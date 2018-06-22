@@ -1,8 +1,3 @@
--- test
---[[
-   'test'"
-]]
-
 local Parser = {}
 
 Parser.kind = {}
@@ -20,7 +15,8 @@ end
 local kindCmnt = regKind( "Cmnt" )
 local kindStr = regKind( "Str" )
 local kindNum = regKind( "Num" )
-local kindStmt = regKind( "Stmt" )
+local kindChar = regKind( "Char" )
+local kindSymb = regKind( "Symb" )
 local kindDlmt = regKind( "Dlmt" )
 local kindKywd = regKind( "Kywd" )
 local kindOpe = regKind( "Ope" )
@@ -224,7 +220,7 @@ function ParserMtd:parse()
 
    local addVal = function( kind, val, column )
       local function createInfo( tokenKind, token, tokenColumn )
-	 if tokenKind == kindStmt then
+	 if tokenKind == kindSymb then
 	    if self.keywordSet[ token ] then
 	       tokenKind = kindKywd
 	    elseif self.typeSet[ token ] then
@@ -237,6 +233,13 @@ function ParserMtd:parse()
 		  pos = { lineNo = self.lineNo, column = tokenColumn } }
       end
 
+      --[[
+	 token の startIndex から始まる数値表現領域を特定する
+
+	 @param token 文字列
+	 @param startIndex token 内の検索開始位置。 この位置から数値表現が始まる。
+	 @return 数値表現の終了位置
+      ]]
       local function analyzeNumber( token, startIndex )
 	 local nonNumIndex = token:find( '[^%d]', startIndex )
 	 if not nonNumIndex then
@@ -265,7 +268,7 @@ function ParserMtd:parse()
 	 return nonNumIndex - 1
       end
       
-      if kind == kindStmt then
+      if kind == kindSymb then
 	 local searchIndex = 1
 	 while true do
 	    -- 空白系以外の何らかの文字領域を探す
@@ -281,7 +284,7 @@ function ParserMtd:parse()
 	       if token:find( '^[%d]', startIndex ) then
 		  -- 数値の場合
 		  local endIndex = analyzeNumber( token, startIndex )
-		  local info = createInfo( kindStmt, token:sub( startIndex, endIndex ),
+		  local info = createInfo( kindNum, token:sub( startIndex, endIndex ),
 					   columnIndex + startIndex )
 		  table.insert( list, info )
 		  startIndex = endIndex + 1
@@ -291,7 +294,7 @@ function ParserMtd:parse()
 		  if index then
 		     if index > startIndex then
 			local info = createInfo(
-			   kindStmt, token:sub( startIndex, index - 1 ),
+			   kindSymb, token:sub( startIndex, index - 1 ),
 			   columnIndex + startIndex )
 			table.insert( list, info )
 		     end
@@ -323,14 +326,14 @@ function ParserMtd:parse()
 
 		     if delimit == "?" then
 			local nextChar = token:sub( startIndex, startIndex )
-			table.insert(
-			   list, createInfo( kindNum, nextChar, columnIndex + startIndex ) )
+			table.insert( list, createInfo( kindChar, nextChar,
+							columnIndex + startIndex ) )
 			startIndex = startIndex + 1
 		     end
 		  else
 		     if startIndex <= #token then
 			table.insert(
-			   list, createInfo( kindStmt, token:sub( startIndex ),
+			   list, createInfo( kindSymb, token:sub( startIndex ),
 					     columnIndex + startIndex ) )
 		     end
 		     break
@@ -354,7 +357,7 @@ function ParserMtd:parse()
       local index = string.find( rawLine, [[[%-"%'%[].]], searchIndex )
 
       if not index then
-	 addVal( kindStmt, rawLine:sub( startIndex ), startIndex )
+	 addVal( kindSymb, rawLine:sub( startIndex ), startIndex )
 	 return list
       end
 
@@ -366,7 +369,7 @@ function ParserMtd:parse()
 	 syncIndexFlag = false
       else
 	 if startIndex < index then
-	    addVal( kindStmt, rawLine:sub( startIndex, index - 1 ), startIndex )
+	    addVal( kindSymb, rawLine:sub( startIndex, index - 1 ), startIndex )
 	 end
 	 if findChar == 45 then -- '-'
 	    if nextChar == 45 then -- '--'

@@ -1,0 +1,57 @@
+EOF
+: Root 
+  : Comment -- test
+  : Comment --[[
+   'test'"
+]]
+  : DeclVar  val1 val2
+    : ExpList 
+      : ExpOp1 ?
+        : LiteralChar 97(a)
+      : LiteralNum 1.0(1.0)
+  : DeclVar  val3 val4 val5
+    : ExpList 
+      : LiteralNum 1(0x1)
+      : LiteralNum 0.01(1.0e-2)
+      : LiteralNum 100.0(0.1e+3)
+  : DeclVar  val6
+    : ExpList 
+      : LiteralList []
+  : DeclVar  val7
+    : ExpList 
+      : LiteralArray [@]
+        : ExpList 
+          : LiteralNum 1(1)
+          : LiteralNum 2(2)
+          : LiteralNum 3(3)
+  : DeclFunc plus1
+    : DeclArg val1
+      : RefType int
+    : DeclArg val2
+      : RefType int
+    : DeclArg val3
+      : RefType int
+    : RefType int
+    : RefType int
+    : Block 
+      : StmtExp 
+        : ExpOp2 =
+          : ExpRef val1
+          : ExpOp1 -
+            : ExpOp2 @
+              : LiteralNum 10(10)
+              : ExpOp2 +
+                : ExpRef int
+                : ExpOp2 +
+                  : ExpRef val2
+                  : ExpRefItem seq[exp]
+                    : ExpRef val3
+                    : LiteralNum 1(1)
+      : Return 
+        : ExpList 
+          : ExpOp2 +
+            : ExpRef val1
+            : LiteralNum 1(1)
+          : ExpOp2 +
+            : ExpRef val2
+            : LiteralNum 1(1)
