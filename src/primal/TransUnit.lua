@@ -19,13 +19,20 @@ end
 
 local nodeKindRoot = regKind( 'Root' )
 local nodeKindComment = regKind( 'Comment' )
-local nodeKindReturn = regKind( 'Return' )
 local nodeKindRefType = regKind( 'RefType' )
+local nodeKindIf = regKind( 'If' )
+local nodeKindWhile = regKind( 'While' )
+local nodeKindRepeat = regKind( 'Repeat' )
+local nodeKindFor = regKind( 'For' )
+local nodeKindEach = regKind( 'Each' )
+local nodeKindReturn = regKind( 'Return' )
+local nodeKindBreak = regKind( 'Break' )
 local nodeKindExpList = regKind( 'ExpList' )
 local nodeKindExpRef = regKind( 'ExpRef' )
 local nodeKindExpOp2 = regKind( 'ExpOp2' )
 local nodeKindExpOp1 = regKind( 'ExpOp1' )
 local nodeKindExpRefItem = regKind( 'ExpRefItem' )
+local nodeKindExpCall = regKind( 'ExpCall' )
 local nodeKindBlock = regKind( 'Block' )
 local nodeKindStmtExp = regKind( 'StmtExp' )
 local nodeKindDeclVar = regKind( 'DeclVar' )
@@ -36,6 +43,7 @@ local nodeKindLiteralNum = regKind( 'LiteralNum' )
 local nodeKindLiteralArray = regKind( 'LiteralArray' )
 local nodeKindLiteralList = regKind( 'LiteralList' )
 local nodeKindLiteralString = regKind( 'LiteralString' )
+local nodeKindLiteralBool = regKind( 'LiteralBool' )
 
 local function nodeFilter( node, filter, ... )
    if not filter[ node.kind ] then
@@ -94,10 +102,26 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 statement = self:analyzeDeclVar( token )
       elseif token.txt == "fn" then
 	 statement = self:analyzeDeclFunc( token )
+      elseif token.txt == "{" then
+	 self:pushback()
+	 statement = self:analyzeBlock()
+      elseif token.txt == "if" then
+	 statement = self:analyzeIf( token )
+      elseif token.txt == "while" then
+	 statement = self:analyzeWhile( token )
+      elseif token.txt == "repeat" then
+	 statement = self:analyzeRepeat( token )
+      elseif token.txt == "for" then
+	 statement = self:analyzeFor( token )
+      elseif token.txt == "each" then
+	 statement = self:analyzeEach( token )
       elseif token.txt == "return" then
 	 local expList = self:analyzeExpList()
 	 self:checkNextToken( ";" )
 	 statement = self:createNode( nodeKindReturn, token.pos, expList )
+      elseif token.txt == "break" then
+	 self:checkNextToken( ";" )
+	 statement = self:createNode( nodeKindBreak, token.pos, nil )
       elseif token.kind == Parser.kind.Cmnt then
 	 statement = self:createNode( nodeKindComment, token.pos, token )
       else
@@ -174,13 +198,91 @@ function TransUnit:error( mess )
 end
 
 function TransUnit:checkNextToken( txt )
-   self:checkToken( self:getToken( mess ), txt )
+   return self:checkToken( self:getToken( mess ), txt )
 end
 
 function TransUnit:checkToken( token, txt )
    if not token or token.txt ~= txt then
       self:error( string.format( "not found -- %s", txt ) )
    end
+   return token
+end
+
+function TransUnit:analyzeIf( token )
+   local list = {}
+   table.insert(
+      list, { kind = "if", exp = self:analyzeExp(), block = self:analyzeBlock() } )
+
+   local token = self:getToken( "illegal if syntax" )
+   while token.txt == "elseif" do
+      table.insert(
+	 list, { kind = "elseif", exp = self:analyzeExp(), block = self:analyzeBlock() } )
+      token = self:getToken( "illegal if syntax" )
+   end
+
+   table.insert(
+      list, { kind = "else", block = self:analyzeBlock() } )
+
+   return self:createNode( nodeKindIf, token.pos, list )
+end
+
+function TransUnit:analyzeWhile( token )
+   local info = { exp = self:analyzeExp(), block = self:analyzeBlock() }
+   return self:createNode( nodeKindWhile, token.pos, info )
+end
+
+function TransUnit:analyzeRepeat( token )
+   local info = { block = self:analyzeBlock(), exp = self:analyzeExp() }
+   local node = self:createNode( nodeKindRepeat, token.pos, info )
+   self:checkNextToken( ";" )
+   return node
+end
+
+function TransUnit:analyzeFor( token )
+   local val = self:getToken()
+   if val.kind ~= Parser.kind.Symb then
+      self:error( "not symbol" )
+   end
+   self:checkNextToken( "=" )
+   local exp1 = self:analyzeExp()
+   self:checkNextToken( "," )
+   local exp2 = self:analyzeExp()
+   local token = self:getToken( "illegal syntax for" )
+   local exp3
+   if token.txt == "," then
+      exp3 = self:analyzeExp()
+   else
+      self:pushback()
+   end
+   
+   local info = { block = self:analyzeBlock(), val = val,
+		  init = exp1, to = exp2, delta = exp3 }
+   local node = self:createNode( nodeKindFor, token.pos, info )
+   return node
+end
+
+function TransUnit:analyzeEach( token )
+   local varList = {}
+   local nextToken
+   repeat
+      local var = self:getToken( "illegal syntax each" )
+      if var.kind ~= Parser.kind.Symb then
+	 self:error( "illegal symbol" )
+      end
+      table.insert( varList, var )
+      nextToken = self:getToken( "illegal symbol each" )
+   until nextToken.txt ~= ","
+   self:checkToken( nextToken, "in" )
+
+   local exp = self:analyzeExp()
+   if exp.kind ~= nodeKindExpCall then
+      self:error( "not call" )
+   end
+
+   local block = self:analyzeBlock()
+
+   local info = { varList = varList, exp = exp, block = block }
+   return self:createNode( nodeKindEach, token.pos, info )
 end
 
 
@@ -243,14 +345,15 @@ function TransUnit:analyzeDeclFunc( fnToken )
       until token.txt ~= ","
    end
 
-   local body = self:analyzeBlock( token )
+   self:pushback()
+   local body = self:analyzeBlock()
    local info = { name = name, argList = argList,
 		  retTypeList = typeList, body = body }
    return self:createNode( nodeKindDeclFunc, fnToken.pos, info )
 end
 
-function TransUnit:analyzeBlock( token )
-   self:checkToken( token, "{" )
+function TransUnit:analyzeBlock()
+   local token = self:checkNextToken( "{" )
 
    local stmtList = {}
    self:analyzeStatement( stmtList, "}" )
@@ -331,7 +434,7 @@ function TransUnit:analyzeExp()
 			     { token = token, num = tonumber( token.txt ) } )
    elseif token.kind == Parser.kind.Char then
       exp = self:createNode( nodeKindLiteralChar, token.pos,
-			     { token = token, num = token.txt:byte( 1 ) } )
+			     { token = token, num = token.txt:byte( 2 ) } )
    elseif token.kind == Parser.kind.Str then
       exp = self:createNode( nodeKindLiteralString, token.pos, token )
    elseif token.kind == Parser.kind.Symb then
@@ -343,11 +446,21 @@ function TransUnit:analyzeExp()
 
 	 local info = { array = exp, index = indexExp }
 	 exp = self:createNode( nodeKindExpRefItem, token.pos, info )
+
+	 nextToken = self:getToken( "illegal syntax" )
+      end
+      if nextToken.txt == "(" then
+	 local expList = self:analyzeExpList()
+	 self:checkNextToken( ")" )
+	 local info = { func = exp, argList = expList }
+	 exp = self:createNode( nodeKindExpCall, token.pos, info )
       else
 	 self:pushback()
       end
    elseif token.kind == Parser.kind.Type then
       exp = self:createNode( nodeKindExpRef, token.pos, token )
+   elseif token.txt == "true" or token.txt == "false" then
+      exp = self:createNode( nodeKindLiteralBool, token.pos, token )
    end
 
    if not exp then

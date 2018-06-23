@@ -1,10 +1,14 @@
 LUA=lua5.3
 
+NDIR=$(shell pwd)
+
 .PHONY: test
 
 exec:
-	$(LUA) base.lua test/test.ls
+	$(LUA) base.lua test/test.lns
 
 test:
-	$(MAKE) exec | tee result
+	LANG= $(MAKE) exec | \
+		sed "s@$(NDIR)@NDIR@g" | \
+                tee result
 	diff result.expect result 

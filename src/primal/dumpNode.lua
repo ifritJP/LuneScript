@@ -62,6 +62,63 @@ dumpNode[ TransUnit.nodeKind.RefType ] = function( node, prefix, depth )
 	    node.info.name.txt )
 end
 
+dumpNode[ TransUnit.nodeKind.If ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "")
+
+   for index, val in ipairs( node.info ) do
+      print( prefix .. val.kind )
+      if val.exp then
+	 val.exp:filter( dumpNode, prefix .. "  ", depth + 1 )
+      end
+      val.block:filter( dumpNode, prefix .. "  ", depth + 1 )
+   end
+end
+
+dumpNode[ TransUnit.nodeKind.While ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "")
+
+   node.info.exp:filter( dumpNode, prefix .. "  ", depth + 1 )
+   node.info.block:filter( dumpNode, prefix .. "  ", depth + 1 )
+end
+
+dumpNode[ TransUnit.nodeKind.Repeat ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "")
+
+   node.info.block:filter( dumpNode, prefix .. "  ", depth + 1 )
+   node.info.exp:filter( dumpNode, prefix .. "  ", depth + 1 )
+end
+
+dumpNode[ TransUnit.nodeKind.For ] = function( node, prefix, depth )
+   dump( prefix, depth, node, node.info.txt )
+
+   node.info.init:filter( dumpNode, prefix .. "  ", depth + 1 )
+   node.info.to:filter( dumpNode, prefix .. "  ", depth + 1 )
+   if node.info.delta then
+      node.info.delta:filter( dumpNode, prefix .. "  ", depth + 1 )
+   end
+   node.info.block:filter( dumpNode, prefix .. "  ", depth + 1 )
+end
+
+dumpNode[ TransUnit.nodeKind.Each ] = function( node, prefix, depth )
+   local varNames = ""
+   for index, var in ipairs( node.info.varList ) do
+      varNames = varNames .. var.txt .. " "
+   end
+   dump( prefix, depth, node, varNames )
+
+   node.info.exp:filter( dumpNode, prefix .. "  ", depth + 1 )
+   node.info.block:filter( dumpNode, prefix .. "  ", depth + 1 )
+end
+
+
+dumpNode[ TransUnit.nodeKind.ExpCall ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "" )
+
+   node.info.func:filter( dumpNode, prefix .. "  ", depth + 1 )
+   node.info.argList:filter( dumpNode, prefix .. "  ", depth + 1 )
+end
+
+
 
 dumpNode[ TransUnit.nodeKind.ExpList ] = function( node, prefix, depth )
    dump( prefix, depth, node, "" )
@@ -132,6 +189,14 @@ end
 
 dumpNode[ TransUnit.nodeKind.LiteralString ] = function( node, prefix, depth )
    dump( prefix, depth, node, node.info.txt )
+end
+
+dumpNode[ TransUnit.nodeKind.LiteralBool ] = function( node, prefix, depth )
+   dump( prefix, depth, node, node.info.txt == "true" )
+end
+
+dumpNode[ TransUnit.nodeKind.Break ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "" )
 end
 
 

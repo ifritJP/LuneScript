@@ -1,13 +1,16 @@
+make[1]: Entering directory 'NDIR'
+lua5.3 base.lua test/test.lns
 EOF
 : Root 
-  : Comment -- test
-  : Comment --[[
-   'test'"
-]]
+  : Comment '''[jioejiopjiofjeioajeji
+jfeioajfeioaji
+'''
+  : Comment ''hogehogheo"""fjiojioe"""
+  : StmtExp 
+    : LiteralString """'''jfiojeiojaoe''"""
   : DeclVar  val1 val2
     : ExpList 
-      : ExpOp1 ?
-        : LiteralChar 97(a)
+      : LiteralChar 97(?a)
       : LiteralNum 1.0(1.0)
   : DeclVar  val3 val4 val5
     : ExpList 
@@ -24,6 +27,13 @@ EOF
           : LiteralNum 1(1)
           : LiteralNum 2(2)
           : LiteralNum 3(3)
+  : DeclVar  val8
+    : ExpList 
+      : LiteralString "1234\""
+  : DeclVar  val9 val10
+    : ExpList 
+      : LiteralString "'1234'"
+      : LiteralString """:a23"""
   : DeclFunc plus1
     : DeclArg val1
       : RefType int
@@ -47,6 +57,47 @@ EOF
                   : ExpRefItem seq[exp]
                     : ExpRef val3
                     : LiteralNum 1(1)
+      : Block 
+        : StmtExp 
+          : ExpOp2 =
+            : ExpRef val2
+            : ExpRef val3
+        : StmtExp 
+          : ExpOp2 =
+            : ExpRef val4
+            : ExpRef val6
+        : If 
+        if
+          : ExpOp2 ==
+            : ExpRef val10
+            : LiteralString ""
+          : Block 
+            : While 
+              : LiteralBool true
+              : Block 
+                : Break 
+        elseif
+          : ExpRef val1
+          : Block 
+            : Repeat 
+              : Block 
+              : LiteralBool false
+        elseif
+          : ExpRef val1
+          : Block 
+            : For nil
+              : LiteralNum 1(1)
+              : LiteralNum 10(10)
+              : LiteralNum 1(1)
+              : Block 
+        else
+          : Block 
+            : Each val 
+              : ExpCall 
+                : ExpRef pairs
+                : ExpList 
+                  : ExpRef val7
+              : Block 
       : Return 
         : ExpList 
           : ExpOp2 +
@@ -55,3 +106,4 @@ EOF
           : ExpOp2 +
             : ExpRef val2
             : LiteralNum 1(1)
+make[1]: Leaving directory 'NDIR'

@@ -1,0 +1,36 @@
+'''[jioejiopjiofjeioajeji
+jfeioajfeioaji
+'''
+''hogehogheo"""fjiojioe"""
+"""'''jfiojeiojaoe''""";
+let val1 : int, val2 : real = ?a, 1.0;
+let val3 : real, val4, val5 : real = 0x1, 1.0e-2, 0.1e+3;
+let val6 : int[] = [1, 2, 3];
+let val7 : int[@] = [@1,2,3];
+let val8 : string = "1234\"";
+let val9, val10 = "'1234'", """:a23""";
+fn plus1( val1: int, val2: int, val3: int[] ) : int, int {
+   val1 = -10@int + val2 + val3[1];
+   {
+      val2 = val3;
+      val4 = val6;
+      if val10 == "" {
+         while true {
+            break;
+         }
+      }
+      elseif val1 {
+         repeat {
+         } false;
+      }
+      elseif val1 {
+         for index = 1, 10, 1 {
+         }
+      }
+      else {
+         each val in pairs( val7 ) {
+         }
+      }
+   }
+   return val1 + 1, val2 + 1;
+}

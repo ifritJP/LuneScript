@@ -53,7 +53,6 @@ op1Set[ '-' ] = true
 op1Set[ 'not' ] = true
 op1Set[ '#' ] = true
 op1Set[ '~' ] = true
-op1Set[ '?' ] = true
 op1Set[ '*' ] = true
 
 
@@ -183,25 +182,17 @@ function ParserMtd:parse()
       local searchIndex = comIndex
       local comment = ""
       while true do
-	 local termIndex = string.find( rawLine, ']', searchIndex, true )
-	 while termIndex do
-	    local termEndIndex = string.find( rawLine, ']', termIndex + 1, true )
-	    if termEndIndex then
-	       if termStr == rawLine:sub( termIndex, termEndIndex ) then
-		  comment = comment .. rawLine:sub( searchIndex, termEndIndex )
-		  return comment, termEndIndex + 1
-	       end
-	       termIndex = termEndIndex
-	    else
-	       break
-	    end
+	 local termIndex, termEndIndex = string.find(
+	    rawLine, termStr, searchIndex, true )
+	 if termIndex then
+	    comment = comment .. rawLine:sub( searchIndex, termEndIndex )
+	    return comment, termEndIndex + 1
 	 end
-	 comment = comment .. rawLine .. "\n"
+	 comment = comment .. rawLine:sub( searchIndex ) .. "\n"
 	 searchIndex = 1
 	 rawLine = readLine()
 	 if not rawLine then
 	    error( "illegal comment" )
-	    return nil
 	 end
       end
    end
@@ -320,15 +311,14 @@ function ParserMtd:parse()
 		     if op2Set[ delimit ] or op1Set[ delimit ] then
 			workKind = kindOpe
 		     end
-		     table.insert(
-			list, createInfo( workKind, delimit, columnIndex + index ) )
-		     
-
 		     if delimit == "?" then
-			local nextChar = token:sub( startIndex, startIndex )
+			local nextChar = token:sub( index, startIndex )
 			table.insert( list, createInfo( kindChar, nextChar,
 							columnIndex + startIndex ) )
 			startIndex = startIndex + 1
+		     else
+			table.insert(
+			   list, createInfo( workKind, delimit, columnIndex + index ) )
 		     end
 		  else
 		     if startIndex <= #token then
@@ -371,52 +361,50 @@ function ParserMtd:parse()
 	 if startIndex < index then
 	    addVal( kindSymb, rawLine:sub( startIndex, index - 1 ), startIndex )
 	 end
-	 if findChar == 45 then -- '-'
-	    if nextChar == 45 then -- '--'
-	       -- コメントの場合
-	       if string.byte( rawLine, index + 2 ) == 91 and
-		  string.byte( rawLine, index + 3 ) == 91
-	       then
-		  -- 複数行コメントの場合
-		  local comment, nextIndex = multiComment( index + 2, "]]" )
-		  addVal( kindCmnt, comment, index )
+	 if findChar == 39 then -- '''
+	    if nextChar == 39 then -- '''
+	       if string.byte( rawLine, index + 2 ) == 39 then
+		  -- 複数行コメントの場合 
+		  local comment, nextIndex = multiComment( index + 3, "'''" )
+		  addVal( kindCmnt, "'''" .. comment, index )
 		  searchIndex = nextIndex
 	       else
 		  addVal( kindCmnt, rawLine:sub( index ), index )
-		  return list
+		  searchIndex = #rawLine + 1
 	       end
 	    else
-	       addVal( kindDlmt, "-", index )
-	       searchIndex = index + 1
+	       error( "illegal syntax:", rawLine )
 	    end
 	 elseif findChar == 91 then -- '['
-	    if nextChar == 91 then -- '['
-	       -- 文字列の場合 [[
-	       local str, nextIndex = multiComment( index, "]]" )
-	       addVal( kindStr, str, index )
-	       searchIndex = nextIndex
-	    elseif nextChar == 64 then -- '@'
+	    if nextChar == 64 then -- '@'
 	       addVal( kindDlmt, "[@", index )
 	       searchIndex = index + 2
 	    else
 	       addVal( kindDlmt, "[", index )
 	       searchIndex = index + 1
 	    end
-	 elseif findChar == 34 or findChar == 39   then -- '"' or "'"
+	 elseif findChar == 34 then -- '"'
 	    -- 文字列の場合
-	    local workIndex = index + 1
-	    local pattern = findChar == 34 and '["\\]' or "['\\]"
-	    while true do
-	       local endIndex = string.find( rawLine, pattern, workIndex )
-	       if not endIndex then
-		  error( "illegal string:", rawLine )
-	       end
-	       if string.byte( rawLine, endIndex ) == findChar then -- -- '"' or "'"
-		  addVal( kindStr, rawLine:sub( index, endIndex ), index )
-		  searchIndex = endIndex + 1
-		  break
-	       else -- '\'
-		  workIndex = workIndex + 2
+	    if nextChar == 34 and string.byte( rawLine, index + 2 ) == 34 then -- '"""'
+	       -- 複数行文字列の場合
+	       local str, nextIndex = multiComment( index + 3, '"""' )
+	       addVal( kindStr, '"""' .. str, index )
+	       searchIndex = nextIndex
+	    else
+	       local workIndex = index + 1
+	       local pattern = '["\\]'
+	       while true do
+		  local endIndex = string.find( rawLine, pattern, workIndex )
+		  if not endIndex then
+		     error( "illegal string:", rawLine )
+		  end
+		  if string.byte( rawLine, endIndex ) == findChar then -- '"'
+		     addVal( kindStr, rawLine:sub( index, endIndex ), index )
+		     searchIndex = endIndex + 1
+		     break
+		  else -- '\'
+		     workIndex = workIndex + 2
+		  end
 	       end
 	    end
 	 end
