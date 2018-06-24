@@ -29,8 +29,10 @@
 		   "type" "unpack" "xpcall")))
   (defconst
     lns-keyword (lns-make-regex-or
-		 '("self" "let" "fn" "if" "while" "repeat" "for"
-		   "each" "return" "class" "false" "nil" "true" "@")))
+		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
+		   "apply" "of" "foreach" "in" "return" "class" "false" "nil" "true"
+		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static"
+		   "trust" "import" "as")))
   (defconst
     lns-type (lns-make-regex-or
 	      '("int" "real" "int_" "real_" "stem" "Map" "Array" "List" "str")))
@@ -40,12 +42,22 @@
 (defvar lns-font-lock-keywords
   `((,lns-builtin . font-lock-builtin-face)
     (,lns-keyword . font-lock-keyword-face)
+    ("@@\\?\\|@@\\|@\\|\\?\\|&" . font-lock-keyword-face)
     (,lns-type . font-lock-type-face)
+    ;; (":\\s-*\\(\\w+\\)" . (1 font-lock-type-face nil t))
+    (,(format "\\(%s\\)\\s-*\\(\\w+\\)"
+	      (lns-make-regex-or '("fn" "form"))) .
+	      ( 2 font-lock-function-name-face nil t))    
+    (,(format "\\(%s\\)\\s-*\\(\\w+\\)"
+	      (lns-make-regex-or '("let" "for" "foreach" "apply"))) .
+	      ( 2 font-lock-variable-name-face nil t))
     ))
 
 (defvar lns-font-lock-syntactic-keywords
   `(("'''" 0 (14 . 41) nil t) ;;; comment
-    ("''.*" 0 (14 . 41) nil t) ;;; comment
+    ("''" 0 (11 . 40) nil t) ;;; comment
+    ("\n" 0 (12 . 40) nil t) ;;; comment
+    ;;("''" 0 (12 . 41) nil t) ;;; comment
     ("\"\"\"" 0 (7 . 41) nil t) ;;; string
     ("\"" 0 (7 . 41) nil t) ;;; string
     ;;(,(lambda (limit) (re-search-forward "\"\"\"" limit t)) 0 (7 . 41) nil t) ;;; string
@@ -55,6 +67,8 @@
 (defvar lns-mode-syntax-table
   (with-syntax-table (copy-syntax-table)
     (modify-syntax-entry ?\\ "\\")
+    (modify-syntax-entry ?_ "w")
+    (modify-syntax-entry ?& ".")
     (syntax-table))
   "`lns-mode' syntax table.")
 

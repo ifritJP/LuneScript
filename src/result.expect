@@ -6,6 +6,9 @@ EOF
 jfeioajfeioaji
 '''
   : Comment ''hogehogheo"""fjiojioe"""
+  : Comment ''
+  : Comment '''fjioeajio
+'''
   : StmtExp 
     : LiteralString """'''jfiojeiojaoe''"""
   : DeclVar  val1 val2
@@ -34,13 +37,32 @@ jfeioajfeioaji
     : ExpList 
       : LiteralString "'1234'"
       : LiteralString """:a23"""
-  : DeclFunc plus1
+  : DeclVar  val11
+    : ExpList 
+      : LiteralMap 
+        : LiteralString "A"
+        : LiteralMap 
+          : LiteralString "AA"
+          : LiteralNum 1(1)
+        : LiteralString "B"
+        : LiteralMap 
+          : LiteralString "BB"
+          : LiteralNum 2(2)
+  : StmtExp 
+    : ExpOp2 =
+      : RefField AA
+        : RefField A
+          : ExpRef val11
+      : LiteralNum 3(3)
+  : DeclFunc plus1_2
     : DeclArg val1
       : RefType int
     : DeclArg val2
       : RefType int
     : DeclArg val3
       : RefType int
+    : DeclArg val4
+      : RefType &mut int
     : RefType int
     : RefType int
     : Block 
@@ -92,12 +114,15 @@ jfeioajfeioaji
               : Block 
         else
           : Block 
-            : Each val 
+            : Apply val sub 
               : ExpCall 
                 : ExpRef pairs
                 : ExpList 
                   : ExpRef val7
               : Block 
+                : Foreach item index 
+                  : ExpRef val6
+                  : Block 
       : Return 
         : ExpList 
           : ExpOp2 +
@@ -106,4 +131,15 @@ jfeioajfeioaji
           : ExpOp2 +
             : ExpRef val2
             : LiteralNum 1(1)
+  : DeclFunc plus2
+    : DeclArg val1
+      : RefType int
+    : DeclArgDDD ...
+    : RefType int
+    : Block 
+      : StmtExp 
+        : ExpCall 
+          : ExpRef print
+          : ExpList 
+            : ExpDDD ...
 make[1]: Leaving directory 'NDIR'

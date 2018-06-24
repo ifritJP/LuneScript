@@ -281,7 +281,7 @@ function ParserMtd:parse()
 		  startIndex = endIndex + 1
 	       else
 		  -- 区切り文字を探す
-		  local index = string.find( token, '[^%w]', startIndex )
+		  local index = string.find( token, '[^%w_]', startIndex )
 		  if index then
 		     if index > startIndex then
 			local info = createInfo(

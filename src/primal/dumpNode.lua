@@ -44,6 +44,14 @@ dumpNode[ TransUnit.nodeKind.DeclArg ] = function( node, prefix, depth )
    node.info.argType:filter( dumpNode, prefix .. "  ", depth + 1 )
 end
 
+dumpNode[ TransUnit.nodeKind.DeclArgDDD ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "..." )
+end
+
+dumpNode[ TransUnit.nodeKind.ExpDDD ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "..." )
+end
+
 dumpNode[ TransUnit.nodeKind.DeclFunc ] = function( node, prefix, depth )
    dump( prefix, depth, node, node.info.name.txt )
    for index, arg in ipairs( node.info.argList ) do
@@ -58,7 +66,7 @@ end
 dumpNode[ TransUnit.nodeKind.RefType ] = function( node, prefix, depth )
    dump( prefix, depth, node,
 	 (node.info.refFlag and "&" or "") ..
-	    (node.info.mutFlag and "mut" or "") ..
+	    (node.info.mutFlag and "mut " or "") ..
 	    node.info.name.txt )
 end
 
@@ -99,7 +107,18 @@ dumpNode[ TransUnit.nodeKind.For ] = function( node, prefix, depth )
    node.info.block:filter( dumpNode, prefix .. "  ", depth + 1 )
 end
 
-dumpNode[ TransUnit.nodeKind.Each ] = function( node, prefix, depth )
+dumpNode[ TransUnit.nodeKind.Apply ] = function( node, prefix, depth )
+   local varNames = ""
+   for index, var in ipairs( node.info.varList ) do
+      varNames = varNames .. var.txt .. " "
+   end
+   dump( prefix, depth, node, varNames )
+
+   node.info.exp:filter( dumpNode, prefix .. "  ", depth + 1 )
+   node.info.block:filter( dumpNode, prefix .. "  ", depth + 1 )
+end
+
+dumpNode[ TransUnit.nodeKind.Foreach ] = function( node, prefix, depth )
    local varNames = ""
    for index, var in ipairs( node.info.varList ) do
       varNames = varNames .. var.txt .. " "
@@ -148,8 +167,14 @@ end
 dumpNode[ TransUnit.nodeKind.ExpRefItem ] = function( node, prefix, depth )
    dump( prefix, depth, node, "seq[exp]" )
 
-   node.info.array:filter( dumpNode, prefix .. "  ", depth + 1 )
+   node.info.val:filter( dumpNode, prefix .. "  ", depth + 1 )
    node.info.index:filter( dumpNode, prefix .. "  ", depth + 1 )
+end
+
+dumpNode[ TransUnit.nodeKind.RefField ] = function( node, prefix, depth )
+   dump( prefix, depth, node, node.info.field.txt )
+
+   node.info.prefix:filter( dumpNode, prefix .. "  ", depth + 1 )
 end
 
 dumpNode[ TransUnit.nodeKind.Return ] = function( node, prefix, depth )
@@ -169,6 +194,16 @@ dumpNode[ TransUnit.nodeKind.LiteralList ] = function( node, prefix, depth )
       exp:filter( dumpNode, prefix .. "  ", depth + 1 )
    end
 end
+
+dumpNode[ TransUnit.nodeKind.LiteralMap ] = function( node, prefix, depth )
+   dump( prefix, depth, node, "" )
+
+   for key, val in pairs( node.info ) do
+      key:filter( dumpNode, prefix .. "  ", depth + 1 )
+      val:filter( dumpNode, prefix .. "  ", depth + 1 )
+   end
+end
+
 
 dumpNode[ TransUnit.nodeKind.LiteralArray ] = function( node, prefix, depth )
    dump( prefix, depth, node, "[@]" )
