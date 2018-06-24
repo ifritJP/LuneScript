@@ -34,6 +34,12 @@
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static"
 		   "trust" "import" "as")))
   (defconst
+    lns-bloak-statement-head (lns-make-regex-or
+			      '("let" "fn" "if" "elseif" "else" "while" "repeat" "for"
+				"apply" "foreach" "class" 
+				"pub" "pro" "pri" "form" "advertise" "wrap" "static"
+				"trust" "import")))
+  (defconst
     lns-type (lns-make-regex-or
 	      '("int" "real" "int_" "real_" "stem" "Map" "Array" "List" "str")))
   )
@@ -69,6 +75,8 @@
     (modify-syntax-entry ?\\ "\\")
     (modify-syntax-entry ?_ "w")
     (modify-syntax-entry ?& ".")
+    (modify-syntax-entry ?  " ")
+    (modify-syntax-entry ?\t " ")
     (syntax-table))
   "`lns-mode' syntax table.")
 
@@ -170,7 +178,7 @@ pattern は  {, }, {{, }} のいずれか。
 	pos work)
     (beginning-of-line)
     (when (not independ)
-      (setq pattern (concat "\\s.*" pattern)))
+      (setq pattern (concat "\\s *" pattern)))
     (while find
       (setq find (re-search-forward pattern end-pos t))
       (when find
@@ -189,42 +197,77 @@ pattern は  {, }, {{, }} のいずれか。
 	    ))))
     pos))
 
-(defun lns-indent-line ()
-  ;; (let (pos end-block-flag start-block-flag start-pos column)
-  ;;   (save-excursion
-  ;;     (setq end-block-flag (lns-indent-search-pattern-in-line "}" nil "}"))
-  ;;     (when (not end-block-flag)
-  ;; 	(setq start-block-flag (lns-indent-search-pattern-in-line "^\s.*{" t)))
-  ;;     (previous-line)
-  ;;     (end-of-line)
-  ;;     (cond
-  ;;      (end-block-flag
-  ;; 	;; ブロック終了の場合、ブロック開始を見つける。
-  ;; 	(setq pos (lns-indent-search-block "{"))
-  ;; 	(when pos
-  ;; 	  (save-excursion
-  ;; 	    (beginning-of-line)
-  ;; 	    (setq start-pos (point)))
-  ;; 	  (backward-char)
-  ;; 	  (if (or (< (point) start-pos)
-  ;; 		  (not (re-search-backward "[^\\s.]" start-pos t))
-  ;; 		  (not (eq (char-after) ?{)))
-  ;; 	      ;; { と同じ場所にインデント
-  ;; 	      (progn
-  ;; 		(goto-char pos)
-  ;; 		(setq column (current-column))))
-  ;; 	  ;;
-  ;; 	  (beginning-of-line)
+(defun lns-indent-search-statement-head ()
+  (when (re-search-backward
+	 (format "^\\s *\\(}\\|{\\|%s\\)" lns-bloak-statement-head) nil t)
+    (when (or (eq (char-after) ? ) (eq (char-after) ?\t))
+      (when (re-search-forward "[^\t ]")
+	(backward-char)
+	)
+  )))
 
-  ;; 	  ))
-  ;;      (start-block-flag
-  ;; 	;; ブロック開始の場合
-  ;; 	(setq pos (lns-indent-search-block "{"))
-  ;; 	)))
-  ;;   (when column
-  ;;     (move-to-column column t)
-  ;;     (indent-line-to column))
-  ;;   )
+(defun lns-indent-line ()
+  (let (pos end-block-flag start-block-flag start-pos column)
+    (save-excursion
+      (setq end-block-flag (lns-indent-search-pattern-in-line "}" nil "}"))
+      (when (not end-block-flag)
+  	(setq start-block-flag (lns-indent-search-pattern-in-line "^\\s *{" t)))
+      (previous-line)
+      (end-of-line)
+      (cond
+       (end-block-flag
+  	;; ブロック終了の場合、ブロック開始を見つける。
+  	(setq pos (lns-indent-search-block "{"))
+  	(when pos
+  	  (save-excursion
+  	    (beginning-of-line)
+  	    (setq start-pos (point)))
+  	  (backward-char)
+  	  (if (or (< (point) start-pos)
+  		  (not (re-search-backward "[^\\s ]" start-pos t)))
+  	      ;; { と同じ場所にインデント
+  	      (progn
+  		(goto-char pos)
+  		(setq column (current-column)))
+	    ;;
+	    (goto-char pos)
+	    (lns-indent-search-statement-head)
+	    ;;(setq column (1- (current-column)))
+	    (setq column (current-column))
+	    )
+  	  ))
+       (start-block-flag
+	;; ブロック開始の場合
+	(save-excursion
+	  (lns-indent-search-statement-head)
+	  ;;(setq column (1- (current-column)))
+	  (setq column (current-column))
+	  (setq pos (point)))
+	(when (lns-indent-search-block "{")
+	  (when (> (point) pos)
+	    (setq column (+ column lns-indent-level)))))
+       (t
+	(setq pos (point))
+	(lns-indent-search-statement-head)
+	(cond ((eq (char-after) ?{)
+	       ;;(setq column (+ (1- (current-column)) lns-indent-level)))
+	       (setq column (+ (current-column) lns-indent-level)))
+	      ((not (eq (char-after) ?}))
+	       ;;(setq column (1- (current-column)))
+	       (setq column (current-column))
+	       (setq start-pos (point))
+	       (goto-char pos)
+	       (when (lns-indent-search-block "{")
+		 (setq column (+ column lns-indent-level))))
+	      (t
+	       ;;(setq column (1- (current-column)))))
+	       (setq column (current-column))))
+	)
+       ))
+    (when column
+      (move-to-column column t)
+      (indent-line-to column))
+    )
   )
 
 
