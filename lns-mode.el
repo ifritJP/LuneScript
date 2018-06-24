@@ -8,7 +8,7 @@
   (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
 
 
-(defvar lns-indent-level 3)
+(defvar lns-indent-level 4)
 (defvar lns-command-path "lns" )
 
 (defun lns-make-regex-or (list)
@@ -95,9 +95,138 @@
   )
 
 
+(defun lns-is-in-comment-string( pos )
+  (let ((syntax (syntax-ppss pos)))
+    (or (elt syntax 3)
+	(elt syntax 4))))
+
+
+(defun lns-indent-search-block (pattern)
+  "
+現在のカーソル位置から前方に pattern の文字列を見つける。
+
+pattern は  {, }, {{, }} のいずれか。
+
+前方方向に閉じたペアがある場合、そのペアは飛ばす。
+"
+  (let ((pattern-char (substring pattern 1))
+	(count 0)
+	(loop t)
+	end-pos pos)
+    (while loop
+      (save-excursion
+	(beginning-of-line)
+	(setq end-pos (point)))
+      (let ((find t)
+	    (pattern-char (substring pattern 1))
+	    find-len work)
+	(while find
+	  (setq find (re-search-backward "[{}]" end-pos 'noerror))
+	  (when find
+	    (when (not (lns-is-in-comment-string find))
+	      (if (eq (char-after) (char-before))
+		  (progn
+		    (setq find-len 2)
+		    (setq work (format "%c%c" (char-after) (char-after))))
+		(setq find-len 1)
+		(setq work (format "%c" (char-after))))
+	      (if (not (eq (length pattern) find-len))
+		  ;; 検索対象と文字数が異なるのでスキップ
+		  (backward-char (1- find-len))
+		;; 検索対象と文字数が同じ
+		(if (eq count 0)
+		    ;; 検索対象は閉じている
+		    (if (equal work pattern)
+			(progn
+			  ;; 検索対象と等しい
+			  (setq pos (- (point) (1- (length pattern))))
+			  (setq find nil))
+		      ;; 検索対象と異なる
+		      (setq count (+ count 1))
+		      (backward-char (1- find-len)))
+		  ;; 検索対象は閉じていない
+		  (if (equal work pattern)
+		      ;; 検索対象と等しい
+		      (setq count (- count 1))
+		    ;; 検索対象と異なる
+		    (setq count (+ count 1)))
+		  (backward-char (1- find-len))))))
+	  (if (< (point) end-pos)
+	      (setq find nil))
+	  ))
+      (if pos
+	  (setq loop nil)
+	(previous-line)
+	(end-of-line))
+      )
+    (when pos
+      (goto-char pos))
+    ))
+
+(defun lns-indent-search-pattern-in-line (pattern &optional independ skip-pattern)
+  (end-of-line)
+  (let ((end-pos (point))
+	(find t)
+	pos work)
+    (beginning-of-line)
+    (when (not independ)
+      (setq pattern (concat "\\s.*" pattern)))
+    (while find
+      (setq find (re-search-forward pattern end-pos t))
+      (when find
+	(when (not (lns-is-in-comment-string find))
+	  (if skip-pattern
+	      (progn
+		(setq work (buffer-substring-no-properties
+			    find (+ find (length skip-pattern))))
+		(if (equal work skip-pattern)
+		    (forward-char (length skip-pattern))
+		  (setq pos find)
+		  (setq find nil)
+		  ))
+	    (setq pos find)
+	    (setq find nil)
+	    ))))
+    pos))
+
 (defun lns-indent-line ()
-  0
-)
+  ;; (let (pos end-block-flag start-block-flag start-pos column)
+  ;;   (save-excursion
+  ;;     (setq end-block-flag (lns-indent-search-pattern-in-line "}" nil "}"))
+  ;;     (when (not end-block-flag)
+  ;; 	(setq start-block-flag (lns-indent-search-pattern-in-line "^\s.*{" t)))
+  ;;     (previous-line)
+  ;;     (end-of-line)
+  ;;     (cond
+  ;;      (end-block-flag
+  ;; 	;; ブロック終了の場合、ブロック開始を見つける。
+  ;; 	(setq pos (lns-indent-search-block "{"))
+  ;; 	(when pos
+  ;; 	  (save-excursion
+  ;; 	    (beginning-of-line)
+  ;; 	    (setq start-pos (point)))
+  ;; 	  (backward-char)
+  ;; 	  (if (or (< (point) start-pos)
+  ;; 		  (not (re-search-backward "[^\\s.]" start-pos t))
+  ;; 		  (not (eq (char-after) ?{)))
+  ;; 	      ;; { と同じ場所にインデント
+  ;; 	      (progn
+  ;; 		(goto-char pos)
+  ;; 		(setq column (current-column))))
+  ;; 	  ;;
+  ;; 	  (beginning-of-line)
+
+  ;; 	  ))
+  ;;      (start-block-flag
+  ;; 	;; ブロック開始の場合
+  ;; 	(setq pos (lns-indent-search-block "{"))
+  ;; 	)))
+  ;;   (when column
+  ;;     (move-to-column column t)
+  ;;     (indent-line-to column))
+  ;;   )
+  )
+
 
 (defun lns-beginning-of-fn (&optional arg)
   ""
