@@ -79,7 +79,7 @@ convLua[ TransUnit.nodeKind.StmtExp ] = function( self, node, baseIndent )
 end
 
 convLua[ TransUnit.nodeKind.DeclVar ] = function( self, node, baseIndent )
-   self:write( "let " )
+   self:write( "local " )
    
    local varName = ""
    for index, var in ipairs( node.info.varList ) do

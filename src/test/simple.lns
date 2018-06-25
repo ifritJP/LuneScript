@@ -5,4 +5,5 @@ fn func( val : int) {
 	print( val );
     }
 }
-func( 20 );
+let data : int = 20;
+func( data );
