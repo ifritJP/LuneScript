@@ -97,9 +97,9 @@ convLua[ TransUnit.nodeKind.DeclVar ] = function( self, node, baseIndent )
 end
 
 convLua[ TransUnit.nodeKind.DeclArg ] = function( self, node, baseIndent )
-   self:write( string.format( "%s: ", node.info.name.txt ) )
+   self:write( string.format( "%s ", node.info.name.txt ) )
 
-   node.info.argType:filter( convLua, baseIndent )
+   -- node.info.argType:filter( convLua, baseIndent )
 end
 
 convLua[ TransUnit.nodeKind.DeclArgDDD ] = function( self, node, baseIndent )
@@ -221,7 +221,9 @@ end
 convLua[ TransUnit.nodeKind.ExpCall ] = function( self, node, baseIndent )
    node.info.func:filter( convLua, baseIndent )
    self:write( "(" )
-   node.info.argList:filter( convLua, baseIndent )
+   if node.info.argList then
+      node.info.argList:filter( convLua, baseIndent )
+   end
    self:write( ")" )
 end
 

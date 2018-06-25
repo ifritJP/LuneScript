@@ -391,7 +391,10 @@ function TransUnit:analyzeDeclFunc( fnToken )
    end
    repeat
       local argName = self:getToken( "" )
-      if argName.txt == "..." then
+      if argName.txt == ")" then
+	 token = argName
+	 break
+      elseif argName.txt == "..." then
 	 table.insert( argList, self:createNode( nodeKindDeclArgDDD,
 						 argName.pos, argName ) )
       else
@@ -541,8 +544,13 @@ function TransUnit:analyzeExpSymbol( firstToken, token, fieldFlag, prefixExp )
       end
       if nextToken.txt == "(" then
 	 matchFlag = true
-	 local expList = self:analyzeExpList()
-	 self:checkNextToken( ")" )
+	 local work = self:getToken( "" )
+	 local expList
+	 if work.txt ~= ")" then
+	    self:pushback()	    
+	    expList = self:analyzeExpList()
+	    self:checkNextToken( ")" )
+	 end
 	 local info = { func = exp, argList = expList }
 
 	 exp = self:createNode( nodeKindExpCall, token.pos, info )

@@ -131,7 +131,9 @@ dumpNode[ TransUnit.nodeKind.ExpCall ] = function( self, node, prefix, depth )
    dump( prefix, depth, node, "" )
 
    node.info.func:filter( dumpNode, prefix .. "  ", depth + 1 )
-   node.info.argList:filter( dumpNode, prefix .. "  ", depth + 1 )
+   if node.info.argList then
+      node.info.argList:filter( dumpNode, prefix .. "  ", depth + 1 )
+   end
 end
 
 
