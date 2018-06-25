@@ -119,11 +119,8 @@ dumpNode[ TransUnit.nodeKind.Apply ] = function( self, node, prefix, depth )
 end
 
 dumpNode[ TransUnit.nodeKind.Foreach ] = function( self, node, prefix, depth )
-   local varNames = ""
-   for index, var in ipairs( node.info.varList ) do
-      varNames = varNames .. var.txt .. " "
-   end
-   dump( prefix, depth, node, varNames )
+   local index = node.info.key and node.info.key.txt or ""
+   dump( prefix, depth, node, node.info.val.txt .. " " .. index )
 
    node.info.exp:filter( dumpNode, prefix .. "  ", depth + 1 )
    node.info.block:filter( dumpNode, prefix .. "  ", depth + 1 )
@@ -225,7 +222,7 @@ dumpNode[ TransUnit.nodeKind.LiteralNum ] = function( self, node, prefix, depth 
 end
 
 dumpNode[ TransUnit.nodeKind.LiteralString ] = function( self, node, prefix, depth )
-   dump( prefix, depth, node, node.info.txt )
+   dump( prefix, depth, node, node.info.token.txt )
 end
 
 dumpNode[ TransUnit.nodeKind.LiteralBool ] = function( self, node, prefix, depth )

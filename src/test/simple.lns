@@ -1,0 +1,5 @@
+print( "abc%s%s" (1,"ab") );
+print( "%X" ("123"[2]) );
+foreach val in [ 1, 2, 3 ] {
+    print( val );
+}

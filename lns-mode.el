@@ -111,6 +111,15 @@
 	(eq (char-after) ?')
 	)))
 
+(defun lns-indent-prev-eol ()
+  (if (eq 1 (count-lines 1 (1+ (point))))
+      nil
+    (beginning-of-line)
+    (previous-line)
+    (end-of-line)
+    t
+    ))
+
 
 (defun lns-indent-search-block (pattern)
   "
@@ -167,8 +176,8 @@ pattern は  {, }, {{, }} のいずれか。
 	  ))
       (if pos
 	  (setq loop nil)
-	(previous-line)
-	(end-of-line))
+	(when (not (lns-indent-prev-eol))
+	  (setq loop nil)))
       )
     (when pos
       (goto-char pos))
@@ -246,8 +255,9 @@ pattern は  {, }, {{, }} のいずれか。
 		    (forward-char)
 		  (beginning-of-line))
 		(setq pos (point)))
-	    (previous-line)
-	    (end-of-line)))))
+	    (when (not (lns-indent-prev-eol))
+	      (setq pos 0)))
+	  )))
     (when pos
       (goto-char pos))
     pos
@@ -300,8 +310,7 @@ pattern は  {, }, {{, }} のいずれか。
        ((eq (char-before) ?\[)
 	(setq start-block-flag "]"))
        )
-      (previous-line)
-      (end-of-line)
+      (lns-indent-prev-eol)
       (cond
        (end-block-flag
   	;; ブロック終了の場合、ブロック開始を見つける。
@@ -355,6 +364,7 @@ pattern は  {, }, {{, }} のいずれか。
 		  (backward-char)
 		  (setq column (+ (current-column) lns-indent-level))))
 	    (setq column (current-column)))))
+	    ;;(setq column (+ (current-column) lns-indent-level)))))
        ))
     (when column
       (move-to-column column t)

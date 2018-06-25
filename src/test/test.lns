@@ -53,12 +53,13 @@ pub fn plus1_2( val1: int,
     }	
     else {
         apply val, sub of pairs( val7 ) {
-	    foreach item, index in val6 {
+	    foreach item in val6 {
 	    } 	  
         }  
     }	
     return val1 + 1, val2 + 1;
 }
 pub fn plus2( val1: int, ... ) : int {
+    print( "abc%s%s" (1,"ab") );
     print( ... );
 }

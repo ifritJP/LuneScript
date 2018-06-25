@@ -104,7 +104,6 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
    while true do
       local token = self:getTokenNoErr()
       if not token then
-	 print( "EOF" )
 	 break
       end
 
@@ -117,7 +116,7 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 elseif token.txt == "pub" or token.txt == "pro" or
 	    token.txt == "pri" or token.txt == "global"
 	 then
-	    statement = self:analyzeDecl( token, self:getToken( "illegal syntax" ) )
+	    statement = self:analyzeDecl( token, self:getToken( "" ) )
 	 elseif token.txt == "{" then
 	    self:pushback()
 	    statement = self:analyzeBlock( "{" )
@@ -169,7 +168,7 @@ end
 function TransUnit:getToken( mess )
    local token = self:getTokenNoErr()
    if not token then
-      self:error( mess )
+      self:error( "EOF" )
    end
    self.currentToken = token
    return self.currentToken
@@ -243,12 +242,12 @@ function TransUnit:analyzeIf( token )
    table.insert(
       list, { kind = "if", exp = self:analyzeExp(), block = self:analyzeBlock( "if" ) } )
 
-   local token = self:getToken( "illegal if syntax" )
+   local token = self:getToken( "" )
    while token.txt == "elseif" do
       table.insert(
 	 list, { kind = "elseif", exp = self:analyzeExp(),
 		 block = self:analyzeBlock( "elseif" ) } )
-      token = self:getToken( "illegal if syntax" )
+      token = self:getToken( "" )
    end
 
    table.insert(
@@ -278,7 +277,7 @@ function TransUnit:analyzeFor( token )
    local exp1 = self:analyzeExp()
    self:checkNextToken( "," )
    local exp2 = self:analyzeExp()
-   local token = self:getToken( "illegal syntax for" )
+   local token = self:getToken( "" )
    local exp3
    if token.txt == "," then
       exp3 = self:analyzeExp()
@@ -296,12 +295,12 @@ function TransUnit:analyzeApply( token )
    local varList = {}
    local nextToken
    repeat
-      local var = self:getToken( "illegal syntax apply" )
+      local var = self:getToken( "" )
       if var.kind ~= Parser.kind.Symb then
 	 self:error( "illegal symbol" )
       end
       table.insert( varList, var )
-      nextToken = self:getToken( "illegal symbol apply" )
+      nextToken = self:getToken( "" )
    until nextToken.txt ~= ","
    self:checkToken( nextToken, "of" )
 
@@ -317,50 +316,58 @@ function TransUnit:analyzeApply( token )
 end
 
 function TransUnit:analyzeForeach( token )
-   local varList = {}
+   local valSymbol
+   local keySymbol
    local nextToken
-   repeat
-      local var = self:getToken( "illegal syntax apply" )
-      if var.kind ~= Parser.kind.Symb then
+   for index = 1, 2 do
+      local sym = self:getToken( "" )
+      if sym.kind ~= Parser.kind.Symb then
 	 self:error( "illegal symbol" )
       end
-      table.insert( varList, var )
-      nextToken = self:getToken( "illegal symbol apply" )
-   until nextToken.txt ~= ","
+      if index == 1 then
+	 valSymbol = sym
+      else
+	 keySymbol = sym
+      end
+      nextToken = self:getToken( "" )
+      if nextToken.txt ~= "," then
+	 break
+      end
+   end
    self:checkToken( nextToken, "in" )
 
    local exp = self:analyzeExp()
 
    local block = self:analyzeBlock( "foreach" )
 
-   local info = { varList = varList, exp = exp, block = block }
+   local info = { val = valSymbol, key = keySymbol, exp = exp, block = block }
    return self:createNode( nodeKindForeach, token.pos, info )
 end
 
 
 function TransUnit:analyzeRefType()
-   local firstToken = self:getToken( "not found type" )
+   local firstToken = self:getToken( "" )
    local token = firstToken
    local refFlag = false
    if token.txt == "&" then
       refFlag = true
-      token = self:getToken( "not found type" )
+      token = self:getToken( "" )
    end
    local mutFlag = false
    if token.txt == "mut" then
       mutFlag = true
-      token = self:getToken( "not found type" )
+      token = self:getToken( "" )
    end
    local name = self:checkSymbol( token )
    local arrayMode = "no"
-   token = self:getToken( "not found type" )
+   token = self:getToken( "" )
    if token.txt == '[' or token.txt == '[@' then
       if token.txt == '[' then
 	 arrayMode = "list"
       else
 	 arrayMode = "array"
       end
-      token = self:getToken( "not found array" )
+      token = self:getToken( "" )
       if token.txt ~= ']' then
 	 self:pushback()
 	 self:checkNextToken( ']' )
@@ -376,14 +383,14 @@ end
 
 function TransUnit:analyzeDeclFunc( fnToken )
    local argList = {}
-   local token = self:getToken( "not found fund name" )
+   local token = self:getToken( "" )
    local name = nil
    if token ~= "(" then
       name = self:checkSymbol( token )
       self:checkNextToken( "(" )
    end
    repeat
-      local argName = self:getToken( "illegal symbol" )
+      local argName = self:getToken( "" )
       if argName.txt == "..." then
 	 table.insert( argList, self:createNode( nodeKindDeclArgDDD,
 						 argName.pos, argName ) )
@@ -396,17 +403,17 @@ function TransUnit:analyzeDeclFunc( fnToken )
 				      { name = argName, argType = refType } )
 	 table.insert( argList, arg )
       end
-      token = self:getToken( "illegal fn syntax" )
+      token = self:getToken( "" )
    until token.txt ~= ","
 
    self:checkToken( token, ")" )
 
-   token = self:getToken( "illegal fn syntax" )
+   token = self:getToken( "" )
    local typeList = {}
    if token.txt == ":" then
       repeat
 	 table.insert( typeList, self:analyzeRefType() )
-	 token = self:getToken( "illegal fn syntax" )
+	 token = self:getToken( "" )
       until token.txt ~= ","
    end
 
@@ -434,10 +441,10 @@ function TransUnit:analyzeDeclVar( letToken )
    local token
    repeat
       local varName = self:getSymbolToken()
-      token = self:getToken( "illegal let syntax" )
+      token = self:getToken( "" )
       if token.txt == ":" then
 	 local refType = self:analyzeRefType()
-	 token = self:getToken( "illegal let syntax" )
+	 token = self:getToken( "" )
       end
       table.insert( varList, { name = varName, refType = refType } )
    until token.txt ~= ","
@@ -462,7 +469,7 @@ function TransUnit:analyzeExpList()
 	 firstExp = exp
       end
       table.insert( expList, exp )
-      local token = self:getToken( "not found expList" )
+      local token = self:getToken( "" )
    until token.txt ~= ","
 
    self:pushback()
@@ -471,7 +478,7 @@ function TransUnit:analyzeExpList()
 end
 
 function TransUnit:analyzeListConst( token )
-   local nextToken = self:getToken( "not found next token" )
+   local nextToken = self:getToken( "" )
    local expList
    if nextToken.txt ~= "]" then
       self:pushback()
@@ -499,7 +506,7 @@ function TransUnit:analyzeMapConst( token )
       self:checkNextToken( ":" )
       local val = self:analyzeExp()
       map[ key ] = val
-      nextToken = self:getToken( "illegal map constructor" )
+      nextToken = self:getToken( "" )
    until nextToken.txt ~= ","
 
    self:checkToken( nextToken, "}" )
@@ -524,13 +531,13 @@ function TransUnit:analyzeExpSymbol( firstToken, token, fieldFlag, prefixExp )
       exp = self:createNode( nodeKindExpRef, firstToken.pos, token )
    end
 
-   local nextToken = self:getToken( "illegal syntax" )
+   local nextToken = self:getToken( "" )
    repeat
       local matchFlag = false
       if nextToken.txt == "[" then
 	 matchFlag = true
 	 exp = self:analyzeExpRefItem( nextToken, exp )
-	 nextToken = self:getToken( "illegal syntax" )
+	 nextToken = self:getToken( "" )
       end
       if nextToken.txt == "(" then
 	 matchFlag = true
@@ -539,13 +546,13 @@ function TransUnit:analyzeExpSymbol( firstToken, token, fieldFlag, prefixExp )
 	 local info = { func = exp, argList = expList }
 
 	 exp = self:createNode( nodeKindExpCall, token.pos, info )
-	 nextToken = self:getToken( "illegal syntax" )
+	 nextToken = self:getToken( "" )
       end
    until not matchFlag
 
    if nextToken.txt == "." then
       return self:analyzeExpSymbol(
-	 firstToken, self:getToken( "illegal field" ), true, exp )
+	 firstToken, self:getToken( "" ), true, exp )
    end
    
    self:pushback()
@@ -554,7 +561,7 @@ end
 
 
 function TransUnit:analyzeExp( skipOp2Flag )
-   local token = self:getToken( "not found exp" )
+   local token = self:getToken( "" )
 
    if token.txt == "..." then
       return self:createNode( nodeKindExpDDD, token.pos, token )
@@ -582,8 +589,19 @@ function TransUnit:analyzeExp( skipOp2Flag )
       exp = self:createNode( nodeKindLiteralChar, token.pos,
 			     { token = token, num = token.txt:byte( 2 ) } )
    elseif token.kind == Parser.kind.Str then
-      exp = self:createNode( nodeKindLiteralString, token.pos, token )
-      local nextToken = self:getToken( "illegal syntax" )
+      local nextToken = self:getToken( "" )
+      local formatArgList = {}
+      if nextToken.txt == "(" then
+	 repeat
+	    local arg = self:analyzeExp()
+	    table.insert( formatArgList, arg )
+	    nextToken = self:getToken( "" )
+	 until nextToken.txt ~= ","
+	 self:checkToken( nextToken, ")" )
+	 nextToken = self:getToken( "" )
+      end
+      exp = self:createNode( nodeKindLiteralString, token.pos,
+			     { token = token, argList = formatArgList } )
       if nextToken.txt == "[" then
 	 exp = self:analyzeExpRefItem( nextToken, exp )
       else
@@ -609,7 +627,7 @@ function TransUnit:analyzeExp( skipOp2Flag )
 end
 
 function TransUnit:analyzeExpOp2( token, exp )
-   local nextToken = self:getToken( "not found next token" )
+   local nextToken = self:getToken( "" )
    while true do
       if nextToken.txt == "@" then
 	 local castType = self:analyzeRefType()
@@ -627,7 +645,7 @@ function TransUnit:analyzeExpOp2( token, exp )
 	 self:pushback()
 	 return exp
       end
-      nextToken = self:getToken( "not found next token" )
+      nextToken = self:getToken( "" )
    end
 end
 

@@ -20,6 +20,17 @@ else
       ast:filter( require( 'primal.dumpNode' ), "", 0 )
    elseif mode == "lua" then
       ast:filter( require( 'primal.convLua' ), 0 )
+   elseif mode == "exe" then
+      local convLua = require( 'primal.convLua' )
+
+      local stream = { txt = "" }
+      stream.write = function( self, txt )
+	 self.txt = self.txt .. txt
+      end
+
+      ast:filter( convLua:new( stream ) , 0 )
+
+      load( stream.txt )()
    else
       print( "illegal mode" )
    end

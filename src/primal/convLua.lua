@@ -1,10 +1,16 @@
 local TransUnit = require( 'primal.TransUnit' )
+local Parser = require( 'primal.Parser' )
 
 local convLua = {}
 
 convLua.stream = io.stdout
 convLua.curLineNo = 1
 convLua.indent = 0
+
+function convLua:new( stream )
+   self.stream = stream
+   return self
+end
 
 function convLua:write( txt )
    if self.needIndent then
@@ -199,16 +205,14 @@ convLua[ TransUnit.nodeKind.Apply ] = function( self, node, baseIndent )
 end
 
 convLua[ TransUnit.nodeKind.Foreach ] = function( self, node, baseIndent )
-   self:write( "foreach " )
-   for index, var in ipairs( node.info.varList ) do
-      if index > 1 then
-	 self:write( ", " )
-      end
-      self:write( var.txt )
-   end
-   self:write( " in " )
+   self:write( "for " )
+   self:write( node.info.key and node.info.key.txt or "__index" )
+   self:write( ", " )
+   self:write( node.info.val.txt )
+
+   self:write( " in pairs( " )
    node.info.exp:filter( convLua, baseIndent )
-   self:write( " " )
+   self:write( " ) " )
    node.info.block:filter( convLua, baseIndent )
    self:write( "end" )
 end
@@ -256,10 +260,18 @@ convLua[ TransUnit.nodeKind.ExpRef ] = function( self, node, baseIndent )
 end
 
 convLua[ TransUnit.nodeKind.ExpRefItem ] = function( self, node, baseIndent )
-   node.info.val:filter( convLua, baseIndent )
-   self:write( "[" )
-   node.info.index:filter( convLua, baseIndent )
-   self:write( "]" )
+   if node.info.val.kind == TransUnit.nodeKind.LiteralString then
+      self:write( "string.byte( " )
+      node.info.val:filter( convLua, baseIndent )
+      self:write( ", " )
+      node.info.index:filter( convLua, baseIndent )
+      self:write( " )" )
+   else
+      node.info.val:filter( convLua, baseIndent )
+      self:write( "[" )
+      node.info.index:filter( convLua, baseIndent )
+      self:write( "]" )
+   end
 end
 
 convLua[ TransUnit.nodeKind.RefField ] = function( self, node, baseIndent )
@@ -317,11 +329,22 @@ convLua[ TransUnit.nodeKind.LiteralNum ] = function( self, node, baseIndent )
 end
 
 convLua[ TransUnit.nodeKind.LiteralString ] = function( self, node, baseIndent )
-   local txt = node.info.txt
+   local txt = node.info.token.txt
    if string.find( txt, '"""', 1, true ) then
       txt = "[==[" .. txt:sub( 3, -3 ) .. "]==]"
    end
-   self:write( txt )
+   if #node.info.argList > 0 then
+      self:write( string.format( "string.format( %s, ", txt ) )
+      for index, val in ipairs( node.info.argList ) do
+	 if index > 1 then
+	    self:write( ", " )
+	 end
+	 val:filter( convLua, baseIndent )
+      end
+      self:write( ")" )
+   else
+      self:write( txt )
+   end
 end
 
 convLua[ TransUnit.nodeKind.LiteralBool ] = function( self, node, baseIndent )
