@@ -184,8 +184,21 @@ function TransUnit:getTokenNoErr()
       return self.currentToken
    end
 
-   local token = self.parser:getToken()
+   local commentList = {}
+   local token
+   while true do
+      token = self.parser:getToken()
+      if not token then
+	 break
+      end
+      if token.kind ~= Parser.kind.Cmnt then
+	 break
+      end
+      table.insert( commentList, token )
+   end
+
    if token then
+      token.commentList = commentList
       self.currentToken = token
    end
    return token
@@ -470,10 +483,16 @@ function TransUnit:analyzeMapConst( token )
    local nextToken
    local map = {}
    repeat
+      nextToken = self:getToken( "" )
+      if nextToken.txt == "}" then
+	 break
+      end
+      self:pushback()
+      
       local key = self:analyzeExp()
       self:checkNextToken( ":" )
       local val = self:analyzeExp()
-      map[ key ] = val  
+      map[ key ] = val
       nextToken = self:getToken( "illegal map constructor" )
    until nextToken.txt ~= ","
 
