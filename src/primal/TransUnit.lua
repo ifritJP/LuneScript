@@ -18,7 +18,6 @@ local function regKind( name )
 end
 
 local nodeKindRoot = regKind( 'Root' )
-local nodeKindComment = regKind( 'Comment' )
 local nodeKindRefType = regKind( 'RefType' )
 local nodeKindIf = regKind( 'If' )
 local nodeKindWhile = regKind( 'While' )
@@ -140,8 +139,6 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 elseif token.txt == "break" then
 	    self:checkNextToken( ";" )
 	    statement = self:createNode( nodeKindBreak, token.pos, nil )
-	 elseif token.kind == Parser.kind.Cmnt then
-	    statement = self:createNode( nodeKindComment, token.pos, token )
 	 else
 	    self:pushback()
 	    local exp = self:analyzeExp()

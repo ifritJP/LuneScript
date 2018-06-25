@@ -183,10 +183,6 @@ dumpNode[ TransUnit.nodeKind.Return ] = function( node, prefix, depth )
    node.info:filter( dumpNode, prefix .. "  ", depth + 1 )
 end
 
-dumpNode[ TransUnit.nodeKind.Comment ] = function( node, prefix, depth )
-   dump( prefix, depth, node, node.info.txt )
-end
-
 dumpNode[ TransUnit.nodeKind.LiteralList ] = function( node, prefix, depth )
    dump( prefix, depth, node, "[]" )
 
