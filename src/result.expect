@@ -1,14 +1,292 @@
 make[1]: Entering directory 'NDIR'
-lua5.3 base.lua test/test.lns
-EOF
-: Root 
-  : Comment '''[jioejiopjiofjeioajeji
+lua5.3 base.lua test/test.lns token
+0	3	1	'''[jioejiopjiofjeioajeji
 jfeioajfeioaji
 '''
-  : Comment ''hogehogheo"""fjiojioe"""
-  : Comment ''
-  : Comment '''fjioeajio
+0	4	1	''hogehogheo"""fjiojioe"""
+0	5	1	''
+0	7	1	'''fjioeajio
 '''
+1	8	1	"""'''jfiojeiojaoe''"""
+5	8	24	;
+6	9	1	let
+4	9	5	val1
+5	9	10	:
+8	9	12	int
+5	9	15	,
+4	9	17	val2
+5	9	22	:
+8	9	24	real
+7	9	29	=
+3	9	32	?a
+5	9	33	,
+2	9	35	1.0
+5	9	38	;
+6	10	1	let
+4	10	5	val3
+5	10	10	:
+8	10	12	real
+5	10	16	,
+4	10	18	val4
+5	10	22	,
+4	10	24	val5
+5	10	29	:
+8	10	31	real
+7	10	36	=
+2	10	38	0x1
+5	10	41	,
+2	10	43	1.0e-2
+5	10	49	,
+2	10	51	0.1e+3
+5	10	57	;
+6	11	1	let
+4	11	5	val6
+5	11	10	:
+8	11	12	int
+5	11	15	[
+5	11	16	]
+7	11	18	=
+5	11	20	[
+2	12	5	1
+5	12	6	,
+2	12	8	2
+5	12	9	,
+2	12	11	3
+5	13	1	]
+5	13	2	;
+6	14	1	let
+4	14	5	val7
+5	14	10	:
+8	14	12	int
+5	14	15	[@
+5	14	17	]
+7	14	19	=
+5	14	21	[@
+2	14	23	1
+5	14	24	,
+2	14	25	2
+5	14	26	,
+2	14	27	3
+5	14	28	]
+5	14	29	;
+6	15	1	let
+4	15	5	val8
+5	15	10	:
+4	15	12	string
+7	15	19	=
+1	15	21	"1234\""
+5	15	29	;
+6	16	1	let
+4	16	5	val9
+5	16	9	,
+4	16	11	val10
+7	16	17	=
+1	16	19	"'1234'"
+5	16	27	,
+1	16	29	""":a23"""
+5	16	39	;
+6	17	1	let
+4	17	5	val11
+7	17	11	=
+5	17	13	{
+1	18	5	"A"
+5	18	8	:
+5	18	10	{
+1	18	12	"AA"
+5	18	16	:
+2	18	18	1
+5	18	20	}
+5	18	21	,
+1	19	5	"B"
+5	19	8	:
+5	19	10	{
+1	19	12	"BB"
+5	19	16	:
+2	19	18	2
+5	19	19	,
+1	20	5	"CC"
+5	20	9	:
+2	20	11	3
+5	20	12	,
+5	21	5	}
+5	21	6	,
+1	22	5	"D"
+5	22	8	:
+5	22	10	[
+2	22	12	1
+5	22	13	,
+2	22	15	2
+5	22	16	,
+2	22	18	3
+5	22	20	]
+5	23	1	}
+5	23	2	;
+4	24	1	val11
+5	24	6	.
+4	24	7	A
+5	24	8	.
+4	24	9	AA
+7	24	12	=
+2	24	14	3
+5	24	15	;
+6	25	1	pub
+6	25	5	fn
+4	25	8	plus1_2
+5	25	15	(
+4	25	17	val1
+5	25	21	:
+8	25	23	int
+5	25	26	,
+4	26	3	val2
+5	26	7	:
+8	26	9	int
+5	26	12	,
+4	26	14	val3
+5	26	18	:
+8	26	20	int
+5	26	23	[
+5	26	24	]
+5	26	25	,
+4	26	27	val4
+5	26	31	:
+7	26	33	&
+6	26	34	mut
+8	26	38	int
+5	26	42	)
+5	26	44	:
+8	26	46	int
+5	26	49	,
+8	26	51	int
+5	27	1	{
+4	28	5	val1
+7	28	10	=
+7	28	12	-
+2	28	13	10
+7	28	15	@
+8	28	16	int
+7	28	20	+
+4	28	22	val2
+7	28	27	+
+4	28	29	val3
+5	28	33	[
+2	28	34	1
+5	28	35	]
+5	28	36	;
+6	29	5	let
+4	29	9	sub
+5	29	12	:
+8	29	14	stem
+7	29	19	=
+5	29	21	{
+0	29	23	''  aa
+1	30	2	"z"
+5	30	5	:
+5	30	7	{
+1	31	6	"a"
+5	31	9	:
+2	31	11	1
+5	32	2	}
+5	33	5	}
+5	33	6	;
+5	34	5	{
+5	36	5	}
+4	38	5	val2
+7	38	10	=
+4	38	12	val3
+5	38	16	;
+4	39	5	val4
+7	39	10	=
+4	39	12	val6
+5	39	16	;
+6	40	5	if
+4	40	8	val10
+7	40	14	==
+1	40	17	""
+5	41	5	{
+6	42	2	while
+6	42	8	true
+5	42	13	{
+6	43	6	break
+5	43	11	;
+5	44	9	}
+5	45	5	}
+6	46	5	elseif
+4	46	12	val1
+5	46	17	{
+4	47	9	repeat
+5	47	16	{
+5	48	9	}
+6	48	11	false
+5	48	16	;
+5	49	5	}
+6	50	5	elseif
+4	50	12	val1
+5	50	17	{
+6	51	9	for
+4	51	13	index
+7	51	19	=
+2	51	21	1
+5	51	22	,
+2	51	24	10
+5	51	26	,
+2	51	28	1
+5	51	30	{
+5	52	9	}
+5	53	5	}
+6	54	5	else
+5	54	10	{
+4	55	9	apply
+4	55	15	val
+5	55	18	,
+4	55	20	sub
+4	55	24	of
+4	55	27	pairs
+5	55	32	(
+4	55	34	val7
+5	55	39	)
+5	55	41	{
+4	56	6	foreach
+4	56	14	item
+5	56	18	,
+4	56	20	index
+6	56	26	in
+4	56	29	val6
+5	56	34	{
+5	57	6	}
+5	58	9	}
+5	59	5	}
+6	60	5	return
+4	60	12	val1
+7	60	17	+
+2	60	19	1
+5	60	20	,
+4	60	22	val2
+7	60	27	+
+2	60	29	1
+5	60	30	;
+5	61	1	}
+6	62	1	pub
+6	62	5	fn
+4	62	8	plus2
+5	62	13	(
+4	62	15	val1
+5	62	19	:
+8	62	21	int
+5	62	24	,
+5	62	26	...
+5	62	30	)
+5	62	32	:
+8	62	34	int
+5	62	38	{
+4	63	5	print
+5	63	10	(
+5	63	12	...
+5	63	16	)
+5	63	17	;
+5	64	1	}
+lua5.3 base.lua test/test.lns ast
+EOF
+: Root 
   : StmtExp 
     : LiteralString """'''jfiojeiojaoe''"""
   : DeclVar  val1 val2
@@ -23,6 +301,10 @@ jfeioajfeioaji
   : DeclVar  val6
     : ExpList 
       : LiteralList []
+        : ExpList 
+          : LiteralNum 1(1)
+          : LiteralNum 2(2)
+          : LiteralNum 3(3)
   : DeclVar  val7
     : ExpList 
       : LiteralArray [@]
@@ -40,14 +322,22 @@ jfeioajfeioaji
   : DeclVar  val11
     : ExpList 
       : LiteralMap 
-        : LiteralString "A"
-        : LiteralMap 
-          : LiteralString "AA"
-          : LiteralNum 1(1)
         : LiteralString "B"
         : LiteralMap 
           : LiteralString "BB"
           : LiteralNum 2(2)
+          : LiteralString "CC"
+          : LiteralNum 3(3)
+        : LiteralString "D"
+        : LiteralList []
+          : ExpList 
+            : LiteralNum 1(1)
+            : LiteralNum 2(2)
+            : LiteralNum 3(3)
+        : LiteralString "A"
+        : LiteralMap 
+          : LiteralString "AA"
+          : LiteralNum 1(1)
   : StmtExp 
     : ExpOp2 =
       : RefField AA
@@ -69,60 +359,67 @@ jfeioajfeioaji
       : StmtExp 
         : ExpOp2 =
           : ExpRef val1
-          : ExpOp1 -
-            : ExpOp2 @
-              : LiteralNum 10(10)
-              : ExpOp2 +
-                : ExpRef int
-                : ExpOp2 +
-                  : ExpRef val2
-                  : ExpRefItem seq[exp]
-                    : ExpRef val3
-                    : LiteralNum 1(1)
+          : ExpOp2 +
+            : ExpCast 
+              : ExpOp1 -
+                : LiteralNum 10(10)
+              : RefType int
+            : ExpOp2 +
+              : ExpRef val2
+              : ExpRefItem seq[exp]
+                : ExpRef val3
+                : LiteralNum 1(1)
+      : DeclVar  sub
+        : ExpList 
+          : LiteralMap 
+            : LiteralString "z"
+            : LiteralMap 
+              : LiteralString "a"
+              : LiteralNum 1(1)
       : Block 
-        : StmtExp 
-          : ExpOp2 =
-            : ExpRef val2
-            : ExpRef val3
-        : StmtExp 
-          : ExpOp2 =
-            : ExpRef val4
-            : ExpRef val6
-        : If 
-        if
-          : ExpOp2 ==
-            : ExpRef val10
-            : LiteralString ""
-          : Block 
-            : While 
-              : LiteralBool true
-              : Block 
-                : Break 
-        elseif
-          : ExpRef val1
-          : Block 
-            : Repeat 
-              : Block 
-              : LiteralBool false
-        elseif
-          : ExpRef val1
-          : Block 
-            : For nil
-              : LiteralNum 1(1)
-              : LiteralNum 10(10)
-              : LiteralNum 1(1)
-              : Block 
-        else
-          : Block 
-            : Apply val sub 
-              : ExpCall 
-                : ExpRef pairs
-                : ExpList 
-                  : ExpRef val7
-              : Block 
-                : Foreach item index 
-                  : ExpRef val6
-                  : Block 
+      : StmtExp 
+        : ExpOp2 =
+          : ExpRef val2
+          : ExpRef val3
+      : StmtExp 
+        : ExpOp2 =
+          : ExpRef val4
+          : ExpRef val6
+      : If 
+      if
+        : ExpOp2 ==
+          : ExpRef val10
+          : LiteralString ""
+        : Block 
+          : While 
+            : LiteralBool true
+            : Block 
+              : Break 
+      elseif
+        : ExpRef val1
+        : Block 
+          : Repeat 
+            : Block 
+            : LiteralBool false
+      elseif
+        : ExpRef val1
+        : Block 
+          : For nil
+            : LiteralNum 1(1)
+            : LiteralNum 10(10)
+            : LiteralNum 1(1)
+            : Block 
+      else
+        : Block 
+          : Apply val sub 
+            : ExpCall 
+              : ExpRef pairs
+              : ExpList 
+                : ExpRef val7
+            : Block 
+              : Foreach item index 
+                : ExpRef val6
+                : Block 
       : Return 
         : ExpList 
           : ExpOp2 +
@@ -142,4 +439,43 @@ jfeioajfeioaji
           : ExpRef print
           : ExpList 
             : ExpDDD ...
+lua5.3 base.lua test/test.lns lua
+EOF
+[==["'''jfiojeiojaoe''"]==]
+let val1, val2 = 97, 1
+let val3, val4, val5 = 1, 0.01, 100
+let val6 = {1, 2, 3}
+let val7 = {1, 2, 3}
+let val8 = "1234\""
+let val9, val10 = "'1234'", [==[":a23"]==]
+let val11 = {["D"] = {1, 2, 3}, ["B"] = {["BB"] = 2, ["CC"] = 3}, ["A"] = {["AA"] = 1}}
+val11.A.AA=3
+function plus1_2( val1: int, val2: int, val3: int[], val4: &mut int)
+    val1=-10+val2+val3[1]
+    let sub = {["z"] = {["a"] = 1}}
+    do
+    end
+    val2=val3
+    val4=val6
+    if val10=="" then
+        while true do
+            break
+        end
+    elseif val1 then
+        repeat 
+        until false
+    elseif val1 then
+        for index = 1, 10, 1 do
+        end
+    else 
+        for val, sub in pairs(val7) do
+            foreach item, index in val6 do
+            end
+        end
+    end
+    return val1+1, val2+1
+end
+function plus2( val1: int, ...)
+    print(...)
+end
 make[1]: Leaving directory 'NDIR'
