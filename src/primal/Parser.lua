@@ -14,13 +14,15 @@ end
 
 local kindCmnt = regKind( "Cmnt" )
 local kindStr = regKind( "Str" )
-local kindNum = regKind( "Num" )
+local kindInt = regKind( "Int" )
+local kindReal = regKind( "Real" )
 local kindChar = regKind( "Char" )
 local kindSymb = regKind( "Symb" )
 local kindDlmt = regKind( "Dlmt" )
 local kindKywd = regKind( "Kywd" )
 local kindOpe = regKind( "Ope" )
 local kindType = regKind( "Type" )
+local kindEof = regKind( "EOF" )
 
 
 local op2Set = {}
@@ -74,7 +76,6 @@ local function createReserveInfo( luaMode )
    keywordSet[ "nil" ] = true
    keywordSet[ "true" ] = true
    keywordSet[ "false" ] = true
-   keywordSet[ "self" ] = true
 
    if luaMode then
       keywordSet[ "end" ] = true
@@ -231,15 +232,17 @@ function ParserMtd:parse()
 
 	 @param token 文字列
 	 @param startIndex token 内の検索開始位置。 この位置から数値表現が始まる。
-	 @return 数値表現の終了位置
+	 @return 数値表現の終了位置, 整数かどうか
       ]]
       local function analyzeNumber( token, startIndex )
 	 local nonNumIndex = token:find( '[^%d]', startIndex )
 	 if not nonNumIndex then
-	    return #token
+	    return #token, true
 	 end
+	 local intFlag = true
 	 local nonNumChar = token:byte( nonNumIndex )
 	 if nonNumChar == 46 then -- .
+	    intFlag = false
 	    nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
 	    nonNumChar = token:byte( nonNumIndex )
 	 end
@@ -248,6 +251,7 @@ function ParserMtd:parse()
 	    nonNumChar = token:byte( nonNumIndex )
 	 end
 	 if nonNumChar == 101 or nonNumChar == 69 then -- E or e
+	    intFlag = false
 	    local nextChar = token:byte( nonNumIndex + 1 )
 	    if nextChar == 45 or nextChar == 43 then -- '-' or '+'
 	       nonNumIndex = token:find( '[^%d]', nonNumIndex + 2 )
@@ -256,9 +260,9 @@ function ParserMtd:parse()
 	    end
 	 end
 	 if not nonNumIndex then
-	    return #token
+	    return #token, intFlag
 	 end
-	 return nonNumIndex - 1
+	 return nonNumIndex - 1, intFlag
       end
       
       if kind == kindSymb then
@@ -276,9 +280,10 @@ function ParserMtd:parse()
 	    while true do
 	       if token:find( '^[%d]', startIndex ) then
 		  -- 数値の場合
-		  local endIndex = analyzeNumber( token, startIndex )
-		  local info = createInfo( kindNum, token:sub( startIndex, endIndex ),
-					   columnIndex + startIndex )
+		  local endIndex, intFlag = analyzeNumber( token, startIndex )
+		  local info = createInfo(
+		     intFlag and kindInt or kindReal,
+		     token:sub( startIndex, endIndex ), columnIndex + startIndex )
 		  table.insert( list, info )
 		  startIndex = endIndex + 1
 	       else
@@ -346,7 +351,7 @@ function ParserMtd:parse()
    -- 領域をカテゴライズする
    while true do
       local syncIndexFlag = true
-      local index = string.find( rawLine, [[[%-"%'%[].]], searchIndex )
+      local index = string.find( rawLine, [[[%-"%'%`%[].]], searchIndex )
 
       if not index then
 	 addVal( kindSymb, rawLine:sub( startIndex ), startIndex )
@@ -363,19 +368,15 @@ function ParserMtd:parse()
 	 if startIndex < index then
 	    addVal( kindSymb, rawLine:sub( startIndex, index - 1 ), startIndex )
 	 end
-	 if findChar == 39 then -- '''
-	    if nextChar == 39 then -- '''
-	       if string.byte( rawLine, index + 2 ) == 39 then
-		  -- 複数行コメントの場合 
-		  local comment, nextIndex = multiComment( index + 3, "'''" )
-		  addVal( kindCmnt, "'''" .. comment, index )
-		  searchIndex = nextIndex
-	       else
-		  addVal( kindCmnt, rawLine:sub( index ), index )
-		  searchIndex = #rawLine + 1
-	       end
+	 if findChar == 39 and nextChar == 39 then -- "''"
+	    if string.byte( rawLine, index + 2 ) == 39 then
+	       -- 複数行コメントの場合
+	       local comment, nextIndex = multiComment( index + 3, "'''" )
+	       addVal( kindCmnt, "'''" .. comment, index )
+	       searchIndex = nextIndex
 	    else
-	       error( "illegal syntax:", rawLine )
+	       addVal( kindCmnt, rawLine:sub( index ), index )
+	       searchIndex = #rawLine + 1
 	    end
 	 elseif findChar == 91 then -- '['
 	    if nextChar == 64 then -- '@'
@@ -385,30 +386,39 @@ function ParserMtd:parse()
 	       addVal( kindDlmt, "[", index )
 	       searchIndex = index + 1
 	    end
-	 elseif findChar == 34 then -- '"'
+	 elseif findChar == 34 or findChar == 39 then -- '"' or "'"
 	    -- 文字列の場合
-	    if nextChar == 34 and string.byte( rawLine, index + 2 ) == 34 then -- '"""'
-	       -- 複数行文字列の場合
-	       local str, nextIndex = multiComment( index + 3, '"""' )
-	       addVal( kindStr, '"""' .. str, index )
-	       searchIndex = nextIndex
-	    else
-	       local workIndex = index + 1
-	       local pattern = '["\\]'
-	       while true do
-		  local endIndex = string.find( rawLine, pattern, workIndex )
-		  if not endIndex then
-		     error( "illegal string:", rawLine )
-		  end
-		  if string.byte( rawLine, endIndex ) == findChar then -- '"'
-		     addVal( kindStr, rawLine:sub( index, endIndex ), index )
-		     searchIndex = endIndex + 1
-		     break
-		  else -- '\'
-		     workIndex = workIndex + 2
-		  end
+	    local workIndex = index + 1
+	    local pattern = '["\'\\]'
+	    while true do
+	       local endIndex = string.find( rawLine, pattern, workIndex )
+	       if not endIndex then
+		  error( string.format( "illegal string: %d: %s", index, rawLine ) )
+	       end
+	       local workChar = string.byte( rawLine, endIndex )
+	       if workChar == findChar then -- '"'
+		  addVal( kindStr, rawLine:sub( index, endIndex ), index )
+		  searchIndex = endIndex + 1
+		  break
+	       elseif workChar == 92 then -- \\
+		  workIndex = workIndex + 2
+	       else
+		  workIndex = workIndex + 1
 	       end
 	    end
+	 elseif findChar == 96 then -- '`'
+	    if nextChar == findChar and
+	       string.byte( rawLine, index + 2 ) == 96
+	    then -- '```'
+	       -- 複数行文字列の場合
+	       local str, nextIndex = multiComment( index + 3, '```' )
+	       addVal( kindStr, '```' .. str, index )
+	       searchIndex = nextIndex
+	    else
+	       addVal( kindDlmt, '`', index )
+	    end
+	 else
+	    error( "illegal" )
 	 end
       end
       if syncIndexFlag then
@@ -417,9 +427,10 @@ function ParserMtd:parse()
    end
 end
 
+
 function ParserMtd:getToken()
    if not self.lineTokenList then
-      return nil
+      return 
    end
    if #self.lineTokenList < self.pos then
       self.pos = 1
@@ -436,6 +447,11 @@ function ParserMtd:getToken()
    self.pos = self.pos + 1
 
    return token
+end
+
+local eofToken = { kind = kindEof, txt = "", pos = { lineNo = 0, column = 0 } }
+function Parser:getEofToken()
+   return eofToken
 end
 
 return Parser

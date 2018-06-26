@@ -1,18 +1,20 @@
 local TransUnit = require( 'primal.TransUnit' )
 local Parser = require( 'primal.Parser' )
 
-local convLua = {}
+local filterObj = {}
 
-convLua.stream = io.stdout
-convLua.curLineNo = 1
-convLua.indent = 0
+filterObj.stream = io.stdout
+filterObj.curLineNo = 1
+filterObj.indent = 0
 
-function convLua:new( stream )
+local stepIndent = 2
+
+function filterObj:new( stream )
    self.stream = stream
    return self
 end
 
-function convLua:write( txt )
+function filterObj:write( txt )
    if self.needIndent then
       self.stream:write( string.rep( " ", self.indent ) )
       self.needIndent = false
@@ -24,24 +26,29 @@ function convLua:write( txt )
    self.stream:write( txt )
 end
 
-function convLua:setIndent( indent )
+function filterObj:setIndent( indent )
    self.indent = indent
 end
 
-function convLua:writeln( txt, baseIndent )
+function filterObj:writeln( txt, baseIndent )
    self:write( txt )
    self:write( "\n" )
    self.needIndent = true
    self.indent = baseIndent
 end
 
-convLua[ TransUnit.nodeKind.Root ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.None ] = function( self, node, parent, baseIndent )
+   self:writeln( "-- none", baseIndent );
+end
+
+
+filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent )
    for index, child in ipairs( node.info.childlen ) do
-      child:filter( convLua, baseIndent )
+      child:filter( filterObj, node, baseIndent )
       self:writeln( "", baseIndent )
    end
 end
-convLua[ TransUnit.nodeKind.Block ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.Block ] = function( self, node, parent, baseIndent )
    local word = ""
    if node.info.kind == "if" or node.info.kind == "elseif" then
       word = "then"
@@ -62,10 +69,10 @@ convLua[ TransUnit.nodeKind.Block ] = function( self, node, baseIndent )
    elseif node.info.kind == "{" then
       word = "do"
    end
-   self:writeln( word, baseIndent + 4 )
+   self:writeln( word, baseIndent + stepIndent )
    for index, statement in ipairs( node.info.stmtList ) do
-      statement:filter( convLua, baseIndent + 4 )
-      self:writeln( "", baseIndent + 4 )
+      statement:filter( filterObj, node, baseIndent + stepIndent )
+      self:writeln( "", baseIndent + stepIndent )
    end
 
    self:setIndent( baseIndent ) 
@@ -74,11 +81,78 @@ convLua[ TransUnit.nodeKind.Block ] = function( self, node, baseIndent )
    end
 end
 
-convLua[ TransUnit.nodeKind.StmtExp ] = function( self, node, baseIndent )
-   node.info:filter( convLua, baseIndent )
+filterObj[ TransUnit.nodeKind.StmtExp ] = function( self, node, parent, baseIndent )
+   node.info:filter( filterObj, node, baseIndent )
 end
 
-convLua[ TransUnit.nodeKind.DeclVar ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.DeclClass ] = function( self, node, parent, baseIndent )
+   local className = node.info.name.txt
+   self:writeln( string.format( "local %s = {}", className ), baseIndent )
+   for index, field in ipairs( node.info.fieldList ) do
+      field:filter( filterObj, node, baseIndent )
+   end
+end
+
+filterObj[ TransUnit.nodeKind.DeclMember ] = function( self, node, parent, baseIndent )
+   -- dump( baseIndent, node, node.info.name.txt )
+   -- node.info.refType:filter( filterObj, prefix .. "  ", depth + 1 )
+end
+
+
+filterObj[ TransUnit.nodeKind.DeclConstr ] = function( self, node, parent, baseIndent )
+   local className = node.info.className.txt
+   self:write( string.format( "function %s:new( ", className ) )
+   
+   for index, arg in ipairs( node.info.argList ) do
+      if index > 1 then
+	 self:write( ", " )
+      end
+      arg:filter( filterObj, node, baseIndent )
+   end
+   self:writeln( ")", baseIndent + stepIndent )
+   self:writeln( "local obj = {}", baseIndent + stepIndent )
+   self:writeln( string.format( "setmetatable( obj, { __index = %s } )", className ),
+		 baseIndent + stepIndent )
+   self:writeln( "obj:__init()", baseIndent + stepIndent )
+   self:writeln( "return obj", baseIndent )
+   self:writeln( "end", baseIndent )
+
+   
+   -- for index, refType in ipairs( node.info.retTypeList ) do
+   --    if index > 1 then
+   -- 	 self:write( ", " )
+   --    end
+   --    refType:filter( filterObj, node, baseIndent )
+   -- end
+   self:write( string.format( "function %s:__init() ", className ) )
+   node.info.body:filter( filterObj, node, baseIndent )
+   self:writeln( "end", baseIndent )
+end
+
+
+filterObj[ TransUnit.nodeKind.DeclMethod ] = function( self, node, parent, baseIndent )
+   self:write( string.format( "function %s:%s( ",
+			      node.info.className.txt, node.info.name.txt ) )
+
+   for index, arg in ipairs( node.info.argList ) do
+      if index > 1 then
+	 self:write( ", " )
+      end
+      arg:filter( filterObj, node, baseIndent )
+   end
+   self:write( ")", baseIndent )
+   -- for index, refType in ipairs( node.info.retTypeList ) do
+   --    if index > 1 then
+   -- 	 self:write( ", " )
+   --    end
+   --    refType:filter( filterObj, node, baseIndent )
+   -- end
+   node.info.body:filter( filterObj, node, baseIndent )
+   self:writeln( "end", baseIndent )
+end
+
+
+filterObj[ TransUnit.nodeKind.DeclVar ] = function( self, node, parent, baseIndent )
    self:write( "local " )
    
    local varName = ""
@@ -92,45 +166,46 @@ convLua[ TransUnit.nodeKind.DeclVar ] = function( self, node, baseIndent )
    self:write( " = " )
    
    if node.info.expList then
-      node.info.expList:filter( convLua, baseIndent )
+      node.info.expList:filter( filterObj, node, baseIndent )
    end
 end
 
-convLua[ TransUnit.nodeKind.DeclArg ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.DeclArg ] = function( self, node, parent, baseIndent )
    self:write( string.format( "%s ", node.info.name.txt ) )
 
-   -- node.info.argType:filter( convLua, baseIndent )
+   -- node.info.argType:filter( filterObj, node, baseIndent )
 end
 
-convLua[ TransUnit.nodeKind.DeclArgDDD ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.DeclArgDDD ] = function( self, node, parent, baseIndent )
    self:write( "..." )
 end
 
-convLua[ TransUnit.nodeKind.ExpDDD ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpDDD ] = function( self, node, parent, baseIndent )
    self:write( "..." )
 end
 
-convLua[ TransUnit.nodeKind.DeclFunc ] = function( self, node, baseIndent )
-   self:write( string.format( "function %s( ", node.info.name.txt ) )
+filterObj[ TransUnit.nodeKind.DeclFunc ] = function( self, node, parent, baseIndent )
+   local name = node.info.name
+   self:write( string.format( "function %s( ", name and name.txt or "" ) )
    
    for index, arg in ipairs( node.info.argList ) do
       if index > 1 then
 	 self:write( ", " )
       end
-      arg:filter( convLua, baseIndent )
+      arg:filter( filterObj, node, baseIndent )
    end
    self:write( ")", baseIndent )
    -- for index, refType in ipairs( node.info.retTypeList ) do
    --    if index > 1 then
    -- 	 self:write( ", " )
    --    end
-   --    refType:filter( convLua, baseIndent )
+   --    refType:filter( filterObj, node, baseIndent )
    -- end
-   node.info.body:filter( convLua, baseIndent )
+   node.info.body:filter( filterObj, node, baseIndent )
    self:write( "end" )
 end
 
-convLua[ TransUnit.nodeKind.RefType ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.RefType ] = function( self, node, parent, baseIndent )
    self:write(
       (node.info.refFlag and "&" or "") ..
 	 (node.info.mutFlag and "mut " or "") .. node.info.name.txt )
@@ -141,55 +216,55 @@ convLua[ TransUnit.nodeKind.RefType ] = function( self, node, baseIndent )
    end
 end
 
-convLua[ TransUnit.nodeKind.If ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.If ] = function( self, node, parent, baseIndent )
 
    for index, val in ipairs( node.info ) do
       if index == 1 then
 	 self:write( "if " )
-	 val.exp:filter( convLua, baseIndent )
+	 val.exp:filter( filterObj, node, baseIndent )
       elseif index ~= #node.info then
 	 self:write( "elseif " )
-	 val.exp:filter( convLua, baseIndent )
+	 val.exp:filter( filterObj, node, baseIndent )
       else
 	 self:write( "else" )
       end
       self:write( " " )
-      val.block:filter( convLua, baseIndent )
+      val.block:filter( filterObj, node, baseIndent )
    end
    self:write( "end" )
 end
 
-convLua[ TransUnit.nodeKind.While ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.While ] = function( self, node, parent, baseIndent )
    self:write( "while " )
 
-   node.info.exp:filter( convLua, baseIndent )
+   node.info.exp:filter( filterObj, node, baseIndent )
    self:write( " " )
-   node.info.block:filter( convLua, baseIndent )
+   node.info.block:filter( filterObj, node, baseIndent )
    self:write( "end" )
 end
 
-convLua[ TransUnit.nodeKind.Repeat ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.Repeat ] = function( self, node, parent, baseIndent )
    self:write( "repeat " )
-   node.info.block:filter( convLua, baseIndent )
+   node.info.block:filter( filterObj, node, baseIndent )
    self:write( "until " )
-   node.info.exp:filter( convLua, baseIndent )
+   node.info.exp:filter( filterObj, node, baseIndent )
 end
 
-convLua[ TransUnit.nodeKind.For ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.For ] = function( self, node, parent, baseIndent )
    self:write( string.format( "for %s = ", node.info.val.txt ) )
-   node.info.init:filter( convLua, baseIndent )
+   node.info.init:filter( filterObj, node, baseIndent )
    self:write( ", " )
-   node.info.to:filter( convLua, baseIndent )
+   node.info.to:filter( filterObj, node, baseIndent )
    if node.info.delta then
       self:write( ", " )
-      node.info.delta:filter( convLua, baseIndent )
+      node.info.delta:filter( filterObj, node, baseIndent )
    end
    self:write( " " )
-   node.info.block:filter( convLua, baseIndent )
+   node.info.block:filter( filterObj, node, baseIndent )
    self:write( "end" )
 end
 
-convLua[ TransUnit.nodeKind.Apply ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.Apply ] = function( self, node, parent, baseIndent )
    self:write( "for " )
    for index, var in ipairs( node.info.varList ) do
       if index > 1 then
@@ -198,104 +273,124 @@ convLua[ TransUnit.nodeKind.Apply ] = function( self, node, baseIndent )
       self:write( var.txt )
    end
    self:write( " in " )
-   node.info.exp:filter( convLua, baseIndent )
+   node.info.exp:filter( filterObj, node, baseIndent )
    self:write( " " )
-   node.info.block:filter( convLua, baseIndent )
+   node.info.block:filter( filterObj, node, baseIndent )
    self:write( "end" )
 end
 
-convLua[ TransUnit.nodeKind.Foreach ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.Foreach ] = function( self, node, parent, baseIndent )
    self:write( "for " )
    self:write( node.info.key and node.info.key.txt or "__index" )
    self:write( ", " )
    self:write( node.info.val.txt )
 
    self:write( " in pairs( " )
-   node.info.exp:filter( convLua, baseIndent )
+   node.info.exp:filter( filterObj, node, baseIndent )
    self:write( " ) " )
-   node.info.block:filter( convLua, baseIndent )
+   node.info.block:filter( filterObj, node, baseIndent )
    self:write( "end" )
 end
 
 
-convLua[ TransUnit.nodeKind.ExpCall ] = function( self, node, baseIndent )
-   node.info.func:filter( convLua, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpCall ] = function( self, node, parent, baseIndent )
+   node.info.func:filter( filterObj, node, baseIndent )
    self:write( "(" )
    if node.info.argList then
-      node.info.argList:filter( convLua, baseIndent )
+      node.info.argList:filter( filterObj, node, baseIndent )
    end
    self:write( ")" )
 end
 
 
 
-convLua[ TransUnit.nodeKind.ExpList ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpList ] = function( self, node, parent, baseIndent )
    for index, exp in ipairs( node.info ) do
       if index > 1 then
 	 self:write( ", " )
       end
-      exp:filter( convLua, baseIndent )
+      exp:filter( filterObj, node, baseIndent )
    end
 end
 
-convLua[ TransUnit.nodeKind.ExpOp1 ] = function( self, node, baseIndent )
-   self:write( node.info.op.txt )
-   node.info.exp:filter( convLua, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpOp1 ] = function( self, node, parent, baseIndent )
+   local op = node.info.op.txt
+   if op == "not" then
+      op = op .. " "
+   end
+   self:write( op )
+   node.info.exp:filter( filterObj, node, baseIndent )
 end
 
-convLua[ TransUnit.nodeKind.ExpCast ] = function( self, node, baseIndent )
-   node.info.exp:filter( convLua, baseIndent )
-   -- node.info.castType:filter( convLua, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpCast ] = function( self, node, parent, baseIndent )
+   node.info.exp:filter( filterObj, node, baseIndent )
+   -- node.info.castType:filter( filterObj, node, baseIndent )
 end
 
 
-convLua[ TransUnit.nodeKind.ExpOp2 ] = function( self, node, baseIndent )
-   node.info.exp1:filter( convLua, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpParen ] = function( self, node, prefix, depth )
+   self:write( "(" )
+   node.info:filter( filterObj, node, baseIndent )
+   self:write( ")" )
+end
 
-   self:write( node.info.op.txt )
+filterObj[ TransUnit.nodeKind.ExpOp2 ] = function( self, node, parent, baseIndent )
+   node.info.exp1:filter( filterObj, node, baseIndent )
+
+   self:write( " " .. node.info.op.txt .. " " )
    
-   node.info.exp2:filter( convLua, baseIndent )
+   node.info.exp2:filter( filterObj, node, baseIndent )
 end
 
-convLua[ TransUnit.nodeKind.ExpRef ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpRef ] = function( self, node, parent, baseIndent )
    self:write( node.info.txt )
 end
 
-convLua[ TransUnit.nodeKind.ExpRefItem ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.ExpRefItem ] = function( self, node, parent, baseIndent )
    if node.info.val.kind == TransUnit.nodeKind.LiteralString then
       self:write( "string.byte( " )
-      node.info.val:filter( convLua, baseIndent )
+      node.info.val:filter( filterObj, node, baseIndent )
       self:write( ", " )
-      node.info.index:filter( convLua, baseIndent )
+      node.info.index:filter( filterObj, node, baseIndent )
       self:write( " )" )
    else
-      node.info.val:filter( convLua, baseIndent )
+      node.info.val:filter( filterObj, node, baseIndent )
       self:write( "[" )
-      node.info.index:filter( convLua, baseIndent )
+      node.info.index:filter( filterObj, node, baseIndent )
       self:write( "]" )
    end
 end
 
-convLua[ TransUnit.nodeKind.RefField ] = function( self, node, baseIndent )
-   node.info.prefix:filter( convLua, baseIndent )
-   self:write( "." .. node.info.field.txt )
+filterObj[ TransUnit.nodeKind.RefField ] = function( self, node, parent, baseIndent )
+   node.info.prefix:filter( filterObj, node, baseIndent )
+   local delimit = "."
+   if parent.kind == TransUnit.nodeKind.ExpCall then
+      if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and
+	 node.info.prefix.info.txt == "string"
+      then
+	 delimit = "."
+      else
+	 delimit = ":"
+      end
+   end
+   self:write( delimit .. node.info.field.txt )
 end
 
-convLua[ TransUnit.nodeKind.Return ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.Return ] = function( self, node, parent, baseIndent )
    self:write( "return " )
 
-   node.info:filter( convLua, baseIndent )
+   node.info:filter( filterObj, node, baseIndent )
 end
 
-convLua[ TransUnit.nodeKind.LiteralList ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.LiteralList ] = function( self, node, parent, baseIndent )
    self:write( "{" )
 
-   node.info:filter( convLua, baseIndent )
+   node.info:filter( filterObj, node, baseIndent )
 
    self:write( "}" )
 end
 
-convLua[ TransUnit.nodeKind.LiteralMap ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.LiteralMap ] = function( self, node, parent, baseIndent )
    self:write( "{" )
    local index = 1
    for key, val in pairs( node.info ) do
@@ -303,9 +398,9 @@ convLua[ TransUnit.nodeKind.LiteralMap ] = function( self, node, baseIndent )
 	 self:write( ", " )
       end
       self:write( "[" )
-      key:filter( convLua, baseIndent )
+      key:filter( filterObj, node, baseIndent )
       self:write( "] = " )
-      val:filter( convLua, baseIndent )
+      val:filter( filterObj, node, baseIndent )
       index = index + 1
    end
 
@@ -313,26 +408,30 @@ convLua[ TransUnit.nodeKind.LiteralMap ] = function( self, node, baseIndent )
 end
 
 
-convLua[ TransUnit.nodeKind.LiteralArray ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.LiteralArray ] = function( self, node, parent, baseIndent )
    self:write( "{" )
 
-   node.info:filter( convLua, baseIndent )
+   node.info:filter( filterObj, node, baseIndent )
 
    self:write( "}" )
 end
 
 
-convLua[ TransUnit.nodeKind.LiteralChar ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.LiteralChar ] = function( self, node, parent, baseIndent )
    self:write( string.format( "%g", node.info.num ) )
 end
 
-convLua[ TransUnit.nodeKind.LiteralNum ] = function( self, node, baseIndent )
-   self:write( string.format( "%g", node.info.num ) )
+filterObj[ TransUnit.nodeKind.LiteralInt ] = function( self, node, parent, baseIndent )
+   self:write( string.format( "%d", node.info.num ) )
 end
 
-convLua[ TransUnit.nodeKind.LiteralString ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.LiteralReal ] = function( self, node, parent, baseIndent )
+   self:write( string.format( "%s", node.info.num ) )
+end
+
+filterObj[ TransUnit.nodeKind.LiteralString ] = function( self, node, parent, baseIndent )
    local txt = node.info.token.txt
-   if string.find( txt, '"""', 1, true ) then
+   if string.find( txt, '```', 1, true ) then
       txt = "[==[" .. txt:sub( 3, -3 ) .. "]==]"
    end
    if #node.info.argList > 0 then
@@ -341,7 +440,7 @@ convLua[ TransUnit.nodeKind.LiteralString ] = function( self, node, baseIndent )
 	 if index > 1 then
 	    self:write( ", " )
 	 end
-	 val:filter( convLua, baseIndent )
+	 val:filter( filterObj, node, baseIndent )
       end
       self:write( ")" )
    else
@@ -349,14 +448,18 @@ convLua[ TransUnit.nodeKind.LiteralString ] = function( self, node, baseIndent )
    end
 end
 
-convLua[ TransUnit.nodeKind.LiteralBool ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.LiteralBool ] = function( self, node, parent, baseIndent )
    self:write( node.info.txt )
 end
 
-convLua[ TransUnit.nodeKind.Break ] = function( self, node, baseIndent )
+filterObj[ TransUnit.nodeKind.LiteralNil ] = function( self, node, prefix, depth )
+   self:write( "nil" )
+end
+
+filterObj[ TransUnit.nodeKind.Break ] = function( self, node, parent, baseIndent )
    self:write( "break" )
 
 end
 
 
-return convLua
+return filterObj

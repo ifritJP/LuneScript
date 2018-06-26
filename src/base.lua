@@ -19,7 +19,7 @@ else
    if mode == "ast" then
       ast:filter( require( 'primal.dumpNode' ), "", 0 )
    elseif mode == "lua" then
-      ast:filter( require( 'primal.convLua' ), 0 )
+      ast:filter( require( 'primal.convLua' ), nil, 0 )
    elseif mode == "exe" then
       local convLua = require( 'primal.convLua' )
 
@@ -28,7 +28,7 @@ else
 	 self.txt = self.txt .. txt
       end
 
-      ast:filter( convLua:new( stream ) , 0 )
+      ast:filter( convLua:new( stream ), nil, 0 )
 
       load( stream.txt )()
    else

@@ -1,11 +1,13 @@
 '''[jioejiopjiofjeioajeji
 jfeioajfeioaji
 '''
-''hogehogheo"""fjiojioe"""
+''hogehogheo```fjiojioe```
 ''
 '''fjioeajio
 '''
-"""'''jfiojeiojaoe''""";
+```'''jfi'ojeio"jaoe''```;
+'"'; '' ajfoijop
+"'"; '' jioejiop
 let val1 : int, val2 : real = ?a, 1.0;
 let val3 : real, val4, val5 : real = 0x1, 1.0e-2, 0.1e+3;
 let val6 : int[] = [
@@ -13,7 +15,7 @@ let val6 : int[] = [
 ];		     
 let val7 : int[@] = [@1,2,3];
 let val8 : string = "1234\"";
-let val9, val10 = "'1234'", """:a23""";
+let val9, val10 = "'1234'", ```:a23```;
 let val11 = {
     "A": { "AA": 1 },
     "B": { "BB": 2,
@@ -21,11 +23,12 @@ let val11 = {
     },  
     "D": [ 1, 2, 3 ]
 };
+let val12 = nil;
 val11.A.AA = 3;
 pub fn plus1_2( val1: int,	
 		val2: int, val3: int[], val4: &mut int ) : int, int
 {   
-    val1 = -10@int + val2 + val3[1];
+    val1 = -10@int + (val2 + val3[1]);
     let sub: stem = { ''  aa
 	"z": {   	
 	    "a": 1
@@ -63,3 +66,28 @@ pub fn plus2( val1: int, ... ) : int {
     print( "abc%s%s" (1,"ab") );
     print( ... );
 }
+
+class ClassA {
+    let val: int;
+    __init() {
+	self.val = 0;
+    }
+    func( data: int ) : int {
+	self.val = self.val + 1;
+	return data + self.val;
+    }
+}
+
+fn ClassA.sub() : int {
+    return self.val;
+}
+
+let classA = ClassA.new();
+print( classA.func( 0 ) );
+print( classA.func( 0 ) );
+print( classA.sub() );
+
+if not classA {
+}
+
+let fun = fn () {};

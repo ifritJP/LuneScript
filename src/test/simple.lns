@@ -7,3 +7,26 @@ fn func( val : int) {
 }
 let data : int = 20;
 func( data );
+
+
+class ClassA {
+    let val: int;
+    __init() {
+	self.val = 10;
+    }
+    func( data: int ) : int {
+	self.val = self.val + 1;
+	return data + self.val;
+    }
+}
+
+fn ClassA.sub() : int {
+    return self.val;
+}
+
+let classA = ClassA.new();
+print( classA.func( 0 ) );
+print( classA.func( 0 ) );
+print( classA.sub() );
+
+print( string.format( "12%d", 10 ) );

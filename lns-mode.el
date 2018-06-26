@@ -32,7 +32,7 @@
 		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "in" "return" "class" "false" "nil" "true"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static"
-		   "trust" "import" "as")))
+		   "trust" "import" "as" "not" "and" "or")))
   (defconst
     lns-bloak-statement-head (lns-make-regex-or
 			      '("let" "fn" "if" "elseif" "else" "while" "repeat" "for"
@@ -64,8 +64,9 @@
     ("''" 0 (11 . 40) nil t) ;;; comment
     ("\n" 0 (12 . 40) nil t) ;;; comment
     ;;("''" 0 (12 . 41) nil t) ;;; comment
-    ("\"\"\"" 0 (7 . 41) nil t) ;;; string
+    ("```" 0 (7 . 41) nil t) ;;; string
     ("\"" 0 (7 . 41) nil t) ;;; string
+    ("\'" 0 (7 . 41) nil t) ;;; string
     ;;(,(lambda (limit) (re-search-forward "\"\"\"" limit t)) 0 (7 . 41) nil t) ;;; string
     ))
 
@@ -112,13 +113,17 @@
 	)))
 
 (defun lns-indent-prev-eol ()
-  (if (eq 1 (count-lines 1 (1+ (point))))
-      nil
-    (beginning-of-line)
-    (previous-line)
-    (end-of-line)
-    t
-    ))
+  (let (line-num)
+    (if (eq (point-max) (point))
+	(setq line-num (count-lines 1 (point)))
+      (setq line-num (count-lines 1 (1+ (point)))))
+    (if (eq 1 line-num)
+	nil
+      (beginning-of-line)
+      (previous-line)
+      (end-of-line)
+      t
+      )))
 
 
 (defun lns-indent-search-block (pattern)
