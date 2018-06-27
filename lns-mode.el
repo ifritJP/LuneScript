@@ -32,7 +32,7 @@
 		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "in" "return" "class" "false" "nil" "true"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static"
-		   "trust" "import" "as" "not" "and" "or")))
+		   "trust" "import" "as" "not" "and" "or" "break" )))
   (defconst
     lns-bloak-statement-head (lns-make-regex-or
 			      '("let" "fn" "if" "elseif" "else" "while" "repeat" "for"
@@ -41,7 +41,7 @@
 				"trust" "import")))
   (defconst
     lns-type (lns-make-regex-or
-	      '("int" "real" "int_" "real_" "stem" "Map" "Array" "List" "str")))
+	      '("int" "real" "int_" "real_" "stem" "Map" "Array" "List" "str" "bool")))
   )
   
 
@@ -59,17 +59,65 @@
 	      ( 2 font-lock-variable-name-face nil t))
     ))
 
+
+
+(defun lns-syntax-multi-string (char)
+  "\""
+  (let ((font-lock-syntactic-keywords nil)
+	(loop-flag t)
+	(syntax-code "|")
+	in-flag)
+    (save-excursion
+      (if (not (lns-is-in-comment-string (point)))
+	  ;; 文字列中でない場合
+	  nil
+	;; 文字列中の場合、前方の文字列開始位置を見つける
+	(while loop-flag
+	  (cond
+	   ((not (re-search-backward "[\"`]" nil t))
+	    ;; 見つからないのはありえない
+	    (setq loop-flag nil))
+	   (t
+	    ;; 見つかった場合は、前の文字が文字列中か調べる
+	    (cond
+	     ((lns-is-in-comment-string (point))
+	      ;; まだ文字列中なのでもっと前の文字を調べる
+	      )
+	      ;;(setq loop-flag nil))
+	     ;; ((lns-is-in-comment-string (1- (point)))
+	     ;;  ;; まだ文字列中なのでもっと前の文字を調べる
+	     ;;  nil)
+	     (t
+	      ;; 文字列開始位置が見つかったので、その文字を調べる
+	      (setq loop-flag nil)
+	      (if (eq (char-after) char)
+		  ;; 同じ文字なので文字列終了
+		  (setq syntax-code "|")
+		;; 違う文字なので文字列継続
+		(setq syntax-code "\."))
+	      ))))
+	)))
+    syntax-code))
+
+
 (defvar lns-font-lock-syntactic-keywords
   `(("'''" 0 (14 . 41) nil t) ;;; comment
     ("''" 0 (11 . 40) nil t) ;;; comment
     ("\n" 0 (12 . 40) nil t) ;;; comment
     ;;("''" 0 (12 . 41) nil t) ;;; comment
-    ("```" 0 (7 . 41) nil t) ;;; string
-    ("\"" 0 (7 . 41) nil t) ;;; string
+    ;; ("```" 0 (7 . 41) nil t) ;;; string
+    ("\\(```\\)"
+     (1 (lns-syntax-multi-string ?`) t t))
+    ("\\(\"\\)"
+     (1 (lns-syntax-multi-string ?\") t t))
+    ;; ("[^\?]\\(\'\\)"
+    ;;  (1 "\"")) ;;; string
     ("\'" 0 (7 . 41) nil t) ;;; string
-    ;;(,(lambda (limit) (re-search-forward "\"\"\"" limit t)) 0 (7 . 41) nil t) ;;; string
+    ;;("?" 0 (10 . 40) nil t) ;; char-quote
+    ;; ("\?" 0 (10 . 40) nil t) ;;; char-quote
+    ;; ("\\?"
+    ;;  (1 "(" t t))
     ))
-
 
 (defvar lns-mode-syntax-table
   (with-syntax-table (copy-syntax-table)
@@ -78,6 +126,8 @@
     (modify-syntax-entry ?& ".")
     (modify-syntax-entry ?  " ")
     (modify-syntax-entry ?\t " ")
+    ;;(modify-syntax-entry ?? ".")
+    (modify-syntax-entry ?\" ".")
     (syntax-table))
   "`lns-mode' syntax table.")
 
@@ -95,9 +145,12 @@
          nil                    ;; syntax-alist
          nil                    ;; syntax-begin
          (font-lock-syntactic-keywords  . ,lns-font-lock-syntactic-keywords)
+         (font-lock-extra-managed-props . (syntax-table))
+         (parse-sexp-lookup-properties  . t)
          (beginning-of-defun-function   . lns-beginning-of-fn)
          (end-of-defun-function         . lns-end-of-fn)
          (indent-line-function          . lns-indent-line)
+	 (indent-region-function        . lns-indent-region)
          (comment-use-syntax            . t)
          (comment-use-global-state      . t)
          ))
@@ -105,12 +158,15 @@
 
 
 (defun lns-is-in-comment-string( pos )
-  (let ((syntax (syntax-ppss pos)))
-    (or (elt syntax 3)
-	(elt syntax 4)
-	(eq (get-char-property pos 'face) 'font-lock-comment-face)
-	(eq (char-after) ?')
-	)))
+  (if (>= (point-min) pos)
+      nil
+    (let ((syntax (syntax-ppss pos)))
+      (or (elt syntax 3)
+	  (elt syntax 4)
+	  (eq (get-char-property pos 'face) 'font-lock-comment-face)
+	  (eq (get-char-property pos 'face) 'font-lock-string-face)
+	  (eq (char-after) ?')
+	  ))))
 
 (defun lns-indent-prev-eol ()
   (let (line-num)
@@ -205,11 +261,18 @@ pattern は  {, }, {{, }} のいずれか。
 	  (beginning-of-line)
 	  (setq end-pos (point)))
 	(let ((searchFlag t)
-	      find-len work)
+	      find-len work quote)
 	  (while searchFlag
+	    (setq quote nil)
 	    (setq searchFlag (re-search-backward "\\([{}()]\\|\\[\\|\\]\\)"
 						 end-pos 'noerror))
-	    (when (and searchFlag (not (lns-is-in-comment-string searchFlag)))
+	    (when (eq (char-before) ??)
+	      (save-excursion
+		(backward-char 1)
+		(re-search-backward "[^\\]" end-pos 'noerror)
+		(setq quote (eq (% (- searchFlag (point)) 2) 0))))
+	    (when (and (not quote)
+		       searchFlag (not (lns-is-in-comment-string searchFlag)))
 	      (cond
 	       ((eq (char-after) ?})
 		(setq count-brace (+ count-brace 1))
@@ -376,6 +439,11 @@ pattern は  {, }, {{, }} のいずれか。
       (indent-line-to column))
     )
   )
+
+(defun lns-indent-region (start end)
+  (let ((indent-region-function nil))
+    (indent-region start end nil) 
+  ))
 
 
 (defun lns-beginning-of-fn (&optional arg)

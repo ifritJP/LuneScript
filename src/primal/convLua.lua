@@ -9,6 +9,13 @@ filterObj.indent = 0
 
 local stepIndent = 2
 
+local builtInModuleSet = {}
+builtInModuleSet[ "io" ] = true
+builtInModuleSet[ "string" ] = true
+builtInModuleSet[ "table" ] = true
+builtInModuleSet[ "math" ] = true
+
+
 function filterObj:new( stream )
    self.stream = stream
    return self
@@ -43,10 +50,14 @@ end
 
 
 filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent )
+   self:writeln( "local moduleObj = {}", baseIndent )
+   
    for index, child in ipairs( node.info.childlen ) do
       child:filter( filterObj, node, baseIndent )
       self:writeln( "", baseIndent )
    end
+
+   self:writeln( "return moduleObj", baseIndent )
 end
 filterObj[ TransUnit.nodeKind.Block ] = function( self, node, parent, baseIndent )
    local word = ""
@@ -88,6 +99,8 @@ end
 filterObj[ TransUnit.nodeKind.DeclClass ] = function( self, node, parent, baseIndent )
    local className = node.info.name.txt
    self:writeln( string.format( "local %s = {}", className ), baseIndent )
+   self:writeln( string.format( "moduleObj.%s = %s", className, className ),
+		 baseIndent )
    for index, field in ipairs( node.info.fieldList ) do
       field:filter( filterObj, node, baseIndent )
    end
@@ -101,20 +114,23 @@ end
 
 filterObj[ TransUnit.nodeKind.DeclConstr ] = function( self, node, parent, baseIndent )
    local className = node.info.className.txt
-   self:write( string.format( "function %s:new( ", className ) )
-   
+   self:write( string.format( "function %s.new( ", className ) )
+
+   local argTxt = ""
    for index, arg in ipairs( node.info.argList ) do
       if index > 1 then
 	 self:write( ", " )
+	 argTxt = argTxt .. ", "
       end
       arg:filter( filterObj, node, baseIndent )
+      argTxt = argTxt .. arg.info.name.txt
    end
    self:writeln( ")", baseIndent + stepIndent )
    self:writeln( "local obj = {}", baseIndent + stepIndent )
    self:writeln( string.format( "setmetatable( obj, { __index = %s } )", className ),
 		 baseIndent + stepIndent )
-   self:writeln( "obj:__init()", baseIndent + stepIndent )
-   self:writeln( "return obj", baseIndent )
+   self:writeln( string.format( "return obj.__init and obj:__init( %s ) or nil;",
+				argTxt ), baseIndent )
    self:writeln( "end", baseIndent )
 
    
@@ -124,15 +140,20 @@ filterObj[ TransUnit.nodeKind.DeclConstr ] = function( self, node, parent, baseI
    --    end
    --    refType:filter( filterObj, node, baseIndent )
    -- end
-   self:write( string.format( "function %s:__init() ", className ) )
+   self:write( string.format( "function %s:__init(%s) ", className, argTxt ) )
    node.info.body:filter( filterObj, node, baseIndent )
    self:writeln( "end", baseIndent )
 end
 
 
 filterObj[ TransUnit.nodeKind.DeclMethod ] = function( self, node, parent, baseIndent )
-   self:write( string.format( "function %s:%s( ",
-			      node.info.className.txt, node.info.name.txt ) )
+   local delimit = ":"
+   if node.info.staticFlag then
+      delimit = "."
+   end
+   self:write( string.format( "function %s%s%s( ",
+			      node.info.className.txt,
+			      delimit, node.info.name.txt ) )
 
    for index, arg in ipairs( node.info.argList ) do
       if index > 1 then
@@ -222,7 +243,7 @@ filterObj[ TransUnit.nodeKind.If ] = function( self, node, parent, baseIndent )
       if index == 1 then
 	 self:write( "if " )
 	 val.exp:filter( filterObj, node, baseIndent )
-      elseif index ~= #node.info then
+      elseif val.kind == "elseif" then
 	 self:write( "elseif " )
 	 val.exp:filter( filterObj, node, baseIndent )
       else
@@ -366,7 +387,7 @@ filterObj[ TransUnit.nodeKind.RefField ] = function( self, node, parent, baseInd
    local delimit = "."
    if parent.kind == TransUnit.nodeKind.ExpCall then
       if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and
-	 node.info.prefix.info.txt == "string"
+	 builtInModuleSet[ node.info.prefix.info.txt ]
       then
 	 delimit = "."
       else
@@ -431,8 +452,8 @@ end
 
 filterObj[ TransUnit.nodeKind.LiteralString ] = function( self, node, parent, baseIndent )
    local txt = node.info.token.txt
-   if string.find( txt, '```', 1, true ) then
-      txt = "[==[" .. txt:sub( 3, -3 ) .. "]==]"
+   if string.find( txt, '^```' ) then
+      txt = "[==[" .. txt:sub( 4, -4 ) .. "]==]"
    end
    if #node.info.argList > 0 then
       self:write( string.format( "string.format( %s, ", txt ) )

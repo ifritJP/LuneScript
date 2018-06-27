@@ -5,9 +5,9 @@ jfeioajfeioaji
 ''
 '''fjioeajio
 '''
-```'''jfi'ojeio"jaoe''```;
 '"'; '' ajfoijop
 "'"; '' jioejiop
+
 let val1 : int, val2 : real = ?a, 1.0;
 let val3 : real, val4, val5 : real = 0x1, 1.0e-2, 0.1e+3;
 let val6 : int[] = [
@@ -40,6 +40,8 @@ pub fn plus1_2( val1: int,
     
     val2 = val3;
     val4 = val6;
+    if not val {
+    }
     if val10 == ""
     {      	 
 	while true {
@@ -82,6 +84,10 @@ fn ClassA.sub() : int {
     return self.val;
 }
 
+static fn ClassA.sub2() : int {
+     return 1;
+ }
+
 let classA = ClassA.new();
 print( classA.func( 0 ) );
 print( classA.func( 0 ) );
@@ -90,4 +96,8 @@ print( classA.sub() );
 if not classA {
 }
 
-let fun = fn () {};
+let fun = fn () {
+    let hoge = ?\t;
+};
+
+print( '```' );

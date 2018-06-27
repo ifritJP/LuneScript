@@ -24,6 +24,19 @@ local kindOpe = regKind( "Ope" )
 local kindType = regKind( "Type" )
 local kindEof = regKind( "EOF" )
 
+local quotedCharSet = {}
+quotedCharSet[ 'a' ] = true
+quotedCharSet[ 'b' ] = true
+quotedCharSet[ 'f' ] = true
+quotedCharSet[ 'n' ] = true
+quotedCharSet[ 'r' ] = true
+quotedCharSet[ 't' ] = true
+quotedCharSet[ 'v' ] = true
+quotedCharSet[ '\\' ] = true
+quotedCharSet[ '"' ] = true
+quotedCharSet[ "'" ] = true
+
+
 
 local op2Set = {}
 op2Set[ '+' ] = true
@@ -103,6 +116,7 @@ local function createReserveInfo( luaMode )
       typeSet[ "stem" ] = true
       typeSet[ "str" ] = true
       typeSet[ "Map" ] = true
+      typeSet[ "bool" ] = true
    end
 
    -- 2文字以上の演算子
@@ -351,7 +365,7 @@ function ParserMtd:parse()
    -- 領域をカテゴライズする
    while true do
       local syncIndexFlag = true
-      local index = string.find( rawLine, [[[%-"%'%`%[].]], searchIndex )
+      local index = string.find( rawLine, [[[%-%?"%'%`%[].]], searchIndex )
 
       if not index then
 	 addVal( kindSymb, rawLine:sub( startIndex ), startIndex )
@@ -361,7 +375,7 @@ function ParserMtd:parse()
       local findChar = string.byte( rawLine, index )
       local nextChar = string.byte( rawLine, index + 1 )
 
-      if findChar == 45 and nextChar ~= 45 then
+      if findChar == 45 and nextChar ~= 45 then -- --
 	 searchIndex = index + 1
 	 syncIndexFlag = false
       else
@@ -417,6 +431,20 @@ function ParserMtd:parse()
 	    else
 	       addVal( kindDlmt, '`', index )
 	    end
+	 elseif findChar == 63 then -- ?
+	    local codeChar = rawLine:sub( index + 1, index + 1 )
+	    if nextChar == 92 then -- \\
+	       local quoted = rawLine:sub( index + 2, index + 2 )
+	       if quotedCharSet[ quoted ] then
+		  codeChar = rawLine:sub( index + 1, index + 2 )
+	       else
+		  codeChar = quoted
+	       end
+	       searchIndex = index + 3
+	    else
+	       searchIndex = index + 2
+	    end
+	    addVal( kindChar, codeChar, index )
 	 else
 	    error( "illegal" )
 	 end

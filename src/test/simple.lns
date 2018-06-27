@@ -13,6 +13,7 @@ class ClassA {
     let val: int;
     __init() {
 	self.val = 10;
+	return self;
     }
     func( data: int ) : int {
 	self.val = self.val + 1;
@@ -24,9 +25,19 @@ fn ClassA.sub() : int {
     return self.val;
 }
 
+class ClassB {
+    func(): int {
+	return 100;
+    }
+}
+
+
 let classA = ClassA.new();
 print( classA.func( 0 ) );
 print( classA.func( 0 ) );
 print( classA.sub() );
+
+let classB = ClassA.new();
+print( classB.sub() );
 
 print( string.format( "12%d", 10 ) );

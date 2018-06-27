@@ -1,8 +1,8 @@
 -- ajiopjiojio
 --[[ fjiaojfeap ]]
-local Parser = require( 'primal.Parser' )
+local Parser = require( 'lune.base.Parser' ).Parser
 
-local parser = Parser:create( arg[ 1 ] )
+local parser = Parser.new( arg[ 1 ] )
 
 local mode = arg[ 2 ]
 if mode == "token" then
