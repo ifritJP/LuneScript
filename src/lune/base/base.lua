@@ -17,7 +17,7 @@ else
    local TransUnit = require( 'primal.TransUnit' )
    local ast = TransUnit:createAST( parser )
    if mode == "ast" then
-      ast:filter( require( 'primal.dumpNode' ), "", 0 )
+      ast:filter( require( 'lune.base.dumpNode' ), "", 0 )
    elseif mode == "lua" then
       ast:filter( require( 'primal.convLua' ), nil, 0 )
    elseif mode == "exe" then

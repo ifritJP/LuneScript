@@ -99,8 +99,10 @@ end
 filterObj[ TransUnit.nodeKind.DeclClass ] = function( self, node, parent, baseIndent )
    local className = node.info.name.txt
    self:writeln( string.format( "local %s = {}", className ), baseIndent )
-   self:writeln( string.format( "moduleObj.%s = %s", className, className ),
-		 baseIndent )
+   if node.info.accessMode == "pub" then
+      self:writeln( string.format( "moduleObj.%s = %s", className, className ),
+		    baseIndent )
+   end
    for index, field in ipairs( node.info.fieldList ) do
       field:filter( filterObj, node, baseIndent )
    end
@@ -125,7 +127,7 @@ filterObj[ TransUnit.nodeKind.DeclConstr ] = function( self, node, parent, baseI
       arg:filter( filterObj, node, baseIndent )
       argTxt = argTxt .. arg.info.name.txt
    end
-   self:writeln( ")", baseIndent + stepIndent )
+   self:writeln( " )", baseIndent + stepIndent )
    self:writeln( "local obj = {}", baseIndent + stepIndent )
    self:writeln( string.format( "setmetatable( obj, { __index = %s } )", className ),
 		 baseIndent + stepIndent )
@@ -161,7 +163,7 @@ filterObj[ TransUnit.nodeKind.DeclMethod ] = function( self, node, parent, baseI
       end
       arg:filter( filterObj, node, baseIndent )
    end
-   self:write( ")", baseIndent )
+   self:write( " )", baseIndent )
    -- for index, refType in ipairs( node.info.retTypeList ) do
    --    if index > 1 then
    -- 	 self:write( ", " )
@@ -174,7 +176,9 @@ end
 
 
 filterObj[ TransUnit.nodeKind.DeclVar ] = function( self, node, parent, baseIndent )
-   self:write( "local " )
+   if node.info.accessMode ~= "global" then
+      self:write( "local " )
+   end
    
    local varName = ""
    for index, var in ipairs( node.info.varList ) do
@@ -189,10 +193,18 @@ filterObj[ TransUnit.nodeKind.DeclVar ] = function( self, node, parent, baseInde
    if node.info.expList then
       node.info.expList:filter( filterObj, node, baseIndent )
    end
+   self:writeln( "", baseIndent )
+
+   if node.info.accessMode == "pub" then
+      for index, var in ipairs( node.info.varList ) do
+	 self:writeln( string.format( "moduleObj.%s = %s", var.name.txt, var.name.txt ),
+		       baseIndent )
+      end
+   end
 end
 
 filterObj[ TransUnit.nodeKind.DeclArg ] = function( self, node, parent, baseIndent )
-   self:write( string.format( "%s ", node.info.name.txt ) )
+   self:write( string.format( "%s", node.info.name.txt ) )
 
    -- node.info.argType:filter( filterObj, node, baseIndent )
 end
@@ -206,8 +218,13 @@ filterObj[ TransUnit.nodeKind.ExpDDD ] = function( self, node, parent, baseInden
 end
 
 filterObj[ TransUnit.nodeKind.DeclFunc ] = function( self, node, parent, baseIndent )
-   local name = node.info.name
-   self:write( string.format( "function %s( ", name and name.txt or "" ) )
+   local nameToken = node.info.name
+   local name = nameToken and nameToken.txt or ""
+   local localTxt = ""
+   if node.info.accessMode ~= "global" and #name ~= 0 then
+      localTxt = "local "
+   end
+   self:write( string.format( "%sfunction %s( ", localTxt, name ) )
    
    for index, arg in ipairs( node.info.argList ) do
       if index > 1 then
@@ -215,7 +232,7 @@ filterObj[ TransUnit.nodeKind.DeclFunc ] = function( self, node, parent, baseInd
       end
       arg:filter( filterObj, node, baseIndent )
    end
-   self:write( ")", baseIndent )
+   self:write( " )", baseIndent )
    -- for index, refType in ipairs( node.info.retTypeList ) do
    --    if index > 1 then
    -- 	 self:write( ", " )
@@ -316,11 +333,11 @@ end
 
 filterObj[ TransUnit.nodeKind.ExpCall ] = function( self, node, parent, baseIndent )
    node.info.func:filter( filterObj, node, baseIndent )
-   self:write( "(" )
+   self:write( "( " )
    if node.info.argList then
       node.info.argList:filter( filterObj, node, baseIndent )
    end
-   self:write( ")" )
+   self:write( " )" )
 end
 
 
@@ -352,7 +369,7 @@ end
 filterObj[ TransUnit.nodeKind.ExpParen ] = function( self, node, prefix, depth )
    self:write( "(" )
    node.info:filter( filterObj, node, baseIndent )
-   self:write( ")" )
+   self:write( " )" )
 end
 
 filterObj[ TransUnit.nodeKind.ExpOp2 ] = function( self, node, parent, baseIndent )

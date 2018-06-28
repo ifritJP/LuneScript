@@ -75,6 +75,7 @@ op1Set[ '*' ] = true
 local function createReserveInfo( luaMode )
    local keywordSet = {}
    local typeSet = {}
+   local builtInSet = {};
    keywordSet[ "local" ] = true
    keywordSet[ "function" ] = true
    keywordSet[ "if" ] = true
@@ -84,12 +85,13 @@ local function createReserveInfo( luaMode )
    keywordSet[ "for" ] = true
    keywordSet[ "in" ] = true
    keywordSet[ "return" ] = true
-   keywordSet[ "require" ] = true
    keywordSet[ "break" ] = true
    keywordSet[ "nil" ] = true
    keywordSet[ "true" ] = true
    keywordSet[ "false" ] = true
 
+   builtInSet[ "require" ] = true
+   
    if luaMode then
       keywordSet[ "end" ] = true
       keywordSet[ "then" ] = true
@@ -105,12 +107,13 @@ local function createReserveInfo( luaMode )
       keywordSet[ "each" ] = true
       keywordSet[ "form" ] = true
       keywordSet[ "class" ] = true
-      keywordSet[ "super" ] = true
       keywordSet[ "static" ] = true
       keywordSet[ "advertise" ] = true
       keywordSet[ "as" ] = true
       keywordSet[ "import" ] = true
 
+      builtInSet[ "super" ] = true
+      
       typeSet[ "int" ] = true
       typeSet[ "real" ] = true
       typeSet[ "stem" ] = true

@@ -118,20 +118,22 @@ function TransUnit:createNode( kind, pos, info )
    return { kind = kind, pos = pos, info = info, filter = nodeFilter }
 end
 
-function TransUnit:analyzeDecl( firstToken, token )
+function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    local staticFlag
 
-   if token.txt == "static" then
-      staticFlag = true
-      token = self:getToken()
+   if not staticFlag then
+      if token.txt == "static" then
+	 staticFlag = true
+	 token = self:getToken()
+      end
    end
       
    if token.txt == "let" then
-      return self:analyzeDeclVar( staticFlag, token )
+      return self:analyzeDeclVar( accessMode, staticFlag, firstToken )
    elseif token.txt == "fn" then
-      return self:analyzeDeclFunc( staticFlag, false, token, nil )
+      return self:analyzeDeclFunc( accessMode, staticFlag, false, token, nil )
    elseif token.txt == "class" then
-      return self:analyzeDeclClass( token )
+      return self:analyzeDeclClass( accessMode, token )
    end
 
    return nil
@@ -144,7 +146,7 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 break
       end
 
-      local statement = self:analyzeDecl( token, token )
+      local statement = self:analyzeDecl( "Pri", false, token, token )
 
       if not statement then
 	 if token.txt == termTxt then
@@ -153,13 +155,16 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 elseif token.txt == "pub" or token.txt == "pro" or
 	    token.txt == "pri" or token.txt == "global" or token.txt == "static"
 	 then
+	    local accessMode = (token.txt ~= "static") and token.txt or "pri"
+	    local staticFlag = (token.txt == "static")
+	    
 	    local nextToken
 	    if token.txt ~= "static" then
 	       nextToken = self:getToken()
 	    else
 	       nextToken = token
 	    end
-	    statement = self:analyzeDecl( token, nextToken )
+	    statement = self:analyzeDecl( accessMode, staticFlag, token, nextToken )
 	 elseif token.txt == "{" then
 	    self:pushback()
 	    statement = self:analyzeBlock( "{" )
@@ -431,7 +436,7 @@ function TransUnit:analyzeRefType()
 end
 
 
-function TransUnit:analyzeDeclMember( staticFlag, firstToken )
+function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
    local varName = self:getSymbolToken()
    token = self:getToken()
    local refType = self:analyzeRefType()
@@ -441,16 +446,18 @@ function TransUnit:analyzeDeclMember( staticFlag, firstToken )
 
    return self:createNode(
       nodeKindDeclMember, firstToken.pos,
-      { name = varName, refType = refType, staticFlag = staticFlag } )
+      { name = varName, refType = refType,
+	staticFlag = staticFlag, accessMode = accessMode } )
 end
 
-function TransUnit:analyzeDeclMethod( staticFlag, className, firstToken, name )
-   local node = self:analyzeDeclFunc( staticFlag, true, name, name )
+function TransUnit:analyzeDeclMethod(
+      accessMode, staticFlag, className, firstToken, name )
+   local node = self:analyzeDeclFunc( accessMode, staticFlag, true, name, name )
    node.info.className = className
    return node
 end
 
-function TransUnit:analyzeDeclClass( classToken )
+function TransUnit:analyzeDeclClass( classAccessMode, classToken )
    local name = self:getToken()
    self:checkNextToken( "{" )
 
@@ -460,26 +467,38 @@ function TransUnit:analyzeDeclClass( classToken )
       if token.txt == "}" then
 	 break;
       end
+      local accessMode = "pri"
+      if token.txt == "pub" or token.txt == "pro" or
+	 token.txt == "pri" or token.txt == "global"
+      then
+	 accessMode = token.txt
+	 token = self:getToken()
+      end
       local staticFlag
       if token.txt == "static" then
 	 staticFlag = true
 	 token = self:getToken()
       end
       if token.txt == "let" then
-	 table.insert( fieldList, self:analyzeDeclMember( staticFlag, token ) )
+	 table.insert( fieldList,
+		       self:analyzeDeclMember( accessMode, staticFlag, token ) )
       else 
-	 table.insert( fieldList, self:analyzeDeclMethod( staticFlag,
-							  name, token, token ) )
+	 table.insert(
+	    fieldList,
+	    self:analyzeDeclMethod(
+	       accessMode, staticFlag, name, token, token ) )
       end
    end
 
    local node = self:createNode(
-      nodeKindDeclClass, classToken.pos, { name = name, fieldList = fieldList } )
+      nodeKindDeclClass, classToken.pos,
+      { accessMode = classAccessMode, name = name, fieldList = fieldList } )
    self.className2NodeMap[ name.txt ] = node
    return node
 end
 
-function TransUnit:analyzeDeclFunc( staticFlag, methodFlag, firstToken, name )
+function TransUnit:analyzeDeclFunc(
+      accessMode, staticFlag, methodFlag, firstToken, name )
    local argList = {}
    local token = self:getToken()
    if not name then
@@ -570,7 +589,7 @@ function TransUnit:analyzeBlock( blockKind )
 			   { kind = blockKind, stmtList = stmtList } )
 end
 
-function TransUnit:analyzeDeclVar( staticFlag, letToken )
+function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
    local varList = {}
    local token
    repeat
@@ -590,8 +609,8 @@ function TransUnit:analyzeDeclVar( staticFlag, letToken )
 
    self:checkNextToken( ";" )
 
-   local declVarInfo = { varList = varList, expList = expList }
-   return self:createNode( nodeKindDeclVar, letToken.pos, declVarInfo )
+   local declVarInfo = { accessMode = accessMode, varList = varList, expList = expList }
+   return self:createNode( nodeKindDeclVar, firstToken.pos, declVarInfo )
 end
 
 function TransUnit:analyzeExpList()
@@ -655,20 +674,7 @@ function TransUnit:analyzeExpRefItem( token, exp )
    return self:createNode( nodeKindExpRefItem, token.pos, info )
 end   
 
-function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp )
-   local exp
-
-   if mode == "field" then
-      local info = { field = token, prefix = prefixExp }
-      exp = self:createNode( nodeKindRefField, firstToken.pos, info )
-   elseif mode == "symbol" then
-      exp = self:createNode( nodeKindExpRef, firstToken.pos, token )
-   elseif mode == "fn" then
-      exp = self:analyzeDeclFunc( false, false, token, nil )   
-   else
-      self:error( "illegal mode", mode )
-   end
-
+function TransUnit:analyzeExpCont( firstToken, exp )
    local nextToken = self:getToken()
    repeat
       local matchFlag = false
@@ -688,7 +694,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp )
 	 end
 	 local info = { func = exp, argList = expList }
 
-	 exp = self:createNode( nodeKindExpCall, token.pos, info )
+	 exp = self:createNode( nodeKindExpCall, firstToken.pos, info )
 	 nextToken = self:getToken()
       end
    until not matchFlag
@@ -700,15 +706,35 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp )
    
    self:pushback()
    return exp
+   
+end
+
+function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp )
+   local exp
+
+   if mode == "field" then
+      local info = { field = token, prefix = prefixExp }
+      exp = self:createNode( nodeKindRefField, firstToken.pos, info )
+   elseif mode == "symbol" then
+      exp = self:createNode( nodeKindExpRef, firstToken.pos, token )
+   elseif mode == "fn" then
+      exp = self:analyzeDeclFunc( "pri", false, false, token, nil )   
+   else
+      self:error( "illegal mode", mode )
+   end
+
+   return self:analyzeExpCont( firstToken, exp )
 end
 
 
 function TransUnit:analyzeExp( skipOp2Flag )
-   local token = self:getToken()
+   local firstToken = self:getToken()
+   local token = firstToken
+   local exp
 
    if token.kind == Parser.kind.Dlmt then
       if token.txt == "..." then
-	 return self:createNode( nodeKindExpDDD, token.pos, token )
+	 return self:createNode( nodeKindExpDDD, firstToken.pos, token )
       end
       
       if token.txt == '[' or token.txt == '[@' then
@@ -720,24 +746,24 @@ function TransUnit:analyzeExp( skipOp2Flag )
       if token.txt == "(" then
 	 exp = self:analyzeExp( false )
 	 self:checkNextToken( ")" )
-	 return self:createNode( nodeKindExpParen, token.pos, exp )
+	 exp = self:createNode( nodeKindExpParen, firstToken.pos, exp )
+	 exp = self:analyzeExpCont( firstToken, exp )
       end
    end
    
-   local exp
    if token.kind == Parser.kind.Ope and Parser.isOp1( token.txt ) then
       -- 単項演算
       exp = self:analyzeExp( true )
-      exp = self:createNode( nodeKindExpOp1, token.pos, { op = token, exp = exp } )
-      return self:analyzeExpOp2( token, exp )
+      exp = self:createNode( nodeKindExpOp1, firstToken.pos, { op = token, exp = exp } )
+      return self:analyzeExpOp2( firstToken, exp )
    end
 
 
    if token.kind == Parser.kind.Int then
-      exp = self:createNode( nodeKindLiteralInt, token.pos,
+      exp = self:createNode( nodeKindLiteralInt, firstToken.pos,
 			     { token = token, num = tonumber( token.txt ) } )
    elseif token.kind == Parser.kind.Real then
-      exp = self:createNode( nodeKindLiteralReal, token.pos,
+      exp = self:createNode( nodeKindLiteralReal, firstToken.pos,
 			     { token = token, num = tonumber( token.txt ) } )
    elseif token.kind == Parser.kind.Char then
       local num
@@ -746,7 +772,7 @@ function TransUnit:analyzeExp( skipOp2Flag )
       else
 	 num = quotedChar2Code[ token.txt:sub( 2, 2 ) ]
       end
-      exp = self:createNode( nodeKindLiteralChar, token.pos,
+      exp = self:createNode( nodeKindLiteralChar, firstToken.pos,
 			     { token = token, num = num } )
    elseif token.kind == Parser.kind.Str then
       local nextToken = self:getToken()
@@ -760,23 +786,24 @@ function TransUnit:analyzeExp( skipOp2Flag )
 	 self:checkToken( nextToken, ")" )
 	 nextToken = self:getToken()
       end
-      exp = self:createNode( nodeKindLiteralString, token.pos,
+      exp = self:createNode( nodeKindLiteralString, firstToken.pos,
 			     { token = token, argList = formatArgList } )
-      if nextToken.txt == "[" then
-	 exp = self:analyzeExpRefItem( nextToken, exp )
+      token = nextToken
+      if token.txt == "[" then
+	 exp = self:analyzeExpRefItem( token, exp )
       else
 	 self:pushback()
       end
    elseif token.txt == "fn" then
-      exp = self:analyzeExpSymbol( token, token, "fn", token )
+      exp = self:analyzeExpSymbol( firstToken, token, "fn", token )
    elseif token.kind == Parser.kind.Symb then
-      exp = self:analyzeExpSymbol( token, token, "symbol", token )
+      exp = self:analyzeExpSymbol( firstToken, token, "symbol", token )
    elseif token.kind == Parser.kind.Type then
-      exp = self:createNode( nodeKindExpRef, token.pos, token )
+      exp = self:createNode( nodeKindExpRef, firstToken.pos, token )
    elseif token.txt == "true" or token.txt == "false" then
-      exp = self:createNode( nodeKindLiteralBool, token.pos, token )
+      exp = self:createNode( nodeKindLiteralBool, firstToken.pos, token )
    elseif token.txt == "nil" then
-      exp = self:createNode( nodeKindLiteralNil, token.pos, token )
+      exp = self:createNode( nodeKindLiteralNil, firstToken.pos, token )
    end
 
    if not exp then
@@ -787,21 +814,22 @@ function TransUnit:analyzeExp( skipOp2Flag )
       return exp
    end
    
-   return self:analyzeExpOp2( token, exp )
+   return self:analyzeExpOp2( firstToken, exp )
 end
 
-function TransUnit:analyzeExpOp2( token, exp )
+function TransUnit:analyzeExpOp2( firstToken, exp )
    local nextToken = self:getToken()
    while true do
       if nextToken.txt == "@" then
 	 local castType = self:analyzeRefType()
 	 local info = { exp = exp, castType = castType }
-	 exp = self:createNode( nodeKindExpCast, token.pos, info )
+	 exp = self:createNode( nodeKindExpCast, firstToken.pos, info )
       elseif nextToken.kind == Parser.kind.Ope then
 	 if Parser.isOp2( nextToken.txt ) then
-	    local exp2 = self:analyzeExp()
+	    local exp2 = self:analyzeExp(
+	       ( nextToken.txt == "and" ) or ( nextToken.txt == "*" ) )
 	    local info = { op = nextToken, exp1 = exp, exp2 = exp2 }
-	    exp = self:createNode( nodeKindExpOp2, token.pos, info )
+	    exp = self:createNode( nodeKindExpOp2, firstToken.pos, info )
 	 else
 	    self:error( "illegal op" )
 	 end

@@ -34,11 +34,12 @@
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static"
 		   "trust" "import" "as" "not" "and" "or" "break" )))
   (defconst
-    lns-bloak-statement-head (lns-make-regex-or
-			      '("let" "fn" "if" "elseif" "else" "while" "repeat" "for"
-				"apply" "foreach" "class" 
-				"pub" "pro" "pri" "form" "advertise" "wrap" "static"
-				"trust" "import")))
+    lns-bloak-statement-head (concat (lns-make-regex-or
+				      '("let" "if" "elseif" "else" "while"
+					"repeat" "for" "apply" "foreach" "class" 
+					"pub" "pro" "pri" "form" "advertise"
+					"wrap" "static" "trust" "import" "''"))
+				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst
     lns-type (lns-make-regex-or
 	      '("int" "real" "int_" "real_" "stem" "Map" "Array" "List" "str" "bool")))
@@ -158,17 +159,22 @@
 
 
 (defun lns-is-in-comment-string( pos )
-  (if (>= (point-min) pos)
-      nil
-    (let ((syntax (syntax-ppss pos)))
-      (or (elt syntax 3)
-	  (elt syntax 4)
-	  (eq (get-char-property pos 'face) 'font-lock-comment-face)
-	  (eq (get-char-property pos 'face) 'font-lock-string-face)
-	  (eq (char-after) ?')
-	  ))))
+  (save-excursion
+    (if (>= (point-min) pos)
+	nil
+      (let ((syntax (syntax-ppss pos)))
+	(or (elt syntax 3)
+	    (elt syntax 4)
+	    (eq (get-char-property pos 'face) 'font-lock-comment-face)
+	    (eq (get-char-property pos 'face) 'font-lock-string-face)
+	    (eq (char-after) ?')
+	    )))))
 
 (defun lns-indent-prev-eol ()
+  "前の行の行末に移動する。
+空行は飛ばす。
+移動できた場合 nil 以外。
+"
   (let (line-num)
     (if (eq (point-max) (point))
 	(setq line-num (count-lines 1 (point)))
@@ -177,6 +183,8 @@
 	nil
       (beginning-of-line)
       (previous-line)
+      (end-of-line)
+      (re-search-backward "[^\s \t]" (point-min) 'noerror)
       (end-of-line)
       t
       )))
@@ -244,7 +252,20 @@ pattern は  {, }, {{, }} のいずれか。
       (goto-char pos))
     ))
 
-
+(defun lns-indent-is-line-no-term ()
+  "現在の行が終端されていないか調べる"
+  (save-excursion
+    (end-of-line)
+    (let (pos)
+      (save-excursion
+	(beginning-of-line)
+	(setq pos (point)))
+      (if (not (re-search-backward "[^\s \t]" pos t))
+	  nil
+	(not (or (eq (char-after) ?\;) (eq (char-after) ?\})))
+	))))
+  
+  
 
 (defun lns-indent-search-open-pair ()
   "現在のカーソル位置から前方向で、閉じていない括弧を探す。
@@ -261,17 +282,21 @@ pattern は  {, }, {{, }} のいずれか。
 	  (beginning-of-line)
 	  (setq end-pos (point)))
 	(let ((searchFlag t)
-	      find-len work quote)
+	      find-len work ignore)
 	  (while searchFlag
-	    (setq quote nil)
+	    (setq ignore nil)
 	    (setq searchFlag (re-search-backward "\\([{}()]\\|\\[\\|\\]\\)"
 						 end-pos 'noerror))
-	    (when (eq (char-before) ??)
-	      (save-excursion
-		(backward-char 1)
-		(re-search-backward "[^\\]" end-pos 'noerror)
-		(setq quote (eq (% (- searchFlag (point)) 2) 0))))
-	    (when (and (not quote)
+	    (if (and searchFlag
+		     (lns-is-in-comment-string searchFlag ))
+		(setq ignore t)
+	      (when (or (eq (char-before) ??)
+			(eq (char-before) ?\\))
+		(save-excursion
+		  (backward-char 1)
+		  (re-search-backward "[^\\]" end-pos 'noerror)
+		  (setq ignore (eq (% (- searchFlag (point)) 2) 0)))))
+	    (when (and (not ignore)
 		       searchFlag (not (lns-is-in-comment-string searchFlag)))
 	      (cond
 	       ((eq (char-after) ?})
@@ -317,12 +342,15 @@ pattern は  {, }, {{, }} のいずれか。
 	       (eq count-paren 0)
 	       (eq count-bracket 0)
 	       (re-search-forward
-		(format "^[\s \t]*\\(%s\\)" lns-bloak-statement-head) start-pos t))
-	      (progn
-		(if (re-search-backward "[\s \t]" end-pos t)
-		    (forward-char)
-		  (beginning-of-line))
-		(setq pos (point)))
+		(format "^[\s \t]*\\(%s\\)" lns-bloak-statement-head)
+		start-pos t))
+	       (progn
+		 (goto-char (match-beginning 0))
+		 (re-search-forward "[^\s \t]")
+		 (if (re-search-backward "[\s \t]" end-pos t)
+		     (forward-char)
+		   (beginning-of-line))
+		 (setq pos (point)))
 	    (when (not (lns-indent-prev-eol))
 	      (setq pos 0)))
 	  )))
@@ -354,6 +382,31 @@ pattern は  {, }, {{, }} のいずれか。
       (goto-char org-pos))
     find))
 
+(defun lns-indent-goto-no-space-bol ()
+  (beginning-of-line)
+  (when (not (string-match "[^ \t]"
+			   (buffer-substring-no-properties (point)
+							   (1+ (point)))))
+    (re-search-forward "[^ \t]")
+    (backward-char)))
+
+(defun lns-indent-to (indent)
+  (if (not (lns-indent-search-open-pair))
+      (setq column 0)
+    (if (or (eq (char-after) ?{)
+	    (eq (char-after) ?\()
+	    (eq (char-after) ?\[))
+	(progn
+	  (setq pos (point))
+	  (forward-char)
+	  (if (lns-re-search-forward-eol "[^ \t]")
+	      (progn
+		(goto-char pos)
+		(setq column (+ (current-column) 2)))
+	    (lns-indent-goto-no-space-bol)
+	    (setq column (+ (current-column) lns-indent-level))))
+      (setq column (+ (current-column) indent)))))
+
 (defun lns-indent-line ()
   (let ((org-pos (point))
 	pos end-block-flag start-block-flag start-pos column)
@@ -378,8 +431,11 @@ pattern は  {, }, {{, }} のいずれか。
        ((eq (char-before) ?\[)
 	(setq start-block-flag "]"))
        )
-      (lns-indent-prev-eol)
+      (when (not (lns-indent-prev-eol))
+	(setq column 0))
       (cond
+       (column
+	nil)
        (end-block-flag
   	;; ブロック終了の場合、ブロック開始を見つける。
   	(when (lns-indent-search-open-pair)
@@ -388,9 +444,7 @@ pattern は  {, }, {{, }} のいずれか。
 		  (eq (char-after) ?\[))
 	      (progn
 		;; 括弧
-		(beginning-of-line)
-		(re-search-forward "[^\\s \t]")
-		(backward-char)
+		(lns-indent-goto-no-space-bol)
 		(setq column (current-column)))
 	    ;; 行の先頭が見つかった
 	    (setq column (- (current-column) lns-indent-level))
@@ -407,32 +461,23 @@ pattern は  {, }, {{, }} のいずれか。
 		    (eq (char-after) ?\()
 		    (eq (char-after) ?\[))
 		(progn
-		  (beginning-of-line)
-		  (re-search-forward "[^\\s \t]")
-		  (backward-char)
-		  (setq column (+ (current-column) lns-indent-level)))
+		  (setq pos (point))
+		  (forward-char)
+		  (if (lns-re-search-forward-eol "[^\\s \t]")
+		      (progn
+			(goto-char pos)
+			(setq column (+ (current-column) 2)))
+		    (lns-indent-goto-no-space-bol)
+		    (setq column (+ (current-column) lns-indent-level))))
 	      (setq column (current-column))
 	      ))))
        (t
 	;; ブロック開始、終了でない場合、
-	(if (not (lns-indent-search-open-pair))
-	    (setq column 0)
-	  (if (or (eq (char-after) ?{)
-		  (eq (char-after) ?\()
-		  (eq (char-after) ?\[))
-	      (progn
-		(setq pos (point))
-		(forward-char)
-		(if (lns-re-search-forward-eol "[^\\s \t]")
-		    (progn
-		      (goto-char pos)
-		      (setq column (+ (current-column) 2)))
-		  (beginning-of-line)
-		  (re-search-forward "[^\\s \t]")
-		  (backward-char)
-		  (setq column (+ (current-column) lns-indent-level))))
-	    (setq column (current-column)))))
-	    ;;(setq column (+ (current-column) lns-indent-level)))))
+	(if (and (not (lns-is-in-comment-string (1- (point))))
+		 (lns-indent-is-line-no-term))
+	    (lns-indent-to lns-indent-level)
+	  (lns-indent-to 0)
+	  ))
        ))
     (when column
       (move-to-column column t)
