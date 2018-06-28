@@ -366,7 +366,7 @@ filterObj[ TransUnit.nodeKind.ExpCast ] = function( self, node, parent, baseInde
 end
 
 
-filterObj[ TransUnit.nodeKind.ExpParen ] = function( self, node, prefix, depth )
+filterObj[ TransUnit.nodeKind.ExpParen ] = function( self, node, parent, baseIndent )
    self:write( "(" )
    node.info:filter( filterObj, node, baseIndent )
    self:write( " )" )
@@ -490,7 +490,7 @@ filterObj[ TransUnit.nodeKind.LiteralBool ] = function( self, node, parent, base
    self:write( node.info.txt )
 end
 
-filterObj[ TransUnit.nodeKind.LiteralNil ] = function( self, node, prefix, depth )
+filterObj[ TransUnit.nodeKind.LiteralNil ] = function( self, node, parent, baseIndent )
    self:write( "nil" )
 end
 

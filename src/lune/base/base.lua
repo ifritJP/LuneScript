@@ -17,11 +17,11 @@ else
    local TransUnit = require( 'primal.TransUnit' )
    local ast = TransUnit:createAST( parser )
    if mode == "ast" then
-      ast:filter( require( 'lune.base.dumpNode' ), "", 0 )
+      ast:filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
    elseif mode == "lua" then
-      ast:filter( require( 'primal.convLua' ), nil, 0 )
+      ast:filter( require( 'lune.base.convLua' ).filterObj, nil, 0 )
    elseif mode == "exe" then
-      local convLua = require( 'primal.convLua' )
+      local convLua = require( 'lune.base.convLua' ).filterObj
 
       local stream = { txt = "" }
       stream.write = function( self, txt )
@@ -30,7 +30,9 @@ else
 
       ast:filter( convLua:new( stream ), nil, 0 )
 
-      load( stream.txt )()
+      local chunk, err = load( stream.txt )
+      print( err )
+      chunk()
    else
       print( "illegal mode" )
    end

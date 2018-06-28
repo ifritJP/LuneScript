@@ -1,0 +1,552 @@
+let TransUnit = require( 'primal.TransUnit' );
+
+pub let filterObj = {};
+
+filterObj.stream = io.stdout;
+filterObj.curLineNo = 1;
+filterObj.indent = 0;
+
+let stepIndent = 2;
+
+let builtInModuleSet = {};
+builtInModuleSet[ "io" ] = true;
+builtInModuleSet[ "string" ] = true;
+builtInModuleSet[ "table" ] = true;
+builtInModuleSet[ "math" ] = true;
+
+
+fn filterObj.new( stream: stem ) {
+    self.stream = stream;
+    return self;
+}
+
+fn filterObj.write( txt: str ) {
+    if self.needIndent {
+	self.stream.write( string.rep( " ", self.indent ) );
+	self.needIndent = false;
+    }
+
+    apply cr of string.gmatch( txt, "\n" ) {
+	self.curLineNo = self.curLineNo + 1;
+    }
+    self.stream.write( txt );
+}
+
+fn filterObj.setIndent( indent: int ) {
+    self.indent = indent;
+}
+
+fn filterObj.writeln( txt: str, baseIndent: int ) {
+    self.write( txt );
+    self.write( "\n" );
+    self.needIndent = true;
+    self.indent = baseIndent;
+}
+
+filterObj[ TransUnit.nodeKind.None ] =
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.writeln( "-- none", baseIndent );
+    };   
+
+
+filterObj[ TransUnit.nodeKind.Root ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.writeln( "local moduleObj = {}", baseIndent );
+
+	foreach child in node.info.childlen {
+	    child.filter( filterObj, node, baseIndent );
+	    self.writeln( "", baseIndent );
+	}	
+
+	self.writeln( "return moduleObj", baseIndent );
+    };   
+
+filterObj[ TransUnit.nodeKind.Block ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let word = "";
+	if node.info.kind == "if" or node.info.kind == "elseif" {
+	    word = "then";
+	}	
+	elseif node.info.kind == "else" {
+	    word = "";
+	}	
+	elseif node.info.kind == "while" {
+	    word = "do";
+	}	
+	elseif node.info.kind == "repeat" {
+	    word = "";
+	}	
+	elseif node.info.kind == "for" {
+	    word = "do";
+	}	
+	elseif node.info.kind == "apply" {
+	    word = "do";
+	}	
+	elseif node.info.kind == "foreach" {
+	    word = "do";
+	}	
+	elseif node.info.kind == "func" {
+	    word = "";
+	}	
+	elseif node.info.kind == "{" {
+	    word = "do";
+	}	
+	self.writeln( word, baseIndent + stepIndent );
+	foreach statement in node.info.stmtList {
+	    statement.filter( filterObj, node, baseIndent + stepIndent );
+	    self.writeln( "", baseIndent + stepIndent );
+	}	
+
+	self.setIndent( baseIndent ) ;
+	if node.info.kind == "{" {
+	    self.write( "end", baseIndent );
+	}	
+    };   
+
+filterObj[ TransUnit.nodeKind.StmtExp ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	node.info.filter( filterObj, node, baseIndent );
+    };  
+
+filterObj[ TransUnit.nodeKind.DeclClass ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let className = node.info.name.txt;
+	self.writeln( string.format( "local %s = {}", className ), baseIndent );
+	if node.info.accessMode == "pub" {
+	    self.writeln( string.format( "moduleObj.%s = %s", className, className ),
+			  baseIndent );
+	}	
+	foreach field in node.info.fieldList {
+	    field.filter( filterObj, node, baseIndent );
+	}	
+    };   
+
+filterObj[ TransUnit.nodeKind.DeclMember ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	'' dump( baseIndent, node, node.info.name.txt )
+	'' node.info.refType.filter( filterObj, prefix .. "  ", depth + 1 )
+    };   
+
+
+filterObj[ TransUnit.nodeKind.DeclConstr ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let className = node.info.className.txt;
+	self.write( string.format( "function %s.new( ", className ) );
+
+	let argTxt = "";
+	foreach arg, index in node.info.argList {
+	    if index > 1 {
+		self.write( ", " );
+		argTxt = argTxt .. ", ";
+	    }   
+	    arg.filter( filterObj, node, baseIndent );
+	    argTxt = argTxt .. arg.info.name.txt;
+	}	
+	self.writeln( " )", baseIndent + stepIndent );
+	self.writeln( "local obj = {}", baseIndent + stepIndent );
+	self.writeln( string.format( "setmetatable( obj, { __index = %s } )", className ),
+		      baseIndent + stepIndent );
+	self.writeln( string.format( "return obj.__init and obj.__init( %s ) or nil;",
+				     argTxt ), baseIndent );
+	self.writeln( "end", baseIndent );
+
+
+	'' foreach refType, index in node.info.retTypeList {
+	''    if index > 1 {
+	'' 	 self.write( ", " )
+	''    }
+	''    refType.filter( filterObj, node, baseIndent )
+	'' }
+	self.write( string.format( "function %s.__init(%s) ", className, argTxt ) );
+	node.info.body.filter( filterObj, node, baseIndent );
+	self.writeln( "end", baseIndent );
+    };   
+
+
+filterObj[ TransUnit.nodeKind.DeclMethod ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let delimit = ".";
+	if node.info.staticFlag {
+	    delimit = ".";
+	}	
+	self.write( string.format( "function %s%s%s( ",
+				   node.info.className.txt,
+				   delimit, node.info.name.txt ) );
+
+	foreach arg, index in node.info.argList {
+	    if index > 1 {
+		self.write( ", " );
+	    }   
+	    arg.filter( filterObj, node, baseIndent );
+	}	
+	self.write( " )", baseIndent );
+	'' foreach refType, index in node.info.retTypeList {
+	''    if index > 1 {
+	'' 	 self.write( ", " )
+	''    }
+	''    refType.filter( filterObj, node, baseIndent )
+	'' }
+	node.info.body.filter( filterObj, node, baseIndent );
+	self.writeln( "end", baseIndent );
+    };
+
+
+filterObj[ TransUnit.nodeKind.DeclVar ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	if node.info.accessMode ~= "global" {
+	    self.write( "local " );
+	}	
+
+	let varName = "";
+	foreach var, index in node.info.varList {
+	    if index > 1 {
+		self.write( ", " );
+	    }   
+	    self.write( var.name.txt );
+	}	
+
+	self.write( " = " );
+
+	if node.info.expList {
+	    node.info.expList.filter( filterObj, node, baseIndent );
+	}	
+	self.writeln( "", baseIndent );
+
+	if node.info.accessMode == "pub" {
+	    foreach var, index in node.info.varList {
+		self.writeln( string.format( "moduleObj.%s = %s", var.name.txt, var.name.txt ),
+			      baseIndent );
+	    }   
+	}	
+    };   
+
+filterObj[ TransUnit.nodeKind.DeclArg ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( string.format( "%s", node.info.name.txt ) );
+
+	'' node.info.argType.filter( filterObj, node, baseIndent )
+    };   
+
+filterObj[ TransUnit.nodeKind.DeclArgDDD ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "..." );
+    };   
+
+filterObj[ TransUnit.nodeKind.ExpDDD ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "..." );
+    };   
+
+filterObj[ TransUnit.nodeKind.DeclFunc ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let nameToken = node.info.name;
+	let name = nameToken and nameToken.txt or "";
+	let letTxt = "";
+	if node.info.accessMode ~= "global" and #name ~= 0 {
+	    letTxt = "local ";
+	}	
+	self.write( string.format( "%sfn %s( ", letTxt, name ) );
+
+	foreach arg, index in node.info.argList {
+	    if index > 1 {
+		self.write( ", " );
+	    }   
+	    arg.filter( filterObj, node, baseIndent );
+	}	
+	self.write( " )", baseIndent );
+	'' foreach refType, index in node.info.retTypeList {
+	''    if index > 1 {
+	'' 	 self.write( ", " )
+	''    }
+	''    refType.filter( filterObj, node, baseIndent )
+	'' }
+	node.info.body.filter( filterObj, node, baseIndent );
+	self.write( "end" );
+    };   
+
+filterObj[ TransUnit.nodeKind.RefType ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write(
+	    (node.info.refFlag and "&" or "") ..
+	    (node.info.mutFlag and "mut " or "") .. node.info.name.txt );
+	if node.info.array == "array" {
+	    self.write( "[@]" );
+	}
+	elseif node.info.array == "list" {
+	    self.write( "[]" );
+	}   
+    };
+
+filterObj[ TransUnit.nodeKind.If ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	foreach val, index in node.info {
+	    if index == 1 {
+		self.write( "if " );
+		val.exp.filter( filterObj, node, baseIndent );
+	    }   
+	    elseif val.kind == "elseif" {
+		self.write( "elseif " );
+		val.exp.filter( filterObj, node, baseIndent );
+	    }
+	    else {
+		self.write( "else" );
+	    }   
+	    self.write( " " );
+	    val.block.filter( filterObj, node, baseIndent );
+	}	
+	self.write( "end" );
+    };   
+
+filterObj[ TransUnit.nodeKind.While ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "while " );
+
+	node.info.exp.filter( filterObj, node, baseIndent );
+	self.write( " " );
+	node.info.block.filter( filterObj, node, baseIndent );
+	self.write( "end" );
+    };   
+
+filterObj[ TransUnit.nodeKind.Repeat ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "repeat " );
+	node.info.block.filter( filterObj, node, baseIndent );
+	self.write( "until " );
+	node.info.exp.filter( filterObj, node, baseIndent );
+    };   
+
+filterObj[ TransUnit.nodeKind.Foreach ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( string.format( "for %s = ", node.info.val.txt ) );
+	node.info.init.filter( filterObj, node, baseIndent );
+	self.write( ", " );
+	node.info.to.filter( filterObj, node, baseIndent );
+	if node.info.delta {
+	    self.write( ", " );
+	    node.info.delta.filter( filterObj, node, baseIndent );
+	}	
+	self.write( " " );
+	node.info.block.filter( filterObj, node, baseIndent );
+	self.write( "end" );
+    };   
+
+filterObj[ TransUnit.nodeKind.Apply ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "for " );
+	foreach var, index in node.info.varList {
+	    if index > 1 {
+		self.write( ", " );
+	    }   
+	    self.write( var.txt );
+	}	
+	self.write( " in " );
+	node.info.exp.filter( filterObj, node, baseIndent );
+	self.write( " " );
+	node.info.block.filter( filterObj, node, baseIndent );
+	self.write( "end" );
+    };   
+
+filterObj[ TransUnit.nodeKind.Foreach ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "for " );
+	self.write( node.info.key and node.info.key.txt or "__index" );
+	self.write( ", " );
+	self.write( node.info.val.txt );
+
+	self.write( " in pairs( " );
+	node.info.exp.filter( filterObj, node, baseIndent );
+	self.write( " ) " );
+	node.info.block.filter( filterObj, node, baseIndent );
+	self.write( "end" );
+    };   
+
+
+filterObj[ TransUnit.nodeKind.ExpCall ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	node.info.func.filter( filterObj, node, baseIndent );
+	self.write( "( " );
+	if node.info.argList {
+	    node.info.argList.filter( filterObj, node, baseIndent );
+	}	
+	self.write( " )" );
+    };   
+
+
+filterObj[ TransUnit.nodeKind.ExpList ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	foreach exp, index in node.info {
+	    if index > 1 {
+		self.write( ", " );
+	    }   
+	    exp.filter( filterObj, node, baseIndent );
+	}	
+    };   
+
+filterObj[ TransUnit.nodeKind.ExpOp1 ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let op = node.info.op.txt;
+	if op == "not" {
+	    op = op .. " ";
+	}	
+	self.write( op );
+	node.info.exp.filter( filterObj, node, baseIndent );
+    };   
+
+filterObj[ TransUnit.nodeKind.ExpCast ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	node.info.exp.filter( filterObj, node, baseIndent );
+	'' node.info.castType.filter( filterObj, node, baseIndent )
+    };   
+
+
+filterObj[ TransUnit.nodeKind.ExpParen ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "(" );
+	node.info.filter( filterObj, node, baseIndent );
+	self.write( " )" );
+    };   
+
+filterObj[ TransUnit.nodeKind.ExpOp2 ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	node.info.exp1.filter( filterObj, node, baseIndent );
+
+	self.write( " " .. node.info.op.txt .. " " );
+
+	node.info.exp2.filter( filterObj, node, baseIndent );
+    };   
+
+filterObj[ TransUnit.nodeKind.ExpRef ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( node.info.txt );
+    };   
+
+filterObj[ TransUnit.nodeKind.ExpRefItem ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	if node.info.val.kind == TransUnit.nodeKind.LiteralString {
+	    self.write( "string.byte( " );
+	    node.info.val.filter( filterObj, node, baseIndent );
+	    self.write( ", " );
+	    node.info.index.filter( filterObj, node, baseIndent );
+	    self.write( " )" );
+	}	
+	else {
+	    node.info.val.filter( filterObj, node, baseIndent );
+	    self.write( "[" );
+	    node.info.index.filter( filterObj, node, baseIndent );
+	    self.write( "]" );
+	}	
+    };   
+
+filterObj[ TransUnit.nodeKind.RefField ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	node.info.prefix.filter( filterObj, node, baseIndent );
+	let delimit = ".";
+	if parent.kind == TransUnit.nodeKind.ExpCall {
+	    if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and
+		builtInModuleSet[ node.info.prefix.info.txt ]
+	    {   
+		delimit = ".";
+	    }   
+	    else {
+		delimit = ".";
+	    }   
+	}	
+	self.write( delimit .. node.info.field.txt );
+    };   
+
+filterObj[ TransUnit.nodeKind.Return ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "return " );
+
+	node.info.filter( filterObj, node, baseIndent );
+    };   
+
+filterObj[ TransUnit.nodeKind.LiteralList ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "{" );
+
+	node.info.filter( filterObj, node, baseIndent );
+
+	self.write( "}" );
+    };   
+
+filterObj[ TransUnit.nodeKind.LiteralMap ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "{" );
+	let index = 1;
+	foreach val, key in pairs( node.info ) {
+	    if index > 1 {
+		self.write( ", " );
+	    }   
+	    self.write( "[" );
+	    key.filter( filterObj, node, baseIndent );
+	    self.write( "] = " );
+	    val.filter( filterObj, node, baseIndent );
+	    index = index + 1;
+	}	
+
+	self.write( "}" );
+    };   
+
+
+filterObj[ TransUnit.nodeKind.LiteralArray ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "{" );
+
+	node.info.filter( filterObj, node, baseIndent );
+
+	self.write( "}" );
+    };   
+
+
+filterObj[ TransUnit.nodeKind.LiteralChar ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( string.format( "%g", node.info.num ) );
+    };   
+
+filterObj[ TransUnit.nodeKind.LiteralInt ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( string.format( "%d", node.info.num ) );
+    };   
+
+filterObj[ TransUnit.nodeKind.LiteralReal ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( string.format( "%s", node.info.num ) );
+    };   
+
+filterObj[ TransUnit.nodeKind.LiteralString ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let txt = node.info.token.txt;
+	if string.find( txt, '^```' ) {
+	    txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
+	}	
+	if #node.info.argList > 0 {
+	    self.write( string.format( "string.format( %s, ", txt ) );
+	    foreach val, index in node.info.argList {
+		if index > 1 {
+		    self.write( ", " );
+		}	
+		val.filter( filterObj, node, baseIndent );
+	    }   
+	    self.write( ")" );
+	}	
+	else {
+	    self.write( txt );
+	}	
+    };   
+
+filterObj[ TransUnit.nodeKind.LiteralBool ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( node.info.txt );
+    };   
+
+filterObj[ TransUnit.nodeKind.LiteralNil ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "nil" );
+    };   
+
+filterObj[ TransUnit.nodeKind.Break ] = 
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	self.write( "break" );
+
+    };   

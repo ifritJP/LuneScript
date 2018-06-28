@@ -1,5 +1,5 @@
 local moduleObj = {}
-local TransUnit = require( 'primal.TransUnit' ).TransUnit
+local TransUnit = require( 'primal.TransUnit' )
 
 local filterObj = {}
 moduleObj.filterObj = filterObj
@@ -184,7 +184,7 @@ filterObj[TransUnit.nodeKind.LiteralList] = function ( self, node, prefix, depth
 end
 filterObj[TransUnit.nodeKind.LiteralMap] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "" )
-  for key, val in pairs( pairs( node.info ) ) do
+  for key, val in pairs( node.info ) do
     key:filter( filterObj, prefix .. "  ", depth + 1 )
     val:filter( filterObj, prefix .. "  ", depth + 1 )
   end

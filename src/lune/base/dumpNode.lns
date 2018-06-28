@@ -1,4 +1,4 @@
-let TransUnit = require( 'primal.TransUnit' ).TransUnit;
+let TransUnit = require( 'primal.TransUnit' );
 
 pub let filterObj = {};
 
@@ -272,7 +272,7 @@ filterObj[ TransUnit.nodeKind.LiteralMap ] =
     fn( self: stem, node: stem, prefix: str, depth: int ) {
 	dump( prefix, depth, node, "" );
 
-	foreach val, key in pairs( node.info ) {
+	foreach val, key in node.info {
 	    key.filter( filterObj, prefix .. "  ", depth + 1 );
 	    val.filter( filterObj, prefix .. "  ", depth + 1 );
 	}	
