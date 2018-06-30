@@ -59,6 +59,7 @@ local function createReserveInfo( luaMode )
   multiCharDelimitMap[".."] = {"..."}
   return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
+
 local Parser = {}
 moduleObj.Parser = Parser
 function Parser.new( path, luaMode )
@@ -85,19 +86,22 @@ function Parser:__init(path, luaMode)
   return self
 end
 
-Parser.kind = {}
+local kind = {}
+moduleObj.kind = kind
+
 local kindSeed = 0
 
 local kind2Txt = {}
 
 local function regKind( name )
-  local kind = kindSeed
+  local assignKind = kindSeed
   
   kindSeed = kindSeed + 1
-  kind2Txt[kind] = name
-  Parser.kind[name] = kind
-  return kind
+  kind2Txt[assignKind] = name
+  kind[name] = assignKind
+  return assignKind
 end
+
 local kindCmnt = regKind( "Cmnt" )
 
 local kindStr = regKind( "Str" )
@@ -162,23 +166,24 @@ op1Set['not'] = true
 op1Set['#'] = true
 op1Set['~'] = true
 op1Set['*'] = true
-function Parser.getKindTxt( kind )
+local function getKindTxt( kind )
   return kind2Txt[kind]
 end
-
-function Parser.isOp2( ope )
+moduleObj.getKindTxt = getKindTxt
+local function isOp2( ope )
   return op2Set[ope]
 end
-
-function Parser.isOp1( ope )
+moduleObj.isOp2 = isOp2
+local function isOp1( ope )
   return op1Set[ope]
 end
-
+moduleObj.isOp1 = isOp1
 function Parser:parse(  )
   local function readLine(  )
     self.lineNo = self.lineNo + 1
     return self.stream:read( '*l' )
   end
+  
   local rawLine = readLine(  )
   
   if not rawLine then
@@ -209,6 +214,7 @@ function Parser:parse(  )
     end
   end
   
+  
   local addVal = function ( kind, val, column )
     local function createInfo( tokenKind, token, tokenColumn )
       if tokenKind == kindSymb then
@@ -222,6 +228,7 @@ function Parser:parse(  )
       end
       return {["kind"] = tokenKind, ["txt"] = token, ["pos"] = {["lineNo"] = self.lineNo, ["column"] = tokenColumn}}
     end
+    
     local function analyzeNumber( token, startIndex )
       local nonNumIndex = token:find( '[^%d]', startIndex )
       
@@ -256,6 +263,7 @@ function Parser:parse(  )
       end
       return nonNumIndex - 1, intFlag
     end
+    
     if kind == kindSymb then
       local searchIndex = 1
       
@@ -335,6 +343,7 @@ function Parser:parse(  )
       table.insert( list, createInfo( kind, val, column ) )
     end
   end
+  
   
   local searchIndex = startIndex
   
@@ -427,7 +436,7 @@ function Parser:parse(  )
         end
         addVal( kindChar, codeChar, index )
       else 
-        error( "illegal" )
+        error( string.format( "illegal syntax:%s:%s", self.lineNo, rawLine:sub( index ) ) )
       end
     end
     if syncIndexFlag then
@@ -456,4 +465,18 @@ function Parser:getToken(  )
   return token
 end
 
+local eofToken = {["txt"] = "", ["pos"] = {["lineNo"] = 0, ["column"] = 0}, ["kind"] = kindEof}
+
+local function getEofToken(  )
+  return eofToken
+end
+moduleObj.getEofToken = getEofToken
+local _className2InfoMap = {}
+moduleObj._className2InfoMap = _className2InfoMap
+local _classInfoParser = {}
+_className2InfoMap.Parser = _classInfoParser
+_classInfoParser.parse = {
+  name='parse', staticFlag = nil, accessMode = 'pri' }
+_classInfoParser.getToken = {
+  name='getToken', staticFlag = nil, accessMode = 'pri' }
 return moduleObj

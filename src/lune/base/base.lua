@@ -1,8 +1,11 @@
 -- ajiopjiojio
 --[[ fjiaojfeap ]]
 local Parser = require( 'lune.base.Parser' ).Parser
+--local convLua = require( 'primal.convLua' )
+local convLua = require( 'lune.base.convLua' ).filterObj
 
-local parser = Parser.new( arg[ 1 ] )
+local path = arg[ 1 ]
+local parser = Parser.new( path )
 
 local mode = arg[ 2 ]
 if mode == "token" then
@@ -14,24 +17,40 @@ if mode == "token" then
       print( token.kind, token.pos.lineNo, token.pos.column, token.txt )
    end
 else
-   local TransUnit = require( 'primal.TransUnit' )
+   local function createStream( val, writeFunc )
+      local stream = { val = val }
+      stream.write = writeFunc
+      return stream
+   end
+   --local TransUnit = require( 'primal.TransUnit' )
+   local TransUnit = require( 'lune.base.TransUnit' ).TransUnit
    local ast = TransUnit:createAST( parser )
    if mode == "ast" then
       ast:filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
    elseif mode == "lua" then
-      ast:filter( require( 'lune.base.convLua' ).filterObj, nil, 0 )
-   elseif mode == "exe" then
-      local convLua = require( 'lune.base.convLua' ).filterObj
-
-      local stream = { txt = "" }
-      stream.write = function( self, txt )
-	 self.txt = self.txt .. txt
+      ast:filter( convLua:new( io.stdout ), nil, 0 )
+   elseif mode == "save" then
+      local func = function( self, txt )
+	 self.val:write( txt )
       end
-
+      local luaPath = path:gsub( ".lns$", ".lua" )
+      if luaPath ~= path then
+	 local fileObj = io.open( luaPath, "w" )
+	 local stream = createStream( fileObj, func )
+	 ast:filter( convLua:new( stream ), nil, 0 )
+	 fileObj:close()
+      end
+   elseif mode == "exe" then
+      local func = function( self, txt )
+	 self.val = self.val .. txt
+      end
+      local stream = createStream( "", func )
       ast:filter( convLua:new( stream ), nil, 0 )
 
       local chunk, err = load( stream.txt )
-      print( err )
+      if err then
+	 print( err )
+      end
       chunk()
    else
       print( "illegal mode" )

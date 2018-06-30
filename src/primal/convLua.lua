@@ -3,7 +3,6 @@ local Parser = require( 'primal.Parser' )
 
 local filterObj = {}
 
-filterObj.stream = io.stdout
 filterObj.curLineNo = 1
 filterObj.indent = 0
 
@@ -16,8 +15,12 @@ builtInModuleSet[ "table" ] = true
 builtInModuleSet[ "math" ] = true
 
 
+-- クラス名 → クラス情報
+local className2InfoMap = {}
+
 function filterObj:new( stream )
    self.stream = stream
+   self.moduleName2Info = {}
    return self
 end
 
@@ -48,6 +51,14 @@ filterObj[ TransUnit.nodeKind.None ] = function( self, node, parent, baseIndent 
    self:writeln( "-- none", baseIndent );
 end
 
+filterObj[ TransUnit.nodeKind.Import ] = function( self, node, parent, baseIndent )
+   local path = node.info
+   local moduleName = string.gsub( path, ".*%.", "" )
+   local moduleInfo = require( path )
+   self.moduleName2Info[ moduleName ] = moduleInfo;
+   self:writeln( string.format( "local %s = require( '%s' )", moduleName, node.info ),
+		 baseIndent );
+end
 
 filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent )
    self:writeln( "local moduleObj = {}", baseIndent )
@@ -57,6 +68,25 @@ filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent 
       self:writeln( "", baseIndent )
    end
 
+
+   self:writeln( "local _className2InfoMap = {}", baseIndent )
+   self:writeln( "moduleObj._className2InfoMap = _className2InfoMap", baseIndent )
+   
+   for className, classInfo in pairs( className2InfoMap ) do
+      self:writeln( string.format( "local _classInfo%s = {}", className), baseIndent )
+      self:writeln( string.format( "_className2InfoMap.%s = _classInfo%s",
+				   className, className), baseIndent )
+      for methodName, methodInfo in pairs( classInfo ) do
+	 self:writeln( string.format( "_classInfo%s.%s = {", className, methodName ),
+		       baseIndent )
+	 self:writeln(
+	    string.format( "  name='%s', staticFlag = %s, accessMode = '%s' }",
+			   methodName, methodInfo.staticFlag, methodInfo.accessMode ),
+	    baseIndent )
+      end
+   end
+
+   
    self:writeln( "return moduleObj", baseIndent )
 end
 filterObj[ TransUnit.nodeKind.Block ] = function( self, node, parent, baseIndent )
@@ -97,7 +127,10 @@ filterObj[ TransUnit.nodeKind.StmtExp ] = function( self, node, parent, baseInde
 end
 
 filterObj[ TransUnit.nodeKind.DeclClass ] = function( self, node, parent, baseIndent )
+   local classInfo = {}
    local className = node.info.name.txt
+   className2InfoMap[ className ] = classInfo
+   
    self:writeln( string.format( "local %s = {}", className ), baseIndent )
    if node.info.accessMode == "pub" then
       self:writeln( string.format( "moduleObj.%s = %s", className, className ),
@@ -149,13 +182,22 @@ end
 
 
 filterObj[ TransUnit.nodeKind.DeclMethod ] = function( self, node, parent, baseIndent )
+
+   local classInfo = className2InfoMap[ node.info.className.txt ]
+   
    local delimit = ":"
    if node.info.staticFlag then
       delimit = "."
    end
+   local methodName = node.info.name.txt
    self:write( string.format( "function %s%s%s( ",
 			      node.info.className.txt,
-			      delimit, node.info.name.txt ) )
+			      delimit, methodName ) )
+
+   classInfo[ methodName ] = {
+      staticFlag = node.info.staticFlag, accessMode = node.info.accessMode
+   }
+   
 
    for index, arg in ipairs( node.info.argList ) do
       if index > 1 then
@@ -240,7 +282,12 @@ filterObj[ TransUnit.nodeKind.DeclFunc ] = function( self, node, parent, baseInd
    --    refType:filter( filterObj, node, baseIndent )
    -- end
    node.info.body:filter( filterObj, node, baseIndent )
-   self:write( "end" )
+
+   self:writeln( "end", baseIndent )
+
+   if node.info.accessMode == "pub" then
+      self:write( string.format( "moduleObj.%s = %s", name, name ) )
+   end
 end
 
 filterObj[ TransUnit.nodeKind.RefType ] = function( self, node, parent, baseIndent )
@@ -403,8 +450,10 @@ filterObj[ TransUnit.nodeKind.RefField ] = function( self, node, parent, baseInd
    node.info.prefix:filter( filterObj, node, baseIndent )
    local delimit = "."
    if parent.kind == TransUnit.nodeKind.ExpCall then
+      local prefixSymbol = node.info.prefix.info.txt
       if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and
-	 builtInModuleSet[ node.info.prefix.info.txt ]
+	 ( builtInModuleSet[ prefixSymbol ] or
+	      self.moduleName2Info[ prefixSymbol ] )
       then
 	 delimit = "."
       else

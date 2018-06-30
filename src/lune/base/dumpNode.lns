@@ -1,4 +1,5 @@
-let TransUnit = require( 'primal.TransUnit' );
+''let TransUnit = require( 'primal.TransUnit' );
+import lune.base.TransUnit;
 
 pub let filterObj = {};
 
@@ -10,7 +11,12 @@ fn dump( prefix: str, depth: int, node: stem, txt: str ) {
 filterObj[ TransUnit.nodeKind.None ] =
     fn( self: stem, node: stem, prefix: str, depth: int ) {
 	dump( prefix, index, node, "" );			      
-    };  
+    };
+
+filterObj[ TransUnit.nodeKind.Import ] =
+    fn( self: stem, node: stem, prefix: str, depth: int ) {
+	dump( prefix, index, node, node.info );
+    };
 
 filterObj[ TransUnit.nodeKind.Root ] =
     fn( self: stem, node: stem, prefix: str, depth: int ) {

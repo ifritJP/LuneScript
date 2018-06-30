@@ -98,16 +98,16 @@ pub class Parser {
     }
 }   
 
-Parser.kind = {};
+pub let kind = {};
 
 let kindSeed = 0;
 let kind2Txt = {};
 fn regKind( name : str) : int {
-    let kind = kindSeed;
+    let assignKind = kindSeed;
     kindSeed = kindSeed + 1;
-    kind2Txt[ kind ] = name;
-    Parser.kind[ name ] = kind;
-    return kind;
+    kind2Txt[ assignKind ] = name;
+    kind[ name ] = assignKind;
+    return assignKind;
 }   
 
 let kindCmnt = regKind( "Cmnt" );
@@ -167,15 +167,15 @@ op1Set[ '~' ] = true;
 op1Set[ '*' ] = true;
 
 
-static fn Parser.getKindTxt( kind: int ) : int {
+pub fn getKindTxt( kind: int ) : int {
     return kind2Txt[ kind ];
 }   
 
-static fn Parser.isOp2( ope: str ) : bool {
+pub fn isOp2( ope: str ) : bool {
     return op2Set[ ope ];
 }   
 
-static fn Parser.isOp1( ope: str ) : bool {
+pub fn isOp1( ope: str ) : bool {
     return op1Set[ ope ];
 }   
 
@@ -473,9 +473,10 @@ fn Parser.parse() : List {
 		addVal( kindChar, codeChar, index );		    
 	    }   	       					    
 	    else {					    
-		error( "illegal" );
-	    }   						    
-	}	
+		error( string.format( "illegal syntax:%s:%s",
+				      self.lineNo, rawLine.sub( index ) ) );
+	    }
+	}
 	if syncIndexFlag {	    
 	    startIndex = searchIndex;
 	}			    
@@ -501,4 +502,9 @@ fn Parser.getToken() : str {
     self.pos = self.pos + 1;
     
     return token;
-}   
+}
+
+let eofToken = { "kind": kindEof, "txt": "", "pos": { "lineNo": 0, "column": 0 } };
+pub fn getEofToken() {
+   return eofToken;
+}

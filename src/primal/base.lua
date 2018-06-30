@@ -27,7 +27,7 @@ else
    if mode == "ast" then
       ast:filter( require( 'primal.dumpNode' ), "", 0 )
    elseif mode == "lua" then
-      ast:filter( require( 'primal.convLua' ), nil, 0 )
+      ast:filter( convLua:new( io.stdout ), nil, 0 )
    elseif mode == "save" then
       local func = function( self, txt )
 	 self.val:write( txt )

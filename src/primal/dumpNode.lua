@@ -11,6 +11,10 @@ filterObj[ TransUnit.nodeKind.None ] = function( self, node, prefix, depth )
    dump( prefix, index, node, "" )
 end
 
+filterObj[ TransUnit.nodeKind.Import ] = function( self, node, prefix, depth )
+   dump( prefix, index, node, node.info )
+end
+
 filterObj[ TransUnit.nodeKind.Root ] = function( self, node, prefix, depth )
    dump( prefix, index, node, "" )
    for index, child in ipairs( node.info.childlen ) do

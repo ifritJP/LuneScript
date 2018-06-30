@@ -1,6 +1,9 @@
-let TransUnit = require( 'primal.TransUnit' );
+''let TransUnit = require( 'primal.TransUnit' );
+''let TransUnit = require( 'lune.base.TransUnit' );
+import lune.base.TransUnit;
 
-pub let filterObj = {};
+pub class filterObj {
+}
 
 filterObj.stream = io.stdout;
 filterObj.curLineNo = 1;
@@ -14,9 +17,12 @@ builtInModuleSet[ "string" ] = true;
 builtInModuleSet[ "table" ] = true;
 builtInModuleSet[ "math" ] = true;
 
+'' クラス名 → クラス情報
+let className2InfoMap = {};
 
 fn filterObj.new( stream: stem ) {
     self.stream = stream;
+    self.moduleName2Info = {};
     return self;
 }
 
@@ -48,6 +54,15 @@ filterObj[ TransUnit.nodeKind.None ] =
 	self.writeln( "-- none", baseIndent );
     };   
 
+filterObj[ TransUnit.nodeKind.Import ] =
+    fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let path = node.info;
+	let moduleName = string.gsub( path, ".*%.", "" );
+	let moduleInfo = require( path );
+	self.moduleName2Info[ moduleName ] = moduleInfo;
+	self.writeln( "local %s = require( '%s' )" ( moduleName, node.info ),
+		      baseIndent );
+    };
 
 filterObj[ TransUnit.nodeKind.Root ] = 
     fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
@@ -56,7 +71,25 @@ filterObj[ TransUnit.nodeKind.Root ] =
 	foreach child in node.info.childlen {
 	    child.filter( filterObj, node, baseIndent );
 	    self.writeln( "", baseIndent );
-	}	
+	}
+
+	self.writeln( "local _className2InfoMap = {}", baseIndent );
+	self.writeln(
+	    "moduleObj._className2InfoMap = _className2InfoMap", baseIndent );
+   	    
+	foreach classInfo, className in className2InfoMap {
+	    self.writeln( "local _classInfo%s = {}" (className), baseIndent );
+	    self.writeln( "_className2InfoMap.%s = _classInfo%s" (className, className),
+			  baseIndent );
+	    foreach methodInfo, methodName in classInfo {
+		self.writeln( "_classInfo%s.%s = {" ( className, methodName ),
+			      baseIndent );
+		self.writeln(
+		    "  name='%s', staticFlag = %s, accessMode = '%s' }"
+		    ( methodName, methodInfo.staticFlag, methodInfo.accessMode ),
+		    baseIndent );
+	    }	    
+	}
 
 	self.writeln( "return moduleObj", baseIndent );
     };   
@@ -110,7 +143,10 @@ filterObj[ TransUnit.nodeKind.StmtExp ] =
 
 filterObj[ TransUnit.nodeKind.DeclClass ] = 
     fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
+	let classInfo = {};
 	let className = node.info.name.txt;
+	className2InfoMap[ className ] = classInfo;
+	    
 	self.writeln( string.format( "local %s = {}", className ), baseIndent );
 	if node.info.accessMode == "pub" {
 	    self.writeln( string.format( "moduleObj.%s = %s", className, className ),
@@ -146,7 +182,7 @@ filterObj[ TransUnit.nodeKind.DeclConstr ] =
 	self.writeln( "local obj = {}", baseIndent + stepIndent );
 	self.writeln( string.format( "setmetatable( obj, { __index = %s } )", className ),
 		      baseIndent + stepIndent );
-	self.writeln( string.format( "return obj.__init and obj.__init( %s ) or nil;",
+	self.writeln( string.format( "return obj.__init and obj:__init( %s ) or nil;",
 				     argTxt ), baseIndent );
 	self.writeln( "end", baseIndent );
 
@@ -157,7 +193,7 @@ filterObj[ TransUnit.nodeKind.DeclConstr ] =
 	''    }
 	''    refType.filter( filterObj, node, baseIndent )
 	'' }
-	self.write( string.format( "function %s.__init(%s) ", className, argTxt ) );
+	self.write( string.format( "function %s:__init(%s) ", className, argTxt ) );
 	node.info.body.filter( filterObj, node, baseIndent );
 	self.writeln( "end", baseIndent );
     };   
@@ -165,13 +201,19 @@ filterObj[ TransUnit.nodeKind.DeclConstr ] =
 
 filterObj[ TransUnit.nodeKind.DeclMethod ] = 
     fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
-	let delimit = ".";
+
+	let classInfo = className2InfoMap[ node.info.className.txt ];
+	
+	let delimit = ":";
 	if node.info.staticFlag {
 	    delimit = ".";
 	}	
-	self.write( string.format( "function %s%s%s( ",
-				   node.info.className.txt,
-				   delimit, node.info.name.txt ) );
+	let methodName = node.info.name.txt;
+	self.write( "function %s%s%s( "
+		    ( node.info.className.txt, delimit, methodName ) );
+	classInfo[ methodName ] = {
+	    "staticFlag": node.info.staticFlag, "accessMode": node.info.accessMode
+	};
 
 	foreach arg, index in node.info.argList {
 	    if index > 1 {
@@ -245,7 +287,7 @@ filterObj[ TransUnit.nodeKind.DeclFunc ] =
 	if node.info.accessMode ~= "global" and #name ~= 0 {
 	    letTxt = "local ";
 	}	
-	self.write( string.format( "%sfn %s( ", letTxt, name ) );
+	self.write( string.format( "%sfunction %s( ", letTxt, name ) );
 
 	foreach arg, index in node.info.argList {
 	    if index > 1 {
@@ -261,7 +303,12 @@ filterObj[ TransUnit.nodeKind.DeclFunc ] =
 	''    refType.filter( filterObj, node, baseIndent )
 	'' }
 	node.info.body.filter( filterObj, node, baseIndent );
-	self.write( "end" );
+	self.writeln( "end", baseIndent );
+
+	if node.info.accessMode == "pub" {
+	    self.write( "moduleObj.%s = %s" ( name, name ) );
+	}	
+	
     };   
 
 filterObj[ TransUnit.nodeKind.RefType ] = 
@@ -315,7 +362,7 @@ filterObj[ TransUnit.nodeKind.Repeat ] =
 	node.info.exp.filter( filterObj, node, baseIndent );
     };   
 
-filterObj[ TransUnit.nodeKind.Foreach ] = 
+filterObj[ TransUnit.nodeKind.For ] = 
     fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
 	self.write( string.format( "for %s = ", node.info.val.txt ) );
 	node.info.init.filter( filterObj, node, baseIndent );
@@ -442,13 +489,15 @@ filterObj[ TransUnit.nodeKind.RefField ] =
 	node.info.prefix.filter( filterObj, node, baseIndent );
 	let delimit = ".";
 	if parent.kind == TransUnit.nodeKind.ExpCall {
+	    let prefixSymbol = node.info.prefix.info.txt;
 	    if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and
-		builtInModuleSet[ node.info.prefix.info.txt ]
+	       ( builtInModuleSet[ prefixSymbol ] or
+		 self.moduleName2Info[ prefixSymbol ] )
 	    {   
 		delimit = ".";
 	    }   
 	    else {
-		delimit = ".";
+		delimit = ":";
 	    }   
 	}	
 	self.write( delimit .. node.info.field.txt );
@@ -474,7 +523,7 @@ filterObj[ TransUnit.nodeKind.LiteralMap ] =
     fn( self: stem, node: stem, parent:stem, baseIndent:int ) {
 	self.write( "{" );
 	let index = 1;
-	foreach val, key in pairs( node.info ) {
+	foreach val, key in node.info {
 	    if index > 1 {
 		self.write( ", " );
 	    }   

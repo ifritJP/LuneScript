@@ -449,7 +449,8 @@ function ParserMtd:parse()
 	    end
 	    addVal( kindChar, codeChar, index )
 	 else
-	    error( "illegal" )
+	    error( string.format( "illegal syntax:%s:%s",
+				  self.lineNo, rawLine:sub( index ) ) )
 	 end
       end
       if syncIndexFlag then

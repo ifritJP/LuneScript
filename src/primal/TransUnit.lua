@@ -20,6 +20,7 @@ local function regKind( name )
 end
 
 local nodeKindNone = regKind( 'None' )
+local nodeKindImport = regKind( 'Import' )
 local nodeKindRoot = regKind( 'Root' )
 local nodeKindRefType = regKind( 'RefType' )
 local nodeKindIf = regKind( 'If' )
@@ -94,7 +95,7 @@ function TransUnit:createAST( parser )
    self.ast = self:createNode(
       nodeKindRoot, { lineNo = 0, column = 0 }, rootInfo )
    self.parser = parser
-   
+   self.moduleName2Info = {}
    TransUnit:analyzeStatement( rootInfo.childlen )
 
    local token = self:getTokenNoErr()
@@ -119,7 +120,7 @@ function TransUnit:createNode( kind, pos, info )
 end
 
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
-   local staticFlag
+   local staticFlag = false
 
    if not staticFlag then
       if token.txt == "static" then
@@ -146,7 +147,7 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 break
       end
 
-      local statement = self:analyzeDecl( "Pri", false, token, token )
+      local statement = self:analyzeDecl( "pri", false, token, token )
 
       if not statement then
 	 if token.txt == termTxt then
@@ -187,6 +188,23 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 elseif token.txt == "break" then
 	    self:checkNextToken( ";" )
 	    statement = self:createNode( nodeKindBreak, token.pos, nil )
+	 elseif token.txt == "import" then
+	    local moduleName = self:getToken()
+	    local path = moduleName.txt
+	    local nextToken = {}
+	    while true do
+	       nextToken = self:getToken()
+	       if nextToken.txt == "." then
+		  nextToken = self:getToken()
+		  moduleName = nextToken.txt
+		  path = string.format( "%s.%s", path, moduleName )
+	       else
+		  break
+	       end
+	    end
+	    self:checkToken( nextToken, ";" )
+	    self.moduleName2Info[ moduleName ] = require( path )
+	    statement = self:createNode( nodeKindImport, token.pos, path )
 	 else
 	    self:pushback()
 	    local exp = self:analyzeExp()
@@ -316,7 +334,7 @@ function TransUnit:analyzeWhile( token )
 end
 
 function TransUnit:analyzeRepeat( token )
-   local info = { block = self:analyzeBlock(), exp = self:analyzeExp( "repeat" ) }
+   local info = { block = self:analyzeBlock(), exp = self:analyzeExp() }
    local node = self:createNode( nodeKindRepeat, token.pos, info )
    self:checkNextToken( ";" )
    return node
@@ -474,7 +492,7 @@ function TransUnit:analyzeDeclClass( classAccessMode, classToken )
 	 accessMode = token.txt
 	 token = self:getToken()
       end
-      local staticFlag
+      local staticFlag = false
       if token.txt == "static" then
 	 staticFlag = true
 	 token = self:getToken()
@@ -565,7 +583,7 @@ function TransUnit:analyzeDeclFunc(
    self:pushback()
    local body = self:analyzeBlock( "func" )
    local info = { name = name, argList = argList, staticFlag = staticFlag,
-		  retTypeList = typeList, body = body }
+		  retTypeList = typeList, body = body, accessMode = accessMode }
 
    local node = self:createNode( kind, firstToken.pos, info )
 
