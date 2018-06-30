@@ -1,3 +1,4 @@
+--lune/base/dumpNode.lns
 local moduleObj = {}
 local TransUnit = require( 'lune.base.TransUnit' )
 
@@ -5,7 +6,11 @@ local filterObj = {}
 moduleObj.filterObj = filterObj
 
 local function dump( prefix, depth, node, txt )
-  print( string.format( "%s: %s %s", prefix, TransUnit.getNodeKindName( node.kind ), txt) )
+  local typeStr = ""
+  if node.expType and node.expType ~= TransUnit.typeInfo.None then
+    typeStr = string.format( "(%s)", node.expType:getTxt(  ))
+  end
+  print( string.format( "%s: %s %s %s", prefix, TransUnit.getNodeKindName( node.kind ), txt, typeStr) )
 end
 
 filterObj[TransUnit.nodeKind.None] = function ( self, node, prefix, depth )
@@ -49,7 +54,6 @@ end
 
 filterObj[TransUnit.nodeKind.DeclVar] = function ( self, node, prefix, depth )
   local varName = ""
-  
   for index, var in pairs( node.info.varList ) do
     varName = varName .. " " .. var.name.txt
   end
@@ -74,7 +78,6 @@ end
 
 filterObj[TransUnit.nodeKind.DeclFunc] = function ( self, node, prefix, depth )
   local name = node.info.name
-  
   dump( prefix, depth, node, name and name.txt or "<anonymous>" )
   for index, arg in pairs( node.info.argList ) do
     arg:filter( filterObj, prefix .. "  ", depth + 1 )
@@ -139,7 +142,6 @@ end
 
 filterObj[TransUnit.nodeKind.Apply] = function ( self, node, prefix, depth )
   local varNames = ""
-  
   for index, var in pairs( node.info.varList ) do
     varNames = varNames .. var.txt .. " "
   end
@@ -150,7 +152,13 @@ end
 
 filterObj[TransUnit.nodeKind.Foreach] = function ( self, node, prefix, depth )
   local index = node.info.key and node.info.key.txt or ""
-  
+  dump( prefix, depth, node, node.info.val.txt .. " " .. index )
+  node.info.exp:filter( filterObj, prefix .. "  ", depth + 1 )
+  node.info.block:filter( filterObj, prefix .. "  ", depth + 1 )
+end
+
+filterObj[TransUnit.nodeKind.Forsort] = function ( self, node, prefix, depth )
+  local index = node.info.key and node.info.key.txt or ""
   dump( prefix, depth, node, node.info.val.txt .. " " .. index )
   node.info.exp:filter( filterObj, prefix .. "  ", depth + 1 )
   node.info.block:filter( filterObj, prefix .. "  ", depth + 1 )
@@ -220,9 +228,9 @@ end
 
 filterObj[TransUnit.nodeKind.LiteralMap] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "" )
-  for key, val in pairs( node.info ) do
-    key:filter( filterObj, prefix .. "  ", depth + 1 )
-    val:filter( filterObj, prefix .. "  ", depth + 1 )
+  for __index, pair in pairs( node.info.pairList ) do
+    pair.key:filter( filterObj, prefix .. "  ", depth + 1 )
+    pair.val:filter( filterObj, prefix .. "  ", depth + 1 )
   end
 end
 

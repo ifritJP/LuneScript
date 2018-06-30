@@ -27,7 +27,7 @@ else
    if mode == "ast" then
       ast:filter( require( 'primal.dumpNode' ), "", 0 )
    elseif mode == "lua" then
-      ast:filter( convLua:new( io.stdout ), nil, 0 )
+      ast:filter( convLua:new( path, io.stdout ), nil, 0 )
    elseif mode == "save" then
       local func = function( self, txt )
 	 self.val:write( txt )
@@ -36,7 +36,7 @@ else
       if luaPath ~= path then
 	 local fileObj = io.open( luaPath, "w" )
 	 local stream = createStream( fileObj, func )
-	 ast:filter( convLua:new( stream ), nil, 0 )
+	 ast:filter( convLua:new( path, stream ), nil, 0 )
 	 fileObj:close()
       end
    elseif mode == "exe" then
@@ -44,9 +44,13 @@ else
 	 self.val = self.val .. txt
       end
       local stream = createStream( "", func )
-      ast:filter( convLua:new( stream ), nil, 0 )
+      ast:filter( convLua:new( path, stream ), nil, 0 )
 
-      load( stream.val )()
+      local chunk,err = load( stream.val )
+      if err then
+	 error( err )
+      end
+      chunk()
    else
       print( "illegal mode" )
    end

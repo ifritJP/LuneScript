@@ -30,14 +30,15 @@
   (defconst
     lns-keyword (lns-make-regex-or
 		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
-		   "apply" "of" "foreach" "in" "return" "class" "false" "nil" "true"
-		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static"
+		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
+		   "nil" "true"
+		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
 				      '("let" "if" "elseif" "else" "while"
-					"repeat" "for" "apply" "foreach" "class" 
-					"pub" "pro" "pri" "form" "advertise"
+					"repeat" "for" "apply" "foreach" "forsort"
+					"class" "pub" "pro" "pri" "form" "advertise"
 					"wrap" "static" "trust" "import" "''"))
 				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst
@@ -56,7 +57,7 @@
 	      (lns-make-regex-or '("fn" "form"))) .
 	      ( 2 font-lock-function-name-face nil t))    
     (,(format "\\(%s\\)\\s-*\\(\\w+\\)"
-	      (lns-make-regex-or '("let" "for" "foreach" "apply"))) .
+	      (lns-make-regex-or '("let" "for" "foreach" "forsort" "apply"))) .
 	      ( 2 font-lock-variable-name-face nil t))
     ))
 

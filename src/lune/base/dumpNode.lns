@@ -1,11 +1,14 @@
-''let TransUnit = require( 'primal.TransUnit' );
 import lune.base.TransUnit;
 
 pub let filterObj = {};
 
 fn dump( prefix: str, depth: int, node: stem, txt: str ) {
-    print( "%s: %s %s"
-	   (prefix, TransUnit.getNodeKindName( node.kind ), txt ) );
+    let typeStr = "";
+    if node.expType and node.expType ~= TransUnit.typeInfo.None {
+	typeStr = "(%s)" (node.expType.getTxt());
+    }
+    print( "%s: %s %s %s"
+	   (prefix, TransUnit.getNodeKindName( node.kind ), txt, typeStr ) );
 }
 
 filterObj[ TransUnit.nodeKind.None ] =
@@ -186,6 +189,15 @@ filterObj[ TransUnit.nodeKind.Foreach ] =
 	node.info.block.filter( filterObj, prefix .. "  ", depth + 1 );
     };  
 
+filterObj[ TransUnit.nodeKind.Forsort ] = 
+    fn( self: stem, node: stem, prefix: str, depth: int ) {
+	let index = node.info.key and node.info.key.txt or "";
+	dump( prefix, depth, node, node.info.val.txt .. " " .. index );
+
+	node.info.exp.filter( filterObj, prefix .. "  ", depth + 1 );
+	node.info.block.filter( filterObj, prefix .. "  ", depth + 1 );
+    };  
+
 
 filterObj[ TransUnit.nodeKind.ExpCall ] = 
     fn( self: stem, node: stem, prefix: str, depth: int ) {
@@ -278,10 +290,10 @@ filterObj[ TransUnit.nodeKind.LiteralMap ] =
     fn( self: stem, node: stem, prefix: str, depth: int ) {
 	dump( prefix, depth, node, "" );
 
-	foreach val, key in node.info {
-	    key.filter( filterObj, prefix .. "  ", depth + 1 );
-	    val.filter( filterObj, prefix .. "  ", depth + 1 );
-	}	
+	foreach pair in node.info.pairList {
+	    pair.key.filter( filterObj, prefix .. "  ", depth + 1 );
+	    pair.val.filter( filterObj, prefix .. "  ", depth + 1 );
+	}
     };  
 
 

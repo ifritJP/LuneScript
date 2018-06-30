@@ -29,6 +29,7 @@ local nodeKindRepeat = regKind( 'Repeat' )
 local nodeKindFor = regKind( 'For' )
 local nodeKindApply = regKind( 'Apply' )
 local nodeKindForeach = regKind( 'Foreach' )
+local nodeKindForsort = regKind( 'Forsort' );
 local nodeKindReturn = regKind( 'Return' )
 local nodeKindBreak = regKind( 'Break' )
 local nodeKindExpList = regKind( 'ExpList' )
@@ -180,7 +181,9 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 	 elseif token.txt == "apply" then
 	    statement = self:analyzeApply( token )
 	 elseif token.txt == "foreach" then
-	    statement = self:analyzeForeach( token )
+	    statement = self:analyzeForeach( token, false )
+	 elseif token.txt == "forsort" then
+	    statement = self:analyzeForeach( token, true )
 	 elseif token.txt == "return" then
 	    local expList = self:analyzeExpList()
 	    self:checkNextToken( ";" )
@@ -387,7 +390,7 @@ function TransUnit:analyzeApply( token )
    return self:createNode( nodeKindApply, token.pos, info )
 end
 
-function TransUnit:analyzeForeach( token )
+function TransUnit:analyzeForeach( token, sortFlag )
    local valSymbol
    local keySymbol
    local nextToken
@@ -412,8 +415,10 @@ function TransUnit:analyzeForeach( token )
 
    local block = self:analyzeBlock( "foreach" )
 
-   local info = { val = valSymbol, key = keySymbol, exp = exp, block = block }
-   return self:createNode( nodeKindForeach, token.pos, info )
+   local info = { val = valSymbol, key = keySymbol,
+		  exp = exp, block = block, sort = sortFlag }
+   return self:createNode( sortFlag and nodeKindForsort or nodeKindForeach,
+			   token.pos, info )
 end
 
 
@@ -666,6 +671,7 @@ end
 function TransUnit:analyzeMapConst( token )
    local nextToken
    local map = {}
+   local pairList = {}
    repeat
       nextToken = self:getToken()
       if nextToken.txt == "}" then
@@ -676,12 +682,14 @@ function TransUnit:analyzeMapConst( token )
       local key = self:analyzeExp()
       self:checkNextToken( ":" )
       local val = self:analyzeExp()
+      table.insert( pairList, { key = key, val = val } )
       map[ key ] = val
       nextToken = self:getToken()
    until nextToken.txt ~= ","
 
    self:checkToken( nextToken, "}" )
-   return self:createNode( nodeKindLiteralMap, token.pos, map )
+   return self:createNode( nodeKindLiteralMap, token.pos,
+			   { map = map, pairList = pairList } )
 end
 
 function TransUnit:analyzeExpRefItem( token, exp )

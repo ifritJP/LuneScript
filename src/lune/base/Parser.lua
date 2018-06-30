@@ -1,11 +1,9 @@
+--lune/base/Parser.lns
 local moduleObj = {}
 local function createReserveInfo( luaMode )
   local keywordSet = {}
-  
   local typeSet = {}
-  
   local builtInSet = {}
-  
   keywordSet["let"] = true
   keywordSet["if"] = true
   keywordSet["else"] = true
@@ -48,7 +46,6 @@ local function createReserveInfo( luaMode )
     typeSet["bool"] = true
   end
   local multiCharDelimitMap = {}
-  
   multiCharDelimitMap["="] = {"=="}
   multiCharDelimitMap["~"] = {"~="}
   multiCharDelimitMap["<"] = {"<="}
@@ -69,7 +66,6 @@ function Parser.new( path, luaMode )
 end
 function Parser:__init(path, luaMode) 
   local stream = io.open( path, "r" )
-  
   if not stream then
     return nil
   end
@@ -78,7 +74,6 @@ function Parser:__init(path, luaMode)
   self.pos = 1
   self.lineTokenList = {}
   local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode or string.find( path, "%.lua$" ) )
-  
   self.keywordSet = keywordSet
   self.typeSet = typeSet
   self.builtInSet = builtInSet
@@ -90,12 +85,9 @@ local kind = {}
 moduleObj.kind = kind
 
 local kindSeed = 0
-
 local kind2Txt = {}
-
 local function regKind( name )
   local assignKind = kindSeed
-  
   kindSeed = kindSeed + 1
   kind2Txt[assignKind] = name
   kind[name] = assignKind
@@ -103,27 +95,16 @@ local function regKind( name )
 end
 
 local kindCmnt = regKind( "Cmnt" )
-
 local kindStr = regKind( "Str" )
-
 local kindInt = regKind( "Int" )
-
 local kindReal = regKind( "Real" )
-
 local kindChar = regKind( "Char" )
-
 local kindSymb = regKind( "Symb" )
-
 local kindDlmt = regKind( "Dlmt" )
-
 local kindKywd = regKind( "Kywd" )
-
 local kindOpe = regKind( "Ope" )
-
 local kindType = regKind( "Type" )
-
 local quotedCharSet = {}
-
 quotedCharSet['a'] = true
 quotedCharSet['b'] = true
 quotedCharSet['f'] = true
@@ -135,7 +116,6 @@ quotedCharSet['\\'] = true
 quotedCharSet['"'] = true
 quotedCharSet["'"] = true
 local op2Set = {}
-
 op2Set['+'] = true
 op2Set['-'] = true
 op2Set['*'] = true
@@ -160,7 +140,6 @@ op2Set['or'] = true
 op2Set['@'] = true
 op2Set['='] = true
 local op1Set = {}
-
 op1Set['-'] = true
 op1Set['not'] = true
 op1Set['#'] = true
@@ -185,22 +164,16 @@ function Parser:parse(  )
   end
   
   local rawLine = readLine(  )
-  
   if not rawLine then
     return nil
   end
   local list = {}
-  
   local startIndex = 1
-  
   local multiComment = function ( comIndex, termStr )
     local searchIndex = comIndex
-    
     local comment = ""
-    
     while true do
       local termIndex, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
-      
       if termIndex then
         comment = comment .. rawLine:sub( searchIndex, termEndIndex )
         return comment, termEndIndex + 1
@@ -213,7 +186,6 @@ function Parser:parse(  )
       end
     end
   end
-  
   
   local addVal = function ( kind, val, column )
     local function createInfo( tokenKind, token, tokenColumn )
@@ -231,14 +203,11 @@ function Parser:parse(  )
     
     local function analyzeNumber( token, startIndex )
       local nonNumIndex = token:find( '[^%d]', startIndex )
-      
       if not nonNumIndex then
         return #token, true
       end
       local intFlag = true
-      
       local nonNumChar = token:byte( nonNumIndex )
-      
       if nonNumChar == 46 then
         intFlag = false
         nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
@@ -251,7 +220,6 @@ function Parser:parse(  )
       if nonNumChar == 101 or nonNumChar == 69 then
         intFlag = false
         local nextChar = token:byte( nonNumIndex + 1 )
-        
         if nextChar == 45 or nextChar == 43 then
           nonNumIndex = token:find( '[^%d]', nonNumIndex + 2 )
         else 
@@ -266,44 +234,32 @@ function Parser:parse(  )
     
     if kind == kindSymb then
       local searchIndex = 1
-      
       while true do
         local tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex )
-        
         if not tokenIndex then
           break
         end
         local columnIndex = column + tokenIndex - 2
-        
         searchIndex = tokenEndIndex + 1
         local token = val:sub( tokenIndex, tokenEndIndex )
-        
         local startIndex = 1
-        
         while true do
           if token:find( '^[%d]', startIndex ) then
             local endIndex, intFlag = analyzeNumber( token, startIndex )
-            
             local info = createInfo( intFlag and kindInt or kindReal, token:sub( startIndex, endIndex ), columnIndex + startIndex )
-            
             table.insert( list, info )
             startIndex = endIndex + 1
           else 
             local index = string.find( token, '[^%w_]', startIndex )
-            
             if index then
               if index > startIndex then
                 local info = createInfo( kindSymb, token:sub( startIndex, index - 1 ), columnIndex + startIndex )
-                
                 table.insert( list, info )
               end
               local delimit = token:sub( index, index )
-              
               local candidateList = self.multiCharDelimitMap[delimit]
-              
               while candidateList do
                 local findFlag = false
-                
                 for __index, candidate in pairs( candidateList ) do
                   if candidate == token:sub( index, index + #candidate - 1 ) then
                     delimit = candidate
@@ -318,13 +274,11 @@ function Parser:parse(  )
               end
               startIndex = index + #delimit
               local workKind = kindDlmt
-              
               if op2Set[delimit] or op1Set[delimit] then
                 workKind = kindOpe
               end
               if delimit == "?" then
                 local nextChar = token:sub( index, startIndex )
-                
                 table.insert( list, createInfo( kindChar, nextChar, columnIndex + startIndex ) )
                 startIndex = startIndex + 1
               else 
@@ -344,24 +298,17 @@ function Parser:parse(  )
     end
   end
   
-  
   local searchIndex = startIndex
-  
   while true do
     local syncIndexFlag = true
-    
     local pattern = [==[[%-%?"%'%`%[].]==]
-    
     local index = string.find( rawLine, pattern, searchIndex )
-    
     if not index then
       addVal( kindSymb, rawLine:sub( startIndex ), startIndex )
       return list
     end
     local findChar = string.byte( rawLine, index )
-    
     local nextChar = string.byte( rawLine, index + 1 )
-    
     if findChar == 45 and nextChar ~= 45 then
       searchIndex = index + 1
       syncIndexFlag = false
@@ -372,7 +319,6 @@ function Parser:parse(  )
       if findChar == 39 and nextChar == 39 then
         if string.byte( rawLine, index + 2 ) == 39 then
           local comment, nextIndex = multiComment( index + 3, "'''" )
-          
           addVal( kindCmnt, "'''" .. comment, index )
           searchIndex = nextIndex
         else 
@@ -389,17 +335,13 @@ function Parser:parse(  )
         end
       elseif findChar == 39 or findChar == 34 then
         local workIndex = index + 1
-        
         local pattern = '["\'\\]'
-        
         while true do
           local endIndex = string.find( rawLine, pattern, workIndex )
-          
           if not endIndex then
             error( string.format( "illegal string: %d: %s", index, rawLine ) )
           end
           local workChar = string.byte( rawLine, endIndex )
-          
           if workChar == findChar then
             addVal( kindStr, rawLine:sub( index, endIndex ), index )
             searchIndex = endIndex + 1
@@ -413,7 +355,6 @@ function Parser:parse(  )
       elseif findChar == 96 then
         if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
           local str, nextIndex = multiComment( index + 3, '```' )
-          
           addVal( kindStr, '```' .. str, index )
           searchIndex = nextIndex
         else 
@@ -421,10 +362,8 @@ function Parser:parse(  )
         end
       elseif findChar == 63 then
         local codeChar = rawLine:sub( index + 1, index + 1 )
-        
         if nextChar == 92 then
           local quoted = rawLine:sub( index + 2, index + 2 )
-          
           if quotedCharSet[quoted] then
             codeChar = rawLine:sub( index + 1, index + 2 )
           else 
@@ -460,13 +399,11 @@ function Parser:getToken(  )
     end
   end
   local token = self.lineTokenList[self.pos]
-  
   self.pos = self.pos + 1
   return token
 end
 
-local eofToken = {["txt"] = "", ["pos"] = {["lineNo"] = 0, ["column"] = 0}, ["kind"] = kindEof}
-
+local eofToken = {["kind"] = kindEof, ["txt"] = "", ["pos"] = {["lineNo"] = 0, ["column"] = 0}}
 local function getEofToken(  )
   return eofToken
 end
@@ -475,8 +412,8 @@ local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 local _classInfoParser = {}
 _className2InfoMap.Parser = _classInfoParser
-_classInfoParser.parse = {
-  name='parse', staticFlag = nil, accessMode = 'pri' }
 _classInfoParser.getToken = {
-  name='getToken', staticFlag = nil, accessMode = 'pri' }
+  name='getToken', staticFlag = false, accessMode = 'pri' }
+_classInfoParser.parse = {
+  name='parse', staticFlag = false, accessMode = 'pri' }
 return moduleObj

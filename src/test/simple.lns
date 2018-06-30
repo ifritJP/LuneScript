@@ -1,15 +1,15 @@
 fn func( val : int) {
     print( "abc%s%s" (val,"ab") );
     print( "%X" ("123"[2]) );
-    foreach val in [ 1, 2, 3 ] {
-	print( val );
+    forsort val, key in { "C": 3, "A": 1, "B": 2 } {
+	print( key, val );
     }
 }
 let data : int = 20;
 func( data );
 
 
-class ClassA {
+pub class ClassA {
     let val: int;
     __init() {
 	self.val = 10;
@@ -25,19 +25,10 @@ fn ClassA.sub() : int {
     return self.val;
 }
 
-class ClassB {
+pub class ClassB {
     func(): int {
 	return 100;
     }
 }
 
 
-let classA = ClassA.new();
-print( classA.func( 0 ) );
-print( classA.func( 0 ) );
-print( classA.sub() );
-
-let classB = ClassA.new();
-print( classB.sub() );
-
-print( string.format( "12%d", 10 ) );

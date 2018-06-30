@@ -13,12 +13,14 @@ builtInModuleSet[ "io" ] = true
 builtInModuleSet[ "string" ] = true
 builtInModuleSet[ "table" ] = true
 builtInModuleSet[ "math" ] = true
+builtInModuleSet[ "_luneScript" ] = true
 
 
 -- クラス名 → クラス情報
 local className2InfoMap = {}
 
-function filterObj:new( stream )
+function filterObj:new( streamName, stream )
+   self.streamName = streamName;
    self.stream = stream
    self.moduleName2Info = {}
    return self
@@ -61,6 +63,7 @@ filterObj[ TransUnit.nodeKind.Import ] = function( self, node, parent, baseInden
 end
 
 filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent )
+   self:writeln( "--" .. filterObj.streamName, baseIndent )
    self:writeln( "local moduleObj = {}", baseIndent )
    
    for index, child in ipairs( node.info.childlen ) do
@@ -71,12 +74,27 @@ filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent 
 
    self:writeln( "local _className2InfoMap = {}", baseIndent )
    self:writeln( "moduleObj._className2InfoMap = _className2InfoMap", baseIndent )
-   
+
+   local keyList = {}
    for className, classInfo in pairs( className2InfoMap ) do
+      table.insert( keyList, className )
+   end
+   table.sort( keyList )
+
+   for index, className in ipairs( keyList ) do
+      local classInfo = className2InfoMap[ className ];
       self:writeln( string.format( "local _classInfo%s = {}", className), baseIndent )
       self:writeln( string.format( "_className2InfoMap.%s = _classInfo%s",
 				   className, className), baseIndent )
+
+      local keyList2 = {}
       for methodName, methodInfo in pairs( classInfo ) do
+	 table.insert( keyList2, methodName )
+      end
+      table.sort( keyList2 )
+      
+      for index2, methodName in ipairs( keyList2 ) do
+	 local methodInfo = classInfo[ methodName ]
 	 self:writeln( string.format( "_classInfo%s.%s = {", className, methodName ),
 		       baseIndent )
 	 self:writeln(
@@ -230,14 +248,14 @@ filterObj[ TransUnit.nodeKind.DeclVar ] = function( self, node, parent, baseInde
       self:write( var.name.txt )
    end
 
-   self:write( " = " )
    
    if node.info.expList then
+      self:write( " = " )
       node.info.expList:filter( filterObj, node, baseIndent )
    end
-   self:writeln( "", baseIndent )
 
    if node.info.accessMode == "pub" then
+      self:writeln( "", baseIndent )
       for index, var in ipairs( node.info.varList ) do
 	 self:writeln( string.format( "moduleObj.%s = %s", var.name.txt, var.name.txt ),
 		       baseIndent )
@@ -378,6 +396,32 @@ filterObj[ TransUnit.nodeKind.Foreach ] = function( self, node, parent, baseInde
 end
 
 
+filterObj[ TransUnit.nodeKind.Forsort ] = function( self, node, parent, baseIndent )
+   self:writeln( "do", baseIndent + stepIndent );
+   self:writeln( "local __sorted = {}", baseIndent + stepIndent );
+   self:write( "local __map = " );
+   node.info.exp:filter( filterObj, node, baseIndent + stepIndent )
+   self:writeln( "", baseIndent + stepIndent );
+   self:writeln( "for __key in pairs( __map ) do", baseIndent + stepIndent * 2 );
+   self:writeln( "table.insert( __sorted, __key )", baseIndent + stepIndent );
+   self:writeln( "end", baseIndent + stepIndent );
+
+   self:writeln( "table.sort( __sorted )", baseIndent + stepIndent );
+
+   
+   self:write( "for __index, " );
+   local key = node.info.key and node.info.key.txt or "__key"
+   self:write( key );
+   self:writeln( " in ipairs( __sorted ) do", baseIndent + stepIndent * 2 );
+   self:writeln( string.format( "%s = __map[ %s ]", node.info.val.txt, key ),
+		 baseIndent + stepIndent * 2 );
+   node.info.block:filter( filterObj, node, baseIndent + stepIndent * 2 );
+   self:writeln( "end", baseIndent + stepIndent );
+   self:writeln( "end", baseIndent );
+   self:writeln( "end", baseIndent );
+end
+
+
 filterObj[ TransUnit.nodeKind.ExpCall ] = function( self, node, parent, baseIndent )
    node.info.func:filter( filterObj, node, baseIndent )
    self:write( "( " )
@@ -453,7 +497,8 @@ filterObj[ TransUnit.nodeKind.RefField ] = function( self, node, parent, baseInd
       local prefixSymbol = node.info.prefix.info.txt
       if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and
 	 ( builtInModuleSet[ prefixSymbol ] or
-	      self.moduleName2Info[ prefixSymbol ] )
+	      self.moduleName2Info[ prefixSymbol ] or
+	      className2InfoMap[ prefixSymbol ] )
       then
 	 delimit = "."
       else
@@ -479,16 +524,14 @@ end
 
 filterObj[ TransUnit.nodeKind.LiteralMap ] = function( self, node, parent, baseIndent )
    self:write( "{" )
-   local index = 1
-   for key, val in pairs( node.info ) do
+   for index, pair in pairs( node.info.pairList ) do
       if index > 1 then
 	 self:write( ", " )
       end
       self:write( "[" )
-      key:filter( filterObj, node, baseIndent )
+      pair.key:filter( filterObj, node, baseIndent )
       self:write( "] = " )
-      val:filter( filterObj, node, baseIndent )
-      index = index + 1
+      pair.val:filter( filterObj, node, baseIndent )
    end
 
    self:write( "}" )

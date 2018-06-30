@@ -1,0 +1,11 @@
+import test.simple;
+
+let classA = simple.ClassA.new();
+print( classA.func( 0 ) );
+print( classA.func( 0 ) );
+print( classA.sub() );
+
+let classB = simple.ClassA.new();
+print( classB.sub() );
+
+print( "12%d" ( 10 ) );

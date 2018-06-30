@@ -164,6 +164,14 @@ filterObj[ TransUnit.nodeKind.Foreach ] = function( self, node, prefix, depth )
    node.info.block:filter( filterObj, prefix .. "  ", depth + 1 )
 end
 
+filterObj[ TransUnit.nodeKind.Forsort ] = function( self, node, prefix, depth )
+   local index = node.info.key and node.info.key.txt or ""
+   dump( prefix, depth, node, node.info.val.txt .. " " .. index )
+
+   node.info.exp:filter( filterObj, prefix .. "  ", depth + 1 )
+   node.info.block:filter( filterObj, prefix .. "  ", depth + 1 )
+end
+
 
 filterObj[ TransUnit.nodeKind.ExpCall ] = function( self, node, prefix, depth )
    dump( prefix, depth, node, "" )
@@ -244,9 +252,9 @@ end
 filterObj[ TransUnit.nodeKind.LiteralMap ] = function( self, node, prefix, depth )
    dump( prefix, depth, node, "" )
 
-   for key, val in pairs( node.info ) do
-      key:filter( filterObj, prefix .. "  ", depth + 1 )
-      val:filter( filterObj, prefix .. "  ", depth + 1 )
+   for index, pair in ipairs( node.info.pairList ) do
+      pair.key:filter( filterObj, prefix .. "  ", depth + 1 )
+      pair.val:filter( filterObj, prefix .. "  ", depth + 1 )
    end
 end
 
