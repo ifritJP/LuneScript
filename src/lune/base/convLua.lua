@@ -26,6 +26,7 @@ builtInModuleSet["io"] = true
 builtInModuleSet["string"] = true
 builtInModuleSet["table"] = true
 builtInModuleSet["math"] = true
+builtInModuleSet["debug"] = true
 builtInModuleSet["_luneScript"] = true
 function filterObj:write( txt )
   if self.needIndent then

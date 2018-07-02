@@ -26,6 +26,12 @@ function _luneScript.loadModule( module )
    return _luneScript.loadedMap[ module ]
 end
 
+local function createAst( path )
+   local parser = Parser.new( scriptPath )
+   local transUnit = TransUnit.new()
+   return transUnit:createAST( parser )
+end
+
 function _luneScript.loadFile( path )
    local transUnit = TransUnit.new()
    local ast = transUnit:createAST( Parser.new( path ) )
@@ -44,10 +50,10 @@ function _luneScript.loadFile( path )
 end
 
 
-local parser = Parser.new( scriptPath )
 
 local mode = arg[ 2 ]
 if mode == "token" then
+   local parser = Parser.new( scriptPath )
    while true do
       local token = parser:getToken()
       if not token then
@@ -57,13 +63,13 @@ if mode == "token" then
    end
 else
    if mode == "ast" then
-      local ast = TransUnit:createAST( parser )
+      local ast = createAst( scriptPath )
       ast:filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
    elseif mode == "lua" then
-      local ast = TransUnit:createAST( parser )
+      local ast = createAst( scriptPath )
       ast:filter( convLua.new( scriptPath, io.stdout ), nil, 0 )
    elseif mode == "save" then
-      local ast = TransUnit:createAST( parser )
+      local ast = createAst( scriptPath )
       local func = function( self, txt )
 	 self.val:write( txt )
       end

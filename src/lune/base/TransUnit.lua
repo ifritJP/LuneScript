@@ -2,60 +2,33 @@
 local moduleObj = {}
 local Parser = require( 'lune.base.Parser' )
 
-local Scope = {}
-function Scope.new( parent )
-  local obj = {}
-  setmetatable( obj, { __index = Scope } )
-  return obj.__init and obj:__init( parent ) or nil;
-end
-function Scope:__init(parent) 
-  self.parent = parent
-  self.varName2DeclNodeMap = {}
-  return self
-end
-function Scope:add( name, declNode )
-  self.varName2DeclNodeMap[name] = declNode
-end
-function Scope:getDeclNode( name )
-  local node = self.varName2DeclNodeMap[name]
-  if node then
-    return node
-  end
-  if self.parent then
-    return self.parent:getDeclNode( name )
-  end
-  return nil
-end
-function Scope:getParent(  )
-  return self.parent
+local function debugLog(  )
+  local debugInfo1 = debug.getinfo( 2 )
+  local debugInfo2 = debug.getinfo( 3 )
+  print( debugInfo1.short_src, debugInfo1.currentline )
+  print( debugInfo2.short_src, debugInfo2.currentline )
 end
 
-local TransUnit = {}
-moduleObj.TransUnit = TransUnit
-function TransUnit.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = TransUnit } )
-  return obj.__init and obj:__init(  ) or nil;
-end
-function TransUnit:__init() 
-  self.scope = Scope.new( nil )
-  return self
-end
-
-local type2typeId2 = {}
 local typeIdSeed = 0
 local typeInfo = {}
 moduleObj.typeInfo = typeInfo
 
+local builtInTypeMap = {}
+local TypeInfoKindPrim = 1
+local TypeInfoKindList = 2
+local TypeInfoKindArray = 3
+local TypeInfoKindClass = 4
+local TypeInfoKindFunc = 5
 local TypeInfo = {}
-function TypeInfo.new( txt, typeId, itemTypeInfo )
+function TypeInfo.new( txt, typeId, kind, itemTypeInfo )
   local obj = {}
   setmetatable( obj, { __index = TypeInfo } )
-  return obj.__init and obj:__init( txt, typeId, itemTypeInfo ) or nil;
+  return obj.__init and obj:__init( txt, typeId, kind, itemTypeInfo ) or nil;
 end
-function TypeInfo:__init(txt, typeId, itemTypeInfo) 
+function TypeInfo:__init(txt, typeId, kind, itemTypeInfo) 
   self.txt = txt
   self.typeId = typeId
+  self.kind = kind
   self.itemTypeInfo = itemTypeInfo
   return self
 end
@@ -73,29 +46,27 @@ function TypeInfo:getTxt(  )
 end
 function TypeInfo.createBuiltin( idName, typeTxt )
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new( typeTxt, typeIdSeed )
-  type2typeId2[typeTxt] = info
+  local info = TypeInfo.new( typeTxt, typeIdSeed, TypeInfoKindPrim )
   typeInfo[idName] = info
+  builtInTypeMap[typeTxt] = info
   return info
 end
 function TypeInfo.createList( itemTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new( nil, typeIdSeed, itemTypeInfo )
+  return TypeInfo.new( nil, typeIdSeed, TypeInfoKindList, itemTypeInfo )
 end
 function TypeInfo.createArray( itemTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new( nil, typeIdSeed, itemTypeInfo )
+  return TypeInfo.new( nil, typeIdSeed, TypeInfoKindArray, itemTypeInfo )
 end
 function TypeInfo.createClass( className )
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new( className, typeIdSeed )
-  type2typeId2[className] = info
+  local info = TypeInfo.new( className, typeIdSeed, TypeInfoKindClass )
   return info
 end
 function TypeInfo.createFunc( funcName )
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new( funcName, typeIdSeed )
-  type2typeId2[funcName] = info
+  local info = TypeInfo.new( funcName, typeIdSeed, TypeInfoKindFunc )
   return info
 end
 
@@ -111,12 +82,69 @@ local typeInfoMap = TypeInfo.createBuiltin( "Map", "Map" )
 local typeInfoList = TypeInfo.createBuiltin( "List", "List" )
 local typeInfoArray = TypeInfo.createBuiltin( "Array", "Array" )
 local typeInfoForm = TypeInfo.createBuiltin( "Form", "form" )
+local Scope = {}
+function Scope.new( parent )
+  local obj = {}
+  setmetatable( obj, { __index = Scope } )
+  return obj.__init and obj:__init( parent ) or nil;
+end
+function Scope:__init(parent) 
+  self.parent = parent
+  self.varName2TypeInfoMap = {}
+  return self
+end
+function Scope:add( name, typeInfo )
+  self.varName2TypeInfoMap[name] = typeInfo
+end
+function Scope:getTypeInfo( name )
+  local node = self.varName2TypeInfoMap[name]
+  if node then
+    return node
+  end
+  if self.parent then
+    return self.parent:getTypeInfo( name )
+  end
+  return builtInTypeMap[name]
+end
+function Scope:getParent(  )
+  return self.parent
+end
+
+local TransUnit = {}
+moduleObj.TransUnit = TransUnit
+function TransUnit.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = TransUnit } )
+  return obj.__init and obj:__init(  ) or nil;
+end
+function TransUnit:__init() 
+  self.scope = Scope.new( nil )
+  self.classList = {}
+  return self
+end
+function TransUnit:pushScope(  )
+  self.scope = Scope.new( self.scope )
+  return self.scope
+end
+function TransUnit:popScope(  )
+  self.scope = self.scope:getParent(  )
+end
+function TransUnit:pushClass( name )
+  local scope = self:pushScope(  )
+  local typeInfo = TypeInfo.createClass( name )
+  table.insert( self.classList, {["name"] = name, ["scope"] = scope, ["typeInfo"] = typeInfo} )
+  return scope
+end
+function TransUnit:popClass(  )
+  self:popScope(  )
+  table.remove( self.classList )
+end
+
 local nodeKind2NameMap = {}
 local nodeKindSeed = 0
 local nodeKind = {}
 moduleObj.nodeKind = nodeKind
 
-TransUnit.className2NodeMap = {}
 local function regKind( name )
   local kind = nodeKindSeed
   nodeKindSeed = nodeKindSeed + 1
@@ -406,13 +434,16 @@ function TransUnit:analyzeWhile( token )
 end
 
 function TransUnit:analyzeRepeat( token )
-  local info = {["block"] = self:analyzeBlock(  ), ["exp"] = self:analyzeExp(  )}
+  local scope = self:pushScope(  )
+  local info = {["block"] = self:analyzeBlock( "repeat", scope ), ["exp"] = self:analyzeExp(  )}
+  self:popScope(  )
   local node = self:createNode( nodeKindRepeat, token.pos, typeInfoNone, info )
   self:checkNextToken( ";" )
   return node
 end
 
 function TransUnit:analyzeFor( token )
+  local scope = self:pushScope(  )
   local val = self:getToken(  )
   if val.kind ~= Parser.kind.Symb then
     self:error( "not symbol" )
@@ -428,12 +459,14 @@ function TransUnit:analyzeFor( token )
   else 
     self:pushback(  )
   end
-  local info = {["block"] = self:analyzeBlock( "for" ), ["val"] = val, ["init"] = exp1, ["to"] = exp2, ["delta"] = exp3}
+  local info = {["block"] = self:analyzeBlock( "for", scope ), ["val"] = val, ["init"] = exp1, ["to"] = exp2, ["delta"] = exp3}
+  self:popScope(  )
   local node = self:createNode( nodeKindFor, token.pos, typeInfoNone, info )
   return node
 end
 
 function TransUnit:analyzeApply( token )
+  local scope = self:pushScope(  )
   local varList = {}
   local nextToken = nil
   repeat 
@@ -449,12 +482,14 @@ function TransUnit:analyzeApply( token )
   if exp.kind ~= nodeKindExpCall then
     self:error( "not call" )
   end
-  local block = self:analyzeBlock( "apply" )
+  local block = self:analyzeBlock( "apply", scope )
+  self:popScope(  )
   local info = {["varList"] = varList, ["exp"] = exp, ["block"] = block}
   return self:createNode( nodeKindApply, token.pos, typeInfoNone, info )
 end
 
 function TransUnit:analyzeForeach( token, sortFlag )
+  local scope = self:pushScope(  )
   local valSymbol = nil
   local keySymbol = nil
   local nextToken = nil
@@ -475,7 +510,8 @@ function TransUnit:analyzeForeach( token, sortFlag )
   end
   self:checkToken( nextToken, "in" )
   local exp = self:analyzeExp(  )
-  local block = self:analyzeBlock( "foreach" )
+  local block = self:analyzeBlock( "foreach", scope )
+  self:popScope(  )
   local info = {["val"] = valSymbol, ["key"] = keySymbol, ["exp"] = exp, ["block"] = block, ["sort"] = sortFlag}
   return self:createNode( sortFlag and nodeKindForsort or nodeKindForeach, token.pos, typeInfoNone, info )
 end
@@ -510,7 +546,8 @@ function TransUnit:analyzeRefType(  )
   else 
     self:pushback(  )
   end
-  return self:createNode( nodeKindRefType, firstToken.pos, typeInfoNone, {["name"] = name, ["refFlag"] = refFlag, ["mutFlag"] = mutFlag, ["array"] = arrayMode} )
+  local typeInfo = self.scope:getTypeInfo( name.txt )
+  return self:createNode( nodeKindRefType, firstToken.pos, typeInfo, {["name"] = name, ["refFlag"] = refFlag, ["mutFlag"] = mutFlag, ["array"] = arrayMode} )
 end
 
 function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
@@ -519,7 +556,7 @@ function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
   local refType = self:analyzeRefType(  )
   token = self:getToken(  )
   self:checkToken( token, ";" )
-  return self:createNode( nodeKindDeclMember, firstToken.pos, typeInfoNone, {["name"] = varName, ["refType"] = refType, ["staticFlag"] = staticFlag, ["accessMode"] = accessMode} )
+  return self:createNode( nodeKindDeclMember, firstToken.pos, refType.expType, {["name"] = varName, ["refType"] = refType, ["staticFlag"] = staticFlag, ["accessMode"] = accessMode} )
 end
 
 function TransUnit:analyzeDeclMethod( accessMode, staticFlag, className, firstToken, name )
@@ -531,6 +568,7 @@ end
 function TransUnit:analyzeDeclClass( classAccessMode, classToken )
   local name = self:getToken(  )
   self:checkNextToken( "{" )
+  self:pushClass( name.txt )
   local fieldList = {}
   while true do
     local token = self:getToken(  )
@@ -553,9 +591,9 @@ function TransUnit:analyzeDeclClass( classAccessMode, classToken )
       table.insert( fieldList, self:analyzeDeclMethod( accessMode, staticFlag, name, token, token ) )
     end
   end
+  self:popClass(  )
   local typeInfo = TypeInfo.createClass( name )
   local node = self:createNode( nodeKindDeclClass, classToken.pos, typeInfoNone, {["accessMode"] = classAccessMode, ["name"] = name, ["fieldList"] = fieldList} )
-  self.className2NodeMap[name.txt] = node
   return node
 end
 
@@ -574,6 +612,7 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
   if token.txt == "." then
     methodFlag = true
     className = name
+    self:pushClass( name.txt )
     name = self:getSymbolToken(  )
     token = self:getToken(  )
   end
@@ -588,6 +627,7 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
   else 
     kind = nodeKindDeclFunc
   end
+  local scope = self:pushScope(  )
   repeat 
     local argName = self:getToken(  )
     if argName.txt == ")" then
@@ -599,7 +639,8 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
       self:checkSymbol( argName )
       self:checkNextToken( ":" )
       local refType = self:analyzeRefType(  )
-      local arg = self:createNode( nodeKindDeclArg, argName.pos, typeInfoNone, {["name"] = argName, ["argType"] = refType} )
+      local arg = self:createNode( nodeKindDeclArg, argName.pos, refType.expType, {["name"] = argName, ["argType"] = refType} )
+      self.scope:add( argName.txt, refType.expType )
       table.insert( argList, arg )
     end
     token = self:getToken(  )
@@ -614,12 +655,13 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
     until token.txt ~= ","
   end
   self:pushback(  )
-  local body = self:analyzeBlock( "func" )
+  local body = self:analyzeBlock( "func", scope )
+  self:popScope(  )
   local info = {["name"] = name, ["argList"] = argList, ["staticFlag"] = staticFlag, ["retTypeList"] = typeList, ["body"] = body, ["accessMode"] = accessMode}
   local node = self:createNode( kind, firstToken.pos, typeInfoNone, info )
   if className then
-    local classNode = self.className2NodeMap[className.txt]
     info.className = className
+    self:popClass( name )
   end
   return node
 end
@@ -627,30 +669,32 @@ end
 function TransUnit:analyzeBlock( blockKind, scope )
   local token = self:checkNextToken( "{" )
   if not scope then
-    local work = Scope.new( self.scope )
-    self.scope = work
+    self:pushScope(  )
   end
   local stmtList = {}
   self:analyzeStatement( stmtList, "}" )
   self:checkNextToken( "}" )
   if not scope then
-    self.scope = self.scope:getParent(  )
+    self:popScope(  )
   end
   local node = self:createNode( nodeKindBlock, token.pos, typeInfoNone, {["kind"] = blockKind, ["stmtList"] = stmtList} )
   return node
 end
 
 function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
+  local typeInfoList = {}
   local varList = {}
   local token = nil
   repeat 
     local varName = self:getSymbolToken(  )
     token = self:getToken(  )
+    local refType = typeInfoNone
     if token.txt == ":" then
-      local refType = self:analyzeRefType(  )
+      refType = self:analyzeRefType(  )
       token = self:getToken(  )
     end
     table.insert( varList, {["name"] = varName, ["refType"] = refType} )
+    table.insert( typeInfoList, refType )
   until token.txt ~= ","
   local expList = nil
   if token.txt == "=" then
@@ -658,7 +702,14 @@ function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
   end
   self:checkNextToken( ";" )
   local declVarInfo = {["accessMode"] = accessMode, ["varList"] = varList, ["expList"] = expList}
-  return self:createNode( nodeKindDeclVar, firstToken.pos, typeInfoNone, declVarInfo )
+  local node = self:createNode( nodeKindDeclVar, firstToken.pos, typeInfoNone, declVarInfo )
+  for index, exp in pairs( expList.info ) do
+    typeInfoList[index] = exp.expType
+  end
+  for index, typeInfo in pairs( typeInfoList ) do
+    self.scope:add( varList[index].name, typeInfo )
+  end
+  return node
 end
 
 function TransUnit:analyzeExpList(  )
@@ -755,7 +806,12 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp )
     local info = {["field"] = token, ["prefix"] = prefixExp}
     exp = self:createNode( nodeKindRefField, firstToken.pos, typeInfoNone, info )
   elseif mode == "symbol" then
-    exp = self:createNode( nodeKindExpRef, firstToken.pos, typeInfoNone, token )
+    local typeInfo = self.scope:getTypeInfo( token.txt )
+    if not typeInfo and token.txt == "self" then
+      local classInfo = self.classList[#self.classList]
+      typeInfo = classInfo.typeInfo
+    end
+    exp = self:createNode( nodeKindExpRef, firstToken.pos, typeInfo, token )
   elseif mode == "fn" then
     exp = self:analyzeDeclFunc( "pri", false, false, token, nil )
   else 
@@ -880,10 +936,10 @@ local _classInfoScope = {}
 _className2InfoMap.Scope = _classInfoScope
 _classInfoScope.add = {
   name='add', staticFlag = false, accessMode = 'pub' }
-_classInfoScope.getDeclNode = {
-  name='getDeclNode', staticFlag = false, accessMode = 'pub' }
 _classInfoScope.getParent = {
   name='getParent', staticFlag = false, accessMode = 'pub' }
+_classInfoScope.getTypeInfo = {
+  name='getTypeInfo', staticFlag = false, accessMode = 'pub' }
 local _classInfoTransUnit = {}
 _className2InfoMap.TransUnit = _classInfoTransUnit
 _classInfoTransUnit.analyzeApply = {
@@ -952,6 +1008,14 @@ _classInfoTransUnit.getToken = {
   name='getToken', staticFlag = false, accessMode = 'pri' }
 _classInfoTransUnit.getTokenNoErr = {
   name='getTokenNoErr', staticFlag = false, accessMode = 'pri' }
+_classInfoTransUnit.popClass = {
+  name='popClass', staticFlag = false, accessMode = 'pri' }
+_classInfoTransUnit.popScope = {
+  name='popScope', staticFlag = false, accessMode = 'pri' }
+_classInfoTransUnit.pushClass = {
+  name='pushClass', staticFlag = false, accessMode = 'pri' }
+_classInfoTransUnit.pushScope = {
+  name='pushScope', staticFlag = false, accessMode = 'pri' }
 _classInfoTransUnit.pushback = {
   name='pushback', staticFlag = false, accessMode = 'pri' }
 local _classInfoTypeInfo = {}
