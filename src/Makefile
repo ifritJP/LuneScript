@@ -26,9 +26,15 @@ define trans
 	cp lune/base/$1.lns work/lune/base
 endef
 
+define cutMeta
+	(cd work/lune/base; cat $1.lua | awk '/^----- meta/{META++;}; //{if (META != 1) {print $$0}} ' > $1.cut.lua )
+endef
+
 define transwork
 	(cd work; $(LUA) lune/base/base.lua lune/base/$1.lns lua > lune/base/$(1)3.lua )
-	diff work/lune/base/$1.lua work/lune/base/$(1)3.lua;
+	$(call cutMeta,$1)
+	$(call cutMeta,$(1)3)
+	diff work/lune/base/$1.cut.lua work/lune/base/$(1)3.cut.lua;
 endef
 
 test-comp:

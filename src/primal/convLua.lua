@@ -75,6 +75,8 @@ filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent 
    end
 
 
+   self:writeln( "----- meta -----", baseIndent )
+
    self:writeln( "local _className2InfoMap = {}", baseIndent )
    self:writeln( "moduleObj._className2InfoMap = _className2InfoMap", baseIndent )
 
@@ -107,6 +109,44 @@ filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent 
       end
    end
 
+
+   local typeId2TypeInfo = {}
+   local typeId2VarInfo = {}
+
+   local function pickupTypeId( typeInfo )
+      if not typeInfo then
+	 return
+      end
+      if not typeId2TypeInfo[ typeInfo:getTypeId() ] then
+	 typeId2TypeInfo[ typeInfo:getTypeId() ] = typeInfo
+	 for index, itemTypeInfo in ipairs( typeInfo:getItemTypeInfoList() ) do
+	    pickupTypeId( itemTypeInfo );
+	 end
+      end
+   end
+   for key, varInfo in pairs( pubVarName2InfoMap ) do
+      pickupTypeId( varInfo.typeInfo )
+   end
+
+   self:writeln( "local _typeInfoList = {}", baseIndent );
+   self:writeln( "moduleObj._typeInfoList = _typeInfoList", baseIndent );
+
+   self:writeln( "local _typeInfoList = {", baseIndent );
+   local keyList4 = {}
+   for typeId in pairs( typeId2TypeInfo ) do
+      table.insert( keyList4, typeId );
+   end
+   table.sort( keyList4 )
+
+   for index, typeId in ipairs( keyList4 ) do
+      local typeInfo = typeId2TypeInfo[ typeId ]
+      self:write( typeInfo.serialize() );
+      self:writeln( "," , baseIndent + 2 );
+   end
+   self:writeln( "}" , baseIndent );
+
+   
+
    self:writeln( "local _varName2InfoMap = {}", baseIndent )
    self:writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent )
    
@@ -125,6 +165,7 @@ filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent 
 	 baseIndent )
    end
 
+   self:writeln( "----- meta -----", baseIndent )
    
    self:writeln( "return moduleObj", baseIndent )
 end
@@ -579,7 +620,9 @@ end
 filterObj[ TransUnit.nodeKind.LiteralArray ] = function( self, node, parent, baseIndent )
    self:write( "{" )
 
-   node.info:filter( filterObj, node, baseIndent )
+   if node.info then
+      node.info:filter( filterObj, node, baseIndent )
+   end
 
    self:write( "}" )
 end

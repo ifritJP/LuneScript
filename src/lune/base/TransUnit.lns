@@ -30,11 +30,12 @@ class TypeInfo {
 	self.txt = txt;
 	self.typeId = typeId;
 	self.kind = kind;
-	self.itemTypeInfo = itemTypeInfo;
+	self.itemTypeInfo = itemTypeInfo or [@];
+	return self;
     }
 
     pub serialize() {
-	let txt: str = '{ "itemTypeInfo": { ';
+	let txt: str = '{ "itemTypeId": { ';
 
 	foreach typeInfo, index in self.itemTypeInfo {
 	    if index ~= 1 {
@@ -42,7 +43,7 @@ class TypeInfo {
 	    }
 	    txt = "%s%d" (txt, typeInfo.typeId );
 	}
-	txt = txt .. '}, typeId = %d, txt = "%s", kind = %d' (self.typeId,
+	txt = txt .. '}, typeId = %d, txt = "%s", kind = %d }' (self.typeId,
 							       self.txt, self.kind );
 	
 	return txt;
@@ -148,16 +149,16 @@ let typeInfoForm = TypeInfo.createBuiltin( "Form", "form" );
 
 class Scope {
     pri let parent: Scope;
-    pri let varName2TypeInfoMap: Map<str,TypeInfo>;
+    pri let symbol2TypeInfoMap: Map<str,TypeInfo>;
     pri let className2ScopeMap: Map<str,Scope>;
     __init( parent: Scope ) {
 	self.parent = parent;
-	self.varName2TypeInfoMap = {};
+	self.symbol2TypeInfoMap = {};
 	self.className2ScopeMap = {};
 	return self;
     }
     pub add( name:str, typeInfo: TypeInfo ) {
-	self.varName2TypeInfoMap[ name ] = typeInfo;
+	self.symbol2TypeInfoMap[ name ] = typeInfo;
     }
     pub addClass( name:str, typeInfo: TypeInfo, scope: Scope ) {
 	self.add( name, typeInfo );
@@ -173,12 +174,12 @@ class Scope {
     }
     
     pub getTypeInfoChild( name: str ) : TypeInfo {
-	return self.varName2TypeInfoMap[ name ];
+	return self.symbol2TypeInfoMap[ name ];
     }
 
 
     pub getTypeInfo( name: str ) : TypeInfo {
-	let node = self.varName2TypeInfoMap[ name ];
+	let node = self.symbol2TypeInfoMap[ name ];
 	if node {
 	    return node;
 	}
@@ -487,9 +488,6 @@ fn TransUnit.analyzeImport( token: stem ) {
 	self.popClass();
     }
 
-    foreach varInfo, varName in moduleInfo._varName2InfoMap {
-	self.scope.add( varName, 
-    }
 
     self.popClass();
 

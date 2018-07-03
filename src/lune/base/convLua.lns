@@ -1,6 +1,7 @@
 import lune.base.TransUnit;
 
 pub class filterObj {
+    
     __init( streamName: str, stream: stem, exeFlag: bool ) {
 	self.streamName = streamName;
 	self.stream = stream;
@@ -87,6 +88,8 @@ filterObj[ TransUnit.nodeKind.Root ] =
 	self.writeln( "", baseIndent );
     }
 
+    self.writeln( "----- meta -----", baseIndent );
+
     self.writeln( "local _className2InfoMap = {}", baseIndent );
     self.writeln(
 	"moduleObj._className2InfoMap = _className2InfoMap", baseIndent );
@@ -105,31 +108,46 @@ filterObj[ TransUnit.nodeKind.Root ] =
 	}	    
     }
 
+   	
+    let typeId2TypeInfo: Map<int,TypeInfo> = {};
+    let typeId2VarInfo: Map<int,stem> = {};
+
+    '' 公開される型情報を typeId2TypeInfo にピックアップする
+    fn pickupTypeId( typeInfo: TypeInfo ) {
+	if not typeId2TypeInfo[ typeInfo.getTypeId() ] {
+	    typeId2TypeInfo[ typeInfo.getTypeId() ] = typeInfo;
+	    foreach itemTypeInfo in typeInfo.getItemTypeInfoList() {
+		pickupTypeId( itemTypeInfo );
+	    }
+	}
+    }
+    foreach varInfo in self.pubVarName2InfoMap {
+	pickupTypeId( varInfo.typeInfo );
+    }
+
+    self.writeln( "local _typeInfoList = {}", baseIndent );
+    self.writeln( "moduleObj._typeInfoList = _typeInfoList", baseIndent );
+
+    self.writeln( "local _typeInfoList = {", baseIndent );
+    forsort typeInfo, typeId in typeId2TypeInfo {
+	self.write( typeInfo.serialize() );
+	self.writeln( "," , baseIndent + 2 );
+    }
+    self.writeln( "}" , baseIndent );
+
     self.writeln( "local _varName2InfoMap = {}", baseIndent );
     self.writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent );
-   	
-    let keyList3 = [];
-    let typeId2TypeInfo: Map<int,TypeInfo> = {};
-    foreach varInfo, varName in self.pubVarName2InfoMap {
-	table.insert( keyList3, varName );
-	let varInfo = self.pubVarName2InfoMap[ varName ];
-	typeId2TypeInfo[ varInfo.getTypeId() ] = varInfo;
-    }
-    forsort typeInfo, typeId in typeId2TypeInfo {
-	let typeInfo
-	typeId2TypeInfo[  TypeInfo.create
-    }   
     
-    table.sort( keyList3 );
-    foreach varName in keyList3 {
-	let varInfo = self.pubVarName2InfoMap[ varName ];
+    forsort varInfo, varName in self.pubVarName2InfoMap {
 	self.writeln( string.format( "_varName2InfoMap.%s = {", varName ),
 		      baseIndent );
 	self.writeln(
-	    "  name='%s', accessMode = '%s', typeInfo = '%s' }"
-	    ( varName, varInfo.accessMode, varInfo.typeInfo.serialize() ),
+	    "  name='%s', accessMode = '%s', typeId = %d }"
+	    ( varName, varInfo.accessMode, varInfo.typeInfo.getTypeId() ),
 	    baseIndent );
-    }   
+    }
+
+    self.writeln( "----- meta -----", baseIndent );
     
 
     self.writeln( "return moduleObj", baseIndent );
@@ -319,7 +337,7 @@ filterObj[ TransUnit.nodeKind.DeclVar ] =
 	    self.pubVarName2InfoMap[ var.name.txt ] =  {
 		"funcFlag": false, "staticFlag": node.info.staticFlag,
 		"accessMode": node.info.accessMode,
-		"typeInfo": node.info.typeInfoList[ info ]
+		"typeInfo": node.info.typeInfoList[ index ]
 	    };
 	}
     }

@@ -13,6 +13,7 @@ end
 
 _luneScript = {}
 _luneScript.loadedMap = {}
+_luneScript.loadedMetaMap = {}
 
 
 function _luneScript.loadModule( module )
@@ -25,6 +26,19 @@ function _luneScript.loadModule( module )
    end
    return _luneScript.loadedMap[ module ]
 end
+
+function _luneScript.loadMeta( module )
+   if not _luneScript.loadedMetaMap[ module ] then
+      local searchPath = package.path
+      searchPath = string.gsub( searchPath, "%.lua", ".lnm" )
+      local path = package.searchpath( module, searchPath )
+
+      _luneScript.loadedMetaMap[ module ] = _luneScript.loadFile( path )
+   end
+   return _luneScript.loadedMetaMap[ module ]
+end
+
+
 
 local function createAst( path )
    local parser = Parser.new( path )
