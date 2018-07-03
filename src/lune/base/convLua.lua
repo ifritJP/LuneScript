@@ -262,7 +262,8 @@ filterObj[TransUnit.nodeKind.DeclFunc] = function ( self, node, parent, baseInde
 end
 
 filterObj[TransUnit.nodeKind.RefType] = function ( self, node, parent, baseIndent )
-  self:write( (node.info.refFlag and "&" or "" ) .. (node.info.mutFlag and "mut " or "" ) .. node.info.name.txt )
+   self:write( (node.info.refFlag and "&" or "" ) .. (node.info.mutFlag and "mut " or "" ) )
+   node.info.name
   if node.info.array == "array" then
     self:write( "[@]" )
   elseif node.info.array == "list" then

@@ -27,7 +27,7 @@ function _luneScript.loadModule( module )
 end
 
 local function createAst( path )
-   local parser = Parser.new( scriptPath )
+   local parser = Parser.new( path )
    local transUnit = TransUnit.new()
    return transUnit:createAST( parser )
 end

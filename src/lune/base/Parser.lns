@@ -40,6 +40,7 @@ fn createReserveInfo( luaMode: stem ) : stem, stem, stem {
 	keywordSet[ "advertise" ] = true;
 	keywordSet[ "as" ] = true;
 	keywordSet[ "import" ] = true;
+	keywordSet[ "new" ] = true;
 
 	typeSet[ "int" ] = true;
 	typeSet[ "real" ] = true;
@@ -63,8 +64,14 @@ fn createReserveInfo( luaMode: stem ) : stem, stem, stem {
     return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
 }	    
 
+class Stream {
+    pub read(): str {
+	return "";
+    }
+}
+
 pub class Parser {
-    let stream : stem;
+    let stream : Stream;
     let lineNo : int;
     let pos : int;
     let lineTokenList : stem[];
@@ -75,7 +82,7 @@ pub class Parser {
 
     
     __init( path: str, luaMode: bool ) {
-	let stream = io.open( path, "r" );
+	let stream: Stream = io.open( path, "r" );
 
 	if not stream {
 	    return nil;

@@ -219,6 +219,14 @@ filterObj[ TransUnit.nodeKind.ExpOp2 ] = function( self, node, prefix, depth )
    node.info.exp2:filter( filterObj, prefix .. "  ", depth + 1 )
 end
 
+filterObj[ TransUnit.nodeKind.ExpNew ] = function( self, node, prefix, depth )
+   dump( prefix, depth, node, "" )
+
+   node.info.symbol:filter( filterObj, prefix .. "  ", depth + 1 )
+   if node.info.argList then
+      node.info.argList:filter( filterObj, prefix .. "  ", depth + 1 )
+   end
+end
 
 filterObj[ TransUnit.nodeKind.ExpRef ] = function( self, node, prefix, depth )
    dump( prefix, depth, node, node.info.txt )

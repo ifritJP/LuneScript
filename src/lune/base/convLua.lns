@@ -10,6 +10,8 @@ pub class filterObj {
 	self.curLineNo = 1;
 	'' クラス名 → クラス情報
 	self.className2InfoMap = {};
+	'' public 変数名 → 変数情報
+	self.pubVarName2InfoMap = {};
 	return self;
     }
 }
@@ -103,6 +105,33 @@ filterObj[ TransUnit.nodeKind.Root ] =
 	}	    
     }
 
+    self.writeln( "local _varName2InfoMap = {}", baseIndent );
+    self.writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent );
+   	
+    let keyList3 = [];
+    let typeId2TypeInfo: Map<int,TypeInfo> = {};
+    foreach varInfo, varName in self.pubVarName2InfoMap {
+	table.insert( keyList3, varName );
+	let varInfo = self.pubVarName2InfoMap[ varName ];
+	typeId2TypeInfo[ varInfo.getTypeId() ] = varInfo;
+    }
+    forsort typeInfo, typeId in typeId2TypeInfo {
+	let typeInfo
+	typeId2TypeInfo[  TypeInfo.create
+    }   
+    
+    table.sort( keyList3 );
+    foreach varName in keyList3 {
+	let varInfo = self.pubVarName2InfoMap[ varName ];
+	self.writeln( string.format( "_varName2InfoMap.%s = {", varName ),
+		      baseIndent );
+	self.writeln(
+	    "  name='%s', accessMode = '%s', typeInfo = '%s' }"
+	    ( varName, varInfo.accessMode, varInfo.typeInfo.serialize() ),
+	    baseIndent );
+    }   
+    
+
     self.writeln( "return moduleObj", baseIndent );
 };   
 
@@ -180,6 +209,17 @@ filterObj[ TransUnit.nodeKind.DeclMember ] =
 };   
 
 
+filterObj[ TransUnit.nodeKind.ExpNew ] =
+    fn( self: stem, node: stem, parent:stem, baseIndent:int )
+{
+   node.info.symbol.filter( filterObj, node, baseIndent );
+   self.write( ".new(" );
+   if node.info.argList {
+      node.info.argList.filter( filterObj, node, baseIndent );
+   }  
+   self.write( ")" );
+};
+
 filterObj[ TransUnit.nodeKind.DeclConstr ] = 
     fn( self: stem, node: stem, parent:stem, baseIndent:int )
 {
@@ -229,6 +269,7 @@ filterObj[ TransUnit.nodeKind.DeclMethod ] =
     self.write( "function %s%s%s( "
 		( node.info.className.txt, delimit, methodName ) );
     classInfo[ methodName ] = {
+	"funcFlag":  true,
 	"staticFlag": node.info.staticFlag, "accessMode": node.info.accessMode
     };
 
@@ -273,10 +314,15 @@ filterObj[ TransUnit.nodeKind.DeclVar ] =
     if node.info.accessMode == "pub" {
 	self.writeln( "", baseIndent );
 	foreach var, index in node.info.varList {
-	    self.writeln( string.format( "moduleObj.%s = %s", var.name.txt, var.name.txt ),
+	    self.writeln( "moduleObj.%s = %s" ( var.name.txt, var.name.txt ),
 			  baseIndent );
-	}   
-    }	
+	    self.pubVarName2InfoMap[ var.name.txt ] =  {
+		"funcFlag": false, "staticFlag": node.info.staticFlag,
+		"accessMode": node.info.accessMode,
+		"typeInfo": node.info.typeInfoList[ info ]
+	    };
+	}
+    }
 };   
 
 filterObj[ TransUnit.nodeKind.DeclArg ] = 
@@ -335,8 +381,8 @@ filterObj[ TransUnit.nodeKind.RefType ] =
     fn( self: stem, node: stem, parent:stem, baseIndent:int )
 {
     self.write(
-	(node.info.refFlag and "&" or "") ..
-	(node.info.mutFlag and "mut " or "") .. node.info.name.txt );
+	(node.info.refFlag and "&" or "") .. (node.info.mutFlag and "mut " or "") );
+    node.info.name.filter( self, node, baseIndent );
     if node.info.array == "array" {
 	self.write( "[@]" );
     }
@@ -580,7 +626,9 @@ filterObj[ TransUnit.nodeKind.LiteralList ] =
 {
     self.write( "{" );
 
-    node.info.filter( self, node, baseIndent );
+    if node.info {
+	node.info.filter( self, node, baseIndent );
+    }
 
     self.write( "}" );
 };   

@@ -123,8 +123,8 @@ filterObj[ TransUnit.nodeKind.RefType ] =
     fn( self: stem, node: stem, prefix: str, depth: int ) {
 	dump( prefix, depth, node,
 	      (node.info.refFlag and "&" or "") ..
-	      (node.info.mutFlag and "mut " or "") ..
-	      node.info.name.txt );
+	      (node.info.mutFlag and "mut " or "") );
+	node.info.name.filter( filterObj, prefix .. "  ", depth + 1 );
     };  
 
 filterObj[ TransUnit.nodeKind.If ] = 
@@ -251,6 +251,17 @@ filterObj[ TransUnit.nodeKind.ExpOp2 ] =
 	node.info.exp2.filter( filterObj, prefix .. "  ", depth + 1 );
     };  
 
+
+filterObj[ TransUnit.nodeKind.ExpNew ] =
+    fn( self: stem, node: stem, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
+
+    node.info.symbol.filter( filterObj, prefix .. "  ", depth + 1 );
+    if node.info.argList {
+	node.info.argList.filter( filterObj, prefix .. "  ", depth + 1 );
+    }
+};
 
 filterObj[ TransUnit.nodeKind.ExpRef ] = 
     fn( self: stem, node: stem, prefix: str, depth: int ) {

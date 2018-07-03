@@ -111,6 +111,7 @@ local function createReserveInfo( luaMode )
       keywordSet[ "advertise" ] = true
       keywordSet[ "as" ] = true
       keywordSet[ "import" ] = true
+      keywordSet[ "new" ] = true
 
       builtInSet[ "super" ] = true
       

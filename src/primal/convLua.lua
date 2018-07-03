@@ -19,6 +19,8 @@ builtInModuleSet[ "_luneScript" ] = true
 
 -- クラス名 → クラス情報
 local className2InfoMap = {}
+-- public 変数名 → 変数情報
+local pubVarName2InfoMap = {}
 
 function filterObj:new( streamName, stream )
    self.streamName = streamName;
@@ -105,6 +107,24 @@ filterObj[ TransUnit.nodeKind.Root ] = function( self, node, parent, baseIndent 
       end
    end
 
+   self:writeln( "local _varName2InfoMap = {}", baseIndent )
+   self:writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent )
+   
+   local keyList3 = {}
+   for varName, varInfo in pairs( pubVarName2InfoMap ) do
+      table.insert( keyList3, varName )
+   end
+   table.sort( keyList3 )
+   for index, varName in ipairs( keyList3 ) do
+      local varInfo = pubVarName2InfoMap[ varName ]
+      self:writeln( string.format( "_varName2InfoMap.%s = {", varName ),
+		    baseIndent )
+      self:writeln(
+	 string.format( "  name='%s', accessMode = '%s' }",
+			varName, varInfo.accessMode ),
+	 baseIndent )
+   end
+
    
    self:writeln( "return moduleObj", baseIndent )
 end
@@ -165,6 +185,14 @@ filterObj[ TransUnit.nodeKind.DeclMember ] = function( self, node, parent, baseI
    -- node.info.refType:filter( filterObj, prefix .. "  ", depth + 1 )
 end
 
+filterObj[ TransUnit.nodeKind.ExpNew ] = function( self, node, parent, baseIndent )
+   node.info.symbol:filter( filterObj, node, baseIndent )
+   self:write( ".new(" )
+   if node.info.argList then
+      node.info.argList:filter( filterObj, node, baseIndent )
+   end
+   self:write( ")" )
+end
 
 filterObj[ TransUnit.nodeKind.DeclConstr ] = function( self, node, parent, baseIndent )
    local className = node.info.className.txt
@@ -214,6 +242,7 @@ filterObj[ TransUnit.nodeKind.DeclMethod ] = function( self, node, parent, baseI
 			      delimit, methodName ) )
 
    classInfo[ methodName ] = {
+      funcFlag = true,
       staticFlag = node.info.staticFlag, accessMode = node.info.accessMode
    }
    
@@ -237,6 +266,7 @@ end
 
 
 filterObj[ TransUnit.nodeKind.DeclVar ] = function( self, node, parent, baseIndent )
+
    if node.info.accessMode ~= "global" then
       self:write( "local " )
    end
@@ -260,7 +290,12 @@ filterObj[ TransUnit.nodeKind.DeclVar ] = function( self, node, parent, baseInde
       for index, var in ipairs( node.info.varList ) do
 	 self:writeln( string.format( "moduleObj.%s = %s", var.name.txt, var.name.txt ),
 		       baseIndent )
+	 pubVarName2InfoMap[ var.name.txt ] =  {
+	    funcFlag = false,
+	    staticFlag = node.info.staticFlag, accessMode = node.info.accessMode
+	 }
       end
+
    end
 end
 
@@ -518,7 +553,9 @@ end
 filterObj[ TransUnit.nodeKind.LiteralList ] = function( self, node, parent, baseIndent )
    self:write( "{" )
 
-   node.info:filter( filterObj, node, baseIndent )
+   if node.info then
+      node.info:filter( filterObj, node, baseIndent )
+   end
 
    self:write( "}" )
 end

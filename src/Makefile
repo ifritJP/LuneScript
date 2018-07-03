@@ -2,7 +2,12 @@ LUA=lua5.3
 
 NDIR=$(shell pwd)
 
-.PHONY: test
+.PHONY: test help exec
+
+help:
+	@echo usage:
+	@echo "  " make test-comp
+
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token

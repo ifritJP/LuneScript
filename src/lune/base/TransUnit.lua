@@ -17,8 +17,9 @@ local builtInTypeMap = {}
 local TypeInfoKindPrim = 1
 local TypeInfoKindList = 2
 local TypeInfoKindArray = 3
-local TypeInfoKindClass = 4
-local TypeInfoKindFunc = 5
+local TypeInfoKindMap = 4
+local TypeInfoKindClass = 5
+local TypeInfoKindFunc = 6
 local TypeInfo = {}
 function TypeInfo.new( txt, typeId, kind, itemTypeInfo )
   local obj = {}
@@ -32,15 +33,31 @@ function TypeInfo:__init(txt, typeId, kind, itemTypeInfo)
   self.itemTypeInfo = itemTypeInfo
   return self
 end
-function TypeInfo:getItemTypeInfo(  )
+function TypeInfo:getItemTypeInfoList(  )
   return self.itemTypeInfo
 end
+function TypeInfo:getKind(  )
+  return self.kind
+end
 function TypeInfo:getTxt(  )
+  if self.kind == TypeInfoKindArray then
+    return self.itemTypeInfo[1]:getTxt(  ) .. "[@]"
+  end
+  if self.kind == TypeInfoKindList then
+    return self.itemTypeInfo[1]:getTxt(  ) .. "[]"
+  end
+  if self.itemTypeInfo and #self.itemTypeInfo > 0 then
+    local txt = self.txt .. "<"
+    for index, typeInfo in pairs( self.itemTypeInfo ) do
+      if index ~= 1 then
+        txt = txt .. ","
+      end
+      txt = txt .. typeInfo:getTxt(  )
+    end
+    return txt .. ">"
+  end
   if self.txt then
     return self.txt
-  end
-  if self.itemTypeInfo then
-    return self.itemTypeInfo:getTxt(  ) .. "[]"
   end
   return ""
 end
@@ -58,6 +75,10 @@ end
 function TypeInfo.createArray( itemTypeInfo )
   typeIdSeed = typeIdSeed + 1
   return TypeInfo.new( nil, typeIdSeed, TypeInfoKindArray, itemTypeInfo )
+end
+function TypeInfo.createMap( keyTypeInfo, valTypeInfo )
+  typeIdSeed = typeIdSeed + 1
+  return TypeInfo.new( "Map", typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo} )
 end
 function TypeInfo.createClass( className )
   typeIdSeed = typeIdSeed + 1
@@ -91,10 +112,15 @@ end
 function Scope:__init(parent) 
   self.parent = parent
   self.varName2TypeInfoMap = {}
+  self.className2ScopeMap = {}
   return self
 end
 function Scope:add( name, typeInfo )
   self.varName2TypeInfoMap[name] = typeInfo
+end
+function Scope:addClass( name, typeInfo, scope )
+  self:add( name, typeInfo )
+  self.className2ScopeMap[name] = scope
 end
 function Scope:getTypeInfo( name )
   local node = self.varName2TypeInfoMap[name]
@@ -130,8 +156,9 @@ function TransUnit:popScope(  )
   self.scope = self.scope:getParent(  )
 end
 function TransUnit:pushClass( name )
-  local scope = self:pushScope(  )
   local typeInfo = TypeInfo.createClass( name )
+  local scope = self:pushScope(  )
+  scope:addClass( name, typeInfo, scope:getParent(  ) )
   table.insert( self.classList, {["name"] = name, ["scope"] = scope, ["typeInfo"] = typeInfo} )
   return scope
 end
@@ -510,6 +537,21 @@ function TransUnit:analyzeForeach( token, sortFlag )
   end
   self:checkToken( nextToken, "in" )
   local exp = self:analyzeExp(  )
+  if not exp.expType then
+  else 
+    local itemTypeInfoList = exp.expType:getItemTypeInfoList(  )
+    if exp.expType:getKind(  ) == TypeInfoKindMap then
+      self.scope:add( valSymbol.txt, itemTypeInfoList[2] )
+      if keySymbol then
+        self.scope:add( keySymbol.txt, itemTypeInfoList[1] )
+      end
+    elseif exp.expType:getKind(  ) == TypeInfoKindList or exp.expType:getKind(  ) == TypeInfoKindArray then
+      self.scope:add( valSymbol.txt, itemTypeInfoList[1] )
+      if keySymbol then
+        self.scope:add( "__index", typeInfoInt )
+      end
+    end
+  end
   local block = self:analyzeBlock( "foreach", scope )
   self:popScope(  )
   local info = {["val"] = valSymbol, ["key"] = keySymbol, ["exp"] = exp, ["block"] = block, ["sort"] = sortFlag}
@@ -543,6 +585,13 @@ function TransUnit:analyzeRefType(  )
       self:pushback(  )
       self:checkNextToken( ']' )
     end
+  elseif token.txt == "<" then
+    local nextToken = nil
+    repeat 
+      self:getSymbolToken(  )
+      nextToken = self:getToken(  )
+    until nextToken.txt ~= ","
+    self:checkToken( nextToken, '>' )
   else 
     self:pushback(  )
   end
@@ -707,7 +756,7 @@ function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
     typeInfoList[index] = exp.expType
   end
   for index, typeInfo in pairs( typeInfoList ) do
-    self.scope:add( varList[index].name, typeInfo )
+    self.scope:add( varList[index].name.txt, typeInfo )
   end
   return node
 end
@@ -746,6 +795,8 @@ function TransUnit:analyzeMapConst( token )
   local nextToken = nil
   local map = {}
   local pairList = {}
+  local keyTypeInfo = typeInfoNone
+  local valTypeInfo = typeInfoNone
   repeat 
     nextToken = self:getToken(  )
     if nextToken.txt == "}" then
@@ -753,14 +804,29 @@ function TransUnit:analyzeMapConst( token )
     end
     self:pushback(  )
     local key = self:analyzeExp(  )
+    if key.expType ~= keyTypeInfo then
+      if keyTypeInfo ~= typeInfoNone then
+        keyTypeInfo = typeInfoStem
+      else 
+        keyTypeInfo = key.expType
+      end
+    end
     self:checkNextToken( ":" )
     local val = self:analyzeExp(  )
+    if val.expType ~= valTypeInfo then
+      if valTypeInfo ~= typeInfoNone then
+        valTypeInfo = typeInfoStem
+      else 
+        valTypeInfo = val.expType
+      end
+    end
     table.insert( pairList, {["key"] = key, ["val"] = val} )
     map[key] = val
     nextToken = self:getToken(  )
   until nextToken.txt ~= ","
+  local typeInfo = TypeInfo.createMap( keyTypeInfo, valTypeInfo )
   self:checkToken( nextToken, "}" )
-  return self:createNode( nodeKindLiteralMap, token.pos, typeInfoMap, {["map"] = map, ["pairList"] = pairList} )
+  return self:createNode( nodeKindLiteralMap, token.pos, typeInfo, {["map"] = map, ["pairList"] = pairList} )
 end
 
 function TransUnit:analyzeExpRefItem( token, exp )
@@ -936,6 +1002,8 @@ local _classInfoScope = {}
 _className2InfoMap.Scope = _classInfoScope
 _classInfoScope.add = {
   name='add', staticFlag = false, accessMode = 'pub' }
+_classInfoScope.addClass = {
+  name='addClass', staticFlag = false, accessMode = 'pub' }
 _classInfoScope.getParent = {
   name='getParent', staticFlag = false, accessMode = 'pub' }
 _classInfoScope.getTypeInfo = {
@@ -1030,8 +1098,12 @@ _classInfoTypeInfo.createFunc = {
   name='createFunc', staticFlag = true, accessMode = 'pub' }
 _classInfoTypeInfo.createList = {
   name='createList', staticFlag = true, accessMode = 'pub' }
-_classInfoTypeInfo.getItemTypeInfo = {
-  name='getItemTypeInfo', staticFlag = false, accessMode = 'pub' }
+_classInfoTypeInfo.createMap = {
+  name='createMap', staticFlag = true, accessMode = 'pub' }
+_classInfoTypeInfo.getItemTypeInfoList = {
+  name='getItemTypeInfoList', staticFlag = false, accessMode = 'pub' }
+_classInfoTypeInfo.getKind = {
+  name='getKind', staticFlag = false, accessMode = 'pub' }
 _classInfoTypeInfo.getTxt = {
   name='getTxt', staticFlag = false, accessMode = 'pub' }
 return moduleObj

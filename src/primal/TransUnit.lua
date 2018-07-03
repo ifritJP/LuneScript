@@ -32,6 +32,7 @@ local nodeKindForeach = regKind( 'Foreach' )
 local nodeKindForsort = regKind( 'Forsort' );
 local nodeKindReturn = regKind( 'Return' )
 local nodeKindBreak = regKind( 'Break' )
+local nodeKindExpNew = regKind( 'ExpNew' )
 local nodeKindExpList = regKind( 'ExpList' )
 local nodeKindExpRef = regKind( 'ExpRef' )
 local nodeKindExpOp2 = regKind( 'ExpOp2' )
@@ -435,7 +436,8 @@ function TransUnit:analyzeRefType()
       mutFlag = true
       token = self:getToken()
    end
-   local name = self:checkSymbol( token )
+   --local name = self:checkSymbol( token )
+   local name = self:analyzeExpSymbol( firstToken, token, "symbol", token, true )
    local arrayMode = "no"
    token = self:getToken()
    if token.txt == '[' or token.txt == '[@' then
@@ -449,6 +451,16 @@ function TransUnit:analyzeRefType()
 	 self:pushback()
 	 self:checkNextToken( ']' )
       end
+   elseif token.txt == "<" then
+      local nextToken
+      while true do
+	 self:getSymbolToken()
+	 nextToken = self:getToken()
+	 if nextToken.txt ~= "," then
+	    break
+	 end
+      end
+      self:checkToken( nextToken, '>' )
    else
       self:pushback()
    end
@@ -459,7 +471,7 @@ function TransUnit:analyzeRefType()
 end
 
 
-function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
+function TransUnit:analyzeDeclMember( className, accessMode, staticFlag, firstToken )
    local varName = self:getSymbolToken()
    token = self:getToken()
    local refType = self:analyzeRefType()
@@ -469,7 +481,7 @@ function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
 
    return self:createNode(
       nodeKindDeclMember, firstToken.pos,
-      { name = varName, refType = refType,
+      { className = className, name = varName, refType = refType,
 	staticFlag = staticFlag, accessMode = accessMode } )
 end
 
@@ -504,7 +516,8 @@ function TransUnit:analyzeDeclClass( classAccessMode, classToken )
       end
       if token.txt == "let" then
 	 table.insert( fieldList,
-		       self:analyzeDeclMember( accessMode, staticFlag, token ) )
+		       self:analyzeDeclMember(
+			  name, accessMode, staticFlag, token ) )
       else 
 	 table.insert(
 	    fieldList,
@@ -700,34 +713,37 @@ function TransUnit:analyzeExpRefItem( token, exp )
    return self:createNode( nodeKindExpRefItem, token.pos, info )
 end   
 
-function TransUnit:analyzeExpCont( firstToken, exp )
+function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
    local nextToken = self:getToken()
-   repeat
-      local matchFlag = false
-      if nextToken.txt == "[" then
-	 matchFlag = true
-	 exp = self:analyzeExpRefItem( nextToken, exp )
-	 nextToken = self:getToken()
-      end
-      if nextToken.txt == "(" then
-	 matchFlag = true
-	 local work = self:getToken()
-	 local expList
-	 if work.txt ~= ")" then
-	    self:pushback()	    
-	    expList = self:analyzeExpList()
-	    self:checkNextToken( ")" )
-	 end
-	 local info = { func = exp, argList = expList }
 
-	 exp = self:createNode( nodeKindExpCall, firstToken.pos, info )
-	 nextToken = self:getToken()
-      end
-   until not matchFlag
+   if not skipFlag then
+      repeat
+	 local matchFlag = false
+	 if nextToken.txt == "[" then
+	    matchFlag = true
+	    exp = self:analyzeExpRefItem( nextToken, exp )
+	    nextToken = self:getToken()
+	 end
+	 if nextToken.txt == "(" then
+	    matchFlag = true
+	    local work = self:getToken()
+	    local expList
+	    if work.txt ~= ")" then
+	       self:pushback()	    
+	       expList = self:analyzeExpList()
+	       self:checkNextToken( ")" )
+	    end
+	    local info = { func = exp, argList = expList }
+
+	    exp = self:createNode( nodeKindExpCall, firstToken.pos, info )
+	    nextToken = self:getToken()
+	 end
+      until not matchFlag
+   end
 
    if nextToken.txt == "." then
       return self:analyzeExpSymbol(
-	 firstToken, self:getToken(), "field", exp )
+	 firstToken, self:getToken(), "field", exp, skipFlag )
    end
    
    self:pushback()
@@ -735,7 +751,7 @@ function TransUnit:analyzeExpCont( firstToken, exp )
    
 end
 
-function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp )
+function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFlag )
    local exp
 
    if mode == "field" then
@@ -749,7 +765,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp )
       self:error( "illegal mode", mode )
    end
 
-   return self:analyzeExpCont( firstToken, exp )
+   return self:analyzeExpCont( firstToken, exp, skipFlag )
 end
 
 
@@ -773,8 +789,25 @@ function TransUnit:analyzeExp( skipOp2Flag )
 	 exp = self:analyzeExp( false )
 	 self:checkNextToken( ")" )
 	 exp = self:createNode( nodeKindExpParen, firstToken.pos, exp )
-	 exp = self:analyzeExpCont( firstToken, exp )
+	 exp = self:analyzeExpCont( firstToken, exp, false )
       end
+   end
+
+   if token.txt == "new" then
+      local nextToken = self:getToken()
+      exp = self:analyzeExpSymbol( firstToken, nextToken, "symbol", nextToken, true )
+      
+      self:checkNextToken( "(" );
+      nextToken = self:getToken();
+      local argList
+      if nextToken.txt ~= ")" then
+	 self:pushback()
+	 argList = self:analyzeExpList()
+	 self:checkNextToken( ")" );
+      end
+      exp = self:createNode( nodeKindExpNew, firstToken.pos,
+			     { symbol = exp, argList = argList } )
+      exp = self:analyzeExpCont( firstToken, exp, false )
    end
    
    if token.kind == Parser.kind.Ope and Parser.isOp1( token.txt ) then
@@ -821,9 +854,9 @@ function TransUnit:analyzeExp( skipOp2Flag )
 	 self:pushback()
       end
    elseif token.txt == "fn" then
-      exp = self:analyzeExpSymbol( firstToken, token, "fn", token )
+      exp = self:analyzeExpSymbol( firstToken, token, "fn", token, false )
    elseif token.kind == Parser.kind.Symb then
-      exp = self:analyzeExpSymbol( firstToken, token, "symbol", token )
+      exp = self:analyzeExpSymbol( firstToken, token, "symbol", token, false )
    elseif token.kind == Parser.kind.Type then
       exp = self:createNode( nodeKindExpRef, firstToken.pos, token )
    elseif token.txt == "true" or token.txt == "false" then
