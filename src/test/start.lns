@@ -1,4 +1,4 @@
-''import test.simple;
+import test.simple;
 
 let classA = new simple.ClassA();
 print( classA.func( 0 ) );

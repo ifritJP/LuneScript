@@ -33,7 +33,7 @@
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
 		   "nil" "true"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
-		   "trust" "import" "as" "not" "and" "or" "break" )))
+		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
 				      '("let" "if" "elseif" "else" "while"

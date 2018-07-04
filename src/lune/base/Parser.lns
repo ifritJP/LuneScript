@@ -512,6 +512,6 @@ fn Parser.getToken() : str {
 }
 
 let eofToken = { "kind": kindEof, "txt": "", "pos": { "lineNo": 0, "column": 0 } };
-pub fn getEofToken() {
+pub fn getEofToken(): stem {
    return eofToken;
 }

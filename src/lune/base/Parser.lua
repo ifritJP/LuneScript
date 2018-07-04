@@ -38,6 +38,7 @@ local function createReserveInfo( luaMode )
     keywordSet["advertise"] = true
     keywordSet["as"] = true
     keywordSet["import"] = true
+    keywordSet["new"] = true
     typeSet["int"] = true
     typeSet["real"] = true
     typeSet["stem"] = true
@@ -55,6 +56,11 @@ local function createReserveInfo( luaMode )
   multiCharDelimitMap["@@"] = {"@@?"}
   multiCharDelimitMap[".."] = {"..."}
   return keywordSet, typeSet, builtInSet, multiCharDelimitMap
+end
+
+local Stream = {}
+function Stream:read(  )
+  return ""
 end
 
 local Parser = {}
@@ -408,6 +414,18 @@ local function getEofToken(  )
   return eofToken
 end
 moduleObj.getEofToken = getEofToken
+----- meta -----
+moduleObj._typeInfoList = {
+{ itemTypeId = { }, typeId = 1, txt = "", kind = 1 },
+  { itemTypeId = { }, typeId = 2, txt = "stem", kind = 1 },
+  { itemTypeId = { }, typeId = 4, txt = "bool", kind = 1 },
+  { itemTypeId = { }, typeId = 5, txt = "int", kind = 1 },
+  { itemTypeId = { 1, 1}, typeId = 41, txt = "Map", kind = 4 },
+  { itemTypeId = { }, typeId = 47, txt = "getKindTxt", kind = 6 },
+  { itemTypeId = { }, typeId = 48, txt = "isOp2", kind = 6 },
+  { itemTypeId = { }, typeId = 49, txt = "isOp1", kind = 6 },
+  { itemTypeId = { }, typeId = 63, txt = "getEofToken", kind = 6 },
+  }
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 local _classInfoParser = {}
@@ -416,4 +434,23 @@ _classInfoParser.getToken = {
   name='getToken', staticFlag = false, accessMode = 'pri' }
 _classInfoParser.parse = {
   name='parse', staticFlag = false, accessMode = 'pri' }
+local _classInfoStream = {}
+_className2InfoMap.Stream = _classInfoStream
+_classInfoStream.read = {
+  name='read', staticFlag = false, accessMode = 'pub' }
+local _varName2InfoMap = {}
+moduleObj._varName2InfoMap = _varName2InfoMap
+_varName2InfoMap.kind = {
+  name='kind', accessMode = 'pub', typeId = 41 }
+local _funcName2InfoMap = {}
+moduleObj._funcName2InfoMap = _funcName2InfoMap
+_funcName2InfoMap.getEofToken = {
+  accessMode = 'pub', typeId = 63 }
+_funcName2InfoMap.getKindTxt = {
+  accessMode = 'pub', typeId = 47 }
+_funcName2InfoMap.isOp1 = {
+  accessMode = 'pub', typeId = 49 }
+_funcName2InfoMap.isOp2 = {
+  accessMode = 'pub', typeId = 48 }
+----- meta -----
 return moduleObj

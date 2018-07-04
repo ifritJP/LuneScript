@@ -31,10 +31,11 @@ define cutMeta
 endef
 
 define transwork
-	(cd work; $(LUA) lune/base/base.lua lune/base/$1.lns lua > lune/base/$(1)3.lua )
-	$(call cutMeta,$1)
-	$(call cutMeta,$(1)3)
-	diff work/lune/base/$1.cut.lua work/lune/base/$(1)3.cut.lua;
+	(cd work; $(LUA) lune/base/base.lua lune/base/$1.lns lua > lune/base/$(1).2.lua )
+	$(call cutMeta,$(1))
+	$(call cutMeta,$(1).2)
+	(cd work/lune/base; diff $1.cut.lua $(1).2.cut.lua)
+	(cd work/lune/base; cp $(1).2.lua $1.lua)
 endef
 
 test-comp:
@@ -52,5 +53,9 @@ test-comp2:
 	$(call transwork,convLua)
 	$(call transwork,dumpNode)
 
-	rm work/lune/base/*3.lua
+	cp -a test work
+	(cd work; $(LUA) lune/base/base.lua test/start.lns exe)
+
+	rm work/lune/base/*.2.lua
+	rm work/lune/base/*.cut.lua
 	cp work/lune/base/*.lua lune/base/

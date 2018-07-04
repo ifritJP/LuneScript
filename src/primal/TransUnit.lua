@@ -598,8 +598,13 @@ function TransUnit:analyzeDeclFunc(
       until token.txt ~= ","
    end
 
+   local body
+   if token.txt == ";" then
+      return self:createNoneNode();
+   end
+
    self:pushback()
-   local body = self:analyzeBlock( "func" )
+   body = self:analyzeBlock( "func" )
    local info = { name = name, argList = argList, staticFlag = staticFlag,
 		  retTypeList = typeList, body = body, accessMode = accessMode }
 
