@@ -416,15 +416,15 @@ end
 moduleObj.getEofToken = getEofToken
 ----- meta -----
 moduleObj._typeInfoList = {
-{ itemTypeId = { }, typeId = 1, txt = "", kind = 1 },
-  { itemTypeId = { }, typeId = 2, txt = "stem", kind = 1 },
-  { itemTypeId = { }, typeId = 4, txt = "bool", kind = 1 },
-  { itemTypeId = { }, typeId = 5, txt = "int", kind = 1 },
-  { itemTypeId = { 1, 1}, typeId = 41, txt = "Map", kind = 4 },
-  { itemTypeId = { }, typeId = 47, txt = "getKindTxt", kind = 6 },
-  { itemTypeId = { }, typeId = 48, txt = "isOp2", kind = 6 },
-  { itemTypeId = { }, typeId = 49, txt = "isOp1", kind = 6 },
-  { itemTypeId = { }, typeId = 63, txt = "getEofToken", kind = 6 },
+{ itemTypeId = { }, typeId = 2, txt = "", kind = 1 },
+  { itemTypeId = { }, typeId = 3, txt = "stem", kind = 1 },
+  { itemTypeId = { }, typeId = 5, txt = "bool", kind = 1 },
+  { itemTypeId = { }, typeId = 6, txt = "int", kind = 1 },
+  { itemTypeId = { 2, 2}, typeId = 42, txt = "Map", kind = 4 },
+  { itemTypeId = { }, typeId = 48, txt = "getKindTxt", kind = 6 },
+  { itemTypeId = { }, typeId = 49, txt = "isOp2", kind = 6 },
+  { itemTypeId = { }, typeId = 50, txt = "isOp1", kind = 6 },
+  { itemTypeId = { }, typeId = 64, txt = "getEofToken", kind = 6 },
   }
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
@@ -441,16 +441,16 @@ _classInfoStream.read = {
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 41 }
+  name='kind', accessMode = 'pub', typeId = 42 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
 _funcName2InfoMap.getEofToken = {
-  accessMode = 'pub', typeId = 63 }
+  accessMode = 'pub', typeId = 64 }
 _funcName2InfoMap.getKindTxt = {
-  accessMode = 'pub', typeId = 47 }
-_funcName2InfoMap.isOp1 = {
-  accessMode = 'pub', typeId = 49 }
-_funcName2InfoMap.isOp2 = {
   accessMode = 'pub', typeId = 48 }
+_funcName2InfoMap.isOp1 = {
+  accessMode = 'pub', typeId = 50 }
+_funcName2InfoMap.isOp2 = {
+  accessMode = 'pub', typeId = 49 }
 ----- meta -----
 return moduleObj

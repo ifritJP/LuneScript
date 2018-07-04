@@ -11,7 +11,7 @@ local function debugLog(  )
   print( debugInfo3.short_src, debugInfo3.currentline )
 end
 
-local typeIdSeed = 0
+local typeIdSeed = 1
 local typeInfo = {}
 moduleObj.typeInfo = typeInfo
 
@@ -224,7 +224,7 @@ end
 -- none
 
 local nodeKind2NameMap = {}
-local nodeKindSeed = 0
+local nodeKindSeed = 1
 local nodeKind = {}
 moduleObj.nodeKind = nodeKind
 
@@ -754,7 +754,7 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
   self:pushback(  )
   local body = self:analyzeBlock( "func", scope )
   self:popScope(  )
-  local info = {["name"] = name, ["argList"] = argList, ["staticFlag"] = staticFlag, ["body"] = body, ["accessMode"] = accessMode}
+  local info = {["name"] = name, ["argList"] = argList, ["staticFlag"] = staticFlag, ["body"] = body, ["accessMode"] = accessMode, ["retTypeList"] = retTypeList}
   local node = self:createNode( kind, firstToken.pos, typeInfo, info )
   if className then
     info.className = className
@@ -1138,13 +1138,13 @@ end
 
 ----- meta -----
 moduleObj._typeInfoList = {
-{ itemTypeId = { }, typeId = 1, txt = "", kind = 1 },
-  { itemTypeId = { }, typeId = 2, txt = "stem", kind = 1 },
-  { itemTypeId = { }, typeId = 8, txt = "str", kind = 1 },
-  { itemTypeId = { 1, 1}, typeId = 95, txt = "Map", kind = 4 },
-  { itemTypeId = { 1, 1}, typeId = 145, txt = "Map", kind = 4 },
-  { itemTypeId = { }, typeId = 148, txt = "nodeFilter", kind = 6 },
-  { itemTypeId = { }, typeId = 149, txt = "getNodeKindName", kind = 6 },
+{ itemTypeId = { }, typeId = 2, txt = "", kind = 1 },
+  { itemTypeId = { }, typeId = 3, txt = "stem", kind = 1 },
+  { itemTypeId = { }, typeId = 9, txt = "str", kind = 1 },
+  { itemTypeId = { 2, 2}, typeId = 97, txt = "Map", kind = 4 },
+  { itemTypeId = { 2, 2}, typeId = 147, txt = "Map", kind = 4 },
+  { itemTypeId = { }, typeId = 150, txt = "nodeFilter", kind = 6 },
+  { itemTypeId = { }, typeId = 151, txt = "getNodeKindName", kind = 6 },
   }
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
@@ -1277,14 +1277,14 @@ _classInfoTypeInfo.serialize = {
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.nodeKind = {
-  name='nodeKind', accessMode = 'pub', typeId = 145 }
+  name='nodeKind', accessMode = 'pub', typeId = 147 }
 _varName2InfoMap.typeInfo = {
-  name='typeInfo', accessMode = 'pub', typeId = 95 }
+  name='typeInfo', accessMode = 'pub', typeId = 97 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
 _funcName2InfoMap.getNodeKindName = {
-  accessMode = 'pub', typeId = 149 }
+  accessMode = 'pub', typeId = 151 }
 _funcName2InfoMap.nodeFilter = {
-  accessMode = 'pub', typeId = 148 }
+  accessMode = 'pub', typeId = 150 }
 ----- meta -----
 return moduleObj

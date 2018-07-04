@@ -9,7 +9,7 @@ fn debugLog() {
     print( debugInfo3.short_src, debugInfo3.currentline );
 }
 
-let typeIdSeed = 0;
+let typeIdSeed = 1;
 
 pub let typeInfo = {};
 let builtInTypeMap = {};
@@ -273,7 +273,7 @@ pub class TransUnit {
 
 
 let nodeKind2NameMap = {};
-let nodeKindSeed = 0;
+let nodeKindSeed = 1;
 pub let nodeKind = {};
 
 fn regKind( name:str ): int {
@@ -952,7 +952,7 @@ fn TransUnit.analyzeDeclFunc(
     let body = self.analyzeBlock( "func", scope );
     self.popScope();
     let info = { "name": name, "argList": argList, "staticFlag": staticFlag,
-		 "body": body, "accessMode": accessMode };
+		 "body": body, "accessMode": accessMode, "retTypeList": retTypeList };
 
     let node = self.createNode( kind, firstToken.pos, typeInfo, info );
 

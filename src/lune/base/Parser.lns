@@ -1,7 +1,7 @@
 fn createReserveInfo( luaMode: stem ) : stem, stem, stem {
-    let keywordSet = {};
-    let typeSet = {};
-    let builtInSet = {};
+    let keywordSet:Map<str,bool> = {};
+    let typeSet:Map<str,bool> = {};
+    let builtInSet:Map<str,bool> = {};
     keywordSet[ "let" ] = true;
     keywordSet[ "if" ] = true;
     keywordSet[ "else" ] = true;
