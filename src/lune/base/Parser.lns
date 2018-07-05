@@ -1,4 +1,5 @@
-fn createReserveInfo( luaMode: stem ) : stem, stem, stem {
+fn createReserveInfo( luaMode: bool ) :
+    Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,bool> {
     let keywordSet:Map<str,bool> = {};
     let typeSet:Map<str,bool> = {};
     let builtInSet:Map<str,bool> = {};
@@ -25,7 +26,7 @@ fn createReserveInfo( luaMode: stem ) : stem, stem, stem {
 	keywordSet[ "do" ] = true;
 	keywordSet[ "until" ] = true;
     }
-    else {  
+    else {
 	keywordSet[ "let" ] = true;
 	keywordSet[ "mut" ] = true;
 	keywordSet[ "pub" ] = true;
@@ -48,10 +49,10 @@ fn createReserveInfo( luaMode: stem ) : stem, stem, stem {
 	typeSet[ "str" ] = true;
 	typeSet[ "Map" ] = true;
 	typeSet[ "bool" ] = true;
-    }	    
+    }
 
     '' 2文字以上の演算子
-    let multiCharDelimitMap = {};
+    let multiCharDelimitMap: Map<str,str[@]> = {};
     multiCharDelimitMap[ "=" ] = [@ "==" ];
     multiCharDelimitMap[ "~" ] = [@ "~=" ];
     multiCharDelimitMap[ "<" ] = [@ "<=" ];
@@ -62,31 +63,40 @@ fn createReserveInfo( luaMode: stem ) : stem, stem, stem {
     multiCharDelimitMap[ ".." ] = [@ "..." ];
 
     return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
-}	    
+}
 
 class Stream {
-    pub read(): str {
-	return "";
-    }
+    pub read(): str;
+}
+
+class Position {
+    let lineNo: int;
+    let column: int;
+}
+
+class Token {
+    let kind: int;
+    let txt: str;
+    let pos: Position;
 }
 
 pub class Parser {
     let stream : Stream;
     let lineNo : int;
     let pos : int;
-    let lineTokenList : stem[];
-    let keywordSet : Map;
-    let typeSet : Map;
-    let builtInSet :Map ;
-    let multiCharDelimitMap : Map;
+    let lineTokenList : Token[];
+    let keywordSet : Map<str,bool>;
+    let typeSet : Map<str,bool>;
+    let builtInSet :Map<str,bool>;
+    let multiCharDelimitMap : Map<str,str[@]>;
 
-    
+
     __init( path: str, luaMode: bool ) {
 	let stream: Stream = io.open( path, "r" );
 
 	if not stream {
 	    return nil;
-	}   
+	}
 
 	self.stream = stream;
 	self.lineNo = 0;
@@ -103,9 +113,9 @@ pub class Parser {
 
 	return self;
     }
-}   
+}
 
-pub let kind = {};
+pub let kind:Map<str,int> = {};
 
 let kindSeed = 0;
 let kind2Txt = {};
@@ -115,7 +125,7 @@ fn regKind( name : str) : int {
     kind2Txt[ assignKind ] = name;
     kind[ name ] = assignKind;
     return assignKind;
-}   
+}
 
 let kindCmnt = regKind( "Cmnt" );
 let kindStr = regKind( "Str" );
@@ -127,7 +137,8 @@ let kindDlmt = regKind( "Dlmt" );
 let kindKywd = regKind( "Kywd" );
 let kindOpe = regKind( "Ope" );
 let kindType = regKind( "Type" );
-
+let kindEof = regKind( "Eof" );
+    
 let quotedCharSet = {};
 quotedCharSet[ 'a' ] = true;
 quotedCharSet[ 'b' ] = true;
@@ -176,36 +187,36 @@ op1Set[ '*' ] = true;
 
 pub fn getKindTxt( kind: int ) : int {
     return kind2Txt[ kind ];
-}   
+}
 
 pub fn isOp2( ope: str ) : bool {
     return op2Set[ ope ];
-}   
+}
 
 pub fn isOp1( ope: str ) : bool {
     return op1Set[ ope ];
-}   
+}
 
-fn Parser.parse() : List {
+fn Parser.parse() : Token[] {
     fn readLine() : str {
 	self.lineNo = self.lineNo + 1;
 	return self.stream.read( '*l' );
     }
-    let rawLine = readLine();
+    let rawLine:str = readLine();
     if not rawLine {
 	return nil;
-    }	    
+    }
 
-    let list = {};
+    let list: Token[] = {};
     let startIndex = 1;
 
-    '''	    
+    '''
     複数行コメントの処理。
 
     @param comIndex 現在の解析行内の複数行コメント開始位置
     @param termStr 複数行コメントの終端文字列
     '''
-    let multiComment = fn ( comIndex: int, termStr: str ) {
+    let multiComment = fn ( comIndex: int, termStr: str ): str, int {
 	let searchIndex = comIndex;
 	let comment = "";
 	while true {
@@ -221,7 +232,7 @@ fn Parser.parse() : List {
 	    if not rawLine {
 		error( "illegal comment" );
 	    }
-	}	    
+	}
     };
 
     '''
@@ -237,76 +248,76 @@ fn Parser.parse() : List {
     '''
 
     let addVal = fn ( kind: int, val: str, column: int ) : stem {
-	fn createInfo( tokenKind: int, token: stem, tokenColumn: int ) {
+	fn createInfo( tokenKind: int, token: stem, tokenColumn: int ): Token {
 	    if tokenKind == kindSymb {
 		if self.keywordSet[ token ] {
 		    tokenKind = kindKywd;
-		}	    
+		}
 		elseif self.typeSet[ token ] {
 		    tokenKind = kindType;
 		}
 		elseif op2Set[ token ] or op1Set[ token ] {
 		    tokenKind = kindOpe;
-		}		    
-	    }   
+		}
+	    }
 	    return { "kind": tokenKind, "txt": token,
 		     "pos": { "lineNo": self.lineNo, "column": tokenColumn } };
-	}	    
+	}
 
-	'''	    
+	'''
 	token の startIndex から始まる数値表現領域を特定する
 
 	@param token 文字列
 	@param startIndex token 内の検索開始位置。 この位置から数値表現が始まる。
 	@return 数値表現の終了位置, 整数かどうか
 	'''
-	fn analyzeNumber( token: stem, startIndex: int ) : int, bool {
+	fn analyzeNumber( token: str, startIndex: int ) : int, bool {
 	    let nonNumIndex = token.find( '[^%d]', startIndex );
 	    if not nonNumIndex {
 		return #token, true;
-	    }		    
+	    }
 	    let intFlag = true;
 	    let nonNumChar = token.byte( nonNumIndex );
 	    if nonNumChar == 46 { '' .
-		intFlag = false;    
+		intFlag = false;
 		nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 );
 		nonNumChar = token.byte( nonNumIndex );
 	    }
 	    if nonNumChar == 120 or nonNumChar == 88 { '' X or x
 		nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 );
 		nonNumChar = token.byte( nonNumIndex );
-	    }			    
+	    }
 	    if nonNumChar == 101 or nonNumChar == 69 { '' E or e
-		intFlag = false;	    
+		intFlag = false;
 		let nextChar = token.byte( nonNumIndex + 1 );
 		if nextChar == 45 or nextChar == 43 { '' '-' or '+'
 		    nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 );
-		}			    
+		}
 		else {
 		    nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 );
 		}
-	    }				    
-	    if not nonNumIndex {	    
+	    }
+	    if not nonNumIndex {
 		return #token, intFlag;
-	    }				    
+	    }
 	    return nonNumIndex - 1, intFlag;
 	}
 
 	if kind == kindSymb {
 	    let searchIndex = 1;
-	    while true {    
+	    while true {
 		'' 空白系以外の何らかの文字領域を探す
 		let tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex );
 		if not tokenIndex {
-		    break;	    
+		    break;
 		}
 		let columnIndex = column + tokenIndex - 2;
 		searchIndex = tokenEndIndex + 1;
-		let token = val.sub( tokenIndex, tokenEndIndex );
-		let startIndex = 1; 
-		while true {	    
+		let token:str = val.sub( tokenIndex, tokenEndIndex );
+		let startIndex = 1;
+		while true {
 		    if token.find( '^[%d]', startIndex ) {
-			'' 数値の場合	    
+			'' 数値の場合
 			let endIndex, intFlag = analyzeNumber( token, startIndex );
 			let info = createInfo(
 			    intFlag and kindInt or kindReal,
@@ -314,66 +325,66 @@ fn Parser.parse() : List {
 			table.insert( list, info );
 			startIndex = endIndex + 1;
 		    }
-		    else {		    
+		    else {
 			'' 区切り文字を探す
 			let index = string.find( token, '[^%w_]', startIndex );
 			if index {
-			    if index > startIndex { 
+			    if index > startIndex {
 				let info = createInfo(
 				    kindSymb, token.sub( startIndex, index - 1 ),
 				    columnIndex + startIndex );
 				table.insert( list, info );
-			    }			    
+			    }
 			    let delimit = token.sub( index, index );
 			    let candidateList = self.multiCharDelimitMap[ delimit ];
 			    while candidateList {
-				let findFlag = false;	    
+				let findFlag = false;
 				foreach candidate in candidateList {
 				    if candidate == token.sub(
 					index, index + #candidate - 1 )
-				    {	
-					delimit = candidate;	    
+				    {
+					delimit = candidate;
 					candidateList = self.multiCharDelimitMap[ delimit ];
-					findFlag = true;	    
-					break;			    
-				    }	
-				}   			    
+					findFlag = true;
+					break;
+				    }
+				}
 				if not findFlag {
-				    break;			    
-				}   
-			    }				    
-			    startIndex = index + #delimit;  
+				    break;
+				}
+			    }
+			    startIndex = index + #delimit;
 
 			    let workKind = kindDlmt;
 			    if op2Set[ delimit ] or op1Set[ delimit ] {
-				workKind = kindOpe;	    
-			    }	
-			    if delimit == "?" {		    
+				workKind = kindOpe;
+			    }
+			    if delimit == "?" {
 				let nextChar = token.sub( index, startIndex );
 				table.insert( list, createInfo(
 				    kindChar, nextChar, columnIndex + startIndex ) );
 				startIndex = startIndex + 1;
-			    }				    
+			    }
 			    else {
-				table.insert( list, createInfo(	    
+				table.insert( list, createInfo(
 				    workKind, delimit, columnIndex + index ) );
-			    }	
-			}   				    
-			else {			    
+			    }
+			}
+			else {
 			    if startIndex <= #token {
-				table.insert(		    
+				table.insert(
 				    list, createInfo( kindSymb, token.sub( startIndex ),
 						      columnIndex + startIndex ) );
-			    }	
-			    break;			    
-			}   			    
-		    }	
-		}   
+			    }
+			    break;
+			}
+		    }
+		}
 	    }
 	}
-	else {		    
+	else {
 	    table.insert( list, createInfo( kind, val, column ) );
-	}		    
+	}
     };
 
     '' 検索開始位置。
@@ -387,10 +398,10 @@ fn Parser.parse() : List {
 	let pattern = ```[%-%?"%'%`%[].```;
 	let index = string.find( rawLine, pattern, searchIndex );
 
-	if not index {	    
+	if not index {
 	    addVal( kindSymb, rawLine.sub( startIndex ), startIndex );
 	    return list;
-	}		    
+	}
 
 	let findChar = string.byte( rawLine, index );
 	let nextChar = string.byte( rawLine, index + 1 );
@@ -398,95 +409,95 @@ fn Parser.parse() : List {
 	if findChar == ?- and nextChar ~= ?- {
 	    searchIndex = index + 1;
 	    syncIndexFlag = false;
-	}		    
+	}
 	else {
-	    if startIndex < index { 
+	    if startIndex < index {
 		addVal( kindSymb, rawLine.sub( startIndex, index - 1 ), startIndex );
-	    }			    
+	    }
 	    if findChar == ?\' and nextChar == ?\' { '' コメント処理
 		if string.byte( rawLine, index + 2 ) == ?\' {
 		    '' 複数行コメントの場合
 		    let comment, nextIndex = multiComment( index + 3, "'''" );
 		    addVal( kindCmnt, "'''" .. comment, index );
 		    searchIndex = nextIndex;
-		}			    
-		else {
-		    '' 1行コメント		    
-		    addVal( kindCmnt, rawLine.sub( index ), index );
-		    searchIndex = #rawLine + 1;	    
 		}
-	    }				    
-	    elseif findChar == ?\[ {	    
+		else {
+		    '' 1行コメント
+		    addVal( kindCmnt, rawLine.sub( index ), index );
+		    searchIndex = #rawLine + 1;
+		}
+	    }
+	    elseif findChar == ?\[ {
 		if nextChar == ?@ {
 		    addVal( kindDlmt, "[@", index );
-		    searchIndex = index + 2;	    
+		    searchIndex = index + 2;
 		}
-		else {				    
+		else {
 		    addVal( kindDlmt, "[", index );
 		    searchIndex = index + 1;
-		}				    
-	    }   
+		}
+	    }
 	    elseif findChar == ?\' or findChar == ?\" {
-		'' 文字列の場合			    
-		let workIndex = index + 1;	    
-		let pattern = '["\'\\]';	    
-		while true {			    
+		'' 文字列の場合
+		let workIndex = index + 1;
+		let pattern = '["\'\\]';
+		while true {
 		    let endIndex = string.find( rawLine, pattern, workIndex );
 		    if not endIndex {
 			error( string.format( "illegal string: %d: %s", index, rawLine ) );
 		    }
 		    let workChar = string.byte( rawLine, endIndex );
-		    if workChar == findChar {		    
+		    if workChar == findChar {
 			addVal( kindStr, rawLine.sub( index, endIndex ), index );
 			searchIndex = endIndex + 1;
 			break;
-		    }   					    
+		    }
 		    elseif workChar == ?\\ {
-			workIndex = workIndex + 2;		    
-		    }   
-		    else {					    
+			workIndex = workIndex + 2;
+		    }
+		    else {
 			workIndex = workIndex + 1;
-		    }   						    
-		}	
+		    }
+		}
 	    }
-	    elseif findChar == ?` {		    
+	    elseif findChar == ?` {
 		if ( nextChar == findChar and
 		     string.byte( rawLine, index + 2 ) == ?` )
 		{ '' '```'
-		    '' 複数行文字列の場合		    
+		    '' 複数行文字列の場合
 		    let str, nextIndex = multiComment( index + 3, '```' );
-		    addVal( kindStr, '```' .. str, index ); 
-		    searchIndex = nextIndex;		    
-		}	
-		else {					    
+		    addVal( kindStr, '```' .. str, index );
+		    searchIndex = nextIndex;
+		}
+		else {
 		    addVal( kindDlmt, '`', index );
-		}					    
-	    }   
+		}
+	    }
 	    elseif findChar == ?? {
 		let codeChar = rawLine.sub( index + 1, index + 1 );
-		if nextChar == ?\\ {			    
+		if nextChar == ?\\ {
 		    let quoted = rawLine.sub( index + 2, index + 2 );
 		    if quotedCharSet[ quoted ] {
 			codeChar = rawLine.sub( index + 1, index + 2 );
-		    }   
-		    else {					    
+		    }
+		    else {
 			codeChar = quoted;
-		    }   						    
+		    }
 		    searchIndex = index + 3;
-		}	
+		}
 		else {
-		    searchIndex = index + 2;			    
-		}	
-		addVal( kindChar, codeChar, index );		    
-	    }   	       					    
-	    else {					    
+		    searchIndex = index + 2;
+		}
+		addVal( kindChar, codeChar, index );
+	    }
+	    else {
 		error( string.format( "illegal syntax:%s:%s",
 				      self.lineNo, rawLine.sub( index ) ) );
 	    }
 	}
-	if syncIndexFlag {	    
+	if syncIndexFlag {
 	    startIndex = searchIndex;
-	}			    
+	}
     }
 }
 
@@ -501,13 +512,13 @@ fn Parser.getToken() : str {
 	    self.lineTokenList = self.parse();
 	    if not self.lineTokenList {
 		return nil;
-	    }	    
-	}   
-    }	    
+	    }
+	}
+    }
 
     let token = self.lineTokenList[ self.pos ];
     self.pos = self.pos + 1;
-    
+
     return token;
 }
 

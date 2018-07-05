@@ -59,9 +59,11 @@ local function createReserveInfo( luaMode )
 end
 
 local Stream = {}
-function Stream:read(  )
-  return ""
-end
+-- none
+
+local Position = {}
+
+local Token = {}
 
 local Parser = {}
 moduleObj.Parser = Parser
@@ -110,6 +112,7 @@ local kindDlmt = regKind( "Dlmt" )
 local kindKywd = regKind( "Kywd" )
 local kindOpe = regKind( "Ope" )
 local kindType = regKind( "Type" )
+local kindEof = regKind( "Eof" )
 local quotedCharSet = {}
 quotedCharSet['a'] = true
 quotedCharSet['b'] = true
@@ -416,15 +419,15 @@ end
 moduleObj.getEofToken = getEofToken
 ----- meta -----
 moduleObj._typeInfoList = {
-{ itemTypeId = { }, typeId = 2, txt = "", kind = 1 },
-  { itemTypeId = { }, typeId = 3, txt = "stem", kind = 1 },
+{ itemTypeId = { }, typeId = 3, txt = "stem", kind = 1 },
   { itemTypeId = { }, typeId = 5, txt = "bool", kind = 1 },
   { itemTypeId = { }, typeId = 6, txt = "int", kind = 1 },
-  { itemTypeId = { 2, 2}, typeId = 42, txt = "Map", kind = 4 },
-  { itemTypeId = { }, typeId = 48, txt = "getKindTxt", kind = 6 },
-  { itemTypeId = { }, typeId = 49, txt = "isOp2", kind = 6 },
-  { itemTypeId = { }, typeId = 50, txt = "isOp1", kind = 6 },
-  { itemTypeId = { }, typeId = 64, txt = "getEofToken", kind = 6 },
+  { itemTypeId = { }, typeId = 9, txt = "str", kind = 1 },
+  { itemTypeId = { 9, 6}, typeId = 72, txt = "Map", kind = 4 },
+  { itemTypeId = { }, typeId = 79, txt = "getKindTxt", kind = 6 },
+  { itemTypeId = { }, typeId = 80, txt = "isOp2", kind = 6 },
+  { itemTypeId = { }, typeId = 81, txt = "isOp1", kind = 6 },
+  { itemTypeId = { }, typeId = 97, txt = "getEofToken", kind = 6 },
   }
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
@@ -434,23 +437,25 @@ _classInfoParser.getToken = {
   name='getToken', staticFlag = false, accessMode = 'pri' }
 _classInfoParser.parse = {
   name='parse', staticFlag = false, accessMode = 'pri' }
+local _classInfoPosition = {}
+_className2InfoMap.Position = _classInfoPosition
 local _classInfoStream = {}
 _className2InfoMap.Stream = _classInfoStream
-_classInfoStream.read = {
-  name='read', staticFlag = false, accessMode = 'pub' }
+local _classInfoToken = {}
+_className2InfoMap.Token = _classInfoToken
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 42 }
+  name='kind', accessMode = 'pub', typeId = 72 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
 _funcName2InfoMap.getEofToken = {
-  accessMode = 'pub', typeId = 64 }
+  accessMode = 'pub', typeId = 97 }
 _funcName2InfoMap.getKindTxt = {
-  accessMode = 'pub', typeId = 48 }
+  accessMode = 'pub', typeId = 79 }
 _funcName2InfoMap.isOp1 = {
-  accessMode = 'pub', typeId = 50 }
+  accessMode = 'pub', typeId = 81 }
 _funcName2InfoMap.isOp2 = {
-  accessMode = 'pub', typeId = 49 }
+  accessMode = 'pub', typeId = 80 }
 ----- meta -----
 return moduleObj

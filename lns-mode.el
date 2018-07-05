@@ -146,15 +146,16 @@
          nil                    ;; case-fold
          nil                    ;; syntax-alist
          nil                    ;; syntax-begin
-         (font-lock-syntactic-keywords  . ,lns-font-lock-syntactic-keywords)
+         (font-lock-syntactic-keywords . ,lns-font-lock-syntactic-keywords)
          (font-lock-extra-managed-props . (syntax-table))
-         (parse-sexp-lookup-properties  . t)
-         (beginning-of-defun-function   . lns-beginning-of-fn)
-         (end-of-defun-function         . lns-end-of-fn)
-         (indent-line-function          . lns-indent-line)
-	 (indent-region-function        . lns-indent-region)
-         (comment-use-syntax            . t)
-         (comment-use-global-state      . t)
+         (parse-sexp-lookup-properties . t)
+         (beginning-of-defun-function . lns-beginning-of-fn)
+         (end-of-defun-function . lns-end-of-fn)
+         (indent-line-function . lns-indent-line)
+	 (indent-region-function . lns-indent-region)
+         (comment-use-syntax . t)
+         (comment-use-global-state . t)
+	 (indent-tabs-mode . nil)
          ))
   )
 

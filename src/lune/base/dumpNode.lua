@@ -14,35 +14,38 @@ local function dump( prefix, depth, node, txt )
 end
 
 filterObj[TransUnit.nodeKind.None] = function ( self, node, prefix, depth )
-  dump( prefix, index, node, "" )
+  dump( prefix, depth, node, "" )
 end
 
 filterObj[TransUnit.nodeKind.Import] = function ( self, node, prefix, depth )
-  dump( prefix, index, node, node.info )
+  dump( prefix, depth, node, node.info )
 end
 
 filterObj[TransUnit.nodeKind.Root] = function ( self, node, prefix, depth )
-  dump( prefix, index, node, "" )
-  for index, child in pairs( node.info.childlen ) do
+  dump( prefix, depth, node, "" )
+  local childlen = node.info.childlen
+  for index, child in pairs( childlen ) do
     TransUnit.nodeFilter( child, self, prefix .. "  ", depth + 1 )
   end
 end
 
 filterObj[TransUnit.nodeKind.Block] = function ( self, node, prefix, depth )
-  dump( prefix, index, node, "" )
-  for index, statement in pairs( node.info.stmtList ) do
+  dump( prefix, depth, node, "" )
+  local stmtList = node.info.stmtList
+  for index, statement in pairs( stmtList ) do
     TransUnit.nodeFilter( statement, self, prefix .. "  ", depth + 1 )
   end
 end
 
 filterObj[TransUnit.nodeKind.StmtExp] = function ( self, node, prefix, depth )
-  dump( prefix, index, node, "" )
+  dump( prefix, depth, node, "" )
   TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 )
 end
 
 filterObj[TransUnit.nodeKind.DeclClass] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, node.info.name.txt )
-  for index, field in pairs( node.info.fieldList ) do
+  local fieldList = node.info.fieldList
+  for index, field in pairs( fieldList ) do
     TransUnit.nodeFilter( field, self, prefix .. "  ", depth + 1 )
   end
 end
@@ -54,10 +57,19 @@ end
 
 filterObj[TransUnit.nodeKind.DeclVar] = function ( self, node, prefix, depth )
   local varName = ""
-  for index, var in pairs( node.info.varList ) do
-    varName = varName .. " " .. var["name"].txt
+  local varList = node.info.varList
+  for index, var in pairs( varList ) do
+    if index > 1 then
+      varName = varName .. ","
+    end
+    varName = string.format( "%s %s", varName, var["name"].txt)
   end
   dump( prefix, depth, node, varName )
+  for index, var in pairs( varList ) do
+    if var["refType"] then
+      TransUnit.nodeFilter( var["refType"], self, prefix .. "  ", depth + 1 )
+    end
+  end
   if node.info.expList then
     TransUnit.nodeFilter( node.info.expList, self, prefix .. "  ", depth + 1 )
   end
@@ -79,10 +91,12 @@ end
 filterObj[TransUnit.nodeKind.DeclFunc] = function ( self, node, prefix, depth )
   local name = node.info.name
   dump( prefix, depth, node, name and name.txt or "<anonymous>" )
-  for index, arg in pairs( node.info.argList ) do
+  local argList = node.info.argList
+  for index, arg in pairs( argList ) do
     TransUnit.nodeFilter( arg, self, prefix .. "  ", depth + 1 )
   end
-  for index, refType in pairs( node.info.retTypeList ) do
+  local retTypeList = node.info.retTypeList
+  for index, refType in pairs( retTypeList ) do
     TransUnit.nodeFilter( refType, self, prefix .. "  ", depth + 1 )
   end
   TransUnit.nodeFilter( node.info.body, self, prefix .. "  ", depth + 1 )
@@ -90,10 +104,12 @@ end
 
 filterObj[TransUnit.nodeKind.DeclMethod] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, node.info.name.txt )
-  for index, arg in pairs( node.info.argList ) do
+  local argList = node.info.argList
+  for index, arg in pairs( argList ) do
     TransUnit.nodeFilter( arg, self, prefix .. "  ", depth + 1 )
   end
-  for index, refType in pairs( node.info.retTypeList ) do
+  local retTypeList = node.info.retTypeList
+  for index, refType in pairs( retTypeList ) do
     TransUnit.nodeFilter( refType, self, prefix .. "  ", depth + 1 )
   end
   TransUnit.nodeFilter( node.info.body, self, prefix .. "  ", depth + 1 )
@@ -110,7 +126,8 @@ end
 
 filterObj[TransUnit.nodeKind.If] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "" )
-  for index, val in pairs( node.info ) do
+  local valList = node.info
+  for index, val in pairs( valList ) do
     print( prefix .. val['kind'] )
     if val['exp'] then
       TransUnit.nodeFilter( val['exp'], self, prefix .. "  ", depth + 1 )
@@ -143,7 +160,8 @@ end
 
 filterObj[TransUnit.nodeKind.Apply] = function ( self, node, prefix, depth )
   local varNames = ""
-  for index, var in pairs( node.info.varList ) do
+  local varList = node.info.varList
+  for index, var in pairs( varList ) do
     varNames = varNames .. var['txt'] .. " "
   end
   dump( prefix, depth, node, varNames )
@@ -175,7 +193,8 @@ end
 
 filterObj[TransUnit.nodeKind.ExpList] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "" )
-  for index, exp in pairs( node.info ) do
+  local expList = node.info
+  for index, exp in pairs( expList ) do
     TransUnit.nodeFilter( exp, self, prefix .. "  ", depth + 1 )
   end
 end
@@ -215,7 +234,7 @@ filterObj[TransUnit.nodeKind.ExpRef] = function ( self, node, prefix, depth )
 end
 
 filterObj[TransUnit.nodeKind.ExpRefItem] = function ( self, node, prefix, depth )
-  dump( prefix, depth, node, "seq[exp]" )
+  dump( prefix, depth, node, "seq[exp] " .. node.expType:getTxt(  ) )
   TransUnit.nodeFilter( node.info.val, self, prefix .. "  ", depth + 1 )
   TransUnit.nodeFilter( node.info.index, self, prefix .. "  ", depth + 1 )
 end
@@ -232,12 +251,15 @@ end
 
 filterObj[TransUnit.nodeKind.LiteralList] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "[]" )
-  TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 )
+  if node.info then
+    TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 )
+  end
 end
 
 filterObj[TransUnit.nodeKind.LiteralMap] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "" )
-  for __index, pair in pairs( node.info.pairList ) do
+  local pairList = node.info.pairList
+  for __index, pair in pairs( pairList ) do
     TransUnit.nodeFilter( pair['key'], self, prefix .. "  ", depth + 1 )
     TransUnit.nodeFilter( pair['val'], self, prefix .. "  ", depth + 1 )
   end
@@ -245,7 +267,9 @@ end
 
 filterObj[TransUnit.nodeKind.LiteralArray] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "[@]" )
-  TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 )
+  if node.info then
+    TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 )
+  end
 end
 
 filterObj[TransUnit.nodeKind.LiteralChar] = function ( self, node, prefix, depth )
