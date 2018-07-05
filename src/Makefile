@@ -22,7 +22,7 @@ test:
 
 define trans
 	echo test $1
-	$(LUA) primal/base.lua lune/base/$1.lns lua > work/lune/base/$1.lua
+	$(LUA) lune/base/base.lua lune/base/$1.lns lua > work/lune/base/$1.lua
 	cp lune/base/$1.lns work/lune/base
 endef
 
