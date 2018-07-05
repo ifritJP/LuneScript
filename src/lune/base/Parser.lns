@@ -445,19 +445,19 @@ fn Parser.parse() : Token[] {
 		    let endIndex = string.find( rawLine, pattern, workIndex );
 		    if not endIndex {
 			error( string.format( "illegal string: %d: %s", index, rawLine ) );
-		    }
+		    }	
 		    let workChar = string.byte( rawLine, endIndex );
 		    if workChar == findChar {
 			addVal( kindStr, rawLine.sub( index, endIndex ), index );
 			searchIndex = endIndex + 1;
 			break;
-		    }
+		    }	
 		    elseif workChar == ?\\ {
 			workIndex = workIndex + 2;
-		    }
+		    }	
 		    else {
 			workIndex = workIndex + 1;
-		    }
+		    }	
 		}
 	    }
 	    elseif findChar == ?` {

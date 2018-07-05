@@ -22,25 +22,27 @@ test:
 
 define trans
 	echo test $1
-	$(LUA) lune/base/base.lua lune/base/$1.lns lua > work/lune/base/$1.lua
-	cp lune/base/$1.lns work/lune/base
+	$(LUA) lune/base/base.lua lune/base/$1.lns lua > work/1/lune/base/$1.lua
+	cp lune/base/$1.lns work/1/lune/base
 endef
 
 define cutMeta
-	(cd work/lune/base; cat $1.lua | awk '/^----- meta/{META++;}; //{if (META != 1) {print $$0}} ' > $1.cut.lua )
+	(cd work/$2/lune/base; cat $1.lua | awk '/^----- meta/{META++;}; //{if (META != 1) {print $$0}} ' > $1.cut.lua )
 endef
 
 define transwork
-	(cd work; $(LUA) lune/base/base.lua lune/base/$1.lns lua > lune/base/$(1).2.lua )
-	$(call cutMeta,$(1))
-	$(call cutMeta,$(1).2)
-	(cd work/lune/base; diff $1.cut.lua $(1).2.cut.lua)
-	(cd work/lune/base; cp $(1).2.lua $1.lua)
+	(cd work/$1; $(LUA) lune/base/base.lua lune/base/$3.lns lua > ../$2/lune/base/$(3).lua )
+	cp lune/base/$3.lns work/$2/lune/base
 endef
 
 test-comp:
-	mkdir -p work/lune/base
-	cp lune/base/base.lua work/lune/base
+	rm -rf work
+	mkdir -p work/1/lune/base
+	mkdir -p work/2/lune/base
+	mkdir -p work/3/lune/base
+	cp lune/base/base.lua work/1/lune/base
+	cp lune/base/base.lua work/2/lune/base
+	cp lune/base/base.lua work/3/lune/base
 	$(call trans,Parser)
 	$(call trans,TransUnit)
 	$(call trans,convLua)
@@ -48,14 +50,20 @@ test-comp:
 	$(MAKE) test-comp2
 
 test-comp2:
-	$(call transwork,Parser)
-	$(call transwork,TransUnit)
-	$(call transwork,convLua)
-	$(call transwork,dumpNode)
+	$(call transwork,1,2,Parser)
+	$(call transwork,1,2,TransUnit)
+	$(call transwork,1,2,convLua)
+	$(call transwork,1,2,dumpNode)
 
-	cp -a test work
-	(cd work; $(LUA) lune/base/base.lua test/start.lns exe)
+	$(call transwork,2,3,Parser)
+	$(call transwork,2,3,TransUnit)
+	$(call transwork,2,3,convLua)
+	$(call transwork,2,3,dumpNode)
 
-	rm work/lune/base/*.2.lua
-	rm work/lune/base/*.cut.lua
-	cp work/lune/base/*.lua lune/base/
+	diff -r work/2 work/3
+
+	cp -a test work/3
+	(cd work/3; $(LUA) lune/base/base.lua test/start.lns exe)
+
+
+	cp work/3/lune/base/*.lua lune/base/

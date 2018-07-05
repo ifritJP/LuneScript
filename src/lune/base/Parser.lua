@@ -60,10 +60,45 @@ end
 
 local Stream = {}
 -- none
+function Stream.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = Stream } )
+  return obj.__init and obj:__init(  ) or nil;
+end
+function Stream:__init(  )
+            
+  return self
+end
+            
 
 local Position = {}
+function Position.new( lineNo, column )
+  local obj = {}
+  setmetatable( obj, { __index = Position } )
+  return obj.__init and obj:__init( lineNo, column ) or nil;
+end
+function Position:__init( lineNo, column )
+            
+self.lineNo = lineNo
+  self.column = column
+    return self
+end
+            
 
 local Token = {}
+function Token.new( kind, txt, pos )
+  local obj = {}
+  setmetatable( obj, { __index = Token } )
+  return obj.__init and obj:__init( kind, txt, pos ) or nil;
+end
+function Token:__init( kind, txt, pos )
+            
+self.kind = kind
+  self.txt = txt
+  self.pos = pos
+    return self
+end
+            
 
 local Parser = {}
 moduleObj.Parser = Parser

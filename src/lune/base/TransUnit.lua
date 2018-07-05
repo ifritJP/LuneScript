@@ -179,9 +179,36 @@ end
 
 local NodePos = {}
 moduleObj.NodePos = NodePos
+function NodePos.new( lineNo, column )
+  local obj = {}
+  setmetatable( obj, { __index = NodePos } )
+  return obj.__init and obj:__init( lineNo, column ) or nil;
+end
+function NodePos:__init( lineNo, column )
+            
+self.lineNo = lineNo
+  self.column = column
+    return self
+end
+            
 
 local Node = {}
 moduleObj.Node = Node
+function Node.new( kind, pos, expType, info, filter )
+  local obj = {}
+  setmetatable( obj, { __index = Node } )
+  return obj.__init and obj:__init( kind, pos, expType, info, filter ) or nil;
+end
+function Node:__init( kind, pos, expType, info, filter )
+            
+self.kind = kind
+  self.pos = pos
+  self.expType = expType
+  self.info = info
+  self.filter = filter
+    return self
+end
+            
 
 local TransUnit = {}
 moduleObj.TransUnit = TransUnit
@@ -441,8 +468,36 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
 end
 
 local _TypeInfo = {}
+function _TypeInfo.new( itemTypeId, typeId, txt, kind )
+  local obj = {}
+  setmetatable( obj, { __index = _TypeInfo } )
+  return obj.__init and obj:__init( itemTypeId, typeId, txt, kind ) or nil;
+end
+function _TypeInfo:__init( itemTypeId, typeId, txt, kind )
+            
+self.itemTypeId = itemTypeId
+  self.typeId = typeId
+  self.txt = txt
+  self.kind = kind
+    return self
+end
+            
 
 local _ModuleInfo = {}
+function _ModuleInfo.new( _className2InfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap )
+  local obj = {}
+  setmetatable( obj, { __index = _ModuleInfo } )
+  return obj.__init and obj:__init( _className2InfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap ) or nil;
+end
+function _ModuleInfo:__init( _className2InfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap )
+            
+self._className2InfoMap = _className2InfoMap
+  self._typeInfoList = _typeInfoList
+  self._varName2InfoMap = _varName2InfoMap
+  self._funcName2InfoMap = _funcName2InfoMap
+    return self
+end
+            
 
 function TransUnit:analyzeImport( token )
   local moduleToken = self:getToken(  )

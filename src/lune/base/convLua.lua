@@ -249,6 +249,31 @@ filterObj[TransUnit.nodeKind.DeclClass] = function ( self, node, parent, baseInd
     end
     TransUnit.nodeFilter( field, self, node, baseIndent )
   end
+  if not hasConstrFlag then
+    local argTxt = ""
+    for index, member in pairs( memberList ) do
+      if index > 1 then
+        argTxt = argTxt .. ", "
+      end
+      argTxt = argTxt .. member["info"].name.txt
+    end
+    self:writeln( string.format( [==[
+function %s.new( %s )
+  local obj = {}
+  setmetatable( obj, { __index = %s } )
+  return obj.__init and obj:__init( %s ) or nil;
+end
+function %s:__init( %s )
+            ]==], className, argTxt, className, argTxt, className, argTxt), baseIndent )
+    for __index, member in pairs( memberList ) do
+      local memberName = member["info"].name.txt
+      self:writeln( string.format( "self.%s = %s", memberName, memberName ), baseIndent + stepIndent )
+    end
+    self:writeln( [==[
+  return self
+end
+            ]==], baseIndent )
+  end
 end
 
 filterObj[TransUnit.nodeKind.DeclMember] = function ( self, node, parent, baseIndent )

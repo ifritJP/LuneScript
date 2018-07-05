@@ -4,6 +4,16 @@ local TransUnit = require( 'lune.base.TransUnit' )
 
 local filterObj = {}
 moduleObj.filterObj = filterObj
+function filterObj.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = filterObj } )
+  return obj.__init and obj:__init(  ) or nil;
+end
+function filterObj:__init(  )
+            
+  return self
+end
+            
 
 local function dump( prefix, depth, node, txt )
   local typeStr = ""

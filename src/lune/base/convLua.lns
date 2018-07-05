@@ -263,32 +263,34 @@ filterObj[ TransUnit.nodeKind.DeclClass ] =
         }
         TransUnit.nodeFilter( field, self, node, baseIndent );
     }
-''     if not hasConstrFlag {
-''         let argTxt = "";
-''         foreach member, index in memberList {
-''             if index > 1 {
-''                 argTxt = argTxt .. ", ";
-''             }
-''             argTxt = argTxt .. member[ "info" ].name.txt;
-''         }
+    if not hasConstrFlag {
+        let argTxt = "";
+        foreach member, index in memberList {
+            if index > 1 {
+                argTxt = argTxt .. ", ";
+            }
+            argTxt = argTxt .. member[ "info" ].name.txt;
+        }
 
-''         self.writeln( """
-'' function %s.new( %s )
-''   local obj = {}
-''   setmetatable( obj, { __index = %s } )
-''   return obj.__init and obj:__init( %s ) or nil;
-'' end
-'' function filterObj:__init( %s )
-''             """ ( className, argTxt, className, argTxt, argTxt ), baseIndent );
-''         foreach member in memberList {
-''             let memberName = member[ "info" ].name.txt;
-''             self.writeln( string.format( "self.%s = %s",memberName, memberName ) );
-''         }
-''         self.writeln( """
-''   return self
-'' end
-''             """ );
-''     }
+        self.writeln( ```
+function %s.new( %s )
+  local obj = {}
+  setmetatable( obj, { __index = %s } )
+  return obj.__init and obj:__init( %s ) or nil;
+end
+function %s:__init( %s )
+            ``` ( className, argTxt, className, argTxt, className, argTxt ),
+            baseIndent );
+        foreach member in memberList {
+            let memberName = member[ "info" ].name.txt;
+            self.writeln( string.format( "self.%s = %s", memberName, memberName ),
+                          baseIndent + stepIndent);         
+        }
+        self.writeln( ```
+  return self
+end
+            ```, baseIndent );
+   }
 };
 
 filterObj[ TransUnit.nodeKind.DeclMember ] =
