@@ -31,7 +31,7 @@
     lns-keyword (lns-make-regex-or
 		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
-		   "nil" "true"
+		   "nil" "true" "switch" "case" "default"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
@@ -39,6 +39,7 @@
 				      '("let" "if" "elseif" "else" "while"
 					"repeat" "for" "apply" "foreach" "forsort"
 					"class" "pub" "pro" "pri" "form" "advertise"
+					"switch"
 					"wrap" "static" "trust" "import" "''"))
 				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst

@@ -86,6 +86,7 @@ end
             
 
 local Token = {}
+moduleObj.Token = Token
 function Token.new( kind, txt, pos )
   local obj = {}
   setmetatable( obj, { __index = Token } )
@@ -453,44 +454,65 @@ local function getEofToken(  )
 end
 moduleObj.getEofToken = getEofToken
 ----- meta -----
-moduleObj._typeInfoList = {
-{ itemTypeId = { }, typeId = 3, txt = "stem", kind = 1 },
-  { itemTypeId = { }, typeId = 5, txt = "bool", kind = 1 },
-  { itemTypeId = { }, typeId = 6, txt = "int", kind = 1 },
-  { itemTypeId = { }, typeId = 9, txt = "str", kind = 1 },
-  { itemTypeId = { 9, 6}, typeId = 72, txt = "Map", kind = 4 },
-  { itemTypeId = { }, typeId = 79, txt = "getKindTxt", kind = 6 },
-  { itemTypeId = { }, typeId = 80, txt = "isOp2", kind = 6 },
-  { itemTypeId = { }, typeId = 81, txt = "isOp1", kind = 6 },
-  { itemTypeId = { }, typeId = 97, txt = "getEofToken", kind = 6 },
-  }
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 local _classInfoParser = {}
 _className2InfoMap.Parser = _classInfoParser
 _classInfoParser.getToken = {
-  name='getToken', staticFlag = false, accessMode = 'pri' }
-_classInfoParser.parse = {
-  name='parse', staticFlag = false, accessMode = 'pri' }
+  name='getToken', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 96 }
 local _classInfoPosition = {}
 _className2InfoMap.Position = _classInfoPosition
 local _classInfoStream = {}
 _className2InfoMap.Stream = _classInfoStream
+_classInfoStream.read = {
+  name='read', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 63 }
 local _classInfoToken = {}
 _className2InfoMap.Token = _classInfoToken
+_classInfoToken.kind = {
+  name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 5 }
+_classInfoToken.txt = {
+  name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 22 }
+_classInfoToken.pos = {
+  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 64 }
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 72 }
+  name='kind', accessMode = 'pub', typeId = 75 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
 _funcName2InfoMap.getEofToken = {
-  accessMode = 'pub', typeId = 97 }
+  accessMode = 'pub', typeId = 100 }
 _funcName2InfoMap.getKindTxt = {
-  accessMode = 'pub', typeId = 79 }
+  accessMode = 'pub', typeId = 82 }
 _funcName2InfoMap.isOp1 = {
-  accessMode = 'pub', typeId = 81 }
+  accessMode = 'pub', typeId = 84 }
 _funcName2InfoMap.isOp2 = {
-  accessMode = 'pub', typeId = 80 }
+  accessMode = 'pub', typeId = 83 }
+moduleObj._typeInfoList = {
+{ typeId = 2, txt = 'stem', staticFlag = false, accessMode = 'pub',
+kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 4, txt = 'bool', staticFlag = false, accessMode = 'pub',
+kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 5, txt = 'int', staticFlag = false, accessMode = 'pub',
+kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 22, txt = 'str', staticFlag = false, accessMode = 'pub',
+kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 63, txt = 'read', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {22}, },
+  { typeId = 64, txt = 'Position', staticFlag = false, accessMode = 'pub',
+kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 75, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 5}, retTypeId = {}, },
+  { typeId = 82, txt = 'getKindTxt', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {5}, },
+  { typeId = 83, txt = 'isOp2', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {4}, },
+  { typeId = 84, txt = 'isOp1', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {4}, },
+  { typeId = 96, txt = 'getToken', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {22}, },
+  { typeId = 100, txt = 'getEofToken', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {2}, },
+  }
 ----- meta -----
 return moduleObj

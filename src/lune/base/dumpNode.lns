@@ -152,18 +152,35 @@ filterObj[ TransUnit.nodeKind.RefType ] =
     };  
 
 filterObj[ TransUnit.nodeKind.If ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "");
+    fn( self: stem, node: stem, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "");
 
-        let valList:stem[] = node.info;
-	foreach val, index in valList {
-	    print( prefix .. val[ 'kind' ] );
-	    if val[ 'exp' ] {
-		TransUnit.nodeFilter( val[ 'exp' ], self, prefix .. "  ", depth + 1 );
-	    }   	
-	    TransUnit.nodeFilter( val[ 'block' ], self, prefix .. "  ", depth + 1 );
-	}	
-    };  
+    let valList:stem[] = node.info;
+    foreach val, index in valList {
+	if val[ 'exp' ] {
+	    TransUnit.nodeFilter( val[ 'exp' ], self, prefix .. "  ", depth + 1 );
+	}   	
+	TransUnit.nodeFilter( val[ 'block' ], self, prefix .. "  ", depth + 1 );
+    }	
+};  
+
+filterObj[ TransUnit.nodeKind.Switch ] = 
+    fn( self: stem, node: stem, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "");
+
+    TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
+
+    let caseList:stem[] = node.info.caseList;
+    foreach caseInfo in caseList {
+        TransUnit.nodeFilter( caseInfo[ 'expList' ], self, prefix .. "  ", depth + 1 );
+        TransUnit.nodeFilter( caseInfo[ 'block' ], self, prefix .. "  ", depth + 1 );
+    }
+    TransUnit.nodeFilter( node.info.default, self, prefix .. "  ", depth + 1 );
+};
+
+
 
 filterObj[ TransUnit.nodeKind.While ] = 
     fn( self: stem, node: stem, prefix: str, depth: int ) {
@@ -259,8 +276,7 @@ filterObj[ TransUnit.nodeKind.ExpCast ] =
     fn( self: stem, node: stem, prefix: str, depth: int ) {
 	dump( prefix, depth, node, "" );
 
-	TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.info.castType, self, prefix .. "  ", depth + 1 );
+	TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 );
     };  
 
 

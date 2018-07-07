@@ -7,8 +7,10 @@ pub class filterObj {
     pri let exeFlag: bool;
     pri let indent: int;
     pri let curLineNo: int;
-    '' クラス名 → クラス情報
-    pri let className2InfoMap: Map<str,Map<str,stem>>;
+    '' クラス名 → TypeInfo
+    pri let className2Scope: Map<str,TransUnit.Scope>;
+    '' クラス名 → Member Node List
+    pri let className2MemberList: Map<str,TransUnit.Node[]>;
     '' public 変数名 → 変数情報
     pri let pubVarName2InfoMap: Map<str,stem>;
     '' public 関数名 → 関数情報
@@ -21,7 +23,8 @@ pub class filterObj {
         self.exeFlag = exeFlag;
         self.indent = 0;
         self.curLineNo = 1;
-        self.className2InfoMap = {};
+        self.className2Scope = {};
+        self.className2MemberList = {};
         self.pubVarName2InfoMap = {};
         self.pubFuncName2InfoMap = {};
         self.needIndent = false;
@@ -108,22 +111,98 @@ filterObj[ TransUnit.nodeKind.Root ] =
 
     '' 公開される型情報を typeId2TypeInfo にピックアップする
     fn pickupTypeId( typeInfo: TransUnit.TypeInfo ) {
-        if not typeId2TypeInfo[ typeInfo.getTypeId() ] {
-            typeId2TypeInfo[ typeInfo.getTypeId() ] = typeInfo;
-            let typeInfoList: TransUnit.TransUnit[] = typeInfo.getItemTypeInfoList();
+        if not typeId2TypeInfo[ typeInfo.get_typeId() ] {
+            typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
+            let typeInfoList: TransUnit.TypeInfo[] = typeInfo.get_itemTypeInfoList();
             foreach itemTypeInfo in typeInfoList {
                 pickupTypeId( itemTypeInfo );
             }
-            typeInfoList = typeInfo.getRetTypeInfoList();
+            typeInfoList = typeInfo.get_retTypeInfoList();
             foreach itemTypeInfo in typeInfoList {
                 pickupTypeId( itemTypeInfo );
             }
         }
     }
-    foreach varInfo in self.pubVarName2InfoMap {
+    '' foreach scope in self.className2Scope {
+    ''     let work = scope@Map<str,stem>;
+    ''     foreach typeInfo in work.symbol2TypeInfoMap@Map<str,stem> {
+    ''         if typeInfo.accessMode == "pub" and not typeInfo.externalFlag {
+    ''             pickupTypeId( typeInfo );
+    ''         }
+    ''     }
+    '' }
+
+
+
+    self.writeln( "local _className2InfoMap = {}", baseIndent );
+    self.writeln(
+        "moduleObj._className2InfoMap = _className2InfoMap", baseIndent );
+
+    forsort scope, className in self.className2Scope {
+        self.writeln( "local _classInfo%s = {}" (className), baseIndent );
+        self.writeln( "_className2InfoMap.%s = _classInfo%s" (className, className),
+                      baseIndent );
+        let work = scope;
+        forsort typeInfo, declName in work.get_symbol2TypeInfoMap()@Map<str,stem> {
+            if typeInfo.accessMode == "pub" and not typeInfo.externalFlag {
+                if typeInfo.kind == TransUnit.TypeInfoKindFunc {
+                    let fieldName = declName;
+                    self.writeln( "_classInfo%s.%s = {" ( className, fieldName ),
+                                  baseIndent );
+
+                    self.writeln(
+                        "  name='%s', staticFlag = %s, " ( fieldName,
+                                                           typeInfo.staticFlag ) ..
+                        "accessMode = '%s', methodFlag = true, typeId = %d }"
+                        ( typeInfo.accessMode, typeInfo.get_typeId() ),
+                        baseIndent );
+                    pickupTypeId( typeInfo );
+                }
+            }
+        }
+        foreach memberNode in self.className2MemberList[ className ] {
+            let memberInfo = memberNode.get_info();
+            if memberInfo.accessMode == "pub" {
+                let memberName = memberInfo.name.txt;
+                let memberTypeInfo = memberName.expType;
+                self.writeln( "_classInfo%s.%s = {" ( className, memberName ),
+                              baseIndent );
+                self.writeln(
+                    "  name='%s', staticFlag = %s, " ( memberName,
+                                                       memberInfo.staticFlag ) ..
+                    "accessMode = '%s', methodFlag = false, typeId = %d }"
+                    ( memberInfo.accessMode, memberNode.get_expType().typeId ),
+                    baseIndent );
+                pickupTypeId( memberInfo.refType );
+            }
+        }
+    }
+
+
+    self.writeln( "local _varName2InfoMap = {}", baseIndent );
+    self.writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent );
+
+    forsort varInfo, varName in self.pubVarName2InfoMap {
+        self.writeln( string.format( "_varName2InfoMap.%s = {", varName ),
+                      baseIndent );
+        self.writeln(
+            "  name='%s', accessMode = '%s', typeId = %d }"
+            ( varName, varInfo[ "accessMode" ],
+              varInfo[ "typeInfo" ].get_typeId() ),
+            baseIndent );
         pickupTypeId( varInfo[ "typeInfo" ] );
     }
-    foreach funcInfo in self.pubFuncName2InfoMap {
+
+    self.writeln( "local _funcName2InfoMap = {}", baseIndent );
+    self.writeln( "moduleObj._funcName2InfoMap = _funcName2InfoMap", baseIndent );
+
+    forsort funcInfo, funcName in self.pubFuncName2InfoMap {
+        self.writeln( string.format( "_funcName2InfoMap.%s = {", funcName ),
+                      baseIndent );
+        self.writeln(
+            "  accessMode = '%s', typeId = %d }"
+            ( funcInfo[ "accessMode" ], funcInfo[ "typeInfo" ].get_typeId() ),
+            baseIndent );
         pickupTypeId( funcInfo[ "typeInfo" ] );
     }
 
@@ -137,51 +216,6 @@ filterObj[ TransUnit.nodeKind.Root ] =
     self.writeln( "}" , baseIndent );
 
 
-
-    self.writeln( "local _className2InfoMap = {}", baseIndent );
-    self.writeln(
-        "moduleObj._className2InfoMap = _className2InfoMap", baseIndent );
-
-    forsort classInfo, className in self.className2InfoMap {
-        self.writeln( "local _classInfo%s = {}" (className), baseIndent );
-        self.writeln( "_className2InfoMap.%s = _classInfo%s" (className, className),
-                      baseIndent );
-        forsort methodInfo, methodName in classInfo {
-            self.writeln( "_classInfo%s.%s = {" ( className, methodName ),
-                          baseIndent );
-            self.writeln(
-                "  name='%s', staticFlag = %s, accessMode = '%s' }"
-                ( methodName, methodInfo[ "staticFlag" ], methodInfo[ "accessMode" ] ),
-                baseIndent );
-        }
-    }
-
-
-
-    self.writeln( "local _varName2InfoMap = {}", baseIndent );
-    self.writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent );
-
-    forsort varInfo, varName in self.pubVarName2InfoMap {
-        self.writeln( string.format( "_varName2InfoMap.%s = {", varName ),
-                      baseIndent );
-        self.writeln(
-            "  name='%s', accessMode = '%s', typeId = %d }"
-            ( varName, varInfo[ "accessMode" ],
-              varInfo[ "typeInfo" ].getTypeId() ),
-            baseIndent );
-    }
-
-    self.writeln( "local _funcName2InfoMap = {}", baseIndent );
-    self.writeln( "moduleObj._funcName2InfoMap = _funcName2InfoMap", baseIndent );
-
-    forsort funcInfo, funcName in self.pubFuncName2InfoMap {
-        self.writeln( string.format( "_funcName2InfoMap.%s = {", funcName ),
-                      baseIndent );
-        self.writeln(
-            "  accessMode = '%s', typeId = %d }"
-            ( funcInfo[ "accessMode" ], funcInfo[ "typeInfo" ].getTypeId() ),
-            baseIndent );
-    }
 
     self.writeln( "----- meta -----", baseIndent );
 
@@ -217,6 +251,9 @@ filterObj[ TransUnit.nodeKind.Block ] =
     elseif node.info.kind == "func" {
         word = "";
     }
+    elseif node.info.kind == "default" {
+        word = "";
+    }
     elseif node.info.kind == "{" {
         word = "do";
     }
@@ -242,9 +279,9 @@ filterObj[ TransUnit.nodeKind.StmtExp ] =
 filterObj[ TransUnit.nodeKind.DeclClass ] =
     fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
 {
-    let classInfo = {};
     let className = node.info.name.txt;
-    self.className2InfoMap[ className ] = classInfo;
+    self.className2Scope[ className ] = node.info.scope;
+    self.className2MemberList[ className ] = node.info.memberList;
 
     self.writeln( string.format( "local %s = {}", className ), baseIndent );
     if node.info.accessMode == "pub" {
@@ -254,14 +291,24 @@ filterObj[ TransUnit.nodeKind.DeclClass ] =
     let hasConstrFlag = false;
     let memberList: TransUnit.Node[] = {};
     let fieldList: Map<str,int> = node.info.fieldList;
+    let outerMethodSet: Map<str,bool> = node.info.outerMethodSet;
     foreach field in fieldList {
+        let ignoreFlag = false;
         if field[ "kind" ] == TransUnit.nodeKind.DeclConstr {
             hasConstrFlag = true;
         }
         if field[ "kind" ] == TransUnit.nodeKind.DeclMember {
             table.insert( memberList, field );
         }
-        TransUnit.nodeFilter( field, self, node, baseIndent );
+        if field[ "kind" ] == TransUnit.nodeKind.DeclMethod {
+            if outerMethodSet[ field.info.name.txt ] {
+                ignoreFlag = true;
+            }
+        }
+
+        if ( not ignoreFlag ) {
+            TransUnit.nodeFilter( field, self, node, baseIndent );
+        }
     }
     if not hasConstrFlag {
         let argTxt = "";
@@ -290,7 +337,31 @@ function %s:__init( %s )
   return self
 end
             ```, baseIndent );
-   }
+    }
+
+    '' accessor
+    let scope = node.info.scope@TransUnit.Scope;
+    foreach memberNode in node.info.memberList@stem[] {
+        let memberName = memberNode.info.name.txt;
+        let getterName = "get_" .. memberName;
+        let typeInfo = scope.getTypeInfo( getterName );
+        if memberNode.info.getterMode ~= "none" and ( not typeInfo or typeInfo.autoFlag )
+        {       
+            self.writeln( ```
+function %s:%s()
+   return self.%s
+end``` ( className, getterName, memberName ), baseIndent );
+        }
+        let setterName = "set_" .. memberName;
+        typeInfo = scope.getTypeInfo( setterName );
+        if memberNode.info.setterMode ~= "none" and ( not typeInfo or typeInfo.autoFlag )
+        {       
+            self.writeln( ```
+function %s:%s()
+   return self.%s
+end``` ( className, setterName, memberName ), baseIndent );
+        }
+    }
 };
 
 filterObj[ TransUnit.nodeKind.DeclMember ] =
@@ -352,8 +423,6 @@ filterObj[ TransUnit.nodeKind.DeclConstr ] =
 filterObj[ TransUnit.nodeKind.DeclMethod ] =
     fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
 {
-    let classInfo = self.className2InfoMap[ node.info.className.txt ];
-
     let delimit = ":";
     if node.info.staticFlag {
         delimit = ".";
@@ -361,10 +430,6 @@ filterObj[ TransUnit.nodeKind.DeclMethod ] =
     let methodName = node.info.name.txt;
     self.write( "function %s%s%s( "
                 ( node.info.className.txt, delimit, methodName ) );
-    classInfo[ methodName ] = {
-        "funcFlag":  true,
-        "staticFlag": node.info.staticFlag, "accessMode": node.info.accessMode
-    };
 
     let argList: TransUnit.Node[] = node.info.argList;
     foreach arg, index in argList {
@@ -470,7 +535,8 @@ filterObj[ TransUnit.nodeKind.DeclFunc ] =
     TransUnit.nodeFilter( node.info.body,  self, node, baseIndent );
     self.writeln( "end", baseIndent );
 
-    if node.info.accessMode == "pub" {
+    ''if node.info.accessMode == "pub" {
+    if node.expType.get_accessMode() == "pub" {
         self.write( "moduleObj.%s = %s" ( name, name ) );
 
         self.pubFuncName2InfoMap[ name ] = {
@@ -514,6 +580,42 @@ filterObj[ TransUnit.nodeKind.If ] =
         TransUnit.nodeFilter( val[ "block" ], self, node, baseIndent );
     }
     self.write( "end" );
+};
+
+filterObj[ TransUnit.nodeKind.Switch ] =
+    fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
+{
+    self.writeln( "do", baseIndent + 2 );
+    self.write( "local _switchExp = " );
+    TransUnit.nodeFilter( node.info.exp,  self, node, baseIndent + 2 );
+    self.writeln( "", baseIndent + 2 );
+
+    foreach caseInfo, index in node.info.caseList@stem[] {
+        if index == 1 {
+            self.write( "if " );
+        }
+        else {
+            self.write( "elseif " );
+        }
+        let expList = caseInfo.expList;
+        foreach expNode, index in expList.info@stem[] {
+            if index ~= 1 {
+                self.write( " or " );
+            }
+
+            self.write( "_switchExp == " );
+            TransUnit.nodeFilter( expNode, self, node, baseIndent + 2 );
+        }   
+        self.write( " then" );
+        TransUnit.nodeFilter( caseInfo.block, self, node, baseIndent + 2 );
+    }
+    if node.info.default {
+        self.write( "else " );
+        TransUnit.nodeFilter( node.info.default, self, node, baseIndent + 2 );
+        self.writeln( "end", baseIndent );
+    }
+    
+    self.writeln( "end", baseIndent );
 };
 
 filterObj[ TransUnit.nodeKind.While ] =
@@ -651,7 +753,7 @@ filterObj[ TransUnit.nodeKind.ExpOp1 ] =
 filterObj[ TransUnit.nodeKind.ExpCast ] =
     fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
 {
-    TransUnit.nodeFilter( node.info.exp,  self, node, baseIndent );
+    TransUnit.nodeFilter( node.info,  self, node, baseIndent );
     ''TransUnit.nodeFilter( '' node.info.castType,  self, node, baseIndent )
 };
 
@@ -705,11 +807,7 @@ filterObj[ TransUnit.nodeKind.RefField ] =
     let delimit = ".";
     if parent.kind == TransUnit.nodeKind.ExpCall {
         let prefixSymbol = node.info.prefix.info.txt;
-        if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and
-        ( builtInModuleSet[ prefixSymbol ] or
-          self.moduleName2Info[ prefixSymbol ] or
-          self.className2InfoMap[ prefixSymbol ] )
-        {
+        if node.expType.get_staticFlag() {
             delimit = ".";
         }
         else {

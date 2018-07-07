@@ -63,6 +63,8 @@ test-comp2:
 	diff -r work/2 work/3
 
 	cp -a test work/3
+	(cd work/3; $(LUA) lune/base/base.lua test/start.lns ast)
+	(cd work/3; $(LUA) lune/base/base.lua test/start.lns lua)
 	(cd work/3; $(LUA) lune/base/base.lua test/start.lns exe)
 
 

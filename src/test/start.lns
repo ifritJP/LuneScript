@@ -5,7 +5,33 @@ print( classA.func( 0 ) );
 print( classA.func( 0 ) );
 print( classA.sub() );
 
-let classB = new simple.ClassA();
-print( classB.sub() );
+let classB = new simple.ClassB();
+print( classB.func() );
 
 print( "12%d" ( 10 ) );
+
+let val = 1;
+print( "%g" (val@real));
+
+print( "op", {},  1 and "2" and 3.0 and {} );
+print( "op", 3.0, 1 and "2" and 3.0 or  {} );
+print( "op", "2", 1 and "2" or  3.0 and {} );
+print( "op", "2", 1 and "2" or  3.0 or  {} );
+print( "op", 1,   1 or  "2" and 3.0 and {} );
+print( "op", 1,   1 or  "2" and 3.0 or  {} );
+print( "op", 1,   1 or  "2" or  3.0 and {} );
+print( "op", 1,   1 or  "2" or  3.0 or  {} );
+
+for index = 1, 4 {
+    switch index {
+        case 1, 2 {
+            print( "hoge", index );
+        }   
+        case 3 {
+            print( "foo", index );
+        }   
+        default {
+            print( "bar", index );
+        }   
+    }   
+}

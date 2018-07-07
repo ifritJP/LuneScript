@@ -16,7 +16,8 @@ function filterObj:__init(streamName, stream, exeFlag)
   self.exeFlag = exeFlag
   self.indent = 0
   self.curLineNo = 1
-  self.className2InfoMap = {}
+  self.className2Scope = {}
+  self.className2MemberList = {}
   self.pubVarName2InfoMap = {}
   self.pubFuncName2InfoMap = {}
   self.needIndent = false
@@ -81,25 +82,108 @@ filterObj[TransUnit.nodeKind.Root] = function ( self, node, parent, baseIndent )
   local typeId2TypeInfo = {}
   local typeId2VarInfo = {}
   local function pickupTypeId( typeInfo )
-    if not typeId2TypeInfo[typeInfo:getTypeId(  )] then
-      typeId2TypeInfo[typeInfo:getTypeId(  )] = typeInfo
-      local typeInfoList = typeInfo:getItemTypeInfoList(  )
+    if not typeId2TypeInfo[typeInfo:get_typeId(  )] then
+      typeId2TypeInfo[typeInfo:get_typeId(  )] = typeInfo
+      local typeInfoList = typeInfo:get_itemTypeInfoList(  )
       for __index, itemTypeInfo in pairs( typeInfoList ) do
         pickupTypeId( itemTypeInfo )
       end
-      typeInfoList = typeInfo:getRetTypeInfoList(  )
+      typeInfoList = typeInfo:get_retTypeInfoList(  )
       for __index, itemTypeInfo in pairs( typeInfoList ) do
         pickupTypeId( itemTypeInfo )
       end
     end
   end
   
-  for __index, varInfo in pairs( self.pubVarName2InfoMap ) do
-    pickupTypeId( varInfo["typeInfo"] )
+  self:writeln( "local _className2InfoMap = {}", baseIndent )
+  self:writeln( "moduleObj._className2InfoMap = _className2InfoMap", baseIndent )
+  do
+    local __sorted = {}
+    local __map = self.className2Scope
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
+    end
+    table.sort( __sorted )
+    for __index, className in ipairs( __sorted ) do
+      scope = __map[ className ]
+      do
+        self:writeln( string.format( "local _classInfo%s = {}", className), baseIndent )
+        self:writeln( string.format( "_className2InfoMap.%s = _classInfo%s", className, className), baseIndent )
+        local work = scope
+        do
+          local __sorted = {}
+          local __map = work:get_symbol2TypeInfoMap(  )
+          for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+          end
+          table.sort( __sorted )
+          for __index, declName in ipairs( __sorted ) do
+            typeInfo = __map[ declName ]
+            do
+              if typeInfo.accessMode == "pub" and not typeInfo.externalFlag then
+                if typeInfo.kind == TransUnit.TypeInfoKindFunc then
+                  local fieldName = declName
+                  self:writeln( string.format( "_classInfo%s.%s = {", className, fieldName), baseIndent )
+                  self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, typeInfo.staticFlag) .. string.format( "accessMode = '%s', methodFlag = true, typeId = %d }", typeInfo.accessMode, typeInfo:get_typeId(  )), baseIndent )
+                  pickupTypeId( typeInfo )
+                end
+              end
+            end
+          end
+        end
+        
+        for __index, memberNode in pairs( self.className2MemberList[className] ) do
+          local memberInfo = memberNode:get_info(  )
+          if memberInfo.accessMode == "pub" then
+            local memberName = memberInfo.name.txt
+            local memberTypeInfo = memberName.expType
+            self:writeln( string.format( "_classInfo%s.%s = {", className, memberName), baseIndent )
+            self:writeln( string.format( "  name='%s', staticFlag = %s, ", memberName, memberInfo.staticFlag) .. string.format( "accessMode = '%s', methodFlag = false, typeId = %d }", memberInfo.accessMode, memberNode:get_expType(  ).typeId), baseIndent )
+            pickupTypeId( memberInfo.refType )
+          end
+        end
+      end
+    end
   end
-  for __index, funcInfo in pairs( self.pubFuncName2InfoMap ) do
-    pickupTypeId( funcInfo["typeInfo"] )
+  
+  self:writeln( "local _varName2InfoMap = {}", baseIndent )
+  self:writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent )
+  do
+    local __sorted = {}
+    local __map = self.pubVarName2InfoMap
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
+    end
+    table.sort( __sorted )
+    for __index, varName in ipairs( __sorted ) do
+      varInfo = __map[ varName ]
+      do
+        self:writeln( string.format( "_varName2InfoMap.%s = {", varName ), baseIndent )
+        self:writeln( string.format( "  name='%s', accessMode = '%s', typeId = %d }", varName, varInfo["accessMode"], varInfo["typeInfo"]:get_typeId(  )), baseIndent )
+        pickupTypeId( varInfo["typeInfo"] )
+      end
+    end
   end
+  
+  self:writeln( "local _funcName2InfoMap = {}", baseIndent )
+  self:writeln( "moduleObj._funcName2InfoMap = _funcName2InfoMap", baseIndent )
+  do
+    local __sorted = {}
+    local __map = self.pubFuncName2InfoMap
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
+    end
+    table.sort( __sorted )
+    for __index, funcName in ipairs( __sorted ) do
+      funcInfo = __map[ funcName ]
+      do
+        self:writeln( string.format( "_funcName2InfoMap.%s = {", funcName ), baseIndent )
+        self:writeln( string.format( "  accessMode = '%s', typeId = %d }", funcInfo["accessMode"], funcInfo["typeInfo"]:get_typeId(  )), baseIndent )
+        pickupTypeId( funcInfo["typeInfo"] )
+      end
+    end
+  end
+  
   self:writeln( "moduleObj._typeInfoList = {", baseIndent )
   do
     local __sorted = {}
@@ -118,76 +202,6 @@ filterObj[TransUnit.nodeKind.Root] = function ( self, node, parent, baseIndent )
   end
   
   self:writeln( "}", baseIndent )
-  self:writeln( "local _className2InfoMap = {}", baseIndent )
-  self:writeln( "moduleObj._className2InfoMap = _className2InfoMap", baseIndent )
-  do
-    local __sorted = {}
-    local __map = self.className2InfoMap
-    for __key in pairs( __map ) do
-      table.insert( __sorted, __key )
-    end
-    table.sort( __sorted )
-    for __index, className in ipairs( __sorted ) do
-      classInfo = __map[ className ]
-      do
-        self:writeln( string.format( "local _classInfo%s = {}", className), baseIndent )
-        self:writeln( string.format( "_className2InfoMap.%s = _classInfo%s", className, className), baseIndent )
-        do
-          local __sorted = {}
-          local __map = classInfo
-          for __key in pairs( __map ) do
-            table.insert( __sorted, __key )
-          end
-          table.sort( __sorted )
-          for __index, methodName in ipairs( __sorted ) do
-            methodInfo = __map[ methodName ]
-            do
-              self:writeln( string.format( "_classInfo%s.%s = {", className, methodName), baseIndent )
-              self:writeln( string.format( "  name='%s', staticFlag = %s, accessMode = '%s' }", methodName, methodInfo["staticFlag"], methodInfo["accessMode"]), baseIndent )
-            end
-          end
-        end
-        
-      end
-    end
-  end
-  
-  self:writeln( "local _varName2InfoMap = {}", baseIndent )
-  self:writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent )
-  do
-    local __sorted = {}
-    local __map = self.pubVarName2InfoMap
-    for __key in pairs( __map ) do
-      table.insert( __sorted, __key )
-    end
-    table.sort( __sorted )
-    for __index, varName in ipairs( __sorted ) do
-      varInfo = __map[ varName ]
-      do
-        self:writeln( string.format( "_varName2InfoMap.%s = {", varName ), baseIndent )
-        self:writeln( string.format( "  name='%s', accessMode = '%s', typeId = %d }", varName, varInfo["accessMode"], varInfo["typeInfo"]:getTypeId(  )), baseIndent )
-      end
-    end
-  end
-  
-  self:writeln( "local _funcName2InfoMap = {}", baseIndent )
-  self:writeln( "moduleObj._funcName2InfoMap = _funcName2InfoMap", baseIndent )
-  do
-    local __sorted = {}
-    local __map = self.pubFuncName2InfoMap
-    for __key in pairs( __map ) do
-      table.insert( __sorted, __key )
-    end
-    table.sort( __sorted )
-    for __index, funcName in ipairs( __sorted ) do
-      funcInfo = __map[ funcName ]
-      do
-        self:writeln( string.format( "_funcName2InfoMap.%s = {", funcName ), baseIndent )
-        self:writeln( string.format( "  accessMode = '%s', typeId = %d }", funcInfo["accessMode"], funcInfo["typeInfo"]:getTypeId(  )), baseIndent )
-      end
-    end
-  end
-  
   self:writeln( "----- meta -----", baseIndent )
   self:writeln( "return moduleObj", baseIndent )
 end
@@ -210,6 +224,8 @@ filterObj[TransUnit.nodeKind.Block] = function ( self, node, parent, baseIndent 
     word = "do"
   elseif node.info.kind == "func" then
     word = ""
+  elseif node.info.kind == "default" then
+    word = ""
   elseif node.info.kind == "{" then
     word = "do"
   end
@@ -230,9 +246,9 @@ filterObj[TransUnit.nodeKind.StmtExp] = function ( self, node, parent, baseInden
 end
 
 filterObj[TransUnit.nodeKind.DeclClass] = function ( self, node, parent, baseIndent )
-  local classInfo = {}
   local className = node.info.name.txt
-  self.className2InfoMap[className] = classInfo
+  self.className2Scope[className] = node.info.scope
+  self.className2MemberList[className] = node.info.memberList
   self:writeln( string.format( "local %s = {}", className ), baseIndent )
   if node.info.accessMode == "pub" then
     self:writeln( string.format( "moduleObj.%s = %s", className, className ), baseIndent )
@@ -240,14 +256,23 @@ filterObj[TransUnit.nodeKind.DeclClass] = function ( self, node, parent, baseInd
   local hasConstrFlag = false
   local memberList = {}
   local fieldList = node.info.fieldList
+  local outerMethodSet = node.info.outerMethodSet
   for __index, field in pairs( fieldList ) do
+    local ignoreFlag = false
     if field["kind"] == TransUnit.nodeKind.DeclConstr then
       hasConstrFlag = true
     end
     if field["kind"] == TransUnit.nodeKind.DeclMember then
       table.insert( memberList, field )
     end
-    TransUnit.nodeFilter( field, self, node, baseIndent )
+    if field["kind"] == TransUnit.nodeKind.DeclMethod then
+      if outerMethodSet[field.info.name.txt] then
+        ignoreFlag = true
+      end
+    end
+    if (not ignoreFlag ) then
+      TransUnit.nodeFilter( field, self, node, baseIndent )
+    end
   end
   if not hasConstrFlag then
     local argTxt = ""
@@ -273,6 +298,26 @@ function %s:__init( %s )
   return self
 end
             ]==], baseIndent )
+  end
+  local scope = node.info.scope
+  for __index, memberNode in pairs( node.info.memberList ) do
+    local memberName = memberNode.info.name.txt
+    local getterName = "get_" .. memberName
+    local typeInfo = scope:getTypeInfo( getterName )
+    if memberNode.info.getterMode ~= "none" and (not typeInfo or typeInfo.autoFlag ) then
+      self:writeln( string.format( [==[
+function %s:%s()
+   return self.%s
+end]==], className, getterName, memberName), baseIndent )
+    end
+    local setterName = "set_" .. memberName
+    typeInfo = scope:getTypeInfo( setterName )
+    if memberNode.info.setterMode ~= "none" and (not typeInfo or typeInfo.autoFlag ) then
+      self:writeln( string.format( [==[
+function %s:%s()
+   return self.%s
+end]==], className, setterName, memberName), baseIndent )
+    end
   end
 end
 
@@ -312,14 +357,12 @@ filterObj[TransUnit.nodeKind.DeclConstr] = function ( self, node, parent, baseIn
 end
 
 filterObj[TransUnit.nodeKind.DeclMethod] = function ( self, node, parent, baseIndent )
-  local classInfo = self.className2InfoMap[node.info.className.txt]
   local delimit = ":"
   if node.info.staticFlag then
     delimit = "."
   end
   local methodName = node.info.name.txt
   self:write( string.format( "function %s%s%s( ", node.info.className.txt, delimit, methodName) )
-  classInfo[methodName] = {["funcFlag"] = true, ["staticFlag"] = node.info.staticFlag, ["accessMode"] = node.info.accessMode}
   local argList = node.info.argList
   for index, arg in pairs( argList ) do
     if index > 1 then
@@ -389,7 +432,7 @@ filterObj[TransUnit.nodeKind.DeclFunc] = function ( self, node, parent, baseInde
   self:write( " )", baseIndent )
   TransUnit.nodeFilter( node.info.body, self, node, baseIndent )
   self:writeln( "end", baseIndent )
-  if node.info.accessMode == "pub" then
+  if node.expType:get_accessMode(  ) == "pub" then
     self:write( string.format( "moduleObj.%s = %s", name, name) )
     self.pubFuncName2InfoMap[name] = {["funcFlag"] = true, ["accessMode"] = node.info.accessMode, ["typeInfo"] = node.expType}
   end
@@ -421,6 +464,36 @@ filterObj[TransUnit.nodeKind.If] = function ( self, node, parent, baseIndent )
     TransUnit.nodeFilter( val["block"], self, node, baseIndent )
   end
   self:write( "end" )
+end
+
+filterObj[TransUnit.nodeKind.Switch] = function ( self, node, parent, baseIndent )
+  self:writeln( "do", baseIndent + 2 )
+  self:write( "local _switchExp = " )
+  TransUnit.nodeFilter( node.info.exp, self, node, baseIndent + 2 )
+  self:writeln( "", baseIndent + 2 )
+  for index, caseInfo in pairs( node.info.caseList ) do
+    if index == 1 then
+      self:write( "if " )
+    else 
+      self:write( "elseif " )
+    end
+    local expList = caseInfo.expList
+    for index, expNode in pairs( expList.info ) do
+      if index ~= 1 then
+        self:write( " or " )
+      end
+      self:write( "_switchExp == " )
+      TransUnit.nodeFilter( expNode, self, node, baseIndent + 2 )
+    end
+    self:write( " then" )
+    TransUnit.nodeFilter( caseInfo.block, self, node, baseIndent + 2 )
+  end
+  if node.info.default then
+    self:write( "else " )
+    TransUnit.nodeFilter( node.info.default, self, node, baseIndent + 2 )
+    self:writeln( "end", baseIndent )
+  end
+  self:writeln( "end", baseIndent )
 end
 
 filterObj[TransUnit.nodeKind.While] = function ( self, node, parent, baseIndent )
@@ -530,7 +603,7 @@ filterObj[TransUnit.nodeKind.ExpOp1] = function ( self, node, parent, baseIndent
 end
 
 filterObj[TransUnit.nodeKind.ExpCast] = function ( self, node, parent, baseIndent )
-  TransUnit.nodeFilter( node.info.exp, self, node, baseIndent )
+  TransUnit.nodeFilter( node.info, self, node, baseIndent )
 end
 
 filterObj[TransUnit.nodeKind.ExpParen] = function ( self, node, parent, baseIndent )
@@ -569,7 +642,7 @@ filterObj[TransUnit.nodeKind.RefField] = function ( self, node, parent, baseInde
   local delimit = "."
   if parent.kind == TransUnit.nodeKind.ExpCall then
     local prefixSymbol = node.info.prefix.info.txt
-    if node.info.prefix.kind == TransUnit.nodeKind.ExpRef and (builtInModuleSet[prefixSymbol] or self.moduleName2Info[prefixSymbol] or self.className2InfoMap[prefixSymbol] ) then
+    if node.expType:get_staticFlag(  ) then
       delimit = "."
     else 
       delimit = ":"
@@ -660,21 +733,15 @@ filterObj[TransUnit.nodeKind.Break] = function ( self, node, parent, baseIndent 
 end
 
 ----- meta -----
-moduleObj._typeInfoList = {
-}
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 local _classInfofilterObj = {}
 _className2InfoMap.filterObj = _classInfofilterObj
-_classInfofilterObj.setIndent = {
-  name='setIndent', staticFlag = false, accessMode = 'pri' }
-_classInfofilterObj.write = {
-  name='write', staticFlag = false, accessMode = 'pri' }
-_classInfofilterObj.writeln = {
-  name='writeln', staticFlag = false, accessMode = 'pri' }
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
+moduleObj._typeInfoList = {
+}
 ----- meta -----
 return moduleObj

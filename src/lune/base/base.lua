@@ -60,6 +60,9 @@ function _luneScript.loadFile( path )
    if err then
       print( err )
    end
+   if not chunk then
+      error( "failed to error" )
+   end
    return chunk()
 end
 

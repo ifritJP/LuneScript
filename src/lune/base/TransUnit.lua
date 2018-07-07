@@ -6,69 +6,78 @@ local function debugLog(  )
   local debugInfo1 = debug.getinfo( 2 )
   local debugInfo2 = debug.getinfo( 3 )
   local debugInfo3 = debug.getinfo( 4 )
-  print( debugInfo1["short_src"], debugInfo1['currentline'] )
-  print( debugInfo2["short_src"], debugInfo2['currentline'] )
-  print( debugInfo3["short_src"], debugInfo3['currentline'] )
+  print( "--", debugInfo1["short_src"], debugInfo1['currentline'] )
+  print( "--", debugInfo2["short_src"], debugInfo2['currentline'] )
+  print( "--", debugInfo3["short_src"], debugInfo3['currentline'] )
 end
 
-local typeIdSeed = 1
+local typeIdSeed = 0
 local typeInfo = {}
 moduleObj.typeInfo = typeInfo
 
 local builtInTypeMap = {}
 local TypeInfoKindPrim = 1
+moduleObj.TypeInfoKindPrim = TypeInfoKindPrim
+
 local TypeInfoKindList = 2
+moduleObj.TypeInfoKindList = TypeInfoKindList
+
 local TypeInfoKindArray = 3
+moduleObj.TypeInfoKindArray = TypeInfoKindArray
+
 local TypeInfoKindMap = 4
+moduleObj.TypeInfoKindMap = TypeInfoKindMap
+
 local TypeInfoKindClass = 5
+moduleObj.TypeInfoKindClass = TypeInfoKindClass
+
 local TypeInfoKindFunc = 6
+moduleObj.TypeInfoKindFunc = TypeInfoKindFunc
+
 local TypeInfo = {}
-function TypeInfo.new( txt, typeId, kind, itemTypeInfo, retTypeInfo )
+function TypeInfo.new( autoFlag, externalFlag, staticFlag, accessMode, txt, typeId, kind, itemTypeInfoList, retTypeInfoList )
   local obj = {}
   setmetatable( obj, { __index = TypeInfo } )
-  return obj.__init and obj:__init( txt, typeId, kind, itemTypeInfo, retTypeInfo ) or nil;
+  return obj.__init and obj:__init( autoFlag, externalFlag, staticFlag, accessMode, txt, typeId, kind, itemTypeInfoList, retTypeInfoList ) or nil;
 end
-function TypeInfo:__init(txt, typeId, kind, itemTypeInfo, retTypeInfo) 
+function TypeInfo:__init(autoFlag, externalFlag, staticFlag, accessMode, txt, typeId, kind, itemTypeInfoList, retTypeInfoList) 
+  self.autoFlag = autoFlag
+  self.externalFlag = externalFlag
+  self.staticFlag = staticFlag
+  self.accessMode = accessMode
   self.txt = txt
   self.typeId = typeId
   self.kind = kind
-  self.itemTypeInfo = itemTypeInfo or {}
-  self.retTypeInfo = retTypeInfo or {}
+  self.itemTypeInfoList = itemTypeInfoList or {}
+  self.retTypeInfoList = retTypeInfoList or {}
   return self
 end
 function TypeInfo:serialize(  )
-  local txt = '{ itemTypeId = { '
-  for index, typeInfo in pairs( self.itemTypeInfo ) do
-    if index ~= 1 then
-      txt = txt .. ", "
+  local function serializeTypeInfoList( name, list )
+    local work = name
+    for index, typeInfo in pairs( list ) do
+      if index ~= 1 then
+        work = work .. ", "
+      end
+      work = string.format( "%s%d", work, typeInfo.typeId)
     end
-    txt = string.format( "%s%d", txt, typeInfo.typeId)
+    return work .. "}, "
   end
-  txt = txt .. string.format( '}, typeId = %d, txt = "%s", kind = %d }', self.typeId, self.txt, self.kind)
-  return txt
-end
-function TypeInfo:getItemTypeInfoList(  )
-  return self.itemTypeInfo
-end
-function TypeInfo:getRetTypeInfoList(  )
-  return self.retTypeInfo
-end
-function TypeInfo:getKind(  )
-  return self.kind
-end
-function TypeInfo:getTypeId(  )
-  return self.typeId
+  
+  local txt = string.format( [==[{ typeId = %d, txt = '%s', staticFlag = %s, accessMode = '%s',
+kind = %d, ]==], self.typeId, self.txt, self.staticFlag, self.accessMode, self.kind)
+  return txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. "}"
 end
 function TypeInfo:getTxt(  )
   if self.kind == TypeInfoKindArray then
-    return self.itemTypeInfo[1]:getTxt(  ) .. "[@]"
+    return self.itemTypeInfoList[1]:getTxt(  ) .. "[@]"
   end
   if self.kind == TypeInfoKindList then
-    return self.itemTypeInfo[1]:getTxt(  ) .. "[]"
+    return self.itemTypeInfoList[1]:getTxt(  ) .. "[]"
   end
-  if self.itemTypeInfo and #self.itemTypeInfo > 0 then
+  if self.itemTypeInfoList and #self.itemTypeInfoList > 0 then
     local txt = self.txt .. "<"
-    for index, typeInfo in pairs( self.itemTypeInfo ) do
+    for index, typeInfo in pairs( self.itemTypeInfoList ) do
       if index ~= 1 then
         txt = txt .. ","
       end
@@ -81,17 +90,17 @@ function TypeInfo:getTxt(  )
   end
   return ""
 end
-function TypeInfo.create( kind, txt, itemTypeInfo, retTypeInfo )
+function TypeInfo.create( staticFlag, kind, txt, itemTypeInfo, retTypeInfoList )
   if kind == TypeInfoKindPrim then
     return builtInTypeMap[txt]
   end
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(txt, typeIdSeed, kind, itemTypeInfo, retTypeInfo)
+  local info = TypeInfo.new(false, true, staticFlag, "pub", txt, typeIdSeed, kind, itemTypeInfo, retTypeInfoList)
   return info
 end
 function TypeInfo.createBuiltin( idName, typeTxt, kind )
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(typeTxt, typeIdSeed, kind)
+  local info = TypeInfo.new(false, false, false, "pub", typeTxt, typeIdSeed, kind)
   typeInfo[idName] = info
   builtInTypeMap[typeTxt] = info
   return info
@@ -101,25 +110,49 @@ function TypeInfo.createList( itemTypeInfo )
     error( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new(nil, typeIdSeed, TypeInfoKindList, itemTypeInfo)
+  return TypeInfo.new(false, false, false, "pub", nil, typeIdSeed, TypeInfoKindList, itemTypeInfo)
 end
 function TypeInfo.createArray( itemTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new(nil, typeIdSeed, TypeInfoKindArray, itemTypeInfo)
+  return TypeInfo.new(false, false, false, "pub", nil, typeIdSeed, TypeInfoKindArray, itemTypeInfo)
 end
 function TypeInfo.createMap( keyTypeInfo, valTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new("Map", typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
+  return TypeInfo.new(false, false, false, "pub", "Map", typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
 end
-function TypeInfo.createClass( className )
+function TypeInfo.createClass( externalFlag, accessMode, className )
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(className, typeIdSeed, TypeInfoKindClass)
+  local info = TypeInfo.new(false, externalFlag, false, accessMode, className, typeIdSeed, TypeInfoKindClass)
   return info
 end
-function TypeInfo.createFunc( funcName, argTypeList, retTypeInfo )
+function TypeInfo.createFunc( autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList )
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(funcName, typeIdSeed, TypeInfoKindFunc, argTypeList, retTypeInfo)
+  local info = TypeInfo.new(autoFlag, externalFlag, staticFlag, accessMode, funcName, typeIdSeed, TypeInfoKindFunc, argTypeList or {}, retTypeInfoList or {})
   return info
+end
+function TypeInfo:get_itemTypeInfoList()
+   return self.itemTypeInfoList
+end
+function TypeInfo:get_retTypeInfoList()
+   return self.retTypeInfoList
+end
+function TypeInfo:get_typeId()
+   return self.typeId
+end
+function TypeInfo:get_txt()
+   return self.txt
+end
+function TypeInfo:get_kind()
+   return self.kind
+end
+function TypeInfo:get_staticFlag()
+   return self.staticFlag
+end
+function TypeInfo:get_accessMode()
+   return self.accessMode
+end
+function TypeInfo:get_autoFlag()
+   return self.autoFlag
 end
 
 local typeInfoNone = TypeInfo.createBuiltin( "None", "", TypeInfoKindPrim )
@@ -173,8 +206,14 @@ function Scope:getTypeInfo( name )
   end
   return builtInTypeMap[name]
 end
-function Scope:getParent(  )
-  return self.parent
+function Scope:get_parent()
+   return self.parent
+end
+function Scope:get_symbol2TypeInfoMap()
+   return self.symbol2TypeInfoMap
+end
+function Scope:get_className2ScopeMap()
+   return self.className2ScopeMap
 end
 
 local NodePos = {}
@@ -194,18 +233,43 @@ end
 
 local Node = {}
 moduleObj.Node = Node
-function Node.new( kind, pos, expType, info, filter )
+function Node.new( kind, pos, expType, expTypeList, info, filter )
   local obj = {}
   setmetatable( obj, { __index = Node } )
-  return obj.__init and obj:__init( kind, pos, expType, info, filter ) or nil;
+  return obj.__init and obj:__init( kind, pos, expType, expTypeList, info, filter ) or nil;
 end
-function Node:__init( kind, pos, expType, info, filter )
+function Node:__init( kind, pos, expType, expTypeList, info, filter )
             
 self.kind = kind
   self.pos = pos
   self.expType = expType
+  self.expTypeList = expTypeList
   self.info = info
   self.filter = filter
+    return self
+end
+            
+function Node:get_kind()
+   return self.kind
+end
+function Node:get_expType()
+   return self.expType
+end
+function Node:get_info()
+   return self.info
+end
+
+local ClassInfo = {}
+function ClassInfo.new( name, scope, typeInfo )
+  local obj = {}
+  setmetatable( obj, { __index = ClassInfo } )
+  return obj.__init and obj:__init( name, scope, typeInfo ) or nil;
+end
+function ClassInfo:__init( name, scope, typeInfo )
+            
+self.name = name
+  self.scope = scope
+  self.typeInfo = typeInfo
     return self
 end
             
@@ -221,6 +285,7 @@ function TransUnit:__init()
   self.scope = Scope.new(nil)
   self.classList = {}
   self.typeInfo2Scope = {}
+  self.typeInfo2ClassNode = {}
   return self
 end
 function TransUnit:pushScope(  )
@@ -228,24 +293,30 @@ function TransUnit:pushScope(  )
   return self.scope
 end
 function TransUnit:popScope(  )
-  self.scope = self.scope:getParent(  )
+  self.scope = self.scope:get_parent(  )
 end
-function TransUnit:pushClass( name )
+function TransUnit:pushClass( externalFlag, name )
   local typeInfo = self.scope:getTypeInfoChild( name )
   if not typeInfo then
-    typeInfo = TypeInfo.createClass( name )
+    typeInfo = TypeInfo.createClass( externalFlag, "pub", name )
     local scope = self:pushScope(  )
-    scope:getParent(  ):addClass( name, typeInfo, scope )
+    scope:get_parent(  ):addClass( name, typeInfo, scope )
   else 
     self.scope = self.scope:getClassScope( name )
   end
-  table.insert( self.classList, {["name"] = name, ["scope"] = self.scope, ["typeInfo"] = typeInfo} )
+  table.insert( self.classList, ClassInfo.new(name, self.scope, typeInfo) )
   self.typeInfo2Scope[typeInfo] = self.scope
-  return self.scope
+  return typeInfo
 end
 function TransUnit:popClass(  )
   self:popScope(  )
   table.remove( self.classList )
+end
+function TransUnit:addMethod( className, methodNode )
+  local classTypeInfo = self.scope:getTypeInfo( className )
+  local classNodeInfo = self.typeInfo2ClassNode[classTypeInfo].info
+  classNodeInfo.outerMethodSet[methodNode.info.name.txt] = true
+  table.insert( classNodeInfo.fieldList, methodNode )
 end
 -- none
 -- none
@@ -256,6 +327,35 @@ end
 -- none
 -- none
 
+local opLevelBase = 0
+local op2levelMap = {}
+local op1levelMap = {}
+local function regOpLevel( opnum, opList )
+  opLevelBase = opLevelBase + 1
+  if opnum == 1 then
+    for __index, op in pairs( opList ) do
+      op1levelMap[op] = opLevelBase
+    end
+  else 
+    for __index, op in pairs( opList ) do
+      op2levelMap[op] = opLevelBase
+    end
+  end
+end
+
+regOpLevel( 2, {"="} )
+regOpLevel( 2, {"or"} )
+regOpLevel( 2, {"and"} )
+regOpLevel( 2, {"<", ">", "<=", ">=", "~=", "=="} )
+regOpLevel( 2, {"|"} )
+regOpLevel( 2, {"~"} )
+regOpLevel( 2, {"&"} )
+regOpLevel( 2, {"<<", ">>"} )
+regOpLevel( 2, {".."} )
+regOpLevel( 2, {"+", "-"} )
+regOpLevel( 2, {"*", "/", "//", "%"} )
+regOpLevel( 1, {"not", "#", "-", "~"} )
+regOpLevel( 1, {"^"} )
 local nodeKind2NameMap = {}
 local nodeKindSeed = 1
 local nodeKind = {}
@@ -274,6 +374,7 @@ local nodeKindImport = regKind( 'Import' )
 local nodeKindRoot = regKind( 'Root' )
 local nodeKindRefType = regKind( 'RefType' )
 local nodeKindIf = regKind( 'If' )
+local nodeKindSwitch = regKind( 'Switch' )
 local nodeKindWhile = regKind( 'While' )
 local nodeKindRepeat = regKind( 'Repeat' )
 local nodeKindFor = regKind( 'For' )
@@ -335,25 +436,53 @@ local function nodeFilter( node, filter, ... )
 end
 moduleObj.nodeFilter = nodeFilter
 function TransUnit:registBuiltInScope(  )
-  local builtInInfo = {[""] = {"error", "print", "tonumber"}, ["io"] = {"open"}, ["string"] = {"find", "byte", "format", "rep", "gmatch", "gsub"}, ["table"] = {"insert", "remove"}, ["debug"] = {"getinfo"}, ["_luneScript"] = {"loadModule"}}
-  for name, infoList in pairs( builtInInfo ) do
-    if name ~= "" then
-      self:pushClass( name )
+  local builtInInfo = {[""] = {["error"] = {["ret"] = {}}, ["print"] = {["ret"] = {}}, ["tonumber"] = {["ret"] = {"int"}}}, ["io"] = {["open"] = {["ret"] = {"stem"}}}, ["string"] = {["find"] = {["ret"] = {"int", "int"}}, ["byte"] = {["ret"] = {"int"}}, ["format"] = {["ret"] = {"str"}}, ["rep"] = {["ret"] = {"str"}}, ["gmatch"] = {["ret"] = {"stem"}}, ["gsub"] = {["ret"] = {"str"}}}, ["str"] = {["find"] = {["methodFlag"] = {}, ["ret"] = {"int", "int"}}, ["byte"] = {["methodFlag"] = {}, ["ret"] = {"int"}}, ["format"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["rep"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["gmatch"] = {["methodFlag"] = {}, ["ret"] = {"stem"}}, ["gsub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["sub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}}, ["table"] = {["insert"] = {["ret"] = {""}}, ["remove"] = {["ret"] = {""}}}, ["debug"] = {["getinfo"] = {["ret"] = {"stem"}}}, ["_luneScript"] = {["loadModule"] = {["ret"] = {"stem"}}}}
+  do
+    local __sorted = {}
+    local __map = builtInInfo
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
     end
-    for __index, info in pairs( infoList ) do
-      self.scope:add( info, TypeInfo.createFunc( info ) )
-    end
-    if name ~= "" then
-      self:popClass(  )
+    table.sort( __sorted )
+    for __index, name in ipairs( __sorted ) do
+      name2FuncInfo = __map[ name ]
+      do
+        if name ~= "" then
+          self:pushClass( true, name )
+        end
+        do
+          local __sorted = {}
+          local __map = name2FuncInfo
+          for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+          end
+          table.sort( __sorted )
+          for __index, funcName in ipairs( __sorted ) do
+            info = __map[ funcName ]
+            do
+              local retTypeList = {}
+              for __index, retType in pairs( info["ret"] ) do
+                table.insert( retTypeList, builtInTypeMap[retType] )
+              end
+              self.scope:add( funcName, TypeInfo.createFunc( false, true, not info["methodFlag"], "pub", funcName, nil, retTypeList ) )
+            end
+          end
+        end
+        
+        if name ~= "" then
+          self:popClass(  )
+        end
+      end
     end
   end
+  
 end
 
-function TransUnit:createNode( kind, pos, expType, info )
+function TransUnit:createNode( kind, pos, expTypeList, info )
   if not getNodeKindName( kind ) then
     error( string.format( "%d:%d: not found nodeKind", pos.lineNo, pos.column ) )
   end
-  return {["kind"] = kind, ["pos"] = pos, ["expType"] = expType, ["info"] = info, ["filter"] = nodeFilter}
+  return Node.new(kind, pos, expTypeList[1], expTypeList, info, nodeFilter)
 end
 
 function TransUnit:error( mess )
@@ -367,7 +496,7 @@ function TransUnit:error( mess )
 end
 
 function TransUnit:createNoneNode(  )
-  return self:createNode( nodeKindNone, {["lineNo"] = 0, ["column"] = 0}, typeInfoNone, {} )
+  return self:createNode( nodeKindNone, {["lineNo"] = 0, ["column"] = 0}, {typeInfoNone}, {} )
 end
 
 function TransUnit:getTokenNoErr(  )
@@ -445,7 +574,7 @@ function TransUnit:analyzeBlock( blockKind, scope )
   if not scope then
     self:popScope(  )
   end
-  local node = self:createNode( nodeKindBlock, token.pos, typeInfoNone, {["kind"] = blockKind, ["stmtList"] = stmtList} )
+  local node = self:createNode( nodeKindBlock, token.pos, {typeInfoNone}, {["kind"] = blockKind, ["stmtList"] = stmtList} )
   return node
 end
 
@@ -460,7 +589,7 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
   if token.txt == "let" then
     return self:analyzeDeclVar( accessMode, staticFlag, firstToken )
   elseif token.txt == "fn" then
-    return self:analyzeDeclFunc( accessMode, staticFlag, false, token, nil )
+    return self:analyzeDeclFunc( accessMode, staticFlag, nil, token, nil )
   elseif token.txt == "class" then
     return self:analyzeDeclClass( accessMode, token )
   end
@@ -468,17 +597,19 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
 end
 
 local _TypeInfo = {}
-function _TypeInfo.new( itemTypeId, typeId, txt, kind )
+function _TypeInfo.new( itemTypeId, retTypeId, typeId, txt, kind, staticFlag )
   local obj = {}
   setmetatable( obj, { __index = _TypeInfo } )
-  return obj.__init and obj:__init( itemTypeId, typeId, txt, kind ) or nil;
+  return obj.__init and obj:__init( itemTypeId, retTypeId, typeId, txt, kind, staticFlag ) or nil;
 end
-function _TypeInfo:__init( itemTypeId, typeId, txt, kind )
+function _TypeInfo:__init( itemTypeId, retTypeId, typeId, txt, kind, staticFlag )
             
 self.itemTypeId = itemTypeId
+  self.retTypeId = retTypeId
   self.typeId = typeId
   self.txt = txt
   self.kind = kind
+  self.staticFlag = staticFlag
     return self
 end
             
@@ -515,23 +646,37 @@ function TransUnit:analyzeImport( token )
       break
     end
   end
-  self:pushClass( moduleToken.txt )
+  local moduleTypeInfo = self:pushClass( true, moduleToken.txt )
   local moduleInfo = _luneScript.loadModule( modulePath )
   self.moduleName2Info[modulePath] = moduleInfo
-  for className, classInfo in pairs( moduleInfo._className2InfoMap ) do
-    self:pushClass( className )
-    for fieldName, fieldInfo in pairs( classInfo ) do
-      self.scope:add( fieldName, TypeInfo.createFunc( fieldName ) )
-    end
-    self:popClass(  )
-  end
   local typeId2TypeInfo = {}
   for __index, typeInfo in pairs( moduleInfo._typeInfoList ) do
-    local itemTypeInfo = {}
-    for __index, typeId in pairs( typeInfo.itemTypeId ) do
-      table.insert( itemTypeInfo, typeId2TypeInfo[typeId] )
+    if typeInfo.kind ~= TypeInfoKindPrim then
+      local itemTypeInfo = {}
+      for __index, typeId in pairs( typeInfo.itemTypeId ) do
+        table.insert( itemTypeInfo, typeId2TypeInfo[typeId] )
+      end
+      local retTypeInfo = {}
+      for __index, typeId in pairs( typeInfo.retTypeId ) do
+        table.insert( retTypeInfo, typeId2TypeInfo[typeId] )
+      end
+      typeId2TypeInfo[typeInfo.typeId] = TypeInfo.create( typeInfo.staticFlag, typeInfo.typeId, typeInfo.txt, itemTypeInfo, retTypeInfo )
+    else 
+      typeId2TypeInfo[typeInfo.typeId] = builtInTypeMap[typeInfo.txt]
     end
-    typeId2TypeInfo[typeInfo.typeId] = TypeInfo.create( typeInfo.typeId, typeInfo.txt, itemTypeInfo )
+  end
+  for className, classInfo in pairs( moduleInfo._className2InfoMap ) do
+    self:pushClass( true, className )
+    for fieldName, fieldInfo in pairs( classInfo ) do
+      local fieldTypeInfo = nil
+      if fieldInfo.methodFlag then
+        fieldTypeInfo = typeId2TypeInfo[fieldInfo["typeId"]]
+      else 
+        fieldTypeInfo = typeId2TypeInfo[fieldInfo["typeId"]]
+      end
+      self.scope:add( fieldName, fieldTypeInfo )
+    end
+    self:popClass(  )
   end
   for varName, varInfo in pairs( moduleInfo._varName2InfoMap ) do
     self.scope:add( varName, typeId2TypeInfo[varInfo["typeId"]] )
@@ -541,7 +686,7 @@ function TransUnit:analyzeImport( token )
   end
   self:popClass(  )
   self:checkToken( nextToken, ";" )
-  return self:createNode( nodeKindImport, token.pos, typeInfoNone, modulePath )
+  return self:createNode( nodeKindImport, token.pos, {typeInfoNone}, modulePath )
 end
 
 function TransUnit:analyzeIf( token )
@@ -559,19 +704,40 @@ function TransUnit:analyzeIf( token )
   else 
     self:pushback(  )
   end
-  return self:createNode( nodeKindIf, token.pos, typeInfoNone, list )
+  return self:createNode( nodeKindIf, token.pos, {typeInfoNone}, list )
+end
+
+function TransUnit:analyzeSwitch( firstToken )
+  local exp = self:analyzeExp(  )
+  self:checkNextToken( "{" )
+  local caseList = {}
+  local nextToken = self:getToken(  )
+  while (nextToken.txt == "case" ) do
+    self:checkToken( nextToken, "case" )
+    local condexpList = self:analyzeExpList(  )
+    local condBock = self:analyzeBlock( "switch" )
+    table.insert( caseList, {["expList"] = condexpList, ["block"] = condBock} )
+    nextToken = self:getToken(  )
+  end
+  local defaultBlock = nil
+  if nextToken.txt == "default" then
+    defaultBlock = self:analyzeBlock( "default" )
+  end
+  self:checkNextToken( "}" )
+  local info = {["exp"] = exp, ["caseList"] = caseList, ["default"] = defaultBlock}
+  return self:createNode( nodeKindSwitch, firstToken.pos, {typeInfoNone}, info )
 end
 
 function TransUnit:analyzeWhile( token )
   local info = {["exp"] = self:analyzeExp(  ), ["block"] = self:analyzeBlock( "while" )}
-  return self:createNode( nodeKindWhile, token.pos, typeInfoNone, info )
+  return self:createNode( nodeKindWhile, token.pos, {typeInfoNone}, info )
 end
 
 function TransUnit:analyzeRepeat( token )
   local scope = self:pushScope(  )
   local info = {["block"] = self:analyzeBlock( "repeat", scope ), ["exp"] = self:analyzeExp(  )}
   self:popScope(  )
-  local node = self:createNode( nodeKindRepeat, token.pos, typeInfoNone, info )
+  local node = self:createNode( nodeKindRepeat, token.pos, {typeInfoNone}, info )
   self:checkNextToken( ";" )
   return node
 end
@@ -596,7 +762,7 @@ function TransUnit:analyzeFor( token )
   end
   local info = {["block"] = self:analyzeBlock( "for", scope ), ["val"] = val, ["init"] = exp1, ["to"] = exp2, ["delta"] = exp3}
   self:popScope(  )
-  local node = self:createNode( nodeKindFor, token.pos, typeInfoNone, info )
+  local node = self:createNode( nodeKindFor, token.pos, {typeInfoNone}, info )
   return node
 end
 
@@ -620,7 +786,7 @@ function TransUnit:analyzeApply( token )
   local block = self:analyzeBlock( "apply", scope )
   self:popScope(  )
   local info = {["varList"] = varList, ["exp"] = exp, ["block"] = block}
-  return self:createNode( nodeKindApply, token.pos, typeInfoNone, info )
+  return self:createNode( nodeKindApply, token.pos, {typeInfoNone}, info )
 end
 
 function TransUnit:analyzeForeach( token, sortFlag )
@@ -648,13 +814,13 @@ function TransUnit:analyzeForeach( token, sortFlag )
   if not exp.expType then
     self:error( "unknown type of exp" )
   else 
-    local itemTypeInfoList = exp.expType:getItemTypeInfoList(  )
-    if exp.expType:getKind(  ) == TypeInfoKindMap then
+    local itemTypeInfoList = exp.expType:get_itemTypeInfoList(  )
+    if exp.expType:get_kind(  ) == TypeInfoKindMap then
       self.scope:add( valSymbol.txt, itemTypeInfoList[2] )
       if keySymbol then
         self.scope:add( keySymbol.txt, itemTypeInfoList[1] )
       end
-    elseif exp.expType:getKind(  ) == TypeInfoKindList or exp.expType:getKind(  ) == TypeInfoKindArray then
+    elseif exp.expType:get_kind(  ) == TypeInfoKindList or exp.expType:get_kind(  ) == TypeInfoKindArray then
       self.scope:add( valSymbol.txt, itemTypeInfoList[1] )
       if keySymbol then
         self.scope:add( keySymbol.txt, typeInfoInt )
@@ -668,7 +834,7 @@ function TransUnit:analyzeForeach( token, sortFlag )
   local block = self:analyzeBlock( "foreach", scope )
   self:popScope(  )
   local info = {["val"] = valSymbol, ["key"] = keySymbol, ["exp"] = exp, ["block"] = block, ["sort"] = sortFlag}
-  return self:createNode( sortFlag and nodeKindForsort or nodeKindForeach, token.pos, typeInfoNone, info )
+  return self:createNode( sortFlag and nodeKindForsort or nodeKindForeach, token.pos, {typeInfoNone}, info )
 end
 
 function TransUnit:analyzeRefType(  )
@@ -724,32 +890,52 @@ function TransUnit:analyzeRefType(  )
   else 
     self:pushback(  )
   end
-  return self:createNode( nodeKindRefType, firstToken.pos, typeInfo, {["name"] = name, ["refFlag"] = refFlag, ["mutFlag"] = mutFlag, ["array"] = arrayMode} )
+  return self:createNode( nodeKindRefType, firstToken.pos, {typeInfo}, {["name"] = name, ["refFlag"] = refFlag, ["mutFlag"] = mutFlag, ["array"] = arrayMode} )
 end
 
 function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
   local varName = self:getSymbolToken(  )
-  token = self:getToken(  )
+  local token = self:getToken(  )
   local refType = self:analyzeRefType(  )
   token = self:getToken(  )
+  local getterMode = "none"
+  local setterMode = "none"
+  if token.txt == "{" then
+    local nextToken = self:getToken(  )
+    if nextToken.txt == "pub" or nextToken.txt == "pri" then
+      getterMode = nextToken.txt
+      nextToken = self:getToken(  )
+      if nextToken.txt == "," then
+        nextToken = self:getToken(  )
+        if nextToken.txt == "pub" or nextToken.txt == "pri" then
+          setterMode = nextToken.txt
+          nextToken = self:getToken(  )
+        end
+      end
+    end
+    self:checkToken( nextToken, "}" )
+    token = self:getToken(  )
+  end
   self:checkToken( token, ";" )
   self.scope:add( varName.txt, refType.expType )
-  return self:createNode( nodeKindDeclMember, firstToken.pos, refType.expType, {["name"] = varName, ["refType"] = refType, ["staticFlag"] = staticFlag, ["accessMode"] = accessMode} )
+  local info = {["name"] = varName, ["refType"] = refType.expType, ["staticFlag"] = staticFlag, ["accessMode"] = accessMode, ["getterMode"] = getterMode, ["setterMode"] = setterMode}
+  return self:createNode( nodeKindDeclMember, firstToken.pos, refType.expTypeList, info )
 end
 
 function TransUnit:analyzeDeclMethod( accessMode, staticFlag, className, firstToken, name )
-  local node = self:analyzeDeclFunc( accessMode, staticFlag, true, name, name )
-  node.info.className = className
+  local node = self:analyzeDeclFunc( accessMode, staticFlag, className, name, name )
   return node
 end
 
 function TransUnit:analyzeDeclClass( classAccessMode, classToken )
   local name = self:getToken(  )
   self:checkNextToken( "{" )
+  local classTypeInfo = self:pushClass( false, name.txt )
   local fieldList = {}
-  local typeInfo = TypeInfo.createClass( name )
-  local node = self:createNode( nodeKindDeclClass, classToken.pos, typeInfo, {["accessMode"] = classAccessMode, ["name"] = name, ["fieldList"] = fieldList} )
-  self:pushClass( name.txt )
+  local memberList = {}
+  local methodName2Node = {}
+  local node = self:createNode( nodeKindDeclClass, classToken.pos, {classTypeInfo}, {["accessMode"] = classAccessMode, ["name"] = name, ["fieldList"] = fieldList, ["memberList"] = memberList, ["scope"] = self.scope, ["outerMethodSet"] = {}} )
+  self.typeInfo2ClassNode[classTypeInfo] = node
   while true do
     local token = self:getToken(  )
     if token.txt == "}" then
@@ -766,16 +952,32 @@ function TransUnit:analyzeDeclClass( classAccessMode, classToken )
       token = self:getToken(  )
     end
     if token.txt == "let" then
-      table.insert( fieldList, self:analyzeDeclMember( accessMode, staticFlag, token ) )
+      local memberNode = self:analyzeDeclMember( accessMode, staticFlag, token )
+      table.insert( fieldList, memberNode )
+      table.insert( memberList, memberNode )
     else 
-      table.insert( fieldList, self:analyzeDeclMethod( accessMode, staticFlag, name, token, token ) )
+      local methodNode = self:analyzeDeclMethod( accessMode, staticFlag, name, token, token )
+      table.insert( fieldList, methodNode )
+    end
+  end
+  for __index, memberNode in pairs( memberList ) do
+    local memberName = memberNode.info.name
+    local getterName = "get_" .. memberName.txt
+    local accessMode = memberNode.info.getterMode
+    if accessMode ~= "none" and not self.scope:getTypeInfo( getterName ) then
+      self.scope:add( getterName, TypeInfo.createFunc( true, false, false, accessMode, getterName, nil, {memberNode.expType} ) )
+    end
+    local setterName = "set_" .. memberName.txt
+    local accessMode = memberNode.info.setterMode
+    if memberNode.info.setterMode ~= "none" and not self.scope:getTypeInfo( setterName ) then
+      self.scope:add( setterName, TypeInfo.createFunc( true, false, false, accessMode, setterName, nil, {memberNode.expType} ) )
     end
   end
   self:popClass(  )
   return node
 end
 
-function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstToken, name )
+function TransUnit:analyzeDeclFunc( accessMode, staticFlag, classNameToken, firstToken, name )
   local argList = {}
   local token = self:getToken(  )
   if not name then
@@ -786,17 +988,17 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
   else 
     self:checkSymbol( name )
   end
-  local className = nil
+  local needPopFlag = false
   if token.txt == "." then
-    methodFlag = true
-    className = name
-    self:pushClass( name.txt )
+    needPopFlag = true
+    classNameToken = name
+    self:pushClass( false, name.txt )
     name = self:getSymbolToken(  )
     token = self:getToken(  )
   end
   self:checkToken( "(" )
   local kind = nodeKindDeclConstr
-  if methodFlag then
+  if classNameToken then
     if name.txt == "__init" then
       kind = nodeKindDeclConstr
     else 
@@ -804,6 +1006,9 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
     end
   else 
     kind = nodeKindDeclFunc
+    if not staticFlag then
+      staticFlag = true
+    end
   end
   local scope = self:pushScope(  )
   repeat 
@@ -812,12 +1017,12 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
       token = argName
       break
     elseif argName.txt == "..." then
-      table.insert( argList, self:createNode( nodeKindDeclArgDDD, argName.pos, typeInfoNone, argName ) )
+      table.insert( argList, self:createNode( nodeKindDeclArgDDD, argName.pos, {typeInfoNone}, argName ) )
     else 
       self:checkSymbol( argName )
       self:checkNextToken( ":" )
       local refType = self:analyzeRefType(  )
-      local arg = self:createNode( nodeKindDeclArg, argName.pos, refType.expType, {["name"] = argName, ["argType"] = refType} )
+      local arg = self:createNode( nodeKindDeclArg, argName.pos, refType.expTypeList, {["name"] = argName, ["argType"] = refType} )
       self.scope:add( argName.txt, refType.expType )
       table.insert( argList, arg )
     end
@@ -835,20 +1040,23 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, methodFlag, firstTok
       token = self:getToken(  )
     until token.txt ~= ","
   end
-  local typeInfo = TypeInfo.createFunc( name and name.txt or "", nil, retTypeInfoList )
+  local typeInfo = TypeInfo.createFunc( false, false, staticFlag, accessMode, name and name.txt or "", nil, retTypeInfoList )
   if name then
-    scope:getParent(  ):add( name.txt, typeInfo )
+    scope:get_parent(  ):add( name.txt, typeInfo )
   end
+  local node = nil
+  local info = nil
   if token.txt == ";" then
-    return self:createNoneNode(  )
+    node = self:createNoneNode(  )
+  else 
+    self:pushback(  )
+    local body = self:analyzeBlock( "func", scope )
+    info = {["name"] = name, ["argList"] = argList, ["staticFlag"] = staticFlag, ["body"] = body, ["accessMode"] = accessMode, ["className"] = classNameToken, ["retTypeList"] = retTypeList, ["retTypeInfoList"] = retTypeInfoList}
+    node = self:createNode( kind, firstToken.pos, {typeInfo}, info )
   end
-  self:pushback(  )
-  local body = self:analyzeBlock( "func", scope )
   self:popScope(  )
-  local info = {["name"] = name, ["argList"] = argList, ["staticFlag"] = staticFlag, ["body"] = body, ["accessMode"] = accessMode, ["retTypeList"] = retTypeList, ["retTypeInfoList"] = retTypeInfoList}
-  local node = self:createNode( kind, firstToken.pos, typeInfo, info )
-  if className then
-    info.className = className
+  if needPopFlag then
+    self:addMethod( classNameToken.txt, node )
     self:popClass(  )
   end
   return node
@@ -888,7 +1096,7 @@ function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
   end
   self:checkNextToken( ";" )
   local declVarInfo = {["accessMode"] = accessMode, ["varList"] = varList, ["expList"] = expList, ["typeInfoList"] = typeInfoList}
-  local node = self:createNode( nodeKindDeclVar, firstToken.pos, typeInfoNone, declVarInfo )
+  local node = self:createNode( nodeKindDeclVar, firstToken.pos, {typeInfoNone}, declVarInfo )
   for index, typeInfo in pairs( typeInfoList ) do
     self.scope:add( varList[index].name.txt, typeInfo )
   end
@@ -907,7 +1115,7 @@ function TransUnit:analyzeExpList(  )
     local token = self:getToken(  )
   until token.txt ~= ","
   self:pushback(  )
-  return self:createNode( nodeKindExpList, firstExp.pos, typeInfoNone, expList )
+  return self:createNode( nodeKindExpList, firstExp.pos, {typeInfoNone}, expList )
 end
 
 function TransUnit:analyzeListConst( token )
@@ -931,7 +1139,7 @@ function TransUnit:analyzeListConst( token )
   if token.txt == '[' then
     kind = nodeKindLiteralList
   end
-  return self:createNode( kind, token.pos, TypeInfo.createList( {itemTypeInfo} ), expList )
+  return self:createNode( kind, token.pos, {TypeInfo.createList( {itemTypeInfo} )}, expList )
 end
 
 function TransUnit:analyzeMapConst( token )
@@ -969,7 +1177,7 @@ function TransUnit:analyzeMapConst( token )
   until nextToken.txt ~= ","
   local typeInfo = TypeInfo.createMap( keyTypeInfo, valTypeInfo )
   self:checkToken( nextToken, "}" )
-  return self:createNode( nodeKindLiteralMap, token.pos, typeInfo, {["map"] = map, ["pairList"] = pairList} )
+  return self:createNode( nodeKindLiteralMap, token.pos, {typeInfo}, {["map"] = map, ["pairList"] = pairList} )
 end
 
 function TransUnit:analyzeExpRefItem( token, exp )
@@ -979,12 +1187,12 @@ function TransUnit:analyzeExpRefItem( token, exp )
   local typeInfo = typeInfoStem
   if exp.expType then
     if exp.expType.kind == TypeInfoKindMap then
-      typeInfo = exp.expType:getItemTypeInfoList(  )[2]
+      typeInfo = exp.expType:get_itemTypeInfoList(  )[2]
     elseif exp.expType.kind == TypeInfoKindArray or exp.expType.kind == TypeInfoKindArray then
-      typeInfo = exp.expType:getItemTypeInfoList(  )[1]
+      typeInfo = exp.expType:get_itemTypeInfoList(  )[1]
     end
   end
-  return self:createNode( nodeKindExpRefItem, token.pos, typeInfo, info )
+  return self:createNode( nodeKindExpRefItem, token.pos, {typeInfo}, info )
 end
 
 function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
@@ -1007,7 +1215,7 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
           self:checkNextToken( ")" )
         end
         local info = {["func"] = exp, ["argList"] = expList}
-        exp = self:createNode( nodeKindExpCall, firstToken.pos, typeInfoNone, info )
+        exp = self:createNode( nodeKindExpCall, firstToken.pos, exp.expType:get_retTypeInfoList(  ), info )
         nextToken = self:getToken(  )
       end
     until not matchFlag
@@ -1027,18 +1235,22 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
     if not prefixExp.expType then
       self:error( "unknown prefix type: " .. getNodeKindName( prefixExp.kind ) )
     end
-    if prefixExp.expType:getKind(  ) == TypeInfoKindClass then
+    if prefixExp.expType:get_kind(  ) == TypeInfoKindClass then
       local classScope = self.typeInfo2Scope[prefixExp.expType]
-      local className = prefixExp.expType.txt
+      local className = prefixExp.expType:get_txt(  )
       if not classScope then
         self:error( "not found field: " .. className )
       end
       typeInfo = classScope:getTypeInfo( token.txt )
       if not typeInfo then
+        print( "hoge", classScope.symbol2TypeInfoMap )
+        for __index, name in pairs( classScope.symbol2TypeInfoMap ) do
+          print( "hoge", name )
+        end
         self:error( string.format( "not found field typeInfo: %s.%s %s", className, token.txt, classScope ) )
       end
     end
-    exp = self:createNode( nodeKindRefField, firstToken.pos, typeInfo, info )
+    exp = self:createNode( nodeKindRefField, firstToken.pos, {typeInfo}, info )
   elseif mode == "symbol" then
     local typeInfo = self.scope:getTypeInfo( token.txt )
     if not typeInfo and token.txt == "self" then
@@ -1048,27 +1260,36 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
     if not typeInfo then
       self:error( "not found type -- " .. token.txt )
     end
-    exp = self:createNode( nodeKindExpRef, firstToken.pos, typeInfo, token )
+    exp = self:createNode( nodeKindExpRef, firstToken.pos, {typeInfo}, token )
   elseif mode == "fn" then
-    exp = self:analyzeDeclFunc( "pri", false, false, token, nil )
+    exp = self:analyzeDeclFunc( "pri", false, nil, token, nil )
   else 
     self:error( "illegal mode", mode )
   end
   return self:analyzeExpCont( firstToken, exp, skipFlag )
 end
 
-function TransUnit:analyzeExpOp2( firstToken, exp )
-  local nextToken = self:getToken(  )
+function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
   while true do
-    if nextToken.txt == "@" then
+    local nextToken = self:getToken(  )
+    local opLevel = prevOpLevel
+    local opTxt = nextToken.txt
+    if opTxt == "@" then
       local castType = self:analyzeRefType(  )
-      local info = {["exp"] = exp, ["castType"] = castType}
-      exp = self:createNode( nodeKindExpCast, firstToken.pos, typeInfoNone, info )
+      exp = self:createNode( nodeKindExpCast, firstToken.pos, castType.expTypeList, exp )
     elseif nextToken.kind == Parser.kind.Ope then
-      if Parser.isOp2( nextToken.txt ) then
-        local exp2 = self:analyzeExp( (nextToken.txt == "and" ) or (nextToken.txt == "*" ) )
+      if Parser.isOp2( opTxt ) then
+        opLevel = op2levelMap[opTxt]
+        if not opLevel then
+          error( string.format( "unknown op -- %s %s", opTxt, prevOpLevel ) )
+        end
+        if prevOpLevel and opLevel <= prevOpLevel then
+          self:pushback(  )
+          return exp
+        end
+        local exp2 = self:analyzeExp( false, opLevel )
         local info = {["op"] = nextToken, ["exp1"] = exp, ["exp2"] = exp2}
-        exp = self:createNode( nodeKindExpOp2, firstToken.pos, typeInfoNone, info )
+        exp = self:createNode( nodeKindExpOp2, firstToken.pos, {typeInfoNone}, info )
       else 
         self:error( "illegal op" )
       end
@@ -1076,17 +1297,17 @@ function TransUnit:analyzeExpOp2( firstToken, exp )
       self:pushback(  )
       return exp
     end
-    nextToken = self:getToken(  )
   end
+  return self:analyzeExpOp2( firstToken, exp, prevOpLevel )
 end
 
-function TransUnit:analyzeExp( skipOp2Flag )
+function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
   local firstToken = self:getToken(  )
   local token = firstToken
   local exp = nil
   if token.kind == Parser.kind.Dlmt then
     if token.txt == "..." then
-      return self:createNode( nodeKindExpDDD, firstToken.pos, typeInfoNone, token )
+      return self:createNode( nodeKindExpDDD, firstToken.pos, {typeInfoNone}, token )
     end
     if token.txt == '[' or token.txt == '[@' then
       return self:analyzeListConst( token )
@@ -1095,9 +1316,9 @@ function TransUnit:analyzeExp( skipOp2Flag )
       return self:analyzeMapConst( token )
     end
     if token.txt == "(" then
-      exp = self:analyzeExp( false )
+      exp = self:analyzeExp(  )
       self:checkNextToken( ")" )
-      exp = self:createNode( nodeKindExpParen, firstToken.pos, typeInfoNone, exp )
+      exp = self:createNode( nodeKindExpParen, firstToken.pos, exp.expTypeList, exp )
       exp = self:analyzeExpCont( firstToken, exp, false )
     end
   end
@@ -1112,11 +1333,11 @@ function TransUnit:analyzeExp( skipOp2Flag )
       argList = self:analyzeExpList(  )
       self:checkNextToken( ")" )
     end
-    exp = self:createNode( nodeKindExpNew, firstToken.pos, exp.expType, {["symbol"] = exp, ["argList"] = argList} )
+    exp = self:createNode( nodeKindExpNew, firstToken.pos, exp.expTypeList, {["symbol"] = exp, ["argList"] = argList} )
     exp = self:analyzeExpCont( firstToken, exp, false )
   end
   if token.kind == Parser.kind.Ope and Parser.isOp1( token.txt ) then
-    exp = self:analyzeExp( true )
+    exp = self:analyzeExp( true, op1levelMap[token.txt] )
     local typeInfo = typeInfoNone
     if token.txt == "-" then
       typeInfo = exp.expType
@@ -1127,13 +1348,13 @@ function TransUnit:analyzeExp( skipOp2Flag )
     else 
       self:error( "unknown op1" )
     end
-    exp = self:createNode( nodeKindExpOp1, firstToken.pos, typeInfo, {["op"] = token, ["exp"] = exp} )
-    return self:analyzeExpOp2( firstToken, exp )
+    exp = self:createNode( nodeKindExpOp1, firstToken.pos, {typeInfo}, {["op"] = token, ["exp"] = exp} )
+    return self:analyzeExpOp2( firstToken, exp, prevOpLevel )
   end
   if token.kind == Parser.kind.Int then
-    exp = self:createNode( nodeKindLiteralInt, firstToken.pos, typeInfoInt, {["token"] = token, ["num"] = tonumber( token.txt )} )
+    exp = self:createNode( nodeKindLiteralInt, firstToken.pos, {typeInfoInt}, {["token"] = token, ["num"] = tonumber( token.txt )} )
   elseif token.kind == Parser.kind.Real then
-    exp = self:createNode( nodeKindLiteralReal, firstToken.pos, typeInfoReal, {["token"] = token, ["num"] = tonumber( token.txt )} )
+    exp = self:createNode( nodeKindLiteralReal, firstToken.pos, {typeInfoReal}, {["token"] = token, ["num"] = tonumber( token.txt )} )
   elseif token.kind == Parser.kind.Char then
     local num = 0
     if #(token.txt ) == 1 then
@@ -1141,7 +1362,7 @@ function TransUnit:analyzeExp( skipOp2Flag )
     else 
       num = quotedChar2Code[token.txt:sub( 2, 2 )]
     end
-    exp = self:createNode( nodeKindLiteralChar, firstToken.pos, typeInfoChar, {["token"] = token, ["num"] = num} )
+    exp = self:createNode( nodeKindLiteralChar, firstToken.pos, {typeInfoChar}, {["token"] = token, ["num"] = num} )
   elseif token.kind == Parser.kind.Str then
     local nextToken = self:getToken(  )
     local formatArgList = {}
@@ -1154,7 +1375,7 @@ function TransUnit:analyzeExp( skipOp2Flag )
       self:checkToken( nextToken, ")" )
       nextToken = self:getToken(  )
     end
-    exp = self:createNode( nodeKindLiteralString, firstToken.pos, typeInfoString, {["token"] = token, ["argList"] = formatArgList} )
+    exp = self:createNode( nodeKindLiteralString, firstToken.os, {typeInfoString}, {["token"] = token, ["argList"] = formatArgList} )
     token = nextToken
     if token.txt == "[" then
       exp = self:analyzeExpRefItem( token, exp )
@@ -1166,11 +1387,11 @@ function TransUnit:analyzeExp( skipOp2Flag )
   elseif token.kind == Parser.kind.Symb then
     exp = self:analyzeExpSymbol( firstToken, token, "symbol", token, false )
   elseif token.kind == Parser.kind.Type then
-    exp = self:createNode( nodeKindExpRef, firstToken.pos, typeInfoNone, token )
+    exp = self:createNode( nodeKindExpRef, firstToken.pos, {typeInfoNone}, token )
   elseif token.txt == "true" or token.txt == "false" then
-    exp = self:createNode( nodeKindLiteralBool, firstToken.pos, typeInfoBool, token )
+    exp = self:createNode( nodeKindLiteralBool, firstToken.pos, {typeInfoBool}, token )
   elseif token.txt == "nil" then
-    exp = self:createNode( nodeKindLiteralNil, firstToken.pos, typeInfoNil, token )
+    exp = self:createNode( nodeKindLiteralNil, firstToken.pos, {typeInfoNil}, token )
   end
   if not exp then
     self:error( "illegal exp" )
@@ -1178,14 +1399,14 @@ function TransUnit:analyzeExp( skipOp2Flag )
   if skipOp2Flag then
     return exp
   end
-  return self:analyzeExpOp2( firstToken, exp )
+  return self:analyzeExpOp2( firstToken, exp, prevOpLevel )
 end
 
 function TransUnit:createAST( parser )
   self:registBuiltInScope(  )
   local rootInfo = {}
   rootInfo.childlen = {}
-  local ast = self:createNode( nodeKindRoot, {["lineNo"] = 0, ["column"] = 0}, typeInfoNone, rootInfo )
+  local ast = self:createNode( nodeKindRoot, {["lineNo"] = 0, ["column"] = 0}, {typeInfoNone}, rootInfo )
   self.parser = parser
   self.moduleName2Info = {}
   self:analyzeStatement( rootInfo.childlen )
@@ -1222,6 +1443,8 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
         statement = self:analyzeBlock( "{" )
       elseif token.txt == "if" then
         statement = self:analyzeIf( token )
+      elseif token.txt == "switch" then
+        statement = self:analyzeSwitch( token )
       elseif token.txt == "while" then
         statement = self:analyzeWhile( token )
       elseif token.txt == "repeat" then
@@ -1237,17 +1460,17 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
       elseif token.txt == "return" then
         local expList = self:analyzeExpList(  )
         self:checkNextToken( ";" )
-        statement = self:createNode( nodeKindReturn, token.pos, typeInfoNone, expList )
+        statement = self:createNode( nodeKindReturn, token.pos, {typeInfoNone}, expList )
       elseif token.txt == "break" then
         self:checkNextToken( ";" )
-        statement = self:createNode( nodeKindBreak, token.pos, typeInfoNone, nil )
+        statement = self:createNode( nodeKindBreak, token.pos, {typeInfoNone}, nil )
       elseif token.txt == "import" then
         statement = self:analyzeImport( token )
       else 
         self:pushback(  )
         local exp = self:analyzeExp(  )
         self:checkNextToken( ";" )
-        statement = self:createNode( nodeKindStmtExp, token.pos, typeInfoNone, exp )
+        statement = self:createNode( nodeKindStmtExp, self.currentToken.pos, {typeInfoNone}, exp )
       end
     end
     if not statement then
@@ -1258,161 +1481,239 @@ function TransUnit:analyzeStatement( stmtList, termTxt )
 end
 
 ----- meta -----
-moduleObj._typeInfoList = {
-{ itemTypeId = { }, typeId = 2, txt = "", kind = 1 },
-  { itemTypeId = { }, typeId = 3, txt = "stem", kind = 1 },
-  { itemTypeId = { }, typeId = 6, txt = "int", kind = 1 },
-  { itemTypeId = { }, typeId = 9, txt = "str", kind = 1 },
-  { itemTypeId = { 2, 2}, typeId = 134, txt = "Map", kind = 4 },
-  { itemTypeId = { 9, 6}, typeId = 205, txt = "Map", kind = 4 },
-  { itemTypeId = { }, typeId = 209, txt = "getNodeKindName", kind = 6 },
-  { itemTypeId = { }, typeId = 210, txt = "nodeFilter", kind = 6 },
-  }
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
+local _classInfoClassInfo = {}
+_className2InfoMap.ClassInfo = _classInfoClassInfo
 local _classInfoNode = {}
 _className2InfoMap.Node = _classInfoNode
+_classInfoNode.filter = {
+  name='filter', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 12 }
+_classInfoNode.get_expType = {
+  name='get_expType', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 197 }
+_classInfoNode.get_info = {
+  name='get_info', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 198 }
+_classInfoNode.get_kind = {
+  name='get_kind', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 196 }
+_classInfoNode.filter = {
+  name='filter', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 local _classInfoNodePos = {}
 _className2InfoMap.NodePos = _classInfoNodePos
 local _classInfoScope = {}
 _className2InfoMap.Scope = _classInfoScope
 _classInfoScope.add = {
-  name='add', staticFlag = false, accessMode = 'pub' }
+  name='add', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 185 }
 _classInfoScope.addClass = {
-  name='addClass', staticFlag = false, accessMode = 'pub' }
+  name='addClass', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 186 }
 _classInfoScope.getClassScope = {
-  name='getClassScope', staticFlag = false, accessMode = 'pub' }
-_classInfoScope.getParent = {
-  name='getParent', staticFlag = false, accessMode = 'pub' }
+  name='getClassScope', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 187 }
 _classInfoScope.getTypeInfo = {
-  name='getTypeInfo', staticFlag = false, accessMode = 'pub' }
+  name='getTypeInfo', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 189 }
 _classInfoScope.getTypeInfoChild = {
-  name='getTypeInfoChild', staticFlag = false, accessMode = 'pub' }
+  name='getTypeInfoChild', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 188 }
+_classInfoScope.get_className2ScopeMap = {
+  name='get_className2ScopeMap', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 192 }
+_classInfoScope.get_parent = {
+  name='get_parent', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 190 }
+_classInfoScope.get_symbol2TypeInfoMap = {
+  name='get_symbol2TypeInfoMap', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 191 }
 local _classInfoTransUnit = {}
 _className2InfoMap.TransUnit = _classInfoTransUnit
-_classInfoTransUnit.analyzeApply = {
-  name='analyzeApply', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeBlock = {
-  name='analyzeBlock', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeDecl = {
-  name='analyzeDecl', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeDeclClass = {
-  name='analyzeDeclClass', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeDeclFunc = {
-  name='analyzeDeclFunc', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeDeclMember = {
-  name='analyzeDeclMember', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeDeclMethod = {
-  name='analyzeDeclMethod', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeDeclVar = {
-  name='analyzeDeclVar', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeExp = {
-  name='analyzeExp', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeExpCont = {
-  name='analyzeExpCont', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeExpList = {
-  name='analyzeExpList', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeExpOp2 = {
-  name='analyzeExpOp2', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeExpRefItem = {
-  name='analyzeExpRefItem', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeExpSymbol = {
-  name='analyzeExpSymbol', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeFor = {
-  name='analyzeFor', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeForeach = {
-  name='analyzeForeach', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeIf = {
-  name='analyzeIf', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeImport = {
-  name='analyzeImport', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeListConst = {
-  name='analyzeListConst', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeMapConst = {
-  name='analyzeMapConst', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeRefType = {
-  name='analyzeRefType', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeRepeat = {
-  name='analyzeRepeat', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeStatement = {
-  name='analyzeStatement', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.analyzeWhile = {
-  name='analyzeWhile', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.checkNextToken = {
-  name='checkNextToken', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.checkSymbol = {
-  name='checkSymbol', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.checkToken = {
-  name='checkToken', staticFlag = false, accessMode = 'pri' }
 _classInfoTransUnit.createAST = {
-  name='createAST', staticFlag = false, accessMode = 'pub' }
-_classInfoTransUnit.createNode = {
-  name='createNode', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.createNoneNode = {
-  name='createNoneNode', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.error = {
-  name='error', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.getSymbolToken = {
-  name='getSymbolToken', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.getToken = {
-  name='getToken', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.getTokenNoErr = {
-  name='getTokenNoErr', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.popClass = {
-  name='popClass', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.popScope = {
-  name='popScope', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.pushClass = {
-  name='pushClass', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.pushScope = {
-  name='pushScope', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.pushback = {
-  name='pushback', staticFlag = false, accessMode = 'pri' }
-_classInfoTransUnit.registBuiltInScope = {
-  name='registBuiltInScope', staticFlag = false, accessMode = 'pri' }
+  name='createAST', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 459 }
 local _classInfoTypeInfo = {}
 _className2InfoMap.TypeInfo = _classInfoTypeInfo
 _classInfoTypeInfo.create = {
-  name='create', staticFlag = true, accessMode = 'pub' }
+  name='create', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 159 }
 _classInfoTypeInfo.createArray = {
-  name='createArray', staticFlag = true, accessMode = 'pub' }
+  name='createArray', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 162 }
 _classInfoTypeInfo.createBuiltin = {
-  name='createBuiltin', staticFlag = true, accessMode = 'pub' }
+  name='createBuiltin', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 160 }
 _classInfoTypeInfo.createClass = {
-  name='createClass', staticFlag = true, accessMode = 'pub' }
+  name='createClass', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 165 }
 _classInfoTypeInfo.createFunc = {
-  name='createFunc', staticFlag = true, accessMode = 'pub' }
+  name='createFunc', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 168 }
 _classInfoTypeInfo.createList = {
-  name='createList', staticFlag = true, accessMode = 'pub' }
+  name='createList', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 161 }
 _classInfoTypeInfo.createMap = {
-  name='createMap', staticFlag = true, accessMode = 'pub' }
-_classInfoTypeInfo.getItemTypeInfoList = {
-  name='getItemTypeInfoList', staticFlag = false, accessMode = 'pub' }
-_classInfoTypeInfo.getKind = {
-  name='getKind', staticFlag = false, accessMode = 'pub' }
-_classInfoTypeInfo.getRetTypeInfoList = {
-  name='getRetTypeInfoList', staticFlag = false, accessMode = 'pub' }
+  name='createMap', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 163 }
 _classInfoTypeInfo.getTxt = {
-  name='getTxt', staticFlag = false, accessMode = 'pub' }
-_classInfoTypeInfo.getTypeId = {
-  name='getTypeId', staticFlag = false, accessMode = 'pub' }
+  name='getTxt', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 156 }
+_classInfoTypeInfo.get_accessMode = {
+  name='get_accessMode', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 177 }
+_classInfoTypeInfo.get_autoFlag = {
+  name='get_autoFlag', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 178 }
+_classInfoTypeInfo.get_itemTypeInfoList = {
+  name='get_itemTypeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 171 }
+_classInfoTypeInfo.get_kind = {
+  name='get_kind', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 175 }
+_classInfoTypeInfo.get_retTypeInfoList = {
+  name='get_retTypeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 172 }
+_classInfoTypeInfo.get_staticFlag = {
+  name='get_staticFlag', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 176 }
+_classInfoTypeInfo.get_txt = {
+  name='get_txt', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 174 }
+_classInfoTypeInfo.get_typeId = {
+  name='get_typeId', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 173 }
 _classInfoTypeInfo.serialize = {
-  name='serialize', staticFlag = false, accessMode = 'pub' }
+  name='serialize', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 153 }
 local _classInfo_ModuleInfo = {}
 _className2InfoMap._ModuleInfo = _classInfo_ModuleInfo
+_classInfo_ModuleInfo._className2InfoMap = {
+  name='_className2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 339 }
+_classInfo_ModuleInfo._typeInfoList = {
+  name='_typeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 340 }
+_classInfo_ModuleInfo._varName2InfoMap = {
+  name='_varName2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 341 }
+_classInfo_ModuleInfo._funcName2InfoMap = {
+  name='_funcName2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 342 }
 local _classInfo_TypeInfo = {}
 _className2InfoMap._TypeInfo = _classInfo_TypeInfo
+_classInfo_TypeInfo.itemTypeId = {
+  name='itemTypeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 335 }
+_classInfo_TypeInfo.retTypeId = {
+  name='retTypeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 336 }
+_classInfo_TypeInfo.typeId = {
+  name='typeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 5 }
+_classInfo_TypeInfo.txt = {
+  name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 22 }
+_classInfo_TypeInfo.kind = {
+  name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 5 }
+_classInfo_TypeInfo.staticFlag = {
+  name='staticFlag', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 4 }
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
+_varName2InfoMap.TypeInfoKindArray = {
+  name='TypeInfoKindArray', accessMode = 'pub', typeId = 5 }
+_varName2InfoMap.TypeInfoKindClass = {
+  name='TypeInfoKindClass', accessMode = 'pub', typeId = 5 }
+_varName2InfoMap.TypeInfoKindFunc = {
+  name='TypeInfoKindFunc', accessMode = 'pub', typeId = 5 }
+_varName2InfoMap.TypeInfoKindList = {
+  name='TypeInfoKindList', accessMode = 'pub', typeId = 5 }
+_varName2InfoMap.TypeInfoKindMap = {
+  name='TypeInfoKindMap', accessMode = 'pub', typeId = 5 }
+_varName2InfoMap.TypeInfoKindPrim = {
+  name='TypeInfoKindPrim', accessMode = 'pub', typeId = 5 }
 _varName2InfoMap.nodeKind = {
-  name='nodeKind', accessMode = 'pub', typeId = 205 }
+  name='nodeKind', accessMode = 'pub', typeId = 243 }
 _varName2InfoMap.typeInfo = {
-  name='typeInfo', accessMode = 'pub', typeId = 134 }
+  name='typeInfo', accessMode = 'pub', typeId = 143 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
 _funcName2InfoMap.getNodeKindName = {
-  accessMode = 'pub', typeId = 209 }
+  accessMode = 'pub', typeId = 247 }
 _funcName2InfoMap.nodeFilter = {
-  accessMode = 'pub', typeId = 210 }
+  accessMode = 'pub', typeId = 248 }
+moduleObj._typeInfoList = {
+{ typeId = 1, txt = '', staticFlag = false, accessMode = 'pub',
+kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 2, txt = 'stem', staticFlag = false, accessMode = 'pub',
+kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 4, txt = 'bool', staticFlag = false, accessMode = 'pub',
+kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 5, txt = 'int', staticFlag = false, accessMode = 'pub',
+kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 9, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 12, txt = 'form', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 22, txt = 'str', staticFlag = false, accessMode = 'pub',
+kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 143, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {1, 1}, retTypeId = {}, },
+  { typeId = 145, txt = 'TypeInfo', staticFlag = false, accessMode = 'pub',
+kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 146, txt = 'nil', staticFlag = false, accessMode = 'pub',
+kind = 3, itemTypeId = {145}, retTypeId = {}, },
+  { typeId = 147, txt = 'nil', staticFlag = false, accessMode = 'pub',
+kind = 3, itemTypeId = {145}, retTypeId = {}, },
+  { typeId = 153, txt = 'serialize', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 156, txt = 'getTxt', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {22}, },
+  { typeId = 159, txt = 'create', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 160, txt = 'createBuiltin', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 161, txt = 'createList', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 162, txt = 'createArray', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 163, txt = 'createMap', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 165, txt = 'createClass', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 168, txt = 'createFunc', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 171, txt = 'get_itemTypeInfoList', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {146}, },
+  { typeId = 172, txt = 'get_retTypeInfoList', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {147}, },
+  { typeId = 173, txt = 'get_typeId', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {5}, },
+  { typeId = 174, txt = 'get_txt', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {22}, },
+  { typeId = 175, txt = 'get_kind', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {5}, },
+  { typeId = 176, txt = 'get_staticFlag', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {4}, },
+  { typeId = 177, txt = 'get_accessMode', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {22}, },
+  { typeId = 178, txt = 'get_autoFlag', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {4}, },
+  { typeId = 179, txt = 'Scope', staticFlag = false, accessMode = 'pub',
+kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 180, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 145}, retTypeId = {}, },
+  { typeId = 181, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 179}, retTypeId = {}, },
+  { typeId = 185, txt = 'add', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 186, txt = 'addClass', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 187, txt = 'getClassScope', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {179}, },
+  { typeId = 188, txt = 'getTypeInfoChild', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 189, txt = 'getTypeInfo', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 190, txt = 'get_parent', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {179}, },
+  { typeId = 191, txt = 'get_symbol2TypeInfoMap', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {180}, },
+  { typeId = 192, txt = 'get_className2ScopeMap', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {181}, },
+  { typeId = 196, txt = 'get_kind', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {5}, },
+  { typeId = 197, txt = 'get_expType', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {145}, },
+  { typeId = 198, txt = 'get_info', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {2}, },
+  { typeId = 243, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 5}, retTypeId = {}, },
+  { typeId = 247, txt = 'getNodeKindName', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {22}, },
+  { typeId = 248, txt = 'nodeFilter', staticFlag = true, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {2}, },
+  { typeId = 334, txt = '_TypeInfo', staticFlag = false, accessMode = 'pub',
+kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { typeId = 335, txt = 'nil', staticFlag = false, accessMode = 'pub',
+kind = 2, itemTypeId = {5}, retTypeId = {}, },
+  { typeId = 336, txt = 'nil', staticFlag = false, accessMode = 'pub',
+kind = 2, itemTypeId = {5}, retTypeId = {}, },
+  { typeId = 338, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 2}, retTypeId = {}, },
+  { typeId = 339, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 338}, retTypeId = {}, },
+  { typeId = 340, txt = 'nil', staticFlag = false, accessMode = 'pub',
+kind = 2, itemTypeId = {334}, retTypeId = {}, },
+  { typeId = 341, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 2}, retTypeId = {}, },
+  { typeId = 342, txt = 'Map', staticFlag = false, accessMode = 'pub',
+kind = 4, itemTypeId = {22, 2}, retTypeId = {}, },
+  { typeId = 459, txt = 'createAST', staticFlag = false, accessMode = 'pub',
+kind = 6, itemTypeId = {}, retTypeId = {9}, },
+  }
 ----- meta -----
 return moduleObj

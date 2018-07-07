@@ -15,19 +15,19 @@ pub class ClassA {
 	self.val = 10;
 	return self;
     }
-    func( data: int ) : int {
+    pub func( data: int ) : int {
 	self.val = self.val + 1;
 	return data + self.val;
     }
 }
 
-fn ClassA.sub() : int {
+pub fn ClassA.sub() : int {
     return self.val;
 }
 
 pub class ClassB {
-    func(): int {
-	return 100;
+    pub func(): real {
+	return 100.0;
     }
 }
 

@@ -138,12 +138,22 @@ filterObj[TransUnit.nodeKind.If] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "" )
   local valList = node.info
   for index, val in pairs( valList ) do
-    print( prefix .. val['kind'] )
     if val['exp'] then
       TransUnit.nodeFilter( val['exp'], self, prefix .. "  ", depth + 1 )
     end
     TransUnit.nodeFilter( val['block'], self, prefix .. "  ", depth + 1 )
   end
+end
+
+filterObj[TransUnit.nodeKind.Switch] = function ( self, node, prefix, depth )
+  dump( prefix, depth, node, "" )
+  TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 )
+  local caseList = node.info.caseList
+  for __index, caseInfo in pairs( caseList ) do
+    TransUnit.nodeFilter( caseInfo['expList'], self, prefix .. "  ", depth + 1 )
+    TransUnit.nodeFilter( caseInfo['block'], self, prefix .. "  ", depth + 1 )
+  end
+  TransUnit.nodeFilter( node.info.default, self, prefix .. "  ", depth + 1 )
 end
 
 filterObj[TransUnit.nodeKind.While] = function ( self, node, prefix, depth )
@@ -216,8 +226,7 @@ end
 
 filterObj[TransUnit.nodeKind.ExpCast] = function ( self, node, prefix, depth )
   dump( prefix, depth, node, "" )
-  TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 )
-  TransUnit.nodeFilter( node.info.castType, self, prefix .. "  ", depth + 1 )
+  TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 )
 end
 
 filterObj[TransUnit.nodeKind.ExpParen] = function ( self, node, prefix, depth )
@@ -311,8 +320,6 @@ filterObj[TransUnit.nodeKind.Break] = function ( self, node, prefix, depth )
 end
 
 ----- meta -----
-moduleObj._typeInfoList = {
-}
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 local _classInfofilterObj = {}
@@ -321,5 +328,7 @@ local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
+moduleObj._typeInfoList = {
+}
 ----- meta -----
 return moduleObj
