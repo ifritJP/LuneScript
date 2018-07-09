@@ -6,7 +6,10 @@ pub class filterObj {
 fn dump( prefix: str, depth: int, node: stem, txt: str ) {
     let typeStr = "";
     if node.expType and node.expType ~= TransUnit.typeInfo.None {
-	typeStr = "(%s)" (node.expType.getTxt());
+	''typeStr = "(%s)" (node.expType.getTxt());
+        typeStr = "(%d:%s:%s)" ( node.expType.get_typeId(),
+                                 node.expType.getTxt(),
+                                 node.expType.get_kind() );
     }
     print( "%s: %s %s %s"
 	   (prefix, TransUnit.getNodeKindName( node.kind ), txt, typeStr ) );
@@ -77,9 +80,8 @@ filterObj[ TransUnit.nodeKind.DeclVar ] =
 	    varName = varName .. ",";
         }
 	varName = "%s %s" (varName, var[ "name" ].txt );
-        
-    }	
-    dump( prefix, depth, node, varName );
+    }
+    dump( prefix, depth, node, node.info.unwrap and "! " or " " .. varName );
     foreach var, index in varList {
         if var[ "refType" ] {
             TransUnit.nodeFilter(
@@ -89,7 +91,11 @@ filterObj[ TransUnit.nodeKind.DeclVar ] =
 
     if node.info.expList {
 	TransUnit.nodeFilter( node.info.expList, self, prefix .. "  ", depth + 1 );
-    }   
+    }
+
+    if node.info.unwrap {
+	TransUnit.nodeFilter( node.info.unwrap, self, prefix .. "  ", depth + 1 );
+    }
 };  
 
 filterObj[ TransUnit.nodeKind.DeclArg ] = 

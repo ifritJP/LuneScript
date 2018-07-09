@@ -1,0 +1,7 @@
+pub class Hoge {
+    pub let val:int;
+    pub func(): int {
+        return 0;
+    }
+}
+

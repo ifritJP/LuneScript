@@ -15,13 +15,14 @@ fn createReserveInfo( luaMode: bool ) :
     keywordSet[ "nil" ] = true;
     keywordSet[ "true" ] = true;
     keywordSet[ "false" ] = true;
+    keywordSet[ "{" ] = true;
+    keywordSet[ "}" ] = true;
 
     builtInSet[ "require" ] = true;
 
 
     if luaMode {
 	keywordSet[ "function" ] = true;
-	keywordSet[ "}" ] = true;
 	keywordSet[ "then" ] = true;
 	keywordSet[ "do" ] = true;
 	keywordSet[ "until" ] = true;
@@ -42,6 +43,7 @@ fn createReserveInfo( luaMode: bool ) :
 	keywordSet[ "as" ] = true;
 	keywordSet[ "import" ] = true;
 	keywordSet[ "new" ] = true;
+	keywordSet[ "!" ] = true;
 
 	typeSet[ "int" ] = true;
 	typeSet[ "real" ] = true;
@@ -70,8 +72,8 @@ class Stream {
 }
 
 class Position {
-    let lineNo: int;
-    let column: int;
+    pub let lineNo: int;
+    pub let column: int;
 }
 
 pub class Token {
@@ -82,6 +84,7 @@ pub class Token {
 
 pub class Parser {
     let stream : Stream;
+    let streamName: str;
     let lineNo : int;
     let pos : int;
     let lineTokenList : Token[];
@@ -91,27 +94,33 @@ pub class Parser {
     let multiCharDelimitMap : Map<str,str[@]>;
 
 
-    __init( path: str, luaMode: bool ) {
-	let stream: Stream = io.open( path, "r" );
-
-	if not stream {
-	    return nil;
-	}
-
+    __init( stream: Stream, name: str, luaMode: bool ) {
 	self.stream = stream;
+	self.streamName = name;
 	self.lineNo = 0;
 	self.pos = 1;
-	self.lineTokenList = {};
+	self.lineTokenList = [];
 
 	let keywordSet, typeSet, builtInSet, multiCharDelimitMap =
-	    createReserveInfo( luaMode or string.find( path, "%.lua$" ) );
+	    createReserveInfo( luaMode );
 
 	self.keywordSet = keywordSet;
 	self.typeSet = typeSet;
 	self.builtInSet = builtInSet;
 	self.multiCharDelimitMap = multiCharDelimitMap;
+    }
 
-	return self;
+    pub getStreamName(): str {
+	return self.streamName;
+    }
+
+    pub static create( path: str, luaMode: bool ): Parser {
+	let stream: Stream = io.open( path, "r" );
+
+	if not stream {
+	    return nil;
+	}
+	return new Parser( stream, path, luaMode or string.find( path, "%.lua$" ) );
     }
 }
 

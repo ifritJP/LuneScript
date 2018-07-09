@@ -16,10 +16,11 @@ local function createReserveInfo( luaMode )
   keywordSet["nil"] = true
   keywordSet["true"] = true
   keywordSet["false"] = true
+  keywordSet["{"] = true
+  keywordSet["}"] = true
   builtInSet["require"] = true
   if luaMode then
     keywordSet["function"] = true
-    keywordSet["}"] = true
     keywordSet["then"] = true
     keywordSet["do"] = true
     keywordSet["until"] = true
@@ -39,6 +40,7 @@ local function createReserveInfo( luaMode )
     keywordSet["as"] = true
     keywordSet["import"] = true
     keywordSet["new"] = true
+    keywordSet["!"] = true
     typeSet["int"] = true
     typeSet["real"] = true
     typeSet["stem"] = true
@@ -63,66 +65,76 @@ local Stream = {}
 function Stream.new(  )
   local obj = {}
   setmetatable( obj, { __index = Stream } )
-  return obj.__init and obj:__init(  ) or nil;
+  if obj.__init then
+    obj:__init(  )
+  end
+  return obj
 end
 function Stream:__init(  )
             
-  return self
 end
-            
 
 local Position = {}
 function Position.new( lineNo, column )
   local obj = {}
   setmetatable( obj, { __index = Position } )
-  return obj.__init and obj:__init( lineNo, column ) or nil;
+  if obj.__init then
+    obj:__init( lineNo, column )
+  end
+  return obj
 end
 function Position:__init( lineNo, column )
             
 self.lineNo = lineNo
   self.column = column
-    return self
-end
-            
+  end
 
 local Token = {}
 moduleObj.Token = Token
 function Token.new( kind, txt, pos )
   local obj = {}
   setmetatable( obj, { __index = Token } )
-  return obj.__init and obj:__init( kind, txt, pos ) or nil;
+  if obj.__init then
+    obj:__init( kind, txt, pos )
+  end
+  return obj
 end
 function Token:__init( kind, txt, pos )
             
 self.kind = kind
   self.txt = txt
   self.pos = pos
-    return self
-end
-            
+  end
 
 local Parser = {}
 moduleObj.Parser = Parser
-function Parser.new( path, luaMode )
+function Parser.new( stream, name, luaMode )
   local obj = {}
   setmetatable( obj, { __index = Parser } )
-  return obj.__init and obj:__init( path, luaMode ) or nil;
+  if obj.__init then obj:__init( stream, name, luaMode ); end
+return obj
 end
-function Parser:__init(path, luaMode) 
-  local stream = io.open( path, "r" )
-  if not stream then
-    return nil
-  end
+function Parser:__init(stream, name, luaMode) 
   self.stream = stream
+  self.streamName = name
   self.lineNo = 0
   self.pos = 1
   self.lineTokenList = {}
-  local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode or string.find( path, "%.lua$" ) )
+  local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode )
   self.keywordSet = keywordSet
   self.typeSet = typeSet
   self.builtInSet = builtInSet
   self.multiCharDelimitMap = multiCharDelimitMap
-  return self
+end
+function Parser:getStreamName(  )
+  return self.streamName
+end
+function Parser.create( path, luaMode )
+  local stream = io.open( path, "r" )
+  if not stream then
+    return nil
+  end
+  return Parser.new(stream, path, luaMode or string.find( path, "%.lua$" ))
 end
 
 local kind = {}
@@ -458,61 +470,79 @@ local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 local _classInfoParser = {}
 _className2InfoMap.Parser = _classInfoParser
+_classInfoParser.create = {
+  name='create', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 154 }
+_classInfoParser.getStreamName = {
+  name='getStreamName', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 152 }
 _classInfoParser.getToken = {
-  name='getToken', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 96 }
+  name='getToken', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 198 }
 local _classInfoPosition = {}
 _className2InfoMap.Position = _classInfoPosition
+_classInfoPosition.lineNo = {
+  name='lineNo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
+_classInfoPosition.column = {
+  name='column', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 local _classInfoStream = {}
 _className2InfoMap.Stream = _classInfoStream
 _classInfoStream.read = {
-  name='read', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 63 }
+  name='read', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 128 }
 local _classInfoToken = {}
 _className2InfoMap.Token = _classInfoToken
 _classInfoToken.kind = {
-  name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 5 }
+  name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 _classInfoToken.txt = {
-  name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 22 }
+  name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
 _classInfoToken.pos = {
-  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 64 }
+  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 130 }
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 75 }
+  name='kind', accessMode = 'pub', typeId = 156 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
 _funcName2InfoMap.getEofToken = {
-  accessMode = 'pub', typeId = 100 }
+  accessMode = 'pub', typeId = 206 }
 _funcName2InfoMap.getKindTxt = {
-  accessMode = 'pub', typeId = 82 }
+  accessMode = 'pub', typeId = 170 }
 _funcName2InfoMap.isOp1 = {
-  accessMode = 'pub', typeId = 84 }
+  accessMode = 'pub', typeId = 174 }
 _funcName2InfoMap.isOp2 = {
-  accessMode = 'pub', typeId = 83 }
+  accessMode = 'pub', typeId = 172 }
 moduleObj._typeInfoList = {
-{ typeId = 2, txt = 'stem', staticFlag = false, accessMode = 'pub',
-kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 4, txt = 'bool', staticFlag = false, accessMode = 'pub',
-kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 5, txt = 'int', staticFlag = false, accessMode = 'pub',
-kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 22, txt = 'str', staticFlag = false, accessMode = 'pub',
-kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 63, txt = 'read', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {22}, },
-  { typeId = 64, txt = 'Position', staticFlag = false, accessMode = 'pub',
-kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 75, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 5}, retTypeId = {}, },
-  { typeId = 82, txt = 'getKindTxt', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {5}, },
-  { typeId = 83, txt = 'isOp2', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {4}, },
-  { typeId = 84, txt = 'isOp1', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {4}, },
-  { typeId = 96, txt = 'getToken', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {22}, },
-  { typeId = 100, txt = 'getEofToken', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {2}, },
+{ parentId = 1, typeId = 1, txt = ':', staticFlag = false,
+accessMode = 'pub', kind = 0, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 6, txt = 'stem', staticFlag = false,
+accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 10, txt = 'bool', staticFlag = false,
+accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 12, txt = 'int', staticFlag = false,
+accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 18, txt = 'str', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 126, txt = 'Stream', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 126, typeId = 128, txt = 'read', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
+  { parentId = 1, typeId = 130, txt = 'Position', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 134, txt = 'Parser', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 134, typeId = 152, txt = 'getStreamName', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
+  { parentId = 134, typeId = 154, txt = 'create', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {134}, },
+  { parentId = 1, typeId = 156, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 12}, retTypeId = {}, },
+  { parentId = 1, typeId = 170, txt = 'getKindTxt', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, },
+  { parentId = 1, typeId = 172, txt = 'isOp2', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
+  { parentId = 1, typeId = 174, txt = 'isOp1', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
+  { parentId = 134, typeId = 198, txt = 'getToken', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
+  { parentId = 1, typeId = 206, txt = 'getEofToken', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, },
   }
 ----- meta -----
 return moduleObj

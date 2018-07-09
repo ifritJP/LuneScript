@@ -2,20 +2,32 @@
 local moduleObj = {}
 local Parser = require( 'lune.base.Parser' )
 
+local function errorLog( message )
+  (io ).stderr:write( message .. "\n" )
+end
+
 local function debugLog(  )
   local debugInfo1 = debug.getinfo( 2 )
   local debugInfo2 = debug.getinfo( 3 )
   local debugInfo3 = debug.getinfo( 4 )
-  print( "--", debugInfo1["short_src"], debugInfo1['currentline'] )
-  print( "--", debugInfo2["short_src"], debugInfo2['currentline'] )
-  print( "--", debugInfo3["short_src"], debugInfo3['currentline'] )
+  local debugInfo4 = debug.getinfo( 5 )
+  errorLog( string.format( "-- %s %s", debugInfo1["short_src"], debugInfo1['currentline']) )
+  errorLog( string.format( "-- %s %s", debugInfo2["short_src"], debugInfo2['currentline']) )
+  errorLog( string.format( "-- %s %s", debugInfo3["short_src"], debugInfo3['currentline']) )
+  errorLog( string.format( "-- %s %s", debugInfo4["short_src"], debugInfo4['currentline']) )
 end
 
-local typeIdSeed = 0
+local rootTypeId = 1
+local typeIdSeed = rootTypeId + 1
+local rootTypeInfo = nil
 local typeInfo = {}
 moduleObj.typeInfo = typeInfo
 
 local builtInTypeMap = {}
+local builtInTypeIdSet = {}
+local TypeInfoKindRoot = 0
+moduleObj.TypeInfoKindRoot = TypeInfoKindRoot
+
 local TypeInfoKindPrim = 1
 moduleObj.TypeInfoKindPrim = TypeInfoKindPrim
 
@@ -34,25 +46,51 @@ moduleObj.TypeInfoKindClass = TypeInfoKindClass
 local TypeInfoKindFunc = 6
 moduleObj.TypeInfoKindFunc = TypeInfoKindFunc
 
+local TypeInfoKindNilable = 7
+moduleObj.TypeInfoKindNilable = TypeInfoKindNilable
+
 local TypeInfo = {}
-function TypeInfo.new( autoFlag, externalFlag, staticFlag, accessMode, txt, typeId, kind, itemTypeInfoList, retTypeInfoList )
+function TypeInfo.new( orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, retTypeInfoList )
   local obj = {}
   setmetatable( obj, { __index = TypeInfo } )
-  return obj.__init and obj:__init( autoFlag, externalFlag, staticFlag, accessMode, txt, typeId, kind, itemTypeInfoList, retTypeInfoList ) or nil;
+  if obj.__init then obj:__init( orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, retTypeInfoList ); end
+return obj
 end
-function TypeInfo:__init(autoFlag, externalFlag, staticFlag, accessMode, txt, typeId, kind, itemTypeInfoList, retTypeInfoList) 
+function TypeInfo:__init(orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, retTypeInfoList) 
   self.autoFlag = autoFlag
   self.externalFlag = externalFlag
   self.staticFlag = staticFlag
   self.accessMode = accessMode
   self.txt = txt
-  self.typeId = typeId
   self.kind = kind
   self.itemTypeInfoList = itemTypeInfoList or {}
   self.retTypeInfoList = retTypeInfoList or {}
-  return self
+  self.orgTypeInfo = orgTypeInfo
+  self.parentInfo = parentInfo
+  if rootTypeInfo and not parentInfo then
+    debugLog(  )
+    error( "" )
+  end
+  if kind == TypeInfoKindRoot then
+    self.typeId = typeId
+    self.nilable = false
+    rootTypeInfo = self
+  elseif not orgTypeInfo then
+    self.typeId = typeId + 1
+    self.nilable = false
+    self.nilableTypeInfo = TypeInfo.new(self, autoFlag, externalFlag, staticFlag, accessMode, "", parentInfo, typeIdSeed, TypeInfoKindNilable, itemTypeInfoList, retTypeInfoList)
+    typeIdSeed = typeIdSeed + 1
+  else 
+    self.typeId = typeId
+    self.nilable = true
+    self.nilableTypeInfo = nil
+  end
 end
 function TypeInfo:serialize(  )
+  local parentId = self.parentInfo and self.parentInfo.typeId or rootTypeId
+  if self.orgTypeInfo then
+    return string.format( '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }', parentId, self.typeId, self.orgTypeInfo.typeId)
+  end
   local function serializeTypeInfoList( name, list )
     local work = name
     for index, typeInfo in pairs( list ) do
@@ -64,11 +102,14 @@ function TypeInfo:serialize(  )
     return work .. "}, "
   end
   
-  local txt = string.format( [==[{ typeId = %d, txt = '%s', staticFlag = %s, accessMode = '%s',
-kind = %d, ]==], self.typeId, self.txt, self.staticFlag, self.accessMode, self.kind)
+  local txt = string.format( [==[{ parentId = %d, typeId = %d, txt = '%s', staticFlag = %s,
+accessMode = '%s', kind = %d, ]==], parentId, self.typeId, self.txt, self.staticFlag, self.accessMode, self.kind)
   return txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. "}"
 end
 function TypeInfo:getTxt(  )
+  if self.orgTypeInfo then
+    return self.orgTypeInfo:getTxt(  ) .. "!"
+  end
   if self.kind == TypeInfoKindArray then
     return self.itemTypeInfoList[1]:getTxt(  ) .. "[@]"
   end
@@ -90,19 +131,69 @@ function TypeInfo:getTxt(  )
   end
   return ""
 end
-function TypeInfo.create( staticFlag, kind, txt, itemTypeInfo, retTypeInfoList )
+function TypeInfo:equals( typeInfo, depth )
+  if not typeInfo then
+    return false
+  end
+  if not depth then
+    depth = 1
+  end
+  if self.typeId == typeInfo.typeId then
+    return true
+  end
+  if self.kind ~= typeInfo.kind or self.staticFlag ~= typeInfo.staticFlag or self.accessMode ~= typeInfo.accessMode or self.autoFlag ~= typeInfo.autoFlag or self.nilable ~= typeInfo.nilable then
+    return false
+  end
+  if (not self.itemTypeInfoList and typeInfo.itemTypeInfoList or self.itemTypeInfoList and not typeInfo.itemTypeInfoList or not self.retTypeInfoList and typeInfo.retTypeInfoList or self.retTypeInfoList and not typeInfo.retTypeInfoList or not self.orgTypeInfo and typeInfo.orgTypeInfo or self.orgTypeInfo and not typeInfo.orgTypeInfo ) then
+    errorLog( "%s, %s", self.itemTypeInfoList, typeInfo.itemTypeInfoList )
+    errorLog( "%s, %s", self.retTypeInfoList, typeInfo.retTypeInfoList )
+    errorLog( "%s, %s", self.orgTypeInfo, typeInfo.orgTypeInfo )
+    return false
+  end
+  if self.itemTypeInfoList then
+    if #self.itemTypeInfoList ~= #typeInfo.itemTypeInfoList then
+      return false
+    end
+    for index, item in pairs( self.itemTypeInfoList ) do
+      if not item:equals( typeInfo.itemTypeInfoList[index], depth + 1 ) then
+        return false
+      end
+    end
+  end
+  if self.retTypeInfoList then
+    if #self.retTypeInfoList ~= #typeInfo.retTypeInfoList then
+      return false
+    end
+    for index, item in pairs( self.retTypeInfoList ) do
+      if not item:equals( typeInfo.retTypeInfoList[index], depth + 1 ) then
+        return false
+      end
+    end
+  end
+  if self.orgTypeInfo and not self.orgTypeInfo:equals( typeInfo.orgTypeInfo, depth + 1 ) then
+    return false
+  end
+  return true
+end
+function TypeInfo.create( parentInfo, staticFlag, kind, txt, itemTypeInfo, retTypeInfoList )
   if kind == TypeInfoKindPrim then
     return builtInTypeMap[txt]
   end
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(false, true, staticFlag, "pub", txt, typeIdSeed, kind, itemTypeInfo, retTypeInfoList)
+  local info = TypeInfo.new(nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, retTypeInfoList)
   return info
 end
 function TypeInfo.createBuiltin( idName, typeTxt, kind )
-  typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(false, false, false, "pub", typeTxt, typeIdSeed, kind)
+  local typeId = typeIdSeed + 1
+  if kind == TypeInfoKindRoot then
+    typeId = rootTypeId
+  else 
+    typeIdSeed = typeIdSeed + 1
+  end
+  local info = TypeInfo.new(nil, false, false, false, "pub", typeTxt, rootTypeInfo, typeId, kind)
   typeInfo[idName] = info
   builtInTypeMap[typeTxt] = info
+  builtInTypeIdSet[info.typeId] = true
   return info
 end
 function TypeInfo.createList( itemTypeInfo )
@@ -110,24 +201,27 @@ function TypeInfo.createList( itemTypeInfo )
     error( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new(false, false, false, "pub", nil, typeIdSeed, TypeInfoKindList, itemTypeInfo)
+  return TypeInfo.new(nil, false, false, false, "pub", "", rootTypeInfo, typeIdSeed, TypeInfoKindList, itemTypeInfo)
 end
 function TypeInfo.createArray( itemTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new(false, false, false, "pub", nil, typeIdSeed, TypeInfoKindArray, itemTypeInfo)
+  return TypeInfo.new(nil, false, false, false, "pub", "", rootTypeInfo, typeIdSeed, TypeInfoKindArray, itemTypeInfo)
 end
 function TypeInfo.createMap( keyTypeInfo, valTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return TypeInfo.new(false, false, false, "pub", "Map", typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
+  return TypeInfo.new(nil, false, false, false, "pub", "Map", rootTypeInfo, typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
 end
-function TypeInfo.createClass( externalFlag, accessMode, className )
+function TypeInfo.createClass( parentInfo, externalFlag, accessMode, className )
+  if className == "str" then
+    return builtInTypeMap[className]
+  end
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(false, externalFlag, false, accessMode, className, typeIdSeed, TypeInfoKindClass)
+  local info = TypeInfo.new(nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, TypeInfoKindClass)
   return info
 end
-function TypeInfo.createFunc( autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList )
+function TypeInfo.createFunc( parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList )
   typeIdSeed = typeIdSeed + 1
-  local info = TypeInfo.new(autoFlag, externalFlag, staticFlag, accessMode, funcName, typeIdSeed, TypeInfoKindFunc, argTypeList or {}, retTypeInfoList or {})
+  local info = TypeInfo.new(nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, TypeInfoKindFunc, argTypeList or {}, retTypeInfoList or {})
   return info
 end
 function TypeInfo:get_itemTypeInfoList()
@@ -136,11 +230,11 @@ end
 function TypeInfo:get_retTypeInfoList()
    return self.retTypeInfoList
 end
+function TypeInfo:get_parentInfo()
+   return self.parentInfo
+end
 function TypeInfo:get_typeId()
    return self.typeId
-end
-function TypeInfo:get_txt()
-   return self.txt
 end
 function TypeInfo:get_kind()
    return self.kind
@@ -154,15 +248,25 @@ end
 function TypeInfo:get_autoFlag()
    return self.autoFlag
 end
+function TypeInfo:get_orgTypeInfo()
+   return self.orgTypeInfo
+end
+function TypeInfo:get_nilable()
+   return self.nilable
+end
+function TypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
+end
 
 local typeInfoNone = TypeInfo.createBuiltin( "None", "", TypeInfoKindPrim )
+local typeInfoRoot = TypeInfo.createBuiltin( "Root", ":", TypeInfoKindRoot )
 local typeInfoStem = TypeInfo.createBuiltin( "Stem", "stem", TypeInfoKindPrim )
 local typeInfoNil = TypeInfo.createBuiltin( "Nil", "nil", TypeInfoKindPrim )
 local typeInfoBool = TypeInfo.createBuiltin( "Bool", "bool", TypeInfoKindPrim )
 local typeInfoInt = TypeInfo.createBuiltin( "Int", "int", TypeInfoKindPrim )
 local typeInfoReal = TypeInfo.createBuiltin( "Real", "real", TypeInfoKindPrim )
 local typeInfoChar = TypeInfo.createBuiltin( "char", "char", TypeInfoKindPrim )
-local typeInfoString = TypeInfo.createBuiltin( "String", "str", TypeInfoKindPrim )
+local typeInfoString = TypeInfo.createBuiltin( "String", "str", TypeInfoKindClass )
 local typeInfoMap = TypeInfo.createBuiltin( "Map", "Map", TypeInfoKindMap )
 local typeInfoList = TypeInfo.createBuiltin( "List", "List", TypeInfoKindList )
 local typeInfoArray = TypeInfo.createBuiltin( "Array", "Array", TypeInfoKindArray )
@@ -171,13 +275,13 @@ local Scope = {}
 function Scope.new( parent )
   local obj = {}
   setmetatable( obj, { __index = Scope } )
-  return obj.__init and obj:__init( parent ) or nil;
+  if obj.__init then obj:__init( parent ); end
+return obj
 end
 function Scope:__init(parent) 
   self.parent = parent
   self.symbol2TypeInfoMap = {}
   self.className2ScopeMap = {}
-  return self
 end
 function Scope:add( name, typeInfo )
   self.symbol2TypeInfoMap[name] = typeInfo
@@ -221,22 +325,26 @@ moduleObj.NodePos = NodePos
 function NodePos.new( lineNo, column )
   local obj = {}
   setmetatable( obj, { __index = NodePos } )
-  return obj.__init and obj:__init( lineNo, column ) or nil;
+  if obj.__init then
+    obj:__init( lineNo, column )
+  end
+  return obj
 end
 function NodePos:__init( lineNo, column )
             
 self.lineNo = lineNo
   self.column = column
-    return self
-end
-            
+  end
 
 local Node = {}
 moduleObj.Node = Node
 function Node.new( kind, pos, expType, expTypeList, info, filter )
   local obj = {}
   setmetatable( obj, { __index = Node } )
-  return obj.__init and obj:__init( kind, pos, expType, expTypeList, info, filter ) or nil;
+  if obj.__init then
+    obj:__init( kind, pos, expType, expTypeList, info, filter )
+  end
+  return obj
 end
 function Node:__init( kind, pos, expType, expTypeList, info, filter )
             
@@ -246,9 +354,7 @@ self.kind = kind
   self.expTypeList = expTypeList
   self.info = info
   self.filter = filter
-    return self
-end
-            
+  end
 function Node:get_kind()
    return self.kind
 end
@@ -259,34 +365,41 @@ function Node:get_info()
    return self.info
 end
 
-local ClassInfo = {}
-function ClassInfo.new( name, scope, typeInfo )
+local NamespaceInfo = {}
+function NamespaceInfo.new( name, scope, typeInfo )
   local obj = {}
-  setmetatable( obj, { __index = ClassInfo } )
-  return obj.__init and obj:__init( name, scope, typeInfo ) or nil;
+  setmetatable( obj, { __index = NamespaceInfo } )
+  if obj.__init then
+    obj:__init( name, scope, typeInfo )
+  end
+  return obj
 end
-function ClassInfo:__init( name, scope, typeInfo )
+function NamespaceInfo:__init( name, scope, typeInfo )
             
 self.name = name
   self.scope = scope
   self.typeInfo = typeInfo
-    return self
-end
-            
+  end
 
 local TransUnit = {}
 moduleObj.TransUnit = TransUnit
 function TransUnit.new(  )
   local obj = {}
   setmetatable( obj, { __index = TransUnit } )
-  return obj.__init and obj:__init(  ) or nil;
+  if obj.__init then obj:__init(  ); end
+return obj
 end
 function TransUnit:__init() 
   self.scope = Scope.new(nil)
+  self.namespaceList = {typeInfoRoot}
   self.classList = {}
   self.typeInfo2Scope = {}
   self.typeInfo2ClassNode = {}
-  return self
+  self.currentToken = nil
+  self.errMessList = {}
+end
+function TransUnit:addErrMess( pos, mess )
+  table.insert( self.errMessList, string.format( "%s:%d:%d: %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, mess) )
 end
 function TransUnit:pushScope(  )
   self.scope = Scope.new(self.scope)
@@ -295,21 +408,35 @@ end
 function TransUnit:popScope(  )
   self.scope = self.scope:get_parent(  )
 end
+function TransUnit:pushNamespace( name, typeInfo, scope )
+  local namespace = NamespaceInfo.new(name, scope, typeInfo)
+  table.insert( self.namespaceList, namespace )
+end
+function TransUnit:popNamespace(  )
+  table.remove( self.namespaceList )
+end
+function TransUnit:getCurrentNamespaceTypeInfo(  )
+  return self.namespaceList[#self.namespaceList].typeInfo
+end
 function TransUnit:pushClass( externalFlag, name )
   local typeInfo = self.scope:getTypeInfoChild( name )
   if not typeInfo then
-    typeInfo = TypeInfo.createClass( externalFlag, "pub", name )
+    local parentInfo = self:getCurrentNamespaceTypeInfo(  )
+    typeInfo = TypeInfo.createClass( parentInfo, externalFlag, "pub", name )
     local scope = self:pushScope(  )
     scope:get_parent(  ):addClass( name, typeInfo, scope )
   else 
     self.scope = self.scope:getClassScope( name )
   end
-  table.insert( self.classList, ClassInfo.new(name, self.scope, typeInfo) )
+  local namespace = NamespaceInfo.new(name, self.scope, typeInfo)
+  table.insert( self.namespaceList, namespace )
+  table.insert( self.classList, namespace )
   self.typeInfo2Scope[typeInfo] = self.scope
   return typeInfo
 end
 function TransUnit:popClass(  )
   self:popScope(  )
+  table.remove( self.namespaceList )
   table.remove( self.classList )
 end
 function TransUnit:addMethod( className, methodNode )
@@ -326,6 +453,9 @@ end
 -- none
 -- none
 -- none
+function TransUnit:get_errMessList()
+   return self.errMessList
+end
 
 local opLevelBase = 0
 local op2levelMap = {}
@@ -436,7 +566,28 @@ local function nodeFilter( node, filter, ... )
 end
 moduleObj.nodeFilter = nodeFilter
 function TransUnit:registBuiltInScope(  )
-  local builtInInfo = {[""] = {["error"] = {["ret"] = {}}, ["print"] = {["ret"] = {}}, ["tonumber"] = {["ret"] = {"int"}}}, ["io"] = {["open"] = {["ret"] = {"stem"}}}, ["string"] = {["find"] = {["ret"] = {"int", "int"}}, ["byte"] = {["ret"] = {"int"}}, ["format"] = {["ret"] = {"str"}}, ["rep"] = {["ret"] = {"str"}}, ["gmatch"] = {["ret"] = {"stem"}}, ["gsub"] = {["ret"] = {"str"}}}, ["str"] = {["find"] = {["methodFlag"] = {}, ["ret"] = {"int", "int"}}, ["byte"] = {["methodFlag"] = {}, ["ret"] = {"int"}}, ["format"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["rep"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["gmatch"] = {["methodFlag"] = {}, ["ret"] = {"stem"}}, ["gsub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["sub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}}, ["table"] = {["insert"] = {["ret"] = {""}}, ["remove"] = {["ret"] = {""}}}, ["debug"] = {["getinfo"] = {["ret"] = {"stem"}}}, ["_luneScript"] = {["loadModule"] = {["ret"] = {"stem"}}}}
+  local builtInInfo = {[""] = {["type"] = {["ret"] = {"str"}}, ["error"] = {["ret"] = {}}, ["print"] = {["ret"] = {}}, ["tonumber"] = {["ret"] = {"int"}}}, ["io"] = {["open"] = {["ret"] = {"stem"}}}, ["string"] = {["find"] = {["ret"] = {"int", "int"}}, ["byte"] = {["ret"] = {"int"}}, ["format"] = {["ret"] = {"str"}}, ["rep"] = {["ret"] = {"str"}}, ["gmatch"] = {["ret"] = {"stem"}}, ["gsub"] = {["ret"] = {"str"}}}, ["str"] = {["find"] = {["methodFlag"] = {}, ["ret"] = {"int", "int"}}, ["byte"] = {["methodFlag"] = {}, ["ret"] = {"int"}}, ["format"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["rep"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["gmatch"] = {["methodFlag"] = {}, ["ret"] = {"stem"}}, ["gsub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["sub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}}, ["table"] = {["insert"] = {["ret"] = {""}}, ["remove"] = {["ret"] = {""}}}, ["debug"] = {["getinfo"] = {["ret"] = {"stem"}}}, ["_luneScript"] = {["loadModule"] = {["ret"] = {"stem"}}}}
+  do
+    local __sorted = {}
+    local __map = builtInTypeMap
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
+    end
+    table.sort( __sorted )
+    for __index, name in ipairs( __sorted ) do
+      typeInfo = __map[ name ]
+      do
+        if typeInfo.kind == TypeInfoKindClass then
+          local scope = self:pushScope(  )
+          scope:get_parent(  ):addClass( name, typeInfo, scope )
+          self:popScope(  )
+        else 
+          self.scope:add( name, typeInfo )
+        end
+      end
+    end
+  end
+  
   do
     local __sorted = {}
     local __map = builtInInfo
@@ -447,8 +598,13 @@ function TransUnit:registBuiltInScope(  )
     for __index, name in ipairs( __sorted ) do
       name2FuncInfo = __map[ name ]
       do
+        local parentInfo = typeInfoRoot
         if name ~= "" then
-          self:pushClass( true, name )
+          local classTypeInfo = self:pushClass( true, name )
+          parentInfo = classTypeInfo
+        end
+        if not parentInfo then
+          error( "parentInfo is nil" )
         end
         do
           local __sorted = {}
@@ -464,7 +620,7 @@ function TransUnit:registBuiltInScope(  )
               for __index, retType in pairs( info["ret"] ) do
                 table.insert( retTypeList, builtInTypeMap[retType] )
               end
-              self.scope:add( funcName, TypeInfo.createFunc( false, true, not info["methodFlag"], "pub", funcName, nil, retTypeList ) )
+              self.scope:add( funcName, TypeInfo.createFunc( parentInfo, false, true, not info["methodFlag"], "pub", funcName, nil, retTypeList ) )
             end
           end
         end
@@ -597,28 +753,35 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
 end
 
 local _TypeInfo = {}
-function _TypeInfo.new( itemTypeId, retTypeId, typeId, txt, kind, staticFlag )
+function _TypeInfo.new( itemTypeId, retTypeId, parentInfo, typeId, txt, kind, staticFlag, nilable, orgTypeId )
   local obj = {}
   setmetatable( obj, { __index = _TypeInfo } )
-  return obj.__init and obj:__init( itemTypeId, retTypeId, typeId, txt, kind, staticFlag ) or nil;
+  if obj.__init then
+    obj:__init( itemTypeId, retTypeId, parentInfo, typeId, txt, kind, staticFlag, nilable, orgTypeId )
+  end
+  return obj
 end
-function _TypeInfo:__init( itemTypeId, retTypeId, typeId, txt, kind, staticFlag )
+function _TypeInfo:__init( itemTypeId, retTypeId, parentInfo, typeId, txt, kind, staticFlag, nilable, orgTypeId )
             
 self.itemTypeId = itemTypeId
   self.retTypeId = retTypeId
+  self.parentInfo = parentInfo
   self.typeId = typeId
   self.txt = txt
   self.kind = kind
   self.staticFlag = staticFlag
-    return self
-end
-            
+  self.nilable = nilable
+  self.orgTypeId = orgTypeId
+  end
 
 local _ModuleInfo = {}
 function _ModuleInfo.new( _className2InfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap )
   local obj = {}
   setmetatable( obj, { __index = _ModuleInfo } )
-  return obj.__init and obj:__init( _className2InfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap ) or nil;
+  if obj.__init then
+    obj:__init( _className2InfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap )
+  end
+  return obj
 end
 function _ModuleInfo:__init( _className2InfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap )
             
@@ -626,9 +789,7 @@ self._className2InfoMap = _className2InfoMap
   self._typeInfoList = _typeInfoList
   self._varName2InfoMap = _varName2InfoMap
   self._funcName2InfoMap = _funcName2InfoMap
-    return self
-end
-            
+  end
 
 function TransUnit:analyzeImport( token )
   local moduleToken = self:getToken(  )
@@ -650,34 +811,56 @@ function TransUnit:analyzeImport( token )
   local moduleInfo = _luneScript.loadModule( modulePath )
   self.moduleName2Info[modulePath] = moduleInfo
   local typeId2TypeInfo = {}
+  typeId2TypeInfo[rootTypeId] = typeInfoRoot
   for __index, typeInfo in pairs( moduleInfo._typeInfoList ) do
-    if typeInfo.kind ~= TypeInfoKindPrim then
-      local itemTypeInfo = {}
-      for __index, typeId in pairs( typeInfo.itemTypeId ) do
-        table.insert( itemTypeInfo, typeId2TypeInfo[typeId] )
+    if not builtInTypeIdSet[typeInfo.typeId] then
+      if typeInfo.nilable then
+        local orgTypeInfo = typeId2TypeInfo[typeInfo.orgTypeId]
+        typeId2TypeInfo[typeInfo.typeId] = orgTypeInfo:get_nilableTypeInfo(  )
+      else 
+        local itemTypeInfo = {}
+        for __index, typeId in pairs( typeInfo.itemTypeId ) do
+          table.insert( itemTypeInfo, typeId2TypeInfo[typeId] )
+        end
+        local retTypeInfo = {}
+        for __index, typeId in pairs( typeInfo.retTypeId ) do
+          table.insert( retTypeInfo, typeId2TypeInfo[typeId] )
+        end
+        local parentInfo = rootTypeId
+        if typeInfo.parentInfo ~= rootTypeId then
+          local parentTypeInfo = typeId2TypeInfo[typeInfo.parentInfo]
+          if not parentTypeInfo then
+            parentTypeInfo = typeInfoRoot
+          end
+          parentInfo = parentTypeInfo:get_typeId(  )
+        end
+        typeId2TypeInfo[typeInfo.typeId] = TypeInfo.create( parentInfo, typeInfo.staticFlag, typeInfo.kind, typeInfo.txt, itemTypeInfo, retTypeInfo )
       end
-      local retTypeInfo = {}
-      for __index, typeId in pairs( typeInfo.retTypeId ) do
-        table.insert( retTypeInfo, typeId2TypeInfo[typeId] )
-      end
-      typeId2TypeInfo[typeInfo.typeId] = TypeInfo.create( typeInfo.staticFlag, typeInfo.typeId, typeInfo.txt, itemTypeInfo, retTypeInfo )
     else 
       typeId2TypeInfo[typeInfo.typeId] = builtInTypeMap[typeInfo.txt]
     end
   end
-  for className, classInfo in pairs( moduleInfo._className2InfoMap ) do
-    self:pushClass( true, className )
-    for fieldName, fieldInfo in pairs( classInfo ) do
-      local fieldTypeInfo = nil
-      if fieldInfo.methodFlag then
-        fieldTypeInfo = typeId2TypeInfo[fieldInfo["typeId"]]
-      else 
-        fieldTypeInfo = typeId2TypeInfo[fieldInfo["typeId"]]
-      end
-      self.scope:add( fieldName, fieldTypeInfo )
+  do
+    local __sorted = {}
+    local __map = moduleInfo._className2InfoMap
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
     end
-    self:popClass(  )
+    table.sort( __sorted )
+    for __index, className in ipairs( __sorted ) do
+      classInfo = __map[ className ]
+      do
+        self:pushClass( true, className )
+        for fieldName, fieldInfo in pairs( classInfo ) do
+          local fieldTypeInfo = nil
+          fieldTypeInfo = typeId2TypeInfo[fieldInfo["typeId"]]
+          self.scope:add( fieldName, fieldTypeInfo )
+        end
+        self:popClass(  )
+      end
+    end
   end
+  
   for varName, varInfo in pairs( moduleInfo._varName2InfoMap ) do
     self.scope:add( varName, typeId2TypeInfo[varInfo["typeId"]] )
   end
@@ -722,6 +905,8 @@ function TransUnit:analyzeSwitch( firstToken )
   local defaultBlock = nil
   if nextToken.txt == "default" then
     defaultBlock = self:analyzeBlock( "default" )
+  else 
+    self:pushback(  )
   end
   self:checkNextToken( "}" )
   local info = {["exp"] = exp, ["caseList"] = caseList, ["default"] = defaultBlock}
@@ -858,8 +1043,12 @@ function TransUnit:analyzeRefType(  )
   else 
     self:pushback(  )
   end
-  local arrayMode = "no"
   token = self:getToken(  )
+  if token.txt == "!" then
+    typeInfo = typeInfo:get_nilableTypeInfo(  )
+    token = self:getToken(  )
+  end
+  local arrayMode = "no"
   if token.txt == '[' or token.txt == '[@' then
     if token.txt == '[' then
       arrayMode = "list"
@@ -918,7 +1107,7 @@ function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
   end
   self:checkToken( token, ";" )
   self.scope:add( varName.txt, refType.expType )
-  local info = {["name"] = varName, ["refType"] = refType.expType, ["staticFlag"] = staticFlag, ["accessMode"] = accessMode, ["getterMode"] = getterMode, ["setterMode"] = setterMode}
+  local info = {["name"] = varName, ["refType"] = refType, ["staticFlag"] = staticFlag, ["accessMode"] = accessMode, ["getterMode"] = getterMode, ["setterMode"] = setterMode}
   return self:createNode( nodeKindDeclMember, firstToken.pos, refType.expTypeList, info )
 end
 
@@ -960,21 +1149,68 @@ function TransUnit:analyzeDeclClass( classAccessMode, classToken )
       table.insert( fieldList, methodNode )
     end
   end
+  local parentInfo = classTypeInfo
   for __index, memberNode in pairs( memberList ) do
     local memberName = memberNode.info.name
     local getterName = "get_" .. memberName.txt
     local accessMode = memberNode.info.getterMode
     if accessMode ~= "none" and not self.scope:getTypeInfo( getterName ) then
-      self.scope:add( getterName, TypeInfo.createFunc( true, false, false, accessMode, getterName, nil, {memberNode.expType} ) )
+      self.scope:add( getterName, TypeInfo.createFunc( parentInfo, true, false, false, accessMode, getterName, nil, {memberNode.expType} ) )
     end
     local setterName = "set_" .. memberName.txt
     local accessMode = memberNode.info.setterMode
     if memberNode.info.setterMode ~= "none" and not self.scope:getTypeInfo( setterName ) then
-      self.scope:add( setterName, TypeInfo.createFunc( true, false, false, accessMode, setterName, nil, {memberNode.expType} ) )
+      self.scope:add( setterName, TypeInfo.createFunc( parentInfo, true, false, false, accessMode, setterName, nil, {memberNode.expType} ) )
     end
   end
   self:popClass(  )
   return node
+end
+
+local DeclFuncInfo = {}
+moduleObj.DeclFuncInfo = DeclFuncInfo
+function DeclFuncInfo.new( className, name, argList, staticFlag, accessMode, body, retTypeList, retTypeInfoList )
+  local obj = {}
+  setmetatable( obj, { __index = DeclFuncInfo } )
+  if obj.__init then
+    obj:__init( className, name, argList, staticFlag, accessMode, body, retTypeList, retTypeInfoList )
+  end
+  return obj
+end
+function DeclFuncInfo:__init( className, name, argList, staticFlag, accessMode, body, retTypeList, retTypeInfoList )
+            
+self.className = className
+  self.name = name
+  self.argList = argList
+  self.staticFlag = staticFlag
+  self.accessMode = accessMode
+  self.body = body
+  self.retTypeList = retTypeList
+  self.retTypeInfoList = retTypeInfoList
+  end
+function DeclFuncInfo:get_className()
+   return self.className
+end
+function DeclFuncInfo:get_name()
+   return self.name
+end
+function DeclFuncInfo:get_argList()
+   return self.argList
+end
+function DeclFuncInfo:get_staticFlag()
+   return self.staticFlag
+end
+function DeclFuncInfo:get_accessMode()
+   return self.accessMode
+end
+function DeclFuncInfo:get_body()
+   return self.body
+end
+function DeclFuncInfo:get_retTypeList()
+   return self.retTypeList
+end
+function DeclFuncInfo:get_retTypeInfoList()
+   return self.retTypeInfoList
 end
 
 function TransUnit:analyzeDeclFunc( accessMode, staticFlag, classNameToken, firstToken, name )
@@ -1040,9 +1276,12 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, classNameToken, firs
       token = self:getToken(  )
     until token.txt ~= ","
   end
-  local typeInfo = TypeInfo.createFunc( false, false, staticFlag, accessMode, name and name.txt or "", nil, retTypeInfoList )
+  local typeInfo = TypeInfo.createFunc( self:getCurrentNamespaceTypeInfo(  ), false, false, staticFlag, accessMode, name and name.txt or "", nil, retTypeInfoList )
   if name then
     scope:get_parent(  ):add( name.txt, typeInfo )
+  end
+  if not needPopFlag then
+    self:pushNamespace( name and name.txt or "", typeInfo, scope )
   end
   local node = nil
   local info = nil
@@ -1051,8 +1290,11 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, classNameToken, firs
   else 
     self:pushback(  )
     local body = self:analyzeBlock( "func", scope )
-    info = {["name"] = name, ["argList"] = argList, ["staticFlag"] = staticFlag, ["body"] = body, ["accessMode"] = accessMode, ["className"] = classNameToken, ["retTypeList"] = retTypeList, ["retTypeInfoList"] = retTypeInfoList}
+    info = DeclFuncInfo.new(classNameToken, name, argList, staticFlag, accessMode, body, retTypeList, retTypeInfoList)
     node = self:createNode( kind, firstToken.pos, {typeInfo}, info )
+  end
+  if not needPopFlag then
+    self:popNamespace(  )
   end
   self:popScope(  )
   if needPopFlag then
@@ -1063,9 +1305,15 @@ function TransUnit:analyzeDeclFunc( accessMode, staticFlag, classNameToken, firs
 end
 
 function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
+  local unwrapFlag = false
+  local token = self:getToken(  )
+  if token.txt == "!" then
+    unwrapFlag = true
+  else 
+    self:pushback(  )
+  end
   local typeInfoList = {}
   local varList = {}
-  local token = nil
   repeat 
     local varName = self:getSymbolToken(  )
     token = self:getToken(  )
@@ -1094,8 +1342,17 @@ function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
       end
     end
   end
+  local unwrapBlock = nil
+  if unwrapFlag then
+    unwrapBlock = self:analyzeBlock( "let!" )
+    for index, typeInfo in pairs( typeInfoList ) do
+      if typeInfo:get_nilable(  ) then
+        typeInfoList[index] = typeInfo:get_orgTypeInfo(  )
+      end
+    end
+  end
   self:checkNextToken( ";" )
-  local declVarInfo = {["accessMode"] = accessMode, ["varList"] = varList, ["expList"] = expList, ["typeInfoList"] = typeInfoList}
+  local declVarInfo = {["accessMode"] = accessMode, ["varList"] = varList, ["expList"] = expList, ["typeInfoList"] = typeInfoList, ["unwrap"] = unwrapBlock}
   local node = self:createNode( nodeKindDeclVar, firstToken.pos, {typeInfoNone}, declVarInfo )
   for index, typeInfo in pairs( typeInfoList ) do
     self.scope:add( varList[index].name.txt, typeInfo )
@@ -1136,10 +1393,14 @@ function TransUnit:analyzeListConst( token )
     end
   end
   local kind = nodeKindLiteralArray
+  local typeInfo = typeInfoNone
   if token.txt == '[' then
     kind = nodeKindLiteralList
+    typeInfo = {TypeInfo.createList( {itemTypeInfo} )}
+  else 
+    typeInfo = {TypeInfo.createArray( {itemTypeInfo} )}
   end
-  return self:createNode( kind, token.pos, {TypeInfo.createList( {itemTypeInfo} )}, expList )
+  return self:createNode( kind, token.pos, typeInfo, expList )
 end
 
 function TransUnit:analyzeMapConst( token )
@@ -1237,7 +1498,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
     end
     if prefixExp.expType:get_kind(  ) == TypeInfoKindClass then
       local classScope = self.typeInfo2Scope[prefixExp.expType]
-      local className = prefixExp.expType:get_txt(  )
+      local className = prefixExp.expType:getTxt(  )
       if not classScope then
         self:error( "not found field: " .. className )
       end
@@ -1254,8 +1515,8 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
   elseif mode == "symbol" then
     local typeInfo = self.scope:getTypeInfo( token.txt )
     if not typeInfo and token.txt == "self" then
-      local classInfo = self.classList[#self.classList]
-      typeInfo = classInfo.typeInfo
+      local namespaceInfo = self.classList[#self.classList]
+      typeInfo = namespaceInfo.typeInfo
     end
     if not typeInfo then
       self:error( "not found type -- " .. token.txt )
@@ -1289,7 +1550,35 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
         end
         local exp2 = self:analyzeExp( false, opLevel )
         local info = {["op"] = nextToken, ["exp1"] = exp, ["exp2"] = exp2}
-        exp = self:createNode( nodeKindExpOp2, firstToken.pos, {typeInfoNone}, info )
+        local opTxt = nextToken.txt
+        local expType = typeInfoNone
+        do
+          local _switchExp = opTxt
+          if _switchExp == "or" or _switchExp == "and" then
+            if exp.expType:equals( exp2.expType ) then
+              expType = exp.expType
+            else 
+              expType = typeInfoStem
+            end
+          elseif _switchExp == "<" or _switchExp == ">" or _switchExp == "<=" or _switchExp == ">=" or _switchExp == "~=" or _switchExp == "==" or _switchExp == "not" then
+            expType = typeInfoBool
+          elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "<<" or _switchExp == ">>" or _switchExp == "#" then
+            expType = typeInfoInt
+          elseif _switchExp == ".." then
+            expType = typeInfoString
+          elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "//" or _switchExp == "%" then
+            if exp.expType == typeInfoReal or exp2.expType == typeInfoReal then
+              expType = typeInfoReal
+            else 
+              expType = typeInfoInt
+            end
+          elseif _switchExp == "=" then
+          else 
+            self:error( "unknown op " .. opTxt )
+          end
+        end
+        
+        exp = self:createNode( nodeKindExpOp2, firstToken.pos, {expType}, info )
       else 
         self:error( "illegal op" )
       end
@@ -1323,10 +1612,9 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
     end
   end
   if token.txt == "new" then
-    local nextToken = self:getToken(  )
-    exp = self:analyzeExpSymbol( firstToken, nextToken, "symbol", nextToken, true )
+    exp = self:analyzeRefType(  )
     self:checkNextToken( "(" )
-    nextToken = self:getToken(  )
+    local nextToken = self:getToken(  )
     local argList = nil
     if nextToken.txt ~= ")" then
       self:pushback(  )
@@ -1340,6 +1628,9 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
     exp = self:analyzeExp( true, op1levelMap[token.txt] )
     local typeInfo = typeInfoNone
     if token.txt == "-" then
+      if exp.expType ~= typeInfoInt and exp.expType ~= typeInfoReal then
+        self:addErrMess( token.pos, string.format( 'unmatch type for "-" -- %s', exp.expType:getTxt(  )) )
+      end
       typeInfo = exp.expType
     elseif token.txt == "#" then
       typeInfo = typeInfoInt
@@ -1375,7 +1666,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
       self:checkToken( nextToken, ")" )
       nextToken = self:getToken(  )
     end
-    exp = self:createNode( nodeKindLiteralString, firstToken.os, {typeInfoString}, {["token"] = token, ["argList"] = formatArgList} )
+    exp = self:createNode( nodeKindLiteralString, firstToken.pos, {typeInfoString}, {["token"] = token, ["argList"] = formatArgList} )
     token = nextToken
     if token.txt == "[" then
       exp = self:analyzeExpRefItem( token, exp )
@@ -1403,6 +1694,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
 end
 
 function TransUnit:createAST( parser )
+  self:pushNamespace( "", typeInfoRoot, self.scope )
   self:registBuiltInScope(  )
   local rootInfo = {}
   rootInfo.childlen = {}
@@ -1412,8 +1704,9 @@ function TransUnit:createAST( parser )
   self:analyzeStatement( rootInfo.childlen )
   local token = self:getTokenNoErr(  )
   if token then
-    error( string.format( "unknown:%d:%d:(%s) %s", token.pos.lineNo, token.pos.column, Parser.getKindTxt( token.kind ), token.txt ) )
+    error( string.format( "unknown:%d:%d:(%s) %s", token.pos.lineNo, token.pos.column, Parser.getKindTxt( token.kind ), token.txt) )
   end
+  self:popNamespace(  )
   return ast
 end
 
@@ -1483,237 +1776,327 @@ end
 ----- meta -----
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
-local _classInfoClassInfo = {}
-_className2InfoMap.ClassInfo = _classInfoClassInfo
+local _classInfoDeclFuncInfo = {}
+_className2InfoMap.DeclFuncInfo = _classInfoDeclFuncInfo
+_classInfoDeclFuncInfo.get_accessMode = {
+  name='get_accessMode', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 868 }
+_classInfoDeclFuncInfo.get_argList = {
+  name='get_argList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 864 }
+_classInfoDeclFuncInfo.get_body = {
+  name='get_body', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 870 }
+_classInfoDeclFuncInfo.get_className = {
+  name='get_className', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 860 }
+_classInfoDeclFuncInfo.get_name = {
+  name='get_name', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 862 }
+_classInfoDeclFuncInfo.get_retTypeInfoList = {
+  name='get_retTypeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 874 }
+_classInfoDeclFuncInfo.get_retTypeList = {
+  name='get_retTypeList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 872 }
+_classInfoDeclFuncInfo.get_staticFlag = {
+  name='get_staticFlag', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 866 }
+local _classInfoNamespaceInfo = {}
+_className2InfoMap.NamespaceInfo = _classInfoNamespaceInfo
+_classInfoNamespaceInfo.name = {
+  name='name', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
+_classInfoNamespaceInfo.scope = {
+  name='scope', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 384 }
+_classInfoNamespaceInfo.typeInfo = {
+  name='typeInfo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 308 }
 local _classInfoNode = {}
 _className2InfoMap.Node = _classInfoNode
 _classInfoNode.filter = {
-  name='filter', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 12 }
+  name='filter', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 26 }
 _classInfoNode.get_expType = {
-  name='get_expType', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 197 }
+  name='get_expType', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 420 }
 _classInfoNode.get_info = {
-  name='get_info', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 198 }
+  name='get_info', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 422 }
 _classInfoNode.get_kind = {
-  name='get_kind', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 196 }
+  name='get_kind', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 418 }
 _classInfoNode.filter = {
-  name='filter', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
+  name='filter', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 26 }
 local _classInfoNodePos = {}
 _className2InfoMap.NodePos = _classInfoNodePos
 local _classInfoScope = {}
 _className2InfoMap.Scope = _classInfoScope
 _classInfoScope.add = {
-  name='add', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 185 }
+  name='add', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 396 }
 _classInfoScope.addClass = {
-  name='addClass', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 186 }
+  name='addClass', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 398 }
 _classInfoScope.getClassScope = {
-  name='getClassScope', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 187 }
+  name='getClassScope', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 400 }
 _classInfoScope.getTypeInfo = {
-  name='getTypeInfo', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 189 }
+  name='getTypeInfo', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 404 }
 _classInfoScope.getTypeInfoChild = {
-  name='getTypeInfoChild', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 188 }
+  name='getTypeInfoChild', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 402 }
 _classInfoScope.get_className2ScopeMap = {
-  name='get_className2ScopeMap', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 192 }
+  name='get_className2ScopeMap', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 410 }
 _classInfoScope.get_parent = {
-  name='get_parent', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 190 }
+  name='get_parent', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 406 }
 _classInfoScope.get_symbol2TypeInfoMap = {
-  name='get_symbol2TypeInfoMap', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 191 }
+  name='get_symbol2TypeInfoMap', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 408 }
 local _classInfoTransUnit = {}
 _className2InfoMap.TransUnit = _classInfoTransUnit
 _classInfoTransUnit.createAST = {
-  name='createAST', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 459 }
+  name='createAST', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 994 }
+_classInfoTransUnit.get_errMessList = {
+  name='get_errMessList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 488 }
 local _classInfoTypeInfo = {}
 _className2InfoMap.TypeInfo = _classInfoTypeInfo
 _classInfoTypeInfo.create = {
-  name='create', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 159 }
+  name='create', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 338 }
 _classInfoTypeInfo.createArray = {
-  name='createArray', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 162 }
+  name='createArray', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 344 }
 _classInfoTypeInfo.createBuiltin = {
-  name='createBuiltin', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 160 }
+  name='createBuiltin', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 340 }
 _classInfoTypeInfo.createClass = {
-  name='createClass', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 165 }
+  name='createClass', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 350 }
 _classInfoTypeInfo.createFunc = {
-  name='createFunc', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 168 }
+  name='createFunc', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 356 }
 _classInfoTypeInfo.createList = {
-  name='createList', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 161 }
+  name='createList', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 342 }
 _classInfoTypeInfo.createMap = {
-  name='createMap', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 163 }
+  name='createMap', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 346 }
+_classInfoTypeInfo.equals = {
+  name='equals', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 332 }
 _classInfoTypeInfo.getTxt = {
-  name='getTxt', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 156 }
+  name='getTxt', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 330 }
 _classInfoTypeInfo.get_accessMode = {
-  name='get_accessMode', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 177 }
+  name='get_accessMode', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 374 }
 _classInfoTypeInfo.get_autoFlag = {
-  name='get_autoFlag', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 178 }
+  name='get_autoFlag', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 376 }
 _classInfoTypeInfo.get_itemTypeInfoList = {
-  name='get_itemTypeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 171 }
+  name='get_itemTypeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 362 }
 _classInfoTypeInfo.get_kind = {
-  name='get_kind', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 175 }
+  name='get_kind', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 370 }
+_classInfoTypeInfo.get_nilable = {
+  name='get_nilable', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 380 }
+_classInfoTypeInfo.get_nilableTypeInfo = {
+  name='get_nilableTypeInfo', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 382 }
+_classInfoTypeInfo.get_orgTypeInfo = {
+  name='get_orgTypeInfo', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 378 }
+_classInfoTypeInfo.get_parentInfo = {
+  name='get_parentInfo', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 366 }
 _classInfoTypeInfo.get_retTypeInfoList = {
-  name='get_retTypeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 172 }
+  name='get_retTypeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 364 }
 _classInfoTypeInfo.get_staticFlag = {
-  name='get_staticFlag', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 176 }
-_classInfoTypeInfo.get_txt = {
-  name='get_txt', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 174 }
+  name='get_staticFlag', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 372 }
 _classInfoTypeInfo.get_typeId = {
-  name='get_typeId', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 173 }
+  name='get_typeId', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 368 }
 _classInfoTypeInfo.serialize = {
-  name='serialize', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 153 }
+  name='serialize', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 324 }
 local _classInfo_ModuleInfo = {}
 _className2InfoMap._ModuleInfo = _classInfo_ModuleInfo
 _classInfo_ModuleInfo._className2InfoMap = {
-  name='_className2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 339 }
+  name='_className2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 728 }
 _classInfo_ModuleInfo._typeInfoList = {
-  name='_typeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 340 }
+  name='_typeInfoList', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 730 }
 _classInfo_ModuleInfo._varName2InfoMap = {
-  name='_varName2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 341 }
+  name='_varName2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 732 }
 _classInfo_ModuleInfo._funcName2InfoMap = {
-  name='_funcName2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 342 }
+  name='_funcName2InfoMap', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 734 }
 local _classInfo_TypeInfo = {}
 _className2InfoMap._TypeInfo = _classInfo_TypeInfo
 _classInfo_TypeInfo.itemTypeId = {
-  name='itemTypeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 335 }
+  name='itemTypeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 720 }
 _classInfo_TypeInfo.retTypeId = {
-  name='retTypeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 336 }
+  name='retTypeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 722 }
+_classInfo_TypeInfo.parentInfo = {
+  name='parentInfo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 _classInfo_TypeInfo.typeId = {
-  name='typeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 5 }
+  name='typeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 _classInfo_TypeInfo.txt = {
-  name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 22 }
+  name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
 _classInfo_TypeInfo.kind = {
-  name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 5 }
+  name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 _classInfo_TypeInfo.staticFlag = {
-  name='staticFlag', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 4 }
+  name='staticFlag', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 10 }
+_classInfo_TypeInfo.nilable = {
+  name='nilable', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 10 }
+_classInfo_TypeInfo.orgTypeId = {
+  name='orgTypeId', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.TypeInfoKindArray = {
-  name='TypeInfoKindArray', accessMode = 'pub', typeId = 5 }
+  name='TypeInfoKindArray', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.TypeInfoKindClass = {
-  name='TypeInfoKindClass', accessMode = 'pub', typeId = 5 }
+  name='TypeInfoKindClass', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.TypeInfoKindFunc = {
-  name='TypeInfoKindFunc', accessMode = 'pub', typeId = 5 }
+  name='TypeInfoKindFunc', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.TypeInfoKindList = {
-  name='TypeInfoKindList', accessMode = 'pub', typeId = 5 }
+  name='TypeInfoKindList', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.TypeInfoKindMap = {
-  name='TypeInfoKindMap', accessMode = 'pub', typeId = 5 }
+  name='TypeInfoKindMap', accessMode = 'pub', typeId = 12 }
+_varName2InfoMap.TypeInfoKindNilable = {
+  name='TypeInfoKindNilable', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.TypeInfoKindPrim = {
-  name='TypeInfoKindPrim', accessMode = 'pub', typeId = 5 }
+  name='TypeInfoKindPrim', accessMode = 'pub', typeId = 12 }
+_varName2InfoMap.TypeInfoKindRoot = {
+  name='TypeInfoKindRoot', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.nodeKind = {
-  name='nodeKind', accessMode = 'pub', typeId = 243 }
+  name='nodeKind', accessMode = 'pub', typeId = 532 }
 _varName2InfoMap.typeInfo = {
-  name='typeInfo', accessMode = 'pub', typeId = 143 }
+  name='typeInfo', accessMode = 'pub', typeId = 300 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
 _funcName2InfoMap.getNodeKindName = {
-  accessMode = 'pub', typeId = 247 }
+  accessMode = 'pub', typeId = 540 }
 _funcName2InfoMap.nodeFilter = {
-  accessMode = 'pub', typeId = 248 }
+  accessMode = 'pub', typeId = 542 }
 moduleObj._typeInfoList = {
-{ typeId = 1, txt = '', staticFlag = false, accessMode = 'pub',
-kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 2, txt = 'stem', staticFlag = false, accessMode = 'pub',
-kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 4, txt = 'bool', staticFlag = false, accessMode = 'pub',
-kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 5, txt = 'int', staticFlag = false, accessMode = 'pub',
-kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 9, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 12, txt = 'form', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 22, txt = 'str', staticFlag = false, accessMode = 'pub',
-kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 143, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {1, 1}, retTypeId = {}, },
-  { typeId = 145, txt = 'TypeInfo', staticFlag = false, accessMode = 'pub',
-kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 146, txt = 'nil', staticFlag = false, accessMode = 'pub',
-kind = 3, itemTypeId = {145}, retTypeId = {}, },
-  { typeId = 147, txt = 'nil', staticFlag = false, accessMode = 'pub',
-kind = 3, itemTypeId = {145}, retTypeId = {}, },
-  { typeId = 153, txt = 'serialize', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 156, txt = 'getTxt', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {22}, },
-  { typeId = 159, txt = 'create', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 160, txt = 'createBuiltin', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 161, txt = 'createList', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 162, txt = 'createArray', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 163, txt = 'createMap', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 165, txt = 'createClass', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 168, txt = 'createFunc', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 171, txt = 'get_itemTypeInfoList', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {146}, },
-  { typeId = 172, txt = 'get_retTypeInfoList', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {147}, },
-  { typeId = 173, txt = 'get_typeId', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {5}, },
-  { typeId = 174, txt = 'get_txt', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {22}, },
-  { typeId = 175, txt = 'get_kind', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {5}, },
-  { typeId = 176, txt = 'get_staticFlag', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {4}, },
-  { typeId = 177, txt = 'get_accessMode', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {22}, },
-  { typeId = 178, txt = 'get_autoFlag', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {4}, },
-  { typeId = 179, txt = 'Scope', staticFlag = false, accessMode = 'pub',
-kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 180, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 145}, retTypeId = {}, },
-  { typeId = 181, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 179}, retTypeId = {}, },
-  { typeId = 185, txt = 'add', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 186, txt = 'addClass', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 187, txt = 'getClassScope', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {179}, },
-  { typeId = 188, txt = 'getTypeInfoChild', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 189, txt = 'getTypeInfo', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 190, txt = 'get_parent', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {179}, },
-  { typeId = 191, txt = 'get_symbol2TypeInfoMap', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {180}, },
-  { typeId = 192, txt = 'get_className2ScopeMap', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {181}, },
-  { typeId = 196, txt = 'get_kind', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {5}, },
-  { typeId = 197, txt = 'get_expType', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {145}, },
-  { typeId = 198, txt = 'get_info', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {2}, },
-  { typeId = 243, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 5}, retTypeId = {}, },
-  { typeId = 247, txt = 'getNodeKindName', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {22}, },
-  { typeId = 248, txt = 'nodeFilter', staticFlag = true, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {2}, },
-  { typeId = 334, txt = '_TypeInfo', staticFlag = false, accessMode = 'pub',
-kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { typeId = 335, txt = 'nil', staticFlag = false, accessMode = 'pub',
-kind = 2, itemTypeId = {5}, retTypeId = {}, },
-  { typeId = 336, txt = 'nil', staticFlag = false, accessMode = 'pub',
-kind = 2, itemTypeId = {5}, retTypeId = {}, },
-  { typeId = 338, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 2}, retTypeId = {}, },
-  { typeId = 339, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 338}, retTypeId = {}, },
-  { typeId = 340, txt = 'nil', staticFlag = false, accessMode = 'pub',
-kind = 2, itemTypeId = {334}, retTypeId = {}, },
-  { typeId = 341, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 2}, retTypeId = {}, },
-  { typeId = 342, txt = 'Map', staticFlag = false, accessMode = 'pub',
-kind = 4, itemTypeId = {22, 2}, retTypeId = {}, },
-  { typeId = 459, txt = 'createAST', staticFlag = false, accessMode = 'pub',
-kind = 6, itemTypeId = {}, retTypeId = {9}, },
+{ parentId = 1, typeId = 1, txt = ':', staticFlag = false,
+accessMode = 'pub', kind = 0, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 4, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 6, txt = 'stem', staticFlag = false,
+accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 10, txt = 'bool', staticFlag = false,
+accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 12, txt = 'int', staticFlag = false,
+accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 18, txt = 'str', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 20, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 26, txt = 'form', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 82, txt = 'Parser', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 82, typeId = 294, txt = 'Token', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 300, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {4, 4}, retTypeId = {}, },
+  { parentId = 1, typeId = 308, txt = 'TypeInfo', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 310, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 3, itemTypeId = {308}, retTypeId = {}, },
+  { parentId = 1, typeId = 312, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 3, itemTypeId = {308}, retTypeId = {}, },
+  { parentId = 308, typeId = 324, txt = 'serialize', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 308, typeId = 330, txt = 'getTxt', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
+  { parentId = 308, typeId = 332, txt = 'equals', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
+  { parentId = 308, typeId = 338, txt = 'create', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 340, txt = 'createBuiltin', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 342, txt = 'createList', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 344, txt = 'createArray', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 346, txt = 'createMap', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 350, txt = 'createClass', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 356, txt = 'createFunc', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 362, txt = 'get_itemTypeInfoList', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {310}, },
+  { parentId = 308, typeId = 364, txt = 'get_retTypeInfoList', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {312}, },
+  { parentId = 308, typeId = 366, txt = 'get_parentInfo', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 368, txt = 'get_typeId', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, },
+  { parentId = 308, typeId = 370, txt = 'get_kind', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, },
+  { parentId = 308, typeId = 372, txt = 'get_staticFlag', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
+  { parentId = 308, typeId = 374, txt = 'get_accessMode', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
+  { parentId = 308, typeId = 376, txt = 'get_autoFlag', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
+  { parentId = 308, typeId = 378, txt = 'get_orgTypeInfo', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 308, typeId = 380, txt = 'get_nilable', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
+  { parentId = 308, typeId = 382, txt = 'get_nilableTypeInfo', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 1, typeId = 384, txt = 'Scope', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 386, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 308}, retTypeId = {}, },
+  { parentId = 1, typeId = 388, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 384}, retTypeId = {}, },
+  { parentId = 384, typeId = 396, txt = 'add', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 384, typeId = 398, txt = 'addClass', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 384, typeId = 400, txt = 'getClassScope', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {384}, },
+  { parentId = 384, typeId = 402, txt = 'getTypeInfoChild', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 384, typeId = 404, txt = 'getTypeInfo', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 384, typeId = 406, txt = 'get_parent', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {384}, },
+  { parentId = 384, typeId = 408, txt = 'get_symbol2TypeInfoMap', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {386}, },
+  { parentId = 384, typeId = 410, txt = 'get_className2ScopeMap', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {388}, },
+  { parentId = 1, typeId = 414, txt = 'Node', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 414, typeId = 418, txt = 'get_kind', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, },
+  { parentId = 414, typeId = 420, txt = 'get_expType', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {308}, },
+  { parentId = 414, typeId = 422, txt = 'get_info', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, },
+  { parentId = 1, typeId = 426, txt = 'TransUnit', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 438, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 2, itemTypeId = {18}, retTypeId = {}, },
+  { parentId = 426, typeId = 488, txt = 'get_errMessList', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {438}, },
+  { parentId = 1, typeId = 532, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 12}, retTypeId = {}, },
+  { parentId = 1, typeId = 540, txt = 'getNodeKindName', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
+  { parentId = 1, typeId = 542, txt = 'nodeFilter', staticFlag = true,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, },
+  { parentId = 1, typeId = 718, txt = '_TypeInfo', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 720, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 2, itemTypeId = {12}, retTypeId = {}, },
+  { parentId = 1, typeId = 722, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 2, itemTypeId = {12}, retTypeId = {}, },
+  { parentId = 1, typeId = 726, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 6}, retTypeId = {}, },
+  { parentId = 1, typeId = 728, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 726}, retTypeId = {}, },
+  { parentId = 1, typeId = 730, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 2, itemTypeId = {718}, retTypeId = {}, },
+  { parentId = 1, typeId = 732, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 6}, retTypeId = {}, },
+  { parentId = 1, typeId = 734, txt = 'Map', staticFlag = false,
+accessMode = 'pub', kind = 4, itemTypeId = {18, 6}, retTypeId = {}, },
+  { parentId = 1, typeId = 852, txt = 'DeclFuncInfo', staticFlag = false,
+accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
+  { parentId = 1, typeId = 854, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 2, itemTypeId = {414}, retTypeId = {}, },
+  { parentId = 1, typeId = 856, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 2, itemTypeId = {308}, retTypeId = {}, },
+  { parentId = 1, typeId = 858, txt = '', staticFlag = false,
+accessMode = 'pub', kind = 2, itemTypeId = {308}, retTypeId = {}, },
+  { parentId = 852, typeId = 860, txt = 'get_className', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {294}, },
+  { parentId = 852, typeId = 862, txt = 'get_name', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {294}, },
+  { parentId = 852, typeId = 864, txt = 'get_argList', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {854}, },
+  { parentId = 852, typeId = 866, txt = 'get_staticFlag', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
+  { parentId = 852, typeId = 868, txt = 'get_accessMode', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
+  { parentId = 852, typeId = 870, txt = 'get_body', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {414}, },
+  { parentId = 852, typeId = 872, txt = 'get_retTypeList', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {856}, },
+  { parentId = 852, typeId = 874, txt = 'get_retTypeInfoList', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {858}, },
+  { parentId = 426, typeId = 994, txt = 'createAST', staticFlag = false,
+accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {20}, },
   }
 ----- meta -----
 return moduleObj

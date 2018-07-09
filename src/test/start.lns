@@ -7,11 +7,15 @@ print( classA.sub() );
 
 let classB = new simple.ClassB();
 print( classB.func() );
+''let hoge = classB.func2();
+''print( hoge.func() );
 
 print( "12%d" ( 10 ) );
 
-let val = 1;
-print( "%g" (val@real));
+{
+    let val = 1;
+    print( "%g" (val@real));
+}
 
 print( "op", {},  1 and "2" and 3.0 and {} );
 print( "op", 3.0, 1 and "2" and 3.0 or  {} );
@@ -35,3 +39,12 @@ for index = 1, 4 {
         }   
     }   
 }
+
+fn func( val: int! ): int {
+    let! val2 = val { return 0; };
+    
+    return val2 + 2;
+}
+
+print( 3, func( 1 ) );
+print( 0, func( nil ) );

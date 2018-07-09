@@ -7,18 +7,19 @@ moduleObj.filterObj = filterObj
 function filterObj.new(  )
   local obj = {}
   setmetatable( obj, { __index = filterObj } )
-  return obj.__init and obj:__init(  ) or nil;
+  if obj.__init then
+    obj:__init(  )
+  end
+  return obj
 end
 function filterObj:__init(  )
             
-  return self
 end
-            
 
 local function dump( prefix, depth, node, txt )
   local typeStr = ""
   if node.expType and node.expType ~= TransUnit.typeInfo.None then
-    typeStr = string.format( "(%s)", node.expType:getTxt(  ))
+    typeStr = string.format( "(%d:%s:%s)", node.expType:get_typeId(  ), node.expType:getTxt(  ), node.expType:get_kind(  ))
   end
   print( string.format( "%s: %s %s %s", prefix, TransUnit.getNodeKindName( node.kind ), txt, typeStr) )
 end
@@ -74,7 +75,7 @@ filterObj[TransUnit.nodeKind.DeclVar] = function ( self, node, prefix, depth )
     end
     varName = string.format( "%s %s", varName, var["name"].txt)
   end
-  dump( prefix, depth, node, varName )
+  dump( prefix, depth, node, node.info.unwrap and "! " or " " .. varName )
   for index, var in pairs( varList ) do
     if var["refType"] then
       TransUnit.nodeFilter( var["refType"], self, prefix .. "  ", depth + 1 )
@@ -82,6 +83,9 @@ filterObj[TransUnit.nodeKind.DeclVar] = function ( self, node, prefix, depth )
   end
   if node.info.expList then
     TransUnit.nodeFilter( node.info.expList, self, prefix .. "  ", depth + 1 )
+  end
+  if node.info.unwrap then
+    TransUnit.nodeFilter( node.info.unwrap, self, prefix .. "  ", depth + 1 )
   end
 end
 

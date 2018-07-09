@@ -38,17 +38,22 @@ function _luneScript.loadMeta( module )
    return _luneScript.loadedMetaMap[ module ]
 end
 
-
+local function createPaser( path )
+   local parser = Parser.create( path )
+   if not parser then
+      error( "failed to open " .. path );
+   end
+   return parser
+end
 
 local function createAst( path )
-   local parser = Parser.new( path )
    local transUnit = TransUnit.new()
-   return transUnit:createAST( parser )
+   return transUnit:createAST( createPaser( path ) )
 end
 
 function _luneScript.loadFile( path )
    local transUnit = TransUnit.new()
-   local ast = transUnit:createAST( Parser.new( path ) )
+   local ast = transUnit:createAST( createPaser( path ) )
    
    local func = function( self, txt )
       self.val = self.val .. txt
@@ -70,7 +75,7 @@ end
 
 local mode = arg[ 2 ]
 if mode == "token" then
-   local parser = Parser.new( scriptPath )
+   local parser = createPaser( scriptPath )
    while true do
       local token = parser:getToken()
       if not token then

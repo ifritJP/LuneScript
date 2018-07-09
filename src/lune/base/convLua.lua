@@ -2,12 +2,15 @@
 local moduleObj = {}
 local TransUnit = require( 'lune.base.TransUnit' )
 
+local Parser = require( 'lune.base.Parser' )
+
 local filterObj = {}
 moduleObj.filterObj = filterObj
 function filterObj.new( streamName, stream, exeFlag )
   local obj = {}
   setmetatable( obj, { __index = filterObj } )
-  return obj.__init and obj:__init( streamName, stream, exeFlag ) or nil;
+  if obj.__init then obj:__init( streamName, stream, exeFlag ); end
+return obj
 end
 function filterObj:__init(streamName, stream, exeFlag) 
   self.streamName = streamName
@@ -21,7 +24,6 @@ function filterObj:__init(streamName, stream, exeFlag)
   self.pubVarName2InfoMap = {}
   self.pubFuncName2InfoMap = {}
   self.needIndent = false
-  return self
 end
 
 local stepIndent = 2
@@ -82,15 +84,25 @@ filterObj[TransUnit.nodeKind.Root] = function ( self, node, parent, baseIndent )
   local typeId2TypeInfo = {}
   local typeId2VarInfo = {}
   local function pickupTypeId( typeInfo )
-    if not typeId2TypeInfo[typeInfo:get_typeId(  )] then
-      typeId2TypeInfo[typeInfo:get_typeId(  )] = typeInfo
-      local typeInfoList = typeInfo:get_itemTypeInfoList(  )
-      for __index, itemTypeInfo in pairs( typeInfoList ) do
-        pickupTypeId( itemTypeInfo )
-      end
-      typeInfoList = typeInfo:get_retTypeInfoList(  )
-      for __index, itemTypeInfo in pairs( typeInfoList ) do
-        pickupTypeId( itemTypeInfo )
+    if typeInfo and not typeId2TypeInfo[typeInfo:get_typeId(  )] then
+      if typeInfo:get_nilable(  ) then
+        pickupTypeId( typeInfo:get_orgTypeInfo(  ) )
+        typeId2TypeInfo[typeInfo:get_typeId(  )] = typeInfo
+      else 
+        typeId2TypeInfo[typeInfo:get_typeId(  )] = typeInfo
+        pickupTypeId( typeInfo:get_parentInfo(  ) )
+        local typeInfoList = typeInfo:get_itemTypeInfoList(  )
+        if typeInfoList then
+          for __index, itemTypeInfo in pairs( typeInfoList ) do
+            pickupTypeId( itemTypeInfo )
+          end
+        end
+        typeInfoList = typeInfo:get_retTypeInfoList(  )
+        if typeInfoList then
+          for __index, itemTypeInfo in pairs( typeInfoList ) do
+            pickupTypeId( itemTypeInfo )
+          end
+        end
       end
     end
   end
@@ -136,10 +148,10 @@ filterObj[TransUnit.nodeKind.Root] = function ( self, node, parent, baseIndent )
           local memberInfo = memberNode:get_info(  )
           if memberInfo.accessMode == "pub" then
             local memberName = memberInfo.name.txt
-            local memberTypeInfo = memberName.expType
+            local memberTypeInfo = memberNode:get_expType(  )
             self:writeln( string.format( "_classInfo%s.%s = {", className, memberName), baseIndent )
-            self:writeln( string.format( "  name='%s', staticFlag = %s, ", memberName, memberInfo.staticFlag) .. string.format( "accessMode = '%s', methodFlag = false, typeId = %d }", memberInfo.accessMode, memberNode:get_expType(  ).typeId), baseIndent )
-            pickupTypeId( memberInfo.refType )
+            self:writeln( string.format( "  name='%s', staticFlag = %s, ", memberName, memberInfo.staticFlag) .. string.format( "accessMode = '%s', methodFlag = false, typeId = %d }", memberInfo.accessMode, memberTypeInfo:get_typeId(  )), baseIndent )
+            pickupTypeId( memberTypeInfo )
           end
         end
       end
@@ -286,7 +298,10 @@ filterObj[TransUnit.nodeKind.DeclClass] = function ( self, node, parent, baseInd
 function %s.new( %s )
   local obj = {}
   setmetatable( obj, { __index = %s } )
-  return obj.__init and obj:__init( %s ) or nil;
+  if obj.__init then
+    obj:__init( %s )
+  end
+  return obj
 end
 function %s:__init( %s )
             ]==], className, argTxt, className, argTxt, className, argTxt), baseIndent )
@@ -294,17 +309,15 @@ function %s:__init( %s )
       local memberName = member["info"].name.txt
       self:writeln( string.format( "self.%s = %s", memberName, memberName ), baseIndent + stepIndent )
     end
-    self:writeln( [==[
-  return self
-end
-            ]==], baseIndent )
+    self:writeln( 'end', baseIndent )
   end
   local scope = node.info.scope
   for __index, memberNode in pairs( node.info.memberList ) do
     local memberName = memberNode.info.name.txt
     local getterName = "get_" .. memberName
     local typeInfo = scope:getTypeInfo( getterName )
-    if memberNode.info.getterMode ~= "none" and (not typeInfo or typeInfo.autoFlag ) then
+    local autoFlag = not typeInfo or typeInfo:get_autoFlag(  )
+    if memberNode.info.getterMode ~= "none" and autoFlag then
       self:writeln( string.format( [==[
 function %s:%s()
    return self.%s
@@ -312,7 +325,7 @@ end]==], className, getterName, memberName), baseIndent )
     end
     local setterName = "set_" .. memberName
     typeInfo = scope:getTypeInfo( setterName )
-    if memberNode.info.setterMode ~= "none" and (not typeInfo or typeInfo.autoFlag ) then
+    if memberNode.info.setterMode ~= "none" and autoFlag then
       self:writeln( string.format( [==[
 function %s:%s()
    return self.%s
@@ -349,7 +362,8 @@ filterObj[TransUnit.nodeKind.DeclConstr] = function ( self, node, parent, baseIn
   self:writeln( " )", baseIndent + stepIndent )
   self:writeln( "local obj = {}", baseIndent + stepIndent )
   self:writeln( string.format( "setmetatable( obj, { __index = %s } )", className ), baseIndent + stepIndent )
-  self:writeln( string.format( "return obj.__init and obj:__init( %s ) or nil;", argTxt ), baseIndent )
+  self:writeln( string.format( "if obj.__init then obj:__init( %s ); end", argTxt ), baseIndent )
+  self:writeln( "return obj", baseIndent )
   self:writeln( "end", baseIndent )
   self:write( string.format( "function %s:__init(%s) ", className, argTxt ) )
   TransUnit.nodeFilter( node.info.body, self, node, baseIndent )
@@ -391,6 +405,19 @@ filterObj[TransUnit.nodeKind.DeclVar] = function ( self, node, parent, baseInden
     self:write( " = " )
     TransUnit.nodeFilter( node.info.expList, self, node, baseIndent )
   end
+  if node.info.unwrap then
+    self:writeln( "", baseIndent )
+    self:write( "if " )
+    for index, var in pairs( varList ) do
+      if index > 1 then
+        self:write( " or " )
+      end
+      self:write( " not " .. var["name"].txt )
+    end
+    self:write( " then" )
+    TransUnit.nodeFilter( node.info.unwrap, self, node, baseIndent )
+    self:writeln( "end", baseIndent )
+  end
   if node.info.accessMode == "pub" then
     self:writeln( "", baseIndent )
     local varList = node.info.varList
@@ -415,14 +442,15 @@ filterObj[TransUnit.nodeKind.ExpDDD] = function ( self, node, parent, baseIndent
 end
 
 filterObj[TransUnit.nodeKind.DeclFunc] = function ( self, node, parent, baseIndent )
-  local nameToken = node.info.name
+  local nodeInfo = node:get_info(  )
+  local nameToken = nodeInfo:get_name(  )
   local name = nameToken and nameToken.txt or ""
   local letTxt = ""
-  if node.info.accessMode ~= "global" and #name ~= 0 then
+  if nodeInfo:get_accessMode(  ) ~= "global" and #name ~= 0 then
     letTxt = "local "
   end
   self:write( string.format( "%sfunction %s( ", letTxt, name ) )
-  local argList = node.info.argList
+  local argList = nodeInfo:get_argList(  )
   for index, arg in pairs( argList ) do
     if index > 1 then
       self:write( ", " )
@@ -430,11 +458,12 @@ filterObj[TransUnit.nodeKind.DeclFunc] = function ( self, node, parent, baseInde
     TransUnit.nodeFilter( arg, self, node, baseIndent )
   end
   self:write( " )", baseIndent )
-  TransUnit.nodeFilter( node.info.body, self, node, baseIndent )
+  TransUnit.nodeFilter( nodeInfo:get_body(  ), self, node, baseIndent )
   self:writeln( "end", baseIndent )
-  if node.expType:get_accessMode(  ) == "pub" then
+  local expType = node:get_expType(  )
+  if expType:get_accessMode(  ) == "pub" then
     self:write( string.format( "moduleObj.%s = %s", name, name) )
-    self.pubFuncName2InfoMap[name] = {["funcFlag"] = true, ["accessMode"] = node.info.accessMode, ["typeInfo"] = node.expType}
+    self.pubFuncName2InfoMap[name] = {["funcFlag"] = true, ["accessMode"] = nodeInfo:get_accessMode(  ), ["typeInfo"] = node:get_expType(  )}
   end
 end
 

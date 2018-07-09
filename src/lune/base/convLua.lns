@@ -1,4 +1,5 @@
 import lune.base.TransUnit;
+import lune.base.Parser;
 
 pub class filterObj {
     pri let streamName: str;
@@ -28,7 +29,6 @@ pub class filterObj {
         self.pubVarName2InfoMap = {};
         self.pubFuncName2InfoMap = {};
         self.needIndent = false;
-        return self;
     }
 }
 
@@ -111,16 +111,27 @@ filterObj[ TransUnit.nodeKind.Root ] =
 
     '' 公開される型情報を typeId2TypeInfo にピックアップする
     fn pickupTypeId( typeInfo: TransUnit.TypeInfo ) {
-        if not typeId2TypeInfo[ typeInfo.get_typeId() ] {
-            typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
-            let typeInfoList: TransUnit.TypeInfo[] = typeInfo.get_itemTypeInfoList();
-            foreach itemTypeInfo in typeInfoList {
-                pickupTypeId( itemTypeInfo );
-            }
-            typeInfoList = typeInfo.get_retTypeInfoList();
-            foreach itemTypeInfo in typeInfoList {
-                pickupTypeId( itemTypeInfo );
-            }
+        if typeInfo and not typeId2TypeInfo[ typeInfo.get_typeId() ] {
+	    if typeInfo.get_nilable() {
+		pickupTypeId( typeInfo.get_orgTypeInfo() );
+		typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
+	    }
+	    else {
+		typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
+                pickupTypeId( typeInfo.get_parentInfo() );
+		let typeInfoList: TransUnit.TypeInfo[] = typeInfo.get_itemTypeInfoList();
+                if typeInfoList {
+		    foreach itemTypeInfo in typeInfoList {
+                        pickupTypeId( itemTypeInfo );
+		    }
+                }
+		typeInfoList = typeInfo.get_retTypeInfoList();
+                if typeInfoList {
+		    foreach itemTypeInfo in typeInfoList {
+                        pickupTypeId( itemTypeInfo );
+		    }
+                }
+	    }
         }
     }
     '' foreach scope in self.className2Scope {
@@ -164,16 +175,17 @@ filterObj[ TransUnit.nodeKind.Root ] =
             let memberInfo = memberNode.get_info();
             if memberInfo.accessMode == "pub" {
                 let memberName = memberInfo.name.txt;
-                let memberTypeInfo = memberName.expType;
+                let memberTypeInfo:TransUnit.TypeInfo = memberNode.get_expType();
                 self.writeln( "_classInfo%s.%s = {" ( className, memberName ),
                               baseIndent );
                 self.writeln(
                     "  name='%s', staticFlag = %s, " ( memberName,
                                                        memberInfo.staticFlag ) ..
                     "accessMode = '%s', methodFlag = false, typeId = %d }"
-                    ( memberInfo.accessMode, memberNode.get_expType().typeId ),
+                    ( memberInfo.accessMode,
+                      memberTypeInfo.get_typeId() ),
                     baseIndent );
-                pickupTypeId( memberInfo.refType );
+                pickupTypeId( memberTypeInfo );
             }
         }
     }
@@ -323,7 +335,10 @@ filterObj[ TransUnit.nodeKind.DeclClass ] =
 function %s.new( %s )
   local obj = {}
   setmetatable( obj, { __index = %s } )
-  return obj.__init and obj:__init( %s ) or nil;
+  if obj.__init then
+    obj:__init( %s )
+  end
+  return obj
 end
 function %s:__init( %s )
             ``` ( className, argTxt, className, argTxt, className, argTxt ),
@@ -333,10 +348,7 @@ function %s:__init( %s )
             self.writeln( string.format( "self.%s = %s", memberName, memberName ),
                           baseIndent + stepIndent);         
         }
-        self.writeln( ```
-  return self
-end
-            ```, baseIndent );
+        self.writeln( 'end', baseIndent );
     }
 
     '' accessor
@@ -344,8 +356,9 @@ end
     foreach memberNode in node.info.memberList@stem[] {
         let memberName = memberNode.info.name.txt;
         let getterName = "get_" .. memberName;
-        let typeInfo = scope.getTypeInfo( getterName );
-        if memberNode.info.getterMode ~= "none" and ( not typeInfo or typeInfo.autoFlag )
+        let typeInfo:TransUnit.TypeInfo = scope.getTypeInfo( getterName );
+        let autoFlag = not typeInfo or typeInfo.get_autoFlag();
+        if memberNode.info.getterMode ~= "none" and autoFlag
         {       
             self.writeln( ```
 function %s:%s()
@@ -354,7 +367,7 @@ end``` ( className, getterName, memberName ), baseIndent );
         }
         let setterName = "set_" .. memberName;
         typeInfo = scope.getTypeInfo( setterName );
-        if memberNode.info.setterMode ~= "none" and ( not typeInfo or typeInfo.autoFlag )
+        if memberNode.info.setterMode ~= "none" and autoFlag
         {       
             self.writeln( ```
 function %s:%s()
@@ -403,8 +416,9 @@ filterObj[ TransUnit.nodeKind.DeclConstr ] =
     self.writeln( "local obj = {}", baseIndent + stepIndent );
     self.writeln( string.format( "setmetatable( obj, { __index = %s } )", className ),
                   baseIndent + stepIndent );
-    self.writeln( string.format( "return obj.__init and obj:__init( %s ) or nil;",
+    self.writeln( string.format( "if obj.__init then obj:__init( %s ); end",
                                  argTxt ), baseIndent );
+    self.writeln( "return obj", baseIndent );
     self.writeln( "end", baseIndent );
 
 
@@ -468,7 +482,21 @@ filterObj[ TransUnit.nodeKind.DeclVar ] =
 
     if node.info.expList {
         self.write( " = " );
-        TransUnit.nodeFilter( node.info.expList,  self, node, baseIndent );
+        TransUnit.nodeFilter( node.info.expList, self, node, baseIndent );
+    }
+
+    if node.info.unwrap {
+	self.writeln( "", baseIndent );
+	self.write( "if " );
+	foreach var, index in varList {
+            if index > 1 {
+		self.write( " or " );
+            }   
+	    self.write( " not " .. var[ "name" ].txt );
+	}
+	self.write( " then" );
+	TransUnit.nodeFilter( node.info.unwrap, self, node, baseIndent );
+	self.writeln( "end", baseIndent );
     }
 
     if node.info.accessMode == "pub" {
@@ -508,17 +536,18 @@ filterObj[ TransUnit.nodeKind.ExpDDD ] =
 };
 
 filterObj[ TransUnit.nodeKind.DeclFunc ] =
-    fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
+    fn( self: filterObj, node: TransUnit.Node, parent:stem, baseIndent:int )
 {
-    let nameToken = node.info.name;
+    let nodeInfo = node.get_info()@TransUnit.DeclFuncInfo;
+    let nameToken:Parser.Token = nodeInfo.get_name();
     let name = nameToken and nameToken.txt or "";
     let letTxt = "";
-    if node.info.accessMode ~= "global" and #name ~= 0 {
+    if nodeInfo.get_accessMode() ~= "global" and #name ~= 0 {
         letTxt = "local ";
     }
     self.write( string.format( "%sfunction %s( ", letTxt, name ) );
 
-    let argList: stem[] = node.info.argList;
+    let argList: stem[] = nodeInfo.get_argList();
     foreach arg, index in argList {
         if index > 1 {
             self.write( ", " );
@@ -526,22 +555,23 @@ filterObj[ TransUnit.nodeKind.DeclFunc ] =
         TransUnit.nodeFilter( arg, self, node, baseIndent );
     }
     self.write( " )", baseIndent );
-    '' foreach refType, index in node.info.retTypeList {
+    '' foreach refType, index in nodeInfo.get_retTypeList() {
     ''    if index > 1 {
     ''   self.write( ", " )
     ''    }
     ''TransUnit.nodeFilter( ''    refType,  self, node, baseIndent )
     '' }
-    TransUnit.nodeFilter( node.info.body,  self, node, baseIndent );
+    TransUnit.nodeFilter( nodeInfo.get_body(),  self, node, baseIndent );
     self.writeln( "end", baseIndent );
 
-    ''if node.info.accessMode == "pub" {
-    if node.expType.get_accessMode() == "pub" {
+    ''if nodeInfo.get_accessMode() == "pub" {
+    let expType: TransUnit.TypeInfo = node.get_expType();
+    if expType.get_accessMode() == "pub" {
         self.write( "moduleObj.%s = %s" ( name, name ) );
 
         self.pubFuncName2InfoMap[ name ] = {
-            "funcFlag": true, "accessMode": node.info.accessMode,
-            "typeInfo": node.expType
+            "funcFlag": true, "accessMode": nodeInfo.get_accessMode(),
+            "typeInfo": node.get_expType()
         };
     }
 };
