@@ -1199,7 +1199,7 @@ local function nodeFilter( node, filter, ... )
 end
 moduleObj.nodeFilter = nodeFilter
 function TransUnit:registBuiltInScope(  )
-  local builtInInfo = {[""] = {["type"] = {["ret"] = {"str"}}, ["error"] = {["ret"] = {}}, ["print"] = {["ret"] = {}}, ["tonumber"] = {["ret"] = {"int"}}}, ["io"] = {["open"] = {["ret"] = {"stem"}}}, ["string"] = {["find"] = {["ret"] = {"int", "int"}}, ["byte"] = {["ret"] = {"int"}}, ["format"] = {["ret"] = {"str"}}, ["rep"] = {["ret"] = {"str"}}, ["gmatch"] = {["ret"] = {"stem"}}, ["gsub"] = {["ret"] = {"str"}}, ["sub"] = {["ret"] = {"str"}}}, ["str"] = {["find"] = {["methodFlag"] = {}, ["ret"] = {"int", "int"}}, ["byte"] = {["methodFlag"] = {}, ["ret"] = {"int"}}, ["format"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["rep"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["gmatch"] = {["methodFlag"] = {}, ["ret"] = {"stem"}}, ["gsub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["sub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}}, ["table"] = {["insert"] = {["ret"] = {""}}, ["remove"] = {["ret"] = {""}}}, ["debug"] = {["getinfo"] = {["ret"] = {"stem"}}}, ["_luneScript"] = {["loadModule"] = {["ret"] = {"stem"}}}}
+  local builtInInfo = {[""] = {["type"] = {["ret"] = {"str"}}, ["error"] = {["ret"] = {}}, ["print"] = {["ret"] = {}}, ["tonumber"] = {["ret"] = {"int"}}}, ["io"] = {["open"] = {["ret"] = {"stem"}}}, ["os"] = {["clock"] = {["ret"] = {"int"}}}, ["string"] = {["find"] = {["ret"] = {"int", "int"}}, ["byte"] = {["ret"] = {"int"}}, ["format"] = {["ret"] = {"str"}}, ["rep"] = {["ret"] = {"str"}}, ["gmatch"] = {["ret"] = {"stem"}}, ["gsub"] = {["ret"] = {"str"}}, ["sub"] = {["ret"] = {"str"}}}, ["str"] = {["find"] = {["methodFlag"] = {}, ["ret"] = {"int", "int"}}, ["byte"] = {["methodFlag"] = {}, ["ret"] = {"int"}}, ["format"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["rep"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["gmatch"] = {["methodFlag"] = {}, ["ret"] = {"stem"}}, ["gsub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}, ["sub"] = {["methodFlag"] = {}, ["ret"] = {"str"}}}, ["table"] = {["insert"] = {["ret"] = {""}}, ["remove"] = {["ret"] = {""}}}, ["debug"] = {["getinfo"] = {["ret"] = {"stem"}}}, ["_luneScript"] = {["loadModule"] = {["ret"] = {"stem"}}}}
   do
     local __sorted = {}
     local __map = builtInTypeMap
@@ -2597,553 +2597,282 @@ _varName2InfoMap.TypeInfoKindPrim = {
 _varName2InfoMap.TypeInfoKindRoot = {
   name='TypeInfoKindRoot', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.nodeKind = {
-  name='nodeKind', accessMode = 'pub', typeId = 680 }
+  name='nodeKind', accessMode = 'pub', typeId = 688 }
 _varName2InfoMap.rootTypeId = {
   name='rootTypeId', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.typeInfoKind = {
-  name='typeInfoKind', accessMode = 'pub', typeId = 310 }
-local _funcName2InfoMap = {}
-moduleObj._funcName2InfoMap = _funcName2InfoMap
-moduleObj._typeInfoList = {}
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 84, baseId = 1, txt = 'Parser',
+  name='typeInfoKind', accessMode = 'pub', typeId = 318 }
+local _typeInfoList = {}
+moduleObj._typeInfoList = _typeInfoList
+_typeInfoList[1] = { parentId = 1, typeId = 88, baseId = 1, txt = 'Parser',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 190, baseId = 1, txt = 'Position',
+_typeInfoList[2] = { parentId = 1, typeId = 198, baseId = 1, txt = 'Position',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 192, baseId = 1, txt = 'Token',
+_typeInfoList[3] = { parentId = 1, typeId = 200, baseId = 1, txt = 'Token',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 194, baseId = 1, txt = 'Parser',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {212, 214, 270}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 216, baseId = 1, txt = 'Stream',
+_typeInfoList[4] = { parentId = 1, typeId = 202, baseId = 1, txt = 'Parser',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {220, 222, 278}, }
+_typeInfoList[5] = { parentId = 1, typeId = 224, baseId = 1, txt = 'Stream',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 242, baseId = 1, txt = 'getKindTxt',
+_typeInfoList[6] = { parentId = 1, typeId = 250, baseId = 1, txt = 'getKindTxt',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 244, baseId = 1, txt = 'isOp2',
+_typeInfoList[7] = { parentId = 1, typeId = 252, baseId = 1, txt = 'isOp2',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 246, baseId = 1, txt = 'isOp1',
+_typeInfoList[8] = { parentId = 1, typeId = 254, baseId = 1, txt = 'isOp1',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 278, baseId = 1, txt = 'getEofToken',
+_typeInfoList[9] = { parentId = 1, typeId = 286, baseId = 1, txt = 'getEofToken',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 280, baseId = 1, txt = 'Parser',
+_typeInfoList[10] = { parentId = 1, typeId = 288, baseId = 1, txt = 'Parser',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 282, baseId = 1, txt = 'Position',
+_typeInfoList[11] = { parentId = 1, typeId = 290, baseId = 1, txt = 'Position',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 284, baseId = 1, txt = 'Token',
+_typeInfoList[12] = { parentId = 1, typeId = 292, baseId = 1, txt = 'Token',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 286, baseId = 1, txt = 'Parser',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {300, 302, 304}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 288, baseId = 1, txt = 'Stream',
+_typeInfoList[13] = { parentId = 1, typeId = 294, baseId = 1, txt = 'Parser',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {308, 310, 312}, }
+_typeInfoList[14] = { parentId = 1, typeId = 296, baseId = 1, txt = 'Stream',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 292, baseId = 1, txt = 'getKindTxt',
+_typeInfoList[15] = { parentId = 1, typeId = 300, baseId = 1, txt = 'getKindTxt',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 294, baseId = 1, txt = 'isOp2',
+_typeInfoList[16] = { parentId = 1, typeId = 302, baseId = 1, txt = 'isOp2',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 296, baseId = 1, txt = 'isOp1',
+_typeInfoList[17] = { parentId = 1, typeId = 304, baseId = 1, txt = 'isOp1',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 298, baseId = 1, txt = 'getEofToken',
+_typeInfoList[18] = { parentId = 1, typeId = 306, baseId = 1, txt = 'getEofToken',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 306, baseId = 1, txt = 'errorLog',
+_typeInfoList[19] = { parentId = 1, typeId = 314, baseId = 1, txt = 'errorLog',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 308, baseId = 1, txt = 'debugLog',
+_typeInfoList[20] = { parentId = 1, typeId = 316, baseId = 1, txt = 'debugLog',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 310, baseId = 1, txt = 'Map',
+_typeInfoList[21] = { parentId = 1, typeId = 318, baseId = 1, txt = 'Map',
 staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 6}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 320, baseId = 1, txt = 'isBuiltin',
+_typeInfoList[22] = { parentId = 1, typeId = 328, baseId = 1, txt = 'isBuiltin',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 326, baseId = 1, txt = 'TypeInfo',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {346, 348, 350, 352, 358, 360, 362, 368, 370, 374, 378, 380, 384, 390, 398, 402, 404, 406, 408, 410, 412, 414, 416, 418, 420, 422, 426}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 396, baseId = 1, txt = '',
-staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {326}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 400, baseId = 1, txt = '',
-staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {326}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 424, baseId = 1, txt = '',
-staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {326}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 428, baseId = 1, txt = 'Scope',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {444, 446, 448, 450, 452, 454, 458, 462}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 456, baseId = 1, txt = 'Map',
-staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 326}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 460, baseId = 1, txt = 'Map',
-staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 428}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 466, baseId = 1, txt = 'NodePos',
+_typeInfoList[23] = { parentId = 1, typeId = 334, baseId = 1, txt = 'TypeInfo',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {354, 356, 358, 360, 366, 368, 370, 376, 378, 382, 386, 388, 392, 398, 406, 410, 412, 414, 416, 418, 420, 422, 424, 426, 428, 430, 434}, }
+_typeInfoList[24] = { parentId = 1, typeId = 404, baseId = 1, txt = '',
+staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {334}, retTypeId = {}, children = {}, }
+_typeInfoList[25] = { parentId = 1, typeId = 408, baseId = 1, txt = '',
+staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {334}, retTypeId = {}, children = {}, }
+_typeInfoList[26] = { parentId = 1, typeId = 432, baseId = 1, txt = '',
+staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {334}, retTypeId = {}, children = {}, }
+_typeInfoList[27] = { parentId = 1, typeId = 436, baseId = 1, txt = 'Scope',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {452, 454, 456, 458, 460, 462, 466, 470}, }
+_typeInfoList[28] = { parentId = 1, typeId = 464, baseId = 1, txt = 'Map',
+staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 334}, retTypeId = {}, children = {}, }
+_typeInfoList[29] = { parentId = 1, typeId = 468, baseId = 1, txt = 'Map',
+staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 436}, retTypeId = {}, children = {}, }
+_typeInfoList[30] = { parentId = 1, typeId = 474, baseId = 1, txt = 'NodePos',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 468, baseId = 1, txt = 'Node',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {472, 474, 478}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 480, baseId = 468, txt = 'ImportNode',
+_typeInfoList[31] = { parentId = 1, typeId = 476, baseId = 1, txt = 'Node',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {480, 482, 486}, }
+_typeInfoList[32] = { parentId = 1, typeId = 488, baseId = 476, txt = 'ImportNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 482, baseId = 468, txt = 'RootNode',
+_typeInfoList[33] = { parentId = 1, typeId = 490, baseId = 476, txt = 'RootNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 484, baseId = 468, txt = 'RefTypeNode',
+_typeInfoList[34] = { parentId = 1, typeId = 492, baseId = 476, txt = 'RefTypeNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 486, baseId = 468, txt = 'IfNode',
+_typeInfoList[35] = { parentId = 1, typeId = 494, baseId = 476, txt = 'IfNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 488, baseId = 468, txt = 'SwitchNode',
+_typeInfoList[36] = { parentId = 1, typeId = 496, baseId = 476, txt = 'SwitchNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 490, baseId = 468, txt = 'WhileNode',
+_typeInfoList[37] = { parentId = 1, typeId = 498, baseId = 476, txt = 'WhileNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 492, baseId = 468, txt = 'RepeatNode',
+_typeInfoList[38] = { parentId = 1, typeId = 500, baseId = 476, txt = 'RepeatNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 494, baseId = 468, txt = 'ForNode',
+_typeInfoList[39] = { parentId = 1, typeId = 502, baseId = 476, txt = 'ForNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 496, baseId = 468, txt = 'ApplyNode',
+_typeInfoList[40] = { parentId = 1, typeId = 504, baseId = 476, txt = 'ApplyNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 498, baseId = 468, txt = 'ForeachNode',
+_typeInfoList[41] = { parentId = 1, typeId = 506, baseId = 476, txt = 'ForeachNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 500, baseId = 468, txt = 'ForsortNode',
+_typeInfoList[42] = { parentId = 1, typeId = 508, baseId = 476, txt = 'ForsortNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 502, baseId = 468, txt = 'ReturnNode',
+_typeInfoList[43] = { parentId = 1, typeId = 510, baseId = 476, txt = 'ReturnNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 504, baseId = 468, txt = 'BreakNode',
+_typeInfoList[44] = { parentId = 1, typeId = 512, baseId = 476, txt = 'BreakNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 506, baseId = 468, txt = 'ExpNewNode',
+_typeInfoList[45] = { parentId = 1, typeId = 514, baseId = 476, txt = 'ExpNewNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 508, baseId = 468, txt = 'ExpListNode',
+_typeInfoList[46] = { parentId = 1, typeId = 516, baseId = 476, txt = 'ExpListNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 510, baseId = 468, txt = 'ExpRefNode',
+_typeInfoList[47] = { parentId = 1, typeId = 518, baseId = 476, txt = 'ExpRefNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 512, baseId = 468, txt = 'ExpOp2Node',
+_typeInfoList[48] = { parentId = 1, typeId = 520, baseId = 476, txt = 'ExpOp2Node',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 514, baseId = 468, txt = 'ExpCastNode',
+_typeInfoList[49] = { parentId = 1, typeId = 522, baseId = 476, txt = 'ExpCastNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 516, baseId = 468, txt = 'ExpOp1Node',
+_typeInfoList[50] = { parentId = 1, typeId = 524, baseId = 476, txt = 'ExpOp1Node',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 518, baseId = 468, txt = 'ExpRefItemNode',
+_typeInfoList[51] = { parentId = 1, typeId = 526, baseId = 476, txt = 'ExpRefItemNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 520, baseId = 468, txt = 'ExpCallNode',
+_typeInfoList[52] = { parentId = 1, typeId = 528, baseId = 476, txt = 'ExpCallNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 522, baseId = 468, txt = 'ExpDDDNode',
+_typeInfoList[53] = { parentId = 1, typeId = 530, baseId = 476, txt = 'ExpDDDNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 524, baseId = 468, txt = 'ExpParenNode',
+_typeInfoList[54] = { parentId = 1, typeId = 532, baseId = 476, txt = 'ExpParenNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 526, baseId = 468, txt = 'BlockNode',
+_typeInfoList[55] = { parentId = 1, typeId = 534, baseId = 476, txt = 'BlockNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 528, baseId = 468, txt = 'StmtExpNode',
+_typeInfoList[56] = { parentId = 1, typeId = 536, baseId = 476, txt = 'StmtExpNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 530, baseId = 468, txt = 'RefFieldNode',
+_typeInfoList[57] = { parentId = 1, typeId = 538, baseId = 476, txt = 'RefFieldNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 532, baseId = 468, txt = 'DeclVarNode',
+_typeInfoList[58] = { parentId = 1, typeId = 540, baseId = 476, txt = 'DeclVarNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 534, baseId = 468, txt = 'DeclFuncNode',
+_typeInfoList[59] = { parentId = 1, typeId = 542, baseId = 476, txt = 'DeclFuncNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 536, baseId = 468, txt = 'DeclMethodNode',
+_typeInfoList[60] = { parentId = 1, typeId = 544, baseId = 476, txt = 'DeclMethodNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 538, baseId = 468, txt = 'DeclConstrNode',
+_typeInfoList[61] = { parentId = 1, typeId = 546, baseId = 476, txt = 'DeclConstrNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 540, baseId = 468, txt = 'DeclMemberNode',
+_typeInfoList[62] = { parentId = 1, typeId = 548, baseId = 476, txt = 'DeclMemberNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 542, baseId = 468, txt = 'DeclArgNode',
+_typeInfoList[63] = { parentId = 1, typeId = 550, baseId = 476, txt = 'DeclArgNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 544, baseId = 468, txt = 'DeclArgDDDNode',
+_typeInfoList[64] = { parentId = 1, typeId = 552, baseId = 476, txt = 'DeclArgDDDNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 546, baseId = 468, txt = 'DeclClassNode',
+_typeInfoList[65] = { parentId = 1, typeId = 554, baseId = 476, txt = 'DeclClassNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 548, baseId = 468, txt = 'LiteralNilNode',
+_typeInfoList[66] = { parentId = 1, typeId = 556, baseId = 476, txt = 'LiteralNilNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 550, baseId = 468, txt = 'LiteralCharNode',
+_typeInfoList[67] = { parentId = 1, typeId = 558, baseId = 476, txt = 'LiteralCharNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 552, baseId = 468, txt = 'LiteralIntNode',
+_typeInfoList[68] = { parentId = 1, typeId = 560, baseId = 476, txt = 'LiteralIntNode',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 556, baseId = 1, txt = 'TransUnit',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {636, 1172}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 634, baseId = 1, txt = '',
+_typeInfoList[69] = { parentId = 1, typeId = 564, baseId = 1, txt = 'TransUnit',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {644, 1186}, }
+_typeInfoList[70] = { parentId = 1, typeId = 642, baseId = 1, txt = '',
 staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {18}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 680, baseId = 1, txt = 'Map',
+_typeInfoList[71] = { parentId = 1, typeId = 688, baseId = 1, txt = 'Map',
 staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 12}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 688, baseId = 1, txt = 'getNodeKindName',
+_typeInfoList[72] = { parentId = 1, typeId = 696, baseId = 1, txt = 'getNodeKindName',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 690, baseId = 1, txt = 'nodeFilter',
+_typeInfoList[73] = { parentId = 1, typeId = 698, baseId = 1, txt = 'nodeFilter',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 1016, baseId = 1, txt = 'DeclFuncInfo',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {1024, 1026, 1030, 1032, 1034, 1036, 1040, 1044}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 1028, baseId = 1, txt = '',
-staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {468}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 1038, baseId = 1, txt = '',
-staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {326}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 1042, baseId = 1, txt = '',
-staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {326}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 1130, baseId = 1, txt = 'LiteralStringInfo',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {1134, 1138}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 1136, baseId = 1, txt = '',
-staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {468}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 194, typeId = 212, baseId = 1, txt = 'getStreamName',
+_typeInfoList[74] = { parentId = 1, typeId = 1030, baseId = 1, txt = 'DeclFuncInfo',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {1038, 1040, 1044, 1046, 1048, 1050, 1054, 1058}, }
+_typeInfoList[75] = { parentId = 1, typeId = 1042, baseId = 1, txt = '',
+staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {476}, retTypeId = {}, children = {}, }
+_typeInfoList[76] = { parentId = 1, typeId = 1052, baseId = 1, txt = '',
+staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {334}, retTypeId = {}, children = {}, }
+_typeInfoList[77] = { parentId = 1, typeId = 1056, baseId = 1, txt = '',
+staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {334}, retTypeId = {}, children = {}, }
+_typeInfoList[78] = { parentId = 1, typeId = 1144, baseId = 1, txt = 'LiteralStringInfo',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {1148, 1152}, }
+_typeInfoList[79] = { parentId = 1, typeId = 1150, baseId = 1, txt = '',
+staticFlag = false, accessMode = 'pub', kind = 2, itemTypeId = {476}, retTypeId = {}, children = {}, }
+_typeInfoList[80] = { parentId = 202, typeId = 220, baseId = 1, txt = 'getStreamName',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 194, typeId = 214, baseId = 1, txt = 'create',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {194}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 194, typeId = 270, baseId = 1, txt = 'getToken',
+_typeInfoList[81] = { parentId = 202, typeId = 222, baseId = 1, txt = 'create',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {202}, children = {}, }
+_typeInfoList[82] = { parentId = 202, typeId = 278, baseId = 1, txt = 'getToken',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 286, typeId = 300, baseId = 1, txt = 'getStreamName',
+_typeInfoList[83] = { parentId = 294, typeId = 308, baseId = 1, txt = 'getStreamName',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 286, typeId = 302, baseId = 1, txt = 'create',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {286}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 286, typeId = 304, baseId = 1, txt = 'getToken',
+_typeInfoList[84] = { parentId = 294, typeId = 310, baseId = 1, txt = 'create',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {294}, children = {}, }
+_typeInfoList[85] = { parentId = 294, typeId = 312, baseId = 1, txt = 'getToken',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 346, baseId = 1, txt = 'getParentId',
+_typeInfoList[86] = { parentId = 334, typeId = 354, baseId = 1, txt = 'getParentId',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 348, baseId = 1, txt = 'get_baseId',
+_typeInfoList[87] = { parentId = 334, typeId = 356, baseId = 1, txt = 'get_baseId',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 350, baseId = 1, txt = 'addChild',
+_typeInfoList[88] = { parentId = 334, typeId = 358, baseId = 1, txt = 'addChild',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 352, baseId = 1, txt = 'serialize',
+_typeInfoList[89] = { parentId = 334, typeId = 360, baseId = 1, txt = 'serialize',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 358, baseId = 1, txt = 'getTxt',
+_typeInfoList[90] = { parentId = 334, typeId = 366, baseId = 1, txt = 'getTxt',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 360, baseId = 1, txt = 'equals',
+_typeInfoList[91] = { parentId = 334, typeId = 368, baseId = 1, txt = 'equals',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 362, baseId = 1, txt = 'cloneToPublic',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 368, baseId = 1, txt = 'create',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 370, baseId = 1, txt = 'createBuiltin',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 374, baseId = 1, txt = 'createList',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 378, baseId = 1, txt = 'createArray',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 380, baseId = 1, txt = 'createMap',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 384, baseId = 1, txt = 'createClass',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 390, baseId = 1, txt = 'createFunc',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 398, baseId = 1, txt = 'get_itemTypeInfoList',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {396}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 402, baseId = 1, txt = 'get_retTypeInfoList',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {400}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 404, baseId = 1, txt = 'get_parentInfo',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 406, baseId = 1, txt = 'get_typeId',
+_typeInfoList[92] = { parentId = 334, typeId = 370, baseId = 1, txt = 'cloneToPublic',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[93] = { parentId = 334, typeId = 376, baseId = 1, txt = 'create',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[94] = { parentId = 334, typeId = 378, baseId = 1, txt = 'createBuiltin',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[95] = { parentId = 334, typeId = 382, baseId = 1, txt = 'createList',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[96] = { parentId = 334, typeId = 386, baseId = 1, txt = 'createArray',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[97] = { parentId = 334, typeId = 388, baseId = 1, txt = 'createMap',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[98] = { parentId = 334, typeId = 392, baseId = 1, txt = 'createClass',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[99] = { parentId = 334, typeId = 398, baseId = 1, txt = 'createFunc',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[100] = { parentId = 334, typeId = 406, baseId = 1, txt = 'get_itemTypeInfoList',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {404}, children = {}, }
+_typeInfoList[101] = { parentId = 334, typeId = 410, baseId = 1, txt = 'get_retTypeInfoList',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {408}, children = {}, }
+_typeInfoList[102] = { parentId = 334, typeId = 412, baseId = 1, txt = 'get_parentInfo',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[103] = { parentId = 334, typeId = 414, baseId = 1, txt = 'get_typeId',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 408, baseId = 1, txt = 'get_kind',
+_typeInfoList[104] = { parentId = 334, typeId = 416, baseId = 1, txt = 'get_kind',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 410, baseId = 1, txt = 'get_staticFlag',
+_typeInfoList[105] = { parentId = 334, typeId = 418, baseId = 1, txt = 'get_staticFlag',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 412, baseId = 1, txt = 'get_accessMode',
+_typeInfoList[106] = { parentId = 334, typeId = 420, baseId = 1, txt = 'get_accessMode',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 414, baseId = 1, txt = 'get_autoFlag',
+_typeInfoList[107] = { parentId = 334, typeId = 422, baseId = 1, txt = 'get_autoFlag',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 416, baseId = 1, txt = 'get_orgTypeInfo',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 418, baseId = 1, txt = 'get_baseTypeInfo',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 420, baseId = 1, txt = 'get_nilable',
+_typeInfoList[108] = { parentId = 334, typeId = 424, baseId = 1, txt = 'get_orgTypeInfo',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[109] = { parentId = 334, typeId = 426, baseId = 1, txt = 'get_baseTypeInfo',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[110] = { parentId = 334, typeId = 428, baseId = 1, txt = 'get_nilable',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 422, baseId = 1, txt = 'get_nilableTypeInfo',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 326, typeId = 426, baseId = 1, txt = 'get_children',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {424}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 444, baseId = 1, txt = 'add',
+_typeInfoList[111] = { parentId = 334, typeId = 430, baseId = 1, txt = 'get_nilableTypeInfo',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[112] = { parentId = 334, typeId = 434, baseId = 1, txt = 'get_children',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {432}, children = {}, }
+_typeInfoList[113] = { parentId = 436, typeId = 452, baseId = 1, txt = 'add',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 446, baseId = 1, txt = 'addClass',
+_typeInfoList[114] = { parentId = 436, typeId = 454, baseId = 1, txt = 'addClass',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 448, baseId = 1, txt = 'getClassScope',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {428}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 450, baseId = 1, txt = 'getTypeInfoChild',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 452, baseId = 1, txt = 'getTypeInfo',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 454, baseId = 1, txt = 'get_parent',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {428}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 458, baseId = 1, txt = 'get_symbol2TypeInfoMap',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {456}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 428, typeId = 462, baseId = 1, txt = 'get_className2ScopeMap',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {460}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 468, typeId = 472, baseId = 1, txt = 'get_kind',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 468, typeId = 474, baseId = 1, txt = 'get_expType',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {326}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 468, typeId = 478, baseId = 1, txt = 'get_info',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 556, typeId = 636, baseId = 1, txt = 'get_errMessList',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {634}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 556, typeId = 1172, baseId = 1, txt = 'createAST',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {20}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1024, baseId = 1, txt = 'get_className',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {284}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1026, baseId = 1, txt = 'get_name',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {284}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1030, baseId = 1, txt = 'get_argList',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {1028}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1032, baseId = 1, txt = 'get_staticFlag',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1034, baseId = 1, txt = 'get_accessMode',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1036, baseId = 1, txt = 'get_body',
+_typeInfoList[115] = { parentId = 436, typeId = 456, baseId = 1, txt = 'getClassScope',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {436}, children = {}, }
+_typeInfoList[116] = { parentId = 436, typeId = 458, baseId = 1, txt = 'getTypeInfoChild',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[117] = { parentId = 436, typeId = 460, baseId = 1, txt = 'getTypeInfo',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[118] = { parentId = 436, typeId = 462, baseId = 1, txt = 'get_parent',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {436}, children = {}, }
+_typeInfoList[119] = { parentId = 436, typeId = 466, baseId = 1, txt = 'get_symbol2TypeInfoMap',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {464}, children = {}, }
+_typeInfoList[120] = { parentId = 436, typeId = 470, baseId = 1, txt = 'get_className2ScopeMap',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {468}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1040, baseId = 1, txt = 'get_retTypeList',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {1038}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1016, typeId = 1044, baseId = 1, txt = 'get_retTypeInfoList',
+_typeInfoList[121] = { parentId = 476, typeId = 480, baseId = 1, txt = 'get_kind',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
+_typeInfoList[122] = { parentId = 476, typeId = 482, baseId = 1, txt = 'get_expType',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {334}, children = {}, }
+_typeInfoList[123] = { parentId = 476, typeId = 486, baseId = 1, txt = 'get_info',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
+_typeInfoList[124] = { parentId = 564, typeId = 644, baseId = 1, txt = 'get_errMessList',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {642}, children = {}, }
+_typeInfoList[125] = { parentId = 564, typeId = 1186, baseId = 1, txt = 'createAST',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {20}, children = {}, }
+_typeInfoList[126] = { parentId = 1030, typeId = 1038, baseId = 1, txt = 'get_className',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {292}, children = {}, }
+_typeInfoList[127] = { parentId = 1030, typeId = 1040, baseId = 1, txt = 'get_name',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {292}, children = {}, }
+_typeInfoList[128] = { parentId = 1030, typeId = 1044, baseId = 1, txt = 'get_argList',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {1042}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1130, typeId = 1134, baseId = 1, txt = 'get_token',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {284}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1130, typeId = 1138, baseId = 1, txt = 'get_argList',
-staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {1136}, children = {}, }
-)
+_typeInfoList[129] = { parentId = 1030, typeId = 1046, baseId = 1, txt = 'get_staticFlag',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[130] = { parentId = 1030, typeId = 1048, baseId = 1, txt = 'get_accessMode',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[131] = { parentId = 1030, typeId = 1050, baseId = 1, txt = 'get_body',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {476}, children = {}, }
+_typeInfoList[132] = { parentId = 1030, typeId = 1054, baseId = 1, txt = 'get_retTypeList',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {1052}, children = {}, }
+_typeInfoList[133] = { parentId = 1030, typeId = 1058, baseId = 1, txt = 'get_retTypeInfoList',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {1056}, children = {}, }
+_typeInfoList[134] = { parentId = 1144, typeId = 1148, baseId = 1, txt = 'get_token',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {292}, children = {}, }
+_typeInfoList[135] = { parentId = 1144, typeId = 1152, baseId = 1, txt = 'get_argList',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {1150}, children = {}, }
 ----- meta -----
 return moduleObj

@@ -53,6 +53,7 @@ end
 
 function _luneScript.loadFile( path )
    local transUnit = TransUnit.new()
+
    local ast = transUnit:createAST( createPaser( path ) )
    
    local func = function( self, txt )

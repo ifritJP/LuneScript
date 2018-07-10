@@ -484,61 +484,36 @@ _classInfoToken.kind = {
 _classInfoToken.txt = {
   name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
 _classInfoToken.pos = {
-  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 132 }
+  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 136 }
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 170 }
-local _funcName2InfoMap = {}
-moduleObj._funcName2InfoMap = _funcName2InfoMap
-moduleObj._typeInfoList = {}
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 132, baseId = 1, txt = 'Position',
+  name='kind', accessMode = 'pub', typeId = 174 }
+local _typeInfoList = {}
+moduleObj._typeInfoList = _typeInfoList
+_typeInfoList[1] = { parentId = 1, typeId = 136, baseId = 1, txt = 'Position',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 134, baseId = 1, txt = 'Token',
+_typeInfoList[2] = { parentId = 1, typeId = 138, baseId = 1, txt = 'Token',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 136, baseId = 1, txt = 'Parser',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {154, 156, 212}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 158, baseId = 1, txt = 'Stream',
+_typeInfoList[3] = { parentId = 1, typeId = 140, baseId = 1, txt = 'Parser',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {158, 160, 216}, }
+_typeInfoList[4] = { parentId = 1, typeId = 162, baseId = 1, txt = 'Stream',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 170, baseId = 1, txt = 'Map',
+_typeInfoList[5] = { parentId = 1, typeId = 174, baseId = 1, txt = 'Map',
 staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 12}, retTypeId = {}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 184, baseId = 1, txt = 'getKindTxt',
+_typeInfoList[6] = { parentId = 1, typeId = 188, baseId = 1, txt = 'getKindTxt',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 186, baseId = 1, txt = 'isOp2',
+_typeInfoList[7] = { parentId = 1, typeId = 190, baseId = 1, txt = 'isOp2',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 188, baseId = 1, txt = 'isOp1',
+_typeInfoList[8] = { parentId = 1, typeId = 192, baseId = 1, txt = 'isOp1',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 1, typeId = 220, baseId = 1, txt = 'getEofToken',
+_typeInfoList[9] = { parentId = 1, typeId = 224, baseId = 1, txt = 'getEofToken',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 136, typeId = 154, baseId = 1, txt = 'getStreamName',
+_typeInfoList[10] = { parentId = 140, typeId = 158, baseId = 1, txt = 'getStreamName',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 136, typeId = 156, baseId = 1, txt = 'create',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {136}, children = {}, }
-)
-table.insert( 
-moduleObj._typeInfoList, { parentId = 136, typeId = 212, baseId = 1, txt = 'getToken',
+_typeInfoList[11] = { parentId = 140, typeId = 160, baseId = 1, txt = 'create',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {140}, children = {}, }
+_typeInfoList[12] = { parentId = 140, typeId = 216, baseId = 1, txt = 'getToken',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-)
 ----- meta -----
 return moduleObj

@@ -840,6 +840,9 @@ fn TransUnit.registBuiltInScope() {
 	"io": {
             "open": { "ret": ["stem"] },
         },      
+	"os": {
+            "clock": { "ret": ["int"] },
+        },      
 	"string": {
             "find": { "ret": ["int", "int"] },
             "byte": { "ret": ["int"] },
@@ -1103,7 +1106,6 @@ fn TransUnit.analyzeImport( token: stem ): Node {
     let moduleInfo: _ModuleInfo = _luneScript.loadModule( modulePath );
     self.moduleName2Info[ modulePath ] = moduleInfo;
 
-
     '' 型情報の登録
     let typeId2TypeInfo: Map<int,TypeInfo> = {};
     typeId2TypeInfo[ rootTypeId ] = typeInfoRoot;
@@ -1224,7 +1226,7 @@ fn TransUnit.analyzeImport( token: stem ): Node {
     '' }
     
     self.checkToken( nextToken, ";" );
-    
+
     return self.createNode( nodeKindImport, token.pos, [ typeInfoNone ], modulePath );
 }
 

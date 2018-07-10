@@ -210,9 +210,6 @@ filterObj[ TransUnit.nodeKind.Root ] =
         pickupTypeId( varInfo[ "typeInfo" ], true );
     }
 
-    self.writeln( "local _funcName2InfoMap = {}", baseIndent );
-    self.writeln( "moduleObj._funcName2InfoMap = _funcName2InfoMap", baseIndent );
-
     forsort funcInfo, funcName in self.pubFuncName2InfoMap {
         pickupTypeId( funcInfo[ "typeInfo" ] );
     }
@@ -236,7 +233,9 @@ filterObj[ TransUnit.nodeKind.Root ] =
     '' self.writeln( "}" , baseIndent );
 
 
-    self.writeln( "moduleObj._typeInfoList = {}", baseIndent );
+    self.writeln( "local _typeInfoList = {}", baseIndent );
+    self.writeln( "moduleObj._typeInfoList = _typeInfoList", baseIndent );
+    let listIndex = 1;
     forsort typeInfo, typeId in typeId2TypeInfo {
         foreach child in typeInfo.get_children()@TransUnit.TypeInfo[] {
             let child:TransUnit.TypeInfo = child;
@@ -244,18 +243,12 @@ filterObj[ TransUnit.nodeKind.Root ] =
             if typeId2TypeInfo[ childTypeId ] and
                 not TransUnit.isBuiltin( childTypeId )
             {               
-                self.writeln( "table.insert( ", baseIndent );
-                self.write( "moduleObj._typeInfoList, " );
+                self.write( "_typeInfoList[%d] = " (listIndex) );
+                listIndex = listIndex + 1;
                 child.serialize( self );
-                self.writeln( ")", baseIndent );
             }
         }
     }
-    
-    
-    
-
-
 
     self.writeln( "----- meta -----", baseIndent );
 
