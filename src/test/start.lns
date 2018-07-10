@@ -6,9 +6,10 @@ print( classA.func( 0 ) );
 print( classA.sub() );
 
 let classB = new simple.ClassB();
-print( classB.func() );
-''let hoge = classB.func2();
-''print( hoge.func() );
+print( "classB.func()", classB.func() );
+print( "classB.sub()", classB.sub() );
+let hoge = classB.func2();
+print( "Hoge.func()", hoge.func() );
 
 print( "12%d" ( 10 ) );
 

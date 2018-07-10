@@ -75,6 +75,7 @@ function Stream:__init(  )
 end
 
 local Position = {}
+moduleObj.Position = Position
 function Position.new( lineNo, column )
   local obj = {}
   setmetatable( obj, { __index = Position } )
@@ -470,22 +471,12 @@ local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 local _classInfoParser = {}
 _className2InfoMap.Parser = _classInfoParser
-_classInfoParser.create = {
-  name='create', staticFlag = true, accessMode = 'pub', methodFlag = true, typeId = 154 }
-_classInfoParser.getStreamName = {
-  name='getStreamName', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 152 }
-_classInfoParser.getToken = {
-  name='getToken', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 198 }
 local _classInfoPosition = {}
 _className2InfoMap.Position = _classInfoPosition
 _classInfoPosition.lineNo = {
   name='lineNo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 _classInfoPosition.column = {
   name='column', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
-local _classInfoStream = {}
-_className2InfoMap.Stream = _classInfoStream
-_classInfoStream.read = {
-  name='read', staticFlag = false, accessMode = 'pub', methodFlag = true, typeId = 128 }
 local _classInfoToken = {}
 _className2InfoMap.Token = _classInfoToken
 _classInfoToken.kind = {
@@ -493,56 +484,61 @@ _classInfoToken.kind = {
 _classInfoToken.txt = {
   name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
 _classInfoToken.pos = {
-  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 130 }
+  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 132 }
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 156 }
+  name='kind', accessMode = 'pub', typeId = 170 }
 local _funcName2InfoMap = {}
 moduleObj._funcName2InfoMap = _funcName2InfoMap
-_funcName2InfoMap.getEofToken = {
-  accessMode = 'pub', typeId = 206 }
-_funcName2InfoMap.getKindTxt = {
-  accessMode = 'pub', typeId = 170 }
-_funcName2InfoMap.isOp1 = {
-  accessMode = 'pub', typeId = 174 }
-_funcName2InfoMap.isOp2 = {
-  accessMode = 'pub', typeId = 172 }
-moduleObj._typeInfoList = {
-{ parentId = 1, typeId = 1, txt = ':', staticFlag = false,
-accessMode = 'pub', kind = 0, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 1, typeId = 6, txt = 'stem', staticFlag = false,
-accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 1, typeId = 10, txt = 'bool', staticFlag = false,
-accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 1, typeId = 12, txt = 'int', staticFlag = false,
-accessMode = 'pub', kind = 1, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 1, typeId = 18, txt = 'str', staticFlag = false,
-accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 1, typeId = 126, txt = 'Stream', staticFlag = false,
-accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 126, typeId = 128, txt = 'read', staticFlag = false,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
-  { parentId = 1, typeId = 130, txt = 'Position', staticFlag = false,
-accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 1, typeId = 134, txt = 'Parser', staticFlag = false,
-accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, },
-  { parentId = 134, typeId = 152, txt = 'getStreamName', staticFlag = false,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
-  { parentId = 134, typeId = 154, txt = 'create', staticFlag = true,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {134}, },
-  { parentId = 1, typeId = 156, txt = 'Map', staticFlag = false,
-accessMode = 'pub', kind = 4, itemTypeId = {18, 12}, retTypeId = {}, },
-  { parentId = 1, typeId = 170, txt = 'getKindTxt', staticFlag = true,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, },
-  { parentId = 1, typeId = 172, txt = 'isOp2', staticFlag = true,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
-  { parentId = 1, typeId = 174, txt = 'isOp1', staticFlag = true,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, },
-  { parentId = 134, typeId = 198, txt = 'getToken', staticFlag = false,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, },
-  { parentId = 1, typeId = 206, txt = 'getEofToken', staticFlag = true,
-accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, },
-  }
+moduleObj._typeInfoList = {}
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 132, baseId = 1, txt = 'Position',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 134, baseId = 1, txt = 'Token',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 136, baseId = 1, txt = 'Parser',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {154, 156, 212}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 158, baseId = 1, txt = 'Stream',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 170, baseId = 1, txt = 'Map',
+staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 12}, retTypeId = {}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 184, baseId = 1, txt = 'getKindTxt',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 186, baseId = 1, txt = 'isOp2',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 188, baseId = 1, txt = 'isOp1',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 1, typeId = 220, baseId = 1, txt = 'getEofToken',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 136, typeId = 154, baseId = 1, txt = 'getStreamName',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 136, typeId = 156, baseId = 1, txt = 'create',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {136}, children = {}, }
+)
+table.insert( 
+moduleObj._typeInfoList, { parentId = 136, typeId = 212, baseId = 1, txt = 'getToken',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
+)
 ----- meta -----
 return moduleObj

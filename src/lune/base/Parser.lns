@@ -71,7 +71,7 @@ class Stream {
     pub read(): str;
 }
 
-class Position {
+pub class Position {
     pub let lineNo: int;
     pub let column: int;
 }

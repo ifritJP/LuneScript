@@ -10,6 +10,7 @@ pub class filterObj {
     pri let curLineNo: int;
     '' クラス名 → TypeInfo
     pri let className2Scope: Map<str,TransUnit.Scope>;
+    pri let className2TypeInfo: Map<str,TransUnit.TypeInfo>;
     '' クラス名 → Member Node List
     pri let className2MemberList: Map<str,TransUnit.Node[]>;
     '' public 変数名 → 変数情報
@@ -25,6 +26,7 @@ pub class filterObj {
         self.indent = 0;
         self.curLineNo = 1;
         self.className2Scope = {};
+        self.className2TypeInfo = {};
         self.className2MemberList = {};
         self.pubVarName2InfoMap = {};
         self.pubFuncName2InfoMap = {};
@@ -98,8 +100,9 @@ filterObj[ TransUnit.nodeKind.Root ] =
     self.writeln( "--%s" ( self.streamName ), baseIndent );
     self.writeln( "local moduleObj = {}", baseIndent );
 
-    let childlen:TransUnit.Node[] = node.info.childlen;
-    foreach child in childlen {
+    let children:TransUnit.Node[] = node.info.children;
+
+    foreach child in children {
         TransUnit.nodeFilter( child, self, node, baseIndent );
         self.writeln( "", baseIndent );
     }
@@ -107,18 +110,31 @@ filterObj[ TransUnit.nodeKind.Root ] =
     self.writeln( "----- meta -----", baseIndent );
 
     let typeId2TypeInfo: Map<int,TransUnit.TypeInfo> = {};
-    let typeId2VarInfo: Map<int,stem> = {};
+    let typeId2UseFlag: Map<int,bool> = {};
 
     '' 公開される型情報を typeId2TypeInfo にピックアップする
-    fn pickupTypeId( typeInfo: TransUnit.TypeInfo ) {
-        if typeInfo and not typeId2TypeInfo[ typeInfo.get_typeId() ] {
+    fn pickupTypeId( typeInfo: TransUnit.TypeInfo, forceFlag: bool ) {
+        if typeInfo {
+            if not forceFlag and typeInfo.get_accessMode() ~= "pub" {
+                return;
+            }
+            if typeId2TypeInfo[ typeInfo.get_typeId() ] {
+                return;
+            }
+            
+            typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
 	    if typeInfo.get_nilable() {
 		pickupTypeId( typeInfo.get_orgTypeInfo() );
-		typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
 	    }
 	    else {
-		typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
-                pickupTypeId( typeInfo.get_parentInfo() );
+                let parentInfo = typeInfo.get_parentInfo();
+                pickupTypeId( parentInfo );
+
+                let baseInfo = typeInfo.get_baseTypeInfo();
+                if baseInfo {
+                    pickupTypeId( baseInfo );
+                }
+                
 		let typeInfoList: TransUnit.TypeInfo[] = typeInfo.get_itemTypeInfoList();
                 if typeInfoList {
 		    foreach itemTypeInfo in typeInfoList {
@@ -131,19 +147,24 @@ filterObj[ TransUnit.nodeKind.Root ] =
                         pickupTypeId( itemTypeInfo );
 		    }
                 }
+		typeInfoList = typeInfo.get_children();
+                if typeInfoList {
+		    foreach itemTypeInfo in typeInfoList {
+                        if itemTypeInfo.get_kind() == TransUnit.TypeInfoKindClass or
+                            itemTypeInfo.get_kind() == TransUnit.TypeInfoKindFunc
+                        {                       
+                            pickupTypeId( itemTypeInfo );
+                        }
+		    }
+                }
 	    }
         }
     }
-    '' foreach scope in self.className2Scope {
-    ''     let work = scope@Map<str,stem>;
-    ''     foreach typeInfo in work.symbol2TypeInfoMap@Map<str,stem> {
-    ''         if typeInfo.accessMode == "pub" and not typeInfo.externalFlag {
-    ''             pickupTypeId( typeInfo );
-    ''         }
-    ''     }
-    '' }
 
 
+    
+
+    
 
     self.writeln( "local _className2InfoMap = {}", baseIndent );
     self.writeln(
@@ -153,24 +174,9 @@ filterObj[ TransUnit.nodeKind.Root ] =
         self.writeln( "local _classInfo%s = {}" (className), baseIndent );
         self.writeln( "_className2InfoMap.%s = _classInfo%s" (className, className),
                       baseIndent );
-        let work = scope;
-        forsort typeInfo, declName in work.get_symbol2TypeInfoMap()@Map<str,stem> {
-            if typeInfo.accessMode == "pub" and not typeInfo.externalFlag {
-                if typeInfo.kind == TransUnit.TypeInfoKindFunc {
-                    let fieldName = declName;
-                    self.writeln( "_classInfo%s.%s = {" ( className, fieldName ),
-                                  baseIndent );
 
-                    self.writeln(
-                        "  name='%s', staticFlag = %s, " ( fieldName,
-                                                           typeInfo.staticFlag ) ..
-                        "accessMode = '%s', methodFlag = true, typeId = %d }"
-                        ( typeInfo.accessMode, typeInfo.get_typeId() ),
-                        baseIndent );
-                    pickupTypeId( typeInfo );
-                }
-            }
-        }
+        pickupTypeId( self.className2TypeInfo[ className ] );
+        
         foreach memberNode in self.className2MemberList[ className ] {
             let memberInfo = memberNode.get_info();
             if memberInfo.accessMode == "pub" {
@@ -185,7 +191,6 @@ filterObj[ TransUnit.nodeKind.Root ] =
                     ( memberInfo.accessMode,
                       memberTypeInfo.get_typeId() ),
                     baseIndent );
-                pickupTypeId( memberTypeInfo );
             }
         }
     }
@@ -202,30 +207,53 @@ filterObj[ TransUnit.nodeKind.Root ] =
             ( varName, varInfo[ "accessMode" ],
               varInfo[ "typeInfo" ].get_typeId() ),
             baseIndent );
-        pickupTypeId( varInfo[ "typeInfo" ] );
+        pickupTypeId( varInfo[ "typeInfo" ], true );
     }
 
     self.writeln( "local _funcName2InfoMap = {}", baseIndent );
     self.writeln( "moduleObj._funcName2InfoMap = _funcName2InfoMap", baseIndent );
 
     forsort funcInfo, funcName in self.pubFuncName2InfoMap {
-        self.writeln( string.format( "_funcName2InfoMap.%s = {", funcName ),
-                      baseIndent );
-        self.writeln(
-            "  accessMode = '%s', typeId = %d }"
-            ( funcInfo[ "accessMode" ], funcInfo[ "typeInfo" ].get_typeId() ),
-            baseIndent );
         pickupTypeId( funcInfo[ "typeInfo" ] );
     }
 
+    
+    '' self.writeln( "moduleObj._typeInfoList = {", baseIndent );
+    '' foreach typeInfo, typeId in typeId2TypeInfo {
+    ''     if typeId == TransUnit.rootTypeId {
+    ''         foreach child in typeInfo.get_children()@TransUnit.TypeInfo[] {
+    ''             let child:TransUnit.TypeInfo = child;
+    ''             let childTypeId = child.get_typeId();
+    ''             if typeId2TypeInfo[ childTypeId ] and
+    ''                 not TransUnit.isBuiltin( childTypeId )
+    ''             {               
+    ''                 child.serialize( self );
+    ''             }
+    ''         }
+    ''         break;
+    ''     }
+    '' }
+    '' self.writeln( "}" , baseIndent );
 
-    self.writeln( "moduleObj._typeInfoList = {", baseIndent );
 
+    self.writeln( "moduleObj._typeInfoList = {}", baseIndent );
     forsort typeInfo, typeId in typeId2TypeInfo {
-        self.write( typeInfo.serialize() );
-        self.writeln( "," , baseIndent + 2 );
+        foreach child in typeInfo.get_children()@TransUnit.TypeInfo[] {
+            let child:TransUnit.TypeInfo = child;
+            let childTypeId = child.get_typeId();
+            if typeId2TypeInfo[ childTypeId ] and
+                not TransUnit.isBuiltin( childTypeId )
+            {               
+                self.writeln( "table.insert( ", baseIndent );
+                self.write( "moduleObj._typeInfoList, " );
+                child.serialize( self );
+                self.writeln( ")", baseIndent );
+            }
+        }
     }
-    self.writeln( "}" , baseIndent );
+    
+    
+    
 
 
 
@@ -292,10 +320,22 @@ filterObj[ TransUnit.nodeKind.DeclClass ] =
     fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
 {
     let className = node.info.name.txt;
-    self.className2Scope[ className ] = node.info.scope;
+
+    if node.info.accessMode == "pub" {
+        self.className2Scope[ className ] = node.info.scope;
+        self.className2TypeInfo[ className ] = node.expType;
+    }
     self.className2MemberList[ className ] = node.info.memberList;
 
     self.writeln( string.format( "local %s = {}", className ), baseIndent );
+
+    let baseInfo: TransUnit.TypeInfo = node.expType.get_baseTypeInfo();
+    if baseInfo {
+        self.writeln(
+            "setmetatable( %s, { __index = %s } )"
+            ( className, baseInfo.getTxt() ), baseIndent );
+    }
+    
     if node.info.accessMode == "pub" {
         self.writeln( string.format( "moduleObj.%s = %s", className, className ),
                       baseIndent );
@@ -852,7 +892,9 @@ filterObj[ TransUnit.nodeKind.Return ] =
 {
     self.write( "return " );
 
-    TransUnit.nodeFilter( node.info,  self, node, baseIndent );
+    if node.info {
+        TransUnit.nodeFilter( node.info,  self, node, baseIndent );
+    }
 };
 
 filterObj[ TransUnit.nodeKind.LiteralList ] =
@@ -919,15 +961,16 @@ filterObj[ TransUnit.nodeKind.LiteralReal ] =
 };
 
 filterObj[ TransUnit.nodeKind.LiteralString ] =
-    fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
+    fn( self: filterObj, node: TransUnit.Node, parent:stem, baseIndent:int )
 {
-    let txt = node.info.token.txt;
+    let nodeInfo = node.get_info()@TransUnit.LiteralStringInfo;
+    let txt = (nodeInfo.get_token()@Parser.Token).txt;
     if string.find( txt, '^```' ) {
         txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
     }
-    if #node.info.argList > 0 {
+    if #nodeInfo.get_argList() > 0 {
         self.write( string.format( "string.format( %s, ", txt ) );
-        let argList:stem[] = node.info.argList;
+        let argList = nodeInfo.get_argList();
         foreach val, index in argList {
             if index > 1 {
                 self.write( ", " );

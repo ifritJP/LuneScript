@@ -31,7 +31,7 @@
     lns-keyword (lns-make-regex-or
 		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
-		   "nil" "true" "switch" "case" "default" "\!"
+		   "nil" "true" "switch" "case" "default" "\!" "extend"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
@@ -157,6 +157,7 @@
          (comment-use-syntax . t)
          (comment-use-global-state . t)
 	 (indent-tabs-mode . nil)
+	 (comment-start . "''")
          ))
   )
 

@@ -1,4 +1,4 @@
-''import test.sub;
+import test.sub;
 
 fn func( val : int) {
     print( "abc%s%s" (val,"ab") );
@@ -27,13 +27,20 @@ pub fn ClassA.sub() : int {
     return self.val;
 }
 
-pub class ClassB {
+pub class Super {
+    pub sub(): int {
+        return 1;
+    }
+}
+
+pub class ClassB extend Super {
     pub func(): real {
 	return 100.0;
     }
-    '' pub func2(): sub.Hoge {
-    ''     return new sub.Hoge( 1 );
-    '' }
+    pub func2(): sub.Hoge {
+        return new sub.Hoge( 1 );
+    }
 }
 
-
+let classB = new ClassB();
+print( "classB.sub", classB.sub() );
