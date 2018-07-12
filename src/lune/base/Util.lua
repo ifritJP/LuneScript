@@ -45,17 +45,17 @@ local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}
 moduleObj._typeInfoList = _typeInfoList
-_typeInfoList[1] = { parentId = 1, typeId = 94, baseId = 1, txt = 'outStream',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {96}, }
-_typeInfoList[2] = { parentId = 1, typeId = 98, baseId = 94, txt = 'memStream',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {100, 102, 104}, }
-_typeInfoList[3] = { parentId = 94, typeId = 96, baseId = 1, txt = 'write',
+_typeInfoList[1] = { parentId = 1, typeId = 96, baseId = 1, txt = 'outStream',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {98}, }
+_typeInfoList[2] = { parentId = 1, typeId = 100, baseId = 96, txt = 'memStream',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {102, 104, 106}, }
+_typeInfoList[3] = { parentId = 96, typeId = 98, baseId = 1, txt = 'write',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[4] = { parentId = 98, typeId = 100, baseId = 1, txt = '__init',
+_typeInfoList[4] = { parentId = 100, typeId = 102, baseId = 1, txt = '__init',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[5] = { parentId = 98, typeId = 102, baseId = 1, txt = 'write',
+_typeInfoList[5] = { parentId = 100, typeId = 104, baseId = 1, txt = 'write',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[6] = { parentId = 98, typeId = 104, baseId = 1, txt = 'get_txt',
+_typeInfoList[6] = { parentId = 100, typeId = 106, baseId = 1, txt = 'get_txt',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
 ----- meta -----
 return moduleObj

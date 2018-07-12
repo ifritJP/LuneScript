@@ -429,6 +429,65 @@ filterObj[ TransUnit.nodeKind.DeclMember ] =
     '' node.info.refType.filter( self, prefix .. "  ", depth + 1 )
 };
 
+
+fn getLiteralValue( node: TransUnit.Node ): stem {
+    switch node.get_kind() {
+        case TransUnit.nodeKind.LiteralNil {
+            return nil;
+        }   
+        case TransUnit.nodeKind.LiteralChar {
+            return node.get_info().num;
+        }   
+        case TransUnit.nodeKind.LiteralInt {
+            return node.get_info().num;
+        }       
+        case TransUnit.nodeKind.LiteralReal {
+            return node.get_info().num;
+        }       
+        case TransUnit.nodeKind.LiteralArray {
+            let array:stem[] = [];
+            foreach val in node.get_info()@TransUnit.Node[] {
+                table.insert( array, getLiteralValue( val ) );
+            }
+            return array;
+        }       
+        case TransUnit.nodeKind.LiteralList {
+            let list:stem[] = [];
+            foreach val in node.get_info()@TransUnit.Node[] {
+                table.insert( list, getLiteralValue( val ) );
+            }
+            return list;
+        }       
+        case TransUnit.nodeKind.LiteralMap {
+            let map:Map = {};
+            foreach pair in node.get_info()@Map<str,stem> {
+                map[ pair.key ] = pair.val;
+            }
+            return map;
+        }       
+        case TransUnit.nodeKind.LiteralString {
+            let nodeInfo = node.get_info()@TransUnit.LiteralStringInfo;
+            let txt = (nodeInfo.get_token()@Parser.Token).txt;
+            if string.find( txt, '^```' ) {
+                txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
+            }       
+            let argList = nodeInfo.get_argList();
+            if argList and #argList > 0 {
+                let argVal = getLiteralValue( argList );
+                return string.format( txt, table.unpack( argVal ) );
+            }       
+            return txt;
+        }       
+        case TransUnit.nodeKind.LiteralBool {
+            return node.get_info().txt == "true";
+        }       
+        default {
+            error( "not support val" );
+        }
+    }
+}
+
+
 filterObj[ TransUnit.nodeKind.ExpMacroExp ] = 
     fn( self: filterObj, node: stem, parent:stem, baseIndent:int )
 {
@@ -436,7 +495,13 @@ filterObj[ TransUnit.nodeKind.ExpMacroExp ] =
 
     let typeId:int = node.info.func.expType.get_typeId();
     let chunk = self.typeId2MacroChunk[ typeId ];
-    ''chunk[ node.info.func.expType.getTxt() ]();
+
+    let argVal:stem[] = [];
+    foreach argNode in node.info.argList.info@TransUnit.Node[] {
+        table.insert( argVal, getLiteralValue( argNode ) );
+    }
+
+    '' chunk[ node.info.func.expType.getTxt() ]( table.unpack( argVal ) );
     
 };
 
@@ -450,6 +515,7 @@ filterObj[ TransUnit.nodeKind.DeclMacro ] =
         
         self.writeln( "local module = {}", baseIndent );
         self.write( "function module.%s(" ( name.txt ) );
+        '' self.write( "local function %s(" ( name.txt ) );
 
         let argTxt = "";
         foreach arg, index in nodeInfo.get_argList() {
@@ -650,6 +716,7 @@ filterObj[ TransUnit.nodeKind.DeclVar ] =
     }
 
     if self.macroDepth > 0 {
+        self.writeln( "", baseIndent );
 	foreach var, index in varList {
 	    self.writeln(
                 "macroVar.%s = %s" ( var[ "name" ].txt, var[ "name" ].txt ),
@@ -785,8 +852,8 @@ filterObj[ TransUnit.nodeKind.Switch ] =
     if node.info.default {
         self.write( "else " );
         TransUnit.nodeFilter( node.info.default, self, node, baseIndent + 2 );
-        self.writeln( "end", baseIndent );
     }
+    self.writeln( "end", baseIndent );
     
     self.writeln( "end", baseIndent );
 };

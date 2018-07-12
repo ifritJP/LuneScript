@@ -906,6 +906,7 @@ fn TransUnit.registBuiltInScope() {
 	"table": {
             "insert": { "ret": [""] },  
             "remove": { "ret": [""] },
+            "unpack": { "ret": ["stem"] },
         },
 	"debug": {
             "getinfo": { "ret": ["stem"] },
@@ -2233,12 +2234,28 @@ fn TransUnit.analyzeExpCont( firstToken: stem, exp: stem, skipFlag: bool ): stem
 		    self.pushback();
 		    expList = self.analyzeExpList();
 		    self.checkNextToken( ")" );
-		}	
+		}
 		let info = { "func": exp, "argList": expList };
 
                 let kind = nodeKindExpCall;
                 if exp.expType.get_kind() == TypeInfoKindMacro {
                     kind = nodeKindExpMacroExp;
+
+                    foreach exp in expList.info@Node[] {
+                        let kind = exp.kind;
+                        if kind ~= nodeKindLiteralNil and
+                            kind ~= nodeKindLiteralChar and
+                            kind ~= nodeKindLiteralInt and
+                            kind ~= nodeKindLiteralReal and
+                            kind ~= nodeKindLiteralArray and
+                            kind ~= nodeKindLiteralList and
+                            kind ~= nodeKindLiteralMap and
+                            kind ~= nodeKindLiteralString and
+                            kind ~= nodeKindLiteralBool
+                        {   
+                            self.error( "Macro arguments must be literal value." );
+                        }   
+                    }   
                 }
 		exp = self.createNode(
 		    kind, firstToken.pos,
