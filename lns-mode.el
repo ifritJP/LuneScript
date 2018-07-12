@@ -31,7 +31,8 @@
     lns-keyword (lns-make-regex-or
 		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
-		   "nil" "true" "switch" "case" "default" "\!" "extend"
+		   "nil" "true" "switch" "case" "default" "\!" "extend" "proto"
+		   "override"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
@@ -39,7 +40,7 @@
 				      '("let" "if" "elseif" "else" "while"
 					"repeat" "for" "apply" "foreach" "forsort"
 					"class" "pub" "pro" "pri" "form" "advertise"
-					"switch"
+					"switch" "proto"
 					"wrap" "static" "trust" "import" "''"))
 				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst
@@ -483,9 +484,12 @@ pattern は  {, }, {{, }} のいずれか。
 	  (lns-indent-to 0)
 	  ))
        ))
-    (when column
-      (move-to-column column t)
-      (indent-line-to column))
+    (let ((marker (point-marker)))
+      (when column
+	(move-to-column column t)
+	(indent-line-to column))
+      (when (> marker (point))
+	(goto-char marker)))
     )
   )
 

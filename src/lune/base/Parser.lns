@@ -60,16 +60,47 @@ fn createReserveInfo( luaMode: bool ) :
     multiCharDelimitMap[ "<" ] = [@ "<=" ];
     multiCharDelimitMap[ ">" ] = [@ ">=" ];
     multiCharDelimitMap[ "." ] = [@ ".." ];
-    multiCharDelimitMap[ "@" ] = [@ "@@" ];
-    multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
-    multiCharDelimitMap[ ".." ] = [@ "..." ];
+
+    if not luaMode {
+        multiCharDelimitMap[ ".." ] = [@ "..." ];
+        multiCharDelimitMap[ "," ] = [@ ",," ];
+        multiCharDelimitMap[ ",," ] = [@ ",,," ];
+        multiCharDelimitMap[ "@" ] = [@ "@@" ];
+        multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
+    }
 
     return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
 }
 
-class Stream {
-    pub read(): str;
+pub class Stream {
+    pub fn read( mode:str ): str;
 }
+
+pub class TxtStream extend Stream {
+    pri let txt: str;
+    pri let start: int;
+    pri let eof: bool;
+    pub fn __init( txt: str ) {
+        self.txt = txt;
+        self.start = 1;
+        self.eof = false;
+    }
+    pub override fn read( mode:str ): str {
+        if eof {
+            return nil;
+        }
+        let index = self.txt.find( "\n", self.start, true );
+        if index {
+            let txt = self.txt.sub( self.start, index - 1 );
+            self.start = index + 1;                
+            return txt;
+        }
+        self.eof = true;
+        return self.txt.sub( self.start);
+    }
+}
+
+
 
 pub class Position {
     pub let lineNo: int;
@@ -80,9 +111,27 @@ pub class Token {
     pub let kind: int;
     pub let txt: str;
     pub let pos: Position;
+
 }
 
 pub class Parser {
+    pub fn getToken() : Token;
+    pub fn getStreamName(): str;
+}
+
+pub class WrapParser {
+    let parser: Parser;
+    let name: str;
+    pub fn getToken() : Token {
+        let token = self.parser.getToken();
+        return token;
+    }
+    pub fn getStreamName(): str {
+        return self.name;
+    }
+}
+
+pub class StreamParser extend Parser {
     let stream : Stream;
     let streamName: str;
     let lineNo : int;
@@ -92,9 +141,7 @@ pub class Parser {
     let typeSet : Map<str,bool>;
     let builtInSet :Map<str,bool>;
     let multiCharDelimitMap : Map<str,str[@]>;
-
-
-    __init( stream: Stream, name: str, luaMode: bool ) {
+    fn __init( stream: Stream, name: str, luaMode: bool ) {
 	self.stream = stream;
 	self.streamName = name;
 	self.lineNo = 0;
@@ -110,17 +157,17 @@ pub class Parser {
 	self.multiCharDelimitMap = multiCharDelimitMap;
     }
 
-    pub getStreamName(): str {
+    pub override fn getStreamName(): str {
 	return self.streamName;
     }
 
-    pub static create( path: str, luaMode: bool ): Parser {
+    pub static fn create( path: str, luaMode: bool ): StreamParser {
 	let stream: Stream = io.open( path, "r" );
 
 	if not stream {
 	    return nil;
 	}
-	return new Parser( stream, path, luaMode or string.find( path, "%.lua$" ) );
+	return new StreamParser( stream, path, luaMode or string.find( path, "%.lua$" ) );
     }
 }
 
@@ -147,7 +194,10 @@ let kindKywd = regKind( "Kywd" );
 let kindOpe = regKind( "Ope" );
 let kindType = regKind( "Type" );
 let kindEof = regKind( "Eof" );
-    
+
+pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ) );
+
+
 let quotedCharSet = {};
 quotedCharSet[ 'a' ] = true;
 quotedCharSet[ 'b' ] = true;
@@ -192,6 +242,9 @@ op1Set[ 'not' ] = true;
 op1Set[ '#' ] = true;
 op1Set[ '~' ] = true;
 op1Set[ '*' ] = true;
+op1Set[ '`' ] = true;
+op1Set[ ',,' ] = true;
+op1Set[ ',,,' ] = true;
 
 
 pub static fn getKindTxt( kind: int ) : int {
@@ -206,7 +259,7 @@ pub static fn isOp1( ope: str ) : bool {
     return op1Set[ ope ];
 }
 
-fn Parser.parse() : Token[] {
+fn StreamParser.parse() : Token[] {
     fn readLine() : str {
 	self.lineNo = self.lineNo + 1;
 	return self.stream.read( '*l' );
@@ -269,8 +322,8 @@ fn Parser.parse() : Token[] {
 		    tokenKind = kindOpe;
 		}
 	    }
-	    return { "kind": tokenKind, "txt": token,
-		     "pos": { "lineNo": self.lineNo, "column": tokenColumn } };
+            return new Token( tokenKind, token,
+                              new Position( self.lineNo, tokenColumn ) );
 	}
 
 	'''
@@ -479,7 +532,8 @@ fn Parser.parse() : Token[] {
 		    searchIndex = nextIndex;
 		}
 		else {
-		    addVal( kindDlmt, '`', index );
+		    addVal( kindOpe, '`', index );
+                    searchIndex = index + 1;
 		}
 	    }
 	    elseif findChar == ?? {
@@ -510,7 +564,7 @@ fn Parser.parse() : Token[] {
     }
 }
 
-pub fn Parser.getToken() : str {
+pub override fn StreamParser.getToken() : Token {
     if not self.lineTokenList {
 	return nil;
     }

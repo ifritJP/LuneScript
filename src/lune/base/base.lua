@@ -1,8 +1,26 @@
-local Parser = require( 'lune.base.Parser' ).Parser
+local Parser = require( 'lune.base.Parser' )
 local convLua = require( 'lune.base.convLua' ).filterObj
 local TransUnit = require( 'lune.base.TransUnit' ).TransUnit
 
 local scriptPath = arg[ 1 ]
+
+function _luneGetLocal( varName )
+   local index = 1
+   while true do
+      local name, val = debug.getlocal( 3, index )
+      if name == varName then
+	 return val
+      end
+      if not name then
+	 break
+      end
+      print( name, val )
+      index = index + 1
+   end
+   error( "not found -- " .. varName )
+end
+
+
 
 local function createStream( val, writeFunc )
    local stream = { val = val }
@@ -39,7 +57,7 @@ function _luneScript.loadMeta( module )
 end
 
 local function createPaser( path )
-   local parser = Parser.create( path )
+   local parser = Parser.StreamParser.create( path )
    if not parser then
       error( "failed to open " .. path );
    end

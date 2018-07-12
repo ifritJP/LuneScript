@@ -49,3 +49,23 @@ fn func( val: int! ): int {
 
 print( 3, func( 1 ) );
 print( 0, func( nil ) );
+
+macro _test( sym: str, val: int ) {
+    {
+        let symbol = "%sfunc" (sym);
+        let list: stat[] = [];
+        for count = 1, val {
+            table.insert( list, `{ ,,,"func%d" ( count ) (); } );
+        }
+    }
+    {
+        if foo {
+            (,,,symbol)( 1 );
+        } 
+        else {
+            ,,list;
+        } 
+    }
+}
+
+_test( "sub", 5 );

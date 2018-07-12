@@ -13,11 +13,11 @@ func( data );
 
 pub class ClassA {
     let val: int;
-    __init() {
+    fn __init() {
 	self.val = 10;
 	return self;
     }
-    pub func( data: int ) : int {
+    pub fn func( data: int ) : int {
 	self.val = self.val + 1;
 	return data + self.val;
     }
@@ -28,19 +28,20 @@ pub fn ClassA.sub() : int {
 }
 
 pub class Super {
-    pub sub(): int {
+    pub fn sub(): int {
         return 1;
     }
 }
 
 pub class ClassB extend Super {
-    pub func(): real {
-	return 100.0;
+    pub fn func(): int {
+	return 100;
     }
-    pub func2(): sub.Hoge {
+    pub fn func2(): sub.Hoge {
         return new sub.Hoge( 1 );
     }
 }
 
 let classB = new ClassB();
 print( "classB.sub", classB.sub() );
+

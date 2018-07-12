@@ -64,10 +64,38 @@ filterObj[ TransUnit.nodeKind.DeclClass ] =
     };  
 
 filterObj[ TransUnit.nodeKind.DeclMember ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.name.txt );
-	TransUnit.nodeFilter( node.info.refType, self, prefix .. "  ", depth + 1 );
-    };  
+    fn( self: stem, node: stem, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, node.info.name.txt );
+    TransUnit.nodeFilter( node.info.refType, self, prefix .. "  ", depth + 1 );
+};  
+
+filterObj[ TransUnit.nodeKind.ExpMacroExp ] = 
+    fn( self: stem, node: stem, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, node.info.func.expType.getTxt() );
+};
+
+
+filterObj[ TransUnit.nodeKind.DeclMacro ] = 
+    fn( self: stem, node: stem, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, node.expType.getTxt() );
+
+    let nodeInfo = node.info@TransUnit.DeclMacroInfo;
+    TransUnit.nodeFilter( nodeInfo.get_ast(), self, prefix .. "  ", depth + 1 );
+};
+
+filterObj[ TransUnit.nodeKind.ExpMacroStat ] = 
+    fn( self: stem, node: TransUnit.Node, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, node.get_expType().getTxt() );
+
+    let list:TransUnit.Node[] = node.get_info();
+    foreach node in list {
+        TransUnit.nodeFilter( node, self, prefix .. "  ", depth + 1 );
+    }
+};
 
 
 filterObj[ TransUnit.nodeKind.DeclVar ] = 

@@ -1,0 +1,27 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
+#+HTML_HEAD: <style type="text/css"> <!-- pre.src { color: #ffffff; background-color: #101010; } --> </style>
+
+#+TITLE: クラス設計
+
+#+begin_src plantuml :file plantuml_class_design.png :cache yes
+Node <|-- RootNode
+RootNode "1" *-- "*" StatementNode
+Node <|-- StatementNode
+Node <|-- ExpNode
+ExpNode <|-- literalStrNode
+ExpNode <|-- literalIntNode
+
+
+Filter <|-- ConvFilter
+Filter <|-- DumpFilter
+
+
+Filter: processRoot( RootNode )
+Filter: processStatement( StatementNode )
+#+end_src
+
+

@@ -1,0 +1,13 @@
+pub class outStream {
+    pub fn write(val:str);
+}
+
+pub class memStream extend outStream {
+    let txt: str { pub };
+    pub fn __init() {
+        self.txt = "";
+    }
+    pub override fn write( val: str ) {
+        self.txt = self.txt .. val;
+    }
+}

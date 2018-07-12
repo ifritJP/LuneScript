@@ -54,13 +54,18 @@ local function createReserveInfo( luaMode )
   multiCharDelimitMap["<"] = {"<="}
   multiCharDelimitMap[">"] = {">="}
   multiCharDelimitMap["."] = {".."}
-  multiCharDelimitMap["@"] = {"@@"}
-  multiCharDelimitMap["@@"] = {"@@?"}
-  multiCharDelimitMap[".."] = {"..."}
+  if not luaMode then
+    multiCharDelimitMap[".."] = {"..."}
+    multiCharDelimitMap[","] = {",,"}
+    multiCharDelimitMap[",,"] = {",,,"}
+    multiCharDelimitMap["@"] = {"@@"}
+    multiCharDelimitMap["@@"] = {"@@?"}
+  end
   return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
 
 local Stream = {}
+moduleObj.Stream = Stream
 -- none
 function Stream.new(  )
   local obj = {}
@@ -72,6 +77,34 @@ function Stream.new(  )
 end
 function Stream:__init(  )
             
+end
+
+local TxtStream = {}
+setmetatable( TxtStream, { __index = Stream } )
+moduleObj.TxtStream = TxtStream
+function TxtStream.new( txt )
+  local obj = {}
+  setmetatable( obj, { __index = TxtStream } )
+  if obj.__init then obj:__init( txt ); end
+return obj
+end
+function TxtStream:__init(txt) 
+  self.txt = txt
+  self.start = 1
+  self.eof = false
+end
+function TxtStream:read( mode )
+  if eof then
+    return nil
+  end
+  local index = self.txt:find( "\n", self.start, true )
+  if index then
+    local txt = self.txt:sub( self.start, index - 1 )
+    self.start = index + 1
+    return txt
+  end
+  self.eof = true
+  return self.txt:sub( self.start )
 end
 
 local Position = {}
@@ -109,13 +142,53 @@ self.kind = kind
 
 local Parser = {}
 moduleObj.Parser = Parser
-function Parser.new( stream, name, luaMode )
+-- none
+-- none
+function Parser.new(  )
   local obj = {}
   setmetatable( obj, { __index = Parser } )
+  if obj.__init then
+    obj:__init(  )
+  end
+  return obj
+end
+function Parser:__init(  )
+            
+end
+
+local WrapParser = {}
+moduleObj.WrapParser = WrapParser
+function WrapParser:getToken(  )
+  local token = self.parser:getToken(  )
+  return token
+end
+function WrapParser:getStreamName(  )
+  return self.name
+end
+function WrapParser.new( parser, name )
+  local obj = {}
+  setmetatable( obj, { __index = WrapParser } )
+  if obj.__init then
+    obj:__init( parser, name )
+  end
+  return obj
+end
+function WrapParser:__init( parser, name )
+            
+self.parser = parser
+  self.name = name
+  end
+
+local StreamParser = {}
+setmetatable( StreamParser, { __index = Parser } )
+moduleObj.StreamParser = StreamParser
+function StreamParser.new( stream, name, luaMode )
+  local obj = {}
+  setmetatable( obj, { __index = StreamParser } )
   if obj.__init then obj:__init( stream, name, luaMode ); end
 return obj
 end
-function Parser:__init(stream, name, luaMode) 
+function StreamParser:__init(stream, name, luaMode) 
   self.stream = stream
   self.streamName = name
   self.lineNo = 0
@@ -127,15 +200,15 @@ function Parser:__init(stream, name, luaMode)
   self.builtInSet = builtInSet
   self.multiCharDelimitMap = multiCharDelimitMap
 end
-function Parser:getStreamName(  )
+function StreamParser:getStreamName(  )
   return self.streamName
 end
-function Parser.create( path, luaMode )
+function StreamParser.create( path, luaMode )
   local stream = io.open( path, "r" )
   if not stream then
     return nil
   end
-  return Parser.new(stream, path, luaMode or string.find( path, "%.lua$" ))
+  return StreamParser.new(stream, path, luaMode or string.find( path, "%.lua$" ))
 end
 
 local kind = {}
@@ -162,6 +235,9 @@ local kindKywd = regKind( "Kywd" )
 local kindOpe = regKind( "Ope" )
 local kindType = regKind( "Type" )
 local kindEof = regKind( "Eof" )
+local noneToken = Token.new(kindEof, "", Position.new(0, 0))
+moduleObj.noneToken = noneToken
+
 local quotedCharSet = {}
 quotedCharSet['a'] = true
 quotedCharSet['b'] = true
@@ -203,6 +279,9 @@ op1Set['not'] = true
 op1Set['#'] = true
 op1Set['~'] = true
 op1Set['*'] = true
+op1Set['`'] = true
+op1Set[',,'] = true
+op1Set[',,,'] = true
 local function getKindTxt( kind )
   return kind2Txt[kind]
 end
@@ -215,7 +294,7 @@ local function isOp1( ope )
   return op1Set[ope]
 end
 moduleObj.isOp1 = isOp1
-function Parser:parse(  )
+function StreamParser:parse(  )
   local function readLine(  )
     self.lineNo = self.lineNo + 1
     return self.stream:read( '*l' )
@@ -256,7 +335,7 @@ function Parser:parse(  )
           tokenKind = kindOpe
         end
       end
-      return {["kind"] = tokenKind, ["txt"] = token, ["pos"] = {["lineNo"] = self.lineNo, ["column"] = tokenColumn}}
+      return Token.new(tokenKind, token, Position.new(self.lineNo, tokenColumn))
     end
     
     local function analyzeNumber( token, startIndex )
@@ -416,7 +495,8 @@ function Parser:parse(  )
           addVal( kindStr, '```' .. str, index )
           searchIndex = nextIndex
         else 
-          addVal( kindDlmt, '`', index )
+          addVal( kindOpe, '`', index )
+          searchIndex = index + 1
         end
       elseif findChar == 63 then
         local codeChar = rawLine:sub( index + 1, index + 1 )
@@ -442,7 +522,7 @@ function Parser:parse(  )
   end
 end
 
-function Parser:getToken(  )
+function StreamParser:getToken(  )
   if not self.lineTokenList then
     return nil
   end
@@ -477,6 +557,10 @@ _classInfoPosition.lineNo = {
   name='lineNo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
 _classInfoPosition.column = {
   name='column', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
+local _classInfoStream = {}
+_className2InfoMap.Stream = _classInfoStream
+local _classInfoStreamParser = {}
+_className2InfoMap.StreamParser = _classInfoStreamParser
 local _classInfoToken = {}
 _className2InfoMap.Token = _classInfoToken
 _classInfoToken.kind = {
@@ -484,36 +568,62 @@ _classInfoToken.kind = {
 _classInfoToken.txt = {
   name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
 _classInfoToken.pos = {
-  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 136 }
+  name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 152 }
+local _classInfoTxtStream = {}
+_className2InfoMap.TxtStream = _classInfoTxtStream
+local _classInfoWrapParser = {}
+_className2InfoMap.WrapParser = _classInfoWrapParser
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 174 }
+  name='kind', accessMode = 'pub', typeId = 200 }
+_varName2InfoMap.noneToken = {
+  name='noneToken', accessMode = 'pub', typeId = 154 }
 local _typeInfoList = {}
 moduleObj._typeInfoList = _typeInfoList
-_typeInfoList[1] = { parentId = 1, typeId = 136, baseId = 1, txt = 'Position',
+_typeInfoList[1] = { parentId = 1, typeId = 142, baseId = 1, txt = 'Stream',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {144}, }
+_typeInfoList[2] = { parentId = 1, typeId = 146, baseId = 142, txt = 'TxtStream',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {148, 150}, }
+_typeInfoList[3] = { parentId = 1, typeId = 152, baseId = 1, txt = 'Position',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[2] = { parentId = 1, typeId = 138, baseId = 1, txt = 'Token',
+_typeInfoList[4] = { parentId = 1, typeId = 154, baseId = 1, txt = 'Token',
 staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[3] = { parentId = 1, typeId = 140, baseId = 1, txt = 'Parser',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {158, 160, 216}, }
-_typeInfoList[4] = { parentId = 1, typeId = 162, baseId = 1, txt = 'Stream',
-staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[5] = { parentId = 1, typeId = 174, baseId = 1, txt = 'Map',
+_typeInfoList[5] = { parentId = 1, typeId = 156, baseId = 1, txt = 'Parser',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {158, 160}, }
+_typeInfoList[6] = { parentId = 1, typeId = 162, baseId = 1, txt = 'WrapParser',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {164, 166}, }
+_typeInfoList[7] = { parentId = 1, typeId = 168, baseId = 156, txt = 'StreamParser',
+staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {}, retTypeId = {}, children = {186, 188, 238}, }
+_typeInfoList[8] = { parentId = 1, typeId = 200, baseId = 1, txt = 'Map',
 staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {18, 12}, retTypeId = {}, children = {}, }
-_typeInfoList[6] = { parentId = 1, typeId = 188, baseId = 1, txt = 'getKindTxt',
+_typeInfoList[9] = { parentId = 1, typeId = 214, baseId = 1, txt = 'getKindTxt',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[7] = { parentId = 1, typeId = 190, baseId = 1, txt = 'isOp2',
+_typeInfoList[10] = { parentId = 1, typeId = 216, baseId = 1, txt = 'isOp2',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[8] = { parentId = 1, typeId = 192, baseId = 1, txt = 'isOp1',
+_typeInfoList[11] = { parentId = 1, typeId = 218, baseId = 1, txt = 'isOp1',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[9] = { parentId = 1, typeId = 224, baseId = 1, txt = 'getEofToken',
+_typeInfoList[12] = { parentId = 1, typeId = 246, baseId = 1, txt = 'getEofToken',
 staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {6}, children = {}, }
-_typeInfoList[10] = { parentId = 140, typeId = 158, baseId = 1, txt = 'getStreamName',
+_typeInfoList[13] = { parentId = 142, typeId = 144, baseId = 1, txt = 'read',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[11] = { parentId = 140, typeId = 160, baseId = 1, txt = 'create',
-staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {140}, children = {}, }
-_typeInfoList[12] = { parentId = 140, typeId = 216, baseId = 1, txt = 'getToken',
+_typeInfoList[14] = { parentId = 146, typeId = 148, baseId = 1, txt = '__init',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[15] = { parentId = 146, typeId = 150, baseId = 1, txt = 'read',
 staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[16] = { parentId = 156, typeId = 158, baseId = 1, txt = 'getToken',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {154}, children = {}, }
+_typeInfoList[17] = { parentId = 156, typeId = 160, baseId = 1, txt = 'getStreamName',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[18] = { parentId = 162, typeId = 164, baseId = 1, txt = 'getToken',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {154}, children = {}, }
+_typeInfoList[19] = { parentId = 162, typeId = 166, baseId = 1, txt = 'getStreamName',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[20] = { parentId = 168, typeId = 186, baseId = 1, txt = 'getStreamName',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[21] = { parentId = 168, typeId = 188, baseId = 1, txt = 'create',
+staticFlag = true, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {168}, children = {}, }
+_typeInfoList[22] = { parentId = 168, typeId = 238, baseId = 1, txt = 'getToken',
+staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {154}, children = {}, }
 ----- meta -----
 return moduleObj
