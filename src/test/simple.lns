@@ -15,7 +15,6 @@ pub class ClassA {
     let val: int;
     fn __init() {
 	self.val = 10;
-	return self;
     }
     pub fn func( data: int ) : int {
 	self.val = self.val + 1;
@@ -28,17 +27,25 @@ pub fn ClassA.sub() : int {
 }
 
 pub class Super {
+    pro let val:int;
     pub fn sub(): int {
         return 1;
     }
 }
 
 pub class ClassB extend Super {
+    pub fn __init( val: int ) {
+        super( val );
+    }
+    
     pub fn func(): int {
-	return 100;
+	return self.val;
     }
     pub fn func2(): sub.Hoge {
         return new sub.Hoge( 1 );
+    }
+    pub fn func3(): int[] {
+        return [ 1, 2, 3 ];
     }
 }
 

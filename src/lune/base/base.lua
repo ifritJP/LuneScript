@@ -1,8 +1,12 @@
 local Parser = require( 'lune.base.Parser' )
-local convLua = require( 'lune.base.convLua' ).filterObj
+local convLua = require( 'lune.base.convLua' )
 local TransUnit = require( 'lune.base.TransUnit' ).TransUnit
+local Util = require( 'lune.base.Util' );
+
 
 local scriptPath = arg[ 1 ]
+local mode = arg[ 2 ]
+local validProf = arg[ 3 ]
 
 function _luneGetLocal( varName )
    local index = 1
@@ -20,7 +24,9 @@ function _luneGetLocal( varName )
    error( "not found -- " .. varName )
 end
 
-
+function _fcall( func, ... )
+   return func( ... )
+end
 
 local function createStream( val, writeFunc )
    local stream = { val = val }
@@ -40,7 +46,7 @@ function _luneScript.loadModule( module )
       searchPath = string.gsub( searchPath, "%.lua", ".lns" )
       local path = package.searchpath( module, searchPath )
 
-      _luneScript.loadedMap[ module ] = _luneScript.loadFile( path )
+      _luneScript.loadedMap[ module ] = _luneScript.loadFile( path, module )
    end
    return _luneScript.loadedMap[ module ]
 end
@@ -51,7 +57,7 @@ function _luneScript.loadMeta( module )
       searchPath = string.gsub( searchPath, "%.lua", ".lnm" )
       local path = package.searchpath( module, searchPath )
 
-      _luneScript.loadedMetaMap[ module ] = _luneScript.loadFile( path )
+      _luneScript.loadedMetaMap[ module ] = _luneScript.loadFile( path, module )
    end
    return _luneScript.loadedMetaMap[ module ]
 end
@@ -64,21 +70,35 @@ local function createPaser( path )
    return parser
 end
 
-local function createAst( path )
-   local transUnit = TransUnit.new()
-   return transUnit:createAST( createPaser( path ) )
+
+local function newTransUnit()
+   return TransUnit.new( convLua.MacroEvalImp.new() )
 end
 
-function _luneScript.loadFile( path )
-   local transUnit = TransUnit.new()
+local function createAst( path, module )
+   local transUnit = newTransUnit()
+   return transUnit:createAST( createPaser( path ), nil, module )
+end
 
-   local ast = transUnit:createAST( createPaser( path ) )
+local function getNode( ast )
+   if not ast.filter then
+      return ast.node
+   end
+   return ast
+end
+
+function _luneScript.loadFile( path, module )
+
+   Util.errorLog( "loadFile " .. path )
+   
+   local ast = createAst( path, module )
    
    local func = function( self, txt )
       self.val = self.val .. txt
    end
    local stream = createStream( "", func )
-   ast:filter( convLua.new( path, stream, true ), nil, 0 )
+   local conv = convLua.Filter.new( path, stream, true, nil, ast.moduleTypeInfo )
+   getNode( ast ):filter( conv, nil, 0 )
 
    local chunk, err = load( stream.val )
    if err then
@@ -92,7 +112,6 @@ end
 
 
 
-local mode = arg[ 2 ]
 if mode == "token" then
    local parser = createPaser( scriptPath )
    while true do
@@ -103,27 +122,36 @@ if mode == "token" then
       print( token.kind, token.pos.lineNo, token.pos.column, token.txt )
    end
 else
+   local module = string.gsub( scriptPath, "/", "." )
+   module = string.gsub( module, "%.lns$", "" )
    if mode == "ast" then
-      local ast = createAst( scriptPath )
-      ast:filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
+      Util.profile(
+	 validProf,
+	 function()
+	    local ast = createAst( scriptPath, module )
+	    getNode( ast ):filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
+	 end, scriptPath .. ".profi" )
    elseif mode == "lua" then
-      local ast = createAst( scriptPath )
-      ast:filter( convLua.new( scriptPath, io.stdout ), nil, 0 )
+      local ast = createAst( scriptPath, module )
+      getNode( ast ):filter( convLua.Filter.new( scriptPath, io.stdout ), nil, 0 )
    elseif mode == "save" then
-      local ast = createAst( scriptPath )
-      local func = function( self, txt )
-	 self.val:write( txt )
-      end
-      local luaPath = scriptPath:gsub( ".lns$", ".lua" )
-      if luaPath ~= scriptPath then
-	 local fileObj = io.open( luaPath, "w" )
-	 local stream = createStream( fileObj, func )
-	 ast:filter( convLua.new( scriptPath, stream ), nil, 0 )
-	 fileObj:close()
-      end
+
+      Util.profile(
+	 validProf,
+      	 function()
+	    local ast = createAst( scriptPath, module )
+	    local func = function( self, txt )
+	       self.val:write( txt )
+	    end
+	    local luaPath = scriptPath:gsub( ".lns$", ".lua" )
+	    if luaPath ~= scriptPath then
+	       local fileObj = io.open( luaPath, "w" )
+	       local stream = createStream( fileObj, func )
+	       getNode( ast ):filter( convLua.Filter.new( scriptPath, stream ), nil, 0 )
+	       fileObj:close()
+	    end
+      	 end, scriptPath .. ".profi" )
    elseif mode == "exe" then
-      local module = string.gsub( scriptPath, "/", "." )
-      module = string.gsub( module, "%.lns$", "" )
       _luneScript.loadModule( module )
    else
       print( "illegal mode" )

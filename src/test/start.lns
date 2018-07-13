@@ -5,11 +5,16 @@ print( classA.func( 0 ) );
 print( classA.func( 0 ) );
 print( classA.sub() );
 
-let classB = new simple.ClassB();
+let classB = new simple.ClassB( 123 );
 print( "classB.func()", classB.func() );
 print( "classB.sub()", classB.sub() );
 let hoge = classB.func2();
 print( "Hoge.func()", hoge.func() );
+
+let func3ret = classB.func3() ;
+foreach val in func3ret {
+    print( val );
+}
 
 print( "12%d" ( 10 ) );
 
@@ -29,7 +34,7 @@ print( "op", 1,   1 or  "2" or  3.0 or  {} );
 
 for index = 1, 4 {
     switch index {
-        case 1, 2 {
+        case 1, 2 {       
             print( "hoge", index );
         }   
         case 3 {
@@ -50,22 +55,97 @@ fn func( val: int! ): int {
 print( 3, func( 1 ) );
 print( 0, func( nil ) );
 
-macro _test( sym: str, val: int ) {
+macro _test() {
+    print( "macro hoge" );
+}
+_test();
+
+macro _test2( val:int, funcxx:sym ) {
     {
-        let symbol = "%sfunc" (sym);
-        let list: stat[] = [];
-        for count = 1, val {
-            table.insert( list, `{ ,,,"func%d" ( count ) (); } );
+        fn func(val2:int):str {
+            return "mfunc%d" (val2);
+        }
+        let message = "hello %d %s" ( val, ,,,,funcxx );
+        let stat = `{ print( "macro stat" ); };
+        let stat2 = `{
+            for index = 1, 10 {
+                print( "hoge %d" ( index ) );
+            }
+        };
+        let stat3:stat[] = [];
+        for index = 1, 4 {
+            table.insert( stat3, `{ print( "foo %d" ( ,,index ) ); } );
+        }
+        let stat4 = ,,,func( 1 );
+        let stat5 = `{
+            ,,stat4( 100 );
+            _fcall( ,,,func( 1 ), ( ,,func( 2 ) ));
+            _fcall( ,,,func( 1 ), ( ,,,,stat4 ));
+        };
+    }
+    print( ,,message );
+    ,,funcxx( "macro test2" );
+    ,,stat;
+    ,,stat2;
+    ,,stat3;
+    ,,stat4( 10 );
+    ,,stat5;
+}
+
+fn mfunc1( val: int ) {
+    print( "mfunc1", val );
+}
+
+_test2( 1, print );
+
+macro _classtest( macroVal: int, fieldInfoList: Map<str,str>[] ) {
+    {
+        let name = ,,,"classTest%d" (macroVal);
+        let field:stat[] = [];
+
+        if fieldInfoList {
+            foreach fieldInfo in fieldInfoList {
+                foreach typeName, varName in fieldInfo {
+                    table.insert( field, `{
+                        pri let ,,,varName : ,,,typeName { pub };
+                    });
+                }
+            }
         }
     }
-    {
-        if foo {
-            (,,,symbol)( 1 );
-        } 
-        else {
-            ,,list;
-        } 
+    class ,,name {
+        ,,field;
+        pub fn func(): int {
+            return ,,macroVal;
+        }
     }
 }
 
-_test( "sub", 5 );
+_classtest( 1, [ { "val": "int" }, { "val2": "str" } ] ) ;
+_classtest( 2 );
+_classtest( 3 );
+
+let classObj = new classTest1( 1000, "2000" );
+print( classObj.func(), classObj.get_val(), classObj.get_val2() );
+classObj = new classTest2();
+print( classObj.func() );
+classObj = new classTest3();
+print( classObj.func() );
+
+
+macro _stattest( val: stat ) {
+    ,,val;
+}
+
+_stattest(
+    `{
+        print( "1" );
+        print( "2" );
+    } );
+
+macro _symboltest( symbol: sym, val:stem ) {
+    print( ,,symbol( ,,val ) );
+}
+
+_symboltest( string.format, "test\n" );
+

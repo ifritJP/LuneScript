@@ -43,25 +43,25 @@ test-comp:
 	cp lune/base/base.lua work/1/lune/base
 	cp lune/base/base.lua work/2/lune/base
 	cp lune/base/base.lua work/3/lune/base
+	$(call trans,Util)
 	$(call trans,Parser)
 	$(call trans,TransUnit)
 	$(call trans,convLua)
 	$(call trans,dumpNode)
-	$(call trans,Util)
 	$(MAKE) test-comp2
 
 test-comp2:
+	$(call transwork,1,2,Util)
 	$(call transwork,1,2,Parser)
 	$(call transwork,1,2,TransUnit)
 	$(call transwork,1,2,convLua)
 	$(call transwork,1,2,dumpNode)
-	$(call transwork,1,2,Util)
 
+	$(call transwork,2,3,Util)
 	$(call transwork,2,3,Parser)
 	$(call transwork,2,3,TransUnit)
 	$(call transwork,2,3,convLua)
 	$(call transwork,2,3,dumpNode)
-	$(call transwork,2,3,Util)
 
 	diff -r work/2 work/3
 

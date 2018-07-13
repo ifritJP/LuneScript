@@ -11,3 +11,35 @@ pub class memStream extend outStream {
         self.txt = self.txt .. val;
     }
 }
+
+pub fn errorLog( message: str ) {
+    let write = (io@stem).stderr.write;
+    write( (io@stem).stderr, message .. "\n" );
+}
+
+pub fn debugLog() {
+    for level = 2, 6 {
+        let debugInfo = debug.getinfo( level );
+        if debugInfo {
+            errorLog( "-- %s %s" ( debugInfo[ "short_src" ],
+                                   debugInfo[ 'currentline' ] ) );
+        }
+    }
+}
+
+
+pub fn profile( validTest:bool, func: stem, path: str ) {
+    if not validTest {
+        return func();
+    }
+    
+    let profiler = require( 'ProFi' );
+    profiler.start();
+    
+    let result:stem = func();
+    
+    profiler.stop();
+    profiler.writeReport( path );
+
+    return result;
+}

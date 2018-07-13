@@ -65,6 +65,7 @@ fn createReserveInfo( luaMode: bool ) :
         multiCharDelimitMap[ ".." ] = [@ "..." ];
         multiCharDelimitMap[ "," ] = [@ ",," ];
         multiCharDelimitMap[ ",," ] = [@ ",,," ];
+        multiCharDelimitMap[ ",,," ] = [@ ",,,," ];
         multiCharDelimitMap[ "@" ] = [@ "@@" ];
         multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
     }
@@ -83,10 +84,13 @@ pub class TxtStream extend Stream {
     pub fn __init( txt: str ) {
         self.txt = txt;
         self.start = 1;
+        if not txt {
+            error( "txt is nil" );
+        }
         self.eof = false;
     }
     pub override fn read( mode:str ): str {
-        if eof {
+        if self.eof {
             return nil;
         }
         let index = self.txt.find( "\n", self.start, true );
@@ -119,14 +123,14 @@ pub class Parser {
     pub fn getStreamName(): str;
 }
 
-pub class WrapParser {
+pub class WrapParser extend Parser {
     let parser: Parser;
     let name: str;
-    pub fn getToken() : Token {
+    pub override fn getToken() : Token {
         let token = self.parser.getToken();
         return token;
     }
-    pub fn getStreamName(): str {
+    pub override fn getStreamName(): str {
         return self.name;
     }
 }
@@ -183,17 +187,17 @@ fn regKind( name : str) : int {
     return assignKind;
 }
 
-let kindCmnt = regKind( "Cmnt" );
-let kindStr = regKind( "Str" );
-let kindInt = regKind( "Int" );
-let kindReal = regKind( "Real" );
-let kindChar = regKind( "Char" );
-let kindSymb = regKind( "Symb" );
-let kindDlmt = regKind( "Dlmt" );
-let kindKywd = regKind( "Kywd" );
-let kindOpe = regKind( "Ope" );
-let kindType = regKind( "Type" );
-let kindEof = regKind( "Eof" );
+pub let kindCmnt = regKind( "Cmnt" );
+pub let kindStr = regKind( "Str" );
+pub let kindInt = regKind( "Int" );
+pub let kindReal = regKind( "Real" );
+pub let kindChar = regKind( "Char" );
+pub let kindSymb = regKind( "Symb" );
+pub let kindDlmt = regKind( "Dlmt" );
+pub let kindKywd = regKind( "Kywd" );
+pub let kindOpe = regKind( "Ope" );
+pub let kindType = regKind( "Type" );
+pub let kindEof = regKind( "Eof" );
 
 pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ) );
 
@@ -245,6 +249,7 @@ op1Set[ '*' ] = true;
 op1Set[ '`' ] = true;
 op1Set[ ',,' ] = true;
 op1Set[ ',,,' ] = true;
+op1Set[ ',,,,' ] = true;
 
 
 pub static fn getKindTxt( kind: int ) : int {

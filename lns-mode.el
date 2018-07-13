@@ -11,6 +11,9 @@
 (defvar lns-indent-level 4)
 (defvar lns-command-path "lns" )
 
+(defvar lns-no-token-pattern "[^a-zA-Z0-9_]")
+(defvar lns-no-space-pattern "[^\s \t]")
+
 (defun lns-make-regex-or (list)
   (apply 'concat
 	 (format "\\_<%s\\_>" (car list))
@@ -23,7 +26,7 @@
     lns-builtin (lns-make-regex-or
 		 '("_VERSION" "assert" "collectgarbage" "dofile" "error"
 		   "getfenv" "getmetatable" "ipairs" "load" "loadfile"
-		   "loadstring" "module" "next" "pairs" "pcall" "print"
+		   "loadstring" "next" "pairs" "pcall" "print"
 		   "rawequal" "rawget" "rawlen" "rawset" "require" "select"
 		   "setfenv" "setmetatable" "tonumber" "tostring"
 		   "type" "unpack" "xpcall")))
@@ -32,7 +35,7 @@
 		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
 		   "nil" "true" "switch" "case" "default" "\!" "extend" "proto"
-		   "override"
+		   "override" "macro"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
@@ -40,12 +43,12 @@
 				      '("let" "if" "elseif" "else" "while"
 					"repeat" "for" "apply" "foreach" "forsort"
 					"class" "pub" "pro" "pri" "form" "advertise"
-					"switch" "proto"
+					"switch" "proto" "case"
 					"wrap" "static" "trust" "import" "''"))
 				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst
     lns-type (lns-make-regex-or
-	      '("int" "real" "int_" "real_" "stem" "Map" "Array" "List" "str" "bool")))
+	      '("int" "real" "sym" "stem" "Map" "Array" "List" "str" "bool")))
   )
   
 
@@ -135,6 +138,9 @@
     (syntax-table))
   "`lns-mode' syntax table.")
 
+(defvar lns-imenu-generic-expression
+  '((nil "\\(\\_<fn\\_>\\|\\_<class\\_>\\)[ \t]*\\([A-Za-z0-9_\.]+\\)" 2)))
+
 
 ;;;###autoload
 (define-derived-mode lns-mode lns--prog-mode "Lns"
@@ -159,6 +165,7 @@
          (comment-use-global-state . t)
 	 (indent-tabs-mode . nil)
 	 (comment-start . "''")
+	 (imenu-generic-expression . ,lns-imenu-generic-expression)
          ))
   )
 
@@ -349,6 +356,7 @@ pattern は  {, }, {{, }} のいずれか。
 	       (re-search-forward
 		(format "^[\s \t]*\\(%s\\)" lns-bloak-statement-head)
 		start-pos t))
+	      ;; 文の先頭が見つかった場合
 	       (progn
 		 (goto-char (match-beginning 0))
 		 (re-search-forward "[^\s \t]")
@@ -395,22 +403,44 @@ pattern は  {, }, {{, }} のいずれか。
     (re-search-forward "[^ \t]")
     (backward-char)))
 
-(defun lns-indent-to (indent)
-  (if (not (lns-indent-search-open-pair))
-      (setq column 0)
-    (if (or (eq (char-after) ?{)
-	    (eq (char-after) ?\()
-	    (eq (char-after) ?\[))
-	(progn
-	  (setq pos (point))
-	  (forward-char)
-	  (if (lns-re-search-forward-eol "[^ \t]")
-	      (progn
-		(goto-char pos)
-		(setq column (+ (current-column) 2)))
-	    (lns-indent-goto-no-space-bol)
-	    (setq column (+ (current-column) lns-indent-level))))
-      (setq column (+ (current-column) indent)))))
+(defun lns-get-current-token ()
+  (interactive)
+  (save-excursion
+    (let (symstart symend)
+      (setq symstart (re-search-backward lns-no-token-pattern nil t))
+      (when symstart
+	(setq symstart (1+ symstart)))
+      (forward-char)
+      (setq symend (re-search-forward lns-no-token-pattern nil t))
+      (when symend
+	(setq symend (1- symend)))
+      (when (and symstart symend)
+	(buffer-substring symstart symend)))))
+
+(defun lns-indent-to (indent &optional nomore)
+  (let ((org-pos (point)))
+    (if (not (lns-indent-search-open-pair))
+	(setq column 0)
+      (if (or (eq (char-after) ?{)
+	      (eq (char-after) ?\()
+	      (eq (char-after) ?\[))
+	  (progn
+	    (setq pos (point))
+	    (forward-char)
+	    (if (lns-re-search-forward-eol "[^ \t]")
+		(progn
+		  (goto-char pos)
+		  (setq column (+ (current-column) 2)))
+	      (lns-indent-goto-no-space-bol)
+	      (setq column (+ (current-column) lns-indent-level))))
+	(if (equal (lns-get-current-token) "case")
+	    (progn
+	      (setq column (current-column))
+	      (save-excursion
+		(if (re-search-forward "}" org-pos t)
+		    (setq column (+ column indent))
+		  (setq column (+ column 5)))))
+	  (setq column (+ (current-column) indent)))))))
 
 (defun lns-indent-line ()
   (let ((org-pos (point))
@@ -485,7 +515,7 @@ pattern は  {, }, {{, }} のいずれか。
 	  ))
        ))
     (let ((marker (point-marker)))
-      (when column
+      (when (>= column 0)
 	(move-to-column column t)
 	(indent-line-to column))
       (when (> marker (point))
