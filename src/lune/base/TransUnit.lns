@@ -454,6 +454,10 @@ pub class Scope {
     }
 }
 
+
+pub class Filter {
+}
+
 pub class NodePos {
     pri let lineNo: int;
     pri let column: int;
@@ -467,12 +471,16 @@ pub class Node {
     pri let info: stem {pub};
     pub let filter: form;
 
-    pub fn getLiteral(): stem;
+    pub fn getLiteral(): stem[], TypeInfo[] {
+        return nil;
+    }
+    pub fn processFilter( filter: Filter, ... ) {
+    }
 }
 
 
 
-class NamespaceInfo {
+pub class NamespaceInfo {
     pub let name: str;
     pub let scope: Scope;
     pub let typeInfo: TypeInfo;
@@ -505,6 +513,8 @@ pub class TransUnit {
     '' 解析中のクラスを保持する
     pri let namespaceList: NamespaceInfo[];
     pri let classList: NamespaceInfo[];
+    pri let typeId2ClassMap: Map<int,NamespaceInfo>;
+    
     pri let moduleName2Info: Map<str,stem>;
     pri let parser: Parser.Parser;
     pri let typeId2Scope: Map<int,Scope>;
@@ -526,6 +536,7 @@ pub class TransUnit {
 	self.scope = new Scope( nil, false );
         self.namespaceList = [ typeInfoRoot ];
         self.classList = {};
+        self.typeId2ClassMap = {};
         self.typeId2Scope = {};
         self.typeInfo2ClassNode = {};
         self.currentToken = nil;
@@ -595,6 +606,7 @@ pub class TransUnit {
         let namespace = new NamespaceInfo( name, self.scope, typeInfo );
 	table.insert( self.namespaceList, namespace);
 	table.insert( self.classList, namespace );
+        self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
 	self.typeId2Scope[ typeInfo.get_typeId() ] = self.scope;
 	return typeInfo;
     }
@@ -748,6 +760,7 @@ macro _declNodeClass(
         let fieldStatList:stat[] = [];
         let argList:stat[] = [];
         let initStatList:stat[] = [];
+        let relateStat:stat[] = [];
         
         if fieldInfoList {
             foreach fieldInfo in fieldInfoList {
@@ -761,13 +774,28 @@ macro _declNodeClass(
             }
         }
 
+        table.insert( fieldStatList, `{
+            pub override fn processFilter( filter: Filter, ... ) {
+                let argList:stem[] = [ ... ];
+
+                filter.,,,"process%s" (baseName) (self, table.unpack( argList ) );
+            } } );
+
         
         let superStat = `{
             super( ,,_nodeKindSym, pos,
                    typeInfoList[1], typeInfoList, self, nodeFilter );
         };
+
+        table.insert( relateStat, `{
+            pub fn Filter. ,,,"process%s" (baseName) ( node: ,,_className, ... ) {
+            };               
+        } );
+        
     }
 
+    pub proto class ,,_className extend ,,super;
+    ,,relateStat;
     let ,,_nodeKindSym = regKind( ,,baseName );
     pub class ,,_className extend ,,super {
         ,,fieldStatList;
@@ -784,7 +812,8 @@ _declNodeClass( "Import", Node,
 );
 
 _declNodeClass( "Root", Node,
-                [ { "children": "Node[]" } ]
+                [ { "children": "Node[]" },
+                  { "typeId2ClassMap": "Map<int,NamespaceInfo>" } ]
 );
 
 _declNodeClass( "RefType", Node,
@@ -1023,19 +1052,14 @@ _declNodeClass( "LiteralList", Node,
                 [ { "expList": "ExpListNode" } ]
 );
 
-pub class PairList {
+pub class PairItem {
     pri let key: Node { pub };
     pri let val: Node { pub };
 }
 _declNodeClass( "LiteralMap", Node,
                 [ { "map": "Map<Node,Node>" },
-                  { "pairList": "PairList" } ]
+                  { "pairList": "PairItem[]" } ]
 );
-
-'' pub class LiteralStringInfo {
-''     pri let token: Parser.Token {pub};
-''     pri let argList: Node[] {pub};
-'' }
 
 _declNodeClass( "LiteralString", Node,
                 [ { "token": "Parser.Token" },
@@ -1052,17 +1076,79 @@ _declNodeClass( "LiteralSymbol", Node,
 
 
 
-
-'' pub fn LiteralIntNode.getLiteral(): stem, TypeInfo {
-''     return self.num, typeInfoInt;
-'' }
-'' pub fn LiteralRealNode.getLiteral(): stem, TypeInfo {
-''     return self.num, typeInfoReal;
-'' }
-'' pub fn LiteralCharNode.getLiteral(): stem, TypeInfo {
-''     return self.num, typeInfoReal;
-'' }
-
+pub override fn LiteralNilNode.getLiteral(): stem[], TypeInfo[] {
+    return [nil], [typeInfoNil];
+}
+pub override fn LiteralCharNode.getLiteral(): stem[], TypeInfo[] {
+    return [self.num], [typeInfoChar];
+}
+pub override fn LiteralIntNode.getLiteral(): stem[], TypeInfo[] {
+    return [self.num], [typeInfoInt];
+}
+pub override fn LiteralRealNode.getLiteral(): stem[], TypeInfo[] {
+    return [self.num], [typeInfoReal];
+}
+pub override fn LiteralArrayNode.getLiteral(): stem[], TypeInfo[] {
+    let array:stem[] = [];
+    foreach val in self.expList.get_expList() {
+        let txt = val.getLiteral()[1];
+        table.insert( array, txt );
+    }
+    return [array], [self.get_expType()];
+}
+pub override fn LiteralListNode.getLiteral(): stem[], TypeInfo[] {
+    let list:stem[] = [];
+    foreach val in self.expList.get_expList() {
+        let item = val.getLiteral()[1];
+        table.insert( list, item );
+    }
+    return [list], [self.get_expType()];
+}
+pub override fn LiteralMapNode.getLiteral(): stem[], TypeInfo[] {
+    let map:Map<str,stem> = {};
+    foreach val, key in self.map {
+        map[ key.getLiteral()[1] ] = val.getLiteral()[1];
+    }
+    return [map], [self.get_expType()];
+}
+pub override fn LiteralStringNode.getLiteral(): stem[], TypeInfo[] {
+    let txt = self.token.txt;
+    if string.find( txt, '^```' ) {
+        txt = txt.sub( 4, -4 );
+    }
+    else {
+        txt = txt.sub( 2, -2 );
+    }
+    let argList = self.get_argList();
+    if argList and #argList > 0 {
+        let argTbl = [];
+        let argValList = argList.getLiteral()@stem[];
+        foreach arg in argValList {
+            table.insert( argTbl, arg );
+        }
+        return string.format( txt, table.unpack( argTbl ) ), typeInfoString;
+    }
+    return [txt], [typeInfoString];
+}
+pub override fn LiteralBoolNode.getLiteral(): stem[], TypeInfo[] {
+    return [ self.token.txt == "true"], [typeInfoBool];
+}
+pub override fn LiteralSymbolNode.getLiteral(): stem[], TypeInfo[] {
+    return [[ self.token.txt ]], [ typeInfoSymbol ];
+}
+pub override fn RefFieldNode.getLiteral(): stem[], TypeInfo[] {
+    let prefix = self.prefix.getLiteral()[1];
+    table.insert( prefix, "." );
+    table.insert( prefix, self.field.txt );
+    return [ prefix ], [ self.get_expType() ];
+}
+pub override fn ExpMacroStatNode.getLiteral(): stem[], TypeInfo[] {
+    let txt = "";
+    foreach token in self.expStrList {
+        txt = "%s %s" (txt, token.getLiteral()[1]);
+    }
+    return [txt ], [ self.get_expType() ];
+}
 
 
 let quotedChar2Code = {};
@@ -1370,92 +1456,6 @@ fn TransUnit.checkToken( token: stem, txt: str ): stem {
 
 fn TransUnit.checkNextToken( txt: str ): stem {
     return self.checkToken( self.getToken(), txt );
-}
-
-
-
-pub fn getLiteralValue( node: Node ): stem, TypeInfo {
-    if not node {
-        return nil;
-    }
-    switch node.get_kind() {
-        case nodeKindLiteralNil {
-            return nil, typeInfoNil;
-        }
-        case nodeKindLiteralChar {
-            return (node@LiteralCharNode).get_num(), typeInfoChar;
-        }
-        case nodeKindLiteralInt {
-            return (node@LiteralIntNode).get_num(), typeInfoInt;
-        }
-        case nodeKindLiteralReal {
-            return (node@LiteralRealNode).get_num(), typeInfoReal;
-        }
-        case nodeKindLiteralArray {
-            let array:stem[] = [];
-            let literalNode = (node@LiteralArrayNode);
-            foreach val in literalNode.get_expList().get_expList() {
-                let txt = getLiteralValue( val );
-                table.insert( array, txt );
-            }
-            return array, node.get_expType();
-        }
-        case nodeKindLiteralList {
-            let list:stem[] = [];
-            let literalNode = (node@LiteralListNode);
-            foreach val in literalNode.get_expList().get_expList() {
-                let txt = getLiteralValue( val );
-                table.insert( list, txt );
-            }
-            return list, node.get_expType();
-        }
-        case nodeKindLiteralMap {
-            let map:Map<str,stem> = {};
-            foreach val, key in (node@LiteralMapNode).map@Map<stem,stem> {
-                map[ getLiteralValue( key ) ] = getLiteralValue( val );
-            }
-            return map, node.get_expType();
-        }
-        case nodeKindLiteralString {
-            let nodeInfo = node@LiteralStringNode;
-            let txt = (nodeInfo.get_token()@Parser.Token).txt;
-            if string.find( txt, '^```' ) {
-                txt = txt.sub( 4, -4 );
-            }
-            else {
-                txt = txt.sub( 2, -2 );
-            }
-            let argList:Node[] = nodeInfo.get_argList();
-            if argList and #argList > 0 {
-                let argVal = getLiteralValue( argList );
-                return string.format( txt, table.unpack( argVal ) ), typeInfoString;
-            }
-            return txt, typeInfoString;
-        }
-        case nodeKindLiteralBool {
-            return (node@LiteralBoolNode).get_token().txt == "true", typeInfoBool;
-        }
-        case nodeKindLiteralSymbol {
-            return [ (node@LiteralSymbolNode).get_token().txt ], typeInfoSymbol;
-        }
-        case nodeKindRefField {
-            let nodeInfo: Map<str,stem> = node.get_info();
-            let prefix = getLiteralValue( nodeInfo.prefix );
-            table.insert( prefix, "." );
-            table.insert( prefix, nodeInfo.field.txt );
-            return prefix, node.get_expType();
-        }
-        case nodeKindExpMacroStat {
-            let txt = "";
-            foreach token in (node@ExpMacroStatNode).get_expStrList()  {
-                txt = "%s %s" (txt,  getLiteralValue( token ));
-            }
-            return txt, node.get_expType();
-        }
-        default {
-            error( "not support val" );
-        }
-    }
 }
 
 
@@ -2051,6 +2051,8 @@ pub fn TransUnit.createAST( parser: str, macroFlag: bool, module: str ): ASTInfo
 
     self.pushNamespace( "", typeInfoRoot, self.scope );
 
+    let rootScope = self.scope;
+
     self.registBuiltInScope();
 
     let moduleTypeInfo = rootTypeInfo;
@@ -2073,8 +2075,8 @@ pub fn TransUnit.createAST( parser: str, macroFlag: bool, module: str ): ASTInfo
         rootInfo.children = {};
         '' ast = self.createNode(
 	''     nodeKindRoot, { "lineNo": 0, "column": 0 }, [ typeInfoNone ], rootInfo );
-        ast = new RootNode( new Parser.Position( 0, 0 ),
-                            [ typeInfoNone ], rootInfo.children );
+        ast = new RootNode( new Parser.Position( 0, 0 ), [ typeInfoNone ],
+                            rootInfo.children, self.typeId2ClassMap );
         self.analyzeStatementList( rootInfo.children );
 
         let token = self.getTokenNoErr();
@@ -2589,7 +2591,7 @@ fn TransUnit.analyzeDeclVar(
 	    typeInfo = refType.expType;
 	    token = self.getToken();
 	}
-	table.insert( varList, { "name": varName, "refType": refType } );
+	table.insert( varList, new VarInfo( varName, refType ) );
 	table.insert( typeInfoList, typeInfo );
     } token.txt ~= ",";
 
@@ -2631,9 +2633,9 @@ fn TransUnit.analyzeDeclVar(
 
     self.checkNextToken( ";" );
 
-    let declVarInfo = { "accessMode": accessMode,
-	                "varList": varList, "expList": expList,
-	                "typeInfoList": typeInfoList, "unwrap": unwrapBlock };
+    '' let declVarInfo = { "accessMode": accessMode,
+    ''                     "varList": varList, "expList": expList,
+    ''                     "typeInfoList": typeInfoList, "unwrap": unwrapBlock };
 
 
 
@@ -2735,7 +2737,8 @@ fn TransUnit.analyzeMapConst( token: stem ): stem {
 	    }
         }
 
-        table.insert( pairList, { "key": key, "val": val } );
+        ''table.insert( pairList, { "key": key, "val": val } );
+        table.insert( pairList, new PairItem( key, val ) );
         map[ key ] = val;
         nextToken = self.getToken();
     } nextToken.txt ~= ",";
@@ -2832,7 +2835,25 @@ fn TransUnit.evalMacro( firstToken: Parser.Token,
     let argType:stem[] = []; 
     if expList {            
         foreach argNode in expList.get_expList() {
-            let val, typeInfo = getLiteralValue( argNode );
+            ''let val, typeInfo = getLiteralValue( argNode );
+            let valList, typeInfoList = argNode.getLiteral();
+            let val = valList[1];
+            let typeInfo = typeInfoList[1];
+            '' if type( val ) == "table" {
+            ''     foreach txt in val@str[] {
+            ''         if type( txt ) == "table" {
+            ''             foreach txt2 in txt@str[] {
+            ''                 Util.errorLog( "hoge: %s" ( txt2 ) );
+            ''             }
+            ''         }
+            ''         else {
+            ''             Util.errorLog( "hoge: %s" ( txt ) );
+            ''         }
+            ''     }
+            '' }
+            '' else {
+            ''         Util.errorLog( "hoge: %s" ( val ) );
+            '' }
             table.insert( argVal, val );
             table.insert( argType, typeInfo );
         }                       

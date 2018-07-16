@@ -615,6 +615,18 @@ do
   local _classInfoWrapParser = {}
   _className2InfoMap.WrapParser = _classInfoWrapParser
   end
+do
+  local _classInfobase = {}
+  _className2InfoMap.base = _classInfobase
+  _classInfobase.Parser = {
+    name='Parser', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 104 }
+  end
+do
+  local _classInfolune = {}
+  _className2InfoMap.lune = _classInfolune
+  _classInfolune.base = {
+    name='base', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 102 }
+  end
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {

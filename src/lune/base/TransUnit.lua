@@ -405,6 +405,20 @@ function Scope:get_className2ScopeMap()
    return self.className2ScopeMap
 end
 
+local Filter = {}
+moduleObj.Filter = Filter
+function Filter.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = Filter } )
+  if obj.__init then
+    obj:__init(  )
+  end
+  return obj
+end
+function Filter:__init(  )
+            
+end
+
 local NodePos = {}
 moduleObj.NodePos = NodePos
 function NodePos.new( lineNo, column )
@@ -423,7 +437,11 @@ self.lineNo = lineNo
 
 local Node = {}
 moduleObj.Node = Node
--- none
+function Node:getLiteral(  )
+  return nil
+end
+function Node:processFilter( filter, ... )
+end
 function Node.new( kind, pos, expType, expTypeList, info, filter )
   local obj = {}
   setmetatable( obj, { __index = Node } )
@@ -452,6 +470,7 @@ function Node:get_info()
 end
 
 local NamespaceInfo = {}
+moduleObj.NamespaceInfo = NamespaceInfo
 function NamespaceInfo.new( name, scope, typeInfo )
   local obj = {}
   setmetatable( obj, { __index = NamespaceInfo } )
@@ -556,6 +575,7 @@ function TransUnit:__init(macroEval)
   self.scope = Scope.new(nil, false)
   self.namespaceList = {typeInfoRoot}
   self.classList = {}
+  self.typeId2ClassMap = {}
   self.typeId2Scope = {}
   self.typeInfo2ClassNode = {}
   self.currentToken = nil
@@ -609,6 +629,7 @@ function TransUnit:pushClass( baseInfo, externalFlag, name, accessMode )
   local namespace = NamespaceInfo.new(name, self.scope, typeInfo)
   table.insert( self.namespaceList, namespace )
   table.insert( self.classList, namespace )
+  self.typeId2ClassMap[typeInfo:get_typeId(  )] = namespace
   self.typeId2Scope[typeInfo:get_typeId(  )] = self.scope
   return typeInfo
 end
@@ -692,10 +713,23 @@ local function nodeFilter( node, filter, ... )
 end
 moduleObj.nodeFilter = nodeFilter
 
+-- none
+
+function Filter:processNone( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindNone = regKind( [[None]] )
 local NoneNode = {}
 setmetatable( NoneNode, { __index = Node } )
 moduleObj.NoneNode = NoneNode
+function NoneNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processNone( self, table.unpack( argList ) )
+end
 function NoneNode.new( pos, typeInfoList )
   local obj = {}
   setmetatable( obj, { __index = NoneNode } )
@@ -712,10 +746,23 @@ function NoneNode:__init(pos, typeInfoList)
 end
 
 
+-- none
+
+function Filter:processImport( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindImport = regKind( [[Import]] )
 local ImportNode = {}
 setmetatable( ImportNode, { __index = Node } )
 moduleObj.ImportNode = ImportNode
+function ImportNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processImport( self, table.unpack( argList ) )
+end
 function ImportNode.new( pos, typeInfoList, modulePath )
   local obj = {}
   setmetatable( obj, { __index = ImportNode } )
@@ -736,34 +783,64 @@ function ImportNode:get_modulePath()
 end
 
 
+-- none
+
+function Filter:processRoot( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindRoot = regKind( [[Root]] )
 local RootNode = {}
 setmetatable( RootNode, { __index = Node } )
 moduleObj.RootNode = RootNode
-function RootNode.new( pos, typeInfoList, children )
+function RootNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processRoot( self, table.unpack( argList ) )
+end
+function RootNode.new( pos, typeInfoList, children, typeId2ClassMap )
   local obj = {}
   setmetatable( obj, { __index = RootNode } )
-  if obj.__init then obj:__init( pos, typeInfoList, children ); end
+  if obj.__init then obj:__init( pos, typeInfoList, children, typeId2ClassMap ); end
 return obj
 end
-function RootNode:__init(pos, typeInfoList, children) 
+function RootNode:__init(pos, typeInfoList, children, typeId2ClassMap) 
   Node.__init( self, nodeKindRoot, pos, typeInfoList[1], typeInfoList, self, nodeFilter)
   
   -- none
   
   self.children = children
+  self.typeId2ClassMap = typeId2ClassMap
   -- none
   
 end
 function RootNode:get_children()
    return self.children
 end
+function RootNode:get_typeId2ClassMap()
+   return self.typeId2ClassMap
+end
 
+
+-- none
+
+function Filter:processRefType( node, ... )
+end
+
+-- none
+
+-- none
 
 local nodeKindRefType = regKind( [[RefType]] )
 local RefTypeNode = {}
 setmetatable( RefTypeNode, { __index = Node } )
 moduleObj.RefTypeNode = RefTypeNode
+function RefTypeNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processRefType( self, table.unpack( argList ) )
+end
 function RefTypeNode.new( pos, typeInfoList, name, refFlag, mutFlag, array )
   local obj = {}
   setmetatable( obj, { __index = RefTypeNode } )
@@ -796,10 +873,23 @@ function RefTypeNode:get_array()
 end
 
 
+-- none
+
+function Filter:processBlock( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindBlock = regKind( [[Block]] )
 local BlockNode = {}
 setmetatable( BlockNode, { __index = Node } )
 moduleObj.BlockNode = BlockNode
+function BlockNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processBlock( self, table.unpack( argList ) )
+end
 function BlockNode.new( pos, typeInfoList, blockKind, stmtList )
   local obj = {}
   setmetatable( obj, { __index = BlockNode } )
@@ -850,10 +940,23 @@ function IfStmtInfo:get_block()
    return self.block
 end
 
+-- none
+
+function Filter:processIf( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindIf = regKind( [[If]] )
 local IfNode = {}
 setmetatable( IfNode, { __index = Node } )
 moduleObj.IfNode = IfNode
+function IfNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processIf( self, table.unpack( argList ) )
+end
 function IfNode.new( pos, typeInfoList, stmtList )
   local obj = {}
   setmetatable( obj, { __index = IfNode } )
@@ -874,10 +977,23 @@ function IfNode:get_stmtList()
 end
 
 
+-- none
+
+function Filter:processExpList( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpList = regKind( [[ExpList]] )
 local ExpListNode = {}
 setmetatable( ExpListNode, { __index = Node } )
 moduleObj.ExpListNode = ExpListNode
+function ExpListNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpList( self, table.unpack( argList ) )
+end
 function ExpListNode.new( pos, typeInfoList, expList )
   local obj = {}
   setmetatable( obj, { __index = ExpListNode } )
@@ -920,10 +1036,23 @@ function CaseInfo:get_block()
    return self.block
 end
 
+-- none
+
+function Filter:processSwitch( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindSwitch = regKind( [[Switch]] )
 local SwitchNode = {}
 setmetatable( SwitchNode, { __index = Node } )
 moduleObj.SwitchNode = SwitchNode
+function SwitchNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processSwitch( self, table.unpack( argList ) )
+end
 function SwitchNode.new( pos, typeInfoList, exp, caseList, default )
   local obj = {}
   setmetatable( obj, { __index = SwitchNode } )
@@ -952,10 +1081,23 @@ function SwitchNode:get_default()
 end
 
 
+-- none
+
+function Filter:processWhile( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindWhile = regKind( [[While]] )
 local WhileNode = {}
 setmetatable( WhileNode, { __index = Node } )
 moduleObj.WhileNode = WhileNode
+function WhileNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processWhile( self, table.unpack( argList ) )
+end
 function WhileNode.new( pos, typeInfoList, exp, block )
   local obj = {}
   setmetatable( obj, { __index = WhileNode } )
@@ -980,10 +1122,23 @@ function WhileNode:get_block()
 end
 
 
+-- none
+
+function Filter:processRepeat( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindRepeat = regKind( [[Repeat]] )
 local RepeatNode = {}
 setmetatable( RepeatNode, { __index = Node } )
 moduleObj.RepeatNode = RepeatNode
+function RepeatNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processRepeat( self, table.unpack( argList ) )
+end
 function RepeatNode.new( pos, typeInfoList, block, exp )
   local obj = {}
   setmetatable( obj, { __index = RepeatNode } )
@@ -1008,10 +1163,23 @@ function RepeatNode:get_exp()
 end
 
 
+-- none
+
+function Filter:processFor( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindFor = regKind( [[For]] )
 local ForNode = {}
 setmetatable( ForNode, { __index = Node } )
 moduleObj.ForNode = ForNode
+function ForNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processFor( self, table.unpack( argList ) )
+end
 function ForNode.new( pos, typeInfoList, block, val, init, to, delta )
   local obj = {}
   setmetatable( obj, { __index = ForNode } )
@@ -1048,10 +1216,23 @@ function ForNode:get_delta()
 end
 
 
+-- none
+
+function Filter:processApply( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindApply = regKind( [[Apply]] )
 local ApplyNode = {}
 setmetatable( ApplyNode, { __index = Node } )
 moduleObj.ApplyNode = ApplyNode
+function ApplyNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processApply( self, table.unpack( argList ) )
+end
 function ApplyNode.new( pos, typeInfoList, varList, exp, block )
   local obj = {}
   setmetatable( obj, { __index = ApplyNode } )
@@ -1080,10 +1261,23 @@ function ApplyNode:get_block()
 end
 
 
+-- none
+
+function Filter:processForeach( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindForeach = regKind( [[Foreach]] )
 local ForeachNode = {}
 setmetatable( ForeachNode, { __index = Node } )
 moduleObj.ForeachNode = ForeachNode
+function ForeachNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processForeach( self, table.unpack( argList ) )
+end
 function ForeachNode.new( pos, typeInfoList, val, key, exp, block )
   local obj = {}
   setmetatable( obj, { __index = ForeachNode } )
@@ -1116,10 +1310,23 @@ function ForeachNode:get_block()
 end
 
 
+-- none
+
+function Filter:processForsort( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindForsort = regKind( [[Forsort]] )
 local ForsortNode = {}
 setmetatable( ForsortNode, { __index = Node } )
 moduleObj.ForsortNode = ForsortNode
+function ForsortNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processForsort( self, table.unpack( argList ) )
+end
 function ForsortNode.new( pos, typeInfoList, val, key, exp, block, sort )
   local obj = {}
   setmetatable( obj, { __index = ForsortNode } )
@@ -1156,10 +1363,23 @@ function ForsortNode:get_sort()
 end
 
 
+-- none
+
+function Filter:processReturn( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindReturn = regKind( [[Return]] )
 local ReturnNode = {}
 setmetatable( ReturnNode, { __index = Node } )
 moduleObj.ReturnNode = ReturnNode
+function ReturnNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processReturn( self, table.unpack( argList ) )
+end
 function ReturnNode.new( pos, typeInfoList, expList )
   local obj = {}
   setmetatable( obj, { __index = ReturnNode } )
@@ -1180,10 +1400,23 @@ function ReturnNode:get_expList()
 end
 
 
+-- none
+
+function Filter:processBreak( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindBreak = regKind( [[Break]] )
 local BreakNode = {}
 setmetatable( BreakNode, { __index = Node } )
 moduleObj.BreakNode = BreakNode
+function BreakNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processBreak( self, table.unpack( argList ) )
+end
 function BreakNode.new( pos, typeInfoList )
   local obj = {}
   setmetatable( obj, { __index = BreakNode } )
@@ -1200,10 +1433,23 @@ function BreakNode:__init(pos, typeInfoList)
 end
 
 
+-- none
+
+function Filter:processExpNew( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpNew = regKind( [[ExpNew]] )
 local ExpNewNode = {}
 setmetatable( ExpNewNode, { __index = Node } )
 moduleObj.ExpNewNode = ExpNewNode
+function ExpNewNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpNew( self, table.unpack( argList ) )
+end
 function ExpNewNode.new( pos, typeInfoList, symbol, argList )
   local obj = {}
   setmetatable( obj, { __index = ExpNewNode } )
@@ -1228,10 +1474,23 @@ function ExpNewNode:get_argList()
 end
 
 
+-- none
+
+function Filter:processExpRef( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpRef = regKind( [[ExpRef]] )
 local ExpRefNode = {}
 setmetatable( ExpRefNode, { __index = Node } )
 moduleObj.ExpRefNode = ExpRefNode
+function ExpRefNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpRef( self, table.unpack( argList ) )
+end
 function ExpRefNode.new( pos, typeInfoList, token )
   local obj = {}
   setmetatable( obj, { __index = ExpRefNode } )
@@ -1252,10 +1511,23 @@ function ExpRefNode:get_token()
 end
 
 
+-- none
+
+function Filter:processExpOp2( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpOp2 = regKind( [[ExpOp2]] )
 local ExpOp2Node = {}
 setmetatable( ExpOp2Node, { __index = Node } )
 moduleObj.ExpOp2Node = ExpOp2Node
+function ExpOp2Node:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpOp2( self, table.unpack( argList ) )
+end
 function ExpOp2Node.new( pos, typeInfoList, op, exp1, exp2 )
   local obj = {}
   setmetatable( obj, { __index = ExpOp2Node } )
@@ -1284,10 +1556,23 @@ function ExpOp2Node:get_exp2()
 end
 
 
+-- none
+
+function Filter:processExpCast( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpCast = regKind( [[ExpCast]] )
 local ExpCastNode = {}
 setmetatable( ExpCastNode, { __index = Node } )
 moduleObj.ExpCastNode = ExpCastNode
+function ExpCastNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpCast( self, table.unpack( argList ) )
+end
 function ExpCastNode.new( pos, typeInfoList, exp )
   local obj = {}
   setmetatable( obj, { __index = ExpCastNode } )
@@ -1308,10 +1593,23 @@ function ExpCastNode:get_exp()
 end
 
 
+-- none
+
+function Filter:processExpOp1( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpOp1 = regKind( [[ExpOp1]] )
 local ExpOp1Node = {}
 setmetatable( ExpOp1Node, { __index = Node } )
 moduleObj.ExpOp1Node = ExpOp1Node
+function ExpOp1Node:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpOp1( self, table.unpack( argList ) )
+end
 function ExpOp1Node.new( pos, typeInfoList, op, exp )
   local obj = {}
   setmetatable( obj, { __index = ExpOp1Node } )
@@ -1336,10 +1634,23 @@ function ExpOp1Node:get_exp()
 end
 
 
+-- none
+
+function Filter:processExpRefItem( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpRefItem = regKind( [[ExpRefItem]] )
 local ExpRefItemNode = {}
 setmetatable( ExpRefItemNode, { __index = Node } )
 moduleObj.ExpRefItemNode = ExpRefItemNode
+function ExpRefItemNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpRefItem( self, table.unpack( argList ) )
+end
 function ExpRefItemNode.new( pos, typeInfoList, val, index )
   local obj = {}
   setmetatable( obj, { __index = ExpRefItemNode } )
@@ -1364,10 +1675,23 @@ function ExpRefItemNode:get_index()
 end
 
 
+-- none
+
+function Filter:processExpCall( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpCall = regKind( [[ExpCall]] )
 local ExpCallNode = {}
 setmetatable( ExpCallNode, { __index = Node } )
 moduleObj.ExpCallNode = ExpCallNode
+function ExpCallNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpCall( self, table.unpack( argList ) )
+end
 function ExpCallNode.new( pos, typeInfoList, func, argList )
   local obj = {}
   setmetatable( obj, { __index = ExpCallNode } )
@@ -1392,10 +1716,23 @@ function ExpCallNode:get_argList()
 end
 
 
+-- none
+
+function Filter:processExpDDD( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpDDD = regKind( [[ExpDDD]] )
 local ExpDDDNode = {}
 setmetatable( ExpDDDNode, { __index = Node } )
 moduleObj.ExpDDDNode = ExpDDDNode
+function ExpDDDNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpDDD( self, table.unpack( argList ) )
+end
 function ExpDDDNode.new( pos, typeInfoList, token )
   local obj = {}
   setmetatable( obj, { __index = ExpDDDNode } )
@@ -1416,10 +1753,23 @@ function ExpDDDNode:get_token()
 end
 
 
+-- none
+
+function Filter:processExpParen( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpParen = regKind( [[ExpParen]] )
 local ExpParenNode = {}
 setmetatable( ExpParenNode, { __index = Node } )
 moduleObj.ExpParenNode = ExpParenNode
+function ExpParenNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpParen( self, table.unpack( argList ) )
+end
 function ExpParenNode.new( pos, typeInfoList, exp )
   local obj = {}
   setmetatable( obj, { __index = ExpParenNode } )
@@ -1440,10 +1790,23 @@ function ExpParenNode:get_exp()
 end
 
 
+-- none
+
+function Filter:processExpMacroExp( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpMacroExp = regKind( [[ExpMacroExp]] )
 local ExpMacroExpNode = {}
 setmetatable( ExpMacroExpNode, { __index = Node } )
 moduleObj.ExpMacroExpNode = ExpMacroExpNode
+function ExpMacroExpNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpMacroExp( self, table.unpack( argList ) )
+end
 function ExpMacroExpNode.new( pos, typeInfoList, stmtList )
   local obj = {}
   setmetatable( obj, { __index = ExpMacroExpNode } )
@@ -1464,10 +1827,23 @@ function ExpMacroExpNode:get_stmtList()
 end
 
 
+-- none
+
+function Filter:processExpMacroStat( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpMacroStat = regKind( [[ExpMacroStat]] )
 local ExpMacroStatNode = {}
 setmetatable( ExpMacroStatNode, { __index = Node } )
 moduleObj.ExpMacroStatNode = ExpMacroStatNode
+function ExpMacroStatNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpMacroStat( self, table.unpack( argList ) )
+end
 function ExpMacroStatNode.new( pos, typeInfoList, expStrList )
   local obj = {}
   setmetatable( obj, { __index = ExpMacroStatNode } )
@@ -1488,10 +1864,23 @@ function ExpMacroStatNode:get_expStrList()
 end
 
 
+-- none
+
+function Filter:processStmtExp( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindStmtExp = regKind( [[StmtExp]] )
 local StmtExpNode = {}
 setmetatable( StmtExpNode, { __index = Node } )
 moduleObj.StmtExpNode = StmtExpNode
+function StmtExpNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processStmtExp( self, table.unpack( argList ) )
+end
 function StmtExpNode.new( pos, typeInfoList, exp )
   local obj = {}
   setmetatable( obj, { __index = StmtExpNode } )
@@ -1512,10 +1901,23 @@ function StmtExpNode:get_exp()
 end
 
 
+-- none
+
+function Filter:processRefField( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindRefField = regKind( [[RefField]] )
 local RefFieldNode = {}
 setmetatable( RefFieldNode, { __index = Node } )
 moduleObj.RefFieldNode = RefFieldNode
+function RefFieldNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processRefField( self, table.unpack( argList ) )
+end
 function RefFieldNode.new( pos, typeInfoList, field, prefix )
   local obj = {}
   setmetatable( obj, { __index = RefFieldNode } )
@@ -1562,10 +1964,23 @@ function VarInfo:get_refType()
    return self.refType
 end
 
+-- none
+
+function Filter:processDeclVar( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclVar = regKind( [[DeclVar]] )
 local DeclVarNode = {}
 setmetatable( DeclVarNode, { __index = Node } )
 moduleObj.DeclVarNode = DeclVarNode
+function DeclVarNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclVar( self, table.unpack( argList ) )
+end
 function DeclVarNode.new( pos, typeInfoList, accessMode, varList, expList, typeInfoList, unwrap )
   local obj = {}
   setmetatable( obj, { __index = DeclVarNode } )
@@ -1648,10 +2063,23 @@ function DeclFuncInfo:get_retTypeInfoList()
    return self.retTypeInfoList
 end
 
+-- none
+
+function Filter:processDeclFunc( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclFunc = regKind( [[DeclFunc]] )
 local DeclFuncNode = {}
 setmetatable( DeclFuncNode, { __index = Node } )
 moduleObj.DeclFuncNode = DeclFuncNode
+function DeclFuncNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclFunc( self, table.unpack( argList ) )
+end
 function DeclFuncNode.new( pos, typeInfoList, declInfo )
   local obj = {}
   setmetatable( obj, { __index = DeclFuncNode } )
@@ -1672,10 +2100,23 @@ function DeclFuncNode:get_declInfo()
 end
 
 
+-- none
+
+function Filter:processDeclMethod( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclMethod = regKind( [[DeclMethod]] )
 local DeclMethodNode = {}
 setmetatable( DeclMethodNode, { __index = Node } )
 moduleObj.DeclMethodNode = DeclMethodNode
+function DeclMethodNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclMethod( self, table.unpack( argList ) )
+end
 function DeclMethodNode.new( pos, typeInfoList, declInfo )
   local obj = {}
   setmetatable( obj, { __index = DeclMethodNode } )
@@ -1696,10 +2137,23 @@ function DeclMethodNode:get_declInfo()
 end
 
 
+-- none
+
+function Filter:processDeclConstr( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclConstr = regKind( [[DeclConstr]] )
 local DeclConstrNode = {}
 setmetatable( DeclConstrNode, { __index = Node } )
 moduleObj.DeclConstrNode = DeclConstrNode
+function DeclConstrNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclConstr( self, table.unpack( argList ) )
+end
 function DeclConstrNode.new( pos, typeInfoList, declInfo )
   local obj = {}
   setmetatable( obj, { __index = DeclConstrNode } )
@@ -1720,10 +2174,23 @@ function DeclConstrNode:get_declInfo()
 end
 
 
+-- none
+
+function Filter:processExpCallSuper( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindExpCallSuper = regKind( [[ExpCallSuper]] )
 local ExpCallSuperNode = {}
 setmetatable( ExpCallSuperNode, { __index = Node } )
 moduleObj.ExpCallSuperNode = ExpCallSuperNode
+function ExpCallSuperNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processExpCallSuper( self, table.unpack( argList ) )
+end
 function ExpCallSuperNode.new( pos, typeInfoList, superType, expList )
   local obj = {}
   setmetatable( obj, { __index = ExpCallSuperNode } )
@@ -1748,10 +2215,23 @@ function ExpCallSuperNode:get_expList()
 end
 
 
+-- none
+
+function Filter:processDeclMember( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclMember = regKind( [[DeclMember]] )
 local DeclMemberNode = {}
 setmetatable( DeclMemberNode, { __index = Node } )
 moduleObj.DeclMemberNode = DeclMemberNode
+function DeclMemberNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclMember( self, table.unpack( argList ) )
+end
 function DeclMemberNode.new( pos, typeInfoList, name, refType, staticFlag, accessMode, getterMode, setterMode )
   local obj = {}
   setmetatable( obj, { __index = DeclMemberNode } )
@@ -1792,10 +2272,23 @@ function DeclMemberNode:get_setterMode()
 end
 
 
+-- none
+
+function Filter:processDeclArg( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclArg = regKind( [[DeclArg]] )
 local DeclArgNode = {}
 setmetatable( DeclArgNode, { __index = Node } )
 moduleObj.DeclArgNode = DeclArgNode
+function DeclArgNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclArg( self, table.unpack( argList ) )
+end
 function DeclArgNode.new( pos, typeInfoList, name, argType )
   local obj = {}
   setmetatable( obj, { __index = DeclArgNode } )
@@ -1820,10 +2313,23 @@ function DeclArgNode:get_argType()
 end
 
 
+-- none
+
+function Filter:processDeclArgDDD( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclArgDDD = regKind( [[DeclArgDDD]] )
 local DeclArgDDDNode = {}
 setmetatable( DeclArgDDDNode, { __index = Node } )
 moduleObj.DeclArgDDDNode = DeclArgDDDNode
+function DeclArgDDDNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclArgDDD( self, table.unpack( argList ) )
+end
 function DeclArgDDDNode.new( pos, typeInfoList )
   local obj = {}
   setmetatable( obj, { __index = DeclArgDDDNode } )
@@ -1840,10 +2346,23 @@ function DeclArgDDDNode:__init(pos, typeInfoList)
 end
 
 
+-- none
+
+function Filter:processDeclClass( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclClass = regKind( [[DeclClass]] )
 local DeclClassNode = {}
 setmetatable( DeclClassNode, { __index = Node } )
 moduleObj.DeclClassNode = DeclClassNode
+function DeclClassNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclClass( self, table.unpack( argList ) )
+end
 function DeclClassNode.new( pos, typeInfoList, accessMode, name, fieldList, memberList, scope, outerMethodSet )
   local obj = {}
   setmetatable( obj, { __index = DeclClassNode } )
@@ -1884,10 +2403,23 @@ function DeclClassNode:get_outerMethodSet()
 end
 
 
+-- none
+
+function Filter:processDeclMacro( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindDeclMacro = regKind( [[DeclMacro]] )
 local DeclMacroNode = {}
 setmetatable( DeclMacroNode, { __index = Node } )
 moduleObj.DeclMacroNode = DeclMacroNode
+function DeclMacroNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processDeclMacro( self, table.unpack( argList ) )
+end
 function DeclMacroNode.new( pos, typeInfoList, declInfo )
   local obj = {}
   setmetatable( obj, { __index = DeclMacroNode } )
@@ -1908,10 +2440,23 @@ function DeclMacroNode:get_declInfo()
 end
 
 
+-- none
+
+function Filter:processLiteralNil( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralNil = regKind( [[LiteralNil]] )
 local LiteralNilNode = {}
 setmetatable( LiteralNilNode, { __index = Node } )
 moduleObj.LiteralNilNode = LiteralNilNode
+function LiteralNilNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralNil( self, table.unpack( argList ) )
+end
 function LiteralNilNode.new( pos, typeInfoList )
   local obj = {}
   setmetatable( obj, { __index = LiteralNilNode } )
@@ -1928,10 +2473,23 @@ function LiteralNilNode:__init(pos, typeInfoList)
 end
 
 
+-- none
+
+function Filter:processLiteralChar( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralChar = regKind( [[LiteralChar]] )
 local LiteralCharNode = {}
 setmetatable( LiteralCharNode, { __index = Node } )
 moduleObj.LiteralCharNode = LiteralCharNode
+function LiteralCharNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralChar( self, table.unpack( argList ) )
+end
 function LiteralCharNode.new( pos, typeInfoList, token, num )
   local obj = {}
   setmetatable( obj, { __index = LiteralCharNode } )
@@ -1956,10 +2514,23 @@ function LiteralCharNode:get_num()
 end
 
 
+-- none
+
+function Filter:processLiteralInt( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralInt = regKind( [[LiteralInt]] )
 local LiteralIntNode = {}
 setmetatable( LiteralIntNode, { __index = Node } )
 moduleObj.LiteralIntNode = LiteralIntNode
+function LiteralIntNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralInt( self, table.unpack( argList ) )
+end
 function LiteralIntNode.new( pos, typeInfoList, token, num )
   local obj = {}
   setmetatable( obj, { __index = LiteralIntNode } )
@@ -1984,10 +2555,23 @@ function LiteralIntNode:get_num()
 end
 
 
+-- none
+
+function Filter:processLiteralReal( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralReal = regKind( [[LiteralReal]] )
 local LiteralRealNode = {}
 setmetatable( LiteralRealNode, { __index = Node } )
 moduleObj.LiteralRealNode = LiteralRealNode
+function LiteralRealNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralReal( self, table.unpack( argList ) )
+end
 function LiteralRealNode.new( pos, typeInfoList, token, num )
   local obj = {}
   setmetatable( obj, { __index = LiteralRealNode } )
@@ -2012,10 +2596,23 @@ function LiteralRealNode:get_num()
 end
 
 
+-- none
+
+function Filter:processLiteralArray( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralArray = regKind( [[LiteralArray]] )
 local LiteralArrayNode = {}
 setmetatable( LiteralArrayNode, { __index = Node } )
 moduleObj.LiteralArrayNode = LiteralArrayNode
+function LiteralArrayNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralArray( self, table.unpack( argList ) )
+end
 function LiteralArrayNode.new( pos, typeInfoList, expList )
   local obj = {}
   setmetatable( obj, { __index = LiteralArrayNode } )
@@ -2036,10 +2633,23 @@ function LiteralArrayNode:get_expList()
 end
 
 
+-- none
+
+function Filter:processLiteralList( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralList = regKind( [[LiteralList]] )
 local LiteralListNode = {}
 setmetatable( LiteralListNode, { __index = Node } )
 moduleObj.LiteralListNode = LiteralListNode
+function LiteralListNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralList( self, table.unpack( argList ) )
+end
 function LiteralListNode.new( pos, typeInfoList, expList )
   local obj = {}
   setmetatable( obj, { __index = LiteralListNode } )
@@ -2060,32 +2670,45 @@ function LiteralListNode:get_expList()
 end
 
 
-local PairList = {}
-moduleObj.PairList = PairList
-function PairList.new( key, val )
+local PairItem = {}
+moduleObj.PairItem = PairItem
+function PairItem.new( key, val )
   local obj = {}
-  setmetatable( obj, { __index = PairList } )
+  setmetatable( obj, { __index = PairItem } )
   if obj.__init then
     obj:__init( key, val )
   end
   return obj
 end
-function PairList:__init( key, val )
+function PairItem:__init( key, val )
             
 self.key = key
   self.val = val
   end
-function PairList:get_key()
+function PairItem:get_key()
    return self.key
 end
-function PairList:get_val()
+function PairItem:get_val()
    return self.val
 end
+
+-- none
+
+function Filter:processLiteralMap( node, ... )
+end
+
+-- none
+
+-- none
 
 local nodeKindLiteralMap = regKind( [[LiteralMap]] )
 local LiteralMapNode = {}
 setmetatable( LiteralMapNode, { __index = Node } )
 moduleObj.LiteralMapNode = LiteralMapNode
+function LiteralMapNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralMap( self, table.unpack( argList ) )
+end
 function LiteralMapNode.new( pos, typeInfoList, map, pairList )
   local obj = {}
   setmetatable( obj, { __index = LiteralMapNode } )
@@ -2110,10 +2733,23 @@ function LiteralMapNode:get_pairList()
 end
 
 
+-- none
+
+function Filter:processLiteralString( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralString = regKind( [[LiteralString]] )
 local LiteralStringNode = {}
 setmetatable( LiteralStringNode, { __index = Node } )
 moduleObj.LiteralStringNode = LiteralStringNode
+function LiteralStringNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralString( self, table.unpack( argList ) )
+end
 function LiteralStringNode.new( pos, typeInfoList, token, argList )
   local obj = {}
   setmetatable( obj, { __index = LiteralStringNode } )
@@ -2138,10 +2774,23 @@ function LiteralStringNode:get_argList()
 end
 
 
+-- none
+
+function Filter:processLiteralBool( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralBool = regKind( [[LiteralBool]] )
 local LiteralBoolNode = {}
 setmetatable( LiteralBoolNode, { __index = Node } )
 moduleObj.LiteralBoolNode = LiteralBoolNode
+function LiteralBoolNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralBool( self, table.unpack( argList ) )
+end
 function LiteralBoolNode.new( pos, typeInfoList, token )
   local obj = {}
   setmetatable( obj, { __index = LiteralBoolNode } )
@@ -2162,10 +2811,23 @@ function LiteralBoolNode:get_token()
 end
 
 
+-- none
+
+function Filter:processLiteralSymbol( node, ... )
+end
+
+-- none
+
+-- none
+
 local nodeKindLiteralSymbol = regKind( [[LiteralSymbol]] )
 local LiteralSymbolNode = {}
 setmetatable( LiteralSymbolNode, { __index = Node } )
 moduleObj.LiteralSymbolNode = LiteralSymbolNode
+function LiteralSymbolNode:processFilter( filter, ... )
+  local argList = {...}
+  filter:processLiteralSymbol( self, table.unpack( argList ) )
+end
 function LiteralSymbolNode.new( pos, typeInfoList, token )
   local obj = {}
   setmetatable( obj, { __index = LiteralSymbolNode } )
@@ -2185,6 +2847,90 @@ function LiteralSymbolNode:get_token()
    return self.token
 end
 
+
+function LiteralNilNode:getLiteral(  )
+  return {nil}, {typeInfoNil}
+end
+
+function LiteralCharNode:getLiteral(  )
+  return {self.num}, {typeInfoChar}
+end
+
+function LiteralIntNode:getLiteral(  )
+  return {self.num}, {typeInfoInt}
+end
+
+function LiteralRealNode:getLiteral(  )
+  return {self.num}, {typeInfoReal}
+end
+
+function LiteralArrayNode:getLiteral(  )
+  local array = {}
+  for __index, val in pairs( self.expList:get_expList(  ) ) do
+    local txt = val:getLiteral(  )[1]
+    table.insert( array, txt )
+  end
+  return {array}, {self:get_expType(  )}
+end
+
+function LiteralListNode:getLiteral(  )
+  local list = {}
+  for __index, val in pairs( self.expList:get_expList(  ) ) do
+    local item = val:getLiteral(  )[1]
+    table.insert( list, item )
+  end
+  return {list}, {self:get_expType(  )}
+end
+
+function LiteralMapNode:getLiteral(  )
+  local map = {}
+  for key, val in pairs( self.map ) do
+    map[key:getLiteral(  )[1]] = val:getLiteral(  )[1]
+  end
+  return {map}, {self:get_expType(  )}
+end
+
+function LiteralStringNode:getLiteral(  )
+  local txt = self.token.txt
+  if string.find( txt, '^```' ) then
+    txt = txt:sub( 4, -4 )
+  else 
+    txt = txt:sub( 2, -2 )
+  end
+  local argList = self:get_argList(  )
+  if argList and #argList > 0 then
+    local argTbl = {}
+    local argValList = argList.getLiteral(  )
+    for __index, arg in pairs( argValList ) do
+      table.insert( argTbl, arg )
+    end
+    return string.format( txt, table.unpack( argTbl ) ), typeInfoString
+  end
+  return {txt}, {typeInfoString}
+end
+
+function LiteralBoolNode:getLiteral(  )
+  return {self.token.txt == "true"}, {typeInfoBool}
+end
+
+function LiteralSymbolNode:getLiteral(  )
+  return {{self.token.txt}}, {typeInfoSymbol}
+end
+
+function RefFieldNode:getLiteral(  )
+  local prefix = self.prefix:getLiteral(  )[1]
+  table.insert( prefix, "." )
+  table.insert( prefix, self.field.txt )
+  return {prefix}, {self:get_expType(  )}
+end
+
+function ExpMacroStatNode:getLiteral(  )
+  local txt = ""
+  for __index, token in pairs( self.expStrList ) do
+    txt = string.format( "%s %s", txt, token:getLiteral(  )[1])
+  end
+  return {txt}, {self:get_expType(  )}
+end
 
 local quotedChar2Code = {}
 quotedChar2Code['a'] = 7
@@ -2435,79 +3181,6 @@ function TransUnit:checkNextToken( txt )
   return self:checkToken( self:getToken(  ), txt )
 end
 
-local function getLiteralValue( node )
-  if not node then
-    return nil
-  end
-  do
-    local _switchExp = node:get_kind(  )
-    if _switchExp == nodeKindLiteralNil then
-      return nil, typeInfoNil
-    elseif _switchExp == nodeKindLiteralChar then
-      return (node ):get_num(  ), typeInfoChar
-    elseif _switchExp == nodeKindLiteralInt then
-      return (node ):get_num(  ), typeInfoInt
-    elseif _switchExp == nodeKindLiteralReal then
-      return (node ):get_num(  ), typeInfoReal
-    elseif _switchExp == nodeKindLiteralArray then
-      local array = {}
-      local literalNode = (node )
-      for __index, val in pairs( literalNode:get_expList(  ):get_expList(  ) ) do
-        local txt = getLiteralValue( val )
-        table.insert( array, txt )
-      end
-      return array, node:get_expType(  )
-    elseif _switchExp == nodeKindLiteralList then
-      local list = {}
-      local literalNode = (node )
-      for __index, val in pairs( literalNode:get_expList(  ):get_expList(  ) ) do
-        local txt = getLiteralValue( val )
-        table.insert( list, txt )
-      end
-      return list, node:get_expType(  )
-    elseif _switchExp == nodeKindLiteralMap then
-      local map = {}
-      for key, val in pairs( (node ).map ) do
-        map[getLiteralValue( key )] = getLiteralValue( val )
-      end
-      return map, node:get_expType(  )
-    elseif _switchExp == nodeKindLiteralString then
-      local nodeInfo = node
-      local txt = (nodeInfo:get_token(  ) ).txt
-      if string.find( txt, '^```' ) then
-        txt = txt:sub( 4, -4 )
-      else 
-        txt = txt:sub( 2, -2 )
-      end
-      local argList = nodeInfo:get_argList(  )
-      if argList and #argList > 0 then
-        local argVal = getLiteralValue( argList )
-        return string.format( txt, table.unpack( argVal ) ), typeInfoString
-      end
-      return txt, typeInfoString
-    elseif _switchExp == nodeKindLiteralBool then
-      return (node ):get_token(  ).txt == "true", typeInfoBool
-    elseif _switchExp == nodeKindLiteralSymbol then
-      return {(node ):get_token(  ).txt}, typeInfoSymbol
-    elseif _switchExp == nodeKindRefField then
-      local nodeInfo = node:get_info(  )
-      local prefix = getLiteralValue( nodeInfo.prefix )
-      table.insert( prefix, "." )
-      table.insert( prefix, nodeInfo.field.txt )
-      return prefix, node:get_expType(  )
-    elseif _switchExp == nodeKindExpMacroStat then
-      local txt = ""
-      for __index, token in pairs( (node ):get_expStrList(  ) ) do
-        txt = string.format( "%s %s", txt, getLiteralValue( token ))
-      end
-      return txt, node:get_expType(  )
-    else 
-      error( "not support val" )
-    end
-  end
-  
-end
-moduleObj.getLiteralValue = getLiteralValue
 function TransUnit:analyzeBlock( blockKind, scope )
   local token = self:checkNextToken( "{" )
   if not scope then
@@ -2972,6 +3645,7 @@ end
 
 function TransUnit:createAST( parser, macroFlag, module )
   self:pushNamespace( "", typeInfoRoot, self.scope )
+  local rootScope = self.scope
   self:registBuiltInScope(  )
   local moduleTypeInfo = rootTypeInfo
   if module then
@@ -2987,7 +3661,7 @@ function TransUnit:createAST( parser, macroFlag, module )
   else 
     local rootInfo = {}
     rootInfo.children = {}
-    ast = RootNode.new(Parser.Position.new(0, 0), {typeInfoNone}, rootInfo.children)
+    ast = RootNode.new(Parser.Position.new(0, 0), {typeInfoNone}, rootInfo.children, self.typeId2ClassMap)
     self:analyzeStatementList( rootInfo.children )
     local token = self:getTokenNoErr(  )
     if token then
@@ -3334,7 +4008,7 @@ function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
       typeInfo = refType.expType
       token = self:getToken(  )
     end
-    table.insert( varList, {["name"] = varName, ["refType"] = refType} )
+    table.insert( varList, VarInfo.new(varName, refType) )
     table.insert( typeInfoList, typeInfo )
   until token.txt ~= ","
   local expList = nil
@@ -3368,7 +4042,6 @@ function TransUnit:analyzeDeclVar( accessMode, staticFlag, firstToken )
     end
   end
   self:checkNextToken( ";" )
-  local declVarInfo = {["accessMode"] = accessMode, ["varList"] = varList, ["expList"] = expList, ["typeInfoList"] = typeInfoList, ["unwrap"] = unwrapBlock}
   local node = DeclVarNode.new(firstToken.pos, {typeInfoNone}, accessMode, varList, expList, typeInfoList, unwrapBlock)
   for index, typeInfo in pairs( typeInfoList ) do
     self.scope:add( varList[index].name.txt, typeInfo )
@@ -3449,7 +4122,7 @@ function TransUnit:analyzeMapConst( token )
         valTypeInfo = val.expType
       end
     end
-    table.insert( pairList, {["key"] = key, ["val"] = val} )
+    table.insert( pairList, PairItem.new(key, val) )
     map[key] = val
     nextToken = self:getToken(  )
   until nextToken.txt ~= ","
@@ -3513,7 +4186,9 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
   local argType = {}
   if expList then
     for __index, argNode in pairs( expList:get_expList(  ) ) do
-      local val, typeInfo = getLiteralValue( argNode )
+      local valList, typeInfoList = argNode:getLiteral(  )
+      local val = valList[1]
+      local typeInfo = typeInfoList[1]
       table.insert( argVal, val )
       table.insert( argType, typeInfo )
     end
@@ -4075,6 +4750,10 @@ do
   _className2InfoMap.ExpRefNode = _classInfoExpRefNode
   end
 do
+  local _classInfoFilter = {}
+  _className2InfoMap.Filter = _classInfoFilter
+  end
+do
   local _classInfoForNode = {}
   _className2InfoMap.ForNode = _classInfoForNode
   end
@@ -4143,6 +4822,16 @@ do
   _className2InfoMap.MacroEval = _classInfoMacroEval
   end
 do
+  local _classInfoNamespaceInfo = {}
+  _className2InfoMap.NamespaceInfo = _classInfoNamespaceInfo
+  _classInfoNamespaceInfo.name = {
+    name='name', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
+  _classInfoNamespaceInfo.scope = {
+    name='scope', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 626 }
+  _classInfoNamespaceInfo.typeInfo = {
+    name='typeInfo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 508 }
+  end
+do
   local _classInfoNode = {}
   _className2InfoMap.Node = _classInfoNode
   _classInfoNode.filter = {
@@ -4157,8 +4846,8 @@ do
   _className2InfoMap.NoneNode = _classInfoNoneNode
   end
 do
-  local _classInfoPairList = {}
-  _className2InfoMap.PairList = _classInfoPairList
+  local _classInfoPairItem = {}
+  _className2InfoMap.PairItem = _classInfoPairItem
   end
 do
   local _classInfoRefFieldNode = {}
@@ -4208,6 +4897,80 @@ do
   local _classInfoWhileNode = {}
   _className2InfoMap.WhileNode = _classInfoWhileNode
   end
+do
+  local _classInfoParser = {}
+  _className2InfoMap.Parser = _classInfoParser
+  end
+do
+  local _classInfoPosition = {}
+  _className2InfoMap.Position = _classInfoPosition
+  _classInfoPosition.column = {
+    name='column', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
+  _classInfoPosition.lineNo = {
+    name='lineNo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
+  end
+do
+  local _classInfoStream = {}
+  _className2InfoMap.Stream = _classInfoStream
+  end
+do
+  local _classInfoStreamParser = {}
+  _className2InfoMap.StreamParser = _classInfoStreamParser
+  _classInfoStreamParser.create = {
+    name='create', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 372 }
+  end
+do
+  local _classInfoToken = {}
+  _className2InfoMap.Token = _classInfoToken
+  _classInfoToken.kind = {
+    name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
+  _classInfoToken.pos = {
+    name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 352 }
+  _classInfoToken.txt = {
+    name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
+  end
+do
+  local _classInfoTxtStream = {}
+  _className2InfoMap.TxtStream = _classInfoTxtStream
+  end
+do
+  local _classInfoUtil = {}
+  _className2InfoMap.Util = _classInfoUtil
+  _classInfoUtil.debugLog = {
+    name='debugLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 498 }
+  _classInfoUtil.errorLog = {
+    name='errorLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 496 }
+  _classInfoUtil.memStream = {
+    name='memStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 488 }
+  _classInfoUtil.outStream = {
+    name='outStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 484 }
+  _classInfoUtil.profile = {
+    name='profile', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 500 }
+  end
+do
+  local _classInfoWrapParser = {}
+  _className2InfoMap.WrapParser = _classInfoWrapParser
+  end
+do
+  local _classInfobase = {}
+  _className2InfoMap.base = _classInfobase
+  _classInfobase.Util = {
+    name='Util', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 390 }
+  end
+do
+  local _classInfolune = {}
+  _className2InfoMap.lune = _classInfolune
+  _classInfolune.base = {
+    name='base', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 102 }
+  end
+do
+  local _classInfomemStream = {}
+  _className2InfoMap.memStream = _classInfomemStream
+  end
+do
+  local _classInfooutStream = {}
+  _className2InfoMap.outStream = _classInfooutStream
+  end
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.TypeInfoKindArray = {
@@ -4233,11 +4996,11 @@ _varName2InfoMap.TypeInfoKindPrim = {
 _varName2InfoMap.TypeInfoKindRoot = {
   name='TypeInfoKindRoot', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.nodeKind = {
-  name='nodeKind', accessMode = 'pub', typeId = 852 }
+  name='nodeKind', accessMode = 'pub', typeId = 876 }
 _varName2InfoMap.rootTypeId = {
   name='rootTypeId', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.typeInfoKind = {
-  name='typeInfoKind', accessMode = 'pub', typeId = 500 }
+  name='typeInfoKind', accessMode = 'pub', typeId = 510 }
 local _typeInfoList = {}
 moduleObj._typeInfoList = _typeInfoList
 _typeInfoList[1] = { parentId = 1, typeId = 100, baseId = 1, txt = 'lune',
@@ -4245,13 +5008,13 @@ _typeInfoList[1] = { parentId = 1, typeId = 100, baseId = 1, txt = 'lune',
 _typeInfoList[2] = { parentId = 100, typeId = 102, baseId = 1, txt = 'base',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {104}, }
 _typeInfoList[3] = { parentId = 102, typeId = 104, baseId = 1, txt = 'TransUnit',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {106, 498, 512, 616, 656, 658, 674, 680, 704, 858, 860, 880, 890, 902, 926, 946, 962, 974, 992, 1006, 1020, 1044, 1060, 1082, 1106, 1134, 1160, 1180, 1188, 1200, 1214, 1230, 1246, 1260, 1276, 1292, 1306, 1318, 1330, 1348, 1366, 1380, 1390, 1408, 1436, 1470, 1482, 1494, 1508, 1532, 1556, 1566, 1586, 1626, 1634, 1646, 1662, 1678, 1692, 1704, 1712, 1724, 1746, 1766, 1778, 1998, 2142}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {106, 508, 522, 626, 666, 668, 670, 690, 692, 698, 722, 882, 884, 908, 926, 948, 988, 1016, 1040, 1052, 1078, 1100, 1114, 1146, 1170, 1200, 1232, 1268, 1302, 1330, 1346, 1366, 1388, 1412, 1436, 1458, 1482, 1506, 1528, 1548, 1568, 1594, 1620, 1642, 1660, 1678, 1714, 1748, 1768, 1788, 1810, 1842, 1874, 1892, 1920, 1968, 1984, 2004, 2028, 2052, 2074, 2094, 2110, 2122, 2158, 2186, 2206, 2694}, }
 _typeInfoList[4] = { parentId = 104, typeId = 106, baseId = 1, txt = 'lune',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {108}, }
 _typeInfoList[5] = { parentId = 106, typeId = 108, baseId = 1, txt = 'base',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {110, 386}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {110, 390}, }
 _typeInfoList[6] = { parentId = 108, typeId = 110, baseId = 1, txt = 'Parser',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {342, 346, 352, 354, 356, 362, 368, 374, 376, 378, 380, 384}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {342, 346, 352, 354, 356, 362, 368, 374, 376, 378, 380, 384, 386, 388}, }
 _typeInfoList[7] = { parentId = 110, typeId = 342, baseId = 1, txt = 'Stream',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {344}, }
 _typeInfoList[8] = { parentId = 342, typeId = 344, baseId = 1, txt = 'read',
@@ -4294,631 +5057,923 @@ _typeInfoList[26] = { parentId = 368, typeId = 382, baseId = 1, txt = 'getToken'
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
 _typeInfoList[27] = { parentId = 110, typeId = 384, baseId = 1, txt = 'getEofToken',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {6}, children = {}, }
-_typeInfoList[28] = { parentId = 108, typeId = 386, baseId = 1, txt = 'Util',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {480, 484, 492, 494, 496}, }
-_typeInfoList[29] = { parentId = 386, typeId = 480, baseId = 1, txt = 'outStream',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {482}, }
-_typeInfoList[30] = { parentId = 480, typeId = 482, baseId = 1, txt = 'write',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[31] = { parentId = 386, typeId = 484, baseId = 480, txt = 'memStream',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {486, 488, 490}, }
-_typeInfoList[32] = { parentId = 484, typeId = 486, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[33] = { parentId = 484, typeId = 488, baseId = 1, txt = 'write',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[34] = { parentId = 484, typeId = 490, baseId = 1, txt = 'get_txt',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[35] = { parentId = 386, typeId = 492, baseId = 1, txt = 'errorLog',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[36] = { parentId = 386, typeId = 494, baseId = 1, txt = 'debugLog',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[37] = { parentId = 386, typeId = 496, baseId = 1, txt = 'profile',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[38] = { parentId = 104, typeId = 498, baseId = 1, txt = 'TypeInfo',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {536, 538, 540, 546, 548, 550, 556, 558, 562, 566, 568, 572, 578, 586, 590, 592, 594, 596, 598, 600, 602, 604, 606, 608, 610, 614}, }
-_typeInfoList[39] = { parentId = 1, typeId = 500, baseId = 1, txt = 'Map',
-        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 498}, retTypeId = {}, children = {}, }
-_typeInfoList[40] = { parentId = 104, typeId = 512, baseId = 1, txt = 'isBuiltin',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[41] = { parentId = 498, typeId = 536, baseId = 1, txt = 'getParentId',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[42] = { parentId = 498, typeId = 538, baseId = 1, txt = 'get_baseId',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[43] = { parentId = 498, typeId = 540, baseId = 1, txt = 'serialize',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[44] = { parentId = 498, typeId = 546, baseId = 1, txt = 'getTxt',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[45] = { parentId = 498, typeId = 548, baseId = 1, txt = 'equals',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[46] = { parentId = 498, typeId = 550, baseId = 1, txt = 'cloneToPublic',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[47] = { parentId = 498, typeId = 556, baseId = 1, txt = 'create',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[48] = { parentId = 498, typeId = 558, baseId = 1, txt = 'createBuiltin',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[49] = { parentId = 498, typeId = 562, baseId = 1, txt = 'createList',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[50] = { parentId = 498, typeId = 566, baseId = 1, txt = 'createArray',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[51] = { parentId = 498, typeId = 568, baseId = 1, txt = 'createMap',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[52] = { parentId = 498, typeId = 572, baseId = 1, txt = 'createClass',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[53] = { parentId = 498, typeId = 578, baseId = 1, txt = 'createFunc',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[54] = { parentId = 1, typeId = 584, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {498}, retTypeId = {}, children = {}, }
-_typeInfoList[55] = { parentId = 498, typeId = 586, baseId = 1, txt = 'get_itemTypeInfoList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {584}, children = {}, }
-_typeInfoList[56] = { parentId = 1, typeId = 588, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {498}, retTypeId = {}, children = {}, }
-_typeInfoList[57] = { parentId = 498, typeId = 590, baseId = 1, txt = 'get_retTypeInfoList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {588}, children = {}, }
-_typeInfoList[58] = { parentId = 498, typeId = 592, baseId = 1, txt = 'get_parentInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[59] = { parentId = 498, typeId = 594, baseId = 1, txt = 'get_typeId',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[60] = { parentId = 498, typeId = 596, baseId = 1, txt = 'get_kind',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[61] = { parentId = 498, typeId = 598, baseId = 1, txt = 'get_staticFlag',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[62] = { parentId = 498, typeId = 600, baseId = 1, txt = 'get_accessMode',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[63] = { parentId = 498, typeId = 602, baseId = 1, txt = 'get_autoFlag',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[64] = { parentId = 498, typeId = 604, baseId = 1, txt = 'get_orgTypeInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[65] = { parentId = 498, typeId = 606, baseId = 1, txt = 'get_baseTypeInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[66] = { parentId = 498, typeId = 608, baseId = 1, txt = 'get_nilable',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[67] = { parentId = 498, typeId = 610, baseId = 1, txt = 'get_nilableTypeInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[68] = { parentId = 1, typeId = 612, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {498}, retTypeId = {}, children = {}, }
-_typeInfoList[69] = { parentId = 498, typeId = 614, baseId = 1, txt = 'get_children',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {612}, children = {}, }
-_typeInfoList[70] = { parentId = 104, typeId = 616, baseId = 1, txt = 'Scope',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {632, 634, 636, 638, 640, 642, 644, 648, 652}, }
-_typeInfoList[71] = { parentId = 616, typeId = 632, baseId = 1, txt = 'add',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[72] = { parentId = 616, typeId = 634, baseId = 1, txt = 'addClass',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[73] = { parentId = 616, typeId = 636, baseId = 1, txt = 'getClassScope',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {616}, children = {}, }
-_typeInfoList[74] = { parentId = 616, typeId = 638, baseId = 1, txt = 'getTypeInfoChild',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[75] = { parentId = 616, typeId = 640, baseId = 1, txt = 'getTypeInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[76] = { parentId = 616, typeId = 642, baseId = 1, txt = 'getTypeInfoMethod',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[77] = { parentId = 616, typeId = 644, baseId = 1, txt = 'get_parent',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {616}, children = {}, }
-_typeInfoList[78] = { parentId = 1, typeId = 646, baseId = 1, txt = 'Map',
-        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 498}, retTypeId = {}, children = {}, }
-_typeInfoList[79] = { parentId = 616, typeId = 648, baseId = 1, txt = 'get_symbol2TypeInfoMap',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {646}, children = {}, }
-_typeInfoList[80] = { parentId = 1, typeId = 650, baseId = 1, txt = 'Map',
-        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 616}, retTypeId = {}, children = {}, }
-_typeInfoList[81] = { parentId = 616, typeId = 652, baseId = 1, txt = 'get_className2ScopeMap',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {650}, children = {}, }
-_typeInfoList[82] = { parentId = 104, typeId = 656, baseId = 1, txt = 'NodePos',
+_typeInfoList[28] = { parentId = 110, typeId = 386, baseId = 1, txt = 'base',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[83] = { parentId = 104, typeId = 658, baseId = 1, txt = 'Node',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {662, 664, 666, 670}, }
-_typeInfoList[84] = { parentId = 658, typeId = 662, baseId = 1, txt = 'getLiteral',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {6}, children = {}, }
-_typeInfoList[85] = { parentId = 658, typeId = 664, baseId = 1, txt = 'get_kind',
+_typeInfoList[29] = { parentId = 110, typeId = 388, baseId = 1, txt = 'lune',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[30] = { parentId = 108, typeId = 390, baseId = 1, txt = 'Util',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {484, 488, 496, 498, 500, 502, 504, 506}, }
+_typeInfoList[31] = { parentId = 390, typeId = 484, baseId = 1, txt = 'outStream',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {486}, }
+_typeInfoList[32] = { parentId = 484, typeId = 486, baseId = 1, txt = 'write',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[33] = { parentId = 390, typeId = 488, baseId = 484, txt = 'memStream',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {490, 492, 494}, }
+_typeInfoList[34] = { parentId = 488, typeId = 490, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[35] = { parentId = 488, typeId = 492, baseId = 1, txt = 'write',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[36] = { parentId = 488, typeId = 494, baseId = 1, txt = 'get_txt',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[37] = { parentId = 390, typeId = 496, baseId = 1, txt = 'errorLog',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[38] = { parentId = 390, typeId = 498, baseId = 1, txt = 'debugLog',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[39] = { parentId = 390, typeId = 500, baseId = 1, txt = 'profile',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[40] = { parentId = 390, typeId = 502, baseId = 1, txt = 'Util',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[41] = { parentId = 390, typeId = 504, baseId = 1, txt = 'base',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[42] = { parentId = 390, typeId = 506, baseId = 1, txt = 'lune',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[43] = { parentId = 104, typeId = 508, baseId = 1, txt = 'TypeInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {546, 548, 550, 556, 558, 560, 566, 568, 572, 576, 578, 582, 588, 596, 600, 602, 604, 606, 608, 610, 612, 614, 616, 618, 620, 624}, }
+_typeInfoList[44] = { parentId = 1, typeId = 510, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 508}, retTypeId = {}, children = {}, }
+_typeInfoList[45] = { parentId = 104, typeId = 522, baseId = 1, txt = 'isBuiltin',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[46] = { parentId = 508, typeId = 546, baseId = 1, txt = 'getParentId',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[86] = { parentId = 658, typeId = 666, baseId = 1, txt = 'get_expType',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[87] = { parentId = 658, typeId = 670, baseId = 1, txt = 'get_info',
+_typeInfoList[47] = { parentId = 508, typeId = 548, baseId = 1, txt = 'get_baseId',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
+_typeInfoList[48] = { parentId = 508, typeId = 550, baseId = 1, txt = 'serialize',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[49] = { parentId = 508, typeId = 556, baseId = 1, txt = 'getTxt',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[50] = { parentId = 508, typeId = 558, baseId = 1, txt = 'equals',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[51] = { parentId = 508, typeId = 560, baseId = 1, txt = 'cloneToPublic',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[52] = { parentId = 508, typeId = 566, baseId = 1, txt = 'create',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[53] = { parentId = 508, typeId = 568, baseId = 1, txt = 'createBuiltin',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[54] = { parentId = 508, typeId = 572, baseId = 1, txt = 'createList',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[55] = { parentId = 508, typeId = 576, baseId = 1, txt = 'createArray',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[56] = { parentId = 508, typeId = 578, baseId = 1, txt = 'createMap',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[57] = { parentId = 508, typeId = 582, baseId = 1, txt = 'createClass',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[58] = { parentId = 508, typeId = 588, baseId = 1, txt = 'createFunc',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[59] = { parentId = 1, typeId = 594, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[60] = { parentId = 508, typeId = 596, baseId = 1, txt = 'get_itemTypeInfoList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {594}, children = {}, }
+_typeInfoList[61] = { parentId = 1, typeId = 598, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 4, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[62] = { parentId = 508, typeId = 600, baseId = 1, txt = 'get_retTypeInfoList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {598}, children = {}, }
+_typeInfoList[63] = { parentId = 508, typeId = 602, baseId = 1, txt = 'get_parentInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[64] = { parentId = 508, typeId = 604, baseId = 1, txt = 'get_typeId',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
+_typeInfoList[65] = { parentId = 508, typeId = 606, baseId = 1, txt = 'get_kind',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
+_typeInfoList[66] = { parentId = 508, typeId = 608, baseId = 1, txt = 'get_staticFlag',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[67] = { parentId = 508, typeId = 610, baseId = 1, txt = 'get_accessMode',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[68] = { parentId = 508, typeId = 612, baseId = 1, txt = 'get_autoFlag',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[69] = { parentId = 508, typeId = 614, baseId = 1, txt = 'get_orgTypeInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[70] = { parentId = 508, typeId = 616, baseId = 1, txt = 'get_baseTypeInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[71] = { parentId = 508, typeId = 618, baseId = 1, txt = 'get_nilable',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[72] = { parentId = 508, typeId = 620, baseId = 1, txt = 'get_nilableTypeInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[73] = { parentId = 1, typeId = 622, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[74] = { parentId = 508, typeId = 624, baseId = 1, txt = 'get_children',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {622}, children = {}, }
+_typeInfoList[75] = { parentId = 104, typeId = 626, baseId = 1, txt = 'Scope',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {642, 644, 646, 648, 650, 652, 654, 658, 662}, }
+_typeInfoList[76] = { parentId = 626, typeId = 642, baseId = 1, txt = 'add',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[77] = { parentId = 626, typeId = 644, baseId = 1, txt = 'addClass',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[78] = { parentId = 626, typeId = 646, baseId = 1, txt = 'getClassScope',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {626}, children = {}, }
+_typeInfoList[79] = { parentId = 626, typeId = 648, baseId = 1, txt = 'getTypeInfoChild',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[80] = { parentId = 626, typeId = 650, baseId = 1, txt = 'getTypeInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[81] = { parentId = 626, typeId = 652, baseId = 1, txt = 'getTypeInfoMethod',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[82] = { parentId = 626, typeId = 654, baseId = 1, txt = 'get_parent',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {626}, children = {}, }
+_typeInfoList[83] = { parentId = 1, typeId = 656, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 508}, retTypeId = {}, children = {}, }
+_typeInfoList[84] = { parentId = 626, typeId = 658, baseId = 1, txt = 'get_symbol2TypeInfoMap',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {656}, children = {}, }
+_typeInfoList[85] = { parentId = 1, typeId = 660, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 626}, retTypeId = {}, children = {}, }
+_typeInfoList[86] = { parentId = 626, typeId = 662, baseId = 1, txt = 'get_className2ScopeMap',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {660}, children = {}, }
+_typeInfoList[87] = { parentId = 104, typeId = 666, baseId = 1, txt = 'Filter',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {910, 928, 950, 990, 1018, 1054, 1080, 1116, 1148, 1172, 1202, 1234, 1270, 1304, 1332, 1348, 1368, 1390, 1414, 1438, 1460, 1484, 1508, 1530, 1550, 1570, 1596, 1622, 1644, 1680, 1750, 1770, 1790, 1812, 1844, 1876, 1894, 1922, 1970, 1986, 2006, 2030, 2054, 2076, 2096, 2124, 2160, 2188, 2208}, }
+_typeInfoList[88] = { parentId = 104, typeId = 668, baseId = 1, txt = 'NodePos',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[89] = { parentId = 104, typeId = 670, baseId = 1, txt = 'Node',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {678, 680, 682, 684, 688}, }
+_typeInfoList[90] = { parentId = 1, typeId = 674, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[91] = { parentId = 1, typeId = 676, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[92] = { parentId = 670, typeId = 678, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {674, 676}, children = {}, }
+_typeInfoList[93] = { parentId = 670, typeId = 680, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[94] = { parentId = 670, typeId = 682, baseId = 1, txt = 'get_kind',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
+_typeInfoList[95] = { parentId = 670, typeId = 684, baseId = 1, txt = 'get_expType',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[96] = { parentId = 670, typeId = 688, baseId = 1, txt = 'get_info',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {6}, children = {}, }
-_typeInfoList[88] = { parentId = 104, typeId = 674, baseId = 1, txt = 'MacroEval',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {678}, }
-_typeInfoList[89] = { parentId = 1, typeId = 676, baseId = 1, txt = 'Map',
+_typeInfoList[97] = { parentId = 104, typeId = 690, baseId = 1, txt = 'NamespaceInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[98] = { parentId = 104, typeId = 692, baseId = 1, txt = 'MacroEval',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {696}, }
+_typeInfoList[99] = { parentId = 1, typeId = 694, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 6}, retTypeId = {}, children = {}, }
-_typeInfoList[90] = { parentId = 674, typeId = 678, baseId = 1, txt = 'eval',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {676}, children = {}, }
-_typeInfoList[91] = { parentId = 104, typeId = 680, baseId = 1, txt = 'DeclMacroInfo',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {686, 690, 692, 696}, }
-_typeInfoList[92] = { parentId = 680, typeId = 686, baseId = 1, txt = 'get_name',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[93] = { parentId = 1, typeId = 688, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[94] = { parentId = 680, typeId = 690, baseId = 1, txt = 'get_argList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {688}, children = {}, }
-_typeInfoList[95] = { parentId = 680, typeId = 692, baseId = 1, txt = 'get_ast',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[96] = { parentId = 1, typeId = 694, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {354}, retTypeId = {}, children = {}, }
-_typeInfoList[97] = { parentId = 680, typeId = 696, baseId = 1, txt = 'get_tokenList',
+_typeInfoList[100] = { parentId = 692, typeId = 696, baseId = 1, txt = 'eval',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {694}, children = {}, }
-_typeInfoList[98] = { parentId = 104, typeId = 704, baseId = 1, txt = 'TransUnit',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {802, 2148}, }
-_typeInfoList[99] = { parentId = 1, typeId = 800, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {18}, retTypeId = {}, children = {}, }
-_typeInfoList[100] = { parentId = 704, typeId = 802, baseId = 1, txt = 'get_errMessList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {800}, children = {}, }
-_typeInfoList[101] = { parentId = 1, typeId = 852, baseId = 1, txt = 'Map',
-        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 12}, retTypeId = {}, children = {}, }
-_typeInfoList[102] = { parentId = 104, typeId = 858, baseId = 1, txt = 'getNodeKindName',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[103] = { parentId = 104, typeId = 860, baseId = 1, txt = 'nodeFilter',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {6}, children = {}, }
-_typeInfoList[104] = { parentId = 104, typeId = 880, baseId = 658, txt = 'NoneNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {884}, }
-_typeInfoList[105] = { parentId = 880, typeId = 884, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[106] = { parentId = 104, typeId = 890, baseId = 658, txt = 'ImportNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {894, 896}, }
-_typeInfoList[107] = { parentId = 890, typeId = 894, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[108] = { parentId = 890, typeId = 896, baseId = 1, txt = 'get_modulePath',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[109] = { parentId = 104, typeId = 902, baseId = 658, txt = 'RootNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {910, 914}, }
-_typeInfoList[110] = { parentId = 902, typeId = 910, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[111] = { parentId = 1, typeId = 912, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[112] = { parentId = 902, typeId = 914, baseId = 1, txt = 'get_children',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {912}, children = {}, }
-_typeInfoList[113] = { parentId = 104, typeId = 926, baseId = 658, txt = 'RefTypeNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {930, 932, 934, 936, 938}, }
-_typeInfoList[114] = { parentId = 926, typeId = 930, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[115] = { parentId = 926, typeId = 932, baseId = 1, txt = 'get_name',
+_typeInfoList[101] = { parentId = 104, typeId = 698, baseId = 1, txt = 'DeclMacroInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {704, 708, 710, 714}, }
+_typeInfoList[102] = { parentId = 698, typeId = 704, baseId = 1, txt = 'get_name',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[116] = { parentId = 926, typeId = 934, baseId = 1, txt = 'get_refFlag',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[117] = { parentId = 926, typeId = 936, baseId = 1, txt = 'get_mutFlag',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[118] = { parentId = 926, typeId = 938, baseId = 1, txt = 'get_array',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[119] = { parentId = 104, typeId = 946, baseId = 658, txt = 'BlockNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {954, 956, 960}, }
-_typeInfoList[120] = { parentId = 946, typeId = 954, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[121] = { parentId = 946, typeId = 956, baseId = 1, txt = 'get_blockKind',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[122] = { parentId = 1, typeId = 958, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[123] = { parentId = 946, typeId = 960, baseId = 1, txt = 'get_stmtList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {958}, children = {}, }
-_typeInfoList[124] = { parentId = 104, typeId = 962, baseId = 1, txt = 'IfStmtInfo',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {964, 966, 968}, }
-_typeInfoList[125] = { parentId = 962, typeId = 964, baseId = 1, txt = 'get_kind',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[126] = { parentId = 962, typeId = 966, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[127] = { parentId = 962, typeId = 968, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[128] = { parentId = 104, typeId = 974, baseId = 658, txt = 'IfNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {982, 986}, }
-_typeInfoList[129] = { parentId = 974, typeId = 982, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[130] = { parentId = 1, typeId = 984, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {962}, retTypeId = {}, children = {}, }
-_typeInfoList[131] = { parentId = 974, typeId = 986, baseId = 1, txt = 'get_stmtList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {984}, children = {}, }
-_typeInfoList[132] = { parentId = 104, typeId = 992, baseId = 658, txt = 'ExpListNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1000, 1004}, }
-_typeInfoList[133] = { parentId = 992, typeId = 1000, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[134] = { parentId = 1, typeId = 1002, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[135] = { parentId = 992, typeId = 1004, baseId = 1, txt = 'get_expList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1002}, children = {}, }
-_typeInfoList[136] = { parentId = 104, typeId = 1006, baseId = 1, txt = 'CaseInfo',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1008, 1010}, }
-_typeInfoList[137] = { parentId = 1006, typeId = 1008, baseId = 1, txt = 'get_expList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[138] = { parentId = 1006, typeId = 1010, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[139] = { parentId = 104, typeId = 1020, baseId = 658, txt = 'SwitchNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1028, 1030, 1034, 1036}, }
-_typeInfoList[140] = { parentId = 1020, typeId = 1028, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[141] = { parentId = 1020, typeId = 1030, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[142] = { parentId = 1, typeId = 1032, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {1006}, retTypeId = {}, children = {}, }
-_typeInfoList[143] = { parentId = 1020, typeId = 1034, baseId = 1, txt = 'get_caseList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1032}, children = {}, }
-_typeInfoList[144] = { parentId = 1020, typeId = 1036, baseId = 1, txt = 'get_default',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[145] = { parentId = 104, typeId = 1044, baseId = 658, txt = 'WhileNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1048, 1050, 1052}, }
-_typeInfoList[146] = { parentId = 1044, typeId = 1048, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[147] = { parentId = 1044, typeId = 1050, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[148] = { parentId = 1044, typeId = 1052, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[149] = { parentId = 104, typeId = 1060, baseId = 658, txt = 'RepeatNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1064, 1066, 1068}, }
-_typeInfoList[150] = { parentId = 1060, typeId = 1064, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[151] = { parentId = 1060, typeId = 1066, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[152] = { parentId = 1060, typeId = 1068, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[153] = { parentId = 104, typeId = 1082, baseId = 658, txt = 'ForNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1086, 1088, 1090, 1092, 1094, 1096}, }
-_typeInfoList[154] = { parentId = 1082, typeId = 1086, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[155] = { parentId = 1082, typeId = 1088, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[156] = { parentId = 1082, typeId = 1090, baseId = 1, txt = 'get_val',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[157] = { parentId = 1082, typeId = 1092, baseId = 1, txt = 'get_init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[158] = { parentId = 1082, typeId = 1094, baseId = 1, txt = 'get_to',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[159] = { parentId = 1082, typeId = 1096, baseId = 1, txt = 'get_delta',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[160] = { parentId = 104, typeId = 1106, baseId = 658, txt = 'ApplyNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1114, 1118, 1120, 1122}, }
-_typeInfoList[161] = { parentId = 1106, typeId = 1114, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[162] = { parentId = 1, typeId = 1116, baseId = 1, txt = '',
+_typeInfoList[103] = { parentId = 1, typeId = 706, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[104] = { parentId = 698, typeId = 708, baseId = 1, txt = 'get_argList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {706}, children = {}, }
+_typeInfoList[105] = { parentId = 698, typeId = 710, baseId = 1, txt = 'get_ast',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[106] = { parentId = 1, typeId = 712, baseId = 1, txt = '',
         staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {354}, retTypeId = {}, children = {}, }
-_typeInfoList[163] = { parentId = 1106, typeId = 1118, baseId = 1, txt = 'get_varList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1116}, children = {}, }
-_typeInfoList[164] = { parentId = 1106, typeId = 1120, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[165] = { parentId = 1106, typeId = 1122, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[166] = { parentId = 104, typeId = 1134, baseId = 658, txt = 'ForeachNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1138, 1140, 1142, 1144, 1146}, }
-_typeInfoList[167] = { parentId = 1134, typeId = 1138, baseId = 1, txt = '__init',
+_typeInfoList[107] = { parentId = 698, typeId = 714, baseId = 1, txt = 'get_tokenList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {712}, children = {}, }
+_typeInfoList[108] = { parentId = 104, typeId = 722, baseId = 1, txt = 'TransUnit',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {826, 2700}, }
+_typeInfoList[109] = { parentId = 1, typeId = 824, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {18}, retTypeId = {}, children = {}, }
+_typeInfoList[110] = { parentId = 722, typeId = 826, baseId = 1, txt = 'get_errMessList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {824}, children = {}, }
+_typeInfoList[111] = { parentId = 1, typeId = 876, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 12}, retTypeId = {}, children = {}, }
+_typeInfoList[112] = { parentId = 104, typeId = 882, baseId = 1, txt = 'getNodeKindName',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[113] = { parentId = 104, typeId = 884, baseId = 1, txt = 'nodeFilter',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {6}, children = {}, }
+_typeInfoList[114] = { parentId = 104, typeId = 908, baseId = 670, txt = 'NoneNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {912, 920}, }
+_typeInfoList[115] = { parentId = 666, typeId = 910, baseId = 1, txt = 'processNone',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[168] = { parentId = 1134, typeId = 1140, baseId = 1, txt = 'get_val',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[169] = { parentId = 1134, typeId = 1142, baseId = 1, txt = 'get_key',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[170] = { parentId = 1134, typeId = 1144, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[171] = { parentId = 1134, typeId = 1146, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[172] = { parentId = 104, typeId = 1160, baseId = 658, txt = 'ForsortNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1164, 1166, 1168, 1170, 1172, 1174}, }
-_typeInfoList[173] = { parentId = 1160, typeId = 1164, baseId = 1, txt = '__init',
+_typeInfoList[116] = { parentId = 908, typeId = 912, baseId = 1, txt = 'processFilter',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[174] = { parentId = 1160, typeId = 1166, baseId = 1, txt = 'get_val',
+_typeInfoList[117] = { parentId = 908, typeId = 920, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[118] = { parentId = 104, typeId = 926, baseId = 670, txt = 'ImportNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {930, 938, 940}, }
+_typeInfoList[119] = { parentId = 666, typeId = 928, baseId = 1, txt = 'processImport',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[120] = { parentId = 926, typeId = 930, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[121] = { parentId = 926, typeId = 938, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[122] = { parentId = 926, typeId = 940, baseId = 1, txt = 'get_modulePath',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[123] = { parentId = 104, typeId = 948, baseId = 670, txt = 'RootNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {956, 968, 972, 976}, }
+_typeInfoList[124] = { parentId = 666, typeId = 950, baseId = 1, txt = 'processRoot',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[125] = { parentId = 948, typeId = 956, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[126] = { parentId = 948, typeId = 968, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[127] = { parentId = 1, typeId = 970, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[128] = { parentId = 948, typeId = 972, baseId = 1, txt = 'get_children',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {970}, children = {}, }
+_typeInfoList[129] = { parentId = 1, typeId = 974, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {12, 690}, retTypeId = {}, children = {}, }
+_typeInfoList[130] = { parentId = 948, typeId = 976, baseId = 1, txt = 'get_typeId2ClassMap',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {974}, children = {}, }
+_typeInfoList[131] = { parentId = 104, typeId = 988, baseId = 670, txt = 'RefTypeNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {992, 1000, 1002, 1004, 1006, 1008}, }
+_typeInfoList[132] = { parentId = 666, typeId = 990, baseId = 1, txt = 'processRefType',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[133] = { parentId = 988, typeId = 992, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[134] = { parentId = 988, typeId = 1000, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[135] = { parentId = 988, typeId = 1002, baseId = 1, txt = 'get_name',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[175] = { parentId = 1160, typeId = 1168, baseId = 1, txt = 'get_key',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[176] = { parentId = 1160, typeId = 1170, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[177] = { parentId = 1160, typeId = 1172, baseId = 1, txt = 'get_block',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[178] = { parentId = 1160, typeId = 1174, baseId = 1, txt = 'get_sort',
+_typeInfoList[136] = { parentId = 988, typeId = 1004, baseId = 1, txt = 'get_refFlag',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[179] = { parentId = 104, typeId = 1180, baseId = 658, txt = 'ReturnNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1184, 1186}, }
-_typeInfoList[180] = { parentId = 1180, typeId = 1184, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[181] = { parentId = 1180, typeId = 1186, baseId = 1, txt = 'get_expList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[182] = { parentId = 104, typeId = 1188, baseId = 658, txt = 'BreakNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1192}, }
-_typeInfoList[183] = { parentId = 1188, typeId = 1192, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[184] = { parentId = 104, typeId = 1200, baseId = 658, txt = 'ExpNewNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1204, 1206, 1208}, }
-_typeInfoList[185] = { parentId = 1200, typeId = 1204, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[186] = { parentId = 1200, typeId = 1206, baseId = 1, txt = 'get_symbol',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[187] = { parentId = 1200, typeId = 1208, baseId = 1, txt = 'get_argList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[188] = { parentId = 104, typeId = 1214, baseId = 658, txt = 'ExpRefNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1218, 1220}, }
-_typeInfoList[189] = { parentId = 1214, typeId = 1218, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[190] = { parentId = 1214, typeId = 1220, baseId = 1, txt = 'get_token',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[191] = { parentId = 104, typeId = 1230, baseId = 658, txt = 'ExpOp2Node',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1234, 1236, 1238, 1240}, }
-_typeInfoList[192] = { parentId = 1230, typeId = 1234, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[193] = { parentId = 1230, typeId = 1236, baseId = 1, txt = 'get_op',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[194] = { parentId = 1230, typeId = 1238, baseId = 1, txt = 'get_exp1',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[195] = { parentId = 1230, typeId = 1240, baseId = 1, txt = 'get_exp2',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[196] = { parentId = 104, typeId = 1246, baseId = 658, txt = 'ExpCastNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1250, 1252}, }
-_typeInfoList[197] = { parentId = 1246, typeId = 1250, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[198] = { parentId = 1246, typeId = 1252, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[199] = { parentId = 104, typeId = 1260, baseId = 658, txt = 'ExpOp1Node',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1264, 1266, 1268}, }
-_typeInfoList[200] = { parentId = 1260, typeId = 1264, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[201] = { parentId = 1260, typeId = 1266, baseId = 1, txt = 'get_op',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[202] = { parentId = 1260, typeId = 1268, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[203] = { parentId = 104, typeId = 1276, baseId = 658, txt = 'ExpRefItemNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1280, 1282, 1284}, }
-_typeInfoList[204] = { parentId = 1276, typeId = 1280, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[205] = { parentId = 1276, typeId = 1282, baseId = 1, txt = 'get_val',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[206] = { parentId = 1276, typeId = 1284, baseId = 1, txt = 'get_index',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[207] = { parentId = 104, typeId = 1292, baseId = 658, txt = 'ExpCallNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1296, 1298, 1300}, }
-_typeInfoList[208] = { parentId = 1292, typeId = 1296, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[209] = { parentId = 1292, typeId = 1298, baseId = 1, txt = 'get_func',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[210] = { parentId = 1292, typeId = 1300, baseId = 1, txt = 'get_argList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[211] = { parentId = 104, typeId = 1306, baseId = 658, txt = 'ExpDDDNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1310, 1312}, }
-_typeInfoList[212] = { parentId = 1306, typeId = 1310, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[213] = { parentId = 1306, typeId = 1312, baseId = 1, txt = 'get_token',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[214] = { parentId = 104, typeId = 1318, baseId = 658, txt = 'ExpParenNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1322, 1324}, }
-_typeInfoList[215] = { parentId = 1318, typeId = 1322, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[216] = { parentId = 1318, typeId = 1324, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[217] = { parentId = 104, typeId = 1330, baseId = 658, txt = 'ExpMacroExpNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1338, 1342}, }
-_typeInfoList[218] = { parentId = 1330, typeId = 1338, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[219] = { parentId = 1, typeId = 1340, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[220] = { parentId = 1330, typeId = 1342, baseId = 1, txt = 'get_stmtList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1340}, children = {}, }
-_typeInfoList[221] = { parentId = 104, typeId = 1348, baseId = 658, txt = 'ExpMacroStatNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1356, 1360}, }
-_typeInfoList[222] = { parentId = 1348, typeId = 1356, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[223] = { parentId = 1, typeId = 1358, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[224] = { parentId = 1348, typeId = 1360, baseId = 1, txt = 'get_expStrList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1358}, children = {}, }
-_typeInfoList[225] = { parentId = 104, typeId = 1366, baseId = 658, txt = 'StmtExpNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1370, 1372}, }
-_typeInfoList[226] = { parentId = 1366, typeId = 1370, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[227] = { parentId = 1366, typeId = 1372, baseId = 1, txt = 'get_exp',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[228] = { parentId = 104, typeId = 1380, baseId = 658, txt = 'RefFieldNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1384, 1386, 1388}, }
-_typeInfoList[229] = { parentId = 1380, typeId = 1384, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[230] = { parentId = 1380, typeId = 1386, baseId = 1, txt = 'get_field',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[231] = { parentId = 1380, typeId = 1388, baseId = 1, txt = 'get_prefix',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[232] = { parentId = 104, typeId = 1390, baseId = 1, txt = 'VarInfo',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1392, 1394}, }
-_typeInfoList[233] = { parentId = 1390, typeId = 1392, baseId = 1, txt = 'get_name',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[234] = { parentId = 1390, typeId = 1394, baseId = 1, txt = 'get_refType',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[235] = { parentId = 104, typeId = 1408, baseId = 658, txt = 'DeclVarNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1420, 1422, 1426, 1428, 1432, 1434}, }
-_typeInfoList[236] = { parentId = 1408, typeId = 1420, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[237] = { parentId = 1408, typeId = 1422, baseId = 1, txt = 'get_accessMode',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[238] = { parentId = 1, typeId = 1424, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {1390}, retTypeId = {}, children = {}, }
-_typeInfoList[239] = { parentId = 1408, typeId = 1426, baseId = 1, txt = 'get_varList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1424}, children = {}, }
-_typeInfoList[240] = { parentId = 1408, typeId = 1428, baseId = 1, txt = 'get_expList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[241] = { parentId = 1, typeId = 1430, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {498}, retTypeId = {}, children = {}, }
-_typeInfoList[242] = { parentId = 1408, typeId = 1432, baseId = 1, txt = 'get_typeInfoList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1430}, children = {}, }
-_typeInfoList[243] = { parentId = 1408, typeId = 1434, baseId = 1, txt = 'get_unwrap',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {946}, children = {}, }
-_typeInfoList[244] = { parentId = 104, typeId = 1436, baseId = 1, txt = 'DeclFuncInfo',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1444, 1446, 1450, 1452, 1454, 1456, 1460, 1464}, }
-_typeInfoList[245] = { parentId = 1436, typeId = 1444, baseId = 1, txt = 'get_className',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[246] = { parentId = 1436, typeId = 1446, baseId = 1, txt = 'get_name',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[247] = { parentId = 1, typeId = 1448, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[248] = { parentId = 1436, typeId = 1450, baseId = 1, txt = 'get_argList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1448}, children = {}, }
-_typeInfoList[249] = { parentId = 1436, typeId = 1452, baseId = 1, txt = 'get_staticFlag',
+_typeInfoList[137] = { parentId = 988, typeId = 1006, baseId = 1, txt = 'get_mutFlag',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[250] = { parentId = 1436, typeId = 1454, baseId = 1, txt = 'get_accessMode',
+_typeInfoList[138] = { parentId = 988, typeId = 1008, baseId = 1, txt = 'get_array',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[251] = { parentId = 1436, typeId = 1456, baseId = 1, txt = 'get_body',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[252] = { parentId = 1, typeId = 1458, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {498}, retTypeId = {}, children = {}, }
-_typeInfoList[253] = { parentId = 1436, typeId = 1460, baseId = 1, txt = 'get_retTypeList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1458}, children = {}, }
-_typeInfoList[254] = { parentId = 1, typeId = 1462, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {498}, retTypeId = {}, children = {}, }
-_typeInfoList[255] = { parentId = 1436, typeId = 1464, baseId = 1, txt = 'get_retTypeInfoList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1462}, children = {}, }
-_typeInfoList[256] = { parentId = 104, typeId = 1470, baseId = 658, txt = 'DeclFuncNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1474, 1476}, }
-_typeInfoList[257] = { parentId = 1470, typeId = 1474, baseId = 1, txt = '__init',
+_typeInfoList[139] = { parentId = 104, typeId = 1016, baseId = 670, txt = 'BlockNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1022, 1032, 1034, 1038}, }
+_typeInfoList[140] = { parentId = 666, typeId = 1018, baseId = 1, txt = 'processBlock',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[258] = { parentId = 1470, typeId = 1476, baseId = 1, txt = 'get_declInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1436}, children = {}, }
-_typeInfoList[259] = { parentId = 104, typeId = 1482, baseId = 658, txt = 'DeclMethodNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1486, 1488}, }
-_typeInfoList[260] = { parentId = 1482, typeId = 1486, baseId = 1, txt = '__init',
+_typeInfoList[141] = { parentId = 1016, typeId = 1022, baseId = 1, txt = 'processFilter',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[261] = { parentId = 1482, typeId = 1488, baseId = 1, txt = 'get_declInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1436}, children = {}, }
-_typeInfoList[262] = { parentId = 104, typeId = 1494, baseId = 658, txt = 'DeclConstrNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1498, 1500}, }
-_typeInfoList[263] = { parentId = 1494, typeId = 1498, baseId = 1, txt = '__init',
+_typeInfoList[142] = { parentId = 1016, typeId = 1032, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[264] = { parentId = 1494, typeId = 1500, baseId = 1, txt = 'get_declInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1436}, children = {}, }
-_typeInfoList[265] = { parentId = 104, typeId = 1508, baseId = 658, txt = 'ExpCallSuperNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1512, 1514, 1516}, }
-_typeInfoList[266] = { parentId = 1508, typeId = 1512, baseId = 1, txt = '__init',
+_typeInfoList[143] = { parentId = 1016, typeId = 1034, baseId = 1, txt = 'get_blockKind',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[144] = { parentId = 1, typeId = 1036, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[145] = { parentId = 1016, typeId = 1038, baseId = 1, txt = 'get_stmtList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1036}, children = {}, }
+_typeInfoList[146] = { parentId = 104, typeId = 1040, baseId = 1, txt = 'IfStmtInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1042, 1044, 1046}, }
+_typeInfoList[147] = { parentId = 1040, typeId = 1042, baseId = 1, txt = 'get_kind',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[148] = { parentId = 1040, typeId = 1044, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[149] = { parentId = 1040, typeId = 1046, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[150] = { parentId = 104, typeId = 1052, baseId = 670, txt = 'IfNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1058, 1068, 1072}, }
+_typeInfoList[151] = { parentId = 666, typeId = 1054, baseId = 1, txt = 'processIf',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[267] = { parentId = 1508, typeId = 1514, baseId = 1, txt = 'get_superType',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[268] = { parentId = 1508, typeId = 1516, baseId = 1, txt = 'get_expList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[269] = { parentId = 104, typeId = 1532, baseId = 658, txt = 'DeclMemberNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1536, 1538, 1540, 1542, 1544, 1546, 1548}, }
-_typeInfoList[270] = { parentId = 1532, typeId = 1536, baseId = 1, txt = '__init',
+_typeInfoList[152] = { parentId = 1052, typeId = 1058, baseId = 1, txt = 'processFilter',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[271] = { parentId = 1532, typeId = 1538, baseId = 1, txt = 'get_name',
+_typeInfoList[153] = { parentId = 1052, typeId = 1068, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[154] = { parentId = 1, typeId = 1070, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {1040}, retTypeId = {}, children = {}, }
+_typeInfoList[155] = { parentId = 1052, typeId = 1072, baseId = 1, txt = 'get_stmtList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1070}, children = {}, }
+_typeInfoList[156] = { parentId = 104, typeId = 1078, baseId = 670, txt = 'ExpListNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1084, 1094, 1098}, }
+_typeInfoList[157] = { parentId = 666, typeId = 1080, baseId = 1, txt = 'processExpList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[158] = { parentId = 1078, typeId = 1084, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[159] = { parentId = 1078, typeId = 1094, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[160] = { parentId = 1, typeId = 1096, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[161] = { parentId = 1078, typeId = 1098, baseId = 1, txt = 'get_expList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1096}, children = {}, }
+_typeInfoList[162] = { parentId = 104, typeId = 1100, baseId = 1, txt = 'CaseInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1102, 1104}, }
+_typeInfoList[163] = { parentId = 1100, typeId = 1102, baseId = 1, txt = 'get_expList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[164] = { parentId = 1100, typeId = 1104, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[165] = { parentId = 104, typeId = 1114, baseId = 670, txt = 'SwitchNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1120, 1130, 1132, 1136, 1138}, }
+_typeInfoList[166] = { parentId = 666, typeId = 1116, baseId = 1, txt = 'processSwitch',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[167] = { parentId = 1114, typeId = 1120, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[168] = { parentId = 1114, typeId = 1130, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[169] = { parentId = 1114, typeId = 1132, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[170] = { parentId = 1, typeId = 1134, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {1100}, retTypeId = {}, children = {}, }
+_typeInfoList[171] = { parentId = 1114, typeId = 1136, baseId = 1, txt = 'get_caseList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1134}, children = {}, }
+_typeInfoList[172] = { parentId = 1114, typeId = 1138, baseId = 1, txt = 'get_default',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[173] = { parentId = 104, typeId = 1146, baseId = 670, txt = 'WhileNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1150, 1158, 1160, 1162}, }
+_typeInfoList[174] = { parentId = 666, typeId = 1148, baseId = 1, txt = 'processWhile',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[175] = { parentId = 1146, typeId = 1150, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[176] = { parentId = 1146, typeId = 1158, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[177] = { parentId = 1146, typeId = 1160, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[178] = { parentId = 1146, typeId = 1162, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[179] = { parentId = 104, typeId = 1170, baseId = 670, txt = 'RepeatNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1174, 1182, 1184, 1186}, }
+_typeInfoList[180] = { parentId = 666, typeId = 1172, baseId = 1, txt = 'processRepeat',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[181] = { parentId = 1170, typeId = 1174, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[182] = { parentId = 1170, typeId = 1182, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[183] = { parentId = 1170, typeId = 1184, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[184] = { parentId = 1170, typeId = 1186, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[185] = { parentId = 104, typeId = 1200, baseId = 670, txt = 'ForNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1204, 1212, 1214, 1216, 1218, 1220, 1222}, }
+_typeInfoList[186] = { parentId = 666, typeId = 1202, baseId = 1, txt = 'processFor',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[187] = { parentId = 1200, typeId = 1204, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[188] = { parentId = 1200, typeId = 1212, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[189] = { parentId = 1200, typeId = 1214, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[190] = { parentId = 1200, typeId = 1216, baseId = 1, txt = 'get_val',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[272] = { parentId = 1532, typeId = 1540, baseId = 1, txt = 'get_refType',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {926}, children = {}, }
-_typeInfoList[273] = { parentId = 1532, typeId = 1542, baseId = 1, txt = 'get_staticFlag',
+_typeInfoList[191] = { parentId = 1200, typeId = 1218, baseId = 1, txt = 'get_init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[192] = { parentId = 1200, typeId = 1220, baseId = 1, txt = 'get_to',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[193] = { parentId = 1200, typeId = 1222, baseId = 1, txt = 'get_delta',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[194] = { parentId = 104, typeId = 1232, baseId = 670, txt = 'ApplyNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1238, 1248, 1252, 1254, 1256}, }
+_typeInfoList[195] = { parentId = 666, typeId = 1234, baseId = 1, txt = 'processApply',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[196] = { parentId = 1232, typeId = 1238, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[197] = { parentId = 1232, typeId = 1248, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[198] = { parentId = 1, typeId = 1250, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {354}, retTypeId = {}, children = {}, }
+_typeInfoList[199] = { parentId = 1232, typeId = 1252, baseId = 1, txt = 'get_varList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1250}, children = {}, }
+_typeInfoList[200] = { parentId = 1232, typeId = 1254, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[201] = { parentId = 1232, typeId = 1256, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[202] = { parentId = 104, typeId = 1268, baseId = 670, txt = 'ForeachNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1272, 1280, 1282, 1284, 1286, 1288}, }
+_typeInfoList[203] = { parentId = 666, typeId = 1270, baseId = 1, txt = 'processForeach',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[204] = { parentId = 1268, typeId = 1272, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[205] = { parentId = 1268, typeId = 1280, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[206] = { parentId = 1268, typeId = 1282, baseId = 1, txt = 'get_val',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[207] = { parentId = 1268, typeId = 1284, baseId = 1, txt = 'get_key',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[208] = { parentId = 1268, typeId = 1286, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[209] = { parentId = 1268, typeId = 1288, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[210] = { parentId = 104, typeId = 1302, baseId = 670, txt = 'ForsortNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1306, 1314, 1316, 1318, 1320, 1322, 1324}, }
+_typeInfoList[211] = { parentId = 666, typeId = 1304, baseId = 1, txt = 'processForsort',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[212] = { parentId = 1302, typeId = 1306, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[213] = { parentId = 1302, typeId = 1314, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[214] = { parentId = 1302, typeId = 1316, baseId = 1, txt = 'get_val',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[215] = { parentId = 1302, typeId = 1318, baseId = 1, txt = 'get_key',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[216] = { parentId = 1302, typeId = 1320, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[217] = { parentId = 1302, typeId = 1322, baseId = 1, txt = 'get_block',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[218] = { parentId = 1302, typeId = 1324, baseId = 1, txt = 'get_sort',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[274] = { parentId = 1532, typeId = 1544, baseId = 1, txt = 'get_accessMode',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[275] = { parentId = 1532, typeId = 1546, baseId = 1, txt = 'get_getterMode',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[276] = { parentId = 1532, typeId = 1548, baseId = 1, txt = 'get_setterMode',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[277] = { parentId = 104, typeId = 1556, baseId = 658, txt = 'DeclArgNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1560, 1562, 1564}, }
-_typeInfoList[278] = { parentId = 1556, typeId = 1560, baseId = 1, txt = '__init',
+_typeInfoList[219] = { parentId = 104, typeId = 1330, baseId = 670, txt = 'ReturnNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1334, 1342, 1344}, }
+_typeInfoList[220] = { parentId = 666, typeId = 1332, baseId = 1, txt = 'processReturn',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[279] = { parentId = 1556, typeId = 1562, baseId = 1, txt = 'get_name',
+_typeInfoList[221] = { parentId = 1330, typeId = 1334, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[222] = { parentId = 1330, typeId = 1342, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[223] = { parentId = 1330, typeId = 1344, baseId = 1, txt = 'get_expList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[224] = { parentId = 104, typeId = 1346, baseId = 670, txt = 'BreakNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1350, 1358}, }
+_typeInfoList[225] = { parentId = 666, typeId = 1348, baseId = 1, txt = 'processBreak',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[226] = { parentId = 1346, typeId = 1350, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[227] = { parentId = 1346, typeId = 1358, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[228] = { parentId = 104, typeId = 1366, baseId = 670, txt = 'ExpNewNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1370, 1378, 1380, 1382}, }
+_typeInfoList[229] = { parentId = 666, typeId = 1368, baseId = 1, txt = 'processExpNew',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[230] = { parentId = 1366, typeId = 1370, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[231] = { parentId = 1366, typeId = 1378, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[232] = { parentId = 1366, typeId = 1380, baseId = 1, txt = 'get_symbol',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[233] = { parentId = 1366, typeId = 1382, baseId = 1, txt = 'get_argList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[234] = { parentId = 104, typeId = 1388, baseId = 670, txt = 'ExpRefNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1392, 1400, 1402}, }
+_typeInfoList[235] = { parentId = 666, typeId = 1390, baseId = 1, txt = 'processExpRef',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[236] = { parentId = 1388, typeId = 1392, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[237] = { parentId = 1388, typeId = 1400, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[238] = { parentId = 1388, typeId = 1402, baseId = 1, txt = 'get_token',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[280] = { parentId = 1556, typeId = 1564, baseId = 1, txt = 'get_argType',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {926}, children = {}, }
-_typeInfoList[281] = { parentId = 104, typeId = 1566, baseId = 658, txt = 'DeclArgDDDNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1570}, }
-_typeInfoList[282] = { parentId = 1566, typeId = 1570, baseId = 1, txt = '__init',
+_typeInfoList[239] = { parentId = 104, typeId = 1412, baseId = 670, txt = 'ExpOp2Node',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1416, 1424, 1426, 1428, 1430}, }
+_typeInfoList[240] = { parentId = 666, typeId = 1414, baseId = 1, txt = 'processExpOp2',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[283] = { parentId = 104, typeId = 1586, baseId = 658, txt = 'DeclClassNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1602, 1604, 1606, 1610, 1614, 1616, 1620}, }
-_typeInfoList[284] = { parentId = 1586, typeId = 1602, baseId = 1, txt = '__init',
+_typeInfoList[241] = { parentId = 1412, typeId = 1416, baseId = 1, txt = 'processFilter',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[285] = { parentId = 1586, typeId = 1604, baseId = 1, txt = 'get_accessMode',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[286] = { parentId = 1586, typeId = 1606, baseId = 1, txt = 'get_name',
+_typeInfoList[242] = { parentId = 1412, typeId = 1424, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[243] = { parentId = 1412, typeId = 1426, baseId = 1, txt = 'get_op',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[287] = { parentId = 1, typeId = 1608, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[288] = { parentId = 1586, typeId = 1610, baseId = 1, txt = 'get_fieldList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1608}, children = {}, }
+_typeInfoList[244] = { parentId = 1412, typeId = 1428, baseId = 1, txt = 'get_exp1',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[245] = { parentId = 1412, typeId = 1430, baseId = 1, txt = 'get_exp2',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[246] = { parentId = 104, typeId = 1436, baseId = 670, txt = 'ExpCastNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1440, 1448, 1450}, }
+_typeInfoList[247] = { parentId = 666, typeId = 1438, baseId = 1, txt = 'processExpCast',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[248] = { parentId = 1436, typeId = 1440, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[249] = { parentId = 1436, typeId = 1448, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[250] = { parentId = 1436, typeId = 1450, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[251] = { parentId = 104, typeId = 1458, baseId = 670, txt = 'ExpOp1Node',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1462, 1470, 1472, 1474}, }
+_typeInfoList[252] = { parentId = 666, typeId = 1460, baseId = 1, txt = 'processExpOp1',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[253] = { parentId = 1458, typeId = 1462, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[254] = { parentId = 1458, typeId = 1470, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[255] = { parentId = 1458, typeId = 1472, baseId = 1, txt = 'get_op',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[256] = { parentId = 1458, typeId = 1474, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[257] = { parentId = 104, typeId = 1482, baseId = 670, txt = 'ExpRefItemNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1486, 1494, 1496, 1498}, }
+_typeInfoList[258] = { parentId = 666, typeId = 1484, baseId = 1, txt = 'processExpRefItem',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[259] = { parentId = 1482, typeId = 1486, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[260] = { parentId = 1482, typeId = 1494, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[261] = { parentId = 1482, typeId = 1496, baseId = 1, txt = 'get_val',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[262] = { parentId = 1482, typeId = 1498, baseId = 1, txt = 'get_index',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[263] = { parentId = 104, typeId = 1506, baseId = 670, txt = 'ExpCallNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1510, 1518, 1520, 1522}, }
+_typeInfoList[264] = { parentId = 666, typeId = 1508, baseId = 1, txt = 'processExpCall',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[265] = { parentId = 1506, typeId = 1510, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[266] = { parentId = 1506, typeId = 1518, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[267] = { parentId = 1506, typeId = 1520, baseId = 1, txt = 'get_func',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[268] = { parentId = 1506, typeId = 1522, baseId = 1, txt = 'get_argList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[269] = { parentId = 104, typeId = 1528, baseId = 670, txt = 'ExpDDDNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1532, 1540, 1542}, }
+_typeInfoList[270] = { parentId = 666, typeId = 1530, baseId = 1, txt = 'processExpDDD',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[271] = { parentId = 1528, typeId = 1532, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[272] = { parentId = 1528, typeId = 1540, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[273] = { parentId = 1528, typeId = 1542, baseId = 1, txt = 'get_token',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[274] = { parentId = 104, typeId = 1548, baseId = 670, txt = 'ExpParenNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1552, 1560, 1562}, }
+_typeInfoList[275] = { parentId = 666, typeId = 1550, baseId = 1, txt = 'processExpParen',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[276] = { parentId = 1548, typeId = 1552, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[277] = { parentId = 1548, typeId = 1560, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[278] = { parentId = 1548, typeId = 1562, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[279] = { parentId = 104, typeId = 1568, baseId = 670, txt = 'ExpMacroExpNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1574, 1584, 1588}, }
+_typeInfoList[280] = { parentId = 666, typeId = 1570, baseId = 1, txt = 'processExpMacroExp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[281] = { parentId = 1568, typeId = 1574, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[282] = { parentId = 1568, typeId = 1584, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[283] = { parentId = 1, typeId = 1586, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[284] = { parentId = 1568, typeId = 1588, baseId = 1, txt = 'get_stmtList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1586}, children = {}, }
+_typeInfoList[285] = { parentId = 104, typeId = 1594, baseId = 670, txt = 'ExpMacroStatNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1600, 1610, 1614, 2354}, }
+_typeInfoList[286] = { parentId = 666, typeId = 1596, baseId = 1, txt = 'processExpMacroStat',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[287] = { parentId = 1594, typeId = 1600, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[288] = { parentId = 1594, typeId = 1610, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[289] = { parentId = 1, typeId = 1612, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {1532}, retTypeId = {}, children = {}, }
-_typeInfoList[290] = { parentId = 1586, typeId = 1614, baseId = 1, txt = 'get_memberList',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[290] = { parentId = 1594, typeId = 1614, baseId = 1, txt = 'get_expStrList',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1612}, children = {}, }
-_typeInfoList[291] = { parentId = 1586, typeId = 1616, baseId = 1, txt = 'get_scope',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {616}, children = {}, }
-_typeInfoList[292] = { parentId = 1, typeId = 1618, baseId = 1, txt = 'Map',
+_typeInfoList[291] = { parentId = 104, typeId = 1620, baseId = 670, txt = 'StmtExpNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1624, 1632, 1634}, }
+_typeInfoList[292] = { parentId = 666, typeId = 1622, baseId = 1, txt = 'processStmtExp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[293] = { parentId = 1620, typeId = 1624, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[294] = { parentId = 1620, typeId = 1632, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[295] = { parentId = 1620, typeId = 1634, baseId = 1, txt = 'get_exp',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[296] = { parentId = 104, typeId = 1642, baseId = 670, txt = 'RefFieldNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1646, 1654, 1656, 1658, 2344}, }
+_typeInfoList[297] = { parentId = 666, typeId = 1644, baseId = 1, txt = 'processRefField',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[298] = { parentId = 1642, typeId = 1646, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[299] = { parentId = 1642, typeId = 1654, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[300] = { parentId = 1642, typeId = 1656, baseId = 1, txt = 'get_field',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[301] = { parentId = 1642, typeId = 1658, baseId = 1, txt = 'get_prefix',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[302] = { parentId = 104, typeId = 1660, baseId = 1, txt = 'VarInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1662, 1664}, }
+_typeInfoList[303] = { parentId = 1660, typeId = 1662, baseId = 1, txt = 'get_name',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[304] = { parentId = 1660, typeId = 1664, baseId = 1, txt = 'get_refType',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[305] = { parentId = 104, typeId = 1678, baseId = 670, txt = 'DeclVarNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1686, 1698, 1700, 1704, 1706, 1710, 1712}, }
+_typeInfoList[306] = { parentId = 666, typeId = 1680, baseId = 1, txt = 'processDeclVar',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[307] = { parentId = 1678, typeId = 1686, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[308] = { parentId = 1678, typeId = 1698, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[309] = { parentId = 1678, typeId = 1700, baseId = 1, txt = 'get_accessMode',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[310] = { parentId = 1, typeId = 1702, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {1660}, retTypeId = {}, children = {}, }
+_typeInfoList[311] = { parentId = 1678, typeId = 1704, baseId = 1, txt = 'get_varList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1702}, children = {}, }
+_typeInfoList[312] = { parentId = 1678, typeId = 1706, baseId = 1, txt = 'get_expList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[313] = { parentId = 1, typeId = 1708, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[314] = { parentId = 1678, typeId = 1710, baseId = 1, txt = 'get_typeInfoList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1708}, children = {}, }
+_typeInfoList[315] = { parentId = 1678, typeId = 1712, baseId = 1, txt = 'get_unwrap',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1016}, children = {}, }
+_typeInfoList[316] = { parentId = 104, typeId = 1714, baseId = 1, txt = 'DeclFuncInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1722, 1724, 1728, 1730, 1732, 1734, 1738, 1742}, }
+_typeInfoList[317] = { parentId = 1714, typeId = 1722, baseId = 1, txt = 'get_className',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[318] = { parentId = 1714, typeId = 1724, baseId = 1, txt = 'get_name',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[319] = { parentId = 1, typeId = 1726, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[320] = { parentId = 1714, typeId = 1728, baseId = 1, txt = 'get_argList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1726}, children = {}, }
+_typeInfoList[321] = { parentId = 1714, typeId = 1730, baseId = 1, txt = 'get_staticFlag',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[322] = { parentId = 1714, typeId = 1732, baseId = 1, txt = 'get_accessMode',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[323] = { parentId = 1714, typeId = 1734, baseId = 1, txt = 'get_body',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[324] = { parentId = 1, typeId = 1736, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[325] = { parentId = 1714, typeId = 1738, baseId = 1, txt = 'get_retTypeList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1736}, children = {}, }
+_typeInfoList[326] = { parentId = 1, typeId = 1740, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[327] = { parentId = 1714, typeId = 1742, baseId = 1, txt = 'get_retTypeInfoList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1740}, children = {}, }
+_typeInfoList[328] = { parentId = 104, typeId = 1748, baseId = 670, txt = 'DeclFuncNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1752, 1760, 1762}, }
+_typeInfoList[329] = { parentId = 666, typeId = 1750, baseId = 1, txt = 'processDeclFunc',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[330] = { parentId = 1748, typeId = 1752, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[331] = { parentId = 1748, typeId = 1760, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[332] = { parentId = 1748, typeId = 1762, baseId = 1, txt = 'get_declInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1714}, children = {}, }
+_typeInfoList[333] = { parentId = 104, typeId = 1768, baseId = 670, txt = 'DeclMethodNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1772, 1780, 1782}, }
+_typeInfoList[334] = { parentId = 666, typeId = 1770, baseId = 1, txt = 'processDeclMethod',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[335] = { parentId = 1768, typeId = 1772, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[336] = { parentId = 1768, typeId = 1780, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[337] = { parentId = 1768, typeId = 1782, baseId = 1, txt = 'get_declInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1714}, children = {}, }
+_typeInfoList[338] = { parentId = 104, typeId = 1788, baseId = 670, txt = 'DeclConstrNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1792, 1800, 1802}, }
+_typeInfoList[339] = { parentId = 666, typeId = 1790, baseId = 1, txt = 'processDeclConstr',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[340] = { parentId = 1788, typeId = 1792, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[341] = { parentId = 1788, typeId = 1800, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[342] = { parentId = 1788, typeId = 1802, baseId = 1, txt = 'get_declInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1714}, children = {}, }
+_typeInfoList[343] = { parentId = 104, typeId = 1810, baseId = 670, txt = 'ExpCallSuperNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1814, 1822, 1824, 1826}, }
+_typeInfoList[344] = { parentId = 666, typeId = 1812, baseId = 1, txt = 'processExpCallSuper',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[345] = { parentId = 1810, typeId = 1814, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[346] = { parentId = 1810, typeId = 1822, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[347] = { parentId = 1810, typeId = 1824, baseId = 1, txt = 'get_superType',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[348] = { parentId = 1810, typeId = 1826, baseId = 1, txt = 'get_expList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[349] = { parentId = 104, typeId = 1842, baseId = 670, txt = 'DeclMemberNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1846, 1854, 1856, 1858, 1860, 1862, 1864, 1866}, }
+_typeInfoList[350] = { parentId = 666, typeId = 1844, baseId = 1, txt = 'processDeclMember',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[351] = { parentId = 1842, typeId = 1846, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[352] = { parentId = 1842, typeId = 1854, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[353] = { parentId = 1842, typeId = 1856, baseId = 1, txt = 'get_name',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[354] = { parentId = 1842, typeId = 1858, baseId = 1, txt = 'get_refType',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {988}, children = {}, }
+_typeInfoList[355] = { parentId = 1842, typeId = 1860, baseId = 1, txt = 'get_staticFlag',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {10}, children = {}, }
+_typeInfoList[356] = { parentId = 1842, typeId = 1862, baseId = 1, txt = 'get_accessMode',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[357] = { parentId = 1842, typeId = 1864, baseId = 1, txt = 'get_getterMode',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[358] = { parentId = 1842, typeId = 1866, baseId = 1, txt = 'get_setterMode',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[359] = { parentId = 104, typeId = 1874, baseId = 670, txt = 'DeclArgNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1878, 1886, 1888, 1890}, }
+_typeInfoList[360] = { parentId = 666, typeId = 1876, baseId = 1, txt = 'processDeclArg',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[361] = { parentId = 1874, typeId = 1878, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[362] = { parentId = 1874, typeId = 1886, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[363] = { parentId = 1874, typeId = 1888, baseId = 1, txt = 'get_name',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[364] = { parentId = 1874, typeId = 1890, baseId = 1, txt = 'get_argType',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {988}, children = {}, }
+_typeInfoList[365] = { parentId = 104, typeId = 1892, baseId = 670, txt = 'DeclArgDDDNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1896, 1904}, }
+_typeInfoList[366] = { parentId = 666, typeId = 1894, baseId = 1, txt = 'processDeclArgDDD',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[367] = { parentId = 1892, typeId = 1896, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[368] = { parentId = 1892, typeId = 1904, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[369] = { parentId = 104, typeId = 1920, baseId = 670, txt = 'DeclClassNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1930, 1944, 1946, 1948, 1952, 1956, 1958, 1962}, }
+_typeInfoList[370] = { parentId = 666, typeId = 1922, baseId = 1, txt = 'processDeclClass',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[371] = { parentId = 1920, typeId = 1930, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[372] = { parentId = 1920, typeId = 1944, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[373] = { parentId = 1920, typeId = 1946, baseId = 1, txt = 'get_accessMode',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[374] = { parentId = 1920, typeId = 1948, baseId = 1, txt = 'get_name',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[375] = { parentId = 1, typeId = 1950, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[376] = { parentId = 1920, typeId = 1952, baseId = 1, txt = 'get_fieldList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1950}, children = {}, }
+_typeInfoList[377] = { parentId = 1, typeId = 1954, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {1842}, retTypeId = {}, children = {}, }
+_typeInfoList[378] = { parentId = 1920, typeId = 1956, baseId = 1, txt = 'get_memberList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1954}, children = {}, }
+_typeInfoList[379] = { parentId = 1920, typeId = 1958, baseId = 1, txt = 'get_scope',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {626}, children = {}, }
+_typeInfoList[380] = { parentId = 1, typeId = 1960, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 10}, retTypeId = {}, children = {}, }
-_typeInfoList[293] = { parentId = 1586, typeId = 1620, baseId = 1, txt = 'get_outerMethodSet',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1618}, children = {}, }
-_typeInfoList[294] = { parentId = 104, typeId = 1626, baseId = 658, txt = 'DeclMacroNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1630, 1632}, }
-_typeInfoList[295] = { parentId = 1626, typeId = 1630, baseId = 1, txt = '__init',
+_typeInfoList[381] = { parentId = 1920, typeId = 1962, baseId = 1, txt = 'get_outerMethodSet',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1960}, children = {}, }
+_typeInfoList[382] = { parentId = 104, typeId = 1968, baseId = 670, txt = 'DeclMacroNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1972, 1980, 1982}, }
+_typeInfoList[383] = { parentId = 666, typeId = 1970, baseId = 1, txt = 'processDeclMacro',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[296] = { parentId = 1626, typeId = 1632, baseId = 1, txt = 'get_declInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {680}, children = {}, }
-_typeInfoList[297] = { parentId = 104, typeId = 1634, baseId = 658, txt = 'LiteralNilNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1638}, }
-_typeInfoList[298] = { parentId = 1634, typeId = 1638, baseId = 1, txt = '__init',
+_typeInfoList[384] = { parentId = 1968, typeId = 1972, baseId = 1, txt = 'processFilter',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[299] = { parentId = 104, typeId = 1646, baseId = 658, txt = 'LiteralCharNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1650, 1652, 1654}, }
-_typeInfoList[300] = { parentId = 1646, typeId = 1650, baseId = 1, txt = '__init',
+_typeInfoList[385] = { parentId = 1968, typeId = 1980, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[301] = { parentId = 1646, typeId = 1652, baseId = 1, txt = 'get_token',
+_typeInfoList[386] = { parentId = 1968, typeId = 1982, baseId = 1, txt = 'get_declInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {698}, children = {}, }
+_typeInfoList[387] = { parentId = 104, typeId = 1984, baseId = 670, txt = 'LiteralNilNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1988, 1996, 2226}, }
+_typeInfoList[388] = { parentId = 666, typeId = 1986, baseId = 1, txt = 'processLiteralNil',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[389] = { parentId = 1984, typeId = 1988, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[390] = { parentId = 1984, typeId = 1996, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[391] = { parentId = 104, typeId = 2004, baseId = 670, txt = 'LiteralCharNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2008, 2016, 2018, 2020, 2236}, }
+_typeInfoList[392] = { parentId = 666, typeId = 2006, baseId = 1, txt = 'processLiteralChar',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[393] = { parentId = 2004, typeId = 2008, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[394] = { parentId = 2004, typeId = 2016, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[395] = { parentId = 2004, typeId = 2018, baseId = 1, txt = 'get_token',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[302] = { parentId = 1646, typeId = 1654, baseId = 1, txt = 'get_num',
+_typeInfoList[396] = { parentId = 2004, typeId = 2020, baseId = 1, txt = 'get_num',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[303] = { parentId = 104, typeId = 1662, baseId = 658, txt = 'LiteralIntNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1666, 1668, 1670}, }
-_typeInfoList[304] = { parentId = 1662, typeId = 1666, baseId = 1, txt = '__init',
+_typeInfoList[397] = { parentId = 104, typeId = 2028, baseId = 670, txt = 'LiteralIntNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2032, 2040, 2042, 2044, 2246}, }
+_typeInfoList[398] = { parentId = 666, typeId = 2030, baseId = 1, txt = 'processLiteralInt',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[305] = { parentId = 1662, typeId = 1668, baseId = 1, txt = 'get_token',
+_typeInfoList[399] = { parentId = 2028, typeId = 2032, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[400] = { parentId = 2028, typeId = 2040, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[401] = { parentId = 2028, typeId = 2042, baseId = 1, txt = 'get_token',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[306] = { parentId = 1662, typeId = 1670, baseId = 1, txt = 'get_num',
+_typeInfoList[402] = { parentId = 2028, typeId = 2044, baseId = 1, txt = 'get_num',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[307] = { parentId = 104, typeId = 1678, baseId = 658, txt = 'LiteralRealNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1682, 1684, 1686}, }
-_typeInfoList[308] = { parentId = 1678, typeId = 1682, baseId = 1, txt = '__init',
+_typeInfoList[403] = { parentId = 104, typeId = 2052, baseId = 670, txt = 'LiteralRealNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2056, 2064, 2066, 2068, 2256}, }
+_typeInfoList[404] = { parentId = 666, typeId = 2054, baseId = 1, txt = 'processLiteralReal',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[309] = { parentId = 1678, typeId = 1684, baseId = 1, txt = 'get_token',
+_typeInfoList[405] = { parentId = 2052, typeId = 2056, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[406] = { parentId = 2052, typeId = 2064, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[407] = { parentId = 2052, typeId = 2066, baseId = 1, txt = 'get_token',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[310] = { parentId = 1678, typeId = 1686, baseId = 1, txt = 'get_num',
+_typeInfoList[408] = { parentId = 2052, typeId = 2068, baseId = 1, txt = 'get_num',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {14}, children = {}, }
-_typeInfoList[311] = { parentId = 104, typeId = 1692, baseId = 658, txt = 'LiteralArrayNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1696, 1698}, }
-_typeInfoList[312] = { parentId = 1692, typeId = 1696, baseId = 1, txt = '__init',
+_typeInfoList[409] = { parentId = 104, typeId = 2074, baseId = 670, txt = 'LiteralArrayNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2078, 2086, 2088, 2266}, }
+_typeInfoList[410] = { parentId = 666, typeId = 2076, baseId = 1, txt = 'processLiteralArray',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[313] = { parentId = 1692, typeId = 1698, baseId = 1, txt = 'get_expList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[314] = { parentId = 104, typeId = 1704, baseId = 658, txt = 'LiteralListNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1708, 1710}, }
-_typeInfoList[315] = { parentId = 1704, typeId = 1708, baseId = 1, txt = '__init',
+_typeInfoList[411] = { parentId = 2074, typeId = 2078, baseId = 1, txt = 'processFilter',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[316] = { parentId = 1704, typeId = 1710, baseId = 1, txt = 'get_expList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {992}, children = {}, }
-_typeInfoList[317] = { parentId = 104, typeId = 1712, baseId = 1, txt = 'PairList',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1714, 1716}, }
-_typeInfoList[318] = { parentId = 1712, typeId = 1714, baseId = 1, txt = 'get_key',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[319] = { parentId = 1712, typeId = 1716, baseId = 1, txt = 'get_val',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[320] = { parentId = 104, typeId = 1724, baseId = 658, txt = 'LiteralMapNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1732, 1736, 1738}, }
-_typeInfoList[321] = { parentId = 1724, typeId = 1732, baseId = 1, txt = '__init',
+_typeInfoList[412] = { parentId = 2074, typeId = 2086, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[322] = { parentId = 1, typeId = 1734, baseId = 1, txt = 'Map',
-        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {658, 658}, retTypeId = {}, children = {}, }
-_typeInfoList[323] = { parentId = 1724, typeId = 1736, baseId = 1, txt = 'get_map',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1734}, children = {}, }
-_typeInfoList[324] = { parentId = 1724, typeId = 1738, baseId = 1, txt = 'get_pairList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1712}, children = {}, }
-_typeInfoList[325] = { parentId = 104, typeId = 1746, baseId = 658, txt = 'LiteralStringNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1754, 1756, 1760}, }
-_typeInfoList[326] = { parentId = 1746, typeId = 1754, baseId = 1, txt = '__init',
+_typeInfoList[413] = { parentId = 2074, typeId = 2088, baseId = 1, txt = 'get_expList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[414] = { parentId = 104, typeId = 2094, baseId = 670, txt = 'LiteralListNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2098, 2106, 2108, 2280}, }
+_typeInfoList[415] = { parentId = 666, typeId = 2096, baseId = 1, txt = 'processLiteralList',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[327] = { parentId = 1746, typeId = 1756, baseId = 1, txt = 'get_token',
+_typeInfoList[416] = { parentId = 2094, typeId = 2098, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[417] = { parentId = 2094, typeId = 2106, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[418] = { parentId = 2094, typeId = 2108, baseId = 1, txt = 'get_expList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1078}, children = {}, }
+_typeInfoList[419] = { parentId = 104, typeId = 2110, baseId = 1, txt = 'PairItem',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2112, 2114}, }
+_typeInfoList[420] = { parentId = 2110, typeId = 2112, baseId = 1, txt = 'get_key',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[421] = { parentId = 2110, typeId = 2114, baseId = 1, txt = 'get_val',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[422] = { parentId = 104, typeId = 2122, baseId = 670, txt = 'LiteralMapNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2130, 2142, 2146, 2150, 2294}, }
+_typeInfoList[423] = { parentId = 666, typeId = 2124, baseId = 1, txt = 'processLiteralMap',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[424] = { parentId = 2122, typeId = 2130, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[425] = { parentId = 2122, typeId = 2142, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[426] = { parentId = 1, typeId = 2144, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {670, 670}, retTypeId = {}, children = {}, }
+_typeInfoList[427] = { parentId = 2122, typeId = 2146, baseId = 1, txt = 'get_map',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2144}, children = {}, }
+_typeInfoList[428] = { parentId = 1, typeId = 2148, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {2110}, retTypeId = {}, children = {}, }
+_typeInfoList[429] = { parentId = 2122, typeId = 2150, baseId = 1, txt = 'get_pairList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2148}, children = {}, }
+_typeInfoList[430] = { parentId = 104, typeId = 2158, baseId = 670, txt = 'LiteralStringNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2164, 2174, 2176, 2180, 2308}, }
+_typeInfoList[431] = { parentId = 666, typeId = 2160, baseId = 1, txt = 'processLiteralString',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[432] = { parentId = 2158, typeId = 2164, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[433] = { parentId = 2158, typeId = 2174, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[434] = { parentId = 2158, typeId = 2176, baseId = 1, txt = 'get_token',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[328] = { parentId = 1, typeId = 1758, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {658}, retTypeId = {}, children = {}, }
-_typeInfoList[329] = { parentId = 1746, typeId = 1760, baseId = 1, txt = 'get_argList',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {1758}, children = {}, }
-_typeInfoList[330] = { parentId = 104, typeId = 1766, baseId = 658, txt = 'LiteralBoolNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1770, 1772}, }
-_typeInfoList[331] = { parentId = 1766, typeId = 1770, baseId = 1, txt = '__init',
+_typeInfoList[435] = { parentId = 1, typeId = 2178, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {670}, retTypeId = {}, children = {}, }
+_typeInfoList[436] = { parentId = 2158, typeId = 2180, baseId = 1, txt = 'get_argList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2178}, children = {}, }
+_typeInfoList[437] = { parentId = 104, typeId = 2186, baseId = 670, txt = 'LiteralBoolNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2190, 2198, 2200, 2322}, }
+_typeInfoList[438] = { parentId = 666, typeId = 2188, baseId = 1, txt = 'processLiteralBool',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[332] = { parentId = 1766, typeId = 1772, baseId = 1, txt = 'get_token',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[333] = { parentId = 104, typeId = 1778, baseId = 658, txt = 'LiteralSymbolNode',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {1782, 1784}, }
-_typeInfoList[334] = { parentId = 1778, typeId = 1782, baseId = 1, txt = '__init',
+_typeInfoList[439] = { parentId = 2186, typeId = 2190, baseId = 1, txt = 'processFilter',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[335] = { parentId = 1778, typeId = 1784, baseId = 1, txt = 'get_token',
+_typeInfoList[440] = { parentId = 2186, typeId = 2198, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[441] = { parentId = 2186, typeId = 2200, baseId = 1, txt = 'get_token',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
-_typeInfoList[336] = { parentId = 104, typeId = 1998, baseId = 1, txt = 'getLiteralValue',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {6, 498}, children = {}, }
-_typeInfoList[337] = { parentId = 104, typeId = 2142, baseId = 1, txt = 'ASTInfo',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2144, 2146}, }
-_typeInfoList[338] = { parentId = 2142, typeId = 2144, baseId = 1, txt = 'get_node',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {658}, children = {}, }
-_typeInfoList[339] = { parentId = 2142, typeId = 2146, baseId = 1, txt = 'get_moduleTypeInfo',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {498}, children = {}, }
-_typeInfoList[340] = { parentId = 704, typeId = 2148, baseId = 1, txt = 'createAST',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2142}, children = {}, }
+_typeInfoList[442] = { parentId = 104, typeId = 2206, baseId = 670, txt = 'LiteralSymbolNode',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2210, 2218, 2220, 2332}, }
+_typeInfoList[443] = { parentId = 666, typeId = 2208, baseId = 1, txt = 'processLiteralSymbol',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[444] = { parentId = 2206, typeId = 2210, baseId = 1, txt = 'processFilter',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[445] = { parentId = 2206, typeId = 2218, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[446] = { parentId = 2206, typeId = 2220, baseId = 1, txt = 'get_token',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {354}, children = {}, }
+_typeInfoList[447] = { parentId = 1, typeId = 2222, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[448] = { parentId = 1, typeId = 2224, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[449] = { parentId = 1984, typeId = 2226, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2222, 2224}, children = {}, }
+_typeInfoList[450] = { parentId = 1, typeId = 2232, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[451] = { parentId = 1, typeId = 2234, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[452] = { parentId = 2004, typeId = 2236, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2232, 2234}, children = {}, }
+_typeInfoList[453] = { parentId = 1, typeId = 2242, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[454] = { parentId = 1, typeId = 2244, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[455] = { parentId = 2028, typeId = 2246, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2242, 2244}, children = {}, }
+_typeInfoList[456] = { parentId = 1, typeId = 2252, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[457] = { parentId = 1, typeId = 2254, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[458] = { parentId = 2052, typeId = 2256, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2252, 2254}, children = {}, }
+_typeInfoList[459] = { parentId = 1, typeId = 2262, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[460] = { parentId = 1, typeId = 2264, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[461] = { parentId = 2074, typeId = 2266, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2262, 2264}, children = {}, }
+_typeInfoList[462] = { parentId = 1, typeId = 2276, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[463] = { parentId = 1, typeId = 2278, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[464] = { parentId = 2094, typeId = 2280, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2276, 2278}, children = {}, }
+_typeInfoList[465] = { parentId = 1, typeId = 2290, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[466] = { parentId = 1, typeId = 2292, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[467] = { parentId = 2122, typeId = 2294, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2290, 2292}, children = {}, }
+_typeInfoList[468] = { parentId = 1, typeId = 2304, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[469] = { parentId = 1, typeId = 2306, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[470] = { parentId = 2158, typeId = 2308, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2304, 2306}, children = {}, }
+_typeInfoList[471] = { parentId = 1, typeId = 2318, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[472] = { parentId = 1, typeId = 2320, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[473] = { parentId = 2186, typeId = 2322, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2318, 2320}, children = {}, }
+_typeInfoList[474] = { parentId = 1, typeId = 2328, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[475] = { parentId = 1, typeId = 2330, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[476] = { parentId = 2206, typeId = 2332, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2328, 2330}, children = {}, }
+_typeInfoList[477] = { parentId = 1, typeId = 2340, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[478] = { parentId = 1, typeId = 2342, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[479] = { parentId = 1642, typeId = 2344, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2340, 2342}, children = {}, }
+_typeInfoList[480] = { parentId = 1, typeId = 2350, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {6}, retTypeId = {}, children = {}, }
+_typeInfoList[481] = { parentId = 1, typeId = 2352, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {508}, retTypeId = {}, children = {}, }
+_typeInfoList[482] = { parentId = 1594, typeId = 2354, baseId = 1, txt = 'getLiteral',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2350, 2352}, children = {}, }
+_typeInfoList[483] = { parentId = 104, typeId = 2694, baseId = 1, txt = 'ASTInfo',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {2696, 2698}, }
+_typeInfoList[484] = { parentId = 2694, typeId = 2696, baseId = 1, txt = 'get_node',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {670}, children = {}, }
+_typeInfoList[485] = { parentId = 2694, typeId = 2698, baseId = 1, txt = 'get_moduleTypeInfo',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {508}, children = {}, }
+_typeInfoList[486] = { parentId = 722, typeId = 2700, baseId = 1, txt = 'createAST',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {2694}, children = {}, }
 ----- meta -----
 return moduleObj

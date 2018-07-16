@@ -71,6 +71,32 @@ do
   local _classInfooutStream = {}
   _className2InfoMap.outStream = _classInfooutStream
   end
+do
+  local _classInfoUtil = {}
+  _className2InfoMap.Util = _classInfoUtil
+  _classInfoUtil.debugLog = {
+    name='debugLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 120 }
+  _classInfoUtil.errorLog = {
+    name='errorLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 118 }
+  _classInfoUtil.memStream = {
+    name='memStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 110 }
+  _classInfoUtil.outStream = {
+    name='outStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 106 }
+  _classInfoUtil.profile = {
+    name='profile', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 122 }
+  end
+do
+  local _classInfobase = {}
+  _className2InfoMap.base = _classInfobase
+  _classInfobase.Util = {
+    name='Util', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 104 }
+  end
+do
+  local _classInfolune = {}
+  _className2InfoMap.lune = _classInfolune
+  _classInfolune.base = {
+    name='base', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 102 }
+  end
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}

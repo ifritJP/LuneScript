@@ -1,13 +1,13 @@
 import lune.base.TransUnit;
+import lune.base.Parser;
 
-pub class filterObj {
+pub class dumpFilter extend TransUnit.Filter {
 }
 
 fn dump( prefix: str, depth: int, node: TransUnit.Node, txt: str ) {
     let typeStr = "";
     let expType = node.get_expType();
     if expType and expType ~= TransUnit.typeInfoKind.None {
-	''typeStr = "(%s)" (node.expType.getTxt());
         typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
                                  expType.getTxt(),
                                  expType.get_kind() );
@@ -16,451 +16,397 @@ fn dump( prefix: str, depth: int, node: TransUnit.Node, txt: str ) {
 	   (prefix, TransUnit.getNodeKindName( node.get_kind() ), txt, typeStr ) );
 }
 
-filterObj[ TransUnit.nodeKind.None ] =
-    fn( self: stem, node: stem, prefix: str, depth: int )
+fn filter( node: TransUnit.Node, filter: dumpFilter, prefix:str, depth:int ) {
+    node.processFilter( dumpFilter, prefix, depth );
+}
+
+fn getTxt( token: Parser.Token ): str {
+    return token.txt;
+}
+
+pub override fn dumpFilter.processNone( 
+    node: NoneNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
 };
-
-filterObj[ TransUnit.nodeKind.Import ] =
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processImport( 
+    node: ImportNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.info );
+    dump( prefix, depth, node, node.get_modulePath() );
 };
-
-filterObj[ TransUnit.nodeKind.Root ] =
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processRoot( 
+    node: RootNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
-    let children: TransUnit.Node[] = node.info.children;
-    foreach child, index in children {
-	TransUnit.nodeFilter( child, self, prefix .. "  ", depth + 1 );
+    foreach child, index in node.get_children() {
+	filter( child, self, prefix .. "  ", depth + 1 );
     }	
 };
-
-filterObj[ TransUnit.nodeKind.Block ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processBlock( 
+    node: BlockNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
-    let stmtList: TransUnit.Node[] = node.info.stmtList;
-    foreach statement, index in stmtList {
-	TransUnit.nodeFilter( statement, self, prefix .. "  ", depth + 1 );
+    foreach statement, index in node.get_stmtList() {
+	filter( statement, self, prefix .. "  ", depth + 1 );
     }	
 };  
-
-filterObj[ TransUnit.nodeKind.StmtExp ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "" );
-	TransUnit.nodeFilter( node.exp, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.DeclClass ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.name.txt );
-
-        let fieldList: TransUnit.Node[] = node.info.fieldList;
-	foreach field, index in fieldList {
-	    TransUnit.nodeFilter( field, self, prefix .. "  ", depth + 1 );
-	}	
-    };  
-
-filterObj[ TransUnit.nodeKind.DeclMember ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
-{
-    dump( prefix, depth, node, node.info.name.txt );
-    TransUnit.nodeFilter( node.info.refType, self, prefix .. "  ", depth + 1 );
-};  
-
-filterObj[ TransUnit.nodeKind.ExpMacroExp ] = 
-    fn( self: stem, node: TransUnit.ExpMacroExpNode, prefix: str, depth: int )
+pub override fn dumpFilter.processStmtExp( 
+    node: StmtExpNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
-
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processDeclClass( 
+    node: DeclClassNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_name() ) );
+    foreach field, index in node.get_fieldList() {
+	filter( field, self, prefix .. "  ", depth + 1 );
+    }	
+};  
+pub override fn dumpFilter.processDeclMember( 
+    node: DeclMemberNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_name() ) );
+    filter( node.get_refType(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processExpMacroExp( 
+    node: ExpMacroExpNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
     let stmtList = node.get_stmtList();
     if  stmtList {
         foreach stmt in stmtList {
-            TransUnit.nodeFilter( stmt, self,  prefix .. "  ", depth + 1 );
+            filter( stmt, self,  prefix .. "  ", depth + 1 );
         }
     }
 };
-
-
-filterObj[ TransUnit.nodeKind.DeclMacro ] = 
-    fn( self: stem, node: TransUnit.Node, prefix: str, depth: int )
+pub override fn dumpFilter.processDeclMacro( 
+    node: DeclMacroNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_expType().getTxt() );
-
-    ''let nodeInfo = node.info@TransUnit.DeclMacroInfo;
-    ''TransUnit.nodeFilter( nodeInfo.get_ast(), self, prefix .. "  ", depth + 1 );
 };
-
-filterObj[ TransUnit.nodeKind.ExpMacroStat ] = 
-    fn( self: stem, node: TransUnit.Node, prefix: str, depth: int )
+pub override fn dumpFilter.processExpMacroStat( 
+    node: ExpMacroStatNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_expType().getTxt() );
-
-    let list:TransUnit.Node[] = node.get_info();
-    foreach node in list {
-        TransUnit.nodeFilter( node, self, prefix .. "  ", depth + 1 );
+    foreach node in node.get_expStrList() {
+        filter( node, self, prefix .. "  ", depth + 1 );
     }
 };
-
-filterObj[ TransUnit.nodeKind.DeclVar ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processDeclVar( 
+    node: DeclVarNode, prefix: str, depth: int )
 {
     let varName = "";
-    let varList: stem[] = node.varList;
-    foreach var, index in varList {
+    foreach var, index in node.get_varList() {
         if index > 1 {
 	    varName = varName .. ",";
         }
-	varName = "%s %s" (varName, var[ "name" ].txt );
+	varName = "%s %s" (varName, getTxt( var.get_name() ) );
     }
-    dump( prefix, depth, node, node.unwrap and "! " or " " .. varName );
-    foreach var, index in varList {
+    dump( prefix, depth, node, node.get_unwrap() and "! " or " " .. varName );
+    foreach var, index in node.get_varList() {
         if var[ "refType" ] {
-            TransUnit.nodeFilter(
+            filter(
                 var[ "refType" ], self, prefix .. "  ", depth + 1 );
         }
     }
-
-    if node.expList {
-	TransUnit.nodeFilter( node.expList, self, prefix .. "  ", depth + 1 );
+    if node.get_expList() {
+	filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
     }
-
-    if node.unwrap {
-	TransUnit.nodeFilter( node.unwrap, self, prefix .. "  ", depth + 1 );
+    if node.get_unwrap() {
+	filter( node.get_unwrap(), self, prefix .. "  ", depth + 1 );
     }
 };  
-
-filterObj[ TransUnit.nodeKind.DeclArg ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.name.txt );
-
-	TransUnit.nodeFilter( node.info.argType, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.DeclArgDDD ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "..." );
-    };  
-
-filterObj[ TransUnit.nodeKind.ExpDDD ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "..." );
-    };  
-
-filterObj[ TransUnit.nodeKind.DeclFunc ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	let name = node.declInfo.name;
-	dump( prefix, depth, node, name and name.txt or "<anonymous>" );
-        let argList:stem[] = node.declInfo.argList;
-	foreach arg, index in argList {
-	    TransUnit.nodeFilter( arg, self, prefix .. "  ", depth + 1 );
-	}
-        let retTypeList:stem[] = node.declInfo.retTypeList;
-	foreach refType, index in retTypeList {
-	    TransUnit.nodeFilter( refType, self, prefix .. "  ", depth + 1 );
-	}
-
-        if node.declInfo.body {
-	    TransUnit.nodeFilter( node.declInfo.body, self, prefix .. "  ", depth + 1 );
-        }
-    };	
-
-filterObj[ TransUnit.nodeKind.DeclMethod ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.declInfo.name.txt );
-        let argList:stem[] = node.declInfo.argList;
-	foreach arg, index in argList {
-	    TransUnit.nodeFilter( arg, self, prefix .. "  ", depth + 1 );
-	}
-        let retTypeList:stem[] = node.declInfo.retTypeList;
-	foreach refType, index in retTypeList {
-	    TransUnit.nodeFilter( refType, self, prefix .. "  ", depth + 1 );
-	}	    
-	TransUnit.nodeFilter( node.declInfo.body, self, prefix .. "  ", depth + 1 );
-    };	
-
-filterObj[ TransUnit.nodeKind.DeclConstr ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processDeclArg( 
+    node: DeclArgNode, prefix: str, depth: int )
 {
-    filterObj[ TransUnit.nodeKind.DeclMethod ]( self, node, prefix, depth );
+    dump( prefix, depth, node, getTxt( node.get_name() ) );
+    filter( node.get_argType(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processDeclArgDDD( 
+    node: DeclArgDDDNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "..." );
+};  
+pub override fn dumpFilter.processExpDDD( 
+    node: ExpDDDNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "..." );
 };
 
-filterObj[ TransUnit.nodeKind.ExpCallSuper ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+fn dumpFilter.processDeclFuncInfo(
+    node: TransUnit.Node, declInfo: TransUnit.DeclFuncInfo, prefix: str, depth: int )
 {
-    let typeInfo:TransUnit.TypeInfo = node.info.superType;
+    let name = declInfo.get_name();
+    dump( prefix, depth, node, name and getTxt( name ) or "<anonymous>" );
+    let argList:stem[] = declInfo.get_argList();
+    foreach arg, index in argList {
+	filter( arg, self, prefix .. "  ", depth + 1 );
+    }
+    let retTypeList:stem[] = declInfo.get_retTypeList();
+    foreach refType, index in retTypeList {
+	filter( refType, self, prefix .. "  ", depth + 1 );
+    }
+    if declInfo.get_body() {
+	filter( declInfo.get_body(), self, prefix .. "  ", depth + 1 );
+    }
+}
+pub override fn dumpFilter.processDeclFunc( 
+    node: DeclFuncNode, prefix: str, depth: int )
+{
+    self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
+};	
+pub override fn dumpFilter.processDeclMethod( 
+    node: DeclMethodNode, prefix: str, depth: int )
+{
+    self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
+};	
+pub override fn dumpFilter.processDeclConstr( 
+    node: DeclConstrNode, prefix: str, depth: int )
+{
+    self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
+};
+
+pub override fn dumpFilter.processExpCallSuper( 
+    node: ExpCallSuperNode, prefix: str, depth: int )
+{
+    let typeInfo:TransUnit.TypeInfo = node.get_superType();
     dump( prefix, depth, node, typeInfo.getTxt() );
 };
-
-
-filterObj[ TransUnit.nodeKind.RefType ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node,
-	      (node.info.refFlag and "&" or "") ..
-	      (node.info.mutFlag and "mut " or "") );
-	TransUnit.nodeFilter( node.info.name, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.If ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processRefType( 
+    node: RefTypeNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node,
+	  (node.get_refFlag() and "&" or "") ..
+	  (node.get_mutFlag() and "mut " or "") );
+    filter( node.get_name(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processIf( 
+    node: IfNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "");
-
-    let valList:stem[] = node.info;
-    foreach val, index in valList {
-	if val[ 'exp' ] {
-	    TransUnit.nodeFilter( val[ 'exp' ], self, prefix .. "  ", depth + 1 );
+    let stmtList:IfStmtInfo[] = node.get_stmtList();
+    foreach stmt, index in stmtList {
+	if stmt[ 'exp' ] {
+	    filter( stmt[ 'exp' ], self, prefix .. "  ", depth + 1 );
 	}   	
-	TransUnit.nodeFilter( val[ 'block' ], self, prefix .. "  ", depth + 1 );
+	filter( stmt[ 'block' ], self, prefix .. "  ", depth + 1 );
     }	
 };  
-
-filterObj[ TransUnit.nodeKind.Switch ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processSwitch( 
+    node: SwitchNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "");
-
-    TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-
-    let caseList:stem[] = node.info.caseList;
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+    let caseList = node.get_caseList()@TransUnit.CaseInfo[];
     foreach caseInfo in caseList {
-        TransUnit.nodeFilter( caseInfo[ 'expList' ], self, prefix .. "  ", depth + 1 );
-        TransUnit.nodeFilter( caseInfo[ 'block' ], self, prefix .. "  ", depth + 1 );
+        filter( caseInfo[ 'expList' ], self, prefix .. "  ", depth + 1 );
+        filter( caseInfo[ 'block' ], self, prefix .. "  ", depth + 1 );
     }
-    TransUnit.nodeFilter( node.info.default, self, prefix .. "  ", depth + 1 );
+    filter( node.get_default(), self, prefix .. "  ", depth + 1 );
 };
-
-
-
-filterObj[ TransUnit.nodeKind.While ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "");
-
-	TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.info.block, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.Repeat ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "");
-
-	TransUnit.nodeFilter( node.info.block, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.For ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.val.txt );
-
-	TransUnit.nodeFilter( node.info.init, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.info.to, self, prefix .. "  ", depth + 1 );
-	if node.info.delta {
-	    TransUnit.nodeFilter( node.info.delta, self, prefix .. "  ", depth + 1 );
-	}	
-	TransUnit.nodeFilter( node.info.block, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.Apply ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	let varNames = "";
-        let varList:stem[] = node.info.varList;
-	foreach var, index in varList {
-	    varNames = varNames .. var[ 'txt' ] .. " ";
-	}	
-	dump( prefix, depth, node, varNames );
-
-	TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.info.block, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.Foreach ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	let index = node.info.key and node.info.key.txt or "";
-	dump( prefix, depth, node, node.info.val.txt .. " " .. index );
-
-	TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.info.block, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.Forsort ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	let index = node.info.key and node.info.key.txt or "";
-	dump( prefix, depth, node, node.info.val.txt .. " " .. index );
-
-	TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.info.block, self, prefix .. "  ", depth + 1 );
-    };  
-
-
-filterObj[ TransUnit.nodeKind.ExpCall ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "" );
-
-	TransUnit.nodeFilter( node.func, self, prefix .. "  ", depth + 1 );
-	if node.argList {
-	    TransUnit.nodeFilter( node.argList, self, prefix .. "  ", depth + 1 );
-	}	
-    };  
-
-
-
-filterObj[ TransUnit.nodeKind.ExpList ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processWhile( 
+    node: WhileNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "");
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processRepeat( 
+    node: RepeatNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "");
+    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processFor( 
+    node: ForNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_val() ) );
+    filter( node.get_init(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_to(), self, prefix .. "  ", depth + 1 );
+    if node.get_delta() {
+	filter( node.get_delta(), self, prefix .. "  ", depth + 1 );
+    }	
+    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processApply( 
+    node: ApplyNode, prefix: str, depth: int )
+{
+    let varNames = "";
+    let varList:stem[] = node.get_varList();
+    foreach var, index in varList {
+	varNames = varNames .. var[ 'txt' ] .. " ";
+    }	
+    dump( prefix, depth, node, varNames );
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processForeach( 
+    node: ForeachNode, prefix: str, depth: int )
+{
+    let index = node.get_key() and getTxt( node.get_key() ) or "";
+    dump( prefix, depth, node, getTxt( node.get_val() ) .. " " .. index );
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processForsort( 
+    node: ForsortNode, prefix: str, depth: int )
+{
+    let index = node.get_key() and getTxt( node.get_key() ) or "";
+    dump( prefix, depth, node, getTxt( node.get_val() ) .. " " .. index );
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processExpCall( 
+    node: ExpCallNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
-
-    let expList: TransUnit.Node[] = node.expList;
-    foreach exp, index in expList {
-	TransUnit.nodeFilter( exp, self, prefix .. "  ", depth + 1 );
+    filter( node.get_func(), self, prefix .. "  ", depth + 1 );
+    if node.get_argList() {
+	filter( node.get_argList(), self, prefix .. "  ", depth + 1 );
     }	
 };  
+pub override fn dumpFilter.processExpList( 
+    node: ExpListNode, prefix: str, depth: int )
 
-filterObj[ TransUnit.nodeKind.ExpOp1 ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.op.txt );
-
-	TransUnit.nodeFilter( node.info.exp, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.ExpCast ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "" );
-
-	TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 );
-    };  
-
-
-filterObj[ TransUnit.nodeKind.ExpParen ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "()" );
-
-	TransUnit.nodeFilter( node.exp, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.ExpOp2 ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.op.txt );
-
-	TransUnit.nodeFilter( node.exp1, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.exp2, self, prefix .. "  ", depth + 1 );
-    };  
-
-
-filterObj[ TransUnit.nodeKind.ExpNew ] =
-    fn( self: stem, node: stem, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
+    let expList: TransUnit.Node[] = node.get_expList();
+    foreach exp, index in expList {
+	filter( exp, self, prefix .. "  ", depth + 1 );
+    }	
+};  
+pub override fn dumpFilter.processExpOp1( 
+    node: ExpOp1Node, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_op() ) );
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processExpCast( 
+    node: ExpCastNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processExpParen( 
+    node: ExpParenNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "()" );
+    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processExpOp2( 
+    node: ExpOp2Node, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_op() ) );
+    filter( node.get_exp1(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_exp2(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processExpNew( 
+    node: ExpNewNode, prefix: str, depth: int )
 
-    TransUnit.nodeFilter( node.symbol, self, prefix .. "  ", depth + 1 );
-    if node.argList {
-	TransUnit.nodeFilter( node.argList, self, prefix .. "  ", depth + 1 );
+{
+    dump( prefix, depth, node, "" );
+    filter( node.get_symbol(), self, prefix .. "  ", depth + 1 );
+    if node.get_argList() {
+	filter( node.get_argList(), self, prefix .. "  ", depth + 1 );
     }
 };
+pub override fn dumpFilter.processExpRef( 
+    node: ExpRefNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_token() ) );
+};
+pub override fn dumpFilter.processExpRefItem( 
+    node: ExpRefItemNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt() );
+    filter( node.get_val(), self, prefix .. "  ", depth + 1 );
+    filter( node.get_index(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processRefField( 
+    node: RefFieldNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_field() ) );
+    filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
+};  
+pub override fn dumpFilter.processReturn( 
+    node: ReturnNode, prefix: str, depth: int )
 
-filterObj[ TransUnit.nodeKind.ExpRef ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.txt );
-    };  
-
-filterObj[ TransUnit.nodeKind.ExpRefItem ] = 
-    fn( self: stem, node: TransUnit.Node, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt() );
-
-	TransUnit.nodeFilter( node.get_info().val, self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( node.get_info().index, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.RefField ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.field.txt );
-
-	TransUnit.nodeFilter( node.info.prefix, self, prefix .. "  ", depth + 1 );
-    };  
-
-filterObj[ TransUnit.nodeKind.Return ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
-
-    if node.expList {
-        TransUnit.nodeFilter( node.expList, self, prefix .. "  ", depth + 1 );
+    if node.get_expList() {
+        filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
     }
 };  
-
-filterObj[ TransUnit.nodeKind.LiteralList ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "[]" );
-
-        if node.info {
-	    TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 );
-        }
-    };  
-
-filterObj[ TransUnit.nodeKind.LiteralMap ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int )
+pub override fn dumpFilter.processLiteralList( 
+    node: LiteralListNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
+    dump( prefix, depth, node, "[]" );
+    if node.get_expList() {
+	filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
+    }
+};  
+pub override fn dumpFilter.processLiteralMap( 
+    node: LiteralMapNode, prefix: str, depth: int )
 
-    let pairList:stem[] = node.info.pairList;
+{
+    dump( prefix, depth, node, "{}" );
+    let pairList:TransUnit.PairItem[] = node.get_pairList();
     foreach pair in pairList {
-	TransUnit.nodeFilter( pair[ 'key' ], self, prefix .. "  ", depth + 1 );
-	TransUnit.nodeFilter( pair[ 'val' ], self, prefix .. "  ", depth + 1 );
+	filter( pair.get_key(), self, prefix .. "  ", depth + 1 );
+	filter( pair.get_val(), self, prefix .. "  ", depth + 1 );
     }
 };  
-
-
-filterObj[ TransUnit.nodeKind.LiteralArray ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "[@]" );
-
-        if node.info {
-	    TransUnit.nodeFilter( node.info, self, prefix .. "  ", depth + 1 );
-        }
-    };  
-
-
-filterObj[ TransUnit.nodeKind.LiteralChar ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node,
-	      string.format( "%s(%s)", node.info.num, node.info.token.txt ) );
-    };  
-
-filterObj[ TransUnit.nodeKind.LiteralInt ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node,
-	      string.format( "%s(%s)", node.info.num, node.info.token.txt ) );
-    };  
-
-filterObj[ TransUnit.nodeKind.LiteralReal ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node,
-	      string.format( "%s(%s)", node.info.num, node.info.token.txt ) );
-    };  
-
-filterObj[ TransUnit.nodeKind.LiteralString ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.token.txt );
-    };  
-
-filterObj[ TransUnit.nodeKind.LiteralBool ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.txt == "true" );
-    };  
-
-filterObj[ TransUnit.nodeKind.LiteralNil ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "" );
-    };  
-
-filterObj[ TransUnit.nodeKind.Break ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, "" );
-    };  
-
-filterObj[ TransUnit.nodeKind.LiteralSymbol ] = 
-    fn( self: stem, node: stem, prefix: str, depth: int ) {
-	dump( prefix, depth, node, node.info.txt );
-    };  
+pub override fn dumpFilter.processLiteralArray( 
+    node: LiteralArrayNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "[@]" );
+    if node.get_expList() {
+	filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
+    }
+};  
+pub override fn dumpFilter.processLiteralChar( 
+    node: LiteralCharNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node,
+	  string.format( "%s(%s)", node.get_num(), getTxt( node.get_token() ) ) );
+};  
+pub override fn dumpFilter.processLiteralInt( 
+    node: LiteralIntNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node,
+	  string.format( "%s(%s)", node.get_num(), getTxt( node.get_token() ) ) );
+};  
+pub override fn dumpFilter.processLiteralReal( 
+    node: LiteralRealNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node,
+	  string.format( "%s(%s)", node.get_num(), getTxt( node.get_token()) ) );
+};  
+pub override fn dumpFilter.processLiteralString( 
+    node: LiteralStringNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_token()) );
+};  
+pub override fn dumpFilter.processLiteralBool( 
+    node: LiteralBoolNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_token() ) == "true" );
+};  
+pub override fn dumpFilter.processLiteralNil( 
+    node: LiteralNilNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
+};  
+pub override fn dumpFilter.processBreak( 
+    node: BreakNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
+};  
+pub override fn dumpFilter.processLiteralSymbol( 
+    node: LiteralSymbolNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, getTxt( node.get_token() ) );
+};  

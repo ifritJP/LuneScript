@@ -2,7 +2,6 @@ import lune.base.TransUnit;
 import lune.base.Parser;
 import lune.base.Util;
 
-
 pub class Filter {
     pri let streamName: str;
     pri let stream: Util.outStream;
@@ -23,6 +22,7 @@ pub class Filter {
     pri let needIndent: bool;
     pri let macroDepth: int;
     pri let moduleTypeInfo: TransUnit.TypeInfo;
+    
     fn __init( streamName: str, stream: Util.outStream,
                exeFlag: bool, inMacro: bool, moduleTypeInfo: TransUnit.TypeInfo )
     {
@@ -114,6 +114,8 @@ Filter[ TransUnit.nodeKind.Root ] =
 
     let children:TransUnit.Node[] = rootNode.get_children();
 
+    let typeId2ClassMap = rootNode.get_typeId2ClassMap();
+
     foreach child in children {
         TransUnit.nodeFilter( child, self, node, baseIndent );
         self.writeln( "", baseIndent );
@@ -123,6 +125,7 @@ Filter[ TransUnit.nodeKind.Root ] =
 
     let typeId2TypeInfo: Map<int,TransUnit.TypeInfo> = {};
     let typeId2UseFlag: Map<int,bool> = {};
+    let pickupClassMap: Map<str,TransUnit.NamespaceInfo> = {};
 
     '' 公開される型情報を typeId2TypeInfo にピックアップする
     fn pickupTypeId( typeInfo: TransUnit.TypeInfo, forceFlag: bool ) {
@@ -178,6 +181,12 @@ Filter[ TransUnit.nodeKind.Root ] =
     }
 
 
+
+    foreach namespaceInfo in typeId2ClassMap {
+        if namespaceInfo.typeInfo.get_accessMode() == "pub" {
+            pickupClassMap[ namespaceInfo.name ] = namespaceInfo;
+        }
+    }
     
 
     
@@ -192,9 +201,11 @@ Filter[ TransUnit.nodeKind.Root ] =
         self.writeln( "_className2InfoMap.%s = _classInfo%s" (className, className),
                       baseIndent + stepIndent );
 
-        pickupTypeId( self.className2TypeInfo[ className ] );
+        let classTypeInfo = self.className2TypeInfo[ className ];
+        pickupTypeId( classTypeInfo );
+        pickupClassMap[ className ] = nil;
         
-        foreach memberNode in self.className2MemberList[ className ] {
+       foreach memberNode in self.className2MemberList[ className ] {
             let memberInfo = memberNode.get_info();
             if memberInfo.accessMode == "pub" {
                 let memberName = memberInfo.name.txt;
@@ -210,8 +221,42 @@ Filter[ TransUnit.nodeKind.Root ] =
                     baseIndent + stepIndent );
             }
         }
+        
         self.writeln( "end", baseIndent );
+   }
+
+
+    forsort namespaceInfo, className in pickupClassMap {
+        let scope = namespaceInfo.scope;
+
+        if not TransUnit.isBuiltin( namespaceInfo.typeInfo.get_typeId()) {
+            self.writeln( "do", baseIndent + stepIndent );
+            self.writeln( "local _classInfo%s = {}"
+                          (className), baseIndent + stepIndent );
+            self.writeln( "_className2InfoMap.%s = _classInfo%s"
+                          (className, className), baseIndent + stepIndent );
+
+            pickupTypeId( namespaceInfo.typeInfo );
+
+            forsort typeInfo, fieldName in scope.get_symbol2TypeInfoMap() {
+                if typeInfo.get_kind() ~= TransUnit.TypeInfoKindMethod
+                {
+                    if typeInfo.get_accessMode() == "pub" {
+                        self.writeln( "_classInfo%s.%s = {" ( className, fieldName ),
+                                      baseIndent + stepIndent );
+                        self.writeln(
+                            "  name='%s', staticFlag = %s, "
+                            ( fieldName,  typeInfo.get_staticFlag() ) ..
+                            "accessMode = '%s', methodFlag = false, typeId = %d }"
+                            ( typeInfo.get_accessMode(), typeInfo.get_typeId() ),
+                            baseIndent + stepIndent );
+                    }
+                }
+            }
+            self.writeln( "end", baseIndent );
+        }
     }
+    
 
 
     self.writeln( "local _varName2InfoMap = {}", baseIndent );
@@ -1136,7 +1181,7 @@ pub class MacroEvalImp extend TransUnit.MacroEval {
 
         conv[ TransUnit.nodeKind.DeclMacro ]( conv, node, nil, 0 );
 
-        '' Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
+        ''Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
         
         let chunk, err = load( oStream.get_txt() );
         if err {

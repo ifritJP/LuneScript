@@ -129,7 +129,9 @@ else
 	 validProf,
 	 function()
 	    local ast = createAst( scriptPath, module )
-	    getNode( ast ):filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
+	    --getNode( ast ):filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
+	    local dumpNode = require( 'lune.base.dumpNode' ).dumpFilter;
+	    getNode( ast ):processFilter( dumpNode, "", 0 )
 	 end, scriptPath .. ".profi" )
    elseif mode == "lua" then
       local ast = createAst( scriptPath, module )
