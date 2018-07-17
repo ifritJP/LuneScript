@@ -53,14 +53,16 @@ local function createReserveInfo( luaMode )
   multiCharDelimitMap["~"] = {"~="}
   multiCharDelimitMap["<"] = {"<="}
   multiCharDelimitMap[">"] = {">="}
-  multiCharDelimitMap["."] = {".."}
   if not luaMode then
+    multiCharDelimitMap["."] = {"..", ".$"}
     multiCharDelimitMap[".."] = {"..."}
     multiCharDelimitMap[","] = {",,"}
     multiCharDelimitMap[",,"] = {",,,"}
     multiCharDelimitMap[",,,"] = {",,,,"}
     multiCharDelimitMap["@"] = {"@@"}
     multiCharDelimitMap["@@"] = {"@@?"}
+  else 
+    multiCharDelimitMap["."] = {".."}
   end
   return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
@@ -68,15 +70,15 @@ end
 local Stream = {}
 moduleObj.Stream = Stream
 -- none
-function Stream.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = Stream } )
-  if obj.__init then
-    obj:__init(  )
-  end
-  return obj
-end
-function Stream:__init(  )
+            function Stream.new(  )
+            local obj = {}
+            setmetatable( obj, { __index = Stream } )
+            if obj.__init then
+            obj:__init(  )
+            end       
+            return obj
+            end         
+            function Stream:__init(  )
             
 end
 
@@ -113,15 +115,15 @@ end
 
 local Position = {}
 moduleObj.Position = Position
-function Position.new( lineNo, column )
-  local obj = {}
-  setmetatable( obj, { __index = Position } )
-  if obj.__init then
-    obj:__init( lineNo, column )
-  end
-  return obj
-end
-function Position:__init( lineNo, column )
+            function Position.new( lineNo, column )
+            local obj = {}
+            setmetatable( obj, { __index = Position } )
+            if obj.__init then
+            obj:__init( lineNo, column )
+            end       
+            return obj
+            end         
+            function Position:__init( lineNo, column )
             
 self.lineNo = lineNo
   self.column = column
@@ -129,34 +131,41 @@ self.lineNo = lineNo
 
 local Token = {}
 moduleObj.Token = Token
-function Token.new( kind, txt, pos )
-  local obj = {}
-  setmetatable( obj, { __index = Token } )
-  if obj.__init then
-    obj:__init( kind, txt, pos )
-  end
-  return obj
+function Token:set_commentList( commentList )
+  self.commentList = commentList
 end
-function Token:__init( kind, txt, pos )
+            function Token.new( kind, txt, pos, commentList )
+            local obj = {}
+            setmetatable( obj, { __index = Token } )
+            if obj.__init then
+            obj:__init( kind, txt, pos, commentList )
+            end       
+            return obj
+            end         
+            function Token:__init( kind, txt, pos, commentList )
             
 self.kind = kind
   self.txt = txt
   self.pos = pos
+  self.commentList = commentList
   end
+                function Token:get_commentList()
+                return self.commentList
+                end
 
 local Parser = {}
 moduleObj.Parser = Parser
 -- none
 -- none
-function Parser.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = Parser } )
-  if obj.__init then
-    obj:__init(  )
-  end
-  return obj
-end
-function Parser:__init(  )
+            function Parser.new(  )
+            local obj = {}
+            setmetatable( obj, { __index = Parser } )
+            if obj.__init then
+            obj:__init(  )
+            end       
+            return obj
+            end         
+            function Parser:__init(  )
             
 end
 
@@ -170,15 +179,15 @@ end
 function WrapParser:getStreamName(  )
   return self.name
 end
-function WrapParser.new( parser, name )
-  local obj = {}
-  setmetatable( obj, { __index = WrapParser } )
-  if obj.__init then
-    obj:__init( parser, name )
-  end
-  return obj
-end
-function WrapParser:__init( parser, name )
+            function WrapParser.new( parser, name )
+            local obj = {}
+            setmetatable( obj, { __index = WrapParser } )
+            if obj.__init then
+            obj:__init( parser, name )
+            end       
+            return obj
+            end         
+            function WrapParser:__init( parser, name )
             
 self.parser = parser
   self.name = name
@@ -575,62 +584,73 @@ local function getEofToken(  )
 end
 moduleObj.getEofToken = getEofToken
 ----- meta -----
+local _typeId2ClassInfoMap = {}
+moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 do
-  local _classInfoParser = {}
-  _className2InfoMap.Parser = _classInfoParser
+  local _classInfo182 = {}
+  _className2InfoMap.Parser = _classInfo182
+  _typeId2ClassInfoMap[ 182 ] = _classInfo182
   end
 do
-  local _classInfoPosition = {}
-  _className2InfoMap.Position = _classInfoPosition
-  _classInfoPosition.lineNo = {
+  local _classInfo168 = {}
+  _className2InfoMap.Position = _classInfo168
+  _typeId2ClassInfoMap[ 168 ] = _classInfo168
+  _classInfo168.lineNo = {
     name='lineNo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
-  _classInfoPosition.column = {
+  _classInfo168.column = {
     name='column', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
   end
 do
-  local _classInfoStream = {}
-  _className2InfoMap.Stream = _classInfoStream
+  local _classInfo158 = {}
+  _className2InfoMap.Stream = _classInfo158
+  _typeId2ClassInfoMap[ 158 ] = _classInfo158
   end
 do
-  local _classInfoStreamParser = {}
-  _className2InfoMap.StreamParser = _classInfoStreamParser
+  local _classInfo194 = {}
+  _className2InfoMap.StreamParser = _classInfo194
+  _typeId2ClassInfoMap[ 194 ] = _classInfo194
   end
 do
-  local _classInfoToken = {}
-  _className2InfoMap.Token = _classInfoToken
-  _classInfoToken.kind = {
+  local _classInfo170 = {}
+  _className2InfoMap.Token = _classInfo170
+  _typeId2ClassInfoMap[ 170 ] = _classInfo170
+  _classInfo170.kind = {
     name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
-  _classInfoToken.txt = {
+  _classInfo170.txt = {
     name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
-  _classInfoToken.pos = {
-    name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 166 }
+  _classInfo170.pos = {
+    name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 168 }
   end
 do
-  local _classInfoTxtStream = {}
-  _className2InfoMap.TxtStream = _classInfoTxtStream
+  local _classInfo162 = {}
+  _className2InfoMap.TxtStream = _classInfo162
+  _typeId2ClassInfoMap[ 162 ] = _classInfo162
   end
 do
-  local _classInfoWrapParser = {}
-  _className2InfoMap.WrapParser = _classInfoWrapParser
+  local _classInfo188 = {}
+  _className2InfoMap.WrapParser = _classInfo188
+  _typeId2ClassInfoMap[ 188 ] = _classInfo188
   end
 do
-  local _classInfobase = {}
-  _className2InfoMap.base = _classInfobase
-  _classInfobase.Parser = {
+  local _classInfo102 = {}
+  _className2InfoMap.base = _classInfo102
+  _typeId2ClassInfoMap[ 102 ] = _classInfo102
+  _classInfo102.Parser = {
     name='Parser', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 104 }
   end
 do
-  local _classInfolune = {}
-  _className2InfoMap.lune = _classInfolune
-  _classInfolune.base = {
+  local _classInfo100 = {}
+  _className2InfoMap.lune = _classInfo100
+  _typeId2ClassInfoMap[ 100 ] = _classInfo100
+  _classInfo100.base = {
     name='base', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 102 }
   end
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 214 }
+  name='kind', accessMode = 'pub', typeId = 226 }
 _varName2InfoMap.kindChar = {
   name='kindChar', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindCmnt = {
@@ -654,7 +674,7 @@ _varName2InfoMap.kindSymb = {
 _varName2InfoMap.kindType = {
   name='kindType', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.noneToken = {
-  name='noneToken', accessMode = 'pub', typeId = 168 }
+  name='noneToken', accessMode = 'pub', typeId = 170 }
 local _typeInfoList = {}
 moduleObj._typeInfoList = _typeInfoList
 _typeInfoList[1] = { parentId = 1, typeId = 100, baseId = 1, txt = 'lune',
@@ -662,50 +682,56 @@ _typeInfoList[1] = { parentId = 1, typeId = 100, baseId = 1, txt = 'lune',
 _typeInfoList[2] = { parentId = 100, typeId = 102, baseId = 1, txt = 'base',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {104}, }
 _typeInfoList[3] = { parentId = 102, typeId = 104, baseId = 1, txt = 'Parser',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {156, 160, 166, 168, 170, 176, 182, 228, 230, 232, 260}, }
-_typeInfoList[4] = { parentId = 104, typeId = 156, baseId = 1, txt = 'Stream',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {158}, }
-_typeInfoList[5] = { parentId = 156, typeId = 158, baseId = 1, txt = 'read',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {158, 162, 168, 170, 182, 188, 194, 240, 242, 244, 272}, }
+_typeInfoList[4] = { parentId = 104, typeId = 158, baseId = 1, txt = 'Stream',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {160}, }
+_typeInfoList[5] = { parentId = 158, typeId = 160, baseId = 1, txt = 'read',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[6] = { parentId = 104, typeId = 160, baseId = 156, txt = 'TxtStream',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {162, 164}, }
-_typeInfoList[7] = { parentId = 160, typeId = 162, baseId = 1, txt = '__init',
+_typeInfoList[6] = { parentId = 104, typeId = 162, baseId = 158, txt = 'TxtStream',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {164, 166}, }
+_typeInfoList[7] = { parentId = 162, typeId = 164, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[8] = { parentId = 160, typeId = 164, baseId = 1, txt = 'read',
+_typeInfoList[8] = { parentId = 162, typeId = 166, baseId = 1, txt = 'read',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[9] = { parentId = 104, typeId = 166, baseId = 1, txt = 'Position',
+_typeInfoList[9] = { parentId = 104, typeId = 168, baseId = 1, txt = 'Position',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[10] = { parentId = 104, typeId = 168, baseId = 1, txt = 'Token',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[11] = { parentId = 104, typeId = 170, baseId = 1, txt = 'Parser',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {172, 174}, }
-_typeInfoList[12] = { parentId = 170, typeId = 172, baseId = 1, txt = 'getToken',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {168}, children = {}, }
-_typeInfoList[13] = { parentId = 170, typeId = 174, baseId = 1, txt = 'getStreamName',
+_typeInfoList[10] = { parentId = 104, typeId = 170, baseId = 1, txt = 'Token',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {176, 180}, }
+_typeInfoList[11] = { parentId = 170, typeId = 176, baseId = 1, txt = 'set_commentList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[12] = { parentId = 1, typeId = 178, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {170}, retTypeId = {}, children = {}, }
+_typeInfoList[13] = { parentId = 170, typeId = 180, baseId = 1, txt = 'get_commentList',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {178}, children = {}, }
+_typeInfoList[14] = { parentId = 104, typeId = 182, baseId = 1, txt = 'Parser',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {184, 186}, }
+_typeInfoList[15] = { parentId = 182, typeId = 184, baseId = 1, txt = 'getToken',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {170}, children = {}, }
+_typeInfoList[16] = { parentId = 182, typeId = 186, baseId = 1, txt = 'getStreamName',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[14] = { parentId = 104, typeId = 176, baseId = 170, txt = 'WrapParser',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {178, 180}, }
-_typeInfoList[15] = { parentId = 176, typeId = 178, baseId = 1, txt = 'getToken',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {168}, children = {}, }
-_typeInfoList[16] = { parentId = 176, typeId = 180, baseId = 1, txt = 'getStreamName',
+_typeInfoList[17] = { parentId = 104, typeId = 188, baseId = 182, txt = 'WrapParser',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {190, 192}, }
+_typeInfoList[18] = { parentId = 188, typeId = 190, baseId = 1, txt = 'getToken',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {170}, children = {}, }
+_typeInfoList[19] = { parentId = 188, typeId = 192, baseId = 1, txt = 'getStreamName',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[17] = { parentId = 104, typeId = 182, baseId = 170, txt = 'StreamParser',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {200, 202, 252}, }
-_typeInfoList[18] = { parentId = 182, typeId = 200, baseId = 1, txt = 'getStreamName',
+_typeInfoList[20] = { parentId = 104, typeId = 194, baseId = 182, txt = 'StreamParser',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, retTypeId = {}, children = {212, 214, 264}, }
+_typeInfoList[21] = { parentId = 194, typeId = 212, baseId = 1, txt = 'getStreamName',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {18}, children = {}, }
-_typeInfoList[19] = { parentId = 182, typeId = 202, baseId = 1, txt = 'create',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {182}, children = {}, }
-_typeInfoList[20] = { parentId = 1, typeId = 214, baseId = 1, txt = 'Map',
+_typeInfoList[22] = { parentId = 194, typeId = 214, baseId = 1, txt = 'create',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {194}, children = {}, }
+_typeInfoList[23] = { parentId = 1, typeId = 226, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 12}, retTypeId = {}, children = {}, }
-_typeInfoList[21] = { parentId = 104, typeId = 228, baseId = 1, txt = 'getKindTxt',
+_typeInfoList[24] = { parentId = 104, typeId = 240, baseId = 1, txt = 'getKindTxt',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {12}, children = {}, }
-_typeInfoList[22] = { parentId = 104, typeId = 230, baseId = 1, txt = 'isOp2',
+_typeInfoList[25] = { parentId = 104, typeId = 242, baseId = 1, txt = 'isOp2',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[23] = { parentId = 104, typeId = 232, baseId = 1, txt = 'isOp1',
+_typeInfoList[26] = { parentId = 104, typeId = 244, baseId = 1, txt = 'isOp1',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {10}, children = {}, }
-_typeInfoList[24] = { parentId = 182, typeId = 252, baseId = 1, txt = 'getToken',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {168}, children = {}, }
-_typeInfoList[25] = { parentId = 104, typeId = 260, baseId = 1, txt = 'getEofToken',
+_typeInfoList[27] = { parentId = 194, typeId = 264, baseId = 1, txt = 'getToken',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, retTypeId = {170}, children = {}, }
+_typeInfoList[28] = { parentId = 104, typeId = 272, baseId = 1, txt = 'getEofToken',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, retTypeId = {6}, children = {}, }
 ----- meta -----
 return moduleObj

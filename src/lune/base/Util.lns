@@ -19,7 +19,7 @@ pub fn errorLog( message: str ) {
 
 pub fn debugLog() {
     for level = 2, 6 {
-        let debugInfo = debug.getinfo( level );
+        let debugInfo = debug.getinfo( level )@stem;
         if debugInfo {
             errorLog( "-- %s %s" ( debugInfo[ "short_src" ],
                                    debugInfo[ 'currentline' ] ) );

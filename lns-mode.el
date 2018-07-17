@@ -55,7 +55,7 @@
 (defvar lns-font-lock-keywords
   `((,lns-builtin . font-lock-builtin-face)
     (,lns-keyword . font-lock-keyword-face)
-    ("@@\\?\\|@@\\|@\\|\\?\\|&" . font-lock-keyword-face)
+    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|#" . font-lock-warning-face)
     (,lns-type . font-lock-type-face)
     ;; (":\\s-*\\(\\w+\\)" . (1 font-lock-type-face nil t))
     (,(format "\\(%s\\)\\s-*\\(\\w+\\)"

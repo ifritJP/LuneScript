@@ -59,15 +59,18 @@ fn createReserveInfo( luaMode: bool ) :
     multiCharDelimitMap[ "~" ] = [@ "~=" ];
     multiCharDelimitMap[ "<" ] = [@ "<=" ];
     multiCharDelimitMap[ ">" ] = [@ ">=" ];
-    multiCharDelimitMap[ "." ] = [@ ".." ];
 
     if not luaMode {
+        multiCharDelimitMap[ "." ] = [@ "..", ".$" ];
         multiCharDelimitMap[ ".." ] = [@ "..." ];
         multiCharDelimitMap[ "," ] = [@ ",," ];
         multiCharDelimitMap[ ",," ] = [@ ",,," ];
         multiCharDelimitMap[ ",,," ] = [@ ",,,," ];
         multiCharDelimitMap[ "@" ] = [@ "@@" ];
         multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
+    }
+    else {
+        multiCharDelimitMap[ "." ] = [@ ".." ];
     }
 
     return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
@@ -115,7 +118,11 @@ pub class Token {
     pub let kind: int;
     pub let txt: str;
     pub let pos: Position;
+    pri let commentList: Token[] { pub };
 
+    pub fn set_commentList( commentList: Token[] ) {
+        self.commentList = commentList;
+    }
 }
 
 pub class Parser {

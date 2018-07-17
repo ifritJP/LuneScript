@@ -81,10 +81,26 @@ local function createAst( path, module )
 end
 
 local function getNode( ast )
-   if not ast.filter then
-      return ast.node
+   return ast.node
+end
+
+local function convert( ast, streamName, stream, exeFlag, inMacro, moduleTypeInfo )
+   if convLua.Filter then
+      local conv = convLua.Filter.new(
+	 streamName, stream, exeFlag, inMacro, moduleTypeInfo );
+      -- for key, val in pairs( ast ) do
+      -- 	 Util.errorLog( string.format( "%s %s", key, val ) )
+      -- end
+      if ast.node.filterObj then
+	 ast.node:filterObj( conv, nil, 0 )
+      else
+	 ast.node:filter( conv, nil, 0 )
+      end
+   else
+      local conv = convLua.convFilter.new(
+	 streamName, stream, exeFlag, inMacro, moduleTypeInfo )
+      getNode( ast ):processFilter( conv, nil, 0 )
    end
-   return ast
 end
 
 function _luneScript.loadFile( path, module )
@@ -97,8 +113,7 @@ function _luneScript.loadFile( path, module )
       self.val = self.val .. txt
    end
    local stream = createStream( "", func )
-   local conv = convLua.Filter.new( path, stream, true, nil, ast.moduleTypeInfo )
-   getNode( ast ):filter( conv, nil, 0 )
+   convert( ast, path, stream, true, nil, ast.moduleTypeInfo )
 
    local chunk, err = load( stream.val )
    if err then
@@ -129,13 +144,12 @@ else
 	 validProf,
 	 function()
 	    local ast = createAst( scriptPath, module )
-	    --getNode( ast ):filter( require( 'lune.base.dumpNode' ).filterObj, "", 0 )
 	    local dumpNode = require( 'lune.base.dumpNode' ).dumpFilter;
 	    getNode( ast ):processFilter( dumpNode, "", 0 )
 	 end, scriptPath .. ".profi" )
    elseif mode == "lua" then
       local ast = createAst( scriptPath, module )
-      getNode( ast ):filter( convLua.Filter.new( scriptPath, io.stdout ), nil, 0 )
+      convert( ast, scriptPath, io.stdout )
    elseif mode == "save" then
 
       Util.profile(
@@ -149,7 +163,7 @@ else
 	    if luaPath ~= scriptPath then
 	       local fileObj = io.open( luaPath, "w" )
 	       local stream = createStream( fileObj, func )
-	       getNode( ast ):filter( convLua.Filter.new( scriptPath, stream ), nil, 0 )
+	       convert( ast, scriptPath, stream )
 	       fileObj:close()
 	    end
       	 end, scriptPath .. ".profi" )

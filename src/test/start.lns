@@ -149,3 +149,21 @@ macro _symboltest( symbol: sym, val:stem ) {
 
 _symboltest( string.format, "test\n" );
 
+
+
+class GetTest {
+    let val: int { pub };
+    pub fn __init() {
+        self.val = 100;
+    }
+}
+print( (new GetTest()).$val );
+
+class GetTest2 {
+    let val: int;
+    pub fn __init() {
+        self.val = 200;
+    }
+}
+print( (new GetTest2()).$val );
+

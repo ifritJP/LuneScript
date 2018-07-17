@@ -3,15 +3,15 @@ local moduleObj = {}
 local outStream = {}
 moduleObj.outStream = outStream
 -- none
-function outStream.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = outStream } )
-  if obj.__init then
-    obj:__init(  )
-  end
-  return obj
-end
-function outStream:__init(  )
+            function outStream.new(  )
+            local obj = {}
+            setmetatable( obj, { __index = outStream } )
+            if obj.__init then
+            obj:__init(  )
+            end       
+            return obj
+            end         
+            function outStream:__init(  )
             
 end
 
@@ -30,9 +30,9 @@ end
 function memStream:write( val )
   self.txt = self.txt .. val
 end
-function memStream:get_txt()
-   return self.txt
-end
+                function memStream:get_txt()
+                return self.txt
+                end
 
 local function errorLog( message )
   local write = (io ).stderr.write
@@ -61,40 +61,47 @@ local function profile( validTest, func, path )
 end
 moduleObj.profile = profile
 ----- meta -----
+local _typeId2ClassInfoMap = {}
+moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 local _className2InfoMap = {}
 moduleObj._className2InfoMap = _className2InfoMap
 do
-  local _classInfomemStream = {}
-  _className2InfoMap.memStream = _classInfomemStream
+  local _classInfo110 = {}
+  _className2InfoMap.memStream = _classInfo110
+  _typeId2ClassInfoMap[ 110 ] = _classInfo110
   end
 do
-  local _classInfooutStream = {}
-  _className2InfoMap.outStream = _classInfooutStream
+  local _classInfo106 = {}
+  _className2InfoMap.outStream = _classInfo106
+  _typeId2ClassInfoMap[ 106 ] = _classInfo106
   end
 do
-  local _classInfoUtil = {}
-  _className2InfoMap.Util = _classInfoUtil
-  _classInfoUtil.debugLog = {
+  local _classInfo104 = {}
+  _className2InfoMap.Util = _classInfo104
+  _typeId2ClassInfoMap[ 104 ] = _classInfo104
+  _classInfo104.debugLog = {
     name='debugLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 120 }
-  _classInfoUtil.errorLog = {
+  _classInfo104.errorLog = {
     name='errorLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 118 }
-  _classInfoUtil.memStream = {
+  _classInfo104.memStream = {
     name='memStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 110 }
-  _classInfoUtil.outStream = {
+  _classInfo104.outStream = {
     name='outStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 106 }
-  _classInfoUtil.profile = {
+  _classInfo104.profile = {
     name='profile', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 122 }
   end
 do
-  local _classInfobase = {}
-  _className2InfoMap.base = _classInfobase
-  _classInfobase.Util = {
+  local _classInfo102 = {}
+  _className2InfoMap.base = _classInfo102
+  _typeId2ClassInfoMap[ 102 ] = _classInfo102
+  _classInfo102.Util = {
     name='Util', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 104 }
   end
 do
-  local _classInfolune = {}
-  _className2InfoMap.lune = _classInfolune
-  _classInfolune.base = {
+  local _classInfo100 = {}
+  _className2InfoMap.lune = _classInfo100
+  _typeId2ClassInfoMap[ 100 ] = _classInfo100
+  _classInfo100.base = {
     name='base', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 102 }
   end
 local _varName2InfoMap = {}

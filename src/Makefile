@@ -40,9 +40,9 @@ test-comp:
 	mkdir -p work/1/lune/base
 	mkdir -p work/2/lune/base
 	mkdir -p work/3/lune/base
-	cp lune/base/base.lua work/1/lune/base
-	cp lune/base/base.lua work/2/lune/base
-	cp lune/base/base.lua work/3/lune/base
+	cp lune/base/base*.lua work/1/lune/base
+	cp lune/base/base*.lua work/2/lune/base
+	cp lune/base/base*.lua work/3/lune/base
 	$(call trans,Util)
 	$(call trans,Parser)
 	$(call trans,TransUnit)
@@ -57,6 +57,7 @@ test-comp2:
 	$(call transwork,1,2,convLua)
 	$(call transwork,1,2,dumpNode)
 
+
 	$(call transwork,2,3,Util)
 	$(call transwork,2,3,Parser)
 	$(call transwork,2,3,TransUnit)
@@ -69,6 +70,5 @@ test-comp2:
 	(cd work/3; $(LUA) lune/base/base.lua test/start.lns ast)
 	(cd work/3; $(LUA) lune/base/base.lua test/start.lns lua)
 	(cd work/3; $(LUA) lune/base/base.lua test/start.lns exe)
-
 
 	cp work/3/lune/base/*.lua lune/base/
