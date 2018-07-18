@@ -1,4 +1,4 @@
-import test.sub;
+import test.Sub2;
 
 fn func( val : int) {
     print( "abc%s%s" (val,"ab") );
@@ -13,7 +13,7 @@ func( data );
 
 pub class ClassA {
     let val: int;
-    fn __init() {
+    pub fn __init() {
 	self.val = 10;
     }
     pub fn func( data: int ) : int {
@@ -41,8 +41,8 @@ pub class ClassB extend Super {
     pub fn func(): int {
 	return self.val;
     }
-    pub fn func2(): sub.Hoge {
-        return new sub.Hoge( 1 );
+    pub fn func2(): Sub2.Hoge {
+        return new Sub2.Hoge( 1 );
     }
     pub fn func3(): int[] {
         return [ 1, 2, 3 ];

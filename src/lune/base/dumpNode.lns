@@ -106,9 +106,9 @@ pub override fn dumpFilter.processDeclVar(
     }
     dump( prefix, depth, node, node.get_unwrap() and "! " or " " .. varName );
     foreach var, index in node.get_varList() {
-        if var[ "refType" ] {
+        if var.$refType {
             filter(
-                var[ "refType" ], self, prefix .. "  ", depth + 1 );
+                var.$refType, self, prefix .. "  ", depth + 1 );
         }
     }
     if node.get_expList() {
@@ -140,13 +140,9 @@ fn dumpFilter.processDeclFuncInfo(
 {
     let name = declInfo.get_name();
     dump( prefix, depth, node, name and name.txt or "<anonymous>" );
-    let argList:stem[] = declInfo.get_argList();
+    let argList = declInfo.get_argList();
     foreach arg, index in argList {
 	filter( arg, self, prefix .. "  ", depth + 1 );
-    }
-    let retTypeList:stem[] = declInfo.get_retTypeList();
-    foreach refType, index in retTypeList {
-	filter( refType, self, prefix .. "  ", depth + 1 );
     }
     if declInfo.get_body() {
 	filter( declInfo.get_body(), self, prefix .. "  ", depth + 1 );
@@ -186,12 +182,12 @@ pub override fn dumpFilter.processIf(
     node: IfNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "");
-    let stmtList:IfStmtInfo[] = node.get_stmtList();
+    let stmtList = node.get_stmtList();
     foreach stmt, index in stmtList {
-	if stmt[ 'exp' ] {
-	    filter( stmt[ 'exp' ], self, prefix .. "  ", depth + 1 );
+	if stmt.$exp {
+	    filter( stmt.$exp, self, prefix .. "  ", depth + 1 );
 	}   	
-	filter( stmt[ 'block' ], self, prefix .. "  ", depth + 1 );
+	filter( stmt.$block, self, prefix .. "  ", depth + 1 );
     }	
 };  
 pub override fn dumpFilter.processSwitch( 
@@ -201,8 +197,8 @@ pub override fn dumpFilter.processSwitch(
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
     let caseList = node.get_caseList()@TransUnit.CaseInfo[];
     foreach caseInfo in caseList {
-        filter( caseInfo[ 'expList' ], self, prefix .. "  ", depth + 1 );
-        filter( caseInfo[ 'block' ], self, prefix .. "  ", depth + 1 );
+        filter( caseInfo.$expList, self, prefix .. "  ", depth + 1 );
+        filter( caseInfo.$block, self, prefix .. "  ", depth + 1 );
     }
     filter( node.get_default(), self, prefix .. "  ", depth + 1 );
 };
@@ -235,9 +231,9 @@ pub override fn dumpFilter.processApply(
     node: ApplyNode, prefix: str, depth: int )
 {
     let varNames = "";
-    let varList:stem[] = node.get_varList();
+    let varList = node.get_varList();
     foreach var, index in varList {
-	varNames = varNames .. var[ 'txt' ] .. " ";
+	varNames = varNames .. var.txt .. " ";
     }	
     dump( prefix, depth, node, varNames );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
@@ -273,7 +269,7 @@ pub override fn dumpFilter.processExpList(
 
 {
     dump( prefix, depth, node, "" );
-    let expList: TransUnit.Node[] = node.get_expList();
+    let expList = node.get_expList();
     foreach exp, index in expList {
 	filter( exp, self, prefix .. "  ", depth + 1 );
     }	
@@ -362,7 +358,7 @@ pub override fn dumpFilter.processLiteralMap(
 
 {
     dump( prefix, depth, node, "{}" );
-    let pairList:TransUnit.PairItem[] = node.get_pairList();
+    let pairList = node.get_pairList();
     foreach pair in pairList {
 	filter( pair.get_key(), self, prefix .. "  ", depth + 1 );
 	filter( pair.get_val(), self, prefix .. "  ", depth + 1 );
@@ -402,7 +398,8 @@ pub override fn dumpFilter.processLiteralString(
 pub override fn dumpFilter.processLiteralBool( 
     node: LiteralBoolNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_token().txt == "true" );
+    dump( prefix, depth, node,
+          node.get_token().txt == "true" and "true" or "false" );
 };  
 pub override fn dumpFilter.processLiteralNil( 
     node: LiteralNilNode, prefix: str, depth: int )

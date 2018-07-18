@@ -1,5 +1,5 @@
 fn createReserveInfo( luaMode: bool ) :
-    Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,bool> {
+    Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,str[@]> {
     let keywordSet:Map<str,bool> = {};
     let typeSet:Map<str,bool> = {};
     let builtInSet:Map<str,bool> = {};
@@ -152,7 +152,7 @@ pub class StreamParser extend Parser {
     let typeSet : Map<str,bool>;
     let builtInSet :Map<str,bool>;
     let multiCharDelimitMap : Map<str,str[@]>;
-    fn __init( stream: Stream, name: str, luaMode: bool ) {
+    pub fn __init( stream: Stream, name: str, luaMode: bool ) {
 	self.stream = stream;
 	self.streamName = name;
 	self.lineNo = 0;
@@ -173,7 +173,7 @@ pub class StreamParser extend Parser {
     }
 
     pub static fn create( path: str, luaMode: bool ): StreamParser {
-	let stream: Stream = io.open( path, "r" );
+	let stream = io.open( path, "r" )@Stream;
 
 	if not stream {
 	    return nil;
@@ -185,7 +185,7 @@ pub class StreamParser extend Parser {
 pub let kind:Map<str,int> = {};
 
 let kindSeed = 0;
-let kind2Txt = {};
+let kind2Txt:Map<str,str> = {};
 fn regKind( name : str) : int {
     let assignKind = kindSeed;
     kindSeed = kindSeed + 1;
@@ -209,7 +209,7 @@ pub let kindEof = regKind( "Eof" );
 pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ) );
 
 
-let quotedCharSet = {};
+let quotedCharSet:Map<int,bool> = {};
 quotedCharSet[ 'a' ] = true;
 quotedCharSet[ 'b' ] = true;
 quotedCharSet[ 'f' ] = true;
@@ -222,7 +222,7 @@ quotedCharSet[ '"' ] = true;
 quotedCharSet[ "'" ] = true;
 
 
-let op2Set = {};
+let op2Set:Map<int,bool> = {};
 op2Set[ '+' ] = true;
 op2Set[ '-' ] = true;
 op2Set[ '*' ] = true;
@@ -247,7 +247,7 @@ op2Set[ 'or' ] = true;
 op2Set[ '@' ] = true;
 op2Set[ '=' ] = true;
 
-let op1Set = {};
+let op1Set:Map<int,bool> = {};
 op1Set[ '-' ] = true;
 op1Set[ 'not' ] = true;
 op1Set[ '#' ] = true;
@@ -259,7 +259,7 @@ op1Set[ ',,,' ] = true;
 op1Set[ ',,,,' ] = true;
 
 
-pub static fn getKindTxt( kind: int ) : int {
+pub static fn getKindTxt( kind: int ) : str {
     return kind2Txt[ kind ];
 }
 
@@ -281,7 +281,7 @@ fn StreamParser.parse() : Token[] {
 	return nil;
     }
 
-    let list: Token[] = {};
+    let list: Token[] = [];
     let startIndex = 1;
 
     '''
@@ -322,7 +322,7 @@ fn StreamParser.parse() : Token[] {
     '''
 
     let addVal = fn ( kind: int, val: str, column: int ) : stem {
-	fn createInfo( tokenKind: int, token: stem, tokenColumn: int ): Token {
+	fn createInfo( tokenKind: int, token: str, tokenColumn: int ): Token {
 	    if tokenKind == kindSymb {
 		if self.keywordSet[ token ] {
 		    tokenKind = kindKywd;
@@ -433,6 +433,9 @@ fn StreamParser.parse() : Token[] {
 			    if op2Set[ delimit ] or op1Set[ delimit ] {
 				workKind = kindOpe;
 			    }
+                            if delimit == "..." {
+                                workKind = kindSymb;
+                            }
 			    if delimit == "?" {
 				let nextChar = token.sub( index, startIndex );
 				table.insert( list, createInfo(
@@ -582,7 +585,7 @@ pub override fn StreamParser.getToken() : Token {
     }
     if #self.lineTokenList < self.pos {
 	self.pos = 1;
-	self.lineTokenList = {};
+	self.lineTokenList = [];
 	while #self.lineTokenList == 0 {
 	    self.lineTokenList = self.parse();
 	    if not self.lineTokenList {
@@ -597,7 +600,7 @@ pub override fn StreamParser.getToken() : Token {
     return token;
 }
 
-let eofToken = { "kind": kindEof, "txt": "", "pos": { "lineNo": 0, "column": 0 } };
-pub fn getEofToken(): stem {
+let eofToken = new Token( kindEof, "", new Position( 0, 0 ) );
+pub fn getEofToken(): Token {
    return eofToken;
 }

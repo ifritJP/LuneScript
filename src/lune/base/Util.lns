@@ -13,13 +13,13 @@ pub class memStream extend outStream {
 }
 
 pub fn errorLog( message: str ) {
-    let write = (io@stem).stderr.write;
+    let write = (io@stem).stderr.write@form;
     write( (io@stem).stderr, message .. "\n" );
 }
 
 pub fn debugLog() {
     for level = 2, 6 {
-        let debugInfo = debug.getinfo( level )@stem;
+        let debugInfo = debug.getinfo( level )@Map<str,stem>;
         if debugInfo {
             errorLog( "-- %s %s" ( debugInfo[ "short_src" ],
                                    debugInfo[ 'currentline' ] ) );
@@ -39,7 +39,7 @@ pub fn profile( validTest:bool, func: stem, path: str ) {
     let result:stem = func();
     
     profiler.stop();
-    profiler.writeReport( path );
+    (profiler.writeReport@form)( path );
 
     return result;
 }

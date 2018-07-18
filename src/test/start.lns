@@ -46,7 +46,7 @@ for index = 1, 4 {
     }   
 }
 
-fn func( val: int! ): int {
+fn func( val: int ): int {
     let! val2 = val { return 0; };
     
     return val2 + 2;
@@ -125,12 +125,18 @@ _classtest( 1, [ { "val": "int" }, { "val2": "str" } ] ) ;
 _classtest( 2 );
 _classtest( 3 );
 
-let classObj = new classTest1( 1000, "2000" );
-print( classObj.func(), classObj.get_val(), classObj.get_val2() );
-classObj = new classTest2();
-print( classObj.func() );
-classObj = new classTest3();
-print( classObj.func() );
+{
+    let classObj = new classTest1( 1000, "2000" );
+    print( classObj.func(), classObj.get_val(), classObj.get_val2() );
+}
+{
+    let classObj = new classTest2();
+    print( classObj.func() );
+}
+{
+    let classObj = new classTest3();
+    print( classObj.func() );
+}
 
 
 macro _stattest( val: stat ) {
@@ -167,3 +173,10 @@ class GetTest2 {
 }
 print( (new GetTest2()).$val );
 
+{
+    fn TestRetDDD(): ... {
+        return 1,2,3;
+    }   
+    let ddd1, ddd2, ddd3 = TestRetDDD();
+    print( ddd1@int + 1, ddd2@int + 1, ddd3@int + 1 );
+}

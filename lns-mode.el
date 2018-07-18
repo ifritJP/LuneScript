@@ -504,7 +504,9 @@ pattern は  {, }, {{, }} のいずれか。
 			(setq column (+ (current-column) 2)))
 		    (lns-indent-goto-no-space-bol)
 		    (setq column (+ (current-column) lns-indent-level))))
-	      (setq column (current-column))
+	      (if (equal start-block-flag "}")
+		  (setq column (current-column))
+		(setq column (+ 4 (current-column))))
 	      ))))
        (t
 	;; ブロック開始、終了でない場合、

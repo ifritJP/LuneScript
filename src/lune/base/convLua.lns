@@ -63,7 +63,7 @@ fn filter( node: TransUnit.Node, filter: convFilter,
 
 let stepIndent = 2;
 
-let builtInModuleSet = {};
+let builtInModuleSet:Map<str,bool> = {};
 builtInModuleSet[ "io" ] = true;
 builtInModuleSet[ "string" ] = true;
 builtInModuleSet[ "table" ] = true;
@@ -166,6 +166,12 @@ pub override fn convFilter.processRoot(
                 }
                 
 		let typeInfoList: TransUnit.TypeInfo[] = typeInfo.get_itemTypeInfoList();
+                if typeInfoList {
+		    foreach itemTypeInfo in typeInfoList {
+                        pickupTypeId( itemTypeInfo );
+		    }
+                }
+		typeInfoList = typeInfo.get_argTypeInfoList();
                 if typeInfoList {
 		    foreach itemTypeInfo in typeInfoList {
                         pickupTypeId( itemTypeInfo );
@@ -314,7 +320,7 @@ pub override fn convFilter.processRoot(
         {               
             self.write( "_typeInfoList[%d] = " (listIndex) );
             listIndex = listIndex + 1;
-            typeInfo.serialize( self );
+            typeInfo.serialize( self@TransUnit.OutStream );
         }
     }
     
@@ -414,18 +420,18 @@ pub override fn convFilter.processDeclClass(
                       baseIndent );
     }
     let hasConstrFlag = false;
-    let memberList: TransUnit.DeclMemberNode[] = {};
-    let fieldList: Map<str,int> = nodeInfo.get_fieldList();
+    let memberList: TransUnit.DeclMemberNode[] = [];
+    let fieldList: Node[] = nodeInfo.get_fieldList();
     let outerMethodSet: Map<str,bool> = nodeInfo.get_outerMethodSet();
     foreach field in fieldList {
         let ignoreFlag = false;
-        if field.kind == TransUnit.nodeKind.DeclConstr {
+        if field.$kind == TransUnit.nodeKind.DeclConstr {
             hasConstrFlag = true;
         }
-        if field.kind == TransUnit.nodeKind.DeclMember {
+        if field.$kind == TransUnit.nodeKind.DeclMember {
             table.insert( memberList, field );
         }
-        if field.kind == TransUnit.nodeKind.DeclMethod {
+        if field.$kind == TransUnit.nodeKind.DeclMethod {
             let methodNode = field@DeclMethodNode;
             let declInfo = methodNode.get_declInfo();
             let methodNameToken = declInfo.get_name();
@@ -448,16 +454,17 @@ pub override fn convFilter.processDeclClass(
         }
 
         self.writeln( ```
-            function %s.new( %s )
-            local obj = {}
-            setmetatable( obj, { __index = %s } )
-            if obj.__init then
-            obj:__init( %s )
-            end       
-            return obj
-            end         
-            function %s:__init( %s )
-            ``` ( className, argTxt, className, argTxt, className, argTxt ),
+function %s.new( %s )
+  local obj = {}
+  setmetatable( obj, { __index = %s } )
+  if obj.__init then
+    obj:__init( %s )
+  end        
+  return obj 
+ end         
+function %s:__init( %s ) 
+            ```
+            ( className, argTxt, className, argTxt, className, argTxt ),
                 baseIndent );
         foreach member in memberList {
             let memberName = member.$name.txt;
@@ -478,18 +485,18 @@ pub override fn convFilter.processDeclClass(
         if memberNode.get_getterMode() ~= "none" and autoFlag
         {       
             self.writeln( ```
-                function %s:%s()
-                return self.%s
-                end``` ( className, getterName, memberName ), baseIndent );
+function %s:%s()
+  return self.%s
+end``` ( className, getterName, memberName ), baseIndent );
         }
         let setterName = "set_" .. memberName;
         typeInfo = scope.getTypeInfo( setterName );
         if memberNode.get_setterMode() ~= "none" and autoFlag
         {       
             self.writeln( ```
-                function %s:%s()
-                return self.%s
-                end``` ( className, setterName, memberName ), baseIndent );
+function %s:%s()
+  return self.%s
+end``` ( className, setterName, memberName ), baseIndent );
         }
     }
 };
@@ -520,7 +527,7 @@ pub override fn convFilter.processDeclMacro(
 {
     if self.inMacro {
         let nodeInfo = node.get_declInfo();
-        let name:Parser.Token = nodeInfo.get_name();
+        let name = nodeInfo.get_name();
         
         self.write( "local function %s(" ( name.txt ) );
         '' self.write( "local function %s(" ( name.txt ) );
@@ -759,7 +766,7 @@ pub override fn convFilter.processDeclFunc(
     node: DeclFuncNode, parent: Node, baseIndent:int )
 {
     let declInfo = node.get_declInfo();
-    let nameToken:Parser.Token = declInfo.get_name();
+    let nameToken = declInfo.get_name();
     let name = nameToken and nameToken.txt or "";
     let letTxt = "";
     if declInfo.get_accessMode() ~= "global" and #name ~= 0 {
@@ -1219,7 +1226,7 @@ pub override fn convFilter.processLiteralSymbol(
 
 
 pub class MacroEvalImp extend TransUnit.MacroEval {
-    pub override fn eval( node: TransUnit.DeclMacroNode ): Map<str,stem>
+    pub override fn eval( node: TransUnit.DeclMacroNode ): form
     {   
         let oStream = new Util.memStream();
         let conv = new convFilter( "macro", oStream, false, true );
@@ -1232,7 +1239,7 @@ pub class MacroEvalImp extend TransUnit.MacroEval {
         if err {
             error( err );
         }
-        let mod: stem = chunk();
+        let mod = chunk()@form;
         if not mod {
             error( "macro load error" );
         }   
