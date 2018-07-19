@@ -40,10 +40,10 @@ fn createReserveInfo( luaMode: bool ) :
 	builtInSet[ "super" ] = true;
 	keywordSet[ "static" ] = true;
 	keywordSet[ "advertise" ] = true;
-	keywordSet[ "as" ] = true;
 	keywordSet[ "import" ] = true;
 	keywordSet[ "new" ] = true;
 	keywordSet[ "!" ] = true;
+	keywordSet[ "unwrap" ] = true;
 
 	typeSet[ "int" ] = true;
 	typeSet[ "real" ] = true;
@@ -77,7 +77,8 @@ fn createReserveInfo( luaMode: bool ) :
 }
 
 pub class Stream {
-    pub fn read( mode:str ): str;
+    pub fn read( mode:str ): str!;
+    ''pub fn read( mode:str ): str;
 }
 
 pub class TxtStream extend Stream {
@@ -92,7 +93,8 @@ pub class TxtStream extend Stream {
         }
         self.eof = false;
     }
-    pub override fn read( mode:str ): str {
+    pub override fn read( mode:str ): str! {
+    ''pub override fn read( mode:str ): str{
         if self.eof {
             return nil;
         }
@@ -172,7 +174,7 @@ pub class StreamParser extend Parser {
 	return self.streamName;
     }
 
-    pub static fn create( path: str, luaMode: bool ): StreamParser {
+    pub static fn create( path: str, luaMode: bool ): StreamParser! {
 	let stream = io.open( path, "r" )@Stream;
 
 	if not stream {
@@ -260,26 +262,24 @@ op1Set[ ',,,,' ] = true;
 
 
 pub static fn getKindTxt( kind: int ) : str {
-    return kind2Txt[ kind ];
+    return unwrap kind2Txt[ kind ];
 }
 
-pub static fn isOp2( ope: str ) : bool {
+pub static fn isOp2( ope: str ) : stem {
     return op2Set[ ope ];
 }
 
-pub static fn isOp1( ope: str ) : bool {
+pub static fn isOp1( ope: str ) : stem {
     return op1Set[ ope ];
 }
 
-fn StreamParser.parse() : Token[] {
-    fn readLine() : str {
+fn StreamParser.parse() : Token[]! {
+    fn readLine() : str! {
+    ''fn readLine() : str {
 	self.lineNo = self.lineNo + 1;
 	return self.stream.read( '*l' );
     }
-    let rawLine:str = readLine();
-    if not rawLine {
-	return nil;
-    }
+    let! rawLine = readLine() { return nil; };
 
     let list: Token[] = [];
     let startIndex = 1;
@@ -302,10 +302,7 @@ fn StreamParser.parse() : Token[] {
 	    }
 	    comment = comment .. rawLine.sub( searchIndex ) .. "\n";
 	    searchIndex = 1;
-	    rawLine = readLine();
-	    if not rawLine {
-		error( "illegal comment" );
-	    }
+	    unwrap! rawLine = readLine() { error( "illegal comment" ); };
 	}
     };
 
@@ -413,7 +410,7 @@ fn StreamParser.parse() : Token[] {
 			    let candidateList = self.multiCharDelimitMap[ delimit ];
 			    while candidateList {
 				let findFlag = false;
-				foreach candidate in candidateList {
+				foreach candidate in unwrap ( candidateList ) {
 				    if candidate == token.sub(
 					index, index + #candidate - 1 )
 				    {
@@ -579,7 +576,7 @@ fn StreamParser.parse() : Token[] {
     }
 }
 
-pub override fn StreamParser.getToken() : Token {
+pub override fn StreamParser.getToken() : Token! {
     if not self.lineTokenList {
 	return nil;
     }
@@ -587,10 +584,10 @@ pub override fn StreamParser.getToken() : Token {
 	self.pos = 1;
 	self.lineTokenList = [];
 	while #self.lineTokenList == 0 {
-	    self.lineTokenList = self.parse();
-	    if not self.lineTokenList {
-		return nil;
-	    }
+            let! workList = self.parse() {
+                return nil;
+            };               
+	    self.lineTokenList = workList;
 	}
     }
 
@@ -600,7 +597,7 @@ pub override fn StreamParser.getToken() : Token {
     return token;
 }
 
-let eofToken = new Token( kindEof, "", new Position( 0, 0 ) );
+let eofToken = new Token( kindEof, "<EOF>", new Position( 0, 0 ) );
 pub fn getEofToken(): Token {
    return eofToken;
 }

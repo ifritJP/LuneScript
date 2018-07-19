@@ -39,6 +39,11 @@ _luneScript = {}
 _luneScript.loadedMap = {}
 _luneScript.loadedMetaMap = {}
 
+function _luneScript.error( message ) 
+      Util.errorLog( message );
+      Util.debugLog()
+      os.exit( 1 );
+end
 
 function _luneScript.loadModule( module )
    if not _luneScript.loadedMap[ module ] then

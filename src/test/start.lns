@@ -180,3 +180,52 @@ print( (new GetTest2()).$val );
     let ddd1, ddd2, ddd3 = TestRetDDD();
     print( ddd1@int + 1, ddd2@int + 1, ddd3@int + 1 );
 }
+
+{
+    let nilableInt1: int! = nil;
+    let! unwrapInt1, unwrapInt2: int = nilableInt1, 456 {
+        unwrapInt1 = 123; unwrapInt2 = _unwrapInt2 or -456; };
+    print( unwrapInt1, unwrapInt2 );
+}
+
+{
+    let nilableInt1: int! = 567;
+    let! unwrapInt1, unwrapInt2: int = nilableInt1, 890 {
+        unwrapInt1 = 123; unwrapInt2 = 456; };
+    print( unwrapInt1, unwrapInt2 );
+}
+
+{
+    let nilableInt1: int! = nil;
+    let! unwrapInt1, unwrapInt2: int = nilableInt1, 890 {
+        unwrapInt1 = unwrap unwrapInt1 instead 123; unwrapInt2 = unwrap unwrapInt2; };
+    print( unwrapInt1, unwrapInt2 );
+    unwrap! unwrapInt1, unwrapInt2 = nilableInt1, nil {
+        unwrapInt1 = unwrap _exp1 instead 321; unwrapInt2 = 654; };
+    print( unwrapInt1, unwrapInt2 );
+}
+
+
+{
+    let nilableInt1: int! = nil;
+    if! nilableInt1 {
+        print( _exp, "not nil" );
+    }
+    else {
+        print( "nil" );
+    }
+}
+
+{
+    let nilableInt1: int! = 1;
+    if! nilableInt1 {
+        print( _exp, "not nil" );
+    }
+    else {
+        print( "nil" );
+    }
+}
+
+{
+    let test: int = nil;
+}

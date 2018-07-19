@@ -32,15 +32,15 @@
 		   "type" "unpack" "xpcall")))
   (defconst
     lns-keyword (lns-make-regex-or
-		 '("self" "let" "fn" "if" "elseif" "else" "while" "repeat" "for"
+		 '("self" "fn" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
-		   "nil" "true" "switch" "case" "default" "\!" "extend" "proto"
-		   "override" "macro"
+		   "nil" "true" "switch" "case" "default" "extend" "proto"
+		   "override" "macro" "let" "unwrap" "if"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
-				      '("let" "if" "elseif" "else" "while"
+				      '("let" "let\!" "let\*" "if" "elseif" "else" "while"
 					"repeat" "for" "apply" "foreach" "forsort"
 					"class" "pub" "pro" "pri" "form" "advertise"
 					"switch" "proto" "case"
@@ -55,7 +55,9 @@
 (defvar lns-font-lock-keywords
   `((,lns-builtin . font-lock-builtin-face)
     (,lns-keyword . font-lock-keyword-face)
-    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|#" . font-lock-warning-face)
+    ("\\<_exp\\>" . font-lock-warning-face)
+    ;;("\\<let\\|unwrap\\|if\\>" . font-lock-keyword-face)
+    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|#\\|\\!" . font-lock-warning-face)
     (,lns-type . font-lock-type-face)
     ;; (":\\s-*\\(\\w+\\)" . (1 font-lock-type-face nil t))
     (,(format "\\(%s\\)\\s-*\\(\\w+\\)"

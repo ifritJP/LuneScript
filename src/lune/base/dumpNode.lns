@@ -94,6 +94,31 @@ pub override fn dumpFilter.processExpMacroStat(
         filter( node, self, prefix .. "  ", depth + 1 );
     }
 };
+
+
+pub override fn dumpFilter.processUnwrapSet( 
+    node: UnwrapSetNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
+    filter( node.$dstExpList, self, prefix .. "  ", depth + 1 );
+    filter( node.$srcExpList, self, prefix .. "  ", depth + 1 );
+
+    if node.$unwrapBlock {
+        filter( unwrap node.$unwrapBlock, self, prefix .. "  ", depth + 1 );
+    }
+}
+
+pub override fn dumpFilter.processIfUnwrap( 
+    node: IfUnwrapNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
+    filter( node.$exp, self, prefix .. "  ", depth + 1 );
+    filter( node.$block, self, prefix .. "  ", depth + 1 );
+    if node.$nilBlock {
+        filter( unwrap node.$nilBlock, self, prefix .. "  ", depth + 1 );
+    }
+}
+
 pub override fn dumpFilter.processDeclVar( 
     node: DeclVarNode, prefix: str, depth: int )
 {
@@ -104,7 +129,10 @@ pub override fn dumpFilter.processDeclVar(
         }
 	varName = "%s %s" (varName, var.get_name().txt );
     }
-    dump( prefix, depth, node, node.get_unwrap() and "! " or " " .. varName );
+    if node.$unwrapBlock {
+        varName = "!" .. varName;
+    }
+    dump( prefix, depth, node, varName );
     foreach var, index in node.get_varList() {
         if var.$refType {
             filter(
@@ -114,8 +142,8 @@ pub override fn dumpFilter.processDeclVar(
     if node.get_expList() {
 	filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
     }
-    if node.get_unwrap() {
-	filter( node.get_unwrap(), self, prefix .. "  ", depth + 1 );
+    if node.$unwrapBlock {
+	filter( unwrap node.$unwrapBlock, self, prefix .. "  ", depth + 1 );
     }
 };  
 pub override fn dumpFilter.processDeclArg( 
@@ -138,8 +166,11 @@ pub override fn dumpFilter.processExpDDD(
 fn dumpFilter.processDeclFuncInfo(
     node: TransUnit.Node, declInfo: TransUnit.DeclFuncInfo, prefix: str, depth: int )
 {
-    let name = declInfo.get_name();
-    dump( prefix, depth, node, name and name.txt or "<anonymous>" );
+    let name = "<anonymous>";
+    if! declInfo.get_name() {
+        name = _exp.txt;
+    }
+    dump( prefix, depth, node, name );
     let argList = declInfo.get_argList();
     foreach arg, index in argList {
 	filter( arg, self, prefix .. "  ", depth + 1 );
@@ -200,7 +231,9 @@ pub override fn dumpFilter.processSwitch(
         filter( caseInfo.$expList, self, prefix .. "  ", depth + 1 );
         filter( caseInfo.$block, self, prefix .. "  ", depth + 1 );
     }
-    filter( node.get_default(), self, prefix .. "  ", depth + 1 );
+    if! node.get_default() {
+        filter( _exp, self, prefix .. "  ", depth + 1 );
+    }
 };
 pub override fn dumpFilter.processWhile( 
     node: WhileNode, prefix: str, depth: int )
@@ -222,8 +255,8 @@ pub override fn dumpFilter.processFor(
     dump( prefix, depth, node, node.get_val().txt );
     filter( node.get_init(), self, prefix .. "  ", depth + 1 );
     filter( node.get_to(), self, prefix .. "  ", depth + 1 );
-    if node.get_delta() {
-	filter( node.get_delta(), self, prefix .. "  ", depth + 1 );
+    if! node.get_delta() {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }	
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
@@ -242,7 +275,10 @@ pub override fn dumpFilter.processApply(
 pub override fn dumpFilter.processForeach( 
     node: ForeachNode, prefix: str, depth: int )
 {
-    let index = node.get_key() and node.get_key().txt or "";
+    let index = "";
+    if! node.get_key() {
+        index = _exp.txt;
+    }
     dump( prefix, depth, node, node.get_val().txt .. " " .. index );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
@@ -250,18 +286,32 @@ pub override fn dumpFilter.processForeach(
 pub override fn dumpFilter.processForsort( 
     node: ForsortNode, prefix: str, depth: int )
 {
-    let index = node.get_key() and node.get_key().txt or "";
+    let index = "";
+    if! node.get_key() {
+        index = _exp.txt;
+    }
     dump( prefix, depth, node, node.get_val().txt .. " " .. index );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
-};  
+};
+
+pub override fn dumpFilter.processExpUnwrap(
+    node: ExpUnwrapNode, prefix: str, depth: int )
+{
+    dump( prefix, depth, node, "" );
+    filter( node.$exp, self, prefix .. "  ", depth + 1 );
+    if! node.$instead {
+        filter( _exp, self, prefix .. "  ", depth + 1 );
+    }
+}
+
 pub override fn dumpFilter.processExpCall( 
     node: ExpCallNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     filter( node.get_func(), self, prefix .. "  ", depth + 1 );
-    if node.get_argList() {
-	filter( node.get_argList(), self, prefix .. "  ", depth + 1 );
+    if! node.get_argList() {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }	
 };  
 pub override fn dumpFilter.processExpList( 
@@ -341,8 +391,8 @@ pub override fn dumpFilter.processReturn(
 
 {
     dump( prefix, depth, node, "" );
-    if node.get_expList() {
-        filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
+    if! node.get_expList() {
+        filter( _exp, self, prefix .. "  ", depth + 1 );
     }
 };  
 pub override fn dumpFilter.processLiteralList( 
