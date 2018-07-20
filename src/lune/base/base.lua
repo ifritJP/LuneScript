@@ -3,10 +3,10 @@ local convLua = require( 'lune.base.convLua' )
 local TransUnit = require( 'lune.base.TransUnit' ).TransUnit
 local Util = require( 'lune.base.Util' );
 
-
 local scriptPath = arg[ 1 ]
 local mode = arg[ 2 ]
 local validProf = arg[ 3 ]
+local outputMetaFlag = true
 
 function _luneGetLocal( varName )
    local index = 1
@@ -24,9 +24,22 @@ function _luneGetLocal( varName )
    error( "not found -- " .. varName )
 end
 
-function _fcall( func, ... )
-   return func( ... )
+function _luneSym2Str( val )
+   if not val then
+      return nil
+   end
+
+   if type( val ) ~= "table" then
+      return string.format( "%s", val )
+   end
+
+   local txt = ""
+   for key, val in pairs( val ) do
+      txt = txt .. val
+   end
+   return txt
 end
+
 
 local function createStream( val, writeFunc )
    local stream = { val = val }
@@ -77,7 +90,7 @@ end
 
 
 local function newTransUnit()
-   return TransUnit.new( convLua.MacroEvalImp.new() )
+   return TransUnit.new( convLua.MacroEvalImp.new( mode ) )
 end
 
 local function createAst( path, module )
@@ -89,28 +102,15 @@ local function getNode( ast )
    return ast.node
 end
 
-local function convert( ast, streamName, stream, exeFlag, inMacro, moduleTypeInfo )
-   if convLua.Filter then
-      local conv = convLua.Filter.new(
-	 streamName, stream, exeFlag, inMacro, moduleTypeInfo );
-      -- for key, val in pairs( ast ) do
-      -- 	 Util.errorLog( string.format( "%s %s", key, val ) )
-      -- end
-      if ast.node.filterObj then
-	 ast.node:filterObj( conv, nil, 0 )
-      else
-	 ast.node:filter( conv, nil, 0 )
-      end
-   else
-      local conv = convLua.convFilter.new(
-	 streamName, stream, exeFlag, inMacro, moduleTypeInfo )
-      getNode( ast ):processFilter( conv, nil, 0 )
-   end
+local function convert( ast, streamName, stream, convMode, inMacro, moduleTypeInfo )
+   local conv = convLua.convFilter.new(
+      streamName, stream, convMode, inMacro, moduleTypeInfo )
+   getNode( ast ):processFilter( conv, nil, 0 )
 end
 
 function _luneScript.loadFile( path, module )
 
-   Util.errorLog( "loadFile " .. path )
+   Util.errorLog( "loadFile " .. path .. " " .. mode )
    
    local ast = createAst( path, module )
    
@@ -118,7 +118,8 @@ function _luneScript.loadFile( path, module )
       self.val = self.val .. txt
    end
    local stream = createStream( "", func )
-   convert( ast, path, stream, true, nil, ast.moduleTypeInfo )
+
+   convert( ast, path, stream, "exe", nil, ast.moduleTypeInfo )
 
    local chunk, err = load( stream.val )
    if err then
@@ -152,11 +153,10 @@ else
 	    local dumpNode = require( 'lune.base.dumpNode' ).dumpFilter;
 	    getNode( ast ):processFilter( dumpNode, "", 0 )
 	 end, scriptPath .. ".profi" )
-   elseif mode == "lua" then
+   elseif mode == "lua" or mode == "LUA" then
       local ast = createAst( scriptPath, module )
-      convert( ast, scriptPath, io.stdout )
-   elseif mode == "save" then
-
+      convert( ast, scriptPath, io.stdout, mode )
+   elseif mode == "save" or mode == "SAVE" then
       Util.profile(
 	 validProf,
       	 function()
@@ -168,7 +168,7 @@ else
 	    if luaPath ~= scriptPath then
 	       local fileObj = io.open( luaPath, "w" )
 	       local stream = createStream( fileObj, func )
-	       convert( ast, scriptPath, stream )
+	       convert( ast, scriptPath, stream, mode )
 	       fileObj:close()
 	    end
       	 end, scriptPath .. ".profi" )

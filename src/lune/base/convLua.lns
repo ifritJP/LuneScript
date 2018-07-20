@@ -1,5 +1,28 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 import lune.base.TransUnit;
-import lune.base.Parser;
 import lune.base.Util;
 
 class VerInfo {
@@ -17,31 +40,32 @@ pub class convFilter extend TransUnit.Filter {
     pri let streamName: str;
     pri let stream: Util.outStream;
     pri let moduleName2Info: Map<str,stem>;
-    pri let exeFlag: bool;
+    pri let convMode: str;
     pri let inMacro: bool;
     pri let indent: int;
     pri let curLineNo: int;
-    '' クラス名 → TypeInfo
+    // クラス名 → TypeInfo
     pri let className2Scope: Map<str,TransUnit.Scope>;
     pri let className2TypeInfo: Map<str,TransUnit.TypeInfo>;
-    '' クラス名 → Member Node List
+    // クラス名 → Member Node List
     pri let className2MemberList: Map<str,TransUnit.DeclMemberNode[]>;
-    '' public 変数名 → 変数情報
+    // public 変数名 → 変数情報
     pri let pubVarName2InfoMap: Map<str,VerInfo>;
-    '' public 関数名 → 関数情報
+    // public 関数名 → 関数情報
     pri let pubFuncName2InfoMap: Map<str,FuncInfo>;
     pri let needIndent: bool;
     pri let macroDepth: int;
     pri let moduleTypeInfo: TransUnit.TypeInfo;
     
     fn __init( streamName: str, stream: Util.outStream,
-               exeFlag: bool, inMacro: bool, moduleTypeInfo: TransUnit.TypeInfo )
+               convMode: str, inMacro: bool, moduleTypeInfo: TransUnit.TypeInfo )
     {
+        //Util.errorLog( "__init: %s" (mode) );
         self.macroDepth = 0;
         self.streamName = streamName;
         self.stream = stream;
         self.moduleName2Info = {};
-        self.exeFlag = exeFlag;
+        self.convMode = convMode;
         self.inMacro = inMacro;
         self.indent = 0;
         self.curLineNo = 1;
@@ -104,10 +128,10 @@ pub override fn convFilter.processImport(
 {
     let module = node.get_modulePath();
     let moduleName = string.gsub( module, ".*%.", "" );
-    ''let moduleInfo = require( module );
+    //let moduleInfo = require( module );
     let moduleInfo = true;
     self.moduleName2Info[ moduleName ] = moduleInfo;
-    if self.exeFlag {
+    if self.convMode == "exe" or self.convMode == "ast"  {
         self.writeln(
             "local %s = _luneScript.loadModule( '%s' )" ( moduleName, module),
             baseIndent );
@@ -118,28 +142,21 @@ pub override fn convFilter.processImport(
     }
 };
 
-pub override fn convFilter.processRoot( 
-    node: RootNode, parent: Node, baseIndent:int )
+fn convFilter.outputMeta( node: RootNode, baseIndent: int )
 {
-    self.writeln( "--%s" ( self.streamName ), baseIndent );
-    self.writeln( "local moduleObj = {}", baseIndent );
-
-    let children:TransUnit.Node[] = node.get_children();
-
-    let typeId2ClassMap = node.get_typeId2ClassMap();
-
-    foreach child in children {
-        filter( child, self, node, baseIndent );
-        self.writeln( "", baseIndent );
+    switch self.convMode {
+        case "lua", "save" {
+            return;
+        }
     }
-
+    
     self.writeln( "----- meta -----", baseIndent );
 
     let typeId2TypeInfo: Map<int,TransUnit.TypeInfo> = {};
     let typeId2UseFlag: Map<int,bool> = {};
     let pickupClassMap: Map<str,TransUnit.NamespaceInfo> = {};
 
-    '' 公開される型情報を typeId2TypeInfo にピックアップする
+    // 公開される型情報を typeId2TypeInfo にピックアップする
     fn pickupTypeId( typeInfo: TransUnit.TypeInfo, forceFlag: bool ) {
         if typeInfo {
             if typeInfo.get_typeId() == TransUnit.rootTypeId {
@@ -154,33 +171,33 @@ pub override fn convFilter.processRoot(
             
             typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
 	    if typeInfo.get_nilable() {
-		pickupTypeId( typeInfo.get_orgTypeInfo() );
+		pickupTypeId( typeInfo.get_orgTypeInfo(), true );
 	    }
 	    else {
                 let parentInfo = typeInfo.get_parentInfo();
-                pickupTypeId( parentInfo );
+                pickupTypeId( parentInfo, true );
 
                 let baseInfo = typeInfo.get_baseTypeInfo();
                 if baseInfo.$typeId ~= TransUnit.rootTypeId {
-                    pickupTypeId( baseInfo );
+                    pickupTypeId( baseInfo, true );
                 }
                 
 		let typeInfoList: TransUnit.TypeInfo[] = typeInfo.get_itemTypeInfoList();
                 if typeInfoList {
 		    foreach itemTypeInfo in typeInfoList {
-                        pickupTypeId( itemTypeInfo );
+                        pickupTypeId( itemTypeInfo, true );
 		    }
                 }
 		typeInfoList = typeInfo.get_argTypeInfoList();
                 if typeInfoList {
 		    foreach itemTypeInfo in typeInfoList {
-                        pickupTypeId( itemTypeInfo );
+                        pickupTypeId( itemTypeInfo, true );
 		    }
                 }
 		typeInfoList = typeInfo.get_retTypeInfoList();
                 if typeInfoList {
 		    foreach itemTypeInfo in typeInfoList {
-                        pickupTypeId( itemTypeInfo );
+                        pickupTypeId( itemTypeInfo, true );
 		    }
                 }
 		typeInfoList = typeInfo.get_children();
@@ -190,18 +207,19 @@ pub override fn convFilter.processRoot(
                             itemTypeInfo.get_kind() == TransUnit.TypeInfoKindFunc or
                             itemTypeInfo.get_kind() == TransUnit.TypeInfoKindMethod
                         {                       
-                            pickupTypeId( itemTypeInfo );
+                            pickupTypeId( itemTypeInfo, true );
                         }
 		    }
                 }
 
-                pickupTypeId( typeInfo.get_nilableTypeInfo() );
+                pickupTypeId( typeInfo.get_nilableTypeInfo(), true );
 	    }
         }
     }
 
 
 
+    let typeId2ClassMap = node.get_typeId2ClassMap();
     foreach namespaceInfo in typeId2ClassMap {
         if namespaceInfo.typeInfo.get_accessMode() == "pub" {
             pickupClassMap[ namespaceInfo.name ] = namespaceInfo;
@@ -331,7 +349,22 @@ pub override fn convFilter.processRoot(
     }
 
     self.writeln( "----- meta -----", baseIndent );
+}
 
+pub override fn convFilter.processRoot( 
+    node: RootNode, parent: Node, baseIndent:int )
+{
+    self.writeln( "--%s" ( self.streamName ), baseIndent );
+    self.writeln( "local moduleObj = {}", baseIndent );
+
+    let children:TransUnit.Node[] = node.get_children();
+
+    foreach child in children {
+        filter( child, self, node, baseIndent );
+        self.writeln( "", baseIndent );
+    }
+
+    self.outputMeta( node, baseIndent );
 
     self.writeln( "return moduleObj", baseIndent );
 };
@@ -376,7 +409,7 @@ pub override fn convFilter.processBlock(
     elseif node.get_blockKind() == "macro" {
         word = "";
     }
-    elseif node.get_blockKind() == "let!" {
+     elseif node.get_blockKind() == "let!" {
         word = "";
     }
     elseif node.get_blockKind() == "if!" {
@@ -437,7 +470,7 @@ pub override fn convFilter.processDeclClass(
             hasConstrFlag = true;
         }
         if field.$kind == TransUnit.nodeKind.DeclMember {
-            table.insert( memberList, field );
+            memberList.insert( field@DeclMemberNode );
         }
         if field.$kind == TransUnit.nodeKind.DeclMethod {
             let methodNode = field@DeclMethodNode;
@@ -482,7 +515,7 @@ function %s:__init( %s )
         self.writeln( 'end', baseIndent );
     }
 
-    '' accessor
+    // accessor
     let scope = nodeInfo.get_scope();
     foreach memberNode in nodeInfo.get_memberList() {
         let memberNameToken = memberNode.get_name();
@@ -503,9 +536,9 @@ end``` ( className, getterName, memberName ), baseIndent );
         if memberNode.get_setterMode() ~= "none" and autoFlag
         {       
             self.writeln( ```
-function %s:%s()
-  return self.%s
-end``` ( className, setterName, memberName ), baseIndent );
+function %s:%s( %s )
+  self.%s = %s
+end``` ( className, setterName, memberName, memberName, memberName ), baseIndent );
         }
     }
 };
@@ -513,8 +546,8 @@ end``` ( className, setterName, memberName ), baseIndent );
 pub override fn convFilter.processDeclMember( 
     node: DeclMemberNode, parent: Node, baseIndent:int )
 {
-    '' dump( baseIndent, node, node.info.name.txt )
-    '' node.info.refType.filter( self, prefix .. "  ", depth + 1 )
+    // dump( baseIndent, node, node.info.name.txt )
+    // node.info.refType.filter( self, prefix .. "  ", depth + 1 )
 };
 
 
@@ -539,7 +572,7 @@ pub override fn convFilter.processDeclMacro(
         let name = nodeInfo.get_name();
         
         self.write( "local function %s(" ( name.txt ) );
-        '' self.write( "local function %s(" ( name.txt ) );
+        // self.write( "local function %s(" ( name.txt ) );
 
         let argTxt = "";
         foreach arg, index in nodeInfo.get_argList() {
@@ -594,8 +627,8 @@ pub override fn convFilter.processExpNew(
 {
     filter( node.get_symbol(),  self, node, baseIndent );
     self.write( ".new(" );
-    if node.get_argList() {
-        filter( node.get_argList(),  self, node, baseIndent );
+    if! node.get_argList() {
+        filter( _exp,  self, node, baseIndent );
     }
     self.write( ")" );
 };
@@ -635,14 +668,16 @@ pub override fn convFilter.processDeclConstr(
     self.writeln( "end", baseIndent );
 
 
-    '' foreach refType, index in declInfo.retTypeList {
-    ''    if index > 1 {
-    ''   self.write( ", " )
-    ''    }
-    ''filter( ''    refType,  self, node, baseIndent )
-    '' }
+    // foreach refType, index in declInfo.retTypeList {
+    //    if index > 1 {
+    //   self.write( ", " )
+    //    }
+    //filter( //    refType,  self, node, baseIndent )
+    // }
     self.write( string.format( "function %s:__init(%s) ", className, argTxt ) );
-    filter( declInfo.get_body(),  self, node, baseIndent );
+    if! declInfo.get_body() {
+        filter( _exp,  self, node, baseIndent );
+    }
     self.writeln( "end", baseIndent );
 };
 
@@ -682,13 +717,15 @@ pub override fn convFilter.processDeclMethod(
         filter( arg, self, node, baseIndent );
     }
     self.write( " )", baseIndent );
-    '' foreach refType, index in declInfo.retTypeList {
-    ''    if index > 1 {
-    ''   self.write( ", " )
-    ''    }
-    ''filter( ''    refType,  self, node, baseIndent )
-    '' }
-    filter( declInfo.get_body(), self, node, baseIndent );
+    // foreach refType, index in declInfo.retTypeList {
+    //    if index > 1 {
+    //   self.write( ", " )
+    //    }
+    //filter( //    refType,  self, node, baseIndent )
+    // }
+    if !declInfo.get_body() {
+        filter( _exp, self, node, baseIndent );
+    }
     self.writeln( "end", baseIndent );
 };
 
@@ -747,7 +784,16 @@ pub override fn convFilter.processIfUnwrap(
 pub override fn convFilter.processDeclVar( 
     node: DeclVarNode, parent: Node, baseIndent:int )
 {
-    if node.get_accessMode() ~= "global" {
+    if node.$syncBlock {
+        self.writeln( "do", baseIndent + stepIndent );
+        foreach varInfo in node.$syncVarList {
+            self.writeln( "local _sync_%s" (varInfo.$name.txt),
+                          baseIndent + stepIndent );
+        }
+        self.writeln( "do", baseIndent + stepIndent * 2 );
+    }
+
+    if node.$mode ~= "unwrap" and node.get_accessMode() ~= "global" {
         self.write( "local " );
     }
 
@@ -760,13 +806,15 @@ pub override fn convFilter.processDeclVar(
         self.write( var.$name.txt );
     }
 
-    if node.get_expList() {
+    if! node.get_expList() {
         self.write( " = " );
-        filter( node.get_expList(), self, node, baseIndent );
+        filter( _exp, self, node, baseIndent );
     }
 
-    if node.$unwrapBlock {
-	self.writeln( "", baseIndent );
+    self.writeln( "", baseIndent );
+
+    if! node.$unwrapBlock {
+	self.writeln( "", baseIndent + stepIndent * 2 );
 	self.write( "if " );
 	foreach var, index in varList {
             if index > 1 {
@@ -774,18 +822,39 @@ pub override fn convFilter.processDeclVar(
             }   
 	    self.write( " not " .. var.$name.txt );
 	}
-	self.writeln( " then", baseIndent );
+	self.writeln( " then", baseIndent + stepIndent * 3 );
 
         foreach var, index in varList  {
             self.writeln( "local _%s = %s" (var.$name.txt, var.$name.txt ),
+                          baseIndent + stepIndent * 3 );
+        }
+
+	filter( _exp, self, node, baseIndent + stepIndent * 2 );
+
+        if! node.$thenBlock {
+            self.writeln( "else", baseIndent + stepIndent * 3 );
+	    filter( _exp, self, node, baseIndent + stepIndent * 3);
+        }   
+        
+	self.writeln( "end", baseIndent + stepIndent * 1 );
+    }
+
+    if! node.$syncBlock {
+	filter( _exp, self, node, baseIndent + stepIndent * 1);
+
+        foreach varInfo in node.$syncVarList {
+            self.writeln( "_sync_%s = %s" (varInfo.$name.txt, varInfo.$name.txt),
                           baseIndent + stepIndent );
         }
+        self.writeln( "end", baseIndent + stepIndent );
         
-        if node.$unwrapBlock {
-	    filter( unwrap node.$unwrapBlock, self, node, baseIndent );
+        foreach varInfo in node.$syncVarList {
+            self.writeln( "%s = _sync_%s" (varInfo.$name.txt, varInfo.$name.txt),
+                          baseIndent + stepIndent );
         }
-	self.writeln( "end", baseIndent );
+        self.writeln( "end", baseIndent );
     }
+    
 
     if node.get_accessMode() == "pub" {
         self.writeln( "", baseIndent );
@@ -816,7 +885,7 @@ pub override fn convFilter.processDeclArg(
 {
     self.write( string.format( "%s", node.get_name().txt ) );
 
-    '' filter( '' node.info.argType,  self, node, baseIndent )
+    // filter( // node.info.argType,  self, node, baseIndent )
 };
 
 pub override fn convFilter.processDeclArgDDD( 
@@ -854,16 +923,18 @@ pub override fn convFilter.processDeclFunc(
         filter( arg, self, node, baseIndent );
     }
     self.write( " )", baseIndent );
-    '' foreach refType, index in declInfo.get_retTypeList() {
-    ''    if index > 1 {
-    ''   self.write( ", " )
-    ''    }
-    ''filter( ''    refType,  self, node, baseIndent )
-    '' }
-    filter( declInfo.get_body(),  self, node, baseIndent );
+    // foreach refType, index in declInfo.get_retTypeList() {
+    //    if index > 1 {
+    //   self.write( ", " )
+    //    }
+    //filter( //    refType,  self, node, baseIndent )
+    // }
+    if! declInfo.get_body() { 
+        filter( _exp,  self, node, baseIndent );
+    }
     self.writeln( "end", baseIndent );
 
-    ''if declInfo.get_accessMode() == "pub" {
+    //if declInfo.get_accessMode() == "pub" {
     let expType: TransUnit.TypeInfo = node.get_expType();
     if expType.get_accessMode() == "pub" {
         self.write( "moduleObj.%s = %s" ( name, name ) );
@@ -1055,7 +1126,7 @@ pub override fn convFilter.processExpUnwrap(
 {
     filter( node.$exp,  self, node );
     self.write( " or " );
-    if! node.$instead {
+    if! node.$default {
         filter( _exp, self, node );
     }
     else {
@@ -1067,9 +1138,28 @@ pub override fn convFilter.processExpUnwrap(
 pub override fn convFilter.processExpCall( 
     node: ExpCallNode, parent: Node, baseIndent:int )
 {
-    filter( node.$func, self, node, baseIndent );
-    self.write( "( " );
+    let wroteFuncFlag = false;
+    if node.$func.$kind == TransUnit.nodeKind.RefField {
+        let refField = node.$func@TransUnit.RefFieldNode;
+        if refField.$prefix.$expType.$kind == TransUnit.TypeInfoKindList {
+            wroteFuncFlag = true;
+            self.write( "table.%s( " (refField.$field.txt ) );
+            filter( refField.$prefix, self, refField, baseIndent );
+        }
+    }
+
+    if not wroteFuncFlag {
+        filter( node.$func, self, node, baseIndent );
+        self.write( "( " );
+    }
+
+    
     if! node.$argList {
+        if wroteFuncFlag {
+            if #_exp.$expList > 0 {
+                self.write( ", " );
+            }
+        }
         filter( _exp,  self, node, baseIndent );
     }
     self.write( " )" );
@@ -1080,7 +1170,7 @@ pub override fn convFilter.processExpList(
     node: ExpListNode, parent: Node, baseIndent:int )
 {
     let expList = node.get_expList();
-    ''let expList = node.$expList;
+    //let expList = node.$expList;
     foreach exp, index in expList {
         if index > 1 {
             self.write( ", " );
@@ -1094,8 +1184,21 @@ pub override fn convFilter.processExpOp1(
     node: ExpOp1Node, parent: Node, baseIndent:int )
 {
     let op = node.$op.txt;
-    if op == ",,," or op == ",,,," {
+    // if op == ",,," or op == ",,,," {
+    //     filter( node.$exp,  self, node, baseIndent );
+    // }
+    if op == ",,," {
         filter( node.$exp,  self, node, baseIndent );
+    }
+    elseif op == ",,,," {
+        if node.$macroMode == "expand" {
+            filter( node.$exp,  self, node, baseIndent );
+        }
+        else {
+            self.write( "_luneSym2Str( " );
+            filter( node.$exp,  self, node, baseIndent );
+            self.write( " )" );
+        }
     }
     elseif op == ",," {
         self.write( "_luneGetLocal( " );
@@ -1114,8 +1217,14 @@ pub override fn convFilter.processExpOp1(
 pub override fn convFilter.processExpCast( 
     node: ExpCastNode, parent: Node, baseIndent:int )
 {
-    filter( node.$exp,  self, node, baseIndent );
-    ''filter( '' node.$info.castType,  self, node, baseIndent )
+    if node.$expType == TransUnit.builtinTypeInt {
+        self.write( "math.floor(" );
+        filter( node.$exp,  self, node, baseIndent );
+        self.write( ")" );
+    }
+    else {
+        filter( node.$exp,  self, node, baseIndent );
+    }
 };
 
 
@@ -1130,11 +1239,21 @@ pub override fn convFilter.processExpParen(
 pub override fn convFilter.processExpOp2( 
     node: ExpOp2Node, parent: Node, baseIndent:int )
 {
+    let intCast = false;
+    if node.$expType == TransUnit.builtinTypeInt and node.$op.txt == "/" {
+        intCast = true;
+        self.write( "math.floor(" );
+    }
+    
     filter( node.$exp1,  self, node, baseIndent );
 
     self.write( " " .. node.$op.txt .. " " );
 
     filter( node.$exp2,  self, node, baseIndent );
+
+    if intCast {
+        self.write( ")" );
+    }
 };
 
 pub override fn convFilter.processExpRef( 
@@ -1164,7 +1283,9 @@ pub override fn convFilter.processExpRefItem(
 pub override fn convFilter.processRefField( 
     node: RefFieldNode, parent: Node, baseIndent:int )
 {
-    filter( node.get_prefix(),  self, node, baseIndent );
+    let prefix = node.get_prefix();
+
+    filter( prefix,  self, node, baseIndent );
     let delimit = ".";
     if parent.$kind == TransUnit.nodeKind.ExpCall {
         if node.get_expType().get_kind() == TransUnit.TypeInfoKindMethod {
@@ -1212,8 +1333,8 @@ pub override fn convFilter.processLiteralList(
 {
     self.write( "{" );
 
-    if node.$expList {
-        filter( node.$expList, self, node, baseIndent );
+    if! node.$expList {
+        filter( _exp, self, node, baseIndent );
     }
 
     self.write( "}" );
@@ -1244,8 +1365,8 @@ pub override fn convFilter.processLiteralArray(
 {
     self.write( "{" );
 
-    if node.$expList {
-        filter( node.$expList, self, node, baseIndent );
+    if! node.$expList {
+        filter( _exp, self, node, baseIndent );
     }
 
     self.write( "}" );
@@ -1320,14 +1441,16 @@ pub override fn convFilter.processLiteralSymbol(
 
 
 pub class MacroEvalImp extend TransUnit.MacroEval {
+    pri let mode: str;
+
     pub override fn eval( node: TransUnit.DeclMacroNode ): form
     {   
         let oStream = new Util.memStream();
-        let conv = new convFilter( "macro", oStream, false, true );
+        let conv = new convFilter( "macro", oStream, "exe", true );
 
-        conv.processDeclMacro( node, nil, 0 );
+        conv.processDeclMacro( node, node, 0 );
 
-        ''Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
+        // Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
         
         let chunk, err = load( oStream.get_txt() );
         if err {

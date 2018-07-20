@@ -34,7 +34,7 @@
     lns-keyword (lns-make-regex-or
 		 '("self" "fn" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
-		   "nil" "true" "switch" "case" "default" "extend" "proto"
+		   "nil" "null" "true" "switch" "case" "default" "extend" "proto"
 		   "override" "macro" "let" "unwrap" "if"
 		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
@@ -110,9 +110,12 @@
 
 
 (defvar lns-font-lock-syntactic-keywords
-  `(("'''" 0 (14 . 41) nil t) ;;; comment
-    ("''" 0 (11 . 40) nil t) ;;; comment
-    ("\n" 0 (12 . 40) nil t) ;;; comment
+  `(
+    ;;("'''" 0 (14 . 41) nil t) ;;; comment
+    ;;("''" 0 (11 . 40) nil t) ;;; comment
+    ;;("\n" 0 (12 . 40) nil t) ;;; comment
+
+    
     ;;("''" 0 (12 . 41) nil t) ;;; comment
     ;; ("```" 0 (7 . 41) nil t) ;;; string
     ("\\(```\\)"
@@ -137,6 +140,11 @@
     (modify-syntax-entry ?\t " ")
     ;;(modify-syntax-entry ?? ".")
     (modify-syntax-entry ?\" ".")
+
+    ;; /* */ //
+    (modify-syntax-entry ?/ ". 124")
+    (modify-syntax-entry ?\* ". 23b")
+    (modify-syntax-entry ?\n ">")
     (syntax-table))
   "`lns-mode' syntax table.")
 
@@ -166,7 +174,7 @@
          (comment-use-syntax . t)
          (comment-use-global-state . t)
 	 (indent-tabs-mode . nil)
-	 (comment-start . "''")
+	 (comment-start . "//")
 	 (imenu-generic-expression . ,lns-imenu-generic-expression)
          ))
   )
@@ -371,7 +379,9 @@ pattern は  {, }, {{, }} のいずれか。
 	  )))
     (when pos
       (goto-char pos))
-    pos
+    (if (eq pos 0)
+	nil
+      pos)
     ))
 
 (defun lns-re-search-forward-eol (pattern)

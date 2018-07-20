@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 import lune.base.TransUnit;
 import lune.base.Parser;
 
@@ -132,18 +156,30 @@ pub override fn dumpFilter.processDeclVar(
     if node.$unwrapBlock {
         varName = "!" .. varName;
     }
+    varName = "%s %s" ( node.$mode, varName );
+    
     dump( prefix, depth, node, varName );
     foreach var, index in node.get_varList() {
-        if var.$refType {
-            filter(
-                var.$refType, self, prefix .. "  ", depth + 1 );
+        if! var.$refType {
+            filter( _exp, self, prefix .. "  ", depth + 1 );
         }
     }
-    if node.get_expList() {
-	filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
+    if! node.get_expList() {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }
-    if node.$unwrapBlock {
-	filter( unwrap node.$unwrapBlock, self, prefix .. "  ", depth + 1 );
+    if! node.$unwrapBlock {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
+    }
+    if! node.$thenBlock {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
+    }
+    foreach var in node.$syncVarList {
+        if! var.$refType {
+            filter( _exp, self, prefix .. "  ", depth + 1 );
+        }
+    }
+    if! node.$syncBlock {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }
 };  
 pub override fn dumpFilter.processDeclArg( 
@@ -175,8 +211,8 @@ fn dumpFilter.processDeclFuncInfo(
     foreach arg, index in argList {
 	filter( arg, self, prefix .. "  ", depth + 1 );
     }
-    if declInfo.get_body() {
-	filter( declInfo.get_body(), self, prefix .. "  ", depth + 1 );
+    if! declInfo.get_body() {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }
 }
 pub override fn dumpFilter.processDeclFunc( 
@@ -300,7 +336,7 @@ pub override fn dumpFilter.processExpUnwrap(
 {
     dump( prefix, depth, node, "" );
     filter( node.$exp, self, prefix .. "  ", depth + 1 );
-    if! node.$instead {
+    if! node.$default {
         filter( _exp, self, prefix .. "  ", depth + 1 );
     }
 }
@@ -355,8 +391,8 @@ pub override fn dumpFilter.processExpNew(
 {
     dump( prefix, depth, node, "" );
     filter( node.get_symbol(), self, prefix .. "  ", depth + 1 );
-    if node.get_argList() {
-	filter( node.get_argList(), self, prefix .. "  ", depth + 1 );
+    if! node.get_argList() {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }
 };
 pub override fn dumpFilter.processExpRef( 
@@ -399,8 +435,8 @@ pub override fn dumpFilter.processLiteralList(
     node: LiteralListNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "[]" );
-    if node.get_expList() {
-	filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
+    if! node.get_expList() {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }
 };  
 pub override fn dumpFilter.processLiteralMap( 
@@ -418,8 +454,8 @@ pub override fn dumpFilter.processLiteralArray(
     node: LiteralArrayNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "[@]" );
-    if node.get_expList() {
-	filter( node.get_expList(), self, prefix .. "  ", depth + 1 );
+    if! node.get_expList() {
+	filter( _exp, self, prefix .. "  ", depth + 1 );
     }
 };  
 pub override fn dumpFilter.processLiteralChar( 

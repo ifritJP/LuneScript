@@ -1,0 +1,1202 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+
+#+TITLE: トランスコンパイラ LuneScript で Lua の開発をもっと楽に!!
+
+Lua は非常にコンパクトな言語でありながら、高い潜在能力を持つ言語です。
+
+プログラムに組み込まれる言語としては、
+最も使い易い言語の一つと言っても良いと思います。
+
+ただ「プログラムに組み込まれる言語としては使い易い」とはいえ、
+イマドキの言語と比べると、いろいろと気になるところがあるのも事実です。
+
+一方で、Lua をイマドキの言語に近づけるための機能進化は、
+「コンパクト」という Lua の大きな特徴の一つとトレードオフになる可能性があります。
+
+そこでここでは Lua 自体には手を加えずに、
+Lua の気になる箇所をカバー出来るトランスコンパイラ LuneScript を紹介します。
+
+まだ LuneScript は開発中の段階ですが、使えるレベルにはなっています。
+
+* LuneScript とは
+
+LuneScript とは、前述の通り Lua の気になる点をカバーする言語で、
+LuneScript で開発したコードを Lua のコードに変換することが可能な
+トランスコンパイラです。
+
+LuneScript は、次の特徴を持ちます。
+
+- Lua と C の syntax を基調としているため、学習コストが低い。
+- 静的型付け言語であるため、型チェックにより単純なミスをコンパイル時に発見可能。
+- 型推論により、型宣言の手間を最小化。
+- NULL 安全 (null safety)。
+- generics (一部のみ)により、型情報を保ったままの処理が可能。
+- 言語の文法としてクラス定義を対応。
+- マクロ により、ポリモーフィズム等の動的処理に頼らないデザインを実現可能。
+- JSON と互換なデータ表現をサポート。
+- トランスコンパイルした Lua コードは、外部ライブラリを前提とせずに単体で動作可能。
+- トランスコンパイルした Lua コードは、LuneScript で書いた処理そのままが出力されるので、
+  性能劣化がない。
+- 既存の Lua の外部モジュールを LuneScript から利用可能。
+- LuneScript は Lua 上で動作し、Lua 標準モジュール以外を必要としないため、導入が簡単。
+- Lua5.2, 5.3 をサポート。
+- LuneScript はセルフホスティングで開発している。
+
+* LuneScript の使用方法
+
+LuneScript は github で開発しています。
+  
+https://github.com/ifritJP/LuneScript
+
+開発中なためインストール手段を用意していませんが、
+前述の通り LuneScript は単なる Lua なので、
+src/lune/base/ 以下のスクリプトを適宜コピーするだけで動きます。
+
+** コマンド
+
+LuneScript は、次のモードを持ちます。
+
+- LuneScript のコードを、Lua コードへトランスコンパイル
+- LuneScript のコードをそのまま実行
+
+コマンドを実行するには、次を実行します。   
+
+#+BEGIN_SRC txt
+lua lune/base/base.lua src.lns mode
+#+END_SRC
+
+ここで、 lune/base/base.lua は LuneScript をインストールした環境にあわせて
+適宜変更してください。
+
+src.lns は、 LuneScript で作成したスクリプトのパスを指定します。
+拡張子は .lns です。
+
+mode は次のいずれかをサポートします。
+
+- token
+  字句解析結果を標準出力する。
+- ast
+  AST を標準出力する。
+- lua
+  Lua へのトランスコンパイルし、結果を標準出力する。
+- save  
+  Lua へのトランスコンパイルし、結果を保存する。
+  トランスコンパイルしたファイルは、指定した lns ファイルと同じディレクトリに作成する。
+- exe
+  実行する。
+
+Lua へトランスコンパイルしたファイルは、Lua コマンドでそのまま実行できます。
+
+なお、別の lns ファイルを import している場合は、
+その lns ファイルもトランスコンパイルしておく必要があります。
+
+* LuneScript の仕様
+
+ここでは LuneScript の仕様について説明します。
+
+なお、機能追加等を行なった場合は、ここにリンクを追加していきます。
+  
+** 値と型
+
+LuneScript は次の値を扱います。
+
+- nil
+- 整数(int)
+- 実数(real)
+- 文字列(str)
+- リスト
+- マップ(Map)
+- 配列
+- クラス
+- マクロ  
+- 関数
+- stem
+
+*** nil
+
+nil は、 Lua の nil と同じです。
+
+LuneScript では null も利用できます。
+
+null は nil の alias です。
+
+null のサポートにより、 LuneScript で JSON をそのまま扱うことができます。
+
+*** 整数、 実数
+
+LuneScript は、整数と実数を分けて扱います。
+
+これにより 10/3 は 3 となり、 10/3.0 は 3.3333... となります。
+
+**** 数値リテラル
+
+数値リテラルは C89 ライクなものを採用します。
+
+- 整数は 10 進数と 16 進数表現をサポート
+- 実数は 10 進数と e による指数表現。
+
+追加で ASCII の文字コード表現が可能です。
+
+#+BEGIN_SRC lns
+let val = ?a;  // 0x61
+#+END_SRC
+
+上記のように ~?~ に続く文字を ACSII コードに展開します。
+ASCII 以外の文字は対応しません。
+
+' や " などの文字は、 ~?\'~ のように \ でクオートする必要があります。
+
+**** 演算
+
+数値の演算は Lua と同じものを採用します。
+
+2項演算の結果は次の通り型が変わります。
+
+- int と int の演算結果は int になる。
+- real と real の演算結果は real になる。
+- int と real の演算結果は real になる。
+  
+ただし、 int と int の演算結果が int の範囲外になった場合、
+実行時の内部的な値としては real になりますが、LuneScript 上の型は int のままです。
+演算結果を int に丸めるには、@int でキャストする必要があります。
+
+*** 文字列
+
+文字列は Lua と同じで終端文字のないデータです。
+   
+文字列リテラルは " あるいは ' で囲みます。
+複数行の文字列リテラルは ``` で囲みます。
+
+文字列内の N 番目の文字にアクセスするには txt[N] を使用します。
+ただし txt[N] は読み込み専用で、文字の書き換えは出来ません。
+
+#+BEGIN_SRC lns
+let txt = "1234";
+txt[ 2 ] // ?2
+#+END_SRC
+
+また、Python に似た format 書式を利用可能です。
+
+#+BEGIN_SRC lns
+"""
+ここから〜
+ここまで文字列"""
+"10 + %s = %d" ("1", 11) // "10 + 1 = 11"
+#+END_SRC
+
+**** 文字列連結
+
+文字列連結は Lua と同じ .. を使用します。
+
+
+*** リスト、配列、マップ
+
+LuneScript では、 Lua の table をリスト、配列、マップに分けて扱います。
+
+リストは Lua のシーケンス、
+配列は固定長のリスト、
+マップは Lua の table です。
+
+リテラルはそれぞれ次のように宣言します。
+
+#+BEGIN_SRC lns
+let list = [ 1, 2, 3 ];
+let array = [@ 'a', 'b', 'c' ];
+let map = { "A": 10, "B": 11, "C": 12 };
+#+END_SRC
+
+**** リスト
+
+リストのオブジェクトは、順序付けて値を管理します。
+     
+#+BEGIN_SRC lns
+let name : itemType[];
+#+END_SRC
+
+リストに保持できる値の型は、1 つに制限されます。
+ただし、stem 型のリストであれば、全ての値を保持できます。
+
+例えば、次は int 型の要素を持つリストになります。
+
+#+BEGIN_SRC lns
+let name : int[];
+#+END_SRC
+
+リストのオブジェクトは、 insert、 remove メソッドを持ちます。
+
+#+BEGIN_SRC lns
+let list:int[] = [];
+list.insert( 1 );  // [ 1 ]
+list.insert( 2 );  // [ 1, 2 ]
+list.insert( 3 );  // [ 1, 2, 3 ]
+list.remove();     // [ 1, 2 ]
+#+END_SRC
+
+リストの要素にアクセスするには、
+次のように [N] で要素のインデックスを指定します。
+
+#+BEGIN_SRC lns
+let list = ['a','b','c'];
+print( list[ 1 ] ); -- 'a'
+#+END_SRC
+
+要素のインデックスがリストの範囲外を指定した場合の処理は *未定義* です。
+
+
+**** 配列
+
+配列オブジェクトは、固定長のリストです。
+サイズが固定であること以外はリストと同じです。
+
+#+BEGIN_SRC lns
+let list = [@ 1, 2 ];
+list.insert( 1 );  // error
+#+END_SRC
+
+サイズ固定なため、 insert、 remove は出来ません。
+
+**** マップ
+
+マップのオブジェクトは、キーと値の紐付けを管理します。
+
+#+BEGIN_SRC lns
+let name : Map<keyType,valType>;
+#+END_SRC
+
+Map 型は、上記のように keyType と valType で宣言します。
+
+例えば次の宣言は、キーが int 型で、値が str 型のマップです。
+
+#+BEGIN_SRC lns
+let val : Map<int,str>;
+#+END_SRC
+
+値にアクセスするには、次のように指定します。
+
+#+BEGIN_SRC lns
+let map = { "A": 10, "B": 11, "C": 12 };
+print( map[ "A" ], map.B );
+#+END_SRC
+
+キーが文字列の場合、
+map.B のようにマップオブジェクトのメンバとしてアクセスできます。
+
+マップオブジェクトのキー、値には nil を設定出来ません。
+
+**** リスト、マップコンストラクタの型
+
+#+BEGIN_SRC lns
+let list = [ 1, 2, 3 ];
+let map = { "A": 10, "B": 11, "C": 12 };
+#+END_SRC
+
+リスト、マップは、上記のようにリテラルを宣言できます。
+この時生成される リスト、マップの型は、 構成する値によって決まります。
+
+マップコンストラクタで利用されるキー、あるいは値が全て同じ型なら、
+マップのキー、値の型は、そのキー、値の型になります。
+いずれかが異なれば stem 型になります。
+
+具体的には、次のようになります。
+
+#+BEGIN_SRC lns
+let list1 = [ 1, 2, 3 ];			// int[]
+let list1 = [ 'a', 'b', 'c' ];			// str[]
+let list1 = [ 'a', 1, 'c' ];			// stem[]
+let map1 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
+let map2 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
+let map3 = { "a": 'z', "b": 'y', "c": 'x' };	// Map<str,str>
+let map4 = { "a": 1, "b": 'Z'' };		// Map<str,stem>
+#+END_SRC
+
+*** stem
+
+stem は、全ての値を保持できる型です。
+
+LuneScript は、静的型付け言語であり、
+想定する型と異なる値を与えらた場合はコンパイルエラーします。
+
+対して stem 型は、全ての型を扱える型なので、
+どのような値を与えられてもコンパイルエラーしません。
+
+Lua の変数そのものと考えて問題ありません。
+
+*** ! 型 (nilable)
+
+nilable は、 nil を保持可能な型です。
+逆に言えば、 nilable でなければ、nil は保持出来ません。
+これにより、非 nilable 型で扱っている間は、
+nil による実行時エラーに気を使う必要がありません。
+
+ただし、 stem 型は nil を含めた全ての型のデータを保持できます。
+
+** 型変換
+
+一部の型の値は、型を変換することが出来ます。
+
+変換するには次の書式を利用します。
+
+#+BEGIN_SRC lns
+val@type
+#+END_SRC
+
+これは val の値を type に変換することを宣言します。
+
+例えば、次は val の値を int に変換しています。
+
+#+BEGIN_SRC lns
+val@int
+#+END_SRC
+
+*** 数値型変換
+
+数値型の値は異なる型に変換することが出来ます。
+変換には、丸めが発生します。
+
+- int から real
+  - 整数から実数に変換
+- real から int  
+  - 実数から整数に変換
+  - math.floor() を呼ぶのと等価。
+
+*** stem 型との型変換
+
+任意の型は stem 型と相互変換が可能です。
+
+- 任意の型から stem 型に変換
+  - @stem で明示せずに暗黙的に変換可能。
+- stem 型から任意の型に変換
+  - @type で明示が必要。
+  - このとき、変換元の値が何の型だったかは判断しない。
+  - 変換元の値の型と変換先の型が不一致した時の動作は *未定義*
+
+
+** コメント
+
+コメントは C++ スタイルを採用。
+一行コメント //、 複数行コメント /* */ を指定可能。
+
+#+BEGIN_SRC lns
+// 行末までコメント
+/* ここから〜
+ここまでコメント*/
+#+END_SRC
+
+** 演算子
+
+原則的に、演算子 は Lua と同じものを利用する。
+
+
+** 変数宣言
+
+#+BEGIN_SRC lns
+[ pub | global ] let name [: type] = evp;
+#+END_SRC
+
+変数宣言は let で行なう。
+
+let に続けて変数名を指定する。
+変数の型は変数名に続けて : を入れて型指定する。
+
+ただし、変数宣言初期化の値から型が推測できる場合は、型指定を省略できる。
+
+例えば、次はは int 型の val 変数を宣言する。
+
+#+BEGIN_SRC lns
+let val: int;
+#+END_SRC
+
+変数は全て local になる。
+ただし、最上位のスコープに定義することで、
+そのモジュール内でグローバルなデータとなる。
+
+最上位のスコープに定義する変数の let の前に pub を指定すると、
+外部のモジュールから参照可能な変数となる。
+
+また、pub の代わりに global を宣言すると、VM 内でグローバルな変数となる。
+ただしグローバルに登録されるのは、
+この宣言を含むモジュールを import したタイミングとなる。
+
+同名のグローバルシンボルが定義されている場合の動作は未定義とする。
+
+同一スコープ内に、同名の変数を宣言することはできない。
+
+*** nilable の変数宣言
+
+宣言する型に ! を付加することで nilable になります。
+
+例えば次の val は、int の nilable 型となり、
+int と nil を設定可能であるのに対し、
+val2 は、 nil を設定できない変数となります。
+
+非 nilable の変数に対して nil を代入すると、コンパイルエラーとなります。
+
+#+BEGIN_SRC lns
+let val: int! = 1;
+let val2: int = nil; // error
+#+END_SRC
+
+nilable は nil となる可能性がありますが、
+stem 型以外の 非nilable の型は nil になりません。
+つまり、非 nilable 型を利用している間は、
+意図しないタイミングで nil アクセスエラーが発生しないことを保証できます。
+
+nilable 型の値は、そのままでは本来の型としては使用できません。
+
+次の例では、int! 型の val は int として演算に使用できず、コンパイルエラーとなります。
+
+#+BEGIN_SRC lns
+let val: int! = 1;
+let val2 =  val + 1; // error
+#+END_SRC
+
+nilable 型から本来の値に戻すには、次のいずれかの syntax を利用します。
+
+- unwrap
+- unwrap!
+- let!
+- sync!
+- if!
+  
+** nilable 関連の仕様
+
+ここでは nilable 関連の仕様について説明します。
+
+*** マップ型の値取得
+
+map 型の要素にアクセスした場合、その結果は必ず nilable 型になります。
+
+たとえば、次の map.B は int! となります。
+
+#+BEGIN_SRC lns
+let map = { "A": 10, "B": 11, "C": 12 };
+let val = map.B; // int! 
+#+END_SRC
+
+*** unwrap
+
+unwrap は、直後に続く式の nilable から非 nilable 型に変換する式です。
+
+
+#+BEGIN_SRC lns
+unwrap exp [ default insexp ]
+#+END_SRC
+
+unwrap の評価結果は、 exp の nilable を外した型となります。
+
+exp には、評価結果が nilable となる式を渡す必要があります。
+insexp には、 exp が nil だった時に、代わりとなる式を渡します。
+insexp の型は、 exp の nilable を外した型でなければなりません。
+例えば exp が int! だった場合、 insexp は int 型でなければなりません。
+default が省略されていて exp が nil だった場合、プログラムはエラー終了します。
+
+exp が nilable でない場合は、 コンパイルエラーします。
+
+#+BEGIN_SRC lns
+{
+  let val: int! = nil;
+  let val2 = unwrap val default 0;
+  print( "%d", val ); // 0
+}
+{
+  let val: int! = 1;
+  let val2 = unwrap val default 0;
+  print( "%d", val ); // 1
+}
+#+END_SRC
+
+上記の例は、
+最初の unwrap では val が nil のため default の評価結果が返り、
+2つめの unwrap では val が 1 のため、1 が返っている。
+
+*** unwrap!
+
+unwrap! は、 前述の unwrap 処理と、変数への代入を同時に行ないます。
+     
+#+BEGIN_SRC lns
+unwrap! symbol {, symbol }  = exp[, exp ] block [then thenblock];
+#+END_SRC
+
+exp が nil でない場合、 unwrap の結果を symbol に代入します。
+
+いずれかの exp が nil だった場合、ブロック block を実行します。
+このブロック内では次のいずれかの処理を行なう必要があります。
+
+- symbol に対して適切な値を設定する
+- symbol を定義しているスコープから抜ける。
+
+もしも上記の処理を行なわない場合、その後の動作は未定義です。
+
+またブロック block 内では、 _exp%d のシンボルで、
+exp の unwrap の結果にアクセスできます。
+%d は 1 から始まる数字で、 symbol の順番に対応します。
+
+このブロック block 内では、symbol の値は未定義となります。
+
+then ブロックは、 exp が全て nil でなかった場合に実行されます。
+このブロック内からは、symbol にアクセス出来ます。
+
+#+BEGIN_SRC lns
+fn test( arg:int! ) {
+  let val = 0;
+
+  unwrap! val = arg { print( 0 ); return; } then { val = val + 1; }
+  print( val );
+}
+test( 1 );  // print( 2 );
+test( 2 );  // print( 3 );
+test( nil );  // print( 0 );
+#+END_SRC
+
+*** let!
+
+let! は、変数宣言と unwrap を同時に行ないます。
+    
+#+BEGIN_SRC lns
+let! symbol {, symbol } = exp[, exp ] block [ then thenblock ];
+#+END_SRC
+
+block と thenblock の扱いは unwrap! と同じです。
+適切な処理をしない場合、 symbol の値は未定義です。
+
+block ブロック内では '_' + symbol の名前で exp の unwrap の結果を参照できます。
+
+thenblock ブロック内では symbol で値を参照できる。
+
+#+BEGIN_SRC lns
+fn test( arg:int! ) {
+  let! val = func() { print( 0 ); return; } do { val = val + 1; }
+  print( val );
+}
+test( 1 );  // print( 2 );
+test( 2 );  // print( 3 );
+test( nil );  // print( 0 );
+#+END_SRC
+
+
+**** sync!
+
+sync! は、 unwrap 処理を行ないます。
+
+#+BEGIN_SRC lns
+sync! symbol {, symbol } = exp[, exp ] block [then thenblock] do doblock;
+#+END_SRC
+
+exp と symbol, thenblock の扱いは unwrap! と、ほぼ同じです。
+異なるのは、 symbol のスコープが thenblock と doblock に限定されることです。
+
+doblock は、 block と thenblock を処理した後に実行されるブロックです。
+
+sync! は、doblock ブロック処理終了後に次の処理を行ないます。
+
+- sync! を使用したスコープに、symbol で宣言したシンボル名と同じシンボルがある場合、
+doblock ブロック終了時点の symbol の値を反映する。
+
+ただし、 doblock を return 等で抜けた場合は反映されない。
+
+*なお sync! で宣言した symbol から、
+上位スコープ内の同名の symbol へは、代入可能な関係でなければならない。*
+
+例えば次は、test() 関数内で sync! を実行している。
+この sync! は val に func() の結果を格納しており、
+doblock で val を変更している。
+doblock が終了すると、val の値が外側のスコープの val に反映される。
+
+#+BEGIN_SRC lns
+fn test( arg:int!, arg2:int! ) {
+  let val = 1;
+  let val2 = 1;
+  sync! val, val3 = arg, arg2 { print( 0 ); return; } do { val = arg + arg2; }
+  print( val );
+}
+test( nil );  // print( 0 );
+#+END_SRC
+
+**** if!
+
+if! は、 unwrap 処理による条件分岐です。
+
+#+BEGIN_SRC lns
+if! exp block [ else elseblock ];
+#+END_SRC
+
+exp には nilable な式を指定します。
+exp が nil でなかった場合、 block を実行します。
+exp が nil だった場合、 elseblock を実行します。
+
+block 内の処理では _exp で、 exp の unwrap の結果にアクセスできます。
+
+
+** 一般制御文
+
+Lua と同じ制御文(if,while,for,repeat)をサポートする。
+
+Lua と同様に、continue はない。
+
+*** if
+
+#+BEGIN_SRC lns
+if exp {
+}
+elseif exp {
+}
+else {
+}
+#+END_SRC
+    
+if は Lua と同じ構文とする。
+ただし、ブロックは {} で宣言する。このブロックは必須である。
+C のようにブロックを宣言せずに 1 文だけ書くことはできない。
+
+*** switch
+
+#+BEGIN_SRC lns
+switch exp {
+  case condexp [, condexp] {
+  }
+  case condexp {
+  }
+  default {
+  }
+}
+#+END_SRC
+    
+switch は、exp の結果と一致する condexp を探し、一致するブロックを実行する。
+どの condexp にも一致しない場合は default のブロックを実行する。
+condexp は , で区切って複数指定できる。
+複数指定した場合、いずれかと一致したブロックを実行する。
+
+*** while, repeat
+
+#+BEGIN_SRC lns
+while exp {
+}
+
+repeat {
+} exp;
+#+END_SRC
+    
+while, repeat は Lua と同じ構文とする。
+ただし、ブロックは {} で宣言する。このブロックは必須である。
+C のようにブロックを宣言せずに 1 文だけ書くことはできない。
+
+*** for
+
+#+BEGIN_SRC lns
+for name = exp1, exp2, exp3 {
+}
+#+END_SRC
+
+for は、イテレータを使用しないタイプの制御とする。
+イテレータを利用するタイプは each とする。
+
+ブロックは {} で宣言する。このブロックは必須である。
+C のようにブロックを宣言せずに 1 文だけ書くことはできない。
+
+*** foreach
+
+#+BEGIN_SRC lns
+foreach val [, index ] in listObj {
+}
+foreach val [ , index ] in arrayObj {
+}
+foreach val [, key ] in mapObj {
+}
+#+END_SRC
+
+foreach は、 List, Array, Map のオブジェクトが保持する要素に対して処理を行なう。
+
+val には各オブジェクトが保持する要素が格納され、body が実行される。
+index には要素のインデックス、 key には要素を紐付けているキーが格納される。
+index, key は省略可能。
+
+*** apply
+
+#+BEGIN_SRC lns
+apply val {,val2 } of exp {
+}
+#+END_SRC
+    
+apply は、イテレータを使用するタイプの for とする。
+ブロックは {} で宣言する。このブロックは必須である。
+C のようにブロックを宣言せずに 1 文だけ書くことはできない。
+
+val には、イテレータで列挙された値が格納される。
+イテレータが複数の値を列挙する場合, その値を格納する val2 , val3... を宣言する。
+
+exp の仕様は Lua の for と同じ。
+
+*** goto
+
+goto はサポートしない
+   
+
+** 関数宣言
+
+#+BEGIN_SRC lns
+[ pub | global ] fn name( arglist ) : retTypeList {
+}
+#+END_SRC
+
+関数宣言は、上記のように fn で行ない、name で関数名を指定する。
+name は省略可能。
+引数は arglist で宣言し、変数宣言の let を省略した形で宣言する。
+戻り値の型は、retTypeList で宣言する。型宣言は 変数宣言の : 以降と同じ。
+関数は複数の値を返すことができる。  retTypeList は返す値の分の型を宣言する。
+
+関数を外部モジュールに公開する場合は、fn の前に pub を宣言する。
+ただし公開可能な関数は、最上位のスコープで定義した関数でなければならない。
+例えば if や while 等のブロック内で定義した関数は、公開できない。
+
+最上位のスコープに定義する関数において、
+pub の代わりに global を指定すると、VM 内でグローバルとなる。
+ただし登録されるのは、この宣言を含むモジュールを import したタイミングとなる。
+
+同名のグローバルシンボルが定義されている場合の動作は *未定義* とする。
+
+
+関数宣言に関して、次の制限を持つ。
+- 関数オーバーロードをサポートしない
+- 演算子オーバーロードをサポートしない
+
+#+BEGIN_SRC lns
+fn plus( val1: int, val2: int ) : int {
+  return val1 + val2;
+}
+fn plus1( val1: int, val2: int ) : int, int {
+  return val1 + 1, val2 + 1;
+}
+#+END_SRC
+
+
+*** 可変長引数
+
+可変長引数は Lua の ... を利用する。
+
+なお、 ... の各値は stem 型として扱う。
+
+#+BEGIN_SRC lns
+fn hoge( ... ) : stem {
+  let val: stem = ...;
+  return val;
+}
+#+END_SRC
+
+例えば、上記関数は引数に与えらえた第一引数を return するが、
+このときの型は stem となる。
+
+*** 関数コール
+
+関数コールは Lua と同じ。
+
+** クラス宣言
+   
+オブジェクト指向プログラミングのためのクラスをサポートする。
+
+クラスに関して、次の制約を持つ。
+- 多重継承はサポートしない。
+- generics(template) はサポートしない。
+- 全てがオーバーライド可能なメソッドとなる。
+  - オーバーライドの抑制はできない。
+- 継承間で引数の異なる同名メソッドは定義できない。
+  - ただし、コンストラクタは例外。
+
+#+BEGIN_SRC lns
+pub class Hoge : superClass {
+  let pri val : int { pub, pri };
+  pub fn __init( arglist ) {
+    super( arglist );
+  }
+  pub fn __free() {
+  }
+  pub fn func( arglist ) : retTypeList {
+  }
+  pub static fn sub( arglist ) : retTypeList {
+  }
+
+  pub override fn proc() : retTypeList {
+  }
+
+  let pri data : Other;
+}
+#+END_SRC
+
+メンバ、メソッドのアクセス制御は pub/pro/pri を使用。
+pro は、自分自身と継承しているクラスからアクセスを許可する。
+
+static を付けることで、クラスメソッド、クラスメンバとなる。
+
+クラスを外部モジュールに公開する場合は pub を指定する。
+ただし公開可能なクラスは、最上位のスコープで定義した関数でなければならない。
+例えば if や while 等のブロック内で定義したクラスは、公開できない。
+
+*** コンストラクタ
+
+コンストラクタは __init で宣言する。
+スーパークラスのコンストラクタをコールする場合は super() を使用する。
+super() は、コンストラクタの先頭で呼び出す必要がある。
+これは Java と同じ扱い。
+
+コンストラクタ内で、自分自身にアクセスする場合は self を使用する。
+
+コンストラクタで、全てのメンバに値を設定しなければならない。
+
+設定しなかった時の動作は *未定義* 。
+
+**** 暗黙的コンストラクタ
+
+コンストラクタを宣言しない場合、暗黙的的にコンストラクタが生成される。
+
+この暗黙的コンストラクタは、全てのメンバを引数に持つコンストラクタになる。
+
+コンストタクタの引数の順番は、メンバの宣言順となる。
+
+*** new
+
+宣言したクラスのインスタンスを生成するには new を使用する。
+
+#+BEGIN_SRC lns
+let hoge = new Hoge();
+#+END_SRC
+
+*** メンバ宣言
+
+メンバ宣言は、変数宣言と基本は同じだが以下の点で異なる。
+
+*型宣言の後の {} で、アクセッサを宣言できる。*
+
+このアクセッサは getter, setter の順に宣言し、
+宣言箇所にはアクセス権限(pub/pro/pri)を指定する。
+
+#+BEGIN_SRC lns
+  let pri val : int { pub, pri };
+#+END_SRC
+
+例えば上記の場合、
+メンバ val に対して pub の getter と pri の setter が作られる。
+作られる getter と setter は、 get_val(), set_val() のメソッドとなる。
+同名のメソッドが存在する場合は、この宣言は無視される。
+
+アクセッサ宣言の {} は省略した場合、アクセッサは作成されない。
+getter だけ指定し、 setter を省略した場合は、 getter だけ作成される。
+
+**** getter アクセス
+
+メンバの getter にアクセスする際は、
+.get_member() だけでなく、 .$member でもアクセスできる。
+
+なお、 member が pub だった場合も .$member でアクセスできる。
+
+#+BEGIN_SRC lns
+class Test {
+  pri val: int { pub };
+}
+Test test = new Test( 10 );
+print( test.$val );  -- 10
+#+END_SRC
+
+*** メソッド
+
+#+BEGIN_SRC lns
+[ pub | pro | pri ] [ override ] fn func( arglist ): retTypeList {
+}
+#+END_SRC
+
+メソッドは上記のように宣言する。
+
+アクセス制御とメソッド名、引数と続き、最後に戻り値の型を宣言する。
+
+メソッド内で自身のメンバ、メソッドにアクセスする場合は self を使用する。
+
+override は、メソッドをオーバーライドする際に宣言する。
+
+
+*** メソッド 呼び出し
+
+メソッド呼び出しは、次のように行なう。
+
+#+BEGIN_SRC cpp
+Hoge hoge;
+Hoge.sub();
+hoge.func();
+#+END_SRC
+
+Hoge.sub() はクラスメソッドで、
+hoge.func() はインスタンスメソッドである。
+
+クラスメソッドは *クラスシンボル.メソッド()* 、
+メソッドは *インスタンス.メソッド()*  で呼び出す。
+
+Lua のような : と . の使い分けではなく、どちらも . を利用する。
+
+*** プロトタイプ宣言
+
+LuneScript は、スクリプトの上から順に解析する。
+
+スクリプトで参照するシンボルは、事前に定義されている必要がある。
+例えばクラス TEST 型の変数を宣言するには、事前にクラス TEST を定義する必要がある。
+
+また、交互に参照するクラスを定義するには、
+どちらかをプロトタイプ宣言する必要がある。
+
+次は、 ClassA, ClassB がそれぞれを参照する時の例である。
+
+#+BEGIN_SRC lns
+class Super {
+}
+pub proto class ClassB extend Super;
+class ClassA {
+  let val: ClassB;
+}
+pub class ClassB extend Super{
+  let val: ClassA;
+}
+#+END_SRC
+
+proto は上記のように宣言する。
+
+プロトタイプ宣言と実際の定義において、
+pub や extend など同じものを宣言しなければならない。
+
+
+** マクロ
+
+LuneScript は簡易的なマクロを採用する。
+
+Lisp などのような本来のマクロではなく、あくまでも簡易的な機能である。
+
+マクロは次のように定義する。
+
+#+BEGIN_SRC lns
+macro _name ( decl-arg-list ) {
+  { macro-statement }
+  expand-statement
+}
+#+END_SRC
+
+マクロ定義は、予約語 macro で始める。
+続いてマクロ名 _name を指定する。マクロ名は _ で始まらなければならない。
+
+decl-arg-list は、マクロで使用する引数を宣言する。
+マクロの引数は、プリミティブでなければならない。
+
+macro-statement は、 expand-statement で使用する変数を設定する処理を書く。
+expand-statement で書いた内容が、マクロで展開される。
+
+次は、単純なマクロの例である。
+
+#+BEGIN_SRC lns
+macro _hello( word: str ) {
+  print( "hello" .. str ); 
+}
+_hello( "world" ); // print( "hello" .. "world" );
+#+END_SRC
+
+この例では macro-statement は無く、 expand-statement だけがあり、
+expand-statement の print が展開されている。
+
+
+マクロ内では、他の関数と同じように処理を書ける。
+ただし、 macro-statement 内では、標準関数の一部しか利用できない。
+
+C のような定数に名前を付けるためにマクロは利用できない。
+そのような使い方をしたい場合は enum を使用すること。
+
+*** macro-statement で利用できる追加 syntax
+
+macro-statement 内では、次の特殊な syntax を追加で利用できる。
+
+- ,,,,
+- ,,,
+- ,,
+- ~`{ }~
+
+,,,, は、直後に続く *シンボル* を *文字列に変換* する演算子である。
+,,, は、直後に続く *式* を評価して得られた *文字列をシンボルに変換* する演算子である。
+
+~`{}~ は、~`{}~  内で書いたステートメントを、そのままの値とすることが出来る。
+macro-statement 内で ~`{}~ で書いたステートメントは、
+macro-expand で展開することができる。
+~`{}~  内では変数の参照や関数の実行を書いても、
+macro-statement 内では評価されない。
+macro-expand で展開時に評価される。
+
+,, は、直後に続く *式* を評価する演算子である。
+,,、 ,,,、 ,,,,、 は ~`{}~  内で利用することで、
+macro-statement 内で式を評価することが出来る。
+
+
+例えば次のマクロでは、
+
+#+BEGIN_SRC lns
+macro _test2( val:int, funcxx:sym ) {
+    {
+        fn func(val2:int):str {
+            return "mfunc%d" (val2);
+        }
+        let message = "hello %d %s" ( val, ,,,,funcxx );
+        let stat = `{ print( "macro stat" ); };
+        let stat2 = `{
+            for index = 1, 10 {
+                print( "hoge %d" ( index ) );
+            }
+        };
+        let stat3:stat[] = [];
+        for index = 1, 4 {
+            table.insert( stat3, `{ print( "foo %d" ( ,,index ) ); } );
+        }
+        let stat4 = ,,,func( 1 );
+    }
+    print( message );
+    funcxx( "macro test2" );
+    stat;
+    stat2;
+    stat3;
+    stat4( 10 );
+}
+fn mfunc1( val: int ) {
+    print( "mfunc1", val );
+}
+
+_test2( 1, print );
+#+END_SRC
+
+マクロ展開によって次のように展開される。
+
+#+BEGIN_SRC lns
+print( [[hello 1 print]] )			// print( message );
+print( "macro test2" )				// funcxx( "macro test2" );
+print( "macro stat" )				// stat2;
+for index = 1, 10 do				
+  print( string.format( "hoge %d", index) )	
+end
+print( string.format( "foo %d", 1) )		// stat3;
+print( string.format( "foo %d", 2) )
+print( string.format( "foo %d", 3) )
+print( string.format( "foo %d", 4) )
+mfunc1( 10 )					// stat4(10)
+#+END_SRC
+
+ここで注目すべき点は、次の点である。
+
+- _test2( 1, print ) のマクロ呼び出しで print を渡しているが、
+  これは print が保持する関数オブジェクトを渡しているのではなく、
+  print シンボルそのものを渡している。
+  - マクロ呼び出しに渡す引数は、評価される前のものが渡される。
+- stat2 は、 for 文そのものを展開しているのに対し、
+  stat3 は、 for 文で作成したステートメントを展開している。
+  
+
+上記の通り、マクロ内では通常の型以外に次の型を利用できる。
+
+- シンボルを格納する sym 型
+- ステートメントを格納する stat 型
+
+マクロはステートメントを定義する箇所であれば、どこでも呼び出せる。
+マクロ内でクラスや関数を定義することもできる。
+
+*** マクロの意義
+
+マクロは通常の関数と比べて幾つかの制限がある。
+またマクロで行なえる処理は、関数等を組合せることで実現できる。
+
+では、マクロを使う意義は何か？
+
+それは、「マクロを使うことで静的に動作が確定する」ことである。
+
+同じ処理を関数で実現した場合、動的な処理となってしまう。
+一方、マクロで実現すれば、静的な処理となる。
+
+これの何が嬉しいのか？
+
+それは、静的型付け言語が動的型付け言語よりも優れている点と同じである。
+
+静的に決まる情報を静的に処理することで、静的に解析できる。
+
+例えば、オブジェクト指向の関数オーバーライドの大部分は、
+マクロを利用することで静的に解決することができる。
+動的な関数オーバーライドではなく、静的な関数呼び出しにすることで、
+ソースコードを追い易くなる。
+
+無闇にマクロを多用するは良くないが、
+安易に関数オーバーライドなどの動的処理にするのも理想ではない。
+
+動的処理とマクロは適宜使い訳が必要である。
+
+** モジュール
+
+LuneScript で作成したスクリプトファイルは、全てモジュールとなる。
+Lua のように return などは不要。
+
+スクリプトファイル内で pub 宣言された関数、クラスが
+外部モジュールからアクセス可能となる。
+   
+*** import
+
+外部モジュールを利用する際に import 宣言する。
+
+import はスクリプトの最上位スコープで宣言しなければならない。
+
+#+BEGIN_SRC lns
+import hoge.foo.module1;
+#+END_SRC
+
+上記は、サーチパスから hoge/foo/module1.lns を検索し、利用可能とする。
+
+module1 のクラス、関数にアクセスするには
+module1.class, module1.func のようにアクセスする。
+
+インポートしたシンボル(上記の場合は module1 )を変数として扱うことは出来ない。
+
+*** require
+
+Lua の外部モジュールを利用する際に宣言する。
+
+#+BEGIN_SRC lns
+let mod: stem = require( 'module' );
+#+END_SRC
+
+require の結果は stem 型となる。
+
+
+* emacs 対応
+
+LuneScript 編集用の emacs のメジャーモード lns-mode.el を用意しています。
+
+https://github.com/ifritJP/LuneScript
+
+emacs ユーザはご利用ください。
+
+* セルフホスティング
+
+LuneScript のトランスコンパイラは、極一部を除いて LuneScript で開発しています。
+
+具体的には、LuneScript のソースコードサイズ 約 230 KB 中、
+98% は LuneScript で開発しています。 残りの 2% は Lua です。
+
+セルフホスティングで開発することで、次の利点があります。
+
+- それなりの規模のスクリプトでの、使用実績が出来る。
+- テストのためだけのスクリプトの作成を、最小限に出来る。
+- その言語を使い倒すことになるため、その言語の長所・短所が実感出来る。
+- 短所を早期発見できるので、すぐに改善策を検討できる。
+
+もし、今後自分で言語を設計・開発しようと考えている方がいれば、
+セルフホスティングで開発することをオススメします。
+
+* さいごに
+
+この記事では Lua のトランスコンパイラである LuneScript を紹介しました。
+
+LuneScript の開発動機は、 Lua での生産性を上げることが建前としてありますが、
+実用的な言語を自作してみたいという技術的興味によるものもかなり大きいです。
+
+LuneScript に、静的型付けやクラス定義だけでなく、
+NULL safety やマクロを取り入れたのは技術的興味によるものが大きかったです。
+
+まだまだ取り入れたい機能はあるので、随時更新する予定です。
+
+とりあえずの予定としては、C 言語をトランスコンパイル先の言語とするために、
+所有権とライフタイムを取り入れたいと考えています。

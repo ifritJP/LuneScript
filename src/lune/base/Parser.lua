@@ -2,8 +2,11 @@
 local moduleObj = {}
 local function createReserveInfo( luaMode )
   local keywordSet = {}
+  
   local typeSet = {}
+  
   local builtInSet = {}
+  
   keywordSet["let"] = true
   keywordSet["if"] = true
   keywordSet["else"] = true
@@ -18,13 +21,14 @@ local function createReserveInfo( luaMode )
   keywordSet["false"] = true
   keywordSet["{"] = true
   keywordSet["}"] = true
+  keywordSet["do"] = true
   builtInSet["require"] = true
   if luaMode then
     keywordSet["function"] = true
     keywordSet["then"] = true
-    keywordSet["do"] = true
     keywordSet["until"] = true
   else 
+    keywordSet["null"] = true
     keywordSet["let"] = true
     keywordSet["mut"] = true
     keywordSet["pub"] = true
@@ -41,6 +45,7 @@ local function createReserveInfo( luaMode )
     keywordSet["new"] = true
     keywordSet["!"] = true
     keywordSet["unwrap"] = true
+    keywordSet["sync"] = true
     typeSet["int"] = true
     typeSet["real"] = true
     typeSet["stem"] = true
@@ -49,6 +54,7 @@ local function createReserveInfo( luaMode )
     typeSet["bool"] = true
   end
   local multiCharDelimitMap = {}
+  
   multiCharDelimitMap["="] = {"=="}
   multiCharDelimitMap["~"] = {"~="}
   multiCharDelimitMap["<"] = {"<="}
@@ -104,8 +110,10 @@ function TxtStream:read( mode )
     return nil
   end
   local index = self.txt:find( "\n", self.start, true )
+  
   if index then
     local txt = self.txt:sub( self.start, index - 1 )
+    
     self.start = index + 1
     return txt
   end
@@ -174,6 +182,7 @@ setmetatable( WrapParser, { __index = Parser } )
 moduleObj.WrapParser = WrapParser
 function WrapParser:getToken(  )
   local token = self.parser:getToken(  )
+  
   return token
 end
 function WrapParser:getStreamName(  )
@@ -209,6 +218,7 @@ function StreamParser:__init(stream, name, luaMode)
   self.pos = 1
   self.lineTokenList = {}
   local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode )
+  
   self.keywordSet = keywordSet
   self.typeSet = typeSet
   self.builtInSet = builtInSet
@@ -219,6 +229,7 @@ function StreamParser:getStreamName(  )
 end
 function StreamParser.create( path, luaMode )
   local stream = io.open( path, "r" )
+  
   if not stream then
     return nil
   end
@@ -226,12 +237,16 @@ function StreamParser.create( path, luaMode )
 end
 
 local kind = {}
+
 moduleObj.kind = kind
 
 local kindSeed = 0
+
 local kind2Txt = {}
+
 local function regKind( name )
   local assignKind = kindSeed
+  
   kindSeed = kindSeed + 1
   kind2Txt[assignKind] = name
   kind[name] = assignKind
@@ -239,42 +254,55 @@ local function regKind( name )
 end
 
 local kindCmnt = regKind( "Cmnt" )
+
 moduleObj.kindCmnt = kindCmnt
 
 local kindStr = regKind( "Str" )
+
 moduleObj.kindStr = kindStr
 
 local kindInt = regKind( "Int" )
+
 moduleObj.kindInt = kindInt
 
 local kindReal = regKind( "Real" )
+
 moduleObj.kindReal = kindReal
 
 local kindChar = regKind( "Char" )
+
 moduleObj.kindChar = kindChar
 
 local kindSymb = regKind( "Symb" )
+
 moduleObj.kindSymb = kindSymb
 
 local kindDlmt = regKind( "Dlmt" )
+
 moduleObj.kindDlmt = kindDlmt
 
 local kindKywd = regKind( "Kywd" )
+
 moduleObj.kindKywd = kindKywd
 
 local kindOpe = regKind( "Ope" )
+
 moduleObj.kindOpe = kindOpe
 
 local kindType = regKind( "Type" )
+
 moduleObj.kindType = kindType
 
 local kindEof = regKind( "Eof" )
+
 moduleObj.kindEof = kindEof
 
 local noneToken = Token.new(kindEof, "", Position.new(0, 0))
+
 moduleObj.noneToken = noneToken
 
 local quotedCharSet = {}
+
 quotedCharSet['a'] = true
 quotedCharSet['b'] = true
 quotedCharSet['f'] = true
@@ -286,6 +314,7 @@ quotedCharSet['\\'] = true
 quotedCharSet['"'] = true
 quotedCharSet["'"] = true
 local op2Set = {}
+
 op2Set['+'] = true
 op2Set['-'] = true
 op2Set['*'] = true
@@ -310,6 +339,7 @@ op2Set['or'] = true
 op2Set['@'] = true
 op2Set['='] = true
 local op1Set = {}
+
 op1Set['-'] = true
 op1Set['not'] = true
 op1Set['#'] = true
@@ -338,36 +368,35 @@ function StreamParser:parse(  )
   end
   
   local rawLine = readLine(  )
-  if  not rawLine then
-  local _rawLine = rawLine
-    
-    return nil
-  end
   
+      if  not rawLine then
+        local _rawLine = rawLine
+        
+        return nil
+      end
+    
   local list = {}
+  
   local startIndex = 1
+  
   local multiComment = function ( comIndex, termStr )
     local searchIndex = comIndex
+    
     local comment = ""
+    
     while true do
       local termIndex, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+      
       if termIndex then
         comment = comment .. rawLine:sub( searchIndex, termEndIndex )
         return comment, termEndIndex + 1
       end
       comment = comment .. rawLine:sub( searchIndex ) .. "\n"
       searchIndex = 1
-      rawLine = readLine(  )
-      if not rawLine then
-        local _exp1 = rawLine
-        
-          error( "illegal comment" )
-        end
-      
-      -- none
-      
+      rawLine = readLine(  ) or _luneScript.error( 'unwrap val is nil' )
     end
   end
+  
   
   local addVal = function ( kind, val, column )
     local function createInfo( tokenKind, token, tokenColumn )
@@ -385,11 +414,14 @@ function StreamParser:parse(  )
     
     local function analyzeNumber( token, startIndex )
       local nonNumIndex = token:find( '[^%d]', startIndex )
+      
       if not nonNumIndex then
         return #token, true
       end
       local intFlag = true
+      
       local nonNumChar = token:byte( nonNumIndex )
+      
       if nonNumChar == 46 then
         intFlag = false
         nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
@@ -402,6 +434,7 @@ function StreamParser:parse(  )
       if nonNumChar == 101 or nonNumChar == 69 then
         intFlag = false
         local nextChar = token:byte( nonNumIndex + 1 )
+        
         if nextChar == 45 or nextChar == 43 then
           nonNumIndex = token:find( '[^%d]', nonNumIndex + 2 )
         else 
@@ -416,32 +449,44 @@ function StreamParser:parse(  )
     
     if kind == kindSymb then
       local searchIndex = 1
+      
       while true do
         local tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex )
+        
         if not tokenIndex then
           break
         end
         local columnIndex = column + tokenIndex - 2
+        
         searchIndex = tokenEndIndex + 1
         local token = val:sub( tokenIndex, tokenEndIndex )
+        
         local startIndex = 1
+        
         while true do
           if token:find( '^[%d]', startIndex ) then
             local endIndex, intFlag = analyzeNumber( token, startIndex )
+            
             local info = createInfo( intFlag and kindInt or kindReal, token:sub( startIndex, endIndex ), columnIndex + startIndex )
+            
             table.insert( list, info )
             startIndex = endIndex + 1
           else 
             local index = string.find( token, '[^%w_]', startIndex )
+            
             if index then
               if index > startIndex then
                 local info = createInfo( kindSymb, token:sub( startIndex, index - 1 ), columnIndex + startIndex )
+                
                 table.insert( list, info )
               end
               local delimit = token:sub( index, index )
+              
               local candidateList = self.multiCharDelimitMap[delimit]
+              
               while candidateList do
                 local findFlag = false
+                
                 for __index, candidate in pairs( (candidateList ) or _luneScript.error( 'unwrap val is nil' ) ) do
                   if candidate == token:sub( index, index + #candidate - 1 ) then
                     delimit = candidate
@@ -456,6 +501,7 @@ function StreamParser:parse(  )
               end
               startIndex = index + #delimit
               local workKind = kindDlmt
+              
               if op2Set[delimit] or op1Set[delimit] then
                 workKind = kindOpe
               end
@@ -464,6 +510,7 @@ function StreamParser:parse(  )
               end
               if delimit == "?" then
                 local nextChar = token:sub( index, startIndex )
+                
                 table.insert( list, createInfo( kindChar, nextChar, columnIndex + startIndex ) )
                 startIndex = startIndex + 1
               else 
@@ -483,17 +530,24 @@ function StreamParser:parse(  )
     end
   end
   
+  
   local searchIndex = startIndex
+  
   while true do
     local syncIndexFlag = true
-    local pattern = [==[[%-%?"%'%`%[].]==]
+    
+    local pattern = [==[[/%-%?"%'%`%[].]==]
+    
     local index = string.find( rawLine, pattern, searchIndex )
+    
     if not index then
       addVal( kindSymb, rawLine:sub( startIndex ), startIndex )
       return list
     end
     local findChar = string.byte( rawLine, index )
+    
     local nextChar = string.byte( rawLine, index + 1 )
+    
     if findChar == 45 and nextChar ~= 45 then
       searchIndex = index + 1
       syncIndexFlag = false
@@ -501,14 +555,18 @@ function StreamParser:parse(  )
       if startIndex < index then
         addVal( kindSymb, rawLine:sub( startIndex, index - 1 ), startIndex )
       end
-      if findChar == 39 and nextChar == 39 then
-        if string.byte( rawLine, index + 2 ) == 39 then
-          local comment, nextIndex = multiComment( index + 3, "'''" )
-          addVal( kindCmnt, "'''" .. comment, index )
+      if findChar == 47 then
+        if nextChar == 42 then
+          local comment, nextIndex = multiComment( index + 2, "*/" )
+          
+          addVal( kindCmnt, "/*" .. comment, index )
           searchIndex = nextIndex
-        else 
+        elseif nextChar == 47 then
           addVal( kindCmnt, rawLine:sub( index ), index )
           searchIndex = #rawLine + 1
+        else 
+          addVal( kindOpe, "/", index )
+          searchIndex = index + 1
         end
       elseif findChar == 91 then
         if nextChar == 64 then
@@ -520,13 +578,17 @@ function StreamParser:parse(  )
         end
       elseif findChar == 39 or findChar == 34 then
         local workIndex = index + 1
+        
         local pattern = '["\'\\]'
+        
         while true do
           local endIndex = string.find( rawLine, pattern, workIndex )
+          
           if not endIndex then
             error( string.format( "illegal string: %d: %s", index, rawLine ) )
           end
           local workChar = string.byte( rawLine, endIndex )
+          
           if workChar == findChar then
             addVal( kindStr, rawLine:sub( index, endIndex ), index )
             searchIndex = endIndex + 1
@@ -540,6 +602,7 @@ function StreamParser:parse(  )
       elseif findChar == 96 then
         if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
           local str, nextIndex = multiComment( index + 3, '```' )
+          
           addVal( kindStr, '```' .. str, index )
           searchIndex = nextIndex
         else 
@@ -548,8 +611,10 @@ function StreamParser:parse(  )
         end
       elseif findChar == 63 then
         local codeChar = rawLine:sub( index + 1, index + 1 )
+        
         if nextChar == 92 then
           local quoted = rawLine:sub( index + 2, index + 2 )
+          
           if quotedCharSet[quoted] then
             codeChar = rawLine:sub( index + 1, index + 2 )
           else 
@@ -579,21 +644,24 @@ function StreamParser:getToken(  )
     self.lineTokenList = {}
     while #self.lineTokenList == 0 do
       local workList = self:parse(  )
-      if  not workList then
-      local _workList = workList
-        
-        return nil
-      end
       
+          if  not workList then
+            local _workList = workList
+            
+            return nil
+          end
+        
       self.lineTokenList = workList
     end
   end
   local token = self.lineTokenList[self.pos]
+  
   self.pos = self.pos + 1
   return token
 end
 
-local eofToken = Token.new(kindEof, "", Position.new(0, 0))
+local eofToken = Token.new(kindEof, "<EOF>", Position.new(0, 0))
+
 local function getEofToken(  )
   return eofToken
 end
@@ -613,9 +681,9 @@ do
   _className2InfoMap.Position = _classInfo174
   _typeId2ClassInfoMap[ 174 ] = _classInfo174
   _classInfo174.lineNo = {
-    name='lineNo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 14 }
+    name='lineNo', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
   _classInfo174.column = {
-    name='column', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 14 }
+    name='column', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
   end
 do
   local _classInfo162 = {}
@@ -632,9 +700,9 @@ do
   _className2InfoMap.Token = _classInfo178
   _typeId2ClassInfoMap[ 178 ] = _classInfo178
   _classInfo178.kind = {
-    name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 14 }
+    name='kind', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 12 }
   _classInfo178.txt = {
-    name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 20 }
+    name='txt', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 18 }
   _classInfo178.pos = {
     name='pos', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 174 }
   end
@@ -667,100 +735,154 @@ moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kind = {
   name='kind', accessMode = 'pub', typeId = 240 }
 _varName2InfoMap.kindChar = {
-  name='kindChar', accessMode = 'pub', typeId = 14 }
+  name='kindChar', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindCmnt = {
-  name='kindCmnt', accessMode = 'pub', typeId = 14 }
+  name='kindCmnt', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindDlmt = {
-  name='kindDlmt', accessMode = 'pub', typeId = 14 }
+  name='kindDlmt', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindEof = {
-  name='kindEof', accessMode = 'pub', typeId = 14 }
+  name='kindEof', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindInt = {
-  name='kindInt', accessMode = 'pub', typeId = 14 }
+  name='kindInt', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindKywd = {
-  name='kindKywd', accessMode = 'pub', typeId = 14 }
+  name='kindKywd', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindOpe = {
-  name='kindOpe', accessMode = 'pub', typeId = 14 }
+  name='kindOpe', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindReal = {
-  name='kindReal', accessMode = 'pub', typeId = 14 }
+  name='kindReal', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindStr = {
-  name='kindStr', accessMode = 'pub', typeId = 14 }
+  name='kindStr', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindSymb = {
-  name='kindSymb', accessMode = 'pub', typeId = 14 }
+  name='kindSymb', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.kindType = {
-  name='kindType', accessMode = 'pub', typeId = 14 }
+  name='kindType', accessMode = 'pub', typeId = 12 }
 _varName2InfoMap.noneToken = {
   name='noneToken', accessMode = 'pub', typeId = 178 }
 local _typeInfoList = {}
 moduleObj._typeInfoList = _typeInfoList
-_typeInfoList[1] = { parentId = 1, typeId = 7, nilable = true, orgTypeId = 6 }_typeInfoList[2] = { parentId = 1, typeId = 11, nilable = true, orgTypeId = 10 }_typeInfoList[3] = { parentId = 1, typeId = 13, nilable = true, orgTypeId = 12 }_typeInfoList[4] = { parentId = 1, typeId = 15, nilable = true, orgTypeId = 14 }_typeInfoList[5] = { parentId = 1, typeId = 21, nilable = true, orgTypeId = 20 }_typeInfoList[6] = { parentId = 1, typeId = 102, baseId = 1, txt = 'lune',
+_typeInfoList[1] = { parentId = 1, typeId = 9, nilable = true, orgTypeId = 8 }
+_typeInfoList[2] = { parentId = 1, typeId = 11, nilable = true, orgTypeId = 10 }
+_typeInfoList[3] = { parentId = 1, typeId = 13, nilable = true, orgTypeId = 12 }
+_typeInfoList[4] = { parentId = 1, typeId = 19, nilable = true, orgTypeId = 18 }
+_typeInfoList[5] = { parentId = 1, typeId = 102, baseId = 1, txt = 'lune',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {104}, }
-_typeInfoList[7] = { parentId = 1, typeId = 103, nilable = true, orgTypeId = 102 }_typeInfoList[8] = { parentId = 102, typeId = 104, baseId = 1, txt = 'base',
+_typeInfoList[6] = { parentId = 1, typeId = 103, nilable = true, orgTypeId = 102 }
+_typeInfoList[7] = { parentId = 102, typeId = 104, baseId = 1, txt = 'base',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {106}, }
-_typeInfoList[9] = { parentId = 102, typeId = 105, nilable = true, orgTypeId = 104 }_typeInfoList[10] = { parentId = 104, typeId = 106, baseId = 1, txt = 'Parser',
+_typeInfoList[8] = { parentId = 102, typeId = 105, nilable = true, orgTypeId = 104 }
+_typeInfoList[9] = { parentId = 104, typeId = 106, baseId = 1, txt = 'Parser',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {162, 168, 174, 178, 192, 200, 208, 262, 264, 266, 290}, }
-_typeInfoList[11] = { parentId = 104, typeId = 107, nilable = true, orgTypeId = 106 }_typeInfoList[12] = { parentId = 106, typeId = 162, baseId = 1, txt = 'Stream',
+_typeInfoList[10] = { parentId = 104, typeId = 107, nilable = true, orgTypeId = 106 }
+_typeInfoList[11] = { parentId = 1, typeId = 108, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pri', kind = 5, itemTypeId = {18, 10}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[12] = { parentId = 1, typeId = 109, nilable = true, orgTypeId = 108 }
+_typeInfoList[13] = { parentId = 1, typeId = 110, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pri', kind = 5, itemTypeId = {18, 10}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[14] = { parentId = 1, typeId = 111, nilable = true, orgTypeId = 110 }
+_typeInfoList[15] = { parentId = 1, typeId = 112, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pri', kind = 5, itemTypeId = {18, 10}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[16] = { parentId = 1, typeId = 113, nilable = true, orgTypeId = 112 }
+_typeInfoList[17] = { parentId = 1, typeId = 114, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pri', kind = 4, itemTypeId = {18}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[18] = { parentId = 1, typeId = 115, nilable = true, orgTypeId = 114 }
+_typeInfoList[19] = { parentId = 1, typeId = 116, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pri', kind = 5, itemTypeId = {18, 114}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[20] = { parentId = 1, typeId = 117, nilable = true, orgTypeId = 116 }
+_typeInfoList[21] = { parentId = 106, typeId = 118, baseId = 1, txt = 'createReserveInfo',
+        staticFlag = true, accessMode = 'pri', kind = 7, itemTypeId = {}, argTypeId = {10}, retTypeId = {108, 110, 112, 116}, children = {}, }
+_typeInfoList[22] = { parentId = 106, typeId = 162, baseId = 1, txt = 'Stream',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {164, 166}, }
-_typeInfoList[13] = { parentId = 106, typeId = 163, nilable = true, orgTypeId = 162 }_typeInfoList[14] = { parentId = 162, typeId = 164, baseId = 1, txt = 'read',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {20}, retTypeId = {21}, children = {}, }
-_typeInfoList[15] = { parentId = 162, typeId = 166, baseId = 1, txt = '__init',
+_typeInfoList[23] = { parentId = 106, typeId = 163, nilable = true, orgTypeId = 162 }
+_typeInfoList[24] = { parentId = 162, typeId = 164, baseId = 1, txt = 'read',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {18}, retTypeId = {19}, children = {}, }
+_typeInfoList[25] = { parentId = 162, typeId = 166, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[16] = { parentId = 106, typeId = 168, baseId = 162, txt = 'TxtStream',
+_typeInfoList[26] = { parentId = 106, typeId = 168, baseId = 162, txt = 'TxtStream',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {170, 172}, }
-_typeInfoList[17] = { parentId = 106, typeId = 169, nilable = true, orgTypeId = 168 }_typeInfoList[18] = { parentId = 168, typeId = 170, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {20}, retTypeId = {}, children = {}, }
-_typeInfoList[19] = { parentId = 168, typeId = 172, baseId = 1, txt = 'read',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {20}, retTypeId = {21}, children = {}, }
-_typeInfoList[20] = { parentId = 106, typeId = 174, baseId = 1, txt = 'Position',
+_typeInfoList[27] = { parentId = 106, typeId = 169, nilable = true, orgTypeId = 168 }
+_typeInfoList[28] = { parentId = 168, typeId = 170, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {18}, retTypeId = {}, children = {}, }
+_typeInfoList[29] = { parentId = 168, typeId = 172, baseId = 1, txt = 'read',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {18}, retTypeId = {19}, children = {}, }
+_typeInfoList[30] = { parentId = 106, typeId = 174, baseId = 1, txt = 'Position',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {176}, }
-_typeInfoList[21] = { parentId = 106, typeId = 175, nilable = true, orgTypeId = 174 }_typeInfoList[22] = { parentId = 174, typeId = 176, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {14, 14}, retTypeId = {}, children = {}, }
-_typeInfoList[23] = { parentId = 106, typeId = 178, baseId = 1, txt = 'Token',
+_typeInfoList[31] = { parentId = 106, typeId = 175, nilable = true, orgTypeId = 174 }
+_typeInfoList[32] = { parentId = 174, typeId = 176, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {12, 12}, retTypeId = {}, children = {}, }
+_typeInfoList[33] = { parentId = 106, typeId = 178, baseId = 1, txt = 'Token',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {184, 188, 190}, }
-_typeInfoList[24] = { parentId = 106, typeId = 179, nilable = true, orgTypeId = 178 }_typeInfoList[25] = { parentId = 1, typeId = 182, baseId = 1, txt = '',
+_typeInfoList[34] = { parentId = 106, typeId = 179, nilable = true, orgTypeId = 178 }
+_typeInfoList[35] = { parentId = 1, typeId = 180, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pri', kind = 3, itemTypeId = {178}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[36] = { parentId = 1, typeId = 181, nilable = true, orgTypeId = 180 }
+_typeInfoList[37] = { parentId = 1, typeId = 182, baseId = 1, txt = '',
         staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {178}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[26] = { parentId = 1, typeId = 183, nilable = true, orgTypeId = 182 }_typeInfoList[27] = { parentId = 178, typeId = 184, baseId = 1, txt = 'set_commentList',
+_typeInfoList[38] = { parentId = 1, typeId = 183, nilable = true, orgTypeId = 182 }
+_typeInfoList[39] = { parentId = 178, typeId = 184, baseId = 1, txt = 'set_commentList',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {182}, retTypeId = {}, children = {}, }
-_typeInfoList[28] = { parentId = 1, typeId = 186, baseId = 1, txt = '',
+_typeInfoList[40] = { parentId = 1, typeId = 186, baseId = 1, txt = '',
         staticFlag = false, accessMode = 'pub', kind = 3, itemTypeId = {178}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[29] = { parentId = 1, typeId = 187, nilable = true, orgTypeId = 186 }_typeInfoList[30] = { parentId = 178, typeId = 188, baseId = 1, txt = 'get_commentList',
+_typeInfoList[41] = { parentId = 1, typeId = 187, nilable = true, orgTypeId = 186 }
+_typeInfoList[42] = { parentId = 178, typeId = 188, baseId = 1, txt = 'get_commentList',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {186}, children = {}, }
-_typeInfoList[31] = { parentId = 178, typeId = 190, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {14, 20, 174, 180}, retTypeId = {}, children = {}, }
-_typeInfoList[32] = { parentId = 106, typeId = 192, baseId = 1, txt = 'Parser',
+_typeInfoList[43] = { parentId = 178, typeId = 190, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {12, 18, 174, 180}, retTypeId = {}, children = {}, }
+_typeInfoList[44] = { parentId = 106, typeId = 192, baseId = 1, txt = 'Parser',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {194, 196, 198}, }
-_typeInfoList[33] = { parentId = 106, typeId = 193, nilable = true, orgTypeId = 192 }_typeInfoList[34] = { parentId = 192, typeId = 194, baseId = 1, txt = 'getToken',
+_typeInfoList[45] = { parentId = 106, typeId = 193, nilable = true, orgTypeId = 192 }
+_typeInfoList[46] = { parentId = 192, typeId = 194, baseId = 1, txt = 'getToken',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {178}, children = {}, }
-_typeInfoList[35] = { parentId = 192, typeId = 196, baseId = 1, txt = 'getStreamName',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {20}, children = {}, }
-_typeInfoList[36] = { parentId = 192, typeId = 198, baseId = 1, txt = '__init',
+_typeInfoList[47] = { parentId = 192, typeId = 196, baseId = 1, txt = 'getStreamName',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[48] = { parentId = 192, typeId = 198, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[37] = { parentId = 106, typeId = 200, baseId = 192, txt = 'WrapParser',
+_typeInfoList[49] = { parentId = 106, typeId = 200, baseId = 192, txt = 'WrapParser',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {202, 204, 206}, }
-_typeInfoList[38] = { parentId = 106, typeId = 201, nilable = true, orgTypeId = 200 }_typeInfoList[39] = { parentId = 200, typeId = 202, baseId = 1, txt = 'getToken',
+_typeInfoList[50] = { parentId = 106, typeId = 201, nilable = true, orgTypeId = 200 }
+_typeInfoList[51] = { parentId = 200, typeId = 202, baseId = 1, txt = 'getToken',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {178}, children = {}, }
-_typeInfoList[40] = { parentId = 200, typeId = 204, baseId = 1, txt = 'getStreamName',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {20}, children = {}, }
-_typeInfoList[41] = { parentId = 200, typeId = 206, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {192, 20}, retTypeId = {}, children = {}, }
-_typeInfoList[42] = { parentId = 106, typeId = 208, baseId = 192, txt = 'StreamParser',
+_typeInfoList[52] = { parentId = 200, typeId = 204, baseId = 1, txt = 'getStreamName',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[53] = { parentId = 200, typeId = 206, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {192, 18}, retTypeId = {}, children = {}, }
+_typeInfoList[54] = { parentId = 106, typeId = 208, baseId = 192, txt = 'StreamParser',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {222, 226, 228, 286}, }
-_typeInfoList[43] = { parentId = 106, typeId = 209, nilable = true, orgTypeId = 208 }_typeInfoList[44] = { parentId = 208, typeId = 222, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {162, 20, 12}, retTypeId = {}, children = {}, }
-_typeInfoList[45] = { parentId = 208, typeId = 226, baseId = 1, txt = 'getStreamName',
-        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {20}, children = {}, }
-_typeInfoList[46] = { parentId = 208, typeId = 228, baseId = 1, txt = 'create',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {20, 12}, retTypeId = {209}, children = {}, }
-_typeInfoList[47] = { parentId = 1, typeId = 240, baseId = 1, txt = 'Map',
-        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {20, 14}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[48] = { parentId = 1, typeId = 241, nilable = true, orgTypeId = 240 }_typeInfoList[49] = { parentId = 106, typeId = 262, baseId = 1, txt = 'getKindTxt',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {14}, retTypeId = {20}, children = {}, }
-_typeInfoList[50] = { parentId = 106, typeId = 264, baseId = 1, txt = 'isOp2',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {20}, retTypeId = {6}, children = {}, }
-_typeInfoList[51] = { parentId = 106, typeId = 266, baseId = 1, txt = 'isOp1',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {20}, retTypeId = {6}, children = {}, }
-_typeInfoList[52] = { parentId = 208, typeId = 286, baseId = 1, txt = 'getToken',
+_typeInfoList[55] = { parentId = 106, typeId = 209, nilable = true, orgTypeId = 208 }
+_typeInfoList[56] = { parentId = 208, typeId = 222, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {162, 18, 10}, retTypeId = {}, children = {}, }
+_typeInfoList[57] = { parentId = 208, typeId = 226, baseId = 1, txt = 'getStreamName',
+        staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {18}, children = {}, }
+_typeInfoList[58] = { parentId = 208, typeId = 228, baseId = 1, txt = 'create',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {18, 10}, retTypeId = {209}, children = {}, }
+_typeInfoList[59] = { parentId = 1, typeId = 240, baseId = 1, txt = 'Map',
+        staticFlag = false, accessMode = 'pub', kind = 5, itemTypeId = {18, 12}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[60] = { parentId = 1, typeId = 241, nilable = true, orgTypeId = 240 }
+_typeInfoList[61] = { parentId = 106, typeId = 248, baseId = 1, txt = 'regKind',
+        staticFlag = true, accessMode = 'pri', kind = 7, itemTypeId = {}, argTypeId = {18}, retTypeId = {12}, children = {}, }
+_typeInfoList[62] = { parentId = 106, typeId = 262, baseId = 1, txt = 'getKindTxt',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {12}, retTypeId = {18}, children = {}, }
+_typeInfoList[63] = { parentId = 106, typeId = 264, baseId = 1, txt = 'isOp2',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {18}, retTypeId = {6}, children = {}, }
+_typeInfoList[64] = { parentId = 106, typeId = 266, baseId = 1, txt = 'isOp1',
+        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {18}, retTypeId = {6}, children = {}, }
+_typeInfoList[65] = { parentId = 1, typeId = 268, baseId = 1, txt = '',
+        staticFlag = false, accessMode = 'pri', kind = 3, itemTypeId = {178}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[66] = { parentId = 1, typeId = 269, nilable = true, orgTypeId = 268 }
+_typeInfoList[67] = { parentId = 208, typeId = 270, baseId = 1, txt = 'parse',
+        staticFlag = false, accessMode = 'pri', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {269}, children = {}, }
+_typeInfoList[68] = { parentId = 270, typeId = 272, baseId = 1, txt = 'readLine',
+        staticFlag = true, accessMode = 'pri', kind = 7, itemTypeId = {}, argTypeId = {}, retTypeId = {19}, children = {}, }
+_typeInfoList[69] = { parentId = 270, typeId = 278, baseId = 1, txt = '',
+        staticFlag = true, accessMode = 'pri', kind = 7, itemTypeId = {}, argTypeId = {12, 18}, retTypeId = {18, 12}, children = {}, }
+_typeInfoList[70] = { parentId = 270, typeId = 280, baseId = 1, txt = '',
+        staticFlag = true, accessMode = 'pri', kind = 7, itemTypeId = {}, argTypeId = {12, 18, 12}, retTypeId = {6}, children = {}, }
+_typeInfoList[71] = { parentId = 280, typeId = 282, baseId = 1, txt = 'createInfo',
+        staticFlag = true, accessMode = 'pri', kind = 7, itemTypeId = {}, argTypeId = {12, 18, 12}, retTypeId = {178}, children = {}, }
+_typeInfoList[72] = { parentId = 280, typeId = 284, baseId = 1, txt = 'analyzeNumber',
+        staticFlag = true, accessMode = 'pri', kind = 7, itemTypeId = {}, argTypeId = {18, 12}, retTypeId = {12, 10}, children = {}, }
+_typeInfoList[73] = { parentId = 208, typeId = 286, baseId = 1, txt = 'getToken',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {179}, children = {}, }
-_typeInfoList[53] = { parentId = 106, typeId = 290, baseId = 1, txt = 'getEofToken',
+_typeInfoList[74] = { parentId = 106, typeId = 290, baseId = 1, txt = 'getEofToken',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {}, retTypeId = {178}, children = {}, }
 ----- meta -----
 return moduleObj

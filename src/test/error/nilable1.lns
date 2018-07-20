@@ -1,0 +1,11 @@
+{
+    let val:int = nil;
+}
+{
+    let val:int = 0;
+    val = nil;
+}
+{
+    let val:int! = 0;
+    val = val + 1;
+}

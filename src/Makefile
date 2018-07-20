@@ -1,4 +1,5 @@
 LUA=lua5.3
+#LUA=lua5.2
 
 NDIR=$(shell pwd)
 
@@ -12,7 +13,7 @@ help:
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
 	$(LUA) lune/base/base.lua test/test.lns ast
-	$(LUA) lune/base/base.lua test/test.lns lua
+	$(LUA) lune/base/base.lua test/test.lns LUA
 
 test:
 	LANG= $(MAKE) exec | \
@@ -22,7 +23,7 @@ test:
 
 define trans
 	echo test $1
-	$(LUA) lune/base/base.lua lune/base/$1.lns lua > work/1/lune/base/$1.lua
+	$(LUA) lune/base/base.lua lune/base/$1.lns LUA > work/1/lune/base/$1.lua
 	cp lune/base/$1.lns work/1/lune/base
 endef
 
@@ -31,7 +32,7 @@ define cutMeta
 endef
 
 define transwork
-	(cd work/$1; $(LUA) lune/base/base.lua lune/base/$3.lns lua > ../$2/lune/base/$(3).lua )
+	(cd work/$1; $(LUA) lune/base/base.lua lune/base/$3.lns LUA > ../$2/lune/base/$(3).lua )
 	cp lune/base/$3.lns work/$2/lune/base
 endef
 
@@ -51,6 +52,8 @@ test-comp:
 	$(MAKE) test-comp2
 
 test-comp2:
+	$(LUA) lune/base/base.lua test/start.lns exe > test.result
+
 	$(call transwork,1,2,Util)
 	$(call transwork,1,2,Parser)
 	$(call transwork,1,2,TransUnit)
@@ -68,7 +71,9 @@ test-comp2:
 
 	cp -a test work/3
 	(cd work/3; $(LUA) lune/base/base.lua test/start.lns ast)
-	(cd work/3; $(LUA) lune/base/base.lua test/start.lns lua)
-	(cd work/3; $(LUA) lune/base/base.lua test/start.lns exe)
+	(cd work/3; $(LUA) lune/base/base.lua test/start.lns LUA)
+	(cd work/3; $(LUA) lune/base/base.lua test/start.lns exe) | tee test2.result
+
+	diff test.result test2.result
 
 	cp work/3/lune/base/*.lua lune/base/

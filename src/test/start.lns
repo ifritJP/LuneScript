@@ -23,7 +23,7 @@ print( "12%d" ( 10 ) );
     print( "%g" (val@real));
 }
 
-print( "op", {},  1 and "2" and 3.0 and {} );
+print( "op", type( {} ),  1 and "2" and 3.0 and type( {} ) );
 print( "op", 3.0, 1 and "2" and 3.0 or  {} );
 print( "op", "2", 1 and "2" or  3.0 and {} );
 print( "op", "2", 1 and "2" or  3.0 or  {} );
@@ -46,7 +46,7 @@ for index = 1, 4 {
     }   
 }
 
-fn func( val: int ): int {
+fn func( val: int! ): int {
     let! val2 = val { return 0; };
     
     return val2 + 2;
@@ -59,6 +59,7 @@ macro _test() {
     print( "macro hoge" );
 }
 _test();
+
 
 macro _test2( val:int, funcxx:sym ) {
     {
@@ -74,27 +75,35 @@ macro _test2( val:int, funcxx:sym ) {
         };
         let stat3:stat[] = [];
         for index = 1, 4 {
-            table.insert( stat3, `{ print( "foo %d" ( ,,index ) ); } );
+            stat3.insert( `{ print( "foo %d" ( ,,index ) ); } );
         }
-        let stat4 = ,,,func( 1 );
-        let stat5 = `{
-            ,,stat4( 100 );
-            _fcall( ,,,func( 1 ), ( ,,func( 2 ) ));
-            _fcall( ,,,func( 1 ), ( ,,,,stat4 ));
+        let symbol1 = ,,,func( 1 );
+        let symbol2 = ,,,"mfunc%d" (1);
+        let stat4 = `{
+            ,,symbol1( "100" );
+            ,,symbol2( ,,func( 2 ) );
+            ,,,func(1)$( ,,,,symbol1 );
         };
     }
     print( ,,message );
+    print( "--funcxx--" );
     ,,funcxx( "macro test2" );
+    print( "--stat--" );
     ,,stat;
+    print( "--stat2--" );
     ,,stat2;
+    print( "--stat3--" );
     ,,stat3;
-    ,,stat4( 10 );
-    ,,stat5;
+    print( "--symbol1--" );
+    ,,symbol1( "10" );
+    print( "--stat4--" );
+    ,,stat4;
 }
 
-fn mfunc1( val: int ) {
+fn mfunc1( val: str ) {
     print( "mfunc1", val );
 }
+
 
 _test2( 1, print );
 
@@ -106,7 +115,7 @@ macro _classtest( macroVal: int, fieldInfoList: Map<str,str>[] ) {
         if fieldInfoList {
             foreach fieldInfo in fieldInfoList {
                 foreach typeName, varName in fieldInfo {
-                    table.insert( field, `{
+                    field.insert( `{
                         pri let ,,,varName : ,,,typeName { pub };
                     });
                 }
@@ -178,36 +187,60 @@ print( (new GetTest2()).$val );
         return 1,2,3;
     }   
     let ddd1, ddd2, ddd3 = TestRetDDD();
-    print( ddd1@int + 1, ddd2@int + 1, ddd3@int + 1 );
+    print( "2 = %d, 3 = %d, 4 = %d"
+           (ddd1@int + 1, ddd2@int + 1, ddd3@int + 1 ) );
 }
 
 {
     let nilableInt1: int! = nil;
-    let! unwrapInt1, unwrapInt2: int = nilableInt1, 456 {
-        unwrapInt1 = 123; unwrapInt2 = _unwrapInt2 or -456; };
-    print( unwrapInt1, unwrapInt2 );
+    let! unwrapInt1, unwrapInt2: int = nilableInt1, nil {
+        unwrapInt1 = 123; unwrapInt2 = unwrap _unwrapInt2 default -456; }
+    then {
+        print( "NG" );
+    };
+    print( "123 = %d, -456 = %d" ( unwrapInt1, unwrapInt2 ) );
 }
 
 {
     let nilableInt1: int! = 567;
     let! unwrapInt1, unwrapInt2: int = nilableInt1, 890 {
         unwrapInt1 = 123; unwrapInt2 = 456; };
-    print( unwrapInt1, unwrapInt2 );
+    print( "567 = %d, 890 = %d" (unwrapInt1, unwrapInt2 ) );
 }
 
 {
-    let nilableInt1: int! = nil;
-    let! unwrapInt1, unwrapInt2: int = nilableInt1, 890 {
-        unwrapInt1 = unwrap unwrapInt1 instead 123; unwrapInt2 = unwrap unwrapInt2; };
-    print( unwrapInt1, unwrapInt2 );
-    unwrap! unwrapInt1, unwrapInt2 = nilableInt1, nil {
-        unwrapInt1 = unwrap _exp1 instead 321; unwrapInt2 = 654; };
-    print( unwrapInt1, unwrapInt2 );
+    let hoge1: int = 1;
+    let hoge2: int = 2;
+    unwrap! hoge1, hoge2 = 3, 4 {
+        print( "NG" );
+    }
+    then {
+        print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+    };
+    print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+}
+
+{
+    let hoge1: int = 1;
+    let hoge2: int = 2;
+    sync! hoge1, hoge2 = 3, 4 {
+        print( "NG" );
+    }
+    then {
+        print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+    }
+    do {
+        print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+        hoge1 = hoge1 * 10;
+        hoge2 = hoge2 * 10;
+    };
+    print( "30 = %d, 40 = %d" ( hoge1, hoge2 ) );
 }
 
 
+
 {
-    let nilableInt1: int! = nil;
+    let nilableInt1: int! = null;
     if! nilableInt1 {
         print( _exp, "not nil" );
     }
@@ -227,5 +260,23 @@ print( (new GetTest2()).$val );
 }
 
 {
-    let test: int = nil;
+    let test: int! = nil;
 }
+
+fn testret() : int! {
+    return nil;
+}
+
+{
+    let arry: int[] = [];
+    arry.insert( 1 );
+    foreach val, index in arry {
+        print( index, val );
+    }
+    arry.remove();
+}
+
+{
+    print( 10 / 3, 10 / 3.0, (10 / 3.0)@int );
+}
+

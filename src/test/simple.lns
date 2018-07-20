@@ -51,4 +51,3 @@ pub class ClassB extend Super {
 
 let classB = new ClassB();
 print( "classB.sub", classB.sub() );
-
