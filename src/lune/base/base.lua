@@ -47,6 +47,12 @@ local function createStream( val, writeFunc )
    return stream
 end
 
+local function getModulePath(module, exn)
+    local searchPath = package.path
+	searchPath = searchPath:gsub("%.lua([;$])", (".%s%s"):format(exn, "%1"))
+    return package.searchpath(module, searchPath)
+end
+
 
 _luneScript = {}
 _luneScript.loadedMap = {}
@@ -60,9 +66,7 @@ end
 
 function _luneScript.loadModule( module )
    if not _luneScript.loadedMap[ module ] then
-      local searchPath = package.path
-      searchPath = string.gsub( searchPath, "%.lua", ".lns" )
-      local path = package.searchpath( module, searchPath )
+      local path = getModulePath(module, "lns")
 
       _luneScript.loadedMap[ module ] = _luneScript.loadFile( path, module )
    end
@@ -71,9 +75,7 @@ end
 
 function _luneScript.loadMeta( module )
    if not _luneScript.loadedMetaMap[ module ] then
-      local searchPath = package.path
-      searchPath = string.gsub( searchPath, "%.lua", ".lnm" )
-      local path = package.searchpath( module, searchPath )
+      local path = getModulePath(module, "lnm")
 
       _luneScript.loadedMetaMap[ module ] = _luneScript.loadFile( path, module )
    end
