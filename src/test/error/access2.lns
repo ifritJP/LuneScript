@@ -1,0 +1,28 @@
+class Super {
+    pri let val1: int;
+    pro let val2: int;
+    pub let val3: int;
+
+    pri fn func1() {
+    }
+    pro fn func2() {
+    }
+    pub fn func3() {
+    }
+}
+
+class Sub extend Super {
+    pub fn __init() {
+        super( 1, 2, 3 );
+    }
+    pub fn test() {
+        self.val3 = 0;
+        self.val2 = 0;
+        self.val1 = 0;
+    }
+}
+
+let sub = new Sub();
+sub.val3 = 0;
+sub.val2 = 0;
+sub.val1 = 0;

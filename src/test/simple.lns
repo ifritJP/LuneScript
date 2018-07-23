@@ -27,7 +27,7 @@ pub fn ClassA.sub() : int {
 }
 
 pub class Super {
-    pro let val:int;
+    pro let val:int {pub};
     pub fn sub(): int {
         return 1;
     }
@@ -39,7 +39,7 @@ pub class ClassB extend Super {
     }
     
     pub fn func(): int {
-	return self.val;
+	return self.$val;
     }
     pub fn func2(): Sub2.Hoge {
         return new Sub2.Hoge( 1 );

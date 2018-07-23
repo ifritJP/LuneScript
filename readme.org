@@ -1,0 +1,26 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+
+#+TITLE: What's a LuneScript
+
+LuneScript is a transcompiler for Lua.
+
+* feature of a LuneScript
+
+- Lua と C の syntax を基調としているため、学習コストが低い。
+- 静的型付け言語であるため、型チェックにより単純なミスをコンパイル時に発見可能。
+- 型推論により、型宣言の手間を最小化。
+- NULL 安全 (null safety)。
+- generics (一部のみ)により、型情報を保ったままの処理が可能。
+- 言語の文法としてクラス定義を対応。
+- マクロ により、ポリモーフィズム等の動的処理に頼らないデザインを実現可能。
+- JSON と互換なデータ表現をサポート。
+- トランスコンパイルした Lua コードは、外部ライブラリを前提とせずに単体で動作可能。
+- トランスコンパイルした Lua コードは、LuneScript で書いた処理そのままが出力されるので、
+  性能劣化がない。
+- 既存の Lua の外部モジュールを LuneScript から利用可能。
+- LuneScript は Lua 上で動作し、Lua 標準モジュール以外を必要としないため、導入が簡単。
+- Lua5.2, 5.3 をサポート。
+- LuneScript はセルフホスティングで開発している。

@@ -1,11 +1,30 @@
 {
-    let val:int = nil;
+    let val:int = nil;  // error
 }
 {
     let val:int = 0;
-    val = nil;
+    val = nil;          // error
 }
 {
     let val:int! = 0;
-    val = val + 1;
+    val = val + 1;      // error
+}
+{
+    fn get(): int[] {
+        return [1];
+    }
+    if! get()[1] {      // error
+        print( _exp );
+    }
+}
+{
+    fn get(): int![] {
+        return [1];
+    }
+    let val:int = get()[1];  // error
+}
+{
+    fn get(val:int) {
+    }
+    get( nil ); // error
 }

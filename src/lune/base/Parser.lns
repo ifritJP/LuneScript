@@ -148,6 +148,13 @@ pub class Token {
     pub let pos: Position;
     pri let commentList: Token[] { pub };
 
+    pub fn __init( kind: int, txt: str, pos: Position, commentList: Token[]! ) {
+        self.kind = kind;
+        self.txt = txt;
+        self.pos = pos;
+        self.commentList = unwrap commentList default [];
+    }
+    
     pub fn set_commentList( commentList: Token[] ) {
         self.commentList = commentList;
     }
@@ -234,7 +241,7 @@ pub let kindOpe = regKind( "Ope" );
 pub let kindType = regKind( "Type" );
 pub let kindEof = regKind( "Eof" );
 
-pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ) );
+pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ), [] );
 
 
 let quotedCharSet:Map<int,bool> = {};
@@ -358,7 +365,7 @@ fn StreamParser.parse() : Token[]! {
 		}
 	    }
             return new Token( tokenKind, token,
-                              new Position( self.lineNo, tokenColumn ) );
+                              new Position( self.lineNo, tokenColumn ), [] );
 	}
 
 	/*
@@ -641,7 +648,7 @@ pub override fn StreamParser.getToken() : Token! {
     return token;
 }
 
-let eofToken = new Token( kindEof, "<EOF>", new Position( 0, 0 ) );
+let eofToken = new Token( kindEof, "<EOF>", new Position( 0, 0 ), [] );
 pub fn getEofToken(): Token {
    return eofToken;
 }

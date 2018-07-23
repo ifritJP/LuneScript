@@ -49,17 +49,17 @@ fn getTxt( token: Parser.Token ): str {
 }
 
 pub override fn dumpFilter.processNone( 
-    node: NoneNode, prefix: str, depth: int )
+    node: TransUnit.NoneNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
 };
 pub override fn dumpFilter.processImport( 
-    node: ImportNode, prefix: str, depth: int )
+    node: TransUnit.ImportNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_modulePath() );
 };
 pub override fn dumpFilter.processRoot( 
-    node: RootNode, prefix: str, depth: int )
+    node: TransUnit.RootNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     foreach child, index in node.get_children() {
@@ -67,7 +67,7 @@ pub override fn dumpFilter.processRoot(
     }	
 };
 pub override fn dumpFilter.processBlock( 
-    node: BlockNode, prefix: str, depth: int )
+    node: TransUnit.BlockNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     foreach statement, index in node.get_stmtList() {
@@ -75,13 +75,13 @@ pub override fn dumpFilter.processBlock(
     }	
 };  
 pub override fn dumpFilter.processStmtExp( 
-    node: StmtExpNode, prefix: str, depth: int )
+    node: TransUnit.StmtExpNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processDeclClass( 
-    node: DeclClassNode, prefix: str, depth: int )
+    node: TransUnit.DeclClassNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_name().txt );
     foreach field, index in node.get_fieldList() {
@@ -89,13 +89,13 @@ pub override fn dumpFilter.processDeclClass(
     }	
 };  
 pub override fn dumpFilter.processDeclMember( 
-    node: DeclMemberNode, prefix: str, depth: int )
+    node: TransUnit.DeclMemberNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_name().txt );
     filter( node.get_refType(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpMacroExp( 
-    node: ExpMacroExpNode, prefix: str, depth: int )
+    node: TransUnit.ExpMacroExpNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     let stmtList = node.get_stmtList();
@@ -106,12 +106,12 @@ pub override fn dumpFilter.processExpMacroExp(
     }
 };
 pub override fn dumpFilter.processDeclMacro( 
-    node: DeclMacroNode, prefix: str, depth: int )
+    node: TransUnit.DeclMacroNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_expType().getTxt() );
 };
 pub override fn dumpFilter.processExpMacroStat( 
-    node: ExpMacroStatNode, prefix: str, depth: int )
+    node: TransUnit.ExpMacroStatNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_expType().getTxt() );
     foreach node in node.get_expStrList() {
@@ -121,7 +121,7 @@ pub override fn dumpFilter.processExpMacroStat(
 
 
 pub override fn dumpFilter.processUnwrapSet( 
-    node: UnwrapSetNode, prefix: str, depth: int )
+    node: TransUnit.UnwrapSetNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     filter( node.$dstExpList, self, prefix .. "  ", depth + 1 );
@@ -133,7 +133,7 @@ pub override fn dumpFilter.processUnwrapSet(
 }
 
 pub override fn dumpFilter.processIfUnwrap( 
-    node: IfUnwrapNode, prefix: str, depth: int )
+    node: TransUnit.IfUnwrapNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     filter( node.$exp, self, prefix .. "  ", depth + 1 );
@@ -144,7 +144,7 @@ pub override fn dumpFilter.processIfUnwrap(
 }
 
 pub override fn dumpFilter.processDeclVar( 
-    node: DeclVarNode, prefix: str, depth: int )
+    node: TransUnit.DeclVarNode, prefix: str, depth: int )
 {
     let varName = "";
     foreach var, index in node.get_varList() {
@@ -183,18 +183,18 @@ pub override fn dumpFilter.processDeclVar(
     }
 };  
 pub override fn dumpFilter.processDeclArg( 
-    node: DeclArgNode, prefix: str, depth: int )
+    node: TransUnit.DeclArgNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_name().txt );
     filter( node.get_argType(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processDeclArgDDD( 
-    node: DeclArgDDDNode, prefix: str, depth: int )
+    node: TransUnit.DeclArgDDDNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "..." );
 };  
 pub override fn dumpFilter.processExpDDD( 
-    node: ExpDDDNode, prefix: str, depth: int )
+    node: TransUnit.ExpDDDNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "..." );
 };
@@ -216,29 +216,29 @@ fn dumpFilter.processDeclFuncInfo(
     }
 }
 pub override fn dumpFilter.processDeclFunc( 
-    node: DeclFuncNode, prefix: str, depth: int )
+    node: TransUnit.DeclFuncNode, prefix: str, depth: int )
 {
     self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
 };	
 pub override fn dumpFilter.processDeclMethod( 
-    node: DeclMethodNode, prefix: str, depth: int )
+    node: TransUnit.DeclMethodNode, prefix: str, depth: int )
 {
     self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
 };	
 pub override fn dumpFilter.processDeclConstr( 
-    node: DeclConstrNode, prefix: str, depth: int )
+    node: TransUnit.DeclConstrNode, prefix: str, depth: int )
 {
     self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
 };
 
 pub override fn dumpFilter.processExpCallSuper( 
-    node: ExpCallSuperNode, prefix: str, depth: int )
+    node: TransUnit.ExpCallSuperNode, prefix: str, depth: int )
 {
     let typeInfo:TransUnit.TypeInfo = node.get_superType();
     dump( prefix, depth, node, typeInfo.getTxt() );
 };
 pub override fn dumpFilter.processRefType( 
-    node: RefTypeNode, prefix: str, depth: int )
+    node: TransUnit.RefTypeNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node,
 	  (node.get_refFlag() and "&" or "") ..
@@ -246,7 +246,7 @@ pub override fn dumpFilter.processRefType(
     filter( node.get_name(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processIf( 
-    node: IfNode, prefix: str, depth: int )
+    node: TransUnit.IfNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "");
     let stmtList = node.get_stmtList();
@@ -258,7 +258,7 @@ pub override fn dumpFilter.processIf(
     }	
 };  
 pub override fn dumpFilter.processSwitch( 
-    node: SwitchNode, prefix: str, depth: int )
+    node: TransUnit.SwitchNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "");
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
@@ -272,21 +272,21 @@ pub override fn dumpFilter.processSwitch(
     }
 };
 pub override fn dumpFilter.processWhile( 
-    node: WhileNode, prefix: str, depth: int )
+    node: TransUnit.WhileNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "");
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processRepeat( 
-    node: RepeatNode, prefix: str, depth: int )
+    node: TransUnit.RepeatNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "");
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processFor( 
-    node: ForNode, prefix: str, depth: int )
+    node: TransUnit.ForNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_val().txt );
     filter( node.get_init(), self, prefix .. "  ", depth + 1 );
@@ -297,7 +297,7 @@ pub override fn dumpFilter.processFor(
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processApply( 
-    node: ApplyNode, prefix: str, depth: int )
+    node: TransUnit.ApplyNode, prefix: str, depth: int )
 {
     let varNames = "";
     let varList = node.get_varList();
@@ -309,7 +309,7 @@ pub override fn dumpFilter.processApply(
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processForeach( 
-    node: ForeachNode, prefix: str, depth: int )
+    node: TransUnit.ForeachNode, prefix: str, depth: int )
 {
     let index = "";
     if! node.get_key() {
@@ -320,7 +320,7 @@ pub override fn dumpFilter.processForeach(
     filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processForsort( 
-    node: ForsortNode, prefix: str, depth: int )
+    node: TransUnit.ForsortNode, prefix: str, depth: int )
 {
     let index = "";
     if! node.get_key() {
@@ -332,7 +332,7 @@ pub override fn dumpFilter.processForsort(
 };
 
 pub override fn dumpFilter.processExpUnwrap(
-    node: ExpUnwrapNode, prefix: str, depth: int )
+    node: TransUnit.ExpUnwrapNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     filter( node.$exp, self, prefix .. "  ", depth + 1 );
@@ -342,7 +342,7 @@ pub override fn dumpFilter.processExpUnwrap(
 }
 
 pub override fn dumpFilter.processExpCall( 
-    node: ExpCallNode, prefix: str, depth: int )
+    node: TransUnit.ExpCallNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     filter( node.get_func(), self, prefix .. "  ", depth + 1 );
@@ -351,7 +351,7 @@ pub override fn dumpFilter.processExpCall(
     }	
 };  
 pub override fn dumpFilter.processExpList( 
-    node: ExpListNode, prefix: str, depth: int )
+    node: TransUnit.ExpListNode, prefix: str, depth: int )
 
 {
     dump( prefix, depth, node, "" );
@@ -361,32 +361,32 @@ pub override fn dumpFilter.processExpList(
     }	
 };  
 pub override fn dumpFilter.processExpOp1( 
-    node: ExpOp1Node, prefix: str, depth: int )
+    node: TransUnit.ExpOp1Node, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_op().txt );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpCast( 
-    node: ExpCastNode, prefix: str, depth: int )
+    node: TransUnit.ExpCastNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpParen( 
-    node: ExpParenNode, prefix: str, depth: int )
+    node: TransUnit.ExpParenNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "()" );
     filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpOp2( 
-    node: ExpOp2Node, prefix: str, depth: int )
+    node: TransUnit.ExpOp2Node, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_op().txt );
     filter( node.get_exp1(), self, prefix .. "  ", depth + 1 );
     filter( node.get_exp2(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpNew( 
-    node: ExpNewNode, prefix: str, depth: int )
+    node: TransUnit.ExpNewNode, prefix: str, depth: int )
 
 {
     dump( prefix, depth, node, "" );
@@ -396,26 +396,26 @@ pub override fn dumpFilter.processExpNew(
     }
 };
 pub override fn dumpFilter.processExpRef( 
-    node: ExpRefNode, prefix: str, depth: int )
+    node: TransUnit.ExpRefNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_token().txt );
 };
 pub override fn dumpFilter.processExpRefItem( 
-    node: ExpRefItemNode, prefix: str, depth: int )
+    node: TransUnit.ExpRefItemNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt() );
     filter( node.get_val(), self, prefix .. "  ", depth + 1 );
     filter( node.get_index(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processRefField( 
-    node: RefFieldNode, prefix: str, depth: int )
+    node: TransUnit.RefFieldNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_field().txt );
     filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
 };  
 
 pub override fn dumpFilter.processGetField( 
-    node: GetFieldNode, prefix: str, depth: int )
+    node: TransUnit.GetFieldNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node,
           (node.get_getterTypeInfo() and "get_" or "") .. node.get_field().txt );
@@ -423,7 +423,7 @@ pub override fn dumpFilter.processGetField(
 };
 
 pub override fn dumpFilter.processReturn( 
-    node: ReturnNode, prefix: str, depth: int )
+    node: TransUnit.ReturnNode, prefix: str, depth: int )
 
 {
     dump( prefix, depth, node, "" );
@@ -432,7 +432,7 @@ pub override fn dumpFilter.processReturn(
     }
 };  
 pub override fn dumpFilter.processLiteralList( 
-    node: LiteralListNode, prefix: str, depth: int )
+    node: TransUnit.LiteralListNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "[]" );
     if! node.get_expList() {
@@ -440,7 +440,7 @@ pub override fn dumpFilter.processLiteralList(
     }
 };  
 pub override fn dumpFilter.processLiteralMap( 
-    node: LiteralMapNode, prefix: str, depth: int )
+    node: TransUnit.LiteralMapNode, prefix: str, depth: int )
 
 {
     dump( prefix, depth, node, "{}" );
@@ -451,7 +451,7 @@ pub override fn dumpFilter.processLiteralMap(
     }
 };  
 pub override fn dumpFilter.processLiteralArray( 
-    node: LiteralArrayNode, prefix: str, depth: int )
+    node: TransUnit.LiteralArrayNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "[@]" );
     if! node.get_expList() {
@@ -459,46 +459,46 @@ pub override fn dumpFilter.processLiteralArray(
     }
 };  
 pub override fn dumpFilter.processLiteralChar( 
-    node: LiteralCharNode, prefix: str, depth: int )
+    node: TransUnit.LiteralCharNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node,
 	  string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
 };  
 pub override fn dumpFilter.processLiteralInt( 
-    node: LiteralIntNode, prefix: str, depth: int )
+    node: TransUnit.LiteralIntNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node,
 	  string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
 };  
 pub override fn dumpFilter.processLiteralReal( 
-    node: LiteralRealNode, prefix: str, depth: int )
+    node: TransUnit.LiteralRealNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node,
 	  string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
 };  
 pub override fn dumpFilter.processLiteralString( 
-    node: LiteralStringNode, prefix: str, depth: int )
+    node: TransUnit.LiteralStringNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_token().txt );
 };  
 pub override fn dumpFilter.processLiteralBool( 
-    node: LiteralBoolNode, prefix: str, depth: int )
+    node: TransUnit.LiteralBoolNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node,
           node.get_token().txt == "true" and "true" or "false" );
 };  
 pub override fn dumpFilter.processLiteralNil( 
-    node: LiteralNilNode, prefix: str, depth: int )
+    node: TransUnit.LiteralNilNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
 };  
 pub override fn dumpFilter.processBreak( 
-    node: BreakNode, prefix: str, depth: int )
+    node: TransUnit.BreakNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
 };  
 pub override fn dumpFilter.processLiteralSymbol( 
-    node: LiteralSymbolNode, prefix: str, depth: int )
+    node: TransUnit.LiteralSymbolNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, node.get_token().txt );
 };  

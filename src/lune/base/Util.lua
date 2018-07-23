@@ -84,29 +84,29 @@ do
   _className2InfoMap.Util = _classInfo106
   _typeId2ClassInfoMap[ 106 ] = _classInfo106
   _classInfo106.debugLog = {
-    name='debugLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 124 }
+    name='debugLog', staticFlag = true, accessMode = 'pub', typeId = 124 }
   _classInfo106.errorLog = {
-    name='errorLog', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 122 }
+    name='errorLog', staticFlag = true, accessMode = 'pub', typeId = 122 }
   _classInfo106.memStream = {
-    name='memStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 114 }
+    name='memStream', staticFlag = false, accessMode = 'pub', typeId = 114 }
   _classInfo106.outStream = {
-    name='outStream', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 108 }
+    name='outStream', staticFlag = false, accessMode = 'pub', typeId = 108 }
   _classInfo106.profile = {
-    name='profile', staticFlag = true, accessMode = 'pub', methodFlag = false, typeId = 128 }
+    name='profile', staticFlag = true, accessMode = 'pub', typeId = 128 }
   end
 do
   local _classInfo104 = {}
   _className2InfoMap.base = _classInfo104
   _typeId2ClassInfoMap[ 104 ] = _classInfo104
   _classInfo104.Util = {
-    name='Util', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 106 }
+    name='Util', staticFlag = false, accessMode = 'pub', typeId = 106 }
   end
 do
   local _classInfo102 = {}
   _className2InfoMap.lune = _classInfo102
   _typeId2ClassInfoMap[ 102 ] = _classInfo102
   _classInfo102.base = {
-    name='base', staticFlag = false, accessMode = 'pub', methodFlag = false, typeId = 104 }
+    name='base', staticFlag = false, accessMode = 'pub', typeId = 104 }
   end
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap

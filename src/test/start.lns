@@ -131,8 +131,8 @@ macro _classtest( macroVal: int, fieldInfoList: Map<str,str>[] ) {
 }
 
 _classtest( 1, [ { "val": "int" }, { "val2": "str" } ] ) ;
-_classtest( 2 );
-_classtest( 3 );
+_classtest( 2, [] );
+_classtest( 3, [] );
 
 {
     let classObj = new classTest1( 1000, "2000" );
@@ -175,7 +175,7 @@ class GetTest {
 print( (new GetTest()).$val );
 
 class GetTest2 {
-    let val: int;
+    let val: int { pub };
     pub fn __init() {
         self.val = 200;
     }
