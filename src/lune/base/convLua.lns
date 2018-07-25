@@ -39,15 +39,17 @@ class PubFuncInfo {
 pub class convFilter extend TransUnit.Filter {
     pri let streamName: str;
     pri let stream: Util.outStream;
+    pri let metaStream: Util.outStream;
+    pri let outMetaFlag: bool;
     pri let moduleName2Info: Map<str,stem>;
     pri let convMode: str;
     pri let inMacro: bool;
     pri let indent: int;
     pri let curLineNo: int;
-    // クラス名 → TypeInfo
-    pri let className2TypeInfo: Map<str,TransUnit.TypeInfo>;
-    // クラス名 → Member Node List
-    pri let className2MemberList: Map<str,TransUnit.DeclMemberNode[]>;
+    // クラス TypeId → TypeInfo
+    pri let classId2TypeInfo: Map<int,TransUnit.TypeInfo>;
+    // クラス TypeId → Member Node List
+    pri let classId2MemberList: Map<str,TransUnit.DeclMemberNode[]>;
     // public 変数名 → 変数情報
     pri let pubVarName2InfoMap: Map<str,PubVerInfo>;
     // public 関数名 → 関数情報
@@ -56,19 +58,22 @@ pub class convFilter extend TransUnit.Filter {
     pri let macroDepth: int;
     
     fn __init( streamName: str, stream: Util.outStream,
+               metaStream: Util.outStream,
                convMode: str, inMacro: bool )
     {
         //Util.errorLog( "__init: %s" (mode) );
         self.macroDepth = 0;
         self.streamName = streamName;
         self.stream = stream;
+        self.metaStream = metaStream;
+        self.outMetaFlag = false;
         self.moduleName2Info = {};
         self.convMode = convMode;
         self.inMacro = inMacro;
         self.indent = 0;
         self.curLineNo = 1;
-        self.className2TypeInfo = {};
-        self.className2MemberList = {};
+        self.classId2TypeInfo = {};
+        self.classId2MemberList = {};
         self.pubVarName2InfoMap = {};
         self.pubFuncName2InfoMap = {};
         self.needIndent = false;
@@ -92,15 +97,20 @@ builtInModuleSet[ "debug" ] = true;
 builtInModuleSet[ "_luneScript" ] = true;
 
 fn convFilter.write( txt: str ) {
+    let stream = self.stream;
+    if self.outMetaFlag {
+        stream = self.metaStream;
+    }
+    
     if self.needIndent {
-        self.stream.write( string.rep( " ", self.indent ) );
+        stream.write( string.rep( " ", self.indent ) );
         self.needIndent = false;
     }
 
     apply cr of string.gmatch( txt, "\n" ) {
         self.curLineNo = self.curLineNo + 1;
     }
-    self.stream.write( txt );
+    stream.write( txt );
 }
 
 fn convFilter.setIndent( indent: int ) {
@@ -146,13 +156,21 @@ fn convFilter.outputMeta( node: TransUnit.RootNode, baseIndent: int )
             return;
         }
     }
+
+    self.outMetaFlag = true;
+
+    if self.stream ~= self.metaStream {
+        self.writeln( "local moduleObj = {}", baseIndent );
+    }
     
     self.writeln( "----- meta -----", baseIndent );
 
     let typeId2TypeInfo: Map<int,TransUnit.TypeInfo> = {};
     let typeId2UseFlag: Map<int,bool> = {};
-    let pickupClassMap: Map<str,TransUnit.NamespaceInfo> = {};
 
+
+    let pickupClassMap: Map<int,TransUnit.TypeInfo> = {};
+    
     // 公開される型情報を typeId2TypeInfo にピックアップする
     fn pickupTypeId( typeInfo: TransUnit.TypeInfo, forceFlag: bool! ) {
         if typeInfo {
@@ -165,12 +183,16 @@ fn convFilter.outputMeta( node: TransUnit.RootNode, baseIndent: int )
             if typeId2TypeInfo[ typeInfo.get_typeId() ] {
                 return;
             }
-            
+
             typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
 	    if typeInfo.get_nilable() {
 		pickupTypeId( typeInfo.get_orgTypeInfo(), true );
 	    }
 	    else {
+                if typeInfo.$kind == TransUnit.TypeInfoKindClass {
+                    pickupClassMap[ typeInfo.$typeId ] = typeInfo;
+                }
+                
                 let parentInfo = typeInfo.get_parentInfo();
                 pickupTypeId( parentInfo, true );
 
@@ -204,7 +226,7 @@ fn convFilter.outputMeta( node: TransUnit.RootNode, baseIndent: int )
                             itemTypeInfo.get_kind() == TransUnit.TypeInfoKindFunc or
                             itemTypeInfo.get_kind() == TransUnit.TypeInfoKindMethod
                         {                       
-                            pickupTypeId( itemTypeInfo, true );
+                            pickupTypeId( itemTypeInfo );
                         }
 		    }
                 }
@@ -214,12 +236,11 @@ fn convFilter.outputMeta( node: TransUnit.RootNode, baseIndent: int )
         }
     }
 
-
-
+    
     let typeId2ClassMap = node.get_typeId2ClassMap();
     foreach namespaceInfo in typeId2ClassMap {
         if namespaceInfo.typeInfo.get_accessMode() == "pub" {
-            pickupClassMap[ namespaceInfo.name ] = namespaceInfo;
+            pickupClassMap[ namespaceInfo.typeInfo.$typeId ] = namespaceInfo.typeInfo;
         }
     }
 
@@ -227,24 +248,24 @@ fn convFilter.outputMeta( node: TransUnit.RootNode, baseIndent: int )
     self.writeln( "local _typeId2ClassInfoMap = {}", baseIndent );
     self.writeln( "moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap",
                   baseIndent );
-    self.writeln( "local _className2InfoMap = {}", baseIndent );
-    self.writeln( "moduleObj._className2InfoMap = _className2InfoMap",
-                  baseIndent );     
+    // self.writeln( "local _className2InfoMap = {}", baseIndent );
+    // self.writeln( "moduleObj._className2InfoMap = _className2InfoMap",
+    //               baseIndent );     
 
-    forsort classTypeInfo, className in self.className2TypeInfo {
-        let classTypeId = classTypeInfo.get_typeId();
+    forsort classTypeInfo, classTypeId in self.classId2TypeInfo {
         pickupTypeId( classTypeInfo );
-        pickupClassMap[ className ] = nil;
+        pickupClassMap[ classTypeId ] = nil;
+
         
         self.writeln( "do", baseIndent + stepIndent );
         self.writeln( "local _classInfo%d = {}" (classTypeId), baseIndent + stepIndent );
-        self.writeln( "_className2InfoMap.%s = _classInfo%d" (className, classTypeId),
-                      baseIndent + stepIndent );
+        // self.writeln( "_className2InfoMap.%s = _classInfo%d" (className, classTypeId),
+        //               baseIndent + stepIndent );
         self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
                       (classTypeId, classTypeId), baseIndent + stepIndent );
 
         
-        foreach memberNode in unwrap self.className2MemberList[ className ] {
+        foreach memberNode in unwrap self.classId2MemberList[ classTypeId ] {
             if memberNode.$accessMode ~= "pri" {
                 let memberName = memberNode.$name.txt;
                 let memberTypeInfo:TransUnit.TypeInfo = memberNode.get_expType();
@@ -266,21 +287,21 @@ fn convFilter.outputMeta( node: TransUnit.RootNode, baseIndent: int )
     }
 
 
-    forsort namespaceInfo, className in pickupClassMap {
-        let scope = namespaceInfo.scope;
-        let classTypeId = namespaceInfo.typeInfo.get_typeId();
+    forsort classTypeInfo, classTypeId in pickupClassMap {
+        let scope = unwrap classTypeInfo.$scope;
 
         if not TransUnit.isBuiltin( classTypeId ) {
+            let className = classTypeInfo.getTxt();
             self.writeln( "do", baseIndent + stepIndent );
             self.writeln( "local _classInfo%s = {}"
                           (classTypeId), baseIndent + stepIndent );
-            self.writeln( "_className2InfoMap.%s = _classInfo%d"
-                          (className, classTypeId), baseIndent + stepIndent );
+            // self.writeln( "_className2InfoMap.%s = _classInfo%d"
+            //               (className, classTypeId), baseIndent + stepIndent );
             self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
                           ( classTypeId, classTypeId), baseIndent + stepIndent );
             
 
-            pickupTypeId( namespaceInfo.typeInfo );
+            pickupTypeId( classTypeInfo );
 
             forsort symbolInfo, fieldName in scope.$symbol2TypeInfoMap {
                 let typeInfo = symbolInfo.$typeInfo;
@@ -348,6 +369,12 @@ fn convFilter.outputMeta( node: TransUnit.RootNode, baseIndent: int )
     }
 
     self.writeln( "----- meta -----", baseIndent );
+
+    if self.stream ~= self.metaStream {
+        self.writeln( "return moduleObj", baseIndent );
+    }
+
+    self.outMetaFlag = false;
 }
 
 pub override fn convFilter.processRoot( 
@@ -439,11 +466,13 @@ pub override fn convFilter.processDeclClass(
     let nodeInfo = node;
     let classNameToken = nodeInfo.get_name();
     let className = classNameToken.txt;
+    let classTypeInfo = node.get_expType();
+    let classTypeId = classTypeInfo.$typeId;
 
     if nodeInfo.get_accessMode() == "pub" {
-        self.className2TypeInfo[ className ] = node.get_expType();
+        self.classId2TypeInfo[ classTypeId ] = classTypeInfo;
     }
-    self.className2MemberList[ className ] = nodeInfo.get_memberList();
+    self.classId2MemberList[ classTypeId ] = nodeInfo.get_memberList();
 
     self.writeln( string.format( "local %s = {}", className ), baseIndent );
 
@@ -519,7 +548,7 @@ function %s:__init( %s )
         let memberNameToken = memberNode.get_name();
         let memberName = memberNameToken.txt;
         let getterName = "get_" .. memberName;
-        let typeInfo = scope.getTypeInfo( getterName, scope );
+        let typeInfo = scope.getTypeInfo( getterName, scope, false );
         let autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
         if memberNode.get_getterMode() ~= "none" and autoFlag
         {       
@@ -529,7 +558,7 @@ function %s:%s()
 end``` ( className, getterName, memberName ), baseIndent );
         }
         let setterName = "set_" .. memberName;
-        typeInfo = scope.getTypeInfo( setterName, scope );
+        typeInfo = scope.getTypeInfo( setterName, scope, false );
         autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
         if memberNode.get_setterMode() ~= "none" and autoFlag
         {       
@@ -721,7 +750,7 @@ pub override fn convFilter.processDeclMethod(
     //    }
     //filter( //    refType,  self, node, baseIndent )
     // }
-    if !declInfo.get_body() {
+    if! declInfo.get_body() {
         filter( _exp, self, node, baseIndent );
     }
     self.writeln( "end", baseIndent );
@@ -795,7 +824,6 @@ pub override fn convFilter.processDeclVar(
         self.write( "local " );
     }
 
-    let varName = "";
     let varList = node.get_varList();
     foreach var, index in varList  {
         if index > 1 {
@@ -856,7 +884,6 @@ pub override fn convFilter.processDeclVar(
 
     if node.get_accessMode() == "pub" {
         self.writeln( "", baseIndent );
-        let varList = node.get_varList();
         foreach var, index in varList {
             let name: str = var.$name.txt;
             self.writeln( "moduleObj.%s = %s" ( name, name ),
@@ -1396,10 +1423,9 @@ pub override fn convFilter.processLiteralString(
     if string.find( txt, '^```' ) {
         txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
     }
-    let argList:TransUnit.Node[] = node.get_argList();
-    if argList and #argList > 0 {
+    let argList = node.get_argList();
+    if #argList > 0 {
         self.write( string.format( 'string.format( %s, ', txt ) );
-        let argList = node.get_argList();
         foreach val, index in argList {
             if index > 1 {
                 self.write( ", " );
@@ -1444,7 +1470,7 @@ pub class MacroEvalImp extend TransUnit.MacroEval {
     pub override fn eval( node: TransUnit.DeclMacroNode ): form
     {   
         let oStream = new Util.memStream();
-        let conv = new convFilter( "macro", oStream, "exe", true );
+        let conv = new convFilter( "macro", oStream, oStream, "exe", true );
 
         conv.processDeclMacro( node, node, 0 );
 
@@ -1454,11 +1480,14 @@ pub class MacroEvalImp extend TransUnit.MacroEval {
         if err {
             error( err );
         }
-        let mod = chunk()@form;
-        if not mod {
-            error( "macro load error" );
-        }   
-        return mod;
+        if! chunk {
+            let mod = _exp();
+            if not mod {
+                error( "macro load error" );
+            }   
+            return (unwrap mod)@form;
+        }
+        error( "failed to load -- " .. node.$declInfo.$name );
     }
 }
 

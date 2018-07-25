@@ -11,17 +11,8 @@ class Super {
     }
 }
 
-class Sub extend Super {
-    pub fn __init() {
-        super( 1, 2, 3 );
-    }
-    pub fn test() {
-        self.func3();
-        self.func2();
-        self.func1();
-    }
-}
-
-let sub = new Sub();
-sub.test();
-sub.func3();
+let aSuper = new Super();
+aSuper.val3 = 0;
+aSuper.func3();
+aSuper.val2 = 0;
+aSuper.func2();

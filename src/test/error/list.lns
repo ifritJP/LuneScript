@@ -1,0 +1,25 @@
+{
+    foreach val in [ 1, 2, 3 ] {
+        let val2:int = val;
+    }
+}   
+{
+    foreach val in [ 1, 2, 3, 4.0 ] {
+        let val2:int = val; // error
+    }
+}   
+{
+    foreach val in [ 1, 2, 3, 4.0 ] {
+        let val2:stem = val;
+    }
+}   
+{
+    foreach val in [ 1, 2, 3, nil ] {
+        let val2:int = val; // error
+    }
+}   
+{
+    foreach val in [ 1, 2, 3, nil ] {
+        let val2:int! = val;
+    }
+}   

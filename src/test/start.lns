@@ -186,7 +186,9 @@ print( (new GetTest2()).$val );
     fn TestRetDDD(): ... {
         return 1,2,3;
     }   
-    let ddd1, ddd2, ddd3 = TestRetDDD();
+    let! ddd1, ddd2, ddd3 = TestRetDDD() {
+        error( "fail" );
+    };
     print( "2 = %d, 3 = %d, 4 = %d"
            (ddd1@int + 1, ddd2@int + 1, ddd3@int + 1 ) );
 }
@@ -280,3 +282,8 @@ fn testret() : int! {
     print( 10 / 3, 10 / 3.0, (10 / 3.0)@int );
 }
 
+{
+    foreach val in [ 1, 2, 3 ] {
+        let val2:int = val;
+    }
+}   

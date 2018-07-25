@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import lune.base.Depend;
+
 pub class outStream {
     pub fn write(val:str);
 }
@@ -37,8 +39,9 @@ pub class memStream extend outStream {
 }
 
 pub fn errorLog( message: str ) {
-    let write = (io@stem).stderr.write@form;
-    write( (io@stem).stderr, message .. "\n" );
+    let stderr = (io@Map<str,stem>).stderr;
+    let write = (stderr@Map<str,form>).write;
+    write( stderr, message .. "\n" );
 }
 
 pub fn debugLog() {
@@ -52,18 +55,34 @@ pub fn debugLog() {
 }
 
 
-pub fn profile( validTest:bool, func: stem, path: str ) {
+pub fn profile( validTest:bool, func: form, path: str ): stem! {
     if not validTest {
         return func();
     }
     
-    let profiler = require( 'ProFi' );
-    profiler.start();
+    let profiler = unwrap require( 'ProFi' );
+    ((unwrap profiler.start)@form)();
     
-    let result:stem = func();
+    let result:stem! = func();
     
-    profiler.stop();
-    (profiler.writeReport@form)( path );
+    ((unwrap profiler.stop)@form)();
+    ((unwrap profiler.writeReport)@form)( path );
 
     return result;
+}
+
+
+/**
+path で指定した lns コードに対応した Lua コードが存在する場合、
+その Lua コードのパスを返す。
+*/
+pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
+    let! luaTime, lnsTime =
+        Depend.getFileLastModifiedTime( luaPath ),
+        Depend.getFileLastModifiedTime( lnsPath )
+    {   
+        return false;
+    };
+
+    return luaTime >= lnsTime;
 }

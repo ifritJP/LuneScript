@@ -21,8 +21,3 @@ class Sub extend Super {
         self.val1 = 0;
     }
 }
-
-let sub = new Sub();
-sub.val3 = 0;
-sub.val2 = 0;
-sub.val1 = 0;

@@ -21,7 +21,3 @@ class Sub extend Super {
         self.func1();
     }
 }
-
-let sub = new Sub();
-sub.test();
-sub.func3();

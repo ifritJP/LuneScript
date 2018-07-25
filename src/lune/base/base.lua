@@ -5,7 +5,8 @@ local Util = require( 'lune.base.Util' );
 
 local scriptPath = arg[ 1 ]
 local mode = arg[ 2 ]
-local validProf = arg[ 3 ]
+local outputDir = arg[ 3 ]
+local validProf = arg[ 4 ]
 local outputMetaFlag = true
 
 function _luneGetLocal( varName )
@@ -58,15 +59,53 @@ function _luneScript.error( message )
       os.exit( 1 );
 end
 
+function _luneScript.loadLua( path )
+   local chunk, err = loadfile( path )
+   if err then
+      Util.errorLog( err )
+   end
+   if not chunk then
+      error( "failed to error" )
+   end
+   return chunk()
+end
+
 function _luneScript.loadModule( module )
    if not _luneScript.loadedMap[ module ] then
-      local searchPath = package.path
-      searchPath = string.gsub( searchPath, "%.lua", ".lns" )
-      local path = package.searchpath( module, searchPath )
+      local lnsSearchPath = package.path
+      lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
+      local lnsPath = package.searchpath( module, lnsSearchPath )
+      local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
 
-      _luneScript.loadedMap[ module ] = _luneScript.loadFile( path, module )
+      if outputDir then
+	 local luaSearchPath =
+	    string.format( "%s/?.lua;%s", outputDir, package.path )
+	 luaPath = package.searchpath( module, luaSearchPath )
+      end
+
+      local mod = nil
+      if luaPath and Util.getReadyCode( lnsPath, luaPath ) then
+	 local metaPath = string.gsub( luaPath, "%.lua$", ".meta" )
+	 if Util.getReadyCode( lnsPath, metaPath ) then
+	    mod = _luneScript.loadLua( luaPath )
+	    local meta = _luneScript.loadLua( metaPath )
+
+	    for key, val in pairs( meta ) do
+	       mod[ key ] = val
+	    end
+	    
+	    _luneScript.loadedMap[ module ] = mod
+	 end
+      end
+      if not mod then
+	 _luneScript.loadedMap[ module ] = _luneScript.loadFile( lnsPath, module )
+      end
    end
-   return _luneScript.loadedMap[ module ]
+   local ret = _luneScript.loadedMap[ module ]
+   if ret then
+      return ret
+   end
+   error( "load error", module )
 end
 
 function _luneScript.loadMeta( module )
@@ -102,16 +141,15 @@ local function getNode( ast )
    return ast.node
 end
 
-local function convert( ast, streamName, stream, convMode, inMacro, moduleTypeInfo )
+local function convert( ast, streamName, stream, metaStream,
+			convMode, inMacro, moduleTypeInfo )
    local conv = convLua.convFilter.new(
-      streamName, stream, convMode, inMacro, moduleTypeInfo )
+      streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
    getNode( ast ):processFilter( conv, nil, 0 )
 end
 
 function _luneScript.loadFile( path, module )
 
-   Util.errorLog( "loadFile " .. path .. " " .. mode )
-   
    local ast = createAst( path, module )
    
    local func = function( self, txt )
@@ -119,7 +157,7 @@ function _luneScript.loadFile( path, module )
    end
    local stream = createStream( "", func )
 
-   convert( ast, path, stream, "exe", nil, ast.moduleTypeInfo )
+   convert( ast, path, stream, stream, "exe", nil, ast.moduleTypeInfo )
 
    local chunk, err = load( stream.val )
    if err then
@@ -155,7 +193,7 @@ else
 	 end, scriptPath .. ".profi" )
    elseif mode == "lua" or mode == "LUA" then
       local ast = createAst( scriptPath, module )
-      convert( ast, scriptPath, io.stdout, mode )
+      convert( ast, scriptPath, io.stdout, io.stdout, mode )
    elseif mode == "save" or mode == "SAVE" then
       Util.profile(
 	 validProf,
@@ -164,12 +202,31 @@ else
 	    local func = function( self, txt )
 	       self.val:write( txt )
 	    end
-	    local luaPath = scriptPath:gsub( ".lns$", ".lua" )
+	    local luaPath = scriptPath:gsub( "%.lns$", ".lua" )
+	    local metaPath = scriptPath:gsub( "%.lns$", ".meta" )
+	    if outputDir then
+	       local filename = module:gsub( "%.", "/" )
+	       luaPath = string.format( "%s/%s.lua", outputDir, filename )
+	       metaPath = string.format( "%s/%s.meta", outputDir, filename )
+	    end
+
+	    
 	    if luaPath ~= scriptPath then
 	       local fileObj = io.open( luaPath, "w" )
 	       local stream = createStream( fileObj, func )
-	       convert( ast, scriptPath, stream, mode )
+
+	       local metaFileObj = nil
+	       local metaStream = stream
+	       if mode == "SAVE" then
+		  metaFileObj = io.open( metaPath, "w" )
+		  metaStream = createStream( metaFileObj, func )
+	       end
+	       
+	       convert( ast, scriptPath, stream, metaStream, mode )
 	       fileObj:close()
+	       if metaFileObj then
+		  metaFileObj:close()
+	       end
 	    end
       	 end, scriptPath .. ".profi" )
    elseif mode == "exe" then

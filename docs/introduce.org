@@ -221,7 +221,7 @@ let name : itemType[];
 #+END_SRC
 
 リストに保持できる値の型は、1 つに制限されます。
-ただし、stem 型のリストであれば、全ての値を保持できます。
+ただし、後述する stem! 型のリストであれば、全ての値を保持できます。
 
 例えば、次は int 型の要素を持つリストになります。
 
@@ -318,14 +318,15 @@ let map4 = { "a": 1, "b": 'Z'' };		// Map<str,stem>
 
 *** stem
 
-stem は、全ての値を保持できる型です。
+stem は、nil 以外の全ての値を保持できる型です。
 
 LuneScript は、静的型付け言語であり、
 想定する型と異なる値を与えらた場合はコンパイルエラーします。
 
-対して stem 型は、全ての型を扱える型なので、
-どのような値を与えられてもコンパイルエラーしません。
+対して stem 型は、nil 以外の全ての型を扱える型なので、
+nil 以外のどのような値を与えられてもコンパイルエラーしません。
 
+stem! は nil を含む全ての値を扱える型です。
 Lua の変数そのものと考えて問題ありません。
 
 *** ! 型 (nilable)
@@ -334,8 +335,6 @@ nilable は、 nil を保持可能な型です。
 逆に言えば、 nilable でなければ、nil は保持出来ません。
 これにより、非 nilable 型で扱っている間は、
 nil による実行時エラーに気を使う必要がありません。
-
-ただし、 stem 型は nil を含めた全ての型のデータを保持できます。
 
 ** 型変換
 
@@ -447,7 +446,7 @@ let val2: int = nil; // error
 #+END_SRC
 
 nilable は nil となる可能性がありますが、
-stem 型以外の 非nilable の型は nil になりません。
+非nilable の型は nil になりません。
 つまり、非 nilable 型を利用している間は、
 意図しないタイミングで nil アクセスエラーが発生しないことを保証できます。
 
@@ -783,17 +782,17 @@ fn plus1( val1: int, val2: int ) : int, int {
 
 可変長引数は Lua の ... を利用する。
 
-なお、 ... の各値は stem 型として扱う。
+なお、 ... の各値は stem! 型として扱う。
 
 #+BEGIN_SRC lns
-fn hoge( ... ) : stem {
-  let val: stem = ...;
+fn hoge( ... ) : stem! {
+  let val: stem! = ...;
   return val;
 }
 #+END_SRC
 
 例えば、上記関数は引数に与えらえた第一引数を return するが、
-このときの型は stem となる。
+このときの型は stem! となる。
 
 *** 関数コール
 
@@ -1163,10 +1162,10 @@ module1.class, module1.func のようにアクセスする。
 Lua の外部モジュールを利用する際に宣言する。
 
 #+BEGIN_SRC lns
-let mod: stem = require( 'module' );
+let mod: stem! = require( 'module' );
 #+END_SRC
 
-require の結果は stem 型となる。
+require の結果は stem! 型となる。
 
 
 * emacs 対応

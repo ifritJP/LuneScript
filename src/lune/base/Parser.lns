@@ -208,12 +208,12 @@ pub class StreamParser extend Parser {
     }
 
     pub static fn create( path: str, luaMode: bool ): StreamParser! {
-	let stream = io.open( path, "r" )@Stream;
+	let! stream = io.open( path, "r" ) {
+            return nil;
+        };
 
-	if not stream {
-	    return nil;
-	}
-	return new StreamParser( stream, path, luaMode or string.find( path, "%.lua$" ) );
+	return new StreamParser(
+            stream@Stream, path, luaMode or string.find( path, "%.lua$" ) );
     }
 }
 
@@ -298,11 +298,11 @@ pub static fn getKindTxt( kind: int ) : str {
     return unwrap kind2Txt[ kind ];
 }
 
-pub static fn isOp2( ope: str ) : stem {
+pub static fn isOp2( ope: str ) : stem! {
     return op2Set[ ope ];
 }
 
-pub static fn isOp1( ope: str ) : stem {
+pub static fn isOp1( ope: str ) : stem! {
     return op1Set[ ope ];
 }
 
@@ -565,11 +565,12 @@ fn StreamParser.parse() : Token[]! {
 	    elseif findChar == ?\' or findChar == ?\" {
 		// 文字列の場合
 		let workIndex = index + 1;
-		let pattern = '["\'\\]';
+		let workPattern = '["\'\\]';
 		while true {
-		    let endIndex = string.find( rawLine, pattern, workIndex );
+		    let endIndex = string.find( rawLine, workPattern, workIndex );
 		    if not endIndex {
-			error( string.format( "illegal string: %d: %s", index, rawLine ) );
+			error( string.format(
+                            "illegal string: %d: %s", index, rawLine ) );
 		    }	
 		    let workChar = string.byte( rawLine, endIndex );
 		    if workChar == findChar {

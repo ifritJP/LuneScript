@@ -1,0 +1,58 @@
+{
+    foreach val, key in { "A": 1, "B": 2 } {
+        let val2:int = val;
+        let key2:str = key;
+    }
+}
+{
+    foreach val, key in { "A": 1, "B": 2.0 } {
+        let val2:int = val; // error
+        let key2:str = key;
+    }
+}
+{
+    foreach val, key in { "A": 1, "B": 2.0 } {
+        let val2:stem = val;
+        let key2:str = key;
+    }
+}
+{
+    foreach val, key in { "A": nil, "B": 2 } {
+        let val2:int = val;
+        let key2:str = key;
+    }
+}
+{
+    let val3:int! = nil;
+    foreach val, key in { "A": val3, "B": 2 } {
+        let val2:int = val;
+        let key2:str = key;
+    }
+}
+{
+    let val3:real! = nil;
+    foreach val, key in { "A": val3, "B": 2 } {
+        let val2:int = val; // error
+        let key2:str = key;
+    }
+}
+{
+    let val3:real! = nil;
+    foreach val, key in { "A": val3, "B": 2 } {
+        let val2:stem = val;
+        let key2:str = key;
+    }
+}
+{
+    foreach val, key in { nil: 1, "B": 2 } { // error
+        let val2:int = val;
+        let key2:str = key;
+    }
+}
+{
+    let val3:str! = nil;
+    foreach val, key in { val3: 1, "B": 2 } { // error
+        let val2:int = val;
+        let key2:str = key;
+    }
+}

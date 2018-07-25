@@ -461,7 +461,8 @@ pattern は  {, }, {{, }} のいずれか。
       (beginning-of-line)
       (if (lns-is-in-comment-string (point))
 	  ;; 行頭がコメント、文字列の場合はインデント調整しない。
-	  (setq column -1)
+	  (when (lns-is-in-comment-string (1- point))
+	    (setq column -1))
 	(re-search-forward "[^\\s \t]")
 	(cond 
 	 ((eq (char-before) ?})
