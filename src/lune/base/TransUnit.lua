@@ -4736,7 +4736,7 @@ function TransUnit:analyzeRefType( accessMode )
       until nextToken.txt ~= ","
       self:checkToken( nextToken, '>' )
       if typeInfo:get_kind() == TypeInfoKindMap then
-        typeInfo = NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), genericList[1] or builtinTypeStem_, genericList[2] or builtinTypeStem_ )
+        typeInfo = NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), genericList[1] or builtinTypeStem, genericList[2] or builtinTypeStem )
       else 
         self:error( string.format( "not support generic: %s", typeInfo:getTxt(  ) ) )
       end

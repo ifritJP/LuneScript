@@ -2668,8 +2668,8 @@ fn TransUnit.analyzeRefType( accessMode: str ): RefTypeNode {
             if typeInfo.$kind == TypeInfoKindMap {
                 typeInfo = NormalTypeInfo.createMap(
                     accessMode, self.getCurrentClass(),
-                    genericList[1] or builtinTypeStem_,
-                    genericList[2] or builtinTypeStem_ );
+                    genericList[1] or builtinTypeStem,
+                    genericList[2] or builtinTypeStem );
             }   
             else {
                 self.error( string.format( "not support generic: %s",
