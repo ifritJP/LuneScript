@@ -17,9 +17,7 @@ exec:
 
 
 define trans
-	@echo test $1
 	$(LUA) lune/base/base.lua lune/base/$1.lns SAVE work/1
-	@cp lune/base/$1.lns work/1/lune/base
 endef
 
 define cutMeta
@@ -28,7 +26,6 @@ endef
 
 define transwork
 	(cd work/$1; $(LUA) lune/base/base.lua lune/base/$3.lns SAVE ../$2)
-	@cp lune/base/$3.lns work/$2/lune/base
 endef
 
 define exeLune
@@ -40,12 +37,13 @@ test-comp:
 	mkdir -p work/1/lune/base
 	mkdir -p work/2/lune/base
 	mkdir -p work/3/lune/base
-	cp lune/base/base*.lua work/1/lune/base
-	cp lune/base/base*.lua work/2/lune/base
-	cp lune/base/base*.lua work/3/lune/base
+	@cp lune/base/base*.lua lune/base/*.lns work/1/lune/base
+	@cp lune/base/base*.lua lune/base/*.lns work/2/lune/base
+	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
 	$(call trans,Depend)
 	$(call trans,Util)
 	$(call trans,Parser)
+	$(call trans,Ast)
 	$(call trans,TransUnit)
 	$(call trans,convLua)
 	$(call trans,dumpNode)
@@ -57,19 +55,24 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/access2.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/access3.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/access4.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/access5.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/list.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/map.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/scope1.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/scope2.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/func.lns,exe,2>&1)
 
 
 test-comp2:
 	$(call exeLune,.,test/start.lns,exe,) > work/test.result
 	cp work/test.result work/test1.result
-	$(MAKE) TEST_DIR=. test-error | grep 'error:' | \
+	$(MAKE) -s TEST_DIR=. test-error | grep 'error:' | \
 		sed 's/.*error:/error:/' >> work/test1.result
 
 	$(call transwork,1,2,Depend)
 	$(call transwork,1,2,Util)
 	$(call transwork,1,2,Parser)
+	$(call transwork,1,2,Ast)
 	$(call transwork,1,2,TransUnit)
 	$(call transwork,1,2,convLua)
 	$(call transwork,1,2,dumpNode)
@@ -78,6 +81,7 @@ test-comp2:
 	$(call transwork,2,3,Depend)
 	$(call transwork,2,3,Util)
 	$(call transwork,2,3,Parser)
+	$(call transwork,2,3,Ast)
 	$(call transwork,2,3,TransUnit)
 	$(call transwork,2,3,convLua)
 	$(call transwork,2,3,dumpNode)
@@ -88,14 +92,7 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,ast,)
 	$(call exeLune,work/3,test/start.lns,lua,)
 	$(call exeLune,work/3,test/start.lns,exe,) | tee work/test2.result
-	$(MAKE) TEST_DIR=work/3 test-error | grep 'error:' | \
-		sed 's/.*error:/error:/' | tee -a work/test2.result
-
-
-	$(call exeLune,work/3,test/start.lns,ast,)
-	$(call exeLune,work/3,test/start.lns,lua,)
-	$(call exeLune,work/3,test/start.lns,exe,) | tee work/test2.result
-	$(MAKE) TEST_DIR=work/3 test-error | grep 'error:' | \
+	$(MAKE) -s TEST_DIR=work/3 test-error | grep 'error:' | \
 		sed 's/.*error:/error:/' | tee -a work/test2.result
 
 

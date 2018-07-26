@@ -16,6 +16,8 @@ function outStream.new(  )
 function outStream:__init(  ) 
             
 end
+do
+  end
 
 local memStream = {}
 setmetatable( memStream, { __index = outStream } )
@@ -35,6 +37,8 @@ end
 function memStream:get_txt()
   return self.txt
 end
+do
+  end
 
 local function errorLog( message )
   local stderr = (io ).stderr

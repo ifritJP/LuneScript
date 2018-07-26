@@ -70,17 +70,24 @@ function _luneScript.loadLua( path )
    return chunk()
 end
 
+function _luneScript.searchModule( module )
+   local lnsSearchPath = package.path
+   lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
+   return package.searchpath( module, lnsSearchPath )
+end
+      
+
 function _luneScript.loadModule( module )
    if not _luneScript.loadedMap[ module ] then
-      local lnsSearchPath = package.path
-      lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
-      local lnsPath = package.searchpath( module, lnsSearchPath )
+      local lnsPath = _luneScript.searchModule( module )
       local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
-
+      local luaSearchPath = package.path
+      local bakSearchPath = package.path
+	    
       if outputDir then
-	 local luaSearchPath =
-	    string.format( "%s/?.lua;%s", outputDir, package.path )
+	 luaSearchPath = string.format( "%s/?.lua;%s", outputDir, package.path )
 	 luaPath = package.searchpath( module, luaSearchPath )
+	 package.path = luaSearchPath
       end
 
       local mod = nil
@@ -96,6 +103,9 @@ function _luneScript.loadModule( module )
 	    
 	    _luneScript.loadedMap[ module ] = mod
 	 end
+      end
+      if outputDir then
+	 package.path = bakSearchPath
       end
       if not mod then
 	 _luneScript.loadedMap[ module ] = _luneScript.loadFile( lnsPath, module )

@@ -1,6 +1,6 @@
 --lune/base/convLua.lns
 local moduleObj = {}
-local TransUnit = require( 'lune.base.TransUnit' )
+local Ast = require( 'lune.base.Ast' )
 
 local Util = require( 'lune.base.Util' )
 
@@ -19,6 +19,8 @@ self.staticFlag = staticFlag
   self.accessMode = accessMode
   self.typeInfo = typeInfo
   end
+do
+  end
 
 -- none
 
@@ -35,6 +37,8 @@ function PubFuncInfo:__init( accessMode, typeInfo )
             
 self.accessMode = accessMode
   self.typeInfo = typeInfo
+  end
+do
   end
 
 local convFilter = {}
@@ -63,6 +67,8 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro)
   self.pubFuncName2InfoMap = {}
   self.needIndent = false
 end
+do
+  end
 
 local function filter( node, filter, parent, baseIndent )
   node:processFilter( filter, parent, baseIndent )
@@ -149,7 +155,7 @@ function convFilter:outputMeta( node, baseIndent )
   
   local function pickupTypeId( typeInfo, forceFlag )
     if typeInfo then
-      if typeInfo:get_typeId(  ) == TransUnit.rootTypeId then
+      if typeInfo:get_typeId(  ) == Ast.rootTypeId then
         return 
       end
       if not forceFlag and typeInfo:get_accessMode(  ) ~= "pub" then
@@ -162,7 +168,7 @@ function convFilter:outputMeta( node, baseIndent )
       if typeInfo:get_nilable(  ) then
         pickupTypeId( typeInfo:get_orgTypeInfo(  ), true )
       else 
-        if typeInfo:get_kind() == TransUnit.TypeInfoKindClass then
+        if typeInfo:get_kind() == Ast.TypeInfoKindClass then
           pickupClassMap[typeInfo:get_typeId()] = typeInfo
         end
         local parentInfo = typeInfo:get_parentInfo(  )
@@ -170,7 +176,7 @@ function convFilter:outputMeta( node, baseIndent )
         pickupTypeId( parentInfo, true )
         local baseInfo = typeInfo:get_baseTypeInfo(  )
         
-        if baseInfo:get_typeId() ~= TransUnit.rootTypeId then
+        if baseInfo:get_typeId() ~= Ast.rootTypeId then
           pickupTypeId( baseInfo, true )
         end
         local typeInfoList = typeInfo:get_itemTypeInfoList(  )
@@ -195,7 +201,7 @@ function convFilter:outputMeta( node, baseIndent )
         typeInfoList = typeInfo:get_children(  )
         if typeInfoList then
           for __index, itemTypeInfo in pairs( typeInfoList ) do
-            if itemTypeInfo:get_kind(  ) == TransUnit.TypeInfoKindClass or itemTypeInfo:get_kind(  ) == TransUnit.TypeInfoKindFunc or itemTypeInfo:get_kind(  ) == TransUnit.TypeInfoKindMethod then
+            if itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindClass or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindFunc or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindMethod then
               pickupTypeId( itemTypeInfo )
             end
           end
@@ -257,7 +263,7 @@ function convFilter:outputMeta( node, baseIndent )
       do
         local scope = classTypeInfo:get_scope() or _luneScript.error( 'unwrap val is nil' )
         
-        if not TransUnit.isBuiltin( classTypeId ) then
+        if not Ast.isBuiltin( classTypeId ) then
           local className = classTypeInfo:getTxt(  )
           
           self:writeln( "do", baseIndent + stepIndent )
@@ -276,7 +282,7 @@ function convFilter:outputMeta( node, baseIndent )
               do
                 local typeInfo = symbolInfo:get_typeInfo()
                 
-                if typeInfo:get_kind(  ) ~= TransUnit.TypeInfoKindMethod then
+                if typeInfo:get_kind(  ) ~= Ast.TypeInfoKindMethod then
                   if symbolInfo:get_accessMode() == "pub" then
                     self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, fieldName), baseIndent + stepIndent )
                     self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, typeInfo:get_staticFlag(  )) .. string.format( "accessMode = '%s', typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )), baseIndent + stepIndent )
@@ -340,7 +346,7 @@ function convFilter:outputMeta( node, baseIndent )
       return 
     end
     wroteTypeIdSet[typeId] = true
-    if typeId2TypeInfo[typeId] and not TransUnit.isBuiltin( typeId ) then
+    if typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) then
       self:write( string.format( "_typeInfoList[%d] = ", listIndex) )
       listIndex = listIndex + 1
       typeInfo:serialize( self )
@@ -383,6 +389,9 @@ function convFilter:processRoot( node, parent, baseIndent )
 end
 
 -- none
+
+function convFilter:processSubmodule( node, parent, baseIndent )
+end
 
 function convFilter:processBlock( node, parent, baseIndent )
   local word = ""
@@ -452,10 +461,19 @@ function convFilter:processDeclClass( node, parent, baseIndent )
     self.classId2TypeInfo[classTypeId] = classTypeInfo
   end
   self.classId2MemberList[classTypeId] = nodeInfo:get_memberList(  )
+  do
+    local _exp = node:get_moduleName()
+    if _exp then
+    
+        self:writeln( string.format( "local %s = require( %s )", className, _exp.txt ), baseIndent )
+        return 
+      end
+  end
+  
   self:writeln( string.format( "local %s = {}", className ), baseIndent )
   local baseInfo = node:get_expType(  ):get_baseTypeInfo(  )
   
-  if baseInfo:get_typeId(  ) ~= TransUnit.rootTypeId then
+  if baseInfo:get_typeId(  ) ~= Ast.rootTypeId then
     self:writeln( string.format( "setmetatable( %s, { __index = %s } )", className, (baseInfo or _luneScript.error( 'unwrap val is nil' ) ):getTxt(  )), baseIndent )
   end
   if nodeInfo:get_accessMode(  ) == "pub" then
@@ -472,13 +490,13 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   for __index, field in pairs( fieldList ) do
     local ignoreFlag = false
     
-    if field:get_kind() == TransUnit.nodeKind.DeclConstr then
+    if field:get_kind() == Ast.nodeKind.DeclConstr then
       hasConstrFlag = true
     end
-    if field:get_kind() == TransUnit.nodeKind.DeclMember then
+    if field:get_kind() == Ast.nodeKind.DeclMember then
       table.insert( memberList, field )
     end
-    if field:get_kind() == TransUnit.nodeKind.DeclMethod then
+    if field:get_kind() == Ast.nodeKind.DeclMethod then
       local methodNode = field
       
       local declInfo = methodNode:get_declInfo(  )
@@ -550,6 +568,12 @@ function %s:%s( %s )
 end]==], className, setterName, memberName, memberName, memberName), baseIndent )
     end
   end
+  self:writeln( "do", baseIndent + stepIndent )
+  for __index, initStmt in pairs( nodeInfo:get_initStmtList() ) do
+    filter( initStmt, self, node, baseIndent + stepIndent )
+    self:writeln( "", baseIndent + stepIndent )
+  end
+  self:writeln( "end", baseIndent )
 end
 
 -- none
@@ -587,7 +611,7 @@ function convFilter:processDeclMacro( node, parent, baseIndent )
         argTxt = argTxt .. ", "
       end
       filter( arg, self, node, baseIndent )
-      if arg:get_kind(  ) == TransUnit.nodeKind.DeclArg then
+      if arg:get_kind(  ) == Ast.nodeKind.DeclArg then
         argTxt = argTxt .. (arg ):get_name().txt
       else 
         error( string.format( "not support ... in macro %s", node:get_declInfo(  ):get_name().txt) )
@@ -660,7 +684,7 @@ function convFilter:processDeclConstr( node, parent, baseIndent )
       argTxt = argTxt .. ", "
     end
     filter( arg, self, node, baseIndent )
-    if arg:get_kind(  ) == TransUnit.nodeKind.DeclArg then
+    if arg:get_kind(  ) == Ast.nodeKind.DeclArg then
       argTxt = argTxt .. (arg ):get_name().txt
     else 
       local name = node:get_declInfo(  ):get_name() or _luneScript.error( 'unwrap val is nil' )
@@ -1148,10 +1172,10 @@ end
 function convFilter:processExpCall( node, parent, baseIndent )
   local wroteFuncFlag = false
   
-  if node:get_func():get_kind() == TransUnit.nodeKind.RefField then
+  if node:get_func():get_kind() == Ast.nodeKind.RefField then
     local refField = node:get_func()
     
-    if refField:get_prefix():get_expType():get_kind() == TransUnit.TypeInfoKindList then
+    if refField:get_prefix():get_expType():get_kind() == Ast.TypeInfoKindList then
       wroteFuncFlag = true
       self:write( string.format( "table.%s( ", refField:get_field().txt) )
       filter( refField:get_prefix(), self, refField, baseIndent )
@@ -1221,7 +1245,7 @@ end
 -- none
 
 function convFilter:processExpCast( node, parent, baseIndent )
-  if node:get_expType() == TransUnit.builtinTypeInt then
+  if node:get_expType() == Ast.builtinTypeInt then
     self:write( "math.floor(" )
     filter( node:get_exp(), self, node, baseIndent )
     self:write( ")" )
@@ -1243,7 +1267,7 @@ end
 function convFilter:processExpOp2( node, parent, baseIndent )
   local intCast = false
   
-  if node:get_expType() == TransUnit.builtinTypeInt and node:get_op().txt == "/" then
+  if node:get_expType() == Ast.builtinTypeInt and node:get_op().txt == "/" then
     intCast = true
     self:write( "math.floor(" )
   end
@@ -1264,7 +1288,7 @@ end
 -- none
 
 function convFilter:processExpRefItem( node, parent, baseIndent )
-  if node:get_val():get_kind() == TransUnit.nodeKind.LiteralString then
+  if node:get_val():get_kind() == Ast.nodeKind.LiteralString then
     self:write( "string.byte( " )
     filter( node:get_val(), self, node, baseIndent )
     self:write( ", " )
@@ -1286,8 +1310,8 @@ function convFilter:processRefField( node, parent, baseIndent )
   filter( prefix, self, node, baseIndent )
   local delimit = "."
   
-  if parent:get_kind() == TransUnit.nodeKind.ExpCall then
-    if node:get_expType(  ):get_kind(  ) == TransUnit.TypeInfoKindMethod then
+  if parent:get_kind() == Ast.nodeKind.ExpCall then
+    if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKindMethod then
       delimit = ":"
     else 
       delimit = "."
@@ -1304,7 +1328,7 @@ function convFilter:processGetField( node, parent, baseIndent )
   filter( node:get_prefix(  ), self, node, baseIndent )
   local delimit = "."
   
-  if node:get_getterTypeInfo(  ):get_kind(  ) == TransUnit.TypeInfoKindMethod then
+  if node:get_getterTypeInfo(  ):get_kind(  ) == Ast.TypeInfoKindMethod then
     delimit = ":"
   else 
     delimit = "."
@@ -1488,6 +1512,8 @@ function MacroEvalImp.new( mode )
 function MacroEvalImp:__init( mode ) 
             
 self.mode = mode
+  end
+do
   end
 
 return moduleObj

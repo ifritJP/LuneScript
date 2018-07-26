@@ -1,0 +1,18 @@
+class Super {
+    fn __init() {
+    }
+}
+class Sub extend Super { // error
+}
+
+class Super2 {
+    pro fn __init() {
+    }
+}
+class Sub2 extend Super2 {
+}
+
+
+let aSuper = new Super(); // error
+let aSuper2 = new Super2(); // error
+

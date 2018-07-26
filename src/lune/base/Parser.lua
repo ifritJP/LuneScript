@@ -1,5 +1,30 @@
 --lune/base/Parser.lns
 local moduleObj = {}
+local luaKeywordSet = {}
+
+luaKeywordSet["let"] = true
+luaKeywordSet["if"] = true
+luaKeywordSet["else"] = true
+luaKeywordSet["elseif"] = true
+luaKeywordSet["while"] = true
+luaKeywordSet["for"] = true
+luaKeywordSet["in"] = true
+luaKeywordSet["return"] = true
+luaKeywordSet["break"] = true
+luaKeywordSet["nil"] = true
+luaKeywordSet["true"] = true
+luaKeywordSet["false"] = true
+luaKeywordSet["{"] = true
+luaKeywordSet["}"] = true
+luaKeywordSet["do"] = true
+luaKeywordSet["require"] = true
+luaKeywordSet["function"] = true
+luaKeywordSet["then"] = true
+luaKeywordSet["until"] = true
+local function isLuaKeyword( txt )
+  return luaKeywordSet[txt]
+end
+moduleObj.isLuaKeyword = isLuaKeyword
 local function createReserveInfo( luaMode )
   local keywordSet = {}
   
@@ -7,27 +32,13 @@ local function createReserveInfo( luaMode )
   
   local builtInSet = {}
   
-  keywordSet["let"] = true
-  keywordSet["if"] = true
-  keywordSet["else"] = true
-  keywordSet["elseif"] = true
-  keywordSet["while"] = true
-  keywordSet["for"] = true
-  keywordSet["in"] = true
-  keywordSet["return"] = true
-  keywordSet["break"] = true
-  keywordSet["nil"] = true
-  keywordSet["true"] = true
-  keywordSet["false"] = true
-  keywordSet["{"] = true
-  keywordSet["}"] = true
-  keywordSet["do"] = true
   builtInSet["require"] = true
-  if luaMode then
-    keywordSet["function"] = true
-    keywordSet["then"] = true
-    keywordSet["until"] = true
-  else 
+  for key, val in pairs( luaKeywordSet ) do
+    if not builtInSet[key] then
+      keywordSet[key] = true
+    end
+  end
+  if not luaMode then
     keywordSet["null"] = true
     keywordSet["let"] = true
     keywordSet["mut"] = true
@@ -87,6 +98,8 @@ function Stream.new(  )
 function Stream:__init(  ) 
             
 end
+do
+  end
 
 local TxtStream = {}
 setmetatable( TxtStream, { __index = Stream } )
@@ -120,6 +133,8 @@ function TxtStream:read( mode )
   self.eof = true
   return self.txt:sub( self.start )
 end
+do
+  end
 
 local Position = {}
 moduleObj.Position = Position
@@ -135,6 +150,8 @@ function Position:__init( lineNo, column )
             
 self.lineNo = lineNo
   self.column = column
+  end
+do
   end
 
 local Token = {}
@@ -157,6 +174,8 @@ end
 function Token:get_commentList()
   return self.commentList
 end
+do
+  end
 
 local Parser = {}
 moduleObj.Parser = Parser
@@ -173,6 +192,8 @@ function Parser.new(  )
 function Parser:__init(  ) 
             
 end
+do
+  end
 
 local WrapParser = {}
 setmetatable( WrapParser, { __index = Parser } )
@@ -197,6 +218,8 @@ function WrapParser:__init( parser, name )
             
 self.parser = parser
   self.name = name
+  end
+do
   end
 
 local StreamParser = {}
@@ -235,6 +258,8 @@ function StreamParser.create( path, luaMode )
     
   return StreamParser.new(stream, path, luaMode or string.find( path, "%.lua$" ))
 end
+do
+  end
 
 local kind = {}
 
@@ -666,4 +691,27 @@ local function getEofToken(  )
   return eofToken
 end
 moduleObj.getEofToken = getEofToken
+local DummyParser = {}
+setmetatable( DummyParser, { __index = Parser } )
+moduleObj.DummyParser = DummyParser
+function DummyParser:getToken(  )
+  return eofToken
+end
+function DummyParser:getStreamName(  )
+  return "dummy"
+end
+function DummyParser.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = DummyParser } )
+  if obj.__init then
+    obj:__init(  )
+  end        
+  return obj 
+ end         
+function DummyParser:__init(  ) 
+            
+end
+do
+  end
+
 return moduleObj

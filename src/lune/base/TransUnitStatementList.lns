@@ -1,0 +1,168 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+submodule owner lune.base.TransUnit;
+
+
+fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
+    let! token = self.getTokenNoErr() {
+        return nil;
+    };
+
+    let statement = self.analyzeDecl( "local", false, token, token );
+
+    if not statement {
+        if token.txt == termTxt {
+            self.pushback();
+            return nil;
+        }
+        elseif token.txt == "pub" or token.txt == "pro" or
+            token.txt == "pri" or token.txt == "global" or token.txt == "static"
+        {
+            let accessMode = (token.txt ~= "static") and token.txt or "pri";
+            let staticFlag = (token.txt == "static");
+
+            let nextToken:Parser.Token = token;
+            if token.txt ~= "static" {
+                nextToken = self.getToken();
+            }
+            statement = self.analyzeDecl( accessMode, staticFlag, token, nextToken );
+        }
+        elseif token.txt == "{" {
+            self.pushback();
+            statement = self.analyzeBlock( "{" );
+        }
+        elseif token.txt == "super" {
+            statement = self.analyzeSuper( token );
+        }
+        elseif token.txt == "if" {
+            statement = self.analyzeIf( token );
+        }
+        elseif token.txt == "switch" {
+            statement = self.analyzeSwitch( token );
+        }
+        elseif token.txt == "while" {
+            statement = self.analyzeWhile( token );
+        }
+        elseif token.txt == "repeat" {
+            statement = self.analyzeRepeat( token );
+        }
+        elseif token.txt == "for" {
+            statement = self.analyzeFor( token );
+        }
+        elseif token.txt == "apply" {
+            statement = self.analyzeApply( token );
+        }
+        elseif token.txt == "foreach" {
+            statement = self.analyzeForeach( token, false );
+        }
+        elseif token.txt == "forsort" {
+            statement = self.analyzeForeach( token, true );
+        }
+        elseif token.txt == "return" {
+            let nextToken = self.getToken();
+
+            let expList: Ast.ExpListNode! = nil;
+            if nextToken.txt ~= ";" {
+                self.pushback();
+                expList = self.analyzeExpList();
+                self.checkNextToken( ";" );
+            }
+            let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
+            if not funcTypeInfo {
+                self.addErrMess(
+                    token.pos,
+                    "'return' could not exist here" );
+            }
+            else{
+                if! expList {
+                    let retTypeList = funcTypeInfo.$retTypeInfoList;
+                    let expNodeList = _exp.$expList;
+                    if #retTypeList == 0 and #expNodeList > 0 {
+                        self.addErrMess( token.pos,
+                                         "this function can't return value." );   
+                    }
+                    foreach retType, index in retTypeList {
+                        let expNode = expNodeList[ index ];
+                        let expType = expNode.$expType;
+                        if not retType.isSettableFrom( expType ) {
+                            self.addErrMess(
+                                token.pos,
+                                "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
+                                (index,
+                                  retType.getTxt(), retType.get_typeId(),
+                                  expType.getTxt(), expType.get_typeId()));
+                        }
+                        if index == #retTypeList {
+                            if #retTypeList < #expNodeList and 
+                                retType ~= Ast.builtinTypeDDD
+                            {                           
+                                self.addErrMess( token.pos, "over return value");
+                            }
+                        }
+                    }
+                }
+            }
+            statement = new Ast.ReturnNode( token.pos, [ Ast.builtinTypeNone ], expList );
+        }
+        elseif token.txt == "break" {
+            self.checkNextToken( ";" );
+            // statement = self.createNode(
+            //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
+            statement = new Ast.BreakNode( token.pos, [ Ast.builtinTypeNone ] );
+        }
+        elseif token.txt == "unwrap" {
+            statement = self.analyzeUnwrap( token );
+        }
+        elseif token.txt == "sync" {
+            statement = self.analyzeDeclVar( "sync", "local", false, token );
+        }
+        elseif token.txt == "import" {
+            statement = self.analyzeImport( token );
+        }
+        elseif token.txt == "submodule" {
+            statement = self.analyzeSubmodule( token );
+        }
+        elseif token.txt == "luneConstrol" {
+            self.analyzeLuneControl( token );
+            statement = self.createNoneNode( token.pos );
+        }
+        elseif token.txt == ";" {
+            statement = self.createNoneNode( token.pos );
+        }
+        elseif token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
+            self.error( "illegal macro op -- %s" (token.txt) );
+        }
+        else {
+            self.pushback();
+            let exp = self.analyzeExp();
+            self.checkNextToken( ";" );
+            // statement = self.createNode(
+            //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
+            statement = new Ast.StmtExpNode( exp.$pos, [ Ast.builtinTypeNone ], exp );
+        }
+    }
+
+    return statement;
+}

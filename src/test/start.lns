@@ -1,3 +1,4 @@
+submodule use test.startsub;
 import test.simple;
 
 let classA = new simple.ClassA();
@@ -287,3 +288,26 @@ fn testret() : int! {
         let val2:int = val;
     }
 }   
+
+class ClassAA {
+   pri static let val:int;
+
+   __init {
+      ClassAA.val = 1;
+   }
+   
+   pub static fn func() {
+      print( "val = %s" (ClassAA.val) ) ;
+   }
+}
+
+ClassAA.func();
+
+module External require "test.external" {
+   pub static fn func1();
+   pub fn func2( val:int  );
+}
+
+External.func1();
+External.func2( 10 );
+External.func2( 20 );

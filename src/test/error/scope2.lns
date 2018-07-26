@@ -1,0 +1,8 @@
+class Class1 {
+    pri let list: int[];
+
+    pub fn func() {
+        foreach item in list { // error
+        }
+    }
+}

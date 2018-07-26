@@ -22,36 +22,47 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+let luaKeywordSet:Map<str,bool> = {};
+luaKeywordSet[ "let" ] = true;
+luaKeywordSet[ "if" ] = true;
+luaKeywordSet[ "else" ] = true;
+luaKeywordSet[ "elseif" ] = true;
+luaKeywordSet[ "while" ] = true;
+luaKeywordSet[ "for" ] = true;
+luaKeywordSet[ "in" ] = true;
+luaKeywordSet[ "return" ] = true;
+luaKeywordSet[ "break" ] = true;
+luaKeywordSet[ "nil" ] = true;
+luaKeywordSet[ "true" ] = true;
+luaKeywordSet[ "false" ] = true;
+luaKeywordSet[ "{" ] = true;
+luaKeywordSet[ "}" ] = true;
+luaKeywordSet[ "do" ] = true;
+luaKeywordSet[ "require" ] = true;
+luaKeywordSet[ "function" ] = true;
+luaKeywordSet[ "then" ] = true;
+luaKeywordSet[ "until" ] = true;
+
+pub fn isLuaKeyword( txt:str ) : bool! {
+    return luaKeywordSet[ txt ];
+}
+
+
 fn createReserveInfo( luaMode: bool ) :
     Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,str[@]> {
     let keywordSet:Map<str,bool> = {};
     let typeSet:Map<str,bool> = {};
     let builtInSet:Map<str,bool> = {};
-    keywordSet[ "let" ] = true;
-    keywordSet[ "if" ] = true;
-    keywordSet[ "else" ] = true;
-    keywordSet[ "elseif" ] = true;
-    keywordSet[ "while" ] = true;
-    keywordSet[ "for" ] = true;
-    keywordSet[ "in" ] = true;
-    keywordSet[ "return" ] = true;
-    keywordSet[ "break" ] = true;
-    keywordSet[ "nil" ] = true;
-    keywordSet[ "true" ] = true;
-    keywordSet[ "false" ] = true;
-    keywordSet[ "{" ] = true;
-    keywordSet[ "}" ] = true;
-    keywordSet[ "do" ] = true;
 
     builtInSet[ "require" ] = true;
-
-
-    if luaMode {
-	keywordSet[ "function" ] = true;
-	keywordSet[ "then" ] = true;
-	keywordSet[ "until" ] = true;
+    foreach val, key in luaKeywordSet {
+        if not builtInSet[ key ] {
+            keywordSet[ key ] = true;
+        }
     }
-    else {
+
+
+    if not luaMode {
         keywordSet[ "null" ] = true;
 	keywordSet[ "let" ] = true;
 	keywordSet[ "mut" ] = true;
@@ -652,4 +663,12 @@ pub override fn StreamParser.getToken() : Token! {
 let eofToken = new Token( kindEof, "<EOF>", new Position( 0, 0 ), [] );
 pub fn getEofToken(): Token {
    return eofToken;
+}
+pub class DummyParser extend Parser {
+    pub override fn getToken() : Token {
+        return eofToken;
+    }
+    pub override fn getStreamName(): str {
+        return "dummy";
+    }
 }

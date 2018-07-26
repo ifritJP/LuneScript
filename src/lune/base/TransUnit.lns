@@ -22,1088 +22,174 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+submodule use lune.base.TransUnitDecl;
+submodule use lune.base.TransUnitExp;
+submodule use lune.base.TransUnitStatementList;
+
+luneConstrol disable_mut_control;
+
 import lune.base.Parser;
 import lune.base.Util;
+import lune.base.Ast;
 
 
-pub let rootTypeId = 1;
-let typeIdSeed = rootTypeId + 1;
-
-
-
-pub proto class TypeInfo;
-
-pub let typeInfoKind:Map<str,TypeInfo> = {};
-let sym2builtInTypeMap:Map<str,TypeInfo> = {};
-let builtInTypeIdSet:Map<int,bool> = {};
-
-pub let TypeInfoKindRoot = 0;
-pub let TypeInfoKindMacro = 1;
-pub let TypeInfoKindPrim = 2;
-pub let TypeInfoKindList = 3;
-pub let TypeInfoKindArray = 4;
-pub let TypeInfoKindMap = 5;
-pub let TypeInfoKindClass = 6;
-pub let TypeInfoKindFunc = 7;
-pub let TypeInfoKindMethod = 8;
-pub let TypeInfoKindNilable = 9;
-
-pub fn isBuiltin( typeId: int ) : bool! {
-    return builtInTypeIdSet[ typeId ];
-}
-
-
-pub class OutStream {
-    pub fn write( txt: str );
-}
-
-
-let dummyList:TypeInfo[] = [];
-
-pub proto class Scope;
-
-pub class SymbolInfo {
-    pri let accessMode: str { pub };
-    pri let name: str { pub };
-    pri let typeInfo: TypeInfo { pub };
-    pub fn canAccess( nsScope:Scope, fromScope:Scope ): TypeInfo!;
-}
-
-pub class Scope {
-    // このスコープのオーナーの TypeInfo。
-    // 名前空間に関連する class, function の TypeInfo。
-    pri let ownerTypeInfo: TypeInfo! { pub, pub };
-    // 親のスコープ。 これが self と等しい場合は root。
-    pri let parent: Scope { pub };
-    // このスコープに登録されているシンボル情報。
-    // シンボル名 → TypeInfo のマップ。
-    pri let symbol2TypeInfoMap: Map<str,SymbolInfo> { pub };
-    // このスコープがクラスのスコープかどうか。
-    pri let classFlag: bool;
-    // 継承しているスコープ。
-    pri let inheritList: Scope[];
-    fn __init( parent: Scope!, classFlag: bool, inheritList: Scope[] ) {
-        self.parent = unwrap parent default self;
-        self.symbol2TypeInfoMap = {};
-        self.inheritList = inheritList;
-        self.classFlag = classFlag;
-    }
-
-    pub fn set_ownerTypeInfo( owner: TypeInfo! ) {
-        self.ownerTypeInfo = owner;
-    }
-    
-    pub fn getTypeInfoChild( name: str ) : TypeInfo! {
-        if! self.symbol2TypeInfoMap[ name ] {
-            return _exp.$typeInfo;
-        }
-        return nil;
-    }
-
-    pub fn getNSTypeInfo(): TypeInfo;
-}
-
-// 最上位のスコープ
-let rootScope = new Scope( nil, false, [] );
-
-pub class TypeInfo {
-
-    // この TypeInfo のスコープ。
-    // class, func など名前空間を持つ TypeInfo は有効。
-    pri let scope: Scope! { pub };
-
-    pub fn __init( scope: Scope! ) {
-        self.scope = scope;
-        if! scope {
-            _exp.set_ownerTypeInfo( self );
-        }
-    }
-    
-    pub fn getParentId(): int {
-        return rootTypeId;
-    }
-
-    pub fn get_baseId(): int {
-        return rootTypeId;
-    }
-
-    pub fn isInheritFrom( other:TypeInfo ) : bool;
-
-    pub fn isSettableFrom( other:TypeInfo ) : bool;
-    
-    pub fn getTxt() : str {
-        return "";
-    }
-    
-    pub fn serialize( stream: OutStream ) {
-        return;
-    }
-
-    pub fn equals( typeInfo: TypeInfo ): bool {
-        return false;
-    }
-
-    pub fn get_externalFlag(): bool {
-        return false;
-    }
-    
-    pub fn get_itemTypeInfoList(): TypeInfo[] {
-        return dummyList;
-    }  
-    pub fn get_argTypeInfoList(): TypeInfo[] {
-        return dummyList;
-    }  
-    pub fn get_retTypeInfoList(): TypeInfo[] {
-        return dummyList;
-    }  
-    pub fn get_parentInfo(): TypeInfo {
-        return self;
-    }  
-    pub fn get_rawTxt(): str {
-        return "";
-    }  
-    pub fn get_typeId(): int {
-        return rootTypeId;
-    }  
-    pub fn get_kind(): int {
-        return TypeInfoKindRoot;
-    } 
-    pub fn get_staticFlag(): bool {
-        return false;
-    } 
-    pub fn get_accessMode(): str {
-        return "pri";
-    }  
-    pub fn get_autoFlag(): bool {
-        return false;
-    }  
-    pub fn get_orgTypeInfo(): TypeInfo {
-        return self;
-    }  
-    pub fn get_baseTypeInfo(): TypeInfo {
-        return self;
-    } 
-    pub fn get_nilable(): bool {
-        return false;
-    }
-    pub fn get_nilableTypeInfo(): TypeInfo {
-        return self;
-    }
-    pub fn get_children(): TypeInfo[] {
-        return dummyList;
-    }
-    pub fn get_children(): TypeInfo[] {
-        return dummyList;
-    }
-}
-
-pub fn Scope.getTypeInfoField(
-    name: str, includeSelfFlag: bool!, fromScope:Scope ) : TypeInfo!
-{
-    if self.classFlag {
-        if includeSelfFlag {
-            if! self.symbol2TypeInfoMap[ name ] {
-                return _exp.canAccess( self, fromScope );
-            }
-        }
-        if self.inheritList {
-            foreach scope in self.inheritList {
-                let typeInfo = scope.getTypeInfoField( name, true, fromScope );
-                if typeInfo {
-                    return typeInfo;
-                }
-            }
-        }
-    }
-
-    return nil;
-}
-
-/**
-このスコープからシンボル name の型情報を取得する。
-
-@param name シンボル名
-@param fromScope シンボルを参照する位置のスコープ
-@param onlySameNsFlag true の場合、検索対象を同一名前空間内に限定する。
-*/
-pub fn Scope.getTypeInfo(
-    name: str, fromScope:Scope, onlySameNsFlag:bool ) : TypeInfo!
-{
-    let typeInfo:TypeInfo! = nil;
-    if! self.symbol2TypeInfoMap[ name ] {
-        return _exp.canAccess( self, fromScope );
-    }
-    if not onlySameNsFlag {
-        if self.inheritList {
-            foreach scope in self.inheritList {
-                typeInfo = scope.getTypeInfoField( name, true, fromScope );
-                if typeInfo {
-                    return typeInfo;
-                }   
-            }   
-        }
-    }
-    if not onlySameNsFlag or not self.ownerTypeInfo {
-        if self.parent ~= self {
-            return self.parent.getTypeInfo( name, fromScope, onlySameNsFlag );
-        }
-    }
-    if onlySameNsFlag {
-        return nil;
-    }
-    return sym2builtInTypeMap[ name ];
-}
-
-
-pub fn Scope.add( name:str, typeInfo: TypeInfo, accessMode:str ) {
-    self.symbol2TypeInfoMap[ name ] = new SymbolInfo( accessMode, name, typeInfo );
-}
-pub fn Scope.addClass( name:str, typeInfo: TypeInfo, scope: Scope ) {
-    self.add( name, typeInfo, typeInfo.$accessMode );
-}
-
-fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
-    if! scope {
-        if readyIdSet[ scope ] {
-            return;
-        }
-        readyIdSet[ scope ] = true;
-        if #prefix > 20 {
-            error("illegal");
-        }   
-        
-        forsort symbolInfo, symbol in _exp.$symbol2TypeInfoMap {
-            Util.errorLog( "scope: %s, %s, %s" ( prefix, _exp, symbol ) );
-            if! symbolInfo.$typeInfo.$scope {
-                dumpScopeSub( _exp, prefix .. "  ", readyIdSet );
-            }
-        }
-    }
-}
-
-fn dumpScope( scope: Scope!, prefix:str ) {
-    dumpScopeSub( scope, prefix, {}@Map<Scope,bool> );
-}
-
-
-
-let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
-
-
-pub fn Scope.getNSTypeInfo(): TypeInfo {
-    let scope = self;
-    while scope.ownerTypeInfo ~= rootTypeInfo {
-        if! scope.ownerTypeInfo {
-            return _exp;
-        }
-        scope = scope.parent;
-    }
-    return rootTypeInfo;
-}
-
-pub fn Scope.getClassTypeInfo(): TypeInfo {
-    let scope = self;
-    while scope.ownerTypeInfo ~= rootTypeInfo {
-        if! scope.ownerTypeInfo {
-            if _exp.$kind == TypeInfoKindClass {
-                return _exp;
-            }
-        }
-        scope = scope.parent;
-    }
-    return rootTypeInfo;
-}
-
-
-/**
-このシンボルが、fromScope のスコープからアクセスできるか調べる。
-このシンボルは、 nsScope で宣言されているものとする。
- */
-pub fn SymbolInfo.canAccess( nsScope:Scope, fromScope:Scope ): TypeInfo!
-{
-    let typeInfo = self.$typeInfo;
-    if nsScope == fromScope {
-        return typeInfo;
-    }
-    switch self.$accessMode {
-        case "pub", "global" {
-            return typeInfo;
-        }           
-        case "pro" {
-            let nsClass = nsScope.getClassTypeInfo();
-            let fromClass = fromScope.getClassTypeInfo();
-            if fromClass.isInheritFrom( nsClass ) {
-                return typeInfo;
-            }
-            return nil;
-        }
-        case "local" {
-            return typeInfo;
-        }
-        case "pri" {
-            let nsClass = nsScope.getClassTypeInfo();
-            let fromClass = fromScope.getClassTypeInfo();
-            if nsClass == fromClass {
-                return typeInfo;
-            }
-            return nil;
-        }
-    }
-    error( "illegl accessmode -- %s, %s"
-           (self.$accessMode, self.$name) );
-}
-
-pub proto class Node;
-pub proto class DeclClassNode extend Node;
-
-pub class NormalTypeInfo extend TypeInfo {
-    // 外部モジュールで定義した TypeInfo かどうか
-    pri let externalFlag: bool;
-    // generic のタイプ
-    pri let itemTypeInfoList: TypeInfo[] { pub };
-    // 引数のタイプ
-    pri let argTypeInfoList: TypeInfo[] { pub };
-    // 戻り値のタイプ
-    pri let retTypeInfoList: TypeInfo[] { pub };
-    // 親のタイプ。メソッドの親はクラスとなる。
-    pri let parentInfo: TypeInfo { pub };
-    // タイプ ID
-    pri let typeId: int { pub };
-    // タイプ名の文字列。配列などの [] は含まない。
-    pri let rawTxt: str { pub };
-    // タイプの種別
-    pri let kind: int { pub };
-    // static かどうか
-    pri let staticFlag: bool { pub };
-    // アクセスモード "pub", "pro", "pri"
-    pri let accessMode: str { pub };
-    // コンパイラで自動生成された型情報の場合 true。 accessor 等。
-    pri let autoFlag: bool { pub };
-
-    // unwrap 後の TypeInfo。 無効な場合は rootTypeInfo。
-    pri let orgTypeInfo: TypeInfo { pub };
-    // 基底クラス。 無効な場合は rootTypeInfo。
-    pri let baseTypeInfo: TypeInfo { pub };
-
-    // この型が nilable を表わす型かどうか。
-    pri let nilable: bool { pub };
-    // この型の nilable 版の TypeInfo。 無効な場合は rootTypeInfo。
-    pri let nilableTypeInfo: TypeInfo { pub };
-    // 子のタイプリスト。 このタイプがクラスなら、メソッドが子。
-    pri let children: TypeInfo[] { pub };
-
-    fn __init( scope: Scope!, baseTypeInfo: TypeInfo!, orgTypeInfo: TypeInfo!,
-               autoFlag: bool, externalFlag: bool, staticFlag: bool, accessMode: str,
-               txt: str, parentInfo: TypeInfo!, typeId: int, kind: int,
-               itemTypeInfoList: TypeInfo[]!,
-               argTypeInfoList:TypeInfo[]!, retTypeInfoList: TypeInfo[]! )
-    {
-        super( scope );
-
-        self.baseTypeInfo = unwrap baseTypeInfo default rootTypeInfo;
-        self.autoFlag = autoFlag;
-        self.externalFlag = externalFlag;
-        self.staticFlag = staticFlag;
-        self.accessMode = accessMode;
-        self.rawTxt = txt;
-        self.kind = kind;
-        self.itemTypeInfoList = unwrap itemTypeInfoList default [];
-        self.argTypeInfoList = unwrap argTypeInfoList default [];
-        self.retTypeInfoList = unwrap retTypeInfoList default [];
-        self.orgTypeInfo = unwrap orgTypeInfo default rootTypeInfo;
-        self.parentInfo = unwrap parentInfo default rootTypeInfo;
-        self.children = [];
-
-        // if dummyRootTypeInfo and not parentInfo {
-        //     Util.debugLog();
-        //     error( "" );
-        // }
-
-        self.typeId = typeId;
-        if kind == TypeInfoKindRoot {
-            self.nilable = false;
-            // dummyRootTypeInfo = self;
-        }
-        elseif txt == "nil" {
-            self.nilable = true;
-            self.nilableTypeInfo = self;
-            self.orgTypeInfo = self;
-        }
-        elseif not orgTypeInfo {
-            if self.parentInfo ~= rootTypeInfo {
-                self.parentInfo.$children.insert( self );
-            }
-            self.nilable = false;
-
-            let hasNilable = false;
-
-            switch ( kind ) {
-                case TypeInfoKindPrim, TypeInfoKindList, TypeInfoKindArray,
-                     TypeInfoKindMap, TypeInfoKindClass
-                {
-                    hasNilable = true;
-                }
-                case TypeInfoKindFunc {
-                    if txt == "form" {
-                        hasNilable = true;
-                    }
-                }
-            }
-            if hasNilable {
-                self.nilableTypeInfo = new NormalTypeInfo(
-                    nil, baseTypeInfo, self, autoFlag, externalFlag,
-                    staticFlag, accessMode, "", parentInfo, typeId + 1,
-                    TypeInfoKindNilable, itemTypeInfoList,
-                    argTypeInfoList, retTypeInfoList );
-            }
-            else {
-                self.nilableTypeInfo = rootTypeInfo;
-            }
-            typeIdSeed = typeIdSeed + 1;
-        }
-        else {
-            self.nilable = true;
-            self.nilableTypeInfo = rootTypeInfo;
-        }
-    }
-
-    pub override fn getParentId(): int {
-        return self.parentInfo and self.parentInfo.$typeId or rootTypeId;
-    }
-
-    pub override fn get_baseId(): int {
-        return self.baseTypeInfo and self.baseTypeInfo.$typeId or rootTypeId;
-    }
-
-    pub override fn getTxt() : str {
-        if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo) {
-            return (unwrap self.orgTypeInfo).getTxt() .. "!";
-        }
-        if self.kind == TypeInfoKindArray {
-            let! _exp = self.itemTypeInfoList[1] {
-                return "[@]";
-            };
-            return _exp.getTxt() .. "[@]";
-        }
-        if self.kind == TypeInfoKindList {
-            let! _exp = self.itemTypeInfoList[1] {
-                return "[]";
-            };
-            return _exp.getTxt() .. "[]";
-        }
-        if self.itemTypeInfoList and #self.itemTypeInfoList > 0 {
-            let txt = self.rawTxt .. "<";
-            foreach typeInfo, index in self.itemTypeInfoList {
-                if index ~= 1 {
-                    txt = txt .. ",";
-                }
-                txt = txt .. typeInfo.getTxt();
-            }
-
-            return txt .. ">";
-        }
-        if self.$rawTxt {
-            return self.$rawTxt;
-        }
-        return "";
-    }
-    
-    pub override fn serialize( stream: OutStream ) {
-        if self.typeId == rootTypeId {
-            return nil;
-        }
-
-        let parentId = self.getParentId();
-        if self.nilable {
-            stream.write(
-                '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
-                    parentId, self.typeId, self.orgTypeInfo.$typeId ) );
-            return nil;
-        }
-
-        fn serializeTypeInfoList( name: str, list: TypeInfo[], onlyPub: bool! ): str {
-            let work = name;
-            foreach typeInfo in list {
-                if not onlyPub or typeInfo.$accessMode == "pub"  {
-                    if #work ~=  #name {
-                        work = work .. ", ";
-                    }
-                    work = "%s%d" (work, typeInfo.$typeId );
-                }
-            }
-            return work .. "}, ";
-        }
-
-        let txt = ```{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        staticFlag = %s, accessMode = '%s', kind = %d, ```
-        ( parentId, self.typeId, self.get_baseId(), self.rawTxt,
-          self.staticFlag, self.accessMode, self.kind );
-
-        stream.write(
-            txt .. serializeTypeInfoList( "itemTypeId = {",
-                                          self.itemTypeInfoList ) ..
-            serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) ..
-            serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) ..
-            serializeTypeInfoList( "children = {", self.children, true ) .. "}\n" );
-    }
-
-    pub fn equalsSub( typeInfo: TypeInfo, depth:int ): bool {
-        if not typeInfo {
-            return false;
-        }
-        if self.typeId == typeInfo.$typeId {
-            return true;
-        }
-        // プリミティブな設定のチェック
-        if //self.externalFlag ~= typeInfo.externalFlag or
-        self.kind ~= typeInfo.$kind or
-            self.staticFlag ~= typeInfo.$staticFlag or
-            self.accessMode ~= typeInfo.$accessMode or
-            self.autoFlag ~= typeInfo.$autoFlag or
-            self.nilable ~= typeInfo.$nilable
-        {
-            // errorLog( "%s, %s" ( self.externalFlag, typeInfo.externalFlag ) );
-            // errorLog( "%s, %s" ( self.kind, typeInfo.kind ) );
-            // errorLog( "%s, %s" ( self.staticFlag, typeInfo.staticFlag ) );
-            // errorLog( "%s, %s" ( self.accessMode, typeInfo.accessMode ) );
-            // errorLog( "%s, %s" ( self.autoFlag, typeInfo.autoFlag ) );
-            // errorLog( "%s, %s" ( self.nilable, typeInfo.nilable ) );
-            return false;
-        }
-
-        if (not self.itemTypeInfoList and typeInfo.$itemTypeInfoList or
-             self.itemTypeInfoList and not typeInfo.$itemTypeInfoList or
-             not self.retTypeInfoList and typeInfo.$retTypeInfoList or
-             self.retTypeInfoList and not typeInfo.$retTypeInfoList or
-             self.orgTypeInfo ~= typeInfo.$orgTypeInfo )
-        {
-            Util.errorLog( "%s, %s", self.itemTypeInfoList, typeInfo.$itemTypeInfoList );
-            Util.errorLog( "%s, %s", self.retTypeInfoList, typeInfo.$retTypeInfoList );
-            Util.errorLog( "%s, %s", self.orgTypeInfo, typeInfo.$orgTypeInfo );
-            //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
-            //                                     typeInfo.getTxt(), typeInfo.typeId ) );
-            return false;
-        }
-
-        if self.itemTypeInfoList {
-            if #self.itemTypeInfoList ~= #typeInfo.$itemTypeInfoList {
-                return false;
-            }
-            foreach item, index in self.itemTypeInfoList {
-                if not item.equals( typeInfo.$itemTypeInfoList[ index ], depth + 1 ) {
-                    //              error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
-                    //                                             typeInfo.getTxt(), typeInfo.typeId ) );
-                    return false;
-                }
-            }
-        }
-
-        if self.retTypeInfoList {
-            if #self.retTypeInfoList ~= #typeInfo.$retTypeInfoList {
-                //              error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
-                //                                             typeInfo.getTxt(), typeInfo.typeId ) );
-                return false;
-            }
-            foreach item, index in self.retTypeInfoList {
-                if not item.equals( typeInfo.$retTypeInfoList[ index ], depth + 1 ) {
-                    //              error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
-                    //                                             typeInfo.getTxt(), typeInfo.typeId ) );
-                    return false;
-                }
-            }
-        }
-
-        if self.orgTypeInfo and not self.orgTypeInfo.equals( typeInfo.$orgTypeInfo, depth + 1 ) {
-            //      error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
-            //                                     typeInfo.getTxt(), typeInfo.typeId ) );
-            return false;
-        }
-
-        return true;
-    }
-
-    pub override fn equals( typeInfo: TypeInfo ): bool {
-        return self.equalsSub( typeInfo, 1 );
-    }
-
-
-    pub static fn cloneToPublic( typeInfo: TypeInfo ): NormalTypeInfo {
-        typeIdSeed = typeIdSeed + 1;
-        return new NormalTypeInfo(
-            typeInfo.$scope, typeInfo.$baseTypeInfo, nil, typeInfo.$autoFlag,
-            typeInfo.$externalFlag, typeInfo.$staticFlag,
-            "pub", typeInfo.$rawTxt, typeInfo.$parentInfo, typeIdSeed, typeInfo.$kind,
-            typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
-            typeInfo.$retTypeInfoList );
-    }
-
-
-
-    pub static fn create(
-        scope: Scope!, baseInfo: TypeInfo,
-        parentInfo: TypeInfo, staticFlag: bool, kind: int, txt: str,
-        itemTypeInfo: TypeInfo[],
-        argTypeInfoList: TypeInfo[],
-        retTypeInfoList: TypeInfo[] ): TypeInfo {
-            if kind == TypeInfoKindPrim {
-                return unwrap sym2builtInTypeMap[ txt ];
-            }
-            typeIdSeed = typeIdSeed + 1;
-            let info = new NormalTypeInfo(
-                scope, baseInfo, nil, false, true, staticFlag, "pub", txt,
-                parentInfo, typeIdSeed, kind, itemTypeInfo,
-                argTypeInfoList, retTypeInfoList ); 
-            return info;
-        }
-}
-
-let typeInfoRoot = rootTypeInfo;
-
-
-typeIdSeed = typeIdSeed + 1;
-
-pub static fn NormalTypeInfo.createBuiltin(
-    idName: str, typeTxt: str, kind: int, typeDDD: TypeInfo! ): TypeInfo {
-        let typeId = typeIdSeed + 1;
-        if kind == TypeInfoKindRoot {
-            typeId = rootTypeId;
-        }
-        else {
-            typeIdSeed = typeIdSeed + 1;
-        }
-        let argTypeList:TypeInfo[] = [];
-        let retTypeList:TypeInfo[] = [];
-        if typeTxt == "form" {
-            if! typeDDD {
-                argTypeList = [ _exp ];
-                retTypeList = [ _exp ];
-            }
-        }
-
-        let scope:Scope! = nil;
-        switch kind {
-            case TypeInfoKindList, TypeInfoKindClass,
-                 TypeInfoKindFunc, TypeInfoKindMethod,
-                 TypeInfoKindMacro
-            {
-                scope = new Scope( rootScope, kind == TypeInfoKindClass, [] );
-            }
-        }
-        
-        let info = new NormalTypeInfo( scope, nil, nil, false, false, false,
-                                       "pub", typeTxt, typeInfoRoot, typeId, kind,
-                                       [], argTypeList, retTypeList );
-        if scope {
-            rootScope.add( typeTxt, info, "pub" );
-        }
-
-        typeInfoKind[ idName ] = info;
-        sym2builtInTypeMap[ typeTxt ] = info;
-        if info.$nilableTypeInfo ~= rootTypeInfo {
-            sym2builtInTypeMap[ typeTxt .. "!" ] = info.$nilableTypeInfo;
-        }
-        
-        builtInTypeIdSet[ info.typeId ] = true;
-        return info;
-    }
-
-pub static fn NormalTypeInfo.createList(
-    accessMode: str, parentInfo: TypeInfo, itemTypeInfo: TypeInfo[] ): TypeInfo {
-        if not itemTypeInfo or #itemTypeInfo == 0 {
-            error( "illegal list type: %s" (itemTypeInfo) );
-        }
-        typeIdSeed = typeIdSeed + 1;
-        return new NormalTypeInfo(
-            nil, nil, nil, false, false, false, accessMode, "",
-            typeInfoRoot, typeIdSeed, TypeInfoKindList, itemTypeInfo );
-    }
-
-pub static fn NormalTypeInfo.createArray(
-    accessMode: str,
-    parentInfo: TypeInfo, itemTypeInfo: TypeInfo[] ): TypeInfo {
-        typeIdSeed = typeIdSeed + 1;
-        return new NormalTypeInfo(
-            nil, nil, nil, false, false, false, accessMode, "",
-            typeInfoRoot, typeIdSeed, TypeInfoKindArray, itemTypeInfo );
-    }
-
-pub static fn NormalTypeInfo.createMap(
-    accessMode: str, parentInfo: TypeInfo,
-    keyTypeInfo: TypeInfo, valTypeInfo: TypeInfo ): TypeInfo
-{
-    typeIdSeed = typeIdSeed + 1;
-    return new NormalTypeInfo(
-        nil, nil, nil, false, false, false, accessMode, "Map",
-        typeInfoRoot, typeIdSeed, TypeInfoKindMap,
-        [ keyTypeInfo, valTypeInfo ] );
-}
-
-pub static fn NormalTypeInfo.createClass(
-    scope: Scope!, baseInfo: TypeInfo!, parentInfo: TypeInfo, externalFlag: bool,
-    accessMode: str, className: str ): TypeInfo
-{
-    // if className == "str" {
-    //     return sym2builtInTypeMap[ className ]@TypeInfo;
-    // }
-    let classTypeInfo = sym2builtInTypeMap[ className ];
-    if! classTypeInfo {
-        return _exp;
-        //return classTypeInfo@TypeInfo;
-    }
-
-    
-    typeIdSeed = typeIdSeed + 1;
-    let info = new NormalTypeInfo(
-        scope, baseInfo, nil, false, externalFlag, false, accessMode,
-        className, parentInfo, typeIdSeed, TypeInfoKindClass );
-    return info;
-}
-
-pub static fn NormalTypeInfo.createFunc(
-    scope: Scope!, kind: int, parentInfo: TypeInfo,
-    autoFlag: bool, externalFlag: bool, staticFlag: bool, accessMode: str,
-    funcName: str, argTypeList: TypeInfo[]!, retTypeInfoList: TypeInfo[]! ): TypeInfo
-{
-    typeIdSeed = typeIdSeed + 1;
-    let info = new NormalTypeInfo(
-        scope, nil, nil, autoFlag, externalFlag, staticFlag,
-        accessMode, funcName, parentInfo, typeIdSeed,
-        kind, [], unwrap argTypeList default [],
-        unwrap retTypeInfoList default [] );
-    return info;
-}
-
-pub let builtinTypeNone:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "None", "", TypeInfoKindPrim );
-pub let builtinTypeStem:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Stem", "stem" , TypeInfoKindPrim );
-pub let builtinTypeNil:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Nil", "nil" , TypeInfoKindPrim );
-pub let builtinTypeDDD:TypeInfo =
-    NormalTypeInfo.createBuiltin( "DDD", "..." , TypeInfoKindPrim );
-pub let builtinTypeBool:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Bool", "bool" , TypeInfoKindPrim );
-pub let builtinTypeInt:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Int", "int" , TypeInfoKindPrim );
-pub let builtinTypeReal:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Real", "real" , TypeInfoKindPrim );
-pub let builtinTypeChar:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "char", "char" , TypeInfoKindPrim );
-pub let builtinTypeString:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "String", "str" , TypeInfoKindClass );
-pub let builtinTypeMap:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Map", "Map" , TypeInfoKindMap );
-pub let builtinTypeList:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "List", "List" , TypeInfoKindList );
-pub let builtinTypeArray:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Array", "Array" , TypeInfoKindArray );
-pub let builtinTypeForm:TypeInfo =
-    NormalTypeInfo.createBuiltin( "Form", "form" , TypeInfoKindFunc, builtinTypeDDD );
-pub let builtinTypeSymbol:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Symbol", "sym" , TypeInfoKindPrim );
-pub let builtinTypeStat:TypeInfo = 
-    NormalTypeInfo.createBuiltin( "Stat", "stat" , TypeInfoKindPrim );
-
-pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
-
-
-macro checkEqualsItemType( type1:sym, type2:sym, index:int ) {
-    if not (unwrap ,,type1.$itemTypeInfoList[ ,,index ]).isSettableFrom(
-        unwrap ,,type2.$itemTypeInfoList[ ,,index ] )
-    {
-        return false;
-    }
-};
-
-pub let typeInfoListInsert = typeInfoRoot;
-pub let typeInfoListRemove = typeInfoRoot;
-
-
-// other のクラスが、この型のクラスの継承関係にあるか調べる
-pub override fn NormalTypeInfo.isInheritFrom( other:TypeInfo ) : bool
-{
-    let otherTypeId = other.$typeId;
-    if self.$typeId == otherTypeId {
-        return true;
-    }
-    if self.$kind ~= self.$kind or self.$kind ~= TypeInfoKindClass {
-        return false;
-    }
-    let baseTypeInfo = self.$baseTypeInfo;
-    while baseTypeInfo ~= rootTypeInfo {
-        if otherTypeId == baseTypeInfo.$typeId {
-            return true;
-        }
-        baseTypeInfo = baseTypeInfo.$baseTypeInfo;
-    };
-    return false;
-}
-
-
-// other 型の値を、この型の変数に設定できるか判定する。
-pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
-    if not other {
-        return false;
-    }
-    if self == builtinTypeStem_ or self == builtinTypeDDD {
-        return true;
-    }
-    if self == builtinTypeStem and not other.$nilable {
-        return true;
-    }
-    if other == builtinTypeNil {
-        if self.kind ~= TypeInfoKindNilable {
-            return false;
-        }
-        return true;
-    }
-    if self.typeId == other.$typeId {
-        return true;
-    }
-    if self.kind ~= other.$kind {
-        if self.kind == TypeInfoKindNilable {
-            return (unwrap self.orgTypeInfo).isSettableFrom( other );
-        }
-        return false;
-    }
-    switch ( self.kind ) {
-        case TypeInfoKindPrim {
-            if self == builtinTypeInt and other == builtinTypeChar or
-                self == builtinTypeChar and other == builtinTypeInt
-            {
-                return true;
-            }
-            return false;
-        }       
-        case TypeInfoKindList, TypeInfoKindArray {
-            if other.$itemTypeInfoList[ 1 ] == builtinTypeNone {
-                // literalMap の [], [@] は互換有りとする
-                return true;
-            }
-            checkEqualsItemType( self, other, 1 );
-            return true;
-        }       
-        case TypeInfoKindMap {
-            if other.$itemTypeInfoList[ 1 ] == builtinTypeNone and
-                other.$itemTypeInfoList[ 2 ] == builtinTypeNone
-            {
-                // literalMap の {} は互換有りとする
-                return true;
-            }
-            checkEqualsItemType( self, other, 1 );
-            checkEqualsItemType( self, other, 2 );
-            return true;
-        }       
-        case TypeInfoKindClass {
-            return other.isInheritFrom( self );
-        }       
-        case TypeInfoKindFunc {
-            if self == builtinTypeForm {
-                return true;
-            }
-            // 暫定 pending 関数型の互換を見る。
-            return false;
-        }       
-        case TypeInfoKindMethod {
-            return false;
-        }
-        default {
-            return false;
-        }
-    }
-    return true;
-}
-
-
-pub class Filter {
-}
-
-pub class Node {
-    pri let kind: int { pub };
-    pri let pos: Parser.Position { pub };
-    pri let expTypeList: TypeInfo[] { pub };
-
-    pub fn get_expType(): TypeInfo {
-        if not self.expTypeList {
-            return builtinTypeNone;
-        }
-        return self.expTypeList[ 1 ];
-    }; 
-    
-    pub fn getLiteral(): stem![], TypeInfo[] {
-        return [nil], [builtinTypeNil];
-    }
-    pub fn processFilter( filter: Filter, ... ) {
-    }
-}
-
-
-
-pub class NamespaceInfo {
-    pub let name: str;
-    pub let scope: Scope;
-    pub let typeInfo: TypeInfo;
-}
-
-pub proto class MacroEval;
-pub proto class ExpListNode extend Node;
-
-pub class DeclMacroInfo {
-    pri let name: Parser.Token { pub };
-    pri let argList: Node[] { pub };
-    pri let ast: Node! { pub };
-    pri let tokenList: Parser.Token[] { pub };
-}
-
-class MacroValInfo {
-    pub let val: stem!;
-    pub let typeInfo: TypeInfo;
-}
-
-class MacroInfo {
-    pub let func: form;
-    pub let declInfo: DeclMacroInfo;
-    pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
-}
 pub class TransUnit {
 
-    pri let rootScope: Scope;
-    pri let moduleScope: Scope;
+  /** true の場合は mut 制御が有効 */
+  pri let validMutControl: bool;
 
-    // 解析中の scope
-    pri let scope: Scope;
-    // 解析中のクラスを保持する
-    pri let typeId2ClassMap: Map<int,NamespaceInfo>;
-    
-    pri let moduleName2Info: Map<str,stem!>;
-    pri let parser: Parser.Parser;
-    pri let typeId2Scope: Map<int,Scope>;
-    pri let typeInfo2ClassNode: Map<TypeInfo,DeclClassNode>;
-    pri let pushbackList: Parser.Token![];
-    pri let currentToken: Parser.Token!;
-    pri let usedTokenList: Parser.Token![];
-    pri let currentNamespace: str;
-    pri let errMessList: str[] { pub };
-    pri let macroEval: MacroEval;
-    pri let typeId2MacroInfo: Map<int,MacroInfo>;
+  /** モジュール名 */
+  pri let moduleName: str;
 
-    pri let macroMode: str;
-    // macro-expand 内で利用できるシンボルと値の紐付けマップ
-    pri let symbol2ValueMapForMacro: Map<str,MacroValInfo>;
-    pri let macroScope: Scope!;
+  /** モジュールの最上位スコープ */
+  pri let moduleScope: Ast.Scope;
 
-    fn __init( macroEval: MacroEval ) {
-        self.pushbackList = [];
-        self.usedTokenList = [];
-        self.scope = rootScope;
-        //self.namespaceList = [ typeInfoRoot ];
-        //self.namespaceList = [];
-        //self.classList = [];
-        self.typeId2ClassMap = {};
-        self.typeId2Scope = {};
-        self.typeInfo2ClassNode = {};
-        self.currentToken = nil;
-        self.errMessList = [];
-        self.macroEval = macroEval;
-        self.typeId2MacroInfo = {};
-        self.macroMode = "none";
-        self.symbol2ValueMapForMacro = {};
-    }
+  /** 解析中の scope */
+  pri let scope: Ast.Scope;
+  /** クラスの TypeId -> NamespaceInfo */
+  pri let typeId2ClassMap: Map<int,Ast.NamespaceInfo>;
 
-    pri fn addErrMess( pos: Parser.Position, mess: str ) {
-        self.errMessList.insert(
-                      "%s:%d:%d: %s" ( self.parser.getStreamName(),
-                                       pos.lineNo, pos.column, mess ) );
-    }
+  /** クラスの型情報 -> そのクラスを宣言しているノード */
+  pri let typeInfo2ClassNode: Map<Ast.TypeInfo,Ast.DeclClassNode>;
+  /** パーサー */
+  pri let parser: Parser.Parser;
+  /** push バックしたトークンリスト */
+  pri let pushbackList: Parser.Token![];
+  /** 現在のトークン */
+  pri let currentToken: Parser.Token!;
+  /** 解析済みトークンリスト */
+  pri let usedTokenList: Parser.Token![];
+  /** 解析エラーメッセージ */
+  pri let errMessList: str[] { pub };
+  /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
+  pri let macroEval: Ast.MacroEval;
+  /** マクロの TypeId -> マクロ情報 */
+  pri let typeId2MacroInfo: Map<int,Ast.MacroInfo>;
+  /** マクロのモード */
+  pri let macroMode: str;
+  /** macro-expand 内で利用できるシンボルと値の紐付けマップ */
+  pri let symbol2ValueMapForMacro: Map<str,Ast.MacroValInfo>;
+  /** macro-statement の最上位スコープ */
+  pri let macroScope: Ast.Scope!;
 
 
-    pri fn pushScope( classFlag: bool, inheritList: Scope[]! ): Scope {
-        self.scope = new Scope( self.scope, classFlag,
-                                unwrap inheritList default []);                  
-        return self.scope;
-    }
+  /** submodule 名のリスト */
+  pri let subModuleList: str[];
 
-    pri fn popScope() {
-        self.scope = self.scope.get_parent();
-    }
+  fn __init( macroEval: Ast.MacroEval ) {
+    self.validMutControl = true;
+    self.moduleName = "";
+    self.parser = new Parser.DummyParser();
+    self.subModuleList = [];
+    self.pushbackList = [];
+    self.usedTokenList = [];
+    self.scope = Ast.rootScope;
+    self.typeId2ClassMap = {};
+    self.typeInfo2ClassNode = {};
+    self.currentToken = nil;
+    self.errMessList = [];
+    self.macroEval = macroEval;
+    self.typeId2MacroInfo = {};
+    self.macroMode = "none";
+    self.symbol2ValueMapForMacro = {};
+  }
 
-    pri fn getCurrentClass() : TypeInfo {
-        let typeInfo = rootTypeInfo;
-        let scope = self.scope;
-        repeat {
-            if! scope.$ownerTypeInfo {
-                if _exp.$kind == TypeInfoKindClass {
-                    return _exp;
-                }
-            }
-            scope = scope.$parent;
-        } scope == rootScope;
-        return typeInfo;
-    }
-    
+  pri fn addErrMess( pos: Parser.Position, mess: str ) {
+    self.errMessList.insert(
+      "%s:%d:%d: %s" ( self.parser.getStreamName(),
+                       pos.lineNo, pos.column, mess ) );
+  }
 
-    pri fn getCurrentNamespaceTypeInfo() : TypeInfo {
-        let typeInfo = rootTypeInfo;
-        let scope = self.scope;
-        repeat {
-            if! scope.$ownerTypeInfo {
-                return _exp;
-            }
-            scope = scope.$parent;
-        } scope == rootScope;
-        return typeInfo;
-    }
 
-    pri fn pushClass( baseInfo: TypeInfo!, externalFlag: bool, name:str,
-                      accessMode:str, defNamespace: NamespaceInfo! ): TypeInfo
-    {
-        let typeInfo = rootTypeInfo;
-        if! self.scope.getTypeInfoChild( name ) {
-            typeInfo = _exp;
-            self.scope = unwrap typeInfo.$scope;
+  pri fn pushScope( classFlag: bool, inheritList: Ast.Scope[]! ): Ast.Scope {
+    self.scope = new Ast.Scope( self.scope, classFlag,
+                                unwrap inheritList default []);
+    return self.scope;
+  }
+
+  pri fn popScope() {
+    self.scope = self.scope.get_parent();
+  }
+
+  pri fn getCurrentClass() : Ast.TypeInfo {
+    let typeInfo = Ast.rootTypeInfo;
+    let scope = self.scope;
+    repeat {
+      if! scope.$ownerTypeInfo {
+        if _exp.$kind == Ast.TypeInfoKindClass {
+          return _exp;
         }
-        else {
-            let parentInfo = self.getCurrentNamespaceTypeInfo();
-            let inheritList:Scope[] = [];
-            if! baseInfo {
-                inheritList = [ unwrap _exp.get_scope() ];
-            }
-            
-            let scope = self.pushScope( true, inheritList );
-            typeInfo = NormalTypeInfo.createClass(
-                scope, baseInfo, parentInfo, externalFlag, accessMode, name );
+      }
+      scope = scope.$parent;
+    } scope == Ast.rootScope;
+    return typeInfo;
+  }
+  
 
-            let parentScope = scope.get_parent();
-            parentScope.addClass( name, typeInfo, scope );
-        }
-        let! namespace = defNamespace {
-            namespace = new NamespaceInfo( name, self.scope, typeInfo );
-        };
-        self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
-        self.typeId2Scope[ typeInfo.get_typeId() ] = self.scope;
-        return typeInfo;
+  pri fn getCurrentNamespaceTypeInfo() : Ast.TypeInfo {
+    let typeInfo = Ast.rootTypeInfo;
+    let scope = self.scope;
+    repeat {
+      if! scope.$ownerTypeInfo {
+        return _exp;
+      }
+      scope = scope.$parent;
+    } scope == Ast.rootScope;
+    return typeInfo;
+  }
+
+  pri fn pushClass( baseInfo: Ast.TypeInfo!, externalFlag: bool, name:str,
+                    accessMode:str, defNamespace: Ast.NamespaceInfo! ): Ast.TypeInfo
+  {
+    let typeInfo = Ast.rootTypeInfo;
+    if! self.scope.getTypeInfoChild( name ) {
+      typeInfo = _exp;
+      self.scope = unwrap typeInfo.$scope;
     }
+    else {
+      let parentInfo = self.getCurrentNamespaceTypeInfo();
+      let inheritList:Ast.Scope[] = [];
+      if! baseInfo {
+        inheritList = [ unwrap _exp.get_scope() ];
+      }
+      
+      let scope = self.pushScope( true, inheritList );
+      typeInfo = Ast.NormalTypeInfo.createClass(
+        scope, baseInfo, parentInfo, externalFlag, accessMode, name );
 
-    pri fn popClass() {
-        self.popScope();
+      let parentScope = scope.get_parent();
+      parentScope.addClass( name, typeInfo, scope, false );
     }
+    let! namespace = defNamespace {
+      namespace = new Ast.NamespaceInfo( name, self.scope, typeInfo );
+    };
+    self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
+    //self.typeId2Scope[ typeInfo.get_typeId() ] = self.scope;
+    return typeInfo;
+  }
 
-    pri fn pushbackStr( name: str, statement: str );
-    pri fn analyzeDecl( accessMode: str, staticFlag:
-                        bool, firstToken: Parser.Token, token: Parser.Token ): Node!;
-    pri fn analyzeDeclVar(
-        mode:str, accessMode: str, staticFlag: bool, firstToken: Parser.Token ): Node;
-    pri fn analyzeDeclFunc(
-        overrideFlag: bool, accessMode: str, staticFlag: bool,
-        classNameToken: Parser.Token!,
-        firstToken: Parser.Token, name: Parser.Token! ) : Node;
-    pri fn analyzeDeclClass( classAccessMode: str, classToken: Parser.Token ): Node;
-    pri fn analyzeExp( skipOp2Flag: bool, opLevel: int ): Node;
-    pri fn analyzeStatementList( stmtList: Node[], termTxt: str! );
-    pri fn analyzeStatement( termTxt: str! );
-    pri fn analyzeExpSymbol( firstToken: Parser.Token, token: Parser.Token,
-                             mode: str, prefixExp: Node!, skipFlag: bool ): Node;
-    pri fn analyzeExpList( skipOp2Flag: bool ): ExpListNode;
+  pri fn popClass() {
+    self.popScope();
+  }
+
+  pri fn pushbackStr( name: str, statement: str );
+  pri fn analyzeDecl( accessMode: str, staticFlag:
+                      bool, firstToken: Parser.Token,
+                      token: Parser.Token ): Ast.Node!;
+  pri fn analyzeDeclVar(
+    mode:str, accessMode: str, staticFlag: bool,
+    firstToken: Parser.Token ): Ast.Node;
+  pri fn analyzeDeclFunc(
+    overrideFlag: bool, accessMode: str, staticFlag: bool,
+    classNameToken: Parser.Token!,
+    firstToken: Parser.Token, name: Parser.Token! ) : Ast.Node;
+  pri fn analyzeDeclClass(
+    classAccessMode: str, classToken: Parser.Token, classFlag:bool ): Ast.Node;
+  pri fn analyzeExp( skipOp2Flag: bool, opLevel: int ): Ast.Node;
+  pri fn analyzeStatement( termTxt: str! ): Ast.Node!;
+  pri fn analyzeExpSymbol( firstToken: Parser.Token, token: Parser.Token,
+                           mode: str, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node;
+  pri fn analyzeExpList( skipOp2Flag: bool ): Ast.ExpListNode;
 
 
 }
@@ -1113,17 +199,17 @@ let opLevelBase = 0;
 let op2levelMap:Map<str,int> = {};
 let op1levelMap:Map<str,int> = {};
 fn regOpLevel( opnum: int, opList: str[@] ) {
-    opLevelBase = opLevelBase + 1;
-    if opnum == 1 {
-        foreach op in opList {
-            op1levelMap[ op ] = opLevelBase;
-        }
+  opLevelBase = opLevelBase + 1;
+  if opnum == 1 {
+    foreach op in opList {
+      op1levelMap[ op ] = opLevelBase;
     }
-    else {
-        foreach op in opList {
-            op2levelMap[ op ] = opLevelBase;
-        }
+  }
+  else {
+    foreach op in opList {
+      op2levelMap[ op ] = opLevelBase;
     }
+  }
 }
 regOpLevel( 2, [@ "=" ] );
 regOpLevel( 2, [@ "or" ] );
@@ -1141,514 +227,6 @@ regOpLevel( 1, [@ "not", "#", "-", "~" ] );
 regOpLevel( 1, [@ "^" ] );
 
 
-let nodeKind2NameMap: Map<int,str> = {};
-let nodeKindSeed = 1;
-pub let nodeKind: Map<str,int> = {};
-
-fn regKind( name:str ): int {
-    let kind = nodeKindSeed;
-    nodeKindSeed = nodeKindSeed + 1;
-    nodeKind2NameMap[ kind ] = name;
-    nodeKind[ name ] = kind;
-    return kind;
-}
-
-pub fn getNodeKindName( kind: int ): str {
-    return unwrap nodeKind2NameMap[ kind ];
-}
-
-// let nodeKindNone = regKind( 'None' );
-// let nodeKindImport = regKind( 'Import' );
-// let nodeKindRoot = regKind( 'Root' );
-// let nodeKindRefType = regKind( 'RefType' );
-// let nodeKindIf = regKind( 'If' );
-// let nodeKindSwitch = regKind( 'Switch' );
-// let nodeKindWhile = regKind( 'While' );
-// let nodeKindRepeat = regKind( 'Repeat' );
-// let nodeKindFor = regKind( 'For' );
-// let nodeKindApply = regKind( 'Apply' );
-// let nodeKindForeach = regKind( 'Foreach' );
-// let nodeKindForsort = regKind( 'Forsort' );
-// let nodeKindReturn = regKind( 'Return' );
-// let nodeKindBreak = regKind( 'Break' );
-// let nodeKindExpNew = regKind( 'ExpNew' );
-// let nodeKindExpList = regKind( 'ExpList' );
-// let nodeKindExpRef = regKind( 'ExpRef' );
-// let nodeKindExpOp2 = regKind( 'ExpOp2' );
-// let nodeKindExpCast = regKind( 'ExpCast' );
-// let nodeKindExpOp1 = regKind( 'ExpOp1' );
-// let nodeKindExpRefItem = regKind( 'ExpRefItem' );
-// let nodeKindExpCall = regKind( 'ExpCall' );
-// let nodeKindExpCallSuper = regKind( 'ExpCallSuper' );
-// let nodeKindExpDDD = regKind( 'ExpDDD' );
-// let nodeKindExpParen = regKind( 'ExpParen' );
-// let nodeKindExpMacroExp = regKind( 'ExpMacroExp' ); // macro expand
-// let nodeKindExpMacroStat = regKind( 'ExpMacroStat' ); // `{}
-// let nodeKindBlock = regKind( 'Block' );
-// let nodeKindStmtExp = regKind( 'StmtExp' );
-// let nodeKindRefField = regKind( 'RefField' );
-// let nodeKindDeclVar = regKind( 'DeclVar' );
-// let nodeKindDeclFunc = regKind( 'DeclFunc' );
-// let nodeKindDeclMethod = regKind( 'DeclMethod' );
-// let nodeKindDeclConstr = regKind( 'DeclConstr' );
-// let nodeKindDeclMember = regKind( 'DeclMember' );
-// let nodeKindDeclArg = regKind( 'DeclArg' );
-// let nodeKindDeclArgDDD = regKind( 'DeclArgDDD' );
-// let nodeKindDeclClass = regKind( 'DeclClass' );
-// let nodeKindDeclMacro = regKind( 'DeclMacro' );
-// let nodeKindLiteralNil = regKind( 'LiteralNil' );
-// let nodeKindLiteralChar = regKind( 'LiteralChar' );
-// let nodeKindLiteralInt = regKind( 'LiteralInt' );
-// let nodeKindLiteralReal = regKind( 'LiteralReal' );
-// let nodeKindLiteralArray = regKind( 'LiteralArray' );
-// let nodeKindLiteralList = regKind( 'LiteralList' );
-// let nodeKindLiteralMap = regKind( 'LiteralMap' );
-// let nodeKindLiteralString = regKind( 'LiteralString' );
-// let nodeKindLiteralBool = regKind( 'LiteralBool' );
-// let nodeKindLiteralSymbol = regKind( 'LiteralSymbol' );
-
-macro _declNodeClass(
-    baseName:str, super:sym, fieldInfoList:Map<str,str>[] )
-{
-    {
-        let _className = ,,,"%sNode" (baseName);
-        let _nodeKindSym = ,,,"nodeKind%s" (baseName);
-
-        let fieldStatList:stat[] = [];
-        let argList:stat[] = [];
-        let initStatList:stat[] = [];
-        let relateStat:stat[] = [];
-        
-        if fieldInfoList {
-            foreach fieldInfo in fieldInfoList {
-                foreach typeName, varName in fieldInfo {
-                    fieldStatList.insert( `{
-                        pri let ,,,varName : ,,,typeName { pub };
-                    });
-                    argList.insert( `{ ,,,varName: ,,,typeName, } );
-                    initStatList.insert( `{ self.,,,varName = ,,,varName; } );
-                }
-            }
-        }
-
-        fieldStatList.insert( `{
-            pub override fn processFilter( filter: Filter, ... ) {
-                let argList:stem[] = [ ... ];
-
-                filter.,,,"process%s" (baseName) (self, table.unpack( argList ) );
-            } } );
-
-        
-        let superStat = `{
-            super( ,,_nodeKindSym, pos, builtinTypeList );
-        };
-
-        relateStat.insert( `{
-            pub fn Filter. ,,,"process%s" (baseName) ( node: ,,_className, ... ) {
-            };               
-        } );
-        
-    }
-
-    pub proto class ,,_className extend ,,super;
-    ,,relateStat;
-    let ,,_nodeKindSym = regKind( ,,baseName );
-    pub class ,,_className extend ,,super {
-        ,,fieldStatList;
-        pub fn __init( pos: Parser.Position, builtinTypeList: TypeInfo[], ,,argList ) {
-            ,,superStat;
-            ,,initStatList;
-        }
-    }
-}
-
-_declNodeClass( "None", Node, []);
-_declNodeClass( "Import", Node,
-                [ { "modulePath": "str" } ]
-);
-
-_declNodeClass( "Root", Node,
-                [ { "children": "Node[]" },
-                  { "typeId2ClassMap": "Map<int,NamespaceInfo>" } ]
-);
-
-_declNodeClass( "RefType", Node,
-                [ { "name": "Node" },
-                  { "refFlag": "bool" },
-                  { "mutFlag": "bool" },
-                  { "array": "str" } ]
-);
-
-_declNodeClass( "Block", Node,
-                [ { "blockKind": "str" },
-                  { "stmtList": "Node[]" } ]
-);
-
-pub class IfStmtInfo {
-    pri let kind: str { pub };
-    pri let exp: Node { pub };
-    pri let block: BlockNode { pub };
-}
-_declNodeClass( "If", Node,
-                [{ "stmtList": "IfStmtInfo[]" } ]
-);
-
-_declNodeClass( "ExpList", Node,
-                [ { "expList": "Node[]" } ]
-);
-
-pub class CaseInfo {
-    pri let expList: ExpListNode { pub };
-    pri let block: BlockNode { pub };
-}
-_declNodeClass( "Switch", Node,
-                [ { "exp": "Node" },
-                  { "caseList": "CaseInfo[]" },
-                  { "default": "BlockNode!" } ]
-);
-
-
-_declNodeClass( "While", Node,
-                [ { "exp": "Node" },
-                  { "block": "BlockNode" } ]
-);
-
-_declNodeClass( "Repeat", Node,
-                [ { "block": "BlockNode" },
-                  { "exp": "Node" } ]
-);
-
-_declNodeClass( "For", Node,
-                [ { "block": "BlockNode" },
-                  { "val": "Parser.Token" },
-                  { "init": "Node" },
-                  { "to": "Node" },
-                  { "delta": "Node!" }] 
-);
-
-_declNodeClass( "Apply", Node,
-                [ { "varList": "Parser.Token[]" },
-                  { "exp": "Node" },
-                  { "block": "BlockNode" } ]
-);
-
-_declNodeClass( "Foreach", Node,
-                [ { "val": "Parser.Token" },
-                  { "key": "Parser.Token!" },
-                  { "exp": "Node" },
-                  { "block": "BlockNode" } ]
-);
-
-_declNodeClass( "Forsort", Node,
-                [ { "val": "Parser.Token" },
-                  { "key": "Parser.Token!" },
-                  { "exp": "Node" },
-                  { "block": "BlockNode" },
-                  { "sort": "bool" } ]
-);
-
-_declNodeClass( "Return", Node,
-                [ { "expList": "ExpListNode!" } ]
-);
-
-_declNodeClass( "Break", Node, [] );
-
-_declNodeClass( "ExpNew", Node,
-                [ { "symbol": "Node" },
-                  { "argList": "ExpListNode!" } ]
-);
-
-_declNodeClass( "ExpUnwrap", Node,
-                [ { "exp": "Node" },
-                  { "default": "Node!" } ]
-);
-
-_declNodeClass( "ExpRef", Node,
-                 [ { "token": "Parser.Token" } ]
-);
-
-_declNodeClass( "ExpOp2", Node,
-                [ { "op": "Parser.Token" },
-                  { "exp1": "Node" },
-                  { "exp2": "Node" } ]
-);
-
-_declNodeClass( "UnwrapSet", Node,
-                [ { "dstExpList": "ExpListNode" },
-                  { "srcExpList": "ExpListNode" },
-                  { "unwrapBlock": "BlockNode!" } ]              
-);
-
-_declNodeClass( "IfUnwrap", Node,
-                [ { "exp": "Node" },
-                  { "block": "BlockNode" },
-                  { "nilBlock": "BlockNode!" } ]
-);
-                
-
-_declNodeClass( "ExpCast", Node,
-                [ { "exp": "Node" } ]
-);
-
-_declNodeClass( "ExpOp1", Node,
-                [ { "op": "Parser.Token" },
-                  { "macroMode": "str" },
-                  { "exp": "Node" } ]
-);
-
-_declNodeClass( "ExpRefItem", Node,
-                [ { "val": "Node" },
-                  { "index": "Node" } ]
-);
-
-_declNodeClass( "ExpCall", Node,
-                [ { "func": "Node" },
-                  { "argList": "ExpListNode!" } ]
-);
-
-_declNodeClass( "ExpDDD", Node,
-                [ { "token": "Parser.Token" } ]
-);
-
-_declNodeClass( "ExpParen", Node,
-                 [ { "exp": "Node" } ]
-);
-
-_declNodeClass( "ExpMacroExp", Node,
-                [ { "stmtList": "Node[]" } ]
-);
-
-_declNodeClass( "ExpMacroStat", Node,
-                [ { "expStrList": "Node[]" } ]
-);
-
-_declNodeClass( "StmtExp", Node,
-                [ { "exp": "Node" } ]
-);
-
-_declNodeClass( "RefField", Node,
-                [ { "field": "Parser.Token" },
-                  { "prefix": "Node" }] 
-);
-
-_declNodeClass( "GetField", Node,
-                [ { "field": "Parser.Token" },
-                  { "prefix": "Node" },
-                  { "getterTypeInfo": "TypeInfo" } ]               
-);
-
-pub class VarInfo {
-    pri let name: Parser.Token { pub };
-    // 宣言している型。 宣言していない場合は nil
-    pri let refType: RefTypeNode! { pub };
-    // 実際の型。
-    pri let actualType: TypeInfo { pub };
-}
-_declNodeClass( "DeclVar", Node,
-                [ { "mode": "str" },
-                  { "accessMode": "str" },
-                  { "staticFlag": "bool" },
-                  { "varList": "VarInfo[]" },
-                  { "expList": "ExpListNode!" },
-                  { "typeInfoList": "TypeInfo[]" },
-                  { "unwrapFlag": "bool" },
-                  { "unwrapBlock": "BlockNode!" },
-                  { "thenBlock": "BlockNode!" },
-                  { "syncVarList": "VarInfo[]" },
-                  { "syncBlock": "BlockNode!" } ]
-);
-
-pub class DeclFuncInfo {
-    pri let className: Parser.Token! { pub };
-    pri let name: Parser.Token! { pub };
-    pri let argList: Node[] { pub };
-    pri let staticFlag: bool { pub };
-    pri let accessMode: str { pub };
-    pri let body: Node! { pub };
-    pri let retTypeInfoList: TypeInfo[] { pub };
-}
-_declNodeClass( "DeclFunc", Node,
-                [ { "declInfo": "DeclFuncInfo" } ]
-);
-
-_declNodeClass( "DeclMethod", Node,
-                [ { "declInfo": "DeclFuncInfo" } ]
-);
-
-_declNodeClass( "DeclConstr", Node,
-                [ { "declInfo": "DeclFuncInfo" } ]
-);
-
-_declNodeClass( "ExpCallSuper", Node,
-                [ { "superType": "TypeInfo" },
-                  { "expList": "ExpListNode" } ]
-);
-
-_declNodeClass( "DeclMember", Node,
-                [ { "name": "Parser.Token" },
-                  { "refType": "RefTypeNode" },
-                  { "staticFlag": "bool" },
-                  { "accessMode": "str" },
-                  { "getterMode": "str" },
-                  { "setterMode": "str" } ]
-);
-
-_declNodeClass( "DeclArg", Node,
-                [ { "name": "Parser.Token" },
-                  { "argType": "RefTypeNode" } ]
-);
-
-_declNodeClass( "DeclArgDDD", Node, [] );
-
-_declNodeClass( "DeclClass", Node,
-                [ { "accessMode": "str" },
-                  { "name": "Parser.Token" },
-                  { "fieldList": "Node[]" },
-                  { "memberList": "DeclMemberNode[]" },
-                  { "scope": "Scope" },
-                  { "outerMethodSet": "Map<str,bool>" } ]
-);
-
-_declNodeClass( "DeclMacro", Node,
-                [ { "declInfo": "DeclMacroInfo" } ]
-);
-
-_declNodeClass( "LiteralNil", Node, [] );
-
-_declNodeClass( "LiteralChar", Node,
-                [ { "token": "Parser.Token" },
-                  { "num": "int" } ]
-);
-
-_declNodeClass( "LiteralInt", Node,
-                [ { "token": "Parser.Token" },
-                  { "num": "int" } ]
-);
-
-_declNodeClass( "LiteralReal", Node,
-                [ { "token": "Parser.Token" },
-                  { "num": "real" } ]
-);
-
-_declNodeClass( "LiteralArray", Node,
-                [ { "expList": "ExpListNode!" } ]
-);
-
-_declNodeClass( "LiteralList", Node,
-                [ { "expList": "ExpListNode!" } ]
-);
-
-pub class PairItem {
-    pri let key: Node { pub };
-    pri let val: Node { pub };
-}
-_declNodeClass( "LiteralMap", Node,
-                [ { "map": "Map<Node,Node>" },
-                  { "pairList": "PairItem[]" } ]
-);
-
-_declNodeClass( "LiteralString", Node,
-                [ { "token": "Parser.Token" },
-                  { "argList": "Node[]" } ]
-);
-
-_declNodeClass( "LiteralBool", Node,
-                [ { "token": "Parser.Token" } ]
-);
-
-_declNodeClass( "LiteralSymbol", Node,
-                [ { "token": "Parser.Token" } ]
-);
-
-
-
-pub override fn LiteralNilNode.getLiteral(): stem![], TypeInfo[] {
-    return [nil], [builtinTypeNil];
-}
-pub override fn LiteralCharNode.getLiteral(): stem![], TypeInfo[] {
-    return [self.num], [builtinTypeChar];
-}
-pub override fn LiteralIntNode.getLiteral(): stem![], TypeInfo[] {
-    return [self.num], [builtinTypeInt];
-}
-pub override fn LiteralRealNode.getLiteral(): stem![], TypeInfo[] {
-    return [self.num], [builtinTypeReal];
-}
-pub override fn LiteralArrayNode.getLiteral(): stem![], TypeInfo[] {
-    let array:stem![] = [];
-    if! self.expList {
-        foreach val in _exp.get_expList() {
-            let txt = val.getLiteral()[1];
-            array.insert( txt );
-        }
-    }
-    return [array], [self.get_expType()];
-}
-pub override fn LiteralListNode.getLiteral(): stem![], TypeInfo[] {
-    let list:stem![] = [];
-    if! self.expList {
-        foreach val in _exp.get_expList() {
-            let item = val.getLiteral()[1];
-            list.insert( item );
-        }
-    }
-    return [list], [self.get_expType()];
-}
-pub override fn LiteralMapNode.getLiteral(): stem![], TypeInfo[] {
-    let map:Map<str,stem!> = {};
-    foreach val, key in self.map {
-        map[ key.getLiteral()[1] ] = val.getLiteral()[1];
-    }
-    return [map], [self.get_expType()];
-}
-pub override fn LiteralStringNode.getLiteral(): stem![], TypeInfo[] {
-    let txt = self.token.txt;
-    if string.find( txt, '^```' ) {
-        txt = txt.sub( 4, -4 );
-    }
-    else {
-        txt = txt.sub( 2, -2 );
-    }
-    let argList = self.$argList;
-
-    if #argList > 0 {
-        let argTbl:stem![] = [];
-        foreach argNode in argList {
-            let arg = argNode.getLiteral();
-            argTbl.insert( arg[1] );
-        }   
-        return [ string.format( txt, table.unpack( argTbl ) )], [builtinTypeString];
-    }
-    return [txt], [builtinTypeString];
-    
-}
-pub override fn LiteralBoolNode.getLiteral(): stem![], TypeInfo[] {
-    return [ self.token.txt == "true"], [builtinTypeBool];
-}
-pub override fn LiteralSymbolNode.getLiteral(): stem![], TypeInfo[] {
-    return [[ self.token.txt ]], [ builtinTypeSymbol ];
-}
-pub override fn RefFieldNode.getLiteral(): stem![], TypeInfo[] {
-    let prefix = (unwrap self.prefix.getLiteral()[1])@str[];
-    prefix.insert( "." );
-    prefix.insert( self.field.txt );
-    return [ prefix ], [ builtinTypeSymbol ];
-}
-pub override fn ExpMacroStatNode.getLiteral(): stem![], TypeInfo[] {
-    let txt = "";
-    foreach token in self.expStrList {
-        txt = "%s %s" (txt, token.getLiteral()[1]);
-    }
-    return [txt ], [ self.get_expType() ];
-}
-
-
-pub class MacroEval {
-    pub fn eval( macroNode: DeclMacroNode ): form;
-}
-
-
-
 let quotedChar2Code:Map<int,int> = {};
 quotedChar2Code[ 'a' ] = 7;    // \a
 quotedChar2Code[ 'b' ] = 8;    // \b
@@ -1662,391 +240,396 @@ quotedChar2Code[ '"' ] = ?\";  // "
 quotedChar2Code[ "'" ] = ?\';  // '
 
 class _TypeInfo {
-    pub let baseId: int;
-    pub let itemTypeId: int[];
-    pub let argTypeId: int[];
-    pub let retTypeId: int[];
-    pub let parentId: int;
-    pub let typeId: int;
-    pub let txt: str;
-    pub let kind: int;
-    pub let staticFlag: bool;
-    pub let nilable: bool;
-    pub let orgTypeId: int;
-    pub let children: int[];
-    pub let accessMode: str;
+  pub let baseId: int;
+  pub let itemTypeId: int[];
+  pub let argTypeId: int[];
+  pub let retTypeId: int[];
+  pub let parentId: int;
+  pub let typeId: int;
+  pub let txt: str;
+  pub let kind: int;
+  pub let staticFlag: bool;
+  pub let nilable: bool;
+  pub let orgTypeId: int;
+  pub let children: int[];
+  pub let accessMode: str;
 }
 
 
 class _ModuleInfo {
-    //pub let _className2InfoMap: Map<str,Map<str,stem>>;
-    pub let _typeId2ClassInfoMap: Map<int,Map<str,stem>>;
-    pub let _typeInfoList: _TypeInfo[];
-    pub let _varName2InfoMap: Map<str,Map<str,stem>>;
-    pub let _funcName2InfoMap: Map<str,stem>;
+  //pub let _className2InfoMap: Map<str,Map<str,stem>>;
+  pub let _typeId2ClassInfoMap: Map<int,Map<str,stem>>;
+  pub let _typeInfoList: _TypeInfo[];
+  pub let _varName2InfoMap: Map<str,Map<str,stem>>;
+  pub let _funcName2InfoMap: Map<str,stem>;
 }
 
-let builtinModuleName2Scope:Map<str,Scope> = {};
+pub let typeInfoListInsert = Ast.typeInfoRoot;
+pub let typeInfoListRemove = Ast.typeInfoRoot;
+
 
 fn TransUnit.registBuiltInScope() {
-    let builtInInfo = [
-        {
-            "": {
-                "type": { "arg": [ "stem!" ], "ret": ["str"] },
-                "error": { "arg": [ "str" ], "ret": [] },
-                "print": { "arg": [ "..." ], "ret": [] },
-                "tonumber": { "arg": [ "str" ], "ret": ["real"] },
-                "load": { "arg": [ "str" ], "ret": ["form!", "str"] },
-                "require": { "arg": [ "str" ], "ret": ["stem!"] },
-                "_fcall": { "arg": [ "form", "..." ], "ret": [""] },
-            },
-        },
-        {
-            "ioStream": {
-                "read": { "methodFlag": [], "arg": [ "stem!" ], "ret": [ "str!" ] },
-                "close": { "methodFlag": [], "arg": [], "ret": [] },
-            },
-        },
-        {
-            "io": {
-                "open": { "arg": [ "str", "str!" ], "ret": ["ioStream!"] },
-                "popen": { "arg": [ "str" ], "ret": ["ioStream!"] },
-            },
-        },
-        {
-            
-            "os": {
-                "clock": { "arg": [], "ret": ["int"] },
-                "exit": { "arg": [ "int!" ], "ret": [] },
-            },  
-        },
-        {
-            "string": {
-                "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["int", "int"] },
-                "byte": { "arg": [ "str", "int" ], "ret": ["int"] },
-                "format": { "arg": [ "str", "..." ], "ret": ["str"] },
-                "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
-                "gmatch": { "arg": [ "str", "str" ], "ret": ["stem!"] },
-                "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str"] },
-                "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
-            },  
-        },
-        {
-            "str": {
-                "find": { "methodFlag": [], "arg": [ "str", "int!", "bool!" ], "ret": ["int", "int"] },
-                "byte": { "methodFlag": [], "arg": [ "int" ], "ret": ["int"] },
-                "format": { "methodFlag": [], "arg": [ "..." ], "ret": ["str"] },
-                "rep": { "methodFlag": [], "arg": [ "int" ], "ret": ["str"] },
-                "gmatch": { "methodFlag": [], "arg": [ "str" ], "ret": ["stem!"] },
-                "gsub": { "methodFlag": [], "arg": [ "str", "str" ], "ret": ["str"] },
-                "sub": { "methodFlag": [], "arg": [ "int", "int!" ], "ret": ["str"] },
-            },  
-        },
-        {
-            "table": {
-                "unpack": { "arg": [ "stem" ], "ret": ["..."] },
-            },  
-        },
-        {
-            "List": {
-                "insert": { "methodFlag": [], "arg": [ "stem!" ], "ret": [""] },
-                "remove": { "methodFlag": [], "arg": [ "int!" ], "ret": [""] },
-            },  
-        },
-        {
-            "debug": {
-                "getinfo": { "arg": ["int"], "ret": ["stem"] },
-            },  
-        },
-        {
-            "_luneScript": {
-                "loadModule": { "arg": [ "str" ], "ret": ["stem"] },
-            },
-        }
-    ]@Map<str,Map<str,Map<str,str[]>>>[];
-
-
-    fn getTypeInfo( typeName:str ) : TypeInfo {
-        if typeName.find( "!$" ) {
-            let orgTypeName = typeName.gsub( "!$", "" );
-            let typeInfo = unwrap self.rootScope.getTypeInfo(
-                orgTypeName, self.rootScope, false );
-            return typeInfo.$nilableTypeInfo;
-        }
-        return unwrap self.rootScope.getTypeInfo(
-            typeName, self.rootScope, false );
+  let builtInInfo = [
+    {
+      "": {
+        "type": { "arg": [ "stem!" ], "ret": ["str"] },
+        "error": { "arg": [ "str" ], "ret": [] },
+        "print": { "arg": [ "..." ], "ret": [] },
+        "tonumber": { "arg": [ "str" ], "ret": ["real"] },
+        "load": { "arg": [ "str" ], "ret": ["form!", "str"] },
+        "require": { "arg": [ "str" ], "ret": ["stem!"] },
+        "_fcall": { "arg": [ "form", "..." ], "ret": [""] },
+      },
+    },
+    {
+      "ioStream": {
+        "read": { "methodFlag": [], "arg": [ "stem!" ], "ret": [ "str!" ] },
+        "close": { "methodFlag": [], "arg": [], "ret": [] },
+      },
+    },
+    {
+      "io": {
+        "open": { "arg": [ "str", "str!" ], "ret": ["ioStream!"] },
+        "popen": { "arg": [ "str" ], "ret": ["ioStream!"] },
+      },
+    },
+    {
+      
+      "os": {
+        "clock": { "arg": [], "ret": ["int"] },
+        "exit": { "arg": [ "int!" ], "ret": [] },
+      },  
+    },
+    {
+      "string": {
+        "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["int", "int"] },
+        "byte": { "arg": [ "str", "int" ], "ret": ["int"] },
+        "format": { "arg": [ "str", "..." ], "ret": ["str"] },
+        "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
+        "gmatch": { "arg": [ "str", "str" ], "ret": ["stem!"] },
+        "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str"] },
+        "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
+      },  
+    },
+    {
+      "str": {
+        "find": { "methodFlag": [], "arg": [ "str", "int!", "bool!" ], "ret": ["int", "int"] },
+        "byte": { "methodFlag": [], "arg": [ "int" ], "ret": ["int"] },
+        "format": { "methodFlag": [], "arg": [ "..." ], "ret": ["str"] },
+        "rep": { "methodFlag": [], "arg": [ "int" ], "ret": ["str"] },
+        "gmatch": { "methodFlag": [], "arg": [ "str" ], "ret": ["stem!"] },
+        "gsub": { "methodFlag": [], "arg": [ "str", "str" ], "ret": ["str"] },
+        "sub": { "methodFlag": [], "arg": [ "int", "int!" ], "ret": ["str"] },
+      },  
+    },
+    {
+      "table": {
+        "unpack": { "arg": [ "stem" ], "ret": ["..."] },
+      },  
+    },
+    {
+      "List": {
+        "insert": { "methodFlag": [], "arg": [ "stem!" ], "ret": [""] },
+        "remove": { "methodFlag": [], "arg": [ "int!" ], "ret": [""] },
+      },  
+    },
+    {
+      "debug": {
+        "getinfo": { "arg": ["int"], "ret": ["stem"] },
+      },  
+    },
+    {
+      "_luneScript": {
+        "loadModule": { "arg": [ "str" ], "ret": ["stem"] },
+        "searchModule": { "arg": [ "str" ], "ret": ["str!"] },
+      },
     }
+  ]@Map<str,Map<str,Map<str,str[]>>>[];
 
-    foreach builtinClassInfo in builtInInfo {
-        foreach name2FuncInfo, name in builtinClassInfo {
-            let parentInfo = typeInfoRoot;
-            if name ~= "" {
-                parentInfo = self.pushClass( nil, true, name, "pub" );
-                builtInTypeIdSet[ parentInfo.get_typeId() ] = true;
-            }   
-            if not parentInfo {
-                error( "parentInfo is nil" );
-            }
-            if not builtinModuleName2Scope[ name ]
-            {
-                if name ~= "" and getTypeInfo( name ) {
-                    builtinModuleName2Scope[ name ] = self.scope;
-                }   
 
-                forsort info, funcName in name2FuncInfo {
-                    let argTypeList: TypeInfo[] = [];
-                    foreach argType in unwrap info[ "arg" ] {
-                        argTypeList.insert( getTypeInfo( argType ) );
-                    }       
-
-                    let retTypeList: TypeInfo[] = [];
-                    foreach retType in unwrap info[ "ret" ] {
-                        let retTypeInfo = getTypeInfo( retType );
-                        retTypeList.insert( retTypeInfo );
-                    }
-
-                    
-                    let methodFlag = info[ "methodFlag" ];
-
-                    self.pushScope( false );
-                    
-                    let typeInfo = NormalTypeInfo.createFunc(
-                        self.scope,
-                        methodFlag and TypeInfoKindMethod or TypeInfoKindFunc,
-                        parentInfo, false, true, not methodFlag, "pub",
-                        funcName, argTypeList, retTypeList );
-
-                    self.popScope();
-                    
-                    builtInTypeIdSet[ typeInfo.get_typeId() ] = true;
-                    self.scope.add( funcName, typeInfo, "pub" );
-                    if methodFlag {
-                        switch ( name ) {
-                            case "List" {
-                                switch ( funcName ) {
-                                    case "insert" {      
-                                        typeInfoListInsert = typeInfo;
-                                    }       
-                                    case "remove" {
-                                        typeInfoListRemove = typeInfo;
-                                    }       
-                                }       
-                            }       
-                        }       
-                    }   
-                }   
-            }
-            if name ~= "" {
-                self.popClass();
-            }
-        }
+  fn getTypeInfo( typeName:str ) : Ast.TypeInfo {
+    if typeName.find( "!$" ) {
+      let orgTypeName = typeName.gsub( "!$", "" );
+      let typeInfo = unwrap Ast.rootScope.getTypeInfo(
+        orgTypeName, Ast.rootScope, false );
+      return typeInfo.$nilableTypeInfo;
     }
+    return unwrap Ast.rootScope.getTypeInfo(
+      typeName, Ast.rootScope, false );
+  }
+
+  let builtinModuleName2Scope:Map<str,Ast.Scope> = {};
+  
+  foreach builtinClassInfo in builtInInfo {
+    foreach name2FuncInfo, name in builtinClassInfo {
+      let parentInfo = Ast.typeInfoRoot;
+      if name ~= "" {
+        parentInfo = self.pushClass( nil, true, name, "pub" );
+        Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = true;
+      }   
+      if not parentInfo {
+        error( "parentInfo is nil" );
+      }
+      if not builtinModuleName2Scope[ name ]
+      {
+        if name ~= "" and getTypeInfo( name ) {
+          builtinModuleName2Scope[ name ] = self.scope;
+        }   
+
+        forsort info, funcName in name2FuncInfo {
+          let argTypeList: Ast.TypeInfo[] = [];
+          foreach argType in unwrap info[ "arg" ] {
+            argTypeList.insert( getTypeInfo( argType ) );
+          }       
+
+          let retTypeList: Ast.TypeInfo[] = [];
+          foreach retType in unwrap info[ "ret" ] {
+            let retTypeInfo = getTypeInfo( retType );
+            retTypeList.insert( retTypeInfo );
+          }
+
+          
+          let methodFlag = info[ "methodFlag" ];
+
+          self.pushScope( false );
+          
+          let typeInfo = Ast.NormalTypeInfo.createFunc(
+            true, self.scope,
+            methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc,
+            parentInfo, false, true, not methodFlag, "pub",
+            funcName, argTypeList, retTypeList );
+
+          self.popScope();
+          
+          Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = true;
+          self.scope.add( funcName, typeInfo, "pub", false );
+          if methodFlag {
+            switch ( name ) {
+              case "List" {
+                switch ( funcName ) {
+                  case "insert" {      
+                    typeInfoListInsert = typeInfo;
+                  }       
+                  case "remove" {
+                    typeInfoListRemove = typeInfo;
+                  }       
+                }       
+              }       
+            }       
+          }   
+        }   
+      }
+      if name ~= "" {
+        self.popClass();
+      }
+    }
+  }
 }
 
 
 fn TransUnit.error( mess: str ) {
-    let pos = new Parser.Position( 0, 0 );
-    let txt = "";
-    if! self.currentToken {
-        pos = _exp.pos;
-        txt = _exp.txt;
-    }
-    error( string.format( "error:%s:%d:%d:(%s) %s",
-                          self.parser.getStreamName(),
-                          pos.lineNo, pos.column, txt, mess ) );
+  let pos = new Parser.Position( 0, 0 );
+  let txt = "";
+  if! self.currentToken {
+    pos = _exp.pos;
+    txt = _exp.txt;
+  }
+  error( string.format( "error:%s:%d:%d:(%s) %s",
+                        self.parser.getStreamName(),
+                        pos.lineNo, pos.column, txt, mess ) );
 }
 
-fn TransUnit.createNoneNode( pos: Parser.Position ): Node {
-    //return self.createNode( nodeKindNone, pos, [ builtinTypeNone ], {} );
-    return new NoneNode( pos, [ builtinTypeNone ] );
+fn TransUnit.createNoneNode( pos: Parser.Position ): Ast.Node {
+  //return self.createNode( nodeKindNone, pos, [ builtinTypeNone ], {} );
+  return new Ast.NoneNode( pos, [ Ast.builtinTypeNone ] );
 }
 
 fn TransUnit.pushbackToken( token: Parser.Token! ) {
-    self.pushbackList.insert( token );
-    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+  self.pushbackList.insert( token );
+  self.currentToken = self.usedTokenList[ #self.usedTokenList ];
 }
 
 fn expandVal( tokenList:Parser.Token[], val: stem!, pos: Parser.Position ): str {
-    if! val {
-        switch type( _exp ) {
-            case "number" {
-                let num = "%g" (_exp);
-                let kind = Parser.kind.Int;
-                if string.find( num, ".", 1, true ) {
-                    kind = Parser.kind.Real;
-                }   
-                tokenList.insert( new Parser.Token( kind, num, pos ) );
-            }   
-            case "string" {
-                tokenList.insert(
-                    new Parser.Token(
-                        Parser.kind.Str, '[[%s]]' (_exp ), pos ) );
-                // val 中に \n 等の制御コードが入ると正常に処理されない。
-                // val 内の制御コードを \xXX に変換する必要がある。
-            }   
-            case "table" {
-                tokenList.insert(
-                    new Parser.Token( Parser.kind.Dlmt, "{" (_exp), pos ) );
-                foreach item, key in _exp@stem![] {
-                    expandVal( tokenList, item, pos );
-                    tokenList.insert(
-                        new Parser.Token( Parser.kind.Dlmt, "," (_exp), pos ) );
-                }   
-                tokenList.insert(
-                    new Parser.Token( Parser.kind.Dlmt, "}" (_exp), pos ) );
-            }   
-        }
+  if! val {
+    switch type( _exp ) {
+      case "number" {
+        let num = "%g" (_exp);
+        let kind = Parser.kind.Int;
+        if string.find( num, ".", 1, true ) {
+          kind = Parser.kind.Real;
+        }   
+        tokenList.insert( new Parser.Token( kind, num, pos ) );
+      }   
+      case "string" {
+        tokenList.insert(
+          new Parser.Token(
+            Parser.kind.Str, '[[%s]]' (_exp ), pos ) );
+        // val 中に \n 等の制御コードが入ると正常に処理されない。
+        // val 内の制御コードを \xXX に変換する必要がある。
+      }   
+      case "table" {
+        tokenList.insert(
+          new Parser.Token( Parser.kind.Dlmt, "{" (_exp), pos ) );
+        foreach item, key in _exp@stem![] {
+          expandVal( tokenList, item, pos );
+          tokenList.insert(
+            new Parser.Token( Parser.kind.Dlmt, "," (_exp), pos ) );
+        }   
+        tokenList.insert(
+          new Parser.Token( Parser.kind.Dlmt, "}" (_exp), pos ) );
+      }   
     }
+  }
 }
 
 fn TransUnit.newPushback( tokenList: Parser.Token[] ) {
-    for index = #tokenList, 1, -1  {
-        self.pushbackList.insert( tokenList[ index ] );
-    }
-    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+  for index = #tokenList, 1, -1  {
+    self.pushbackList.insert( tokenList[ index ] );
+  }
+  self.currentToken = self.usedTokenList[ #self.usedTokenList ];
 }
 
 fn TransUnit.getTokenNoErr(): Parser.Token! {
-    if #self.pushbackList > 0 {
-        self.usedTokenList.insert( self.currentToken );
-        self.currentToken = self.pushbackList[ #self.pushbackList ];
-        self.pushbackList.remove();
-        return self.currentToken;
-    }
-
-    let commentList:Parser.Token[] = [];
-    let token:Parser.Token! = nil;
-    while true {
-        token = self.parser.getToken();
-        if! token {
-            if _exp.kind ~= Parser.kind.Cmnt {
-                break;
-            }   
-            commentList.insert( _exp );
-        }
-        else {
-            break;
-        }
-    }
-
-    if! token {
-        if self.macroMode == "expand" and _exp.txt == ',,' {
-            let nextToken = unwrap self.getTokenNoErr();
-
-            let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
-                self.error( "unknown macro val %s" (nextToken.txt) );
-            };
-            //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
-            if macroVal.typeInfo == builtinTypeSymbol {
-                let txtList = (unwrap macroVal.val)@str[];
-                for index = #txtList, 1, -1 {
-                    nextToken = new Parser.Token(
-                        nextToken.kind, txtList[ index ], nextToken.pos );
-                    self.pushbackToken( nextToken );
-                }   
-            }   
-            elseif macroVal.typeInfo == builtinTypeStat {
-                self.pushbackStr( "macroVal %s" (nextToken.txt),
-                                  (unwrap macroVal.val)@str );                       
-            }   
-            elseif macroVal.typeInfo.get_kind() == TypeInfoKindArray or
-                macroVal.typeInfo.get_kind() == TypeInfoKindList
-            {   
-                let strList = (unwrap macroVal.val)@str[];
-                if strList {
-                    for index = #strList, 1, -1 {
-                        self.pushbackStr(
-                            "macroVal %s[%d]" (nextToken.txt, index),
-                            strList[ index ] );
-                    }   
-                }   
-                else {
-                    self.error( "macro val is nil %s" (nextToken.txt) );
-                }   
-            }
-            else {
-                let tokenList: Parser.Token[] = [];
-                expandVal( tokenList, macroVal.val, nextToken.pos );
-                
-                self.newPushback( tokenList );
-            }
-            nextToken = unwrap self.getTokenNoErr();
-
-            token = nextToken;
-        }
-    }
-    if! token {
-        _exp.set_commentList( commentList );
-    }
-
+  if #self.pushbackList > 0 {
     self.usedTokenList.insert( self.currentToken );
-    self.currentToken = token;
+    self.currentToken = self.pushbackList[ #self.pushbackList ];
+    self.pushbackList.remove();
+    return self.currentToken;
+  }
 
-    return token;
+  let commentList:Parser.Token[] = [];
+  let token:Parser.Token! = nil;
+  while true {
+    token = self.parser.getToken();
+    if! token {
+      if _exp.kind ~= Parser.kind.Cmnt {
+        break;
+      }   
+      commentList.insert( _exp );
+    }
+    else {
+      break;
+    }
+  }
+
+  if! token {
+    if self.macroMode == "expand" and _exp.txt == ',,' {
+      let nextToken = unwrap self.getTokenNoErr();
+
+      let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
+        self.error( "unknown macro val %s" (nextToken.txt) );
+      };
+      //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
+      if macroVal.typeInfo == Ast.builtinTypeSymbol {
+        let txtList = (unwrap macroVal.val)@str[];
+        for index = #txtList, 1, -1 {
+          nextToken = new Parser.Token(
+            nextToken.kind, txtList[ index ], nextToken.pos );
+          self.pushbackToken( nextToken );
+        }   
+      }   
+      elseif macroVal.typeInfo == Ast.builtinTypeStat {
+        self.pushbackStr( "macroVal %s" (nextToken.txt),
+                          (unwrap macroVal.val)@str );                       
+      }   
+      elseif macroVal.typeInfo.get_kind() == Ast.TypeInfoKindArray or
+        macroVal.typeInfo.get_kind() == Ast.TypeInfoKindList
+      {   
+        let strList = (unwrap macroVal.val)@str[];
+        if strList {
+          for index = #strList, 1, -1 {
+            self.pushbackStr(
+              "macroVal %s[%d]" (nextToken.txt, index),
+              strList[ index ] );
+          }   
+        }   
+        else {
+          self.error( "macro val is nil %s" (nextToken.txt) );
+        }   
+      }
+      else {
+        let tokenList: Parser.Token[] = [];
+        expandVal( tokenList, macroVal.val, nextToken.pos );
+        
+        self.newPushback( tokenList );
+      }
+      nextToken = unwrap self.getTokenNoErr();
+
+      token = nextToken;
+    }
+  }
+  if! token {
+    _exp.set_commentList( commentList );
+  }
+
+  self.usedTokenList.insert( self.currentToken );
+  self.currentToken = token;
+
+  return token;
 }
 
 
 
 fn TransUnit.getToken(): Parser.Token {
-    let! token = self.getTokenNoErr() {
-        return Parser.getEofToken();
-    };
+  let! token = self.getTokenNoErr() {
+    return Parser.getEofToken();
+  };
 
-    // if self.macroMode == "expand"  {
-    //     Util.errorLog( "getToken %s" (token.txt) );
-    // }
-    
-    self.currentToken = token;
-    return token;
+  // if self.macroMode == "expand"  {
+  //     Util.errorLog( "getToken %s" (token.txt) );
+  // }
+  
+  self.currentToken = token;
+  return token;
 }
 
 fn TransUnit.pushback() {
-    self.pushbackList.insert( self.currentToken );
-    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
-    self.usedTokenList.remove();
+  self.pushbackList.insert( self.currentToken );
+  self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+  self.usedTokenList.remove();
 }
 
 fn TransUnit.pushbackStr( name: str, statement: str ) {
-    let memStream = new Parser.TxtStream( statement );
-    let parer = new Parser.StreamParser( memStream, name, false );
+  let memStream = new Parser.TxtStream( statement );
+  let parser = new Parser.StreamParser( memStream, name, false );
 
-    let list:Parser.Token![] = [];
-    while true {
-        let token = parer.getToken();
-        if not token {
-            break;
-        }
-        list.insert( token ); 
+  let list:Parser.Token![] = [];
+  while true {
+    let token = parser.getToken();
+    if not token {
+      break;
     }
-    for index = #list, 1, -1  {
-        self.pushbackToken( list[ index ] );
-    }
+    list.insert( token ); 
+  }
+  for index = #list, 1, -1  {
+    self.pushbackToken( list[ index ] );
+  }
 }
 
 fn TransUnit.checkSymbol( token: Parser.Token ): Parser.Token {
-    if token.kind ~= Parser.kind.Symb and
-        token.kind ~= Parser.kind.Kywd and
-        token.kind ~= Parser.kind.Type
-    {
-        self.error( "illegal symbol" );
-    }
-    return token;
+  if token.kind ~= Parser.kind.Symb and
+    token.kind ~= Parser.kind.Kywd and
+    token.kind ~= Parser.kind.Type
+  {
+    self.error( "illegal symbol" );
+  }
+  return token;
 }
 
 fn TransUnit.getSymbolToken(): Parser.Token {
-    return self.checkSymbol( self.getToken() );
+  return self.checkSymbol( self.getToken() );
 }
 
 
 fn TransUnit.checkToken( token: Parser.Token, txt: str ): Parser.Token {
-    if not token or token.txt ~= txt {
-        self.error( string.format( "not found -- %s", txt ) );
-    }
-    return token;
+  if not token or token.txt ~= txt {
+    self.error( string.format( "not found -- %s", txt ) );
+  }
+  return token;
 }
 
 fn TransUnit.checkNextToken( txt: str ): Parser.Token {
-    return self.checkToken( self.getToken(), txt );
+  return self.checkToken( self.getToken(), txt );
 }
 
 /**
@@ -2056,2691 +639,645 @@ fn TransUnit.checkNextToken( txt: str ): Parser.Token {
 @return 2 連続したトークンだった場合 true
 */
 fn TransUnit.getContinueToken(): Parser.Token, bool {
-    let! prevToken = self.currentToken {
-        return self.getToken(), false;
-    };
-    let token = self.getToken();
+  let! prevToken = self.currentToken {
+    return self.getToken(), false;
+  };
+  let token = self.getToken();
 
-    if prevToken.pos.lineNo ~= token.pos.lineNo or
-        prevToken.pos.column + #prevToken.txt ~= token.pos.column
-    {
-        return token, false;
-    }
+  if prevToken.pos.lineNo ~= token.pos.lineNo or
+    prevToken.pos.column + #prevToken.txt ~= token.pos.column
+  {
+    return token, false;
+  }
 
-    return token, true;
+  return token, true;
 }
 
 
-fn TransUnit.analyzeBlock( blockKind: str, scope: Scope! ): BlockNode {
-    let token = self.checkNextToken( "{" );
-
-    if not scope {
-        self.pushScope( false );
-    }
-
-    let stmtList:Node[] = [];
-    self.analyzeStatementList( stmtList, "}" );
-
-    self.checkNextToken( "}" );
-
-    if not scope {
-        self.popScope();
-    }
-
-    // let node = self.createNode( nodeKindBlock, token.pos, [ builtinTypeNone ],
-    //                          { "kind": blockKind, "stmtList": stmtList } );
-    let node = new BlockNode(
-        token.pos, [ builtinTypeNone ], blockKind, stmtList );
-
-    return node;
-}
-
-fn TransUnit.analyzeImport( token: Parser.Token ): Node {
-    if self.moduleScope ~= self.scope {
-        self.error( "'import' must call at top scope." );
-    }
-
-    // スコープをルートに変更
-    self.scope = self.rootScope;
-
-    let moduleToken = self.getToken();
-    let modulePath = moduleToken.txt;
-    let nextToken:Parser.Token = moduleToken;
-
-    let nameList = [ moduleToken.txt ];
-
-    while true {
-        nextToken = self.getToken();
-        if nextToken.txt == "." {
-            nextToken = self.getToken();
-            moduleToken = nextToken;
-            modulePath = "%s.%s" ( modulePath, moduleToken.txt );
-            nameList.insert( moduleToken.txt );
-        }
-        else {
-            break;
-        }
-    }
-
-
-    // 型情報の登録
-    let typeId2TypeInfo: Map<int,TypeInfo> = {};
-    typeId2TypeInfo[ rootTypeId ] = typeInfoRoot;
-
-    let moduleTypeInfo: TypeInfo = rootTypeInfo;
-    foreach moduleName in nameList {
-        moduleTypeInfo = self.pushClass( nil, true, moduleName, "pub" );
-    }
-    foreach moduleName in nameList {
-        self.popClass();
-    }
-
-
-    let moduleInfo = _luneScript.loadModule( modulePath )@_ModuleInfo;
-    self.moduleName2Info[ modulePath ] = moduleInfo;
-
-    foreach typeInfo in sym2builtInTypeMap@Map<str,TypeInfo> {
-        typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
-        // let nilableTypeInfo = typeInfo.$nilableTypeInfo;
-        // if nilableTypeInfo ~= rootTypeInfo {
-        //     Util.errorLog( "xxx:%s %s" (nilableTypeInfo.getTxt(),
-        //                                  nilableTypeInfo.$typeId ) );
-        //     typeId2TypeInfo[ nilableTypeInfo.$typeId ] = nilableTypeInfo;
-        // }
-    }
-
-    let typeId2Scope: Map<int,Scope> = {};
-    typeId2Scope[ rootTypeId ] = self.scope;
-
-    let newId2OldIdMap: Map<int,int> = {};
-
-    fn registTypeInfo( atomInfo: _TypeInfo ): TypeInfo {
-        let newTypeInfo: TypeInfo! = nil;
-        if not builtInTypeIdSet[ atomInfo.typeId ] {
-            if atomInfo.nilable {
-                let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
-                newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
-                typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
-            }
-            else {
-                let itemTypeInfo:TypeInfo[] = [];
-                foreach typeId in atomInfo.itemTypeId {
-                    itemTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-                }
-                let argTypeInfo:TypeInfo[] = [];
-                foreach typeId in atomInfo.argTypeId {
-                    if not typeId2TypeInfo[ typeId ] {
-                        Util.errorLog( "not found -- %s,%d" ( atomInfo.txt,
-                                                              #atomInfo.argTypeId ) );
-                    }
-                    argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-                }
-                let retTypeInfo:TypeInfo[] = [];
-                foreach typeId in atomInfo.retTypeId {
-                    retTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-                }
-                //let parentInfo = moduleTypeInfo;
-                let parentInfo = typeInfoRoot;
-                if atomInfo.parentId ~= rootTypeId {
-                    let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
-                        error( "not found parentInfo %s %s"
-                               ( atomInfo.parentId, atomInfo.txt ) );
-                    };
-                    parentInfo = workTypeInfo;
-                }
-                
-                let baseInfo = unwrap typeId2TypeInfo[ atomInfo.baseId ];
-
-                let! parentScope = typeId2Scope[ atomInfo.parentId ] {
-                    self.error( "not found parentScope %s %s"
-                                ( atomInfo.parentId, atomInfo.txt ) );
-                };
-
-                if atomInfo.txt ~= "" {
-                    newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
-                }
-                if newTypeInfo and atomInfo.kind == TypeInfoKindClass {
-                    sync! newTypeInfo = newTypeInfo {
-                    }
-                    then {
-                        typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
-                        if not newTypeInfo.$scope {
-                            error( "not found scope %s %s %s %s %s"
-                                   ( parentScope, atomInfo.parentId,
-                                     atomInfo.typeId,
-                                     atomInfo.txt, newTypeInfo.getTxt() ) );
-                        }   
-                        typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
-                    };
-                }
-                else {
-                    if atomInfo.kind == TypeInfoKindClass {
-                        let baseScope = unwrap typeId2Scope[ atomInfo.baseId ];
-
-                        let scope = new Scope(
-                            parentScope, true, baseScope and [ baseScope ] or [] );
-
-                        let workTypeInfo = NormalTypeInfo.createClass(
-                            scope, baseInfo, parentInfo, true, "pub", atomInfo.txt );
-                        newTypeInfo = workTypeInfo;
-                        typeId2Scope[ atomInfo.typeId ] = scope;
-
-
-                        typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-
-                        parentScope.addClass( atomInfo.txt, workTypeInfo, scope );
-                    }
-                    else {
-                        let scope:Scope! = nil;
-
-                        if atomInfo.kind == TypeInfoKindFunc or
-                            atomInfo.kind == TypeInfoKindMethod
-                        {
-                            scope = new Scope( parentScope, false, [] );
-                        }
-
-                        
-                        let workTypeInfo = NormalTypeInfo.create(
-                            scope, baseInfo, parentInfo,
-                            atomInfo.staticFlag, atomInfo.kind,              
-                            atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo );
-                        newTypeInfo = workTypeInfo;
-
-                        typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-
-                        if atomInfo.kind == TypeInfoKindFunc or
-                            atomInfo.kind == TypeInfoKindMethod
-                        {
-                            (unwrap typeId2Scope[ atomInfo.parentId ]).add(
-                                atomInfo.txt, workTypeInfo, atomInfo.accessMode );
-                            typeId2Scope[ atomInfo.typeId ] = scope;
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            //newTypeInfo = sym2builtInTypeMap[ atomInfo.txt ];
-            newTypeInfo = self.rootScope.getTypeInfo(
-                atomInfo.txt, self.rootScope, false );
-            typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
-        }
-        return unwrap newTypeInfo;
-    }
-
-    // 初めに child 以外で TypeInfo を登録
-    foreach atomInfo in moduleInfo._typeInfoList {
-        registTypeInfo( atomInfo );
-    }
-
-    // 次に child を登録
-    foreach atomInfo in moduleInfo._typeInfoList {
-        if atomInfo.children and #atomInfo.children > 0 {
-            let scope = unwrap typeId2Scope[ atomInfo.typeId ];
-            foreach childId in atomInfo.children {
-                let typeInfo = unwrap typeId2TypeInfo[ childId ];
-                scope.add( typeInfo.getTxt(), typeInfo, typeInfo.$accessMode );
-            }
-        }
-    }
-
-    // インポート後の TypeId と インポート前の TypeId の紐付け
-    foreach typeInfo, typeId in typeId2TypeInfo {
-        newId2OldIdMap[ typeInfo.get_typeId() ] = typeId;
-    }
-
-    // メンバーの登録
-    fn registMember( classTypeId: int ) {
-        let classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
-        self.pushClass( nil, true, classTypeInfo.getTxt(), "pub" );
-        if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
-            let classInfo = _exp;
-            foreach fieldInfo, fieldName in classInfo@Map<str,Map<str,stem!>> {
-                let typeId = fieldInfo.typeId;
-                let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
-                self.scope.add( fieldName, fieldTypeInfo, fieldInfo.accessMode@str );
-            }   
-            foreach child in classTypeInfo.get_children() {
-                if child.get_kind() == TypeInfoKindClass {
-                    let oldId = newId2OldIdMap[ child.get_typeId() ];
-                    if oldId {
-                        registMember( unwrap oldId );
-                    }   
-                }   
-            }
-        }
-        else {
-            self.error( "not found class -- %d, %s"
-                        (classTypeId, classTypeInfo.getTxt()) );
-        }
-        self.popClass();
-    }
-    foreach atomInfo in moduleInfo._typeInfoList {
-        if atomInfo.parentId == rootTypeId and
-            atomInfo.kind == TypeInfoKindClass
-        {       
-            registMember( atomInfo.typeId );
-        }
-    }
-    
-
-    foreach moduleName in nameList {
-        self.pushClass( nil, true, moduleName, "pub" );
-    }
-
-
-    // 変数登録
-    foreach varInfo, varName in moduleInfo._varName2InfoMap {
-        self.scope.add(
-            varName, unwrap typeId2TypeInfo[ varInfo.typeId ], "pub" );
-    }
-
-    foreach moduleName in nameList {
-        self.popClass();
-    }
-
-    //dumpScope( self.rootScope, "" );
-
-
-    // スコープを元に戻す
-    self.scope = self.moduleScope;
-    
-    self.scope.add( moduleToken.txt, moduleTypeInfo, "local" );
-
-
-    self.checkToken( nextToken, ";" );
-
-
-    if self.moduleScope ~= self.scope {
-        self.error( "illegal top scope." );
-    }
-
-    
-    return new ImportNode( token.pos, [ builtinTypeNone ], modulePath );
-}
-
-fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ): Node {
-    let exp = self.analyzeExp();
-
-    let scope = self.pushScope();
-
-    let expType = exp.$expType;
-    if not expType.$nilable {
-        self.addErrMess( exp.$pos, "this is not nilable" );
-        scope.add( "_exp", expType, "local" );
+fn TransUnit.analyzeStatementList( stmtList: Ast.Node[], termTxt: str! ) {
+  while true {
+    let statement = self.analyzeStatement( termTxt );
+    if! statement {
+      stmtList.insert( _exp );
     }
     else {
-        scope.add( "_exp", expType.$orgTypeInfo, "local" );
+      break;
     }
-    
-    let block = self.analyzeBlock( "if!", scope );
+  }
+}
 
+fn TransUnit.analyzeStatementListSubModule( stmtList: Ast.Node[] ) {
+  let statement = self.analyzeStatement();
+
+  if! statement {
+    if _exp.$kind ~= Ast.nodeKindSubmodule {
+      self.error( "submodule must have 'module' declaration at top." );
+    }
+  }
+
+  self.analyzeStatementList( stmtList );
+}
+
+fn TransUnit.analyzeLuneControl( firstToken: Parser.Token ) {
+  let nextToken = self.getToken();
+  switch ( nextToken.txt ) {
+    case "disable_mut_control" {
+      self.validMutControl = false;
+    }
+    default {
+      self.addErrMess(
+        nextToken.pos, "unknown option -- %s" (nextToken.txt) );
+    }
+  }
+  self.checkNextToken( ";" );
+}
+
+fn TransUnit.analyzeBlock( blockKind: str, scope: Ast.Scope! ): Ast.BlockNode {
+  let token = self.checkNextToken( "{" );
+
+  if not scope {
+    self.pushScope( false );
+  }
+
+  let stmtList:Ast.Node[] = [];
+  self.analyzeStatementList( stmtList, "}" );
+
+  self.checkNextToken( "}" );
+
+  if not scope {
     self.popScope();
+  }
 
-    let elseBlock:BlockNode! = nil;
-    let nextToken = self.getToken();
-    if nextToken.txt == "else" {
-        elseBlock = self.analyzeBlock( "if!" );
-    }
-    else {
-        self.pushback();
-    }
+  // let node = self.createNode( nodeKindBlock, token.pos, [ builtinTypeNone ],
+  //                          { "kind": blockKind, "stmtList": stmtList } );
+  let node = new Ast.BlockNode(
+    token.pos, [ Ast.builtinTypeNone ], blockKind, stmtList );
 
-    return new IfUnwrapNode( firstToken.pos, [ builtinTypeNone ], exp, block, elseBlock );
+  return node;
 }
 
+fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
+  if self.moduleScope ~= self.scope {
+    self.error( "'import' must call at top scope." );
+  }
 
-fn TransUnit.analyzeIf( token: Parser.Token ): Node {
-    let nextToken, continueFlag = self.getContinueToken();
-    if continueFlag and nextToken.txt == "!" {
-        return self.analyzeIfUnwrap( token );
-    }
-    self.pushback();
-    
-    let list:IfStmtInfo[] = [];
-    list.insert( new IfStmtInfo( "if", self.analyzeExp(),
-                                        self.analyzeBlock( "if" ) ) );
+  // スコープをルートに変更
+  self.scope = Ast.rootScope;
 
+  let moduleToken = self.getToken();
+  let modulePath = moduleToken.txt;
+  let nextToken:Parser.Token = moduleToken;
+
+  let nameList = [ moduleToken.txt ];
+
+  while true {
     nextToken = self.getToken();
-    if nextToken.txt == "elseif" {
-        while nextToken.txt == "elseif" {
-            list.insert( new IfStmtInfo( "elseif", self.analyzeExp(),
-                                                self.analyzeBlock( "elseif" ) ));
-            nextToken = self.getToken();
-        }
-    }
-
-    if nextToken.txt == "else" {
-        list.insert(
-            new IfStmtInfo( "else", new NoneNode( nextToken.pos,
-                                                  [ builtinTypeNone ] ),
-                            self.analyzeBlock( "else" ) ));
-    }
-    else {
-        self.pushback();
-    }
-
-    return new IfNode( token.pos, [ builtinTypeNone ], list );
-}
-
-
-fn TransUnit.analyzeSwitch( firstToken: Parser.Token ): SwitchNode {
-    let exp = self.analyzeExp();
-
-    self.checkNextToken( "{" );
-
-    let caseList: CaseInfo[] = [];
-
-    let nextToken = self.getToken();
-    while ( nextToken.txt == "case" ) {
-        self.checkToken( nextToken, "case" );
-        let condexpList = self.analyzeExpList();
-        let condBock = self.analyzeBlock( "switch" );
-        caseList.insert( new CaseInfo( condexpList, condBock ) );
-        nextToken = self.getToken();
-    }
-
-    let defaultBlock: BlockNode! = nil;
-    if nextToken.txt == "default" {
-        defaultBlock = self.analyzeBlock( "default" );
-    }
-    else {
-        self.pushback();
-    }
-    self.checkNextToken( "}" );
-
-    return new SwitchNode( firstToken.pos, [ builtinTypeNone ],
-                           exp, caseList, defaultBlock );
-}
-
-
-fn TransUnit.analyzeWhile( token: Parser.Token ): WhileNode {
-    return new WhileNode( token.pos, [ builtinTypeNone ],
-                          self.analyzeExp(), self.analyzeBlock( "while" ) );
-}
-
-fn TransUnit.analyzeRepeat( token: Parser.Token ): RepeatNode {
-    let scope = self.pushScope( false );
-    let node = new RepeatNode( token.pos, [ builtinTypeNone ],
-                               self.analyzeBlock( "repeat", scope ),
-                               self.analyzeExp() );
-    self.popScope();
-    
-    self.checkNextToken( ";" );
-    return node;
-}
-
-fn TransUnit.analyzeFor( firstToken: Parser.Token ): ForNode {
-
-    let scope = self.pushScope( false );
-
-    let val = self.getToken();
-    if val.kind ~= Parser.kind.Symb {
-        self.error( "not symbol" );
-    }
-    self.checkNextToken( "=" );
-    let exp1 = self.analyzeExp();
-    if exp1.$expType ~= builtinTypeInt {
-        self.addErrMess( exp1.$pos,
-                         "exp1 is not int -- %s" (exp1.$expType.getTxt()) );
-    }
-    self.scope.add( val.txt, exp1.$expType, "local" );
-    self.checkNextToken( "," );
-    let exp2 = self.analyzeExp();
-    if exp2.$expType ~= builtinTypeInt {
-        self.addErrMess( exp2.$pos,
-                         "exp2 is not int -- %s" (exp2.$expType.getTxt()) );
-    }
-    let token = self.getToken();
-    let exp3:Node! = nil;
-    if token.txt == "," {
-        exp3 = self.analyzeExp();
-        if! exp3 {
-            if _exp.$expType ~= builtinTypeInt {
-                self.addErrMess( _exp.$pos,
-                                 "exp is not int -- %s" (_exp.$expType.getTxt()) );
-            }
-        }
-            
-    }
-    else {
-        self.pushback();
-    }
-
-    let node = new ForNode(
-        firstToken.pos, [ builtinTypeNone ],
-        self.analyzeBlock( "for", scope ), val, exp1, exp2, exp3 );
-    self.popScope();
-                            
-    return node;
-}
-
-fn TransUnit.analyzeApply( token: Parser.Token ): ApplyNode {
-    let scope = self.pushScope();
-    let varList:Parser.Token[] = [];
-    let nextToken:Parser.Token = Parser.getEofToken();
-    repeat {
-        let var = self.getSymbolToken();
-        if var.kind ~= Parser.kind.Symb {
-            self.error( "illegal symbol" );
-        }
-        varList.insert( var );
-        nextToken = self.getToken();
-        scope.add( var.txt, builtinTypeStem, "local" );
-    } nextToken.txt ~= ",";
-    self.checkToken( nextToken, "of" );
-
-    let exp = self.analyzeExp();
-    if exp.$kind ~= nodeKindExpCall {
-        self.error( "not call" );
-    }
-
-    let block = self.analyzeBlock( "apply", scope );
-    self.popScope();
-
-    return new ApplyNode( token.pos, [ builtinTypeNone ], varList, exp, block );
-}
-
-fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Node {
-    let scope = self.pushScope();
-    let valSymbol:Parser.Token = Parser.getEofToken();
-    let keySymbol:Parser.Token! = nil;
-    let nextToken:Parser.Token = Parser.getEofToken();
-    for index = 1, 2 {
-        let sym = self.getToken();
-        if sym.kind ~= Parser.kind.Symb {
-            self.error( "illegal symbol" );
-        }
-        if index == 1 {
-            valSymbol = sym;
-        }
-        else {
-            keySymbol = sym;
-        }
-        nextToken = self.getToken();
-        if nextToken.txt ~= "," {
-            break;
-        }
-    }
-    self.checkToken( nextToken, "in" );
-
-    let exp = self.analyzeExp();
-    if not exp.$expType {
-        self.error( "unknown type of exp -- %d:%d" (token.pos.lineNo, token.pos.column) );
-    }
-    else {
-        let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
-        if exp.$expType.get_kind() == TypeInfoKindMap {
-            self.scope.add( valSymbol.txt, itemTypeInfoList[ 2 ], "local" );
-            if! keySymbol {
-                self.scope.add( _exp.txt, itemTypeInfoList[ 1 ], "local" );
-            }
-        }
-        elseif exp.$expType.get_kind() == TypeInfoKindList or
-            exp.$expType.get_kind() == TypeInfoKindArray
-        {
-            self.scope.add( valSymbol.txt, itemTypeInfoList[ 1 ], "local" );
-            if! keySymbol {
-                self.scope.add( _exp.txt, builtinTypeInt, "local" );
-            }
-            else {
-                self.scope.add( "__index", builtinTypeInt, "local" );
-            }
-        }
-        else {
-            self.error( "unknown kind type of exp for foreach-- %d:%d"
-                (exp.$pos.lineNo, exp.$pos.column) );
-        }
-    }
-
-
-    let block = self.analyzeBlock( "foreach", scope );
-
-    self.popScope();
-
-    if sortFlag {
-        return new ForsortNode( token.pos, [ builtinTypeNone ],
-                                valSymbol, keySymbol, exp, block, sortFlag );
-    }
-    else {
-        return new ForeachNode( token.pos, [ builtinTypeNone ],
-                                valSymbol, keySymbol, exp, block, sortFlag );
-    }
-
-}
-
-fn TransUnit.analyzeRefType( accessMode: str ): RefTypeNode {
-    let firstToken = self.getToken();
-    let token = firstToken;
-    let refFlag = false;
-    if token.txt == "&" {
-        refFlag = true;
-        token = self.getToken();
-    }
-    let mutFlag = false;
-    if token.txt == "mut" {
-        mutFlag = true;
-        token = self.getToken();
-    }
-    let typeInfo = builtinTypeStem_;
-    self.checkSymbol( token );
-
-
-    let name = self.analyzeExpSymbol( firstToken, token, "symbol", nil, true );
-    typeInfo = name.$expType;
-
-    let continueToken, continueFlag = self.getContinueToken();
-    token = continueToken;
-    if continueFlag and token.txt == "!" {
-        typeInfo = unwrap typeInfo.get_nilableTypeInfo();
-        token = self.getToken();
-    }
-
-    let arrayMode = "no";
-    while true {
-        if token.txt == '[' or token.txt == '[@' {
-            if token.txt == '[' {
-                arrayMode = "list";
-                typeInfo = NormalTypeInfo.createList(
-                    accessMode, self.getCurrentClass(), [ typeInfo ] );
-            }   
-            else {
-                arrayMode = "array";
-                typeInfo = NormalTypeInfo.createArray(
-                    accessMode, self.getCurrentClass(), [ typeInfo ] );
-            }   
-            token = self.getToken();
-            if token.txt ~= ']' {
-                self.pushback();
-                self.checkNextToken( ']' );
-            }   
-        }   
-        elseif token.txt == "<" {
-            let genericList: TypeInfo[] = [];
-            let nextToken: Parser.Token = Parser.getEofToken();
-            repeat {
-                let typeExp = self.analyzeRefType( accessMode );
-
-                genericList.insert( typeExp.$expType );
-                nextToken = self.getToken();
-            } nextToken.txt ~= ",";
-            self.checkToken( nextToken, '>' );
-            if typeInfo.$kind == TypeInfoKindMap {
-                typeInfo = NormalTypeInfo.createMap(
-                    accessMode, self.getCurrentClass(),
-                    genericList[1] or builtinTypeStem,
-                    genericList[2] or builtinTypeStem );
-            }   
-            else {
-                self.error( string.format( "not support generic: %s",
-                                           typeInfo.getTxt() ) );
-            }   
-        }   
-        else {
-            self.pushback();
-            break;
-        }
-        token = self.getToken();
-    }
-    if token.txt == "!" {
-        typeInfo = unwrap typeInfo.get_nilableTypeInfo();
-        token = self.getToken();
-    }
-
-    return new RefTypeNode( firstToken.pos, [ typeInfo ],
-                            name, refFlag, mutFlag, arrayMode );
-}
-
-fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Node[] ) : Parser.Token {
-    let token: Parser.Token = Parser.noneToken;
-    repeat {
-        let argName = self.getToken();
-        if argName.txt == ")" {
-            token = argName;
-            break;
-        }
-        elseif argName.txt == "..." {
-            argList.insert( 
-                new DeclArgDDDNode( argName.pos, [ builtinTypeDDD ] ) );
-        }
-        else {
-            argName = self.checkSymbol( argName );
-
-            self.checkNextToken( ":" );
-            let refType = self.analyzeRefType( accessMode );
-            let arg = new DeclArgNode( argName.pos, refType.$expTypeList,
-                                       argName, refType );    
-            
-            self.scope.add( argName.txt, refType.$expType, "local" );
-            argList.insert( arg );
-        }
-        token = self.getToken();
-    } token.txt ~= ",";
-
-    self.checkToken( token, ")" );
-
-    return token;
-}
-
-pub class ASTInfo {
-    pri let node: Node { pub };
-    pri let moduleTypeInfo: TypeInfo { pub };
-}
-
-pub fn TransUnit.createAST(
-    parser: Parser.Parser, macroFlag: bool, module: str ): ASTInfo
-{
-    self.rootScope = self.scope;
-
-    self.registBuiltInScope();
-
-
-    let moduleTypeInfo = typeInfoRoot;
-
-    if module {
-        apply txt of string.gmatch( module, '[^%.]+' ) {
-            moduleTypeInfo = unwrap self.pushClass( nil, false, txt@str, "pub" );
-        }
-    }
-    self.moduleScope = self.scope;
-
-    
-    self.parser = parser;
-    self.moduleName2Info = {};
-
-    let ast:Node! = nil;
-
-    if macroFlag {
-        ast = self.analyzeBlock( "macro" );
-    }
-    else {
-        let children:Node[] = [];
-        ast = new RootNode( new Parser.Position( 0, 0 ), [ builtinTypeNone ],
-                            children, self.typeId2ClassMap );
-        self.analyzeStatementList( children );
-
-        let token = self.getTokenNoErr();
-        if! token {
-            error( "unknown:%d:%d:(%s) %s"
-                   ( _exp.pos.lineNo, _exp.pos.column,
-                     Parser.getKindTxt( _exp.kind ), _exp.txt ) );
-        }
-    }
-
-    if module {
-        apply txt of string.gmatch( module, '[^%.]+' ) {
-            self.popClass();
-        }
-    }
-
-    if #self.errMessList > 0 {
-        foreach mess in self.errMessList {
-            Util.errorLog( "error:" .. mess );
-        }
-        error( "has error" );
-    }
-
-
-    return new ASTInfo( unwrap ast, moduleTypeInfo );
-}
-
-
-fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Node
-{
-    let nameToken = self.getToken();
-    self.checkNextToken( "(" );
-
-    let scope = self.pushScope();
-
-    let argList: Node[] = [];
-    let nextToken = self.analyzeDeclArgList( accessMode, argList );
-    let argTypeList: TypeInfo[] = [];
-    foreach argNode in argList {
-        argTypeList.insert( argNode.$expType );
-    }
-
-
-    self.checkNextToken( "{" );
-
-    nextToken = self.getToken();
-
-    let ast : Node! = nil;
-    if nextToken.txt == "{" {
-        let parser = new Parser.WrapParser(
-            self.parser, "decl macro %s" (nameToken.txt) );
-
-        foreach symbolInfo, symbol in scope.$symbol2TypeInfoMap {
-            scope.add( symbol, symbolInfo.$typeInfo, "local" );
-        }
-
-        self.macroScope = scope;
-        
-        let bakParser = self.parser;
-        self.parser = parser;
-        
-        let stmtList:Node[] = [];
-        self.analyzeStatementList( stmtList, "}" );
-        self.checkNextToken( "}" );
-
-
-        self.parser = bakParser;
-
-
-        self.macroScope = nil;
-        ast = new BlockNode(
-            firstToken.pos, [ builtinTypeNone ], "macro", stmtList );
-    }
-    else {
-        self.pushback();
-    }
-
-    self.popScope();
-
-    
-    let tokenList: Parser.Token[] = [];
-    let braceCount = 0;
-
-    while true {
-        nextToken = self.getToken();
-        if nextToken.txt == "{" {
-            braceCount = braceCount + 1;
-        }
-        elseif nextToken.txt == "}" {
-            if braceCount == 0 {
-                break;
-            }
-            braceCount = braceCount - 1;
-        }
-        tokenList.insert( nextToken );
-    }
-
-    let typeInfo = NormalTypeInfo.createFunc(
-        scope, TypeInfoKindMacro, self.getCurrentNamespaceTypeInfo(),
-        false, false, false, accessMode, nameToken.txt, argTypeList );
-    self.scope.add( nameToken.txt, typeInfo, "local" );
-
-
-    let declMacroInfo = new DeclMacroInfo( nameToken, argList, ast, tokenList ) ;
-    let node = new DeclMacroNode( firstToken.pos, [ typeInfo ], declMacroInfo );
-
-    let macroObj = self.macroEval.eval( node );
-
-    self.typeId2MacroInfo[ typeInfo.get_typeId() ] =
-        new MacroInfo( macroObj, declMacroInfo, self.symbol2ValueMapForMacro );
-    self.symbol2ValueMapForMacro = {};
-
-    return node;
-}
-
-
-fn TransUnit.analyzeDeclProto( accessMode: str, firstToken: Parser.Token ) : Node
-{
-    let nextToken = self.getToken();
-    if nextToken.txt == "class" {
-        let name = self.getToken();
-
-        nextToken = self.getToken();
-        let baseRef:Node! = nil;
-        if nextToken.txt == "extend" {
-            baseRef = self.analyzeRefType( accessMode );
-            nextToken = self.getToken();
-        }
-
-        self.checkToken( nextToken, ";" );
-
-        let typeInfo:TypeInfo! = nil;
-        if! baseRef {
-            typeInfo = _exp.get_expType();
-        }
-        
-        self.pushClass( typeInfo, false, name.txt, accessMode );
-        self.popClass();
-    }
-    else {
-        self.error( "illegal proto" );
-    }
-    return self.createNoneNode( firstToken.pos );
-}
-
-fn TransUnit.analyzeDecl(
-    accessMode: str, staticFlag: bool,
-    firstToken: Parser.Token, token: Parser.Token ): Node!
-{
-    if not staticFlag {
-        if token.txt == "static" {
-            staticFlag = true;
-            token = self.getToken();
-        }
-    }
-    let overrideFlag = false;
-    if token.txt == "override" {
-        overrideFlag = true;
-        token = self.getToken();
-    }
-
-    if token.txt == "let" {
-        return self.analyzeDeclVar( "let", accessMode, staticFlag, firstToken );
-    }
-    elseif token.txt == "fn" {
-        return self.analyzeDeclFunc(
-            overrideFlag, accessMode, staticFlag, nil, firstToken, nil );
-    }
-    elseif token.txt == "class" {
-        return self.analyzeDeclClass( accessMode, firstToken );
-    }
-    elseif token.txt == "proto" {
-        return self.analyzeDeclProto( accessMode, firstToken );
-    }
-    elseif token.txt == "macro" {
-        return self.analyzeDeclMacro( accessMode, firstToken );
-    }
-
-    return nil;
-}
-
-fn TransUnit.analyzeDeclMember(
-    accessMode: str, staticFlag: bool, firstToken: Parser.Token ): DeclMemberNode {
-        let varName = self.getSymbolToken();
-        let token = self.getToken();
-        let refType = self.analyzeRefType( accessMode );
-        token = self.getToken();
-
-        let getterMode = "none";
-        let setterMode = "none";
-        if token.txt == "{" {
-            let nextToken = self.getToken();
-            if nextToken.txt == "pub" or nextToken.txt == "pri" {
-                getterMode = nextToken.txt;
-                nextToken = self.getToken();
-                if nextToken.txt == "," {
-                    nextToken = self.getToken();
-                    if nextToken.txt == "pub" or nextToken.txt == "pri" {
-                        setterMode = nextToken.txt;
-                        nextToken = self.getToken();
-                    }
-                }
-            }
-            self.checkToken( nextToken, "}" );
-            token = self.getToken();
-        }
-
-        // accessor
-        self.checkToken( token, ";" );
-
-        self.scope.add( varName.txt, refType.$expType, accessMode );
-
-        return new DeclMemberNode(
-            firstToken.pos, refType.$expTypeList,
-            varName, refType, staticFlag, accessMode, getterMode, setterMode );
-    }
-
-fn TransUnit.analyzeDeclMethod(
-    overrideFlag: bool, accessMode: str,
-    staticFlag: bool, className: Parser.Token,
-    firstToken: Parser.Token, name: Parser.Token ): Node
-{
-    let node = self.analyzeDeclFunc(
-        overrideFlag, accessMode, staticFlag, className, name, name );
-    return node;
-}
-
-fn TransUnit.analyzeDeclClass(
-    classAccessMode: str, firstToken: Parser.Token ): DeclClassNode {
-    let name = self.getSymbolToken();
-
-    let nextToken = self.getToken();
-
-    let baseRef:Node! = nil;
-    if nextToken.txt == "extend" {
-        baseRef = self.analyzeRefType( classAccessMode );
-        nextToken = self.getToken();
-    }
-    self.checkToken( nextToken, "{" );
-
-
-    let typeInfo:TypeInfo! = nil;
-    if! baseRef {
-       typeInfo = _exp.get_expType();
-    }
-    let classTypeInfo = self.pushClass(
-        typeInfo, false, name.txt, classAccessMode );
-
-    let fieldList:Node[] = [];
-    let memberList:DeclMemberNode[] = [];
-    let methodName2Node: Map<str,Node> = {};
-    let node = new DeclClassNode(
-        firstToken.pos, [ classTypeInfo ],
-        classAccessMode, name, fieldList, memberList, self.scope, {} );
-    self.typeInfo2ClassNode[ classTypeInfo ] = node;
-
-
-    while true {
-        let token = self.getToken();
-        if token.txt == "}" {
-            break;
-        }
-        let accessMode = "pri";
-        if token.txt == "pub" or token.txt == "pro" or
-            token.txt == "pri" or token.txt == "global"
-        {
-            accessMode = token.txt;
-            token = self.getToken();
-        }
-        let staticFlag = false;
-        if token.txt == "static" {
-            staticFlag = true;
-            token = self.getToken();
-        }
-        let overrideFlag = false;
-        if token.txt == "override" {
-            overrideFlag = true;
-            token = self.getToken();
-        }
-
-        if token.txt == "let" {
-            let memberNode = self.analyzeDeclMember( accessMode, staticFlag, token );
-            fieldList.insert( memberNode );
-            memberList.insert( memberNode );
-        }
-        elseif token.txt == "fn" {
-            let nameToken = self.getToken();
-            let methodNode = self.analyzeDeclMethod(
-                overrideFlag, accessMode, staticFlag, name, token, nameToken );
-            fieldList.insert( methodNode );
-        }
-        elseif token.txt == ";" {
-        }
-        else {
-            self.error( "illegal field" );
-        }
-    }
-
-    let parentInfo = classTypeInfo;
-
-    let memberTypeList:TypeInfo[] = [];
-    
-    // accessor の生成
-    foreach memberNode in memberList {
-        let memberType = memberNode.$expType;
-        memberTypeList.insert( memberType );
-        if memberNode.$expType.$accessMode ~= "pub" {
-            memberType = NormalTypeInfo.cloneToPublic( memberType );
-        }
-        let memberName = memberNode.$name;
-        let getterName = "get_" .. memberName.txt;
-        let accessMode = memberNode.$getterMode;
-        if accessMode ~= "none" and not self.scope.getTypeInfoChild( getterName )
-        {
-            let retTypeInfo = NormalTypeInfo.createFunc(
-                self.pushScope( false ),
-                TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
-                getterName, [], [ memberType ] );
-            self.popScope();
-            
-            self.scope.add( getterName, retTypeInfo, accessMode );
-        }
-        let setterName = "set_" .. memberName.txt;
-        accessMode = memberNode.$setterMode;
-        if memberNode.$setterMode ~= "none" and
-            not self.scope.getTypeInfoChild( setterName )
-        {
-            self.scope.add(
-                setterName,
-                NormalTypeInfo.createFunc(
-                    self.pushScope( false ),
-                    TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
-                    setterName, [ memberType ], nil 
-                ), accessMode );
-            self.popScope();
-        }
-    }
-
-    if not self.scope.getTypeInfoChild( "__init" ) {
-        // デフォルトコンストラクタの登録
-        let initTypeInfo = NormalTypeInfo.createFunc(
-            self.pushScope( false ),
-            TypeInfoKindMethod, parentInfo, true, false, false, "pub",
-            "__init", memberTypeList, [] );
-        self.popScope();
-        self.scope.add( "__init", initTypeInfo, "pub" );
-    }
-    
-
-    self.popClass();
-
-    return node;
-}
-
-pri fn TransUnit.addMethod( className: str, methodNode: Node, name: str ) {
-    let classTypeInfo = self.scope.getTypeInfo(
-        className, self.scope, false );
-    let classNodeInfo = unwrap self.typeInfo2ClassNode[ classTypeInfo ];
-
-    classNodeInfo.$outerMethodSet[ name ] = true;
-    classNodeInfo.$fieldList.insert( methodNode );
-}
-
-
-fn TransUnit.analyzeDeclFunc(
-    overrideFlag: bool, accessMode: str,
-    staticFlag: bool, classNameToken: Parser.Token!,
-    firstToken: Parser.Token, name: Parser.Token! ) : Node
-{
-    let token = self.getToken();
-    if! name {
-        name = self.checkSymbol( _exp );
-    }
-    else {
-        if token.txt ~= "(" {
-            name = self.checkSymbol( token );
-            token = self.getToken();
-        }
-    }
-    let needPopFlag = false;
-    if token.txt == "." {
-        needPopFlag = true;
-        classNameToken = name;
-
-        self.pushClass( nil, false, (unwrap name).txt, "pub" );
-
-        name = self.getSymbolToken();
-        token = self.getToken();
-    }
-
-    let kind = nodeKindDeclConstr;
-    let typeKind = TypeInfoKindFunc;
-    if classNameToken {
-        if not staticFlag {
-            typeKind = TypeInfoKindMethod;
-        }
-        if (unwrap name).txt == "__init" {
-            kind = nodeKindDeclConstr;
-        }
-        else {
-            kind = nodeKindDeclMethod;
-        }
-    }
-    else {
-        kind = nodeKindDeclFunc;
-        if not staticFlag {
-            staticFlag = true;
-        }
-    }
-
-    let funcName = "";
-    if! name {
-        funcName = _exp.txt;
-    }
-    
-    if overrideFlag {
-        // オーバーライドの型チェック
-        if not name {
-            self.error( "name is nil" );
-        };       
-        let! overrideType = self.scope.getTypeInfoField( funcName,
-                                                         false, self.scope )
-        {
-            self.error( "not found override -- " .. funcName );
-        };
-        if overrideType.get_accessMode() ~= accessMode {
-            self.error( "missmatch override accessMode -- %s,%s,%s"
-                        ( funcName, overrideType.get_accessMode(), accessMode ) );
-        }
-        if overrideType.get_staticFlag() ~= staticFlag {
-            self.error( "missmatch override staticFlag -- " .. funcName );
-        }
-        if overrideType.get_kind() ~= TypeInfoKindMethod {
-            self.error( "missmatch override kind -- %s, %d"
-                        ( funcName, overrideType.get_kind() ) );
-        }
-    }
-    else {
-        if! name {
-            if _exp.txt ~= "__init" and
-                self.scope.getTypeInfoField( _exp.txt, false, self.scope )
-            {          
-                // override 宣言していないのに、オーバーライドしている場合エラー
-                self.error( "missmatch override --" .. funcName );
-            }
-        }
-    }
-
-
-    self.checkToken( token, "(" );
-
-    let scope = self.pushScope();
-
-    let argList:Node[] = [];
-    token = self.analyzeDeclArgList( accessMode, argList );
-    let argTypeList:TypeInfo[] = [];
-    foreach argNode in argList {
-        argTypeList.insert( argNode.$expType );
-    }
-
-    self.checkToken( token, ")" );
-
-    token = self.getToken();
-    let retTypeInfoList:TypeInfo[] = [];
-    if token.txt == ":" {
-        repeat {
-            let refType = self.analyzeRefType( accessMode );
-            retTypeInfoList.insert( refType.$expType );
-            token = self.getToken();
-        } token.txt ~= ",";
-    }
-
-    let typeInfo = NormalTypeInfo.createFunc(
-        scope, typeKind, self.getCurrentNamespaceTypeInfo(),
-        false, false, staticFlag, accessMode,
-        funcName, argTypeList, retTypeInfoList );
-    if! name {
-        scope.get_parent().add( _exp.txt, typeInfo, accessMode );
-    }
-
-    let node:Node = self.createNoneNode( firstToken.pos );
-    if token.txt == ";" {
-        node = self.createNoneNode( firstToken.pos );
-    }
-    else {
-        self.pushback();
-        let body = self.analyzeBlock( "func", scope );
-        let info:DeclFuncInfo = new DeclFuncInfo(
-            classNameToken, name, argList, staticFlag, accessMode,
-            body, retTypeInfoList );
-        // node = self.createNode( kind, firstToken.pos, [ typeInfo ], info );
-
-        switch ( kind ) {
-            case nodeKindDeclConstr {
-                node = new DeclConstrNode( firstToken.pos, [ typeInfo ], info );
-            }
-            case nodeKindDeclMethod {
-                node = new DeclMethodNode( firstToken.pos, [ typeInfo ], info );
-            }
-            case nodeKindDeclFunc {
-                node = new DeclFuncNode( firstToken.pos, [ typeInfo ], info );
-            }
-            default {
-                self.error( "illegal kind -- %d" (kind) );
-            }
-        }
-    }
-
-    self.popScope();
-
-    if needPopFlag {
-        self.addMethod( (unwrap classNameToken).txt, node, funcName );
-        self.popClass();
-    }
-
-    return node;
-}
-
-fn TransUnit.analyzeDeclVar(
-    mode:str, accessMode: str, staticFlag: bool, firstToken: Parser.Token ): Node
-{
-    let unwrapFlag = false;
-    let token, continueFlag = self.getContinueToken();
-    if continueFlag and token.txt == "!" {
-        unwrapFlag = true;
-    }
-    else {
-        self.pushback();
-        if mode ~= "let" {
-            Util.errorLog( "need '!'" );
-        }
-    }
-
-    let typeInfoList : TypeInfo[] = [];
-
-    let varNameList:Parser.Token[] = [];
-    let varTypeList:RefTypeNode![] = [];
-    repeat {
-        let varName = self.getSymbolToken();
-        token = self.getToken();
-        let typeInfo = builtinTypeNone;
-        if token.txt == ":" {
-            let refType = self.analyzeRefType( accessMode );
-            varTypeList.insert( refType );
-            typeInfo = refType.$expType;
-            token = self.getToken();
-        }
-        else {
-            varTypeList.insert( nil );
-        }
-        varNameList.insert( varName );
-        typeInfoList.insert( typeInfo );
-    } token.txt ~= ",";
-
-    let expList:ExpListNode! = nil;
-    if token.txt == "=" {
-        expList = self.analyzeExpList();
-        if not expList {
-            self.error( "expList is nil" );
-        }
-    }
-
-    let orgExpTypeList: TypeInfo[] = [];
-    if! expList {
-        //  初期化値の型を反映する
-        let expTypeList: TypeInfo[] = [];
-        foreach exp, index in _exp.$expList {
-            if index == #_exp.$expList {
-                // 最終要素の場合
-                if exp.$expType == builtinTypeDDD {
-                    // ... なら、残りの変数宣言の分 stem をセットする
-                    for subIndex = index, #varNameList {
-                        let argType = typeInfoList[ subIndex ];
-                        if argType ~= builtinTypeNone and
-                            not argType.isSettableFrom( builtinTypeStem_ )
-                        {
-                            self.addErrMess(
-                                firstToken.pos,
-                                "unmatch value type %s(%d) <- %s(%d)"
-                                ( argType.getTxt(), argType.$typeId,
-                                  builtinTypeStem_.getTxt(), builtinTypeStem_.$typeId ));
-                        }
-                        if unwrapFlag {
-                            expTypeList.insert( builtinTypeStem );
-                        }
-                        else {
-                            expTypeList.insert( builtinTypeStem_ );
-                        }
-                        orgExpTypeList.insert( builtinTypeStem_ );
-                    }
-                }
-                else {
-                    foreach typeInfo in exp.$expTypeList {
-                        orgExpTypeList.insert( typeInfo );
-                        if unwrapFlag and typeInfo.$nilable {
-                            typeInfo = unwrap typeInfo.$orgTypeInfo;
-                        }
-                        expTypeList.insert( typeInfo );
-                        let argType = typeInfoList[ index ];
-                        if not (unwrapFlag and typeInfo == builtinTypeNil) and
-                            argType ~= builtinTypeNone  and
-                            not argType.isSettableFrom( typeInfo )
-                        {                       
-                            self.addErrMess(
-                                firstToken.pos,
-                                "unmatch value type %s <- %s"
-                                (argType.getTxt(), typeInfo.getTxt()));
-                        }
-                    }
-                }
-            }
-            else {
-                // 最終要素でない場合
-                let expTypeInfo: TypeInfo = builtinTypeStem_;
-                if exp.$expType == builtinTypeDDD {
-                    expTypeInfo = builtinTypeStem_;
-                }
-                else {
-                    expTypeInfo = exp.$expType;
-                }
-                orgExpTypeList.insert( expTypeInfo );
-                if unwrapFlag and expTypeInfo.$nilable {
-                    expTypeInfo = unwrap expTypeInfo.$orgTypeInfo;
-                }
-                
-                let argType = typeInfoList[ index ];
-                if argType ~= builtinTypeNone and
-                    not argType.isSettableFrom( expTypeInfo )
-                {               
-                    self.addErrMess(
-                        firstToken.pos,
-                        "unmatch value type %s <- %s"
-                        (argType.getTxt(), expTypeInfo.getTxt()));
-                }
-                expTypeList.insert( expTypeInfo );
-            }
-        }
-        foreach typeInfo, index in expTypeList {
-            if not typeInfoList[ index ] or typeInfoList[ index ] == builtinTypeNone {
-                typeInfoList[ index ] = typeInfo;
-            }
-        }
-    }
-
-    if self.macroScope == self.scope {
-        foreach varName, index in varNameList {
-            let typeInfo = typeInfoList[ index ];
-            
-            self.symbol2ValueMapForMacro[ varName.txt ] =
-                new MacroValInfo( nil, typeInfo);
-        }
-    }
-
-    let varList:VarInfo[] = [];
-    let sameSymbolList:VarInfo[] = [];
-    let currentClass = self.getCurrentClass();
-    foreach varName, index in varNameList {
-        let typeInfo = typeInfoList[ index ];
-        let varInfo = new VarInfo( varName, varTypeList[ index ], typeInfo );
-        varList.insert( varInfo );
-        if not varTypeList[ index ] and typeInfo == builtinTypeNil {
-            self.addErrMess(
-                varName.pos, 'need type -- %s' ( varName.txt ) ); 
-        }
-        let sameTypeInfo = self.scope.getTypeInfo( varName.txt, self.scope, true );
-        if! sameTypeInfo {
-            sameSymbolList.insert( varInfo );
-        }
-        // スコープに変数を登録
-        if mode == "let" or mode == "sync" {
-            if mode == "let" {
-                if self.scope.getTypeInfo( varName.txt, self.scope, true ) {
-                    self.addErrMess( varName.pos,
-                                     "shadowing variable -- %s" (varName.txt) );
-                }
-            }
-            self.scope.add( varName.txt, typeInfo, "local" );
-        }
-    }
-
-    let unwrapBlock: BlockNode! = nil;
-    let thenBlock: BlockNode! = nil;
-    if unwrapFlag {
-        let scope = self.pushScope();
-
-        // unwrap ブロックに変数を登録
-        foreach varName, index in varNameList {
-            self.scope.add( "_" .. varName.txt, orgExpTypeList[ index ], "local" );
-        }
-        
-        unwrapBlock = self.analyzeBlock( "let!", scope );
-        self.popScope();
-
-        token = self.getToken();
-        if token.txt == "then" {
-            thenBlock = self.analyzeBlock( "let!", scope );
-        }
-        else {
-            self.pushback();
-        }
-    }
-
-    let syncBlock: BlockNode! = nil;
-    if mode == "sync" {
-        let nextToken = self.getToken();
-        if nextToken.txt == "do" {
-            syncBlock = self.analyzeBlock( "let!", scope );
-        }   
-        else {
-            self.pushback();
-        }
-    }
-
-    self.checkNextToken( ";" );
-
-
-    let node = new DeclVarNode(
-        firstToken.pos, [ builtinTypeNone ], mode, accessMode, staticFlag,
-        varList, expList, typeInfoList, unwrapFlag, unwrapBlock,
-        thenBlock, sameSymbolList, syncBlock );
-    
-    return node;
-}
-
-fn TransUnit.analyzeExpList( skipOp2Flag: bool ): ExpListNode {
-    let expList:Node[] = [];
-    let pos:Parser.Position! = nil;
-
-    let expTypeList:TypeInfo[] = [];
-    repeat {
-        let exp = self.analyzeExp( skipOp2Flag, 0 );
-        if not pos {
-            pos = exp.$pos;
-        }
-        expList.insert( exp );
-        expTypeList.insert( exp.$expType );
-        let token = self.getToken();
-    } token.txt ~= ",";
-
-    self.pushback();
-
-    return new ExpListNode( unwrap pos default new Parser.Position( 0, 0 ),
-                            expTypeList, expList );
-}
-
-fn TransUnit.analyzeListConst( token: Parser.Token ): Node {
-    let nextToken = self.getToken();
-    let expList:ExpListNode! = nil;
-    let itemTypeInfo = builtinTypeNone;
-    if nextToken.txt ~= "]" {
-        self.pushback();
-        expList = self.analyzeExpList();
-        self.checkNextToken( "]" );
-        let nodeList: Node[] = (unwrap expList).$expList;
-        foreach exp in nodeList {
-            let expType = exp.$expType;
-            if itemTypeInfo == builtinTypeNone {
-                itemTypeInfo = expType;
-            }
-            elseif not itemTypeInfo.isSettableFrom( expType ) {
-                if expType == builtinTypeNil {
-                    itemTypeInfo = unwrap itemTypeInfo.$nilableTypeInfo;
-                }
-                elseif expType.$nilable {
-                    itemTypeInfo = builtinTypeStem_;
-                }
-                else {
-                    itemTypeInfo = builtinTypeStem;
-                }
-            }
-        }
-    }
-    let kind = nodeKindLiteralArray;
-    let typeInfoList = [ builtinTypeNone ];
-    if token.txt == '[' {
-        kind = nodeKindLiteralList;
-        typeInfoList = [ NormalTypeInfo.createList( "local", self.getCurrentClass(),
-                                                    [ itemTypeInfo ] ) ];
-        return new LiteralListNode( token.pos, typeInfoList, expList );
-    }
-    else {
-        typeInfoList = [ NormalTypeInfo.createArray( "local", self.getCurrentClass(),
-                                                     [ itemTypeInfo ] ) ];                         
-        return new LiteralArrayNode( token.pos, typeInfoList, expList );
-    }
-    //return self.createNode( kind, token.pos, typeInfo, expList );
-}
-
-fn TransUnit.analyzeMapConst( token: Parser.Token ): LiteralMapNode {
-    let nextToken:Parser.Token = self.getToken();
-    let map:Map<Node,Node> = {};
-    let pairList:PairItem[] = [];
-    let keyTypeInfo = builtinTypeNone;
-    let valTypeInfo = builtinTypeNone;
-
-
-    fn getMapKeyValType(
-        pos: Parser.Position,
-        keyFlag: bool, typeInfo:TypeInfo, expType:TypeInfo ): TypeInfo
-    {   
-        if expType.$nilable {
-            if keyFlag {
-                self.addErrMess(
-                    pos, "map key can't set a nilable -- %s" (expType.getTxt()) );
-            }   
-            if expType == builtinTypeNil {
-                return typeInfo;
-            }
-            expType = unwrap expType.$orgTypeInfo;
-        }
-        if not typeInfo.isSettableFrom( expType ) {
-            if typeInfo ~= builtinTypeNone {
-                typeInfo = builtinTypeStem;
-            }
-            else {
-                typeInfo = expType;
-            }
-        }
-        return typeInfo;
-    }
-    
-    while true {
-        if nextToken.txt == "}" {
-            break;
-        }
-        self.pushback();
-
-        let key = self.analyzeExp();
-        keyTypeInfo = getMapKeyValType( key.$pos, true, keyTypeInfo, key.$expType );
-
-        self.checkNextToken( ":" );
-
-        let val = self.analyzeExp();
-        valTypeInfo = getMapKeyValType( val.$pos, false, valTypeInfo, val.$expType );
-
-        //pairList.insert( { "key": key, "val": val } );
-        pairList.insert( new PairItem( key, val ) );
-        map[ key ] = val;
-        nextToken = self.getToken();
-        if nextToken.txt ~= "," {
-            break;
-        }
-        nextToken = self.getToken();
-    }
-
-    let typeInfo = NormalTypeInfo.createMap(
-        "local", self.getCurrentClass(), keyTypeInfo, valTypeInfo );
-
-    self.checkToken( nextToken, "}" );
-    // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
-    //                      { "map": map, "pairList": pairList } );
-    return new LiteralMapNode( token.pos,[ typeInfo ], map, pairList );
-}
-
-fn TransUnit.analyzeExpRefItem( token: Parser.Token, exp: Node ): Node {
-    let indexExp = self.analyzeExp();
-    self.checkNextToken( "]" );
-
-    let typeInfo = builtinTypeStem_;
-    let expType = exp.$expType;
-    if expType {
-        if expType.$kind == TypeInfoKindMap {
-            typeInfo = expType.get_itemTypeInfoList()[2];
-            if typeInfo ~= builtinTypeStem_ and not typeInfo.$nilable {
-                typeInfo = typeInfo.$nilableTypeInfo;
-            }
-        }
-        elseif expType.$kind == TypeInfoKindArray or
-            expType.$kind == TypeInfoKindList
-        {
-            typeInfo = expType.get_itemTypeInfoList()[1];
-        }
-        elseif expType == builtinTypeString {
-            typeInfo = builtinTypeInt;
-        }
-        else {
-            self.addErrMess( exp.$pos, "could not access with []." );
-        }
-    }
-    if not typeInfo {
-        Util.errorLog( "illegal type" );
-    }
-
-    return new ExpRefItemNode( token.pos, [ typeInfo ], exp, indexExp );
-}
-
-
-fn TransUnit.checkMatchValType(
-    pos: Parser.Position, funcTypeInfo:TypeInfo, expList:ExpListNode!,
-    genericTypeList: TypeInfo[] )
-{
-    let argTypeList = funcTypeInfo.$argTypeInfoList;
-    switch funcTypeInfo {
-        case typeInfoListInsert {
-            argTypeList = genericTypeList;
-        }
-        case typeInfoListRemove {
-        }
-    }
-        
-    if! expList {
-        let expNodeList = _exp.$expList;
-        foreach expNode, index in expNodeList {
-            if #argTypeList < index {
-                self.addErrMess( pos,
-                                 "%s: over argument. expect:%d, actual:%d"
-                                 ( funcTypeInfo.getTxt(),
-                                   #argTypeList, #expNodeList) );
-                break;
-            }
-            let argType = argTypeList[ index ];
-            let expType = expNode.$expType;
-            if #argTypeList == index {
-                if argType ~= builtinTypeDDD {
-                    if not argType.isSettableFrom( expType ) {
-                        self.addErrMess(
-                            expNode.$pos,                           
-                            "%s: argument(%d) type mismatch %s <- %s"
-                            ( funcTypeInfo.getTxt(), index,
-                              argType.getTxt(), expType.getTxt()));      
-                    }
-                }
-                break;
-            }
-            elseif #expNodeList == index {
-                // 最終実引数処理
-                if expType == builtinTypeDDD {
-                    for argIndex = index, #argTypeList {
-                        let workArgType = argTypeList[ argIndex ];
-                        if not workArgType.isSettableFrom( builtinTypeStem_ ) {
-                            self.addErrMess(
-                                expNode.$pos,                           
-                                "%s: argument(%d) type mismatch %s <- %s"
-                                ( funcTypeInfo.getTxt(), argIndex,
-                                  workArgType.getTxt(), expType.getTxt()));
-                        }
-                    }
-                }
-                else {
-                    for argIndex = index, #argTypeList {
-                        let argTypeInfo = argTypeList[ argIndex ];
-                        if not argTypeInfo.isSettableFrom( expType ) {
-                            self.addErrMess(
-                                expNode.$pos,
-                                "%s: argument(%d) type mismatch %s <- %s"
-                                ( funcTypeInfo.getTxt(), argIndex,
-                                  argTypeInfo.getTxt(), expType.getTxt() ) );
-                        }
-                        expType = builtinTypeNil;
-                    }
-                }
-                break;
-            }
-            if not argType.isSettableFrom( expType ) {
-                self.addErrMess(
-                    expNode.$pos,                           
-                    "%s: argument(%d) type mismatch %s <- %s"
-                    ( funcTypeInfo.getTxt(), index,
-                      argType.getTxt(), expType.getTxt()));
-            }
-        }
-    }
-    else {
-        if #argTypeList ~= 0 {
-            // 現状引数省略は無視
-            // self.addErrMess( nextToken.pos,
-            //                  "argument is shortness" );
-        }
-    }
-}
-
-class MacroPaser extend Parser.Parser {
-    let tokenList: Parser.Token[];
-    let pos: int;
-    let name: str;
-
-    pub fn __init( tokenList: Parser.Token[], name: str ) {
-        self.pos = 1;
-        self.tokenList = tokenList;
-        self.name = name;
-    }
-
-    pub override fn getToken() : Parser.Token! {
-        if #self.tokenList < self.pos {
-            return nil;
-        }
-        let token = self.tokenList[ self.pos ];
-        self.pos = self.pos + 1;
-
-        // Util.errorLog( "getToken: %s" (token.txt) );
-        
-        return token;
-    }
-    pub override fn getStreamName(): str {
-        return self.name;
-    }
-}
-
-
-fn TransUnit.evalMacro(
-    firstToken: Parser.Token,
-    macroTypeInfo: TypeInfo, expList: ExpListNode! ) : ExpMacroExpNode
-{
-
-    if! expList {
-        if _exp.get_expList() {
-            foreach exp in _exp.get_expList() {
-                let kind = exp.$kind;    
-                if kind ~= nodeKindLiteralNil and
-                    kind ~= nodeKindLiteralChar and
-                    kind ~= nodeKindLiteralInt and
-                    kind ~= nodeKindLiteralReal and
-                    kind ~= nodeKindLiteralArray and
-                    kind ~= nodeKindLiteralList and
-                    kind ~= nodeKindLiteralMap and
-                    kind ~= nodeKindLiteralString and
-                    kind ~= nodeKindLiteralBool and
-                    kind ~= nodeKindLiteralSymbol and
-                    kind ~= nodeKindRefField and
-                    kind ~= nodeKindExpMacroStat 
-                {                       
-                    self.error( "Macro arguments must be literal value." );
-                }                       
-            }
-        }
-    }                       
-
-    let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.get_typeId() ];
-
-    let argVal:stem![] = []; 
-    if! expList {            
-        foreach argNode in _exp.get_expList() {
-            //let val, typeInfo = getLiteralValue( argNode );
-            let valList, typeInfoList = argNode.getLiteral();
-            let val = valList[1];
-            let typeInfo = typeInfoList[1];
-
-            
-            // if type( val ) == "table" {
-            //     foreach txt in val@str[] {
-            //         if type( txt ) == "table" {
-            //             foreach txt2 in txt@str[] {
-            //                 Util.errorLog( "hoge: %s" ( txt2 ) );
-            //             }
-            //         }
-            //         else {
-            //             Util.errorLog( "hoge: %s" ( txt ) );
-            //         }
-            //     }
-            // }
-            // else {
-            //         Util.errorLog( "hoge: %s" ( val ) );
-            // }
-            argVal.insert( val );
-        }                       
-    }                       
-
-    let func = macroInfo.func;
-    let macroVars:Map<str,stem!> = func( table.unpack( argVal ) )@Map<str,stem!>;
-
-    foreach name in macroVars._names@str[] {
-        let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
-        let typeInfo = valInfo and valInfo.typeInfo or builtinTypeStem_;
-        let val = macroVars[ name ];
-        if typeInfo == builtinTypeSymbol {
-            val = [ val ];
-        }
-        self.symbol2ValueMapForMacro[ name ] = new MacroValInfo( val, typeInfo );
-    }
-    
-    //let scope = self.pushScope();
-
-
-    let argList = macroInfo.declInfo.get_argList();
-    if argList {            
-        foreach arg, index in argList {
-            if arg.get_kind() == nodeKindDeclArg {
-                let argInfo = arg@DeclArgNode; 
-                let argType = argInfo.$argType;
-                let argName = argInfo.$name.txt;
-                //scope.add( argName, argType.expType );
-                self.symbol2ValueMapForMacro[ argName ] =
-                    new MacroValInfo( argVal[ index ], argType.$expType );
-            }
-            else {
-                self.error( "not support ... in macro" );
-            }
-        }                       
-    }
-
-    // foreach macroValInfo, symbol in self.symbol2ValueMapForMacro {
-    //     Util.errorLog( "HOGE: %s %s" (symbol, macroValInfo) );
-    // }
-    
-
-    let parser = new MacroPaser( macroInfo.$declInfo.$tokenList,
-                                 "macro %s" (macroTypeInfo.getTxt()) );
-    let bakParser = self.parser;
-    self.parser = parser;   
-    
-
-    self.macroMode = "expand";
-
-    
-    let stmtList:Node[] = [];
-    self.analyzeStatementList( stmtList, "}" );
-
-
-    //    self.popScope();        
-
-    self.macroMode = "none";
-    self.parser = bakParser;
-
-    
-    // return self.createNode( 
-    //     nodeKindExpMacroExp, firstToken.pos, builtinTypeNone, stmtList );
-    return new ExpMacroExpNode( firstToken.pos, [ builtinTypeNone ], stmtList );
-    
-}                       
-
-fn TransUnit.analyzeExpCont(
-    firstToken: Parser.Token, exp: Node, skipFlag: bool ): Node {
-    let nextToken = self.getToken();
-
-    if not skipFlag {
-        repeat {
-            let matchFlag = false;
-            if nextToken.txt == "[" {
-                matchFlag = true;
-                exp = self.analyzeExpRefItem( nextToken, exp );
-                nextToken = self.getToken();
-            }
-            if nextToken.txt == "(" {
-                let macroFlag = false;
-                let funcTypeInfo = exp.$expType;
-                if funcTypeInfo.get_kind() == TypeInfoKindMacro {
-                    macroFlag = true;
-                    self.symbol2ValueMapForMacro = {};
-                    self.macroMode = "analyze";
-                }
-                
-                matchFlag = true;
-                let work = self.getToken();
-                let expList: ExpListNode! = nil;
-                if work.txt ~= ")" {
-                    self.pushback();
-                    expList = self.analyzeExpList();
-                    self.checkNextToken( ")" );
-                }
-
-                // 引数の型チェック
-                let genericTypeList = funcTypeInfo.$itemTypeInfoList;
-                if funcTypeInfo.$kind == TypeInfoKindMethod and
-                    exp.$kind == nodeKindRefField
-                {              
-                    let refField = exp@RefFieldNode;
-                    let classType = refField.$prefix.$expType;
-                    genericTypeList = classType.$itemTypeInfoList;
-                }
-                
-                self.checkMatchValType(
-                    exp.$pos, funcTypeInfo, expList, genericTypeList );
-                
-                if macroFlag {
-                    self.macroMode = "none";
-                    exp = self.evalMacro( firstToken, funcTypeInfo, expList );
-                }
-                else {
-                    switch( exp.$expType.$kind ) {
-                        case TypeInfoKindMethod, TypeInfoKindFunc {
-                        }
-                        default {
-                            self.error( "can't call the type -- %s"
-                                        (exp.$expType.getTxt() ) );
-                        }
-                    }
-                    exp = new ExpCallNode(
-                        firstToken.pos,
-                        funcTypeInfo.get_retTypeInfoList(), exp, expList );
-                }
-
-                nextToken = self.getToken();
-            }
-        } not matchFlag;
-    }
-
     if nextToken.txt == "." {
-        return self.analyzeExpSymbol(
-            firstToken, self.getToken(), "field", exp, skipFlag );
-    }
-    elseif nextToken.txt == ".$" {
-        return self.analyzeExpSymbol(
-            firstToken, self.getToken(), "get", exp, skipFlag );
-    }
-
-    self.pushback();
-    return exp;
-
-}
-
-
-fn TransUnit.analyzeExpSymbol(
-    firstToken: Parser.Token, token: Parser.Token,
-    mode: str, prefixExp: Node!, skipFlag: bool ): Node {
-        let exp:Node! = nil;
-
-        if mode == "field" or mode == "get" {
-            sync! prefixExp = prefixExp { self.error( "prefix is nil" ); }
-            then {
-                if self.macroMode == "analyze" {
-                    exp = new RefFieldNode(
-                        firstToken.pos, [ builtinTypeSymbol ], token, unwrap prefixExp );
-                }
-                else {
-                    let typeInfo:TypeInfo! = builtinTypeStem_;
-                    let prefixExpType = prefixExp.$expType;
-                    if not prefixExpType {
-                        self.error( "unknown prefix type: " ..
-                                    getNodeKindName( prefixExp.$kind ) );
-                    }
-                    let getterTypeInfo:TypeInfo! = nil;
-                    if prefixExpType.get_kind() == TypeInfoKindClass or
-                        prefixExpType.get_kind() == TypeInfoKindList
-                    {   
-                        if prefixExpType.get_kind() == TypeInfoKindList {
-                            prefixExpType = unwrap sym2builtInTypeMap[ "List" ];
-                        }
-                        let className = prefixExpType.getTxt();
-                        let! classScope = prefixExpType.$scope {
-                            self.error( "not found field: %s, %s, %s"
-                                        ( classScope, className, prefixExpType ) );
-                        };
-                        typeInfo = nil;
-                        if mode == "get" {
-                            typeInfo = classScope.getTypeInfo(
-                                "get_%s" (token.txt), self.scope, false );
-                            if! typeInfo {                       
-                                if ( _exp.get_kind() == TypeInfoKindMethod )
-                                {                                
-                                    let retTypeList = _exp.get_retTypeInfoList();
-                                    getterTypeInfo = _exp;
-                                    typeInfo = retTypeList[ 1 ];
-                                }   
-                            }   
-                        }   
-                        if not getterTypeInfo {
-                            typeInfo = classScope.getTypeInfo(
-                                token.txt, self.scope, false );
-                        }   
-                        if not typeInfo {
-                            foreach val, name in classScope.$symbol2TypeInfoMap {
-                                Util.errorLog( "debug: %s, %s" ( name, val ) );
-                            }   
-                            self.error( string.format(
-                                "not found field typeInfo: %s.%s",
-                                className, token.txt) );
-                        }   
-                    }
-                    elseif prefixExpType.get_kind() == TypeInfoKindMap {
-                        let work = prefixExpType.$itemTypeInfoList[1];
-                        if work ~= builtinTypeString {
-                            self.addErrMess(
-                                token.pos,
-                                "map key type is not str. (%s)" (work.getTxt()) );
-                        }
-                        typeInfo = prefixExpType.$itemTypeInfoList[2];
-                        if! typeInfo {
-                            if _exp.$nilable {
-                                typeInfo = _exp.$nilableTypeInfo;
-                            }   
-                        }   
-                    }
-                    elseif prefixExpType == builtinTypeStem {
-                    }   
-                    else {
-                        self.error( "illegal type -- %s, %d"
-                                    ( prefixExpType.getTxt(),
-                                      prefixExpType.get_kind() ) );
-                    }   
-
-                    // exp = self.createNode(
-                    //     nodeKindRefField, firstToken.pos, [ typeInfo ], info );
-                    if! getterTypeInfo {
-                        exp = new GetFieldNode(
-                            firstToken.pos, [ unwrap typeInfo ],
-                            token, prefixExp, _exp );
-                    }   
-                    else {
-                        exp = new RefFieldNode(
-                            firstToken.pos, [ unwrap typeInfo ], token, prefixExp );
-                    }
-                }
-            };
-        }
-        elseif mode == "symbol" {
-            if self.macroMode == "analyze" {
-                exp = new LiteralSymbolNode(
-                    firstToken.pos, [ builtinTypeSymbol ], token );
-            }
-            else {
-                let typeInfo = self.scope.getTypeInfo( token.txt, self.scope, false );
-                if not typeInfo and token.txt == "self" {
-                    typeInfo = self.getCurrentClass();
-                }
-                if! typeInfo {
-                    if _exp == builtinTypeSymbol {
-                        skipFlag = true;
-                    }
-                    exp = new ExpRefNode( firstToken.pos, [ _exp ], token );
-                }
-                else {
-                    self.error( "not found type -- " .. token.txt );
-                }
-            }
-        }
-        elseif mode == "fn" {
-            exp = self.analyzeDeclFunc( false, "local", false, nil, token, nil );
-        }
-        else {
-            self.error( "illegal mode", mode );
-        }
-
-        return self.analyzeExpCont( firstToken, unwrap exp, skipFlag );
-    }
-
-fn TransUnit.analyzeExpOp2(
-    firstToken: Parser.Token, exp: Node, prevOpLevel: int ): Node
-{
-    while true {
-        let nextToken = self.getToken();
-        let opTxt = nextToken.txt;
-
-        if opTxt == "@" {
-            let castType = self.analyzeRefType( "local" );
-            if exp.$expType.$nilable and not castType.$expType.$nilable {
-                self.addErrMess( firstToken.pos,
-                                 "can't cast from nilable to not nilable  -- %s->%s"
-                                 (exp.$expType.getTxt(), castType.$expType.getTxt()) );
-            }
-            exp = new ExpCastNode( firstToken.pos, castType.$expTypeList, exp );
-        }
-        elseif nextToken.kind == Parser.kind.Ope {
-            if Parser.isOp2( opTxt ) {
-                let! opLevel = op2levelMap[ opTxt ] {
-                    error( string.format( "unknown op -- %s %s",
-                                          opTxt, prevOpLevel ) );
-                };
-                if prevOpLevel and opLevel <= prevOpLevel {
-                    self.pushback();
-                    return exp;
-                }
-
-                let exp2 = self.analyzeExp( false, opLevel );
-                let info = { "op": nextToken, "exp1": exp, "exp2": exp2 };
-
-                if not exp.$expType or not exp2.$expType {
-                    self.error( "illegal exp or exp2 %s, %s, %s , %s,%d:%d"
-                                ( exp.$expType, exp2.$expType,
-                                  nextToken.txt, self.parser.getStreamName(),
-                                  nextToken.pos.lineNo, nextToken.pos.column) );
-                }
-
-                let retType = builtinTypeNone;
-
-                let exp1Type = exp.$expType;
-                let exp2Type = exp2.$expType;
-                if not exp1Type {
-                    self.error( "expType is nil %s:%d:%d"
-                                ( self.parser.getStreamName(),
-                                  firstToken.pos.lineNo, firstToken.pos.column ) );
-                }
-
-                switch opTxt {
-                    case "or" {
-                        if exp1Type.equals( exp2Type ) {
-                            retType = exp1Type;
-                        }
-                        elseif exp1Type.$kind == exp2Type.$kind {
-                            // 暫定
-                            retType = exp1Type;
-                        }
-                        elseif exp2Type == builtinTypeNil {
-                            retType = exp1Type;
-                        }
-                        elseif exp1Type == builtinTypeNil {
-                            retType = exp2Type;
-                        }
-                        else {
-                            retType = builtinTypeStem_;
-                        }
-                    }
-                    case "and" {
-                        // 暫定。 本来は exp2Type の nilable になる
-                        retType = exp2Type;
-                    }
-                    case "<", ">", "<=", ">=" {
-                        if exp1Type ~= builtinTypeInt and exp1Type ~= builtinTypeReal or
-                            exp2Type ~= builtinTypeInt and exp2Type ~= builtinTypeReal
-                        {
-                            self.addErrMess(
-                                nextToken.pos,
-                                "no int type %s or %s" ( exp1Type.getTxt(),
-                                                         exp2Type.getTxt() ) );
-                        }
-                        retType = builtinTypeBool;
-                    }
-                    case "~=", "==" {
-                        if ( not exp1Type.isSettableFrom( exp2Type ) and
-                             not exp2Type.isSettableFrom( exp1Type ) )
-                        {
-                            self.addErrMess(
-                                nextToken.pos,
-                                "not compatible type %s or %s" ( exp1Type.getTxt(),
-                                                                 exp2Type.getTxt() ) );
-                        }
-                        retType = builtinTypeBool;
-                    }
-                    case "^", "|", "~", "&", "<<", ">>" {
-                        if exp1Type ~= builtinTypeInt or exp2Type ~= builtinTypeInt
-                        {                       
-                            self.addErrMess(
-                                nextToken.pos,
-                                "no int type %s or %s" ( exp1Type.getTxt(),
-                                                         exp2Type.getTxt() ) );
-                        }
-                        retType = builtinTypeInt;
-                    }
-                    case ".." {
-                        if exp1Type ~= builtinTypeString or
-                            exp1Type ~= builtinTypeString
-                        {
-                            self.addErrMess(
-                                nextToken.pos,
-                                "no string type %s or %s" ( exp1Type.getTxt(),
-                                                            exp2Type.getTxt() ) );
-                        }
-                        retType = builtinTypeString;
-                    }
-                    case "+", "-", "*", "/", "//", "%" {
-                        if ( exp1Type ~= builtinTypeReal and
-                             exp1Type ~= builtinTypeInt ) or
-                            ( exp2Type ~= builtinTypeReal and
-                              exp2Type ~= builtinTypeInt )
-                        {                       
-                            self.addErrMess(
-                                nextToken.pos,
-                                "no numeric type %s or %s" ( exp1Type.getTxt(),
-                                                             exp2Type.getTxt() ) );
-                        }
-                            
-                        if exp1Type == builtinTypeReal or exp2Type == builtinTypeReal
-                        {
-                            retType = builtinTypeReal;
-                        }
-                        else {
-                            retType = builtinTypeInt;
-                        }
-                    }
-                    case "=" {
-                        // Util.errorLog(
-                        //     "hoge: %d:%d %s %s"
-                        //     (exp2.$pos.lineNo, exp2.$pos.column,
-                        //       #exp2Type.$itemTypeInfoList,
-                        //       #exp2Type.$itemTypeInfoList > 0 and
-                        //       exp2Type.$itemTypeInfoList[1]) );                       
-                        if not exp1Type.isSettableFrom( exp2Type ) {   
-                            self.addErrMess(
-                                nextToken.pos,
-                                "unmatch type %s and %s" ( exp1Type.getTxt(),
-                                                           exp2Type.getTxt() ) );
-                        }
-                    }
-                    default {
-                        self.error( "unknown op " .. opTxt );
-                    }
-                }
-
-                exp = new ExpOp2Node(
-                    firstToken.pos, [ retType ], nextToken, exp, exp2 );
-            }
-            else {
-                self.error( "illegal op" );
-            }
-        }
-        else {
-            self.pushback();
-            return exp;
-        }
-    }
-    return self.analyzeExpOp2( firstToken, exp, prevOpLevel );
-}
-
-fn TransUnit.analyzeExpMacroStat( firstToken: Parser.Token ): ExpMacroStatNode {
-    let expStrList: Node[] = [];
-
-    self.checkNextToken( "{" );
-
-    let braceCount = 0;
-    while true {
-        let token = self.getToken();
-
-        if token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
-            let exp = self.analyzeExp( true, unwrap op1levelMap[ token.txt ] );
-
-            let nextToken = self.getToken();
-            if nextToken.txt ~= "$" {
-                self.pushback();
-            }
-
-            
-            let format = token.txt == ",,," and "'%s '" or '"\'%s\'"';
-
-            if token.txt == ",," and exp.$kind == nodeKindExpRef
-            {           
-                let refToken = (exp@ExpRefNode).get_token();
-                let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
-                if macroInfo {
-                    if (unwrap macroInfo).typeInfo == builtinTypeSymbol {
-                        format = "'%s '";
-                    }
-                }
-            }
-            let newToken = new Parser.Token( Parser.kind.Str, format, token.pos );
-            // let literalStr = self.createNode(
-            //     nodeKindLiteralString, token.pos, [ builtinTypeString ],
-            //     new LiteralStringInfo( newToken, [ exp ] ) );
-            let literalStr = new LiteralStringNode(
-                token.pos, [ builtinTypeString ], newToken, [ exp ] );
-            expStrList.insert(  literalStr );
-        }
-        else {
-            if token.txt == "{" {
-                braceCount = braceCount + 1;
-            }   
-            elseif token.txt == "}" {
-                if braceCount == 0 {
-                    break;
-                }   
-                braceCount = braceCount - 1;
-            }
-
-            let newToken = new Parser.Token(
-                token.kind, string.format( "'%s '", token.txt ), token.pos );
-            // let literalStr = self.createNode(
-            //     nodeKindLiteralString, token.pos, [ builtinTypeString ],
-            //     new LiteralStringInfo( newToken, nil ) );
-            let literalStr = new LiteralStringNode(
-                token.pos, [ builtinTypeString ], newToken, [] );
-            expStrList.insert( literalStr );
-        }
-    }
-
-    // return self.createNode(
-    //     nodeKindExpMacroStat, firstToken.pos, [ builtinTypeStat ], expStrList );
-    return new ExpMacroStatNode( firstToken.pos, [ builtinTypeStat ], expStrList );
-}
-
-
-fn TransUnit.analyzeSuper( firstToken:Parser.Token ) : Node {
-
-    self.checkNextToken( "(" );
-
-    let expList = self.analyzeExpList();
-    
-    self.checkNextToken( ")" );
-    self.checkNextToken( ";" );
-
-    let classType = self.getCurrentClass();
-    let superType = classType.get_baseTypeInfo();
-    
-    return new ExpCallSuperNode(
-        firstToken.pos, [ builtinTypeNone ], superType, expList ); 
-}
-
-fn TransUnit.analyzeUnwrap( firstToken: Parser.Token ): Node {
-    let nextToken, continueFlag = self.getContinueToken();
-
-    if not continueFlag or nextToken.txt ~= "!" {
-        self.pushback();
-        self.pushbackToken( firstToken );
-        let exp = self.analyzeExp();
-        self.checkNextToken( ";" );
-        return new StmtExpNode( nextToken.pos, [ builtinTypeNone ], exp );
-    }
-
-    self.pushback();
-    return self.analyzeDeclVar( "unwrap", "local", false, firstToken );
-}
-
-fn TransUnit.analyzeExpUnwrap( firstToken: Parser.Token ): Node {
-    let expNode = self.analyzeExp();
-    let nextToken = self.getToken();
-    let insNode: Node! = nil;
-    if nextToken.txt == "default" {
-        insNode = self.analyzeExp();
+      nextToken = self.getToken();
+      moduleToken = nextToken;
+      modulePath = "%s.%s" ( modulePath, moduleToken.txt );
+      nameList.insert( moduleToken.txt );
     }
     else {
-        self.pushback();
+      break;
     }
+  }
 
-    let unwrapType:TypeInfo = builtinTypeStem_;
 
-    let expType = expNode.$expType;
-    if not expType.$nilable {
-        unwrapType = expType;
-    }
-    else {
-        unwrapType = unwrap expType.$orgTypeInfo;
-        if! insNode {
-            let insType = _exp.$expType;
-            unwrapType = insType;
+  // 型情報の登録
+  let typeId2TypeInfo: Map<int,Ast.TypeInfo> = {};
+  typeId2TypeInfo[ Ast.rootTypeId ] = Ast.typeInfoRoot;
 
-            if not unwrapType.isSettableFrom( insType ) {
-                self.addErrMess(
-                    _exp.$pos,   
-                    "unmatch type: %s <- %s" ( unwrapType.getTxt(), insType.getTxt() ) ); 
-            }
+  let moduleTypeInfo: Ast.TypeInfo = Ast.rootTypeInfo;
+  foreach moduleName in nameList {
+    moduleTypeInfo = self.pushClass( nil, true, moduleName, "pub" );
+  }
+  foreach moduleName in nameList {
+    self.popClass();
+  }
+
+
+  let moduleInfo = _luneScript.loadModule( modulePath )@_ModuleInfo;
+  //self.moduleName2Info[ modulePath ] = moduleInfo;
+
+  foreach symbolInfo in Ast.sym2builtInTypeMap {
+    typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId() ] = symbolInfo.$typeInfo;
+    // let nilableTypeInfo = typeInfo.$nilableTypeInfo;
+    // if nilableTypeInfo ~= rootTypeInfo {
+    //     Util.errorLog( "xxx:%s %s" (nilableTypeInfo.getTxt(),
+    //                                  nilableTypeInfo.$typeId ) );
+    //     typeId2TypeInfo[ nilableTypeInfo.$typeId ] = nilableTypeInfo;
+    // }
+  }
+
+  let typeId2Scope: Map<int,Ast.Scope> = {};
+  typeId2Scope[ Ast.rootTypeId ] = self.scope;
+
+  let newId2OldIdMap: Map<int,int> = {};
+
+  fn registTypeInfo( atomInfo: _TypeInfo ): Ast.TypeInfo {
+    let newTypeInfo: Ast.TypeInfo! = nil;
+    if not Ast.builtInTypeIdSet[ atomInfo.typeId ] {
+      if atomInfo.nilable {
+        let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
+        newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
+        typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
+      }
+      else {
+        let itemTypeInfo:Ast.TypeInfo[] = [];
+        foreach typeId in atomInfo.itemTypeId {
+          itemTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
         }
-    }
-
-    return new ExpUnwrapNode( firstToken.pos, [ unwrapType ], expNode, insNode );
-}
-
-
-fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int ): Node {
-    let firstToken = self.getToken();
-    let token = firstToken;
-    let exp:Node = new NoneNode( firstToken.pos, [ builtinTypeNone ] );
-
-    if token.kind == Parser.kind.Dlmt {
-        if token.txt == "..." {
-            // return self.createNode(
-            //     nodeKindExpDDD, firstToken.pos, [ builtinTypeNone ], token );
-            return new ExpDDDNode( firstToken.pos, [ builtinTypeNone ], token );
+        let argTypeInfo:Ast.TypeInfo[] = [];
+        foreach typeId in atomInfo.argTypeId {
+          if not typeId2TypeInfo[ typeId ] {
+            Util.errorLog( "not found -- %s,%d" ( atomInfo.txt,
+                                                  #atomInfo.argTypeId ) );
+          }
+          argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
         }
-
-        if token.txt == '[' or token.txt == '[@' {
-            exp = self.analyzeListConst( token );
+        let retTypeInfo:Ast.TypeInfo[] = [];
+        foreach typeId in atomInfo.retTypeId {
+          retTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
         }
-        if token.txt == '{' {
-            exp = self.analyzeMapConst( token );
+        //let parentInfo = moduleTypeInfo;
+        let parentInfo = Ast.typeInfoRoot;
+        if atomInfo.parentId ~= Ast.rootTypeId {
+          let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
+            error( "not found parentInfo %s %s"
+                   ( atomInfo.parentId, atomInfo.txt ) );
+          };
+          parentInfo = workTypeInfo;
         }
-        if token.txt == "(" {
-            exp = self.analyzeExp();
-            self.checkNextToken( ")" );
-            // exp = self.createNode(
-            //     nodeKindExpParen, firstToken.pos, exp.expTypeList, exp );
-            exp = new ExpParenNode( firstToken.pos, exp.$expTypeList, exp );
-            exp = self.analyzeExpCont( firstToken, exp, false );
-        }
-    }
+        
+        let baseInfo = unwrap typeId2TypeInfo[ atomInfo.baseId ];
 
-    if token.txt == "new" {
-        exp = self.analyzeRefType( "local" );
-
-        self.checkNextToken( "(" );
-        let nextToken = self.getToken();
-        let argList: ExpListNode! = nil;
-        if nextToken.txt ~= ")" {
-            self.pushback();
-            argList = self.analyzeExpList();
-            self.checkNextToken( ")" );
-        }
-
-        // 引数チェック
-        let classTypeInfo = exp.$expType;
-        //let classScope = self.typeId2Scope[ classTypeInfo.get_typeId() ];
-        let classScope = classTypeInfo.get_scope();
-        let! initTypeInfo = (unwrap classScope).getTypeInfoChild( "__init" ) {
-            self.error( "not found __init" );
+        let! parentScope = typeId2Scope[ atomInfo.parentId ] {
+          self.error( "not found parentScope %s %s"
+                      ( atomInfo.parentId, atomInfo.txt ) );
         };
-        
-        self.checkMatchValType( exp.$pos, initTypeInfo, argList,
-                                exp.$expType.$itemTypeInfoList );
-        
-        exp = new ExpNewNode( firstToken.pos, exp.$expTypeList, exp, argList );
-        exp = self.analyzeExpCont( firstToken, exp, false );
-    }
 
-    if token.kind == Parser.kind.Ope and Parser.isOp1( token.txt ) {
-        // 単項演算
-        if token.txt == "`" {
-            exp = self.analyzeExpMacroStat( token );
+        if atomInfo.txt ~= "" {
+          newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
+        }
+        if newTypeInfo and atomInfo.kind == Ast.TypeInfoKindClass {
+          sync! newTypeInfo = newTypeInfo {
+          }
+          then {
+            typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
+            if not newTypeInfo.$scope {
+              error( "not found scope %s %s %s %s %s"
+                     ( parentScope, atomInfo.parentId,
+                       atomInfo.typeId,
+                       atomInfo.txt, newTypeInfo.getTxt() ) );
+            }   
+            typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
+          };
         }
         else {
-            exp = self.analyzeExp( true, unwrap op1levelMap[ token.txt] );
-            let typeInfo = builtinTypeNone;
-            let macroExpFlag = false;
+          if atomInfo.kind == Ast.TypeInfoKindClass {
+            let baseScope = unwrap typeId2Scope[ atomInfo.baseId ];
 
-            switch ( token.txt ) {
-                case "-" {
-                    if exp.$expType ~= builtinTypeInt and exp.$expType ~= builtinTypeReal {
-                        self.addErrMess(
-                            token.pos,
-                            'unmatch type for "-" -- %s' ( exp.$expType.getTxt() ) );
-                    }
-                    typeInfo = exp.$expType;
-                }
-                case "#" {
-                    if exp.$expType.$kind ~= TypeInfoKindList and
-                        exp.$expType.$kind ~= TypeInfoKindArray and
-                        exp.$expType.$kind ~= TypeInfoKindMap and
-                        exp.$expType ~= builtinTypeString
-                    {
-                        self.addErrMess(
-                            token.pos,
-                            'unmatch type for "#" -- %s' ( exp.$expType.getTxt() ) );
-                    }
-                    typeInfo = builtinTypeInt;
-                }
-                case "not" {
-                    typeInfo = builtinTypeBool;
-                }
-                case ",," {
-                    macroExpFlag = true;
-                }
-                case ",,," {
-                    macroExpFlag = true;
-                    if exp.$expType ~= builtinTypeString {
-                        self.error( "unmatch ,,, type, need string type" );
-                    }   
-                    typeInfo = builtinTypeSymbol;
-                }
-                case ",,,," {
-                    macroExpFlag = true;
-                    if exp.$expType ~= builtinTypeSymbol {
-                        self.error( "unmatch ,,, type, need symbol type" );
-                    }   
-                    typeInfo = builtinTypeString;
-                }
-                case "`" {
-                    typeInfo = builtinTypeNone;
-                }
-                case "not" {
-                    typeInfo = builtinTypeBool;
-                }
-                default {
-                    self.error( "unknown op1" );
-                }
+            let scope = new Ast.Scope(
+              parentScope, true, baseScope and [ baseScope ] or [] );
+
+            let workTypeInfo = Ast.NormalTypeInfo.createClass(
+              scope, baseInfo, parentInfo, true, "pub", atomInfo.txt );
+            newTypeInfo = workTypeInfo;
+            typeId2Scope[ atomInfo.typeId ] = scope;
+
+
+            typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
+
+            parentScope.addClass( atomInfo.txt, workTypeInfo, scope, false );
+          }
+          else {
+            let scope:Ast.Scope! = nil;
+
+            if atomInfo.kind == Ast.TypeInfoKindFunc or
+              atomInfo.kind == Ast.TypeInfoKindMethod
+            {
+              scope = new Ast.Scope( parentScope, false, [] );
             }
 
-            if macroExpFlag {
-                let nextToken = self.getToken();
-                if nextToken.txt ~= "$" {
-                    self.pushback();
-                }
-            }
             
+            let workTypeInfo = Ast.NormalTypeInfo.create(
+              scope, baseInfo, parentInfo,
+              atomInfo.staticFlag, atomInfo.kind,              
+              atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo );
+            newTypeInfo = workTypeInfo;
 
-            // exp = self.createNode( nodeKindExpOp1, firstToken.pos, [ typeInfo ],
-            //                     { "op": token, "exp": exp } );
-            exp = new ExpOp1Node(
-                firstToken.pos, [ typeInfo ], token, self.macroMode, exp );
-            return self.analyzeExpOp2( firstToken, exp, prevOpLevel );
+            typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
+
+            if atomInfo.kind == Ast.TypeInfoKindFunc or
+              atomInfo.kind == Ast.TypeInfoKindMethod
+            {
+              (unwrap typeId2Scope[ atomInfo.parentId ]).add(
+                atomInfo.txt, workTypeInfo, atomInfo.accessMode, false );
+              typeId2Scope[ atomInfo.typeId ] = scope;
+            }
+          }
         }
+      }
     }
+    else {
+      newTypeInfo = Ast.rootScope.getTypeInfo(
+        atomInfo.txt, Ast.rootScope, false );
+      typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
+    }
+    return unwrap newTypeInfo;
+  }
+
+  // 初めに child 以外で TypeInfo を登録
+  foreach atomInfo in moduleInfo._typeInfoList {
+    registTypeInfo( atomInfo );
+  }
+
+  // 次に child を登録
+  foreach atomInfo in moduleInfo._typeInfoList {
+    if atomInfo.children and #atomInfo.children > 0 {
+      let scope = unwrap typeId2Scope[ atomInfo.typeId ];
+      foreach childId in atomInfo.children {
+        let typeInfo = unwrap typeId2TypeInfo[ childId ];
+        scope.add(
+          typeInfo.getTxt(), typeInfo, typeInfo.$accessMode, typeInfo.$mutable );
+      }
+    }
+  }
+
+  // インポート後の TypeId と インポート前の TypeId の紐付け
+  foreach typeInfo, typeId in typeId2TypeInfo {
+    newId2OldIdMap[ typeInfo.get_typeId() ] = typeId;
+  }
+
+  // メンバーの登録
+  fn registMember( classTypeId: int ) {
+    let classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
+    self.pushClass( nil, true, classTypeInfo.getTxt(), "pub" );
+    if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
+      let classInfo = _exp;
+      foreach fieldInfo, fieldName in classInfo@Map<str,Map<str,stem!>> {
+        let typeId = fieldInfo.typeId;
+        let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
+        self.scope.add(
+          fieldName, fieldTypeInfo, fieldInfo.accessMode@str, fieldInfo.mutable@bool );
+      }   
+      foreach child in classTypeInfo.get_children() {
+        if child.get_kind() == Ast.TypeInfoKindClass {
+          let oldId = newId2OldIdMap[ child.get_typeId() ];
+          if oldId {
+            registMember( unwrap oldId );
+          }   
+        }   
+      }
+    }
+    else {
+      self.error( "not found class -- %d, %s"
+                  (classTypeId, classTypeInfo.getTxt()) );
+    }
+    self.popClass();
+  }
+  foreach atomInfo in moduleInfo._typeInfoList {
+    if atomInfo.parentId == Ast.rootTypeId and
+      atomInfo.kind == Ast.TypeInfoKindClass
+    {       
+      registMember( atomInfo.typeId );
+    }
+  }
+  
+
+  foreach moduleName in nameList {
+    self.pushClass( nil, true, moduleName, "pub" );
+  }
 
 
-    if token.kind == Parser.kind.Int {
-        // exp = self.createNode( nodeKindLiteralInt, firstToken.pos, [ builtinTypeInt ],
-        //                     { "token": token, "num": tonumber( token.txt ) } );
-        exp = new LiteralIntNode( firstToken.pos, [ builtinTypeInt ],
-                                  token, tonumber( token.txt )@int );
+  // 変数登録
+  foreach varInfo, varName in moduleInfo._varName2InfoMap {
+    self.scope.add(
+      varName, unwrap typeId2TypeInfo[ varInfo.typeId ], "pub", varInfo.mutable@bool );
+  }
+
+  foreach moduleName in nameList {
+    self.popClass();
+  }
+
+  //dumpScope( self.rootScope, "" );
+
+
+  // スコープを元に戻す
+  self.scope = self.moduleScope;
+  
+  self.scope.add( moduleToken.txt, moduleTypeInfo, "local", false );
+
+
+  self.checkToken( nextToken, ";" );
+
+
+  if self.moduleScope ~= self.scope {
+    self.error( "illegal top scope." );
+  }
+
+  
+  return new Ast.ImportNode( token.pos, [ Ast.builtinTypeNone ], modulePath );
+}
+
+
+fn TransUnit.analyzeSubmodule( token: Parser.Token ): Ast.SubmoduleNode {
+  if self.scope ~= self.moduleScope {
+    self.error( "'module' must be top scope." );
+  }
+  
+
+  let mode = self.getToken();
+
+  let moduleName = "";
+  while true {
+    let nextToken = self.getToken();
+    if nextToken.txt == ";" {
+      break;
+    }   
+    if moduleName == "" {
+      moduleName = nextToken.txt;
+    }   
+    else {
+      moduleName = "%s%s" (moduleName, nextToken.txt);
     }
-    elseif token.kind == Parser.kind.Real {
-        // exp = self.createNode( nodeKindLiteralReal, firstToken.pos, [ builtinTypeReal ],
-        //                     { "token": token, "num": tonumber( token.txt ) } );
-        exp = new LiteralRealNode( firstToken.pos, [ builtinTypeReal ],
-                                   token, tonumber( token.txt ) );
+  }
+  if moduleName == "" {
+    self.addErrMess( token.pos, "illegal submodule" );
+  }
+  else {
+    if mode.txt == "use" {
+      if! _luneScript.searchModule( moduleName ) {
+        self.subModuleList.insert( _exp );
+      }   
+      else {
+        self.addErrMess(
+          token.pos, "not found submodule -- %s" ( moduleName ) );
+      }   
     }
-    elseif token.kind == Parser.kind.Char {
-        let num = 0;
-        if #(token.txt) == 1 {
-            num = token.txt.byte( 1 );
-        }
-        else {
-            num = unwrap quotedChar2Code[ token.txt.sub( 2, 2 ) ];
-        }
-        // exp = self.createNode( nodeKindLiteralChar, firstToken.pos, [ builtinTypeChar ],
-        //                     { "token": token, "num": num } );
-        exp = new LiteralCharNode( firstToken.pos, [ builtinTypeChar ], token, num );
+    elseif mode.txt == "owner" {
+      if self.moduleName ~= moduleName {
+        self.addErrMess(
+          token.pos,
+          "illegal owner module -- %s, %s"
+          ( moduleName, self.moduleName ) );
+      }
     }
-    elseif token.kind == Parser.kind.Str {
-        let nextToken = self.getToken();
-        let formatArgList:Node[] = [];
-        if nextToken.txt == "(" {
-            repeat {
-                let arg = self.analyzeExp();
-                formatArgList.insert( arg );
-                nextToken = self.getToken();
-            } nextToken.txt ~= ",";
-            self.checkToken( nextToken, ")" );
-            nextToken = self.getToken();
-        }
-        // exp = self.createNode(
-        //     nodeKindLiteralString, firstToken.pos, [ builtinTypeString ],
-        //     new LiteralStringInfo( token, formatArgList ) );
-        exp = new LiteralStringNode(
-            firstToken.pos, [ builtinTypeString ], token, formatArgList );
-        token = nextToken;
-        if token.txt == "[" {
-            exp = self.analyzeExpRefItem( token, exp );
-        }
-        else {
-            self.pushback();
-        }
+    else {
+      self.addErrMess( mode.pos, "illegal module mode -- %s" ( mode.txt ) );
     }
-    elseif token.kind == Parser.kind.Kywd and token.txt == "fn" {
-        exp = self.analyzeExpSymbol( firstToken, token, "fn", nil, false );
+  }
+  return new Ast.SubmoduleNode( token.pos, [ Ast.builtinTypeNone ] );
+}
+
+fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ): Ast.Node {
+  let exp = self.analyzeExp();
+
+  let scope = self.pushScope();
+
+  let expType = exp.$expType;
+  if not expType.$nilable {
+    self.addErrMess( exp.$pos, "this is not nilable" );
+    scope.add( "_exp", expType, "local", false );
+  }
+  else {
+    scope.add( "_exp", expType.$orgTypeInfo, "local", false );
+  }
+  
+  let block = self.analyzeBlock( "if!", scope );
+
+  self.popScope();
+
+  let elseBlock:Ast.BlockNode! = nil;
+  let nextToken = self.getToken();
+  if nextToken.txt == "else" {
+    elseBlock = self.analyzeBlock( "if!" );
+  }
+  else {
+    self.pushback();
+  }
+
+  return new Ast.IfUnwrapNode(
+    firstToken.pos, [ Ast.builtinTypeNone ], exp, block, elseBlock );
+}
+
+
+fn TransUnit.analyzeIf( token: Parser.Token ): Ast.Node {
+  let nextToken, continueFlag = self.getContinueToken();
+  if continueFlag and nextToken.txt == "!" {
+    return self.analyzeIfUnwrap( token );
+  }
+  self.pushback();
+  
+  let list:Ast.IfStmtInfo[] = [];
+  list.insert( new Ast.IfStmtInfo( "if", self.analyzeExp(),
+                                   self.analyzeBlock( "if" ) ) );
+
+  nextToken = self.getToken();
+  if nextToken.txt == "elseif" {
+    while nextToken.txt == "elseif" {
+      list.insert( new Ast.IfStmtInfo( "elseif", self.analyzeExp(),
+                                       self.analyzeBlock( "elseif" ) ));
+      nextToken = self.getToken();
     }
-    elseif token.kind == Parser.kind.Kywd and token.txt == "unwrap" {
-        exp = self.analyzeExpUnwrap( token );
+  }
+
+  if nextToken.txt == "else" {
+    list.insert(
+      new Ast.IfStmtInfo( "else", new Ast.NoneNode( nextToken.pos,
+                                                    [ Ast.builtinTypeNone ] ),
+                          self.analyzeBlock( "else" ) ));
+  }
+  else {
+    self.pushback();
+  }
+
+  return new Ast.IfNode( token.pos, [ Ast.builtinTypeNone ], list );
+}
+
+
+fn TransUnit.analyzeSwitch( firstToken: Parser.Token ): Ast.SwitchNode {
+  let exp = self.analyzeExp();
+
+  self.checkNextToken( "{" );
+
+  let caseList: Ast.CaseInfo[] = [];
+
+  let nextToken = self.getToken();
+  while ( nextToken.txt == "case" ) {
+    self.checkToken( nextToken, "case" );
+    let condexpList = self.analyzeExpList();
+    let condBock = self.analyzeBlock( "switch" );
+    caseList.insert( new Ast.CaseInfo( condexpList, condBock ) );
+    nextToken = self.getToken();
+  }
+
+  let defaultBlock: Ast.BlockNode! = nil;
+  if nextToken.txt == "default" {
+    defaultBlock = self.analyzeBlock( "default" );
+  }
+  else {
+    self.pushback();
+  }
+  self.checkNextToken( "}" );
+
+  return new Ast.SwitchNode( firstToken.pos, [ Ast.builtinTypeNone ],
+                             exp, caseList, defaultBlock );
+}
+
+
+fn TransUnit.analyzeWhile( token: Parser.Token ): Ast.WhileNode {
+  return new Ast.WhileNode( token.pos, [ Ast.builtinTypeNone ],
+                            self.analyzeExp(), self.analyzeBlock( "while" ) );
+}
+
+fn TransUnit.analyzeRepeat( token: Parser.Token ): Ast.RepeatNode {
+  let scope = self.pushScope( false );
+  let node = new Ast.RepeatNode( token.pos, [ Ast.builtinTypeNone ],
+                                 self.analyzeBlock( "repeat", scope ),
+                                 self.analyzeExp() );
+  self.popScope();
+  
+  self.checkNextToken( ";" );
+  return node;
+}
+
+fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
+
+  let scope = self.pushScope( false );
+
+  let val = self.getToken();
+  if val.kind ~= Parser.kind.Symb {
+    self.error( "not symbol" );
+  }
+  self.checkNextToken( "=" );
+  let exp1 = self.analyzeExp();
+  if exp1.$expType ~= Ast.builtinTypeInt {
+    self.addErrMess( exp1.$pos,
+                     "exp1 is not int -- %s" (exp1.$expType.getTxt()) );
+  }
+  self.scope.add( val.txt, exp1.$expType, "local", false );
+  self.checkNextToken( "," );
+  let exp2 = self.analyzeExp();
+  if exp2.$expType ~= Ast.builtinTypeInt {
+    self.addErrMess( exp2.$pos,
+                     "exp2 is not int -- %s" (exp2.$expType.getTxt()) );
+  }
+  let token = self.getToken();
+  let exp3:Ast.Node! = nil;
+  if token.txt == "," {
+    exp3 = self.analyzeExp();
+    if! exp3 {
+      if _exp.$expType ~= Ast.builtinTypeInt {
+        self.addErrMess( _exp.$pos,
+                         "exp is not int -- %s" (_exp.$expType.getTxt()) );
+      }
     }
-    elseif token.kind == Parser.kind.Symb {
-        exp = self.analyzeExpSymbol(
-            firstToken, token, "symbol", nil, false );
+    
+  }
+  else {
+    self.pushback();
+  }
+
+  let node = new Ast.ForNode(
+    firstToken.pos, [ Ast.builtinTypeNone ],
+    self.analyzeBlock( "for", scope ), val, exp1, exp2, exp3 );
+  self.popScope();
+  
+  return node;
+}
+
+fn TransUnit.analyzeApply( token: Parser.Token ): Ast.ApplyNode {
+  let scope = self.pushScope();
+  let varList:Parser.Token[] = [];
+  let nextToken:Parser.Token = Parser.getEofToken();
+  repeat {
+    let var = self.getSymbolToken();
+    if var.kind ~= Parser.kind.Symb {
+      self.error( "illegal symbol" );
     }
-    elseif token.kind == Parser.kind.Type {
-        //exp = self.createNode( nodeKindExpRef, firstToken.pos, [ builtinTypeNone ], token );
-        exp = new ExpRefNode( firstToken.pos, [ builtinTypeNone ], token );
+    varList.insert( var );
+    nextToken = self.getToken();
+    scope.add( var.txt, Ast.builtinTypeStem, "local", false );
+  } nextToken.txt ~= ",";
+  self.checkToken( nextToken, "of" );
+
+  let exp = self.analyzeExp();
+  if exp.$kind ~= Ast.nodeKindExpCall {
+    self.error( "not call" );
+  }
+
+  let block = self.analyzeBlock( "apply", scope );
+  self.popScope();
+
+  return new Ast.ApplyNode( token.pos, [ Ast.builtinTypeNone ], varList, exp, block );
+}
+
+fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
+  let scope = self.pushScope();
+  let valSymbol:Parser.Token = Parser.getEofToken();
+  let keySymbol:Parser.Token! = nil;
+  let nextToken:Parser.Token = Parser.getEofToken();
+  for index = 1, 2 {
+    let sym = self.getToken();
+    if sym.kind ~= Parser.kind.Symb {
+      self.error( "illegal symbol" );
     }
-    elseif token.kind == Parser.kind.Kywd and
-        ( token.txt == "true" or token.txt == "false" ) {
-        // exp = self.createNode(
-        //     nodeKindLiteralBool, firstToken.pos, [ builtinTypeBool ], token );
-        exp = new LiteralBoolNode( firstToken.pos, [ builtinTypeBool ], token );
+    if index == 1 {
+      valSymbol = sym;
     }
-    elseif token.kind == Parser.kind.Kywd and
-        ( token.txt == "nil" or token.txt == "null" )
+    else {
+      keySymbol = sym;
+    }
+    nextToken = self.getToken();
+    if nextToken.txt ~= "," {
+      break;
+    }
+  }
+  self.checkToken( nextToken, "in" );
+
+  let exp = self.analyzeExp();
+  if not exp.$expType {
+    self.error( "unknown type of exp -- %d:%d" (token.pos.lineNo, token.pos.column) );
+  }
+  else {
+    let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
+    if exp.$expType.get_kind() == Ast.TypeInfoKindMap {
+      self.scope.add( valSymbol.txt, itemTypeInfoList[ 2 ], "local", false );
+      if! keySymbol {
+        self.scope.add( _exp.txt, itemTypeInfoList[ 1 ], "local", false );
+      }
+    }
+    elseif exp.$expType.get_kind() == Ast.TypeInfoKindList or
+      exp.$expType.get_kind() == Ast.TypeInfoKindArray
     {
-        // exp = self.createNode(
-        //     nodeKindLiteralNil, firstToken.pos, [ builtinTypeNil ] , token );
-        exp = new LiteralNilNode( firstToken.pos, [ builtinTypeNil ] );
+      self.scope.add( valSymbol.txt, itemTypeInfoList[ 1 ], "local", false );
+      if! keySymbol {
+        self.scope.add( _exp.txt, Ast.builtinTypeInt, "local", false );
+      }
+      else {
+        self.scope.add( "__index", Ast.builtinTypeInt, "local", false );
+      }
     }
-
-    if not exp {
-        self.error( "illegal exp" );
+    else {
+      self.error( "unknown kind type of exp for foreach-- %d:%d"
+        (exp.$pos.lineNo, exp.$pos.column) );
     }
-
-    if skipOp2Flag {
-        return exp;
-    }
-
-    return self.analyzeExpOp2( firstToken, exp, prevOpLevel );
-}
+  }
 
 
-fn TransUnit.analyzeStatement( termTxt: str! ): Node! {
-    let! token = self.getTokenNoErr() {
-        return nil;
-    };
+  let block = self.analyzeBlock( "foreach", scope );
 
-    let statement = self.analyzeDecl( "local", false, token, token );
+  self.popScope();
 
-    if not statement {
-        if token.txt == termTxt {
-            self.pushback();
-            return nil;
-        }
-        elseif token.txt == "pub" or token.txt == "pro" or
-            token.txt == "pri" or token.txt == "global" or token.txt == "static"
-        {
-            let accessMode = (token.txt ~= "static") and token.txt or "pri";
-            let staticFlag = (token.txt == "static");
+  if sortFlag {
+    return new Ast.ForsortNode( token.pos, [ Ast.builtinTypeNone ],
+                                valSymbol, keySymbol, exp, block, sortFlag );
+  }
+  else {
+    return new Ast.ForeachNode( token.pos, [ Ast.builtinTypeNone ],
+                                valSymbol, keySymbol, exp, block, sortFlag );
+  }
 
-            let nextToken:Parser.Token = token;
-            if token.txt ~= "static" {
-                nextToken = self.getToken();
-            }
-            statement = self.analyzeDecl( accessMode, staticFlag, token, nextToken );
-        }
-        elseif token.txt == "{" {
-            self.pushback();
-            statement = self.analyzeBlock( "{" );
-        }
-        elseif token.txt == "super" {
-            statement = self.analyzeSuper( token );
-        }
-        elseif token.txt == "if" {
-            statement = self.analyzeIf( token );
-        }
-        elseif token.txt == "switch" {
-            statement = self.analyzeSwitch( token );
-        }
-        elseif token.txt == "while" {
-            statement = self.analyzeWhile( token );
-        }
-        elseif token.txt == "repeat" {
-            statement = self.analyzeRepeat( token );
-        }
-        elseif token.txt == "for" {
-            statement = self.analyzeFor( token );
-        }
-        elseif token.txt == "apply" {
-            statement = self.analyzeApply( token );
-        }
-        elseif token.txt == "foreach" {
-            statement = self.analyzeForeach( token, false );
-        }
-        elseif token.txt == "forsort" {
-            statement = self.analyzeForeach( token, true );
-        }
-        elseif token.txt == "return" {
-            let nextToken = self.getToken();
-
-            let expList: ExpListNode! = nil;
-            if nextToken.txt ~= ";" {
-                self.pushback();
-                expList = self.analyzeExpList();
-                self.checkNextToken( ";" );
-            }
-            let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-            if not funcTypeInfo {
-                self.addErrMess(
-                    token.pos,
-                    "'return' could not exist here" );
-            }
-            else{
-                if! expList {
-                    let retTypeList = funcTypeInfo.$retTypeInfoList;
-                    let expNodeList = _exp.$expList;
-                    foreach retType, index in retTypeList {
-                        let expNode = expNodeList[ index ];
-                        if expNode {
-                            let expType = expNode.$expType;
-                            if not retType.isSettableFrom( expType ) {
-                                self.addErrMess(
-                                    token.pos,
-                                    "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
-                                    (index,
-                                      retType.getTxt(), retType.get_typeId(),
-                                      expType.getTxt(), expType.get_typeId()));
-                            }   
-                        }   
-                    }
-                }
-            }
-            statement = new ReturnNode( token.pos, [ builtinTypeNone ], expList );
-        }
-        elseif token.txt == "break" {
-            self.checkNextToken( ";" );
-            // statement = self.createNode(
-            //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
-            statement = new BreakNode( token.pos, [ builtinTypeNone ] );
-        }
-        elseif token.txt == "unwrap" {
-            statement = self.analyzeUnwrap( token );
-        }
-        elseif token.txt == "sync" {
-            statement = self.analyzeDeclVar( "sync", "local", false, token );
-        }
-        elseif token.txt == "import" {
-            statement = self.analyzeImport( token );
-        }
-        elseif token.txt == ";" {
-            // statement = self.createNode(
-            //     nodeKindNone, token.pos, [ builtinTypeNone ], nil );
-            statement = self.createNoneNode( token.pos );
-        }
-        elseif token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
-            self.error( "illegal macro op -- %s" (token.txt) );
-        }
-        else {
-            self.pushback();
-            let exp = self.analyzeExp();
-            self.checkNextToken( ";" );
-            // statement = self.createNode(
-            //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
-            statement = new StmtExpNode( exp.$pos, [ builtinTypeNone ], exp );
-        }
-    }
-
-    return statement;
-}
-
-
-fn TransUnit.analyzeStatementList( stmtList: Node[], termTxt: str! ) {
-    while true {
-        let statement = self.analyzeStatement( termTxt );
-        if! statement {
-            stmtList.insert( _exp );
-        }
-        else {
-            break;
-        }
-    }
 }

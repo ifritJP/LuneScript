@@ -1,6 +1,6 @@
 --lune/base/dumpNode.lns
 local moduleObj = {}
-local TransUnit = require( 'lune.base.TransUnit' )
+local Ast = require( 'lune.base.Ast' )
 
 local Parser = require( 'lune.base.Parser' )
 
@@ -18,16 +18,18 @@ function dumpFilter.new(  )
 function dumpFilter:__init(  ) 
             
 end
+do
+  end
 
 local function dump( prefix, depth, node, txt )
   local typeStr = ""
   
   local expType = node:get_expType(  )
   
-  if expType and expType ~= TransUnit.typeInfoKind.None then
+  if expType and expType ~= Ast.typeInfoKind.None then
     typeStr = string.format( "(%d:%s:%s)", expType:get_typeId(  ), expType:getTxt(  ), expType:get_kind(  ))
   end
-  print( string.format( "%s: %s %s %s", prefix, TransUnit.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
+  print( string.format( "%s: %s %s %s", prefix, Ast.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
 end
 
 local function filter( node, filter, prefix, depth )
@@ -58,6 +60,10 @@ function dumpFilter:processRoot( node, prefix, depth )
 end
 
 -- none
+
+function dumpFilter:processSubmodule( node, prefix, depth )
+  dump( prefix, depth, node, "" )
+end
 
 function dumpFilter:processBlock( node, prefix, depth )
   dump( prefix, depth, node, "" )

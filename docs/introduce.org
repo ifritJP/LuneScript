@@ -588,7 +588,7 @@ test( nil );  // print( 0 );
 sync! は、 unwrap 処理を行ないます。
 
 #+BEGIN_SRC lns
-sync! symbol {, symbol } = exp[, exp ] block [then thenblock] do doblock;
+sync! symbol {, symbol } = exp[, exp ] block [then thenblock] [ do doblock ];
 #+END_SRC
 
 exp と symbol, thenblock の扱いは unwrap! と、ほぼ同じです。
@@ -1134,12 +1134,15 @@ mfunc1( 10 )					// stat4(10)
 
 ** モジュール
 
-LuneScript で作成したスクリプトファイルは、全てモジュールとなる。
-Lua のように return などは不要。
+LuneScript は、 1 ファイル 1 モジュールとなる。
+モジュールは、それぞれ名前空間が異なる。
 
-スクリプトファイル内で pub 宣言された関数、クラスが
+例えば lune/base/Parser.lns は、
+lune.base.Parser の名前空間となる。
+
+スクリプトファイル内で pub 宣言された関数、クラスは、
 外部モジュールからアクセス可能となる。
-   
+
 *** import
 
 外部モジュールを利用する際に import 宣言する。
@@ -1157,6 +1160,13 @@ module1.class, module1.func のようにアクセスする。
 
 インポートしたシンボル(上記の場合は module1 )を変数として扱うことは出来ない。
 
+モジュールは、相互参照出来ない。
+
+例えば ModuleA, ModuleB があったとき、
+ModuleA から ModuleB を import,
+ModuleB から ModuleA を import することは出来ない。
+
+
 *** require
 
 Lua の外部モジュールを利用する際に宣言する。
@@ -1167,6 +1177,41 @@ let mod: stem! = require( 'module' );
 
 require の結果は stem! 型となる。
 
+モジュールは、相互参照出来ない。
+
+*** submodule
+
+1 ファイルの肥大化を防止するため、
+ファイルを分割してサブモジュール化できる。
+
+サブモジュールを利用するには、次のように宣言する。
+
+#+BEGIN_SRC lns
+submodule use foo.bar.module;
+#+END_SRC
+
+また、サブモジュール側では次のように宣言する。
+
+#+BEGIN_SRC lns
+submodule owner foo.bar.mainmodule;
+#+END_SRC
+
+これにより、
+指定したモジュール(上記の例では foo.bar.module)をサブモジュールとして扱う。
+
+モジュールの宣言は、スクリプトの先頭で行なう必要がある。
+ただし、コメントは除く。
+
+
+C の #include と基本的には同じと考えて良い。
+ただし、次の点で #include と異なる。
+
+- #include は、宣言した箇所にファイルを展開するが、 
+  LuneScript ではファイルの最終位置に展開する。
+- サブモジュールは、 statement として完結している必要がある。
+  - #include のような、式の一部をサブモジュール内には書けない。
+- サブモジュールとメインモジュールは 1 対 1 で対応していなければならない。
+- サブモジュールから、さらにサブモジュールを利用することはできない。
 
 * emacs 対応
 

@@ -1,15 +1,5 @@
 ( val1 and "&" and "+" or "" ) .. "";
 
-'''[jioejiopjiofjeioajeji
-jfeioajfeioaji
-'''
-''hogehogheo```fjiojioe```
-''
-'''fjioeajio
-'''
-'"'; '' ajfoijop
-"'"; '' jioejiop
-
 let val1 : int, val2 : real = ?a, 1.0;
 let val3 : real, val4, val5 : real = 0x1, 1.0e-2, 0.1e+3;
 let val6 : int[] = [

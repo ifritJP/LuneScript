@@ -4,4 +4,3 @@ pub class Hoge {
         return 0;
     }
 }
-

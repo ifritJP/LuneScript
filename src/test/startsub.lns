@@ -1,0 +1,6 @@
+submodule owner test.start;
+
+let classA2 = new simple.ClassA();
+print( classA2.func( 0 ) );
+print( classA2.func( 0 ) );
+print( classA2.sub() );

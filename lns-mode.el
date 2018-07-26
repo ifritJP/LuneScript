@@ -8,7 +8,7 @@
   (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
 
 
-(defvar lns-indent-level 4)
+(defvar lns-indent-level 3)
 (defvar lns-command-path "lns" )
 
 (defvar lns-no-token-pattern "[^a-zA-Z0-9_]")
@@ -35,8 +35,9 @@
 		 '("self" "fn" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
 		   "nil" "null" "true" "switch" "case" "default" "extend" "proto"
-		   "override" "macro" "let" "unwrap" "if"
-		   "mut" "pub" "pro" "pri" "form" "advertise" "wrap" "static" "global"
+		   "override" "macro" "let" "unwrap" "if" "module" "submodule"
+		   "__init", "mut" "pub" "pro" "pri" "form" "advertise"
+		   "wrap" "static" "global"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
@@ -55,7 +56,7 @@
 (defvar lns-font-lock-keywords
   `((,lns-builtin . font-lock-builtin-face)
     (,lns-keyword . font-lock-keyword-face)
-    ("\\<_exp\\>" . font-lock-warning-face)
+    ("\\<_exp[0-9]*\\>" . font-lock-warning-face)
     ;;("\\<let\\|unwrap\\|if\\>" . font-lock-keyword-face)
     ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|#\\|\\!" . font-lock-warning-face)
     (,lns-type . font-lock-type-face)
@@ -142,9 +143,9 @@
     (modify-syntax-entry ?\" ".")
 
     ;; /* */ //
-    (modify-syntax-entry ?/ ". 124")
-    (modify-syntax-entry ?\* ". 23b")
-    (modify-syntax-entry ?\n ">")
+    (modify-syntax-entry ?/ ". 124b")
+    (modify-syntax-entry ?\* ". 23")
+    (modify-syntax-entry ?\n "> b")
     (syntax-table))
   "`lns-mode' syntax table.")
 
@@ -166,6 +167,8 @@
          nil                    ;; syntax-begin
          (font-lock-syntactic-keywords . ,lns-font-lock-syntactic-keywords)
          (font-lock-extra-managed-props . (syntax-table))
+	 ;; comment 内を対象外にする
+	 (parse-sexp-ignore-comments . t )
          (parse-sexp-lookup-properties . t)
          (beginning-of-defun-function . lns-beginning-of-fn)
          (end-of-defun-function . lns-end-of-fn)
@@ -459,10 +462,10 @@ pattern は  {, }, {{, }} のいずれか。
 	pos end-block-flag start-block-flag start-pos column)
     (save-excursion
       (beginning-of-line)
-      (if (lns-is-in-comment-string (point))
+      (if (and (lns-is-in-comment-string (point))
+	       (lns-is-in-comment-string (1- (point))))
 	  ;; 行頭がコメント、文字列の場合はインデント調整しない。
-	  (when (lns-is-in-comment-string (1- point))
-	    (setq column -1))
+	  (setq column -1)
 	(re-search-forward "[^\\s \t]")
 	(cond 
 	 ((eq (char-before) ?})
