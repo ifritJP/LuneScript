@@ -1,5 +1,35 @@
 --lune/base/Ast.lns
 local moduleObj = {}
+local function _lune_nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 local Parser = require( 'lune.base.Parser' )
 
 local Util = require( 'lune.base.Util' )
@@ -1233,33 +1263,33 @@ do
 
 -- none
 
-function Filter:processSubmodule( node, ... )
+function Filter:processSubfile( node, ... )
 end
 
 -- none
 
 -- none
 
-local nodeKindSubmodule = regKind( [[Submodule]] )
+local nodeKindSubfile = regKind( [[Subfile]] )
 
-moduleObj.nodeKindSubmodule = nodeKindSubmodule
+moduleObj.nodeKindSubfile = nodeKindSubfile
 
-local SubmoduleNode = {}
-setmetatable( SubmoduleNode, { __index = Node } )
-moduleObj.SubmoduleNode = SubmoduleNode
-function SubmoduleNode:processFilter( filter, ... )
+local SubfileNode = {}
+setmetatable( SubfileNode, { __index = Node } )
+moduleObj.SubfileNode = SubfileNode
+function SubfileNode:processFilter( filter, ... )
   local argList = {...}
   
-  filter:processSubmodule( self, table.unpack( argList ) )
+  filter:processSubfile( self, table.unpack( argList ) )
 end
-function SubmoduleNode.new( pos, builtinTypeList )
+function SubfileNode.new( pos, builtinTypeList )
   local obj = {}
-  setmetatable( obj, { __index = SubmoduleNode } )
+  setmetatable( obj, { __index = SubfileNode } )
   if obj.__init then obj:__init( pos, builtinTypeList ); end
 return obj
 end
-function SubmoduleNode:__init(pos, builtinTypeList) 
-  Node.__init( self, nodeKindSubmodule, pos, builtinTypeList)
+function SubfileNode:__init(pos, builtinTypeList) 
+  Node.__init( self, nodeKindSubfile, pos, builtinTypeList)
   
   -- none
   
@@ -2460,24 +2490,28 @@ function ExpRefItemNode:processFilter( filter, ... )
   
   filter:processExpRefItem( self, table.unpack( argList ) )
 end
-function ExpRefItemNode.new( pos, builtinTypeList, val, index )
+function ExpRefItemNode.new( pos, builtinTypeList, val, nilAccess, index )
   local obj = {}
   setmetatable( obj, { __index = ExpRefItemNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, val, index ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, val, nilAccess, index ); end
 return obj
 end
-function ExpRefItemNode:__init(pos, builtinTypeList, val, index) 
+function ExpRefItemNode:__init(pos, builtinTypeList, val, nilAccess, index) 
   Node.__init( self, nodeKindExpRefItem, pos, builtinTypeList)
   
   -- none
   
   self.val = val
+  self.nilAccess = nilAccess
   self.index = index
   -- none
   
 end
 function ExpRefItemNode:get_val()
   return self.val
+end
+function ExpRefItemNode:get_nilAccess()
+  return self.nilAccess
 end
 function ExpRefItemNode:get_index()
   return self.index
@@ -2769,24 +2803,28 @@ function RefFieldNode:processFilter( filter, ... )
   
   filter:processRefField( self, table.unpack( argList ) )
 end
-function RefFieldNode.new( pos, builtinTypeList, field, prefix )
+function RefFieldNode.new( pos, builtinTypeList, field, nilAccess, prefix )
   local obj = {}
   setmetatable( obj, { __index = RefFieldNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, field, prefix ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, field, nilAccess, prefix ); end
 return obj
 end
-function RefFieldNode:__init(pos, builtinTypeList, field, prefix) 
+function RefFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix) 
   Node.__init( self, nodeKindRefField, pos, builtinTypeList)
   
   -- none
   
   self.field = field
+  self.nilAccess = nilAccess
   self.prefix = prefix
   -- none
   
 end
 function RefFieldNode:get_field()
   return self.field
+end
+function RefFieldNode:get_nilAccess()
+  return self.nilAccess
 end
 function RefFieldNode:get_prefix()
   return self.prefix
@@ -2816,18 +2854,19 @@ function GetFieldNode:processFilter( filter, ... )
   
   filter:processGetField( self, table.unpack( argList ) )
 end
-function GetFieldNode.new( pos, builtinTypeList, field, prefix, getterTypeInfo )
+function GetFieldNode.new( pos, builtinTypeList, field, nilAccess, prefix, getterTypeInfo )
   local obj = {}
   setmetatable( obj, { __index = GetFieldNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, field, prefix, getterTypeInfo ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, field, nilAccess, prefix, getterTypeInfo ); end
 return obj
 end
-function GetFieldNode:__init(pos, builtinTypeList, field, prefix, getterTypeInfo) 
+function GetFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix, getterTypeInfo) 
   Node.__init( self, nodeKindGetField, pos, builtinTypeList)
   
   -- none
   
   self.field = field
+  self.nilAccess = nilAccess
   self.prefix = prefix
   self.getterTypeInfo = getterTypeInfo
   -- none
@@ -2835,6 +2874,9 @@ function GetFieldNode:__init(pos, builtinTypeList, field, prefix, getterTypeInfo
 end
 function GetFieldNode:get_field()
   return self.field
+end
+function GetFieldNode:get_nilAccess()
+  return self.nilAccess
 end
 function GetFieldNode:get_prefix()
   return self.prefix
@@ -4022,7 +4064,11 @@ end
 function RefFieldNode:getLiteral(  )
   local prefix = (self.prefix:getLiteral(  )[1] or _luneScript.error( 'unwrap val is nil' ) )
   
-  table.insert( prefix, "." )
+  if self.nilAccess then
+    table.insert( prefix, "$." )
+  else 
+    table.insert( prefix, "." )
+  end
   table.insert( prefix, self.field.txt )
   return {prefix}, {builtinTypeSymbol}
 end
@@ -4031,7 +4077,7 @@ function ExpMacroStatNode:getLiteral(  )
   local txt = ""
   
   for __index, token in pairs( self.expStrList ) do
-    txt = string.format( "%s %s", txt, token:getLiteral(  )[1])
+    txt = string.format( "%s%s", txt, token:getLiteral(  )[1])
   end
   return {txt}, {self:get_expType(  )}
 end

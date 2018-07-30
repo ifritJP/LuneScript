@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-submodule use lune.base.TransUnitDecl;
-submodule use lune.base.TransUnitExp;
-submodule use lune.base.TransUnitStatementList;
+subfile use lune.base.TransUnitDecl;
+subfile use lune.base.TransUnitExp;
+subfile use lune.base.TransUnitStatementList;
 
 luneConstrol disable_mut_control;
 
@@ -73,14 +73,14 @@ pub class TransUnit {
   pri let macroScope: Ast.Scope!;
 
 
-  /** submodule 名のリスト */
-  pri let subModuleList: str[];
+  /** subfile 名のリスト */
+  pri let subfileList: str[];
 
   fn __init( macroEval: Ast.MacroEval ) {
     self.validMutControl = true;
     self.moduleName = "";
     self.parser = new Parser.DummyParser();
-    self.subModuleList = [];
+    self.subfileList = [];
     self.pushbackList = [];
     self.usedTokenList = [];
     self.scope = Ast.rootScope;
@@ -513,49 +513,76 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
   }
 
   if! token {
-    if self.macroMode == "expand" and _exp.txt == ',,' {
-      let nextToken = unwrap self.getTokenNoErr();
+    if self.macroMode == "expand" {
+       let tokenTxt = _exp.txt;
+       if tokenTxt == ',,' or tokenTxt == ',,,,' {
+          let nextToken = unwrap self.getTokenNoErr();
 
-      let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
-        self.error( "unknown macro val %s" (nextToken.txt) );
-      };
-      //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
-      if macroVal.typeInfo == Ast.builtinTypeSymbol {
-        let txtList = (unwrap macroVal.val)@str[];
-        for index = #txtList, 1, -1 {
-          nextToken = new Parser.Token(
-            nextToken.kind, txtList[ index ], nextToken.pos );
-          self.pushbackToken( nextToken );
-        }   
-      }   
-      elseif macroVal.typeInfo == Ast.builtinTypeStat {
-        self.pushbackStr( "macroVal %s" (nextToken.txt),
-                          (unwrap macroVal.val)@str );                       
-      }   
-      elseif macroVal.typeInfo.get_kind() == Ast.TypeInfoKindArray or
-        macroVal.typeInfo.get_kind() == Ast.TypeInfoKindList
-      {   
-        let strList = (unwrap macroVal.val)@str[];
-        if strList {
-          for index = #strList, 1, -1 {
-            self.pushbackStr(
-              "macroVal %s[%d]" (nextToken.txt, index),
-              strList[ index ] );
-          }   
-        }   
-        else {
-          self.error( "macro val is nil %s" (nextToken.txt) );
-        }   
-      }
-      else {
-        let tokenList: Parser.Token[] = [];
-        expandVal( tokenList, macroVal.val, nextToken.pos );
-        
-        self.newPushback( tokenList );
-      }
-      nextToken = unwrap self.getTokenNoErr();
+          let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
+             self.error( "unknown macro val %s" (nextToken.txt) );
+          };
+          
+          if tokenTxt == ',,' {
+             //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
+             if macroVal.typeInfo == Ast.builtinTypeSymbol {
+                let txtList = (unwrap macroVal.val)@str[];
+                for index = #txtList, 1, -1 {
+                   nextToken = new Parser.Token(
+                      nextToken.kind, txtList[ index ], nextToken.pos );
+                   self.pushbackToken( nextToken );
+                }    
+             }   
+             elseif macroVal.typeInfo == Ast.builtinTypeStat {
+                self.pushbackStr( "macroVal %s" (nextToken.txt),
+                                  (unwrap macroVal.val)@str );                       
+             }   
+             elseif macroVal.typeInfo.get_kind() == Ast.TypeInfoKindArray or
+                macroVal.typeInfo.get_kind() == Ast.TypeInfoKindList
+             {   
+                let strList = (unwrap macroVal.val)@str[];
+                if strList {
+                   for index = #strList, 1, -1 {
+                      self.pushbackStr(
+                         "macroVal %s[%d]" (nextToken.txt, index),
+                         strList[ index ] );
+                   }     
+                }    
+                else {
+                   self.error( "macro val is nil %s" (nextToken.txt) );
+                }    
+             }   
+             else {
+                let tokenList: Parser.Token[] = [];
+                expandVal( tokenList, macroVal.val, nextToken.pos );
+                
+                self.newPushback( tokenList );
+             }
+          }
+          elseif tokenTxt == ',,,,' {
+             if macroVal.typeInfo == Ast.builtinTypeSymbol {
+                let txtList = (unwrap macroVal.val)@str[];
+                let newToken = "";
+                foreach txt in txtList {
+                   newToken = "%s%s" (newToken, txt);
+                }
+                nextToken = new Parser.Token(
+                   Parser.kind.Str, "'%s'" (newToken), nextToken.pos );
+                self.pushbackToken( nextToken );
+             }
+             elseif macroVal.typeInfo == Ast.builtinTypeStat {
+                nextToken = new Parser.Token(
+                   Parser.kind.Str, "'%s'" (unwrap macroVal.val), nextToken.pos );
+                self.pushbackToken( nextToken );
+             }
+             else {
+                self.error( "not support this symbol -- %s%s"
+                            (tokenTxt, nextToken.txt) );
+             }
+          }
+          nextToken = unwrap self.getTokenNoErr();
 
-      token = nextToken;
+          token = nextToken;
+       }
     }
   }
   if! token {
@@ -666,12 +693,12 @@ fn TransUnit.analyzeStatementList( stmtList: Ast.Node[], termTxt: str! ) {
   }
 }
 
-fn TransUnit.analyzeStatementListSubModule( stmtList: Ast.Node[] ) {
+fn TransUnit.analyzeStatementListSubfile( stmtList: Ast.Node[] ) {
   let statement = self.analyzeStatement();
 
   if! statement {
-    if _exp.$kind ~= Ast.nodeKindSubmodule {
-      self.error( "submodule must have 'module' declaration at top." );
+    if _exp.$kind ~= Ast.nodeKindSubfile {
+      self.error( "subfile must have 'subfile' declaration at top." );
     }
   }
 
@@ -916,11 +943,13 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
     self.pushClass( nil, true, classTypeInfo.getTxt(), "pub" );
     if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
       let classInfo = _exp;
-      foreach fieldInfo, fieldName in classInfo@Map<str,Map<str,stem!>> {
+      foreach fieldInfo, fieldName in classInfo@Map<str,Map<str,stem>> {
         let typeId = fieldInfo.typeId;
         let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
         self.scope.add(
-          fieldName, fieldTypeInfo, fieldInfo.accessMode@str, fieldInfo.mutable@bool );
+          fieldName, fieldTypeInfo,
+           (unwrap fieldInfo.accessMode)@str,
+           (unwrap fieldInfo.mutable default false)@bool );
       }   
       foreach child in classTypeInfo.get_children() {
         if child.get_kind() == Ast.TypeInfoKindClass {
@@ -954,7 +983,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
   // 変数登録
   foreach varInfo, varName in moduleInfo._varName2InfoMap {
     self.scope.add(
-      varName, unwrap typeId2TypeInfo[ varInfo.typeId ], "pub", varInfo.mutable@bool );
+      varName, unwrap typeId2TypeInfo[ varInfo.typeId ], "pub",
+       (unwrap varInfo.mutable default false)@bool );
   }
 
   foreach moduleName in nameList {
@@ -982,7 +1012,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 }
 
 
-fn TransUnit.analyzeSubmodule( token: Parser.Token ): Ast.SubmoduleNode {
+fn TransUnit.analyzeSubfile( token: Parser.Token ): Ast.SubfileNode {
   if self.scope ~= self.moduleScope {
     self.error( "'module' must be top scope." );
   }
@@ -1004,16 +1034,16 @@ fn TransUnit.analyzeSubmodule( token: Parser.Token ): Ast.SubmoduleNode {
     }
   }
   if moduleName == "" {
-    self.addErrMess( token.pos, "illegal submodule" );
+    self.addErrMess( token.pos, "illegal subfile" );
   }
   else {
     if mode.txt == "use" {
       if! _luneScript.searchModule( moduleName ) {
-        self.subModuleList.insert( _exp );
+        self.subfileList.insert( _exp );
       }   
       else {
         self.addErrMess(
-          token.pos, "not found submodule -- %s" ( moduleName ) );
+          token.pos, "not found subfile -- %s" ( moduleName ) );
       }   
     }
     elseif mode.txt == "owner" {
@@ -1028,7 +1058,7 @@ fn TransUnit.analyzeSubmodule( token: Parser.Token ): Ast.SubmoduleNode {
       self.addErrMess( mode.pos, "illegal module mode -- %s" ( mode.txt ) );
     }
   }
-  return new Ast.SubmoduleNode( token.pos, [ Ast.builtinTypeNone ] );
+  return new Ast.SubfileNode( token.pos, [ Ast.builtinTypeNone ] );
 }
 
 fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ): Ast.Node {

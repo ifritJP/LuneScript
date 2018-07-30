@@ -1,4 +1,4 @@
-submodule use test.startsub;
+subfile use test.startsub;
 import test.simple;
 
 let classA = new simple.ClassA();
@@ -304,6 +304,7 @@ class ClassAA {
 ClassAA.func();
 
 module External require "test.external" {
+   pub static let val:int;
    pub static fn func1();
    pub fn func2( val:int  );
 }
@@ -311,3 +312,27 @@ module External require "test.external" {
 External.func1();
 External.func2( 10 );
 External.func2( 20 );
+print( "val", External.val );
+
+
+{
+   let foo = {
+      "bar": {
+         "baz": 1,
+         "hoge": [ 'a', 'b', 'c' ],
+         "sage": "xyz",
+      }
+   };
+
+   macro _print( symbol2:stat, format:str ) {
+      //print( ,,,,symbol2, ,,symbol2 );
+      print( string.format( "macro %s " .. ,,format, ,,,,symbol2, ,,symbol2 ));
+   }
+   
+   _print( `{ foo$.bar$.baz }, "%s" );
+   _print( `{ foo$.ba$.baz }, "%s" );
+   _print( `{ foo$.bar$.hoge$[1] }, "%s" );
+   _print( `{ foo$.ba$.hoge$[1] }, "%s" );
+   _print( `{ foo$.bar$.sage$[1] }, "%c" );
+   _print( `{ foo$.ba$.sage$[1] }, "%s" );
+}

@@ -1,5 +1,35 @@
 --lune/base/Parser.lns
 local moduleObj = {}
+local function _lune_nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 local luaKeywordSet = {}
 
 luaKeywordSet["let"] = true
@@ -71,6 +101,9 @@ local function createReserveInfo( luaMode )
   multiCharDelimitMap["<"] = {"<="}
   multiCharDelimitMap[">"] = {">="}
   if not luaMode then
+    multiCharDelimitMap["["] = {"[@"}
+    multiCharDelimitMap["$"] = {"$[", "$."}
+    multiCharDelimitMap["$."] = {"$.$"}
     multiCharDelimitMap["."] = {"..", ".$"}
     multiCharDelimitMap[".."] = {"..."}
     multiCharDelimitMap[","] = {",,"}
@@ -261,66 +294,96 @@ end
 do
   end
 
-local kind = {}
-
-moduleObj.kind = kind
-
-local kindSeed = 0
 
 local kind2Txt = {}
 
-local function regKind( name )
-  local assignKind = kindSeed
-  
-  kindSeed = kindSeed + 1
-  kind2Txt[assignKind] = name
-  kind[name] = assignKind
-  return assignKind
+local TokenKind = {}
+moduleObj.TokenKind = TokenKind
+function TokenKind.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = TokenKind } )
+  if obj.__init then obj:__init(  ); end
+return obj
 end
+function TokenKind:__init() 
+  self.Cmnt = 1
+  self.Str = 2
+  self.Int = 3
+  self.Real = 4
+  self.Char = 5
+  self.Symb = 6
+  self.Dlmt = 7
+  self.Kywd = 8
+  self.Ope = 9
+  self.Type = 10
+  self.Eof = 11
+  -- none
+  
+end
+do
+  end
 
-local kindCmnt = regKind( "Cmnt" )
+kind2Txt[1] = 'Cmnt'
+local kindCmnt = 1
 
 moduleObj.kindCmnt = kindCmnt
 
-local kindStr = regKind( "Str" )
+kind2Txt[2] = 'Str'
+local kindStr = 2
 
 moduleObj.kindStr = kindStr
 
-local kindInt = regKind( "Int" )
+kind2Txt[3] = 'Int'
+local kindInt = 3
 
 moduleObj.kindInt = kindInt
 
-local kindReal = regKind( "Real" )
+kind2Txt[4] = 'Real'
+local kindReal = 4
 
 moduleObj.kindReal = kindReal
 
-local kindChar = regKind( "Char" )
+kind2Txt[5] = 'Char'
+local kindChar = 5
 
 moduleObj.kindChar = kindChar
 
-local kindSymb = regKind( "Symb" )
+kind2Txt[6] = 'Symb'
+local kindSymb = 6
 
 moduleObj.kindSymb = kindSymb
 
-local kindDlmt = regKind( "Dlmt" )
+kind2Txt[7] = 'Dlmt'
+local kindDlmt = 7
 
 moduleObj.kindDlmt = kindDlmt
 
-local kindKywd = regKind( "Kywd" )
+kind2Txt[8] = 'Kywd'
+local kindKywd = 8
 
 moduleObj.kindKywd = kindKywd
 
-local kindOpe = regKind( "Ope" )
+kind2Txt[9] = 'Ope'
+local kindOpe = 9
 
 moduleObj.kindOpe = kindOpe
 
-local kindType = regKind( "Type" )
+kind2Txt[10] = 'Type'
+local kindType = 10
 
 moduleObj.kindType = kindType
 
-local kindEof = regKind( "Eof" )
+kind2Txt[11] = 'Eof'
+local kindEof = 11
 
 moduleObj.kindEof = kindEof
+
+-- none
+
+
+local kind = TokenKind.new()
+
+moduleObj.kind = kind
 
 local noneToken = Token.new(kindEof, "", Position.new(0, 0), {})
 
@@ -561,7 +624,7 @@ function StreamParser:parse(  )
   while true do
     local syncIndexFlag = true
     
-    local pattern = [==[[/%-%?"%'%`%[].]==]
+    local pattern = [==[[/%-%?"%'%`].]==]
     
     local index = string.find( rawLine, pattern, searchIndex )
     
@@ -591,14 +654,6 @@ function StreamParser:parse(  )
           searchIndex = #rawLine + 1
         else 
           addVal( kindOpe, "/", index )
-          searchIndex = index + 1
-        end
-      elseif findChar == 91 then
-        if nextChar == 64 then
-          addVal( kindDlmt, "[@", index )
-          searchIndex = index + 2
-        else 
-          addVal( kindDlmt, "[", index )
           searchIndex = index + 1
         end
       elseif findChar == 39 or findChar == 34 then

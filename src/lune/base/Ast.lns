@@ -1162,7 +1162,7 @@ macro _declNodeClass(
 }
 
 _declNodeClass( "None", Node, []);
-_declNodeClass( "Submodule", Node, []);
+_declNodeClass( "Subfile", Node, []);
 _declNodeClass( "Import", Node,
                 [ { "modulePath": "str" } ]
 );
@@ -1299,6 +1299,7 @@ _declNodeClass( "ExpOp1", Node,
 
 _declNodeClass( "ExpRefItem", Node,
                 [ { "val": "Node" },
+                  { "nilAccess": "bool" },
                   { "index": "Node" } ]
 );
 
@@ -1329,11 +1330,13 @@ _declNodeClass( "StmtExp", Node,
 
 _declNodeClass( "RefField", Node,
                 [ { "field": "Parser.Token" },
+                  { "nilAccess": "bool" },
                   { "prefix": "Node" }] 
 );
 
 _declNodeClass( "GetField", Node,
                 [ { "field": "Parser.Token" },
+                  { "nilAccess": "bool" },
                   { "prefix": "Node" },
                   { "getterTypeInfo": "TypeInfo" } ]               
 );
@@ -1537,14 +1540,19 @@ pub override fn LiteralSymbolNode.getLiteral(): stem![], TypeInfo[] {
 }
 pub override fn RefFieldNode.getLiteral(): stem![], TypeInfo[] {
    let prefix = (unwrap self.prefix.getLiteral()[1])@str[];
-   prefix.insert( "." );
+   if self.nilAccess {
+      prefix.insert( "$." );
+   }
+   else {
+      prefix.insert( "." );
+   }
    prefix.insert( self.field.txt );
    return [ prefix ], [ builtinTypeSymbol ];
 }
 pub override fn ExpMacroStatNode.getLiteral(): stem![], TypeInfo[] {
    let txt = "";
    foreach token in self.expStrList {
-      txt = "%s %s" (txt, token.getLiteral()[1]);
+      txt = "%s%s" (txt, token.getLiteral()[1]);
    }
    return [txt ], [ self.get_expType() ];
 }

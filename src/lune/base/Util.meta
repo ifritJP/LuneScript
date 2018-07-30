@@ -28,17 +28,17 @@ do
   local _classInfo117 = {}
   _typeId2ClassInfoMap[ 117 ] = _classInfo117
   _classInfo117.debugLog = {
-    name='debugLog', staticFlag = true, accessMode = 'pub', typeId = 143 }
+    name='debugLog', staticFlag = true, accessMode = 'pub', typeId = 139 }
   _classInfo117.errorLog = {
     name='errorLog', staticFlag = true, accessMode = 'pub', typeId = 137 }
   _classInfo117.getReadyCode = {
-    name='getReadyCode', staticFlag = true, accessMode = 'pub', typeId = 149 }
+    name='getReadyCode', staticFlag = true, accessMode = 'pub', typeId = 155 }
   _classInfo117.memStream = {
     name='memStream', staticFlag = false, accessMode = 'pub', typeId = 129 }
   _classInfo117.outStream = {
     name='outStream', staticFlag = false, accessMode = 'pub', typeId = 123 }
   _classInfo117.profile = {
-    name='profile', staticFlag = true, accessMode = 'pub', typeId = 147 }
+    name='profile', staticFlag = true, accessMode = 'pub', typeId = 143 }
   end
 do
   local _classInfo119 = {}
@@ -64,7 +64,7 @@ _typeInfoList[10] = { parentId = 113, typeId = 115, baseId = 1, txt = 'base',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {117, 119}, }
 _typeInfoList[11] = { parentId = 113, typeId = 116, nilable = true, orgTypeId = 115 }
 _typeInfoList[12] = { parentId = 115, typeId = 117, baseId = 1, txt = 'Util',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {123, 129, 137, 143, 147, 149}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {123, 129, 137, 139, 143, 155}, }
 _typeInfoList[13] = { parentId = 115, typeId = 118, nilable = true, orgTypeId = 117 }
 _typeInfoList[14] = { parentId = 115, typeId = 119, baseId = 1, txt = 'Depend',
         staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {121}, }
@@ -89,11 +89,11 @@ _typeInfoList[25] = { parentId = 129, typeId = 135, baseId = 1, txt = 'get_txt',
         staticFlag = false, accessMode = 'pub', kind = 8, itemTypeId = {}, argTypeId = {}, retTypeId = {19}, children = {}, }
 _typeInfoList[26] = { parentId = 117, typeId = 137, baseId = 1, txt = 'errorLog',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {19}, retTypeId = {}, children = {}, }
-_typeInfoList[27] = { parentId = 117, typeId = 143, baseId = 1, txt = 'debugLog',
+_typeInfoList[27] = { parentId = 117, typeId = 139, baseId = 1, txt = 'debugLog',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[28] = { parentId = 117, typeId = 147, baseId = 1, txt = 'profile',
+_typeInfoList[28] = { parentId = 117, typeId = 143, baseId = 1, txt = 'profile',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {11, 27, 19}, retTypeId = {7}, children = {}, }
-_typeInfoList[29] = { parentId = 117, typeId = 149, baseId = 1, txt = 'getReadyCode',
+_typeInfoList[29] = { parentId = 117, typeId = 155, baseId = 1, txt = 'getReadyCode',
         staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {19, 19}, retTypeId = {11}, children = {}, }
 ----- meta -----
 return moduleObj

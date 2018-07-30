@@ -1,5 +1,35 @@
 --lune/base/Util.lns
 local moduleObj = {}
+local function _lune_nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 local Depend = require( 'lune.base.Depend' )
 
 local outStream = {}
@@ -41,9 +71,9 @@ do
   end
 
 local function errorLog( message )
-  local stderr = (io ).stderr
+  local stderr = (io ).stderr or _luneScript.error( 'unwrap val is nil' )
   
-  local write = (stderr ).write
+  local write = (stderr.write or _luneScript.error( 'unwrap val is nil' ) )
   
   write( stderr, message .. "\n" )
 end
@@ -62,13 +92,13 @@ local function profile( validTest, func, path )
   if not validTest then
     return func(  )
   end
-  local profiler = require( 'ProFi' ) or _luneScript.error( 'unwrap val is nil' )
+  local ProFi = require( 'ProFi' )
   
-  ((profiler.start or _luneScript.error( 'unwrap val is nil' ) ) )(  )
+  ProFi.start(  )
   local result = func(  )
   
-  ((profiler.stop or _luneScript.error( 'unwrap val is nil' ) ) )(  )
-  ((profiler.writeReport or _luneScript.error( 'unwrap val is nil' ) ) )( path )
+  ProFi.stop(  )
+  ProFi.writeReport( path )
   return result
 end
 moduleObj.profile = profile

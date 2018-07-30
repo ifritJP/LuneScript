@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-submodule owner lune.base.TransUnit;
+subfile owner lune.base.TransUnit;
 
 fn TransUnit.analyzeRefType( accessMode: str ): Ast.RefTypeNode {
    let firstToken = self.getToken();
@@ -180,15 +180,15 @@ pub fn TransUnit.createAST(
                   Parser.getKindTxt( _exp.kind ), _exp.txt ) );
       }
 
-      foreach submodule in self.subModuleList {
+      foreach file in self.subfileList {
          if self.scope ~= self.moduleScope {
             self.error( "scope does not close" );
          }
 
-         if! Parser.StreamParser.create( submodule, false ) {
+         if! Parser.StreamParser.create( file, false ) {
             self.parser = _exp;
 
-            self.analyzeStatementListSubModule( children );
+            self.analyzeStatementListSubfile( children );
 
             token = self.getTokenNoErr();
             if! token {
@@ -198,7 +198,7 @@ pub fn TransUnit.createAST(
             }
          }
          else {
-            self.error( "open error -- %s" (submodule) );
+            self.error( "open error -- %s" (file) );
          }
       }
    }
@@ -233,6 +233,11 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    let argTypeList: Ast.TypeInfo[] = [];
    foreach argNode in argList {
       argTypeList.insert( argNode.$expType );
+      // if argNode.$kind == Ast.nodeKindDeclArg {
+      //    let declArgNode = argNode@Ast.DeclArgNode;
+      //    scope.add( declArgNode.$name.txt,
+      //               declArgNode.$expType, "local", false );
+      // }
    }
 
 
@@ -245,9 +250,9 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
       let parser = new Parser.WrapParser(
          self.parser, "decl macro %s" (nameToken.txt) );
 
-      foreach symbolInfo, symbol in scope.$symbol2TypeInfoMap {
-         scope.add( symbol, symbolInfo.$typeInfo, "local", false );
-      }
+      // foreach symbolInfo, symbol in scope.$symbol2TypeInfoMap {
+      //    scope.add( symbol, symbolInfo.$typeInfo, "local", false );
+      // }
 
       self.macroScope = scope;
       

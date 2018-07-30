@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-submodule owner lune.base.TransUnit;
+subfile owner lune.base.TransUnit;
 
 
 fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
@@ -141,8 +141,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
         elseif token.txt == "import" {
             statement = self.analyzeImport( token );
         }
-        elseif token.txt == "submodule" {
-            statement = self.analyzeSubmodule( token );
+        elseif token.txt == "subfile" {
+            statement = self.analyzeSubfile( token );
         }
         elseif token.txt == "luneConstrol" {
             self.analyzeLuneControl( token );

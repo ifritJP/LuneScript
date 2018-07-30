@@ -39,8 +39,8 @@ pub class memStream extend outStream {
 }
 
 pub fn errorLog( message: str ) {
-    let stderr = (io@Map<str,stem>).stderr;
-    let write = (stderr@Map<str,form>).write;
+    let stderr = unwrap (io@stem).stderr;
+    let write = (unwrap stderr.write)@form;
     write( stderr, message .. "\n" );
 }
 
@@ -54,20 +54,25 @@ pub fn debugLog() {
     }
 }
 
-
 pub fn profile( validTest:bool, func: form, path: str ): stem! {
     if not validTest {
         return func();
     }
-    
-    let profiler = unwrap require( 'ProFi' );
-    ((unwrap profiler.start)@form)();
+
+    module ProFi require 'ProFi' {
+       pub static fn start();
+       pub static fn stop();
+       pub static fn writeReport(path:str);
+    }
+
+    ProFi.start();
     
     let result:stem! = func();
     
-    ((unwrap profiler.stop)@form)();
-    ((unwrap profiler.writeReport)@form)( path );
-
+    ProFi.stop();
+    ProFi.writeReport( path );
+    
+    
     return result;
 }
 

@@ -1,5 +1,35 @@
 --lune/base/convLua.lns
 local moduleObj = {}
+local function _lune_nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 local Ast = require( 'lune.base.Ast' )
 
 local Util = require( 'lune.base.Util' )
@@ -378,6 +408,37 @@ end
 function convFilter:processRoot( node, parent, baseIndent )
   self:writeln( string.format( "--%s", self.streamName), baseIndent )
   self:writeln( "local moduleObj = {}", baseIndent )
+  self:writeln( [==[
+local function _lune_nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+]==], baseIndent )
   local children = node:get_children(  )
   
   for __index, child in pairs( children ) do
@@ -390,7 +451,7 @@ end
 
 -- none
 
-function convFilter:processSubmodule( node, parent, baseIndent )
+function convFilter:processSubfile( node, parent, baseIndent )
 end
 
 function convFilter:processBlock( node, parent, baseIndent )
@@ -1288,17 +1349,25 @@ end
 -- none
 
 function convFilter:processExpRefItem( node, parent, baseIndent )
-  if node:get_val():get_kind() == Ast.nodeKind.LiteralString then
-    self:write( "string.byte( " )
+  if node:get_nilAccess() then
+    self:write( "_lune_nilacc( " )
     filter( node:get_val(), self, node, baseIndent )
-    self:write( ", " )
+    self:write( ", nil, 'item', " )
     filter( node:get_index(), self, node, baseIndent )
-    self:write( " )" )
+    self:write( ")" )
   else 
-    filter( node:get_val(), self, node, baseIndent )
-    self:write( "[" )
-    filter( node:get_index(), self, node, baseIndent )
-    self:write( "]" )
+    if node:get_val():get_expType() == Ast.builtinTypeString then
+      self:write( "string.byte( " )
+      filter( node:get_val(), self, node, baseIndent )
+      self:write( ", " )
+      filter( node:get_index(), self, node, baseIndent )
+      self:write( " )" )
+    else 
+      filter( node:get_val(), self, node, baseIndent )
+      self:write( "[" )
+      filter( node:get_index(), self, node, baseIndent )
+      self:write( "]" )
+    end
   end
 end
 
@@ -1307,19 +1376,25 @@ end
 function convFilter:processRefField( node, parent, baseIndent )
   local prefix = node:get_prefix(  )
   
-  filter( prefix, self, node, baseIndent )
-  local delimit = "."
-  
-  if parent:get_kind() == Ast.nodeKind.ExpCall then
-    if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKindMethod then
-      delimit = ":"
-    else 
-      delimit = "."
+  if node:get_nilAccess() then
+    self:write( '_lune_nilacc( ' )
+    filter( prefix, self, node, baseIndent )
+    self:write( string.format( ', "%s" )', node:get_field().txt) )
+  else 
+    filter( prefix, self, node, baseIndent )
+    local delimit = "."
+    
+    if parent:get_kind() == Ast.nodeKind.ExpCall then
+      if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKindMethod then
+        delimit = ":"
+      else 
+        delimit = "."
+      end
     end
+    local fieldToken = node:get_field(  )
+    
+    self:write( delimit .. fieldToken.txt )
   end
-  local fieldToken = node:get_field(  )
-  
-  self:write( delimit .. fieldToken.txt )
 end
 
 -- none

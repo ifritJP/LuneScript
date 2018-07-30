@@ -98,6 +98,9 @@ fn createReserveInfo( luaMode: bool ) :
     multiCharDelimitMap[ ">" ] = [@ ">=" ];
 
     if not luaMode {
+        multiCharDelimitMap[ "[" ] = [@ "[@" ];
+        multiCharDelimitMap[ "$" ] = [@ "$[", "$." ];
+        multiCharDelimitMap[ "$." ] = [@ "$.$" ];
         multiCharDelimitMap[ "." ] = [@ "..", ".$" ];
         multiCharDelimitMap[ ".." ] = [@ "..." ];
         multiCharDelimitMap[ "," ] = [@ ",," ];
@@ -228,29 +231,41 @@ pub class StreamParser extend Parser {
     }
 }
 
-pub let kind:Map<str,int> = {};
-
-let kindSeed = 0;
-let kind2Txt:Map<str,str> = {};
-fn regKind( name : str) : int {
-    let assignKind = kindSeed;
-    kindSeed = kindSeed + 1;
-    kind2Txt[ assignKind ] = name;
-    kind[ name ] = assignKind;
-    return assignKind;
+macro _declTokenKind( name_array:str[@] ) {
+   {
+      let field_array: stat[] = [];
+      let stat_array: stat[] = [];
+      let init_array: stat[] = [];
+      foreach name, index in name_array {
+         field_array.insert( `{
+            pub static let ,,,name:int;
+         });
+         init_array.insert( `{
+            self.,,,name = ,,index;
+         });
+         stat_array.insert( `{
+            kind2Txt[ ,,index ] = ,,name;
+            pub let ,,,"kind%s" (name) = ,,index;
+         });
+      }
+   }  
+   pub class TokenKind {
+      ,,field_array;
+      pub fn __init() {
+         ,,init_array;
+      }
+   }
+   ,,stat_array;
 }
 
-pub let kindCmnt = regKind( "Cmnt" );
-pub let kindStr = regKind( "Str" );
-pub let kindInt = regKind( "Int" );
-pub let kindReal = regKind( "Real" );
-pub let kindChar = regKind( "Char" );
-pub let kindSymb = regKind( "Symb" );
-pub let kindDlmt = regKind( "Dlmt" );
-pub let kindKywd = regKind( "Kywd" );
-pub let kindOpe = regKind( "Ope" );
-pub let kindType = regKind( "Type" );
-pub let kindEof = regKind( "Eof" );
+
+let kind2Txt:Map<str,str> = {};
+
+_declTokenKind(
+   [@ "Cmnt", "Str", "Int", "Real", "Char", 
+     "Symb", "Dlmt", "Kywd", "Ope", "Type", "Eof" ] );
+
+pub let kind = new TokenKind();
 
 pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ), [] );
 
@@ -513,7 +528,8 @@ fn StreamParser.parse() : Token[]! {
     // 領域をカテゴライズする
     while true {
 	let syncIndexFlag = true;
-	let pattern = ```[/%-%?"%'%`%[].```;
+	//let pattern = ```[/%-%?"%'%`%[].```;
+	let pattern = ```[/%-%?"%'%`].```;
 	let index = string.find( rawLine, pattern, searchIndex );
 
 	if not index {
@@ -563,16 +579,16 @@ fn StreamParser.parse() : Token[]! {
 	    //         searchIndex = #rawLine + 1;
 	    //     }
 	    // }
-	    elseif findChar == ?\[ {
-		if nextChar == ?@ {
-		    addVal( kindDlmt, "[@", index );
-		    searchIndex = index + 2;
-		}
-		else {
-		    addVal( kindDlmt, "[", index );
-		    searchIndex = index + 1;
-		}
-	    }
+	    // elseif findChar == ?\[ {
+	    //     if nextChar == ?@ {
+	    //         addVal( kindDlmt, "[@", index );
+	    //         searchIndex = index + 2;
+	    //     }
+	    //     else {
+	    //         addVal( kindDlmt, "[", index );
+	    //         searchIndex = index + 1;
+	    //     }
+	    // }
 	    elseif findChar == ?\' or findChar == ?\" {
 		// 文字列の場合
 		let workIndex = index + 1;

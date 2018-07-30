@@ -35,9 +35,9 @@
 		 '("self" "fn" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
 		   "nil" "null" "true" "switch" "case" "default" "extend" "proto"
-		   "override" "macro" "let" "unwrap" "if" "module" "submodule"
+		   "override" "macro" "let" "unwrap" "if" "module" "subfile" 
 		   "__init", "mut" "pub" "pro" "pri" "form" "advertise"
-		   "wrap" "static" "global"
+		   "wrap" "static" "global" "sync" "then" "do"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
@@ -58,7 +58,7 @@
     (,lns-keyword . font-lock-keyword-face)
     ("\\<_exp[0-9]*\\>" . font-lock-warning-face)
     ;;("\\<let\\|unwrap\\|if\\>" . font-lock-keyword-face)
-    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|#\\|\\!" . font-lock-warning-face)
+    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|\\$[\\.\\[]\\|#\\|\\!" . font-lock-warning-face)
     (,lns-type . font-lock-type-face)
     ;; (":\\s-*\\(\\w+\\)" . (1 font-lock-type-face nil t))
     (,(format "\\(%s\\)\\s-*\\(\\w+\\)"
@@ -121,8 +121,8 @@
     ;; ("```" 0 (7 . 41) nil t) ;;; string
     ("\\(```\\)"
      (1 (lns-syntax-multi-string ?`) t t))
-    ("\\(\"\\)"
-     (1 (lns-syntax-multi-string ?\") t t))
+    ;; ("\\(\"\\)"
+    ;;  (1 (lns-syntax-multi-string ?\") t t))
     ;; ("[^\?]\\(\'\\)"
     ;;  (1 "\"")) ;;; string
     ("\'" 0 (7 . 41) nil t) ;;; string
@@ -140,7 +140,7 @@
     (modify-syntax-entry ?  " ")
     (modify-syntax-entry ?\t " ")
     ;;(modify-syntax-entry ?? ".")
-    (modify-syntax-entry ?\" ".")
+    ;;(modify-syntax-entry ?\" ".")
 
     ;; /* */ //
     (modify-syntax-entry ?/ ". 124b")

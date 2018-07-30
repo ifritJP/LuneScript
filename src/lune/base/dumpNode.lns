@@ -66,8 +66,8 @@ pub override fn dumpFilter.processRoot(
 	filter( child, self, prefix .. "  ", depth + 1 );
     }	
 };
-pub override fn dumpFilter.processSubmodule( 
-    node: Ast.SubmoduleNode, prefix: str, depth: int )
+pub override fn dumpFilter.processSubfile( 
+    node: Ast.SubfileNode, prefix: str, depth: int )
 {
     dump( prefix, depth, node, "" );
 }

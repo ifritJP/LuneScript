@@ -1,4 +1,4 @@
-submodule owner test.start;
+subfile owner test.start;
 
 let classA2 = new simple.ClassA();
 print( classA2.func( 0 ) );
