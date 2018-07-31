@@ -16,6 +16,10 @@ local function _lune_nilacc( val, fieldName, access, ... )
          elseif typeId == "string" then
             return string.byte( field, ... )
          end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
       end
       return field
    end
@@ -26,6 +30,14 @@ local function _lune_nilacc( val, fieldName, access, ... )
       elseif typeId == "string" then
          return string.byte( val, ... )
       end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
@@ -425,6 +437,10 @@ local function _lune_nilacc( val, fieldName, access, ... )
          elseif typeId == "string" then
             return string.byte( field, ... )
          end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
       end
       return field
    end
@@ -435,6 +451,14 @@ local function _lune_nilacc( val, fieldName, access, ... )
       elseif typeId == "string" then
          return string.byte( val, ... )
       end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
@@ -1236,15 +1260,34 @@ function convFilter:processExpCall( node, parent, baseIndent )
   if node:get_func():get_kind() == Ast.nodeKind.RefField then
     local refField = node:get_func()
     
-    if refField:get_prefix():get_expType():get_kind() == Ast.TypeInfoKindList then
+    if node:get_nilAccess() then
       wroteFuncFlag = true
-      self:write( string.format( "table.%s( ", refField:get_field().txt) )
-      filter( refField:get_prefix(), self, refField, baseIndent )
+      if refField:get_prefix():get_expType():get_kind() == Ast.TypeInfoKindList then
+        self:write( string.format( "_lune_nilacc( table.%s, nil, 'list', ", refField:get_field().txt) )
+        filter( refField:get_prefix(), self, refField, baseIndent )
+      else 
+        self:write( "_lune_nilacc( " )
+        filter( refField:get_prefix(), self, refField, baseIndent )
+        self:write( string.format( ", '%s', 'callmtd' ", refField:get_field().txt) )
+      end
+    else 
+      if refField:get_prefix():get_expType():get_kind() == Ast.TypeInfoKindList then
+        wroteFuncFlag = true
+        self:write( string.format( "table.%s( ", refField:get_field().txt) )
+        filter( refField:get_prefix(), self, refField, baseIndent )
+      end
     end
   end
   if not wroteFuncFlag then
-    filter( node:get_func(), self, node, baseIndent )
-    self:write( "( " )
+    if node:get_nilAccess() then
+      self:write( "_lune_nilacc( " )
+      filter( node:get_func(), self, node, baseIndent )
+      self:write( ", nil, 'call'" )
+      wroteFuncFlag = true
+    else 
+      filter( node:get_func(), self, node, baseIndent )
+      self:write( "( " )
+    end
   end
   do
     local _exp = node:get_argList()

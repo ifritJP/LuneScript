@@ -37,3 +37,30 @@
     val = val3@int;
     val = val4@int;
 }
+{
+   let val = 0;
+   let valnil:int! = 0;
+   let map = {
+      "hoge": {
+         "foo": {
+            "val1": 1,
+            "val2": 2,
+         }
+      }
+   };
+   val = map$.hoge$.foo$.val1;  // error
+   valnil = map$.hoge$.foo$.val1;
+}
+
+{
+   class Test {
+      pub fn func(): int {
+         return 1;
+      }
+   }
+   let test:Test! = new Test();
+   let val:int = test$.func$(); // error
+   let func:form! = fn (): int { return 0; };
+   let val2:stem = func$(); // error
+}
+

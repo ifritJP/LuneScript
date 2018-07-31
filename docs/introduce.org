@@ -98,6 +98,10 @@ Lua へトランスコンパイルしたファイルは、Lua コマンドでそ
 ここでは LuneScript の仕様について説明します。
 
 なお、機能追加等を行なった場合は、ここにリンクを追加していきます。
+
+
+- Lua のトランスコンパイラ LuneScript の紹介 2 
+  - https://qiita.com/dwarfJP/items/646588287e91e812421f
   
 ** 値と型
 
@@ -1032,8 +1036,11 @@ macro-statement 内では評価されない。
 macro-expand で展開時に評価される。
 
 ,, は、直後に続く *式* を評価する演算子である。
-,,、 ,,,、 ,,,,、 は ~`{}~  内で利用することで、
-macro-statement 内で式を評価することが出来る。
+,,、 ,,,、 ,,,,、 は、 macro-statement の ~`{}~  内で利用することで、
+式を評価することが出来る。
+
+macro-expand で ,, を利用すると、直後の変数を展開する。
+macro-expand では、式の評価ではなく、変数を展開に限定される。
 
 
 例えば次のマクロでは、
@@ -1053,16 +1060,16 @@ macro _test2( val:int, funcxx:sym ) {
         };
         let stat3:stat[] = [];
         for index = 1, 4 {
-            table.insert( stat3, `{ print( "foo %d" ( ,,index ) ); } );
+            stat3.insert( `{ print( "foo %d" ( ,,index ) ); } );
         }
         let stat4 = ,,,func( 1 );
     }
-    print( message );
-    funcxx( "macro test2" );
-    stat;
-    stat2;
-    stat3;
-    stat4( 10 );
+    print( ,,message );
+    ,,funcxx( "macro test2" );
+    ,,stat;
+    ,,stat2;
+    ,,stat3;
+    ,,stat4( 10 );
 }
 fn mfunc1( val: int ) {
     print( "mfunc1", val );
@@ -1074,17 +1081,17 @@ _test2( 1, print );
 マクロ展開によって次のように展開される。
 
 #+BEGIN_SRC lns
-print( [[hello 1 print]] )			// print( message );
-print( "macro test2" )				// funcxx( "macro test2" );
-print( "macro stat" )				// stat2;
-for index = 1, 10 do				
-  print( string.format( "hoge %d", index) )	
-end
-print( string.format( "foo %d", 1) )		// stat3;
-print( string.format( "foo %d", 2) )
-print( string.format( "foo %d", 3) )
-print( string.format( "foo %d", 4) )
-mfunc1( 10 )					// stat4(10)
+print( "hello 1 print" );			// print( ,,message );
+print( "macro test2" );				// ,,funcxx( "macro test2" );
+print( "macro stat" );				// ,,stat
+for index = 1, 10 {				// ,,stat2
+  print( "hoge %d" ( index ) );
+}
+print( "foo %d" ( 1 ) );			// ,,stat3
+print( "foo %d" ( 2 ) );
+print( "foo %d" ( 3 ) );
+print( "foo %d" ( 4 ) );
+mfunc1( 10 );					// ,,stat4( 10 );
 #+END_SRC
 
 ここで注目すべき点は、次の点である。
@@ -1092,9 +1099,8 @@ mfunc1( 10 )					// stat4(10)
 - _test2( 1, print ) のマクロ呼び出しで print を渡しているが、
   これは print が保持する関数オブジェクトを渡しているのではなく、
   print シンボルそのものを渡している。
-  - マクロ呼び出しに渡す引数は、評価される前のものが渡される。
 - stat2 は、 for 文そのものを展開しているのに対し、
-  stat3 は、 for 文で作成したステートメントを展開している。
+  stat3 は、 for 文で作成したステートメントリストを展開している。
   
 
 上記の通り、マクロ内では通常の型以外に次の型を利用できる。
@@ -1179,82 +1185,6 @@ let mod: stem! = require( 'module' );
 require の結果は stem! 型となる。
 
 モジュールは、相互参照出来ない。
-
-*** module
-
-require の戻り値は、stem! 型となり使い勝手が良くない。
-
-これを改善するため、Lua の外部モジュールを、
-LuneScript モジュールのように扱えるようにするために、
-module 宣言を利用する。
-
-module 宣言は、class 宣言とほぼ同じで次のように宣言する。
-
-#+BEGIN_SRC lns
-module External require "test.external" {
-   pub static let val:int;
-   pub static fn func1();
-   pub fn func2( val:int );
-}
-#+END_SRC
-
-上記の例は、test.external の Lua モジュールを
-LuneScript の External モジュールとして
-メンバ val と func1()、func2() のメソッドを宣言をしている。
-
-
-*** subfile
-
-クラスの処理が大きくなると、それに応じてファイルも肥大化する。
-
-基本的にファイルの肥大化に良いことはないため、
-そのような場合はクラスの責務を細分化し、
-それぞれのクラス毎にファイルを分けるのが一般的なリファクタリングである。
-
-しかし、綺麗に責務を分割できない場合や、
-分割すると他のモジュールに与える影響が大きくなってしまう事もよくある。
-こういったクラス分割による対応が出来ない時の代替手段として、
-サブファイル化を行なう。
-
-サブファイル化は、
-本来 1 つのファイルで構成するモジュールを複数のファイルに分割することである。
-
-LuneScript は、原則 1 モジュール = 1 ファイルであるが、
-サブファイル化した場合は、1 モジュール = 複数ファイルとなる。
-
-サブファイルを利用するには、利用する側で次のように宣言する。
-
-#+BEGIN_SRC lns
-subfile use foo.bar.sub;
-#+END_SRC
-
-また、サブファイル側では次のように宣言する。
-
-#+BEGIN_SRC lns
-subfile owner foo.bar.main;
-#+END_SRC
-
-これにより、
-指定したモジュール(上記の例では foo.bar.sub)をサブファイルとして扱う。
-
-モジュールの宣言は、スクリプトの先頭で行なう必要がある。
-ただし、コメントは除く。
-
-subfile use は、複数宣言できる。
-subfile owner は、一つだけ宣言できる。
-つまり、1 つのファイルは複数のサブファイルを持てるが、
-1つのサブファイルは1つのオーナからしか利用できない。
-
-
-C の #include と基本的には同じと考えて良い。
-ただし、次の点で #include と異なる。
-
-- #include は、宣言した箇所にファイルを展開するが、 
-  LuneScript ではファイルの最終位置に展開する。
-- サブファイルは、 statement として完結している必要がある。
-  - #include のような、式の一部をサブファイル内には書けない。
-- サブファイルに対するメインファイルは 1 つでなければならない。
-- サブファイルから、さらにサブファイルを利用することはできない。
 
 * emacs 対応
 

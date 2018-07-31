@@ -505,21 +505,24 @@ pub class NormalTypeInfo extend TypeInfo {
          switch ( kind ) {
             case TypeInfoKindPrim, TypeInfoKindList, TypeInfoKindArray,
                  TypeInfoKindMap, TypeInfoKindClass
-            {   
+            {
                hasNilable = true;
             }   
-            case TypeInfoKindFunc {
-               if txt == "form" {
-                  hasNilable = true;
-               }    
-            }   
+            case TypeInfoKindFunc, TypeInfoKindMethod {
+               hasNilable = true;
+            }
          }  
          if hasNilable {
-            self.nilableTypeInfo = new NormalTypeInfo(
-               nil, baseTypeInfo, self, autoFlag, externalFlag,
-               staticFlag, accessMode, "", parentInfo, typeId + 1,
-               TypeInfoKindNilable, itemTypeInfoList,
-               argTypeInfoList, retTypeInfoList );
+            if txt == "..." {
+               self.nilableTypeInfo = self;
+            }
+            else {
+               self.nilableTypeInfo = new NormalTypeInfo(
+                  nil, baseTypeInfo, self, autoFlag, externalFlag,
+                  staticFlag, accessMode, "", parentInfo, typeId + 1,
+                  TypeInfoKindNilable, itemTypeInfoList,
+                  argTypeInfoList, retTypeInfoList );
+            }
          }  
          else {
             self.nilableTypeInfo = rootTypeInfo;
@@ -772,6 +775,7 @@ pub static fn NormalTypeInfo.createBuiltin(
       if info.$nilableTypeInfo ~= rootTypeInfo {
          sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
             "pub", typeTxt, info.$nilableTypeInfo, false );
+         builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = true;
       } 
       
       builtInTypeIdSet[ info.typeId ] = true;
@@ -924,6 +928,9 @@ pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
    if self == builtinTypeStem and not other.$nilable {
       return true;
    }
+   if self == builtinTypeForm and other.$kind == TypeInfoKindFunc {
+      return true;
+   }
    if other == builtinTypeNil {
       if self.kind ~= TypeInfoKindNilable {
          return false;
@@ -935,7 +942,10 @@ pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
    }
    if self.kind ~= other.$kind {
       if self.kind == TypeInfoKindNilable {
-         return (unwrap self.orgTypeInfo).isSettableFrom( other );
+         if other.$nilable {
+            return self.$orgTypeInfo.isSettableFrom( other.$orgTypeInfo );
+         }
+         return self.$orgTypeInfo.isSettableFrom( other );
       } 
       return false;
    }
@@ -979,7 +989,10 @@ pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
       }       
       case TypeInfoKindMethod {
          return false;
-      } 
+      }
+      case TypeInfoKindNilable {
+         return self.$orgTypeInfo.isSettableFrom( other.$orgTypeInfo );
+      }
       default {
          return false;
       } 
@@ -1305,6 +1318,7 @@ _declNodeClass( "ExpRefItem", Node,
 
 _declNodeClass( "ExpCall", Node,
                 [ { "func": "Node" },
+                  { "nilAccess": "bool" },
                   { "argList": "ExpListNode!" } ]
 );
 

@@ -16,6 +16,10 @@ local function _lune_nilacc( val, fieldName, access, ... )
          elseif typeId == "string" then
             return string.byte( field, ... )
          end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
       end
       return field
    end
@@ -26,6 +30,14 @@ local function _lune_nilacc( val, fieldName, access, ... )
       elseif typeId == "string" then
          return string.byte( val, ... )
       end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
@@ -335,6 +347,9 @@ function TransUnit:registBuiltInScope(  )
               
               self:popScope(  )
               Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = true
+              if typeInfo:get_nilableTypeInfo() ~= Ast.rootTypeInfo then
+                Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = true
+              end
               self.scope:add( funcName, typeInfo, "pub", false )
               if methodFlag then
                 do
@@ -2414,11 +2429,20 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
         exp = self:analyzeExpRefItem( nextToken, exp, nextToken.txt == "$[" )
         nextToken = self:getToken(  )
       end
-      if nextToken.txt == "(" then
+      if nextToken.txt == "(" or nextToken.txt == "$(" then
         local macroFlag = false
         
         local funcTypeInfo = exp:get_expType()
         
+        local nilAccess = nextToken.txt == "$("
+        
+        if nilAccess then
+          if funcTypeInfo:get_nilable() then
+            funcTypeInfo = funcTypeInfo:get_orgTypeInfo()
+          else 
+            nilAccess = false
+          end
+        end
         if funcTypeInfo:get_kind(  ) == Ast.TypeInfoKindMacro then
           macroFlag = true
           self.symbol2ValueMapForMacro = {}
@@ -2449,14 +2473,26 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
           exp = self:evalMacro( firstToken, funcTypeInfo, expList )
         else 
           do
-            local _switchExp = (exp:get_expType():get_kind() )
+            local _switchExp = (funcTypeInfo:get_kind() )
             if _switchExp == Ast.TypeInfoKindMethod or _switchExp == Ast.TypeInfoKindFunc then
             else 
-              self:error( string.format( "can't call the type -- %s", exp:get_expType():getTxt(  )) )
+              self:error( string.format( "can't call the type -- %s", funcTypeInfo:getTxt(  )) )
             end
           end
           
-          exp = Ast.ExpCallNode.new(firstToken.pos, funcTypeInfo:get_retTypeInfoList(  ), exp, expList)
+          local retTypeInfoList = funcTypeInfo:get_retTypeInfoList(  )
+          
+          if nilAccess then
+            retTypeInfoList = {}
+            for __index, retType in pairs( funcTypeInfo:get_retTypeInfoList(  ) ) do
+              if retType:get_nilable() then
+                table.insert( retTypeInfoList, retType )
+              else 
+                table.insert( retTypeInfoList, retType:get_nilableTypeInfo() )
+              end
+            end
+          end
+          exp = Ast.ExpCallNode.new(firstToken.pos, retTypeInfoList, exp, nilAccess, expList)
         end
         nextToken = self:getToken(  )
       end
@@ -2572,6 +2608,18 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               elseif prefixExpType == Ast.builtinTypeStem then
               else 
                 self:error( string.format( "illegal type -- %s, %d", prefixExpType:getTxt(  ), prefixExpType:get_kind(  )) )
+              end
+              if accessNil then
+                do
+                  local _exp = typeInfo
+                  if _exp then
+                  
+                      if not _exp:get_nilable() then
+                        typeInfo = _exp:get_nilableTypeInfo()
+                      end
+                    end
+                end
+                
               end
               do
                 local _exp = getterTypeInfo
@@ -2739,7 +2787,7 @@ function TransUnit:analyzeExpMacroStat( firstToken )
       
       local nextToken = self:getToken(  )
       
-      if nextToken.txt ~= "$" then
+      if nextToken.txt ~= "~~" then
         self:pushback(  )
       end
       local format = token.txt == ",,," and "'%s '" or '"\'%s\'"'
@@ -2959,7 +3007,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
       if macroExpFlag then
         local nextToken = self:getToken(  )
         
-        if nextToken.txt ~= "$" then
+        if nextToken.txt ~= "~~" then
           self:pushback(  )
         end
       end

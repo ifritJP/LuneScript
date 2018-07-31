@@ -400,6 +400,10 @@ local function _lune_nilacc( val, fieldName, access, ... )
          elseif typeId == "string" then
             return string.byte( field, ... )
          end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
       end
       return field
    end
@@ -410,6 +414,14 @@ local function _lune_nilacc( val, fieldName, access, ... )
       elseif typeId == "string" then
          return string.byte( val, ... )
       end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
@@ -1220,16 +1232,38 @@ pub override fn convFilter.processExpCall(
    let wroteFuncFlag = false;
    if node.$func.$kind == Ast.nodeKind.RefField {
       let refField = node.$func@Ast.RefFieldNode;
-      if refField.$prefix.$expType.$kind == Ast.TypeInfoKindList {
+      if node.$nilAccess {
          wroteFuncFlag = true;
-         self.write( "table.%s( " (refField.$field.txt ) );
-         filter( refField.$prefix, self, refField, baseIndent );
+         if refField.$prefix.$expType.$kind == Ast.TypeInfoKindList {
+            self.write( "_lune_nilacc( table.%s, nil, 'list', " (refField.$field.txt ) );
+            filter( refField.$prefix, self, refField, baseIndent );
+         }
+         else {
+            self.write( "_lune_nilacc( " );
+            filter( refField.$prefix, self, refField, baseIndent );
+            self.write( ", '%s', 'callmtd' " (refField.$field.txt ) );
+         }
+      }
+      else {
+         if refField.$prefix.$expType.$kind == Ast.TypeInfoKindList {
+            wroteFuncFlag = true;
+            self.write( "table.%s( " (refField.$field.txt ) );
+            filter( refField.$prefix, self, refField, baseIndent );
+         }
       }
    }
 
    if not wroteFuncFlag {
-      filter( node.$func, self, node, baseIndent );
-      self.write( "( " );
+      if node.$nilAccess {
+         self.write( "_lune_nilacc( " );
+         filter( node.$func, self, node, baseIndent );
+         self.write( ", nil, 'call'" );
+         wroteFuncFlag = true;
+      }
+      else {
+         filter( node.$func, self, node, baseIndent );
+         self.write( "( " );
+      }
    }
 
    

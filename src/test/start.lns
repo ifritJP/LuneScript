@@ -83,7 +83,7 @@ macro _test2( val:int, funcxx:sym ) {
         let stat4 = `{
             ,,symbol1( "100" );
             ,,symbol2( ,,func( 2 ) );
-            ,,,func(1)$( ,,,,symbol1 );
+            ,,,func(1)~~( ,,,,symbol1 );
         };
     }
     print( ,,message );
@@ -315,6 +315,13 @@ External.func2( 20 );
 print( "val", External.val );
 
 
+macro _print( symbol2:stat, format:str! ) {
+   {
+      let work = unwrap format default "%s";
+   }
+   print( string.format( "macro %s " .. ,,work, ,,,,symbol2, ,,symbol2 ));
+}
+
 {
    let foo = {
       "bar": {
@@ -324,15 +331,27 @@ print( "val", External.val );
       }
    };
 
-   macro _print( symbol2:stat, format:str ) {
-      //print( ,,,,symbol2, ,,symbol2 );
-      print( string.format( "macro %s " .. ,,format, ,,,,symbol2, ,,symbol2 ));
-   }
-   
    _print( `{ foo$.bar$.baz }, "%s" );
    _print( `{ foo$.ba$.baz }, "%s" );
    _print( `{ foo$.bar$.hoge$[1] }, "%s" );
    _print( `{ foo$.ba$.hoge$[1] }, "%s" );
    _print( `{ foo$.bar$.sage$[1] }, "%c" );
    _print( `{ foo$.ba$.sage$[1] }, "%s" );
+}
+
+{
+   class Test {
+      let val:int;
+      pub fn func(): int {
+         return self.val;
+      }
+   }
+   let test:Test! = new Test( 1 );
+   _print( `{ test$.func$() } );
+   let test2:Test! = nil;
+   _print( `{ test2$.func$() } );
+   let funcnil:form! = fn():int { return 1; };
+   _print( `{ funcnil$() } );
+   funcnil = nil;
+   _print( `{ funcnil$() } );
 }

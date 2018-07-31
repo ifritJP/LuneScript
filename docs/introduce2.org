@@ -1,0 +1,211 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="org-mode-document.css" />
+
+#+TITLE: Lua のトランスコンパイラ LuneScript の紹介 2 
+
+LuneScript は、 Lua へのトランスコンパイルを目的とした言語です。
+
+LuneScript を利用することで、規模の大きい Lua スクリプトを効率良く開発出来ます。
+
+この記事は https://qiita.com/dwarfJP/items/21d4d4099ab0feb68eaf の続きです。
+
+上記の記事で紹介出来なかった機能について説明します。
+
+* subfile
+
+クラスの処理が大きくなると、それに伴ないファイルが肥大化する。
+
+ファイルの肥大化に良いことはないため、
+このような場合はクラスの責務を細分化し、
+それぞれのクラス毎にファイルを分けるのが一般的なリファクタリングである。
+
+しかし、綺麗に責務を分割できない場合や、
+分割すると他のモジュールに与える影響が大きくなってしまう事もよくある。
+このようにクラス分割による対応が出来ない場合の代替手段として、
+サブファイル化を行なう。
+
+サブファイル化は、
+本来 1 つのファイルで構成するモジュールを複数のファイルに分割することである。
+
+LuneScript は、原則 1 モジュール = 1 ファイルであるが、
+サブファイル化した場合は、1 モジュール = 複数ファイルとなる。
+
+サブファイルを利用するには、利用する側で次のように宣言する。
+
+#+BEGIN_SRC lns
+subfile use foo.bar.sub;
+#+END_SRC
+
+また、サブファイル側では次のように宣言する。
+
+#+BEGIN_SRC lns
+subfile owner foo.bar.main;
+#+END_SRC
+
+これにより、
+指定したモジュール(上記の例では foo.bar.sub)をサブファイルとして扱う。
+
+モジュールの宣言は、スクリプトの先頭で行なう必要がある。
+ただし、コメントは除く。
+
+subfile use は、1 つのファイル内で複数宣言できる。
+subfile owner は、一つだけ宣言できる。
+つまり、1 つのファイルは複数のサブファイルを持てるが、
+1つのサブファイルは1つのオーナからしか利用できない。
+
+subfile use を複数宣言した場合、宣言した順でサブファイルを処理する。
+
+
+サブファイルは C の #include と基本的には同じと考えて良いが、
+次の点で #include と異なる。
+
+- #include は、宣言した箇所にファイルを展開するが、 
+  LuneScript ではファイルの最終位置に展開する。
+- サブファイルは、 statement として完結している必要がある。
+  - #include のような、式の一部をサブファイル内には書けない。
+- サブファイルに対するメインファイルは 1 つでなければならない。
+- サブファイルから、さらにサブファイルを利用することはできない。
+
+例えば、次の main.lns, sub1.lns, sub2.lns があった場合、
+
+#+BEGIN_SRC lns
+//------ main.lns -------
+subfile use sub1;
+subfile use sub2;
+
+pub let val = 1;
+//------ sub1.lns -------
+subfile owner main;
+
+pub let val1 = 1;
+//------ sub2.lns -------
+subfile owner main;
+
+pub let val2 = 1;
+#+END_SRC
+
+main.lns は次のスクリプトと等価である。
+
+#+BEGIN_SRC lns
+//------ main.lns -------
+pub let val = 1;
+pub let val1 = 1;
+pub let val2 = 1;
+#+END_SRC
+
+* module
+
+Lua の外部モジュールは require で利用できる。
+しかし require の結果は stem 型であり、
+stem 型のまま LuneScript で扱うのは使い勝手が悪い。
+
+module は、外部モジュールの型を定義する。
+
+module 宣言は、class 宣言とほぼ同じで次のように宣言する。
+
+#+BEGIN_SRC lns
+module External require "test.external" {
+   pub static let val:int;
+   pub static fn func1();
+   pub fn func2( val:int );
+}
+#+END_SRC
+
+上記の例は、次のような test.external の Lua モジュールを
+LuneScript の External モジュールとして宣言している。
+
+#+BEGIN_SRC lua
+local obj = {}
+
+function obj.func1()
+   print( "func1" )
+end
+
+obj.val = 0
+
+function obj:func2( val )
+   self.val = self.val + val
+   print( "func2", self.val )
+end
+
+return obj
+#+END_SRC
+
+この module で宣言することで、次のようにアクセスできる。
+
+#+BEGIN_SRC lns
+External.func1();
+External.func2( 10 );
+print( "val", External.val );
+#+END_SRC
+
+* nil 条件演算子
+
+nilable のデータを扱うには、 unwrap しなければならない。
+
+しかし、 JSON などのような深い階層構造を持つデータで
+1 つ 1 つ unwrap するのは、 処理が煩雑になってしまう。
+
+#+BEGIN_SRC lns
+let foo = {
+   "bar": {
+      "hoge": [ 'a', 'b', 'c' ],
+   }
+};
+#+END_SRC
+
+上記 JSON データの ~foo.bar.hoge[1]~ にアクセスするには
+次のような処理が必要になる。
+
+#+BEGIN_SRC lns
+if! foo.bar {
+  if! _exp.hoge {
+     print( _exp[1] );   // print( foo.bar.hoge[1] );
+  }
+}
+#+END_SRC
+
+bar, hoge の存在をチェックすることに意味があるのであれば、
+上記の処理は意味のあるコードと言えるが、
+bar, hoge の存在のチェックに意味はなく、
+単に ~foo.bar.hoge[1]~ のデータにアクセスすることが目的であれば、
+上記の処理は手間がかかるだけのコードとなる。
+
+このような場合に nil条件演算子を利用する。
+nil条件演算子を利用して ~foo.bar.hoge[1]~ にアクセスすると、次のように書ける。
+
+#+BEGIN_SRC lns
+print( foo$.bar$.hoge$[1] );
+#+END_SRC
+
+上記の場合 foo.bar, foo.bar.hoge のいずれかが nil だった場合、
+foo$.bar$.hoge$[1] の結果は nil になる。
+foo.bar, foo.bar.hoge 全てが nil でなければ、
+foo$.bar$.hoge$[1] は、foo.bar.hoge の値を返す。
+
+なお、 nil 条件演算子の結果は nilable 型となる。
+
+例えば次のようなクラスがあった時、
+
+#+BEGIN_SRC lns
+class Test {
+  let val:int;
+  pub fn func(): int {
+    return self.val;
+  }
+}
+fn sub( test:Test! ): int {
+  return test$.func$() + 1; // error
+}
+#+END_SRC
+
+
+sub() 関数内の ~test$.func$() + 1~ でコンパイルエラーする。
+本来 Test クラスのメソッド func() の戻り値は int 型であるが、
+nil 条件演算子によって func() メソッドの評価結果が nil を返す可能性があるため、
+戻り値が int 型から int! 型に変わり、
+int! + int の演算は出来ないためエラーとなっている。
+

@@ -16,6 +16,10 @@ local function _lune_nilacc( val, fieldName, access, ... )
          elseif typeId == "string" then
             return string.byte( field, ... )
          end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
       end
       return field
    end
@@ -26,6 +30,14 @@ local function _lune_nilacc( val, fieldName, access, ... )
       elseif typeId == "string" then
          return string.byte( val, ... )
       end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
@@ -588,15 +600,17 @@ function NormalTypeInfo:__init(scope, baseTypeInfo, orgTypeInfo, autoFlag, exter
       local _switchExp = (kind )
       if _switchExp == TypeInfoKindPrim or _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindArray or _switchExp == TypeInfoKindMap or _switchExp == TypeInfoKindClass then
         hasNilable = true
-      elseif _switchExp == TypeInfoKindFunc then
-        if txt == "form" then
-          hasNilable = true
-        end
+      elseif _switchExp == TypeInfoKindFunc or _switchExp == TypeInfoKindMethod then
+        hasNilable = true
       end
     end
     
     if hasNilable then
-      self.nilableTypeInfo = NormalTypeInfo.new(nil, baseTypeInfo, self, autoFlag, externalFlag, staticFlag, accessMode, "", parentInfo, typeId + 1, TypeInfoKindNilable, itemTypeInfoList, argTypeInfoList, retTypeInfoList)
+      if txt == "..." then
+        self.nilableTypeInfo = self
+      else 
+        self.nilableTypeInfo = NormalTypeInfo.new(nil, baseTypeInfo, self, autoFlag, externalFlag, staticFlag, accessMode, "", parentInfo, typeId + 1, TypeInfoKindNilable, itemTypeInfoList, argTypeInfoList, retTypeInfoList)
+      end
     else 
       self.nilableTypeInfo = rootTypeInfo
     end
@@ -842,6 +856,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   sym2builtInTypeMap[typeTxt] = SymbolInfo.new("pub", typeTxt, info, false)
   if info:get_nilableTypeInfo() ~= rootTypeInfo then
     sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new("pub", typeTxt, info:get_nilableTypeInfo(), false)
+    builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = true
   end
   builtInTypeIdSet[info.typeId] = true
   return info
@@ -992,6 +1007,9 @@ function NormalTypeInfo:isSettableFrom( other )
   if self == builtinTypeStem and not other:get_nilable() then
     return true
   end
+  if self == builtinTypeForm and other:get_kind() == TypeInfoKindFunc then
+    return true
+  end
   if other == builtinTypeNil then
     if self.kind ~= TypeInfoKindNilable then
       return false
@@ -1003,7 +1021,10 @@ function NormalTypeInfo:isSettableFrom( other )
   end
   if self.kind ~= other:get_kind() then
     if self.kind == TypeInfoKindNilable then
-      return (self.orgTypeInfo or _luneScript.error( 'unwrap val is nil' ) ):isSettableFrom( other )
+      if other:get_nilable() then
+        return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
+      end
+      return self:get_orgTypeInfo():isSettableFrom( other )
     end
     return false
   end
@@ -1045,6 +1066,8 @@ function NormalTypeInfo:isSettableFrom( other )
       return false
     elseif _switchExp == TypeInfoKindMethod then
       return false
+    elseif _switchExp == TypeInfoKindNilable then
+      return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
     else 
       return false
     end
@@ -2541,24 +2564,28 @@ function ExpCallNode:processFilter( filter, ... )
   
   filter:processExpCall( self, table.unpack( argList ) )
 end
-function ExpCallNode.new( pos, builtinTypeList, func, argList )
+function ExpCallNode.new( pos, builtinTypeList, func, nilAccess, argList )
   local obj = {}
   setmetatable( obj, { __index = ExpCallNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, func, argList ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, func, nilAccess, argList ); end
 return obj
 end
-function ExpCallNode:__init(pos, builtinTypeList, func, argList) 
+function ExpCallNode:__init(pos, builtinTypeList, func, nilAccess, argList) 
   Node.__init( self, nodeKindExpCall, pos, builtinTypeList)
   
   -- none
   
   self.func = func
+  self.nilAccess = nilAccess
   self.argList = argList
   -- none
   
 end
 function ExpCallNode:get_func()
   return self.func
+end
+function ExpCallNode:get_nilAccess()
+  return self.nilAccess
 end
 function ExpCallNode:get_argList()
   return self.argList

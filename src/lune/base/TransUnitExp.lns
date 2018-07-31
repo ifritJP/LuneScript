@@ -446,9 +446,20 @@ fn TransUnit.analyzeExpCont(
                exp = self.analyzeExpRefItem( nextToken, exp, nextToken.txt == "$[" );
                nextToken = self.getToken();
             }   
-            if nextToken.txt == "(" {
+            if nextToken.txt == "(" or nextToken.txt == "$(" {
                let macroFlag = false;
                let funcTypeInfo = exp.$expType;
+               let nilAccess = nextToken.txt == "$(";
+
+               if nilAccess {
+                  if funcTypeInfo.$nilable {
+                     funcTypeInfo = funcTypeInfo.$orgTypeInfo;
+                  }
+                  else {
+                     nilAccess = false;
+                  }
+               }
+               
                if funcTypeInfo.get_kind() == Ast.TypeInfoKindMacro {
                   macroFlag = true;
                   self.symbol2ValueMapForMacro = {};
@@ -472,7 +483,7 @@ fn TransUnit.analyzeExpCont(
                   let refField = exp@Ast.RefFieldNode;
                   let classType = refField.$prefix.$expType;
                   genericTypeList = classType.$itemTypeInfoList;
-               }    
+               }
                
                self.checkMatchValType(
                   exp.$pos, funcTypeInfo, expList, genericTypeList );
@@ -482,18 +493,30 @@ fn TransUnit.analyzeExpCont(
                   exp = self.evalMacro( firstToken, funcTypeInfo, expList );
                }    
                else {
-                  switch( exp.$expType.$kind ) {
+                  switch( funcTypeInfo.$kind ) {
                      case Ast.TypeInfoKindMethod, Ast.TypeInfoKindFunc {
                      }      
                      default {
                         self.error( "can't call the type -- %s"
-                                    (exp.$expType.getTxt() ) );
+                                    (funcTypeInfo.getTxt() ) );
                      }      
-                  }     
+                  }
+                  let retTypeInfoList:Ast.TypeInfo[] =
+                     funcTypeInfo.get_retTypeInfoList();
+                  if nilAccess {
+                     retTypeInfoList = [];
+                     foreach retType in funcTypeInfo.get_retTypeInfoList() {
+                        if retType.$nilable {
+                           retTypeInfoList.insert( retType );
+                        }
+                        else {
+                           retTypeInfoList.insert( retType.$nilableTypeInfo );
+                        }
+                     }
+                  }
                   exp = new Ast.ExpCallNode(
-                     firstToken.pos,
-                     funcTypeInfo.get_retTypeInfoList(), exp, expList );
-               }    
+                     firstToken.pos, retTypeInfoList, exp, nilAccess, expList );
+               }
 
                nextToken = self.getToken();
             }   
@@ -623,8 +646,14 @@ fn TransUnit.analyzeExpSymbol(
                                 prefixExpType.get_kind() ) );
                }
 
-               // exp = self.createNode(
-               //     nodeKindRefField, firstToken.pos, [ typeInfo ], info );
+               
+               if accessNil {
+                  if! typeInfo {
+                     if not _exp.$nilable {
+                        typeInfo = _exp.$nilableTypeInfo;
+                     }
+                  }
+               }
                if! getterTypeInfo {
                   exp = new Ast.GetFieldNode(
                      firstToken.pos, [ unwrap typeInfo ],
@@ -847,7 +876,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: Parser.Token ): Ast.ExpMacroStatNo
          let exp = self.analyzeExp( true, unwrap op1levelMap[ token.txt ] );
 
          let nextToken = self.getToken();
-         if nextToken.txt ~= "$" {
+         if nextToken.txt ~= "~~" {
             self.pushback();
          }  
 
@@ -1104,7 +1133,7 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int ): Ast.Node {
 
          if macroExpFlag {
             let nextToken = self.getToken();
-            if nextToken.txt ~= "$" {
+            if nextToken.txt ~= "~~" {
                self.pushback();
             }   
          }  

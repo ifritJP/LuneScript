@@ -16,6 +16,10 @@ local function _lune_nilacc( val, fieldName, access, ... )
          elseif typeId == "string" then
             return string.byte( field, ... )
          end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
       end
       return field
    end
@@ -26,6 +30,14 @@ local function _lune_nilacc( val, fieldName, access, ... )
       elseif typeId == "string" then
          return string.byte( val, ... )
       end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
    end
    error( string.format( "illegal access -- %s", access ) )
 end

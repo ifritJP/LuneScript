@@ -402,6 +402,10 @@ fn TransUnit.registBuiltInScope() {
           self.popScope();
           
           Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = true;
+          if typeInfo.$nilableTypeInfo ~= Ast.rootTypeInfo {
+             Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = true;
+          }
+          
           self.scope.add( funcName, typeInfo, "pub", false );
           if methodFlag {
             switch ( name ) {
