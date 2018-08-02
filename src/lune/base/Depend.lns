@@ -29,20 +29,23 @@ path の最終更新日時を取得する。
 @return 1970/1/1 0:0:0 からの秒数。 取得失敗した場合は nil。
 */
 pub fn getFileLastModifiedTime( path: str ): real! {
-    let file = io.open( path );
-    if! file {
-        _exp.close();
-    }
-    else {
-        return nil;
-    }
-    
-    let stream = io.popen( "stat -c '%%Y' %s" (path) );
-    if! stream {
-        let val = _exp.read( '*a' );
-        if! val {
-            return tonumber( _exp );
-        }
-    }
-    return nil;
+   let file = io.open( path );
+   if! file {
+      _exp.close();
+   }
+   else {
+      return nil;
+   }
+   
+   let stream = io.popen( "stat -c '%%Y' %s" (path) );
+   if! stream$.read$('*a') {
+      return tonumber( _exp );
+   }
+   // if! stream {
+   //     let val = _exp.read( '*a' );
+   //     if! val {
+   //         return tonumber( _exp );
+   //     }
+   // }
+   return nil;
 }

@@ -126,7 +126,7 @@ fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) : Parser.
          let arg = new Ast.DeclArgNode( argName.pos, refType.$expTypeList,
                                         argName, refType );    
          
-         self.scope.add( argName.txt, refType.$expType, "local", false );
+         self.scope.add( argName.txt, refType.$expType, "local", false, false );
          argList.insert( arg );
       }
       token = self.getToken();
@@ -154,7 +154,8 @@ pub fn TransUnit.createAST(
 
    if module {
       apply txt of string.gmatch( module, '[^%.]+' ) {
-         moduleTypeInfo = unwrap self.pushClass( nil, false, txt@str, "pub" );
+         moduleTypeInfo = unwrap self.pushClass(
+            true, false, nil, nil, false, txt@str, "pub" );
       }
    }
    self.moduleScope = self.scope;
@@ -185,20 +186,19 @@ pub fn TransUnit.createAST(
             self.error( "scope does not close" );
          }
 
-         if! Parser.StreamParser.create( file, false ) {
-            self.parser = _exp;
-
-            self.analyzeStatementListSubfile( children );
-
-            token = self.getTokenNoErr();
-            if! token {
-               error( "unknown:%d:%d:(%s) %s"
-                      ( _exp.pos.lineNo, _exp.pos.column,
-                        Parser.getKindTxt( _exp.kind ), _exp.txt ) );
-            }
-         }
-         else {
+         let! subParser = Parser.StreamParser.create( file, false ) {
             self.error( "open error -- %s" (file) );
+         };
+         
+         self.parser = subParser;
+
+         self.analyzeStatementListSubfile( children );
+
+         token = self.getTokenNoErr();
+         if! token {
+            error( "unknown:%d:%d:(%s) %s"
+                   ( _exp.pos.lineNo, _exp.pos.column,
+                     Parser.getKindTxt( _exp.kind ), _exp.txt ) );
          }
       }
    }
@@ -226,7 +226,7 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    let nameToken = self.getToken();
    self.checkNextToken( "(" );
 
-   let scope = self.pushScope();
+   let scope = self.pushScope( false );
 
    let argList: Ast.Node[] = [];
    let nextToken = self.analyzeDeclArgList( accessMode, argList );
@@ -296,9 +296,9 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      false, scope, Ast.TypeInfoKindMacro, self.getCurrentNamespaceTypeInfo(),
+      false, false, scope, Ast.TypeInfoKindMacro, self.getCurrentNamespaceTypeInfo(),
       false, false, false, accessMode, nameToken.txt, argTypeList );
-   self.scope.add( nameToken.txt, typeInfo, "local", false );
+   self.scope.add( nameToken.txt, typeInfo, "local", false, false );
 
 
    let declMacroInfo = new Ast.DeclMacroInfo( nameToken, argList, ast, tokenList ) ;
@@ -313,29 +313,82 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    return node;
 }
 
+fn TransUnit.analyzePushClass(
+   classFlag: bool, abstructFlag: bool,
+   firstToken:Parser.Token, name:Parser.Token, accessMode:str ):
+   Parser.Token, Ast.TypeInfo
+{
+   let nextToken = self.getToken();
+   let baseRef:Ast.Node! = nil;
+   let interfaceList:Ast.TypeInfo[] = [];
+   if nextToken.txt == "extend" {
+      nextToken = self.getToken();
+      if nextToken.txt ~= "(" {
+         self.pushback();
+         baseRef = self.analyzeRefType( accessMode );
+         nextToken = self.getToken();
+      }
+      if nextToken.txt == "(" {
+         while true {
+            nextToken = self.getToken();
+            if nextToken.txt == ")" {
+               break;
+            }
+            self.pushback();
+            let ifType = self.analyzeRefType( accessMode );
+            if ifType.$expType.$kind ~= Ast.TypeInfoKindIF {
+               self.error( "%s is not interface" (ifType.$expType.getTxt()) );
+            }
+            interfaceList.insert( ifType.$expType );
+            nextToken = self.getToken();
+            if nextToken.txt ~= "," {
+               if nextToken.txt == ")" {
+                  break;
+               }
+               self.error( "illegal token" );
+            }
+         }
+         nextToken = self.getToken();
+      }
+   }
+
+   let typeInfo:Ast.TypeInfo! = nil;
+   if! baseRef {
+      let baseTypeInfo = _exp.get_expType(); 
+      typeInfo = baseTypeInfo;
+      let! initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
+         // プロトタイプ宣言時は __init がないこともある。
+      }     
+      then {
+         if initTypeInfo.$accessMode == "pri" {
+            self.addErrMess(
+               firstToken.pos, "The access mode of '__init' is 'pri'." );
+         }
+      };
+   }
+   
+   let classTypeInfo = self.pushClass(
+      classFlag, abstructFlag, typeInfo, interfaceList, false, name.txt, accessMode );
+   return nextToken, classTypeInfo;
+}
 
 fn TransUnit.analyzeDeclProto( accessMode: str, firstToken: Parser.Token ) : Ast.Node
 {
    let nextToken = self.getToken();
-   if nextToken.txt == "class" {
-      let name = self.getToken();
-
+   let abstructFlag = false;
+   if nextToken.txt == "abstruct" {
+      abstructFlag = true;
       nextToken = self.getToken();
-      let baseRef:Ast.Node! = nil;
-      if nextToken.txt == "extend" {
-         baseRef = self.analyzeRefType( accessMode );
-         nextToken = self.getToken();
-      }
+   }
 
-      self.checkToken( nextToken, ";" );
-
-      let typeInfo:Ast.TypeInfo! = nil;
-      if! baseRef {
-         typeInfo = _exp.get_expType();
-      }
-      
-      self.pushClass( typeInfo, false, name.txt, accessMode );
+   
+   if nextToken.txt == "class" {
+      let name = self.getSymbolToken();
+   
+      nextToken = self.analyzePushClass(
+         true, abstructFlag, firstToken, name, accessMode );
       self.popClass();
+      self.checkToken( nextToken, ";" );
    }
    else {
       self.error( "illegal proto" );
@@ -359,18 +412,31 @@ fn TransUnit.analyzeDecl(
       token = self.getToken();
    }
 
+   let abstructFlag = false;
+   if token.txt == "abstruct" {
+      abstructFlag = true;
+      token = self.getToken();
+   }
+
    if token.txt == "let" {
       return self.analyzeDeclVar( "let", accessMode, staticFlag, firstToken );
    }
    elseif token.txt == "fn" {
       return self.analyzeDeclFunc(
-         overrideFlag, accessMode, staticFlag, nil, firstToken, nil );
+         abstructFlag, overrideFlag, accessMode, staticFlag, nil, firstToken, nil );
+   }
+   elseif token.txt == "abstruct" {
+      self.checkNextToken( "class" );
+      return self.analyzeDeclClass( true, accessMode, firstToken, "class" );
    }
    elseif token.txt == "class" {
-      return self.analyzeDeclClass( accessMode, firstToken, true );
+      return self.analyzeDeclClass( false, accessMode, firstToken, "class" );
+   }
+   elseif token.txt == "interface" {
+      return self.analyzeDeclClass( true, accessMode, firstToken, "interface" );
    }
    elseif token.txt == "module" {
-      return self.analyzeDeclClass( accessMode, firstToken, false );
+      return self.analyzeDeclClass( false, accessMode, firstToken, "module" );
    }
    elseif token.txt == "proto" {
       return self.analyzeDeclProto( accessMode, firstToken );
@@ -411,7 +477,7 @@ fn TransUnit.analyzeDeclMember(
       // accessor
       self.checkToken( token, ";" );
 
-      self.scope.add( varName.txt, refType.$expType, accessMode, false );
+      self.scope.add( varName.txt, refType.$expType, accessMode, staticFlag, false );
 
       return new Ast.DeclMemberNode(
          firstToken.pos, refType.$expTypeList,
@@ -419,52 +485,35 @@ fn TransUnit.analyzeDeclMember(
    }
 
 fn TransUnit.analyzeDeclMethod(
-   overrideFlag: bool, accessMode: str,
+   abstructFlag: bool, overrideFlag: bool, accessMode: str,
    staticFlag: bool, className: Parser.Token,
    firstToken: Parser.Token, name: Parser.Token ): Ast.Node
 {
    let node = self.analyzeDeclFunc(
-      overrideFlag, accessMode, staticFlag, className, name, name );
+      abstructFlag, overrideFlag, accessMode, staticFlag, className, name, name );
    return node;
 }
 
 fn TransUnit.analyzeDeclClass(
-   classAccessMode: str, firstToken: Parser.Token, classFlag:bool ): Ast.DeclClassNode
+   classAbstructFlag: bool, 
+   classAccessMode: str, firstToken: Parser.Token, mode:str ): Ast.DeclClassNode
 {
    let name = self.getSymbolToken();
 
    let moduleName: Parser.Token! = nil;
-   if not classFlag {
+   if mode == "module" {
       self.checkNextToken( "require" );
       moduleName = self.getToken();
    }
 
-   let nextToken = self.getToken();
+   let nextToken, classTypeInfo = self.analyzePushClass(
+      mode ~= "interface", classAbstructFlag, firstToken, name, classAccessMode );
 
-   let baseRef:Ast.Node! = nil;
-   if nextToken.txt == "extend" {
-      baseRef = self.analyzeRefType( classAccessMode );
-      nextToken = self.getToken();
-   }
    self.checkToken( nextToken, "{" );
 
-
-   let baseTypeInfo:Ast.TypeInfo! = nil;
-   if! baseRef {
-      baseTypeInfo = _exp.get_expType();
-      if! _exp.get_expType().$scope {
-         if! _exp.getTypeInfoChild( "__init" ) {
-            if _exp.$accessMode == "pri" {
-               self.addErrMess(
-                  firstToken.pos, "The access mode of '__init' is 'pri'." );
-            }
-         }
-      }
+   if mode == "class" {
+      self.scope.add( "self", classTypeInfo, "pri", false, false );
    }
-   let classTypeInfo = self.pushClass(
-      baseTypeInfo, false, name.txt, classAccessMode );
-
-   self.scope.add( "self", classTypeInfo, "pri", false );
 
    let fieldList:Ast.Node[] = [];
    let memberList:Ast.DeclMemberNode[] = [];
@@ -498,8 +547,16 @@ fn TransUnit.analyzeDeclClass(
          overrideFlag = true;
          token = self.getToken();
       }   
+      let abstructFlag = false;
+      if token.txt == "abstructFlag" {
+         abstructFlag = true;
+         token = self.getToken();
+      }   
 
       if token.txt == "let" {
+         if mode == "interface" {
+            self.error( "interface can not have member" );
+         }
          let memberNode = self.analyzeDeclMember( accessMode, staticFlag, token );
          fieldList.insert( memberNode );
          memberList.insert( memberNode );
@@ -507,20 +564,23 @@ fn TransUnit.analyzeDeclClass(
       elseif token.txt == "fn" {
          let nameToken = self.getToken();
          let methodNode = self.analyzeDeclMethod(
-            overrideFlag, accessMode, staticFlag, name, token, nameToken );
+            abstructFlag, overrideFlag, accessMode, staticFlag, name, token, nameToken );
          fieldList.insert( methodNode );
       }
       elseif token.txt == "__init" {
+         if mode ~= "class" {
+            self.error( "%s can not have __init method" (mode) );
+         }
          self.checkNextToken( "{" );
          self.analyzeStatementList( initStmtList, "}" );
          self.checkNextToken( "}" );
       }
       elseif token.txt == ";" {
-      }   
+      }
       else {
          self.error( "illegal field" );
-      }   
-   }   
+      }
+   }
 
    let parentInfo = classTypeInfo;
 
@@ -529,22 +589,24 @@ fn TransUnit.analyzeDeclClass(
    // accessor の生成
    foreach memberNode in memberList {
       let memberType = memberNode.$expType;
-      memberTypeList.insert( memberType );
-      if memberNode.$expType.$accessMode ~= "pub" {
-         memberType = Ast.NormalTypeInfo.cloneToPublic( memberType );
-      }   
+      if not memberNode.$staticFlag {
+         memberTypeList.insert( memberType );
+      }
+      // if memberNode.$accessMode ~= "pub" {
+      //    memberType = Ast.NormalTypeInfo.cloneToPublic( memberType );
+      // }   
       let memberName = memberNode.$name;
       let getterName = "get_" .. memberName.txt;
       let accessMode = memberNode.$getterMode;
       if accessMode ~= "none" and not self.scope.getTypeInfoChild( getterName )
       {   
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
-            false, self.pushScope( false ),
+            false, false, self.pushScope( false ),
             Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
             getterName, [], [ memberType ] );
          self.popScope();
          
-         self.scope.add( getterName, retTypeInfo, accessMode, false );
+         self.scope.add( getterName, retTypeInfo, accessMode, false, false );
       }   
       let setterName = "set_" .. memberName.txt;
       accessMode = memberNode.$setterMode;
@@ -554,10 +616,10 @@ fn TransUnit.analyzeDeclClass(
          self.scope.add(
             setterName,
             Ast.NormalTypeInfo.createFunc(
-               false, self.pushScope( false ),
+               false, false, self.pushScope( false ),
                Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
                setterName, [ memberType ], nil 
-            ), accessMode, false );
+            ), accessMode, false, false );
          self.popScope();
       }   
    }   
@@ -565,11 +627,11 @@ fn TransUnit.analyzeDeclClass(
    if not self.scope.getTypeInfoChild( "__init" ) {
       // デフォルトコンストラクタの登録
       let initTypeInfo = Ast.NormalTypeInfo.createFunc(
-         false, self.pushScope( false ),
+         false, false, self.pushScope( false ),
          Ast.TypeInfoKindMethod, parentInfo, true, false, false, "pub",
          "__init", memberTypeList, [] );
       self.popScope();
-      self.scope.add( "__init", initTypeInfo, "pub", false );
+      self.scope.add( "__init", initTypeInfo, "pub", false, false );
    }   
    
 
@@ -589,7 +651,7 @@ pri fn TransUnit.addMethod( className: str, methodNode: Ast.Node, name: str ) {
 
 
 fn TransUnit.analyzeDeclFunc(
-   overrideFlag: bool, accessMode: str,
+   abstructFlag: bool, overrideFlag: bool, accessMode: str,
    staticFlag: bool, classNameToken: Parser.Token!,
    firstToken: Parser.Token, name: Parser.Token! ) : Ast.Node
 {
@@ -607,8 +669,12 @@ fn TransUnit.analyzeDeclFunc(
    if token.txt == "." {
       needPopFlag = true;
       classNameToken = name;
+      
+      let classTypeInfo = unwrap self.scope.getTypeInfoChild( (unwrap name).txt );
 
-      self.pushClass( nil, false, (unwrap name).txt, "pub" );
+      self.pushClass(
+         classTypeInfo.$kind == Ast.TypeInfoKindClass,
+         classTypeInfo.$abstructFlag, nil, nil, false, (unwrap name).txt, "pub" );
 
       name = self.getSymbolToken();
       token = self.getToken();
@@ -675,7 +741,7 @@ fn TransUnit.analyzeDeclFunc(
 
    self.checkToken( token, "(" );
 
-   let scope = self.pushScope();
+   let scope = self.pushScope( false );
 
    let argList:Ast.Node[] = [];
    token = self.analyzeDeclArgList( accessMode, argList );
@@ -697,11 +763,11 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      false, scope, typeKind, self.getCurrentNamespaceTypeInfo(),
+      abstructFlag, false, scope, typeKind, self.getCurrentNamespaceTypeInfo(),
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList );
    if! name {
-      scope.get_parent().add( _exp.txt, typeInfo, accessMode, false );
+      scope.get_parent().add( _exp.txt, typeInfo, accessMode, staticFlag, false );
    }
 
    let node:Ast.Node = self.createNoneNode( firstToken.pos );
@@ -780,7 +846,7 @@ fn TransUnit.analyzeDeclVar(
 
    let expList:Ast.ExpListNode! = nil;
    if token.txt == "=" {
-      expList = self.analyzeExpList();
+      expList = self.analyzeExpList( false );
       if not expList {
          self.error( "expList is nil" );
       }
@@ -880,7 +946,7 @@ fn TransUnit.analyzeDeclVar(
 
    let syncScope:Ast.Scope = self.scope;
    if mode == "sync" {
-      syncScope = self.pushScope();
+      syncScope = self.pushScope( false );
    }
    
    let varList:Ast.VarInfo[] = [];
@@ -906,19 +972,19 @@ fn TransUnit.analyzeDeclVar(
                                 "shadowing variable -- %s" (varName.txt) );
             }
          }
-         self.scope.add( varName.txt, typeInfo, "local", false );
+         self.scope.add( varName.txt, typeInfo, "local", false, false );
       }
    }
 
    let unwrapBlock: Ast.BlockNode! = nil;
    let thenBlock: Ast.BlockNode! = nil;
    if unwrapFlag {
-      let scope = self.pushScope();
+      let scope = self.pushScope( false );
 
       // unwrap ブロックに変数を登録
       foreach varName, index in varNameList {
          self.scope.add(
-            "_" .. varName.txt, orgExpTypeList[ index ], "local", false );
+            "_" .. varName.txt, orgExpTypeList[ index ], "local", false, false );
       }
       
       unwrapBlock = self.analyzeBlock( "let!", scope );

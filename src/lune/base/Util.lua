@@ -41,6 +41,18 @@ local function _lune_nilacc( val, fieldName, access, ... )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
+function _lune_unwrap( val )
+  if val == nil then
+     _luneScript.error( 'unwrap val is nil' )
+  end
+  return val
+end
+function _lune_unwrapDefault( val, defval )
+  if val == nil then
+     return defval
+  end
+  return val
+end
 
 local Depend = require( 'lune.base.Depend' )
 
@@ -74,6 +86,7 @@ function memStream:__init()
   self.txt = ""
 end
 function memStream:write( val )
+
   self.txt = self.txt .. val
 end
 function memStream:get_txt()
@@ -83,14 +96,16 @@ do
   end
 
 local function errorLog( message )
-  local stderr = (io ).stderr or _luneScript.error( 'unwrap val is nil' )
+
+  local stderr = _lune_unwrap( (io ).stderr)
   
-  local write = (stderr.write or _luneScript.error( 'unwrap val is nil' ) )
+  local write = (_lune_unwrap( stderr.write) )
   
   write( stderr, message .. "\n" )
 end
 moduleObj.errorLog = errorLog
 local function debugLog(  )
+
   for level = 2, 6 do
     local debugInfo = debug.getinfo( level )
     
@@ -101,6 +116,7 @@ local function debugLog(  )
 end
 moduleObj.debugLog = debugLog
 local function profile( validTest, func, path )
+
   if not validTest then
     return func(  )
   end
@@ -115,6 +131,7 @@ local function profile( validTest, func, path )
 end
 moduleObj.profile = profile
 local function getReadyCode( lnsPath, luaPath )
+
   local luaTime, lnsTime = Depend.getFileLastModifiedTime( luaPath ), Depend.getFileLastModifiedTime( lnsPath )
   
       if  not luaTime or  not lnsTime then

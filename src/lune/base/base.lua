@@ -138,12 +138,12 @@ local function createPaser( path )
 end
 
 
-local function newTransUnit()
-   return TransUnit.new( convLua.MacroEvalImp.new( mode ) )
+local function newTransUnit( analyzeMode, pos )
+   return TransUnit.new( convLua.MacroEvalImp.new( mode ), analyzeMode, pos )
 end
 
-local function createAst( path, module )
-   local transUnit = newTransUnit()
+local function createAst( path, module, analyzeMode, pos )
+   local transUnit = newTransUnit( analyzeMode, pos )
    return transUnit:createAST( createPaser( path ), nil, module )
 end
 

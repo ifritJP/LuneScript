@@ -25,16 +25,16 @@ moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}
 moduleObj._typeInfoList = _typeInfoList
 _typeInfoList[1] = { parentId = 1, typeId = 113, baseId = 1, txt = 'lune',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {115}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {115}, }
 _typeInfoList[2] = { parentId = 1, typeId = 114, nilable = true, orgTypeId = 113 }
 _typeInfoList[3] = { parentId = 113, typeId = 115, baseId = 1, txt = 'base',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {117}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {117}, }
 _typeInfoList[4] = { parentId = 113, typeId = 116, nilable = true, orgTypeId = 115 }
 _typeInfoList[5] = { parentId = 115, typeId = 117, baseId = 1, txt = 'Depend',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, argTypeId = {}, retTypeId = {}, children = {119}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {119}, }
 _typeInfoList[6] = { parentId = 115, typeId = 118, nilable = true, orgTypeId = 117 }
 _typeInfoList[7] = { parentId = 117, typeId = 119, baseId = 1, txt = 'getFileLastModifiedTime',
-        staticFlag = true, accessMode = 'pub', kind = 7, itemTypeId = {}, argTypeId = {19}, retTypeId = {16}, children = {}, }
+        staticFlag = true, accessMode = 'pub', kind = 8, itemTypeId = {}, ifList = {}, argTypeId = {19}, retTypeId = {16}, children = {}, }
 _typeInfoList[8] = { parentId = 117, typeId = 120, nilable = true, orgTypeId = 119 }
 ----- meta -----
 return moduleObj

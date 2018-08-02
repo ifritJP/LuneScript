@@ -189,7 +189,8 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
 	    pickupTypeId( typeInfo.get_orgTypeInfo(), true );
 	 }
 	 else {
-            if typeInfo.$kind == Ast.TypeInfoKindClass {
+            if typeInfo.$kind == Ast.TypeInfoKindClass or
+               typeInfo.$kind == Ast.TypeInfoKindIF {          
                pickupClassMap[ typeInfo.$typeId ] = typeInfo;
             }
             
@@ -223,6 +224,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
             if typeInfoList {
 	       foreach itemTypeInfo in typeInfoList {
                   if itemTypeInfo.get_kind() == Ast.TypeInfoKindClass or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKindIF or
                      itemTypeInfo.get_kind() == Ast.TypeInfoKindFunc or
                      itemTypeInfo.get_kind() == Ast.TypeInfoKindMethod
                   {                       
@@ -425,6 +427,18 @@ local function _lune_nilacc( val, fieldName, access, ... )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
+function _lune_unwrap( val )
+  if val == nil then
+     _luneScript.error( 'unwrap val is nil' )
+  end
+  return val
+end
+function _lune_unwrapDefault( val, defval )
+  if val == nil then
+     return defval
+  end
+  return val
+end
 ```, baseIndent );
    
 
@@ -501,7 +515,7 @@ pub override fn convFilter.processBlock(
 
    self.setIndent( baseIndent ) ;
    if node.get_blockKind() == "{" {
-      self.write( "end", baseIndent );
+      self.writeln( "end", baseIndent );
    }
 };
 
@@ -553,7 +567,10 @@ pub override fn convFilter.processDeclClass(
          hasConstrFlag = true;
       }
       if field.$kind == Ast.nodeKind.DeclMember {
-         memberList.insert( field@Ast.DeclMemberNode );
+         let declMemberNode = field@Ast.DeclMemberNode;
+         if not declMemberNode.$staticFlag {
+            memberList.insert( declMemberNode );
+         }
       }
       if field.$kind == Ast.nodeKind.DeclMethod {
          let methodNode = field@Ast.DeclMethodNode;
@@ -601,18 +618,19 @@ function %s:__init( %s )
 
    // accessor
    let scope = nodeInfo.get_scope();
-   foreach memberNode in nodeInfo.get_memberList() {
+   foreach memberNode in nodeInfo.$memberList {
       let memberNameToken = memberNode.get_name();
       let memberName = memberNameToken.txt;
       let getterName = "get_" .. memberName;
       let typeInfo = scope.getTypeInfo( getterName, scope, false );
       let autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
+      let prefix = memberNode.$staticFlag and className or "self";
       if memberNode.get_getterMode() ~= "none" and autoFlag
       {       
          self.writeln( ```
 function %s:%s()
-  return self.%s
-end``` ( className, getterName, memberName ), baseIndent );
+  return %s.%s
+end``` ( className, getterName, prefix, memberName ), baseIndent );
       }
       let setterName = "set_" .. memberName;
       typeInfo = scope.getTypeInfo( setterName, scope, false );
@@ -621,8 +639,9 @@ end``` ( className, getterName, memberName ), baseIndent );
       {       
          self.writeln( ```
 function %s:%s( %s )
-  self.%s = %s
-end``` ( className, setterName, memberName, memberName, memberName ), baseIndent );
+  %s.%s = %s
+end``` ( className, setterName, memberName, prefix, memberName, memberName ),
+            baseIndent );
       }
    }
 
@@ -809,7 +828,7 @@ pub override fn convFilter.processDeclMethod(
       }
       filter( arg, self, node, baseIndent );
    }
-   self.write( " )", baseIndent );
+   self.writeln( " )", baseIndent );
    // foreach refType, index in declInfo.retTypeList {
    //    if index > 1 {
    //   self.write( ", " )
@@ -923,10 +942,11 @@ pub override fn convFilter.processDeclVar(
 
       filter( _exp, self, node, baseIndent + stepIndent * 2 );
 
-      if! node.$thenBlock {
+      sync! thenBlock = node.$thenBlock {}
+      then {
          self.writeln( "else", baseIndent + stepIndent * 3 );
-	 filter( _exp, self, node, baseIndent + stepIndent * 3);
-      }   
+	 filter( thenBlock, self, node, baseIndent + stepIndent * 3);
+      };
       
       self.writeln( "end", baseIndent + stepIndent * 1 );
    }
@@ -1013,7 +1033,7 @@ pub override fn convFilter.processDeclFunc(
       }
       filter( arg, self, node, baseIndent );
    }
-   self.write( " )", baseIndent );
+   self.writeln( " )", baseIndent );
    // foreach refType, index in declInfo.get_retTypeList() {
    //    if index > 1 {
    //   self.write( ", " )
@@ -1215,13 +1235,17 @@ pub override fn convFilter.processForsort(
 pub override fn convFilter.processExpUnwrap(
    node: Ast.ExpUnwrapNode, parent: Ast.Node, baseIndent:int )
 {
-   filter( node.$exp, self, node, baseIndent );
-   self.write( " or " );
    if! node.$default {
+      self.write( '_lune_unwrapDefault( ' );
+      filter( node.$exp, self, node, baseIndent );
+      self.write( ', ' );
       filter( _exp, self, node, baseIndent );
+      self.write( ')');
    }
    else {
-      self.write( "_luneScript.error( 'unwrap val is nil' )" );
+      self.write( '_lune_unwrap( ' );
+      filter( node.$exp, self, node, baseIndent );
+      self.write( ')');
    }
 }
 
@@ -1579,7 +1603,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
 
       conv.processDeclMacro( node, node, 0 );
 
-      // Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
+      //Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
       
       let chunk, err = load( oStream.get_txt() );
       if err {

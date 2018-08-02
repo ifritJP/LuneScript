@@ -41,6 +41,18 @@ local function _lune_nilacc( val, fieldName, access, ... )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
+function _lune_unwrap( val )
+  if val == nil then
+     _luneScript.error( 'unwrap val is nil' )
+  end
+  return val
+end
+function _lune_unwrapDefault( val, defval )
+  if val == nil then
+     return defval
+  end
+  return val
+end
 
 local luaKeywordSet = {}
 
@@ -64,10 +76,12 @@ luaKeywordSet["function"] = true
 luaKeywordSet["then"] = true
 luaKeywordSet["until"] = true
 local function isLuaKeyword( txt )
+
   return luaKeywordSet[txt]
 end
 moduleObj.isLuaKeyword = isLuaKeyword
 local function createReserveInfo( luaMode )
+
   local keywordSet = {}
   
   local typeSet = {}
@@ -165,6 +179,7 @@ function TxtStream:__init(txt)
   self.eof = false
 end
 function TxtStream:read( mode )
+
   if self.eof then
     return nil
   end
@@ -212,9 +227,10 @@ function Token:__init(kind, txt, pos, commentList)
   self.kind = kind
   self.txt = txt
   self.pos = pos
-  self.commentList = commentList or {}
+  self.commentList = _lune_unwrapDefault( commentList, {})
 end
 function Token:set_commentList( commentList )
+
   self.commentList = commentList
 end
 function Token:get_commentList()
@@ -245,11 +261,13 @@ local WrapParser = {}
 setmetatable( WrapParser, { __index = Parser } )
 moduleObj.WrapParser = WrapParser
 function WrapParser:getToken(  )
+
   local token = self.parser:getToken(  )
   
   return token
 end
 function WrapParser:getStreamName(  )
+
   return self.name
 end
 function WrapParser.new( parser, name )
@@ -291,9 +309,11 @@ function StreamParser:__init(stream, name, luaMode)
   self.multiCharDelimitMap = multiCharDelimitMap
 end
 function StreamParser:getStreamName(  )
+
   return self.streamName
 end
 function StreamParser.create( path, luaMode )
+
   local stream = io.open( path, "r" )
   
       if  not stream then
@@ -451,19 +471,24 @@ op1Set[',,'] = true
 op1Set[',,,'] = true
 op1Set[',,,,'] = true
 local function getKindTxt( kind )
-  return kind2Txt[kind] or _luneScript.error( 'unwrap val is nil' )
+
+  return _lune_unwrap( kind2Txt[kind])
 end
 moduleObj.getKindTxt = getKindTxt
 local function isOp2( ope )
+
   return op2Set[ope]
 end
 moduleObj.isOp2 = isOp2
 local function isOp1( ope )
+
   return op1Set[ope]
 end
 moduleObj.isOp1 = isOp1
 function StreamParser:parse(  )
+
   local function readLine(  )
+  
     self.lineNo = self.lineNo + 1
     return self.stream:read( '*l' )
   end
@@ -481,6 +506,7 @@ function StreamParser:parse(  )
   local startIndex = 1
   
   local multiComment = function ( comIndex, termStr )
+  
     local searchIndex = comIndex
     
     local comment = ""
@@ -494,13 +520,15 @@ function StreamParser:parse(  )
       end
       comment = comment .. rawLine:sub( searchIndex ) .. "\n"
       searchIndex = 1
-      rawLine = readLine(  ) or _luneScript.error( 'unwrap val is nil' )
+      rawLine = _lune_unwrap( readLine(  ))
     end
   end
   
   
   local addVal = function ( kind, val, column )
+  
     local function createInfo( tokenKind, token, tokenColumn )
+    
       if tokenKind == kindSymb then
         if self.keywordSet[token] then
           tokenKind = kindKywd
@@ -514,6 +542,7 @@ function StreamParser:parse(  )
     end
     
     local function analyzeNumber( token, startIndex )
+    
       local nonNumIndex = token:find( '[^%d]', startIndex )
       
       if not nonNumIndex then
@@ -588,7 +617,7 @@ function StreamParser:parse(  )
               while candidateList do
                 local findFlag = false
                 
-                for __index, candidate in pairs( (candidateList ) or _luneScript.error( 'unwrap val is nil' ) ) do
+                for __index, candidate in pairs( _lune_unwrap( (candidateList )) ) do
                   if candidate == token:sub( index, index + #candidate - 1 ) then
                     delimit = candidate
                     candidateList = self.multiCharDelimitMap[delimit]
@@ -729,6 +758,7 @@ function StreamParser:parse(  )
 end
 
 function StreamParser:getToken(  )
+
   if not self.lineTokenList then
     return nil
   end
@@ -756,6 +786,7 @@ end
 local eofToken = Token.new(kindEof, "<EOF>", Position.new(0, 0), {})
 
 local function getEofToken(  )
+
   return eofToken
 end
 moduleObj.getEofToken = getEofToken
@@ -763,9 +794,11 @@ local DummyParser = {}
 setmetatable( DummyParser, { __index = Parser } )
 moduleObj.DummyParser = DummyParser
 function DummyParser:getToken(  )
+
   return eofToken
 end
 function DummyParser:getStreamName(  )
+
   return "dummy"
 end
 function DummyParser.new(  )

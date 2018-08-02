@@ -1,6 +1,14 @@
 subfile use test.startsub;
 import test.simple;
 
+macro _print( symbol2:stat, format:str! ) {
+   {
+      let work = unwrap format default "%s";
+   }
+   print( string.format( "macro %s " .. ,,work, ,,,,symbol2, ,,symbol2 ));
+}
+
+
 let classA = new simple.ClassA();
 print( classA.func( 0 ) );
 print( classA.func( 0 ) );
@@ -290,7 +298,7 @@ fn testret() : int! {
 }   
 
 class ClassAA {
-   pri static let val:int;
+   pri static let val:int { pub };
 
    __init {
       ClassAA.val = 1;
@@ -302,6 +310,11 @@ class ClassAA {
 }
 
 ClassAA.func();
+_print( `{ ClassAA.$val } );
+{
+   let classAA = new ClassAA();
+}
+
 
 module External require "test.external" {
    pub static let val:int;
@@ -314,13 +327,6 @@ External.func2( 10 );
 External.func2( 20 );
 print( "val", External.val );
 
-
-macro _print( symbol2:stat, format:str! ) {
-   {
-      let work = unwrap format default "%s";
-   }
-   print( string.format( "macro %s " .. ,,work, ,,,,symbol2, ,,symbol2 ));
-}
 
 {
    let foo = {
@@ -354,4 +360,25 @@ macro _print( symbol2:stat, format:str! ) {
    _print( `{ funcnil$() } );
    funcnil = nil;
    _print( `{ funcnil$() } );
+}
+
+
+{
+   interface IF {
+      pub fn func(): int;
+   }
+   class TestCC extend (IF) {
+      pub fn func(): int {
+         return 1;
+      }
+   }
+   let test:IF = new TestCC();
+   _print( `{ test.func() } );
+}
+
+{
+   let val1, val2 = 1, 2;
+   val1, val2 = 3, 4;
+   _print( `{ val1 } );
+   _print( `{ val2 } );
 }

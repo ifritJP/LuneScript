@@ -41,8 +41,21 @@ local function _lune_nilacc( val, fieldName, access, ... )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
+function _lune_unwrap( val )
+  if val == nil then
+     _luneScript.error( 'unwrap val is nil' )
+  end
+  return val
+end
+function _lune_unwrapDefault( val, defval )
+  if val == nil then
+     return defval
+  end
+  return val
+end
 
 local function getFileLastModifiedTime( path )
+
   local file = io.open( path )
   
   do
@@ -59,19 +72,10 @@ local function getFileLastModifiedTime( path )
   local stream = io.popen( string.format( "stat -c '%%Y' %s", path) )
   
   do
-    local _exp = stream
+    local _exp = _lune_nilacc( stream, 'read', 'callmtd' , '*a' )
     if _exp then
     
-        local val = _exp:read( '*a' )
-        
-        do
-          local _exp = val
-          if _exp then
-          
-              return tonumber( _exp )
-            end
-        end
-        
+        return tonumber( _exp )
       end
   end
   

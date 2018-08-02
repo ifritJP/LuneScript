@@ -44,14 +44,14 @@ pub let TypeInfoKindList = 3;
 pub let TypeInfoKindArray = 4;
 pub let TypeInfoKindMap = 5;
 pub let TypeInfoKindClass = 6;
-pub let TypeInfoKindFunc = 7;
-pub let TypeInfoKindMethod = 8;
-pub let TypeInfoKindNilable = 9;
+pub let TypeInfoKindIF = 7;
+pub let TypeInfoKindFunc = 8;
+pub let TypeInfoKindMethod = 9;
+pub let TypeInfoKindNilable = 10;
 
 pub fn isBuiltin( typeId: int ) : bool! {
    return builtInTypeIdSet[ typeId ];
 }
-
 
 pub class OutStream {
    pub fn write( txt: str );
@@ -64,23 +64,54 @@ pub proto class Scope;
 
 /** シンボル情報 */
 pub class SymbolInfo {
+   pri static let symbolIdSeed:int;
+
+   __init {
+      SymbolInfo.symbolIdSeed = 0;
+   }
+   
+   /** このシンボルの ID */
+   pri let symbolId: int { pub };
+   /** このシンボルが属するスコープ */
+   pri let scope: Scope { pub };
    /** シンボルのアクセス */
    pri let accessMode: str { pub };
+   /** */
+   pri let staticFlag: bool { pub };
    /** シンボルの名前 */
    pri let name: str { pub };
    /** シンボルの型 */
    pri let typeInfo: TypeInfo { pub };
    /** このシンボルが mut かどうか */
    pri let mutable: bool { pub };
+
+   pub fn __init(
+      scope: Scope, accessMode: str,
+      staticFlag: bool, name: str, typeInfo: TypeInfo, mutable: bool )
+   {
+      SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1;
+      self.symbolId = SymbolInfo.symbolIdSeed;
+      self.scope = scope;
+      self.accessMode = accessMode;
+      self.staticFlag = staticFlag;
+      self.name = name;
+      self.typeInfo = typeInfo;
+      self.mutable = mutable;
+   }
    
    /**
 このシンボルにアクセス可能かどうか調べる。
 
-@param nsScope このシンボルが属するスコープ。
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub fn canAccess( nsScope:Scope, fromScope:Scope ): SymbolInfo!;
+   pub fn canAccess( fromScope:Scope ): SymbolInfo!;
 }
+
+pub class DataOwnerInfo {
+   pub let hasData:bool;
+   pub let symbolInfo: SymbolInfo;
+}
+
 
 pub class Scope {
    // このスコープのオーナーの TypeInfo。
@@ -95,11 +126,16 @@ pub class Scope {
    pri let classFlag: bool;
    // 継承しているスコープ。
    pri let inheritList: Scope[];
+   /** 所有権情報 */
+   pri let symbolId2DataOwnerInfo: Map<int,DataOwnerInfo>;
+      
+      
    pub fn __init( parent: Scope!, classFlag: bool, inheritList: Scope[] ) {
       self.parent = unwrap parent default self;
       self.symbol2TypeInfoMap = {};
       self.inheritList = inheritList;
       self.classFlag = classFlag;
+      self.symbolId2DataOwnerInfo = {};
    }
 
    pub fn set_ownerTypeInfo( owner: TypeInfo! ) {
@@ -111,6 +147,11 @@ pub class Scope {
          return _exp.$typeInfo;
       } 
       return nil;
+   }
+
+   pub fn setData( symbolInfo:SymbolInfo ) {
+      self.symbolId2DataOwnerInfo[ symbolInfo.$symbolId ] =
+      new DataOwnerInfo( true, symbolInfo );
    }
 
    pub fn getNSTypeInfo(): TypeInfo;
@@ -140,9 +181,17 @@ pub class TypeInfo {
       return rootTypeId;
    }
 
-   pub fn isInheritFrom( other:TypeInfo ) : bool;
+   pub fn isInheritFrom( other:TypeInfo ) : bool {
+      return false;
+   }
 
-   pub fn isSettableFrom( other:TypeInfo ) : bool;
+   pub fn isSettableFrom( other:TypeInfo ) : bool {
+      return false;
+   }
+
+   pub fn get_abstructFlag(): bool {
+      return false;
+   }
    
    pub fn getTxt() : str {
       return "";
@@ -160,6 +209,9 @@ pub class TypeInfo {
       return false;
    }
    
+   pub fn get_interfaceList(): TypeInfo[] {
+      return dummyList;
+   }  
    pub fn get_itemTypeInfoList(): TypeInfo[] {
       return dummyList;
    }  
@@ -218,11 +270,11 @@ pub fn Scope.getTypeInfoField(
 {
    if self.classFlag {
       if includeSelfFlag {
-         if! self.symbol2TypeInfoMap[ name ] {
-            if! _exp.canAccess( self, fromScope ) {
-               return _exp.$typeInfo;
-            }   
-            return nil;
+         if! self.symbol2TypeInfoMap$[ name ] {
+            let! symbolInfo = _exp.canAccess( fromScope ) {
+               return nil;
+            };
+            return symbolInfo.$typeInfo;
          }  
       } 
       if self.inheritList {
@@ -250,10 +302,10 @@ pub fn Scope.getTypeInfo(
 {
    let typeInfo:TypeInfo! = nil;
    if! self.symbol2TypeInfoMap[ name ] {
-      if! _exp.canAccess( self, fromScope ) {
-         return _exp.$typeInfo;
-      } 
-      return nil;
+      let! symbolInfo = _exp.canAccess( fromScope ) {
+         return nil;
+      };
+      return symbolInfo.$typeInfo;
    }
    if not onlySameNsFlag {
       if self.inheritList {
@@ -299,7 +351,8 @@ pub fn Scope.getSymbolTypeInfo(
       { 
          validThisScope = true;
       } 
-      if _exp.$kind == TypeInfoKindClass and name == "self" {
+      if ( _exp.$kind == TypeInfoKindIF or
+           _exp.$kind == TypeInfoKindClass ) and name == "self" {
          validThisScope = true;
       } 
    } 
@@ -308,7 +361,7 @@ pub fn Scope.getSymbolTypeInfo(
    }
    if validThisScope {
       if! self.symbol2TypeInfoMap[ name ] {
-         return _exp.canAccess( self, fromScope );
+         return _exp.canAccess( fromScope );
       } 
    }
    if self.parent ~= self {
@@ -318,17 +371,19 @@ pub fn Scope.getSymbolTypeInfo(
 }
 
 
-pub fn Scope.add( name:str, typeInfo: TypeInfo, accessMode:str, mutable:bool ) {
+pub fn Scope.add( name:str, typeInfo: TypeInfo, accessMode:str,
+                  staticFlag:bool, mutable:bool ) {  
    self.symbol2TypeInfoMap[ name ] =
-   new SymbolInfo( accessMode, name, typeInfo, mutable );
+   new SymbolInfo( self, accessMode, staticFlag, name, typeInfo, mutable );
 }
 pub fn Scope.addClass(
    name:str, typeInfo: TypeInfo, scope: Scope, mutable:bool ) {
-      self.add( name, typeInfo, typeInfo.$accessMode, mutable );
+      self.add( name, typeInfo, typeInfo.$accessMode, false, mutable );
    } 
 
 fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
-   if! scope {
+   sync! scope = scope { return; }
+   then {
       if readyIdSet[ scope ] {
          return;
       } 
@@ -337,17 +392,17 @@ fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
          error("illegal");
       }   
       
-      forsort symbolInfo, symbol in _exp.$symbol2TypeInfoMap {
-         Util.errorLog( "scope: %s, %s, %s" ( prefix, _exp, symbol ) );
+      forsort symbolInfo, symbol in scope.$symbol2TypeInfoMap {
+         Util.errorLog( "scope: %s, %s, %s" ( prefix, scope, symbol ) );
          if! symbolInfo.$typeInfo.$scope {
             dumpScopeSub( _exp, prefix .. "  ", readyIdSet );
          }  
       } 
-   }
+   };
 }
 
 fn dumpScope( scope: Scope!, prefix:str ) {
-   dumpScopeSub( scope, prefix, {}@Map<Scope,bool> );
+   dumpScopeSub( scope, prefix, {} );
 }
 
 
@@ -370,7 +425,7 @@ pub fn Scope.getClassTypeInfo(): TypeInfo {
    let scope = self;
    while scope.ownerTypeInfo ~= rootTypeInfo {
       if! scope.ownerTypeInfo {
-         if _exp.$kind == TypeInfoKindClass {
+         if _exp.$kind == TypeInfoKindClass or _exp.$kind == TypeInfoKindIF {
             return _exp;
          }  
       } 
@@ -382,12 +437,11 @@ pub fn Scope.getClassTypeInfo(): TypeInfo {
 
 /**
 このシンボルが、fromScope のスコープからアクセスできるか調べる。
-このシンボルは、 nsScope で宣言されているものとする。
  */
-pub fn SymbolInfo.canAccess( nsScope:Scope, fromScope:Scope ): SymbolInfo!
+pub fn SymbolInfo.canAccess( fromScope:Scope ): SymbolInfo!
 {
    let typeInfo = self.$typeInfo;
-   if nsScope == fromScope {
+   if self.scope == fromScope {
       return self;
    }
    switch self.$accessMode {
@@ -395,7 +449,7 @@ pub fn SymbolInfo.canAccess( nsScope:Scope, fromScope:Scope ): SymbolInfo!
          return self;
       }           
       case "pro" {
-         let nsClass = nsScope.getClassTypeInfo();
+         let nsClass = self.scope.getClassTypeInfo();
          let fromClass = fromScope.getClassTypeInfo();
          if fromClass.isInheritFrom( nsClass ) {
             return self;
@@ -406,7 +460,7 @@ pub fn SymbolInfo.canAccess( nsScope:Scope, fromScope:Scope ): SymbolInfo!
          return self;
       } 
       case "pri" {
-         let nsClass = nsScope.getClassTypeInfo();
+         let nsClass = self.scope.getClassTypeInfo();
          let fromClass = fromScope.getClassTypeInfo();
          if nsClass == fromClass {
             return self;
@@ -444,11 +498,15 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let accessMode: str { pub };
    // コンパイラで自動生成された型情報の場合 true。 accessor 等。
    pri let autoFlag: bool { pub };
+   /** */
+   pri let abstructFlag: bool { pub };
 
    // unwrap 後の TypeInfo。 無効な場合は rootTypeInfo。
    pri let orgTypeInfo: TypeInfo { pub };
    // 基底クラス。 無効な場合は rootTypeInfo。
    pri let baseTypeInfo: TypeInfo { pub };
+   // インタフェースのリスト。
+   pri let interfaceList: TypeInfo[] { pub };
 
    // この型が nilable を表わす型かどうか。
    pri let nilable: bool { pub };
@@ -456,8 +514,10 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let nilableTypeInfo: TypeInfo { pub };
    // 子のタイプリスト。 このタイプがクラスなら、メソッドが子。
    pri let children: TypeInfo[] { pub };
+   
 
-   fn __init( scope: Scope!, baseTypeInfo: TypeInfo!, orgTypeInfo: TypeInfo!,
+   fn __init( abstructFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
+              interfaceList: TypeInfo[]!, orgTypeInfo: TypeInfo!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool, accessMode: str,
               txt: str, parentInfo: TypeInfo!, typeId: int, kind: int,
               itemTypeInfoList: TypeInfo[]!,
@@ -465,7 +525,9 @@ pub class NormalTypeInfo extend TypeInfo {
    {
       super( scope );
 
+      self.abstructFlag = abstructFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default rootTypeInfo;
+      self.interfaceList = unwrap interfaceList default [];
       self.autoFlag = autoFlag;
       self.externalFlag = externalFlag;
       self.staticFlag = staticFlag;
@@ -504,7 +566,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
          switch ( kind ) {
             case TypeInfoKindPrim, TypeInfoKindList, TypeInfoKindArray,
-                 TypeInfoKindMap, TypeInfoKindClass
+                 TypeInfoKindMap, TypeInfoKindClass, TypeInfoKindIF
             {
                hasNilable = true;
             }   
@@ -518,7 +580,7 @@ pub class NormalTypeInfo extend TypeInfo {
             }
             else {
                self.nilableTypeInfo = new NormalTypeInfo(
-                  nil, baseTypeInfo, self, autoFlag, externalFlag,
+                  false, nil, baseTypeInfo, interfaceList, self, autoFlag, externalFlag,
                   staticFlag, accessMode, "", parentInfo, typeId + 1,
                   TypeInfoKindNilable, itemTypeInfoList,
                   argTypeInfoList, retTypeInfoList );
@@ -610,12 +672,13 @@ pub class NormalTypeInfo extend TypeInfo {
       stream.write(
          txt .. serializeTypeInfoList( "itemTypeId = {",
                                        self.itemTypeInfoList ) ..
+         serializeTypeInfoList( "ifList = {", self.interfaceList ) ..
          serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) ..
          serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) ..
          serializeTypeInfoList( "children = {", self.children, true ) .. "}\n" );
    }
 
-   pub fn equalsSub( typeInfo: TypeInfo, depth:int ): bool {
+   pub fn equalsSub( typeInfo: TypeInfo ): bool {
       if not typeInfo {
          return false;
       } 
@@ -645,9 +708,9 @@ pub class NormalTypeInfo extend TypeInfo {
            self.retTypeInfoList and not typeInfo.$retTypeInfoList or
            self.orgTypeInfo ~= typeInfo.$orgTypeInfo )
       { 
-         Util.errorLog( "%s, %s", self.itemTypeInfoList, typeInfo.$itemTypeInfoList );
-         Util.errorLog( "%s, %s", self.retTypeInfoList, typeInfo.$retTypeInfoList );
-         Util.errorLog( "%s, %s", self.orgTypeInfo, typeInfo.$orgTypeInfo );
+         Util.errorLog( "%s, %s" (self.itemTypeInfoList, typeInfo.$itemTypeInfoList ) );
+         Util.errorLog( "%s, %s" ( self.retTypeInfoList, typeInfo.$retTypeInfoList ) );
+         Util.errorLog( "%s, %s" ( self.orgTypeInfo, typeInfo.$orgTypeInfo ) );
          //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
          //                                     typeInfo.getTxt(), typeInfo.typeId ) );
          return false;
@@ -658,7 +721,7 @@ pub class NormalTypeInfo extend TypeInfo {
             return false;
          }  
          foreach item, index in self.itemTypeInfoList {
-            if not item.equals( typeInfo.$itemTypeInfoList[ index ], depth + 1 ) {
+            if not item.equals( typeInfo.$itemTypeInfoList[ index ] ) {
                //              error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
                //                                             typeInfo.getTxt(), typeInfo.typeId ) );
                return false;
@@ -673,7 +736,7 @@ pub class NormalTypeInfo extend TypeInfo {
             return false;
          }  
          foreach item, index in self.retTypeInfoList {
-            if not item.equals( typeInfo.$retTypeInfoList[ index ], depth + 1 ) {
+            if not item.equals( typeInfo.$retTypeInfoList[ index ] ) {
                //              error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
                //                                             typeInfo.getTxt(), typeInfo.typeId ) );
                return false;
@@ -681,7 +744,7 @@ pub class NormalTypeInfo extend TypeInfo {
          }  
       } 
 
-      if self.orgTypeInfo and not self.orgTypeInfo.equals( typeInfo.$orgTypeInfo, depth + 1 ) {
+      if self.orgTypeInfo and not self.orgTypeInfo.equals( typeInfo.$orgTypeInfo ) {
          //      error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
          //                                     typeInfo.getTxt(), typeInfo.typeId ) );
          return false;
@@ -691,24 +754,25 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    pub override fn equals( typeInfo: TypeInfo ): bool {
-      return self.equalsSub( typeInfo, 1 );
+      return self.equalsSub( typeInfo );
    }
 
 
-   pub static fn cloneToPublic( typeInfo: TypeInfo ): NormalTypeInfo {
-      typeIdSeed = typeIdSeed + 1;
-      return new NormalTypeInfo(
-         typeInfo.$scope, typeInfo.$baseTypeInfo, nil, typeInfo.$autoFlag,
-         typeInfo.$externalFlag, typeInfo.$staticFlag,
-         "pub", typeInfo.$rawTxt, typeInfo.$parentInfo, typeIdSeed, typeInfo.$kind,
-         typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
-         typeInfo.$retTypeInfoList );
-   }
+   // pub static fn cloneToPublic( typeInfo: TypeInfo ): NormalTypeInfo {
+   //    typeIdSeed = typeIdSeed + 1;
+   //    return new NormalTypeInfo(
+   //       typeInfo.$scope, typeInfo.$baseTypeInfo, nil, typeInfo.$autoFlag,
+   //       typeInfo.$externalFlag, typeInfo.$staticFlag,
+   //       "pub", typeInfo.$rawTxt, typeInfo.$parentInfo, typeIdSeed, typeInfo.$kind,
+   //       typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
+   //       typeInfo.$retTypeInfoList );
+   // }
 
 
 
    pub static fn create(
-      scope: Scope!, baseInfo: TypeInfo,
+      abstructFlag: bool, scope: Scope!, baseInfo: TypeInfo,
+      interfaceList: TypeInfo[],
       parentInfo: TypeInfo, staticFlag: bool, kind: int, txt: str,
       itemTypeInfo: TypeInfo[],
       argTypeInfoList: TypeInfo[],
@@ -721,9 +785,9 @@ pub class NormalTypeInfo extend TypeInfo {
          }  
          typeIdSeed = typeIdSeed + 1;
          let info = new NormalTypeInfo(
-            scope, baseInfo, nil, false, true, staticFlag, "pub", txt,
-            parentInfo, typeIdSeed, kind, itemTypeInfo,
-            argTypeInfoList, retTypeInfoList ); 
+            abstructFlag, scope, baseInfo, interfaceList, nil, false, true,
+            staticFlag, "pub", txt, parentInfo, typeIdSeed, kind,
+            itemTypeInfo, argTypeInfoList, retTypeInfoList ); 
          return info;
       } 
 }
@@ -753,28 +817,30 @@ pub static fn NormalTypeInfo.createBuiltin(
 
       let scope:Scope! = nil;
       switch kind {
-         case TypeInfoKindList, TypeInfoKindClass,
+         case TypeInfoKindList, TypeInfoKindClass, TypeInfoKindIF,
               TypeInfoKindFunc, TypeInfoKindMethod,
               TypeInfoKindMacro
          {  
             scope = new Scope(
                rootScope,
-               kind == TypeInfoKindClass or kind == TypeInfoKindList, [] );
+               kind == TypeInfoKindClass or
+               kind == TypeInfoKindIF or kind == TypeInfoKindList, [] );
          }  
       } 
       
-      let info = new NormalTypeInfo( scope, nil, nil, false, false, false,
+      let info = new NormalTypeInfo( false, scope, nil, nil, nil, false, false, false,
                                      "pub", typeTxt, typeInfoRoot, typeId, kind,
                                      [], argTypeList, retTypeList );
       if scope {
-         rootScope.add( typeTxt, info, "pub", false );
+         rootScope.add( typeTxt, info, "pub", false, false );
       } 
 
       typeInfoKind[ idName ] = info;
-      sym2builtInTypeMap[ typeTxt ] = new SymbolInfo( "pub", typeTxt, info, false );
+      sym2builtInTypeMap[ typeTxt ] =
+         new SymbolInfo( rootScope, "pub", false, typeTxt, info, false );
       if info.$nilableTypeInfo ~= rootTypeInfo {
          sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
-            "pub", typeTxt, info.$nilableTypeInfo, false );
+            rootScope, "pub", false, typeTxt, info.$nilableTypeInfo, false );
          builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = true;
       } 
       
@@ -789,7 +855,7 @@ pub static fn NormalTypeInfo.createList(
       } 
       typeIdSeed = typeIdSeed + 1;
       return new NormalTypeInfo(
-         nil, nil, nil, false, false, false, accessMode, "",
+         false, nil, nil, nil, nil, false, false, false, accessMode, "",
          typeInfoRoot, typeIdSeed, TypeInfoKindList, itemTypeInfo );
    }
 
@@ -798,7 +864,7 @@ pub static fn NormalTypeInfo.createArray(
    parentInfo: TypeInfo, itemTypeInfo: TypeInfo[] ): TypeInfo {
       typeIdSeed = typeIdSeed + 1;
       return new NormalTypeInfo(
-         nil, nil, nil, false, false, false, accessMode, "",
+         false, nil, nil, nil, nil, false, false, false, accessMode, "",
          typeInfoRoot, typeIdSeed, TypeInfoKindArray, itemTypeInfo );
    }
 
@@ -808,13 +874,15 @@ pub static fn NormalTypeInfo.createMap(
 {
    typeIdSeed = typeIdSeed + 1;
    return new NormalTypeInfo(
-      nil, nil, nil, false, false, false, accessMode, "Map",
+      false, nil, nil, nil, nil, false, false, false, accessMode, "Map",
       typeInfoRoot, typeIdSeed, TypeInfoKindMap,
       [ keyTypeInfo, valTypeInfo ] );
 }
 
 pub static fn NormalTypeInfo.createClass(
-   scope: Scope!, baseInfo: TypeInfo!, parentInfo: TypeInfo, externalFlag: bool,
+   classFlag: bool, abstructFlag: bool, scope: Scope!,
+   baseInfo: TypeInfo!, interfaceList: TypeInfo[]!,
+   parentInfo: TypeInfo, externalFlag: bool,
    accessMode: str, className: str ): TypeInfo
 {
    // if className == "str" {
@@ -831,13 +899,15 @@ pub static fn NormalTypeInfo.createClass(
    
    typeIdSeed = typeIdSeed + 1;
    let info = new NormalTypeInfo(
-      scope, baseInfo, nil, false, externalFlag, false, accessMode,
-      className, parentInfo, typeIdSeed, TypeInfoKindClass );
+      abstructFlag, scope, baseInfo, interfaceList, nil, false,
+      externalFlag, false, accessMode,
+      className, parentInfo, typeIdSeed,
+      classFlag and TypeInfoKindClass or TypeInfoKindIF );
    return info;
 }
 
 pub static fn NormalTypeInfo.createFunc(
-   builtinFlag:bool, scope: Scope!, kind: int, parentInfo: TypeInfo,
+   abstructFlag: bool, builtinFlag:bool, scope: Scope!, kind: int, parentInfo: TypeInfo,
    autoFlag: bool, externalFlag: bool, staticFlag: bool, accessMode: str,
    funcName: str, argTypeList: TypeInfo[]!, retTypeInfoList: TypeInfo[]! ): TypeInfo
 {
@@ -847,7 +917,7 @@ pub static fn NormalTypeInfo.createFunc(
    
    typeIdSeed = typeIdSeed + 1;
    let info = new NormalTypeInfo(
-      scope, nil, nil, autoFlag, externalFlag, staticFlag,
+      abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, typeIdSeed,
       kind, [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [] );
@@ -903,7 +973,9 @@ pub override fn NormalTypeInfo.isInheritFrom( other:TypeInfo ) : bool
    if self.$typeId == otherTypeId {
       return true;
    }
-   if self.$kind ~= self.$kind or self.$kind ~= TypeInfoKindClass {
+   if ( self.$kind ~= TypeInfoKindClass and self.$kind ~= TypeInfoKindIF ) or
+      ( other.$kind ~= TypeInfoKindClass and other.$kind ~= TypeInfoKindIF )
+   {  
       return false;
    }
    let baseTypeInfo = self.$baseTypeInfo;
@@ -913,6 +985,14 @@ pub override fn NormalTypeInfo.isInheritFrom( other:TypeInfo ) : bool
       } 
       baseTypeInfo = baseTypeInfo.$baseTypeInfo;
    };
+   foreach ifType in self.$interfaceList {
+      while ifType ~= rootTypeInfo {
+         if otherTypeId == ifType.$typeId {
+            return true;
+         }
+         ifType = ifType.$baseTypeInfo;
+      }; 
+   }
    return false;
 }
 
@@ -947,6 +1027,11 @@ pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
          }
          return self.$orgTypeInfo.isSettableFrom( other );
       } 
+      if ( self.$kind == TypeInfoKindClass or self.$kind == TypeInfoKindIF ) and
+         ( other.$kind == TypeInfoKindClass or other.$kind == TypeInfoKindIF )
+      {
+         return other.isInheritFrom( self );
+      }
       return false;
    }
    switch ( self.kind ) {
@@ -977,7 +1062,7 @@ pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
          checkEqualsItemType( self, other, 2 );
          return true;
       }       
-      case TypeInfoKindClass {
+      case TypeInfoKindClass, TypeInfoKindIF {
          return other.isInheritFrom( self );
       }       
       case TypeInfoKindFunc {

@@ -1,0 +1,13 @@
+class Test {
+   pri static let val:int {pub};
+   pri let val1:int {pub};
+   pub fn __init( val:int ) {
+      self.val1 = val;
+   }
+   pub fn func( val:int ) {
+      self.val1 = val;
+   }
+}
+
+let test = new Test(1,2);
+test.func( 1, 1.0, 2.0 );

@@ -37,14 +37,14 @@
 		   "nil" "null" "true" "switch" "case" "default" "extend" "proto"
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" 
 		   "__init", "mut" "pub" "pro" "pri" "form" "advertise"
-		   "wrap" "static" "global" "sync" "then" "do"
+		   "wrap" "static" "global" "sync" "then" "do" "interface"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
 				      '("let" "let\!" "let\*" "if" "elseif" "else" "while"
 					"repeat" "for" "apply" "foreach" "forsort"
 					"class" "pub" "pro" "pri" "form" "advertise"
-					"switch" "proto" "case"
+					"switch" "proto" "case" "interface"
 					"wrap" "static" "trust" "import" "''"))
 				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst
@@ -181,6 +181,7 @@
 	 (comment-start . "//")
 	 (imenu-generic-expression . ,lns-imenu-generic-expression)
          ))
+  (set (make-local-variable 'isearch-wrap-function) 'lns-isearch-wrap-function)
   )
 
 
@@ -566,5 +567,45 @@ pattern は  {, }, {{, }} のいずれか。
   (interactive "p")
   (error "not support now")
 )
+
+(defun lns-get-subfile-list (mode)
+  (let ((txt (buffer-substring-no-properties (point-min) (point-max)))
+	list start-pos)
+    (while (setq start-pos
+		 (string-match (concat "^subfile[ \t]+" mode "[ \t]+.+\\.\\([^\.;]+\\);")
+			       txt start-pos))
+      (setq start-pos (1+ start-pos))
+      (setq list (append list (list (concat (match-string 1 txt) ".lns")))))
+    list))
+
+(defun lns-isearch-wrap-function ()
+  "subfile を辿って isearch"
+  (isearch-dehighlight)
+  (let ((now-file (file-name-nondirectory (buffer-file-name)))
+	file-list next-file)
+    (cond
+     ((setq file-list (lns-get-subfile-list "use"))
+      ;; サブファイルがある場合、サブファイルを開いて検索する
+      (find-file (car file-list)))
+     ((setq file-list (lns-get-subfile-list "owner"))
+      ;; オーナーファイルがある場合、次のサブファイルを開いて検索する
+      (find-file (car file-list))
+      (setq file-list (lns-get-subfile-list "use"))
+      (when (not isearch-forward)
+	(setq file-list (reverse file-list)))
+      (setq file-list (member now-file file-list))
+      (setq next-file (car (cdr file-list)))
+      (when next-file
+	(find-file next-file))
+     )))
+  (setq isearch-other-end nil)
+  (cond
+   (isearch-forward
+    (goto-char 1)
+    ;;(isearch-repeat-forward)
+    )
+   (t
+    (goto-char (point-max)))
+   ))
 
 (provide 'lns-mode)

@@ -29,7 +29,7 @@ pub fn ClassA.sub() : int {
 pub class Super {
     pro let val:int {pub};
     pub fn sub(): int {
-        return 1;
+        return self.val;
     }
 }
 
@@ -49,5 +49,5 @@ pub class ClassB extend Super {
     }
 }
 
-let classB = new ClassB();
+let classB = new ClassB( 1 );
 print( "classB.sub", classB.sub() );

@@ -41,6 +41,18 @@ local function _lune_nilacc( val, fieldName, access, ... )
    end
    error( string.format( "illegal access -- %s", access ) )
 end
+function _lune_unwrap( val )
+  if val == nil then
+     _luneScript.error( 'unwrap val is nil' )
+  end
+  return val
+end
+function _lune_unwrapDefault( val, defval )
+  if val == nil then
+     return defval
+  end
+  return val
+end
 
 local Parser = require( 'lune.base.Parser' )
 
@@ -96,19 +108,24 @@ local TypeInfoKindClass = 6
 
 moduleObj.TypeInfoKindClass = TypeInfoKindClass
 
-local TypeInfoKindFunc = 7
+local TypeInfoKindIF = 7
+
+moduleObj.TypeInfoKindIF = TypeInfoKindIF
+
+local TypeInfoKindFunc = 8
 
 moduleObj.TypeInfoKindFunc = TypeInfoKindFunc
 
-local TypeInfoKindMethod = 8
+local TypeInfoKindMethod = 9
 
 moduleObj.TypeInfoKindMethod = TypeInfoKindMethod
 
-local TypeInfoKindNilable = 9
+local TypeInfoKindNilable = 10
 
 moduleObj.TypeInfoKindNilable = TypeInfoKindNilable
 
 local function isBuiltin( typeId )
+
   return builtInTypeIdSet[typeId]
 end
 moduleObj.isBuiltin = isBuiltin
@@ -135,24 +152,34 @@ local dummyList = {}
 
 local SymbolInfo = {}
 moduleObj.SymbolInfo = SymbolInfo
--- none
-function SymbolInfo.new( accessMode, name, typeInfo, mutable )
+function SymbolInfo.new( scope, accessMode, staticFlag, name, typeInfo, mutable )
   local obj = {}
   setmetatable( obj, { __index = SymbolInfo } )
-  if obj.__init then
-    obj:__init( accessMode, name, typeInfo, mutable )
-  end        
-  return obj 
- end         
-function SymbolInfo:__init( accessMode, name, typeInfo, mutable ) 
-            
-self.accessMode = accessMode
+  if obj.__init then obj:__init( scope, accessMode, staticFlag, name, typeInfo, mutable ); end
+return obj
+end
+function SymbolInfo:__init(scope, accessMode, staticFlag, name, typeInfo, mutable) 
+  SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1
+  self.symbolId = SymbolInfo.symbolIdSeed
+  self.scope = scope
+  self.accessMode = accessMode
+  self.staticFlag = staticFlag
   self.name = name
   self.typeInfo = typeInfo
   self.mutable = mutable
-  end
+end
+-- none
+function SymbolInfo:get_symbolId()
+  return self.symbolId
+end
+function SymbolInfo:get_scope()
+  return self.scope
+end
 function SymbolInfo:get_accessMode()
   return self.accessMode
+end
+function SymbolInfo:get_staticFlag()
+  return self.staticFlag
 end
 function SymbolInfo:get_name()
   return self.name
@@ -163,6 +190,25 @@ end
 function SymbolInfo:get_mutable()
   return self.mutable
 end
+do
+  SymbolInfo.symbolIdSeed = 0
+  end
+
+local DataOwnerInfo = {}
+moduleObj.DataOwnerInfo = DataOwnerInfo
+function DataOwnerInfo.new( hasData, symbolInfo )
+  local obj = {}
+  setmetatable( obj, { __index = DataOwnerInfo } )
+  if obj.__init then
+    obj:__init( hasData, symbolInfo )
+  end        
+  return obj 
+ end         
+function DataOwnerInfo:__init( hasData, symbolInfo ) 
+            
+self.hasData = hasData
+  self.symbolInfo = symbolInfo
+  end
 do
   end
 
@@ -175,15 +221,18 @@ function Scope.new( parent, classFlag, inheritList )
 return obj
 end
 function Scope:__init(parent, classFlag, inheritList) 
-  self.parent = parent or self
+  self.parent = _lune_unwrapDefault( parent, self)
   self.symbol2TypeInfoMap = {}
   self.inheritList = inheritList
   self.classFlag = classFlag
+  self.symbolId2DataOwnerInfo = {}
 end
 function Scope:set_ownerTypeInfo( owner )
+
   self.ownerTypeInfo = owner
 end
 function Scope:getTypeInfoChild( name )
+
   do
     local _exp = self.symbol2TypeInfoMap[name]
     if _exp then
@@ -193,6 +242,10 @@ function Scope:getTypeInfoChild( name )
   end
   
   return nil
+end
+function Scope:setData( symbolInfo )
+
+  self.symbolId2DataOwnerInfo[symbolInfo:get_symbolId()] = DataOwnerInfo.new(true, symbolInfo)
 end
 -- none
 function Scope:get_ownerTypeInfo()
@@ -231,74 +284,111 @@ function TypeInfo:__init(scope)
   
 end
 function TypeInfo:getParentId(  )
+
   return rootTypeId
 end
 function TypeInfo:get_baseId(  )
+
   return rootTypeId
 end
--- none
--- none
+function TypeInfo:isInheritFrom( other )
+
+  return false
+end
+function TypeInfo:isSettableFrom( other )
+
+  return false
+end
+function TypeInfo:get_abstructFlag(  )
+
+  return false
+end
 function TypeInfo:getTxt(  )
+
   return ""
 end
 function TypeInfo:serialize( stream )
+
   return 
 end
 function TypeInfo:equals( typeInfo )
+
   return false
 end
 function TypeInfo:get_externalFlag(  )
+
   return false
 end
+function TypeInfo:get_interfaceList(  )
+
+  return dummyList
+end
 function TypeInfo:get_itemTypeInfoList(  )
+
   return dummyList
 end
 function TypeInfo:get_argTypeInfoList(  )
+
   return dummyList
 end
 function TypeInfo:get_retTypeInfoList(  )
+
   return dummyList
 end
 function TypeInfo:get_parentInfo(  )
+
   return self
 end
 function TypeInfo:get_rawTxt(  )
+
   return ""
 end
 function TypeInfo:get_typeId(  )
+
   return rootTypeId
 end
 function TypeInfo:get_kind(  )
+
   return TypeInfoKindRoot
 end
 function TypeInfo:get_staticFlag(  )
+
   return false
 end
 function TypeInfo:get_accessMode(  )
+
   return "pri"
 end
 function TypeInfo:get_autoFlag(  )
+
   return false
 end
 function TypeInfo:get_orgTypeInfo(  )
+
   return self
 end
 function TypeInfo:get_baseTypeInfo(  )
+
   return self
 end
 function TypeInfo:get_nilable(  )
+
   return false
 end
 function TypeInfo:get_nilableTypeInfo(  )
+
   return self
 end
 function TypeInfo:get_children(  )
+
   return dummyList
 end
 function TypeInfo:get_children(  )
+
   return dummyList
 end
 function TypeInfo:get_mutable(  )
+
   return false
 end
 function TypeInfo:get_scope()
@@ -308,21 +398,22 @@ do
   end
 
 function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
+
   if self.classFlag then
     if includeSelfFlag then
       do
         local _exp = self.symbol2TypeInfoMap[name]
         if _exp then
         
-            do
-              local _exp = _exp:canAccess( self, fromScope )
-              if _exp then
-              
-                  return _exp:get_typeInfo()
-                end
-            end
+            local symbolInfo = _exp:canAccess( fromScope )
             
-            return nil
+                if  not symbolInfo then
+                  local _symbolInfo = symbolInfo
+                  
+                  return nil
+                end
+              
+            return symbolInfo:get_typeInfo()
           end
       end
       
@@ -341,21 +432,22 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
 end
 
 function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
+
   local typeInfo = nil
   
   do
     local _exp = self.symbol2TypeInfoMap[name]
     if _exp then
     
-        do
-          local _exp = _exp:canAccess( self, fromScope )
-          if _exp then
-          
-              return _exp:get_typeInfo()
-            end
-        end
+        local symbolInfo = _exp:canAccess( fromScope )
         
-        return nil
+            if  not symbolInfo then
+              local _symbolInfo = symbolInfo
+              
+              return nil
+            end
+          
+        return symbolInfo:get_typeInfo()
       end
   end
   
@@ -389,6 +481,7 @@ function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
 end
 
 function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
+
   local typeInfo = nil
   
   local validThisScope = false
@@ -400,7 +493,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
         if _exp:get_kind() == TypeInfoKindFunc or _exp:get_kind() == TypeInfoKindMethod or self == moduleScope or self == rootScope then
           validThisScope = true
         end
-        if _exp:get_kind() == TypeInfoKindClass and name == "self" then
+        if (_exp:get_kind() == TypeInfoKindIF or _exp:get_kind() == TypeInfoKindClass ) and name == "self" then
           validThisScope = true
         end
       else
@@ -414,7 +507,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
       local _exp = self.symbol2TypeInfoMap[name]
       if _exp then
       
-          return _exp:canAccess( self, fromScope )
+          return _exp:canAccess( fromScope )
         end
     end
     
@@ -425,55 +518,62 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
   return sym2builtInTypeMap[name]
 end
 
-function Scope:add( name, typeInfo, accessMode, mutable )
-  self.symbol2TypeInfoMap[name] = SymbolInfo.new(accessMode, name, typeInfo, mutable)
+function Scope:add( name, typeInfo, accessMode, staticFlag, mutable )
+
+  self.symbol2TypeInfoMap[name] = SymbolInfo.new(self, accessMode, staticFlag, name, typeInfo, mutable)
 end
 
 function Scope:addClass( name, typeInfo, scope, mutable )
-  self:add( name, typeInfo, typeInfo:get_accessMode(), mutable )
+
+  self:add( name, typeInfo, typeInfo:get_accessMode(), false, mutable )
 end
 
 local function dumpScopeSub( scope, prefix, readyIdSet )
-  do
-    local _exp = scope
-    if _exp then
-    
-        if readyIdSet[scope] then
-          return 
-        end
-        readyIdSet[scope] = true
-        if #prefix > 20 then
-          error( "illegal" )
-        end
-        do
-          local __sorted = {}
-          local __map = _exp:get_symbol2TypeInfoMap()
-          for __key in pairs( __map ) do
-            table.insert( __sorted, __key )
+
+  local scope = scope
+  
+      if  not scope then
+        local _scope = scope
+        
+        return 
+      else
+        
+          if readyIdSet[scope] then
+            return 
           end
-          table.sort( __sorted )
-          for __index, symbol in ipairs( __sorted ) do
-            symbolInfo = __map[ symbol ]
-            do
-              Util.errorLog( string.format( "scope: %s, %s, %s", prefix, _exp, symbol) )
+          readyIdSet[scope] = true
+          if #prefix > 20 then
+            error( "illegal" )
+          end
+          do
+            local __sorted = {}
+            local __map = scope:get_symbol2TypeInfoMap()
+            for __key in pairs( __map ) do
+              table.insert( __sorted, __key )
+            end
+            table.sort( __sorted )
+            for __index, symbol in ipairs( __sorted ) do
+              symbolInfo = __map[ symbol ]
               do
-                local _exp = symbolInfo:get_typeInfo():get_scope()
-                if _exp then
+                Util.errorLog( string.format( "scope: %s, %s, %s", prefix, scope, symbol) )
+                do
+                  local _exp = symbolInfo:get_typeInfo():get_scope()
+                  if _exp then
+                  
+                      dumpScopeSub( _exp, prefix .. "  ", readyIdSet )
+                    end
+                end
                 
-                    dumpScopeSub( _exp, prefix .. "  ", readyIdSet )
-                  end
               end
-              
             end
           end
+          
         end
-        
-      end
-  end
-  
+    
 end
 
 local function dumpScope( scope, prefix )
+
   dumpScopeSub( scope, prefix, {} )
 end
 
@@ -482,6 +582,7 @@ local rootTypeInfo = TypeInfo.new(rootScope)
 moduleObj.rootTypeInfo = rootTypeInfo
 
 function Scope:getNSTypeInfo(  )
+
   local scope = self
   
   while scope.ownerTypeInfo ~= rootTypeInfo do
@@ -499,6 +600,7 @@ function Scope:getNSTypeInfo(  )
 end
 
 function Scope:getClassTypeInfo(  )
+
   local scope = self
   
   while scope.ownerTypeInfo ~= rootTypeInfo do
@@ -506,7 +608,7 @@ function Scope:getClassTypeInfo(  )
       local _exp = scope.ownerTypeInfo
       if _exp then
       
-          if _exp:get_kind() == TypeInfoKindClass then
+          if _exp:get_kind() == TypeInfoKindClass or _exp:get_kind() == TypeInfoKindIF then
             return _exp
           end
         end
@@ -517,10 +619,11 @@ function Scope:getClassTypeInfo(  )
   return rootTypeInfo
 end
 
-function SymbolInfo:canAccess( nsScope, fromScope )
+function SymbolInfo:canAccess( fromScope )
+
   local typeInfo = self:get_typeInfo()
   
-  if nsScope == fromScope then
+  if self.scope == fromScope then
     return self
   end
   do
@@ -528,7 +631,7 @@ function SymbolInfo:canAccess( nsScope, fromScope )
     if _switchExp == "pub" or _switchExp == "global" then
       return self
     elseif _switchExp == "pro" then
-      local nsClass = nsScope:getClassTypeInfo(  )
+      local nsClass = self.scope:getClassTypeInfo(  )
       
       local fromClass = fromScope:getClassTypeInfo(  )
       
@@ -539,7 +642,7 @@ function SymbolInfo:canAccess( nsScope, fromScope )
     elseif _switchExp == "local" then
       return self
     elseif _switchExp == "pri" then
-      local nsClass = nsScope:getClassTypeInfo(  )
+      local nsClass = self.scope:getClassTypeInfo(  )
       
       local fromClass = fromScope:getClassTypeInfo(  )
       
@@ -560,27 +663,29 @@ end
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 moduleObj.NormalTypeInfo = NormalTypeInfo
-function NormalTypeInfo.new( scope, baseTypeInfo, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList )
+function NormalTypeInfo.new( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList )
   local obj = {}
   setmetatable( obj, { __index = NormalTypeInfo } )
-  if obj.__init then obj:__init( scope, baseTypeInfo, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList ); end
+  if obj.__init then obj:__init( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList ); end
 return obj
 end
-function NormalTypeInfo:__init(scope, baseTypeInfo, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList) 
+function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList) 
   TypeInfo.__init( self, scope)
   
-  self.baseTypeInfo = baseTypeInfo or rootTypeInfo
+  self.abstructFlag = abstructFlag
+  self.baseTypeInfo = _lune_unwrapDefault( baseTypeInfo, rootTypeInfo)
+  self.interfaceList = _lune_unwrapDefault( interfaceList, {})
   self.autoFlag = autoFlag
   self.externalFlag = externalFlag
   self.staticFlag = staticFlag
   self.accessMode = accessMode
   self.rawTxt = txt
   self.kind = kind
-  self.itemTypeInfoList = itemTypeInfoList or {}
-  self.argTypeInfoList = argTypeInfoList or {}
-  self.retTypeInfoList = retTypeInfoList or {}
-  self.orgTypeInfo = orgTypeInfo or rootTypeInfo
-  self.parentInfo = parentInfo or rootTypeInfo
+  self.itemTypeInfoList = _lune_unwrapDefault( itemTypeInfoList, {})
+  self.argTypeInfoList = _lune_unwrapDefault( argTypeInfoList, {})
+  self.retTypeInfoList = _lune_unwrapDefault( retTypeInfoList, {})
+  self.orgTypeInfo = _lune_unwrapDefault( orgTypeInfo, rootTypeInfo)
+  self.parentInfo = _lune_unwrapDefault( parentInfo, rootTypeInfo)
   self.children = {}
   self.typeId = typeId
   if kind == TypeInfoKindRoot then
@@ -598,7 +703,7 @@ function NormalTypeInfo:__init(scope, baseTypeInfo, orgTypeInfo, autoFlag, exter
     
     do
       local _switchExp = (kind )
-      if _switchExp == TypeInfoKindPrim or _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindArray or _switchExp == TypeInfoKindMap or _switchExp == TypeInfoKindClass then
+      if _switchExp == TypeInfoKindPrim or _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindArray or _switchExp == TypeInfoKindMap or _switchExp == TypeInfoKindClass or _switchExp == TypeInfoKindIF then
         hasNilable = true
       elseif _switchExp == TypeInfoKindFunc or _switchExp == TypeInfoKindMethod then
         hasNilable = true
@@ -609,7 +714,7 @@ function NormalTypeInfo:__init(scope, baseTypeInfo, orgTypeInfo, autoFlag, exter
       if txt == "..." then
         self.nilableTypeInfo = self
       else 
-        self.nilableTypeInfo = NormalTypeInfo.new(nil, baseTypeInfo, self, autoFlag, externalFlag, staticFlag, accessMode, "", parentInfo, typeId + 1, TypeInfoKindNilable, itemTypeInfoList, argTypeInfoList, retTypeInfoList)
+        self.nilableTypeInfo = NormalTypeInfo.new(false, nil, baseTypeInfo, interfaceList, self, autoFlag, externalFlag, staticFlag, accessMode, "", parentInfo, typeId + 1, TypeInfoKindNilable, itemTypeInfoList, argTypeInfoList, retTypeInfoList)
       end
     else 
       self.nilableTypeInfo = rootTypeInfo
@@ -621,14 +726,17 @@ function NormalTypeInfo:__init(scope, baseTypeInfo, orgTypeInfo, autoFlag, exter
   end
 end
 function NormalTypeInfo:getParentId(  )
+
   return self.parentInfo and self.parentInfo:get_typeId() or rootTypeId
 end
 function NormalTypeInfo:get_baseId(  )
+
   return self.baseTypeInfo and self.baseTypeInfo:get_typeId() or rootTypeId
 end
 function NormalTypeInfo:getTxt(  )
+
   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
-    return (self.orgTypeInfo or _luneScript.error( 'unwrap val is nil' ) ):getTxt(  ) .. "!"
+    return (_lune_unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
   end
   if self.kind == TypeInfoKindArray then
     local _exp = self.itemTypeInfoList[1]
@@ -669,6 +777,7 @@ function NormalTypeInfo:getTxt(  )
   return ""
 end
 function NormalTypeInfo:serialize( stream )
+
   if self.typeId == rootTypeId then
     return nil
   end
@@ -679,6 +788,7 @@ function NormalTypeInfo:serialize( stream )
     return nil
   end
   local function serializeTypeInfoList( name, list, onlyPub )
+  
     local work = name
     
     for __index, typeInfo in pairs( list ) do
@@ -695,9 +805,10 @@ function NormalTypeInfo:serialize( stream )
   local txt = string.format( [==[{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         staticFlag = %s, accessMode = '%s', kind = %d, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind)
   
-  stream:write( txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. serializeTypeInfoList( "children = {", self.children, true ) .. "}\n" )
+  stream:write( txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "ifList = {", self.interfaceList ) .. serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. serializeTypeInfoList( "children = {", self.children, true ) .. "}\n" )
 end
-function NormalTypeInfo:equalsSub( typeInfo, depth )
+function NormalTypeInfo:equalsSub( typeInfo )
+
   if not typeInfo then
     return false
   end
@@ -708,9 +819,9 @@ function NormalTypeInfo:equalsSub( typeInfo, depth )
     return false
   end
   if (not self.itemTypeInfoList and typeInfo:get_itemTypeInfoList() or self.itemTypeInfoList and not typeInfo:get_itemTypeInfoList() or not self.retTypeInfoList and typeInfo:get_retTypeInfoList() or self.retTypeInfoList and not typeInfo:get_retTypeInfoList() or self.orgTypeInfo ~= typeInfo:get_orgTypeInfo() ) then
-    Util.errorLog( "%s, %s", self.itemTypeInfoList, typeInfo:get_itemTypeInfoList() )
-    Util.errorLog( "%s, %s", self.retTypeInfoList, typeInfo:get_retTypeInfoList() )
-    Util.errorLog( "%s, %s", self.orgTypeInfo, typeInfo:get_orgTypeInfo() )
+    Util.errorLog( string.format( "%s, %s", self.itemTypeInfoList, typeInfo:get_itemTypeInfoList()) )
+    Util.errorLog( string.format( "%s, %s", self.retTypeInfoList, typeInfo:get_retTypeInfoList()) )
+    Util.errorLog( string.format( "%s, %s", self.orgTypeInfo, typeInfo:get_orgTypeInfo()) )
     return false
   end
   if self.itemTypeInfoList then
@@ -718,7 +829,7 @@ function NormalTypeInfo:equalsSub( typeInfo, depth )
       return false
     end
     for index, item in pairs( self.itemTypeInfoList ) do
-      if not item:equals( typeInfo:get_itemTypeInfoList()[index], depth + 1 ) then
+      if not item:equals( typeInfo:get_itemTypeInfoList()[index] ) then
         return false
       end
     end
@@ -728,24 +839,22 @@ function NormalTypeInfo:equalsSub( typeInfo, depth )
       return false
     end
     for index, item in pairs( self.retTypeInfoList ) do
-      if not item:equals( typeInfo:get_retTypeInfoList()[index], depth + 1 ) then
+      if not item:equals( typeInfo:get_retTypeInfoList()[index] ) then
         return false
       end
     end
   end
-  if self.orgTypeInfo and not self.orgTypeInfo:equals( typeInfo:get_orgTypeInfo(), depth + 1 ) then
+  if self.orgTypeInfo and not self.orgTypeInfo:equals( typeInfo:get_orgTypeInfo() ) then
     return false
   end
   return true
 end
 function NormalTypeInfo:equals( typeInfo )
-  return self:equalsSub( typeInfo, 1 )
+
+  return self:equalsSub( typeInfo )
 end
-function NormalTypeInfo.cloneToPublic( typeInfo )
-  typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(typeInfo:get_scope(), typeInfo:get_baseTypeInfo(), nil, typeInfo:get_autoFlag(), typeInfo:get_externalFlag(), typeInfo:get_staticFlag(), "pub", typeInfo:get_rawTxt(), typeInfo:get_parentInfo(), typeIdSeed, typeInfo:get_kind(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList())
-end
-function NormalTypeInfo.create( scope, baseInfo, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList )
+function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList )
+
   if kind == TypeInfoKindPrim then
     do
       local _exp = sym2builtInTypeMap[txt]
@@ -758,7 +867,7 @@ function NormalTypeInfo.create( scope, baseInfo, parentInfo, staticFlag, kind, t
     error( string.format( "not found symbol -- %s", txt) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(scope, baseInfo, nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList)
   
   return info
 end
@@ -792,11 +901,17 @@ end
 function NormalTypeInfo:get_autoFlag()
   return self.autoFlag
 end
+function NormalTypeInfo:get_abstructFlag()
+  return self.abstructFlag
+end
 function NormalTypeInfo:get_orgTypeInfo()
   return self.orgTypeInfo
 end
 function NormalTypeInfo:get_baseTypeInfo()
   return self.baseTypeInfo
+end
+function NormalTypeInfo:get_interfaceList()
+  return self.interfaceList
 end
 function NormalTypeInfo:get_nilable()
   return self.nilable
@@ -816,6 +931,7 @@ moduleObj.typeInfoRoot = typeInfoRoot
 
 typeIdSeed = typeIdSeed + 1
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
+
   local typeId = typeIdSeed + 1
   
   if kind == TypeInfoKindRoot then
@@ -842,20 +958,20 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   
   do
     local _switchExp = kind
-    if _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindClass or _switchExp == TypeInfoKindFunc or _switchExp == TypeInfoKindMethod or _switchExp == TypeInfoKindMacro then
-      scope = Scope.new(rootScope, kind == TypeInfoKindClass or kind == TypeInfoKindList, {})
+    if _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindClass or _switchExp == TypeInfoKindIF or _switchExp == TypeInfoKindFunc or _switchExp == TypeInfoKindMethod or _switchExp == TypeInfoKindMacro then
+      scope = Scope.new(rootScope, kind == TypeInfoKindClass or kind == TypeInfoKindIF or kind == TypeInfoKindList, {})
     end
   end
   
-  local info = NormalTypeInfo.new(scope, nil, nil, false, false, false, "pub", typeTxt, typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList)
+  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList)
   
   if scope then
-    rootScope:add( typeTxt, info, "pub", false )
+    rootScope:add( typeTxt, info, "pub", false, false )
   end
   typeInfoKind[idName] = info
-  sym2builtInTypeMap[typeTxt] = SymbolInfo.new("pub", typeTxt, info, false)
+  sym2builtInTypeMap[typeTxt] = SymbolInfo.new(rootScope, "pub", false, typeTxt, info, false)
   if info:get_nilableTypeInfo() ~= rootTypeInfo then
-    sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new("pub", typeTxt, info:get_nilableTypeInfo(), false)
+    sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
     builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = true
   end
   builtInTypeIdSet[info.typeId] = true
@@ -863,24 +979,28 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
 end
 
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
+
   if not itemTypeInfo or #itemTypeInfo == 0 then
     error( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(nil, nil, nil, false, false, false, accessMode, "", typeInfoRoot, typeIdSeed, TypeInfoKindList, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", typeInfoRoot, typeIdSeed, TypeInfoKindList, itemTypeInfo)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
+
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(nil, nil, nil, false, false, false, accessMode, "", typeInfoRoot, typeIdSeed, TypeInfoKindArray, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", typeInfoRoot, typeIdSeed, TypeInfoKindArray, itemTypeInfo)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
+
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(nil, nil, nil, false, false, false, accessMode, "Map", typeInfoRoot, typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", typeInfoRoot, typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
 end
 
-function NormalTypeInfo.createClass( scope, baseInfo, parentInfo, externalFlag, accessMode, className )
+function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, className )
+
   do
     local _exp = sym2builtInTypeMap[className]
     if _exp then
@@ -893,17 +1013,18 @@ function NormalTypeInfo.createClass( scope, baseInfo, parentInfo, externalFlag, 
     error( string.format( "This symbol can not use for a class or script file. -- %s", className) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(scope, baseInfo, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, TypeInfoKindClass)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKindClass or TypeInfoKindIF)
   
   return info
 end
 
-function NormalTypeInfo.createFunc( builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList )
+function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList )
+
   if not builtinFlag and Parser.isLuaKeyword( funcName ) then
     error( string.format( "This symbol can not use for a function. -- %s", funcName) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, kind, {}, argTypeList or {}, retTypeInfoList or {})
+  local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, kind, {}, _lune_unwrapDefault( argTypeList, {}), _lune_unwrapDefault( retTypeInfoList, {}))
   
   return info
 end
@@ -968,7 +1089,7 @@ local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKi
 
 moduleObj.builtinTypeStat = builtinTypeStat
 
-local builtinTypeStem_ = builtinTypeStem:get_nilableTypeInfo() or _luneScript.error( 'unwrap val is nil' )
+local builtinTypeStem_ = _lune_unwrap( builtinTypeStem:get_nilableTypeInfo())
 
 moduleObj.builtinTypeStem_ = builtinTypeStem_
 
@@ -976,12 +1097,13 @@ moduleObj.builtinTypeStem_ = builtinTypeStem_
 -- none
 
 function NormalTypeInfo:isInheritFrom( other )
+
   local otherTypeId = other:get_typeId()
   
   if self:get_typeId() == otherTypeId then
     return true
   end
-  if self:get_kind() ~= self:get_kind() or self:get_kind() ~= TypeInfoKindClass then
+  if (self:get_kind() ~= TypeInfoKindClass and self:get_kind() ~= TypeInfoKindIF ) or (other:get_kind() ~= TypeInfoKindClass and other:get_kind() ~= TypeInfoKindIF ) then
     return false
   end
   local baseTypeInfo = self:get_baseTypeInfo()
@@ -994,10 +1116,21 @@ function NormalTypeInfo:isInheritFrom( other )
   end
   -- none
   
+  for __index, ifType in pairs( self:get_interfaceList() ) do
+    while ifType ~= rootTypeInfo do
+      if otherTypeId == ifType:get_typeId() then
+        return true
+      end
+      ifType = ifType:get_baseTypeInfo()
+    end
+    -- none
+    
+  end
   return false
 end
 
 function NormalTypeInfo:isSettableFrom( other )
+
   if not other then
     return false
   end
@@ -1026,6 +1159,9 @@ function NormalTypeInfo:isSettableFrom( other )
       end
       return self:get_orgTypeInfo():isSettableFrom( other )
     end
+    if (self:get_kind() == TypeInfoKindClass or self:get_kind() == TypeInfoKindIF ) and (other:get_kind() == TypeInfoKindClass or other:get_kind() == TypeInfoKindIF ) then
+      return other:isInheritFrom( self )
+    end
     return false
   end
   do
@@ -1039,7 +1175,7 @@ function NormalTypeInfo:isSettableFrom( other )
       if other:get_itemTypeInfoList()[1] == builtinTypeNone then
         return true
       end
-      if not (self:get_itemTypeInfoList()[1] or _luneScript.error( 'unwrap val is nil' ) ):isSettableFrom( other:get_itemTypeInfoList()[1] or _luneScript.error( 'unwrap val is nil' ) ) then
+      if not (_lune_unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[1]) ) then
         return false
       end
       
@@ -1048,16 +1184,16 @@ function NormalTypeInfo:isSettableFrom( other )
       if other:get_itemTypeInfoList()[1] == builtinTypeNone and other:get_itemTypeInfoList()[2] == builtinTypeNone then
         return true
       end
-      if not (self:get_itemTypeInfoList()[1] or _luneScript.error( 'unwrap val is nil' ) ):isSettableFrom( other:get_itemTypeInfoList()[1] or _luneScript.error( 'unwrap val is nil' ) ) then
+      if not (_lune_unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[1]) ) then
         return false
       end
       
-      if not (self:get_itemTypeInfoList()[2] or _luneScript.error( 'unwrap val is nil' ) ):isSettableFrom( other:get_itemTypeInfoList()[2] or _luneScript.error( 'unwrap val is nil' ) ) then
+      if not (_lune_unwrap( self:get_itemTypeInfoList()[2]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[2]) ) then
         return false
       end
       
       return true
-    elseif _switchExp == TypeInfoKindClass then
+    elseif _switchExp == TypeInfoKindClass or _switchExp == TypeInfoKindIF then
       return other:isInheritFrom( self )
     elseif _switchExp == TypeInfoKindFunc then
       if self == builtinTypeForm then
@@ -1095,15 +1231,18 @@ do
 local Node = {}
 moduleObj.Node = Node
 function Node:get_expType(  )
+
   if not self.expTypeList then
     return builtinTypeNone
   end
   return self.expTypeList[1]
 end
 function Node:getLiteral(  )
+
   return {nil}, {builtinTypeNil}
 end
 function Node:processFilter( filter, ... )
+
 end
 function Node.new( kind, pos, expTypeList )
   local obj = {}
@@ -1232,6 +1371,7 @@ local nodeKind = {}
 moduleObj.nodeKind = nodeKind
 
 local function regKind( name )
+
   local kind = nodeKindSeed
   
   nodeKindSeed = nodeKindSeed + 1
@@ -1241,13 +1381,15 @@ local function regKind( name )
 end
 
 local function getNodeKindName( kind )
-  return nodeKind2NameMap[kind] or _luneScript.error( 'unwrap val is nil' )
+
+  return _lune_unwrap( nodeKind2NameMap[kind])
 end
 moduleObj.getNodeKindName = getNodeKindName
 
 -- none
 
 function Filter:processNone( node, ... )
+
 end
 
 -- none
@@ -1262,6 +1404,7 @@ local NoneNode = {}
 setmetatable( NoneNode, { __index = Node } )
 moduleObj.NoneNode = NoneNode
 function NoneNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processNone( self, table.unpack( argList ) )
@@ -1287,6 +1430,7 @@ do
 -- none
 
 function Filter:processSubfile( node, ... )
+
 end
 
 -- none
@@ -1301,6 +1445,7 @@ local SubfileNode = {}
 setmetatable( SubfileNode, { __index = Node } )
 moduleObj.SubfileNode = SubfileNode
 function SubfileNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processSubfile( self, table.unpack( argList ) )
@@ -1326,6 +1471,7 @@ do
 -- none
 
 function Filter:processImport( node, ... )
+
 end
 
 -- none
@@ -1340,6 +1486,7 @@ local ImportNode = {}
 setmetatable( ImportNode, { __index = Node } )
 moduleObj.ImportNode = ImportNode
 function ImportNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processImport( self, table.unpack( argList ) )
@@ -1369,6 +1516,7 @@ do
 -- none
 
 function Filter:processRoot( node, ... )
+
 end
 
 -- none
@@ -1383,6 +1531,7 @@ local RootNode = {}
 setmetatable( RootNode, { __index = Node } )
 moduleObj.RootNode = RootNode
 function RootNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processRoot( self, table.unpack( argList ) )
@@ -1416,6 +1565,7 @@ do
 -- none
 
 function Filter:processRefType( node, ... )
+
 end
 
 -- none
@@ -1430,6 +1580,7 @@ local RefTypeNode = {}
 setmetatable( RefTypeNode, { __index = Node } )
 moduleObj.RefTypeNode = RefTypeNode
 function RefTypeNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processRefType( self, table.unpack( argList ) )
@@ -1471,6 +1622,7 @@ do
 -- none
 
 function Filter:processBlock( node, ... )
+
 end
 
 -- none
@@ -1485,6 +1637,7 @@ local BlockNode = {}
 setmetatable( BlockNode, { __index = Node } )
 moduleObj.BlockNode = BlockNode
 function BlockNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processBlock( self, table.unpack( argList ) )
@@ -1546,6 +1699,7 @@ do
 -- none
 
 function Filter:processIf( node, ... )
+
 end
 
 -- none
@@ -1560,6 +1714,7 @@ local IfNode = {}
 setmetatable( IfNode, { __index = Node } )
 moduleObj.IfNode = IfNode
 function IfNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processIf( self, table.unpack( argList ) )
@@ -1589,6 +1744,7 @@ do
 -- none
 
 function Filter:processExpList( node, ... )
+
 end
 
 -- none
@@ -1603,6 +1759,7 @@ local ExpListNode = {}
 setmetatable( ExpListNode, { __index = Node } )
 moduleObj.ExpListNode = ExpListNode
 function ExpListNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpList( self, table.unpack( argList ) )
@@ -1656,6 +1813,7 @@ do
 -- none
 
 function Filter:processSwitch( node, ... )
+
 end
 
 -- none
@@ -1670,6 +1828,7 @@ local SwitchNode = {}
 setmetatable( SwitchNode, { __index = Node } )
 moduleObj.SwitchNode = SwitchNode
 function SwitchNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processSwitch( self, table.unpack( argList ) )
@@ -1707,6 +1866,7 @@ do
 -- none
 
 function Filter:processWhile( node, ... )
+
 end
 
 -- none
@@ -1721,6 +1881,7 @@ local WhileNode = {}
 setmetatable( WhileNode, { __index = Node } )
 moduleObj.WhileNode = WhileNode
 function WhileNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processWhile( self, table.unpack( argList ) )
@@ -1754,6 +1915,7 @@ do
 -- none
 
 function Filter:processRepeat( node, ... )
+
 end
 
 -- none
@@ -1768,6 +1930,7 @@ local RepeatNode = {}
 setmetatable( RepeatNode, { __index = Node } )
 moduleObj.RepeatNode = RepeatNode
 function RepeatNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processRepeat( self, table.unpack( argList ) )
@@ -1801,6 +1964,7 @@ do
 -- none
 
 function Filter:processFor( node, ... )
+
 end
 
 -- none
@@ -1815,6 +1979,7 @@ local ForNode = {}
 setmetatable( ForNode, { __index = Node } )
 moduleObj.ForNode = ForNode
 function ForNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processFor( self, table.unpack( argList ) )
@@ -1860,6 +2025,7 @@ do
 -- none
 
 function Filter:processApply( node, ... )
+
 end
 
 -- none
@@ -1874,6 +2040,7 @@ local ApplyNode = {}
 setmetatable( ApplyNode, { __index = Node } )
 moduleObj.ApplyNode = ApplyNode
 function ApplyNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processApply( self, table.unpack( argList ) )
@@ -1911,6 +2078,7 @@ do
 -- none
 
 function Filter:processForeach( node, ... )
+
 end
 
 -- none
@@ -1925,6 +2093,7 @@ local ForeachNode = {}
 setmetatable( ForeachNode, { __index = Node } )
 moduleObj.ForeachNode = ForeachNode
 function ForeachNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processForeach( self, table.unpack( argList ) )
@@ -1966,6 +2135,7 @@ do
 -- none
 
 function Filter:processForsort( node, ... )
+
 end
 
 -- none
@@ -1980,6 +2150,7 @@ local ForsortNode = {}
 setmetatable( ForsortNode, { __index = Node } )
 moduleObj.ForsortNode = ForsortNode
 function ForsortNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processForsort( self, table.unpack( argList ) )
@@ -2025,6 +2196,7 @@ do
 -- none
 
 function Filter:processReturn( node, ... )
+
 end
 
 -- none
@@ -2039,6 +2211,7 @@ local ReturnNode = {}
 setmetatable( ReturnNode, { __index = Node } )
 moduleObj.ReturnNode = ReturnNode
 function ReturnNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processReturn( self, table.unpack( argList ) )
@@ -2068,6 +2241,7 @@ do
 -- none
 
 function Filter:processBreak( node, ... )
+
 end
 
 -- none
@@ -2082,6 +2256,7 @@ local BreakNode = {}
 setmetatable( BreakNode, { __index = Node } )
 moduleObj.BreakNode = BreakNode
 function BreakNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processBreak( self, table.unpack( argList ) )
@@ -2107,6 +2282,7 @@ do
 -- none
 
 function Filter:processExpNew( node, ... )
+
 end
 
 -- none
@@ -2121,6 +2297,7 @@ local ExpNewNode = {}
 setmetatable( ExpNewNode, { __index = Node } )
 moduleObj.ExpNewNode = ExpNewNode
 function ExpNewNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpNew( self, table.unpack( argList ) )
@@ -2154,6 +2331,7 @@ do
 -- none
 
 function Filter:processExpUnwrap( node, ... )
+
 end
 
 -- none
@@ -2168,6 +2346,7 @@ local ExpUnwrapNode = {}
 setmetatable( ExpUnwrapNode, { __index = Node } )
 moduleObj.ExpUnwrapNode = ExpUnwrapNode
 function ExpUnwrapNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpUnwrap( self, table.unpack( argList ) )
@@ -2201,6 +2380,7 @@ do
 -- none
 
 function Filter:processExpRef( node, ... )
+
 end
 
 -- none
@@ -2215,6 +2395,7 @@ local ExpRefNode = {}
 setmetatable( ExpRefNode, { __index = Node } )
 moduleObj.ExpRefNode = ExpRefNode
 function ExpRefNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpRef( self, table.unpack( argList ) )
@@ -2248,6 +2429,7 @@ do
 -- none
 
 function Filter:processExpOp2( node, ... )
+
 end
 
 -- none
@@ -2262,6 +2444,7 @@ local ExpOp2Node = {}
 setmetatable( ExpOp2Node, { __index = Node } )
 moduleObj.ExpOp2Node = ExpOp2Node
 function ExpOp2Node:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpOp2( self, table.unpack( argList ) )
@@ -2299,6 +2482,7 @@ do
 -- none
 
 function Filter:processUnwrapSet( node, ... )
+
 end
 
 -- none
@@ -2313,6 +2497,7 @@ local UnwrapSetNode = {}
 setmetatable( UnwrapSetNode, { __index = Node } )
 moduleObj.UnwrapSetNode = UnwrapSetNode
 function UnwrapSetNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processUnwrapSet( self, table.unpack( argList ) )
@@ -2350,6 +2535,7 @@ do
 -- none
 
 function Filter:processIfUnwrap( node, ... )
+
 end
 
 -- none
@@ -2364,6 +2550,7 @@ local IfUnwrapNode = {}
 setmetatable( IfUnwrapNode, { __index = Node } )
 moduleObj.IfUnwrapNode = IfUnwrapNode
 function IfUnwrapNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processIfUnwrap( self, table.unpack( argList ) )
@@ -2401,6 +2588,7 @@ do
 -- none
 
 function Filter:processExpCast( node, ... )
+
 end
 
 -- none
@@ -2415,6 +2603,7 @@ local ExpCastNode = {}
 setmetatable( ExpCastNode, { __index = Node } )
 moduleObj.ExpCastNode = ExpCastNode
 function ExpCastNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpCast( self, table.unpack( argList ) )
@@ -2444,6 +2633,7 @@ do
 -- none
 
 function Filter:processExpOp1( node, ... )
+
 end
 
 -- none
@@ -2458,6 +2648,7 @@ local ExpOp1Node = {}
 setmetatable( ExpOp1Node, { __index = Node } )
 moduleObj.ExpOp1Node = ExpOp1Node
 function ExpOp1Node:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpOp1( self, table.unpack( argList ) )
@@ -2495,6 +2686,7 @@ do
 -- none
 
 function Filter:processExpRefItem( node, ... )
+
 end
 
 -- none
@@ -2509,6 +2701,7 @@ local ExpRefItemNode = {}
 setmetatable( ExpRefItemNode, { __index = Node } )
 moduleObj.ExpRefItemNode = ExpRefItemNode
 function ExpRefItemNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpRefItem( self, table.unpack( argList ) )
@@ -2546,6 +2739,7 @@ do
 -- none
 
 function Filter:processExpCall( node, ... )
+
 end
 
 -- none
@@ -2560,6 +2754,7 @@ local ExpCallNode = {}
 setmetatable( ExpCallNode, { __index = Node } )
 moduleObj.ExpCallNode = ExpCallNode
 function ExpCallNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpCall( self, table.unpack( argList ) )
@@ -2597,6 +2792,7 @@ do
 -- none
 
 function Filter:processExpDDD( node, ... )
+
 end
 
 -- none
@@ -2611,6 +2807,7 @@ local ExpDDDNode = {}
 setmetatable( ExpDDDNode, { __index = Node } )
 moduleObj.ExpDDDNode = ExpDDDNode
 function ExpDDDNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpDDD( self, table.unpack( argList ) )
@@ -2640,6 +2837,7 @@ do
 -- none
 
 function Filter:processExpParen( node, ... )
+
 end
 
 -- none
@@ -2654,6 +2852,7 @@ local ExpParenNode = {}
 setmetatable( ExpParenNode, { __index = Node } )
 moduleObj.ExpParenNode = ExpParenNode
 function ExpParenNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpParen( self, table.unpack( argList ) )
@@ -2683,6 +2882,7 @@ do
 -- none
 
 function Filter:processExpMacroExp( node, ... )
+
 end
 
 -- none
@@ -2697,6 +2897,7 @@ local ExpMacroExpNode = {}
 setmetatable( ExpMacroExpNode, { __index = Node } )
 moduleObj.ExpMacroExpNode = ExpMacroExpNode
 function ExpMacroExpNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpMacroExp( self, table.unpack( argList ) )
@@ -2726,6 +2927,7 @@ do
 -- none
 
 function Filter:processExpMacroStat( node, ... )
+
 end
 
 -- none
@@ -2740,6 +2942,7 @@ local ExpMacroStatNode = {}
 setmetatable( ExpMacroStatNode, { __index = Node } )
 moduleObj.ExpMacroStatNode = ExpMacroStatNode
 function ExpMacroStatNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpMacroStat( self, table.unpack( argList ) )
@@ -2769,6 +2972,7 @@ do
 -- none
 
 function Filter:processStmtExp( node, ... )
+
 end
 
 -- none
@@ -2783,6 +2987,7 @@ local StmtExpNode = {}
 setmetatable( StmtExpNode, { __index = Node } )
 moduleObj.StmtExpNode = StmtExpNode
 function StmtExpNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processStmtExp( self, table.unpack( argList ) )
@@ -2812,6 +3017,7 @@ do
 -- none
 
 function Filter:processRefField( node, ... )
+
 end
 
 -- none
@@ -2826,6 +3032,7 @@ local RefFieldNode = {}
 setmetatable( RefFieldNode, { __index = Node } )
 moduleObj.RefFieldNode = RefFieldNode
 function RefFieldNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processRefField( self, table.unpack( argList ) )
@@ -2863,6 +3070,7 @@ do
 -- none
 
 function Filter:processGetField( node, ... )
+
 end
 
 -- none
@@ -2877,6 +3085,7 @@ local GetFieldNode = {}
 setmetatable( GetFieldNode, { __index = Node } )
 moduleObj.GetFieldNode = GetFieldNode
 function GetFieldNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processGetField( self, table.unpack( argList ) )
@@ -2946,6 +3155,7 @@ do
 -- none
 
 function Filter:processDeclVar( node, ... )
+
 end
 
 -- none
@@ -2960,6 +3170,7 @@ local DeclVarNode = {}
 setmetatable( DeclVarNode, { __index = Node } )
 moduleObj.DeclVarNode = DeclVarNode
 function DeclVarNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclVar( self, table.unpack( argList ) )
@@ -3073,6 +3284,7 @@ do
 -- none
 
 function Filter:processDeclFunc( node, ... )
+
 end
 
 -- none
@@ -3087,6 +3299,7 @@ local DeclFuncNode = {}
 setmetatable( DeclFuncNode, { __index = Node } )
 moduleObj.DeclFuncNode = DeclFuncNode
 function DeclFuncNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclFunc( self, table.unpack( argList ) )
@@ -3116,6 +3329,7 @@ do
 -- none
 
 function Filter:processDeclMethod( node, ... )
+
 end
 
 -- none
@@ -3130,6 +3344,7 @@ local DeclMethodNode = {}
 setmetatable( DeclMethodNode, { __index = Node } )
 moduleObj.DeclMethodNode = DeclMethodNode
 function DeclMethodNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclMethod( self, table.unpack( argList ) )
@@ -3159,6 +3374,7 @@ do
 -- none
 
 function Filter:processDeclConstr( node, ... )
+
 end
 
 -- none
@@ -3173,6 +3389,7 @@ local DeclConstrNode = {}
 setmetatable( DeclConstrNode, { __index = Node } )
 moduleObj.DeclConstrNode = DeclConstrNode
 function DeclConstrNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclConstr( self, table.unpack( argList ) )
@@ -3202,6 +3419,7 @@ do
 -- none
 
 function Filter:processExpCallSuper( node, ... )
+
 end
 
 -- none
@@ -3216,6 +3434,7 @@ local ExpCallSuperNode = {}
 setmetatable( ExpCallSuperNode, { __index = Node } )
 moduleObj.ExpCallSuperNode = ExpCallSuperNode
 function ExpCallSuperNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processExpCallSuper( self, table.unpack( argList ) )
@@ -3249,6 +3468,7 @@ do
 -- none
 
 function Filter:processDeclMember( node, ... )
+
 end
 
 -- none
@@ -3263,6 +3483,7 @@ local DeclMemberNode = {}
 setmetatable( DeclMemberNode, { __index = Node } )
 moduleObj.DeclMemberNode = DeclMemberNode
 function DeclMemberNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclMember( self, table.unpack( argList ) )
@@ -3312,6 +3533,7 @@ do
 -- none
 
 function Filter:processDeclArg( node, ... )
+
 end
 
 -- none
@@ -3326,6 +3548,7 @@ local DeclArgNode = {}
 setmetatable( DeclArgNode, { __index = Node } )
 moduleObj.DeclArgNode = DeclArgNode
 function DeclArgNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclArg( self, table.unpack( argList ) )
@@ -3359,6 +3582,7 @@ do
 -- none
 
 function Filter:processDeclArgDDD( node, ... )
+
 end
 
 -- none
@@ -3373,6 +3597,7 @@ local DeclArgDDDNode = {}
 setmetatable( DeclArgDDDNode, { __index = Node } )
 moduleObj.DeclArgDDDNode = DeclArgDDDNode
 function DeclArgDDDNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclArgDDD( self, table.unpack( argList ) )
@@ -3398,6 +3623,7 @@ do
 -- none
 
 function Filter:processDeclClass( node, ... )
+
 end
 
 -- none
@@ -3412,6 +3638,7 @@ local DeclClassNode = {}
 setmetatable( DeclClassNode, { __index = Node } )
 moduleObj.DeclClassNode = DeclClassNode
 function DeclClassNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclClass( self, table.unpack( argList ) )
@@ -3469,6 +3696,7 @@ do
 -- none
 
 function Filter:processDeclMacro( node, ... )
+
 end
 
 -- none
@@ -3483,6 +3711,7 @@ local DeclMacroNode = {}
 setmetatable( DeclMacroNode, { __index = Node } )
 moduleObj.DeclMacroNode = DeclMacroNode
 function DeclMacroNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processDeclMacro( self, table.unpack( argList ) )
@@ -3529,6 +3758,7 @@ do
 -- none
 
 function Filter:processLiteralNil( node, ... )
+
 end
 
 -- none
@@ -3543,6 +3773,7 @@ local LiteralNilNode = {}
 setmetatable( LiteralNilNode, { __index = Node } )
 moduleObj.LiteralNilNode = LiteralNilNode
 function LiteralNilNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralNil( self, table.unpack( argList ) )
@@ -3568,6 +3799,7 @@ do
 -- none
 
 function Filter:processLiteralChar( node, ... )
+
 end
 
 -- none
@@ -3582,6 +3814,7 @@ local LiteralCharNode = {}
 setmetatable( LiteralCharNode, { __index = Node } )
 moduleObj.LiteralCharNode = LiteralCharNode
 function LiteralCharNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralChar( self, table.unpack( argList ) )
@@ -3615,6 +3848,7 @@ do
 -- none
 
 function Filter:processLiteralInt( node, ... )
+
 end
 
 -- none
@@ -3629,6 +3863,7 @@ local LiteralIntNode = {}
 setmetatable( LiteralIntNode, { __index = Node } )
 moduleObj.LiteralIntNode = LiteralIntNode
 function LiteralIntNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralInt( self, table.unpack( argList ) )
@@ -3662,6 +3897,7 @@ do
 -- none
 
 function Filter:processLiteralReal( node, ... )
+
 end
 
 -- none
@@ -3676,6 +3912,7 @@ local LiteralRealNode = {}
 setmetatable( LiteralRealNode, { __index = Node } )
 moduleObj.LiteralRealNode = LiteralRealNode
 function LiteralRealNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralReal( self, table.unpack( argList ) )
@@ -3709,6 +3946,7 @@ do
 -- none
 
 function Filter:processLiteralArray( node, ... )
+
 end
 
 -- none
@@ -3723,6 +3961,7 @@ local LiteralArrayNode = {}
 setmetatable( LiteralArrayNode, { __index = Node } )
 moduleObj.LiteralArrayNode = LiteralArrayNode
 function LiteralArrayNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralArray( self, table.unpack( argList ) )
@@ -3752,6 +3991,7 @@ do
 -- none
 
 function Filter:processLiteralList( node, ... )
+
 end
 
 -- none
@@ -3766,6 +4006,7 @@ local LiteralListNode = {}
 setmetatable( LiteralListNode, { __index = Node } )
 moduleObj.LiteralListNode = LiteralListNode
 function LiteralListNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralList( self, table.unpack( argList ) )
@@ -3819,6 +4060,7 @@ do
 -- none
 
 function Filter:processLiteralMap( node, ... )
+
 end
 
 -- none
@@ -3833,6 +4075,7 @@ local LiteralMapNode = {}
 setmetatable( LiteralMapNode, { __index = Node } )
 moduleObj.LiteralMapNode = LiteralMapNode
 function LiteralMapNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralMap( self, table.unpack( argList ) )
@@ -3866,6 +4109,7 @@ do
 -- none
 
 function Filter:processLiteralString( node, ... )
+
 end
 
 -- none
@@ -3880,6 +4124,7 @@ local LiteralStringNode = {}
 setmetatable( LiteralStringNode, { __index = Node } )
 moduleObj.LiteralStringNode = LiteralStringNode
 function LiteralStringNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralString( self, table.unpack( argList ) )
@@ -3913,6 +4158,7 @@ do
 -- none
 
 function Filter:processLiteralBool( node, ... )
+
 end
 
 -- none
@@ -3927,6 +4173,7 @@ local LiteralBoolNode = {}
 setmetatable( LiteralBoolNode, { __index = Node } )
 moduleObj.LiteralBoolNode = LiteralBoolNode
 function LiteralBoolNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralBool( self, table.unpack( argList ) )
@@ -3956,6 +4203,7 @@ do
 -- none
 
 function Filter:processLiteralSymbol( node, ... )
+
 end
 
 -- none
@@ -3970,6 +4218,7 @@ local LiteralSymbolNode = {}
 setmetatable( LiteralSymbolNode, { __index = Node } )
 moduleObj.LiteralSymbolNode = LiteralSymbolNode
 function LiteralSymbolNode:processFilter( filter, ... )
+
   local argList = {...}
   
   filter:processLiteralSymbol( self, table.unpack( argList ) )
@@ -3997,22 +4246,27 @@ do
 
 
 function LiteralNilNode:getLiteral(  )
+
   return {nil}, {builtinTypeNil}
 end
 
 function LiteralCharNode:getLiteral(  )
+
   return {self.num}, {builtinTypeChar}
 end
 
 function LiteralIntNode:getLiteral(  )
+
   return {self.num}, {builtinTypeInt}
 end
 
 function LiteralRealNode:getLiteral(  )
+
   return {self.num}, {builtinTypeReal}
 end
 
 function LiteralArrayNode:getLiteral(  )
+
   local array = {}
   
   do
@@ -4031,6 +4285,7 @@ function LiteralArrayNode:getLiteral(  )
 end
 
 function LiteralListNode:getLiteral(  )
+
   local list = {}
   
   do
@@ -4049,6 +4304,7 @@ function LiteralListNode:getLiteral(  )
 end
 
 function LiteralMapNode:getLiteral(  )
+
   local map = {}
   
   for key, val in pairs( self.map ) do
@@ -4058,6 +4314,7 @@ function LiteralMapNode:getLiteral(  )
 end
 
 function LiteralStringNode:getLiteral(  )
+
   local txt = self.token.txt
   
   if string.find( txt, '^```' ) then
@@ -4081,15 +4338,18 @@ function LiteralStringNode:getLiteral(  )
 end
 
 function LiteralBoolNode:getLiteral(  )
+
   return {self.token.txt == "true"}, {builtinTypeBool}
 end
 
 function LiteralSymbolNode:getLiteral(  )
+
   return {{self.token.txt}}, {builtinTypeSymbol}
 end
 
 function RefFieldNode:getLiteral(  )
-  local prefix = (self.prefix:getLiteral(  )[1] or _luneScript.error( 'unwrap val is nil' ) )
+
+  local prefix = (_lune_unwrap( self.prefix:getLiteral(  )[1]) )
   
   if self.nilAccess then
     table.insert( prefix, "$." )
@@ -4101,6 +4361,7 @@ function RefFieldNode:getLiteral(  )
 end
 
 function ExpMacroStatNode:getLiteral(  )
+
   local txt = ""
   
   for __index, token in pairs( self.expStrList ) do
