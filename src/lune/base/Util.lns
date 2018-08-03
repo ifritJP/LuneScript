@@ -39,14 +39,14 @@ pub class memStream extend outStream {
 }
 
 pub fn errorLog( message: str ) {
-    let stderr = unwrap (io@stem).stderr;
-    let write = (unwrap stderr.write)@form;
+    let stderr = unwrap (io@@stem).stderr;
+    let write = (unwrap stderr.write)@@form;
     write( stderr, message .. "\n" );
 }
 
 pub fn debugLog() {
     for level = 2, 6 {
-        let debugInfo = debug.getinfo( level )@Map<str,stem>;
+        let debugInfo = debug.getinfo( level )@@Map<str,stem>;
         if debugInfo {
             errorLog( "-- %s %s" ( debugInfo[ "short_src" ],
                                    debugInfo[ 'currentline' ] ) );

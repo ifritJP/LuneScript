@@ -421,7 +421,7 @@ function TransUnit:error( mess )
       end
   end
   
-  error( string.format( "error:%s:%d:%d:(%s) %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, txt, mess ) )
+  error( string.format( "\nerror:%s:%d:%d:(%s) %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, txt, mess ) )
 end
 
 function TransUnit:createNoneNode( pos )
@@ -2834,7 +2834,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
     
     local opTxt = nextToken.txt
     
-    if opTxt == "@" then
+    if opTxt == "@@" then
       local castType = self:analyzeRefType( "local" )
       
       if exp:get_expType():get_nilable() and not castType:get_expType():get_nilable() then
@@ -2848,7 +2848,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             if  not opLevel then
               local _opLevel = opLevel
               
-              error( string.format( "unknown op -- %s %s", opTxt, prevOpLevel ) )
+              self:error( string.format( "unknown op -- %s %s", opTxt, prevOpLevel) )
             end
           
         do

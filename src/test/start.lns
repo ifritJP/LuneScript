@@ -29,7 +29,7 @@ print( "12%d" ( 10 ) );
 
 {
     let val = 1;
-    print( "%g" (val@real));
+    print( "%g" (val@@real));
 }
 
 print( "op", type( {} ),  1 and "2" and 3.0 and type( {} ) );
@@ -199,7 +199,7 @@ print( (new GetTest2()).$val );
         error( "fail" );
     };
     print( "2 = %d, 3 = %d, 4 = %d"
-           (ddd1@int + 1, ddd2@int + 1, ddd3@int + 1 ) );
+           (ddd1@@int + 1, ddd2@@int + 1, ddd3@@int + 1 ) );
 }
 
 {
@@ -288,7 +288,7 @@ fn testret() : int! {
 }
 
 {
-    print( 10 / 3, 10 / 3.0, (10 / 3.0)@int );
+    print( 10 / 3, 10 / 3.0, (10 / 3.0)@@int );
 }
 
 {

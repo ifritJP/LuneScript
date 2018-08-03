@@ -357,7 +357,7 @@ fn TransUnit.registBuiltInScope() {
             "searchModule": { "arg": [ "str" ], "ret": ["str!"] },
          }, 
       } 
-   ]@Map<str,Map<str,Map<str,str[]>>>[];
+   ]@@Map<str,Map<str,Map<str,str[]>>>[];
 
 
    fn getTypeInfo( typeName:str ) : Ast.TypeInfo {
@@ -451,7 +451,7 @@ fn TransUnit.error( mess: str ) {
       pos = _exp.pos;
       txt = _exp.txt;
    }
-   error( string.format( "error:%s:%d:%d:(%s) %s",
+   error( string.format( "\nerror:%s:%d:%d:(%s) %s",
                          self.parser.getStreamName(),
                          pos.lineNo, pos.column, txt, mess ) );
 }
@@ -487,7 +487,7 @@ fn expandVal( tokenList:Parser.Token[], val: stem!, pos: Parser.Position ): str 
          case "table" {
             tokenList.insert(
                new Parser.Token( Parser.kind.Dlmt, "{" (_exp), pos ) );
-            foreach item, key in _exp@stem![] {
+            foreach item, key in _exp@@stem![] {
                expandVal( tokenList, item, pos );
                tokenList.insert(
                   new Parser.Token( Parser.kind.Dlmt, "," (_exp), pos ) );
@@ -542,7 +542,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
             if tokenTxt == ',,' {
                //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
                if macroVal.typeInfo == Ast.builtinTypeSymbol {
-                  let txtList = (unwrap macroVal.val)@str[];
+                  let txtList = (unwrap macroVal.val)@@str[];
                   for index = #txtList, 1, -1 {
                      nextToken = new Parser.Token(
                         nextToken.kind, txtList[ index ], nextToken.pos );
@@ -551,12 +551,12 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
                }   
                elseif macroVal.typeInfo == Ast.builtinTypeStat {
                   self.pushbackStr( "macroVal %s" (nextToken.txt),
-                                    (unwrap macroVal.val)@str );                       
+                                    (unwrap macroVal.val)@@str );                       
                }   
                elseif macroVal.typeInfo.get_kind() == Ast.TypeInfoKindArray or
                   macroVal.typeInfo.get_kind() == Ast.TypeInfoKindList
                {   
-                  let strList = (unwrap macroVal.val)@str[];
+                  let strList = (unwrap macroVal.val)@@str[];
                   if strList {
                      for index = #strList, 1, -1 {
                         self.pushbackStr(
@@ -577,7 +577,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
             } 
             elseif tokenTxt == ',,,,' {
                if macroVal.typeInfo == Ast.builtinTypeSymbol {
-                  let txtList = (unwrap macroVal.val)@str[];
+                  let txtList = (unwrap macroVal.val)@@str[];
                   let newToken = "";
                   foreach txt in txtList {
                      newToken = "%s%s" (newToken, txt);
@@ -801,7 +801,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    }
 
 
-   let moduleInfo = _luneScript.loadModule( modulePath )@_ModuleInfo;
+   let moduleInfo = _luneScript.loadModule( modulePath )@@_ModuleInfo;
    //self.moduleName2Info[ modulePath ] = moduleInfo;
 
    foreach symbolInfo in Ast.sym2builtInTypeMap {
@@ -973,14 +973,14 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                       nil, nil, true, classTypeInfo.getTxt(), "pub" );
       if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
          let classInfo = _exp;
-         foreach fieldInfo, fieldName in classInfo@Map<str,Map<str,stem>> {
+         foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
             let typeId = fieldInfo.typeId;
             let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
             self.scope.add(
                fieldName, fieldTypeInfo,
-               (unwrap fieldInfo.accessMode)@str,
-               (unwrap fieldInfo.staticFlag default false)@bool,
-               (unwrap fieldInfo.mutable default false)@bool );
+               (unwrap fieldInfo.accessMode)@@str,
+               (unwrap fieldInfo.staticFlag default false)@@bool,
+               (unwrap fieldInfo.mutable default false)@@bool );
          }   
          foreach child in classTypeInfo.get_children() {
             if child.get_kind() == Ast.TypeInfoKindClass or
@@ -1018,8 +1018,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    foreach varInfo, varName in moduleInfo._varName2InfoMap {
       self.scope.add(
          varName, unwrap typeId2TypeInfo[ varInfo.typeId ], "pub",
-         (unwrap varInfo.staticFlag default false)@bool,
-         (unwrap varInfo.mutable default false)@bool );
+         (unwrap varInfo.staticFlag default false)@@bool,
+         (unwrap varInfo.mutable default false)@@bool );
    }
 
    foreach moduleName in nameList {

@@ -228,7 +228,7 @@ pub class StreamParser extend Parser {
       };
 
       return new StreamParser(
-         stream@Stream, path, luaMode or string.find( path, "%.lua$" ) );
+         stream@@Stream, path, luaMode or string.find( path, "%.lua$" ) );
    }
 }
 

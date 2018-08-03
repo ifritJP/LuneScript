@@ -399,9 +399,9 @@ fn TransUnit.evalMacro(
    }
 
    let func = macroInfo.func;
-   let macroVars:Map<str,stem!> = func( table.unpack( argVal ) )@Map<str,stem!>;
+   let macroVars:Map<str,stem!> = func( table.unpack( argVal ) )@@Map<str,stem!>;
 
-   foreach name in (unwrap macroVars._names)@str[] {
+   foreach name in (unwrap macroVars._names)@@str[] {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
       let typeInfo = valInfo and valInfo.typeInfo or Ast.builtinTypeStem_;
       let val = macroVars[ name ];
@@ -418,7 +418,7 @@ fn TransUnit.evalMacro(
    if argList {
       foreach arg, index in argList {
          if arg.get_kind() == Ast.nodeKindDeclArg {
-            let argInfo = arg@Ast.DeclArgNode;
+            let argInfo = arg@@Ast.DeclArgNode;
             let argType = argInfo.$argType;
             let argName = argInfo.$name.txt;
             //scope.add( argName, argType.expType );
@@ -507,7 +507,7 @@ fn TransUnit.analyzeExpCont(
                if funcTypeInfo.$kind == Ast.TypeInfoKindMethod and
                   exp.$kind == Ast.nodeKindRefField
                {
-                  let refField = exp@Ast.RefFieldNode;
+                  let refField = exp@@Ast.RefFieldNode;
                   let classType = refField.$prefix.$expType;
                   genericTypeList = classType.$itemTypeInfoList;
                }
@@ -744,7 +744,7 @@ fn TransUnit.analyzeExpOp2(
       let nextToken = self.getToken();
       let opTxt = nextToken.txt;
 
-      if opTxt == "@" {
+      if opTxt == "@@" {
          let castType = self.analyzeRefType( "local" );
          if exp.$expType.$nilable and not castType.$expType.$nilable {
             self.addErrMess( firstToken.pos,
@@ -756,8 +756,7 @@ fn TransUnit.analyzeExpOp2(
       elseif nextToken.kind == Parser.kind.Ope {
          if Parser.isOp2( opTxt ) {
             let! opLevel = op2levelMap[ opTxt ] {
-               error( string.format( "unknown op -- %s %s",
-                                     opTxt, prevOpLevel ) );
+               self.error( "unknown op -- %s %s" (opTxt, prevOpLevel ) );
             };
             if! prevOpLevel {
                if opLevel <= _exp {
@@ -935,7 +934,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: Parser.Token ): Ast.ExpMacroStatNo
 
          if token.txt == ",," and exp.$kind == Ast.nodeKindExpRef
          {
-            let refToken = (exp@Ast.ExpRefNode).get_token();
+            let refToken = (exp@@Ast.ExpRefNode).get_token();
             let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
             if macroInfo {
                if (unwrap macroInfo).typeInfo == Ast.builtinTypeSymbol {
@@ -1197,7 +1196,7 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
 
    if token.kind == Parser.kind.Int {
       exp = new Ast.LiteralIntNode( firstToken.pos, [ Ast.builtinTypeInt ],
-                                    token, tonumber( token.txt )@int );
+                                    token, tonumber( token.txt )@@int );
    }
    elseif token.kind == Parser.kind.Real {
       exp = new Ast.LiteralRealNode( firstToken.pos, [ Ast.builtinTypeReal ],

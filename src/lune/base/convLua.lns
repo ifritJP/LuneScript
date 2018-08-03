@@ -362,7 +362,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
       {               
          self.write( "_typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
-         typeInfo.serialize( self@Ast.OutStream );
+         typeInfo.serialize( self@@Ast.OutStream );
       }
    }
    
@@ -567,13 +567,13 @@ pub override fn convFilter.processDeclClass(
          hasConstrFlag = true;
       }
       if field.$kind == Ast.nodeKind.DeclMember {
-         let declMemberNode = field@Ast.DeclMemberNode;
+         let declMemberNode = field@@Ast.DeclMemberNode;
          if not declMemberNode.$staticFlag {
             memberList.insert( declMemberNode );
          }
       }
       if field.$kind == Ast.nodeKind.DeclMethod {
-         let methodNode = field@Ast.DeclMethodNode;
+         let methodNode = field@@Ast.DeclMethodNode;
          let declInfo = methodNode.get_declInfo();
          let methodNameToken = declInfo.get_name();
          if outerMethodSet[ (unwrap methodNameToken).txt ] {
@@ -694,7 +694,7 @@ pub override fn convFilter.processDeclMacro(
          }   
          filter( arg, self, node, baseIndent );
          if arg.get_kind() == Ast.nodeKind.DeclArg {
-            argTxt = argTxt .. (arg@Ast.DeclArgNode).$name.txt;
+            argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
          }
          else {
             error( "not support ... in macro %s" ( node.get_declInfo().$name.txt ) );
@@ -763,7 +763,7 @@ pub override fn convFilter.processDeclConstr(
       filter( arg, self, node, baseIndent );
 
       if arg.get_kind() == Ast.nodeKind.DeclArg {
-         argTxt = argTxt .. (arg@Ast.DeclArgNode).$name.txt;
+         argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
       }
       else {
          let name = unwrap node.get_declInfo().$name;
@@ -1255,7 +1255,7 @@ pub override fn convFilter.processExpCall(
 {
    let wroteFuncFlag = false;
    if node.$func.$kind == Ast.nodeKind.RefField {
-      let refField = node.$func@Ast.RefFieldNode;
+      let refField = node.$func@@Ast.RefFieldNode;
       if node.$nilAccess {
          wroteFuncFlag = true;
          if refField.$prefix.$expType.$kind == Ast.TypeInfoKindList {
@@ -1614,7 +1614,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
          if not mod {
             error( "macro load error" );
          }   
-         return (unwrap mod)@form;
+         return (unwrap mod)@@form;
       }
       error( "failed to load -- " .. node.$declInfo.$name );
    }

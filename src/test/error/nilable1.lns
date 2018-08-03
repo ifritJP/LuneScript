@@ -33,9 +33,9 @@
     let val2:int! = nil;
     let val3:stem = nil;
     let val4:stem! = nil;
-    val = val2@int;
-    val = val3@int;
-    val = val4@int;
+    val = val2@@int;
+    val = val3@@int;
+    val = val4@@int;
 }
 {
    let val = 0;

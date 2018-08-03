@@ -1638,7 +1638,7 @@ pub override fn LiteralSymbolNode.getLiteral(): stem![], TypeInfo[] {
    return [[ self.token.txt ]], [ builtinTypeSymbol ];
 }
 pub override fn RefFieldNode.getLiteral(): stem![], TypeInfo[] {
-   let prefix = (unwrap self.prefix.getLiteral()[1])@str[];
+   let prefix = (unwrap self.prefix.getLiteral()[1])@@str[];
    if self.nilAccess {
       prefix.insert( "$." );
    }
