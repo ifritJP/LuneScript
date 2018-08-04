@@ -619,6 +619,32 @@ fn TransUnit.analyzeAccessClassField(
    return fieldTypeInfo, getterTypeInfo;
 }
 
+fn TransUnit.dumpComp( scope: Ast.Scope ) {
+   foreach symbolInfo, symbol in scope.$symbol2TypeInfoMap {
+      if symbol ~= "__init" and symbol ~= "self" {
+         if scope.getTypeInfoField( symbol, true, self.scope ) {
+            Util.errorLog(
+               "hoge: candidate %s %s" ( symbol, symbolInfo.$typeInfo.$display_stirng ) );
+         }
+      }
+   }
+   foreach inheritScope in scope.$inheritList {
+      self.dumpComp( inheritScope );
+   }
+}
+
+fn TransUnit.checkComp( token:Parser.Token, prefixExpType: Ast.TypeInfo )
+{
+   if self.analyzeMode == "comp" and
+      self.analyzePos.lineNo == token.pos.lineNo and
+      self.analyzePos.column >= token.pos.column and
+      self.analyzePos.column <= token.pos.column + #token.txt 
+   {
+      self.dumpComp( unwrap prefixExpType.$scope );
+   }
+}
+
+
 fn TransUnit.analyzeExpSymbol(
    firstToken: Parser.Token, token: Parser.Token,
    mode: str, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node
@@ -642,6 +668,9 @@ fn TransUnit.analyzeExpSymbol(
          else {
             let typeInfo:Ast.TypeInfo! = Ast.builtinTypeStem_;
             let prefixExpType = prefixExp.$expType;
+
+            self.checkComp( token, prefixExpType );
+            
             if accessNil {
                if prefixExpType.$nilable {
                   // nil 条件演算で、 prefixExpType が nilable ならば、

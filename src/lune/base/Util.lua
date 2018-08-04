@@ -56,25 +56,7 @@ end
 
 local Depend = require( 'lune.base.Depend' )
 
-local outStream = {}
-moduleObj.outStream = outStream
--- none
-function outStream.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = outStream } )
-  if obj.__init then
-    obj:__init(  )
-  end        
-  return obj 
- end         
-function outStream:__init(  ) 
-            
-end
-do
-  end
-
 local memStream = {}
-setmetatable( memStream, { __index = outStream } )
 moduleObj.memStream = memStream
 function memStream.new(  )
   local obj = {}
@@ -97,11 +79,7 @@ do
 
 local function errorLog( message )
 
-  local stderr = _lune_unwrap( (io ).stderr)
-  
-  local write = (_lune_unwrap( stderr.write) )
-  
-  write( stderr, message .. "\n" )
+  io.stderr:write( message .. "\n" )
 end
 moduleObj.errorLog = errorLog
 local function debugLog(  )

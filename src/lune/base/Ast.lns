@@ -35,7 +35,7 @@ pub proto class SymbolInfo;
 
 pub let typeInfoKind:Map<str,TypeInfo> = {};
 pub let sym2builtInTypeMap:Map<str,SymbolInfo> = {};
-pub let builtInTypeIdSet:Map<int,bool> = {};
+pub let builtInTypeIdSet:Map<int,TypeInfo> = {};
 
 pub let TypeInfoKindRoot = 0;
 pub let TypeInfoKindMacro = 1;
@@ -49,14 +49,9 @@ pub let TypeInfoKindFunc = 8;
 pub let TypeInfoKindMethod = 9;
 pub let TypeInfoKindNilable = 10;
 
-pub fn isBuiltin( typeId: int ) : bool! {
-   return builtInTypeIdSet[ typeId ];
+pub fn isBuiltin( typeId: int ) : bool {
+   return builtInTypeIdSet[ typeId ] ~= nil;
 }
-
-pub class OutStream {
-   pub fn write( txt: str );
-}
-
 
 let dummyList:TypeInfo[] = [];
 
@@ -125,7 +120,7 @@ pub class Scope {
    // このスコープがクラスのスコープかどうか。
    pri let classFlag: bool;
    // 継承しているスコープ。
-   pri let inheritList: Scope[];
+   pri let inheritList: Scope[] { pub };
    /** 所有権情報 */
    pri let symbolId2DataOwnerInfo: Map<int,DataOwnerInfo>;
       
@@ -197,8 +192,12 @@ pub class TypeInfo {
       return "";
    }
    
-   pub fn serialize( stream: OutStream ) {
+   pub fn serialize( stream: oStream ) {
       return;
+   }
+
+   pub fn get_display_stirng(): str {
+      return "";
    }
 
    pub fn equals( typeInfo: TypeInfo ): bool {
@@ -253,9 +252,6 @@ pub class TypeInfo {
    }
    pub fn get_nilableTypeInfo(): TypeInfo {
       return self;
-   }
-   pub fn get_children(): TypeInfo[] {
-      return dummyList;
    }
    pub fn get_children(): TypeInfo[] {
       return dummyList;
@@ -637,8 +633,37 @@ pub class NormalTypeInfo extend TypeInfo {
       } 
       return "";
    }
+
+   pub override fn get_display_stirng(): str {
+      if self.kind == TypeInfoKindNilable {
+         return (unwrap self.orgTypeInfo).get_display_stirng() .. "!";
+      }
+      if self.kind == TypeInfoKindFunc or self.kind == TypeInfoKindMethod
+      {
+         let txt = self.$rawTxt .. "(";
+         foreach argType, index in self.argTypeInfoList {
+            if index ~= 1 {
+               txt = txt .. ", ";
+            }
+            txt = txt .. argType.get_display_stirng();
+         }
+         txt = txt .. ")";
+         foreach retType, index in self.retTypeInfoList {
+            if index == 1 {
+               txt = txt .. ": ";
+            }
+            else {
+               txt = txt .. ", ";
+            }
+            txt = txt .. retType.get_display_stirng();
+         }
+         return txt;
+      }
+      return self.getTxt();
+   }
+
    
-   pub override fn serialize( stream: OutStream ): str! {
+   pub override fn serialize( stream: oStream ): str! {
       if self.typeId == rootTypeId {
          return nil;
       } 
@@ -841,10 +866,10 @@ pub static fn NormalTypeInfo.createBuiltin(
       if info.$nilableTypeInfo ~= rootTypeInfo {
          sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
             rootScope, "pub", false, typeTxt, info.$nilableTypeInfo, false );
-         builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = true;
+         builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
       } 
       
-      builtInTypeIdSet[ info.typeId ] = true;
+      builtInTypeIdSet[ info.typeId ] = info;
       return info;
    }
 
@@ -1503,6 +1528,10 @@ _declNodeClass( "DeclArg", Node,
 
 _declNodeClass( "DeclArgDDD", Node, [] );
 
+pub class AdvertiseInfo {
+   pri let member: DeclMemberNode { pub };
+   pri let prefix: str {pub};
+};
 _declNodeClass( "DeclClass", Node,
                 [ { "accessMode": "str" },
                   { "name": "Parser.Token" },
@@ -1511,9 +1540,9 @@ _declNodeClass( "DeclClass", Node,
                   { "memberList": "DeclMemberNode[]" },
                   { "scope": "Scope" },
                   { "initStmtList": "Node[]" },
+                  { "advertiseList": "AdvertiseInfo[]" },
                   { "outerMethodSet": "Map<str,bool>" } ]
 );
-
 
 _declNodeClass( "DeclMacro", Node,
                 [ { "declInfo": "DeclMacroInfo" } ]

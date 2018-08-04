@@ -313,7 +313,7 @@ moduleObj.typeInfoListRemove = typeInfoListRemove
 
 function TransUnit:registBuiltInScope(  )
 
-  local builtInInfo = {{[""] = {["type"] = {["arg"] = {"stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["_fcall"] = {["arg"] = {"form", "..."}, ["ret"] = {""}}}}, {["ioStream"] = {["read"] = {["methodFlag"] = {}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["methodFlag"] = {}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"ioStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"ioStream!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["methodFlag"] = {}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["methodFlag"] = {}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["methodFlag"] = {}, ["arg"] = {"..."}, ["ret"] = {"str"}}, ["rep"] = {["methodFlag"] = {}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["methodFlag"] = {}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["methodFlag"] = {}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["methodFlag"] = {}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["methodFlag"] = {}, ["arg"] = {"stem!"}, ["ret"] = {""}}, ["remove"] = {["methodFlag"] = {}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}}}, {["_luneScript"] = {["loadModule"] = {["arg"] = {"str"}, ["ret"] = {"stem"}}, ["searchModule"] = {["arg"] = {"str"}, ["ret"] = {"str!"}}}}}
+  local builtInInfo = {{[""] = {["type"] = {["arg"] = {"stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["_fcall"] = {["arg"] = {"form", "..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"method"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"method"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"method"}, ["arg"] = {"stem!"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"method"}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}}}, {["_luneScript"] = {["loadModule"] = {["arg"] = {"str"}, ["ret"] = {"stem"}}, ["searchModule"] = {["arg"] = {"str"}, ["ret"] = {"str!"}}}}}
   
   local function getTypeInfo( typeName )
   
@@ -330,12 +330,32 @@ function TransUnit:registBuiltInScope(  )
   local builtinModuleName2Scope = {}
   
   for __index, builtinClassInfo in pairs( builtInInfo ) do
-    for name, name2FuncInfo in pairs( builtinClassInfo ) do
+    for name, name2FieldInfo in pairs( builtinClassInfo ) do
       local parentInfo = Ast.typeInfoRoot
       
       if name ~= "" then
-        parentInfo = self:pushClass( true, false, nil, nil, true, name, "pub" )
-        Ast.builtInTypeIdSet[parentInfo:get_typeId(  )] = true
+        local classFlag = true
+        
+        if _lune_nilacc( _lune_nilacc( name2FieldInfo.__attrib, "type" ), nil, 'item', 1) == "interface" then
+          classFlag = false
+        end
+        local interfaceList = {}
+        
+        do
+          local _exp = _lune_nilacc( name2FieldInfo.__attrib, "inplements" )
+          if _exp then
+          
+              for __index, ifname in pairs( _exp ) do
+                local ifType = getTypeInfo( ifname )
+                
+                table.insert( interfaceList, ifType )
+              end
+            end
+        end
+        
+        parentInfo = self:pushClass( classFlag, false, nil, interfaceList, true, name, "pub" )
+        Ast.builtInTypeIdSet[parentInfo:get_typeId(  )] = parentInfo
+        Ast.builtInTypeIdSet[parentInfo:get_nilableTypeInfo():get_typeId()] = parentInfo:get_nilableTypeInfo()
       end
       if not parentInfo then
         error( "parentInfo is nil" )
@@ -346,53 +366,59 @@ function TransUnit:registBuiltInScope(  )
         end
         do
           local __sorted = {}
-          local __map = name2FuncInfo
+          local __map = name2FieldInfo
           for __key in pairs( __map ) do
             table.insert( __sorted, __key )
           end
           table.sort( __sorted )
-          for __index, funcName in ipairs( __sorted ) do
-            info = __map[ funcName ]
+          for __index, fieldName in ipairs( __sorted ) do
+            info = __map[ fieldName ]
             do
-              local argTypeList = {}
-              
-              for __index, argType in pairs( _lune_unwrap( info["arg"]) ) do
-                table.insert( argTypeList, getTypeInfo( argType ) )
-              end
-              local retTypeList = {}
-              
-              for __index, retType in pairs( _lune_unwrap( info["ret"]) ) do
-                local retTypeInfo = getTypeInfo( retType )
-                
-                table.insert( retTypeList, retTypeInfo )
-              end
-              local methodFlag = info["methodFlag"]
-              
-              self:pushScope( false )
-              local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc, parentInfo, false, true, not methodFlag, "pub", funcName, argTypeList, retTypeList )
-              
-              self:popScope(  )
-              Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = true
-              if typeInfo:get_nilableTypeInfo() ~= Ast.rootTypeInfo then
-                Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = true
-              end
-              self.scope:add( funcName, typeInfo, "pub", not methodFlag, false )
-              if methodFlag then
-                do
-                  local _switchExp = (name )
-                  if _switchExp == "List" then
+              if fieldName ~= "__attrib" then
+                if _lune_nilacc( info.type, nil, 'item', 1) == "member" then
+                  self.scope:add( fieldName, getTypeInfo( _lune_unwrap( _lune_nilacc( info.typeInfo, nil, 'item', 1)) ), "pub", true, false )
+                else 
+                  local argTypeList = {}
+                  
+                  for __index, argType in pairs( _lune_unwrap( info["arg"]) ) do
+                    table.insert( argTypeList, getTypeInfo( argType ) )
+                  end
+                  local retTypeList = {}
+                  
+                  for __index, retType in pairs( _lune_unwrap( info["ret"]) ) do
+                    local retTypeInfo = getTypeInfo( retType )
+                    
+                    table.insert( retTypeList, retTypeInfo )
+                  end
+                  local methodFlag = _lune_nilacc( info.type, nil, 'item', 1) == "method"
+                  
+                  self:pushScope( false )
+                  local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc, parentInfo, false, true, not methodFlag, "pub", fieldName, argTypeList, retTypeList )
+                  
+                  self:popScope(  )
+                  Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = typeInfo
+                  if typeInfo:get_nilableTypeInfo() ~= Ast.rootTypeInfo then
+                    Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
+                  end
+                  self.scope:add( fieldName, typeInfo, "pub", not methodFlag, false )
+                  if methodFlag then
                     do
-                      local _switchExp = (funcName )
-                      if _switchExp == "insert" then
-                        typeInfoListInsert = typeInfo
-                      elseif _switchExp == "remove" then
-                        typeInfoListRemove = typeInfo
+                      local _switchExp = (name )
+                      if _switchExp == "List" then
+                        do
+                          local _switchExp = (fieldName )
+                          if _switchExp == "insert" then
+                            typeInfoListInsert = typeInfo
+                          elseif _switchExp == "remove" then
+                            typeInfoListRemove = typeInfo
+                          end
+                        end
+                        
                       end
                     end
                     
                   end
                 end
-                
               end
             end
           end
@@ -786,6 +812,9 @@ function TransUnit:analyzeImport( token )
   for __index, symbolInfo in pairs( Ast.sym2builtInTypeMap ) do
     typeId2TypeInfo[symbolInfo:get_typeInfo():get_typeId(  )] = symbolInfo:get_typeInfo()
   end
+  for __index, builtinTypeInfo in pairs( Ast.builtInTypeIdSet ) do
+    typeId2TypeInfo[builtinTypeInfo:get_typeId()] = builtinTypeInfo
+  end
   local typeId2Scope = {}
   
   typeId2Scope[Ast.rootTypeId] = self.scope
@@ -795,7 +824,7 @@ function TransUnit:analyzeImport( token )
   
     local newTypeInfo = nil
     
-    if not Ast.builtInTypeIdSet[atomInfo.typeId] then
+    if atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] then
       if atomInfo.nilable then
         local orgTypeInfo = _lune_unwrap( typeId2TypeInfo[atomInfo.orgTypeId])
         
@@ -811,7 +840,7 @@ function TransUnit:analyzeImport( token )
         
         for __index, typeId in pairs( atomInfo.argTypeId ) do
           if not typeId2TypeInfo[typeId] then
-            Util.errorLog( string.format( "not found -- %s,%d", atomInfo.txt, #atomInfo.argTypeId) )
+            Util.errorLog( string.format( "not found -- %s, %d, %d", atomInfo.txt, typeId, #atomInfo.argTypeId) )
           end
           table.insert( argTypeInfo, _lune_unwrap( typeId2TypeInfo[typeId]) )
         end
@@ -1405,17 +1434,22 @@ end
 do
   end
 
-function TransUnit:createAST( parser, macroFlag, module )
+function TransUnit:createAST( parser, macroFlag, moduleName )
 
-  self.moduleName = module
+  self.moduleName = _lune_unwrapDefault( moduleName, "")
   self:registBuiltInScope(  )
   local moduleTypeInfo = Ast.typeInfoRoot
   
-  if module then
-    for txt in string.gmatch( module, '[^%.]+' ) do
-      moduleTypeInfo = _lune_unwrap( self:pushClass( true, false, nil, nil, false, txt, "pub" ))
-    end
+  do
+    local _exp = moduleName
+    if _exp then
+    
+        for txt in string.gmatch( _exp, '[^%.]+' ) do
+          moduleTypeInfo = _lune_unwrap( self:pushClass( true, false, nil, nil, false, txt, "pub" ))
+        end
+      end
   end
+  
   self.moduleScope = self.scope
   self.parser = parser
   local ast = nil
@@ -1462,11 +1496,16 @@ function TransUnit:createAST( parser, macroFlag, module )
       
     end
   end
-  if module then
-    for txt in string.gmatch( module, '[^%.]+' ) do
-      self:popClass(  )
-    end
+  do
+    local _exp = moduleName
+    if _exp then
+    
+        for txt in string.gmatch( _exp, '[^%.]+' ) do
+          self:popClass(  )
+        end
+      end
   end
+  
   if #self.errMessList > 0 then
     for __index, mess in pairs( self.errMessList ) do
       Util.errorLog( "error:" .. mess )
@@ -1737,11 +1776,15 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
   
   local memberList = {}
   
-  local methodName2Node = {}
+  local methodNameSet = {}
   
   local initStmtList = {}
   
-  local node = Ast.DeclClassNode.new(firstToken.pos, {classTypeInfo}, classAccessMode, name, fieldList, moduleName, memberList, self.scope, initStmtList, {})
+  local advertiseList = {}
+  
+  local node = Ast.DeclClassNode.new(firstToken.pos, {classTypeInfo}, classAccessMode, name, fieldList, moduleName, memberList, self.scope, initStmtList, advertiseList, {})
+  
+  local memberName2Node = {}
   
   self.typeInfo2ClassNode[classTypeInfo] = node
   while true do
@@ -1782,12 +1825,14 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
       table.insert( fieldList, memberNode )
       table.insert( memberList, memberNode )
+      memberName2Node[memberNode:get_name().txt] = memberNode
     elseif token.txt == "fn" then
       local nameToken = self:getToken(  )
       
       local methodNode = self:analyzeDeclMethod( abstructFlag, overrideFlag, accessMode, staticFlag, name, token, nameToken )
       
       table.insert( fieldList, methodNode )
+      methodNameSet[nameToken.txt] = true
     elseif token.txt == "__init" then
       if mode ~= "class" then
         self:error( string.format( "%s can not have __init method", mode) )
@@ -1795,6 +1840,26 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       self:checkNextToken( "{" )
       self:analyzeStatementList( initStmtList, "}" )
       self:checkNextToken( "}" )
+    elseif token.txt == "advertise" then
+      local memberToken = self:getSymbolToken(  )
+      
+      nextToken = self:getToken(  )
+      local prefix = ""
+      
+      if nextToken.txt ~= ";" and nextToken.txt ~= "{" then
+        prefix = nextToken.txt
+        nextToken = self:getToken(  )
+      end
+      self:checkToken( nextToken, ";" )
+      local memberNode = memberName2Node[memberToken.txt]
+      
+          if  not memberNode then
+            local _memberNode = memberNode
+            
+            self:error( string.format( "not found member -- %s", memberToken.txt) )
+          end
+        
+      table.insert( advertiseList, Ast.AdvertiseInfo.new(memberNode, prefix) )
     elseif token.txt == ";" then
     else 
       self:error( "illegal field" )
@@ -1835,6 +1900,28 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     
     self:popScope(  )
     self.scope:add( "__init", initTypeInfo, "pub", false, false )
+    methodNameSet["__init"] = true
+  end
+  for __index, advertiseInfo in pairs( advertiseList ) do
+    local memberType = advertiseInfo:get_member():get_expType()
+    
+    do
+      local _switchExp = memberType:get_kind()
+      if _switchExp == Ast.TypeInfoKindClass or _switchExp == Ast.TypeInfoKindIF then
+        for __index, child in pairs( memberType:get_children() ) do
+          if child:get_kind() == Ast.TypeInfoKindMethod and child:get_accessMode() ~= "pri" and not child:get_staticFlag() then
+            local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
+            
+            if not methodNameSet[childName] then
+              self.scope:add( childName, child, child:get_accessMode(), child:get_staticFlag(), false )
+            end
+          end
+        end
+      else 
+        self:error( string.format( "advertise member type is illegal -- %s", advertiseInfo:get_member():get_name()) )
+      end
+    end
+    
   end
   self:popClass(  )
   return node
@@ -2717,6 +2804,27 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
   return fieldTypeInfo, getterTypeInfo
 end
 
+function TransUnit:dumpComp( scope )
+
+  for symbol, symbolInfo in pairs( scope:get_symbol2TypeInfoMap() ) do
+    if symbol ~= "__init" and symbol ~= "self" then
+      if scope:getTypeInfoField( symbol, true, self.scope ) then
+        Util.errorLog( string.format( "hoge: candidate %s %s", symbol, symbolInfo:get_typeInfo():get_display_stirng()) )
+      end
+    end
+  end
+  for __index, inheritScope in pairs( scope:get_inheritList() ) do
+    self:dumpComp( inheritScope )
+  end
+end
+
+function TransUnit:checkComp( token, prefixExpType )
+
+  if self.analyzeMode == "comp" and self.analyzePos.lineNo == token.pos.lineNo and self.analyzePos.column >= token.pos.column and self.analyzePos.column <= token.pos.column + #token.txt then
+    self:dumpComp( _lune_unwrap( prefixExpType:get_scope()) )
+  end
+end
+
 function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFlag )
 
   local exp = nil
@@ -2742,6 +2850,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               
               local prefixExpType = prefixExp:get_expType()
               
+              self:checkComp( token, prefixExpType )
               if accessNil then
                 if prefixExpType:get_nilable() then
                   prefixExpType = _lune_unwrap( prefixExpType:get_orgTypeInfo())
@@ -3270,6 +3379,59 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
   return self:analyzeExpOp2( firstToken, exp, prevOpLevel )
 end
 
+function TransUnit:analyzeReturn( token )
+
+  local nextToken = self:getToken(  )
+  
+  local expList = nil
+  
+  if nextToken.txt ~= ";" then
+    self:pushback(  )
+    expList = self:analyzeExpList( false )
+    self:checkNextToken( ";" )
+  end
+  local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
+  
+  if not funcTypeInfo then
+    self:addErrMess( token.pos, "'return' could not exist here" )
+  else 
+    local retTypeList = funcTypeInfo:get_retTypeInfoList()
+    
+    do
+      local _exp = expList
+      if _exp then
+      
+          local expNodeList = _exp:get_expList()
+          
+          if #retTypeList == 0 and #expNodeList > 0 then
+            self:addErrMess( token.pos, "this function can't return value." )
+          end
+          for index, retType in pairs( retTypeList ) do
+            local expNode = expNodeList[index]
+            
+            local expType = expNode:get_expType()
+            
+            if not retType:isSettableFrom( expType ) then
+              self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", index, retType:getTxt(  ), retType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
+            end
+            if index == #retTypeList then
+              if #retTypeList < #expNodeList and retType ~= Ast.builtinTypeDDD then
+                self:addErrMess( token.pos, "over return value" )
+              end
+            end
+          end
+        else
+      
+          if #retTypeList ~= 0 then
+            self:addErrMess( token.pos, "no return value" )
+          end
+        end
+    end
+    
+  end
+  return Ast.ReturnNode.new(token.pos, {Ast.builtinTypeNone}, expList)
+end
+
 function TransUnit:analyzeStatement( termTxt )
 
   local token = self:getTokenNoErr(  )
@@ -3319,50 +3481,7 @@ function TransUnit:analyzeStatement( termTxt )
     elseif token.txt == "forsort" then
       statement = self:analyzeForeach( token, true )
     elseif token.txt == "return" then
-      local nextToken = self:getToken(  )
-      
-      local expList = nil
-      
-      if nextToken.txt ~= ";" then
-        self:pushback(  )
-        expList = self:analyzeExpList( false )
-        self:checkNextToken( ";" )
-      end
-      local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
-      
-      if not funcTypeInfo then
-        self:addErrMess( token.pos, "'return' could not exist here" )
-      else 
-        do
-          local _exp = expList
-          if _exp then
-          
-              local retTypeList = funcTypeInfo:get_retTypeInfoList()
-              
-              local expNodeList = _exp:get_expList()
-              
-              if #retTypeList == 0 and #expNodeList > 0 then
-                self:addErrMess( token.pos, "this function can't return value." )
-              end
-              for index, retType in pairs( retTypeList ) do
-                local expNode = expNodeList[index]
-                
-                local expType = expNode:get_expType()
-                
-                if not retType:isSettableFrom( expType ) then
-                  self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", index, retType:getTxt(  ), retType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
-                end
-                if index == #retTypeList then
-                  if #retTypeList < #expNodeList and retType ~= Ast.builtinTypeDDD then
-                    self:addErrMess( token.pos, "over return value" )
-                  end
-                end
-              end
-            end
-        end
-        
-      end
-      statement = Ast.ReturnNode.new(token.pos, {Ast.builtinTypeNone}, expList)
+      statement = self:analyzeReturn( token )
     elseif token.txt == "break" then
       self:checkNextToken( ";" )
       statement = Ast.BreakNode.new(token.pos, {Ast.builtinTypeNone})

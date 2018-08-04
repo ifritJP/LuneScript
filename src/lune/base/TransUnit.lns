@@ -294,24 +294,42 @@ fn TransUnit.registBuiltInScope() {
             "_fcall": { "arg": [ "form", "..." ], "ret": [""] },
          }, 
       },
+      {
+         "iStream": {
+            "__attrib": { "type": [ "interface" ] },
+            "read": { "type": [ "method" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+            "close": { "type": [ "method" ], "arg": [], "ret": [] },
+         },
+      },
+      {
+         "oStream": {
+            "__attrib": { "type": [ "interface" ] },
+            "write": { "type": [ "method" ], "arg": [ "str" ], "ret": [ ] },
+            "close": { "type": [ "method" ], "arg": [], "ret": [] },
+         },
+      },
       { 
-         "ioStream": {
-            "read": { "methodFlag": [], "arg": [ "stem!" ], "ret": [ "str!" ] },
-            "close": { "methodFlag": [], "arg": [], "ret": [] },
+         "luaStream": {
+            "__attrib": { "inplements": [ "iStream", "oStream" ] },
+            "read": { "type": [ "method" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+            "write": { "type": [ "method" ], "arg": [ "str" ], "ret": [ ] },
+            "close": { "type": [ "method" ], "arg": [], "ret": [] },
          }, 
       },
       { 
          "io": {
-            "open": { "arg": [ "str", "str!" ], "ret": ["ioStream!"] },
-            "popen": { "arg": [ "str" ], "ret": ["ioStream!"] },
-         }, 
+            "stdout": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
+            "stderr": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
+            "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!"] },
+            "popen": { "arg": [ "str" ], "ret": ["luaStream!"] },
+         },
       },
       { 
          
          "os": {
             "clock": { "arg": [], "ret": ["int"] },
             "exit": { "arg": [ "int!" ], "ret": [] },
-         },  
+         },
       },
       { 
          "string": {
@@ -322,17 +340,17 @@ fn TransUnit.registBuiltInScope() {
             "gmatch": { "arg": [ "str", "str" ], "ret": ["stem!"] },
             "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str"] },
             "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
-         },  
+         },
       },
       { 
          "str": {
-            "find": { "methodFlag": [], "arg": [ "str", "int!", "bool!" ], "ret": ["int", "int"] },
-            "byte": { "methodFlag": [], "arg": [ "int" ], "ret": ["int"] },
-            "format": { "methodFlag": [], "arg": [ "..." ], "ret": ["str"] },
-            "rep": { "methodFlag": [], "arg": [ "int" ], "ret": ["str"] },
-            "gmatch": { "methodFlag": [], "arg": [ "str" ], "ret": ["stem!"] },
-            "gsub": { "methodFlag": [], "arg": [ "str", "str" ], "ret": ["str"] },
-            "sub": { "methodFlag": [], "arg": [ "int", "int!" ], "ret": ["str"] },
+            "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int", "int"] },
+            "byte": { "type": [ "method" ], "arg": [ "int" ], "ret": ["int"] },
+            "format": { "type": [ "method" ], "arg": [ "..." ], "ret": ["str"] },
+            "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
+            "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["stem!"] },
+            "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str"] },
+            "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
          },  
       },
       { 
@@ -342,8 +360,8 @@ fn TransUnit.registBuiltInScope() {
       },
       { 
          "List": {
-            "insert": { "methodFlag": [], "arg": [ "stem!" ], "ret": [""] },
-            "remove": { "methodFlag": [], "arg": [ "int!" ], "ret": [""] },
+            "insert": { "type": [ "method" ], "arg": [ "stem!" ], "ret": [""] },
+            "remove": { "type": [ "method" ], "arg": [ "int!" ], "ret": [""] },
          },  
       },
       { 
@@ -374,11 +392,25 @@ fn TransUnit.registBuiltInScope() {
    let builtinModuleName2Scope:Map<str,Ast.Scope> = {};
    
    foreach builtinClassInfo in builtInInfo {
-      foreach name2FuncInfo, name in builtinClassInfo {
+      foreach name2FieldInfo, name in builtinClassInfo {
          let parentInfo = Ast.typeInfoRoot;
          if name ~= "" {
-            parentInfo = self.pushClass( true, false, nil, nil, true, name, "pub" );
-            Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = true;
+            let classFlag = true;
+            if name2FieldInfo$.__attrib$.type$[1] == "interface" {
+               classFlag = false;
+            }
+            let interfaceList:Ast.TypeInfo[] = [];
+            if! name2FieldInfo$.__attrib$.inplements {
+               foreach ifname in _exp {
+                  let ifType = getTypeInfo( ifname );
+                  interfaceList.insert( ifType );
+               }              
+            }
+            parentInfo = self.pushClass(
+               classFlag, false, nil, interfaceList, true, name, "pub" );
+            Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
+            Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
+               parentInfo.$nilableTypeInfo;
          }   
          if not parentInfo {
             error( "parentInfo is nil" );
@@ -387,53 +419,63 @@ fn TransUnit.registBuiltInScope() {
          {  
             if name ~= "" and getTypeInfo( name ) {
                builtinModuleName2Scope[ name ] = self.scope;
-            }   
+            }
 
-            forsort info, funcName in name2FuncInfo {
-               let argTypeList: Ast.TypeInfo[] = [];
-               foreach argType in unwrap info[ "arg" ] {
-                  argTypeList.insert( getTypeInfo( argType ) );
-               }       
+            forsort info, fieldName in name2FieldInfo {
+               if fieldName ~= "__attrib" {
 
-               let retTypeList: Ast.TypeInfo[] = [];
-               foreach retType in unwrap info[ "ret" ] {
-                  let retTypeInfo = getTypeInfo( retType );
-                  retTypeList.insert( retTypeInfo );
-               }    
+                  if info.type$[1] == "member" {
+                     self.scope.add(
+                        fieldName, getTypeInfo( unwrap info.typeInfo$[1] ),
+                        "pub", true, false );
+                  }
+                  else {
+                     let argTypeList: Ast.TypeInfo[] = [];
+                     foreach argType in unwrap info[ "arg" ] {
+                        argTypeList.insert( getTypeInfo( argType ) );
+                     }  
 
-               
-               let methodFlag = info[ "methodFlag" ];
+                     let retTypeList: Ast.TypeInfo[] = [];
+                     foreach retType in unwrap info[ "ret" ] {
+                        let retTypeInfo = getTypeInfo( retType );
+                        retTypeList.insert( retTypeInfo );
+                     }    
 
-               self.pushScope( false );
-               
-               let typeInfo = Ast.NormalTypeInfo.createFunc(
-                  false, true, self.scope,
-                  methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc,
-                  parentInfo, false, true, not methodFlag, "pub",
-                  funcName, argTypeList, retTypeList );
+                     
+                     let methodFlag = info.type$[1] == "method";
 
-               self.popScope();
-               
-               Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = true;
-               if typeInfo.$nilableTypeInfo ~= Ast.rootTypeInfo {
-                  Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = true;
-               }    
-               
-               self.scope.add( funcName, typeInfo, "pub", not methodFlag, false );
-               if methodFlag {
-                  switch ( name ) {
-                     case "List" {
-                        switch ( funcName ) {
-                           case "insert" {      
-                              typeInfoListInsert = typeInfo;
-                           }        
-                           case "remove" {
-                              typeInfoListRemove = typeInfo;
-                           }        
+                     self.pushScope( false );
+                     
+                     let typeInfo = Ast.NormalTypeInfo.createFunc(
+                        false, true, self.scope,
+                        methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc,
+                        parentInfo, false, true, not methodFlag, "pub",
+                        fieldName, argTypeList, retTypeList );
+
+                     self.popScope();
+                     
+                     Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
+                     if typeInfo.$nilableTypeInfo ~= Ast.rootTypeInfo {
+                        Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
+                     }
+                     self.scope.add(
+                        fieldName, typeInfo, "pub", not methodFlag, false );
+                     if methodFlag {
+                        switch ( name ) {
+                           case "List" {
+                              switch ( fieldName ) {
+                                 case "insert" {      
+                                    typeInfoListInsert = typeInfo;
+                                 }        
+                                 case "remove" {
+                                    typeInfoListRemove = typeInfo;
+                                 }        
+                              }       
+                           }       
                         }       
-                     }       
-                  }       
-               }    
+                     }
+                  }
+               }
             }   
          }  
          if name ~= "" {
@@ -806,12 +848,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    foreach symbolInfo in Ast.sym2builtInTypeMap {
       typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId() ] = symbolInfo.$typeInfo;
-      // let nilableTypeInfo = typeInfo.$nilableTypeInfo;
-      // if nilableTypeInfo ~= rootTypeInfo {
-      //     Util.errorLog( "xxx:%s %s" (nilableTypeInfo.getTxt(),
-      //                                  nilableTypeInfo.$typeId ) );
-      //     typeId2TypeInfo[ nilableTypeInfo.$typeId ] = nilableTypeInfo;
-      // }
+   }
+   foreach builtinTypeInfo in Ast.builtInTypeIdSet {
+      typeId2TypeInfo[ builtinTypeInfo.$typeId ] = builtinTypeInfo;
    }
 
    let typeId2Scope: Map<int,Ast.Scope> = {};
@@ -821,7 +860,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    fn registTypeInfo( atomInfo: _TypeInfo ): Ast.TypeInfo {
       let newTypeInfo: Ast.TypeInfo! = nil;
-      if not Ast.builtInTypeIdSet[ atomInfo.typeId ] {
+      if atomInfo.parentId ~= Ast.rootTypeId or
+         not Ast.builtInTypeIdSet[ atomInfo.typeId ]
+      {     
          if atomInfo.nilable {
             let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
             newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
@@ -835,8 +876,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             let argTypeInfo:Ast.TypeInfo[] = [];
             foreach typeId in atomInfo.argTypeId {
                if not typeId2TypeInfo[ typeId ] {
-                  Util.errorLog( "not found -- %s,%d" ( atomInfo.txt,
-                                                        #atomInfo.argTypeId ) );
+                  Util.errorLog( "not found -- %s, %d, %d"
+                                 ( atomInfo.txt, typeId, #atomInfo.argTypeId ) );
                }    
                argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
             }   

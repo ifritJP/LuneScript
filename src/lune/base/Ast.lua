@@ -126,26 +126,9 @@ moduleObj.TypeInfoKindNilable = TypeInfoKindNilable
 
 local function isBuiltin( typeId )
 
-  return builtInTypeIdSet[typeId]
+  return builtInTypeIdSet[typeId] ~= nil
 end
 moduleObj.isBuiltin = isBuiltin
-local OutStream = {}
-moduleObj.OutStream = OutStream
--- none
-function OutStream.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = OutStream } )
-  if obj.__init then
-    obj:__init(  )
-  end        
-  return obj 
- end         
-function OutStream:__init(  ) 
-            
-end
-do
-  end
-
 local dummyList = {}
 
 -- none
@@ -257,6 +240,9 @@ end
 function Scope:get_symbol2TypeInfoMap()
   return self.symbol2TypeInfoMap
 end
+function Scope:get_inheritList()
+  return self.inheritList
+end
 do
   end
 
@@ -310,6 +296,10 @@ end
 function TypeInfo:serialize( stream )
 
   return 
+end
+function TypeInfo:get_display_stirng(  )
+
+  return ""
 end
 function TypeInfo:equals( typeInfo )
 
@@ -378,10 +368,6 @@ end
 function TypeInfo:get_nilableTypeInfo(  )
 
   return self
-end
-function TypeInfo:get_children(  )
-
-  return dummyList
 end
 function TypeInfo:get_children(  )
 
@@ -776,6 +762,33 @@ function NormalTypeInfo:getTxt(  )
   end
   return ""
 end
+function NormalTypeInfo:get_display_stirng(  )
+
+  if self.kind == TypeInfoKindNilable then
+    return (_lune_unwrap( self.orgTypeInfo) ):get_display_stirng(  ) .. "!"
+  end
+  if self.kind == TypeInfoKindFunc or self.kind == TypeInfoKindMethod then
+    local txt = self:get_rawTxt() .. "("
+    
+    for index, argType in pairs( self.argTypeInfoList ) do
+      if index ~= 1 then
+        txt = txt .. ", "
+      end
+      txt = txt .. argType:get_display_stirng(  )
+    end
+    txt = txt .. ")"
+    for index, retType in pairs( self.retTypeInfoList ) do
+      if index == 1 then
+        txt = txt .. ": "
+      else 
+        txt = txt .. ", "
+      end
+      txt = txt .. retType:get_display_stirng(  )
+    end
+    return txt
+  end
+  return self:getTxt(  )
+end
 function NormalTypeInfo:serialize( stream )
 
   if self.typeId == rootTypeId then
@@ -972,9 +985,9 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   sym2builtInTypeMap[typeTxt] = SymbolInfo.new(rootScope, "pub", false, typeTxt, info, false)
   if info:get_nilableTypeInfo() ~= rootTypeInfo then
     sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
-    builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = true
+    builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
-  builtInTypeIdSet[info.typeId] = true
+  builtInTypeIdSet[info.typeId] = info
   return info
 end
 
@@ -3620,6 +3633,32 @@ do
   end
 
 
+local AdvertiseInfo = {}
+moduleObj.AdvertiseInfo = AdvertiseInfo
+function AdvertiseInfo.new( member, prefix )
+  local obj = {}
+  setmetatable( obj, { __index = AdvertiseInfo } )
+  if obj.__init then
+    obj:__init( member, prefix )
+  end        
+  return obj 
+ end         
+function AdvertiseInfo:__init( member, prefix ) 
+            
+self.member = member
+  self.prefix = prefix
+  end
+function AdvertiseInfo:get_member()
+  return self.member
+end
+function AdvertiseInfo:get_prefix()
+  return self.prefix
+end
+do
+  end
+
+-- none
+
 -- none
 
 function Filter:processDeclClass( node, ... )
@@ -3643,13 +3682,13 @@ function DeclClassNode:processFilter( filter, ... )
   
   filter:processDeclClass( self, table.unpack( argList ) )
 end
-function DeclClassNode.new( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, outerMethodSet )
+function DeclClassNode.new( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, outerMethodSet )
   local obj = {}
   setmetatable( obj, { __index = DeclClassNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, outerMethodSet ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, outerMethodSet ); end
 return obj
 end
-function DeclClassNode:__init(pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, outerMethodSet) 
+function DeclClassNode:__init(pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, outerMethodSet) 
   Node.__init( self, nodeKindDeclClass, pos, builtinTypeList)
   
   -- none
@@ -3661,6 +3700,7 @@ function DeclClassNode:__init(pos, builtinTypeList, accessMode, name, fieldList,
   self.memberList = memberList
   self.scope = scope
   self.initStmtList = initStmtList
+  self.advertiseList = advertiseList
   self.outerMethodSet = outerMethodSet
   -- none
   
@@ -3685,6 +3725,9 @@ function DeclClassNode:get_scope()
 end
 function DeclClassNode:get_initStmtList()
   return self.initStmtList
+end
+function DeclClassNode:get_advertiseList()
+  return self.advertiseList
 end
 function DeclClassNode:get_outerMethodSet()
   return self.outerMethodSet

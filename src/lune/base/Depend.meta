@@ -3,38 +3,38 @@ local moduleObj = {}
 local _typeId2ClassInfoMap = {}
 moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo113 = {}
-  _typeId2ClassInfoMap[ 113 ] = _classInfo113
-  _classInfo113.base = {
-    name='base', staticFlag = false, accessMode = 'pub', typeId = 115 }
+  local _classInfo127 = {}
+  _typeId2ClassInfoMap[ 127 ] = _classInfo127
+  _classInfo127.base = {
+    name='base', staticFlag = false, accessMode = 'pub', typeId = 129 }
   end
 do
-  local _classInfo115 = {}
-  _typeId2ClassInfoMap[ 115 ] = _classInfo115
-  _classInfo115.Depend = {
-    name='Depend', staticFlag = false, accessMode = 'pub', typeId = 117 }
+  local _classInfo129 = {}
+  _typeId2ClassInfoMap[ 129 ] = _classInfo129
+  _classInfo129.Depend = {
+    name='Depend', staticFlag = false, accessMode = 'pub', typeId = 131 }
   end
 do
-  local _classInfo117 = {}
-  _typeId2ClassInfoMap[ 117 ] = _classInfo117
-  _classInfo117.getFileLastModifiedTime = {
-    name='getFileLastModifiedTime', staticFlag = true, accessMode = 'pub', typeId = 119 }
+  local _classInfo131 = {}
+  _typeId2ClassInfoMap[ 131 ] = _classInfo131
+  _classInfo131.getFileLastModifiedTime = {
+    name='getFileLastModifiedTime', staticFlag = true, accessMode = 'pub', typeId = 133 }
   end
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}
 moduleObj._typeInfoList = _typeInfoList
-_typeInfoList[1] = { parentId = 1, typeId = 113, baseId = 1, txt = 'lune',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {115}, }
-_typeInfoList[2] = { parentId = 1, typeId = 114, nilable = true, orgTypeId = 113 }
-_typeInfoList[3] = { parentId = 113, typeId = 115, baseId = 1, txt = 'base',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {117}, }
-_typeInfoList[4] = { parentId = 113, typeId = 116, nilable = true, orgTypeId = 115 }
-_typeInfoList[5] = { parentId = 115, typeId = 117, baseId = 1, txt = 'Depend',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {119}, }
-_typeInfoList[6] = { parentId = 115, typeId = 118, nilable = true, orgTypeId = 117 }
-_typeInfoList[7] = { parentId = 117, typeId = 119, baseId = 1, txt = 'getFileLastModifiedTime',
+_typeInfoList[1] = { parentId = 1, typeId = 127, baseId = 1, txt = 'lune',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {129}, }
+_typeInfoList[2] = { parentId = 1, typeId = 128, nilable = true, orgTypeId = 127 }
+_typeInfoList[3] = { parentId = 127, typeId = 129, baseId = 1, txt = 'base',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {131}, }
+_typeInfoList[4] = { parentId = 127, typeId = 130, nilable = true, orgTypeId = 129 }
+_typeInfoList[5] = { parentId = 129, typeId = 131, baseId = 1, txt = 'Depend',
+        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {133}, }
+_typeInfoList[6] = { parentId = 129, typeId = 132, nilable = true, orgTypeId = 131 }
+_typeInfoList[7] = { parentId = 131, typeId = 133, baseId = 1, txt = 'getFileLastModifiedTime',
         staticFlag = true, accessMode = 'pub', kind = 8, itemTypeId = {}, ifList = {}, argTypeId = {19}, retTypeId = {16}, children = {}, }
-_typeInfoList[8] = { parentId = 117, typeId = 120, nilable = true, orgTypeId = 119 }
+_typeInfoList[8] = { parentId = 131, typeId = 134, nilable = true, orgTypeId = 133 }
 ----- meta -----
 return moduleObj

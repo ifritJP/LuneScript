@@ -144,25 +144,7 @@ local function createReserveInfo( luaMode )
   return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
 
-local Stream = {}
-moduleObj.Stream = Stream
--- none
-function Stream.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = Stream } )
-  if obj.__init then
-    obj:__init(  )
-  end        
-  return obj 
- end         
-function Stream:__init(  ) 
-            
-end
-do
-  end
-
 local TxtStream = {}
-setmetatable( TxtStream, { __index = Stream } )
 moduleObj.TxtStream = TxtStream
 function TxtStream.new( txt )
   local obj = {}

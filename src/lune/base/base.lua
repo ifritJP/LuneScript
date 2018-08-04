@@ -7,6 +7,14 @@ local scriptPath = arg[ 1 ]
 local mode = arg[ 2 ]
 local outputDir = arg[ 3 ]
 local validProf = arg[ 4 ]
+
+
+local analyzePos = {}
+if mode == "comp" then
+   analyzePos.lineNo = tonumber( arg[ 3 ] )
+   analyzePos.column = tonumber( arg[ 4 ] )
+end
+
 local outputMetaFlag = true
 
 function _luneGetLocal( varName )
@@ -158,9 +166,9 @@ local function convert( ast, streamName, stream, metaStream,
    getNode( ast ):processFilter( conv, nil, 0 )
 end
 
-function _luneScript.loadFile( path, module )
+function _luneScript.loadFile( path, module, analyzeMode, pos )
 
-   local ast = createAst( path, module )
+   local ast = createAst( path, module, analyzeMode, pos )
    
    local func = function( self, txt )
       self.val = self.val .. txt
@@ -201,6 +209,8 @@ else
 	    local dumpNode = require( 'lune.base.dumpNode' ).dumpFilter;
 	    getNode( ast ):processFilter( dumpNode, "", 0 )
 	 end, scriptPath .. ".profi" )
+   elseif mode == "comp" then
+      createAst( scriptPath, module, "comp", analyzePos )
    elseif mode == "lua" or mode == "LUA" then
       local ast = createAst( scriptPath, module )
       convert( ast, scriptPath, io.stdout, io.stdout, mode )

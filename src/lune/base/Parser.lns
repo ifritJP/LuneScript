@@ -117,12 +117,12 @@ fn createReserveInfo( luaMode: bool ) :
       return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
    }  
 
-pub class Stream {
-   pub fn read( mode:str ): str!;
-   //pub fn read( mode:str ): str;
-}
+// pub class Stream {
+//    pub fn read( mode:str ): str!;
+//    //pub fn read( mode:str ): str;
+// }
 
-pub class TxtStream extend Stream {
+pub class TxtStream extend (iStream) {
    pri let txt: str;
    pri let start: int;
    pri let eof: bool;
@@ -134,7 +134,7 @@ pub class TxtStream extend Stream {
       }
       self.eof = false;
    }
-   pub override fn read( mode:str ): str! {
+   pub fn read( mode:str ): str! {
       //pub override fn read( mode:str ): str{
       if self.eof {
          return nil;
@@ -193,7 +193,7 @@ pub class WrapParser extend Parser {
 }
 
 pub class StreamParser extend Parser {
-   let stream : Stream;
+   let stream : iStream;
    let streamName: str;
    let lineNo : int;
    let pos : int;
@@ -202,7 +202,7 @@ pub class StreamParser extend Parser {
    let typeSet : Map<str,bool>;
    let builtInSet :Map<str,bool>;
    let multiCharDelimitMap : Map<str,str[@]>;
-   pub fn __init( stream: Stream, name: str, luaMode: bool ) {
+   pub fn __init( stream: iStream, name: str, luaMode: bool ) {
       self.stream = stream;
       self.streamName = name;
       self.lineNo = 0;
@@ -228,7 +228,7 @@ pub class StreamParser extend Parser {
       };
 
       return new StreamParser(
-         stream@@Stream, path, luaMode or string.find( path, "%.lua$" ) );
+         stream, path, luaMode or string.find( path, "%.lua$" ) );
    }
 }
 

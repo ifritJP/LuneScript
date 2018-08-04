@@ -1,18 +1,35 @@
-fn func() {
-    return 1; // error
+{
+   fn func() {
+      return 1; // error
+   }  
 }
-fn func(): int {
-    return 1.0; // error
+{
+   fn func(): int {
+      return 1.0; // error
+   }
 }
-fn func(): ... {
-    return 1.0;
+{
+   fn func(): ... {
+      return 1.0;
+   }  
 }
-fn func(): int, int {
-    return 1, 0;
+{
+   fn func(): int, int {
+      return 1, 0;
+   }  
 }
-fn func(): int {
-    return 1, 0; // error
+{
+   fn func(): int {
+      return 1, 0; // error
+   }  
 }
-fn func(): stem {
-    return 1;
+{
+   fn func(): stem {
+      return 1;
+   }  
+}
+{
+   fn func(): stem {
+      return;  // error
+   }  
 }

@@ -143,17 +143,16 @@ pub class ASTInfo {
 }
 
 pub fn TransUnit.createAST(
-   parser: Parser.Parser, macroFlag: bool, module: str ): ASTInfo
+   parser: Parser.Parser, macroFlag: bool, moduleName: str! ): ASTInfo
 {
-   self.moduleName = module;
+   self.moduleName = unwrap moduleName default "";
 
    self.registBuiltInScope();
 
-
    let moduleTypeInfo = Ast.typeInfoRoot;
 
-   if module {
-      apply txt of string.gmatch( module, '[^%.]+' ) {
+   if! moduleName {
+      apply txt of string.gmatch( _exp, '[^%.]+' ) {
          moduleTypeInfo = unwrap self.pushClass(
             true, false, nil, nil, false, txt@@str, "pub" );
       }
@@ -203,8 +202,8 @@ pub fn TransUnit.createAST(
       }
    }
 
-   if module {
-      apply txt of string.gmatch( module, '[^%.]+' ) {
+   if! moduleName {
+      apply txt of string.gmatch( _exp, '[^%.]+' ) {
          self.popClass();
       }
    }
@@ -517,12 +516,14 @@ fn TransUnit.analyzeDeclClass(
 
    let fieldList:Ast.Node[] = [];
    let memberList:Ast.DeclMemberNode[] = [];
-   let methodName2Node: Map<str,Ast.Node> = {};
+   let methodNameSet: Map<str,bool> = {};
    let initStmtList:Ast.Node[] = [];
+   let advertiseList:Ast.AdvertiseInfo[] = [];
    let node = new Ast.DeclClassNode(
       firstToken.pos, [ classTypeInfo ],
       classAccessMode, name, fieldList, moduleName,
-      memberList, self.scope, initStmtList, {} );
+      memberList, self.scope, initStmtList, advertiseList, {} );
+   let memberName2Node: Map<str,Ast.DeclMemberNode> = {};
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
 
    while true {
@@ -560,12 +561,14 @@ fn TransUnit.analyzeDeclClass(
          let memberNode = self.analyzeDeclMember( accessMode, staticFlag, token );
          fieldList.insert( memberNode );
          memberList.insert( memberNode );
+         memberName2Node[ memberNode.$name.txt ] = memberNode;
       }   
       elseif token.txt == "fn" {
          let nameToken = self.getToken();
          let methodNode = self.analyzeDeclMethod(
             abstructFlag, overrideFlag, accessMode, staticFlag, name, token, nameToken );
          fieldList.insert( methodNode );
+         methodNameSet[ nameToken.txt ] = true;
       }
       elseif token.txt == "__init" {
          if mode ~= "class" {
@@ -574,6 +577,20 @@ fn TransUnit.analyzeDeclClass(
          self.checkNextToken( "{" );
          self.analyzeStatementList( initStmtList, "}" );
          self.checkNextToken( "}" );
+      }
+      elseif token.txt == "advertise" {
+         let memberToken = self.getSymbolToken();
+         nextToken = self.getToken();
+         let prefix = "";
+         if nextToken.txt ~= ";" and nextToken.txt ~= "{" {
+            prefix = nextToken.txt;
+            nextToken = self.getToken();
+         }
+         self.checkToken( nextToken, ";" );
+         let! memberNode = memberName2Node[ memberToken.txt ] {
+            self.error( "not found member -- %s" (memberToken.txt) );
+         };
+         advertiseList.insert( new Ast.AdvertiseInfo( memberNode, prefix ) );
       }
       elseif token.txt == ";" {
       }
@@ -607,7 +624,7 @@ fn TransUnit.analyzeDeclClass(
          self.popScope();
          
          self.scope.add( getterName, retTypeInfo, accessMode, false, false );
-      }   
+      }
       let setterName = "set_" .. memberName.txt;
       accessMode = memberNode.$setterMode;
       if memberNode.$setterMode ~= "none" and
@@ -622,7 +639,7 @@ fn TransUnit.analyzeDeclClass(
             ), accessMode, false, false );
          self.popScope();
       }   
-   }   
+   }
 
    if not self.scope.getTypeInfoChild( "__init" ) {
       // デフォルトコンストラクタの登録
@@ -632,7 +649,35 @@ fn TransUnit.analyzeDeclClass(
          "__init", memberTypeList, [] );
       self.popScope();
       self.scope.add( "__init", initTypeInfo, "pub", false, false );
-   }   
+      methodNameSet[ "__init" ] = true;
+   }
+
+
+   // advertise の処理
+   foreach advertiseInfo in advertiseList {
+      let memberType = advertiseInfo.$member.$expType;
+      switch memberType.$kind {
+         case Ast.TypeInfoKindClass, Ast.TypeInfoKindIF {
+            foreach child in memberType.$children {
+               if child.$kind == Ast.TypeInfoKindMethod and
+                  child.$accessMode ~= "pri" and
+                  not child.$staticFlag
+               {
+                  let childName = advertiseInfo.$prefix .. child.getTxt();
+                  if not methodNameSet[ childName ] {
+                     self.scope.add(
+                        childName, child, child.$accessMode,
+                        child.$staticFlag, false );
+                  }
+               }
+            }
+         }
+         default {
+            self.error( "advertise member type is illegal -- %s"
+                        (advertiseInfo.$member.$name) );
+         }
+      }
+   }
    
 
    self.popClass();

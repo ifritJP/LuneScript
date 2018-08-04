@@ -42,6 +42,7 @@ test-comp:
 	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
 	$(call trans,Depend)
 	$(call trans,Util)
+	$(call trans,Writer)
 	$(call trans,Parser)
 	$(call trans,Ast)
 	$(call trans,TransUnit)
@@ -72,6 +73,7 @@ test-comp2:
 
 	$(call transwork,1,2,Depend)
 	$(call transwork,1,2,Util)
+	$(call transwork,1,2,Writer)
 	$(call transwork,1,2,Parser)
 	$(call transwork,1,2,Ast)
 	$(call transwork,1,2,TransUnit)
@@ -81,6 +83,7 @@ test-comp2:
 
 	$(call transwork,2,3,Depend)
 	$(call transwork,2,3,Util)
+	$(call transwork,2,3,Writer)
 	$(call transwork,2,3,Parser)
 	$(call transwork,2,3,Ast)
 	$(call transwork,2,3,TransUnit)

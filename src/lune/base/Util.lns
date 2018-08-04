@@ -24,56 +24,54 @@ SOFTWARE.
 
 import lune.base.Depend;
 
-pub class outStream {
-    pub fn write(val:str);
-}
+// pub class outStream {
+//    pub fn write(val:str);
+// }
 
-pub class memStream extend outStream {
-    let txt: str { pub };
-    pub fn __init() {
-        self.txt = "";
-    }
-    pub override fn write( val: str ) {
-        self.txt = self.txt .. val;
-    }
+pub class memStream extend (oStream) {
+   let txt: str { pub };
+   pub fn __init() {
+      self.txt = "";
+   }
+   pub fn write( val: str ) {
+      self.txt = self.txt .. val;
+   }
 }
 
 pub fn errorLog( message: str ) {
-    let stderr = unwrap (io@@stem).stderr;
-    let write = (unwrap stderr.write)@@form;
-    write( stderr, message .. "\n" );
+   io.stderr.write( message .. "\n" );
 }
 
 pub fn debugLog() {
-    for level = 2, 6 {
-        let debugInfo = debug.getinfo( level )@@Map<str,stem>;
-        if debugInfo {
-            errorLog( "-- %s %s" ( debugInfo[ "short_src" ],
-                                   debugInfo[ 'currentline' ] ) );
-        }
-    }
+   for level = 2, 6 {
+      let debugInfo = debug.getinfo( level )@@Map<str,stem>;
+      if debugInfo {
+         errorLog( "-- %s %s" ( debugInfo[ "short_src" ],
+                                debugInfo[ 'currentline' ] ) );
+      }
+   }
 }
 
 pub fn profile( validTest:bool, func: form, path: str ): stem! {
-    if not validTest {
-        return func();
-    }
+   if not validTest {
+      return func();
+   }
 
-    module ProFi require 'ProFi' {
-       pub static fn start();
-       pub static fn stop();
-       pub static fn writeReport(path:str);
-    }
+   module ProFi require 'ProFi' {
+      pub static fn start();
+      pub static fn stop();
+      pub static fn writeReport(path:str);
+   }
 
-    ProFi.start();
-    
-    let result:stem! = func();
-    
-    ProFi.stop();
-    ProFi.writeReport( path );
-    
-    
-    return result;
+   ProFi.start();
+   
+   let result:stem! = func();
+   
+   ProFi.stop();
+   ProFi.writeReport( path );
+   
+   
+   return result;
 }
 
 
@@ -82,12 +80,12 @@ path で指定した lns コードに対応した Lua コードが存在する�
 その Lua コードのパスを返す。
 */
 pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
-    let! luaTime, lnsTime =
-        Depend.getFileLastModifiedTime( luaPath ),
-        Depend.getFileLastModifiedTime( lnsPath )
-    {   
-        return false;
-    };
+   let! luaTime, lnsTime =
+      Depend.getFileLastModifiedTime( luaPath ),
+      Depend.getFileLastModifiedTime( lnsPath )
+   {   
+      return false;
+   };
 
-    return luaTime >= lnsTime;
+   return luaTime >= lnsTime;
 }

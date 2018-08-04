@@ -24,6 +24,57 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
+fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
+   let nextToken = self.getToken();
+
+   let expList: Ast.ExpListNode! = nil;
+   if nextToken.txt ~= ";" {
+      self.pushback();
+      expList = self.analyzeExpList( false );
+      self.checkNextToken( ";" );
+   }
+   let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
+   if not funcTypeInfo {
+      self.addErrMess(
+         token.pos,
+         "'return' could not exist here" );
+   }
+   else{
+      let retTypeList = funcTypeInfo.$retTypeInfoList;
+      if! expList {
+         let expNodeList = _exp.$expList;
+         if #retTypeList == 0 and #expNodeList > 0 {
+            self.addErrMess( token.pos,
+                             "this function can't return value." );   
+         }
+         foreach retType, index in retTypeList {
+            let expNode = expNodeList[ index ];
+            let expType = expNode.$expType;
+            if not retType.isSettableFrom( expType ) {
+               self.addErrMess(
+                  token.pos,
+                  "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
+                  (index,
+                    retType.getTxt(), retType.get_typeId(),
+                    expType.getTxt(), expType.get_typeId()));
+            }
+            if index == #retTypeList {
+               if #retTypeList < #expNodeList and 
+                  retType ~= Ast.builtinTypeDDD
+               {                           
+                  self.addErrMess( token.pos, "over return value");
+               }
+            }
+         }
+      }
+      else {
+         if #retTypeList ~= 0 {
+            self.addErrMess( token.pos, "no return value" );
+         }
+      }
+   }
+   return new Ast.ReturnNode( token.pos, [ Ast.builtinTypeNone ], expList );
+}
 
 fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
    let! token = self.getTokenNoErr() {
@@ -81,50 +132,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
          statement = self.analyzeForeach( token, true );
       }
       elseif token.txt == "return" {
-         let nextToken = self.getToken();
-
-         let expList: Ast.ExpListNode! = nil;
-         if nextToken.txt ~= ";" {
-            self.pushback();
-            expList = self.analyzeExpList( false );
-            self.checkNextToken( ";" );
-         }
-         let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-         if not funcTypeInfo {
-            self.addErrMess(
-               token.pos,
-               "'return' could not exist here" );
-         }
-         else{
-            if! expList {
-               let retTypeList = funcTypeInfo.$retTypeInfoList;
-               let expNodeList = _exp.$expList;
-               if #retTypeList == 0 and #expNodeList > 0 {
-                  self.addErrMess( token.pos,
-                                   "this function can't return value." );   
-               }
-               foreach retType, index in retTypeList {
-                  let expNode = expNodeList[ index ];
-                  let expType = expNode.$expType;
-                  if not retType.isSettableFrom( expType ) {
-                     self.addErrMess(
-                        token.pos,
-                        "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
-                        (index,
-                          retType.getTxt(), retType.get_typeId(),
-                          expType.getTxt(), expType.get_typeId()));
-                  }
-                  if index == #retTypeList {
-                     if #retTypeList < #expNodeList and 
-                        retType ~= Ast.builtinTypeDDD
-                     {                           
-                        self.addErrMess( token.pos, "over return value");
-                     }
-                  }
-               }
-            }
-         }
-         statement = new Ast.ReturnNode( token.pos, [ Ast.builtinTypeNone ], expList );
+         statement = self.analyzeReturn( token );
       }
       elseif token.txt == "break" {
          self.checkNextToken( ";" );

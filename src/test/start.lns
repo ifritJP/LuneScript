@@ -1,5 +1,6 @@
 subfile use test.startsub;
 import test.simple;
+import lune.base.Writer;
 
 macro _print( symbol2:stat, format:str! ) {
    {
@@ -381,4 +382,37 @@ print( "val", External.val );
    val1, val2 = 3, 4;
    _print( `{ val1 } );
    _print( `{ val2 } );
+}
+
+{
+   class TestDD {
+      pri let val:int { pub };
+      pub fn func1(): int {
+         return 1 + self.val;
+      }
+      pub fn func2(): int {
+         return 2 + self.val;
+      }
+   }
+   class TestEE {
+      pri let testDD: TestDD;
+      pub fn __init() {
+         self.testDD = new TestDD( 100 );
+      }
+      pub fn func1(): int {
+         return 3;
+      }
+      advertise testDD;
+   }
+   let testEE = new TestEE();
+   _print( `{ testEE.func1() } );
+   _print( `{ testEE.func2() } );
+}
+
+{
+   let jsonWriter = new Writer.JSON( io.stdout );
+   jsonWriter.startParent( "hoge", true );
+   jsonWriter.write( "foo", "bar" );
+   jsonWriter.endElement();
+   jsonWriter.fin();
 }

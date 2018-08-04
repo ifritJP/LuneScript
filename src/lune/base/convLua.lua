@@ -610,11 +610,14 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   
   local outerMethodSet = nodeInfo:get_outerMethodSet(  )
   
+  local methodNameSet = {}
+  
   for __index, field in pairs( fieldList ) do
     local ignoreFlag = false
     
     if field:get_kind() == Ast.nodeKind.DeclConstr then
       hasConstrFlag = true
+      methodNameSet["__init"] = true
     end
     if field:get_kind() == Ast.nodeKind.DeclMember then
       local declMemberNode = field
@@ -628,11 +631,12 @@ function convFilter:processDeclClass( node, parent, baseIndent )
       
       local declInfo = methodNode:get_declInfo(  )
       
-      local methodNameToken = declInfo:get_name(  )
+      local methodNameToken = _lune_unwrap( declInfo:get_name(  ))
       
-      if outerMethodSet[(_lune_unwrap( methodNameToken) ).txt] then
+      if outerMethodSet[methodNameToken.txt] then
         ignoreFlag = true
       end
+      methodNameSet[methodNameToken.txt] = true
     end
     if (not ignoreFlag ) then
       filter( field, self, node, baseIndent )
@@ -695,6 +699,25 @@ end]==], className, getterName, prefix, memberName), baseIndent )
 function %s:%s( %s )
   %s.%s = %s
 end]==], className, setterName, memberName, prefix, memberName, memberName), baseIndent )
+    end
+  end
+  for __index, advertiseInfo in pairs( node:get_advertiseList() ) do
+    local memberName = advertiseInfo:get_member():get_name().txt
+    
+    local memberType = advertiseInfo:get_member():get_expType()
+    
+    for __index, child in pairs( memberType:get_children() ) do
+      if child:get_kind() == Ast.TypeInfoKindMethod and child:get_accessMode() ~= "pri" and not child:get_staticFlag() then
+        local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
+        
+        if not methodNameSet[childName] then
+          self:writeln( string.format( [==[
+function %s:%s( ... )
+   return self.%s:%s( ... )
+end
+]==], className, childName, memberName, childName), baseIndent )
+        end
+      end
     end
   end
   self:writeln( "do", baseIndent + stepIndent )

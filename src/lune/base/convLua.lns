@@ -36,10 +36,10 @@ class PubFuncInfo {
    pub let typeInfo: Ast.TypeInfo;
 }
 
-pub class convFilter extend Ast.Filter {
+pub class convFilter extend Ast.Filter (oStream) {
    pri let streamName: str;
-   pri let stream: Util.outStream;
-   pri let metaStream: Util.outStream;
+   pri let stream: oStream;
+   pri let metaStream: oStream;
    pri let outMetaFlag: bool;
    pri let moduleName2Info: Map<str,stem>;
    pri let convMode: str;
@@ -57,8 +57,8 @@ pub class convFilter extend Ast.Filter {
    pri let needIndent: bool;
    pri let macroDepth: int;
    
-   pub fn __init( streamName: str, stream: Util.outStream,
-                  metaStream: Util.outStream,
+   pub fn __init( streamName: str, stream: oStream,
+                  metaStream: oStream,
                   convMode: str, inMacro: bool )
    {
       //Util.errorLog( "__init: %s" (mode) );
@@ -362,7 +362,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
       {               
          self.write( "_typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
-         typeInfo.serialize( self@@Ast.OutStream );
+         typeInfo.serialize( self );
       }
    }
    
@@ -561,10 +561,12 @@ pub override fn convFilter.processDeclClass(
    let memberList: Ast.DeclMemberNode[] = [];
    let fieldList: Ast.Node[] = nodeInfo.get_fieldList();
    let outerMethodSet: Map<str,bool> = nodeInfo.get_outerMethodSet();
+   let methodNameSet: Map<str,bool> = {};
    foreach field in fieldList {
       let ignoreFlag = false;
       if field.$kind == Ast.nodeKind.DeclConstr {
          hasConstrFlag = true;
+         methodNameSet[ "__init" ] = true;
       }
       if field.$kind == Ast.nodeKind.DeclMember {
          let declMemberNode = field@@Ast.DeclMemberNode;
@@ -575,10 +577,11 @@ pub override fn convFilter.processDeclClass(
       if field.$kind == Ast.nodeKind.DeclMethod {
          let methodNode = field@@Ast.DeclMethodNode;
          let declInfo = methodNode.get_declInfo();
-         let methodNameToken = declInfo.get_name();
-         if outerMethodSet[ (unwrap methodNameToken).txt ] {
+         let methodNameToken = unwrap declInfo.get_name();
+         if outerMethodSet[ methodNameToken.txt ] {
             ignoreFlag = true;
          }
+         methodNameSet[ methodNameToken.txt ] = true;
       }
 
       if ( not ignoreFlag ) {
@@ -644,6 +647,29 @@ end``` ( className, setterName, memberName, prefix, memberName, memberName ),
             baseIndent );
       }
    }
+
+   // advertise
+   foreach advertiseInfo in node.$advertiseList {
+      let memberName = advertiseInfo.$member.$name.txt;
+      let memberType = advertiseInfo.$member.$expType;
+      foreach child in memberType.$children {
+         if child.$kind == Ast.TypeInfoKindMethod and
+            child.$accessMode ~= "pri" and
+            not child.$staticFlag
+         {
+            let childName = advertiseInfo.$prefix .. child.getTxt();
+            if not methodNameSet[ childName ] {
+               self.writeln( ```
+function %s:%s( ... )
+   return self.%s:%s( ... )
+end
+``` (className, childName, memberName, childName), baseIndent );
+            }
+         }
+      }
+   }
+
+   
 
 
    // init block

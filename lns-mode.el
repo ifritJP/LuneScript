@@ -580,24 +580,44 @@ pattern は  {, }, {{, }} のいずれか。
 
 (defun lns-isearch-wrap-function ()
   "subfile を辿って isearch"
-  (isearch-dehighlight)
+  ;;(isearch-dehighlight)
   (let ((now-file (file-name-nondirectory (buffer-file-name)))
-	file-list next-file)
+	file-list next-file owner-file find-flag)
     (cond
      ((setq file-list (lns-get-subfile-list "use"))
       ;; サブファイルがある場合、サブファイルを開いて検索する
-      (find-file (car file-list)))
+      (when (not isearch-forward)
+	(setq file-list (reverse file-list)))
+      (setq owner-file now-file)
+      )
      ((setq file-list (lns-get-subfile-list "owner"))
       ;; オーナーファイルがある場合、次のサブファイルを開いて検索する
-      (find-file (car file-list))
+      (setq owner-file (car file-list))
+      (find-file owner-file)
       (setq file-list (lns-get-subfile-list "use"))
       (when (not isearch-forward)
 	(setq file-list (reverse file-list)))
-      (setq file-list (member now-file file-list))
-      (setq next-file (car (cdr file-list)))
-      (when next-file
-	(find-file next-file))
-     )))
+      (setq file-list (cdr (member now-file file-list)))
+      ))
+    (setq next-file (car file-list))
+    (while (and (not find-flag) next-file)
+      (find-file next-file)
+      (if isearch-forward
+	  (progn
+	    (goto-char 1)
+	    (if (isearch-search-string isearch-string (point-max) t)
+		(setq find-flag t)
+	      (setq file-list (cdr file-list))
+	      (setq next-file (car file-list))))
+	(goto-char (point-max))
+	(if (isearch-search-string isearch-string nil t)
+	    (setq find-flag t)
+	  (setq file-list (cdr file-list))
+	  (setq next-file (car file-list)))
+	))
+    (when (and (not find-flag) owner-file)
+      (find-file owner-file))
+    )
   (setq isearch-other-end nil)
   (cond
    (isearch-forward

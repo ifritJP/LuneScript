@@ -9,5 +9,5 @@ class Test {
    }
 }
 
-let test = new Test(1,2);
-test.func( 1, 1.0, 2.0 );
+let test = new Test(1,2); // error
+test.func( 1, 1.0, 2.0 ); // error
