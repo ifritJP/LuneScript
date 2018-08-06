@@ -112,7 +112,7 @@ local function getReadyCode( lnsPath, luaPath )
 
   local luaTime, lnsTime = Depend.getFileLastModifiedTime( luaPath ), Depend.getFileLastModifiedTime( lnsPath )
   
-      if  not luaTime or  not lnsTime then
+      if  nil == luaTime or  nil == lnsTime then
         local _luaTime = luaTime
         local _lnsTime = lnsTime
         

@@ -126,7 +126,8 @@ fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) : Parser.
          let arg = new Ast.DeclArgNode( argName.pos, refType.$expTypeList,
                                         argName, refType );    
          
-         self.scope.add( argName.txt, refType.$expType, "local", false, false );
+         self.scope.add( true, true, argName.txt,
+                         refType.$expType, "local", false, false );
          argList.insert( arg );
       }
       token = self.getToken();
@@ -227,16 +228,19 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
 
    let scope = self.pushScope( false );
 
-   let argList: Ast.Node[] = [];
-   let nextToken = self.analyzeDeclArgList( accessMode, argList );
+   let workArgList: Ast.Node[] = [];
+   let argList: Ast.DeclArgNode[] = [];
+   let nextToken = self.analyzeDeclArgList( accessMode, workArgList );
    let argTypeList: Ast.TypeInfo[] = [];
-   foreach argNode in argList {
-      argTypeList.insert( argNode.$expType );
-      // if argNode.$kind == Ast.nodeKindDeclArg {
-      //    let declArgNode = argNode@Ast.DeclArgNode;
-      //    scope.add( declArgNode.$name.txt,
-      //               declArgNode.$expType, "local", false );
-      // }
+   foreach argNode, index in workArgList {
+      if argNode.$kind == Ast.nodeKindDeclArg {
+         argList.insert( argNode@@Ast.DeclArgNode );
+      }
+      else {
+         self.error( "macro argument can not use '...'." );
+      }
+      let argType = argNode.$expType;
+      argTypeList.insert( argType );
    }
 
 
@@ -297,7 +301,7 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       false, false, scope, Ast.TypeInfoKindMacro, self.getCurrentNamespaceTypeInfo(),
       false, false, false, accessMode, nameToken.txt, argTypeList );
-   self.scope.add( nameToken.txt, typeInfo, "local", false, false );
+   self.scope.add( false, false, nameToken.txt, typeInfo, "local", false, false );
 
 
    let declMacroInfo = new Ast.DeclMacroInfo( nameToken, argList, ast, tokenList ) ;
@@ -476,7 +480,8 @@ fn TransUnit.analyzeDeclMember(
       // accessor
       self.checkToken( token, ";" );
 
-      self.scope.add( varName.txt, refType.$expType, accessMode, staticFlag, false );
+      self.scope.add(
+         true, true, varName.txt, refType.$expType, accessMode, staticFlag, false );
 
       return new Ast.DeclMemberNode(
          firstToken.pos, refType.$expTypeList,
@@ -511,7 +516,8 @@ fn TransUnit.analyzeDeclClass(
    self.checkToken( nextToken, "{" );
 
    if mode == "class" {
-      self.scope.add( "self", classTypeInfo, "pri", false, false );
+      self.scope.add(
+         false, true, "self", classTypeInfo, "pri", false, false );
    }
 
    let fieldList:Ast.Node[] = [];
@@ -623,7 +629,9 @@ fn TransUnit.analyzeDeclClass(
             getterName, [], [ memberType ] );
          self.popScope();
          
-         self.scope.add( getterName, retTypeInfo, accessMode, false, false );
+         self.scope.add(
+            false, false, getterName, retTypeInfo, accessMode, false, false );
+         methodNameSet[ getterName ] = true;
       }
       let setterName = "set_" .. memberName.txt;
       accessMode = memberNode.$setterMode;
@@ -631,13 +639,14 @@ fn TransUnit.analyzeDeclClass(
          not self.scope.getTypeInfoChild( setterName )
       {   
          self.scope.add(
-            setterName,
+            false, false, setterName,
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ),
                Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
                setterName, [ memberType ], nil 
             ), accessMode, false, false );
          self.popScope();
+         methodNameSet[ setterName ] = true;
       }   
    }
 
@@ -648,7 +657,7 @@ fn TransUnit.analyzeDeclClass(
          Ast.TypeInfoKindMethod, parentInfo, true, false, false, "pub",
          "__init", memberTypeList, [] );
       self.popScope();
-      self.scope.add( "__init", initTypeInfo, "pub", false, false );
+      self.scope.add( false, false, "__init", initTypeInfo, "pub", false, false );
       methodNameSet[ "__init" ] = true;
    }
 
@@ -666,7 +675,7 @@ fn TransUnit.analyzeDeclClass(
                   let childName = advertiseInfo.$prefix .. child.getTxt();
                   if not methodNameSet[ childName ] {
                      self.scope.add(
-                        childName, child, child.$accessMode,
+                        false, false, childName, child, child.$accessMode,
                         child.$staticFlag, false );
                   }
                }
@@ -812,7 +821,8 @@ fn TransUnit.analyzeDeclFunc(
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList );
    if! name {
-      scope.get_parent().add( _exp.txt, typeInfo, accessMode, staticFlag, false );
+      scope.get_parent().add(
+         false, true, _exp.txt, typeInfo, accessMode, staticFlag, false );
    }
 
    let node:Ast.Node = self.createNoneNode( firstToken.pos );
@@ -902,6 +912,11 @@ fn TransUnit.analyzeDeclVar(
       //  初期化値の型を反映する
       let expTypeList: Ast.TypeInfo[] = [];
       foreach exp, index in _exp.$expList {
+         if not exp.canBeRight() {
+            self.addErrMess( exp.$pos,
+                             "this node can not be r-value. -- %s"
+                             (Ast.getNodeKindName( exp.$kind ) ) );
+         }
          if index == #_exp.$expList {
             // 最終要素の場合
             if exp.$expType == Ast.builtinTypeDDD {
@@ -979,7 +994,7 @@ fn TransUnit.analyzeDeclVar(
       }
    }
 
-   if self.macroScope == self.scope {
+   if self.macroScope {
       foreach varName, index in varNameList {
          let typeInfo = typeInfoList[ index ];
          
@@ -1017,7 +1032,7 @@ fn TransUnit.analyzeDeclVar(
                                 "shadowing variable -- %s" (varName.txt) );
             }
          }
-         self.scope.add( varName.txt, typeInfo, "local", false, false );
+         self.scope.add( true, true, varName.txt, typeInfo, "local", false, false );
       }
    }
 
@@ -1029,7 +1044,8 @@ fn TransUnit.analyzeDeclVar(
       // unwrap ブロックに変数を登録
       foreach varName, index in varNameList {
          self.scope.add(
-            "_" .. varName.txt, orgExpTypeList[ index ], "local", false, false );
+            true, true, "_" .. varName.txt,
+            orgExpTypeList[ index ], "local", false, false );
       }
       
       unwrapBlock = self.analyzeBlock( "let!", scope );

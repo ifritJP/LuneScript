@@ -586,7 +586,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   self.classId2MemberList[classTypeId] = nodeInfo:get_memberList(  )
   do
     local _exp = node:get_moduleName()
-    if _exp then
+    if _exp ~= nil then
     
         self:writeln( string.format( "local %s = require( %s )", className, _exp.txt ), baseIndent )
         return 
@@ -643,6 +643,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
     end
   end
   if not hasConstrFlag then
+    methodNameSet["__init"] = true
     local argTxt = ""
     
     for index, member in pairs( memberList ) do
@@ -678,9 +679,7 @@ function %s:__init( %s )
     
     local getterName = "get_" .. memberName
     
-    local typeInfo = scope:getTypeInfo( getterName, scope, false )
-    
-    local autoFlag = not typeInfo or (_lune_unwrap( typeInfo) ):get_autoFlag(  )
+    local autoFlag = not methodNameSet[getterName]
     
     local prefix = memberNode:get_staticFlag() and className or "self"
     
@@ -689,16 +688,17 @@ function %s:__init( %s )
 function %s:%s()
   return %s.%s
 end]==], className, getterName, prefix, memberName), baseIndent )
+      methodNameSet[getterName] = true
     end
     local setterName = "set_" .. memberName
     
-    typeInfo = scope:getTypeInfo( setterName, scope, false )
-    autoFlag = not typeInfo or (_lune_unwrap( typeInfo) ):get_autoFlag(  )
+    autoFlag = not methodNameSet[setterName]
     if memberNode:get_setterMode(  ) ~= "none" and autoFlag then
       self:writeln( string.format( [==[
 function %s:%s( %s )
   %s.%s = %s
 end]==], className, setterName, memberName, prefix, memberName, memberName), baseIndent )
+      methodNameSet[setterName] = true
     end
   end
   for __index, advertiseInfo in pairs( node:get_advertiseList() ) do
@@ -758,27 +758,18 @@ function convFilter:processDeclMacro( node, parent, baseIndent )
     local name = nodeInfo:get_name(  )
     
     self:write( string.format( "local function %s(", name.txt) )
-    local argTxt = ""
-    
+    self:writeln( "__macroArgs )", baseIndent )
     for index, arg in pairs( nodeInfo:get_argList(  ) ) do
-      if index > 1 then
-        self:write( ", " )
-        argTxt = argTxt .. ", "
-      end
-      filter( arg, self, node, baseIndent )
-      if arg:get_kind(  ) == Ast.nodeKind.DeclArg then
-        argTxt = argTxt .. (arg ):get_name().txt
-      else 
-        error( string.format( "not support ... in macro %s", node:get_declInfo(  ):get_name().txt) )
-      end
+      local argName = arg:get_name().txt
+      
+      self:writeln( string.format( "local %s = __macroArgs.%s", argName, argName), baseIndent )
     end
-    self:writeln( ")", baseIndent )
     self:writeln( "local macroVar = {}", baseIndent )
     self:writeln( "macroVar._names = {}", baseIndent )
     self.macroDepth = self.macroDepth + 1
     do
       local _exp = nodeInfo:get_ast(  )
-      if _exp then
+      if _exp ~= nil then
       
           filter( _exp, self, node, baseIndent )
         end
@@ -812,7 +803,7 @@ function convFilter:processExpNew( node, parent, baseIndent )
   self:write( ".new(" )
   do
     local _exp = node:get_argList(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
       end
@@ -859,7 +850,7 @@ function convFilter:processDeclConstr( node, parent, baseIndent )
   self:write( string.format( "function %s:__init(%s) ", className, argTxt ) )
   do
     local _exp = declInfo:get_body(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
       end
@@ -910,7 +901,7 @@ function convFilter:processDeclMethod( node, parent, baseIndent )
   self:writeln( " )", baseIndent )
   do
     local _exp = declInfo:get_body(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
       end
@@ -934,7 +925,7 @@ function convFilter:processUnwrapSet( node, parent, baseIndent )
     if index > 1 then
       self:write( " or " )
     end
-    self:write( "not " )
+    self:write( "nil == " )
     filter( expNode, self, node, baseIndent )
   end
   self:writeln( " then", baseIndent + stepIndent )
@@ -955,7 +946,7 @@ function convFilter:processIfUnwrap( node, parent, baseIndent )
   self:write( "local _exp = " )
   filter( node:get_exp(), self, node, baseIndent + stepIndent )
   self:writeln( "", baseIndent + stepIndent )
-  self:writeln( "if _exp then", baseIndent + stepIndent )
+  self:writeln( "if _exp ~= nil then", baseIndent + stepIndent )
   filter( node:get_block(), self, node, baseIndent + stepIndent * 2 )
   if node:get_nilBlock() then
     self:writeln( "else", baseIndent + stepIndent )
@@ -987,7 +978,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
   end
   do
     local _exp = node:get_expList(  )
-    if _exp then
+    if _exp ~= nil then
     
         self:write( " = " )
         filter( _exp, self, node, baseIndent )
@@ -997,7 +988,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
   self:writeln( "", baseIndent )
   do
     local _exp = node:get_unwrapBlock()
-    if _exp then
+    if _exp ~= nil then
     
         self:writeln( "", baseIndent + stepIndent * 2 )
         self:write( "if " )
@@ -1005,7 +996,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
           if index > 1 then
             self:write( " or " )
           end
-          self:write( " not " .. var:get_name().txt )
+          self:write( " nil == " .. var:get_name().txt )
         end
         self:writeln( " then", baseIndent + stepIndent * 3 )
         for index, var in pairs( varList ) do
@@ -1014,7 +1005,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
         filter( _exp, self, node, baseIndent + stepIndent * 2 )
         local thenBlock = node:get_thenBlock()
         
-            if  not thenBlock then
+            if  nil == thenBlock then
               local _thenBlock = thenBlock
               
             else
@@ -1029,7 +1020,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
   
   do
     local _exp = node:get_syncBlock()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent + stepIndent * 1 )
         for __index, varInfo in pairs( node:get_syncVarList() ) do
@@ -1096,7 +1087,7 @@ function convFilter:processDeclFunc( node, parent, baseIndent )
   
   do
     local _exp = nameToken
-    if _exp then
+    if _exp ~= nil then
     
         name = _exp.txt
       end
@@ -1119,7 +1110,7 @@ function convFilter:processDeclFunc( node, parent, baseIndent )
   self:writeln( " )", baseIndent )
   do
     local _exp = declInfo:get_body(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
       end
@@ -1197,7 +1188,7 @@ function convFilter:processSwitch( node, parent, baseIndent )
   end
   do
     local _exp = node:get_default(  )
-    if _exp then
+    if _exp ~= nil then
     
         self:write( "else " )
         filter( _exp, self, node, baseIndent + 2 )
@@ -1239,7 +1230,7 @@ function convFilter:processFor( node, parent, baseIndent )
   filter( node:get_to(  ), self, node, baseIndent )
   do
     local _exp = node:get_delta(  )
-    if _exp then
+    if _exp ~= nil then
     
         self:write( ", " )
         filter( _exp, self, node, baseIndent )
@@ -1278,7 +1269,7 @@ function convFilter:processForeach( node, parent, baseIndent )
   self:write( "for " )
   do
     local _exp = node:get_key()
-    if _exp then
+    if _exp ~= nil then
     
         self:write( _exp.txt )
       else
@@ -1314,7 +1305,7 @@ function convFilter:processForsort( node, parent, baseIndent )
   
   do
     local _exp = node:get_key()
-    if _exp then
+    if _exp ~= nil then
     
         key = _exp.txt
       end
@@ -1335,7 +1326,7 @@ function convFilter:processExpUnwrap( node, parent, baseIndent )
 
   do
     local _exp = node:get_default()
-    if _exp then
+    if _exp ~= nil then
     
         self:write( '_lune_unwrapDefault( ' )
         filter( node:get_exp(), self, node, baseIndent )
@@ -1390,7 +1381,7 @@ function convFilter:processExpCall( node, parent, baseIndent )
   end
   do
     local _exp = node:get_argList()
-    if _exp then
+    if _exp ~= nil then
     
         if wroteFuncFlag then
           if #_exp:get_expList() > 0 then
@@ -1574,7 +1565,7 @@ function convFilter:processReturn( node, parent, baseIndent )
   self:write( "return " )
   do
     local _exp = node:get_expList()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
       end
@@ -1589,7 +1580,7 @@ function convFilter:processLiteralList( node, parent, baseIndent )
   self:write( "{" )
   do
     local _exp = node:get_expList()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
       end
@@ -1613,7 +1604,6 @@ function convFilter:processLiteralMap( node, parent, baseIndent )
     filter( pair:get_key(), self, node, baseIndent )
     self:write( "] = " )
     filter( pair:get_val(), self, node, baseIndent )
-    index = index + 1
   end
   self:write( "}" )
 end
@@ -1625,7 +1615,7 @@ function convFilter:processLiteralArray( node, parent, baseIndent )
   self:write( "{" )
   do
     local _exp = node:get_expList()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
       end
@@ -1727,7 +1717,7 @@ function MacroEvalImp:eval( node )
   end
   do
     local _exp = chunk
-    if _exp then
+    if _exp ~= nil then
     
         local mod = _exp(  )
         

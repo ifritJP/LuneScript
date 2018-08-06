@@ -11,3 +11,10 @@ class Test {
 
 let test = new Test(1,2); // error
 test.func( 1, 1.0, 2.0 ); // error
+let test2 = Test; // error
+Test = test; // error
+Test = int; // error
+let val = int + 1; // error
+let val = 1;
+val = 1 + int; //error
+val = int + 1; //error

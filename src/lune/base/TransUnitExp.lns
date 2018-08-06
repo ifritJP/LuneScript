@@ -371,13 +371,14 @@ fn TransUnit.evalMacro(
    let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.get_typeId() ];
 
    let argVal:stem![] = [];
+   let macroArgValMap:Map<str,stem> = {};
+   let macroArgNodeList = macroInfo.declInfo.$argList;
    if! expList {
-      foreach argNode in _exp.get_expList() {
+      foreach argNode, index in _exp.get_expList() {
          //let val, typeInfo = getLiteralValue( argNode );
          let valList, typeInfoList = argNode.getLiteral();
          let val = valList[1];
          let typeInfo = typeInfoList[1];
-
 
          // if type( val ) == "table" {
          //     foreach txt in val@str[] {
@@ -395,11 +396,14 @@ fn TransUnit.evalMacro(
          //         Util.errorLog( "hoge: %s" ( val ) );
          // }
          argVal.insert( val );
+         let declArgNode = macroArgNodeList[ index ];
+         macroArgValMap[ declArgNode.$name.txt ] = val;
       }
    }
 
    let func = macroInfo.func;
-   let macroVars:Map<str,stem!> = func( table.unpack( argVal ) )@@Map<str,stem!>;
+   //let macroVars:Map<str,stem!> = func( table.unpack( argVal ) )@@Map<str,stem!>;
+   let macroVars:Map<str,stem!> = func( macroArgValMap )@@Map<str,stem!>;
 
    foreach name in (unwrap macroVars._names)@@str[] {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
@@ -818,6 +822,12 @@ fn TransUnit.analyzeExpOp2(
 
             let retType = Ast.builtinTypeNone;
 
+            if not exp2.canBeRight() {
+               self.addErrMess( exp2.$pos,
+                                "this node can not be r-value. -- %s"
+                                (Ast.getNodeKindName( exp2.$kind ) ) );
+            }
+            
             let exp1Type = exp.$expType;
             let exp2Type = exp2.$expType;
             if not exp1Type {
@@ -917,6 +927,11 @@ fn TransUnit.analyzeExpOp2(
                   }
                }
                case "=" {
+                  if not exp.canBeLeft() {
+                     self.addErrMess( exp.$pos,
+                                      "this node can not be l-value. -- %s"
+                                      (Ast.getNodeKindName( exp.$kind ) ) );
+                  }     
                   self.checkMatchType(
                      "= operator", nextToken.pos, exp.$expTypeList, exp2NodeList );
                }

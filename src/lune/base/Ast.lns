@@ -64,6 +64,11 @@ pub class SymbolInfo {
    __init {
       SymbolInfo.symbolIdSeed = 0;
    }
+
+   /** 左辺値になれる場合 true */
+   pri let canBeLeft: bool { pub };
+   /** 右辺値になれる場合 true */
+   pri let canBeRight: bool { pub };
    
    /** このシンボルの ID */
    pri let symbolId: int { pub };
@@ -81,10 +86,12 @@ pub class SymbolInfo {
    pri let mutable: bool { pub };
 
    pub fn __init(
-      scope: Scope, accessMode: str,
+      canBeLeft:bool, canBeRight:bool, scope: Scope, accessMode: str,
       staticFlag: bool, name: str, typeInfo: TypeInfo, mutable: bool )
    {
       SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1;
+      self.canBeLeft = canBeLeft;
+      self.canBeRight = canBeRight;
       self.symbolId = SymbolInfo.symbolIdSeed;
       self.scope = scope;
       self.accessMode = accessMode;
@@ -367,15 +374,17 @@ pub fn Scope.getSymbolTypeInfo(
 }
 
 
-pub fn Scope.add( name:str, typeInfo: TypeInfo, accessMode:str,
+pub fn Scope.add( canBeLeft:bool, canBeRight:bool,
+                  name:str, typeInfo: TypeInfo, accessMode:str,
                   staticFlag:bool, mutable:bool ) {  
-   self.symbol2TypeInfoMap[ name ] =
-   new SymbolInfo( self, accessMode, staticFlag, name, typeInfo, mutable );
+   self.symbol2TypeInfoMap[ name ] = new SymbolInfo(
+      canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable );
 }
-pub fn Scope.addClass(
-   name:str, typeInfo: TypeInfo, scope: Scope, mutable:bool ) {
-      self.add( name, typeInfo, typeInfo.$accessMode, false, mutable );
-   } 
+
+pub fn Scope.addClass( name:str, typeInfo: TypeInfo )
+{
+   self.add( false, false, name, typeInfo, typeInfo.$accessMode, true, true );
+} 
 
 fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
    sync! scope = scope { return; }
@@ -470,6 +479,29 @@ pub fn SymbolInfo.canAccess( fromScope:Scope ): SymbolInfo!
 
 pub proto class Node;
 pub proto class DeclClassNode extend Node;
+
+pub class NilableTypeInfo extend TypeInfo {
+   pri let orgTypeInfo: TypeInfo { pub };
+   pri let typeId: int { pub };
+   pub override fn get_kind(): int {
+      return TypeInfoKindNilable;
+   } 
+   pub override fn get_nilable(): bool {
+      return true;
+   } 
+   pub override fn getTxt() : str {
+      return self.orgTypeInfo.getTxt() .. "!";
+   }
+   pub override fn serialize( stream: oStream ): str! {
+      let parentId = self.getParentId();
+      stream.write(
+         '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
+            parentId, self.typeId, self.orgTypeInfo.$typeId ) );
+      return nil;
+   }
+   
+   advertise orgTypeInfo;
+}
 
 pub class NormalTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
@@ -575,13 +607,15 @@ pub class NormalTypeInfo extend TypeInfo {
                self.nilableTypeInfo = self;
             }
             else {
-               self.nilableTypeInfo = new NormalTypeInfo(
-                  false, nil, baseTypeInfo, interfaceList, self, autoFlag, externalFlag,
-                  staticFlag, accessMode, "", parentInfo, typeId + 1,
-                  TypeInfoKindNilable, itemTypeInfoList,
-                  argTypeInfoList, retTypeInfoList );
+               // self.nilableTypeInfo = new NormalTypeInfo(
+               //    false, nil, baseTypeInfo, interfaceList, self, autoFlag, externalFlag,
+               //    staticFlag, accessMode, "", parentInfo, typeId + 1,
+               //    TypeInfoKindNilable, itemTypeInfoList,
+               //    argTypeInfoList, retTypeInfoList );
+               self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
+               typeIdSeed = typeIdSeed + 1;
             }
-         }  
+         }
          else {
             self.nilableTypeInfo = rootTypeInfo;
          }  
@@ -857,15 +891,16 @@ pub static fn NormalTypeInfo.createBuiltin(
                                      "pub", typeTxt, typeInfoRoot, typeId, kind,
                                      [], argTypeList, retTypeList );
       if scope {
-         rootScope.add( typeTxt, info, "pub", false, false );
+         rootScope.addClass( typeTxt, info );
       } 
 
       typeInfoKind[ idName ] = info;
       sym2builtInTypeMap[ typeTxt ] =
-         new SymbolInfo( rootScope, "pub", false, typeTxt, info, false );
+         new SymbolInfo( false, false, rootScope, "pub", false, typeTxt, info, false );
       if info.$nilableTypeInfo ~= rootTypeInfo {
          sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
-            rootScope, "pub", false, typeTxt, info.$nilableTypeInfo, false );
+            false, kind == TypeInfoKindFunc, rootScope, "pub",
+            false, typeTxt, info.$nilableTypeInfo, false );
          builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
       } 
       
@@ -981,6 +1016,28 @@ pub let builtinTypeStat:TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , TypeInfoKindPrim );
 
 pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
+
+
+// other 型の値を、この型の変数に設定できるか判定する。
+pub override fn NilableTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
+   if not other {
+      return false;
+   }  
+   if self == builtinTypeStem_ {
+      return true;
+   }  
+   if other == builtinTypeNil {
+      return true;
+   }  
+   if self.typeId == other.$typeId {
+      return true;
+   }
+   if other.$nilable {
+      return self.$orgTypeInfo.isSettableFrom( other.$orgTypeInfo );
+   }
+   return self.$orgTypeInfo.isSettableFrom( other );
+}
+   
 
 
 macro checkEqualsItemType( type1:sym, type2:sym, index:int ) {
@@ -1131,6 +1188,13 @@ pub class Node {
    }
    pub fn processFilter( filter: Filter, ... ) {
    }
+
+   pub fn canBeLeft(): bool {
+      return false;
+   };     
+   pub fn canBeRight(): bool {
+      return false;
+   }
 }
 
 
@@ -1144,10 +1208,11 @@ pub class NamespaceInfo {
 
 pub proto class MacroEval;
 pub proto class ExpListNode extend Node;
+pub proto class DeclArgNode extend Node;
 
 pub class DeclMacroInfo {
    pri let name: Parser.Token { pub };
-   pri let argList: Node[] { pub };
+   pri let argList: DeclArgNode[] { pub };
    pri let ast: Node! { pub };
    pri let tokenList: Parser.Token[] { pub };
 }
@@ -1230,7 +1295,8 @@ pub fn getNodeKindName( kind: int ): str {
 // let nodeKindLiteralSymbol = regKind( 'LiteralSymbol' );
 
 macro _declNodeClass(
-   baseName:str, super:sym, fieldInfoList:Map<str,str>[] )
+   baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
+   fieldInfoList:Map<str,str>[] )
 {
    {
       let _className = ,,,"%sNode" (baseName);
@@ -1260,6 +1326,18 @@ macro _declNodeClass(
             filter.,,,"process%s" (baseName) (self, table.unpack( argList ) );
          } } );
 
+      if! canBeRightFlag {
+         fieldStatList.insert( `{
+            pub override fn canBeRight():bool {
+               return ,,, canBeRightFlag;
+            } } );
+      }
+      if! canBeLeftFlag {
+         fieldStatList.insert( `{
+            pub override fn canBeLeft():bool {
+               return ,,, canBeLeftFlag;
+            } } );
+      }
       
       let superStat = `{
          super( ,,_nodeKindSym, pos, builtinTypeList );
@@ -1280,29 +1358,29 @@ macro _declNodeClass(
       pub fn __init( pos: Parser.Position, builtinTypeList: TypeInfo[], ,,argList ) {
          ,,superStat;
          ,,initStatList;
-      } 
+      }
    }
 }
 
-_declNodeClass( "None", Node, []);
-_declNodeClass( "Subfile", Node, []);
-_declNodeClass( "Import", Node,
+_declNodeClass( "None", Node, false, false, []);
+_declNodeClass( "Subfile", Node, false, false, []);
+_declNodeClass( "Import", Node, false, false,
                 [ { "modulePath": "str" } ]
 );
 
-_declNodeClass( "Root", Node,
+_declNodeClass( "Root", Node, false, false,
                 [ { "children": "Node[]" },
                   { "typeId2ClassMap": "Map<int,NamespaceInfo>" } ]
 );
 
-_declNodeClass( "RefType", Node,
+_declNodeClass( "RefType", Node, false, false,
                 [ { "name": "Node" },
                   { "refFlag": "bool" },
                   { "mutFlag": "bool" },
                   { "array": "str" } ]
 );
 
-_declNodeClass( "Block", Node,
+_declNodeClass( "Block", Node, false, false,
                 [ { "blockKind": "str" },
                   { "stmtList": "Node[]" } ]
 );
@@ -1312,11 +1390,11 @@ pub class IfStmtInfo {
    pri let exp: Node { pub };
    pri let block: BlockNode { pub };
 }
-_declNodeClass( "If", Node,
+_declNodeClass( "If", Node, false, false,
                 [{ "stmtList": "IfStmtInfo[]" } ]
 );
 
-_declNodeClass( "ExpList", Node,
+_declNodeClass( "ExpList", Node, true, true,
                 [ { "expList": "Node[]" } ]
 );
 
@@ -1324,24 +1402,24 @@ pub class CaseInfo {
    pri let expList: ExpListNode { pub };
    pri let block: BlockNode { pub };
 }
-_declNodeClass( "Switch", Node,
+_declNodeClass( "Switch", Node, false, false,
                 [ { "exp": "Node" },
                   { "caseList": "CaseInfo[]" },
                   { "default": "BlockNode!" } ]
 );
 
 
-_declNodeClass( "While", Node,
+_declNodeClass( "While", Node, false, false,
                 [ { "exp": "Node" },
                   { "block": "BlockNode" } ]
 );
 
-_declNodeClass( "Repeat", Node,
+_declNodeClass( "Repeat", Node, false, false,
                 [ { "block": "BlockNode" },
                   { "exp": "Node" } ]
 );
 
-_declNodeClass( "For", Node,
+_declNodeClass( "For", Node, false, false,
                 [ { "block": "BlockNode" },
                   { "val": "Parser.Token" },
                   { "init": "Node" },
@@ -1349,20 +1427,20 @@ _declNodeClass( "For", Node,
                   { "delta": "Node!" }] 
 );
 
-_declNodeClass( "Apply", Node,
+_declNodeClass( "Apply", Node, false, false,
                 [ { "varList": "Parser.Token[]" },
                   { "exp": "Node" },
                   { "block": "BlockNode" } ]
 );
 
-_declNodeClass( "Foreach", Node,
+_declNodeClass( "Foreach", Node, false, false,
                 [ { "val": "Parser.Token" },
                   { "key": "Parser.Token!" },
                   { "exp": "Node" },
                   { "block": "BlockNode" } ]
 );
 
-_declNodeClass( "Forsort", Node,
+_declNodeClass( "Forsort", Node, false, false,
                 [ { "val": "Parser.Token" },
                   { "key": "Parser.Token!" },
                   { "exp": "Node" },
@@ -1370,95 +1448,103 @@ _declNodeClass( "Forsort", Node,
                   { "sort": "bool" } ]
 );
 
-_declNodeClass( "Return", Node,
+_declNodeClass( "Return", Node, false, false,
                 [ { "expList": "ExpListNode!" } ]
 );
 
-_declNodeClass( "Break", Node, [] );
+_declNodeClass( "Break", Node, false, false, [] );
 
-_declNodeClass( "ExpNew", Node,
+_declNodeClass( "ExpNew", Node, false, true,
                 [ { "symbol": "Node" },
                   { "argList": "ExpListNode!" } ]
 );
 
-_declNodeClass( "ExpUnwrap", Node,
+_declNodeClass( "ExpUnwrap", Node, false, true,
                 [ { "exp": "Node" },
                   { "default": "Node!" } ]
 );
 
-_declNodeClass( "ExpRef", Node,
+_declNodeClass( "ExpRef", Node, false, false,
                 [ { "token": "Parser.Token" },
                   { "symbolInfo": "SymbolInfo" } ]              
 );
 
-_declNodeClass( "ExpOp2", Node,
+pub override fn ExpRefNode.canBeLeft():bool {
+   return self.$symbolInfo.$canBeLeft;
+}
+
+pub override fn ExpRefNode.canBeRight():bool {
+   return self.$symbolInfo.$canBeRight;
+}
+
+_declNodeClass( "ExpOp2", Node, false, true,
                 [ { "op": "Parser.Token" },
                   { "exp1": "Node" },
                   { "exp2": "Node" } ]
 );
 
-_declNodeClass( "UnwrapSet", Node,
+_declNodeClass( "UnwrapSet", Node, false, false,
                 [ { "dstExpList": "ExpListNode" },
                   { "srcExpList": "ExpListNode" },
                   { "unwrapBlock": "BlockNode!" } ]              
 );
 
-_declNodeClass( "IfUnwrap", Node,
+_declNodeClass( "IfUnwrap", Node, false, false,
                 [ { "exp": "Node" },
                   { "block": "BlockNode" },
                   { "nilBlock": "BlockNode!" } ]
 );
 
 
-_declNodeClass( "ExpCast", Node,
+_declNodeClass( "ExpCast", Node, false, true,
                 [ { "exp": "Node" } ]
 );
 
-_declNodeClass( "ExpOp1", Node,
+_declNodeClass( "ExpOp1", Node, false, true,
                 [ { "op": "Parser.Token" },
                   { "macroMode": "str" },
                   { "exp": "Node" } ]
 );
 
-_declNodeClass( "ExpRefItem", Node,
+_declNodeClass( "ExpRefItem", Node, true, true,
                 [ { "val": "Node" },
                   { "nilAccess": "bool" },
                   { "index": "Node" } ]
 );
 
-_declNodeClass( "ExpCall", Node,
+_declNodeClass( "ExpCall", Node, false, true,
                 [ { "func": "Node" },
                   { "nilAccess": "bool" },
                   { "argList": "ExpListNode!" } ]
 );
 
-_declNodeClass( "ExpDDD", Node,
+_declNodeClass( "ExpDDD", Node, false, true,
                 [ { "token": "Parser.Token" } ]
 );
 
-_declNodeClass( "ExpParen", Node,
+_declNodeClass( "ExpParen", Node, false, true,
                 [ { "exp": "Node" } ]
 );
 
-_declNodeClass( "ExpMacroExp", Node,
+_declNodeClass( "ExpMacroExp", Node, false, false,
                 [ { "stmtList": "Node[]" } ]
 );
 
-_declNodeClass( "ExpMacroStat", Node,
+_declNodeClass( "ExpMacroStat", Node, false, true,
                 [ { "expStrList": "Node[]" } ]
 );
 
-_declNodeClass( "StmtExp", Node,
+_declNodeClass( "StmtExp", Node, false, true,
                 [ { "exp": "Node" } ]
 );
 
-_declNodeClass( "RefField", Node,
+_declNodeClass( "RefField", Node, true, true,
                 [ { "field": "Parser.Token" },
                   { "nilAccess": "bool" },
                   { "prefix": "Node" }] 
 );
 
-_declNodeClass( "GetField", Node,
+_declNodeClass( "GetField", Node, false, true,
                 [ { "field": "Parser.Token" },
                   { "nilAccess": "bool" },
                   { "prefix": "Node" },
@@ -1472,7 +1558,7 @@ pub class VarInfo {
    // 実際の型。
    pri let actualType: TypeInfo { pub };
 }
-_declNodeClass( "DeclVar", Node,
+_declNodeClass( "DeclVar", Node, false, false,
                 [ { "mode": "str" },
                   { "accessMode": "str" },
                   { "staticFlag": "bool" },
@@ -1495,24 +1581,24 @@ pub class DeclFuncInfo {
    pri let body: Node! { pub };
    pri let retTypeInfoList: TypeInfo[] { pub };
 }
-_declNodeClass( "DeclFunc", Node,
+_declNodeClass( "DeclFunc", Node, false, true,
                 [ { "declInfo": "DeclFuncInfo" } ]
 );
 
-_declNodeClass( "DeclMethod", Node,
+_declNodeClass( "DeclMethod", Node, false, false,
                 [ { "declInfo": "DeclFuncInfo" } ]
 );
 
-_declNodeClass( "DeclConstr", Node,
+_declNodeClass( "DeclConstr", Node, false, false,
                 [ { "declInfo": "DeclFuncInfo" } ]
 );
 
-_declNodeClass( "ExpCallSuper", Node,
+_declNodeClass( "ExpCallSuper", Node, false, false,
                 [ { "superType": "TypeInfo" },
                   { "expList": "ExpListNode" } ]
 );
 
-_declNodeClass( "DeclMember", Node,
+_declNodeClass( "DeclMember", Node, false, false,
                 [ { "name": "Parser.Token" },
                   { "refType": "RefTypeNode" },
                   { "staticFlag": "bool" },
@@ -1521,18 +1607,18 @@ _declNodeClass( "DeclMember", Node,
                   { "setterMode": "str" } ]
 );
 
-_declNodeClass( "DeclArg", Node,
+_declNodeClass( "DeclArg", Node, false, false,
                 [ { "name": "Parser.Token" },
                   { "argType": "RefTypeNode" } ]
 );
 
-_declNodeClass( "DeclArgDDD", Node, [] );
+_declNodeClass( "DeclArgDDD", Node, false, false, [] );
 
 pub class AdvertiseInfo {
    pri let member: DeclMemberNode { pub };
    pri let prefix: str {pub};
 };
-_declNodeClass( "DeclClass", Node,
+_declNodeClass( "DeclClass", Node, false, false,
                 [ { "accessMode": "str" },
                   { "name": "Parser.Token" },
                   { "fieldList": "Node[]" },
@@ -1544,7 +1630,7 @@ _declNodeClass( "DeclClass", Node,
                   { "outerMethodSet": "Map<str,bool>" } ]
 );
 
-_declNodeClass( "DeclMacro", Node,
+_declNodeClass( "DeclMacro", Node, false, false,
                 [ { "declInfo": "DeclMacroInfo" } ]
 );
 
@@ -1552,28 +1638,28 @@ pub class MacroEval {
    pub fn eval( macroNode: DeclMacroNode ): form;
 }
 
-_declNodeClass( "LiteralNil", Node, [] );
+_declNodeClass( "LiteralNil", Node, false, true, [] );
 
-_declNodeClass( "LiteralChar", Node,
+_declNodeClass( "LiteralChar", Node, false, true,
                 [ { "token": "Parser.Token" },
                   { "num": "int" } ]
 );
 
-_declNodeClass( "LiteralInt", Node,
+_declNodeClass( "LiteralInt", Node, false, true,
                 [ { "token": "Parser.Token" },
                   { "num": "int" } ]
 );
 
-_declNodeClass( "LiteralReal", Node,
+_declNodeClass( "LiteralReal", Node, false, true,
                 [ { "token": "Parser.Token" },
                   { "num": "real" } ]
 );
 
-_declNodeClass( "LiteralArray", Node,
+_declNodeClass( "LiteralArray", Node, false, true,
                 [ { "expList": "ExpListNode!" } ]
 );
 
-_declNodeClass( "LiteralList", Node,
+_declNodeClass( "LiteralList", Node, false, true,
                 [ { "expList": "ExpListNode!" } ]
 );
 
@@ -1581,21 +1667,21 @@ pub class PairItem {
    pri let key: Node { pub };
    pri let val: Node { pub };
 }
-_declNodeClass( "LiteralMap", Node,
+_declNodeClass( "LiteralMap", Node, false, true,
                 [ { "map": "Map<Node,Node>" },
                   { "pairList": "PairItem[]" } ]
 );
 
-_declNodeClass( "LiteralString", Node,
+_declNodeClass( "LiteralString", Node, false, true,
                 [ { "token": "Parser.Token" },
                   { "argList": "Node[]" } ]
 );
 
-_declNodeClass( "LiteralBool", Node,
+_declNodeClass( "LiteralBool", Node, false, true,
                 [ { "token": "Parser.Token" } ]
 );
 
-_declNodeClass( "LiteralSymbol", Node,
+_declNodeClass( "LiteralSymbol", Node, false, true,
                 [ { "token": "Parser.Token" } ]
 );
 

@@ -590,6 +590,7 @@ pub override fn convFilter.processDeclClass(
    }
    
    if not hasConstrFlag {
+      methodNameSet[ "__init" ] = true;
       let argTxt = "";
       foreach member, index in memberList {
          if index > 1 {
@@ -625,8 +626,9 @@ function %s:__init( %s )
       let memberNameToken = memberNode.get_name();
       let memberName = memberNameToken.txt;
       let getterName = "get_" .. memberName;
-      let typeInfo = scope.getTypeInfo( getterName, scope, false );
-      let autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
+      // let typeInfo = scope.getTypeInfo( getterName, scope, false );
+      // let autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
+      let autoFlag = not methodNameSet[ getterName ];
       let prefix = memberNode.$staticFlag and className or "self";
       if memberNode.get_getterMode() ~= "none" and autoFlag
       {       
@@ -634,10 +636,12 @@ function %s:__init( %s )
 function %s:%s()
   return %s.%s
 end``` ( className, getterName, prefix, memberName ), baseIndent );
+         methodNameSet[ getterName ] = true;
       }
       let setterName = "set_" .. memberName;
-      typeInfo = scope.getTypeInfo( setterName, scope, false );
-      autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
+      //typeInfo = scope.getTypeInfo( setterName, scope, false );
+      //autoFlag = not typeInfo or (unwrap typeInfo).get_autoFlag();
+      autoFlag = not methodNameSet[ setterName ];
       if memberNode.get_setterMode() ~= "none" and autoFlag
       {       
          self.writeln( ```
@@ -645,6 +649,7 @@ function %s:%s( %s )
   %s.%s = %s
 end``` ( className, setterName, memberName, prefix, memberName, memberName ),
             baseIndent );
+         methodNameSet[ setterName ] = true;
       }
    }
 
@@ -710,24 +715,30 @@ pub override fn convFilter.processDeclMacro(
       let name = nodeInfo.get_name();
       
       self.write( "local function %s(" ( name.txt ) );
-      // self.write( "local function %s(" ( name.txt ) );
 
-      let argTxt = "";
+      // let argTxt = "";
+      // foreach arg, index in nodeInfo.get_argList() {
+      //    if index > 1 {
+      //       self.write( ", " );
+      //       argTxt = argTxt .. ", ";
+      //    }   
+      //    filter( arg, self, node, baseIndent );
+      //    if arg.get_kind() == Ast.nodeKind.DeclArg {
+      //       argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
+      //    }
+      //    else {
+      //       error( "not support ... in macro %s" ( node.get_declInfo().$name.txt ) );
+      //    }
+      // }
+
+      // self.writeln( ")", baseIndent );
+
+      self.writeln( "__macroArgs )", baseIndent );
       foreach arg, index in nodeInfo.get_argList() {
-         if index > 1 {
-            self.write( ", " );
-            argTxt = argTxt .. ", ";
-         }   
-         filter( arg, self, node, baseIndent );
-         if arg.get_kind() == Ast.nodeKind.DeclArg {
-            argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
-         }
-         else {
-            error( "not support ... in macro %s" ( node.get_declInfo().$name.txt ) );
-         }
+         let argName = arg.$name.txt;
+         self.writeln( "local %s = __macroArgs.%s"
+                       (argName, argName ), baseIndent );
       }
-
-      self.writeln( ")", baseIndent );
 
       self.writeln( "local macroVar = {}", baseIndent );
       self.writeln( "macroVar._names = {}", baseIndent );
@@ -882,7 +893,7 @@ pub override fn convFilter.processUnwrapSet(
       if index > 1 {
 	 self.write( " or " );
       }   
-      self.write( "not " );
+      self.write( "nil == " );
       filter( expNode, self, node, baseIndent );
    }
    self.writeln( " then", baseIndent + stepIndent );
@@ -907,7 +918,7 @@ pub override fn convFilter.processIfUnwrap(
    filter( node.$exp, self, node, baseIndent + stepIndent );
    self.writeln( "", baseIndent + stepIndent );
 
-   self.writeln( "if _exp then", baseIndent + stepIndent );
+   self.writeln( "if _exp ~= nil then", baseIndent + stepIndent );
    filter( node.$block, self, node, baseIndent + stepIndent * 2 );
 
    if node.$nilBlock {
@@ -957,7 +968,7 @@ pub override fn convFilter.processDeclVar(
          if index > 1 {
 	    self.write( " or " );
          }   
-	 self.write( " not " .. var.$name.txt );
+	 self.write( " nil == " .. var.$name.txt );
       }
       self.writeln( " then", baseIndent + stepIndent * 3 );
 
@@ -1533,7 +1544,6 @@ pub override fn convFilter.processLiteralMap(
       filter( pair.$key, self, node, baseIndent );
       self.write( "] = " );
       filter( pair.$val, self, node, baseIndent );
-      index = index + 1;
    }
 
    self.write( "}" );

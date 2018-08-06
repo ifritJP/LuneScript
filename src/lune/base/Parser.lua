@@ -298,7 +298,7 @@ function StreamParser.create( path, luaMode )
 
   local stream = io.open( path, "r" )
   
-      if  not stream then
+      if  nil == stream then
         local _stream = stream
         
         return nil
@@ -477,7 +477,7 @@ function StreamParser:parse(  )
   
   local rawLine = readLine(  )
   
-      if  not rawLine then
+      if  nil == rawLine then
         local _rawLine = rawLine
         
         return nil
@@ -705,9 +705,9 @@ function StreamParser:parse(  )
         end
       elseif findChar == 96 then
         if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
-          local str, nextIndex = multiComment( index + 3, '```' )
+          local txt, nextIndex = multiComment( index + 3, '```' )
           
-          addVal( kindStr, '```' .. str, index )
+          addVal( kindStr, '```' .. txt, index )
           searchIndex = nextIndex
         else 
           addVal( kindOpe, '`', index )
@@ -750,7 +750,7 @@ function StreamParser:getToken(  )
     while #self.lineTokenList == 0 do
       local workList = self:parse(  )
       
-          if  not workList then
+          if  nil == workList then
             local _workList = workList
             
             return nil

@@ -231,7 +231,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
   for index, var in pairs( node:get_varList(  ) ) do
     do
       local _exp = var:get_refType()
-      if _exp then
+      if _exp ~= nil then
       
           filter( _exp, self, prefix .. "  ", depth + 1 )
         end
@@ -240,7 +240,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
   end
   do
     local _exp = node:get_expList(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -248,7 +248,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
   
   do
     local _exp = node:get_unwrapBlock()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -256,7 +256,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
   
   do
     local _exp = node:get_thenBlock()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -265,7 +265,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
   for __index, var in pairs( node:get_syncVarList() ) do
     do
       local _exp = var:get_refType()
-      if _exp then
+      if _exp ~= nil then
       
           filter( _exp, self, prefix .. "  ", depth + 1 )
         end
@@ -274,7 +274,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
   end
   do
     local _exp = node:get_syncBlock()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -312,7 +312,7 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, prefix, depth )
   
   do
     local _exp = declInfo:get_name(  )
-    if _exp then
+    if _exp ~= nil then
     
         name = _exp.txt
       end
@@ -326,7 +326,7 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, prefix, depth )
   end
   do
     local _exp = declInfo:get_body(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -399,7 +399,7 @@ function dumpFilter:processSwitch( node, prefix, depth )
   end
   do
     local _exp = node:get_default(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -434,7 +434,7 @@ function dumpFilter:processFor( node, prefix, depth )
   filter( node:get_to(  ), self, prefix .. "  ", depth + 1 )
   do
     local _exp = node:get_delta(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -467,7 +467,7 @@ function dumpFilter:processForeach( node, prefix, depth )
   
   do
     local _exp = node:get_key(  )
-    if _exp then
+    if _exp ~= nil then
     
         index = _exp.txt
       end
@@ -486,7 +486,7 @@ function dumpFilter:processForsort( node, prefix, depth )
   
   do
     local _exp = node:get_key(  )
-    if _exp then
+    if _exp ~= nil then
     
         index = _exp.txt
       end
@@ -505,7 +505,7 @@ function dumpFilter:processExpUnwrap( node, prefix, depth )
   filter( node:get_exp(), self, prefix .. "  ", depth + 1 )
   do
     local _exp = node:get_default()
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -519,7 +519,7 @@ function dumpFilter:processExpCall( node, prefix, depth )
   filter( node:get_func(  ), self, prefix .. "  ", depth + 1 )
   do
     local _exp = node:get_argList(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -580,7 +580,7 @@ function dumpFilter:processExpNew( node, prefix, depth )
   filter( node:get_symbol(  ), self, prefix .. "  ", depth + 1 )
   do
     local _exp = node:get_argList(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -627,7 +627,7 @@ function dumpFilter:processReturn( node, prefix, depth )
   dump( prefix, depth, node, "" )
   do
     local _exp = node:get_expList(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -642,7 +642,7 @@ function dumpFilter:processLiteralList( node, prefix, depth )
   dump( prefix, depth, node, "[]" )
   do
     local _exp = node:get_expList(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end
@@ -670,7 +670,7 @@ function dumpFilter:processLiteralArray( node, prefix, depth )
   dump( prefix, depth, node, "[@]" )
   do
     local _exp = node:get_expList(  )
-    if _exp then
+    if _exp ~= nil then
     
         filter( _exp, self, prefix .. "  ", depth + 1 )
       end

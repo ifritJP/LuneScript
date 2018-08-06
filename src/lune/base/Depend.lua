@@ -60,7 +60,7 @@ local function getFileLastModifiedTime( path )
   
   do
     local _exp = file
-    if _exp then
+    if _exp ~= nil then
     
         _exp:close(  )
       else
@@ -73,7 +73,7 @@ local function getFileLastModifiedTime( path )
   
   do
     local _exp = _lune_nilacc( stream, 'read', 'callmtd' , '*a' )
-    if _exp then
+    if _exp ~= nil then
     
         return tonumber( _exp )
       end
