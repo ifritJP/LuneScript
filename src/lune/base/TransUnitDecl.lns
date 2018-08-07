@@ -1068,7 +1068,7 @@ fn TransUnit.analyzeDeclVar(
       let nextToken = self.getToken();
       if nextToken.txt == "do" {
          syncBlock = self.analyzeBlock( "let!", syncScope );
-      }   
+      }
       else {
          self.pushback();
       }

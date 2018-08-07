@@ -2885,6 +2885,8 @@ function TransUnit:dumpComp( writer, scope )
                 writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
               elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
                 writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
+              elseif _switchExp == Ast.SymbolKind.Type then
+                writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
               end
             end
             

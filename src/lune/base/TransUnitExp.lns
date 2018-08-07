@@ -639,6 +639,10 @@ fn TransUnit.dumpComp( writer: Writer.Writer, scope: Ast.Scope ) {
                   writer.write( "displayTxt", "%s: %s"
                                 ( symbolInfo.$name, typeInfo.$display_stirng ) );
                }
+               case Ast.SymbolKind.Type {
+                  writer.write( "displayTxt", "%s"
+                                ( typeInfo.$display_stirng ) );
+               }
             }
             writer.endElement();
          }
