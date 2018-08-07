@@ -2,20 +2,9 @@ local Parser = require( 'lune.base.Parser' )
 local convLua = require( 'lune.base.convLua' )
 local TransUnit = require( 'lune.base.TransUnit' ).TransUnit
 local Util = require( 'lune.base.Util' );
+local Option = require( 'lune.base.Option' );
 
-local scriptPath = arg[ 1 ]
-local mode = arg[ 2 ]
-local outputDir = arg[ 3 ]
-local validProf = arg[ 4 ]
-
-
-local analyzePos = {}
-if mode == "comp" then
-   analyzePos.lineNo = tonumber( arg[ 3 ] )
-   analyzePos.column = tonumber( arg[ 4 ] )
-end
-
-local outputMetaFlag = true
+local option = Option.analyze( arg );
 
 function _luneGetLocal( varName )
    local index = 1
@@ -92,8 +81,8 @@ function _luneScript.loadModule( module )
       local luaSearchPath = package.path
       local bakSearchPath = package.path
 	    
-      if outputDir then
-	 luaSearchPath = string.format( "%s/?.lua;%s", outputDir, package.path )
+      if option.outputDir then
+	 luaSearchPath = string.format( "%s/?.lua;%s", option.outputDir, package.path )
 	 luaPath = package.searchpath( module, luaSearchPath )
 	 package.path = luaSearchPath
       end
@@ -112,7 +101,7 @@ function _luneScript.loadModule( module )
 	    _luneScript.loadedMap[ module ] = mod
 	 end
       end
-      if outputDir then
+      if option.outputDir then
 	 package.path = bakSearchPath
       end
       if not mod then
@@ -137,8 +126,8 @@ function _luneScript.loadMeta( module )
    return _luneScript.loadedMetaMap[ module ]
 end
 
-local function createPaser( path )
-   local parser = Parser.StreamParser.create( path )
+local function createPaser( path, module )
+   local parser = Parser.StreamParser.create( path, false, module )
    if not parser then
       error( "failed to open " .. path );
    end
@@ -146,13 +135,14 @@ local function createPaser( path )
 end
 
 
-local function newTransUnit( analyzeMode, pos )
-   return TransUnit.new( convLua.MacroEvalImp.new( mode ), analyzeMode, pos )
+local function newTransUnit( analyzeModule, analyzeMode, pos )
+   return TransUnit.new( convLua.MacroEvalImp.new( option.mode ),
+			 analyzeModule, analyzeMode, pos )
 end
 
-local function createAst( path, module, analyzeMode, pos )
-   local transUnit = newTransUnit( analyzeMode, pos )
-   return transUnit:createAST( createPaser( path ), nil, module )
+local function createAst( path, module, analyzeModule, analyzeMode, pos )
+   local transUnit = newTransUnit( analyzeModule, analyzeMode, pos )
+   return transUnit:createAST( createPaser( path, module ), nil, module )
 end
 
 local function getNode( ast )
@@ -168,7 +158,7 @@ end
 
 function _luneScript.loadFile( path, module, analyzeMode, pos )
 
-   local ast = createAst( path, module, analyzeMode, pos )
+   local ast = createAst( path, module, module, analyzeMode, pos )
    
    local func = function( self, txt )
       self.val = self.val .. txt
@@ -189,8 +179,9 @@ end
 
 
 
-if mode == "token" then
-   local parser = createPaser( scriptPath )
+local module = string.gsub( option.scriptPath, "/", "." )
+if option.mode == "token" then
+   local parser = createPaser( option.scriptPath, module )
    while true do
       local token = parser:getToken()
       if not token then
@@ -199,57 +190,57 @@ if mode == "token" then
       print( token.kind, token.pos.lineNo, token.pos.column, token.txt )
    end
 else
-   local module = string.gsub( scriptPath, "/", "." )
    module = string.gsub( module, "%.lns$", "" )
-   if mode == "ast" then
+   if option.mode == "ast" then
       Util.profile(
-	 validProf,
+	 option.validProf,
 	 function()
-	    local ast = createAst( scriptPath, module )
+	    local ast = createAst( option.scriptPath, module )
 	    local dumpNode = require( 'lune.base.dumpNode' ).dumpFilter;
 	    getNode( ast ):processFilter( dumpNode, "", 0 )
-	 end, scriptPath .. ".profi" )
-   elseif mode == "comp" then
-      createAst( scriptPath, module, "comp", analyzePos )
-   elseif mode == "lua" or mode == "LUA" then
-      local ast = createAst( scriptPath, module )
-      convert( ast, scriptPath, io.stdout, io.stdout, mode )
-   elseif mode == "save" or mode == "SAVE" then
+	 end, option.scriptPath .. ".profi" )
+   elseif option.mode == "comp" then
+      createAst( option.scriptPath, module,
+		 option.analyzeModule, "comp", option.analyzePos )
+   elseif option.mode == "lua" or option.mode == "LUA" then
+      local ast = createAst( option.scriptPath, module )
+      convert( ast, option.scriptPath, io.stdout, io.stdout, option.mode )
+   elseif option.mode == "save" or option.mode == "SAVE" then
       Util.profile(
-	 validProf,
+	 option.validProf,
       	 function()
-	    local ast = createAst( scriptPath, module )
+	    local ast = createAst( option.scriptPath, module )
 	    local func = function( self, txt )
 	       self.val:write( txt )
 	    end
-	    local luaPath = scriptPath:gsub( "%.lns$", ".lua" )
-	    local metaPath = scriptPath:gsub( "%.lns$", ".meta" )
-	    if outputDir then
+	    local luaPath = option.scriptPath:gsub( "%.lns$", ".lua" )
+	    local metaPath = option.scriptPath:gsub( "%.lns$", ".meta" )
+	    if option.outputDir then
 	       local filename = module:gsub( "%.", "/" )
-	       luaPath = string.format( "%s/%s.lua", outputDir, filename )
-	       metaPath = string.format( "%s/%s.meta", outputDir, filename )
+	       luaPath = string.format( "%s/%s.lua", option.outputDir, filename )
+	       metaPath = string.format( "%s/%s.meta", option.outputDir, filename )
 	    end
 
 	    
-	    if luaPath ~= scriptPath then
+	    if luaPath ~= option.scriptPath then
 	       local fileObj = io.open( luaPath, "w" )
 	       local stream = createStream( fileObj, func )
 
 	       local metaFileObj = nil
 	       local metaStream = stream
-	       if mode == "SAVE" then
+	       if option.mode == "SAVE" then
 		  metaFileObj = io.open( metaPath, "w" )
 		  metaStream = createStream( metaFileObj, func )
 	       end
 	       
-	       convert( ast, scriptPath, stream, metaStream, mode )
+	       convert( ast, option.scriptPath, stream, metaStream, option.mode )
 	       fileObj:close()
 	       if metaFileObj then
 		  metaFileObj:close()
 	       end
 	    end
-      	 end, scriptPath .. ".profi" )
-   elseif mode == "exe" then
+      	 end, option.scriptPath .. ".profi" )
+   elseif option.mode == "exe" then
       _luneScript.loadModule( module )
    else
       print( "illegal mode" )

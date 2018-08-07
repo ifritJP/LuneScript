@@ -133,16 +133,66 @@ local dummyList = {}
 
 -- none
 
+
+local SymbolKind = {}
+moduleObj.SymbolKind = SymbolKind
+function SymbolKind.getTxt( val )
+
+  return _lune_unwrap( SymbolKind.val2txt[val])
+end
+function SymbolKind.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = SymbolKind } )
+  if obj.__init then
+    obj:__init(  )
+  end        
+  return obj 
+ end         
+function SymbolKind:__init(  ) 
+            
+end
+do
+  SymbolKind.seed = 0
+  SymbolKind.val2txt = {}
+  SymbolKind.val2txt[SymbolKind.seed] = 'Type'
+  SymbolKind.Type = SymbolKind.seed
+  SymbolKind.seed = SymbolKind.seed + 1
+  
+  SymbolKind.val2txt[SymbolKind.seed] = 'Mbr'
+  SymbolKind.Mbr = SymbolKind.seed
+  SymbolKind.seed = SymbolKind.seed + 1
+  
+  SymbolKind.val2txt[SymbolKind.seed] = 'Mtd'
+  SymbolKind.Mtd = SymbolKind.seed
+  SymbolKind.seed = SymbolKind.seed + 1
+  
+  SymbolKind.val2txt[SymbolKind.seed] = 'Fun'
+  SymbolKind.Fun = SymbolKind.seed
+  SymbolKind.seed = SymbolKind.seed + 1
+  
+  SymbolKind.val2txt[SymbolKind.seed] = 'Var'
+  SymbolKind.Var = SymbolKind.seed
+  SymbolKind.seed = SymbolKind.seed + 1
+  
+  SymbolKind.val2txt[SymbolKind.seed] = 'Arg'
+  SymbolKind.Arg = SymbolKind.seed
+  SymbolKind.seed = SymbolKind.seed + 1
+  
+  end
+
+-- none
+
 local SymbolInfo = {}
 moduleObj.SymbolInfo = SymbolInfo
-function SymbolInfo.new( canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable )
+function SymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable )
   local obj = {}
   setmetatable( obj, { __index = SymbolInfo } )
-  if obj.__init then obj:__init( canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable ); end
+  if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable ); end
 return obj
 end
-function SymbolInfo:__init(canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable) 
+function SymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable) 
   SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1
+  self.kind = kind
   self.canBeLeft = canBeLeft
   self.canBeRight = canBeRight
   self.symbolId = SymbolInfo.symbolIdSeed
@@ -180,6 +230,9 @@ function SymbolInfo:get_typeInfo()
 end
 function SymbolInfo:get_mutable()
   return self.mutable
+end
+function SymbolInfo:get_kind()
+  return self.kind
 end
 do
   SymbolInfo.symbolIdSeed = 0
@@ -512,14 +565,34 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
   return sym2builtInTypeMap[name]
 end
 
-function Scope:add( canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable )
+function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable )
 
-  self.symbol2TypeInfoMap[name] = SymbolInfo.new(canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable)
+  self.symbol2TypeInfoMap[name] = SymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable)
+end
+
+function Scope:addVar( argFlag, canBeLeft, name, typeInfo, mutable )
+
+  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", false, mutable )
+end
+
+function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutable )
+
+  self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable )
+end
+
+function Scope:addMethod( typeInfo, accessMode, staticFlag, mutable )
+
+  self:add( SymbolKind.Mtd, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable )
+end
+
+function Scope:addFunc( typeInfo, accessMode, staticFlag, mutable )
+
+  self:add( SymbolKind.Fun, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable )
 end
 
 function Scope:addClass( name, typeInfo )
 
-  self:add( false, false, name, typeInfo, typeInfo:get_accessMode(), true, true )
+  self:add( SymbolKind.Type, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true )
 end
 
 local function dumpScopeSub( scope, prefix, readyIdSet )
@@ -1119,9 +1192,9 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
     rootScope:addClass( typeTxt, info )
   end
   typeInfoKind[idName] = info
-  sym2builtInTypeMap[typeTxt] = SymbolInfo.new(false, false, rootScope, "pub", false, typeTxt, info, false)
+  sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Type, false, false, rootScope, "pub", false, typeTxt, info, false)
   if info:get_nilableTypeInfo() ~= rootTypeInfo then
-    sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(false, kind == TypeInfoKindFunc, rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
+    sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Type, false, kind == TypeInfoKindFunc, rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
     builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
   builtInTypeIdSet[info.typeId] = info

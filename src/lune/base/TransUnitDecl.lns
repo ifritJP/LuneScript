@@ -126,8 +126,7 @@ fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) : Parser.
          let arg = new Ast.DeclArgNode( argName.pos, refType.$expTypeList,
                                         argName, refType );    
          
-         self.scope.add( true, true, argName.txt,
-                         refType.$expType, "local", false, false );
+         self.scope.addVar( false, true, argName.txt, refType.$expType, false );
          argList.insert( arg );
       }
       token = self.getToken();
@@ -181,12 +180,16 @@ pub fn TransUnit.createAST(
                   Parser.getKindTxt( _exp.kind ), _exp.txt ) );
       }
 
-      foreach file in self.subfileList {
+      foreach subModule in self.subfileList {
+         let! file = _luneScript.searchModule( subModule ) {
+            self.error( "not found subfile -- %s" ( subModule ) );
+         };
+
          if self.scope ~= self.moduleScope {
             self.error( "scope does not close" );
          }
 
-         let! subParser = Parser.StreamParser.create( file, false ) {
+         let! subParser = Parser.StreamParser.create( file, false, subModule ) {
             self.error( "open error -- %s" (file) );
          };
          
@@ -301,7 +304,7 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       false, false, scope, Ast.TypeInfoKindMacro, self.getCurrentNamespaceTypeInfo(),
       false, false, false, accessMode, nameToken.txt, argTypeList );
-   self.scope.add( false, false, nameToken.txt, typeInfo, "local", false, false );
+   self.scope.addVar( false, false, nameToken.txt, typeInfo, false );
 
 
    let declMacroInfo = new Ast.DeclMacroInfo( nameToken, argList, ast, tokenList ) ;
@@ -480,8 +483,8 @@ fn TransUnit.analyzeDeclMember(
       // accessor
       self.checkToken( token, ";" );
 
-      self.scope.add(
-         true, true, varName.txt, refType.$expType, accessMode, staticFlag, false );
+      self.scope.addMember(
+         varName.txt, refType.$expType, accessMode, staticFlag, false );
 
       return new Ast.DeclMemberNode(
          firstToken.pos, refType.$expTypeList,
@@ -517,7 +520,7 @@ fn TransUnit.analyzeDeclClass(
 
    if mode == "class" {
       self.scope.add(
-         false, true, "self", classTypeInfo, "pri", false, false );
+         Ast.SymbolKind.Var, false, true, "self", classTypeInfo, "pri", false, false );
    }
 
    let fieldList:Ast.Node[] = [];
@@ -629,8 +632,7 @@ fn TransUnit.analyzeDeclClass(
             getterName, [], [ memberType ] );
          self.popScope();
          
-         self.scope.add(
-            false, false, getterName, retTypeInfo, accessMode, false, false );
+         self.scope.addMethod( retTypeInfo, accessMode, false, false );
          methodNameSet[ getterName ] = true;
       }
       let setterName = "set_" .. memberName.txt;
@@ -638,8 +640,7 @@ fn TransUnit.analyzeDeclClass(
       if memberNode.$setterMode ~= "none" and
          not self.scope.getTypeInfoChild( setterName )
       {   
-         self.scope.add(
-            false, false, setterName,
+         self.scope.addMethod(
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ),
                Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
@@ -657,7 +658,7 @@ fn TransUnit.analyzeDeclClass(
          Ast.TypeInfoKindMethod, parentInfo, true, false, false, "pub",
          "__init", memberTypeList, [] );
       self.popScope();
-      self.scope.add( false, false, "__init", initTypeInfo, "pub", false, false );
+      self.scope.addMethod( initTypeInfo, "pub", false, false );
       methodNameSet[ "__init" ] = true;
    }
 
@@ -674,9 +675,8 @@ fn TransUnit.analyzeDeclClass(
                {
                   let childName = advertiseInfo.$prefix .. child.getTxt();
                   if not methodNameSet[ childName ] {
-                     self.scope.add(
-                        false, false, childName, child, child.$accessMode,
-                        child.$staticFlag, false );
+                     self.scope.addMethod(
+                        child, child.$accessMode, child.$staticFlag, false );
                   }
                }
             }
@@ -821,8 +821,12 @@ fn TransUnit.analyzeDeclFunc(
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList );
    if! name {
-      scope.get_parent().add(
-         false, true, _exp.txt, typeInfo, accessMode, staticFlag, false );
+      if kind == Ast.nodeKindDeclFunc {
+         scope.get_parent().addFunc( typeInfo, accessMode, staticFlag, false );
+      }
+      else {
+         scope.get_parent().addMethod( typeInfo, accessMode, staticFlag, false );
+      }
    }
 
    let node:Ast.Node = self.createNoneNode( firstToken.pos );
@@ -1032,7 +1036,7 @@ fn TransUnit.analyzeDeclVar(
                                 "shadowing variable -- %s" (varName.txt) );
             }
          }
-         self.scope.add( true, true, varName.txt, typeInfo, "local", false, false );
+         self.scope.addVar( false, true, varName.txt, typeInfo, false );
       }
    }
 
@@ -1043,9 +1047,8 @@ fn TransUnit.analyzeDeclVar(
 
       // unwrap ブロックに変数を登録
       foreach varName, index in varNameList {
-         self.scope.add(
-            true, true, "_" .. varName.txt,
-            orgExpTypeList[ index ], "local", false, false );
+         self.scope.addVar(
+            false, true, "_" .. varName.txt, orgExpTypeList[ index ], false );
       }
       
       unwrapBlock = self.analyzeBlock( "let!", scope );
@@ -1073,7 +1076,6 @@ fn TransUnit.analyzeDeclVar(
    }
 
    self.checkNextToken( ";" );
-
 
    let node = new Ast.DeclVarNode(
       firstToken.pos, [ Ast.builtinTypeNone ], mode, accessMode, staticFlag,

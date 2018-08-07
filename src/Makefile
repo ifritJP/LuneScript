@@ -32,6 +32,11 @@ define exeLune
 	(cd $1; $(LUA) lune/base/base.lua $2 $3 $4)
 endef
 
+define exeComp
+	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
+			json_pp --json_opt=canonical,pretty
+endef
+
 test-comp:
 	rm -rf work
 	mkdir -p work/1/lune/base
@@ -44,6 +49,7 @@ test-comp:
 	$(call trans,Util)
 	$(call trans,Writer)
 	$(call trans,Parser)
+	$(call trans,Option)
 	$(call trans,Ast)
 	$(call trans,TransUnit)
 	$(call trans,convLua)
@@ -67,7 +73,11 @@ test-error:
 
 test-comp2:
 	$(call exeLune,.,test/start.lns,exe,) > work/test.result
+
+
 	cp work/test.result work/test1.result
+	$(call exeComp,.,test/comp.lns,test/comp.lns,test.comp 15 7) >> work/test1.result
+	$(call exeComp,.,test/comp2.lns,test/compSub.lns,test.compSub 5 6) >> work/test1.result
 	$(MAKE) -s TEST_DIR=. test-error | grep 'error:' | \
 		sed 's/.*error:/error:/' >> work/test1.result
 
@@ -75,6 +85,7 @@ test-comp2:
 	$(call transwork,1,2,Util)
 	$(call transwork,1,2,Writer)
 	$(call transwork,1,2,Parser)
+	$(call transwork,1,2,Option)
 	$(call transwork,1,2,Ast)
 	$(call transwork,1,2,TransUnit)
 	$(call transwork,1,2,convLua)
@@ -85,6 +96,7 @@ test-comp2:
 	$(call transwork,2,3,Util)
 	$(call transwork,2,3,Writer)
 	$(call transwork,2,3,Parser)
+	$(call transwork,2,3,Option)
 	$(call transwork,2,3,Ast)
 	$(call transwork,2,3,TransUnit)
 	$(call transwork,2,3,convLua)
@@ -96,10 +108,13 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,ast,)
 	$(call exeLune,work/3,test/start.lns,lua,)
 	$(call exeLune,work/3,test/start.lns,exe,) | tee work/test2.result
+	$(call exeComp,work/3,test/comp.lns,test/comp.lns,test.comp 15 7) | tee -a work/test2.result
+	$(call exeComp,work/3,test/comp2.lns,test/compSub.lns,test.compSub 5 6) | tee -a work/test2.result
 	$(MAKE) -s TEST_DIR=work/3 test-error | grep 'error:' | \
 		sed 's/.*error:/error:/' | tee -a work/test2.result
 
 
+## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
 	$(call exeLune,work/3,test/Sub2.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/simple.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/start.lns,save,) > /dev/null

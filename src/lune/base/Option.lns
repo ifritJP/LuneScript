@@ -22,13 +22,100 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
+import lune.base.Parser;
+import lune.base.Util;
 
 pub let version = "00.01";
 
-pub fn analyze( argList: str[] ) {
-    if #str == 0 {
-        print( "" );
-        os.exit
-    }
+pub class Option {
+   pub let mode:str;
+   pub let analyzeModule:str!;
+   pub let analyzePos: Parser.Position!;
+   pub let outputDir:str!;
+   pub let scriptPath: str;
+   pub let validProf:bool;
+   pub fn __init() {
+      self.validProf = false;
+      self.mode = "";
+      self.scriptPath = "";
+   }
+}
+
+pub fn analyze( argList: str[@] ) : Option {
+   if #argList < 2 {
+      print( ```
+usage: [-prof] src.lns mode [mode-option]
+  - src.lns ast
+  - src.lns comp [-i] module line column
+  - src.lns [lua|LUA] 
+  - src.lns [save|SAVE] output-dir
+  - src.lns exe
+``` );
+      os.exit( 1 );
+   }
+
+   let option = new Option();
+   let useStdInFlag = false;
+   let lineNo:int! = nil;
+   let column:int! = nil;
+
+   let index = 1;
+   while #argList >= index {
+      let arg = argList[ index ];
+
+      if arg.find( "^-" ) {
+         switch ( arg ) {
+            case "-i" {     
+               useStdInFlag = true;
+            }
+            case "-prof" {
+               option.validProf = true;
+            }
+            default {
+               Util.errorLog( "unknown option -- %s" (arg) );
+               os.exit( 1 );
+            }
+         }
+      }
+      else {
+         if option.scriptPath == "" {
+            option.scriptPath = arg;
+         }
+         elseif option.mode == "" {
+            option.mode = arg;
+         }
+         else {
+            switch( option.mode ) {
+               case "comp" {
+                  if not option.analyzeModule {
+                     option.analyzeModule = arg;
+                  }
+                  elseif not lineNo {
+                     lineNo = tonumber( arg )@@int;
+                  }
+                  elseif not column {
+                     column = tonumber( arg )@@int;
+                     option.analyzePos = new Parser.Position(
+                        unwrap lineNo, unwrap column );
+                  }
+               }
+               case "save", "SAVE" {
+                  option.outputDir = arg;
+               }
+               default {
+                  error( "unknown option for this mode (%s) -- %s"
+                         (option.mode, arg ) );
+               }
+            }
+         }
+      }
+
+      index = index + 1;
+   }
+
+   if useStdInFlag and option.analyzeModule {
+      Parser.StreamParser.setStdinStream( unwrap option.analyzeModule );
+   }
+
+   return option;
 }

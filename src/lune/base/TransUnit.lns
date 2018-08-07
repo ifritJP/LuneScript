@@ -31,6 +31,7 @@ luneControl disable_mut_control;
 import lune.base.Parser;
 import lune.base.Util;
 import lune.base.Ast;
+import lune.base.Writer;
 
 pub class TransUnit {
 
@@ -78,8 +79,12 @@ pub class TransUnit {
    pri let analyzeMode: str;
    /** 解析対象位置 */
    pri let analyzePos: Parser.Position;
+   /** 解析対象モジュール */
+   pri let analyzeModule: str;
 
-   fn __init( macroEval: Ast.MacroEval, mode:str!, pos:Parser.Position! ) {
+   fn __init( macroEval: Ast.MacroEval,
+              analyzeModule:str!, mode:str!, pos:Parser.Position! )
+   {  
       self.macroScope = nil;
       self.validMutControl = true;
       self.moduleName = "";
@@ -98,6 +103,7 @@ pub class TransUnit {
       self.symbol2ValueMapForMacro = {};
       self.analyzeMode = unwrap mode default "";
       self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
+      self.analyzeModule = unwrap analyzeModule default "";
    }
 
    pri fn addErrMess( pos: Parser.Position, mess: str ) {
@@ -319,6 +325,7 @@ fn TransUnit.registBuiltInScope() {
       },
       { 
          "io": {
+            "stdin": { "type": [ "member" ], "typeInfo": [ "iStream" ] },
             "stdout": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
             "stderr": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
             "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!"] },
@@ -426,8 +433,8 @@ fn TransUnit.registBuiltInScope() {
                if fieldName ~= "__attrib" {
 
                   if info.type$[1] == "member" {
-                     self.scope.add(
-                        true, true, fieldName,
+                     self.scope.addMember(
+                        fieldName,
                         getTypeInfo( unwrap info.typeInfo$[1] ), "pub", true, false );
                   }
                   else {
@@ -460,6 +467,7 @@ fn TransUnit.registBuiltInScope() {
                         Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
                      }
                      self.scope.add(
+                        methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Mbr,
                         not methodFlag, not methodFlag,
                         fieldName, typeInfo, "pub", not methodFlag, false );
                      if methodFlag {
@@ -974,9 +982,13 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
                   if atomInfo.kind == Ast.TypeInfoKindFunc or
                      atomInfo.kind == Ast.TypeInfoKindMethod
-                  {     
+                  {
+                     let symbolKind = Ast.SymbolKind.Fun;
+                     if atomInfo.kind == Ast.TypeInfoKindMethod {
+                        symbolKind = Ast.SymbolKind.Mtd;
+                     }
                      (unwrap typeId2Scope[ atomInfo.parentId ]).add(
-                        false, atomInfo.kind == Ast.TypeInfoKindFunc,
+                        symbolKind, false, atomInfo.kind == Ast.TypeInfoKindFunc,
                         atomInfo.txt, workTypeInfo, atomInfo.accessMode,
                         atomInfo.staticFlag, false );
                      typeId2Scope[ atomInfo.typeId ] = scope;
@@ -1007,7 +1019,19 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             // scope.addClass(
             //    typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
             //    typeInfo.$staticFlag, typeInfo.$mutable );
-            scope.add( false, typeInfo.$kind == Ast.TypeInfoKindFunc,
+            let symbolKind = Ast.SymbolKind.Type;
+            switch typeInfo.$kind {
+               case Ast.TypeInfoKindFunc {
+                  symbolKind = Ast.SymbolKind.Fun;
+               }
+               case Ast.TypeInfoKindMethod {
+                  symbolKind = Ast.SymbolKind.Mtd;
+               }
+               case Ast.TypeInfoKindClass {
+                  symbolKind = Ast.SymbolKind.Type;
+               }
+            }
+            scope.add( symbolKind, false, typeInfo.$kind == Ast.TypeInfoKindFunc,
                        atomInfo.txt, typeInfo, atomInfo.accessMode,
                        atomInfo.staticFlag, typeInfo.$mutable );
          }
@@ -1029,8 +1053,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
          foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
             let typeId = fieldInfo.typeId;
             let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
-            self.scope.add(
-               true, true, fieldName, fieldTypeInfo,
+            self.scope.addMember(
+               fieldName, fieldTypeInfo,
                (unwrap fieldInfo.accessMode)@@str,
                (unwrap fieldInfo.staticFlag default false)@@bool,
                (unwrap fieldInfo.mutable default false)@@bool );
@@ -1069,9 +1093,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    // 変数登録
    foreach varInfo, varName in moduleInfo._varName2InfoMap {
-      self.scope.add(
-         true, true, varName, unwrap typeId2TypeInfo[ varInfo.typeId ], "pub",
-         (unwrap varInfo.staticFlag default false)@@bool,
+      self.scope.addVar(
+         false, true, varName, unwrap typeId2TypeInfo[ varInfo.typeId ],
          (unwrap varInfo.mutable default false)@@bool );
    }
 
@@ -1085,9 +1108,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    // スコープを元に戻す
    self.scope = self.moduleScope;
    
-   self.scope.add(
-      false, false, moduleToken.txt, moduleTypeInfo, "local", true, false );
-
+   self.scope.add( Ast.SymbolKind.Var, false, false,
+                   moduleToken.txt, moduleTypeInfo, "local", true, false );
 
    self.checkToken( nextToken, ";" );
 
@@ -1127,8 +1149,8 @@ fn TransUnit.analyzeSubfile( token: Parser.Token ): Ast.SubfileNode {
    }
    else {
       if mode.txt == "use" {
-         if! _luneScript.searchModule( moduleName ) {
-            self.subfileList.insert( _exp );
+         if _luneScript.searchModule( moduleName ) {
+            self.subfileList.insert( moduleName );
          }   
          else {
             self.addErrMess(
@@ -1162,10 +1184,10 @@ fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ): Ast.Node {
    let expType = exp.$expType;
    if not expType.$nilable {
       self.addErrMess( exp.$pos, "this is not nilable" );
-      scope.add( false, true, "_exp", expType, "local", false, false );
+      scope.addVar( false, true, "_exp", expType, false );
    }
    else {
-      scope.add( false, true, "_exp", expType.$orgTypeInfo, "local", false, false );
+      scope.addVar( false, true, "_exp", expType.$orgTypeInfo, false );
    }
    
    let block = self.analyzeBlock( "if!", scope );
@@ -1280,7 +1302,7 @@ fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
       self.addErrMess( exp1.$pos,
                        "exp1 is not int -- %s" (exp1.$expType.getTxt()) );
    }
-   self.scope.add( true, true, val.txt, exp1.$expType, "local", false, false );
+   self.scope.addVar( false, true, val.txt, exp1.$expType, false );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExp( false );
    if exp2.$expType ~= Ast.builtinTypeInt {
@@ -1322,7 +1344,7 @@ fn TransUnit.analyzeApply( token: Parser.Token ): Ast.ApplyNode {
       } 
       varList.insert( var );
       nextToken = self.getToken();
-      scope.add( true, true, var.txt, Ast.builtinTypeStem, "local", false, false );
+      scope.addVar( false, true, var.txt, Ast.builtinTypeStem, false );
    } nextToken.txt ~= ",";
    self.checkToken( nextToken, "of" );
 
@@ -1367,25 +1389,23 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
    else {
       let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
       if exp.$expType.get_kind() == Ast.TypeInfoKindMap {
-         self.scope.add( true, true, valSymbol.txt,
-                         itemTypeInfoList[ 2 ], "local", false, false );
+         self.scope.addVar(
+            false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false );
          if! keySymbol {
-            self.scope.add( true, true, _exp.txt,
-                            itemTypeInfoList[ 1 ], "local", false, false );
+            self.scope.addVar(
+               false, true, _exp.txt, itemTypeInfoList[ 1 ], false );
          }  
       } 
       elseif exp.$expType.get_kind() == Ast.TypeInfoKindList or
          exp.$expType.get_kind() == Ast.TypeInfoKindArray
       { 
-         self.scope.add( true, true, valSymbol.txt,
-                            itemTypeInfoList[ 1 ], "local", false, false );
+         self.scope.addVar(
+            false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );
          if! keySymbol {
-            self.scope.add( false, true, _exp.txt,
-                               Ast.builtinTypeInt, "local", false, false );
+            self.scope.addVar( false, false, _exp.txt, Ast.builtinTypeInt, false );
          }  
          else {
-            self.scope.add( false, true, "__index",
-                            Ast.builtinTypeInt, "local", false, false );
+            self.scope.addVar( false, false, "__index", Ast.builtinTypeInt, false );
          }  
       } 
       else {

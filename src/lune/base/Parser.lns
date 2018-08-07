@@ -193,6 +193,16 @@ pub class WrapParser extend Parser {
 }
 
 pub class StreamParser extend Parser {
+   /** stdin に紐付けている*/
+   static let stdinStreamModuleName: str!;
+
+   __init {
+      StreamParser.stdinStreamModuleName = nil;
+   }
+   pub static fn setStdinStream( moduleName:str ){
+      StreamParser.stdinStreamModuleName = moduleName;
+   }
+
    let stream : iStream;
    let streamName: str;
    let lineNo : int;
@@ -222,10 +232,13 @@ pub class StreamParser extend Parser {
       return self.streamName;
    }
 
-   pub static fn create( path: str, luaMode: bool ): StreamParser! {
-      let! stream = io.open( path, "r" ) {
-         return nil;
-      };
+   pub static fn create( path: str, luaMode: bool, moduleName:str ): StreamParser! {
+      let stream = io.stdin;
+      if StreamParser.stdinStreamModuleName ~= moduleName {
+         unwrap! stream = io.open( path, "r" ) {
+            return nil;
+         };
+      }
 
       return new StreamParser(
          stream, path, luaMode or string.find( path, "%.lua$" ) );

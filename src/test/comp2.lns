@@ -1,3 +1,5 @@
+subfile use test.compSub;
+
 class Super {
    pub let val1:int;
    pri let val2:int { pub };
@@ -9,7 +11,3 @@ class Test extend Super {
    pub fn func3( arg:int ): int;
    pub fn func4( arg1:int, arg2:int ): int;
 }
-
-let test = new Test();
-test.func1(1);
-test.

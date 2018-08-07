@@ -57,6 +57,39 @@ let dummyList:TypeInfo[] = [];
 
 pub proto class Scope;
 
+macro _setSymbolKind( kind:sym ) {
+   SymbolKind.val2txt[ SymbolKind.seed ] = ,,,,kind;
+   SymbolKind.,,kind = SymbolKind.seed;
+   SymbolKind.seed = SymbolKind.seed + 1;
+}
+
+pub class SymbolKind {
+   pub static let Type:int;
+   pub static let Mbr:int;
+   pub static let Mtd:int;
+   pub static let Fun:int;
+   pub static let Var:int;
+   pub static let Arg:int;
+   pri static let val2txt:Map<int,str>;
+   pri static let seed;int;
+
+   __init {
+      SymbolKind.seed = 0;
+      SymbolKind.val2txt = {};
+      _setSymbolKind( Type );
+      _setSymbolKind( Mbr );
+      _setSymbolKind( Mtd );
+      _setSymbolKind( Fun );
+      _setSymbolKind( Var );
+      _setSymbolKind( Arg );
+   }
+
+   pub static fn getTxt( val:int ) : str {
+      return unwrap SymbolKind.val2txt[ val ];
+   }
+};
+
+
 /** シンボル情報 */
 pub class SymbolInfo {
    pri static let symbolIdSeed:int;
@@ -84,12 +117,16 @@ pub class SymbolInfo {
    pri let typeInfo: TypeInfo { pub };
    /** このシンボルが mut かどうか */
    pri let mutable: bool { pub };
+   /** このシンボルの種類 SymbolKind */
+   pri let kind: int { pub };
 
    pub fn __init(
-      canBeLeft:bool, canBeRight:bool, scope: Scope, accessMode: str,
-      staticFlag: bool, name: str, typeInfo: TypeInfo, mutable: bool )
+      kind:int, canBeLeft:bool, canBeRight:bool, scope: Scope,
+      accessMode: str, staticFlag: bool, name: str, 
+      typeInfo: TypeInfo, mutable: bool )
    {
       SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1;
+      self.kind = kind;
       self.canBeLeft = canBeLeft;
       self.canBeRight = canBeRight;
       self.symbolId = SymbolInfo.symbolIdSeed;
@@ -374,16 +411,47 @@ pub fn Scope.getSymbolTypeInfo(
 }
 
 
-pub fn Scope.add( canBeLeft:bool, canBeRight:bool,
+pub fn Scope.add( kind: int, canBeLeft:bool, canBeRight:bool,
                   name:str, typeInfo: TypeInfo, accessMode:str,
-                  staticFlag:bool, mutable:bool ) {  
+                  staticFlag:bool, mutable:bool )
+{  
    self.symbol2TypeInfoMap[ name ] = new SymbolInfo(
-      canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable );
+      kind, canBeLeft, canBeRight,
+      self, accessMode, staticFlag, name, typeInfo, mutable );
+}
+
+pub fn Scope.addVar( argFlag:bool, canBeLeft:bool,
+                     name:str, typeInfo: TypeInfo, mutable:bool )
+{
+   self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
+             canBeLeft, true, name, typeInfo, "local", false, mutable );
+}
+
+pub fn Scope.addMember( name:str, typeInfo: TypeInfo, accessMode:str,
+                        staticFlag:bool, mutable:bool )
+{
+   self.add( SymbolKind.Mbr, true, true,
+             name, typeInfo, accessMode, staticFlag, mutable );
+}
+
+pub fn Scope.addMethod(
+   typeInfo: TypeInfo, accessMode:str, staticFlag:bool, mutable:bool )
+{
+   self.add( SymbolKind.Mtd, true, true,
+             typeInfo.getTxt(), typeInfo, accessMode, staticFlag, mutable );
+}
+
+pub fn Scope.addFunc(
+   typeInfo: TypeInfo, accessMode:str, staticFlag:bool, mutable:bool )
+{
+   self.add( SymbolKind.Fun, true, true,
+             typeInfo.getTxt(), typeInfo, accessMode, staticFlag, mutable );
 }
 
 pub fn Scope.addClass( name:str, typeInfo: TypeInfo )
 {
-   self.add( false, false, name, typeInfo, typeInfo.$accessMode, true, true );
+   self.add( SymbolKind.Type, false, false,
+             name, typeInfo, typeInfo.$accessMode, true, true );
 } 
 
 fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
@@ -895,11 +963,12 @@ pub static fn NormalTypeInfo.createBuiltin(
       } 
 
       typeInfoKind[ idName ] = info;
-      sym2builtInTypeMap[ typeTxt ] =
-         new SymbolInfo( false, false, rootScope, "pub", false, typeTxt, info, false );
+      sym2builtInTypeMap[ typeTxt ] = new SymbolInfo(
+         SymbolKind.Type, false, false,
+         rootScope, "pub", false, typeTxt, info, false );
       if info.$nilableTypeInfo ~= rootTypeInfo {
          sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
-            false, kind == TypeInfoKindFunc, rootScope, "pub",
+            SymbolKind.Type, false, kind == TypeInfoKindFunc, rootScope, "pub",
             false, typeTxt, info.$nilableTypeInfo, false );
          builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
       } 

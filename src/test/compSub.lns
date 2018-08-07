@@ -1,0 +1,5 @@
+subfile owner test.comp2;
+
+let test = new Test();
+test.func1(1);
+test.

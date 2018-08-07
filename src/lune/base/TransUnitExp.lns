@@ -623,17 +623,29 @@ fn TransUnit.analyzeAccessClassField(
    return fieldTypeInfo, getterTypeInfo;
 }
 
-fn TransUnit.dumpComp( scope: Ast.Scope ) {
-   foreach symbolInfo, symbol in scope.$symbol2TypeInfoMap {
+fn TransUnit.dumpComp( writer: Writer.Writer, scope: Ast.Scope ) {
+   forsort symbolInfo, symbol in scope.$symbol2TypeInfoMap {
       if symbol ~= "__init" and symbol ~= "self" {
          if scope.getTypeInfoField( symbol, true, self.scope ) {
-            Util.errorLog(
-               "hoge: candidate %s %s" ( symbol, symbolInfo.$typeInfo.$display_stirng ) );
+            writer.startParent( "candidate", false );
+            let typeInfo = symbolInfo.$typeInfo;
+            let typeKindTxt = "";
+            writer.write( "type", "%s" ( Ast.SymbolKind.getTxt( symbolInfo.$kind ) ) );
+            switch ( symbolInfo.$kind ) {
+               case Ast.SymbolKind.Fun, Ast.SymbolKind.Mtd {
+                  writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
+               }
+               case Ast.SymbolKind.Mbr, Ast.SymbolKind.Var {
+                  writer.write( "displayTxt", "%s: %s"
+                                ( symbolInfo.$name, typeInfo.$display_stirng ) );
+               }
+            }
+            writer.endElement();
          }
       }
    }
    foreach inheritScope in scope.$inheritList {
-      self.dumpComp( inheritScope );
+      self.dumpComp( writer, inheritScope );
    }
 }
 
@@ -644,7 +656,19 @@ fn TransUnit.checkComp( token:Parser.Token, prefixExpType: Ast.TypeInfo )
       self.analyzePos.column >= token.pos.column and
       self.analyzePos.column <= token.pos.column + #token.txt 
    {
-      self.dumpComp( unwrap prefixExpType.$scope );
+      let currentModule = self.parser.getStreamName().gsub( "%.lns", "" );
+      currentModule = currentModule.gsub( ".*/", "" );
+      let target = self.analyzeModule.gsub( "[^%.]+%.", "" );
+      if currentModule == target {
+         let jsonWriter = new Writer.JSON( io.stdout );
+         jsonWriter.startParent( "lunescript", false );
+         jsonWriter.startParent( "candidateList", true );
+         self.dumpComp( jsonWriter, unwrap prefixExpType.$scope );
+         jsonWriter.endElement();
+         jsonWriter.endElement();
+         jsonWriter.fin();
+         os.exit( 0 );
+      }
    }
 }
 

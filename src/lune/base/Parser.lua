@@ -271,6 +271,10 @@ do
 local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
 moduleObj.StreamParser = StreamParser
+function StreamParser.setStdinStream( moduleName )
+
+  StreamParser.stdinStreamModuleName = moduleName
+end
 function StreamParser.new( stream, name, luaMode )
   local obj = {}
   setmetatable( obj, { __index = StreamParser } )
@@ -294,19 +298,24 @@ function StreamParser:getStreamName(  )
 
   return self.streamName
 end
-function StreamParser.create( path, luaMode )
+function StreamParser.create( path, luaMode, moduleName )
 
-  local stream = io.open( path, "r" )
+  local stream = io.stdin
   
-      if  nil == stream then
-        local _stream = stream
-        
-        return nil
-      end
+  if StreamParser.stdinStreamModuleName ~= moduleName then
+    stream = io.open( path, "r" )
     
+        if  nil == stream then
+          local _stream = stream
+          
+          return nil
+        end
+      
+  end
   return StreamParser.new(stream, path, luaMode or string.find( path, "%.lua$" ))
 end
 do
+  StreamParser.stdinStreamModuleName = nil
   end
 
 
