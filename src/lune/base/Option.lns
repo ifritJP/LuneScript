@@ -71,8 +71,11 @@ usage: [-prof] src.lns mode [mode-option]
             case "-prof" {
                option.validProf = true;
             }
+            case "--nodebug" {
+               Util.setDebugFlag( false );
+            }
             default {
-               Util.errorLog( "unknown option -- %s" (arg) );
+               Util.log( "unknown option -- %s" (arg) );
                os.exit( 1 );
             }
          }
@@ -103,8 +106,8 @@ usage: [-prof] src.lns mode [mode-option]
                   option.outputDir = arg;
                }
                default {
-                  error( "unknown option for this mode (%s) -- %s"
-                         (option.mode, arg ) );
+                  Util.err( "unknown option for this mode (%s) -- %s"
+                              (option.mode, arg ) );
                }
             }
          }

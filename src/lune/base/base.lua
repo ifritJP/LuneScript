@@ -52,7 +52,7 @@ _luneScript.loadedMetaMap = {}
 
 function _luneScript.error( message ) 
       Util.errorLog( message );
-      Util.debugLog()
+      Util.printStackTrace()
       os.exit( 1 );
 end
 
@@ -199,6 +199,9 @@ else
 	    local dumpNode = require( 'lune.base.dumpNode' ).dumpFilter;
 	    getNode( ast ):processFilter( dumpNode, "", 0 )
 	 end, option.scriptPath .. ".profi" )
+   elseif option.mode == "diag" then
+      Util.setErrorCode( 0 );
+      createAst( option.scriptPath, module, nil, "diag" )
    elseif option.mode == "comp" then
       createAst( option.scriptPath, module,
 		 option.analyzeModule, "comp", option.analyzePos )

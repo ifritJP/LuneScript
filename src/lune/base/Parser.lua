@@ -54,6 +54,8 @@ function _lune_unwrapDefault( val, defval )
   return val
 end
 
+local Util = require( 'lune.base.Util' )
+
 local luaKeywordSet = {}
 
 luaKeywordSet["let"] = true
@@ -156,7 +158,7 @@ function TxtStream:__init(txt)
   self.txt = txt
   self.start = 1
   if not txt then
-    error( "txt is nil" )
+    Util.err( "txt is nil" )
   end
   self.eof = false
 end
@@ -698,7 +700,7 @@ function StreamParser:parse(  )
           local endIndex = string.find( rawLine, workPattern, workIndex )
           
           if not endIndex then
-            error( string.format( "illegal string: %d: %s", index, rawLine ) )
+            Util.err( string.format( "illegal string: %d: %s", index, rawLine ) )
           end
           local workChar = string.byte( rawLine, endIndex )
           
@@ -739,7 +741,7 @@ function StreamParser:parse(  )
         end
         addVal( kindChar, codeChar, index )
       else 
-        error( string.format( "illegal syntax:%s:%s", self.lineNo, rawLine:sub( index ) ) )
+        Util.err( string.format( "illegal syntax:%s:%s", self.lineNo, rawLine:sub( index ) ) )
       end
     end
     if syncIndexFlag then

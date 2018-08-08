@@ -154,8 +154,8 @@ end
 do
   SymbolKind.seed = 0
   SymbolKind.val2txt = {}
-  SymbolKind.val2txt[SymbolKind.seed] = 'Type'
-  SymbolKind.Type = SymbolKind.seed
+  SymbolKind.val2txt[SymbolKind.seed] = 'Typ'
+  SymbolKind.Typ = SymbolKind.seed
   SymbolKind.seed = SymbolKind.seed + 1
   
   SymbolKind.val2txt[SymbolKind.seed] = 'Mbr'
@@ -592,7 +592,7 @@ end
 
 function Scope:addClass( name, typeInfo )
 
-  self:add( SymbolKind.Type, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true )
+  self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true )
 end
 
 local function dumpScopeSub( scope, prefix, readyIdSet )
@@ -610,7 +610,7 @@ local function dumpScopeSub( scope, prefix, readyIdSet )
           end
           readyIdSet[scope] = true
           if #prefix > 20 then
-            error( "illegal" )
+            Util.err( "illegal" )
           end
           do
             local __sorted = {}
@@ -622,7 +622,7 @@ local function dumpScopeSub( scope, prefix, readyIdSet )
             for __index, symbol in ipairs( __sorted ) do
               symbolInfo = __map[ symbol ]
               do
-                Util.errorLog( string.format( "scope: %s, %s, %s", prefix, scope, symbol) )
+                Util.log( string.format( "scope: %s, %s, %s", prefix, scope, symbol) )
                 do
                   local _exp = symbolInfo:get_typeInfo():get_scope()
                   if _exp ~= nil then
@@ -720,7 +720,7 @@ function SymbolInfo:canAccess( fromScope )
     end
   end
   
-  error( string.format( "illegl accessmode -- %s, %s", self:get_accessMode(), self:get_name()) )
+  Util.err( string.format( "illegl accessmode -- %s, %s", self:get_accessMode(), self:get_name()) )
 end
 
 -- none
@@ -1042,9 +1042,9 @@ function NormalTypeInfo:equalsSub( typeInfo )
     return false
   end
   if (not self.itemTypeInfoList and typeInfo:get_itemTypeInfoList() or self.itemTypeInfoList and not typeInfo:get_itemTypeInfoList() or not self.retTypeInfoList and typeInfo:get_retTypeInfoList() or self.retTypeInfoList and not typeInfo:get_retTypeInfoList() or self.orgTypeInfo ~= typeInfo:get_orgTypeInfo() ) then
-    Util.errorLog( string.format( "%s, %s", self.itemTypeInfoList, typeInfo:get_itemTypeInfoList()) )
-    Util.errorLog( string.format( "%s, %s", self.retTypeInfoList, typeInfo:get_retTypeInfoList()) )
-    Util.errorLog( string.format( "%s, %s", self.orgTypeInfo, typeInfo:get_orgTypeInfo()) )
+    Util.log( string.format( "%s, %s", self.itemTypeInfoList, typeInfo:get_itemTypeInfoList()) )
+    Util.log( string.format( "%s, %s", self.retTypeInfoList, typeInfo:get_retTypeInfoList()) )
+    Util.log( string.format( "%s, %s", self.orgTypeInfo, typeInfo:get_orgTypeInfo()) )
     return false
   end
   if self.itemTypeInfoList then
@@ -1087,7 +1087,7 @@ function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, pa
         end
     end
     
-    error( string.format( "not found symbol -- %s", txt) )
+    Util.err( string.format( "not found symbol -- %s", txt) )
   end
   typeIdSeed = typeIdSeed + 1
   local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList)
@@ -1192,9 +1192,9 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
     rootScope:addClass( typeTxt, info )
   end
   typeInfoKind[idName] = info
-  sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Type, false, false, rootScope, "pub", false, typeTxt, info, false)
+  sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Typ, false, false, rootScope, "pub", false, typeTxt, info, false)
   if info:get_nilableTypeInfo() ~= rootTypeInfo then
-    sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Type, false, kind == TypeInfoKindFunc, rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
+    sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKindFunc, rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
     builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
   builtInTypeIdSet[info.typeId] = info
@@ -1204,7 +1204,7 @@ end
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
 
   if not itemTypeInfo or #itemTypeInfo == 0 then
-    error( string.format( "illegal list type: %s", itemTypeInfo) )
+    Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
   return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", typeInfoRoot, typeIdSeed, TypeInfoKindList, itemTypeInfo)
@@ -1233,7 +1233,7 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
   end
   
   if Parser.isLuaKeyword( className ) then
-    error( string.format( "This symbol can not use for a class or script file. -- %s", className) )
+    Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
   end
   typeIdSeed = typeIdSeed + 1
   local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKindClass or TypeInfoKindIF)
@@ -1244,7 +1244,7 @@ end
 function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList )
 
   if not builtinFlag and Parser.isLuaKeyword( funcName ) then
-    error( string.format( "This symbol can not use for a function. -- %s", funcName) )
+    Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
   end
   typeIdSeed = typeIdSeed + 1
   local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, kind, {}, _lune_unwrapDefault( argTypeList, {}), _lune_unwrapDefault( retTypeInfoList, {}))

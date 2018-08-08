@@ -21,17 +21,27 @@
 ;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
-;;
-;; (require 'lns-flycheck)
 
+(require 'lns-command)
 
-(require 'lns-mode)
-(require 'lns-completion)
-(add-to-list 'auto-mode-alist '("\\.lns$" . lns-mode))
+(require 'flymake)
+;;c++のflymakeでmakefileを不要にする
+(defun flymake-lns-init ()
+  (let* ((command-info (lns-command-get-info))
+	 (command-list (lns-command-get-command
+			(lns-convert-path-2-proj-relative-path
+			 (plist-get command-info :owner)) "diag" "--nodebug")))
+    (list (car command-list) (cdr command-list)
+	  (plist-get command-info :dir))))
 
-(add-hook 'lns-mode-hook
-      '(lambda ()
-         (local-set-key (kbd "C-c C-/") 'lns-helm-complete-at)))
+(push '("\\.lns$" flymake-lns-init) flymake-allowed-file-name-masks)
 
+(add-hook 'lns-mode-hook '(lambda ()
+  (flymake-mode t)
+))
 
-(provide 'lns-conf)
+(add-to-list
+ 'flymake-err-line-patterns
+ '( "\\([^/]+\\.lns\\):\\([0-9]+\\):\\([0-9]+\\):\\(.+\\)" 1 2 3 4))
+
+(provide 'lns-flycheck)

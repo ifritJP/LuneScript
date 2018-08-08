@@ -307,7 +307,9 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
 
          forsort symbolInfo, fieldName in scope.$symbol2TypeInfoMap {
             let typeInfo = symbolInfo.$typeInfo;
-            if typeInfo.get_kind() ~= Ast.TypeInfoKindMethod
+            if symbolInfo.$kind == Ast.SymbolKind.Mbr or
+               symbolInfo.$kind == Ast.SymbolKind.Var //or
+               //symbolInfo.$kind == Ast.SymbolKind.Typ
             {
                if symbolInfo.$accessMode == "pub" {
                   self.writeln( "_classInfo%d.%s = {" ( classTypeId, fieldName ),
@@ -804,7 +806,7 @@ pub override fn convFilter.processDeclConstr(
       }
       else {
          let name = unwrap node.get_declInfo().$name;
-         error( "not support ... in macro -- %s" (name.txt) );
+         Util.err( "not support ... in macro -- %s" (name.txt) );
       }
    }
    self.writeln( " )", baseIndent + stepIndent );
@@ -1643,16 +1645,16 @@ pub class MacroEvalImp extend Ast.MacroEval {
       
       let chunk, err = load( oStream.get_txt() );
       if err {
-         error( err );
+         Util.err( err );
       }
       if! chunk {
          let mod = _exp();
          if not mod {
-            error( "macro load error" );
+            Util.err( "macro load error" );
          }   
          return (unwrap mod)@@form;
       }
-      error( "failed to load -- " .. node.$declInfo.$name );
+      Util.err( "failed to load -- " .. node.$declInfo.$name );
    }
 }
 

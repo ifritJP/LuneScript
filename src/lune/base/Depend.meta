@@ -5,20 +5,14 @@ moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
   local _classInfo187 = {}
   _typeId2ClassInfoMap[ 187 ] = _classInfo187
-  _classInfo187.base = {
-    name='base', staticFlag = false, accessMode = 'pub', typeId = 190 }
   end
 do
   local _classInfo190 = {}
   _typeId2ClassInfoMap[ 190 ] = _classInfo190
-  _classInfo190.Depend = {
-    name='Depend', staticFlag = false, accessMode = 'pub', typeId = 193 }
   end
 do
   local _classInfo193 = {}
   _typeId2ClassInfoMap[ 193 ] = _classInfo193
-  _classInfo193.getFileLastModifiedTime = {
-    name='getFileLastModifiedTime', staticFlag = true, accessMode = 'pub', typeId = 196 }
   end
 local _varName2InfoMap = {}
 moduleObj._varName2InfoMap = _varName2InfoMap

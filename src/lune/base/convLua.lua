@@ -344,7 +344,7 @@ function convFilter:outputMeta( node, baseIndent )
               do
                 local typeInfo = symbolInfo:get_typeInfo()
                 
-                if typeInfo:get_kind(  ) ~= Ast.TypeInfoKindMethod then
+                if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
                   if symbolInfo:get_accessMode() == "pub" then
                     self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, fieldName), baseIndent + stepIndent )
                     self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, typeInfo:get_staticFlag(  )) .. string.format( "accessMode = '%s', typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )), baseIndent + stepIndent )
@@ -838,7 +838,7 @@ function convFilter:processDeclConstr( node, parent, baseIndent )
     else 
       local name = _lune_unwrap( node:get_declInfo(  ):get_name())
       
-      error( string.format( "not support ... in macro -- %s", name.txt) )
+      Util.err( string.format( "not support ... in macro -- %s", name.txt) )
     end
   end
   self:writeln( " )", baseIndent + stepIndent )
@@ -1713,7 +1713,7 @@ function MacroEvalImp:eval( node )
   local chunk, err = load( oStream:get_txt(  ) )
   
   if err then
-    error( err )
+    Util.err( err )
   end
   do
     local _exp = chunk
@@ -1722,13 +1722,13 @@ function MacroEvalImp:eval( node )
         local mod = _exp(  )
         
         if not mod then
-          error( "macro load error" )
+          Util.err( "macro load error" )
         end
         return (_lune_unwrap( mod) )
       end
   end
   
-  error( "failed to load -- " .. node:get_declInfo():get_name() )
+  Util.err( "failed to load -- " .. node:get_declInfo():get_name() )
 end
 function MacroEvalImp.new( mode )
   local obj = {}

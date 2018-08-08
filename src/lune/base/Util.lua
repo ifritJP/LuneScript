@@ -77,12 +77,42 @@ end
 do
   end
 
+local debugFlag = true
+
+local function setDebugFlag( flag )
+
+  debugFlag = flag
+end
+moduleObj.setDebugFlag = setDebugFlag
+local errorCode = 1
+
+local function setErrorCode( code )
+
+  errorCode = code
+end
+moduleObj.setErrorCode = setErrorCode
 local function errorLog( message )
 
   io.stderr:write( message .. "\n" )
 end
 moduleObj.errorLog = errorLog
-local function debugLog(  )
+local function err( message )
+
+  if debugFlag then
+    error( message )
+  end
+  errorLog( message )
+  os.exit( errorCode )
+end
+moduleObj.err = err
+local function log( message )
+
+  if debugFlag then
+    errorLog( message )
+  end
+end
+moduleObj.log = log
+local function printStackTrace(  )
 
   for level = 2, 6 do
     local debugInfo = debug.getinfo( level )
@@ -92,7 +122,7 @@ local function debugLog(  )
     end
   end
 end
-moduleObj.debugLog = debugLog
+moduleObj.printStackTrace = printStackTrace
 local function profile( validTest, func, path )
 
   if not validTest then

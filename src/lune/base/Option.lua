@@ -111,8 +111,10 @@ usage: [-prof] src.lns mode [mode-option]
           useStdInFlag = true
         elseif _switchExp == "-prof" then
           option.validProf = true
+        elseif _switchExp == "--nodebug" then
+          Util.setDebugFlag( false )
         else 
-          Util.errorLog( string.format( "unknown option -- %s", arg) )
+          Util.log( string.format( "unknown option -- %s", arg) )
           os.exit( 1 )
         end
       end
@@ -137,7 +139,7 @@ usage: [-prof] src.lns mode [mode-option]
           elseif _switchExp == "save" or _switchExp == "SAVE" then
             option.outputDir = arg
           else 
-            error( string.format( "unknown option for this mode (%s) -- %s", option.mode, arg) )
+            Util.err( string.format( "unknown option for this mode (%s) -- %s", option.mode, arg) )
           end
         end
         

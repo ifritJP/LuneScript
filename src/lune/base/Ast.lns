@@ -64,7 +64,7 @@ macro _setSymbolKind( kind:sym ) {
 }
 
 pub class SymbolKind {
-   pub static let Type:int;
+   pub static let Typ:int;
    pub static let Mbr:int;
    pub static let Mtd:int;
    pub static let Fun:int;
@@ -76,7 +76,7 @@ pub class SymbolKind {
    __init {
       SymbolKind.seed = 0;
       SymbolKind.val2txt = {};
-      _setSymbolKind( Type );
+      _setSymbolKind( Typ );
       _setSymbolKind( Mbr );
       _setSymbolKind( Mtd );
       _setSymbolKind( Fun );
@@ -414,7 +414,7 @@ pub fn Scope.getSymbolTypeInfo(
 pub fn Scope.add( kind: int, canBeLeft:bool, canBeRight:bool,
                   name:str, typeInfo: TypeInfo, accessMode:str,
                   staticFlag:bool, mutable:bool )
-{  
+{
    self.symbol2TypeInfoMap[ name ] = new SymbolInfo(
       kind, canBeLeft, canBeRight,
       self, accessMode, staticFlag, name, typeInfo, mutable );
@@ -450,7 +450,7 @@ pub fn Scope.addFunc(
 
 pub fn Scope.addClass( name:str, typeInfo: TypeInfo )
 {
-   self.add( SymbolKind.Type, false, false,
+   self.add( SymbolKind.Typ, false, false,
              name, typeInfo, typeInfo.$accessMode, true, true );
 } 
 
@@ -462,11 +462,11 @@ fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
       } 
       readyIdSet[ scope ] = true;
       if #prefix > 20 {
-         error("illegal");
+         Util.err("illegal");
       }   
       
       forsort symbolInfo, symbol in scope.$symbol2TypeInfoMap {
-         Util.errorLog( "scope: %s, %s, %s" ( prefix, scope, symbol ) );
+         Util.log( "scope: %s, %s, %s" ( prefix, scope, symbol ) );
          if! symbolInfo.$typeInfo.$scope {
             dumpScopeSub( _exp, prefix .. "  ", readyIdSet );
          }  
@@ -541,8 +541,8 @@ pub fn SymbolInfo.canAccess( fromScope:Scope ): SymbolInfo!
          return nil;
       } 
    }
-   error( "illegl accessmode -- %s, %s"
-          (self.$accessMode, self.$name) );
+   Util.err( "illegl accessmode -- %s, %s"
+               (self.$accessMode, self.$name) );
 }
 
 pub proto class Node;
@@ -835,9 +835,9 @@ pub class NormalTypeInfo extend TypeInfo {
            self.retTypeInfoList and not typeInfo.$retTypeInfoList or
            self.orgTypeInfo ~= typeInfo.$orgTypeInfo )
       { 
-         Util.errorLog( "%s, %s" (self.itemTypeInfoList, typeInfo.$itemTypeInfoList ) );
-         Util.errorLog( "%s, %s" ( self.retTypeInfoList, typeInfo.$retTypeInfoList ) );
-         Util.errorLog( "%s, %s" ( self.orgTypeInfo, typeInfo.$orgTypeInfo ) );
+         Util.log( "%s, %s" (self.itemTypeInfoList, typeInfo.$itemTypeInfoList ) );
+         Util.log( "%s, %s" ( self.retTypeInfoList, typeInfo.$retTypeInfoList ) );
+         Util.log( "%s, %s" ( self.orgTypeInfo, typeInfo.$orgTypeInfo ) );
          //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
          //                                     typeInfo.getTxt(), typeInfo.typeId ) );
          return false;
@@ -907,8 +907,8 @@ pub class NormalTypeInfo extend TypeInfo {
          if kind == TypeInfoKindPrim {
             if! sym2builtInTypeMap[ txt ] {
                return _exp.$typeInfo;
-            }   
-            error( "not found symbol -- %s" (txt ) );
+            }
+            Util.err( "not found symbol -- %s" (txt ) );
          }  
          typeIdSeed = typeIdSeed + 1;
          let info = new NormalTypeInfo(
@@ -964,11 +964,11 @@ pub static fn NormalTypeInfo.createBuiltin(
 
       typeInfoKind[ idName ] = info;
       sym2builtInTypeMap[ typeTxt ] = new SymbolInfo(
-         SymbolKind.Type, false, false,
+         SymbolKind.Typ, false, false,
          rootScope, "pub", false, typeTxt, info, false );
       if info.$nilableTypeInfo ~= rootTypeInfo {
          sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
-            SymbolKind.Type, false, kind == TypeInfoKindFunc, rootScope, "pub",
+            SymbolKind.Typ, false, kind == TypeInfoKindFunc, rootScope, "pub",
             false, typeTxt, info.$nilableTypeInfo, false );
          builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
       } 
@@ -980,7 +980,7 @@ pub static fn NormalTypeInfo.createBuiltin(
 pub static fn NormalTypeInfo.createList(
    accessMode: str, parentInfo: TypeInfo, itemTypeInfo: TypeInfo[] ): TypeInfo {
       if not itemTypeInfo or #itemTypeInfo == 0 {
-         error( "illegal list type: %s" (itemTypeInfo) );
+         Util.err( "illegal list type: %s" (itemTypeInfo) );
       } 
       typeIdSeed = typeIdSeed + 1;
       return new NormalTypeInfo(
@@ -1023,7 +1023,8 @@ pub static fn NormalTypeInfo.createClass(
    }
 
    if Parser.isLuaKeyword( className ) {
-      error( "This symbol can not use for a class or script file. -- %s" (className) );
+      Util.err( "This symbol can not use for a class or script file. -- %s"
+                  (className) );
    }
    
    typeIdSeed = typeIdSeed + 1;
@@ -1041,7 +1042,7 @@ pub static fn NormalTypeInfo.createFunc(
    funcName: str, argTypeList: TypeInfo[]!, retTypeInfoList: TypeInfo[]! ): TypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
-      error( "This symbol can not use for a function. -- %s" (funcName) );
+      Util.err( "This symbol can not use for a function. -- %s" (funcName) );
    }
    
    typeIdSeed = typeIdSeed + 1;

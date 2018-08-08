@@ -36,6 +36,12 @@
 (defvar lns-no-token-pattern "[^a-zA-Z0-9_]")
 (defvar lns-no-space-pattern "[^\s \t]")
 
+
+(defvar lns-mode-hook nil
+  "Hooks called when Lns mode fires up.")
+
+
+
 (defun lns-make-regex-or (list)
   (apply 'concat
 	 (format "\\_<%s\\_>" (car list))

@@ -98,7 +98,7 @@ function TransUnit:__init(macroEval, analyzeModule, mode, pos)
 end
 function TransUnit:addErrMess( pos, mess )
 
-  table.insert( self.errMessList, string.format( "%s:%d:%d: %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, mess) )
+  table.insert( self.errMessList, string.format( "%s:%d:%d: error: %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, mess) )
 end
 function TransUnit:pushScope( classFlag, inheritList )
 
@@ -362,7 +362,7 @@ function TransUnit:registBuiltInScope(  )
         Ast.builtInTypeIdSet[parentInfo:get_nilableTypeInfo():get_typeId()] = parentInfo:get_nilableTypeInfo()
       end
       if not parentInfo then
-        error( "parentInfo is nil" )
+        Util.err( "parentInfo is nil" )
       end
       if not builtinModuleName2Scope[name] then
         if name ~= "" and getTypeInfo( name ) then
@@ -451,7 +451,7 @@ function TransUnit:error( mess )
       end
   end
   
-  error( string.format( "\nerror:%s:%d:%d:(%s) %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, txt, mess ) )
+  Util.err( string.format( "error:%s:%d:%d:(%s) %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, txt, mess ) )
 end
 
 function TransUnit:createNoneNode( pos )
@@ -849,7 +849,7 @@ function TransUnit:analyzeImport( token )
               if  nil == workTypeInfo then
                 local _workTypeInfo = workTypeInfo
                 
-                error( string.format( "not found parentInfo %s %s", atomInfo.parentId, atomInfo.txt) )
+                Util.err( string.format( "not found parentInfo %s %s", atomInfo.parentId, atomInfo.txt) )
               end
             
           parentInfo = workTypeInfo
@@ -863,7 +863,7 @@ function TransUnit:analyzeImport( token )
         
         for __index, typeId in pairs( atomInfo.argTypeId ) do
           if not typeId2TypeInfo[typeId] then
-            Util.errorLog( string.format( "not found -- %s.%s, %d, %d", parentInfo:getTxt(  ), atomInfo.txt, typeId, #atomInfo.argTypeId) )
+            Util.log( string.format( "not found -- %s.%s, %d, %d", parentInfo:getTxt(  ), atomInfo.txt, typeId, #atomInfo.argTypeId) )
           end
           table.insert( argTypeInfo, _lune_unwrap( typeId2TypeInfo[typeId]) )
         end
@@ -900,7 +900,7 @@ function TransUnit:analyzeImport( token )
                 
                   typeId2Scope[atomInfo.typeId] = newTypeInfo:get_scope()
                   if not newTypeInfo:get_scope() then
-                    error( string.format( "not found scope %s %s %s %s %s", parentScope, atomInfo.parentId, atomInfo.typeId, atomInfo.txt, newTypeInfo:getTxt(  )) )
+                    Util.err( string.format( "not found scope %s %s %s %s %s", parentScope, atomInfo.parentId, atomInfo.typeId, atomInfo.txt, newTypeInfo:getTxt(  )) )
                   end
                   typeId2TypeInfo[atomInfo.typeId] = newTypeInfo
                 end
@@ -956,7 +956,7 @@ function TransUnit:analyzeImport( token )
       for __index, childId in pairs( atomInfo.children ) do
         local typeInfo = _lune_unwrap( typeId2TypeInfo[childId])
         
-        local symbolKind = Ast.SymbolKind.Type
+        local symbolKind = Ast.SymbolKind.Typ
         
         do
           local _switchExp = typeInfo:get_kind()
@@ -965,11 +965,11 @@ function TransUnit:analyzeImport( token )
           elseif _switchExp == Ast.TypeInfoKindMethod then
             symbolKind = Ast.SymbolKind.Mtd
           elseif _switchExp == Ast.TypeInfoKindClass then
-            symbolKind = Ast.SymbolKind.Type
+            symbolKind = Ast.SymbolKind.Typ
           end
         end
         
-        scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKindFunc, atomInfo.txt, typeInfo, atomInfo.accessMode, atomInfo.staticFlag, typeInfo:get_mutable() )
+        scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKindFunc, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable() )
       end
     end
   end
@@ -1489,7 +1489,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
       local _exp = token
       if _exp ~= nil then
       
-          error( string.format( "unknown:%d:%d:(%s) %s", _exp.pos.lineNo, _exp.pos.column, Parser.getKindTxt( _exp.kind ), _exp.txt) )
+          Util.err( string.format( "unknown:%d:%d:(%s) %s", _exp.pos.lineNo, _exp.pos.column, Parser.getKindTxt( _exp.kind ), _exp.txt) )
         end
     end
     
@@ -1520,7 +1520,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
         local _exp = token
         if _exp ~= nil then
         
-            error( string.format( "unknown:%d:%d:(%s) %s", _exp.pos.lineNo, _exp.pos.column, Parser.getKindTxt( _exp.kind ), _exp.txt) )
+            Util.err( string.format( "unknown:%d:%d:(%s) %s", _exp.pos.lineNo, _exp.pos.column, Parser.getKindTxt( _exp.kind ), _exp.txt) )
           end
       end
       
@@ -1538,9 +1538,12 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
   
   if #self.errMessList > 0 then
     for __index, mess in pairs( self.errMessList ) do
-      Util.errorLog( "error:" .. mess )
+      Util.errorLog( mess )
     end
-    error( "has error" )
+    Util.err( "has error" )
+  end
+  if self.analyzeMode == "diag" then
+    os.exit( 0 )
   end
   return ASTInfo.new(_lune_unwrap( ast), moduleTypeInfo)
 end
@@ -2151,7 +2154,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, staticFlag, firstToken )
   else 
     self:pushback(  )
     if mode ~= "let" then
-      Util.errorLog( "need '!'" )
+      Util.log( "need '!'" )
     end
   end
   local typeInfoList = {}
@@ -2852,7 +2855,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
   end
   if not fieldTypeInfo then
     for name, val in pairs( classScope:get_symbol2TypeInfoMap() ) do
-      Util.errorLog( string.format( "debug: %s, %s", name, val) )
+      Util.log( string.format( "debug: %s, %s", name, val) )
     end
     self:error( string.format( "not found field typeInfo: %s.%s", className, token.txt ) )
   end
@@ -2885,7 +2888,7 @@ function TransUnit:dumpComp( writer, scope )
                 writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
               elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
                 writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
-              elseif _switchExp == Ast.SymbolKind.Type then
+              elseif _switchExp == Ast.SymbolKind.Typ then
                 writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
               end
             end

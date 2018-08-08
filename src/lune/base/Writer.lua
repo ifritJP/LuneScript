@@ -54,6 +54,8 @@ function _lune_unwrapDefault( val, defval )
   return val
 end
 
+local Util = require( 'lune.base.Util' )
+
 local Writer = {}
 moduleObj.Writer = Writer
 -- none
@@ -125,7 +127,7 @@ function XML:endElement(  )
   if self.depth == 0 then
     self.stream:write( '\n' )
   elseif self.depth < 0 then
-    error( "illegal depth" )
+    Util.err( "illegal depth" )
   end
 end
 function XML:writeValue( val )
@@ -197,7 +199,7 @@ end
 function JSON:endLayer(  )
 
   if #self.layerQueue == 0 then
-    error( "illegal depth" )
+    Util.err( "illegal depth" )
   end
   while #self.layerQueue > 0 do
     local info = _lune_unwrap( self:getLayerInfo(  ))
@@ -241,7 +243,7 @@ function JSON:addElementName( name )
   local nameSet = info.elementNameSet
   
   if not info.arrayFlag and nameSet[name] then
-    error( "exist same name: " .. name )
+    Util.err( "exist same name: " .. name )
   end
   nameSet[name] = true
 end
@@ -269,7 +271,7 @@ function JSON:startElement( name )
   if self:equalLayerState( 'termed' ) then
     self.stream:write( "," )
   elseif self:equalLayerState( 'named' ) then
-    error( 'illegal layer state' )
+    Util.err( 'illegal layer state' )
   elseif self:equalLayerState( 'none' ) then
     -- none
     
@@ -280,7 +282,7 @@ function JSON:startElement( name )
   local info = _lune_unwrap( self:getLayerInfo(  ))
   
   if info.openElement then
-    error( 'illegal openElement' )
+    Util.err( 'illegal openElement' )
   end
   info.openElement = true
   self.stream:write( string.format( '"%s": ', name) )
@@ -301,7 +303,7 @@ function JSON:endElement(  )
       self:endLayer(  )
     end
   else 
-    error( string.format( 'illegal layer state %s', self:getLayerName(  )) )
+    Util.err( string.format( 'illegal layer state %s', self:getLayerName(  )) )
   end
   self:setLayerState( 'termed' )
 end
@@ -342,7 +344,7 @@ function JSON:fin(  )
   if self:equalLayerState( 'none' ) or self:equalLayerState( 'termed' ) then
     self:endLayer(  )
   else 
-    error( 'illegal' )
+    Util.err( 'illegal' )
   end
 end
 do

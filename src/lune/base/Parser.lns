@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import lune.base.Util;
+
 let luaKeywordSet:Map<str,bool> = {};
 luaKeywordSet[ "let" ] = true;
 luaKeywordSet[ "if" ] = true;
@@ -130,7 +132,7 @@ pub class TxtStream extend (iStream) {
       self.txt = txt;
       self.start = 1;
       if not txt {
-         error( "txt is nil" );
+         Util.err( "txt is nil" );
       }
       self.eof = false;
    }
@@ -610,7 +612,7 @@ fn StreamParser.parse() : Token[]! {
             while true {
                let endIndex = string.find( rawLine, workPattern, workIndex );
                if not endIndex {
-                  error( string.format(
+                  Util.err( string.format(
                      "illegal string: %d: %s", index, rawLine ) );
                }        
                let workChar = string.byte( rawLine, endIndex );
@@ -659,8 +661,8 @@ fn StreamParser.parse() : Token[]! {
             addVal( kindChar, codeChar, index );
          }
          else {
-            error( string.format( "illegal syntax:%s:%s",
-                                  self.lineNo, rawLine.sub( index ) ) );
+            Util.err( string.format( "illegal syntax:%s:%s",
+                                       self.lineNo, rawLine.sub( index ) ) );
          }
       }
       if syncIndexFlag {

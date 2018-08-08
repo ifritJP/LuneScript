@@ -38,11 +38,35 @@ pub class memStream extend (oStream) {
    }
 }
 
+pri let debugFlag = true;
+pub fn setDebugFlag( flag:bool ) {
+   debugFlag = flag;
+}
+pri let errorCode = 1;
+pub fn setErrorCode( code:int ) {
+   errorCode = code;
+}
+
+
 pub fn errorLog( message: str ) {
    io.stderr.write( message .. "\n" );
 }
 
-pub fn debugLog() {
+pub fn err( message:str ) {
+   if debugFlag {
+      error( message );
+   }
+   errorLog( message );
+   os.exit( errorCode );
+}
+
+pub fn log( message:str ) {
+   if debugFlag {
+      errorLog( message );
+   }
+}
+
+pub fn printStackTrace() {
    for level = 2, 6 {
       let debugInfo = debug.getinfo( level )@@Map<str,stem>;
       if debugInfo {

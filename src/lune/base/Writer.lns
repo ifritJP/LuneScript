@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import lune.base.Util;
+
 pub interface Writer {
    pub fn startParent( name:str, arrayFlag:bool );
    pub fn startElement( name:str );
@@ -76,7 +78,7 @@ pub class XML extend (Writer) {
          self.stream.write( '\n' );
       }
       elseif self.depth < 0 {
-         error( "illegal depth" );
+         Util.err( "illegal depth" );
       }
    }
    pub fn writeValue( val:stem ) {
@@ -137,7 +139,7 @@ pub class JSON extend (Writer) {
 
    pub fn endLayer() {
       if #self.layerQueue == 0 {
-         error( "illegal depth" );
+         Util.err( "illegal depth" );
       }
 
       while #self.layerQueue > 0 {
@@ -179,7 +181,7 @@ pub class JSON extend (Writer) {
       let info = unwrap self.getLayerInfo();
       let nameSet = info.elementNameSet;
       if not info.arrayFlag and nameSet[ name ] {
-         error( "exist same name: " .. name );
+         Util.err( "exist same name: " .. name );
       }
       nameSet[ name ] = true;
    }
@@ -214,7 +216,7 @@ pub class JSON extend (Writer) {
          self.stream.write( "," );
       }
       elseif self.equalLayerState( 'named' ) {
-         error( 'illegal layer state' );
+         Util.err( 'illegal layer state' );
       }
       elseif self.equalLayerState( 'none' ) {
          ;
@@ -226,7 +228,7 @@ pub class JSON extend (Writer) {
       let info = unwrap self.getLayerInfo();
 
       if info.openElement {
-         error( 'illegal openElement' );
+         Util.err( 'illegal openElement' );
       }
       info.openElement = true;
       
@@ -249,7 +251,7 @@ pub class JSON extend (Writer) {
          }
       }
       else  {
-         error( 'illegal layer state %s'  (self.getLayerName() ) );
+         Util.err( 'illegal layer state %s'  (self.getLayerName() ) );
       }
       self.setLayerState( 'termed' );
    }
@@ -293,7 +295,7 @@ pub class JSON extend (Writer) {
          self.endLayer();
       }
       else {
-         error( 'illegal' );
+         Util.err( 'illegal' );
       }
    }  
 }

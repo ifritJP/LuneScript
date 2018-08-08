@@ -108,8 +108,8 @@ pub class TransUnit {
 
    pri fn addErrMess( pos: Parser.Position, mess: str ) {
       self.errMessList.insert(
-         "%s:%d:%d: %s" ( self.parser.getStreamName(),
-                          pos.lineNo, pos.column, mess ) );
+         "%s:%d:%d: error: %s" ( self.parser.getStreamName(),
+                                 pos.lineNo, pos.column, mess ) );
    }
 
 
@@ -421,7 +421,7 @@ fn TransUnit.registBuiltInScope() {
                parentInfo.$nilableTypeInfo;
          }   
          if not parentInfo {
-            error( "parentInfo is nil" );
+            Util.err( "parentInfo is nil" );
          }  
          if not builtinModuleName2Scope[ name ]
          {  
@@ -503,9 +503,9 @@ fn TransUnit.error( mess: str ) {
       pos = _exp.pos;
       txt = _exp.txt;
    }
-   error( string.format( "\nerror:%s:%d:%d:(%s) %s",
-                         self.parser.getStreamName(),
-                         pos.lineNo, pos.column, txt, mess ) );
+   Util.err( string.format( "error:%s:%d:%d:(%s) %s",
+                              self.parser.getStreamName(),
+                              pos.lineNo, pos.column, txt, mess ) );
 }
 
 fn TransUnit.createNoneNode( pos: Parser.Position ): Ast.Node {
@@ -887,8 +887,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             let parentInfo = Ast.typeInfoRoot;
             if atomInfo.parentId ~= Ast.rootTypeId {
                let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
-                  error( "not found parentInfo %s %s"
-                         ( atomInfo.parentId, atomInfo.txt ) );
+                  Util.err( "not found parentInfo %s %s"
+                              ( atomInfo.parentId, atomInfo.txt ) );
                };   
                parentInfo = workTypeInfo;
             }   
@@ -900,7 +900,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             let argTypeInfo:Ast.TypeInfo[] = [];
             foreach typeId in atomInfo.argTypeId {
                if not typeId2TypeInfo[ typeId ] {
-                  Util.errorLog( "not found -- %s.%s, %d, %d"
+                  Util.log( "not found -- %s.%s, %d, %d"
                                  ( parentInfo.getTxt(), atomInfo.txt,
                                    typeId, #atomInfo.argTypeId ) );  
                }    
@@ -933,10 +933,10 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                then {
                   typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
                   if not newTypeInfo.$scope {
-                     error( "not found scope %s %s %s %s %s"
-                            ( parentScope, atomInfo.parentId,
-                              atomInfo.typeId,
-                              atomInfo.txt, newTypeInfo.getTxt() ) );
+                     Util.err( "not found scope %s %s %s %s %s"
+                                 ( parentScope, atomInfo.parentId,
+                                   atomInfo.typeId,
+                                   atomInfo.txt, newTypeInfo.getTxt() ) );
                   }     
                   typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
                };   
@@ -1019,7 +1019,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             // scope.addClass(
             //    typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
             //    typeInfo.$staticFlag, typeInfo.$mutable );
-            let symbolKind = Ast.SymbolKind.Type;
+            let symbolKind = Ast.SymbolKind.Typ;
             switch typeInfo.$kind {
                case Ast.TypeInfoKindFunc {
                   symbolKind = Ast.SymbolKind.Fun;
@@ -1028,12 +1028,12 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                   symbolKind = Ast.SymbolKind.Mtd;
                }
                case Ast.TypeInfoKindClass {
-                  symbolKind = Ast.SymbolKind.Type;
+                  symbolKind = Ast.SymbolKind.Typ;
                }
             }
             scope.add( symbolKind, false, typeInfo.$kind == Ast.TypeInfoKindFunc,
-                       atomInfo.txt, typeInfo, atomInfo.accessMode,
-                       atomInfo.staticFlag, typeInfo.$mutable );
+                       typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
+                       typeInfo.$staticFlag, typeInfo.$mutable );
          }
       }
    }
@@ -1403,17 +1403,16 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
             false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );
          if! keySymbol {
             self.scope.addVar( false, false, _exp.txt, Ast.builtinTypeInt, false );
-         }  
+         }
          else {
             self.scope.addVar( false, false, "__index", Ast.builtinTypeInt, false );
-         }  
-      } 
+         }
+      }
       else {
          self.error( "unknown kind type of exp for foreach-- %d:%d"
             (exp.$pos.lineNo, exp.$pos.column) );
-      } 
+      }
    }
-
 
    let block = self.analyzeBlock( "foreach", scope );
 

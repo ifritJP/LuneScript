@@ -26,6 +26,8 @@
 
 (defvar lns-max-size-search-subfile 10000)
 
+(require 'lns-command)
+
 (when (not lns-anything)
   (require 'helm))
 
@@ -83,14 +85,16 @@
     buffer))
 
 (defun lns-execute-command ( out-buffer input-txt &rest args )
-  (let ((proj-dir lns-proj-dir))
+  (let ((proj-dir lns-proj-dir)
+	command-list)
     (with-temp-buffer
       (when input-txt
 	(insert input-txt))
       (setq default-directory proj-dir)
+      (setq command-list (apply 'lns-command-get-command args ))
       (apply 'call-process-region (point-min) (point-max)
-	     lns-lua-command nil out-buffer nil
-	     "-e" "require( 'lune.base.base' )" " " args ))
+	     (car command-list) nil out-buffer nil
+	     (cdr command-list)))
     (with-current-buffer out-buffer
       (buffer-string))))
 
@@ -173,25 +177,42 @@
     
 (defun lns-helm-complete-at ()
   (interactive)
-  (let (candidate-list
-	helm-candidate-list
-	helm-params owner-file analyze-module)
-    (save-excursion
-      (goto-char (point-min))
-      (when (re-search-forward "^[ \t]*subfile[ \t]+owner[ \t]+"
-			       lns-max-size-search-subfile t)
-	(when (looking-at "\\([^;]+\\);")
-	  (setq owner-file (buffer-substring-no-properties (match-beginning 1)
-							   (match-end 1)))
-	  (setq owner-file (lns-convert-module-2-path owner-file))
-	  (setq analyze-module (lns-convert-path-2-module buffer-file-name))
-	  )))
+  (let* ((command-info (lns-command-get-info))
+	 (owner-file (plist-get command-info :owner))
+	 (analyze-module (plist-get command-info :module))
+	 candidate-list
+	 helm-candidate-list
+	 helm-params)
     (setq candidate-list (lns-get-complete-list owner-file analyze-module))
     (setq helm-candidate-list
 	  (mapcar (lambda (candidate)
 		    (let* ((info (lns-json-val candidate :candidate))
-			   (item-txt (lns-candidate-get-displayTxt info)))
-		      (cons item-txt info)))
+			   (item-type (lns-candidate-get-type info))
+			   (item-txt (lns-candidate-get-displayTxt info))
+			   (item-name item-txt)
+			   (item-name-append "")
+			   face)
+		      (setq face (cond ((equal item-type "Typ")
+					'font-lock-type-face)
+				       ((or (equal item-type "Mbr")
+					    (equal item-type "Var"))
+					'font-lock-variable-name-face)
+				       ((or (equal item-type "Mtd")
+					    (equal item-type "Fun"))
+					'font-lock-function-name-face)))
+		      (when (string-match "\\([^ \t(]+\\)" item-txt)
+			(setq item-name (substring item-txt
+						   (match-beginning 1)
+						   (match-end 1)))
+			(setq item-name-append (substring item-txt
+							  (match-end 1))))
+		      (cons (format "(%s) %s%s"
+				    (propertize
+				     item-type 'face face)
+				    (propertize
+				     item-name 'face face)
+				    item-name-append)
+			    info)))
 		  candidate-list))
     (setq helm-params
 	  `((name . ,(format "comp-at:%s:%d:%d"

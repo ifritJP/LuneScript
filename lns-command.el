@@ -1,4 +1,3 @@
-;;; lns-mode.el --- a major-mode for editing LuneScript
 ;;
 ;; MIT License
 ;;
@@ -21,17 +20,29 @@
 ;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
-;;
-;; (require 'lns-flycheck)
 
 
-(require 'lns-mode)
-(require 'lns-completion)
-(add-to-list 'auto-mode-alist '("\\.lns$" . lns-mode))
+(defun lns-command-get-info ()
+  (let ((owner-file buffer-file-name)
+	analyze-module)
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward "^[ \t]*subfile[ \t]+owner[ \t]+"
+			       lns-max-size-search-subfile t)
+	(when (looking-at "\\([^;]+\\);")
+	  (setq owner-file (buffer-substring-no-properties (match-beginning 1)
+							   (match-end 1)))
+	  (setq owner-file (lns-convert-module-2-path owner-file))
+	  (setq analyze-module (lns-convert-path-2-module buffer-file-name))
+	  )))
+    (list :owner owner-file
+	  :module analyze-module
+	  :script buffer-file-name
+	  :dir lns-proj-dir)))
+  
+(defun lns-command-get-command (&rest args)
+  (append (list lns-lua-command "-e" "require( 'lune.base.base' )" " ") args))
+  
+  
 
-(add-hook 'lns-mode-hook
-      '(lambda ()
-         (local-set-key (kbd "C-c C-/") 'lns-helm-complete-at)))
-
-
-(provide 'lns-conf)
+(provide 'lns-command)

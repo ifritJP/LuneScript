@@ -614,7 +614,7 @@ fn TransUnit.analyzeAccessClassField(
    }
    if not fieldTypeInfo {
       foreach val, name in classScope.$symbol2TypeInfoMap {
-         Util.errorLog( "debug: %s, %s" ( name, val ) );
+         Util.log( "debug: %s, %s" ( name, val ) );
       }
       self.error( string.format(
          "not found field typeInfo: %s.%s",
@@ -639,7 +639,7 @@ fn TransUnit.dumpComp( writer: Writer.Writer, scope: Ast.Scope ) {
                   writer.write( "displayTxt", "%s: %s"
                                 ( symbolInfo.$name, typeInfo.$display_stirng ) );
                }
-               case Ast.SymbolKind.Type {
+               case Ast.SymbolKind.Typ {
                   writer.write( "displayTxt", "%s"
                                 ( typeInfo.$display_stirng ) );
                }

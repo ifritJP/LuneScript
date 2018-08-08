@@ -175,9 +175,9 @@ pub fn TransUnit.createAST(
 
       let token = self.getTokenNoErr();
       if! token {
-         error( "unknown:%d:%d:(%s) %s"
-                ( _exp.pos.lineNo, _exp.pos.column,
-                  Parser.getKindTxt( _exp.kind ), _exp.txt ) );
+         Util.err( "unknown:%d:%d:(%s) %s"
+                     ( _exp.pos.lineNo, _exp.pos.column,
+                       Parser.getKindTxt( _exp.kind ), _exp.txt ) );
       }
 
       foreach subModule in self.subfileList {
@@ -192,16 +192,16 @@ pub fn TransUnit.createAST(
          let! subParser = Parser.StreamParser.create( file, false, subModule ) {
             self.error( "open error -- %s" (file) );
          };
-         
+
          self.parser = subParser;
 
          self.analyzeStatementListSubfile( children );
 
          token = self.getTokenNoErr();
          if! token {
-            error( "unknown:%d:%d:(%s) %s"
-                   ( _exp.pos.lineNo, _exp.pos.column,
-                     Parser.getKindTxt( _exp.kind ), _exp.txt ) );
+            Util.err( "unknown:%d:%d:(%s) %s"
+                        ( _exp.pos.lineNo, _exp.pos.column,
+                          Parser.getKindTxt( _exp.kind ), _exp.txt ) );
          }
       }
    }
@@ -214,9 +214,12 @@ pub fn TransUnit.createAST(
 
    if #self.errMessList > 0 {
       foreach mess in self.errMessList {
-         Util.errorLog( "error:" .. mess );
+         Util.errorLog( mess );
       }
-      error( "has error" );
+      Util.err( "has error" );
+   }
+   if self.analyzeMode == "diag" {
+      os.exit( 0 );
    }
 
 
@@ -390,7 +393,7 @@ fn TransUnit.analyzeDeclProto( accessMode: str, firstToken: Parser.Token ) : Ast
    
    if nextToken.txt == "class" {
       let name = self.getSymbolToken();
-   
+      
       nextToken = self.analyzePushClass(
          true, abstructFlag, firstToken, name, accessMode );
       self.popClass();
@@ -878,7 +881,7 @@ fn TransUnit.analyzeDeclVar(
    else {
       self.pushback();
       if mode ~= "let" {
-         Util.errorLog( "need '!'" );
+         Util.log( "need '!'" );
       }
    }
 
