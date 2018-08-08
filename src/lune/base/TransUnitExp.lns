@@ -1090,7 +1090,7 @@ fn TransUnit.analyzeUnwrap( firstToken: Parser.Token ): Ast.Node {
 }
 
 fn TransUnit.analyzeExpUnwrap( firstToken: Parser.Token ): Ast.Node {
-   let expNode = self.analyzeExp( false );
+   let expNode = self.analyzeExp( true );
    let nextToken = self.getToken();
    let insNode: Ast.Node! = nil;
    if nextToken.txt == "default" {

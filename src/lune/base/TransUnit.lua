@@ -3272,7 +3272,7 @@ end
 
 function TransUnit:analyzeExpUnwrap( firstToken )
 
-  local expNode = self:analyzeExp( false )
+  local expNode = self:analyzeExp( true )
   
   local nextToken = self:getToken(  )
   

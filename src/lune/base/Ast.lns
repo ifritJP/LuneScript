@@ -560,6 +560,10 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn getTxt() : str {
       return self.orgTypeInfo.getTxt() .. "!";
    }
+   pub override fn get_display_stirng(): str {
+      return self.orgTypeInfo.$display_stirng .. "!";
+   }
+
    pub override fn serialize( stream: oStream ): str! {
       let parentId = self.getParentId();
       stream.write(

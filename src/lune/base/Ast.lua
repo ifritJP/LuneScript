@@ -742,6 +742,10 @@ function NilableTypeInfo:getTxt(  )
 
   return self.orgTypeInfo:getTxt(  ) .. "!"
 end
+function NilableTypeInfo:get_display_stirng(  )
+
+  return self.orgTypeInfo:get_display_stirng() .. "!"
+end
 function NilableTypeInfo:serialize( stream )
 
   local parentId = self:getParentId(  )
@@ -782,10 +786,6 @@ end
 
 function NilableTypeInfo:get_abstructFlag( ... )
    return self.orgTypeInfo:get_abstructFlag( ... )
-end
-
-function NilableTypeInfo:get_display_stirng( ... )
-   return self.orgTypeInfo:get_display_stirng( ... )
 end
 
 function NilableTypeInfo:equals( ... )

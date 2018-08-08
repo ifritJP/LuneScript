@@ -1,0 +1,20 @@
+class Super {
+   pub fn funcsuper():int! {
+      return 0;
+   }
+}
+
+class Test extend Super {
+   pub fn func():int {
+      return 1;
+   }
+}
+
+let test = new Test();
+
+fn sub( val:Test ) {
+   val.func();
+   let data = unwrap val.funcsuper() + 1;
+}
+
+sub( test );
