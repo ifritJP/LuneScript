@@ -174,7 +174,7 @@
       (backward-char)
       )))
     
-    
+
 (defun lns-helm-complete-at ()
   (interactive)
   (let* ((command-info (lns-command-get-info))
@@ -224,7 +224,15 @@
     ))
 
 
-    
+(defun lns-popup-complete-at ()
+  (interactive)
+  (let* ((command-info (lns-command-get-info))
+	 (owner-file (plist-get command-info :owner))
+	 (analyze-module (plist-get command-info :module))
+	 candidate-list)
+    (setq candidate-list (lns-get-complete-list owner-file analyze-module))
+    (popup-menu* candidate-list)
+  ))
 
 
 (provide 'lns-completion)

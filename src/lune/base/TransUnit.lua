@@ -448,6 +448,19 @@ function TransUnit:error( mess )
     
         pos = _exp.pos
         txt = _exp.txt
+      else
+    
+        if #self.usedTokenList > 0 then
+          do
+            local _exp = self.usedTokenList[#self.usedTokenList]
+            if _exp ~= nil then
+            
+                pos = _exp.pos
+                txt = _exp.txt
+              end
+          end
+          
+        end
       end
   end
   
@@ -2862,7 +2875,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
   return fieldTypeInfo, getterTypeInfo
 end
 
-function TransUnit:dumpComp( writer, scope )
+function TransUnit:dumpComp( writer, scope, pattern )
 
   do
     local __sorted = {}
@@ -2875,25 +2888,27 @@ function TransUnit:dumpComp( writer, scope )
       symbolInfo = __map[ symbol ]
       do
         if symbol ~= "__init" and symbol ~= "self" then
-          if scope:getTypeInfoField( symbol, true, self.scope ) then
-            writer:startParent( "candidate", false )
-            local typeInfo = symbolInfo:get_typeInfo()
-            
-            local typeKindTxt = ""
-            
-            writer:write( "type", string.format( "%s", Ast.SymbolKind.getTxt( symbolInfo:get_kind() )) )
-            do
-              local _switchExp = (symbolInfo:get_kind() )
-              if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
-                writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
-              elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
-                writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
-              elseif _switchExp == Ast.SymbolKind.Typ then
-                writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+          if pattern == "" or symbol:find( pattern ) then
+            if scope:getTypeInfoField( symbol, true, self.scope ) then
+              writer:startParent( "candidate", false )
+              local typeInfo = symbolInfo:get_typeInfo()
+              
+              local typeKindTxt = ""
+              
+              writer:write( "type", string.format( "%s", Ast.SymbolKind.getTxt( symbolInfo:get_kind() )) )
+              do
+                local _switchExp = (symbolInfo:get_kind() )
+                if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
+                  writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+                elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
+                  writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
+                elseif _switchExp == Ast.SymbolKind.Typ then
+                  writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+                end
               end
+              
+              writer:endElement(  )
             end
-            
-            writer:endElement(  )
           end
         end
       end
@@ -2901,7 +2916,7 @@ function TransUnit:dumpComp( writer, scope )
   end
   
   for __index, inheritScope in pairs( scope:get_inheritList() ) do
-    self:dumpComp( writer, inheritScope )
+    self:dumpComp( writer, inheritScope, pattern )
   end
 end
 
@@ -2917,8 +2932,11 @@ function TransUnit:checkComp( token, prefixExpType )
       local jsonWriter = Writer.JSON.new(io.stdout)
       
       jsonWriter:startParent( "lunescript", false )
+      local prefix = token.txt:gsub( "lune$", "" )
+      
+      jsonWriter:write( "prefix", prefix )
       jsonWriter:startParent( "candidateList", true )
-      self:dumpComp( jsonWriter, _lune_unwrap( prefixExpType:get_scope()) )
+      self:dumpComp( jsonWriter, _lune_unwrap( prefixExpType:get_scope()), prefix == "" and "" or "^" .. prefix )
       jsonWriter:endElement(  )
       jsonWriter:endElement(  )
       jsonWriter:fin(  )

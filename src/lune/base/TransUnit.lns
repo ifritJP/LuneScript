@@ -503,6 +503,14 @@ fn TransUnit.error( mess: str ) {
       pos = _exp.pos;
       txt = _exp.txt;
    }
+   else {
+      if #self.usedTokenList > 0 {
+         if! self.usedTokenList[ #self.usedTokenList ] {
+            pos = _exp.pos;
+            txt = _exp.txt;
+         }
+      }
+   }
    Util.err( string.format( "error:%s:%d:%d:(%s) %s",
                               self.parser.getStreamName(),
                               pos.lineNo, pos.column, txt, mess ) );
