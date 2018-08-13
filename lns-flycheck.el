@@ -24,27 +24,29 @@
 
 (require 'lns-command)
 
-(require 'flymake)
-;;c++のflymakeでmakefileを不要にする
-(defun flymake-lns-init ()
-  (let* ((command-info (lns-command-get-info))
-	 (command-list (lns-command-get-command
-			(lns-convert-path-2-proj-relative-path
-			 (plist-get command-info :owner)) "diag" "--nodebug")))
-    (list (car command-list) (cdr command-list)
-	  (plist-get command-info :dir))))
+(require 'flycheck)
 
-(add-to-list 'flymake-allowed-file-name-masks
-	     '("\\.lns$" flymake-lns-init) )
+(flycheck-define-checker lunescript
+  "A LuneScript syntax checker.
 
+See URL `https://github.com/ifritJP/LuneScript'."
+  :command ("lua5.3"
+	    (eval (nth 1 (lns-command-get-command)))
+	    (eval (nth 2 (lns-command-get-command)))
+	    (eval (nth 3 (lns-command-get-command)))
+	    (eval (lns-convert-path-2-proj-relative-path
+		   (plist-get (lns-command-get-info) :owner)))
+	    "diag" "--nodebug")
+  :error-patterns
+  ((error line-start (file-name) ":" line ":" column ":" (message) line-end))
+  :modes lns-mode
+  :working-directory (lambda (checker)
+		       (plist-get (lns-command-get-info) :dir))
+  )
+  
 (add-hook 'lns-mode-hook '(lambda ()
-			    (flymake-mode t)
+			    (flycheck-mode)
+			    (flycheck-select-checker 'lunescript)
 			    ))
 
-(add-to-list
- 'flymake-err-line-patterns
- '( "^error:.*\\([^/]+\\.lns\\):\\([0-9]+\\):\\([0-9]+\\):\\(.+\\)" 1 2 3 4))
-
-
-
-(provide 'lns-flymake)
+(provide 'lns-flycheck)

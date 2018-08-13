@@ -464,7 +464,7 @@ function TransUnit:error( mess )
       end
   end
   
-  Util.err( string.format( "error:%s:%d:%d:(%s) %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, txt, mess ) )
+  Util.err( string.format( "%s:%d:%d: error:(%s) %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, txt, mess) )
 end
 
 function TransUnit:createNoneNode( pos )
@@ -2870,7 +2870,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
     for name, val in pairs( classScope:get_symbol2TypeInfoMap() ) do
       Util.log( string.format( "debug: %s, %s", name, val) )
     end
-    self:error( string.format( "not found field typeInfo: %s.%s", className, token.txt ) )
+    self:error( string.format( "not found field typeInfo: %s.%s", className, token.txt) )
   end
   return fieldTypeInfo, getterTypeInfo
 end

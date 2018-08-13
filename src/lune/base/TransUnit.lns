@@ -511,9 +511,9 @@ fn TransUnit.error( mess: str ) {
          }
       }
    }
-   Util.err( string.format( "error:%s:%d:%d:(%s) %s",
-                              self.parser.getStreamName(),
-                              pos.lineNo, pos.column, txt, mess ) );
+   Util.err( "%s:%d:%d: error:(%s) %s"
+             ( self.parser.getStreamName(),
+               pos.lineNo, pos.column, txt, mess ) );
 }
 
 fn TransUnit.createNoneNode( pos: Parser.Position ): Ast.Node {

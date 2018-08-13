@@ -616,9 +616,8 @@ fn TransUnit.analyzeAccessClassField(
       foreach val, name in classScope.$symbol2TypeInfoMap {
          Util.log( "debug: %s, %s" ( name, val ) );
       }
-      self.error( string.format(
-         "not found field typeInfo: %s.%s",
-         className, token.txt) );
+      self.error( "not found field typeInfo: %s.%s"
+                  ( className, token.txt ) );
    }
    return fieldTypeInfo, getterTypeInfo;
 }
@@ -1269,7 +1268,6 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
          return self.analyzeExpOp2( firstToken, exp, prevOpLevel );
       }
    }
-
 
    if token.kind == Parser.kind.Int {
       exp = new Ast.LiteralIntNode( firstToken.pos, [ Ast.builtinTypeInt ],

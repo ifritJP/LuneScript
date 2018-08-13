@@ -22,14 +22,7 @@
 ;; SOFTWARE.
 ;;
 
-(defvar lns-anything nil)
-
-(defvar lns-max-size-search-subfile 10000)
-
 (require 'lns-command)
-
-(when (not lns-anything)
-  (require 'helm))
 
 (defun lns-json-get (buf symbol)
   (with-current-buffer buf
@@ -42,27 +35,6 @@
 (defun lns-json-val (json symbol)
   (plist-get json symbol))
 
-
-(defface lns-candidate-face
-  '((t
-     :foreground "gold"))
-  "candidate face")
-(defvar lns-candidate-face 'lns-candidate-face)
-
-(defface lns-candidate-path-face
-  '((t
-     :foreground "green"))
-  "candidate path face")
-(defvar lns-candidate-path-face 'lns-candidate-path-face)
-
-(defface lns-expandable-candidate-face
-  '((t
-     :foreground "dark orange"))
-  "expandable candidate face")
-(defvar lns-expandable-candidate-face 'lns-expandable-candidate-face)
-
-(defvar lns-lua-command "lua5.3"
-  "lua command")
 
 (defun lns-get-line ()
   (interactive)
@@ -84,8 +56,15 @@
 	(erase-buffer)))
     buffer))
 
+
+(defun lns-candidate-get-type (info)
+  (lns-json-val info :type))
+(defun lns-candidate-get-displayTxt (info)
+  (lns-json-val info :displayTxt))
+
+
 (defun lns-execute-command ( out-buffer input-txt &rest args )
-  (let ((proj-dir lns-proj-dir)
+  (let ((proj-dir (lns-get-proj-dir))
 	command-list)
     (with-temp-buffer
       (when input-txt
@@ -99,10 +78,10 @@
       (buffer-string))))
 
 (defun lns-convert-path-2-proj-relative-path (path)
-  (file-relative-name (expand-file-name path) lns-proj-dir))
+  (file-relative-name (expand-file-name path) (lns-get-proj-dir)))
 
 (defun lns-convert-path-2-module ( path )
-  (let ((module (file-relative-name (expand-file-name path) lns-proj-dir)))
+  (let ((module (file-relative-name (expand-file-name path) (lns-get-proj-dir))))
     (setq module (file-name-sans-extension module))
     (setq module (apply 'concat
 			(mapcar (lambda (X)
@@ -117,7 +96,7 @@
 		      (mapcar (lambda (X)
 				(concat "/" X ))
 			      (split-string path "\\."))))
-    (concat (expand-file-name (substring path 1) lns-proj-dir) ".lns")
+    (concat (expand-file-name (substring path 1) (lns-get-proj-dir)) ".lns")
     ))
 
 
@@ -138,101 +117,12 @@
     ))
 
 
-(defun lns-helm-wrap (src keymap preselect)
-  (if lns-anything
-      (let ((anything-candidate-number-limit 9999))
-	(anything :sources '(src) :keymap keymap :preselect preselect))
-    (let ((helm-candidate-number-limit 9999))
-      (helm :sources src :keymap keymap :preselect preselect)))
-  )
-
-
-
-(defun lns-candidate-get-type (info)
-  (lns-json-val info :type))
-(defun lns-candidate-get-displayTxt (info)
-  (lns-json-val info :displayTxt))
-
-(defun lns-helm-select (item)
-  (let ((item-type (lns-candidate-get-type item))
-	(item-txt (lns-candidate-get-displayTxt item)))
-    (if (or (equal item-type "Fun")
-	    (equal item-type "Mtd"))
-	(progn
-	  (if (and (equal item-type "Mtd")
-		   (string-match "^get_\\(.*\\)():[^,]*" item-txt))
-	      ;; accessor
-	      (progn
-		(setq item-txt (concat "$" (replace-match "\\1" t nil item-txt)))
-		(insert item-txt))
-	    (save-excursion
-	      (insert item-txt))
-	    (search-forward "(")))
-      (save-excursion
-	(insert item-txt))
-      (search-forward ":")
-      (backward-char)
-      )))
-    
-
-(defun lns-helm-complete-at ()
-  (interactive)
-  (let* ((command-info (lns-command-get-info))
-	 (owner-file (plist-get command-info :owner))
-	 (analyze-module (plist-get command-info :module))
-	 candidate-list
-	 helm-candidate-list
-	 helm-params)
-    (setq candidate-list (lns-get-complete-list owner-file analyze-module))
-    (setq helm-candidate-list
-	  (mapcar (lambda (candidate)
-		    (let* ((info (lns-json-val candidate :candidate))
-			   (item-type (lns-candidate-get-type info))
-			   (item-txt (lns-candidate-get-displayTxt info))
-			   (item-name item-txt)
-			   (item-name-append "")
-			   face)
-		      (setq face (cond ((equal item-type "Typ")
-					'font-lock-type-face)
-				       ((or (equal item-type "Mbr")
-					    (equal item-type "Var"))
-					'font-lock-variable-name-face)
-				       ((or (equal item-type "Mtd")
-					    (equal item-type "Fun"))
-					'font-lock-function-name-face)))
-		      (when (string-match "\\([^ \t(]+\\)" item-txt)
-			(setq item-name (substring item-txt
-						   (match-beginning 1)
-						   (match-end 1)))
-			(setq item-name-append (substring item-txt
-							  (match-end 1))))
-		      (cons (format "(%s) %s%s"
-				    (propertize
-				     item-type 'face face)
-				    (propertize
-				     item-name 'face face)
-				    item-name-append)
-			    info)))
-		  candidate-list))
-    (setq helm-params
-	  `((name . ,(format "comp-at:%s:%d:%d"
-			     (file-name-nondirectory buffer-file-name)
-			     (lns-get-line) (lns-get-column)))
-	    (candidates . ,helm-candidate-list)
-	    (action . lns-helm-select)))
-    (lns-helm-wrap helm-params nil nil)
-    ))
-
-
-(defun lns-popup-complete-at ()
-  (interactive)
-  (let* ((command-info (lns-command-get-info))
-	 (owner-file (plist-get command-info :owner))
-	 (analyze-module (plist-get command-info :module))
-	 candidate-list)
-    (setq candidate-list (lns-get-complete-list owner-file analyze-module))
-    (popup-menu* candidate-list)
-  ))
-
+(defun lns-completion-get-candidate-list ()
+  (condition-case err
+      (let* ((command-info (lns-command-get-info))
+	     (owner-file (plist-get command-info :owner))
+	     (analyze-module (plist-get command-info :module)))
+	(lns-get-complete-list owner-file analyze-module))
+    (error nil)))
 
 (provide 'lns-completion)

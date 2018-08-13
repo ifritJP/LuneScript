@@ -21,9 +21,14 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+(defvar lns-lua-command "lua5.3"
+  "lua command")
+
+(defvar lns-max-size-search-subfile 10000)
+
 
 (defun lns-command-get-info ()
-  (let ((owner-file buffer-file-name)
+  (let ((owner-file (buffer-file-name))
 	analyze-module)
     (save-excursion
       (goto-char (point-min))
@@ -33,12 +38,12 @@
 	  (setq owner-file (buffer-substring-no-properties (match-beginning 1)
 							   (match-end 1)))
 	  (setq owner-file (lns-convert-module-2-path owner-file))
-	  (setq analyze-module (lns-convert-path-2-module buffer-file-name))
+	  (setq analyze-module (lns-convert-path-2-module (buffer-file-name)))
 	  )))
     (list :owner owner-file
 	  :module analyze-module
-	  :script buffer-file-name
-	  :dir lns-proj-dir)))
+	  :script (buffer-file-name)
+	  :dir (lns-get-proj-dir))))
   
 (defun lns-command-get-command (&rest args)
   (append (list lns-lua-command "-e" "require( 'lune.base.base' )" " ") args))

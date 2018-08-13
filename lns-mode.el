@@ -185,13 +185,20 @@
 (defun lns-proj-search ()
   ""
   (let ((dir (expand-file-name default-directory)))
+    (when buffer-file-name
+      (setq dir (file-name-directory (buffer-file-name))))
     (while (and dir
 		(not (file-exists-p (expand-file-name "lune.js" dir))))
       (if (equal dir "/")
 	  (setq dir nil)
 	(setq dir (file-name-directory (directory-file-name dir)))))
     dir
-  ))
+    ))
+
+(defun lns-get-proj-dir ()
+  (if (boundp 'lns-proj-dir)
+      lns-proj-dir
+    (lns-proj-search)))
 
 ;;;###autoload
 (define-derived-mode lns-mode lns--prog-mode "Lns"

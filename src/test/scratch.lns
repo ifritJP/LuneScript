@@ -1,20 +1,97 @@
+// module External require "test.external" {
+//    pub static let val:int;
+//    pub static fn func1();
+//    pub fn func2( val:int  );
+// }
+
+interface TcpSocket {
+   pub fn connect(addr:str,port:int);
+   pub fn close();
+   pub fn receive( pattern:stem ): str!, str!;
+   pub fn send( data:str, startIndex:int!, endIndex:int! ): int!, str!;
+}
+
+module Socket require 'socket' {
+   pub static fn tcp(): TcpSocket!, str!;
+}
+
+let socket = unwrap Socket.tcp();
+socket.connect("www.google.co.jp", 80);
+socket.send( "GET / HTTP/1.1\n\n" );
+if! socket.receive( 100 ) {
+   print( _exp );
+}
+socket.close();
+
+
 class Super {
+   pub let val:int;
+   pri let val2:int { pub };
    pub fn funcsuper():int! {
       return 0;
    }
 }
-
 class Test extend Super {
-   pub fn func():int {
+   pub fn __init( val: int ) {
+      super( val );
+   }
+   pub fn func( val: int ):int {
       return 1;
    }
 }
+let test = new Test( 1 );
 
-let test = new Test();
+fn func( val: int ) {
+   print( val );
+}
+let map = { "a": 1, "b":2 };
+func( map.a );
+
+   
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 fn sub( val:Test ) {
-   val.func();
+   val.func( 1 );
    let data = unwrap val.funcsuper() + 1;
 }
 
-sub( test );
+
+class Obj {
+   pri let val:int;
+   pub fn func() {
+      print( self.val );
+   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

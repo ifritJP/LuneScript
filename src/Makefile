@@ -78,8 +78,9 @@ test-comp2:
 	cp work/test.result work/test1.result
 	$(call exeComp,.,test/comp.lns,test/comp.lns,test.comp 15 7) >> work/test1.result
 	$(call exeComp,.,test/comp2.lns,test/compSub.lns,test.compSub 5 6) >> work/test1.result
-	$(MAKE) -s TEST_DIR=. test-error | grep 'error:' | \
-		sed 's/.*error:/error:/' >> work/test1.result
+	$(MAKE) -s TEST_DIR=. test-error | grep 'error:' >> work/test1.result
+
+#		sed 's/.*error:/error:/' >> work/test1.result
 
 	$(call transwork,1,2,Depend)
 	$(call transwork,1,2,Util)
@@ -111,7 +112,8 @@ test-comp2:
 	$(call exeComp,work/3,test/comp.lns,test/comp.lns,test.comp 15 7) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp2.lns,test/compSub.lns,test.compSub 5 6) | tee -a work/test2.result
 	$(MAKE) -s TEST_DIR=work/3 test-error | grep 'error:' | \
-		sed 's/.*error:/error:/' | tee -a work/test2.result
+				tee -a work/test2.result
+#sed 's/.*error:/error:/' | tee -a work/test2.result
 
 
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。

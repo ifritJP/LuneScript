@@ -1,0 +1,144 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
+#+HTML_HEAD: <style type="text/css"> <!-- pre.src { color: #ffffff; background-color: #101010; } --> </style>
+
+#+TITLE: Lua のトランスコンパイラ LuneScript のイマドキな開発環境でもっと楽しよう
+
+皆さんは Lua の開発に、エディタは何を使用しているでしょうか？
+
+Lua Development Tools や Atom のようなイマドキな機能満載な環境ですか？
+それとも、emacs や vim などの古典的な環境ですか？
+
+どちらの環境にしろ、 Lua コーディング中の補完機能に不満を持ってないですか？
+
+Lua の補完機能は、多くの場合かなり賢く補完してくれるんですが、
+補完が効かないことって結構ありますよね？
+
+ちょっと確認しただけでも、次の場面では補完が効いてくれないようです。
+- 関数の引数に渡したオブジェクトが持つメソッドのフィールド補完
+- metatable を利用した自前のオブジェクト指向プログラミングの補完
+
+まぁ軽い処理では、上記問題はあまり気にならないのかもしれないですが、
+ある程度の規模の処理を書く時は結構気になります。
+
+Lua のトランスコンパイラ LuneScript ではどんな場面でも補完が効くように、
+コンパイラレベルで補完機能を提供します。
+
+ここでは、LuneScript のコーディング時に利用出来る、
+イマドキの開発支援を紹介します。
+
+具体的には次の 3 つの機能です。
+
+- コード補完機能
+- Syntax エラーチェック機能
+- subfile を認識した検索
+
+* コード補完機能
+
+LuneScript では、クラスフィールドの補完機能を提供しています。
+
+例えば次のようなコードのとき、
+
+#+BEGIN_SRC lns
+class Super {
+   pub let val:int;
+   pri let val2:int { pub };
+   pub fn funcsuper():int! {
+      return 0;
+   }
+}
+class Test extend Super {
+   pub fn __init( val: int ) {
+      super( val );
+   }
+   pub fn func( val: int ):int {
+      return 1;
+   }
+}
+let test = new Test( 1 );
+#+END_SRC
+
+test のフィールドの補完が次のように行なえます。
+
+[[https://ifritjp.github.io/doc/LuneScript/comp1.gif]]
+
+ここで注目してもらいたいのは次の点です。
+
+- 継承関係を認識して Super と Test のフィールドが候補にリストされている
+- アクセス制御をしっかりと認識して Super の val2 がリストから除外されている
+- 不要なコンストラクタ(__init)がリストから除外されている
+- コードで直接定義のない val2 の getter の get_val2() がリストされている
+
+ぶっちゃけ当たり前の機能ですが、
+この当たり前の機能をしっかりとコンパイラ自体が提供しているというのは、
+以外に少なかったりします。
+
+* Syntax エラーチェック機能
+
+LuneScript は、コンパイラなので当然 Syntax エラーチェック機能を持ちます。
+
+このエラーチェック情報の基、エディタ上にエラー箇所を表示可能です。
+
+例えば、次のようなソースで、
+
+#+BEGIN_SRC lns
+fn func( val: int ) {
+   print( val );
+}
+let map = { "a": 1, "b":2 };
+#+END_SRC
+
+次の処理を追加するとエラーとなります。
+
+[[https://ifritjp.github.io/doc/LuneScript/error.gif]]
+
+[[https://ifritjp.github.io/doc/LuneScript/error2.PNG]]
+
+これは、 map 型の item へのアクセス結果は nilable 型になるため、
+それを func() に与えた場合 int! を int にセット出来ずにエラーとなります。
+
+このような、ちょっと見過しがちなエラーもエディタ上で簡単に確認できます。
+
+* subfile を認識した検索
+
+LuneScript は、大きいモジュールを定義するファイルを
+複数のファイルに分割して定義する機能 subfile を持ちます。
+
+この機能を利用することで、ファイルが大きくなってエディタが重くなる、
+なんてストレスから開放されます。
+
+しかし、ファイルが分割されてしまうので、
+モジュール内の検索性が悪くなる欠点があります。
+
+例えば、あるモジュールが owner.lns, sub1.lns, sub2.lns, sub3.lns で構成されている場合、
+あるモジュール内データがどこでアクセスされているかを検索するには、
+owner.lns, sub1.lns, sub2.lns, sub3.lns の 4 つのファイルを
+切り替えて検索する必要があります。
+
+これは面倒な操作です。
+
+この面倒な操作を、検索時に自動で行ないます。
+
+具体的には owner.lns で検索して見つかない場合は、次は sub1.lns に切り替えて検索。
+sub1.lns で見つからない場合は、次は sub2.lns に切り替えて検索。
+... この処理を自動で行ないます。
+
+
+* 最後に
+
+今回の機能は emacs 上で動作確認しています。
+ちなみに、コード補完は auto-complete,
+syntax エラーチェックは flymake, flycheck に対応しています。
+
+LuneScript でデフォルトで提供しているのは emacs 向けの設定ですが、
+emacs が行なっているのはフロントエンド制御だけで、
+バックエンドは全て LuneScript が行なっています。
+
+つまり、 emacs 以外の環境に移植することは十分可能です。
+ただ、私自身は emacs ユーザなので、 emacs を最優先で開発しています。
+
+もしも LuneScript に興味をもって、
+emacs 以外の環境の対応をしていただけると嬉しいです。
