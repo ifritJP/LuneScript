@@ -126,6 +126,36 @@ owner.lns, sub1.lns, sub2.lns, sub3.lns の 4 つのファイルを
 sub1.lns で見つからない場合は、次は sub2.lns に切り替えて検索。
 ... この処理を自動で行ないます。
 
+* 設定
+
+emacs の設定です。  
+  
+#+BEGIN_SRC lns
+(require 'lns-conf)
+;;(require 'lns-flymake)
+(require 'lns-flycheck)
+(require 'lns-auto-complete)
+(require 'lns-helm)
+#+END_SRC
+
+flymake と flycheck は、環境に合わせてどちらかを選択してください。
+
+また、開発する LuneScript のコードを置いているディレクトリに
+次のファイルを作成してください。
+
+#+BEGIN_SRC txt
+lune.js
+#+END_SRC
+
+具体的には foo.bar.module1 というモジュールを定義する場合は、
+次の位置に lune.js を作成します。
+
+#+BEGIN_SRC txt
+proj/foo/bar/module1.lsn
+proj/lune.js
+#+END_SRC
+
+lune.js の内容は、 ~{}~ だけ書いておきます。
 
 * 最後に
 
