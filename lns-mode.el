@@ -64,7 +64,7 @@
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
 		   "nil" "null" "true" "switch" "case" "default" "extend" "proto"
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" 
-		   "__init", "mut" "pub" "pro" "pri" "form" "advertise"
+		   "__init", "mut" "pub" "pro" "pri" "form" "advertise" "provide"
 		   "wrap" "static" "global" "sync" "then" "do" "interface"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst

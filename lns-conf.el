@@ -29,9 +29,4 @@
 (require 'lns-completion)
 (add-to-list 'auto-mode-alist '("\\.lns$" . lns-mode))
 
-(add-hook 'lns-mode-hook
-      '(lambda ()
-         (local-set-key (kbd "C-c C-/") 'lns-helm-complete-at)))
-
-
 (provide 'lns-conf)

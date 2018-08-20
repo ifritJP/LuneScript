@@ -1,0 +1,11 @@
+pub class Hoge {
+}
+
+pub class Hoge2 {
+}
+
+pub let var = 1;
+pub let var2 = 1;
+pub let var3 = 1;
+
+provide Hoge;

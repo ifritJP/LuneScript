@@ -34,8 +34,13 @@
     (list (car command-list) (cdr command-list)
 	  (plist-get command-info :dir))))
 
+(defun lns-flymake-get-real-file-name (file-name)
+  ""
+  (expand-file-name file-name (lns-get-proj-dir))
+  )
+
 (add-to-list 'flymake-allowed-file-name-masks
-	     '("\\.lns$" flymake-lns-init) )
+	     '("\\.lns$" flymake-lns-init nil lns-flymake-get-real-file-name) )
 
 (add-hook 'lns-mode-hook '(lambda ()
 			    (flymake-mode t)

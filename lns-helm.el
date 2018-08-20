@@ -110,4 +110,11 @@
     (lns-helm-wrap helm-params nil nil)
     ))
 
+
+
+(add-hook 'lns-mode-hook
+      '(lambda ()
+         (local-set-key (kbd "C-c C-/") 'lns-helm-complete-at)))
+
+
 (provide 'lns-helm)

@@ -56,10 +56,11 @@ pub class convFilter extend Ast.Filter (oStream) {
    pri let pubFuncName2InfoMap: Map<str,PubFuncInfo>;
    pri let needIndent: bool;
    pri let macroDepth: int;
+   pri let moduleTypeInfo: Ast.TypeInfo;
+
    
-   pub fn __init( streamName: str, stream: oStream,
-                  metaStream: oStream,
-                  convMode: str, inMacro: bool )
+   pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
+                  convMode: str, inMacro: bool, moduleTypeInfo: Ast.TypeInfo )
    {
       //Util.errorLog( "__init: %s" (mode) );
       self.macroDepth = 0;
@@ -77,6 +78,7 @@ pub class convFilter extend Ast.Filter (oStream) {
       self.pubVarName2InfoMap = {};
       self.pubFuncName2InfoMap = {};
       self.needIndent = false;
+      self.moduleTypeInfo = moduleTypeInfo;
    }
 }
 
@@ -194,8 +196,8 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
                pickupClassMap[ typeInfo.$typeId ] = typeInfo;
             }
             
-            let parentInfo = typeInfo.get_parentInfo();
-            pickupTypeId( parentInfo, true );
+            // let parentInfo = typeInfo.get_parentInfo();
+            // pickupTypeId( parentInfo, true );
 
             let baseInfo = typeInfo.get_baseTypeInfo();
             if baseInfo.$typeId ~= Ast.rootTypeId {
@@ -238,31 +240,53 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
       }
    }
 
-   
-   let typeId2ClassMap = node.get_typeId2ClassMap();
-   foreach namespaceInfo in typeId2ClassMap {
-      if namespaceInfo.typeInfo.get_accessMode() == "pub" {
-         pickupClassMap[ namespaceInfo.typeInfo.$typeId ] = namespaceInfo.typeInfo;
+   let classId2TypeInfo:Map<int,Ast.TypeInfo> = {};
+
+   let validChildrenSet:Map<Ast.TypeInfo, Map<Ast.TypeInfo,bool>> = {};
+
+   {
+      let typeInfo = self.moduleTypeInfo;
+      while typeInfo ~= Ast.rootTypeInfo {
+         //pickupClassMap[ typeInfo.$typeId ] = typeInfo;
+         typeId2TypeInfo[ typeInfo.$typeId ] = typeInfo;
+         validChildrenSet[ typeInfo.$parentInfo ] = { typeInfo: true };
+         typeInfo = typeInfo.$parentInfo;
       }
+   }
+   
+   if! node.$provideNode {
+      foreach typeInfo, typeId in typeId2TypeInfo {
+         pickupClassMap[ typeId ] = typeInfo;
+      }
+      if _exp.$val.$kind == Ast.nodeKindExpRef {
+         let expRefNode = _exp.$val@@Ast.ExpRefNode;
+         if expRefNode.$expType.$kind == Ast.TypeInfoKindClass {
+            pickupTypeId( expRefNode.$expType );
+         }
+      }
+   }
+   else {
+      let typeId2ClassMap = node.get_typeId2ClassMap();
+      foreach namespaceInfo in typeId2ClassMap {
+         if namespaceInfo.typeInfo.get_accessMode() == "pub" {
+            pickupClassMap[ namespaceInfo.typeInfo.$typeId ] = namespaceInfo.typeInfo;
+         }  
+      }
+      classId2TypeInfo = self.classId2TypeInfo;
    }
 
 
    self.writeln( "local _typeId2ClassInfoMap = {}", baseIndent );
    self.writeln( "moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap",
                  baseIndent );
-   // self.writeln( "local _className2InfoMap = {}", baseIndent );
-   // self.writeln( "moduleObj._className2InfoMap = _className2InfoMap",
-   //               baseIndent );     
 
-   forsort classTypeInfo, classTypeId in self.classId2TypeInfo {
+   forsort classTypeInfo, classTypeId in classId2TypeInfo {
       pickupTypeId( classTypeInfo );
       pickupClassMap[ classTypeId ] = nil;
 
       
       self.writeln( "do", baseIndent + stepIndent );
       self.writeln( "local _classInfo%d = {}" (classTypeId), baseIndent + stepIndent );
-      // self.writeln( "_className2InfoMap.%s = _classInfo%d" (className, classTypeId),
-      //               baseIndent + stepIndent );
       self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
                     (classTypeId, classTypeId), baseIndent + stepIndent );
 
@@ -282,8 +306,8 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
                baseIndent + stepIndent );
 
             pickupTypeId( memberTypeInfo, true );
-         }
-      }
+         }  
+      }  
       
       self.writeln( "end", baseIndent );
    }
@@ -297,8 +321,6 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
          self.writeln( "do", baseIndent + stepIndent );
          self.writeln( "local _classInfo%s = {}"
                        (classTypeId), baseIndent + stepIndent );
-         // self.writeln( "_className2InfoMap.%s = _classInfo%d"
-         //               (className, classTypeId), baseIndent + stepIndent );
          self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
                        ( classTypeId, classTypeId), baseIndent + stepIndent );
          
@@ -347,8 +369,6 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
       pickupTypeId( funcInfo.$typeInfo, true );
    }
 
-   
-
    self.writeln( "local _typeInfoList = {}", baseIndent );
    self.writeln( "moduleObj._typeInfoList = _typeInfoList", baseIndent );
    let listIndex = 1;
@@ -364,13 +384,24 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
       {               
          self.write( "_typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
-         typeInfo.serialize( self );
+
+         typeInfo.serialize( self, validChildrenSet[ typeInfo ] );
       }
    }
    
    forsort typeInfo, typeId in typeId2TypeInfo {
       outputTypeInfo( typeInfo );
    }
+
+   if! node.$provideNode {
+      self.writeln( "moduleObj._moduleTypeId = %d" (_exp.$val.$expType.$typeId ),
+                    baseIndent );       
+   }
+   else {
+      self.writeln( "moduleObj._moduleTypeId = %d" (self.moduleTypeInfo.$typeId ),
+                    baseIndent );       
+   }
+   
 
    self.writeln( "----- meta -----", baseIndent );
 
@@ -453,7 +484,14 @@ end
 
    self.outputMeta( node, baseIndent );
 
-   self.writeln( "return moduleObj", baseIndent );
+   if! node.$provideNode {
+      self.write( "return " );
+      filter( _exp.$val, self, node, baseIndent );
+      self.writeln( "", baseIndent );
+   }
+   else { 
+      self.writeln( "return moduleObj", baseIndent );
+   }
 };
 
 pub override fn convFilter.processSubfile( 
@@ -1521,6 +1559,12 @@ pub override fn convFilter.processReturn(
    }
 };
 
+pub override fn convFilter.processProvide(
+   node: Ast.ProvideNode, parent:Ast.Node, baseIndent:int )
+{
+}
+      
+
 pub override fn convFilter.processLiteralList( 
    node: Ast.LiteralListNode, parent: Ast.Node, baseIndent:int )
 {
@@ -1637,7 +1681,8 @@ pub class MacroEvalImp extend Ast.MacroEval {
    pub override fn eval( node: Ast.DeclMacroNode ): form
    {   
       let oStream = new Util.memStream();
-      let conv = new convFilter( "macro", oStream, oStream, "exe", true );
+      let conv = new convFilter(
+         "macro", oStream, oStream, "exe", true, Ast.rootTypeInfo );
 
       conv.processDeclMacro( node, node, 0 );
 

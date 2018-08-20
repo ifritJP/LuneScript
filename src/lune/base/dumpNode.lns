@@ -29,481 +29,489 @@ pub class dumpFilter extend Ast.Filter {
 }
 
 fn dump( prefix: str, depth: int, node: Ast.Node, txt: str ) {
-    let typeStr = "";
-    let expType = node.get_expType();
-    if expType and expType ~= Ast.typeInfoKind.None {
-        typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
-                                 expType.getTxt(),
-                                 expType.get_kind() );
-    }
-    print( "%s: %s %s %s"
-	   (prefix, Ast.getNodeKindName( node.get_kind() ), txt, typeStr ) );
+   let typeStr = "";
+   let expType = node.get_expType();
+   if expType and expType ~= Ast.typeInfoKind.None {
+      typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
+                               expType.getTxt(),
+                               expType.get_kind() );
+   }
+   print( "%s: %s %s %s"
+	  (prefix, Ast.getNodeKindName( node.get_kind() ), txt, typeStr ) );
 }
 
 fn filter( node: Ast.Node, filter: dumpFilter, prefix:str, depth:int ) {
-    node.processFilter( dumpFilter, prefix, depth );
+   node.processFilter( dumpFilter, prefix, depth );
 }
 
 fn getTxt( token: Parser.Token ): str {
-    return token.txt;
+   return token.txt;
 }
 
 pub override fn dumpFilter.processNone( 
-    node: Ast.NoneNode, prefix: str, depth: int )
+   node: Ast.NoneNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
+   dump( prefix, depth, node, "" );
 };
 pub override fn dumpFilter.processImport( 
-    node: Ast.ImportNode, prefix: str, depth: int )
+   node: Ast.ImportNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_modulePath() );
+   dump( prefix, depth, node, node.get_modulePath() );
 };
 pub override fn dumpFilter.processRoot( 
-    node: Ast.RootNode, prefix: str, depth: int )
+   node: Ast.RootNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    foreach child, index in node.get_children() {
-	filter( child, self, prefix .. "  ", depth + 1 );
-    }	
+   dump( prefix, depth, node, "" );
+   foreach child, index in node.get_children() {
+      filter( child, self, prefix .. "  ", depth + 1 );
+   }	
 };
 pub override fn dumpFilter.processSubfile( 
-    node: Ast.SubfileNode, prefix: str, depth: int )
+   node: Ast.SubfileNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
+   dump( prefix, depth, node, "" );
 }
 pub override fn dumpFilter.processBlock( 
-    node: Ast.BlockNode, prefix: str, depth: int )
+   node: Ast.BlockNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    foreach statement, index in node.get_stmtList() {
-	filter( statement, self, prefix .. "  ", depth + 1 );
-    }	
+   dump( prefix, depth, node, "" );
+   foreach statement, index in node.get_stmtList() {
+      filter( statement, self, prefix .. "  ", depth + 1 );
+   }	
 };  
 pub override fn dumpFilter.processStmtExp( 
-    node: Ast.StmtExpNode, prefix: str, depth: int )
+   node: Ast.StmtExpNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, "" );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processDeclClass( 
-    node: Ast.DeclClassNode, prefix: str, depth: int )
+   node: Ast.DeclClassNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_name().txt );
-    foreach field, index in node.get_fieldList() {
-	filter( field, self, prefix .. "  ", depth + 1 );
-    }	
+   dump( prefix, depth, node, node.get_name().txt );
+   foreach field, index in node.get_fieldList() {
+      filter( field, self, prefix .. "  ", depth + 1 );
+   }	
 };  
 pub override fn dumpFilter.processDeclMember( 
-    node: Ast.DeclMemberNode, prefix: str, depth: int )
+   node: Ast.DeclMemberNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_name().txt );
-    filter( node.get_refType(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, node.get_name().txt );
+   filter( node.get_refType(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpMacroExp( 
-    node: Ast.ExpMacroExpNode, prefix: str, depth: int )
+   node: Ast.ExpMacroExpNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    let stmtList = node.get_stmtList();
-    if  stmtList {
-        foreach stmt in stmtList {
-            filter( stmt, self,  prefix .. "  ", depth + 1 );
-        }
-    }
+   dump( prefix, depth, node, "" );
+   let stmtList = node.get_stmtList();
+   if  stmtList {
+      foreach stmt in stmtList {
+         filter( stmt, self,  prefix .. "  ", depth + 1 );
+      }
+   }
 };
 pub override fn dumpFilter.processDeclMacro( 
-    node: Ast.DeclMacroNode, prefix: str, depth: int )
+   node: Ast.DeclMacroNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_expType().getTxt() );
+   dump( prefix, depth, node, node.get_expType().getTxt() );
 };
 pub override fn dumpFilter.processExpMacroStat( 
-    node: Ast.ExpMacroStatNode, prefix: str, depth: int )
+   node: Ast.ExpMacroStatNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_expType().getTxt() );
-    foreach node in node.get_expStrList() {
-        filter( node, self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, node.get_expType().getTxt() );
+   foreach node in node.get_expStrList() {
+      filter( node, self, prefix .. "  ", depth + 1 );
+   }
 };
 
 
 pub override fn dumpFilter.processUnwrapSet( 
-    node: Ast.UnwrapSetNode, prefix: str, depth: int )
+   node: Ast.UnwrapSetNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    filter( node.$dstExpList, self, prefix .. "  ", depth + 1 );
-    filter( node.$srcExpList, self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, "" );
+   filter( node.$dstExpList, self, prefix .. "  ", depth + 1 );
+   filter( node.$srcExpList, self, prefix .. "  ", depth + 1 );
 
-    if node.$unwrapBlock {
-        filter( unwrap node.$unwrapBlock, self, prefix .. "  ", depth + 1 );
-    }
+   if node.$unwrapBlock {
+      filter( unwrap node.$unwrapBlock, self, prefix .. "  ", depth + 1 );
+   }
 }
 
 pub override fn dumpFilter.processIfUnwrap( 
-    node: Ast.IfUnwrapNode, prefix: str, depth: int )
+   node: Ast.IfUnwrapNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    filter( node.$exp, self, prefix .. "  ", depth + 1 );
-    filter( node.$block, self, prefix .. "  ", depth + 1 );
-    if node.$nilBlock {
-        filter( unwrap node.$nilBlock, self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, "" );
+   filter( node.$exp, self, prefix .. "  ", depth + 1 );
+   filter( node.$block, self, prefix .. "  ", depth + 1 );
+   if node.$nilBlock {
+      filter( unwrap node.$nilBlock, self, prefix .. "  ", depth + 1 );
+   }
 }
 
 pub override fn dumpFilter.processDeclVar( 
-    node: Ast.DeclVarNode, prefix: str, depth: int )
+   node: Ast.DeclVarNode, prefix: str, depth: int )
 {
-    let varName = "";
-    foreach var, index in node.get_varList() {
-        if index > 1 {
-	    varName = varName .. ",";
-        }
-	varName = "%s %s" (varName, var.get_name().txt );
-    }
-    if node.$unwrapBlock {
-        varName = "!" .. varName;
-    }
-    varName = "%s %s" ( node.$mode, varName );
-    
-    dump( prefix, depth, node, varName );
-    foreach var, index in node.get_varList() {
-        if! var.$refType {
-            filter( _exp, self, prefix .. "  ", depth + 1 );
-        }
-    }
-    if! node.get_expList() {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
-    if! node.$unwrapBlock {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
-    if! node.$thenBlock {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
-    foreach var in node.$syncVarList {
-        if! var.$refType {
-            filter( _exp, self, prefix .. "  ", depth + 1 );
-        }
-    }
-    if! node.$syncBlock {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
+   let varName = "";
+   foreach var, index in node.get_varList() {
+      if index > 1 {
+	 varName = varName .. ",";
+      }
+      varName = "%s %s" (varName, var.get_name().txt );
+   }
+   if node.$unwrapBlock {
+      varName = "!" .. varName;
+   }
+   varName = "%s %s" ( node.$mode, varName );
+   
+   dump( prefix, depth, node, varName );
+   foreach var, index in node.get_varList() {
+      if! var.$refType {
+         filter( _exp, self, prefix .. "  ", depth + 1 );
+      }
+   }
+   if! node.get_expList() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
+   if! node.$unwrapBlock {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
+   if! node.$thenBlock {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
+   foreach var in node.$syncVarList {
+      if! var.$refType {
+         filter( _exp, self, prefix .. "  ", depth + 1 );
+      }
+   }
+   if! node.$syncBlock {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 };  
 pub override fn dumpFilter.processDeclArg( 
-    node: Ast.DeclArgNode, prefix: str, depth: int )
+   node: Ast.DeclArgNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_name().txt );
-    filter( node.get_argType(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, node.get_name().txt );
+   filter( node.get_argType(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processDeclArgDDD( 
-    node: Ast.DeclArgDDDNode, prefix: str, depth: int )
+   node: Ast.DeclArgDDDNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "..." );
+   dump( prefix, depth, node, "..." );
 };  
 pub override fn dumpFilter.processExpDDD( 
-    node: Ast.ExpDDDNode, prefix: str, depth: int )
+   node: Ast.ExpDDDNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "..." );
+   dump( prefix, depth, node, "..." );
 };
 
 fn dumpFilter.processDeclFuncInfo(
-    node: Ast.Node, declInfo: Ast.DeclFuncInfo, prefix: str, depth: int )
+   node: Ast.Node, declInfo: Ast.DeclFuncInfo, prefix: str, depth: int )
 {
-    let name = "<anonymous>";
-    if! declInfo.get_name() {
-        name = _exp.txt;
-    }
-    dump( prefix, depth, node, name );
-    let argList = declInfo.get_argList();
-    foreach arg, index in argList {
-	filter( arg, self, prefix .. "  ", depth + 1 );
-    }
-    if! declInfo.get_body() {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
+   let name = "<anonymous>";
+   if! declInfo.get_name() {
+      name = _exp.txt;
+   }
+   dump( prefix, depth, node, name );
+   let argList = declInfo.get_argList();
+   foreach arg, index in argList {
+      filter( arg, self, prefix .. "  ", depth + 1 );
+   }
+   if! declInfo.get_body() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 }
 pub override fn dumpFilter.processDeclFunc( 
-    node: Ast.DeclFuncNode, prefix: str, depth: int )
+   node: Ast.DeclFuncNode, prefix: str, depth: int )
 {
-    self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
+   self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
 };	
 pub override fn dumpFilter.processDeclMethod( 
-    node: Ast.DeclMethodNode, prefix: str, depth: int )
+   node: Ast.DeclMethodNode, prefix: str, depth: int )
 {
-    self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
+   self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
 };	
 pub override fn dumpFilter.processDeclConstr( 
-    node: Ast.DeclConstrNode, prefix: str, depth: int )
+   node: Ast.DeclConstrNode, prefix: str, depth: int )
 {
-    self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
+   self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
 };
 
 pub override fn dumpFilter.processExpCallSuper( 
-    node: Ast.ExpCallSuperNode, prefix: str, depth: int )
+   node: Ast.ExpCallSuperNode, prefix: str, depth: int )
 {
-    let typeInfo:Ast.TypeInfo = node.get_superType();
-    dump( prefix, depth, node, typeInfo.getTxt() );
+   let typeInfo:Ast.TypeInfo = node.get_superType();
+   dump( prefix, depth, node, typeInfo.getTxt() );
 };
 pub override fn dumpFilter.processRefType( 
-    node: Ast.RefTypeNode, prefix: str, depth: int )
+   node: Ast.RefTypeNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node,
-	  (node.get_refFlag() and "&" or "") ..
-	  (node.get_mutFlag() and "mut " or "") );
-    filter( node.get_name(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node,
+	 (node.get_refFlag() and "&" or "") ..
+	 (node.get_mutFlag() and "mut " or "") );
+   filter( node.get_name(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processIf( 
-    node: Ast.IfNode, prefix: str, depth: int )
+   node: Ast.IfNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "");
-    let stmtList = node.get_stmtList();
-    foreach stmt, index in stmtList {
-	if stmt.$exp {
-	    filter( stmt.$exp, self, prefix .. "  ", depth + 1 );
-	}   	
-	filter( stmt.$block, self, prefix .. "  ", depth + 1 );
-    }	
+   dump( prefix, depth, node, "");
+   let stmtList = node.get_stmtList();
+   foreach stmt, index in stmtList {
+      if stmt.$exp {
+	 filter( stmt.$exp, self, prefix .. "  ", depth + 1 );
+      }   	
+      filter( stmt.$block, self, prefix .. "  ", depth + 1 );
+   }	
 };  
 pub override fn dumpFilter.processSwitch( 
-    node: Ast.SwitchNode, prefix: str, depth: int )
+   node: Ast.SwitchNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "");
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
-    let caseList = node.get_caseList()@@Ast.CaseInfo[];
-    foreach caseInfo in caseList {
-        filter( caseInfo.$expList, self, prefix .. "  ", depth + 1 );
-        filter( caseInfo.$block, self, prefix .. "  ", depth + 1 );
-    }
-    if! node.get_default() {
-        filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, "");
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   let caseList = node.get_caseList()@@Ast.CaseInfo[];
+   foreach caseInfo in caseList {
+      filter( caseInfo.$expList, self, prefix .. "  ", depth + 1 );
+      filter( caseInfo.$block, self, prefix .. "  ", depth + 1 );
+   }
+   if! node.get_default() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 };
 pub override fn dumpFilter.processWhile( 
-    node: Ast.WhileNode, prefix: str, depth: int )
+   node: Ast.WhileNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "");
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, "");
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processRepeat( 
-    node: Ast.RepeatNode, prefix: str, depth: int )
+   node: Ast.RepeatNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "");
-    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, "");
+   filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processFor( 
-    node: Ast.ForNode, prefix: str, depth: int )
+   node: Ast.ForNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_val().txt );
-    filter( node.get_init(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_to(), self, prefix .. "  ", depth + 1 );
-    if! node.get_delta() {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }	
-    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, node.get_val().txt );
+   filter( node.get_init(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_to(), self, prefix .. "  ", depth + 1 );
+   if! node.get_delta() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }	
+   filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processApply( 
-    node: Ast.ApplyNode, prefix: str, depth: int )
+   node: Ast.ApplyNode, prefix: str, depth: int )
 {
-    let varNames = "";
-    let varList = node.get_varList();
-    foreach var, index in varList {
-	varNames = varNames .. var.txt .. " ";
-    }	
-    dump( prefix, depth, node, varNames );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+   let varNames = "";
+   let varList = node.get_varList();
+   foreach var, index in varList {
+      varNames = varNames .. var.txt .. " ";
+   }	
+   dump( prefix, depth, node, varNames );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processForeach( 
-    node: Ast.ForeachNode, prefix: str, depth: int )
+   node: Ast.ForeachNode, prefix: str, depth: int )
 {
-    let index = "";
-    if! node.get_key() {
-        index = _exp.txt;
-    }
-    dump( prefix, depth, node, node.get_val().txt .. " " .. index );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+   let index = "";
+   if! node.get_key() {
+      index = _exp.txt;
+   }
+   dump( prefix, depth, node, node.get_val().txt .. " " .. index );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processForsort( 
-    node: Ast.ForsortNode, prefix: str, depth: int )
+   node: Ast.ForsortNode, prefix: str, depth: int )
 {
-    let index = "";
-    if! node.get_key() {
-        index = _exp.txt;
-    }
-    dump( prefix, depth, node, node.get_val().txt .. " " .. index );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
+   let index = "";
+   if! node.get_key() {
+      index = _exp.txt;
+   }
+   dump( prefix, depth, node, node.get_val().txt .. " " .. index );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };
 
 pub override fn dumpFilter.processExpUnwrap(
-    node: Ast.ExpUnwrapNode, prefix: str, depth: int )
+   node: Ast.ExpUnwrapNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    filter( node.$exp, self, prefix .. "  ", depth + 1 );
-    if! node.$default {
-        filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, "" );
+   filter( node.$exp, self, prefix .. "  ", depth + 1 );
+   if! node.$default {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 }
 
 pub override fn dumpFilter.processExpCall( 
-    node: Ast.ExpCallNode, prefix: str, depth: int )
+   node: Ast.ExpCallNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    filter( node.get_func(), self, prefix .. "  ", depth + 1 );
-    if! node.get_argList() {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }	
+   dump( prefix, depth, node, "" );
+   filter( node.get_func(), self, prefix .. "  ", depth + 1 );
+   if! node.get_argList() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }	
 };  
 pub override fn dumpFilter.processExpList( 
-    node: Ast.ExpListNode, prefix: str, depth: int )
+   node: Ast.ExpListNode, prefix: str, depth: int )
 
 {
-    dump( prefix, depth, node, "" );
-    let expList = node.get_expList();
-    foreach exp, index in expList {
-	filter( exp, self, prefix .. "  ", depth + 1 );
-    }	
+   dump( prefix, depth, node, "" );
+   let expList = node.get_expList();
+   foreach exp, index in expList {
+      filter( exp, self, prefix .. "  ", depth + 1 );
+   }	
 };  
 pub override fn dumpFilter.processExpOp1( 
-    node: Ast.ExpOp1Node, prefix: str, depth: int )
+   node: Ast.ExpOp1Node, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_op().txt );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, node.get_op().txt );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpCast( 
-    node: Ast.ExpCastNode, prefix: str, depth: int )
+   node: Ast.ExpCastNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, "" );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpParen( 
-    node: Ast.ExpParenNode, prefix: str, depth: int )
+   node: Ast.ExpParenNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "()" );
-    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, "()" );
+   filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpOp2( 
-    node: Ast.ExpOp2Node, prefix: str, depth: int )
+   node: Ast.ExpOp2Node, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_op().txt );
-    filter( node.get_exp1(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_exp2(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, node.get_op().txt );
+   filter( node.get_exp1(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_exp2(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processExpNew( 
-    node: Ast.ExpNewNode, prefix: str, depth: int )
+   node: Ast.ExpNewNode, prefix: str, depth: int )
 
 {
-    dump( prefix, depth, node, "" );
-    filter( node.get_symbol(), self, prefix .. "  ", depth + 1 );
-    if! node.get_argList() {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, "" );
+   filter( node.get_symbol(), self, prefix .. "  ", depth + 1 );
+   if! node.get_argList() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 };
 pub override fn dumpFilter.processExpRef( 
-    node: Ast.ExpRefNode, prefix: str, depth: int )
+   node: Ast.ExpRefNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_token().txt );
+   dump( prefix, depth, node, node.get_token().txt );
 };
 pub override fn dumpFilter.processExpRefItem( 
-    node: Ast.ExpRefItemNode, prefix: str, depth: int )
+   node: Ast.ExpRefItemNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt() );
-    filter( node.get_val(), self, prefix .. "  ", depth + 1 );
-    filter( node.get_index(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt() );
+   filter( node.get_val(), self, prefix .. "  ", depth + 1 );
+   filter( node.get_index(), self, prefix .. "  ", depth + 1 );
 };  
 pub override fn dumpFilter.processRefField( 
-    node: Ast.RefFieldNode, prefix: str, depth: int )
+   node: Ast.RefFieldNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_field().txt );
-    filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, node.get_field().txt );
+   filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
 };  
 
 pub override fn dumpFilter.processGetField( 
-    node: Ast.GetFieldNode, prefix: str, depth: int )
+   node: Ast.GetFieldNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node,
-          (node.get_getterTypeInfo() and "get_" or "") .. node.get_field().txt );
-    filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node,
+         (node.get_getterTypeInfo() and "get_" or "") .. node.get_field().txt );
+   filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
 };
 
 pub override fn dumpFilter.processReturn( 
-    node: Ast.ReturnNode, prefix: str, depth: int )
+   node: Ast.ReturnNode, prefix: str, depth: int )
 
 {
-    dump( prefix, depth, node, "" );
-    if! node.get_expList() {
-        filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
-};  
-pub override fn dumpFilter.processLiteralList( 
-    node: Ast.LiteralListNode, prefix: str, depth: int )
+   dump( prefix, depth, node, "" );
+   if! node.get_expList() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
+};
+
+pub override fn dumpFilter.processProvide(
+   node: Ast.ProvideNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "[]" );
-    if! node.get_expList() {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, "" );
+   filter( node.$val,  self, prefix .. "  ", depth + 1 );
+}
+
+pub override fn dumpFilter.processLiteralList( 
+   node: Ast.LiteralListNode, prefix: str, depth: int )
+{
+   dump( prefix, depth, node, "[]" );
+   if! node.get_expList() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 };  
 pub override fn dumpFilter.processLiteralMap( 
-    node: Ast.LiteralMapNode, prefix: str, depth: int )
+   node: Ast.LiteralMapNode, prefix: str, depth: int )
 
 {
-    dump( prefix, depth, node, "{}" );
-    let pairList = node.get_pairList();
-    foreach pair in pairList {
-	filter( pair.get_key(), self, prefix .. "  ", depth + 1 );
-	filter( pair.get_val(), self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, "{}" );
+   let pairList = node.get_pairList();
+   foreach pair in pairList {
+      filter( pair.get_key(), self, prefix .. "  ", depth + 1 );
+      filter( pair.get_val(), self, prefix .. "  ", depth + 1 );
+   }
 };  
 pub override fn dumpFilter.processLiteralArray( 
-    node: Ast.LiteralArrayNode, prefix: str, depth: int )
+   node: Ast.LiteralArrayNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "[@]" );
-    if! node.get_expList() {
-	filter( _exp, self, prefix .. "  ", depth + 1 );
-    }
+   dump( prefix, depth, node, "[@]" );
+   if! node.get_expList() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 };  
 pub override fn dumpFilter.processLiteralChar( 
-    node: Ast.LiteralCharNode, prefix: str, depth: int )
+   node: Ast.LiteralCharNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node,
-	  string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
+   dump( prefix, depth, node,
+	 string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
 };  
 pub override fn dumpFilter.processLiteralInt( 
-    node: Ast.LiteralIntNode, prefix: str, depth: int )
+   node: Ast.LiteralIntNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node,
-	  string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
+   dump( prefix, depth, node,
+	 string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
 };  
 pub override fn dumpFilter.processLiteralReal( 
-    node: Ast.LiteralRealNode, prefix: str, depth: int )
+   node: Ast.LiteralRealNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node,
-	  string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
+   dump( prefix, depth, node,
+	 string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
 };  
 pub override fn dumpFilter.processLiteralString( 
-    node: Ast.LiteralStringNode, prefix: str, depth: int )
+   node: Ast.LiteralStringNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_token().txt );
+   dump( prefix, depth, node, node.get_token().txt );
 };  
 pub override fn dumpFilter.processLiteralBool( 
-    node: Ast.LiteralBoolNode, prefix: str, depth: int )
+   node: Ast.LiteralBoolNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node,
-          node.get_token().txt == "true" and "true" or "false" );
+   dump( prefix, depth, node,
+         node.get_token().txt == "true" and "true" or "false" );
 };  
 pub override fn dumpFilter.processLiteralNil( 
-    node: Ast.LiteralNilNode, prefix: str, depth: int )
+   node: Ast.LiteralNilNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
+   dump( prefix, depth, node, "" );
 };  
 pub override fn dumpFilter.processBreak( 
-    node: Ast.BreakNode, prefix: str, depth: int )
+   node: Ast.BreakNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, "" );
+   dump( prefix, depth, node, "" );
 };  
 pub override fn dumpFilter.processLiteralSymbol( 
-    node: Ast.LiteralSymbolNode, prefix: str, depth: int )
+   node: Ast.LiteralSymbolNode, prefix: str, depth: int )
 {
-    dump( prefix, depth, node, node.get_token().txt );
+   dump( prefix, depth, node, node.get_token().txt );
 };  

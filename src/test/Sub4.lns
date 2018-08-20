@@ -1,0 +1,9 @@
+class Hoge {
+    pub let val:int;
+}
+
+pub fn func( val: int ): int {
+   return val + 1;
+}
+
+provide func;

@@ -94,36 +94,39 @@ function _luneScript.loadModule( module )
 	    mod = _luneScript.loadLua( luaPath )
 	    local meta = _luneScript.loadLua( metaPath )
 
-	    for key, val in pairs( meta ) do
-	       mod[ key ] = val
-	    end
+	    -- for key, val in pairs( meta ) do
+	    --    mod[ key ] = val
+	    -- end
 	    
-	    _luneScript.loadedMap[ module ] = mod
+	    -- _luneScript.loadedMap[ module ] = mod
+	    local info = {}
+	    info.mod = mod
+	    info.meta = meta
+	    _luneScript.loadedMap[ module ] = info
+	    
 	 end
       end
       if option.outputDir then
 	 package.path = bakSearchPath
       end
       if not mod then
-	 _luneScript.loadedMap[ module ] = _luneScript.loadFile( lnsPath, module )
+	 local mod, meta = _luneScript.loadFile( lnsPath, module )
+	 local info = {}
+	 info.mod = mod
+	 info.meta = meta
+
+	 -- for key, val in pairs( meta ) do
+	 --    mod[ key ] = val
+	 -- end
+	 
+	 _luneScript.loadedMap[ module ] = info
       end
    end
    local ret = _luneScript.loadedMap[ module ]
    if ret then
-      return ret
+      return ret.mod, ret.meta
    end
    error( "load error", module )
-end
-
-function _luneScript.loadMeta( module )
-   if not _luneScript.loadedMetaMap[ module ] then
-      local searchPath = package.path
-      searchPath = string.gsub( searchPath, "%.lua", ".lnm" )
-      local path = package.searchpath( module, searchPath )
-
-      _luneScript.loadedMetaMap[ module ] = _luneScript.loadFile( path, module )
-   end
-   return _luneScript.loadedMetaMap[ module ]
 end
 
 local function createPaser( path, module )
@@ -150,9 +153,9 @@ local function getNode( ast )
 end
 
 local function convert( ast, streamName, stream, metaStream,
-			convMode, inMacro, moduleTypeInfo )
+			convMode, inMacro )
    local conv = convLua.convFilter.new(
-      streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
+      streamName, stream, metaStream, convMode, inMacro, ast.moduleTypeInfo )
    getNode( ast ):processFilter( conv, nil, 0 )
 end
 
@@ -164,17 +167,23 @@ function _luneScript.loadFile( path, module, analyzeMode, pos )
       self.val = self.val .. txt
    end
    local stream = createStream( "", func )
+   local metaStream = createStream( "", func )
 
-   convert( ast, path, stream, stream, "exe", nil, ast.moduleTypeInfo )
+   convert( ast, path, stream, metaStream, "exe", nil )
+   
 
-   local chunk, err = load( stream.val )
-   if err then
-      print( err )
+   local loadFunc = function( txt )
+      --print( txt )
+      local chunk, err = load( txt )
+      if err then
+	 print( err )
+      end
+      if not chunk then
+	 error( "failed to error" )
+      end
+      return chunk()
    end
-   if not chunk then
-      error( "failed to error" )
-   end
-   return chunk()
+   return loadFunc( stream.val ), loadFunc( metaStream.val )
 end
 
 

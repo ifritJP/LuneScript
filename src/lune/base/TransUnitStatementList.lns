@@ -37,7 +37,7 @@ fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
    if not funcTypeInfo {
       self.addErrMess(
          token.pos,
-         "'return' could not exist here" );
+         "'return' could not use here" );
    }
    else{
       let retTypeList = funcTypeInfo.$retTypeInfoList;
@@ -144,7 +144,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
          statement = self.analyzeUnwrap( token );
       }
       elseif token.txt == "sync" {
-         statement = self.analyzeDeclVar( "sync", "local", false, token );
+         statement = self.analyzeDeclVar( "sync", "local", token );
       }
       elseif token.txt == "import" {
          statement = self.analyzeImport( token );
@@ -155,6 +155,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
       elseif token.txt == "luneControl" {
          self.analyzeLuneControl( token );
          statement = self.createNoneNode( token.pos );
+      }
+      elseif token.txt == "provide" {
+         statement = self.analyzeProvide( token );
       }
       elseif token.txt == ";" {
          statement = self.createNoneNode( token.pos );

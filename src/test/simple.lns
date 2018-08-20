@@ -1,4 +1,13 @@
 import test.Sub2;
+import test.Sub3;
+import test.Sub4;
+
+{
+   let val = new Sub3( 1 );
+   print( "Sub3.func() %d" ( val.func() ));
+   print( "Sub4() %d" ( Sub4( 1 ) ));
+   
+}
 
 fn func( val : int) {
     print( "abc%s%s" (val,"ab") );

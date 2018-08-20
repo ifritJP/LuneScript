@@ -73,6 +73,7 @@
     (prefix . lns-ac-prefix)
     (action . lns-ac-action)
     (requires . 0)
+    (cache)
     ;;(symbol . "lns")
     ))
 

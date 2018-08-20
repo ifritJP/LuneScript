@@ -236,7 +236,7 @@ pub class TypeInfo {
       return "";
    }
    
-   pub fn serialize( stream: oStream ) {
+   pub fn serialize( stream: oStream, validChildrenSet: Map<TypeInfo,bool>! ) {
       return;
    }
 
@@ -420,12 +420,18 @@ pub fn Scope.add( kind: int, canBeLeft:bool, canBeRight:bool,
       self, accessMode, staticFlag, name, typeInfo, mutable );
 }
 
-pub fn Scope.addVar( argFlag:bool, canBeLeft:bool,
-                     name:str, typeInfo: TypeInfo, mutable:bool )
+pub fn Scope.addLocalVar( argFlag:bool, canBeLeft:bool,
+                          name:str, typeInfo: TypeInfo, mutable:bool )
 {
    self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
              canBeLeft, true, name, typeInfo, "local", false, mutable );
 }
+
+pub fn Scope.addVar( accessMode:str, name:str, typeInfo: TypeInfo, mutable:bool )
+{
+   self.add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable );
+}
+
 
 pub fn Scope.addMember( name:str, typeInfo: TypeInfo, accessMode:str,
                         staticFlag:bool, mutable:bool )
@@ -564,12 +570,11 @@ pub class NilableTypeInfo extend TypeInfo {
       return self.orgTypeInfo.$display_stirng .. "!";
    }
 
-   pub override fn serialize( stream: oStream ): str! {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<TypeInfo,bool>! ) {
       let parentId = self.getParentId();
       stream.write(
          '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
             parentId, self.typeId, self.orgTypeInfo.$typeId ) );
-      return nil;
    }
    
    advertise orgTypeInfo;
@@ -769,17 +774,17 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    
-   pub override fn serialize( stream: oStream ): str! {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<TypeInfo,bool>! ) {
       if self.typeId == rootTypeId {
-         return nil;
-      } 
+         return;
+      }
 
       let parentId = self.getParentId();
       if self.nilable {
          stream.write(
             '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
                parentId, self.typeId, self.orgTypeInfo.$typeId ) );
-         return nil;
+         return;
       } 
 
       fn serializeTypeInfoList( name: str, list: TypeInfo[], onlyPub: bool! ): str {
@@ -800,13 +805,23 @@ pub class NormalTypeInfo extend TypeInfo {
           ( parentId, self.typeId, self.get_baseId(), self.rawTxt,
             self.staticFlag, self.accessMode, self.kind );
 
+      let children = self.children;
+      if! validChildrenSet {
+         children = [];
+         foreach child in self.children {
+            if _exp[ child ] {
+               children.insert( child );
+            }
+         }
+      }
+
       stream.write(
          txt .. serializeTypeInfoList( "itemTypeId = {",
                                        self.itemTypeInfoList ) ..
          serializeTypeInfoList( "ifList = {", self.interfaceList ) ..
          serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) ..
          serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) ..
-         serializeTypeInfoList( "children = {", self.children, true ) .. "}\n" );
+         serializeTypeInfoList( "children = {", children, true ) .. "}\n" );
    }
 
    pub fn equalsSub( typeInfo: TypeInfo ): bool {
@@ -1442,10 +1457,18 @@ _declNodeClass( "Import", Node, false, false,
                 [ { "modulePath": "str" } ]
 );
 
+
+pub proto class ProvideNode extend Node;
+
 _declNodeClass( "Root", Node, false, false,
                 [ { "children": "Node[]" },
+                  { "provideNode": "ProvideNode!" },
                   { "typeId2ClassMap": "Map<int,NamespaceInfo>" } ]
 );
+
+pub fn RootNode.set_provide( node: ProvideNode ) {
+   self.provideNode = node;
+}
 
 _declNodeClass( "RefType", Node, false, false,
                 [ { "name": "Node" },
@@ -1527,6 +1550,10 @@ _declNodeClass( "Return", Node, false, false,
 );
 
 _declNodeClass( "Break", Node, false, false, [] );
+
+_declNodeClass( "Provide", Node, false, false,
+                [ { "val": "Node" } ]
+);     
 
 _declNodeClass( "ExpNew", Node, false, true,
                 [ { "symbol": "Node" },

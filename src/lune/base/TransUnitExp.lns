@@ -1090,7 +1090,7 @@ fn TransUnit.analyzeUnwrap( firstToken: Parser.Token ): Ast.Node {
    }
 
    self.pushback();
-   return self.analyzeDeclVar( "unwrap", "local", false, firstToken );
+   return self.analyzeDeclVar( "unwrap", "local", firstToken );
 }
 
 fn TransUnit.analyzeExpUnwrap( firstToken: Parser.Token ): Ast.Node {

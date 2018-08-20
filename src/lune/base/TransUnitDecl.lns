@@ -126,7 +126,7 @@ fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) : Parser.
          let arg = new Ast.DeclArgNode( argName.pos, refType.$expTypeList,
                                         argName, refType );    
          
-         self.scope.addVar( false, true, argName.txt, refType.$expType, false );
+         self.scope.addLocalVar( false, true, argName.txt, refType.$expType, false );
          argList.insert( arg );
       }
       token = self.getToken();
@@ -164,14 +164,17 @@ pub fn TransUnit.createAST(
 
    let ast:Ast.Node! = nil;
 
+   let lastStatement:Ast.Node! = nil;
    if macroFlag {
       ast = self.analyzeBlock( "macro" );
    }
    else {
       let children:Ast.Node[] = [];
-      ast = new Ast.RootNode( new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ],
-                              children, self.typeId2ClassMap );
-      self.analyzeStatementList( children );
+      let rootNode = new Ast.RootNode(
+         new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ],
+         children, nil, self.typeId2ClassMap );
+      ast = rootNode;
+      lastStatement = self.analyzeStatementList( children );
 
       let token = self.getTokenNoErr();
       if! token {
@@ -195,7 +198,7 @@ pub fn TransUnit.createAST(
 
          self.parser = subParser;
 
-         self.analyzeStatementListSubfile( children );
+         lastStatement = self.analyzeStatementListSubfile( children );
 
          token = self.getTokenNoErr();
          if! token {
@@ -203,6 +206,13 @@ pub fn TransUnit.createAST(
                         ( _exp.pos.lineNo, _exp.pos.column,
                           Parser.getKindTxt( _exp.kind ), _exp.txt ) );
          }
+      }
+
+      if! self.provideNode {
+         if lastStatement ~= _exp {
+            self.addErrMess( _exp.$pos, "'provide' must be last." );
+         }
+         rootNode.set_provide( _exp );
       }
    }
 
@@ -221,7 +231,6 @@ pub fn TransUnit.createAST(
    if self.analyzeMode == "diag" {
       os.exit( 0 );
    }
-
 
    return new ASTInfo( unwrap ast, moduleTypeInfo );
 }
@@ -307,7 +316,7 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       false, false, scope, Ast.TypeInfoKindMacro, self.getCurrentNamespaceTypeInfo(),
       false, false, false, accessMode, nameToken.txt, argTypeList );
-   self.scope.addVar( false, false, nameToken.txt, typeInfo, false );
+   self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
 
 
    let declMacroInfo = new Ast.DeclMacroInfo( nameToken, argList, ast, tokenList ) ;
@@ -428,7 +437,7 @@ fn TransUnit.analyzeDecl(
    }
 
    if token.txt == "let" {
-      return self.analyzeDeclVar( "let", accessMode, staticFlag, firstToken );
+      return self.analyzeDeclVar( "let", accessMode, firstToken );
    }
    elseif token.txt == "fn" {
       return self.analyzeDeclFunc(
@@ -871,7 +880,7 @@ fn TransUnit.analyzeDeclFunc(
 }
 
 fn TransUnit.analyzeDeclVar(
-   mode:str, accessMode: str, staticFlag: bool, firstToken: Parser.Token ): Ast.Node
+   mode:str, accessMode: str, firstToken: Parser.Token ): Ast.Node
 {
    let unwrapFlag = false;
    let token, continueFlag = self.getContinueToken();
@@ -887,6 +896,12 @@ fn TransUnit.analyzeDeclVar(
 
    let typeInfoList : Ast.TypeInfo[] = [];
 
+   if accessMode == "pub" {
+      if self.scope ~= self.moduleScope {
+         self.addErrMess( firstToken.pos, "'pub' variable must exist top scope." );
+      }
+   }
+   
    let varNameList:Parser.Token[] = [];
    let varTypeList:Ast.RefTypeNode![] = [];
    repeat {
@@ -1039,7 +1054,7 @@ fn TransUnit.analyzeDeclVar(
                                 "shadowing variable -- %s" (varName.txt) );
             }
          }
-         self.scope.addVar( false, true, varName.txt, typeInfo, false );
+         self.scope.addVar( accessMode, varName.txt, typeInfo, false );
       }
    }
 
@@ -1050,7 +1065,7 @@ fn TransUnit.analyzeDeclVar(
 
       // unwrap ブロックに変数を登録
       foreach varName, index in varNameList {
-         self.scope.addVar(
+         self.scope.addLocalVar(
             false, true, "_" .. varName.txt, orgExpTypeList[ index ], false );
       }
       
@@ -1081,7 +1096,7 @@ fn TransUnit.analyzeDeclVar(
    self.checkNextToken( ";" );
 
    let node = new Ast.DeclVarNode(
-      firstToken.pos, [ Ast.builtinTypeNone ], mode, accessMode, staticFlag,
+      firstToken.pos, [ Ast.builtinTypeNone ], mode, accessMode, false,
       varList, expList, typeInfoList, unwrapFlag, unwrapBlock,
       thenBlock, sameSymbolList, syncBlock );
    

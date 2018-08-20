@@ -1,0 +1,12 @@
+class Hoge {
+    pub let val:int;
+}
+
+pub class Hoge2 {
+    pub let val:int;
+    pub fn func(): int {
+        return self.val;
+    }
+}
+
+provide Hoge2;

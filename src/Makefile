@@ -69,6 +69,8 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/scope2.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/func.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/class.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/provide1.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/provide2.lns,exe,2>&1)
 
 
 test-comp2:
@@ -118,6 +120,8 @@ test-comp2:
 
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
 	$(call exeLune,work/3,test/Sub2.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Sub3.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Sub4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/simple.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/start.lns,save,) > /dev/null
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result

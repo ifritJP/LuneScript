@@ -98,13 +98,13 @@ do
 local convFilter = {}
 setmetatable( convFilter, { __index = Filter } )
 moduleObj.convFilter = convFilter
-function convFilter.new( streamName, stream, metaStream, convMode, inMacro )
+function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
   local obj = {}
   setmetatable( obj, { __index = convFilter } )
-  if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro ); end
+  if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo ); end
 return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, inMacro) 
+function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo) 
   self.macroDepth = 0
   self.streamName = streamName
   self.stream = stream
@@ -120,6 +120,7 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro)
   self.pubVarName2InfoMap = {}
   self.pubFuncName2InfoMap = {}
   self.needIndent = false
+  self.moduleTypeInfo = moduleTypeInfo
 end
 do
   end
@@ -233,9 +234,6 @@ function convFilter:outputMeta( node, baseIndent )
         if typeInfo:get_kind() == Ast.TypeInfoKindClass or typeInfo:get_kind() == Ast.TypeInfoKindIF then
           pickupClassMap[typeInfo:get_typeId()] = typeInfo
         end
-        local parentInfo = typeInfo:get_parentInfo(  )
-        
-        pickupTypeId( parentInfo, true )
         local baseInfo = typeInfo:get_baseTypeInfo(  )
         
         if baseInfo:get_typeId() ~= Ast.rootTypeId then
@@ -273,18 +271,52 @@ function convFilter:outputMeta( node, baseIndent )
     end
   end
   
-  local typeId2ClassMap = node:get_typeId2ClassMap(  )
+  local classId2TypeInfo = {}
   
-  for __index, namespaceInfo in pairs( typeId2ClassMap ) do
-    if namespaceInfo.typeInfo:get_accessMode(  ) == "pub" then
-      pickupClassMap[namespaceInfo.typeInfo:get_typeId()] = namespaceInfo.typeInfo
+  local validChildrenSet = {}
+  
+  do
+    local typeInfo = self.moduleTypeInfo
+    
+    while typeInfo ~= Ast.rootTypeInfo do
+      typeId2TypeInfo[typeInfo:get_typeId()] = typeInfo
+      validChildrenSet[typeInfo:get_parentInfo()] = {[typeInfo] = true}
+      typeInfo = typeInfo:get_parentInfo()
     end
   end
+  
+  do
+    local _exp = node:get_provideNode()
+    if _exp ~= nil then
+    
+        for typeId, typeInfo in pairs( typeId2TypeInfo ) do
+          pickupClassMap[typeId] = typeInfo
+        end
+        if _exp:get_val():get_kind() == Ast.nodeKindExpRef then
+          local expRefNode = _exp:get_val()
+          
+          if expRefNode:get_expType():get_kind() == Ast.TypeInfoKindClass then
+            pickupTypeId( expRefNode:get_expType() )
+          end
+        end
+      else
+    
+        local typeId2ClassMap = node:get_typeId2ClassMap(  )
+        
+        for __index, namespaceInfo in pairs( typeId2ClassMap ) do
+          if namespaceInfo.typeInfo:get_accessMode(  ) == "pub" then
+            pickupClassMap[namespaceInfo.typeInfo:get_typeId()] = namespaceInfo.typeInfo
+          end
+        end
+        classId2TypeInfo = self.classId2TypeInfo
+      end
+  end
+  
   self:writeln( "local _typeId2ClassInfoMap = {}", baseIndent )
   self:writeln( "moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap", baseIndent )
   do
     local __sorted = {}
-    local __map = self.classId2TypeInfo
+    local __map = classId2TypeInfo
     for __key in pairs( __map ) do
       table.insert( __sorted, __key )
     end
@@ -412,7 +444,7 @@ function convFilter:outputMeta( node, baseIndent )
     if typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) then
       self:write( string.format( "_typeInfoList[%d] = ", listIndex) )
       listIndex = listIndex + 1
-      typeInfo:serialize( self )
+      typeInfo:serialize( self, validChildrenSet[typeInfo] )
     end
   end
   
@@ -429,6 +461,17 @@ function convFilter:outputMeta( node, baseIndent )
         outputTypeInfo( typeInfo )
       end
     end
+  end
+  
+  do
+    local _exp = node:get_provideNode()
+    if _exp ~= nil then
+    
+        self:writeln( string.format( "moduleObj._moduleTypeId = %d", _exp:get_val():get_expType():get_typeId()), baseIndent )
+      else
+    
+        self:writeln( string.format( "moduleObj._moduleTypeId = %d", self.moduleTypeInfo:get_typeId()), baseIndent )
+      end
   end
   
   self:writeln( "----- meta -----", baseIndent )
@@ -504,7 +547,19 @@ end
     self:writeln( "", baseIndent )
   end
   self:outputMeta( node, baseIndent )
-  self:writeln( "return moduleObj", baseIndent )
+  do
+    local _exp = node:get_provideNode()
+    if _exp ~= nil then
+    
+        self:write( "return " )
+        filter( _exp:get_val(), self, node, baseIndent )
+        self:writeln( "", baseIndent )
+      else
+    
+        self:writeln( "return moduleObj", baseIndent )
+      end
+  end
+  
 end
 
 -- none
@@ -1575,6 +1630,10 @@ end
 
 -- none
 
+function convFilter:processProvide( node, parent, baseIndent )
+
+end
+
 function convFilter:processLiteralList( node, parent, baseIndent )
 
   self:write( "{" )
@@ -1707,7 +1766,7 @@ function MacroEvalImp:eval( node )
 
   local oStream = Util.memStream.new()
   
-  local conv = convFilter.new("macro", oStream, oStream, "exe", true)
+  local conv = convFilter.new("macro", oStream, oStream, "exe", true, Ast.rootTypeInfo)
   
   conv:processDeclMacro( node, node, 0 )
   local chunk, err = load( oStream:get_txt(  ) )

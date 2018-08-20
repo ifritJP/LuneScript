@@ -21,3 +21,5 @@ class Sub extend Super {
         self.func1();
     }
 }
+
+

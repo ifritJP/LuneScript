@@ -354,7 +354,7 @@ function TypeInfo:getTxt(  )
 
   return ""
 end
-function TypeInfo:serialize( stream )
+function TypeInfo:serialize( stream, validChildrenSet )
 
   return 
 end
@@ -570,9 +570,14 @@ function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, sta
   self.symbol2TypeInfoMap[name] = SymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable)
 end
 
-function Scope:addVar( argFlag, canBeLeft, name, typeInfo, mutable )
+function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", false, mutable )
+end
+
+function Scope:addVar( accessMode, name, typeInfo, mutable )
+
+  self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable )
 end
 
 function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutable )
@@ -746,12 +751,11 @@ function NilableTypeInfo:get_display_stirng(  )
 
   return self.orgTypeInfo:get_display_stirng() .. "!"
 end
-function NilableTypeInfo:serialize( stream )
+function NilableTypeInfo:serialize( stream, validChildrenSet )
 
   local parentId = self:getParentId(  )
   
   stream:write( string.format( '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
-  return nil
 end
 function NilableTypeInfo.new( orgTypeInfo, typeId )
   local obj = {}
@@ -999,16 +1003,16 @@ function NormalTypeInfo:get_display_stirng(  )
   end
   return self:getTxt(  )
 end
-function NormalTypeInfo:serialize( stream )
+function NormalTypeInfo:serialize( stream, validChildrenSet )
 
   if self.typeId == rootTypeId then
-    return nil
+    return 
   end
   local parentId = self:getParentId(  )
   
   if self.nilable then
     stream:write( string.format( '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
-    return nil
+    return 
   end
   local function serializeTypeInfoList( name, list, onlyPub )
   
@@ -1028,7 +1032,22 @@ function NormalTypeInfo:serialize( stream )
   local txt = string.format( [==[{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         staticFlag = %s, accessMode = '%s', kind = %d, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind)
   
-  stream:write( txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "ifList = {", self.interfaceList ) .. serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. serializeTypeInfoList( "children = {", self.children, true ) .. "}\n" )
+  local children = self.children
+  
+  do
+    local _exp = validChildrenSet
+    if _exp ~= nil then
+    
+        children = {}
+        for __index, child in pairs( self.children ) do
+          if _exp[child] then
+            table.insert( children, child )
+          end
+        end
+      end
+  end
+  
+  stream:write( txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "ifList = {", self.interfaceList ) .. serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. serializeTypeInfoList( "children = {", children, true ) .. "}\n" )
 end
 function NormalTypeInfo:equalsSub( typeInfo )
 
@@ -1792,6 +1811,8 @@ do
 
 -- none
 
+-- none
+
 function Filter:processRoot( node, ... )
 
 end
@@ -1821,18 +1842,19 @@ function RootNode:canBeLeft(  )
 
   return false
 end
-function RootNode.new( pos, builtinTypeList, children, typeId2ClassMap )
+function RootNode.new( pos, builtinTypeList, children, provideNode, typeId2ClassMap )
   local obj = {}
   setmetatable( obj, { __index = RootNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, children, typeId2ClassMap ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, children, provideNode, typeId2ClassMap ); end
 return obj
 end
-function RootNode:__init(pos, builtinTypeList, children, typeId2ClassMap) 
+function RootNode:__init(pos, builtinTypeList, children, provideNode, typeId2ClassMap) 
   Node.__init( self, nodeKindRoot, pos, builtinTypeList)
   
   -- none
   
   self.children = children
+  self.provideNode = provideNode
   self.typeId2ClassMap = typeId2ClassMap
   -- none
   
@@ -1840,12 +1862,20 @@ end
 function RootNode:get_children()
   return self.children
 end
+function RootNode:get_provideNode()
+  return self.provideNode
+end
 function RootNode:get_typeId2ClassMap()
   return self.typeId2ClassMap
 end
 do
   end
 
+
+function RootNode:set_provide( node )
+
+  self.provideNode = node
+end
 
 -- none
 
@@ -2663,6 +2693,59 @@ function BreakNode:__init(pos, builtinTypeList)
   
   -- none
   
+end
+do
+  end
+
+
+-- none
+
+function Filter:processProvide( node, ... )
+
+end
+
+-- none
+
+-- none
+
+local nodeKindProvide = regKind( [[Provide]] )
+
+moduleObj.nodeKindProvide = nodeKindProvide
+
+local ProvideNode = {}
+setmetatable( ProvideNode, { __index = Node } )
+moduleObj.ProvideNode = ProvideNode
+function ProvideNode:processFilter( filter, ... )
+
+  local argList = {...}
+  
+  filter:processProvide( self, table.unpack( argList ) )
+end
+function ProvideNode:canBeRight(  )
+
+  return false
+end
+function ProvideNode:canBeLeft(  )
+
+  return false
+end
+function ProvideNode.new( pos, builtinTypeList, val )
+  local obj = {}
+  setmetatable( obj, { __index = ProvideNode } )
+  if obj.__init then obj:__init( pos, builtinTypeList, val ); end
+return obj
+end
+function ProvideNode:__init(pos, builtinTypeList, val) 
+  Node.__init( self, nodeKindProvide, pos, builtinTypeList)
+  
+  -- none
+  
+  self.val = val
+  -- none
+  
+end
+function ProvideNode:get_val()
+  return self.val
 end
 do
   end

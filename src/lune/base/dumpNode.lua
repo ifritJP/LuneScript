@@ -637,6 +637,12 @@ end
 
 -- none
 
+function dumpFilter:processProvide( node, prefix, depth )
+
+  dump( prefix, depth, node, "" )
+  filter( node:get_val(), self, prefix .. "  ", depth + 1 )
+end
+
 function dumpFilter:processLiteralList( node, prefix, depth )
 
   dump( prefix, depth, node, "[]" )

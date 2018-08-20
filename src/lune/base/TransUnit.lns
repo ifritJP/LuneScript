@@ -82,6 +82,9 @@ pub class TransUnit {
    /** 解析対象モジュール */
    pri let analyzeModule: str;
 
+   /** provide ノード */
+   pri let provideNode: Ast.ProvideNode!;
+
    fn __init( macroEval: Ast.MacroEval,
               analyzeModule:str!, mode:str!, pos:Parser.Position! )
    {  
@@ -104,6 +107,7 @@ pub class TransUnit {
       self.analyzeMode = unwrap mode default "";
       self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
+      self.provideNode = nil;
    }
 
    pri fn addErrMess( pos: Parser.Position, mess: str ) {
@@ -194,8 +198,7 @@ pub class TransUnit {
                        bool, firstToken: Parser.Token,
                        token: Parser.Token ): Ast.Node!;
    pri fn analyzeDeclVar(
-      mode:str, accessMode: str, staticFlag: bool,
-      firstToken: Parser.Token ): Ast.Node;
+      mode:str, accessMode: str, firstToken: Parser.Token ): Ast.Node;
    pri fn analyzeDeclFunc(
       abstructFlag: bool, overrideFlag: bool, accessMode: str, staticFlag: bool,
       classNameToken: Parser.Token!,
@@ -282,6 +285,7 @@ class _ModuleInfo {
    pub let _typeInfoList: _TypeInfo[];
    pub let _varName2InfoMap: Map<str,Map<str,stem>>;
    pub let _funcName2InfoMap: Map<str,stem>;
+   pub let _moduleTypeId: int;
 }
 
 pub let typeInfoListInsert = Ast.typeInfoRoot;
@@ -379,7 +383,7 @@ fn TransUnit.registBuiltInScope() {
       },
       { 
          "_luneScript": {
-            "loadModule": { "arg": [ "str" ], "ret": ["stem"] },
+            "loadModule": { "arg": [ "str" ], "ret": ["stem", "stem"] },
             "searchModule": { "arg": [ "str" ], "ret": ["str!"] },
          }, 
       } 
@@ -763,19 +767,22 @@ fn TransUnit.getContinueToken(): Parser.Token, bool {
 }
 
 
-fn TransUnit.analyzeStatementList( stmtList: Ast.Node[], termTxt: str! ) {
+fn TransUnit.analyzeStatementList( stmtList: Ast.Node[], termTxt: str! ) : Ast.Node! {
+   let lastStatement:Ast.Node! = nil;
    while true {
       let statement = self.analyzeStatement( termTxt );
       if! statement {
          stmtList.insert( _exp );
+         lastStatement = statement;
       } 
       else {
          break;
       } 
    }
+   return lastStatement;
 }
 
-fn TransUnit.analyzeStatementListSubfile( stmtList: Ast.Node[] ) {
+fn TransUnit.analyzeStatementListSubfile( stmtList: Ast.Node[] ) : Ast.Node! {
    let statement = self.analyzeStatement();
 
    if! statement {
@@ -783,8 +790,11 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: Ast.Node[] ) {
          self.error( "subfile must have 'subfile' declaration at top." );
       } 
    }
+   else {
+      self.error( "subfile must have 'subfile' declaration at top." );
+   }
 
-   self.analyzeStatementList( stmtList );
+   return self.analyzeStatementList( stmtList );
 }
 
 fn TransUnit.analyzeLuneControl( firstToken: Parser.Token ) {
@@ -866,7 +876,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    }
 
 
-   let moduleInfo = _luneScript.loadModule( modulePath )@@_ModuleInfo;
+   let _obj, _obj2 = _luneScript.loadModule( modulePath );
+   let moduleInfo = _obj2@@_ModuleInfo;
    //self.moduleName2Info[ modulePath ] = moduleInfo;
 
    foreach symbolInfo in Ast.sym2builtInTypeMap {
@@ -1077,7 +1088,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                }    
             }   
          }  
-      } 
+      }
       else {
          self.error( "not found class -- %d, %s"
                      (classTypeId, classTypeInfo.getTxt()) );
@@ -1101,7 +1112,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    // 変数登録
    foreach varInfo, varName in moduleInfo._varName2InfoMap {
-      self.scope.addVar(
+      self.scope.addLocalVar(
          false, true, varName, unwrap typeId2TypeInfo[ varInfo.typeId ],
          (unwrap varInfo.mutable default false)@@bool );
    }
@@ -1115,7 +1126,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    // スコープを元に戻す
    self.scope = self.moduleScope;
-   
+
+   moduleTypeInfo = unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ];
    self.scope.add( Ast.SymbolKind.Var, false, false,
                    moduleToken.txt, moduleTypeInfo, "local", true, false );
 
@@ -1192,10 +1204,10 @@ fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ): Ast.Node {
    let expType = exp.$expType;
    if not expType.$nilable {
       self.addErrMess( exp.$pos, "this is not nilable" );
-      scope.addVar( false, true, "_exp", expType, false );
+      scope.addLocalVar( false, true, "_exp", expType, false );
    }
    else {
-      scope.addVar( false, true, "_exp", expType.$orgTypeInfo, false );
+      scope.addLocalVar( false, true, "_exp", expType.$orgTypeInfo, false );
    }
    
    let block = self.analyzeBlock( "if!", scope );
@@ -1310,7 +1322,7 @@ fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
       self.addErrMess( exp1.$pos,
                        "exp1 is not int -- %s" (exp1.$expType.getTxt()) );
    }
-   self.scope.addVar( false, true, val.txt, exp1.$expType, false );
+   self.scope.addLocalVar( false, true, val.txt, exp1.$expType, false );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExp( false );
    if exp2.$expType ~= Ast.builtinTypeInt {
@@ -1352,7 +1364,7 @@ fn TransUnit.analyzeApply( token: Parser.Token ): Ast.ApplyNode {
       } 
       varList.insert( var );
       nextToken = self.getToken();
-      scope.addVar( false, true, var.txt, Ast.builtinTypeStem, false );
+      scope.addLocalVar( false, true, var.txt, Ast.builtinTypeStem, false );
    } nextToken.txt ~= ",";
    self.checkToken( nextToken, "of" );
 
@@ -1397,23 +1409,23 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
    else {
       let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
       if exp.$expType.get_kind() == Ast.TypeInfoKindMap {
-         self.scope.addVar(
+         self.scope.addLocalVar(
             false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false );
          if! keySymbol {
-            self.scope.addVar(
+            self.scope.addLocalVar(
                false, true, _exp.txt, itemTypeInfoList[ 1 ], false );
          }  
       } 
       elseif exp.$expType.get_kind() == Ast.TypeInfoKindList or
          exp.$expType.get_kind() == Ast.TypeInfoKindArray
       { 
-         self.scope.addVar(
+         self.scope.addLocalVar(
             false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );
          if! keySymbol {
-            self.scope.addVar( false, false, _exp.txt, Ast.builtinTypeInt, false );
+            self.scope.addLocalVar( false, false, _exp.txt, Ast.builtinTypeInt, false );
          }
          else {
-            self.scope.addVar( false, false, "__index", Ast.builtinTypeInt, false );
+            self.scope.addLocalVar( false, false, "__index", Ast.builtinTypeInt, false );
          }
       }
       else {
@@ -1434,4 +1446,40 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
       return new Ast.ForeachNode( token.pos, [ Ast.builtinTypeNone ],
                                   valSymbol, keySymbol, exp, block );
    }
+}
+
+fn TransUnit.analyzeProvide( firstToken: Parser.Token ): Ast.Node {
+   let val = self.analyzeExp( true );
+   self.checkNextToken( ";" );
+
+   switch val.$kind {
+      case Ast.nodeKindExpRef {
+         let expRefNode = val@@Ast.ExpRefNode;
+      }
+   }
+   
+   let node = new Ast.ProvideNode( firstToken.pos, [ Ast.builtinTypeNone ], val );
+   self.provideNode = node;
+
+
+   if node.$val.$kind == Ast.nodeKindExpRef {
+      let expRefNode = node.$val@@Ast.ExpRefNode;
+
+      forsort symbolInfo, symbol in self.moduleScope.$symbol2TypeInfoMap {
+         if expRefNode.$symbolInfo == symbolInfo {
+            if symbolInfo.$accessMode ~= "pub" {
+               self.addErrMess( firstToken.pos,
+                                "provide variable must be 'pub'.  -- %s"
+                                (symbolInfo.$accessMode));
+            }
+         }
+         elseif symbolInfo.$accessMode == "pub" {
+            self.addErrMess(
+               firstToken.pos,   
+               "variable (%s) can't set 'pub'." ( symbolInfo.$name ) );
+         }  
+      }  
+   }
+      
+   return node;
 }
