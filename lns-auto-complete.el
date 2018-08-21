@@ -60,13 +60,35 @@
       (goto-char move-pos))
     ))
 
+(defvar lns-ac-process nil)
+(defvar lns-ac-candidate-list nil)
+
+(defun lns-ac-candidates-processing ()
+  (if lns-ac-candidate-list
+      (let ((list lns-ac-candidate-list))
+	;;(setq lns-ac-candidate-list nil)
+	(setq lns-ac-process nil)
+	list)
+    nil))
+
 (defun lns-ac-candidates ()
-  (let ((candidate-list (lns-completion-get-candidate-list)))
-    (mapcar (lambda (candidate)
-	      (let* ((info (lns-json-val candidate :candidate))
-		     (item-txt (lns-candidate-get-displayTxt info)))
-		item-txt))
-	    candidate-list)))
+  (if lns-ac-process
+      (lns-ac-candidates-processing)
+    (setq lns-ac-process
+	  (lns-completion-get-candidate-list
+	   (lambda (candidate-list)
+	     (setq lns-ac-candidate-list
+		   (mapcar (lambda (candidate)
+			     (let* ((info (lns-json-val candidate :candidate))
+				    (item-txt (lns-candidate-get-displayTxt info)))
+			       item-txt))
+			   candidate-list))
+	     (ac-start)
+	     (ac-update)
+	     )
+	   t))
+    nil
+    ))
 
 (ac-define-source lns
   '((candidates . lns-ac-candidates)

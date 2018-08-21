@@ -162,7 +162,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
    self.outMetaFlag = true;
 
    if self.stream ~= self.metaStream {
-      self.writeln( "local moduleObj = {}", baseIndent );
+      self.writeln( "local _moduleObj = {}", baseIndent );
    }
    
    self.writeln( "----- meta -----", baseIndent );
@@ -174,186 +174,208 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
    let pickupClassMap: Map<int,Ast.TypeInfo> = {};
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
-   fn pickupTypeId( typeInfo: Ast.TypeInfo, forceFlag: bool! ) {
-      if typeInfo {
-         if typeInfo.get_typeId() == Ast.rootTypeId {
-            return;
-         }
-         if not forceFlag and typeInfo.get_accessMode() ~= "pub" {
-            return;
-         }
-         if typeId2TypeInfo[ typeInfo.get_typeId() ] {
-            return;
-         }
 
-         typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
-	 if typeInfo.get_nilable() {
-	    pickupTypeId( typeInfo.get_orgTypeInfo(), true );
-	 }
-	 else {
-            if typeInfo.$kind == Ast.TypeInfoKindClass or
-               typeInfo.$kind == Ast.TypeInfoKindIF {          
-               pickupClassMap[ typeInfo.$typeId ] = typeInfo;
-            }
-            
-            // let parentInfo = typeInfo.get_parentInfo();
-            // pickupTypeId( parentInfo, true );
-
-            let baseInfo = typeInfo.get_baseTypeInfo();
-            if baseInfo.$typeId ~= Ast.rootTypeId {
-               pickupTypeId( baseInfo, true );
-            }
-            
-	    let typeInfoList: Ast.TypeInfo[] = typeInfo.get_itemTypeInfoList();
-            if typeInfoList {
-	       foreach itemTypeInfo in typeInfoList {
-                  pickupTypeId( itemTypeInfo, true );
-	       }
-            }
-	    typeInfoList = typeInfo.get_argTypeInfoList();
-            if typeInfoList {
-	       foreach itemTypeInfo in typeInfoList {
-                  pickupTypeId( itemTypeInfo, true );
-	       }
-            }
-	    typeInfoList = typeInfo.get_retTypeInfoList();
-            if typeInfoList {
-	       foreach itemTypeInfo in typeInfoList {
-                  pickupTypeId( itemTypeInfo, true );
-	       }
-            }
-	    typeInfoList = typeInfo.get_children();
-            if typeInfoList {
-	       foreach itemTypeInfo in typeInfoList {
-                  if itemTypeInfo.get_kind() == Ast.TypeInfoKindClass or
+   fn pickupTypeId( typeInfo: Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
+      if typeInfo.get_typeId() == Ast.rootTypeId {
+         return;
+      }
+      if not forceFlag and typeInfo.get_accessMode() ~= "pub" {
+         return;
+      }
+      if typeId2TypeInfo[ typeInfo.get_typeId() ] {
+         if pickupChildFlag and not typeInfo.$nilable {
+	    foreach itemTypeInfo in typeInfo.get_children() {
+               if itemTypeInfo.$accessMode == "pub" and
+                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKindClass or
                      itemTypeInfo.get_kind() == Ast.TypeInfoKindIF or
                      itemTypeInfo.get_kind() == Ast.TypeInfoKindFunc or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKindMethod
-                  {                       
-                     pickupTypeId( itemTypeInfo );
-                  }
-	       }
-            }
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKindMethod )
+               {
+                  pickupTypeId( itemTypeInfo, true, true );
+               }
+	    }
+         }
+         return;
+      }
 
-            pickupTypeId( typeInfo.get_nilableTypeInfo(), true );
-	 }
+      typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
+      if typeInfo.$nilable {
+	 pickupTypeId( typeInfo.get_orgTypeInfo(), true, false );
+      }
+      else {
+         if typeInfo.$kind == Ast.TypeInfoKindClass or
+            typeInfo.$kind == Ast.TypeInfoKindIF
+         {           
+            pickupClassMap[ typeInfo.$typeId ] = typeInfo;
+         }
+
+         let parentInfo = typeInfo.get_parentInfo();
+         pickupTypeId( parentInfo, true, false );
+         
+         let baseInfo = typeInfo.get_baseTypeInfo();
+         if baseInfo.$typeId ~= Ast.rootTypeId {
+            pickupTypeId( baseInfo, true, true );
+         }
+         
+	 let typeInfoList: Ast.TypeInfo[] = typeInfo.get_itemTypeInfoList();
+         if typeInfoList {
+	    foreach itemTypeInfo in typeInfoList {
+               pickupTypeId( itemTypeInfo, true, false );
+	    }
+         }
+	 typeInfoList = typeInfo.get_argTypeInfoList();
+         if typeInfoList {
+	    foreach itemTypeInfo in typeInfoList {
+               pickupTypeId( itemTypeInfo, true, false );
+	    }
+         }
+	 typeInfoList = typeInfo.get_retTypeInfoList();
+         if typeInfoList {
+	    foreach itemTypeInfo in typeInfoList {
+               pickupTypeId( itemTypeInfo, true, true );
+	    }
+         }
+         if pickupChildFlag {
+	    foreach itemTypeInfo in typeInfo.get_children() {
+               if itemTypeInfo.$accessMode == "pub" and
+                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKindClass or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKindIF or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKindFunc or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKindMethod )
+               {
+                  pickupTypeId( itemTypeInfo, true, true );
+               }
+	    }
+         }
+
+         pickupTypeId( typeInfo.get_nilableTypeInfo(), true, false );
       }
    }
 
    let classId2TypeInfo:Map<int,Ast.TypeInfo> = {};
 
-   let validChildrenSet:Map<Ast.TypeInfo, Map<Ast.TypeInfo,bool>> = {};
+   let validChildrenSet:Map<Ast.TypeInfo, Map<int,Ast.TypeInfo>> = {};
 
    {
       let typeInfo = self.moduleTypeInfo;
       while typeInfo ~= Ast.rootTypeInfo {
-         //pickupClassMap[ typeInfo.$typeId ] = typeInfo;
-         typeId2TypeInfo[ typeInfo.$typeId ] = typeInfo;
-         validChildrenSet[ typeInfo.$parentInfo ] = { typeInfo: true };
+         validChildrenSet[ typeInfo.$parentInfo ] = { typeInfo.$typeId: typeInfo };
          typeInfo = typeInfo.$parentInfo;
       }
+      pickupTypeId( self.moduleTypeInfo, true );
    }
    
-   if! node.$provideNode {
-      foreach typeInfo, typeId in typeId2TypeInfo {
-         pickupClassMap[ typeId ] = typeInfo;
-      }
-      if _exp.$val.$kind == Ast.nodeKindExpRef {
-         let expRefNode = _exp.$val@@Ast.ExpRefNode;
-         if expRefNode.$expType.$kind == Ast.TypeInfoKindClass {
-            pickupTypeId( expRefNode.$expType );
-         }
+   let typeId2ClassMap = node.get_typeId2ClassMap();
+   foreach namespaceInfo in typeId2ClassMap {
+      if namespaceInfo.typeInfo.get_accessMode() == "pub" and
+         not namespaceInfo.typeInfo.$externalFlag
+      {
+         pickupClassMap[ namespaceInfo.typeInfo.$typeId ] = namespaceInfo.typeInfo;
       }
    }
-   else {
-      let typeId2ClassMap = node.get_typeId2ClassMap();
-      foreach namespaceInfo in typeId2ClassMap {
-         if namespaceInfo.typeInfo.get_accessMode() == "pub" {
-            pickupClassMap[ namespaceInfo.typeInfo.$typeId ] = namespaceInfo.typeInfo;
-         }  
-      }
-      classId2TypeInfo = self.classId2TypeInfo;
-   }
+   classId2TypeInfo = self.classId2TypeInfo;
 
 
    self.writeln( "local _typeId2ClassInfoMap = {}", baseIndent );
-   self.writeln( "moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap",
+   self.writeln( "_moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap",
                  baseIndent );
 
    forsort classTypeInfo, classTypeId in classId2TypeInfo {
-      pickupTypeId( classTypeInfo );
-      pickupClassMap[ classTypeId ] = nil;
+      if classTypeInfo.$accessMode == "pub" {
+         pickupTypeId( classTypeInfo, true,
+                       validChildrenSet[ classTypeInfo ] == nil and
+                       not classTypeInfo.$externalFlag );    
+         pickupClassMap[ classTypeId ] = nil;
 
-      
-      self.writeln( "do", baseIndent + stepIndent );
-      self.writeln( "local _classInfo%d = {}" (classTypeId), baseIndent + stepIndent );
-      self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
-                    (classTypeId, classTypeId), baseIndent + stepIndent );
+         
+         self.writeln( "do", baseIndent + stepIndent );
+         self.writeln( "local _classInfo%d = {}" (classTypeId), baseIndent + stepIndent );
+         self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
+                       (classTypeId, classTypeId), baseIndent + stepIndent );
 
-      
-      foreach memberNode in unwrap self.classId2MemberList[ classTypeId ] {
-         if memberNode.$accessMode ~= "pri" {
-            let memberName = memberNode.$name.txt;
-            let memberTypeInfo:Ast.TypeInfo = memberNode.get_expType();
-            self.writeln( "_classInfo%d.%s = {" ( classTypeId, memberName ),
-                          baseIndent + stepIndent );
-            self.writeln(
-               "  name='%s', staticFlag = %s, " ( memberName,
-                                                  memberNode.$staticFlag ) ..
-               "accessMode = '%s', typeId = %d }"
-               ( memberNode.$accessMode,
-                 memberTypeInfo.get_typeId() ),
-               baseIndent + stepIndent );
+         
+         foreach memberNode in unwrap self.classId2MemberList[ classTypeId ] {
+            if memberNode.$accessMode ~= "pri" {
+               let memberName = memberNode.$name.txt;
+               let memberTypeInfo:Ast.TypeInfo = memberNode.get_expType();
+               self.writeln( "_classInfo%d.%s = {" ( classTypeId, memberName ),
+                             baseIndent + stepIndent );
+               self.writeln(
+                  "  name='%s', staticFlag = %s, " ( memberName,
+                                                     memberNode.$staticFlag ) ..
+                  "accessMode = '%s', typeId = %d }"
+                  ( memberNode.$accessMode,
+                    memberTypeInfo.get_typeId() ),
+                  baseIndent + stepIndent );
 
-            pickupTypeId( memberTypeInfo, true );
+               pickupTypeId( memberTypeInfo, true );
+            }  
          }  
-      }  
-      
-      self.writeln( "end", baseIndent );
+         
+         self.writeln( "end", baseIndent );
+      }
    }
 
 
-   forsort classTypeInfo, classTypeId in pickupClassMap {
-      let scope = unwrap classTypeInfo.$scope;
+   let pickupedClassMap: Map<int,Ast.TypeInfo> = {};
+   while true {
+      let workClassMap: Map<int,Ast.TypeInfo> = {};
+      let hasWorkClassFlag = false;
+      foreach classTypeInfo, classTypeId in pickupClassMap {
+         if not pickupedClassMap[ classTypeId ] {
+            pickupedClassMap[ classTypeId ] = classTypeInfo;
+            workClassMap[ classTypeId ] = classTypeInfo;
+            hasWorkClassFlag = true;
+         }  
+      }
 
-      if not Ast.isBuiltin( classTypeId ) {
-         let className = classTypeInfo.getTxt();
-         self.writeln( "do", baseIndent + stepIndent );
-         self.writeln( "local _classInfo%s = {}"
-                       (classTypeId), baseIndent + stepIndent );
-         self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
-                       ( classTypeId, classTypeId), baseIndent + stepIndent );
-         
+      if not hasWorkClassFlag {
+         break;
+      }
+      forsort classTypeInfo, classTypeId in workClassMap {
+         let scope = unwrap classTypeInfo.$scope;
 
-         pickupTypeId( classTypeInfo );
+         if not Ast.isBuiltin( classTypeId ) {
+            let className = classTypeInfo.getTxt();
+            self.writeln( "do", baseIndent + stepIndent );
+            self.writeln( "local _classInfo%s = {}"
+                          (classTypeId), baseIndent + stepIndent );
+            self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
+                          ( classTypeId, classTypeId), baseIndent + stepIndent );
+            
 
-         forsort symbolInfo, fieldName in scope.$symbol2TypeInfoMap {
-            let typeInfo = symbolInfo.$typeInfo;
-            if symbolInfo.$kind == Ast.SymbolKind.Mbr or
-               symbolInfo.$kind == Ast.SymbolKind.Var //or
+            pickupTypeId( classTypeInfo, true,
+                          validChildrenSet[ classTypeInfo ] == nil and
+                          not classTypeInfo.$externalFlag );
+            
+            forsort symbolInfo, fieldName in scope.$symbol2TypeInfoMap {
+               let typeInfo = symbolInfo.$typeInfo;
+               if symbolInfo.$kind == Ast.SymbolKind.Mbr or
+                  symbolInfo.$kind == Ast.SymbolKind.Var //or
                //symbolInfo.$kind == Ast.SymbolKind.Typ
-            {
-               if symbolInfo.$accessMode == "pub" {
-                  self.writeln( "_classInfo%d.%s = {" ( classTypeId, fieldName ),
-                                baseIndent + stepIndent );
-                  self.writeln(
-                     "  name='%s', staticFlag = %s, "
-                     ( fieldName,  typeInfo.get_staticFlag() ) ..
-                     "accessMode = '%s', typeId = %d }"
-                     ( symbolInfo.$accessMode, typeInfo.get_typeId() ),
-                     baseIndent + stepIndent );
-                  pickupTypeId( typeInfo );
-               }
-            }
-         }
-         self.writeln( "end", baseIndent );
+               {  
+                  if symbolInfo.$accessMode == "pub" {
+                     self.writeln( "_classInfo%d.%s = {" ( classTypeId, fieldName ),
+                                   baseIndent + stepIndent );
+                     self.writeln(
+                        "  name='%s', staticFlag = %s, "
+                        ( fieldName,  typeInfo.get_staticFlag() ) ..
+                        "accessMode = '%s', typeId = %d }"
+                        ( symbolInfo.$accessMode, typeInfo.get_typeId() ),
+                        baseIndent + stepIndent );
+                     pickupTypeId( typeInfo );
+                  }  
+               }  
+            }  
+            self.writeln( "end", baseIndent );
+         }  
       }
    }
    
 
 
    self.writeln( "local _varName2InfoMap = {}", baseIndent );
-   self.writeln( "moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent );
+   self.writeln( "_moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent );
 
    forsort varInfo, varName in self.pubVarName2InfoMap {
       self.writeln( string.format( "_varName2InfoMap.%s = {", varName ),
@@ -370,7 +392,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
    }
 
    self.writeln( "local _typeInfoList = {}", baseIndent );
-   self.writeln( "moduleObj._typeInfoList = _typeInfoList", baseIndent );
+   self.writeln( "_moduleObj._typeInfoList = _typeInfoList", baseIndent );
    let listIndex = 1;
 
    let wroteTypeIdSet:Map<int,bool> = {};
@@ -385,7 +407,11 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
          self.write( "_typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
 
-         typeInfo.serialize( self, validChildrenSet[ typeInfo ] );
+         let validChildren = validChildrenSet[ typeInfo ];
+         if not validChildren {
+            validChildren = typeId2TypeInfo;
+         }
+         typeInfo.serialize( self, validChildren );
       }
    }
    
@@ -394,11 +420,11 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
    }
 
    if! node.$provideNode {
-      self.writeln( "moduleObj._moduleTypeId = %d" (_exp.$val.$expType.$typeId ),
+      self.writeln( "_moduleObj._moduleTypeId = %d" (_exp.$val.$expType.$typeId ),
                     baseIndent );       
    }
    else {
-      self.writeln( "moduleObj._moduleTypeId = %d" (self.moduleTypeInfo.$typeId ),
+      self.writeln( "_moduleObj._moduleTypeId = %d" (self.moduleTypeInfo.$typeId ),
                     baseIndent );       
    }
    
@@ -406,7 +432,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
    self.writeln( "----- meta -----", baseIndent );
 
    if self.stream ~= self.metaStream {
-      self.writeln( "return moduleObj", baseIndent );
+      self.writeln( "return _moduleObj", baseIndent );
    }
 
    self.outMetaFlag = false;
@@ -416,7 +442,7 @@ pub override fn convFilter.processRoot(
    node: Ast.RootNode, parent: Ast.Node, baseIndent:int )
 {
    self.writeln( "--%s" ( self.streamName ), baseIndent );
-   self.writeln( "local moduleObj = {}", baseIndent );
+   self.writeln( "local _moduleObj = {}", baseIndent );
 
    self.writeln( ```
 local function _lune_nilacc( val, fieldName, access, ... )
@@ -490,7 +516,7 @@ end
       self.writeln( "", baseIndent );
    }
    else { 
-      self.writeln( "return moduleObj", baseIndent );
+      self.writeln( "return _moduleObj", baseIndent );
    }
 };
 
@@ -594,7 +620,7 @@ pub override fn convFilter.processDeclClass(
    }
    
    if nodeInfo.get_accessMode() == "pub" {
-      self.writeln( string.format( "moduleObj.%s = %s", className, className ),
+      self.writeln( string.format( "_moduleObj.%s = %s", className, className ),
                     baseIndent );
    }
    let hasConstrFlag = false;
@@ -1049,7 +1075,7 @@ pub override fn convFilter.processDeclVar(
       self.writeln( "", baseIndent );
       foreach var, index in varList {
          let name: str = var.$name.txt;
-         self.writeln( "moduleObj.%s = %s" ( name, name ),
+         self.writeln( "_moduleObj.%s = %s" ( name, name ),
                        baseIndent );
          self.pubVarName2InfoMap[ name ] = new PubVerInfo(
             node.get_staticFlag(),
@@ -1125,7 +1151,7 @@ pub override fn convFilter.processDeclFunc(
    //if declInfo.get_accessMode() == "pub" {
    let expType: Ast.TypeInfo = node.get_expType();
    if expType.get_accessMode() == "pub" {
-      self.write( "moduleObj.%s = %s" ( name, name ) );
+      self.write( "_moduleObj.%s = %s" ( name, name ) );
 
       self.pubFuncName2InfoMap[ name ] = new PubFuncInfo(
          declInfo.get_accessMode(), node.get_expType() );
@@ -1473,6 +1499,11 @@ pub override fn convFilter.processExpOp2(
 pub override fn convFilter.processExpRef( 
    node: Ast.ExpRefNode, parent: Ast.Node, baseIndent:int )
 {
+   if node.$symbolInfo.$accessMode == "pub" and
+      node.$symbolInfo.$kind == Ast.SymbolKind.Var
+   { 
+      self.write( "_moduleObj." );
+   }
    self.write( node.$token.txt );
 };
 

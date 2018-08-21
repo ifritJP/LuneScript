@@ -236,7 +236,7 @@ pub class TypeInfo {
       return "";
    }
    
-   pub fn serialize( stream: oStream, validChildrenSet: Map<TypeInfo,bool>! ) {
+   pub fn serialize( stream: oStream, validChildrenSet: Map<int,TypeInfo>! ) {
       return;
    }
 
@@ -570,7 +570,7 @@ pub class NilableTypeInfo extend TypeInfo {
       return self.orgTypeInfo.$display_stirng .. "!";
    }
 
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<TypeInfo,bool>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
          '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
@@ -582,7 +582,7 @@ pub class NilableTypeInfo extend TypeInfo {
 
 pub class NormalTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
-   pri let externalFlag: bool;
+   pri let externalFlag: bool { pub };
    // generic のタイプ
    pri let itemTypeInfoList: TypeInfo[] { pub };
    // 引数のタイプ
@@ -774,7 +774,7 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<TypeInfo,bool>! ) {
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,TypeInfo>! ) {
       if self.typeId == rootTypeId {
          return;
       }
@@ -809,7 +809,7 @@ pub class NormalTypeInfo extend TypeInfo {
       if! validChildrenSet {
          children = [];
          foreach child in self.children {
-            if _exp[ child ] {
+            if _exp[ child.$typeId ] {
                children.insert( child );
             }
          }
@@ -1728,6 +1728,7 @@ _declNodeClass( "DeclClass", Node, false, false,
                   { "scope": "Scope" },
                   { "initStmtList": "Node[]" },
                   { "advertiseList": "AdvertiseInfo[]" },
+                  { "trustList": "TypeInfo[]" },
                   { "outerMethodSet": "Map<str,bool>" } ]
 );
 

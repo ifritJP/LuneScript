@@ -205,6 +205,7 @@ pub class StreamParser extend Parser {
       StreamParser.stdinStreamModuleName = moduleName;
    }
 
+   let eof: bool;
    let stream : iStream;
    let streamName: str;
    let lineNo : int;
@@ -215,6 +216,7 @@ pub class StreamParser extend Parser {
    let builtInSet :Map<str,bool>;
    let multiCharDelimitMap : Map<str,str[@]>;
    pub fn __init( stream: iStream, name: str, luaMode: bool ) {
+      self.eof = false;
       self.stream = stream;
       self.streamName = name;
       self.lineNo = 0;
@@ -350,9 +352,16 @@ pub static fn isOp1( ope: str ) : stem! {
 
 fn StreamParser.parse() : Token[]! {
    fn readLine() : str! {
-      //fn readLine() : str {
+      if self.eof {
+         return nil;
+      }
       self.lineNo = self.lineNo + 1;
-      return self.stream.read( '*l' );
+      let line = self.stream.read( '*l' );
+      if not line {
+         self.eof = true;
+         Util.errorLog( "eof: %s" (self.streamName) );
+      }
+      return line;
    }
    let! rawLine = readLine() { return nil; };
 

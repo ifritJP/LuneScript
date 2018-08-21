@@ -1,0 +1,6 @@
+pub let var = 1;
+let var2 = 1;
+let var3 = 1;
+
+provide var;
+provide var;

@@ -2,6 +2,8 @@ import test.Sub2;
 import test.Sub3;
 import test.Sub4;
 
+print( "sub2globalfun", sub2globalfun() );
+
 {
    let val = new Sub3( 1 );
    print( "Sub3.func() %d" ( val.func() ));

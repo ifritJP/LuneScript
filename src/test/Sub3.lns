@@ -1,12 +1,12 @@
-class Hoge {
+class Hoge3 {
     pub let val:int;
 }
 
-pub class Hoge2 {
+pub class Hoge32 {
     pub let val:int;
     pub fn func(): int {
         return self.val;
     }
 }
 
-provide Hoge2;
+provide Hoge32;

@@ -1,5 +1,5 @@
 --lune/base/Ast.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -60,9 +60,9 @@ local Util = require( 'lune.base.Util' )
 
 local rootTypeId = 1
 
-moduleObj.rootTypeId = rootTypeId
+_moduleObj.rootTypeId = rootTypeId
 
-local typeIdSeed = rootTypeId + 1
+local typeIdSeed = _moduleObj.rootTypeId + 1
 
 -- none
 
@@ -70,72 +70,72 @@ local typeIdSeed = rootTypeId + 1
 
 local typeInfoKind = {}
 
-moduleObj.typeInfoKind = typeInfoKind
+_moduleObj.typeInfoKind = typeInfoKind
 
 local sym2builtInTypeMap = {}
 
-moduleObj.sym2builtInTypeMap = sym2builtInTypeMap
+_moduleObj.sym2builtInTypeMap = sym2builtInTypeMap
 
 local builtInTypeIdSet = {}
 
-moduleObj.builtInTypeIdSet = builtInTypeIdSet
+_moduleObj.builtInTypeIdSet = builtInTypeIdSet
 
 local TypeInfoKindRoot = 0
 
-moduleObj.TypeInfoKindRoot = TypeInfoKindRoot
+_moduleObj.TypeInfoKindRoot = TypeInfoKindRoot
 
 local TypeInfoKindMacro = 1
 
-moduleObj.TypeInfoKindMacro = TypeInfoKindMacro
+_moduleObj.TypeInfoKindMacro = TypeInfoKindMacro
 
 local TypeInfoKindPrim = 2
 
-moduleObj.TypeInfoKindPrim = TypeInfoKindPrim
+_moduleObj.TypeInfoKindPrim = TypeInfoKindPrim
 
 local TypeInfoKindList = 3
 
-moduleObj.TypeInfoKindList = TypeInfoKindList
+_moduleObj.TypeInfoKindList = TypeInfoKindList
 
 local TypeInfoKindArray = 4
 
-moduleObj.TypeInfoKindArray = TypeInfoKindArray
+_moduleObj.TypeInfoKindArray = TypeInfoKindArray
 
 local TypeInfoKindMap = 5
 
-moduleObj.TypeInfoKindMap = TypeInfoKindMap
+_moduleObj.TypeInfoKindMap = TypeInfoKindMap
 
 local TypeInfoKindClass = 6
 
-moduleObj.TypeInfoKindClass = TypeInfoKindClass
+_moduleObj.TypeInfoKindClass = TypeInfoKindClass
 
 local TypeInfoKindIF = 7
 
-moduleObj.TypeInfoKindIF = TypeInfoKindIF
+_moduleObj.TypeInfoKindIF = TypeInfoKindIF
 
 local TypeInfoKindFunc = 8
 
-moduleObj.TypeInfoKindFunc = TypeInfoKindFunc
+_moduleObj.TypeInfoKindFunc = TypeInfoKindFunc
 
 local TypeInfoKindMethod = 9
 
-moduleObj.TypeInfoKindMethod = TypeInfoKindMethod
+_moduleObj.TypeInfoKindMethod = TypeInfoKindMethod
 
 local TypeInfoKindNilable = 10
 
-moduleObj.TypeInfoKindNilable = TypeInfoKindNilable
+_moduleObj.TypeInfoKindNilable = TypeInfoKindNilable
 
 local function isBuiltin( typeId )
 
-  return builtInTypeIdSet[typeId] ~= nil
+  return _moduleObj.builtInTypeIdSet[typeId] ~= nil
 end
-moduleObj.isBuiltin = isBuiltin
+_moduleObj.isBuiltin = isBuiltin
 local dummyList = {}
 
 -- none
 
 
 local SymbolKind = {}
-moduleObj.SymbolKind = SymbolKind
+_moduleObj.SymbolKind = SymbolKind
 function SymbolKind.getTxt( val )
 
   return _lune_unwrap( SymbolKind.val2txt[val])
@@ -183,7 +183,7 @@ do
 -- none
 
 local SymbolInfo = {}
-moduleObj.SymbolInfo = SymbolInfo
+_moduleObj.SymbolInfo = SymbolInfo
 function SymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable )
   local obj = {}
   setmetatable( obj, { __index = SymbolInfo } )
@@ -239,7 +239,7 @@ do
   end
 
 local DataOwnerInfo = {}
-moduleObj.DataOwnerInfo = DataOwnerInfo
+_moduleObj.DataOwnerInfo = DataOwnerInfo
 function DataOwnerInfo.new( hasData, symbolInfo )
   local obj = {}
   setmetatable( obj, { __index = DataOwnerInfo } )
@@ -257,7 +257,7 @@ do
   end
 
 local Scope = {}
-moduleObj.Scope = Scope
+_moduleObj.Scope = Scope
 function Scope.new( parent, classFlag, inheritList )
   local obj = {}
   setmetatable( obj, { __index = Scope } )
@@ -309,10 +309,10 @@ do
 
 local rootScope = Scope.new(nil, false, {})
 
-moduleObj.rootScope = rootScope
+_moduleObj.rootScope = rootScope
 
 local TypeInfo = {}
-moduleObj.TypeInfo = TypeInfo
+_moduleObj.TypeInfo = TypeInfo
 function TypeInfo.new( scope )
   local obj = {}
   setmetatable( obj, { __index = TypeInfo } )
@@ -332,11 +332,11 @@ function TypeInfo:__init(scope)
 end
 function TypeInfo:getParentId(  )
 
-  return rootTypeId
+  return _moduleObj.rootTypeId
 end
 function TypeInfo:get_baseId(  )
 
-  return rootTypeId
+  return _moduleObj.rootTypeId
 end
 function TypeInfo:isInheritFrom( other )
 
@@ -396,11 +396,11 @@ function TypeInfo:get_rawTxt(  )
 end
 function TypeInfo:get_typeId(  )
 
-  return rootTypeId
+  return _moduleObj.rootTypeId
 end
 function TypeInfo:get_kind(  )
 
-  return TypeInfoKindRoot
+  return _moduleObj.TypeInfoKindRoot
 end
 function TypeInfo:get_staticFlag(  )
 
@@ -517,7 +517,7 @@ function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
     return nil
   end
   do
-    local _exp = sym2builtInTypeMap[name]
+    local _exp = _moduleObj.sym2builtInTypeMap[name]
     if _exp ~= nil then
     
         return _exp:get_typeInfo()
@@ -537,10 +537,10 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
     local _exp = self.ownerTypeInfo
     if _exp ~= nil then
     
-        if _exp:get_kind() == TypeInfoKindFunc or _exp:get_kind() == TypeInfoKindMethod or self == moduleScope or self == rootScope then
+        if _exp:get_kind() == _moduleObj.TypeInfoKindFunc or _exp:get_kind() == _moduleObj.TypeInfoKindMethod or self == moduleScope or self == _moduleObj.rootScope then
           validThisScope = true
         end
-        if (_exp:get_kind() == TypeInfoKindIF or _exp:get_kind() == TypeInfoKindClass ) and name == "self" then
+        if (_exp:get_kind() == _moduleObj.TypeInfoKindIF or _exp:get_kind() == _moduleObj.TypeInfoKindClass ) and name == "self" then
           validThisScope = true
         end
       else
@@ -562,7 +562,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
   if self.parent ~= self then
     return self.parent:getSymbolTypeInfo( name, fromScope, moduleScope )
   end
-  return sym2builtInTypeMap[name]
+  return _moduleObj.sym2builtInTypeMap[name]
 end
 
 function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable )
@@ -649,15 +649,15 @@ local function dumpScope( scope, prefix )
   dumpScopeSub( scope, prefix, {} )
 end
 
-local rootTypeInfo = TypeInfo.new(rootScope)
+local rootTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 
-moduleObj.rootTypeInfo = rootTypeInfo
+_moduleObj.rootTypeInfo = rootTypeInfo
 
 function Scope:getNSTypeInfo(  )
 
   local scope = self
   
-  while scope.ownerTypeInfo ~= rootTypeInfo do
+  while scope.ownerTypeInfo ~= _moduleObj.rootTypeInfo do
     do
       local _exp = scope.ownerTypeInfo
       if _exp ~= nil then
@@ -668,19 +668,19 @@ function Scope:getNSTypeInfo(  )
     
     scope = scope.parent
   end
-  return rootTypeInfo
+  return _moduleObj.rootTypeInfo
 end
 
 function Scope:getClassTypeInfo(  )
 
   local scope = self
   
-  while scope.ownerTypeInfo ~= rootTypeInfo do
+  while scope.ownerTypeInfo ~= _moduleObj.rootTypeInfo do
     do
       local _exp = scope.ownerTypeInfo
       if _exp ~= nil then
       
-          if _exp:get_kind() == TypeInfoKindClass or _exp:get_kind() == TypeInfoKindIF then
+          if _exp:get_kind() == _moduleObj.TypeInfoKindClass or _exp:get_kind() == _moduleObj.TypeInfoKindIF then
             return _exp
           end
         end
@@ -688,7 +688,7 @@ function Scope:getClassTypeInfo(  )
     
     scope = scope.parent
   end
-  return rootTypeInfo
+  return _moduleObj.rootTypeInfo
 end
 
 function SymbolInfo:canAccess( fromScope )
@@ -734,10 +734,10 @@ end
 
 local NilableTypeInfo = {}
 setmetatable( NilableTypeInfo, { __index = TypeInfo } )
-moduleObj.NilableTypeInfo = NilableTypeInfo
+_moduleObj.NilableTypeInfo = NilableTypeInfo
 function NilableTypeInfo:get_kind(  )
 
-  return TypeInfoKindNilable
+  return _moduleObj.TypeInfoKindNilable
 end
 function NilableTypeInfo:get_nilable(  )
 
@@ -861,7 +861,7 @@ do
 
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
-moduleObj.NormalTypeInfo = NormalTypeInfo
+_moduleObj.NormalTypeInfo = NormalTypeInfo
 function NormalTypeInfo.new( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList )
   local obj = {}
   setmetatable( obj, { __index = NormalTypeInfo } )
@@ -872,7 +872,7 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
   TypeInfo.__init( self, scope)
   
   self.abstructFlag = abstructFlag
-  self.baseTypeInfo = _lune_unwrapDefault( baseTypeInfo, rootTypeInfo)
+  self.baseTypeInfo = _lune_unwrapDefault( baseTypeInfo, _moduleObj.rootTypeInfo)
   self.interfaceList = _lune_unwrapDefault( interfaceList, {})
   self.autoFlag = autoFlag
   self.externalFlag = externalFlag
@@ -883,18 +883,18 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
   self.itemTypeInfoList = _lune_unwrapDefault( itemTypeInfoList, {})
   self.argTypeInfoList = _lune_unwrapDefault( argTypeInfoList, {})
   self.retTypeInfoList = _lune_unwrapDefault( retTypeInfoList, {})
-  self.orgTypeInfo = _lune_unwrapDefault( orgTypeInfo, rootTypeInfo)
-  self.parentInfo = _lune_unwrapDefault( parentInfo, rootTypeInfo)
+  self.orgTypeInfo = _lune_unwrapDefault( orgTypeInfo, _moduleObj.rootTypeInfo)
+  self.parentInfo = _lune_unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
   self.children = {}
   self.typeId = typeId
-  if kind == TypeInfoKindRoot then
+  if kind == _moduleObj.TypeInfoKindRoot then
     self.nilable = false
   elseif txt == "nil" then
     self.nilable = true
     self.nilableTypeInfo = self
     self.orgTypeInfo = self
   elseif not orgTypeInfo then
-    if self.parentInfo ~= rootTypeInfo then
+    if self.parentInfo ~= _moduleObj.rootTypeInfo then
       table.insert( self.parentInfo:get_children(), self )
     end
     self.nilable = false
@@ -902,9 +902,9 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
     
     do
       local _switchExp = (kind )
-      if _switchExp == TypeInfoKindPrim or _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindArray or _switchExp == TypeInfoKindMap or _switchExp == TypeInfoKindClass or _switchExp == TypeInfoKindIF then
+      if _switchExp == _moduleObj.TypeInfoKindPrim or _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindArray or _switchExp == _moduleObj.TypeInfoKindMap or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindIF then
         hasNilable = true
-      elseif _switchExp == TypeInfoKindFunc or _switchExp == TypeInfoKindMethod then
+      elseif _switchExp == _moduleObj.TypeInfoKindFunc or _switchExp == _moduleObj.TypeInfoKindMethod then
         hasNilable = true
       end
     end
@@ -917,28 +917,28 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
         typeIdSeed = typeIdSeed + 1
       end
     else 
-      self.nilableTypeInfo = rootTypeInfo
+      self.nilableTypeInfo = _moduleObj.rootTypeInfo
     end
     typeIdSeed = typeIdSeed + 1
   else 
     self.nilable = true
-    self.nilableTypeInfo = rootTypeInfo
+    self.nilableTypeInfo = _moduleObj.rootTypeInfo
   end
 end
 function NormalTypeInfo:getParentId(  )
 
-  return self.parentInfo and self.parentInfo:get_typeId() or rootTypeId
+  return self.parentInfo and self.parentInfo:get_typeId() or _moduleObj.rootTypeId
 end
 function NormalTypeInfo:get_baseId(  )
 
-  return self.baseTypeInfo and self.baseTypeInfo:get_typeId() or rootTypeId
+  return self.baseTypeInfo and self.baseTypeInfo:get_typeId() or _moduleObj.rootTypeId
 end
 function NormalTypeInfo:getTxt(  )
 
   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
     return (_lune_unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
   end
-  if self.kind == TypeInfoKindArray then
+  if self.kind == _moduleObj.TypeInfoKindArray then
     local _exp = self.itemTypeInfoList[1]
     
         if  nil == _exp then
@@ -949,7 +949,7 @@ function NormalTypeInfo:getTxt(  )
       
     return _exp:getTxt(  ) .. "[@]"
   end
-  if self.kind == TypeInfoKindList then
+  if self.kind == _moduleObj.TypeInfoKindList then
     local _exp = self.itemTypeInfoList[1]
     
         if  nil == _exp then
@@ -978,10 +978,10 @@ function NormalTypeInfo:getTxt(  )
 end
 function NormalTypeInfo:get_display_stirng(  )
 
-  if self.kind == TypeInfoKindNilable then
+  if self.kind == _moduleObj.TypeInfoKindNilable then
     return (_lune_unwrap( self.orgTypeInfo) ):get_display_stirng(  ) .. "!"
   end
-  if self.kind == TypeInfoKindFunc or self.kind == TypeInfoKindMethod then
+  if self.kind == _moduleObj.TypeInfoKindFunc or self.kind == _moduleObj.TypeInfoKindMethod then
     local txt = self:get_rawTxt() .. "("
     
     for index, argType in pairs( self.argTypeInfoList ) do
@@ -1005,7 +1005,7 @@ function NormalTypeInfo:get_display_stirng(  )
 end
 function NormalTypeInfo:serialize( stream, validChildrenSet )
 
-  if self.typeId == rootTypeId then
+  if self.typeId == _moduleObj.rootTypeId then
     return 
   end
   local parentId = self:getParentId(  )
@@ -1040,7 +1040,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
     
         children = {}
         for __index, child in pairs( self.children ) do
-          if _exp[child] then
+          if _exp[child:get_typeId()] then
             table.insert( children, child )
           end
         end
@@ -1097,9 +1097,9 @@ function NormalTypeInfo:equals( typeInfo )
 end
 function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList )
 
-  if kind == TypeInfoKindPrim then
+  if kind == _moduleObj.TypeInfoKindPrim then
     do
-      local _exp = sym2builtInTypeMap[txt]
+      local _exp = _moduleObj.sym2builtInTypeMap[txt]
       if _exp ~= nil then
       
           return _exp:get_typeInfo()
@@ -1112,6 +1112,9 @@ function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, pa
   local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList)
   
   return info
+end
+function NormalTypeInfo:get_externalFlag()
+  return self.externalFlag
 end
 function NormalTypeInfo:get_itemTypeInfoList()
   return self.itemTypeInfoList
@@ -1167,17 +1170,17 @@ end
 do
   end
 
-local typeInfoRoot = rootTypeInfo
+local typeInfoRoot = _moduleObj.rootTypeInfo
 
-moduleObj.typeInfoRoot = typeInfoRoot
+_moduleObj.typeInfoRoot = typeInfoRoot
 
 typeIdSeed = typeIdSeed + 1
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
 
   local typeId = typeIdSeed + 1
   
-  if kind == TypeInfoKindRoot then
-    typeId = rootTypeId
+  if kind == _moduleObj.TypeInfoKindRoot then
+    typeId = _moduleObj.rootTypeId
   else 
     typeIdSeed = typeIdSeed + 1
   end
@@ -1200,23 +1203,23 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   
   do
     local _switchExp = kind
-    if _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindClass or _switchExp == TypeInfoKindIF or _switchExp == TypeInfoKindFunc or _switchExp == TypeInfoKindMethod or _switchExp == TypeInfoKindMacro then
-      scope = Scope.new(rootScope, kind == TypeInfoKindClass or kind == TypeInfoKindIF or kind == TypeInfoKindList, {})
+    if _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindIF or _switchExp == _moduleObj.TypeInfoKindFunc or _switchExp == _moduleObj.TypeInfoKindMethod or _switchExp == _moduleObj.TypeInfoKindMacro then
+      scope = Scope.new(_moduleObj.rootScope, kind == _moduleObj.TypeInfoKindClass or kind == _moduleObj.TypeInfoKindIF or kind == _moduleObj.TypeInfoKindList, {})
     end
   end
   
-  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList)
+  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList)
   
   if scope then
-    rootScope:addClass( typeTxt, info )
+    _moduleObj.rootScope:addClass( typeTxt, info )
   end
-  typeInfoKind[idName] = info
-  sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Typ, false, false, rootScope, "pub", false, typeTxt, info, false)
-  if info:get_nilableTypeInfo() ~= rootTypeInfo then
-    sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKindFunc, rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
-    builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
+  _moduleObj.typeInfoKind[idName] = info
+  _moduleObj.sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, "pub", false, typeTxt, info, false)
+  if info:get_nilableTypeInfo() ~= _moduleObj.rootTypeInfo then
+    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == _moduleObj.TypeInfoKindFunc, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
+    _moduleObj.builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
-  builtInTypeIdSet[info.typeId] = info
+  _moduleObj.builtInTypeIdSet[info.typeId] = info
   return info
 end
 
@@ -1226,25 +1229,25 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", typeInfoRoot, typeIdSeed, TypeInfoKindList, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, _moduleObj.TypeInfoKindList, itemTypeInfo)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
 
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", typeInfoRoot, typeIdSeed, TypeInfoKindArray, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, _moduleObj.TypeInfoKindArray, itemTypeInfo)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
 
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", typeInfoRoot, typeIdSeed, TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, _moduleObj.TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
 end
 
 function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, className )
 
   do
-    local _exp = sym2builtInTypeMap[className]
+    local _exp = _moduleObj.sym2builtInTypeMap[className]
     if _exp ~= nil then
     
         return _exp:get_typeInfo()
@@ -1255,7 +1258,7 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
     Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKindClass or TypeInfoKindIF)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and _moduleObj.TypeInfoKindClass or _moduleObj.TypeInfoKindIF)
   
   return info
 end
@@ -1271,79 +1274,79 @@ function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, pare
   return info
 end
 
-local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKindPrim )
+local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeNone = builtinTypeNone
+_moduleObj.builtinTypeNone = builtinTypeNone
 
-local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKindPrim )
+local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeStem = builtinTypeStem
+_moduleObj.builtinTypeStem = builtinTypeStem
 
-local builtinTypeNil = NormalTypeInfo.createBuiltin( "Nil", "nil", TypeInfoKindPrim )
+local builtinTypeNil = NormalTypeInfo.createBuiltin( "Nil", "nil", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeNil = builtinTypeNil
+_moduleObj.builtinTypeNil = builtinTypeNil
 
-local builtinTypeDDD = NormalTypeInfo.createBuiltin( "DDD", "...", TypeInfoKindPrim )
+local builtinTypeDDD = NormalTypeInfo.createBuiltin( "DDD", "...", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeDDD = builtinTypeDDD
+_moduleObj.builtinTypeDDD = builtinTypeDDD
 
-local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKindPrim )
+local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeBool = builtinTypeBool
+_moduleObj.builtinTypeBool = builtinTypeBool
 
-local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", TypeInfoKindPrim )
+local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeInt = builtinTypeInt
+_moduleObj.builtinTypeInt = builtinTypeInt
 
-local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKindPrim )
+local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeReal = builtinTypeReal
+_moduleObj.builtinTypeReal = builtinTypeReal
 
-local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKindPrim )
+local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeChar = builtinTypeChar
+_moduleObj.builtinTypeChar = builtinTypeChar
 
-local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKindClass )
+local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", _moduleObj.TypeInfoKindClass )
 
-moduleObj.builtinTypeString = builtinTypeString
+_moduleObj.builtinTypeString = builtinTypeString
 
-local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKindMap )
+local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", _moduleObj.TypeInfoKindMap )
 
-moduleObj.builtinTypeMap = builtinTypeMap
+_moduleObj.builtinTypeMap = builtinTypeMap
 
-local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKindList )
+local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", _moduleObj.TypeInfoKindList )
 
-moduleObj.builtinTypeList = builtinTypeList
+_moduleObj.builtinTypeList = builtinTypeList
 
-local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKindArray )
+local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", _moduleObj.TypeInfoKindArray )
 
-moduleObj.builtinTypeArray = builtinTypeArray
+_moduleObj.builtinTypeArray = builtinTypeArray
 
-local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKindFunc, builtinTypeDDD )
+local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", _moduleObj.TypeInfoKindFunc, _moduleObj.builtinTypeDDD )
 
-moduleObj.builtinTypeForm = builtinTypeForm
+_moduleObj.builtinTypeForm = builtinTypeForm
 
-local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKindPrim )
+local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeSymbol = builtinTypeSymbol
+_moduleObj.builtinTypeSymbol = builtinTypeSymbol
 
-local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKindPrim )
+local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", _moduleObj.TypeInfoKindPrim )
 
-moduleObj.builtinTypeStat = builtinTypeStat
+_moduleObj.builtinTypeStat = builtinTypeStat
 
-local builtinTypeStem_ = _lune_unwrap( builtinTypeStem:get_nilableTypeInfo())
+local builtinTypeStem_ = _lune_unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
 
-moduleObj.builtinTypeStem_ = builtinTypeStem_
+_moduleObj.builtinTypeStem_ = builtinTypeStem_
 
 function NilableTypeInfo:isSettableFrom( other )
 
   if not other then
     return false
   end
-  if self == builtinTypeStem_ then
+  if self == _moduleObj.builtinTypeStem_ then
     return true
   end
-  if other == builtinTypeNil then
+  if other == _moduleObj.builtinTypeNil then
     return true
   end
   if self.typeId == other:get_typeId() then
@@ -1365,12 +1368,12 @@ function NormalTypeInfo:isInheritFrom( other )
   if self:get_typeId() == otherTypeId then
     return true
   end
-  if (self:get_kind() ~= TypeInfoKindClass and self:get_kind() ~= TypeInfoKindIF ) or (other:get_kind() ~= TypeInfoKindClass and other:get_kind() ~= TypeInfoKindIF ) then
+  if (self:get_kind() ~= _moduleObj.TypeInfoKindClass and self:get_kind() ~= _moduleObj.TypeInfoKindIF ) or (other:get_kind() ~= _moduleObj.TypeInfoKindClass and other:get_kind() ~= _moduleObj.TypeInfoKindIF ) then
     return false
   end
   local baseTypeInfo = self:get_baseTypeInfo()
   
-  while baseTypeInfo ~= rootTypeInfo do
+  while baseTypeInfo ~= _moduleObj.rootTypeInfo do
     if otherTypeId == baseTypeInfo:get_typeId() then
       return true
     end
@@ -1379,7 +1382,7 @@ function NormalTypeInfo:isInheritFrom( other )
   -- none
   
   for __index, ifType in pairs( self:get_interfaceList() ) do
-    while ifType ~= rootTypeInfo do
+    while ifType ~= _moduleObj.rootTypeInfo do
       if otherTypeId == ifType:get_typeId() then
         return true
       end
@@ -1396,17 +1399,17 @@ function NormalTypeInfo:isSettableFrom( other )
   if not other then
     return false
   end
-  if self == builtinTypeStem_ or self == builtinTypeDDD then
+  if self == _moduleObj.builtinTypeStem_ or self == _moduleObj.builtinTypeDDD then
     return true
   end
-  if self == builtinTypeStem and not other:get_nilable() then
+  if self == _moduleObj.builtinTypeStem and not other:get_nilable() then
     return true
   end
-  if self == builtinTypeForm and other:get_kind() == TypeInfoKindFunc then
+  if self == _moduleObj.builtinTypeForm and other:get_kind() == _moduleObj.TypeInfoKindFunc then
     return true
   end
-  if other == builtinTypeNil then
-    if self.kind ~= TypeInfoKindNilable then
+  if other == _moduleObj.builtinTypeNil then
+    if self.kind ~= _moduleObj.TypeInfoKindNilable then
       return false
     end
     return true
@@ -1415,26 +1418,26 @@ function NormalTypeInfo:isSettableFrom( other )
     return true
   end
   if self.kind ~= other:get_kind() then
-    if self.kind == TypeInfoKindNilable then
+    if self.kind == _moduleObj.TypeInfoKindNilable then
       if other:get_nilable() then
         return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
       end
       return self:get_orgTypeInfo():isSettableFrom( other )
     end
-    if (self:get_kind() == TypeInfoKindClass or self:get_kind() == TypeInfoKindIF ) and (other:get_kind() == TypeInfoKindClass or other:get_kind() == TypeInfoKindIF ) then
+    if (self:get_kind() == _moduleObj.TypeInfoKindClass or self:get_kind() == _moduleObj.TypeInfoKindIF ) and (other:get_kind() == _moduleObj.TypeInfoKindClass or other:get_kind() == _moduleObj.TypeInfoKindIF ) then
       return other:isInheritFrom( self )
     end
     return false
   end
   do
     local _switchExp = (self.kind )
-    if _switchExp == TypeInfoKindPrim then
-      if self == builtinTypeInt and other == builtinTypeChar or self == builtinTypeChar and other == builtinTypeInt then
+    if _switchExp == _moduleObj.TypeInfoKindPrim then
+      if self == _moduleObj.builtinTypeInt and other == _moduleObj.builtinTypeChar or self == _moduleObj.builtinTypeChar and other == _moduleObj.builtinTypeInt then
         return true
       end
       return false
-    elseif _switchExp == TypeInfoKindList or _switchExp == TypeInfoKindArray then
-      if other:get_itemTypeInfoList()[1] == builtinTypeNone then
+    elseif _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindArray then
+      if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
         return true
       end
       if not (_lune_unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[1]) ) then
@@ -1442,8 +1445,8 @@ function NormalTypeInfo:isSettableFrom( other )
       end
       
       return true
-    elseif _switchExp == TypeInfoKindMap then
-      if other:get_itemTypeInfoList()[1] == builtinTypeNone and other:get_itemTypeInfoList()[2] == builtinTypeNone then
+    elseif _switchExp == _moduleObj.TypeInfoKindMap then
+      if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and other:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
         return true
       end
       if not (_lune_unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[1]) ) then
@@ -1455,16 +1458,16 @@ function NormalTypeInfo:isSettableFrom( other )
       end
       
       return true
-    elseif _switchExp == TypeInfoKindClass or _switchExp == TypeInfoKindIF then
+    elseif _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindIF then
       return other:isInheritFrom( self )
-    elseif _switchExp == TypeInfoKindFunc then
-      if self == builtinTypeForm then
+    elseif _switchExp == _moduleObj.TypeInfoKindFunc then
+      if self == _moduleObj.builtinTypeForm then
         return true
       end
       return false
-    elseif _switchExp == TypeInfoKindMethod then
+    elseif _switchExp == _moduleObj.TypeInfoKindMethod then
       return false
-    elseif _switchExp == TypeInfoKindNilable then
+    elseif _switchExp == _moduleObj.TypeInfoKindNilable then
       return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
     else 
       return false
@@ -1475,7 +1478,7 @@ function NormalTypeInfo:isSettableFrom( other )
 end
 
 local Filter = {}
-moduleObj.Filter = Filter
+_moduleObj.Filter = Filter
 function Filter.new(  )
   local obj = {}
   setmetatable( obj, { __index = Filter } )
@@ -1491,17 +1494,17 @@ do
   end
 
 local Node = {}
-moduleObj.Node = Node
+_moduleObj.Node = Node
 function Node:get_expType(  )
 
   if not self.expTypeList then
-    return builtinTypeNone
+    return _moduleObj.builtinTypeNone
   end
   return self.expTypeList[1]
 end
 function Node:getLiteral(  )
 
-  return {nil}, {builtinTypeNil}
+  return {nil}, {_moduleObj.builtinTypeNil}
 end
 function Node:processFilter( filter, ... )
 
@@ -1541,7 +1544,7 @@ do
   end
 
 local NamespaceInfo = {}
-moduleObj.NamespaceInfo = NamespaceInfo
+_moduleObj.NamespaceInfo = NamespaceInfo
 function NamespaceInfo.new( name, scope, typeInfo )
   local obj = {}
   setmetatable( obj, { __index = NamespaceInfo } )
@@ -1566,7 +1569,7 @@ do
 -- none
 
 local DeclMacroInfo = {}
-moduleObj.DeclMacroInfo = DeclMacroInfo
+_moduleObj.DeclMacroInfo = DeclMacroInfo
 function DeclMacroInfo.new( name, argList, ast, tokenList )
   local obj = {}
   setmetatable( obj, { __index = DeclMacroInfo } )
@@ -1598,7 +1601,7 @@ do
   end
 
 local MacroValInfo = {}
-moduleObj.MacroValInfo = MacroValInfo
+_moduleObj.MacroValInfo = MacroValInfo
 function MacroValInfo.new( val, typeInfo )
   local obj = {}
   setmetatable( obj, { __index = MacroValInfo } )
@@ -1616,7 +1619,7 @@ do
   end
 
 local MacroInfo = {}
-moduleObj.MacroInfo = MacroInfo
+_moduleObj.MacroInfo = MacroInfo
 function MacroInfo.new( func, declInfo, symbol2MacroValInfoMap )
   local obj = {}
   setmetatable( obj, { __index = MacroInfo } )
@@ -1640,7 +1643,7 @@ local nodeKindSeed = 1
 
 local nodeKind = {}
 
-moduleObj.nodeKind = nodeKind
+_moduleObj.nodeKind = nodeKind
 
 local function regKind( name )
 
@@ -1648,7 +1651,7 @@ local function regKind( name )
   
   nodeKindSeed = nodeKindSeed + 1
   nodeKind2NameMap[kind] = name
-  nodeKind[name] = kind
+  _moduleObj.nodeKind[name] = kind
   return kind
 end
 
@@ -1656,7 +1659,7 @@ local function getNodeKindName( kind )
 
   return _lune_unwrap( nodeKind2NameMap[kind])
 end
-moduleObj.getNodeKindName = getNodeKindName
+_moduleObj.getNodeKindName = getNodeKindName
 
 -- none
 
@@ -1670,11 +1673,11 @@ end
 
 local nodeKindNone = regKind( [[None]] )
 
-moduleObj.nodeKindNone = nodeKindNone
+_moduleObj.nodeKindNone = nodeKindNone
 
 local NoneNode = {}
 setmetatable( NoneNode, { __index = Node } )
-moduleObj.NoneNode = NoneNode
+_moduleObj.NoneNode = NoneNode
 function NoneNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -1696,7 +1699,7 @@ function NoneNode.new( pos, builtinTypeList )
 return obj
 end
 function NoneNode:__init(pos, builtinTypeList) 
-  Node.__init( self, nodeKindNone, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindNone, pos, builtinTypeList)
   
   -- none
   
@@ -1719,11 +1722,11 @@ end
 
 local nodeKindSubfile = regKind( [[Subfile]] )
 
-moduleObj.nodeKindSubfile = nodeKindSubfile
+_moduleObj.nodeKindSubfile = nodeKindSubfile
 
 local SubfileNode = {}
 setmetatable( SubfileNode, { __index = Node } )
-moduleObj.SubfileNode = SubfileNode
+_moduleObj.SubfileNode = SubfileNode
 function SubfileNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -1745,7 +1748,7 @@ function SubfileNode.new( pos, builtinTypeList )
 return obj
 end
 function SubfileNode:__init(pos, builtinTypeList) 
-  Node.__init( self, nodeKindSubfile, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindSubfile, pos, builtinTypeList)
   
   -- none
   
@@ -1768,11 +1771,11 @@ end
 
 local nodeKindImport = regKind( [[Import]] )
 
-moduleObj.nodeKindImport = nodeKindImport
+_moduleObj.nodeKindImport = nodeKindImport
 
 local ImportNode = {}
 setmetatable( ImportNode, { __index = Node } )
-moduleObj.ImportNode = ImportNode
+_moduleObj.ImportNode = ImportNode
 function ImportNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -1794,7 +1797,7 @@ function ImportNode.new( pos, builtinTypeList, modulePath )
 return obj
 end
 function ImportNode:__init(pos, builtinTypeList, modulePath) 
-  Node.__init( self, nodeKindImport, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindImport, pos, builtinTypeList)
   
   -- none
   
@@ -1823,11 +1826,11 @@ end
 
 local nodeKindRoot = regKind( [[Root]] )
 
-moduleObj.nodeKindRoot = nodeKindRoot
+_moduleObj.nodeKindRoot = nodeKindRoot
 
 local RootNode = {}
 setmetatable( RootNode, { __index = Node } )
-moduleObj.RootNode = RootNode
+_moduleObj.RootNode = RootNode
 function RootNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -1849,7 +1852,7 @@ function RootNode.new( pos, builtinTypeList, children, provideNode, typeId2Class
 return obj
 end
 function RootNode:__init(pos, builtinTypeList, children, provideNode, typeId2ClassMap) 
-  Node.__init( self, nodeKindRoot, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindRoot, pos, builtinTypeList)
   
   -- none
   
@@ -1889,11 +1892,11 @@ end
 
 local nodeKindRefType = regKind( [[RefType]] )
 
-moduleObj.nodeKindRefType = nodeKindRefType
+_moduleObj.nodeKindRefType = nodeKindRefType
 
 local RefTypeNode = {}
 setmetatable( RefTypeNode, { __index = Node } )
-moduleObj.RefTypeNode = RefTypeNode
+_moduleObj.RefTypeNode = RefTypeNode
 function RefTypeNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -1915,7 +1918,7 @@ function RefTypeNode.new( pos, builtinTypeList, name, refFlag, mutFlag, array )
 return obj
 end
 function RefTypeNode:__init(pos, builtinTypeList, name, refFlag, mutFlag, array) 
-  Node.__init( self, nodeKindRefType, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindRefType, pos, builtinTypeList)
   
   -- none
   
@@ -1954,11 +1957,11 @@ end
 
 local nodeKindBlock = regKind( [[Block]] )
 
-moduleObj.nodeKindBlock = nodeKindBlock
+_moduleObj.nodeKindBlock = nodeKindBlock
 
 local BlockNode = {}
 setmetatable( BlockNode, { __index = Node } )
-moduleObj.BlockNode = BlockNode
+_moduleObj.BlockNode = BlockNode
 function BlockNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -1980,7 +1983,7 @@ function BlockNode.new( pos, builtinTypeList, blockKind, stmtList )
 return obj
 end
 function BlockNode:__init(pos, builtinTypeList, blockKind, stmtList) 
-  Node.__init( self, nodeKindBlock, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindBlock, pos, builtinTypeList)
   
   -- none
   
@@ -2000,7 +2003,7 @@ do
 
 
 local IfStmtInfo = {}
-moduleObj.IfStmtInfo = IfStmtInfo
+_moduleObj.IfStmtInfo = IfStmtInfo
 function IfStmtInfo.new( kind, exp, block )
   local obj = {}
   setmetatable( obj, { __index = IfStmtInfo } )
@@ -2039,11 +2042,11 @@ end
 
 local nodeKindIf = regKind( [[If]] )
 
-moduleObj.nodeKindIf = nodeKindIf
+_moduleObj.nodeKindIf = nodeKindIf
 
 local IfNode = {}
 setmetatable( IfNode, { __index = Node } )
-moduleObj.IfNode = IfNode
+_moduleObj.IfNode = IfNode
 function IfNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2065,7 +2068,7 @@ function IfNode.new( pos, builtinTypeList, stmtList )
 return obj
 end
 function IfNode:__init(pos, builtinTypeList, stmtList) 
-  Node.__init( self, nodeKindIf, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindIf, pos, builtinTypeList)
   
   -- none
   
@@ -2092,11 +2095,11 @@ end
 
 local nodeKindExpList = regKind( [[ExpList]] )
 
-moduleObj.nodeKindExpList = nodeKindExpList
+_moduleObj.nodeKindExpList = nodeKindExpList
 
 local ExpListNode = {}
 setmetatable( ExpListNode, { __index = Node } )
-moduleObj.ExpListNode = ExpListNode
+_moduleObj.ExpListNode = ExpListNode
 function ExpListNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2118,7 +2121,7 @@ function ExpListNode.new( pos, builtinTypeList, expList )
 return obj
 end
 function ExpListNode:__init(pos, builtinTypeList, expList) 
-  Node.__init( self, nodeKindExpList, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpList, pos, builtinTypeList)
   
   -- none
   
@@ -2134,7 +2137,7 @@ do
 
 
 local CaseInfo = {}
-moduleObj.CaseInfo = CaseInfo
+_moduleObj.CaseInfo = CaseInfo
 function CaseInfo.new( expList, block )
   local obj = {}
   setmetatable( obj, { __index = CaseInfo } )
@@ -2169,11 +2172,11 @@ end
 
 local nodeKindSwitch = regKind( [[Switch]] )
 
-moduleObj.nodeKindSwitch = nodeKindSwitch
+_moduleObj.nodeKindSwitch = nodeKindSwitch
 
 local SwitchNode = {}
 setmetatable( SwitchNode, { __index = Node } )
-moduleObj.SwitchNode = SwitchNode
+_moduleObj.SwitchNode = SwitchNode
 function SwitchNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2195,7 +2198,7 @@ function SwitchNode.new( pos, builtinTypeList, exp, caseList, default )
 return obj
 end
 function SwitchNode:__init(pos, builtinTypeList, exp, caseList, default) 
-  Node.__init( self, nodeKindSwitch, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindSwitch, pos, builtinTypeList)
   
   -- none
   
@@ -2230,11 +2233,11 @@ end
 
 local nodeKindWhile = regKind( [[While]] )
 
-moduleObj.nodeKindWhile = nodeKindWhile
+_moduleObj.nodeKindWhile = nodeKindWhile
 
 local WhileNode = {}
 setmetatable( WhileNode, { __index = Node } )
-moduleObj.WhileNode = WhileNode
+_moduleObj.WhileNode = WhileNode
 function WhileNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2256,7 +2259,7 @@ function WhileNode.new( pos, builtinTypeList, exp, block )
 return obj
 end
 function WhileNode:__init(pos, builtinTypeList, exp, block) 
-  Node.__init( self, nodeKindWhile, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindWhile, pos, builtinTypeList)
   
   -- none
   
@@ -2287,11 +2290,11 @@ end
 
 local nodeKindRepeat = regKind( [[Repeat]] )
 
-moduleObj.nodeKindRepeat = nodeKindRepeat
+_moduleObj.nodeKindRepeat = nodeKindRepeat
 
 local RepeatNode = {}
 setmetatable( RepeatNode, { __index = Node } )
-moduleObj.RepeatNode = RepeatNode
+_moduleObj.RepeatNode = RepeatNode
 function RepeatNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2313,7 +2316,7 @@ function RepeatNode.new( pos, builtinTypeList, block, exp )
 return obj
 end
 function RepeatNode:__init(pos, builtinTypeList, block, exp) 
-  Node.__init( self, nodeKindRepeat, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindRepeat, pos, builtinTypeList)
   
   -- none
   
@@ -2344,11 +2347,11 @@ end
 
 local nodeKindFor = regKind( [[For]] )
 
-moduleObj.nodeKindFor = nodeKindFor
+_moduleObj.nodeKindFor = nodeKindFor
 
 local ForNode = {}
 setmetatable( ForNode, { __index = Node } )
-moduleObj.ForNode = ForNode
+_moduleObj.ForNode = ForNode
 function ForNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2370,7 +2373,7 @@ function ForNode.new( pos, builtinTypeList, block, val, init, to, delta )
 return obj
 end
 function ForNode:__init(pos, builtinTypeList, block, val, init, to, delta) 
-  Node.__init( self, nodeKindFor, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindFor, pos, builtinTypeList)
   
   -- none
   
@@ -2413,11 +2416,11 @@ end
 
 local nodeKindApply = regKind( [[Apply]] )
 
-moduleObj.nodeKindApply = nodeKindApply
+_moduleObj.nodeKindApply = nodeKindApply
 
 local ApplyNode = {}
 setmetatable( ApplyNode, { __index = Node } )
-moduleObj.ApplyNode = ApplyNode
+_moduleObj.ApplyNode = ApplyNode
 function ApplyNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2439,7 +2442,7 @@ function ApplyNode.new( pos, builtinTypeList, varList, exp, block )
 return obj
 end
 function ApplyNode:__init(pos, builtinTypeList, varList, exp, block) 
-  Node.__init( self, nodeKindApply, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindApply, pos, builtinTypeList)
   
   -- none
   
@@ -2474,11 +2477,11 @@ end
 
 local nodeKindForeach = regKind( [[Foreach]] )
 
-moduleObj.nodeKindForeach = nodeKindForeach
+_moduleObj.nodeKindForeach = nodeKindForeach
 
 local ForeachNode = {}
 setmetatable( ForeachNode, { __index = Node } )
-moduleObj.ForeachNode = ForeachNode
+_moduleObj.ForeachNode = ForeachNode
 function ForeachNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2500,7 +2503,7 @@ function ForeachNode.new( pos, builtinTypeList, val, key, exp, block )
 return obj
 end
 function ForeachNode:__init(pos, builtinTypeList, val, key, exp, block) 
-  Node.__init( self, nodeKindForeach, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindForeach, pos, builtinTypeList)
   
   -- none
   
@@ -2539,11 +2542,11 @@ end
 
 local nodeKindForsort = regKind( [[Forsort]] )
 
-moduleObj.nodeKindForsort = nodeKindForsort
+_moduleObj.nodeKindForsort = nodeKindForsort
 
 local ForsortNode = {}
 setmetatable( ForsortNode, { __index = Node } )
-moduleObj.ForsortNode = ForsortNode
+_moduleObj.ForsortNode = ForsortNode
 function ForsortNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2565,7 +2568,7 @@ function ForsortNode.new( pos, builtinTypeList, val, key, exp, block, sort )
 return obj
 end
 function ForsortNode:__init(pos, builtinTypeList, val, key, exp, block, sort) 
-  Node.__init( self, nodeKindForsort, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindForsort, pos, builtinTypeList)
   
   -- none
   
@@ -2608,11 +2611,11 @@ end
 
 local nodeKindReturn = regKind( [[Return]] )
 
-moduleObj.nodeKindReturn = nodeKindReturn
+_moduleObj.nodeKindReturn = nodeKindReturn
 
 local ReturnNode = {}
 setmetatable( ReturnNode, { __index = Node } )
-moduleObj.ReturnNode = ReturnNode
+_moduleObj.ReturnNode = ReturnNode
 function ReturnNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2634,7 +2637,7 @@ function ReturnNode.new( pos, builtinTypeList, expList )
 return obj
 end
 function ReturnNode:__init(pos, builtinTypeList, expList) 
-  Node.__init( self, nodeKindReturn, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindReturn, pos, builtinTypeList)
   
   -- none
   
@@ -2661,11 +2664,11 @@ end
 
 local nodeKindBreak = regKind( [[Break]] )
 
-moduleObj.nodeKindBreak = nodeKindBreak
+_moduleObj.nodeKindBreak = nodeKindBreak
 
 local BreakNode = {}
 setmetatable( BreakNode, { __index = Node } )
-moduleObj.BreakNode = BreakNode
+_moduleObj.BreakNode = BreakNode
 function BreakNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2687,7 +2690,7 @@ function BreakNode.new( pos, builtinTypeList )
 return obj
 end
 function BreakNode:__init(pos, builtinTypeList) 
-  Node.__init( self, nodeKindBreak, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindBreak, pos, builtinTypeList)
   
   -- none
   
@@ -2710,11 +2713,11 @@ end
 
 local nodeKindProvide = regKind( [[Provide]] )
 
-moduleObj.nodeKindProvide = nodeKindProvide
+_moduleObj.nodeKindProvide = nodeKindProvide
 
 local ProvideNode = {}
 setmetatable( ProvideNode, { __index = Node } )
-moduleObj.ProvideNode = ProvideNode
+_moduleObj.ProvideNode = ProvideNode
 function ProvideNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2736,7 +2739,7 @@ function ProvideNode.new( pos, builtinTypeList, val )
 return obj
 end
 function ProvideNode:__init(pos, builtinTypeList, val) 
-  Node.__init( self, nodeKindProvide, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindProvide, pos, builtinTypeList)
   
   -- none
   
@@ -2763,11 +2766,11 @@ end
 
 local nodeKindExpNew = regKind( [[ExpNew]] )
 
-moduleObj.nodeKindExpNew = nodeKindExpNew
+_moduleObj.nodeKindExpNew = nodeKindExpNew
 
 local ExpNewNode = {}
 setmetatable( ExpNewNode, { __index = Node } )
-moduleObj.ExpNewNode = ExpNewNode
+_moduleObj.ExpNewNode = ExpNewNode
 function ExpNewNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2789,7 +2792,7 @@ function ExpNewNode.new( pos, builtinTypeList, symbol, argList )
 return obj
 end
 function ExpNewNode:__init(pos, builtinTypeList, symbol, argList) 
-  Node.__init( self, nodeKindExpNew, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpNew, pos, builtinTypeList)
   
   -- none
   
@@ -2820,11 +2823,11 @@ end
 
 local nodeKindExpUnwrap = regKind( [[ExpUnwrap]] )
 
-moduleObj.nodeKindExpUnwrap = nodeKindExpUnwrap
+_moduleObj.nodeKindExpUnwrap = nodeKindExpUnwrap
 
 local ExpUnwrapNode = {}
 setmetatable( ExpUnwrapNode, { __index = Node } )
-moduleObj.ExpUnwrapNode = ExpUnwrapNode
+_moduleObj.ExpUnwrapNode = ExpUnwrapNode
 function ExpUnwrapNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2846,7 +2849,7 @@ function ExpUnwrapNode.new( pos, builtinTypeList, exp, default )
 return obj
 end
 function ExpUnwrapNode:__init(pos, builtinTypeList, exp, default) 
-  Node.__init( self, nodeKindExpUnwrap, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpUnwrap, pos, builtinTypeList)
   
   -- none
   
@@ -2877,11 +2880,11 @@ end
 
 local nodeKindExpRef = regKind( [[ExpRef]] )
 
-moduleObj.nodeKindExpRef = nodeKindExpRef
+_moduleObj.nodeKindExpRef = nodeKindExpRef
 
 local ExpRefNode = {}
 setmetatable( ExpRefNode, { __index = Node } )
-moduleObj.ExpRefNode = ExpRefNode
+_moduleObj.ExpRefNode = ExpRefNode
 function ExpRefNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -2895,7 +2898,7 @@ function ExpRefNode.new( pos, builtinTypeList, token, symbolInfo )
 return obj
 end
 function ExpRefNode:__init(pos, builtinTypeList, token, symbolInfo) 
-  Node.__init( self, nodeKindExpRef, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpRef, pos, builtinTypeList)
   
   -- none
   
@@ -2936,11 +2939,11 @@ end
 
 local nodeKindExpOp2 = regKind( [[ExpOp2]] )
 
-moduleObj.nodeKindExpOp2 = nodeKindExpOp2
+_moduleObj.nodeKindExpOp2 = nodeKindExpOp2
 
 local ExpOp2Node = {}
 setmetatable( ExpOp2Node, { __index = Node } )
-moduleObj.ExpOp2Node = ExpOp2Node
+_moduleObj.ExpOp2Node = ExpOp2Node
 function ExpOp2Node:processFilter( filter, ... )
 
   local argList = {...}
@@ -2962,7 +2965,7 @@ function ExpOp2Node.new( pos, builtinTypeList, op, exp1, exp2 )
 return obj
 end
 function ExpOp2Node:__init(pos, builtinTypeList, op, exp1, exp2) 
-  Node.__init( self, nodeKindExpOp2, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpOp2, pos, builtinTypeList)
   
   -- none
   
@@ -2997,11 +3000,11 @@ end
 
 local nodeKindUnwrapSet = regKind( [[UnwrapSet]] )
 
-moduleObj.nodeKindUnwrapSet = nodeKindUnwrapSet
+_moduleObj.nodeKindUnwrapSet = nodeKindUnwrapSet
 
 local UnwrapSetNode = {}
 setmetatable( UnwrapSetNode, { __index = Node } )
-moduleObj.UnwrapSetNode = UnwrapSetNode
+_moduleObj.UnwrapSetNode = UnwrapSetNode
 function UnwrapSetNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3023,7 +3026,7 @@ function UnwrapSetNode.new( pos, builtinTypeList, dstExpList, srcExpList, unwrap
 return obj
 end
 function UnwrapSetNode:__init(pos, builtinTypeList, dstExpList, srcExpList, unwrapBlock) 
-  Node.__init( self, nodeKindUnwrapSet, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindUnwrapSet, pos, builtinTypeList)
   
   -- none
   
@@ -3058,11 +3061,11 @@ end
 
 local nodeKindIfUnwrap = regKind( [[IfUnwrap]] )
 
-moduleObj.nodeKindIfUnwrap = nodeKindIfUnwrap
+_moduleObj.nodeKindIfUnwrap = nodeKindIfUnwrap
 
 local IfUnwrapNode = {}
 setmetatable( IfUnwrapNode, { __index = Node } )
-moduleObj.IfUnwrapNode = IfUnwrapNode
+_moduleObj.IfUnwrapNode = IfUnwrapNode
 function IfUnwrapNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3084,7 +3087,7 @@ function IfUnwrapNode.new( pos, builtinTypeList, exp, block, nilBlock )
 return obj
 end
 function IfUnwrapNode:__init(pos, builtinTypeList, exp, block, nilBlock) 
-  Node.__init( self, nodeKindIfUnwrap, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindIfUnwrap, pos, builtinTypeList)
   
   -- none
   
@@ -3119,11 +3122,11 @@ end
 
 local nodeKindExpCast = regKind( [[ExpCast]] )
 
-moduleObj.nodeKindExpCast = nodeKindExpCast
+_moduleObj.nodeKindExpCast = nodeKindExpCast
 
 local ExpCastNode = {}
 setmetatable( ExpCastNode, { __index = Node } )
-moduleObj.ExpCastNode = ExpCastNode
+_moduleObj.ExpCastNode = ExpCastNode
 function ExpCastNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3145,7 +3148,7 @@ function ExpCastNode.new( pos, builtinTypeList, exp )
 return obj
 end
 function ExpCastNode:__init(pos, builtinTypeList, exp) 
-  Node.__init( self, nodeKindExpCast, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpCast, pos, builtinTypeList)
   
   -- none
   
@@ -3172,11 +3175,11 @@ end
 
 local nodeKindExpOp1 = regKind( [[ExpOp1]] )
 
-moduleObj.nodeKindExpOp1 = nodeKindExpOp1
+_moduleObj.nodeKindExpOp1 = nodeKindExpOp1
 
 local ExpOp1Node = {}
 setmetatable( ExpOp1Node, { __index = Node } )
-moduleObj.ExpOp1Node = ExpOp1Node
+_moduleObj.ExpOp1Node = ExpOp1Node
 function ExpOp1Node:processFilter( filter, ... )
 
   local argList = {...}
@@ -3198,7 +3201,7 @@ function ExpOp1Node.new( pos, builtinTypeList, op, macroMode, exp )
 return obj
 end
 function ExpOp1Node:__init(pos, builtinTypeList, op, macroMode, exp) 
-  Node.__init( self, nodeKindExpOp1, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpOp1, pos, builtinTypeList)
   
   -- none
   
@@ -3233,11 +3236,11 @@ end
 
 local nodeKindExpRefItem = regKind( [[ExpRefItem]] )
 
-moduleObj.nodeKindExpRefItem = nodeKindExpRefItem
+_moduleObj.nodeKindExpRefItem = nodeKindExpRefItem
 
 local ExpRefItemNode = {}
 setmetatable( ExpRefItemNode, { __index = Node } )
-moduleObj.ExpRefItemNode = ExpRefItemNode
+_moduleObj.ExpRefItemNode = ExpRefItemNode
 function ExpRefItemNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3259,7 +3262,7 @@ function ExpRefItemNode.new( pos, builtinTypeList, val, nilAccess, index )
 return obj
 end
 function ExpRefItemNode:__init(pos, builtinTypeList, val, nilAccess, index) 
-  Node.__init( self, nodeKindExpRefItem, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpRefItem, pos, builtinTypeList)
   
   -- none
   
@@ -3294,11 +3297,11 @@ end
 
 local nodeKindExpCall = regKind( [[ExpCall]] )
 
-moduleObj.nodeKindExpCall = nodeKindExpCall
+_moduleObj.nodeKindExpCall = nodeKindExpCall
 
 local ExpCallNode = {}
 setmetatable( ExpCallNode, { __index = Node } )
-moduleObj.ExpCallNode = ExpCallNode
+_moduleObj.ExpCallNode = ExpCallNode
 function ExpCallNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3320,7 +3323,7 @@ function ExpCallNode.new( pos, builtinTypeList, func, nilAccess, argList )
 return obj
 end
 function ExpCallNode:__init(pos, builtinTypeList, func, nilAccess, argList) 
-  Node.__init( self, nodeKindExpCall, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpCall, pos, builtinTypeList)
   
   -- none
   
@@ -3355,11 +3358,11 @@ end
 
 local nodeKindExpDDD = regKind( [[ExpDDD]] )
 
-moduleObj.nodeKindExpDDD = nodeKindExpDDD
+_moduleObj.nodeKindExpDDD = nodeKindExpDDD
 
 local ExpDDDNode = {}
 setmetatable( ExpDDDNode, { __index = Node } )
-moduleObj.ExpDDDNode = ExpDDDNode
+_moduleObj.ExpDDDNode = ExpDDDNode
 function ExpDDDNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3381,7 +3384,7 @@ function ExpDDDNode.new( pos, builtinTypeList, token )
 return obj
 end
 function ExpDDDNode:__init(pos, builtinTypeList, token) 
-  Node.__init( self, nodeKindExpDDD, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpDDD, pos, builtinTypeList)
   
   -- none
   
@@ -3408,11 +3411,11 @@ end
 
 local nodeKindExpParen = regKind( [[ExpParen]] )
 
-moduleObj.nodeKindExpParen = nodeKindExpParen
+_moduleObj.nodeKindExpParen = nodeKindExpParen
 
 local ExpParenNode = {}
 setmetatable( ExpParenNode, { __index = Node } )
-moduleObj.ExpParenNode = ExpParenNode
+_moduleObj.ExpParenNode = ExpParenNode
 function ExpParenNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3434,7 +3437,7 @@ function ExpParenNode.new( pos, builtinTypeList, exp )
 return obj
 end
 function ExpParenNode:__init(pos, builtinTypeList, exp) 
-  Node.__init( self, nodeKindExpParen, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpParen, pos, builtinTypeList)
   
   -- none
   
@@ -3461,11 +3464,11 @@ end
 
 local nodeKindExpMacroExp = regKind( [[ExpMacroExp]] )
 
-moduleObj.nodeKindExpMacroExp = nodeKindExpMacroExp
+_moduleObj.nodeKindExpMacroExp = nodeKindExpMacroExp
 
 local ExpMacroExpNode = {}
 setmetatable( ExpMacroExpNode, { __index = Node } )
-moduleObj.ExpMacroExpNode = ExpMacroExpNode
+_moduleObj.ExpMacroExpNode = ExpMacroExpNode
 function ExpMacroExpNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3487,7 +3490,7 @@ function ExpMacroExpNode.new( pos, builtinTypeList, stmtList )
 return obj
 end
 function ExpMacroExpNode:__init(pos, builtinTypeList, stmtList) 
-  Node.__init( self, nodeKindExpMacroExp, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpMacroExp, pos, builtinTypeList)
   
   -- none
   
@@ -3514,11 +3517,11 @@ end
 
 local nodeKindExpMacroStat = regKind( [[ExpMacroStat]] )
 
-moduleObj.nodeKindExpMacroStat = nodeKindExpMacroStat
+_moduleObj.nodeKindExpMacroStat = nodeKindExpMacroStat
 
 local ExpMacroStatNode = {}
 setmetatable( ExpMacroStatNode, { __index = Node } )
-moduleObj.ExpMacroStatNode = ExpMacroStatNode
+_moduleObj.ExpMacroStatNode = ExpMacroStatNode
 function ExpMacroStatNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3540,7 +3543,7 @@ function ExpMacroStatNode.new( pos, builtinTypeList, expStrList )
 return obj
 end
 function ExpMacroStatNode:__init(pos, builtinTypeList, expStrList) 
-  Node.__init( self, nodeKindExpMacroStat, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpMacroStat, pos, builtinTypeList)
   
   -- none
   
@@ -3567,11 +3570,11 @@ end
 
 local nodeKindStmtExp = regKind( [[StmtExp]] )
 
-moduleObj.nodeKindStmtExp = nodeKindStmtExp
+_moduleObj.nodeKindStmtExp = nodeKindStmtExp
 
 local StmtExpNode = {}
 setmetatable( StmtExpNode, { __index = Node } )
-moduleObj.StmtExpNode = StmtExpNode
+_moduleObj.StmtExpNode = StmtExpNode
 function StmtExpNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3593,7 +3596,7 @@ function StmtExpNode.new( pos, builtinTypeList, exp )
 return obj
 end
 function StmtExpNode:__init(pos, builtinTypeList, exp) 
-  Node.__init( self, nodeKindStmtExp, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindStmtExp, pos, builtinTypeList)
   
   -- none
   
@@ -3620,11 +3623,11 @@ end
 
 local nodeKindRefField = regKind( [[RefField]] )
 
-moduleObj.nodeKindRefField = nodeKindRefField
+_moduleObj.nodeKindRefField = nodeKindRefField
 
 local RefFieldNode = {}
 setmetatable( RefFieldNode, { __index = Node } )
-moduleObj.RefFieldNode = RefFieldNode
+_moduleObj.RefFieldNode = RefFieldNode
 function RefFieldNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3646,7 +3649,7 @@ function RefFieldNode.new( pos, builtinTypeList, field, nilAccess, prefix )
 return obj
 end
 function RefFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix) 
-  Node.__init( self, nodeKindRefField, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindRefField, pos, builtinTypeList)
   
   -- none
   
@@ -3681,11 +3684,11 @@ end
 
 local nodeKindGetField = regKind( [[GetField]] )
 
-moduleObj.nodeKindGetField = nodeKindGetField
+_moduleObj.nodeKindGetField = nodeKindGetField
 
 local GetFieldNode = {}
 setmetatable( GetFieldNode, { __index = Node } )
-moduleObj.GetFieldNode = GetFieldNode
+_moduleObj.GetFieldNode = GetFieldNode
 function GetFieldNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3707,7 +3710,7 @@ function GetFieldNode.new( pos, builtinTypeList, field, nilAccess, prefix, gette
 return obj
 end
 function GetFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix, getterTypeInfo) 
-  Node.__init( self, nodeKindGetField, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindGetField, pos, builtinTypeList)
   
   -- none
   
@@ -3735,7 +3738,7 @@ do
 
 
 local VarInfo = {}
-moduleObj.VarInfo = VarInfo
+_moduleObj.VarInfo = VarInfo
 function VarInfo.new( name, refType, actualType )
   local obj = {}
   setmetatable( obj, { __index = VarInfo } )
@@ -3774,11 +3777,11 @@ end
 
 local nodeKindDeclVar = regKind( [[DeclVar]] )
 
-moduleObj.nodeKindDeclVar = nodeKindDeclVar
+_moduleObj.nodeKindDeclVar = nodeKindDeclVar
 
 local DeclVarNode = {}
 setmetatable( DeclVarNode, { __index = Node } )
-moduleObj.DeclVarNode = DeclVarNode
+_moduleObj.DeclVarNode = DeclVarNode
 function DeclVarNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3800,7 +3803,7 @@ function DeclVarNode.new( pos, builtinTypeList, mode, accessMode, staticFlag, va
 return obj
 end
 function DeclVarNode:__init(pos, builtinTypeList, mode, accessMode, staticFlag, varList, expList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
-  Node.__init( self, nodeKindDeclVar, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclVar, pos, builtinTypeList)
   
   -- none
   
@@ -3856,7 +3859,7 @@ do
 
 
 local DeclFuncInfo = {}
-moduleObj.DeclFuncInfo = DeclFuncInfo
+_moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.new( className, name, argList, staticFlag, accessMode, body, retTypeInfoList )
   local obj = {}
   setmetatable( obj, { __index = DeclFuncInfo } )
@@ -3911,11 +3914,11 @@ end
 
 local nodeKindDeclFunc = regKind( [[DeclFunc]] )
 
-moduleObj.nodeKindDeclFunc = nodeKindDeclFunc
+_moduleObj.nodeKindDeclFunc = nodeKindDeclFunc
 
 local DeclFuncNode = {}
 setmetatable( DeclFuncNode, { __index = Node } )
-moduleObj.DeclFuncNode = DeclFuncNode
+_moduleObj.DeclFuncNode = DeclFuncNode
 function DeclFuncNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3937,7 +3940,7 @@ function DeclFuncNode.new( pos, builtinTypeList, declInfo )
 return obj
 end
 function DeclFuncNode:__init(pos, builtinTypeList, declInfo) 
-  Node.__init( self, nodeKindDeclFunc, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclFunc, pos, builtinTypeList)
   
   -- none
   
@@ -3964,11 +3967,11 @@ end
 
 local nodeKindDeclMethod = regKind( [[DeclMethod]] )
 
-moduleObj.nodeKindDeclMethod = nodeKindDeclMethod
+_moduleObj.nodeKindDeclMethod = nodeKindDeclMethod
 
 local DeclMethodNode = {}
 setmetatable( DeclMethodNode, { __index = Node } )
-moduleObj.DeclMethodNode = DeclMethodNode
+_moduleObj.DeclMethodNode = DeclMethodNode
 function DeclMethodNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -3990,7 +3993,7 @@ function DeclMethodNode.new( pos, builtinTypeList, declInfo )
 return obj
 end
 function DeclMethodNode:__init(pos, builtinTypeList, declInfo) 
-  Node.__init( self, nodeKindDeclMethod, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclMethod, pos, builtinTypeList)
   
   -- none
   
@@ -4017,11 +4020,11 @@ end
 
 local nodeKindDeclConstr = regKind( [[DeclConstr]] )
 
-moduleObj.nodeKindDeclConstr = nodeKindDeclConstr
+_moduleObj.nodeKindDeclConstr = nodeKindDeclConstr
 
 local DeclConstrNode = {}
 setmetatable( DeclConstrNode, { __index = Node } )
-moduleObj.DeclConstrNode = DeclConstrNode
+_moduleObj.DeclConstrNode = DeclConstrNode
 function DeclConstrNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4043,7 +4046,7 @@ function DeclConstrNode.new( pos, builtinTypeList, declInfo )
 return obj
 end
 function DeclConstrNode:__init(pos, builtinTypeList, declInfo) 
-  Node.__init( self, nodeKindDeclConstr, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclConstr, pos, builtinTypeList)
   
   -- none
   
@@ -4070,11 +4073,11 @@ end
 
 local nodeKindExpCallSuper = regKind( [[ExpCallSuper]] )
 
-moduleObj.nodeKindExpCallSuper = nodeKindExpCallSuper
+_moduleObj.nodeKindExpCallSuper = nodeKindExpCallSuper
 
 local ExpCallSuperNode = {}
 setmetatable( ExpCallSuperNode, { __index = Node } )
-moduleObj.ExpCallSuperNode = ExpCallSuperNode
+_moduleObj.ExpCallSuperNode = ExpCallSuperNode
 function ExpCallSuperNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4096,7 +4099,7 @@ function ExpCallSuperNode.new( pos, builtinTypeList, superType, expList )
 return obj
 end
 function ExpCallSuperNode:__init(pos, builtinTypeList, superType, expList) 
-  Node.__init( self, nodeKindExpCallSuper, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindExpCallSuper, pos, builtinTypeList)
   
   -- none
   
@@ -4127,11 +4130,11 @@ end
 
 local nodeKindDeclMember = regKind( [[DeclMember]] )
 
-moduleObj.nodeKindDeclMember = nodeKindDeclMember
+_moduleObj.nodeKindDeclMember = nodeKindDeclMember
 
 local DeclMemberNode = {}
 setmetatable( DeclMemberNode, { __index = Node } )
-moduleObj.DeclMemberNode = DeclMemberNode
+_moduleObj.DeclMemberNode = DeclMemberNode
 function DeclMemberNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4153,7 +4156,7 @@ function DeclMemberNode.new( pos, builtinTypeList, name, refType, staticFlag, ac
 return obj
 end
 function DeclMemberNode:__init(pos, builtinTypeList, name, refType, staticFlag, accessMode, getterMode, setterMode) 
-  Node.__init( self, nodeKindDeclMember, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclMember, pos, builtinTypeList)
   
   -- none
   
@@ -4200,11 +4203,11 @@ end
 
 local nodeKindDeclArg = regKind( [[DeclArg]] )
 
-moduleObj.nodeKindDeclArg = nodeKindDeclArg
+_moduleObj.nodeKindDeclArg = nodeKindDeclArg
 
 local DeclArgNode = {}
 setmetatable( DeclArgNode, { __index = Node } )
-moduleObj.DeclArgNode = DeclArgNode
+_moduleObj.DeclArgNode = DeclArgNode
 function DeclArgNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4226,7 +4229,7 @@ function DeclArgNode.new( pos, builtinTypeList, name, argType )
 return obj
 end
 function DeclArgNode:__init(pos, builtinTypeList, name, argType) 
-  Node.__init( self, nodeKindDeclArg, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclArg, pos, builtinTypeList)
   
   -- none
   
@@ -4257,11 +4260,11 @@ end
 
 local nodeKindDeclArgDDD = regKind( [[DeclArgDDD]] )
 
-moduleObj.nodeKindDeclArgDDD = nodeKindDeclArgDDD
+_moduleObj.nodeKindDeclArgDDD = nodeKindDeclArgDDD
 
 local DeclArgDDDNode = {}
 setmetatable( DeclArgDDDNode, { __index = Node } )
-moduleObj.DeclArgDDDNode = DeclArgDDDNode
+_moduleObj.DeclArgDDDNode = DeclArgDDDNode
 function DeclArgDDDNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4283,7 +4286,7 @@ function DeclArgDDDNode.new( pos, builtinTypeList )
 return obj
 end
 function DeclArgDDDNode:__init(pos, builtinTypeList) 
-  Node.__init( self, nodeKindDeclArgDDD, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclArgDDD, pos, builtinTypeList)
   
   -- none
   
@@ -4295,7 +4298,7 @@ do
 
 
 local AdvertiseInfo = {}
-moduleObj.AdvertiseInfo = AdvertiseInfo
+_moduleObj.AdvertiseInfo = AdvertiseInfo
 function AdvertiseInfo.new( member, prefix )
   local obj = {}
   setmetatable( obj, { __index = AdvertiseInfo } )
@@ -4332,11 +4335,11 @@ end
 
 local nodeKindDeclClass = regKind( [[DeclClass]] )
 
-moduleObj.nodeKindDeclClass = nodeKindDeclClass
+_moduleObj.nodeKindDeclClass = nodeKindDeclClass
 
 local DeclClassNode = {}
 setmetatable( DeclClassNode, { __index = Node } )
-moduleObj.DeclClassNode = DeclClassNode
+_moduleObj.DeclClassNode = DeclClassNode
 function DeclClassNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4351,14 +4354,14 @@ function DeclClassNode:canBeLeft(  )
 
   return false
 end
-function DeclClassNode.new( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, outerMethodSet )
+function DeclClassNode.new( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
   local obj = {}
   setmetatable( obj, { __index = DeclClassNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, outerMethodSet ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet ); end
 return obj
 end
-function DeclClassNode:__init(pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, outerMethodSet) 
-  Node.__init( self, nodeKindDeclClass, pos, builtinTypeList)
+function DeclClassNode:__init(pos, builtinTypeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
+  Node.__init( self, _moduleObj.nodeKindDeclClass, pos, builtinTypeList)
   
   -- none
   
@@ -4370,6 +4373,7 @@ function DeclClassNode:__init(pos, builtinTypeList, accessMode, name, fieldList,
   self.scope = scope
   self.initStmtList = initStmtList
   self.advertiseList = advertiseList
+  self.trustList = trustList
   self.outerMethodSet = outerMethodSet
   -- none
   
@@ -4398,6 +4402,9 @@ end
 function DeclClassNode:get_advertiseList()
   return self.advertiseList
 end
+function DeclClassNode:get_trustList()
+  return self.trustList
+end
 function DeclClassNode:get_outerMethodSet()
   return self.outerMethodSet
 end
@@ -4417,11 +4424,11 @@ end
 
 local nodeKindDeclMacro = regKind( [[DeclMacro]] )
 
-moduleObj.nodeKindDeclMacro = nodeKindDeclMacro
+_moduleObj.nodeKindDeclMacro = nodeKindDeclMacro
 
 local DeclMacroNode = {}
 setmetatable( DeclMacroNode, { __index = Node } )
-moduleObj.DeclMacroNode = DeclMacroNode
+_moduleObj.DeclMacroNode = DeclMacroNode
 function DeclMacroNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4443,7 +4450,7 @@ function DeclMacroNode.new( pos, builtinTypeList, declInfo )
 return obj
 end
 function DeclMacroNode:__init(pos, builtinTypeList, declInfo) 
-  Node.__init( self, nodeKindDeclMacro, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindDeclMacro, pos, builtinTypeList)
   
   -- none
   
@@ -4459,7 +4466,7 @@ do
 
 
 local MacroEval = {}
-moduleObj.MacroEval = MacroEval
+_moduleObj.MacroEval = MacroEval
 -- none
 function MacroEval.new(  )
   local obj = {}
@@ -4487,11 +4494,11 @@ end
 
 local nodeKindLiteralNil = regKind( [[LiteralNil]] )
 
-moduleObj.nodeKindLiteralNil = nodeKindLiteralNil
+_moduleObj.nodeKindLiteralNil = nodeKindLiteralNil
 
 local LiteralNilNode = {}
 setmetatable( LiteralNilNode, { __index = Node } )
-moduleObj.LiteralNilNode = LiteralNilNode
+_moduleObj.LiteralNilNode = LiteralNilNode
 function LiteralNilNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4513,7 +4520,7 @@ function LiteralNilNode.new( pos, builtinTypeList )
 return obj
 end
 function LiteralNilNode:__init(pos, builtinTypeList) 
-  Node.__init( self, nodeKindLiteralNil, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralNil, pos, builtinTypeList)
   
   -- none
   
@@ -4536,11 +4543,11 @@ end
 
 local nodeKindLiteralChar = regKind( [[LiteralChar]] )
 
-moduleObj.nodeKindLiteralChar = nodeKindLiteralChar
+_moduleObj.nodeKindLiteralChar = nodeKindLiteralChar
 
 local LiteralCharNode = {}
 setmetatable( LiteralCharNode, { __index = Node } )
-moduleObj.LiteralCharNode = LiteralCharNode
+_moduleObj.LiteralCharNode = LiteralCharNode
 function LiteralCharNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4562,7 +4569,7 @@ function LiteralCharNode.new( pos, builtinTypeList, token, num )
 return obj
 end
 function LiteralCharNode:__init(pos, builtinTypeList, token, num) 
-  Node.__init( self, nodeKindLiteralChar, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralChar, pos, builtinTypeList)
   
   -- none
   
@@ -4593,11 +4600,11 @@ end
 
 local nodeKindLiteralInt = regKind( [[LiteralInt]] )
 
-moduleObj.nodeKindLiteralInt = nodeKindLiteralInt
+_moduleObj.nodeKindLiteralInt = nodeKindLiteralInt
 
 local LiteralIntNode = {}
 setmetatable( LiteralIntNode, { __index = Node } )
-moduleObj.LiteralIntNode = LiteralIntNode
+_moduleObj.LiteralIntNode = LiteralIntNode
 function LiteralIntNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4619,7 +4626,7 @@ function LiteralIntNode.new( pos, builtinTypeList, token, num )
 return obj
 end
 function LiteralIntNode:__init(pos, builtinTypeList, token, num) 
-  Node.__init( self, nodeKindLiteralInt, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralInt, pos, builtinTypeList)
   
   -- none
   
@@ -4650,11 +4657,11 @@ end
 
 local nodeKindLiteralReal = regKind( [[LiteralReal]] )
 
-moduleObj.nodeKindLiteralReal = nodeKindLiteralReal
+_moduleObj.nodeKindLiteralReal = nodeKindLiteralReal
 
 local LiteralRealNode = {}
 setmetatable( LiteralRealNode, { __index = Node } )
-moduleObj.LiteralRealNode = LiteralRealNode
+_moduleObj.LiteralRealNode = LiteralRealNode
 function LiteralRealNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4676,7 +4683,7 @@ function LiteralRealNode.new( pos, builtinTypeList, token, num )
 return obj
 end
 function LiteralRealNode:__init(pos, builtinTypeList, token, num) 
-  Node.__init( self, nodeKindLiteralReal, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralReal, pos, builtinTypeList)
   
   -- none
   
@@ -4707,11 +4714,11 @@ end
 
 local nodeKindLiteralArray = regKind( [[LiteralArray]] )
 
-moduleObj.nodeKindLiteralArray = nodeKindLiteralArray
+_moduleObj.nodeKindLiteralArray = nodeKindLiteralArray
 
 local LiteralArrayNode = {}
 setmetatable( LiteralArrayNode, { __index = Node } )
-moduleObj.LiteralArrayNode = LiteralArrayNode
+_moduleObj.LiteralArrayNode = LiteralArrayNode
 function LiteralArrayNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4733,7 +4740,7 @@ function LiteralArrayNode.new( pos, builtinTypeList, expList )
 return obj
 end
 function LiteralArrayNode:__init(pos, builtinTypeList, expList) 
-  Node.__init( self, nodeKindLiteralArray, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralArray, pos, builtinTypeList)
   
   -- none
   
@@ -4760,11 +4767,11 @@ end
 
 local nodeKindLiteralList = regKind( [[LiteralList]] )
 
-moduleObj.nodeKindLiteralList = nodeKindLiteralList
+_moduleObj.nodeKindLiteralList = nodeKindLiteralList
 
 local LiteralListNode = {}
 setmetatable( LiteralListNode, { __index = Node } )
-moduleObj.LiteralListNode = LiteralListNode
+_moduleObj.LiteralListNode = LiteralListNode
 function LiteralListNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4786,7 +4793,7 @@ function LiteralListNode.new( pos, builtinTypeList, expList )
 return obj
 end
 function LiteralListNode:__init(pos, builtinTypeList, expList) 
-  Node.__init( self, nodeKindLiteralList, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralList, pos, builtinTypeList)
   
   -- none
   
@@ -4802,7 +4809,7 @@ do
 
 
 local PairItem = {}
-moduleObj.PairItem = PairItem
+_moduleObj.PairItem = PairItem
 function PairItem.new( key, val )
   local obj = {}
   setmetatable( obj, { __index = PairItem } )
@@ -4837,11 +4844,11 @@ end
 
 local nodeKindLiteralMap = regKind( [[LiteralMap]] )
 
-moduleObj.nodeKindLiteralMap = nodeKindLiteralMap
+_moduleObj.nodeKindLiteralMap = nodeKindLiteralMap
 
 local LiteralMapNode = {}
 setmetatable( LiteralMapNode, { __index = Node } )
-moduleObj.LiteralMapNode = LiteralMapNode
+_moduleObj.LiteralMapNode = LiteralMapNode
 function LiteralMapNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4863,7 +4870,7 @@ function LiteralMapNode.new( pos, builtinTypeList, map, pairList )
 return obj
 end
 function LiteralMapNode:__init(pos, builtinTypeList, map, pairList) 
-  Node.__init( self, nodeKindLiteralMap, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralMap, pos, builtinTypeList)
   
   -- none
   
@@ -4894,11 +4901,11 @@ end
 
 local nodeKindLiteralString = regKind( [[LiteralString]] )
 
-moduleObj.nodeKindLiteralString = nodeKindLiteralString
+_moduleObj.nodeKindLiteralString = nodeKindLiteralString
 
 local LiteralStringNode = {}
 setmetatable( LiteralStringNode, { __index = Node } )
-moduleObj.LiteralStringNode = LiteralStringNode
+_moduleObj.LiteralStringNode = LiteralStringNode
 function LiteralStringNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4920,7 +4927,7 @@ function LiteralStringNode.new( pos, builtinTypeList, token, argList )
 return obj
 end
 function LiteralStringNode:__init(pos, builtinTypeList, token, argList) 
-  Node.__init( self, nodeKindLiteralString, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralString, pos, builtinTypeList)
   
   -- none
   
@@ -4951,11 +4958,11 @@ end
 
 local nodeKindLiteralBool = regKind( [[LiteralBool]] )
 
-moduleObj.nodeKindLiteralBool = nodeKindLiteralBool
+_moduleObj.nodeKindLiteralBool = nodeKindLiteralBool
 
 local LiteralBoolNode = {}
 setmetatable( LiteralBoolNode, { __index = Node } )
-moduleObj.LiteralBoolNode = LiteralBoolNode
+_moduleObj.LiteralBoolNode = LiteralBoolNode
 function LiteralBoolNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -4977,7 +4984,7 @@ function LiteralBoolNode.new( pos, builtinTypeList, token )
 return obj
 end
 function LiteralBoolNode:__init(pos, builtinTypeList, token) 
-  Node.__init( self, nodeKindLiteralBool, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralBool, pos, builtinTypeList)
   
   -- none
   
@@ -5004,11 +5011,11 @@ end
 
 local nodeKindLiteralSymbol = regKind( [[LiteralSymbol]] )
 
-moduleObj.nodeKindLiteralSymbol = nodeKindLiteralSymbol
+_moduleObj.nodeKindLiteralSymbol = nodeKindLiteralSymbol
 
 local LiteralSymbolNode = {}
 setmetatable( LiteralSymbolNode, { __index = Node } )
-moduleObj.LiteralSymbolNode = LiteralSymbolNode
+_moduleObj.LiteralSymbolNode = LiteralSymbolNode
 function LiteralSymbolNode:processFilter( filter, ... )
 
   local argList = {...}
@@ -5030,7 +5037,7 @@ function LiteralSymbolNode.new( pos, builtinTypeList, token )
 return obj
 end
 function LiteralSymbolNode:__init(pos, builtinTypeList, token) 
-  Node.__init( self, nodeKindLiteralSymbol, pos, builtinTypeList)
+  Node.__init( self, _moduleObj.nodeKindLiteralSymbol, pos, builtinTypeList)
   
   -- none
   
@@ -5047,22 +5054,22 @@ do
 
 function LiteralNilNode:getLiteral(  )
 
-  return {nil}, {builtinTypeNil}
+  return {nil}, {_moduleObj.builtinTypeNil}
 end
 
 function LiteralCharNode:getLiteral(  )
 
-  return {self.num}, {builtinTypeChar}
+  return {self.num}, {_moduleObj.builtinTypeChar}
 end
 
 function LiteralIntNode:getLiteral(  )
 
-  return {self.num}, {builtinTypeInt}
+  return {self.num}, {_moduleObj.builtinTypeInt}
 end
 
 function LiteralRealNode:getLiteral(  )
 
-  return {self.num}, {builtinTypeReal}
+  return {self.num}, {_moduleObj.builtinTypeReal}
 end
 
 function LiteralArrayNode:getLiteral(  )
@@ -5132,19 +5139,19 @@ function LiteralStringNode:getLiteral(  )
       
       table.insert( argTbl, arg[1] )
     end
-    return {string.format( txt, table.unpack( argTbl ) )}, {builtinTypeString}
+    return {string.format( txt, table.unpack( argTbl ) )}, {_moduleObj.builtinTypeString}
   end
-  return {txt}, {builtinTypeString}
+  return {txt}, {_moduleObj.builtinTypeString}
 end
 
 function LiteralBoolNode:getLiteral(  )
 
-  return {self.token.txt == "true"}, {builtinTypeBool}
+  return {self.token.txt == "true"}, {_moduleObj.builtinTypeBool}
 end
 
 function LiteralSymbolNode:getLiteral(  )
 
-  return {{self.token.txt}}, {builtinTypeSymbol}
+  return {{self.token.txt}}, {_moduleObj.builtinTypeSymbol}
 end
 
 function RefFieldNode:getLiteral(  )
@@ -5157,7 +5164,7 @@ function RefFieldNode:getLiteral(  )
     table.insert( prefix, "." )
   end
   table.insert( prefix, self.field.txt )
-  return {prefix}, {builtinTypeSymbol}
+  return {prefix}, {_moduleObj.builtinTypeSymbol}
 end
 
 function ExpMacroStatNode:getLiteral(  )
@@ -5170,4 +5177,4 @@ function ExpMacroStatNode:getLiteral(  )
   return {txt}, {self:get_expType(  )}
 end
 
-return moduleObj
+return _moduleObj

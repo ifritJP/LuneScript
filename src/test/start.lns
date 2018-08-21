@@ -1,6 +1,7 @@
 subfile use test.startsub;
 import test.simple;
 import lune.base.Writer;
+import test.Sub2;
 
 macro _print( symbol2:stat, format:str! ) {
    {
@@ -19,6 +20,8 @@ let classB = new simple.ClassB( 123 );
 print( "classB.func()", classB.func() );
 print( "classB.sub()", classB.sub() );
 let hoge = classB.func2();
+print( "Hoge.func()", hoge.func() );
+Sub2.sub2val = 10;
 print( "Hoge.func()", hoge.func() );
 
 let func3ret = classB.func3() ;

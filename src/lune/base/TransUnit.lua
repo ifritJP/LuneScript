@@ -1,5 +1,5 @@
 --lune/base/TransUnit.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -68,7 +68,7 @@ local Ast = require( 'lune.base.Ast' )
 local Writer = require( 'lune.base.Writer' )
 
 local TransUnit = {}
-moduleObj.TransUnit = TransUnit
+_moduleObj.TransUnit = TransUnit
 function TransUnit.new( macroEval, analyzeModule, mode, pos )
   local obj = {}
   setmetatable( obj, { __index = TransUnit } )
@@ -311,11 +311,11 @@ do
 
 local typeInfoListInsert = Ast.typeInfoRoot
 
-moduleObj.typeInfoListInsert = typeInfoListInsert
+_moduleObj.typeInfoListInsert = typeInfoListInsert
 
 local typeInfoListRemove = Ast.typeInfoRoot
 
-moduleObj.typeInfoListRemove = typeInfoListRemove
+_moduleObj.typeInfoListRemove = typeInfoListRemove
 
 function TransUnit:registBuiltInScope(  )
 
@@ -414,9 +414,9 @@ function TransUnit:registBuiltInScope(  )
                         do
                           local _switchExp = (fieldName )
                           if _switchExp == "insert" then
-                            typeInfoListInsert = typeInfo
+                            _moduleObj.typeInfoListInsert = typeInfo
                           elseif _switchExp == "remove" then
-                            typeInfoListRemove = typeInfo
+                            _moduleObj.typeInfoListRemove = typeInfo
                           end
                         end
                         
@@ -831,10 +831,8 @@ function TransUnit:analyzeImport( token )
   local typeId2TypeInfo = {}
   
   typeId2TypeInfo[Ast.rootTypeId] = Ast.typeInfoRoot
-  local moduleTypeInfo = Ast.rootTypeInfo
-  
   for __index, moduleName in pairs( nameList ) do
-    moduleTypeInfo = self:pushClass( true, false, nil, nil, true, moduleName, "pub" )
+    self:pushClass( true, false, nil, nil, true, moduleName, "pub" )
   end
   for __index, moduleName in pairs( nameList ) do
     self:popClass(  )
@@ -1051,8 +1049,7 @@ function TransUnit:analyzeImport( token )
     self:popClass(  )
   end
   self.scope = self.moduleScope
-  moduleTypeInfo = _lune_unwrap( typeId2TypeInfo[moduleInfo._moduleTypeId])
-  self.scope:add( Ast.SymbolKind.Var, false, false, moduleToken.txt, moduleTypeInfo, "local", true, false )
+  self.scope:add( Ast.SymbolKind.Var, false, false, moduleToken.txt, _lune_unwrap( typeId2TypeInfo[moduleInfo._moduleTypeId]), "local", true, false )
   self:checkToken( nextToken, ";" )
   if self.moduleScope ~= self.scope then
     self:error( "illegal top scope." )
@@ -1367,6 +1364,9 @@ function TransUnit:analyzeProvide( firstToken )
   
   local node = Ast.ProvideNode.new(firstToken.pos, {Ast.builtinTypeNone}, val)
   
+  if self.provideNode then
+    self:addErrMess( firstToken.pos, "multiple provide" )
+  end
   self.provideNode = node
   if node:get_val():get_kind() == Ast.nodeKindExpRef then
     local expRefNode = node:get_val()
@@ -1502,7 +1502,7 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
 end
 
 local ASTInfo = {}
-moduleObj.ASTInfo = ASTInfo
+_moduleObj.ASTInfo = ASTInfo
 function ASTInfo.new( node, moduleTypeInfo )
   local obj = {}
   setmetatable( obj, { __index = ASTInfo } )
@@ -1882,22 +1882,10 @@ function TransUnit:analyzeDeclMethod( abstructFlag, overrideFlag, accessMode, st
   return node
 end
 
-function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
+function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, classTypeInfo, name, moduleName, nextToken )
 
-  local name = self:getSymbolToken(  )
+  local memberName2Node = {}
   
-  local moduleName = nil
-  
-  if mode == "module" then
-    self:checkNextToken( "require" )
-    moduleName = self:getToken(  )
-  end
-  local nextToken, classTypeInfo = self:analyzePushClass( mode ~= "interface", classAbstructFlag, firstToken, name, classAccessMode )
-  
-  self:checkToken( nextToken, "{" )
-  if mode == "class" then
-    self.scope:add( Ast.SymbolKind.Var, false, true, "self", classTypeInfo, "pri", false, false )
-  end
   local fieldList = {}
   
   local memberList = {}
@@ -1908,9 +1896,9 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
   
   local advertiseList = {}
   
-  local node = Ast.DeclClassNode.new(firstToken.pos, {classTypeInfo}, classAccessMode, name, fieldList, moduleName, memberList, self.scope, initStmtList, advertiseList, {})
+  local trustList = {}
   
-  local memberName2Node = {}
+  local node = Ast.DeclClassNode.new(firstToken.pos, {classTypeInfo}, classAccessMode, name, fieldList, moduleName, memberList, self.scope, initStmtList, advertiseList, trustList, {})
   
   self.typeInfo2ClassNode[classTypeInfo] = node
   while true do
@@ -1991,11 +1979,33 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       self:error( "illegal field" )
     end
   end
+  return node, nextToken, methodNameSet
+end
+
+function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
+
+  local name = self:getSymbolToken(  )
+  
+  local moduleName = nil
+  
+  if mode == "module" then
+    self:checkNextToken( "require" )
+    moduleName = self:getToken(  )
+  end
+  local nextToken, classTypeInfo = self:analyzePushClass( mode ~= "interface", classAbstructFlag, firstToken, name, classAccessMode )
+  
+  self:checkToken( nextToken, "{" )
+  if mode == "class" then
+    self.scope:add( Ast.SymbolKind.Var, false, true, "self", classTypeInfo, "pri", false, false )
+  end
+  local node, workNextToken, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, classTypeInfo, name, moduleName, nextToken )
+  
+  nextToken = workNextToken
   local parentInfo = classTypeInfo
   
   local memberTypeList = {}
   
-  for __index, memberNode in pairs( memberList ) do
+  for __index, memberNode in pairs( node:get_memberList() ) do
     local memberType = memberNode:get_expType()
     
     if not memberNode:get_staticFlag() then
@@ -2030,7 +2040,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     self.scope:addMethod( initTypeInfo, "pub", false, false )
     methodNameSet["__init"] = true
   end
-  for __index, advertiseInfo in pairs( advertiseList ) do
+  for __index, advertiseInfo in pairs( node:get_advertiseList() ) do
     local memberType = advertiseInfo:get_member():get_expType()
     
     do
@@ -2120,6 +2130,17 @@ function TransUnit:analyzeDeclFunc( abstructFlag, overrideFlag, accessMode, stat
     if _exp ~= nil then
     
         funcName = _exp.txt
+        if kind == Ast.nodeKindDeclFunc then
+          do
+            local _switchExp = accessMode
+            if _switchExp == "pub" or _switchExp == "global" then
+              if self.scope ~= self.moduleScope then
+                self:addErrMess( firstToken.pos, "'global' or 'pub' function must exist top scope." )
+              end
+            end
+          end
+          
+        end
       end
   end
   
@@ -2187,10 +2208,15 @@ function TransUnit:analyzeDeclFunc( abstructFlag, overrideFlag, accessMode, stat
     local _exp = name
     if _exp ~= nil then
     
+        local parentScope = scope:get_parent(  )
+        
+        if accessMode == "global" then
+          parentScope = Ast.rootScope
+        end
         if kind == Ast.nodeKindDeclFunc then
-          scope:get_parent(  ):addFunc( typeInfo, accessMode, staticFlag, false )
+          parentScope:addFunc( typeInfo, accessMode, staticFlag, false )
         else 
-          scope:get_parent(  ):addMethod( typeInfo, accessMode, staticFlag, false )
+          parentScope:addMethod( typeInfo, accessMode, staticFlag, false )
         end
       end
   end
@@ -2664,9 +2690,9 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
   
   do
     local _switchExp = funcTypeInfo
-    if _switchExp == typeInfoListInsert then
+    if _switchExp == _moduleObj.typeInfoListInsert then
       argTypeList = genericTypeList
-    elseif _switchExp == typeInfoListRemove then
+    elseif _switchExp == _moduleObj.typeInfoListRemove then
     end
   end
   
@@ -3722,4 +3748,4 @@ function TransUnit:analyzeStatement( termTxt )
   return statement
 end
 
-return moduleObj
+return _moduleObj

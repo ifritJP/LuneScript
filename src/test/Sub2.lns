@@ -1,6 +1,14 @@
+pub let sub2val = 1;
+sub2val = sub2val + 1;
+
 pub class Hoge {
     pub let val:int;
     pub fn func(): int {
-        return 0;
+        return sub2val;
     }
+}
+
+global let sub2globalval = 1;
+global fn sub2globalfun(): int {
+   return sub2globalval;
 }

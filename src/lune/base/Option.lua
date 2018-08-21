@@ -1,5 +1,5 @@
 --lune/base/Option.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -60,10 +60,10 @@ local Util = require( 'lune.base.Util' )
 
 local version = "00.01"
 
-moduleObj.version = version
+_moduleObj.version = version
 
 local Option = {}
-moduleObj.Option = Option
+_moduleObj.Option = Option
 function Option.new(  )
   local obj = {}
   setmetatable( obj, { __index = Option } )
@@ -152,5 +152,5 @@ usage: [-prof] src.lns mode [mode-option]
   end
   return option
 end
-moduleObj.analyze = analyze
-return moduleObj
+_moduleObj.analyze = analyze
+return _moduleObj

@@ -1,5 +1,5 @@
 --lune/base/Parser.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -81,7 +81,7 @@ local function isLuaKeyword( txt )
 
   return luaKeywordSet[txt]
 end
-moduleObj.isLuaKeyword = isLuaKeyword
+_moduleObj.isLuaKeyword = isLuaKeyword
 local function createReserveInfo( luaMode )
 
   local keywordSet = {}
@@ -147,7 +147,7 @@ local function createReserveInfo( luaMode )
 end
 
 local TxtStream = {}
-moduleObj.TxtStream = TxtStream
+_moduleObj.TxtStream = TxtStream
 function TxtStream.new( txt )
   local obj = {}
   setmetatable( obj, { __index = TxtStream } )
@@ -182,7 +182,7 @@ do
   end
 
 local Position = {}
-moduleObj.Position = Position
+_moduleObj.Position = Position
 function Position.new( lineNo, column )
   local obj = {}
   setmetatable( obj, { __index = Position } )
@@ -200,7 +200,7 @@ do
   end
 
 local Token = {}
-moduleObj.Token = Token
+_moduleObj.Token = Token
 function Token.new( kind, txt, pos, commentList )
   local obj = {}
   setmetatable( obj, { __index = Token } )
@@ -224,7 +224,7 @@ do
   end
 
 local Parser = {}
-moduleObj.Parser = Parser
+_moduleObj.Parser = Parser
 -- none
 -- none
 function Parser.new(  )
@@ -243,7 +243,7 @@ do
 
 local WrapParser = {}
 setmetatable( WrapParser, { __index = Parser } )
-moduleObj.WrapParser = WrapParser
+_moduleObj.WrapParser = WrapParser
 function WrapParser:getToken(  )
 
   local token = self.parser:getToken(  )
@@ -272,7 +272,7 @@ do
 
 local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
-moduleObj.StreamParser = StreamParser
+_moduleObj.StreamParser = StreamParser
 function StreamParser.setStdinStream( moduleName )
 
   StreamParser.stdinStreamModuleName = moduleName
@@ -284,6 +284,7 @@ function StreamParser.new( stream, name, luaMode )
 return obj
 end
 function StreamParser:__init(stream, name, luaMode) 
+  self.eof = false
   self.stream = stream
   self.streamName = name
   self.lineNo = 0
@@ -324,7 +325,7 @@ do
 local kind2Txt = {}
 
 local TokenKind = {}
-moduleObj.TokenKind = TokenKind
+_moduleObj.TokenKind = TokenKind
 function TokenKind.new(  )
   local obj = {}
   setmetatable( obj, { __index = TokenKind } )
@@ -352,68 +353,68 @@ do
 kind2Txt[1] = 'Cmnt'
 local kindCmnt = 1
 
-moduleObj.kindCmnt = kindCmnt
+_moduleObj.kindCmnt = kindCmnt
 
 kind2Txt[2] = 'Str'
 local kindStr = 2
 
-moduleObj.kindStr = kindStr
+_moduleObj.kindStr = kindStr
 
 kind2Txt[3] = 'Int'
 local kindInt = 3
 
-moduleObj.kindInt = kindInt
+_moduleObj.kindInt = kindInt
 
 kind2Txt[4] = 'Real'
 local kindReal = 4
 
-moduleObj.kindReal = kindReal
+_moduleObj.kindReal = kindReal
 
 kind2Txt[5] = 'Char'
 local kindChar = 5
 
-moduleObj.kindChar = kindChar
+_moduleObj.kindChar = kindChar
 
 kind2Txt[6] = 'Symb'
 local kindSymb = 6
 
-moduleObj.kindSymb = kindSymb
+_moduleObj.kindSymb = kindSymb
 
 kind2Txt[7] = 'Dlmt'
 local kindDlmt = 7
 
-moduleObj.kindDlmt = kindDlmt
+_moduleObj.kindDlmt = kindDlmt
 
 kind2Txt[8] = 'Kywd'
 local kindKywd = 8
 
-moduleObj.kindKywd = kindKywd
+_moduleObj.kindKywd = kindKywd
 
 kind2Txt[9] = 'Ope'
 local kindOpe = 9
 
-moduleObj.kindOpe = kindOpe
+_moduleObj.kindOpe = kindOpe
 
 kind2Txt[10] = 'Type'
 local kindType = 10
 
-moduleObj.kindType = kindType
+_moduleObj.kindType = kindType
 
 kind2Txt[11] = 'Eof'
 local kindEof = 11
 
-moduleObj.kindEof = kindEof
+_moduleObj.kindEof = kindEof
 
 -- none
 
 
 local kind = TokenKind.new()
 
-moduleObj.kind = kind
+_moduleObj.kind = kind
 
-local noneToken = Token.new(kindEof, "", Position.new(0, 0), {})
+local noneToken = Token.new(_moduleObj.kindEof, "", Position.new(0, 0), {})
 
-moduleObj.noneToken = noneToken
+_moduleObj.noneToken = noneToken
 
 local quotedCharSet = {}
 
@@ -467,23 +468,32 @@ local function getKindTxt( kind )
 
   return _lune_unwrap( kind2Txt[kind])
 end
-moduleObj.getKindTxt = getKindTxt
+_moduleObj.getKindTxt = getKindTxt
 local function isOp2( ope )
 
   return op2Set[ope]
 end
-moduleObj.isOp2 = isOp2
+_moduleObj.isOp2 = isOp2
 local function isOp1( ope )
 
   return op1Set[ope]
 end
-moduleObj.isOp1 = isOp1
+_moduleObj.isOp1 = isOp1
 function StreamParser:parse(  )
 
   local function readLine(  )
   
+    if self.eof then
+      return nil
+    end
     self.lineNo = self.lineNo + 1
-    return self.stream:read( '*l' )
+    local line = self.stream:read( '*l' )
+    
+    if not line then
+      self.eof = true
+      print( string.format( "eof: %s", self.streamName) )
+    end
+    return line
   end
   
   local rawLine = readLine(  )
@@ -522,13 +532,13 @@ function StreamParser:parse(  )
   
     local function createInfo( tokenKind, token, tokenColumn )
     
-      if tokenKind == kindSymb then
+      if tokenKind == _moduleObj.kindSymb then
         if self.keywordSet[token] then
-          tokenKind = kindKywd
+          tokenKind = _moduleObj.kindKywd
         elseif self.typeSet[token] then
-          tokenKind = kindType
+          tokenKind = _moduleObj.kindType
         elseif op2Set[token] or op1Set[token] then
-          tokenKind = kindOpe
+          tokenKind = _moduleObj.kindOpe
         end
       end
       return Token.new(tokenKind, token, Position.new(self.lineNo, tokenColumn), {})
@@ -570,7 +580,7 @@ function StreamParser:parse(  )
       return nonNumIndex - 1, intFlag
     end
     
-    if kind == kindSymb then
+    if kind == _moduleObj.kindSymb then
       local searchIndex = 1
       
       while true do
@@ -590,7 +600,7 @@ function StreamParser:parse(  )
           if token:find( '^[%d]', startIndex ) then
             local endIndex, intFlag = analyzeNumber( token, startIndex )
             
-            local info = createInfo( intFlag and kindInt or kindReal, token:sub( startIndex, endIndex ), columnIndex + startIndex )
+            local info = createInfo( intFlag and _moduleObj.kindInt or _moduleObj.kindReal, token:sub( startIndex, endIndex ), columnIndex + startIndex )
             
             table.insert( list, info )
             startIndex = endIndex + 1
@@ -599,7 +609,7 @@ function StreamParser:parse(  )
             
             if index then
               if index > startIndex then
-                local info = createInfo( kindSymb, token:sub( startIndex, index - 1 ), columnIndex + startIndex )
+                local info = createInfo( _moduleObj.kindSymb, token:sub( startIndex, index - 1 ), columnIndex + startIndex )
                 
                 table.insert( list, info )
               end
@@ -623,25 +633,25 @@ function StreamParser:parse(  )
                 end
               end
               startIndex = index + #delimit
-              local workKind = kindDlmt
+              local workKind = _moduleObj.kindDlmt
               
               if op2Set[delimit] or op1Set[delimit] then
-                workKind = kindOpe
+                workKind = _moduleObj.kindOpe
               end
               if delimit == "..." then
-                workKind = kindSymb
+                workKind = _moduleObj.kindSymb
               end
               if delimit == "?" then
                 local nextChar = token:sub( index, startIndex )
                 
-                table.insert( list, createInfo( kindChar, nextChar, columnIndex + startIndex ) )
+                table.insert( list, createInfo( _moduleObj.kindChar, nextChar, columnIndex + startIndex ) )
                 startIndex = startIndex + 1
               else 
                 table.insert( list, createInfo( workKind, delimit, columnIndex + index ) )
               end
             else 
               if startIndex <= #token then
-                table.insert( list, createInfo( kindSymb, token:sub( startIndex ), columnIndex + startIndex ) )
+                table.insert( list, createInfo( _moduleObj.kindSymb, token:sub( startIndex ), columnIndex + startIndex ) )
               end
               break
             end
@@ -664,7 +674,7 @@ function StreamParser:parse(  )
     local index = string.find( rawLine, pattern, searchIndex )
     
     if not index then
-      addVal( kindSymb, rawLine:sub( startIndex ), startIndex )
+      addVal( _moduleObj.kindSymb, rawLine:sub( startIndex ), startIndex )
       return list
     end
     local findChar = string.byte( rawLine, index )
@@ -676,19 +686,19 @@ function StreamParser:parse(  )
       syncIndexFlag = false
     else 
       if startIndex < index then
-        addVal( kindSymb, rawLine:sub( startIndex, index - 1 ), startIndex )
+        addVal( _moduleObj.kindSymb, rawLine:sub( startIndex, index - 1 ), startIndex )
       end
       if findChar == 47 then
         if nextChar == 42 then
           local comment, nextIndex = multiComment( index + 2, "*/" )
           
-          addVal( kindCmnt, "/*" .. comment, index )
+          addVal( _moduleObj.kindCmnt, "/*" .. comment, index )
           searchIndex = nextIndex
         elseif nextChar == 47 then
-          addVal( kindCmnt, rawLine:sub( index ), index )
+          addVal( _moduleObj.kindCmnt, rawLine:sub( index ), index )
           searchIndex = #rawLine + 1
         else 
-          addVal( kindOpe, "/", index )
+          addVal( _moduleObj.kindOpe, "/", index )
           searchIndex = index + 1
         end
       elseif findChar == 39 or findChar == 34 then
@@ -705,7 +715,7 @@ function StreamParser:parse(  )
           local workChar = string.byte( rawLine, endIndex )
           
           if workChar == findChar then
-            addVal( kindStr, rawLine:sub( index, endIndex ), index )
+            addVal( _moduleObj.kindStr, rawLine:sub( index, endIndex ), index )
             searchIndex = endIndex + 1
             break
           elseif workChar == 92 then
@@ -718,10 +728,10 @@ function StreamParser:parse(  )
         if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
           local txt, nextIndex = multiComment( index + 3, '```' )
           
-          addVal( kindStr, '```' .. txt, index )
+          addVal( _moduleObj.kindStr, '```' .. txt, index )
           searchIndex = nextIndex
         else 
-          addVal( kindOpe, '`', index )
+          addVal( _moduleObj.kindOpe, '`', index )
           searchIndex = index + 1
         end
       elseif findChar == 63 then
@@ -739,7 +749,7 @@ function StreamParser:parse(  )
         else 
           searchIndex = index + 2
         end
-        addVal( kindChar, codeChar, index )
+        addVal( _moduleObj.kindChar, codeChar, index )
       else 
         Util.err( string.format( "illegal syntax:%s:%s", self.lineNo, rawLine:sub( index ) ) )
       end
@@ -776,16 +786,16 @@ function StreamParser:getToken(  )
   return token
 end
 
-local eofToken = Token.new(kindEof, "<EOF>", Position.new(0, 0), {})
+local eofToken = Token.new(_moduleObj.kindEof, "<EOF>", Position.new(0, 0), {})
 
 local function getEofToken(  )
 
   return eofToken
 end
-moduleObj.getEofToken = getEofToken
+_moduleObj.getEofToken = getEofToken
 local DummyParser = {}
 setmetatable( DummyParser, { __index = Parser } )
-moduleObj.DummyParser = DummyParser
+_moduleObj.DummyParser = DummyParser
 function DummyParser:getToken(  )
 
   return eofToken
@@ -808,4 +818,4 @@ end
 do
   end
 
-return moduleObj
+return _moduleObj

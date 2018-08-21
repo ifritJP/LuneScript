@@ -1,5 +1,5 @@
 --lune/base/dumpNode.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -60,7 +60,7 @@ local Parser = require( 'lune.base.Parser' )
 
 local dumpFilter = {}
 setmetatable( dumpFilter, { __index = Filter } )
-moduleObj.dumpFilter = dumpFilter
+_moduleObj.dumpFilter = dumpFilter
 function dumpFilter.new(  )
   local obj = {}
   setmetatable( obj, { __index = dumpFilter } )
@@ -742,4 +742,4 @@ end
 
 -- none
 
-return moduleObj
+return _moduleObj

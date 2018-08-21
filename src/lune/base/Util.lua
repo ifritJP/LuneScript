@@ -1,5 +1,5 @@
 --lune/base/Util.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -57,7 +57,7 @@ end
 local Depend = require( 'lune.base.Depend' )
 
 local memStream = {}
-moduleObj.memStream = memStream
+_moduleObj.memStream = memStream
 function memStream.new(  )
   local obj = {}
   setmetatable( obj, { __index = memStream } )
@@ -83,19 +83,19 @@ local function setDebugFlag( flag )
 
   debugFlag = flag
 end
-moduleObj.setDebugFlag = setDebugFlag
+_moduleObj.setDebugFlag = setDebugFlag
 local errorCode = 1
 
 local function setErrorCode( code )
 
   errorCode = code
 end
-moduleObj.setErrorCode = setErrorCode
+_moduleObj.setErrorCode = setErrorCode
 local function errorLog( message )
 
   io.stderr:write( message .. "\n" )
 end
-moduleObj.errorLog = errorLog
+_moduleObj.errorLog = errorLog
 local function err( message )
 
   if debugFlag then
@@ -104,14 +104,14 @@ local function err( message )
   errorLog( message )
   os.exit( errorCode )
 end
-moduleObj.err = err
+_moduleObj.err = err
 local function log( message )
 
   if debugFlag then
     errorLog( message )
   end
 end
-moduleObj.log = log
+_moduleObj.log = log
 local function printStackTrace(  )
 
   for level = 2, 6 do
@@ -122,7 +122,7 @@ local function printStackTrace(  )
     end
   end
 end
-moduleObj.printStackTrace = printStackTrace
+_moduleObj.printStackTrace = printStackTrace
 local function profile( validTest, func, path )
 
   if not validTest then
@@ -137,7 +137,7 @@ local function profile( validTest, func, path )
   ProFi.writeReport( path )
   return result
 end
-moduleObj.profile = profile
+_moduleObj.profile = profile
 local function getReadyCode( lnsPath, luaPath )
 
   local luaTime, lnsTime = Depend.getFileLastModifiedTime( luaPath ), Depend.getFileLastModifiedTime( lnsPath )
@@ -151,5 +151,5 @@ local function getReadyCode( lnsPath, luaPath )
     
   return luaTime >= lnsTime
 end
-moduleObj.getReadyCode = getReadyCode
-return moduleObj
+_moduleObj.getReadyCode = getReadyCode
+return _moduleObj

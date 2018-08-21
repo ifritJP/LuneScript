@@ -1,5 +1,5 @@
 --lune/base/Depend.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -81,5 +81,5 @@ local function getFileLastModifiedTime( path )
   
   return nil
 end
-moduleObj.getFileLastModifiedTime = getFileLastModifiedTime
-return moduleObj
+_moduleObj.getFileLastModifiedTime = getFileLastModifiedTime
+return _moduleObj

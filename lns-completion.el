@@ -63,19 +63,43 @@
   (lns-json-val info :displayTxt))
 
 
-(defun lns-execute-command ( out-buffer input-txt &rest args )
+;; (defun lns-execute-command ( out-buffer input-txt &rest args )
+;;   (let ((proj-dir (lns-get-proj-dir))
+;; 	command-list)
+;;     (with-temp-buffer
+;;       (when input-txt
+;; 	(insert input-txt))
+;;       (setq default-directory proj-dir)
+;;       (setq command-list (apply 'lns-command-get-command args ))
+;;       (apply 'call-process-region (point-min) (point-max)
+;; 	     (car command-list) nil out-buffer nil
+;; 	     (cdr command-list)))
+;;     (with-current-buffer out-buffer
+;;       (buffer-string))))
+
+(defun lns-execute-command ( async-callback out-buffer input-txt &rest args )
   (let ((proj-dir (lns-get-proj-dir))
-	command-list)
+	command-list process)
     (with-temp-buffer
       (when input-txt
-	(insert input-txt))
+	(insert input-txt))      
       (setq default-directory proj-dir)
       (setq command-list (apply 'lns-command-get-command args ))
-      (apply 'call-process-region (point-min) (point-max)
-	     (car command-list) nil out-buffer nil
-	     (cdr command-list)))
-    (with-current-buffer out-buffer
-      (buffer-string))))
+      (if async-callback
+	  (progn
+	    (setq process (apply 'start-process "lns"
+				 out-buffer command-list))
+	    (set-process-sentinel process async-callback)
+	    (when input-txt
+	      (process-send-string process (concat input-txt "\n"))))
+	(apply 'call-process-region (point-min) (point-max)
+	       (car command-list) nil out-buffer nil
+	       (cdr command-list))
+	(with-current-buffer out-buffer
+	  (buffer-string))))
+    process))
+
+
 
 (defun lns-convert-path-2-proj-relative-path (path)
   (file-relative-name (expand-file-name path) (lns-get-proj-dir)))
@@ -101,28 +125,42 @@
 
 
 
-(defun lns-get-complete-list ( &optional file-path analyze-module)
+(defun lns-get-complete-list ( callback async &optional file-path analyze-module)
   (let ((out-buf (lns-get-buffer "*lns-process*" t))
-	result )
+	result process)
     (when (not file-path)
       (setq file-path buffer-file-name))
-    (lns-execute-command
-     out-buf
-     (concat (buffer-substring-no-properties (point-min) (point)) "lune")
-     (lns-convert-path-2-proj-relative-path file-path) "comp" 
-     (or analyze-module (lns-convert-path-2-module file-path))
-     (number-to-string (lns-get-line))
-     (number-to-string (lns-get-column)) "-i")
-    (lns-json-get out-buf :candidateList)
+    (setq process
+	  (lns-execute-command
+	   (if async
+	       (lexical-let ((lex-buf out-buf)
+			     (lex-callback callback))
+		 (lambda (process event)
+		   (condition-case err
+		       (let (json)
+			 (setq json (lns-json-get lex-buf :candidateList))
+			 (funcall lex-callback json))
+		       (error nil))
+		     ))
+	     nil)
+	   out-buf
+	   (concat (buffer-substring-no-properties (point-min) (point)) "lune")
+	   (lns-convert-path-2-proj-relative-path file-path) "comp" 
+	   (or analyze-module (lns-convert-path-2-module file-path))
+	   (number-to-string (lns-get-line))
+	   (number-to-string (lns-get-column)) "-i"))
+    (when (not async)
+      (funcall callback
+	       (lns-json-get out-buf :candidateList)))
+    process
     ))
 
-
-(defun lns-completion-get-candidate-list ()
+(defun lns-completion-get-candidate-list (callback &optional async)
   (condition-case err
       (let* ((command-info (lns-command-get-info))
 	     (owner-file (plist-get command-info :owner))
 	     (analyze-module (plist-get command-info :module)))
-	(lns-get-complete-list owner-file analyze-module))
+	(lns-get-complete-list callback async owner-file analyze-module))
     (error nil)))
 
 (provide 'lns-completion)

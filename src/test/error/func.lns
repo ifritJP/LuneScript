@@ -33,3 +33,9 @@
       return;  // error
    }  
 }
+{
+   pub fn func() { // error
+   }
+   global fn func2() { // error
+   }
+}

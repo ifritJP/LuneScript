@@ -867,9 +867,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    let typeId2TypeInfo: Map<int,Ast.TypeInfo> = {};
    typeId2TypeInfo[ Ast.rootTypeId ] = Ast.typeInfoRoot;
 
-   let moduleTypeInfo: Ast.TypeInfo = Ast.rootTypeInfo;
    foreach moduleName in nameList {
-      moduleTypeInfo = self.pushClass( true, false, nil, nil, true, moduleName, "pub" );
+      self.pushClass( true, false, nil, nil, true, moduleName, "pub" );
    }
    foreach moduleName in nameList {
       self.popClass();
@@ -1127,9 +1126,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    // スコープを元に戻す
    self.scope = self.moduleScope;
 
-   moduleTypeInfo = unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ];
-   self.scope.add( Ast.SymbolKind.Var, false, false,
-                   moduleToken.txt, moduleTypeInfo, "local", true, false );
+   self.scope.add( Ast.SymbolKind.Var, false, false, moduleToken.txt,
+                   unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ],
+                   "local", true, false );
 
    self.checkToken( nextToken, ";" );
 
@@ -1459,6 +1458,9 @@ fn TransUnit.analyzeProvide( firstToken: Parser.Token ): Ast.Node {
    }
    
    let node = new Ast.ProvideNode( firstToken.pos, [ Ast.builtinTypeNone ], val );
+   if self.provideNode {
+      self.addErrMess( firstToken.pos, "multiple provide" );
+   }
    self.provideNode = node;
 
 

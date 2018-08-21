@@ -1,5 +1,5 @@
 --lune/base/Writer.lns
-local moduleObj = {}
+local _moduleObj = {}
 local function _lune_nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -57,7 +57,7 @@ end
 local Util = require( 'lune.base.Util' )
 
 local Writer = {}
-moduleObj.Writer = Writer
+_moduleObj.Writer = Writer
 -- none
 -- none
 -- none
@@ -79,7 +79,7 @@ do
   end
 
 local XML = {}
-moduleObj.XML = XML
+_moduleObj.XML = XML
 function XML.new( stream )
   local obj = {}
   setmetatable( obj, { __index = XML } )
@@ -169,7 +169,7 @@ do
   end
 
 local JSON = {}
-moduleObj.JSON = JSON
+_moduleObj.JSON = JSON
 function JSON:startLayer( arrayFlag, madeByArrayFlag )
 
   local info = JsonLayer.new('none', arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
@@ -350,4 +350,4 @@ end
 do
   end
 
-return moduleObj
+return _moduleObj
