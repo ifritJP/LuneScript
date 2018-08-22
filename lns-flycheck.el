@@ -49,12 +49,21 @@ See URL `https://github.com/ifritJP/LuneScript'."
   (remove-hook 'after-save-hook 'lns-flycheck-after-save-hook-func)
   )
 
+(defun lns-flycheck-enable-mode (buf)
+  (with-current-buffer buf
+    (if (and (buffer-file-name)
+	     (file-exists-p (buffer-file-name)))
+	(flycheck-mode)
+      (add-hook 'after-save-hook 'lns-flycheck-after-save-hook-func)
+      )
+    ))
+
 (defun lns-flycheck-lns-mode-hook-func ()
   (flycheck-select-checker 'lunescript)
-  (if (file-exists-p (buffer-file-name))
-      (flycheck-mode)
-    (add-hook 'after-save-hook 'lns-flycheck-after-save-hook-func)
-    ))
+  (lexical-let ((buf (current-buffer)))
+    (run-at-time 1 nil (lambda ()
+			 (lns-flycheck-enable-mode buf)))
+  ))
 (add-hook 'lns-mode-hook 'lns-flycheck-lns-mode-hook-func)
 
 (provide 'lns-flycheck)

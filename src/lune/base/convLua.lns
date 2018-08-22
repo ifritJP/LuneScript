@@ -371,8 +371,6 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
          }  
       }
    }
-   
-
 
    self.writeln( "local _varName2InfoMap = {}", baseIndent );
    self.writeln( "_moduleObj._varName2InfoMap = _varName2InfoMap", baseIndent );

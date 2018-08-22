@@ -47,11 +47,20 @@
   (remove-hook 'after-save-hook 'lns-flymake-after-save-hook-func)
   )
 
-(defun lns-flymake-lns-mode-hook-func ()
-  (if (file-exists-p (buffer-file-name))
-      (flymake-mode t)
-    (add-hook 'after-save-hook 'lns-flymake-after-save-hook-func)
+(defun lns-flymake-enable-mode (buf)
+  (with-current-buffer buf
+    (if (and (buffer-file-name)
+	     (file-exists-p (buffer-file-name)))
+	(flymake-mode)
+      (add-hook 'after-save-hook 'lns-flymake-after-save-hook-func)
+      )
     ))
+
+(defun lns-flymake-lns-mode-hook-func ()
+  (lexical-let ((buf (current-buffer)))
+    (run-at-time 1 nil (lambda ()
+			 (lns-flymake-enable-mode buf)))
+  ))
 
 (add-hook 'lns-mode-hook 'lns-flymake-lns-mode-hook-func)
 
