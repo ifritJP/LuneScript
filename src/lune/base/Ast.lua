@@ -590,7 +590,7 @@ end
 
 function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
 
-  if not self.classFlag then
+  if moduleScope == fromScope or not self.classFlag then
     for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
       if not callback( symbolInfo ) then
         return 

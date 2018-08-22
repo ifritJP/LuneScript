@@ -440,7 +440,7 @@ pub fn Scope.getSymbolTypeInfo(
 pub fn Scope.filterSymbolTypeInfo(
    fromScope:Scope, moduleScope:Scope, callback:form )
 {
-   if not self.classFlag {
+   if moduleScope == fromScope or not self.classFlag {
       foreach symbolInfo in self.symbol2TypeInfoMap {
          if not callback( symbolInfo ) {
             return;

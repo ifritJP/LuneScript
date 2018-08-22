@@ -23,7 +23,6 @@ if! socket.receive( 100 ) {
 }
 socket.close();
 
-
 class Super {
    pub let val:int;
    pri let val2:int { pub };
@@ -59,4 +58,3 @@ class Obj {
       print( self.val );
    }
 }
-
