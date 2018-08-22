@@ -478,6 +478,29 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
   return nil
 end
 
+function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
+
+  if self.classFlag then
+    if includeSelfFlag then
+      for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
+        if symbolInfo:canAccess( fromScope ) then
+          if not callback( symbolInfo ) then
+            return false
+          end
+        end
+      end
+    end
+    if self.inheritList then
+      for __index, scope in pairs( self.inheritList ) do
+        if not scope:filterTypeInfoField( true, fromScope, callback ) then
+          return false
+        end
+      end
+    end
+  end
+  return true
+end
+
 function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
 
   local typeInfo = nil
@@ -563,6 +586,20 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
     return self.parent:getSymbolTypeInfo( name, fromScope, moduleScope )
   end
   return _moduleObj.sym2builtInTypeMap[name]
+end
+
+function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
+
+  if not self.classFlag then
+    for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
+      if not callback( symbolInfo ) then
+        return 
+      end
+    end
+  end
+  if self.parent ~= self then
+    self.parent:filterSymbolTypeInfo( fromScope, moduleScope, callback )
+  end
 end
 
 function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable )

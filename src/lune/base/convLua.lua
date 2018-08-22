@@ -1710,14 +1710,14 @@ end
 
 function convFilter:processLiteralInt( node, parent, baseIndent )
 
-  self:write( string.format( "%d", node:get_num() ) )
+  self:write( node:get_token().txt )
 end
 
 -- none
 
 function convFilter:processLiteralReal( node, parent, baseIndent )
 
-  self:write( string.format( "%s", node:get_num() ) )
+  self:write( node:get_token().txt )
 end
 
 -- none

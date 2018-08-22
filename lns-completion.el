@@ -80,23 +80,24 @@
 (defun lns-execute-command ( async-callback out-buffer input-txt &rest args )
   (let ((proj-dir (lns-get-proj-dir))
 	command-list process)
+    (setq command-list (apply 'lns-command-get-command args ))
     (with-temp-buffer
+      (setq default-directory proj-dir)
       (when input-txt
 	(insert input-txt))      
-      (setq default-directory proj-dir)
-      (setq command-list (apply 'lns-command-get-command args ))
       (if async-callback
 	  (progn
 	    (setq process (apply 'start-process "lns"
 				 out-buffer command-list))
-	    (set-process-sentinel process async-callback)
-	    (when input-txt
-	      (process-send-string process (concat input-txt "\n"))))
+	    (set-process-sentinel process async-callback))
 	(apply 'call-process-region (point-min) (point-max)
 	       (car command-list) nil out-buffer nil
 	       (cdr command-list))
 	(with-current-buffer out-buffer
 	  (buffer-string))))
+    (when (and async-callback input-txt)
+      (process-send-string process (concat input-txt "\n"))
+      (process-send-eof process))
     process))
 
 
@@ -124,6 +125,17 @@
     ))
 
 
+(defun lns-complete-from-json (buf)
+  (let ((candidate-list (lns-json-get buf :candidateList)))
+    (setq candidate-list
+	  (sort candidate-list
+		(lambda (obj1 obj2)
+		  (let* ((info1 (lns-json-val obj1 :candidate))
+			 (item-txt1 (lns-candidate-get-displayTxt info1))
+			 (info2 (lns-json-val obj2 :candidate))
+			 (item-txt2 (lns-candidate-get-displayTxt info2)))
+		    (string< item-txt1 item-txt2)))))
+    candidate-list))
 
 (defun lns-get-complete-list ( callback async &optional file-path analyze-module)
   (let ((out-buf (lns-get-buffer "*lns-process*" t))
@@ -138,10 +150,12 @@
 		 (lambda (process event)
 		   (condition-case err
 		       (let (json)
-			 (setq json (lns-json-get lex-buf :candidateList))
-			 (funcall lex-callback json))
-		       (error nil))
-		     ))
+			 ;;(setq json (lns-json-get lex-buf :candidateList))
+			 (setq json (lns-complete-from-json lex-buf))
+			 (funcall lex-callback json nil))
+		     (error nil
+			    (funcall lex-callback nil t)))
+		   ))
 	     nil)
 	   out-buf
 	   (concat (buffer-substring-no-properties (point-min) (point)) "lune")
@@ -150,17 +164,19 @@
 	   (number-to-string (lns-get-line))
 	   (number-to-string (lns-get-column)) "-i"))
     (when (not async)
-      (funcall callback
-	       (lns-json-get out-buf :candidateList)))
+      (condition-case err
+	  (funcall callback
+		   ;;(lns-json-get out-buf :candidateList) nil)
+		   (lns-complete-from-json out-buf) nil)
+	(error nil
+	       (funcall callback nil t))))
     process
     ))
 
 (defun lns-completion-get-candidate-list (callback &optional async)
-  (condition-case err
-      (let* ((command-info (lns-command-get-info))
-	     (owner-file (plist-get command-info :owner))
-	     (analyze-module (plist-get command-info :module)))
-	(lns-get-complete-list callback async owner-file analyze-module))
-    (error nil)))
+  (let* ((command-info (lns-command-get-info))
+	 (owner-file (plist-get command-info :owner))
+	 (analyze-module (plist-get command-info :module)))
+    (lns-get-complete-list callback async owner-file analyze-module)))
 
 (provide 'lns-completion)

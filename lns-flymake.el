@@ -42,9 +42,18 @@
 (add-to-list 'flymake-allowed-file-name-masks
 	     '("\\.lns$" flymake-lns-init nil lns-flymake-get-real-file-name) )
 
-(add-hook 'lns-mode-hook '(lambda ()
-			    (flymake-mode t)
-			    ))
+(defun lns-flymake-after-save-hook-func ()
+  (flymake-mode t)
+  (remove-hook 'after-save-hook 'lns-flymake-after-save-hook-func)
+  )
+
+(defun lns-flymake-lns-mode-hook-func ()
+  (if (file-exists-p (buffer-file-name))
+      (flymake-mode t)
+    (add-hook 'after-save-hook 'lns-flymake-after-save-hook-func)
+    ))
+
+(add-hook 'lns-mode-hook 'lns-flymake-lns-mode-hook-func)
 
 (add-to-list
  'flymake-err-line-patterns

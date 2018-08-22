@@ -34,7 +34,7 @@ endef
 
 define exeComp
 	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
-			json_pp --json_opt=canonical,pretty
+			json_pp --json_opt=canonical,pretty | sort
 endef
 
 test-comp:

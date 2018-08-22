@@ -419,3 +419,9 @@ print( "val", External.val );
    jsonWriter.endElement();
    jsonWriter.fin();
 }
+
+{
+   let val = 0xff1;
+   _print( `{ val } );
+}
+

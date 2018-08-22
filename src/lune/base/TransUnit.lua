@@ -319,7 +319,7 @@ _moduleObj.typeInfoListRemove = typeInfoListRemove
 
 function TransUnit:registBuiltInScope(  )
 
-  local builtInInfo = {{[""] = {["type"] = {["arg"] = {"stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["_fcall"] = {["arg"] = {"form", "..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"method"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"method"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"method"}, ["arg"] = {"stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"method"}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}}}, {["_luneScript"] = {["loadModule"] = {["arg"] = {"str"}, ["ret"] = {"stem", "stem"}}, ["searchModule"] = {["arg"] = {"str"}, ["ret"] = {"str!"}}}}}
+  local builtInInfo = {{[""] = {["type"] = {["arg"] = {"stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["_fcall"] = {["arg"] = {"form", "..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"method"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"method"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"method"}, ["arg"] = {"stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"method"}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}}}, {["_luneScript"] = {["loadModule"] = {["arg"] = {"str"}, ["ret"] = {"stem", "stem"}}, ["searchModule"] = {["arg"] = {"str"}, ["ret"] = {"str!"}}}}}
   
   local function getTypeInfo( typeName )
   
@@ -856,7 +856,7 @@ function TransUnit:analyzeImport( token )
   
     local newTypeInfo = nil
     
-    if atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] then
+    if atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] or atomInfo.kind == Ast.TypeInfoKindList or atomInfo.kind == Ast.TypeInfoKindArray or atomInfo.kind == Ast.TypeInfoKindMap then
       if atomInfo.nilable then
         local orgTypeInfo = _lune_unwrap( typeId2TypeInfo[atomInfo.orgTypeId])
         
@@ -1626,7 +1626,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
     end
     Util.err( "has error" )
   end
-  if self.analyzeMode == "diag" then
+  if self.analyzeMode == "diag" or self.analyzeMode == "comp" then
     os.exit( 0 )
   end
   return ASTInfo.new(_lune_unwrap( ast), moduleTypeInfo)
@@ -2977,52 +2977,73 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
   return fieldTypeInfo, getterTypeInfo
 end
 
-function TransUnit:dumpComp( writer, scope, pattern )
+function TransUnit:dumpFieldComp( writer, scope, pattern )
 
-  do
-    local __sorted = {}
-    local __map = scope:get_symbol2TypeInfoMap()
-    for __key in pairs( __map ) do
-      table.insert( __sorted, __key )
-    end
-    table.sort( __sorted )
-    for __index, symbol in ipairs( __sorted ) do
-      symbolInfo = __map[ symbol ]
-      do
-        if symbol ~= "__init" and symbol ~= "self" then
-          if pattern == "" or symbol:find( pattern ) then
-            if scope:getTypeInfoField( symbol, true, self.scope ) then
-              writer:startParent( "candidate", false )
-              local typeInfo = symbolInfo:get_typeInfo()
-              
-              local typeKindTxt = ""
-              
-              writer:write( "type", string.format( "%s", Ast.SymbolKind.getTxt( symbolInfo:get_kind() )) )
-              do
-                local _switchExp = (symbolInfo:get_kind() )
-                if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
-                  writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
-                elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
-                  writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
-                elseif _switchExp == Ast.SymbolKind.Typ then
-                  writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
-                end
-              end
-              
-              writer:endElement(  )
-            end
+  scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
+  
+    local symbol = symbolInfo:get_name()
+    
+    if symbol ~= "__init" and symbol ~= "self" then
+      if pattern == "" or symbol:find( pattern ) then
+        writer:startParent( "candidate", false )
+        local typeInfo = symbolInfo:get_typeInfo()
+        
+        local typeKindTxt = ""
+        
+        writer:write( "type", string.format( "%s", Ast.SymbolKind.getTxt( symbolInfo:get_kind() )) )
+        do
+          local _switchExp = (symbolInfo:get_kind() )
+          if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
+            writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+          elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
+            writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
+          elseif _switchExp == Ast.SymbolKind.Typ then
+            writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
           end
         end
+        
+        writer:endElement(  )
       end
     end
+    return true
   end
-  
-  for __index, inheritScope in pairs( scope:get_inheritList() ) do
-    self:dumpComp( writer, inheritScope, pattern )
-  end
+   )
 end
 
-function TransUnit:checkComp( token, prefixExpType )
+function TransUnit:dumpSymbolComp( writer, scope, pattern )
+
+  scope:filterSymbolTypeInfo( scope, self.moduleScope, function ( symbolInfo )
+  
+    local symbol = symbolInfo:get_name()
+    
+    if symbol ~= "__init" and symbol ~= "self" then
+      if pattern == "" or symbol:find( pattern ) then
+        writer:startParent( "candidate", false )
+        local typeInfo = symbolInfo:get_typeInfo()
+        
+        local typeKindTxt = ""
+        
+        writer:write( "type", string.format( "%s", Ast.SymbolKind.getTxt( symbolInfo:get_kind() )) )
+        do
+          local _switchExp = (symbolInfo:get_kind() )
+          if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
+            writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+          elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
+            writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
+          elseif _switchExp == Ast.SymbolKind.Typ then
+            writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+          end
+        end
+        
+        writer:endElement(  )
+      end
+    end
+    return true
+  end
+   )
+end
+
+function TransUnit:checkFieldComp( token, prefixExpType )
 
   if self.analyzeMode == "comp" and self.analyzePos.lineNo == token.pos.lineNo and self.analyzePos.column >= token.pos.column and self.analyzePos.column <= token.pos.column + #token.txt then
     local currentModule = self.parser:getStreamName(  ):gsub( "%.lns", "" )
@@ -3038,7 +3059,32 @@ function TransUnit:checkComp( token, prefixExpType )
       
       jsonWriter:write( "prefix", prefix )
       jsonWriter:startParent( "candidateList", true )
-      self:dumpComp( jsonWriter, _lune_unwrap( prefixExpType:get_scope()), prefix == "" and "" or "^" .. prefix )
+      self:dumpFieldComp( jsonWriter, _lune_unwrap( prefixExpType:get_scope()), prefix == "" and "" or "^" .. prefix )
+      jsonWriter:endElement(  )
+      jsonWriter:endElement(  )
+      jsonWriter:fin(  )
+      os.exit( 0 )
+    end
+  end
+end
+
+function TransUnit:checkSymbolComp( token )
+
+  if self.analyzeMode == "comp" and self.analyzePos.lineNo == token.pos.lineNo and self.analyzePos.column >= token.pos.column and self.analyzePos.column <= token.pos.column + #token.txt then
+    local currentModule = self.parser:getStreamName(  ):gsub( "%.lns", "" )
+    
+    currentModule = currentModule:gsub( ".*/", "" )
+    local target = self.analyzeModule:gsub( "[^%.]+%.", "" )
+    
+    if currentModule == target then
+      local jsonWriter = Writer.JSON.new(io.stdout)
+      
+      jsonWriter:startParent( "lunescript", false )
+      local prefix = token.txt:gsub( "lune$", "" )
+      
+      jsonWriter:write( "prefix", prefix )
+      jsonWriter:startParent( "candidateList", true )
+      self:dumpSymbolComp( jsonWriter, self.scope, prefix == "" and "" or "^" .. prefix )
       jsonWriter:endElement(  )
       jsonWriter:endElement(  )
       jsonWriter:fin(  )
@@ -3072,7 +3118,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               
               local prefixExpType = prefixExp:get_expType()
               
-              self:checkComp( token, prefixExpType )
+              self:checkFieldComp( token, prefixExpType )
               if accessNil then
                 if prefixExpType:get_nilable() then
                   prefixExpType = _lune_unwrap( prefixExpType:get_orgTypeInfo())
@@ -3135,6 +3181,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
     if self.macroMode == "analyze" then
       exp = Ast.LiteralSymbolNode.new(firstToken.pos, {Ast.builtinTypeSymbol}, token)
     else 
+      self:checkSymbolComp( token )
       local symbolInfo = self.scope:getSymbolTypeInfo( token.txt, self.scope, self.moduleScope )
       
           if  nil == symbolInfo then

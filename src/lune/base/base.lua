@@ -103,7 +103,6 @@ function _luneScript.loadModule( module )
 	    info.mod = mod
 	    info.meta = meta
 	    _luneScript.loadedMap[ module ] = info
-	    
 	 end
       end
       if option.outputDir then

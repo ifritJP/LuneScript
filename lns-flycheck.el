@@ -43,10 +43,18 @@ See URL `https://github.com/ifritJP/LuneScript'."
   :working-directory (lambda (checker)
 		       (plist-get (lns-command-get-info) :dir))
   )
-  
-(add-hook 'lns-mode-hook '(lambda ()
-			    (flycheck-mode)
-			    (flycheck-select-checker 'lunescript)
-			    ))
+
+(defun lns-flycheck-after-save-hook-func ()
+  (flycheck-mode)
+  (remove-hook 'after-save-hook 'lns-flycheck-after-save-hook-func)
+  )
+
+(defun lns-flycheck-lns-mode-hook-func ()
+  (flycheck-select-checker 'lunescript)
+  (if (file-exists-p (buffer-file-name))
+      (flycheck-mode)
+    (add-hook 'after-save-hook 'lns-flycheck-after-save-hook-func)
+    ))
+(add-hook 'lns-mode-hook 'lns-flycheck-lns-mode-hook-func)
 
 (provide 'lns-flycheck)

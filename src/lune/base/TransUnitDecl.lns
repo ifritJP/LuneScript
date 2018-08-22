@@ -228,7 +228,7 @@ pub fn TransUnit.createAST(
       }
       Util.err( "has error" );
    }
-   if self.analyzeMode == "diag" {
+   if self.analyzeMode == "diag" or self.analyzeMode == "comp" {
       os.exit( 0 );
    }
 

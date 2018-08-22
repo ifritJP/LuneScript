@@ -276,6 +276,7 @@ _moduleObj.StreamParser = StreamParser
 function StreamParser.setStdinStream( moduleName )
 
   StreamParser.stdinStreamModuleName = moduleName
+  StreamParser.stdinTxt = _lune_unwrapDefault( io.stdin:read( '*a' ), "")
 end
 function StreamParser.new( stream, name, luaMode )
   local obj = {}
@@ -303,7 +304,7 @@ function StreamParser:getStreamName(  )
 end
 function StreamParser.create( path, luaMode, moduleName )
 
-  local stream = io.stdin
+  local stream = TxtStream.new(StreamParser.stdinTxt)
   
   if StreamParser.stdinStreamModuleName ~= moduleName then
     stream = io.open( path, "r" )
@@ -319,6 +320,7 @@ function StreamParser.create( path, luaMode, moduleName )
 end
 do
   StreamParser.stdinStreamModuleName = nil
+  StreamParser.stdinTxt = ""
   end
 
 
@@ -491,7 +493,6 @@ function StreamParser:parse(  )
     
     if not line then
       self.eof = true
-      print( string.format( "eof: %s", self.streamName) )
     end
     return line
   end
@@ -561,7 +562,7 @@ function StreamParser:parse(  )
         nonNumChar = token:byte( nonNumIndex )
       end
       if nonNumChar == 120 or nonNumChar == 88 then
-        nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
+        nonNumIndex = token:find( '[^%da-fA-F]', nonNumIndex + 1 )
         nonNumChar = token:byte( nonNumIndex )
       end
       if nonNumChar == 101 or nonNumChar == 69 then
@@ -710,7 +711,7 @@ function StreamParser:parse(  )
           local endIndex = string.find( rawLine, workPattern, workIndex )
           
           if not endIndex then
-            Util.err( string.format( "illegal string: %d: %s", index, rawLine ) )
+            Util.err( string.format( "%s:%d:%d: error: illegal string -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
           end
           local workChar = string.byte( rawLine, endIndex )
           
@@ -751,7 +752,7 @@ function StreamParser:parse(  )
         end
         addVal( _moduleObj.kindChar, codeChar, index )
       else 
-        Util.err( string.format( "illegal syntax:%s:%s", self.lineNo, rawLine:sub( index ) ) )
+        Util.err( string.format( "%s:%d:%d: error: illegal syntax -- %s", self:getStreamName(  ), self.lineNo, index, rawLine) )
       end
     end
     if syncIndexFlag then

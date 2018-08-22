@@ -330,6 +330,32 @@ pub fn Scope.getTypeInfoField(
    return nil;
 }
 
+pub fn Scope.filterTypeInfoField(
+   includeSelfFlag: bool!, fromScope:Scope, callback:form ):bool
+{
+   if self.classFlag {
+      if includeSelfFlag {
+         foreach symbolInfo in self.symbol2TypeInfoMap {
+            if symbolInfo.canAccess( fromScope ) {
+               if not callback( symbolInfo ) {
+                  return false;
+               }        
+            }
+         }  
+      } 
+      if self.inheritList {
+         foreach scope in self.inheritList {
+            if not scope.filterTypeInfoField( true, fromScope, callback ) {
+               return false;
+            }
+         }
+      } 
+   }
+
+   return true;
+}
+
+
 /**
 このスコープからシンボル name の型情報を取得する。
 
@@ -408,6 +434,23 @@ pub fn Scope.getSymbolTypeInfo(
       return self.parent.getSymbolTypeInfo( name, fromScope, moduleScope );
    }
    return sym2builtInTypeMap[ name ];
+}
+
+
+pub fn Scope.filterSymbolTypeInfo(
+   fromScope:Scope, moduleScope:Scope, callback:form )
+{
+   if not self.classFlag {
+      foreach symbolInfo in self.symbol2TypeInfoMap {
+         if not callback( symbolInfo ) {
+            return;
+         }  
+      }
+   }
+
+   if self.parent ~= self {
+      self.parent.filterSymbolTypeInfo( fromScope, moduleScope, callback );
+   }
 }
 
 

@@ -1649,13 +1649,16 @@ pub override fn convFilter.processLiteralChar(
 pub override fn convFilter.processLiteralInt( 
    node: Ast.LiteralIntNode, parent: Ast.Node, baseIndent:int )
 {
-   self.write( string.format( "%d", node.$num ) );
+   //self.write( string.format( "%d", node.$num ) );
+   self.write( node.$token.txt );
+
 };
 
 pub override fn convFilter.processLiteralReal( 
    node: Ast.LiteralRealNode, parent: Ast.Node, baseIndent:int )
 {
-   self.write( string.format( "%s", node.$num ) );
+   //self.write( string.format( "%s", node.$num ) );
+   self.write( node.$token.txt );
 };
 
 pub override fn convFilter.processLiteralString( 

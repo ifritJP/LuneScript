@@ -66,50 +66,56 @@
       )))
 
 
+(defun lns-helm-create-candidate-list (candidate)
+  (let* ((info (lns-json-val candidate :candidate))
+	 (item-type (lns-candidate-get-type info))
+	 (item-txt (lns-candidate-get-displayTxt info))
+	 (item-name item-txt)
+	 (item-name-append "")
+	 face)
+    (setq face (cond ((equal item-type "Typ")
+		      'font-lock-type-face)
+		     ((or (equal item-type "Mbr")
+			  (equal item-type "Var"))
+		      'font-lock-variable-name-face)
+		     ((or (equal item-type "Mtd")
+			  (equal item-type "Fun"))
+		      'font-lock-function-name-face)))
+    (when (string-match "\\([^ \t(]+\\)" item-txt)
+      (setq item-name (substring item-txt
+				 (match-beginning 1)
+				 (match-end 1)))
+      (setq item-name-append (substring item-txt
+					(match-end 1))))
+    (cons (format "(%s) %s%s"
+		  (propertize
+		   item-type 'face face)
+		  (propertize
+		   item-name 'face face)
+		  item-name-append)
+	  info))
+  )
+
 (defun lns-helm-complete-at ()
   (interactive)
   (lns-completion-get-candidate-list
-   (lambda (candidate-list)
-     (let (helm-candidate-list
-	   helm-params)
-       (setq helm-candidate-list
-	     (mapcar (lambda (candidate)
-		       (let* ((info (lns-json-val candidate :candidate))
-			      (item-type (lns-candidate-get-type info))
-			      (item-txt (lns-candidate-get-displayTxt info))
-			      (item-name item-txt)
-			      (item-name-append "")
-			      face)
-			 (setq face (cond ((equal item-type "Typ")
-					   'font-lock-type-face)
-					  ((or (equal item-type "Mbr")
-					       (equal item-type "Var"))
-					   'font-lock-variable-name-face)
-					  ((or (equal item-type "Mtd")
-					       (equal item-type "Fun"))
-					   'font-lock-function-name-face)))
-			 (when (string-match "\\([^ \t(]+\\)" item-txt)
-			   (setq item-name (substring item-txt
-						      (match-beginning 1)
-						      (match-end 1)))
-			   (setq item-name-append (substring item-txt
-							     (match-end 1))))
-			 (cons (format "(%s) %s%s"
-				       (propertize
-					item-type 'face face)
-				       (propertize
-					item-name 'face face)
-				       item-name-append)
-			       info)))
-		     candidate-list))
-       (setq helm-params
-	     `((name . ,(format "comp-at:%s:%d:%d"
-				(file-name-nondirectory buffer-file-name)
-				(lns-get-line) (lns-get-column)))
-	       (candidates . ,helm-candidate-list)
-	       (action . lns-helm-select)))
-       (lns-helm-wrap helm-params nil nil)
-       ))))
+   (lambda (candidate-list err)
+     (when candidate-list
+       (let (helm-candidate-list
+	     helm-params)
+	 (setq helm-candidate-list
+	       (mapcar (lambda (candidate)
+			 (when candidate
+			   (lns-helm-create-candidate-list candidate)))
+		       candidate-list))
+	 (setq helm-params
+	       `((name . ,(format "comp-at:%s:%d:%d"
+				  (file-name-nondirectory buffer-file-name)
+				  (lns-get-line) (lns-get-column)))
+		 (candidates . ,helm-candidate-list)
+		 (action . lns-helm-select)))
+	 (lns-helm-wrap helm-params nil nil)
+	 )))))
 
 
 

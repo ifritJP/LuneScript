@@ -30,7 +30,9 @@
 
 (defun lns-hook-for-ac ()
   (add-to-list 'ac-modes 'lns-mode)
-  (add-to-list 'ac-sources 'ac-source-lns)
+  (add-to-list 'ac-sources 'ac-source-lns-field)
+  (add-to-list 'ac-sources 'ac-source-lns-symbol)
+  (delq 'ac-source-words-in-same-mode-buffers ac-sources)
   (set (make-local-variable 'ac-ignore-case) nil)
   (set (make-local-variable 'ac-auto-show-menu) 0.3)
   (auto-complete-mode))
@@ -41,6 +43,15 @@
   (when (and (not (lns-is-in-comment-string (point)))
 	     (re-search-backward "\\.\\(\\(?:[a-zA-Z0-9][_a-zA-Z0-9]*\\)?\\)\\=" nil t))
     (match-beginning 1)))
+
+;; (defun lns-ac-prefix-symbol ()
+;;   (if (and (not (lns-is-in-comment-string (point)))
+;; 	   (re-search-backward "\\.\\(\\(?:[a-zA-Z0-9][_a-zA-Z0-9]*\\)?\\)\\=" nil t))
+;; 	   ;;(re-search-backward "\\." nil t))
+;; 	   ;;(re-search-backward "\\(\\(?:[a-zA-Z0-9][_a-zA-Z0-9]*\\)?\\)\\=" nil t))
+;;       (not (match-beginning 1))
+;;     t))
+
 
 (defun lns-ac-action ()
   (let ((end-pos (point-marker))
@@ -60,43 +71,91 @@
       (goto-char move-pos))
     ))
 
-(defvar lns-ac-process nil)
-(defvar lns-ac-candidate-list nil)
-
-(defun lns-ac-candidates-processing ()
-  (if lns-ac-candidate-list
-      (let ((list lns-ac-candidate-list))
-	;;(setq lns-ac-candidate-list nil)
-	(setq lns-ac-process nil)
-	list)
-    nil))
-
-(defun lns-ac-candidates ()
-  (if lns-ac-process
-      (lns-ac-candidates-processing)
-    (setq lns-ac-process
-	  (lns-completion-get-candidate-list
-	   (lambda (candidate-list)
-	     (setq lns-ac-candidate-list
-		   (mapcar (lambda (candidate)
-			     (let* ((info (lns-json-val candidate :candidate))
-				    (item-txt (lns-candidate-get-displayTxt info)))
-			       item-txt))
-			   candidate-list))
-	     (ac-start)
-	     (ac-update)
-	     )
-	   t))
-    nil
+(defun lns-ac-action-symbol ()
+  (let ((end-pos (point-marker))
+	(start-pos (car ac-last-completion))
+	move-pos)
+    (save-excursion
+      (goto-char start-pos)
+      (if (re-search-forward "\\(.*\\):[^:]+" end-pos t)
+	  (progn
+	    (replace-match "\\1")
+	    (setq move-pos end-pos)
+	    )
+	(goto-char start-pos)
+	))
+    (when move-pos
+      (goto-char move-pos))
     ))
 
-(ac-define-source lns
-  '((candidates . lns-ac-candidates)
+
+(defvar lns-ac-process-state-field :idle)
+(defvar lns-ac-process-state-symbol :idle)
+(defvar lns-ac-candidate-list-field nil)
+(defvar lns-ac-candidate-list-symbol nil)
+
+(defun lns-ac-candidates-symbol ()
+  (setq lns-ac-candidate-list-field nil)
+  (lns-ac-candidates :symbol)
+  )
+
+(defun lns-ac-candidates-field ()
+  (setq lns-ac-candidate-list-symbol nil)
+  (lns-ac-candidates :field)
+  )
+
+
+(defun lns-ac-candidates (mode)
+  (lexical-let ((let-list (if (eq mode :symbol)
+			      'lns-ac-candidate-list-symbol
+			    'lns-ac-candidate-list-field))
+		(process-state (if (eq mode :symbol)
+				   'lns-ac-process-state-symbol
+				 'lns-ac-process-state-field)))
+    (if (eq (symbol-value process-state) :done)
+	(progn
+	  (set process-state :idle)
+	  (symbol-value let-list))
+      (set process-state :processing)
+      (lns-completion-get-candidate-list
+       (lambda (candidate-list err)
+	 (cond
+	  (candidate-list
+	   (let ((count 0))
+	     (set let-list
+		  (mapcar (lambda (candidate)
+			    (let* ((info (lns-json-val candidate :candidate))
+				   (item-txt (lns-candidate-get-displayTxt info)))
+			      item-txt))
+			  candidate-list)))
+	   (set process-state :done)
+	   (ac-start)
+	   (ac-update)
+	   )
+	  (t
+	   (set process-state :idle)))
+	 )
+       t)
+      nil)
+    ))
+
+(ac-define-source lns-field
+  '((candidates . lns-ac-candidates-field)
     (prefix . lns-ac-prefix)
     (action . lns-ac-action)
     (requires . 0)
     (cache)
     ;;(symbol . "lns")
     ))
+
+(ac-define-source lns-symbol
+  '((candidates . lns-ac-candidates-symbol)
+    ;;(prefix . lns-ac-prefix-symbol)
+    (action . lns-ac-action-symbol)
+    (requires . 0)
+    (cache)
+    ;;(symbol . "lns")
+    ))
+
 
 (provide 'lns-auto-complete)

@@ -299,7 +299,7 @@ fn TransUnit.registBuiltInScope() {
             "type": { "arg": [ "stem!" ], "ret": ["str"] },
             "error": { "arg": [ "str" ], "ret": [] },
             "print": { "arg": [ "..." ], "ret": [] },
-            "tonumber": { "arg": [ "str" ], "ret": ["real"] },
+            "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
             "load": { "arg": [ "str" ], "ret": ["form!", "str"] },
             "require": { "arg": [ "str" ], "ret": ["stem!"] },
             "_fcall": { "arg": [ "form", "..." ], "ret": [""] },
@@ -894,8 +894,11 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    fn registTypeInfo( atomInfo: _TypeInfo ): Ast.TypeInfo {
       let newTypeInfo: Ast.TypeInfo! = nil;
       if atomInfo.parentId ~= Ast.rootTypeId or
-         not Ast.builtInTypeIdSet[ atomInfo.typeId ]
-      {     
+         not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
+         atomInfo.kind == Ast.TypeInfoKindList or
+         atomInfo.kind == Ast.TypeInfoKindArray or
+         atomInfo.kind == Ast.TypeInfoKindMap 
+      {
          if atomInfo.nilable {
             let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
             newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
@@ -958,7 +961,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                   }     
                   typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
                };   
-            }   
+            }
             else {
                if atomInfo.kind == Ast.TypeInfoKindClass or
                   atomInfo.kind == Ast.TypeInfoKindIF

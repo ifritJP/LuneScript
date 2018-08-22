@@ -622,39 +622,101 @@ fn TransUnit.analyzeAccessClassField(
    return fieldTypeInfo, getterTypeInfo;
 }
 
-fn TransUnit.dumpComp( writer: Writer.Writer, scope: Ast.Scope, pattern: str ) {
-   forsort symbolInfo, symbol in scope.$symbol2TypeInfoMap {
-      if symbol ~= "__init" and symbol ~= "self" {
-         if pattern == "" or symbol.find( pattern ) {
-            if scope.getTypeInfoField( symbol, true, self.scope ) {
+fn TransUnit.dumpFieldComp( writer: Writer.Writer, scope: Ast.Scope, pattern: str ) {
+   // forsort symbolInfo, symbol in scope.$symbol2TypeInfoMap {
+   //    if symbol ~= "__init" and symbol ~= "self" {
+   //       if pattern == "" or symbol.find( pattern ) {
+   //          if scope.getTypeInfoField( symbol, true, self.scope ) {
+   //             writer.startParent( "candidate", false );
+   //             let typeInfo = symbolInfo.$typeInfo;
+   //             let typeKindTxt = "";
+   //             writer.write( "type", "%s" ( Ast.SymbolKind.getTxt( symbolInfo.$kind ) ) );
+   //             switch ( symbolInfo.$kind ) {
+   //                case Ast.SymbolKind.Fun, Ast.SymbolKind.Mtd {
+   //                   writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
+   //                }
+   //                case Ast.SymbolKind.Mbr, Ast.SymbolKind.Var {
+   //                   writer.write( "displayTxt", "%s: %s"
+   //                                 ( symbolInfo.$name, typeInfo.$display_stirng ) );
+   //                }
+   //                case Ast.SymbolKind.Typ {
+   //                   writer.write( "displayTxt", "%s"
+   //                                 ( typeInfo.$display_stirng ) );
+   //                }
+   //             }
+   //             writer.endElement();
+   //          }
+   //       }
+   //    }
+   // }
+   // foreach inheritScope in scope.$inheritList {
+   //    self.dumpFieldComp( writer, inheritScope, pattern );
+   // }
+
+   scope.filterTypeInfoField(
+      true, self.scope,
+      fn ( symbolInfo: Ast.SymbolInfo ) : bool {
+         let symbol = symbolInfo.$name;
+         if symbol ~= "__init" and symbol ~= "self" {
+            if pattern == "" or symbol.find( pattern ) {
                writer.startParent( "candidate", false );
                let typeInfo = symbolInfo.$typeInfo;
                let typeKindTxt = "";
-               writer.write( "type", "%s" ( Ast.SymbolKind.getTxt( symbolInfo.$kind ) ) );
+               writer.write(
+                  "type", "%s" ( Ast.SymbolKind.getTxt( symbolInfo.$kind ) ) );
                switch ( symbolInfo.$kind ) {
                   case Ast.SymbolKind.Fun, Ast.SymbolKind.Mtd {
                      writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
-                  }
+                  }  
                   case Ast.SymbolKind.Mbr, Ast.SymbolKind.Var {
                      writer.write( "displayTxt", "%s: %s"
                                    ( symbolInfo.$name, typeInfo.$display_stirng ) );
-                  }
+                  }  
                   case Ast.SymbolKind.Typ {
                      writer.write( "displayTxt", "%s"
                                    ( typeInfo.$display_stirng ) );
-                  }
-               }
+                  }  
+               }  
                writer.endElement();
             }
-         }
-      }
-   }
-   foreach inheritScope in scope.$inheritList {
-      self.dumpComp( writer, inheritScope, pattern );
-   }
+         }  
+         return true;
+      });
 }
 
-fn TransUnit.checkComp( token:Parser.Token, prefixExpType: Ast.TypeInfo )
+fn TransUnit.dumpSymbolComp( writer: Writer.Writer, scope: Ast.Scope, pattern: str ) {
+   scope.filterSymbolTypeInfo(
+      scope, self.moduleScope,
+      fn ( symbolInfo: Ast.SymbolInfo ) : bool {
+         let symbol = symbolInfo.$name;
+         if symbol ~= "__init" and symbol ~= "self" {
+            if pattern == "" or symbol.find( pattern ) {
+               writer.startParent( "candidate", false );
+               let typeInfo = symbolInfo.$typeInfo;
+               let typeKindTxt = "";
+               writer.write(
+                  "type", "%s" ( Ast.SymbolKind.getTxt( symbolInfo.$kind ) ) );
+               switch ( symbolInfo.$kind ) {
+                  case Ast.SymbolKind.Fun, Ast.SymbolKind.Mtd {
+                     writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
+                  }  
+                  case Ast.SymbolKind.Mbr, Ast.SymbolKind.Var {
+                     writer.write( "displayTxt", "%s: %s"
+                                   ( symbolInfo.$name, typeInfo.$display_stirng ) );
+                  }  
+                  case Ast.SymbolKind.Typ {
+                     writer.write( "displayTxt", "%s"
+                                   ( typeInfo.$display_stirng ) );
+                  }  
+               }  
+               writer.endElement();
+            }
+         }  
+         return true;
+      });    
+}
+
+fn TransUnit.checkFieldComp( token:Parser.Token, prefixExpType: Ast.TypeInfo )
 {
    if self.analyzeMode == "comp" and
       self.analyzePos.lineNo == token.pos.lineNo and
@@ -670,8 +732,34 @@ fn TransUnit.checkComp( token:Parser.Token, prefixExpType: Ast.TypeInfo )
          let prefix = token.txt.gsub( "lune$", "" );
          jsonWriter.write( "prefix", prefix );
          jsonWriter.startParent( "candidateList", true );
-         self.dumpComp( jsonWriter, unwrap prefixExpType.$scope,
-                        prefix == "" and "" or "^" .. prefix );
+         self.dumpFieldComp( jsonWriter, unwrap prefixExpType.$scope,
+                             prefix == "" and "" or "^" .. prefix );
+         jsonWriter.endElement();
+         jsonWriter.endElement();
+         jsonWriter.fin();
+         os.exit( 0 );
+      }
+   }
+}
+
+fn TransUnit.checkSymbolComp( token:Parser.Token )
+{
+   if self.analyzeMode == "comp" and
+      self.analyzePos.lineNo == token.pos.lineNo and
+      self.analyzePos.column >= token.pos.column and
+      self.analyzePos.column <= token.pos.column + #token.txt 
+   {
+      let currentModule = self.parser.getStreamName().gsub( "%.lns", "" );
+      currentModule = currentModule.gsub( ".*/", "" );
+      let target = self.analyzeModule.gsub( "[^%.]+%.", "" );
+      if currentModule == target {
+         let jsonWriter = new Writer.JSON( io.stdout );
+         jsonWriter.startParent( "lunescript", false );
+         let prefix = token.txt.gsub( "lune$", "" );
+         jsonWriter.write( "prefix", prefix );
+         jsonWriter.startParent( "candidateList", true );
+         self.dumpSymbolComp( jsonWriter, self.scope,
+                              prefix == "" and "" or "^" .. prefix );
          jsonWriter.endElement();
          jsonWriter.endElement();
          jsonWriter.fin();
@@ -686,7 +774,7 @@ fn TransUnit.analyzeExpSymbol(
    mode: str, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node
 {
    let exp:Ast.Node! = nil;
-
+   
    if mode == "field" or mode == "get" or
       mode == "field_nil" or mode == "get_nil"
    {
@@ -705,7 +793,7 @@ fn TransUnit.analyzeExpSymbol(
             let typeInfo:Ast.TypeInfo! = Ast.builtinTypeStem_;
             let prefixExpType = prefixExp.$expType;
 
-            self.checkComp( token, prefixExpType );
+            self.checkFieldComp( token, prefixExpType );
             
             if accessNil {
                if prefixExpType.$nilable {
@@ -777,6 +865,8 @@ fn TransUnit.analyzeExpSymbol(
             firstToken.pos, [ Ast.builtinTypeSymbol ], token );
       }
       else {
+         self.checkSymbolComp( token );
+         
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             token.txt, self.scope, self.moduleScope )
          {

@@ -197,12 +197,15 @@ pub class WrapParser extend Parser {
 pub class StreamParser extend Parser {
    /** stdin に紐付けている*/
    static let stdinStreamModuleName: str!;
+   static let stdinTxt: str;
 
    __init {
       StreamParser.stdinStreamModuleName = nil;
+      StreamParser.stdinTxt = "";
    }
    pub static fn setStdinStream( moduleName:str ){
       StreamParser.stdinStreamModuleName = moduleName;
+      StreamParser.stdinTxt = unwrap io.stdin.read( '*a' ) default "";
    }
 
    let eof: bool;
@@ -237,7 +240,7 @@ pub class StreamParser extend Parser {
    }
 
    pub static fn create( path: str, luaMode: bool, moduleName:str ): StreamParser! {
-      let stream = io.stdin;
+      let stream = new TxtStream( StreamParser.stdinTxt );
       if StreamParser.stdinStreamModuleName ~= moduleName {
          unwrap! stream = io.open( path, "r" ) {
             return nil;
@@ -359,7 +362,6 @@ fn StreamParser.parse() : Token[]! {
       let line = self.stream.read( '*l' );
       if not line {
          self.eof = true;
-         Util.errorLog( "eof: %s" (self.streamName) );
       }
       return line;
    }
@@ -439,7 +441,7 @@ fn StreamParser.parse() : Token[]! {
             nonNumChar = token.byte( nonNumIndex );
          }
          if nonNumChar == 120 or nonNumChar == 88 { // X or x
-            nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 );
+            nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 );
             nonNumChar = token.byte( nonNumIndex );
          }
          if nonNumChar == 101 or nonNumChar == 69 { // E or e
@@ -621,9 +623,9 @@ fn StreamParser.parse() : Token[]! {
             while true {
                let endIndex = string.find( rawLine, workPattern, workIndex );
                if not endIndex {
-                  Util.err( string.format(
-                     "illegal string: %d: %s", index, rawLine ) );
-               }        
+                  Util.err( "%s:%d:%d: error: illegal string -- %s"
+                            ( self.getStreamName(), self.lineNo, index, rawLine ) );
+               }
                let workChar = string.byte( rawLine, endIndex );
                if workChar == findChar {
                   addVal( kindStr, rawLine.sub( index, endIndex ), index );
@@ -670,8 +672,8 @@ fn StreamParser.parse() : Token[]! {
             addVal( kindChar, codeChar, index );
          }
          else {
-            Util.err( string.format( "illegal syntax:%s:%s",
-                                       self.lineNo, rawLine.sub( index ) ) );
+            Util.err( "%s:%d:%d: error: illegal syntax -- %s"
+                      ( self.getStreamName(), self.lineNo, index, rawLine ) );
          }
       }
       if syncIndexFlag {
