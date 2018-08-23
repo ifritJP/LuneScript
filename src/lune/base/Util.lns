@@ -24,10 +24,6 @@ SOFTWARE.
 
 import lune.base.Depend;
 
-// pub class outStream {
-//    pub fn write(val:str);
-// }
-
 pub class memStream extend (oStream) {
    let txt: str { pub };
    pub fn __init() {

@@ -130,8 +130,12 @@ test-comp2:
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 
-	$(MAKE) accept-package
+	$(MAKE) accept-package ACCEPT=y
 
 accept-package:
+ifndef ACCEPT
+	@read -p "accept? $1 (y/n): " ANS; \
+	if [ $${ANS}x != yx ]; then exit 1; fi;
+endif
 	cp work/3/lune/base/*.lua lune/base/
 	cp work/3/lune/base/*.meta lune/base/

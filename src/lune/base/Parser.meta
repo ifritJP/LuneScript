@@ -77,8 +77,6 @@ do
 do
   local _classInfo193 = {}
   _typeId2ClassInfoMap[ 193 ] = _classInfo193
-  _classInfo193.kind = {
-    name='kind', staticFlag = false, accessMode = 'pub', typeId = 468 }
   _classInfo193.kindChar = {
     name='kindChar', staticFlag = false, accessMode = 'pub', typeId = 16 }
   _classInfo193.kindCmnt = {
@@ -106,8 +104,6 @@ do
   end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
-_varName2InfoMap.kind = {
-  name='kind', accessMode = 'pub', typeId = 468 }
 _varName2InfoMap.kindChar = {
   name='kindChar', accessMode = 'pub', typeId = 16 }
 _varName2InfoMap.kindCmnt = {

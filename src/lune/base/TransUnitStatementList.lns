@@ -68,6 +68,10 @@ fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
          }
       }
       else {
+         if funcTypeInfo.getTxt() == "__init" {
+            // フロー解析するのが面倒なので、 __init 内では return を禁止。
+            self.addErrMess( token.pos, "__init method can't return" );
+         }
          if #retTypeList ~= 0 {
             self.addErrMess( token.pos, "no return value" );
          }

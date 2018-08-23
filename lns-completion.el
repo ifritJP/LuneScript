@@ -137,8 +137,8 @@
 		    (string< item-txt1 item-txt2)))))
     candidate-list))
 
-(defun lns-get-complete-list ( callback async &optional file-path analyze-module)
-  (let ((out-buf (lns-get-buffer "*lns-process*" t))
+(defun lns-get-complete-list ( callback async &optional file-path analyze-module buf-name)
+  (let ((out-buf (lns-get-buffer (or buf-name "*lns-process*") t))
 	result process)
     (when (not file-path)
       (setq file-path buffer-file-name))
@@ -173,10 +173,10 @@
     process
     ))
 
-(defun lns-completion-get-candidate-list (callback &optional async)
+(defun lns-completion-get-candidate-list (callback &optional async out-bufname)
   (let* ((command-info (lns-command-get-info))
 	 (owner-file (plist-get command-info :owner))
 	 (analyze-module (plist-get command-info :module)))
-    (lns-get-complete-list callback async owner-file analyze-module)))
+    (lns-get-complete-list callback async owner-file analyze-module out-bufname)))
 
 (provide 'lns-completion)

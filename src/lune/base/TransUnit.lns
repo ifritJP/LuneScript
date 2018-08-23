@@ -96,6 +96,7 @@ pub class TransUnit {
       self.pushbackList = [];
       self.usedTokenList = [];
       self.scope = Ast.rootScope;
+      self.moduleScope = Ast.rootScope;
       self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
       self.currentToken = nil;
@@ -200,7 +201,8 @@ pub class TransUnit {
    pri fn analyzeDeclVar(
       mode:str, accessMode: str, firstToken: Parser.Token ): Ast.Node;
    pri fn analyzeDeclFunc(
-      abstructFlag: bool, overrideFlag: bool, accessMode: str, staticFlag: bool,
+      moduleFlag: bool, abstructFlag: bool,
+      overrideFlag: bool, accessMode: str, staticFlag: bool,
       classNameToken: Parser.Token!,
       firstToken: Parser.Token, name: Parser.Token! ) : Ast.Node;
    pri fn analyzeDeclClass(
@@ -463,7 +465,7 @@ fn TransUnit.registBuiltInScope() {
                         methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc,
                         parentInfo, false, true, not methodFlag, "pub",
                         fieldName, argTypeList, retTypeList );
-
+                     
                      self.popScope();
                      
                      Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
@@ -471,9 +473,9 @@ fn TransUnit.registBuiltInScope() {
                         Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
                      }
                      self.scope.add(
-                        methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Mbr,
+                        methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
                         not methodFlag, not methodFlag,
-                        fieldName, typeInfo, "pub", not methodFlag, false );
+                        fieldName, typeInfo, "pub", not methodFlag, false, true );
                      if methodFlag {
                         switch ( name ) {
                            case "List" {
@@ -535,34 +537,34 @@ fn expandVal( tokenList:Parser.Token[], val: stem!, pos: Parser.Position ): str 
       switch type( _exp ) {
          case "boolean" {
             let token = "%s" (_exp);
-            let kind = Parser.kind.Kywd;
+            let kind = Parser.TokenKind.Kywd;
             tokenList.insert( new Parser.Token( kind, token, pos ) );
          }   
          case "number" {
             let num = "%g" (_exp);
-            let kind = Parser.kind.Int;
+            let kind = Parser.TokenKind.Int;
             if string.find( num, ".", 1, true ) {
-               kind = Parser.kind.Real;
+               kind = Parser.TokenKind.Real;
             }   
             tokenList.insert( new Parser.Token( kind, num, pos ) );
          }   
          case "string" {
             tokenList.insert(
                new Parser.Token(
-                  Parser.kind.Str, '[[%s]]' (_exp ), pos ) );
+                  Parser.TokenKind.Str, '[[%s]]' (_exp ), pos ) );
             // val 中に \n 等の制御コードが入ると正常に処理されない。
             // val 内の制御コードを \xXX に変換する必要がある。
          }   
          case "table" {
             tokenList.insert(
-               new Parser.Token( Parser.kind.Dlmt, "{" (_exp), pos ) );
+               new Parser.Token( Parser.TokenKind.Dlmt, "{" (_exp), pos ) );
             foreach item, key in _exp@@stem![] {
                expandVal( tokenList, item, pos );
                tokenList.insert(
-                  new Parser.Token( Parser.kind.Dlmt, "," (_exp), pos ) );
+                  new Parser.Token( Parser.TokenKind.Dlmt, "," (_exp), pos ) );
             }   
             tokenList.insert(
-               new Parser.Token( Parser.kind.Dlmt, "}" (_exp), pos ) );
+               new Parser.Token( Parser.TokenKind.Dlmt, "}" (_exp), pos ) );
          }   
       } 
    }
@@ -588,7 +590,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
    while true {
       token = self.parser.getToken();
       if! token {
-         if _exp.kind ~= Parser.kind.Cmnt {
+         if _exp.kind ~= Parser.TokenKind.Cmnt {
             break;
          }   
          commentList.insert( _exp );
@@ -652,12 +654,12 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
                      newToken = "%s%s" (newToken, txt);
                   } 
                   nextToken = new Parser.Token(
-                     Parser.kind.Str, "'%s'" (newToken), nextToken.pos );
+                     Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos );
                   self.pushbackToken( nextToken );
                } 
                elseif macroVal.typeInfo == Ast.builtinTypeStat {
                   nextToken = new Parser.Token(
-                     Parser.kind.Str, "'%s'" (unwrap macroVal.val), nextToken.pos );
+                     Parser.TokenKind.Str, "'%s'" (unwrap macroVal.val), nextToken.pos );
                   self.pushbackToken( nextToken );
                } 
                else {
@@ -720,9 +722,9 @@ fn TransUnit.pushbackStr( name: str, statement: str ) {
 }
 
 fn TransUnit.checkSymbol( token: Parser.Token ): Parser.Token {
-   if token.kind ~= Parser.kind.Symb and
-      token.kind ~= Parser.kind.Kywd and
-      token.kind ~= Parser.kind.Type
+   if token.kind ~= Parser.TokenKind.Symb and
+      token.kind ~= Parser.TokenKind.Kywd and
+      token.kind ~= Parser.TokenKind.Type
    {
       self.error( "illegal symbol" );
    }
@@ -897,7 +899,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
          not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
          atomInfo.kind == Ast.TypeInfoKindList or
          atomInfo.kind == Ast.TypeInfoKindArray or
-         atomInfo.kind == Ast.TypeInfoKindMap 
+         atomInfo.kind == Ast.TypeInfoKindMap or
+         atomInfo.kind == Ast.TypeInfoKindNilable
       {
          if atomInfo.nilable {
             let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
@@ -1011,7 +1014,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                      (unwrap typeId2Scope[ atomInfo.parentId ]).add(
                         symbolKind, false, atomInfo.kind == Ast.TypeInfoKindFunc,
                         atomInfo.txt, workTypeInfo, atomInfo.accessMode,
-                        atomInfo.staticFlag, false );
+                        atomInfo.staticFlag, false, true );
                      typeId2Scope[ atomInfo.typeId ] = scope;
                   }     
                }    
@@ -1021,6 +1024,11 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
       else {
          newTypeInfo = Ast.rootScope.getTypeInfo(
             atomInfo.txt, Ast.rootScope, false );
+         if not newTypeInfo {
+            foreach val, key in atomInfo@@Map<str,stem> {
+               Util.errorLog( "error: illegal atomInfo %s:%s" ( key, val ) );
+            }
+         }
          typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
       } 
       return unwrap newTypeInfo;
@@ -1054,7 +1062,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             }
             scope.add( symbolKind, false, typeInfo.$kind == Ast.TypeInfoKindFunc,
                        typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
-                       typeInfo.$staticFlag, typeInfo.$mutable );
+                       typeInfo.$staticFlag, typeInfo.$mutable, true );
          }
       }
    }
@@ -1114,7 +1122,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    // 変数登録
    foreach varInfo, varName in moduleInfo._varName2InfoMap {
-      self.scope.addLocalVar(
+      self.scope.addStaticVar(
          false, true, varName, unwrap typeId2TypeInfo[ varInfo.typeId ],
          (unwrap varInfo.mutable default false)@@bool );
    }
@@ -1129,9 +1137,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    // スコープを元に戻す
    self.scope = self.moduleScope;
 
-   self.scope.add( Ast.SymbolKind.Var, false, false, moduleToken.txt,
+   self.scope.add( Ast.SymbolKind.Typ, false, false, moduleToken.txt,
                    unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ],
-                   "local", true, false );
+                   "local", true, false, true );
 
    self.checkToken( nextToken, ";" );
 
@@ -1315,7 +1323,7 @@ fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
    let scope = self.pushScope( false );
 
    let val = self.getToken();
-   if val.kind ~= Parser.kind.Symb {
+   if val.kind ~= Parser.TokenKind.Symb {
       self.error( "not symbol" );
    }
    self.checkNextToken( "=" );
@@ -1361,7 +1369,7 @@ fn TransUnit.analyzeApply( token: Parser.Token ): Ast.ApplyNode {
    let nextToken:Parser.Token = Parser.getEofToken();
    repeat {
       let var = self.getSymbolToken();
-      if var.kind ~= Parser.kind.Symb {
+      if var.kind ~= Parser.TokenKind.Symb {
          self.error( "illegal symbol" );
       } 
       varList.insert( var );
@@ -1388,7 +1396,7 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
    let nextToken:Parser.Token = Parser.getEofToken();
    for index = 1, 2 {
       let sym = self.getToken();
-      if sym.kind ~= Parser.kind.Symb {
+      if sym.kind ~= Parser.TokenKind.Symb {
          self.error( "illegal symbol" );
       } 
       if index == 1 {

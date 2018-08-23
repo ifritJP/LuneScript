@@ -441,7 +441,8 @@ fn TransUnit.analyzeDecl(
    }
    elseif token.txt == "fn" {
       return self.analyzeDeclFunc(
-         abstructFlag, overrideFlag, accessMode, staticFlag, nil, firstToken, nil );
+         false, abstructFlag, overrideFlag,
+         accessMode, staticFlag, nil, firstToken, nil );
    }
    elseif token.txt == "abstruct" {
       self.checkNextToken( "class" );
@@ -504,12 +505,13 @@ fn TransUnit.analyzeDeclMember(
    }
 
 fn TransUnit.analyzeDeclMethod(
-   abstructFlag: bool, overrideFlag: bool, accessMode: str,
+   moduleFlag: bool, abstructFlag: bool, overrideFlag: bool, accessMode: str,
    staticFlag: bool, className: Parser.Token,
    firstToken: Parser.Token, name: Parser.Token ): Ast.Node
 {
    let node = self.analyzeDeclFunc(
-      abstructFlag, overrideFlag, accessMode, staticFlag, className, name, name );
+      moduleFlag, abstructFlag,
+      overrideFlag, accessMode, staticFlag, className, name, name );
    return node;
 }
 
@@ -531,6 +533,7 @@ fn TransUnit.analyzeClassBody(
       classAccessMode, name, fieldList, moduleName,
       memberList, self.scope, initStmtList, advertiseList, trustList, {} );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
+   let declCtorNode:Ast.Node! = nil;
    
    while true {
       let token = self.getToken();
@@ -564,6 +567,9 @@ fn TransUnit.analyzeClassBody(
          if mode == "interface" {
             self.error( "interface can not have member" );
          }
+         if not staticFlag and declCtorNode {
+            self.addErrMess( token.pos, "member can't declare after '__init' method." );
+         }
          let memberNode = self.analyzeDeclMember( accessMode, staticFlag, token );
          fieldList.insert( memberNode );
          memberList.insert( memberNode );
@@ -572,9 +578,13 @@ fn TransUnit.analyzeClassBody(
       elseif token.txt == "fn" {
          let nameToken = self.getToken();
          let methodNode = self.analyzeDeclMethod(
-            abstructFlag, overrideFlag, accessMode, staticFlag, name, token, nameToken );
+            mode == "module", abstructFlag, overrideFlag,
+            accessMode, staticFlag, name, token, nameToken );
          fieldList.insert( methodNode );
          methodNameSet[ nameToken.txt ] = true;
+         if nameToken.txt == "__init" {
+            declCtorNode = methodNode;
+         }
       }
       elseif token.txt == "__init" {
          if mode ~= "class" {
@@ -605,6 +615,20 @@ fn TransUnit.analyzeClassBody(
       }
    }
 
+   if! declCtorNode {
+      foreach memberNode, memberName in memberName2Node {
+         if not memberNode.$staticFlag {
+            let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
+            let typeInfo = symbolInfo.$typeInfo;
+            if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
+               self.addErrMess( _exp.$pos,
+                                "does not set member -- %s %s"
+                                ( memberName, symbolInfo.$symbolId ) );
+            }
+         }
+      }
+   }
+
    return node, nextToken, methodNameSet;
 }
 
@@ -626,8 +650,10 @@ fn TransUnit.analyzeDeclClass(
    self.checkToken( nextToken, "{" );
 
    if mode == "class" {
+      // self シンボルを登録
       self.scope.add(
-         Ast.SymbolKind.Var, false, true, "self", classTypeInfo, "pri", false, false );
+         Ast.SymbolKind.Var, false, true, "self",
+         classTypeInfo, "pri", false, false, true );
    }
 
 
@@ -640,7 +666,7 @@ fn TransUnit.analyzeDeclClass(
    let parentInfo = classTypeInfo;
 
    let memberTypeList:Ast.TypeInfo[] = [];
-   
+
    // accessor の生成
    foreach memberNode in node.$memberList {
       let memberType = memberNode.$expType;
@@ -678,6 +704,16 @@ fn TransUnit.analyzeDeclClass(
    }
 
    if not self.scope.getTypeInfoChild( "__init" ) {
+      if classTypeInfo.$baseTypeInfo ~= Ast.rootTypeInfo {
+         let superScope = unwrap classTypeInfo.$baseTypeInfo.$scope;
+         let superTypeInfo = unwrap superScope.getTypeInfoChild( "__init" );
+         foreach argType in superTypeInfo.$argTypeInfoList {
+            if not argType.$nilable {
+               self.addErrMess( firstToken.pos, "not found '__init' decl." );
+            }
+         }
+      }
+      
       // デフォルトコンストラクタの登録
       let initTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, self.pushScope( false ),
@@ -731,7 +767,7 @@ pri fn TransUnit.addMethod( className: str, methodNode: Ast.Node, name: str ) {
 
 
 fn TransUnit.analyzeDeclFunc(
-   abstructFlag: bool, overrideFlag: bool, accessMode: str,
+   moduleFlag: bool, abstructFlag: bool, overrideFlag: bool, accessMode: str,
    staticFlag: bool, classNameToken: Parser.Token!,
    firstToken: Parser.Token, name: Parser.Token! ) : Ast.Node
 {
@@ -763,7 +799,9 @@ fn TransUnit.analyzeDeclFunc(
    let kind = Ast.nodeKindDeclConstr;
    let typeKind = Ast.TypeInfoKindFunc;
    if classNameToken {
-      if not staticFlag {
+      if moduleFlag or not staticFlag {
+         // module で Lua の外部モジュールを宣言した場合、
+         // static なメソッド呼び出しが必要なので。。。
          typeKind = Ast.TypeInfoKindMethod;
       }
       if (unwrap name).txt == "__init" {
@@ -1063,8 +1101,7 @@ fn TransUnit.analyzeDeclVar(
    }
    
    let varList:Ast.VarInfo[] = [];
-   let sameSymbolList:Ast.VarInfo[] = [];
-   let currentClass = self.getCurrentClass();
+   let syncSymbolList:Ast.VarInfo[] = [];
    foreach varName, index in varNameList {
       let typeInfo = typeInfoList[ index ];
       let varInfo = new Ast.VarInfo( varName, varTypeList[ index ], typeInfo );
@@ -1073,9 +1110,10 @@ fn TransUnit.analyzeDeclVar(
          self.addErrMess(
             varName.pos, 'need type -- %s' ( varName.txt ) ); 
       }
-      let sameTypeInfo = self.scope.getTypeInfo( varName.txt, self.scope, true );
-      if! sameTypeInfo {
-         sameSymbolList.insert( varInfo );
+      if mode == "sync" {
+         if self.scope.getTypeInfo( varName.txt, self.scope, true ) {
+            syncSymbolList.insert( varInfo );
+         }
       }
       // スコープに変数を登録
       if mode == "let" or mode == "sync" {
@@ -1129,7 +1167,7 @@ fn TransUnit.analyzeDeclVar(
    let node = new Ast.DeclVarNode(
       firstToken.pos, [ Ast.builtinTypeNone ], mode, accessMode, false,
       varList, expList, typeInfoList, unwrapFlag, unwrapBlock,
-      thenBlock, sameSymbolList, syncBlock );
+      thenBlock, syncSymbolList, syncBlock );
    
    return node;
 }

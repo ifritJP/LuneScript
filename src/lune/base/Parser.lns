@@ -262,7 +262,7 @@ macro _declTokenKind( name_array:str[@] ) {
             pub static let ,,,name:int;
          });
          init_array.insert( `{
-            self.,,,name = ,,index;
+            TokenKind.,,,name = ,,index;
          });
          stat_array.insert( `{
             kind2Txt[ ,,index ] = ,,name;
@@ -272,7 +272,7 @@ macro _declTokenKind( name_array:str[@] ) {
    }  
    pub class TokenKind {
       ,,field_array;
-      pub fn __init() {
+      __init {
          ,,init_array;
       }
    }
@@ -286,7 +286,7 @@ _declTokenKind(
    [@ "Cmnt", "Str", "Int", "Real", "Char", 
      "Symb", "Dlmt", "Kywd", "Ope", "Type", "Eof" ] );
 
-pub let kind = new TokenKind();
+//pub let kind = new TokenKind();
 
 pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ), [] );
 

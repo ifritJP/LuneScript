@@ -331,25 +331,28 @@ _moduleObj.TokenKind = TokenKind
 function TokenKind.new(  )
   local obj = {}
   setmetatable( obj, { __index = TokenKind } )
-  if obj.__init then obj:__init(  ); end
-return obj
-end
-function TokenKind:__init() 
-  self.Cmnt = 1
-  self.Str = 2
-  self.Int = 3
-  self.Real = 4
-  self.Char = 5
-  self.Symb = 6
-  self.Dlmt = 7
-  self.Kywd = 8
-  self.Ope = 9
-  self.Type = 10
-  self.Eof = 11
-  -- none
-  
+  if obj.__init then
+    obj:__init(  )
+  end        
+  return obj 
+ end         
+function TokenKind:__init(  ) 
+            
 end
 do
+  TokenKind.Cmnt = 1
+  TokenKind.Str = 2
+  TokenKind.Int = 3
+  TokenKind.Real = 4
+  TokenKind.Char = 5
+  TokenKind.Symb = 6
+  TokenKind.Dlmt = 7
+  TokenKind.Kywd = 8
+  TokenKind.Ope = 9
+  TokenKind.Type = 10
+  TokenKind.Eof = 11
+  -- none
+  
   end
 
 kind2Txt[1] = 'Cmnt'
@@ -409,10 +412,6 @@ _moduleObj.kindEof = kindEof
 
 -- none
 
-
-local kind = TokenKind.new()
-
-_moduleObj.kind = kind
 
 local noneToken = Token.new(_moduleObj.kindEof, "", Position.new(0, 0), {})
 

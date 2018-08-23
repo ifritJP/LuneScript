@@ -184,13 +184,13 @@ do
 
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
-function SymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable )
+function SymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag )
   local obj = {}
   setmetatable( obj, { __index = SymbolInfo } )
-  if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable ); end
+  if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag ); end
 return obj
 end
-function SymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable) 
+function SymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag) 
   SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1
   self.kind = kind
   self.canBeLeft = canBeLeft
@@ -202,6 +202,7 @@ function SymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, stati
   self.name = name
   self.typeInfo = typeInfo
   self.mutable = mutable
+  self.hasValueFlag = hasValueFlag
 end
 -- none
 function SymbolInfo:get_canBeLeft()
@@ -233,6 +234,12 @@ function SymbolInfo:get_mutable()
 end
 function SymbolInfo:get_kind()
   return self.kind
+end
+function SymbolInfo:get_hasValueFlag()
+  return self.hasValueFlag
+end
+function SymbolInfo:set_hasValueFlag( hasValueFlag )
+  self.hasValueFlag = hasValueFlag
 end
 do
   SymbolInfo.symbolIdSeed = 0
@@ -286,6 +293,10 @@ function Scope:getTypeInfoChild( name )
   end
   
   return nil
+end
+function Scope:getSymbolInfoChild( name )
+
+  return self.symbol2TypeInfoMap[name]
 end
 function Scope:setData( symbolInfo )
 
@@ -444,7 +455,7 @@ end
 do
   end
 
-function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
+function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
 
   if self.classFlag then
     if includeSelfFlag then
@@ -460,21 +471,36 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
                   return nil
                 end
               
-            return symbolInfo:get_typeInfo()
+            return symbolInfo
           end
       end
       
     end
     if self.inheritList then
       for __index, scope in pairs( self.inheritList ) do
-        local typeInfo = scope:getTypeInfoField( name, true, fromScope )
+        local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
         
-        if typeInfo then
-          return typeInfo
+        if symbolInfo then
+          return symbolInfo
         end
       end
     end
   end
+  return nil
+end
+
+function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
+
+  local symbolInfo = self:getSymbolInfoField( name, includeSelfFlag, fromScope )
+  
+  do
+    local _exp = symbolInfo
+    if _exp ~= nil then
+    
+        return _exp:get_typeInfo()
+      end
+  end
+  
   return nil
 end
 
@@ -590,6 +616,16 @@ end
 
 function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
 
+  if self.classFlag then
+    do
+      local _exp = self.symbol2TypeInfoMap["self"]
+      if _exp ~= nil then
+      
+          callback( _exp )
+        end
+    end
+    
+  end
   if moduleScope == fromScope or not self.classFlag then
     for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
       if not callback( symbolInfo ) then
@@ -602,39 +638,46 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
   end
 end
 
-function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable )
+function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable, hasValueFlag )
 
-  self.symbol2TypeInfoMap[name] = SymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable)
+  local symbolInfo = SymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag)
+  
+  self.symbol2TypeInfoMap[name] = symbolInfo
 end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
-  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", false, mutable )
+  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", false, mutable, true )
+end
+
+function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
+
+  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", true, mutable, true )
 end
 
 function Scope:addVar( accessMode, name, typeInfo, mutable )
 
-  self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable )
+  self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable, true )
 end
 
 function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutable )
 
-  self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable )
+  self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable, false )
 end
 
 function Scope:addMethod( typeInfo, accessMode, staticFlag, mutable )
 
-  self:add( SymbolKind.Mtd, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable )
+  self:add( SymbolKind.Mtd, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable, true )
 end
 
 function Scope:addFunc( typeInfo, accessMode, staticFlag, mutable )
 
-  self:add( SymbolKind.Fun, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable )
+  self:add( SymbolKind.Fun, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable, true )
 end
 
 function Scope:addClass( name, typeInfo )
 
-  self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true )
+  self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true, true )
 end
 
 local function dumpScopeSub( scope, prefix, readyIdSet )
@@ -1251,9 +1294,9 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
     _moduleObj.rootScope:addClass( typeTxt, info )
   end
   _moduleObj.typeInfoKind[idName] = info
-  _moduleObj.sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, "pub", false, typeTxt, info, false)
+  _moduleObj.sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, "pub", false, typeTxt, info, false, true)
   if info:get_nilableTypeInfo() ~= _moduleObj.rootTypeInfo then
-    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == _moduleObj.TypeInfoKindFunc, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false)
+    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == _moduleObj.TypeInfoKindFunc, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false, true)
     _moduleObj.builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
   _moduleObj.builtInTypeIdSet[info.typeId] = info
@@ -3679,18 +3722,19 @@ function RefFieldNode:canBeLeft(  )
 
   return true
 end
-function RefFieldNode.new( pos, builtinTypeList, field, nilAccess, prefix )
+function RefFieldNode.new( pos, builtinTypeList, field, symbolInfo, nilAccess, prefix )
   local obj = {}
   setmetatable( obj, { __index = RefFieldNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, field, nilAccess, prefix ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, field, symbolInfo, nilAccess, prefix ); end
 return obj
 end
-function RefFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix) 
+function RefFieldNode:__init(pos, builtinTypeList, field, symbolInfo, nilAccess, prefix) 
   Node.__init( self, _moduleObj.nodeKindRefField, pos, builtinTypeList)
   
   -- none
   
   self.field = field
+  self.symbolInfo = symbolInfo
   self.nilAccess = nilAccess
   self.prefix = prefix
   -- none
@@ -3698,6 +3742,9 @@ function RefFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix)
 end
 function RefFieldNode:get_field()
   return self.field
+end
+function RefFieldNode:get_symbolInfo()
+  return self.symbolInfo
 end
 function RefFieldNode:get_nilAccess()
   return self.nilAccess
@@ -3740,18 +3787,19 @@ function GetFieldNode:canBeLeft(  )
 
   return false
 end
-function GetFieldNode.new( pos, builtinTypeList, field, nilAccess, prefix, getterTypeInfo )
+function GetFieldNode.new( pos, builtinTypeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
   local obj = {}
   setmetatable( obj, { __index = GetFieldNode } )
-  if obj.__init then obj:__init( pos, builtinTypeList, field, nilAccess, prefix, getterTypeInfo ); end
+  if obj.__init then obj:__init( pos, builtinTypeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo ); end
 return obj
 end
-function GetFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix, getterTypeInfo) 
+function GetFieldNode:__init(pos, builtinTypeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
   Node.__init( self, _moduleObj.nodeKindGetField, pos, builtinTypeList)
   
   -- none
   
   self.field = field
+  self.symbolInfo = symbolInfo
   self.nilAccess = nilAccess
   self.prefix = prefix
   self.getterTypeInfo = getterTypeInfo
@@ -3760,6 +3808,9 @@ function GetFieldNode:__init(pos, builtinTypeList, field, nilAccess, prefix, get
 end
 function GetFieldNode:get_field()
   return self.field
+end
+function GetFieldNode:get_symbolInfo()
+  return self.symbolInfo
 end
 function GetFieldNode:get_nilAccess()
   return self.nilAccess
@@ -5088,6 +5139,65 @@ end
 do
   end
 
+
+function Node:getSymbolInfo(  )
+
+  local function processExpNode( node )
+  
+    do
+      local _switchExp = (node:get_kind() )
+      if _switchExp == _moduleObj.nodeKindExpRef then
+        return {(node ):get_symbolInfo()}
+      elseif _switchExp == _moduleObj.nodeKindRefField then
+        local refFieldNode = node
+        
+        do
+          local _exp = refFieldNode:get_symbolInfo()
+          if _exp ~= nil then
+          
+              return {_exp}
+            end
+        end
+        
+        return {}
+      elseif _switchExp == _moduleObj.nodeKindGetField then
+        local getFieldNode = node
+        
+        do
+          local _exp = getFieldNode:get_symbolInfo()
+          if _exp ~= nil then
+          
+              return {_exp}
+            end
+        end
+        
+        return {}
+      elseif _switchExp == _moduleObj.nodeKindExpList then
+        local expListNode = node
+        
+        local list = {}
+        
+        for index, expNode in pairs( expListNode:get_expList() ) do
+          if index == #expListNode:get_expList() then
+            for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
+              table.insert( list, symbolInfo )
+            end
+          else 
+            for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
+              table.insert( list, symbolInfo )
+              break
+            end
+          end
+        end
+        return list
+      end
+    end
+    
+    return {}
+  end
+  
+  return processExpNode( self )
+end
 
 function LiteralNilNode:getLiteral(  )
 

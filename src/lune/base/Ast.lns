@@ -119,11 +119,13 @@ pub class SymbolInfo {
    pri let mutable: bool { pub };
    /** このシンボルの種類 SymbolKind */
    pri let kind: int { pub };
+   /** このシンボルがデータを保持しているかどうか */
+   pri let hasValueFlag: bool { pub, pub };
 
    pub fn __init(
       kind:int, canBeLeft:bool, canBeRight:bool, scope: Scope,
       accessMode: str, staticFlag: bool, name: str, 
-      typeInfo: TypeInfo, mutable: bool )
+      typeInfo: TypeInfo, mutable: bool, hasValueFlag: bool )
    {
       SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
@@ -136,6 +138,7 @@ pub class SymbolInfo {
       self.name = name;
       self.typeInfo = typeInfo;
       self.mutable = mutable;
+      self.hasValueFlag = hasValueFlag;
    }
    
    /**
@@ -188,6 +191,10 @@ pub class Scope {
       return nil;
    }
 
+   pub fn getSymbolInfoChild( name: str ) : SymbolInfo! {
+      return self.symbol2TypeInfoMap[ name ];
+   }
+   
    pub fn setData( symbolInfo:SymbolInfo ) {
       self.symbolId2DataOwnerInfo[ symbolInfo.$symbolId ] =
       new DataOwnerInfo( true, symbolInfo );
@@ -305,8 +312,8 @@ pub class TypeInfo {
    }
 } 
 
-pub fn Scope.getTypeInfoField(
-   name: str, includeSelfFlag: bool!, fromScope:Scope ) : TypeInfo!
+pub fn Scope.getSymbolInfoField(
+   name: str, includeSelfFlag: bool!, fromScope:Scope ) : SymbolInfo!
 {
    if self.classFlag {
       if includeSelfFlag {
@@ -314,19 +321,29 @@ pub fn Scope.getTypeInfoField(
             let! symbolInfo = _exp.canAccess( fromScope ) {
                return nil;
             };
-            return symbolInfo.$typeInfo;
+            return symbolInfo;
          }  
       } 
       if self.inheritList {
          foreach scope in self.inheritList {
-            let typeInfo = scope.getTypeInfoField( name, true, fromScope );
-            if typeInfo {
-               return typeInfo;
+            let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
+            if symbolInfo {
+               return symbolInfo;
             }   
          }  
       } 
    }
 
+   return nil;
+}
+
+pub fn Scope.getTypeInfoField(
+   name: str, includeSelfFlag: bool!, fromScope:Scope ) : TypeInfo!
+{
+   let symbolInfo = self.getSymbolInfoField( name, includeSelfFlag, fromScope );
+   if! symbolInfo {
+      return _exp.$typeInfo;
+   }
    return nil;
 }
 
@@ -420,7 +437,7 @@ pub fn Scope.getSymbolTypeInfo(
       if ( _exp.$kind == TypeInfoKindIF or
            _exp.$kind == TypeInfoKindClass ) and name == "self" {
          validThisScope = true;
-      } 
+      }
    } 
    else {
       validThisScope = true;
@@ -440,6 +457,11 @@ pub fn Scope.getSymbolTypeInfo(
 pub fn Scope.filterSymbolTypeInfo(
    fromScope:Scope, moduleScope:Scope, callback:form )
 {
+   if self.classFlag {
+      if! self.symbol2TypeInfoMap[ "self" ] {
+         callback( _exp );
+      }
+   }
    if moduleScope == fromScope or not self.classFlag {
       foreach symbolInfo in self.symbol2TypeInfoMap {
          if not callback( symbolInfo ) {
@@ -456,23 +478,36 @@ pub fn Scope.filterSymbolTypeInfo(
 
 pub fn Scope.add( kind: int, canBeLeft:bool, canBeRight:bool,
                   name:str, typeInfo: TypeInfo, accessMode:str,
-                  staticFlag:bool, mutable:bool )
+                  staticFlag:bool, mutable:bool, hasValueFlag:bool )
 {
-   self.symbol2TypeInfoMap[ name ] = new SymbolInfo(
+   let symbolInfo = new SymbolInfo(
       kind, canBeLeft, canBeRight,
-      self, accessMode, staticFlag, name, typeInfo, mutable );
+      self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag );
+   self.symbol2TypeInfoMap[ name ] = symbolInfo;
 }
 
-pub fn Scope.addLocalVar( argFlag:bool, canBeLeft:bool,
-                          name:str, typeInfo: TypeInfo, mutable:bool )
+pub fn Scope.addLocalVar(
+   argFlag:bool, canBeLeft:bool, name:str, typeInfo: TypeInfo, mutable:bool )
 {
    self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-             canBeLeft, true, name, typeInfo, "local", false, mutable );
+             canBeLeft, true, name, typeInfo,
+             "local", false, mutable, true );
 }
 
-pub fn Scope.addVar( accessMode:str, name:str, typeInfo: TypeInfo, mutable:bool )
+pub fn Scope.addStaticVar(
+   argFlag:bool, canBeLeft:bool, name:str, typeInfo: TypeInfo, mutable:bool )
 {
-   self.add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable );
+   self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
+             canBeLeft, true, name, typeInfo,
+             "local", true, mutable, true );
+}
+
+pub fn Scope.addVar(
+   accessMode:str, name:str, typeInfo: TypeInfo, mutable:bool )
+{
+   // 現状変数は常に値を保持する
+   self.add( SymbolKind.Var, true, true, name, typeInfo,
+             accessMode, false, mutable, true );
 }
 
 
@@ -480,27 +515,27 @@ pub fn Scope.addMember( name:str, typeInfo: TypeInfo, accessMode:str,
                         staticFlag:bool, mutable:bool )
 {
    self.add( SymbolKind.Mbr, true, true,
-             name, typeInfo, accessMode, staticFlag, mutable );
+             name, typeInfo, accessMode, staticFlag, mutable, false );
 }
 
 pub fn Scope.addMethod(
    typeInfo: TypeInfo, accessMode:str, staticFlag:bool, mutable:bool )
 {
-   self.add( SymbolKind.Mtd, true, true,
-             typeInfo.getTxt(), typeInfo, accessMode, staticFlag, mutable );
+   self.add( SymbolKind.Mtd, true, true, typeInfo.getTxt(),
+             typeInfo, accessMode, staticFlag, mutable, true );
 }
 
 pub fn Scope.addFunc(
    typeInfo: TypeInfo, accessMode:str, staticFlag:bool, mutable:bool )
 {
-   self.add( SymbolKind.Fun, true, true,
-             typeInfo.getTxt(), typeInfo, accessMode, staticFlag, mutable );
+   self.add( SymbolKind.Fun, true, true, typeInfo.getTxt(),
+             typeInfo, accessMode, staticFlag, mutable, true );
 }
 
 pub fn Scope.addClass( name:str, typeInfo: TypeInfo )
 {
-   self.add( SymbolKind.Typ, false, false,
-             name, typeInfo, typeInfo.$accessMode, true, true );
+   self.add( SymbolKind.Typ, false, false, name, typeInfo,
+             typeInfo.$accessMode, true, true, true );
 } 
 
 fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
@@ -600,6 +635,7 @@ pub proto class DeclClassNode extend Node;
 pub class NilableTypeInfo extend TypeInfo {
    pri let orgTypeInfo: TypeInfo { pub };
    pri let typeId: int { pub };
+
    pub override fn get_kind(): int {
       return TypeInfoKindNilable;
    } 
@@ -1027,11 +1063,11 @@ pub static fn NormalTypeInfo.createBuiltin(
       typeInfoKind[ idName ] = info;
       sym2builtInTypeMap[ typeTxt ] = new SymbolInfo(
          SymbolKind.Typ, false, false,
-         rootScope, "pub", false, typeTxt, info, false );
+         rootScope, "pub", false, typeTxt, info, false, true );
       if info.$nilableTypeInfo ~= rootTypeInfo {
          sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
             SymbolKind.Typ, false, kind == TypeInfoKindFunc, rootScope, "pub",
-            false, typeTxt, info.$nilableTypeInfo, false );
+            false, typeTxt, info.$nilableTypeInfo, false, true );
          builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
       } 
       
@@ -1684,12 +1720,14 @@ _declNodeClass( "StmtExp", Node, false, true,
 
 _declNodeClass( "RefField", Node, true, true,
                 [ { "field": "Parser.Token" },
+                  { "symbolInfo": "SymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "Node" }] 
 );
 
 _declNodeClass( "GetField", Node, false, true,
                 [ { "field": "Parser.Token" },
+                  { "symbolInfo": "SymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "Node" },
                   { "getterTypeInfo": "TypeInfo" } ]               
@@ -1829,6 +1867,50 @@ _declNodeClass( "LiteralBool", Node, false, true,
 _declNodeClass( "LiteralSymbol", Node, false, true,
                 [ { "token": "Parser.Token" } ]
 );
+
+pub fn Node.getSymbolInfo(): SymbolInfo[] {
+   fn processExpNode( node: Node ): SymbolInfo[] {
+      switch ( node.$kind ) {
+         case nodeKindExpRef {
+            return [(node@@ExpRefNode).$symbolInfo];
+         }
+         case nodeKindRefField {
+            let refFieldNode = node@@RefFieldNode;
+            if! refFieldNode.$symbolInfo {
+               return [_exp];
+            }
+            return [];
+         }
+         case nodeKindGetField {
+            let getFieldNode = node@@GetFieldNode;
+            if! getFieldNode.$symbolInfo {
+               return [_exp];
+            }
+            return [];
+         }
+         case nodeKindExpList {
+            let expListNode = node@@ExpListNode;
+            let list: SymbolInfo[] = [];
+            foreach expNode, index in expListNode.$expList {
+               if index == #expListNode.$expList {
+                  foreach symbolInfo in processExpNode( expNode ) {
+                     list.insert( symbolInfo );
+                  }
+               }
+               else {
+                  foreach symbolInfo in processExpNode( expNode ) {
+                     list.insert( symbolInfo );
+                     break;
+                  }
+               }
+            }
+            return list;
+         }
+      }
+      return [];
+   }
+   return processExpNode( self );
+}
 
 
 pub override fn LiteralNilNode.getLiteral(): stem![], TypeInfo[] {

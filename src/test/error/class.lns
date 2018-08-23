@@ -1,13 +1,48 @@
 class Test {
    pri static let val:int {pub};
    pri let val1:int {pub};
-   pub fn __init( val:int ) {
+   pub fn __init( val:int ) { // error: does not set 'val2';
       self.val1 = val;
+      return; // error: return
    }
+   pri let val2:int; // error: after __init
    pub fn func( val:int ) {
       self.val1 = val;
    }
 }
+
+class Test2 {
+   pri let val:int;
+   pub fn __init() { // error: does not set 'val';
+   }
+}
+
+class Test3 {
+   pri let val1:int;
+   pub let val2:int;
+   pub static let val3:int;
+   pub fn __init() {
+      self.val1, self.val2 = 0, 1;
+   }
+}
+Test3.val2 = 1; // error: access member from class.
+let test3 = new Test3();
+test3.val3 = 0; // error: access class member from obj.
+
+class Super1 {
+   pri let val:int;
+}
+
+class Sub1 extend Super1 { // error: no __init
+}
+
+class Super2 {
+   pri let val:int!;
+}
+
+class Sub2 extend Super2 {
+}
+
 
 let test = new Test(1,2); // error
 test.func( 1, 1.0, 2.0 ); // error
