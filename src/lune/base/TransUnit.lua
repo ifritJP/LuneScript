@@ -261,15 +261,15 @@ quotedChar2Code['\\'] = 92
 quotedChar2Code['"'] = 34
 quotedChar2Code["'"] = 39
 local _TypeInfo = {}
-function _TypeInfo.new( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode )
+function _TypeInfo.new( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode, valTypeId, enumValList )
   local obj = {}
   setmetatable( obj, { __index = _TypeInfo } )
   if obj.__init then
-    obj:__init( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode )
+    obj:__init( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode, valTypeId, enumValList )
   end        
   return obj 
  end         
-function _TypeInfo:__init( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode ) 
+function _TypeInfo:__init( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode, valTypeId, enumValList ) 
             
 self.abstructFlag = abstructFlag
   self.baseId = baseId
@@ -286,6 +286,8 @@ self.abstructFlag = abstructFlag
   self.orgTypeId = orgTypeId
   self.children = children
   self.accessMode = accessMode
+  self.valTypeId = valTypeId
+  self.enumValList = enumValList
   end
 do
   end
@@ -857,7 +859,24 @@ function TransUnit:analyzeImport( token )
   
     local newTypeInfo = nil
     
-    if atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] or atomInfo.kind == Ast.TypeInfoKindList or atomInfo.kind == Ast.TypeInfoKindArray or atomInfo.kind == Ast.TypeInfoKindMap or atomInfo.kind == Ast.TypeInfoKindNilable then
+    if atomInfo.kind == Ast.TypeInfoKindEnum then
+      local parentInfo = typeId2TypeInfo[atomInfo.parentId]
+      
+      local name2EnumValInfo = {}
+      
+      local scope = self:pushScope( false )
+      
+      local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune_unwrap( parentInfo), true, atomInfo.accessMode, atomInfo.txt, _lune_unwrap( typeId2TypeInfo[atomInfo.valTypeId]), name2EnumValInfo )
+      
+      newTypeInfo = enumTypeInfo
+      typeId2TypeInfo[atomInfo.typeId] = enumTypeInfo
+      for valName, valData in pairs( atomInfo.enumValList ) do
+        name2EnumValInfo[valName] = Ast.EnumValInfo.new(valName, valData)
+        scope:addEnumVal( valName, enumTypeInfo )
+      end
+      self:popScope(  )
+      self.scope:addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo )
+    elseif atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] or atomInfo.kind == Ast.TypeInfoKindList or atomInfo.kind == Ast.TypeInfoKindArray or atomInfo.kind == Ast.TypeInfoKindMap or atomInfo.nilable then
       if atomInfo.nilable then
         local orgTypeInfo = _lune_unwrap( typeId2TypeInfo[atomInfo.orgTypeId])
         
@@ -997,7 +1016,9 @@ function TransUnit:analyzeImport( token )
           end
         end
         
-        scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKindFunc, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
+        if typeInfo:get_kind() ~= Ast.TypeInfoKindEnum then
+          scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKindFunc, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
+        end
       end
     end
   end
@@ -1493,6 +1514,9 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
       table.insert( argList, Ast.DeclArgDDDNode.new(argName.pos, {Ast.builtinTypeDDD}) )
     else 
       argName = self:checkSymbol( argName )
+      if self.scope:getSymbolTypeInfo( argName.txt, self.scope, self.moduleScope ) then
+        self:addErrMess( argName.pos, string.format( "shadowing variable -- %s", argName.txt) )
+      end
       self:checkNextToken( ":" )
       local refType = self:analyzeRefType( accessMode )
       
@@ -1805,6 +1829,108 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
   return self:createNoneNode( firstToken.pos )
 end
 
+function TransUnit:analyzeDeclEnum( accessMode, firstToken )
+
+  local name = self:getSymbolToken(  )
+  
+  self:checkNextToken( "{" )
+  local valueList = {}
+  
+  local valueName2Info = {}
+  
+  local scope = self:pushScope( false )
+  
+  local enumTypeInfo = Ast.rootTypeInfo
+  
+  local nextToken = self:getToken(  )
+  
+  local number = 0.0
+  
+  local prevValTypeInfo = Ast.rootTypeInfo
+  
+  local valTypeInfo = Ast.rootTypeInfo
+  
+  while nextToken.txt ~= "}" do
+    local valName = nextToken
+    
+    nextToken = self:getToken(  )
+    local enumVal = number
+    
+    do
+      local _switchExp = (prevValTypeInfo )
+      if _switchExp == Ast.builtinTypeReal then
+      elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.rootTypeInfo then
+        enumVal = math.floor(number)
+      end
+    end
+    
+    if nextToken.txt == "=" then
+      local exp = self:analyzeExp( false )
+      
+      local valList, typeInfoList = exp:getLiteral(  )
+      
+      if #valList ~= 1 or #typeInfoList ~= 1 then
+        self:error( string.format( "illegal enum val -- %d %d", #valList, #typeInfoList) )
+      end
+      valTypeInfo = typeInfoList[1]
+      do
+        local _switchExp = (valTypeInfo )
+        if _switchExp == Ast.builtinTypeString then
+          enumVal = (_lune_unwrap( valList[1]) )
+        elseif _switchExp == Ast.builtinTypeInt then
+          local val = math.floor((_lune_unwrap( valList[1]) ))
+          
+          enumVal = val
+          number = val
+        elseif _switchExp == Ast.builtinTypeReal then
+          number = (_lune_unwrap( valList[1]) )
+          enumVal = number
+        else 
+          self:error( string.format( "illegal enum val type -- %s", valTypeInfo:getTxt(  )) )
+        end
+      end
+      
+      nextToken = self:getToken(  )
+    else 
+      do
+        local _switchExp = (prevValTypeInfo )
+        if _switchExp == Ast.rootTypeInfo then
+          valTypeInfo = Ast.builtinTypeInt
+        elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeReal then
+          valTypeInfo = prevValTypeInfo
+        else 
+          self:addErrMess( valName.pos, string.format( "illegal enum val type -- %s", valTypeInfo:getTxt(  )) )
+        end
+      end
+      
+    end
+    if prevValTypeInfo ~= Ast.rootTypeInfo and prevValTypeInfo ~= valTypeInfo then
+      self:addErrMess( valName.pos, string.format( "multiple enum val type. %s, %s", valTypeInfo:getTxt(  ), prevValTypeInfo:getTxt(  )) )
+    end
+    prevValTypeInfo = valTypeInfo
+    if enumTypeInfo == Ast.rootTypeInfo then
+      enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt, valTypeInfo, valueName2Info )
+    end
+    scope:addEnumVal( valName.txt, enumTypeInfo )
+    local enumValInfo = Ast.EnumValInfo.new(valName.txt, enumVal)
+    
+    table.insert( valueList, valName )
+    valueName2Info[valName.txt] = enumValInfo
+    if nextToken.txt == "}" then
+      break
+    end
+    self:checkToken( nextToken, "," )
+    nextToken = self:getToken(  )
+    number = number + 1
+  end
+  if enumTypeInfo == Ast.rootTypeInfo then
+    enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt, Ast.builtinTypeNone, valueName2Info )
+  end
+  self:popScope(  )
+  self.scope:addEnum( accessMode, name.txt, enumTypeInfo )
+  return Ast.DeclEnumNode.new(firstToken.pos, {enumTypeInfo}, accessMode, name, valueList, scope)
+end
+
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
 
   if not staticFlag then
@@ -1842,6 +1968,8 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
     return self:analyzeDeclProto( accessMode, firstToken )
   elseif token.txt == "macro" then
     return self:analyzeDeclMacro( accessMode, firstToken )
+  elseif token.txt == "enum" then
+    return self:analyzeDeclEnum( accessMode, firstToken )
   end
   return nil
 end
@@ -3040,10 +3168,21 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo )
   return true
 end
 
-function TransUnit:dumpFieldComp( writer, scope, pattern )
+function TransUnit:dumpFieldComp( writer, prefixSymbolInfo, pattern )
 
+  local typeInfo = prefixSymbolInfo:get_typeInfo()
+  
+  local scope = _lune_unwrap( typeInfo:get_scope())
+  
   scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
   
+    if (prefixSymbolInfo:get_kind() == Ast.SymbolKind.Typ ) then
+      if not symbolInfo:get_staticFlag() and symbolInfo:get_kind() ~= Ast.SymbolKind.Typ then
+        return true
+      end
+    elseif symbolInfo:get_staticFlag() then
+      return true
+    end
     local symbol = symbolInfo:get_name()
     
     if symbol ~= "__init" and symbol ~= "self" then
@@ -3088,11 +3227,14 @@ function TransUnit:checkComp( token, callback )
   end
 end
 
-function TransUnit:checkFieldComp( token, prefixExpType )
+function TransUnit:checkFieldComp( token, prefixSymbolInfo )
 
+  if #prefixSymbolInfo ~= 1 then
+    return 
+  end
   self:checkComp( token, function ( jsonWriter, prefix )
   
-    self:dumpFieldComp( jsonWriter, _lune_unwrap( prefixExpType:get_scope()), prefix == "" and "" or "^" .. prefix )
+    self:dumpFieldComp( jsonWriter, prefixSymbolInfo[1], prefix == "" and "" or "^" .. prefix )
   end
    )
 end
@@ -3131,7 +3273,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               
               local prefixExpType = prefixExp:get_expType()
               
-              self:checkFieldComp( token, prefixExpType )
+              self:checkFieldComp( token, prefixExp:getSymbolInfo(  ) )
               if accessNil then
                 if prefixExpType:get_nilable() then
                   prefixExpType = _lune_unwrap( prefixExpType:get_orgTypeInfo())
@@ -3162,6 +3304,8 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                     end
                 end
                 
+              elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKindEnum then
+                typeInfo = prefixExpType
               elseif prefixExpType == Ast.builtinTypeStem then
               else 
                 self:error( string.format( "illegal type -- %s, %d", prefixExpType:getTxt(  ), prefixExpType:get_kind(  )) )
@@ -3342,7 +3486,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
           elseif _switchExp == "and" then
             retType = exp2Type
           elseif _switchExp == "<" or _switchExp == ">" or _switchExp == "<=" or _switchExp == ">=" then
-            if (exp1Type ~= Ast.builtinTypeInt and exp1Type ~= Ast.builtinTypeReal ) or (exp2Type ~= Ast.builtinTypeInt and exp2Type ~= Ast.builtinTypeReal ) then
+            if (not Ast.builtinTypeInt:isSettableFrom( exp1Type ) and not Ast.builtinTypeReal:isSettableFrom( exp1Type ) ) or (not Ast.builtinTypeInt:isSettableFrom( exp2Type ) and not Ast.builtinTypeReal:isSettableFrom( exp2Type ) ) then
               self:addErrMess( nextToken.pos, string.format( "no int type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
             end
             retType = Ast.builtinTypeBool
@@ -3352,7 +3496,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             end
             retType = Ast.builtinTypeBool
           elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "<<" or _switchExp == ">>" then
-            if exp1Type ~= Ast.builtinTypeInt or exp2Type ~= Ast.builtinTypeInt then
+            if not Ast.builtinTypeInt:isSettableFrom( exp1Type ) or not Ast.builtinTypeInt:isSettableFrom( exp2Type ) then
               self:addErrMess( nextToken.pos, string.format( "no int type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
             end
             retType = Ast.builtinTypeInt
@@ -3362,10 +3506,10 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             end
             retType = Ast.builtinTypeString
           elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "//" or _switchExp == "%" then
-            if (exp1Type ~= Ast.builtinTypeReal and exp1Type ~= Ast.builtinTypeInt ) or (exp2Type ~= Ast.builtinTypeReal and exp2Type ~= Ast.builtinTypeInt ) then
+            if (not Ast.builtinTypeInt:isSettableFrom( exp1Type ) and not Ast.builtinTypeReal:isSettableFrom( exp1Type ) ) or (not Ast.builtinTypeInt:isSettableFrom( exp2Type ) and not Ast.builtinTypeReal:isSettableFrom( exp2Type ) ) then
               self:addErrMess( nextToken.pos, string.format( "no numeric type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
             end
-            if exp1Type == Ast.builtinTypeReal or exp2Type == Ast.builtinTypeReal then
+            if Ast.builtinTypeReal:isSettableFrom( exp1Type ) or Ast.builtinTypeReal:isSettableFrom( exp2Type ) then
               retType = Ast.builtinTypeReal
             else 
               retType = Ast.builtinTypeInt
@@ -3742,6 +3886,19 @@ function TransUnit:analyzeReturn( token )
               if #retTypeList < #expNodeList and retType ~= Ast.builtinTypeDDD then
                 self:addErrMess( token.pos, "over return value" )
               end
+            elseif index == #expNodeList then
+              if expType == Ast.builtinTypeDDD then
+                for retIndex = index, #retTypeList do
+                  local workRetType = retTypeList[retIndex]
+                  
+                  if not workRetType:isSettableFrom( Ast.builtinTypeStem_ ) then
+                    self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", retIndex, workRetType:getTxt(  ), workRetType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
+                  end
+                end
+              else 
+                self:addErrMess( token.pos, string.format( "short return value -- %d < %d", #expNodeList, #retTypeList) )
+              end
+              break
             end
           end
         else

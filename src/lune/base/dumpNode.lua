@@ -144,6 +144,18 @@ end
 
 -- none
 
+function dumpFilter:processDeclEnum( node, prefix, depth )
+
+  dump( prefix, depth, node, node:get_name().txt )
+  local enumTypeInfo = node:get_expType()
+  
+  for __index, name in pairs( node:get_valueNameList() ) do
+    local valInfo = _lune_unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
+    
+    print( string.format( "%s  %s: %s", prefix, name.txt, valInfo:get_val()) )
+  end
+end
+
 function dumpFilter:processDeclClass( node, prefix, depth )
 
   dump( prefix, depth, node, node:get_name(  ).txt )

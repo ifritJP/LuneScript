@@ -14,4 +14,4 @@ class Test extend Super {
 
 let test = new Test();
 test.func1(1);
-test.
+Test.

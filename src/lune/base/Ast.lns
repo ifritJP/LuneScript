@@ -48,6 +48,7 @@ pub let TypeInfoKindIF = 7;
 pub let TypeInfoKindFunc = 8;
 pub let TypeInfoKindMethod = 9;
 pub let TypeInfoKindNilable = 10;
+pub let TypeInfoKindEnum = 11;
 
 pub fn isBuiltin( typeId: int ) : bool {
    return builtInTypeIdSet[ typeId ] ~= nil;
@@ -252,7 +253,7 @@ pub class TypeInfo {
    }
 
    pub fn equals( typeInfo: TypeInfo ): bool {
-      return false;
+      return self == typeInfo;
    }
 
    pub fn get_externalFlag(): bool {
@@ -350,16 +351,16 @@ pub fn Scope.getTypeInfoField(
 pub fn Scope.filterTypeInfoField(
    includeSelfFlag: bool!, fromScope:Scope, callback:form ):bool
 {
+   if includeSelfFlag {
+      foreach symbolInfo in self.symbol2TypeInfoMap {
+         if symbolInfo.canAccess( fromScope ) {
+            if not callback( symbolInfo ) {
+               return false;
+            }        
+         }
+      }  
+   } 
    if self.classFlag {
-      if includeSelfFlag {
-         foreach symbolInfo in self.symbol2TypeInfoMap {
-            if symbolInfo.canAccess( fromScope ) {
-               if not callback( symbolInfo ) {
-                  return false;
-               }        
-            }
-         }  
-      } 
       if self.inheritList {
          foreach scope in self.inheritList {
             if not scope.filterTypeInfoField( true, fromScope, callback ) {
@@ -434,8 +435,11 @@ pub fn Scope.getSymbolTypeInfo(
       { 
          validThisScope = true;
       } 
-      if ( _exp.$kind == TypeInfoKindIF or
+      elseif ( _exp.$kind == TypeInfoKindIF or
            _exp.$kind == TypeInfoKindClass ) and name == "self" {
+         validThisScope = true;
+      }
+      elseif _exp.$kind == TypeInfoKindEnum {
          validThisScope = true;
       }
    } 
@@ -510,6 +514,18 @@ pub fn Scope.addVar(
              accessMode, false, mutable, true );
 }
 
+
+pub fn Scope.addEnumVal( name:str, typeInfo: TypeInfo )
+{
+   self.add( SymbolKind.Mbr, false, true,
+             name, typeInfo, "pub", true, true, true );
+}
+
+pub fn Scope.addEnum( accessMode:str, name:str, typeInfo: TypeInfo )
+{
+   self.add( SymbolKind.Typ, false, false,
+             name, typeInfo, accessMode, true, true, true );
+}
 
 pub fn Scope.addMember( name:str, typeInfo: TypeInfo, accessMode:str,
                         staticFlag:bool, mutable:bool )
@@ -658,6 +674,81 @@ pub class NilableTypeInfo extend TypeInfo {
    
    advertise orgTypeInfo;
 }
+
+pub class EnumValInfo {
+   pri let name: str {pub};
+   pri let val:stem {pub};
+}
+
+pub class EnumTypeInfo extend TypeInfo {
+   // 外部モジュールで定義した TypeInfo かどうか
+   pri let externalFlag: bool { pub };
+   // 親のタイプ。メソッドの親はクラスとなる。
+   pri let parentInfo: TypeInfo { pub };
+   // タイプ ID
+   pri let typeId: int { pub };
+   // タイプ名の文字列。配列などの [] は含まない。
+   pri let rawTxt: str { pub };
+   // アクセスモード "pub", "pro", "pri"
+   pri let accessMode: str { pub };
+   pri let nilableTypeInfo: TypeInfo { pub };
+
+   // この enum で格納している値の型
+   pri let valTypeInfo: TypeInfo {pub};
+   
+
+   // enum 値名 -> EnumValInfo
+   pri let name2EnumValInfo: Map<str,EnumValInfo> { pub };
+   
+   pub fn __init( scope: Scope, externalFlag: bool, accessMode: str,
+                  txt: str, parentInfo: TypeInfo!, typeId: int, valTypeInfo:TypeInfo,
+                  name2EnumValInfo: Map<str,EnumValInfo> )
+   {
+      super( scope );
+
+      self.externalFlag = externalFlag;
+      self.accessMode = accessMode;
+      self.rawTxt = txt;
+      self.parentInfo = unwrap parentInfo default rootTypeInfo;
+      self.typeId = typeId;
+      self.name2EnumValInfo = name2EnumValInfo;
+      self.valTypeInfo = valTypeInfo;
+
+      if self.parentInfo ~= rootTypeInfo {
+         self.parentInfo.$children.insert( self );
+      }
+
+      self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
+      typeIdSeed = typeIdSeed + 1;
+
+      scope.set_ownerTypeInfo( self );
+   }
+
+   pub override fn get_kind(): int {
+      return TypeInfoKindEnum;
+   } 
+   
+   pub override fn getParentId(): int {
+      return self.parentInfo.$typeId;
+   }
+
+   pub override fn getTxt() : str {
+      return self.rawTxt;
+   }
+
+   pub override fn get_display_stirng(): str {
+      return self.getTxt();
+   }
+   
+   pub override fn isSettableFrom( other:TypeInfo ) : bool {
+      return self == other;
+   }
+
+   pub fn getEnumValInfo( name:str ): EnumValInfo! {
+      return self.name2EnumValInfo[ name ];
+   }
+}
+
 
 pub class NormalTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
@@ -1017,6 +1108,7 @@ pub class NormalTypeInfo extend TypeInfo {
       } 
 }
 
+
 pub let typeInfoRoot = rootTypeInfo;
 
 
@@ -1134,6 +1226,25 @@ pub static fn NormalTypeInfo.createClass(
    return info;
 }
 
+pub static fn NormalTypeInfo.createEnum(
+   scope: Scope, parentInfo: TypeInfo, externalFlag: bool,
+   accessMode: str, enumName: str, valTypeInfo:TypeInfo, 
+   name2EnumValInfo:Map<str,EnumValInfo> ): TypeInfo
+{
+   if Parser.isLuaKeyword( enumName ) {
+      Util.err( "This symbol can not use for a enum. -- %s"
+                (enumName) );
+   }
+   
+   typeIdSeed = typeIdSeed + 1;
+   let info = new EnumTypeInfo(
+      scope, externalFlag, accessMode, enumName,
+      parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo );
+
+   return info;
+}
+
+
 pub static fn NormalTypeInfo.createFunc(
    abstructFlag: bool, builtinFlag:bool, scope: Scope!, kind: int, parentInfo: TypeInfo,
    autoFlag: bool, externalFlag: bool, staticFlag: bool, accessMode: str,
@@ -1184,6 +1295,30 @@ pub let builtinTypeStat:TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , TypeInfoKindPrim );
 
 pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
+
+
+pub override fn EnumTypeInfo.serialize(
+   stream: oStream, validChildrenSet: Map<int,TypeInfo>! )
+{
+   let txt = ```{ parentId = %d, typeId = %d, txt = '%s',
+accessMode = '%s', kind = %d, valTypeId = %d, ```
+       ( self.getParentId(), self.typeId, self.rawTxt,
+         self.accessMode, TypeInfoKindEnum, self.valTypeInfo.$typeId );
+   stream.write( txt );
+
+   stream.write( "enumValList = {" );
+   forsort enumValInfo in self.name2EnumValInfo {
+      if self.valTypeInfo == builtinTypeString {
+         stream.write( "%s = '%s'," (enumValInfo.$name, enumValInfo.$val) );
+      }
+      else {
+         stream.write( "%s = %s," (enumValInfo.$name, enumValInfo.$val) );
+      }
+   }
+   stream.write( "} }\n" );
+}
+
+
 
 
 // other 型の値を、この型の変数に設定できるか判定する。
@@ -1277,10 +1412,14 @@ pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
          }
          return self.$orgTypeInfo.isSettableFrom( other );
       } 
-      if ( self.$kind == TypeInfoKindClass or self.$kind == TypeInfoKindIF ) and
+      elseif ( self.$kind == TypeInfoKindClass or self.$kind == TypeInfoKindIF ) and
          ( other.$kind == TypeInfoKindClass or other.$kind == TypeInfoKindIF )
       {
          return other.isInheritFrom( self );
+      }
+      elseif other.$kind == TypeInfoKindEnum {
+         let enumTypeInfo = other@@EnumTypeInfo;
+         return self.isSettableFrom( enumTypeInfo.$valTypeInfo );
       }
       return false;
    }
@@ -1508,7 +1647,7 @@ macro _declNodeClass(
       }
       
       let superStat = `{
-         super( ,,_nodeKindSym, pos, builtinTypeList );
+         super( ,,_nodeKindSym, pos, typeList );
       };
 
       relateStat.insert( `{
@@ -1523,7 +1662,7 @@ macro _declNodeClass(
    pub let ,,_nodeKindSym = regKind( ,,baseName );
    pub class ,,_className extend ,,super {
       ,,fieldStatList;
-      pub fn __init( pos: Parser.Position, builtinTypeList: TypeInfo[], ,,argList ) {
+      pub fn __init( pos: Parser.Position, typeList: TypeInfo[], ,,argList ) {
          ,,superStat;
          ,,initStatList;
       }
@@ -1724,6 +1863,12 @@ _declNodeClass( "RefField", Node, true, true,
                   { "nilAccess": "bool" },
                   { "prefix": "Node" }] 
 );
+pub override fn RefFieldNode.canBeLeft():bool {
+   if! self.$symbolInfo {
+      return _exp.$canBeLeft;
+   }
+   return false;
+}
 
 _declNodeClass( "GetField", Node, false, true,
                 [ { "field": "Parser.Token" },
@@ -1732,6 +1877,13 @@ _declNodeClass( "GetField", Node, false, true,
                   { "prefix": "Node" },
                   { "getterTypeInfo": "TypeInfo" } ]               
 );
+pub override fn GetFieldNode.canBeLeft():bool {
+   if! self.$symbolInfo {
+      return _exp.$canBeLeft;
+   }
+   return false;
+}
+
 
 pub class VarInfo {
    pri let name: Parser.Token { pub };
@@ -1812,6 +1964,14 @@ _declNodeClass( "DeclClass", Node, false, false,
                   { "trustList": "TypeInfo[]" },
                   { "outerMethodSet": "Map<str,bool>" } ]
 );
+
+_declNodeClass( "DeclEnum", Node, false, false,
+                [ { "accessMode": "str" },
+                  { "name": "Parser.Token" },
+                  { "valueNameList": "Parser.Token[]" },
+                  { "scope": "Scope" } ]
+);
+
 
 _declNodeClass( "DeclMacro", Node, false, false,
                 [ { "declInfo": "DeclMacroInfo" } ]
@@ -1996,4 +2156,86 @@ pub override fn ExpMacroStatNode.getLiteral(): stem![], TypeInfo[] {
       txt = "%s%s" (txt, token.getLiteral()[1]);
    }
    return [txt ], [ self.get_expType() ];
+}
+
+pub override fn ExpRefNode.getLiteral(): stem![], TypeInfo[] {
+   let typeInfo = self.symbolInfo.$typeInfo;
+   if typeInfo.$kind ~= TypeInfoKindEnum {
+      return [], [];
+   }
+   let enumTypeInfo = typeInfo@@EnumTypeInfo;
+
+   let val = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
+   return [ val.$val ], [ enumTypeInfo.$valTypeInfo ];
+}
+
+pub override fn ExpOp2Node.getLiteral(): stem![], TypeInfo[] {
+   let val1List, type1List = self.$exp1.getLiteral();
+   let val2List, type2List = self.$exp2.getLiteral();
+
+   if #val1List ~= 1 or #type1List ~= 1 or #val2List ~= 1 or #type2List ~= 1 {
+      return [], [];
+   }
+
+   let val1, type1, val2, type2 =
+      unwrap val1List[1], type1List[1], unwrap val2List[1], type2List[1];
+
+   if ( type1 == builtinTypeInt or type1 == builtinTypeReal ) and
+      ( type2 == builtinTypeInt or type2 == builtinTypeReal )
+   {
+      let retType = builtinTypeInt;
+      if type1 == builtinTypeReal or type2 == builtinTypeReal {
+         retType = builtinTypeReal;
+      }
+      let int1, int2 = 0, 0;
+      let real1, real2 = 0.0, 0.0;
+      if type1 == builtinTypeInt {
+         int1 = val1@@int;
+         real1 = int1@@real;
+      }
+      else {
+         real1 = val1@@real;
+      }
+      if type2 == builtinTypeInt {
+         int2 = val2@@int;
+         real2 = int2@@real;
+      }
+      else {
+         real2 = val2@@real;
+      }
+
+      switch ( self.op.txt ) {
+         case "+" {
+            if retType == builtinTypeInt {
+               return [ int1 + int2 ], [ retType ];
+            }
+            return [ real1 + real2 ], [ retType ];
+         }
+         case "-" {
+            if retType == builtinTypeInt {
+               return [ int1 - int2 ], [ retType ];
+            }
+            return [ real1 - real2 ], [ retType ];
+         }
+         case "*" {
+            if retType == builtinTypeInt {
+               return [ int1 * int2 ], [ retType ];
+            }
+            return [ real1 * real2 ], [ retType ];
+         }
+         case "/" {
+            if retType == builtinTypeInt {
+               return [ int1 / int2 ], [ retType ];
+            }
+            return [ real1 / real2 ], [ retType ];
+         }
+      }
+   }
+   elseif type1 == builtinTypeString and type2 == builtinTypeString {
+      if self.op.txt == ".." {
+         return [ val1@@str .. val2@@str ], [ builtinTypeString ];
+      }
+   }
+
+   return [],[];
 }

@@ -32,6 +32,9 @@
    fn func(): stem {
       return;  // error
    }  
+   fn func2(): stem, stem {
+      return 1;  // error
+   }  
 }
 {
    pub fn func() { // error

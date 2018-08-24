@@ -12,3 +12,9 @@ global let sub2globalval = 1;
 global fn sub2globalfun(): int {
    return sub2globalval;
 }
+
+pub enum enumTestSub {
+   val1,
+   val2,
+   val3
+}

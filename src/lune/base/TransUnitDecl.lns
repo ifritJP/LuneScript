@@ -121,6 +121,11 @@ fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) : Parser.
       else {
          argName = self.checkSymbol( argName );
 
+         if self.scope.getSymbolTypeInfo( argName.txt, self.scope, self.moduleScope ) {
+            self.addErrMess( argName.pos,
+                             "shadowing variable -- %s" (argName.txt) );
+         }
+
          self.checkNextToken( ":" );
          let refType = self.analyzeRefType( accessMode );
          let arg = new Ast.DeclArgNode( argName.pos, refType.$expTypeList,
@@ -414,6 +419,124 @@ fn TransUnit.analyzeDeclProto( accessMode: str, firstToken: Parser.Token ) : Ast
    return self.createNoneNode( firstToken.pos );
 }
 
+fn TransUnit.analyzeDeclEnum(
+   accessMode: str, firstToken: Parser.Token ): Ast.DeclEnumNode
+{
+   let name = self.getSymbolToken();
+
+   self.checkNextToken( "{" );
+
+   let valueList:Parser.Token[] = [];
+   let valueName2Info:Map<str,Ast.EnumValInfo> = {};
+
+
+   let scope = self.pushScope( false );
+
+   let enumTypeInfo = Ast.rootTypeInfo;
+   
+   let nextToken = self.getToken();
+   let number = 0.0;
+   let prevValTypeInfo = Ast.rootTypeInfo;
+   let valTypeInfo = Ast.rootTypeInfo;
+   while nextToken.txt ~= "}" {
+      let valName = nextToken;
+      nextToken = self.getToken();
+
+      let enumVal:stem = number;
+      switch ( prevValTypeInfo ) {
+         case Ast.builtinTypeReal {
+         }
+         case Ast.builtinTypeInt, Ast.rootTypeInfo {
+            enumVal = number@@int;
+         }
+      }
+      
+      if nextToken.txt == "=" {
+         let exp = self.analyzeExp( false );
+         let valList, typeInfoList = exp.getLiteral();
+         if #valList ~= 1 or #typeInfoList ~= 1 {
+            self.error( "illegal enum val -- %d %d" ( #valList, #typeInfoList ) );
+         }  
+         valTypeInfo = typeInfoList[ 1 ];
+
+         
+         switch ( valTypeInfo ) {
+            case Ast.builtinTypeString {
+               enumVal = (unwrap valList[1])@@str;
+            }  
+            case Ast.builtinTypeInt {
+               let val = (unwrap valList[1])@@int;
+               enumVal = val;
+               number = val@@real;
+            }
+            case Ast.builtinTypeReal {
+               number = (unwrap valList[1])@@real;
+               enumVal = number;
+            }  
+            default {
+               self.error( "illegal enum val type -- %s"
+                           (valTypeInfo.getTxt() ) );
+            }
+         }
+         nextToken = self.getToken();
+      }
+      else {
+         switch ( prevValTypeInfo ) {
+            case Ast.rootTypeInfo {
+               valTypeInfo = Ast.builtinTypeInt;
+            }
+            case Ast.builtinTypeInt, Ast.builtinTypeReal {
+               valTypeInfo = prevValTypeInfo;
+            }
+            default {
+               self.addErrMess( valName.pos,
+                                "illegal enum val type -- %s" (valTypeInfo.getTxt()) );
+            }
+         }
+      }
+      if prevValTypeInfo ~= Ast.rootTypeInfo and prevValTypeInfo ~= valTypeInfo
+      {        
+         self.addErrMess( valName.$pos,
+                          "multiple enum val type. %s, %s"
+                          (valTypeInfo.getTxt(), prevValTypeInfo.getTxt()) );
+      }
+      prevValTypeInfo = valTypeInfo;
+
+      if enumTypeInfo == Ast.rootTypeInfo {
+         enumTypeInfo = Ast.NormalTypeInfo.createEnum(
+            scope, self.getCurrentNamespaceTypeInfo(),
+            false, accessMode, name.txt, valTypeInfo, valueName2Info );
+      }
+      
+      scope.addEnumVal( valName.txt, enumTypeInfo );
+      let enumValInfo = new Ast.EnumValInfo( valName.txt, enumVal );
+      valueList.insert( valName );
+      valueName2Info[ valName.txt ] = enumValInfo;
+
+      if nextToken.txt == "}" {
+         break;
+      }
+      self.checkToken( nextToken, "," );
+      nextToken = self.getToken();
+      number = number + 1;
+   }
+
+   if enumTypeInfo == Ast.rootTypeInfo {
+      enumTypeInfo = Ast.NormalTypeInfo.createEnum(
+         scope, self.getCurrentNamespaceTypeInfo(),
+         false, accessMode, name.txt, Ast.builtinTypeNone, valueName2Info );
+   }
+
+   self.popScope();
+
+   self.scope.addEnum( accessMode, name.txt, enumTypeInfo );
+
+   
+   return new Ast.DeclEnumNode(
+      firstToken.pos, [ enumTypeInfo ], accessMode, name, valueList, scope );
+}
+
+
 fn TransUnit.analyzeDecl(
    accessMode: str, staticFlag: bool,
    firstToken: Parser.Token, token: Parser.Token ): Ast.Node!
@@ -463,6 +586,9 @@ fn TransUnit.analyzeDecl(
    elseif token.txt == "macro" {
       return self.analyzeDeclMacro( accessMode, firstToken );
    }
+   elseif token.txt == "enum" {
+      return self.analyzeDeclEnum( accessMode, firstToken );
+   }  
 
    return nil;
 }
@@ -1171,3 +1297,4 @@ fn TransUnit.analyzeDeclVar(
    
    return node;
 }
+

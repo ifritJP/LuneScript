@@ -119,6 +119,7 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
   self.classId2MemberList = {}
   self.pubVarName2InfoMap = {}
   self.pubFuncName2InfoMap = {}
+  self.pubEnumId2EnumTypeInfo = {}
   self.needIndent = false
   self.moduleTypeInfo = moduleTypeInfo
 end
@@ -461,6 +462,9 @@ function convFilter:outputMeta( node, baseIndent )
     end
   end
   
+  for typeId, typeInfo in pairs( self.pubEnumId2EnumTypeInfo ) do
+    typeId2TypeInfo[typeId] = typeInfo
+  end
   do
     local __sorted = {}
     local __map = typeId2TypeInfo
@@ -635,6 +639,32 @@ function convFilter:processStmtExp( node, parent, baseIndent )
 end
 
 -- none
+
+function convFilter:processDeclEnum( node, parent, baseIndent )
+
+  local access = node:get_accessMode() == "global" and "" or "local "
+  
+  self:writeln( string.format( "%s%s = {}", access, node:get_name().txt), baseIndent )
+  if node:get_accessMode() == "pub" then
+    self:writeln( string.format( "_moduleObj.%s = %s", node:get_name().txt, node:get_name().txt), baseIndent )
+  end
+  local typeInfo = node:get_expType()
+  
+  if typeInfo:get_accessMode() ~= "pri" then
+    self.pubEnumId2EnumTypeInfo[typeInfo:get_typeId()] = typeInfo
+  end
+  for __index, valName in pairs( node:get_valueNameList() ) do
+    local valInfo = _lune_unwrap( typeInfo:getEnumValInfo( valName.txt ))
+    
+    local valTxt = string.format( "%s", valInfo:get_val())
+    
+    if typeInfo:get_valTypeInfo() == Ast.builtinTypeString then
+      valTxt = string.format( "'%s'", valInfo:get_val())
+      Util.errorLog( string.format( "hoge: %s", valTxt) )
+    end
+    self:writeln( string.format( "%s.%s = %s", node:get_name().txt, valName.txt, valTxt), baseIndent )
+  end
+end
 
 function convFilter:processDeclClass( node, parent, baseIndent )
 

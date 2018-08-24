@@ -213,8 +213,6 @@ pub class TransUnit {
    pri fn analyzeExpSymbol( firstToken: Parser.Token, token: Parser.Token,
                             mode: str, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node;
    pri fn analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node! ): Ast.ExpListNode;
-
-
 }
 
 
@@ -278,6 +276,9 @@ class _TypeInfo {
    pub let orgTypeId: int;
    pub let children: int[];
    pub let accessMode: str;
+   pub let valTypeId: int;
+   pub let enumValList: Map<str,stem>;
+   
 }
 
 
@@ -895,12 +896,31 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    fn registTypeInfo( atomInfo: _TypeInfo ): Ast.TypeInfo {
       let newTypeInfo: Ast.TypeInfo! = nil;
-      if atomInfo.parentId ~= Ast.rootTypeId or
+
+      if atomInfo.kind == Ast.TypeInfoKindEnum {
+         let parentInfo = typeId2TypeInfo[ atomInfo.parentId ];
+         let name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
+         let scope = self.pushScope( false );
+         let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
+            scope, unwrap parentInfo, true,
+            atomInfo.accessMode, atomInfo.txt,
+            unwrap typeId2TypeInfo[ atomInfo.valTypeId ],
+            name2EnumValInfo );
+         newTypeInfo = enumTypeInfo;
+         typeId2TypeInfo[ atomInfo.typeId ] = enumTypeInfo;
+         foreach valData, valName in atomInfo.enumValList {
+            name2EnumValInfo[ valName ] = new Ast.EnumValInfo( valName, valData );
+            scope.addEnumVal( valName, enumTypeInfo );
+         }
+         self.popScope();
+         self.scope.addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo );
+      }
+      elseif atomInfo.parentId ~= Ast.rootTypeId or
          not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
          atomInfo.kind == Ast.TypeInfoKindList or
          atomInfo.kind == Ast.TypeInfoKindArray or
          atomInfo.kind == Ast.TypeInfoKindMap or
-         atomInfo.kind == Ast.TypeInfoKindNilable
+         atomInfo.nilable
       {
          if atomInfo.nilable {
             let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
@@ -1020,7 +1040,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                }    
             }   
          }  
-      } 
+      }
       else {
          newTypeInfo = Ast.rootScope.getTypeInfo(
             atomInfo.txt, Ast.rootScope, false );
@@ -1060,9 +1080,12 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                   symbolKind = Ast.SymbolKind.Typ;
                }
             }
-            scope.add( symbolKind, false, typeInfo.$kind == Ast.TypeInfoKindFunc,
-                       typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
-                       typeInfo.$staticFlag, typeInfo.$mutable, true );
+            if typeInfo.$kind ~= Ast.TypeInfoKindEnum {
+               scope.add( symbolKind, false,
+                          typeInfo.$kind == Ast.TypeInfoKindFunc,
+                          typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
+                          typeInfo.$staticFlag, typeInfo.$mutable, true );
+            }
          }
       }
    }

@@ -428,8 +428,8 @@ fn StreamParser.parse() : Token[]! {
         @param startIndex token 内の検索開始位置。 この位置から数値表現が始まる。
         @return 数値表現の終了位置, 整数かどうか
         */
-      fn analyzeNumber( token: str, startIndex: int ) : int, bool {
-         let nonNumIndex = token.find( '[^%d]', startIndex );
+      fn analyzeNumber( token: str, beginIndex: int ) : int, bool {
+         let nonNumIndex = token.find( '[^%d]', beginIndex );
          if not nonNumIndex {
             return #token, true;
          }

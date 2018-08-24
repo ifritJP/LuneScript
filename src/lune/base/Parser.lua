@@ -544,9 +544,9 @@ function StreamParser:parse(  )
       return Token.new(tokenKind, token, Position.new(self.lineNo, tokenColumn), {})
     end
     
-    local function analyzeNumber( token, startIndex )
+    local function analyzeNumber( token, beginIndex )
     
-      local nonNumIndex = token:find( '[^%d]', startIndex )
+      local nonNumIndex = token:find( '[^%d]', beginIndex )
       
       if not nonNumIndex then
         return #token, true

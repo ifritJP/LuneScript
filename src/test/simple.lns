@@ -3,6 +3,7 @@ import test.Sub3;
 import test.Sub4;
 
 print( "sub2globalfun", sub2globalfun() );
+print( "enumTestSub.val3", Sub2.enumTestSub.val3 );
 
 {
    let val = new Sub3( 1 );
@@ -27,11 +28,11 @@ pub class ClassA {
     pub fn __init() {
 	self.val = 10;
     }
-    pub fn func( data: int ) : int {
+    pub fn func( data1: int ) : int {
 	self.val = self.val + 1;
-	return data + self.val;
+	return data1 + self.val;
     }
-}
+ }
 
 pub fn ClassA.sub() : int {
     return self.val;

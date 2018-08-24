@@ -75,7 +75,11 @@
 	  (goto-char start-pos)
 	  (when (re-search-forward "([^)]\\|:" end-pos t)
 	    (setq move-pos (1- (point))))	  
-	  ))))
+	  )))
+      (goto-char start-pos)
+      (when (re-search-forward ":.*" end-pos t)
+	(replace-match ""))
+      )
     (when move-pos
       (goto-char move-pos))
     ))
@@ -114,13 +118,15 @@
        (lambda (candidate-list err)
 	 (cond
 	  (candidate-list
-	   (let ((count 0))
-	     (set let-list
-		  (mapcar (lambda (candidate)
-			    (let* ((info (lns-json-val candidate :candidate))
-				   (item-txt (lns-candidate-get-displayTxt info)))
-			      item-txt))
-			  candidate-list)))
+	   (set let-list
+		(mapcar (lambda (candidate)
+			  (let* ((info (lns-json-val candidate :candidate))
+				 (item-txt (lns-candidate-get-displayTxt info)))
+			    item-txt))
+			candidate-list))
+	   ;; field の内容を symbol にコピーする。
+	   ;; 現状は field も symbol も同じ結果になるため。
+	   (setq lns-ac-candidate-list-symbol (symbol-value let-list))
 	   (set process-state :done)
 	   (ac-stop)
 	   (ac-start)

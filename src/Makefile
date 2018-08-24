@@ -71,6 +71,8 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/class.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/provide1.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/provide2.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/shadowing.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/enum.lns,exe,2>&1)
 
 
 test-comp2:
@@ -78,7 +80,8 @@ test-comp2:
 
 
 	cp work/test.result work/test1.result
-	$(call exeComp,.,test/comp.lns,test/comp.lns,test.comp 15 7) >> work/test1.result
+	$(call exeComp,.,test/comp.lns,test/comp.lns,test.comp 17 7) >> work/test1.result
+	$(call exeComp,.,test/comp-2.lns,test/comp-2.lns,test.comp-2 17 7) >> work/test1.result
 	$(call exeComp,.,test/comp2.lns,test/compSub.lns,test.compSub 5 6) >> work/test1.result
 	$(MAKE) -s TEST_DIR=. test-error | grep 'error:' >> work/test1.result
 
@@ -111,7 +114,8 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,ast,)
 	$(call exeLune,work/3,test/start.lns,lua,)
 	$(call exeLune,work/3,test/start.lns,exe,) | tee work/test2.result
-	$(call exeComp,work/3,test/comp.lns,test/comp.lns,test.comp 15 7) | tee -a work/test2.result
+	$(call exeComp,work/3,test/comp.lns,test/comp.lns,test.comp 17 7) | tee -a work/test2.result
+	$(call exeComp,work/3,test/comp-2.lns,test/comp-2.lns,test.comp-2 17 7) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp2.lns,test/compSub.lns,test.compSub 5 6) | tee -a work/test2.result
 	$(MAKE) -s TEST_DIR=work/3 test-error | grep 'error:' | \
 				tee -a work/test2.result

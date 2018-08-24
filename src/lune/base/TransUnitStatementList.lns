@@ -65,6 +65,27 @@ fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
                   self.addErrMess( token.pos, "over return value");
                }
             }
+            elseif index == #expNodeList {
+               if expType == Ast.builtinTypeDDD {
+                  for retIndex = index, #retTypeList {
+                     let workRetType = retTypeList[ retIndex ];
+                     if not workRetType.isSettableFrom( Ast.builtinTypeStem_ ) {
+                        self.addErrMess(
+                           token.pos,
+                           "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
+                           (retIndex,  
+                             workRetType.getTxt(), workRetType.get_typeId(),
+                             expType.getTxt(), expType.get_typeId()));
+                     }        
+                  }
+               }
+               else {
+                  self.addErrMess( token.pos,
+                                   "short return value -- %d < %d"
+                                   (#expNodeList, #retTypeList ));
+               }
+               break;
+            }
          }
       }
       else {

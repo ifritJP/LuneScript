@@ -10,7 +10,6 @@ macro _print( symbol2:stat, format:str! ) {
    print( string.format( "macro %s " .. ,,work, ,,,,symbol2, ,,symbol2 ));
 }
 
-
 let classA = new simple.ClassA();
 print( classA.func( 0 ) );
 print( classA.func( 0 ) );
@@ -425,3 +424,24 @@ print( "val", External.val );
    _print( `{ val } );
 }
 
+
+{
+   enum enumTest {
+      val1,
+      val2,
+      val3 = val2 + 10 - 1 * 2 / 3,
+      val4
+   }
+   _print( `{ enumTest.val4 } );
+   let val2 = 0;
+   val2 = enumTest.val1;
+
+   enum enumTest2 {
+      val1 = 1.0,
+      val2,
+      val3 = val2 + 10 - 1 * 2 / 3,
+      val4
+   }
+   _print( `{ enumTest2.val4 } );
+   
+}

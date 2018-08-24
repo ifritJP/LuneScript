@@ -54,7 +54,7 @@ fn sub( val:Test ) {
 
 class Obj {
    pri let val:int;
-   pub fn func() {
+   pub static fn func() {
       print( self.val );
    }
 }

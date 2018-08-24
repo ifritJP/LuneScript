@@ -50,6 +50,8 @@ pub class convFilter extend Ast.Filter (oStream) {
    pri let classId2TypeInfo: Map<int,Ast.TypeInfo>;
    // クラス TypeId → Member Node List
    pri let classId2MemberList: Map<str,Ast.DeclMemberNode[]>;
+   // enum TypeId -> EnumTypeInfo
+   pri let pubEnumId2EnumTypeInfo: Map<int,Ast.EnumTypeInfo>;
    // public 変数名 → 変数情報
    pri let pubVarName2InfoMap: Map<str,PubVerInfo>;
    // public 関数名 → 関数情報
@@ -77,6 +79,7 @@ pub class convFilter extend Ast.Filter (oStream) {
       self.classId2MemberList = {};
       self.pubVarName2InfoMap = {};
       self.pubFuncName2InfoMap = {};
+      self.pubEnumId2EnumTypeInfo = {};
       self.needIndent = false;
       self.moduleTypeInfo = moduleTypeInfo;
    }
@@ -275,7 +278,6 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
    }
    classId2TypeInfo = self.classId2TypeInfo;
 
-
    self.writeln( "local _typeId2ClassInfoMap = {}", baseIndent );
    self.writeln( "_moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap",
                  baseIndent );
@@ -411,6 +413,10 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
          }
          typeInfo.serialize( self, validChildren );
       }
+   }
+
+   foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {
+      typeId2TypeInfo[ typeId ] = typeInfo;
    }
    
    forsort typeInfo, typeId in typeId2TypeInfo {
@@ -588,6 +594,34 @@ pub override fn convFilter.processStmtExp(
 {
    filter( node.get_exp(),  self, node, baseIndent );
 };
+
+pub override fn convFilter.processDeclEnum(
+   node: Ast.DeclEnumNode, parent: Ast.Node, baseIndent:int )
+{
+   let access = node.$accessMode == "global" and "" or "local ";
+   self.writeln( "%s%s = {}" (access, node.$name.txt), baseIndent );
+   if node.$accessMode == "pub" {
+      self.writeln( "_moduleObj.%s = %s" ( node.$name.txt, node.$name.txt ),
+                    baseIndent );
+   }
+   
+   let typeInfo = node.$expType@@Ast.EnumTypeInfo;
+
+   if typeInfo.$accessMode ~= "pri" {
+      self.pubEnumId2EnumTypeInfo[ typeInfo.$typeId ] = typeInfo;
+   }
+   
+   foreach valName in node.$valueNameList {
+      let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
+      let valTxt = "%s" (valInfo.$val);
+      if typeInfo.$valTypeInfo == Ast.builtinTypeString {
+         valTxt = "'%s'" (valInfo.$val);
+         Util.errorLog( "hoge: %s" (valTxt) );
+      }
+      self.writeln(
+         "%s.%s = %s" (node.$name.txt, valName.txt, valTxt ), baseIndent );
+   }
+}
 
 pub override fn convFilter.processDeclClass( 
    node: Ast.DeclClassNode, parent: Ast.Node, baseIndent:int )

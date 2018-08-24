@@ -1,0 +1,5 @@
+fn test( val:int ) {
+   fn ( val:str ) {
+      let val = 1;
+   }
+}

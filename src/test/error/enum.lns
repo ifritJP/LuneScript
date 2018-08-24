@@ -1,0 +1,40 @@
+enum testEnum {
+   val1,
+   val2,
+   val3 = 1.0 // error: multiple type
+}
+
+enum testEnum2 {
+   val1 = 1.0,
+   val2,
+   val3 = 1, // error: multiple type
+}
+
+enum testEnum3 {
+   val1 = "1",
+   val2,  // error: illegal type
+   val3 = 1, // error: multiple type
+}
+
+enum testEnum4 {
+   val1,
+   val2
+}
+
+let val = testEnum4.val1;
+val = testEnum4.val2;
+val = 1; // error: type mismatch
+
+testEnum4 = 1; // error
+testEnum4.val1 = 1; // error
+testEnum4.val1 = testEnum4.val1; // error
+
+
+let val2 = 1;
+val = testEnum4.val1;
+
+let val3 = 1.0;
+val3 = testEnum2.val1;
+
+let val4 = "";
+val4 = testEnum3.val1;

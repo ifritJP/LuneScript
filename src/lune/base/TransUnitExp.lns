@@ -650,12 +650,29 @@ fn TransUnit.dumpComp(
    return true;
 }
 
-fn TransUnit.dumpFieldComp( writer: Writer.Writer, scope: Ast.Scope, pattern: str ) {
+fn TransUnit.dumpFieldComp(
+   writer: Writer.Writer, prefixSymbolInfo: Ast.SymbolInfo, pattern: str )
+{
+   let typeInfo = prefixSymbolInfo.$typeInfo;
+   let scope = unwrap typeInfo.$scope;
+   
    scope.filterTypeInfoField(
       true, self.scope,
       fn ( symbolInfo: Ast.SymbolInfo ) : bool {
+         if ( prefixSymbolInfo.$kind == Ast.SymbolKind.Typ ) {
+            if not symbolInfo.$staticFlag and symbolInfo.$kind ~= Ast.SymbolKind.Typ
+            {
+               // 型のフィールド補完は 非 static を除外
+               return true;
+            }
+         }
+         elseif symbolInfo.$staticFlag {
+            // インスタンスのフィールド補完は static を除外
+            return true;
+         }
          let symbol = symbolInfo.$name;
-         if symbol ~= "__init" and symbol ~= "self" {
+         if symbol ~= "__init" and symbol ~= "self"
+         {        
             return self.dumpComp(writer, pattern, symbolInfo );
          }
          return true;
@@ -698,13 +715,17 @@ fn TransUnit.checkComp( token:Parser.Token, callback:form )
 }
 
 
-fn TransUnit.checkFieldComp( token:Parser.Token, prefixExpType: Ast.TypeInfo )
+fn TransUnit.checkFieldComp( token:Parser.Token, prefixSymbolInfo: Ast.SymbolInfo[] )
 {
+   if #prefixSymbolInfo ~= 1 {
+      return;
+   }
    self.checkComp(
       token,
       fn ( jsonWriter: Writer.JSON, prefix:str ) {
-         self.dumpFieldComp( jsonWriter, unwrap prefixExpType.$scope,
-                             prefix == "" and "" or "^" .. prefix );
+         self.dumpFieldComp(
+            jsonWriter, prefixSymbolInfo[ 1 ],
+            prefix == "" and "" or "^" .. prefix );
       }
    );
 }
@@ -745,7 +766,7 @@ fn TransUnit.analyzeExpSymbol(
             let typeInfo:Ast.TypeInfo! = Ast.builtinTypeStem_;
             let prefixExpType = prefixExp.$expType;
 
-            self.checkFieldComp( token, prefixExpType );
+            self.checkFieldComp( token, prefixExp.getSymbolInfo() );
             
             if accessNil {
                if prefixExpType.$nilable {
@@ -783,6 +804,9 @@ fn TransUnit.analyzeExpSymbol(
                      typeInfo = _exp.$nilableTypeInfo;
                   }
                }
+            }
+            elseif prefixExpType.get_kind() == Ast.TypeInfoKindEnum {
+               typeInfo = prefixExpType;
             }
             elseif prefixExpType == Ast.builtinTypeStem {
             }
@@ -978,10 +1002,10 @@ fn TransUnit.analyzeExpOp2(
                   retType = exp2Type;
                }
                case "<", ">", "<=", ">=" {
-                  if ( exp1Type ~= Ast.builtinTypeInt and
-                       exp1Type ~= Ast.builtinTypeReal ) or
-                      ( exp2Type ~= Ast.builtinTypeInt and
-                        exp2Type ~= Ast.builtinTypeReal )
+                  if ( not Ast.builtinTypeInt.isSettableFrom( exp1Type ) and
+                       not Ast.builtinTypeReal.isSettableFrom( exp1Type ) ) or
+                      ( not Ast.builtinTypeInt.isSettableFrom( exp2Type ) and
+                        not Ast.builtinTypeReal.isSettableFrom( exp2Type) )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -1002,8 +1026,8 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeBool;
                }
                case "^", "|", "~", "&", "<<", ">>" {
-                  if exp1Type ~= Ast.builtinTypeInt or
-                     exp2Type ~= Ast.builtinTypeInt
+                  if not Ast.builtinTypeInt.isSettableFrom( exp1Type ) or
+                     not Ast.builtinTypeInt.isSettableFrom( exp2Type )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -1024,10 +1048,10 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeString;
                }
                case "+", "-", "*", "/", "//", "%" {
-                  if ( exp1Type ~= Ast.builtinTypeReal and
-                       exp1Type ~= Ast.builtinTypeInt ) or
-                      ( exp2Type ~= Ast.builtinTypeReal and
-                        exp2Type ~= Ast.builtinTypeInt )
+                  if ( not Ast.builtinTypeInt.isSettableFrom( exp1Type ) and
+                       not Ast.builtinTypeReal.isSettableFrom( exp1Type ) ) or
+                      ( not Ast.builtinTypeInt.isSettableFrom( exp2Type ) and
+                        not Ast.builtinTypeReal.isSettableFrom( exp2Type) )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -1035,8 +1059,8 @@ fn TransUnit.analyzeExpOp2(
                                                      exp2Type.getTxt() ) );
                   }
 
-                  if exp1Type == Ast.builtinTypeReal or
-                     exp2Type == Ast.builtinTypeReal
+                  if Ast.builtinTypeReal.isSettableFrom( exp1Type ) or
+                     Ast.builtinTypeReal.isSettableFrom( exp2Type )
                   {
                      retType = Ast.builtinTypeReal;
                   }
