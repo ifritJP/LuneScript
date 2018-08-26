@@ -710,6 +710,9 @@ function convFilter:processDeclClass( node, parent, baseIndent )
     if _exp ~= nil then
     
         self:writeln( string.format( "local %s = require( %s )", className, _exp.txt ), baseIndent )
+        if node:get_accessMode() ~= "pri" then
+          self:writeln( string.format( "_moduleObj.%s = %s", className, className), baseIndent )
+        end
         return 
       end
   end

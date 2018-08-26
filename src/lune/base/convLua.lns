@@ -664,6 +664,9 @@ pub override fn convFilter.processDeclClass(
    if! node.$moduleName {
       self.writeln(
          string.format( "local %s = require( %s )", className, _exp.txt ), baseIndent );
+      if node.$accessMode ~= "pri" {
+         self.writeln( "_moduleObj.%s = %s" (className, className ), baseIndent );
+      }
       return;
    }
    self.writeln( string.format( "local %s = {}", className ), baseIndent );

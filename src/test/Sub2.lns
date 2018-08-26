@@ -18,3 +18,9 @@ pub enum enumTestSub {
    val2,
    val3
 }
+
+pub module External require "test.external" {
+   pub static let val:int;
+   pub static fn func1();
+   pub fn func2( val:int  );
+}

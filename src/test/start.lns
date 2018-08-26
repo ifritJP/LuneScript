@@ -319,16 +319,10 @@ _print( `{ ClassAA.$val } );
 }
 
 
-module External require "test.external" {
-   pub static let val:int;
-   pub static fn func1();
-   pub fn func2( val:int  );
-}
-
-External.func1();
-External.func2( 10 );
-External.func2( 20 );
-print( "val", External.val );
+Sub2.External.func1();
+Sub2.External.func2( 10 );
+Sub2.External.func2( 20 );
+_print( `{ Sub2.External.val } );
 
 
 {
