@@ -57,4 +57,9 @@ testEnum4.val1 = testEnum4.val1; // error
    }
    if valtest == testEnum4._fromVal(1) {
    }
+   let! valtest2 = valtest {}
+   then {
+      if valtest2 == 1 {
+      }
+   };
 }
