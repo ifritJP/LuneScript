@@ -631,7 +631,13 @@ pub override fn convFilter.processDeclEnum(
    end
    return string.format( "illegal val -- %%s", val )
 end
-``` (node.$name.txt, self.getCanonicalName( typeInfo ) ), baseIndent );
+function %s:_fromVal( val )
+   if self._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+``` (node.$name.txt, self.getCanonicalName( typeInfo ), node.$name.txt ), baseIndent );
    foreach valName in node.$valueNameList {
       let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
       let valTxt = "%s" (valInfo.$val);

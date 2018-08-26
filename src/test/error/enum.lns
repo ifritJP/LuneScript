@@ -30,13 +30,31 @@ testEnum4.val1 = 1; // error
 testEnum4.val1 = testEnum4.val1; // error
 
 
-let val2 = 1;
-val = testEnum4.val1;
+{
+   let valtest = 1;
+   valtest = testEnum4.val1;
+}
 
-let val3 = 1.0;
-val3 = testEnum2.val1;
+{
+   let valtest = 1.0;
+   valtest = testEnum2.val2;
+}
 
-let val4 = "";
-val4 = testEnum3.val1;
+{
+   let valtest = "";
+   valtest = testEnum3.val1;
+}
 
-let val5 = testEnum3.val4; // error
+{
+   let valtest = testEnum3.val4; // error
+}
+
+{
+   let valtest = testEnum4._fromVal( 0 );
+   valtest = testEnum4.val1;
+   valtest = 1; // error
+   if valtest == 1 { // error
+   }
+   if valtest == testEnum4._fromVal(1) {
+   }
+}

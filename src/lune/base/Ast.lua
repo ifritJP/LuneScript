@@ -1688,9 +1688,12 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
   typeIdSeed = typeIdSeed + 1
   local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo)
   
-  local builtinTypeGetEnumName = NormalTypeInfo.createFunc( false, true, nil, _moduleObj.TypeInfoKindMethod, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString} )
+  local getEnumName = NormalTypeInfo.createFunc( false, true, nil, _moduleObj.TypeInfoKindMethod, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString} )
   
-  scope:addMethod( builtinTypeGetEnumName, "pub", false, true )
+  scope:addMethod( getEnumName, "pub", false, true )
+  local fromVal = NormalTypeInfo.createFunc( false, true, nil, _moduleObj.TypeInfoKindMethod, info, true, true, true, "pub", "_fromVal", {valTypeInfo}, {info:get_nilableTypeInfo()} )
+  
+  scope:addMethod( fromVal, "pub", true, true )
   return info
 end
 

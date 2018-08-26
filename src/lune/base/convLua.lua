@@ -674,7 +674,13 @@ function convFilter:processDeclEnum( node, parent, baseIndent )
    end
    return string.format( "illegal val -- %%s", val )
 end
-]==], node:get_name().txt, self:getCanonicalName( typeInfo )), baseIndent )
+function %s:_fromVal( val )
+   if self._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+]==], node:get_name().txt, self:getCanonicalName( typeInfo ), node:get_name().txt), baseIndent )
   for __index, valName in pairs( node:get_valueNameList() ) do
     local valInfo = _lune_unwrap( typeInfo:getEnumValInfo( valName.txt ))
     

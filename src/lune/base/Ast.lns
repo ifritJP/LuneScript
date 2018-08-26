@@ -1414,11 +1414,17 @@ pub static fn NormalTypeInfo.createEnum(
       scope, externalFlag, accessMode, enumName,
       parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo );
 
-   let builtinTypeGetEnumName = NormalTypeInfo.createFunc(
+   let getEnumName = NormalTypeInfo.createFunc(
       false, true, nil, TypeInfoKindMethod, info,
       true, true, false, "pub",
       "get__txt", nil, [ builtinTypeString ] );
-   scope.addMethod( builtinTypeGetEnumName, "pub", false, true );
+   scope.addMethod( getEnumName, "pub", false, true );
+
+   let fromVal = NormalTypeInfo.createFunc(
+      false, true, nil, TypeInfoKindMethod, info,
+      true, true, true, "pub",
+      "_fromVal", [ valTypeInfo ], [ info.$nilableTypeInfo ] );
+   scope.addMethod( fromVal, "pub", true, true );
    
    return info;
 }
@@ -1537,7 +1543,7 @@ pub override fn NormalTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
             return self.$orgTypeInfo.isSettableFrom( other.$orgTypeInfo );
          }
          return self.$orgTypeInfo.isSettableFrom( other );
-      } 
+      }
       elseif ( self.$kind == TypeInfoKindClass or self.$kind == TypeInfoKindIF ) and
          ( other.$kind == TypeInfoKindClass or other.$kind == TypeInfoKindIF )
       {
