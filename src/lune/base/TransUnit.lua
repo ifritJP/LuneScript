@@ -122,7 +122,7 @@ function TransUnit:getCurrentClass(  )
       local _exp = scope:get_ownerTypeInfo()
       if _exp ~= nil then
       
-          if _exp:get_kind() == Ast.TypeInfoKindClass or _exp:get_kind() == Ast.TypeInfoKindIF then
+          if _exp:get_kind() == Ast.TypeInfoKindClass or _exp:get_kind() == Ast.TypeInfoKindModule or _exp:get_kind() == Ast.TypeInfoKindIF then
             return _exp
           end
         end
@@ -150,6 +150,40 @@ function TransUnit:getCurrentNamespaceTypeInfo(  )
     scope = scope:get_parent()
   until scope == Ast.rootScope
   return typeInfo
+end
+function TransUnit:pushModule( externalFlag, name )
+
+  local typeInfo = Ast.rootTypeInfo
+  
+  do
+    local _exp = self.scope:getTypeInfoChild( name )
+    if _exp ~= nil then
+    
+        typeInfo = _exp
+        self.scope = _lune_unwrap( typeInfo:get_scope())
+      else
+    
+        local parentInfo = self:getCurrentNamespaceTypeInfo(  )
+        
+        local scope = self:pushScope( true )
+        
+        typeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, externalFlag, name )
+        local parentScope = scope:get_parent(  )
+        
+        parentScope:addClass( name, typeInfo )
+      end
+  end
+  
+  if not self.typeId2ClassMap[typeInfo:get_typeId(  )] then
+    local namespace = Ast.NamespaceInfo.new(name, self.scope, typeInfo)
+    
+    self.typeId2ClassMap[typeInfo:get_typeId(  )] = namespace
+  end
+  return typeInfo
+end
+function TransUnit:popModule(  )
+
+  self:popScope(  )
 end
 function TransUnit:pushClass( classFlag, abstructFlag, baseInfo, interfaceList, externalFlag, name, accessMode, defNamespace )
 
@@ -700,7 +734,7 @@ end
 function TransUnit:checkToken( token, txt )
 
   if not token or token.txt ~= txt then
-    self:error( string.format( "not found -- %s", txt ) )
+    self:error( string.format( "not found -- %s", txt) )
   end
   return token
 end
@@ -835,10 +869,10 @@ function TransUnit:analyzeImport( token )
   
   typeId2TypeInfo[Ast.rootTypeId] = Ast.typeInfoRoot
   for __index, moduleName in pairs( nameList ) do
-    self:pushClass( true, false, nil, nil, true, moduleName, "pub" )
+    self:pushModule( true, moduleName )
   end
   for __index, moduleName in pairs( nameList ) do
-    self:popClass(  )
+    self:popModule(  )
   end
   local _obj, _obj2 = _luneScript.loadModule( modulePath )
   
@@ -866,6 +900,7 @@ function TransUnit:analyzeImport( token )
       
       local scope = self:pushScope( false )
       
+      typeId2Scope[atomInfo.typeId] = scope
       local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune_unwrap( parentInfo), true, atomInfo.accessMode, atomInfo.txt, _lune_unwrap( typeId2TypeInfo[atomInfo.valTypeId]), name2EnumValInfo )
       
       newTypeInfo = enumTypeInfo
@@ -876,6 +911,54 @@ function TransUnit:analyzeImport( token )
       end
       self:popScope(  )
       self.scope:addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo )
+    elseif atomInfo.kind == Ast.TypeInfoKindModule then
+      local parentInfo = Ast.typeInfoRoot
+      
+      if atomInfo.parentId ~= Ast.rootTypeId then
+        local workTypeInfo = typeId2TypeInfo[atomInfo.parentId]
+        
+            if  nil == workTypeInfo then
+              local _workTypeInfo = workTypeInfo
+              
+              Util.err( string.format( "not found parentInfo %s %s", atomInfo.parentId, atomInfo.txt) )
+            end
+          
+        parentInfo = workTypeInfo
+      end
+      local parentScope = typeId2Scope[atomInfo.parentId]
+      
+          if  nil == parentScope then
+            local _parentScope = parentScope
+            
+            self:error( string.format( "not found parentScope %s %s", atomInfo.parentId, atomInfo.txt) )
+          end
+        
+      newTypeInfo = parentScope:getTypeInfoChild( atomInfo.txt )
+      if newTypeInfo then
+        local newTypeInfo = newTypeInfo
+        
+            if  nil == newTypeInfo then
+              local _newTypeInfo = newTypeInfo
+              
+            else
+              
+                typeId2Scope[atomInfo.typeId] = newTypeInfo:get_scope()
+                if not newTypeInfo:get_scope() then
+                  Util.err( string.format( "not found scope %s %s %s %s %s", parentScope, atomInfo.parentId, atomInfo.typeId, atomInfo.txt, newTypeInfo:getTxt(  )) )
+                end
+                typeId2TypeInfo[atomInfo.typeId] = newTypeInfo
+              end
+          
+      else 
+        local scope = Ast.Scope.new(parentScope, true, {})
+        
+        local workTypeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, true, atomInfo.txt )
+        
+        newTypeInfo = workTypeInfo
+        typeId2Scope[atomInfo.typeId] = scope
+        typeId2TypeInfo[atomInfo.typeId] = workTypeInfo
+        parentScope:addClass( atomInfo.txt, workTypeInfo )
+      end
     elseif atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] or atomInfo.kind == Ast.TypeInfoKindList or atomInfo.kind == Ast.TypeInfoKindArray or atomInfo.kind == Ast.TypeInfoKindMap or atomInfo.nilable then
       if atomInfo.nilable then
         local orgTypeInfo = _lune_unwrap( typeId2TypeInfo[atomInfo.orgTypeId])
@@ -1005,18 +1088,22 @@ function TransUnit:analyzeImport( token )
         
         local symbolKind = Ast.SymbolKind.Typ
         
+        local addFlag = true
+        
         do
           local _switchExp = typeInfo:get_kind()
           if _switchExp == Ast.TypeInfoKindFunc then
             symbolKind = Ast.SymbolKind.Fun
           elseif _switchExp == Ast.TypeInfoKindMethod then
             symbolKind = Ast.SymbolKind.Mtd
-          elseif _switchExp == Ast.TypeInfoKindClass then
+          elseif _switchExp == Ast.TypeInfoKindClass or _switchExp == Ast.TypeInfoKindModule then
             symbolKind = Ast.SymbolKind.Typ
+          elseif _switchExp == Ast.TypeInfoKindEnum then
+            addFlag = false
           end
         end
         
-        if typeInfo:get_kind() ~= Ast.TypeInfoKindEnum then
+        if addFlag then
           scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKindFunc, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
         end
       end
@@ -1029,59 +1116,69 @@ function TransUnit:analyzeImport( token )
   
     local classTypeInfo = _lune_unwrap( typeId2TypeInfo[classTypeId])
     
-    self:pushClass( true, classTypeInfo:get_abstructFlag(), nil, nil, true, classTypeInfo:getTxt(  ), "pub" )
-    do
-      local _exp = moduleInfo._typeId2ClassInfoMap[classTypeId]
-      if _exp ~= nil then
-      
-          local classInfo = _exp
-          
-          for fieldName, fieldInfo in pairs( classInfo ) do
-            local typeId = fieldInfo.typeId
+    if classTypeInfo:get_kind() ~= Ast.TypeInfoKindModule then
+      self:pushClass( true, classTypeInfo:get_abstructFlag(), nil, nil, true, classTypeInfo:getTxt(  ), "pub" )
+      do
+        local _exp = moduleInfo._typeId2ClassInfoMap[classTypeId]
+        if _exp ~= nil then
+        
+            local classInfo = _exp
             
-            local fieldTypeInfo = _lune_unwrap( typeId2TypeInfo[typeId])
-            
-            self.scope:addMember( fieldName, fieldTypeInfo, (_lune_unwrap( fieldInfo.accessMode) ), (_lune_unwrapDefault( fieldInfo.staticFlag, false) ), (_lune_unwrapDefault( fieldInfo.mutable, false) ) )
-          end
-          for __index, child in pairs( classTypeInfo:get_children(  ) ) do
-            if child:get_kind(  ) == Ast.TypeInfoKindClass or child:get_kind(  ) == Ast.TypeInfoKindIF then
-              local oldId = newId2OldIdMap[child:get_typeId(  )]
+            for fieldName, fieldInfo in pairs( classInfo ) do
+              local typeId = fieldInfo.typeId
               
-              if oldId then
-                registMember( _lune_unwrap( oldId) )
-              end
+              local fieldTypeInfo = _lune_unwrap( typeId2TypeInfo[typeId])
+              
+              self.scope:addMember( fieldName, fieldTypeInfo, (_lune_unwrap( fieldInfo.accessMode) ), (_lune_unwrapDefault( fieldInfo.staticFlag, false) ), (_lune_unwrapDefault( fieldInfo.mutable, false) ) )
             end
+          else
+        
+            self:error( string.format( "not found class -- %d, %s", classTypeId, classTypeInfo:getTxt(  )) )
           end
-        else
+      end
       
-          self:error( string.format( "not found class -- %d, %s", classTypeId, classTypeInfo:getTxt(  )) )
-        end
+    else 
+      self:pushModule( true, classTypeInfo:getTxt(  ) )
     end
-    
-    self:popClass(  )
+    for __index, child in pairs( classTypeInfo:get_children(  ) ) do
+      if child:get_kind(  ) == Ast.TypeInfoKindClass or child:get_kind(  ) == Ast.TypeInfoKindModule or child:get_kind(  ) == Ast.TypeInfoKindIF then
+        local oldId = newId2OldIdMap[child:get_typeId(  )]
+        
+        if oldId then
+          registMember( _lune_unwrap( oldId) )
+        end
+      end
+    end
+    if classTypeInfo:get_kind() ~= Ast.TypeInfoKindModule then
+      self:popClass(  )
+    else 
+      self:popModule(  )
+    end
   end
   
   for __index, atomInfo in pairs( moduleInfo._typeInfoList ) do
-    if atomInfo.parentId == Ast.rootTypeId and (atomInfo.kind == Ast.TypeInfoKindClass or atomInfo.kind == Ast.TypeInfoKindIF ) then
+    if atomInfo.parentId == Ast.rootTypeId and (atomInfo.kind == Ast.TypeInfoKindClass or atomInfo.kind == Ast.TypeInfoKindModule or atomInfo.kind == Ast.TypeInfoKindIF ) then
       registMember( atomInfo.typeId )
     end
   end
   for __index, moduleName in pairs( nameList ) do
-    self:pushClass( true, false, nil, nil, true, moduleName, "pub" )
+    self:pushModule( true, moduleName )
   end
   for varName, varInfo in pairs( moduleInfo._varName2InfoMap ) do
     self.scope:addStaticVar( false, true, varName, _lune_unwrap( typeId2TypeInfo[varInfo.typeId]), (_lune_unwrapDefault( varInfo.mutable, false) ) )
   end
   for __index, moduleName in pairs( nameList ) do
-    self:popClass(  )
+    self:popModule(  )
   end
   self.scope = self.moduleScope
-  self.scope:add( Ast.SymbolKind.Typ, false, false, moduleToken.txt, _lune_unwrap( typeId2TypeInfo[moduleInfo._moduleTypeId]), "local", true, false, true )
+  local moduleTypeInfo = _lune_unwrap( typeId2TypeInfo[moduleInfo._moduleTypeId])
+  
+  self.scope:add( Ast.SymbolKind.Typ, false, false, moduleToken.txt, moduleTypeInfo, "local", true, false, true )
   self:checkToken( nextToken, ";" )
   if self.moduleScope ~= self.scope then
     self:error( "illegal top scope." )
   end
-  return Ast.ImportNode.new(token.pos, {Ast.builtinTypeNone}, modulePath)
+  return Ast.ImportNode.new(token.pos, {Ast.builtinTypeNone}, modulePath, moduleTypeInfo)
 end
 
 function TransUnit:analyzeSubfile( token )
@@ -1566,7 +1663,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
     if _exp ~= nil then
     
         for txt in string.gmatch( _exp, '[^%.]+' ) do
-          moduleTypeInfo = _lune_unwrap( self:pushClass( true, false, nil, nil, false, txt, "pub" ))
+          moduleTypeInfo = _lune_unwrap( self:pushModule( false, txt ))
         end
       end
   end
@@ -1645,7 +1742,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
     if _exp ~= nil then
     
         for txt in string.gmatch( _exp, '[^%.]+' ) do
-          self:popClass(  )
+          self:popModule(  )
         end
       end
   end
@@ -1764,7 +1861,7 @@ function TransUnit:analyzePushClass( classFlag, abstructFlag, firstToken, name, 
         local ifType = self:analyzeRefType( accessMode )
         
         if ifType:get_expType():get_kind() ~= Ast.TypeInfoKindIF then
-          self:error( string.format( "%s is not interface", ifType:get_expType():getTxt(  )) )
+          self:error( string.format( "%s is not interface -- %d", ifType:get_expType():getTxt(  ), ifType:get_expType():get_kind()) )
         end
         table.insert( interfaceList, ifType:get_expType() )
         nextToken = self:getToken(  )
@@ -3285,7 +3382,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               
               local symbolInfo = nil
               
-              if prefixExpType:get_kind(  ) == Ast.TypeInfoKindClass or prefixExpType:get_kind(  ) == Ast.TypeInfoKindIF or prefixExpType:get_kind(  ) == Ast.TypeInfoKindList then
+              if prefixExpType:get_kind(  ) == Ast.TypeInfoKindClass or prefixExpType:get_kind(  ) == Ast.TypeInfoKindModule or prefixExpType:get_kind(  ) == Ast.TypeInfoKindIF or prefixExpType:get_kind(  ) == Ast.TypeInfoKindList then
                 typeInfo, getterTypeInfo = self:analyzeAccessClassField( prefixExpType, mode, token )
               elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKindMap then
                 local work = prefixExpType:get_itemTypeInfoList()[1]
@@ -3305,7 +3402,19 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                 end
                 
               elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKindEnum then
-                typeInfo = prefixExpType
+                local scope = _lune_unwrap( prefixExpType:get_scope())
+                
+                local fieldName = token.txt
+                
+                if mode == "get" then
+                  fieldName = "get_" .. fieldName
+                  getterTypeInfo = Ast.rootTypeInfo
+                end
+                typeInfo = scope:getTypeInfoChild( fieldName )
+                if not typeInfo then
+                  self:addErrMess( token.pos, string.format( "not found enum field -- %s", token.txt) )
+                  typeInfo = Ast.builtinTypeInt
+                end
               elseif prefixExpType == Ast.builtinTypeStem then
               else 
                 self:error( string.format( "illegal type -- %s, %d", prefixExpType:getTxt(  ), prefixExpType:get_kind(  )) )

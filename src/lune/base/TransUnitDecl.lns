@@ -158,8 +158,9 @@ pub fn TransUnit.createAST(
 
    if! moduleName {
       apply txt of string.gmatch( _exp, '[^%.]+' ) {
-         moduleTypeInfo = unwrap self.pushClass(
-            true, false, nil, nil, false, txt@@str, "pub" );
+         // moduleTypeInfo = unwrap self.pushClass(
+         //    true, false, nil, nil, false, txt@@str, "pub" );
+         moduleTypeInfo = unwrap self.pushModule( false, txt@@str );
       }
    }
    self.moduleScope = self.scope;
@@ -223,7 +224,8 @@ pub fn TransUnit.createAST(
 
    if! moduleName {
       apply txt of string.gmatch( _exp, '[^%.]+' ) {
-         self.popClass();
+         //self.popClass();
+         self.popModule();
       }
    }
 
@@ -360,7 +362,8 @@ fn TransUnit.analyzePushClass(
             self.pushback();
             let ifType = self.analyzeRefType( accessMode );
             if ifType.$expType.$kind ~= Ast.TypeInfoKindIF {
-               self.error( "%s is not interface" (ifType.$expType.getTxt()) );
+               self.error( "%s is not interface -- %d"
+                           (ifType.$expType.getTxt(), ifType.$expType.$kind ) );
             }
             interfaceList.insert( ifType.$expType );
             nextToken = self.getToken();

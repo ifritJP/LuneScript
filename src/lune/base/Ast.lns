@@ -49,6 +49,7 @@ pub let TypeInfoKindFunc = 8;
 pub let TypeInfoKindMethod = 9;
 pub let TypeInfoKindNilable = 10;
 pub let TypeInfoKindEnum = 11;
+pub let TypeInfoKindModule = 12;
 
 pub fn isBuiltin( typeId: int ) : bool {
    return builtInTypeIdSet[ typeId ] ~= nil;
@@ -218,6 +219,10 @@ pub class TypeInfo {
       if! scope {
          _exp.set_ownerTypeInfo( self );
       } 
+   }
+
+   pub fn isModule(): bool {
+      return true;
    }
    
    pub fn getParentId(): int {
@@ -436,7 +441,8 @@ pub fn Scope.getSymbolTypeInfo(
          validThisScope = true;
       } 
       elseif ( _exp.$kind == TypeInfoKindIF or
-           _exp.$kind == TypeInfoKindClass ) and name == "self" {
+               _exp.$kind == TypeInfoKindClass or
+               _exp.$kind == TypeInfoKindModule ) and name == "self" {
          validThisScope = true;
       }
       elseif _exp.$kind == TypeInfoKindEnum {
@@ -598,7 +604,8 @@ pub fn Scope.getClassTypeInfo(): TypeInfo {
    let scope = self;
    while scope.ownerTypeInfo ~= rootTypeInfo {
       if! scope.ownerTypeInfo {
-         if _exp.$kind == TypeInfoKindClass or _exp.$kind == TypeInfoKindIF {
+         if _exp.$kind == TypeInfoKindClass or
+            _exp.$kind == TypeInfoKindIF or _exp.$kind == TypeInfoKindModule {       
             return _exp;
          }  
       } 
@@ -675,6 +682,91 @@ pub class NilableTypeInfo extend TypeInfo {
    advertise orgTypeInfo;
 }
 
+pub class ModuleTypeInfo extend TypeInfo {
+   // 外部モジュールで定義した TypeInfo かどうか
+   pri let externalFlag: bool { pub };
+   // 親のタイプ。メソッドの親はクラスとなる。
+   pri let parentInfo: TypeInfo { pub };
+   // タイプ ID
+   pri let typeId: int { pub };
+   // タイプ名の文字列。配列などの [] は含まない。
+   pri let rawTxt: str { pub };
+   // 子のタイプリスト。 このタイプがクラスなら、メソッドが子。
+   pri let children: TypeInfo[] { pub };
+
+   pub fn __init( scope: Scope, externalFlag: bool,
+                  txt: str, parentInfo: TypeInfo!, typeId: int )
+   {
+      super( scope );
+
+      self.externalFlag = externalFlag;
+      self.rawTxt = txt;
+      self.parentInfo = unwrap parentInfo default rootTypeInfo;
+      self.typeId = typeId;
+      self.children = [];
+
+      if self.parentInfo ~= rootTypeInfo {
+         self.parentInfo.$children.insert( self );
+      }
+
+      typeIdSeed = typeIdSeed + 1;
+
+      scope.set_ownerTypeInfo( self );
+   }
+
+   pub override fn isModule(): bool {
+      return true;
+   }
+
+   pub override fn get_accessMode(): str {
+      return "pub";
+   }
+
+   pub override fn get_kind(): int {
+      return TypeInfoKindModule;
+   } 
+   
+   pub override fn getParentId(): int {
+      return self.parentInfo.$typeId;
+   }
+
+   pub override fn getTxt() : str {
+      return self.rawTxt;
+   }
+
+   pub override fn get_display_stirng(): str {
+      return self.getTxt();
+   }
+   
+   pub override fn isSettableFrom( other:TypeInfo ) : bool {
+      return false;
+   }
+
+   pub override fn serialize(
+      stream: oStream, validChildrenSet: Map<int,TypeInfo>! )
+   {  
+      let txt = "{ parentId = %d, typeId = %d, txt = '%s', kind = %d, "
+          ( self.getParentId(), self.typeId, self.rawTxt, TypeInfoKindModule );
+      stream.write( txt .. '\n' );
+
+      stream.write( "children = {" );
+
+      let children = self.children;
+      if! validChildrenSet {
+         children = [];
+         foreach child in self.children {
+            if _exp[ child.$typeId ] {
+               children.insert( child );
+            }  
+         }  
+      }
+      forsort child in children {
+         stream.write( "%d, " ( child.$typeId ) );
+      }  
+      stream.write( "} }\n" );
+   }
+}
+
 pub class EnumValInfo {
    pri let name: str {pub};
    pri let val:stem {pub};
@@ -722,6 +814,10 @@ pub class EnumTypeInfo extend TypeInfo {
       typeIdSeed = typeIdSeed + 1;
 
       scope.set_ownerTypeInfo( self );
+   }
+
+   pub override fn isModule(): bool {
+      return false;
    }
 
    pub override fn get_kind(): int {
@@ -789,7 +885,6 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let nilableTypeInfo: TypeInfo { pub };
    // 子のタイプリスト。 このタイプがクラスなら、メソッドが子。
    pri let children: TypeInfo[] { pub };
-   
 
    fn __init( abstructFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
               interfaceList: TypeInfo[]!, orgTypeInfo: TypeInfo!,
@@ -841,7 +936,8 @@ pub class NormalTypeInfo extend TypeInfo {
 
          switch ( kind ) {
             case TypeInfoKindPrim, TypeInfoKindList, TypeInfoKindArray,
-                 TypeInfoKindMap, TypeInfoKindClass, TypeInfoKindIF
+                 TypeInfoKindMap, TypeInfoKindClass,
+                 TypeInfoKindModule, TypeInfoKindIF   
             {
                hasNilable = true;
             }   
@@ -872,6 +968,10 @@ pub class NormalTypeInfo extend TypeInfo {
          self.nilable = true;
          self.nilableTypeInfo = rootTypeInfo;
       } 
+   }
+
+   pub override fn isModule(): bool {
+      return false;
    }
 
    pub override fn getParentId(): int {
@@ -1134,13 +1234,13 @@ pub static fn NormalTypeInfo.createBuiltin(
 
       let scope:Scope! = nil;
       switch kind {
-         case TypeInfoKindList, TypeInfoKindClass, TypeInfoKindIF,
-              TypeInfoKindFunc, TypeInfoKindMethod,
+         case TypeInfoKindList, TypeInfoKindClass, TypeInfoKindModule,
+              TypeInfoKindIF, TypeInfoKindFunc, TypeInfoKindMethod,
               TypeInfoKindMacro
          {  
             scope = new Scope(
                rootScope,
-               kind == TypeInfoKindClass or
+               kind == TypeInfoKindClass or kind == TypeInfoKindModule or
                kind == TypeInfoKindIF or kind == TypeInfoKindList, [] );
          }  
       } 
@@ -1198,6 +1298,27 @@ pub static fn NormalTypeInfo.createMap(
       [ keyTypeInfo, valTypeInfo ] );
 }
 
+
+pub static fn NormalTypeInfo.createModule(
+   scope: Scope, parentInfo: TypeInfo,
+   externalFlag: bool, moduleName: str ): TypeInfo
+{
+   if! sym2builtInTypeMap[ moduleName ] {
+      return _exp.$typeInfo;
+   }
+
+   if Parser.isLuaKeyword( moduleName ) {
+      Util.err( "This symbol can not use for a class or script file. -- %s"
+                  (moduleName) );
+   }
+   
+   typeIdSeed = typeIdSeed + 1;
+   let info = new ModuleTypeInfo(
+      scope, externalFlag, moduleName, parentInfo, typeIdSeed );
+   return info;
+}
+
+
 pub static fn NormalTypeInfo.createClass(
    classFlag: bool, abstructFlag: bool, scope: Scope!,
    baseInfo: TypeInfo!, interfaceList: TypeInfo[]!,
@@ -1225,25 +1346,6 @@ pub static fn NormalTypeInfo.createClass(
       classFlag and TypeInfoKindClass or TypeInfoKindIF );
    return info;
 }
-
-pub static fn NormalTypeInfo.createEnum(
-   scope: Scope, parentInfo: TypeInfo, externalFlag: bool,
-   accessMode: str, enumName: str, valTypeInfo:TypeInfo, 
-   name2EnumValInfo:Map<str,EnumValInfo> ): TypeInfo
-{
-   if Parser.isLuaKeyword( enumName ) {
-      Util.err( "This symbol can not use for a enum. -- %s"
-                (enumName) );
-   }
-   
-   typeIdSeed = typeIdSeed + 1;
-   let info = new EnumTypeInfo(
-      scope, externalFlag, accessMode, enumName,
-      parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo );
-
-   return info;
-}
-
 
 pub static fn NormalTypeInfo.createFunc(
    abstructFlag: bool, builtinFlag:bool, scope: Scope!, kind: int, parentInfo: TypeInfo,
@@ -1296,6 +1398,30 @@ pub let builtinTypeStat:TypeInfo =
 
 pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
 
+
+pub static fn NormalTypeInfo.createEnum(
+   scope: Scope, parentInfo: TypeInfo, externalFlag: bool,
+   accessMode: str, enumName: str, valTypeInfo:TypeInfo, 
+   name2EnumValInfo:Map<str,EnumValInfo> ): TypeInfo
+{
+   if Parser.isLuaKeyword( enumName ) {
+      Util.err( "This symbol can not use for a enum. -- %s"
+                (enumName) );
+   }
+   
+   typeIdSeed = typeIdSeed + 1;
+   let info = new EnumTypeInfo(
+      scope, externalFlag, accessMode, enumName,
+      parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo );
+
+   let builtinTypeGetEnumName = NormalTypeInfo.createFunc(
+      false, true, nil, TypeInfoKindMethod, info,
+      true, true, false, "pub",
+      "get__txt", nil, [ builtinTypeString ] );
+   scope.addMethod( builtinTypeGetEnumName, "pub", false, true );
+   
+   return info;
+}
 
 pub override fn EnumTypeInfo.serialize(
    stream: oStream, validChildrenSet: Map<int,TypeInfo>! )
@@ -1672,7 +1798,8 @@ macro _declNodeClass(
 _declNodeClass( "None", Node, false, false, []);
 _declNodeClass( "Subfile", Node, false, false, []);
 _declNodeClass( "Import", Node, false, false,
-                [ { "modulePath": "str" } ]
+                [ { "modulePath": "str" },
+                  { "moduleTypeInfo": "TypeInfo" } ]
 );
 
 

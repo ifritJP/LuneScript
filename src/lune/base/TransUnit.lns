@@ -134,6 +134,7 @@ pub class TransUnit {
       repeat {
          if! scope.$ownerTypeInfo {
             if _exp.$kind == Ast.TypeInfoKindClass or
+               _exp.$kind == Ast.TypeInfoKindModule or
                _exp.$kind == Ast.TypeInfoKindIF {          
                return _exp;
             }   
@@ -156,6 +157,34 @@ pub class TransUnit {
       return typeInfo;
    }
 
+   pri fn pushModule( externalFlag: bool, name:str ): Ast.TypeInfo
+   {
+      let typeInfo = Ast.rootTypeInfo;
+      if! self.scope.getTypeInfoChild( name ) {
+         typeInfo = _exp;
+         self.scope = unwrap typeInfo.$scope;
+      }
+      else {
+         let parentInfo = self.getCurrentNamespaceTypeInfo();
+         let scope = self.pushScope( true );
+         typeInfo = Ast.NormalTypeInfo.createModule(
+            scope, parentInfo, externalFlag, name );
+
+         let parentScope = scope.get_parent();
+         parentScope.addClass( name, typeInfo );
+      }
+      if not self.typeId2ClassMap[ typeInfo.get_typeId() ] {
+         let namespace = new Ast.NamespaceInfo( name, self.scope, typeInfo );
+         self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
+      }
+      return typeInfo;
+   }
+
+   pri fn popModule() {
+      self.popScope();
+   }
+   
+
    pri fn pushClass(
       classFlag:bool, abstructFlag: bool,
       baseInfo: Ast.TypeInfo!, interfaceList: Ast.TypeInfo[]!,
@@ -166,7 +195,7 @@ pub class TransUnit {
       if! self.scope.getTypeInfoChild( name ) {
          typeInfo = _exp;
          self.scope = unwrap typeInfo.$scope;
-      } 
+      }
       else {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
          let inheritList:Ast.Scope[] = [];
@@ -181,12 +210,11 @@ pub class TransUnit {
 
          let parentScope = scope.get_parent();
          parentScope.addClass( name, typeInfo );
-      } 
+      }
       let! namespace = defNamespace {
          namespace = new Ast.NamespaceInfo( name, self.scope, typeInfo );
       };
       self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
-      //self.typeId2Scope[ typeInfo.get_typeId() ] = self.scope;
       return typeInfo;
    }
 
@@ -293,7 +321,6 @@ class _ModuleInfo {
 
 pub let typeInfoListInsert = Ast.typeInfoRoot;
 pub let typeInfoListRemove = Ast.typeInfoRoot;
-
 
 fn TransUnit.registBuiltInScope() {
    let builtInInfo = [
@@ -739,7 +766,7 @@ fn TransUnit.getSymbolToken(): Parser.Token {
 
 fn TransUnit.checkToken( token: Parser.Token, txt: str ): Parser.Token {
    if not token or token.txt ~= txt {
-      self.error( string.format( "not found -- %s", txt ) );
+      self.error( "not found -- %s" ( txt ) );
    }
    return token;
 }
@@ -871,10 +898,10 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    typeId2TypeInfo[ Ast.rootTypeId ] = Ast.typeInfoRoot;
 
    foreach moduleName in nameList {
-      self.pushClass( true, false, nil, nil, true, moduleName, "pub" );
+      self.pushModule( true, moduleName );
    }
    foreach moduleName in nameList {
-      self.popClass();
+      self.popModule();
    }
 
 
@@ -901,6 +928,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
          let parentInfo = typeId2TypeInfo[ atomInfo.parentId ];
          let name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
          let scope = self.pushScope( false );
+         typeId2Scope[ atomInfo.typeId ] = scope;
          let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
             scope, unwrap parentInfo, true,
             atomInfo.accessMode, atomInfo.txt,
@@ -914,6 +942,46 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
          }
          self.popScope();
          self.scope.addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo );
+      }
+      elseif atomInfo.kind == Ast.TypeInfoKindModule {
+         let parentInfo = Ast.typeInfoRoot;
+         if atomInfo.parentId ~= Ast.rootTypeId {
+            let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
+               Util.err( "not found parentInfo %s %s"
+                         ( atomInfo.parentId, atomInfo.txt ) );
+            };   
+            parentInfo = workTypeInfo;
+         }   
+         let! parentScope = typeId2Scope[ atomInfo.parentId ] {
+            self.error( "not found parentScope %s %s"
+                        ( atomInfo.parentId, atomInfo.txt ) );
+         };  
+
+         newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
+         if newTypeInfo {                                
+            sync! newTypeInfo = newTypeInfo {}    
+            then {
+               typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
+               if not newTypeInfo.$scope {
+                  Util.err( "not found scope %s %s %s %s %s"
+                            ( parentScope, atomInfo.parentId,
+                              atomInfo.typeId,
+                              atomInfo.txt, newTypeInfo.getTxt() ) );
+               }     
+               typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
+            };   
+         }
+         else {
+            let scope = new Ast.Scope( parentScope, true, [] );
+
+            let workTypeInfo = Ast.NormalTypeInfo.createModule(
+               scope, parentInfo, true, atomInfo.txt );
+
+            newTypeInfo = workTypeInfo;
+            typeId2Scope[ atomInfo.typeId ] = scope;
+            typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
+            parentScope.addClass( atomInfo.txt, workTypeInfo );
+         }   
       }
       elseif atomInfo.parentId ~= Ast.rootTypeId or
          not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
@@ -1069,6 +1137,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             //    typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
             //    typeInfo.$staticFlag, typeInfo.$mutable );
             let symbolKind = Ast.SymbolKind.Typ;
+            let addFlag = true;
             switch typeInfo.$kind {
                case Ast.TypeInfoKindFunc {
                   symbolKind = Ast.SymbolKind.Fun;
@@ -1076,11 +1145,16 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                case Ast.TypeInfoKindMethod {
                   symbolKind = Ast.SymbolKind.Mtd;
                }
-               case Ast.TypeInfoKindClass {
+               case Ast.TypeInfoKindClass, Ast.TypeInfoKindModule
+               {              
                   symbolKind = Ast.SymbolKind.Typ;
                }
+               case Ast.TypeInfoKindEnum {
+                  addFlag = false;
+               }
             }
-            if typeInfo.$kind ~= Ast.TypeInfoKindEnum {
+
+            if addFlag {
                scope.add( symbolKind, false,
                           typeInfo.$kind == Ast.TypeInfoKindFunc,
                           typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
@@ -1098,48 +1172,64 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    // メンバーの登録
    fn registMember( classTypeId: int ) {
       let classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
-      self.pushClass( true, classTypeInfo.$abstructFlag,
-                      nil, nil, true, classTypeInfo.getTxt(), "pub" );
-      if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
-         let classInfo = _exp;
-         foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
-            let typeId = fieldInfo.typeId;
-            let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
-            self.scope.addMember(
-               fieldName, fieldTypeInfo,
-               (unwrap fieldInfo.accessMode)@@str,
-               (unwrap fieldInfo.staticFlag default false)@@bool,
-               (unwrap fieldInfo.mutable default false)@@bool );
-         }   
-         foreach child in classTypeInfo.get_children() {
-            if child.get_kind() == Ast.TypeInfoKindClass or
-               child.get_kind() == Ast.TypeInfoKindIF
-            {           
-               let oldId = newId2OldIdMap[ child.get_typeId() ];
-               if oldId {
-                  registMember( unwrap oldId );
-               }    
-            }   
-         }  
+
+      if classTypeInfo.$kind ~= Ast.TypeInfoKindModule
+      {     
+         self.pushClass( true, classTypeInfo.$abstructFlag,
+                         nil, nil, true, classTypeInfo.getTxt(), "pub" );
+         if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
+            let classInfo = _exp;
+            foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
+               let typeId = fieldInfo.typeId;
+               let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
+               self.scope.addMember(
+                  fieldName, fieldTypeInfo,
+                  (unwrap fieldInfo.accessMode)@@str,
+                  (unwrap fieldInfo.staticFlag default false)@@bool,
+                  (unwrap fieldInfo.mutable default false)@@bool );
+            }
+         }
+         else {
+            self.error( "not found class -- %d, %s"
+                        (classTypeId, classTypeInfo.getTxt()) );
+         }
       }
       else {
-         self.error( "not found class -- %d, %s"
-                     (classTypeId, classTypeInfo.getTxt()) );
-      } 
-      self.popClass();
+         self.pushModule( true, classTypeInfo.getTxt() );
+      }
+
+      foreach child in classTypeInfo.get_children() {
+         if child.get_kind() == Ast.TypeInfoKindClass or
+            child.get_kind() == Ast.TypeInfoKindModule or
+            child.get_kind() == Ast.TypeInfoKindIF
+         {           
+            let oldId = newId2OldIdMap[ child.get_typeId() ];
+            if oldId {
+               registMember( unwrap oldId );
+            }
+         }
+      }
+
+      if classTypeInfo.$kind ~= Ast.TypeInfoKindModule {     
+         self.popClass();
+      }
+      else {
+         self.popModule();
+      }
    }
    foreach atomInfo in moduleInfo._typeInfoList {
       if atomInfo.parentId == Ast.rootTypeId and
          ( atomInfo.kind == Ast.TypeInfoKindClass or
+           atomInfo.kind == Ast.TypeInfoKindModule or
            atomInfo.kind == Ast.TypeInfoKindIF )
-      {       
+      {
          registMember( atomInfo.typeId );
       } 
    }
    
 
    foreach moduleName in nameList {
-      self.pushClass( true, false, nil, nil, true, moduleName, "pub" );
+      self.pushModule( true, moduleName );
    }
 
 
@@ -1151,7 +1241,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    }
 
    foreach moduleName in nameList {
-      self.popClass();
+      self.popModule();
    }
 
    //dumpScope( self.rootScope, "" );
@@ -1160,9 +1250,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    // スコープを元に戻す
    self.scope = self.moduleScope;
 
+   let moduleTypeInfo = unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ];
    self.scope.add( Ast.SymbolKind.Typ, false, false, moduleToken.txt,
-                   unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ],
-                   "local", true, false, true );
+                   moduleTypeInfo, "local", true, false, true );
 
    self.checkToken( nextToken, ";" );
 
@@ -1172,7 +1262,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    }
 
    
-   return new Ast.ImportNode( token.pos, [ Ast.builtinTypeNone ], modulePath );
+   return new Ast.ImportNode( token.pos, [ Ast.builtinTypeNone ],
+                              modulePath, moduleTypeInfo );
 }
 
 

@@ -128,6 +128,10 @@ local TypeInfoKindEnum = 11
 
 _moduleObj.TypeInfoKindEnum = TypeInfoKindEnum
 
+local TypeInfoKindModule = 12
+
+_moduleObj.TypeInfoKindModule = TypeInfoKindModule
+
 local function isBuiltin( typeId )
 
   return _moduleObj.builtInTypeIdSet[typeId] ~= nil
@@ -344,6 +348,10 @@ function TypeInfo:__init(scope)
       end
   end
   
+end
+function TypeInfo:isModule(  )
+
+  return true
 end
 function TypeInfo:getParentId(  )
 
@@ -592,7 +600,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
     
         if _exp:get_kind() == _moduleObj.TypeInfoKindFunc or _exp:get_kind() == _moduleObj.TypeInfoKindMethod or self == moduleScope or self == _moduleObj.rootScope then
           validThisScope = true
-        elseif (_exp:get_kind() == _moduleObj.TypeInfoKindIF or _exp:get_kind() == _moduleObj.TypeInfoKindClass ) and name == "self" then
+        elseif (_exp:get_kind() == _moduleObj.TypeInfoKindIF or _exp:get_kind() == _moduleObj.TypeInfoKindClass or _exp:get_kind() == _moduleObj.TypeInfoKindModule ) and name == "self" then
           validThisScope = true
         elseif _exp:get_kind() == _moduleObj.TypeInfoKindEnum then
           validThisScope = true
@@ -775,7 +783,7 @@ function Scope:getClassTypeInfo(  )
       local _exp = scope.ownerTypeInfo
       if _exp ~= nil then
       
-          if _exp:get_kind() == _moduleObj.TypeInfoKindClass or _exp:get_kind() == _moduleObj.TypeInfoKindIF then
+          if _exp:get_kind() == _moduleObj.TypeInfoKindClass or _exp:get_kind() == _moduleObj.TypeInfoKindIF or _exp:get_kind() == _moduleObj.TypeInfoKindModule then
             return _exp
           end
         end
@@ -871,6 +879,10 @@ end
 function NilableTypeInfo:get_typeId()
   return self.typeId
 end
+function NilableTypeInfo:isModule( ... )
+   return self.orgTypeInfo:isModule( ... )
+end
+
 function NilableTypeInfo:getParentId( ... )
    return self.orgTypeInfo:getParentId( ... )
 end
@@ -954,6 +966,113 @@ end
 do
   end
 
+local ModuleTypeInfo = {}
+setmetatable( ModuleTypeInfo, { __index = TypeInfo } )
+_moduleObj.ModuleTypeInfo = ModuleTypeInfo
+function ModuleTypeInfo.new( scope, externalFlag, txt, parentInfo, typeId )
+  local obj = {}
+  setmetatable( obj, { __index = ModuleTypeInfo } )
+  if obj.__init then obj:__init( scope, externalFlag, txt, parentInfo, typeId ); end
+return obj
+end
+function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId) 
+  TypeInfo.__init( self, scope)
+  
+  self.externalFlag = externalFlag
+  self.rawTxt = txt
+  self.parentInfo = _lune_unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
+  self.typeId = typeId
+  self.children = {}
+  if self.parentInfo ~= _moduleObj.rootTypeInfo then
+    table.insert( self.parentInfo:get_children(), self )
+  end
+  typeIdSeed = typeIdSeed + 1
+  scope:set_ownerTypeInfo( self )
+end
+function ModuleTypeInfo:isModule(  )
+
+  return true
+end
+function ModuleTypeInfo:get_accessMode(  )
+
+  return "pub"
+end
+function ModuleTypeInfo:get_kind(  )
+
+  return _moduleObj.TypeInfoKindModule
+end
+function ModuleTypeInfo:getParentId(  )
+
+  return self.parentInfo:get_typeId()
+end
+function ModuleTypeInfo:getTxt(  )
+
+  return self.rawTxt
+end
+function ModuleTypeInfo:get_display_stirng(  )
+
+  return self:getTxt(  )
+end
+function ModuleTypeInfo:isSettableFrom( other )
+
+  return false
+end
+function ModuleTypeInfo:serialize( stream, validChildrenSet )
+
+  local txt = string.format( "{ parentId = %d, typeId = %d, txt = '%s', kind = %d, ", self:getParentId(  ), self.typeId, self.rawTxt, _moduleObj.TypeInfoKindModule)
+  
+  stream:write( txt .. '\n' )
+  stream:write( "children = {" )
+  local children = self.children
+  
+  do
+    local _exp = validChildrenSet
+    if _exp ~= nil then
+    
+        children = {}
+        for __index, child in pairs( self.children ) do
+          if _exp[child:get_typeId()] then
+            table.insert( children, child )
+          end
+        end
+      end
+  end
+  
+  do
+    local __sorted = {}
+    local __map = children
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
+    end
+    table.sort( __sorted )
+    for __index, __key in ipairs( __sorted ) do
+      child = __map[ __key ]
+      do
+        stream:write( string.format( "%d, ", child:get_typeId()) )
+      end
+    end
+  end
+  
+  stream:write( "} }\n" )
+end
+function ModuleTypeInfo:get_externalFlag()
+  return self.externalFlag
+end
+function ModuleTypeInfo:get_parentInfo()
+  return self.parentInfo
+end
+function ModuleTypeInfo:get_typeId()
+  return self.typeId
+end
+function ModuleTypeInfo:get_rawTxt()
+  return self.rawTxt
+end
+function ModuleTypeInfo:get_children()
+  return self.children
+end
+do
+  end
+
 local EnumValInfo = {}
 _moduleObj.EnumValInfo = EnumValInfo
 function EnumValInfo.new( name, val )
@@ -1003,6 +1122,10 @@ function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
   self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
   typeIdSeed = typeIdSeed + 1
   scope:set_ownerTypeInfo( self )
+end
+function EnumTypeInfo:isModule(  )
+
+  return false
 end
 function EnumTypeInfo:get_kind(  )
 
@@ -1098,7 +1221,7 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
     
     do
       local _switchExp = (kind )
-      if _switchExp == _moduleObj.TypeInfoKindPrim or _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindArray or _switchExp == _moduleObj.TypeInfoKindMap or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindIF then
+      if _switchExp == _moduleObj.TypeInfoKindPrim or _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindArray or _switchExp == _moduleObj.TypeInfoKindMap or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindModule or _switchExp == _moduleObj.TypeInfoKindIF then
         hasNilable = true
       elseif _switchExp == _moduleObj.TypeInfoKindFunc or _switchExp == _moduleObj.TypeInfoKindMethod then
         hasNilable = true
@@ -1120,6 +1243,10 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
     self.nilable = true
     self.nilableTypeInfo = _moduleObj.rootTypeInfo
   end
+end
+function NormalTypeInfo:isModule(  )
+
+  return false
 end
 function NormalTypeInfo:getParentId(  )
 
@@ -1399,8 +1526,8 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   
   do
     local _switchExp = kind
-    if _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindIF or _switchExp == _moduleObj.TypeInfoKindFunc or _switchExp == _moduleObj.TypeInfoKindMethod or _switchExp == _moduleObj.TypeInfoKindMacro then
-      scope = Scope.new(_moduleObj.rootScope, kind == _moduleObj.TypeInfoKindClass or kind == _moduleObj.TypeInfoKindIF or kind == _moduleObj.TypeInfoKindList, {})
+    if _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindModule or _switchExp == _moduleObj.TypeInfoKindIF or _switchExp == _moduleObj.TypeInfoKindFunc or _switchExp == _moduleObj.TypeInfoKindMethod or _switchExp == _moduleObj.TypeInfoKindMacro then
+      scope = Scope.new(_moduleObj.rootScope, kind == _moduleObj.TypeInfoKindClass or kind == _moduleObj.TypeInfoKindModule or kind == _moduleObj.TypeInfoKindIF or kind == _moduleObj.TypeInfoKindList, {})
     end
   end
   
@@ -1440,6 +1567,25 @@ function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeI
   return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, _moduleObj.TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
 end
 
+function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName )
+
+  do
+    local _exp = _moduleObj.sym2builtInTypeMap[moduleName]
+    if _exp ~= nil then
+    
+        return _exp:get_typeInfo()
+      end
+  end
+  
+  if Parser.isLuaKeyword( moduleName ) then
+    Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
+  end
+  typeIdSeed = typeIdSeed + 1
+  local info = ModuleTypeInfo.new(scope, externalFlag, moduleName, parentInfo, typeIdSeed)
+  
+  return info
+end
+
 function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, className )
 
   do
@@ -1455,17 +1601,6 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
   end
   typeIdSeed = typeIdSeed + 1
   local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and _moduleObj.TypeInfoKindClass or _moduleObj.TypeInfoKindIF)
-  
-  return info
-end
-
-function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode, enumName, valTypeInfo, name2EnumValInfo )
-
-  if Parser.isLuaKeyword( enumName ) then
-    Util.err( string.format( "This symbol can not use for a enum. -- %s", enumName) )
-  end
-  typeIdSeed = typeIdSeed + 1
-  local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo)
   
   return info
 end
@@ -1544,6 +1679,20 @@ _moduleObj.builtinTypeStat = builtinTypeStat
 local builtinTypeStem_ = _lune_unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
 
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
+
+function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode, enumName, valTypeInfo, name2EnumValInfo )
+
+  if Parser.isLuaKeyword( enumName ) then
+    Util.err( string.format( "This symbol can not use for a enum. -- %s", enumName) )
+  end
+  typeIdSeed = typeIdSeed + 1
+  local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo)
+  
+  local builtinTypeGetEnumName = NormalTypeInfo.createFunc( false, true, nil, _moduleObj.TypeInfoKindMethod, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString} )
+  
+  scope:addMethod( builtinTypeGetEnumName, "pub", false, true )
+  return info
+end
 
 function EnumTypeInfo:serialize( stream, validChildrenSet )
 
@@ -2029,23 +2178,27 @@ function ImportNode:canBeLeft(  )
 
   return false
 end
-function ImportNode.new( pos, typeList, modulePath )
+function ImportNode.new( pos, typeList, modulePath, moduleTypeInfo )
   local obj = {}
   setmetatable( obj, { __index = ImportNode } )
-  if obj.__init then obj:__init( pos, typeList, modulePath ); end
+  if obj.__init then obj:__init( pos, typeList, modulePath, moduleTypeInfo ); end
 return obj
 end
-function ImportNode:__init(pos, typeList, modulePath) 
+function ImportNode:__init(pos, typeList, modulePath, moduleTypeInfo) 
   Node.__init( self, _moduleObj.nodeKindImport, pos, typeList)
   
   -- none
   
   self.modulePath = modulePath
+  self.moduleTypeInfo = moduleTypeInfo
   -- none
   
 end
 function ImportNode:get_modulePath()
   return self.modulePath
+end
+function ImportNode:get_moduleTypeInfo()
+  return self.moduleTypeInfo
 end
 do
   end

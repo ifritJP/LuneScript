@@ -784,6 +784,7 @@ fn TransUnit.analyzeExpSymbol(
             let getterTypeInfo:Ast.TypeInfo! = nil;
             let symbolInfo:Ast.SymbolInfo! = nil;
             if prefixExpType.get_kind() == Ast.TypeInfoKindClass or
+               prefixExpType.get_kind() == Ast.TypeInfoKindModule or
                prefixExpType.get_kind() == Ast.TypeInfoKindIF or
                prefixExpType.get_kind() == Ast.TypeInfoKindList
             {
@@ -806,7 +807,19 @@ fn TransUnit.analyzeExpSymbol(
                }
             }
             elseif prefixExpType.get_kind() == Ast.TypeInfoKindEnum {
-               typeInfo = prefixExpType;
+               let scope = unwrap prefixExpType.$scope;
+               let fieldName = token.txt;
+               if mode == "get" {
+                  fieldName = "get_" .. fieldName;
+                  getterTypeInfo = Ast.rootTypeInfo;
+               }
+               
+               typeInfo = scope.getTypeInfoChild( fieldName );
+               if not typeInfo {
+                  self.addErrMess( token.pos,
+                                   "not found enum field -- %s" (token.txt));
+                  typeInfo = Ast.builtinTypeInt;
+               }
             }
             elseif prefixExpType == Ast.builtinTypeStem {
             }
@@ -825,12 +838,12 @@ fn TransUnit.analyzeExpSymbol(
                let prefixSymbolInfoList = prefixExp.getSymbolInfo();
                if #prefixSymbolInfoList == 1 and
                   prefixSymbolInfoList[ 1 ].$kind == Ast.SymbolKind.Typ
-               {              
+               {
                   if _exp.$typeInfo.$kind ~= Ast.TypeInfoKindFunc and
                      _exp.$typeInfo.$kind ~= Ast.TypeInfoKindMethod and
                      _exp.$kind ~= Ast.SymbolKind.Typ and
                      not _exp.$staticFlag
-                  {                 
+                  {
                      self.addErrMess(
                         token.pos,              
                         "Type can't access this symbol. -- %s" (token.txt) );

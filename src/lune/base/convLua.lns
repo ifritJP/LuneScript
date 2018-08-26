@@ -41,7 +41,7 @@ pub class convFilter extend Ast.Filter (oStream) {
    pri let stream: oStream;
    pri let metaStream: oStream;
    pri let outMetaFlag: bool;
-   pri let moduleName2Info: Map<str,stem>;
+   pri let typeInfo2ModuleName: Map<Ast.TypeInfo,str>;
    pri let convMode: str;
    pri let inMacro: bool;
    pri let indent: int;
@@ -70,7 +70,7 @@ pub class convFilter extend Ast.Filter (oStream) {
       self.stream = stream;
       self.metaStream = metaStream;
       self.outMetaFlag = false;
-      self.moduleName2Info = {};
+      self.typeInfo2ModuleName = {};
       self.convMode = convMode;
       self.inMacro = inMacro;
       self.indent = 0;
@@ -82,6 +82,20 @@ pub class convFilter extend Ast.Filter (oStream) {
       self.pubEnumId2EnumTypeInfo = {};
       self.needIndent = false;
       self.moduleTypeInfo = moduleTypeInfo;
+   }
+
+
+   fn getCanonicalName( typeInfo:Ast.TypeInfo ): str {
+      let canonicalName = typeInfo.getTxt();
+      let workType = typeInfo.$parentInfo;
+      while workType ~= Ast.rootTypeInfo {
+         canonicalName = "%s.%s" (workType.getTxt(), canonicalName);
+         if self.typeInfo2ModuleName[ workType ] {
+            break;
+         }
+         workType = workType.$parentInfo;
+      }
+      return canonicalName;
    }
 }
 
@@ -140,9 +154,7 @@ pub override fn convFilter.processImport(
 {
    let module = node.get_modulePath();
    let moduleName = string.gsub( module, ".*%.", "" );
-   //let moduleInfo = require( module );
-   let moduleInfo = true;
-   self.moduleName2Info[ moduleName ] = moduleInfo;
+   self.typeInfo2ModuleName[ node.$moduleTypeInfo ] = moduleName;
    if self.convMode == "exe" or self.convMode == "ast"  {
       self.writeln(
          "local %s = _luneScript.loadModule( '%s' )" ( moduleName, module),
@@ -361,7 +373,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
                                    baseIndent + stepIndent );
                      self.writeln(
                         "  name='%s', staticFlag = %s, "
-                        ( fieldName,  typeInfo.get_staticFlag() ) ..
+                        ( fieldName,  symbolInfo.$staticFlag ) ..
                         "accessMode = '%s', typeId = %d }"
                         ( symbolInfo.$accessMode, typeInfo.get_typeId() ),
                         baseIndent + stepIndent );
@@ -610,7 +622,16 @@ pub override fn convFilter.processDeclEnum(
    if typeInfo.$accessMode ~= "pri" {
       self.pubEnumId2EnumTypeInfo[ typeInfo.$typeId ] = typeInfo;
    }
-   
+
+   self.writeln( "%s._val2NameMap = {}" (node.$name.txt), baseIndent );
+   self.writeln( ```function %s:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+     return string.format( "%s.%%s", name )
+   end
+   return string.format( "illegal val -- %%s", val )
+end
+``` (node.$name.txt, self.getCanonicalName( typeInfo ) ), baseIndent );
    foreach valName in node.$valueNameList {
       let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
       let valTxt = "%s" (valInfo.$val);
@@ -620,6 +641,9 @@ pub override fn convFilter.processDeclEnum(
       }
       self.writeln(
          "%s.%s = %s" (node.$name.txt, valName.txt, valTxt ), baseIndent );
+
+      self.writeln( "%s._val2NameMap[%s] = '%s'"
+                    (node.$name.txt, valTxt, valName.txt ), baseIndent );
    }
 }
 
@@ -1389,28 +1413,44 @@ pub override fn convFilter.processExpCall(
    node: Ast.ExpCallNode, parent: Ast.Node, baseIndent:int )
 {
    let wroteFuncFlag = false;
-   if node.$func.$kind == Ast.nodeKind.RefField {
-      let refField = node.$func@@Ast.RefFieldNode;
+
+   macro _fieldCall( fieldClass:sym ) {
+      let fieldNode = node.$func@@Ast. ,,fieldClass;
+      let prefixNode = fieldNode.$prefix;
+      let prefixType = prefixNode.$expType;
       if node.$nilAccess {
          wroteFuncFlag = true;
-         if refField.$prefix.$expType.$kind == Ast.TypeInfoKindList {
-            self.write( "_lune_nilacc( table.%s, nil, 'list', " (refField.$field.txt ) );
-            filter( refField.$prefix, self, refField, baseIndent );
+         if prefixType.$kind == Ast.TypeInfoKindList {
+            self.write( "_lune_nilacc( table.%s, nil, 'list', " (fieldNode.$field.txt ) );
+            filter( prefixNode, self, fieldNode, baseIndent );
          }
          else {
             self.write( "_lune_nilacc( " );
-            filter( refField.$prefix, self, refField, baseIndent );
-            self.write( ", '%s', 'callmtd' " (refField.$field.txt ) );
+            filter( prefixNode, self, fieldNode, baseIndent );
+            self.write( ", '%s', 'callmtd' " (fieldNode.$field.txt ) );
          }
       }
       else {
-         if refField.$prefix.$expType.$kind == Ast.TypeInfoKindList {
+         if prefixType.$kind == Ast.TypeInfoKindList {
             wroteFuncFlag = true;
-            self.write( "table.%s( " (refField.$field.txt ) );
-            filter( refField.$prefix, self, refField, baseIndent );
+            self.write( "table.%s( " (fieldNode.$field.txt ) );
+            filter( prefixNode, self, fieldNode, baseIndent );
+         }
+         elseif prefixType.$kind == Ast.TypeInfoKindEnum {
+            wroteFuncFlag = true;
+
+            let canonicalName = self.getCanonicalName( prefixType );
+            self.write( "%s:_getTxt( " (canonicalName ) );
+            filter( prefixNode, self, fieldNode, baseIndent );
          }
       }
+      
    }
+   
+   if node.$func.$kind == Ast.nodeKind.RefField {
+      _fieldCall( RefFieldNode );
+   }
+   
 
    if not wroteFuncFlag {
       if node.$nilAccess {
@@ -1596,19 +1636,29 @@ pub override fn convFilter.processRefField(
 pub override fn convFilter.processGetField(
    node: Ast.GetFieldNode, parent: Ast.Node, baseIndent:int )
 {
-   filter( node.get_prefix(),  self, node, baseIndent );
-   let delimit = ".";
-   if node.get_getterTypeInfo().get_kind() == Ast.TypeInfoKindMethod {
-      delimit = ":";
-   }   
-   else {
-      delimit = ".";
-   }
+   let prefixNode = node.get_prefix();
+   let prefixType = prefixNode.$expType;
    let fieldTxt = node.get_field().txt;
-   if node.get_getterTypeInfo() {
-      fieldTxt = "get_%s()" ( fieldTxt );
+   if fieldTxt == "_txt" and prefixType.$kind == Ast.TypeInfoKindEnum {
+      let canonicalName = self.getCanonicalName( prefixType );
+      self.write( "%s:_getTxt( " (canonicalName ) );
+      filter( prefixNode, self, node, baseIndent );
+      self.writeln( ")", baseIndent );
    }
-   self.write( delimit .. fieldTxt );
+   else {
+      filter( prefixNode,  self, node, baseIndent );
+      let delimit = ".";
+      if node.get_getterTypeInfo().get_kind() == Ast.TypeInfoKindMethod {
+         delimit = ":";
+      }   
+      else {
+         delimit = ".";
+      }  
+      if node.get_getterTypeInfo() {
+         fieldTxt = "get_%s()" ( fieldTxt );
+      }  
+      self.write( delimit .. fieldTxt );
+   }
 };  
 
 

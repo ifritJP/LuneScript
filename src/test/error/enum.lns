@@ -38,3 +38,5 @@ val3 = testEnum2.val1;
 
 let val4 = "";
 val4 = testEnum3.val1;
+
+let val5 = testEnum3.val4; // error
