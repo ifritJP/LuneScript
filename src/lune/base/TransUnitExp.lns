@@ -660,7 +660,9 @@ fn TransUnit.dumpFieldComp(
       true, self.scope,
       fn ( symbolInfo: Ast.SymbolInfo ) : bool {
          if ( prefixSymbolInfo.$kind == Ast.SymbolKind.Typ ) {
-            if not symbolInfo.$staticFlag and symbolInfo.$kind ~= Ast.SymbolKind.Typ
+            if not symbolInfo.$staticFlag and
+               not symbolInfo.$typeInfo.$staticFlag and
+               symbolInfo.$kind ~= Ast.SymbolKind.Typ
             {
                // 型のフィールド補完は 非 static を除外
                return true;

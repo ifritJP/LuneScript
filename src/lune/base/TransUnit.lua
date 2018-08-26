@@ -2391,6 +2391,9 @@ function TransUnit:analyzeDeclFunc( moduleFlag, abstructFlag, overrideFlag, acce
       staticFlag = true
     end
   end
+  if moduleFlag then
+    staticFlag = true
+  end
   local funcName = ""
   
   do
@@ -3274,7 +3277,7 @@ function TransUnit:dumpFieldComp( writer, prefixSymbolInfo, pattern )
   scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
   
     if (prefixSymbolInfo:get_kind() == Ast.SymbolKind.Typ ) then
-      if not symbolInfo:get_staticFlag() and symbolInfo:get_kind() ~= Ast.SymbolKind.Typ then
+      if not symbolInfo:get_staticFlag() and not symbolInfo:get_typeInfo():get_staticFlag() and symbolInfo:get_kind() ~= Ast.SymbolKind.Typ then
         return true
       end
     elseif symbolInfo:get_staticFlag() then

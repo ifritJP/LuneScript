@@ -946,6 +946,12 @@ fn TransUnit.analyzeDeclFunc(
          staticFlag = true;
       }
    }
+   if moduleFlag {
+      // module で Lua の外部モジュールを宣言した場合、
+      // モジュール名でメンバにアクセスできるように、
+      // 強制的に static にする。
+      staticFlag = true;
+   }
 
    let funcName = "";
    if! name {

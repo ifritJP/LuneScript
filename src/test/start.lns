@@ -318,12 +318,10 @@ _print( `{ ClassAA.$val } );
    let classAA = new ClassAA();
 }
 
-
 Sub2.External.func1();
 Sub2.External.func2( 10 );
 Sub2.External.func2( 20 );
 _print( `{ Sub2.External.val } );
-
 
 {
    let foo = {

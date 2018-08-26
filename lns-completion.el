@@ -28,8 +28,15 @@
   (with-current-buffer buf
     (let ((json-object-type 'plist)
 	  (json-array-type 'list)
-	  info)
-      (setq info (json-read-from-string (buffer-string)))
+	  info
+	  json-str)
+      (goto-char (point-min))
+      (if (search-forward "{\"lunescript\":" nil t)
+	  (progn
+	    (search-backward "{\"lunescript\":" nil t)
+	    (setq json-str (buffer-substring-no-properties (point) (point-max))))
+	(setq json-str (buffer-string)))
+      (setq info (json-read-from-string json-str))
       (plist-get (plist-get info :lunescript) symbol))))
 
 (defun lns-json-val (json symbol)
