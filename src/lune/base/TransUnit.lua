@@ -122,7 +122,7 @@ function TransUnit:getCurrentClass(  )
       local _exp = scope:get_ownerTypeInfo()
       if _exp ~= nil then
       
-          if _exp:get_kind() == Ast.TypeInfoKindClass or _exp:get_kind() == Ast.TypeInfoKindModule or _exp:get_kind() == Ast.TypeInfoKindIF then
+          if _exp:get_kind() == Ast.TypeInfoKind.Class or _exp:get_kind() == Ast.TypeInfoKind.Module or _exp:get_kind() == Ast.TypeInfoKind.IF then
             return _exp
           end
         end
@@ -436,7 +436,7 @@ function TransUnit:registBuiltInScope(  )
                   local methodFlag = _lune_nilacc( info.type, nil, 'item', 1) == "method"
                   
                   self:pushScope( false )
-                  local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc, parentInfo, false, true, not methodFlag, "pub", fieldName, argTypeList, retTypeList )
+                  local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func, parentInfo, false, true, not methodFlag, "pub", fieldName, argTypeList, retTypeList )
                   
                   self:popScope(  )
                   Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = typeInfo
@@ -622,7 +622,7 @@ function TransUnit:getTokenNoErr(  )
                 end
               elseif macroVal.typeInfo == Ast.builtinTypeStat then
                 self:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune_unwrap( macroVal.val) ) )
-              elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKindArray or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKindList then
+              elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
                 local strList = (_lune_unwrap( macroVal.val) )
                 
                 if strList then
@@ -893,12 +893,14 @@ function TransUnit:analyzeImport( token )
   
     local newTypeInfo = nil
     
-    if atomInfo.kind == Ast.TypeInfoKindEnum then
-      local parentInfo = typeId2TypeInfo[atomInfo.parentId]
+    if atomInfo.kind == Ast.TypeInfoKind.Enum then
+      local parentInfo = _lune_unwrap( typeId2TypeInfo[atomInfo.parentId])
       
       local name2EnumValInfo = {}
       
-      local scope = self:pushScope( false )
+      local parentScope = _lune_unwrap( parentInfo:get_scope())
+      
+      local scope = Ast.Scope.new(parentScope, true, {})
       
       typeId2Scope[atomInfo.typeId] = scope
       local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune_unwrap( parentInfo), true, atomInfo.accessMode, atomInfo.txt, _lune_unwrap( typeId2TypeInfo[atomInfo.valTypeId]), name2EnumValInfo )
@@ -909,9 +911,8 @@ function TransUnit:analyzeImport( token )
         name2EnumValInfo[valName] = Ast.EnumValInfo.new(valName, valData)
         scope:addEnumVal( valName, enumTypeInfo )
       end
-      self:popScope(  )
-      self.scope:addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo )
-    elseif atomInfo.kind == Ast.TypeInfoKindModule then
+      parentScope:addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo )
+    elseif atomInfo.kind == Ast.TypeInfoKind.Module then
       local parentInfo = Ast.typeInfoRoot
       
       if atomInfo.parentId ~= Ast.rootTypeId then
@@ -959,7 +960,7 @@ function TransUnit:analyzeImport( token )
         typeId2TypeInfo[atomInfo.typeId] = workTypeInfo
         parentScope:addClass( atomInfo.txt, workTypeInfo )
       end
-    elseif atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] or atomInfo.kind == Ast.TypeInfoKindList or atomInfo.kind == Ast.TypeInfoKindArray or atomInfo.kind == Ast.TypeInfoKindMap or atomInfo.nilable then
+    elseif atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] or atomInfo.kind == Ast.TypeInfoKind.List or atomInfo.kind == Ast.TypeInfoKind.Array or atomInfo.kind == Ast.TypeInfoKind.Map or atomInfo.nilable then
       if atomInfo.nilable then
         local orgTypeInfo = _lune_unwrap( typeId2TypeInfo[atomInfo.orgTypeId])
         
@@ -1015,7 +1016,7 @@ function TransUnit:analyzeImport( token )
         if atomInfo.txt ~= "" then
           newTypeInfo = parentScope:getTypeInfoChild( atomInfo.txt )
         end
-        if newTypeInfo and (atomInfo.kind == Ast.TypeInfoKindClass or atomInfo.kind == Ast.TypeInfoKindIF ) then
+        if newTypeInfo and (atomInfo.kind == Ast.TypeInfoKind.Class or atomInfo.kind == Ast.TypeInfoKind.IF ) then
           local newTypeInfo = newTypeInfo
           
               if  nil == newTypeInfo then
@@ -1031,12 +1032,12 @@ function TransUnit:analyzeImport( token )
                 end
             
         else 
-          if atomInfo.kind == Ast.TypeInfoKindClass or atomInfo.kind == Ast.TypeInfoKindIF then
+          if atomInfo.kind == Ast.TypeInfoKind.Class or atomInfo.kind == Ast.TypeInfoKind.IF then
             local baseScope = _lune_unwrap( typeId2Scope[atomInfo.baseId])
             
             local scope = Ast.Scope.new(parentScope, true, baseScope and {baseScope} or {})
             
-            local workTypeInfo = Ast.NormalTypeInfo.createClass( atomInfo.kind == Ast.TypeInfoKindClass, atomInfo.abstructFlag, scope, baseInfo, interfaceList, parentInfo, true, "pub", atomInfo.txt )
+            local workTypeInfo = Ast.NormalTypeInfo.createClass( atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag, scope, baseInfo, interfaceList, parentInfo, true, "pub", atomInfo.txt )
             
             newTypeInfo = workTypeInfo
             typeId2Scope[atomInfo.typeId] = scope
@@ -1045,20 +1046,22 @@ function TransUnit:analyzeImport( token )
           else 
             local scope = nil
             
-            if atomInfo.kind == Ast.TypeInfoKindFunc or atomInfo.kind == Ast.TypeInfoKindMethod then
+            if atomInfo.kind == Ast.TypeInfoKind.Func or atomInfo.kind == Ast.TypeInfoKind.Method then
               scope = Ast.Scope.new(parentScope, false, {})
             end
-            local workTypeInfo = Ast.NormalTypeInfo.create( atomInfo.abstructFlag, scope, baseInfo, interfaceList, parentInfo, atomInfo.staticFlag, atomInfo.kind, atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo )
+            local typeInfoKind = _lune_unwrap( Ast.TypeInfoKind:_from( atomInfo.kind ))
+            
+            local workTypeInfo = Ast.NormalTypeInfo.create( atomInfo.abstructFlag, scope, baseInfo, interfaceList, parentInfo, atomInfo.staticFlag, typeInfoKind, atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo )
             
             newTypeInfo = workTypeInfo
             typeId2TypeInfo[atomInfo.typeId] = workTypeInfo
-            if atomInfo.kind == Ast.TypeInfoKindFunc or atomInfo.kind == Ast.TypeInfoKindMethod then
+            if atomInfo.kind == Ast.TypeInfoKind.Func or atomInfo.kind == Ast.TypeInfoKind.Method then
               local symbolKind = Ast.SymbolKind.Fun
               
-              if atomInfo.kind == Ast.TypeInfoKindMethod then
+              if atomInfo.kind == Ast.TypeInfoKind.Method then
                 symbolKind = Ast.SymbolKind.Mtd
               end
-              (_lune_unwrap( typeId2Scope[atomInfo.parentId]) ):add( symbolKind, false, atomInfo.kind == Ast.TypeInfoKindFunc, atomInfo.txt, workTypeInfo, atomInfo.accessMode, atomInfo.staticFlag, false, true )
+              (_lune_unwrap( typeId2Scope[atomInfo.parentId]) ):add( symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func, atomInfo.txt, workTypeInfo, atomInfo.accessMode, atomInfo.staticFlag, false, true )
               typeId2Scope[atomInfo.typeId] = scope
             end
           end
@@ -1092,19 +1095,19 @@ function TransUnit:analyzeImport( token )
         
         do
           local _switchExp = typeInfo:get_kind()
-          if _switchExp == Ast.TypeInfoKindFunc then
+          if _switchExp == Ast.TypeInfoKind.Func then
             symbolKind = Ast.SymbolKind.Fun
-          elseif _switchExp == Ast.TypeInfoKindMethod then
+          elseif _switchExp == Ast.TypeInfoKind.Method then
             symbolKind = Ast.SymbolKind.Mtd
-          elseif _switchExp == Ast.TypeInfoKindClass or _switchExp == Ast.TypeInfoKindModule then
+          elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
             symbolKind = Ast.SymbolKind.Typ
-          elseif _switchExp == Ast.TypeInfoKindEnum then
+          elseif _switchExp == Ast.TypeInfoKind.Enum then
             addFlag = false
           end
         end
         
         if addFlag then
-          scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKindFunc, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
+          scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
         end
       end
     end
@@ -1116,7 +1119,7 @@ function TransUnit:analyzeImport( token )
   
     local classTypeInfo = _lune_unwrap( typeId2TypeInfo[classTypeId])
     
-    if classTypeInfo:get_kind() ~= Ast.TypeInfoKindModule then
+    if classTypeInfo:get_kind() ~= Ast.TypeInfoKind.Module then
       self:pushClass( true, classTypeInfo:get_abstructFlag(), nil, nil, true, classTypeInfo:getTxt(  ), "pub" )
       do
         local _exp = moduleInfo._typeId2ClassInfoMap[classTypeId]
@@ -1141,7 +1144,7 @@ function TransUnit:analyzeImport( token )
       self:pushModule( true, classTypeInfo:getTxt(  ) )
     end
     for __index, child in pairs( classTypeInfo:get_children(  ) ) do
-      if child:get_kind(  ) == Ast.TypeInfoKindClass or child:get_kind(  ) == Ast.TypeInfoKindModule or child:get_kind(  ) == Ast.TypeInfoKindIF then
+      if child:get_kind(  ) == Ast.TypeInfoKind.Class or child:get_kind(  ) == Ast.TypeInfoKind.Module or child:get_kind(  ) == Ast.TypeInfoKind.IF then
         local oldId = newId2OldIdMap[child:get_typeId(  )]
         
         if oldId then
@@ -1149,7 +1152,7 @@ function TransUnit:analyzeImport( token )
         end
       end
     end
-    if classTypeInfo:get_kind() ~= Ast.TypeInfoKindModule then
+    if classTypeInfo:get_kind() ~= Ast.TypeInfoKind.Module then
       self:popClass(  )
     else 
       self:popModule(  )
@@ -1157,7 +1160,7 @@ function TransUnit:analyzeImport( token )
   end
   
   for __index, atomInfo in pairs( moduleInfo._typeInfoList ) do
-    if atomInfo.parentId == Ast.rootTypeId and (atomInfo.kind == Ast.TypeInfoKindClass or atomInfo.kind == Ast.TypeInfoKindModule or atomInfo.kind == Ast.TypeInfoKindIF ) then
+    if atomInfo.parentId == Ast.rootTypeId and (atomInfo.kind == Ast.TypeInfoKind.Class or atomInfo.kind == Ast.TypeInfoKind.Module or atomInfo.kind == Ast.TypeInfoKind.IF ) then
       registMember( atomInfo.typeId )
     end
   end
@@ -1436,7 +1439,7 @@ function TransUnit:analyzeForeach( token, sortFlag )
   else 
     local itemTypeInfoList = exp:get_expType():get_itemTypeInfoList(  )
     
-    if exp:get_expType():get_kind(  ) == Ast.TypeInfoKindMap then
+    if exp:get_expType():get_kind(  ) == Ast.TypeInfoKind.Map then
       self.scope:addLocalVar( false, true, valSymbol.txt, itemTypeInfoList[2], false )
       do
         local _exp = keySymbol
@@ -1446,7 +1449,7 @@ function TransUnit:analyzeForeach( token, sortFlag )
           end
       end
       
-    elseif exp:get_expType():get_kind(  ) == Ast.TypeInfoKindList or exp:get_expType():get_kind(  ) == Ast.TypeInfoKindArray then
+    elseif exp:get_expType():get_kind(  ) == Ast.TypeInfoKind.List or exp:get_expType():get_kind(  ) == Ast.TypeInfoKind.Array then
       self.scope:addLocalVar( false, true, valSymbol.txt, itemTypeInfoList[1], false )
       do
         local _exp = keySymbol
@@ -1579,7 +1582,7 @@ function TransUnit:analyzeRefType( accessMode )
         nextToken = self:getToken(  )
       until nextToken.txt ~= ","
       self:checkToken( nextToken, '>' )
-      if typeInfo:get_kind() == Ast.TypeInfoKindMap then
+      if typeInfo:get_kind() == Ast.TypeInfoKind.Map then
         typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), genericList[1] or Ast.builtinTypeStem, genericList[2] or Ast.builtinTypeStem )
       else 
         self:error( string.format( "not support generic: %s", typeInfo:getTxt(  ) ) )
@@ -1811,7 +1814,13 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
   local braceCount = 0
   
   while true do
-    nextToken = self:getToken(  )
+    local workToken = self:getToken(  )
+    
+    if workToken.kind == Parser.kindEof then
+      self:addErrMess( nextToken.pos, "eof in macro" )
+      break
+    end
+    nextToken = workToken
     if nextToken.txt == "{" then
       braceCount = braceCount + 1
     elseif nextToken.txt == "}" then
@@ -1822,7 +1831,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
     end
     table.insert( tokenList, nextToken )
   end
-  local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, scope, Ast.TypeInfoKindMacro, self:getCurrentNamespaceTypeInfo(  ), false, false, false, accessMode, nameToken.txt, argTypeList )
+  local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, scope, Ast.TypeInfoKind.Macro, self:getCurrentNamespaceTypeInfo(  ), false, false, false, accessMode, nameToken.txt, argTypeList )
   
   self.scope:addLocalVar( false, false, nameToken.txt, typeInfo, false )
   local declMacroInfo = Ast.DeclMacroInfo.new(nameToken, argList, ast, tokenList)
@@ -1860,7 +1869,7 @@ function TransUnit:analyzePushClass( classFlag, abstructFlag, firstToken, name, 
         self:pushback(  )
         local ifType = self:analyzeRefType( accessMode )
         
-        if ifType:get_expType():get_kind() ~= Ast.TypeInfoKindIF then
+        if ifType:get_expType():get_kind() ~= Ast.TypeInfoKind.IF then
           self:error( string.format( "%s is not interface -- %d", ifType:get_expType():getTxt(  ), ifType:get_expType():get_kind()) )
         end
         table.insert( interfaceList, ifType:get_expType() )
@@ -2275,7 +2284,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     local accessMode = memberNode:get_getterMode()
     
     if accessMode ~= "none" and not self.scope:getTypeInfoChild( getterName ) then
-      local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode, getterName, {}, {memberType} )
+      local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode, getterName, {}, {memberType} )
       
       self:popScope(  )
       self.scope:addMethod( retTypeInfo, accessMode, false, false )
@@ -2285,7 +2294,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     
     accessMode = memberNode:get_setterMode()
     if memberNode:get_setterMode() ~= "none" and not self.scope:getTypeInfoChild( setterName ) then
-      self.scope:addMethod( Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode, setterName, {memberType}, nil ), accessMode, false, false )
+      self.scope:addMethod( Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode, setterName, {memberType}, nil ), accessMode, false, false )
       self:popScope(  )
       methodNameSet[setterName] = true
     end
@@ -2302,7 +2311,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
         end
       end
     end
-    local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKindMethod, parentInfo, true, false, false, "pub", "__init", memberTypeList, {} )
+    local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, "pub", "__init", memberTypeList, {} )
     
     self:popScope(  )
     self.scope:addMethod( initTypeInfo, "pub", false, false )
@@ -2313,9 +2322,9 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     
     do
       local _switchExp = memberType:get_kind()
-      if _switchExp == Ast.TypeInfoKindClass or _switchExp == Ast.TypeInfoKindIF then
+      if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
         for __index, child in pairs( memberType:get_children() ) do
-          if child:get_kind() == Ast.TypeInfoKindMethod and child:get_accessMode() ~= "pri" and not child:get_staticFlag() then
+          if child:get_kind() == Ast.TypeInfoKind.Method and child:get_accessMode() ~= "pri" and not child:get_staticFlag() then
             local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
             
             if not methodNameSet[childName] then
@@ -2368,17 +2377,17 @@ function TransUnit:analyzeDeclFunc( moduleFlag, abstructFlag, overrideFlag, acce
     classNameToken = name
     local classTypeInfo = _lune_unwrap( self.scope:getTypeInfoChild( (_lune_unwrap( name) ).txt ))
     
-    self:pushClass( classTypeInfo:get_kind() == Ast.TypeInfoKindClass, classTypeInfo:get_abstructFlag(), nil, nil, false, (_lune_unwrap( name) ).txt, "pub" )
+    self:pushClass( classTypeInfo:get_kind() == Ast.TypeInfoKind.Class, classTypeInfo:get_abstructFlag(), nil, nil, false, (_lune_unwrap( name) ).txt, "pub" )
     name = self:getSymbolToken(  )
     token = self:getToken(  )
   end
   local kind = Ast.nodeKindDeclConstr
   
-  local typeKind = Ast.TypeInfoKindFunc
+  local typeKind = Ast.TypeInfoKind.Func
   
   if classNameToken then
     if moduleFlag or not staticFlag then
-      typeKind = Ast.TypeInfoKindMethod
+      typeKind = Ast.TypeInfoKind.Method
     end
     if (_lune_unwrap( name) ).txt == "__init" then
       kind = Ast.nodeKindDeclConstr
@@ -2435,7 +2444,7 @@ function TransUnit:analyzeDeclFunc( moduleFlag, abstructFlag, overrideFlag, acce
     if overrideType:get_staticFlag(  ) ~= staticFlag then
       self:error( "missmatch override staticFlag -- " .. funcName )
     end
-    if overrideType:get_kind(  ) ~= Ast.TypeInfoKindMethod then
+    if overrideType:get_kind(  ) ~= Ast.TypeInfoKind.Method then
       self:error( string.format( "missmatch override kind -- %s, %d", funcName, overrideType:get_kind(  )) )
     end
   else 
@@ -2872,12 +2881,12 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
   end
   local typeInfo = Ast.builtinTypeStem_
   
-  if expType:get_kind() == Ast.TypeInfoKindMap then
+  if expType:get_kind() == Ast.TypeInfoKind.Map then
     typeInfo = expType:get_itemTypeInfoList(  )[2]
     if typeInfo ~= Ast.builtinTypeStem_ and not typeInfo:get_nilable() then
       typeInfo = typeInfo:get_nilableTypeInfo()
     end
-  elseif expType:get_kind() == Ast.TypeInfoKindArray or expType:get_kind() == Ast.TypeInfoKindList then
+  elseif expType:get_kind() == Ast.TypeInfoKind.Array or expType:get_kind() == Ast.TypeInfoKind.List then
     typeInfo = expType:get_itemTypeInfoList(  )[1]
   elseif expType == Ast.builtinTypeString then
     typeInfo = Ast.builtinTypeInt
@@ -3122,7 +3131,7 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
             nilAccess = false
           end
         end
-        if funcTypeInfo:get_kind(  ) == Ast.TypeInfoKindMacro then
+        if funcTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Macro then
           macroFlag = true
           self.symbol2ValueMapForMacro = {}
           self.macroMode = "analyze"
@@ -3139,7 +3148,7 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
         end
         local genericTypeList = funcTypeInfo:get_itemTypeInfoList()
         
-        if funcTypeInfo:get_kind() == Ast.TypeInfoKindMethod and exp:get_kind() == Ast.nodeKindRefField then
+        if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Method and exp:get_kind() == Ast.nodeKindRefField then
           local refField = exp
           
           local classType = refField:get_prefix():get_expType()
@@ -3153,9 +3162,10 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
         else 
           do
             local _switchExp = (funcTypeInfo:get_kind() )
-            if _switchExp == Ast.TypeInfoKindMethod or _switchExp == Ast.TypeInfoKindFunc then
+            if _switchExp == Ast.TypeInfoKind.Method or _switchExp == Ast.TypeInfoKind.Func then
             else 
-              self:error( string.format( "can't call the type -- %s", funcTypeInfo:getTxt(  )) )
+              self:error( string.format( "can't call the type -- %s, %s", funcTypeInfo:getTxt(  ), Ast.TypeInfoKind:_getTxt( funcTypeInfo:get_kind())
+              ) )
             end
           end
           
@@ -3196,7 +3206,7 @@ end
 
 function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
 
-  if classTypeInfo:get_kind(  ) == Ast.TypeInfoKindList then
+  if classTypeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
     classTypeInfo = Ast.builtinTypeList
   end
   local className = classTypeInfo:getTxt(  )
@@ -3214,13 +3224,14 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
   local fieldTypeInfo = nil
   
   if mode == "get" or mode == "get_nil" then
-    fieldTypeInfo = classScope:getTypeInfo( string.format( "get_%s", token.txt), self.scope, false )
+    local fieldSymbolInfo = classScope:getSymbolInfo( string.format( "get_%s", token.txt), self.scope, false )
+    
     do
-      local _exp = fieldTypeInfo
+      local _exp = fieldSymbolInfo
       if _exp ~= nil then
       
-          if (_exp:get_kind(  ) == Ast.TypeInfoKindMethod ) then
-            local retTypeList = _exp:get_retTypeInfoList(  )
+          if (_exp:get_kind(  ) == Ast.SymbolKind.Mtd ) then
+            local retTypeList = _exp:get_typeInfo():get_retTypeInfoList(  )
             
             getterTypeInfo = _exp
             fieldTypeInfo = retTypeList[1]
@@ -3241,42 +3252,78 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
   return fieldTypeInfo, getterTypeInfo
 end
 
-function TransUnit:dumpComp( writer, pattern, symbolInfo )
+function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
 
   local symbol = symbolInfo:get_name()
   
   if pattern == "" or symbol:find( pattern ) then
-    writer:startParent( "candidate", false )
-    local typeInfo = symbolInfo:get_typeInfo()
-    
-    local typeKindTxt = ""
-    
-    writer:write( "type", string.format( "%s", Ast.SymbolKind.getTxt( symbolInfo:get_kind() )) )
-    do
-      local _switchExp = (symbolInfo:get_kind() )
-      if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
-        writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
-      elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
-        writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
-      elseif _switchExp == Ast.SymbolKind.Typ then
-        writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+    if getterFlag then
+      writer:startParent( "candidate", false )
+      local typeInfo = symbolInfo:get_typeInfo()
+      
+      local typeKindTxt = ""
+      
+      writer:write( "type", string.format( "%s", Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
+      ) )
+      do
+        local _switchExp = (symbolInfo:get_kind() )
+        if _switchExp == Ast.SymbolKind.Mtd then
+          writer:write( "displayTxt", string.format( "$%s", typeInfo:get_rawTxt():gsub( "^get_", "" )) )
+        elseif _switchExp == Ast.SymbolKind.Mbr then
+          writer:write( "displayTxt", string.format( "$%s: %s", symbolInfo:get_name(), typeInfo:getTxt(  )) )
+        end
       end
+      
+    else 
+      writer:startParent( "candidate", false )
+      local typeInfo = symbolInfo:get_typeInfo()
+      
+      local typeKindTxt = ""
+      
+      writer:write( "type", string.format( "%s", Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
+      ) )
+      do
+        local _switchExp = (symbolInfo:get_kind() )
+        if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
+          writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+        elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
+          writer:write( "displayTxt", string.format( "%s: %s", symbolInfo:get_name(), typeInfo:get_display_stirng()) )
+        elseif _switchExp == Ast.SymbolKind.Typ then
+          writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+        end
+      end
+      
     end
-    
     writer:endElement(  )
   end
   return true
 end
 
-function TransUnit:dumpFieldComp( writer, prefixSymbolInfo, pattern )
+function TransUnit:dumpFieldComp( writer, prefixSymbolInfo, prefixTypeInfo, pattern, getterPattern )
 
-  local typeInfo = prefixSymbolInfo:get_typeInfo()
+  local typeInfo = prefixTypeInfo
   
-  local scope = _lune_unwrap( typeInfo:get_scope())
+  local scope = typeInfo:get_scope()
+  
+      if  nil == scope then
+        local _scope = scope
+        
+        return 
+      end
+    
+  local isPrefixType = false
+  
+  do
+    local _exp = prefixSymbolInfo
+    if _exp ~= nil then
+    
+        isPrefixType = _exp:get_kind() == Ast.SymbolKind.Typ
+      end
+  end
   
   scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
   
-    if (prefixSymbolInfo:get_kind() == Ast.SymbolKind.Typ ) then
+    if (isPrefixType ) then
       if not symbolInfo:get_staticFlag() and not symbolInfo:get_typeInfo():get_staticFlag() and symbolInfo:get_kind() ~= Ast.SymbolKind.Typ then
         return true
       end
@@ -3286,7 +3333,24 @@ function TransUnit:dumpFieldComp( writer, prefixSymbolInfo, pattern )
     local symbol = symbolInfo:get_name()
     
     if symbol ~= "__init" and symbol ~= "self" then
-      return self:dumpComp( writer, pattern, symbolInfo )
+      do
+        local _exp = getterPattern
+        if _exp ~= nil then
+        
+            if symbolInfo:get_kind() == Ast.SymbolKind.Mtd then
+              local typeInfo = symbolInfo:get_typeInfo()
+              
+              local retList = typeInfo:get_retTypeInfoList()
+              
+              if #retList == 1 then
+                return self:dumpComp( writer, _exp, symbolInfo, true )
+              end
+            end
+            return true
+          end
+      end
+      
+      return self:dumpComp( writer, pattern, symbolInfo, false )
     end
     return true
   end
@@ -3297,7 +3361,7 @@ function TransUnit:dumpSymbolComp( writer, scope, pattern )
 
   scope:filterSymbolTypeInfo( scope, self.moduleScope, function ( symbolInfo )
   
-    return self:dumpComp( writer, pattern, symbolInfo )
+    return self:dumpComp( writer, pattern, symbolInfo, false )
   end
    )
 end
@@ -3327,14 +3391,26 @@ function TransUnit:checkComp( token, callback )
   end
 end
 
-function TransUnit:checkFieldComp( token, prefixSymbolInfo )
+function TransUnit:checkFieldComp( getterFlag, token, prefixExp )
 
-  if #prefixSymbolInfo ~= 1 then
+  if self.analyzeMode ~= "comp" then
     return 
+  end
+  local prefixSymbolInfoList = prefixExp:getSymbolInfo(  )
+  
+  local prefixSymbolInfo = nil
+  
+  if #prefixSymbolInfoList == 1 then
+    prefixSymbolInfo = prefixSymbolInfoList[1]
   end
   self:checkComp( token, function ( jsonWriter, prefix )
   
-    self:dumpFieldComp( jsonWriter, prefixSymbolInfo[1], prefix == "" and "" or "^" .. prefix )
+    local getterPattern = nil
+    
+    if getterFlag then
+      getterPattern = "^get_" .. prefix
+    end
+    self:dumpFieldComp( jsonWriter, prefixSymbolInfo, prefixExp:get_expType(), prefix == "" and "" or "^" .. prefix, getterPattern )
   end
    )
 end
@@ -3373,7 +3449,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               
               local prefixExpType = prefixExp:get_expType()
               
-              self:checkFieldComp( token, prefixExp:getSymbolInfo(  ) )
+              self:checkFieldComp( mode == "get" or mode == "get_nil", token, prefixExp )
               if accessNil then
                 if prefixExpType:get_nilable() then
                   prefixExpType = _lune_unwrap( prefixExpType:get_orgTypeInfo())
@@ -3385,9 +3461,17 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               
               local symbolInfo = nil
               
-              if prefixExpType:get_kind(  ) == Ast.TypeInfoKindClass or prefixExpType:get_kind(  ) == Ast.TypeInfoKindModule or prefixExpType:get_kind(  ) == Ast.TypeInfoKindIF or prefixExpType:get_kind(  ) == Ast.TypeInfoKindList then
-                typeInfo, getterTypeInfo = self:analyzeAccessClassField( prefixExpType, mode, token )
-              elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKindMap then
+              if prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Class or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Module or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.IF or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.List then
+                typeInfo, symbolInfo = self:analyzeAccessClassField( prefixExpType, mode, token )
+                do
+                  local _exp = symbolInfo
+                  if _exp ~= nil then
+                  
+                      getterTypeInfo = _exp:get_typeInfo()
+                    end
+                end
+                
+              elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Map then
                 local work = prefixExpType:get_itemTypeInfoList()[1]
                 
                 if work ~= Ast.builtinTypeString then
@@ -3404,7 +3488,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                     end
                 end
                 
-              elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKindEnum then
+              elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Enum then
                 local scope = _lune_unwrap( prefixExpType:get_scope())
                 
                 local fieldName = token.txt
@@ -3422,16 +3506,18 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               else 
                 self:error( string.format( "illegal type -- %s, %d", prefixExpType:getTxt(  ), prefixExpType:get_kind(  )) )
               end
-              local prefixScope = prefixExpType:get_scope()
-              
-              do
-                local _exp = prefixScope
-                if _exp ~= nil then
+              if not symbolInfo then
+                local prefixScope = prefixExpType:get_scope()
                 
-                    symbolInfo = _exp:getSymbolInfoField( token.txt, true, self.scope )
-                  end
+                do
+                  local _exp = prefixScope
+                  if _exp ~= nil then
+                  
+                      symbolInfo = _exp:getSymbolInfoField( token.txt, true, self.scope )
+                    end
+                end
+                
               end
-              
               do
                 local _exp = symbolInfo
                 if _exp ~= nil then
@@ -3439,7 +3525,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                     local prefixSymbolInfoList = prefixExp:getSymbolInfo(  )
                     
                     if #prefixSymbolInfoList == 1 and prefixSymbolInfoList[1]:get_kind() == Ast.SymbolKind.Typ then
-                      if _exp:get_typeInfo():get_kind() ~= Ast.TypeInfoKindFunc and _exp:get_typeInfo():get_kind() ~= Ast.TypeInfoKindMethod and _exp:get_kind() ~= Ast.SymbolKind.Typ and not _exp:get_staticFlag() then
+                      if _exp:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.Func and _exp:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.Method and _exp:get_kind() ~= Ast.SymbolKind.Typ and not _exp:get_staticFlag() then
                         self:addErrMess( token.pos, string.format( "Type can't access this symbol. -- %s", token.txt) )
                       end
                     elseif _exp:get_staticFlag() then
@@ -3854,7 +3940,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
           end
           typeInfo = exp:get_expType()
         elseif _switchExp == "#" then
-          if exp:get_expType():get_kind() ~= Ast.TypeInfoKindList and exp:get_expType():get_kind() ~= Ast.TypeInfoKindArray and exp:get_expType():get_kind() ~= Ast.TypeInfoKindMap and exp:get_expType() ~= Ast.builtinTypeString then
+          if exp:get_expType():get_kind() ~= Ast.TypeInfoKind.List and exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Array and exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Map and exp:get_expType() ~= Ast.builtinTypeString then
             self:addErrMess( token.pos, string.format( 'unmatch type for "#" -- %s', exp:get_expType():getTxt(  )) )
           end
           typeInfo = Ast.builtinTypeInt

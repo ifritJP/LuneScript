@@ -133,9 +133,9 @@ pub class TransUnit {
       let scope = self.scope;
       repeat {
          if! scope.$ownerTypeInfo {
-            if _exp.$kind == Ast.TypeInfoKindClass or
-               _exp.$kind == Ast.TypeInfoKindModule or
-               _exp.$kind == Ast.TypeInfoKindIF {          
+            if _exp.$kind == Ast.TypeInfoKind.Class or
+               _exp.$kind == Ast.TypeInfoKind.Module or
+               _exp.$kind == Ast.TypeInfoKind.IF {          
                return _exp;
             }   
          }  
@@ -490,7 +490,7 @@ fn TransUnit.registBuiltInScope() {
                      
                      let typeInfo = Ast.NormalTypeInfo.createFunc(
                         false, true, self.scope,
-                        methodFlag and Ast.TypeInfoKindMethod or Ast.TypeInfoKindFunc,
+                        methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
                         parentInfo, false, true, not methodFlag, "pub",
                         fieldName, argTypeList, retTypeList );
                      
@@ -652,8 +652,8 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
                   self.pushbackStr( "macroVal %s" (nextToken.txt),
                                     (unwrap macroVal.val)@@str );                       
                }   
-               elseif macroVal.typeInfo.get_kind() == Ast.TypeInfoKindArray or
-                  macroVal.typeInfo.get_kind() == Ast.TypeInfoKindList
+               elseif macroVal.typeInfo.get_kind() == Ast.TypeInfoKind.Array or
+                  macroVal.typeInfo.get_kind() == Ast.TypeInfoKind.List
                {   
                   let strList = (unwrap macroVal.val)@@str[];
                   if strList {
@@ -924,10 +924,12 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    fn registTypeInfo( atomInfo: _TypeInfo ): Ast.TypeInfo {
       let newTypeInfo: Ast.TypeInfo! = nil;
 
-      if atomInfo.kind == Ast.TypeInfoKindEnum {
-         let parentInfo = typeId2TypeInfo[ atomInfo.parentId ];
+      if atomInfo.kind == Ast.TypeInfoKind.Enum {
+         let parentInfo = unwrap typeId2TypeInfo[ atomInfo.parentId ];
          let name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
-         let scope = self.pushScope( false );
+         let parentScope = unwrap parentInfo.$scope;
+         let scope = new Ast.Scope( parentScope, true, [] );
+         
          typeId2Scope[ atomInfo.typeId ] = scope;
          let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
             scope, unwrap parentInfo, true,
@@ -940,10 +942,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             name2EnumValInfo[ valName ] = new Ast.EnumValInfo( valName, valData );
             scope.addEnumVal( valName, enumTypeInfo );
          }
-         self.popScope();
-         self.scope.addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo );
+         parentScope.addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo );
       }
-      elseif atomInfo.kind == Ast.TypeInfoKindModule {
+      elseif atomInfo.kind == Ast.TypeInfoKind.Module {
          let parentInfo = Ast.typeInfoRoot;
          if atomInfo.parentId ~= Ast.rootTypeId {
             let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
@@ -985,9 +986,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
       }
       elseif atomInfo.parentId ~= Ast.rootTypeId or
          not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
-         atomInfo.kind == Ast.TypeInfoKindList or
-         atomInfo.kind == Ast.TypeInfoKindArray or
-         atomInfo.kind == Ast.TypeInfoKindMap or
+         atomInfo.kind == Ast.TypeInfoKind.List or
+         atomInfo.kind == Ast.TypeInfoKind.Array or
+         atomInfo.kind == Ast.TypeInfoKind.Map or
          atomInfo.nilable
       {
          if atomInfo.nilable {
@@ -1037,8 +1038,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             if atomInfo.txt ~= "" {
                newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
             }   
-            if newTypeInfo and ( atomInfo.kind == Ast.TypeInfoKindClass or
-                                 atomInfo.kind == Ast.TypeInfoKindIF )
+            if newTypeInfo and ( atomInfo.kind == Ast.TypeInfoKind.Class or
+                                 atomInfo.kind == Ast.TypeInfoKind.IF )
             {                                
                sync! newTypeInfo = newTypeInfo {
                }    
@@ -1054,8 +1055,8 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                };   
             }
             else {
-               if atomInfo.kind == Ast.TypeInfoKindClass or
-                  atomInfo.kind == Ast.TypeInfoKindIF
+               if atomInfo.kind == Ast.TypeInfoKind.Class or
+                  atomInfo.kind == Ast.TypeInfoKind.IF
                {             
                   let baseScope = unwrap typeId2Scope[ atomInfo.baseId ];
 
@@ -1063,7 +1064,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                      parentScope, true, baseScope and [ baseScope ] or [] );
 
                   let workTypeInfo = Ast.NormalTypeInfo.createClass(
-                     atomInfo.kind == Ast.TypeInfoKindClass, atomInfo.abstructFlag,
+                     atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag,
                      scope, baseInfo, interfaceList,
                      parentInfo, true, "pub", atomInfo.txt );
                   newTypeInfo = workTypeInfo;
@@ -1077,35 +1078,36 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
                else {
                   let scope:Ast.Scope! = nil;
 
-                  if atomInfo.kind == Ast.TypeInfoKindFunc or
-                     atomInfo.kind == Ast.TypeInfoKindMethod
+                  if atomInfo.kind == Ast.TypeInfoKind.Func or
+                     atomInfo.kind == Ast.TypeInfoKind.Method
                   {     
                      scope = new Ast.Scope( parentScope, false, [] );
                   }     
 
-                  
+
+                  let typeInfoKind = unwrap Ast.TypeInfoKind._from( atomInfo.kind );
                   let workTypeInfo = Ast.NormalTypeInfo.create(
-                     atomInfo.abstructFlag, scope, baseInfo, interfaceList, parentInfo,
-                     atomInfo.staticFlag, atomInfo.kind,              
+                     atomInfo.abstructFlag, scope, baseInfo,
+                     interfaceList, parentInfo, atomInfo.staticFlag, typeInfoKind,
                      atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo );
                   newTypeInfo = workTypeInfo;
 
                   typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
 
-                  if atomInfo.kind == Ast.TypeInfoKindFunc or
-                     atomInfo.kind == Ast.TypeInfoKindMethod
+                  if atomInfo.kind == Ast.TypeInfoKind.Func or
+                     atomInfo.kind == Ast.TypeInfoKind.Method
                   {
                      let symbolKind = Ast.SymbolKind.Fun;
-                     if atomInfo.kind == Ast.TypeInfoKindMethod {
+                     if atomInfo.kind == Ast.TypeInfoKind.Method {
                         symbolKind = Ast.SymbolKind.Mtd;
                      }
                      (unwrap typeId2Scope[ atomInfo.parentId ]).add(
-                        symbolKind, false, atomInfo.kind == Ast.TypeInfoKindFunc,
+                        symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func,
                         atomInfo.txt, workTypeInfo, atomInfo.accessMode,
                         atomInfo.staticFlag, false, true );
                      typeId2Scope[ atomInfo.typeId ] = scope;
-                  }     
-               }    
+                  }
+               }
             }   
          }  
       }
@@ -1139,24 +1141,24 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             let symbolKind = Ast.SymbolKind.Typ;
             let addFlag = true;
             switch typeInfo.$kind {
-               case Ast.TypeInfoKindFunc {
+               case Ast.TypeInfoKind.Func {
                   symbolKind = Ast.SymbolKind.Fun;
                }
-               case Ast.TypeInfoKindMethod {
+               case Ast.TypeInfoKind.Method {
                   symbolKind = Ast.SymbolKind.Mtd;
                }
-               case Ast.TypeInfoKindClass, Ast.TypeInfoKindModule
+               case Ast.TypeInfoKind.Class, Ast.TypeInfoKind.Module
                {              
                   symbolKind = Ast.SymbolKind.Typ;
                }
-               case Ast.TypeInfoKindEnum {
+               case Ast.TypeInfoKind.Enum {
                   addFlag = false;
                }
             }
 
             if addFlag {
                scope.add( symbolKind, false,
-                          typeInfo.$kind == Ast.TypeInfoKindFunc,
+                          typeInfo.$kind == Ast.TypeInfoKind.Func,
                           typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
                           typeInfo.$staticFlag, typeInfo.$mutable, true );
             }
@@ -1173,7 +1175,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    fn registMember( classTypeId: int ) {
       let classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
 
-      if classTypeInfo.$kind ~= Ast.TypeInfoKindModule
+      if classTypeInfo.$kind ~= Ast.TypeInfoKind.Module
       {     
          self.pushClass( true, classTypeInfo.$abstructFlag,
                          nil, nil, true, classTypeInfo.getTxt(), "pub" );
@@ -1199,9 +1201,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
       }
 
       foreach child in classTypeInfo.get_children() {
-         if child.get_kind() == Ast.TypeInfoKindClass or
-            child.get_kind() == Ast.TypeInfoKindModule or
-            child.get_kind() == Ast.TypeInfoKindIF
+         if child.get_kind() == Ast.TypeInfoKind.Class or
+            child.get_kind() == Ast.TypeInfoKind.Module or
+            child.get_kind() == Ast.TypeInfoKind.IF
          {           
             let oldId = newId2OldIdMap[ child.get_typeId() ];
             if oldId {
@@ -1210,7 +1212,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
          }
       }
 
-      if classTypeInfo.$kind ~= Ast.TypeInfoKindModule {     
+      if classTypeInfo.$kind ~= Ast.TypeInfoKind.Module {     
          self.popClass();
       }
       else {
@@ -1219,9 +1221,9 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    }
    foreach atomInfo in moduleInfo._typeInfoList {
       if atomInfo.parentId == Ast.rootTypeId and
-         ( atomInfo.kind == Ast.TypeInfoKindClass or
-           atomInfo.kind == Ast.TypeInfoKindModule or
-           atomInfo.kind == Ast.TypeInfoKindIF )
+         ( atomInfo.kind == Ast.TypeInfoKind.Class or
+           atomInfo.kind == Ast.TypeInfoKind.Module or
+           atomInfo.kind == Ast.TypeInfoKind.IF )
       {
          registMember( atomInfo.typeId );
       } 
@@ -1532,7 +1534,7 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
    }
    else {
       let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
-      if exp.$expType.get_kind() == Ast.TypeInfoKindMap {
+      if exp.$expType.get_kind() == Ast.TypeInfoKind.Map {
          self.scope.addLocalVar(
             false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false );
          if! keySymbol {
@@ -1540,8 +1542,8 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
                false, true, _exp.txt, itemTypeInfoList[ 1 ], false );
          }  
       } 
-      elseif exp.$expType.get_kind() == Ast.TypeInfoKindList or
-         exp.$expType.get_kind() == Ast.TypeInfoKindArray
+      elseif exp.$expType.get_kind() == Ast.TypeInfoKind.List or
+         exp.$expType.get_kind() == Ast.TypeInfoKind.Array
       { 
          self.scope.addLocalVar(
             false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );

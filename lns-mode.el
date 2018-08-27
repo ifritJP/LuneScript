@@ -65,7 +65,7 @@
 		   "nil" "null" "true" "switch" "case" "default" "extend" "proto"
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" 
 		   "__init", "mut" "pub" "pro" "pri" "form" "advertise" "provide"
-		   "wrap" "static" "global" "sync" "then" "do" "interface"
+		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
 		   "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
@@ -507,7 +507,8 @@ pattern は  {, }, {{, }} のいずれか。
 	  (setq column (+ (current-column) indent)))))))
 
 (defun lns-indent-line ()
-  (let ((org-pos (point))
+  (let ((case-fold-search nil)
+	(org-pos (point))
 	pos end-block-flag start-block-flag start-pos column)
     (save-excursion
       (beginning-of-line)

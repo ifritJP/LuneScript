@@ -1,0 +1,17 @@
+class Super {
+   pub let val1:int;
+   pri let val2:int { pub };
+   pub fn func1( arg:int ): int!;
+   pub fn func2( arg1:int, arg2:int ): int;
+   pub static let val3:int;
+}
+
+class Test extend Super {
+   pub fn func3( arg:int ): int;
+   pub fn func4( arg1:int, arg2:int ): int;
+   pub static fn func5( arg:int ): int;
+}
+
+let test = new Test();
+test.func1(1);
+test.$

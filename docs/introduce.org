@@ -101,9 +101,14 @@ Lua へトランスコンパイルしたファイルは、Lua コマンドでそ
 
 
 - Lua のトランスコンパイラ LuneScript の紹介 2 
+  - subfile, module, nil 条件演算子 の紹介
   - https://qiita.com/dwarfJP/items/646588287e91e812421f
 - Lua のトランスコンパイラ LuneScript のイマドキな開発環境でもっと楽しよう
+  - 補完、syntax チェック、subfile の検索 
   - https://qiita.com/dwarfJP/items/6c80026f8dc60ad0fbdc
+- Lua のトランスコンパイラ LuneScript の紹介 3
+  - provide, enum の紹介
+  - https://qiita.com/dwarfJP/items/7b573f9c7961d2b8f10a
 
 
 番外

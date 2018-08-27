@@ -59,7 +59,8 @@
 (defun lns-flymake-lns-mode-hook-func ()
   (lexical-let ((buf (current-buffer)))
     (run-at-time 1 nil (lambda ()
-			 (lns-flymake-enable-mode buf)))
+			 (when (buffer-live-p buf)
+			   (lns-flymake-enable-mode buf))))
   ))
 
 (add-hook 'lns-mode-hook 'lns-flymake-lns-mode-hook-func)

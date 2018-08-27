@@ -44,6 +44,7 @@
 (defun lns-ac-prefix ()
   (when (and (not (lns-is-in-comment-string (point)))
 	     ;;(re-search-backward "\\.\\(\\(?:[a-zA-Z0-9][_a-zA-Z0-9]*\\)?\\)\\=" nil t))
+	     ;;(re-search-backward "\\.\\(\\(?:[a-zA-Z0-9]\\)?\\)\\=" nil t))
 	     (re-search-backward "\\.\\(\\(?:[a-zA-Z0-9]\\)?\\)\\=" nil t))
 	     ;;(re-search-backward "\\.\\(.\\)\\=" nil t))
     (match-beginning 1)))

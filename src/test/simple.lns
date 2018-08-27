@@ -4,14 +4,15 @@ import test.Sub4;
 
 print( "sub2globalfun", sub2globalfun() );
 let enumVal3 = Sub2.enumTestSub.val3;
-print( "enumTestSub.val3", enumVal3 );
+print( "enumTestSub.val3", enumVal3, enumVal3 + 10 );
 print( "enumTestSub.val3", enumVal3, enumVal3.get__txt() );
 print( "enumTestSub.val3", enumVal3, enumVal3.$_txt );
+enumVal3 = unwrap Sub2.enumTestSub._from( enumVal3 );
+
 {
    let val = new Sub3( 1 );
    print( "Sub3.func() %d" ( val.func() ));
    print( "Sub4() %d" ( Sub4( 1 ) ));
-   
 }
 
 fn func( val : int) {

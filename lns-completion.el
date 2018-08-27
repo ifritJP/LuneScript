@@ -65,7 +65,9 @@
 
 
 (defun lns-candidate-get-type (info)
-  (lns-json-val info :type))
+  (let ((type-txt (lns-json-val info :type)))
+    (string-match ".+\\.\\([^\\.]+\\)" type-txt)
+    (replace-match "\\1" nil nil type-txt)))
 (defun lns-candidate-get-displayTxt (info)
   (lns-json-val info :displayTxt))
 

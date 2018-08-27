@@ -240,7 +240,7 @@ function convFilter:outputMeta( node, baseIndent )
     if typeId2TypeInfo[typeInfo:get_typeId(  )] then
       if pickupChildFlag and not typeInfo:get_nilable() then
         for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
-          if itemTypeInfo:get_accessMode() == "pub" and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindClass or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindIF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindFunc or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindMethod ) then
+          if itemTypeInfo:get_accessMode() == "pub" and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
             pickupTypeId( itemTypeInfo, true, true )
           end
         end
@@ -251,7 +251,7 @@ function convFilter:outputMeta( node, baseIndent )
     if typeInfo:get_nilable() then
       pickupTypeId( typeInfo:get_orgTypeInfo(  ), true, false )
     else 
-      if typeInfo:get_kind() == Ast.TypeInfoKindClass or typeInfo:get_kind() == Ast.TypeInfoKindIF then
+      if typeInfo:get_kind() == Ast.TypeInfoKind.Class or typeInfo:get_kind() == Ast.TypeInfoKind.IF then
         pickupClassMap[typeInfo:get_typeId()] = typeInfo
       end
       local parentInfo = typeInfo:get_parentInfo(  )
@@ -283,7 +283,7 @@ function convFilter:outputMeta( node, baseIndent )
       end
       if pickupChildFlag then
         for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
-          if itemTypeInfo:get_accessMode() == "pub" and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindClass or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindIF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindFunc or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKindMethod ) then
+          if itemTypeInfo:get_accessMode() == "pub" and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
             pickupTypeId( itemTypeInfo, true, true )
           end
         end
@@ -674,7 +674,7 @@ function convFilter:processDeclEnum( node, parent, baseIndent )
    end
    return string.format( "illegal val -- %%s", val )
 end
-function %s:_fromVal( val )
+function %s:_from( val )
    if self._val2NameMap[ val ] then
       return val
    end
@@ -837,7 +837,7 @@ end]==], className, setterName, memberName, prefix, memberName, memberName), bas
     local memberType = advertiseInfo:get_member():get_expType()
     
     for __index, child in pairs( memberType:get_children() ) do
-      if child:get_kind() == Ast.TypeInfoKindMethod and child:get_accessMode() ~= "pri" and not child:get_staticFlag() then
+      if child:get_kind() == Ast.TypeInfoKind.Method and child:get_accessMode() ~= "pri" and not child:get_staticFlag() then
         local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
         
         if not methodNameSet[childName] then
@@ -1477,6 +1477,8 @@ function convFilter:processExpCall( node, parent, baseIndent )
 
   local wroteFuncFlag = false
   
+  local setArgFlag = false
+  
   
   if node:get_func():get_kind() == Ast.nodeKind.RefField then
     local fieldNode = node:get_func()
@@ -1487,7 +1489,8 @@ function convFilter:processExpCall( node, parent, baseIndent )
     
     if node:get_nilAccess() then
       wroteFuncFlag = true
-      if prefixType:get_kind() == Ast.TypeInfoKindList then
+      setArgFlag = true
+      if prefixType:get_kind() == Ast.TypeInfoKind.List then
         self:write( string.format( "_lune_nilacc( table.%s, nil, 'list', ", fieldNode:get_field().txt) )
         filter( prefixNode, self, fieldNode, baseIndent )
       else 
@@ -1496,16 +1499,29 @@ function convFilter:processExpCall( node, parent, baseIndent )
         self:write( string.format( ", '%s', 'callmtd' ", fieldNode:get_field().txt) )
       end
     else 
-      if prefixType:get_kind() == Ast.TypeInfoKindList then
+      if prefixType:get_kind() == Ast.TypeInfoKind.List then
+        setArgFlag = true
         wroteFuncFlag = true
         self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
         filter( prefixNode, self, fieldNode, baseIndent )
-      elseif prefixType:get_kind() == Ast.TypeInfoKindEnum then
+      elseif prefixType:get_kind() == Ast.TypeInfoKind.Enum then
         wroteFuncFlag = true
+        local fieldExpType = fieldNode:get_expType()
+        
         local canonicalName = self:getCanonicalName( prefixType )
         
-        self:write( string.format( "%s:_getTxt( ", canonicalName) )
-        filter( prefixNode, self, fieldNode, baseIndent )
+        local methodName = fieldNode:get_field().txt
+        
+        if methodName == "get__txt" then
+          methodName = "_getTxt"
+        end
+        self:write( string.format( "%s:%s( ", canonicalName, methodName) )
+        if fieldExpType:get_staticFlag() then
+          setArgFlag = false
+        else 
+          filter( prefixNode, self, fieldNode, baseIndent )
+          setArgFlag = true
+        end
       end
     end
     
@@ -1525,7 +1541,7 @@ function convFilter:processExpCall( node, parent, baseIndent )
     local _exp = node:get_argList()
     if _exp ~= nil then
     
-        if wroteFuncFlag then
+        if wroteFuncFlag and setArgFlag then
           if #_exp:get_expList() > 0 then
             self:write( ", " )
           end
@@ -1671,7 +1687,7 @@ function convFilter:processRefField( node, parent, baseIndent )
     local delimit = "."
     
     if parent:get_kind() == Ast.nodeKind.ExpCall then
-      if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKindMethod then
+      if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
         delimit = ":"
       else 
         delimit = "."
@@ -1693,7 +1709,7 @@ function convFilter:processGetField( node, parent, baseIndent )
   
   local fieldTxt = node:get_field(  ).txt
   
-  if fieldTxt == "_txt" and prefixType:get_kind() == Ast.TypeInfoKindEnum then
+  if fieldTxt == "_txt" and prefixType:get_kind() == Ast.TypeInfoKind.Enum then
     local canonicalName = self:getCanonicalName( prefixType )
     
     self:write( string.format( "%s:_getTxt( ", canonicalName) )
@@ -1703,7 +1719,7 @@ function convFilter:processGetField( node, parent, baseIndent )
     filter( prefixNode, self, node, baseIndent )
     local delimit = "."
     
-    if node:get_getterTypeInfo(  ):get_kind(  ) == Ast.TypeInfoKindMethod then
+    if node:get_getterTypeInfo(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
       delimit = ":"
     else 
       delimit = "."

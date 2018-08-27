@@ -80,57 +80,49 @@ local builtInTypeIdSet = {}
 
 _moduleObj.builtInTypeIdSet = builtInTypeIdSet
 
-local TypeInfoKindRoot = 0
+local TypeInfoKind = {}
+_moduleObj.TypeInfoKind = TypeInfoKind
+TypeInfoKind._val2NameMap = {}
+function TypeInfoKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+     return string.format( "lune.base.Ast.TypeInfoKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function TypeInfoKind:_from( val )
+   if self._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
 
-_moduleObj.TypeInfoKindRoot = TypeInfoKindRoot
-
-local TypeInfoKindMacro = 1
-
-_moduleObj.TypeInfoKindMacro = TypeInfoKindMacro
-
-local TypeInfoKindPrim = 2
-
-_moduleObj.TypeInfoKindPrim = TypeInfoKindPrim
-
-local TypeInfoKindList = 3
-
-_moduleObj.TypeInfoKindList = TypeInfoKindList
-
-local TypeInfoKindArray = 4
-
-_moduleObj.TypeInfoKindArray = TypeInfoKindArray
-
-local TypeInfoKindMap = 5
-
-_moduleObj.TypeInfoKindMap = TypeInfoKindMap
-
-local TypeInfoKindClass = 6
-
-_moduleObj.TypeInfoKindClass = TypeInfoKindClass
-
-local TypeInfoKindIF = 7
-
-_moduleObj.TypeInfoKindIF = TypeInfoKindIF
-
-local TypeInfoKindFunc = 8
-
-_moduleObj.TypeInfoKindFunc = TypeInfoKindFunc
-
-local TypeInfoKindMethod = 9
-
-_moduleObj.TypeInfoKindMethod = TypeInfoKindMethod
-
-local TypeInfoKindNilable = 10
-
-_moduleObj.TypeInfoKindNilable = TypeInfoKindNilable
-
-local TypeInfoKindEnum = 11
-
-_moduleObj.TypeInfoKindEnum = TypeInfoKindEnum
-
-local TypeInfoKindModule = 12
-
-_moduleObj.TypeInfoKindModule = TypeInfoKindModule
+TypeInfoKind.Root = 0
+TypeInfoKind._val2NameMap[0] = 'Root'
+TypeInfoKind.Macro = 1
+TypeInfoKind._val2NameMap[1] = 'Macro'
+TypeInfoKind.Prim = 2
+TypeInfoKind._val2NameMap[2] = 'Prim'
+TypeInfoKind.List = 3
+TypeInfoKind._val2NameMap[3] = 'List'
+TypeInfoKind.Array = 4
+TypeInfoKind._val2NameMap[4] = 'Array'
+TypeInfoKind.Map = 5
+TypeInfoKind._val2NameMap[5] = 'Map'
+TypeInfoKind.Class = 6
+TypeInfoKind._val2NameMap[6] = 'Class'
+TypeInfoKind.IF = 7
+TypeInfoKind._val2NameMap[7] = 'IF'
+TypeInfoKind.Func = 8
+TypeInfoKind._val2NameMap[8] = 'Func'
+TypeInfoKind.Method = 9
+TypeInfoKind._val2NameMap[9] = 'Method'
+TypeInfoKind.Nilable = 10
+TypeInfoKind._val2NameMap[10] = 'Nilable'
+TypeInfoKind.Enum = 11
+TypeInfoKind._val2NameMap[11] = 'Enum'
+TypeInfoKind.Module = 12
+TypeInfoKind._val2NameMap[12] = 'Module'
 
 local function isBuiltin( typeId )
 
@@ -141,54 +133,35 @@ local dummyList = {}
 
 -- none
 
-
 local SymbolKind = {}
 _moduleObj.SymbolKind = SymbolKind
-function SymbolKind.getTxt( val )
-
-  return _lune_unwrap( SymbolKind.val2txt[val])
+SymbolKind._val2NameMap = {}
+function SymbolKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+     return string.format( "lune.base.Ast.SymbolKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
 end
-function SymbolKind.new(  )
-  local obj = {}
-  setmetatable( obj, { __index = SymbolKind } )
-  if obj.__init then
-    obj:__init(  )
-  end        
-  return obj 
- end         
-function SymbolKind:__init(  ) 
-            
+function SymbolKind:_from( val )
+   if self._val2NameMap[ val ] then
+      return val
+   end
+   return nil
 end
-do
-  SymbolKind.seed = 0
-  SymbolKind.val2txt = {}
-  SymbolKind.val2txt[SymbolKind.seed] = 'Typ'
-  SymbolKind.Typ = SymbolKind.seed
-  SymbolKind.seed = SymbolKind.seed + 1
-  
-  SymbolKind.val2txt[SymbolKind.seed] = 'Mbr'
-  SymbolKind.Mbr = SymbolKind.seed
-  SymbolKind.seed = SymbolKind.seed + 1
-  
-  SymbolKind.val2txt[SymbolKind.seed] = 'Mtd'
-  SymbolKind.Mtd = SymbolKind.seed
-  SymbolKind.seed = SymbolKind.seed + 1
-  
-  SymbolKind.val2txt[SymbolKind.seed] = 'Fun'
-  SymbolKind.Fun = SymbolKind.seed
-  SymbolKind.seed = SymbolKind.seed + 1
-  
-  SymbolKind.val2txt[SymbolKind.seed] = 'Var'
-  SymbolKind.Var = SymbolKind.seed
-  SymbolKind.seed = SymbolKind.seed + 1
-  
-  SymbolKind.val2txt[SymbolKind.seed] = 'Arg'
-  SymbolKind.Arg = SymbolKind.seed
-  SymbolKind.seed = SymbolKind.seed + 1
-  
-  end
 
--- none
+SymbolKind.Typ = 0
+SymbolKind._val2NameMap[0] = 'Typ'
+SymbolKind.Mbr = 1
+SymbolKind._val2NameMap[1] = 'Mbr'
+SymbolKind.Mtd = 2
+SymbolKind._val2NameMap[2] = 'Mtd'
+SymbolKind.Fun = 3
+SymbolKind._val2NameMap[3] = 'Fun'
+SymbolKind.Var = 4
+SymbolKind._val2NameMap[4] = 'Var'
+SymbolKind.Arg = 5
+SymbolKind._val2NameMap[5] = 'Arg'
 
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
@@ -423,7 +396,7 @@ function TypeInfo:get_typeId(  )
 end
 function TypeInfo:get_kind(  )
 
-  return _moduleObj.TypeInfoKindRoot
+  return TypeInfoKind.Root
 end
 function TypeInfo:get_staticFlag(  )
 
@@ -539,10 +512,8 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
   return true
 end
 
-function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
+function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
 
-  local typeInfo = nil
-  
   do
     local _exp = self.symbol2TypeInfoMap[name]
     if _exp ~= nil then
@@ -555,23 +526,24 @@ function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
               return nil
             end
           
-        return symbolInfo:get_typeInfo()
+        return symbolInfo
       end
   end
   
   if not onlySameNsFlag then
     if self.inheritList then
       for __index, scope in pairs( self.inheritList ) do
-        typeInfo = scope:getTypeInfoField( name, true, fromScope )
-        if typeInfo then
-          return typeInfo
+        local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
+        
+        if symbolInfo then
+          return symbolInfo
         end
       end
     end
   end
   if not onlySameNsFlag or not self.ownerTypeInfo then
     if self.parent ~= self then
-      return self.parent:getTypeInfo( name, fromScope, onlySameNsFlag )
+      return self.parent:getSymbolInfo( name, fromScope, onlySameNsFlag )
     end
   end
   if onlySameNsFlag then
@@ -581,11 +553,24 @@ function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
     local _exp = _moduleObj.sym2builtInTypeMap[name]
     if _exp ~= nil then
     
-        return _exp:get_typeInfo()
+        return _exp
       end
   end
   
   return nil
+end
+
+function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
+
+  local symbolInfo = self:getSymbolInfo( name, fromScope, onlySameNsFlag )
+  
+      if  nil == symbolInfo then
+        local _symbolInfo = symbolInfo
+        
+        return nil
+      end
+    
+  return symbolInfo:get_typeInfo()
 end
 
 function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
@@ -598,11 +583,11 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
     local _exp = self.ownerTypeInfo
     if _exp ~= nil then
     
-        if _exp:get_kind() == _moduleObj.TypeInfoKindFunc or _exp:get_kind() == _moduleObj.TypeInfoKindMethod or self == moduleScope or self == _moduleObj.rootScope then
+        if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or self == moduleScope or self == _moduleObj.rootScope then
           validThisScope = true
-        elseif (_exp:get_kind() == _moduleObj.TypeInfoKindIF or _exp:get_kind() == _moduleObj.TypeInfoKindClass or _exp:get_kind() == _moduleObj.TypeInfoKindModule ) and name == "self" then
+        elseif (_exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.Module ) and name == "self" then
           validThisScope = true
-        elseif _exp:get_kind() == _moduleObj.TypeInfoKindEnum then
+        elseif _exp:get_kind() == TypeInfoKind.Enum then
           validThisScope = true
         end
       else
@@ -783,7 +768,7 @@ function Scope:getClassTypeInfo(  )
       local _exp = scope.ownerTypeInfo
       if _exp ~= nil then
       
-          if _exp:get_kind() == _moduleObj.TypeInfoKindClass or _exp:get_kind() == _moduleObj.TypeInfoKindIF or _exp:get_kind() == _moduleObj.TypeInfoKindModule then
+          if _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Module then
             return _exp
           end
         end
@@ -840,7 +825,7 @@ setmetatable( NilableTypeInfo, { __index = TypeInfo } )
 _moduleObj.NilableTypeInfo = NilableTypeInfo
 function NilableTypeInfo:get_kind(  )
 
-  return _moduleObj.TypeInfoKindNilable
+  return TypeInfoKind.Nilable
 end
 function NilableTypeInfo:get_nilable(  )
 
@@ -999,7 +984,7 @@ function ModuleTypeInfo:get_accessMode(  )
 end
 function ModuleTypeInfo:get_kind(  )
 
-  return _moduleObj.TypeInfoKindModule
+  return TypeInfoKind.Module
 end
 function ModuleTypeInfo:getParentId(  )
 
@@ -1019,7 +1004,7 @@ function ModuleTypeInfo:isSettableFrom( other )
 end
 function ModuleTypeInfo:serialize( stream, validChildrenSet )
 
-  local txt = string.format( "{ parentId = %d, typeId = %d, txt = '%s', kind = %d, ", self:getParentId(  ), self.typeId, self.rawTxt, _moduleObj.TypeInfoKindModule)
+  local txt = string.format( "{ parentId = %d, typeId = %d, txt = '%s', kind = %d, ", self:getParentId(  ), self.typeId, self.rawTxt, TypeInfoKind.Module)
   
   stream:write( txt .. '\n' )
   stream:write( "children = {" )
@@ -1129,7 +1114,7 @@ function EnumTypeInfo:isModule(  )
 end
 function EnumTypeInfo:get_kind(  )
 
-  return _moduleObj.TypeInfoKindEnum
+  return TypeInfoKind.Enum
 end
 function EnumTypeInfo:getParentId(  )
 
@@ -1190,6 +1175,9 @@ end
 function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList) 
   TypeInfo.__init( self, scope)
   
+  if type( kind ) ~= "number" then
+    Util.printStackTrace(  )
+  end
   self.abstructFlag = abstructFlag
   self.baseTypeInfo = _lune_unwrapDefault( baseTypeInfo, _moduleObj.rootTypeInfo)
   self.interfaceList = _lune_unwrapDefault( interfaceList, {})
@@ -1206,7 +1194,7 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
   self.parentInfo = _lune_unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
   self.children = {}
   self.typeId = typeId
-  if kind == _moduleObj.TypeInfoKindRoot then
+  if kind == TypeInfoKind.Root then
     self.nilable = false
   elseif txt == "nil" then
     self.nilable = true
@@ -1221,9 +1209,9 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
     
     do
       local _switchExp = (kind )
-      if _switchExp == _moduleObj.TypeInfoKindPrim or _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindArray or _switchExp == _moduleObj.TypeInfoKindMap or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindModule or _switchExp == _moduleObj.TypeInfoKindIF then
+      if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF then
         hasNilable = true
-      elseif _switchExp == _moduleObj.TypeInfoKindFunc or _switchExp == _moduleObj.TypeInfoKindMethod then
+      elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method then
         hasNilable = true
       end
     end
@@ -1261,7 +1249,7 @@ function NormalTypeInfo:getTxt(  )
   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
     return (_lune_unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
   end
-  if self.kind == _moduleObj.TypeInfoKindArray then
+  if self.kind == TypeInfoKind.Array then
     local _exp = self.itemTypeInfoList[1]
     
         if  nil == _exp then
@@ -1272,7 +1260,7 @@ function NormalTypeInfo:getTxt(  )
       
     return _exp:getTxt(  ) .. "[@]"
   end
-  if self.kind == _moduleObj.TypeInfoKindList then
+  if self.kind == TypeInfoKind.List then
     local _exp = self.itemTypeInfoList[1]
     
         if  nil == _exp then
@@ -1301,10 +1289,10 @@ function NormalTypeInfo:getTxt(  )
 end
 function NormalTypeInfo:get_display_stirng(  )
 
-  if self.kind == _moduleObj.TypeInfoKindNilable then
+  if self.kind == TypeInfoKind.Nilable then
     return (_lune_unwrap( self.orgTypeInfo) ):get_display_stirng(  ) .. "!"
   end
-  if self.kind == _moduleObj.TypeInfoKindFunc or self.kind == _moduleObj.TypeInfoKindMethod then
+  if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Method then
     local txt = self:get_rawTxt() .. "("
     
     for index, argType in pairs( self.argTypeInfoList ) do
@@ -1420,7 +1408,7 @@ function NormalTypeInfo:equals( typeInfo )
 end
 function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList )
 
-  if kind == _moduleObj.TypeInfoKindPrim then
+  if kind == TypeInfoKind.Prim then
     do
       local _exp = _moduleObj.sym2builtInTypeMap[txt]
       if _exp ~= nil then
@@ -1502,7 +1490,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
 
   local typeId = typeIdSeed + 1
   
-  if kind == _moduleObj.TypeInfoKindRoot then
+  if kind == TypeInfoKind.Root then
     typeId = _moduleObj.rootTypeId
   else 
     typeIdSeed = typeIdSeed + 1
@@ -1526,8 +1514,8 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   
   do
     local _switchExp = kind
-    if _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindModule or _switchExp == _moduleObj.TypeInfoKindIF or _switchExp == _moduleObj.TypeInfoKindFunc or _switchExp == _moduleObj.TypeInfoKindMethod or _switchExp == _moduleObj.TypeInfoKindMacro then
-      scope = Scope.new(_moduleObj.rootScope, kind == _moduleObj.TypeInfoKindClass or kind == _moduleObj.TypeInfoKindModule or kind == _moduleObj.TypeInfoKindIF or kind == _moduleObj.TypeInfoKindList, {})
+    if _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
+      scope = Scope.new(_moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List, {})
     end
   end
   
@@ -1539,7 +1527,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   _moduleObj.typeInfoKind[idName] = info
   _moduleObj.sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, "pub", false, typeTxt, info, false, true)
   if info:get_nilableTypeInfo() ~= _moduleObj.rootTypeInfo then
-    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == _moduleObj.TypeInfoKindFunc, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false, true)
+    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false, true)
     _moduleObj.builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
   _moduleObj.builtInTypeIdSet[info.typeId] = info
@@ -1552,19 +1540,19 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, _moduleObj.TypeInfoKindList, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
 
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, _moduleObj.TypeInfoKindArray, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
 
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, _moduleObj.TypeInfoKindMap, {keyTypeInfo, valTypeInfo})
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo})
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName )
@@ -1600,7 +1588,7 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
     Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and _moduleObj.TypeInfoKindClass or _moduleObj.TypeInfoKindIF)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKind.Class or TypeInfoKind.IF)
   
   return info
 end
@@ -1616,63 +1604,63 @@ function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, pare
   return info
 end
 
-local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", _moduleObj.TypeInfoKindPrim )
+local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeNone = builtinTypeNone
 
-local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", _moduleObj.TypeInfoKindPrim )
+local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeStem = builtinTypeStem
 
-local builtinTypeNil = NormalTypeInfo.createBuiltin( "Nil", "nil", _moduleObj.TypeInfoKindPrim )
+local builtinTypeNil = NormalTypeInfo.createBuiltin( "Nil", "nil", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeNil = builtinTypeNil
 
-local builtinTypeDDD = NormalTypeInfo.createBuiltin( "DDD", "...", _moduleObj.TypeInfoKindPrim )
+local builtinTypeDDD = NormalTypeInfo.createBuiltin( "DDD", "...", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
-local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", _moduleObj.TypeInfoKindPrim )
+local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeBool = builtinTypeBool
 
-local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", _moduleObj.TypeInfoKindPrim )
+local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeInt = builtinTypeInt
 
-local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", _moduleObj.TypeInfoKindPrim )
+local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeReal = builtinTypeReal
 
-local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", _moduleObj.TypeInfoKindPrim )
+local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeChar = builtinTypeChar
 
-local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", _moduleObj.TypeInfoKindClass )
+local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class )
 
 _moduleObj.builtinTypeString = builtinTypeString
 
-local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", _moduleObj.TypeInfoKindMap )
+local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
 
 _moduleObj.builtinTypeMap = builtinTypeMap
 
-local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", _moduleObj.TypeInfoKindList )
+local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKind.List )
 
 _moduleObj.builtinTypeList = builtinTypeList
 
-local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", _moduleObj.TypeInfoKindArray )
+local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 
 _moduleObj.builtinTypeArray = builtinTypeArray
 
-local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", _moduleObj.TypeInfoKindFunc, _moduleObj.builtinTypeDDD )
+local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Func, _moduleObj.builtinTypeDDD )
 
 _moduleObj.builtinTypeForm = builtinTypeForm
 
-local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", _moduleObj.TypeInfoKindPrim )
+local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeSymbol = builtinTypeSymbol
 
-local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", _moduleObj.TypeInfoKindPrim )
+local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKind.Prim )
 
 _moduleObj.builtinTypeStat = builtinTypeStat
 
@@ -1688,10 +1676,10 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
   typeIdSeed = typeIdSeed + 1
   local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo)
   
-  local getEnumName = NormalTypeInfo.createFunc( false, true, nil, _moduleObj.TypeInfoKindMethod, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString} )
+  local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString} )
   
   scope:addMethod( getEnumName, "pub", false, true )
-  local fromVal = NormalTypeInfo.createFunc( false, true, nil, _moduleObj.TypeInfoKindMethod, info, true, true, true, "pub", "_fromVal", {valTypeInfo}, {info:get_nilableTypeInfo()} )
+  local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, "pub", "_from", {valTypeInfo}, {info:get_nilableTypeInfo()} )
   
   scope:addMethod( fromVal, "pub", true, true )
   return info
@@ -1700,7 +1688,7 @@ end
 function EnumTypeInfo:serialize( stream, validChildrenSet )
 
   local txt = string.format( [==[{ parentId = %d, typeId = %d, txt = '%s',
-accessMode = '%s', kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, _moduleObj.TypeInfoKindEnum, self.valTypeInfo:get_typeId())
+accessMode = '%s', kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId())
   
   stream:write( txt )
   stream:write( "enumValList = {" )
@@ -1756,7 +1744,7 @@ function NormalTypeInfo:isInheritFrom( other )
   if self:get_typeId() == otherTypeId then
     return true
   end
-  if (self:get_kind() ~= _moduleObj.TypeInfoKindClass and self:get_kind() ~= _moduleObj.TypeInfoKindIF ) or (other:get_kind() ~= _moduleObj.TypeInfoKindClass and other:get_kind() ~= _moduleObj.TypeInfoKindIF ) then
+  if (self:get_kind() ~= TypeInfoKind.Class and self:get_kind() ~= TypeInfoKind.IF ) or (other:get_kind() ~= TypeInfoKind.Class and other:get_kind() ~= TypeInfoKind.IF ) then
     return false
   end
   local baseTypeInfo = self:get_baseTypeInfo()
@@ -1793,11 +1781,11 @@ function NormalTypeInfo:isSettableFrom( other )
   if self == _moduleObj.builtinTypeStem and not other:get_nilable() then
     return true
   end
-  if self == _moduleObj.builtinTypeForm and other:get_kind() == _moduleObj.TypeInfoKindFunc then
+  if self == _moduleObj.builtinTypeForm and other:get_kind() == TypeInfoKind.Func then
     return true
   end
   if other == _moduleObj.builtinTypeNil then
-    if self.kind ~= _moduleObj.TypeInfoKindNilable then
+    if self.kind ~= TypeInfoKind.Nilable then
       return false
     end
     return true
@@ -1806,14 +1794,14 @@ function NormalTypeInfo:isSettableFrom( other )
     return true
   end
   if self.kind ~= other:get_kind() then
-    if self.kind == _moduleObj.TypeInfoKindNilable then
+    if self.kind == TypeInfoKind.Nilable then
       if other:get_nilable() then
         return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
       end
       return self:get_orgTypeInfo():isSettableFrom( other )
-    elseif (self:get_kind() == _moduleObj.TypeInfoKindClass or self:get_kind() == _moduleObj.TypeInfoKindIF ) and (other:get_kind() == _moduleObj.TypeInfoKindClass or other:get_kind() == _moduleObj.TypeInfoKindIF ) then
+    elseif (self:get_kind() == TypeInfoKind.Class or self:get_kind() == TypeInfoKind.IF ) and (other:get_kind() == TypeInfoKind.Class or other:get_kind() == TypeInfoKind.IF ) then
       return other:isInheritFrom( self )
-    elseif other:get_kind() == _moduleObj.TypeInfoKindEnum then
+    elseif other:get_kind() == TypeInfoKind.Enum then
       local enumTypeInfo = other
       
       return self:isSettableFrom( enumTypeInfo:get_valTypeInfo() )
@@ -1822,12 +1810,12 @@ function NormalTypeInfo:isSettableFrom( other )
   end
   do
     local _switchExp = (self.kind )
-    if _switchExp == _moduleObj.TypeInfoKindPrim then
+    if _switchExp == TypeInfoKind.Prim then
       if self == _moduleObj.builtinTypeInt and other == _moduleObj.builtinTypeChar or self == _moduleObj.builtinTypeChar and other == _moduleObj.builtinTypeInt then
         return true
       end
       return false
-    elseif _switchExp == _moduleObj.TypeInfoKindList or _switchExp == _moduleObj.TypeInfoKindArray then
+    elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array then
       if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
         return true
       end
@@ -1836,7 +1824,7 @@ function NormalTypeInfo:isSettableFrom( other )
       end
       
       return true
-    elseif _switchExp == _moduleObj.TypeInfoKindMap then
+    elseif _switchExp == TypeInfoKind.Map then
       if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and other:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
         return true
       end
@@ -1849,16 +1837,16 @@ function NormalTypeInfo:isSettableFrom( other )
       end
       
       return true
-    elseif _switchExp == _moduleObj.TypeInfoKindClass or _switchExp == _moduleObj.TypeInfoKindIF then
+    elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
       return other:isInheritFrom( self )
-    elseif _switchExp == _moduleObj.TypeInfoKindFunc then
+    elseif _switchExp == TypeInfoKind.Func then
       if self == _moduleObj.builtinTypeForm then
         return true
       end
       return false
-    elseif _switchExp == _moduleObj.TypeInfoKindMethod then
+    elseif _switchExp == TypeInfoKind.Method then
       return false
-    elseif _switchExp == _moduleObj.TypeInfoKindNilable then
+    elseif _switchExp == TypeInfoKind.Nilable then
       return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
     else 
       return false
@@ -5726,7 +5714,7 @@ function ExpRefNode:getLiteral(  )
 
   local typeInfo = self.symbolInfo:get_typeInfo()
   
-  if typeInfo:get_kind() ~= _moduleObj.TypeInfoKindEnum then
+  if typeInfo:get_kind() ~= TypeInfoKind.Enum then
     return {}, {}
   end
   local enumTypeInfo = typeInfo

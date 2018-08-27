@@ -50,16 +50,21 @@ testEnum4.val1 = testEnum4.val1; // error
 }
 
 {
-   let valtest = testEnum4._fromVal( 0 );
+   let valtest = testEnum4._from( 0 );
    valtest = testEnum4.val1;
    valtest = 1; // error
    if valtest == 1 { // error
    }
-   if valtest == testEnum4._fromVal(1) {
+   if valtest == testEnum4._from(1) {
    }
    let! valtest2 = valtest {}
    then {
       if valtest2 == 1 {
       }
    };
+}
+
+{
+   let val1:testEnum = 1;
+   testEnum._from( "1" );
 }

@@ -61,8 +61,10 @@ See URL `https://github.com/ifritJP/LuneScript'."
 (defun lns-flycheck-lns-mode-hook-func ()
   (flycheck-select-checker 'lunescript)
   (lexical-let ((buf (current-buffer)))
-    (run-at-time 1 nil (lambda ()
-			 (lns-flycheck-enable-mode buf)))
+    (run-at-time 1 nil
+		 (lambda ()
+		   (when (buffer-live-p buf)
+		     (lns-flycheck-enable-mode buf))))
   ))
 (add-hook 'lns-mode-hook 'lns-flycheck-lns-mode-hook-func)
 

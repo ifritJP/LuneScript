@@ -1,0 +1,253 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="org-mode-document.css" />
+#+HTML_HEAD: <meta http-equiv="Pragma" content="no-cache">
+#+HTML_HEAD: <meta http-equiv="Cache-Control" content="no-cache"> 
+
+#+TITLE: Lua のトランスコンパイラ LuneScript の紹介 3
+
+LuneScript は、 Lua へのトランスコンパイルを目的とした言語です。
+
+LuneScript を利用することで、規模の大きい Lua スクリプトを効率良く開発出来ます。
+
+この記事は https://qiita.com/dwarfJP/items/21d4d4099ab0feb68eaf の続きです。
+
+上記の記事で紹介出来なかった機能について説明します。
+
+* provide
+
+LuneScript では 1 スクリプトファイル が 1 モジュールであり、
+1 つのスクリプトファイル内に宣言した複数のクラスや関数をまとめて
+1 つのモジュールを作成する。
+
+例えば次のスクリプトでは、 val 変数と func() 関数を宣言している。
+
+#+BEGIN_SRC lns
+// sub.lns
+pub let val:int = 1;
+pub fn func():int {
+  return 1;
+}
+#+END_SRC
+
+このモジュールを import して利用する際は、
+次のように sub.val, val.func() としてモジュールのフィールドにアクセスする。
+
+#+BEGIN_SRC lns
+// main.lns
+import sub;
+print( sub.val, sub.func() );
+#+END_SRC
+
+これは、スクリプトファイル内で 1 つの関数だけを宣言した場合でも同じである。
+
+一方、Lua のモジュールは何の値を返してもよい。
+例えば、モジュールが整数値を返すことも出来る。
+
+provide は、 LuneScript のモジュールと
+Lua のモジュールの互換性を確保するために利用する。
+
+つまり、 provide を利用することで、
+LuneScript モジュールで関数やクラスを返すことが出来る。
+
+
+** 使用方法
+
+provide は次のように使用する。
+
+#+BEGIN_SRC lns
+// sub.lns
+let val:int = 1;
+pub fn func():int {
+  return 1;
+}
+provide func;
+#+END_SRC
+
+この例では、 sub モジュールは func を返す。
+
+この sub モジュールを利用する場合、次のように import した sub が関数となる。
+
+#+BEGIN_SRC lns
+// main.lns
+import sub;
+print( sub() );
+#+END_SRC
+
+** 制限
+
+provide は次の制限をもつ
+
+- provide で指定できるのは 1 つのシンボルのみ。 
+  - プリミティブな値を指定することは出来ない。
+- provide を指定した場合は、当然 pub 指定できるのは 1 つのシンボルに限られる。
+- provide は、スクリプトの末尾に宣言しなければならない。
+
+
+* enum
+
+LuneScript は enum を扱える。
+
+** 宣言方法
+
+enum は次のように宣言する。
+   
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1,
+  val2,
+  val3,
+  val4,
+}
+
+let val = EnumVal.val1;
+#+END_SRC
+
+この例では EnumVal という enum 型を宣言し、
+EnumVal には val1 〜 val4 までの値を保持する。
+
+宣言した enum 値を使用する場合は EnumVal.val1 のようにアクセスする。
+
+アクセス制御として pub を指定可能。
+
+** enum 値の型
+
+宣言時に '=' で値を設定することで、 enum 値を設定できる。
+
+'=' を省略すると、enum 値は 0 から始まる int 型となる。
+
+enum が保持できる型は int, real, str のいずれかで、
+1 つの enum に複数の型を混在させることは出来ない。
+
+#+BEGIN_SRC lns
+enum testEnum {
+   val1,
+   val2,
+   val3 = 1.0 // error: multiple type
+}
+
+enum testEnum2 {
+   val1 = 1.0,
+   val2,
+   val3 = 1, // error: multiple type
+}
+
+enum testEnum3 {
+   val1 = "1",
+   val2,  // error: illegal type
+   val3 = 1, // error: multiple type
+}
+
+enum testEnum4 {
+   val1,
+   val2
+}
+#+END_SRC
+
+int, real は、 enum 値は 1 ずつ増加する。
+
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1 = 10,	// 10
+  val2,		// 11
+  val3 = 20,	// 20
+  val4,		// 21
+  val5,		// 22
+}
+#+END_SRC
+
+enum 値は、式を書ける。
+ただし式はプリミティブな値でなければならない。
+
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1 = 10,		// 10
+  val2 = val + 1,	// 11
+}
+#+END_SRC
+
+** enum 値の演算
+
+enum 値は、enum 値の型と演算できる。
+
+例えば次の場合、EnumVal.val4 + 10 は 13 となる。
+
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1,
+  val2,
+  val3,
+  val4,
+}
+
+print( EnumVal.val4 + 10 ); // 13
+#+END_SRC
+
+** enum 値の名前
+
+enum 値から動的に名前を取得することが出来る。
+
+例えば次の場合、 ~print( val, val.$_txt )~ は 0, Enumval.val1 を出力する。
+
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1,
+  val2,
+  val3,
+  val4,
+}
+
+let val = EnumVal.val1;
+print( val, val.$_txt ); // 0, Enumval.val1 
+#+END_SRC
+
+** enum 値への変換
+
+enum 値は int real, str のいずれかの値を持つ。
+
+enum 値は、それらの型の変数に代入できる。
+   
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1,
+  val2,
+  val3,
+  val4,
+}
+let val:int = EnumVal.val1;
+#+END_SRC
+
+一方で、int real, str の値を enum 型の変数に代入することは出来ない。
+
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1,
+  val2,
+  val3,
+  val4,
+}
+let val:EnumVal = 1; // error
+#+END_SRC
+
+int real, str の値を、対応する enum 型に変換するには _from() メソッドを使用する。
+
+次の例は、 ~EnumVal._from(0)~ を使って、
+0 から対応する EnumVal.val1 に変換し、EnumVal 型の変数 val に設定している。
+
+#+BEGIN_SRC lns
+pub enum EnumVal {
+  val1,
+  val2,
+  val3,
+  val4,
+}
+let val:EnumVal = unwrap EnumVal._from( 0 );
+print( val.$_txt );  // EnumVal.val1;
+#+END_SRC
+
+ここで _from() メソッドの戻り値は EnumVal! 型となるので、
+EnumVal にするため unwrap している。
+_from() メソッドは、指定の引数に一致する enum 値が存在する場合はその enum 値を返すが、
+一致する enum 値が無い場合は nil を返す。

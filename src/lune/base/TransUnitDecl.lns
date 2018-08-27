@@ -80,7 +80,7 @@ fn TransUnit.analyzeRefType( accessMode: str ): Ast.RefTypeNode {
             nextToken = self.getToken();
          } nextToken.txt ~= ",";
          self.checkToken( nextToken, '>' );
-         if typeInfo.$kind == Ast.TypeInfoKindMap {
+         if typeInfo.$kind == Ast.TypeInfoKind.Map {
             typeInfo = Ast.NormalTypeInfo.createMap(
                accessMode, self.getCurrentClass(),
                genericList[1] or Ast.builtinTypeStem,
@@ -307,7 +307,12 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    let braceCount = 0;
 
    while true {
-      nextToken = self.getToken();
+      let workToken = self.getToken();
+      if workToken.kind == Parser.kindEof {
+         self.addErrMess( nextToken.pos, "eof in macro" );
+         break;
+      }
+      nextToken = workToken;
       if nextToken.txt == "{" {
          braceCount = braceCount + 1;
       }
@@ -321,7 +326,7 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      false, false, scope, Ast.TypeInfoKindMacro, self.getCurrentNamespaceTypeInfo(),
+      false, false, scope, Ast.TypeInfoKind.Macro, self.getCurrentNamespaceTypeInfo(),
       false, false, false, accessMode, nameToken.txt, argTypeList );
    self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
 
@@ -361,7 +366,7 @@ fn TransUnit.analyzePushClass(
             }
             self.pushback();
             let ifType = self.analyzeRefType( accessMode );
-            if ifType.$expType.$kind ~= Ast.TypeInfoKindIF {
+            if ifType.$expType.$kind ~= Ast.TypeInfoKind.IF {
                self.error( "%s is not interface -- %d"
                            (ifType.$expType.getTxt(), ifType.$expType.$kind ) );
             }
@@ -809,7 +814,7 @@ fn TransUnit.analyzeDeclClass(
       {   
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
             false, false, self.pushScope( false ),
-            Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
+            Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode,
             getterName, [], [ memberType ] );
          self.popScope();
          
@@ -824,7 +829,7 @@ fn TransUnit.analyzeDeclClass(
          self.scope.addMethod(
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ),
-               Ast.TypeInfoKindMethod, parentInfo, true, false, false, accessMode,
+               Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode,
                setterName, [ memberType ], nil 
             ), accessMode, false, false );
          self.popScope();
@@ -846,7 +851,7 @@ fn TransUnit.analyzeDeclClass(
       // デフォルトコンストラクタの登録
       let initTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, self.pushScope( false ),
-         Ast.TypeInfoKindMethod, parentInfo, true, false, false, "pub",
+         Ast.TypeInfoKind.Method, parentInfo, true, false, false, "pub",
          "__init", memberTypeList, [] );
       self.popScope();
       self.scope.addMethod( initTypeInfo, "pub", false, false );
@@ -858,9 +863,9 @@ fn TransUnit.analyzeDeclClass(
    foreach advertiseInfo in node.$advertiseList {
       let memberType = advertiseInfo.$member.$expType;
       switch memberType.$kind {
-         case Ast.TypeInfoKindClass, Ast.TypeInfoKindIF {
+         case Ast.TypeInfoKind.Class, Ast.TypeInfoKind.IF {
             foreach child in memberType.$children {
-               if child.$kind == Ast.TypeInfoKindMethod and
+               if child.$kind == Ast.TypeInfoKind.Method and
                   child.$accessMode ~= "pri" and
                   not child.$staticFlag
                {
@@ -918,7 +923,7 @@ fn TransUnit.analyzeDeclFunc(
       let classTypeInfo = unwrap self.scope.getTypeInfoChild( (unwrap name).txt );
 
       self.pushClass(
-         classTypeInfo.$kind == Ast.TypeInfoKindClass,
+         classTypeInfo.$kind == Ast.TypeInfoKind.Class,
          classTypeInfo.$abstructFlag, nil, nil, false, (unwrap name).txt, "pub" );
 
       name = self.getSymbolToken();
@@ -926,12 +931,12 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let kind = Ast.nodeKindDeclConstr;
-   let typeKind = Ast.TypeInfoKindFunc;
+   let typeKind = Ast.TypeInfoKind.Func;
    if classNameToken {
       if moduleFlag or not staticFlag {
          // module で Lua の外部モジュールを宣言した場合、
          // static なメソッド呼び出しが必要なので。。。
-         typeKind = Ast.TypeInfoKindMethod;
+         typeKind = Ast.TypeInfoKind.Method;
       }
       if (unwrap name).txt == "__init" {
          kind = Ast.nodeKindDeclConstr;
@@ -986,7 +991,7 @@ fn TransUnit.analyzeDeclFunc(
       if overrideType.get_staticFlag() ~= staticFlag {
          self.error( "missmatch override staticFlag -- " .. funcName );
       }
-      if overrideType.get_kind() ~= Ast.TypeInfoKindMethod {
+      if overrideType.get_kind() ~= Ast.TypeInfoKind.Method {
          self.error( "missmatch override kind -- %s, %d"
                      ( funcName, overrideType.get_kind() ) );
       }
@@ -1303,7 +1308,6 @@ fn TransUnit.analyzeDeclVar(
       firstToken.pos, [ Ast.builtinTypeNone ], mode, accessMode, false,
       varList, expList, typeInfoList, unwrapFlag, unwrapBlock,
       thenBlock, syncSymbolList, syncBlock );
-   
+
    return node;
 }
-

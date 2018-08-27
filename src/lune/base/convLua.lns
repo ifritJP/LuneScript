@@ -201,10 +201,10 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
          if pickupChildFlag and not typeInfo.$nilable {
 	    foreach itemTypeInfo in typeInfo.get_children() {
                if itemTypeInfo.$accessMode == "pub" and
-                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKindClass or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKindIF or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKindFunc or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKindMethod )
+                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKind.Class or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.IF or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Func or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Method )
                {
                   pickupTypeId( itemTypeInfo, true, true );
                }
@@ -218,8 +218,8 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
 	 pickupTypeId( typeInfo.get_orgTypeInfo(), true, false );
       }
       else {
-         if typeInfo.$kind == Ast.TypeInfoKindClass or
-            typeInfo.$kind == Ast.TypeInfoKindIF
+         if typeInfo.$kind == Ast.TypeInfoKind.Class or
+            typeInfo.$kind == Ast.TypeInfoKind.IF
          {           
             pickupClassMap[ typeInfo.$typeId ] = typeInfo;
          }
@@ -253,10 +253,10 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int )
          if pickupChildFlag {
 	    foreach itemTypeInfo in typeInfo.get_children() {
                if itemTypeInfo.$accessMode == "pub" and
-                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKindClass or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKindIF or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKindFunc or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKindMethod )
+                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKind.Class or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.IF or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Func or
+                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Method )
                {
                   pickupTypeId( itemTypeInfo, true, true );
                }
@@ -595,7 +595,7 @@ pub override fn convFilter.processBlock(
       self.writeln( "", baseIndent + stepIndent );
    }
 
-   self.setIndent( baseIndent ) ;
+   self.setIndent( baseIndent );
    if node.get_blockKind() == "{" {
       self.writeln( "end", baseIndent );
    }
@@ -631,7 +631,7 @@ pub override fn convFilter.processDeclEnum(
    end
    return string.format( "illegal val -- %%s", val )
 end
-function %s:_fromVal( val )
+function %s:_from( val )
    if self._val2NameMap[ val ] then
       return val
    end
@@ -789,7 +789,7 @@ end``` ( className, setterName, memberName, prefix, memberName, memberName ),
       let memberName = advertiseInfo.$member.$name.txt;
       let memberType = advertiseInfo.$member.$expType;
       foreach child in memberType.$children {
-         if child.$kind == Ast.TypeInfoKindMethod and
+         if child.$kind == Ast.TypeInfoKind.Method and
             child.$accessMode ~= "pri" and
             not child.$staticFlag
          {
@@ -1422,6 +1422,7 @@ pub override fn convFilter.processExpCall(
    node: Ast.ExpCallNode, parent: Ast.Node, baseIndent:int )
 {
    let wroteFuncFlag = false;
+   let setArgFlag = false;
 
    macro _fieldCall( fieldClass:sym ) {
       let fieldNode = node.$func@@Ast. ,,fieldClass;
@@ -1429,7 +1430,8 @@ pub override fn convFilter.processExpCall(
       let prefixType = prefixNode.$expType;
       if node.$nilAccess {
          wroteFuncFlag = true;
-         if prefixType.$kind == Ast.TypeInfoKindList {
+         setArgFlag = true;
+         if prefixType.$kind == Ast.TypeInfoKind.List {
             self.write( "_lune_nilacc( table.%s, nil, 'list', " (fieldNode.$field.txt ) );
             filter( prefixNode, self, fieldNode, baseIndent );
          }
@@ -1440,17 +1442,28 @@ pub override fn convFilter.processExpCall(
          }
       }
       else {
-         if prefixType.$kind == Ast.TypeInfoKindList {
+         if prefixType.$kind == Ast.TypeInfoKind.List {
+            setArgFlag = true;
             wroteFuncFlag = true;
             self.write( "table.%s( " (fieldNode.$field.txt ) );
             filter( prefixNode, self, fieldNode, baseIndent );
          }
-         elseif prefixType.$kind == Ast.TypeInfoKindEnum {
+         elseif prefixType.$kind == Ast.TypeInfoKind.Enum {
             wroteFuncFlag = true;
-
+            let fieldExpType = fieldNode.$expType;
             let canonicalName = self.getCanonicalName( prefixType );
-            self.write( "%s:_getTxt( " (canonicalName ) );
-            filter( prefixNode, self, fieldNode, baseIndent );
+            let methodName = fieldNode.$field.txt;
+            if methodName == "get__txt" {
+               methodName = "_getTxt";
+            }
+            self.write( "%s:%s( " (canonicalName, methodName ) );
+            if fieldExpType.$staticFlag {
+               setArgFlag = false;
+            }
+            else {
+               filter( prefixNode, self, fieldNode, baseIndent );
+               setArgFlag = true;
+            }
          }
       }
       
@@ -1476,7 +1489,7 @@ pub override fn convFilter.processExpCall(
 
    
    if! node.$argList {
-      if wroteFuncFlag {
+      if wroteFuncFlag and setArgFlag {
          if #_exp.$expList > 0 {
             self.write( ", " );
          }
@@ -1630,7 +1643,7 @@ pub override fn convFilter.processRefField(
       
       let delimit = ".";
       if parent.$kind == Ast.nodeKind.ExpCall {
-         if node.get_expType().get_kind() == Ast.TypeInfoKindMethod {
+         if node.get_expType().get_kind() == Ast.TypeInfoKind.Method {
             delimit = ":";
          }   
          else {
@@ -1648,7 +1661,7 @@ pub override fn convFilter.processGetField(
    let prefixNode = node.get_prefix();
    let prefixType = prefixNode.$expType;
    let fieldTxt = node.get_field().txt;
-   if fieldTxt == "_txt" and prefixType.$kind == Ast.TypeInfoKindEnum {
+   if fieldTxt == "_txt" and prefixType.$kind == Ast.TypeInfoKind.Enum {
       let canonicalName = self.getCanonicalName( prefixType );
       self.write( "%s:_getTxt( " (canonicalName ) );
       filter( prefixNode, self, node, baseIndent );
@@ -1657,7 +1670,7 @@ pub override fn convFilter.processGetField(
    else {
       filter( prefixNode,  self, node, baseIndent );
       let delimit = ".";
-      if node.get_getterTypeInfo().get_kind() == Ast.TypeInfoKindMethod {
+      if node.get_getterTypeInfo().get_kind() == Ast.TypeInfoKind.Method {
          delimit = ":";
       }   
       else {

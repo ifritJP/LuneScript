@@ -176,14 +176,14 @@ fn TransUnit.analyzeExpRefItem(
    }
 
    let typeInfo = Ast.builtinTypeStem_;
-   if expType.$kind == Ast.TypeInfoKindMap {
+   if expType.$kind == Ast.TypeInfoKind.Map {
       typeInfo = expType.get_itemTypeInfoList()[2];
       if typeInfo ~= Ast.builtinTypeStem_ and not typeInfo.$nilable {
          typeInfo = typeInfo.$nilableTypeInfo;
       }
    }
-   elseif expType.$kind == Ast.TypeInfoKindArray or
-      expType.$kind == Ast.TypeInfoKindList
+   elseif expType.$kind == Ast.TypeInfoKind.Array or
+      expType.$kind == Ast.TypeInfoKind.List
    {
       typeInfo = expType.get_itemTypeInfoList()[1];
    }
@@ -491,7 +491,7 @@ fn TransUnit.analyzeExpCont(
                   }
                }
 
-               if funcTypeInfo.get_kind() == Ast.TypeInfoKindMacro {
+               if funcTypeInfo.get_kind() == Ast.TypeInfoKind.Macro {
                   macroFlag = true;
                   self.symbol2ValueMapForMacro = {};
                   self.macroMode = "analyze";
@@ -508,7 +508,7 @@ fn TransUnit.analyzeExpCont(
 
                // 引数の型チェック
                let genericTypeList = funcTypeInfo.$itemTypeInfoList;
-               if funcTypeInfo.$kind == Ast.TypeInfoKindMethod and
+               if funcTypeInfo.$kind == Ast.TypeInfoKind.Method and
                   exp.$kind == Ast.nodeKindRefField
                {
                   let refField = exp@@Ast.RefFieldNode;
@@ -525,11 +525,12 @@ fn TransUnit.analyzeExpCont(
                }
                else {
                   switch( funcTypeInfo.$kind ) {
-                     case Ast.TypeInfoKindMethod, Ast.TypeInfoKindFunc {
+                     case Ast.TypeInfoKind.Method, Ast.TypeInfoKind.Func {
                      }
                      default {
-                        self.error( "can't call the type -- %s"
-                                    (funcTypeInfo.getTxt() ) );
+                        self.error( "can't call the type -- %s, %s"
+                                    ( funcTypeInfo.getTxt(),
+                                      funcTypeInfo.$kind.$_txt ) );
                      }
                   }
                   let retTypeInfoList:Ast.TypeInfo[] =
@@ -581,9 +582,9 @@ fn TransUnit.analyzeExpCont(
 
 fn TransUnit.analyzeAccessClassField(
    classTypeInfo: Ast.TypeInfo, mode:str, token:Parser.Token ) :
-   Ast.TypeInfo!, Ast.TypeInfo!
+   Ast.TypeInfo!, Ast.SymbolInfo!
 {
-   if classTypeInfo.get_kind() == Ast.TypeInfoKindList {
+   if classTypeInfo.get_kind() == Ast.TypeInfoKind.List {
       classTypeInfo = Ast.builtinTypeList;
    }
    let className = classTypeInfo.getTxt();
@@ -592,22 +593,22 @@ fn TransUnit.analyzeAccessClassField(
                   ( classScope, className, classTypeInfo ) );
    };
    
-   let getterTypeInfo:Ast.TypeInfo! = nil;
+   let getterTypeInfo:Ast.SymbolInfo! = nil;
    let fieldTypeInfo:Ast.TypeInfo! = nil;
    if mode == "get" or mode == "get_nil" {
-      fieldTypeInfo = classScope.getTypeInfo(
+      let fieldSymbolInfo = classScope.getSymbolInfo(
          "get_%s" (token.txt), self.scope, false );
-      if! fieldTypeInfo {
-         if ( _exp.get_kind() == Ast.TypeInfoKindMethod )
+      if! fieldSymbolInfo {
+         if ( _exp.get_kind() == Ast.SymbolKind.Mtd )
          {
-            let retTypeList = _exp.get_retTypeInfoList();
+            let retTypeList = _exp.$typeInfo.get_retTypeInfoList();
             getterTypeInfo = _exp;
             fieldTypeInfo = retTypeList[ 1 ];
          }
       }
    }
    if not getterTypeInfo {
-      // fieldTypeInfo = classScope.getTypeInfo(
+      // fieldSymbolInfo = classScope.getTypeInfo(
       //     token.txt, self.scope, false );
       fieldTypeInfo = classScope.getTypeInfoField(
          token.txt, true, self.scope );
@@ -623,43 +624,69 @@ fn TransUnit.analyzeAccessClassField(
 }
 
 fn TransUnit.dumpComp(
-   writer: Writer.Writer, pattern: str, symbolInfo: Ast.SymbolInfo ): bool
+   writer: Writer.Writer, pattern: str,
+   symbolInfo: Ast.SymbolInfo, getterFlag:bool ): bool
 {
    let symbol = symbolInfo.$name;
    if pattern == "" or symbol.find( pattern ) {
-      writer.startParent( "candidate", false );
-      let typeInfo = symbolInfo.$typeInfo;
-      let typeKindTxt = "";
-      writer.write(
-         "type", "%s" ( Ast.SymbolKind.getTxt( symbolInfo.$kind ) ) );
-      switch ( symbolInfo.$kind ) {
-         case Ast.SymbolKind.Fun, Ast.SymbolKind.Mtd {
-            writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
+      if getterFlag {
+         writer.startParent( "candidate", false );
+         let typeInfo = symbolInfo.$typeInfo;
+         let typeKindTxt = "";
+         writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
+         switch ( symbolInfo.$kind ) {
+            case Ast.SymbolKind.Mtd {
+               writer.write( "displayTxt", "$%s"
+                             ( typeInfo.$rawTxt.gsub( "^get_", "") ) );
+            }  
+            case Ast.SymbolKind.Mbr {
+               writer.write( "displayTxt", "$%s: %s"
+                             ( symbolInfo.$name, typeInfo.getTxt() ) );
+            }  
          }
-         case Ast.SymbolKind.Mbr, Ast.SymbolKind.Var {
-            writer.write( "displayTxt", "%s: %s"
-                          ( symbolInfo.$name, typeInfo.$display_stirng ) );
-         }  
-         case Ast.SymbolKind.Typ {
-            writer.write( "displayTxt", "%s"
-                          ( typeInfo.$display_stirng ) );
-         }  
-      }  
+      }
+      else {
+         writer.startParent( "candidate", false );
+         let typeInfo = symbolInfo.$typeInfo;
+         let typeKindTxt = "";
+         writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
+         switch ( symbolInfo.$kind ) {
+            case Ast.SymbolKind.Fun, Ast.SymbolKind.Mtd {
+               writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
+            }  
+            case Ast.SymbolKind.Mbr, Ast.SymbolKind.Var {
+               writer.write( "displayTxt", "%s: %s"
+                             ( symbolInfo.$name, typeInfo.$display_stirng ) );
+            }  
+            case Ast.SymbolKind.Typ {
+               writer.write( "displayTxt", "%s"
+                             ( typeInfo.$display_stirng ) );
+            }  
+         }
+      }
       writer.endElement();
    }
    return true;
 }
 
 fn TransUnit.dumpFieldComp(
-   writer: Writer.Writer, prefixSymbolInfo: Ast.SymbolInfo, pattern: str )
+   writer: Writer.Writer, prefixSymbolInfo: Ast.SymbolInfo!,
+   prefixTypeInfo: Ast.TypeInfo, pattern: str, getterPattern: str! )
 {
-   let typeInfo = prefixSymbolInfo.$typeInfo;
-   let scope = unwrap typeInfo.$scope;
+   let typeInfo = prefixTypeInfo;
+   let! scope = typeInfo.$scope {
+      return;
+   };
+
+   let isPrefixType = false;
+   if! prefixSymbolInfo {
+      isPrefixType = _exp.$kind == Ast.SymbolKind.Typ;
+   }
    
    scope.filterTypeInfoField(
       true, self.scope,
       fn ( symbolInfo: Ast.SymbolInfo ) : bool {
-         if ( prefixSymbolInfo.$kind == Ast.SymbolKind.Typ ) {
+         if ( isPrefixType ) {
             if not symbolInfo.$staticFlag and
                not symbolInfo.$typeInfo.$staticFlag and
                symbolInfo.$kind ~= Ast.SymbolKind.Typ
@@ -674,8 +701,18 @@ fn TransUnit.dumpFieldComp(
          }
          let symbol = symbolInfo.$name;
          if symbol ~= "__init" and symbol ~= "self"
-         {        
-            return self.dumpComp(writer, pattern, symbolInfo );
+         {
+            if! getterPattern {
+               if symbolInfo.$kind == Ast.SymbolKind.Mtd {
+                  let typeInfo = symbolInfo.$typeInfo;
+                  let retList = typeInfo.$retTypeInfoList;
+                  if #retList == 1 {
+                     return self.dumpComp( writer, _exp, symbolInfo, true );
+                  }
+               }
+               return true;
+            }
+            return self.dumpComp(writer, pattern, symbolInfo, false );
          }
          return true;
       });
@@ -685,7 +722,7 @@ fn TransUnit.dumpSymbolComp( writer: Writer.Writer, scope: Ast.Scope, pattern: s
    scope.filterSymbolTypeInfo(
       scope, self.moduleScope,
       fn ( symbolInfo: Ast.SymbolInfo ) : bool {
-         return self.dumpComp(writer, pattern, symbolInfo );
+         return self.dumpComp(writer, pattern, symbolInfo, false );
       });    
 }
 
@@ -717,17 +754,28 @@ fn TransUnit.checkComp( token:Parser.Token, callback:form )
 }
 
 
-fn TransUnit.checkFieldComp( token:Parser.Token, prefixSymbolInfo: Ast.SymbolInfo[] )
+fn TransUnit.checkFieldComp(
+   getterFlag:bool, token:Parser.Token, prefixExp: Ast.Node )
 {
-   if #prefixSymbolInfo ~= 1 {
+   if self.analyzeMode ~= "comp" {
       return;
    }
+   let prefixSymbolInfoList = prefixExp.getSymbolInfo();
+   let prefixSymbolInfo:Ast.SymbolInfo! = nil;
+   if #prefixSymbolInfoList == 1 {
+      prefixSymbolInfo = prefixSymbolInfoList[ 1 ];
+   }
+   
    self.checkComp(
       token,
       fn ( jsonWriter: Writer.JSON, prefix:str ) {
+         let getterPattern:str! = nil;
+         if getterFlag {
+            getterPattern = "^get_" .. prefix;
+         }
          self.dumpFieldComp(
-            jsonWriter, prefixSymbolInfo[ 1 ],
-            prefix == "" and "" or "^" .. prefix );
+            jsonWriter, prefixSymbolInfo, prefixExp.$expType,
+            prefix == "" and "" or "^" .. prefix, getterPattern );
       }
    );
 }
@@ -768,7 +816,8 @@ fn TransUnit.analyzeExpSymbol(
             let typeInfo:Ast.TypeInfo! = Ast.builtinTypeStem_;
             let prefixExpType = prefixExp.$expType;
 
-            self.checkFieldComp( token, prefixExp.getSymbolInfo() );
+            self.checkFieldComp(
+               mode == "get" or mode == "get_nil", token, prefixExp );
             
             if accessNil {
                if prefixExpType.$nilable {
@@ -785,15 +834,18 @@ fn TransUnit.analyzeExpSymbol(
 
             let getterTypeInfo:Ast.TypeInfo! = nil;
             let symbolInfo:Ast.SymbolInfo! = nil;
-            if prefixExpType.get_kind() == Ast.TypeInfoKindClass or
-               prefixExpType.get_kind() == Ast.TypeInfoKindModule or
-               prefixExpType.get_kind() == Ast.TypeInfoKindIF or
-               prefixExpType.get_kind() == Ast.TypeInfoKindList
+            if prefixExpType.get_kind() == Ast.TypeInfoKind.Class or
+               prefixExpType.get_kind() == Ast.TypeInfoKind.Module or
+               prefixExpType.get_kind() == Ast.TypeInfoKind.IF or
+               prefixExpType.get_kind() == Ast.TypeInfoKind.List
             {
-               typeInfo, getterTypeInfo = self.analyzeAccessClassField(
+               typeInfo, symbolInfo = self.analyzeAccessClassField(
                   prefixExpType, mode, token );
+               if! symbolInfo {
+                  getterTypeInfo = _exp.$typeInfo;
+               }
             }
-            elseif prefixExpType.get_kind() == Ast.TypeInfoKindMap {
+            elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Map {
                let work = prefixExpType.$itemTypeInfoList[1];
                if work ~= Ast.builtinTypeString {
                   self.addErrMess(
@@ -808,7 +860,7 @@ fn TransUnit.analyzeExpSymbol(
                   }
                }
             }
-            elseif prefixExpType.get_kind() == Ast.TypeInfoKindEnum {
+            elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Enum {
                let scope = unwrap prefixExpType.$scope;
                let fieldName = token.txt;
                if mode == "get" {
@@ -832,17 +884,19 @@ fn TransUnit.analyzeExpSymbol(
             }
 
 
-            let prefixScope = prefixExpType.$scope;
-            if! prefixScope {
-               symbolInfo = _exp.getSymbolInfoField( token.txt, true, self.scope );
+            if not symbolInfo {
+               let prefixScope = prefixExpType.$scope;
+               if! prefixScope {
+                  symbolInfo = _exp.getSymbolInfoField( token.txt, true, self.scope );
+               }
             }
             if! symbolInfo {
                let prefixSymbolInfoList = prefixExp.getSymbolInfo();
                if #prefixSymbolInfoList == 1 and
                   prefixSymbolInfoList[ 1 ].$kind == Ast.SymbolKind.Typ
                {
-                  if _exp.$typeInfo.$kind ~= Ast.TypeInfoKindFunc and
-                     _exp.$typeInfo.$kind ~= Ast.TypeInfoKindMethod and
+                  if _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Func and
+                     _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Method and
                      _exp.$kind ~= Ast.SymbolKind.Typ and
                      not _exp.$staticFlag
                   {
@@ -871,8 +925,8 @@ fn TransUnit.analyzeExpSymbol(
             }
             else {
                exp = new Ast.RefFieldNode(
-                  firstToken.pos, [ unwrap typeInfo ], token,
-                  symbolInfo, accessNil, prefixExp );
+                  firstToken.pos, [ unwrap typeInfo ],
+                  token, symbolInfo, accessNil, prefixExp );
             }
          }
       };
@@ -1333,9 +1387,9 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
                typeInfo = exp.$expType;
             }
             case "#" {
-               if exp.$expType.$kind ~= Ast.TypeInfoKindList and
-                  exp.$expType.$kind ~= Ast.TypeInfoKindArray and
-                  exp.$expType.$kind ~= Ast.TypeInfoKindMap and
+               if exp.$expType.$kind ~= Ast.TypeInfoKind.List and
+                  exp.$expType.$kind ~= Ast.TypeInfoKind.Array and
+                  exp.$expType.$kind ~= Ast.TypeInfoKind.Map and
                   exp.$expType ~= Ast.builtinTypeString
                {
                   self.addErrMess(
