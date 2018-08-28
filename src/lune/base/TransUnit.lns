@@ -1259,7 +1259,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    foreach varInfo, varName in moduleInfo._varName2InfoMap {
       self.scope.addStaticVar(
          false, true, varName, unwrap typeId2TypeInfo[ varInfo.typeId ],
-         (unwrap varInfo.mutable default false)@@bool );
+         unwrap varInfo.mutable default false );
    }
 
    foreach moduleName in nameList {

@@ -1192,7 +1192,7 @@ function TransUnit:analyzeImport( token )
     self:pushModule( true, moduleName )
   end
   for varName, varInfo in pairs( moduleInfo._varName2InfoMap ) do
-    self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[varInfo.typeId]), (_lune.unwrapDefault( varInfo.mutable, false) ) )
+    self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[varInfo.typeId]), _lune.unwrapDefault( varInfo.mutable, false) )
   end
   for __index, moduleName in pairs( nameList ) do
     self:popModule(  )
