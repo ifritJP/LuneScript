@@ -2,11 +2,11 @@
     let val:int = nil;  // error
 }
 {
-    let val:int = 0;
+    let mut val:int = 0;
     val = nil;          // error
 }
 {
-    let val:int! = 0;
+    let mut val:int! = 0;
     val = val + 1;      // error
 }
 {
@@ -29,7 +29,7 @@
     get( nil ); // error
 }
 {
-    let val:int = 0;
+    let mut val:int = 0;
     let val2:int! = nil;
     let val3:stem = nil;
     let val4:stem! = nil;
@@ -38,8 +38,8 @@
     val = val4@@int;
 }
 {
-   let val = 0;
-   let valnil:int! = 0;
+   let mut val = 0;
+   let mut valnil:int! = 0;
    let map = {
       "hoge": {
          "foo": {

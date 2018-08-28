@@ -1,55 +1,56 @@
 --lune/base/Writer.lns
 local _moduleObj = {}
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -71,9 +72,9 @@ function Writer.new(  )
     obj:__init(  )
   end        
   return obj 
- end         
+end         
 function Writer:__init(  ) 
-            
+
 end
 do
   end
@@ -154,9 +155,9 @@ function JsonLayer.new( state, arrayFlag, name, madeByArrayFlag, elementNameSet,
     obj:__init( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
   end        
   return obj 
- end         
+end         
 function JsonLayer:__init( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement ) 
-            
+
 self.state = state
   self.arrayFlag = arrayFlag
   self.name = name
@@ -202,7 +203,7 @@ function JSON:endLayer(  )
     Util.err( "illegal depth" )
   end
   while #self.layerQueue > 0 do
-    local info = _lune_unwrap( self:getLayerInfo(  ))
+    local info = _lune.unwrap( self:getLayerInfo(  ))
     
     if info.arrayFlag then
       self.stream:write( ']' )
@@ -212,7 +213,7 @@ function JSON:endLayer(  )
     table.remove( self.layerQueue )
     local parentInfo = self:getLayerInfo(  )
     
-    if not _lune_nilacc( parentInfo, "madeByArrayFlag" ) then
+    if not _lune.nilacc( parentInfo, "madeByArrayFlag" ) then
       break
     end
   end
@@ -238,7 +239,7 @@ function JSON:getLayerName(  )
 end
 function JSON:addElementName( name )
 
-  local info = _lune_unwrap( self:getLayerInfo(  ))
+  local info = _lune.unwrap( self:getLayerInfo(  ))
   
   local nameSet = info.elementNameSet
   
@@ -258,7 +259,7 @@ function JSON:startParent( name, arrayFlag )
   end
   local parentInfo = self:getLayerInfo(  )
   
-  if not arrayFlag and _lune_nilacc( parentInfo, "arrayFlag" ) then
+  if not arrayFlag and _lune.nilacc( parentInfo, "arrayFlag" ) then
     self:startLayer( false, true )
   end
   self.stream:write( string.format( '"%s": ', name) )
@@ -279,7 +280,7 @@ function JSON:startElement( name )
   if self:isArrayLayer(  ) then
     self:startLayer( false, true )
   end
-  local info = _lune_unwrap( self:getLayerInfo(  ))
+  local info = _lune.unwrap( self:getLayerInfo(  ))
   
   if info.openElement then
     Util.err( 'illegal openElement' )
@@ -294,12 +295,12 @@ function JSON:endElement(  )
   if self:equalLayerState( 'none' ) or self:equalLayerState( 'termed' ) then
     self:endLayer(  )
   elseif self:equalLayerState( 'valued' ) then
-    local info = _lune_unwrap( self:getLayerInfo(  ))
+    local info = _lune.unwrap( self:getLayerInfo(  ))
     
     if info.openElement then
       info.openElement = false
     end
-    if _lune_nilacc( self:getLayerInfo(  ), "madeByArrayFlag" ) then
+    if _lune.nilacc( self:getLayerInfo(  ), "madeByArrayFlag" ) then
       self:endLayer(  )
     end
   else 

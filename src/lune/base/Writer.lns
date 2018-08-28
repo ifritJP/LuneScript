@@ -36,7 +36,7 @@ pub interface Writer {
 pub class XML extend (Writer) {
    pri let stream: oStream;
    pri let elementList:str[];
-   pri let depth: int;
+   pri let mut depth: int;
 
    pub fn __init( stream:oStream ) {
       self.stream = stream;
@@ -52,7 +52,7 @@ pub class XML extend (Writer) {
       if type( val ) == "number" {
          return "%g" ( val );
       }
-      let txt = "%s" ( val );
+      let mut txt = "%s" ( val );
       txt = string.gsub( txt, '&', "&amp;" );
       txt = string.gsub( txt, '>', "&gt;" );
       txt = string.gsub( txt, '<', "&lt;" );
@@ -94,20 +94,20 @@ pub class XML extend (Writer) {
 }
 
 class JsonLayer {
-   pub let state: str;
+   pub let mut state: str;
    pub let arrayFlag: bool;
    pub let name: str;
    pub let madeByArrayFlag: bool;
    pub let elementNameSet: Map<str,bool>;
    pub let parentFlag: bool;
-   pub let openElement: bool;
+   pub let mut openElement: bool;
 }
 
 pub class JSON extend (Writer) {
 
    pri let stream:oStream;
    pri let layerQueue:JsonLayer[];
-   pri let prevName:str;
+   pri let mut prevName:str;
 
    pri fn startLayer( arrayFlag: bool, madeByArrayFlag: bool ) {
       let info = new JsonLayer(
@@ -256,7 +256,7 @@ pub class JSON extend (Writer) {
       self.setLayerState( 'termed' );
    }
 
-   pri static fn convertJsonTxt( txt:str ):str {
+   pri static fn convertJsonTxt( mut txt:str ):str {
       if txt == "" {
          return "";
       }  
@@ -268,7 +268,7 @@ pub class JSON extend (Writer) {
 
 
    pub fn writeValue( val: stem ) {
-      let txt = "";
+      let mut txt = "";
       let typeId = type( val );
       if typeId == "number" {
          txt = "%g" ( val );

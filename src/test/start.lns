@@ -25,14 +25,14 @@ print( "Hoge.func()", hoge.func() );
 
 let func3ret = classB.func3() ;
 foreach val in func3ret {
-    print( val );
+   print( val );
 }
 
 print( "12%d" ( 10 ) );
 
 {
-    let val = 1;
-    print( "%g" (val@@real));
+   let val = 1;
+   print( "%g" (val@@real));
 }
 
 print( "op", type( {} ),  1 and "2" and 3.0 and type( {} ) );
@@ -45,101 +45,101 @@ print( "op", 1,   1 or  "2" or  3.0 and {} );
 print( "op", 1,   1 or  "2" or  3.0 or  {} );
 
 for index = 1, 4 {
-    switch index {
-        case 1, 2 {       
-            print( "hoge", index );
-        }   
-        case 3 {
-            print( "foo", index );
-        }   
-        default {
-            print( "bar", index );
-        }   
-    }   
+   switch index {
+      case 1, 2 {       
+         print( "hoge", index );
+      }   
+      case 3 {
+         print( "foo", index );
+      }   
+      default {
+         print( "bar", index );
+      }   
+   }   
 }
 
 fn func( val: int! ): int {
-    let! val2 = val { return 0; };
-    
-    return val2 + 2;
+   let! val2 = val { return 0; };
+   
+   return val2 + 2;
 }
 
 print( 3, func( 1 ) );
 print( 0, func( nil ) );
 
 macro _test() {
-    print( "macro hoge" );
+   print( "macro hoge" );
 }
 _test();
 
 
 macro _test2( val:int, funcxx:sym ) {
-    {
-        fn func(val2:int):str {
-            return "mfunc%d" (val2);
-        }
-        let message = "hello %d %s" ( val, ,,,,funcxx );
-        let stat = `{ print( "macro stat" ); };
-        let stat2 = `{
-            for index = 1, 10 {
-                print( "hoge %d" ( index ) );
-            }
-        };
-        let stat3:stat[] = [];
-        for index = 1, 4 {
-            stat3.insert( `{ print( "foo %d" ( ,,index ) ); } );
-        }
-        let symbol1 = ,,,func( 1 );
-        let symbol2 = ,,,"mfunc%d" (1);
-        let stat4 = `{
-            ,,symbol1( "100" );
-            ,,symbol2( ,,func( 2 ) );
-            ,,,func(1)~~( ,,,,symbol1 );
-        };
-    }
-    print( ,,message );
-    print( "--funcxx--" );
-    ,,funcxx( "macro test2" );
-    print( "--stat--" );
-    ,,stat;
-    print( "--stat2--" );
-    ,,stat2;
-    print( "--stat3--" );
-    ,,stat3;
-    print( "--symbol1--" );
-    ,,symbol1( "10" );
-    print( "--stat4--" );
-    ,,stat4;
+   {
+      fn func(val2:int):str {
+         return "mfunc%d" (val2);
+      }
+      let message = "hello %d %s" ( val, ,,,,funcxx );
+      let stat = `{ print( "macro stat" ); };
+      let stat2 = `{
+         for index = 1, 10 {
+            print( "hoge %d" ( index ) );
+         }
+      };
+      let stat3:stat[] = [];
+      for index = 1, 4 {
+         stat3.insert( `{ print( "foo %d" ( ,,index ) ); } );
+      }
+      let symbol1 = ,,,func( 1 );
+      let symbol2 = ,,,"mfunc%d" (1);
+      let stat4 = `{
+         ,,symbol1( "100" );
+         ,,symbol2( ,,func( 2 ) );
+         ,,,func(1)~~( ,,,,symbol1 );
+      };
+   }
+   print( ,,message );
+   print( "--funcxx--" );
+   ,,funcxx( "macro test2" );
+   print( "--stat--" );
+   ,,stat;
+   print( "--stat2--" );
+   ,,stat2;
+   print( "--stat3--" );
+   ,,stat3;
+   print( "--symbol1--" );
+   ,,symbol1( "10" );
+   print( "--stat4--" );
+   ,,stat4;
 }
 
 fn mfunc1( val: str ) {
-    print( "mfunc1", val );
+   print( "mfunc1", val );
 }
 
 
 _test2( 1, print );
 
 macro _classtest( macroVal: int, fieldInfoList: Map<str,str>[] ) {
-    {
-        let name = ,,,"classTest%d" (macroVal);
-        let field:stat[] = [];
+   {
+      let name = ,,,"classTest%d" (macroVal);
+      let field:stat[] = [];
 
-        if fieldInfoList {
-            foreach fieldInfo in fieldInfoList {
-                foreach typeName, varName in fieldInfo {
-                    field.insert( `{
-                        pri let ,,,varName : ,,,typeName { pub };
-                    });
-                }
+      if fieldInfoList {
+         foreach fieldInfo in fieldInfoList {
+            foreach typeName, varName in fieldInfo {
+               field.insert( `{
+                  pri let ,,,varName : ,,,typeName { pub };
+               });
             }
-        }
-    }
-    class ,,name {
-        ,,field;
-        pub fn func(): int {
-            return ,,macroVal;
-        }
-    }
+         }
+      }
+   }
+   class ,,name {
+      ,,field;
+      pub fn func(): int {
+         return ,,macroVal;
+      }
+   }
 }
 
 _classtest( 1, [ { "val": "int" }, { "val2": "str" } ] ) ;
@@ -147,31 +147,31 @@ _classtest( 2, [] );
 _classtest( 3, [] );
 
 {
-    let classObj = new classTest1( 1000, "2000" );
-    print( classObj.func(), classObj.get_val(), classObj.get_val2() );
+   let classObj = new classTest1( 1000, "2000" );
+   print( classObj.func(), classObj.get_val(), classObj.get_val2() );
 }
 {
-    let classObj = new classTest2();
-    print( classObj.func() );
+   let classObj = new classTest2();
+   print( classObj.func() );
 }
 {
-    let classObj = new classTest3();
-    print( classObj.func() );
+   let classObj = new classTest3();
+   print( classObj.func() );
 }
 
 
 macro _stattest( val: stat ) {
-    ,,val;
+   ,,val;
 }
 
 _stattest(
-    `{
-        print( "1" );
-        print( "2" );
-    } );
+   `{
+      print( "1" );
+      print( "2" );
+   } );
 
 macro _symboltest( symbol: sym, val:stem ) {
-    print( ,,symbol( ,,val ) );
+   print( ,,symbol( ,,val ) );
 }
 
 _symboltest( string.format, "test\n" );
@@ -179,125 +179,125 @@ _symboltest( string.format, "test\n" );
 
 
 class GetTest {
-    let val: int { pub };
-    pub fn __init() {
-        self.val = 100;
-    }
+   let val: int { pub };
+   pub fn __init() {
+      self.val = 100;
+   }
 }
 print( (new GetTest()).$val );
 
 class GetTest2 {
-    let val: int { pub };
-    pub fn __init() {
-        self.val = 200;
-    }
+   let val: int { pub };
+   pub fn __init() {
+      self.val = 200;
+   }
 }
 print( (new GetTest2()).$val );
 
 {
-    fn TestRetDDD(): ... {
-        return 1,2,3;
-    }   
-    let! ddd1, ddd2, ddd3 = TestRetDDD() {
-        error( "fail" );
-    };
-    print( "2 = %d, 3 = %d, 4 = %d"
-           (ddd1@@int + 1, ddd2@@int + 1, ddd3@@int + 1 ) );
+   fn TestRetDDD(): ... {
+      return 1,2,3;
+   }   
+   let! ddd1, ddd2, ddd3 = TestRetDDD() {
+      error( "fail" );
+   };
+   print( "2 = %d, 3 = %d, 4 = %d"
+          (ddd1@@int + 1, ddd2@@int + 1, ddd3@@int + 1 ) );
 }
 
 {
-    let nilableInt1: int! = nil;
-    let! unwrapInt1, unwrapInt2: int = nilableInt1, nil {
-        unwrapInt1 = 123; unwrapInt2 = unwrap _unwrapInt2 default -456; }
-    then {
-        print( "NG" );
-    };
-    print( "123 = %d, -456 = %d" ( unwrapInt1, unwrapInt2 ) );
+   let nilableInt1: int! = nil;
+   let! unwrapInt1, unwrapInt2: int = nilableInt1, nil {
+      unwrapInt1 = 123; unwrapInt2 = unwrap _unwrapInt2 default -456; }
+   then {
+      print( "NG" );
+   };
+   print( "123 = %d, -456 = %d" ( unwrapInt1, unwrapInt2 ) );
 }
 
 {
-    let nilableInt1: int! = 567;
-    let! unwrapInt1, unwrapInt2: int = nilableInt1, 890 {
-        unwrapInt1 = 123; unwrapInt2 = 456; };
-    print( "567 = %d, 890 = %d" (unwrapInt1, unwrapInt2 ) );
+   let nilableInt1: int! = 567;
+   let! unwrapInt1, unwrapInt2: int = nilableInt1, 890 {
+      unwrapInt1 = 123; unwrapInt2 = 456; };
+   print( "567 = %d, 890 = %d" (unwrapInt1, unwrapInt2 ) );
 }
 
 {
-    let hoge1: int = 1;
-    let hoge2: int = 2;
-    unwrap! hoge1, hoge2 = 3, 4 {
-        print( "NG" );
-    }
-    then {
-        print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
-    };
-    print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+   let hoge1: int = 1;
+   let hoge2: int = 2;
+   unwrap! hoge1, hoge2 = 3, 4 {
+      print( "NG" );
+   }
+   then {
+      print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+   };
+   print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
 }
 
 {
-    let hoge1: int = 1;
-    let hoge2: int = 2;
-    sync! hoge1, hoge2 = 3, 4 {
-        print( "NG" );
-    }
-    then {
-        print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
-    }
-    do {
-        print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
-        hoge1 = hoge1 * 10;
-        hoge2 = hoge2 * 10;
-    };
-    print( "30 = %d, 40 = %d" ( hoge1, hoge2 ) );
+   let mut hoge1: int = 1;
+   let mut hoge2: int = 2;
+   sync! hoge1, hoge2 = 3, 4 {
+      print( "NG" );
+   }
+   then {
+      print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+   }
+   do {
+      print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+      hoge1 = hoge1 * 10;
+      hoge2 = hoge2 * 10;
+   };
+   print( "30 = %d, 40 = %d" ( hoge1, hoge2 ) );
 }
 
 
 
 {
-    let nilableInt1: int! = null;
-    if! nilableInt1 {
-        print( _exp, "not nil" );
-    }
-    else {
-        print( "nil" );
-    }
+   let nilableInt1: int! = null;
+   if! nilableInt1 {
+      print( _exp, "not nil" );
+   }
+   else {
+      print( "nil" );
+   }
 }
 
 {
-    let nilableInt1: int! = 1;
-    if! nilableInt1 {
-        print( _exp, "not nil" );
-    }
-    else {
-        print( "nil" );
-    }
+   let nilableInt1: int! = 1;
+   if! nilableInt1 {
+      print( _exp, "not nil" );
+   }
+   else {
+      print( "nil" );
+   }
 }
 
 {
-    let test: int! = nil;
+   let test: int! = nil;
 }
 
 fn testret() : int! {
-    return nil;
+   return nil;
 }
 
 {
-    let arry: int[] = [];
-    arry.insert( 1 );
-    foreach val, index in arry {
-        print( index, val );
-    }
-    arry.remove();
+   let arry: int[] = [];
+   arry.insert( 1 );
+   foreach val, index in arry {
+      print( index, val );
+   }
+   arry.remove();
 }
 
 {
-    print( 10 / 3, 10 / 3.0, (10 / 3.0)@@int );
+   print( 10 / 3, 10 / 3.0, (10 / 3.0)@@int );
 }
 
 {
-    foreach val in [ 1, 2, 3 ] {
-        let val2:int = val;
-    }
+   foreach val in [ 1, 2, 3 ] {
+      let val2:int = val;
+   }
 }   
 
 class ClassAA {
@@ -351,7 +351,7 @@ _print( `{ Sub2.External.val } );
    _print( `{ test$.func$() } );
    let test2:Test! = nil;
    _print( `{ test2$.func$() } );
-   let funcnil:form! = fn():int { return 1; };
+   let mut funcnil:form! = fn():int { return 1; };
    _print( `{ funcnil$() } );
    funcnil = nil;
    _print( `{ funcnil$() } );
@@ -372,7 +372,7 @@ _print( `{ Sub2.External.val } );
 }
 
 {
-   let val1, val2 = 1, 2;
+   let mut val1, mut val2 = 1, 2;
    val1, val2 = 3, 4;
    _print( `{ val1 } );
    _print( `{ val2 } );
@@ -425,7 +425,7 @@ _print( `{ Sub2.External.val } );
       val4
    }
    _print( `{ enumTest.val4 } );
-   let val2 = 0;
+   let mut val2 = 0;
    val2 = enumTest.val1;
 
    enum enumTest2 {
@@ -436,4 +436,9 @@ _print( `{ Sub2.External.val } );
    }
    _print( `{ enumTest2.val4 } );
    
+}
+
+class mutTest {
+   pub fn func() mut {
+   }
 }

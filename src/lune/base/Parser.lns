@@ -126,8 +126,8 @@ fn createReserveInfo( luaMode: bool ) :
 
 pub class TxtStream extend (iStream) {
    pri let txt: str;
-   pri let start: int;
-   pri let eof: bool;
+   pri let mut start: int;
+   pri let mut eof: bool;
    pub fn __init( txt: str ) {
       self.txt = txt;
       self.start = 1;
@@ -163,7 +163,7 @@ pub class Token {
    pub let kind: int;
    pub let txt: str;
    pub let pos: Position;
-   pri let commentList: Token[] { pub };
+   pri let mut commentList: Token[] { pub };
 
    pub fn __init( kind: int, txt: str, pos: Position, commentList: Token[]! ) {
       self.kind = kind;
@@ -196,8 +196,8 @@ pub class WrapParser extend Parser {
 
 pub class StreamParser extend Parser {
    /** stdin に紐付けている*/
-   static let stdinStreamModuleName: str!;
-   static let stdinTxt: str;
+   static let mut stdinStreamModuleName: str!;
+   static let mut stdinTxt: str;
 
    __init {
       StreamParser.stdinStreamModuleName = nil;
@@ -208,12 +208,12 @@ pub class StreamParser extend Parser {
       StreamParser.stdinTxt = unwrap io.stdin.read( '*a' ) default "";
    }
 
-   let eof: bool;
+   let mut eof: bool;
    let stream : iStream;
    let streamName: str;
-   let lineNo : int;
-   let pos : int;
-   let lineTokenList : Token[];
+   let mut lineNo : int;
+   let mut pos : int;
+   let mut lineTokenList : Token[];
    let keywordSet : Map<str,bool>;
    let typeSet : Map<str,bool>;
    let builtInSet :Map<str,bool>;
@@ -365,10 +365,10 @@ fn StreamParser.parse() : Token[]! {
       }
       return line;
    }
-   let! rawLine = readLine() { return nil; };
+   let! mut rawLine = readLine() { return nil; };
 
    let list: Token[] = [];
-   let startIndex = 1;
+   let mut startIndex = 1;
 
    /*
     複数行コメントの処理。
@@ -377,8 +377,8 @@ fn StreamParser.parse() : Token[]! {
     @param termStr 複数行コメントの終端文字列
     */
    let multiComment = fn ( comIndex: int, termStr: str ): str, int {
-      let searchIndex = comIndex;
-      let comment = "";
+      let mut searchIndex = comIndex;
+      let mut comment = "";
       while true {
          let termIndex, termEndIndex = string.find(
             rawLine, termStr, searchIndex, true );
@@ -405,7 +405,7 @@ fn StreamParser.parse() : Token[]! {
     */
 
    let addVal = fn ( kind: int, val: str, column: int ) : stem {
-      fn createInfo( tokenKind: int, token: str, tokenColumn: int ): Token {
+      fn createInfo( mut tokenKind: int, token: str, tokenColumn: int ): Token {
          if tokenKind == kindSymb {
             if self.keywordSet[ token ] {
                tokenKind = kindKywd;
@@ -429,12 +429,12 @@ fn StreamParser.parse() : Token[]! {
         @return 数値表現の終了位置, 整数かどうか
         */
       fn analyzeNumber( token: str, beginIndex: int ) : int, bool {
-         let nonNumIndex = token.find( '[^%d]', beginIndex );
+         let mut nonNumIndex = token.find( '[^%d]', beginIndex );
          if not nonNumIndex {
             return #token, true;
          }
-         let intFlag = true;
-         let nonNumChar = token.byte( nonNumIndex );
+         let mut intFlag = true;
+         let mut nonNumChar = token.byte( nonNumIndex );
          if nonNumChar == 46 { // .
             intFlag = false;
             nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 );
@@ -461,7 +461,7 @@ fn StreamParser.parse() : Token[]! {
       }
 
       if kind == kindSymb {
-         let searchIndex = 1;
+         let mut searchIndex = 1;
          while true {
             // 空白系以外の何らかの文字領域を探す
             let tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex );
@@ -471,7 +471,7 @@ fn StreamParser.parse() : Token[]! {
             let columnIndex = column + tokenIndex - 2;
             searchIndex = tokenEndIndex + 1;
             let token:str = val.sub( tokenIndex, tokenEndIndex );
-            let startIndex = 1;
+            let mut startIndex = 1;
             while true {
                if token.find( '^[%d]', startIndex ) {
                   // 数値の場合
@@ -492,10 +492,10 @@ fn StreamParser.parse() : Token[]! {
                            columnIndex + startIndex );
                         list.insert( info );
                      }
-                     let delimit = token.sub( index, index );
-                     let candidateList = self.multiCharDelimitMap[ delimit ];
+                     let mut delimit = token.sub( index, index );
+                     let mut candidateList = self.multiCharDelimitMap[ delimit ];
                      while candidateList {
-                        let findFlag = false;
+                        let mut findFlag = false;
                         foreach candidate in unwrap ( candidateList ) {
                            if candidate == token.sub(
                               index, index + #candidate - 1 )
@@ -512,7 +512,7 @@ fn StreamParser.parse() : Token[]! {
                      }
                      startIndex = index + #delimit;
 
-                     let workKind = kindDlmt;
+                     let mut workKind = kindDlmt;
                      if op2Set[ delimit ] or op1Set[ delimit ] {
                         workKind = kindOpe;
                      }
@@ -550,11 +550,11 @@ fn StreamParser.parse() : Token[]! {
    // 検索開始位置。
    // 領域開始位置と検索開始位置が異なる場合がある。
    // たとえば、 0.12e-2 のときに - の部分が検索開始位置、 0 の部分が領域開始位置になる
-   let searchIndex = startIndex;
+   let mut searchIndex = startIndex;
 
    // 領域をカテゴライズする
    while true {
-      let syncIndexFlag = true;
+      let mut syncIndexFlag = true;
       //let pattern = ```[/%-%?"%'%`%[].```;
       let pattern = ```[/%-%?"%'%`].```;
       let index = string.find( rawLine, pattern, searchIndex );
@@ -618,7 +618,7 @@ fn StreamParser.parse() : Token[]! {
          // }
          elseif findChar == ?\' or findChar == ?\" {
             // 文字列の場合
-            let workIndex = index + 1;
+            let mut workIndex = index + 1;
             let workPattern = '["\'\\]';
             while true {
                let endIndex = string.find( rawLine, workPattern, workIndex );
@@ -655,7 +655,7 @@ fn StreamParser.parse() : Token[]! {
             }
          }
          elseif findChar == ?? {
-            let codeChar = rawLine.sub( index + 1, index + 1 );
+            let mut codeChar = rawLine.sub( index + 1, index + 1 );
             if nextChar == ?\\ {
                let quoted = rawLine.sub( index + 2, index + 2 );
                if quotedCharSet[ quoted ] {

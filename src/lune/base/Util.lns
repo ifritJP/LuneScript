@@ -25,7 +25,7 @@ SOFTWARE.
 import lune.base.Depend;
 
 pub class memStream extend (oStream) {
-   let txt: str { pub };
+   let mut txt: str { pub };
    pub fn __init() {
       self.txt = "";
    }
@@ -34,11 +34,11 @@ pub class memStream extend (oStream) {
    }
 }
 
-pri let debugFlag = true;
+pri let mut debugFlag = true;
 pub fn setDebugFlag( flag:bool ) {
    debugFlag = flag;
 }
-pri let errorCode = 1;
+pri let mut errorCode = 1;
 pub fn setErrorCode( code:int ) {
    errorCode = code;
 }

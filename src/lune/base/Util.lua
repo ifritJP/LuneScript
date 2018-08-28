@@ -1,55 +1,56 @@
 --lune/base/Util.lns
 local _moduleObj = {}
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -71,8 +72,8 @@ function memStream:write( val )
 
   self.txt = self.txt .. val
 end
-function memStream:get_txt()
-  return self.txt
+function memStream:get_txt()       
+  return self.txt         
 end
 do
   end

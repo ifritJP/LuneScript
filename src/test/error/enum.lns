@@ -21,7 +21,7 @@ enum testEnum4 {
    val2
 }
 
-let val = testEnum4.val1;
+let mut val = testEnum4.val1;
 val = testEnum4.val2;
 val = 1; // error: type mismatch
 
@@ -31,17 +31,17 @@ testEnum4.val1 = testEnum4.val1; // error
 
 
 {
-   let valtest = 1;
+   let mut valtest = 1;
    valtest = testEnum4.val1;
 }
 
 {
-   let valtest = 1.0;
+   let mut valtest = 1.0;
    valtest = testEnum2.val2;
 }
 
 {
-   let valtest = "";
+   let mut valtest = "";
    valtest = testEnum3.val1;
 }
 
@@ -50,7 +50,7 @@ testEnum4.val1 = testEnum4.val1; // error
 }
 
 {
-   let valtest = testEnum4._from( 0 );
+   let mut valtest = testEnum4._from( 0 );
    valtest = testEnum4.val1;
    valtest = 1; // error
    if valtest == 1 { // error
@@ -65,6 +65,6 @@ testEnum4.val1 = testEnum4.val1; // error
 }
 
 {
-   let val1:testEnum = 1;
-   testEnum._from( "1" );
+   let val1:testEnum = 1; // error
+   testEnum._from( "1" ); // error
 }

@@ -29,7 +29,7 @@ pub class dumpFilter extend Ast.Filter {
 }
 
 fn dump( prefix: str, depth: int, node: Ast.Node, txt: str ) {
-   let typeStr = "";
+   let mut typeStr = "";
    let expType = node.get_expType();
    if expType and expType ~= Ast.typeInfoKind.None {
       typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
@@ -163,7 +163,7 @@ pub override fn dumpFilter.processIfUnwrap(
 pub override fn dumpFilter.processDeclVar( 
    node: Ast.DeclVarNode, prefix: str, depth: int )
 {
-   let varName = "";
+   let mut varName = "";
    foreach var, index in node.get_varList() {
       if index > 1 {
 	 varName = varName .. ",";
@@ -219,9 +219,12 @@ pub override fn dumpFilter.processExpDDD(
 fn dumpFilter.processDeclFuncInfo(
    node: Ast.Node, declInfo: Ast.DeclFuncInfo, prefix: str, depth: int )
 {
-   let name = "<anonymous>";
+   let mut name = "<anonymous>";
    if! declInfo.get_name() {
       name = _exp.txt;
+   }
+   if node.$expType.$mutable {
+      name = name .. " mut";
    }
    dump( prefix, depth, node, name );
    let argList = declInfo.get_argList();
@@ -316,7 +319,7 @@ pub override fn dumpFilter.processFor(
 pub override fn dumpFilter.processApply( 
    node: Ast.ApplyNode, prefix: str, depth: int )
 {
-   let varNames = "";
+   let mut varNames = "";
    let varList = node.get_varList();
    foreach var, index in varList {
       varNames = varNames .. var.txt .. " ";
@@ -328,7 +331,7 @@ pub override fn dumpFilter.processApply(
 pub override fn dumpFilter.processForeach( 
    node: Ast.ForeachNode, prefix: str, depth: int )
 {
-   let index = "";
+   let mut index = "";
    if! node.get_key() {
       index = _exp.txt;
    }
@@ -339,7 +342,7 @@ pub override fn dumpFilter.processForeach(
 pub override fn dumpFilter.processForsort( 
    node: Ast.ForsortNode, prefix: str, depth: int )
 {
-   let index = "";
+   let mut index = "";
    if! node.get_key() {
       index = _exp.txt;
    }

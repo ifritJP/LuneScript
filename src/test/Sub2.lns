@@ -1,4 +1,4 @@
-pub let sub2val = 1;
+pub let mut sub2val = 1;
 sub2val = sub2val + 1;
 
 pub class Hoge {

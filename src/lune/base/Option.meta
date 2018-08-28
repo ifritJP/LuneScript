@@ -99,7 +99,7 @@ do
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.version = {
-  name='version', accessMode = 'pub', typeId = 25 }
+  name='version', accessMode = 'pub', typeId = 25, mutable = true }
 local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
 _typeInfoList[1] = { parentId = 1, typeId = 187, txt = 'lune', kind = 12, 

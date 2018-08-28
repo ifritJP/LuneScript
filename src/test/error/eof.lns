@@ -1,0 +1,52 @@
+macro _test() {
+   {}
+   ;
+}
+{ _test(); }
+
+macro _test_if() {
+   if true {
+   }
+}
+{ _test_if(); }
+
+macro _test_else() {
+   if true {
+   }
+   else {
+   }
+}
+{ _test_else(); }
+
+macro _test_elseif() {
+   if true {
+   }
+   elseif false {
+   }
+}
+{ _test_elseif(); }
+
+macro _test_switch() {
+   switch 1 {
+   }
+}
+{ _test_switch(); }
+
+macro _test_ifunwrap() {
+   let val:int! = 1;
+   if! val {
+   }
+}
+{ _test_ifunwrap(); }
+
+macro _test_letunwrap() {
+   let! val = 1 {
+   };
+}
+{ _test_letunwrap(); }
+
+macro _test_syncunwrap() {
+   sync! val = 1 {
+   };
+}
+{ _test_syncunwrap(); }

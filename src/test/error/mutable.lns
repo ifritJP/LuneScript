@@ -1,0 +1,36 @@
+{
+   let val1, val2 = 0, 1;
+   val1 = 1; // error
+   val2 = 2; // error
+}
+
+{
+   let! val1, val2 = 1, 2 {
+      val1 = 1;
+      val2 = 2;
+   }
+   then {
+      val1 = 1; // error
+      val2 = 2; // error
+   };
+}
+
+{
+   sync! val1, val2 = 1, 2 {
+      val1 = 1;
+      val2 = 2;
+   }
+   then {
+      val1 = 1;
+      val2 = 2;
+   };
+}
+
+class Test {
+   pub let val:int;
+   pub let mut val2:int;
+}
+let test:Test = new Test( 1 );
+test = new Test( 2 );  // error
+test.val = 1;
+test.val2 = 1;

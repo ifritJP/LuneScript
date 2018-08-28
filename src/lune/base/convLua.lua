@@ -1,55 +1,56 @@
 --lune/base/convLua.lns
 local _moduleObj = {}
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -59,18 +60,19 @@ local Ast = require( 'lune.base.Ast' )
 local Util = require( 'lune.base.Util' )
 
 local PubVerInfo = {}
-function PubVerInfo.new( staticFlag, accessMode, typeInfo )
+function PubVerInfo.new( staticFlag, accessMode, mutable, typeInfo )
   local obj = {}
   setmetatable( obj, { __index = PubVerInfo } )
   if obj.__init then
-    obj:__init( staticFlag, accessMode, typeInfo )
+    obj:__init( staticFlag, accessMode, mutable, typeInfo )
   end        
   return obj 
- end         
-function PubVerInfo:__init( staticFlag, accessMode, typeInfo ) 
-            
+end         
+function PubVerInfo:__init( staticFlag, accessMode, mutable, typeInfo ) 
+
 self.staticFlag = staticFlag
   self.accessMode = accessMode
+  self.mutable = mutable
   self.typeInfo = typeInfo
   end
 do
@@ -86,9 +88,9 @@ function PubFuncInfo.new( accessMode, typeInfo )
     obj:__init( accessMode, typeInfo )
   end        
   return obj 
- end         
+end         
 function PubFuncInfo:__init( accessMode, typeInfo ) 
-            
+
 self.accessMode = accessMode
   self.typeInfo = typeInfo
   end
@@ -332,7 +334,7 @@ function convFilter:outputMeta( node, baseIndent )
           self:writeln( "do", baseIndent + stepIndent )
           self:writeln( string.format( "local _classInfo%d = {}", classTypeId), baseIndent + stepIndent )
           self:writeln( string.format( "_typeId2ClassInfoMap[ %d ] = _classInfo%d", classTypeId, classTypeId), baseIndent + stepIndent )
-          for __index, memberNode in pairs( _lune_unwrap( self.classId2MemberList[classTypeId]) ) do
+          for __index, memberNode in pairs( _lune.unwrap( self.classId2MemberList[classTypeId]) ) do
             if memberNode:get_accessMode() ~= "pri" then
               local memberName = memberNode:get_name().txt
               
@@ -376,7 +378,7 @@ function convFilter:outputMeta( node, baseIndent )
       for __index, classTypeId in ipairs( __sorted ) do
         classTypeInfo = __map[ classTypeId ]
         do
-          local scope = _lune_unwrap( classTypeInfo:get_scope())
+          local scope = _lune.unwrap( classTypeInfo:get_scope())
           
           if not Ast.isBuiltin( classTypeId ) then
             local className = classTypeInfo:getTxt(  )
@@ -428,7 +430,7 @@ function convFilter:outputMeta( node, baseIndent )
       varInfo = __map[ varName ]
       do
         self:writeln( string.format( "_varName2InfoMap.%s = {", varName ), baseIndent )
-        self:writeln( string.format( "  name='%s', accessMode = '%s', typeId = %d }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId()), baseIndent )
+        self:writeln( string.format( "  name='%s', accessMode = '%s', typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId(), true), baseIndent )
         pickupTypeId( varInfo.typeInfo, true )
       end
     end
@@ -516,56 +518,57 @@ function convFilter:processRoot( node, parent, baseIndent )
   self:writeln( string.format( "--%s", self.streamName), baseIndent )
   self:writeln( "local _moduleObj = {}", baseIndent )
   self:writeln( [==[
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -668,21 +671,21 @@ function convFilter:processDeclEnum( node, parent, baseIndent )
   end
   self:writeln( string.format( "%s._val2NameMap = {}", node:get_name().txt), baseIndent )
   self:writeln( string.format( [==[function %s:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-     return string.format( "%s.%%s", name )
-   end
-   return string.format( "illegal val -- %%s", val )
-end
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "%s.%%s", name )
+  end
+  return string.format( "illegal val -- %%s", val )
+end 
 function %s:_from( val )
-   if self._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-]==], node:get_name().txt, self:getCanonicalName( typeInfo ), node:get_name().txt), baseIndent )
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    ]==], node:get_name().txt, self:getCanonicalName( typeInfo ), node:get_name().txt), baseIndent )
   for __index, valName in pairs( node:get_valueNameList() ) do
-    local valInfo = _lune_unwrap( typeInfo:getEnumValInfo( valName.txt ))
+    local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
     
     local valTxt = string.format( "%s", valInfo:get_val())
     
@@ -727,7 +730,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   local baseInfo = node:get_expType(  ):get_baseTypeInfo(  )
   
   if baseInfo:get_typeId(  ) ~= Ast.rootTypeId then
-    self:writeln( string.format( "setmetatable( %s, { __index = %s } )", className, (_lune_unwrap( baseInfo) ):getTxt(  )), baseIndent )
+    self:writeln( string.format( "setmetatable( %s, { __index = %s } )", className, (_lune.unwrap( baseInfo) ):getTxt(  )), baseIndent )
   end
   if nodeInfo:get_accessMode(  ) == "pub" then
     self:writeln( string.format( "_moduleObj.%s = %s", className, className ), baseIndent )
@@ -761,7 +764,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
       
       local declInfo = methodNode:get_declInfo(  )
       
-      local methodNameToken = _lune_unwrap( declInfo:get_name(  ))
+      local methodNameToken = _lune.unwrap( declInfo:get_name(  ))
       
       if outerMethodSet[methodNameToken.txt] then
         ignoreFlag = true
@@ -790,9 +793,9 @@ function %s.new( %s )
     obj:__init( %s )
   end        
   return obj 
- end         
+end         
 function %s:__init( %s ) 
-            ]==], className, argTxt, className, argTxt, className, argTxt), baseIndent )
+]==], className, argTxt, className, argTxt, className, argTxt), baseIndent )
     for __index, member in pairs( memberList ) do
       local memberName = member:get_name().txt
       
@@ -815,8 +818,8 @@ function %s:__init( %s )
     
     if memberNode:get_getterMode(  ) ~= "none" and autoFlag then
       self:writeln( string.format( [==[
-function %s:%s()
-  return %s.%s
+function %s:%s()       
+  return %s.%s         
 end]==], className, getterName, prefix, memberName), baseIndent )
       methodNameSet[getterName] = true
     end
@@ -825,8 +828,8 @@ end]==], className, getterName, prefix, memberName), baseIndent )
     autoFlag = not methodNameSet[setterName]
     if memberNode:get_setterMode(  ) ~= "none" and autoFlag then
       self:writeln( string.format( [==[
-function %s:%s( %s )
-  %s.%s = %s
+function %s:%s( %s )   
+  %s.%s = %s              
 end]==], className, setterName, memberName, prefix, memberName, memberName), baseIndent )
       methodNameSet[setterName] = true
     end
@@ -843,8 +846,8 @@ end]==], className, setterName, memberName, prefix, memberName, memberName), bas
         if not methodNameSet[childName] then
           self:writeln( string.format( [==[
 function %s:%s( ... )
-   return self.%s:%s( ... )
-end
+  return self.%s:%s( ... )
+end       
 ]==], className, childName, memberName, childName), baseIndent )
         end
       end
@@ -948,7 +951,7 @@ function convFilter:processDeclConstr( node, parent, baseIndent )
 
   local declInfo = node:get_declInfo(  )
   
-  local classNameToken = _lune_unwrap( declInfo:get_className(  ))
+  local classNameToken = _lune.unwrap( declInfo:get_className(  ))
   
   local className = classNameToken.txt
   
@@ -966,7 +969,7 @@ function convFilter:processDeclConstr( node, parent, baseIndent )
     if arg:get_kind(  ) == Ast.nodeKind.DeclArg then
       argTxt = argTxt .. (arg ):get_name().txt
     else 
-      local name = _lune_unwrap( node:get_declInfo(  ):get_name())
+      local name = _lune.unwrap( node:get_declInfo(  ):get_name())
       
       Util.err( string.format( "not support ... in macro -- %s", name.txt) )
     end
@@ -1013,11 +1016,11 @@ function convFilter:processDeclMethod( node, parent, baseIndent )
   if declInfo:get_staticFlag(  ) then
     delimit = "."
   end
-  local methodNodeToken = _lune_unwrap( declInfo:get_name(  ))
+  local methodNodeToken = _lune.unwrap( declInfo:get_name(  ))
   
   local methodName = methodNodeToken.txt
   
-  local classNameToken = _lune_unwrap( declInfo:get_className(  ))
+  local classNameToken = _lune.unwrap( declInfo:get_className(  ))
   
   self:write( string.format( "function %s%s%s( ", classNameToken.txt, delimit, methodName) )
   local argList = declInfo:get_argList(  )
@@ -1065,7 +1068,7 @@ function convFilter:processUnwrapSet( node, parent, baseIndent )
     self:writeln( "", baseIndent + stepIndent )
   end
   if node:get_unwrapBlock() then
-    filter( _lune_unwrap( node:get_unwrapBlock()), self, node, baseIndent + stepIndent )
+    filter( _lune.unwrap( node:get_unwrapBlock()), self, node, baseIndent + stepIndent )
   end
   self:writeln( "end", baseIndent )
 end
@@ -1080,7 +1083,7 @@ function convFilter:processIfUnwrap( node, parent, baseIndent )
   filter( node:get_block(), self, node, baseIndent + stepIndent * 2 )
   if node:get_nilBlock() then
     self:writeln( "else", baseIndent + stepIndent )
-    filter( _lune_unwrap( node:get_nilBlock()), self, node, baseIndent + stepIndent * 2 )
+    filter( _lune.unwrap( node:get_nilBlock()), self, node, baseIndent + stepIndent * 2 )
   end
   self:writeln( "end", baseIndent )
   self:writeln( "end", baseIndent )
@@ -1170,7 +1173,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
       local name = var:get_name().txt
       
       self:writeln( string.format( "_moduleObj.%s = %s", name, name), baseIndent )
-      self.pubVarName2InfoMap[name] = PubVerInfo.new(node:get_staticFlag(  ), node:get_accessMode(  ), node:get_typeInfoList(  )[index])
+      self.pubVarName2InfoMap[name] = PubVerInfo.new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
     end
   end
   if self.macroDepth > 0 then
@@ -1458,14 +1461,14 @@ function convFilter:processExpUnwrap( node, parent, baseIndent )
     local _exp = node:get_default()
     if _exp ~= nil then
     
-        self:write( '_lune_unwrapDefault( ' )
+        self:write( '_lune.unwrapDefault( ' )
         filter( node:get_exp(), self, node, baseIndent )
         self:write( ', ' )
         filter( _exp, self, node, baseIndent )
         self:write( ')' )
       else
     
-        self:write( '_lune_unwrap( ' )
+        self:write( '_lune.unwrap( ' )
         filter( node:get_exp(), self, node, baseIndent )
         self:write( ')' )
       end
@@ -1491,10 +1494,10 @@ function convFilter:processExpCall( node, parent, baseIndent )
       wroteFuncFlag = true
       setArgFlag = true
       if prefixType:get_kind() == Ast.TypeInfoKind.List then
-        self:write( string.format( "_lune_nilacc( table.%s, nil, 'list', ", fieldNode:get_field().txt) )
+        self:write( string.format( "_lune.nilacc( table.%s, nil, 'list', ", fieldNode:get_field().txt) )
         filter( prefixNode, self, fieldNode, baseIndent )
       else 
-        self:write( "_lune_nilacc( " )
+        self:write( "_lune.nilacc( " )
         filter( prefixNode, self, fieldNode, baseIndent )
         self:write( string.format( ", '%s', 'callmtd' ", fieldNode:get_field().txt) )
       end
@@ -1528,7 +1531,7 @@ function convFilter:processExpCall( node, parent, baseIndent )
   end
   if not wroteFuncFlag then
     if node:get_nilAccess() then
-      self:write( "_lune_nilacc( " )
+      self:write( "_lune.nilacc( " )
       filter( node:get_func(), self, node, baseIndent )
       self:write( ", nil, 'call'" )
       wroteFuncFlag = true
@@ -1651,7 +1654,7 @@ end
 function convFilter:processExpRefItem( node, parent, baseIndent )
 
   if node:get_nilAccess() then
-    self:write( "_lune_nilacc( " )
+    self:write( "_lune.nilacc( " )
     filter( node:get_val(), self, node, baseIndent )
     self:write( ", nil, 'item', " )
     filter( node:get_index(), self, node, baseIndent )
@@ -1679,7 +1682,7 @@ function convFilter:processRefField( node, parent, baseIndent )
   local prefix = node:get_prefix(  )
   
   if node:get_nilAccess() then
-    self:write( '_lune_nilacc( ' )
+    self:write( '_lune.nilacc( ' )
     filter( prefix, self, node, baseIndent )
     self:write( string.format( ', "%s" )', node:get_field().txt) )
   else 
@@ -1901,7 +1904,7 @@ function MacroEvalImp:eval( node )
         if not mod then
           Util.err( "macro load error" )
         end
-        return (_lune_unwrap( mod) )
+        return (_lune.unwrap( mod) )
       end
   end
   
@@ -1914,9 +1917,9 @@ function MacroEvalImp.new( mode )
     obj:__init( mode )
   end        
   return obj 
- end         
+end         
 function MacroEvalImp:__init( mode ) 
-            
+
 self.mode = mode
   end
 do

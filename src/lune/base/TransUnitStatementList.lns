@@ -27,7 +27,7 @@ subfile owner lune.base.TransUnit;
 fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
    let nextToken = self.getToken();
 
-   let expList: Ast.ExpListNode! = nil;
+   let mut expList: Ast.ExpListNode! = nil;
    if nextToken.txt ~= ";" {
       self.pushback();
       expList = self.analyzeExpList( false );
@@ -106,7 +106,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
       return nil;
    };
 
-   let statement = self.analyzeDecl( "local", false, token, token );
+   let mut statement = self.analyzeDecl( "local", false, token, token );
 
    if not statement {
       if token.txt == termTxt {
@@ -119,7 +119,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
          let accessMode = (token.txt ~= "static") and token.txt or "pri";
          let staticFlag = (token.txt == "static");
 
-         let nextToken:Parser.Token = token;
+         let mut nextToken:Parser.Token = token;
          if token.txt ~= "static" {
             nextToken = self.getToken();
          }
@@ -192,8 +192,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
       }
       else {
          self.pushback();
-         let exp = self.analyzeExp( false );
-         let nextToken = self.getToken();
+         let mut exp = self.analyzeExp( false );
+         let mut nextToken = self.getToken();
          if nextToken.txt == "," {
             exp = self.analyzeExpList( true, exp );
             exp = self.analyzeExpOp2( token, exp, nil );

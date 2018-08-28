@@ -26,7 +26,7 @@ subfile owner lune.base.TransUnit;
 
 fn TransUnit.analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node! ): Ast.ExpListNode {
    let expList:Ast.Node[] = [];
-   let pos:Parser.Position! = nil;
+   let mut pos:Parser.Position! = nil;
    let expTypeList:Ast.TypeInfo[] = [];
    if! expNode {
       pos = _exp.$pos;
@@ -52,8 +52,8 @@ fn TransUnit.analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node! ): Ast.ExpLis
 
 fn TransUnit.analyzeListConst( token: Parser.Token ): Ast.Node {
    let nextToken = self.getToken();
-   let expList:Ast.ExpListNode! = nil;
-   let itemTypeInfo = Ast.builtinTypeNone;
+   let mut expList:Ast.ExpListNode! = nil;
+   let mut itemTypeInfo = Ast.builtinTypeNone;
    if nextToken.txt ~= "]" {
       self.pushback();
       expList = self.analyzeExpList( false );
@@ -77,8 +77,8 @@ fn TransUnit.analyzeListConst( token: Parser.Token ): Ast.Node {
          }
       }
    }
-   let kind = Ast.nodeKindLiteralArray;
-   let typeInfoList = [ Ast.builtinTypeNone ];
+   let mut kind = Ast.nodeKindLiteralArray;
+   let mut typeInfoList = [ Ast.builtinTypeNone ];
    if token.txt == '[' {
       kind = Ast.nodeKindLiteralList;
       typeInfoList = [ Ast.NormalTypeInfo.createList( "local", self.getCurrentClass(),
@@ -94,16 +94,16 @@ fn TransUnit.analyzeListConst( token: Parser.Token ): Ast.Node {
 }
 
 fn TransUnit.analyzeMapConst( token: Parser.Token ): Ast.LiteralMapNode {
-   let nextToken:Parser.Token = self.getToken();
+   let mut nextToken:Parser.Token = self.getToken();
    let map:Map<Ast.Node,Ast.Node> = {};
    let pairList:Ast.PairItem[] = [];
-   let keyTypeInfo = Ast.builtinTypeNone;
-   let valTypeInfo = Ast.builtinTypeNone;
+   let mut keyTypeInfo = Ast.builtinTypeNone;
+   let mut valTypeInfo = Ast.builtinTypeNone;
 
 
    fn getMapKeyValType(
-      pos: Parser.Position,
-      keyFlag: bool, typeInfo:Ast.TypeInfo, expType:Ast.TypeInfo ): Ast.TypeInfo
+      pos: Parser.Position, keyFlag: bool,
+      mut typeInfo:Ast.TypeInfo, mut expType:Ast.TypeInfo ): Ast.TypeInfo
    {
       if expType.$nilable {
          if keyFlag {
@@ -160,11 +160,11 @@ fn TransUnit.analyzeMapConst( token: Parser.Token ): Ast.LiteralMapNode {
 }
 
 fn TransUnit.analyzeExpRefItem(
-   token: Parser.Token, exp: Ast.Node, nilAccess:bool ): Ast.Node {
+   token: Parser.Token, exp: Ast.Node, mut nilAccess:bool ): Ast.Node {
    let indexExp = self.analyzeExp( false );
    self.checkNextToken( "]" );
 
-   let expType = exp.$expType;
+   let mut expType = exp.$expType;
 
    if nilAccess {
       if not expType.$nilable {
@@ -175,7 +175,7 @@ fn TransUnit.analyzeExpRefItem(
       }
    }
 
-   let typeInfo = Ast.builtinTypeStem_;
+   let mut typeInfo = Ast.builtinTypeStem_;
    if expType.$kind == Ast.TypeInfoKind.Map {
       typeInfo = expType.get_itemTypeInfoList()[2];
       if typeInfo ~= Ast.builtinTypeStem_ and not typeInfo.$nilable {
@@ -220,7 +220,7 @@ fn TransUnit.checkMatchType(
             break;
          }
          let argType = dstTypeList[ index ];
-         let expType = expNode.$expType;
+         let mut expType = expNode.$expType;
          if #dstTypeList == index {
             if argType ~= Ast.builtinTypeDDD {
                if not argType.isSettableFrom( expType ) {
@@ -295,7 +295,7 @@ fn TransUnit.checkMatchValType(
    pos: Parser.Position, funcTypeInfo:Ast.TypeInfo, expList:Ast.ExpListNode!,
    genericTypeList: Ast.TypeInfo[] )
 {
-   let argTypeList = funcTypeInfo.$argTypeInfoList;
+   let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
       case typeInfoListInsert {
          argTypeList = genericTypeList;
@@ -304,7 +304,7 @@ fn TransUnit.checkMatchValType(
       }
    }
 
-   let expNodeList:Ast.Node[] = [];
+   let mut expNodeList:Ast.Node[] = [];
 
    if! expList {
       expNodeList = _exp.$expList;
@@ -314,7 +314,7 @@ fn TransUnit.checkMatchValType(
 
 class MacroPaser extend Parser.Parser {
    let tokenList: Parser.Token[];
-   let pos: int;
+   let mut pos: int;
    let name: str;
 
    pub fn __init( tokenList: Parser.Token[], name: str ) {
@@ -408,7 +408,7 @@ fn TransUnit.evalMacro(
    foreach name in (unwrap macroVars._names)@@str[] {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
       let typeInfo = valInfo and valInfo.typeInfo or Ast.builtinTypeStem_;
-      let val = macroVars[ name ];
+      let mut val = macroVars[ name ];
       if typeInfo == Ast.builtinTypeSymbol {
          val = [ val ];
       }
@@ -466,21 +466,21 @@ fn TransUnit.evalMacro(
 }
 
 fn TransUnit.analyzeExpCont(
-   firstToken: Parser.Token, exp: Ast.Node, skipFlag: bool ): Ast.Node {
-      let nextToken = self.getToken();
+   firstToken: Parser.Token, mut exp: Ast.Node, skipFlag: bool ): Ast.Node {
+      let mut nextToken = self.getToken();
 
       if not skipFlag {
          repeat {
-            let matchFlag = false;
+            let mut matchFlag = false;
             if nextToken.txt == "[" or nextToken.txt == "$[" {
                matchFlag = true;
                exp = self.analyzeExpRefItem( nextToken, exp, nextToken.txt == "$[" );
                nextToken = self.getToken();
             }
             if nextToken.txt == "(" or nextToken.txt == "$(" {
-               let macroFlag = false;
-               let funcTypeInfo = exp.$expType;
-               let nilAccess = nextToken.txt == "$(";
+               let mut macroFlag = false;
+               let mut funcTypeInfo = exp.$expType;
+               let mut nilAccess = nextToken.txt == "$(";
 
                if nilAccess {
                   if funcTypeInfo.$nilable {
@@ -499,7 +499,7 @@ fn TransUnit.analyzeExpCont(
 
                matchFlag = true;
                let work = self.getToken();
-               let expList: Ast.ExpListNode! = nil;
+               let mut expList: Ast.ExpListNode! = nil;
                if work.txt ~= ")" {
                   self.pushback();
                   expList = self.analyzeExpList( false );
@@ -507,7 +507,7 @@ fn TransUnit.analyzeExpCont(
                }
 
                // 引数の型チェック
-               let genericTypeList = funcTypeInfo.$itemTypeInfoList;
+               let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
                if funcTypeInfo.$kind == Ast.TypeInfoKind.Method and
                   exp.$kind == Ast.nodeKindRefField
                {
@@ -533,7 +533,7 @@ fn TransUnit.analyzeExpCont(
                                       funcTypeInfo.$kind.$_txt ) );
                      }
                   }
-                  let retTypeInfoList:Ast.TypeInfo[] =
+                  let mut retTypeInfoList:Ast.TypeInfo[] =
                      funcTypeInfo.get_retTypeInfoList();
                   if nilAccess {
                      retTypeInfoList = [];
@@ -581,7 +581,7 @@ fn TransUnit.analyzeExpCont(
 
 
 fn TransUnit.analyzeAccessClassField(
-   classTypeInfo: Ast.TypeInfo, mode:str, token:Parser.Token ) :
+   mut classTypeInfo: Ast.TypeInfo, mode:str, token:Parser.Token ) :
    Ast.TypeInfo!, Ast.SymbolInfo!
 {
    if classTypeInfo.get_kind() == Ast.TypeInfoKind.List {
@@ -593,8 +593,8 @@ fn TransUnit.analyzeAccessClassField(
                   ( classScope, className, classTypeInfo ) );
    };
    
-   let getterTypeInfo:Ast.SymbolInfo! = nil;
-   let fieldTypeInfo:Ast.TypeInfo! = nil;
+   let mut getterTypeInfo:Ast.SymbolInfo! = nil;
+   let mut fieldTypeInfo:Ast.TypeInfo! = nil;
    if mode == "get" or mode == "get_nil" {
       let fieldSymbolInfo = classScope.getSymbolInfo(
          "get_%s" (token.txt), self.scope, false );
@@ -632,7 +632,6 @@ fn TransUnit.dumpComp(
       if getterFlag {
          writer.startParent( "candidate", false );
          let typeInfo = symbolInfo.$typeInfo;
-         let typeKindTxt = "";
          writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
          switch ( symbolInfo.$kind ) {
             case Ast.SymbolKind.Mtd {
@@ -648,7 +647,6 @@ fn TransUnit.dumpComp(
       else {
          writer.startParent( "candidate", false );
          let typeInfo = symbolInfo.$typeInfo;
-         let typeKindTxt = "";
          writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
          switch ( symbolInfo.$kind ) {
             case Ast.SymbolKind.Fun, Ast.SymbolKind.Mtd {
@@ -678,7 +676,7 @@ fn TransUnit.dumpFieldComp(
       return;
    };
 
-   let isPrefixType = false;
+   let mut isPrefixType = false;
    if! prefixSymbolInfo {
       isPrefixType = _exp.$kind == Ast.SymbolKind.Typ;
    }
@@ -733,7 +731,7 @@ fn TransUnit.checkComp( token:Parser.Token, callback:form )
       self.analyzePos.column >= token.pos.column and
       self.analyzePos.column <= token.pos.column + #token.txt 
    {
-      let currentModule = self.parser.getStreamName().gsub( "%.lns", "" );
+      let mut currentModule = self.parser.getStreamName().gsub( "%.lns", "" );
       currentModule = currentModule.gsub( ".*/", "" );
       let target = self.analyzeModule.gsub( "[^%.]+%.", "" );
       if currentModule == target {
@@ -761,7 +759,7 @@ fn TransUnit.checkFieldComp(
       return;
    }
    let prefixSymbolInfoList = prefixExp.getSymbolInfo();
-   let prefixSymbolInfo:Ast.SymbolInfo! = nil;
+   let mut prefixSymbolInfo:Ast.SymbolInfo! = nil;
    if #prefixSymbolInfoList == 1 {
       prefixSymbolInfo = prefixSymbolInfoList[ 1 ];
    }
@@ -769,7 +767,7 @@ fn TransUnit.checkFieldComp(
    self.checkComp(
       token,
       fn ( jsonWriter: Writer.JSON, prefix:str ) {
-         let getterPattern:str! = nil;
+         let mut getterPattern:str! = nil;
          if getterFlag {
             getterPattern = "^get_" .. prefix;
          }
@@ -794,16 +792,16 @@ fn TransUnit.checkSymbolComp( token:Parser.Token )
 
 fn TransUnit.analyzeExpSymbol(
    firstToken: Parser.Token, token: Parser.Token,
-   mode: str, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node
+   mode: str, prefixExp: Ast.Node!, mut skipFlag: bool ): Ast.Node
 {
-   let exp:Ast.Node! = nil;
+   let mut exp:Ast.Node! = nil;
    
    if mode == "field" or mode == "get" or
       mode == "field_nil" or mode == "get_nil"
    {
       sync! prefixExp = prefixExp { self.error( "prefix is nil" ); }
       then {
-         let accessNil = false;
+         let mut accessNil = false;
          if mode == "field_nil" or mode == "get_nil" {
             accessNil = true;
          }
@@ -813,8 +811,8 @@ fn TransUnit.analyzeExpSymbol(
                token, nil, accessNil, unwrap prefixExp );
          }
          else {
-            let typeInfo:Ast.TypeInfo! = Ast.builtinTypeStem_;
-            let prefixExpType = prefixExp.$expType;
+            let mut typeInfo:Ast.TypeInfo! = Ast.builtinTypeStem_;
+            let mut prefixExpType = prefixExp.$expType;
 
             self.checkFieldComp(
                mode == "get" or mode == "get_nil", token, prefixExp );
@@ -832,8 +830,8 @@ fn TransUnit.analyzeExpSymbol(
                }
             }
 
-            let getterTypeInfo:Ast.TypeInfo! = nil;
-            let symbolInfo:Ast.SymbolInfo! = nil;
+            let mut getterTypeInfo:Ast.TypeInfo! = nil;
+            let mut symbolInfo:Ast.SymbolInfo! = nil;
             if prefixExpType.get_kind() == Ast.TypeInfoKind.Class or
                prefixExpType.get_kind() == Ast.TypeInfoKind.Module or
                prefixExpType.get_kind() == Ast.TypeInfoKind.IF or
@@ -862,7 +860,7 @@ fn TransUnit.analyzeExpSymbol(
             }
             elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Enum {
                let scope = unwrap prefixExpType.$scope;
-               let fieldName = token.txt;
+               let mut fieldName = token.txt;
                if mode == "get" {
                   fieldName = "get_" .. fieldName;
                   getterTypeInfo = Ast.rootTypeInfo;
@@ -890,25 +888,31 @@ fn TransUnit.analyzeExpSymbol(
                   symbolInfo = _exp.getSymbolInfoField( token.txt, true, self.scope );
                }
             }
+            let prefixSymbolInfoList = prefixExp.getSymbolInfo();
+            let mut prefixSymbolInfo:Ast.AccessSymbolInfo! = nil;
+            if #prefixSymbolInfoList == 1 {
+               prefixSymbolInfo = prefixSymbolInfoList[1];
+            }
+            
             if! symbolInfo {
-               let prefixSymbolInfoList = prefixExp.getSymbolInfo();
-               if #prefixSymbolInfoList == 1 and
-                  prefixSymbolInfoList[ 1 ].$kind == Ast.SymbolKind.Typ
-               {
-                  if _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Func and
-                     _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Method and
-                     _exp.$kind ~= Ast.SymbolKind.Typ and
-                     not _exp.$staticFlag
-                  {
-                     self.addErrMess(
-                        token.pos,              
-                        "Type can't access this symbol. -- %s" (token.txt) );
+               sync! prefixSymbolInfo = prefixSymbolInfo {}
+               then {
+                  if prefixSymbolInfo.$kind == Ast.SymbolKind.Typ {
+                     if _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Func and
+                        _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Method and
+                        _exp.$kind ~= Ast.SymbolKind.Typ and
+                        not _exp.$staticFlag
+                     {  
+                        self.addErrMess(
+                           token.pos,              
+                           "Type can't access this symbol. -- %s" (token.txt) );
+                     }  
                   }  
-               }
-               elseif _exp.$staticFlag {
-                  self.addErrMess(
-                     token.pos, "can't access this symbol. -- %s" (token.txt) );
-               }
+                  elseif _exp.$staticFlag {
+                     self.addErrMess(
+                        token.pos, "can't access this symbol. -- %s" (token.txt) );
+                  }
+               };
             }
 
             if accessNil {
@@ -918,15 +922,22 @@ fn TransUnit.analyzeExpSymbol(
                   }
                }
             }
+
+            let mut accessSymbolInfo:Ast.AccessSymbolInfo! = nil;
+            if! symbolInfo {           
+               accessSymbolInfo = new Ast.AccessSymbolInfo( _exp );
+            };
+
+            
             if! getterTypeInfo {
                exp = new Ast.GetFieldNode(
                   firstToken.pos, [ unwrap typeInfo ],
-                  token, symbolInfo, accessNil, prefixExp, _exp );
+                  token, accessSymbolInfo, accessNil, prefixExp, _exp );
             }
             else {
                exp = new Ast.RefFieldNode(
                   firstToken.pos, [ unwrap typeInfo ],
-                  token, symbolInfo, accessNil, prefixExp );
+                  token, accessSymbolInfo, accessNil, prefixExp );
             }
          }
       };
@@ -945,13 +956,12 @@ fn TransUnit.analyzeExpSymbol(
             self.error( "not found type -- " .. token.txt );
          };
          let typeInfo = symbolInfo.$typeInfo;
-         // if token.txt == "self" {
-         //    typeInfo = self.getCurrentClass();
-         // }
          if typeInfo == Ast.builtinTypeSymbol {
             skipFlag = true;
          }
-         exp = new Ast.ExpRefNode( firstToken.pos, [ typeInfo ], token, symbolInfo );
+         exp = new Ast.ExpRefNode(
+            firstToken.pos, [ typeInfo ], token,
+            new Ast.AccessSymbolInfo( symbolInfo ) );
       }
    }
    elseif mode == "fn" {
@@ -966,7 +976,7 @@ fn TransUnit.analyzeExpSymbol(
 }
 
 fn TransUnit.analyzeExpOpSet(
-   exp: Ast.Node, nextToken: Parser.Token, exp2NodeList:Ast.Node[] )
+   exp: Ast.Node, opeToken: Parser.Token, exp2NodeList:Ast.Node[] )
 {
    if not exp.canBeLeft() {
       self.addErrMess( exp.$pos,
@@ -974,15 +984,21 @@ fn TransUnit.analyzeExpOpSet(
                        (Ast.getNodeKindName( exp.$kind ) ) );
    }
    self.checkMatchType(
-      "= operator", nextToken.pos, exp.$expTypeList, exp2NodeList );
+      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList );
 
    foreach symbolInfo in exp.getSymbolInfo() {
+      if not symbolInfo.$mutable and symbolInfo.$hasValueFlag
+      {     
+         self.addErrMess( opeToken.$pos,
+                          "this is not mutable variable. -- %s"
+                          ( symbolInfo.$name ) );
+      }
       symbolInfo.set_hasValueFlag( true );
    }
 }
 
 fn TransUnit.analyzeExpOp2(
-   firstToken: Parser.Token, exp: Ast.Node, prevOpLevel: int! ): Ast.Node
+   firstToken: Parser.Token, mut exp: Ast.Node, prevOpLevel: int! ): Ast.Node
 {
    while true {
       let nextToken = self.getToken();
@@ -1009,8 +1025,8 @@ fn TransUnit.analyzeExpOp2(
                }
             }
 
-            let exp2 = self.analyzeExp( false, opLevel );
-            let exp2NodeList = [ exp2 ];
+            let mut exp2 = self.analyzeExp( false, opLevel );
+            let mut exp2NodeList = [ exp2 ];
             if opTxt == "=" {
                let workToken = self.getToken();
                if workToken.txt == "," {
@@ -1031,7 +1047,7 @@ fn TransUnit.analyzeExpOp2(
                              nextToken.pos.lineNo, nextToken.pos.column) );
             }
 
-            let retType = Ast.builtinTypeNone;
+            let mut retType = Ast.builtinTypeNone;
 
             if not exp2.canBeRight() {
                self.addErrMess( exp2.$pos,
@@ -1165,8 +1181,8 @@ fn TransUnit.analyzeExpMacroStat( firstToken: Parser.Token ): Ast.ExpMacroStatNo
 
    self.checkNextToken( "{" );
 
-   let braceCount = 0;
-   let prevToken = firstToken;
+   let mut braceCount = 0;
+   let mut prevToken = firstToken;
    while true {
       let token = self.getToken();
 
@@ -1179,7 +1195,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: Parser.Token ): Ast.ExpMacroStatNo
          }
 
 
-         let format = token.txt == ",,," and "'%s '" or '"\'%s\'"';
+         let mut format = token.txt == ",,," and "'%s '" or '"\'%s\'"';
 
          if token.txt == ",," and exp.$kind == Ast.nodeKindExpRef
          {
@@ -1214,7 +1230,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: Parser.Token ): Ast.ExpMacroStatNo
             braceCount = braceCount - 1;
          }
 
-         let format = "' %s '";
+         let mut format = "' %s '";
          if prevToken == firstToken or
             (prevToken.pos.lineNo == token.pos.lineNo and
               prevToken.pos.column + #prevToken.txt == token.pos.column)
@@ -1269,7 +1285,7 @@ fn TransUnit.analyzeUnwrap( firstToken: Parser.Token ): Ast.Node {
 fn TransUnit.analyzeExpUnwrap( firstToken: Parser.Token ): Ast.Node {
    let expNode = self.analyzeExp( true );
    let nextToken = self.getToken();
-   let insNode: Ast.Node! = nil;
+   let mut insNode: Ast.Node! = nil;
    if nextToken.txt == "default" {
       insNode = self.analyzeExp( false );
    }
@@ -1277,7 +1293,7 @@ fn TransUnit.analyzeExpUnwrap( firstToken: Parser.Token ): Ast.Node {
       self.pushback();
    }
 
-   let unwrapType:Ast.TypeInfo = Ast.builtinTypeStem_;
+   let mut unwrapType:Ast.TypeInfo = Ast.builtinTypeStem_;
 
    let expType = expNode.$expType;
    if not expType.$nilable {
@@ -1303,8 +1319,8 @@ fn TransUnit.analyzeExpUnwrap( firstToken: Parser.Token ): Ast.Node {
 
 fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
    let firstToken = self.getToken();
-   let token = firstToken;
-   let exp:Ast.Node = new Ast.NoneNode( firstToken.pos, [ Ast.builtinTypeNone ] );
+   let mut token = firstToken;
+   let mut exp:Ast.Node = new Ast.NoneNode( firstToken.pos, [ Ast.builtinTypeNone ] );
 
    if token.kind == Parser.TokenKind.Dlmt {
       if token.txt == "..." {
@@ -1330,7 +1346,7 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
 
       self.checkNextToken( "(" );
       let nextToken = self.getToken();
-      let argList: Ast.ExpListNode! = nil;
+      let mut argList: Ast.ExpListNode! = nil;
       if nextToken.txt ~= ")" {
          self.pushback();
          argList = self.analyzeExpList( false );
@@ -1372,8 +1388,8 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
       }
       else {
          exp = self.analyzeExp( true, unwrap op1levelMap[ token.txt] );
-         let typeInfo = Ast.builtinTypeNone;
-         let macroExpFlag = false;
+         let mut typeInfo = Ast.builtinTypeNone;
+         let mut macroExpFlag = false;
 
          switch ( token.txt ) {
             case "-" {
@@ -1451,7 +1467,7 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
                                      token, tonumber( token.txt ) );
    }
    elseif token.kind == Parser.TokenKind.Char {
-      let num = 0;
+      let mut num = 0;
       if #(token.txt) == 1 {
          num = token.txt.byte( 1 );
       }
@@ -1461,7 +1477,7 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
       exp = new Ast.LiteralCharNode( firstToken.pos, [ Ast.builtinTypeChar ], token, num );
    }
    elseif token.kind == Parser.TokenKind.Str {
-      let nextToken = self.getToken();
+      let mut nextToken = self.getToken();
       let formatArgList:Ast.Node[] = [];
       if nextToken.txt == "(" {
          repeat {
@@ -1497,7 +1513,8 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ): Ast.Node {
          self.error( "unknown type -- %s" ( token.txt ) );
       };
       exp = new Ast.ExpRefNode(
-         firstToken.pos, [ Ast.builtinTypeNone ], token, symbolTypeInfo );
+         firstToken.pos, [ Ast.builtinTypeNone ], token,
+         new Ast.AccessSymbolInfo( symbolTypeInfo ) );
    }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" ) {

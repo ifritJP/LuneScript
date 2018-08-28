@@ -1,55 +1,56 @@
 --lune/base/Option.lns
 local _moduleObj = {}
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -134,7 +135,7 @@ usage: [-prof] src.lns mode [mode-option]
               lineNo = math.floor(tonumber( arg ))
             elseif not column then
               column = math.floor(tonumber( arg ))
-              option.analyzePos = Parser.Position.new(_lune_unwrap( lineNo), _lune_unwrap( column))
+              option.analyzePos = Parser.Position.new(_lune.unwrap( lineNo), _lune.unwrap( column))
             end
           elseif _switchExp == "save" or _switchExp == "SAVE" then
             option.outputDir = arg
@@ -148,7 +149,7 @@ usage: [-prof] src.lns mode [mode-option]
     index = index + 1
   end
   if useStdInFlag and option.analyzeModule then
-    Parser.StreamParser.setStdinStream( _lune_unwrap( option.analyzeModule) )
+    Parser.StreamParser.setStdinStream( _lune.unwrap( option.analyzeModule) )
   end
   return option
 end

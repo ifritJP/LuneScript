@@ -1,55 +1,56 @@
 --lune/base/Ast.lns
 local _moduleObj = {}
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -84,19 +85,19 @@ local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
 TypeInfoKind._val2NameMap = {}
 function TypeInfoKind:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-     return string.format( "lune.base.Ast.TypeInfoKind.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "lune.base.Ast.TypeInfoKind.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
 function TypeInfoKind:_from( val )
-   if self._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
 TypeInfoKind.Root = 0
 TypeInfoKind._val2NameMap[0] = 'Root'
 TypeInfoKind.Macro = 1
@@ -137,19 +138,19 @@ local SymbolKind = {}
 _moduleObj.SymbolKind = SymbolKind
 SymbolKind._val2NameMap = {}
 function SymbolKind:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-     return string.format( "lune.base.Ast.SymbolKind.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "lune.base.Ast.SymbolKind.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
 function SymbolKind:_from( val )
-   if self._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
 SymbolKind.Typ = 0
 SymbolKind._val2NameMap[0] = 'Typ'
 SymbolKind.Mbr = 1
@@ -165,65 +166,167 @@ SymbolKind._val2NameMap[5] = 'Arg'
 
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
-function SymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag )
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+-- none
+function SymbolInfo.new(  )
   local obj = {}
   setmetatable( obj, { __index = SymbolInfo } )
+  if obj.__init then
+    obj:__init(  )
+  end        
+  return obj 
+end         
+function SymbolInfo:__init(  ) 
+
+end
+do
+  end
+
+local NormalSymbolInfo = {}
+_moduleObj.NormalSymbolInfo = NormalSymbolInfo
+function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag )
+  local obj = {}
+  setmetatable( obj, { __index = NormalSymbolInfo } )
   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag ); end
 return obj
 end
-function SymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag) 
-  SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1
+function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag) 
+  NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
   self.kind = kind
   self.canBeLeft = canBeLeft
   self.canBeRight = canBeRight
-  self.symbolId = SymbolInfo.symbolIdSeed
+  self.symbolId = NormalSymbolInfo.symbolIdSeed
   self.scope = scope
   self.accessMode = accessMode
   self.staticFlag = staticFlag
   self.name = name
   self.typeInfo = typeInfo
-  self.mutable = mutable
+  self.mutable = mutable and true or false
   self.hasValueFlag = hasValueFlag
 end
 -- none
-function SymbolInfo:get_canBeLeft()
-  return self.canBeLeft
+function NormalSymbolInfo:get_canBeLeft()       
+  return self.canBeLeft         
 end
-function SymbolInfo:get_canBeRight()
-  return self.canBeRight
+function NormalSymbolInfo:get_canBeRight()       
+  return self.canBeRight         
 end
-function SymbolInfo:get_symbolId()
-  return self.symbolId
+function NormalSymbolInfo:get_symbolId()       
+  return self.symbolId         
 end
-function SymbolInfo:get_scope()
-  return self.scope
+function NormalSymbolInfo:get_scope()       
+  return self.scope         
 end
-function SymbolInfo:get_accessMode()
-  return self.accessMode
+function NormalSymbolInfo:get_accessMode()       
+  return self.accessMode         
 end
-function SymbolInfo:get_staticFlag()
-  return self.staticFlag
+function NormalSymbolInfo:get_staticFlag()       
+  return self.staticFlag         
 end
-function SymbolInfo:get_name()
-  return self.name
+function NormalSymbolInfo:get_name()       
+  return self.name         
 end
-function SymbolInfo:get_typeInfo()
-  return self.typeInfo
+function NormalSymbolInfo:get_typeInfo()       
+  return self.typeInfo         
 end
-function SymbolInfo:get_mutable()
-  return self.mutable
+function NormalSymbolInfo:get_mutable()       
+  return self.mutable         
 end
-function SymbolInfo:get_kind()
-  return self.kind
+function NormalSymbolInfo:get_kind()       
+  return self.kind         
 end
-function SymbolInfo:get_hasValueFlag()
-  return self.hasValueFlag
+function NormalSymbolInfo:get_hasValueFlag()       
+  return self.hasValueFlag         
 end
-function SymbolInfo:set_hasValueFlag( hasValueFlag )
-  self.hasValueFlag = hasValueFlag
+function NormalSymbolInfo:set_hasValueFlag( hasValueFlag )   
+  self.hasValueFlag = hasValueFlag              
 end
 do
-  SymbolInfo.symbolIdSeed = 0
+  NormalSymbolInfo.symbolIdSeed = 0
+  end
+
+local AccessSymbolInfo = {}
+setmetatable( AccessSymbolInfo, { __index = SymbolInfo } )
+_moduleObj.AccessSymbolInfo = AccessSymbolInfo
+function AccessSymbolInfo.new( symbolInfo )
+  local obj = {}
+  setmetatable( obj, { __index = AccessSymbolInfo } )
+  if obj.__init then
+    obj:__init( symbolInfo )
+  end        
+  return obj 
+end         
+function AccessSymbolInfo:__init( symbolInfo ) 
+
+self.symbolInfo = symbolInfo
+  end
+function AccessSymbolInfo:get_symbolInfo()       
+  return self.symbolInfo         
+end
+function AccessSymbolInfo:get_canBeLeft( ... )
+  return self.symbolInfo:get_canBeLeft( ... )
+end       
+
+function AccessSymbolInfo:get_canBeRight( ... )
+  return self.symbolInfo:get_canBeRight( ... )
+end       
+
+function AccessSymbolInfo:get_symbolId( ... )
+  return self.symbolInfo:get_symbolId( ... )
+end       
+
+function AccessSymbolInfo:get_scope( ... )
+  return self.symbolInfo:get_scope( ... )
+end       
+
+function AccessSymbolInfo:get_accessMode( ... )
+  return self.symbolInfo:get_accessMode( ... )
+end       
+
+function AccessSymbolInfo:get_staticFlag( ... )
+  return self.symbolInfo:get_staticFlag( ... )
+end       
+
+function AccessSymbolInfo:get_name( ... )
+  return self.symbolInfo:get_name( ... )
+end       
+
+function AccessSymbolInfo:get_typeInfo( ... )
+  return self.symbolInfo:get_typeInfo( ... )
+end       
+
+function AccessSymbolInfo:get_mutable( ... )
+  return self.symbolInfo:get_mutable( ... )
+end       
+
+function AccessSymbolInfo:get_kind( ... )
+  return self.symbolInfo:get_kind( ... )
+end       
+
+function AccessSymbolInfo:get_hasValueFlag( ... )
+  return self.symbolInfo:get_hasValueFlag( ... )
+end       
+
+function AccessSymbolInfo:set_hasValueFlag( ... )
+  return self.symbolInfo:set_hasValueFlag( ... )
+end       
+
+function AccessSymbolInfo:canAccess( ... )
+  return self.symbolInfo:canAccess( ... )
+end       
+
+do
   end
 
 local DataOwnerInfo = {}
@@ -235,9 +338,9 @@ function DataOwnerInfo.new( hasData, symbolInfo )
     obj:__init( hasData, symbolInfo )
   end        
   return obj 
- end         
+end         
 function DataOwnerInfo:__init( hasData, symbolInfo ) 
-            
+
 self.hasData = hasData
   self.symbolInfo = symbolInfo
   end
@@ -253,7 +356,7 @@ function Scope.new( parent, classFlag, inheritList )
 return obj
 end
 function Scope:__init(parent, classFlag, inheritList) 
-  self.parent = _lune_unwrapDefault( parent, self)
+  self.parent = _lune.unwrapDefault( parent, self)
   self.symbol2TypeInfoMap = {}
   self.inheritList = inheritList
   self.classFlag = classFlag
@@ -284,17 +387,17 @@ function Scope:setData( symbolInfo )
   self.symbolId2DataOwnerInfo[symbolInfo:get_symbolId()] = DataOwnerInfo.new(true, symbolInfo)
 end
 -- none
-function Scope:get_ownerTypeInfo()
-  return self.ownerTypeInfo
+function Scope:get_ownerTypeInfo()       
+  return self.ownerTypeInfo         
 end
-function Scope:get_parent()
-  return self.parent
+function Scope:get_parent()       
+  return self.parent         
 end
-function Scope:get_symbol2TypeInfoMap()
-  return self.symbol2TypeInfoMap
+function Scope:get_symbol2TypeInfoMap()       
+  return self.symbol2TypeInfoMap         
 end
-function Scope:get_inheritList()
-  return self.inheritList
+function Scope:get_inheritList()       
+  return self.inheritList         
 end
 do
   end
@@ -434,8 +537,8 @@ function TypeInfo:get_mutable(  )
 
   return false
 end
-function TypeInfo:get_scope()
-  return self.scope
+function TypeInfo:get_scope()       
+  return self.scope         
 end
 do
   end
@@ -638,9 +741,10 @@ end
 
 function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable, hasValueFlag )
 
-  local symbolInfo = SymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag)
+  local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag)
   
   self.symbol2TypeInfoMap[name] = symbolInfo
+  return symbolInfo
 end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
@@ -653,9 +757,9 @@ function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", true, mutable, true )
 end
 
-function Scope:addVar( accessMode, name, typeInfo, mutable )
+function Scope:addVar( accessMode, name, typeInfo, mutable, hasValueFlag )
 
-  self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable, true )
+  self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable, hasValueFlag )
 end
 
 function Scope:addEnumVal( name, typeInfo )
@@ -670,7 +774,7 @@ end
 
 function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutable )
 
-  self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable, false )
+  return self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable, false )
 end
 
 function Scope:addMethod( typeInfo, accessMode, staticFlag, mutable )
@@ -779,7 +883,7 @@ function Scope:getClassTypeInfo(  )
   return _moduleObj.rootTypeInfo
 end
 
-function SymbolInfo:canAccess( fromScope )
+function NormalSymbolInfo:canAccess( fromScope )
 
   local typeInfo = self:get_typeInfo()
   
@@ -852,101 +956,246 @@ function NilableTypeInfo.new( orgTypeInfo, typeId )
     obj:__init( orgTypeInfo, typeId )
   end        
   return obj 
- end         
+end         
 function NilableTypeInfo:__init( orgTypeInfo, typeId ) 
-            
+
 self.orgTypeInfo = orgTypeInfo
   self.typeId = typeId
   end
-function NilableTypeInfo:get_orgTypeInfo()
-  return self.orgTypeInfo
+function NilableTypeInfo:get_orgTypeInfo()       
+  return self.orgTypeInfo         
 end
-function NilableTypeInfo:get_typeId()
-  return self.typeId
+function NilableTypeInfo:get_typeId()       
+  return self.typeId         
 end
 function NilableTypeInfo:isModule( ... )
-   return self.orgTypeInfo:isModule( ... )
-end
+  return self.orgTypeInfo:isModule( ... )
+end       
 
 function NilableTypeInfo:getParentId( ... )
-   return self.orgTypeInfo:getParentId( ... )
-end
+  return self.orgTypeInfo:getParentId( ... )
+end       
 
 function NilableTypeInfo:get_baseId( ... )
-   return self.orgTypeInfo:get_baseId( ... )
-end
+  return self.orgTypeInfo:get_baseId( ... )
+end       
 
 function NilableTypeInfo:isInheritFrom( ... )
-   return self.orgTypeInfo:isInheritFrom( ... )
-end
+  return self.orgTypeInfo:isInheritFrom( ... )
+end       
 
 function NilableTypeInfo:get_abstructFlag( ... )
-   return self.orgTypeInfo:get_abstructFlag( ... )
-end
+  return self.orgTypeInfo:get_abstructFlag( ... )
+end       
 
 function NilableTypeInfo:equals( ... )
-   return self.orgTypeInfo:equals( ... )
-end
+  return self.orgTypeInfo:equals( ... )
+end       
 
 function NilableTypeInfo:get_externalFlag( ... )
-   return self.orgTypeInfo:get_externalFlag( ... )
-end
+  return self.orgTypeInfo:get_externalFlag( ... )
+end       
 
 function NilableTypeInfo:get_interfaceList( ... )
-   return self.orgTypeInfo:get_interfaceList( ... )
-end
+  return self.orgTypeInfo:get_interfaceList( ... )
+end       
 
 function NilableTypeInfo:get_itemTypeInfoList( ... )
-   return self.orgTypeInfo:get_itemTypeInfoList( ... )
-end
+  return self.orgTypeInfo:get_itemTypeInfoList( ... )
+end       
 
 function NilableTypeInfo:get_argTypeInfoList( ... )
-   return self.orgTypeInfo:get_argTypeInfoList( ... )
-end
+  return self.orgTypeInfo:get_argTypeInfoList( ... )
+end       
 
 function NilableTypeInfo:get_retTypeInfoList( ... )
-   return self.orgTypeInfo:get_retTypeInfoList( ... )
-end
+  return self.orgTypeInfo:get_retTypeInfoList( ... )
+end       
 
 function NilableTypeInfo:get_parentInfo( ... )
-   return self.orgTypeInfo:get_parentInfo( ... )
-end
+  return self.orgTypeInfo:get_parentInfo( ... )
+end       
 
 function NilableTypeInfo:get_rawTxt( ... )
-   return self.orgTypeInfo:get_rawTxt( ... )
-end
+  return self.orgTypeInfo:get_rawTxt( ... )
+end       
 
 function NilableTypeInfo:get_staticFlag( ... )
-   return self.orgTypeInfo:get_staticFlag( ... )
-end
+  return self.orgTypeInfo:get_staticFlag( ... )
+end       
 
 function NilableTypeInfo:get_accessMode( ... )
-   return self.orgTypeInfo:get_accessMode( ... )
-end
+  return self.orgTypeInfo:get_accessMode( ... )
+end       
 
 function NilableTypeInfo:get_autoFlag( ... )
-   return self.orgTypeInfo:get_autoFlag( ... )
-end
+  return self.orgTypeInfo:get_autoFlag( ... )
+end       
 
 function NilableTypeInfo:get_baseTypeInfo( ... )
-   return self.orgTypeInfo:get_baseTypeInfo( ... )
-end
+  return self.orgTypeInfo:get_baseTypeInfo( ... )
+end       
 
 function NilableTypeInfo:get_nilableTypeInfo( ... )
-   return self.orgTypeInfo:get_nilableTypeInfo( ... )
-end
+  return self.orgTypeInfo:get_nilableTypeInfo( ... )
+end       
 
 function NilableTypeInfo:get_children( ... )
-   return self.orgTypeInfo:get_children( ... )
-end
+  return self.orgTypeInfo:get_children( ... )
+end       
 
 function NilableTypeInfo:get_mutable( ... )
-   return self.orgTypeInfo:get_mutable( ... )
-end
+  return self.orgTypeInfo:get_mutable( ... )
+end       
 
 function NilableTypeInfo:get_scope( ... )
-   return self.orgTypeInfo:get_scope( ... )
+  return self.orgTypeInfo:get_scope( ... )
+end       
+
+do
+  end
+
+local ModifierTypeInfo = {}
+setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
+_moduleObj.ModifierTypeInfo = ModifierTypeInfo
+function ModifierTypeInfo:getTxt(  )
+
+  local txt = self.orgTypeInfo:getTxt(  )
+  
+  if self.mutable then
+    txt = "mut " .. txt
+  end
+  return txt
 end
+function ModifierTypeInfo:get_display_stirng(  )
+
+  local txt = self.orgTypeInfo:get_display_stirng(  )
+  
+  if self.mutable then
+    txt = "mut " .. txt
+  end
+  return txt
+end
+function ModifierTypeInfo:serialize( stream, validChildrenSet )
+
+  local parentId = self:getParentId(  )
+  
+  stream:write( string.format( '{ parentId = %d, typeId = %d, orgTypeId = %d, mutable = %s }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId(), self.mutable and true or false) )
+end
+function ModifierTypeInfo.new( orgTypeInfo, typeId, mutable )
+  local obj = {}
+  setmetatable( obj, { __index = ModifierTypeInfo } )
+  if obj.__init then
+    obj:__init( orgTypeInfo, typeId, mutable )
+  end        
+  return obj 
+end         
+function ModifierTypeInfo:__init( orgTypeInfo, typeId, mutable ) 
+
+self.orgTypeInfo = orgTypeInfo
+  self.typeId = typeId
+  self.mutable = mutable
+  end
+function ModifierTypeInfo:get_orgTypeInfo()       
+  return self.orgTypeInfo         
+end
+function ModifierTypeInfo:get_typeId()       
+  return self.typeId         
+end
+function ModifierTypeInfo:get_mutable()       
+  return self.mutable         
+end
+function ModifierTypeInfo:isModule( ... )
+  return self.orgTypeInfo:isModule( ... )
+end       
+
+function ModifierTypeInfo:getParentId( ... )
+  return self.orgTypeInfo:getParentId( ... )
+end       
+
+function ModifierTypeInfo:get_baseId( ... )
+  return self.orgTypeInfo:get_baseId( ... )
+end       
+
+function ModifierTypeInfo:isInheritFrom( ... )
+  return self.orgTypeInfo:isInheritFrom( ... )
+end       
+
+function ModifierTypeInfo:isSettableFrom( ... )
+  return self.orgTypeInfo:isSettableFrom( ... )
+end       
+
+function ModifierTypeInfo:get_abstructFlag( ... )
+  return self.orgTypeInfo:get_abstructFlag( ... )
+end       
+
+function ModifierTypeInfo:equals( ... )
+  return self.orgTypeInfo:equals( ... )
+end       
+
+function ModifierTypeInfo:get_externalFlag( ... )
+  return self.orgTypeInfo:get_externalFlag( ... )
+end       
+
+function ModifierTypeInfo:get_interfaceList( ... )
+  return self.orgTypeInfo:get_interfaceList( ... )
+end       
+
+function ModifierTypeInfo:get_itemTypeInfoList( ... )
+  return self.orgTypeInfo:get_itemTypeInfoList( ... )
+end       
+
+function ModifierTypeInfo:get_argTypeInfoList( ... )
+  return self.orgTypeInfo:get_argTypeInfoList( ... )
+end       
+
+function ModifierTypeInfo:get_retTypeInfoList( ... )
+  return self.orgTypeInfo:get_retTypeInfoList( ... )
+end       
+
+function ModifierTypeInfo:get_parentInfo( ... )
+  return self.orgTypeInfo:get_parentInfo( ... )
+end       
+
+function ModifierTypeInfo:get_rawTxt( ... )
+  return self.orgTypeInfo:get_rawTxt( ... )
+end       
+
+function ModifierTypeInfo:get_kind( ... )
+  return self.orgTypeInfo:get_kind( ... )
+end       
+
+function ModifierTypeInfo:get_staticFlag( ... )
+  return self.orgTypeInfo:get_staticFlag( ... )
+end       
+
+function ModifierTypeInfo:get_accessMode( ... )
+  return self.orgTypeInfo:get_accessMode( ... )
+end       
+
+function ModifierTypeInfo:get_autoFlag( ... )
+  return self.orgTypeInfo:get_autoFlag( ... )
+end       
+
+function ModifierTypeInfo:get_baseTypeInfo( ... )
+  return self.orgTypeInfo:get_baseTypeInfo( ... )
+end       
+
+function ModifierTypeInfo:get_nilable( ... )
+  return self.orgTypeInfo:get_nilable( ... )
+end       
+
+function ModifierTypeInfo:get_nilableTypeInfo( ... )
+  return self.orgTypeInfo:get_nilableTypeInfo( ... )
+end       
+
+function ModifierTypeInfo:get_children( ... )
+  return self.orgTypeInfo:get_children( ... )
+end       
+
+function ModifierTypeInfo:get_scope( ... )
+  return self.orgTypeInfo:get_scope( ... )
+end       
 
 do
   end
@@ -965,7 +1214,7 @@ function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId)
   
   self.externalFlag = externalFlag
   self.rawTxt = txt
-  self.parentInfo = _lune_unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
+  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
   self.typeId = typeId
   self.children = {}
   if self.parentInfo ~= _moduleObj.rootTypeInfo then
@@ -1040,20 +1289,20 @@ function ModuleTypeInfo:serialize( stream, validChildrenSet )
   
   stream:write( "} }\n" )
 end
-function ModuleTypeInfo:get_externalFlag()
-  return self.externalFlag
+function ModuleTypeInfo:get_externalFlag()       
+  return self.externalFlag         
 end
-function ModuleTypeInfo:get_parentInfo()
-  return self.parentInfo
+function ModuleTypeInfo:get_parentInfo()       
+  return self.parentInfo         
 end
-function ModuleTypeInfo:get_typeId()
-  return self.typeId
+function ModuleTypeInfo:get_typeId()       
+  return self.typeId         
 end
-function ModuleTypeInfo:get_rawTxt()
-  return self.rawTxt
+function ModuleTypeInfo:get_rawTxt()       
+  return self.rawTxt         
 end
-function ModuleTypeInfo:get_children()
-  return self.children
+function ModuleTypeInfo:get_children()       
+  return self.children         
 end
 do
   end
@@ -1067,17 +1316,17 @@ function EnumValInfo.new( name, val )
     obj:__init( name, val )
   end        
   return obj 
- end         
+end         
 function EnumValInfo:__init( name, val ) 
-            
+
 self.name = name
   self.val = val
   end
-function EnumValInfo:get_name()
-  return self.name
+function EnumValInfo:get_name()       
+  return self.name         
 end
-function EnumValInfo:get_val()
-  return self.val
+function EnumValInfo:get_val()       
+  return self.val         
 end
 do
   end
@@ -1097,7 +1346,7 @@ function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
   self.externalFlag = externalFlag
   self.accessMode = accessMode
   self.rawTxt = txt
-  self.parentInfo = _lune_unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
+  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
   self.typeId = typeId
   self.name2EnumValInfo = name2EnumValInfo
   self.valTypeInfo = valTypeInfo
@@ -1136,29 +1385,29 @@ function EnumTypeInfo:getEnumValInfo( name )
 
   return self.name2EnumValInfo[name]
 end
-function EnumTypeInfo:get_externalFlag()
-  return self.externalFlag
+function EnumTypeInfo:get_externalFlag()       
+  return self.externalFlag         
 end
-function EnumTypeInfo:get_parentInfo()
-  return self.parentInfo
+function EnumTypeInfo:get_parentInfo()       
+  return self.parentInfo         
 end
-function EnumTypeInfo:get_typeId()
-  return self.typeId
+function EnumTypeInfo:get_typeId()       
+  return self.typeId         
 end
-function EnumTypeInfo:get_rawTxt()
-  return self.rawTxt
+function EnumTypeInfo:get_rawTxt()       
+  return self.rawTxt         
 end
-function EnumTypeInfo:get_accessMode()
-  return self.accessMode
+function EnumTypeInfo:get_accessMode()       
+  return self.accessMode         
 end
-function EnumTypeInfo:get_nilableTypeInfo()
-  return self.nilableTypeInfo
+function EnumTypeInfo:get_nilableTypeInfo()       
+  return self.nilableTypeInfo         
 end
-function EnumTypeInfo:get_valTypeInfo()
-  return self.valTypeInfo
+function EnumTypeInfo:get_valTypeInfo()       
+  return self.valTypeInfo         
 end
-function EnumTypeInfo:get_name2EnumValInfo()
-  return self.name2EnumValInfo
+function EnumTypeInfo:get_name2EnumValInfo()       
+  return self.name2EnumValInfo         
 end
 do
   end
@@ -1166,33 +1415,34 @@ do
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
-function NormalTypeInfo.new( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList )
+function NormalTypeInfo.new( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
   local obj = {}
   setmetatable( obj, { __index = NormalTypeInfo } )
-  if obj.__init then obj:__init( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList ); end
+  if obj.__init then obj:__init( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
 return obj
 end
-function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList) 
+function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
   TypeInfo.__init( self, scope)
   
   if type( kind ) ~= "number" then
     Util.printStackTrace(  )
   end
   self.abstructFlag = abstructFlag
-  self.baseTypeInfo = _lune_unwrapDefault( baseTypeInfo, _moduleObj.rootTypeInfo)
-  self.interfaceList = _lune_unwrapDefault( interfaceList, {})
+  self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.rootTypeInfo)
+  self.interfaceList = _lune.unwrapDefault( interfaceList, {})
   self.autoFlag = autoFlag
   self.externalFlag = externalFlag
   self.staticFlag = staticFlag
   self.accessMode = accessMode
   self.rawTxt = txt
   self.kind = kind
-  self.itemTypeInfoList = _lune_unwrapDefault( itemTypeInfoList, {})
-  self.argTypeInfoList = _lune_unwrapDefault( argTypeInfoList, {})
-  self.retTypeInfoList = _lune_unwrapDefault( retTypeInfoList, {})
-  self.orgTypeInfo = _lune_unwrapDefault( orgTypeInfo, _moduleObj.rootTypeInfo)
-  self.parentInfo = _lune_unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
+  self.itemTypeInfoList = _lune.unwrapDefault( itemTypeInfoList, {})
+  self.argTypeInfoList = _lune.unwrapDefault( argTypeInfoList, {})
+  self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
+  self.orgTypeInfo = _lune.unwrapDefault( orgTypeInfo, _moduleObj.rootTypeInfo)
+  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
   self.children = {}
+  self.mutable = mutable and true or false
   self.typeId = typeId
   if kind == TypeInfoKind.Root then
     self.nilable = false
@@ -1247,7 +1497,7 @@ end
 function NormalTypeInfo:getTxt(  )
 
   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
-    return (_lune_unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
+    return (_lune.unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
   end
   if self.kind == TypeInfoKind.Array then
     local _exp = self.itemTypeInfoList[1]
@@ -1290,7 +1540,7 @@ end
 function NormalTypeInfo:get_display_stirng(  )
 
   if self.kind == TypeInfoKind.Nilable then
-    return (_lune_unwrap( self.orgTypeInfo) ):get_display_stirng(  ) .. "!"
+    return (_lune.unwrap( self.orgTypeInfo) ):get_display_stirng(  ) .. "!"
   end
   if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Method then
     local txt = self:get_rawTxt() .. "("
@@ -1406,7 +1656,7 @@ function NormalTypeInfo:equals( typeInfo )
 
   return self:equalsSub( typeInfo )
 end
-function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList )
+function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable )
 
   if kind == TypeInfoKind.Prim then
     do
@@ -1420,63 +1670,66 @@ function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, pa
     Util.err( string.format( "not found symbol -- %s", txt) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
   
   return info
 end
-function NormalTypeInfo:get_externalFlag()
-  return self.externalFlag
+function NormalTypeInfo:get_externalFlag()       
+  return self.externalFlag         
 end
-function NormalTypeInfo:get_itemTypeInfoList()
-  return self.itemTypeInfoList
+function NormalTypeInfo:get_itemTypeInfoList()       
+  return self.itemTypeInfoList         
 end
-function NormalTypeInfo:get_argTypeInfoList()
-  return self.argTypeInfoList
+function NormalTypeInfo:get_argTypeInfoList()       
+  return self.argTypeInfoList         
 end
-function NormalTypeInfo:get_retTypeInfoList()
-  return self.retTypeInfoList
+function NormalTypeInfo:get_retTypeInfoList()       
+  return self.retTypeInfoList         
 end
-function NormalTypeInfo:get_parentInfo()
-  return self.parentInfo
+function NormalTypeInfo:get_parentInfo()       
+  return self.parentInfo         
 end
-function NormalTypeInfo:get_typeId()
-  return self.typeId
+function NormalTypeInfo:get_typeId()       
+  return self.typeId         
 end
-function NormalTypeInfo:get_rawTxt()
-  return self.rawTxt
+function NormalTypeInfo:get_rawTxt()       
+  return self.rawTxt         
 end
-function NormalTypeInfo:get_kind()
-  return self.kind
+function NormalTypeInfo:get_kind()       
+  return self.kind         
 end
-function NormalTypeInfo:get_staticFlag()
-  return self.staticFlag
+function NormalTypeInfo:get_staticFlag()       
+  return self.staticFlag         
 end
-function NormalTypeInfo:get_accessMode()
-  return self.accessMode
+function NormalTypeInfo:get_accessMode()       
+  return self.accessMode         
 end
-function NormalTypeInfo:get_autoFlag()
-  return self.autoFlag
+function NormalTypeInfo:get_autoFlag()       
+  return self.autoFlag         
 end
-function NormalTypeInfo:get_abstructFlag()
-  return self.abstructFlag
+function NormalTypeInfo:get_abstructFlag()       
+  return self.abstructFlag         
 end
-function NormalTypeInfo:get_orgTypeInfo()
-  return self.orgTypeInfo
+function NormalTypeInfo:get_orgTypeInfo()       
+  return self.orgTypeInfo         
 end
-function NormalTypeInfo:get_baseTypeInfo()
-  return self.baseTypeInfo
+function NormalTypeInfo:get_baseTypeInfo()       
+  return self.baseTypeInfo         
 end
-function NormalTypeInfo:get_interfaceList()
-  return self.interfaceList
+function NormalTypeInfo:get_interfaceList()       
+  return self.interfaceList         
 end
-function NormalTypeInfo:get_nilable()
-  return self.nilable
+function NormalTypeInfo:get_nilable()       
+  return self.nilable         
 end
-function NormalTypeInfo:get_nilableTypeInfo()
-  return self.nilableTypeInfo
+function NormalTypeInfo:get_nilableTypeInfo()       
+  return self.nilableTypeInfo         
 end
-function NormalTypeInfo:get_children()
-  return self.children
+function NormalTypeInfo:get_children()       
+  return self.children         
+end
+function NormalTypeInfo:get_mutable()       
+  return self.mutable         
 end
 do
   end
@@ -1519,15 +1772,15 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
     end
   end
   
-  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList)
+  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList, false)
   
   if scope then
     _moduleObj.rootScope:addClass( typeTxt, info )
   end
   _moduleObj.typeInfoKind[idName] = info
-  _moduleObj.sym2builtInTypeMap[typeTxt] = SymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, "pub", false, typeTxt, info, false, true)
+  _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, "pub", false, typeTxt, info, false, true)
   if info:get_nilableTypeInfo() ~= _moduleObj.rootTypeInfo then
-    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = SymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false, true)
+    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false, true)
     _moduleObj.builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
   _moduleObj.builtInTypeIdSet[info.typeId] = info
@@ -1540,19 +1793,19 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, false)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
 
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, false)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
 
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo})
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, false)
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName )
@@ -1588,20 +1841,26 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
     Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKind.Class or TypeInfoKind.IF)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, false)
   
   return info
 end
 
-function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList )
+function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
 
   if not builtinFlag and Parser.isLuaKeyword( funcName ) then
     Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, kind, {}, _lune_unwrapDefault( argTypeList, {}), _lune_unwrapDefault( retTypeInfoList, {}))
+  local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
   
   return info
+end
+
+function NormalTypeInfo.createModifier( orgTypeInfo, typeId, mutable )
+
+  typeIdSeed = typeIdSeed + 1
+  return ModifierTypeInfo.new(orgTypeInfo, typeId, mutable)
 end
 
 local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
@@ -1664,7 +1923,7 @@ local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKi
 
 _moduleObj.builtinTypeStat = builtinTypeStat
 
-local builtinTypeStem_ = _lune_unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
+local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
 
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
 
@@ -1676,10 +1935,10 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
   typeIdSeed = typeIdSeed + 1
   local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo)
   
-  local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString} )
+  local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString}, false )
   
   scope:addMethod( getEnumName, "pub", false, true )
-  local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, "pub", "_from", {valTypeInfo}, {info:get_nilableTypeInfo()} )
+  local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, "pub", "_from", {valTypeInfo}, {info:get_nilableTypeInfo()}, false )
   
   scope:addMethod( fromVal, "pub", true, true )
   return info
@@ -1758,11 +2017,13 @@ function NormalTypeInfo:isInheritFrom( other )
   -- none
   
   for __index, ifType in pairs( self:get_interfaceList() ) do
-    while ifType ~= _moduleObj.rootTypeInfo do
-      if otherTypeId == ifType:get_typeId() then
+    local workType = ifType
+    
+    while workType ~= _moduleObj.rootTypeInfo do
+      if otherTypeId == workType:get_typeId() then
         return true
       end
-      ifType = ifType:get_baseTypeInfo()
+      workType = workType:get_baseTypeInfo()
     end
     -- none
     
@@ -1819,7 +2080,7 @@ function NormalTypeInfo:isSettableFrom( other )
       if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
         return true
       end
-      if not (_lune_unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[1]) ) then
+      if not (_lune.unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune.unwrap( other:get_itemTypeInfoList()[1]) ) then
         return false
       end
       
@@ -1828,11 +2089,11 @@ function NormalTypeInfo:isSettableFrom( other )
       if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and other:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
         return true
       end
-      if not (_lune_unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[1]) ) then
+      if not (_lune.unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune.unwrap( other:get_itemTypeInfoList()[1]) ) then
         return false
       end
       
-      if not (_lune_unwrap( self:get_itemTypeInfoList()[2]) ):isSettableFrom( _lune_unwrap( other:get_itemTypeInfoList()[2]) ) then
+      if not (_lune.unwrap( self:get_itemTypeInfoList()[2]) ):isSettableFrom( _lune.unwrap( other:get_itemTypeInfoList()[2]) ) then
         return false
       end
       
@@ -1865,9 +2126,9 @@ function Filter.new(  )
     obj:__init(  )
   end        
   return obj 
- end         
+end         
 function Filter:__init(  ) 
-            
+
 end
 do
   end
@@ -1903,21 +2164,21 @@ function Node.new( kind, pos, expTypeList )
     obj:__init( kind, pos, expTypeList )
   end        
   return obj 
- end         
+end         
 function Node:__init( kind, pos, expTypeList ) 
-            
+
 self.kind = kind
   self.pos = pos
   self.expTypeList = expTypeList
   end
-function Node:get_kind()
-  return self.kind
+function Node:get_kind()       
+  return self.kind         
 end
-function Node:get_pos()
-  return self.pos
+function Node:get_pos()       
+  return self.pos         
 end
-function Node:get_expTypeList()
-  return self.expTypeList
+function Node:get_expTypeList()       
+  return self.expTypeList         
 end
 do
   end
@@ -1931,9 +2192,9 @@ function NamespaceInfo.new( name, scope, typeInfo )
     obj:__init( name, scope, typeInfo )
   end        
   return obj 
- end         
+end         
 function NamespaceInfo:__init( name, scope, typeInfo ) 
-            
+
 self.name = name
   self.scope = scope
   self.typeInfo = typeInfo
@@ -1956,25 +2217,25 @@ function DeclMacroInfo.new( name, argList, ast, tokenList )
     obj:__init( name, argList, ast, tokenList )
   end        
   return obj 
- end         
+end         
 function DeclMacroInfo:__init( name, argList, ast, tokenList ) 
-            
+
 self.name = name
   self.argList = argList
   self.ast = ast
   self.tokenList = tokenList
   end
-function DeclMacroInfo:get_name()
-  return self.name
+function DeclMacroInfo:get_name()       
+  return self.name         
 end
-function DeclMacroInfo:get_argList()
-  return self.argList
+function DeclMacroInfo:get_argList()       
+  return self.argList         
 end
-function DeclMacroInfo:get_ast()
-  return self.ast
+function DeclMacroInfo:get_ast()       
+  return self.ast         
 end
-function DeclMacroInfo:get_tokenList()
-  return self.tokenList
+function DeclMacroInfo:get_tokenList()       
+  return self.tokenList         
 end
 do
   end
@@ -1988,9 +2249,9 @@ function MacroValInfo.new( val, typeInfo )
     obj:__init( val, typeInfo )
   end        
   return obj 
- end         
+end         
 function MacroValInfo:__init( val, typeInfo ) 
-            
+
 self.val = val
   self.typeInfo = typeInfo
   end
@@ -2006,9 +2267,9 @@ function MacroInfo.new( func, declInfo, symbol2MacroValInfoMap )
     obj:__init( func, declInfo, symbol2MacroValInfoMap )
   end        
   return obj 
- end         
+end         
 function MacroInfo:__init( func, declInfo, symbol2MacroValInfoMap ) 
-            
+
 self.func = func
   self.declInfo = declInfo
   self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
@@ -2036,7 +2297,7 @@ end
 
 local function getNodeKindName( kind )
 
-  return _lune_unwrap( nodeKind2NameMap[kind])
+  return _lune.unwrap( nodeKind2NameMap[kind])
 end
 _moduleObj.getNodeKindName = getNodeKindName
 
@@ -2185,11 +2446,11 @@ function ImportNode:__init(pos, typeList, modulePath, moduleTypeInfo)
   -- none
   
 end
-function ImportNode:get_modulePath()
-  return self.modulePath
+function ImportNode:get_modulePath()       
+  return self.modulePath         
 end
-function ImportNode:get_moduleTypeInfo()
-  return self.moduleTypeInfo
+function ImportNode:get_moduleTypeInfo()       
+  return self.moduleTypeInfo         
 end
 do
   end
@@ -2245,14 +2506,14 @@ function RootNode:__init(pos, typeList, children, provideNode, typeId2ClassMap)
   -- none
   
 end
-function RootNode:get_children()
-  return self.children
+function RootNode:get_children()       
+  return self.children         
 end
-function RootNode:get_provideNode()
-  return self.provideNode
+function RootNode:get_provideNode()       
+  return self.provideNode         
 end
-function RootNode:get_typeId2ClassMap()
-  return self.typeId2ClassMap
+function RootNode:get_typeId2ClassMap()       
+  return self.typeId2ClassMap         
 end
 do
   end
@@ -2312,17 +2573,17 @@ function RefTypeNode:__init(pos, typeList, name, refFlag, mutFlag, array)
   -- none
   
 end
-function RefTypeNode:get_name()
-  return self.name
+function RefTypeNode:get_name()       
+  return self.name         
 end
-function RefTypeNode:get_refFlag()
-  return self.refFlag
+function RefTypeNode:get_refFlag()       
+  return self.refFlag         
 end
-function RefTypeNode:get_mutFlag()
-  return self.mutFlag
+function RefTypeNode:get_mutFlag()       
+  return self.mutFlag         
 end
-function RefTypeNode:get_array()
-  return self.array
+function RefTypeNode:get_array()       
+  return self.array         
 end
 do
   end
@@ -2375,11 +2636,11 @@ function BlockNode:__init(pos, typeList, blockKind, stmtList)
   -- none
   
 end
-function BlockNode:get_blockKind()
-  return self.blockKind
+function BlockNode:get_blockKind()       
+  return self.blockKind         
 end
-function BlockNode:get_stmtList()
-  return self.stmtList
+function BlockNode:get_stmtList()       
+  return self.stmtList         
 end
 do
   end
@@ -2394,21 +2655,21 @@ function IfStmtInfo.new( kind, exp, block )
     obj:__init( kind, exp, block )
   end        
   return obj 
- end         
+end         
 function IfStmtInfo:__init( kind, exp, block ) 
-            
+
 self.kind = kind
   self.exp = exp
   self.block = block
   end
-function IfStmtInfo:get_kind()
-  return self.kind
+function IfStmtInfo:get_kind()       
+  return self.kind         
 end
-function IfStmtInfo:get_exp()
-  return self.exp
+function IfStmtInfo:get_exp()       
+  return self.exp         
 end
-function IfStmtInfo:get_block()
-  return self.block
+function IfStmtInfo:get_block()       
+  return self.block         
 end
 do
   end
@@ -2459,8 +2720,8 @@ function IfNode:__init(pos, typeList, stmtList)
   -- none
   
 end
-function IfNode:get_stmtList()
-  return self.stmtList
+function IfNode:get_stmtList()       
+  return self.stmtList         
 end
 do
   end
@@ -2512,8 +2773,8 @@ function ExpListNode:__init(pos, typeList, expList)
   -- none
   
 end
-function ExpListNode:get_expList()
-  return self.expList
+function ExpListNode:get_expList()       
+  return self.expList         
 end
 do
   end
@@ -2528,17 +2789,17 @@ function CaseInfo.new( expList, block )
     obj:__init( expList, block )
   end        
   return obj 
- end         
+end         
 function CaseInfo:__init( expList, block ) 
-            
+
 self.expList = expList
   self.block = block
   end
-function CaseInfo:get_expList()
-  return self.expList
+function CaseInfo:get_expList()       
+  return self.expList         
 end
-function CaseInfo:get_block()
-  return self.block
+function CaseInfo:get_block()       
+  return self.block         
 end
 do
   end
@@ -2591,14 +2852,14 @@ function SwitchNode:__init(pos, typeList, exp, caseList, default)
   -- none
   
 end
-function SwitchNode:get_exp()
-  return self.exp
+function SwitchNode:get_exp()       
+  return self.exp         
 end
-function SwitchNode:get_caseList()
-  return self.caseList
+function SwitchNode:get_caseList()       
+  return self.caseList         
 end
-function SwitchNode:get_default()
-  return self.default
+function SwitchNode:get_default()       
+  return self.default         
 end
 do
   end
@@ -2651,11 +2912,11 @@ function WhileNode:__init(pos, typeList, exp, block)
   -- none
   
 end
-function WhileNode:get_exp()
-  return self.exp
+function WhileNode:get_exp()       
+  return self.exp         
 end
-function WhileNode:get_block()
-  return self.block
+function WhileNode:get_block()       
+  return self.block         
 end
 do
   end
@@ -2708,11 +2969,11 @@ function RepeatNode:__init(pos, typeList, block, exp)
   -- none
   
 end
-function RepeatNode:get_block()
-  return self.block
+function RepeatNode:get_block()       
+  return self.block         
 end
-function RepeatNode:get_exp()
-  return self.exp
+function RepeatNode:get_exp()       
+  return self.exp         
 end
 do
   end
@@ -2768,20 +3029,20 @@ function ForNode:__init(pos, typeList, block, val, init, to, delta)
   -- none
   
 end
-function ForNode:get_block()
-  return self.block
+function ForNode:get_block()       
+  return self.block         
 end
-function ForNode:get_val()
-  return self.val
+function ForNode:get_val()       
+  return self.val         
 end
-function ForNode:get_init()
-  return self.init
+function ForNode:get_init()       
+  return self.init         
 end
-function ForNode:get_to()
-  return self.to
+function ForNode:get_to()       
+  return self.to         
 end
-function ForNode:get_delta()
-  return self.delta
+function ForNode:get_delta()       
+  return self.delta         
 end
 do
   end
@@ -2835,14 +3096,14 @@ function ApplyNode:__init(pos, typeList, varList, exp, block)
   -- none
   
 end
-function ApplyNode:get_varList()
-  return self.varList
+function ApplyNode:get_varList()       
+  return self.varList         
 end
-function ApplyNode:get_exp()
-  return self.exp
+function ApplyNode:get_exp()       
+  return self.exp         
 end
-function ApplyNode:get_block()
-  return self.block
+function ApplyNode:get_block()       
+  return self.block         
 end
 do
   end
@@ -2897,17 +3158,17 @@ function ForeachNode:__init(pos, typeList, val, key, exp, block)
   -- none
   
 end
-function ForeachNode:get_val()
-  return self.val
+function ForeachNode:get_val()       
+  return self.val         
 end
-function ForeachNode:get_key()
-  return self.key
+function ForeachNode:get_key()       
+  return self.key         
 end
-function ForeachNode:get_exp()
-  return self.exp
+function ForeachNode:get_exp()       
+  return self.exp         
 end
-function ForeachNode:get_block()
-  return self.block
+function ForeachNode:get_block()       
+  return self.block         
 end
 do
   end
@@ -2963,20 +3224,20 @@ function ForsortNode:__init(pos, typeList, val, key, exp, block, sort)
   -- none
   
 end
-function ForsortNode:get_val()
-  return self.val
+function ForsortNode:get_val()       
+  return self.val         
 end
-function ForsortNode:get_key()
-  return self.key
+function ForsortNode:get_key()       
+  return self.key         
 end
-function ForsortNode:get_exp()
-  return self.exp
+function ForsortNode:get_exp()       
+  return self.exp         
 end
-function ForsortNode:get_block()
-  return self.block
+function ForsortNode:get_block()       
+  return self.block         
 end
-function ForsortNode:get_sort()
-  return self.sort
+function ForsortNode:get_sort()       
+  return self.sort         
 end
 do
   end
@@ -3028,8 +3289,8 @@ function ReturnNode:__init(pos, typeList, expList)
   -- none
   
 end
-function ReturnNode:get_expList()
-  return self.expList
+function ReturnNode:get_expList()       
+  return self.expList         
 end
 do
   end
@@ -3130,8 +3391,8 @@ function ProvideNode:__init(pos, typeList, val)
   -- none
   
 end
-function ProvideNode:get_val()
-  return self.val
+function ProvideNode:get_val()       
+  return self.val         
 end
 do
   end
@@ -3184,11 +3445,11 @@ function ExpNewNode:__init(pos, typeList, symbol, argList)
   -- none
   
 end
-function ExpNewNode:get_symbol()
-  return self.symbol
+function ExpNewNode:get_symbol()       
+  return self.symbol         
 end
-function ExpNewNode:get_argList()
-  return self.argList
+function ExpNewNode:get_argList()       
+  return self.argList         
 end
 do
   end
@@ -3241,11 +3502,11 @@ function ExpUnwrapNode:__init(pos, typeList, exp, default)
   -- none
   
 end
-function ExpUnwrapNode:get_exp()
-  return self.exp
+function ExpUnwrapNode:get_exp()       
+  return self.exp         
 end
-function ExpUnwrapNode:get_default()
-  return self.default
+function ExpUnwrapNode:get_default()       
+  return self.default         
 end
 do
   end
@@ -3290,11 +3551,11 @@ function ExpRefNode:__init(pos, typeList, token, symbolInfo)
   -- none
   
 end
-function ExpRefNode:get_token()
-  return self.token
+function ExpRefNode:get_token()       
+  return self.token         
 end
-function ExpRefNode:get_symbolInfo()
-  return self.symbolInfo
+function ExpRefNode:get_symbolInfo()       
+  return self.symbolInfo         
 end
 do
   end
@@ -3358,14 +3619,14 @@ function ExpOp2Node:__init(pos, typeList, op, exp1, exp2)
   -- none
   
 end
-function ExpOp2Node:get_op()
-  return self.op
+function ExpOp2Node:get_op()       
+  return self.op         
 end
-function ExpOp2Node:get_exp1()
-  return self.exp1
+function ExpOp2Node:get_exp1()       
+  return self.exp1         
 end
-function ExpOp2Node:get_exp2()
-  return self.exp2
+function ExpOp2Node:get_exp2()       
+  return self.exp2         
 end
 do
   end
@@ -3419,14 +3680,14 @@ function UnwrapSetNode:__init(pos, typeList, dstExpList, srcExpList, unwrapBlock
   -- none
   
 end
-function UnwrapSetNode:get_dstExpList()
-  return self.dstExpList
+function UnwrapSetNode:get_dstExpList()       
+  return self.dstExpList         
 end
-function UnwrapSetNode:get_srcExpList()
-  return self.srcExpList
+function UnwrapSetNode:get_srcExpList()       
+  return self.srcExpList         
 end
-function UnwrapSetNode:get_unwrapBlock()
-  return self.unwrapBlock
+function UnwrapSetNode:get_unwrapBlock()       
+  return self.unwrapBlock         
 end
 do
   end
@@ -3480,14 +3741,14 @@ function IfUnwrapNode:__init(pos, typeList, exp, block, nilBlock)
   -- none
   
 end
-function IfUnwrapNode:get_exp()
-  return self.exp
+function IfUnwrapNode:get_exp()       
+  return self.exp         
 end
-function IfUnwrapNode:get_block()
-  return self.block
+function IfUnwrapNode:get_block()       
+  return self.block         
 end
-function IfUnwrapNode:get_nilBlock()
-  return self.nilBlock
+function IfUnwrapNode:get_nilBlock()       
+  return self.nilBlock         
 end
 do
   end
@@ -3539,8 +3800,8 @@ function ExpCastNode:__init(pos, typeList, exp)
   -- none
   
 end
-function ExpCastNode:get_exp()
-  return self.exp
+function ExpCastNode:get_exp()       
+  return self.exp         
 end
 do
   end
@@ -3594,14 +3855,14 @@ function ExpOp1Node:__init(pos, typeList, op, macroMode, exp)
   -- none
   
 end
-function ExpOp1Node:get_op()
-  return self.op
+function ExpOp1Node:get_op()       
+  return self.op         
 end
-function ExpOp1Node:get_macroMode()
-  return self.macroMode
+function ExpOp1Node:get_macroMode()       
+  return self.macroMode         
 end
-function ExpOp1Node:get_exp()
-  return self.exp
+function ExpOp1Node:get_exp()       
+  return self.exp         
 end
 do
   end
@@ -3655,14 +3916,14 @@ function ExpRefItemNode:__init(pos, typeList, val, nilAccess, index)
   -- none
   
 end
-function ExpRefItemNode:get_val()
-  return self.val
+function ExpRefItemNode:get_val()       
+  return self.val         
 end
-function ExpRefItemNode:get_nilAccess()
-  return self.nilAccess
+function ExpRefItemNode:get_nilAccess()       
+  return self.nilAccess         
 end
-function ExpRefItemNode:get_index()
-  return self.index
+function ExpRefItemNode:get_index()       
+  return self.index         
 end
 do
   end
@@ -3716,14 +3977,14 @@ function ExpCallNode:__init(pos, typeList, func, nilAccess, argList)
   -- none
   
 end
-function ExpCallNode:get_func()
-  return self.func
+function ExpCallNode:get_func()       
+  return self.func         
 end
-function ExpCallNode:get_nilAccess()
-  return self.nilAccess
+function ExpCallNode:get_nilAccess()       
+  return self.nilAccess         
 end
-function ExpCallNode:get_argList()
-  return self.argList
+function ExpCallNode:get_argList()       
+  return self.argList         
 end
 do
   end
@@ -3775,8 +4036,8 @@ function ExpDDDNode:__init(pos, typeList, token)
   -- none
   
 end
-function ExpDDDNode:get_token()
-  return self.token
+function ExpDDDNode:get_token()       
+  return self.token         
 end
 do
   end
@@ -3828,8 +4089,8 @@ function ExpParenNode:__init(pos, typeList, exp)
   -- none
   
 end
-function ExpParenNode:get_exp()
-  return self.exp
+function ExpParenNode:get_exp()       
+  return self.exp         
 end
 do
   end
@@ -3881,8 +4142,8 @@ function ExpMacroExpNode:__init(pos, typeList, stmtList)
   -- none
   
 end
-function ExpMacroExpNode:get_stmtList()
-  return self.stmtList
+function ExpMacroExpNode:get_stmtList()       
+  return self.stmtList         
 end
 do
   end
@@ -3934,8 +4195,8 @@ function ExpMacroStatNode:__init(pos, typeList, expStrList)
   -- none
   
 end
-function ExpMacroStatNode:get_expStrList()
-  return self.expStrList
+function ExpMacroStatNode:get_expStrList()       
+  return self.expStrList         
 end
 do
   end
@@ -3987,8 +4248,8 @@ function StmtExpNode:__init(pos, typeList, exp)
   -- none
   
 end
-function StmtExpNode:get_exp()
-  return self.exp
+function StmtExpNode:get_exp()       
+  return self.exp         
 end
 do
   end
@@ -4039,17 +4300,17 @@ function RefFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
   -- none
   
 end
-function RefFieldNode:get_field()
-  return self.field
+function RefFieldNode:get_field()       
+  return self.field         
 end
-function RefFieldNode:get_symbolInfo()
-  return self.symbolInfo
+function RefFieldNode:get_symbolInfo()       
+  return self.symbolInfo         
 end
-function RefFieldNode:get_nilAccess()
-  return self.nilAccess
+function RefFieldNode:get_nilAccess()       
+  return self.nilAccess         
 end
-function RefFieldNode:get_prefix()
-  return self.prefix
+function RefFieldNode:get_prefix()       
+  return self.prefix         
 end
 do
   end
@@ -4114,20 +4375,20 @@ function GetFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
   -- none
   
 end
-function GetFieldNode:get_field()
-  return self.field
+function GetFieldNode:get_field()       
+  return self.field         
 end
-function GetFieldNode:get_symbolInfo()
-  return self.symbolInfo
+function GetFieldNode:get_symbolInfo()       
+  return self.symbolInfo         
 end
-function GetFieldNode:get_nilAccess()
-  return self.nilAccess
+function GetFieldNode:get_nilAccess()       
+  return self.nilAccess         
 end
-function GetFieldNode:get_prefix()
-  return self.prefix
+function GetFieldNode:get_prefix()       
+  return self.prefix         
 end
-function GetFieldNode:get_getterTypeInfo()
-  return self.getterTypeInfo
+function GetFieldNode:get_getterTypeInfo()       
+  return self.getterTypeInfo         
 end
 do
   end
@@ -4155,21 +4416,21 @@ function VarInfo.new( name, refType, actualType )
     obj:__init( name, refType, actualType )
   end        
   return obj 
- end         
+end         
 function VarInfo:__init( name, refType, actualType ) 
-            
+
 self.name = name
   self.refType = refType
   self.actualType = actualType
   end
-function VarInfo:get_name()
-  return self.name
+function VarInfo:get_name()       
+  return self.name         
 end
-function VarInfo:get_refType()
-  return self.refType
+function VarInfo:get_refType()       
+  return self.refType         
 end
-function VarInfo:get_actualType()
-  return self.actualType
+function VarInfo:get_actualType()       
+  return self.actualType         
 end
 do
   end
@@ -4205,13 +4466,13 @@ function DeclVarNode:canBeLeft(  )
 
   return false
 end
-function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, expList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
   local obj = {}
   setmetatable( obj, { __index = DeclVarNode } )
-  if obj.__init then obj:__init( pos, typeList, mode, accessMode, staticFlag, varList, expList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
+  if obj.__init then obj:__init( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
 return obj
 end
-function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList, expList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
+function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
   Node.__init( self, _moduleObj.nodeKindDeclVar, pos, typeList)
   
   -- none
@@ -4221,6 +4482,7 @@ function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList
   self.staticFlag = staticFlag
   self.varList = varList
   self.expList = expList
+  self.symbolInfoList = symbolInfoList
   self.typeInfoList = typeInfoList
   self.unwrapFlag = unwrapFlag
   self.unwrapBlock = unwrapBlock
@@ -4230,38 +4492,41 @@ function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList
   -- none
   
 end
-function DeclVarNode:get_mode()
-  return self.mode
+function DeclVarNode:get_mode()       
+  return self.mode         
 end
-function DeclVarNode:get_accessMode()
-  return self.accessMode
+function DeclVarNode:get_accessMode()       
+  return self.accessMode         
 end
-function DeclVarNode:get_staticFlag()
-  return self.staticFlag
+function DeclVarNode:get_staticFlag()       
+  return self.staticFlag         
 end
-function DeclVarNode:get_varList()
-  return self.varList
+function DeclVarNode:get_varList()       
+  return self.varList         
 end
-function DeclVarNode:get_expList()
-  return self.expList
+function DeclVarNode:get_expList()       
+  return self.expList         
 end
-function DeclVarNode:get_typeInfoList()
-  return self.typeInfoList
+function DeclVarNode:get_symbolInfoList()       
+  return self.symbolInfoList         
 end
-function DeclVarNode:get_unwrapFlag()
-  return self.unwrapFlag
+function DeclVarNode:get_typeInfoList()       
+  return self.typeInfoList         
 end
-function DeclVarNode:get_unwrapBlock()
-  return self.unwrapBlock
+function DeclVarNode:get_unwrapFlag()       
+  return self.unwrapFlag         
 end
-function DeclVarNode:get_thenBlock()
-  return self.thenBlock
+function DeclVarNode:get_unwrapBlock()       
+  return self.unwrapBlock         
 end
-function DeclVarNode:get_syncVarList()
-  return self.syncVarList
+function DeclVarNode:get_thenBlock()       
+  return self.thenBlock         
 end
-function DeclVarNode:get_syncBlock()
-  return self.syncBlock
+function DeclVarNode:get_syncVarList()       
+  return self.syncVarList         
+end
+function DeclVarNode:get_syncBlock()       
+  return self.syncBlock         
 end
 do
   end
@@ -4276,9 +4541,9 @@ function DeclFuncInfo.new( className, name, argList, staticFlag, accessMode, bod
     obj:__init( className, name, argList, staticFlag, accessMode, body, retTypeInfoList )
   end        
   return obj 
- end         
+end         
 function DeclFuncInfo:__init( className, name, argList, staticFlag, accessMode, body, retTypeInfoList ) 
-            
+
 self.className = className
   self.name = name
   self.argList = argList
@@ -4287,26 +4552,26 @@ self.className = className
   self.body = body
   self.retTypeInfoList = retTypeInfoList
   end
-function DeclFuncInfo:get_className()
-  return self.className
+function DeclFuncInfo:get_className()       
+  return self.className         
 end
-function DeclFuncInfo:get_name()
-  return self.name
+function DeclFuncInfo:get_name()       
+  return self.name         
 end
-function DeclFuncInfo:get_argList()
-  return self.argList
+function DeclFuncInfo:get_argList()       
+  return self.argList         
 end
-function DeclFuncInfo:get_staticFlag()
-  return self.staticFlag
+function DeclFuncInfo:get_staticFlag()       
+  return self.staticFlag         
 end
-function DeclFuncInfo:get_accessMode()
-  return self.accessMode
+function DeclFuncInfo:get_accessMode()       
+  return self.accessMode         
 end
-function DeclFuncInfo:get_body()
-  return self.body
+function DeclFuncInfo:get_body()       
+  return self.body         
 end
-function DeclFuncInfo:get_retTypeInfoList()
-  return self.retTypeInfoList
+function DeclFuncInfo:get_retTypeInfoList()       
+  return self.retTypeInfoList         
 end
 do
   end
@@ -4357,8 +4622,8 @@ function DeclFuncNode:__init(pos, typeList, declInfo)
   -- none
   
 end
-function DeclFuncNode:get_declInfo()
-  return self.declInfo
+function DeclFuncNode:get_declInfo()       
+  return self.declInfo         
 end
 do
   end
@@ -4410,8 +4675,8 @@ function DeclMethodNode:__init(pos, typeList, declInfo)
   -- none
   
 end
-function DeclMethodNode:get_declInfo()
-  return self.declInfo
+function DeclMethodNode:get_declInfo()       
+  return self.declInfo         
 end
 do
   end
@@ -4463,8 +4728,8 @@ function DeclConstrNode:__init(pos, typeList, declInfo)
   -- none
   
 end
-function DeclConstrNode:get_declInfo()
-  return self.declInfo
+function DeclConstrNode:get_declInfo()       
+  return self.declInfo         
 end
 do
   end
@@ -4517,11 +4782,11 @@ function ExpCallSuperNode:__init(pos, typeList, superType, expList)
   -- none
   
 end
-function ExpCallSuperNode:get_superType()
-  return self.superType
+function ExpCallSuperNode:get_superType()       
+  return self.superType         
 end
-function ExpCallSuperNode:get_expList()
-  return self.expList
+function ExpCallSuperNode:get_expList()       
+  return self.expList         
 end
 do
   end
@@ -4558,19 +4823,20 @@ function DeclMemberNode:canBeLeft(  )
 
   return false
 end
-function DeclMemberNode.new( pos, typeList, name, refType, staticFlag, accessMode, getterMode, setterMode )
+function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode )
   local obj = {}
   setmetatable( obj, { __index = DeclMemberNode } )
-  if obj.__init then obj:__init( pos, typeList, name, refType, staticFlag, accessMode, getterMode, setterMode ); end
+  if obj.__init then obj:__init( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode ); end
 return obj
 end
-function DeclMemberNode:__init(pos, typeList, name, refType, staticFlag, accessMode, getterMode, setterMode) 
+function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode) 
   Node.__init( self, _moduleObj.nodeKindDeclMember, pos, typeList)
   
   -- none
   
   self.name = name
   self.refType = refType
+  self.symbolInfo = symbolInfo
   self.staticFlag = staticFlag
   self.accessMode = accessMode
   self.getterMode = getterMode
@@ -4578,23 +4844,26 @@ function DeclMemberNode:__init(pos, typeList, name, refType, staticFlag, accessM
   -- none
   
 end
-function DeclMemberNode:get_name()
-  return self.name
+function DeclMemberNode:get_name()       
+  return self.name         
 end
-function DeclMemberNode:get_refType()
-  return self.refType
+function DeclMemberNode:get_refType()       
+  return self.refType         
 end
-function DeclMemberNode:get_staticFlag()
-  return self.staticFlag
+function DeclMemberNode:get_symbolInfo()       
+  return self.symbolInfo         
 end
-function DeclMemberNode:get_accessMode()
-  return self.accessMode
+function DeclMemberNode:get_staticFlag()       
+  return self.staticFlag         
 end
-function DeclMemberNode:get_getterMode()
-  return self.getterMode
+function DeclMemberNode:get_accessMode()       
+  return self.accessMode         
 end
-function DeclMemberNode:get_setterMode()
-  return self.setterMode
+function DeclMemberNode:get_getterMode()       
+  return self.getterMode         
+end
+function DeclMemberNode:get_setterMode()       
+  return self.setterMode         
 end
 do
   end
@@ -4647,11 +4916,11 @@ function DeclArgNode:__init(pos, typeList, name, argType)
   -- none
   
 end
-function DeclArgNode:get_name()
-  return self.name
+function DeclArgNode:get_name()       
+  return self.name         
 end
-function DeclArgNode:get_argType()
-  return self.argType
+function DeclArgNode:get_argType()       
+  return self.argType         
 end
 do
   end
@@ -4715,17 +4984,17 @@ function AdvertiseInfo.new( member, prefix )
     obj:__init( member, prefix )
   end        
   return obj 
- end         
+end         
 function AdvertiseInfo:__init( member, prefix ) 
-            
+
 self.member = member
   self.prefix = prefix
   end
-function AdvertiseInfo:get_member()
-  return self.member
+function AdvertiseInfo:get_member()       
+  return self.member         
 end
-function AdvertiseInfo:get_prefix()
-  return self.prefix
+function AdvertiseInfo:get_prefix()       
+  return self.prefix         
 end
 do
   end
@@ -4787,35 +5056,35 @@ function DeclClassNode:__init(pos, typeList, accessMode, name, fieldList, module
   -- none
   
 end
-function DeclClassNode:get_accessMode()
-  return self.accessMode
+function DeclClassNode:get_accessMode()       
+  return self.accessMode         
 end
-function DeclClassNode:get_name()
-  return self.name
+function DeclClassNode:get_name()       
+  return self.name         
 end
-function DeclClassNode:get_fieldList()
-  return self.fieldList
+function DeclClassNode:get_fieldList()       
+  return self.fieldList         
 end
-function DeclClassNode:get_moduleName()
-  return self.moduleName
+function DeclClassNode:get_moduleName()       
+  return self.moduleName         
 end
-function DeclClassNode:get_memberList()
-  return self.memberList
+function DeclClassNode:get_memberList()       
+  return self.memberList         
 end
-function DeclClassNode:get_scope()
-  return self.scope
+function DeclClassNode:get_scope()       
+  return self.scope         
 end
-function DeclClassNode:get_initStmtList()
-  return self.initStmtList
+function DeclClassNode:get_initStmtList()       
+  return self.initStmtList         
 end
-function DeclClassNode:get_advertiseList()
-  return self.advertiseList
+function DeclClassNode:get_advertiseList()       
+  return self.advertiseList         
 end
-function DeclClassNode:get_trustList()
-  return self.trustList
+function DeclClassNode:get_trustList()       
+  return self.trustList         
 end
-function DeclClassNode:get_outerMethodSet()
-  return self.outerMethodSet
+function DeclClassNode:get_outerMethodSet()       
+  return self.outerMethodSet         
 end
 do
   end
@@ -4870,17 +5139,17 @@ function DeclEnumNode:__init(pos, typeList, accessMode, name, valueNameList, sco
   -- none
   
 end
-function DeclEnumNode:get_accessMode()
-  return self.accessMode
+function DeclEnumNode:get_accessMode()       
+  return self.accessMode         
 end
-function DeclEnumNode:get_name()
-  return self.name
+function DeclEnumNode:get_name()       
+  return self.name         
 end
-function DeclEnumNode:get_valueNameList()
-  return self.valueNameList
+function DeclEnumNode:get_valueNameList()       
+  return self.valueNameList         
 end
-function DeclEnumNode:get_scope()
-  return self.scope
+function DeclEnumNode:get_scope()       
+  return self.scope         
 end
 do
   end
@@ -4932,8 +5201,8 @@ function DeclMacroNode:__init(pos, typeList, declInfo)
   -- none
   
 end
-function DeclMacroNode:get_declInfo()
-  return self.declInfo
+function DeclMacroNode:get_declInfo()       
+  return self.declInfo         
 end
 do
   end
@@ -4949,9 +5218,9 @@ function MacroEval.new(  )
     obj:__init(  )
   end        
   return obj 
- end         
+end         
 function MacroEval:__init(  ) 
-            
+
 end
 do
   end
@@ -5052,11 +5321,11 @@ function LiteralCharNode:__init(pos, typeList, token, num)
   -- none
   
 end
-function LiteralCharNode:get_token()
-  return self.token
+function LiteralCharNode:get_token()       
+  return self.token         
 end
-function LiteralCharNode:get_num()
-  return self.num
+function LiteralCharNode:get_num()       
+  return self.num         
 end
 do
   end
@@ -5109,11 +5378,11 @@ function LiteralIntNode:__init(pos, typeList, token, num)
   -- none
   
 end
-function LiteralIntNode:get_token()
-  return self.token
+function LiteralIntNode:get_token()       
+  return self.token         
 end
-function LiteralIntNode:get_num()
-  return self.num
+function LiteralIntNode:get_num()       
+  return self.num         
 end
 do
   end
@@ -5166,11 +5435,11 @@ function LiteralRealNode:__init(pos, typeList, token, num)
   -- none
   
 end
-function LiteralRealNode:get_token()
-  return self.token
+function LiteralRealNode:get_token()       
+  return self.token         
 end
-function LiteralRealNode:get_num()
-  return self.num
+function LiteralRealNode:get_num()       
+  return self.num         
 end
 do
   end
@@ -5222,8 +5491,8 @@ function LiteralArrayNode:__init(pos, typeList, expList)
   -- none
   
 end
-function LiteralArrayNode:get_expList()
-  return self.expList
+function LiteralArrayNode:get_expList()       
+  return self.expList         
 end
 do
   end
@@ -5275,8 +5544,8 @@ function LiteralListNode:__init(pos, typeList, expList)
   -- none
   
 end
-function LiteralListNode:get_expList()
-  return self.expList
+function LiteralListNode:get_expList()       
+  return self.expList         
 end
 do
   end
@@ -5291,17 +5560,17 @@ function PairItem.new( key, val )
     obj:__init( key, val )
   end        
   return obj 
- end         
+end         
 function PairItem:__init( key, val ) 
-            
+
 self.key = key
   self.val = val
   end
-function PairItem:get_key()
-  return self.key
+function PairItem:get_key()       
+  return self.key         
 end
-function PairItem:get_val()
-  return self.val
+function PairItem:get_val()       
+  return self.val         
 end
 do
   end
@@ -5353,11 +5622,11 @@ function LiteralMapNode:__init(pos, typeList, map, pairList)
   -- none
   
 end
-function LiteralMapNode:get_map()
-  return self.map
+function LiteralMapNode:get_map()       
+  return self.map         
 end
-function LiteralMapNode:get_pairList()
-  return self.pairList
+function LiteralMapNode:get_pairList()       
+  return self.pairList         
 end
 do
   end
@@ -5410,11 +5679,11 @@ function LiteralStringNode:__init(pos, typeList, token, argList)
   -- none
   
 end
-function LiteralStringNode:get_token()
-  return self.token
+function LiteralStringNode:get_token()       
+  return self.token         
 end
-function LiteralStringNode:get_argList()
-  return self.argList
+function LiteralStringNode:get_argList()       
+  return self.argList         
 end
 do
   end
@@ -5466,8 +5735,8 @@ function LiteralBoolNode:__init(pos, typeList, token)
   -- none
   
 end
-function LiteralBoolNode:get_token()
-  return self.token
+function LiteralBoolNode:get_token()       
+  return self.token         
 end
 do
   end
@@ -5519,8 +5788,8 @@ function LiteralSymbolNode:__init(pos, typeList, token)
   -- none
   
 end
-function LiteralSymbolNode:get_token()
-  return self.token
+function LiteralSymbolNode:get_token()       
+  return self.token         
 end
 do
   end
@@ -5689,7 +5958,7 @@ end
 
 function RefFieldNode:getLiteral(  )
 
-  local prefix = (_lune_unwrap( self.prefix:getLiteral(  )[1]) )
+  local prefix = (_lune.unwrap( self.prefix:getLiteral(  )[1]) )
   
   if self.nilAccess then
     table.insert( prefix, "$." )
@@ -5719,7 +5988,7 @@ function ExpRefNode:getLiteral(  )
   end
   local enumTypeInfo = typeInfo
   
-  local val = _lune_unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
+  local val = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
   
   return {val:get_val()}, {enumTypeInfo:get_valTypeInfo()}
 end
@@ -5733,7 +6002,7 @@ function ExpOp2Node:getLiteral(  )
   if #val1List ~= 1 or #type1List ~= 1 or #val2List ~= 1 or #type2List ~= 1 then
     return {}, {}
   end
-  local val1, type1, val2, type2 = _lune_unwrap( val1List[1]), type1List[1], _lune_unwrap( val2List[1]), type2List[1]
+  local val1, type1, val2, type2 = _lune.unwrap( val1List[1]), type1List[1], _lune.unwrap( val2List[1]), type2List[1]
   
   if (type1 == _moduleObj.builtinTypeInt or type1 == _moduleObj.builtinTypeReal ) and (type2 == _moduleObj.builtinTypeInt or type2 == _moduleObj.builtinTypeReal ) then
     local retType = _moduleObj.builtinTypeInt

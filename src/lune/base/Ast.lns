@@ -26,12 +26,12 @@ import lune.base.Parser;
 import lune.base.Util;
 
 pub let rootTypeId = 1;
-let typeIdSeed = rootTypeId + 1;
+let mut typeIdSeed = rootTypeId + 1;
 
 
 
 pub proto class TypeInfo;
-pub proto class SymbolInfo;
+pub proto interface SymbolInfo;
 
 pub let typeInfoKind:Map<str,TypeInfo> = {};
 pub let sym2builtInTypeMap:Map<str,SymbolInfo> = {};
@@ -50,22 +50,8 @@ pub enum TypeInfoKind {
    Method,  
    Nilable, 
    Enum,    
-   Module,  
+   Module,
 }
-
-// pub let TypeInfoKindRoot = 0;
-// pub let TypeInfoKindMacro = 1;
-// pub let TypeInfoKindPrim = 2;
-// pub let TypeInfoKindList = 3;
-// pub let TypeInfoKindArray = 4;
-// pub let TypeInfoKindMap = 5;
-// pub let TypeInfoKindClass = 6;
-// pub let TypeInfoKindIF = 7;
-// pub let TypeInfoKindFunc = 8;
-// pub let TypeInfoKindMethod = 9;
-// pub let TypeInfoKindNilable = 10;
-// pub let TypeInfoKindEnum = 11;
-// pub let TypeInfoKindModule = 12;
 
 pub fn isBuiltin( typeId: int ) : bool {
    return builtInTypeIdSet[ typeId ] ~= nil;
@@ -74,38 +60,6 @@ pub fn isBuiltin( typeId: int ) : bool {
 let dummyList:TypeInfo[] = [];
 
 pub proto class Scope;
-
-// macro _setSymbolKind( kind:sym ) {
-//    SymbolKind.val2txt[ SymbolKind.seed ] = ,,,,kind;
-//    SymbolKind.,,kind = SymbolKind.seed;
-//    SymbolKind.seed = SymbolKind.seed + 1;
-// }
-
-// pub class SymbolKind {
-//    pub static let Typ:int;
-//    pub static let Mbr:int;
-//    pub static let Mtd:int;
-//    pub static let Fun:int;
-//    pub static let Var:int;
-//    pub static let Arg:int;
-//    pri static let val2txt:Map<int,str>;
-//    pri static let seed;int;
-
-//    __init {
-//       SymbolKind.seed = 0;
-//       SymbolKind.val2txt = {};
-//       _setSymbolKind( Typ );
-//       _setSymbolKind( Mbr );
-//       _setSymbolKind( Mtd );
-//       _setSymbolKind( Fun );
-//       _setSymbolKind( Var );
-//       _setSymbolKind( Arg );
-//    }
-
-//    pub static fn getTxt( val:int ) : str {
-//       return unwrap SymbolKind.val2txt[ val ];
-//    }
-// };
 
 pub enum SymbolKind {
    Typ,
@@ -118,11 +72,45 @@ pub enum SymbolKind {
 
 
 /** シンボル情報 */
-pub class SymbolInfo {
-   pri static let symbolIdSeed:int;
+pub interface SymbolInfo {
+   /** 左辺値になれる場合 true */
+   pub fn get_canBeLeft(): bool;
+   /** 右辺値になれる場合 true */
+   pub fn get_canBeRight(): bool;
+   /** このシンボルの ID */
+   pub fn get_symbolId(): int;
+   /** このシンボルが属するスコープ */
+   pub fn get_scope(): Scope;
+   /** シンボルのアクセス */
+   pub fn get_accessMode(): str;
+   /** */
+   pub fn get_staticFlag(): bool;
+   /** シンボルの名前 */
+   pub fn get_name(): str;
+   /** シンボルの型 */
+   pub fn get_typeInfo(): TypeInfo;
+   /** このシンボルが mut かどうか */
+   pub fn get_mutable(): bool;
+   /** このシンボルの種類 SymbolKind */
+   pub fn get_kind(): SymbolKind;
+   /** このシンボルがデータを保持しているかどうか */
+   pub fn get_hasValueFlag(): bool;
+   pub fn set_hasValueFlag( arg:bool );
+
+   /**
+このシンボルにアクセス可能かどうか調べる。
+
+@param fromScope このシンボルにアクセスしようとしているスコープ。
+*/
+   pub fn canAccess( fromScope:Scope ): SymbolInfo!;
+}
+
+
+pub class NormalSymbolInfo extend (SymbolInfo) {
+   pri static let mut symbolIdSeed:int;
 
    __init {
-      SymbolInfo.symbolIdSeed = 0;
+      NormalSymbolInfo.symbolIdSeed = 0;
    }
 
    /** 左辺値になれる場合 true */
@@ -152,19 +140,19 @@ pub class SymbolInfo {
    pub fn __init(
       kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
       accessMode: str, staticFlag: bool, name: str, 
-      typeInfo: TypeInfo, mutable: bool, hasValueFlag: bool )
+      typeInfo: TypeInfo, mutable: bool!, hasValueFlag: bool )
    {
-      SymbolInfo.symbolIdSeed = SymbolInfo.symbolIdSeed + 1;
+      NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
       self.canBeLeft = canBeLeft;
       self.canBeRight = canBeRight;
-      self.symbolId = SymbolInfo.symbolIdSeed;
+      self.symbolId = NormalSymbolInfo.symbolIdSeed;
       self.scope = scope;
       self.accessMode = accessMode;
       self.staticFlag = staticFlag;
       self.name = name;
       self.typeInfo = typeInfo;
-      self.mutable = mutable;
+      self.mutable = mutable and true or false;
       self.hasValueFlag = hasValueFlag;
    }
    
@@ -174,6 +162,13 @@ pub class SymbolInfo {
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
    pub fn canAccess( fromScope:Scope ): SymbolInfo!;
+}
+
+
+pub class AccessSymbolInfo extend SymbolInfo {
+   pri let symbolInfo: SymbolInfo {pub};
+
+   advertise symbolInfo;
 }
 
 pub class DataOwnerInfo {
@@ -341,7 +336,7 @@ pub class TypeInfo {
    pub fn get_mutable(): bool {
       return false;
    }
-} 
+}
 
 pub fn Scope.getSymbolInfoField(
    name: str, includeSelfFlag: bool!, fromScope:Scope ) : SymbolInfo!
@@ -464,8 +459,8 @@ pub fn Scope.getTypeInfo(
 pub fn Scope.getSymbolTypeInfo(
    name: str, fromScope:Scope, moduleScope:Scope ) : SymbolInfo!
 {
-   let typeInfo:TypeInfo! = nil;
-   let validThisScope = false;
+   let mut typeInfo:TypeInfo! = nil;
+   let mut validThisScope = false;
 
    if! self.ownerTypeInfo {
       if _exp.$kind == TypeInfoKind.Func or _exp.$kind == TypeInfoKind.Method or
@@ -521,12 +516,13 @@ pub fn Scope.filterSymbolTypeInfo(
 
 pub fn Scope.add( kind: SymbolKind, canBeLeft:bool, canBeRight:bool,
                   name:str, typeInfo: TypeInfo, accessMode:str,
-                  staticFlag:bool, mutable:bool, hasValueFlag:bool )
+                  staticFlag:bool, mutable:bool, hasValueFlag:bool ) : SymbolInfo
 {
-   let symbolInfo = new SymbolInfo(
+   let symbolInfo = new NormalSymbolInfo(
       kind, canBeLeft, canBeRight,
       self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag );
    self.symbol2TypeInfoMap[ name ] = symbolInfo;
+   return symbolInfo;
 }
 
 pub fn Scope.addLocalVar(
@@ -546,11 +542,10 @@ pub fn Scope.addStaticVar(
 }
 
 pub fn Scope.addVar(
-   accessMode:str, name:str, typeInfo: TypeInfo, mutable:bool )
+   accessMode:str, name:str, typeInfo: TypeInfo, mutable:bool, hasValueFlag:bool )
 {
-   // 現状変数は常に値を保持する
    self.add( SymbolKind.Var, true, true, name, typeInfo,
-             accessMode, false, mutable, true );
+             accessMode, false, mutable, hasValueFlag );
 }
 
 
@@ -567,10 +562,10 @@ pub fn Scope.addEnum( accessMode:str, name:str, typeInfo: TypeInfo )
 }
 
 pub fn Scope.addMember( name:str, typeInfo: TypeInfo, accessMode:str,
-                        staticFlag:bool, mutable:bool )
+                        staticFlag:bool, mutable:bool ) : SymbolInfo
 {
-   self.add( SymbolKind.Mbr, true, true,
-             name, typeInfo, accessMode, staticFlag, mutable, false );
+   return self.add( SymbolKind.Mbr, true, true,
+                    name, typeInfo, accessMode, staticFlag, mutable, false );
 }
 
 pub fn Scope.addMethod(
@@ -623,7 +618,7 @@ pub let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
 
 pub fn Scope.getNSTypeInfo(): TypeInfo {
-   let scope = self;
+   let mut scope = self;
    while scope.ownerTypeInfo ~= rootTypeInfo {
       if! scope.ownerTypeInfo {
          return _exp;
@@ -634,7 +629,7 @@ pub fn Scope.getNSTypeInfo(): TypeInfo {
 }
 
 pub fn Scope.getClassTypeInfo(): TypeInfo {
-   let scope = self;
+   let mut scope = self;
    while scope.ownerTypeInfo ~= rootTypeInfo {
       if! scope.ownerTypeInfo {
          if _exp.$kind == TypeInfoKind.Class or
@@ -651,7 +646,7 @@ pub fn Scope.getClassTypeInfo(): TypeInfo {
 /**
 このシンボルが、fromScope のスコープからアクセスできるか調べる。
  */
-pub fn SymbolInfo.canAccess( fromScope:Scope ): SymbolInfo!
+pub fn NormalSymbolInfo.canAccess( fromScope:Scope ): SymbolInfo!
 {
    let typeInfo = self.$typeInfo;
    if self.scope == fromScope {
@@ -714,6 +709,39 @@ pub class NilableTypeInfo extend TypeInfo {
    
    advertise orgTypeInfo;
 }
+
+
+pub class ModifierTypeInfo extend TypeInfo {
+   pri let orgTypeInfo: TypeInfo { pub };
+   pri let typeId: int { pub };
+   pri let mutable: bool! { pub };
+
+   pub override fn getTxt() : str {
+      let mut txt = self.orgTypeInfo.getTxt();
+      if self.mutable {
+         txt = "mut " .. txt;
+      }
+      return txt;
+   }
+   pub override fn get_display_stirng(): str {
+      let mut txt = self.orgTypeInfo.get_display_stirng();
+      if self.mutable {
+         txt = "mut " .. txt;
+      }
+      return txt;
+   }
+
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,TypeInfo>! ) {
+      let parentId = self.getParentId();
+      stream.write(
+         '{ parentId = %d, typeId = %d, orgTypeId = %d, mutable = %s }\n' (
+            parentId, self.typeId, self.orgTypeInfo.$typeId,
+            self.mutable and true or false ) );
+   }
+   
+   advertise orgTypeInfo;
+}
+
 
 pub class ModuleTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
@@ -784,7 +812,7 @@ pub class ModuleTypeInfo extend TypeInfo {
 
       stream.write( "children = {" );
 
-      let children = self.children;
+      let mut children = self.children;
       if! validChildrenSet {
          children = [];
          foreach child in self.children {
@@ -906,25 +934,27 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let abstructFlag: bool { pub };
 
    // unwrap 後の TypeInfo。 無効な場合は rootTypeInfo。
-   pri let orgTypeInfo: TypeInfo { pub };
+   pri let mut orgTypeInfo: TypeInfo { pub };
    // 基底クラス。 無効な場合は rootTypeInfo。
    pri let baseTypeInfo: TypeInfo { pub };
    // インタフェースのリスト。
    pri let interfaceList: TypeInfo[] { pub };
 
    // この型が nilable を表わす型かどうか。
-   pri let nilable: bool { pub };
+   pri let mut nilable: bool { pub };
    // この型の nilable 版の TypeInfo。 無効な場合は rootTypeInfo。
-   pri let nilableTypeInfo: TypeInfo { pub };
+   pri let mut nilableTypeInfo: TypeInfo { pub };
    // 子のタイプリスト。 このタイプがクラスなら、メソッドが子。
    pri let children: TypeInfo[] { pub };
+   // このメソッドが mutable かどうか。
+   pri let mutable: bool {pub};
 
    fn __init( abstructFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
               interfaceList: TypeInfo[]!, orgTypeInfo: TypeInfo!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool, accessMode: str,
               txt: str, parentInfo: TypeInfo!, typeId: int, kind: TypeInfoKind,
-              itemTypeInfoList: TypeInfo[]!,
-              argTypeInfoList:TypeInfo[]!, retTypeInfoList: TypeInfo[]! )
+              itemTypeInfoList: TypeInfo[]!, argTypeInfoList:TypeInfo[]!,
+              retTypeInfoList: TypeInfo[]!, mutable: bool! )
    {
       super( scope );
 
@@ -947,6 +977,7 @@ pub class NormalTypeInfo extend TypeInfo {
       self.orgTypeInfo = unwrap orgTypeInfo default rootTypeInfo;
       self.parentInfo = unwrap parentInfo default rootTypeInfo;
       self.children = [];
+      self.mutable = mutable and true or false;
 
       // if dummyRootTypeInfo and not parentInfo {
       //     Util.debugLog();
@@ -969,7 +1000,7 @@ pub class NormalTypeInfo extend TypeInfo {
          }  
          self.nilable = false;
 
-         let hasNilable = false;
+         let mut hasNilable = false;
 
          switch ( kind ) {
             case TypeInfoKind.Prim, TypeInfoKind.List, TypeInfoKind.Array,
@@ -1036,7 +1067,7 @@ pub class NormalTypeInfo extend TypeInfo {
          return _exp.getTxt() .. "[]";
       } 
       if self.itemTypeInfoList and #self.itemTypeInfoList > 0 {
-         let txt = self.rawTxt .. "<";
+         let mut txt = self.rawTxt .. "<";
          foreach typeInfo, index in self.itemTypeInfoList {
             if index ~= 1 {
                txt = txt .. ",";
@@ -1058,7 +1089,7 @@ pub class NormalTypeInfo extend TypeInfo {
       }
       if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Method
       {
-         let txt = self.$rawTxt .. "(";
+         let mut txt = self.$rawTxt .. "(";
          foreach argType, index in self.argTypeInfoList {
             if index ~= 1 {
                txt = txt .. ", ";
@@ -1095,7 +1126,7 @@ pub class NormalTypeInfo extend TypeInfo {
       } 
 
       fn serializeTypeInfoList( name: str, list: TypeInfo[], onlyPub: bool! ): str {
-         let work = name;
+         let mut work = name;
          foreach typeInfo in list {
             if not onlyPub or typeInfo.$accessMode == "pub"  {
                if #work ~=  #name {
@@ -1112,7 +1143,7 @@ pub class NormalTypeInfo extend TypeInfo {
           ( parentId, self.typeId, self.get_baseId(), self.rawTxt,
             self.staticFlag, self.accessMode, self.kind );
 
-      let children = self.children;
+      let mut children = self.children;
       if! validChildrenSet {
          children = [];
          foreach child in self.children {
@@ -1225,11 +1256,11 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pub static fn create(
       abstructFlag: bool, scope: Scope!, baseInfo: TypeInfo,
-      interfaceList: TypeInfo[],
-      parentInfo: TypeInfo, staticFlag: bool, kind: TypeInfoKind, txt: str,
-      itemTypeInfo: TypeInfo[],
-      argTypeInfoList: TypeInfo[],
-      retTypeInfoList: TypeInfo[] ): TypeInfo {
+      interfaceList: TypeInfo[], parentInfo: TypeInfo, staticFlag: bool,
+      kind: TypeInfoKind, txt: str, itemTypeInfo: TypeInfo[],
+      argTypeInfoList: TypeInfo[], retTypeInfoList: TypeInfo[],
+      mutable: bool! ): TypeInfo
+   {  
          if kind == TypeInfoKind.Prim {
             if! sym2builtInTypeMap[ txt ] {
                return _exp.$typeInfo;
@@ -1240,7 +1271,7 @@ pub class NormalTypeInfo extend TypeInfo {
          let info = new NormalTypeInfo(
             abstructFlag, scope, baseInfo, interfaceList, nil, false, true,
             staticFlag, "pub", txt, parentInfo, typeIdSeed, kind,
-            itemTypeInfo, argTypeInfoList, retTypeInfoList ); 
+            itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable ); 
          return info;
       } 
 }
@@ -1253,15 +1284,15 @@ typeIdSeed = typeIdSeed + 1;
 
 pub static fn NormalTypeInfo.createBuiltin(
    idName: str, typeTxt: str, kind: TypeInfoKind, typeDDD: TypeInfo! ): TypeInfo {
-      let typeId = typeIdSeed + 1;
+      let mut typeId = typeIdSeed + 1;
       if kind == TypeInfoKind.Root {
          typeId = rootTypeId;
       } 
       else {
          typeIdSeed = typeIdSeed + 1;
       } 
-      let argTypeList:TypeInfo[] = [];
-      let retTypeList:TypeInfo[] = [];
+      let mut argTypeList:TypeInfo[] = [];
+      let mut retTypeList:TypeInfo[] = [];
       if typeTxt == "form" {
          if! typeDDD {
             argTypeList = [ _exp ];
@@ -1269,7 +1300,7 @@ pub static fn NormalTypeInfo.createBuiltin(
          }  
       } 
 
-      let scope:Scope! = nil;
+      let mut scope:Scope! = nil;
       switch kind {
          case TypeInfoKind.List, TypeInfoKind.Class, TypeInfoKind.Module,
               TypeInfoKind.IF, TypeInfoKind.Func, TypeInfoKind.Method,
@@ -1284,17 +1315,17 @@ pub static fn NormalTypeInfo.createBuiltin(
       
       let info = new NormalTypeInfo( false, scope, nil, nil, nil, false, false, false,
                                      "pub", typeTxt, typeInfoRoot, typeId, kind,
-                                     [], argTypeList, retTypeList );
+                                     [], argTypeList, retTypeList, false );
       if scope {
          rootScope.addClass( typeTxt, info );
       } 
 
       typeInfoKind[ idName ] = info;
-      sym2builtInTypeMap[ typeTxt ] = new SymbolInfo(
+      sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
          SymbolKind.Typ, false, false,
          rootScope, "pub", false, typeTxt, info, false, true );
       if info.$nilableTypeInfo ~= rootTypeInfo {
-         sym2builtInTypeMap[ typeTxt .. "!" ] = new SymbolInfo(
+         sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
             SymbolKind.Typ, false, kind == TypeInfoKind.Func, rootScope, "pub",
             false, typeTxt, info.$nilableTypeInfo, false, true );
          builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
@@ -1312,7 +1343,7 @@ pub static fn NormalTypeInfo.createList(
       typeIdSeed = typeIdSeed + 1;
       return new NormalTypeInfo(
          false, nil, nil, nil, nil, false, false, false, accessMode, "",
-         typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo );
+         typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, false );
    }
 
 pub static fn NormalTypeInfo.createArray(
@@ -1321,7 +1352,7 @@ pub static fn NormalTypeInfo.createArray(
       typeIdSeed = typeIdSeed + 1;
       return new NormalTypeInfo(
          false, nil, nil, nil, nil, false, false, false, accessMode, "",
-         typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo );
+         typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, false );
    }
 
 pub static fn NormalTypeInfo.createMap(
@@ -1332,7 +1363,7 @@ pub static fn NormalTypeInfo.createMap(
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "Map",
       typeInfoRoot, typeIdSeed, TypeInfoKind.Map,
-      [ keyTypeInfo, valTypeInfo ] );
+      [ keyTypeInfo, valTypeInfo ], nil, nil, false );
 }
 
 
@@ -1380,15 +1411,15 @@ pub static fn NormalTypeInfo.createClass(
       abstructFlag, scope, baseInfo, interfaceList, nil, false,
       externalFlag, false, accessMode,
       className, parentInfo, typeIdSeed,
-      classFlag and TypeInfoKind.Class or TypeInfoKind.IF );
+      classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, false );
    return info;
 }
 
 pub static fn NormalTypeInfo.createFunc(
    abstructFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
-   parentInfo: TypeInfo,
-   autoFlag: bool, externalFlag: bool, staticFlag: bool, accessMode: str,
-   funcName: str, argTypeList: TypeInfo[]!, retTypeInfoList: TypeInfo[]! ): TypeInfo
+   parentInfo: TypeInfo, autoFlag: bool, externalFlag: bool,
+   staticFlag: bool, accessMode: str, funcName: str, argTypeList: TypeInfo[]!,
+   retTypeInfoList: TypeInfo[]!, mutable: bool! ): TypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
@@ -1399,8 +1430,15 @@ pub static fn NormalTypeInfo.createFunc(
       abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, typeIdSeed,
       kind, [], unwrap argTypeList default [],
-      unwrap retTypeInfoList default [] );
+      unwrap retTypeInfoList default [], mutable );
    return info;
+}
+
+pub static fn NormalTypeInfo.createModifier(
+   orgTypeInfo: TypeInfo, typeId: int, mutable: bool! ): ModifierTypeInfo
+{
+   typeIdSeed = typeIdSeed + 1;
+   return new ModifierTypeInfo( orgTypeInfo, typeId, mutable ); 
 }
 
 pub let builtinTypeNone:TypeInfo = 
@@ -1455,13 +1493,13 @@ pub static fn NormalTypeInfo.createEnum(
    let getEnumName = NormalTypeInfo.createFunc(
       false, true, nil, TypeInfoKind.Method, info,
       true, true, false, "pub",
-      "get__txt", nil, [ builtinTypeString ] );
+      "get__txt", nil, [ builtinTypeString ], false );
    scope.addMethod( getEnumName, "pub", false, true );
 
    let fromVal = NormalTypeInfo.createFunc(
       false, true, nil, TypeInfoKind.Method, info,
       true, true, true, "pub",
-      "_from", [ valTypeInfo ], [ info.$nilableTypeInfo ] );
+      "_from", [ valTypeInfo ], [ info.$nilableTypeInfo ], false );
    scope.addMethod( fromVal, "pub", true, true );
    
    return info;
@@ -1511,8 +1549,6 @@ pub override fn NilableTypeInfo.isSettableFrom( other:TypeInfo ) : bool {
    return self.$orgTypeInfo.isSettableFrom( other );
 }
    
-
-
 macro checkEqualsItemType( type1:sym, type2:sym, index:int ) {
    if not (unwrap ,,type1.$itemTypeInfoList[ ,,index ]).isSettableFrom(
       unwrap ,,type2.$itemTypeInfoList[ ,,index ] )
@@ -1533,7 +1569,7 @@ pub override fn NormalTypeInfo.isInheritFrom( other:TypeInfo ) : bool
    {  
       return false;
    }
-   let baseTypeInfo = self.$baseTypeInfo;
+   let mut baseTypeInfo = self.$baseTypeInfo;
    while baseTypeInfo ~= rootTypeInfo {
       if otherTypeId == baseTypeInfo.$typeId {
          return true;
@@ -1541,11 +1577,12 @@ pub override fn NormalTypeInfo.isInheritFrom( other:TypeInfo ) : bool
       baseTypeInfo = baseTypeInfo.$baseTypeInfo;
    };
    foreach ifType in self.$interfaceList {
-      while ifType ~= rootTypeInfo {
-         if otherTypeId == ifType.$typeId {
+      let mut workType = ifType;
+      while workType ~= rootTypeInfo {
+         if otherTypeId == workType.$typeId {
             return true;
          }
-         ifType = ifType.$baseTypeInfo;
+         workType = workType.$baseTypeInfo;
       }; 
    }
    return false;
@@ -1706,7 +1743,7 @@ pub class MacroInfo {
 }
 
 let nodeKind2NameMap: Map<int,str> = {};
-let nodeKindSeed = 1;
+let mut nodeKindSeed = 1;
 pub let nodeKind: Map<str,int> = {};
 
 fn regKind( name:str ): int {
@@ -1788,7 +1825,7 @@ macro _declNodeClass(
          foreach fieldInfo in fieldInfoList {
             foreach typeName, varName in fieldInfo {
                fieldStatList.insert( `{
-                  pri let ,,,varName : ,,,typeName { pub };
+                  pri let mut ,,,varName : ,,,typeName { pub };
                });  
                argList.insert( `{ ,,,varName: ,,,typeName, } );
                initStatList.insert( `{ self.,,,varName = ,,,varName; } );
@@ -1956,7 +1993,7 @@ _declNodeClass( "ExpUnwrap", Node, false, true,
 
 _declNodeClass( "ExpRef", Node, nil, nil,
                 [ { "token": "Parser.Token" },
-                  { "symbolInfo": "SymbolInfo" } ]              
+                  { "symbolInfo": "AccessSymbolInfo" } ]              
 );
 
 pub override fn ExpRefNode.canBeLeft():bool {
@@ -2030,7 +2067,7 @@ _declNodeClass( "StmtExp", Node, false, true,
 
 _declNodeClass( "RefField", Node, true, true,
                 [ { "field": "Parser.Token" },
-                  { "symbolInfo": "SymbolInfo!" },
+                  { "symbolInfo": "AccessSymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "Node" }] 
 );
@@ -2043,7 +2080,7 @@ pub override fn RefFieldNode.canBeLeft():bool {
 
 _declNodeClass( "GetField", Node, false, true,
                 [ { "field": "Parser.Token" },
-                  { "symbolInfo": "SymbolInfo!" },
+                  { "symbolInfo": "AccessSymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "Node" },
                   { "getterTypeInfo": "TypeInfo" } ]               
@@ -2069,6 +2106,7 @@ _declNodeClass( "DeclVar", Node, false, false,
                   { "staticFlag": "bool" },
                   { "varList": "VarInfo[]" },
                   { "expList": "ExpListNode!" },
+                  { "symbolInfoList": "SymbolInfo[]"},
                   { "typeInfoList": "TypeInfo[]" },
                   { "unwrapFlag": "bool" },
                   { "unwrapBlock": "BlockNode!" },
@@ -2106,6 +2144,7 @@ _declNodeClass( "ExpCallSuper", Node, false, false,
 _declNodeClass( "DeclMember", Node, false, false,
                 [ { "name": "Parser.Token" },
                   { "refType": "RefTypeNode" },
+                  { "symbolInfo": "SymbolInfo" },
                   { "staticFlag": "bool" },
                   { "accessMode": "str" },
                   { "getterMode": "str" },
@@ -2199,8 +2238,8 @@ _declNodeClass( "LiteralSymbol", Node, false, true,
                 [ { "token": "Parser.Token" } ]
 );
 
-pub fn Node.getSymbolInfo(): SymbolInfo[] {
-   fn processExpNode( node: Node ): SymbolInfo[] {
+pub fn Node.getSymbolInfo(): AccessSymbolInfo[] {
+   fn processExpNode( node: Node ): AccessSymbolInfo[] {
       switch ( node.$kind ) {
          case nodeKindExpRef {
             return [(node@@ExpRefNode).$symbolInfo];
@@ -2221,7 +2260,7 @@ pub fn Node.getSymbolInfo(): SymbolInfo[] {
          }
          case nodeKindExpList {
             let expListNode = node@@ExpListNode;
-            let list: SymbolInfo[] = [];
+            let list: AccessSymbolInfo[] = [];
             foreach expNode, index in expListNode.$expList {
                if index == #expListNode.$expList {
                   foreach symbolInfo in processExpNode( expNode ) {
@@ -2291,7 +2330,7 @@ pub override fn LiteralMapNode.getLiteral(): stem![], TypeInfo[] {
 }
 
 pub override fn LiteralStringNode.getLiteral(): stem![], TypeInfo[] {
-   let txt = self.token.txt;
+   let mut txt = self.token.txt;
    if string.find( txt, '^```' ) {
       txt = txt.sub( 4, -4 );
    }
@@ -2332,7 +2371,7 @@ pub override fn RefFieldNode.getLiteral(): stem![], TypeInfo[] {
 }
 
 pub override fn ExpMacroStatNode.getLiteral(): stem![], TypeInfo[] {
-   let txt = "";
+   let mut txt = "";
    foreach token in self.expStrList {
       txt = "%s%s" (txt, token.getLiteral()[1]);
    }
@@ -2364,12 +2403,12 @@ pub override fn ExpOp2Node.getLiteral(): stem![], TypeInfo[] {
    if ( type1 == builtinTypeInt or type1 == builtinTypeReal ) and
       ( type2 == builtinTypeInt or type2 == builtinTypeReal )
    {
-      let retType = builtinTypeInt;
+      let mut retType = builtinTypeInt;
       if type1 == builtinTypeReal or type2 == builtinTypeReal {
          retType = builtinTypeReal;
       }
-      let int1, int2 = 0, 0;
-      let real1, real2 = 0.0, 0.0;
+      let mut int1, mut int2 = 0, 0;
+      let mut real1, mut real2 = 0.0, 0.0;
       if type1 == builtinTypeInt {
          int1 = val1@@int;
          real1 = int1@@real;

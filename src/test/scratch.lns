@@ -58,4 +58,3 @@ class Obj {
       print( self.val );
    }
 }
-

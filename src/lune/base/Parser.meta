@@ -105,29 +105,29 @@ do
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.kindChar = {
-  name='kindChar', accessMode = 'pub', typeId = 16 }
+  name='kindChar', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindCmnt = {
-  name='kindCmnt', accessMode = 'pub', typeId = 16 }
+  name='kindCmnt', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindDlmt = {
-  name='kindDlmt', accessMode = 'pub', typeId = 16 }
+  name='kindDlmt', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindEof = {
-  name='kindEof', accessMode = 'pub', typeId = 16 }
+  name='kindEof', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindInt = {
-  name='kindInt', accessMode = 'pub', typeId = 16 }
+  name='kindInt', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindKywd = {
-  name='kindKywd', accessMode = 'pub', typeId = 16 }
+  name='kindKywd', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindOpe = {
-  name='kindOpe', accessMode = 'pub', typeId = 16 }
+  name='kindOpe', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindReal = {
-  name='kindReal', accessMode = 'pub', typeId = 16 }
+  name='kindReal', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindStr = {
-  name='kindStr', accessMode = 'pub', typeId = 16 }
+  name='kindStr', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindSymb = {
-  name='kindSymb', accessMode = 'pub', typeId = 16 }
+  name='kindSymb', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.kindType = {
-  name='kindType', accessMode = 'pub', typeId = 16 }
+  name='kindType', accessMode = 'pub', typeId = 16, mutable = true }
 _varName2InfoMap.noneToken = {
-  name='noneToken', accessMode = 'pub', typeId = 348 }
+  name='noneToken', accessMode = 'pub', typeId = 348, mutable = true }
 local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
 _typeInfoList[1] = { parentId = 1, typeId = 187, txt = 'lune', kind = 12, 

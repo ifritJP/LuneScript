@@ -1,55 +1,56 @@
 --lune/base/Parser.lns
 local _moduleObj = {}
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -190,9 +191,9 @@ function Position.new( lineNo, column )
     obj:__init( lineNo, column )
   end        
   return obj 
- end         
+end         
 function Position:__init( lineNo, column ) 
-            
+
 self.lineNo = lineNo
   self.column = column
   end
@@ -211,14 +212,14 @@ function Token:__init(kind, txt, pos, commentList)
   self.kind = kind
   self.txt = txt
   self.pos = pos
-  self.commentList = _lune_unwrapDefault( commentList, {})
+  self.commentList = _lune.unwrapDefault( commentList, {})
 end
 function Token:set_commentList( commentList )
 
   self.commentList = commentList
 end
-function Token:get_commentList()
-  return self.commentList
+function Token:get_commentList()       
+  return self.commentList         
 end
 do
   end
@@ -234,9 +235,9 @@ function Parser.new(  )
     obj:__init(  )
   end        
   return obj 
- end         
+end         
 function Parser:__init(  ) 
-            
+
 end
 do
   end
@@ -261,9 +262,9 @@ function WrapParser.new( parser, name )
     obj:__init( parser, name )
   end        
   return obj 
- end         
+end         
 function WrapParser:__init( parser, name ) 
-            
+
 self.parser = parser
   self.name = name
   end
@@ -276,7 +277,7 @@ _moduleObj.StreamParser = StreamParser
 function StreamParser.setStdinStream( moduleName )
 
   StreamParser.stdinStreamModuleName = moduleName
-  StreamParser.stdinTxt = _lune_unwrapDefault( io.stdin:read( '*a' ), "")
+  StreamParser.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
 end
 function StreamParser.new( stream, name, luaMode )
   local obj = {}
@@ -335,9 +336,9 @@ function TokenKind.new(  )
     obj:__init(  )
   end        
   return obj 
- end         
+end         
 function TokenKind:__init(  ) 
-            
+
 end
 do
   TokenKind.Cmnt = 1
@@ -467,7 +468,7 @@ op1Set[',,,'] = true
 op1Set[',,,,'] = true
 local function getKindTxt( kind )
 
-  return _lune_unwrap( kind2Txt[kind])
+  return _lune.unwrap( kind2Txt[kind])
 end
 _moduleObj.getKindTxt = getKindTxt
 local function isOp2( ope )
@@ -523,7 +524,7 @@ function StreamParser:parse(  )
       end
       comment = comment .. rawLine:sub( searchIndex ) .. "\n"
       searchIndex = 1
-      rawLine = _lune_unwrap( readLine(  ))
+      rawLine = _lune.unwrap( readLine(  ))
     end
   end
   
@@ -620,7 +621,7 @@ function StreamParser:parse(  )
               while candidateList do
                 local findFlag = false
                 
-                for __index, candidate in pairs( _lune_unwrap( (candidateList )) ) do
+                for __index, candidate in pairs( _lune.unwrap( (candidateList )) ) do
                   if candidate == token:sub( index, index + #candidate - 1 ) then
                     delimit = candidate
                     candidateList = self.multiCharDelimitMap[delimit]
@@ -811,9 +812,9 @@ function DummyParser.new(  )
     obj:__init(  )
   end        
   return obj 
- end         
+end         
 function DummyParser:__init(  ) 
-            
+
 end
 do
   end

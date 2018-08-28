@@ -28,12 +28,12 @@ import lune.base.Util;
 pub let version = "00.01";
 
 pub class Option {
-   pub let mode:str;
+   pub let mut mode:str;
    pub let analyzeModule:str!;
    pub let analyzePos: Parser.Position!;
    pub let outputDir:str!;
-   pub let scriptPath: str;
-   pub let validProf:bool;
+   pub let mut scriptPath: str;
+   pub let mut validProf:bool;
    pub fn __init() {
       self.validProf = false;
       self.mode = "";
@@ -55,11 +55,11 @@ usage: [-prof] src.lns mode [mode-option]
    }
 
    let option = new Option();
-   let useStdInFlag = false;
-   let lineNo:int! = nil;
-   let column:int! = nil;
+   let mut useStdInFlag = false;
+   let mut lineNo:int! = nil;
+   let mut column:int! = nil;
 
-   let index = 1;
+   let mut index = 1;
    while #argList >= index {
       let arg = argList[ index ];
 

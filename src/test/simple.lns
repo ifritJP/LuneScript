@@ -3,7 +3,7 @@ import test.Sub3;
 import test.Sub4;
 
 print( "sub2globalfun", sub2globalfun() );
-let enumVal3 = Sub2.enumTestSub.val3;
+let mut enumVal3 = Sub2.enumTestSub.val3;
 print( "enumTestSub.val3", enumVal3, enumVal3 + 10 );
 print( "enumTestSub.val3", enumVal3, enumVal3.get__txt() );
 print( "enumTestSub.val3", enumVal3, enumVal3.$_txt );
@@ -27,7 +27,7 @@ func( data );
 
 
 pub class ClassA {
-    let val: int;
+    let mut val: int;
     pub fn __init() {
 	self.val = 10;
     }

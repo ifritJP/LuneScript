@@ -1,55 +1,56 @@
 --lune/base/dumpNode.lns
 local _moduleObj = {}
-local function _lune_nilacc( val, fieldName, access, ... )
-   if not val then
+_lune = {}
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
       return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
+    end
+    if access == "item" then
+      local typeId = type( field )
       if typeId == "table" then
-         return val[ ... ]
+        return field[ ... ]
       elseif typeId == "string" then
-         return string.byte( val, ... )
+        return string.byte( field, ... )
       end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-function _lune_unwrap( val )
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end 
+function _lune.unwrap( val )
   if val == nil then
-     _luneScript.error( 'unwrap val is nil' )
+    _luneScript.error( 'unwrap val is nil' )
   end
   return val
-end
-function _lune_unwrapDefault( val, defval )
+end 
+function _lune.unwrapDefault( val, defval )
   if val == nil then
-     return defval
+    return defval
   end
   return val
 end
@@ -68,9 +69,9 @@ function dumpFilter.new(  )
     obj:__init(  )
   end        
   return obj 
- end         
+end         
 function dumpFilter:__init(  ) 
-            
+
 end
 do
   end
@@ -150,7 +151,7 @@ function dumpFilter:processDeclEnum( node, prefix, depth )
   local enumTypeInfo = node:get_expType()
   
   for __index, name in pairs( node:get_valueNameList() ) do
-    local valInfo = _lune_unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
+    local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
     
     print( string.format( "%s  %s: %s", prefix, name.txt, valInfo:get_val()) )
   end
@@ -211,7 +212,7 @@ function dumpFilter:processUnwrapSet( node, prefix, depth )
   filter( node:get_dstExpList(), self, prefix .. "  ", depth + 1 )
   filter( node:get_srcExpList(), self, prefix .. "  ", depth + 1 )
   if node:get_unwrapBlock() then
-    filter( _lune_unwrap( node:get_unwrapBlock()), self, prefix .. "  ", depth + 1 )
+    filter( _lune.unwrap( node:get_unwrapBlock()), self, prefix .. "  ", depth + 1 )
   end
 end
 
@@ -221,7 +222,7 @@ function dumpFilter:processIfUnwrap( node, prefix, depth )
   filter( node:get_exp(), self, prefix .. "  ", depth + 1 )
   filter( node:get_block(), self, prefix .. "  ", depth + 1 )
   if node:get_nilBlock() then
-    filter( _lune_unwrap( node:get_nilBlock()), self, prefix .. "  ", depth + 1 )
+    filter( _lune.unwrap( node:get_nilBlock()), self, prefix .. "  ", depth + 1 )
   end
 end
 
@@ -330,6 +331,9 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, prefix, depth )
       end
   end
   
+  if node:get_expType():get_mutable() then
+    name = name .. " mut"
+  end
   dump( prefix, depth, node, name )
   local argList = declInfo:get_argList(  )
   
