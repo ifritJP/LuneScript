@@ -1,12 +1,15 @@
 class Test {
    pri static let val:int {pub};
    pri let mut val1:int {pub};
-   pub fn __init( val:int ) { // error: does not set 'val2';
+   pub fn __init( val:int ) {
       self.val1 = val;
       return; // error: return
    }
    pri let val2:int; // error: after __init
-   pub fn func( val:int ) {
+   pub fn func( val:int ) mut {
+      self.val1 = val;
+   }
+   pub fn func2( val:int ) {
       self.val1 = val;
    }
 }

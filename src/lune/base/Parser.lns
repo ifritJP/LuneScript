@@ -136,7 +136,7 @@ pub class TxtStream extend (iStream) {
       }
       self.eof = false;
    }
-   pub fn read( mode:str ): str! {
+   pub fn read( mode:str ) mut : str! {
       //pub override fn read( mode:str ): str{
       if self.eof {
          return nil;
@@ -172,7 +172,7 @@ pub class Token {
       self.commentList = unwrap commentList default [];
    }
    
-   pub fn set_commentList( commentList: Token[] ) {
+   pub fn set_commentList( commentList: Token[] ) mut {
       self.commentList = commentList;
    }
 }
@@ -353,7 +353,7 @@ pub static fn isOp1( ope: str ) : stem! {
    return op1Set[ ope ];
 }
 
-fn StreamParser.parse() : Token[]! {
+fn StreamParser.parse() mut : Token[]! {
    fn readLine() : str! {
       if self.eof {
          return nil;
@@ -682,7 +682,7 @@ fn StreamParser.parse() : Token[]! {
    }
 }
 
-pub override fn StreamParser.getToken() : Token! {
+pub override fn StreamParser.getToken() mut : Token! {
    if not self.lineTokenList {
       return nil;
    }

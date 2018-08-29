@@ -24,7 +24,7 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
-fn TransUnit.analyzeRefType( accessMode: str ): Ast.RefTypeNode {
+fn TransUnit.analyzeRefType( accessMode: str, allowDDD:bool ) mut: Ast.RefTypeNode {
    let firstToken = self.getToken();
    let mut token = firstToken;
    let mut refFlag = false;
@@ -74,7 +74,7 @@ fn TransUnit.analyzeRefType( accessMode: str ): Ast.RefTypeNode {
          let genericList: Ast.TypeInfo[] = [];
          let mut nextToken: Parser.Token = Parser.getEofToken();
          repeat {
-            let typeExp = self.analyzeRefType( accessMode );
+            let typeExp = self.analyzeRefType( accessMode, false );
 
             genericList.insert( typeExp.$expType );
             nextToken = self.getToken();
@@ -101,12 +101,20 @@ fn TransUnit.analyzeRefType( accessMode: str ): Ast.RefTypeNode {
       typeInfo = unwrap typeInfo.get_nilableTypeInfo();
       token = self.getToken();
    }
+   if not allowDDD and typeInfo.equals( Ast.builtinTypeDDD ) {
+      self.addErrMess(
+         firstToken.pos, "invalid type. -- '%s'" (typeInfo.getTxt() ) );
+   }
+
+   if refFlag {
+      typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
+   }
 
    return new Ast.RefTypeNode( firstToken.pos, [ typeInfo ],
                                name, refFlag, mutFlag, arrayMode );
 }
 
-fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) : Parser.Token {
+fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) mut : Parser.Token {
    let mut nextToken: Parser.Token = Parser.noneToken;
    repeat {
       nextToken = self.getToken();
@@ -134,7 +142,7 @@ fn TransUnit.analyzeDeclArgList( accessMode:str, argList: Ast.Node[] ) : Parser.
          }
 
          self.checkNextToken( ":" );
-         let refType = self.analyzeRefType( accessMode );
+         let refType = self.analyzeRefType( accessMode, false );
          let arg = new Ast.DeclArgNode( argName.pos, refType.$expTypeList,
                                         argName, refType );    
          
@@ -155,7 +163,7 @@ pub class ASTInfo {
 }
 
 pub fn TransUnit.createAST(
-   parser: Parser.Parser, macroFlag: bool, moduleName: str! ): ASTInfo
+   parser: Parser.Parser, macroFlag: bool, moduleName: str! ) mut : ASTInfo
 {
    self.moduleName = unwrap moduleName default "";
 
@@ -167,7 +175,7 @@ pub fn TransUnit.createAST(
       apply txt of string.gmatch( _exp, '[^%.]+' ) {
          // moduleTypeInfo = unwrap self.pushClass(
          //    true, false, nil, nil, false, txt@@str, "pub" );
-         moduleTypeInfo = unwrap self.pushModule( false, txt@@str );
+         moduleTypeInfo = unwrap self.pushModule( false, txt@@str, true );
       }
    }
    self.moduleScope = self.scope;
@@ -183,17 +191,13 @@ pub fn TransUnit.createAST(
    }
    else {
       let children:Ast.Node[] = [];
-      let rootNode = new Ast.RootNode(
-         new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ],
-         children, nil, self.typeId2ClassMap );
-      ast = rootNode;
       lastStatement = self.analyzeStatementList( children );
 
       let mut token = self.getTokenNoErr();
-      if! token {
+      if token ~= Parser.getEofToken() {
          Util.err( "unknown:%d:%d:(%s) %s"
-                     ( _exp.pos.lineNo, _exp.pos.column,
-                       Parser.getKindTxt( _exp.kind ), _exp.txt ) );
+                     ( token.pos.lineNo, token.pos.column,
+                       Parser.getKindTxt( token.kind ), token.txt ) );
       }
 
       foreach subModule in self.subfileList {
@@ -214,13 +218,19 @@ pub fn TransUnit.createAST(
          lastStatement = self.analyzeStatementListSubfile( children );
 
          token = self.getTokenNoErr();
-         if! token {
+         if token ~= Parser.getEofToken() {
             Util.err( "unknown:%d:%d:(%s) %s"
-                        ( _exp.pos.lineNo, _exp.pos.column,
-                          Parser.getKindTxt( _exp.kind ), _exp.txt ) );
-         }
+                      ( token.pos.lineNo, token.pos.column,
+                        Parser.getKindTxt( token.kind ), token.txt ) );
+         }  
       }
 
+      let luneHelperInfo =
+         new Ast.LuneHelperInfo( self.useNilAccess, self.useUnwrapExp );
+      let rootNode = new Ast.RootNode(
+         new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ],
+         children, nil, luneHelperInfo, self.typeId2ClassMap );
+      ast = rootNode;
       if! self.provideNode {
          if lastStatement ~= _exp {
             self.addErrMess( _exp.$pos, "'provide' must be last." );
@@ -250,7 +260,7 @@ pub fn TransUnit.createAST(
 }
 
 
-fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast.Node
+fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) mut : Ast.Node
 {
    let nameToken = self.getToken();
    self.checkNextToken( "(" );
@@ -347,7 +357,7 @@ fn TransUnit.analyzeDeclMacro( accessMode: str, firstToken: Parser.Token ) : Ast
 
 fn TransUnit.analyzePushClass(
    classFlag: bool, abstructFlag: bool,
-   firstToken:Parser.Token, name:Parser.Token, accessMode:str ):
+   firstToken:Parser.Token, name:Parser.Token, accessMode:str ) mut :
    Parser.Token, Ast.TypeInfo
 {
    let mut nextToken = self.getToken();
@@ -357,7 +367,7 @@ fn TransUnit.analyzePushClass(
       nextToken = self.getToken();
       if nextToken.txt ~= "(" {
          self.pushback();
-         baseRef = self.analyzeRefType( accessMode );
+         baseRef = self.analyzeRefType( accessMode, false );
          nextToken = self.getToken();
       }
       if nextToken.txt == "(" {
@@ -367,7 +377,7 @@ fn TransUnit.analyzePushClass(
                break;
             }
             self.pushback();
-            let ifType = self.analyzeRefType( accessMode );
+            let ifType = self.analyzeRefType( accessMode, false );
             if ifType.$expType.$kind ~= Ast.TypeInfoKind.IF {
                self.error( "%s is not interface -- %d"
                            (ifType.$expType.getTxt(), ifType.$expType.$kind ) );
@@ -405,7 +415,7 @@ fn TransUnit.analyzePushClass(
    return nextToken, classTypeInfo;
 }
 
-fn TransUnit.analyzeDeclProto( accessMode: str, firstToken: Parser.Token ) : Ast.Node
+fn TransUnit.analyzeDeclProto( accessMode: str, firstToken: Parser.Token ) mut : Ast.Node
 {
    let mut nextToken = self.getToken();
    let mut abstructFlag = false;
@@ -430,7 +440,7 @@ fn TransUnit.analyzeDeclProto( accessMode: str, firstToken: Parser.Token ) : Ast
 }
 
 fn TransUnit.analyzeDeclEnum(
-   accessMode: str, firstToken: Parser.Token ): Ast.DeclEnumNode
+   accessMode: str, firstToken: Parser.Token ) mut : Ast.DeclEnumNode
 {
    let name = self.getSymbolToken();
 
@@ -549,7 +559,7 @@ fn TransUnit.analyzeDeclEnum(
 
 fn TransUnit.analyzeDecl(
    accessMode: str, mut staticFlag: bool,
-   firstToken: Parser.Token, mut token: Parser.Token ): Ast.Node!
+   firstToken: Parser.Token, mut token: Parser.Token ) mut : Ast.Node!
 {
    if not staticFlag {
       if token.txt == "static" {
@@ -604,7 +614,7 @@ fn TransUnit.analyzeDecl(
 }
 
 fn TransUnit.analyzeDeclMember(
-   accessMode: str, staticFlag: bool, firstToken: Parser.Token ): Ast.DeclMemberNode {
+   accessMode: str, staticFlag: bool, firstToken: Parser.Token ) mut: Ast.DeclMemberNode {
       let mut nextToken = self.getToken();
       let mut mutable = false;
       if nextToken.txt == "mut" {
@@ -613,7 +623,7 @@ fn TransUnit.analyzeDeclMember(
       }
       let varName = self.checkSymbol(nextToken);
       let mut token = self.getToken();
-      let refType = self.analyzeRefType( accessMode );
+      let refType = self.analyzeRefType( accessMode, false );
       token = self.getToken();
 
       let mut getterMode = "none";
@@ -650,7 +660,7 @@ fn TransUnit.analyzeDeclMember(
 fn TransUnit.analyzeDeclMethod(
    moduleFlag: bool, abstructFlag: bool, overrideFlag: bool, accessMode: str,
    staticFlag: bool, className: Parser.Token,
-   firstToken: Parser.Token, name: Parser.Token ): Ast.Node
+   firstToken: Parser.Token, name: Parser.Token ) mut : Ast.Node
 {
    let node = self.analyzeDeclFunc(
       moduleFlag, abstructFlag,
@@ -661,7 +671,7 @@ fn TransUnit.analyzeDeclMethod(
 fn TransUnit.analyzeClassBody(
    classAccessMode: str, firstToken: Parser.Token,
    mode:str, classTypeInfo: Ast.TypeInfo,
-   name:Parser.Token, moduleName: Parser.Token!, mut nextToken:Parser.Token ) :
+   name:Parser.Token, moduleName: Parser.Token!, mut nextToken:Parser.Token ) mut :
    Ast.DeclClassNode, Parser.Token, Map<str,bool>
 {
    let memberName2Node: Map<str,Ast.DeclMemberNode> = {};
@@ -733,6 +743,13 @@ fn TransUnit.analyzeClassBody(
          if mode ~= "class" {
             self.error( "%s can not have __init method" (mode) );
          }
+         foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
+            if symbolInfo.$staticFlag {
+               // 一旦全てのメンバを値なし状態にセットする
+               symbolInfo.set_hasValueFlag( false );
+            }
+         }
+         
          self.checkNextToken( "{" );
          self.analyzeStatementList( initStmtList, "}" );
          self.checkNextToken( "}" );
@@ -777,7 +794,7 @@ fn TransUnit.analyzeClassBody(
 
 fn TransUnit.analyzeDeclClass(
    classAbstructFlag: bool, 
-   classAccessMode: str, firstToken: Parser.Token, mode:str ): Ast.DeclClassNode
+   classAccessMode: str, firstToken: Parser.Token, mode:str ) mut : Ast.DeclClassNode
 {
    let name = self.getSymbolToken();
 
@@ -792,12 +809,12 @@ fn TransUnit.analyzeDeclClass(
 
    self.checkToken( nextToken, "{" );
 
-   if mode == "class" {
-      // self シンボルを登録
-      self.scope.add(
-         Ast.SymbolKind.Var, false, true, "self",
-         classTypeInfo, "pri", false, true, true );
-   }
+   // if mode == "class" {
+   //    // self シンボルを登録
+   //    self.scope.add(
+   //       Ast.SymbolKind.Var, false, true, "self",
+   //       classTypeInfo, "pri", false, true, true );
+   // }
 
 
 
@@ -919,7 +936,7 @@ pri fn TransUnit.addMethod( className: str, methodNode: Ast.Node, name: str ) {
 fn TransUnit.analyzeDeclFunc(
    moduleFlag: bool, abstructFlag: bool, overrideFlag: bool, accessMode: str,
    mut staticFlag: bool, mut classNameToken: Parser.Token!,
-   firstToken: Parser.Token, mut name: Parser.Token! ) : Ast.Node
+   firstToken: Parser.Token, mut name: Parser.Token! ) mut : Ast.Node
 {
    let mut token = self.getToken();
    if! name {
@@ -956,6 +973,12 @@ fn TransUnit.analyzeDeclFunc(
       }
       if (unwrap name).txt == "__init" {
          kind = Ast.nodeKindDeclConstr;
+         foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
+            if not symbolInfo.$staticFlag {
+               // 一旦全てのメンバを値なし状態にセットする
+               symbolInfo.set_hasValueFlag( false );
+            }
+         }
       }
       else {
          kind = Ast.nodeKindDeclMethod;
@@ -967,6 +990,7 @@ fn TransUnit.analyzeDeclFunc(
          staticFlag = true;
       }
    }
+
    if moduleFlag {
       // module で Lua の外部モジュールを宣言した場合、
       // モジュール名でメンバにアクセスできるように、
@@ -1043,11 +1067,29 @@ fn TransUnit.analyzeDeclFunc(
       token = self.getToken();
       mutable = true;
    }
+
+   if kind == Ast.nodeKindDeclMethod or
+      kind == Ast.nodeKindDeclConstr
+   {
+      if kind == Ast.nodeKindDeclConstr {
+         mutable = true;
+      }
+      // self シンボルを登録
+      let mut classTypeInfo = unwrap scope.$parent.$ownerTypeInfo;
+      if not mutable {
+         classTypeInfo = Ast.NormalTypeInfo.createModifier( classTypeInfo, mutable );
+      }
+      self.scope.add(
+         Ast.SymbolKind.Var, false, true, "self",
+         classTypeInfo, "pri", false, mutable, true );
+   }
+
+   
    
    let retTypeInfoList:Ast.TypeInfo[] = [];
    if token.txt == ":" {
       repeat {
-         let refType = self.analyzeRefType( accessMode );
+         let refType = self.analyzeRefType( accessMode, true );
          retTypeInfoList.insert( refType.$expType );
          token = self.getToken();
       } token.txt ~= ",";
@@ -1065,10 +1107,10 @@ fn TransUnit.analyzeDeclFunc(
       }
       
       if kind == Ast.nodeKindDeclFunc {
-         parentScope.addFunc( typeInfo, accessMode, staticFlag, false );
+         parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
       }
       else {
-         parentScope.addMethod( typeInfo, accessMode, staticFlag, false );
+         parentScope.addMethod( typeInfo, accessMode, staticFlag, mutable );
       }
    }
 
@@ -1117,7 +1159,7 @@ class LetVarInfo {
 }
 
 fn TransUnit.analyzeDeclVar(
-   mode:str, accessMode: str, firstToken: Parser.Token ): Ast.Node
+   mode:str, accessMode: str, firstToken: Parser.Token ) mut : Ast.Node
 {
    let mut unwrapFlag = false;
    let mut token, continueFlag = self.getContinueToken();
@@ -1142,6 +1184,7 @@ fn TransUnit.analyzeDeclVar(
 
    let letVarList:LetVarInfo[] = [];
    repeat {
+      // 変数名と : で明示している型情報を取得。
       let mut mutable = (mode == "sync");
       let mut nextToken = self.getToken();
       if nextToken.txt == "mut" {
@@ -1152,13 +1195,16 @@ fn TransUnit.analyzeDeclVar(
       token = self.getToken();
       let mut typeInfo = Ast.builtinTypeNone;
       if token.txt == ":" {
-         let refType = self.analyzeRefType( accessMode );
+         let refType = self.analyzeRefType( accessMode, false );
          letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
          typeInfo = refType.$expType;
          token = self.getToken();
       }
       else {
          letVarList.insert( new LetVarInfo( mutable, varName, nil ) );
+      }
+      if not typeInfo.equals( Ast.builtinTypeNone ) and not mutable {
+         typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
       }
       typeInfoList.insert( typeInfo );
    } token.txt ~= ",";
@@ -1173,88 +1219,92 @@ fn TransUnit.analyzeDeclVar(
 
    let orgExpTypeList: Ast.TypeInfo[] = [];
    if! expList {
-      //  初期化値の型を反映する
-      let expTypeList: Ast.TypeInfo[] = [];
       foreach exp, index in _exp.$expList {
          if not exp.canBeRight() {
             self.addErrMess( exp.$pos,
                              "this node can not be r-value. -- %s"
                              (Ast.getNodeKindName( exp.$kind ) ) );
          }
-         if index == #_exp.$expList {
-            // 最終要素の場合
-            if exp.$expType == Ast.builtinTypeDDD {
-               // ... なら、残りの変数宣言の分 stem をセットする
-               for subIndex = index, #letVarList {
-                  let argType = typeInfoList[ subIndex ];
-                  if argType ~= Ast.builtinTypeNone and
-                     not argType.isSettableFrom( Ast.builtinTypeStem_ )
-                  {
-                     self.addErrMess(
-                        firstToken.pos,
-                        "unmatch value type %s(%d) <- %s(%d)"
-                        ( argType.getTxt(), argType.$typeId,
-                          Ast.builtinTypeStem_.getTxt(), Ast.builtinTypeStem_.$typeId ));
-                  }
-                  if unwrapFlag {
-                     expTypeList.insert( Ast.builtinTypeStem );
-                  }
-                  else {
-                     expTypeList.insert( Ast.builtinTypeStem_ );
-                  }
-                  orgExpTypeList.insert( Ast.builtinTypeStem_ );
+      }
+
+      //  初期化値の型を反映する
+      let expTypeList: Ast.TypeInfo[] = [];
+      foreach expType, index in _exp.$expTypeList {
+         let processedFlag = false;
+         if index == #_exp.$expTypeList and
+            _exp.$expTypeList[ index ].equals( Ast.builtinTypeDDD )
+         {        
+            // 最終要素が ... の場合
+            // ... なら、残りの変数宣言の分 stem をセットする
+            for subIndex = index, #letVarList {
+               let argType = typeInfoList[ subIndex ];
+               let mut checkType = Ast.builtinTypeStem_;
+               if unwrapFlag {
+                  checkType = Ast.builtinTypeStem;
                }
-            }
-            else {
-               foreach expType in exp.$expTypeList {
-                  let mut typeInfo = expType;
-                  orgExpTypeList.insert( typeInfo );
-                  if unwrapFlag and typeInfo.$nilable {
-                     typeInfo = unwrap typeInfo.$orgTypeInfo;
-                  }
-                  expTypeList.insert( typeInfo );
-                  let argType = typeInfoList[ index ];
-                  if not (unwrapFlag and typeInfo == Ast.builtinTypeNil) and
-                     argType ~= Ast.builtinTypeNone  and
-                     not argType.isSettableFrom( typeInfo )
-                  {                       
-                     self.addErrMess(
-                        firstToken.pos,
-                        "unmatch value type %s <- %s"
-                        (argType.getTxt(), typeInfo.getTxt()));
-                  }
+               if not argType.equals( Ast.builtinTypeNone ) and
+                  not argType.isSettableFrom( checkType )
+               {
+                  self.addErrMess(
+                     firstToken.pos,
+                     "unmatch value type (index = %d) %s(%d) <- %s(%d)"
+                     ( subIndex, argType.getTxt(), argType.$typeId,
+                       Ast.builtinTypeStem_.getTxt(), Ast.builtinTypeStem_.$typeId ));
                }
+               expTypeList.insert( checkType );
+               orgExpTypeList.insert( Ast.builtinTypeStem_ );
             }
          }
          else {
             // 最終要素でない場合
-            let mut expTypeInfo: Ast.TypeInfo = Ast.builtinTypeStem_;
-            if exp.$expType == Ast.builtinTypeDDD {
+            let mut expTypeInfo: Ast.TypeInfo = expType;
+            if expType.equals( Ast.builtinTypeDDD ) {
                expTypeInfo = Ast.builtinTypeStem_;
-            }
-            else {
-               expTypeInfo = exp.$expType;
             }
             orgExpTypeList.insert( expTypeInfo );
             if unwrapFlag and expTypeInfo.$nilable {
                expTypeInfo = unwrap expTypeInfo.$orgTypeInfo;
             }
-            
-            let argType = typeInfoList[ index ];
-            if argType ~= Ast.builtinTypeNone and
-               not argType.isSettableFrom( expTypeInfo )
-            {               
-               self.addErrMess(
-                  firstToken.pos,
-                  "unmatch value type %s <- %s"
-                  (argType.getTxt(), expTypeInfo.getTxt()));
+
+            if index <= #typeInfoList {
+               let argType = typeInfoList[ index ];
+               if not argType.equals( Ast.builtinTypeNone ) and
+                  not argType.isSettableFrom( expTypeInfo ) and
+                  not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ))
+               {               
+                  self.addErrMess(
+                     firstToken.pos,
+                     "unmatch value type (index:%d) %s <- %s"
+                     (index, argType.getTxt(), expTypeInfo.getTxt()));
+               }
             }
             expTypeList.insert( expTypeInfo );
          }
       }
+      // 宣言する変数の数より初期値が少ない場合、
+      // nil で初期化されるため変数が nilable かどうか判定
+      foreach varType, index in typeInfoList {
+         if index > #expTypeList {
+            if not varType.$nilable {
+               self.addErrMess(
+                  firstToken.pos,
+                  "unmatch value type (index:%d) %s <- nil"
+                  (index, varType.getTxt()));
+            }
+         }
+      }
+      // 変数の型を、型推論で初期値から設定
       foreach typeInfo, index in expTypeList {
-         if not typeInfoList[ index ] or typeInfoList[ index ] == Ast.builtinTypeNone {
-            typeInfoList[ index ] = typeInfo;
+         if not typeInfoList[ index ] or
+            typeInfoList[ index ].equals( Ast.builtinTypeNone )
+         {
+            if index <= #letVarList and not letVarList[ index ].mutable {
+               typeInfoList[ index ] = Ast.NormalTypeInfo.createModifier(
+                  typeInfo, false );
+            }
+            else {
+               typeInfoList[ index ] = typeInfo;
+            }
          }
       }
    }
@@ -1282,7 +1332,7 @@ fn TransUnit.analyzeDeclVar(
       let varInfo = new Ast.VarInfo(
          varName, letVarInfo.varType, typeInfo );
       varList.insert( varInfo );
-      if not letVarInfo.varType and typeInfo == Ast.builtinTypeNil {
+      if not letVarInfo.varType and typeInfo.equals( Ast.builtinTypeNil ) {
          self.addErrMess(
             varName.pos, 'need type -- %s' ( varName.txt ) ); 
       }

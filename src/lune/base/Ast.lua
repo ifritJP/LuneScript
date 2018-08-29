@@ -1,47 +1,8 @@
 --lune/base/Ast.lns
 local _moduleObj = {}
-_lune = {}
-function _lune.nilacc( val, fieldName, access, ... )
-  if not val then
-    return nil
-  end
-  if fieldName then
-    local field = val[ fieldName ]
-    if not field then
-      return nil
-    end
-    if access == "item" then
-      local typeId = type( field )
-      if typeId == "table" then
-        return field[ ... ]
-      elseif typeId == "string" then
-        return string.byte( field, ... )
-      end
-    elseif access == "call" then
-      return field( ... )
-    elseif access == "callmtd" then
-      return field( val, ... )
-    end
-    return field
-  end
-  if access == "item" then
-    local typeId = type( val )
-    if typeId == "table" then
-      return val[ ... ]
-    elseif typeId == "string" then
-      return string.byte( val, ... )
-    end
-  elseif access == "call" then
-    return val( ... )
-  elseif access == "list" then
-    local list, arg = ...
-    if not list then
-      return nil
-    end
-    return val( list, arg )
-  end
-  error( string.format( "illegal access -- %s", access ) )
-end 
+if not _ENV._lune then
+   _lune = {}
+end
 function _lune.unwrap( val )
   if val == nil then
     _luneScript.error( 'unwrap val is nil' )
@@ -126,7 +87,6 @@ TypeInfoKind.Module = 12
 TypeInfoKind._val2NameMap[12] = 'Module'
 
 local function isBuiltin( typeId )
-
   return _moduleObj.builtInTypeIdSet[typeId] ~= nil
 end
 _moduleObj.isBuiltin = isBuiltin
@@ -256,79 +216,6 @@ do
   NormalSymbolInfo.symbolIdSeed = 0
   end
 
-local AccessSymbolInfo = {}
-setmetatable( AccessSymbolInfo, { __index = SymbolInfo } )
-_moduleObj.AccessSymbolInfo = AccessSymbolInfo
-function AccessSymbolInfo.new( symbolInfo )
-  local obj = {}
-  setmetatable( obj, { __index = AccessSymbolInfo } )
-  if obj.__init then
-    obj:__init( symbolInfo )
-  end        
-  return obj 
-end         
-function AccessSymbolInfo:__init( symbolInfo ) 
-
-self.symbolInfo = symbolInfo
-  end
-function AccessSymbolInfo:get_symbolInfo()       
-  return self.symbolInfo         
-end
-function AccessSymbolInfo:get_canBeLeft( ... )
-  return self.symbolInfo:get_canBeLeft( ... )
-end       
-
-function AccessSymbolInfo:get_canBeRight( ... )
-  return self.symbolInfo:get_canBeRight( ... )
-end       
-
-function AccessSymbolInfo:get_symbolId( ... )
-  return self.symbolInfo:get_symbolId( ... )
-end       
-
-function AccessSymbolInfo:get_scope( ... )
-  return self.symbolInfo:get_scope( ... )
-end       
-
-function AccessSymbolInfo:get_accessMode( ... )
-  return self.symbolInfo:get_accessMode( ... )
-end       
-
-function AccessSymbolInfo:get_staticFlag( ... )
-  return self.symbolInfo:get_staticFlag( ... )
-end       
-
-function AccessSymbolInfo:get_name( ... )
-  return self.symbolInfo:get_name( ... )
-end       
-
-function AccessSymbolInfo:get_typeInfo( ... )
-  return self.symbolInfo:get_typeInfo( ... )
-end       
-
-function AccessSymbolInfo:get_mutable( ... )
-  return self.symbolInfo:get_mutable( ... )
-end       
-
-function AccessSymbolInfo:get_kind( ... )
-  return self.symbolInfo:get_kind( ... )
-end       
-
-function AccessSymbolInfo:get_hasValueFlag( ... )
-  return self.symbolInfo:get_hasValueFlag( ... )
-end       
-
-function AccessSymbolInfo:set_hasValueFlag( ... )
-  return self.symbolInfo:set_hasValueFlag( ... )
-end       
-
-function AccessSymbolInfo:canAccess( ... )
-  return self.symbolInfo:canAccess( ... )
-end       
-
-do
-  end
-
 local DataOwnerInfo = {}
 _moduleObj.DataOwnerInfo = DataOwnerInfo
 function DataOwnerInfo.new( hasData, symbolInfo )
@@ -363,11 +250,9 @@ function Scope:__init(parent, classFlag, inheritList)
   self.symbolId2DataOwnerInfo = {}
 end
 function Scope:set_ownerTypeInfo( owner )
-
   self.ownerTypeInfo = owner
 end
 function Scope:getTypeInfoChild( name )
-
   do
     local _exp = self.symbol2TypeInfoMap[name]
     if _exp ~= nil then
@@ -379,11 +264,9 @@ function Scope:getTypeInfoChild( name )
   return nil
 end
 function Scope:getSymbolInfoChild( name )
-
   return self.symbol2TypeInfoMap[name]
 end
 function Scope:setData( symbolInfo )
-
   self.symbolId2DataOwnerInfo[symbolInfo:get_symbolId()] = DataOwnerInfo.new(true, symbolInfo)
 end
 -- none
@@ -426,115 +309,90 @@ function TypeInfo:__init(scope)
   
 end
 function TypeInfo:isModule(  )
-
   return true
 end
 function TypeInfo:getParentId(  )
-
   return _moduleObj.rootTypeId
 end
 function TypeInfo:get_baseId(  )
-
   return _moduleObj.rootTypeId
 end
 function TypeInfo:isInheritFrom( other )
-
   return false
 end
 function TypeInfo:isSettableFrom( other )
-
   return false
 end
 function TypeInfo:get_abstructFlag(  )
-
   return false
 end
 function TypeInfo:getTxt(  )
-
   return ""
 end
 function TypeInfo:serialize( stream, validChildrenSet )
-
   return 
 end
 function TypeInfo:get_display_stirng(  )
-
   return ""
 end
+function TypeInfo:get_srcTypeInfo(  )
+  return self
+end
 function TypeInfo:equals( typeInfo )
-
-  return self == typeInfo
+  return self == typeInfo:get_srcTypeInfo()
 end
 function TypeInfo:get_externalFlag(  )
-
   return false
 end
 function TypeInfo:get_interfaceList(  )
-
   return dummyList
 end
 function TypeInfo:get_itemTypeInfoList(  )
-
   return dummyList
 end
 function TypeInfo:get_argTypeInfoList(  )
-
   return dummyList
 end
 function TypeInfo:get_retTypeInfoList(  )
-
   return dummyList
 end
 function TypeInfo:get_parentInfo(  )
-
   return self
 end
 function TypeInfo:get_rawTxt(  )
-
   return ""
 end
 function TypeInfo:get_typeId(  )
-
   return _moduleObj.rootTypeId
 end
 function TypeInfo:get_kind(  )
-
   return TypeInfoKind.Root
 end
 function TypeInfo:get_staticFlag(  )
-
   return false
 end
 function TypeInfo:get_accessMode(  )
-
   return "pri"
 end
 function TypeInfo:get_autoFlag(  )
-
   return false
 end
 function TypeInfo:get_orgTypeInfo(  )
-
   return self
 end
 function TypeInfo:get_baseTypeInfo(  )
-
   return self
 end
 function TypeInfo:get_nilable(  )
-
   return false
 end
 function TypeInfo:get_nilableTypeInfo(  )
-
   return self
 end
 function TypeInfo:get_children(  )
-
   return dummyList
 end
 function TypeInfo:get_mutable(  )
-
   return false
 end
 function TypeInfo:get_scope()       
@@ -544,7 +402,6 @@ do
   end
 
 function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
-
   if self.classFlag then
     if includeSelfFlag then
       do
@@ -578,7 +435,6 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
 end
 
 function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
-
   local symbolInfo = self:getSymbolInfoField( name, includeSelfFlag, fromScope )
   
   do
@@ -593,7 +449,6 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
 end
 
 function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
-
   if includeSelfFlag then
     for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
       if symbolInfo:canAccess( fromScope ) then
@@ -616,7 +471,6 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
 end
 
 function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
-
   do
     local _exp = self.symbol2TypeInfoMap[name]
     if _exp ~= nil then
@@ -664,7 +518,6 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
 end
 
 function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
-
   local symbolInfo = self:getSymbolInfo( name, fromScope, onlySameNsFlag )
   
       if  nil == symbolInfo then
@@ -677,7 +530,6 @@ function Scope:getTypeInfo( name, fromScope, onlySameNsFlag )
 end
 
 function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
-
   local typeInfo = nil
   
   local validThisScope = false
@@ -716,7 +568,6 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
 end
 
 function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
-
   if self.classFlag then
     do
       local _exp = self.symbol2TypeInfoMap["self"]
@@ -740,7 +591,6 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
 end
 
 function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable, hasValueFlag )
-
   local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag)
   
   self.symbol2TypeInfoMap[name] = symbolInfo
@@ -748,52 +598,42 @@ function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, sta
 end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
-
   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", false, mutable, true )
 end
 
 function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
-
   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", true, mutable, true )
 end
 
 function Scope:addVar( accessMode, name, typeInfo, mutable, hasValueFlag )
-
   self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable, hasValueFlag )
 end
 
 function Scope:addEnumVal( name, typeInfo )
-
   self:add( SymbolKind.Mbr, false, true, name, typeInfo, "pub", true, true, true )
 end
 
 function Scope:addEnum( accessMode, name, typeInfo )
-
   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
 end
 
 function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutable )
-
-  return self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable, false )
+  return self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable, true )
 end
 
 function Scope:addMethod( typeInfo, accessMode, staticFlag, mutable )
-
   self:add( SymbolKind.Mtd, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable, true )
 end
 
 function Scope:addFunc( typeInfo, accessMode, staticFlag, mutable )
-
   self:add( SymbolKind.Fun, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable, true )
 end
 
 function Scope:addClass( name, typeInfo )
-
   self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true, true )
 end
 
 local function dumpScopeSub( scope, prefix, readyIdSet )
-
   local scope = scope
   
       if  nil == scope then
@@ -837,7 +677,6 @@ local function dumpScopeSub( scope, prefix, readyIdSet )
 end
 
 local function dumpScope( scope, prefix )
-
   dumpScopeSub( scope, prefix, {} )
 end
 
@@ -846,7 +685,6 @@ local rootTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.rootTypeInfo = rootTypeInfo
 
 function Scope:getNSTypeInfo(  )
-
   local scope = self
   
   while scope.ownerTypeInfo ~= _moduleObj.rootTypeInfo do
@@ -864,7 +702,6 @@ function Scope:getNSTypeInfo(  )
 end
 
 function Scope:getClassTypeInfo(  )
-
   local scope = self
   
   while scope.ownerTypeInfo ~= _moduleObj.rootTypeInfo do
@@ -884,7 +721,6 @@ function Scope:getClassTypeInfo(  )
 end
 
 function NormalSymbolInfo:canAccess( fromScope )
-
   local typeInfo = self:get_typeInfo()
   
   if self.scope == fromScope then
@@ -920,6 +756,90 @@ function NormalSymbolInfo:canAccess( fromScope )
   Util.err( string.format( "illegl accessmode -- %s, %s", self:get_accessMode(), self:get_name()) )
 end
 
+local AccessSymbolInfo = {}
+setmetatable( AccessSymbolInfo, { __index = SymbolInfo } )
+_moduleObj.AccessSymbolInfo = AccessSymbolInfo
+function AccessSymbolInfo:get_mutable(  )
+  do
+    local _exp = self.prefixTypeInfo
+    if _exp ~= nil then
+    
+        return _exp:get_mutable() and self.symbolInfo:get_mutable()
+      end
+  end
+  
+  return self.symbolInfo:get_mutable()
+end
+function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo )
+  local obj = {}
+  setmetatable( obj, { __index = AccessSymbolInfo } )
+  if obj.__init then
+    obj:__init( symbolInfo, prefixTypeInfo )
+  end        
+  return obj 
+end         
+function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo ) 
+
+self.symbolInfo = symbolInfo
+  self.prefixTypeInfo = prefixTypeInfo
+  end
+function AccessSymbolInfo:get_symbolInfo()       
+  return self.symbolInfo         
+end
+function AccessSymbolInfo:get_prefixTypeInfo()       
+  return self.prefixTypeInfo         
+end
+function AccessSymbolInfo:get_canBeLeft( ... )
+  return self.symbolInfo:get_canBeLeft( ... )
+end       
+
+function AccessSymbolInfo:get_canBeRight( ... )
+  return self.symbolInfo:get_canBeRight( ... )
+end       
+
+function AccessSymbolInfo:get_symbolId( ... )
+  return self.symbolInfo:get_symbolId( ... )
+end       
+
+function AccessSymbolInfo:get_scope( ... )
+  return self.symbolInfo:get_scope( ... )
+end       
+
+function AccessSymbolInfo:get_accessMode( ... )
+  return self.symbolInfo:get_accessMode( ... )
+end       
+
+function AccessSymbolInfo:get_staticFlag( ... )
+  return self.symbolInfo:get_staticFlag( ... )
+end       
+
+function AccessSymbolInfo:get_name( ... )
+  return self.symbolInfo:get_name( ... )
+end       
+
+function AccessSymbolInfo:get_typeInfo( ... )
+  return self.symbolInfo:get_typeInfo( ... )
+end       
+
+function AccessSymbolInfo:get_kind( ... )
+  return self.symbolInfo:get_kind( ... )
+end       
+
+function AccessSymbolInfo:get_hasValueFlag( ... )
+  return self.symbolInfo:get_hasValueFlag( ... )
+end       
+
+function AccessSymbolInfo:set_hasValueFlag( ... )
+  return self.symbolInfo:set_hasValueFlag( ... )
+end       
+
+function AccessSymbolInfo:canAccess( ... )
+  return self.symbolInfo:canAccess( ... )
+end       
+
+do
+  end
+
 -- none
 
 -- none
@@ -928,23 +848,21 @@ local NilableTypeInfo = {}
 setmetatable( NilableTypeInfo, { __index = TypeInfo } )
 _moduleObj.NilableTypeInfo = NilableTypeInfo
 function NilableTypeInfo:get_kind(  )
-
   return TypeInfoKind.Nilable
 end
+function NilableTypeInfo:get_srcTypeInfo(  )
+  return self
+end
 function NilableTypeInfo:get_nilable(  )
-
   return true
 end
 function NilableTypeInfo:getTxt(  )
-
   return self.orgTypeInfo:getTxt(  ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng(  )
-
   return self.orgTypeInfo:get_display_stirng() .. "!"
 end
 function NilableTypeInfo:serialize( stream, validChildrenSet )
-
   local parentId = self:getParentId(  )
   
   stream:write( string.format( '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
@@ -1059,8 +977,7 @@ local ModifierTypeInfo = {}
 setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModifierTypeInfo = ModifierTypeInfo
 function ModifierTypeInfo:getTxt(  )
-
-  local txt = self.orgTypeInfo:getTxt(  )
+  local txt = self.srcTypeInfo:getTxt(  )
   
   if self.mutable then
     txt = "mut " .. txt
@@ -1068,8 +985,7 @@ function ModifierTypeInfo:getTxt(  )
   return txt
 end
 function ModifierTypeInfo:get_display_stirng(  )
-
-  local txt = self.orgTypeInfo:get_display_stirng(  )
+  local txt = self.srcTypeInfo:get_display_stirng(  )
   
   if self.mutable then
     txt = "mut " .. txt
@@ -1077,27 +993,26 @@ function ModifierTypeInfo:get_display_stirng(  )
   return txt
 end
 function ModifierTypeInfo:serialize( stream, validChildrenSet )
-
   local parentId = self:getParentId(  )
   
-  stream:write( string.format( '{ parentId = %d, typeId = %d, orgTypeId = %d, mutable = %s }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId(), self.mutable and true or false) )
+  stream:write( string.format( '{ parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', parentId, self.typeId, self.srcTypeInfo:get_typeId(), self.mutable and true or false) )
 end
-function ModifierTypeInfo.new( orgTypeInfo, typeId, mutable )
+function ModifierTypeInfo.new( srcTypeInfo, typeId, mutable )
   local obj = {}
   setmetatable( obj, { __index = ModifierTypeInfo } )
   if obj.__init then
-    obj:__init( orgTypeInfo, typeId, mutable )
+    obj:__init( srcTypeInfo, typeId, mutable )
   end        
   return obj 
 end         
-function ModifierTypeInfo:__init( orgTypeInfo, typeId, mutable ) 
+function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutable ) 
 
-self.orgTypeInfo = orgTypeInfo
+self.srcTypeInfo = srcTypeInfo
   self.typeId = typeId
   self.mutable = mutable
   end
-function ModifierTypeInfo:get_orgTypeInfo()       
-  return self.orgTypeInfo         
+function ModifierTypeInfo:get_srcTypeInfo()       
+  return self.srcTypeInfo         
 end
 function ModifierTypeInfo:get_typeId()       
   return self.typeId         
@@ -1106,95 +1021,99 @@ function ModifierTypeInfo:get_mutable()
   return self.mutable         
 end
 function ModifierTypeInfo:isModule( ... )
-  return self.orgTypeInfo:isModule( ... )
+  return self.srcTypeInfo:isModule( ... )
 end       
 
 function ModifierTypeInfo:getParentId( ... )
-  return self.orgTypeInfo:getParentId( ... )
+  return self.srcTypeInfo:getParentId( ... )
 end       
 
 function ModifierTypeInfo:get_baseId( ... )
-  return self.orgTypeInfo:get_baseId( ... )
+  return self.srcTypeInfo:get_baseId( ... )
 end       
 
 function ModifierTypeInfo:isInheritFrom( ... )
-  return self.orgTypeInfo:isInheritFrom( ... )
+  return self.srcTypeInfo:isInheritFrom( ... )
 end       
 
 function ModifierTypeInfo:isSettableFrom( ... )
-  return self.orgTypeInfo:isSettableFrom( ... )
+  return self.srcTypeInfo:isSettableFrom( ... )
 end       
 
 function ModifierTypeInfo:get_abstructFlag( ... )
-  return self.orgTypeInfo:get_abstructFlag( ... )
+  return self.srcTypeInfo:get_abstructFlag( ... )
 end       
 
 function ModifierTypeInfo:equals( ... )
-  return self.orgTypeInfo:equals( ... )
+  return self.srcTypeInfo:equals( ... )
 end       
 
 function ModifierTypeInfo:get_externalFlag( ... )
-  return self.orgTypeInfo:get_externalFlag( ... )
+  return self.srcTypeInfo:get_externalFlag( ... )
 end       
 
 function ModifierTypeInfo:get_interfaceList( ... )
-  return self.orgTypeInfo:get_interfaceList( ... )
+  return self.srcTypeInfo:get_interfaceList( ... )
 end       
 
 function ModifierTypeInfo:get_itemTypeInfoList( ... )
-  return self.orgTypeInfo:get_itemTypeInfoList( ... )
+  return self.srcTypeInfo:get_itemTypeInfoList( ... )
 end       
 
 function ModifierTypeInfo:get_argTypeInfoList( ... )
-  return self.orgTypeInfo:get_argTypeInfoList( ... )
+  return self.srcTypeInfo:get_argTypeInfoList( ... )
 end       
 
 function ModifierTypeInfo:get_retTypeInfoList( ... )
-  return self.orgTypeInfo:get_retTypeInfoList( ... )
+  return self.srcTypeInfo:get_retTypeInfoList( ... )
 end       
 
 function ModifierTypeInfo:get_parentInfo( ... )
-  return self.orgTypeInfo:get_parentInfo( ... )
+  return self.srcTypeInfo:get_parentInfo( ... )
 end       
 
 function ModifierTypeInfo:get_rawTxt( ... )
-  return self.orgTypeInfo:get_rawTxt( ... )
+  return self.srcTypeInfo:get_rawTxt( ... )
 end       
 
 function ModifierTypeInfo:get_kind( ... )
-  return self.orgTypeInfo:get_kind( ... )
+  return self.srcTypeInfo:get_kind( ... )
 end       
 
 function ModifierTypeInfo:get_staticFlag( ... )
-  return self.orgTypeInfo:get_staticFlag( ... )
+  return self.srcTypeInfo:get_staticFlag( ... )
 end       
 
 function ModifierTypeInfo:get_accessMode( ... )
-  return self.orgTypeInfo:get_accessMode( ... )
+  return self.srcTypeInfo:get_accessMode( ... )
 end       
 
 function ModifierTypeInfo:get_autoFlag( ... )
-  return self.orgTypeInfo:get_autoFlag( ... )
+  return self.srcTypeInfo:get_autoFlag( ... )
+end       
+
+function ModifierTypeInfo:get_orgTypeInfo( ... )
+  return self.srcTypeInfo:get_orgTypeInfo( ... )
 end       
 
 function ModifierTypeInfo:get_baseTypeInfo( ... )
-  return self.orgTypeInfo:get_baseTypeInfo( ... )
+  return self.srcTypeInfo:get_baseTypeInfo( ... )
 end       
 
 function ModifierTypeInfo:get_nilable( ... )
-  return self.orgTypeInfo:get_nilable( ... )
+  return self.srcTypeInfo:get_nilable( ... )
 end       
 
 function ModifierTypeInfo:get_nilableTypeInfo( ... )
-  return self.orgTypeInfo:get_nilableTypeInfo( ... )
+  return self.srcTypeInfo:get_nilableTypeInfo( ... )
 end       
 
 function ModifierTypeInfo:get_children( ... )
-  return self.orgTypeInfo:get_children( ... )
+  return self.srcTypeInfo:get_children( ... )
 end       
 
 function ModifierTypeInfo:get_scope( ... )
-  return self.orgTypeInfo:get_scope( ... )
+  return self.srcTypeInfo:get_scope( ... )
 end       
 
 do
@@ -1203,13 +1122,13 @@ do
 local ModuleTypeInfo = {}
 setmetatable( ModuleTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModuleTypeInfo = ModuleTypeInfo
-function ModuleTypeInfo.new( scope, externalFlag, txt, parentInfo, typeId )
+function ModuleTypeInfo.new( scope, externalFlag, txt, parentInfo, typeId, mutable )
   local obj = {}
   setmetatable( obj, { __index = ModuleTypeInfo } )
-  if obj.__init then obj:__init( scope, externalFlag, txt, parentInfo, typeId ); end
+  if obj.__init then obj:__init( scope, externalFlag, txt, parentInfo, typeId, mutable ); end
 return obj
 end
-function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId) 
+function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mutable) 
   TypeInfo.__init( self, scope)
   
   self.externalFlag = externalFlag
@@ -1217,6 +1136,7 @@ function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId)
   self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
   self.typeId = typeId
   self.children = {}
+  self.mutable = mutable
   if self.parentInfo ~= _moduleObj.rootTypeInfo then
     table.insert( self.parentInfo:get_children(), self )
   end
@@ -1224,35 +1144,27 @@ function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId)
   scope:set_ownerTypeInfo( self )
 end
 function ModuleTypeInfo:isModule(  )
-
   return true
 end
 function ModuleTypeInfo:get_accessMode(  )
-
   return "pub"
 end
 function ModuleTypeInfo:get_kind(  )
-
   return TypeInfoKind.Module
 end
 function ModuleTypeInfo:getParentId(  )
-
   return self.parentInfo:get_typeId()
 end
 function ModuleTypeInfo:getTxt(  )
-
   return self.rawTxt
 end
 function ModuleTypeInfo:get_display_stirng(  )
-
   return self:getTxt(  )
 end
 function ModuleTypeInfo:isSettableFrom( other )
-
   return false
 end
 function ModuleTypeInfo:serialize( stream, validChildrenSet )
-
   local txt = string.format( "{ parentId = %d, typeId = %d, txt = '%s', kind = %d, ", self:getParentId(  ), self.typeId, self.rawTxt, TypeInfoKind.Module)
   
   stream:write( txt .. '\n' )
@@ -1303,6 +1215,9 @@ function ModuleTypeInfo:get_rawTxt()
 end
 function ModuleTypeInfo:get_children()       
   return self.children         
+end
+function ModuleTypeInfo:get_mutable()       
+  return self.mutable         
 end
 do
   end
@@ -1358,31 +1273,24 @@ function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
   scope:set_ownerTypeInfo( self )
 end
 function EnumTypeInfo:isModule(  )
-
   return false
 end
 function EnumTypeInfo:get_kind(  )
-
   return TypeInfoKind.Enum
 end
 function EnumTypeInfo:getParentId(  )
-
   return self.parentInfo:get_typeId()
 end
 function EnumTypeInfo:getTxt(  )
-
   return self.rawTxt
 end
 function EnumTypeInfo:get_display_stirng(  )
-
   return self:getTxt(  )
 end
 function EnumTypeInfo:isSettableFrom( other )
-
-  return self == other
+  return self == other:get_srcTypeInfo()
 end
 function EnumTypeInfo:getEnumValInfo( name )
-
   return self.name2EnumValInfo[name]
 end
 function EnumTypeInfo:get_externalFlag()       
@@ -1483,19 +1391,15 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
   end
 end
 function NormalTypeInfo:isModule(  )
-
   return false
 end
 function NormalTypeInfo:getParentId(  )
-
   return self.parentInfo and self.parentInfo:get_typeId() or _moduleObj.rootTypeId
 end
 function NormalTypeInfo:get_baseId(  )
-
   return self.baseTypeInfo and self.baseTypeInfo:get_typeId() or _moduleObj.rootTypeId
 end
 function NormalTypeInfo:getTxt(  )
-
   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
     return (_lune.unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
   end
@@ -1538,7 +1442,6 @@ function NormalTypeInfo:getTxt(  )
   return ""
 end
 function NormalTypeInfo:get_display_stirng(  )
-
   if self.kind == TypeInfoKind.Nilable then
     return (_lune.unwrap( self.orgTypeInfo) ):get_display_stirng(  ) .. "!"
   end
@@ -1565,7 +1468,6 @@ function NormalTypeInfo:get_display_stirng(  )
   return self:getTxt(  )
 end
 function NormalTypeInfo:serialize( stream, validChildrenSet )
-
   if self.typeId == _moduleObj.rootTypeId then
     return 
   end
@@ -1576,7 +1478,6 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
     return 
   end
   local function serializeTypeInfoList( name, list, onlyPub )
-  
     local work = name
     
     for __index, typeInfo in pairs( list ) do
@@ -1611,19 +1512,14 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
   stream:write( txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "ifList = {", self.interfaceList ) .. serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. serializeTypeInfoList( "children = {", children, true ) .. "}\n" )
 end
 function NormalTypeInfo:equalsSub( typeInfo )
-
-  if not typeInfo then
-    return false
-  end
+  typeInfo = typeInfo:get_srcTypeInfo()
   if self.typeId == typeInfo:get_typeId() then
     return true
   end
-  if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.accessMode ~= typeInfo:get_accessMode() or self.autoFlag ~= typeInfo:get_autoFlag() or self.nilable ~= typeInfo:get_nilable() then
+  if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.accessMode ~= typeInfo:get_accessMode() or self.autoFlag ~= typeInfo:get_autoFlag() or self.nilable ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() or self:get_srcTypeInfo() ~= typeInfo:get_srcTypeInfo() then
     return false
   end
-  if (not self.itemTypeInfoList and typeInfo:get_itemTypeInfoList() or self.itemTypeInfoList and not typeInfo:get_itemTypeInfoList() or not self.retTypeInfoList and typeInfo:get_retTypeInfoList() or self.retTypeInfoList and not typeInfo:get_retTypeInfoList() or self.orgTypeInfo ~= typeInfo:get_orgTypeInfo() ) then
-    Util.log( string.format( "%s, %s", self.itemTypeInfoList, typeInfo:get_itemTypeInfoList()) )
-    Util.log( string.format( "%s, %s", self.retTypeInfoList, typeInfo:get_retTypeInfoList()) )
+  if (self.orgTypeInfo ~= typeInfo:get_orgTypeInfo() ) then
     Util.log( string.format( "%s, %s", self.orgTypeInfo, typeInfo:get_orgTypeInfo()) )
     return false
   end
@@ -1647,17 +1543,16 @@ function NormalTypeInfo:equalsSub( typeInfo )
       end
     end
   end
-  if self.orgTypeInfo and not self.orgTypeInfo:equals( typeInfo:get_orgTypeInfo() ) then
+  if self.orgTypeInfo ~= _moduleObj.rootTypeInfo and not self.orgTypeInfo:equals( typeInfo:get_orgTypeInfo() ) then
+    error( string.format( "illegal %s:%d %s:%d", self:getTxt(  ), self.typeId, typeInfo:getTxt(  ), typeInfo:get_typeId()) )
     return false
   end
   return true
 end
 function NormalTypeInfo:equals( typeInfo )
-
   return self:equalsSub( typeInfo )
 end
 function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable )
-
   if kind == TypeInfoKind.Prim then
     do
       local _exp = _moduleObj.sym2builtInTypeMap[txt]
@@ -1740,7 +1635,6 @@ _moduleObj.typeInfoRoot = typeInfoRoot
 
 typeIdSeed = typeIdSeed + 1
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
-
   local typeId = typeIdSeed + 1
   
   if kind == TypeInfoKind.Root then
@@ -1772,7 +1666,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
     end
   end
   
-  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList, false)
+  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList, true)
   
   if scope then
     _moduleObj.rootScope:addClass( typeTxt, info )
@@ -1788,28 +1682,24 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
 end
 
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
-
   if not itemTypeInfo or #itemTypeInfo == 0 then
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, false)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
-
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, false)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
-
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, false)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
 end
 
-function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName )
-
+function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )
   do
     local _exp = _moduleObj.sym2builtInTypeMap[moduleName]
     if _exp ~= nil then
@@ -1822,13 +1712,12 @@ function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleNam
     Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = ModuleTypeInfo.new(scope, externalFlag, moduleName, parentInfo, typeIdSeed)
+  local info = ModuleTypeInfo.new(scope, externalFlag, moduleName, parentInfo, typeIdSeed, mutable)
   
   return info
 end
 
 function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, className )
-
   do
     local _exp = _moduleObj.sym2builtInTypeMap[className]
     if _exp ~= nil then
@@ -1841,13 +1730,12 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
     Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, false)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
   
   return info
 end
 
 function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
-
   if not builtinFlag and Parser.isLuaKeyword( funcName ) then
     Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
   end
@@ -1857,10 +1745,9 @@ function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, pare
   return info
 end
 
-function NormalTypeInfo.createModifier( orgTypeInfo, typeId, mutable )
-
+function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
   typeIdSeed = typeIdSeed + 1
-  return ModifierTypeInfo.new(orgTypeInfo, typeId, mutable)
+  return ModifierTypeInfo.new(srcTypeInfo, typeIdSeed, mutable)
 end
 
 local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
@@ -1928,7 +1815,6 @@ local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTyp
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
 
 function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode, enumName, valTypeInfo, name2EnumValInfo )
-
   if Parser.isLuaKeyword( enumName ) then
     Util.err( string.format( "This symbol can not use for a enum. -- %s", enumName) )
   end
@@ -1945,7 +1831,6 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
 end
 
 function EnumTypeInfo:serialize( stream, validChildrenSet )
-
   local txt = string.format( [==[{ parentId = %d, typeId = %d, txt = '%s',
 accessMode = '%s', kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId())
   
@@ -1961,7 +1846,7 @@ accessMode = '%s', kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.t
     for __index, __key in ipairs( __sorted ) do
       enumValInfo = __map[ __key ]
       do
-        if self.valTypeInfo == _moduleObj.builtinTypeString then
+        if self.valTypeInfo:equals( _moduleObj.builtinTypeString ) then
           stream:write( string.format( "%s = '%s',", enumValInfo:get_name(), enumValInfo:get_val()) )
         else 
           stream:write( string.format( "%s = %s,", enumValInfo:get_name(), enumValInfo:get_val()) )
@@ -1974,10 +1859,7 @@ accessMode = '%s', kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.t
 end
 
 function NilableTypeInfo:isSettableFrom( other )
-
-  if not other then
-    return false
-  end
+  other = other:get_srcTypeInfo()
   if self == _moduleObj.builtinTypeStem_ then
     return true
   end
@@ -1997,7 +1879,6 @@ end
 -- none
 
 function NormalTypeInfo:isInheritFrom( other )
-
   local otherTypeId = other:get_typeId()
   
   if self:get_typeId() == otherTypeId then
@@ -2032,12 +1913,12 @@ function NormalTypeInfo:isInheritFrom( other )
 end
 
 function NormalTypeInfo:isSettableFrom( other )
-
-  if not other then
-    return false
-  end
+  other = other:get_srcTypeInfo()
   if self == _moduleObj.builtinTypeStem_ or self == _moduleObj.builtinTypeDDD then
     return true
+  end
+  if not self.nilable and other:get_nilable() then
+    return false
   end
   if self == _moduleObj.builtinTypeStem and not other:get_nilable() then
     return true
@@ -2136,25 +2017,20 @@ do
 local Node = {}
 _moduleObj.Node = Node
 function Node:get_expType(  )
-
   if not self.expTypeList then
     return _moduleObj.builtinTypeNone
   end
   return self.expTypeList[1]
 end
 function Node:getLiteral(  )
-
   return {nil}, {_moduleObj.builtinTypeNil}
 end
 function Node:processFilter( filter, ... )
-
 end
 function Node:canBeLeft(  )
-
   return false
 end
 function Node:canBeRight(  )
-
   return false
 end
 function Node.new( kind, pos, expTypeList )
@@ -2286,7 +2162,6 @@ local nodeKind = {}
 _moduleObj.nodeKind = nodeKind
 
 local function regKind( name )
-
   local kind = nodeKindSeed
   
   nodeKindSeed = nodeKindSeed + 1
@@ -2296,7 +2171,6 @@ local function regKind( name )
 end
 
 local function getNodeKindName( kind )
-
   return _lune.unwrap( nodeKind2NameMap[kind])
 end
 _moduleObj.getNodeKindName = getNodeKindName
@@ -2304,7 +2178,6 @@ _moduleObj.getNodeKindName = getNodeKindName
 -- none
 
 function Filter:processNone( node, ... )
-
 end
 
 -- none
@@ -2319,17 +2192,14 @@ local NoneNode = {}
 setmetatable( NoneNode, { __index = Node } )
 _moduleObj.NoneNode = NoneNode
 function NoneNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processNone( self, table.unpack( argList ) )
 end
 function NoneNode:canBeRight(  )
-
   return false
 end
 function NoneNode:canBeLeft(  )
-
   return false
 end
 function NoneNode.new( pos, typeList )
@@ -2353,7 +2223,6 @@ do
 -- none
 
 function Filter:processSubfile( node, ... )
-
 end
 
 -- none
@@ -2368,17 +2237,14 @@ local SubfileNode = {}
 setmetatable( SubfileNode, { __index = Node } )
 _moduleObj.SubfileNode = SubfileNode
 function SubfileNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processSubfile( self, table.unpack( argList ) )
 end
 function SubfileNode:canBeRight(  )
-
   return false
 end
 function SubfileNode:canBeLeft(  )
-
   return false
 end
 function SubfileNode.new( pos, typeList )
@@ -2402,7 +2268,6 @@ do
 -- none
 
 function Filter:processImport( node, ... )
-
 end
 
 -- none
@@ -2417,17 +2282,14 @@ local ImportNode = {}
 setmetatable( ImportNode, { __index = Node } )
 _moduleObj.ImportNode = ImportNode
 function ImportNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processImport( self, table.unpack( argList ) )
 end
 function ImportNode:canBeRight(  )
-
   return false
 end
 function ImportNode:canBeLeft(  )
-
   return false
 end
 function ImportNode.new( pos, typeList, modulePath, moduleTypeInfo )
@@ -2458,10 +2320,33 @@ do
 
 -- none
 
+local LuneHelperInfo = {}
+_moduleObj.LuneHelperInfo = LuneHelperInfo
+function LuneHelperInfo.new( useNilAccess, useUnwrapExp )
+  local obj = {}
+  setmetatable( obj, { __index = LuneHelperInfo } )
+  if obj.__init then
+    obj:__init( useNilAccess, useUnwrapExp )
+  end        
+  return obj 
+end         
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp ) 
+
+self.useNilAccess = useNilAccess
+  self.useUnwrapExp = useUnwrapExp
+  end
+function LuneHelperInfo:get_useNilAccess()       
+  return self.useNilAccess         
+end
+function LuneHelperInfo:get_useUnwrapExp()       
+  return self.useUnwrapExp         
+end
+do
+  end
+
 -- none
 
 function Filter:processRoot( node, ... )
-
 end
 
 -- none
@@ -2476,32 +2361,30 @@ local RootNode = {}
 setmetatable( RootNode, { __index = Node } )
 _moduleObj.RootNode = RootNode
 function RootNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processRoot( self, table.unpack( argList ) )
 end
 function RootNode:canBeRight(  )
-
   return false
 end
 function RootNode:canBeLeft(  )
-
   return false
 end
-function RootNode.new( pos, typeList, children, provideNode, typeId2ClassMap )
+function RootNode.new( pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap )
   local obj = {}
   setmetatable( obj, { __index = RootNode } )
-  if obj.__init then obj:__init( pos, typeList, children, provideNode, typeId2ClassMap ); end
+  if obj.__init then obj:__init( pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap ); end
 return obj
 end
-function RootNode:__init(pos, typeList, children, provideNode, typeId2ClassMap) 
+function RootNode:__init(pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap) 
   Node.__init( self, _moduleObj.nodeKindRoot, pos, typeList)
   
   -- none
   
   self.children = children
   self.provideNode = provideNode
+  self.luneHelperInfo = luneHelperInfo
   self.typeId2ClassMap = typeId2ClassMap
   -- none
   
@@ -2512,6 +2395,9 @@ end
 function RootNode:get_provideNode()       
   return self.provideNode         
 end
+function RootNode:get_luneHelperInfo()       
+  return self.luneHelperInfo         
+end
 function RootNode:get_typeId2ClassMap()       
   return self.typeId2ClassMap         
 end
@@ -2520,14 +2406,12 @@ do
 
 
 function RootNode:set_provide( node )
-
   self.provideNode = node
 end
 
 -- none
 
 function Filter:processRefType( node, ... )
-
 end
 
 -- none
@@ -2542,17 +2426,14 @@ local RefTypeNode = {}
 setmetatable( RefTypeNode, { __index = Node } )
 _moduleObj.RefTypeNode = RefTypeNode
 function RefTypeNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processRefType( self, table.unpack( argList ) )
 end
 function RefTypeNode:canBeRight(  )
-
   return false
 end
 function RefTypeNode:canBeLeft(  )
-
   return false
 end
 function RefTypeNode.new( pos, typeList, name, refFlag, mutFlag, array )
@@ -2592,7 +2473,6 @@ do
 -- none
 
 function Filter:processBlock( node, ... )
-
 end
 
 -- none
@@ -2607,17 +2487,14 @@ local BlockNode = {}
 setmetatable( BlockNode, { __index = Node } )
 _moduleObj.BlockNode = BlockNode
 function BlockNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processBlock( self, table.unpack( argList ) )
 end
 function BlockNode:canBeRight(  )
-
   return false
 end
 function BlockNode:canBeLeft(  )
-
   return false
 end
 function BlockNode.new( pos, typeList, blockKind, stmtList )
@@ -2677,7 +2554,6 @@ do
 -- none
 
 function Filter:processIf( node, ... )
-
 end
 
 -- none
@@ -2692,17 +2568,14 @@ local IfNode = {}
 setmetatable( IfNode, { __index = Node } )
 _moduleObj.IfNode = IfNode
 function IfNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processIf( self, table.unpack( argList ) )
 end
 function IfNode:canBeRight(  )
-
   return false
 end
 function IfNode:canBeLeft(  )
-
   return false
 end
 function IfNode.new( pos, typeList, stmtList )
@@ -2730,7 +2603,6 @@ do
 -- none
 
 function Filter:processExpList( node, ... )
-
 end
 
 -- none
@@ -2745,18 +2617,9 @@ local ExpListNode = {}
 setmetatable( ExpListNode, { __index = Node } )
 _moduleObj.ExpListNode = ExpListNode
 function ExpListNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpList( self, table.unpack( argList ) )
-end
-function ExpListNode:canBeRight(  )
-
-  return true
-end
-function ExpListNode:canBeLeft(  )
-
-  return true
 end
 function ExpListNode.new( pos, typeList, expList )
   local obj = {}
@@ -2779,6 +2642,24 @@ end
 do
   end
 
+
+function ExpListNode:canBeLeft(  )
+  for __index, expNode in pairs( self:get_expList() ) do
+    if not expNode.canBeLeft then
+      return false
+    end
+  end
+  return true
+end
+
+function ExpListNode:canBeRight(  )
+  for __index, expNode in pairs( self:get_expList() ) do
+    if not expNode.canBeRight then
+      return false
+    end
+  end
+  return true
+end
 
 local CaseInfo = {}
 _moduleObj.CaseInfo = CaseInfo
@@ -2807,7 +2688,6 @@ do
 -- none
 
 function Filter:processSwitch( node, ... )
-
 end
 
 -- none
@@ -2822,17 +2702,14 @@ local SwitchNode = {}
 setmetatable( SwitchNode, { __index = Node } )
 _moduleObj.SwitchNode = SwitchNode
 function SwitchNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processSwitch( self, table.unpack( argList ) )
 end
 function SwitchNode:canBeRight(  )
-
   return false
 end
 function SwitchNode:canBeLeft(  )
-
   return false
 end
 function SwitchNode.new( pos, typeList, exp, caseList, default )
@@ -2868,7 +2745,6 @@ do
 -- none
 
 function Filter:processWhile( node, ... )
-
 end
 
 -- none
@@ -2883,17 +2759,14 @@ local WhileNode = {}
 setmetatable( WhileNode, { __index = Node } )
 _moduleObj.WhileNode = WhileNode
 function WhileNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processWhile( self, table.unpack( argList ) )
 end
 function WhileNode:canBeRight(  )
-
   return false
 end
 function WhileNode:canBeLeft(  )
-
   return false
 end
 function WhileNode.new( pos, typeList, exp, block )
@@ -2925,7 +2798,6 @@ do
 -- none
 
 function Filter:processRepeat( node, ... )
-
 end
 
 -- none
@@ -2940,17 +2812,14 @@ local RepeatNode = {}
 setmetatable( RepeatNode, { __index = Node } )
 _moduleObj.RepeatNode = RepeatNode
 function RepeatNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processRepeat( self, table.unpack( argList ) )
 end
 function RepeatNode:canBeRight(  )
-
   return false
 end
 function RepeatNode:canBeLeft(  )
-
   return false
 end
 function RepeatNode.new( pos, typeList, block, exp )
@@ -2982,7 +2851,6 @@ do
 -- none
 
 function Filter:processFor( node, ... )
-
 end
 
 -- none
@@ -2997,17 +2865,14 @@ local ForNode = {}
 setmetatable( ForNode, { __index = Node } )
 _moduleObj.ForNode = ForNode
 function ForNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processFor( self, table.unpack( argList ) )
 end
 function ForNode:canBeRight(  )
-
   return false
 end
 function ForNode:canBeLeft(  )
-
   return false
 end
 function ForNode.new( pos, typeList, block, val, init, to, delta )
@@ -3051,7 +2916,6 @@ do
 -- none
 
 function Filter:processApply( node, ... )
-
 end
 
 -- none
@@ -3066,17 +2930,14 @@ local ApplyNode = {}
 setmetatable( ApplyNode, { __index = Node } )
 _moduleObj.ApplyNode = ApplyNode
 function ApplyNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processApply( self, table.unpack( argList ) )
 end
 function ApplyNode:canBeRight(  )
-
   return false
 end
 function ApplyNode:canBeLeft(  )
-
   return false
 end
 function ApplyNode.new( pos, typeList, varList, exp, block )
@@ -3112,7 +2973,6 @@ do
 -- none
 
 function Filter:processForeach( node, ... )
-
 end
 
 -- none
@@ -3127,17 +2987,14 @@ local ForeachNode = {}
 setmetatable( ForeachNode, { __index = Node } )
 _moduleObj.ForeachNode = ForeachNode
 function ForeachNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processForeach( self, table.unpack( argList ) )
 end
 function ForeachNode:canBeRight(  )
-
   return false
 end
 function ForeachNode:canBeLeft(  )
-
   return false
 end
 function ForeachNode.new( pos, typeList, val, key, exp, block )
@@ -3177,7 +3034,6 @@ do
 -- none
 
 function Filter:processForsort( node, ... )
-
 end
 
 -- none
@@ -3192,17 +3048,14 @@ local ForsortNode = {}
 setmetatable( ForsortNode, { __index = Node } )
 _moduleObj.ForsortNode = ForsortNode
 function ForsortNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processForsort( self, table.unpack( argList ) )
 end
 function ForsortNode:canBeRight(  )
-
   return false
 end
 function ForsortNode:canBeLeft(  )
-
   return false
 end
 function ForsortNode.new( pos, typeList, val, key, exp, block, sort )
@@ -3246,7 +3099,6 @@ do
 -- none
 
 function Filter:processReturn( node, ... )
-
 end
 
 -- none
@@ -3261,17 +3113,14 @@ local ReturnNode = {}
 setmetatable( ReturnNode, { __index = Node } )
 _moduleObj.ReturnNode = ReturnNode
 function ReturnNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processReturn( self, table.unpack( argList ) )
 end
 function ReturnNode:canBeRight(  )
-
   return false
 end
 function ReturnNode:canBeLeft(  )
-
   return false
 end
 function ReturnNode.new( pos, typeList, expList )
@@ -3299,7 +3148,6 @@ do
 -- none
 
 function Filter:processBreak( node, ... )
-
 end
 
 -- none
@@ -3314,17 +3162,14 @@ local BreakNode = {}
 setmetatable( BreakNode, { __index = Node } )
 _moduleObj.BreakNode = BreakNode
 function BreakNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processBreak( self, table.unpack( argList ) )
 end
 function BreakNode:canBeRight(  )
-
   return false
 end
 function BreakNode:canBeLeft(  )
-
   return false
 end
 function BreakNode.new( pos, typeList )
@@ -3348,7 +3193,6 @@ do
 -- none
 
 function Filter:processProvide( node, ... )
-
 end
 
 -- none
@@ -3363,17 +3207,14 @@ local ProvideNode = {}
 setmetatable( ProvideNode, { __index = Node } )
 _moduleObj.ProvideNode = ProvideNode
 function ProvideNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processProvide( self, table.unpack( argList ) )
 end
 function ProvideNode:canBeRight(  )
-
   return false
 end
 function ProvideNode:canBeLeft(  )
-
   return false
 end
 function ProvideNode.new( pos, typeList, val )
@@ -3401,7 +3242,6 @@ do
 -- none
 
 function Filter:processExpNew( node, ... )
-
 end
 
 -- none
@@ -3416,17 +3256,14 @@ local ExpNewNode = {}
 setmetatable( ExpNewNode, { __index = Node } )
 _moduleObj.ExpNewNode = ExpNewNode
 function ExpNewNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpNew( self, table.unpack( argList ) )
 end
 function ExpNewNode:canBeRight(  )
-
   return true
 end
 function ExpNewNode:canBeLeft(  )
-
   return false
 end
 function ExpNewNode.new( pos, typeList, symbol, argList )
@@ -3458,7 +3295,6 @@ do
 -- none
 
 function Filter:processExpUnwrap( node, ... )
-
 end
 
 -- none
@@ -3473,17 +3309,14 @@ local ExpUnwrapNode = {}
 setmetatable( ExpUnwrapNode, { __index = Node } )
 _moduleObj.ExpUnwrapNode = ExpUnwrapNode
 function ExpUnwrapNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpUnwrap( self, table.unpack( argList ) )
 end
 function ExpUnwrapNode:canBeRight(  )
-
   return true
 end
 function ExpUnwrapNode:canBeLeft(  )
-
   return false
 end
 function ExpUnwrapNode.new( pos, typeList, exp, default )
@@ -3515,7 +3348,6 @@ do
 -- none
 
 function Filter:processExpRef( node, ... )
-
 end
 
 -- none
@@ -3530,7 +3362,6 @@ local ExpRefNode = {}
 setmetatable( ExpRefNode, { __index = Node } )
 _moduleObj.ExpRefNode = ExpRefNode
 function ExpRefNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpRef( self, table.unpack( argList ) )
@@ -3562,19 +3393,16 @@ do
 
 
 function ExpRefNode:canBeLeft(  )
-
   return self:get_symbolInfo():get_canBeLeft()
 end
 
 function ExpRefNode:canBeRight(  )
-
   return self:get_symbolInfo():get_canBeRight()
 end
 
 -- none
 
 function Filter:processExpOp2( node, ... )
-
 end
 
 -- none
@@ -3589,17 +3417,14 @@ local ExpOp2Node = {}
 setmetatable( ExpOp2Node, { __index = Node } )
 _moduleObj.ExpOp2Node = ExpOp2Node
 function ExpOp2Node:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpOp2( self, table.unpack( argList ) )
 end
 function ExpOp2Node:canBeRight(  )
-
   return true
 end
 function ExpOp2Node:canBeLeft(  )
-
   return false
 end
 function ExpOp2Node.new( pos, typeList, op, exp1, exp2 )
@@ -3635,7 +3460,6 @@ do
 -- none
 
 function Filter:processUnwrapSet( node, ... )
-
 end
 
 -- none
@@ -3650,17 +3474,14 @@ local UnwrapSetNode = {}
 setmetatable( UnwrapSetNode, { __index = Node } )
 _moduleObj.UnwrapSetNode = UnwrapSetNode
 function UnwrapSetNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processUnwrapSet( self, table.unpack( argList ) )
 end
 function UnwrapSetNode:canBeRight(  )
-
   return false
 end
 function UnwrapSetNode:canBeLeft(  )
-
   return false
 end
 function UnwrapSetNode.new( pos, typeList, dstExpList, srcExpList, unwrapBlock )
@@ -3696,7 +3517,6 @@ do
 -- none
 
 function Filter:processIfUnwrap( node, ... )
-
 end
 
 -- none
@@ -3711,17 +3531,14 @@ local IfUnwrapNode = {}
 setmetatable( IfUnwrapNode, { __index = Node } )
 _moduleObj.IfUnwrapNode = IfUnwrapNode
 function IfUnwrapNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processIfUnwrap( self, table.unpack( argList ) )
 end
 function IfUnwrapNode:canBeRight(  )
-
   return false
 end
 function IfUnwrapNode:canBeLeft(  )
-
   return false
 end
 function IfUnwrapNode.new( pos, typeList, exp, block, nilBlock )
@@ -3757,7 +3574,6 @@ do
 -- none
 
 function Filter:processExpCast( node, ... )
-
 end
 
 -- none
@@ -3772,17 +3588,14 @@ local ExpCastNode = {}
 setmetatable( ExpCastNode, { __index = Node } )
 _moduleObj.ExpCastNode = ExpCastNode
 function ExpCastNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpCast( self, table.unpack( argList ) )
 end
 function ExpCastNode:canBeRight(  )
-
   return true
 end
 function ExpCastNode:canBeLeft(  )
-
   return false
 end
 function ExpCastNode.new( pos, typeList, exp )
@@ -3810,7 +3623,6 @@ do
 -- none
 
 function Filter:processExpOp1( node, ... )
-
 end
 
 -- none
@@ -3825,17 +3637,14 @@ local ExpOp1Node = {}
 setmetatable( ExpOp1Node, { __index = Node } )
 _moduleObj.ExpOp1Node = ExpOp1Node
 function ExpOp1Node:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpOp1( self, table.unpack( argList ) )
 end
 function ExpOp1Node:canBeRight(  )
-
   return true
 end
 function ExpOp1Node:canBeLeft(  )
-
   return false
 end
 function ExpOp1Node.new( pos, typeList, op, macroMode, exp )
@@ -3871,7 +3680,6 @@ do
 -- none
 
 function Filter:processExpRefItem( node, ... )
-
 end
 
 -- none
@@ -3886,17 +3694,14 @@ local ExpRefItemNode = {}
 setmetatable( ExpRefItemNode, { __index = Node } )
 _moduleObj.ExpRefItemNode = ExpRefItemNode
 function ExpRefItemNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpRefItem( self, table.unpack( argList ) )
 end
 function ExpRefItemNode:canBeRight(  )
-
   return true
 end
 function ExpRefItemNode:canBeLeft(  )
-
   return true
 end
 function ExpRefItemNode.new( pos, typeList, val, nilAccess, index )
@@ -3932,7 +3737,6 @@ do
 -- none
 
 function Filter:processExpCall( node, ... )
-
 end
 
 -- none
@@ -3947,17 +3751,14 @@ local ExpCallNode = {}
 setmetatable( ExpCallNode, { __index = Node } )
 _moduleObj.ExpCallNode = ExpCallNode
 function ExpCallNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpCall( self, table.unpack( argList ) )
 end
 function ExpCallNode:canBeRight(  )
-
   return true
 end
 function ExpCallNode:canBeLeft(  )
-
   return false
 end
 function ExpCallNode.new( pos, typeList, func, nilAccess, argList )
@@ -3993,7 +3794,6 @@ do
 -- none
 
 function Filter:processExpDDD( node, ... )
-
 end
 
 -- none
@@ -4008,17 +3808,14 @@ local ExpDDDNode = {}
 setmetatable( ExpDDDNode, { __index = Node } )
 _moduleObj.ExpDDDNode = ExpDDDNode
 function ExpDDDNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpDDD( self, table.unpack( argList ) )
 end
 function ExpDDDNode:canBeRight(  )
-
   return true
 end
 function ExpDDDNode:canBeLeft(  )
-
   return false
 end
 function ExpDDDNode.new( pos, typeList, token )
@@ -4046,7 +3843,6 @@ do
 -- none
 
 function Filter:processExpParen( node, ... )
-
 end
 
 -- none
@@ -4061,17 +3857,14 @@ local ExpParenNode = {}
 setmetatable( ExpParenNode, { __index = Node } )
 _moduleObj.ExpParenNode = ExpParenNode
 function ExpParenNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpParen( self, table.unpack( argList ) )
 end
 function ExpParenNode:canBeRight(  )
-
   return true
 end
 function ExpParenNode:canBeLeft(  )
-
   return false
 end
 function ExpParenNode.new( pos, typeList, exp )
@@ -4099,7 +3892,6 @@ do
 -- none
 
 function Filter:processExpMacroExp( node, ... )
-
 end
 
 -- none
@@ -4114,17 +3906,14 @@ local ExpMacroExpNode = {}
 setmetatable( ExpMacroExpNode, { __index = Node } )
 _moduleObj.ExpMacroExpNode = ExpMacroExpNode
 function ExpMacroExpNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpMacroExp( self, table.unpack( argList ) )
 end
 function ExpMacroExpNode:canBeRight(  )
-
   return false
 end
 function ExpMacroExpNode:canBeLeft(  )
-
   return false
 end
 function ExpMacroExpNode.new( pos, typeList, stmtList )
@@ -4152,7 +3941,6 @@ do
 -- none
 
 function Filter:processExpMacroStat( node, ... )
-
 end
 
 -- none
@@ -4167,17 +3955,14 @@ local ExpMacroStatNode = {}
 setmetatable( ExpMacroStatNode, { __index = Node } )
 _moduleObj.ExpMacroStatNode = ExpMacroStatNode
 function ExpMacroStatNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpMacroStat( self, table.unpack( argList ) )
 end
 function ExpMacroStatNode:canBeRight(  )
-
   return true
 end
 function ExpMacroStatNode:canBeLeft(  )
-
   return false
 end
 function ExpMacroStatNode.new( pos, typeList, expStrList )
@@ -4205,7 +3990,6 @@ do
 -- none
 
 function Filter:processStmtExp( node, ... )
-
 end
 
 -- none
@@ -4220,17 +4004,14 @@ local StmtExpNode = {}
 setmetatable( StmtExpNode, { __index = Node } )
 _moduleObj.StmtExpNode = StmtExpNode
 function StmtExpNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processStmtExp( self, table.unpack( argList ) )
 end
 function StmtExpNode:canBeRight(  )
-
   return true
 end
 function StmtExpNode:canBeLeft(  )
-
   return false
 end
 function StmtExpNode.new( pos, typeList, exp )
@@ -4258,7 +4039,6 @@ do
 -- none
 
 function Filter:processRefField( node, ... )
-
 end
 
 -- none
@@ -4273,13 +4053,11 @@ local RefFieldNode = {}
 setmetatable( RefFieldNode, { __index = Node } )
 _moduleObj.RefFieldNode = RefFieldNode
 function RefFieldNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processRefField( self, table.unpack( argList ) )
 end
 function RefFieldNode:canBeRight(  )
-
   return true
 end
 function RefFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix )
@@ -4317,7 +4095,6 @@ do
 
 
 function RefFieldNode:canBeLeft(  )
-
   do
     local _exp = self:get_symbolInfo()
     if _exp ~= nil then
@@ -4332,7 +4109,6 @@ end
 -- none
 
 function Filter:processGetField( node, ... )
-
 end
 
 -- none
@@ -4347,13 +4123,11 @@ local GetFieldNode = {}
 setmetatable( GetFieldNode, { __index = Node } )
 _moduleObj.GetFieldNode = GetFieldNode
 function GetFieldNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processGetField( self, table.unpack( argList ) )
 end
 function GetFieldNode:canBeRight(  )
-
   return true
 end
 function GetFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
@@ -4395,7 +4169,6 @@ do
 
 
 function GetFieldNode:canBeLeft(  )
-
   do
     local _exp = self:get_symbolInfo()
     if _exp ~= nil then
@@ -4438,7 +4211,6 @@ do
 -- none
 
 function Filter:processDeclVar( node, ... )
-
 end
 
 -- none
@@ -4453,17 +4225,14 @@ local DeclVarNode = {}
 setmetatable( DeclVarNode, { __index = Node } )
 _moduleObj.DeclVarNode = DeclVarNode
 function DeclVarNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclVar( self, table.unpack( argList ) )
 end
 function DeclVarNode:canBeRight(  )
-
   return false
 end
 function DeclVarNode:canBeLeft(  )
-
   return false
 end
 function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
@@ -4579,7 +4348,6 @@ do
 -- none
 
 function Filter:processDeclFunc( node, ... )
-
 end
 
 -- none
@@ -4594,17 +4362,14 @@ local DeclFuncNode = {}
 setmetatable( DeclFuncNode, { __index = Node } )
 _moduleObj.DeclFuncNode = DeclFuncNode
 function DeclFuncNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclFunc( self, table.unpack( argList ) )
 end
 function DeclFuncNode:canBeRight(  )
-
   return true
 end
 function DeclFuncNode:canBeLeft(  )
-
   return false
 end
 function DeclFuncNode.new( pos, typeList, declInfo )
@@ -4632,7 +4397,6 @@ do
 -- none
 
 function Filter:processDeclMethod( node, ... )
-
 end
 
 -- none
@@ -4647,17 +4411,14 @@ local DeclMethodNode = {}
 setmetatable( DeclMethodNode, { __index = Node } )
 _moduleObj.DeclMethodNode = DeclMethodNode
 function DeclMethodNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclMethod( self, table.unpack( argList ) )
 end
 function DeclMethodNode:canBeRight(  )
-
   return false
 end
 function DeclMethodNode:canBeLeft(  )
-
   return false
 end
 function DeclMethodNode.new( pos, typeList, declInfo )
@@ -4685,7 +4446,6 @@ do
 -- none
 
 function Filter:processDeclConstr( node, ... )
-
 end
 
 -- none
@@ -4700,17 +4460,14 @@ local DeclConstrNode = {}
 setmetatable( DeclConstrNode, { __index = Node } )
 _moduleObj.DeclConstrNode = DeclConstrNode
 function DeclConstrNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclConstr( self, table.unpack( argList ) )
 end
 function DeclConstrNode:canBeRight(  )
-
   return false
 end
 function DeclConstrNode:canBeLeft(  )
-
   return false
 end
 function DeclConstrNode.new( pos, typeList, declInfo )
@@ -4738,7 +4495,6 @@ do
 -- none
 
 function Filter:processExpCallSuper( node, ... )
-
 end
 
 -- none
@@ -4753,17 +4509,14 @@ local ExpCallSuperNode = {}
 setmetatable( ExpCallSuperNode, { __index = Node } )
 _moduleObj.ExpCallSuperNode = ExpCallSuperNode
 function ExpCallSuperNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processExpCallSuper( self, table.unpack( argList ) )
 end
 function ExpCallSuperNode:canBeRight(  )
-
   return false
 end
 function ExpCallSuperNode:canBeLeft(  )
-
   return false
 end
 function ExpCallSuperNode.new( pos, typeList, superType, expList )
@@ -4795,7 +4548,6 @@ do
 -- none
 
 function Filter:processDeclMember( node, ... )
-
 end
 
 -- none
@@ -4810,17 +4562,14 @@ local DeclMemberNode = {}
 setmetatable( DeclMemberNode, { __index = Node } )
 _moduleObj.DeclMemberNode = DeclMemberNode
 function DeclMemberNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclMember( self, table.unpack( argList ) )
 end
 function DeclMemberNode:canBeRight(  )
-
   return false
 end
 function DeclMemberNode:canBeLeft(  )
-
   return false
 end
 function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode )
@@ -4872,7 +4621,6 @@ do
 -- none
 
 function Filter:processDeclArg( node, ... )
-
 end
 
 -- none
@@ -4887,17 +4635,14 @@ local DeclArgNode = {}
 setmetatable( DeclArgNode, { __index = Node } )
 _moduleObj.DeclArgNode = DeclArgNode
 function DeclArgNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclArg( self, table.unpack( argList ) )
 end
 function DeclArgNode:canBeRight(  )
-
   return false
 end
 function DeclArgNode:canBeLeft(  )
-
   return false
 end
 function DeclArgNode.new( pos, typeList, name, argType )
@@ -4929,7 +4674,6 @@ do
 -- none
 
 function Filter:processDeclArgDDD( node, ... )
-
 end
 
 -- none
@@ -4944,17 +4688,14 @@ local DeclArgDDDNode = {}
 setmetatable( DeclArgDDDNode, { __index = Node } )
 _moduleObj.DeclArgDDDNode = DeclArgDDDNode
 function DeclArgDDDNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclArgDDD( self, table.unpack( argList ) )
 end
 function DeclArgDDDNode:canBeRight(  )
-
   return false
 end
 function DeclArgDDDNode:canBeLeft(  )
-
   return false
 end
 function DeclArgDDDNode.new( pos, typeList )
@@ -5004,7 +4745,6 @@ do
 -- none
 
 function Filter:processDeclClass( node, ... )
-
 end
 
 -- none
@@ -5019,17 +4759,14 @@ local DeclClassNode = {}
 setmetatable( DeclClassNode, { __index = Node } )
 _moduleObj.DeclClassNode = DeclClassNode
 function DeclClassNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclClass( self, table.unpack( argList ) )
 end
 function DeclClassNode:canBeRight(  )
-
   return false
 end
 function DeclClassNode:canBeLeft(  )
-
   return false
 end
 function DeclClassNode.new( pos, typeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
@@ -5093,7 +4830,6 @@ do
 -- none
 
 function Filter:processDeclEnum( node, ... )
-
 end
 
 -- none
@@ -5108,17 +4844,14 @@ local DeclEnumNode = {}
 setmetatable( DeclEnumNode, { __index = Node } )
 _moduleObj.DeclEnumNode = DeclEnumNode
 function DeclEnumNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclEnum( self, table.unpack( argList ) )
 end
 function DeclEnumNode:canBeRight(  )
-
   return false
 end
 function DeclEnumNode:canBeLeft(  )
-
   return false
 end
 function DeclEnumNode.new( pos, typeList, accessMode, name, valueNameList, scope )
@@ -5158,7 +4891,6 @@ do
 -- none
 
 function Filter:processDeclMacro( node, ... )
-
 end
 
 -- none
@@ -5173,17 +4905,14 @@ local DeclMacroNode = {}
 setmetatable( DeclMacroNode, { __index = Node } )
 _moduleObj.DeclMacroNode = DeclMacroNode
 function DeclMacroNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processDeclMacro( self, table.unpack( argList ) )
 end
 function DeclMacroNode:canBeRight(  )
-
   return false
 end
 function DeclMacroNode:canBeLeft(  )
-
   return false
 end
 function DeclMacroNode.new( pos, typeList, declInfo )
@@ -5228,7 +4957,6 @@ do
 -- none
 
 function Filter:processLiteralNil( node, ... )
-
 end
 
 -- none
@@ -5243,17 +4971,14 @@ local LiteralNilNode = {}
 setmetatable( LiteralNilNode, { __index = Node } )
 _moduleObj.LiteralNilNode = LiteralNilNode
 function LiteralNilNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralNil( self, table.unpack( argList ) )
 end
 function LiteralNilNode:canBeRight(  )
-
   return true
 end
 function LiteralNilNode:canBeLeft(  )
-
   return false
 end
 function LiteralNilNode.new( pos, typeList )
@@ -5277,7 +5002,6 @@ do
 -- none
 
 function Filter:processLiteralChar( node, ... )
-
 end
 
 -- none
@@ -5292,17 +5016,14 @@ local LiteralCharNode = {}
 setmetatable( LiteralCharNode, { __index = Node } )
 _moduleObj.LiteralCharNode = LiteralCharNode
 function LiteralCharNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralChar( self, table.unpack( argList ) )
 end
 function LiteralCharNode:canBeRight(  )
-
   return true
 end
 function LiteralCharNode:canBeLeft(  )
-
   return false
 end
 function LiteralCharNode.new( pos, typeList, token, num )
@@ -5334,7 +5055,6 @@ do
 -- none
 
 function Filter:processLiteralInt( node, ... )
-
 end
 
 -- none
@@ -5349,17 +5069,14 @@ local LiteralIntNode = {}
 setmetatable( LiteralIntNode, { __index = Node } )
 _moduleObj.LiteralIntNode = LiteralIntNode
 function LiteralIntNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralInt( self, table.unpack( argList ) )
 end
 function LiteralIntNode:canBeRight(  )
-
   return true
 end
 function LiteralIntNode:canBeLeft(  )
-
   return false
 end
 function LiteralIntNode.new( pos, typeList, token, num )
@@ -5391,7 +5108,6 @@ do
 -- none
 
 function Filter:processLiteralReal( node, ... )
-
 end
 
 -- none
@@ -5406,17 +5122,14 @@ local LiteralRealNode = {}
 setmetatable( LiteralRealNode, { __index = Node } )
 _moduleObj.LiteralRealNode = LiteralRealNode
 function LiteralRealNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralReal( self, table.unpack( argList ) )
 end
 function LiteralRealNode:canBeRight(  )
-
   return true
 end
 function LiteralRealNode:canBeLeft(  )
-
   return false
 end
 function LiteralRealNode.new( pos, typeList, token, num )
@@ -5448,7 +5161,6 @@ do
 -- none
 
 function Filter:processLiteralArray( node, ... )
-
 end
 
 -- none
@@ -5463,17 +5175,14 @@ local LiteralArrayNode = {}
 setmetatable( LiteralArrayNode, { __index = Node } )
 _moduleObj.LiteralArrayNode = LiteralArrayNode
 function LiteralArrayNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralArray( self, table.unpack( argList ) )
 end
 function LiteralArrayNode:canBeRight(  )
-
   return true
 end
 function LiteralArrayNode:canBeLeft(  )
-
   return false
 end
 function LiteralArrayNode.new( pos, typeList, expList )
@@ -5501,7 +5210,6 @@ do
 -- none
 
 function Filter:processLiteralList( node, ... )
-
 end
 
 -- none
@@ -5516,17 +5224,14 @@ local LiteralListNode = {}
 setmetatable( LiteralListNode, { __index = Node } )
 _moduleObj.LiteralListNode = LiteralListNode
 function LiteralListNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralList( self, table.unpack( argList ) )
 end
 function LiteralListNode:canBeRight(  )
-
   return true
 end
 function LiteralListNode:canBeLeft(  )
-
   return false
 end
 function LiteralListNode.new( pos, typeList, expList )
@@ -5578,7 +5283,6 @@ do
 -- none
 
 function Filter:processLiteralMap( node, ... )
-
 end
 
 -- none
@@ -5593,17 +5297,14 @@ local LiteralMapNode = {}
 setmetatable( LiteralMapNode, { __index = Node } )
 _moduleObj.LiteralMapNode = LiteralMapNode
 function LiteralMapNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralMap( self, table.unpack( argList ) )
 end
 function LiteralMapNode:canBeRight(  )
-
   return true
 end
 function LiteralMapNode:canBeLeft(  )
-
   return false
 end
 function LiteralMapNode.new( pos, typeList, map, pairList )
@@ -5635,7 +5336,6 @@ do
 -- none
 
 function Filter:processLiteralString( node, ... )
-
 end
 
 -- none
@@ -5650,17 +5350,14 @@ local LiteralStringNode = {}
 setmetatable( LiteralStringNode, { __index = Node } )
 _moduleObj.LiteralStringNode = LiteralStringNode
 function LiteralStringNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralString( self, table.unpack( argList ) )
 end
 function LiteralStringNode:canBeRight(  )
-
   return true
 end
 function LiteralStringNode:canBeLeft(  )
-
   return false
 end
 function LiteralStringNode.new( pos, typeList, token, argList )
@@ -5692,7 +5389,6 @@ do
 -- none
 
 function Filter:processLiteralBool( node, ... )
-
 end
 
 -- none
@@ -5707,17 +5403,14 @@ local LiteralBoolNode = {}
 setmetatable( LiteralBoolNode, { __index = Node } )
 _moduleObj.LiteralBoolNode = LiteralBoolNode
 function LiteralBoolNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralBool( self, table.unpack( argList ) )
 end
 function LiteralBoolNode:canBeRight(  )
-
   return true
 end
 function LiteralBoolNode:canBeLeft(  )
-
   return false
 end
 function LiteralBoolNode.new( pos, typeList, token )
@@ -5745,7 +5438,6 @@ do
 -- none
 
 function Filter:processLiteralSymbol( node, ... )
-
 end
 
 -- none
@@ -5760,17 +5452,14 @@ local LiteralSymbolNode = {}
 setmetatable( LiteralSymbolNode, { __index = Node } )
 _moduleObj.LiteralSymbolNode = LiteralSymbolNode
 function LiteralSymbolNode:processFilter( filter, ... )
-
   local argList = {...}
   
   filter:processLiteralSymbol( self, table.unpack( argList ) )
 end
 function LiteralSymbolNode:canBeRight(  )
-
   return true
 end
 function LiteralSymbolNode:canBeLeft(  )
-
   return false
 end
 function LiteralSymbolNode.new( pos, typeList, token )
@@ -5796,9 +5485,7 @@ do
 
 
 function Node:getSymbolInfo(  )
-
   local function processExpNode( node )
-  
     do
       local _switchExp = (node:get_kind() )
       if _switchExp == _moduleObj.nodeKindExpRef then
@@ -5855,27 +5542,22 @@ function Node:getSymbolInfo(  )
 end
 
 function LiteralNilNode:getLiteral(  )
-
   return {nil}, {_moduleObj.builtinTypeNil}
 end
 
 function LiteralCharNode:getLiteral(  )
-
   return {self.num}, {_moduleObj.builtinTypeChar}
 end
 
 function LiteralIntNode:getLiteral(  )
-
   return {self.num}, {_moduleObj.builtinTypeInt}
 end
 
 function LiteralRealNode:getLiteral(  )
-
   return {self.num}, {_moduleObj.builtinTypeReal}
 end
 
 function LiteralArrayNode:getLiteral(  )
-
   local array = {}
   
   do
@@ -5885,6 +5567,12 @@ function LiteralArrayNode:getLiteral(  )
         for __index, val in pairs( _exp:get_expList(  ) ) do
           local txt = val:getLiteral(  )[1]
           
+              if  nil == txt then
+                local _txt = txt
+                
+                return {}, {}
+              end
+            
           table.insert( array, txt )
         end
       end
@@ -5894,7 +5582,6 @@ function LiteralArrayNode:getLiteral(  )
 end
 
 function LiteralListNode:getLiteral(  )
-
   local list = {}
   
   do
@@ -5904,6 +5591,12 @@ function LiteralListNode:getLiteral(  )
         for __index, val in pairs( _exp:get_expList(  ) ) do
           local item = val:getLiteral(  )[1]
           
+              if  nil == item then
+                local _item = item
+                
+                return {}, {}
+              end
+            
           table.insert( list, item )
         end
       end
@@ -5913,7 +5606,6 @@ function LiteralListNode:getLiteral(  )
 end
 
 function LiteralMapNode:getLiteral(  )
-
   local map = {}
   
   for key, val in pairs( self.map ) do
@@ -5923,7 +5615,6 @@ function LiteralMapNode:getLiteral(  )
 end
 
 function LiteralStringNode:getLiteral(  )
-
   local txt = self.token.txt
   
   if string.find( txt, '^```' ) then
@@ -5939,7 +5630,17 @@ function LiteralStringNode:getLiteral(  )
     for __index, argNode in pairs( argList ) do
       local arg = argNode:getLiteral(  )
       
-      table.insert( argTbl, arg[1] )
+      if #arg > 1 then
+        local argTxt = arg[1]
+        
+            if  nil == argTxt then
+              local _argTxt = argTxt
+              
+              return {}, {}
+            end
+          
+        table.insert( argTbl, argTxt )
+      end
     end
     return {string.format( txt, table.unpack( argTbl ) )}, {_moduleObj.builtinTypeString}
   end
@@ -5947,17 +5648,14 @@ function LiteralStringNode:getLiteral(  )
 end
 
 function LiteralBoolNode:getLiteral(  )
-
   return {self.token.txt == "true"}, {_moduleObj.builtinTypeBool}
 end
 
 function LiteralSymbolNode:getLiteral(  )
-
   return {{self.token.txt}}, {_moduleObj.builtinTypeSymbol}
 end
 
 function RefFieldNode:getLiteral(  )
-
   local prefix = (_lune.unwrap( self.prefix:getLiteral(  )[1]) )
   
   if self.nilAccess then
@@ -5970,7 +5668,6 @@ function RefFieldNode:getLiteral(  )
 end
 
 function ExpMacroStatNode:getLiteral(  )
-
   local txt = ""
   
   for __index, token in pairs( self.expStrList ) do
@@ -5980,7 +5677,6 @@ function ExpMacroStatNode:getLiteral(  )
 end
 
 function ExpRefNode:getLiteral(  )
-
   local typeInfo = self.symbolInfo:get_typeInfo()
   
   if typeInfo:get_kind() ~= TypeInfoKind.Enum then
@@ -5994,7 +5690,6 @@ function ExpRefNode:getLiteral(  )
 end
 
 function ExpOp2Node:getLiteral(  )
-
   local val1List, type1List = self:get_exp1():getLiteral(  )
   
   local val2List, type2List = self:get_exp2():getLiteral(  )
@@ -6002,7 +5697,7 @@ function ExpOp2Node:getLiteral(  )
   if #val1List ~= 1 or #type1List ~= 1 or #val2List ~= 1 or #type2List ~= 1 then
     return {}, {}
   end
-  local val1, type1, val2, type2 = _lune.unwrap( val1List[1]), type1List[1], _lune.unwrap( val2List[1]), type2List[1]
+  local val1, type1, val2, type2 = _lune.unwrap( val1List[1]), type1List[1]:get_srcTypeInfo(), _lune.unwrap( val2List[1]), type2List[1]:get_srcTypeInfo()
   
   if (type1 == _moduleObj.builtinTypeInt or type1 == _moduleObj.builtinTypeReal ) and (type2 == _moduleObj.builtinTypeInt or type2 == _moduleObj.builtinTypeReal ) then
     local retType = _moduleObj.builtinTypeInt

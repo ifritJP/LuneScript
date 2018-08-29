@@ -1,6 +1,8 @@
 --lune/base/Depend.lns
 local _moduleObj = {}
-_lune = {}
+if not _ENV._lune then
+   _lune = {}
+end
 function _lune.nilacc( val, fieldName, access, ... )
   if not val then
     return nil
@@ -41,22 +43,9 @@ function _lune.nilacc( val, fieldName, access, ... )
     return val( list, arg )
   end
   error( string.format( "illegal access -- %s", access ) )
-end 
-function _lune.unwrap( val )
-  if val == nil then
-    _luneScript.error( 'unwrap val is nil' )
-  end
-  return val
-end 
-function _lune.unwrapDefault( val, defval )
-  if val == nil then
-    return defval
-  end
-  return val
 end
 
 local function getFileLastModifiedTime( path )
-
   local file = io.open( path )
   
   do

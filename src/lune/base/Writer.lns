@@ -61,7 +61,7 @@ pub class XML extend (Writer) {
       return txt;
    }
    
-   pub fn startElement( name:str ) {
+   pub fn startElement( name:str ) mut {
       self.elementList.insert( name );
       self.stream.write( '<%s>' ( name ) );
       self.depth = self.depth + 1;
@@ -70,7 +70,7 @@ pub class XML extend (Writer) {
    pub fn startParent( name:str, arrayFlag:bool ) {
       self.startElement( name );
    }
-   pub fn endElement() {
+   pub fn endElement() mut {
       let name = self.elementList.remove();
       self.stream.write( '</%s>' ( name ) );
       self.depth = self.depth - 1;
@@ -186,7 +186,7 @@ pub class JSON extend (Writer) {
       nameSet[ name ] = true;
    }
 
-   pub fn startParent( name:str, arrayFlag:bool ) {
+   pub fn startParent( name:str, arrayFlag:bool ) mut {
       self.addElementName( name );
 
       if self.equalLayerState( 'termed' ) or
@@ -209,7 +209,7 @@ pub class JSON extend (Writer) {
       self.prevName = name;
    }
 
-   pub fn startElement( name:str ) {
+   pub fn startElement( name:str ) mut {
       self.addElementName( name );
 
       if self.equalLayerState( 'termed' ) {
@@ -225,7 +225,7 @@ pub class JSON extend (Writer) {
          self.startLayer( false, true );
       }
 
-      let info = unwrap self.getLayerInfo();
+      let mut info = unwrap self.getLayerInfo();
 
       if info.openElement {
          Util.err( 'illegal openElement' );
@@ -242,7 +242,7 @@ pub class JSON extend (Writer) {
          self.endLayer();
       }
       elseif self.equalLayerState( 'valued' ) {
-         let info = unwrap self.getLayerInfo();
+         let mut info = unwrap self.getLayerInfo();
          if info.openElement {
 	    info.openElement = false;
          }        

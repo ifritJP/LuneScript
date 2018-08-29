@@ -1,47 +1,8 @@
 --lune/base/dumpNode.lns
 local _moduleObj = {}
-_lune = {}
-function _lune.nilacc( val, fieldName, access, ... )
-  if not val then
-    return nil
-  end
-  if fieldName then
-    local field = val[ fieldName ]
-    if not field then
-      return nil
-    end
-    if access == "item" then
-      local typeId = type( field )
-      if typeId == "table" then
-        return field[ ... ]
-      elseif typeId == "string" then
-        return string.byte( field, ... )
-      end
-    elseif access == "call" then
-      return field( ... )
-    elseif access == "callmtd" then
-      return field( val, ... )
-    end
-    return field
-  end
-  if access == "item" then
-    local typeId = type( val )
-    if typeId == "table" then
-      return val[ ... ]
-    elseif typeId == "string" then
-      return string.byte( val, ... )
-    end
-  elseif access == "call" then
-    return val( ... )
-  elseif access == "list" then
-    local list, arg = ...
-    if not list then
-      return nil
-    end
-    return val( list, arg )
-  end
-  error( string.format( "illegal access -- %s", access ) )
-end 
+if not _ENV._lune then
+   _lune = {}
+end
 function _lune.unwrap( val )
   if val == nil then
     _luneScript.error( 'unwrap val is nil' )
@@ -77,7 +38,6 @@ do
   end
 
 local function dump( prefix, depth, node, txt )
-
   local typeStr = ""
   
   local expType = node:get_expType(  )
@@ -89,31 +49,26 @@ local function dump( prefix, depth, node, txt )
 end
 
 local function filter( node, filter, prefix, depth )
-
   node:processFilter( dumpFilter, prefix, depth )
 end
 
 local function getTxt( token )
-
   return token.txt
 end
 
 function dumpFilter:processNone( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
 end
 
 -- none
 
 function dumpFilter:processImport( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_modulePath(  ) )
 end
 
 -- none
 
 function dumpFilter:processRoot( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   for index, child in pairs( node:get_children(  ) ) do
     filter( child, self, prefix .. "  ", depth + 1 )
@@ -123,12 +78,10 @@ end
 -- none
 
 function dumpFilter:processSubfile( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
 end
 
 function dumpFilter:processBlock( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   for index, statement in pairs( node:get_stmtList(  ) ) do
     filter( statement, self, prefix .. "  ", depth + 1 )
@@ -138,7 +91,6 @@ end
 -- none
 
 function dumpFilter:processStmtExp( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -146,7 +98,6 @@ end
 -- none
 
 function dumpFilter:processDeclEnum( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_name().txt )
   local enumTypeInfo = node:get_expType()
   
@@ -158,7 +109,6 @@ function dumpFilter:processDeclEnum( node, prefix, depth )
 end
 
 function dumpFilter:processDeclClass( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_name(  ).txt )
   for index, field in pairs( node:get_fieldList(  ) ) do
     filter( field, self, prefix .. "  ", depth + 1 )
@@ -168,7 +118,6 @@ end
 -- none
 
 function dumpFilter:processDeclMember( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_name(  ).txt )
   filter( node:get_refType(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -176,7 +125,6 @@ end
 -- none
 
 function dumpFilter:processExpMacroExp( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   local stmtList = node:get_stmtList(  )
   
@@ -190,14 +138,12 @@ end
 -- none
 
 function dumpFilter:processDeclMacro( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_expType(  ):getTxt(  ) )
 end
 
 -- none
 
 function dumpFilter:processExpMacroStat( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_expType(  ):getTxt(  ) )
   for __index, node in pairs( node:get_expStrList(  ) ) do
     filter( node, self, prefix .. "  ", depth + 1 )
@@ -207,7 +153,6 @@ end
 -- none
 
 function dumpFilter:processUnwrapSet( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_dstExpList(), self, prefix .. "  ", depth + 1 )
   filter( node:get_srcExpList(), self, prefix .. "  ", depth + 1 )
@@ -217,7 +162,6 @@ function dumpFilter:processUnwrapSet( node, prefix, depth )
 end
 
 function dumpFilter:processIfUnwrap( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_exp(), self, prefix .. "  ", depth + 1 )
   filter( node:get_block(), self, prefix .. "  ", depth + 1 )
@@ -227,7 +171,6 @@ function dumpFilter:processIfUnwrap( node, prefix, depth )
 end
 
 function dumpFilter:processDeclVar( node, prefix, depth )
-
   local varName = ""
   
   for index, var in pairs( node:get_varList(  ) ) do
@@ -298,7 +241,6 @@ end
 -- none
 
 function dumpFilter:processDeclArg( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_name(  ).txt )
   filter( node:get_argType(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -306,21 +248,18 @@ end
 -- none
 
 function dumpFilter:processDeclArgDDD( node, prefix, depth )
-
   dump( prefix, depth, node, "..." )
 end
 
 -- none
 
 function dumpFilter:processExpDDD( node, prefix, depth )
-
   dump( prefix, depth, node, "..." )
 end
 
 -- none
 
 function dumpFilter:processDeclFuncInfo( node, declInfo, prefix, depth )
-
   local name = "<anonymous>"
   
   do
@@ -351,28 +290,24 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, prefix, depth )
 end
 
 function dumpFilter:processDeclFunc( node, prefix, depth )
-
   self:processDeclFuncInfo( node, node:get_declInfo(  ), prefix, depth )
 end
 
 -- none
 
 function dumpFilter:processDeclMethod( node, prefix, depth )
-
   self:processDeclFuncInfo( node, node:get_declInfo(  ), prefix, depth )
 end
 
 -- none
 
 function dumpFilter:processDeclConstr( node, prefix, depth )
-
   self:processDeclFuncInfo( node, node:get_declInfo(  ), prefix, depth )
 end
 
 -- none
 
 function dumpFilter:processExpCallSuper( node, prefix, depth )
-
   local typeInfo = node:get_superType(  )
   
   dump( prefix, depth, node, typeInfo:getTxt(  ) )
@@ -381,7 +316,6 @@ end
 -- none
 
 function dumpFilter:processRefType( node, prefix, depth )
-
   dump( prefix, depth, node, (node:get_refFlag(  ) and "&" or "" ) .. (node:get_mutFlag(  ) and "mut " or "" ) )
   filter( node:get_name(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -389,7 +323,6 @@ end
 -- none
 
 function dumpFilter:processIf( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   local stmtList = node:get_stmtList(  )
   
@@ -404,7 +337,6 @@ end
 -- none
 
 function dumpFilter:processSwitch( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
   local caseList = node:get_caseList(  )
@@ -426,7 +358,6 @@ end
 -- none
 
 function dumpFilter:processWhile( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
@@ -435,7 +366,6 @@ end
 -- none
 
 function dumpFilter:processRepeat( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
@@ -444,7 +374,6 @@ end
 -- none
 
 function dumpFilter:processFor( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_val(  ).txt )
   filter( node:get_init(  ), self, prefix .. "  ", depth + 1 )
   filter( node:get_to(  ), self, prefix .. "  ", depth + 1 )
@@ -462,7 +391,6 @@ end
 -- none
 
 function dumpFilter:processApply( node, prefix, depth )
-
   local varNames = ""
   
   local varList = node:get_varList(  )
@@ -478,7 +406,6 @@ end
 -- none
 
 function dumpFilter:processForeach( node, prefix, depth )
-
   local index = ""
   
   do
@@ -497,7 +424,6 @@ end
 -- none
 
 function dumpFilter:processForsort( node, prefix, depth )
-
   local index = ""
   
   do
@@ -516,7 +442,6 @@ end
 -- none
 
 function dumpFilter:processExpUnwrap( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_exp(), self, prefix .. "  ", depth + 1 )
   do
@@ -530,7 +455,6 @@ function dumpFilter:processExpUnwrap( node, prefix, depth )
 end
 
 function dumpFilter:processExpCall( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_func(  ), self, prefix .. "  ", depth + 1 )
   do
@@ -546,7 +470,6 @@ end
 -- none
 
 function dumpFilter:processExpList( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   local expList = node:get_expList(  )
   
@@ -558,7 +481,6 @@ end
 -- none
 
 function dumpFilter:processExpOp1( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_op(  ).txt )
   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -566,7 +488,6 @@ end
 -- none
 
 function dumpFilter:processExpCast( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -574,7 +495,6 @@ end
 -- none
 
 function dumpFilter:processExpParen( node, prefix, depth )
-
   dump( prefix, depth, node, "()" )
   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -582,7 +502,6 @@ end
 -- none
 
 function dumpFilter:processExpOp2( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_op(  ).txt )
   filter( node:get_exp1(  ), self, prefix .. "  ", depth + 1 )
   filter( node:get_exp2(  ), self, prefix .. "  ", depth + 1 )
@@ -591,7 +510,6 @@ end
 -- none
 
 function dumpFilter:processExpNew( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_symbol(  ), self, prefix .. "  ", depth + 1 )
   do
@@ -607,14 +525,12 @@ end
 -- none
 
 function dumpFilter:processExpRef( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_token(  ).txt )
 end
 
 -- none
 
 function dumpFilter:processExpRefItem( node, prefix, depth )
-
   dump( prefix, depth, node, "seq[exp] " .. node:get_expType(  ):getTxt(  ) )
   filter( node:get_val(  ), self, prefix .. "  ", depth + 1 )
   filter( node:get_index(  ), self, prefix .. "  ", depth + 1 )
@@ -623,7 +539,6 @@ end
 -- none
 
 function dumpFilter:processRefField( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_field(  ).txt )
   filter( node:get_prefix(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -631,7 +546,6 @@ end
 -- none
 
 function dumpFilter:processGetField( node, prefix, depth )
-
   dump( prefix, depth, node, (node:get_getterTypeInfo(  ) and "get_" or "" ) .. node:get_field(  ).txt )
   filter( node:get_prefix(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -639,7 +553,6 @@ end
 -- none
 
 function dumpFilter:processReturn( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   do
     local _exp = node:get_expList(  )
@@ -654,13 +567,11 @@ end
 -- none
 
 function dumpFilter:processProvide( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
   filter( node:get_val(), self, prefix .. "  ", depth + 1 )
 end
 
 function dumpFilter:processLiteralList( node, prefix, depth )
-
   dump( prefix, depth, node, "[]" )
   do
     local _exp = node:get_expList(  )
@@ -675,7 +586,6 @@ end
 -- none
 
 function dumpFilter:processLiteralMap( node, prefix, depth )
-
   dump( prefix, depth, node, "{}" )
   local pairList = node:get_pairList(  )
   
@@ -688,7 +598,6 @@ end
 -- none
 
 function dumpFilter:processLiteralArray( node, prefix, depth )
-
   dump( prefix, depth, node, "[@]" )
   do
     local _exp = node:get_expList(  )
@@ -703,56 +612,48 @@ end
 -- none
 
 function dumpFilter:processLiteralChar( node, prefix, depth )
-
   dump( prefix, depth, node, string.format( "%s(%s)", node:get_num(  ), node:get_token(  ).txt ) )
 end
 
 -- none
 
 function dumpFilter:processLiteralInt( node, prefix, depth )
-
   dump( prefix, depth, node, string.format( "%s(%s)", node:get_num(  ), node:get_token(  ).txt ) )
 end
 
 -- none
 
 function dumpFilter:processLiteralReal( node, prefix, depth )
-
   dump( prefix, depth, node, string.format( "%s(%s)", node:get_num(  ), node:get_token(  ).txt ) )
 end
 
 -- none
 
 function dumpFilter:processLiteralString( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_token(  ).txt )
 end
 
 -- none
 
 function dumpFilter:processLiteralBool( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_token(  ).txt == "true" and "true" or "false" )
 end
 
 -- none
 
 function dumpFilter:processLiteralNil( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
 end
 
 -- none
 
 function dumpFilter:processBreak( node, prefix, depth )
-
   dump( prefix, depth, node, "" )
 end
 
 -- none
 
 function dumpFilter:processLiteralSymbol( node, prefix, depth )
-
   dump( prefix, depth, node, node:get_token(  ).txt )
 end
 

@@ -29,8 +29,27 @@
 class Test {
    pub let val:int;
    pub let mut val2:int;
+   pub fn func1() mut {
+      self.val2 = 1;
+   }
+   pub fn func2() mut {
+      self.val2 = 1;
+   }
+   pub fn func3() {
+      self.val2 = 1; // error
+   }
 }
-let test:Test = new Test( 1 );
-test = new Test( 2 );  // error
-test.val = 1;
-test.val2 = 1;
+let test = new Test( 1, 2 );
+test = new Test( 1, 2 );  // error
+test.val = 1;  // error
+test.val2 = 1; // error
+test.func1();
+test.func2();
+test.func3();
+
+let mut test2 = new Test( 1, 2 );
+test2.val2 = 1;
+test2.func1();
+test2.func2();
+test2.func3();
+

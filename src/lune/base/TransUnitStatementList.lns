@@ -24,7 +24,7 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
-fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
+fn TransUnit.analyzeReturn( token: Parser.Token ) mut: Ast.ReturnNode {
    let nextToken = self.getToken();
 
    let mut expList: Ast.ExpListNode! = nil;
@@ -60,13 +60,13 @@ fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
             }
             if index == #retTypeList {
                if #retTypeList < #expNodeList and 
-                  retType ~= Ast.builtinTypeDDD
+                  not retType.equals( Ast.builtinTypeDDD )
                {                           
                   self.addErrMess( token.pos, "over return value");
                }
             }
             elseif index == #expNodeList {
-               if expType == Ast.builtinTypeDDD {
+               if expType.equals( Ast.builtinTypeDDD ) {
                   for retIndex = index, #retTypeList {
                      let workRetType = retTypeList[ retIndex ];
                      if not workRetType.isSettableFrom( Ast.builtinTypeStem_ ) {
@@ -101,8 +101,9 @@ fn TransUnit.analyzeReturn( token: Parser.Token ): Ast.ReturnNode {
    return new Ast.ReturnNode( token.pos, [ Ast.builtinTypeNone ], expList );
 }
 
-fn TransUnit.analyzeStatement( termTxt: str! ): Ast.Node! {
-   let! token = self.getTokenNoErr() {
+fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
+   let token = self.getTokenNoErr();
+   if token == Parser.getEofToken() {
       return nil;
    };
 

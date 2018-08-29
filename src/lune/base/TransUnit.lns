@@ -54,11 +54,11 @@ pub class TransUnit {
    /** パーサー */
    pri let mut parser: Parser.Parser;
    /** push バックしたトークンリスト */
-   pri let pushbackList: Parser.Token![];
+   pri let pushbackList: Parser.Token[];
    /** 現在のトークン */
-   pri let mut currentToken: Parser.Token!;
+   pri let mut currentToken: Parser.Token;
    /** 解析済みトークンリスト */
-   pri let usedTokenList: Parser.Token![];
+   pri let usedTokenList: Parser.Token[];
    /** 解析エラーメッセージ */
    pri let errMessList: str[] { pub };
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
@@ -82,6 +82,9 @@ pub class TransUnit {
    /** 解析対象モジュール */
    pri let analyzeModule: str;
 
+   pri let mut useUnwrapExp: bool;
+   pri let mut useNilAccess: bool;
+
    /** provide ノード */
    pri let mut provideNode: Ast.ProvideNode!;
 
@@ -99,7 +102,7 @@ pub class TransUnit {
       self.moduleScope = Ast.rootScope;
       self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
-      self.currentToken = nil;
+      self.currentToken = Parser.getEofToken();
       self.errMessList = [];
       self.macroEval = macroEval;
       self.typeId2MacroInfo = {};
@@ -109,6 +112,8 @@ pub class TransUnit {
       self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
       self.provideNode = nil;
+      self.useUnwrapExp = false;
+      self.useNilAccess = false;
    }
 
    pri fn addErrMess( pos: Parser.Position, mess: str ) {
@@ -118,13 +123,13 @@ pub class TransUnit {
    }
 
 
-   pri fn pushScope( classFlag: bool, inheritList: Ast.Scope[]! ): Ast.Scope {
+   pri fn pushScope( classFlag: bool, inheritList: Ast.Scope[]! ) mut : Ast.Scope {
       self.scope = new Ast.Scope( self.scope, classFlag,
                                   unwrap inheritList default []);
       return self.scope;
    }
 
-   pri fn popScope() {
+   pri fn popScope() mut {
       self.scope = self.scope.get_parent();
    }
 
@@ -157,7 +162,7 @@ pub class TransUnit {
       return typeInfo;
    }
 
-   pri fn pushModule( externalFlag: bool, name:str ): Ast.TypeInfo
+   pri fn pushModule( externalFlag: bool, name:str, mutable: bool ) mut : Ast.TypeInfo
    {
       let mut typeInfo = Ast.rootTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
@@ -168,7 +173,7 @@ pub class TransUnit {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
          let scope = self.pushScope( true );
          typeInfo = Ast.NormalTypeInfo.createModule(
-            scope, parentInfo, externalFlag, name );
+            scope, parentInfo, externalFlag, name, mutable );
 
          let parentScope = scope.get_parent();
          parentScope.addClass( name, typeInfo );
@@ -189,7 +194,7 @@ pub class TransUnit {
       classFlag:bool, abstructFlag: bool,
       baseInfo: Ast.TypeInfo!, interfaceList: Ast.TypeInfo[]!,
       externalFlag: bool, name:str,
-      accessMode:str, defNamespace: Ast.NamespaceInfo! ): Ast.TypeInfo
+      accessMode:str, defNamespace: Ast.NamespaceInfo! ) mut : Ast.TypeInfo
    {
       let mut typeInfo = Ast.rootTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
@@ -199,7 +204,7 @@ pub class TransUnit {
             case Ast.TypeInfoKind.Class {
                if not classFlag {
                   self.addErrMess(
-                     (unwrap self.currentToken).pos,
+                     self.currentToken.pos,
                      "define interface already -- %s" (name) );
                   Util.printStackTrace();
                }
@@ -207,7 +212,7 @@ pub class TransUnit {
             case Ast.TypeInfoKind.IF {
                if classFlag {
                   self.addErrMess(
-                     (unwrap self.currentToken).pos,
+                     self.currentToken.pos,
                      "define class already -- %s" (name) );
                   Util.printStackTrace();
                }
@@ -325,6 +330,7 @@ class _TypeInfo {
    pub let valTypeId: int;
    pub let enumValList: Map<str,stem>;
    pub let mutable: bool!;
+   pub let srcTypeId: int!;
 }
 
 
@@ -335,6 +341,7 @@ class _ModuleInfo {
    pub let _varName2InfoMap: Map<str,Map<str,stem>>;
    pub let _funcName2InfoMap: Map<str,stem>;
    pub let _moduleTypeId: int;
+   pub let _moduleMutable: bool;
 }
 
 pub let mut typeInfoListInsert = Ast.typeInfoRoot;
@@ -551,16 +558,15 @@ fn TransUnit.registBuiltInScope() {
 fn TransUnit.error( mess: str ) {
    let mut pos = new Parser.Position( 0, 0 );
    let mut txt = "";
-   if! self.currentToken {
-      pos = _exp.pos;
-      txt = _exp.txt;
+   if self.currentToken ~= Parser.getEofToken() {
+      pos = self.currentToken.pos;
+      txt = self.currentToken.txt;
    }
    else {
       if #self.usedTokenList > 0 {
-         if! self.usedTokenList[ #self.usedTokenList ] {
-            pos = _exp.pos;
-            txt = _exp.txt;
-         }
+         let token = self.usedTokenList[ #self.usedTokenList ];
+         pos = token.pos;
+         txt = token.txt;
       }
    }
    Util.err( "%s:%d:%d: error:(%s) %s"
@@ -573,8 +579,10 @@ fn TransUnit.createNoneNode( pos: Parser.Position ): Ast.Node {
    return new Ast.NoneNode( pos, [ Ast.builtinTypeNone ] );
 }
 
-fn TransUnit.pushbackToken( token: Parser.Token! ) {
-   self.pushbackList.insert( token );
+fn TransUnit.pushbackToken( token: Parser.Token ) mut {
+   if token ~= Parser.getEofToken() {
+      self.pushbackList.insert( token );
+   }
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
 }
 
@@ -616,16 +624,18 @@ fn expandVal( tokenList:Parser.Token[], val: stem!, pos: Parser.Position ): str 
    }
 }
 
-fn TransUnit.newPushback( tokenList: Parser.Token[] ) {
+fn TransUnit.newPushback( tokenList: Parser.Token[] ) mut {
    for index = #tokenList, 1, -1  {
       self.pushbackList.insert( tokenList[ index ] );
    }
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
 }
 
-fn TransUnit.getTokenNoErr(): Parser.Token! {
+fn TransUnit.getTokenNoErr() mut : Parser.Token {
    if #self.pushbackList > 0 {
-      self.usedTokenList.insert( self.currentToken );
+      if self.currentToken ~= Parser.getEofToken() {
+         self.usedTokenList.insert( self.currentToken );
+      }
       self.currentToken = self.pushbackList[ #self.pushbackList ];
       self.pushbackList.remove();
       return self.currentToken;
@@ -650,7 +660,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
       if self.macroMode == "expand" {
          let tokenTxt = _exp.txt;
          if tokenTxt == ',,' or tokenTxt == ',,,,' {
-            let mut nextToken = unwrap self.getTokenNoErr();
+            let mut nextToken = self.getTokenNoErr();
 
             let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
                self.error( "unknown macro val %s" (nextToken.txt) );
@@ -658,7 +668,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
             
             if tokenTxt == ',,' {
                //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
-               if macroVal.typeInfo == Ast.builtinTypeSymbol {
+               if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
                   let txtList = (unwrap macroVal.val)@@str[];
                   for index = #txtList, 1, -1 {
                      nextToken = new Parser.Token(
@@ -666,7 +676,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
                      self.pushbackToken( nextToken );
                   }    
                }   
-               elseif macroVal.typeInfo == Ast.builtinTypeStat {
+               elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
                   self.pushbackStr( "macroVal %s" (nextToken.txt),
                                     (unwrap macroVal.val)@@str );                       
                }   
@@ -693,7 +703,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
                } 
             } 
             elseif tokenTxt == ',,,,' {
-               if macroVal.typeInfo == Ast.builtinTypeSymbol {
+               if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
                   let txtList = (unwrap macroVal.val)@@str[];
                   let mut newToken = "";
                   foreach txt in txtList {
@@ -703,7 +713,7 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
                      Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos );
                   self.pushbackToken( nextToken );
                } 
-               elseif macroVal.typeInfo == Ast.builtinTypeStat {
+               elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
                   nextToken = new Parser.Token(
                      Parser.TokenKind.Str, "'%s'" (unwrap macroVal.val), nextToken.pos );
                   self.pushbackToken( nextToken );
@@ -713,26 +723,27 @@ fn TransUnit.getTokenNoErr(): Parser.Token! {
                               (tokenTxt, nextToken.txt) );
                } 
             } 
-            nextToken = unwrap self.getTokenNoErr();
+            nextToken = self.getTokenNoErr();
 
             token = nextToken;
-         } 
-      } 
+         }
+      }
    }
    if! token {
       _exp.set_commentList( commentList );
    }
 
    self.usedTokenList.insert( self.currentToken );
-   self.currentToken = token;
+   self.currentToken = unwrap token default Parser.getEofToken();
 
-   return token;
+   return self.currentToken;
 }
 
 
 
-fn TransUnit.getToken( allowEof:bool! ): Parser.Token {
-   let! token = self.getTokenNoErr() {
+fn TransUnit.getToken( allowEof:bool! ) mut : Parser.Token {
+   let token = self.getTokenNoErr();
+   if token == Parser.getEofToken() {  
       if allowEof {
          return Parser.getEofToken();
       }
@@ -747,23 +758,26 @@ fn TransUnit.getToken( allowEof:bool! ): Parser.Token {
    return token;
 }
 
-fn TransUnit.pushback() {
-   self.pushbackList.insert( self.currentToken );
+fn TransUnit.pushback() mut {
+   if self.currentToken ~= Parser.getEofToken() {
+      self.pushbackList.insert( self.currentToken );
+   }
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
    self.usedTokenList.remove();
 }
 
-fn TransUnit.pushbackStr( name: str, statement: str ) {
+fn TransUnit.pushbackStr( name: str, statement: str ) mut {
    let memStream = new Parser.TxtStream( statement );
    let parser = new Parser.StreamParser( memStream, name, false );
 
-   let list:Parser.Token![] = [];
+   let list:Parser.Token[] = [];
    while true {
-      let token = parser.getToken();
-      if not token {
+      if! parser.getToken() {
+         list.insert( _exp );
+      }
+      else {
          break;
-      } 
-      list.insert( token ); 
+      }
    }
    for index = #list, 1, -1  {
       self.pushbackToken( list[ index ] );
@@ -848,7 +862,7 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: Ast.Node[] ) : Ast.Node! {
    return self.analyzeStatementList( stmtList );
 }
 
-fn TransUnit.analyzeLuneControl( firstToken: Parser.Token ) {
+fn TransUnit.analyzeLuneControl( firstToken: Parser.Token ) mut {
    let nextToken = self.getToken();
    switch ( nextToken.txt ) {
       case "disable_mut_control" {
@@ -886,7 +900,7 @@ fn TransUnit.analyzeBlock( blockKind: str, scope: Ast.Scope! ): Ast.BlockNode {
    return node;
 }
 
-fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
+fn TransUnit.analyzeImport( token: Parser.Token ) mut : Ast.Node {
    if self.moduleScope ~= self.scope {
       self.error( "'import' must call at top scope." );
    }
@@ -914,20 +928,25 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    }
 
 
+   let _obj, _obj2 = _luneScript.loadModule( modulePath );
+   let moduleInfo = _obj2@@_ModuleInfo;
+   
    // 型情報の登録
    let typeId2TypeInfo: Map<int,Ast.TypeInfo> = {};
    typeId2TypeInfo[ Ast.rootTypeId ] = Ast.typeInfoRoot;
 
-   foreach moduleName in nameList {
-      self.pushModule( true, moduleName );
+   foreach moduleName, index in nameList {
+      let mut mutable = false;
+      if index == #nameList {
+         mutable = moduleInfo._moduleMutable;
+      }
+      self.pushModule( true, moduleName, mutable );
    }
    foreach moduleName in nameList {
       self.popModule();
    }
 
 
-   let _obj, _obj2 = _luneScript.loadModule( modulePath );
-   let moduleInfo = _obj2@@_ModuleInfo;
    //self.moduleName2Info[ modulePath ] = moduleInfo;
 
    foreach symbolInfo in Ast.sym2builtInTypeMap {
@@ -945,204 +964,221 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    fn registTypeInfo( atomInfo: _TypeInfo ): Ast.TypeInfo {
       let mut newTypeInfo: Ast.TypeInfo! = nil;
 
-      if atomInfo.kind == Ast.TypeInfoKind.Enum {
-         let parentInfo = unwrap typeId2TypeInfo[ atomInfo.parentId ];
-         let name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
-         let parentScope = unwrap parentInfo.$scope;
-         let scope = new Ast.Scope( parentScope, true, [] );
-         
-         typeId2Scope[ atomInfo.typeId ] = scope;
-         let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
-            scope, unwrap parentInfo, true,
-            atomInfo.accessMode, atomInfo.txt,
-            unwrap typeId2TypeInfo[ atomInfo.valTypeId ],
-            name2EnumValInfo );
-         newTypeInfo = enumTypeInfo;
-         typeId2TypeInfo[ atomInfo.typeId ] = enumTypeInfo;
-         foreach valData, valName in atomInfo.enumValList {
-            name2EnumValInfo[ valName ] = new Ast.EnumValInfo( valName, valData );
-            scope.addEnumVal( valName, enumTypeInfo );
-         }
-         parentScope.addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo );
+      if! atomInfo.srcTypeId {
+         let srcTypeInfo = unwrap typeId2TypeInfo[ _exp ];
+         newTypeInfo = Ast.NormalTypeInfo.createModifier(
+            srcTypeInfo, atomInfo.mutable );
+         typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
       }
-      elseif atomInfo.kind == Ast.TypeInfoKind.Module {
-         let mut parentInfo = Ast.typeInfoRoot;
-         if atomInfo.parentId ~= Ast.rootTypeId {
-            let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
-               Util.err( "not found parentInfo %s %s"
-                         ( atomInfo.parentId, atomInfo.txt ) );
-            };   
-            parentInfo = workTypeInfo;
-         }   
-         let! parentScope = typeId2Scope[ atomInfo.parentId ] {
-            self.error( "not found parentScope %s %s"
-                        ( atomInfo.parentId, atomInfo.txt ) );
-         };  
-
-         newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
-         if newTypeInfo {                                
-            sync! newTypeInfo = newTypeInfo {}    
-            then {
-               typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
-               if not newTypeInfo.$scope {
-                  Util.err( "not found scope %s %s %s %s %s"
-                            ( parentScope, atomInfo.parentId,
-                              atomInfo.typeId,
-                              atomInfo.txt, newTypeInfo.getTxt() ) );
-               }     
-               typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
-            };   
-         }
-         else {
+      else {
+         if atomInfo.kind == Ast.TypeInfoKind.Enum {
+            let parentInfo = unwrap typeId2TypeInfo[ atomInfo.parentId ];
+            let name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
+            let parentScope = unwrap parentInfo.$scope;
             let scope = new Ast.Scope( parentScope, true, [] );
-
-            let workTypeInfo = Ast.NormalTypeInfo.createModule(
-               scope, parentInfo, true, atomInfo.txt );
-
-            newTypeInfo = workTypeInfo;
+            
             typeId2Scope[ atomInfo.typeId ] = scope;
-            typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-            parentScope.addClass( atomInfo.txt, workTypeInfo );
-         }   
-      }
-      elseif atomInfo.parentId ~= Ast.rootTypeId or
-         not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
-         atomInfo.kind == Ast.TypeInfoKind.List or
-         atomInfo.kind == Ast.TypeInfoKind.Array or
-         atomInfo.kind == Ast.TypeInfoKind.Map or
-         atomInfo.nilable
-      {
-         if atomInfo.nilable {
-            let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
-            newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
-            typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
+            let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
+               scope, unwrap parentInfo, true,
+               atomInfo.accessMode, atomInfo.txt,
+               unwrap typeId2TypeInfo[ atomInfo.valTypeId ],
+               name2EnumValInfo );
+            newTypeInfo = enumTypeInfo;
+            typeId2TypeInfo[ atomInfo.typeId ] = enumTypeInfo;
+            foreach valData, valName in atomInfo.enumValList {
+               name2EnumValInfo[ valName ] = new Ast.EnumValInfo( valName, valData );
+               scope.addEnumVal( valName, enumTypeInfo );
+            }  
+            parentScope.addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo );
          }  
-         else {
+         elseif atomInfo.kind == Ast.TypeInfoKind.Module {
             let mut parentInfo = Ast.typeInfoRoot;
             if atomInfo.parentId ~= Ast.rootTypeId {
                let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
                   Util.err( "not found parentInfo %s %s"
-                              ( atomInfo.parentId, atomInfo.txt ) );
+                            ( atomInfo.parentId, atomInfo.txt ) );
                };   
                parentInfo = workTypeInfo;
             }   
-            
-            let itemTypeInfo:Ast.TypeInfo[] = [];
-            foreach typeId in atomInfo.itemTypeId {
-               itemTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-            }   
-            let argTypeInfo:Ast.TypeInfo[] = [];
-            foreach typeId in atomInfo.argTypeId {
-               if not typeId2TypeInfo[ typeId ] {
-                  Util.log( "not found -- %s.%s, %d, %d"
-                                 ( parentInfo.getTxt(), atomInfo.txt,
-                                   typeId, #atomInfo.argTypeId ) );  
-               }    
-               argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-            }   
-            let retTypeInfo:Ast.TypeInfo[] = [];
-            foreach typeId in atomInfo.retTypeId {
-               retTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-            }   
-            
-            let baseInfo = unwrap typeId2TypeInfo[ atomInfo.baseId ];
-            let interfaceList:Ast.TypeInfo[] = [];
-            foreach ifTypeId in atomInfo.ifList {
-               interfaceList.insert( unwrap typeId2TypeInfo[ ifTypeId ] );
-            }
-
             let! parentScope = typeId2Scope[ atomInfo.parentId ] {
                self.error( "not found parentScope %s %s"
                            ( atomInfo.parentId, atomInfo.txt ) );
             };  
 
-            if atomInfo.txt ~= "" {
-               newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
-            }   
-            if newTypeInfo and ( atomInfo.kind == Ast.TypeInfoKind.Class or
-                                 atomInfo.kind == Ast.TypeInfoKind.IF )
-            {                                
-               sync! newTypeInfo = newTypeInfo {
-               }    
+            newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
+            if newTypeInfo {
+               sync! newTypeInfo = newTypeInfo {}    
                then {
                   typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
                   if not newTypeInfo.$scope {
                      Util.err( "not found scope %s %s %s %s %s"
-                                 ( parentScope, atomInfo.parentId,
-                                   atomInfo.typeId,
-                                   atomInfo.txt, newTypeInfo.getTxt() ) );
+                               ( parentScope, atomInfo.parentId,
+                                 atomInfo.typeId,
+                                 atomInfo.txt, newTypeInfo.getTxt() ) );
                   }     
                   typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
                };   
-            }
+            }  
             else {
-               if atomInfo.kind == Ast.TypeInfoKind.Class or
-                  atomInfo.kind == Ast.TypeInfoKind.IF
-               {             
-                  let baseScope = unwrap typeId2Scope[ atomInfo.baseId ];
+               let scope = new Ast.Scope( parentScope, true, [] );
 
-                  let scope = new Ast.Scope(
-                     parentScope, true, baseScope and [ baseScope ] or [] );
+               let mut mutable = false;
+               if atomInfo.typeId == moduleInfo._moduleTypeId {
+                  mutable = moduleInfo._moduleMutable;
+               }  
+               let workTypeInfo = Ast.NormalTypeInfo.createModule(
+                  scope, parentInfo, true, atomInfo.txt, mutable );
 
-                  let workTypeInfo = Ast.NormalTypeInfo.createClass(
-                     atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag,
-                     scope, baseInfo, interfaceList,
-                     parentInfo, true, "pub", atomInfo.txt );
-                  newTypeInfo = workTypeInfo;
-                  typeId2Scope[ atomInfo.typeId ] = scope;
-
-
-                  typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-
-                  parentScope.addClass( atomInfo.txt, workTypeInfo );
-               }    
-               else {
-                  let mut scope:Ast.Scope! = nil;
-
-                  if atomInfo.kind == Ast.TypeInfoKind.Func or
-                     atomInfo.kind == Ast.TypeInfoKind.Method
-                  {     
-                     scope = new Ast.Scope( parentScope, false, [] );
-                  }     
-
-
-                  let typeInfoKind = unwrap Ast.TypeInfoKind._from( atomInfo.kind );
-                  let workTypeInfo = Ast.NormalTypeInfo.create(
-                     atomInfo.abstructFlag, scope, baseInfo,
-                     interfaceList, parentInfo, atomInfo.staticFlag, typeInfoKind,
-                     atomInfo.txt, itemTypeInfo, argTypeInfo,
-                     retTypeInfo, atomInfo.mutable );
-                  newTypeInfo = workTypeInfo;
-
-                  typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-
-                  if atomInfo.kind == Ast.TypeInfoKind.Func or
-                     atomInfo.kind == Ast.TypeInfoKind.Method
-                  {
-                     let mut symbolKind = Ast.SymbolKind.Fun;
-                     if atomInfo.kind == Ast.TypeInfoKind.Method {
-                        symbolKind = Ast.SymbolKind.Mtd;
-                     }
-                     (unwrap typeId2Scope[ atomInfo.parentId ]).add(
-                        symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func,
-                        atomInfo.txt, workTypeInfo, atomInfo.accessMode,
-                        atomInfo.staticFlag, false, true );
-                     typeId2Scope[ atomInfo.typeId ] = scope;
-                  }
-               }
+               newTypeInfo = workTypeInfo;
+               typeId2Scope[ atomInfo.typeId ] = scope;
+               typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
+               parentScope.addClass( atomInfo.txt, workTypeInfo );
             }   
          }  
-      }
-      else {
-         newTypeInfo = Ast.rootScope.getTypeInfo(
-            atomInfo.txt, Ast.rootScope, false );
-         if not newTypeInfo {
-            foreach val, key in atomInfo@@Map<str,stem> {
-               Util.errorLog( "error: illegal atomInfo %s:%s" ( key, val ) );
-            }
+         elseif atomInfo.parentId ~= Ast.rootTypeId or
+            not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
+            atomInfo.kind == Ast.TypeInfoKind.List or
+            atomInfo.kind == Ast.TypeInfoKind.Array or
+            atomInfo.kind == Ast.TypeInfoKind.Map or
+            atomInfo.nilable
+         {  
+            if atomInfo.nilable {
+               let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
+               newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
+               typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
+            }  
+            else {
+               let mut parentInfo = Ast.typeInfoRoot;
+               if atomInfo.parentId ~= Ast.rootTypeId {
+                  let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
+                     Util.err( "not found parentInfo %s %s"
+                               ( atomInfo.parentId, atomInfo.txt ) );
+                  };   
+                  parentInfo = workTypeInfo;
+               }   
+               
+               let itemTypeInfo:Ast.TypeInfo[] = [];
+               foreach typeId in atomInfo.itemTypeId {
+                  itemTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
+               }   
+               let argTypeInfo:Ast.TypeInfo[] = [];
+               foreach typeId in atomInfo.argTypeId {
+                  if not typeId2TypeInfo[ typeId ] {
+                     Util.log( "not found -- %s.%s, %d, %d"
+                               ( parentInfo.getTxt(), atomInfo.txt,
+                                 typeId, #atomInfo.argTypeId ) );  
+                  }    
+                  argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
+               }   
+               let retTypeInfo:Ast.TypeInfo[] = [];
+               foreach typeId in atomInfo.retTypeId {
+                  retTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
+               }   
+               
+               let baseInfo = unwrap typeId2TypeInfo[ atomInfo.baseId ];
+               let interfaceList:Ast.TypeInfo[] = [];
+               foreach ifTypeId in atomInfo.ifList {
+                  interfaceList.insert( unwrap typeId2TypeInfo[ ifTypeId ] );
+               }  
+
+               let! parentScope = typeId2Scope[ atomInfo.parentId ] {
+                  self.error( "not found parentScope %s %s"
+                              ( atomInfo.parentId, atomInfo.txt ) );
+               };  
+
+               if atomInfo.txt ~= "" {
+                  newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
+               }   
+               if newTypeInfo and ( atomInfo.kind == Ast.TypeInfoKind.Class or
+                                    atomInfo.kind == Ast.TypeInfoKind.IF )
+               {                                
+                  sync! newTypeInfo = newTypeInfo {
+                  }    
+                  then {
+                     typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
+                     if not newTypeInfo.$scope {
+                        Util.err( "not found scope %s %s %s %s %s"
+                                  ( parentScope, atomInfo.parentId,
+                                    atomInfo.typeId,
+                                    atomInfo.txt, newTypeInfo.getTxt() ) );
+                     }     
+                     typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
+                  };   
+               }  
+               else {
+                  if atomInfo.kind == Ast.TypeInfoKind.Class or
+                     atomInfo.kind == Ast.TypeInfoKind.IF
+                  {             
+                     let baseScope = unwrap typeId2Scope[ atomInfo.baseId ];
+
+                     let scope = new Ast.Scope(
+                        parentScope, true, baseScope and [ baseScope ] or [] );
+
+                     let workTypeInfo = Ast.NormalTypeInfo.createClass(
+                        atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag,
+                        scope, baseInfo, interfaceList,
+                        parentInfo, true, "pub", atomInfo.txt );
+                     newTypeInfo = workTypeInfo;
+                     typeId2Scope[ atomInfo.typeId ] = scope;
+
+
+                     typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
+
+                     parentScope.addClass( atomInfo.txt, workTypeInfo );
+                  }    
+                  else {
+                     let mut scope:Ast.Scope! = nil;
+
+                     if atomInfo.kind == Ast.TypeInfoKind.Func or
+                        atomInfo.kind == Ast.TypeInfoKind.Method
+                     {     
+                        scope = new Ast.Scope( parentScope, false, [] );
+                     }     
+
+
+                     let typeInfoKind = unwrap Ast.TypeInfoKind._from( atomInfo.kind );
+                     let mut mutable = true;
+                     if! atomInfo.mutable {
+                        if not _exp {
+                           mutable = false;
+                        }  
+                     }  
+                     let workTypeInfo = Ast.NormalTypeInfo.create(
+                        atomInfo.abstructFlag, scope, baseInfo,
+                        interfaceList, parentInfo, atomInfo.staticFlag, typeInfoKind,
+                        atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable );
+                     newTypeInfo = workTypeInfo;
+
+                     typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
+
+                     if atomInfo.kind == Ast.TypeInfoKind.Func or
+                        atomInfo.kind == Ast.TypeInfoKind.Method
+                     {  
+                        let mut symbolKind = Ast.SymbolKind.Fun;
+                        if atomInfo.kind == Ast.TypeInfoKind.Method {
+                           symbolKind = Ast.SymbolKind.Mtd;
+                        }  
+                            (unwrap typeId2Scope[ atomInfo.parentId ]).add(
+                               symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func,
+                               atomInfo.txt, workTypeInfo, atomInfo.accessMode,
+                               atomInfo.staticFlag, false, true );
+                        typeId2Scope[ atomInfo.typeId ] = scope;
+                     }  
+                  }  
+               }   
+            }  
+         }  
+         else {
+            newTypeInfo = Ast.rootScope.getTypeInfo(
+               atomInfo.txt, Ast.rootScope, false );
+            if not newTypeInfo {
+               foreach val, key in atomInfo@@Map<str,stem> {
+                  Util.errorLog( "error: illegal atomInfo %s:%s" ( key, val ) );
+               }  
+            }  
+            typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
          }
-         typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
-      } 
+      }
       return unwrap newTypeInfo;
    }
 
@@ -1216,7 +1252,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
             }
          }
          case Ast.TypeInfoKind.Module {
-            self.pushModule( true, classTypeInfo.getTxt() );
+            self.pushModule( true, classTypeInfo.getTxt(), classTypeInfo.$mutable );
          }
       }
 
@@ -1250,8 +1286,12 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
    }
    
 
-   foreach moduleName in nameList {
-      self.pushModule( true, moduleName );
+   foreach moduleName, index in nameList {
+      let mut mutable = false;
+      if index == #nameList {
+         mutable = moduleInfo._moduleMutable;
+      }
+      self.pushModule( true, moduleName, mutable );
    }
 
 
@@ -1274,7 +1314,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ): Ast.Node {
 
    let moduleTypeInfo = unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ];
    self.scope.add( Ast.SymbolKind.Typ, false, false, moduleToken.txt,
-                   moduleTypeInfo, "local", true, false, true );
+                   moduleTypeInfo, "local", true, moduleInfo._moduleMutable, true );
 
    self.checkToken( nextToken, ";" );
 
@@ -1464,14 +1504,14 @@ fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
    }
    self.checkNextToken( "=" );
    let exp1 = self.analyzeExp( false );
-   if exp1.$expType ~= Ast.builtinTypeInt {
+   if not exp1.$expType.equals( Ast.builtinTypeInt ) {
       self.addErrMess( exp1.$pos,
                        "exp1 is not int -- %s" (exp1.$expType.getTxt()) );
    }
    self.scope.addLocalVar( false, true, val.txt, exp1.$expType, false );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExp( false );
-   if exp2.$expType ~= Ast.builtinTypeInt {
+   if not exp2.$expType.equals( Ast.builtinTypeInt ) {
       self.addErrMess( exp2.$pos,
                        "exp2 is not int -- %s" (exp2.$expType.getTxt()) );
    }
@@ -1480,7 +1520,7 @@ fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
    if token.txt == "," {
       exp3 = self.analyzeExp( false );
       if! exp3 {
-         if _exp.$expType ~= Ast.builtinTypeInt {
+         if not _exp.$expType.equals( Ast.builtinTypeInt ) {
             self.addErrMess( _exp.$pos,
                              "exp is not int -- %s" (_exp.$expType.getTxt()) );
          }  
@@ -1594,7 +1634,7 @@ fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
    }
 }
 
-fn TransUnit.analyzeProvide( firstToken: Parser.Token ): Ast.Node {
+fn TransUnit.analyzeProvide( firstToken: Parser.Token ) mut : Ast.Node {
    let val = self.analyzeExp( true );
    self.checkNextToken( ";" );
 

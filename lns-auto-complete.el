@@ -68,14 +68,14 @@
 	    (setq move-pos (1- (point))))))
        (t
 	;; シンボル補完
-	(if (re-search-forward "\\(.*\\):[^:]+" end-pos t)
-	    (progn
-	      (replace-match "\\1")
-	      (setq move-pos end-pos)
-	      )
+	(if (re-search-forward "([^)]\\|:" end-pos t)
+	    ;; 関数呼び出しの '(' の位置に移動
+	    (setq move-pos (1- (point)))
 	  (goto-char start-pos)
-	  (when (re-search-forward "([^)]\\|:" end-pos t)
-	    (setq move-pos (1- (point))))	  
+	  (when (re-search-forward "\\(.*\\):[^:]+" end-pos t)
+	    (replace-match "\\1")
+	    (setq move-pos end-pos)
+	    )
 	  )))
       (goto-char start-pos)
       (when (re-search-forward ":.*" end-pos t)

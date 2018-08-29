@@ -1,6 +1,8 @@
 --lune/base/Writer.lns
 local _moduleObj = {}
-_lune = {}
+if not _ENV._lune then
+   _lune = {}
+end
 function _lune.nilacc( val, fieldName, access, ... )
   if not val then
     return nil
@@ -41,7 +43,8 @@ function _lune.nilacc( val, fieldName, access, ... )
     return val( list, arg )
   end
   error( string.format( "illegal access -- %s", access ) )
-end 
+end
+
 function _lune.unwrap( val )
   if val == nil then
     _luneScript.error( 'unwrap val is nil' )
@@ -93,7 +96,6 @@ function XML:__init(stream)
   self.depth = 0
 end
 function XML.convertXmlTxt( val )
-
   if val == "" then
     return ""
   end
@@ -110,17 +112,14 @@ function XML.convertXmlTxt( val )
   return txt
 end
 function XML:startElement( name )
-
   table.insert( self.elementList, name )
   self.stream:write( string.format( '<%s>', name) )
   self.depth = self.depth + 1
 end
 function XML:startParent( name, arrayFlag )
-
   self:startElement( name )
 end
 function XML:endElement(  )
-
   local name = table.remove( self.elementList )
   
   self.stream:write( string.format( '</%s>', name) )
@@ -132,17 +131,14 @@ function XML:endElement(  )
   end
 end
 function XML:writeValue( val )
-
   self.stream:write( XML.convertXmlTxt( val ) )
 end
 function XML:write( name, val )
-
   self:startElement( name )
   self:writeValue( val )
   self:endElement(  )
 end
 function XML:fin(  )
-
 end
 do
   end
@@ -172,7 +168,6 @@ do
 local JSON = {}
 _moduleObj.JSON = JSON
 function JSON:startLayer( arrayFlag, madeByArrayFlag )
-
   local info = JsonLayer.new('none', arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
   
   table.insert( self.layerQueue, info )
@@ -191,14 +186,12 @@ function JSON:__init(stream)
   self:startLayer( false, false )
 end
 function JSON:getLayerInfo(  )
-
   if #self.layerQueue == 0 then
     return nil
   end
   return self.layerQueue[#self.layerQueue]
 end
 function JSON:endLayer(  )
-
   if #self.layerQueue == 0 then
     Util.err( "illegal depth" )
   end
@@ -222,23 +215,18 @@ function JSON:endLayer(  )
   end
 end
 function JSON:equalLayerState( state )
-
   return self.layerQueue[#self.layerQueue].state == state
 end
 function JSON:isArrayLayer(  )
-
   return self.layerQueue[#self.layerQueue].arrayFlag
 end
 function JSON:setLayerState( state )
-
   self.layerQueue[#self.layerQueue].state = state
 end
 function JSON:getLayerName(  )
-
   return self.layerQueue[#self.layerQueue].name
 end
 function JSON:addElementName( name )
-
   local info = _lune.unwrap( self:getLayerInfo(  ))
   
   local nameSet = info.elementNameSet
@@ -249,7 +237,6 @@ function JSON:addElementName( name )
   nameSet[name] = true
 end
 function JSON:startParent( name, arrayFlag )
-
   self:addElementName( name )
   if self:equalLayerState( 'termed' ) or self:equalLayerState( 'named' ) or self:equalLayerState( 'valued' ) then
     self.stream:write( "," )
@@ -267,7 +254,6 @@ function JSON:startParent( name, arrayFlag )
   self.prevName = name
 end
 function JSON:startElement( name )
-
   self:addElementName( name )
   if self:equalLayerState( 'termed' ) then
     self.stream:write( "," )
@@ -291,7 +277,6 @@ function JSON:startElement( name )
   self.prevName = name
 end
 function JSON:endElement(  )
-
   if self:equalLayerState( 'none' ) or self:equalLayerState( 'termed' ) then
     self:endLayer(  )
   elseif self:equalLayerState( 'valued' ) then
@@ -309,7 +294,6 @@ function JSON:endElement(  )
   self:setLayerState( 'termed' )
 end
 function JSON.convertJsonTxt( txt )
-
   if txt == "" then
     return ""
   end
@@ -319,7 +303,6 @@ function JSON.convertJsonTxt( txt )
   return txt
 end
 function JSON:writeValue( val )
-
   local txt = ""
   
   local typeId = type( val )
@@ -335,13 +318,11 @@ function JSON:writeValue( val )
   self:setLayerState( 'valued' )
 end
 function JSON:write( name, val )
-
   self:startElement( name )
   self:writeValue( val )
   self:endElement(  )
 end
 function JSON:fin(  )
-
   if self:equalLayerState( 'none' ) or self:equalLayerState( 'termed' ) then
     self:endLayer(  )
   else 

@@ -23,3 +23,8 @@
         let val2:int! = val;
     }
 }   
+{
+   let val:int![] = [];
+   val.insert( 1 );
+   val.insert( nil );
+}

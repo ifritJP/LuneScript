@@ -54,7 +54,7 @@ usage: [-prof] src.lns mode [mode-option]
       os.exit( 1 );
    }
 
-   let option = new Option();
+   let mut option = new Option();
    let mut useStdInFlag = false;
    let mut lineNo:int! = nil;
    let mut column:int! = nil;

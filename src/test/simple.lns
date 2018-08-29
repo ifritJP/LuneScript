@@ -31,7 +31,7 @@ pub class ClassA {
     pub fn __init() {
 	self.val = 10;
     }
-    pub fn func( data1: int ) : int {
+    pub fn func( data1: int ) mut : int {
 	self.val = self.val + 1;
 	return data1 + self.val;
     }

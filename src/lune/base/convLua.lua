@@ -1,47 +1,8 @@
 --lune/base/convLua.lns
 local _moduleObj = {}
-_lune = {}
-function _lune.nilacc( val, fieldName, access, ... )
-  if not val then
-    return nil
-  end
-  if fieldName then
-    local field = val[ fieldName ]
-    if not field then
-      return nil
-    end
-    if access == "item" then
-      local typeId = type( field )
-      if typeId == "table" then
-        return field[ ... ]
-      elseif typeId == "string" then
-        return string.byte( field, ... )
-      end
-    elseif access == "call" then
-      return field( ... )
-    elseif access == "callmtd" then
-      return field( val, ... )
-    end
-    return field
-  end
-  if access == "item" then
-    local typeId = type( val )
-    if typeId == "table" then
-      return val[ ... ]
-    elseif typeId == "string" then
-      return string.byte( val, ... )
-    end
-  elseif access == "call" then
-    return val( ... )
-  elseif access == "list" then
-    local list, arg = ...
-    if not list then
-      return nil
-    end
-    return val( list, arg )
-  end
-  error( string.format( "illegal access -- %s", access ) )
-end 
+if not _ENV._lune then
+   _lune = {}
+end
 function _lune.unwrap( val )
   if val == nil then
     _luneScript.error( 'unwrap val is nil' )
@@ -126,7 +87,6 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
   self.moduleTypeInfo = moduleTypeInfo
 end
 function convFilter:getCanonicalName( typeInfo )
-
   local canonicalName = typeInfo:getTxt(  )
   
   local workType = typeInfo:get_parentInfo()
@@ -144,7 +104,6 @@ do
   end
 
 local function filter( node, filter, parent, baseIndent )
-
   node:processFilter( filter, parent, baseIndent )
 end
 
@@ -159,7 +118,6 @@ builtInModuleSet["math"] = true
 builtInModuleSet["debug"] = true
 builtInModuleSet["_luneScript"] = true
 function convFilter:write( txt )
-
   local stream = self.stream
   
   if self.outMetaFlag then
@@ -176,12 +134,10 @@ function convFilter:write( txt )
 end
 
 function convFilter:setIndent( indent )
-
   self.indent = indent
 end
 
 function convFilter:writeln( txt, baseIndent )
-
   self:write( txt )
   self:write( "\n" )
   self.needIndent = true
@@ -189,14 +145,12 @@ function convFilter:writeln( txt, baseIndent )
 end
 
 function convFilter:processNone( node, parent, baseIndent )
-
   self:writeln( "-- none", baseIndent )
 end
 
 -- none
 
 function convFilter:processImport( node, parent, baseIndent )
-
   local module = node:get_modulePath(  )
   
   local moduleName = string.gsub( module, ".*%.", "" )
@@ -212,7 +166,6 @@ end
 -- none
 
 function convFilter:outputMeta( node, baseIndent )
-
   do
     local _switchExp = self.convMode
     if _switchExp == "lua" or _switchExp == "save" then
@@ -232,7 +185,6 @@ function convFilter:outputMeta( node, baseIndent )
   local pickupClassMap = {}
   
   local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
-  
     if typeInfo:get_typeId(  ) == Ast.rootTypeId then
       return 
     end
@@ -458,7 +410,6 @@ function convFilter:outputMeta( node, baseIndent )
   local wroteTypeIdSet = {}
   
   local function outputTypeInfo( typeInfo )
-  
     local typeId = typeInfo:get_typeId(  )
     
     if wroteTypeIdSet[typeId] then
@@ -495,17 +446,18 @@ function convFilter:outputMeta( node, baseIndent )
     end
   end
   
+  local moduleTypeInfo = self.moduleTypeInfo
+  
   do
     local _exp = node:get_provideNode()
     if _exp ~= nil then
     
-        self:writeln( string.format( "_moduleObj._moduleTypeId = %d", _exp:get_val():get_expType():get_typeId()), baseIndent )
-      else
-    
-        self:writeln( string.format( "_moduleObj._moduleTypeId = %d", self.moduleTypeInfo:get_typeId()), baseIndent )
+        moduleTypeInfo = _exp:get_val():get_expType()
       end
   end
   
+  self:writeln( string.format( "_moduleObj._moduleTypeId = %d", moduleTypeInfo:get_typeId()), baseIndent )
+  self:writeln( string.format( "_moduleObj._moduleMutable = %s", moduleTypeInfo:get_mutable()), baseIndent )
   self:writeln( "----- meta -----", baseIndent )
   if self.stream ~= self.metaStream then
     self:writeln( "return _moduleObj", baseIndent )
@@ -514,11 +466,15 @@ function convFilter:outputMeta( node, baseIndent )
 end
 
 function convFilter:processRoot( node, parent, baseIndent )
-
   self:writeln( string.format( "--%s", self.streamName), baseIndent )
   self:writeln( "local _moduleObj = {}", baseIndent )
-  self:writeln( [==[
-_lune = {}
+  if node:get_luneHelperInfo():get_useNilAccess() or node:get_luneHelperInfo():get_useUnwrapExp() then
+    self:writeln( [==[
+if not _ENV._lune then
+   _lune = {}
+end]==], baseIndent )
+    if node:get_luneHelperInfo():get_useNilAccess() then
+      self:writeln( [==[
 function _lune.nilacc( val, fieldName, access, ... )
   if not val then
     return nil
@@ -559,7 +515,11 @@ function _lune.nilacc( val, fieldName, access, ... )
     return val( list, arg )
   end
   error( string.format( "illegal access -- %s", access ) )
-end 
+end
+]==], baseIndent )
+    end
+    if node:get_luneHelperInfo():get_useUnwrapExp() then
+      self:writeln( [==[
 function _lune.unwrap( val )
   if val == nil then
     _luneScript.error( 'unwrap val is nil' )
@@ -573,6 +533,8 @@ function _lune.unwrapDefault( val, defval )
   return val
 end
 ]==], baseIndent )
+    end
+  end
   local children = node:get_children(  )
   
   for __index, child in pairs( children ) do
@@ -598,11 +560,9 @@ end
 -- none
 
 function convFilter:processSubfile( node, parent, baseIndent )
-
 end
 
 function convFilter:processBlock( node, parent, baseIndent )
-
   local word = ""
   
   if node:get_blockKind(  ) == "if" or node:get_blockKind(  ) == "elseif" then
@@ -650,14 +610,12 @@ end
 -- none
 
 function convFilter:processStmtExp( node, parent, baseIndent )
-
   filter( node:get_exp(  ), self, node, baseIndent )
 end
 
 -- none
 
 function convFilter:processDeclEnum( node, parent, baseIndent )
-
   local access = node:get_accessMode() == "global" and "" or "local "
   
   self:writeln( string.format( "%s%s = {}", access, node:get_name().txt), baseIndent )
@@ -689,7 +647,7 @@ end
     
     local valTxt = string.format( "%s", valInfo:get_val())
     
-    if typeInfo:get_valTypeInfo() == Ast.builtinTypeString then
+    if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
       valTxt = string.format( "'%s'", valInfo:get_val())
       Util.errorLog( string.format( "hoge: %s", valTxt) )
     end
@@ -699,7 +657,6 @@ end
 end
 
 function convFilter:processDeclClass( node, parent, baseIndent )
-
   local nodeInfo = node
   
   local classNameToken = nodeInfo:get_name(  )
@@ -864,13 +821,11 @@ end
 -- none
 
 function convFilter:processDeclMember( node, parent, baseIndent )
-
 end
 
 -- none
 
 function convFilter:processExpMacroExp( node, parent, baseIndent )
-
   local stmtList = node:get_stmtList(  )
   
   if stmtList then
@@ -884,7 +839,6 @@ end
 -- none
 
 function convFilter:processDeclMacro( node, parent, baseIndent )
-
   if self.inMacro then
     local nodeInfo = node:get_declInfo(  )
     
@@ -919,7 +873,6 @@ end
 -- none
 
 function convFilter:processExpMacroStat( node, parent, baseIndent )
-
   for index, token in pairs( node:get_expStrList(  ) ) do
     if index ~= 1 then
       self:write( '..' )
@@ -931,7 +884,6 @@ end
 -- none
 
 function convFilter:processExpNew( node, parent, baseIndent )
-
   filter( node:get_symbol(  ), self, node, baseIndent )
   self:write( ".new(" )
   do
@@ -948,7 +900,6 @@ end
 -- none
 
 function convFilter:processDeclConstr( node, parent, baseIndent )
-
   local declInfo = node:get_declInfo(  )
   
   local classNameToken = _lune.unwrap( declInfo:get_className(  ))
@@ -995,7 +946,6 @@ end
 -- none
 
 function convFilter:processExpCallSuper( node, parent, baseIndent )
-
   local typeInfo = node:get_superType(  )
   
   self:write( string.format( "%s.__init( self, ", typeInfo:getTxt(  )) )
@@ -1008,7 +958,6 @@ end
 -- none
 
 function convFilter:processDeclMethod( node, parent, baseIndent )
-
   local declInfo = node:get_declInfo(  )
   
   local delimit = ":"
@@ -1031,12 +980,15 @@ function convFilter:processDeclMethod( node, parent, baseIndent )
     end
     filter( arg, self, node, baseIndent )
   end
-  self:writeln( " )", baseIndent )
+  self:write( " )" )
   do
     local _exp = declInfo:get_body(  )
     if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
+      else
+    
+        self:writeln( "", baseIndent )
       end
   end
   
@@ -1046,7 +998,6 @@ end
 -- none
 
 function convFilter:processUnwrapSet( node, parent, baseIndent )
-
   local dstExpList = node:get_dstExpList()
   
   filter( dstExpList, self, node, baseIndent )
@@ -1074,7 +1025,6 @@ function convFilter:processUnwrapSet( node, parent, baseIndent )
 end
 
 function convFilter:processIfUnwrap( node, parent, baseIndent )
-
   self:writeln( "do", baseIndent + stepIndent )
   self:write( "local _exp = " )
   filter( node:get_exp(), self, node, baseIndent + stepIndent )
@@ -1090,7 +1040,6 @@ function convFilter:processIfUnwrap( node, parent, baseIndent )
 end
 
 function convFilter:processDeclVar( node, parent, baseIndent )
-
   if node:get_syncBlock() then
     self:writeln( "do", baseIndent + stepIndent )
     for __index, varInfo in pairs( node:get_syncVarList() ) do
@@ -1190,28 +1139,24 @@ end
 -- none
 
 function convFilter:processDeclArg( node, parent, baseIndent )
-
   self:write( string.format( "%s", node:get_name(  ).txt ) )
 end
 
 -- none
 
 function convFilter:processDeclArgDDD( node, parent, baseIndent )
-
   self:write( "..." )
 end
 
 -- none
 
 function convFilter:processExpDDD( node, parent, baseIndent )
-
   self:write( "..." )
 end
 
 -- none
 
 function convFilter:processDeclFunc( node, parent, baseIndent )
-
   local declInfo = node:get_declInfo(  )
   
   local nameToken = declInfo:get_name(  )
@@ -1240,12 +1185,15 @@ function convFilter:processDeclFunc( node, parent, baseIndent )
     end
     filter( arg, self, node, baseIndent )
   end
-  self:writeln( " )", baseIndent )
+  self:write( " )" )
   do
     local _exp = declInfo:get_body(  )
     if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
+      else
+    
+        self:writeln( "", baseIndent )
       end
   end
   
@@ -1261,7 +1209,6 @@ end
 -- none
 
 function convFilter:processRefType( node, parent, baseIndent )
-
   self:write( (node:get_refFlag(  ) and "&" or "" ) .. (node:get_mutFlag(  ) and "mut " or "" ) )
   filter( node:get_name(  ), self, node, baseIndent )
   if node:get_array(  ) == "array" then
@@ -1274,7 +1221,6 @@ end
 -- none
 
 function convFilter:processIf( node, parent, baseIndent )
-
   local valList = node:get_stmtList(  )
   
   for index, val in pairs( valList ) do
@@ -1296,7 +1242,6 @@ end
 -- none
 
 function convFilter:processSwitch( node, parent, baseIndent )
-
   self:writeln( "do", baseIndent + 2 )
   self:write( "local _switchExp = " )
   filter( node:get_exp(  ), self, node, baseIndent + 2 )
@@ -1335,7 +1280,6 @@ end
 -- none
 
 function convFilter:processWhile( node, parent, baseIndent )
-
   self:write( "while " )
   filter( node:get_exp(  ), self, node, baseIndent )
   self:write( " " )
@@ -1346,7 +1290,6 @@ end
 -- none
 
 function convFilter:processRepeat( node, parent, baseIndent )
-
   self:write( "repeat " )
   filter( node:get_block(  ), self, node, baseIndent )
   self:write( "until " )
@@ -1356,7 +1299,6 @@ end
 -- none
 
 function convFilter:processFor( node, parent, baseIndent )
-
   self:write( string.format( "for %s = ", node:get_val(  ).txt ) )
   filter( node:get_init(  ), self, node, baseIndent )
   self:write( ", " )
@@ -1378,7 +1320,6 @@ end
 -- none
 
 function convFilter:processApply( node, parent, baseIndent )
-
   self:write( "for " )
   local varList = node:get_varList(  )
   
@@ -1398,7 +1339,6 @@ end
 -- none
 
 function convFilter:processForeach( node, parent, baseIndent )
-
   self:write( "for " )
   do
     local _exp = node:get_key()
@@ -1423,7 +1363,6 @@ end
 -- none
 
 function convFilter:processForsort( node, parent, baseIndent )
-
   self:writeln( "do", baseIndent + stepIndent )
   self:writeln( "local __sorted = {}", baseIndent + stepIndent )
   self:write( "local __map = " )
@@ -1456,7 +1395,6 @@ end
 -- none
 
 function convFilter:processExpUnwrap( node, parent, baseIndent )
-
   do
     local _exp = node:get_default()
     if _exp ~= nil then
@@ -1477,7 +1415,6 @@ function convFilter:processExpUnwrap( node, parent, baseIndent )
 end
 
 function convFilter:processExpCall( node, parent, baseIndent )
-
   local wroteFuncFlag = false
   
   local setArgFlag = false
@@ -1559,7 +1496,6 @@ end
 -- none
 
 function convFilter:processExpList( node, parent, baseIndent )
-
   local expList = node:get_expList(  )
   
   for index, exp in pairs( expList ) do
@@ -1573,7 +1509,6 @@ end
 -- none
 
 function convFilter:processExpOp1( node, parent, baseIndent )
-
   local op = node:get_op().txt
   
   if op == ",,," then
@@ -1602,8 +1537,7 @@ end
 -- none
 
 function convFilter:processExpCast( node, parent, baseIndent )
-
-  if node:get_expType() == Ast.builtinTypeInt then
+  if node:get_expType():equals( Ast.builtinTypeInt ) then
     self:write( "math.floor(" )
     filter( node:get_exp(), self, node, baseIndent )
     self:write( ")" )
@@ -1615,7 +1549,6 @@ end
 -- none
 
 function convFilter:processExpParen( node, parent, baseIndent )
-
   self:write( "(" )
   filter( node:get_exp(), self, node, baseIndent )
   self:write( " )" )
@@ -1624,10 +1557,9 @@ end
 -- none
 
 function convFilter:processExpOp2( node, parent, baseIndent )
-
   local intCast = false
   
-  if node:get_expType() == Ast.builtinTypeInt and node:get_op().txt == "/" then
+  if node:get_expType():equals( Ast.builtinTypeInt ) and node:get_op().txt == "/" then
     intCast = true
     self:write( "math.floor(" )
   end
@@ -1642,7 +1574,6 @@ end
 -- none
 
 function convFilter:processExpRef( node, parent, baseIndent )
-
   if node:get_symbolInfo():get_accessMode() == "pub" and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
     self:write( "_moduleObj." )
   end
@@ -1652,7 +1583,6 @@ end
 -- none
 
 function convFilter:processExpRefItem( node, parent, baseIndent )
-
   if node:get_nilAccess() then
     self:write( "_lune.nilacc( " )
     filter( node:get_val(), self, node, baseIndent )
@@ -1660,7 +1590,7 @@ function convFilter:processExpRefItem( node, parent, baseIndent )
     filter( node:get_index(), self, node, baseIndent )
     self:write( ")" )
   else 
-    if node:get_val():get_expType() == Ast.builtinTypeString then
+    if node:get_val():get_expType():equals( Ast.builtinTypeString ) then
       self:write( "string.byte( " )
       filter( node:get_val(), self, node, baseIndent )
       self:write( ", " )
@@ -1678,7 +1608,6 @@ end
 -- none
 
 function convFilter:processRefField( node, parent, baseIndent )
-
   local prefix = node:get_prefix(  )
   
   if node:get_nilAccess() then
@@ -1705,7 +1634,6 @@ end
 -- none
 
 function convFilter:processGetField( node, parent, baseIndent )
-
   local prefixNode = node:get_prefix(  )
   
   local prefixType = prefixNode:get_expType()
@@ -1737,7 +1665,6 @@ end
 -- none
 
 function convFilter:processReturn( node, parent, baseIndent )
-
   self:write( "return " )
   do
     local _exp = node:get_expList()
@@ -1752,11 +1679,9 @@ end
 -- none
 
 function convFilter:processProvide( node, parent, baseIndent )
-
 end
 
 function convFilter:processLiteralList( node, parent, baseIndent )
-
   self:write( "{" )
   do
     local _exp = node:get_expList()
@@ -1772,7 +1697,6 @@ end
 -- none
 
 function convFilter:processLiteralMap( node, parent, baseIndent )
-
   self:write( "{" )
   local pairList = node:get_pairList()
   
@@ -1791,7 +1715,6 @@ end
 -- none
 
 function convFilter:processLiteralArray( node, parent, baseIndent )
-
   self:write( "{" )
   do
     local _exp = node:get_expList()
@@ -1807,28 +1730,24 @@ end
 -- none
 
 function convFilter:processLiteralChar( node, parent, baseIndent )
-
   self:write( string.format( "%g", node:get_num() ) )
 end
 
 -- none
 
 function convFilter:processLiteralInt( node, parent, baseIndent )
-
   self:write( node:get_token().txt )
 end
 
 -- none
 
 function convFilter:processLiteralReal( node, parent, baseIndent )
-
   self:write( node:get_token().txt )
 end
 
 -- none
 
 function convFilter:processLiteralString( node, parent, baseIndent )
-
   local txt = node:get_token(  ).txt
   
   if string.find( txt, '^```' ) then
@@ -1853,28 +1772,24 @@ end
 -- none
 
 function convFilter:processLiteralBool( node, parent, baseIndent )
-
   self:write( node:get_token().txt )
 end
 
 -- none
 
 function convFilter:processLiteralNil( node, parent, baseIndent )
-
   self:write( "nil" )
 end
 
 -- none
 
 function convFilter:processBreak( node, parent, baseIndent )
-
   self:write( "break" )
 end
 
 -- none
 
 function convFilter:processLiteralSymbol( node, parent, baseIndent )
-
   self:write( string.format( '%s', node:get_token().txt) )
 end
 
@@ -1884,7 +1799,6 @@ local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:eval( node )
-
   local oStream = Util.memStream.new()
   
   local conv = convFilter.new("macro", oStream, oStream, "exe", true, Ast.rootTypeInfo)

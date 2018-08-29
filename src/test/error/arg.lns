@@ -1,0 +1,92 @@
+fn func(): int, ... {
+   return 1, 2;   
+}
+
+{
+   let mut val1:int, mut val2 = func();
+   val1, val2 = func();
+   let mut val10:int, mut val20, mut val30 = func();
+   val10, val20, val30 = func();
+   let mut val100:int, mut val200, mut val300:stem! = func();
+   val100, val200, val300 = func();
+   let mut val100:int, mut val200, mut val300:stem = func();  // error
+   val100, val200, val300 = func();  // error
+   let! mut val1000:int, mut val2000, mut val3000:stem = func() {
+      val1000, val2000, val3000 = 1, 2, 3;
+   };
+   let val:... = 1;
+}
+
+{
+   let mut val1, mut val2, mut val3 = 0, func();
+   val1, val2, val3 = 0, func();
+   let mut val10, mut val20, mut val30, mut val40 = 0, func();
+   val10, val20, val30, val40 = 0, func();
+}
+
+{
+   let mut val1, mut val2 = func(), 1;
+   val1, val2 = func(), 1;
+   let mut val10, mut val20, mut val30 = func(), 1;  // error
+   val10, val20, val30 = func(), 1;  // error
+}
+
+
+fn func2( val:int ): int, int {
+   return val + 1, val + 2;   
+}
+
+{
+   let mut val1, mut val2 = func2( 1 );
+   val1, val2 = func2( 1 );
+   let mut val10, mut val20, mut val30 = func2( 1 );  // error
+   val10, val20, val30 = func2( 1 );  // error
+}
+
+{
+   let mut val1, mut val2, mut val3 = 0, func2( 1 );
+   val1, val2, val3 = 0, func2( 1 );
+   let mut val10, mut val20, mut val30, mut val40 = 0, func2( 1 );  // error
+   val10, val20, val30, val40 = 0, func2( 1 );  // error
+}
+
+{
+   let mut val1, mut val2 = func2( 1 ), 1;
+   val1, val2 = func2( 1 ), 1;
+   let mut val10, mut val20, mut val30 = func2( 1 ), 1;  // error
+   val10, val20, val30 = func2( 1 ), 1;  // error
+}
+
+
+fn func3( val1:int, val2:int, val3:int ) {
+}
+
+func3( 1, 2 ); // error
+func3( 1, 2, 3 );
+func3( 1, func2(0) );
+func3( 1, func2(0), 3 );
+func3( func2(0) ); // error
+func3( func2(0), 3 ); // error
+func3( func2(0), 2, 3 );
+func3( func2(0), 2, 3, 4 );  // error
+
+fn func4( val1:int, val2:int, val3:int, ... ) {
+}
+fn func5(): int, ... {
+   return 1,2;
+}
+fn func6( val1:int!, ... ) {
+}
+fn func7( val1:stem!, ... ) {
+}
+
+func4( 1, 2 ); // error
+func4( 1, 2, 3 );
+func4( 1, func2( 0 ) );
+func4( func2( 0 ) ); // error
+func4( func5() ); // error
+func4( func5(), 2, 3 );
+func4( 1, func5() ); // error
+func4( 1, 2, func5() );
+func6( func5() );
+func7( func5() );
