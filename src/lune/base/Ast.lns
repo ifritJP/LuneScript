@@ -771,7 +771,7 @@ pub class ModuleTypeInfo extend TypeInfo {
    // タイプ名の文字列。配列などの [] は含まない。
    pri let rawTxt: str { pub };
    // 子のタイプリスト。 このタイプがクラスなら、メソッドが子。
-   pri let children: TypeInfo[] { pub };
+   pri let mut children: TypeInfo[] { pub };
    //
    pri let mutable: bool {pub};
 
@@ -1160,9 +1160,9 @@ pub class NormalTypeInfo extend TypeInfo {
       } 
 
       let txt = ```{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        staticFlag = %s, accessMode = '%s', kind = %d, ```
+        staticFlag = %s, accessMode = '%s', kind = %d, mutable = %s, ```
           ( parentId, self.typeId, self.get_baseId(), self.rawTxt,
-            self.staticFlag, self.accessMode, self.kind );
+            self.staticFlag, self.accessMode, self.kind, self.mutable );
 
       let mut children = self.children;
       if! validChildrenSet {
@@ -1838,10 +1838,10 @@ macro _declNodeClass(
       let _className = ,,,"%sNode" (baseName);
       let _nodeKindSym = ,,,"nodeKind%s" (baseName);
 
-      let fieldStatList:stat[] = [];
-      let argList:stat[] = [];
-      let initStatList:stat[] = [];
-      let relateStat:stat[] = [];
+      let mut fieldStatList:stat[] = [];
+      let mut argList:stat[] = [];
+      let mut initStatList:stat[] = [];
+      let mut relateStat:stat[] = [];
       
       if fieldInfoList {
          foreach fieldInfo in fieldInfoList {
@@ -2305,7 +2305,7 @@ pub fn Node.getSymbolInfo(): AccessSymbolInfo[] {
          }
          case nodeKindExpList {
             let expListNode = node@@ExpListNode;
-            let list: AccessSymbolInfo[] = [];
+            let mut list: AccessSymbolInfo[] = [];
             foreach expNode, index in expListNode.$expList {
                if index == #expListNode.$expList {
                   foreach symbolInfo in processExpNode( expNode ) {
@@ -2345,7 +2345,7 @@ pub override fn LiteralRealNode.getLiteral(): stem![], TypeInfo[] {
 }
 
 pub override fn LiteralArrayNode.getLiteral(): stem![], TypeInfo[] {
-   let array:stem![] = [];
+   let mut array:stem![] = [];
    if! self.expList {
       foreach val in _exp.get_expList() {
          let! txt = val.getLiteral()[1] {
@@ -2359,7 +2359,7 @@ pub override fn LiteralArrayNode.getLiteral(): stem![], TypeInfo[] {
 }
 
 pub override fn LiteralListNode.getLiteral(): stem![], TypeInfo[] {
-   let list:stem![] = [];
+   let mut list:stem![] = [];
    if! self.expList {
       foreach val in _exp.get_expList() {
          let! item = val.getLiteral()[1] {
@@ -2391,7 +2391,7 @@ pub override fn LiteralStringNode.getLiteral(): stem![], TypeInfo[] {
    let argList = self.$argList;
 
    if #argList > 0 {
-      let argTbl:stem![] = [];
+      let mut argTbl:stem![] = [];
       foreach argNode in argList {
          let arg = argNode.getLiteral();
          if #arg > 1 {
@@ -2416,7 +2416,7 @@ pub override fn LiteralSymbolNode.getLiteral(): stem![], TypeInfo[] {
 }
 
 pub override fn RefFieldNode.getLiteral(): stem![], TypeInfo[] {
-   let prefix = (unwrap self.prefix.getLiteral()[1])@@str[];
+   let mut prefix = (unwrap self.prefix.getLiteral()[1])@@str[];
    if self.nilAccess {
       prefix.insert( "$." );
    }

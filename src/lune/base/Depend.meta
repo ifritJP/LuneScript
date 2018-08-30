@@ -25,7 +25,7 @@ children = {191, } }
 _typeInfoList[3] = { parentId = 189, typeId = 191, txt = 'Depend', kind = 12, 
 children = {193, } }
 _typeInfoList[4] = { parentId = 191, typeId = 193, baseId = 1, txt = 'getFileLastModifiedTime',
-        staticFlag = true, accessMode = 'pub', kind = 8, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {20}, children = {}, }
+        staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {20}, children = {}, }
 _typeInfoList[5] = { parentId = 191, typeId = 194, nilable = true, orgTypeId = 193 }
 _moduleObj._moduleTypeId = 191
 _moduleObj._moduleMutable = true

@@ -11,8 +11,8 @@ do
   _typeId2ClassInfoMap[ 261 ] = _classInfo261
   end
 do
-  local _classInfo309 = {}
-  _typeId2ClassInfoMap[ 309 ] = _classInfo309
+  local _classInfo307 = {}
+  _typeId2ClassInfoMap[ 307 ] = _classInfo307
   end
 do
   local _classInfo187 = {}
@@ -35,97 +35,97 @@ children = {189, } }
 _typeInfoList[2] = { parentId = 187, typeId = 189, txt = 'base', kind = 12, 
 children = {191, } }
 _typeInfoList[3] = { parentId = 189, typeId = 191, txt = 'Writer', kind = 12, 
-children = {231, 261, 309, } }
+children = {231, 261, 307, } }
 _typeInfoList[4] = { parentId = 191, typeId = 231, baseId = 1, txt = 'Writer',
-        staticFlag = false, accessMode = 'pub', kind = 7, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {235, 239, 243, 247, 251, 255, 258}, }
+        staticFlag = false, accessMode = 'pub', kind = 7, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {235, 239, 243, 247, 251, 255, 258}, }
 _typeInfoList[5] = { parentId = 191, typeId = 232, nilable = true, orgTypeId = 231 }
 _typeInfoList[6] = { parentId = 231, typeId = 235, baseId = 1, txt = 'startParent',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25, 13}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 13}, retTypeId = {}, children = {}, }
 _typeInfoList[7] = { parentId = 231, typeId = 236, nilable = true, orgTypeId = 235 }
 _typeInfoList[8] = { parentId = 231, typeId = 239, baseId = 1, txt = 'startElement',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
 _typeInfoList[9] = { parentId = 231, typeId = 240, nilable = true, orgTypeId = 239 }
 _typeInfoList[10] = { parentId = 231, typeId = 243, baseId = 1, txt = 'endElement',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[11] = { parentId = 231, typeId = 244, nilable = true, orgTypeId = 243 }
 _typeInfoList[12] = { parentId = 231, typeId = 247, baseId = 1, txt = 'writeValue',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {7}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {7}, retTypeId = {}, children = {}, }
 _typeInfoList[13] = { parentId = 231, typeId = 248, nilable = true, orgTypeId = 247 }
 _typeInfoList[14] = { parentId = 231, typeId = 251, baseId = 1, txt = 'write',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25, 7}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 7}, retTypeId = {}, children = {}, }
 _typeInfoList[15] = { parentId = 231, typeId = 252, nilable = true, orgTypeId = 251 }
 _typeInfoList[16] = { parentId = 231, typeId = 255, baseId = 1, txt = 'fin',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[17] = { parentId = 231, typeId = 256, nilable = true, orgTypeId = 255 }
 _typeInfoList[18] = { parentId = 231, typeId = 258, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[19] = { parentId = 231, typeId = 259, nilable = true, orgTypeId = 258 }
 _typeInfoList[20] = { parentId = 191, typeId = 261, baseId = 1, txt = 'XML',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {231}, argTypeId = {}, retTypeId = {}, children = {267, 277, 281, 284, 289, 293, 297}, }
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {231}, argTypeId = {}, retTypeId = {}, children = {267, 277, 280, 283, 288, 291, 295}, }
 _typeInfoList[21] = { parentId = 191, typeId = 262, nilable = true, orgTypeId = 261 }
 _typeInfoList[22] = { parentId = 261, typeId = 267, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {76}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {76}, retTypeId = {}, children = {}, }
 _typeInfoList[23] = { parentId = 261, typeId = 268, nilable = true, orgTypeId = 267 }
 _typeInfoList[24] = { parentId = 261, typeId = 277, baseId = 1, txt = 'startElement',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
 _typeInfoList[25] = { parentId = 261, typeId = 278, nilable = true, orgTypeId = 277 }
-_typeInfoList[26] = { parentId = 261, typeId = 281, baseId = 1, txt = 'startParent',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25, 13}, retTypeId = {}, children = {}, }
-_typeInfoList[27] = { parentId = 261, typeId = 282, nilable = true, orgTypeId = 281 }
-_typeInfoList[28] = { parentId = 261, typeId = 284, baseId = 1, txt = 'endElement',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[29] = { parentId = 261, typeId = 285, nilable = true, orgTypeId = 284 }
-_typeInfoList[30] = { parentId = 261, typeId = 289, baseId = 1, txt = 'writeValue',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {7}, retTypeId = {}, children = {}, }
-_typeInfoList[31] = { parentId = 261, typeId = 290, nilable = true, orgTypeId = 289 }
-_typeInfoList[32] = { parentId = 261, typeId = 293, baseId = 1, txt = 'write',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25, 7}, retTypeId = {}, children = {}, }
-_typeInfoList[33] = { parentId = 261, typeId = 294, nilable = true, orgTypeId = 293 }
-_typeInfoList[34] = { parentId = 261, typeId = 297, baseId = 1, txt = 'fin',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[35] = { parentId = 261, typeId = 298, nilable = true, orgTypeId = 297 }
-_typeInfoList[36] = { parentId = 191, typeId = 309, baseId = 1, txt = 'JSON',
-        staticFlag = false, accessMode = 'pub', kind = 6, itemTypeId = {}, ifList = {231}, argTypeId = {}, retTypeId = {}, children = {323, 334, 340, 344, 348, 352, 356, 361, 365, 369, 377, 382, 386}, }
-_typeInfoList[37] = { parentId = 191, typeId = 310, nilable = true, orgTypeId = 309 }
-_typeInfoList[38] = { parentId = 309, typeId = 323, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {76}, retTypeId = {}, children = {}, }
-_typeInfoList[39] = { parentId = 309, typeId = 324, nilable = true, orgTypeId = 323 }
-_typeInfoList[40] = { parentId = 309, typeId = 334, baseId = 1, txt = 'endLayer',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[41] = { parentId = 309, typeId = 335, nilable = true, orgTypeId = 334 }
-_typeInfoList[42] = { parentId = 309, typeId = 340, baseId = 1, txt = 'equalLayerState',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {13}, children = {}, }
-_typeInfoList[43] = { parentId = 309, typeId = 341, nilable = true, orgTypeId = 340 }
-_typeInfoList[44] = { parentId = 309, typeId = 344, baseId = 1, txt = 'isArrayLayer',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {13}, children = {}, }
-_typeInfoList[45] = { parentId = 309, typeId = 345, nilable = true, orgTypeId = 344 }
-_typeInfoList[46] = { parentId = 309, typeId = 348, baseId = 1, txt = 'setLayerState',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
-_typeInfoList[47] = { parentId = 309, typeId = 349, nilable = true, orgTypeId = 348 }
-_typeInfoList[48] = { parentId = 309, typeId = 352, baseId = 1, txt = 'getLayerName',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
-_typeInfoList[49] = { parentId = 309, typeId = 353, nilable = true, orgTypeId = 352 }
-_typeInfoList[50] = { parentId = 309, typeId = 356, baseId = 1, txt = 'addElementName',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
-_typeInfoList[51] = { parentId = 309, typeId = 357, nilable = true, orgTypeId = 356 }
-_typeInfoList[52] = { parentId = 309, typeId = 361, baseId = 1, txt = 'startParent',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25, 13}, retTypeId = {}, children = {}, }
-_typeInfoList[53] = { parentId = 309, typeId = 362, nilable = true, orgTypeId = 361 }
-_typeInfoList[54] = { parentId = 309, typeId = 365, baseId = 1, txt = 'startElement',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
-_typeInfoList[55] = { parentId = 309, typeId = 366, nilable = true, orgTypeId = 365 }
-_typeInfoList[56] = { parentId = 309, typeId = 369, baseId = 1, txt = 'endElement',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[57] = { parentId = 309, typeId = 370, nilable = true, orgTypeId = 369 }
-_typeInfoList[58] = { parentId = 309, typeId = 377, baseId = 1, txt = 'writeValue',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {7}, retTypeId = {}, children = {}, }
-_typeInfoList[59] = { parentId = 309, typeId = 378, nilable = true, orgTypeId = 377 }
-_typeInfoList[60] = { parentId = 309, typeId = 382, baseId = 1, txt = 'write',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {25, 7}, retTypeId = {}, children = {}, }
-_typeInfoList[61] = { parentId = 309, typeId = 383, nilable = true, orgTypeId = 382 }
-_typeInfoList[62] = { parentId = 309, typeId = 386, baseId = 1, txt = 'fin',
-        staticFlag = false, accessMode = 'pub', kind = 9, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[63] = { parentId = 309, typeId = 387, nilable = true, orgTypeId = 386 }
+_typeInfoList[26] = { parentId = 261, typeId = 280, baseId = 1, txt = 'startParent',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25, 13}, retTypeId = {}, children = {}, }
+_typeInfoList[27] = { parentId = 261, typeId = 281, nilable = true, orgTypeId = 280 }
+_typeInfoList[28] = { parentId = 261, typeId = 283, baseId = 1, txt = 'endElement',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[29] = { parentId = 261, typeId = 284, nilable = true, orgTypeId = 283 }
+_typeInfoList[30] = { parentId = 261, typeId = 288, baseId = 1, txt = 'writeValue',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {7}, retTypeId = {}, children = {}, }
+_typeInfoList[31] = { parentId = 261, typeId = 289, nilable = true, orgTypeId = 288 }
+_typeInfoList[32] = { parentId = 261, typeId = 291, baseId = 1, txt = 'write',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25, 7}, retTypeId = {}, children = {}, }
+_typeInfoList[33] = { parentId = 261, typeId = 292, nilable = true, orgTypeId = 291 }
+_typeInfoList[34] = { parentId = 261, typeId = 295, baseId = 1, txt = 'fin',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[35] = { parentId = 261, typeId = 296, nilable = true, orgTypeId = 295 }
+_typeInfoList[36] = { parentId = 191, typeId = 307, baseId = 1, txt = 'JSON',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {231}, argTypeId = {}, retTypeId = {}, children = {321, 332, 338, 342, 346, 350, 354, 359, 363, 367, 375, 379, 383}, }
+_typeInfoList[37] = { parentId = 191, typeId = 308, nilable = true, orgTypeId = 307 }
+_typeInfoList[38] = { parentId = 307, typeId = 321, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {76}, retTypeId = {}, children = {}, }
+_typeInfoList[39] = { parentId = 307, typeId = 322, nilable = true, orgTypeId = 321 }
+_typeInfoList[40] = { parentId = 307, typeId = 332, baseId = 1, txt = 'endLayer',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[41] = { parentId = 307, typeId = 333, nilable = true, orgTypeId = 332 }
+_typeInfoList[42] = { parentId = 307, typeId = 338, baseId = 1, txt = 'equalLayerState',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {13}, children = {}, }
+_typeInfoList[43] = { parentId = 307, typeId = 339, nilable = true, orgTypeId = 338 }
+_typeInfoList[44] = { parentId = 307, typeId = 342, baseId = 1, txt = 'isArrayLayer',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {13}, children = {}, }
+_typeInfoList[45] = { parentId = 307, typeId = 343, nilable = true, orgTypeId = 342 }
+_typeInfoList[46] = { parentId = 307, typeId = 346, baseId = 1, txt = 'setLayerState',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
+_typeInfoList[47] = { parentId = 307, typeId = 347, nilable = true, orgTypeId = 346 }
+_typeInfoList[48] = { parentId = 307, typeId = 350, baseId = 1, txt = 'getLayerName',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
+_typeInfoList[49] = { parentId = 307, typeId = 351, nilable = true, orgTypeId = 350 }
+_typeInfoList[50] = { parentId = 307, typeId = 354, baseId = 1, txt = 'addElementName',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
+_typeInfoList[51] = { parentId = 307, typeId = 355, nilable = true, orgTypeId = 354 }
+_typeInfoList[52] = { parentId = 307, typeId = 359, baseId = 1, txt = 'startParent',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25, 13}, retTypeId = {}, children = {}, }
+_typeInfoList[53] = { parentId = 307, typeId = 360, nilable = true, orgTypeId = 359 }
+_typeInfoList[54] = { parentId = 307, typeId = 363, baseId = 1, txt = 'startElement',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
+_typeInfoList[55] = { parentId = 307, typeId = 364, nilable = true, orgTypeId = 363 }
+_typeInfoList[56] = { parentId = 307, typeId = 367, baseId = 1, txt = 'endElement',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[57] = { parentId = 307, typeId = 368, nilable = true, orgTypeId = 367 }
+_typeInfoList[58] = { parentId = 307, typeId = 375, baseId = 1, txt = 'writeValue',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {7}, retTypeId = {}, children = {}, }
+_typeInfoList[59] = { parentId = 307, typeId = 376, nilable = true, orgTypeId = 375 }
+_typeInfoList[60] = { parentId = 307, typeId = 379, baseId = 1, txt = 'write',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25, 7}, retTypeId = {}, children = {}, }
+_typeInfoList[61] = { parentId = 307, typeId = 380, nilable = true, orgTypeId = 379 }
+_typeInfoList[62] = { parentId = 307, typeId = 383, baseId = 1, txt = 'fin',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[63] = { parentId = 307, typeId = 384, nilable = true, orgTypeId = 383 }
 _moduleObj._moduleTypeId = 191
 _moduleObj._moduleMutable = true
 ----- meta -----

@@ -1492,7 +1492,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
   end
   
   local txt = string.format( [==[{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        staticFlag = %s, accessMode = '%s', kind = %d, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind)
+        staticFlag = %s, accessMode = '%s', kind = %d, mutable = %s, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind, self.mutable)
   
   local children = self.children
   

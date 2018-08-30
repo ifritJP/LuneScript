@@ -90,6 +90,10 @@
 (defvar lns-ac-process-state-symbol :idle)
 (defvar lns-ac-candidate-list-field nil)
 (defvar lns-ac-candidate-list-symbol nil)
+(defvar lns-ac-point-field nil)
+(defvar lns-ac-point-symbol nil)
+(defvar lns-ac-process-field nil)
+(defvar lns-ac-process-symbol nil)
 
 (defun lns-ac-candidates-symbol ()
   (lns-ac-candidates :symbol)
@@ -99,44 +103,70 @@
   (lns-ac-candidates :field)
   )
 
+(defun lns-ac-check-cancel (prev-ac-point-sym lns-ac-process-sym process-state)
+  "補完位置が、補完候補問い合わせ時と現在の位置で変ったら問い合わせを kill する。
+変っていた場合 t、 変っていない場合 nil を返す。"
+  (if (eq (symbol-value prev-ac-point-sym) ac-point)
+      nil
+    (let ((process (symbol-value lns-ac-process-sym)))
+      (when (and process
+		 (not (eq (process-status process) 'exit)))
+	(kill-process process))
+    (set lns-ac-process-sym nil)
+    (set process-state :idle)
+    (set prev-ac-point-sym :idle)
+    t
+    )))
 
 (defun lns-ac-candidates (mode)
   (lexical-let ((let-list (if (eq mode :symbol)
 			      'lns-ac-candidate-list-symbol
 			    'lns-ac-candidate-list-field))
+		(let-prev-ac-point (if (eq mode :symbol)
+				       'lns-ac-point-symbol
+				     'lns-ac-point-field))
+		(let-ac-process (if (eq mode :symbol)
+				    'lns-ac-process-symbol
+				  'lns-ac-process-field))
 		(process-state (if (eq mode :symbol)
 				   'lns-ac-process-state-symbol
 				 'lns-ac-process-state-field)))
+    (lns-ac-check-cancel let-prev-ac-point let-ac-process process-state)
+	
     (cond
      ((eq (symbol-value process-state) :done)
       (set process-state :idle)
+      (set let-prev-ac-point nil)
       (symbol-value let-list))
      ((eq (symbol-value process-state) :processing)
       nil)
      ((eq (symbol-value process-state) :idle)
+      (set let-prev-ac-point ac-point)
       (set process-state :processing)
-      (lns-completion-get-candidate-list
-       (lambda (candidate-list err)
-	 (cond
-	  (candidate-list
-	   (set let-list
-		(mapcar (lambda (candidate)
-			  (let* ((info (lns-json-val candidate :candidate))
-				 (item-txt (lns-candidate-get-displayTxt info)))
-			    item-txt))
-			candidate-list))
-	   ;; field の内容を symbol にコピーする。
-	   ;; 現状は field も symbol も同じ結果になるため。
-	   (setq lns-ac-candidate-list-symbol (symbol-value let-list))
-	   (set process-state :done)
-	   (ac-stop)
-	   (ac-start)
-	   (ac-update)
-	   )
-	  (t
-	   (set process-state :idle)))
-	 )
-       t (format "*%s-lns-process*" mode))
+      (set let-ac-process
+	   (lns-completion-get-candidate-list
+	    (lambda (candidate-list err)
+	      (cond
+	       (candidate-list
+		(set let-list
+		     (mapcar (lambda (candidate)
+			       (let* ((info (lns-json-val candidate :candidate))
+				      (item-txt (lns-candidate-get-displayTxt info)))
+				 item-txt))
+			     candidate-list))
+		;; field の内容を symbol にコピーする。
+		;; 現状は field も symbol も同じ結果になるため。
+		(setq lns-ac-candidate-list-symbol (symbol-value let-list))
+		(set process-state :done)
+		(set let-ac-process nil)
+		(ac-stop)
+		(ac-start)
+		(ac-update)
+		)
+	       (t
+		(set process-state :idle)))
+	      )
+	    t (format "*%s-lns-process*" mode)))
       nil)
      )))
 

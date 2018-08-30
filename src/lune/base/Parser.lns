@@ -254,9 +254,9 @@ pub class StreamParser extend Parser {
 
 macro _declTokenKind( name_array:str[@] ) {
    {
-      let field_array: stat[] = [];
-      let stat_array: stat[] = [];
-      let init_array: stat[] = [];
+      let mut field_array: stat[] = [];
+      let mut stat_array: stat[] = [];
+      let mut init_array: stat[] = [];
       foreach name, index in name_array {
          field_array.insert( `{
             pub static let ,,,name:int;
@@ -367,7 +367,7 @@ fn StreamParser.parse() mut : Token[]! {
    }
    let! mut rawLine = readLine() { return nil; };
 
-   let list: Token[] = [];
+   let mut list: Token[] = [];
    let mut startIndex = 1;
 
    /*

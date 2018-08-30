@@ -10,7 +10,7 @@ macro _print( symbol2:stat, format:str! ) {
    print( string.format( "macro %s " .. ,,work, ,,,,symbol2, ,,symbol2 ));
 }
 
-let classA = new simple.ClassA();
+let mut classA = new simple.ClassA();
 print( classA.func( 0 ) );
 print( classA.func( 0 ) );
 print( classA.sub() );
@@ -85,7 +85,7 @@ macro _test2( val:int, funcxx:sym ) {
             print( "hoge %d" ( index ) );
          }
       };
-      let stat3:stat[] = [];
+      let mut stat3:stat[] = [];
       for index = 1, 4 {
          stat3.insert( `{ print( "foo %d" ( ,,index ) ); } );
       }
@@ -122,7 +122,7 @@ _test2( 1, print );
 macro _classtest( macroVal: int, fieldInfoList: Map<str,str>[] ) {
    {
       let name = ,,,"classTest%d" (macroVal);
-      let field:stat[] = [];
+      let mut field:stat[] = [];
 
       if fieldInfoList {
          foreach fieldInfo in fieldInfoList {
@@ -282,7 +282,7 @@ fn testret() : int! {
 }
 
 {
-   let arry: int[] = [];
+   let mut arry: int[] = [];
    arry.insert( 1 );
    foreach val, index in arry {
       print( index, val );
@@ -404,7 +404,7 @@ _print( `{ Sub2.External.val } );
 }
 
 {
-   let jsonWriter = new Writer.JSON( io.stdout );
+   let mut jsonWriter = new Writer.JSON( io.stdout );
    jsonWriter.startParent( "hoge", true );
    jsonWriter.write( "foo", "bar" );
    jsonWriter.endElement();

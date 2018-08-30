@@ -116,7 +116,7 @@ pub class TransUnit {
       self.useNilAccess = false;
    }
 
-   pri fn addErrMess( pos: Parser.Position, mess: str ) {
+   pri fn addErrMess( pos: Parser.Position, mess: str ) mut {
       self.errMessList.insert(
          "%s:%d:%d: error: %s" ( self.parser.getStreamName(),
                                  pos.lineNo, pos.column, mess ) );
@@ -185,7 +185,7 @@ pub class TransUnit {
       return typeInfo;
    }
 
-   pri fn popModule() {
+   pri fn popModule() mut {
       self.popScope();
    }
    
@@ -241,7 +241,7 @@ pub class TransUnit {
       return typeInfo;
    }
 
-   pri fn popClass() {
+   pri fn popClass() mut {
       self.popScope();
    }
 
@@ -347,7 +347,7 @@ class _ModuleInfo {
 pub let mut typeInfoListInsert = Ast.typeInfoRoot;
 pub let mut typeInfoListRemove = Ast.typeInfoRoot;
 
-fn TransUnit.registBuiltInScope() {
+fn TransUnit.registBuiltInScope() mut {
    let builtInInfo = [
       { 
          "": {
@@ -363,23 +363,23 @@ fn TransUnit.registBuiltInScope() {
       {
          "iStream": {
             "__attrib": { "type": [ "interface" ] },
-            "read": { "type": [ "method" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
-            "close": { "type": [ "method" ], "arg": [], "ret": [] },
+            "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+            "close": { "type": [ "mut" ], "arg": [], "ret": [] },
          },
       },
       {
          "oStream": {
             "__attrib": { "type": [ "interface" ] },
-            "write": { "type": [ "method" ], "arg": [ "str" ], "ret": [ ] },
-            "close": { "type": [ "method" ], "arg": [], "ret": [] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
+            "close": { "type": [ "mut" ], "arg": [], "ret": [] },
          },
       },
       { 
          "luaStream": {
             "__attrib": { "inplements": [ "iStream", "oStream" ] },
-            "read": { "type": [ "method" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
-            "write": { "type": [ "method" ], "arg": [ "str" ], "ret": [ ] },
-            "close": { "type": [ "method" ], "arg": [], "ret": [] },
+            "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
+            "close": { "type": [ "mut" ], "arg": [], "ret": [] },
          }, 
       },
       { 
@@ -416,7 +416,7 @@ fn TransUnit.registBuiltInScope() {
             "format": { "type": [ "method" ], "arg": [ "..." ], "ret": ["str"] },
             "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
             "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["stem!"] },
-            "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str"] },
+            "gsub": { "type": [ "mut" ], "arg": [ "str", "str" ], "ret": ["str"] },
             "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
          },  
       },
@@ -427,8 +427,8 @@ fn TransUnit.registBuiltInScope() {
       },
       { 
          "List": {
-            "insert": { "type": [ "method" ], "arg": [ "stem" ], "ret": [""] },
-            "remove": { "type": [ "method" ], "arg": [ "int!" ], "ret": [""] },
+            "insert": { "type": [ "mut" ], "arg": [ "stem" ], "ret": [""] },
+            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": [""] },
          },  
       },
       { 
@@ -466,7 +466,7 @@ fn TransUnit.registBuiltInScope() {
             if name2FieldInfo$.__attrib$.type$[1] == "interface" {
                classFlag = false;
             }
-            let interfaceList:Ast.TypeInfo[] = [];
+            let mut interfaceList:Ast.TypeInfo[] = [];
             if! name2FieldInfo$.__attrib$.inplements {
                foreach ifname in _exp {
                   let ifType = getTypeInfo( ifname );
@@ -497,19 +497,20 @@ fn TransUnit.registBuiltInScope() {
                         getTypeInfo( unwrap info.typeInfo$[1] ), "pub", true, false );
                   }
                   else {
-                     let argTypeList: Ast.TypeInfo[] = [];
+                     let mut argTypeList: Ast.TypeInfo[] = [];
                      foreach argType in unwrap info[ "arg" ] {
                         argTypeList.insert( getTypeInfo( argType ) );
                      }  
 
-                     let retTypeList: Ast.TypeInfo[] = [];
+                     let mut retTypeList: Ast.TypeInfo[] = [];
                      foreach retType in unwrap info[ "ret" ] {
                         let retTypeInfo = getTypeInfo( retType );
                         retTypeList.insert( retTypeInfo );
                      }    
 
-                     
-                     let methodFlag = info.type$[1] == "method";
+                     let funcType = info.type$[1];
+                     let methodFlag = funcType == "method" or funcType == "mut";
+                     let mutable = funcType == "mut";
 
                      self.pushScope( false );
                      
@@ -517,7 +518,7 @@ fn TransUnit.registBuiltInScope() {
                         false, true, self.scope,
                         methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
                         parentInfo, false, true, not methodFlag, "pub",
-                        fieldName, argTypeList, retTypeList, methodFlag );
+                        fieldName, argTypeList, retTypeList, mutable );
                      
                      self.popScope();
                      
@@ -528,7 +529,7 @@ fn TransUnit.registBuiltInScope() {
                      self.scope.add(
                         methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
                         not methodFlag, not methodFlag,
-                        fieldName, typeInfo, "pub", not methodFlag, false, true );
+                        fieldName, typeInfo, "pub", not methodFlag, mutable, true );
                      if methodFlag {
                         switch ( name ) {
                            case "List" {
@@ -641,7 +642,7 @@ fn TransUnit.getTokenNoErr() mut : Parser.Token {
       return self.currentToken;
    }
 
-   let commentList:Parser.Token[] = [];
+   let mut commentList:Parser.Token[] = [];
    let mut token:Parser.Token! = nil;
    while true {
       token = self.parser.getToken();
@@ -696,7 +697,7 @@ fn TransUnit.getTokenNoErr() mut : Parser.Token {
                   }    
                }
                else {
-                  let tokenList: Parser.Token[] = [];
+                  let mut tokenList: Parser.Token[] = [];
                   expandVal( tokenList, macroVal.val, nextToken.pos );
                   
                   self.newPushback( tokenList );
@@ -768,9 +769,9 @@ fn TransUnit.pushback() mut {
 
 fn TransUnit.pushbackStr( name: str, statement: str ) mut {
    let memStream = new Parser.TxtStream( statement );
-   let parser = new Parser.StreamParser( memStream, name, false );
+   let mut parser = new Parser.StreamParser( memStream, name, false );
 
-   let list:Parser.Token[] = [];
+   let mut list:Parser.Token[] = [];
    while true {
       if! parser.getToken() {
          list.insert( _exp );
@@ -794,7 +795,7 @@ fn TransUnit.checkSymbol( token: Parser.Token ): Parser.Token {
    return token;
 }
 
-fn TransUnit.getSymbolToken(): Parser.Token {
+fn TransUnit.getSymbolToken() mut : Parser.Token {
    return self.checkSymbol( self.getToken() );
 }
 
@@ -806,7 +807,7 @@ fn TransUnit.checkToken( token: Parser.Token, txt: str ): Parser.Token {
    return token;
 }
 
-fn TransUnit.checkNextToken( txt: str ): Parser.Token {
+fn TransUnit.checkNextToken( txt: str ) mut : Parser.Token {
    return self.checkToken( self.getToken(), txt );
 }
 
@@ -816,7 +817,7 @@ fn TransUnit.checkNextToken( txt: str ): Parser.Token {
 @return 1 次のトークン
 @return 2 連続したトークンだった場合 true
 */
-fn TransUnit.getContinueToken(): Parser.Token, bool {
+fn TransUnit.getContinueToken() mut : Parser.Token, bool {
    let! prevToken = self.currentToken {
       return self.getToken(), false;
    };
@@ -876,14 +877,14 @@ fn TransUnit.analyzeLuneControl( firstToken: Parser.Token ) mut {
    self.checkNextToken( ";" );
 }
 
-fn TransUnit.analyzeBlock( blockKind: str, scope: Ast.Scope! ): Ast.BlockNode {
+fn TransUnit.analyzeBlock( blockKind: str, scope: Ast.Scope! ) mut : Ast.BlockNode {
    let token = self.checkNextToken( "{" );
 
    if not scope {
       self.pushScope( false );
    }
 
-   let stmtList:Ast.Node[] = [];
+   let mut stmtList:Ast.Node[] = [];
    self.analyzeStatementList( stmtList, "}" );
 
    self.checkNextToken( "}" );
@@ -912,7 +913,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ) mut : Ast.Node {
    let mut modulePath = moduleToken.txt;
    let mut nextToken:Parser.Token = moduleToken;
 
-   let nameList = [ moduleToken.txt ];
+   let mut nameList = [ moduleToken.txt ];
 
    while true {
       nextToken = self.getToken();
@@ -1057,11 +1058,11 @@ fn TransUnit.analyzeImport( token: Parser.Token ) mut : Ast.Node {
                   parentInfo = workTypeInfo;
                }   
                
-               let itemTypeInfo:Ast.TypeInfo[] = [];
+               let mut itemTypeInfo:Ast.TypeInfo[] = [];
                foreach typeId in atomInfo.itemTypeId {
                   itemTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
                }   
-               let argTypeInfo:Ast.TypeInfo[] = [];
+               let mut argTypeInfo:Ast.TypeInfo[] = [];
                foreach typeId in atomInfo.argTypeId {
                   if not typeId2TypeInfo[ typeId ] {
                      Util.log( "not found -- %s.%s, %d, %d"
@@ -1070,13 +1071,13 @@ fn TransUnit.analyzeImport( token: Parser.Token ) mut : Ast.Node {
                   }    
                   argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
                }   
-               let retTypeInfo:Ast.TypeInfo[] = [];
+               let mut retTypeInfo:Ast.TypeInfo[] = [];
                foreach typeId in atomInfo.retTypeId {
                   retTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
                }   
                
                let baseInfo = unwrap typeId2TypeInfo[ atomInfo.baseId ];
-               let interfaceList:Ast.TypeInfo[] = [];
+               let mut interfaceList:Ast.TypeInfo[] = [];
                foreach ifTypeId in atomInfo.ifList {
                   interfaceList.insert( unwrap typeId2TypeInfo[ ifTypeId ] );
                }  
@@ -1329,7 +1330,7 @@ fn TransUnit.analyzeImport( token: Parser.Token ) mut : Ast.Node {
 }
 
 
-fn TransUnit.analyzeSubfile( token: Parser.Token ): Ast.SubfileNode {
+fn TransUnit.analyzeSubfile( token: Parser.Token ) mut : Ast.SubfileNode {
    if self.scope ~= self.moduleScope {
       self.error( "'module' must be top scope." );
    }
@@ -1378,7 +1379,7 @@ fn TransUnit.analyzeSubfile( token: Parser.Token ): Ast.SubfileNode {
    return new Ast.SubfileNode( token.pos, [ Ast.builtinTypeNone ] );
 }
 
-fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ): Ast.Node {
+fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ) mut : Ast.Node {
    let exp = self.analyzeExp( false );
 
    if self.scope.getSymbolTypeInfo( "_exp", self.scope, self.moduleScope ) {
@@ -1414,14 +1415,14 @@ fn TransUnit.analyzeIfUnwrap( firstToken: Parser.Token ): Ast.Node {
 }
 
 
-fn TransUnit.analyzeIf( token: Parser.Token ): Ast.Node {
+fn TransUnit.analyzeIf( token: Parser.Token ) mut : Ast.Node {
    let mut nextToken, continueFlag = self.getContinueToken();
    if continueFlag and nextToken.txt == "!" {
       return self.analyzeIfUnwrap( token );
    }
    self.pushback();
    
-   let list:Ast.IfStmtInfo[] = [];
+   let mut list:Ast.IfStmtInfo[] = [];
    list.insert( new Ast.IfStmtInfo( "if", self.analyzeExp( false ),
                                     self.analyzeBlock( "if" ) ) );
 
@@ -1448,12 +1449,12 @@ fn TransUnit.analyzeIf( token: Parser.Token ): Ast.Node {
 }
 
 
-fn TransUnit.analyzeSwitch( firstToken: Parser.Token ): Ast.SwitchNode {
+fn TransUnit.analyzeSwitch( firstToken: Parser.Token ) mut : Ast.SwitchNode {
    let exp = self.analyzeExp( false );
 
    self.checkNextToken( "{" );
 
-   let caseList: Ast.CaseInfo[] = [];
+   let mut caseList: Ast.CaseInfo[] = [];
 
    let mut nextToken = self.getToken();
    while ( nextToken.txt == "case" ) {
@@ -1478,12 +1479,12 @@ fn TransUnit.analyzeSwitch( firstToken: Parser.Token ): Ast.SwitchNode {
 }
 
 
-fn TransUnit.analyzeWhile( token: Parser.Token ): Ast.WhileNode {
+fn TransUnit.analyzeWhile( token: Parser.Token ) mut : Ast.WhileNode {
    return new Ast.WhileNode( token.pos, [ Ast.builtinTypeNone ],
                              self.analyzeExp( false ), self.analyzeBlock( "while" ) );
 }
 
-fn TransUnit.analyzeRepeat( token: Parser.Token ): Ast.RepeatNode {
+fn TransUnit.analyzeRepeat( token: Parser.Token ) mut : Ast.RepeatNode {
    let scope = self.pushScope( false );
    let node = new Ast.RepeatNode( token.pos, [ Ast.builtinTypeNone ],
                                   self.analyzeBlock( "repeat", scope ),
@@ -1494,7 +1495,7 @@ fn TransUnit.analyzeRepeat( token: Parser.Token ): Ast.RepeatNode {
    return node;
 }
 
-fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
+fn TransUnit.analyzeFor( firstToken: Parser.Token ) mut : Ast.ForNode {
 
    let scope = self.pushScope( false );
 
@@ -1539,9 +1540,9 @@ fn TransUnit.analyzeFor( firstToken: Parser.Token ): Ast.ForNode {
    return node;
 }
 
-fn TransUnit.analyzeApply( token: Parser.Token ): Ast.ApplyNode {
+fn TransUnit.analyzeApply( token: Parser.Token ) mut : Ast.ApplyNode {
    let scope = self.pushScope( false );
-   let varList:Parser.Token[] = [];
+   let mut varList:Parser.Token[] = [];
    let mut nextToken:Parser.Token = Parser.getEofToken();
    repeat {
       let var = self.getSymbolToken();
@@ -1565,7 +1566,7 @@ fn TransUnit.analyzeApply( token: Parser.Token ): Ast.ApplyNode {
    return new Ast.ApplyNode( token.pos, [ Ast.builtinTypeNone ], varList, exp, block );
 }
 
-fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ): Ast.Node {
+fn TransUnit.analyzeForeach( token: Parser.Token, sortFlag: bool ) mut : Ast.Node {
    let scope = self.pushScope( false );
    let mut valSymbol:Parser.Token = Parser.getEofToken();
    let mut keySymbol:Parser.Token! = nil;

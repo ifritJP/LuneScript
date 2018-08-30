@@ -46,7 +46,8 @@
 
 (defun lns-helm-select (item)
   (let ((item-type (lns-candidate-get-type item))
-	(item-txt (lns-candidate-get-displayTxt item)))
+	(item-txt (lns-candidate-get-displayTxt item))
+	end-poind)
     (if (or (equal item-type "Fun")
 	    (equal item-type "Mtd"))
 	(progn
@@ -60,9 +61,10 @@
 	      (insert item-txt))
 	    (search-forward "(")))
       (save-excursion
-	(insert item-txt))
-      (search-forward ":")
-      (backward-char)
+	(insert item-txt)
+	(setq end-poind (point)))
+      (when (search-forward ":" end-poind t)
+	(backward-char))
       )))
 
 

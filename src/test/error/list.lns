@@ -24,7 +24,12 @@
     }
 }   
 {
-   let val:int![] = [];
+   let mut val:int![] = [];
    val.insert( 1 );
    val.insert( nil );
+}
+{
+   let val:int![] = [];
+   val.insert( 1 );
+   val.remove( 1 );
 }

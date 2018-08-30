@@ -702,7 +702,7 @@ pub override fn convFilter.processDeclClass(
                     baseIndent );
    }
    let mut hasConstrFlag = false;
-   let memberList: Ast.DeclMemberNode[] = [];
+   let mut memberList: Ast.DeclMemberNode[] = [];
    let fieldList: Ast.Node[] = nodeInfo.get_fieldList();
    let outerMethodSet: Map<str,bool> = nodeInfo.get_outerMethodSet();
    let methodNameSet: Map<str,bool> = {};
@@ -1827,7 +1827,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
    pub override fn eval( node: Ast.DeclMacroNode ): form
    {   
       let oStream = new Util.memStream();
-      let conv = new convFilter(
+      let mut conv = new convFilter(
          "macro", oStream, oStream, "exe", true, Ast.rootTypeInfo );
 
       conv.processDeclMacro( node, node, 0 );
