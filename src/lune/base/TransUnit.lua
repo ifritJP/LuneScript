@@ -165,11 +165,11 @@ function TransUnit:pushModule( externalFlag, name, mutable )
     
         local parentInfo = self:getCurrentNamespaceTypeInfo(  )
         
+        local parentScope = self.scope
+        
         local scope = self:pushScope( true )
         
         typeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, externalFlag, name, mutable )
-        local parentScope = scope:get_parent(  )
-        
         parentScope:addClass( name, typeInfo )
       end
   end
@@ -222,11 +222,11 @@ function TransUnit:pushClass( classFlag, abstructFlag, baseInfo, interfaceList, 
             end
         end
         
+        local parentScope = self.scope
+        
         local scope = self:pushScope( true, inheritList )
         
         typeInfo = Ast.NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, name )
-        local parentScope = scope:get_parent(  )
-        
         parentScope:addClass( name, typeInfo )
       end
   end
@@ -369,17 +369,30 @@ local typeInfoListRemove = Ast.typeInfoRoot
 _moduleObj.typeInfoListRemove = typeInfoListRemove
 
 function TransUnit:registBuiltInScope(  )
-  local builtInInfo = {{[""] = {["type"] = {["arg"] = {"stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["_fcall"] = {["arg"] = {"form", "..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"mut"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}}}, {["_luneScript"] = {["loadModule"] = {["arg"] = {"str"}, ["ret"] = {"stem", "stem"}}, ["searchModule"] = {["arg"] = {"str"}, ["ret"] = {"str!"}}}}}
+  local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"&str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"&str", "&int!"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"&str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"&str"}, ["ret"] = {"stem!"}}, ["_fcall"] = {["arg"] = {"&form", "&..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"&str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"&str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"&str", "&str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"&str"}, ["ret"] = {"luaStream!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"&int!"}, ["ret"] = {}}}}, {["string"] = {["find"] = {["arg"] = {"&str", "&str", "&int!", "&bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["arg"] = {"&str", "&int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"&str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"&str", "&int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"&str", "&str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"&str", "&str", "&str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"&str", "&int", "&int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"&str", "&int!", "&bool!"}, ["ret"] = {"int", "int"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"&int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"&int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"&str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"&str", "&str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"&int", "&int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"&stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"&int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"&int"}, ["ret"] = {"stem"}}}}, {["_luneScript"] = {["loadModule"] = {["arg"] = {"&str"}, ["ret"] = {"stem", "stem"}}, ["searchModule"] = {["arg"] = {"&str"}, ["ret"] = {"str!"}}}}}
   
   local function getTypeInfo( typeName )
+    local mutable = true
+    
+    if typeName:find( "^&" ) then
+      mutable = false
+      typeName = typeName:gsub( "^&", "" )
+    end
+    local typeInfo = Ast.rootTypeInfo
+    
     if typeName:find( "!$" ) then
       local orgTypeName = typeName:gsub( "!$", "" )
       
-      local typeInfo = _lune.unwrap( Ast.rootScope:getTypeInfo( orgTypeName, Ast.rootScope, false ))
-      
-      return typeInfo:get_nilableTypeInfo()
+      typeInfo = _lune.unwrap( Ast.rootScope:getTypeInfo( orgTypeName, Ast.rootScope, false ))
+      typeInfo = typeInfo:get_nilableTypeInfo()
+    else 
+      typeInfo = _lune.unwrap( Ast.rootScope:getTypeInfo( typeName, Ast.rootScope, false ))
     end
-    return _lune.unwrap( Ast.rootScope:getTypeInfo( typeName, Ast.rootScope, false ))
+    if mutable then
+      return typeInfo
+    end
+    typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false )
+    return typeInfo
   end
   
   local builtinModuleName2Scope = {}
@@ -666,14 +679,6 @@ function TransUnit:getTokenNoErr(  )
       end
   end
   
-  do
-    local _exp = token
-    if _exp ~= nil then
-    
-        _exp:set_commentList( commentList )
-      end
-  end
-  
   table.insert( self.usedTokenList, self.currentToken )
   self.currentToken = _lune.unwrapDefault( token, Parser.getEofToken(  ))
   return self.currentToken
@@ -902,7 +907,7 @@ function TransUnit:analyzeImport( token )
       
           local srcTypeInfo = _lune.unwrap( typeId2TypeInfo[_exp])
           
-          newTypeInfo = Ast.NormalTypeInfo.createModifier( srcTypeInfo, atomInfo.mutable )
+          newTypeInfo = Ast.NormalTypeInfo.createModifier( srcTypeInfo, _lune.unwrapDefault( atomInfo.mutable, false) )
           typeId2TypeInfo[atomInfo.typeId] = newTypeInfo
         else
       
@@ -1614,6 +1619,8 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
       self:checkToken( nextToken, '>' )
       if typeInfo:get_kind() == Ast.TypeInfoKind.Map then
         typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), genericList[1] or Ast.builtinTypeStem, genericList[2] or Ast.builtinTypeStem )
+      elseif typeInfo:get_kind() == Ast.TypeInfoKind.List then
+        typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
       else 
         self:error( string.format( "not support generic: %s", typeInfo:getTxt(  ) ) )
       end
@@ -2121,28 +2128,47 @@ function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
   token = self:getToken(  )
   local getterMode = "none"
   
+  local getterMutable = true
+  
   local setterMode = "none"
   
   if token.txt == "{" then
-    nextToken = self:getToken(  )
-    if nextToken.txt == "pub" or nextToken.txt == "pri" then
-      getterMode = nextToken.txt
-      nextToken = self:getToken(  )
-      if nextToken.txt == "," then
-        nextToken = self:getToken(  )
-        if nextToken.txt == "pub" or nextToken.txt == "pri" then
-          setterMode = nextToken.txt
-          nextToken = self:getToken(  )
+    local function analyzeAccessorMode(  )
+      local mode = "none"
+      
+      local workToken = self:getToken(  )
+      
+      do
+        local _switchExp = workToken.txt
+        if _switchExp == "pub" or _switchExp == "pri" or _switchExp == "pro" then
+          mode = workToken.txt
+          workToken = self:getToken(  )
+          if workToken.txt == "&" then
+            getterMutable = false
+            workToken = self:getToken(  )
+          end
         end
       end
+      
+      return mode, workToken
+    end
+    
+    getterMode, nextToken = analyzeAccessorMode(  )
+    if nextToken.txt == "," then
+      setterMode, nextToken = analyzeAccessorMode(  )
     end
     self:checkToken( nextToken, "}" )
     token = self:getToken(  )
   end
   self:checkToken( token, ";" )
-  local symbolInfo = self.scope:addMember( varName.txt, refType:get_expType(), accessMode, staticFlag, mutable )
+  local typeInfo = refType:get_expType()
   
-  return Ast.DeclMemberNode.new(firstToken.pos, refType:get_expTypeList(), varName, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode)
+  if typeInfo:get_mutable() and not mutable then
+    typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false )
+  end
+  local symbolInfo = self.scope:addMember( varName.txt, typeInfo, accessMode, staticFlag, mutable )
+  
+  return Ast.DeclMemberNode.new(firstToken.pos, {typeInfo}, varName, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode)
 end
 
 function TransUnit:analyzeDeclMethod( moduleFlag, abstructFlag, overrideFlag, accessMode, staticFlag, className, firstToken, name )
@@ -2313,7 +2339,14 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     local accessMode = memberNode:get_getterMode()
     
     if accessMode ~= "none" and not self.scope:getTypeInfoChild( getterName ) then
-      local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode, getterName, {}, {memberType} )
+      local mutable = memberNode:get_getterMutable()
+      
+      local getterMemberType = memberType
+      
+      if memberType:get_mutable() and not mutable then
+        getterMemberType = Ast.NormalTypeInfo.createModifier( memberType, false )
+      end
+      local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode, getterName, {}, {getterMemberType} )
       
       self:popScope(  )
       self.scope:addMethod( retTypeInfo, accessMode, false, false )
@@ -2323,7 +2356,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     
     accessMode = memberNode:get_setterMode()
     if memberNode:get_setterMode() ~= "none" and not self.scope:getTypeInfoChild( setterName ) then
-      self.scope:addMethod( Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode, setterName, {memberType}, nil ), accessMode, false, false )
+      self.scope:addMethod( Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, accessMode, setterName, {memberType}, nil, true ), accessMode, false, true )
       self:popScope(  )
       methodNameSet[setterName] = true
     end
@@ -2521,8 +2554,8 @@ function TransUnit:analyzeDeclFunc( moduleFlag, abstructFlag, overrideFlag, acce
     end
     local classTypeInfo = _lune.unwrap( scope:get_parent():get_ownerTypeInfo())
     
-    if not mutable then
-      classTypeInfo = Ast.NormalTypeInfo.createModifier( classTypeInfo, mutable )
+    if classTypeInfo:get_mutable() and not mutable then
+      classTypeInfo = Ast.NormalTypeInfo.createModifier( classTypeInfo, false )
     end
     self.scope:add( Ast.SymbolKind.Var, false, true, "self", classTypeInfo, "pri", false, mutable, true )
   end
@@ -2652,7 +2685,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
     else 
       table.insert( letVarList, LetVarInfo.new(mutable, varName, nil) )
     end
-    if not typeInfo:equals( Ast.builtinTypeNone ) and not mutable then
+    if not typeInfo:equals( Ast.builtinTypeNone ) and typeInfo:get_mutable() and not mutable then
       typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false )
     end
     table.insert( typeInfoList, typeInfo )
@@ -2690,7 +2723,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
               if unwrapFlag then
                 checkType = Ast.builtinTypeStem
               end
-              if not argType:equals( Ast.builtinTypeNone ) and not argType:isSettableFrom( checkType ) then
+              if not argType:equals( Ast.builtinTypeNone ) and not argType:canEvalWith( checkType, "=" ) then
                 self:addErrMess( firstToken.pos, string.format( "unmatch value type (index = %d) %s(%d) <- %s(%d)", subIndex, argType:getTxt(  ), argType:get_typeId(), Ast.builtinTypeStem_:getTxt(  ), Ast.builtinTypeStem_:get_typeId()) )
               end
               table.insert( expTypeList, checkType )
@@ -2709,7 +2742,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
             if index <= #typeInfoList then
               local argType = typeInfoList[index]
               
-              if not argType:equals( Ast.builtinTypeNone ) and not argType:isSettableFrom( expTypeInfo ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
+              if not argType:equals( Ast.builtinTypeNone ) and not argType:canEvalWith( expTypeInfo, "=" ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
                 self:addErrMess( firstToken.pos, string.format( "unmatch value type (index:%d) %s <- %s", index, argType:getTxt(  ), expTypeInfo:getTxt(  )) )
               end
             end
@@ -2725,7 +2758,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
         end
         for index, typeInfo in pairs( expTypeList ) do
           if not typeInfoList[index] or typeInfoList[index]:equals( Ast.builtinTypeNone ) then
-            if index <= #letVarList and not letVarList[index].mutable then
+            if typeInfo:get_mutable() and index <= #letVarList and not letVarList[index].mutable then
               typeInfoList[index] = Ast.NormalTypeInfo.createModifier( typeInfo, false )
             else 
               typeInfoList[index] = typeInfo
@@ -2876,7 +2909,7 @@ function TransUnit:analyzeListConst( token )
       
       if itemTypeInfo:equals( Ast.builtinTypeNone ) then
         itemTypeInfo = expType
-      elseif not itemTypeInfo:isSettableFrom( expType ) then
+      elseif not itemTypeInfo:canEvalWith( expType, "=" ) then
         if expType:equals( Ast.builtinTypeNil ) then
           itemTypeInfo = _lune.unwrap( itemTypeInfo:get_nilableTypeInfo())
         elseif expType:get_nilable() then
@@ -2922,7 +2955,7 @@ function TransUnit:analyzeMapConst( token )
       end
       expType = _lune.unwrap( expType:get_orgTypeInfo())
     end
-    if not typeInfo:isSettableFrom( expType ) then
+    if not typeInfo:canEvalWith( expType, "=" ) then
       if not typeInfo:equals( Ast.builtinTypeNone ) then
         typeInfo = Ast.builtinTypeStem
       else 
@@ -2993,6 +3026,9 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
   if nilAccess then
     self.useNilAccess = true
   end
+  if typeInfo:get_mutable() and not expType:get_mutable() then
+    typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false )
+  end
   return Ast.ExpRefItemNode.new(token.pos, {typeInfo}, exp, nilAccess, indexExp)
 end
 
@@ -3009,7 +3045,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList )
       
       if #dstTypeList == index then
         if not argType:equals( Ast.builtinTypeDDD ) then
-          if not argType:isSettableFrom( expType ) then
+          if not argType:canEvalWith( expType, "=" ) then
             self:addErrMess( expNode:get_pos(), string.format( "%s: exp(%d) type mismatch %s <- %s", message, index, argType:getTxt(  ), expType:getTxt(  )) )
           end
           if #dstTypeList < #expNodeList then
@@ -3022,7 +3058,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList )
           for argIndex = index, #dstTypeList do
             local workArgType = dstTypeList[argIndex]
             
-            if not workArgType:isSettableFrom( Ast.builtinTypeStem_ ) then
+            if not workArgType:canEvalWith( Ast.builtinTypeStem_, "=" ) then
               self:addErrMess( expNode:get_pos(), string.format( "%s: exp(%d) type mismatch %s <- %s", message, argIndex, workArgType:getTxt(  ), expType:getTxt(  )) )
             end
           end
@@ -3039,7 +3075,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList )
             end
             local argTypeInfo = dstTypeList[argIndex]
             
-            if not argTypeInfo:isSettableFrom( expType ) then
+            if not argTypeInfo:canEvalWith( expType, "=" ) then
               self:addErrMess( expNode:get_pos(), string.format( "%s: exp(%d) type mismatch %s <- %s", message, argIndex, argTypeInfo:getTxt(  ), expType:getTxt(  )) )
             end
             expIndex = expIndex + 1
@@ -3047,13 +3083,13 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList )
         end
         break
       end
-      if not argType:isSettableFrom( expType ) then
+      if not argType:canEvalWith( expType, "=" ) then
         self:addErrMess( expNode:get_pos(), string.format( "%s: exp(%d) type mismatch %s <- %s", message, index, argType:getTxt(  ), expType:getTxt(  )) )
       end
     end
   else 
     for index, argType in pairs( dstTypeList ) do
-      if not argType:isSettableFrom( Ast.builtinTypeNil ) then
+      if not argType:canEvalWith( Ast.builtinTypeNil, "=" ) then
         self:addErrMess( pos, string.format( "%s: exp(%d) type mismatch %s <- nil", message, index, argType:getTxt(  )) )
       end
     end
@@ -3289,14 +3325,16 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )
           local retTypeInfoList = funcTypeInfo:get_retTypeInfoList(  )
           
           if nilAccess then
-            retTypeInfoList = {}
+            local retList = {}
+            
             for __index, retType in pairs( funcTypeInfo:get_retTypeInfoList(  ) ) do
               if retType:get_nilable() then
-                table.insert( retTypeInfoList, retType )
+                table.insert( retList, retType )
               else 
-                table.insert( retTypeInfoList, retType:get_nilableTypeInfo() )
+                table.insert( retList, retType:get_nilableTypeInfo() )
               end
             end
+            retTypeInfoList = retList
             self.useNilAccess = true
           end
           exp = Ast.ExpCallNode.new(firstToken.pos, retTypeInfoList, exp, nilAccess, expList)
@@ -3353,7 +3391,9 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
             local retTypeList = _exp:get_typeInfo():get_retTypeInfoList(  )
             
             symbolInfo = _exp
-            fieldTypeInfo = retTypeList[1]
+            if #retTypeList > 0 then
+              fieldTypeInfo = retTypeList[1]
+            end
             getterFlag = true
           end
         end
@@ -3377,7 +3417,9 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
     end
     self:error( string.format( "not found field typeInfo: %s.%s", className, token.txt) )
   end
-  return fieldTypeInfo, symbolInfo, getterFlag
+  local typeInfo = _lune.unwrapDefault( fieldTypeInfo, Ast.builtinTypeNone)
+  
+  return typeInfo, symbolInfo, getterFlag
 end
 
 function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
@@ -3598,16 +3640,9 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                   self:addErrMess( token.pos, string.format( "map key type is not str. (%s)", work:getTxt(  )) )
                 end
                 typeInfo = prefixExpType:get_itemTypeInfoList()[2]
-                do
-                  local _exp = typeInfo
-                  if _exp ~= nil then
-                  
-                      if not _exp:get_nilable() then
-                        typeInfo = _exp:get_nilableTypeInfo()
-                      end
-                    end
+                if not typeInfo:get_nilable() then
+                  typeInfo = typeInfo:get_nilableTypeInfo()
                 end
-                
               elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Enum then
                 local scope = _lune.unwrap( prefixExpType:get_scope())
                 
@@ -3617,11 +3652,18 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                   fieldName = "get_" .. fieldName
                   getterTypeInfo = Ast.rootTypeInfo
                 end
-                typeInfo = scope:getTypeInfoChild( fieldName )
-                if not typeInfo then
-                  self:addErrMess( token.pos, string.format( "not found enum field -- %s", token.txt) )
-                  typeInfo = Ast.builtinTypeInt
+                do
+                  local _exp = scope:getTypeInfoChild( fieldName )
+                  if _exp ~= nil then
+                  
+                      typeInfo = _exp
+                    else
+                  
+                      self:addErrMess( token.pos, string.format( "not found enum field -- %s", token.txt) )
+                      typeInfo = Ast.builtinTypeInt
+                    end
                 end
+                
               elseif prefixExpType:equals( Ast.builtinTypeStem ) then
               else 
                 self:error( string.format( "illegal type -- %s, %d", prefixExpType:getTxt(  ), prefixExpType:get_kind(  )) )
@@ -3672,16 +3714,9 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               end
               
               if accessNil then
-                do
-                  local _exp = typeInfo
-                  if _exp ~= nil then
-                  
-                      if not _exp:get_nilable() then
-                        typeInfo = _exp:get_nilableTypeInfo()
-                      end
-                    end
+                if not typeInfo:get_nilable() then
+                  typeInfo = typeInfo:get_nilableTypeInfo()
                 end
-                
                 self.useNilAccess = true
               end
               local accessSymbolInfo = nil
@@ -3696,14 +3731,17 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
               
               -- none
               
+              if not prefixExpType:get_mutable() and typeInfo:get_mutable() then
+                typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false )
+              end
               do
                 local _exp = getterTypeInfo
                 if _exp ~= nil then
                 
-                    exp = Ast.GetFieldNode.new(firstToken.pos, {_lune.unwrap( typeInfo)}, token, accessSymbolInfo, accessNil, prefixExp, _exp)
+                    exp = Ast.GetFieldNode.new(firstToken.pos, {typeInfo}, token, accessSymbolInfo, accessNil, prefixExp, _exp)
                   else
                 
-                    exp = Ast.RefFieldNode.new(firstToken.pos, {_lune.unwrap( typeInfo)}, token, accessSymbolInfo, accessNil, prefixExp)
+                    exp = Ast.RefFieldNode.new(firstToken.pos, {typeInfo}, token, accessSymbolInfo, accessNil, prefixExp)
                   end
               end
               
@@ -3835,17 +3873,17 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
           elseif _switchExp == "and" then
             retType = exp2Type
           elseif _switchExp == "<" or _switchExp == ">" or _switchExp == "<=" or _switchExp == ">=" then
-            if (not Ast.builtinTypeInt:isSettableFrom( exp1Type ) and not Ast.builtinTypeReal:isSettableFrom( exp1Type ) ) or (not Ast.builtinTypeInt:isSettableFrom( exp2Type ) and not Ast.builtinTypeReal:isSettableFrom( exp2Type ) ) then
+            if (not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt ) and not Ast.builtinTypeReal:canEvalWith( exp1Type, opTxt ) ) or (not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt ) and not Ast.builtinTypeReal:canEvalWith( exp2Type, opTxt ) ) then
               self:addErrMess( nextToken.pos, string.format( "no numeric type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
             end
             retType = Ast.builtinTypeBool
           elseif _switchExp == "~=" or _switchExp == "==" then
-            if (not exp1Type:isSettableFrom( exp2Type ) and not exp2Type:isSettableFrom( exp1Type ) ) then
+            if (not exp1Type:canEvalWith( exp2Type, opTxt ) and not exp2Type:canEvalWith( exp1Type, opTxt ) ) then
               self:addErrMess( nextToken.pos, string.format( "not compatible type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
             end
             retType = Ast.builtinTypeBool
           elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "<<" or _switchExp == ">>" then
-            if not Ast.builtinTypeInt:isSettableFrom( exp1Type ) or not Ast.builtinTypeInt:isSettableFrom( exp2Type ) then
+            if not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt ) or not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt ) then
               self:addErrMess( nextToken.pos, string.format( "no int type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
             end
             retType = Ast.builtinTypeInt
@@ -3855,10 +3893,10 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             end
             retType = Ast.builtinTypeString
           elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "//" or _switchExp == "%" then
-            if (not Ast.builtinTypeInt:isSettableFrom( exp1Type ) and not Ast.builtinTypeReal:isSettableFrom( exp1Type ) ) or (not Ast.builtinTypeInt:isSettableFrom( exp2Type ) and not Ast.builtinTypeReal:isSettableFrom( exp2Type ) ) then
+            if (not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt ) and not Ast.builtinTypeReal:canEvalWith( exp1Type, opTxt ) ) or (not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt ) and not Ast.builtinTypeReal:canEvalWith( exp2Type, opTxt ) ) then
               self:addErrMess( nextToken.pos, string.format( "no numeric type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
             end
-            if Ast.builtinTypeReal:isSettableFrom( exp1Type ) or Ast.builtinTypeReal:isSettableFrom( exp2Type ) then
+            if Ast.builtinTypeReal:canEvalWith( exp1Type, opTxt ) or Ast.builtinTypeReal:canEvalWith( exp2Type, opTxt ) then
               retType = Ast.builtinTypeReal
             else 
               retType = Ast.builtinTypeInt
@@ -4003,7 +4041,7 @@ function TransUnit:analyzeExpUnwrap( firstToken )
           local insType = _exp:get_expType()
           
           unwrapType = insType
-          if not unwrapType:isSettableFrom( insType ) then
+          if not unwrapType:canEvalWith( insType, "=" ) then
             self:addErrMess( _exp:get_pos(), string.format( "unmatch type: %s <- %s", unwrapType:getTxt(  ), insType:getTxt(  )) )
           end
         end
@@ -4087,7 +4125,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
           end
           typeInfo = exp:get_expType()
         elseif _switchExp == "#" then
-          if exp:get_expType():get_kind() ~= Ast.TypeInfoKind.List and exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Array and exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Map and not Ast.builtinTypeString:isSettableFrom( exp:get_expType() ) then
+          if exp:get_expType():get_kind() ~= Ast.TypeInfoKind.List and exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Array and exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Map and not Ast.builtinTypeString:canEvalWith( exp:get_expType(), "=" ) then
             self:addErrMess( token.pos, string.format( 'unmatch type for "#" -- %s', exp:get_expType():getTxt(  )) )
           end
           typeInfo = Ast.builtinTypeInt
@@ -4223,7 +4261,7 @@ function TransUnit:analyzeReturn( token )
             
             local expType = expNode:get_expType()
             
-            if not retType:isSettableFrom( expType ) then
+            if not retType:canEvalWith( expType, "=" ) then
               self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", index, retType:getTxt(  ), retType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
             end
             if index == #retTypeList then
@@ -4235,7 +4273,7 @@ function TransUnit:analyzeReturn( token )
                 for retIndex = index, #retTypeList do
                   local workRetType = retTypeList[retIndex]
                   
-                  if not workRetType:isSettableFrom( Ast.builtinTypeStem_ ) then
+                  if not workRetType:canEvalWith( Ast.builtinTypeStem_, "=" ) then
                     self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", retIndex, workRetType:getTxt(  ), workRetType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
                   end
                 end

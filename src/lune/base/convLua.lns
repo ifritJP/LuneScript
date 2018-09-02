@@ -29,41 +29,41 @@ class PubVerInfo {
    pub let staticFlag: bool;
    pub let accessMode: str;
    pub let mutable:bool;
-   pub let typeInfo: Ast.TypeInfo;
+   pub let typeInfo: &Ast.TypeInfo;
 };
 
 class PubFuncInfo {
    pub let accessMode: str;
-   pub let typeInfo: Ast.TypeInfo;
+   pub let typeInfo: &Ast.TypeInfo;
 }
 
 pub class convFilter extend Ast.Filter (oStream) {
    pri let streamName: str;
-   pri let stream: oStream;
-   pri let metaStream: oStream;
+   pri let mut stream: oStream;
+   pri let mut metaStream: oStream;
    pri let mut outMetaFlag: bool;
-   pri let typeInfo2ModuleName: Map<Ast.TypeInfo,str>;
+   pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,str>;
    pri let convMode: str;
    pri let inMacro: bool;
    pri let mut indent: int;
    pri let mut curLineNo: int;
    // クラス TypeId → TypeInfo
-   pri let classId2TypeInfo: Map<int,Ast.TypeInfo>;
+   pri let mut classId2TypeInfo: Map<int,&Ast.TypeInfo>;
    // クラス TypeId → Member Node List
-   pri let classId2MemberList: Map<str,Ast.DeclMemberNode[]>;
+   pri let mut classId2MemberList: Map<str,List<&Ast.DeclMemberNode>>;
    // enum TypeId -> EnumTypeInfo
-   pri let pubEnumId2EnumTypeInfo: Map<int,Ast.EnumTypeInfo>;
+   pri let mut pubEnumId2EnumTypeInfo: Map<int,&Ast.EnumTypeInfo>;
    // public 変数名 → 変数情報
-   pri let pubVarName2InfoMap: Map<str,PubVerInfo>;
+   pri let mut pubVarName2InfoMap: Map<str,PubVerInfo>;
    // public 関数名 → 関数情報
-   pri let pubFuncName2InfoMap: Map<str,PubFuncInfo>;
+   pri let mut pubFuncName2InfoMap: Map<str,PubFuncInfo>;
    pri let mut needIndent: bool;
    pri let mut macroDepth: int;
-   pri let moduleTypeInfo: Ast.TypeInfo;
+   pri let moduleTypeInfo: &Ast.TypeInfo;
 
    
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
-                  convMode: str, inMacro: bool, moduleTypeInfo: Ast.TypeInfo )
+                  convMode: str, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo )
    {
       //Util.errorLog( "__init: %s" (mode) );
       self.macroDepth = 0;
@@ -86,11 +86,11 @@ pub class convFilter extend Ast.Filter (oStream) {
    }
 
 
-   fn getCanonicalName( typeInfo:Ast.TypeInfo ): str {
-      let mut canonicalName = typeInfo.getTxt();
+   fn getCanonicalName( typeInfo:&Ast.TypeInfo ): str {
+      let mut canonicalName = typeInfo.$rawTxt;
       let mut workType = typeInfo.$parentInfo;
       while workType ~= Ast.rootTypeInfo {
-         canonicalName = "%s.%s" (workType.getTxt(), canonicalName);
+         canonicalName = "%s.%s" (workType.$rawTxt, canonicalName);
          if self.typeInfo2ModuleName[ workType ] {
             break;
          }
@@ -100,15 +100,15 @@ pub class convFilter extend Ast.Filter (oStream) {
    }
 }
 
-fn filter( node: Ast.Node, filter: convFilter,
-           parent: Ast.Node, baseIndent:int )
+fn filter( node: &Ast.Node, filter: convFilter,
+           parent: &Ast.Node, baseIndent:int )
 {
    node.processFilter( filter, parent, baseIndent );
 }
 
 let stepIndent = 2;
 
-let builtInModuleSet:Map<str,bool> = {};
+let mut builtInModuleSet:Map<str,bool> = {};
 builtInModuleSet[ "io" ] = true;
 builtInModuleSet[ "string" ] = true;
 builtInModuleSet[ "table" ] = true;
@@ -183,15 +183,15 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
    
    self.writeln( "----- meta -----", baseIndent );
 
-   let typeId2TypeInfo: Map<int,Ast.TypeInfo> = {};
-   let typeId2UseFlag: Map<int,bool> = {};
+   let mut typeId2TypeInfo: Map<int,Ast.TypeInfo> = {};
+   let mut typeId2UseFlag: Map<int,bool> = {};
 
 
-   let pickupClassMap: Map<int,Ast.TypeInfo> = {};
+   let mut pickupClassMap: Map<int,Ast.TypeInfo> = {};
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
 
-   fn pickupTypeId( typeInfo: Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
+   fn pickupTypeId( typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
       if typeInfo.get_typeId() == Ast.rootTypeId {
          return;
       }
@@ -233,7 +233,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
             pickupTypeId( baseInfo, true, true );
          }
          
-	 let mut typeInfoList: Ast.TypeInfo[] = typeInfo.get_itemTypeInfoList();
+	 let mut typeInfoList: &List<&Ast.TypeInfo> = typeInfo.get_itemTypeInfoList();
          if typeInfoList {
 	    foreach itemTypeInfo in typeInfoList {
                pickupTypeId( itemTypeInfo, true, false );
@@ -268,9 +268,9 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
       }
    }
 
-   let mut classId2TypeInfo:Map<int,Ast.TypeInfo> = {};
+   let mut classId2TypeInfo:Map<int,&Ast.TypeInfo> = {};
 
-   let validChildrenSet:Map<Ast.TypeInfo, Map<int,Ast.TypeInfo>> = {};
+   let mut validChildrenSet:Map<&Ast.TypeInfo, Map<int,&Ast.TypeInfo>> = {};
 
    {
       let mut typeInfo = self.moduleTypeInfo;
@@ -332,9 +332,9 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
    }
 
 
-   let pickupedClassMap: Map<int,Ast.TypeInfo> = {};
+   let mut pickupedClassMap: Map<int,Ast.TypeInfo> = {};
    while true {
-      let workClassMap: Map<int,Ast.TypeInfo> = {};
+      let mut workClassMap: Map<int,Ast.TypeInfo> = {};
       let mut hasWorkClassFlag = false;
       foreach classTypeInfo, classTypeId in pickupClassMap {
          if not pickupedClassMap[ classTypeId ] {
@@ -409,7 +409,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
    self.writeln( "_moduleObj._typeInfoList = _typeInfoList", baseIndent );
    let mut listIndex = 1;
 
-   let wroteTypeIdSet:Map<int,bool> = {};
+   let mut wroteTypeIdSet:Map<int,bool> = {};
    fn outputTypeInfo( typeInfo: Ast.TypeInfo ) {
       let typeId = typeInfo.get_typeId();
       if wroteTypeIdSet[ typeId ] {
@@ -530,7 +530,7 @@ end
    }
    
 
-   let children:Ast.Node[] = node.get_children();
+   let children:List<&Ast.Node> = node.get_children();
 
    foreach child in children {
       filter( child, self, node, baseIndent );
@@ -702,10 +702,10 @@ pub override fn convFilter.processDeclClass(
                     baseIndent );
    }
    let mut hasConstrFlag = false;
-   let mut memberList: Ast.DeclMemberNode[] = [];
-   let fieldList: Ast.Node[] = nodeInfo.get_fieldList();
+   let mut memberList: List<&Ast.DeclMemberNode> = [];
+   let fieldList: List<&Ast.Node> = nodeInfo.get_fieldList();
    let outerMethodSet: Map<str,bool> = nodeInfo.get_outerMethodSet();
-   let methodNameSet: Map<str,bool> = {};
+   let mut methodNameSet: Map<str,bool> = {};
    foreach field in fieldList {
       let mut ignoreFlag = false;
       if field.$kind == Ast.nodeKind.DeclConstr {
@@ -800,7 +800,7 @@ end``` ( className, setterName, memberName, prefix, memberName, memberName ),
    // advertise
    foreach advertiseInfo in node.$advertiseList {
       let memberName = advertiseInfo.$member.$name.txt;
-      let memberType = advertiseInfo.$member.$expType;
+      let mut memberType = advertiseInfo.$member.$expType;
       foreach child in memberType.$children {
          if child.$kind == Ast.TypeInfoKind.Method and
             child.$accessMode ~= "pri" and
@@ -930,7 +930,7 @@ pub override fn convFilter.processDeclConstr(
    self.write( string.format( "function %s.new( ", className ) );
 
    let mut argTxt = "";
-   let argList: Ast.Node[] = declInfo.get_argList();
+   let argList = declInfo.get_argList();
    foreach arg, index in argList {
       if index > 1 {
          self.write( ", " );
@@ -997,7 +997,7 @@ pub override fn convFilter.processDeclMethod(
    self.write( "function %s%s%s( "
                ( classNameToken.txt, delimit, methodName ) );
 
-   let argList: Ast.Node[] = declInfo.get_argList();
+   let argList = declInfo.get_argList();
    foreach arg, index in argList {
       if index > 1 {
          self.write( ", " );
@@ -1442,7 +1442,7 @@ pub override fn convFilter.processExpCall(
          if prefixType.$kind == Ast.TypeInfoKind.List {
             self.write( "_lune.nilacc( table.%s, nil, 'list', " (fieldNode.$field.txt ) );
             filter( prefixNode, self, fieldNode, baseIndent );
-         }   
+         }
          else {
             self.write( "_lune.nilacc( " );
             filter( prefixNode, self, fieldNode, baseIndent );
@@ -1826,7 +1826,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
 
    pub override fn eval( node: Ast.DeclMacroNode ): form
    {   
-      let oStream = new Util.memStream();
+      let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", oStream, oStream, "exe", true, Ast.rootTypeInfo );
 

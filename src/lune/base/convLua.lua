@@ -87,12 +87,12 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
   self.moduleTypeInfo = moduleTypeInfo
 end
 function convFilter:getCanonicalName( typeInfo )
-  local canonicalName = typeInfo:getTxt(  )
+  local canonicalName = typeInfo:get_rawTxt()
   
   local workType = typeInfo:get_parentInfo()
   
   while workType ~= Ast.rootTypeInfo do
-    canonicalName = string.format( "%s.%s", workType:getTxt(  ), canonicalName)
+    canonicalName = string.format( "%s.%s", workType:get_rawTxt(), canonicalName)
     if self.typeInfo2ModuleName[workType] then
       break
     end

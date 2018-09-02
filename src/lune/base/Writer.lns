@@ -34,8 +34,8 @@ pub interface Writer {
 }
 
 pub class XML extend (Writer) {
-   pri let stream: oStream;
-   pri let elementList:str[];
+   pri let mut stream: oStream;
+   pri let mut elementList:str[];
    pri let mut depth: int;
 
    pub fn __init( stream:oStream ) {
@@ -81,7 +81,7 @@ pub class XML extend (Writer) {
          Util.err( "illegal depth" );
       }
    }
-   pub fn writeValue( val:stem ) {
+   pub fn writeValue( val:stem ) mut {
       self.stream.write( XML.convertXmlTxt( val ) );
    }
    pub fn write( name:str, val:stem ) mut {
@@ -98,19 +98,19 @@ class JsonLayer {
    pub let arrayFlag: bool;
    pub let name: str;
    pub let madeByArrayFlag: bool;
-   pub let elementNameSet: Map<str,bool>;
+   pub let mut elementNameSet: Map<str,bool>;
    pub let parentFlag: bool;
    pub let mut openElement: bool;
 }
 
 pub class JSON extend (Writer) {
 
-   pri let stream:oStream;
-   pri let layerQueue:JsonLayer[];
+   pri let mut stream:oStream;
+   pri let mut layerQueue:JsonLayer[];
    pri let mut prevName:str;
 
-   pri fn startLayer( arrayFlag: bool, madeByArrayFlag: bool ) {
-      let info = new JsonLayer(
+   pri fn startLayer( arrayFlag: bool, madeByArrayFlag: bool ) mut {
+      let mut info = new JsonLayer(
          'none', // none, named, valued, termed
          arrayFlag, 
          self.prevName,
@@ -137,7 +137,7 @@ pub class JSON extend (Writer) {
       return self.layerQueue[ #self.layerQueue ];
    }  
 
-   pub fn endLayer() {
+   pub fn endLayer() mut {
       if #self.layerQueue == 0 {
          Util.err( "illegal depth" );
       }
@@ -169,17 +169,17 @@ pub class JSON extend (Writer) {
       return self.layerQueue[ #self.layerQueue ].arrayFlag;
    }
 
-   pub fn setLayerState( state:str ) {
+   pub fn setLayerState( state:str ) mut {
       self.layerQueue[ #self.layerQueue ].state = state;
    }
 
-   pub fn getLayerName(): str {
+   pub fn getLayerName(): &str {
       return self.layerQueue[ #self.layerQueue ].name;
    }
 
    pub fn addElementName( name:str ) {
-      let info = unwrap self.getLayerInfo();
-      let nameSet = info.elementNameSet;
+      let mut info = unwrap self.getLayerInfo();
+      let mut nameSet = info.elementNameSet;
       if not info.arrayFlag and nameSet[ name ] {
          Util.err( "exist same name: " .. name );
       }
@@ -237,7 +237,7 @@ pub class JSON extend (Writer) {
       self.prevName = name;
    }  
 
-   pub fn endElement() {
+   pub fn endElement() mut {
       if self.equalLayerState( 'none' ) or self.equalLayerState( 'termed' ) {
          self.endLayer();
       }
@@ -267,7 +267,7 @@ pub class JSON extend (Writer) {
    }  
 
 
-   pub fn writeValue( val: stem ) {
+   pub fn writeValue( val: stem ) mut {
       let mut txt = "";
       let typeId = type( val );
       if typeId == "number" {
@@ -290,7 +290,7 @@ pub class JSON extend (Writer) {
       self.endElement();
    }  
 
-   pub fn fin() {
+   pub fn fin() mut {
       if self.equalLayerState( 'none' ) or self.equalLayerState( 'termed' ) {
          self.endLayer();
       }

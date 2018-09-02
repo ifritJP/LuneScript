@@ -24,7 +24,7 @@ SOFTWARE.
 
 import lune.base.Util;
 
-let luaKeywordSet:Map<str,bool> = {};
+let mut luaKeywordSet:Map<str,bool> = {};
 luaKeywordSet[ "let" ] = true;
 luaKeywordSet[ "if" ] = true;
 luaKeywordSet[ "else" ] = true;
@@ -52,9 +52,9 @@ pub fn isLuaKeyword( txt:str ) : bool! {
 
 fn createReserveInfo( luaMode: bool ) :
    Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,str[@]> {
-      let keywordSet:Map<str,bool> = {};
-      let typeSet:Map<str,bool> = {};
-      let builtInSet:Map<str,bool> = {};
+      let mut keywordSet:Map<str,bool> = {};
+      let mut typeSet:Map<str,bool> = {};
+      let mut builtInSet:Map<str,bool> = {};
 
       builtInSet[ "require" ] = true;
       foreach val, key in luaKeywordSet {
@@ -93,7 +93,7 @@ fn createReserveInfo( luaMode: bool ) :
       } 
 
       // 2文字以上の演算子
-      let multiCharDelimitMap: Map<str,str[@]> = {};
+      let mut multiCharDelimitMap: Map<str,str[@]> = {};
       multiCharDelimitMap[ "=" ] = [@ "==" ];
       multiCharDelimitMap[ "<" ] = [@ "<=" ];
       multiCharDelimitMap[ ">" ] = [@ ">=" ];
@@ -162,10 +162,10 @@ pub class Position {
 pub class Token {
    pub let kind: int;
    pub let txt: str;
-   pub let pos: Position;
+   pub let pos: &Position;
    pri let mut commentList: Token[] { pub };
 
-   pub fn __init( kind: int, txt: str, pos: Position, commentList: Token[]! ) {
+   pub fn __init( kind: int, txt: str, pos: &Position, commentList: Token[]! ) {
       self.kind = kind;
       self.txt = txt;
       self.pos = pos;
@@ -178,18 +178,18 @@ pub class Token {
 }
 
 pub class Parser {
-   pub fn getToken() : Token;
+   pub fn getToken() : &Token;
    pub fn getStreamName(): str;
 }
 
 pub class WrapParser extend Parser {
    let parser: Parser;
    let name: str;
-   pub override fn getToken() : Token {
-      let token = self.parser.getToken();
+   pub override fn getToken() : &Token {
+      let mut token = self.parser.getToken();
       return token;
    }
-   pub override fn getStreamName(): str {
+   pub override fn getStreamName(): &str {
       return self.name;
    }
 }
@@ -209,7 +209,7 @@ pub class StreamParser extend Parser {
    }
 
    let mut eof: bool;
-   let stream : iStream;
+   let mut stream : iStream;
    let streamName: str;
    let mut lineNo : int;
    let mut pos : int;
@@ -235,12 +235,12 @@ pub class StreamParser extend Parser {
       self.multiCharDelimitMap = multiCharDelimitMap;
    }
 
-   pub override fn getStreamName(): str {
+   pub override fn getStreamName(): &str {
       return self.streamName;
    }
 
    pub static fn create( path: str, luaMode: bool, moduleName:str ): StreamParser! {
-      let stream = new TxtStream( StreamParser.stdinTxt );
+      let mut stream = new TxtStream( StreamParser.stdinTxt );
       if StreamParser.stdinStreamModuleName ~= moduleName {
          unwrap! stream = io.open( path, "r" ) {
             return nil;
@@ -280,7 +280,7 @@ macro _declTokenKind( name_array:str[@] ) {
 }
 
 
-let kind2Txt:Map<str,str> = {};
+let mut kind2Txt:Map<str,str> = {};
 
 _declTokenKind(
    [@ "Cmnt", "Str", "Int", "Real", "Char", 
@@ -291,7 +291,7 @@ _declTokenKind(
 pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ), [] );
 
 
-let quotedCharSet:Map<int,bool> = {};
+let mut quotedCharSet:Map<int,bool> = {};
 quotedCharSet[ 'a' ] = true;
 quotedCharSet[ 'b' ] = true;
 quotedCharSet[ 'f' ] = true;
@@ -304,7 +304,7 @@ quotedCharSet[ '"' ] = true;
 quotedCharSet[ "'" ] = true;
 
 
-let op2Set:Map<int,bool> = {};
+let mut op2Set:Map<int,bool> = {};
 op2Set[ '+' ] = true;
 op2Set[ '-' ] = true;
 op2Set[ '*' ] = true;
@@ -329,7 +329,7 @@ op2Set[ 'or' ] = true;
 op2Set[ '@' ] = true;
 op2Set[ '=' ] = true;
 
-let op1Set:Map<int,bool> = {};
+let mut op1Set:Map<int,bool> = {};
 op1Set[ '-' ] = true;
 op1Set[ 'not' ] = true;
 op1Set[ '#' ] = true;
@@ -428,7 +428,7 @@ fn StreamParser.parse() mut : Token[]! {
         @param startIndex token 内の検索開始位置。 この位置から数値表現が始まる。
         @return 数値表現の終了位置, 整数かどうか
         */
-      fn analyzeNumber( token: str, beginIndex: int ) : int, bool {
+      fn analyzeNumber( token: &str, beginIndex: int ) : int, bool {
          let mut nonNumIndex = token.find( '[^%d]', beginIndex );
          if not nonNumIndex {
             return #token, true;
@@ -476,7 +476,7 @@ fn StreamParser.parse() mut : Token[]! {
                if token.find( '^[%d]', startIndex ) {
                   // 数値の場合
                   let endIndex, intFlag = analyzeNumber( token, startIndex );
-                  let info = createInfo(
+                  let mut info = createInfo(
                      intFlag and kindInt or kindReal,
                      token.sub( startIndex, endIndex ), columnIndex + startIndex );
                   list.insert( info );
@@ -487,7 +487,7 @@ fn StreamParser.parse() mut : Token[]! {
                   let index = string.find( token, '[^%w_]', startIndex );
                   if index {
                      if index > startIndex {
-                        let info = createInfo(
+                        let mut info = createInfo(
                            kindSymb, token.sub( startIndex, index - 1 ),
                            columnIndex + startIndex );
                         list.insert( info );
@@ -690,7 +690,7 @@ pub override fn StreamParser.getToken() mut : Token! {
       self.pos = 1;
       self.lineTokenList = [];
       while #self.lineTokenList == 0 {
-         let! workList = self.parse() {
+         let! mut workList = self.parse() {
             return nil;
          };               
          self.lineTokenList = workList;
@@ -704,11 +704,11 @@ pub override fn StreamParser.getToken() mut : Token! {
 }
 
 let eofToken = new Token( kindEof, "<EOF>", new Position( 0, 0 ), [] );
-pub fn getEofToken(): Token {
+pub fn getEofToken(): &Token {
    return eofToken;
 }
 pub class DummyParser extend Parser {
-   pub override fn getToken() : Token {
+   pub override fn getToken() : &Token {
       return eofToken;
    }
    pub override fn getStreamName(): str {

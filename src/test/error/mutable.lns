@@ -29,41 +29,86 @@
 class Test {
    pub let val:int;
    pub let mut val2:int;
-   pri let list:int[] {pub};
-   pri static let mut val3:int;
+   pub let mut val3:int{pub,pub};
+   pri let mut list:int[] {pub};
+   pri let list2:int[] {pub};
+   pri let mut list3:int[] {pub&};
+   pri let mut map:Map<int,int> {pub};
+   pub static let mut val3:int;
+   pub static let val4:int;
    pub fn func1() mut {
       self.val2 = 1;
    }
    pub fn func2() mut {
       self.val2 = 1;
+      self.list[ 1 ] = 1;
+      self.list.insert( 1 );
+      self.map[ 1 ] = 1;
+      self.list2.insert( 1 ); // error
    }
    pub fn func3() {
       self.val2 = 1; // error
+      self.list[ 1 ] = 1;  // error
+      self.list.insert( 1 ); // error
+      self.map[ 1 ] = 1; // error
    }
    
    __init {
       Test.val3 = 1;
+      Test.val4 = 1;
    }
    pub static fn staticFunc1(): int {
       return Test.val3;
    }
 }
-let test = new Test( 1, 2, [] );
-test = new Test( 1, 2, [] );  // error
+Test.val3 = 1;
+Test.val4 = 1; // error
+
+
+let test = new Test( 1, 2, 3, [], [], [], {} );
+test = new Test( 1, 2, 3, [], [], [], {} );  // error
 test.val = 1;  // error
 test.val2 = 1; // error
-test.func1();
-test.func2();
+test.set_val3(1); // error
+test.func1(); // error
+test.func2(); // error
 test.func3();
 
-let list = test.$list;
-list.insert( 1 );
+test.$list.insert( 1 );  // error
+test.$map[ 1 ] = 1; // error
+
+{
+   let mut val = 1;
+   val = test.val;
+   let mut val2:int[] = [];
+   val2 = test.$list2;
+   //val2 = test.$list;
+   val2.insert( 1 );
+   let val3 = test.$list2;
+   val3.insert( 1 ); // error
+}
 
 
-
-let mut test2 = new Test( 1, 2 );
+let mut test2 = new Test( 1, 2, 3, [], [], [], {} );
 test2.val2 = 1;
+test2.set_val3(1);
 test2.func1();
 test2.func2();
 test2.func3();
+
+test2.$list.insert( 1 );
+test2.$map[ 1 ] = 1;
+test2.$list3.insert( 1 );
+
+
+{
+   let val = [ [1, 2] ];
+   val[1].insert( 1 ); // error
+}
+{
+   let val:List<List<int>> = [ [1, 2] ];
+   let mut val2:List<int> = val[1]; // error
+   val2.insert( 1 );
+   val[1].insert( 1 ); // error
+}
 

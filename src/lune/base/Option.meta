@@ -3,242 +3,373 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo357 = {}
-  _typeId2ClassInfoMap[ 357 ] = _classInfo357
-  _classInfo357.mode = {
+  local _classInfo455 = {}
+  _typeId2ClassInfoMap[ 455 ] = _classInfo455
+  _classInfo455.mode = {
     name='mode', staticFlag = false, accessMode = 'pub', typeId = 25 }
-  _classInfo357.analyzeModule = {
-    name='analyzeModule', staticFlag = false, accessMode = 'pub', typeId = 26 }
-  _classInfo357.analyzePos = {
-    name='analyzePos', staticFlag = false, accessMode = 'pub', typeId = 208 }
-  _classInfo357.outputDir = {
-    name='outputDir', staticFlag = false, accessMode = 'pub', typeId = 26 }
-  _classInfo357.scriptPath = {
+  _classInfo455.analyzeModule = {
+    name='analyzeModule', staticFlag = false, accessMode = 'pub', typeId = 458 }
+  _classInfo455.analyzePos = {
+    name='analyzePos', staticFlag = false, accessMode = 'pub', typeId = 459 }
+  _classInfo455.outputDir = {
+    name='outputDir', staticFlag = false, accessMode = 'pub', typeId = 460 }
+  _classInfo455.scriptPath = {
     name='scriptPath', staticFlag = false, accessMode = 'pub', typeId = 25 }
-  _classInfo357.validProf = {
+  _classInfo455.validProf = {
     name='validProf', staticFlag = false, accessMode = 'pub', typeId = 13 }
+  end
+do
+  local _classInfo177 = {}
+  _typeId2ClassInfoMap[ 177 ] = _classInfo177
   end
 do
   local _classInfo187 = {}
   _typeId2ClassInfoMap[ 187 ] = _classInfo187
   end
 do
-  local _classInfo189 = {}
-  _typeId2ClassInfoMap[ 189 ] = _classInfo189
-  end
-do
   local _classInfo191 = {}
   _typeId2ClassInfoMap[ 191 ] = _classInfo191
-  _classInfo191.version = {
-    name='version', staticFlag = false, accessMode = 'pub', typeId = 356 }
   end
 do
-  local _classInfo198 = {}
-  _typeId2ClassInfoMap[ 198 ] = _classInfo198
+  local _classInfo192 = {}
+  _typeId2ClassInfoMap[ 192 ] = _classInfo192
   end
 do
-  local _classInfo207 = {}
-  _typeId2ClassInfoMap[ 207 ] = _classInfo207
-  _classInfo207.column = {
-    name='column', staticFlag = false, accessMode = 'pub', typeId = 16 }
-  _classInfo207.lineNo = {
-    name='lineNo', staticFlag = false, accessMode = 'pub', typeId = 16 }
+  local _classInfo238 = {}
+  _typeId2ClassInfoMap[ 238 ] = _classInfo238
   end
 do
-  local _classInfo213 = {}
-  _typeId2ClassInfoMap[ 213 ] = _classInfo213
-  _classInfo213.kind = {
-    name='kind', staticFlag = false, accessMode = 'pub', typeId = 16 }
-  _classInfo213.pos = {
-    name='pos', staticFlag = false, accessMode = 'pub', typeId = 207 }
-  _classInfo213.txt = {
-    name='txt', staticFlag = false, accessMode = 'pub', typeId = 25 }
+  local _classInfo240 = {}
+  _typeId2ClassInfoMap[ 240 ] = _classInfo240
   end
 do
-  local _classInfo234 = {}
-  _typeId2ClassInfoMap[ 234 ] = _classInfo234
+  local _classInfo242 = {}
+  _typeId2ClassInfoMap[ 242 ] = _classInfo242
+  _classInfo242.version = {
+    name='version', staticFlag = false, accessMode = 'pub', typeId = 454 }
   end
 do
-  local _classInfo246 = {}
-  _typeId2ClassInfoMap[ 246 ] = _classInfo246
+  local _classInfo260 = {}
+  _typeId2ClassInfoMap[ 260 ] = _classInfo260
   end
 do
-  local _classInfo258 = {}
-  _typeId2ClassInfoMap[ 258 ] = _classInfo258
+  local _classInfo269 = {}
+  _typeId2ClassInfoMap[ 269 ] = _classInfo269
+  _classInfo269.column = {
+    name='column', staticFlag = false, accessMode = 'pub', typeId = 273 }
+  _classInfo269.lineNo = {
+    name='lineNo', staticFlag = false, accessMode = 'pub', typeId = 272 }
   end
 do
-  local _classInfo273 = {}
-  _typeId2ClassInfoMap[ 273 ] = _classInfo273
-  _classInfo273.Char = {
-    name='Char', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Cmnt = {
-    name='Cmnt', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Dlmt = {
-    name='Dlmt', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Eof = {
-    name='Eof', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Int = {
-    name='Int', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Kywd = {
-    name='Kywd', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Ope = {
-    name='Ope', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Real = {
-    name='Real', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Str = {
-    name='Str', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Symb = {
-    name='Symb', staticFlag = true, accessMode = 'pub', typeId = 16 }
-  _classInfo273.Type = {
-    name='Type', staticFlag = true, accessMode = 'pub', typeId = 16 }
+  local _classInfo277 = {}
+  _typeId2ClassInfoMap[ 277 ] = _classInfo277
+  _classInfo277.kind = {
+    name='kind', staticFlag = false, accessMode = 'pub', typeId = 280 }
+  _classInfo277.pos = {
+    name='pos', staticFlag = false, accessMode = 'pub', typeId = 282 }
+  _classInfo277.txt = {
+    name='txt', staticFlag = false, accessMode = 'pub', typeId = 281 }
   end
 do
-  local _classInfo306 = {}
-  _typeId2ClassInfoMap[ 306 ] = _classInfo306
+  local _classInfo286 = {}
+  _typeId2ClassInfoMap[ 286 ] = _classInfo286
+  _classInfo286.column = {
+    name='column', staticFlag = false, accessMode = 'pub', typeId = 273 }
+  _classInfo286.lineNo = {
+    name='lineNo', staticFlag = false, accessMode = 'pub', typeId = 272 }
   end
 do
-  local _classInfo356 = {}
-  _typeId2ClassInfoMap[ 356 ] = _classInfo356
+  local _classInfo302 = {}
+  _typeId2ClassInfoMap[ 302 ] = _classInfo302
+  end
+do
+  local _classInfo305 = {}
+  _typeId2ClassInfoMap[ 305 ] = _classInfo305
+  _classInfo305.kind = {
+    name='kind', staticFlag = false, accessMode = 'pub', typeId = 280 }
+  _classInfo305.pos = {
+    name='pos', staticFlag = false, accessMode = 'pub', typeId = 282 }
+  _classInfo305.txt = {
+    name='txt', staticFlag = false, accessMode = 'pub', typeId = 281 }
+  end
+do
+  local _classInfo315 = {}
+  _typeId2ClassInfoMap[ 315 ] = _classInfo315
+  end
+do
+  local _classInfo318 = {}
+  _typeId2ClassInfoMap[ 318 ] = _classInfo318
+  end
+do
+  local _classInfo319 = {}
+  _typeId2ClassInfoMap[ 319 ] = _classInfo319
+  end
+do
+  local _classInfo320 = {}
+  _typeId2ClassInfoMap[ 320 ] = _classInfo320
+  _classInfo320.kind = {
+    name='kind', staticFlag = false, accessMode = 'pub', typeId = 280 }
+  _classInfo320.pos = {
+    name='pos', staticFlag = false, accessMode = 'pub', typeId = 282 }
+  _classInfo320.txt = {
+    name='txt', staticFlag = false, accessMode = 'pub', typeId = 281 }
+  end
+do
+  local _classInfo324 = {}
+  _typeId2ClassInfoMap[ 324 ] = _classInfo324
+  end
+do
+  local _classInfo331 = {}
+  _typeId2ClassInfoMap[ 331 ] = _classInfo331
+  end
+do
+  local _classInfo340 = {}
+  _typeId2ClassInfoMap[ 340 ] = _classInfo340
+  end
+do
+  local _classInfo347 = {}
+  _typeId2ClassInfoMap[ 347 ] = _classInfo347
+  _classInfo347.Char = {
+    name='Char', staticFlag = true, accessMode = 'pub', typeId = 354 }
+  _classInfo347.Cmnt = {
+    name='Cmnt', staticFlag = true, accessMode = 'pub', typeId = 350 }
+  _classInfo347.Dlmt = {
+    name='Dlmt', staticFlag = true, accessMode = 'pub', typeId = 356 }
+  _classInfo347.Eof = {
+    name='Eof', staticFlag = true, accessMode = 'pub', typeId = 360 }
+  _classInfo347.Int = {
+    name='Int', staticFlag = true, accessMode = 'pub', typeId = 352 }
+  _classInfo347.Kywd = {
+    name='Kywd', staticFlag = true, accessMode = 'pub', typeId = 357 }
+  _classInfo347.Ope = {
+    name='Ope', staticFlag = true, accessMode = 'pub', typeId = 358 }
+  _classInfo347.Real = {
+    name='Real', staticFlag = true, accessMode = 'pub', typeId = 353 }
+  _classInfo347.Str = {
+    name='Str', staticFlag = true, accessMode = 'pub', typeId = 351 }
+  _classInfo347.Symb = {
+    name='Symb', staticFlag = true, accessMode = 'pub', typeId = 355 }
+  _classInfo347.Type = {
+    name='Type', staticFlag = true, accessMode = 'pub', typeId = 359 }
+  end
+do
+  local _classInfo388 = {}
+  _typeId2ClassInfoMap[ 388 ] = _classInfo388
+  _classInfo388.kind = {
+    name='kind', staticFlag = false, accessMode = 'pub', typeId = 280 }
+  _classInfo388.pos = {
+    name='pos', staticFlag = false, accessMode = 'pub', typeId = 282 }
+  _classInfo388.txt = {
+    name='txt', staticFlag = false, accessMode = 'pub', typeId = 281 }
+  end
+do
+  local _classInfo392 = {}
+  _typeId2ClassInfoMap[ 392 ] = _classInfo392
+  end
+do
+  local _classInfo395 = {}
+  _typeId2ClassInfoMap[ 395 ] = _classInfo395
+  _classInfo395.kind = {
+    name='kind', staticFlag = false, accessMode = 'pub', typeId = 280 }
+  _classInfo395.pos = {
+    name='pos', staticFlag = false, accessMode = 'pub', typeId = 282 }
+  _classInfo395.txt = {
+    name='txt', staticFlag = false, accessMode = 'pub', typeId = 281 }
+  end
+do
+  local _classInfo281 = {}
+  _typeId2ClassInfoMap[ 281 ] = _classInfo281
+  end
+do
+  local _classInfo282 = {}
+  _typeId2ClassInfoMap[ 282 ] = _classInfo282
+  _classInfo282.column = {
+    name='column', staticFlag = false, accessMode = 'pub', typeId = 273 }
+  _classInfo282.lineNo = {
+    name='lineNo', staticFlag = false, accessMode = 'pub', typeId = 272 }
+  end
+do
+  local _classInfo454 = {}
+  _typeId2ClassInfoMap[ 454 ] = _classInfo454
   end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.version = {
-  name='version', accessMode = 'pub', typeId = 356, mutable = true }
+  name='version', accessMode = 'pub', typeId = 454, mutable = true }
 local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
-_typeInfoList[1] = { parentId = 1, typeId = 187, txt = 'lune', kind = 12, 
-children = {189, } }
-_typeInfoList[2] = { parentId = 187, typeId = 189, txt = 'base', kind = 12, 
-children = {191, } }
-_typeInfoList[3] = { parentId = 189, typeId = 191, txt = 'Option', kind = 12, 
-children = {357, 366, } }
-_typeInfoList[4] = { parentId = 189, typeId = 193, txt = 'Parser', kind = 12, 
-children = {195, 198, 207, 213, 234, 246, 258, 273, 291, 294, 297, 303, 306, } }
-_typeInfoList[5] = { parentId = 193, typeId = 195, baseId = 1, txt = 'isLuaKeyword',
+_typeInfoList[1] = { parentId = 1, typeId = 173, srcTypeId = 16, mutable = false }
+_typeInfoList[2] = { parentId = 1, typeId = 177, srcTypeId = 25, mutable = false }
+_typeInfoList[3] = { parentId = 1, typeId = 178, srcTypeId = 17, mutable = false }
+_typeInfoList[4] = { parentId = 1, typeId = 179, srcTypeId = 14, mutable = false }
+_typeInfoList[5] = { parentId = 1, typeId = 183, srcTypeId = 11, mutable = false }
+_typeInfoList[6] = { parentId = 1, typeId = 187, srcTypeId = 25, mutable = false }
+_typeInfoList[7] = { parentId = 1, typeId = 191, srcTypeId = 25, mutable = false }
+_typeInfoList[8] = { parentId = 1, typeId = 192, srcTypeId = 25, mutable = false }
+_typeInfoList[9] = { parentId = 1, typeId = 196, srcTypeId = 16, mutable = false }
+_typeInfoList[10] = { parentId = 1, typeId = 200, srcTypeId = 16, mutable = false }
+_typeInfoList[11] = { parentId = 1, typeId = 201, srcTypeId = 17, mutable = false }
+_typeInfoList[12] = { parentId = 1, typeId = 238, txt = 'lune', kind = 12, 
+children = {240, } }
+_typeInfoList[13] = { parentId = 238, typeId = 240, txt = 'base', kind = 12, 
+children = {242, } }
+_typeInfoList[14] = { parentId = 240, typeId = 242, txt = 'Option', kind = 12, 
+children = {455, 467, } }
+_typeInfoList[15] = { parentId = 240, typeId = 244, txt = 'Parser', kind = 12, 
+children = {257, 260, 269, 277, 302, 315, 331, 347, 376, 379, 382, 389, 392, } }
+_typeInfoList[16] = { parentId = 244, typeId = 257, baseId = 1, txt = 'isLuaKeyword',
         staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {14}, children = {}, }
-_typeInfoList[6] = { parentId = 193, typeId = 196, nilable = true, orgTypeId = 195 }
-_typeInfoList[7] = { parentId = 193, typeId = 198, baseId = 1, txt = 'TxtStream',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {67}, argTypeId = {}, retTypeId = {}, children = {201, 204}, }
-_typeInfoList[8] = { parentId = 193, typeId = 199, nilable = true, orgTypeId = 198 }
-_typeInfoList[9] = { parentId = 198, typeId = 201, baseId = 1, txt = '__init',
+_typeInfoList[17] = { parentId = 244, typeId = 258, nilable = true, orgTypeId = 257 }
+_typeInfoList[18] = { parentId = 244, typeId = 260, baseId = 1, txt = 'TxtStream',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {76}, argTypeId = {}, retTypeId = {}, children = {263, 266}, }
+_typeInfoList[19] = { parentId = 244, typeId = 261, nilable = true, orgTypeId = 260 }
+_typeInfoList[20] = { parentId = 260, typeId = 263, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
-_typeInfoList[10] = { parentId = 198, typeId = 202, nilable = true, orgTypeId = 201 }
-_typeInfoList[11] = { parentId = 198, typeId = 204, baseId = 1, txt = 'read',
+_typeInfoList[21] = { parentId = 260, typeId = 264, nilable = true, orgTypeId = 263 }
+_typeInfoList[22] = { parentId = 260, typeId = 266, baseId = 1, txt = 'read',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {26}, children = {}, }
-_typeInfoList[12] = { parentId = 198, typeId = 205, nilable = true, orgTypeId = 204 }
-_typeInfoList[13] = { parentId = 193, typeId = 207, baseId = 1, txt = 'Position',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {210}, }
-_typeInfoList[14] = { parentId = 193, typeId = 208, nilable = true, orgTypeId = 207 }
-_typeInfoList[15] = { parentId = 207, typeId = 210, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {16, 16}, retTypeId = {}, children = {}, }
-_typeInfoList[16] = { parentId = 207, typeId = 211, nilable = true, orgTypeId = 210 }
-_typeInfoList[17] = { parentId = 193, typeId = 213, baseId = 1, txt = 'Token',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {222, 228, 231}, }
-_typeInfoList[18] = { parentId = 193, typeId = 214, nilable = true, orgTypeId = 213 }
-_typeInfoList[19] = { parentId = 1, typeId = 216, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, mutable = true, itemTypeId = {213}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[20] = { parentId = 1, typeId = 217, nilable = true, orgTypeId = 216 }
-_typeInfoList[21] = { parentId = 1, typeId = 219, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, mutable = true, itemTypeId = {213}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[22] = { parentId = 1, typeId = 220, nilable = true, orgTypeId = 219 }
-_typeInfoList[23] = { parentId = 213, typeId = 222, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {16, 25, 207, 220}, retTypeId = {}, children = {}, }
-_typeInfoList[24] = { parentId = 213, typeId = 223, nilable = true, orgTypeId = 222 }
-_typeInfoList[25] = { parentId = 1, typeId = 225, baseId = 1, txt = '',
-        staticFlag = false, accessMode = 'pub', kind = 3, mutable = true, itemTypeId = {213}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[26] = { parentId = 1, typeId = 226, nilable = true, orgTypeId = 225 }
-_typeInfoList[27] = { parentId = 213, typeId = 228, baseId = 1, txt = 'set_commentList',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {225}, retTypeId = {}, children = {}, }
-_typeInfoList[28] = { parentId = 213, typeId = 229, nilable = true, orgTypeId = 228 }
-_typeInfoList[29] = { parentId = 213, typeId = 231, baseId = 1, txt = 'get_commentList',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {216}, children = {}, }
-_typeInfoList[30] = { parentId = 213, typeId = 232, nilable = true, orgTypeId = 231 }
-_typeInfoList[31] = { parentId = 193, typeId = 234, baseId = 1, txt = 'Parser',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {237, 240, 243}, }
-_typeInfoList[32] = { parentId = 193, typeId = 235, nilable = true, orgTypeId = 234 }
-_typeInfoList[33] = { parentId = 234, typeId = 237, baseId = 1, txt = 'getToken',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {213}, children = {}, }
-_typeInfoList[34] = { parentId = 234, typeId = 238, nilable = true, orgTypeId = 237 }
-_typeInfoList[35] = { parentId = 234, typeId = 240, baseId = 1, txt = 'getStreamName',
+_typeInfoList[23] = { parentId = 260, typeId = 267, nilable = true, orgTypeId = 266 }
+_typeInfoList[24] = { parentId = 244, typeId = 269, baseId = 1, txt = 'Position',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {274}, }
+_typeInfoList[25] = { parentId = 244, typeId = 270, nilable = true, orgTypeId = 269 }
+_typeInfoList[26] = { parentId = 1, typeId = 272, srcTypeId = 16, mutable = false }
+_typeInfoList[27] = { parentId = 1, typeId = 273, srcTypeId = 16, mutable = false }
+_typeInfoList[28] = { parentId = 269, typeId = 274, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {272, 273}, retTypeId = {}, children = {}, }
+_typeInfoList[29] = { parentId = 269, typeId = 275, nilable = true, orgTypeId = 274 }
+_typeInfoList[30] = { parentId = 244, typeId = 277, baseId = 1, txt = 'Token',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {290, 296, 299}, }
+_typeInfoList[31] = { parentId = 244, typeId = 278, nilable = true, orgTypeId = 277 }
+_typeInfoList[32] = { parentId = 1, typeId = 280, srcTypeId = 16, mutable = false }
+_typeInfoList[33] = { parentId = 1, typeId = 281, srcTypeId = 25, mutable = false }
+_typeInfoList[34] = { parentId = 244, typeId = 282, srcTypeId = 269, mutable = false }
+_typeInfoList[35] = { parentId = 1, typeId = 283, baseId = 1, txt = 'Array',
+        staticFlag = false, accessMode = 'pub', kind = 3, mutable = true, itemTypeId = {277}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[36] = { parentId = 1, typeId = 284, nilable = true, orgTypeId = 283 }
+_typeInfoList[37] = { parentId = 244, typeId = 286, srcTypeId = 269, mutable = false }
+_typeInfoList[38] = { parentId = 1, typeId = 287, baseId = 1, txt = 'Array',
+        staticFlag = false, accessMode = 'pub', kind = 3, mutable = true, itemTypeId = {277}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[39] = { parentId = 1, typeId = 288, nilable = true, orgTypeId = 287 }
+_typeInfoList[40] = { parentId = 277, typeId = 290, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {16, 25, 286, 288}, retTypeId = {}, children = {}, }
+_typeInfoList[41] = { parentId = 277, typeId = 291, nilable = true, orgTypeId = 290 }
+_typeInfoList[42] = { parentId = 1, typeId = 293, baseId = 1, txt = 'Array',
+        staticFlag = false, accessMode = 'pub', kind = 3, mutable = true, itemTypeId = {277}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[43] = { parentId = 1, typeId = 294, nilable = true, orgTypeId = 293 }
+_typeInfoList[44] = { parentId = 277, typeId = 296, baseId = 1, txt = 'set_commentList',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {293}, retTypeId = {}, children = {}, }
+_typeInfoList[45] = { parentId = 277, typeId = 297, nilable = true, orgTypeId = 296 }
+_typeInfoList[46] = { parentId = 277, typeId = 299, baseId = 1, txt = 'get_commentList',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {283}, children = {}, }
+_typeInfoList[47] = { parentId = 277, typeId = 300, nilable = true, orgTypeId = 299 }
+_typeInfoList[48] = { parentId = 244, typeId = 302, baseId = 1, txt = 'Parser',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {306, 309, 312}, }
+_typeInfoList[49] = { parentId = 244, typeId = 303, nilable = true, orgTypeId = 302 }
+_typeInfoList[50] = { parentId = 244, typeId = 305, srcTypeId = 277, mutable = false }
+_typeInfoList[51] = { parentId = 302, typeId = 306, baseId = 1, txt = 'getToken',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {305}, children = {}, }
+_typeInfoList[52] = { parentId = 302, typeId = 307, nilable = true, orgTypeId = 306 }
+_typeInfoList[53] = { parentId = 302, typeId = 309, baseId = 1, txt = 'getStreamName',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
-_typeInfoList[36] = { parentId = 234, typeId = 241, nilable = true, orgTypeId = 240 }
-_typeInfoList[37] = { parentId = 234, typeId = 243, baseId = 1, txt = '__init',
+_typeInfoList[54] = { parentId = 302, typeId = 310, nilable = true, orgTypeId = 309 }
+_typeInfoList[55] = { parentId = 302, typeId = 312, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[38] = { parentId = 234, typeId = 244, nilable = true, orgTypeId = 243 }
-_typeInfoList[39] = { parentId = 193, typeId = 246, baseId = 234, txt = 'WrapParser',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {249, 252, 255}, }
-_typeInfoList[40] = { parentId = 193, typeId = 247, nilable = true, orgTypeId = 246 }
-_typeInfoList[41] = { parentId = 246, typeId = 249, baseId = 1, txt = 'getToken',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {213}, children = {}, }
-_typeInfoList[42] = { parentId = 246, typeId = 250, nilable = true, orgTypeId = 249 }
-_typeInfoList[43] = { parentId = 246, typeId = 252, baseId = 1, txt = 'getStreamName',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
-_typeInfoList[44] = { parentId = 246, typeId = 253, nilable = true, orgTypeId = 252 }
-_typeInfoList[45] = { parentId = 246, typeId = 255, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {234, 25}, retTypeId = {}, children = {}, }
-_typeInfoList[46] = { parentId = 246, typeId = 256, nilable = true, orgTypeId = 255 }
-_typeInfoList[47] = { parentId = 193, typeId = 258, baseId = 234, txt = 'StreamParser',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {261, 264, 267, 270, 300}, }
-_typeInfoList[48] = { parentId = 193, typeId = 259, nilable = true, orgTypeId = 258 }
-_typeInfoList[49] = { parentId = 258, typeId = 261, baseId = 1, txt = 'setStdinStream',
+_typeInfoList[56] = { parentId = 302, typeId = 313, nilable = true, orgTypeId = 312 }
+_typeInfoList[57] = { parentId = 244, typeId = 315, baseId = 302, txt = 'WrapParser',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {321, 325, 328}, }
+_typeInfoList[58] = { parentId = 244, typeId = 316, nilable = true, orgTypeId = 315 }
+_typeInfoList[59] = { parentId = 244, typeId = 318, srcTypeId = 302, mutable = false }
+_typeInfoList[60] = { parentId = 1, typeId = 319, srcTypeId = 25, mutable = false }
+_typeInfoList[61] = { parentId = 244, typeId = 320, srcTypeId = 277, mutable = false }
+_typeInfoList[62] = { parentId = 315, typeId = 321, baseId = 1, txt = 'getToken',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {320}, children = {}, }
+_typeInfoList[63] = { parentId = 315, typeId = 322, nilable = true, orgTypeId = 321 }
+_typeInfoList[64] = { parentId = 1, typeId = 324, srcTypeId = 25, mutable = false }
+_typeInfoList[65] = { parentId = 315, typeId = 325, baseId = 1, txt = 'getStreamName',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {324}, children = {}, }
+_typeInfoList[66] = { parentId = 315, typeId = 326, nilable = true, orgTypeId = 325 }
+_typeInfoList[67] = { parentId = 315, typeId = 328, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {318, 319}, retTypeId = {}, children = {}, }
+_typeInfoList[68] = { parentId = 315, typeId = 329, nilable = true, orgTypeId = 328 }
+_typeInfoList[69] = { parentId = 244, typeId = 331, baseId = 302, txt = 'StreamParser',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {334, 337, 341, 344, 385}, }
+_typeInfoList[70] = { parentId = 244, typeId = 332, nilable = true, orgTypeId = 331 }
+_typeInfoList[71] = { parentId = 331, typeId = 334, baseId = 1, txt = 'setStdinStream',
         staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
-_typeInfoList[50] = { parentId = 258, typeId = 262, nilable = true, orgTypeId = 261 }
-_typeInfoList[51] = { parentId = 258, typeId = 264, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {67, 25, 13}, retTypeId = {}, children = {}, }
-_typeInfoList[52] = { parentId = 258, typeId = 265, nilable = true, orgTypeId = 264 }
-_typeInfoList[53] = { parentId = 258, typeId = 267, baseId = 1, txt = 'getStreamName',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
-_typeInfoList[54] = { parentId = 258, typeId = 268, nilable = true, orgTypeId = 267 }
-_typeInfoList[55] = { parentId = 258, typeId = 270, baseId = 1, txt = 'create',
-        staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 13, 25}, retTypeId = {259}, children = {}, }
-_typeInfoList[56] = { parentId = 258, typeId = 271, nilable = true, orgTypeId = 270 }
-_typeInfoList[57] = { parentId = 193, typeId = 273, baseId = 1, txt = 'TokenKind',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {276}, }
-_typeInfoList[58] = { parentId = 193, typeId = 274, nilable = true, orgTypeId = 273 }
-_typeInfoList[59] = { parentId = 273, typeId = 276, baseId = 1, txt = '__init',
+_typeInfoList[72] = { parentId = 331, typeId = 335, nilable = true, orgTypeId = 334 }
+_typeInfoList[73] = { parentId = 331, typeId = 337, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {76, 25, 13}, retTypeId = {}, children = {}, }
+_typeInfoList[74] = { parentId = 331, typeId = 338, nilable = true, orgTypeId = 337 }
+_typeInfoList[75] = { parentId = 1, typeId = 340, srcTypeId = 25, mutable = false }
+_typeInfoList[76] = { parentId = 331, typeId = 341, baseId = 1, txt = 'getStreamName',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {340}, children = {}, }
+_typeInfoList[77] = { parentId = 331, typeId = 342, nilable = true, orgTypeId = 341 }
+_typeInfoList[78] = { parentId = 331, typeId = 344, baseId = 1, txt = 'create',
+        staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 13, 25}, retTypeId = {332}, children = {}, }
+_typeInfoList[79] = { parentId = 331, typeId = 345, nilable = true, orgTypeId = 344 }
+_typeInfoList[80] = { parentId = 244, typeId = 347, baseId = 1, txt = 'TokenKind',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {361}, }
+_typeInfoList[81] = { parentId = 244, typeId = 348, nilable = true, orgTypeId = 347 }
+_typeInfoList[82] = { parentId = 1, typeId = 350, srcTypeId = 16, mutable = false }
+_typeInfoList[83] = { parentId = 1, typeId = 351, srcTypeId = 16, mutable = false }
+_typeInfoList[84] = { parentId = 1, typeId = 352, srcTypeId = 16, mutable = false }
+_typeInfoList[85] = { parentId = 1, typeId = 353, srcTypeId = 16, mutable = false }
+_typeInfoList[86] = { parentId = 1, typeId = 354, srcTypeId = 16, mutable = false }
+_typeInfoList[87] = { parentId = 1, typeId = 355, srcTypeId = 16, mutable = false }
+_typeInfoList[88] = { parentId = 1, typeId = 356, srcTypeId = 16, mutable = false }
+_typeInfoList[89] = { parentId = 1, typeId = 357, srcTypeId = 16, mutable = false }
+_typeInfoList[90] = { parentId = 1, typeId = 358, srcTypeId = 16, mutable = false }
+_typeInfoList[91] = { parentId = 1, typeId = 359, srcTypeId = 16, mutable = false }
+_typeInfoList[92] = { parentId = 1, typeId = 360, srcTypeId = 16, mutable = false }
+_typeInfoList[93] = { parentId = 347, typeId = 361, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[60] = { parentId = 273, typeId = 277, nilable = true, orgTypeId = 276 }
-_typeInfoList[61] = { parentId = 193, typeId = 291, baseId = 1, txt = 'getKindTxt',
+_typeInfoList[94] = { parentId = 347, typeId = 362, nilable = true, orgTypeId = 361 }
+_typeInfoList[95] = { parentId = 244, typeId = 376, baseId = 1, txt = 'getKindTxt',
         staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {16}, retTypeId = {25}, children = {}, }
-_typeInfoList[62] = { parentId = 193, typeId = 292, nilable = true, orgTypeId = 291 }
-_typeInfoList[63] = { parentId = 193, typeId = 294, baseId = 1, txt = 'isOp2',
+_typeInfoList[96] = { parentId = 244, typeId = 377, nilable = true, orgTypeId = 376 }
+_typeInfoList[97] = { parentId = 244, typeId = 379, baseId = 1, txt = 'isOp2',
         staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {8}, children = {}, }
-_typeInfoList[64] = { parentId = 193, typeId = 295, nilable = true, orgTypeId = 294 }
-_typeInfoList[65] = { parentId = 193, typeId = 297, baseId = 1, txt = 'isOp1',
+_typeInfoList[98] = { parentId = 244, typeId = 380, nilable = true, orgTypeId = 379 }
+_typeInfoList[99] = { parentId = 244, typeId = 382, baseId = 1, txt = 'isOp1',
         staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {8}, children = {}, }
-_typeInfoList[66] = { parentId = 193, typeId = 298, nilable = true, orgTypeId = 297 }
-_typeInfoList[67] = { parentId = 258, typeId = 300, baseId = 1, txt = 'getToken',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {214}, children = {}, }
-_typeInfoList[68] = { parentId = 258, typeId = 301, nilable = true, orgTypeId = 300 }
-_typeInfoList[69] = { parentId = 193, typeId = 303, baseId = 1, txt = 'getEofToken',
-        staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {213}, children = {}, }
-_typeInfoList[70] = { parentId = 193, typeId = 304, nilable = true, orgTypeId = 303 }
-_typeInfoList[71] = { parentId = 193, typeId = 306, baseId = 234, txt = 'DummyParser',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {309, 312, 315}, }
-_typeInfoList[72] = { parentId = 193, typeId = 307, nilable = true, orgTypeId = 306 }
-_typeInfoList[73] = { parentId = 306, typeId = 309, baseId = 1, txt = 'getToken',
-        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {213}, children = {}, }
-_typeInfoList[74] = { parentId = 306, typeId = 310, nilable = true, orgTypeId = 309 }
-_typeInfoList[75] = { parentId = 306, typeId = 312, baseId = 1, txt = 'getStreamName',
+_typeInfoList[100] = { parentId = 244, typeId = 383, nilable = true, orgTypeId = 382 }
+_typeInfoList[101] = { parentId = 331, typeId = 385, baseId = 1, txt = 'getToken',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {278}, children = {}, }
+_typeInfoList[102] = { parentId = 331, typeId = 386, nilable = true, orgTypeId = 385 }
+_typeInfoList[103] = { parentId = 244, typeId = 388, srcTypeId = 277, mutable = false }
+_typeInfoList[104] = { parentId = 244, typeId = 389, baseId = 1, txt = 'getEofToken',
+        staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {388}, children = {}, }
+_typeInfoList[105] = { parentId = 244, typeId = 390, nilable = true, orgTypeId = 389 }
+_typeInfoList[106] = { parentId = 244, typeId = 392, baseId = 302, txt = 'DummyParser',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {396, 399, 402}, }
+_typeInfoList[107] = { parentId = 244, typeId = 393, nilable = true, orgTypeId = 392 }
+_typeInfoList[108] = { parentId = 244, typeId = 395, srcTypeId = 277, mutable = false }
+_typeInfoList[109] = { parentId = 392, typeId = 396, baseId = 1, txt = 'getToken',
+        staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {395}, children = {}, }
+_typeInfoList[110] = { parentId = 392, typeId = 397, nilable = true, orgTypeId = 396 }
+_typeInfoList[111] = { parentId = 392, typeId = 399, baseId = 1, txt = 'getStreamName',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
-_typeInfoList[76] = { parentId = 306, typeId = 313, nilable = true, orgTypeId = 312 }
-_typeInfoList[77] = { parentId = 306, typeId = 315, baseId = 1, txt = '__init',
+_typeInfoList[112] = { parentId = 392, typeId = 400, nilable = true, orgTypeId = 399 }
+_typeInfoList[113] = { parentId = 392, typeId = 402, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[78] = { parentId = 306, typeId = 316, nilable = true, orgTypeId = 315 }
-_typeInfoList[79] = { parentId = 1, typeId = 356, srcTypeId = 25, mutable = false }
-_typeInfoList[80] = { parentId = 191, typeId = 357, baseId = 1, txt = 'Option',
-        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {360}, }
-_typeInfoList[81] = { parentId = 191, typeId = 358, nilable = true, orgTypeId = 357 }
-_typeInfoList[82] = { parentId = 357, typeId = 360, baseId = 1, txt = '__init',
+_typeInfoList[114] = { parentId = 392, typeId = 403, nilable = true, orgTypeId = 402 }
+_typeInfoList[115] = { parentId = 1, typeId = 454, srcTypeId = 25, mutable = false }
+_typeInfoList[116] = { parentId = 242, typeId = 455, baseId = 1, txt = 'Option',
+        staticFlag = false, accessMode = 'pub', kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {461}, }
+_typeInfoList[117] = { parentId = 242, typeId = 456, nilable = true, orgTypeId = 455 }
+_typeInfoList[118] = { parentId = 1, typeId = 458, srcTypeId = 26, mutable = false }
+_typeInfoList[119] = { parentId = 244, typeId = 459, srcTypeId = 270, mutable = false }
+_typeInfoList[120] = { parentId = 1, typeId = 460, srcTypeId = 26, mutable = false }
+_typeInfoList[121] = { parentId = 455, typeId = 461, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 'pub', kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[83] = { parentId = 357, typeId = 361, nilable = true, orgTypeId = 360 }
-_typeInfoList[84] = { parentId = 1, typeId = 363, baseId = 1, txt = '',
+_typeInfoList[122] = { parentId = 455, typeId = 462, nilable = true, orgTypeId = 461 }
+_typeInfoList[123] = { parentId = 1, typeId = 464, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 'pub', kind = 4, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[85] = { parentId = 1, typeId = 364, nilable = true, orgTypeId = 363 }
-_typeInfoList[86] = { parentId = 191, typeId = 366, baseId = 1, txt = 'analyze',
-        staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {363}, retTypeId = {357}, children = {}, }
-_typeInfoList[87] = { parentId = 191, typeId = 367, nilable = true, orgTypeId = 366 }
-_moduleObj._moduleTypeId = 191
+_typeInfoList[124] = { parentId = 1, typeId = 465, nilable = true, orgTypeId = 464 }
+_typeInfoList[125] = { parentId = 242, typeId = 467, baseId = 1, txt = 'analyze',
+        staticFlag = true, accessMode = 'pub', kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {464}, retTypeId = {455}, children = {}, }
+_typeInfoList[126] = { parentId = 242, typeId = 468, nilable = true, orgTypeId = 467 }
+_moduleObj._moduleTypeId = 242
 _moduleObj._moduleMutable = true
 ----- meta -----
 return _moduleObj

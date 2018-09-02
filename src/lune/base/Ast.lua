@@ -90,8 +90,6 @@ local function isBuiltin( typeId )
   return _moduleObj.builtInTypeIdSet[typeId] ~= nil
 end
 _moduleObj.isBuiltin = isBuiltin
-local dummyList = {}
-
 -- none
 
 local SymbolKind = {}
@@ -289,6 +287,54 @@ local rootScope = Scope.new(nil, false, {})
 
 _moduleObj.rootScope = rootScope
 
+local dummyList = {}
+
+local rootChildren = {}
+
+local TypeData = {}
+function TypeData:addChildren( child )
+  table.insert( self.children, child )
+end
+function TypeData.new( children )
+  local obj = {}
+  setmetatable( obj, { __index = TypeData } )
+  if obj.__init then
+    obj:__init( children )
+  end        
+  return obj 
+end         
+function TypeData:__init( children ) 
+
+self.children = children
+  end
+function TypeData:get_children()       
+  return self.children         
+end
+do
+  end
+
+local TypeManager = {}
+function TypeManager.add( typeInfo )
+  TypeManager.info2Data[typeInfo] = TypeData.new({})
+end
+function TypeManager.getData( typeInfo )
+  return TypeManager.info2Data[typeInfo]
+end
+function TypeManager.new(  )
+  local obj = {}
+  setmetatable( obj, { __index = TypeManager } )
+  if obj.__init then
+    obj:__init(  )
+  end        
+  return obj 
+end         
+function TypeManager:__init(  ) 
+
+end
+do
+  TypeManager.info2Data = {}
+  end
+
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
 function TypeInfo.new( scope )
@@ -307,6 +353,7 @@ function TypeInfo:__init(scope)
       end
   end
   
+  TypeManager.add( self )
 end
 function TypeInfo:isModule(  )
   return true
@@ -320,14 +367,15 @@ end
 function TypeInfo:isInheritFrom( other )
   return false
 end
-function TypeInfo:isSettableFrom( other )
+function TypeInfo:getTxt(  )
+  return ""
+end
+-- none
+function TypeInfo:canEvalWith( other, opTxt )
   return false
 end
 function TypeInfo:get_abstructFlag(  )
   return false
-end
-function TypeInfo:getTxt(  )
-  return ""
 end
 function TypeInfo:serialize( stream, validChildrenSet )
   return 
@@ -389,11 +437,17 @@ end
 function TypeInfo:get_nilableTypeInfo(  )
   return self
 end
+function TypeInfo:get_typeData(  )
+  return _lune.unwrap( TypeManager.getData( self ))
+end
 function TypeInfo:get_children(  )
-  return dummyList
+  return self:get_typeData():get_children()
+end
+function TypeInfo:addChildren( child )
+  (_lune.unwrap( TypeManager.getData( self )) ):addChildren( child )
 end
 function TypeInfo:get_mutable(  )
-  return false
+  return true
 end
 function TypeInfo:get_scope()       
   return self.scope         
@@ -958,8 +1012,16 @@ function NilableTypeInfo:get_nilableTypeInfo( ... )
   return self.orgTypeInfo:get_nilableTypeInfo( ... )
 end       
 
+function NilableTypeInfo:get_typeData( ... )
+  return self.orgTypeInfo:get_typeData( ... )
+end       
+
 function NilableTypeInfo:get_children( ... )
   return self.orgTypeInfo:get_children( ... )
+end       
+
+function NilableTypeInfo:addChildren( ... )
+  return self.orgTypeInfo:addChildren( ... )
 end       
 
 function NilableTypeInfo:get_mutable( ... )
@@ -979,8 +1041,8 @@ _moduleObj.ModifierTypeInfo = ModifierTypeInfo
 function ModifierTypeInfo:getTxt(  )
   local txt = self.srcTypeInfo:getTxt(  )
   
-  if self.mutable then
-    txt = "mut " .. txt
+  if not self.mutable then
+    txt = "&" .. txt
   end
   return txt
 end
@@ -996,6 +1058,9 @@ function ModifierTypeInfo:serialize( stream, validChildrenSet )
   local parentId = self:getParentId(  )
   
   stream:write( string.format( '{ parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', parentId, self.typeId, self.srcTypeInfo:get_typeId(), self.mutable and true or false) )
+end
+function ModifierTypeInfo:canEvalWith( other, opTxt )
+  return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other, opTxt )
 end
 function ModifierTypeInfo.new( srcTypeInfo, typeId, mutable )
   local obj = {}
@@ -1034,10 +1099,6 @@ end
 
 function ModifierTypeInfo:isInheritFrom( ... )
   return self.srcTypeInfo:isInheritFrom( ... )
-end       
-
-function ModifierTypeInfo:isSettableFrom( ... )
-  return self.srcTypeInfo:isSettableFrom( ... )
 end       
 
 function ModifierTypeInfo:get_abstructFlag( ... )
@@ -1108,8 +1169,16 @@ function ModifierTypeInfo:get_nilableTypeInfo( ... )
   return self.srcTypeInfo:get_nilableTypeInfo( ... )
 end       
 
+function ModifierTypeInfo:get_typeData( ... )
+  return self.srcTypeInfo:get_typeData( ... )
+end       
+
 function ModifierTypeInfo:get_children( ... )
   return self.srcTypeInfo:get_children( ... )
+end       
+
+function ModifierTypeInfo:addChildren( ... )
+  return self.srcTypeInfo:addChildren( ... )
 end       
 
 function ModifierTypeInfo:get_scope( ... )
@@ -1135,11 +1204,15 @@ function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mut
   self.rawTxt = txt
   self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
   self.typeId = typeId
-  self.children = {}
   self.mutable = mutable
-  if self.parentInfo ~= _moduleObj.rootTypeInfo then
-    table.insert( self.parentInfo:get_children(), self )
+  do
+    local _exp = parentInfo
+    if _exp ~= nil then
+    
+        _exp:addChildren( self )
+      end
   end
+  
   typeIdSeed = typeIdSeed + 1
   scope:set_ownerTypeInfo( self )
 end
@@ -1161,7 +1234,7 @@ end
 function ModuleTypeInfo:get_display_stirng(  )
   return self:getTxt(  )
 end
-function ModuleTypeInfo:isSettableFrom( other )
+function ModuleTypeInfo:canEvalWith( other, opTxt )
   return false
 end
 function ModuleTypeInfo:serialize( stream, validChildrenSet )
@@ -1169,34 +1242,24 @@ function ModuleTypeInfo:serialize( stream, validChildrenSet )
   
   stream:write( txt .. '\n' )
   stream:write( "children = {" )
-  local children = self.children
+  local set = validChildrenSet
   
+      if  nil == set then
+        local _set = set
+        
+        set = {}
+      end
+    
   do
     local _exp = validChildrenSet
     if _exp ~= nil then
     
-        children = {}
-        for __index, child in pairs( self.children ) do
-          if _exp[child:get_typeId()] then
-            table.insert( children, child )
+        for __index, child in pairs( self:get_children() ) do
+          if set[child:get_typeId()] then
+            stream:write( string.format( "%d, ", child:get_typeId()) )
           end
         end
       end
-  end
-  
-  do
-    local __sorted = {}
-    local __map = children
-    for __key in pairs( __map ) do
-      table.insert( __sorted, __key )
-    end
-    table.sort( __sorted )
-    for __index, __key in ipairs( __sorted ) do
-      child = __map[ __key ]
-      do
-        stream:write( string.format( "%d, ", child:get_typeId()) )
-      end
-    end
   end
   
   stream:write( "} }\n" )
@@ -1212,9 +1275,6 @@ function ModuleTypeInfo:get_typeId()
 end
 function ModuleTypeInfo:get_rawTxt()       
   return self.rawTxt         
-end
-function ModuleTypeInfo:get_children()       
-  return self.children         
 end
 function ModuleTypeInfo:get_mutable()       
   return self.mutable         
@@ -1265,9 +1325,14 @@ function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
   self.typeId = typeId
   self.name2EnumValInfo = name2EnumValInfo
   self.valTypeInfo = valTypeInfo
-  if self.parentInfo ~= _moduleObj.rootTypeInfo then
-    table.insert( self.parentInfo:get_children(), self )
+  do
+    local _exp = parentInfo
+    if _exp ~= nil then
+    
+        _exp:addChildren( self )
+      end
   end
+  
   self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
   typeIdSeed = typeIdSeed + 1
   scope:set_ownerTypeInfo( self )
@@ -1287,11 +1352,14 @@ end
 function EnumTypeInfo:get_display_stirng(  )
   return self:getTxt(  )
 end
-function EnumTypeInfo:isSettableFrom( other )
+function EnumTypeInfo:canEvalWith( other, opTxt )
   return self == other:get_srcTypeInfo()
 end
 function EnumTypeInfo:getEnumValInfo( name )
   return self.name2EnumValInfo[name]
+end
+function EnumTypeInfo:get_mutable(  )
+  return true
 end
 function EnumTypeInfo:get_externalFlag()       
   return self.externalFlag         
@@ -1349,7 +1417,6 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
   self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
   self.orgTypeInfo = _lune.unwrapDefault( orgTypeInfo, _moduleObj.rootTypeInfo)
   self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
-  self.children = {}
   self.mutable = mutable and true or false
   self.typeId = typeId
   if kind == TypeInfoKind.Root then
@@ -1359,9 +1426,14 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
     self.nilableTypeInfo = self
     self.orgTypeInfo = self
   elseif not orgTypeInfo then
-    if self.parentInfo ~= _moduleObj.rootTypeInfo then
-      table.insert( self.parentInfo:get_children(), self )
+    do
+      local _exp = parentInfo
+      if _exp ~= nil then
+      
+          _exp:addChildren( self )
+        end
     end
+    
     self.nilable = false
     local hasNilable = false
     
@@ -1402,28 +1474,6 @@ end
 function NormalTypeInfo:getTxt(  )
   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
     return (_lune.unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
-  end
-  if self.kind == TypeInfoKind.Array then
-    local _exp = self.itemTypeInfoList[1]
-    
-        if  nil == _exp then
-          local __exp = _exp
-          
-          return "[@]"
-        end
-      
-    return _exp:getTxt(  ) .. "[@]"
-  end
-  if self.kind == TypeInfoKind.List then
-    local _exp = self.itemTypeInfoList[1]
-    
-        if  nil == _exp then
-          local __exp = _exp
-          
-          return "[]"
-        end
-      
-    return _exp:getTxt(  ) .. "[]"
   end
   if self.itemTypeInfoList and #self.itemTypeInfoList > 0 then
     local txt = self.rawTxt .. "<"
@@ -1494,21 +1544,21 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
   local txt = string.format( [==[{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         staticFlag = %s, accessMode = '%s', kind = %d, mutable = %s, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind, self.mutable)
   
-  local children = self.children
+  local children = {}
   
-  do
-    local _exp = validChildrenSet
-    if _exp ~= nil then
-    
-        children = {}
-        for __index, child in pairs( self.children ) do
-          if _exp[child:get_typeId()] then
-            table.insert( children, child )
-          end
-        end
+  local set = validChildrenSet
+  
+      if  nil == set then
+        local _set = set
+        
+        set = {}
       end
+    
+  for __index, child in pairs( self:get_children() ) do
+    if set[child:get_typeId()] then
+      table.insert( children, child )
+    end
   end
-  
   stream:write( txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "ifList = {", self.interfaceList ) .. serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. serializeTypeInfoList( "children = {", children, true ) .. "}\n" )
 end
 function NormalTypeInfo:equalsSub( typeInfo )
@@ -1516,7 +1566,7 @@ function NormalTypeInfo:equalsSub( typeInfo )
   if self.typeId == typeInfo:get_typeId() then
     return true
   end
-  if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.accessMode ~= typeInfo:get_accessMode() or self.autoFlag ~= typeInfo:get_autoFlag() or self.nilable ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() or self:get_srcTypeInfo() ~= typeInfo:get_srcTypeInfo() then
+  if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.accessMode ~= typeInfo:get_accessMode() or self.autoFlag ~= typeInfo:get_autoFlag() or self.nilable ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() or self ~= typeInfo:get_srcTypeInfo() then
     return false
   end
   if (self.orgTypeInfo ~= typeInfo:get_orgTypeInfo() ) then
@@ -1620,9 +1670,6 @@ end
 function NormalTypeInfo:get_nilableTypeInfo()       
   return self.nilableTypeInfo         
 end
-function NormalTypeInfo:get_children()       
-  return self.children         
-end
 function NormalTypeInfo:get_mutable()       
   return self.mutable         
 end
@@ -1686,12 +1733,12 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
@@ -1824,7 +1871,7 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
   local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString}, false )
   
   scope:addMethod( getEnumName, "pub", false, true )
-  local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, "pub", "_from", {valTypeInfo}, {info:get_nilableTypeInfo()}, false )
+  local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, "pub", "_from", {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
   
   scope:addMethod( fromVal, "pub", true, true )
   return info
@@ -1858,21 +1905,22 @@ accessMode = '%s', kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.t
   stream:write( "} }\n" )
 end
 
-function NilableTypeInfo:isSettableFrom( other )
-  other = other:get_srcTypeInfo()
+function NilableTypeInfo:canEvalWith( other, opTxt )
+  local otherSrc = other:get_srcTypeInfo()
+  
   if self == _moduleObj.builtinTypeStem_ then
     return true
   end
-  if other == _moduleObj.builtinTypeNil then
+  if otherSrc == _moduleObj.builtinTypeNil then
     return true
   end
-  if self.typeId == other:get_typeId() then
+  if self.typeId == otherSrc:get_typeId() then
     return true
   end
-  if other:get_nilable() then
-    return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
+  if otherSrc:get_nilable() then
+    return self:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
   end
-  return self:get_orgTypeInfo():isSettableFrom( other )
+  return self:get_orgTypeInfo():canEvalWith( otherSrc, opTxt )
 end
 
 
@@ -1912,90 +1960,100 @@ function NormalTypeInfo:isInheritFrom( other )
   return false
 end
 
-function NormalTypeInfo:isSettableFrom( other )
-  other = other:get_srcTypeInfo()
-  if self == _moduleObj.builtinTypeStem_ or self == _moduleObj.builtinTypeDDD then
-    return true
-  end
-  if not self.nilable and other:get_nilable() then
+function TypeInfo.canEvalWithBase( dist, distMut, other, opTxt )
+  local otherMut = other:get_mutable()
+  
+  local otherSrc = other:get_srcTypeInfo()
+  
+  if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and distMut and not otherMut then
     return false
   end
-  if self == _moduleObj.builtinTypeStem and not other:get_nilable() then
+  if dist == _moduleObj.builtinTypeStem_ or dist == _moduleObj.builtinTypeDDD then
     return true
   end
-  if self == _moduleObj.builtinTypeForm and other:get_kind() == TypeInfoKind.Func then
+  if not dist:get_nilable() and otherSrc:get_nilable() then
+    return false
+  end
+  if dist == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then
     return true
   end
-  if other == _moduleObj.builtinTypeNil then
-    if self.kind ~= TypeInfoKind.Nilable then
+  if dist == _moduleObj.builtinTypeForm and otherSrc:get_kind() == TypeInfoKind.Func then
+    return true
+  end
+  if otherSrc == _moduleObj.builtinTypeNil then
+    if dist:get_kind() ~= TypeInfoKind.Nilable then
       return false
     end
     return true
   end
-  if self.typeId == other:get_typeId() then
+  if dist:get_typeId() == otherSrc:get_typeId() then
     return true
   end
-  if self.kind ~= other:get_kind() then
-    if self.kind == TypeInfoKind.Nilable then
-      if other:get_nilable() then
-        return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
+  if dist:get_kind() ~= otherSrc:get_kind() then
+    if dist:get_kind() == TypeInfoKind.Nilable then
+      if otherSrc:get_nilable() then
+        return dist:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
       end
-      return self:get_orgTypeInfo():isSettableFrom( other )
-    elseif (self:get_kind() == TypeInfoKind.Class or self:get_kind() == TypeInfoKind.IF ) and (other:get_kind() == TypeInfoKind.Class or other:get_kind() == TypeInfoKind.IF ) then
-      return other:isInheritFrom( self )
-    elseif other:get_kind() == TypeInfoKind.Enum then
-      local enumTypeInfo = other
+      return dist:get_orgTypeInfo():canEvalWith( otherSrc, opTxt )
+    elseif (dist:get_kind() == TypeInfoKind.Class or dist:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
+      return otherSrc:isInheritFrom( dist )
+    elseif otherSrc:get_kind() == TypeInfoKind.Enum then
+      local enumTypeInfo = otherSrc
       
-      return self:isSettableFrom( enumTypeInfo:get_valTypeInfo() )
+      return dist:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt )
     end
     return false
   end
   do
-    local _switchExp = (self.kind )
+    local _switchExp = (dist:get_kind() )
     if _switchExp == TypeInfoKind.Prim then
-      if self == _moduleObj.builtinTypeInt and other == _moduleObj.builtinTypeChar or self == _moduleObj.builtinTypeChar and other == _moduleObj.builtinTypeInt then
+      if dist == _moduleObj.builtinTypeInt and otherSrc == _moduleObj.builtinTypeChar or dist == _moduleObj.builtinTypeChar and otherSrc == _moduleObj.builtinTypeInt then
         return true
       end
       return false
     elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array then
-      if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
+      if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
         return true
       end
-      if not (_lune.unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune.unwrap( other:get_itemTypeInfoList()[1]) ) then
+      if not (_lune.unwrap( dist:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
         return false
       end
       
       return true
     elseif _switchExp == TypeInfoKind.Map then
-      if other:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and other:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
+      if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and otherSrc:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
         return true
       end
-      if not (_lune.unwrap( self:get_itemTypeInfoList()[1]) ):isSettableFrom( _lune.unwrap( other:get_itemTypeInfoList()[1]) ) then
+      if not (_lune.unwrap( dist:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
         return false
       end
       
-      if not (_lune.unwrap( self:get_itemTypeInfoList()[2]) ):isSettableFrom( _lune.unwrap( other:get_itemTypeInfoList()[2]) ) then
+      if not (_lune.unwrap( dist:get_itemTypeInfoList()[2]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[2]), "=" ) then
         return false
       end
       
       return true
     elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
-      return other:isInheritFrom( self )
+      return otherSrc:isInheritFrom( dist )
     elseif _switchExp == TypeInfoKind.Func then
-      if self == _moduleObj.builtinTypeForm then
+      if dist == _moduleObj.builtinTypeForm then
         return true
       end
       return false
     elseif _switchExp == TypeInfoKind.Method then
       return false
     elseif _switchExp == TypeInfoKind.Nilable then
-      return self:get_orgTypeInfo():isSettableFrom( other:get_orgTypeInfo() )
+      return dist:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
     else 
       return false
     end
   end
   
   return true
+end
+
+function NormalTypeInfo:canEvalWith( other, opTxt )
+  return TypeInfo.canEvalWithBase( self, self:get_mutable(), other, opTxt )
 end
 
 local Filter = {}
@@ -3701,9 +3759,6 @@ end
 function ExpRefItemNode:canBeRight(  )
   return true
 end
-function ExpRefItemNode:canBeLeft(  )
-  return true
-end
 function ExpRefItemNode.new( pos, typeList, val, nilAccess, index )
   local obj = {}
   setmetatable( obj, { __index = ExpRefItemNode } )
@@ -3733,6 +3788,10 @@ end
 do
   end
 
+
+function ExpRefItemNode:canBeLeft(  )
+  return self:get_val():get_expType():get_mutable()
+end
 
 -- none
 
@@ -4572,13 +4631,13 @@ end
 function DeclMemberNode:canBeLeft(  )
   return false
 end
-function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode )
+function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
   local obj = {}
   setmetatable( obj, { __index = DeclMemberNode } )
-  if obj.__init then obj:__init( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode ); end
+  if obj.__init then obj:__init( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode ); end
 return obj
 end
-function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMode, setterMode) 
+function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode) 
   Node.__init( self, _moduleObj.nodeKindDeclMember, pos, typeList)
   
   -- none
@@ -4588,6 +4647,7 @@ function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticF
   self.symbolInfo = symbolInfo
   self.staticFlag = staticFlag
   self.accessMode = accessMode
+  self.getterMutable = getterMutable
   self.getterMode = getterMode
   self.setterMode = setterMode
   -- none
@@ -4607,6 +4667,9 @@ function DeclMemberNode:get_staticFlag()
 end
 function DeclMemberNode:get_accessMode()       
   return self.accessMode         
+end
+function DeclMemberNode:get_getterMutable()       
+  return self.getterMutable         
 end
 function DeclMemberNode:get_getterMode()       
   return self.getterMode         
