@@ -118,7 +118,7 @@ Lua へトランスコンパイルしたファイルは、Lua コマンドでそ
 番外
 
 - Lua のトランスコンパイラ LuneScript を開発した理由
-  - https://qiita.com/dwarfJP/items/21d4d4099ab0feb68eaf
+  - https://qiita.com/dwarfJP/items/9559562b8b97e76d961f
 
 
 ** 値と型
