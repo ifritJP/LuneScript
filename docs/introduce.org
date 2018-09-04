@@ -109,7 +109,9 @@ Lua へトランスコンパイルしたファイルは、Lua コマンドでそ
 - Lua のトランスコンパイラ LuneScript の紹介 3
   - provide, enum の紹介
   - https://qiita.com/dwarfJP/items/7b573f9c7961d2b8f10a
-
+- Lua のトランスコンパイラ LuneScript の紹介 4 (mutable)
+  - mutable の紹介
+  - https://qiita.com/dwarfJP/items/29540d0767d50cfce896
 
 番外
 
@@ -450,6 +452,13 @@ let val: int;
 同名のグローバルシンボルが定義されている場合の動作は未定義とする。
 
 同一スコープ内に、同名の変数を宣言することはできない。
+
+*** mutable 制御
+
+変数には mutable 制御が不可欠です。
+必ずこちらを参照してください。
+
+https://qiita.com/dwarfJP/items/29540d0767d50cfce896
 
 *** nilable の変数宣言
 
