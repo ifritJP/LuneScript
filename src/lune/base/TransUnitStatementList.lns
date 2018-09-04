@@ -178,7 +178,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
       elseif token.txt == "subfile" {
          statement = self.analyzeSubfile( token );
       }
-      elseif token.txt == "luneControl" {
+      elseif token.txt == "_lune_control" {
          self.analyzeLuneControl( token );
          statement = self.createNoneNode( token.pos );
       }

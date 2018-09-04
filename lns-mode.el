@@ -86,7 +86,7 @@
     (,lns-keyword . font-lock-keyword-face)
     ("\\<_exp[0-9]*\\>" . font-lock-warning-face)
     ;;("\\<let\\|unwrap\\|if\\>" . font-lock-keyword-face)
-    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|\\$[\\.\\[(]\\|#\\|\\!" .
+    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|\\$[\\.\\[(]\\|#\\|\\!\\|_lune_control" .
      font-lock-warning-face)
     (,lns-type . font-lock-type-face)
     ;; (":\\s-*\\(\\w+\\)" . (1 font-lock-type-face nil t))

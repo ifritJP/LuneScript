@@ -394,7 +394,7 @@ pub fn Scope.getSymbolInfoField(
 }
 
 pub fn Scope.getTypeInfoField(
-   name: str, includeSelfFlag: bool!, fromScope:Scope ) : TypeInfo!
+   name: str, includeSelfFlag: bool!, fromScope:&Scope ) : TypeInfo!
 {
    let symbolInfo = self.getSymbolInfoField( name, includeSelfFlag, fromScope );
    if! symbolInfo {
@@ -1399,7 +1399,7 @@ pub static fn NormalTypeInfo.createList(
    } 
    typeIdSeed = typeIdSeed + 1;
    return new NormalTypeInfo(
-      false, nil, nil, nil, nil, false, false, false, accessMode, "Array",
+      false, nil, nil, nil, nil, false, false, false, accessMode, "List",
       typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true );
 }
 
@@ -1409,7 +1409,7 @@ pub static fn NormalTypeInfo.createArray(
 {
    typeIdSeed = typeIdSeed + 1;
    return new NormalTypeInfo(
-      false, nil, nil, nil, nil, false, false, false, accessMode, "List",
+      false, nil, nil, nil, nil, false, false, false, accessMode, "Array",
       typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true );
 }
 
@@ -1647,6 +1647,72 @@ pub override fn NormalTypeInfo.isInheritFrom( other:&TypeInfo ) : bool
 }
 
 
+pub static fn TypeInfo.checkMatchType(
+   dstTypeList: &List<&TypeInfo>,
+   expTypeList: &List<&TypeInfo>, allowDstShort:bool ) : bool, str
+{
+   if #expTypeList > 0 {
+      foreach expType, index in expTypeList {
+         if #dstTypeList == 0 {
+            return false, "over exp. expect:0, actual:%d" ( #expTypeList);
+         }
+         let argType = dstTypeList[ index ];
+         if #dstTypeList == index {
+            if not argType.equals( builtinTypeDDD ) {
+               if not argType.canEvalWith( expType, "=" ) {
+                  return false, "exp(%d) type mismatch %s <- %s"
+                  ( index, argType.getTxt(), expType.getTxt());
+               }
+               if not allowDstShort and #dstTypeList < #expTypeList {
+                  return false, "over exp. expect: %d: actual: %d"
+                  (#dstTypeList, #expTypeList );
+               }
+            }
+            break;
+         }
+         elseif #expTypeList == index {
+            // 最終実引数処理
+            if expType.equals( builtinTypeDDD ) {
+               for argIndex = index, #dstTypeList {
+                  let workArgType = dstTypeList[ argIndex ];
+                  if not workArgType.canEvalWith( builtinTypeStem_, "=" ) {
+                     return false, "exp(%d) type mismatch %s <- %s"
+                     ( argIndex, workArgType.getTxt(), builtinTypeStem_.getTxt());
+                  }
+               }
+            }
+            else {
+               let mut workExpType = expType;
+               for argIndex = index, #dstTypeList {
+                  let argTypeInfo = dstTypeList[ argIndex ];
+                  if not argTypeInfo.canEvalWith( workExpType, "=" ) {
+                     return false, "exp(%d) type mismatch %s <- %s"
+                     ( argIndex, argTypeInfo.getTxt(), workExpType.getTxt() );
+                  }
+                  workExpType = builtinTypeNil;
+               }
+            }
+            break;
+         }
+         else {
+            if not argType.canEvalWith( expType, "=" ) {
+               return false, "exp(%d) type mismatch %s <- %s"
+               ( index, argType.getTxt(), expType.getTxt());
+            }  
+         }  
+      }
+   }
+   elseif not allowDstShort {
+      foreach argType, index in dstTypeList {
+         if not argType.canEvalWith( builtinTypeNil, "=" ) {
+            return false, "exp(%d) type mismatch %s <- nil"
+            ( index, argType.getTxt());
+         }
+      }
+   }
+   return true, "";
+}
+
 static fn TypeInfo.canEvalWithBase(
    dist:&TypeInfo, distMut:bool, other:&TypeInfo, opTxt:str ) : bool
 {
@@ -1703,6 +1769,7 @@ static fn TypeInfo.canEvalWithBase(
       }
       return false;
    }
+   // TypeInfoKind が等しい
    switch ( dist.$kind ) {
       case TypeInfoKind.Prim {
          if dist == builtinTypeInt and otherSrc == builtinTypeChar or
@@ -1738,11 +1805,24 @@ static fn TypeInfo.canEvalWithBase(
          if dist == builtinTypeForm {
             return true;
          }  
-         // 暫定 pending 関数型の互換を見る。
-         return false;
+         if not TypeInfo.checkMatchType( dist.$argTypeInfoList,
+                                         otherSrc.$argTypeInfoList, false ) or
+            not TypeInfo.checkMatchType( dist.$retTypeInfoList,
+                                         otherSrc.$retTypeInfoList, false )
+         {
+            return false;
+         }
+         return true;
       }       
       case TypeInfoKind.Method {
-         return false;
+         if not TypeInfo.checkMatchType( dist.$argTypeInfoList,
+                                         otherSrc.$argTypeInfoList, false ) or
+            not TypeInfo.checkMatchType( dist.$retTypeInfoList,
+                                         otherSrc.$retTypeInfoList, false )
+         {
+            return false;
+         }
+         return true;
       }
       case TypeInfoKind.Nilable {
          return dist.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
@@ -1937,7 +2017,7 @@ macro _declNodeClass(
       };
 
       relateStat.insert( `{
-         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,_className, ... ) {
+         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,_className, ... ) mut {
          };               
       } );
       

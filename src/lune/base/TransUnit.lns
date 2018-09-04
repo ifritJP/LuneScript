@@ -26,8 +26,6 @@ subfile use lune.base.TransUnitDecl;
 subfile use lune.base.TransUnitExp;
 subfile use lune.base.TransUnitStatementList;
 
-luneControl disable_mut_control;
-
 import lune.base.Parser;
 import lune.base.Util;
 import lune.base.Ast;
@@ -347,6 +345,13 @@ class _ModuleInfo {
 pub let mut typeInfoListInsert = Ast.typeInfoRoot;
 pub let mut typeInfoListRemove = Ast.typeInfoRoot;
 
+fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
+   if not self.validMutControl {
+      return typeInfo;
+   }  
+   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable );
+}
+
 fn TransUnit.registBuiltInScope() mut {
    let builtInInfo = [
       { 
@@ -465,7 +470,7 @@ fn TransUnit.registBuiltInScope() mut {
       if mutable {
          return typeInfo;
       }
-      typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
+      typeInfo = self.createModifier( typeInfo, false );
       return typeInfo;
    }
 
@@ -982,7 +987,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
 
       if! atomInfo.srcTypeId {
          let srcTypeInfo = unwrap typeId2TypeInfo[ _exp ];
-         newTypeInfo = Ast.NormalTypeInfo.createModifier(
+         newTypeInfo = self.createModifier(
             srcTypeInfo, unwrap atomInfo.mutable default false);
          typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
       }

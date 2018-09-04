@@ -112,7 +112,7 @@ fn TransUnit.analyzeRefType( accessMode: str, allowDDD:bool ) mut: Ast.RefTypeNo
    }
 
    if refFlag {
-      typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
+      typeInfo = self.createModifier( typeInfo, false );
    }
 
    return new Ast.RefTypeNode( firstToken.pos, [ typeInfo ],
@@ -670,7 +670,7 @@ fn TransUnit.analyzeDeclMember(
 
       let mut typeInfo = refType.$expType;
       if typeInfo.$mutable and not mutable {
-         typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
+         typeInfo = self.createModifier( typeInfo, false );
       }
          
       let symbolInfo = self.scope.addMember(
@@ -866,7 +866,7 @@ fn TransUnit.analyzeDeclClass(
          let mutable = memberNode.$getterMutable;
          let mut getterMemberType = memberType;
          if memberType.$mutable and not mutable {
-            getterMemberType = Ast.NormalTypeInfo.createModifier( memberType, false );
+            getterMemberType = self.createModifier( memberType, false );
          }
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
             false, false, self.pushScope( false ),
@@ -1045,43 +1045,9 @@ fn TransUnit.analyzeDeclFunc(
       }  
    }
    
-   if overrideFlag {
-      // オーバーライドの型チェック
-      if not name {
-         self.error( "name is nil" );
-      };       
-      let! overrideType = self.scope.getTypeInfoField( funcName,
-                                                       false, self.scope )
-      {
-         self.error( "not found override -- " .. funcName );
-      };
-      if overrideType.get_accessMode() ~= accessMode {
-         self.error( "missmatch override accessMode -- %s,%s,%s"
-                     ( funcName, overrideType.get_accessMode(), accessMode ) );
-      }
-      if overrideType.get_staticFlag() ~= staticFlag {
-         self.error( "missmatch override staticFlag -- " .. funcName );
-      }
-      if overrideType.get_kind() ~= Ast.TypeInfoKind.Method {
-         self.error( "missmatch override kind -- %s, %d"
-                     ( funcName, overrideType.get_kind() ) );
-      }
-   }
-   else {
-      if! name {
-         if _exp.txt ~= "__init" and
-            self.scope.getTypeInfoField( _exp.txt, false, self.scope )
-         {          
-            // override 宣言していないのに、オーバーライドしている場合エラー
-            self.error( "missmatch override --" .. funcName );
-         }
-      }
-   }
-
-
    self.checkToken( token, "(" );
 
-   let scope = self.pushScope( false );
+   let mut scope = self.pushScope( false );
 
    let mut argList:List<&Ast.Node> = [];
    token = self.analyzeDeclArgList( accessMode, argList );
@@ -1108,7 +1074,7 @@ fn TransUnit.analyzeDeclFunc(
       // self シンボルを登録
       let mut classTypeInfo:&Ast.TypeInfo = unwrap scope.$parent.$ownerTypeInfo;
       if classTypeInfo.$mutable and not mutable {
-         classTypeInfo = Ast.NormalTypeInfo.createModifier( classTypeInfo, false );
+         classTypeInfo = self.createModifier( classTypeInfo, false );
       }
       self.scope.add(
          Ast.SymbolKind.Var, false, true, "self",
@@ -1144,6 +1110,51 @@ fn TransUnit.analyzeDeclFunc(
          parentScope.addMethod( typeInfo, accessMode, staticFlag, mutable );
       }
    }
+
+   if overrideFlag {
+      // オーバーライドの型チェック
+      if not name {
+         self.addErrMess( firstToken.pos, "can't override anonymous func" );
+      };
+      let! overrideType =
+         self.scope.$parent.getTypeInfoField( funcName, false, scope )
+      {
+         self.addErrMess( firstToken.pos, "not found override -- " .. funcName );
+      }
+      then {
+         if overrideType.get_accessMode() ~= accessMode {
+            self.addErrMess( firstToken.pos, "mismatch override accessMode -- %s,%s,%s"
+                             ( funcName, overrideType.get_accessMode(), accessMode ) );
+         }  
+         if overrideType.get_staticFlag() ~= staticFlag {
+            self.addErrMess( firstToken.pos,
+                             "mismatch override staticFlag -- " .. funcName );
+         }  
+         if overrideType.get_kind() ~= Ast.TypeInfoKind.Method {
+            self.addErrMess( firstToken.pos, "mismatch override kind -- %s, %d"
+                             ( funcName, overrideType.get_kind() ) );
+         }
+         if overrideType.$mutable ~= typeInfo.$mutable {
+            self.addErrMess( firstToken.pos, "mismatch mutable -- %s" ( funcName ) );
+         }
+         if not overrideType.canEvalWith( typeInfo, "=" ) {
+            self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
+         }
+      };
+   }
+   else {
+      if! name {
+         if _exp.txt ~= "__init" and
+            self.scope.$parent.getTypeInfoField( _exp.txt, false, scope )
+         {          
+            // override 宣言していないのに、オーバーライドしている場合エラー
+            self.error( "mismatch override --" .. funcName );
+         }
+      }
+   }
+
+
+   
 
    let mut node:Ast.Node = self.createNoneNode( firstToken.pos );
    if token.txt == ";" {
@@ -1237,7 +1248,7 @@ fn TransUnit.analyzeDeclVar(
       if not typeInfo.equals( Ast.builtinTypeNone ) and
          typeInfo.$mutable and not mutable
       {     
-         typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
+         typeInfo = self.createModifier( typeInfo, false );
       }
       typeInfoList.insert( typeInfo );
    } token.txt ~= ",";
@@ -1334,8 +1345,7 @@ fn TransUnit.analyzeDeclVar(
             if typeInfo.$mutable and
                index <= #letVarList and not letVarList[ index ].mutable
             {           
-               typeInfoList[ index ] = Ast.NormalTypeInfo.createModifier( typeInfo,
-                                                                          false );
+               typeInfoList[ index ] = self.createModifier( typeInfo, false );
             }
             else {
                typeInfoList[ index ] = typeInfo;

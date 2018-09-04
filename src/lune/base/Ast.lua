@@ -1733,12 +1733,12 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
   typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
@@ -1960,6 +1960,62 @@ function NormalTypeInfo:isInheritFrom( other )
   return false
 end
 
+function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
+  if #expTypeList > 0 then
+    for index, expType in pairs( expTypeList ) do
+      if #dstTypeList == 0 then
+        return false, string.format( "over exp. expect:0, actual:%d", #expTypeList)
+      end
+      local argType = dstTypeList[index]
+      
+      if #dstTypeList == index then
+        if not argType:equals( _moduleObj.builtinTypeDDD ) then
+          if not argType:canEvalWith( expType, "=" ) then
+            return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt(  ), expType:getTxt(  ))
+          end
+          if not allowDstShort and #dstTypeList < #expTypeList then
+            return false, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList)
+          end
+        end
+        break
+      elseif #expTypeList == index then
+        if expType:equals( _moduleObj.builtinTypeDDD ) then
+          for argIndex = index, #dstTypeList do
+            local workArgType = dstTypeList[argIndex]
+            
+            if not workArgType:canEvalWith( _moduleObj.builtinTypeStem_, "=" ) then
+              return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, workArgType:getTxt(  ), _moduleObj.builtinTypeStem_:getTxt(  ))
+            end
+          end
+        else 
+          local workExpType = expType
+          
+          for argIndex = index, #dstTypeList do
+            local argTypeInfo = dstTypeList[argIndex]
+            
+            if not argTypeInfo:canEvalWith( workExpType, "=" ) then
+              return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, argTypeInfo:getTxt(  ), workExpType:getTxt(  ))
+            end
+            workExpType = _moduleObj.builtinTypeNil
+          end
+        end
+        break
+      else 
+        if not argType:canEvalWith( expType, "=" ) then
+          return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt(  ), expType:getTxt(  ))
+        end
+      end
+    end
+  elseif not allowDstShort then
+    for index, argType in pairs( dstTypeList ) do
+      if not argType:canEvalWith( _moduleObj.builtinTypeNil, "=" ) then
+        return false, string.format( "exp(%d) type mismatch %s <- nil", index, argType:getTxt(  ))
+      end
+    end
+  end
+  return true, ""
+end
+
 function TypeInfo.canEvalWithBase( dist, distMut, other, opTxt )
   local otherMut = other:get_mutable()
   
@@ -2039,9 +2095,15 @@ function TypeInfo.canEvalWithBase( dist, distMut, other, opTxt )
       if dist == _moduleObj.builtinTypeForm then
         return true
       end
-      return false
+      if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) then
+        return false
+      end
+      return true
     elseif _switchExp == TypeInfoKind.Method then
-      return false
+      if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) then
+        return false
+      end
+      return true
     elseif _switchExp == TypeInfoKind.Nilable then
       return dist:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
     else 

@@ -214,7 +214,7 @@ fn TransUnit.analyzeExpRefItem(
    }
 
    if typeInfo.$mutable and not expType.$mutable {
-      typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
+      typeInfo = self.createModifier( typeInfo, false );
    }
    
    return new Ast.ExpRefItemNode( token.pos, [ typeInfo ], exp, nilAccess, indexExp );
@@ -222,93 +222,24 @@ fn TransUnit.analyzeExpRefItem(
 
 
 fn TransUnit.checkMatchType(
-   mut message:str, pos: &Parser.Position,
-   dstTypeList: &List<&Ast.TypeInfo>, expNodeList: &List<&Ast.Node> ) mut
+   mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
+   expNodeList: &List<&Ast.Node>, allowDstShort:bool ) mut
 {
-   if #expNodeList > 0 {
-      foreach expNode, index in expNodeList {
-         if #dstTypeList < index {
-            self.addErrMess( pos,
-                             "%s: over exp. expect:%d, actual:%d"
-                             ( message,
-                               #dstTypeList, #expNodeList) );
-            break;
+   let mut expTypeList:List<&Ast.TypeInfo> = [];
+   foreach expNode, index in expNodeList {
+      if index == #expNodeList {
+         foreach expType in expNode.$expTypeList {
+            expTypeList.insert( expType );
          }
-         let argType = dstTypeList[ index ];
-         let mut expType = expNode.$expType;
-         if #dstTypeList == index {
-            if not argType.equals( Ast.builtinTypeDDD ) {
-               if not argType.canEvalWith( expType, "=" ) {
-                  self.addErrMess(
-                     expNode.$pos,
-                     "%s: exp(%d) type mismatch %s <- %s"
-                     ( message, index,
-                       argType.getTxt(), expType.getTxt()));
-               }
-               if #dstTypeList < #expNodeList {
-                  self.addErrMess(
-                     expNode.$pos,
-                     "%s: over exp. expect: %d: actual: %d"
-                     ( message,
-                       #dstTypeList, #expNodeList ) );
-               }
-            }
-            break;
-         }
-         elseif #expNodeList == index {
-            // 最終実引数処理
-            if expType.equals( Ast.builtinTypeDDD ) {
-               for argIndex = index, #dstTypeList {
-                  let workArgType = dstTypeList[ argIndex ];
-                  if not workArgType.canEvalWith( Ast.builtinTypeStem_, "=" ) {
-                     self.addErrMess(
-                        expNode.$pos,
-                        "%s: exp(%d) type mismatch %s <- %s"
-                        ( message, argIndex,
-                          workArgType.getTxt(), expType.getTxt()));
-                  }
-               }
-            }
-            else {
-               let lastExpTypeList = expNode.$expTypeList;
-               let mut expIndex = 1;
-               for argIndex = index, #dstTypeList {
-                  if expIndex <= #lastExpTypeList {
-                     expType = lastExpTypeList[ expIndex ];
-                  }
-                  else {
-                     expType = Ast.builtinTypeNil;
-                  }
-                  let argTypeInfo = dstTypeList[ argIndex ];
-                  if not argTypeInfo.canEvalWith( expType, "=" ) {
-                     self.addErrMess(
-                        expNode.$pos,
-                        "%s: exp(%d) type mismatch %s <- %s"
-                        ( message, argIndex,
-                          argTypeInfo.getTxt(), expType.getTxt() ) );
-                  }
-                  expIndex = expIndex + 1;
-               }
-            }
-            break;
-         }
-         if not argType.canEvalWith( expType, "=" ) {
-            self.addErrMess(
-               expNode.$pos,
-               "%s: exp(%d) type mismatch %s <- %s"
-               ( message, index,
-                 argType.getTxt(), expType.getTxt()));
-         }
+      }
+      else {
+         expTypeList.insert( expNode.$expType );
       }
    }
-   else {
-      foreach argType, index in dstTypeList {
-         if not argType.canEvalWith( Ast.builtinTypeNil, "=" ) {
-            self.addErrMess(
-               pos, "%s: exp(%d) type mismatch %s <- nil"
-               ( message, index, argType.getTxt()));
-         }
-      }
+   let match, mess = Ast.TypeInfo.checkMatchType( dstTypeList,
+                                                  expTypeList, allowDstShort );
+   if not match {
+      self.addErrMess( pos, "%s: %s" (message, mess ) );
    }
 }
 
@@ -332,7 +263,7 @@ fn TransUnit.checkMatchValType(
    if! expList {
       expNodeList = _exp.$expList;
    }
-   self.checkMatchType( funcTypeInfo.getTxt(), pos, argTypeList, expNodeList );
+   self.checkMatchType( funcTypeInfo.getTxt(), pos, argTypeList, expNodeList, false );
 }
 
 class MacroPaser extend Parser.Parser {
@@ -987,8 +918,9 @@ fn TransUnit.analyzeExpSymbol(
             if! symbolInfo {
                accessSymbolInfo = new Ast.AccessSymbolInfo( _exp, prefixExpType );
             };
-            if not prefixExpType.$mutable and typeInfo.$mutable {
-               typeInfo = Ast.NormalTypeInfo.createModifier( typeInfo, false );
+            if not prefixExpType.$mutable and typeInfo.$mutable
+            {           
+               typeInfo = self.createModifier( typeInfo, false );
             }
             
             if! getterTypeInfo {
@@ -1046,14 +978,16 @@ fn TransUnit.analyzeExpOpSet(
                        (Ast.getNodeKindName( exp.$kind ) ) );
    }
    self.checkMatchType(
-      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList );
+      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true );
 
    foreach symbolInfo in exp.getSymbolInfo() {
       if not symbolInfo.$mutable and symbolInfo.$hasValueFlag
-      {     
-         self.addErrMess( opeToken.$pos,
-                          "this is not mutable variable. -- %s"
-                          ( symbolInfo.$name ) );
+      {
+         if self.validMutControl {
+            self.addErrMess( opeToken.$pos,
+                             "this is not mutable variable. -- %s"
+                             ( symbolInfo.$name ) );
+         }
       }
       symbolInfo.set_hasValueFlag( true );
    }

@@ -178,14 +178,14 @@ pub class Token {
 }
 
 pub class Parser {
-   pub fn getToken() : &Token;
+   pub fn getToken() mut : &Token!;
    pub fn getStreamName(): str;
 }
 
 pub class WrapParser extend Parser {
-   let parser: Parser;
+   let mut parser: Parser;
    let name: str;
-   pub override fn getToken() : &Token {
+   pub override fn getToken() mut : &Token! {
       let mut token = self.parser.getToken();
       return token;
    }
@@ -682,7 +682,7 @@ fn StreamParser.parse() mut : Token[]! {
    }
 }
 
-pub override fn StreamParser.getToken() mut : Token! {
+pub override fn StreamParser.getToken() mut : &Token! {
    if not self.lineTokenList {
       return nil;
    }
@@ -708,7 +708,7 @@ pub fn getEofToken(): &Token {
    return eofToken;
 }
 pub class DummyParser extend Parser {
-   pub override fn getToken() : &Token {
+   pub override fn getToken() mut : &Token! {
       return eofToken;
    }
    pub override fn getStreamName(): str {

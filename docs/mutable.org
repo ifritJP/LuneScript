@@ -1,0 +1,306 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="org-mode-document.css" />
+#+HTML_HEAD: <meta http-equiv="Pragma" content="no-cache">
+#+HTML_HEAD: <meta http-equiv="Cache-Control" content="no-cache"> 
+
+#+TITLE: Lua のトランスコンパイラ LuneScript の紹介 4 (mutable)
+
+LuneScript は、 Lua へのトランスコンパイルを目的とした言語です。
+
+LuneScript を利用することで、規模の大きい Lua スクリプトを効率良く開発出来ます。
+
+この記事は https://qiita.com/dwarfJP/items/21d4d4099ab0feb68eaf の続きです。
+
+上記の記事で紹介出来なかった機能について説明します。
+
+* mutable
+
+LuneScript は、 C++ の const のような、データの mutability を制御できます。
+
+** 変数の mutable 制御
+
+C/C++ では、 const 宣言したものが immutable になりますが、
+LuneScript では、デフォルトが immutable になります。
+この辺りは Rust を参考にしています。
+   
+例えば次の場合、val は immutable なため ~val = 2~ はエラーになります。
+
+#+BEGIN_SRC lns
+let val = 1;
+val = 2;  // error
+#+END_SRC
+
+mutable なデータを宣言するには、次のように行ないます。
+
+#+BEGIN_SRC lns
+let mut val = 1;
+val = 2;
+#+END_SRC
+
+mut 宣言していない変数は、変数そのものが immutable であるのと同時に、
+その変数に格納しているオブジェクトも immutable になります。
+
+次の場合 int リストを immutable な val 変数に格納しています。
+このリストは immutable になるため、insert はエラーになります。
+
+#+BEGIN_SRC lns
+let val1 = [ 1, 2 ];
+val1.insert( 1 ); //  error
+#+END_SRC
+
+これは、 val1 に格納されたリストそのものが immutable として扱われるため、
+insert() のようなオブジェクトを変更する操作は出来なくなります。 
+
+このような制御は、 C++ でもお馴染の動作なので問題ないと思います。
+
+C++ の const との違いは次の 2 点です。
+
+- デフォルトが immutable で、 mut 宣言した場合に mutable になる。
+- mut 宣言しないと、変数に格納するオブジェクトと、変数自体が immutable になる。
+
+この制御は、ローカル変数だけでなく、引数も同様です。
+
+** メンバの mutable 制御
+
+クラスのメンバの mutable 制御は、基本的に変数と同じです。
+
+ただし、次の点で異なります。
+
+   /immutable なメンバでもコンストラクタでは値をセット可能/
+
+LuneScript では、メンバの初期化はコンストラクタで行ないます。
+メンバ宣言時には初期値を設定できません。
+
+static メンバについては、 コンストラクタではなく__init ブロックでセットします。
+
+次の例では、 __init ブロックで static な sval に値を設定した後、
+~Test.sval = 10~ していますが、 sval は immutable なためエラーとなります。 
+また、 コンストラクタで val に値を設定した後、
+~test.val = 10~ していますが、 val は immutable なためエラーとなります。
+
+#+BEGIN_SRC lns
+class Test {
+   pub static let sval:int;
+   __init {
+      Test.sval = 1;
+   }
+   pub let val:int;
+   pub fn __init( val:int ) {
+      self.val = val;
+   }
+}
+
+Test.sval = 10; // error
+let mut test = new Test( 1 );
+test.val = 10; // error
+#+END_SRC
+
+メンバを mutable にするには、 宣言に mut を付加します。
+
+#+BEGIN_SRC lns
+class Test {
+   pub static let mut sval:int;
+   __init {
+      Test.sval = 1;
+   }
+   pub let mut val:int;
+   pub fn __init( val:int ) {
+      self.val = val;
+   }
+}
+
+Test.sval = 10; // ok
+let mut test = new Test( 1 );
+test.val = 10; // ok
+#+END_SRC
+
+なお、メンバが mutable であっても、
+次のようにインスタンス自体が immutable である場合、
+~test.val = 10~ はエラーとなります。
+
+#+BEGIN_SRC lns
+class Test {
+   pub let mut val:int;
+   pub fn __init( val:int ) {
+      self.val = val;
+   }
+}
+
+let test = new Test( 1 );
+test.val = 10; // error
+#+END_SRC
+
+
+** メソッドの mutable 制御
+
+C++ のメソッドに const があるように、   
+メソッドにも mutable と immutable があります。
+
+これは、そのメソッドが、
+クラスのメンバに変更を行なうかどうかを制御するものです。
+
+変更を行なうならば、そのメソッドは mutable となります。
+
+例えば次の func() メソッドは mutable です。
+
+#+BEGIN_SRC lns
+class Test {
+   let mut val:int;
+   pub fn func() mut {
+      self.val = self.val + 1;
+   }
+}
+#+END_SRC
+
+ここで、 次のように func() メソッドに mut を付けないと、
+エラーになります。
+
+#+BEGIN_SRC lns
+class Test {
+   let mut val:int;
+   pub fn func() {
+      self.val = self.val + 1;  // error
+   }
+}
+#+END_SRC
+
+これは、 immutable なメソッド内で、
+メンバに値を設定したためエラーとなります。
+
+また、次のように immutable なメソッド func2() から、
+mutable なメソッド func1() を呼び出した場合もエラーとなります。
+
+#+BEGIN_SRC lns
+class Test {
+   let mut val:int;
+   pub fn func1() mut {
+      self.val = self.val + 1;
+   }
+   pub fn func2() {
+      self.func1();  // error
+   }
+}
+#+END_SRC
+
+** immutable な型
+
+ここままでで、 mutable の制御について説明しました。
+
+では、次の場合 ~val2.insert()~ は、エラーになるか、ならないか,どちらでしょうか？
+
+#+BEGIN_SRC lns
+let val = [ 1, 2 ];
+let mut val2 = val;
+val2.insert( 3 );
+#+END_SRC
+
+val は immutable です。
+一方 val2 は、 mutable です。
+
+では val2.insert() はどうでしょうか？
+
+正解は、 val2.insert() はエラーになります。
+
+理由は、 val が保持する int 配列が immutable なものになるためです。
+
+val は、 val 自身と、val に格納されているデータの型が immutable になります。
+val2 自体は mutable になりますが、
+そのデータ型は、型推論により val と同じ immutable な型となります。
+
+immutable なデータ型なため、
+insert() のような mutable なメソッドはコール出来ずにエラーとなります。
+
+ちなみに型推論を使わずに、型を明示すると次のようになります。
+
+#+BEGIN_SRC lns
+let val:int[] = [ 1, 2 ];
+let mut val2:&List<int> = val;
+val2.insert( 3 );
+#+END_SRC
+
+ここで、 ~&List<int>~ は immutable な int[] を示す型です。
+List<int> が int[] を示し、 & が immutable を示します。
+
+なお、 ~&List<int>~ と ~&int[]~ は等価な表現ですが、
+immutable な型を表現する場合は ~&List<int>~ を使うことを推奨します。
+
+理由は、 ~&List<&List<int>>~ のような表現が ~int[]~ では出来ないためです。
+
+あくまで ~int[]~ は、 ~List<int>~ のシンタックシュガーだと思ってください。
+
+** immutable と mutable 間のデータの代入
+
+C の const 宣言したポインタを、
+const でないポインタに代入する時に warning あるいはエラーするように、
+LuneScript の immutable から mutable への代入はエラーとなります。
+
+例えば次の場合、 func() の引数 list は mutable な型となります。
+一方 list2 は immutable です。
+この list2 を func() に与えた場合、
+immutable なデータを mutable に渡すことになるため、エラーとなります。
+
+#+BEGIN_SRC lns
+fn func( list:int[] ) {
+   foreach val in list {
+      print( val )
+   }
+}
+
+let list2 = [ 1, 2 ];
+func( list2 );  // error
+#+END_SRC
+
+このエラーを回避するには、次のように func() の引数 list 型を宣言します。
+
+#+BEGIN_SRC lns
+fn func( list:&List<int> ) {
+   foreach val in list {
+      print( val )
+   }
+}
+
+let list2 = [ 1, 2 ];
+func( list2 );
+#+END_SRC
+
+list が &List<int> として immutable な型となったため、
+~func(list2)~ となりません。
+
+** mutable 制御の抑制
+
+mutable 制御は、次の長所があります。
+
+- C++ の const 同様に、意図しないタイミングでのデータ更新を防ぐ
+- mutable 制御を意識することで、より安全な設計に矯正される
+
+一方で次の短所があります。
+
+- 設計の自由度をかなり奪う
+- C++ とは違いデフォルトで immutable になるため、mut 宣言を多くしなければならない
+- mutable 制御がなければ簡単に書けた処理が、遠まわしになってしまう
+
+C++ の const 制御ですら、まともに行なわれていないことが多いため、
+C++ の const 制御以上に mut 宣言が多くなってしまう mutable 制御は、
+敬遠されることをが予想できます。
+
+そこで、そういった人のために mutable 制御を off にするオプションを用意しています。
+
+次の宣言をスクリプトの先頭に記述することで、
+そのファイルでは mutable 制御を行なわないようになります。
+
+#+BEGIN_SRC lns
+_lune_control disable_mut_control;
+#+END_SRC
+
+なおこの宣言は、これを宣言したスクリプト内でのみ有効です。
+
+このスクリプトで pub 宣言したものを外部から利用した場合は、
+mutable 制御が行なわれます。
+
+その外部モジュールでも mutable 制御を無効にする場合は、
+別途その外部モジュール内で ~_lune_control disable_mut_control;~ を宣言する必要があります。
+
+この宣言は、あくまで救済措置であり、多様すべきではありません。

@@ -78,6 +78,9 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/var.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/arg.lns,exe,2>&1)
 
+	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
+	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
+	rm test/error/dis_mutable.lns
 
 test-comp2:
 	$(call exeLune,.,test/start.lns,exe,) > work/test.result

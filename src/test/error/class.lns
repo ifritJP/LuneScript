@@ -44,6 +44,10 @@ class Test5 { // error
 
 class Super1 {
    pri let val:int;
+   pub fn func() {
+   }
+   pub override fn func() { // error
+   }
 }
 
 class Sub1 extend Super1 { // error: no __init
@@ -51,9 +55,21 @@ class Sub1 extend Super1 { // error: no __init
 
 class Super2 {
    pri let val:int!;
+   pub fn func1() {
+   }
+   pub fn func2() {
+   }
+   pub fn func3() {
+   }
 }
 
 class Sub2 extend Super2 {
+   pub override fn func1() mut {
+   }
+   pub override fn func2(arg:int) mut {
+   }
+   pub override fn func3() mut : int {
+   }
 }
 
 
