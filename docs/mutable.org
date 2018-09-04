@@ -267,7 +267,7 @@ func( list2 );
 #+END_SRC
 
 list が &List<int> として immutable な型となったため、
-~func(list2)~ となりません。
+~func(list2)~ はエラーとなりません。
 
 ** mutable 制御の抑制
 
