@@ -163,7 +163,9 @@ end
 
 function dumpFilter:processIfUnwrap( node, prefix, depth )
   dump( prefix, depth, node, "" )
-  filter( node:get_exp(), self, prefix .. "  ", depth + 1 )
+  for index, expNode in pairs( node:get_expNodeList() ) do
+    filter( expNode, self, prefix .. "  ", depth + 1 )
+  end
   filter( node:get_block(), self, prefix .. "  ", depth + 1 )
   if node:get_nilBlock() then
     filter( _lune.unwrap( node:get_nilBlock()), self, prefix .. "  ", depth + 1 )

@@ -1,0 +1,19 @@
+let! val1, val2:int! = 1, nil {
+   val2 = 2;
+}
+then {
+   print( val1, val2 );
+};
+
+let val1 = 1; // error
+let val2 = 1; // error
+
+if! let val1 = val2 {  // error
+}
+
+if! let val3 = val2 {
+   print( val3 );
+}
+else {
+   print( val3 );  // error
+}

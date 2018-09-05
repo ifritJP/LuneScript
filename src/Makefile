@@ -7,7 +7,8 @@ NDIR=$(shell pwd)
 
 help:
 	@echo usage:
-	@echo "  " make test-comp
+	@echo "  make test-comp"
+	@echo "  make release-check"
 
 
 exec:
@@ -36,6 +37,10 @@ define exeComp
 	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
 			json_pp --json_opt=canonical,pretty | sort
 endef
+
+release-check:
+	$(MAKE) test-comp
+	$(MAKE) test-comp LUA=lua5.2
 
 test-comp:
 	rm -rf work
@@ -77,6 +82,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/mutable.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/var.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/arg.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/unwrap.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)

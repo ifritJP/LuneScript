@@ -153,7 +153,9 @@ pub override fn dumpFilter.processIfUnwrap(
    node: &Ast.IfUnwrapNode, prefix: str, depth: int ) mut
 {
    dump( prefix, depth, node, "" );
-   filter( node.$exp, self, prefix .. "  ", depth + 1 );
+   foreach expNode, index in node.$expNodeList {
+      filter( expNode, self, prefix .. "  ", depth + 1 );
+   }
    filter( node.$block, self, prefix .. "  ", depth + 1 );
    if node.$nilBlock {
       filter( unwrap node.$nilBlock, self, prefix .. "  ", depth + 1 );

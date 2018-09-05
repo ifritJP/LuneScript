@@ -262,6 +262,7 @@ pub class TransUnit {
    pri fn analyzeExpSymbol( firstToken: &Parser.Token, token: &Parser.Token,
                             mode: str, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node;
    pri fn analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node! ): Ast.ExpListNode;
+   pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node;
 }
 
 
@@ -446,7 +447,7 @@ fn TransUnit.registBuiltInScope() mut {
             "loadModule": { "arg": [ "&str" ], "ret": ["stem", "stem"] },
             "searchModule": { "arg": [ "&str" ], "ret": ["str!"] },
          }, 
-      } 
+      }
    ]@@Map<str,Map<str,Map<str,str[]>>>[];
 
 
@@ -475,6 +476,8 @@ fn TransUnit.registBuiltInScope() mut {
    }
 
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
+
+   self.scope.addVar( "global", "_VERSION", Ast.builtinTypeString, false, true );
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, name in builtinClassInfo {
@@ -574,7 +577,7 @@ fn TransUnit.registBuiltInScope() mut {
 }
 
 
-fn TransUnit.error( mess: str ) {
+fn TransUnit.error( mess: str ) mut {
    let mut pos:&Parser.Position = new Parser.Position( 0, 0 );
    let mut txt = "";
    if self.currentToken ~= Parser.getEofToken() {
@@ -588,9 +591,15 @@ fn TransUnit.error( mess: str ) {
          txt = token.txt;
       }
    }
-   Util.err( "%s:%d:%d: error:(%s) %s"
-             ( self.parser.getStreamName(),
-               pos.lineNo, pos.column, txt, mess ) );
+   self.addErrMess(pos, mess);
+   // Util.err( "%s:%d:%d: error:(%s) %s"
+   //           ( self.parser.getStreamName(),
+   //             pospos.lineNo, pos.column, txt, mess ) );
+
+   foreach mess in self.errMessList {
+      Util.errorLog( mess );
+   }
+   Util.err( "has error" );
 }
 
 fn TransUnit.createNoneNode( pos: &Parser.Position ): Ast.Node {
@@ -803,7 +812,7 @@ fn TransUnit.pushbackStr( name: str, statement: str ) mut {
    }
 }
 
-fn TransUnit.checkSymbol( token: &Parser.Token ): &Parser.Token {
+fn TransUnit.checkSymbol( token: &Parser.Token ) mut : &Parser.Token {
    if token.kind ~= Parser.TokenKind.Symb and
       token.kind ~= Parser.TokenKind.Kywd and
       token.kind ~= Parser.TokenKind.Type
@@ -818,7 +827,7 @@ fn TransUnit.getSymbolToken() mut : &Parser.Token {
 }
 
 
-fn TransUnit.checkToken( token: &Parser.Token, txt: str ): &Parser.Token {
+fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
    if not token or token.txt ~= txt {
       self.error( "not found -- %s" ( txt ) );
    }
@@ -868,7 +877,7 @@ fn TransUnit.analyzeStatementList(
    return lastStatement;
 }
 
-fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Ast.Node> ) : Ast.Node! {
+fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Ast.Node> ) mut : Ast.Node! {
    let statement = self.analyzeStatement();
 
    if! statement {
@@ -1027,19 +1036,16 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
             };  
 
             newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
-            if newTypeInfo {
-               sync! newTypeInfo = newTypeInfo {}    
-               then {
-                  typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
-                  if not newTypeInfo.$scope {
-                     Util.err( "not found scope %s %s %s %s %s"
-                               ( parentScope, atomInfo.parentId,
-                                 atomInfo.typeId,
-                                 atomInfo.txt, newTypeInfo.getTxt() ) );
-                  }     
-                  typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
-               };   
-            }  
+            if! newTypeInfo {
+               typeId2Scope[ atomInfo.typeId ] = _exp.$scope;
+               if not _exp.$scope {
+                  Util.err( "not found scope %s %s %s %s %s"
+                            ( parentScope, atomInfo.parentId,
+                              atomInfo.typeId,
+                              atomInfo.txt, _exp.getTxt() ) );
+               }
+               typeId2TypeInfo[ atomInfo.typeId ] = _exp;
+            }
             else {
                let mut scope = new Ast.Scope( parentScope, true, [] );
 
@@ -1113,17 +1119,15 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                if newTypeInfo and ( atomInfo.kind == Ast.TypeInfoKind.Class or
                                     atomInfo.kind == Ast.TypeInfoKind.IF )
                {                                
-                  sync! newTypeInfo = newTypeInfo {
-                  }    
-                  then {
-                     typeId2Scope[ atomInfo.typeId ] = newTypeInfo.$scope;
-                     if not newTypeInfo.$scope {
+                  if! newTypeInfo {
+                     typeId2Scope[ atomInfo.typeId ] = _exp.$scope;
+                     if not _exp.$scope {
                         Util.err( "not found scope %s %s %s %s %s"
                                   ( parentScope, atomInfo.parentId,
                                     atomInfo.typeId,
-                                    atomInfo.txt, newTypeInfo.getTxt() ) );
+                                    atomInfo.txt, _exp.getTxt() ) );
                      }     
-                     typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
+                     typeId2TypeInfo[ atomInfo.typeId ] = _exp;
                   };   
                }  
                else {
@@ -1398,42 +1402,6 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Ast.SubfileNode {
    }
    return new Ast.SubfileNode( token.pos, [ Ast.builtinTypeNone ] );
 }
-
-fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
-   let exp = self.analyzeExp( false );
-
-   if self.scope.getSymbolTypeInfo( "_exp", self.scope, self.moduleScope ) {
-      self.addErrMess( firstToken.pos, "shadowing _exp" );
-   }
-
-   let mut scope = self.pushScope( false );
-
-   let expType = exp.$expType;
-   if not expType.$nilable {
-      self.addErrMess( exp.$pos, "this is not nilable" );
-      scope.addLocalVar( false, true, "_exp", expType, false );
-   }
-   else {
-      scope.addLocalVar( false, true, "_exp", expType.$orgTypeInfo, false );
-   }
-   
-   let block = self.analyzeBlock( "if!", scope );
-
-   self.popScope();
-
-   let mut elseBlock:Ast.BlockNode! = nil;
-   let nextToken = self.getToken( true );
-   if nextToken.txt == "else" {
-      elseBlock = self.analyzeBlock( "if!" );
-   }
-   else {
-      self.pushback();
-   }
-
-   return new Ast.IfUnwrapNode(
-      firstToken.pos, [ Ast.builtinTypeNone ], exp, block, elseBlock );
-}
-
 
 fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
    let mut nextToken, continueFlag = self.getContinueToken();

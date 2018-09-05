@@ -548,7 +548,7 @@ fn TransUnit.analyzeExpCont(
 
 
 fn TransUnit.analyzeAccessClassField(
-   mut classTypeInfo: &Ast.TypeInfo, mode:str, token:&Parser.Token ) :
+   mut classTypeInfo: &Ast.TypeInfo, mode:str, token:&Parser.Token ) mut :
    &Ast.TypeInfo, &Ast.SymbolInfo!, bool
 {
    if classTypeInfo.get_kind() == Ast.TypeInfoKind.List {
@@ -766,6 +766,164 @@ fn TransUnit.checkSymbolComp( token:&Parser.Token )
    );
 }
 
+fn TransUnit.analyzeExpField(
+   firstToken: &Parser.Token, token: &Parser.Token,
+   mode: str, prefixExp: &Ast.Node ) mut : Ast.Node
+{
+   let mut accessNil = false;
+   if mode == "field_nil" or mode == "get_nil" {
+      accessNil = true;
+   }
+   if self.macroMode == "analyze" {
+      if accessNil {
+         self.useNilAccess = true;
+      }
+      return new Ast.RefFieldNode(
+         firstToken.pos, [ Ast.builtinTypeSymbol ],
+         token, nil, accessNil, unwrap prefixExp );
+   }
+
+   let mut typeInfo:&Ast.TypeInfo = Ast.builtinTypeStem_;
+   let mut prefixExpType = prefixExp.$expType;
+
+   self.checkFieldComp(
+      mode == "get" or mode == "get_nil", token, prefixExp );
+   
+   if accessNil {
+      if prefixExpType.$nilable {
+         // nil 条件演算で、 prefixExpType が nilable ならば、
+         // prefixExpType を非 nilable にセットする
+         prefixExpType = unwrap prefixExpType.$orgTypeInfo;
+      }
+      else {
+         // prefixExpType が nilable でなければ、
+         // nil 判定は不要なので accessNil をクリアする
+         accessNil = false;
+      }
+   }
+
+   let mut getterTypeInfo:Ast.TypeInfo! = nil;
+   let mut symbolInfo:Ast.SymbolInfo! = nil;
+   if prefixExpType.get_kind() == Ast.TypeInfoKind.Class or
+      prefixExpType.get_kind() == Ast.TypeInfoKind.Module or
+      prefixExpType.get_kind() == Ast.TypeInfoKind.IF or
+      prefixExpType.get_kind() == Ast.TypeInfoKind.List
+   {
+      let mut getterFlag = false;
+      typeInfo, symbolInfo, getterFlag =
+         self.analyzeAccessClassField( prefixExpType, mode, token );
+      if getterFlag {
+         if! symbolInfo {
+            getterTypeInfo = _exp.$typeInfo;
+         }
+      }
+   }
+   elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Map {
+      let work = prefixExpType.$itemTypeInfoList[1];
+      if not work.equals( Ast.builtinTypeString ) {
+         self.addErrMess(
+            token.pos,
+            "map key type is not str. (%s)" (work.getTxt()) );
+      }
+      typeInfo = prefixExpType.$itemTypeInfoList[2];
+      if not typeInfo.$nilable {
+         //if _exp.$nilable {
+         typeInfo = typeInfo.$nilableTypeInfo;
+      }
+   }
+   elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Enum {
+      let scope = unwrap prefixExpType.$scope;
+      let mut fieldName = token.txt;
+      if mode == "get" {
+         fieldName = "get_" .. fieldName;
+         getterTypeInfo = Ast.rootTypeInfo;
+      }
+
+      if! scope.getTypeInfoChild( fieldName ) {
+         typeInfo = _exp;
+      }
+      else {
+         self.addErrMess( token.pos,
+                          "not found enum field -- %s" (token.txt));
+         typeInfo = Ast.builtinTypeInt;
+      }
+   }
+   elseif prefixExpType.equals( Ast.builtinTypeStem ) {
+   }
+   else {
+      self.error( "illegal type -- %s, %d"
+                  ( prefixExpType.getTxt(),
+                    prefixExpType.get_kind() ) );
+   }
+
+   if not symbolInfo {
+      let prefixScope = prefixExpType.$scope;
+      if! prefixScope {
+         symbolInfo = _exp.getSymbolInfoField( token.txt, true, self.scope );
+      }
+   }
+   let prefixSymbolInfoList = prefixExp.getSymbolInfo();
+   let mut prefixSymbolInfo:Ast.AccessSymbolInfo! = nil;
+   if #prefixSymbolInfoList == 1 {
+      prefixSymbolInfo = prefixSymbolInfoList[1];
+   }
+   
+   if! symbolInfo {
+      sync! prefixSymbolInfo = prefixSymbolInfo {}
+      then {
+         if prefixSymbolInfo.$kind == Ast.SymbolKind.Typ {
+            if not _exp.$staticFlag and _exp.$kind ~= Ast.SymbolKind.Typ
+            {
+               // クラスシンボルから、 static でないメンバにアクセスした場合エラー
+               self.addErrMess(
+                  token.pos, "Type can't access this symbol. -- %s" (_exp.$name) );    
+            }
+         }
+         elseif _exp.$staticFlag {
+            // インスタンスから、 static メンバにアクセスした場合エラー
+            self.addErrMess(
+               token.pos, "can't access this symbol. -- %s" (token.txt) );
+         }
+      };
+
+      if not prefixExpType.$mutable and
+         not _exp.$staticFlag and
+         _exp.$kind == Ast.SymbolKind.Mtd and _exp.$mutable 
+      {  
+         // オブジェクトが immutable で、
+         // mutable な method へのアクセスはエラー
+         self.addErrMess(
+            token.pos, "can't access mutable method. -- %s" (token.txt) );
+      }  
+   }
+
+   if accessNil {
+      if not typeInfo.$nilable {
+         typeInfo = typeInfo.$nilableTypeInfo;
+      }
+      self.useNilAccess = true;
+   }
+
+   let mut accessSymbolInfo:Ast.AccessSymbolInfo! = nil;
+   if! symbolInfo {
+      accessSymbolInfo = new Ast.AccessSymbolInfo( _exp, prefixExpType );
+   };
+   if not prefixExpType.$mutable and typeInfo.$mutable
+   {           
+      typeInfo = self.createModifier( typeInfo, false );
+   }
+   
+   if! getterTypeInfo {
+      return new Ast.GetFieldNode(
+         firstToken.pos, [ typeInfo ],
+         token, accessSymbolInfo, accessNil, prefixExp, _exp );
+   }
+   else {
+      return new Ast.RefFieldNode(
+         firstToken.pos, [ typeInfo ],
+         token, accessSymbolInfo, accessNil, prefixExp );
+   }
+}
 
 fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, token: &Parser.Token,
@@ -776,165 +934,7 @@ fn TransUnit.analyzeExpSymbol(
    if mode == "field" or mode == "get" or
       mode == "field_nil" or mode == "get_nil"
    {
-      sync! prefixExp = prefixExp { self.error( "prefix is nil" ); }
-      then {
-         let mut accessNil = false;
-         if mode == "field_nil" or mode == "get_nil" {
-            accessNil = true;
-         }
-         if self.macroMode == "analyze" {
-            if accessNil {
-               self.useNilAccess = true;
-            }
-            exp = new Ast.RefFieldNode(
-               firstToken.pos, [ Ast.builtinTypeSymbol ],
-               token, nil, accessNil, unwrap prefixExp );
-         }
-         else {
-            let mut typeInfo:&Ast.TypeInfo = Ast.builtinTypeStem_;
-            let mut prefixExpType = prefixExp.$expType;
-
-            self.checkFieldComp(
-               mode == "get" or mode == "get_nil", token, prefixExp );
-            
-            if accessNil {
-               if prefixExpType.$nilable {
-                  // nil 条件演算で、 prefixExpType が nilable ならば、
-                  // prefixExpType を非 nilable にセットする
-                  prefixExpType = unwrap prefixExpType.$orgTypeInfo;
-               }
-               else {
-                  // prefixExpType が nilable でなければ、
-                  // nil 判定は不要なので accessNil をクリアする
-                  accessNil = false;
-               }
-            }
-
-            let mut getterTypeInfo:Ast.TypeInfo! = nil;
-            let mut symbolInfo:Ast.SymbolInfo! = nil;
-            if prefixExpType.get_kind() == Ast.TypeInfoKind.Class or
-               prefixExpType.get_kind() == Ast.TypeInfoKind.Module or
-               prefixExpType.get_kind() == Ast.TypeInfoKind.IF or
-               prefixExpType.get_kind() == Ast.TypeInfoKind.List
-            {
-               let mut getterFlag = false;
-               typeInfo, symbolInfo, getterFlag =
-                  self.analyzeAccessClassField( prefixExpType, mode, token );
-               if getterFlag {
-                  if! symbolInfo {
-                     getterTypeInfo = _exp.$typeInfo;
-                  }
-               }
-            }
-            elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Map {
-               let work = prefixExpType.$itemTypeInfoList[1];
-               if not work.equals( Ast.builtinTypeString ) {
-                  self.addErrMess(
-                     token.pos,
-                     "map key type is not str. (%s)" (work.getTxt()) );
-               }
-               typeInfo = prefixExpType.$itemTypeInfoList[2];
-               if not typeInfo.$nilable {
-                  //if _exp.$nilable {
-                  typeInfo = typeInfo.$nilableTypeInfo;
-               }
-            }
-            elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Enum {
-               let scope = unwrap prefixExpType.$scope;
-               let mut fieldName = token.txt;
-               if mode == "get" {
-                  fieldName = "get_" .. fieldName;
-                  getterTypeInfo = Ast.rootTypeInfo;
-               }
-
-               if! scope.getTypeInfoChild( fieldName ) {
-                  typeInfo = _exp;
-               }
-               else {
-                  self.addErrMess( token.pos,
-                                   "not found enum field -- %s" (token.txt));
-                  typeInfo = Ast.builtinTypeInt;
-               }
-            }
-            elseif prefixExpType.equals( Ast.builtinTypeStem ) {
-            }
-            else {
-               self.error( "illegal type -- %s, %d"
-                           ( prefixExpType.getTxt(),
-                             prefixExpType.get_kind() ) );
-            }
-
-            if not symbolInfo {
-               let prefixScope = prefixExpType.$scope;
-               if! prefixScope {
-                  symbolInfo = _exp.getSymbolInfoField( token.txt, true, self.scope );
-               }
-            }
-            let prefixSymbolInfoList = prefixExp.getSymbolInfo();
-            let mut prefixSymbolInfo:Ast.AccessSymbolInfo! = nil;
-            if #prefixSymbolInfoList == 1 {
-               prefixSymbolInfo = prefixSymbolInfoList[1];
-            }
-            
-            if! symbolInfo {
-               sync! prefixSymbolInfo = prefixSymbolInfo {}
-               then {
-                  if prefixSymbolInfo.$kind == Ast.SymbolKind.Typ {
-                     if _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Func and
-                        _exp.$typeInfo.$kind ~= Ast.TypeInfoKind.Method and
-                        _exp.$kind ~= Ast.SymbolKind.Typ and
-                        not _exp.$staticFlag
-                     {  
-                        self.addErrMess(
-                           token.pos,              
-                           "Type can't access this symbol. -- %s" (token.txt) );
-                     }  
-                  }  
-                  elseif _exp.$staticFlag {
-                     self.addErrMess(
-                        token.pos, "can't access this symbol. -- %s" (token.txt) );
-                  }
-               };
-
-               if not prefixExpType.$mutable and
-                  not _exp.$staticFlag and
-                  _exp.$kind == Ast.SymbolKind.Mtd and _exp.$mutable 
-               {  
-                  // オブジェクトが immutable で、
-                  // mutable な method へのアクセスはエラー
-                  self.addErrMess(
-                     token.pos, "can't access mutable method. -- %s" (token.txt) );
-               }  
-            }
-
-            if accessNil {
-               if not typeInfo.$nilable {
-                  typeInfo = typeInfo.$nilableTypeInfo;
-               }
-               self.useNilAccess = true;
-            }
-
-            let mut accessSymbolInfo:Ast.AccessSymbolInfo! = nil;
-            if! symbolInfo {
-               accessSymbolInfo = new Ast.AccessSymbolInfo( _exp, prefixExpType );
-            };
-            if not prefixExpType.$mutable and typeInfo.$mutable
-            {           
-               typeInfo = self.createModifier( typeInfo, false );
-            }
-            
-            if! getterTypeInfo {
-               exp = new Ast.GetFieldNode(
-                  firstToken.pos, [ typeInfo ],
-                  token, accessSymbolInfo, accessNil, prefixExp, _exp );
-            }
-            else {
-               exp = new Ast.RefFieldNode(
-                  firstToken.pos, [ typeInfo ],
-                  token, accessSymbolInfo, accessNil, prefixExp );
-            }
-         }
-      };
+      exp = self.analyzeExpField( firstToken, token, mode, unwrap prefixExp );
    }
    elseif mode == "symbol" {
       if self.macroMode == "analyze" {

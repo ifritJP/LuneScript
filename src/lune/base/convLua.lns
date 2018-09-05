@@ -1050,11 +1050,32 @@ pub override fn convFilter.processIfUnwrap(
    node: Ast.IfUnwrapNode, parent: Ast.Node, baseIndent:int ) mut
 {
    self.writeln( "do", baseIndent + stepIndent );
-   self.write( "local _exp = " );
-   filter( node.$exp, self, node, baseIndent + stepIndent );
+   self.write( "local " );
+   foreach varName, index in node.$varNameList {
+      self.write( varName );
+      if index ~= #node.$varNameList {
+         self.write( ", " );
+      }
+   }
+   self.write( " = " );
+
+   foreach expNode, index in node.$expNodeList {
+      filter( expNode, self, node, baseIndent + stepIndent );
+      if index ~= #node.$expNodeList {
+         self.write( ", " );
+      }
+   }
    self.writeln( "", baseIndent + stepIndent );
 
-   self.writeln( "if _exp ~= nil then", baseIndent + stepIndent );
+   self.write( "if " );
+   foreach varName, index in node.$varNameList {
+      self.write( "%s ~= nil" (varName) );
+      if index ~= #node.$varNameList {
+         self.write( " and " );
+      }
+   }
+   self.writeln( " then", baseIndent + stepIndent );
+   
    filter( node.$block, self, node, baseIndent + stepIndent * 2 );
 
    if node.$nilBlock {

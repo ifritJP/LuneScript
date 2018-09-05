@@ -42,6 +42,7 @@ pub class Option {
 }
 
 pub fn analyze( argList: str[@] ) : Option {
+
    if #argList < 2 {
       print( ```
 usage: [-prof] src.lns mode [mode-option]

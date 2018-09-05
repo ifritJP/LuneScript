@@ -688,46 +688,45 @@ function Scope:addClass( name, typeInfo )
 end
 
 local function dumpScopeSub( scope, prefix, readyIdSet )
-  local scope = scope
-  
-      if  nil == scope then
-        local _scope = scope
-        
-        return 
-      else
-        
-          if readyIdSet[scope] then
-            return 
-          end
-          readyIdSet[scope] = true
-          if #prefix > 20 then
-            Util.err( "illegal" )
-          end
-          do
-            local __sorted = {}
-            local __map = scope:get_symbol2TypeInfoMap()
-            for __key in pairs( __map ) do
-              table.insert( __sorted, __key )
-            end
-            table.sort( __sorted )
-            for __index, symbol in ipairs( __sorted ) do
-              symbolInfo = __map[ symbol ]
-              do
-                Util.log( string.format( "scope: %s, %s, %s", prefix, scope, symbol) )
-                do
-                  local _exp = symbolInfo:get_typeInfo():get_scope()
-                  if _exp ~= nil then
-                  
-                      dumpScopeSub( _exp, prefix .. "  ", readyIdSet )
-                    end
-                end
-                
-              end
-            end
-          end
-          
-        end
+  do
+    local _exp = scope
+    if _exp ~= nil then
     
+        if readyIdSet[_exp] then
+          return 
+        end
+        readyIdSet[_exp] = true
+        if #prefix > 20 then
+          Util.err( "illegal" )
+        end
+        do
+          local __sorted = {}
+          local __map = _exp:get_symbol2TypeInfoMap()
+          for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+          end
+          table.sort( __sorted )
+          for __index, symbol in ipairs( __sorted ) do
+            symbolInfo = __map[ symbol ]
+            do
+              Util.log( string.format( "scope: %s, %s, %s", prefix, _exp, symbol) )
+              do
+                local subScope = symbolInfo:get_typeInfo():get_scope()
+                if subScope ~= nil then
+                
+                    dumpScopeSub( subScope, prefix .. "  ", readyIdSet )
+                  end
+              end
+              
+            end
+          end
+        end
+        
+      end
+  end
+  
+  -- none
+  
 end
 
 local function dumpScope( scope, prefix )
@@ -3661,25 +3660,29 @@ end
 function IfUnwrapNode:canBeLeft(  )
   return false
 end
-function IfUnwrapNode.new( pos, typeList, exp, block, nilBlock )
+function IfUnwrapNode.new( pos, typeList, varNameList, expNodeList, block, nilBlock )
   local obj = {}
   setmetatable( obj, { __index = IfUnwrapNode } )
-  if obj.__init then obj:__init( pos, typeList, exp, block, nilBlock ); end
+  if obj.__init then obj:__init( pos, typeList, varNameList, expNodeList, block, nilBlock ); end
 return obj
 end
-function IfUnwrapNode:__init(pos, typeList, exp, block, nilBlock) 
+function IfUnwrapNode:__init(pos, typeList, varNameList, expNodeList, block, nilBlock) 
   Node.__init( self, _moduleObj.nodeKindIfUnwrap, pos, typeList)
   
   -- none
   
-  self.exp = exp
+  self.varNameList = varNameList
+  self.expNodeList = expNodeList
   self.block = block
   self.nilBlock = nilBlock
   -- none
   
 end
-function IfUnwrapNode:get_exp()       
-  return self.exp         
+function IfUnwrapNode:get_varNameList()       
+  return self.varNameList         
+end
+function IfUnwrapNode:get_expNodeList()       
+  return self.expNodeList         
 end
 function IfUnwrapNode:get_block()       
   return self.block         

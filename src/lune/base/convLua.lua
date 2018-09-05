@@ -1026,10 +1026,29 @@ end
 
 function convFilter:processIfUnwrap( node, parent, baseIndent )
   self:writeln( "do", baseIndent + stepIndent )
-  self:write( "local _exp = " )
-  filter( node:get_exp(), self, node, baseIndent + stepIndent )
+  self:write( "local " )
+  for index, varName in pairs( node:get_varNameList() ) do
+    self:write( varName )
+    if index ~= #node:get_varNameList() then
+      self:write( ", " )
+    end
+  end
+  self:write( " = " )
+  for index, expNode in pairs( node:get_expNodeList() ) do
+    filter( expNode, self, node, baseIndent + stepIndent )
+    if index ~= #node:get_expNodeList() then
+      self:write( ", " )
+    end
+  end
   self:writeln( "", baseIndent + stepIndent )
-  self:writeln( "if _exp ~= nil then", baseIndent + stepIndent )
+  self:write( "if " )
+  for index, varName in pairs( node:get_varNameList() ) do
+    self:write( string.format( "%s ~= nil", varName) )
+    if index ~= #node:get_varNameList() then
+      self:write( " and " )
+    end
+  end
+  self:writeln( " then", baseIndent + stepIndent )
   filter( node:get_block(), self, node, baseIndent + stepIndent * 2 )
   if node:get_nilBlock() then
     self:writeln( "else", baseIndent + stepIndent )

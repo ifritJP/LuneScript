@@ -3,3 +3,17 @@ fn test( val:int ) {
       let val = 1;
    }
 }
+
+let val2 = 1;
+let val2 = 1;
+
+let val3:int! = 1;
+
+if! val3 {
+   if! val3 {
+   }
+   let _exp = 1;
+}
+
+if! let val2 = val3 {
+}

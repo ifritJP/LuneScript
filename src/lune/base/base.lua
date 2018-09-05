@@ -1,3 +1,13 @@
+local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
+
+if version < 5.2 then
+   io.stderr:write(
+      string.format( "LuneScript doesn't support this lua version(%s). %s\n",
+		     version, "please use the version after 5.2.") )
+   os.exit( 1 )
+end
+
+
 local Parser = require( 'lune.base.Parser' )
 local convLua = require( 'lune.base.convLua' )
 local TransUnit = require( 'lune.base.TransUnit' ).TransUnit

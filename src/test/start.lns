@@ -277,6 +277,23 @@ print( (new GetTest2()).$val );
    let test: int! = nil;
 }
 
+{
+   let mut val:int! = nil;
+   if! let val1, val2:int = 1, val {
+      print("NG");
+   }
+   else {
+      print( "OK" );
+   }
+   val = 2;
+   if! let val1, val2:int = 1, val {
+      print( "OK", val1, val2 );
+   }
+   else {
+      print("NG");
+   }
+}
+
 fn testret() : int! {
    return nil;
 }

@@ -619,21 +619,20 @@ pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
 } 
 
 fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
-   sync! scope = scope { return; }
-   then {
-      if readyIdSet[ scope ] {
+   if! scope {
+      if readyIdSet[ _exp ] {
          return;
       } 
-      readyIdSet[ scope ] = true;
+      readyIdSet[ _exp ] = true;
       if #prefix > 20 {
          Util.err("illegal");
       }   
       
-      forsort symbolInfo, symbol in scope.$symbol2TypeInfoMap {
-         Util.log( "scope: %s, %s, %s" ( prefix, scope, symbol ) );
-         if! symbolInfo.$typeInfo.$scope {
-            dumpScopeSub( _exp, prefix .. "  ", readyIdSet );
-         }  
+      forsort symbolInfo, symbol in _exp.$symbol2TypeInfoMap {
+         Util.log( "scope: %s, %s, %s" ( prefix, _exp, symbol ) );
+         if! let subScope = symbolInfo.$typeInfo.$scope {
+            dumpScopeSub( subScope, prefix .. "  ", readyIdSet );
+         }
       } 
    };
 }
@@ -2199,7 +2198,8 @@ _declNodeClass( "UnwrapSet", Node, false, false,
 );
 
 _declNodeClass( "IfUnwrap", Node, false, false,
-                [ { "exp": "&Node" },
+                [ { "varNameList": "List<str>" },
+                  { "expNodeList": "List<&Node>" },
                   { "block": "&BlockNode" },
                   { "nilBlock": "&BlockNode!" } ]
 );
@@ -2286,6 +2286,7 @@ pub class VarInfo {
    // 実際の型。
    pri let actualType: TypeInfo { pub };
 }
+
 _declNodeClass( "DeclVar", Node, false, false,
                 [ { "mode": "str" },
                   { "accessMode": "str" },
