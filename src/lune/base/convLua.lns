@@ -1637,7 +1637,12 @@ pub override fn convFilter.processExpRefItem(
       self.write( "_lune.nilacc( " );
       filter( node.$val, self, node, baseIndent );
       self.write( ", nil, 'item', " );
-      filter( node.$index, self, node, baseIndent );
+      if! node.$index {
+         filter( _exp, self, node, baseIndent );
+      }
+      else {
+         self.write( "'%s'" ( unwrap node.$symbol ) );
+      }
       self.write( ")" );
    }
    else {
@@ -1645,13 +1650,23 @@ pub override fn convFilter.processExpRefItem(
          self.write( "string.byte( " );
          filter( node.$val, self, node, baseIndent );
          self.write( ", " );
-         filter( node.$index, self, node, baseIndent );
+         if! node.$index {
+            filter( _exp, self, node, baseIndent );
+         }
+         else {
+            error( "index is nil" );
+         }
          self.write( " )" );
-      }  
+      }
       else {
          filter( node.$val, self, node, baseIndent );
          self.write( "[" );
-         filter( node.$index, self, node, baseIndent );
+         if! node.$index {
+            filter( _exp, self, node, baseIndent );
+         }
+         else {
+            self.write( "'%s'" ( unwrap node.$symbol ) );
+         }
          self.write( "]" );
       } 
    }    

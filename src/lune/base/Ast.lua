@@ -85,6 +85,8 @@ TypeInfoKind.Enum = 11
 TypeInfoKind._val2NameMap[11] = 'Enum'
 TypeInfoKind.Module = 12
 TypeInfoKind._val2NameMap[12] = 'Module'
+TypeInfoKind.Stem = 13
+TypeInfoKind._val2NameMap[13] = 'Stem'
 
 local function isBuiltin( typeId )
   return _moduleObj.builtInTypeIdSet[typeId] ~= nil
@@ -152,6 +154,7 @@ do
   end
 
 local NormalSymbolInfo = {}
+setmetatable( NormalSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.NormalSymbolInfo = NormalSymbolInfo
 function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag )
   local obj = {}
@@ -823,18 +826,35 @@ function AccessSymbolInfo:get_mutable(  )
   
   return self.symbolInfo:get_mutable()
 end
-function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo )
+function AccessSymbolInfo:get_canBeLeft(  )
+  if not self.overrideCanBeLeft then
+    return false
+  end
+  do
+    local _exp = self.prefixTypeInfo
+    if _exp ~= nil then
+    
+        if not _exp:get_mutable() then
+          return false
+        end
+      end
+  end
+  
+  return self.symbolInfo:get_canBeLeft()
+end
+function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
   local obj = {}
   setmetatable( obj, { __index = AccessSymbolInfo } )
   if obj.__init then
-    obj:__init( symbolInfo, prefixTypeInfo )
+    obj:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
   end        
   return obj 
 end         
-function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo ) 
+function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft ) 
 
 self.symbolInfo = symbolInfo
   self.prefixTypeInfo = prefixTypeInfo
+  self.overrideCanBeLeft = overrideCanBeLeft
   end
 function AccessSymbolInfo:get_symbolInfo()       
   return self.symbolInfo         
@@ -842,10 +862,6 @@ end
 function AccessSymbolInfo:get_prefixTypeInfo()       
   return self.prefixTypeInfo         
 end
-function AccessSymbolInfo:get_canBeLeft( ... )
-  return self.symbolInfo:get_canBeLeft( ... )
-end       
-
 function AccessSymbolInfo:get_canBeRight( ... )
   return self.symbolInfo:get_canBeRight( ... )
 end       
@@ -920,6 +936,12 @@ function NilableTypeInfo:serialize( stream, validChildrenSet )
   
   stream:write( string.format( '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
 end
+function NilableTypeInfo:equals( typeInfo )
+  if not typeInfo:get_nilable() then
+    return false
+  end
+  return self.orgTypeInfo:equals( typeInfo )
+end
 function NilableTypeInfo.new( orgTypeInfo, typeId )
   local obj = {}
   setmetatable( obj, { __index = NilableTypeInfo } )
@@ -957,10 +979,6 @@ end
 
 function NilableTypeInfo:get_abstructFlag( ... )
   return self.orgTypeInfo:get_abstructFlag( ... )
-end       
-
-function NilableTypeInfo:equals( ... )
-  return self.orgTypeInfo:equals( ... )
 end       
 
 function NilableTypeInfo:get_externalFlag( ... )
@@ -1438,7 +1456,7 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
     
     do
       local _switchExp = (kind )
-      if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF then
+      if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF then
         hasNilable = true
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method then
         hasNilable = true
@@ -1800,7 +1818,7 @@ local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.P
 
 _moduleObj.builtinTypeNone = builtinTypeNone
 
-local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Prim )
+local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
 
 _moduleObj.builtinTypeStem = builtinTypeStem
 
@@ -3824,19 +3842,20 @@ end
 function ExpRefItemNode:canBeRight(  )
   return true
 end
-function ExpRefItemNode.new( pos, typeList, val, nilAccess, index )
+function ExpRefItemNode.new( pos, typeList, val, nilAccess, symbol, index )
   local obj = {}
   setmetatable( obj, { __index = ExpRefItemNode } )
-  if obj.__init then obj:__init( pos, typeList, val, nilAccess, index ); end
+  if obj.__init then obj:__init( pos, typeList, val, nilAccess, symbol, index ); end
 return obj
 end
-function ExpRefItemNode:__init(pos, typeList, val, nilAccess, index) 
+function ExpRefItemNode:__init(pos, typeList, val, nilAccess, symbol, index) 
   Node.__init( self, _moduleObj.nodeKindExpRefItem, pos, typeList)
   
   -- none
   
   self.val = val
   self.nilAccess = nilAccess
+  self.symbol = symbol
   self.index = index
   -- none
   
@@ -3847,6 +3866,9 @@ end
 function ExpRefItemNode:get_nilAccess()       
   return self.nilAccess         
 end
+function ExpRefItemNode:get_symbol()       
+  return self.symbol         
+end
 function ExpRefItemNode:get_index()       
   return self.index         
 end
@@ -3855,7 +3877,10 @@ do
 
 
 function ExpRefItemNode:canBeLeft(  )
-  return self:get_val():get_expType():get_mutable()
+  if self.val:get_expType() == _moduleObj.builtinTypeStem then
+    return false
+  end
+  return self:get_val():get_expType():get_mutable() and not self.nilAccess
 end
 
 -- none

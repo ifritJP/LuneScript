@@ -455,7 +455,16 @@ _print( `{ Sub2.External.val } );
    
 }
 
-class mutTest {
-   pub fn func() mut {
-   }
+{
+   let mut val = { "abc": 1 };
+   //val.abc = 1;
+}
+
+{
+   let mut val = { "abc": 1 };
+   print( val.abc );
+   val.abc = 2;
+   val.efg = 3;
+   val[ "zzz" ] = 4;
+   print( val[ "ab" .. "c" ], val.efg, val.zzz );
 }

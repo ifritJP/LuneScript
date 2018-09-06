@@ -56,3 +56,12 @@
         let key2:str = key;
     }
 }
+
+{
+   let mut val2:Map<str,stem> = {};
+   (unwrap val2.abc).zz = 1; // error
+   val2.abc.zz = 1; // error
+}
+
+
+

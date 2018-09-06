@@ -217,7 +217,8 @@ fn TransUnit.analyzeExpRefItem(
       typeInfo = self.createModifier( typeInfo, false );
    }
    
-   return new Ast.ExpRefItemNode( token.pos, [ typeInfo ], exp, nilAccess, indexExp );
+   return new Ast.ExpRefItemNode(
+      token.pos, [ typeInfo ], exp, nilAccess, nil, indexExp );
 }
 
 
@@ -781,6 +782,7 @@ fn TransUnit.analyzeExpField(
       return new Ast.RefFieldNode(
          firstToken.pos, [ Ast.builtinTypeSymbol ],
          token, nil, accessNil, unwrap prefixExp );
+         //token, accessNil, unwrap prefixExp );
    }
 
    let mut typeInfo:&Ast.TypeInfo = Ast.builtinTypeStem_;
@@ -818,19 +820,6 @@ fn TransUnit.analyzeExpField(
          }
       }
    }
-   elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Map {
-      let work = prefixExpType.$itemTypeInfoList[1];
-      if not work.equals( Ast.builtinTypeString ) {
-         self.addErrMess(
-            token.pos,
-            "map key type is not str. (%s)" (work.getTxt()) );
-      }
-      typeInfo = prefixExpType.$itemTypeInfoList[2];
-      if not typeInfo.$nilable {
-         //if _exp.$nilable {
-         typeInfo = typeInfo.$nilableTypeInfo;
-      }
-   }
    elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Enum {
       let scope = unwrap prefixExpType.$scope;
       let mut fieldName = token.txt;
@@ -848,7 +837,23 @@ fn TransUnit.analyzeExpField(
          typeInfo = Ast.builtinTypeInt;
       }
    }
+   elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Map {
+      let work = prefixExpType.$itemTypeInfoList[1];
+      if not work.equals( Ast.builtinTypeString ) {
+         self.addErrMess(
+            token.pos,
+            "map key type is not str. (%s)" (work.getTxt()) );
+      }
+      typeInfo = prefixExpType.$itemTypeInfoList[2];
+      if not typeInfo.$nilable {
+         typeInfo = typeInfo.$nilableTypeInfo;
+      }
+      return new Ast.ExpRefItemNode(
+         token.pos, [ typeInfo ], prefixExp, accessNil, token.txt, nil );
+   }
    elseif prefixExpType.equals( Ast.builtinTypeStem ) {
+      return new Ast.ExpRefItemNode(
+         token.pos, [ Ast.builtinTypeStem_ ], prefixExp, accessNil, token.txt, nil );
    }
    else {
       self.error( "illegal type -- %s, %d"
@@ -905,8 +910,10 @@ fn TransUnit.analyzeExpField(
    }
 
    let mut accessSymbolInfo:Ast.AccessSymbolInfo! = nil;
+   //let mut canBeLeft:bool! = nil;
    if! symbolInfo {
-      accessSymbolInfo = new Ast.AccessSymbolInfo( _exp, prefixExpType );
+      //canBeLeft = _exp.canBeLeft();
+      accessSymbolInfo = new Ast.AccessSymbolInfo( _exp, prefixExpType, not accessNil );
    };
    if not prefixExpType.$mutable and typeInfo.$mutable
    {           
@@ -917,11 +924,13 @@ fn TransUnit.analyzeExpField(
       return new Ast.GetFieldNode(
          firstToken.pos, [ typeInfo ],
          token, accessSymbolInfo, accessNil, prefixExp, _exp );
+         //token, canBeLeft, accessNil, prefixExp, _exp );
    }
    else {
       return new Ast.RefFieldNode(
          firstToken.pos, [ typeInfo ],
          token, accessSymbolInfo, accessNil, prefixExp );
+         //token, canBeLeft, accessNil, prefixExp );
    }
 }
 
@@ -955,7 +964,7 @@ fn TransUnit.analyzeExpSymbol(
          }
          exp = new Ast.ExpRefNode(
             firstToken.pos, [ typeInfo ], token,
-            new Ast.AccessSymbolInfo( symbolInfo, nil ) );
+            new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
       }
    }
    elseif mode == "fn" {
@@ -1513,7 +1522,7 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ) mut: Ast.Node {
       };
       exp = new Ast.ExpRefNode(
          firstToken.pos, [ Ast.builtinTypeNone ], token,
-         new Ast.AccessSymbolInfo( symbolTypeInfo, nil ) );
+         new Ast.AccessSymbolInfo( symbolTypeInfo, nil, false ) );
    }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" ) {

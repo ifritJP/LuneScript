@@ -426,8 +426,10 @@ pub override fn dumpFilter.processExpRefItem(
    node: &Ast.ExpRefItemNode, prefix: str, depth: int ) mut
 {
    dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt() );
-   filter( node.get_val(), self, prefix .. "  ", depth + 1 );
-   filter( node.get_index(), self, prefix .. "  ", depth + 1 );
+   filter( node.$val, self, prefix .. "  ", depth + 1 );
+   if! node.$index {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
 };  
 pub override fn dumpFilter.processRefField( 
    node: &Ast.RefFieldNode, prefix: str, depth: int ) mut

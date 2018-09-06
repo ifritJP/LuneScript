@@ -31,7 +31,7 @@ let mut typeIdSeed = rootTypeId + 1;
 
 
 pub proto class TypeInfo;
-pub proto interface SymbolInfo;
+pub proto class SymbolInfo;
 
 pub let mut typeInfoKind:Map<str,TypeInfo> = {};
 pub let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
@@ -51,6 +51,7 @@ pub enum TypeInfoKind {
    Nilable, 
    Enum,    
    Module,
+   Stem,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -71,7 +72,7 @@ pub enum SymbolKind {
 
 
 /** シンボル情報 */
-pub interface SymbolInfo {
+pub class SymbolInfo {
    /** 左辺値になれる場合 true */
    pub fn get_canBeLeft(): bool;
    /** 右辺値になれる場合 true */
@@ -105,7 +106,7 @@ pub interface SymbolInfo {
 }
 
 
-pub class NormalSymbolInfo extend (SymbolInfo) {
+pub class NormalSymbolInfo extend SymbolInfo {
    pri static let mut symbolIdSeed:int;
 
    __init {
@@ -160,7 +161,7 @@ pub class NormalSymbolInfo extend (SymbolInfo) {
 
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub fn canAccess( fromScope:&Scope ): &SymbolInfo!;
+   pub override fn canAccess( fromScope:&Scope ): &SymbolInfo!;
 }
 
 
@@ -675,7 +676,7 @@ pub fn Scope.getClassTypeInfo(): &TypeInfo {
 /**
 このシンボルが、fromScope のスコープからアクセスできるか調べる。
  */
-pub fn NormalSymbolInfo.canAccess( fromScope:&Scope ): &SymbolInfo!
+pub override fn NormalSymbolInfo.canAccess( fromScope:&Scope ): &SymbolInfo!
 {
    let typeInfo = self.$typeInfo;
    if self.scope == fromScope {
@@ -713,6 +714,7 @@ pub fn NormalSymbolInfo.canAccess( fromScope:&Scope ): &SymbolInfo!
 pub class AccessSymbolInfo extend SymbolInfo {
    pri let symbolInfo: SymbolInfo {pub};
    pri let prefixTypeInfo: TypeInfo! {pub};
+   pri let overrideCanBeLeft: bool;
 
    pub override fn get_mutable(): bool {
       if! self.prefixTypeInfo {
@@ -720,6 +722,18 @@ pub class AccessSymbolInfo extend SymbolInfo {
       }
       return self.symbolInfo.$mutable;
    };
+
+   pub override fn get_canBeLeft(): bool {
+      if not self.overrideCanBeLeft {
+         return false;
+      }
+      if! self.prefixTypeInfo {
+         if not _exp.$mutable {
+            return false;
+         }
+      }
+      return self.symbolInfo.$canBeLeft;
+   }
 
    advertise symbolInfo;
 }
@@ -754,6 +768,13 @@ pub class NilableTypeInfo extend TypeInfo {
       stream.write(
          '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
             parentId, self.typeId, self.orgTypeInfo.$typeId ) );
+   }
+
+   pub override fn equals( typeInfo: &TypeInfo ): bool {
+      if not typeInfo.$nilable {
+         return false;
+      }
+      return self.orgTypeInfo.equals( typeInfo );
    }
 
    advertise orgTypeInfo;
@@ -1057,7 +1078,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
          switch ( kind ) {
             case TypeInfoKind.Prim, TypeInfoKind.List, TypeInfoKind.Array,
-                 TypeInfoKind.Map, TypeInfoKind.Class,
+                 TypeInfoKind.Map, TypeInfoKind.Class, TypeInfoKind.Stem, 
                  TypeInfoKind.Module, TypeInfoKind.IF   
             {
                hasNilable = true;
@@ -1220,7 +1241,8 @@ pub class NormalTypeInfo extend TypeInfo {
 
       if self.typeId == typeInfo.$typeId {
          return true;
-      } 
+      }
+
       // プリミティブな設定のチェック
       if self.kind ~= typeInfo.$kind or
          self.staticFlag ~= typeInfo.$staticFlag or
@@ -1247,7 +1269,7 @@ pub class NormalTypeInfo extend TypeInfo {
          //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
          //                                     typeInfo.getTxt(), typeInfo.typeId ) );
          return false;
-      } 
+      }
 
       if self.itemTypeInfoList {
          if #self.itemTypeInfoList ~= #typeInfo.$itemTypeInfoList {
@@ -1501,7 +1523,7 @@ pub static fn NormalTypeInfo.createModifier(
 pub let builtinTypeNone:TypeInfo = 
    NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim );
 pub let builtinTypeStem:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Stem", "stem" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "Stem", "stem" , TypeInfoKind.Stem );
 pub let builtinTypeNil:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Nil", "nil" , TypeInfoKind.Prim );
 pub let builtinTypeDDD:TypeInfo =
@@ -1530,7 +1552,6 @@ pub let builtinTypeStat:TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , TypeInfoKind.Prim );
 
 pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
-
 
 pub static fn NormalTypeInfo.createEnum(
    scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
@@ -2218,11 +2239,15 @@ _declNodeClass( "ExpOp1", Node, false, true,
 _declNodeClass( "ExpRefItem", Node, true, true,
                 [ { "val": "&Node" },
                   { "nilAccess": "bool" },
-                  { "index": "&Node" } ]
+                  { "symbol": "str!" },
+                  { "index": "&Node!" } ]
 );
 pub override fn ExpRefItemNode.canBeLeft(): bool {
+   if self.val.$expType == builtinTypeStem {
+      return false;
+   }
    //return self.$expType.$mutable;
-   return self.$val.$expType.$mutable;
+   return self.$val.$expType.$mutable and not self.nilAccess;
 }
 
 _declNodeClass( "ExpCall", Node, false, true,
@@ -2253,6 +2278,7 @@ _declNodeClass( "StmtExp", Node, false, true,
 
 _declNodeClass( "RefField", Node, true, true,
                 [ { "field": "&Parser.Token" },
+                  //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&AccessSymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "&Node" }] 
@@ -2261,11 +2287,15 @@ pub override fn RefFieldNode.canBeLeft():bool {
    if! self.$symbolInfo {
       return _exp.$canBeLeft;
    }
+   // if! self.overrideCanBeLeft {
+   //    return _exp;
+   // }
    return false;
 }
 
 _declNodeClass( "GetField", Node, false, true,
                 [ { "field": "&Parser.Token" },
+                  //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&AccessSymbolInfo!" },
                   { "nilAccess": "bool" },
                   { "prefix": "&Node" },
@@ -2275,6 +2305,9 @@ pub override fn GetFieldNode.canBeLeft():bool {
    if! self.$symbolInfo {
       return _exp.$canBeLeft;
    }
+   // if! self.overrideCanBeLeft {
+   //    return _exp;
+   // }
    return false;
 }
 

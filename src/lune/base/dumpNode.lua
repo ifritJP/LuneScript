@@ -42,7 +42,7 @@ local function dump( prefix, depth, node, txt )
   
   local expType = node:get_expType(  )
   
-  if expType and expType ~= Ast.typeInfoKind.None then
+  if expType and expType ~= Ast.typeInfoKind['None'] then
     typeStr = string.format( "(%d:%s:%s)", expType:get_typeId(  ), expType:getTxt(  ), expType:get_kind(  ))
   end
   print( string.format( "%s: %s %s %s", prefix, Ast.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
@@ -534,8 +534,15 @@ end
 
 function dumpFilter:processExpRefItem( node, prefix, depth )
   dump( prefix, depth, node, "seq[exp] " .. node:get_expType(  ):getTxt(  ) )
-  filter( node:get_val(  ), self, prefix .. "  ", depth + 1 )
-  filter( node:get_index(  ), self, prefix .. "  ", depth + 1 )
+  filter( node:get_val(), self, prefix .. "  ", depth + 1 )
+  do
+    local _exp = node:get_index()
+    if _exp ~= nil then
+    
+        filter( _exp, self, prefix .. "  ", depth + 1 )
+      end
+  end
+  
 end
 
 -- none

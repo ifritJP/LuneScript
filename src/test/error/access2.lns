@@ -15,7 +15,7 @@ class Sub extend Super {
     pub fn __init() {
         super( 1, 2, 3 );
     }
-    pub fn test() {
+    pub fn test() mut {
         self.val3 = 0;
         self.val2 = 0;
         self.val1 = 0;

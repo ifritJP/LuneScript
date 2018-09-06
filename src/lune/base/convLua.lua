@@ -705,18 +705,18 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   for __index, field in pairs( fieldList ) do
     local ignoreFlag = false
     
-    if field:get_kind() == Ast.nodeKind.DeclConstr then
+    if field:get_kind() == Ast.nodeKind['DeclConstr'] then
       hasConstrFlag = true
       methodNameSet["__init"] = true
     end
-    if field:get_kind() == Ast.nodeKind.DeclMember then
+    if field:get_kind() == Ast.nodeKind['DeclMember'] then
       local declMemberNode = field
       
       if not declMemberNode:get_staticFlag() then
         table.insert( memberList, declMemberNode )
       end
     end
-    if field:get_kind() == Ast.nodeKind.DeclMethod then
+    if field:get_kind() == Ast.nodeKind['DeclMethod'] then
       local methodNode = field
       
       local declInfo = methodNode:get_declInfo(  )
@@ -917,7 +917,7 @@ function convFilter:processDeclConstr( node, parent, baseIndent )
       argTxt = argTxt .. ", "
     end
     filter( arg, self, node, baseIndent )
-    if arg:get_kind(  ) == Ast.nodeKind.DeclArg then
+    if arg:get_kind(  ) == Ast.nodeKind['DeclArg'] then
       argTxt = argTxt .. (arg ):get_name().txt
     else 
       local name = _lune.unwrap( node:get_declInfo(  ):get_name())
@@ -1439,7 +1439,7 @@ function convFilter:processExpCall( node, parent, baseIndent )
   local setArgFlag = false
   
   
-  if node:get_func():get_kind() == Ast.nodeKind.RefField then
+  if node:get_func():get_kind() == Ast.nodeKind['RefField'] then
     local fieldNode = node:get_func()
     
     local prefixNode = fieldNode:get_prefix()
@@ -1606,19 +1606,49 @@ function convFilter:processExpRefItem( node, parent, baseIndent )
     self:write( "_lune.nilacc( " )
     filter( node:get_val(), self, node, baseIndent )
     self:write( ", nil, 'item', " )
-    filter( node:get_index(), self, node, baseIndent )
+    do
+      local _exp = node:get_index()
+      if _exp ~= nil then
+      
+          filter( _exp, self, node, baseIndent )
+        else
+      
+          self:write( string.format( "'%s'", _lune.unwrap( node:get_symbol())) )
+        end
+    end
+    
     self:write( ")" )
   else 
     if node:get_val():get_expType():equals( Ast.builtinTypeString ) then
       self:write( "string.byte( " )
       filter( node:get_val(), self, node, baseIndent )
       self:write( ", " )
-      filter( node:get_index(), self, node, baseIndent )
+      do
+        local _exp = node:get_index()
+        if _exp ~= nil then
+        
+            filter( _exp, self, node, baseIndent )
+          else
+        
+            error( "index is nil" )
+          end
+      end
+      
       self:write( " )" )
     else 
       filter( node:get_val(), self, node, baseIndent )
       self:write( "[" )
-      filter( node:get_index(), self, node, baseIndent )
+      do
+        local _exp = node:get_index()
+        if _exp ~= nil then
+        
+            filter( _exp, self, node, baseIndent )
+          else
+        
+            self:write( string.format( "'%s'", _lune.unwrap( node:get_symbol())) )
+          end
+      end
+      
       self:write( "]" )
     end
   end
@@ -1637,7 +1667,7 @@ function convFilter:processRefField( node, parent, baseIndent )
     filter( prefix, self, node, baseIndent )
     local delimit = "."
     
-    if parent:get_kind() == Ast.nodeKind.ExpCall then
+    if parent:get_kind() == Ast.nodeKind['ExpCall'] then
       if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
         delimit = ":"
       else 

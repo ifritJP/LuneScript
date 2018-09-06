@@ -9,7 +9,7 @@ class Test {
    pub fn func( val:int ) mut {
       self.val1 = val;
    }
-   pub fn func2( val:int ) {
+   pub fn func2( val:int ) mut {
       self.val1 = val;
    }
 }
@@ -31,7 +31,7 @@ class Test3 {
    }
 }
 Test3.val2 = 1; // error: access member from class.
-let test3 = new Test3();
+let mut test3 = new Test3();
 test3.val3 = 0; // error: access class member from obj.
 let mut val = 0;
 val = test3; // error

@@ -411,13 +411,13 @@ function TransUnit:registBuiltInScope(  )
       if name ~= "" then
         local classFlag = true
         
-        if _lune.nilacc( _lune.nilacc( name2FieldInfo.__attrib, "type" ), nil, 'item', 1) == "interface" then
+        if _lune.nilacc( _lune.nilacc( name2FieldInfo['__attrib'], nil, 'item', 'type'), nil, 'item', 1) == "interface" then
           classFlag = false
         end
         local interfaceList = {}
         
         do
-          local _exp = _lune.nilacc( name2FieldInfo.__attrib, "inplements" )
+          local _exp = _lune.nilacc( name2FieldInfo['__attrib'], nil, 'item', 'inplements')
           if _exp ~= nil then
           
               for __index, ifname in pairs( _exp ) do
@@ -450,8 +450,8 @@ function TransUnit:registBuiltInScope(  )
             info = __map[ fieldName ]
             do
               if fieldName ~= "__attrib" then
-                if _lune.nilacc( info.type, nil, 'item', 1) == "member" then
-                  self.scope:addMember( fieldName, getTypeInfo( _lune.unwrap( _lune.nilacc( info.typeInfo, nil, 'item', 1)) ), "pub", true, false )
+                if _lune.nilacc( info['type'], nil, 'item', 1) == "member" then
+                  self.scope:addMember( fieldName, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), "pub", true, false )
                 else 
                   local argTypeList = {}
                   
@@ -465,7 +465,7 @@ function TransUnit:registBuiltInScope(  )
                     
                     table.insert( retTypeList, retTypeInfo )
                   end
-                  local funcType = _lune.nilacc( info.type, nil, 'item', 1)
+                  local funcType = _lune.nilacc( info['type'], nil, 'item', 1)
                   
                   local methodFlag = funcType == "method" or funcType == "mut"
                   
@@ -1175,11 +1175,11 @@ function TransUnit:analyzeImport( token )
               local classInfo = _exp
               
               for fieldName, fieldInfo in pairs( classInfo ) do
-                local typeId = fieldInfo.typeId
+                local typeId = fieldInfo['typeId']
                 
                 local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[typeId])
                 
-                self.scope:addMember( fieldName, fieldTypeInfo, (_lune.unwrap( fieldInfo.accessMode) ), (_lune.unwrapDefault( fieldInfo.staticFlag, false) ), (_lune.unwrapDefault( fieldInfo.mutable, false) ) )
+                self.scope:addMember( fieldName, fieldTypeInfo, (_lune.unwrap( fieldInfo['accessMode']) ), (_lune.unwrapDefault( fieldInfo['staticFlag'], false) ), (_lune.unwrapDefault( fieldInfo['mutable'], false) ) )
               end
             else
           
@@ -1222,7 +1222,7 @@ function TransUnit:analyzeImport( token )
     self:pushModule( true, moduleName, mutable )
   end
   for varName, varInfo in pairs( moduleInfo._varName2InfoMap ) do
-    self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[varInfo.typeId]), _lune.unwrapDefault( varInfo.mutable, false) )
+    self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[varInfo['typeId']]), _lune.unwrapDefault( varInfo['mutable'], false) )
   end
   for __index, moduleName in pairs( nameList ) do
     self:popModule(  )
@@ -3076,7 +3076,7 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
   if typeInfo:get_mutable() and not expType:get_mutable() then
     typeInfo = self:createModifier( typeInfo, false )
   end
-  return Ast.ExpRefItemNode.new(token.pos, {typeInfo}, exp, nilAccess, indexExp)
+  return Ast.ExpRefItemNode.new(token.pos, {typeInfo}, exp, nilAccess, nil, indexExp)
 end
 
 function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allowDstShort )
@@ -3205,7 +3205,7 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
   
   local macroVars = func( macroArgValMap )
   
-  for __index, name in pairs( (_lune.unwrap( macroVars._names) ) ) do
+  for __index, name in pairs( (_lune.unwrap( macroVars['_names']) ) ) do
     local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
     
     local typeInfo = valInfo and valInfo.typeInfo or Ast.builtinTypeStem_
@@ -3624,16 +3624,6 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       end
       
     end
-  elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Map then
-    local work = prefixExpType:get_itemTypeInfoList()[1]
-    
-    if not work:equals( Ast.builtinTypeString ) then
-      self:addErrMess( token.pos, string.format( "map key type is not str. (%s)", work:getTxt(  )) )
-    end
-    typeInfo = prefixExpType:get_itemTypeInfoList()[2]
-    if not typeInfo:get_nilable() then
-      typeInfo = typeInfo:get_nilableTypeInfo()
-    end
   elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Enum then
     local scope = _lune.unwrap( prefixExpType:get_scope())
     
@@ -3655,7 +3645,19 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
         end
     end
     
+  elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Map then
+    local work = prefixExpType:get_itemTypeInfoList()[1]
+    
+    if not work:equals( Ast.builtinTypeString ) then
+      self:addErrMess( token.pos, string.format( "map key type is not str. (%s)", work:getTxt(  )) )
+    end
+    typeInfo = prefixExpType:get_itemTypeInfoList()[2]
+    if not typeInfo:get_nilable() then
+      typeInfo = typeInfo:get_nilableTypeInfo()
+    end
+    return Ast.ExpRefItemNode.new(token.pos, {typeInfo}, prefixExp, accessNil, token.txt, nil)
   elseif prefixExpType:equals( Ast.builtinTypeStem ) then
+    return Ast.ExpRefItemNode.new(token.pos, {Ast.builtinTypeStem_}, prefixExp, accessNil, token.txt, nil)
   else 
     self:error( string.format( "illegal type -- %s, %d", prefixExpType:getTxt(  ), prefixExpType:get_kind(  )) )
   end
@@ -3716,7 +3718,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
     local _exp = symbolInfo
     if _exp ~= nil then
     
-        accessSymbolInfo = Ast.AccessSymbolInfo.new(_exp, prefixExpType)
+        accessSymbolInfo = Ast.AccessSymbolInfo.new(_exp, prefixExpType, not accessNil)
       end
   end
   
@@ -3761,7 +3763,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       if typeInfo:equals( Ast.builtinTypeSymbol ) then
         skipFlag = true
       end
-      exp = Ast.ExpRefNode.new(firstToken.pos, {typeInfo}, token, Ast.AccessSymbolInfo.new(symbolInfo, nil))
+      exp = Ast.ExpRefNode.new(firstToken.pos, {typeInfo}, token, Ast.AccessSymbolInfo.new(symbolInfo, nil, true))
     end
   elseif mode == "fn" then
     exp = self:analyzeDeclFunc( false, false, false, "local", false, nil, token, nil )
@@ -4212,7 +4214,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel )
           self:error( string.format( "unknown type -- %s", token.txt) )
         end
       
-    exp = Ast.ExpRefNode.new(firstToken.pos, {Ast.builtinTypeNone}, token, Ast.AccessSymbolInfo.new(symbolTypeInfo, nil))
+    exp = Ast.ExpRefNode.new(firstToken.pos, {Ast.builtinTypeNone}, token, Ast.AccessSymbolInfo.new(symbolTypeInfo, nil, false))
   elseif token.kind == Parser.TokenKind.Kywd and (token.txt == "true" or token.txt == "false" ) then
     exp = Ast.LiteralBoolNode.new(firstToken.pos, {Ast.builtinTypeBool}, token)
   elseif token.kind == Parser.TokenKind.Kywd and (token.txt == "nil" or token.txt == "null" ) then

@@ -11,7 +11,7 @@ class Super {
     }
 }
 
-let aSuper = new Super();
+let mut aSuper = new Super();
 aSuper.val3 = 0;
 aSuper.func3();
 aSuper.val2 = 0;
