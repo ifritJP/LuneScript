@@ -31,6 +31,21 @@ import lune.base.Util;
 import lune.base.Ast;
 import lune.base.Writer;
 
+enum DeclClassMode {
+   Class,
+   Interface,
+   Module
+}
+
+enum ExpSymbolMode {
+   Symbol,
+   Fn,
+   Field,
+   FieldNil,
+   Get,
+   GetNil,
+}
+
 pub class TransUnit {
 
    /** true の場合は mut 制御が有効 */
@@ -64,11 +79,14 @@ pub class TransUnit {
    /** マクロの TypeId -> マクロ情報 */
    pri let mut typeId2MacroInfo: Map<int,Ast.MacroInfo>;
    /** マクロのモード */
-   pri let mut macroMode: str;
+   pri let mut macroMode: Ast.MacroMode;
    /** macro-expand 内で利用できるシンボルと値の紐付けマップ */
    pri let mut symbol2ValueMapForMacro: Map<str,Ast.MacroValInfo>;
    /** macro-statement の最上位スコープ */
    pri let mut macroScope: Ast.Scope!;
+
+   /** インポートしているモジュールの TypeInfo -> シンボル情報 */
+   pri let mut importModule2SymbolInfo: Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
@@ -88,7 +106,8 @@ pub class TransUnit {
 
    fn __init( macroEval: Ast.MacroEval,
               analyzeModule:str!, mode:str!, pos:&Parser.Position! )
-   {  
+   {
+      self.importModule2SymbolInfo = {};
       self.macroScope = nil;
       self.validMutControl = true;
       self.moduleName = "";
@@ -104,7 +123,7 @@ pub class TransUnit {
       self.errMessList = [];
       self.macroEval = macroEval;
       self.typeId2MacroInfo = {};
-      self.macroMode = "none";
+      self.macroMode = .None;
       self.symbol2ValueMapForMacro = {};
       self.analyzeMode = unwrap mode default "";
       self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
@@ -192,7 +211,7 @@ pub class TransUnit {
       classFlag:bool, abstructFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: List<&Ast.TypeInfo>!,
       externalFlag: bool, name:str,
-      accessMode:str, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
+      accessMode:Ast.AccessMode, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
       let mut typeInfo = Ast.rootTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
@@ -244,24 +263,28 @@ pub class TransUnit {
    }
 
    pri fn pushbackStr( name: str, statement: str );
-   pri fn analyzeDecl( accessMode: str, staticFlag:
+   pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
                        bool, firstToken: &Parser.Token,
                        token: &Parser.Token ): Ast.Node!;
    pri fn analyzeDeclVar(
-      mode:str, accessMode: str, firstToken: &Parser.Token ): Ast.Node;
+      mode:Ast.DeclVarMode,
+      accessMode: Ast.AccessMode, firstToken: &Parser.Token ): Ast.Node;
    pri fn analyzeDeclFunc(
       moduleFlag: bool, abstructFlag: bool,
-      overrideFlag: bool, accessMode: str, staticFlag: bool,
+      overrideFlag: bool, accessMode: Ast.AccessMode, staticFlag: bool,
       classNameToken: &Parser.Token!,
       firstToken: &Parser.Token, name: &Parser.Token! ) : Ast.Node;
    pri fn analyzeDeclClass(
-      abstructFlag:bool, classAccessMode: str,
-      classToken: &Parser.Token, mode:str ): Ast.Node;
-   pri fn analyzeExp( skipOp2Flag: bool, opLevel: int! ): Ast.Node;
+      abstructFlag:bool, classAccessMode: Ast.AccessMode,
+      classToken: &Parser.Token, mode:DeclClassMode ): Ast.Node;
+   pri fn analyzeExp( skipOp2Flag: bool, opLevel: int!,
+                      expectType:&Ast.TypeInfo! ): Ast.Node;
    pri fn analyzeStatement( termTxt: str! ): Ast.Node!;
-   pri fn analyzeExpSymbol( firstToken: &Parser.Token, token: &Parser.Token,
-                            mode: str, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node;
-   pri fn analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node! ): Ast.ExpListNode;
+   pri fn analyzeExpSymbol(
+      firstToken: &Parser.Token, token: &Parser.Token,
+      mode: ExpSymbolMode, prefixExp: Ast.Node!, skipFlag: bool ): Ast.Node;
+   pri fn analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node!,
+                          expectTypeList: List<&Ast.TypeInfo>!, contExpect: bool! ): Ast.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node;
 }
 
@@ -325,7 +348,7 @@ class _TypeInfo {
    pub let nilable: bool;
    pub let orgTypeId: int;
    pub let children: int[];
-   pub let accessMode: str;
+   pub let accessMode: int;
    pub let valTypeId: int;
    pub let enumValList: Map<str,stem>;
    pub let mutable: bool!;
@@ -477,7 +500,7 @@ fn TransUnit.registBuiltInScope() mut {
 
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
 
-   self.scope.addVar( "global", "_VERSION", Ast.builtinTypeString, false, true );
+   self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, false, true );
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, name in builtinClassInfo {
@@ -495,7 +518,7 @@ fn TransUnit.registBuiltInScope() mut {
                }              
             }
             parentInfo = self.pushClass(
-               classFlag, false, nil, interfaceList, true, name, "pub" );
+               classFlag, false, nil, interfaceList, true, name, .Pub );
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
@@ -515,7 +538,7 @@ fn TransUnit.registBuiltInScope() mut {
                   if info.type$[1] == "member" {
                      self.scope.addMember(
                         fieldName,
-                        getTypeInfo( unwrap info.typeInfo$[1] ), "pub", true, false );
+                        getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, false );
                   }
                   else {
                      let mut argTypeList: List<&Ast.TypeInfo> = [];
@@ -538,7 +561,7 @@ fn TransUnit.registBuiltInScope() mut {
                      let typeInfo = Ast.NormalTypeInfo.createFunc(
                         false, true, self.scope,
                         methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
-                        parentInfo, false, true, not methodFlag, "pub",
+                        parentInfo, false, true, not methodFlag, .Pub,
                         fieldName, argTypeList, retTypeList, mutable );
                      
                      self.popScope();
@@ -550,7 +573,7 @@ fn TransUnit.registBuiltInScope() mut {
                      self.scope.add(
                         methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
                         not methodFlag, not methodFlag,
-                        fieldName, typeInfo, "pub", not methodFlag, mutable, true );
+                        fieldName, typeInfo, .Pub, not methodFlag, mutable, true );
                      if methodFlag {
                         switch ( name ) {
                            case "List" {
@@ -685,7 +708,7 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token {
    }
 
    if! token {
-      if self.macroMode == "expand" {
+      if self.macroMode == .Expand {
          let tokenTxt = _exp.txt;
          if tokenTxt == ',,' or tokenTxt == ',,,,' {
             let mut nextToken = self.getTokenNoErr();
@@ -906,7 +929,9 @@ fn TransUnit.analyzeLuneControl( firstToken: &Parser.Token ) mut {
    self.checkNextToken( ";" );
 }
 
-fn TransUnit.analyzeBlock( blockKind: str, scope: Ast.Scope! ) mut : Ast.BlockNode {
+fn TransUnit.analyzeBlock(
+   blockKind: Ast.BlockKind, scope: Ast.Scope! ) mut : Ast.BlockNode
+{
    let token = self.checkNextToken( "{" );
 
    if not scope {
@@ -993,7 +1018,6 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
 
    fn registTypeInfo( atomInfo: _TypeInfo ): &Ast.TypeInfo {
       let mut newTypeInfo: &Ast.TypeInfo! = nil;
-
       if! atomInfo.srcTypeId {
          let srcTypeInfo = unwrap typeId2TypeInfo[ _exp ];
          newTypeInfo = self.createModifier(
@@ -1002,6 +1026,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
       }
       else {
          if atomInfo.kind == Ast.TypeInfoKind.Enum {
+            let accessMode = unwrap Ast.AccessMode._from( atomInfo.accessMode );
             let parentInfo = unwrap typeId2TypeInfo[ atomInfo.parentId ];
             let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
             let mut parentScope = unwrap parentInfo.$scope;
@@ -1009,8 +1034,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
             
             typeId2Scope[ atomInfo.typeId ] = scope;
             let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
-               scope, unwrap parentInfo, true,
-               atomInfo.accessMode, atomInfo.txt,
+               scope, unwrap parentInfo, true, accessMode, atomInfo.txt,
                unwrap typeId2TypeInfo[ atomInfo.valTypeId ],
                name2EnumValInfo );
             newTypeInfo = enumTypeInfo;
@@ -1019,7 +1043,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                name2EnumValInfo[ valName ] = new Ast.EnumValInfo( valName, valData );
                scope.addEnumVal( valName, enumTypeInfo );
             }  
-            parentScope.addEnum( atomInfo.accessMode, atomInfo.txt, enumTypeInfo );
+            parentScope.addEnum( accessMode, atomInfo.txt, enumTypeInfo );
          }  
          elseif atomInfo.kind == Ast.TypeInfoKind.Module {
             let mut parentInfo = Ast.typeInfoRoot;
@@ -1142,7 +1166,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                      let workTypeInfo = Ast.NormalTypeInfo.createClass(
                         atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag,
                         scope, baseInfo, interfaceList,
-                        parentInfo, true, "pub", atomInfo.txt );
+                        parentInfo, true, .Pub, atomInfo.txt );
                      newTypeInfo = workTypeInfo;
                      typeId2Scope[ atomInfo.typeId ] = scope;
 
@@ -1182,11 +1206,15 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                         let mut symbolKind = Ast.SymbolKind.Fun;
                         if atomInfo.kind == Ast.TypeInfoKind.Method {
                            symbolKind = Ast.SymbolKind.Mtd;
-                        }  
-                            (unwrap typeId2Scope[ atomInfo.parentId ]).add(
-                               symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func,
-                               atomInfo.txt, workTypeInfo, atomInfo.accessMode,
-                               atomInfo.staticFlag, false, true );
+                        }
+                        let accessMode =
+                           unwrap Ast.AccessMode._from( atomInfo.accessMode );
+                        let mut workParentScope =
+                           unwrap typeId2Scope[ atomInfo.parentId ];
+                        workParentScope.add(
+                           symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func,
+                           atomInfo.txt, workTypeInfo, accessMode,
+                           atomInfo.staticFlag, false, true );
                         typeId2Scope[ atomInfo.typeId ] = scope;
                      }  
                   }  
@@ -1258,7 +1286,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
       switch ( classTypeInfo.$kind ) {
          case Ast.TypeInfoKind.Class {
             self.pushClass( true, classTypeInfo.$abstructFlag,
-                            nil, nil, true, classTypeInfo.getTxt(), "pub" );
+                            nil, nil, true, classTypeInfo.getTxt(), .Pub );
             if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
@@ -1266,7 +1294,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                   let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
                   self.scope.addMember(
                      fieldName, fieldTypeInfo,
-                     (unwrap fieldInfo.accessMode)@@str,
+                     unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
                      (unwrap fieldInfo.staticFlag default false)@@bool,
                      (unwrap fieldInfo.mutable default false)@@bool );
                }  
@@ -1337,9 +1365,12 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    // スコープを元に戻す
    self.scope = self.moduleScope;
 
+   // モジュールをスコープに登録する
    let moduleTypeInfo = unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ];
-   self.scope.add( Ast.SymbolKind.Typ, false, false, moduleToken.txt,
-                   moduleTypeInfo, "local", true, moduleInfo._moduleMutable, true );
+   let moduleSymbolInfo = self.scope.add(
+      Ast.SymbolKind.Typ, false, false, moduleToken.txt,
+      moduleTypeInfo, .Local, true, moduleInfo._moduleMutable, true );
+   self.importModule2SymbolInfo[ moduleTypeInfo ] = moduleSymbolInfo;
 
    self.checkToken( nextToken, ";" );
 
@@ -1412,13 +1443,13 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
    
    let mut list:Ast.IfStmtInfo[] = [];
    list.insert( new Ast.IfStmtInfo( "if", self.analyzeExp( false ),
-                                    self.analyzeBlock( "if" ) ) );
+                                    self.analyzeBlock( .If ) ) );
 
    nextToken = self.getToken( true );
    if nextToken.txt == "elseif" {
       while nextToken.txt == "elseif" {
          list.insert( new Ast.IfStmtInfo( "elseif", self.analyzeExp( false ),
-                                          self.analyzeBlock( "elseif" ) ));
+                                          self.analyzeBlock( .Elseif ) ));
          nextToken = self.getToken( true );
       } 
    }
@@ -1427,7 +1458,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
       list.insert(
          new Ast.IfStmtInfo( "else", new Ast.NoneNode( nextToken.pos,
                                                        [ Ast.builtinTypeNone ] ),
-                             self.analyzeBlock( "else" ) ));
+                             self.analyzeBlock( .Else ) ));
    }
    else {
       self.pushback();
@@ -1439,23 +1470,23 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
 
 fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Ast.SwitchNode {
    let exp = self.analyzeExp( false );
-
+   
    self.checkNextToken( "{" );
 
    let mut caseList: Ast.CaseInfo[] = [];
-
+   
    let mut nextToken = self.getToken();
    while ( nextToken.txt == "case" ) {
       self.checkToken( nextToken, "case" );
-      let condexpList = self.analyzeExpList( false );
-      let condBock = self.analyzeBlock( "switch" );
+      let condexpList = self.analyzeExpList( false, nil, [ exp.$expType ], true );
+      let condBock = self.analyzeBlock( .Switch );
       caseList.insert( new Ast.CaseInfo( condexpList, condBock ) );
       nextToken = self.getToken();
    }
 
    let mut defaultBlock: Ast.BlockNode! = nil;
    if nextToken.txt == "default" {
-      defaultBlock = self.analyzeBlock( "default" );
+      defaultBlock = self.analyzeBlock( .Default );
    }
    else {
       self.pushback();
@@ -1469,13 +1500,13 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Ast.SwitchNode {
 
 fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Ast.WhileNode {
    return new Ast.WhileNode( token.pos, [ Ast.builtinTypeNone ],
-                             self.analyzeExp( false ), self.analyzeBlock( "while" ) );
+                             self.analyzeExp( false ), self.analyzeBlock( .While ) );
 }
 
 fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Ast.RepeatNode {
    let scope = self.pushScope( false );
    let mut node = new Ast.RepeatNode( token.pos, [ Ast.builtinTypeNone ],
-                                      self.analyzeBlock( "repeat", scope ),
+                                      self.analyzeBlock( .Repeat, scope ),
                                       self.analyzeExp( false ) );
    self.popScope();
    
@@ -1522,7 +1553,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Ast.ForNode {
 
    let mut node = new Ast.ForNode(
       firstToken.pos, [ Ast.builtinTypeNone ],
-      self.analyzeBlock( "for", scope ), val, exp1, exp2, exp3 );
+      self.analyzeBlock( .For, scope ), val, exp1, exp2, exp3 );
    self.popScope();
    
    return node;
@@ -1548,7 +1579,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
       self.error( "not call" );
    }
 
-   let block = self.analyzeBlock( "apply", scope );
+   let block = self.analyzeBlock( .Apply, scope );
    self.popScope();
 
    return new Ast.ApplyNode( token.pos, [ Ast.builtinTypeNone ], varList, exp, block );
@@ -1609,7 +1640,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
       }
    }
 
-   let block = self.analyzeBlock( "foreach", scope );
+   let block = self.analyzeBlock( .Foreach, scope );
 
    self.popScope();
 
@@ -1645,13 +1676,13 @@ fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Ast.Node {
 
       forsort symbolInfo, symbol in self.moduleScope.$symbol2TypeInfoMap {
          if expRefNode.$symbolInfo.$symbolId == symbolInfo.$symbolId {
-            if symbolInfo.$accessMode ~= "pub" {
+            if symbolInfo.$accessMode ~= .Pub {
                self.addErrMess( firstToken.pos,
                                 "provide variable must be 'pub'.  -- %s"
                                 (symbolInfo.$accessMode));
             }
          }
-         elseif symbolInfo.$accessMode == "pub" {
+         elseif symbolInfo.$accessMode == .Pub {
             self.addErrMess(
                firstToken.pos,   
                "variable (%s) can't set 'pub'." ( symbolInfo.$name ) );

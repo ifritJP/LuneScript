@@ -1,7 +1,7 @@
 local obj = {}
 
-function obj.func1()
-   print( "func1" )
+function obj.func1( val )
+   print( "func1", val )
 end
 
 obj.val = 0

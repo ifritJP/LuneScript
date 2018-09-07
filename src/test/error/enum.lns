@@ -22,13 +22,17 @@ enum testEnum4 {
 }
 
 let mut val = testEnum4.val1;
-val = testEnum4.val2;
+val = .val2;
 val = 1; // error: type mismatch
 
 testEnum4 = 1; // error
 testEnum4.val1 = 1; // error
 testEnum4.val1 = testEnum4.val1; // error
 
+
+fn func( enum1: testEnum, enum4: testEnum4 ) {
+}
+func( .val1, .val1 );
 
 {
    let mut valtest = 1;
@@ -51,7 +55,7 @@ testEnum4.val1 = testEnum4.val1; // error
 
 {
    let mut valtest = testEnum4._from( 0 );
-   valtest = testEnum4.val1;
+   valtest = .val1;
    valtest = 1; // error
    if valtest == 1 { // error
    }
@@ -67,4 +71,9 @@ testEnum4.val1 = testEnum4.val1; // error
 {
    let val1:testEnum = 1; // error
    testEnum._from( "1" ); // error
+}
+
+{
+   let val1 = testEnum.val1;
+   val1 = .val4;
 }

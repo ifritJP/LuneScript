@@ -32,6 +32,8 @@ pub class memStream extend (oStream) {
    pub fn write( val: str ) mut {
       self.txt = self.txt .. val;
    }
+   pub fn close() mut {
+   }
 }
 
 pri let mut debugFlag = true;

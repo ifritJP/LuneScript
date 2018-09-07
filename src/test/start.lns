@@ -335,7 +335,7 @@ _print( `{ ClassAA.$val } );
    let classAA = new ClassAA();
 }
 
-Sub2.External.func1();
+Sub2.External.func1( 100 );
 Sub2.External.func2( 10 );
 Sub2.External.func2( 20 );
 _print( `{ Sub2.External.val } );
@@ -467,4 +467,60 @@ _print( `{ Sub2.External.val } );
    val.efg = 3;
    val[ "zzz" ] = 4;
    print( val[ "ab" .. "c" ], val.efg, val.zzz );
+}
+
+interface IFTEST {
+   pub fn sub();
+}
+
+class TEST2 extend (IFTEST) {
+   pub fn sub() {
+      print( "TEST2.sub()" );
+   }
+}
+
+
+class TEST extend (IFTEST) {
+   let iftest:IFTEST;
+
+   advertise iftest;
+}
+
+{
+   let test = new TEST( new TEST2() );
+   test.sub();
+}
+
+enum TESTENUM {
+   val1,
+   val2,
+   val3,
+}
+
+enum TESTENUM2 {
+   val1 = 100,
+   val2,
+   val3,
+}
+
+{
+   let mut val = TESTENUM.val1;
+   val = .val1;
+   print( val );
+   val = .val2;
+   print( val );
+
+   switch ( val ) {
+      case .val1, .val2 {
+         print( "ok" );
+      }  
+      default {
+         print( "ng" );
+      }  
+   }
+
+   fn testenum( enum1:TESTENUM, enum2:TESTENUM2 ) {
+      print( "testenum", enum1, enum2 );
+   }
+   testenum( .val2, .val2 );
 }

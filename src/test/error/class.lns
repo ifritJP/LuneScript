@@ -16,6 +16,18 @@ class Test {
 
 Test.func( 1 ); // error
 
+let test = new Test(1,2); // error
+test.func( 1, 1.0, 2.0 ); // error
+let test2 = Test; // error
+Test = test; // error
+Test = int; // error
+let val = int + 1; // error
+let mut val2 = 1;
+val2 = 1 + int; //error
+val2 = int + 1; //error
+
+
+
 class Test2 {
    pri let val:int;
    pub fn __init() { // error: does not set 'val';
@@ -44,6 +56,16 @@ proto interface Test5;
 class Test5 { // error
 }
 
+interface Test6 {
+   pub let val:int;
+   fn sub();
+   pub fn sub2() {
+   }
+}
+
+class Test extend Test6 {
+}
+
 class Super1 {
    pri let val:int;
    pub fn func() {
@@ -63,26 +85,15 @@ class Super2 {
    }
    pub fn func3() {
    }
-}
-
-class Sub2 extend Super2 {
-   pub override fn func1() mut {
-   }
-   pub override fn func2(arg:int) mut {
-   }
-   pub override fn func3() mut : int {
+   pub abstruct fn func4() { // error
    }
 }
 
-
-
-let test = new Test(1,2); // error
-test.func( 1, 1.0, 2.0 ); // error
-let test2 = Test; // error
-Test = test; // error
-Test = int; // error
-let val = int + 1; // error
-let mut val2 = 1;
-val2 = 1 + int; //error
-val2 = int + 1; //error
-
+class Sub2 extend Super2 { // error
+   pub override fn func1() mut { // error
+   }
+   pub override fn func2(arg:int) mut { // error
+   }
+   pub override fn func3() mut : int { // error
+   }
+}

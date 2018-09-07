@@ -76,6 +76,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/class.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/provide1.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/provide2.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/provide3.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/shadowing.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/enum.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/eof.lns,exe,2>&1)

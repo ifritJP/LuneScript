@@ -16,6 +16,8 @@ end
 function memStream:write( val )
   self.txt = self.txt .. val
 end
+function memStream:close(  )
+end
 function memStream:get_txt()       
   return self.txt         
 end
@@ -69,11 +71,11 @@ local function profile( validTest, func, path )
   local ProFi = require( 'ProFi' )
   _moduleObj.ProFi = ProFi
   
-  ProFi:start(  )
+  ProFi.start(  )
   local result = func(  )
   
-  ProFi:stop(  )
-  ProFi:writeReport( path )
+  ProFi.stop(  )
+  ProFi.writeReport( path )
   return result
 end
 _moduleObj.profile = profile

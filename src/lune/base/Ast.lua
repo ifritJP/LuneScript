@@ -124,6 +124,48 @@ SymbolKind._val2NameMap[4] = 'Var'
 SymbolKind.Arg = 5
 SymbolKind._val2NameMap[5] = 'Arg'
 
+local AccessMode = {}
+_moduleObj.AccessMode = AccessMode
+AccessMode._val2NameMap = {}
+function AccessMode:_getTxt( val )
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "lune.base.Ast.AccessMode.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
+function AccessMode:_from( val )
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
+AccessMode.None = 0
+AccessMode._val2NameMap[0] = 'None'
+AccessMode.Pub = 1
+AccessMode._val2NameMap[1] = 'Pub'
+AccessMode.Pro = 2
+AccessMode._val2NameMap[2] = 'Pro'
+AccessMode.Pri = 3
+AccessMode._val2NameMap[3] = 'Pri'
+AccessMode.Local = 4
+AccessMode._val2NameMap[4] = 'Local'
+AccessMode.Global = 5
+AccessMode._val2NameMap[5] = 'Global'
+
+local txt2AccessModeMap = {}
+
+txt2AccessModeMap['none'] = AccessMode.None
+txt2AccessModeMap['pub'] = AccessMode.Pub
+txt2AccessModeMap['pro'] = AccessMode.Pro
+txt2AccessModeMap['pri'] = AccessMode.Pri
+txt2AccessModeMap['local'] = AccessMode.Local
+txt2AccessModeMap['global'] = AccessMode.Global
+local function txt2AccessMode( accessMode )
+  return txt2AccessModeMap[accessMode]
+end
+_moduleObj.txt2AccessMode = txt2AccessMode
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
 -- none
@@ -410,6 +452,12 @@ end
 function TypeInfo:get_parentInfo(  )
   return self
 end
+function TypeInfo:getModule(  )
+  if self:isModule(  ) then
+    return self
+  end
+  return self:get_parentInfo():getModule(  )
+end
 function TypeInfo:get_rawTxt(  )
   return ""
 end
@@ -423,7 +471,7 @@ function TypeInfo:get_staticFlag(  )
   return false
 end
 function TypeInfo:get_accessMode(  )
-  return "pri"
+  return AccessMode.Pri
 end
 function TypeInfo:get_autoFlag(  )
   return false
@@ -457,6 +505,28 @@ function TypeInfo:get_scope()
 end
 do
   end
+
+function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
+  if self.classFlag then
+    if includeSelfFlag then
+      for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
+        if symbolInfo:canAccess( fromScope ) then
+          if not callback( symbolInfo ) then
+            return false
+          end
+        end
+      end
+    end
+    if self.inheritList then
+      for __index, scope in pairs( self.inheritList ) do
+        if not scope:filterTypeInfoField( true, fromScope, callback ) then
+          return false
+        end
+      end
+    end
+  end
+  return true
+end
 
 function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
   if self.classFlag then
@@ -503,28 +573,6 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
   end
   
   return nil
-end
-
-function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
-  if includeSelfFlag then
-    for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
-      if symbolInfo:canAccess( fromScope ) then
-        if not callback( symbolInfo ) then
-          return false
-        end
-      end
-    end
-  end
-  if self.classFlag then
-    if self.inheritList then
-      for __index, scope in pairs( self.inheritList ) do
-        if not scope:filterTypeInfoField( true, fromScope, callback ) then
-          return false
-        end
-      end
-    end
-  end
-  return true
 end
 
 function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
@@ -655,11 +703,11 @@ function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, sta
 end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
-  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", false, mutable, true )
+  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable, true )
 end
 
 function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
-  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, "local", true, mutable, true )
+  self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, true, mutable, true )
 end
 
 function Scope:addVar( accessMode, name, typeInfo, mutable, hasValueFlag )
@@ -667,7 +715,7 @@ function Scope:addVar( accessMode, name, typeInfo, mutable, hasValueFlag )
 end
 
 function Scope:addEnumVal( name, typeInfo )
-  self:add( SymbolKind.Mbr, false, true, name, typeInfo, "pub", true, true, true )
+  self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, true, true )
 end
 
 function Scope:addEnum( accessMode, name, typeInfo )
@@ -784,9 +832,9 @@ function NormalSymbolInfo:canAccess( fromScope )
   end
   do
     local _switchExp = self:get_accessMode()
-    if _switchExp == "pub" or _switchExp == "global" then
+    if _switchExp == AccessMode.Pub or _switchExp == AccessMode.Global then
       return self
-    elseif _switchExp == "pro" then
+    elseif _switchExp == AccessMode.Pro then
       local nsClass = self.scope:getClassTypeInfo(  )
       
       local fromClass = fromScope:getClassTypeInfo(  )
@@ -795,9 +843,9 @@ function NormalSymbolInfo:canAccess( fromScope )
         return self
       end
       return nil
-    elseif _switchExp == "local" then
+    elseif _switchExp == AccessMode.Local then
       return self
-    elseif _switchExp == "pri" then
+    elseif _switchExp == AccessMode.Pri then
       local nsClass = self.scope:getClassTypeInfo(  )
       
       local fromClass = fromScope:getClassTypeInfo(  )
@@ -1005,6 +1053,10 @@ function NilableTypeInfo:get_parentInfo( ... )
   return self.orgTypeInfo:get_parentInfo( ... )
 end       
 
+function NilableTypeInfo:getModule( ... )
+  return self.orgTypeInfo:getModule( ... )
+end       
+
 function NilableTypeInfo:get_rawTxt( ... )
   return self.orgTypeInfo:get_rawTxt( ... )
 end       
@@ -1150,6 +1202,10 @@ function ModifierTypeInfo:get_parentInfo( ... )
   return self.srcTypeInfo:get_parentInfo( ... )
 end       
 
+function ModifierTypeInfo:getModule( ... )
+  return self.srcTypeInfo:getModule( ... )
+end       
+
 function ModifierTypeInfo:get_rawTxt( ... )
   return self.srcTypeInfo:get_rawTxt( ... )
 end       
@@ -1237,7 +1293,7 @@ function ModuleTypeInfo:isModule(  )
   return true
 end
 function ModuleTypeInfo:get_accessMode(  )
-  return "pub"
+  return AccessMode.Pub
 end
 function ModuleTypeInfo:get_kind(  )
   return TypeInfoKind.Module
@@ -1548,7 +1604,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
     local work = name
     
     for __index, typeInfo in pairs( list ) do
-      if not onlyPub or typeInfo:get_accessMode() == "pub" then
+      if not onlyPub or typeInfo:get_accessMode() == AccessMode.Pub then
         if #work ~= #name then
           work = work .. ", "
         end
@@ -1559,7 +1615,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
   end
   
   local txt = string.format( [==[{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        staticFlag = %s, accessMode = '%s', kind = %d, mutable = %s, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind, self.mutable)
+        staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind, self.mutable)
   
   local children = {}
   
@@ -1632,7 +1688,7 @@ function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, pa
     Util.err( string.format( "not found symbol -- %s", txt) )
   end
   typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, "pub", txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, AccessMode.Pub, txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
   
   return info
 end
@@ -1730,15 +1786,15 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
     end
   end
   
-  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, "pub", typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList, true)
+  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList, true)
   
   if scope then
     _moduleObj.rootScope:addClass( typeTxt, info )
   end
   _moduleObj.typeInfoKind[idName] = info
-  _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, "pub", false, typeTxt, info, false, true)
+  _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, info, false, true)
   if info:get_nilableTypeInfo() ~= _moduleObj.rootTypeInfo then
-    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, "pub", false, typeTxt, info:get_nilableTypeInfo(), false, true)
+    _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, info:get_nilableTypeInfo(), false, true)
     _moduleObj.builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
   _moduleObj.builtInTypeIdSet[info.typeId] = info
@@ -1807,6 +1863,10 @@ function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, pare
   local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
   
   return info
+end
+
+function NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, typeInfo )
+  return NormalTypeInfo.createFunc( false, false, typeInfo:get_scope(), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), typeInfo:get_mutable() )
 end
 
 function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
@@ -1885,18 +1945,18 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
   typeIdSeed = typeIdSeed + 1
   local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo)
   
-  local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, "pub", "get__txt", nil, {_moduleObj.builtinTypeString}, false )
+  local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, {_moduleObj.builtinTypeString}, false )
   
-  scope:addMethod( getEnumName, "pub", false, true )
-  local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, "pub", "_from", {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
+  scope:addMethod( getEnumName, AccessMode.Pub, false, true )
+  local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, AccessMode.Pub, "_from", {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
   
-  scope:addMethod( fromVal, "pub", true, true )
+  scope:addMethod( fromVal, AccessMode.Pub, true, true )
   return info
 end
 
 function EnumTypeInfo:serialize( stream, validChildrenSet )
   local txt = string.format( [==[{ parentId = %d, typeId = %d, txt = '%s',
-accessMode = '%s', kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId())
+accessMode = %d, kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId())
   
   stream:write( txt )
   stream:write( "enumValList = {" )
@@ -2606,6 +2666,56 @@ end
 do
   end
 
+
+local BlockKind = {}
+_moduleObj.BlockKind = BlockKind
+BlockKind._val2NameMap = {}
+function BlockKind:_getTxt( val )
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "lune.base.Ast.BlockKind.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
+function BlockKind:_from( val )
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
+BlockKind.If = 0
+BlockKind._val2NameMap[0] = 'If'
+BlockKind.Elseif = 1
+BlockKind._val2NameMap[1] = 'Elseif'
+BlockKind.Else = 2
+BlockKind._val2NameMap[2] = 'Else'
+BlockKind.While = 3
+BlockKind._val2NameMap[3] = 'While'
+BlockKind.Switch = 4
+BlockKind._val2NameMap[4] = 'Switch'
+BlockKind.Repeat = 5
+BlockKind._val2NameMap[5] = 'Repeat'
+BlockKind.For = 6
+BlockKind._val2NameMap[6] = 'For'
+BlockKind.Apply = 7
+BlockKind._val2NameMap[7] = 'Apply'
+BlockKind.Foreach = 8
+BlockKind._val2NameMap[8] = 'Foreach'
+BlockKind.Macro = 13
+BlockKind._val2NameMap[13] = 'Macro'
+BlockKind.Func = 10
+BlockKind._val2NameMap[10] = 'Func'
+BlockKind.Default = 11
+BlockKind._val2NameMap[11] = 'Default'
+BlockKind.Block = 12
+BlockKind._val2NameMap[12] = 'Block'
+BlockKind.Macro = 13
+BlockKind._val2NameMap[13] = 'Macro'
+BlockKind.LetUnwrap = 14
+BlockKind._val2NameMap[14] = 'LetUnwrap'
+BlockKind.IfUnwrap = 15
+BlockKind._val2NameMap[15] = 'IfUnwrap'
 
 -- none
 
@@ -3761,6 +3871,30 @@ do
   end
 
 
+local MacroMode = {}
+_moduleObj.MacroMode = MacroMode
+MacroMode._val2NameMap = {}
+function MacroMode:_getTxt( val )
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "lune.base.Ast.MacroMode.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
+function MacroMode:_from( val )
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
+MacroMode.None = 0
+MacroMode._val2NameMap[0] = 'None'
+MacroMode.Expand = 1
+MacroMode._val2NameMap[1] = 'Expand'
+MacroMode.Analyze = 2
+MacroMode._val2NameMap[2] = 'Analyze'
+
 -- none
 
 function Filter:processExpOp1( node, ... )
@@ -4187,6 +4321,59 @@ do
 
 -- none
 
+function Filter:processExpOmitEnum( node, ... )
+end
+
+-- none
+
+-- none
+
+local nodeKindExpOmitEnum = regKind( [[ExpOmitEnum]] )
+
+_moduleObj.nodeKindExpOmitEnum = nodeKindExpOmitEnum
+
+local ExpOmitEnumNode = {}
+setmetatable( ExpOmitEnumNode, { __index = Node } )
+_moduleObj.ExpOmitEnumNode = ExpOmitEnumNode
+function ExpOmitEnumNode:processFilter( filter, ... )
+  local argList = {...}
+  
+  filter:processExpOmitEnum( self, table.unpack( argList ) )
+end
+function ExpOmitEnumNode:canBeRight(  )
+  return true
+end
+function ExpOmitEnumNode:canBeLeft(  )
+  return true
+end
+function ExpOmitEnumNode.new( pos, typeList, valToken, enumTypeInfo )
+  local obj = {}
+  setmetatable( obj, { __index = ExpOmitEnumNode } )
+  if obj.__init then obj:__init( pos, typeList, valToken, enumTypeInfo ); end
+return obj
+end
+function ExpOmitEnumNode:__init(pos, typeList, valToken, enumTypeInfo) 
+  Node.__init( self, _moduleObj.nodeKindExpOmitEnum, pos, typeList)
+  
+  -- none
+  
+  self.valToken = valToken
+  self.enumTypeInfo = enumTypeInfo
+  -- none
+  
+end
+function ExpOmitEnumNode:get_valToken()       
+  return self.valToken         
+end
+function ExpOmitEnumNode:get_enumTypeInfo()       
+  return self.enumTypeInfo         
+end
+do
+  end
+
+
+-- none
+
 function Filter:processRefField( node, ... )
 end
 
@@ -4356,6 +4543,30 @@ function VarInfo:get_actualType()
 end
 do
   end
+
+local DeclVarMode = {}
+_moduleObj.DeclVarMode = DeclVarMode
+DeclVarMode._val2NameMap = {}
+function DeclVarMode:_getTxt( val )
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "lune.base.Ast.DeclVarMode.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
+function DeclVarMode:_from( val )
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
+DeclVarMode.Let = 0
+DeclVarMode._val2NameMap[0] = 'Let'
+DeclVarMode.Sync = 1
+DeclVarMode._val2NameMap[1] = 'Sync'
+DeclVarMode.Unwrap = 2
+DeclVarMode._val2NameMap[2] = 'Unwrap'
 
 -- none
 

@@ -137,6 +137,8 @@ function TxtStream:read( mode )
   self.eof = true
   return self.txt:sub( self.start )
 end
+function TxtStream:close(  )
+end
 do
   end
 

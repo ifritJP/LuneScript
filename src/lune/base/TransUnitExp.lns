@@ -24,7 +24,10 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
-fn TransUnit.analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node! ) mut: Ast.ExpListNode {
+fn TransUnit.analyzeExpList(
+   skipOp2Flag: bool, expNode: Ast.Node!,
+   expectTypeList: List<&Ast.TypeInfo>!, contExpect:bool! ) mut: Ast.ExpListNode
+{
    let mut expList:List<&Ast.Node> = [];
    let mut pos:Parser.Position! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
@@ -34,14 +37,28 @@ fn TransUnit.analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node! ) mut: Ast.Ex
       expTypeList.insert( _exp.$expType );
    }
 
+   let mut index = 1;
    repeat {
-      let exp = self.analyzeExp( skipOp2Flag, 0 );
+      let mut expectType:&Ast.TypeInfo! = nil;
+      if! expectTypeList {
+         if #_exp > 0 {
+            let mut checkIndex = index;
+            if index > #_exp and contExpect {
+               checkIndex = #_exp;
+            }
+            if checkIndex <= #_exp and _exp[ checkIndex ] ~= Ast.builtinTypeNone {
+               expectType = _exp[ checkIndex ];
+            }
+         }
+      }
+      let exp = self.analyzeExp( skipOp2Flag, 0, expectType );
       if not pos {
          pos = exp.$pos;
       }
       expList.insert( exp );
       expTypeList.insert( exp.$expType );
       let token = self.getToken();
+      index = index + 1;
    } token.txt ~= ",";
 
    // 最終ノードが複数の値を持つ場合は、その型を追加する
@@ -88,12 +105,12 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    if token.txt == '[' {
       kind = Ast.nodeKindLiteralList;
-      typeInfoList = [ Ast.NormalTypeInfo.createList( "local", self.getCurrentClass(),
+      typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
                                                       [ itemTypeInfo ] ) ];
       return new Ast.LiteralListNode( token.pos, typeInfoList, expList );
    }
    else {
-      typeInfoList = [ Ast.NormalTypeInfo.createArray( "local", self.getCurrentClass(),
+      typeInfoList = [ Ast.NormalTypeInfo.createArray( .Local, self.getCurrentClass(),
                                                        [ itemTypeInfo ] ) ];
       return new Ast.LiteralArrayNode( token.pos, typeInfoList, expList );
    }
@@ -158,7 +175,7 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Ast.LiteralMapNode {
    }
 
    let typeInfo = Ast.NormalTypeInfo.createMap(
-      "local", self.getCurrentClass(), keyTypeInfo, valTypeInfo );
+      .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo );
 
    self.checkToken( nextToken, "}" );
    // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
@@ -404,7 +421,7 @@ fn TransUnit.evalMacro(
    self.parser = parser;
 
 
-   self.macroMode = "expand";
+   self.macroMode = .Expand;
 
 
    let mut stmtList:List<&Ast.Node> = [];
@@ -413,7 +430,7 @@ fn TransUnit.evalMacro(
 
    //    self.popScope();
 
-   self.macroMode = "none";
+   self.macroMode = .None;
    self.parser = bakParser;
 
 
@@ -452,7 +469,7 @@ fn TransUnit.analyzeExpCont(
                if funcTypeInfo.get_kind() == Ast.TypeInfoKind.Macro {
                   macroFlag = true;
                   self.symbol2ValueMapForMacro = {};
-                  self.macroMode = "analyze";
+                  self.macroMode = .Analyze;
                }
 
                matchFlag = true;
@@ -460,7 +477,8 @@ fn TransUnit.analyzeExpCont(
                let mut expList: Ast.ExpListNode! = nil;
                if work.txt ~= ")" {
                   self.pushback();
-                  expList = self.analyzeExpList( false );
+                  expList = self.analyzeExpList(
+                     false, nil, funcTypeInfo.$argTypeInfoList );
                   self.checkNextToken( ")" );
                }
 
@@ -486,7 +504,7 @@ fn TransUnit.analyzeExpCont(
                }
 
                if macroFlag {
-                  self.macroMode = "none";
+                  self.macroMode = .None;
                   exp = self.evalMacro( firstToken, funcTypeInfo, expList );
                }
                else {
@@ -526,19 +544,19 @@ fn TransUnit.analyzeExpCont(
       switch nextToken.txt {
          case "." {
             return self.analyzeExpSymbol(
-               firstToken, self.getToken(), "field", exp, skipFlag );
+               firstToken, self.getToken(), .Field, exp, skipFlag );
          }
          case "$." {
             return self.analyzeExpSymbol(
-               firstToken, self.getToken(), "field_nil", exp, skipFlag );
+               firstToken, self.getToken(), .FieldNil, exp, skipFlag );
          }
          case ".$" {
             return self.analyzeExpSymbol(
-               firstToken, self.getToken(), "get", exp, skipFlag );
+               firstToken, self.getToken(), .Get, exp, skipFlag );
          }
          case "$.$" {
             return self.analyzeExpSymbol(
-               firstToken, self.getToken(), "get_nil", exp, skipFlag );
+               firstToken, self.getToken(), .GetNil, exp, skipFlag );
          }
       }
 
@@ -549,7 +567,7 @@ fn TransUnit.analyzeExpCont(
 
 
 fn TransUnit.analyzeAccessClassField(
-   mut classTypeInfo: &Ast.TypeInfo, mode:str, token:&Parser.Token ) mut :
+   mut classTypeInfo: &Ast.TypeInfo, mode:ExpSymbolMode, token:&Parser.Token ) mut :
    &Ast.TypeInfo, &Ast.SymbolInfo!, bool
 {
    if classTypeInfo.get_kind() == Ast.TypeInfoKind.List {
@@ -564,7 +582,7 @@ fn TransUnit.analyzeAccessClassField(
    let mut symbolInfo:Ast.SymbolInfo! = nil;
    let mut fieldTypeInfo:Ast.TypeInfo! = nil;
    let mut getterFlag = false;
-   if mode == "get" or mode == "get_nil" {
+   if mode == .Get or mode == .GetNil {
       let fieldSymbolInfo = classScope.getSymbolInfo(
          "get_%s" (token.txt), self.scope, false );
       if! fieldSymbolInfo {
@@ -646,7 +664,7 @@ fn TransUnit.dumpComp(
 }
 
 fn TransUnit.dumpFieldComp(
-   writer: Writer.Writer, prefixSymbolInfo: &Ast.SymbolInfo!,
+   writer: Writer.Writer, isPrefixType: bool,
    prefixTypeInfo: &Ast.TypeInfo, pattern: str, getterPattern: str! )
 {
    let typeInfo = prefixTypeInfo;
@@ -654,11 +672,6 @@ fn TransUnit.dumpFieldComp(
       return;
    };
 
-   let mut isPrefixType = false;
-   if! prefixSymbolInfo {
-      isPrefixType = _exp.$kind == Ast.SymbolKind.Typ;
-   }
-   
    scope.filterTypeInfoField(
       true, self.scope,
       fn ( symbolInfo: Ast.SymbolInfo ) : bool {
@@ -749,12 +762,33 @@ fn TransUnit.checkFieldComp(
          if getterFlag {
             getterPattern = "^get_" .. prefix;
          }
+         let mut isPrefixType = false;
+         if! prefixSymbolInfo {
+            isPrefixType = _exp.$kind == Ast.SymbolKind.Typ;
+         }     
          self.dumpFieldComp(
-            jsonWriter, prefixSymbolInfo, prefixExp.$expType,
+            jsonWriter, isPrefixType, prefixExp.$expType,
             prefix == "" and "" or "^" .. prefix, getterPattern );
       }
    );
 }
+
+fn TransUnit.checkEnumComp(
+   token:&Parser.Token, enumTypeInfo: &Ast.EnumTypeInfo ) 
+{
+   if self.analyzeMode ~= "comp" {
+      return;
+   }
+   self.checkComp(
+      token,
+      fn ( jsonWriter: Writer.JSON, prefix:str ) {
+         self.dumpFieldComp(
+            jsonWriter, true, enumTypeInfo,
+            prefix == "" and "" or "^" .. prefix, nil );
+      }
+   );
+}
+
 
 fn TransUnit.checkSymbolComp( token:&Parser.Token ) 
 {
@@ -769,13 +803,13 @@ fn TransUnit.checkSymbolComp( token:&Parser.Token )
 
 fn TransUnit.analyzeExpField(
    firstToken: &Parser.Token, token: &Parser.Token,
-   mode: str, prefixExp: &Ast.Node ) mut : Ast.Node
+   mode: ExpSymbolMode, prefixExp: &Ast.Node ) mut : Ast.Node
 {
    let mut accessNil = false;
-   if mode == "field_nil" or mode == "get_nil" {
+   if mode == .FieldNil or mode == .GetNil {
       accessNil = true;
    }
-   if self.macroMode == "analyze" {
+   if self.macroMode == .Analyze {
       if accessNil {
          self.useNilAccess = true;
       }
@@ -789,7 +823,7 @@ fn TransUnit.analyzeExpField(
    let mut prefixExpType = prefixExp.$expType;
 
    self.checkFieldComp(
-      mode == "get" or mode == "get_nil", token, prefixExp );
+      mode == .Get or mode == .GetNil, token, prefixExp );
    
    if accessNil {
       if prefixExpType.$nilable {
@@ -823,7 +857,7 @@ fn TransUnit.analyzeExpField(
    elseif prefixExpType.get_kind() == Ast.TypeInfoKind.Enum {
       let scope = unwrap prefixExpType.$scope;
       let mut fieldName = token.txt;
-      if mode == "get" {
+      if mode == .Get {
          fieldName = "get_" .. fieldName;
          getterTypeInfo = Ast.rootTypeInfo;
       }
@@ -936,17 +970,17 @@ fn TransUnit.analyzeExpField(
 
 fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, token: &Parser.Token,
-   mode: str, prefixExp: &Ast.Node!, mut skipFlag: bool ) mut : Ast.Node
+   mode: ExpSymbolMode, prefixExp: &Ast.Node!, mut skipFlag: bool ) mut : Ast.Node
 {
    let mut exp:Ast.Node! = nil;
    
-   if mode == "field" or mode == "get" or
-      mode == "field_nil" or mode == "get_nil"
+   if mode == .Field or mode == .Get or
+      mode == .FieldNil or mode == .GetNil
    {
       exp = self.analyzeExpField( firstToken, token, mode, unwrap prefixExp );
    }
-   elseif mode == "symbol" {
-      if self.macroMode == "analyze" {
+   elseif mode == .Symbol {
+      if self.macroMode == .Analyze {
          exp = new Ast.LiteralSymbolNode(
             firstToken.pos, [ Ast.builtinTypeSymbol ], token );
       }
@@ -967,9 +1001,9 @@ fn TransUnit.analyzeExpSymbol(
             new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
       }
    }
-   elseif mode == "fn" {
+   elseif mode == .Fn {
       exp = self.analyzeDeclFunc(
-         false, false, false, "local", false, nil, token, nil );
+         false, false, false, .Local, false, nil, token, nil );
    }
    else {
       self.error( "illegal mode -- %s" ( mode ) );
@@ -1010,7 +1044,7 @@ fn TransUnit.analyzeExpOp2(
       let opTxt = nextToken.txt;
 
       if opTxt == "@@" {
-         let castType = self.analyzeRefType( "local", false );
+         let castType = self.analyzeRefType( .Local, false );
          
          if exp.$expType.$nilable and not castType.$expType.$nilable {
             self.addErrMess( firstToken.pos,
@@ -1031,7 +1065,18 @@ fn TransUnit.analyzeExpOp2(
                }
             }
 
-            let mut exp2:&Ast.Node = self.analyzeExp( false, opLevel );
+            let mut enumTypeInfo:&Ast.EnumTypeInfo! = nil;
+            {
+               let mut prefixExpType = exp.$expType;
+               if prefixExpType.$nilable {
+                  prefixExpType = prefixExpType.$orgTypeInfo;
+               }  
+               if prefixExpType.$kind == .Enum {
+                  enumTypeInfo = prefixExpType.$srcTypeInfo@@Ast.EnumTypeInfo;
+               }
+            }
+            
+            let mut exp2:&Ast.Node = self.analyzeExp( false, opLevel, enumTypeInfo );
             let mut exp2NodeList = [ exp2 ];
             if opTxt == "=" {
                let workToken = self.getToken();
@@ -1285,7 +1330,7 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
    }
 
    self.pushback();
-   return self.analyzeDeclVar( "unwrap", "local", firstToken );
+   return self.analyzeDeclVar( .Unwrap, .Local, firstToken );
 }
 
 fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
@@ -1325,23 +1370,55 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
 }
 
 
-fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ) mut: Ast.Node {
+fn TransUnit.analyzeExp(
+   skipOp2Flag: bool, prevOpLevel: int!, expectType:&Ast.TypeInfo! ) mut : Ast.Node
+{
    let firstToken = self.getToken();
    let mut token = firstToken;
    let mut exp:Ast.Node = new Ast.NoneNode( firstToken.pos, [ Ast.builtinTypeNone ] );
 
    if token.kind == Parser.TokenKind.Dlmt {
-      if token.txt == "..." {
+      if token.txt == "." {
+         if! expectType {
+            if _exp.$kind == .Enum {
+               let enumTyepInfo = _exp.$srcTypeInfo@@Ast.EnumTypeInfo;
+               let nextToken = self.getToken();
+               self.checkEnumComp( nextToken, enumTyepInfo );
+               
+               if enumTyepInfo.getEnumValInfo( nextToken.txt ) {
+                  if _exp.$externalFlag and
+                     not self.importModule2SymbolInfo[ _exp.getModule().$srcTypeInfo ]
+                  {              
+                     self.addErrMess( token.pos, "This module not import -- %s"
+                                      ( _exp.getTxt() ) );
+                  }  
+                  exp = new Ast.ExpOmitEnumNode( token.pos, [ enumTyepInfo ],
+                                                 nextToken, enumTyepInfo );
+                  exp = self.analyzeExpCont( firstToken, exp, false );
+               }
+               else {
+                  self.error( "illegal enum val -- %s.%s"
+                              (_exp.getTxt(), nextToken.txt) );
+               }
+            }
+            else {
+               self.error( "illegal type for '.' -- %s" (_exp.getTxt() ) );
+            }
+         }
+         else {
+            self.error( "illegal '.'" );
+         }
+      }
+      elseif token.txt == "..." {
          return new Ast.ExpDDDNode( firstToken.pos, [ Ast.builtinTypeNone ], token );
       }
-
-      if token.txt == '[' or token.txt == '[@' {
+      elseif token.txt == '[' or token.txt == '[@' {
          exp = self.analyzeListConst( token );
       }
-      if token.txt == '{' {
+      elseif token.txt == '{' {
          exp = self.analyzeMapConst( token );
       }
-      if token.txt == "(" {
+      elseif token.txt == "(" {
          exp = self.analyzeExp( false );
          self.checkNextToken( ")" );
          exp = new Ast.ExpParenNode( firstToken.pos, exp.$expTypeList, exp );
@@ -1350,27 +1427,29 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ) mut: Ast.Node {
    }
 
    if token.txt == "new" {
-      exp = self.analyzeRefType( "local", false );
+      exp = self.analyzeRefType( .Local, false );
 
-      self.checkNextToken( "(" );
-      let nextToken = self.getToken();
-      let mut argList: Ast.ExpListNode! = nil;
-      if nextToken.txt ~= ")" {
-         self.pushback();
-         argList = self.analyzeExpList( false );
-         self.checkNextToken( ")" );
-      }
-
-      // 引数チェック
       let classTypeInfo = exp.$expType;
-      //let classScope = self.typeId2Scope[ classTypeInfo.get_typeId() ];
       let classScope = classTypeInfo.get_scope();
       let! initTypeInfo = (unwrap classScope).getTypeInfoChild( "__init" ) {
          self.error( "not found __init" );
       };
+      
+      self.checkNextToken( "(" );
+      let nextToken = self.getToken();
+      let mut argList: Ast.ExpListNode! = nil;
+      
+      if nextToken.txt ~= ")" {
+         self.pushback();
+         argList = self.analyzeExpList( false, nil, initTypeInfo.$argTypeInfoList );
+         self.checkNextToken( ")" );
+      }
 
-      if initTypeInfo.$accessMode == "pub" or
-          ( initTypeInfo.$accessMode == "pro" and
+      // 引数チェック
+      //let classScope = self.typeId2Scope[ classTypeInfo.get_typeId() ];
+
+      if initTypeInfo.$accessMode == .Pub or
+          ( initTypeInfo.$accessMode == .Pro and
             self.scope.getClassTypeInfo().isInheritFrom( classTypeInfo ) ) or
           ( self.scope.getClassTypeInfo() == classTypeInfo )
       {
@@ -1507,14 +1586,14 @@ fn TransUnit.analyzeExp( skipOp2Flag: bool, prevOpLevel: int! ) mut: Ast.Node {
       }
    }
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" {
-      exp = self.analyzeExpSymbol( firstToken, token, "fn", nil, false );
+      exp = self.analyzeExpSymbol( firstToken, token, .Fn, nil, false );
    }
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "unwrap" {
       exp = self.analyzeExpUnwrap( token );
    }
    elseif token.kind == Parser.TokenKind.Symb {
       exp = self.analyzeExpSymbol(
-         firstToken, token, "symbol", nil, false );
+         firstToken, token, .Symbol, nil, false );
    }
    elseif token.kind == Parser.TokenKind.Type {
       let! symbolTypeInfo = Ast.sym2builtInTypeMap[ token.txt ] {

@@ -437,6 +437,12 @@ pub override fn dumpFilter.processRefField(
    dump( prefix, depth, node, node.get_field().txt );
    filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
 };  
+pub override fn dumpFilter.processExpOmitEnum( 
+   node: &Ast.ExpOmitEnumNode, prefix: str, depth: int ) mut
+{
+   dump( prefix, depth, node,
+         "%s.%s" (node.$expType.getTxt(), node.$valToken.txt ) );
+};
 
 pub override fn dumpFilter.processGetField( 
    node: &Ast.GetFieldNode, prefix: str, depth: int ) mut

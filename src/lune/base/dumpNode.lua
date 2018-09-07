@@ -554,6 +554,12 @@ end
 
 -- none
 
+function dumpFilter:processExpOmitEnum( node, prefix, depth )
+  dump( prefix, depth, node, string.format( "%s.%s", node:get_expType():getTxt(  ), node:get_valToken().txt) )
+end
+
+-- none
+
 function dumpFilter:processGetField( node, prefix, depth )
   dump( prefix, depth, node, (node:get_getterTypeInfo(  ) and "get_" or "" ) .. node:get_field(  ).txt )
   filter( node:get_prefix(  ), self, prefix .. "  ", depth + 1 )

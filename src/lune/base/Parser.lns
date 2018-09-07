@@ -150,6 +150,8 @@ pub class TxtStream extend (iStream) {
       self.eof = true;
       return self.txt.sub( self.start);
    }
+   pub fn close() mut {
+   }
 }
 
 

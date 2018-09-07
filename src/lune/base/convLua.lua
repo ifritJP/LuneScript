@@ -100,6 +100,23 @@ function convFilter:getCanonicalName( typeInfo )
   end
   return canonicalName
 end
+function convFilter:close(  )
+end
+function convFilter:write( txt )
+  local stream = self.stream
+  
+  if self.outMetaFlag then
+    stream = self.metaStream
+  end
+  if self.needIndent then
+    stream:write( string.rep( " ", self.indent ) )
+    self.needIndent = false
+  end
+  for cr in string.gmatch( txt, "\n" ) do
+    self.curLineNo = self.curLineNo + 1
+  end
+  stream:write( txt )
+end
 do
   end
 
@@ -117,22 +134,6 @@ builtInModuleSet["table"] = true
 builtInModuleSet["math"] = true
 builtInModuleSet["debug"] = true
 builtInModuleSet["_luneScript"] = true
-function convFilter:write( txt )
-  local stream = self.stream
-  
-  if self.outMetaFlag then
-    stream = self.metaStream
-  end
-  if self.needIndent then
-    stream:write( string.rep( " ", self.indent ) )
-    self.needIndent = false
-  end
-  for cr in string.gmatch( txt, "\n" ) do
-    self.curLineNo = self.curLineNo + 1
-  end
-  stream:write( txt )
-end
-
 function convFilter:setIndent( indent )
   self.indent = indent
 end
@@ -188,13 +189,13 @@ function convFilter:outputMeta( node, baseIndent )
     if typeInfo:get_typeId(  ) == Ast.rootTypeId then
       return 
     end
-    if not forceFlag and typeInfo:get_accessMode(  ) ~= "pub" then
+    if not forceFlag and typeInfo:get_accessMode(  ) ~= Ast.AccessMode.Pub then
       return 
     end
     if typeId2TypeInfo[typeInfo:get_typeId(  )] then
       if pickupChildFlag and not typeInfo:get_nilable() then
         for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
-          if itemTypeInfo:get_accessMode() == "pub" and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
+          if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
             pickupTypeId( itemTypeInfo, true, true )
           end
         end
@@ -237,7 +238,7 @@ function convFilter:outputMeta( node, baseIndent )
       end
       if pickupChildFlag then
         for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
-          if itemTypeInfo:get_accessMode() == "pub" and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
+          if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
             pickupTypeId( itemTypeInfo, true, true )
           end
         end
@@ -263,7 +264,7 @@ function convFilter:outputMeta( node, baseIndent )
   local typeId2ClassMap = node:get_typeId2ClassMap(  )
   
   for __index, namespaceInfo in pairs( typeId2ClassMap ) do
-    if namespaceInfo.typeInfo:get_accessMode(  ) == "pub" and not namespaceInfo.typeInfo:get_externalFlag() then
+    if namespaceInfo.typeInfo:get_accessMode(  ) == Ast.AccessMode.Pub and not namespaceInfo.typeInfo:get_externalFlag() then
       pickupClassMap[namespaceInfo.typeInfo:get_typeId()] = namespaceInfo.typeInfo
     end
   end
@@ -280,14 +281,14 @@ function convFilter:outputMeta( node, baseIndent )
     for __index, classTypeId in ipairs( __sorted ) do
       classTypeInfo = __map[ classTypeId ]
       do
-        if classTypeInfo:get_accessMode() == "pub" then
+        if classTypeInfo:get_accessMode() == Ast.AccessMode.Pub then
           pickupTypeId( classTypeInfo, true, validChildrenSet[classTypeInfo] == nil and not classTypeInfo:get_externalFlag() )
           pickupClassMap[classTypeId] = nil
           self:writeln( "do", baseIndent + stepIndent )
           self:writeln( string.format( "local _classInfo%d = {}", classTypeId), baseIndent + stepIndent )
           self:writeln( string.format( "_typeId2ClassInfoMap[ %d ] = _classInfo%d", classTypeId, classTypeId), baseIndent + stepIndent )
           for __index, memberNode in pairs( _lune.unwrap( self.classId2MemberList[classTypeId]) ) do
-            if memberNode:get_accessMode() ~= "pri" then
+            if memberNode:get_accessMode() ~= Ast.AccessMode.Pri then
               local memberName = memberNode:get_name().txt
               
               local memberTypeInfo = memberNode:get_expType(  )
@@ -352,9 +353,9 @@ function convFilter:outputMeta( node, baseIndent )
                   local typeInfo = symbolInfo:get_typeInfo()
                   
                   if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
-                    if symbolInfo:get_accessMode() == "pub" then
+                    if symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
                       self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, fieldName), baseIndent + stepIndent )
-                      self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, symbolInfo:get_staticFlag()) .. string.format( "accessMode = '%s', typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )), baseIndent + stepIndent )
+                      self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, symbolInfo:get_staticFlag()) .. string.format( "accessMode = %d, typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )), baseIndent + stepIndent )
                       pickupTypeId( typeInfo )
                     end
                   end
@@ -382,7 +383,7 @@ function convFilter:outputMeta( node, baseIndent )
       varInfo = __map[ varName ]
       do
         self:writeln( string.format( "_varName2InfoMap.%s = {", varName ), baseIndent )
-        self:writeln( string.format( "  name='%s', accessMode = '%s', typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId(), true), baseIndent )
+        self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId(), true), baseIndent )
         pickupTypeId( varInfo.typeInfo, true )
       end
     end
@@ -565,35 +566,39 @@ end
 function convFilter:processBlock( node, parent, baseIndent )
   local word = ""
   
-  if node:get_blockKind(  ) == "if" or node:get_blockKind(  ) == "elseif" then
-    word = "then"
-  elseif node:get_blockKind(  ) == "else" then
-    word = ""
-  elseif node:get_blockKind(  ) == "while" then
-    word = "do"
-  elseif node:get_blockKind(  ) == "repeat" then
-    word = ""
-  elseif node:get_blockKind(  ) == "for" then
-    word = "do"
-  elseif node:get_blockKind(  ) == "apply" then
-    word = "do"
-  elseif node:get_blockKind(  ) == "foreach" then
-    word = "do"
-  elseif node:get_blockKind(  ) == "macro" then
-    word = ""
-  elseif node:get_blockKind(  ) == "func" then
-    word = ""
-  elseif node:get_blockKind(  ) == "default" then
-    word = ""
-  elseif node:get_blockKind(  ) == "{" then
-    word = "do"
-  elseif node:get_blockKind(  ) == "macro" then
-    word = ""
-  elseif node:get_blockKind(  ) == "let!" then
-    word = ""
-  elseif node:get_blockKind(  ) == "if!" then
-    word = ""
+  do
+    local _switchExp = node:get_blockKind(  )
+    if _switchExp == Ast.BlockKind.If or _switchExp == Ast.BlockKind.Elseif then
+      word = "then"
+    elseif _switchExp == Ast.BlockKind.Else then
+      word = ""
+    elseif _switchExp == Ast.BlockKind.While then
+      word = "do"
+    elseif _switchExp == Ast.BlockKind.Repeat then
+      word = ""
+    elseif _switchExp == Ast.BlockKind.For then
+      word = "do"
+    elseif _switchExp == Ast.BlockKind.Apply then
+      word = "do"
+    elseif _switchExp == Ast.BlockKind.Foreach then
+      word = "do"
+    elseif _switchExp == Ast.BlockKind.Macro then
+      word = ""
+    elseif _switchExp == Ast.BlockKind.Func then
+      word = ""
+    elseif _switchExp == Ast.BlockKind.Default then
+      word = ""
+    elseif _switchExp == Ast.BlockKind.Block then
+      word = "do"
+    elseif _switchExp == Ast.BlockKind.Macro then
+      word = ""
+    elseif _switchExp == Ast.BlockKind.LetUnwrap then
+      word = ""
+    elseif _switchExp == Ast.BlockKind.IfUnwrap then
+      word = ""
+    end
   end
+  
   self:writeln( word, baseIndent + stepIndent )
   local stmtList = node:get_stmtList(  )
   
@@ -602,7 +607,7 @@ function convFilter:processBlock( node, parent, baseIndent )
     self:writeln( "", baseIndent + stepIndent )
   end
   self:setIndent( baseIndent )
-  if node:get_blockKind(  ) == "{" then
+  if node:get_blockKind(  ) == Ast.BlockKind.Block then
     self:writeln( "end", baseIndent )
   end
 end
@@ -616,15 +621,15 @@ end
 -- none
 
 function convFilter:processDeclEnum( node, parent, baseIndent )
-  local access = node:get_accessMode() == "global" and "" or "local "
+  local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
   
   self:writeln( string.format( "%s%s = {}", access, node:get_name().txt), baseIndent )
-  if node:get_accessMode() == "pub" then
+  if node:get_accessMode() == Ast.AccessMode.Pub then
     self:writeln( string.format( "_moduleObj.%s = %s", node:get_name().txt, node:get_name().txt), baseIndent )
   end
   local typeInfo = node:get_expType()
   
-  if typeInfo:get_accessMode() ~= "pri" then
+  if typeInfo:get_accessMode() ~= Ast.AccessMode.Pri then
     self.pubEnumId2EnumTypeInfo[typeInfo:get_typeId()] = typeInfo
   end
   self:writeln( string.format( "%s._val2NameMap = {}", node:get_name().txt), baseIndent )
@@ -667,7 +672,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   
   local classTypeId = classTypeInfo:get_typeId()
   
-  if nodeInfo:get_accessMode(  ) == "pub" then
+  if nodeInfo:get_accessMode(  ) == Ast.AccessMode.Pub then
     self.classId2TypeInfo[classTypeId] = classTypeInfo
   end
   self.classId2MemberList[classTypeId] = nodeInfo:get_memberList(  )
@@ -676,7 +681,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
     if _exp ~= nil then
     
         self:writeln( string.format( "local %s = require( %s )", className, _exp.txt ), baseIndent )
-        if node:get_accessMode() ~= "pri" then
+        if node:get_accessMode() ~= Ast.AccessMode.Pri then
           self:writeln( string.format( "_moduleObj.%s = %s", className, className), baseIndent )
         end
         return 
@@ -689,7 +694,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   if baseInfo:get_typeId(  ) ~= Ast.rootTypeId then
     self:writeln( string.format( "setmetatable( %s, { __index = %s } )", className, (_lune.unwrap( baseInfo) ):getTxt(  )), baseIndent )
   end
-  if nodeInfo:get_accessMode(  ) == "pub" then
+  if nodeInfo:get_accessMode(  ) == Ast.AccessMode.Pub then
     self:writeln( string.format( "_moduleObj.%s = %s", className, className ), baseIndent )
   end
   local hasConstrFlag = false
@@ -773,7 +778,7 @@ function %s:__init( %s )
     
     local prefix = memberNode:get_staticFlag() and className or "self"
     
-    if memberNode:get_getterMode(  ) ~= "none" and autoFlag then
+    if memberNode:get_getterMode(  ) ~= Ast.AccessMode.None and autoFlag then
       self:writeln( string.format( [==[
 function %s:%s()       
   return %s.%s         
@@ -783,7 +788,7 @@ end]==], className, getterName, prefix, memberName), baseIndent )
     local setterName = "set_" .. memberName
     
     autoFlag = not methodNameSet[setterName]
-    if memberNode:get_setterMode(  ) ~= "none" and autoFlag then
+    if memberNode:get_setterMode(  ) ~= Ast.AccessMode.None and autoFlag then
       self:writeln( string.format( [==[
 function %s:%s( %s )   
   %s.%s = %s              
@@ -797,7 +802,7 @@ end]==], className, setterName, memberName, prefix, memberName, memberName), bas
     local memberType = advertiseInfo:get_member():get_expType()
     
     for __index, child in pairs( memberType:get_children() ) do
-      if child:get_kind() == Ast.TypeInfoKind.Method and child:get_accessMode() ~= "pri" and not child:get_staticFlag() then
+      if child:get_kind() == Ast.TypeInfoKind.Method and child:get_accessMode() ~= Ast.AccessMode.Pri and not child:get_staticFlag() then
         local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
         
         if not methodNameSet[childName] then
@@ -1066,7 +1071,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
     end
     self:writeln( "do", baseIndent + stepIndent * 2 )
   end
-  if node:get_mode() ~= "unwrap" and node:get_accessMode(  ) ~= "global" then
+  if node:get_mode() ~= Ast.DeclVarMode.Unwrap and node:get_accessMode(  ) ~= Ast.AccessMode.Global then
     self:write( "local " )
   end
   local varList = node:get_varList(  )
@@ -1135,7 +1140,7 @@ function convFilter:processDeclVar( node, parent, baseIndent )
       end
   end
   
-  if node:get_accessMode(  ) == "pub" then
+  if node:get_accessMode(  ) == Ast.AccessMode.Pub then
     self:writeln( "", baseIndent )
     for index, var in pairs( varList ) do
       local name = var:get_name().txt
@@ -1192,7 +1197,7 @@ function convFilter:processDeclFunc( node, parent, baseIndent )
   
   local letTxt = ""
   
-  if declInfo:get_accessMode(  ) ~= "global" and #name ~= 0 then
+  if declInfo:get_accessMode(  ) ~= Ast.AccessMode.Global and #name ~= 0 then
     letTxt = "local "
   end
   self:write( string.format( "%sfunction %s( ", letTxt, name ) )
@@ -1219,7 +1224,7 @@ function convFilter:processDeclFunc( node, parent, baseIndent )
   self:writeln( "end", baseIndent )
   local expType = node:get_expType(  )
   
-  if expType:get_accessMode(  ) == "pub" then
+  if expType:get_accessMode(  ) == Ast.AccessMode.Pub then
     self:write( string.format( "_moduleObj.%s = %s", name, name) )
     self.pubFuncName2InfoMap[name] = PubFuncInfo.new(declInfo:get_accessMode(  ), node:get_expType(  ))
   end
@@ -1533,7 +1538,7 @@ function convFilter:processExpOp1( node, parent, baseIndent )
   if op == ",,," then
     filter( node:get_exp(), self, node, baseIndent )
   elseif op == ",,,," then
-    if node:get_macroMode() == "expand" then
+    if node:get_macroMode() == Ast.MacroMode.Expand then
       filter( node:get_exp(), self, node, baseIndent )
     else 
       self:write( "_luneSym2Str( " )
@@ -1593,7 +1598,7 @@ end
 -- none
 
 function convFilter:processExpRef( node, parent, baseIndent )
-  if node:get_symbolInfo():get_accessMode() == "pub" and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
+  if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
     self:write( "_moduleObj." )
   end
   self:write( node:get_token().txt )
@@ -1678,6 +1683,23 @@ function convFilter:processRefField( node, parent, baseIndent )
     
     self:write( delimit .. fieldToken.txt )
   end
+end
+
+-- none
+
+function convFilter:processExpOmitEnum( node, parent, baseIndent )
+  local moduleName = self.typeInfo2ModuleName[node:get_expType():getModule(  )]
+  
+      if  nil == moduleName then
+        local _moduleName = moduleName
+        
+        moduleName = ""
+      else
+        
+          moduleName = moduleName .. "."
+        end
+    
+  self:write( string.format( "%s%s.%s", moduleName, node:get_expType():getTxt(  ), node:get_valToken().txt) )
 end
 
 -- none
