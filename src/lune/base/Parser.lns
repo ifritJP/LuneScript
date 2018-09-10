@@ -50,7 +50,7 @@ pub fn isLuaKeyword( txt:str ) : bool! {
 }
 
 
-fn createReserveInfo( luaMode: bool ) :
+fn createReserveInfo( luaMode: bool! ) :
    Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,str[@]> {
       let mut keywordSet:Map<str,bool> = {};
       let mut typeSet:Map<str,bool> = {};
@@ -131,9 +131,6 @@ pub class TxtStream extend (iStream) {
    pub fn __init( txt: str ) {
       self.txt = txt;
       self.start = 1;
-      if not txt {
-         Util.err( "txt is nil" );
-      }
       self.eof = false;
    }
    pub fn read( mode:str ) mut : str! {
@@ -142,9 +139,9 @@ pub class TxtStream extend (iStream) {
          return nil;
       }
       let index = self.txt.find( "\n", self.start, true );
-      if index {
-         let txt = self.txt.sub( self.start, index - 1 );
-         self.start = index + 1;                
+      if! index {
+         let txt = self.txt.sub( self.start, _exp - 1 );
+         self.start = _exp + 1;                
          return txt;
       }
       self.eof = true;
@@ -161,13 +158,27 @@ pub class Position {
    pub let column: int;
 }
 
+pub enum TokenKind {
+   Cmnt,
+   Str,
+   Int,
+   Real,
+   Char, 
+   Symb,
+   Dlmt,
+   Kywd,
+   Ope,
+   Type,
+   Eof,
+}
+
 pub class Token {
-   pub let kind: int;
+   pub let kind: TokenKind;
    pub let txt: str;
    pub let pos: &Position;
    pri let mut commentList: Token[] { pub };
 
-   pub fn __init( kind: int, txt: str, pos: &Position, commentList: Token[]! ) {
+   pub fn __init( kind: TokenKind, txt: str, pos: &Position, commentList: Token[]! ) {
       self.kind = kind;
       self.txt = txt;
       self.pos = pos;
@@ -220,7 +231,7 @@ pub class StreamParser extend Parser {
    let typeSet : Map<str,bool>;
    let builtInSet :Map<str,bool>;
    let multiCharDelimitMap : Map<str,str[@]>;
-   pub fn __init( stream: iStream, name: str, luaMode: bool ) {
+   pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
       self.eof = false;
       self.stream = stream;
       self.streamName = name;
@@ -250,47 +261,47 @@ pub class StreamParser extend Parser {
       }
 
       return new StreamParser(
-         stream, path, luaMode or string.find( path, "%.lua$" ) );
+         stream, path, luaMode or string.find( path, "%.lua$" ) and true );
    }
 }
 
-macro _declTokenKind( name_array:str[@] ) {
-   {
-      let mut field_array: stat[] = [];
-      let mut stat_array: stat[] = [];
-      let mut init_array: stat[] = [];
-      foreach name, index in name_array {
-         field_array.insert( `{
-            pub static let ,,,name:int;
-         });
-         init_array.insert( `{
-            TokenKind.,,,name = ,,index;
-         });
-         stat_array.insert( `{
-            kind2Txt[ ,,index ] = ,,name;
-            pub let ,,,"kind%s" (name) = ,,index;
-         });
-      }
-   }  
-   pub class TokenKind {
-      ,,field_array;
-      __init {
-         ,,init_array;
-      }
-   }
-   ,,stat_array;
-}
+// macro _declTokenKind( name_array:str[@] ) {
+//    {
+//       let mut field_array: stat[] = [];
+//       let mut stat_array: stat[] = [];
+//       let mut init_array: stat[] = [];
+//       foreach name, index in name_array {
+//          field_array.insert( `{
+//             pub static let ,,,name:int;
+//          });
+//          init_array.insert( `{
+//             TokenKind.,,,name = ,,index;
+//          });
+//          stat_array.insert( `{
+//             kind2Txt[ ,,index ] = ,,name;
+//             pub let ,,,"kind%s" (name) = ,,index;
+//          });
+//       }
+//    }  
+//    pub class TokenKind {
+//       ,,field_array;
+//       __init {
+//          ,,init_array;
+//       }
+//    }
+//    ,,stat_array;
+// }
 
 
-let mut kind2Txt:Map<str,str> = {};
+// let mut kind2Txt:Map<str,str> = {};
 
-_declTokenKind(
-   [@ "Cmnt", "Str", "Int", "Real", "Char", 
-     "Symb", "Dlmt", "Kywd", "Ope", "Type", "Eof" ] );
+// _declTokenKind(
+//    [@ "Cmnt", "Str", "Int", "Real", "Char", 
+//      "Symb", "Dlmt", "Kywd", "Ope", "Type", "Eof" ] );
 
 //pub let kind = new TokenKind();
 
-pub let noneToken = new Token( kindEof, "", new Position( 0, 0 ), [] );
+pub let noneToken = new Token( .Eof, "", new Position( 0, 0 ), [] );
 
 
 let mut quotedCharSet:Map<int,bool> = {};
@@ -343,9 +354,9 @@ op1Set[ ',,,' ] = true;
 op1Set[ ',,,,' ] = true;
 
 
-pub static fn getKindTxt( kind: int ) : str {
-   return unwrap kind2Txt[ kind ];
-}
+// pub static fn getKindTxt( kind: int ) : str {
+//    return unwrap kind2Txt[ kind ];
+// }
 
 pub static fn isOp2( ope: str ) : stem! {
    return op2Set[ ope ];
@@ -382,9 +393,9 @@ fn StreamParser.parse() mut : Token[]! {
       let mut searchIndex = comIndex;
       let mut comment = "";
       while true {
-         let termIndex, termEndIndex = string.find(
-            rawLine, termStr, searchIndex, true );
-         if termIndex {
+         if! let termIndex, termEndIndex = string.find(
+            rawLine, termStr, searchIndex, true )
+         {        
             comment = comment .. rawLine.sub( searchIndex, termEndIndex );
             return comment, termEndIndex + 1;
          }
@@ -406,17 +417,17 @@ fn StreamParser.parse() mut : Token[]! {
 
     */
 
-   let addVal = fn ( kind: int, val: str, column: int ) : stem {
-      fn createInfo( mut tokenKind: int, token: str, tokenColumn: int ): Token {
-         if tokenKind == kindSymb {
+   let addVal = fn ( kind: TokenKind, val: str, column: int ) : stem {
+      fn createInfo( mut tokenKind: TokenKind, token: str, tokenColumn: int ): Token {
+         if tokenKind == .Symb {
             if self.keywordSet[ token ] {
-               tokenKind = kindKywd;
+               tokenKind = .Kywd;
             }
             elseif self.typeSet[ token ] {
-               tokenKind = kindType;
+               tokenKind = .Type;
             }
             elseif op2Set[ token ] or op1Set[ token ] {
-               tokenKind = kindOpe;
+               tokenKind = .Ope;
             }
          }
          return new Token( tokenKind, token,
@@ -428,48 +439,52 @@ fn StreamParser.parse() mut : Token[]! {
 
         @param token 文字列
         @param startIndex token 内の検索開始位置。 この位置から数値表現が始まる。
-        @return 数値表現の終了位置, 整数かどうか
+        @return int 数値表現の終了位置
+        @return bool 整数かどうか
         */
       fn analyzeNumber( token: &str, beginIndex: int ) : int, bool {
-         let mut nonNumIndex = token.find( '[^%d]', beginIndex );
-         if not nonNumIndex {
+         let! mut nonNumIndex = token.find( '[^%d]', beginIndex ) {
             return #token, true;
-         }
+         };
          let mut intFlag = true;
          let mut nonNumChar = token.byte( nonNumIndex );
-         if nonNumChar == 46 { // .
+         if nonNumChar == ?. { // .
             intFlag = false;
-            nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 );
+            unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ) {
+               return #token, intFlag;
+            };
             nonNumChar = token.byte( nonNumIndex );
          }
-         if nonNumChar == 120 or nonNumChar == 88 { // X or x
-            nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 );
+         if nonNumChar == ?X or nonNumChar == ?x { // X or x
+            unwrap! nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 ) {
+               return #token, intFlag;
+            };
             nonNumChar = token.byte( nonNumIndex );
          }
-         if nonNumChar == 101 or nonNumChar == 69 { // E or e
+         if nonNumChar == ?E or nonNumChar == ?e { // E or e
             intFlag = false;
             let nextChar = token.byte( nonNumIndex + 1 );
-            if nextChar == 45 or nextChar == 43 { // '-' or '+'
-               nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 );
+            if nextChar == ?- or nextChar == ?+ { // '-' or '+'
+               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 ) {
+                  return #token, intFlag;
+               };
             }
             else {
-               nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 );
+               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ) {
+                  return #token, intFlag;
+               };
             }
-         }
-         if not nonNumIndex {
-            return #token, intFlag;
          }
          return nonNumIndex - 1, intFlag;
       }
 
-      if kind == kindSymb {
+      if kind == .Symb {
          let mut searchIndex = 1;
          while true {
             // 空白系以外の何らかの文字領域を探す
-            let tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex );
-            if not tokenIndex {
+            let! tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex ) {
                break;
-            }
+            };
             let columnIndex = column + tokenIndex - 2;
             searchIndex = tokenEndIndex + 1;
             let token:str = val.sub( tokenIndex, tokenEndIndex );
@@ -479,18 +494,18 @@ fn StreamParser.parse() mut : Token[]! {
                   // 数値の場合
                   let endIndex, intFlag = analyzeNumber( token, startIndex );
                   let mut info = createInfo(
-                     intFlag and kindInt or kindReal,
+                     intFlag and TokenKind.Int or TokenKind.Real,
                      token.sub( startIndex, endIndex ), columnIndex + startIndex );
                   list.insert( info );
                   startIndex = endIndex + 1;
                }
                else {
                   // 区切り文字を探す
-                  let index = string.find( token, '[^%w_]', startIndex );
-                  if index {
+                  if! string.find( token, '[^%w_]', startIndex ) {
+                     let index = _exp;
                      if index > startIndex {
                         let mut info = createInfo(
-                           kindSymb, token.sub( startIndex, index - 1 ),
+                           .Symb, token.sub( startIndex, index - 1 ),
                            columnIndex + startIndex );
                         list.insert( info );
                      }
@@ -514,17 +529,17 @@ fn StreamParser.parse() mut : Token[]! {
                      }
                      startIndex = index + #delimit;
 
-                     let mut workKind = kindDlmt;
+                     let mut workKind = TokenKind.Dlmt;
                      if op2Set[ delimit ] or op1Set[ delimit ] {
-                        workKind = kindOpe;
+                        workKind = .Ope;
                      }
                      if delimit == "..." {
-                        workKind = kindSymb;
+                        workKind = .Symb;
                      }
                      if delimit == "?" {
                         let nextChar = token.sub( index, startIndex );
                         list.insert( createInfo(
-                           kindChar, nextChar, columnIndex + startIndex ) );
+                           .Char, nextChar, columnIndex + startIndex ) );
                         startIndex = startIndex + 1;
                      }
                      else {
@@ -535,7 +550,7 @@ fn StreamParser.parse() mut : Token[]! {
                   else {
                      if startIndex <= #token {
                         list.insert( createInfo(                         
-                           kindSymb, token.sub( startIndex ),  
+                           .Symb, token.sub( startIndex ),  
                            columnIndex + startIndex ) );
                      }
                      break;
@@ -559,12 +574,10 @@ fn StreamParser.parse() mut : Token[]! {
       let mut syncIndexFlag = true;
       //let pattern = ```[/%-%?"%'%`%[].```;
       let pattern = ```[/%-%?"%'%`].```;
-      let index = string.find( rawLine, pattern, searchIndex );
-
-      if not index {
-         addVal( kindSymb, rawLine.sub( startIndex ), startIndex );
+      let! index = string.find( rawLine, pattern, searchIndex ) {
+         addVal( .Symb, rawLine.sub( startIndex ), startIndex );
          return list;
-      }
+      };
 
       let findChar = string.byte( rawLine, index );
       let nextChar = string.byte( rawLine, index + 1 );
@@ -575,23 +588,23 @@ fn StreamParser.parse() mut : Token[]! {
       }
       else {
          if startIndex < index {
-            addVal( kindSymb, rawLine.sub( startIndex, index - 1 ), startIndex );
+            addVal( .Symb, rawLine.sub( startIndex, index - 1 ), startIndex );
          }
          if findChar == ?/ {
             // コメント処理
             if nextChar == ?* {
                // 複数行コメントの場合
                let comment, nextIndex = multiComment( index + 2, "*/" );
-               addVal( kindCmnt, "/*" .. comment, index );
+               addVal( .Cmnt, "/*" .. comment, index );
                searchIndex = nextIndex;
             }
             elseif nextChar == ?/ {
                // 1行コメント
-               addVal( kindCmnt, rawLine.sub( index ), index );
+               addVal( .Cmnt, rawLine.sub( index ), index );
                searchIndex = #rawLine + 1;
             }
             else {
-               addVal( kindOpe, "/", index );
+               addVal( .Ope, "/", index );
                searchIndex = index + 1;
             }
          }
@@ -623,14 +636,13 @@ fn StreamParser.parse() mut : Token[]! {
             let mut workIndex = index + 1;
             let workPattern = '["\'\\]';
             while true {
-               let endIndex = string.find( rawLine, workPattern, workIndex );
-               if not endIndex {
+               let! endIndex = string.find( rawLine, workPattern, workIndex ) {
                   Util.err( "%s:%d:%d: error: illegal string -- %s"
                             ( self.getStreamName(), self.lineNo, index, rawLine ) );
-               }
+               };
                let workChar = string.byte( rawLine, endIndex );
                if workChar == findChar {
-                  addVal( kindStr, rawLine.sub( index, endIndex ), index );
+                  addVal( .Str, rawLine.sub( index, endIndex ), index );
                   searchIndex = endIndex + 1;
                   break;
                }        
@@ -648,11 +660,11 @@ fn StreamParser.parse() mut : Token[]! {
             { // '```'
                // 複数行文字列の場合
                let txt, nextIndex = multiComment( index + 3, '```' );
-               addVal( kindStr, '```' .. txt, index );
+               addVal( .Str, '```' .. txt, index );
                searchIndex = nextIndex;
             }
             else {
-               addVal( kindOpe, '`', index );
+               addVal( .Ope, '`', index );
                searchIndex = index + 1;
             }
          }
@@ -671,7 +683,7 @@ fn StreamParser.parse() mut : Token[]! {
             else {
                searchIndex = index + 2;
             }
-            addVal( kindChar, codeChar, index );
+            addVal( .Char, codeChar, index );
          }
          else {
             Util.err( "%s:%d:%d: error: illegal syntax -- %s"
@@ -685,9 +697,6 @@ fn StreamParser.parse() mut : Token[]! {
 }
 
 pub override fn StreamParser.getToken() mut : &Token! {
-   if not self.lineTokenList {
-      return nil;
-   }
    if #self.lineTokenList < self.pos {
       self.pos = 1;
       self.lineTokenList = [];
@@ -705,7 +714,7 @@ pub override fn StreamParser.getToken() mut : &Token! {
    return token;
 }
 
-let eofToken = new Token( kindEof, "<EOF>", new Position( 0, 0 ), [] );
+let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0 ), [] );
 pub fn getEofToken(): &Token {
    return eofToken;
 }

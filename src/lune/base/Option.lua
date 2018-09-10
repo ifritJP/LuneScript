@@ -28,7 +28,7 @@ local Option = {}
 _moduleObj.Option = Option
 function Option.new(  )
   local obj = {}
-  setmetatable( obj, { __index = Option } )
+  Option.setmeta( obj )
   if obj.__init then obj:__init(  ); end
 return obj
 end
@@ -36,6 +36,9 @@ function Option:__init()
   self.validProf = false
   self.mode = ""
   self.scriptPath = ""
+end
+function Option.setmeta( obj )
+  setmetatable( obj, { __index = Option  } )
 end
 do
   end

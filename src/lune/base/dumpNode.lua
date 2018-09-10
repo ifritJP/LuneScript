@@ -23,9 +23,12 @@ local Parser = require( 'lune.base.Parser' )
 local dumpFilter = {}
 setmetatable( dumpFilter, { __index = Filter } )
 _moduleObj.dumpFilter = dumpFilter
+function dumpFilter.setmeta( obj )
+  setmetatable( obj, { __index = dumpFilter  } )
+end
 function dumpFilter.new(  )
   local obj = {}
-  setmetatable( obj, { __index = dumpFilter } )
+  dumpFilter.setmeta( obj )
   if obj.__init then
     obj:__init(  )
   end        
@@ -42,7 +45,7 @@ local function dump( prefix, depth, node, txt )
   
   local expType = node:get_expType(  )
   
-  if expType and expType ~= Ast.typeInfoKind['None'] then
+  if expType:equals( Ast.builtinTypeNone ) then
     typeStr = string.format( "(%d:%s:%s)", expType:get_typeId(  ), expType:getTxt(  ), expType:get_kind(  ))
   end
   print( string.format( "%s: %s %s %s", prefix, Ast.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
@@ -309,6 +312,12 @@ end
 
 -- none
 
+function dumpFilter:processDeclDestr( node, prefix, depth )
+  dump( prefix, depth, node, "" )
+end
+
+-- none
+
 function dumpFilter:processExpCallSuper( node, prefix, depth )
   local typeInfo = node:get_superType(  )
   
@@ -561,7 +570,7 @@ end
 -- none
 
 function dumpFilter:processGetField( node, prefix, depth )
-  dump( prefix, depth, node, (node:get_getterTypeInfo(  ) and "get_" or "" ) .. node:get_field(  ).txt )
+  dump( prefix, depth, node, "get_" .. node:get_field(  ).txt )
   filter( node:get_prefix(  ), self, prefix .. "  ", depth + 1 )
 end
 

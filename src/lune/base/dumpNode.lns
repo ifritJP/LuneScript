@@ -31,7 +31,7 @@ pub class dumpFilter extend Ast.Filter {
 fn dump( prefix: str, depth: int, node: &Ast.Node, txt: str ) {
    let mut typeStr = "";
    let expType = node.get_expType();
-   if expType and expType ~= Ast.typeInfoKind.None {
+   if expType.equals( Ast.builtinTypeNone ) {
       typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
                                expType.getTxt(),
                                expType.get_kind() );
@@ -253,6 +253,12 @@ pub override fn dumpFilter.processDeclConstr(
    self.processDeclFuncInfo( node, node.get_declInfo(), prefix, depth );
 };
 
+pub override fn dumpFilter.processDeclDestr( 
+   node: &Ast.DeclDestrNode, prefix: str, depth: int ) mut
+{
+   dump( prefix, depth, node, "" );
+};
+
 pub override fn dumpFilter.processExpCallSuper( 
    node: &Ast.ExpCallSuperNode, prefix: str, depth: int ) mut
 {
@@ -447,8 +453,7 @@ pub override fn dumpFilter.processExpOmitEnum(
 pub override fn dumpFilter.processGetField( 
    node: &Ast.GetFieldNode, prefix: str, depth: int ) mut
 {
-   dump( prefix, depth, node,
-         (node.get_getterTypeInfo() and "get_" or "") .. node.get_field().txt );
+   dump( prefix, depth, node, "get_" .. node.get_field().txt );
    filter( node.get_prefix(), self, prefix .. "  ", depth + 1 );
 };
 

@@ -251,3 +251,36 @@ print( val.$_txt );  // EnumVal.val1;
 EnumVal にするため unwrap している。
 _from() メソッドは、指定の引数に一致する enum 値が存在する場合はその enum 値を返すが、
 一致する enum 値が無い場合は nil を返す。
+
+** 名前の省略
+
+LuneScript では enum 値にアクセスする際、
+swift と同じ形式で名前を省略することが可能です。
+
+例えば次のような場合、 switch の条件に enum 値を指定しています。
+この時の case は EnumVal.val1 ではなく .val1 で enum 値を利用できます。
+
+#+BEGIN_SRC lns
+pub enum EnumVal {
+   val1,
+   val2,
+   val3,
+   val4,
+}
+fn func( val:EnumVal ) {
+   switch ( val ) {
+      case .val1, .val2 {
+      } 
+      case .val3, .val4 {
+      } 
+   }
+}
+#+END_SRC
+
+この方法が利用可能なのは、次の箇所です。
+
+- 関数コール時の引数指定
+- 変数への代入
+- switch-case
+- return
+- 2項演算

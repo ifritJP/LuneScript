@@ -2,6 +2,10 @@ subfile use test.startsub;
 import test.simple;
 import lune.base.Writer;
 import test.Sub2;
+import test.Class1;
+import test.Class2;
+import test.Class3;
+import test.Class4;
 
 macro _print( symbol2:stat, format:str! ) {
    {
@@ -524,3 +528,12 @@ enum TESTENUM2 {
    }
    testenum( .val2, .val2 );
 }
+
+class TestDest {
+   let mut val:int;
+   fn __free() {
+      self.val = self.val * 10;
+      print( "__free(): %d" (self.val) );
+   }
+}
+// new TestDest( 100 );

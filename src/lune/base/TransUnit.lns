@@ -74,6 +74,8 @@ pub class TransUnit {
    pri let mut usedTokenList: List<&Parser.Token>;
    /** 解析エラーメッセージ */
    pri let mut errMessList: str[] { pub };
+   /** 解析警告ーメッセージ */
+   pri let mut warnMessList: str[] { pub };
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
    pri let macroEval: Ast.MacroEval;
    /** マクロの TypeId -> マクロ情報 */
@@ -121,6 +123,7 @@ pub class TransUnit {
       self.typeInfo2ClassNode = {};
       self.currentToken = Parser.getEofToken();
       self.errMessList = [];
+      self.warnMessList = [];
       self.macroEval = macroEval;
       self.typeId2MacroInfo = {};
       self.macroMode = .None;
@@ -139,6 +142,12 @@ pub class TransUnit {
                                  pos.lineNo, pos.column, mess ) );
    }
 
+   pri fn addWarnMess( pos: &Parser.Position, mess: str ) mut {
+      self.warnMessList.insert(
+         "%s:%d:%d: warning: %s" ( self.parser.getStreamName(),
+                                   pos.lineNo, pos.column, mess ) );
+   }
+   
 
    pri fn pushScope( classFlag: bool, inheritList: Ast.Scope[]! ) mut : Ast.Scope {
       self.scope = new Ast.Scope( self.scope, classFlag,
@@ -155,9 +164,9 @@ pub class TransUnit {
       let mut scope = self.scope;
       repeat {
          if! scope.$ownerTypeInfo {
-            if _exp.$kind == Ast.TypeInfoKind.Class or
-               _exp.$kind == Ast.TypeInfoKind.Module or
-               _exp.$kind == Ast.TypeInfoKind.IF {          
+            if _exp.$kind == .Class or
+               _exp.$kind == .Module or
+               _exp.$kind == .IF {          
                return _exp;
             }   
          }  
@@ -218,7 +227,7 @@ pub class TransUnit {
          typeInfo = _exp;
          self.scope = unwrap typeInfo.$scope;
          switch ( _exp.$kind ) {
-            case Ast.TypeInfoKind.Class {
+            case .Class {
                if not classFlag {
                   self.addErrMess(
                      self.currentToken.pos,
@@ -226,7 +235,7 @@ pub class TransUnit {
                   Util.printStackTrace();
                }
             }
-            case Ast.TypeInfoKind.IF {
+            case .IF {
                if classFlag {
                   self.addErrMess(
                      self.currentToken.pos,
@@ -347,7 +356,7 @@ class _TypeInfo {
    pub let staticFlag: bool;
    pub let nilable: bool;
    pub let orgTypeId: int;
-   pub let children: int[];
+   pub let children: int[]!;
    pub let accessMode: int;
    pub let valTypeId: int;
    pub let enumValList: Map<str,stem>;
@@ -386,6 +395,7 @@ fn TransUnit.registBuiltInScope() mut {
             "tonumber": { "arg": [ "&str", "&int!" ], "ret": ["real"] },
             "load": { "arg": [ "&str" ], "ret": ["form!", "str"] },
             "require": { "arg": [ "&str" ], "ret": ["stem!"] },
+            "collectgarbage": { "arg": [ ], "ret": [] },
             "_fcall": { "arg": [ "&form", "&..." ], "ret": [""] },
          }, 
       },
@@ -429,7 +439,7 @@ fn TransUnit.registBuiltInScope() mut {
       },
       { 
          "string": {
-            "find": { "arg": [ "&str", "&str", "&int!", "&bool!" ], "ret": ["int", "int"] },
+            "find": { "arg": [ "&str", "&str", "&int!", "&bool!" ], "ret": ["int!", "int!"] },
             "byte": { "arg": [ "&str", "&int" ], "ret": ["int"] },
             "format": { "arg": [ "&str", "..." ], "ret": ["str"] },
             "rep": { "arg": [ "&str", "&int" ], "ret": ["str"] },
@@ -440,7 +450,7 @@ fn TransUnit.registBuiltInScope() mut {
       },
       { 
          "str": {
-            "find": { "type": [ "method" ], "arg": [ "&str", "&int!", "&bool!" ], "ret": ["int", "int"] },
+            "find": { "type": [ "method" ], "arg": [ "&str", "&int!", "&bool!" ], "ret": ["int!", "int!"] },
             "byte": { "type": [ "method" ], "arg": [ "&int" ], "ret": ["int"] },
             "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
             "rep": { "type": [ "method" ], "arg": [ "&int" ], "ret": ["str"] },
@@ -523,9 +533,6 @@ fn TransUnit.registBuiltInScope() mut {
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
          }   
-         if not parentInfo {
-            Util.err( "parentInfo is nil" );
-         }  
          if not builtinModuleName2Scope[ name ]
          {  
             if name ~= "" and getTypeInfo( name ) {
@@ -620,6 +627,9 @@ fn TransUnit.error( mess: str ) mut {
    //             pospos.lineNo, pos.column, txt, mess ) );
 
    foreach mess in self.errMessList {
+      Util.errorLog( mess );
+   }
+   foreach mess in self.warnMessList {
       Util.errorLog( mess );
    }
    Util.err( "has error" );
@@ -731,8 +741,8 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token {
                   self.pushbackStr( "macroVal %s" (nextToken.txt),
                                     (unwrap macroVal.val)@@str );                       
                }   
-               elseif macroVal.typeInfo.get_kind() == Ast.TypeInfoKind.Array or
-                  macroVal.typeInfo.get_kind() == Ast.TypeInfoKind.List
+               elseif macroVal.typeInfo.get_kind() == .Array or
+                  macroVal.typeInfo.get_kind() == .List
                {   
                   let strList = (unwrap macroVal.val)@@str[];
                   if strList {
@@ -851,7 +861,7 @@ fn TransUnit.getSymbolToken() mut : &Parser.Token {
 
 
 fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
-   if not token or token.txt ~= txt {
+   if token.txt ~= txt {
       self.error( "not found -- %s" ( txt ) );
    }
    return token;
@@ -1161,7 +1171,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                      let baseScope = unwrap typeId2Scope[ atomInfo.baseId ];
 
                      let mut scope = new Ast.Scope(
-                        parentScope, true, baseScope and [ baseScope ] or [] );
+                        parentScope, true, [ baseScope ] );
 
                      let workTypeInfo = Ast.NormalTypeInfo.createClass(
                         atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag,
@@ -1242,34 +1252,36 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
 
    // 次に child を登録
    foreach atomInfo in moduleInfo._typeInfoList {
-      if atomInfo.children and #atomInfo.children > 0 {
-         let mut scope = unwrap typeId2Scope[ atomInfo.typeId ];
-         foreach childId in atomInfo.children {
-            let typeInfo = unwrap typeId2TypeInfo[ childId ];
-            let mut symbolKind = Ast.SymbolKind.Typ;
-            let mut addFlag = true;
-            switch typeInfo.$kind {
-               case Ast.TypeInfoKind.Func {
-                  symbolKind = Ast.SymbolKind.Fun;
-               }
-               case Ast.TypeInfoKind.Method {
-                  symbolKind = Ast.SymbolKind.Mtd;
-               }
-               case Ast.TypeInfoKind.Class, Ast.TypeInfoKind.Module
-               {              
-                  symbolKind = Ast.SymbolKind.Typ;
-               }
-               case Ast.TypeInfoKind.Enum {
-                  addFlag = false;
-               }
-            }
+      if! let children = atomInfo.children {
+         if #children > 0 {
+            let mut scope = unwrap typeId2Scope[ atomInfo.typeId ];
+            foreach childId in children {
+               let typeInfo = unwrap typeId2TypeInfo[ childId ];
+               let mut symbolKind = Ast.SymbolKind.Typ;
+               let mut addFlag = true;
+               switch typeInfo.$kind {
+                  case .Func {
+                     symbolKind = Ast.SymbolKind.Fun;
+                  }  
+                  case .Method {
+                     symbolKind = Ast.SymbolKind.Mtd;
+                  }  
+                  case .Class, .Module
+                  {              
+                     symbolKind = Ast.SymbolKind.Typ;
+                  }  
+                  case .Enum {
+                     addFlag = false;
+                  }  
+               }  
 
-            if addFlag {
-               scope.add( symbolKind, false,
-                          typeInfo.$kind == Ast.TypeInfoKind.Func,
-                          typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
-                          typeInfo.$staticFlag, typeInfo.$mutable, true );
-            }
+               if addFlag {
+                  scope.add( symbolKind, false,
+                             typeInfo.$kind == .Func,
+                             typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
+                             typeInfo.$staticFlag, typeInfo.$mutable, true );
+               }  
+            }  
          }
       }
    }
@@ -1284,7 +1296,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
       let mut classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
 
       switch ( classTypeInfo.$kind ) {
-         case Ast.TypeInfoKind.Class {
+         case .Class {
             self.pushClass( true, classTypeInfo.$abstructFlag,
                             nil, nil, true, classTypeInfo.getTxt(), .Pub );
             if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
@@ -1304,15 +1316,15 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                            (classTypeId, classTypeInfo.getTxt()) );
             }
          }
-         case Ast.TypeInfoKind.Module {
+         case .Module {
             self.pushModule( true, classTypeInfo.getTxt(), classTypeInfo.$mutable );
          }
       }
 
       foreach child in classTypeInfo.get_children() {
-         if child.get_kind() == Ast.TypeInfoKind.Class or
-            child.get_kind() == Ast.TypeInfoKind.Module or
-            child.get_kind() == Ast.TypeInfoKind.IF
+         if child.get_kind() == .Class or
+            child.get_kind() == .Module or
+            child.get_kind() == .IF
          {           
             let oldId = newId2OldIdMap[ child.get_typeId() ];
             if oldId {
@@ -1321,10 +1333,10 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
          }
       }
 
-      if classTypeInfo.$kind == Ast.TypeInfoKind.Class {     
+      if classTypeInfo.$kind == .Class {     
          self.popClass();
       }
-      elseif classTypeInfo.$kind == Ast.TypeInfoKind.Module {
+      elseif classTypeInfo.$kind == .Module {
          self.popModule();
       }
    }
@@ -1609,35 +1621,31 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
    self.checkToken( nextToken, "in" );
 
    let exp = self.analyzeExp( false );
-   if not exp.$expType {
-      self.error( "unknown type of exp -- %d:%d" (token.pos.lineNo, token.pos.column) );
-   }
-   else {
-      let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
-      if exp.$expType.get_kind() == Ast.TypeInfoKind.Map {
+
+   let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
+   if exp.$expType.get_kind() == .Map {
+      self.scope.addLocalVar(
+         false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false );
+      if! keySymbol {
          self.scope.addLocalVar(
-            false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false );
-         if! keySymbol {
-            self.scope.addLocalVar(
-               false, true, _exp.txt, itemTypeInfoList[ 1 ], false );
-         }  
-      } 
-      elseif exp.$expType.get_kind() == Ast.TypeInfoKind.List or
-         exp.$expType.get_kind() == Ast.TypeInfoKind.Array
-      { 
-         self.scope.addLocalVar(
-            false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );
-         if! keySymbol {
-            self.scope.addLocalVar( false, false, _exp.txt, Ast.builtinTypeInt, false );
-         }
-         else {
-            self.scope.addLocalVar( false, false, "__index", Ast.builtinTypeInt, false );
-         }
+            false, true, _exp.txt, itemTypeInfoList[ 1 ], false );
+      }  
+   } 
+   elseif exp.$expType.get_kind() == .List or
+      exp.$expType.get_kind() == .Array
+   { 
+      self.scope.addLocalVar(
+         false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );
+      if! keySymbol {
+         self.scope.addLocalVar( false, false, _exp.txt, Ast.builtinTypeInt, false );
       }
       else {
-         self.error( "unknown kind type of exp for foreach-- %d:%d"
-            (exp.$pos.lineNo, exp.$pos.column) );
+         self.scope.addLocalVar( false, false, "__index", Ast.builtinTypeInt, false );
       }
+   }
+   else {
+      self.error( "unknown kind type of exp for foreach-- %d:%d"
+         (exp.$pos.lineNo, exp.$pos.column) );
    }
 
    let block = self.analyzeBlock( .Foreach, scope );

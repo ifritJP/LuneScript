@@ -6,7 +6,7 @@ local memStream = {}
 _moduleObj.memStream = memStream
 function memStream.new(  )
   local obj = {}
-  setmetatable( obj, { __index = memStream } )
+  memStream.setmeta( obj )
   if obj.__init then obj:__init(  ); end
 return obj
 end
@@ -17,6 +17,9 @@ function memStream:write( val )
   self.txt = self.txt .. val
 end
 function memStream:close(  )
+end
+function memStream.setmeta( obj )
+  setmetatable( obj, { __index = memStream  } )
 end
 function memStream:get_txt()       
   return self.txt         

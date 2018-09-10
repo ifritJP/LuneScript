@@ -82,13 +82,13 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             nextToken = self.getToken();
          } nextToken.txt ~= ",";
          self.checkToken( nextToken, '>' );
-         if typeInfo.$kind == Ast.TypeInfoKind.Map {
+         if typeInfo.$kind == .Map {
             typeInfo = Ast.NormalTypeInfo.createMap(
                accessMode, self.getCurrentClass(),
                genericList[1] or Ast.builtinTypeStem,
                genericList[2] or Ast.builtinTypeStem );
          }
-         elseif typeInfo.$kind == Ast.TypeInfoKind.List {
+         elseif typeInfo.$kind == .List {
             typeInfo = Ast.NormalTypeInfo.createList(
                accessMode, self.getCurrentClass(),
                [ genericList[1] ] or [ Ast.builtinTypeStem ] );
@@ -206,8 +206,8 @@ pub fn TransUnit.createAST(
       if token ~= Parser.getEofToken() {
          Util.err( "%s:%d:%d:(%s) not eof -- %s"
                    ( self.parser.getStreamName(),
-                      token.pos.lineNo, token.pos.column,
-                      Parser.getKindTxt( token.kind ), token.txt ) );
+                     token.pos.lineNo, token.pos.column,
+                     token.kind.$_txt, token.txt ) );
       }
 
       foreach subModule in self.subfileList {
@@ -231,7 +231,7 @@ pub fn TransUnit.createAST(
          if token ~= Parser.getEofToken() {
             Util.err( "unknown:%d:%d:(%s) %s"
                       ( token.pos.lineNo, token.pos.column,
-                        Parser.getKindTxt( token.kind ), token.txt ) );
+                        token.kind.$_txt, token.txt ) );
          }  
       }
 
@@ -256,6 +256,9 @@ pub fn TransUnit.createAST(
       }
    }
 
+   foreach mess in self.warnMessList {
+      Util.errorLog( mess );
+   }
    if #self.errMessList > 0 {
       foreach mess in self.errMessList {
          Util.errorLog( mess );
@@ -349,7 +352,7 @@ fn TransUnit.analyzeDeclMacro(
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      false, false, scope, Ast.TypeInfoKind.Macro, self.getCurrentNamespaceTypeInfo(),
+      false, false, scope, .Macro, self.getCurrentNamespaceTypeInfo(),
       false, false, false, accessMode, nameToken.txt, argTypeList );
    self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
 
@@ -380,7 +383,7 @@ fn TransUnit.analyzePushClass(
          self.pushback();
          sync! baseRef = self.analyzeRefType( accessMode, false ) {}
          do {
-            if baseRef.$expType.$kind ~= Ast.TypeInfoKind.Class {
+            if baseRef.$expType.$kind ~= .Class {
                self.addErrMess( baseRef.$pos,
                                 "%s is not class." ( baseRef.$expType.getTxt() ) );
             }
@@ -395,7 +398,7 @@ fn TransUnit.analyzePushClass(
             }
             self.pushback();
             let ifType = self.analyzeRefType( accessMode, false );
-            if ifType.$expType.$kind ~= Ast.TypeInfoKind.IF {
+            if ifType.$expType.$kind ~= .IF {
                self.error( "%s is not interface -- %d"
                            (ifType.$expType.getTxt(), ifType.$expType.$kind ) );
             }
@@ -605,12 +608,8 @@ fn TransUnit.analyzeDecl(
          false, abstructFlag, overrideFlag,
          accessMode, staticFlag, nil, firstToken, nil );
    }
-   elseif token.txt == "abstruct" {
-      self.checkNextToken( "class" );
-      return self.analyzeDeclClass( true, accessMode, firstToken, .Class );
-   }
    elseif token.txt == "class" {
-      return self.analyzeDeclClass( false, accessMode, firstToken, .Class );
+      return self.analyzeDeclClass( abstructFlag, accessMode, firstToken, .Class );
    }
    elseif token.txt == "interface" {
       return self.analyzeDeclClass( true, accessMode, firstToken, .Interface );
@@ -729,7 +728,7 @@ fn TransUnit.analyzeClassBody(
          break;
       }   
       let! mut accessMode = Ast.txt2AccessMode( token.txt ) {
-         accessMode = Ast.AccessMode.Pri;
+         accessMode = .Pri;
       }
       then {
          token = self.getToken();
@@ -880,7 +879,7 @@ fn TransUnit.analyzeDeclClass(
          }
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
             false, false, self.pushScope( false ),
-            Ast.TypeInfoKind.Method, parentInfo, true, false,
+            .Method, parentInfo, true, false,
             memberNode.$staticFlag, accessMode,
             getterName, [], [ getterMemberType ] );
          self.popScope();
@@ -898,7 +897,7 @@ fn TransUnit.analyzeDeclClass(
          self.scope.addMethod(
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ),
-               Ast.TypeInfoKind.Method, parentInfo, true, false,
+               .Method, parentInfo, true, false,
                memberNode.$staticFlag, accessMode,
                setterName, [ memberType ], nil, true 
             ), accessMode, memberNode.$staticFlag, true );
@@ -921,7 +920,7 @@ fn TransUnit.analyzeDeclClass(
       // デフォルトコンストラクタの登録
       let initTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, self.pushScope( false ),
-         Ast.TypeInfoKind.Method, parentInfo, true, false, false, .Pub,
+         .Method, parentInfo, true, false, false, .Pub,
          "__init", memberTypeList, [] );
       self.popScope();
       self.scope.addMethod( initTypeInfo, .Pub, false, false );
@@ -939,9 +938,9 @@ fn TransUnit.analyzeDeclClass(
    foreach advertiseInfo in node.$advertiseList {
       let mut memberType = advertiseInfo.$member.$expType;
       switch memberType.$kind {
-         case Ast.TypeInfoKind.Class, Ast.TypeInfoKind.IF {
+         case .Class, .IF {
             foreach child in memberType.$children {
-               if child.$kind == Ast.TypeInfoKind.Method and
+               if child.$kind == .Method and
                   child.$accessMode ~= .Pri and
                   not child.$staticFlag
                {
@@ -967,7 +966,7 @@ fn TransUnit.analyzeDeclClass(
       scope.filterTypeInfoField(
          true, self.scope,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
-            if symbolInfo.$kind == Ast.SymbolKind.Mtd {
+            if symbolInfo.$kind == .Mtd {
                let impMethodType = self.scope.getTypeInfoField(
                   symbolInfo.$name, true, self.scope );
                let mut noImp = false;
@@ -1036,7 +1035,7 @@ fn TransUnit.analyzeDeclFunc(
       let classTypeInfo = unwrap self.scope.getTypeInfoChild( (unwrap name).txt );
 
       self.pushClass(
-         classTypeInfo.$kind == Ast.TypeInfoKind.Class,
+         classTypeInfo.$kind == .Class,
          classTypeInfo.$abstructFlag, nil, nil, false, (unwrap name).txt, .Pub );
 
       name = self.getSymbolToken();
@@ -1047,19 +1046,24 @@ fn TransUnit.analyzeDeclFunc(
    let mut typeKind = Ast.TypeInfoKind.Func;
    if classNameToken {
       if not staticFlag {
-         typeKind = Ast.TypeInfoKind.Method;
+         typeKind = .Method;
       }
-      if (unwrap name).txt == "__init" {
-         kind = Ast.nodeKindDeclConstr;
-         foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
-            if not symbolInfo.$staticFlag {
-               // 一旦全てのメンバを値なし状態にセットする
-               symbolInfo.set_hasValueFlag( false );
+      switch (unwrap name).txt {
+         case "__init" {
+            kind = Ast.nodeKindDeclConstr;
+            foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
+               if not symbolInfo.$staticFlag {
+                  // 一旦全てのメンバを値なし状態にセットする
+                  symbolInfo.set_hasValueFlag( false );
+               }  
             }
          }
-      }
-      else {
-         kind = Ast.nodeKindDeclMethod;
+         case "__free" {
+            kind = Ast.nodeKindDeclDestr;
+         }
+         default {
+            kind = Ast.nodeKindDeclMethod;
+         }
       }
    }
    else {
@@ -1114,9 +1118,10 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    if kind == Ast.nodeKindDeclMethod or
-      kind == Ast.nodeKindDeclConstr
+      kind == Ast.nodeKindDeclConstr or
+      kind == Ast.nodeKindDeclDestr
    {
-      if kind == Ast.nodeKindDeclConstr {
+      if kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr {
          mutable = true;
       }
       // self シンボルを登録
@@ -1125,8 +1130,13 @@ fn TransUnit.analyzeDeclFunc(
          classTypeInfo = self.createModifier( classTypeInfo, false );
       }
       self.scope.add(
-         Ast.SymbolKind.Var, false, true, "self",
+         .Var, false, true, "self",
          classTypeInfo, .Pri, false, mutable, true );
+
+      if not classTypeInfo.$abstructFlag and abstructFlag {
+         self.addErrMess( firstToken.pos,
+                          "no abstruct class does not have abstruct method" );
+      }
    }
 
    
@@ -1179,7 +1189,7 @@ fn TransUnit.analyzeDeclFunc(
             self.addErrMess( firstToken.pos,
                              "mismatch override staticFlag -- " .. funcName );
          }  
-         if overrideType.get_kind() ~= Ast.TypeInfoKind.Method {
+         if overrideType.get_kind() ~= .Method {
             self.addErrMess( firstToken.pos, "mismatch override kind -- %s, %d"
                              ( funcName, overrideType.get_kind() ) );
          }
@@ -1224,6 +1234,9 @@ fn TransUnit.analyzeDeclFunc(
       switch ( kind ) {
          case Ast.nodeKindDeclConstr {
             node = new Ast.DeclConstrNode( firstToken.pos, [ typeInfo ], info );
+         }
+         case Ast.nodeKindDeclDestr {
+            node = new Ast.DeclDestrNode( firstToken.pos, [ typeInfo ], info );
          }
          case Ast.nodeKindDeclMethod {
             node = new Ast.DeclMethodNode( firstToken.pos, [ typeInfo ], info );
@@ -1397,7 +1410,7 @@ fn TransUnit.analyzeLetAndInitExp(
       }
       // 変数の型を、型推論で初期値から設定
       foreach typeInfo, index in expTypeList {
-         if not typeInfoList[ index ] or
+         if #typeInfoList < index or
             typeInfoList[ index ].equals( Ast.builtinTypeNone )
          {
             if typeInfo.$mutable and
@@ -1526,13 +1539,8 @@ fn TransUnit.analyzeDeclVar(
 
    let mut syncBlock: Ast.BlockNode! = nil;
    if mode == .Sync {
-      let nextToken = self.getToken();
-      if nextToken.txt == "do" {
-         syncBlock = self.analyzeBlock( .LetUnwrap, syncScope );
-      }
-      else {
-         self.pushback();
-      }
+      self.checkNextToken( "do" );
+      syncBlock = self.analyzeBlock( .LetUnwrap, syncScope );
       self.popScope();
    }
 

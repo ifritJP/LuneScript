@@ -84,23 +84,24 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/var.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/arg.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/unwrap.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/operand.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
 	rm test/error/dis_mutable.lns
 
 test-comp2:
-	$(call exeLune,.,test/start.lns,exe,) > work/test.result
+	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
 
 
-	cp work/test.result work/test1.result
+	grep -v 'warning:' work/test1.result > work/test.result
 	$(call exeComp,.,test/comp.lns,test/comp.lns,test.comp 17 7) >> work/test1.result
 	$(call exeComp,.,test/comp-2.lns,test/comp-2.lns,test.comp-2 17 7) >> work/test1.result
 	$(call exeComp,.,test/comp-3.lns,test/comp-3.lns,test.comp-3 17 7) >> work/test1.result
 	$(call exeComp,.,test/comp-4.lns,test/comp-4.lns,test.comp-4 17 12) >> work/test1.result
 	$(call exeComp,.,test/comp-5.lns,test/comp-5.lns,test.comp-5 17 15) >> work/test1.result
 	$(call exeComp,.,test/comp2.lns,test/compSub.lns,test.compSub 5 6) >> work/test1.result
-	$(MAKE) -s TEST_DIR=. test-error | grep 'error:' >> work/test1.result
+	$(MAKE) -s TEST_DIR=. test-error | grep -e 'error:' -e 'warning:' >> work/test1.result
 
 #		sed 's/.*error:/error:/' >> work/test1.result
 
@@ -130,14 +131,14 @@ test-comp2:
 	cp -a test work/3
 	$(call exeLune,work/3,test/start.lns,ast,)
 	$(call exeLune,work/3,test/start.lns,lua,)
-	$(call exeLune,work/3,test/start.lns,exe,) | tee work/test2.result
+	$(call exeLune,work/3,test/start.lns,exe,2>&1) | tee work/test2.result
 	$(call exeComp,work/3,test/comp.lns,test/comp.lns,test.comp 17 7) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp-2.lns,test/comp-2.lns,test.comp-2 17 7) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp-3.lns,test/comp-3.lns,test.comp-3 17 7) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp-4.lns,test/comp-4.lns,test.comp-4 17 12) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp-5.lns,test/comp-5.lns,test.comp-5 17 15) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp2.lns,test/compSub.lns,test.compSub 5 6) | tee -a work/test2.result
-	$(MAKE) -s TEST_DIR=work/3 test-error | grep 'error:' | \
+	$(MAKE) -s TEST_DIR=work/3 test-error | grep -e 'error:' -e 'warning:' | \
 				tee -a work/test2.result
 #sed 's/.*error:/error:/' | tee -a work/test2.result
 
@@ -147,6 +148,10 @@ test-comp2:
 	$(call exeLune,work/3,test/Sub3.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Sub4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/simple.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Class1.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Class2.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Class3.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Class4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/start.lns,save,) > /dev/null
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result
 

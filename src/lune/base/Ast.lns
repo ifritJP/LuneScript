@@ -358,7 +358,7 @@ pub class TypeInfo {
       return rootTypeId;
    }  
    pub fn get_kind(): TypeInfoKind {
-      return TypeInfoKind.Root;
+      return .Root;
    } 
    pub fn get_staticFlag(): bool {
       return false;
@@ -520,17 +520,16 @@ pub fn Scope.getSymbolTypeInfo(
    let mut validThisScope = false;
 
    if! self.ownerTypeInfo {
-      if _exp.$kind == TypeInfoKind.Func or _exp.$kind == TypeInfoKind.Method or
+      if _exp.$kind == .Func or _exp.$kind == .Method or
          self == moduleScope or self == rootScope
       { 
          validThisScope = true;
       } 
-      elseif ( _exp.$kind == TypeInfoKind.IF or
-               _exp.$kind == TypeInfoKind.Class or
-               _exp.$kind == TypeInfoKind.Module ) and name == "self" {
+      elseif ( _exp.$kind == .IF or _exp.$kind == .Class or
+               _exp.$kind == .Module ) and name == "self" {
          validThisScope = true;
       }
-      elseif _exp.$kind == TypeInfoKind.Enum {
+      elseif _exp.$kind == .Enum {
          validThisScope = true;
       }
    } 
@@ -689,8 +688,8 @@ pub fn Scope.getClassTypeInfo(): &TypeInfo {
    let mut scope = self;
    while scope.ownerTypeInfo ~= rootTypeInfo {
       if! scope.ownerTypeInfo {
-         if _exp.$kind == TypeInfoKind.Class or
-            _exp.$kind == TypeInfoKind.IF or _exp.$kind == TypeInfoKind.Module {
+         if _exp.$kind == .Class or
+            _exp.$kind == .IF or _exp.$kind == .Module {
             return _exp;
          }  
       } 
@@ -775,7 +774,7 @@ pub class NilableTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
 
    pub override fn get_kind(): TypeInfoKind {
-      return TypeInfoKind.Nilable;
+      return .Nilable;
    }
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
@@ -886,7 +885,7 @@ pub class ModuleTypeInfo extend TypeInfo {
    }
 
    pub override fn get_kind(): TypeInfoKind {
-      return TypeInfoKind.Module;
+      return .Module;
    } 
    
    pub override fn getParentId(): int {
@@ -982,7 +981,7 @@ pub class EnumTypeInfo extend TypeInfo {
    }
 
    pub override fn get_kind(): TypeInfoKind {
-      return TypeInfoKind.Enum;
+      return .Enum;
    } 
    
    pub override fn getParentId(): int {
@@ -1087,7 +1086,7 @@ pub class NormalTypeInfo extend TypeInfo {
       // }
 
       self.typeId = typeId;
-      if kind == TypeInfoKind.Root {
+      if kind == .Root {
          self.nilable = false;
          // dummyRootTypeInfo = self;
       } 
@@ -1105,13 +1104,13 @@ pub class NormalTypeInfo extend TypeInfo {
          let mut hasNilable = false;
 
          switch ( kind ) {
-            case TypeInfoKind.Prim, TypeInfoKind.List, TypeInfoKind.Array,
-                 TypeInfoKind.Map, TypeInfoKind.Class, TypeInfoKind.Stem, 
-                 TypeInfoKind.Module, TypeInfoKind.IF   
+            case .Prim, .List, .Array,
+                 .Map, .Class, .Stem, 
+                 .Module, .IF   
             {
                hasNilable = true;
             }   
-            case TypeInfoKind.Func, TypeInfoKind.Method {
+            case .Func, .Method {
                hasNilable = true;
             }
          }  
@@ -1123,7 +1122,7 @@ pub class NormalTypeInfo extend TypeInfo {
                // self.nilableTypeInfo = new NormalTypeInfo(
                //    false, nil, baseTypeInfo, interfaceList, self, autoFlag, externalFlag,
                //    staticFlag, accessMode, "", parentInfo, typeId + 1,
-               //    TypeInfoKind.Nilable, itemTypeInfoList,
+               //    .Nilable, itemTypeInfoList,
                //    argTypeInfoList, retTypeInfoList );
                self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
                typeIdSeed = typeIdSeed + 1;
@@ -1145,30 +1144,30 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    pub override fn getParentId(): int {
-      return self.parentInfo and self.parentInfo.$typeId or rootTypeId;
+      return self.parentInfo.$typeId or rootTypeId;
    }
 
    pub override fn get_baseId(): int {
-      return self.baseTypeInfo and self.baseTypeInfo.$typeId or rootTypeId;
+      return self.baseTypeInfo.$typeId or rootTypeId;
    }
 
    pub override fn getTxt() : str {
       if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo) {
          return (unwrap self.orgTypeInfo).getTxt() .. "!";
       } 
-      // if self.kind == TypeInfoKind.Array {
+      // if self.kind == .Array {
       //    let! _exp = self.itemTypeInfoList[1] {
       //       return "[@]";
       //    }; 
       //    return _exp.getTxt() .. "[@]";
       // } 
-      // if self.kind == TypeInfoKind.List {
+      // if self.kind == .List {
       //    let! _exp = self.itemTypeInfoList[1] {
       //       return "[]";
       //    }; 
       //    return _exp.getTxt() .. "[]";
       // } 
-      if self.itemTypeInfoList and #self.itemTypeInfoList > 0 {
+      if #self.itemTypeInfoList > 0 {
          let mut txt = self.rawTxt .. "<";
          foreach typeInfo, index in self.itemTypeInfoList {
             if index ~= 1 {
@@ -1186,10 +1185,10 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    pub override fn get_display_stirng(): str {
-      if self.kind == TypeInfoKind.Nilable {
+      if self.kind == .Nilable {
          return (unwrap self.orgTypeInfo).get_display_stirng() .. "!";
       }
-      if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Method
+      if self.kind == .Func or self.kind == .Method
       {
          let mut txt = self.$rawTxt .. "(";
          foreach argType, index in self.argTypeInfoList {
@@ -1364,7 +1363,7 @@ pub class NormalTypeInfo extend TypeInfo {
       argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
       mutable: bool! ): &TypeInfo
    {  
-      if kind == TypeInfoKind.Prim {
+      if kind == .Prim {
          if! sym2builtInTypeMap[ txt ] {
             return _exp.$typeInfo;
          }
@@ -1390,7 +1389,7 @@ pub static fn NormalTypeInfo.createBuiltin(
    idName: str, typeTxt: str, kind: TypeInfoKind, typeDDD: TypeInfo! ): &TypeInfo
 {
    let mut typeId = typeIdSeed + 1;
-   if kind == TypeInfoKind.Root {
+   if kind == .Root {
       typeId = rootTypeId;
    } 
    else {
@@ -1407,14 +1406,14 @@ pub static fn NormalTypeInfo.createBuiltin(
 
    let mut scope:Scope! = nil;
    switch kind {
-      case TypeInfoKind.List, TypeInfoKind.Class, TypeInfoKind.Module,
-           TypeInfoKind.IF, TypeInfoKind.Func, TypeInfoKind.Method,
-           TypeInfoKind.Macro
+      case .List, .Class, .Module,
+           .IF, .Func, .Method,
+           .Macro
       {  
          scope = new Scope(
             rootScope,
-            kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or
-            kind == TypeInfoKind.IF or kind == TypeInfoKind.List, [] );
+            kind == .Class or kind == .Module or
+            kind == .IF or kind == .List, [] );
       }  
    } 
    
@@ -1431,7 +1430,7 @@ pub static fn NormalTypeInfo.createBuiltin(
       rootScope, AccessMode.Pub, false, typeTxt, info, false, true );
    if info.$nilableTypeInfo ~= rootTypeInfo {
       sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
-         SymbolKind.Typ, false, kind == TypeInfoKind.Func, rootScope,
+         SymbolKind.Typ, false, kind == .Func, rootScope,
          AccessMode.Pub, false, typeTxt, info.$nilableTypeInfo, false, true );
       builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
    } 
@@ -1443,13 +1442,13 @@ pub static fn NormalTypeInfo.createBuiltin(
 pub static fn NormalTypeInfo.createList(
    accessMode: AccessMode, parentInfo: &TypeInfo, itemTypeInfo: List<&TypeInfo> ): &TypeInfo
 {
-   if not itemTypeInfo or #itemTypeInfo == 0 {
+   if #itemTypeInfo == 0 {
       Util.err( "illegal list type: %s" (itemTypeInfo) );
    } 
    typeIdSeed = typeIdSeed + 1;
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "List",
-      typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true );
+      typeInfoRoot, typeIdSeed, .List, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createArray(
@@ -1459,7 +1458,7 @@ pub static fn NormalTypeInfo.createArray(
    typeIdSeed = typeIdSeed + 1;
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "Array",
-      typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true );
+      typeInfoRoot, typeIdSeed, .Array, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createMap(
@@ -1469,7 +1468,7 @@ pub static fn NormalTypeInfo.createMap(
    typeIdSeed = typeIdSeed + 1;
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "Map",
-      typeInfoRoot, typeIdSeed, TypeInfoKind.Map,
+      typeInfoRoot, typeIdSeed, .Map,
       [ keyTypeInfo, valTypeInfo ], nil, nil, true );
 }
 
@@ -1558,35 +1557,35 @@ pub static fn NormalTypeInfo.createModifier(
 }
 
 pub let builtinTypeNone:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "None", "", .Prim );
 pub let builtinTypeStem:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Stem", "stem" , TypeInfoKind.Stem );
+   NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem );
 pub let builtinTypeNil:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Nil", "nil" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "Nil", "nil" , .Prim );
 pub let builtinTypeDDD:TypeInfo =
-   NormalTypeInfo.createBuiltin( "DDD", "..." , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "DDD", "..." , .Prim );
 pub let builtinTypeBool:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Bool", "bool" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim );
 pub let builtinTypeInt:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Int", "int" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "Int", "int" , .Prim );
 pub let builtinTypeReal:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Real", "real" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "Real", "real" , .Prim );
 pub let builtinTypeChar:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "char", "char" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "char", "char" , .Prim );
 pub let builtinTypeString:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "String", "str" , TypeInfoKind.Class );
+   NormalTypeInfo.createBuiltin( "String", "str" , .Class );
 pub let builtinTypeMap:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Map", "Map" , TypeInfoKind.Map );
+   NormalTypeInfo.createBuiltin( "Map", "Map" , .Map );
 pub let builtinTypeList:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "List", "List" , TypeInfoKind.List );
+   NormalTypeInfo.createBuiltin( "List", "List" , .List );
 pub let builtinTypeArray:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Array", "Array" , TypeInfoKind.Array );
+   NormalTypeInfo.createBuiltin( "Array", "Array" , .Array );
 pub let builtinTypeForm:TypeInfo =
-   NormalTypeInfo.createBuiltin( "Form", "form" , TypeInfoKind.Func, builtinTypeDDD );
+   NormalTypeInfo.createBuiltin( "Form", "form" , .Func, builtinTypeDDD );
 pub let builtinTypeSymbol:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Symbol", "sym" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim );
 pub let builtinTypeStat:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Stat", "stat" , TypeInfoKind.Prim );
+   NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim );
 
 pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
 
@@ -1606,13 +1605,13 @@ pub static fn NormalTypeInfo.createEnum(
       parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo );
 
    let mut getEnumName = NormalTypeInfo.createFunc(
-      false, true, nil, TypeInfoKind.Method, info,
+      false, true, nil, .Method, info,
       true, true, false, AccessMode.Pub,
       "get__txt", nil, [ builtinTypeString ], false );
    scope.addMethod( getEnumName, AccessMode.Pub, false, true );
 
    let mut fromVal = NormalTypeInfo.createFunc(
-      false, true, nil, TypeInfoKind.Method, info,
+      false, true, nil, .Method, info,
       true, true, true, AccessMode.Pub,
       "_from", [ NormalTypeInfo.createModifier( valTypeInfo,false ) ],
       [ info.$nilableTypeInfo ], false );
@@ -1679,8 +1678,8 @@ pub override fn NormalTypeInfo.isInheritFrom( other:&TypeInfo ) : bool
    if self.$typeId == otherTypeId {
       return true;
    }
-   if ( self.$kind ~= TypeInfoKind.Class and self.$kind ~= TypeInfoKind.IF ) or
-      ( other.$kind ~= TypeInfoKind.Class and other.$kind ~= TypeInfoKind.IF )
+   if ( self.$kind ~= .Class and self.$kind ~= .IF ) or
+      ( other.$kind ~= .Class and other.$kind ~= .IF )
    {  
       return false;
    }
@@ -1779,9 +1778,9 @@ static fn TypeInfo.canEvalWithBase(
    if opTxt == "=" and
       otherSrc ~= builtinTypeNil and
       otherSrc ~= builtinTypeString and
-      otherSrc.$kind ~= TypeInfoKind.Prim and
-      otherSrc.$kind ~= TypeInfoKind.Func and
-      otherSrc.$kind ~= TypeInfoKind.Enum and
+      otherSrc.$kind ~= .Prim and
+      otherSrc.$kind ~= .Func and
+      otherSrc.$kind ~= .Enum and
       distMut and not otherMut
    {
       return false;
@@ -1796,11 +1795,11 @@ static fn TypeInfo.canEvalWithBase(
    if dist == builtinTypeStem and not otherSrc.$nilable {
       return true;
    }
-   if dist == builtinTypeForm and otherSrc.$kind == TypeInfoKind.Func {
+   if dist == builtinTypeForm and otherSrc.$kind == .Func {
       return true;
    }
    if otherSrc == builtinTypeNil {
-      if dist.$kind ~= TypeInfoKind.Nilable {
+      if dist.$kind ~= .Nilable {
          return false;
       } 
       return true;
@@ -1809,18 +1808,18 @@ static fn TypeInfo.canEvalWithBase(
       return true;
    }
    if dist.$kind ~= otherSrc.$kind {
-      if dist.$kind == TypeInfoKind.Nilable {
+      if dist.$kind == .Nilable {
          if otherSrc.$nilable {
             return dist.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
          }
          return dist.$orgTypeInfo.canEvalWith( otherSrc, opTxt );
       }
-      elseif ( dist.$kind == TypeInfoKind.Class or dist.$kind == TypeInfoKind.IF ) and
-         ( otherSrc.$kind == TypeInfoKind.Class or otherSrc.$kind == TypeInfoKind.IF )
+      elseif ( dist.$kind == .Class or dist.$kind == .IF ) and
+         ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
       {
          return otherSrc.isInheritFrom( dist );
       }
-      elseif otherSrc.$kind == TypeInfoKind.Enum {
+      elseif otherSrc.$kind == .Enum {
          let enumTypeInfo = otherSrc@@EnumTypeInfo;
          return dist.$canEvalWith( enumTypeInfo.$valTypeInfo, opTxt );
       }
@@ -1828,7 +1827,7 @@ static fn TypeInfo.canEvalWithBase(
    }
    // TypeInfoKind が等しい
    switch ( dist.$kind ) {
-      case TypeInfoKind.Prim {
+      case .Prim {
          if dist == builtinTypeInt and otherSrc == builtinTypeChar or
             dist == builtinTypeChar and otherSrc == builtinTypeInt
          {  
@@ -1836,7 +1835,7 @@ static fn TypeInfo.canEvalWithBase(
          }  
          return false;
       }       
-      case TypeInfoKind.List, TypeInfoKind.Array {
+      case .List, .Array {
          if otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone {
             // literalMap の [], [@] は互換有りとする
             return true;
@@ -1844,7 +1843,7 @@ static fn TypeInfo.canEvalWithBase(
          checkEqualsItemType( dist, otherSrc, 1 );
          return true;
       }       
-      case TypeInfoKind.Map {
+      case .Map {
          if otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone and
             otherSrc.$itemTypeInfoList[ 2 ] == builtinTypeNone
          {  
@@ -1855,10 +1854,10 @@ static fn TypeInfo.canEvalWithBase(
          checkEqualsItemType( dist, otherSrc, 2 );
          return true;
       }       
-      case TypeInfoKind.Class, TypeInfoKind.IF {
+      case .Class, .IF {
          return otherSrc.isInheritFrom( dist );
       }       
-      case TypeInfoKind.Func {
+      case .Func {
          if dist == builtinTypeForm {
             return true;
          }  
@@ -1871,7 +1870,7 @@ static fn TypeInfo.canEvalWithBase(
          }
          return true;
       }       
-      case TypeInfoKind.Method {
+      case .Method {
          if not TypeInfo.checkMatchType( dist.$argTypeInfoList,
                                          otherSrc.$argTypeInfoList, false ) or
             not TypeInfo.checkMatchType( dist.$retTypeInfoList,
@@ -1881,7 +1880,7 @@ static fn TypeInfo.canEvalWithBase(
          }
          return true;
       }
-      case TypeInfoKind.Nilable {
+      case .Nilable {
          return dist.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
       }
       default {
@@ -1907,9 +1906,9 @@ pub class Node {
    pri let expTypeList: &List<&TypeInfo> { pub };
 
    pub fn get_expType(): &TypeInfo {
-      if not self.expTypeList {
+      if #self.expTypeList == 0 {
          return builtinTypeNone;
-      } 
+      }
       return self.expTypeList[ 1 ];
    }; 
    
@@ -2163,7 +2162,7 @@ _declNodeClass( "ExpList", Node, true, true,
 );
 pub override fn ExpListNode.canBeLeft():bool {
    foreach expNode in self.$expList {
-      if not expNode.$canBeLeft {
+      if not expNode.canBeLeft() {
          return false;
       }
    }
@@ -2171,7 +2170,7 @@ pub override fn ExpListNode.canBeLeft():bool {
 }
 pub override fn ExpListNode.canBeRight():bool {
    foreach expNode in self.$expList {
-      if not expNode.$canBeRight {
+      if not expNode.canBeRight() {
          return false;
       }
    }
@@ -2414,7 +2413,7 @@ pub class DeclFuncInfo {
    pri let argList: List<&Node> { pub };
    pri let staticFlag: bool { pub };
    pri let accessMode: AccessMode { pub };
-   pri let body: &Node! { pub };
+   pri let body: &BlockNode! { pub };
    pri let retTypeInfoList: List<&TypeInfo> { pub };
 }
 _declNodeClass( "DeclFunc", Node, false, true,
@@ -2429,9 +2428,13 @@ _declNodeClass( "DeclConstr", Node, false, false,
                 [ { "declInfo": "DeclFuncInfo" } ]
 );
 
+_declNodeClass( "DeclDestr", Node, false, false,
+                [ { "declInfo": "DeclFuncInfo" } ]
+);
+
 _declNodeClass( "ExpCallSuper", Node, false, false,
                 [ { "superType": "&TypeInfo" },
-                  { "expList": "&ExpListNode" } ]
+                  { "expList": "&ExpListNode!" } ]
 );
 
 _declNodeClass( "DeclMember", Node, false, false,
@@ -2686,7 +2689,7 @@ pub override fn ExpMacroStatNode.getLiteral(): stem![], List<&TypeInfo> {
 
 pub override fn ExpRefNode.getLiteral(): stem![], List<&TypeInfo> {
    let typeInfo = self.symbolInfo.$typeInfo;
-   if typeInfo.$kind ~= TypeInfoKind.Enum {
+   if typeInfo.$kind ~= .Enum {
       return [], [];
    }
    let enumTypeInfo = typeInfo@@EnumTypeInfo;

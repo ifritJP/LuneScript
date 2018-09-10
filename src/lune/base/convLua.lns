@@ -661,7 +661,6 @@ end
       let mut valTxt = "%s" (valInfo.$val);
       if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ) {
          valTxt = "'%s'" (valInfo.$val);
-         Util.errorLog( "hoge: %s" (valTxt) );
       }
       self.writeln(
          "%s.%s = %s" (node.$name.txt, valName.txt, valTxt ), baseIndent );
@@ -669,6 +668,20 @@ end
       self.writeln( "%s._val2NameMap[%s] = '%s'"
          (node.$name.txt, valTxt, valName.txt ), baseIndent );
    }
+}
+
+
+fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : Ast.TypeInfo!
+{
+   let mut typeInfo = classTypeInfo;
+   while not typeInfo.equals( Ast.rootTypeInfo ) {
+      let scope = unwrap typeInfo.$scope;
+      if! scope.getTypeInfoChild( "__free" ) {
+         return typeInfo;
+      }
+      typeInfo = typeInfo.$baseTypeInfo;
+   }
+   return nil;
 }
 
 pub override fn convFilter.processDeclClass( 
@@ -707,6 +720,7 @@ pub override fn convFilter.processDeclClass(
                     baseIndent );
    }
    let mut hasConstrFlag = false;
+   let mut hasDestrFlag = false;
    let mut memberList: List<&Ast.DeclMemberNode> = [];
    let fieldList: List<&Ast.Node> = nodeInfo.get_fieldList();
    let outerMethodSet: Map<str,bool> = nodeInfo.get_outerMethodSet();
@@ -716,6 +730,10 @@ pub override fn convFilter.processDeclClass(
       if field.$kind == Ast.nodeKind.DeclConstr {
          hasConstrFlag = true;
          methodNameSet[ "__init" ] = true;
+      }
+      if field.$kind == Ast.nodeKind.DeclDestr {
+         hasDestrFlag = true;
+         methodNameSet[ "__free" ] = true;
       }
       if field.$kind == Ast.nodeKind.DeclMember {
          let declMemberNode = field@@Ast.DeclMemberNode;
@@ -737,6 +755,17 @@ pub override fn convFilter.processDeclClass(
          filter( field, self, node, baseIndent );
       }
    }
+
+   let mut destTxt = "";
+   if! self.getDestrClass( node.get_expType() ) {
+      destTxt = ", __gc = %s.__free" (_exp.getTxt());
+   }
+   
+   self.writeln(```
+function %s.setmeta( obj )
+  setmetatable( obj, { __index = %s %s } )
+end```
+      ( className, className, destTxt ), baseIndent );
    
    if not hasConstrFlag {
       methodNameSet[ "__init" ] = true;
@@ -748,10 +777,11 @@ pub override fn convFilter.processDeclClass(
          argTxt = argTxt .. member.$name.txt;
       }
 
+
       self.writeln( ```
 function %s.new( %s )
   local obj = {}
-  setmetatable( obj, { __index = %s } )
+  %s.setmeta( obj )
   if obj.__init then
     obj:__init( %s )
   end        
@@ -759,7 +789,8 @@ function %s.new( %s )
 end         
 function %s:__init( %s ) 
 ```
-            ( className, argTxt, className, argTxt, className, argTxt ),
+            ( className, argTxt, className,
+              argTxt, className, argTxt ),
            baseIndent );
       foreach member in memberList {
          let memberName = member.$name.txt;
@@ -953,7 +984,7 @@ pub override fn convFilter.processDeclConstr(
    }  
    self.writeln( " )", baseIndent + stepIndent );
    self.writeln( "local obj = {}", baseIndent + stepIndent );
-   self.writeln( string.format( "setmetatable( obj, { __index = %s } )", className ),
+   self.writeln( "%s.setmeta( obj )" ( className ),
                  baseIndent + stepIndent );
    self.writeln( string.format( "if obj.__init then obj:__init( %s ); end",
                                 argTxt ), baseIndent );
@@ -968,11 +999,28 @@ pub override fn convFilter.processDeclConstr(
    //filter( //    refType,  self, node, baseIndent )
    // }
    self.write( string.format( "function %s:__init(%s) ", className, argTxt ) );
-   if! declInfo.get_body() {
+   if! declInfo.$body {
       filter( _exp,  self, node, baseIndent );
    }
    self.writeln( "end", baseIndent );
-};   
+};
+
+pub override fn convFilter.processDeclDestr( 
+   node: Ast.DeclDestrNode, parent: &Ast.Node, baseIndent:int ) mut
+{
+   self.writeln( "function %s.__free( self )" ( node.$declInfo.$className$.txt ),
+                 baseIndent + stepIndent );
+
+   filter( unwrap node.$declInfo.$body, self, node, baseIndent + stepIndent );
+
+   let classTypeInfo = node.$expType.$parentInfo;
+   if! self.getDestrClass( classTypeInfo.$baseTypeInfo ) {
+      self.writeln( "%s.__free( self )" (_exp.getTxt() ), baseIndent );
+   }
+
+   
+   self.writeln( "end", baseIndent );
+}
 
 
 pub override fn convFilter.processExpCallSuper( 
@@ -981,8 +1029,8 @@ pub override fn convFilter.processExpCallSuper(
    let typeInfo:Ast.TypeInfo = node.get_superType();
    self.write( "%s.__init( self, " ( typeInfo.getTxt() ) );
 
-   if node.get_expList() {
-      filter( node.get_expList(), self, node, baseIndent );
+   if! node.$expList {
+      filter( _exp, self, node, baseIndent );
    }
    self.writeln( ")", baseIndent );
 };  
@@ -1010,7 +1058,7 @@ pub override fn convFilter.processDeclMethod(
       filter( arg, self, node, baseIndent );
    }
    self.write( " )" );
-   if! declInfo.get_body() {
+   if! declInfo.$body {
       filter( _exp, self, node, baseIndent );
    }
    else {
@@ -1141,8 +1189,7 @@ pub override fn convFilter.processDeclVar(
 
       filter( _exp, self, node, baseIndent + stepIndent * 2 );
 
-      sync! thenBlock = node.$thenBlock {}
-      then {
+      if! let thenBlock = node.$thenBlock {     
          self.writeln( "else", baseIndent + stepIndent * 3 );
 	 filter( thenBlock, self, node, baseIndent + stepIndent * 3);
       };
@@ -1239,7 +1286,7 @@ pub override fn convFilter.processDeclFunc(
    //    }
    //filter( //    refType,  self, node, baseIndent )
    // }
-   if! declInfo.get_body() { 
+   if! declInfo.$body { 
       filter( _exp,  self, node, baseIndent );
    }
    else {

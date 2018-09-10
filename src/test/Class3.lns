@@ -1,0 +1,34 @@
+class Super {
+   let val1:int;
+   fn __free() {
+      print( "Super:__func__(): %d" ( self.val1 ) );
+   }
+}
+
+class Test extend Super {
+   let mut val2:int;
+   pub fn __init( val1: int, val2:int ) {
+      super( val1 );
+      self.val2 = val2;
+   }
+   fn __free() {
+      self.val2 = self.val2 * 10;
+      print( "Test:__free(): %d" (self.val2) );
+   }
+}
+
+
+class Sub extend Test {
+   let mut val3:int;
+   pub fn __init( val1: int, val2:int, val3:int ) {
+      super( val1, val2 );
+      self.val3 = val3;
+   }
+   fn __free() {
+      self.val3 = self.val3 * 10;
+      print( "Sub:__free(): %d" (self.val3) );
+   }
+}
+
+new Sub( 100, 1, 3 );
+collectgarbage();

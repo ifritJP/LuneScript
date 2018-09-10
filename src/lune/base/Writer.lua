@@ -68,9 +68,12 @@ _moduleObj.Writer = Writer
 -- none
 -- none
 -- none
+function Writer.setmeta( obj )
+  setmetatable( obj, { __index = Writer  } )
+end
 function Writer.new(  )
   local obj = {}
-  setmetatable( obj, { __index = Writer } )
+  Writer.setmeta( obj )
   if obj.__init then
     obj:__init(  )
   end        
@@ -86,7 +89,7 @@ local XML = {}
 _moduleObj.XML = XML
 function XML.new( stream )
   local obj = {}
-  setmetatable( obj, { __index = XML } )
+  XML.setmeta( obj )
   if obj.__init then obj:__init( stream ); end
 return obj
 end
@@ -140,13 +143,19 @@ function XML:write( name, val )
 end
 function XML:fin(  )
 end
+function XML.setmeta( obj )
+  setmetatable( obj, { __index = XML  } )
+end
 do
   end
 
 local JsonLayer = {}
+function JsonLayer.setmeta( obj )
+  setmetatable( obj, { __index = JsonLayer  } )
+end
 function JsonLayer.new( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
   local obj = {}
-  setmetatable( obj, { __index = JsonLayer } )
+  JsonLayer.setmeta( obj )
   if obj.__init then
     obj:__init( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
   end        
@@ -175,7 +184,7 @@ function JSON:startLayer( arrayFlag, madeByArrayFlag )
 end
 function JSON.new( stream )
   local obj = {}
-  setmetatable( obj, { __index = JSON } )
+  JSON.setmeta( obj )
   if obj.__init then obj:__init( stream ); end
 return obj
 end
@@ -328,6 +337,9 @@ function JSON:fin(  )
   else 
     Util.err( 'illegal' )
   end
+end
+function JSON.setmeta( obj )
+  setmetatable( obj, { __index = JSON  } )
 end
 do
   end

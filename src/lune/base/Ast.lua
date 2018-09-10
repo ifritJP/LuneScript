@@ -181,9 +181,12 @@ _moduleObj.SymbolInfo = SymbolInfo
 -- none
 -- none
 -- none
+function SymbolInfo.setmeta( obj )
+  setmetatable( obj, { __index = SymbolInfo  } )
+end
 function SymbolInfo.new(  )
   local obj = {}
-  setmetatable( obj, { __index = SymbolInfo } )
+  SymbolInfo.setmeta( obj )
   if obj.__init then
     obj:__init(  )
   end        
@@ -200,7 +203,7 @@ setmetatable( NormalSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.NormalSymbolInfo = NormalSymbolInfo
 function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag )
   local obj = {}
-  setmetatable( obj, { __index = NormalSymbolInfo } )
+  NormalSymbolInfo.setmeta( obj )
   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag ); end
 return obj
 end
@@ -219,6 +222,9 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
   self.hasValueFlag = hasValueFlag
 end
 -- none
+function NormalSymbolInfo.setmeta( obj )
+  setmetatable( obj, { __index = NormalSymbolInfo  } )
+end
 function NormalSymbolInfo:get_canBeLeft()       
   return self.canBeLeft         
 end
@@ -261,9 +267,12 @@ do
 
 local DataOwnerInfo = {}
 _moduleObj.DataOwnerInfo = DataOwnerInfo
+function DataOwnerInfo.setmeta( obj )
+  setmetatable( obj, { __index = DataOwnerInfo  } )
+end
 function DataOwnerInfo.new( hasData, symbolInfo )
   local obj = {}
-  setmetatable( obj, { __index = DataOwnerInfo } )
+  DataOwnerInfo.setmeta( obj )
   if obj.__init then
     obj:__init( hasData, symbolInfo )
   end        
@@ -281,7 +290,7 @@ local Scope = {}
 _moduleObj.Scope = Scope
 function Scope.new( parent, classFlag, inheritList )
   local obj = {}
-  setmetatable( obj, { __index = Scope } )
+  Scope.setmeta( obj )
   if obj.__init then obj:__init( parent, classFlag, inheritList ); end
 return obj
 end
@@ -313,6 +322,9 @@ function Scope:setData( symbolInfo )
   self.symbolId2DataOwnerInfo[symbolInfo:get_symbolId()] = DataOwnerInfo.new(true, symbolInfo)
 end
 -- none
+function Scope.setmeta( obj )
+  setmetatable( obj, { __index = Scope  } )
+end
 function Scope:get_ownerTypeInfo()       
   return self.ownerTypeInfo         
 end
@@ -340,9 +352,12 @@ local TypeData = {}
 function TypeData:addChildren( child )
   table.insert( self.children, child )
 end
+function TypeData.setmeta( obj )
+  setmetatable( obj, { __index = TypeData  } )
+end
 function TypeData.new( children )
   local obj = {}
-  setmetatable( obj, { __index = TypeData } )
+  TypeData.setmeta( obj )
   if obj.__init then
     obj:__init( children )
   end        
@@ -365,9 +380,12 @@ end
 function TypeManager.getData( typeInfo )
   return TypeManager.info2Data[typeInfo]
 end
+function TypeManager.setmeta( obj )
+  setmetatable( obj, { __index = TypeManager  } )
+end
 function TypeManager.new(  )
   local obj = {}
-  setmetatable( obj, { __index = TypeManager } )
+  TypeManager.setmeta( obj )
   if obj.__init then
     obj:__init(  )
   end        
@@ -384,7 +402,7 @@ local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
 function TypeInfo.new( scope )
   local obj = {}
-  setmetatable( obj, { __index = TypeInfo } )
+  TypeInfo.setmeta( obj )
   if obj.__init then obj:__init( scope ); end
 return obj
 end
@@ -499,6 +517,9 @@ function TypeInfo:addChildren( child )
 end
 function TypeInfo:get_mutable(  )
   return true
+end
+function TypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = TypeInfo  } )
 end
 function TypeInfo:get_scope()       
   return self.scope         
@@ -890,9 +911,12 @@ function AccessSymbolInfo:get_canBeLeft(  )
   
   return self.symbolInfo:get_canBeLeft()
 end
+function AccessSymbolInfo.setmeta( obj )
+  setmetatable( obj, { __index = AccessSymbolInfo  } )
+end
 function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
   local obj = {}
-  setmetatable( obj, { __index = AccessSymbolInfo } )
+  AccessSymbolInfo.setmeta( obj )
   if obj.__init then
     obj:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
   end        
@@ -990,9 +1014,12 @@ function NilableTypeInfo:equals( typeInfo )
   end
   return self.orgTypeInfo:equals( typeInfo )
 end
+function NilableTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = NilableTypeInfo  } )
+end
 function NilableTypeInfo.new( orgTypeInfo, typeId )
   local obj = {}
-  setmetatable( obj, { __index = NilableTypeInfo } )
+  NilableTypeInfo.setmeta( obj )
   if obj.__init then
     obj:__init( orgTypeInfo, typeId )
   end        
@@ -1131,9 +1158,12 @@ end
 function ModifierTypeInfo:canEvalWith( other, opTxt )
   return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other, opTxt )
 end
+function ModifierTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = ModifierTypeInfo  } )
+end
 function ModifierTypeInfo.new( srcTypeInfo, typeId, mutable )
   local obj = {}
-  setmetatable( obj, { __index = ModifierTypeInfo } )
+  ModifierTypeInfo.setmeta( obj )
   if obj.__init then
     obj:__init( srcTypeInfo, typeId, mutable )
   end        
@@ -1266,7 +1296,7 @@ setmetatable( ModuleTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModuleTypeInfo = ModuleTypeInfo
 function ModuleTypeInfo.new( scope, externalFlag, txt, parentInfo, typeId, mutable )
   local obj = {}
-  setmetatable( obj, { __index = ModuleTypeInfo } )
+  ModuleTypeInfo.setmeta( obj )
   if obj.__init then obj:__init( scope, externalFlag, txt, parentInfo, typeId, mutable ); end
 return obj
 end
@@ -1337,6 +1367,9 @@ function ModuleTypeInfo:serialize( stream, validChildrenSet )
   
   stream:write( "} }\n" )
 end
+function ModuleTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = ModuleTypeInfo  } )
+end
 function ModuleTypeInfo:get_externalFlag()       
   return self.externalFlag         
 end
@@ -1357,9 +1390,12 @@ do
 
 local EnumValInfo = {}
 _moduleObj.EnumValInfo = EnumValInfo
+function EnumValInfo.setmeta( obj )
+  setmetatable( obj, { __index = EnumValInfo  } )
+end
 function EnumValInfo.new( name, val )
   local obj = {}
-  setmetatable( obj, { __index = EnumValInfo } )
+  EnumValInfo.setmeta( obj )
   if obj.__init then
     obj:__init( name, val )
   end        
@@ -1384,7 +1420,7 @@ setmetatable( EnumTypeInfo, { __index = TypeInfo } )
 _moduleObj.EnumTypeInfo = EnumTypeInfo
 function EnumTypeInfo.new( scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo, name2EnumValInfo )
   local obj = {}
-  setmetatable( obj, { __index = EnumTypeInfo } )
+  EnumTypeInfo.setmeta( obj )
   if obj.__init then obj:__init( scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo, name2EnumValInfo ); end
 return obj
 end
@@ -1434,6 +1470,9 @@ end
 function EnumTypeInfo:get_mutable(  )
   return true
 end
+function EnumTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = EnumTypeInfo  } )
+end
 function EnumTypeInfo:get_externalFlag()       
   return self.externalFlag         
 end
@@ -1466,7 +1505,7 @@ setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
 function NormalTypeInfo.new( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
   local obj = {}
-  setmetatable( obj, { __index = NormalTypeInfo } )
+  NormalTypeInfo.setmeta( obj )
   if obj.__init then obj:__init( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
 return obj
 end
@@ -1539,16 +1578,16 @@ function NormalTypeInfo:isModule(  )
   return false
 end
 function NormalTypeInfo:getParentId(  )
-  return self.parentInfo and self.parentInfo:get_typeId() or _moduleObj.rootTypeId
+  return self.parentInfo:get_typeId() or _moduleObj.rootTypeId
 end
 function NormalTypeInfo:get_baseId(  )
-  return self.baseTypeInfo and self.baseTypeInfo:get_typeId() or _moduleObj.rootTypeId
+  return self.baseTypeInfo:get_typeId() or _moduleObj.rootTypeId
 end
 function NormalTypeInfo:getTxt(  )
   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
     return (_lune.unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
   end
-  if self.itemTypeInfoList and #self.itemTypeInfoList > 0 then
+  if #self.itemTypeInfoList > 0 then
     local txt = self.rawTxt .. "<"
     
     for index, typeInfo in pairs( self.itemTypeInfoList ) do
@@ -1692,6 +1731,9 @@ function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, pa
   
   return info
 end
+function NormalTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = NormalTypeInfo  } )
+end
 function NormalTypeInfo:get_externalFlag()       
   return self.externalFlag         
 end
@@ -1802,7 +1844,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
 end
 
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
-  if not itemTypeInfo or #itemTypeInfo == 0 then
+  if #itemTypeInfo == 0 then
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   typeIdSeed = typeIdSeed + 1
@@ -2197,9 +2239,12 @@ end
 
 local Filter = {}
 _moduleObj.Filter = Filter
+function Filter.setmeta( obj )
+  setmetatable( obj, { __index = Filter  } )
+end
 function Filter.new(  )
   local obj = {}
-  setmetatable( obj, { __index = Filter } )
+  Filter.setmeta( obj )
   if obj.__init then
     obj:__init(  )
   end        
@@ -2214,7 +2259,7 @@ do
 local Node = {}
 _moduleObj.Node = Node
 function Node:get_expType(  )
-  if not self.expTypeList then
+  if #self.expTypeList == 0 then
     return _moduleObj.builtinTypeNone
   end
   return self.expTypeList[1]
@@ -2230,9 +2275,12 @@ end
 function Node:canBeRight(  )
   return false
 end
+function Node.setmeta( obj )
+  setmetatable( obj, { __index = Node  } )
+end
 function Node.new( kind, pos, expTypeList )
   local obj = {}
-  setmetatable( obj, { __index = Node } )
+  Node.setmeta( obj )
   if obj.__init then
     obj:__init( kind, pos, expTypeList )
   end        
@@ -2258,9 +2306,12 @@ do
 
 local NamespaceInfo = {}
 _moduleObj.NamespaceInfo = NamespaceInfo
+function NamespaceInfo.setmeta( obj )
+  setmetatable( obj, { __index = NamespaceInfo  } )
+end
 function NamespaceInfo.new( name, scope, typeInfo )
   local obj = {}
-  setmetatable( obj, { __index = NamespaceInfo } )
+  NamespaceInfo.setmeta( obj )
   if obj.__init then
     obj:__init( name, scope, typeInfo )
   end        
@@ -2283,9 +2334,12 @@ do
 
 local DeclMacroInfo = {}
 _moduleObj.DeclMacroInfo = DeclMacroInfo
+function DeclMacroInfo.setmeta( obj )
+  setmetatable( obj, { __index = DeclMacroInfo  } )
+end
 function DeclMacroInfo.new( name, argList, ast, tokenList )
   local obj = {}
-  setmetatable( obj, { __index = DeclMacroInfo } )
+  DeclMacroInfo.setmeta( obj )
   if obj.__init then
     obj:__init( name, argList, ast, tokenList )
   end        
@@ -2315,9 +2369,12 @@ do
 
 local MacroValInfo = {}
 _moduleObj.MacroValInfo = MacroValInfo
+function MacroValInfo.setmeta( obj )
+  setmetatable( obj, { __index = MacroValInfo  } )
+end
 function MacroValInfo.new( val, typeInfo )
   local obj = {}
-  setmetatable( obj, { __index = MacroValInfo } )
+  MacroValInfo.setmeta( obj )
   if obj.__init then
     obj:__init( val, typeInfo )
   end        
@@ -2333,9 +2390,12 @@ do
 
 local MacroInfo = {}
 _moduleObj.MacroInfo = MacroInfo
+function MacroInfo.setmeta( obj )
+  setmetatable( obj, { __index = MacroInfo  } )
+end
 function MacroInfo.new( func, declInfo, symbol2MacroValInfoMap )
   local obj = {}
-  setmetatable( obj, { __index = MacroInfo } )
+  MacroInfo.setmeta( obj )
   if obj.__init then
     obj:__init( func, declInfo, symbol2MacroValInfoMap )
   end        
@@ -2401,7 +2461,7 @@ function NoneNode:canBeLeft(  )
 end
 function NoneNode.new( pos, typeList )
   local obj = {}
-  setmetatable( obj, { __index = NoneNode } )
+  NoneNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList ); end
 return obj
 end
@@ -2412,6 +2472,9 @@ function NoneNode:__init(pos, typeList)
   
   -- none
   
+end
+function NoneNode.setmeta( obj )
+  setmetatable( obj, { __index = NoneNode  } )
 end
 do
   end
@@ -2446,7 +2509,7 @@ function SubfileNode:canBeLeft(  )
 end
 function SubfileNode.new( pos, typeList )
   local obj = {}
-  setmetatable( obj, { __index = SubfileNode } )
+  SubfileNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList ); end
 return obj
 end
@@ -2457,6 +2520,9 @@ function SubfileNode:__init(pos, typeList)
   
   -- none
   
+end
+function SubfileNode.setmeta( obj )
+  setmetatable( obj, { __index = SubfileNode  } )
 end
 do
   end
@@ -2491,7 +2557,7 @@ function ImportNode:canBeLeft(  )
 end
 function ImportNode.new( pos, typeList, modulePath, moduleTypeInfo )
   local obj = {}
-  setmetatable( obj, { __index = ImportNode } )
+  ImportNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, modulePath, moduleTypeInfo ); end
 return obj
 end
@@ -2504,6 +2570,9 @@ function ImportNode:__init(pos, typeList, modulePath, moduleTypeInfo)
   self.moduleTypeInfo = moduleTypeInfo
   -- none
   
+end
+function ImportNode.setmeta( obj )
+  setmetatable( obj, { __index = ImportNode  } )
 end
 function ImportNode:get_modulePath()       
   return self.modulePath         
@@ -2519,9 +2588,12 @@ do
 
 local LuneHelperInfo = {}
 _moduleObj.LuneHelperInfo = LuneHelperInfo
+function LuneHelperInfo.setmeta( obj )
+  setmetatable( obj, { __index = LuneHelperInfo  } )
+end
 function LuneHelperInfo.new( useNilAccess, useUnwrapExp )
   local obj = {}
-  setmetatable( obj, { __index = LuneHelperInfo } )
+  LuneHelperInfo.setmeta( obj )
   if obj.__init then
     obj:__init( useNilAccess, useUnwrapExp )
   end        
@@ -2570,7 +2642,7 @@ function RootNode:canBeLeft(  )
 end
 function RootNode.new( pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap )
   local obj = {}
-  setmetatable( obj, { __index = RootNode } )
+  RootNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap ); end
 return obj
 end
@@ -2585,6 +2657,9 @@ function RootNode:__init(pos, typeList, children, provideNode, luneHelperInfo, t
   self.typeId2ClassMap = typeId2ClassMap
   -- none
   
+end
+function RootNode.setmeta( obj )
+  setmetatable( obj, { __index = RootNode  } )
 end
 function RootNode:get_children()       
   return self.children         
@@ -2635,7 +2710,7 @@ function RefTypeNode:canBeLeft(  )
 end
 function RefTypeNode.new( pos, typeList, name, refFlag, mutFlag, array )
   local obj = {}
-  setmetatable( obj, { __index = RefTypeNode } )
+  RefTypeNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, name, refFlag, mutFlag, array ); end
 return obj
 end
@@ -2650,6 +2725,9 @@ function RefTypeNode:__init(pos, typeList, name, refFlag, mutFlag, array)
   self.array = array
   -- none
   
+end
+function RefTypeNode.setmeta( obj )
+  setmetatable( obj, { __index = RefTypeNode  } )
 end
 function RefTypeNode:get_name()       
   return self.name         
@@ -2746,7 +2824,7 @@ function BlockNode:canBeLeft(  )
 end
 function BlockNode.new( pos, typeList, blockKind, stmtList )
   local obj = {}
-  setmetatable( obj, { __index = BlockNode } )
+  BlockNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, blockKind, stmtList ); end
 return obj
 end
@@ -2760,6 +2838,9 @@ function BlockNode:__init(pos, typeList, blockKind, stmtList)
   -- none
   
 end
+function BlockNode.setmeta( obj )
+  setmetatable( obj, { __index = BlockNode  } )
+end
 function BlockNode:get_blockKind()       
   return self.blockKind         
 end
@@ -2772,9 +2853,12 @@ do
 
 local IfStmtInfo = {}
 _moduleObj.IfStmtInfo = IfStmtInfo
+function IfStmtInfo.setmeta( obj )
+  setmetatable( obj, { __index = IfStmtInfo  } )
+end
 function IfStmtInfo.new( kind, exp, block )
   local obj = {}
-  setmetatable( obj, { __index = IfStmtInfo } )
+  IfStmtInfo.setmeta( obj )
   if obj.__init then
     obj:__init( kind, exp, block )
   end        
@@ -2827,7 +2911,7 @@ function IfNode:canBeLeft(  )
 end
 function IfNode.new( pos, typeList, stmtList )
   local obj = {}
-  setmetatable( obj, { __index = IfNode } )
+  IfNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, stmtList ); end
 return obj
 end
@@ -2839,6 +2923,9 @@ function IfNode:__init(pos, typeList, stmtList)
   self.stmtList = stmtList
   -- none
   
+end
+function IfNode.setmeta( obj )
+  setmetatable( obj, { __index = IfNode  } )
 end
 function IfNode:get_stmtList()       
   return self.stmtList         
@@ -2870,7 +2957,7 @@ function ExpListNode:processFilter( filter, ... )
 end
 function ExpListNode.new( pos, typeList, expList )
   local obj = {}
-  setmetatable( obj, { __index = ExpListNode } )
+  ExpListNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, expList ); end
 return obj
 end
@@ -2883,6 +2970,9 @@ function ExpListNode:__init(pos, typeList, expList)
   -- none
   
 end
+function ExpListNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpListNode  } )
+end
 function ExpListNode:get_expList()       
   return self.expList         
 end
@@ -2892,7 +2982,7 @@ do
 
 function ExpListNode:canBeLeft(  )
   for __index, expNode in pairs( self:get_expList() ) do
-    if not expNode.canBeLeft then
+    if not expNode:canBeLeft(  ) then
       return false
     end
   end
@@ -2901,7 +2991,7 @@ end
 
 function ExpListNode:canBeRight(  )
   for __index, expNode in pairs( self:get_expList() ) do
-    if not expNode.canBeRight then
+    if not expNode:canBeRight(  ) then
       return false
     end
   end
@@ -2910,9 +3000,12 @@ end
 
 local CaseInfo = {}
 _moduleObj.CaseInfo = CaseInfo
+function CaseInfo.setmeta( obj )
+  setmetatable( obj, { __index = CaseInfo  } )
+end
 function CaseInfo.new( expList, block )
   local obj = {}
-  setmetatable( obj, { __index = CaseInfo } )
+  CaseInfo.setmeta( obj )
   if obj.__init then
     obj:__init( expList, block )
   end        
@@ -2961,7 +3054,7 @@ function SwitchNode:canBeLeft(  )
 end
 function SwitchNode.new( pos, typeList, exp, caseList, default )
   local obj = {}
-  setmetatable( obj, { __index = SwitchNode } )
+  SwitchNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, exp, caseList, default ); end
 return obj
 end
@@ -2975,6 +3068,9 @@ function SwitchNode:__init(pos, typeList, exp, caseList, default)
   self.default = default
   -- none
   
+end
+function SwitchNode.setmeta( obj )
+  setmetatable( obj, { __index = SwitchNode  } )
 end
 function SwitchNode:get_exp()       
   return self.exp         
@@ -3018,7 +3114,7 @@ function WhileNode:canBeLeft(  )
 end
 function WhileNode.new( pos, typeList, exp, block )
   local obj = {}
-  setmetatable( obj, { __index = WhileNode } )
+  WhileNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, exp, block ); end
 return obj
 end
@@ -3031,6 +3127,9 @@ function WhileNode:__init(pos, typeList, exp, block)
   self.block = block
   -- none
   
+end
+function WhileNode.setmeta( obj )
+  setmetatable( obj, { __index = WhileNode  } )
 end
 function WhileNode:get_exp()       
   return self.exp         
@@ -3071,7 +3170,7 @@ function RepeatNode:canBeLeft(  )
 end
 function RepeatNode.new( pos, typeList, block, exp )
   local obj = {}
-  setmetatable( obj, { __index = RepeatNode } )
+  RepeatNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, block, exp ); end
 return obj
 end
@@ -3084,6 +3183,9 @@ function RepeatNode:__init(pos, typeList, block, exp)
   self.exp = exp
   -- none
   
+end
+function RepeatNode.setmeta( obj )
+  setmetatable( obj, { __index = RepeatNode  } )
 end
 function RepeatNode:get_block()       
   return self.block         
@@ -3124,7 +3226,7 @@ function ForNode:canBeLeft(  )
 end
 function ForNode.new( pos, typeList, block, val, init, to, delta )
   local obj = {}
-  setmetatable( obj, { __index = ForNode } )
+  ForNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, block, val, init, to, delta ); end
 return obj
 end
@@ -3140,6 +3242,9 @@ function ForNode:__init(pos, typeList, block, val, init, to, delta)
   self.delta = delta
   -- none
   
+end
+function ForNode.setmeta( obj )
+  setmetatable( obj, { __index = ForNode  } )
 end
 function ForNode:get_block()       
   return self.block         
@@ -3189,7 +3294,7 @@ function ApplyNode:canBeLeft(  )
 end
 function ApplyNode.new( pos, typeList, varList, exp, block )
   local obj = {}
-  setmetatable( obj, { __index = ApplyNode } )
+  ApplyNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, varList, exp, block ); end
 return obj
 end
@@ -3203,6 +3308,9 @@ function ApplyNode:__init(pos, typeList, varList, exp, block)
   self.block = block
   -- none
   
+end
+function ApplyNode.setmeta( obj )
+  setmetatable( obj, { __index = ApplyNode  } )
 end
 function ApplyNode:get_varList()       
   return self.varList         
@@ -3246,7 +3354,7 @@ function ForeachNode:canBeLeft(  )
 end
 function ForeachNode.new( pos, typeList, val, key, exp, block )
   local obj = {}
-  setmetatable( obj, { __index = ForeachNode } )
+  ForeachNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, val, key, exp, block ); end
 return obj
 end
@@ -3261,6 +3369,9 @@ function ForeachNode:__init(pos, typeList, val, key, exp, block)
   self.block = block
   -- none
   
+end
+function ForeachNode.setmeta( obj )
+  setmetatable( obj, { __index = ForeachNode  } )
 end
 function ForeachNode:get_val()       
   return self.val         
@@ -3307,7 +3418,7 @@ function ForsortNode:canBeLeft(  )
 end
 function ForsortNode.new( pos, typeList, val, key, exp, block, sort )
   local obj = {}
-  setmetatable( obj, { __index = ForsortNode } )
+  ForsortNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, val, key, exp, block, sort ); end
 return obj
 end
@@ -3323,6 +3434,9 @@ function ForsortNode:__init(pos, typeList, val, key, exp, block, sort)
   self.sort = sort
   -- none
   
+end
+function ForsortNode.setmeta( obj )
+  setmetatable( obj, { __index = ForsortNode  } )
 end
 function ForsortNode:get_val()       
   return self.val         
@@ -3372,7 +3486,7 @@ function ReturnNode:canBeLeft(  )
 end
 function ReturnNode.new( pos, typeList, expList )
   local obj = {}
-  setmetatable( obj, { __index = ReturnNode } )
+  ReturnNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, expList ); end
 return obj
 end
@@ -3384,6 +3498,9 @@ function ReturnNode:__init(pos, typeList, expList)
   self.expList = expList
   -- none
   
+end
+function ReturnNode.setmeta( obj )
+  setmetatable( obj, { __index = ReturnNode  } )
 end
 function ReturnNode:get_expList()       
   return self.expList         
@@ -3421,7 +3538,7 @@ function BreakNode:canBeLeft(  )
 end
 function BreakNode.new( pos, typeList )
   local obj = {}
-  setmetatable( obj, { __index = BreakNode } )
+  BreakNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList ); end
 return obj
 end
@@ -3432,6 +3549,9 @@ function BreakNode:__init(pos, typeList)
   
   -- none
   
+end
+function BreakNode.setmeta( obj )
+  setmetatable( obj, { __index = BreakNode  } )
 end
 do
   end
@@ -3466,7 +3586,7 @@ function ProvideNode:canBeLeft(  )
 end
 function ProvideNode.new( pos, typeList, val )
   local obj = {}
-  setmetatable( obj, { __index = ProvideNode } )
+  ProvideNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, val ); end
 return obj
 end
@@ -3478,6 +3598,9 @@ function ProvideNode:__init(pos, typeList, val)
   self.val = val
   -- none
   
+end
+function ProvideNode.setmeta( obj )
+  setmetatable( obj, { __index = ProvideNode  } )
 end
 function ProvideNode:get_val()       
   return self.val         
@@ -3515,7 +3638,7 @@ function ExpNewNode:canBeLeft(  )
 end
 function ExpNewNode.new( pos, typeList, symbol, argList )
   local obj = {}
-  setmetatable( obj, { __index = ExpNewNode } )
+  ExpNewNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, symbol, argList ); end
 return obj
 end
@@ -3528,6 +3651,9 @@ function ExpNewNode:__init(pos, typeList, symbol, argList)
   self.argList = argList
   -- none
   
+end
+function ExpNewNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpNewNode  } )
 end
 function ExpNewNode:get_symbol()       
   return self.symbol         
@@ -3568,7 +3694,7 @@ function ExpUnwrapNode:canBeLeft(  )
 end
 function ExpUnwrapNode.new( pos, typeList, exp, default )
   local obj = {}
-  setmetatable( obj, { __index = ExpUnwrapNode } )
+  ExpUnwrapNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, exp, default ); end
 return obj
 end
@@ -3581,6 +3707,9 @@ function ExpUnwrapNode:__init(pos, typeList, exp, default)
   self.default = default
   -- none
   
+end
+function ExpUnwrapNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpUnwrapNode  } )
 end
 function ExpUnwrapNode:get_exp()       
   return self.exp         
@@ -3615,7 +3744,7 @@ function ExpRefNode:processFilter( filter, ... )
 end
 function ExpRefNode.new( pos, typeList, token, symbolInfo )
   local obj = {}
-  setmetatable( obj, { __index = ExpRefNode } )
+  ExpRefNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token, symbolInfo ); end
 return obj
 end
@@ -3628,6 +3757,9 @@ function ExpRefNode:__init(pos, typeList, token, symbolInfo)
   self.symbolInfo = symbolInfo
   -- none
   
+end
+function ExpRefNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpRefNode  } )
 end
 function ExpRefNode:get_token()       
   return self.token         
@@ -3676,7 +3808,7 @@ function ExpOp2Node:canBeLeft(  )
 end
 function ExpOp2Node.new( pos, typeList, op, exp1, exp2 )
   local obj = {}
-  setmetatable( obj, { __index = ExpOp2Node } )
+  ExpOp2Node.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, op, exp1, exp2 ); end
 return obj
 end
@@ -3690,6 +3822,9 @@ function ExpOp2Node:__init(pos, typeList, op, exp1, exp2)
   self.exp2 = exp2
   -- none
   
+end
+function ExpOp2Node.setmeta( obj )
+  setmetatable( obj, { __index = ExpOp2Node  } )
 end
 function ExpOp2Node:get_op()       
   return self.op         
@@ -3733,7 +3868,7 @@ function UnwrapSetNode:canBeLeft(  )
 end
 function UnwrapSetNode.new( pos, typeList, dstExpList, srcExpList, unwrapBlock )
   local obj = {}
-  setmetatable( obj, { __index = UnwrapSetNode } )
+  UnwrapSetNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, dstExpList, srcExpList, unwrapBlock ); end
 return obj
 end
@@ -3747,6 +3882,9 @@ function UnwrapSetNode:__init(pos, typeList, dstExpList, srcExpList, unwrapBlock
   self.unwrapBlock = unwrapBlock
   -- none
   
+end
+function UnwrapSetNode.setmeta( obj )
+  setmetatable( obj, { __index = UnwrapSetNode  } )
 end
 function UnwrapSetNode:get_dstExpList()       
   return self.dstExpList         
@@ -3790,7 +3928,7 @@ function IfUnwrapNode:canBeLeft(  )
 end
 function IfUnwrapNode.new( pos, typeList, varNameList, expNodeList, block, nilBlock )
   local obj = {}
-  setmetatable( obj, { __index = IfUnwrapNode } )
+  IfUnwrapNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, varNameList, expNodeList, block, nilBlock ); end
 return obj
 end
@@ -3805,6 +3943,9 @@ function IfUnwrapNode:__init(pos, typeList, varNameList, expNodeList, block, nil
   self.nilBlock = nilBlock
   -- none
   
+end
+function IfUnwrapNode.setmeta( obj )
+  setmetatable( obj, { __index = IfUnwrapNode  } )
 end
 function IfUnwrapNode:get_varNameList()       
   return self.varNameList         
@@ -3851,7 +3992,7 @@ function ExpCastNode:canBeLeft(  )
 end
 function ExpCastNode.new( pos, typeList, exp )
   local obj = {}
-  setmetatable( obj, { __index = ExpCastNode } )
+  ExpCastNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, exp ); end
 return obj
 end
@@ -3863,6 +4004,9 @@ function ExpCastNode:__init(pos, typeList, exp)
   self.exp = exp
   -- none
   
+end
+function ExpCastNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpCastNode  } )
 end
 function ExpCastNode:get_exp()       
   return self.exp         
@@ -3924,7 +4068,7 @@ function ExpOp1Node:canBeLeft(  )
 end
 function ExpOp1Node.new( pos, typeList, op, macroMode, exp )
   local obj = {}
-  setmetatable( obj, { __index = ExpOp1Node } )
+  ExpOp1Node.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, op, macroMode, exp ); end
 return obj
 end
@@ -3938,6 +4082,9 @@ function ExpOp1Node:__init(pos, typeList, op, macroMode, exp)
   self.exp = exp
   -- none
   
+end
+function ExpOp1Node.setmeta( obj )
+  setmetatable( obj, { __index = ExpOp1Node  } )
 end
 function ExpOp1Node:get_op()       
   return self.op         
@@ -3978,7 +4125,7 @@ function ExpRefItemNode:canBeRight(  )
 end
 function ExpRefItemNode.new( pos, typeList, val, nilAccess, symbol, index )
   local obj = {}
-  setmetatable( obj, { __index = ExpRefItemNode } )
+  ExpRefItemNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, val, nilAccess, symbol, index ); end
 return obj
 end
@@ -3993,6 +4140,9 @@ function ExpRefItemNode:__init(pos, typeList, val, nilAccess, symbol, index)
   self.index = index
   -- none
   
+end
+function ExpRefItemNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpRefItemNode  } )
 end
 function ExpRefItemNode:get_val()       
   return self.val         
@@ -4046,7 +4196,7 @@ function ExpCallNode:canBeLeft(  )
 end
 function ExpCallNode.new( pos, typeList, func, nilAccess, argList )
   local obj = {}
-  setmetatable( obj, { __index = ExpCallNode } )
+  ExpCallNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, func, nilAccess, argList ); end
 return obj
 end
@@ -4060,6 +4210,9 @@ function ExpCallNode:__init(pos, typeList, func, nilAccess, argList)
   self.argList = argList
   -- none
   
+end
+function ExpCallNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpCallNode  } )
 end
 function ExpCallNode:get_func()       
   return self.func         
@@ -4103,7 +4256,7 @@ function ExpDDDNode:canBeLeft(  )
 end
 function ExpDDDNode.new( pos, typeList, token )
   local obj = {}
-  setmetatable( obj, { __index = ExpDDDNode } )
+  ExpDDDNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token ); end
 return obj
 end
@@ -4115,6 +4268,9 @@ function ExpDDDNode:__init(pos, typeList, token)
   self.token = token
   -- none
   
+end
+function ExpDDDNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpDDDNode  } )
 end
 function ExpDDDNode:get_token()       
   return self.token         
@@ -4152,7 +4308,7 @@ function ExpParenNode:canBeLeft(  )
 end
 function ExpParenNode.new( pos, typeList, exp )
   local obj = {}
-  setmetatable( obj, { __index = ExpParenNode } )
+  ExpParenNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, exp ); end
 return obj
 end
@@ -4164,6 +4320,9 @@ function ExpParenNode:__init(pos, typeList, exp)
   self.exp = exp
   -- none
   
+end
+function ExpParenNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpParenNode  } )
 end
 function ExpParenNode:get_exp()       
   return self.exp         
@@ -4201,7 +4360,7 @@ function ExpMacroExpNode:canBeLeft(  )
 end
 function ExpMacroExpNode.new( pos, typeList, stmtList )
   local obj = {}
-  setmetatable( obj, { __index = ExpMacroExpNode } )
+  ExpMacroExpNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, stmtList ); end
 return obj
 end
@@ -4213,6 +4372,9 @@ function ExpMacroExpNode:__init(pos, typeList, stmtList)
   self.stmtList = stmtList
   -- none
   
+end
+function ExpMacroExpNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpMacroExpNode  } )
 end
 function ExpMacroExpNode:get_stmtList()       
   return self.stmtList         
@@ -4250,7 +4412,7 @@ function ExpMacroStatNode:canBeLeft(  )
 end
 function ExpMacroStatNode.new( pos, typeList, expStrList )
   local obj = {}
-  setmetatable( obj, { __index = ExpMacroStatNode } )
+  ExpMacroStatNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, expStrList ); end
 return obj
 end
@@ -4262,6 +4424,9 @@ function ExpMacroStatNode:__init(pos, typeList, expStrList)
   self.expStrList = expStrList
   -- none
   
+end
+function ExpMacroStatNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpMacroStatNode  } )
 end
 function ExpMacroStatNode:get_expStrList()       
   return self.expStrList         
@@ -4299,7 +4464,7 @@ function StmtExpNode:canBeLeft(  )
 end
 function StmtExpNode.new( pos, typeList, exp )
   local obj = {}
-  setmetatable( obj, { __index = StmtExpNode } )
+  StmtExpNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, exp ); end
 return obj
 end
@@ -4311,6 +4476,9 @@ function StmtExpNode:__init(pos, typeList, exp)
   self.exp = exp
   -- none
   
+end
+function StmtExpNode.setmeta( obj )
+  setmetatable( obj, { __index = StmtExpNode  } )
 end
 function StmtExpNode:get_exp()       
   return self.exp         
@@ -4348,7 +4516,7 @@ function ExpOmitEnumNode:canBeLeft(  )
 end
 function ExpOmitEnumNode.new( pos, typeList, valToken, enumTypeInfo )
   local obj = {}
-  setmetatable( obj, { __index = ExpOmitEnumNode } )
+  ExpOmitEnumNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, valToken, enumTypeInfo ); end
 return obj
 end
@@ -4361,6 +4529,9 @@ function ExpOmitEnumNode:__init(pos, typeList, valToken, enumTypeInfo)
   self.enumTypeInfo = enumTypeInfo
   -- none
   
+end
+function ExpOmitEnumNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpOmitEnumNode  } )
 end
 function ExpOmitEnumNode:get_valToken()       
   return self.valToken         
@@ -4398,7 +4569,7 @@ function RefFieldNode:canBeRight(  )
 end
 function RefFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix )
   local obj = {}
-  setmetatable( obj, { __index = RefFieldNode } )
+  RefFieldNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, field, symbolInfo, nilAccess, prefix ); end
 return obj
 end
@@ -4413,6 +4584,9 @@ function RefFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
   self.prefix = prefix
   -- none
   
+end
+function RefFieldNode.setmeta( obj )
+  setmetatable( obj, { __index = RefFieldNode  } )
 end
 function RefFieldNode:get_field()       
   return self.field         
@@ -4468,7 +4642,7 @@ function GetFieldNode:canBeRight(  )
 end
 function GetFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
   local obj = {}
-  setmetatable( obj, { __index = GetFieldNode } )
+  GetFieldNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo ); end
 return obj
 end
@@ -4484,6 +4658,9 @@ function GetFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
   self.getterTypeInfo = getterTypeInfo
   -- none
   
+end
+function GetFieldNode.setmeta( obj )
+  setmetatable( obj, { __index = GetFieldNode  } )
 end
 function GetFieldNode:get_field()       
   return self.field         
@@ -4518,9 +4695,12 @@ end
 
 local VarInfo = {}
 _moduleObj.VarInfo = VarInfo
+function VarInfo.setmeta( obj )
+  setmetatable( obj, { __index = VarInfo  } )
+end
 function VarInfo.new( name, refType, actualType )
   local obj = {}
-  setmetatable( obj, { __index = VarInfo } )
+  VarInfo.setmeta( obj )
   if obj.__init then
     obj:__init( name, refType, actualType )
   end        
@@ -4597,7 +4777,7 @@ function DeclVarNode:canBeLeft(  )
 end
 function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
   local obj = {}
-  setmetatable( obj, { __index = DeclVarNode } )
+  DeclVarNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
 return obj
 end
@@ -4620,6 +4800,9 @@ function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList
   self.syncBlock = syncBlock
   -- none
   
+end
+function DeclVarNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclVarNode  } )
 end
 function DeclVarNode:get_mode()       
   return self.mode         
@@ -4663,9 +4846,12 @@ do
 
 local DeclFuncInfo = {}
 _moduleObj.DeclFuncInfo = DeclFuncInfo
+function DeclFuncInfo.setmeta( obj )
+  setmetatable( obj, { __index = DeclFuncInfo  } )
+end
 function DeclFuncInfo.new( className, name, argList, staticFlag, accessMode, body, retTypeInfoList )
   local obj = {}
-  setmetatable( obj, { __index = DeclFuncInfo } )
+  DeclFuncInfo.setmeta( obj )
   if obj.__init then
     obj:__init( className, name, argList, staticFlag, accessMode, body, retTypeInfoList )
   end        
@@ -4734,7 +4920,7 @@ function DeclFuncNode:canBeLeft(  )
 end
 function DeclFuncNode.new( pos, typeList, declInfo )
   local obj = {}
-  setmetatable( obj, { __index = DeclFuncNode } )
+  DeclFuncNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, declInfo ); end
 return obj
 end
@@ -4746,6 +4932,9 @@ function DeclFuncNode:__init(pos, typeList, declInfo)
   self.declInfo = declInfo
   -- none
   
+end
+function DeclFuncNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclFuncNode  } )
 end
 function DeclFuncNode:get_declInfo()       
   return self.declInfo         
@@ -4783,7 +4972,7 @@ function DeclMethodNode:canBeLeft(  )
 end
 function DeclMethodNode.new( pos, typeList, declInfo )
   local obj = {}
-  setmetatable( obj, { __index = DeclMethodNode } )
+  DeclMethodNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, declInfo ); end
 return obj
 end
@@ -4795,6 +4984,9 @@ function DeclMethodNode:__init(pos, typeList, declInfo)
   self.declInfo = declInfo
   -- none
   
+end
+function DeclMethodNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclMethodNode  } )
 end
 function DeclMethodNode:get_declInfo()       
   return self.declInfo         
@@ -4832,7 +5024,7 @@ function DeclConstrNode:canBeLeft(  )
 end
 function DeclConstrNode.new( pos, typeList, declInfo )
   local obj = {}
-  setmetatable( obj, { __index = DeclConstrNode } )
+  DeclConstrNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, declInfo ); end
 return obj
 end
@@ -4845,7 +5037,62 @@ function DeclConstrNode:__init(pos, typeList, declInfo)
   -- none
   
 end
+function DeclConstrNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclConstrNode  } )
+end
 function DeclConstrNode:get_declInfo()       
+  return self.declInfo         
+end
+do
+  end
+
+
+-- none
+
+function Filter:processDeclDestr( node, ... )
+end
+
+-- none
+
+-- none
+
+local nodeKindDeclDestr = regKind( [[DeclDestr]] )
+
+_moduleObj.nodeKindDeclDestr = nodeKindDeclDestr
+
+local DeclDestrNode = {}
+setmetatable( DeclDestrNode, { __index = Node } )
+_moduleObj.DeclDestrNode = DeclDestrNode
+function DeclDestrNode:processFilter( filter, ... )
+  local argList = {...}
+  
+  filter:processDeclDestr( self, table.unpack( argList ) )
+end
+function DeclDestrNode:canBeRight(  )
+  return false
+end
+function DeclDestrNode:canBeLeft(  )
+  return false
+end
+function DeclDestrNode.new( pos, typeList, declInfo )
+  local obj = {}
+  DeclDestrNode.setmeta( obj )
+  if obj.__init then obj:__init( pos, typeList, declInfo ); end
+return obj
+end
+function DeclDestrNode:__init(pos, typeList, declInfo) 
+  Node.__init( self, _moduleObj.nodeKindDeclDestr, pos, typeList)
+  
+  -- none
+  
+  self.declInfo = declInfo
+  -- none
+  
+end
+function DeclDestrNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclDestrNode  } )
+end
+function DeclDestrNode:get_declInfo()       
   return self.declInfo         
 end
 do
@@ -4881,7 +5128,7 @@ function ExpCallSuperNode:canBeLeft(  )
 end
 function ExpCallSuperNode.new( pos, typeList, superType, expList )
   local obj = {}
-  setmetatable( obj, { __index = ExpCallSuperNode } )
+  ExpCallSuperNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, superType, expList ); end
 return obj
 end
@@ -4894,6 +5141,9 @@ function ExpCallSuperNode:__init(pos, typeList, superType, expList)
   self.expList = expList
   -- none
   
+end
+function ExpCallSuperNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpCallSuperNode  } )
 end
 function ExpCallSuperNode:get_superType()       
   return self.superType         
@@ -4934,7 +5184,7 @@ function DeclMemberNode:canBeLeft(  )
 end
 function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
   local obj = {}
-  setmetatable( obj, { __index = DeclMemberNode } )
+  DeclMemberNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode ); end
 return obj
 end
@@ -4953,6 +5203,9 @@ function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticF
   self.setterMode = setterMode
   -- none
   
+end
+function DeclMemberNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclMemberNode  } )
 end
 function DeclMemberNode:get_name()       
   return self.name         
@@ -5011,7 +5264,7 @@ function DeclArgNode:canBeLeft(  )
 end
 function DeclArgNode.new( pos, typeList, name, argType )
   local obj = {}
-  setmetatable( obj, { __index = DeclArgNode } )
+  DeclArgNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, name, argType ); end
 return obj
 end
@@ -5024,6 +5277,9 @@ function DeclArgNode:__init(pos, typeList, name, argType)
   self.argType = argType
   -- none
   
+end
+function DeclArgNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclArgNode  } )
 end
 function DeclArgNode:get_name()       
   return self.name         
@@ -5064,7 +5320,7 @@ function DeclArgDDDNode:canBeLeft(  )
 end
 function DeclArgDDDNode.new( pos, typeList )
   local obj = {}
-  setmetatable( obj, { __index = DeclArgDDDNode } )
+  DeclArgDDDNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList ); end
 return obj
 end
@@ -5076,15 +5332,21 @@ function DeclArgDDDNode:__init(pos, typeList)
   -- none
   
 end
+function DeclArgDDDNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclArgDDDNode  } )
+end
 do
   end
 
 
 local AdvertiseInfo = {}
 _moduleObj.AdvertiseInfo = AdvertiseInfo
+function AdvertiseInfo.setmeta( obj )
+  setmetatable( obj, { __index = AdvertiseInfo  } )
+end
 function AdvertiseInfo.new( member, prefix )
   local obj = {}
-  setmetatable( obj, { __index = AdvertiseInfo } )
+  AdvertiseInfo.setmeta( obj )
   if obj.__init then
     obj:__init( member, prefix )
   end        
@@ -5135,7 +5397,7 @@ function DeclClassNode:canBeLeft(  )
 end
 function DeclClassNode.new( pos, typeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
   local obj = {}
-  setmetatable( obj, { __index = DeclClassNode } )
+  DeclClassNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet ); end
 return obj
 end
@@ -5156,6 +5418,9 @@ function DeclClassNode:__init(pos, typeList, accessMode, name, fieldList, module
   self.outerMethodSet = outerMethodSet
   -- none
   
+end
+function DeclClassNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclClassNode  } )
 end
 function DeclClassNode:get_accessMode()       
   return self.accessMode         
@@ -5220,7 +5485,7 @@ function DeclEnumNode:canBeLeft(  )
 end
 function DeclEnumNode.new( pos, typeList, accessMode, name, valueNameList, scope )
   local obj = {}
-  setmetatable( obj, { __index = DeclEnumNode } )
+  DeclEnumNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, accessMode, name, valueNameList, scope ); end
 return obj
 end
@@ -5235,6 +5500,9 @@ function DeclEnumNode:__init(pos, typeList, accessMode, name, valueNameList, sco
   self.scope = scope
   -- none
   
+end
+function DeclEnumNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclEnumNode  } )
 end
 function DeclEnumNode:get_accessMode()       
   return self.accessMode         
@@ -5281,7 +5549,7 @@ function DeclMacroNode:canBeLeft(  )
 end
 function DeclMacroNode.new( pos, typeList, declInfo )
   local obj = {}
-  setmetatable( obj, { __index = DeclMacroNode } )
+  DeclMacroNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, declInfo ); end
 return obj
 end
@@ -5294,6 +5562,9 @@ function DeclMacroNode:__init(pos, typeList, declInfo)
   -- none
   
 end
+function DeclMacroNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclMacroNode  } )
+end
 function DeclMacroNode:get_declInfo()       
   return self.declInfo         
 end
@@ -5304,9 +5575,12 @@ do
 local MacroEval = {}
 _moduleObj.MacroEval = MacroEval
 -- none
+function MacroEval.setmeta( obj )
+  setmetatable( obj, { __index = MacroEval  } )
+end
 function MacroEval.new(  )
   local obj = {}
-  setmetatable( obj, { __index = MacroEval } )
+  MacroEval.setmeta( obj )
   if obj.__init then
     obj:__init(  )
   end        
@@ -5347,7 +5621,7 @@ function LiteralNilNode:canBeLeft(  )
 end
 function LiteralNilNode.new( pos, typeList )
   local obj = {}
-  setmetatable( obj, { __index = LiteralNilNode } )
+  LiteralNilNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList ); end
 return obj
 end
@@ -5358,6 +5632,9 @@ function LiteralNilNode:__init(pos, typeList)
   
   -- none
   
+end
+function LiteralNilNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralNilNode  } )
 end
 do
   end
@@ -5392,7 +5669,7 @@ function LiteralCharNode:canBeLeft(  )
 end
 function LiteralCharNode.new( pos, typeList, token, num )
   local obj = {}
-  setmetatable( obj, { __index = LiteralCharNode } )
+  LiteralCharNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token, num ); end
 return obj
 end
@@ -5405,6 +5682,9 @@ function LiteralCharNode:__init(pos, typeList, token, num)
   self.num = num
   -- none
   
+end
+function LiteralCharNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralCharNode  } )
 end
 function LiteralCharNode:get_token()       
   return self.token         
@@ -5445,7 +5725,7 @@ function LiteralIntNode:canBeLeft(  )
 end
 function LiteralIntNode.new( pos, typeList, token, num )
   local obj = {}
-  setmetatable( obj, { __index = LiteralIntNode } )
+  LiteralIntNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token, num ); end
 return obj
 end
@@ -5458,6 +5738,9 @@ function LiteralIntNode:__init(pos, typeList, token, num)
   self.num = num
   -- none
   
+end
+function LiteralIntNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralIntNode  } )
 end
 function LiteralIntNode:get_token()       
   return self.token         
@@ -5498,7 +5781,7 @@ function LiteralRealNode:canBeLeft(  )
 end
 function LiteralRealNode.new( pos, typeList, token, num )
   local obj = {}
-  setmetatable( obj, { __index = LiteralRealNode } )
+  LiteralRealNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token, num ); end
 return obj
 end
@@ -5511,6 +5794,9 @@ function LiteralRealNode:__init(pos, typeList, token, num)
   self.num = num
   -- none
   
+end
+function LiteralRealNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralRealNode  } )
 end
 function LiteralRealNode:get_token()       
   return self.token         
@@ -5551,7 +5837,7 @@ function LiteralArrayNode:canBeLeft(  )
 end
 function LiteralArrayNode.new( pos, typeList, expList )
   local obj = {}
-  setmetatable( obj, { __index = LiteralArrayNode } )
+  LiteralArrayNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, expList ); end
 return obj
 end
@@ -5563,6 +5849,9 @@ function LiteralArrayNode:__init(pos, typeList, expList)
   self.expList = expList
   -- none
   
+end
+function LiteralArrayNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralArrayNode  } )
 end
 function LiteralArrayNode:get_expList()       
   return self.expList         
@@ -5600,7 +5889,7 @@ function LiteralListNode:canBeLeft(  )
 end
 function LiteralListNode.new( pos, typeList, expList )
   local obj = {}
-  setmetatable( obj, { __index = LiteralListNode } )
+  LiteralListNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, expList ); end
 return obj
 end
@@ -5613,6 +5902,9 @@ function LiteralListNode:__init(pos, typeList, expList)
   -- none
   
 end
+function LiteralListNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralListNode  } )
+end
 function LiteralListNode:get_expList()       
   return self.expList         
 end
@@ -5622,9 +5914,12 @@ do
 
 local PairItem = {}
 _moduleObj.PairItem = PairItem
+function PairItem.setmeta( obj )
+  setmetatable( obj, { __index = PairItem  } )
+end
 function PairItem.new( key, val )
   local obj = {}
-  setmetatable( obj, { __index = PairItem } )
+  PairItem.setmeta( obj )
   if obj.__init then
     obj:__init( key, val )
   end        
@@ -5673,7 +5968,7 @@ function LiteralMapNode:canBeLeft(  )
 end
 function LiteralMapNode.new( pos, typeList, map, pairList )
   local obj = {}
-  setmetatable( obj, { __index = LiteralMapNode } )
+  LiteralMapNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, map, pairList ); end
 return obj
 end
@@ -5686,6 +5981,9 @@ function LiteralMapNode:__init(pos, typeList, map, pairList)
   self.pairList = pairList
   -- none
   
+end
+function LiteralMapNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralMapNode  } )
 end
 function LiteralMapNode:get_map()       
   return self.map         
@@ -5726,7 +6024,7 @@ function LiteralStringNode:canBeLeft(  )
 end
 function LiteralStringNode.new( pos, typeList, token, argList )
   local obj = {}
-  setmetatable( obj, { __index = LiteralStringNode } )
+  LiteralStringNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token, argList ); end
 return obj
 end
@@ -5739,6 +6037,9 @@ function LiteralStringNode:__init(pos, typeList, token, argList)
   self.argList = argList
   -- none
   
+end
+function LiteralStringNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralStringNode  } )
 end
 function LiteralStringNode:get_token()       
   return self.token         
@@ -5779,7 +6080,7 @@ function LiteralBoolNode:canBeLeft(  )
 end
 function LiteralBoolNode.new( pos, typeList, token )
   local obj = {}
-  setmetatable( obj, { __index = LiteralBoolNode } )
+  LiteralBoolNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token ); end
 return obj
 end
@@ -5791,6 +6092,9 @@ function LiteralBoolNode:__init(pos, typeList, token)
   self.token = token
   -- none
   
+end
+function LiteralBoolNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralBoolNode  } )
 end
 function LiteralBoolNode:get_token()       
   return self.token         
@@ -5828,7 +6132,7 @@ function LiteralSymbolNode:canBeLeft(  )
 end
 function LiteralSymbolNode.new( pos, typeList, token )
   local obj = {}
-  setmetatable( obj, { __index = LiteralSymbolNode } )
+  LiteralSymbolNode.setmeta( obj )
   if obj.__init then obj:__init( pos, typeList, token ); end
 return obj
 end
@@ -5840,6 +6144,9 @@ function LiteralSymbolNode:__init(pos, typeList, token)
   self.token = token
   -- none
   
+end
+function LiteralSymbolNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralSymbolNode  } )
 end
 function LiteralSymbolNode:get_token()       
   return self.token         

@@ -25,12 +25,12 @@ SOFTWARE.
 import lune.base.Util;
 
 pub interface Writer {
-   pub fn startParent( name:str, arrayFlag:bool );
-   pub fn startElement( name:str );
-   pub fn endElement();
-   pub fn writeValue( val:stem );
-   pub fn write( name:str, val:stem );
-   pub fn fin();
+   pub fn startParent( name:str, arrayFlag:bool ) mut;
+   pub fn startElement( name:str ) mut;
+   pub fn endElement() mut;
+   pub fn writeValue( val:stem ) mut;
+   pub fn write( name:str, val:stem ) mut;
+   pub fn fin() mut;
 }
 
 pub class XML extend (Writer) {

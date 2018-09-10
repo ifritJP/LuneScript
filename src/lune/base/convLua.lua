@@ -3,6 +3,48 @@ local _moduleObj = {}
 if not _ENV._lune then
    _lune = {}
 end
+function _lune.nilacc( val, fieldName, access, ... )
+  if not val then
+    return nil
+  end
+  if fieldName then
+    local field = val[ fieldName ]
+    if not field then
+      return nil
+    end
+    if access == "item" then
+      local typeId = type( field )
+      if typeId == "table" then
+        return field[ ... ]
+      elseif typeId == "string" then
+        return string.byte( field, ... )
+      end
+    elseif access == "call" then
+      return field( ... )
+    elseif access == "callmtd" then
+      return field( val, ... )
+    end
+    return field
+  end
+  if access == "item" then
+    local typeId = type( val )
+    if typeId == "table" then
+      return val[ ... ]
+    elseif typeId == "string" then
+      return string.byte( val, ... )
+    end
+  elseif access == "call" then
+    return val( ... )
+  elseif access == "list" then
+    local list, arg = ...
+    if not list then
+      return nil
+    end
+    return val( list, arg )
+  end
+  error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.unwrap( val )
   if val == nil then
     _luneScript.error( 'unwrap val is nil' )
@@ -21,9 +63,12 @@ local Ast = require( 'lune.base.Ast' )
 local Util = require( 'lune.base.Util' )
 
 local PubVerInfo = {}
+function PubVerInfo.setmeta( obj )
+  setmetatable( obj, { __index = PubVerInfo  } )
+end
 function PubVerInfo.new( staticFlag, accessMode, mutable, typeInfo )
   local obj = {}
-  setmetatable( obj, { __index = PubVerInfo } )
+  PubVerInfo.setmeta( obj )
   if obj.__init then
     obj:__init( staticFlag, accessMode, mutable, typeInfo )
   end        
@@ -42,9 +87,12 @@ do
 -- none
 
 local PubFuncInfo = {}
+function PubFuncInfo.setmeta( obj )
+  setmetatable( obj, { __index = PubFuncInfo  } )
+end
 function PubFuncInfo.new( accessMode, typeInfo )
   local obj = {}
-  setmetatable( obj, { __index = PubFuncInfo } )
+  PubFuncInfo.setmeta( obj )
   if obj.__init then
     obj:__init( accessMode, typeInfo )
   end        
@@ -63,7 +111,7 @@ setmetatable( convFilter, { __index = Filter } )
 _moduleObj.convFilter = convFilter
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
   local obj = {}
-  setmetatable( obj, { __index = convFilter } )
+  convFilter.setmeta( obj )
   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo ); end
 return obj
 end
@@ -116,6 +164,9 @@ function convFilter:write( txt )
     self.curLineNo = self.curLineNo + 1
   end
   stream:write( txt )
+end
+function convFilter.setmeta( obj )
+  setmetatable( obj, { __index = convFilter  } )
 end
 do
   end
@@ -654,11 +705,29 @@ end
     
     if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
       valTxt = string.format( "'%s'", valInfo:get_val())
-      Util.errorLog( string.format( "hoge: %s", valTxt) )
     end
     self:writeln( string.format( "%s.%s = %s", node:get_name().txt, valName.txt, valTxt), baseIndent )
     self:writeln( string.format( "%s._val2NameMap[%s] = '%s'", node:get_name().txt, valTxt, valName.txt), baseIndent )
   end
+end
+
+function convFilter:getDestrClass( classTypeInfo )
+  local typeInfo = classTypeInfo
+  
+  while not typeInfo:equals( Ast.rootTypeInfo ) do
+    local scope = _lune.unwrap( typeInfo:get_scope())
+    
+    do
+      local _exp = scope:getTypeInfoChild( "__free" )
+      if _exp ~= nil then
+      
+          return typeInfo
+        end
+    end
+    
+    typeInfo = typeInfo:get_baseTypeInfo()
+  end
+  return nil
 end
 
 function convFilter:processDeclClass( node, parent, baseIndent )
@@ -699,6 +768,8 @@ function convFilter:processDeclClass( node, parent, baseIndent )
   end
   local hasConstrFlag = false
   
+  local hasDestrFlag = false
+  
   local memberList = {}
   
   local fieldList = nodeInfo:get_fieldList(  )
@@ -713,6 +784,10 @@ function convFilter:processDeclClass( node, parent, baseIndent )
     if field:get_kind() == Ast.nodeKind['DeclConstr'] then
       hasConstrFlag = true
       methodNameSet["__init"] = true
+    end
+    if field:get_kind() == Ast.nodeKind['DeclDestr'] then
+      hasDestrFlag = true
+      methodNameSet["__free"] = true
     end
     if field:get_kind() == Ast.nodeKind['DeclMember'] then
       local declMemberNode = field
@@ -737,6 +812,20 @@ function convFilter:processDeclClass( node, parent, baseIndent )
       filter( field, self, node, baseIndent )
     end
   end
+  local destTxt = ""
+  
+  do
+    local _exp = self:getDestrClass( node:get_expType(  ) )
+    if _exp ~= nil then
+    
+        destTxt = string.format( ", __gc = %s.__free", _exp:getTxt(  ))
+      end
+  end
+  
+  self:writeln( string.format( [==[
+function %s.setmeta( obj )
+  setmetatable( obj, { __index = %s %s } )
+end]==], className, className, destTxt), baseIndent )
   if not hasConstrFlag then
     methodNameSet["__init"] = true
     local argTxt = ""
@@ -750,7 +839,7 @@ function convFilter:processDeclClass( node, parent, baseIndent )
     self:writeln( string.format( [==[
 function %s.new( %s )
   local obj = {}
-  setmetatable( obj, { __index = %s } )
+  %s.setmeta( obj )
   if obj.__init then
     obj:__init( %s )
   end        
@@ -932,13 +1021,13 @@ function convFilter:processDeclConstr( node, parent, baseIndent )
   end
   self:writeln( " )", baseIndent + stepIndent )
   self:writeln( "local obj = {}", baseIndent + stepIndent )
-  self:writeln( string.format( "setmetatable( obj, { __index = %s } )", className ), baseIndent + stepIndent )
+  self:writeln( string.format( "%s.setmeta( obj )", className), baseIndent + stepIndent )
   self:writeln( string.format( "if obj.__init then obj:__init( %s ); end", argTxt ), baseIndent )
   self:writeln( "return obj", baseIndent )
   self:writeln( "end", baseIndent )
   self:write( string.format( "function %s:__init(%s) ", className, argTxt ) )
   do
-    local _exp = declInfo:get_body(  )
+    local _exp = declInfo:get_body()
     if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
@@ -950,13 +1039,34 @@ end
 
 -- none
 
+function convFilter:processDeclDestr( node, parent, baseIndent )
+  self:writeln( string.format( "function %s.__free( self )", _lune.nilacc( node:get_declInfo():get_className(), "txt" )), baseIndent + stepIndent )
+  filter( _lune.unwrap( node:get_declInfo():get_body()), self, node, baseIndent + stepIndent )
+  local classTypeInfo = node:get_expType():get_parentInfo()
+  
+  do
+    local _exp = self:getDestrClass( classTypeInfo:get_baseTypeInfo() )
+    if _exp ~= nil then
+    
+        self:writeln( string.format( "%s.__free( self )", _exp:getTxt(  )), baseIndent )
+      end
+  end
+  
+  self:writeln( "end", baseIndent )
+end
+
 function convFilter:processExpCallSuper( node, parent, baseIndent )
   local typeInfo = node:get_superType(  )
   
   self:write( string.format( "%s.__init( self, ", typeInfo:getTxt(  )) )
-  if node:get_expList(  ) then
-    filter( node:get_expList(  ), self, node, baseIndent )
+  do
+    local _exp = node:get_expList()
+    if _exp ~= nil then
+    
+        filter( _exp, self, node, baseIndent )
+      end
   end
+  
   self:writeln( ")", baseIndent )
 end
 
@@ -987,7 +1097,7 @@ function convFilter:processDeclMethod( node, parent, baseIndent )
   end
   self:write( " )" )
   do
-    local _exp = declInfo:get_body(  )
+    local _exp = declInfo:get_body()
     if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
@@ -1109,17 +1219,17 @@ function convFilter:processDeclVar( node, parent, baseIndent )
           self:writeln( string.format( "local _%s = %s", var:get_name().txt, var:get_name().txt), baseIndent + stepIndent * 3 )
         end
         filter( _exp, self, node, baseIndent + stepIndent * 2 )
-        local thenBlock = node:get_thenBlock()
-        
-            if  nil == thenBlock then
-              local _thenBlock = thenBlock
-              
-            else
-              
-                self:writeln( "else", baseIndent + stepIndent * 3 )
-                filter( thenBlock, self, node, baseIndent + stepIndent * 3 )
-              end
+        do
+          local thenBlock = node:get_thenBlock()
+          if thenBlock ~= nil then
           
+              self:writeln( "else", baseIndent + stepIndent * 3 )
+              filter( thenBlock, self, node, baseIndent + stepIndent * 3 )
+            end
+        end
+        
+        -- none
+        
         self:writeln( "end", baseIndent + stepIndent * 1 )
       end
   end
@@ -1211,7 +1321,7 @@ function convFilter:processDeclFunc( node, parent, baseIndent )
   end
   self:write( " )" )
   do
-    local _exp = declInfo:get_body(  )
+    local _exp = declInfo:get_body()
     if _exp ~= nil then
     
         filter( _exp, self, node, baseIndent )
@@ -1895,9 +2005,12 @@ function MacroEvalImp:eval( node )
   
   Util.err( "failed to load -- " .. node:get_declInfo():get_name() )
 end
+function MacroEvalImp.setmeta( obj )
+  setmetatable( obj, { __index = MacroEvalImp  } )
+end
 function MacroEvalImp.new( mode )
   local obj = {}
-  setmetatable( obj, { __index = MacroEvalImp } )
+  MacroEvalImp.setmeta( obj )
   if obj.__init then
     obj:__init( mode )
   end        

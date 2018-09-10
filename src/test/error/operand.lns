@@ -1,0 +1,13 @@
+{
+   let val = not 1; // error
+}
+
+fn func( val:int! ) {
+}
+
+{
+   let val1 = 1;
+   let val2:int! = nil;
+   func( val1 or val2 );
+   func( 1 and 2 ); // error
+}

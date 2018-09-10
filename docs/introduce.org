@@ -498,6 +498,8 @@ nilable 型から本来の値に戻すには、次のいずれかの syntax を�
 - let!
 - sync!
 - if!
+- if! let
+  
   
 ** nilable 関連の仕様
 
@@ -620,7 +622,7 @@ test( nil );  // print( 0 );
 sync! は、 unwrap 処理を行ないます。
 
 #+BEGIN_SRC lns
-sync! symbol {, symbol } = exp[, exp ] block [then thenblock] [ do doblock ];
+sync! symbol {, symbol } = exp[, exp ] block [then thenblock] do doblock;
 #+END_SRC
 
 exp と symbol, thenblock の扱いは unwrap! と、ほぼ同じです。
@@ -667,6 +669,20 @@ exp が nil だった場合、 elseblock を実行します。
 
 block 内の処理では _exp で、 exp の unwrap の結果にアクセスできます。
 
+**** if! let
+
+if! let は、 unwrap 処理による条件分岐です。
+
+#+BEGIN_SRC lns
+if! let var[,var,...] = exp[,exp,...] block [ else elseblock ];
+#+END_SRC
+
+exp には nilable な式を指定します。
+exp が nil でなかった場合、 block を実行します。
+exp が nil だった場合、 elseblock を実行します。
+
+block 内の処理では var で宣言した変数にアクセス出来ます。
+var の変数には exp の unwrap の結果が格納されます。
 
 ** 一般制御文
 

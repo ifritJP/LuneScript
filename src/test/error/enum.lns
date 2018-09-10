@@ -30,7 +30,8 @@ testEnum4.val1 = 1; // error
 testEnum4.val1 = testEnum4.val1; // error
 
 
-fn func( enum1: testEnum, enum4: testEnum4 ) {
+fn func( enum1: testEnum, enum4: testEnum4 ): testEnum4 {
+   return .val1;
 }
 func( .val1, .val1 );
 

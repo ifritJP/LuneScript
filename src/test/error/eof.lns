@@ -47,6 +47,8 @@ macro _test_letunwrap() {
 
 macro _test_syncunwrap() {
    sync! val = 1 {
+   }
+   do {
    };
 }
 { _test_syncunwrap(); }

@@ -25,22 +25,22 @@ SOFTWARE.
 subfile owner lune.base.TransUnit;
 
 fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
-   let nextToken = self.getToken();
-
    let mut expList: Ast.ExpListNode! = nil;
-   if nextToken.txt ~= ";" {
-      self.pushback();
-      expList = self.analyzeExpList( false );
-      self.checkNextToken( ";" );
-   }
    let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-   if not funcTypeInfo {
+   if funcTypeInfo == Ast.rootTypeInfo {
       self.addErrMess(
          token.pos,
          "'return' could not use here" );
    }
    else{
+      let nextToken = self.getToken();
+
       let retTypeList = funcTypeInfo.$retTypeInfoList;
+      if nextToken.txt ~= ";" {
+         self.pushback();
+         expList = self.analyzeExpList( false, nil, retTypeList );
+         self.checkNextToken( ";" );
+      }  
       if! expList {
          let expNodeList = _exp.$expList;
          if #retTypeList == 0 and #expNodeList > 0 {
