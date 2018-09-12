@@ -47,7 +47,7 @@ end
 
 function _lune.unwrap( val )
   if val == nil then
-    _luneScript.error( 'unwrap val is nil' )
+    __luneScript:error( 'unwrap val is nil' )
   end
   return val
 end 
@@ -184,7 +184,6 @@ builtInModuleSet["string"] = true
 builtInModuleSet["table"] = true
 builtInModuleSet["math"] = true
 builtInModuleSet["debug"] = true
-builtInModuleSet["_luneScript"] = true
 function convFilter:setIndent( indent )
   self.indent = indent
 end
@@ -207,9 +206,9 @@ function convFilter:processImport( node, parent, baseIndent )
   
   local moduleName = string.gsub( module, ".*%.", "" )
   
-  self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = moduleName
+  self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = module
   if self.convMode == "exe" or self.convMode == "ast" then
-    self:writeln( string.format( "local %s = _luneScript.loadModule( '%s' )", moduleName, module), baseIndent )
+    self:writeln( string.format( "local %s = __luneScript:loadModule( '%s' )", moduleName, module), baseIndent )
   else 
     self:writeln( string.format( "local %s = require( '%s' )", moduleName, module), baseIndent )
   end
@@ -230,6 +229,34 @@ function convFilter:outputMeta( node, baseIndent )
     self:writeln( "local _moduleObj = {}", baseIndent )
   end
   self:writeln( "----- meta -----", baseIndent )
+  self:writeln( "local _importList = {}", baseIndent )
+  self:writeln( "_moduleObj._importList = _importList", baseIndent )
+  do
+    local importNameMap = {}
+    
+    for __index, importName in pairs( self.typeInfo2ModuleName ) do
+      importNameMap[importName] = true
+    end
+    local index = 0
+    
+    do
+      local __sorted = {}
+      local __map = importNameMap
+      for __key in pairs( __map ) do
+        table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, importName in ipairs( __sorted ) do
+        flag = __map[ importName ]
+        do
+          index = index + 1
+          self:writeln( string.format( "_importList[ %d ] = '%s'", index, importName), baseIndent )
+        end
+      end
+    end
+    
+  end
+  
   local typeId2TypeInfo = {}
   
   local typeId2UseFlag = {}
@@ -574,7 +601,7 @@ end
       self:writeln( [==[
 function _lune.unwrap( val )
   if val == nil then
-    _luneScript.error( 'unwrap val is nil' )
+    __luneScript:error( 'unwrap val is nil' )
   end
   return val
 end 
@@ -1806,6 +1833,7 @@ function convFilter:processExpOmitEnum( node, parent, baseIndent )
         moduleName = ""
       else
         
+          moduleName = moduleName:gsub( ".*%.", "" )
           moduleName = moduleName .. "."
         end
     

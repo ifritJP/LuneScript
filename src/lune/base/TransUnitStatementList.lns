@@ -42,14 +42,13 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
          self.checkNextToken( ";" );
       }  
       if! expList {
-         let expNodeList = _exp.$expList;
-         if #retTypeList == 0 and #expNodeList > 0 {
+         let expTypeList = _exp.$expTypeList;
+         if #retTypeList == 0 and #expTypeList > 0 {
             self.addErrMess( token.pos,
                              "this function can't return value." );   
          }
          foreach retType, index in retTypeList {
-            let expNode = expNodeList[ index ];
-            let expType = expNode.$expType;
+            let expType = expTypeList[ index ];
             if not retType.canEvalWith( expType, "=" ) {
                self.addErrMess(
                   token.pos,
@@ -59,13 +58,13 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
                     expType.getTxt(), expType.get_typeId()));
             }
             if index == #retTypeList {
-               if #retTypeList < #expNodeList and 
+               if #retTypeList < #expTypeList and 
                   not retType.equals( Ast.builtinTypeDDD )
                {                           
                   self.addErrMess( token.pos, "over return value");
                }
             }
-            elseif index == #expNodeList {
+            elseif index == #expTypeList {
                if expType.equals( Ast.builtinTypeDDD ) {
                   for retIndex = index, #retTypeList {
                      let workRetType = retTypeList[ retIndex ];
@@ -82,7 +81,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
                else {
                   self.addErrMess( token.pos,
                                    "short return value -- %d < %d"
-                                   (#expNodeList, #retTypeList ));
+                                   (#expTypeList, #retTypeList ));
                }
                break;
             }

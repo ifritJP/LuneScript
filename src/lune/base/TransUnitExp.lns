@@ -1142,12 +1142,14 @@ fn TransUnit.analyzeExpOp2(
                         }  
                         else {
                            retType = exp2Type.$nilableTypeInfo;
-                        }  
-                     }  
-                     elseif exp1Type.equals( Ast.builtinTypeBool ) {
+                        }
+                     }
+                     elseif exp1Type.equals( Ast.builtinTypeBool ) or
+                        exp2Type.equals( Ast.builtinTypeBool )
+                     {
                         if exp1Type.canEvalWith( exp2Type, "=" ) {
                            retType = exp1Type;
-                        }  
+                        }
                         elseif exp2Type.canEvalWith( exp1Type, "=" ) {
                            retType = exp2Type;
                         }  
@@ -1159,7 +1161,7 @@ fn TransUnit.analyzeExpOp2(
                               retType = Ast.builtinTypeStem;
                            }  
                         }  
-                     }  
+                     }
                      else {
                         retType = exp2Type;
                      }
@@ -1362,6 +1364,9 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
       self.pushbackToken( firstToken );
       let exp = self.analyzeExp( false );
       self.checkNextToken( ";" );
+      if not exp.$expType.$nilable {
+         self.addErrMess( exp.$pos, "this value is not nilable." );
+      }
       return new Ast.StmtExpNode( nextToken.pos, [ Ast.builtinTypeNone ], exp );
    }
 

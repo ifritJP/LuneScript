@@ -5,7 +5,7 @@ if not _ENV._lune then
 end
 function _lune.unwrap( val )
   if val == nil then
-    _luneScript.error( 'unwrap val is nil' )
+    __luneScript:error( 'unwrap val is nil' )
   end
   return val
 end 
@@ -1911,9 +1911,22 @@ function NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, typeInfo )
   return NormalTypeInfo.createFunc( false, false, typeInfo:get_scope(), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), typeInfo:get_mutable() )
 end
 
+local typeInfo2ModifierMap = {}
+
 function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
+  do
+    local _exp = typeInfo2ModifierMap[srcTypeInfo]
+    if _exp ~= nil then
+    
+        return _exp
+      end
+  end
+  
   typeIdSeed = typeIdSeed + 1
-  return ModifierTypeInfo.new(srcTypeInfo, typeIdSeed, mutable)
+  local modifier = ModifierTypeInfo.new(srcTypeInfo, typeIdSeed, mutable)
+  
+  typeInfo2ModifierMap[srcTypeInfo] = modifier
+  return modifier
 end
 
 local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )

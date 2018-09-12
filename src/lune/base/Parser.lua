@@ -5,7 +5,7 @@ if not _ENV._lune then
 end
 function _lune.unwrap( val )
   if val == nil then
-    _luneScript.error( 'unwrap val is nil' )
+    __luneScript:error( 'unwrap val is nil' )
   end
   return val
 end 

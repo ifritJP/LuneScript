@@ -41,7 +41,7 @@ pub class Option {
    }
 }
 
-pub fn analyze( argList: str[@] ) : Option {
+pub fn analyze( argList: str[] ) : Option {
 
    if #argList < 2 {
       print( ```

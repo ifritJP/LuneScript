@@ -1549,11 +1549,20 @@ pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
       typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList, typeInfo.$mutable );
 }
 
+
+let mut typeInfo2ModifierMap:Map<&TypeInfo,TypeInfo> = {};
+
 pub static fn NormalTypeInfo.createModifier(
-   srcTypeInfo: &TypeInfo, mutable: bool ): ModifierTypeInfo
+   srcTypeInfo: &TypeInfo, mutable: bool ): &TypeInfo
 {
+   if! typeInfo2ModifierMap[ srcTypeInfo ] {
+      return _exp;
+   }
+   
    typeIdSeed = typeIdSeed + 1;
-   return new ModifierTypeInfo( srcTypeInfo, typeIdSeed, mutable ); 
+   let modifier = new ModifierTypeInfo( srcTypeInfo, typeIdSeed, mutable ); 
+   typeInfo2ModifierMap[ srcTypeInfo ] = modifier;
+   return modifier;
 }
 
 pub let builtinTypeNone:TypeInfo = 

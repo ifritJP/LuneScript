@@ -30,6 +30,7 @@ import lune.base.Parser;
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.Writer;
+import lune.base.frontInterface;
 
 enum DeclClassMode {
    Class,
@@ -44,6 +45,18 @@ enum ExpSymbolMode {
    FieldNil,
    Get,
    GetNil,
+}
+
+class ModuleInfo {
+   pri let fullName:str{ pub };
+   pri let symbolInfo:&Ast.SymbolInfo { pub };
+   pri let localTypeId2importIdMap:Map<int,int> { pub };
+
+   pub fn __init( fullName:str, symbolInfo:&Ast.SymbolInfo, idMap:Map<int,int> ) {
+      self.fullName = fullName;
+      self.symbolInfo = symbolInfo;
+      self.localTypeId2importIdMap = idMap;
+   }
 }
 
 pub class TransUnit {
@@ -88,7 +101,7 @@ pub class TransUnit {
    pri let mut macroScope: Ast.Scope!;
 
    /** インポートしているモジュールの TypeInfo -> シンボル情報 */
-   pri let mut importModule2SymbolInfo: Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
+   pri let mut importModule2SymbolInfo: Map<&Ast.TypeInfo,&ModuleInfo>;
 
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
@@ -106,7 +119,7 @@ pub class TransUnit {
    /** provide ノード */
    pri let mut provideNode: Ast.ProvideNode!;
 
-   fn __init( macroEval: Ast.MacroEval,
+   pub fn __init( macroEval: Ast.MacroEval,
               analyzeModule:str!, mode:str!, pos:&Parser.Position! )
    {
       self.importModule2SymbolInfo = {};
@@ -381,22 +394,24 @@ pub let mut typeInfoListRemove = Ast.typeInfoRoot;
 fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
    if not self.validMutControl {
       return typeInfo;
-   }  
+   }
    return Ast.NormalTypeInfo.createModifier( typeInfo, mutable );
 }
+
 
 fn TransUnit.registBuiltInScope() mut {
    let builtInInfo = [
       { 
          "": {
             "type": { "arg": [ "&stem!" ], "ret": ["str"] },
-            "error": { "arg": [ "&str" ], "ret": [] },
+            "error": { "arg": [ "str" ], "ret": [] },
             "print": { "arg": [ "&..." ], "ret": [] },
-            "tonumber": { "arg": [ "&str", "&int!" ], "ret": ["real"] },
-            "load": { "arg": [ "&str" ], "ret": ["form!", "str"] },
-            "require": { "arg": [ "&str" ], "ret": ["stem!"] },
+            "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
+            "load": { "arg": [ "str" ], "ret": ["form!", "str"] },
+            "loadfile": { "arg": [ "str" ], "ret": ["form!", "str"] },
+            "require": { "arg": [ "str" ], "ret": ["stem!"] },
             "collectgarbage": { "arg": [ ], "ret": [] },
-            "_fcall": { "arg": [ "&form", "&..." ], "ret": [""] },
+            "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          }, 
       },
       {
@@ -409,7 +424,7 @@ fn TransUnit.registBuiltInScope() mut {
       {
          "oStream": {
             "__attrib": { "type": [ "interface" ] },
-            "write": { "type": [ "mut" ], "arg": [ "&str" ], "ret": [ ] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
          },
       },
@@ -417,7 +432,7 @@ fn TransUnit.registBuiltInScope() mut {
          "luaStream": {
             "__attrib": { "inplements": [ "iStream", "oStream" ] },
             "read": { "type": [ "mut" ], "arg": [ "&stem!" ], "ret": [ "str!" ] },
-            "write": { "type": [ "mut" ], "arg": [ "&str" ], "ret": [ ] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
          }, 
       },
@@ -426,37 +441,43 @@ fn TransUnit.registBuiltInScope() mut {
             "stdin": { "type": [ "member" ], "typeInfo": [ "iStream" ] },
             "stdout": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
             "stderr": { "type": [ "member" ], "typeInfo": [ "oStream" ] },
-            "open": { "arg": [ "&str", "&str!" ], "ret": ["luaStream!"] },
-            "popen": { "arg": [ "&str" ], "ret": ["luaStream!"] },
+            "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!"] },
+            "popen": { "arg": [ "str" ], "ret": ["luaStream!"] },
+         },
+      },
+      { 
+         "package": {
+            "path": { "type": [ "member" ], "typeInfo": [ "str" ] },
+            "searchpath": { "arg": [ "str", "str" ], "ret": ["str!"] },
          },
       },
       { 
          
          "os": {
             "clock": { "arg": [], "ret": ["int"] },
-            "exit": { "arg": [ "&int!" ], "ret": [] },
+            "exit": { "arg": [ "int!" ], "ret": [] },
          },
       },
       { 
          "string": {
-            "find": { "arg": [ "&str", "&str", "&int!", "&bool!" ], "ret": ["int!", "int!"] },
-            "byte": { "arg": [ "&str", "&int" ], "ret": ["int"] },
-            "format": { "arg": [ "&str", "..." ], "ret": ["str"] },
-            "rep": { "arg": [ "&str", "&int" ], "ret": ["str"] },
-            "gmatch": { "arg": [ "&str", "&str" ], "ret": ["stem!"] },
-            "gsub": { "arg": [ "&str", "&str", "&str" ], "ret": ["str"] },
-            "sub": { "arg": [ "&str", "&int", "&int!" ], "ret": ["str"] },
+            "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
+            "byte": { "arg": [ "str", "int" ], "ret": ["int"] },
+            "format": { "arg": [ "str", "..." ], "ret": ["str"] },
+            "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
+            "gmatch": { "arg": [ "str", "str" ], "ret": ["stem!"] },
+            "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str"] },
+            "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
          },
       },
       { 
          "str": {
-            "find": { "type": [ "method" ], "arg": [ "&str", "&int!", "&bool!" ], "ret": ["int!", "int!"] },
-            "byte": { "type": [ "method" ], "arg": [ "&int" ], "ret": ["int"] },
+            "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
+            "byte": { "type": [ "method" ], "arg": [ "int" ], "ret": ["int"] },
             "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
-            "rep": { "type": [ "method" ], "arg": [ "&int" ], "ret": ["str"] },
-            "gmatch": { "type": [ "method" ], "arg": [ "&str" ], "ret": ["stem!"] },
-            "gsub": { "type": [ "method" ], "arg": [ "&str", "&str" ], "ret": ["str"] },
-            "sub": { "type": [ "method" ], "arg": [ "&int", "&int!" ], "ret": ["str"] },
+            "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
+            "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["stem!"] },
+            "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str"] },
+            "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
          },  
       },
       { 
@@ -467,19 +488,14 @@ fn TransUnit.registBuiltInScope() mut {
       { 
          "List": {
             "insert": { "type": [ "mut" ], "arg": [ "&stem" ], "ret": [""] },
-            "remove": { "type": [ "mut" ], "arg": [ "&int!" ], "ret": [""] },
-         },  
+            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": [""] },
+         },
       },
-      { 
+      {
          "debug": {
-            "getinfo": { "arg": ["&int"], "ret": ["stem"] },
-         },  
-      },
-      { 
-         "_luneScript": {
-            "loadModule": { "arg": [ "&str" ], "ret": ["stem", "stem"] },
-            "searchModule": { "arg": [ "&str" ], "ret": ["str!"] },
-         }, 
+            "getinfo": { "arg": ["int"], "ret": ["stem"] },
+            "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
+         },
       }
    ]@@Map<str,Map<str,Map<str,str[]>>>[];
 
@@ -545,7 +561,7 @@ fn TransUnit.registBuiltInScope() mut {
                   if info.type$[1] == "member" {
                      self.scope.addMember(
                         fieldName,
-                        getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, false );
+                        getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, true );
                   }
                   else {
                      let mut argTypeList: List<&Ast.TypeInfo> = [];
@@ -993,7 +1009,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    }
 
 
-   let _obj, _obj2 = _luneScript.loadModule( modulePath );
+   let _obj2 = frontInterface.loadMeta( modulePath );
    let moduleInfo = _obj2@@_ModuleInfo;
    
    // 型情報の登録
@@ -1382,7 +1398,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    let moduleSymbolInfo = self.scope.add(
       Ast.SymbolKind.Typ, false, false, moduleToken.txt,
       moduleTypeInfo, .Local, true, moduleInfo._moduleMutable, true );
-   self.importModule2SymbolInfo[ moduleTypeInfo ] = moduleSymbolInfo;
+   self.importModule2SymbolInfo[ moduleTypeInfo ] =
+      new ModuleInfo( modulePath, moduleSymbolInfo, newId2OldIdMap );
 
    self.checkToken( nextToken, ";" );
 
@@ -1423,7 +1440,7 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Ast.SubfileNode {
    }
    else {
       if mode.txt == "use" {
-         if _luneScript.searchModule( moduleName ) {
+         if frontInterface.searchModule( moduleName ) {
             self.subfileList.insert( moduleName );
          }   
          else {
@@ -1694,9 +1711,9 @@ fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Ast.Node {
             self.addErrMess(
                firstToken.pos,   
                "variable (%s) can't set 'pub'." ( symbolInfo.$name ) );
-         }  
-      }  
+         }
+      }
    }
-      
+
    return node;
 }

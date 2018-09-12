@@ -133,7 +133,7 @@ builtInModuleSet[ "string" ] = true;
 builtInModuleSet[ "table" ] = true;
 builtInModuleSet[ "math" ] = true;
 builtInModuleSet[ "debug" ] = true;
-builtInModuleSet[ "_luneScript" ] = true;
+//builtInModuleSet[ "_luneScript" ] = true;
 
 
 fn convFilter.setIndent( indent: int ) mut {
@@ -158,10 +158,10 @@ pub override fn convFilter.processImport(
 {
    let module = node.get_modulePath();
    let moduleName = string.gsub( module, ".*%.", "" );
-   self.typeInfo2ModuleName[ node.$moduleTypeInfo ] = moduleName;
+   self.typeInfo2ModuleName[ node.$moduleTypeInfo ] = module;
    if self.convMode == "exe" or self.convMode == "ast" {
       self.writeln(
-         "local %s = _luneScript.loadModule( '%s' )" ( moduleName, module),
+         "local %s = __luneScript:loadModule( '%s' )" ( moduleName, module),
          baseIndent );
    }
    else {
@@ -185,6 +185,20 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
    }
    
    self.writeln( "----- meta -----", baseIndent );
+
+   self.writeln( "local _importList = {}", baseIndent );
+   self.writeln( "_moduleObj._importList = _importList", baseIndent );
+   {
+      let mut importNameMap:Map<str,bool> = {};
+      foreach importName in self.typeInfo2ModuleName {
+         importNameMap[ importName ] = true;
+      }
+      let mut index = 0;
+      forsort flag, importName in importNameMap {
+         index = index + 1;
+         self.writeln( "_importList[ %d ] = '%s'" ( index, importName ), baseIndent );
+      }
+   }
 
    let mut typeId2TypeInfo: Map<int,Ast.TypeInfo> = {};
    let mut typeId2UseFlag: Map<int,bool> = {};
@@ -518,7 +532,7 @@ end
          self.writeln(```
 function _lune.unwrap( val )
   if val == nil then
-    _luneScript.error( 'unwrap val is nil' )
+    __luneScript:error( 'unwrap val is nil' )
   end
   return val
 end 
@@ -1758,6 +1772,7 @@ pub override fn convFilter.processExpOmitEnum(
       moduleName = "";
    }
    then {
+      moduleName = moduleName.gsub( ".*%.", "" );
       moduleName = moduleName .. ".";
    };
    self.write( "%s%s.%s" (moduleName, node.$expType.getTxt(), node.$valToken.txt ) );

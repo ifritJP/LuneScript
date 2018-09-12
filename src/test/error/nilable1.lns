@@ -64,3 +64,4 @@
    let val2:stem = func$(); // error
 }
 
+unwrap 1;

@@ -211,7 +211,7 @@ pub fn TransUnit.createAST(
       }
 
       foreach subModule in self.subfileList {
-         let! file = _luneScript.searchModule( subModule ) {
+         let! file = frontInterface.searchModule( subModule ) {
             self.error( "not found subfile -- %s" ( subModule ) );
          };
 

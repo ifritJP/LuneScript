@@ -17,16 +17,12 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
 
-define trans
-	$(LUA) lune/base/base.lua lune/base/$1.lns SAVE work/1
-endef
-
 define cutMeta
 	(cd work/$2/lune/base; cat $1.lua | awk '/^----- meta/{META++;}; //{if (META != 1) {print $$0}} ' > $1.cut.lua )
 endef
 
 define transwork
-	(cd work/$1; $(LUA) lune/base/base.lua lune/base/$3.lns SAVE ../$2)
+	(cd $1; $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2)
 endef
 
 define exeLune
@@ -36,6 +32,20 @@ endef
 define exeComp
 	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
 			json_pp --json_opt=canonical,pretty | sort
+endef
+
+define buildLns
+	$(call transwork,$1,$2,Depend)
+	$(call transwork,$1,$2,Util)
+	$(call transwork,$1,$2,Writer)
+	$(call transwork,$1,$2,Parser)
+	$(call transwork,$1,$2,Option)
+	$(call transwork,$1,$2,Ast)
+	$(call transwork,$1,$2,TransUnit)
+	$(call transwork,$1,$2,convLua)
+	$(call transwork,$1,$2,dumpNode)
+	$(call transwork,$1,$2,frontInterface)
+	$(call transwork,$1,$2,front)
 endef
 
 release-check:
@@ -50,15 +60,7 @@ test-comp:
 	@cp lune/base/base*.lua lune/base/*.lns work/1/lune/base
 	@cp lune/base/base*.lua lune/base/*.lns work/2/lune/base
 	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
-	$(call trans,Depend)
-	$(call trans,Util)
-	$(call trans,Writer)
-	$(call trans,Parser)
-	$(call trans,Option)
-	$(call trans,Ast)
-	$(call trans,TransUnit)
-	$(call trans,convLua)
-	$(call trans,dumpNode)
+	$(call buildLns,.,work/1)
 	$(MAKE) test-comp2
 
 test-error:
@@ -105,26 +107,9 @@ test-comp2:
 
 #		sed 's/.*error:/error:/' >> work/test1.result
 
-	$(call transwork,1,2,Depend)
-	$(call transwork,1,2,Util)
-	$(call transwork,1,2,Writer)
-	$(call transwork,1,2,Parser)
-	$(call transwork,1,2,Option)
-	$(call transwork,1,2,Ast)
-	$(call transwork,1,2,TransUnit)
-	$(call transwork,1,2,convLua)
-	$(call transwork,1,2,dumpNode)
+	$(call buildLns,work/1,../2)
 
-
-	$(call transwork,2,3,Depend)
-	$(call transwork,2,3,Util)
-	$(call transwork,2,3,Writer)
-	$(call transwork,2,3,Parser)
-	$(call transwork,2,3,Option)
-	$(call transwork,2,3,Ast)
-	$(call transwork,2,3,TransUnit)
-	$(call transwork,2,3,convLua)
-	$(call transwork,2,3,dumpNode)
+	$(call buildLns,work/2,../3)
 
 	diff -r work/2 work/3
 

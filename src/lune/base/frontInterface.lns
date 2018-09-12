@@ -1,0 +1,43 @@
+pub interface frontInterface {
+   pub fn loadModule( mod:str ): stem, stem;
+   pub fn loadMeta( mod:str ): stem;
+   pub fn searchModule( mod:str ): str!;
+   pub fn error( message:str );
+}
+
+class dummyFront extend (frontInterface) {
+   pub fn loadModule( mod:str ): stem, stem {
+      error( "not implements" );
+   }
+   pub fn loadMeta( mod:str ): stem {
+      error( "not implements" );
+   }
+   pub fn searchModule( mod:str ): str! {
+      error( "not implements" );
+   }
+   pub fn error( message:str ) {
+      error( "not implements" );
+   }
+}
+
+global let mut __luneScript:frontInterface = new dummyFront();
+
+pub fn setFront( newFront:frontInterface ) {
+   __luneScript = newFront;
+}
+
+pub fn loadModule( mod:str ): stem, stem {
+   return __luneScript.loadModule( mod );
+}
+
+pub fn loadMeta( mod:str ): stem {
+   return __luneScript.loadMeta( mod );
+}
+
+pub fn searchModule( mod:str ): str! {
+   return __luneScript.searchModule( mod );
+}
+
+pub fn error( message:str ) {
+   __luneScript.error( message );
+}

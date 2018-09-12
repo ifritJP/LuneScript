@@ -37,6 +37,30 @@
    }  
 }
 {
+   fn func(): stem {
+      return 1;
+   }
+   fn func2(): stem, stem {
+      return func(); // error
+   }
+}
+{
+   fn func(): stem, stem {
+      return 1, 2;
+   }
+   fn func2(): stem, stem {
+      return func();
+   }
+}
+{
+   fn func(): stem, stem, stem {
+      return 1, 2, 3;
+   }
+   fn func2(): stem, stem {
+      return func(); // error
+   }
+}
+{
    pub fn func() { // error
    }
    global fn func2() { // error
