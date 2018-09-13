@@ -1428,7 +1428,7 @@ fn TransUnit.analyzeExp(
                
                if enumTyepInfo.getEnumValInfo( nextToken.txt ) {
                   if _exp.$externalFlag and
-                     not self.importModule2SymbolInfo[ _exp.getModule().$srcTypeInfo ]
+                     not self.importModule2ModuleInfo[ _exp.getModule().$srcTypeInfo ]
                   {              
                      self.addErrMess( token.pos, "This module not import -- %s"
                                       ( _exp.getTxt() ) );

@@ -37,7 +37,7 @@ class PubFuncInfo {
    pub let typeInfo: &Ast.TypeInfo;
 }
 
-pub class convFilter extend Ast.Filter (oStream) {
+class convFilter extend Ast.Filter (oStream) {
    pri let streamName: str;
    pri let mut stream: oStream;
    pri let mut metaStream: oStream;
@@ -170,6 +170,25 @@ pub override fn convFilter.processImport(
    }
 };
 
+
+/**
+メタ情報を出力する。
+
+メタ情報は次の情報から成る。
+
+- モジュールが依存(import)している外部モジュール情報
+  - 外部モジュール識別番号
+  - 外部モジュール名
+  - このモジュールが公開している型の一部に、外部モジュールの情報を利用しているかどうか
+- モジュール内で定義している pub な型情報
+- モジュールが利用している外部モジュール内の型情報
+  - 外部モジュール識別番号
+  - このモジュール内の型識別番号
+  - 外部モジュール内の型識別番号
+
+@param node RootNode
+@param baseIndent インデント量
+*/
 fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
 {
    switch self.convMode {
@@ -186,17 +205,21 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
    
    self.writeln( "----- meta -----", baseIndent );
 
-   self.writeln( "local _importList = {}", baseIndent );
-   self.writeln( "_moduleObj._importList = _importList", baseIndent );
+   let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
+   let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
    {
-      let mut importNameMap:Map<str,bool> = {};
-      foreach importName in self.typeInfo2ModuleName {
-         importNameMap[ importName ] = true;
+      // foreach importName, typeInfo in self.typeInfo2ModuleName {
+      //    importNameMap[ importName ] = typeInfo;
+      // }
+
+      foreach moduleInfo, typeInfo in node.$importModule2moduleInfo {
+         importNameMap[ moduleInfo.$fullName ] = typeInfo;
       }
+      
       let mut index = 0;
-      forsort flag, importName in importNameMap {
+      forsort typeInfo, importName in importNameMap {
          index = index + 1;
-         self.writeln( "_importList[ %d ] = '%s'" ( index, importName ), baseIndent );
+         importModuleType2Index[ typeInfo ] = index;
       }
    }
 
@@ -205,9 +228,17 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
 
 
    let mut pickupClassMap: Map<int,Ast.TypeInfo> = {};
+
+   fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
+      let moduleTypeInfo = typeInfo.getModule();
+      let typeId = typeInfo.$typeId;
+      return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId ) and
+          ( moduleTypeInfo.hasRouteNamespaceFrom( node.$moduleTypeInfo ) or
+            typeInfo.$srcTypeInfo ~= typeInfo or
+            moduleTypeInfo.equals( Ast.rootTypeInfo ) );
+   }
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
-
    fn pickupTypeId( typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
       if typeInfo.get_typeId() == Ast.rootTypeId {
          return;
@@ -215,6 +246,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
       if not forceFlag and typeInfo.get_accessMode() ~= .Pub {
          return;
       }
+
       if typeId2TypeInfo[ typeInfo.get_typeId() ] {
          if pickupChildFlag and not typeInfo.$nilable {
 	    foreach itemTypeInfo in typeInfo.get_children() {
@@ -368,39 +400,41 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
          let scope = unwrap classTypeInfo.$scope;
 
          if not Ast.isBuiltin( classTypeId ) {
-            let className = classTypeInfo.getTxt();
-            self.writeln( "do", baseIndent + stepIndent );
-            self.writeln( "local _classInfo%s = {}"
-                          (classTypeId), baseIndent + stepIndent );
-            self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
-                          ( classTypeId, classTypeId), baseIndent + stepIndent );
-            
-
             pickupTypeId( classTypeInfo, true,
                           validChildrenSet[ classTypeInfo ] == nil and
                           not classTypeInfo.$externalFlag );
-            
-            forsort symbolInfo, fieldName in scope.$symbol2TypeInfoMap {
-               let typeInfo = symbolInfo.$typeInfo;
-               if symbolInfo.$kind == Ast.SymbolKind.Mbr or
-                  symbolInfo.$kind == Ast.SymbolKind.Var //or
-               //symbolInfo.$kind == Ast.SymbolKind.Typ
-               {  
-                  if symbolInfo.$accessMode == .Pub {
-                     self.writeln( "_classInfo%d.%s = {" ( classTypeId, fieldName ),
-                                   baseIndent + stepIndent );
-                     self.writeln(
-                        "  name='%s', staticFlag = %s, "
-                        ( fieldName,  symbolInfo.$staticFlag ) ..
-                        "accessMode = %d, typeId = %d }"
-                        ( symbolInfo.$accessMode, typeInfo.get_typeId() ),
-                        baseIndent + stepIndent );
-                     pickupTypeId( typeInfo );
-                  }  
-               }  
-            }  
-            self.writeln( "end", baseIndent );
-         }  
+
+            if checkExportTypeInfo( classTypeInfo ) {
+               let className = classTypeInfo.getTxt();
+               self.writeln( "do", baseIndent + stepIndent );
+               self.writeln( "local _classInfo%s = {}"
+                             (classTypeId), baseIndent + stepIndent );
+               self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
+                             ( classTypeId, classTypeId), baseIndent + stepIndent );
+               
+               forsort symbolInfo, fieldName in scope.$symbol2TypeInfoMap {
+                  let typeInfo = symbolInfo.$typeInfo;
+                  if symbolInfo.$kind == Ast.SymbolKind.Mbr or
+                     symbolInfo.$kind == Ast.SymbolKind.Var //or
+                  //symbolInfo.$kind == Ast.SymbolKind.Typ
+                  {
+                     if symbolInfo.$accessMode == .Pub {
+                        self.writeln( "_classInfo%d.%s = {" ( classTypeId, fieldName ),
+                                      baseIndent + stepIndent );
+                        self.writeln(
+                           "  name='%s', staticFlag = %s, "
+                           ( fieldName,  symbolInfo.$staticFlag ) ..
+                           "accessMode = %d, typeId = %d }"
+                           ( symbolInfo.$accessMode, typeInfo.get_typeId() ),
+                           baseIndent + stepIndent );
+                        pickupTypeId( typeInfo );
+                     }
+                  }
+               }
+
+               self.writeln( "end", baseIndent );
+            }
+         }
       }
    }
 
@@ -424,6 +458,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
 
    self.writeln( "local _typeInfoList = {}", baseIndent );
    self.writeln( "_moduleObj._typeInfoList = _typeInfoList", baseIndent );
+   
    let mut listIndex = 1;
 
    let mut wroteTypeIdSet:Map<int,bool> = {};
@@ -433,8 +468,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
          return;
       }
       wroteTypeIdSet[ typeId ] = true;
-      if typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId )
-      {               
+      if checkExportTypeInfo( typeInfo ) {
          self.write( "_typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
 
@@ -444,16 +478,69 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
          }
          typeInfo.serialize( self, validChildren );
       }
+      else {
+         // self.writeln( "--[[ %s, %s" ( moduleTypeInfo.getTxt(),
+         //                               node.$moduleTypeInfo.getTxt() ), baseIndent );  
+         // typeInfo.serialize( self, nil );
+         // self.writeln( "]]", baseIndent );
+      }
    }
 
    foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {
       typeId2TypeInfo[ typeId ] = typeInfo;
    }
-   
+
+
+   self.writeln( "local _dependIdMap = {}", baseIndent );
+   self.writeln( "_moduleObj._dependIdMap = _dependIdMap", baseIndent );
+   let mut exportNeedModuleTypeInfo:Map<&Ast.TypeInfo,bool> = {};
    forsort typeInfo, typeId in typeId2TypeInfo {
       outputTypeInfo( typeInfo );
+      let moduleTypeInfo = typeInfo.getModule();
+      exportNeedModuleTypeInfo[ moduleTypeInfo ] = true;
+      if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
+         let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
+         if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+            let mut valid = false;
+            if typeInfo.$srcTypeInfo ~= typeInfo {
+               valid = true;
+            }
+            else {
+               let mut orgTypeInfo:&Ast.TypeInfo = typeInfo;
+               if typeInfo.$nilable {
+                  orgTypeInfo = typeInfo.$orgTypeInfo;
+               }
+               switch orgTypeInfo.$kind {
+                  case .IF, .Map, .Enum, .List, .Array, .Class, .Module {
+                     valid = true;
+                  }
+                  // default {
+                  //    Util.errorLog( "hoge: %s:%d(%s)"
+                  //       ( typeInfo.getTxt(), typeInfo.$typeId, typeInfo.$kind.$_txt ) );
+                  // }
+               }
+            }
+            if valid {
+               self.writeln(
+                  "_dependIdMap[ %d ] = { %d, %d }"
+                  ( typeInfo.$typeId, moduleIndex, extId ),
+                  baseIndent );
+            }
+         }
+      }
    }
 
+   self.writeln( "local _dependModuleMap = {}", baseIndent );
+   self.writeln( "_moduleObj._dependModuleMap = _dependModuleMap", baseIndent );
+
+   
+   forsort moduleTypeInfo, name in importNameMap {
+      self.writeln(
+         "_dependModuleMap[ '%s' ] = { id = %d, use = %s }"
+         ( name, unwrap importModuleType2Index[ moduleTypeInfo ],
+           exportNeedModuleTypeInfo[ moduleTypeInfo ] or false ), baseIndent );
+   }
+   
    let mut moduleTypeInfo = self.moduleTypeInfo;
    if! node.$provideNode {
       moduleTypeInfo = _exp.$val.$expType;
@@ -1934,6 +2021,15 @@ pub override fn convFilter.processLiteralSymbol(
 {
    self.write( '%s' ( node.$token.txt ) );
 };
+
+
+pub fn createFilter(
+   streamName: str, stream: oStream, metaStream: oStream,
+   convMode: str, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo ) : Ast.Filter
+{
+   return new convFilter( streamName, stream, metaStream,
+                          convMode, inMacro, moduleTypeInfo );
+}
 
 
 pub class MacroEvalImp extend Ast.MacroEval {

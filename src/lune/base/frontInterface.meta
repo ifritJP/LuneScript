@@ -1,7 +1,5 @@
 local _moduleObj = {}
 ----- meta -----
-local _importList = {}
-_moduleObj._importList = _importList
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -24,6 +22,8 @@ local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
+local _dependIdMap = {}
+_moduleObj._dependIdMap = _dependIdMap
 _typeInfoList[1] = { parentId = 1, typeId = 196, txt = 'lune', kind = 12, 
 children = {198, } }
 _typeInfoList[2] = { parentId = 196, typeId = 198, txt = 'base', kind = 12, 
@@ -63,6 +63,8 @@ _typeInfoList[23] = { parentId = 200, typeId = 250, nilable = true, orgTypeId = 
 _typeInfoList[24] = { parentId = 200, typeId = 252, baseId = 1, txt = 'error',
         staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
 _typeInfoList[25] = { parentId = 200, typeId = 253, nilable = true, orgTypeId = 252 }
+local _dependModuleMap = {}
+_moduleObj._dependModuleMap = _dependModuleMap
 _moduleObj._moduleTypeId = 200
 _moduleObj._moduleMutable = true
 ----- meta -----

@@ -47,18 +47,6 @@ enum ExpSymbolMode {
    GetNil,
 }
 
-class ModuleInfo {
-   pri let fullName:str{ pub };
-   pri let symbolInfo:&Ast.SymbolInfo { pub };
-   pri let localTypeId2importIdMap:Map<int,int> { pub };
-
-   pub fn __init( fullName:str, symbolInfo:&Ast.SymbolInfo, idMap:Map<int,int> ) {
-      self.fullName = fullName;
-      self.symbolInfo = symbolInfo;
-      self.localTypeId2importIdMap = idMap;
-   }
-}
-
 pub class TransUnit {
 
    /** true の場合は mut 制御が有効 */
@@ -101,7 +89,8 @@ pub class TransUnit {
    pri let mut macroScope: Ast.Scope!;
 
    /** インポートしているモジュールの TypeInfo -> シンボル情報 */
-   pri let mut importModule2SymbolInfo: Map<&Ast.TypeInfo,&ModuleInfo>;
+   pri let mut importModule2ModuleInfo: Map<&Ast.TypeInfo,Ast.ModuleInfo>;
+   pri let mut importModuleName2ModuleInfo: Map<str,Ast.ModuleInfo>;
 
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
@@ -122,7 +111,8 @@ pub class TransUnit {
    pub fn __init( macroEval: Ast.MacroEval,
               analyzeModule:str!, mode:str!, pos:&Parser.Position! )
    {
-      self.importModule2SymbolInfo = {};
+      self.importModuleName2ModuleInfo = {};
+      self.importModule2ModuleInfo = {};
       self.macroScope = nil;
       self.validMutControl = true;
       self.moduleName = "";
@@ -378,7 +368,7 @@ class _TypeInfo {
 }
 
 
-class _ModuleInfo {
+class _MetaInfo {
    //pub let _className2InfoMap: Map<str,Map<str,stem>>;
    pub let _typeId2ClassInfoMap: Map<int,Map<str,stem>>;
    pub let _typeInfoList: _TypeInfo[];
@@ -386,6 +376,8 @@ class _ModuleInfo {
    pub let _funcName2InfoMap: Map<str,stem>;
    pub let _moduleTypeId: int;
    pub let _moduleMutable: bool;
+   pub let _dependModuleMap: Map<str,Map<str,stem>>;
+   pub let _dependIdMap: Map<int,int[]>;
 }
 
 pub let mut typeInfoListInsert = Ast.typeInfoRoot;
@@ -981,54 +973,84 @@ fn TransUnit.analyzeBlock(
    return node;
 }
 
-fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
-   if self.moduleScope ~= self.scope {
-      self.error( "'import' must call at top scope." );
+
+/**
+modulePath で指定されたモジュールからメタ情報を読み込み、型情報を反映する。
+
+@param modulePath モジュール名。 例: 'hoge.foo.bar'
+@return 読み込んだメタ情報
+@return メタ情報内の typeId -> TypeInfo の Map
+@return インポート後の typeId -> メタ情報内の typeId の Map
+*/
+class DependModuleInfo {
+   let id:int;
+   let metaTypeId2TypeInfoMap:Map<int,&Ast.TypeInfo>;
+
+   pub fn getTypeInfo( metaTypeId:int ):&Ast.TypeInfo {
+      return unwrap self.metaTypeId2TypeInfoMap[ metaTypeId ];
    }
+}
 
-   // スコープをルートに変更
-   self.scope = Ast.rootScope;
 
-   let mut moduleToken = self.getToken();
-   let mut modulePath = moduleToken.txt;
-   let mut nextToken:&Parser.Token = moduleToken;
-
-   let mut nameList = [ moduleToken.txt ];
-
-   while true {
-      nextToken = self.getToken();
-      if nextToken.txt == "." {
-         nextToken = self.getToken();
-         moduleToken = nextToken;
-         modulePath = "%s.%s" ( modulePath, moduleToken.txt );
-         nameList.insert( moduleToken.txt );
-      } 
-      else {
-         break;
-      } 
+fn TransUnit.processImport( modulePath:str ) mut :
+   &_MetaInfo, &Map<int,&Ast.TypeInfo>
+{
+   if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
+      let metaInfo = frontInterface.loadMeta( modulePath )@@_MetaInfo;
+      return metaInfo, moduleInfo.$importId2localTypeInfoMap;
    }
-
-
-   let _obj2 = frontInterface.loadMeta( modulePath );
-   let moduleInfo = _obj2@@_ModuleInfo;
    
+   let mut nameList:str[] = [];
+   apply txt of string.gmatch( modulePath, '[^%.]+' ) {
+      nameList.insert( txt@@str );
+   }
+   
+   let metaInfo = frontInterface.loadMeta( modulePath )@@_MetaInfo;
+
+   // 依存するモジュールのメタ情報を読み込み
+   let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
+   foreach dependInfo, dependName in metaInfo._dependModuleMap {
+      if dependInfo.use {
+         let workModuleInfo, metaTypeId2TypeInfoMap = self.processImport( dependName );
+         let id = (unwrap dependInfo.id)@@int;
+         dependLibId2DependInfo[ id ] =
+            new DependModuleInfo( id, metaTypeId2TypeInfoMap );
+      }
+   }
+
    // 型情報の登録
+
+   // meta情報内の typeId -> typeInfo
    let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
    typeId2TypeInfo[ Ast.rootTypeId ] = Ast.typeInfoRoot;
+   let mut typeId2Scope: Map<int,Ast.Scope> = {};
+   typeId2Scope[ Ast.rootTypeId ] = self.scope;
 
+   
+   // 依存するモジュールの typeInfo と、 meta 情報内の typeId との紐付け
+   foreach dependIdInfo, typeId in metaInfo._dependIdMap {
+      let dependInfo = unwrap dependLibId2DependInfo[ dependIdInfo[ 1 ] ];
+      let typeInfo = dependInfo.getTypeInfo( dependIdInfo[ 2 ] );
+      typeId2TypeInfo[ typeId ] = typeInfo;
+      if! typeInfo.$scope {
+         typeId2Scope[ typeId ] = _exp;
+      }
+   }
+
+   let mut moduleTypeInfo = Ast.rootTypeInfo;
    foreach moduleName, index in nameList {
       let mut mutable = false;
       if index == #nameList {
-         mutable = moduleInfo._moduleMutable;
+         mutable = metaInfo._moduleMutable;
       }
-      self.pushModule( true, moduleName, mutable );
+      moduleTypeInfo = self.pushModule( true, moduleName, mutable );
    }
    foreach moduleName in nameList {
       self.popModule();
    }
 
 
-   //self.moduleName2Info[ modulePath ] = moduleInfo;
+   //self.moduleName2Info[ modulePath ] = metaInfo;
 
    foreach symbolInfo in Ast.sym2builtInTypeMap {
       typeId2TypeInfo[ symbolInfo.$typeInfo.get_typeId() ] = symbolInfo.$typeInfo;
@@ -1037,15 +1059,16 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
       typeId2TypeInfo[ builtinTypeInfo.$typeId ] = builtinTypeInfo;
    }
 
-   let mut typeId2Scope: Map<int,Ast.Scope> = {};
-   typeId2Scope[ Ast.rootTypeId ] = self.scope;
 
-   let mut newId2OldIdMap: Map<int,int> = {};
+   let mut newId2OldIdMap: Map<&Ast.TypeInfo,int> = {};
 
    fn registTypeInfo( atomInfo: _TypeInfo ): &Ast.TypeInfo {
       let mut newTypeInfo: &Ast.TypeInfo! = nil;
       if! atomInfo.srcTypeId {
-         let srcTypeInfo = unwrap typeId2TypeInfo[ _exp ];
+         let! srcTypeInfo = typeId2TypeInfo[ _exp ] {
+            Util.err( "not found srcType -- %s: %d, %d"
+                      ( modulePath, atomInfo.parentId, _exp ) );
+         };
          newTypeInfo = self.createModifier(
             srcTypeInfo, unwrap atomInfo.mutable default false);
          typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
@@ -1100,8 +1123,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                let mut scope = new Ast.Scope( parentScope, true, [] );
 
                let mut mutable = false;
-               if atomInfo.typeId == moduleInfo._moduleTypeId {
-                  mutable = moduleInfo._moduleMutable;
+               if atomInfo.typeId == metaInfo._moduleTypeId {
+                  mutable = metaInfo._moduleMutable;
                }  
                let workTypeInfo = Ast.NormalTypeInfo.createModule(
                   scope, parentInfo, true, atomInfo.txt, mutable );
@@ -1141,8 +1164,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                let mut argTypeInfo:List<&Ast.TypeInfo> = [];
                foreach typeId in atomInfo.argTypeId {
                   if not typeId2TypeInfo[ typeId ] {
-                     Util.log( "not found -- %s.%s, %d, %d"
-                               ( parentInfo.getTxt(), atomInfo.txt,
+                     Util.log( "not found -- %s, %s.%s, %d, %d"
+                               ( modulePath, parentInfo.getTxt(), atomInfo.txt,
                                  typeId, #atomInfo.argTypeId ) );  
                   }    
                   argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
@@ -1262,17 +1285,20 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    }
 
    // 初めに child 以外で TypeInfo を登録
-   foreach atomInfo in moduleInfo._typeInfoList {
+   foreach atomInfo in metaInfo._typeInfoList {
       registTypeInfo( atomInfo );
    }
 
    // 次に child を登録
-   foreach atomInfo in moduleInfo._typeInfoList {
+   foreach atomInfo in metaInfo._typeInfoList {
       if! let children = atomInfo.children {
          if #children > 0 {
             let mut scope = unwrap typeId2Scope[ atomInfo.typeId ];
             foreach childId in children {
-               let typeInfo = unwrap typeId2TypeInfo[ childId ];
+               let! typeInfo = typeId2TypeInfo[ childId ] {
+                  Util.err( "not found childId -- %s, %d, %s(%d)"
+                            (modulePath, childId, atomInfo.txt, atomInfo.typeId ) );
+               };
                let mut symbolKind = Ast.SymbolKind.Typ;
                let mut addFlag = true;
                switch typeInfo.$kind {
@@ -1304,18 +1330,21 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
 
    // インポート後の TypeId と インポート前の TypeId の紐付け
    foreach typeInfo, typeId in typeId2TypeInfo {
-      newId2OldIdMap[ typeInfo.get_typeId() ] = typeId;
+      newId2OldIdMap[ typeInfo ] = typeId;
    }
 
    // メンバーの登録
    fn registMember( classTypeId: int ) {
+      if metaInfo._dependIdMap[ classTypeId ] {
+         return;
+      }
       let mut classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
 
       switch ( classTypeInfo.$kind ) {
          case .Class {
             self.pushClass( true, classTypeInfo.$abstructFlag,
                             nil, nil, true, classTypeInfo.getTxt(), .Pub );
-            if! moduleInfo._typeId2ClassInfoMap[ classTypeId ] {
+            if! metaInfo._typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
                   let typeId = fieldInfo.typeId;
@@ -1328,8 +1357,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
                }  
             }  
             else {
-               self.error( "not found class -- %d, %s"
-                           (classTypeId, classTypeInfo.getTxt()) );
+               self.error( "not found class -- %s: %d, %s"
+                           (modulePath, classTypeId, classTypeInfo.getTxt()) );
             }
          }
          case .Module {
@@ -1342,7 +1371,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
             child.get_kind() == .Module or
             child.get_kind() == .IF
          {           
-            let oldId = newId2OldIdMap[ child.get_typeId() ];
+            let oldId = newId2OldIdMap[ child ];
             if oldId {
                registMember( unwrap oldId );
             }
@@ -1356,7 +1385,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
          self.popModule();
       }
    }
-   foreach atomInfo in moduleInfo._typeInfoList {
+   foreach atomInfo in metaInfo._typeInfoList {
       if atomInfo.parentId == Ast.rootTypeId and
          ( atomInfo.kind == Ast.TypeInfoKind.Class or
            atomInfo.kind == Ast.TypeInfoKind.Module or
@@ -1370,14 +1399,14 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    foreach moduleName, index in nameList {
       let mut mutable = false;
       if index == #nameList {
-         mutable = moduleInfo._moduleMutable;
+         mutable = metaInfo._moduleMutable;
       }
       self.pushModule( true, moduleName, mutable );
    }
 
 
    // 変数登録
-   foreach varInfo, varName in moduleInfo._varName2InfoMap {
+   foreach varInfo, varName in metaInfo._varName2InfoMap {
       self.scope.addStaticVar(
          false, true, varName, unwrap typeId2TypeInfo[ varInfo.typeId ],
          unwrap varInfo.mutable default false );
@@ -1389,17 +1418,48 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
 
    //dumpScope( self.rootScope, "" );
 
+   let moduleInfo = new Ast.ModuleInfo( modulePath, newId2OldIdMap );
+   self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
+   self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
+
+   return metaInfo, typeId2TypeInfo;
+}
+
+fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
+   if self.moduleScope ~= self.scope {
+      self.error( "'import' must call at top scope." );
+   }
+
+   // スコープをルートに変更
+   self.scope = Ast.rootScope;
+
+   let mut moduleToken = self.getToken();
+   let mut modulePath = moduleToken.txt;
+   let mut nextToken:&Parser.Token = moduleToken;
+
+   while true {
+      nextToken = self.getToken();
+      if nextToken.txt == "." {
+         nextToken = self.getToken();
+         moduleToken = nextToken;
+         modulePath = "%s.%s" ( modulePath, moduleToken.txt );
+      } 
+      else {
+         break;
+      } 
+   }
+
+   let metaInfo, typeId2TypeInfo = self.processImport( modulePath );
 
    // スコープを元に戻す
    self.scope = self.moduleScope;
 
-   // モジュールをスコープに登録する
-   let moduleTypeInfo = unwrap typeId2TypeInfo[ moduleInfo._moduleTypeId ];
-   let moduleSymbolInfo = self.scope.add(
+   // モジュールの末尾のシンボルでスコープに登録する。
+   // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
+   let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo._moduleTypeId ];
+   self.scope.add(
       Ast.SymbolKind.Typ, false, false, moduleToken.txt,
-      moduleTypeInfo, .Local, true, moduleInfo._moduleMutable, true );
-   self.importModule2SymbolInfo[ moduleTypeInfo ] =
-      new ModuleInfo( modulePath, moduleSymbolInfo, newId2OldIdMap );
+      moduleTypeInfo, .Local, true, metaInfo._moduleMutable, true );
 
    self.checkToken( nextToken, ";" );
 

@@ -123,33 +123,6 @@ ExpSymbolMode._val2NameMap[4] = 'Get'
 ExpSymbolMode.GetNil = 5
 ExpSymbolMode._val2NameMap[5] = 'GetNil'
 
-local ModuleInfo = {}
-function ModuleInfo.new( fullName, symbolInfo, idMap )
-  local obj = {}
-  ModuleInfo.setmeta( obj )
-  if obj.__init then obj:__init( fullName, symbolInfo, idMap ); end
-return obj
-end
-function ModuleInfo:__init(fullName, symbolInfo, idMap) 
-  self.fullName = fullName
-  self.symbolInfo = symbolInfo
-  self.localTypeId2importIdMap = idMap
-end
-function ModuleInfo.setmeta( obj )
-  setmetatable( obj, { __index = ModuleInfo  } )
-end
-function ModuleInfo:get_fullName()       
-  return self.fullName         
-end
-function ModuleInfo:get_symbolInfo()       
-  return self.symbolInfo         
-end
-function ModuleInfo:get_localTypeId2importIdMap()       
-  return self.localTypeId2importIdMap         
-end
-do
-  end
-
 local TransUnit = {}
 _moduleObj.TransUnit = TransUnit
 function TransUnit.new( macroEval, analyzeModule, mode, pos )
@@ -159,7 +132,8 @@ function TransUnit.new( macroEval, analyzeModule, mode, pos )
 return obj
 end
 function TransUnit:__init(macroEval, analyzeModule, mode, pos) 
-  self.importModule2SymbolInfo = {}
+  self.importModuleName2ModuleInfo = {}
+  self.importModule2ModuleInfo = {}
   self.macroScope = nil
   self.validMutControl = true
   self.moduleName = ""
@@ -433,19 +407,19 @@ self.abstructFlag = abstructFlag
 do
   end
 
-local _ModuleInfo = {}
-function _ModuleInfo.setmeta( obj )
-  setmetatable( obj, { __index = _ModuleInfo  } )
+local _MetaInfo = {}
+function _MetaInfo.setmeta( obj )
+  setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _ModuleInfo.new( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable )
+function _MetaInfo.new( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable, _dependModuleMap, _dependIdMap )
   local obj = {}
-  _ModuleInfo.setmeta( obj )
+  _MetaInfo.setmeta( obj )
   if obj.__init then
-    obj:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable )
+    obj:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable, _dependModuleMap, _dependIdMap )
   end        
   return obj 
 end         
-function _ModuleInfo:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable ) 
+function _MetaInfo:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable, _dependModuleMap, _dependIdMap ) 
 
 self._typeId2ClassInfoMap = _typeId2ClassInfoMap
   self._typeInfoList = _typeInfoList
@@ -453,6 +427,8 @@ self._typeId2ClassInfoMap = _typeId2ClassInfoMap
   self._funcName2InfoMap = _funcName2InfoMap
   self._moduleTypeId = _moduleTypeId
   self._moduleMutable = _moduleMutable
+  self._dependModuleMap = _dependModuleMap
+  self._dependIdMap = _dependIdMap
   end
 do
   end
@@ -954,44 +930,88 @@ function TransUnit:analyzeBlock( blockKind, scope )
   return node
 end
 
-function TransUnit:analyzeImport( token )
-  if self.moduleScope ~= self.scope then
-    self:error( "'import' must call at top scope." )
+local DependModuleInfo = {}
+function DependModuleInfo:getTypeInfo( metaTypeId )
+  return _lune.unwrap( self.metaTypeId2TypeInfoMap[metaTypeId])
+end
+function DependModuleInfo.setmeta( obj )
+  setmetatable( obj, { __index = DependModuleInfo  } )
+end
+function DependModuleInfo.new( id, metaTypeId2TypeInfoMap )
+  local obj = {}
+  DependModuleInfo.setmeta( obj )
+  if obj.__init then
+    obj:__init( id, metaTypeId2TypeInfoMap )
+  end        
+  return obj 
+end         
+function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap ) 
+
+self.id = id
+  self.metaTypeId2TypeInfoMap = metaTypeId2TypeInfoMap
   end
-  self.scope = Ast.rootScope
-  local moduleToken = self:getToken(  )
+do
+  end
+
+function TransUnit:processImport( modulePath )
+  do
+    local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
+    if moduleInfo ~= nil then
+    
+        local metaInfo = frontInterface.loadMeta( modulePath )
+        
+        return metaInfo, moduleInfo:get_importId2localTypeInfoMap()
+      end
+  end
   
-  local modulePath = moduleToken.txt
+  local nameList = {}
   
-  local nextToken = moduleToken
+  for txt in string.gmatch( modulePath, '[^%.]+' ) do
+    table.insert( nameList, txt )
+  end
+  local metaInfo = frontInterface.loadMeta( modulePath )
   
-  local nameList = {moduleToken.txt}
+  local dependLibId2DependInfo = {}
   
-  while true do
-    nextToken = self:getToken(  )
-    if nextToken.txt == "." then
-      nextToken = self:getToken(  )
-      moduleToken = nextToken
-      modulePath = string.format( "%s.%s", modulePath, moduleToken.txt)
-      table.insert( nameList, moduleToken.txt )
-    else 
-      break
+  for dependName, dependInfo in pairs( metaInfo._dependModuleMap ) do
+    if dependInfo['use'] then
+      local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName )
+      
+      local id = math.floor((_lune.unwrap( dependInfo['id']) ))
+      
+      dependLibId2DependInfo[id] = DependModuleInfo.new(id, metaTypeId2TypeInfoMap)
     end
   end
-  local _obj2 = frontInterface.loadMeta( modulePath )
-  
-  local moduleInfo = _obj2
-  
   local typeId2TypeInfo = {}
   
   typeId2TypeInfo[Ast.rootTypeId] = Ast.typeInfoRoot
+  local typeId2Scope = {}
+  
+  typeId2Scope[Ast.rootTypeId] = self.scope
+  for typeId, dependIdInfo in pairs( metaInfo._dependIdMap ) do
+    local dependInfo = _lune.unwrap( dependLibId2DependInfo[dependIdInfo[1]])
+    
+    local typeInfo = dependInfo:getTypeInfo( dependIdInfo[2] )
+    
+    typeId2TypeInfo[typeId] = typeInfo
+    do
+      local _exp = typeInfo:get_scope()
+      if _exp ~= nil then
+      
+          typeId2Scope[typeId] = _exp
+        end
+    end
+    
+  end
+  local moduleTypeInfo = Ast.rootTypeInfo
+  
   for index, moduleName in pairs( nameList ) do
     local mutable = false
     
     if index == #nameList then
-      mutable = moduleInfo._moduleMutable
+      mutable = metaInfo._moduleMutable
     end
-    self:pushModule( true, moduleName, mutable )
+    moduleTypeInfo = self:pushModule( true, moduleName, mutable )
   end
   for __index, moduleName in pairs( nameList ) do
     self:popModule(  )
@@ -1002,9 +1022,6 @@ function TransUnit:analyzeImport( token )
   for __index, builtinTypeInfo in pairs( Ast.builtInTypeIdSet ) do
     typeId2TypeInfo[builtinTypeInfo:get_typeId()] = builtinTypeInfo
   end
-  local typeId2Scope = {}
-  
-  typeId2Scope[Ast.rootTypeId] = self.scope
   local newId2OldIdMap = {}
   
   local function registTypeInfo( atomInfo )
@@ -1014,8 +1031,14 @@ function TransUnit:analyzeImport( token )
       local _exp = atomInfo.srcTypeId
       if _exp ~= nil then
       
-          local srcTypeInfo = _lune.unwrap( typeId2TypeInfo[_exp])
+          local srcTypeInfo = typeId2TypeInfo[_exp]
           
+              if  nil == srcTypeInfo then
+                local _srcTypeInfo = srcTypeInfo
+                
+                Util.err( string.format( "not found srcType -- %s: %d, %d", modulePath, atomInfo.parentId, _exp) )
+              end
+            
           newTypeInfo = self:createModifier( srcTypeInfo, _lune.unwrapDefault( atomInfo.mutable, false) )
           typeId2TypeInfo[atomInfo.typeId] = newTypeInfo
         else
@@ -1079,8 +1102,8 @@ function TransUnit:analyzeImport( token )
                   
                   local mutable = false
                   
-                  if atomInfo.typeId == moduleInfo._moduleTypeId then
-                    mutable = moduleInfo._moduleMutable
+                  if atomInfo.typeId == metaInfo._moduleTypeId then
+                    mutable = metaInfo._moduleMutable
                   end
                   local workTypeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, true, atomInfo.txt, mutable )
                   
@@ -1120,7 +1143,7 @@ function TransUnit:analyzeImport( token )
               
               for __index, typeId in pairs( atomInfo.argTypeId ) do
                 if not typeId2TypeInfo[typeId] then
-                  Util.log( string.format( "not found -- %s.%s, %d, %d", parentInfo:getTxt(  ), atomInfo.txt, typeId, #atomInfo.argTypeId) )
+                  Util.log( string.format( "not found -- %s, %s.%s, %d, %d", modulePath, parentInfo:getTxt(  ), atomInfo.txt, typeId, #atomInfo.argTypeId) )
                 end
                 table.insert( argTypeInfo, _lune.unwrap( typeId2TypeInfo[typeId]) )
               end
@@ -1229,10 +1252,10 @@ function TransUnit:analyzeImport( token )
     return _lune.unwrap( newTypeInfo)
   end
   
-  for __index, atomInfo in pairs( moduleInfo._typeInfoList ) do
+  for __index, atomInfo in pairs( metaInfo._typeInfoList ) do
     registTypeInfo( atomInfo )
   end
-  for __index, atomInfo in pairs( moduleInfo._typeInfoList ) do
+  for __index, atomInfo in pairs( metaInfo._typeInfoList ) do
     do
       local children = atomInfo.children
       if children ~= nil then
@@ -1241,8 +1264,14 @@ function TransUnit:analyzeImport( token )
             local scope = _lune.unwrap( typeId2Scope[atomInfo.typeId])
             
             for __index, childId in pairs( children ) do
-              local typeInfo = _lune.unwrap( typeId2TypeInfo[childId])
+              local typeInfo = typeId2TypeInfo[childId]
               
+                  if  nil == typeInfo then
+                    local _typeInfo = typeInfo
+                    
+                    Util.err( string.format( "not found childId -- %s, %d, %s(%d)", modulePath, childId, atomInfo.txt, atomInfo.typeId) )
+                  end
+                
               local symbolKind = Ast.SymbolKind.Typ
               
               local addFlag = true
@@ -1270,9 +1299,12 @@ function TransUnit:analyzeImport( token )
     
   end
   for typeId, typeInfo in pairs( typeId2TypeInfo ) do
-    newId2OldIdMap[typeInfo:get_typeId(  )] = typeId
+    newId2OldIdMap[typeInfo] = typeId
   end
   local function registMember( classTypeId )
+    if metaInfo._dependIdMap[classTypeId] then
+      return 
+    end
     local classTypeInfo = _lune.unwrap( typeId2TypeInfo[classTypeId])
     
     do
@@ -1280,7 +1312,7 @@ function TransUnit:analyzeImport( token )
       if _switchExp == Ast.TypeInfoKind.Class then
         self:pushClass( true, classTypeInfo:get_abstructFlag(), nil, nil, true, classTypeInfo:getTxt(  ), Ast.AccessMode.Pub )
         do
-          local _exp = moduleInfo._typeId2ClassInfoMap[classTypeId]
+          local _exp = metaInfo._typeId2ClassInfoMap[classTypeId]
           if _exp ~= nil then
           
               local classInfo = _exp
@@ -1294,7 +1326,7 @@ function TransUnit:analyzeImport( token )
               end
             else
           
-              self:error( string.format( "not found class -- %d, %s", classTypeId, classTypeInfo:getTxt(  )) )
+              self:error( string.format( "not found class -- %s: %d, %s", modulePath, classTypeId, classTypeInfo:getTxt(  )) )
             end
         end
         
@@ -1305,7 +1337,7 @@ function TransUnit:analyzeImport( token )
     
     for __index, child in pairs( classTypeInfo:get_children(  ) ) do
       if child:get_kind(  ) == Ast.TypeInfoKind.Class or child:get_kind(  ) == Ast.TypeInfoKind.Module or child:get_kind(  ) == Ast.TypeInfoKind.IF then
-        local oldId = newId2OldIdMap[child:get_typeId(  )]
+        local oldId = newId2OldIdMap[child]
         
         if oldId then
           registMember( _lune.unwrap( oldId) )
@@ -1319,7 +1351,7 @@ function TransUnit:analyzeImport( token )
     end
   end
   
-  for __index, atomInfo in pairs( moduleInfo._typeInfoList ) do
+  for __index, atomInfo in pairs( metaInfo._typeInfoList ) do
     if atomInfo.parentId == Ast.rootTypeId and (atomInfo.kind == Ast.TypeInfoKind.Class or atomInfo.kind == Ast.TypeInfoKind.Module or atomInfo.kind == Ast.TypeInfoKind.IF ) then
       registMember( atomInfo.typeId )
     end
@@ -1328,22 +1360,50 @@ function TransUnit:analyzeImport( token )
     local mutable = false
     
     if index == #nameList then
-      mutable = moduleInfo._moduleMutable
+      mutable = metaInfo._moduleMutable
     end
     self:pushModule( true, moduleName, mutable )
   end
-  for varName, varInfo in pairs( moduleInfo._varName2InfoMap ) do
+  for varName, varInfo in pairs( metaInfo._varName2InfoMap ) do
     self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[varInfo['typeId']]), _lune.unwrapDefault( varInfo['mutable'], false) )
   end
   for __index, moduleName in pairs( nameList ) do
     self:popModule(  )
   end
+  local moduleInfo = Ast.ModuleInfo.new(modulePath, newId2OldIdMap)
+  
+  self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
+  self.importModuleName2ModuleInfo[modulePath] = moduleInfo
+  return metaInfo, typeId2TypeInfo
+end
+
+function TransUnit:analyzeImport( token )
+  if self.moduleScope ~= self.scope then
+    self:error( "'import' must call at top scope." )
+  end
+  self.scope = Ast.rootScope
+  local moduleToken = self:getToken(  )
+  
+  local modulePath = moduleToken.txt
+  
+  local nextToken = moduleToken
+  
+  while true do
+    nextToken = self:getToken(  )
+    if nextToken.txt == "." then
+      nextToken = self:getToken(  )
+      moduleToken = nextToken
+      modulePath = string.format( "%s.%s", modulePath, moduleToken.txt)
+    else 
+      break
+    end
+  end
+  local metaInfo, typeId2TypeInfo = self:processImport( modulePath )
+  
   self.scope = self.moduleScope
-  local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[moduleInfo._moduleTypeId])
+  local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo._moduleTypeId])
   
-  local moduleSymbolInfo = self.scope:add( Ast.SymbolKind.Typ, false, false, moduleToken.txt, moduleTypeInfo, Ast.AccessMode.Local, true, moduleInfo._moduleMutable, true )
-  
-  self.importModule2SymbolInfo[moduleTypeInfo] = ModuleInfo.new(modulePath, moduleSymbolInfo, newId2OldIdMap)
+  self.scope:add( Ast.SymbolKind.Typ, false, false, moduleToken.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo._moduleMutable, true )
   self:checkToken( nextToken, ";" )
   if self.moduleScope ~= self.scope then
     self:error( "illegal top scope." )
@@ -1804,7 +1864,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
     if _exp ~= nil then
     
         for txt in string.gmatch( _exp, '[^%.]+' ) do
-          moduleTypeInfo = _lune.unwrap( self:pushModule( false, txt, true ))
+          moduleTypeInfo = self:pushModule( false, txt, true )
         end
       end
   end
@@ -1857,7 +1917,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
     end
     local luneHelperInfo = Ast.LuneHelperInfo.new(self.useNilAccess, self.useUnwrapExp)
     
-    local rootNode = Ast.RootNode.new(Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, nil, luneHelperInfo, self.typeId2ClassMap)
+    local rootNode = Ast.RootNode.new(Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, moduleTypeInfo, nil, luneHelperInfo, self.importModule2ModuleInfo, self.typeId2ClassMap)
     
     ast = rootNode
     do
@@ -4342,7 +4402,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
               
               self:checkEnumComp( nextToken, enumTyepInfo )
               if enumTyepInfo:getEnumValInfo( nextToken.txt ) then
-                if _exp:get_externalFlag() and not self.importModule2SymbolInfo[_exp:getModule(  ):get_srcTypeInfo()] then
+                if _exp:get_externalFlag() and not self.importModule2ModuleInfo[_exp:getModule(  ):get_srcTypeInfo()] then
                   self:addErrMess( token.pos, string.format( "This module not import -- %s", _exp:getTxt(  )) )
                 end
                 exp = Ast.ExpOmitEnumNode.new(token.pos, {enumTyepInfo}, nextToken, enumTyepInfo)

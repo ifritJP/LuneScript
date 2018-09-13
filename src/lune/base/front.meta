@@ -1,14 +1,5 @@
 local _moduleObj = {}
 ----- meta -----
-local _importList = {}
-_moduleObj._importList = _importList
-_importList[ 1 ] = 'lune.base.Option'
-_importList[ 2 ] = 'lune.base.Parser'
-_importList[ 3 ] = 'lune.base.TransUnit'
-_importList[ 4 ] = 'lune.base.Util'
-_importList[ 5 ] = 'lune.base.convLua'
-_importList[ 6 ] = 'lune.base.dumpNode'
-_importList[ 7 ] = 'lune.base.frontInterface'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -27,18 +18,30 @@ local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
+local _dependIdMap = {}
+_moduleObj._dependIdMap = _dependIdMap
 _typeInfoList[1] = { parentId = 1, typeId = 196, txt = 'lune', kind = 12, 
 children = {198, } }
 _typeInfoList[2] = { parentId = 196, typeId = 198, txt = 'base', kind = 12, 
 children = {200, } }
 _typeInfoList[3] = { parentId = 198, typeId = 200, txt = 'front', kind = 12, 
-children = {10960, } }
-_typeInfoList[4] = { parentId = 1, typeId = 10957, baseId = 1, txt = 'List',
+children = {6067, } }
+_typeInfoList[4] = { parentId = 1, typeId = 6064, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[5] = { parentId = 1, typeId = 10958, nilable = true, orgTypeId = 10957 }
-_typeInfoList[6] = { parentId = 200, typeId = 10960, baseId = 1, txt = 'exec',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {10957}, retTypeId = {}, children = {}, }
-_typeInfoList[7] = { parentId = 200, typeId = 10961, nilable = true, orgTypeId = 10960 }
+_typeInfoList[5] = { parentId = 1, typeId = 6065, nilable = true, orgTypeId = 6064 }
+_typeInfoList[6] = { parentId = 200, typeId = 6067, baseId = 1, txt = 'exec',
+        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {6064}, retTypeId = {}, children = {}, }
+_typeInfoList[7] = { parentId = 200, typeId = 6068, nilable = true, orgTypeId = 6067 }
+local _dependModuleMap = {}
+_moduleObj._dependModuleMap = _dependModuleMap
+_dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = false }
+_dependModuleMap[ 'lune.base.Option' ] = { id = 2, use = false }
+_dependModuleMap[ 'lune.base.Parser' ] = { id = 3, use = false }
+_dependModuleMap[ 'lune.base.TransUnit' ] = { id = 4, use = false }
+_dependModuleMap[ 'lune.base.Util' ] = { id = 5, use = false }
+_dependModuleMap[ 'lune.base.convLua' ] = { id = 6, use = false }
+_dependModuleMap[ 'lune.base.dumpNode' ] = { id = 7, use = false }
+_dependModuleMap[ 'lune.base.frontInterface' ] = { id = 8, use = false }
 _moduleObj._moduleTypeId = 200
 _moduleObj._moduleMutable = true
 ----- meta -----

@@ -108,7 +108,6 @@ do
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Filter } )
-_moduleObj.convFilter = convFilter
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
   local obj = {}
   convFilter.setmeta( obj )
@@ -229,13 +228,13 @@ function convFilter:outputMeta( node, baseIndent )
     self:writeln( "local _moduleObj = {}", baseIndent )
   end
   self:writeln( "----- meta -----", baseIndent )
-  self:writeln( "local _importList = {}", baseIndent )
-  self:writeln( "_moduleObj._importList = _importList", baseIndent )
+  local importModuleType2Index = {}
+  
+  local importNameMap = {}
+  
   do
-    local importNameMap = {}
-    
-    for __index, importName in pairs( self.typeInfo2ModuleName ) do
-      importNameMap[importName] = true
+    for typeInfo, moduleInfo in pairs( node:get_importModule2moduleInfo() ) do
+      importNameMap[moduleInfo:get_fullName()] = typeInfo
     end
     local index = 0
     
@@ -247,10 +246,10 @@ function convFilter:outputMeta( node, baseIndent )
       end
       table.sort( __sorted )
       for __index, importName in ipairs( __sorted ) do
-        flag = __map[ importName ]
+        typeInfo = __map[ importName ]
         do
           index = index + 1
-          self:writeln( string.format( "_importList[ %d ] = '%s'", index, importName), baseIndent )
+          importModuleType2Index[typeInfo] = index
         end
       end
     end
@@ -262,6 +261,14 @@ function convFilter:outputMeta( node, baseIndent )
   local typeId2UseFlag = {}
   
   local pickupClassMap = {}
+  
+  local function checkExportTypeInfo( typeInfo )
+    local moduleTypeInfo = typeInfo:getModule(  )
+    
+    local typeId = typeInfo:get_typeId()
+    
+    return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( Ast.rootTypeInfo ) )
+  end
   
   local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
     if typeInfo:get_typeId(  ) == Ast.rootTypeId then
@@ -412,36 +419,38 @@ function convFilter:outputMeta( node, baseIndent )
           local scope = _lune.unwrap( classTypeInfo:get_scope())
           
           if not Ast.isBuiltin( classTypeId ) then
-            local className = classTypeInfo:getTxt(  )
-            
-            self:writeln( "do", baseIndent + stepIndent )
-            self:writeln( string.format( "local _classInfo%s = {}", classTypeId), baseIndent + stepIndent )
-            self:writeln( string.format( "_typeId2ClassInfoMap[ %d ] = _classInfo%d", classTypeId, classTypeId), baseIndent + stepIndent )
             pickupTypeId( classTypeInfo, true, validChildrenSet[classTypeInfo] == nil and not classTypeInfo:get_externalFlag() )
-            do
-              local __sorted = {}
-              local __map = scope:get_symbol2TypeInfoMap()
-              for __key in pairs( __map ) do
-                table.insert( __sorted, __key )
-              end
-              table.sort( __sorted )
-              for __index, fieldName in ipairs( __sorted ) do
-                symbolInfo = __map[ fieldName ]
-                do
-                  local typeInfo = symbolInfo:get_typeInfo()
-                  
-                  if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
-                    if symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
-                      self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, fieldName), baseIndent + stepIndent )
-                      self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, symbolInfo:get_staticFlag()) .. string.format( "accessMode = %d, typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )), baseIndent + stepIndent )
-                      pickupTypeId( typeInfo )
+            if checkExportTypeInfo( classTypeInfo ) then
+              local className = classTypeInfo:getTxt(  )
+              
+              self:writeln( "do", baseIndent + stepIndent )
+              self:writeln( string.format( "local _classInfo%s = {}", classTypeId), baseIndent + stepIndent )
+              self:writeln( string.format( "_typeId2ClassInfoMap[ %d ] = _classInfo%d", classTypeId, classTypeId), baseIndent + stepIndent )
+              do
+                local __sorted = {}
+                local __map = scope:get_symbol2TypeInfoMap()
+                for __key in pairs( __map ) do
+                  table.insert( __sorted, __key )
+                end
+                table.sort( __sorted )
+                for __index, fieldName in ipairs( __sorted ) do
+                  symbolInfo = __map[ fieldName ]
+                  do
+                    local typeInfo = symbolInfo:get_typeInfo()
+                    
+                    if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
+                      if symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
+                        self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, fieldName), baseIndent + stepIndent )
+                        self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, symbolInfo:get_staticFlag()) .. string.format( "accessMode = %d, typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )), baseIndent + stepIndent )
+                        pickupTypeId( typeInfo )
+                      end
                     end
                   end
                 end
               end
+              
+              self:writeln( "end", baseIndent )
             end
-            
-            self:writeln( "end", baseIndent )
           end
         end
       end
@@ -495,7 +504,7 @@ function convFilter:outputMeta( node, baseIndent )
       return 
     end
     wroteTypeIdSet[typeId] = true
-    if typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) then
+    if checkExportTypeInfo( typeInfo ) then
       self:write( string.format( "_typeInfoList[%d] = ", listIndex) )
       listIndex = listIndex + 1
       local validChildren = validChildrenSet[typeInfo]
@@ -504,12 +513,17 @@ function convFilter:outputMeta( node, baseIndent )
         validChildren = typeId2TypeInfo
       end
       typeInfo:serialize( self, validChildren )
+    else 
     end
   end
   
   for typeId, typeInfo in pairs( self.pubEnumId2EnumTypeInfo ) do
     typeId2TypeInfo[typeId] = typeInfo
   end
+  self:writeln( "local _dependIdMap = {}", baseIndent )
+  self:writeln( "_moduleObj._dependIdMap = _dependIdMap", baseIndent )
+  local exportNeedModuleTypeInfo = {}
+  
   do
     local __sorted = {}
     local __map = typeId2TypeInfo
@@ -521,6 +535,63 @@ function convFilter:outputMeta( node, baseIndent )
       typeInfo = __map[ typeId ]
       do
         outputTypeInfo( typeInfo )
+        local moduleTypeInfo = typeInfo:getModule(  )
+        
+        exportNeedModuleTypeInfo[moduleTypeInfo] = true
+        do
+          local moduleIndex = importModuleType2Index[moduleTypeInfo]
+          if moduleIndex ~= nil then
+          
+              local moduleInfo = _lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo])
+              
+              do
+                local extId = moduleInfo:get_localTypeInfo2importIdMap()[typeInfo]
+                if extId ~= nil then
+                
+                    local valid = false
+                    
+                    if typeInfo:get_srcTypeInfo() ~= typeInfo then
+                      valid = true
+                    else 
+                      local orgTypeInfo = typeInfo
+                      
+                      if typeInfo:get_nilable() then
+                        orgTypeInfo = typeInfo:get_orgTypeInfo()
+                      end
+                      do
+                        local _switchExp = orgTypeInfo:get_kind()
+                        if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
+                          valid = true
+                        end
+                      end
+                      
+                    end
+                    if valid then
+                      self:writeln( string.format( "_dependIdMap[ %d ] = { %d, %d }", typeInfo:get_typeId(), moduleIndex, extId), baseIndent )
+                    end
+                  end
+              end
+              
+            end
+        end
+        
+      end
+    end
+  end
+  
+  self:writeln( "local _dependModuleMap = {}", baseIndent )
+  self:writeln( "_moduleObj._dependModuleMap = _dependModuleMap", baseIndent )
+  do
+    local __sorted = {}
+    local __map = importNameMap
+    for __key in pairs( __map ) do
+      table.insert( __sorted, __key )
+    end
+    table.sort( __sorted )
+    for __index, name in ipairs( __sorted ) do
+      moduleTypeInfo = __map[ name ]
+      do
+        self:writeln( string.format( "_dependModuleMap[ '%s' ] = { id = %d, use = %s }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), exportNeedModuleTypeInfo[moduleTypeInfo] or false), baseIndent )
       end
     end
   end
@@ -2004,6 +2075,10 @@ end
 
 -- none
 
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
+  return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo)
+end
+_moduleObj.createFilter = createFilter
 local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp

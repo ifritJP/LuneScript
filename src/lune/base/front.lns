@@ -88,7 +88,7 @@ fn convert(
    ast:&TransUnit.ASTInfo, streamName:str,
    mut stream:oStream, mut metaStream:oStream, convMode:str, inMacro:bool )  
 {
-   let mut conv = new convLua.convFilter(
+   let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro, ast.$moduleTypeInfo );
    ast.$node.processFilter( conv, nil, 0 );
 }

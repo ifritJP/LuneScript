@@ -345,6 +345,23 @@ pub class TypeInfo {
    pub fn get_parentInfo(): &TypeInfo {
       return self;
    }
+
+   /**
+   この型情報に、 other から辿ることができるか？
+   具体的には other の名前空間の上位に、この型情報か？
+   */
+   pub fn hasRouteNamespaceFrom( mut other: &TypeInfo ): bool {
+      while true {
+         if other == self {
+            return true;
+         }
+         if other.$parentInfo == other {
+            break;
+         }
+         other = other.$parentInfo;
+      }
+      return false;
+   }
    pub fn getModule(): &TypeInfo {
       if self.isModule() {
          return self;
@@ -918,7 +935,8 @@ pub class ModuleTypeInfo extend TypeInfo {
       };
       if! validChildrenSet {
          foreach child in self.$children {
-            if set[ child.$typeId ] {
+            if set[ child.$typeId ] and
+               ( child.$accessMode == .Pub or child.$accessMode == .Global ) {
                stream.write( "%d, " ( child.$typeId ) );
             }  
          }  
@@ -2115,10 +2133,30 @@ pub class LuneHelperInfo {
    pri let useUnwrapExp:bool { pub };
 }
 
+pub class ModuleInfo {
+   pri let fullName:str{ pub };
+   //pri let symbolInfo:&SymbolInfo { pub };
+   pri let localTypeInfo2importIdMap:Map<&TypeInfo,int> { pub };
+   pri let mut importId2localTypeInfoMap:Map<int,&TypeInfo> { pub& };
+
+   //pub fn __init( fullName:str, symbolInfo:&SymbolInfo, idMap:Map<int,int> ) {
+   pub fn __init( fullName:str, idMap:Map<&TypeInfo,int> ) {
+      self.fullName = fullName;
+      //self.symbolInfo = symbolInfo;
+      self.localTypeInfo2importIdMap = idMap;
+      self.importId2localTypeInfoMap = {};
+      foreach importId, typeInfo in idMap {
+         self.importId2localTypeInfoMap[ importId ] = typeInfo;
+      }
+   }
+}
+
 _declNodeClass( "Root", Node, false, false,
                 [ { "children": "List<&Node>" },
+                  { "moduleTypeInfo": "&TypeInfo" },
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "LuneHelperInfo" },
+                  { "importModule2moduleInfo": "Map<&TypeInfo,ModuleInfo>" },
                   { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]
 );
 

@@ -470,6 +470,18 @@ end
 function TypeInfo:get_parentInfo(  )
   return self
 end
+function TypeInfo:hasRouteNamespaceFrom( other )
+  while true do
+    if other == self then
+      return true
+    end
+    if other:get_parentInfo() == other then
+      break
+    end
+    other = other:get_parentInfo()
+  end
+  return false
+end
 function TypeInfo:getModule(  )
   if self:isModule(  ) then
     return self
@@ -1080,6 +1092,10 @@ function NilableTypeInfo:get_parentInfo( ... )
   return self.orgTypeInfo:get_parentInfo( ... )
 end       
 
+function NilableTypeInfo:hasRouteNamespaceFrom( ... )
+  return self.orgTypeInfo:hasRouteNamespaceFrom( ... )
+end       
+
 function NilableTypeInfo:getModule( ... )
   return self.orgTypeInfo:getModule( ... )
 end       
@@ -1232,6 +1248,10 @@ function ModifierTypeInfo:get_parentInfo( ... )
   return self.srcTypeInfo:get_parentInfo( ... )
 end       
 
+function ModifierTypeInfo:hasRouteNamespaceFrom( ... )
+  return self.srcTypeInfo:hasRouteNamespaceFrom( ... )
+end       
+
 function ModifierTypeInfo:getModule( ... )
   return self.srcTypeInfo:getModule( ... )
 end       
@@ -1358,7 +1378,7 @@ function ModuleTypeInfo:serialize( stream, validChildrenSet )
     if _exp ~= nil then
     
         for __index, child in pairs( self:get_children() ) do
-          if set[child:get_typeId()] then
+          if set[child:get_typeId()] and (child:get_accessMode() == AccessMode.Pub or child:get_accessMode() == AccessMode.Global ) then
             stream:write( string.format( "%d, ", child:get_typeId()) )
           end
         end
@@ -2626,6 +2646,37 @@ end
 do
   end
 
+local ModuleInfo = {}
+_moduleObj.ModuleInfo = ModuleInfo
+function ModuleInfo.new( fullName, idMap )
+  local obj = {}
+  ModuleInfo.setmeta( obj )
+  if obj.__init then obj:__init( fullName, idMap ); end
+return obj
+end
+function ModuleInfo:__init(fullName, idMap) 
+  self.fullName = fullName
+  self.localTypeInfo2importIdMap = idMap
+  self.importId2localTypeInfoMap = {}
+  for typeInfo, importId in pairs( idMap ) do
+    self.importId2localTypeInfoMap[importId] = typeInfo
+  end
+end
+function ModuleInfo.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfo  } )
+end
+function ModuleInfo:get_fullName()       
+  return self.fullName         
+end
+function ModuleInfo:get_localTypeInfo2importIdMap()       
+  return self.localTypeInfo2importIdMap         
+end
+function ModuleInfo:get_importId2localTypeInfoMap()       
+  return self.importId2localTypeInfoMap         
+end
+do
+  end
+
 -- none
 
 function Filter:processRoot( node, ... )
@@ -2653,20 +2704,22 @@ end
 function RootNode:canBeLeft(  )
   return false
 end
-function RootNode.new( pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap )
+function RootNode.new( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, importModule2moduleInfo, typeId2ClassMap )
   local obj = {}
   RootNode.setmeta( obj )
-  if obj.__init then obj:__init( pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap ); end
+  if obj.__init then obj:__init( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, importModule2moduleInfo, typeId2ClassMap ); end
 return obj
 end
-function RootNode:__init(pos, typeList, children, provideNode, luneHelperInfo, typeId2ClassMap) 
+function RootNode:__init(pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, importModule2moduleInfo, typeId2ClassMap) 
   Node.__init( self, _moduleObj.nodeKindRoot, pos, typeList)
   
   -- none
   
   self.children = children
+  self.moduleTypeInfo = moduleTypeInfo
   self.provideNode = provideNode
   self.luneHelperInfo = luneHelperInfo
+  self.importModule2moduleInfo = importModule2moduleInfo
   self.typeId2ClassMap = typeId2ClassMap
   -- none
   
@@ -2677,11 +2730,17 @@ end
 function RootNode:get_children()       
   return self.children         
 end
+function RootNode:get_moduleTypeInfo()       
+  return self.moduleTypeInfo         
+end
 function RootNode:get_provideNode()       
   return self.provideNode         
 end
 function RootNode:get_luneHelperInfo()       
   return self.luneHelperInfo         
+end
+function RootNode:get_importModule2moduleInfo()       
+  return self.importModule2moduleInfo         
 end
 function RootNode:get_typeId2ClassMap()       
   return self.typeId2ClassMap         

@@ -52,6 +52,24 @@ release-check:
 	$(MAKE) test-comp
 	$(MAKE) test-comp LUA=lua5.2
 
+# LuneScript 自身のソースを Lua に変換する。
+#
+# 次の手順で実行する。
+# - lune/base/ 内にある Lua に変換済みの LuneScript (以降orginalとする)を使用して、
+#   lune/base/ 内の .lns ファイルを .lua に変換し、 work/1/lune/base に格納する。
+# - orginal を利用してテスト用コードを実行し、
+#   出力を work/test.result, work/test1.result に格納する
+# - work/1/lune/base に格納した新しい LuneScript を利用して、
+#   再度 .lns ファイルを .lua に変換し、work/2/lune/base に格納する。
+# - work/2/lune/base に格納した新しい LuneScript を利用して、
+#   再度 .lns ファイルを .lua に変換し、work/3/lune/base に格納する。
+#   これを candidate とする
+# - work/2 と work/3 を比較し、同じになっているか確認する。
+# - candidate を利用してテスト用コードを実行し、
+#   出力を work/test2.result, work/test3.result に格納する
+# - work/test.result, work/test1.result と、
+#   work/test2.result, work/test3.result を比較し、同じになっているか確認する。
+# - 上記の比較が全て同じなら、 candidate を orginal とする。
 test-comp:
 	rm -rf work
 	mkdir -p work/1/lune/base
@@ -107,10 +125,9 @@ test-comp2:
 
 #		sed 's/.*error:/error:/' >> work/test1.result
 
+# 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
 	$(call buildLns,work/1,../2)
-
 	$(call buildLns,work/2,../3)
-
 	diff -r work/2 work/3
 
 	cp -a test work/3

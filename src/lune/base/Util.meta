@@ -1,8 +1,5 @@
 local _moduleObj = {}
 ----- meta -----
-local _importList = {}
-_moduleObj._importList = _importList
-_importList[ 1 ] = 'lune.base.Depend'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -25,6 +22,8 @@ local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
+local _dependIdMap = {}
+_moduleObj._dependIdMap = _dependIdMap
 _typeInfoList[1] = { parentId = 1, typeId = 46, srcTypeId = 11, mutable = false }
 _typeInfoList[2] = { parentId = 1, typeId = 196, txt = 'lune', kind = 12, 
 children = {198, } }
@@ -71,6 +70,9 @@ _typeInfoList[28] = { parentId = 200, typeId = 245, nilable = true, orgTypeId = 
 _typeInfoList[29] = { parentId = 200, typeId = 263, baseId = 1, txt = 'getReadyCode',
         staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 25}, retTypeId = {13}, children = {}, }
 _typeInfoList[30] = { parentId = 200, typeId = 264, nilable = true, orgTypeId = 263 }
+local _dependModuleMap = {}
+_moduleObj._dependModuleMap = _dependModuleMap
+_dependModuleMap[ 'lune.base.Depend' ] = { id = 1, use = false }
 _moduleObj._moduleTypeId = 200
 _moduleObj._moduleMutable = true
 ----- meta -----

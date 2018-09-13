@@ -184,7 +184,7 @@ pub fn TransUnit.createAST(
       apply txt of string.gmatch( _exp, '[^%.]+' ) {
          // moduleTypeInfo = unwrap self.pushClass(
          //    true, false, nil, nil, false, txt@@str, "pub" );
-         moduleTypeInfo = unwrap self.pushModule( false, txt@@str, true );
+         moduleTypeInfo = self.pushModule( false, txt@@str, true );
       }
    }
    self.moduleScope = self.scope;
@@ -238,8 +238,9 @@ pub fn TransUnit.createAST(
       let mut luneHelperInfo =
          new Ast.LuneHelperInfo( self.useNilAccess, self.useUnwrapExp );
       let mut rootNode = new Ast.RootNode(
-         new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ],
-         children, nil, luneHelperInfo, self.typeId2ClassMap );
+         new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ], children,
+         moduleTypeInfo, nil,     
+         luneHelperInfo, self.importModule2ModuleInfo, self.typeId2ClassMap );
       ast = rootNode;
       if! self.provideNode {
          if lastStatement ~= _exp {
