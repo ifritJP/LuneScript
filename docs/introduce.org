@@ -255,7 +255,7 @@ let name : int[];
 リストのオブジェクトは、 insert、 remove メソッドを持ちます。
 
 #+BEGIN_SRC lns
-let list:int[] = [];
+let mut list:int[] = [];
 list.insert( 1 );  // [ 1 ]
 list.insert( 2 );  // [ 1, 2 ]
 list.insert( 3 );  // [ 1, 2, 3 ]
@@ -279,7 +279,7 @@ print( list[ 1 ] ); -- 'a'
 サイズが固定であること以外はリストと同じです。
 
 #+BEGIN_SRC lns
-let list = [@ 1, 2 ];
+let mut list = [@ 1, 2 ];
 list.insert( 1 );  // error
 #+END_SRC
 
@@ -647,7 +647,7 @@ doblock が終了すると、val の値が外側のスコープの val に反映
 
 #+BEGIN_SRC lns
 fn test( arg:int!, arg2:int! ) {
-  let val = 1;
+  let mut val = 1;
   let val2 = 1;
   sync! val, val3 = arg, arg2 { print( 0 ); return; } do { val = arg + arg2; }
   print( val );
@@ -1247,7 +1247,7 @@ macro _test2( val:int, funcxx:sym ) {
                 print( "hoge %d" ( index ) );
             }
         };
-        let stat3:stat[] = [];
+        let mut stat3:stat[] = [];
         for index = 1, 4 {
             stat3.insert( `{ print( "foo %d" ( ,,index ) ); } );
         }
