@@ -856,85 +856,199 @@ fn hoge( ... ) : stem! {
 - 全てがオーバーライド可能なメソッドとなる。
   - オーバーライドの抑制はできない。
 - 継承間で引数の異なる同名メソッドは定義できない。
-  - ただし、コンストラクタは例外。
+  - ただし、コンストラクタは例外で同じ名前( __init )。
+
+クラス宣言の最小サンプルを示す。
 
 #+BEGIN_SRC lns
-pub class Hoge : superClass {
-  let pri val : int { pub, pri };
-  pub fn __init( arglist ) {
-    super( arglist );
-  }
-  pub fn __free() {
-  }
-  pub fn func( arglist ) : retTypeList {
-  }
-  pub static fn sub( arglist ) : retTypeList {
-  }
-
-  pub override fn proc() : retTypeList {
-  }
-
-  let pri data : Other;
+class Hoge {
 }
 #+END_SRC
 
-メンバ、メソッドのアクセス制御は pub/pro/pri を使用。
-pro は、自分自身と継承しているクラスからアクセスを許可する。
+このサンプルは、 Hoge という名前のクラスを宣言している。
+メンバもメソッドも持たないため、
+現実的に利用することはないだろうが、クラス宣言としてはこれが最小である。
 
-static を付けることで、クラスメソッド、クラスメンバとなる。
-
-クラスを外部モジュールに公開する場合は pub を指定する。
-ただし公開可能なクラスは、最上位のスコープで定義した関数でなければならない。
-例えば if や while 等のブロック内で定義したクラスは、公開できない。
-
-*** コンストラクタ
-
-コンストラクタは __init で宣言する。
-スーパークラスのコンストラクタをコールする場合は super() を使用する。
-super() は、コンストラクタの先頭で呼び出す必要がある。
-これは Java と同じ扱い。
-
-コンストラクタ内で、自分自身にアクセスする場合は self を使用する。
-
-コンストラクタで、全てのメンバに値を設定しなければならない。
-
-設定しなかった時の動作は *未定義* 。
-
-**** 暗黙的コンストラクタ
-
-コンストラクタを宣言しない場合、暗黙的にコンストラクタが生成される。
-
-この暗黙的コンストラクタは、全てのメンバを引数に持つコンストラクタになる。
-
-コンストタクタの引数の順番は、メンバの宣言順となる。
-
-*** new
-
-宣言したクラスのインスタンスを生成するには new を使用する。
+なお、 class を外部モジュールに公開する場合は、次のように pub を付けて宣言する。
 
 #+BEGIN_SRC lns
+pub class Hoge {
+}
+#+END_SRC
+
+*** メンバ、メソッド
+
+クラスはメンバ(変数)、メソッド(関数)を持つことが出来る。
+
+例えば、次は val1,val2 のメンバと、 func() のメソッドを持つ。
+
+#+BEGIN_SRC lns
+class Hoge {
+  let val1:int;
+  let val2:int;
+  pub fn func( val:int ): int {
+     return val + self.val1 + self.val2;
+  }
+}
+#+END_SRC
+
+メソッドの処理から自分自身のインスタンスにアクセスする場合、
+self を利用する (C++ の場合 this )。
+
+なお、 C++ ではメソッドの処理から自分自身のメンバやメソッドにアクセスする場合、
+次のように this ポインタを経由する方法と、そのまま直にアクセスすることが可能である。
+
+#+BEGIN_SRC cpp
+this->val = 1;
+val = 1;
+#+END_SRC
+
+一方で、LuneScript では必ず self を使用しなければならない。
+
+**** アクセス制御
+
+LuneScript では、メンバ、メソッドのアクセス制御を行なえる。     
+
+アクセス制御には 'pub', 'pro', 'pri' を指定する。
+
+それぞれの意味は次の通り。 (C++ と同じ)
+
+- pub
+  - どこからでもアクセス可
+- pro
+  - サブクラスからアクセス可
+- pri    
+  - このクラス内からのみアクセス可
+    
+アクセス制御を明示しない場合、デフォルトの pri が使用される。    
+
+次の例は、 val1 が pri, val2 が pro, func が pub である。
+
+#+BEGIN_SRC lns
+class Hoge {
+  pri let val1:int;
+  pro let val2:int;
+  pub fn func( val:int ): int {
+     return val + self.val1 + self.val2;
+  }
+}
+#+END_SRC
+
+
+*** インスタンスの生成
+
+クラスのインスタンス生成には new を使用する。
+
+次は、 Hoge クラスのインスタンスを生成している。
+
+#+BEGIN_SRC lns
+class Hoge {
+}
 let hoge = new Hoge();
 #+END_SRC
 
-*** メンバ宣言
+new 演算子の後には、クラスを指定する。
+クラスがメンバを持つ場合、
+次のように設定するメンバの値を new の後のクラスの () で指定する。
 
-メンバ宣言は、変数宣言と基本は同じだが以下の点で異なる。
+#+BEGIN_SRC lns
+class Hoge {
+  let val1:int;
+  let val2:int;
+}
+let hoge = new Hoge(1,2);
+#+END_SRC
 
-*型宣言の後の {} で、アクセッサを宣言できる。*
+*** コンストラクタ
+
+クラスはコンストラクタを持てる。
+コンストラクタは、クラスの全メンバの初期化を行なう。
+
+例えば次の場合、 コンストラクタで val1, val2 の初期化を行なっている。
+
+#+BEGIN_SRC lns
+class Hoge {
+  let val1:int;
+  let val2:int;
+  pub fn __init() {
+    self.val1 = 0;
+    self.val2 = 0;
+  }
+}
+let hoge = new Hoge();
+#+END_SRC
+
+このとき、new に続くクラス名の後に指定する引数には値を指定しない。
+new の引数はそのクラスの引数であり、
+この例のクラスのコンストラクタは引数を持たないため new には値を指定しない。
+
+なお、コンストラクタを自前で作成しない場合は、
+自動で全メンバを引数に持つコンストラクタが生成される。
+この時生成されるコンストラクタの引数は、メンバの宣言順となる。
+
+コンストラクタを自前で作成する場合、次の制約がある。
+
+- 全てのメンバを初期化しなければならない。
+- コンストラクタの宣言の後に、メンバを宣言してはならない。
+- return を使用してはならない。
+  
+スーパークラスのコンストラクタをコールする場合は super() を使用する。
+super() は、コンストラクタの先頭で呼び出す必要がある。
+
+クラスを継承している場合、コンストラクタは自前で作成しなければならない。
+
+*** static
+
+メンバ、メソッドの宣言時 static を付加することで、
+静的なメンバ、メソッドを作成することが出来る。
+
+次は、static なメンバ val, メソッド func() を持つクラスのサンプルである。
+
+#+BEGIN_SRC lns
+class Hoge {
+  static let val:int;
+  __init {
+    Hoge.val = 1;
+  }
+  static pub fn func():int {
+     return 2;
+  }
+}
+print( Hoge.val, Hoge.func() ); // 1, 2
+#+END_SRC
+
+static メンバ、メソッドは、インスタンスを生成せずに利用できる。
+
+**** __init ブロック
+
+static なメンバを初期化するブロックである。
+
+static なメンバを持つクラスは、必ず __init ブロックを宣言しなければならない。
+
+__init ブロックは次の制約がある。
+
+- 全ての static メンバを初期化しなければならない。
+- __init ブロックの後に、 static メンバを宣言してはならない。
+
+
+*** アクセッサ
+
+メンバ宣言時に、アクセッサを同時に宣言できる。
 
 このアクセッサは getter, setter の順に宣言し、
 宣言箇所にはアクセス権限(pub/pro/pri)を指定する。
 
+例えば次の場合、
+メンバ val に対して pub の getter と pri の setter が作られる。
+
 #+BEGIN_SRC lns
   let pri val : int { pub, pri };
 #+END_SRC
 
-例えば上記の場合、
-メンバ val に対して pub の getter と pri の setter が作られる。
 作られる getter と setter は、 get_val(), set_val() のメソッドとなる。
 同名のメソッドが存在する場合は、この宣言は無視される。
 
-アクセッサ宣言の {} は省略した場合、アクセッサは作成されない。
+アクセッサ宣言の {} を省略した場合、アクセッサは作成されない。
 getter だけ指定し、 setter を省略した場合は、 getter だけ作成される。
 
 **** getter アクセス
@@ -942,7 +1056,8 @@ getter だけ指定し、 setter を省略した場合は、 getter だけ作成
 メンバの getter にアクセスする際は、
 .get_member() だけでなく、 .$member でもアクセスできる。
 
-なお、 member が pub だった場合も .$member でアクセスできる。
+なおアクセッサではなく、メンバ member 自体が pub だった場合も
+.$member でアクセスできる。
 
 #+BEGIN_SRC lns
 class Test {
@@ -952,21 +1067,52 @@ Test test = new Test( 10 );
 print( test.$val );  -- 10
 #+END_SRC
 
-*** メソッド
+*** 継承
+
+LuneScript は、クラスの継承をサポートする。
+ただし、多重継承はサポートしない。
+
+その代わりに、インタフェースをサポートする。
+
+継承は次のように extend で宣言する。
 
 #+BEGIN_SRC lns
-[ pub | pro | pri ] [ override ] fn func( arglist ): retTypeList {
+class Super {
+}
+class Sub extend Super {
+  pub fn __init() {
+     super();
+  }
 }
 #+END_SRC
 
-メソッドは上記のように宣言する。
+この例は、Sub クラスが Super クラスを継承している。
 
-アクセス制御とメソッド名、引数と続き、最後に戻り値の型を宣言する。
+*** override
 
-メソッド内で自身のメンバ、メソッドにアクセスする場合は self を使用する。
+全てのメソッドはオーバーライド可能である。
 
-override は、メソッドをオーバーライドする際に宣言する。
+メソッドをオーバーライドする場合、次のように override を宣言しなければならない。
 
+#+BEGIN_SRC lns
+class Super {
+  pub fn func() {
+  }
+}
+class Sub extend Super {
+  pub fn __init() {
+     super();
+  }
+  pub override fn func() {
+  }
+}
+#+END_SRC
+
+*** インタフェース
+
+インタフェースは、メソッドの型だけを宣言可能なクラスである。
+
+メンバを持つことや、メソッドの処理を定義することは出来ない。
 
 *** メソッド 呼び出し
 

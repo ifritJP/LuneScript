@@ -722,6 +722,8 @@ fn TransUnit.analyzeClassBody(
       memberList, self.scope, initStmtList, advertiseList, trustList, {} );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
    let mut declCtorNode:Ast.Node! = nil;
+   let mut hasInitBlock = false;
+   let mut hasStaticMember = false;
    
    while true {
       let mut token = self.getToken();
@@ -760,11 +762,19 @@ fn TransUnit.analyzeClassBody(
           
 
       if token.txt == "let" {
+         if staticFlag {
+            hasStaticMember = true;
+         }
          if mode == .Interface {
             self.addErrMess( token.pos, "interface can not have member" );
          }
          if not staticFlag and declCtorNode {
-            self.addErrMess( token.pos, "member can't declare after '__init' method." );
+            self.addErrMess(
+               token.pos, "member can't declare after '__init' method." );
+         }
+         elseif staticFlag and hasInitBlock {
+            self.addErrMess(
+               token.pos, "static member can't declare after '__init' block." );
          }
          let memberNode = self.analyzeDeclMember( accessMode, staticFlag, token );
          fieldList.insert( memberNode );
@@ -786,6 +796,7 @@ fn TransUnit.analyzeClassBody(
          if mode ~= .Class {
             self.error( "%s can not have __init method" (mode) );
          }
+         hasInitBlock = true;
          foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
             if symbolInfo.$staticFlag {
                // 一旦全てのメンバを値なし状態にセットする
@@ -818,17 +829,37 @@ fn TransUnit.analyzeClassBody(
       }
    }
 
-   if! declCtorNode {
+   if mode ~= .Module {
+      if! declCtorNode {
+         foreach memberNode, memberName in memberName2Node {
+            if not memberNode.$staticFlag {
+               let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
+               let typeInfo = symbolInfo.$typeInfo;
+               if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
+                  self.addErrMess( _exp.$pos,
+                                   "does not set member -- %s.%s %s"
+                                   ( name.txt, memberName, symbolInfo.$symbolId ) );
+               }  
+            }  
+         }  
+      }
+
+      if hasStaticMember and not hasInitBlock {
+         self.addErrMess(
+            node.$pos,
+            "This class (%s) need __init block for initialize static members." ( name.txt ) );   
+      }  
+
       foreach memberNode, memberName in memberName2Node {
-         if not memberNode.$staticFlag {
+         if memberNode.$staticFlag {
             let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
             let typeInfo = symbolInfo.$typeInfo;
             if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
-               self.addErrMess( _exp.$pos,
+               self.addErrMess( memberNode.$pos,
                                 "does not set member -- %s %s"
                                 ( memberName, symbolInfo.$symbolId ) );
-            }
-         }
+            }  
+         }  
       }
    }
 

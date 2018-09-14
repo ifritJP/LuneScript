@@ -1,7 +1,10 @@
 class Test {
    pri static let val:int {pub};
+   __init {
+      Test.val = 0;
+   }
    pri let mut val1:int {pub};
-   pub fn __init( val:int ) {
+      pub fn __init( val:int ) {
       super( 1 );
       self.val1 = val;
       return; // error: return
@@ -41,6 +44,9 @@ class Test3 {
    pri let val1:int;
    pub let mut val2:int;
    pub static let val3:int;
+   __init {
+      Test3.val3 = 0;
+   }
    pub fn __init() {
       self.val1, self.val2 = 0, 1;
    }
@@ -70,6 +76,19 @@ interface Test6 {
 
 class Test extend Test6 { // error
 }
+
+class Test7 { // error
+   static let val:int;
+}
+
+class Test8 {
+   static let val1:int;
+   static let val2:int;
+   __init {
+      Test8.val1 = 1;
+   }
+}
+
 
 class Super1 {
    pri let val:int;

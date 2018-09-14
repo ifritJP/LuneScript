@@ -2365,6 +2365,10 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, classTyp
   self.typeInfo2ClassNode[classTypeInfo] = node
   local declCtorNode = nil
   
+  local hasInitBlock = false
+  
+  local hasStaticMember = false
+  
   while true do
     local token = self:getToken(  )
     
@@ -2406,11 +2410,16 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, classTyp
       abstructFlag = true
     end
     if token.txt == "let" then
+      if staticFlag then
+        hasStaticMember = true
+      end
       if mode == DeclClassMode.Interface then
         self:addErrMess( token.pos, "interface can not have member" )
       end
       if not staticFlag and declCtorNode then
         self:addErrMess( token.pos, "member can't declare after '__init' method." )
+      elseif staticFlag and hasInitBlock then
+        self:addErrMess( token.pos, "static member can't declare after '__init' block." )
       end
       local memberNode = self:analyzeDeclMember( accessMode, staticFlag, token )
       
@@ -2431,6 +2440,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, classTyp
       if mode ~= DeclClassMode.Class then
         self:error( string.format( "%s can not have __init method", mode) )
       end
+      hasInitBlock = true
       for symbolName, symbolInfo in pairs( self.scope:get_symbol2TypeInfoMap() ) do
         if symbolInfo:get_staticFlag() then
           symbolInfo:set_hasValueFlag( false )
@@ -2464,24 +2474,40 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, classTyp
       self:error( "illegal field" )
     end
   end
-  do
-    local _exp = declCtorNode
-    if _exp ~= nil then
-    
-        for memberName, memberNode in pairs( memberName2Node ) do
-          if not memberNode:get_staticFlag() then
-            local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
-            
-            local typeInfo = symbolInfo:get_typeInfo()
-            
-            if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
-              self:addErrMess( _exp:get_pos(), string.format( "does not set member -- %s %s", memberName, symbolInfo:get_symbolId()) )
+  if mode ~= DeclClassMode.Module then
+    do
+      local _exp = declCtorNode
+      if _exp ~= nil then
+      
+          for memberName, memberNode in pairs( memberName2Node ) do
+            if not memberNode:get_staticFlag() then
+              local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
+              
+              local typeInfo = symbolInfo:get_typeInfo()
+              
+              if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
+                self:addErrMess( _exp:get_pos(), string.format( "does not set member -- %s.%s %s", name.txt, memberName, symbolInfo:get_symbolId()) )
+              end
             end
           end
         end
+    end
+    
+    if hasStaticMember and not hasInitBlock then
+      self:addErrMess( node:get_pos(), string.format( "This class (%s) need __init block for initialize static members.", name.txt) )
+    end
+    for memberName, memberNode in pairs( memberName2Node ) do
+      if memberNode:get_staticFlag() then
+        local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
+        
+        local typeInfo = symbolInfo:get_typeInfo()
+        
+        if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
+          self:addErrMess( memberNode:get_pos(), string.format( "does not set member -- %s %s", memberName, symbolInfo:get_symbolId()) )
+        end
       end
+    end
   end
-  
   return node, nextToken, methodNameSet
 end
 
