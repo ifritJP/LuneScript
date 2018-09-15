@@ -76,7 +76,7 @@ DeclClassMode._val2NameMap = {}
 function DeclClassMode:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.TransUnit.DeclClassMode.%s", name )
+    return string.format( "DeclClassMode.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 
@@ -99,7 +99,7 @@ ExpSymbolMode._val2NameMap = {}
 function ExpSymbolMode:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.TransUnit.ExpSymbolMode.%s", name )
+    return string.format( "ExpSymbolMode.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 

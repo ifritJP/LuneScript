@@ -24,6 +24,44 @@ local version = "00.01"
 
 _moduleObj.version = version
 
+local ModeKind = {}
+_moduleObj.ModeKind = ModeKind
+ModeKind._val2NameMap = {}
+function ModeKind:_getTxt( val )
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "ModeKind.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
+function ModeKind:_from( val )
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
+ModeKind.Unknown = ''
+ModeKind._val2NameMap[''] = 'Unknown'
+ModeKind.Token = 'token'
+ModeKind._val2NameMap['token'] = 'Token'
+ModeKind.Ast = 'ast'
+ModeKind._val2NameMap['ast'] = 'Ast'
+ModeKind.Diag = 'diag'
+ModeKind._val2NameMap['diag'] = 'Diag'
+ModeKind.Complete = 'comp'
+ModeKind._val2NameMap['comp'] = 'Complete'
+ModeKind.lua = 'lua'
+ModeKind._val2NameMap['lua'] = 'lua'
+ModeKind.LuaMeta = 'LUA'
+ModeKind._val2NameMap['LUA'] = 'LuaMeta'
+ModeKind.Save = 'save'
+ModeKind._val2NameMap['save'] = 'Save'
+ModeKind.SaveMeta = 'SAVE'
+ModeKind._val2NameMap['SAVE'] = 'SaveMeta'
+ModeKind.Exec = 'exe'
+ModeKind._val2NameMap['exe'] = 'Exec'
+
 local Option = {}
 _moduleObj.Option = Option
 function Option.new(  )
@@ -34,7 +72,7 @@ return obj
 end
 function Option:__init() 
   self.validProf = false
-  self.mode = ""
+  self.mode = ModeKind.Unknown
   self.scriptPath = ""
 end
 function Option.setmeta( obj )
@@ -87,11 +125,22 @@ usage: [-prof] src.lns mode [mode-option]
       if option.scriptPath == "" then
         option.scriptPath = arg
       elseif option.mode == "" then
-        option.mode = arg
+        do
+          local mode = ModeKind:_from( arg )
+          if mode ~= nil then
+          
+              option.mode = mode
+            else
+          
+              Util.err( string.format( "unknown mode -- %s", arg) )
+              os.exit( 1 )
+            end
+        end
+        
       else 
         do
           local _switchExp = (option.mode )
-          if _switchExp == "comp" then
+          if _switchExp == ModeKind.Complete then
             if not option.analyzeModule then
               option.analyzeModule = arg
             elseif not lineNo then
@@ -100,10 +149,9 @@ usage: [-prof] src.lns mode [mode-option]
               column = math.floor(tonumber( arg ))
               option.analyzePos = Parser.Position.new(_lune.unwrap( lineNo), _lune.unwrap( column))
             end
-          elseif _switchExp == "save" or _switchExp == "SAVE" then
+          elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta then
             option.outputDir = arg
           else 
-            Util.err( string.format( "unknown option for this mode (%s) -- %s", option.mode, arg) )
           end
         end
         

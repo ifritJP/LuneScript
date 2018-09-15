@@ -174,7 +174,7 @@ TokenKind._val2NameMap = {}
 function TokenKind:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.Parser.TokenKind.%s", name )
+    return string.format( "TokenKind.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 

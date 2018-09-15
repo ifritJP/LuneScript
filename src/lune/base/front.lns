@@ -86,7 +86,7 @@ fn Front.createAst( path:str, mod:str, analyzeModule:str!,
 
 fn convert(
    ast:&TransUnit.ASTInfo, streamName:str,
-   mut stream:oStream, mut metaStream:oStream, convMode:str, inMacro:bool )  
+   mut stream:oStream, mut metaStream:oStream, convMode:convLua.ConvMode, inMacro:bool )  
 {
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro, ast.$moduleTypeInfo );
@@ -113,7 +113,7 @@ fn Front.loadFile( path:str, mod:str, onlyMeta:bool ): stem, stem
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
 
-   convert( ast, path, stream, metaStream, "exe", false );
+   convert( ast, path, stream, metaStream, .Exec, false );
    
    let mut meta = loadFromTxt( metaStream.$txt );
    if onlyMeta {
@@ -221,7 +221,6 @@ fn Front.loadMeta( mod:str ) mut : stem {
             }  
             if meta == nil {
 	       let metawork, luaTxt = self.loadFile( lnsPath, mod, true );
-               meta = metawork;
 	       self.loadedMetaMap[ mod ] = metawork;
                self.convertedMap[ mod ] = luaTxt@@str;
             }  
@@ -231,7 +230,7 @@ fn Front.loadMeta( mod:str ) mut : stem {
    if! self.loadedMetaMap[ mod ] {
       return unwrap _exp;
    }
-   error( "load error, %s" ( mod ) );
+   error( "load meta error, %s" ( mod ) );
 }
 
 
@@ -268,8 +267,12 @@ pub fn Front.exec() mut
       }
       case "lua", "LUA" {
          let ast = self.createAst( self.option.scriptPath, mod );
+         let mut convMode = convLua.ConvMode.Convert;
+         if self.option.mode == "LUA" {
+            convMode = .ConvMeta;
+         }
          convert( ast, self.option.scriptPath,
-                  io.stdout, io.stdout, self.option.mode, false );
+                  io.stdout, io.stdout, convMode, false );
       }
       case "save", "SAVE" {
          Util.profile(           
@@ -294,7 +297,9 @@ pub fn Front.exec() mut
 
 	          let mut metaFileObj:oStream! = nil;
 	          let mut metaStream:oStream = stream;
+                  let mut convMode = convLua.ConvMode.Convert;
 	          if self.option.mode == "SAVE" {
+                     convMode = .ConvMeta;
                      if! io.open( metaPath, "w" ) {
 		        metaStream = _exp;
                      }
@@ -304,7 +309,7 @@ pub fn Front.exec() mut
                   }
 	             
 	          convert( ast, self.option.scriptPath,
-                           stream, metaStream, self.option.mode, false );
+                           stream, metaStream, convMode, false );
 	          fileObj.close();
 	          if! metaFileObj {     
 		     _exp.close();

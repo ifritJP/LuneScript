@@ -37,13 +37,22 @@ class PubFuncInfo {
    pub let typeInfo: &Ast.TypeInfo;
 }
 
+pub enum ConvMode {
+   /** lns ソースを実行する */
+   Exec,
+   /** lua への変換を行なう */
+   Convert,
+   /** lua への変換と、 Meta 情報生成を行なう */
+   ConvMeta,
+}
+
 class convFilter extend Ast.Filter (oStream) {
    pri let streamName: str;
    pri let mut stream: oStream;
    pri let mut metaStream: oStream;
    pri let mut outMetaFlag: bool;
    pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,str>;
-   pri let convMode: str;
+   pri let convMode: ConvMode;
    pri let inMacro: bool;
    pri let mut indent: int;
    pri let mut curLineNo: int;
@@ -63,7 +72,7 @@ class convFilter extend Ast.Filter (oStream) {
 
    
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
-                  convMode: str, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo )
+                  convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo )
    {
       //Util.errorLog( "__init: %s" (mode) );
       self.macroDepth = 0;
@@ -88,6 +97,11 @@ class convFilter extend Ast.Filter (oStream) {
 
    fn getCanonicalName( typeInfo:&Ast.TypeInfo ): str {
       let mut canonicalName = typeInfo.$rawTxt;
+
+      if self.moduleTypeInfo == typeInfo.getModule() {
+         return canonicalName;
+      }     
+      
       let mut workType = typeInfo.$parentInfo;
       while workType ~= Ast.rootTypeInfo {
          canonicalName = "%s.%s" (workType.$rawTxt, canonicalName);
@@ -159,7 +173,8 @@ pub override fn convFilter.processImport(
    let module = node.get_modulePath();
    let moduleName = string.gsub( module, ".*%.", "" );
    self.typeInfo2ModuleName[ node.$moduleTypeInfo ] = module;
-   if self.convMode == "exe" or self.convMode == "ast" {
+   //if self.convMode == "exe" or self.convMode == "ast" {
+   if self.convMode == .Exec {
       self.writeln(
          "local %s = __luneScript:loadModule( '%s' )" ( moduleName, module),
          baseIndent );
@@ -191,11 +206,14 @@ pub override fn convFilter.processImport(
 */
 fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
 {
-   switch self.convMode {
-      case "lua", "save" {
-         return;
-      }
+   if self.convMode == .Convert {
+      return;
    }
+   // switch self.convMode {
+   //    case "lua", "save" {
+   //       return;
+   //    }
+   // }
 
    self.outMetaFlag = true;
 
@@ -1859,6 +1877,10 @@ pub override fn convFilter.processExpOmitEnum(
       moduleName = "";
    }
    then {
+      // Util.errorLog( "hoge: %s %s"
+      //                (node.$expType.getModule().getTxt(),
+      //                  self.moduleTypeInfo.getTxt() ) );
+      
       moduleName = moduleName.gsub( ".*%.", "" );
       moduleName = moduleName .. ".";
    };
@@ -2025,7 +2047,7 @@ pub override fn convFilter.processLiteralSymbol(
 
 pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
-   convMode: str, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo ) : Ast.Filter
+   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo ) : Ast.Filter
 {
    return new convFilter( streamName, stream, metaStream,
                           convMode, inMacro, moduleTypeInfo );
@@ -2039,7 +2061,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
    {   
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", oStream, oStream, "exe", true, Ast.rootTypeInfo );
+         "macro", oStream, oStream, .Exec, true, Ast.rootTypeInfo );
 
       conv.processDeclMacro( node, node, 0 );
 

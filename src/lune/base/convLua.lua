@@ -106,6 +106,30 @@ self.accessMode = accessMode
 do
   end
 
+local ConvMode = {}
+_moduleObj.ConvMode = ConvMode
+ConvMode._val2NameMap = {}
+function ConvMode:_getTxt( val )
+  local name = self._val2NameMap[ val ]
+  if name then
+    return string.format( "ConvMode.%s", name )
+  end
+  return string.format( "illegal val -- %s", val )
+end 
+function ConvMode:_from( val )
+  if self._val2NameMap[ val ] then
+    return val
+  end
+  return nil
+end 
+    
+ConvMode.Exec = 0
+ConvMode._val2NameMap[0] = 'Exec'
+ConvMode.Convert = 1
+ConvMode._val2NameMap[1] = 'Convert'
+ConvMode.ConvMeta = 2
+ConvMode._val2NameMap[2] = 'ConvMeta'
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Filter } )
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
@@ -136,6 +160,9 @@ end
 function convFilter:getCanonicalName( typeInfo )
   local canonicalName = typeInfo:get_rawTxt()
   
+  if self.moduleTypeInfo == typeInfo:getModule(  ) then
+    return canonicalName
+  end
   local workType = typeInfo:get_parentInfo()
   
   while workType ~= Ast.rootTypeInfo do
@@ -206,7 +233,7 @@ function convFilter:processImport( node, parent, baseIndent )
   local moduleName = string.gsub( module, ".*%.", "" )
   
   self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = module
-  if self.convMode == "exe" or self.convMode == "ast" then
+  if self.convMode == ConvMode.Exec then
     self:writeln( string.format( "local %s = __luneScript:loadModule( '%s' )", moduleName, module), baseIndent )
   else 
     self:writeln( string.format( "local %s = require( '%s' )", moduleName, module), baseIndent )
@@ -216,13 +243,9 @@ end
 -- none
 
 function convFilter:outputMeta( node, baseIndent )
-  do
-    local _switchExp = self.convMode
-    if _switchExp == "lua" or _switchExp == "save" then
-      return 
-    end
+  if self.convMode == ConvMode.Convert then
+    return 
   end
-  
   self.outMetaFlag = true
   if self.stream ~= self.metaStream then
     self:writeln( "local _moduleObj = {}", baseIndent )
@@ -2085,7 +2108,7 @@ _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:eval( node )
   local oStream = Util.memStream.new()
   
-  local conv = convFilter.new("macro", oStream, oStream, "exe", true, Ast.rootTypeInfo)
+  local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.rootTypeInfo)
   
   conv:processDeclMacro( node, node, 0 )
   local chunk, err = load( oStream:get_txt(  ) )

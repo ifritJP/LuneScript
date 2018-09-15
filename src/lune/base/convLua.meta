@@ -3,8 +3,8 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo4140 = {}
-  _typeId2ClassInfoMap[ 4140 ] = _classInfo4140
+  local _classInfo4149 = {}
+  _typeId2ClassInfoMap[ 4149 ] = _classInfo4149
   end
 do
   local _classInfo196 = {}
@@ -328,7 +328,7 @@ children = {198, } }
 _typeInfoList[5] = { parentId = 196, typeId = 198, txt = 'base', kind = 12, 
 children = {200, } }
 _typeInfoList[6] = { parentId = 198, typeId = 200, txt = 'convLua', kind = 12, 
-children = {4137, 4140, } }
+children = {3757, 4146, 4149, } }
 _dependIdMap[ 202 ] = { 2, 200 }
 _dependIdMap[ 207 ] = { 2, 345 }
 _dependIdMap[ 208 ] = { 2, 346 }
@@ -1338,18 +1338,27 @@ _typeInfoList[542] = { parentId = 1, typeId = 3696, nilable = true, orgTypeId = 
 _typeInfoList[543] = { parentId = 1, typeId = 3698, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {352}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[544] = { parentId = 1, typeId = 3699, nilable = true, orgTypeId = 3698 }
-_typeInfoList[545] = { parentId = 200, typeId = 4137, baseId = 1, txt = 'createFilter',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 84, 84, 25, 13, 352}, retTypeId = {1343}, children = {}, }
-_typeInfoList[546] = { parentId = 200, typeId = 4138, nilable = true, orgTypeId = 4137 }
-_typeInfoList[547] = { parentId = 200, typeId = 4140, baseId = 1393, txt = 'MacroEvalImp',
-        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {4144, 4148}, }
-_typeInfoList[548] = { parentId = 200, typeId = 4141, nilable = true, orgTypeId = 4140 }
-_typeInfoList[549] = { parentId = 4140, typeId = 4144, baseId = 1, txt = 'eval',
+_typeInfoList[545] = { parentId = 200, typeId = 3757, txt = 'ConvMode',
+accessMode = 1, kind = 11, valTypeId = 16, enumValList = {ConvMeta = 2,Convert = 1,Exec = 0,} }
+_typeInfoList[546] = { parentId = 200, typeId = 3758, nilable = true, orgTypeId = 3757 }
+_typeInfoList[547] = { parentId = 3757, typeId = 3759, baseId = 1, txt = 'get__txt',
+        staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
+_typeInfoList[548] = { parentId = 3757, typeId = 3760, nilable = true, orgTypeId = 3759 }
+_typeInfoList[549] = { parentId = 3757, typeId = 3762, baseId = 1, txt = '_from',
+        staticFlag = true, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {223}, retTypeId = {3758}, children = {}, }
+_typeInfoList[550] = { parentId = 3757, typeId = 3763, nilable = true, orgTypeId = 3762 }
+_typeInfoList[551] = { parentId = 200, typeId = 4146, baseId = 1, txt = 'createFilter',
+        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 84, 84, 3757, 13, 352}, retTypeId = {1343}, children = {}, }
+_typeInfoList[552] = { parentId = 200, typeId = 4147, nilable = true, orgTypeId = 4146 }
+_typeInfoList[553] = { parentId = 200, typeId = 4149, baseId = 1393, txt = 'MacroEvalImp',
+        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {4153, 4157}, }
+_typeInfoList[554] = { parentId = 200, typeId = 4150, nilable = true, orgTypeId = 4149 }
+_typeInfoList[555] = { parentId = 4149, typeId = 4153, baseId = 1, txt = 'eval',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {3238}, retTypeId = {37}, children = {}, }
-_typeInfoList[550] = { parentId = 4140, typeId = 4145, nilable = true, orgTypeId = 4144 }
-_typeInfoList[551] = { parentId = 4140, typeId = 4148, baseId = 1, txt = '__init',
+_typeInfoList[556] = { parentId = 4149, typeId = 4154, nilable = true, orgTypeId = 4153 }
+_typeInfoList[557] = { parentId = 4149, typeId = 4157, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {210}, retTypeId = {}, children = {}, }
-_typeInfoList[552] = { parentId = 4140, typeId = 4149, nilable = true, orgTypeId = 4148 }
+_typeInfoList[558] = { parentId = 4149, typeId = 4158, nilable = true, orgTypeId = 4157 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = true }

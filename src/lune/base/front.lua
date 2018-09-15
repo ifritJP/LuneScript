@@ -176,7 +176,7 @@ function Front:loadFile( path, mod, onlyMeta )
   
   local metaStream = Util.memStream.new()
   
-  convert( ast, path, stream, metaStream, "exe", false )
+  convert( ast, path, stream, metaStream, convLua.ConvMode.Exec, false )
   local meta = loadFromTxt( metaStream:get_txt() )
   
   if onlyMeta then
@@ -333,7 +333,6 @@ function Front:loadMeta( mod )
                 if meta == nil then
                   local metawork, luaTxt = self:loadFile( lnsPath, mod, true )
                   
-                  meta = metawork
                   self.loadedMetaMap[mod] = metawork
                   self.convertedMap[mod] = luaTxt
                 end
@@ -352,7 +351,7 @@ function Front:loadMeta( mod )
       end
   end
   
-  error( string.format( "load error, %s", mod) )
+  error( string.format( "load meta error, %s", mod) )
 end
 
 function Front:exec(  )
@@ -390,7 +389,12 @@ function Front:exec(  )
     elseif _switchExp == "lua" or _switchExp == "LUA" then
       local ast = self:createAst( self.option.scriptPath, mod )
       
-      convert( ast, self.option.scriptPath, io.stdout, io.stdout, self.option.mode, false )
+      local convMode = convLua.ConvMode.Convert
+      
+      if self.option.mode == "LUA" then
+        convMode = convLua.ConvMode.ConvMeta
+      end
+      convert( ast, self.option.scriptPath, io.stdout, io.stdout, convMode, false )
     elseif _switchExp == "save" or _switchExp == "SAVE" then
       Util.profile( self.option.validProf, function (  )
         local ast = self:createAst( self.option.scriptPath, mod )
@@ -420,7 +424,10 @@ function Front:exec(  )
           
           local metaStream = stream
           
+          local convMode = convLua.ConvMode.Convert
+          
           if self.option.mode == "SAVE" then
+            convMode = convLua.ConvMode.ConvMeta
             do
               local _exp = io.open( metaPath, "w" )
               if _exp ~= nil then
@@ -433,7 +440,7 @@ function Front:exec(  )
             end
             
           end
-          convert( ast, self.option.scriptPath, stream, metaStream, self.option.mode, false )
+          convert( ast, self.option.scriptPath, stream, metaStream, convMode, false )
           fileObj:close(  )
           do
             local _exp = metaFileObj

@@ -3,19 +3,19 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo370 = {}
-  _typeId2ClassInfoMap[ 370 ] = _classInfo370
-  _classInfo370.mode = {
-    name='mode', staticFlag = false, accessMode = '1', typeId = 25 }
-  _classInfo370.analyzeModule = {
-    name='analyzeModule', staticFlag = false, accessMode = '1', typeId = 373 }
-  _classInfo370.analyzePos = {
-    name='analyzePos', staticFlag = false, accessMode = '1', typeId = 374 }
-  _classInfo370.outputDir = {
-    name='outputDir', staticFlag = false, accessMode = '1', typeId = 373 }
-  _classInfo370.scriptPath = {
+  local _classInfo378 = {}
+  _typeId2ClassInfoMap[ 378 ] = _classInfo378
+  _classInfo378.mode = {
+    name='mode', staticFlag = false, accessMode = '1', typeId = 370 }
+  _classInfo378.analyzeModule = {
+    name='analyzeModule', staticFlag = false, accessMode = '1', typeId = 381 }
+  _classInfo378.analyzePos = {
+    name='analyzePos', staticFlag = false, accessMode = '1', typeId = 382 }
+  _classInfo378.outputDir = {
+    name='outputDir', staticFlag = false, accessMode = '1', typeId = 381 }
+  _classInfo378.scriptPath = {
     name='scriptPath', staticFlag = false, accessMode = '1', typeId = 25 }
-  _classInfo370.validProf = {
+  _classInfo378.validProf = {
     name='validProf', staticFlag = false, accessMode = '1', typeId = 13 }
   end
 do
@@ -68,7 +68,7 @@ children = {198, } }
 _typeInfoList[3] = { parentId = 196, typeId = 198, txt = 'base', kind = 12, 
 children = {200, } }
 _typeInfoList[4] = { parentId = 198, typeId = 200, txt = 'Option', kind = 12, 
-children = {370, 381, } }
+children = {370, 378, 389, } }
 _dependIdMap[ 202 ] = { 1, 200 }
 _dependIdMap[ 207 ] = { 1, 345 }
 _dependIdMap[ 208 ] = { 1, 346 }
@@ -105,20 +105,29 @@ _typeInfoList[16] = { parentId = 202, typeId = 304, srcTypeId = 241, mutable = f
 _dependIdMap[ 304 ] = { 1, 476 }
 _dependIdMap[ 317 ] = { 1, 547 }
 _dependIdMap[ 318 ] = { 1, 548 }
-_typeInfoList[17] = { parentId = 200, typeId = 370, baseId = 1, txt = 'Option',
-        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {375}, }
+_typeInfoList[17] = { parentId = 200, typeId = 370, txt = 'ModeKind',
+accessMode = 1, kind = 11, valTypeId = 25, enumValList = {Ast = 'ast',Complete = 'comp',Diag = 'diag',Exec = 'exe',LuaMeta = 'LUA',Save = 'save',SaveMeta = 'SAVE',Token = 'token',Unknown = '',lua = 'lua',} }
 _typeInfoList[18] = { parentId = 200, typeId = 371, nilable = true, orgTypeId = 370 }
-_typeInfoList[19] = { parentId = 1, typeId = 373, srcTypeId = 26, mutable = false }
-_typeInfoList[20] = { parentId = 202, typeId = 374, srcTypeId = 221, mutable = false }
-_typeInfoList[21] = { parentId = 370, typeId = 375, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[19] = { parentId = 370, typeId = 372, baseId = 1, txt = 'get__txt',
+        staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
+_typeInfoList[20] = { parentId = 370, typeId = 373, nilable = true, orgTypeId = 372 }
+_typeInfoList[21] = { parentId = 370, typeId = 375, baseId = 1, txt = '_from',
+        staticFlag = true, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {210}, retTypeId = {371}, children = {}, }
 _typeInfoList[22] = { parentId = 370, typeId = 376, nilable = true, orgTypeId = 375 }
-_typeInfoList[23] = { parentId = 1, typeId = 378, baseId = 1, txt = 'List',
+_typeInfoList[23] = { parentId = 200, typeId = 378, baseId = 1, txt = 'Option',
+        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {383}, }
+_typeInfoList[24] = { parentId = 200, typeId = 379, nilable = true, orgTypeId = 378 }
+_typeInfoList[25] = { parentId = 1, typeId = 381, srcTypeId = 26, mutable = false }
+_typeInfoList[26] = { parentId = 202, typeId = 382, srcTypeId = 221, mutable = false }
+_typeInfoList[27] = { parentId = 378, typeId = 383, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[28] = { parentId = 378, typeId = 384, nilable = true, orgTypeId = 383 }
+_typeInfoList[29] = { parentId = 1, typeId = 386, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[24] = { parentId = 1, typeId = 379, nilable = true, orgTypeId = 378 }
-_typeInfoList[25] = { parentId = 200, typeId = 381, baseId = 1, txt = 'analyze',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {378}, retTypeId = {370}, children = {}, }
-_typeInfoList[26] = { parentId = 200, typeId = 382, nilable = true, orgTypeId = 381 }
+_typeInfoList[30] = { parentId = 1, typeId = 387, nilable = true, orgTypeId = 386 }
+_typeInfoList[31] = { parentId = 200, typeId = 389, baseId = 1, txt = 'analyze',
+        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {386}, retTypeId = {378}, children = {}, }
+_typeInfoList[32] = { parentId = 200, typeId = 390, nilable = true, orgTypeId = 389 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Parser' ] = { id = 1, use = true }

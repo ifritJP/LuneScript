@@ -27,8 +27,21 @@ import lune.base.Util;
 
 pub let version = "00.01";
 
+pub enum ModeKind {
+   Unknown = "",
+   Token = "token",
+   Ast = "ast",
+   Diag = "diag",
+   Complete = "comp",
+   lua = "lua",
+   LuaMeta = "LUA",
+   Save = "save",
+   SaveMeta = "SAVE",
+   Exec = "exe",
+}
+
 pub class Option {
-   pub let mut mode:str;
+   pub let mut mode:ModeKind;
    pub let analyzeModule:str!;
    pub let analyzePos: Parser.Position!;
    pub let outputDir:str!;
@@ -36,7 +49,7 @@ pub class Option {
    pub let mut validProf:bool;
    pub fn __init() {
       self.validProf = false;
-      self.mode = "";
+      self.mode = .Unknown;
       self.scriptPath = "";
    }
 }
@@ -86,11 +99,17 @@ usage: [-prof] src.lns mode [mode-option]
             option.scriptPath = arg;
          }
          elseif option.mode == "" {
-            option.mode = arg;
+            if! let mode = ModeKind._from( arg ) {
+               option.mode = mode;
+            }
+            else {
+               Util.err( "unknown mode -- %s" ( arg ) );
+               os.exit( 1 );
+            }
          }
          else {
             switch( option.mode ) {
-               case "comp" {
+               case .Complete {
                   if not option.analyzeModule {
                      option.analyzeModule = arg;
                   }
@@ -103,12 +122,10 @@ usage: [-prof] src.lns mode [mode-option]
                         unwrap lineNo, unwrap column );
                   }
                }
-               case "save", "SAVE" {
+               case .Save, .SaveMeta {
                   option.outputDir = arg;
                }
                default {
-                  Util.err( "unknown option for this mode (%s) -- %s"
-                              (option.mode, arg ) );
                }
             }
          }

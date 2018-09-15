@@ -48,7 +48,7 @@ TypeInfoKind._val2NameMap = {}
 function TypeInfoKind:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.Ast.TypeInfoKind.%s", name )
+    return string.format( "TypeInfoKind.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 
@@ -100,7 +100,7 @@ SymbolKind._val2NameMap = {}
 function SymbolKind:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.Ast.SymbolKind.%s", name )
+    return string.format( "SymbolKind.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 
@@ -130,7 +130,7 @@ AccessMode._val2NameMap = {}
 function AccessMode:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.Ast.AccessMode.%s", name )
+    return string.format( "AccessMode.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 
@@ -2823,7 +2823,7 @@ BlockKind._val2NameMap = {}
 function BlockKind:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.Ast.BlockKind.%s", name )
+    return string.format( "BlockKind.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 
@@ -4093,7 +4093,7 @@ MacroMode._val2NameMap = {}
 function MacroMode:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.Ast.MacroMode.%s", name )
+    return string.format( "MacroMode.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 
@@ -4802,7 +4802,7 @@ DeclVarMode._val2NameMap = {}
 function DeclVarMode:_getTxt( val )
   local name = self._val2NameMap[ val ]
   if name then
-    return string.format( "lune.base.Ast.DeclVarMode.%s", name )
+    return string.format( "DeclVarMode.%s", name )
   end
   return string.format( "illegal val -- %s", val )
 end 
