@@ -25,8 +25,24 @@ SOFTWARE.
 import lune.base.Parser;
 import lune.base.Util;
 
-pub let rootTypeId = 1;
-let mut typeIdSeed = rootTypeId + 1;
+pub class IdProvider {
+   let mut id:int {pub};
+
+   pub fn increment() mut {
+      self.id = self.id + 1;
+   }
+   
+   pub fn getNewId() mut : int {
+      let newId = self.id;
+      self.id = self.id + 1;
+      return newId;
+   }
+}
+
+let mut idProv = new IdProvider( 1 );
+
+pub let rootTypeId = idProv.getNewId();
+//let mut typeIdSeed = rootTypeId + 1;
 
 
 
@@ -888,7 +904,9 @@ pub class ModuleTypeInfo extend TypeInfo {
          _exp.addChildren( self );
       }
 
-      typeIdSeed = typeIdSeed + 1;
+      idProv.increment();
+      //typeIdSeed = typeIdSeed + 1;
+      
 
       scope.set_ownerTypeInfo( self );
    }
@@ -989,7 +1007,8 @@ pub class EnumTypeInfo extend TypeInfo {
       }
 
       self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
-      typeIdSeed = typeIdSeed + 1;
+      idProv.increment();
+      //typeIdSeed = typeIdSeed + 1;
 
       scope.set_ownerTypeInfo( self );
    }
@@ -1143,13 +1162,15 @@ pub class NormalTypeInfo extend TypeInfo {
                //    .Nilable, itemTypeInfoList,
                //    argTypeInfoList, retTypeInfoList );
                self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
-               typeIdSeed = typeIdSeed + 1;
+               idProv.increment();
+               //typeIdSeed = typeIdSeed + 1;
             }
          }
          else {
             self.nilableTypeInfo = rootTypeInfo;
-         }  
-         typeIdSeed = typeIdSeed + 1;
+         }
+         idProv.increment();
+         //typeIdSeed = typeIdSeed + 1;
       } 
       else {
          self.nilable = true;
@@ -1386,11 +1407,12 @@ pub class NormalTypeInfo extend TypeInfo {
             return _exp.$typeInfo;
          }
          Util.err( "not found symbol -- %s" (txt ) );
-      }  
-      typeIdSeed = typeIdSeed + 1;
+      }
+      idProv.increment();
+      //typeIdSeed = typeIdSeed + 1;
       let mut info = new NormalTypeInfo(
          abstructFlag, scope, baseInfo, interfaceList, nil, false, true,
-         staticFlag, AccessMode.Pub, txt, parentInfo, typeIdSeed, kind,
+         staticFlag, AccessMode.Pub, txt, parentInfo, idProv.$id, kind,
          itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable ); 
       return info;
    }
@@ -1400,18 +1422,20 @@ pub class NormalTypeInfo extend TypeInfo {
 
 pub let typeInfoRoot = rootTypeInfo;
 
-
-typeIdSeed = typeIdSeed + 1;
+idProv.increment();
+//typeIdSeed = typeIdSeed + 1;
 
 pub static fn NormalTypeInfo.createBuiltin(
    idName: str, typeTxt: str, kind: TypeInfoKind, typeDDD: TypeInfo! ): &TypeInfo
 {
-   let mut typeId = typeIdSeed + 1;
+   //let mut typeId = typeIdSeed + 1;
+   let mut typeId = idProv.$id + 1;
    if kind == .Root {
       typeId = rootTypeId;
    } 
    else {
-      typeIdSeed = typeIdSeed + 1;
+      //typeIdSeed = typeIdSeed + 1;
+      idProv.increment();
    } 
    let mut argTypeList:List<&TypeInfo> = [];
    let mut retTypeList:List<&TypeInfo> = [];
@@ -1437,7 +1461,8 @@ pub static fn NormalTypeInfo.createBuiltin(
    
    let mut info = new NormalTypeInfo(
       false, scope, nil, nil, nil, false, false, false, AccessMode.Pub,
-      typeTxt, typeInfoRoot, typeId, kind, [], argTypeList, retTypeList, true );
+      typeTxt, typeInfoRoot, typeId,
+      kind, [], argTypeList, retTypeList, true );
    if scope {
       rootScope.addClass( typeTxt, info );
    } 
@@ -1463,30 +1488,33 @@ pub static fn NormalTypeInfo.createList(
    if #itemTypeInfo == 0 {
       Util.err( "illegal list type: %s" (itemTypeInfo) );
    } 
-   typeIdSeed = typeIdSeed + 1;
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "List",
-      typeInfoRoot, typeIdSeed, .List, itemTypeInfo, nil, nil, true );
+      typeInfoRoot, idProv.$id, .List, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createArray(
    accessMode: AccessMode,
    parentInfo: &TypeInfo, itemTypeInfo: List<&TypeInfo> ): &TypeInfo
 {
-   typeIdSeed = typeIdSeed + 1;
+   //   typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "Array",
-      typeInfoRoot, typeIdSeed, .Array, itemTypeInfo, nil, nil, true );
+      typeInfoRoot, idProv.$id, .Array, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createMap(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    keyTypeInfo: &TypeInfo, valTypeInfo: &TypeInfo ): &TypeInfo
 {
-   typeIdSeed = typeIdSeed + 1;
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "Map",
-      typeInfoRoot, typeIdSeed, .Map,
+      typeInfoRoot, idProv.$id, .Map,
       [ keyTypeInfo, valTypeInfo ], nil, nil, true );
 }
 
@@ -1504,9 +1532,10 @@ pub static fn NormalTypeInfo.createModule(
                   (moduleName) );
    }
    
-   typeIdSeed = typeIdSeed + 1;
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
    let mut info = new ModuleTypeInfo(
-      scope, externalFlag, moduleName, parentInfo, typeIdSeed, mutable );
+      scope, externalFlag, moduleName, parentInfo, idProv.$id, mutable );
    return info;
 }
 
@@ -1530,11 +1559,12 @@ pub static fn NormalTypeInfo.createClass(
                   (className) );
    }
    
-   typeIdSeed = typeIdSeed + 1;
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
    let mut info = new NormalTypeInfo(
       abstructFlag, scope, baseInfo, interfaceList, nil, false,
       externalFlag, false, accessMode,
-      className, parentInfo, typeIdSeed,
+      className, parentInfo, idProv.$id,
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true );
    return info;
 }
@@ -1549,10 +1579,11 @@ pub static fn NormalTypeInfo.createFunc(
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
    }
    
-   typeIdSeed = typeIdSeed + 1;
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
    let mut info = new NormalTypeInfo(
       abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag,
-      accessMode, funcName, parentInfo, typeIdSeed,
+      accessMode, funcName, parentInfo, idProv.$id,
       kind, [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [], mutable );
    return info;
@@ -1577,8 +1608,9 @@ pub static fn NormalTypeInfo.createModifier(
       return _exp;
    }
    
-   typeIdSeed = typeIdSeed + 1;
-   let modifier = new ModifierTypeInfo( srcTypeInfo, typeIdSeed, mutable ); 
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
+   let modifier = new ModifierTypeInfo( srcTypeInfo, idProv.$id, mutable ); 
    typeInfo2ModifierMap[ srcTypeInfo ] = modifier;
    return modifier;
 }
@@ -1626,10 +1658,11 @@ pub static fn NormalTypeInfo.createEnum(
                 (enumName) );
    }
    
-   typeIdSeed = typeIdSeed + 1;
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
    let mut info = new EnumTypeInfo(
       scope, externalFlag, accessMode, enumName,
-      parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo );
+      parentInfo, idProv.$id, valTypeInfo, name2EnumValInfo );
 
    let mut getEnumName = NormalTypeInfo.createFunc(
       false, true, nil, .Method, info,

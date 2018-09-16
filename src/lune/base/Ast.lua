@@ -20,11 +20,43 @@ local Parser = require( 'lune.base.Parser' )
 
 local Util = require( 'lune.base.Util' )
 
-local rootTypeId = 1
+local IdProvider = {}
+_moduleObj.IdProvider = IdProvider
+function IdProvider:increment(  )
+  self.id = self.id + 1
+end
+function IdProvider:getNewId(  )
+  local newId = self.id
+  
+  self.id = self.id + 1
+  return newId
+end
+function IdProvider.setmeta( obj )
+  setmetatable( obj, { __index = IdProvider  } )
+end
+function IdProvider.new( id )
+  local obj = {}
+  IdProvider.setmeta( obj )
+  if obj.__init then
+    obj:__init( id )
+  end        
+  return obj 
+end         
+function IdProvider:__init( id ) 
+
+self.id = id
+  end
+function IdProvider:get_id()       
+  return self.id         
+end
+do
+  end
+
+local idProv = IdProvider.new(1)
+
+local rootTypeId = idProv:getNewId(  )
 
 _moduleObj.rootTypeId = rootTypeId
-
-local typeIdSeed = _moduleObj.rootTypeId + 1
 
 -- none
 
@@ -1336,7 +1368,7 @@ function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mut
       end
   end
   
-  typeIdSeed = typeIdSeed + 1
+  idProv:increment(  )
   scope:set_ownerTypeInfo( self )
 end
 function ModuleTypeInfo:isModule(  )
@@ -1463,7 +1495,7 @@ function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
   end
   
   self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
-  typeIdSeed = typeIdSeed + 1
+  idProv:increment(  )
   scope:set_ownerTypeInfo( self )
 end
 function EnumTypeInfo:isModule(  )
@@ -1583,12 +1615,12 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
         self.nilableTypeInfo = self
       else 
         self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
-        typeIdSeed = typeIdSeed + 1
+        idProv:increment(  )
       end
     else 
       self.nilableTypeInfo = _moduleObj.rootTypeInfo
     end
-    typeIdSeed = typeIdSeed + 1
+    idProv:increment(  )
   else 
     self.nilable = true
     self.nilableTypeInfo = _moduleObj.rootTypeInfo
@@ -1746,8 +1778,8 @@ function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, pa
     
     Util.err( string.format( "not found symbol -- %s", txt) )
   end
-  typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, AccessMode.Pub, txt, parentInfo, typeIdSeed, kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
+  idProv:increment(  )
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, AccessMode.Pub, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
   
   return info
 end
@@ -1815,14 +1847,14 @@ local typeInfoRoot = _moduleObj.rootTypeInfo
 
 _moduleObj.typeInfoRoot = typeInfoRoot
 
-typeIdSeed = typeIdSeed + 1
+idProv:increment(  )
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
-  local typeId = typeIdSeed + 1
+  local typeId = idProv:get_id() + 1
   
   if kind == TypeInfoKind.Root then
     typeId = _moduleObj.rootTypeId
   else 
-    typeIdSeed = typeIdSeed + 1
+    idProv:increment(  )
   end
   local argTypeList = {}
   
@@ -1867,18 +1899,18 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
   if #itemTypeInfo == 0 then
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
-  typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.List, itemTypeInfo, nil, nil, true)
+  idProv:increment(  )
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.typeInfoRoot, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
-  typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
+  idProv:increment(  )
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.typeInfoRoot, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
-  typeIdSeed = typeIdSeed + 1
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, typeIdSeed, TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
+  idProv:increment(  )
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )
@@ -1893,8 +1925,8 @@ function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleNam
   if Parser.isLuaKeyword( moduleName ) then
     Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
   end
-  typeIdSeed = typeIdSeed + 1
-  local info = ModuleTypeInfo.new(scope, externalFlag, moduleName, parentInfo, typeIdSeed, mutable)
+  idProv:increment(  )
+  local info = ModuleTypeInfo.new(scope, externalFlag, moduleName, parentInfo, idProv:get_id(), mutable)
   
   return info
 end
@@ -1911,8 +1943,8 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
   if Parser.isLuaKeyword( className ) then
     Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
   end
-  typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, typeIdSeed, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
+  idProv:increment(  )
+  local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
   
   return info
 end
@@ -1921,8 +1953,8 @@ function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, pare
   if not builtinFlag and Parser.isLuaKeyword( funcName ) then
     Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
   end
-  typeIdSeed = typeIdSeed + 1
-  local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeIdSeed, kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
+  idProv:increment(  )
+  local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
   
   return info
 end
@@ -1942,8 +1974,8 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
       end
   end
   
-  typeIdSeed = typeIdSeed + 1
-  local modifier = ModifierTypeInfo.new(srcTypeInfo, typeIdSeed, mutable)
+  idProv:increment(  )
+  local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutable)
   
   typeInfo2ModifierMap[srcTypeInfo] = modifier
   return modifier
@@ -2017,8 +2049,8 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
   if Parser.isLuaKeyword( enumName ) then
     Util.err( string.format( "This symbol can not use for a enum. -- %s", enumName) )
   end
-  typeIdSeed = typeIdSeed + 1
-  local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, typeIdSeed, valTypeInfo, name2EnumValInfo)
+  idProv:increment(  )
+  local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, idProv:get_id(), valTypeInfo, name2EnumValInfo)
   
   local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, {_moduleObj.builtinTypeString}, false )
   
