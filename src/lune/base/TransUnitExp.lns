@@ -1037,7 +1037,6 @@ fn TransUnit.analyzeExpOp2(
 
       if opTxt == "@@" {
          let mut castType = self.analyzeRefType( .Local, false ).$expType;
-         
 
          let expType = exp.$expType;
          
