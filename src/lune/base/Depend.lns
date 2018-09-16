@@ -49,3 +49,7 @@ pub fn getFileLastModifiedTime( path: str ): real! {
    // }
    return nil;
 }
+
+
+let mut list = [1];
+list.insert( 1 );

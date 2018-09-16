@@ -55,6 +55,7 @@ pub class TransUnit {
    /** モジュール名 */
    pri let mut moduleName: str;
 
+   pri let mut topScope: Ast.Scope;
    /** モジュールの最上位スコープ */
    pri let mut moduleScope: Ast.Scope;
 
@@ -120,8 +121,13 @@ pub class TransUnit {
       self.subfileList = [];
       self.pushbackList = [];
       self.usedTokenList = [];
-      self.scope = Ast.rootScope;
-      self.moduleScope = Ast.rootScope;
+      
+      // self.scope = Ast.rootScope;
+      // self.topScope = Ast.rootScope;
+      // self.moduleScope = Ast.rootScope;
+      self.scope = new Ast.Scope( Ast.rootScope, true, [] );
+      self.topScope = self.scope;
+      self.moduleScope = self.scope;
       self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
       self.currentToken = Parser.getEofToken();
@@ -163,7 +169,7 @@ pub class TransUnit {
    }
 
    pri fn getCurrentClass() : &Ast.TypeInfo {
-      let typeInfo = Ast.rootTypeInfo;
+      let typeInfo = Ast.headTypeInfo;
       let mut scope = self.scope;
       repeat {
          if! scope.$ownerTypeInfo {
@@ -174,26 +180,26 @@ pub class TransUnit {
             }   
          }  
          scope = scope.$parent;
-      } scope == Ast.rootScope;
+      } scope.isRoot();
       return typeInfo;
    }
    
 
    pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
-      let typeInfo = Ast.rootTypeInfo;
+      let typeInfo = Ast.headTypeInfo;
       let mut scope = self.scope;
       repeat {
          if! scope.$ownerTypeInfo {
             return _exp;
          }  
          scope = scope.$parent;
-      } scope == Ast.rootScope;
+      } scope.isRoot();
       return typeInfo;
    }
 
    pri fn pushModule( externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
    {
-      let mut typeInfo = Ast.rootTypeInfo;
+      let mut typeInfo = Ast.headTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
          typeInfo = _exp;
          self.scope = unwrap typeInfo.$scope;
@@ -225,7 +231,7 @@ pub class TransUnit {
       externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
-      let mut typeInfo = Ast.rootTypeInfo;
+      let mut typeInfo = Ast.headTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
          typeInfo = _exp;
          self.scope = unwrap typeInfo.$scope;
@@ -380,8 +386,8 @@ class _MetaInfo {
    pub let _dependIdMap: Map<int,int[]>;
 }
 
-pub let mut typeInfoListInsert = Ast.typeInfoRoot;
-pub let mut typeInfoListRemove = Ast.typeInfoRoot;
+pub let mut typeInfoListInsert = Ast.headTypeInfo;
+pub let mut typeInfoListRemove = Ast.headTypeInfo;
 
 fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
    if not self.validMutControl {
@@ -391,7 +397,14 @@ fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.Type
 }
 
 
+let mut readyBuiltin = false;
+
 fn TransUnit.registBuiltInScope() mut {
+   if readyBuiltin {
+      return;
+   }
+   readyBuiltin = true;
+   
    let builtInInfo = [
       { 
          "": {
@@ -498,16 +511,16 @@ fn TransUnit.registBuiltInScope() mut {
          mutable = false;
          typeName = typeName.gsub( "^&", "" );
       }
-      let mut typeInfo = Ast.rootTypeInfo;
+      let mut typeInfo = Ast.headTypeInfo;
       if typeName.find( "!$" ) {
          let orgTypeName = typeName.gsub( "!$", "" );
-         typeInfo = unwrap Ast.rootScope.getTypeInfo(
-            orgTypeName, Ast.rootScope, false );
+         typeInfo = unwrap self.scope.getTypeInfo(
+            orgTypeName, self.scope, false );
          typeInfo = typeInfo.$nilableTypeInfo;
       }
       else {
-         typeInfo = unwrap Ast.rootScope.getTypeInfo(
-            typeName, Ast.rootScope, false );
+         typeInfo = unwrap self.scope.getTypeInfo(
+            typeName, self.scope, false );
       }
       if mutable {
          return typeInfo;
@@ -516,13 +529,15 @@ fn TransUnit.registBuiltInScope() mut {
       return typeInfo;
    }
 
+   self.scope = Ast.rootScope;
+
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
 
    self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, false, true );
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, name in builtinClassInfo {
-         let mut parentInfo = Ast.typeInfoRoot;
+         let mut parentInfo = Ast.headTypeInfo;
          if name ~= "" {
             let mut classFlag = true;
             if name2FieldInfo$.__attrib$.type$[1] == "interface" {
@@ -540,7 +555,7 @@ fn TransUnit.registBuiltInScope() mut {
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
-         }   
+         }
          if not builtinModuleName2Scope[ name ]
          {  
             if name ~= "" and getTypeInfo( name ) {
@@ -565,7 +580,7 @@ fn TransUnit.registBuiltInScope() mut {
                      foreach retType in unwrap info[ "ret" ] {
                         let retTypeInfo = getTypeInfo( retType );
                         retTypeList.insert( retTypeInfo );
-                     }    
+                     }
 
                      let funcType = info.type$[1];
                      let methodFlag = funcType == "method" or funcType == "mut";
@@ -582,7 +597,7 @@ fn TransUnit.registBuiltInScope() mut {
                      self.popScope();
                      
                      Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
-                     if typeInfo.$nilableTypeInfo ~= Ast.rootTypeInfo {
+                     if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
                         Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
                      }
                      self.scope.add(
@@ -612,6 +627,8 @@ fn TransUnit.registBuiltInScope() mut {
          }  
       } 
    }
+
+   self.scope = self.topScope;
 }
 
 
@@ -1022,7 +1039,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // meta情報内の typeId -> typeInfo
    let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
-   typeId2TypeInfo[ Ast.rootTypeId ] = Ast.typeInfoRoot;
+   typeId2TypeInfo[ Ast.rootTypeId ] = Ast.headTypeInfo;
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
    typeId2Scope[ Ast.rootTypeId ] = self.scope;
 
@@ -1037,7 +1054,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       }
    }
 
-   let mut moduleTypeInfo = Ast.rootTypeInfo;
+   let mut moduleTypeInfo = Ast.headTypeInfo;
    foreach moduleName, index in nameList {
       let mut mutable = false;
       if index == #nameList {
@@ -1095,7 +1112,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
             parentScope.addEnum( accessMode, atomInfo.txt, enumTypeInfo );
          }  
          elseif atomInfo.kind == Ast.TypeInfoKind.Module {
-            let mut parentInfo = Ast.typeInfoRoot;
+            let mut parentInfo = Ast.headTypeInfo;
             if atomInfo.parentId ~= Ast.rootTypeId {
                let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
                   Util.err( "not found parentInfo %s %s"
@@ -1148,7 +1165,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
                typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
             }  
             else {
-               let mut parentInfo = Ast.typeInfoRoot;
+               let mut parentInfo = Ast.headTypeInfo;
                if atomInfo.parentId ~= Ast.rootTypeId {
                   let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
                      Util.err( "not found parentInfo %s %s"
@@ -1269,10 +1286,10 @@ fn TransUnit.processImport( modulePath:str ) mut :
                   }  
                }   
             }  
-         }  
+         }
          else {
-            newTypeInfo = Ast.rootScope.getTypeInfo(
-               atomInfo.txt, Ast.rootScope, false );
+            newTypeInfo = self.scope.getTypeInfo(
+               atomInfo.txt, self.scope, false );
             if not newTypeInfo {
                foreach val, key in atomInfo@@Map<str,stem> {
                   Util.errorLog( "error: illegal atomInfo %s:%s" ( key, val ) );
@@ -1431,7 +1448,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    }
 
    // スコープをルートに変更
-   self.scope = Ast.rootScope;
+   self.scope = self.topScope;
 
    let mut moduleToken = self.getToken();
    let mut modulePath = moduleToken.txt;

@@ -178,7 +178,7 @@ pub fn TransUnit.createAST(
 
    self.registBuiltInScope();
 
-   let mut moduleTypeInfo = Ast.typeInfoRoot;
+   let mut moduleTypeInfo = Ast.headTypeInfo;
 
    if! moduleName {
       apply txt of string.gmatch( _exp, '[^%.]+' ) {
@@ -474,12 +474,12 @@ fn TransUnit.analyzeDeclEnum(
 
    let mut scope = self.pushScope( true );
 
-   let mut enumTypeInfo = Ast.rootTypeInfo;
+   let mut enumTypeInfo = Ast.headTypeInfo;
    
    let mut nextToken = self.getToken();
    let mut number = 0.0;
-   let mut prevValTypeInfo = Ast.rootTypeInfo;
-   let mut valTypeInfo = Ast.rootTypeInfo;
+   let mut prevValTypeInfo = Ast.headTypeInfo;
+   let mut valTypeInfo = Ast.headTypeInfo;
    while nextToken.txt ~= "}" {
       let valName = nextToken;
       nextToken = self.getToken();
@@ -488,7 +488,7 @@ fn TransUnit.analyzeDeclEnum(
       switch ( prevValTypeInfo ) {
          case Ast.builtinTypeReal {
          }
-         case Ast.builtinTypeInt, Ast.rootTypeInfo {
+         case Ast.builtinTypeInt, Ast.headTypeInfo {
             enumVal = number@@int;
          }
       }
@@ -524,7 +524,7 @@ fn TransUnit.analyzeDeclEnum(
       }
       else {
          switch ( prevValTypeInfo ) {
-            case Ast.rootTypeInfo {
+            case Ast.headTypeInfo {
                valTypeInfo = Ast.builtinTypeInt;
             }
             case Ast.builtinTypeInt, Ast.builtinTypeReal {
@@ -536,7 +536,7 @@ fn TransUnit.analyzeDeclEnum(
             }
          }
       }
-      if prevValTypeInfo ~= Ast.rootTypeInfo and prevValTypeInfo ~= valTypeInfo
+      if prevValTypeInfo ~= Ast.headTypeInfo and prevValTypeInfo ~= valTypeInfo
       {        
          self.addErrMess( valName.$pos,
                           "multiple enum val type. %s, %s"
@@ -544,7 +544,7 @@ fn TransUnit.analyzeDeclEnum(
       }
       prevValTypeInfo = valTypeInfo;
 
-      if enumTypeInfo == Ast.rootTypeInfo {
+      if enumTypeInfo == Ast.headTypeInfo {
          enumTypeInfo = Ast.NormalTypeInfo.createEnum(
             scope, self.getCurrentNamespaceTypeInfo(),
             false, accessMode, name.txt, valTypeInfo, valueName2Info );
@@ -563,7 +563,7 @@ fn TransUnit.analyzeDeclEnum(
       number = number + 1;
    }
 
-   if enumTypeInfo == Ast.rootTypeInfo {
+   if enumTypeInfo == Ast.headTypeInfo {
       enumTypeInfo = Ast.NormalTypeInfo.createEnum(
          scope, self.getCurrentNamespaceTypeInfo(),
          false, accessMode, name.txt, Ast.builtinTypeNone, valueName2Info );
@@ -939,7 +939,7 @@ fn TransUnit.analyzeDeclClass(
    }
 
    if not self.scope.getTypeInfoChild( "__init" ) {
-      if classTypeInfo.$baseTypeInfo ~= Ast.rootTypeInfo {
+      if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
          let superScope = unwrap classTypeInfo.$baseTypeInfo.$scope;
          let superTypeInfo = unwrap superScope.getTypeInfoChild( "__init" );
          foreach argType in superTypeInfo.$argTypeInfoList {
@@ -1021,7 +1021,7 @@ fn TransUnit.analyzeDeclClass(
    }
    
    // extend のメソッドがオーバーライドされているか確認
-   if classTypeInfo.$baseTypeInfo ~= Ast.typeInfoRoot {
+   if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
       checkOverrideMethod( unwrap classTypeInfo.$baseTypeInfo.$scope );
    }
    foreach ifType in classTypeInfo.$interfaceList {

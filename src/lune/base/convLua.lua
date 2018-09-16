@@ -165,7 +165,7 @@ function convFilter:getCanonicalName( typeInfo )
   end
   local workType = typeInfo:get_parentInfo()
   
-  while workType ~= Ast.rootTypeInfo do
+  while workType ~= Ast.headTypeInfo do
     canonicalName = string.format( "%s.%s", workType:get_rawTxt(), canonicalName)
     if self.typeInfo2ModuleName[workType] then
       break
@@ -290,7 +290,7 @@ function convFilter:outputMeta( node, baseIndent )
     
     local typeId = typeInfo:get_typeId()
     
-    return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( Ast.rootTypeInfo ) )
+    return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( Ast.headTypeInfo ) )
   end
   
   local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
@@ -362,7 +362,7 @@ function convFilter:outputMeta( node, baseIndent )
   do
     local typeInfo = self.moduleTypeInfo
     
-    while typeInfo ~= Ast.rootTypeInfo do
+    while typeInfo ~= Ast.headTypeInfo do
       validChildrenSet[typeInfo:get_parentInfo()] = {[typeInfo:get_typeId()] = typeInfo}
       typeInfo = typeInfo:get_parentInfo()
     end
@@ -835,7 +835,7 @@ end
 function convFilter:getDestrClass( classTypeInfo )
   local typeInfo = classTypeInfo
   
-  while not typeInfo:equals( Ast.rootTypeInfo ) do
+  while not typeInfo:equals( Ast.headTypeInfo ) do
     local scope = _lune.unwrap( typeInfo:get_scope())
     
     do
@@ -2108,7 +2108,7 @@ _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:eval( node )
   local oStream = Util.memStream.new()
   
-  local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.rootTypeInfo)
+  local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo)
   
   conv:processDeclMacro( node, node, 0 )
   local chunk, err = load( oStream:get_txt(  ) )

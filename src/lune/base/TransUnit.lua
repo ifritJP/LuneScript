@@ -141,8 +141,9 @@ function TransUnit:__init(macroEval, analyzeModule, mode, pos)
   self.subfileList = {}
   self.pushbackList = {}
   self.usedTokenList = {}
-  self.scope = Ast.rootScope
-  self.moduleScope = Ast.rootScope
+  self.scope = Ast.Scope.new(Ast.rootScope, true, {})
+  self.topScope = self.scope
+  self.moduleScope = self.scope
   self.typeId2ClassMap = {}
   self.typeInfo2ClassNode = {}
   self.currentToken = Parser.getEofToken(  )
@@ -173,7 +174,7 @@ function TransUnit:popScope(  )
   self.scope = self.scope:get_parent(  )
 end
 function TransUnit:getCurrentClass(  )
-  local typeInfo = Ast.rootTypeInfo
+  local typeInfo = Ast.headTypeInfo
   
   local scope = self.scope
   
@@ -189,11 +190,11 @@ function TransUnit:getCurrentClass(  )
     end
     
     scope = scope:get_parent()
-  until scope == Ast.rootScope
+  until scope:isRoot(  )
   return typeInfo
 end
 function TransUnit:getCurrentNamespaceTypeInfo(  )
-  local typeInfo = Ast.rootTypeInfo
+  local typeInfo = Ast.headTypeInfo
   
   local scope = self.scope
   
@@ -207,11 +208,11 @@ function TransUnit:getCurrentNamespaceTypeInfo(  )
     end
     
     scope = scope:get_parent()
-  until scope == Ast.rootScope
+  until scope:isRoot(  )
   return typeInfo
 end
 function TransUnit:pushModule( externalFlag, name, mutable )
-  local typeInfo = Ast.rootTypeInfo
+  local typeInfo = Ast.headTypeInfo
   
   do
     local _exp = self.scope:getTypeInfoChild( name )
@@ -243,7 +244,7 @@ function TransUnit:popModule(  )
   self:popScope(  )
 end
 function TransUnit:pushClass( classFlag, abstructFlag, baseInfo, interfaceList, externalFlag, name, accessMode, defNamespace )
-  local typeInfo = Ast.rootTypeInfo
+  local typeInfo = Ast.headTypeInfo
   
   do
     local _exp = self.scope:getTypeInfoChild( name )
@@ -433,11 +434,11 @@ self._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
   end
 
-local typeInfoListInsert = Ast.typeInfoRoot
+local typeInfoListInsert = Ast.headTypeInfo
 
 _moduleObj.typeInfoListInsert = typeInfoListInsert
 
-local typeInfoListRemove = Ast.typeInfoRoot
+local typeInfoListRemove = Ast.headTypeInfo
 
 _moduleObj.typeInfoListRemove = typeInfoListRemove
 
@@ -448,7 +449,13 @@ function TransUnit:createModifier( typeInfo, mutable )
   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable )
 end
 
+local readyBuiltin = false
+
 function TransUnit:registBuiltInScope(  )
+  if readyBuiltin then
+    return 
+  end
+  readyBuiltin = true
   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"&stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
   
   local function getTypeInfo( typeName )
@@ -458,15 +465,15 @@ function TransUnit:registBuiltInScope(  )
       mutable = false
       typeName = typeName:gsub( "^&", "" )
     end
-    local typeInfo = Ast.rootTypeInfo
+    local typeInfo = Ast.headTypeInfo
     
     if typeName:find( "!$" ) then
       local orgTypeName = typeName:gsub( "!$", "" )
       
-      typeInfo = _lune.unwrap( Ast.rootScope:getTypeInfo( orgTypeName, Ast.rootScope, false ))
+      typeInfo = _lune.unwrap( self.scope:getTypeInfo( orgTypeName, self.scope, false ))
       typeInfo = typeInfo:get_nilableTypeInfo()
     else 
-      typeInfo = _lune.unwrap( Ast.rootScope:getTypeInfo( typeName, Ast.rootScope, false ))
+      typeInfo = _lune.unwrap( self.scope:getTypeInfo( typeName, self.scope, false ))
     end
     if mutable then
       return typeInfo
@@ -475,12 +482,13 @@ function TransUnit:registBuiltInScope(  )
     return typeInfo
   end
   
+  self.scope = Ast.rootScope
   local builtinModuleName2Scope = {}
   
   self.scope:addVar( Ast.AccessMode.Global, "_VERSION", Ast.builtinTypeString, false, true )
   for __index, builtinClassInfo in pairs( builtInInfo ) do
     for name, name2FieldInfo in pairs( builtinClassInfo ) do
-      local parentInfo = Ast.typeInfoRoot
+      local parentInfo = Ast.headTypeInfo
       
       if name ~= "" then
         local classFlag = true
@@ -547,7 +555,7 @@ function TransUnit:registBuiltInScope(  )
                   
                   self:popScope(  )
                   Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = typeInfo
-                  if typeInfo:get_nilableTypeInfo() ~= Ast.rootTypeInfo then
+                  if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
                     Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
                   end
                   self.scope:add( methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun, not methodFlag, not methodFlag, fieldName, typeInfo, Ast.AccessMode.Pub, not methodFlag, mutable, true )
@@ -580,6 +588,7 @@ function TransUnit:registBuiltInScope(  )
       end
     end
   end
+  self.scope = self.topScope
 end
 
 function TransUnit:error( mess )
@@ -984,7 +993,7 @@ function TransUnit:processImport( modulePath )
   end
   local typeId2TypeInfo = {}
   
-  typeId2TypeInfo[Ast.rootTypeId] = Ast.typeInfoRoot
+  typeId2TypeInfo[Ast.rootTypeId] = Ast.headTypeInfo
   local typeId2Scope = {}
   
   typeId2Scope[Ast.rootTypeId] = self.scope
@@ -1003,7 +1012,7 @@ function TransUnit:processImport( modulePath )
     end
     
   end
-  local moduleTypeInfo = Ast.rootTypeInfo
+  local moduleTypeInfo = Ast.headTypeInfo
   
   for index, moduleName in pairs( nameList ) do
     local mutable = false
@@ -1065,7 +1074,7 @@ function TransUnit:processImport( modulePath )
             end
             parentScope:addEnum( accessMode, atomInfo.txt, enumTypeInfo )
           elseif atomInfo.kind == Ast.TypeInfoKind.Module then
-            local parentInfo = Ast.typeInfoRoot
+            local parentInfo = Ast.headTypeInfo
             
             if atomInfo.parentId ~= Ast.rootTypeId then
               local workTypeInfo = typeId2TypeInfo[atomInfo.parentId]
@@ -1121,7 +1130,7 @@ function TransUnit:processImport( modulePath )
               newTypeInfo = orgTypeInfo:get_nilableTypeInfo(  )
               typeId2TypeInfo[atomInfo.typeId] = _lune.unwrap( newTypeInfo)
             else 
-              local parentInfo = Ast.typeInfoRoot
+              local parentInfo = Ast.headTypeInfo
               
               if atomInfo.parentId ~= Ast.rootTypeId then
                 local workTypeInfo = typeId2TypeInfo[atomInfo.parentId]
@@ -1238,7 +1247,7 @@ function TransUnit:processImport( modulePath )
               end
             end
           else 
-            newTypeInfo = Ast.rootScope:getTypeInfo( atomInfo.txt, Ast.rootScope, false )
+            newTypeInfo = self.scope:getTypeInfo( atomInfo.txt, self.scope, false )
             if not newTypeInfo then
               for key, val in pairs( atomInfo ) do
                 Util.errorLog( string.format( "error: illegal atomInfo %s:%s", key, val) )
@@ -1381,7 +1390,7 @@ function TransUnit:analyzeImport( token )
   if self.moduleScope ~= self.scope then
     self:error( "'import' must call at top scope." )
   end
-  self.scope = Ast.rootScope
+  self.scope = self.topScope
   local moduleToken = self:getToken(  )
   
   local modulePath = moduleToken.txt
@@ -1857,7 +1866,7 @@ do
 function TransUnit:createAST( parser, macroFlag, moduleName )
   self.moduleName = _lune.unwrapDefault( moduleName, "")
   self:registBuiltInScope(  )
-  local moduleTypeInfo = Ast.typeInfoRoot
+  local moduleTypeInfo = Ast.headTypeInfo
   
   do
     local _exp = moduleName
@@ -2148,15 +2157,15 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
   
   local scope = self:pushScope( true )
   
-  local enumTypeInfo = Ast.rootTypeInfo
+  local enumTypeInfo = Ast.headTypeInfo
   
   local nextToken = self:getToken(  )
   
   local number = 0.0
   
-  local prevValTypeInfo = Ast.rootTypeInfo
+  local prevValTypeInfo = Ast.headTypeInfo
   
-  local valTypeInfo = Ast.rootTypeInfo
+  local valTypeInfo = Ast.headTypeInfo
   
   while nextToken.txt ~= "}" do
     local valName = nextToken
@@ -2167,7 +2176,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
     do
       local _switchExp = (prevValTypeInfo )
       if _switchExp == Ast.builtinTypeReal then
-      elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.rootTypeInfo then
+      elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.headTypeInfo then
         enumVal = math.floor(number)
       end
     end
@@ -2202,7 +2211,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
     else 
       do
         local _switchExp = (prevValTypeInfo )
-        if _switchExp == Ast.rootTypeInfo then
+        if _switchExp == Ast.headTypeInfo then
           valTypeInfo = Ast.builtinTypeInt
         elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeReal then
           valTypeInfo = prevValTypeInfo
@@ -2212,11 +2221,11 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
       end
       
     end
-    if prevValTypeInfo ~= Ast.rootTypeInfo and prevValTypeInfo ~= valTypeInfo then
+    if prevValTypeInfo ~= Ast.headTypeInfo and prevValTypeInfo ~= valTypeInfo then
       self:addErrMess( valName.pos, string.format( "multiple enum val type. %s, %s", valTypeInfo:getTxt(  ), prevValTypeInfo:getTxt(  )) )
     end
     prevValTypeInfo = valTypeInfo
-    if enumTypeInfo == Ast.rootTypeInfo then
+    if enumTypeInfo == Ast.headTypeInfo then
       enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt, valTypeInfo, valueName2Info )
     end
     scope:addEnumVal( valName.txt, enumTypeInfo )
@@ -2231,7 +2240,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
     nextToken = self:getToken(  )
     number = number + 1
   end
-  if enumTypeInfo == Ast.rootTypeInfo then
+  if enumTypeInfo == Ast.headTypeInfo then
     enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt, Ast.builtinTypeNone, valueName2Info )
   end
   self:popScope(  )
@@ -2566,7 +2575,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
     end
   end
   if not self.scope:getTypeInfoChild( "__init" ) then
-    if classTypeInfo:get_baseTypeInfo() ~= Ast.rootTypeInfo then
+    if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
       local superScope = _lune.unwrap( classTypeInfo:get_baseTypeInfo():get_scope())
       
       local superTypeInfo = _lune.unwrap( superScope:getTypeInfoChild( "__init" ))
@@ -2640,7 +2649,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
      )
   end
   
-  if classTypeInfo:get_baseTypeInfo() ~= Ast.typeInfoRoot then
+  if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
     checkOverrideMethod( _lune.unwrap( classTypeInfo:get_baseTypeInfo():get_scope()) )
   end
   for __index, ifType in pairs( classTypeInfo:get_interfaceList() ) do
@@ -3941,7 +3950,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
     
     if mode == ExpSymbolMode.Get then
       fieldName = "get_" .. fieldName
-      getterTypeInfo = Ast.rootTypeInfo
+      getterTypeInfo = Ast.headTypeInfo
     end
     do
       local _exp = scope:getTypeInfoChild( fieldName )
@@ -4350,7 +4359,7 @@ function TransUnit:analyzeSuper( firstToken )
   
   local superType = classType:get_baseTypeInfo(  )
   
-  if superType:equals( Ast.rootTypeInfo ) then
+  if superType:equals( Ast.headTypeInfo ) then
     self:addErrMess( firstToken.pos, "This class doesn't have super-class." )
   end
   return Ast.ExpCallSuperNode.new(firstToken.pos, {Ast.builtinTypeNone}, superType, expList)
@@ -4627,7 +4636,7 @@ function TransUnit:analyzeReturn( token )
   
   local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
   
-  if funcTypeInfo == Ast.rootTypeInfo then
+  if funcTypeInfo == Ast.headTypeInfo then
     self:addErrMess( token.pos, "'return' could not use here" )
   else 
     local nextToken = self:getToken(  )

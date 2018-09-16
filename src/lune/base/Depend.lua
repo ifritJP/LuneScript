@@ -72,4 +72,7 @@ local function getFileLastModifiedTime( path )
   return nil
 end
 _moduleObj.getFileLastModifiedTime = getFileLastModifiedTime
+local list = {1}
+
+table.insert( list, 1 )
 return _moduleObj

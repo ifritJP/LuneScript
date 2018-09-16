@@ -333,6 +333,9 @@ function Scope:__init(parent, classFlag, inheritList)
   self.classFlag = classFlag
   self.symbolId2DataOwnerInfo = {}
 end
+function Scope:isRoot(  )
+  return self.parent == self
+end
 function Scope:set_ownerTypeInfo( owner )
   self.ownerTypeInfo = owner
 end
@@ -849,44 +852,56 @@ local function dumpScope( scope, prefix )
   dumpScopeSub( scope, prefix, {} )
 end
 
-local rootTypeInfo = TypeInfo.new(_moduleObj.rootScope)
+local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 
-_moduleObj.rootTypeInfo = rootTypeInfo
+_moduleObj.headTypeInfo = headTypeInfo
 
 function Scope:getNSTypeInfo(  )
   local scope = self
   
-  while scope.ownerTypeInfo ~= _moduleObj.rootTypeInfo do
+  while true do
     do
-      local _exp = scope.ownerTypeInfo
-      if _exp ~= nil then
+      local owner = scope.ownerTypeInfo
+      if owner ~= nil then
       
-          return _exp
+          if owner:get_kind() == TypeInfoKind.Root then
+            return owner
+          end
         end
     end
     
+    if scope.parent == scope then
+      break
+    end
     scope = scope.parent
   end
-  return _moduleObj.rootTypeInfo
+  return _moduleObj.headTypeInfo
 end
 
 function Scope:getClassTypeInfo(  )
   local scope = self
   
-  while scope.ownerTypeInfo ~= _moduleObj.rootTypeInfo do
+  while true do
     do
-      local _exp = scope.ownerTypeInfo
-      if _exp ~= nil then
+      local owner = scope.ownerTypeInfo
+      if owner ~= nil then
       
-          if _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Module then
-            return _exp
+          do
+            local _switchExp = owner:get_kind()
+            if _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Module then
+              return owner
+            end
           end
+          
         end
     end
     
+    if scope.parent == scope then
+      break
+    end
     scope = scope.parent
   end
-  return _moduleObj.rootTypeInfo
+  return _moduleObj.headTypeInfo
 end
 
 function NormalSymbolInfo:canAccess( fromScope )
@@ -1357,7 +1372,7 @@ function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mut
   
   self.externalFlag = externalFlag
   self.rawTxt = txt
-  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
+  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
   self.typeId = typeId
   self.mutable = mutable
   do
@@ -1482,7 +1497,7 @@ function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
   self.externalFlag = externalFlag
   self.accessMode = accessMode
   self.rawTxt = txt
-  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
+  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
   self.typeId = typeId
   self.name2EnumValInfo = name2EnumValInfo
   self.valTypeInfo = valTypeInfo
@@ -1568,7 +1583,7 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
     Util.printStackTrace(  )
   end
   self.abstructFlag = abstructFlag
-  self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.rootTypeInfo)
+  self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
   self.interfaceList = _lune.unwrapDefault( interfaceList, {})
   self.autoFlag = autoFlag
   self.externalFlag = externalFlag
@@ -1579,8 +1594,8 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
   self.itemTypeInfoList = _lune.unwrapDefault( itemTypeInfoList, {})
   self.argTypeInfoList = _lune.unwrapDefault( argTypeInfoList, {})
   self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
-  self.orgTypeInfo = _lune.unwrapDefault( orgTypeInfo, _moduleObj.rootTypeInfo)
-  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.rootTypeInfo)
+  self.orgTypeInfo = _lune.unwrapDefault( orgTypeInfo, _moduleObj.headTypeInfo)
+  self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
   self.mutable = mutable and true or false
   self.typeId = typeId
   if kind == TypeInfoKind.Root then
@@ -1618,12 +1633,12 @@ function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList,
         idProv:increment(  )
       end
     else 
-      self.nilableTypeInfo = _moduleObj.rootTypeInfo
+      self.nilableTypeInfo = _moduleObj.headTypeInfo
     end
     idProv:increment(  )
   else 
     self.nilable = true
-    self.nilableTypeInfo = _moduleObj.rootTypeInfo
+    self.nilableTypeInfo = _moduleObj.headTypeInfo
   end
 end
 function NormalTypeInfo:isModule(  )
@@ -1757,7 +1772,7 @@ function NormalTypeInfo:equalsSub( typeInfo )
       end
     end
   end
-  if self.orgTypeInfo ~= _moduleObj.rootTypeInfo and not self.orgTypeInfo:equals( typeInfo:get_orgTypeInfo() ) then
+  if self.orgTypeInfo ~= _moduleObj.headTypeInfo and not self.orgTypeInfo:equals( typeInfo:get_orgTypeInfo() ) then
     error( string.format( "illegal %s:%d %s:%d", self:getTxt(  ), self.typeId, typeInfo:getTxt(  ), typeInfo:get_typeId()) )
     return false
   end
@@ -1843,10 +1858,6 @@ end
 do
   end
 
-local typeInfoRoot = _moduleObj.rootTypeInfo
-
-_moduleObj.typeInfoRoot = typeInfoRoot
-
 idProv:increment(  )
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
   local typeId = idProv:get_id() + 1
@@ -1880,14 +1891,14 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
     end
   end
   
-  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.typeInfoRoot, typeId, kind, {}, argTypeList, retTypeList, true)
+  local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, {}, argTypeList, retTypeList, true)
   
   if scope then
     _moduleObj.rootScope:addClass( typeTxt, info )
   end
   _moduleObj.typeInfoKind[idName] = info
   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, info, false, true)
-  if info:get_nilableTypeInfo() ~= _moduleObj.rootTypeInfo then
+  if info:get_nilableTypeInfo() ~= _moduleObj.headTypeInfo then
     _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, info:get_nilableTypeInfo(), false, true)
     _moduleObj.builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
   end
@@ -1900,17 +1911,17 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
     Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
   end
   idProv:increment(  )
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.typeInfoRoot, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
   idProv:increment(  )
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.typeInfoRoot, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
   idProv:increment(  )
-  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.typeInfoRoot, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
+  return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )
@@ -2121,7 +2132,7 @@ function NormalTypeInfo:isInheritFrom( other )
   end
   local baseTypeInfo = self:get_baseTypeInfo()
   
-  while baseTypeInfo ~= _moduleObj.rootTypeInfo do
+  while baseTypeInfo ~= _moduleObj.headTypeInfo do
     if otherTypeId == baseTypeInfo:get_typeId() then
       return true
     end
@@ -2132,7 +2143,7 @@ function NormalTypeInfo:isInheritFrom( other )
   for __index, ifType in pairs( self:get_interfaceList() ) do
     local workType = ifType
     
-    while workType ~= _moduleObj.rootTypeInfo do
+    while workType ~= _moduleObj.headTypeInfo do
       if otherTypeId == workType:get_typeId() then
         return true
       end

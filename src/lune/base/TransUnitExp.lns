@@ -856,7 +856,7 @@ fn TransUnit.analyzeExpField(
       let mut fieldName = token.txt;
       if mode == .Get {
          fieldName = "get_" .. fieldName;
-         getterTypeInfo = Ast.rootTypeInfo;
+         getterTypeInfo = Ast.headTypeInfo;
       }
 
       if! scope.getTypeInfoChild( fieldName ) {
@@ -1353,7 +1353,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
 
    let classType = self.getCurrentClass();
    let superType = classType.get_baseTypeInfo();
-   if superType.equals( Ast.rootTypeInfo ) {
+   if superType.equals( Ast.headTypeInfo ) {
       self.addErrMess( firstToken.pos, "This class doesn't have super-class." );
    }
 

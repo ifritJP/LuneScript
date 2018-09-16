@@ -27,7 +27,7 @@ subfile owner lune.base.TransUnit;
 fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
    let mut expList: Ast.ExpListNode! = nil;
    let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-   if funcTypeInfo == Ast.rootTypeInfo {
+   if funcTypeInfo == Ast.headTypeInfo {
       self.addErrMess(
          token.pos,
          "'return' could not use here" );

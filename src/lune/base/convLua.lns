@@ -103,7 +103,7 @@ class convFilter extend Ast.Filter (oStream) {
       }     
       
       let mut workType = typeInfo.$parentInfo;
-      while workType ~= Ast.rootTypeInfo {
+      while workType ~= Ast.headTypeInfo {
          canonicalName = "%s.%s" (workType.$rawTxt, canonicalName);
          if self.typeInfo2ModuleName[ workType ] {
             break;
@@ -253,7 +253,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
       return typeId2TypeInfo[ typeId ] and not Ast.isBuiltin( typeId ) and
           ( moduleTypeInfo.hasRouteNamespaceFrom( node.$moduleTypeInfo ) or
             typeInfo.$srcTypeInfo ~= typeInfo or
-            moduleTypeInfo.equals( Ast.rootTypeInfo ) );
+            moduleTypeInfo.equals( Ast.headTypeInfo ) );
    }
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
@@ -342,7 +342,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
 
    {
       let mut typeInfo = self.moduleTypeInfo;
-      while typeInfo ~= Ast.rootTypeInfo {
+      while typeInfo ~= Ast.headTypeInfo {
          validChildrenSet[ typeInfo.$parentInfo ] = { typeInfo.$typeId: typeInfo };
          typeInfo = typeInfo.$parentInfo;
       }
@@ -796,7 +796,7 @@ end
 fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : Ast.TypeInfo!
 {
    let mut typeInfo = classTypeInfo;
-   while not typeInfo.equals( Ast.rootTypeInfo ) {
+   while not typeInfo.equals( Ast.headTypeInfo ) {
       let scope = unwrap typeInfo.$scope;
       if! scope.getTypeInfoChild( "__free" ) {
          return typeInfo;
@@ -2064,7 +2064,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
    {   
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", oStream, oStream, .Exec, true, Ast.rootTypeInfo );
+         "macro", oStream, oStream, .Exec, true, Ast.headTypeInfo );
 
       conv.processDeclMacro( node, node, 0 );
 

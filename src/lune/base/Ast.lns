@@ -231,6 +231,10 @@ pub class Scope {
       self.symbolId2DataOwnerInfo = {};
    }
 
+   pub fn isRoot(): bool {
+      return self.parent == self;
+   }
+
    pub fn set_ownerTypeInfo( owner: &TypeInfo! ) mut {
       self.ownerTypeInfo = owner;
    }
@@ -703,32 +707,42 @@ fn dumpScope( scope: Scope!, prefix:str ) {
 
 
 
-pub let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
+pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
+//let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
 
 pub fn Scope.getNSTypeInfo(): &TypeInfo {
    let mut scope = self;
-   while scope.ownerTypeInfo ~= rootTypeInfo {
-      if! scope.ownerTypeInfo {
-         return _exp;
-      } 
+   while true {
+      if! let owner = scope.ownerTypeInfo {
+         if owner.$kind == .Root {
+            return owner;
+         }
+      }
+      if scope.parent == scope {
+         break;
+      }
       scope = scope.parent;
    }
-   return rootTypeInfo;
+   return headTypeInfo;
 }
 
 pub fn Scope.getClassTypeInfo(): &TypeInfo {
    let mut scope = self;
-   while scope.ownerTypeInfo ~= rootTypeInfo {
-      if! scope.ownerTypeInfo {
-         if _exp.$kind == .Class or
-            _exp.$kind == .IF or _exp.$kind == .Module {
-            return _exp;
-         }  
-      } 
+   while true {
+      if! let owner = scope.ownerTypeInfo {
+         switch owner.$kind {
+            case .Class, .IF, .Module {
+               return owner;
+            }
+         }
+      }
+      if scope.parent == scope {
+         break;
+      }
       scope = scope.parent;
    }
-   return rootTypeInfo;
+   return headTypeInfo;
 }
 
 
@@ -896,7 +910,7 @@ pub class ModuleTypeInfo extend TypeInfo {
 
       self.externalFlag = externalFlag;
       self.rawTxt = txt;
-      self.parentInfo = unwrap parentInfo default rootTypeInfo;
+      self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.typeId = typeId;
       self.mutable = mutable;
 
@@ -997,7 +1011,7 @@ pub class EnumTypeInfo extend TypeInfo {
       self.externalFlag = externalFlag;
       self.accessMode = accessMode;
       self.rawTxt = txt;
-      self.parentInfo = unwrap parentInfo default rootTypeInfo;
+      self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.typeId = typeId;
       self.name2EnumValInfo = name2EnumValInfo;
       self.valTypeInfo = valTypeInfo;
@@ -1073,16 +1087,16 @@ pub class NormalTypeInfo extend TypeInfo {
    /** */
    pri let abstructFlag: bool { pub };
 
-   // unwrap 後の TypeInfo。 無効な場合は rootTypeInfo。
+   // unwrap 後の TypeInfo。 無効な場合は headTypeInfo。
    pri let mut orgTypeInfo: &TypeInfo { pub };
-   // 基底クラス。 無効な場合は rootTypeInfo。
+   // 基底クラス。 無効な場合は headTypeInfo。
    pri let baseTypeInfo: &TypeInfo { pub };
    // インタフェースのリスト。
    pri let interfaceList: List<&TypeInfo> { pub };
 
    // この型が nilable を表わす型かどうか。
    pri let mut nilable: bool { pub };
-   // この型の nilable 版の TypeInfo。 無効な場合は rootTypeInfo。
+   // この型の nilable 版の TypeInfo。 無効な場合は headTypeInfo。
    pri let mut nilableTypeInfo: &TypeInfo { pub };
    // このメソッドが mutable かどうか。
    pri let mutable: bool {pub};
@@ -1102,7 +1116,7 @@ pub class NormalTypeInfo extend TypeInfo {
       }
       
       self.abstructFlag = abstructFlag;
-      self.baseTypeInfo = unwrap baseTypeInfo default rootTypeInfo;
+      self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
       self.autoFlag = autoFlag;
       self.externalFlag = externalFlag;
@@ -1113,8 +1127,8 @@ pub class NormalTypeInfo extend TypeInfo {
       self.itemTypeInfoList = unwrap itemTypeInfoList default [];
       self.argTypeInfoList = unwrap argTypeInfoList default [];
       self.retTypeInfoList = unwrap retTypeInfoList default [];
-      self.orgTypeInfo = unwrap orgTypeInfo default rootTypeInfo;
-      self.parentInfo = unwrap parentInfo default rootTypeInfo;
+      self.orgTypeInfo = unwrap orgTypeInfo default headTypeInfo;
+      self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.mutable = mutable and true or false;
 
       // if dummyRootTypeInfo and not parentInfo {
@@ -1167,14 +1181,14 @@ pub class NormalTypeInfo extend TypeInfo {
             }
          }
          else {
-            self.nilableTypeInfo = rootTypeInfo;
+            self.nilableTypeInfo = headTypeInfo;
          }
          idProv.increment();
          //typeIdSeed = typeIdSeed + 1;
       } 
       else {
          self.nilable = true;
-         self.nilableTypeInfo = rootTypeInfo;
+         self.nilableTypeInfo = headTypeInfo;
       } 
    }
 
@@ -1368,7 +1382,7 @@ pub class NormalTypeInfo extend TypeInfo {
          }  
       } 
 
-      if self.orgTypeInfo ~= rootTypeInfo and
+      if self.orgTypeInfo ~= headTypeInfo and
          not self.orgTypeInfo.equals( typeInfo.$orgTypeInfo )
       {     
          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
@@ -1420,13 +1434,14 @@ pub class NormalTypeInfo extend TypeInfo {
 }
 
 
-pub let typeInfoRoot = rootTypeInfo;
+//pub let typeInfoRoot = rootTypeInfo;
 
 idProv.increment();
 //typeIdSeed = typeIdSeed + 1;
 
 pub static fn NormalTypeInfo.createBuiltin(
-   idName: str, typeTxt: str, kind: TypeInfoKind, typeDDD: TypeInfo! ): &TypeInfo
+   idName: str, typeTxt: str,
+   kind: TypeInfoKind, typeDDD: TypeInfo! ): &TypeInfo
 {
    //let mut typeId = typeIdSeed + 1;
    let mut typeId = idProv.$id + 1;
@@ -1461,7 +1476,7 @@ pub static fn NormalTypeInfo.createBuiltin(
    
    let mut info = new NormalTypeInfo(
       false, scope, nil, nil, nil, false, false, false, AccessMode.Pub,
-      typeTxt, typeInfoRoot, typeId,
+      typeTxt, headTypeInfo, typeId,
       kind, [], argTypeList, retTypeList, true );
    if scope {
       rootScope.addClass( typeTxt, info );
@@ -1471,7 +1486,7 @@ pub static fn NormalTypeInfo.createBuiltin(
    sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
       SymbolKind.Typ, false, false,
       rootScope, AccessMode.Pub, false, typeTxt, info, false, true );
-   if info.$nilableTypeInfo ~= rootTypeInfo {
+   if info.$nilableTypeInfo ~= headTypeInfo {
       sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
          SymbolKind.Typ, false, kind == .Func, rootScope,
          AccessMode.Pub, false, typeTxt, info.$nilableTypeInfo, false, true );
@@ -1492,7 +1507,7 @@ pub static fn NormalTypeInfo.createList(
    idProv.increment();
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "List",
-      typeInfoRoot, idProv.$id, .List, itemTypeInfo, nil, nil, true );
+      headTypeInfo, idProv.$id, .List, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createArray(
@@ -1503,7 +1518,7 @@ pub static fn NormalTypeInfo.createArray(
    idProv.increment();
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "Array",
-      typeInfoRoot, idProv.$id, .Array, itemTypeInfo, nil, nil, true );
+      headTypeInfo, idProv.$id, .Array, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createMap(
@@ -1514,7 +1529,7 @@ pub static fn NormalTypeInfo.createMap(
    idProv.increment();
    return new NormalTypeInfo(
       false, nil, nil, nil, nil, false, false, false, accessMode, "Map",
-      typeInfoRoot, idProv.$id, .Map,
+      headTypeInfo, idProv.$id, .Map,
       [ keyTypeInfo, valTypeInfo ], nil, nil, true );
 }
 
@@ -1744,7 +1759,7 @@ pub override fn NormalTypeInfo.isInheritFrom( other:&TypeInfo ) : bool
       return false;
    }
    let mut baseTypeInfo = self.$baseTypeInfo;
-   while baseTypeInfo ~= rootTypeInfo {
+   while baseTypeInfo ~= headTypeInfo {
       if otherTypeId == baseTypeInfo.$typeId {
          return true;
       } 
@@ -1752,7 +1767,7 @@ pub override fn NormalTypeInfo.isInheritFrom( other:&TypeInfo ) : bool
    };
    foreach ifType in self.$interfaceList {
       let mut workType = ifType;
-      while workType ~= rootTypeInfo {
+      while workType ~= headTypeInfo {
          if otherTypeId == workType.$typeId {
             return true;
          }
