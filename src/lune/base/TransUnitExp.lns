@@ -1036,14 +1036,20 @@ fn TransUnit.analyzeExpOp2(
       let opTxt = nextToken.txt;
 
       if opTxt == "@@" {
-         let castType = self.analyzeRefType( .Local, false );
+         let mut castType = self.analyzeRefType( .Local, false ).$expType;
          
-         if exp.$expType.$nilable and not castType.$expType.$nilable {
+
+         let expType = exp.$expType;
+         
+         if expType.$nilable and not castType.$nilable {
             self.addErrMess( firstToken.pos,
                              "can't cast from nilable to not nilable  -- %s->%s"
-                             (exp.$expType.getTxt(), castType.$expType.getTxt()) );
+                             (expType.getTxt(), castType.getTxt()) );
          }
-         exp = new Ast.ExpCastNode( firstToken.pos, castType.$expTypeList, exp );
+         elseif not expType.$mutable and castType.$mutable {
+            castType = self.createModifier( castType, false );
+         }
+         exp = new Ast.ExpCastNode( firstToken.pos, [ castType ], exp );
       }
       elseif nextToken.kind == Parser.TokenKind.Ope {
          if Parser.isOp2( opTxt ) {

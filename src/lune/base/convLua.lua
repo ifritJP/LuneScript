@@ -590,7 +590,7 @@ function convFilter:outputMeta( node, baseIndent )
                       
                     end
                     if valid then
-                      self:writeln( string.format( "_dependIdMap[ %d ] = { %d, %d }", typeInfo:get_typeId(), moduleIndex, extId), baseIndent )
+                      self:writeln( string.format( "_dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId(), moduleIndex, extId, typeInfo:getTxt(  )), baseIndent )
                     end
                   end
               end

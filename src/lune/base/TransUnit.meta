@@ -7,8 +7,8 @@ do
   _typeId2ClassInfoMap[ 3888 ] = _classInfo3888
   end
 do
-  local _classInfo5122 = {}
-  _typeId2ClassInfoMap[ 5122 ] = _classInfo5122
+  local _classInfo5123 = {}
+  _typeId2ClassInfoMap[ 5123 ] = _classInfo5123
   end
 do
   local _classInfo196 = {}
@@ -340,22 +340,22 @@ children = {198, } }
 _typeInfoList[5] = { parentId = 196, typeId = 198, txt = 'base', kind = 12, 
 children = {200, } }
 _typeInfoList[6] = { parentId = 198, typeId = 200, txt = 'TransUnit', kind = 12, 
-children = {3888, 5122, } }
-_dependIdMap[ 202 ] = { 2, 200 }
-_dependIdMap[ 207 ] = { 2, 345 }
-_dependIdMap[ 208 ] = { 2, 346 }
+children = {3888, 5123, } }
+_dependIdMap[ 202 ] = { 2, 200 } -- Parser
+_dependIdMap[ 207 ] = { 2, 345 } -- TxtStream
+_dependIdMap[ 208 ] = { 2, 346 } -- TxtStream!
 _typeInfoList[7] = { parentId = 1, typeId = 210, srcTypeId = 25, mutable = false }
-_dependIdMap[ 220 ] = { 2, 359 }
-_dependIdMap[ 221 ] = { 2, 360 }
+_dependIdMap[ 220 ] = { 2, 359 } -- Position
+_dependIdMap[ 221 ] = { 2, 360 } -- Position!
 _typeInfoList[8] = { parentId = 1, typeId = 223, srcTypeId = 16, mutable = false }
-_dependIdMap[ 227 ] = { 2, 366 }
-_dependIdMap[ 228 ] = { 2, 367 }
-_dependIdMap[ 241 ] = { 2, 374 }
-_dependIdMap[ 242 ] = { 2, 375 }
+_dependIdMap[ 227 ] = { 2, 366 } -- TokenKind
+_dependIdMap[ 228 ] = { 2, 367 } -- TokenKind!
+_dependIdMap[ 241 ] = { 2, 374 } -- Token
+_dependIdMap[ 242 ] = { 2, 375 } -- Token!
 _typeInfoList[9] = { parentId = 202, typeId = 244, srcTypeId = 227, mutable = false }
-_dependIdMap[ 244 ] = { 2, 377 }
+_dependIdMap[ 244 ] = { 2, 377 } -- &TokenKind
 _typeInfoList[10] = { parentId = 202, typeId = 245, srcTypeId = 220, mutable = false }
-_dependIdMap[ 245 ] = { 2, 378 }
+_dependIdMap[ 245 ] = { 2, 378 } -- &Position
 _typeInfoList[11] = { parentId = 1, typeId = 246, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {241}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[12] = { parentId = 1, typeId = 247, nilable = true, orgTypeId = 246 }
@@ -365,50 +365,50 @@ _typeInfoList[14] = { parentId = 1, typeId = 250, nilable = true, orgTypeId = 24
 _typeInfoList[15] = { parentId = 1, typeId = 255, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {241}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[16] = { parentId = 1, typeId = 256, nilable = true, orgTypeId = 255 }
-_dependIdMap[ 264 ] = { 2, 400 }
-_dependIdMap[ 265 ] = { 2, 401 }
+_dependIdMap[ 264 ] = { 2, 400 } -- Parser
+_dependIdMap[ 265 ] = { 2, 401 } -- Parser!
 _typeInfoList[17] = { parentId = 202, typeId = 267, srcTypeId = 242, mutable = false }
-_dependIdMap[ 267 ] = { 2, 403 }
-_dependIdMap[ 277 ] = { 2, 414 }
-_dependIdMap[ 278 ] = { 2, 415 }
-_dependIdMap[ 289 ] = { 2, 427 }
-_dependIdMap[ 290 ] = { 2, 428 }
+_dependIdMap[ 267 ] = { 2, 403 } -- &Token!
+_dependIdMap[ 277 ] = { 2, 414 } -- WrapParser
+_dependIdMap[ 278 ] = { 2, 415 } -- WrapParser!
+_dependIdMap[ 289 ] = { 2, 427 } -- StreamParser
+_dependIdMap[ 290 ] = { 2, 428 } -- StreamParser!
 _typeInfoList[18] = { parentId = 202, typeId = 304, srcTypeId = 241, mutable = false }
-_dependIdMap[ 304 ] = { 2, 476 }
-_dependIdMap[ 317 ] = { 2, 547 }
-_dependIdMap[ 318 ] = { 2, 548 }
-_dependIdMap[ 370 ] = { 1, 200 }
-_dependIdMap[ 381 ] = { 1, 370 }
-_dependIdMap[ 382 ] = { 1, 371 }
-_dependIdMap[ 384 ] = { 1, 373 }
-_dependIdMap[ 385 ] = { 1, 374 }
+_dependIdMap[ 304 ] = { 2, 476 } -- &Token
+_dependIdMap[ 317 ] = { 2, 547 } -- DummyParser
+_dependIdMap[ 318 ] = { 2, 548 } -- DummyParser!
+_dependIdMap[ 370 ] = { 1, 200 } -- Ast
+_dependIdMap[ 381 ] = { 1, 370 } -- TypeInfo
+_dependIdMap[ 382 ] = { 1, 371 } -- TypeInfo!
+_dependIdMap[ 384 ] = { 1, 373 } -- SymbolInfo
+_dependIdMap[ 385 ] = { 1, 374 } -- SymbolInfo!
 _typeInfoList[19] = { parentId = 370, typeId = 393, srcTypeId = 381, mutable = false }
-_dependIdMap[ 393 ] = { 1, 388 }
-_dependIdMap[ 397 ] = { 1, 395 }
-_dependIdMap[ 398 ] = { 1, 396 }
-_dependIdMap[ 414 ] = { 1, 406 }
-_dependIdMap[ 415 ] = { 1, 407 }
-_dependIdMap[ 417 ] = { 1, 409 }
-_dependIdMap[ 418 ] = { 1, 410 }
-_dependIdMap[ 431 ] = { 1, 417 }
-_dependIdMap[ 432 ] = { 1, 418 }
+_dependIdMap[ 393 ] = { 1, 388 } -- &TypeInfo
+_dependIdMap[ 397 ] = { 1, 395 } -- TypeInfoKind
+_dependIdMap[ 398 ] = { 1, 396 } -- TypeInfoKind!
+_dependIdMap[ 414 ] = { 1, 406 } -- Scope
+_dependIdMap[ 415 ] = { 1, 407 } -- Scope!
+_dependIdMap[ 417 ] = { 1, 409 } -- SymbolKind
+_dependIdMap[ 418 ] = { 1, 410 } -- SymbolKind!
+_dependIdMap[ 431 ] = { 1, 417 } -- AccessMode
+_dependIdMap[ 432 ] = { 1, 418 } -- AccessMode!
 _typeInfoList[20] = { parentId = 370, typeId = 448, srcTypeId = 384, mutable = false }
-_dependIdMap[ 448 ] = { 1, 434 }
+_dependIdMap[ 448 ] = { 1, 434 } -- &SymbolInfo
 _typeInfoList[21] = { parentId = 370, typeId = 485, srcTypeId = 414, mutable = false }
-_dependIdMap[ 485 ] = { 1, 471 }
+_dependIdMap[ 485 ] = { 1, 471 } -- &Scope
 _typeInfoList[22] = { parentId = 370, typeId = 486, srcTypeId = 385, mutable = false }
-_dependIdMap[ 486 ] = { 1, 472 }
-_dependIdMap[ 493 ] = { 1, 479 }
-_dependIdMap[ 494 ] = { 1, 480 }
+_dependIdMap[ 486 ] = { 1, 472 } -- &SymbolInfo!
+_dependIdMap[ 493 ] = { 1, 479 } -- NormalSymbolInfo
+_dependIdMap[ 494 ] = { 1, 480 } -- NormalSymbolInfo!
 _typeInfoList[23] = { parentId = 1, typeId = 496, srcTypeId = 13, mutable = false }
 _typeInfoList[24] = { parentId = 370, typeId = 497, srcTypeId = 431, mutable = false }
-_dependIdMap[ 497 ] = { 1, 483 }
+_dependIdMap[ 497 ] = { 1, 483 } -- &AccessMode
 _typeInfoList[25] = { parentId = 370, typeId = 498, srcTypeId = 417, mutable = false }
-_dependIdMap[ 498 ] = { 1, 484 }
-_dependIdMap[ 541 ] = { 1, 528 }
-_dependIdMap[ 542 ] = { 1, 529 }
+_dependIdMap[ 498 ] = { 1, 484 } -- &SymbolKind
+_dependIdMap[ 541 ] = { 1, 528 } -- DataOwnerInfo
+_dependIdMap[ 542 ] = { 1, 529 } -- DataOwnerInfo!
 _typeInfoList[26] = { parentId = 370, typeId = 547, srcTypeId = 382, mutable = false }
-_dependIdMap[ 547 ] = { 1, 534 }
+_dependIdMap[ 547 ] = { 1, 534 } -- &TypeInfo!
 _typeInfoList[27] = { parentId = 1, typeId = 548, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {25, 448}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[28] = { parentId = 1, typeId = 549, nilable = true, orgTypeId = 548 }
@@ -419,13 +419,13 @@ _typeInfoList[31] = { parentId = 1, typeId = 554, srcTypeId = 551, mutable = fal
 _typeInfoList[32] = { parentId = 1, typeId = 555, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {485}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[33] = { parentId = 1, typeId = 556, nilable = true, orgTypeId = 555 }
-_dependIdMap[ 588 ] = { 1, 601 }
-_dependIdMap[ 589 ] = { 1, 602 }
+_dependIdMap[ 588 ] = { 1, 601 } -- TypeData
+_dependIdMap[ 589 ] = { 1, 602 } -- TypeData!
 _typeInfoList[34] = { parentId = 1, typeId = 591, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[35] = { parentId = 1, typeId = 592, nilable = true, orgTypeId = 591 }
 _typeInfoList[36] = { parentId = 370, typeId = 603, srcTypeId = 415, mutable = false }
-_dependIdMap[ 603 ] = { 1, 638 }
+_dependIdMap[ 603 ] = { 1, 638 } -- &Scope!
 _typeInfoList[37] = { parentId = 1, typeId = 628, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {16, 393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[38] = { parentId = 1, typeId = 629, nilable = true, orgTypeId = 628 }
@@ -449,33 +449,33 @@ _typeInfoList[51] = { parentId = 1, typeId = 716, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[52] = { parentId = 1, typeId = 717, nilable = true, orgTypeId = 716 }
 _typeInfoList[53] = { parentId = 1, typeId = 719, srcTypeId = 716, mutable = false }
-_dependIdMap[ 792 ] = { 1, 844 }
-_dependIdMap[ 793 ] = { 1, 845 }
+_dependIdMap[ 792 ] = { 1, 844 } -- AccessSymbolInfo
+_dependIdMap[ 793 ] = { 1, 845 } -- AccessSymbolInfo!
 _typeInfoList[54] = { parentId = 370, typeId = 795, srcTypeId = 792, mutable = false }
-_dependIdMap[ 795 ] = { 1, 847 }
-_dependIdMap[ 844 ] = { 1, 896 }
-_dependIdMap[ 845 ] = { 1, 897 }
-_dependIdMap[ 847 ] = { 1, 899 }
-_dependIdMap[ 848 ] = { 1, 900 }
-_dependIdMap[ 850 ] = { 1, 902 }
-_dependIdMap[ 851 ] = { 1, 903 }
+_dependIdMap[ 795 ] = { 1, 847 } -- &AccessSymbolInfo
+_dependIdMap[ 844 ] = { 1, 896 } -- Node
+_dependIdMap[ 845 ] = { 1, 897 } -- Node!
+_dependIdMap[ 847 ] = { 1, 899 } -- DeclClassNode
+_dependIdMap[ 848 ] = { 1, 900 } -- DeclClassNode!
+_dependIdMap[ 850 ] = { 1, 902 } -- NilableTypeInfo
+_dependIdMap[ 851 ] = { 1, 903 } -- NilableTypeInfo!
 _typeInfoList[55] = { parentId = 1, typeId = 868, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {16, 393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[56] = { parentId = 1, typeId = 869, nilable = true, orgTypeId = 868 }
-_dependIdMap[ 961 ] = { 1, 1014 }
-_dependIdMap[ 962 ] = { 1, 1015 }
+_dependIdMap[ 961 ] = { 1, 1014 } -- ModifierTypeInfo
+_dependIdMap[ 962 ] = { 1, 1015 } -- ModifierTypeInfo!
 _typeInfoList[57] = { parentId = 1, typeId = 970, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {16, 393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[58] = { parentId = 1, typeId = 971, nilable = true, orgTypeId = 970 }
-_dependIdMap[ 1072 ] = { 1, 1126 }
-_dependIdMap[ 1073 ] = { 1, 1127 }
+_dependIdMap[ 1072 ] = { 1, 1126 } -- ModuleTypeInfo
+_dependIdMap[ 1073 ] = { 1, 1127 } -- ModuleTypeInfo!
 _typeInfoList[59] = { parentId = 1, typeId = 1099, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {16, 393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[60] = { parentId = 1, typeId = 1100, nilable = true, orgTypeId = 1099 }
-_dependIdMap[ 1120 ] = { 1, 1179 }
-_dependIdMap[ 1121 ] = { 1, 1180 }
-_dependIdMap[ 1132 ] = { 1, 1191 }
-_dependIdMap[ 1133 ] = { 1, 1192 }
+_dependIdMap[ 1120 ] = { 1, 1179 } -- EnumValInfo
+_dependIdMap[ 1121 ] = { 1, 1180 } -- EnumValInfo!
+_dependIdMap[ 1132 ] = { 1, 1191 } -- EnumTypeInfo
+_dependIdMap[ 1133 ] = { 1, 1192 } -- EnumTypeInfo!
 _typeInfoList[61] = { parentId = 1, typeId = 1135, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {25, 1120}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[62] = { parentId = 1, typeId = 1136, nilable = true, orgTypeId = 1135 }
@@ -484,9 +484,9 @@ _typeInfoList[64] = { parentId = 1, typeId = 1139, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {25, 1120}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[65] = { parentId = 1, typeId = 1140, nilable = true, orgTypeId = 1139 }
 _typeInfoList[66] = { parentId = 370, typeId = 1145, srcTypeId = 1132, mutable = false }
-_dependIdMap[ 1145 ] = { 1, 1204 }
-_dependIdMap[ 1194 ] = { 1, 1254 }
-_dependIdMap[ 1195 ] = { 1, 1255 }
+_dependIdMap[ 1145 ] = { 1, 1204 } -- &EnumTypeInfo
+_dependIdMap[ 1194 ] = { 1, 1254 } -- NormalTypeInfo
+_dependIdMap[ 1195 ] = { 1, 1255 } -- NormalTypeInfo!
 _typeInfoList[67] = { parentId = 1, typeId = 1197, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[68] = { parentId = 1, typeId = 1198, nilable = true, orgTypeId = 1197 }
@@ -500,7 +500,7 @@ _typeInfoList[73] = { parentId = 1, typeId = 1205, baseId = 1, txt = 'List',
 _typeInfoList[74] = { parentId = 1, typeId = 1206, nilable = true, orgTypeId = 1205 }
 _typeInfoList[75] = { parentId = 1, typeId = 1208, srcTypeId = 1205, mutable = false }
 _typeInfoList[76] = { parentId = 370, typeId = 1209, srcTypeId = 397, mutable = false }
-_dependIdMap[ 1209 ] = { 1, 1269 }
+_dependIdMap[ 1209 ] = { 1, 1269 } -- &TypeInfoKind
 _typeInfoList[77] = { parentId = 1, typeId = 1210, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[78] = { parentId = 1, typeId = 1211, nilable = true, orgTypeId = 1210 }
@@ -549,83 +549,83 @@ _typeInfoList[107] = { parentId = 1, typeId = 1374, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[108] = { parentId = 1, typeId = 1375, nilable = true, orgTypeId = 1374 }
 _typeInfoList[109] = { parentId = 1, typeId = 1377, srcTypeId = 1374, mutable = false }
-_dependIdMap[ 1384 ] = { 1, 1545 }
-_dependIdMap[ 1385 ] = { 1, 1546 }
+_dependIdMap[ 1384 ] = { 1, 1545 } -- Filter
+_dependIdMap[ 1385 ] = { 1, 1546 } -- Filter!
 _typeInfoList[110] = { parentId = 1, typeId = 1390, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[111] = { parentId = 1, typeId = 1391, nilable = true, orgTypeId = 1390 }
 _typeInfoList[112] = { parentId = 1, typeId = 1393, srcTypeId = 1390, mutable = false }
 _typeInfoList[113] = { parentId = 370, typeId = 1394, srcTypeId = 844, mutable = false }
-_dependIdMap[ 1394 ] = { 1, 1555 }
+_dependIdMap[ 1394 ] = { 1, 1555 } -- &Node
 _typeInfoList[114] = { parentId = 1, typeId = 1398, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {8}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[115] = { parentId = 1, typeId = 1399, nilable = true, orgTypeId = 1398 }
 _typeInfoList[116] = { parentId = 1, typeId = 1401, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[117] = { parentId = 1, typeId = 1402, nilable = true, orgTypeId = 1401 }
-_dependIdMap[ 1428 ] = { 1, 1595 }
-_dependIdMap[ 1429 ] = { 1, 1596 }
-_dependIdMap[ 1434 ] = { 1, 1601 }
-_dependIdMap[ 1435 ] = { 1, 1602 }
-_dependIdMap[ 1437 ] = { 1, 1604 }
-_dependIdMap[ 1438 ] = { 1, 1605 }
-_dependIdMap[ 1440 ] = { 1, 1607 }
-_dependIdMap[ 1441 ] = { 1, 1608 }
-_dependIdMap[ 1443 ] = { 1, 1610 }
-_dependIdMap[ 1444 ] = { 1, 1611 }
+_dependIdMap[ 1428 ] = { 1, 1595 } -- NamespaceInfo
+_dependIdMap[ 1429 ] = { 1, 1596 } -- NamespaceInfo!
+_dependIdMap[ 1434 ] = { 1, 1601 } -- MacroEval
+_dependIdMap[ 1435 ] = { 1, 1602 } -- MacroEval!
+_dependIdMap[ 1437 ] = { 1, 1604 } -- ExpListNode
+_dependIdMap[ 1438 ] = { 1, 1605 } -- ExpListNode!
+_dependIdMap[ 1440 ] = { 1, 1607 } -- DeclArgNode
+_dependIdMap[ 1441 ] = { 1, 1608 } -- DeclArgNode!
+_dependIdMap[ 1443 ] = { 1, 1610 } -- DeclMacroInfo
+_dependIdMap[ 1444 ] = { 1, 1611 } -- DeclMacroInfo!
 _typeInfoList[118] = { parentId = 370, typeId = 1446, srcTypeId = 1440, mutable = false }
-_dependIdMap[ 1446 ] = { 1, 1613 }
+_dependIdMap[ 1446 ] = { 1, 1613 } -- &DeclArgNode
 _typeInfoList[119] = { parentId = 1, typeId = 1447, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1446}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[120] = { parentId = 1, typeId = 1448, nilable = true, orgTypeId = 1447 }
 _typeInfoList[121] = { parentId = 1, typeId = 1450, srcTypeId = 1447, mutable = false }
 _typeInfoList[122] = { parentId = 370, typeId = 1451, srcTypeId = 845, mutable = false }
-_dependIdMap[ 1451 ] = { 1, 1618 }
+_dependIdMap[ 1451 ] = { 1, 1618 } -- &Node!
 _typeInfoList[123] = { parentId = 1, typeId = 1452, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {304}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[124] = { parentId = 1, typeId = 1453, nilable = true, orgTypeId = 1452 }
 _typeInfoList[125] = { parentId = 1, typeId = 1455, srcTypeId = 1452, mutable = false }
-_dependIdMap[ 1471 ] = { 1, 1638 }
-_dependIdMap[ 1472 ] = { 1, 1639 }
-_dependIdMap[ 1477 ] = { 1, 1644 }
-_dependIdMap[ 1478 ] = { 1, 1645 }
+_dependIdMap[ 1471 ] = { 1, 1638 } -- MacroValInfo
+_dependIdMap[ 1472 ] = { 1, 1639 } -- MacroValInfo!
+_dependIdMap[ 1477 ] = { 1, 1644 } -- MacroInfo
+_dependIdMap[ 1478 ] = { 1, 1645 } -- MacroInfo!
 _typeInfoList[126] = { parentId = 1, typeId = 1480, srcTypeId = 37, mutable = false }
 _typeInfoList[127] = { parentId = 370, typeId = 1481, srcTypeId = 1443, mutable = false }
-_dependIdMap[ 1481 ] = { 1, 1648 }
+_dependIdMap[ 1481 ] = { 1, 1648 } -- &DeclMacroInfo
 _typeInfoList[128] = { parentId = 1, typeId = 1482, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {25, 1471}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[129] = { parentId = 1, typeId = 1483, nilable = true, orgTypeId = 1482 }
 _typeInfoList[130] = { parentId = 1, typeId = 1485, srcTypeId = 1482, mutable = false }
-_dependIdMap[ 1495 ] = { 1, 1711 }
-_dependIdMap[ 1496 ] = { 1, 1712 }
+_dependIdMap[ 1495 ] = { 1, 1711 } -- NoneNode
+_dependIdMap[ 1496 ] = { 1, 1712 } -- NoneNode!
 _typeInfoList[131] = { parentId = 370, typeId = 1498, srcTypeId = 1495, mutable = false }
-_dependIdMap[ 1498 ] = { 1, 1714 }
+_dependIdMap[ 1498 ] = { 1, 1714 } -- &NoneNode
 _typeInfoList[132] = { parentId = 1, typeId = 1511, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[133] = { parentId = 1, typeId = 1512, nilable = true, orgTypeId = 1511 }
 _typeInfoList[134] = { parentId = 1, typeId = 1514, srcTypeId = 1511, mutable = false }
-_dependIdMap[ 1518 ] = { 1, 1744 }
-_dependIdMap[ 1519 ] = { 1, 1745 }
+_dependIdMap[ 1518 ] = { 1, 1744 } -- SubfileNode
+_dependIdMap[ 1519 ] = { 1, 1745 } -- SubfileNode!
 _typeInfoList[135] = { parentId = 370, typeId = 1521, srcTypeId = 1518, mutable = false }
-_dependIdMap[ 1521 ] = { 1, 1747 }
+_dependIdMap[ 1521 ] = { 1, 1747 } -- &SubfileNode
 _typeInfoList[136] = { parentId = 1, typeId = 1534, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[137] = { parentId = 1, typeId = 1535, nilable = true, orgTypeId = 1534 }
 _typeInfoList[138] = { parentId = 1, typeId = 1537, srcTypeId = 1534, mutable = false }
-_dependIdMap[ 1541 ] = { 1, 1783 }
-_dependIdMap[ 1542 ] = { 1, 1784 }
+_dependIdMap[ 1541 ] = { 1, 1783 } -- ImportNode
+_dependIdMap[ 1542 ] = { 1, 1784 } -- ImportNode!
 _typeInfoList[139] = { parentId = 370, typeId = 1544, srcTypeId = 1541, mutable = false }
-_dependIdMap[ 1544 ] = { 1, 1786 }
+_dependIdMap[ 1544 ] = { 1, 1786 } -- &ImportNode
 _typeInfoList[140] = { parentId = 1, typeId = 1557, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[141] = { parentId = 1, typeId = 1558, nilable = true, orgTypeId = 1557 }
 _typeInfoList[142] = { parentId = 1, typeId = 1560, srcTypeId = 1557, mutable = false }
-_dependIdMap[ 1570 ] = { 1, 1819 }
-_dependIdMap[ 1571 ] = { 1, 1820 }
-_dependIdMap[ 1573 ] = { 1, 1822 }
-_dependIdMap[ 1574 ] = { 1, 1823 }
-_dependIdMap[ 1585 ] = { 1, 1834 }
-_dependIdMap[ 1586 ] = { 1, 1835 }
+_dependIdMap[ 1570 ] = { 1, 1819 } -- ProvideNode
+_dependIdMap[ 1571 ] = { 1, 1820 } -- ProvideNode!
+_dependIdMap[ 1573 ] = { 1, 1822 } -- LuneHelperInfo
+_dependIdMap[ 1574 ] = { 1, 1823 } -- LuneHelperInfo!
+_dependIdMap[ 1585 ] = { 1, 1834 } -- ModuleInfo
+_dependIdMap[ 1586 ] = { 1, 1835 } -- ModuleInfo!
 _typeInfoList[143] = { parentId = 1, typeId = 1588, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {393, 16}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[144] = { parentId = 1, typeId = 1589, nilable = true, orgTypeId = 1588 }
@@ -637,20 +637,20 @@ _typeInfoList[148] = { parentId = 1, typeId = 1595, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {393, 16}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[149] = { parentId = 1, typeId = 1596, nilable = true, orgTypeId = 1595 }
 _typeInfoList[150] = { parentId = 1, typeId = 1607, srcTypeId = 1592, mutable = false }
-_dependIdMap[ 1611 ] = { 1, 1884 }
-_dependIdMap[ 1612 ] = { 1, 1885 }
+_dependIdMap[ 1611 ] = { 1, 1884 } -- RootNode
+_dependIdMap[ 1612 ] = { 1, 1885 } -- RootNode!
 _typeInfoList[151] = { parentId = 370, typeId = 1614, srcTypeId = 1611, mutable = false }
-_dependIdMap[ 1614 ] = { 1, 1887 }
+_dependIdMap[ 1614 ] = { 1, 1887 } -- &RootNode
 _typeInfoList[152] = { parentId = 1, typeId = 1618, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[153] = { parentId = 1, typeId = 1619, nilable = true, orgTypeId = 1618 }
 _typeInfoList[154] = { parentId = 370, typeId = 1621, srcTypeId = 1571, mutable = false }
-_dependIdMap[ 1621 ] = { 1, 1894 }
+_dependIdMap[ 1621 ] = { 1, 1894 } -- &ProvideNode!
 _typeInfoList[155] = { parentId = 1, typeId = 1622, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {393, 1585}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[156] = { parentId = 1, typeId = 1623, nilable = true, orgTypeId = 1622 }
 _typeInfoList[157] = { parentId = 370, typeId = 1625, srcTypeId = 1428, mutable = false }
-_dependIdMap[ 1625 ] = { 1, 1898 }
+_dependIdMap[ 1625 ] = { 1, 1898 } -- &NamespaceInfo
 _typeInfoList[158] = { parentId = 1, typeId = 1626, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {16, 1625}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[159] = { parentId = 1, typeId = 1627, nilable = true, orgTypeId = 1626 }
@@ -667,20 +667,20 @@ _typeInfoList[166] = { parentId = 1, typeId = 1646, nilable = true, orgTypeId = 
 _typeInfoList[167] = { parentId = 1, typeId = 1648, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {16, 1625}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[168] = { parentId = 1, typeId = 1649, nilable = true, orgTypeId = 1648 }
-_dependIdMap[ 1675 ] = { 1, 1970 }
-_dependIdMap[ 1676 ] = { 1, 1971 }
+_dependIdMap[ 1675 ] = { 1, 1970 } -- RefTypeNode
+_dependIdMap[ 1676 ] = { 1, 1971 } -- RefTypeNode!
 _typeInfoList[169] = { parentId = 370, typeId = 1678, srcTypeId = 1675, mutable = false }
-_dependIdMap[ 1678 ] = { 1, 1973 }
+_dependIdMap[ 1678 ] = { 1, 1973 } -- &RefTypeNode
 _typeInfoList[170] = { parentId = 1, typeId = 1691, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[171] = { parentId = 1, typeId = 1692, nilable = true, orgTypeId = 1691 }
 _typeInfoList[172] = { parentId = 1, typeId = 1694, srcTypeId = 1691, mutable = false }
-_dependIdMap[ 1710 ] = { 1, 2012 }
-_dependIdMap[ 1711 ] = { 1, 2013 }
-_dependIdMap[ 1724 ] = { 1, 2029 }
-_dependIdMap[ 1725 ] = { 1, 2030 }
+_dependIdMap[ 1710 ] = { 1, 2012 } -- BlockKind
+_dependIdMap[ 1711 ] = { 1, 2013 } -- BlockKind!
+_dependIdMap[ 1724 ] = { 1, 2029 } -- BlockNode
+_dependIdMap[ 1725 ] = { 1, 2030 } -- BlockNode!
 _typeInfoList[173] = { parentId = 370, typeId = 1727, srcTypeId = 1724, mutable = false }
-_dependIdMap[ 1727 ] = { 1, 2032 }
+_dependIdMap[ 1727 ] = { 1, 2032 } -- &BlockNode
 _typeInfoList[174] = { parentId = 1, typeId = 1731, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[175] = { parentId = 1, typeId = 1732, nilable = true, orgTypeId = 1731 }
@@ -691,12 +691,12 @@ _typeInfoList[178] = { parentId = 1, typeId = 1746, srcTypeId = 1743, mutable = 
 _typeInfoList[179] = { parentId = 1, typeId = 1747, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[180] = { parentId = 1, typeId = 1748, nilable = true, orgTypeId = 1747 }
-_dependIdMap[ 1759 ] = { 1, 2071 }
-_dependIdMap[ 1760 ] = { 1, 2072 }
-_dependIdMap[ 1774 ] = { 1, 2092 }
-_dependIdMap[ 1775 ] = { 1, 2093 }
+_dependIdMap[ 1759 ] = { 1, 2071 } -- IfStmtInfo
+_dependIdMap[ 1760 ] = { 1, 2072 } -- IfStmtInfo!
+_dependIdMap[ 1774 ] = { 1, 2092 } -- IfNode
+_dependIdMap[ 1775 ] = { 1, 2093 } -- IfNode!
 _typeInfoList[181] = { parentId = 370, typeId = 1777, srcTypeId = 1774, mutable = false }
-_dependIdMap[ 1777 ] = { 1, 2095 }
+_dependIdMap[ 1777 ] = { 1, 2095 } -- &IfNode
 _typeInfoList[182] = { parentId = 1, typeId = 1781, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1759}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[183] = { parentId = 1, typeId = 1782, nilable = true, orgTypeId = 1781 }
@@ -708,7 +708,7 @@ _typeInfoList[187] = { parentId = 1, typeId = 1797, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1759}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[188] = { parentId = 1, typeId = 1798, nilable = true, orgTypeId = 1797 }
 _typeInfoList[189] = { parentId = 370, typeId = 1806, srcTypeId = 1437, mutable = false }
-_dependIdMap[ 1806 ] = { 1, 2137 }
+_dependIdMap[ 1806 ] = { 1, 2137 } -- &ExpListNode
 _typeInfoList[190] = { parentId = 1, typeId = 1810, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[191] = { parentId = 1, typeId = 1811, nilable = true, orgTypeId = 1810 }
@@ -719,17 +719,17 @@ _typeInfoList[194] = { parentId = 1, typeId = 1825, srcTypeId = 1822, mutable = 
 _typeInfoList[195] = { parentId = 1, typeId = 1826, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[196] = { parentId = 1, typeId = 1827, nilable = true, orgTypeId = 1826 }
-_dependIdMap[ 1841 ] = { 1, 2180 }
-_dependIdMap[ 1842 ] = { 1, 2181 }
-_dependIdMap[ 1853 ] = { 1, 2204 }
-_dependIdMap[ 1854 ] = { 1, 2205 }
+_dependIdMap[ 1841 ] = { 1, 2180 } -- CaseInfo
+_dependIdMap[ 1842 ] = { 1, 2181 } -- CaseInfo!
+_dependIdMap[ 1853 ] = { 1, 2204 } -- SwitchNode
+_dependIdMap[ 1854 ] = { 1, 2205 } -- SwitchNode!
 _typeInfoList[197] = { parentId = 370, typeId = 1856, srcTypeId = 1853, mutable = false }
-_dependIdMap[ 1856 ] = { 1, 2207 }
+_dependIdMap[ 1856 ] = { 1, 2207 } -- &SwitchNode
 _typeInfoList[198] = { parentId = 1, typeId = 1860, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1841}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[199] = { parentId = 1, typeId = 1861, nilable = true, orgTypeId = 1860 }
 _typeInfoList[200] = { parentId = 370, typeId = 1863, srcTypeId = 1725, mutable = false }
-_dependIdMap[ 1863 ] = { 1, 2214 }
+_dependIdMap[ 1863 ] = { 1, 2214 } -- &BlockNode!
 _typeInfoList[201] = { parentId = 1, typeId = 1873, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[202] = { parentId = 1, typeId = 1874, nilable = true, orgTypeId = 1873 }
@@ -737,34 +737,34 @@ _typeInfoList[203] = { parentId = 1, typeId = 1876, srcTypeId = 1873, mutable = 
 _typeInfoList[204] = { parentId = 1, typeId = 1877, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1841}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[205] = { parentId = 1, typeId = 1878, nilable = true, orgTypeId = 1877 }
-_dependIdMap[ 1892 ] = { 1, 2259 }
-_dependIdMap[ 1893 ] = { 1, 2260 }
+_dependIdMap[ 1892 ] = { 1, 2259 } -- WhileNode
+_dependIdMap[ 1893 ] = { 1, 2260 } -- WhileNode!
 _typeInfoList[206] = { parentId = 370, typeId = 1895, srcTypeId = 1892, mutable = false }
-_dependIdMap[ 1895 ] = { 1, 2262 }
+_dependIdMap[ 1895 ] = { 1, 2262 } -- &WhileNode
 _typeInfoList[207] = { parentId = 1, typeId = 1908, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[208] = { parentId = 1, typeId = 1909, nilable = true, orgTypeId = 1908 }
 _typeInfoList[209] = { parentId = 1, typeId = 1911, srcTypeId = 1908, mutable = false }
-_dependIdMap[ 1921 ] = { 1, 2304 }
-_dependIdMap[ 1922 ] = { 1, 2305 }
+_dependIdMap[ 1921 ] = { 1, 2304 } -- RepeatNode
+_dependIdMap[ 1922 ] = { 1, 2305 } -- RepeatNode!
 _typeInfoList[210] = { parentId = 370, typeId = 1924, srcTypeId = 1921, mutable = false }
-_dependIdMap[ 1924 ] = { 1, 2307 }
+_dependIdMap[ 1924 ] = { 1, 2307 } -- &RepeatNode
 _typeInfoList[211] = { parentId = 1, typeId = 1937, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[212] = { parentId = 1, typeId = 1938, nilable = true, orgTypeId = 1937 }
 _typeInfoList[213] = { parentId = 1, typeId = 1940, srcTypeId = 1937, mutable = false }
-_dependIdMap[ 1950 ] = { 1, 2358 }
-_dependIdMap[ 1951 ] = { 1, 2359 }
+_dependIdMap[ 1950 ] = { 1, 2358 } -- ForNode
+_dependIdMap[ 1951 ] = { 1, 2359 } -- ForNode!
 _typeInfoList[214] = { parentId = 370, typeId = 1953, srcTypeId = 1950, mutable = false }
-_dependIdMap[ 1953 ] = { 1, 2361 }
+_dependIdMap[ 1953 ] = { 1, 2361 } -- &ForNode
 _typeInfoList[215] = { parentId = 1, typeId = 1966, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[216] = { parentId = 1, typeId = 1967, nilable = true, orgTypeId = 1966 }
 _typeInfoList[217] = { parentId = 1, typeId = 1969, srcTypeId = 1966, mutable = false }
-_dependIdMap[ 1988 ] = { 1, 2415 }
-_dependIdMap[ 1989 ] = { 1, 2416 }
+_dependIdMap[ 1988 ] = { 1, 2415 } -- ApplyNode
+_dependIdMap[ 1989 ] = { 1, 2416 } -- ApplyNode!
 _typeInfoList[218] = { parentId = 370, typeId = 1991, srcTypeId = 1988, mutable = false }
-_dependIdMap[ 1991 ] = { 1, 2418 }
+_dependIdMap[ 1991 ] = { 1, 2418 } -- &ApplyNode
 _typeInfoList[219] = { parentId = 1, typeId = 1995, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {304}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[220] = { parentId = 1, typeId = 1996, nilable = true, orgTypeId = 1995 }
@@ -775,90 +775,90 @@ _typeInfoList[223] = { parentId = 1, typeId = 2010, srcTypeId = 2007, mutable = 
 _typeInfoList[224] = { parentId = 1, typeId = 2011, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {304}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[225] = { parentId = 1, typeId = 2012, nilable = true, orgTypeId = 2011 }
-_dependIdMap[ 2026 ] = { 1, 2475 }
-_dependIdMap[ 2027 ] = { 1, 2476 }
+_dependIdMap[ 2026 ] = { 1, 2475 } -- ForeachNode
+_dependIdMap[ 2027 ] = { 1, 2476 } -- ForeachNode!
 _typeInfoList[226] = { parentId = 370, typeId = 2029, srcTypeId = 2026, mutable = false }
-_dependIdMap[ 2029 ] = { 1, 2478 }
+_dependIdMap[ 2029 ] = { 1, 2478 } -- &ForeachNode
 _typeInfoList[227] = { parentId = 1, typeId = 2042, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[228] = { parentId = 1, typeId = 2043, nilable = true, orgTypeId = 2042 }
 _typeInfoList[229] = { parentId = 1, typeId = 2045, srcTypeId = 2042, mutable = false }
-_dependIdMap[ 2061 ] = { 1, 2535 }
-_dependIdMap[ 2062 ] = { 1, 2536 }
+_dependIdMap[ 2061 ] = { 1, 2535 } -- ForsortNode
+_dependIdMap[ 2062 ] = { 1, 2536 } -- ForsortNode!
 _typeInfoList[230] = { parentId = 370, typeId = 2064, srcTypeId = 2061, mutable = false }
-_dependIdMap[ 2064 ] = { 1, 2538 }
+_dependIdMap[ 2064 ] = { 1, 2538 } -- &ForsortNode
 _typeInfoList[231] = { parentId = 1, typeId = 2077, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[232] = { parentId = 1, typeId = 2078, nilable = true, orgTypeId = 2077 }
 _typeInfoList[233] = { parentId = 1, typeId = 2080, srcTypeId = 2077, mutable = false }
-_dependIdMap[ 2099 ] = { 1, 2586 }
-_dependIdMap[ 2100 ] = { 1, 2587 }
+_dependIdMap[ 2099 ] = { 1, 2586 } -- ReturnNode
+_dependIdMap[ 2100 ] = { 1, 2587 } -- ReturnNode!
 _typeInfoList[234] = { parentId = 370, typeId = 2102, srcTypeId = 2099, mutable = false }
-_dependIdMap[ 2102 ] = { 1, 2589 }
+_dependIdMap[ 2102 ] = { 1, 2589 } -- &ReturnNode
 _typeInfoList[235] = { parentId = 370, typeId = 2106, srcTypeId = 1438, mutable = false }
-_dependIdMap[ 2106 ] = { 1, 2593 }
+_dependIdMap[ 2106 ] = { 1, 2593 } -- &ExpListNode!
 _typeInfoList[236] = { parentId = 1, typeId = 2116, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[237] = { parentId = 1, typeId = 2117, nilable = true, orgTypeId = 2116 }
 _typeInfoList[238] = { parentId = 1, typeId = 2119, srcTypeId = 2116, mutable = false }
-_dependIdMap[ 2126 ] = { 1, 2623 }
-_dependIdMap[ 2127 ] = { 1, 2624 }
+_dependIdMap[ 2126 ] = { 1, 2623 } -- BreakNode
+_dependIdMap[ 2127 ] = { 1, 2624 } -- BreakNode!
 _typeInfoList[239] = { parentId = 370, typeId = 2129, srcTypeId = 2126, mutable = false }
-_dependIdMap[ 2129 ] = { 1, 2626 }
+_dependIdMap[ 2129 ] = { 1, 2626 } -- &BreakNode
 _typeInfoList[240] = { parentId = 1, typeId = 2142, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[241] = { parentId = 1, typeId = 2143, nilable = true, orgTypeId = 2142 }
 _typeInfoList[242] = { parentId = 1, typeId = 2145, srcTypeId = 2142, mutable = false }
 _typeInfoList[243] = { parentId = 370, typeId = 2149, srcTypeId = 1570, mutable = false }
-_dependIdMap[ 2149 ] = { 1, 2659 }
+_dependIdMap[ 2149 ] = { 1, 2659 } -- &ProvideNode
 _typeInfoList[244] = { parentId = 1, typeId = 2162, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[245] = { parentId = 1, typeId = 2163, nilable = true, orgTypeId = 2162 }
 _typeInfoList[246] = { parentId = 1, typeId = 2165, srcTypeId = 2162, mutable = false }
-_dependIdMap[ 2172 ] = { 1, 2698 }
-_dependIdMap[ 2173 ] = { 1, 2699 }
+_dependIdMap[ 2172 ] = { 1, 2698 } -- ExpNewNode
+_dependIdMap[ 2173 ] = { 1, 2699 } -- ExpNewNode!
 _typeInfoList[247] = { parentId = 370, typeId = 2175, srcTypeId = 2172, mutable = false }
-_dependIdMap[ 2175 ] = { 1, 2701 }
+_dependIdMap[ 2175 ] = { 1, 2701 } -- &ExpNewNode
 _typeInfoList[248] = { parentId = 1, typeId = 2188, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[249] = { parentId = 1, typeId = 2189, nilable = true, orgTypeId = 2188 }
 _typeInfoList[250] = { parentId = 1, typeId = 2191, srcTypeId = 2188, mutable = false }
-_dependIdMap[ 2201 ] = { 1, 2743 }
-_dependIdMap[ 2202 ] = { 1, 2744 }
+_dependIdMap[ 2201 ] = { 1, 2743 } -- ExpUnwrapNode
+_dependIdMap[ 2202 ] = { 1, 2744 } -- ExpUnwrapNode!
 _typeInfoList[251] = { parentId = 370, typeId = 2204, srcTypeId = 2201, mutable = false }
-_dependIdMap[ 2204 ] = { 1, 2746 }
+_dependIdMap[ 2204 ] = { 1, 2746 } -- &ExpUnwrapNode
 _typeInfoList[252] = { parentId = 1, typeId = 2217, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[253] = { parentId = 1, typeId = 2218, nilable = true, orgTypeId = 2217 }
 _typeInfoList[254] = { parentId = 1, typeId = 2220, srcTypeId = 2217, mutable = false }
-_dependIdMap[ 2230 ] = { 1, 2788 }
-_dependIdMap[ 2231 ] = { 1, 2789 }
+_dependIdMap[ 2230 ] = { 1, 2788 } -- ExpRefNode
+_dependIdMap[ 2231 ] = { 1, 2789 } -- ExpRefNode!
 _typeInfoList[255] = { parentId = 370, typeId = 2233, srcTypeId = 2230, mutable = false }
-_dependIdMap[ 2233 ] = { 1, 2791 }
+_dependIdMap[ 2233 ] = { 1, 2791 } -- &ExpRefNode
 _typeInfoList[256] = { parentId = 1, typeId = 2240, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[257] = { parentId = 1, typeId = 2241, nilable = true, orgTypeId = 2240 }
 _typeInfoList[258] = { parentId = 1, typeId = 2243, srcTypeId = 2240, mutable = false }
-_dependIdMap[ 2259 ] = { 1, 2836 }
-_dependIdMap[ 2260 ] = { 1, 2837 }
+_dependIdMap[ 2259 ] = { 1, 2836 } -- ExpOp2Node
+_dependIdMap[ 2260 ] = { 1, 2837 } -- ExpOp2Node!
 _typeInfoList[259] = { parentId = 370, typeId = 2262, srcTypeId = 2259, mutable = false }
-_dependIdMap[ 2262 ] = { 1, 2839 }
+_dependIdMap[ 2262 ] = { 1, 2839 } -- &ExpOp2Node
 _typeInfoList[260] = { parentId = 1, typeId = 2275, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[261] = { parentId = 1, typeId = 2276, nilable = true, orgTypeId = 2275 }
 _typeInfoList[262] = { parentId = 1, typeId = 2278, srcTypeId = 2275, mutable = false }
-_dependIdMap[ 2291 ] = { 1, 2887 }
-_dependIdMap[ 2292 ] = { 1, 2888 }
+_dependIdMap[ 2291 ] = { 1, 2887 } -- UnwrapSetNode
+_dependIdMap[ 2292 ] = { 1, 2888 } -- UnwrapSetNode!
 _typeInfoList[263] = { parentId = 370, typeId = 2294, srcTypeId = 2291, mutable = false }
-_dependIdMap[ 2294 ] = { 1, 2890 }
+_dependIdMap[ 2294 ] = { 1, 2890 } -- &UnwrapSetNode
 _typeInfoList[264] = { parentId = 1, typeId = 2307, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[265] = { parentId = 1, typeId = 2308, nilable = true, orgTypeId = 2307 }
 _typeInfoList[266] = { parentId = 1, typeId = 2310, srcTypeId = 2307, mutable = false }
-_dependIdMap[ 2323 ] = { 1, 2941 }
-_dependIdMap[ 2324 ] = { 1, 2942 }
+_dependIdMap[ 2323 ] = { 1, 2941 } -- IfUnwrapNode
+_dependIdMap[ 2324 ] = { 1, 2942 } -- IfUnwrapNode!
 _typeInfoList[267] = { parentId = 370, typeId = 2326, srcTypeId = 2323, mutable = false }
-_dependIdMap[ 2326 ] = { 1, 2944 }
+_dependIdMap[ 2326 ] = { 1, 2944 } -- &IfUnwrapNode
 _typeInfoList[268] = { parentId = 1, typeId = 2330, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[269] = { parentId = 1, typeId = 2331, nilable = true, orgTypeId = 2330 }
@@ -875,60 +875,60 @@ _typeInfoList[276] = { parentId = 1, typeId = 2350, nilable = true, orgTypeId = 
 _typeInfoList[277] = { parentId = 1, typeId = 2352, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[278] = { parentId = 1, typeId = 2353, nilable = true, orgTypeId = 2352 }
-_dependIdMap[ 2370 ] = { 1, 3001 }
-_dependIdMap[ 2371 ] = { 1, 3002 }
+_dependIdMap[ 2370 ] = { 1, 3001 } -- ExpCastNode
+_dependIdMap[ 2371 ] = { 1, 3002 } -- ExpCastNode!
 _typeInfoList[279] = { parentId = 370, typeId = 2373, srcTypeId = 2370, mutable = false }
-_dependIdMap[ 2373 ] = { 1, 3004 }
+_dependIdMap[ 2373 ] = { 1, 3004 } -- &ExpCastNode
 _typeInfoList[280] = { parentId = 1, typeId = 2386, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[281] = { parentId = 1, typeId = 2387, nilable = true, orgTypeId = 2386 }
 _typeInfoList[282] = { parentId = 1, typeId = 2389, srcTypeId = 2386, mutable = false }
-_dependIdMap[ 2396 ] = { 1, 3034 }
-_dependIdMap[ 2397 ] = { 1, 3035 }
-_dependIdMap[ 2410 ] = { 1, 3054 }
-_dependIdMap[ 2411 ] = { 1, 3055 }
+_dependIdMap[ 2396 ] = { 1, 3034 } -- MacroMode
+_dependIdMap[ 2397 ] = { 1, 3035 } -- MacroMode!
+_dependIdMap[ 2410 ] = { 1, 3054 } -- ExpOp1Node
+_dependIdMap[ 2411 ] = { 1, 3055 } -- ExpOp1Node!
 _typeInfoList[283] = { parentId = 370, typeId = 2413, srcTypeId = 2410, mutable = false }
-_dependIdMap[ 2413 ] = { 1, 3057 }
+_dependIdMap[ 2413 ] = { 1, 3057 } -- &ExpOp1Node
 _typeInfoList[284] = { parentId = 1, typeId = 2426, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[285] = { parentId = 1, typeId = 2427, nilable = true, orgTypeId = 2426 }
 _typeInfoList[286] = { parentId = 1, typeId = 2429, srcTypeId = 2426, mutable = false }
-_dependIdMap[ 2442 ] = { 1, 3108 }
-_dependIdMap[ 2443 ] = { 1, 3109 }
+_dependIdMap[ 2442 ] = { 1, 3108 } -- ExpRefItemNode
+_dependIdMap[ 2443 ] = { 1, 3109 } -- ExpRefItemNode!
 _typeInfoList[287] = { parentId = 370, typeId = 2445, srcTypeId = 2442, mutable = false }
-_dependIdMap[ 2445 ] = { 1, 3111 }
+_dependIdMap[ 2445 ] = { 1, 3111 } -- &ExpRefItemNode
 _typeInfoList[288] = { parentId = 1, typeId = 2458, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[289] = { parentId = 1, typeId = 2459, nilable = true, orgTypeId = 2458 }
 _typeInfoList[290] = { parentId = 1, typeId = 2461, srcTypeId = 2458, mutable = false }
-_dependIdMap[ 2480 ] = { 1, 3165 }
-_dependIdMap[ 2481 ] = { 1, 3166 }
+_dependIdMap[ 2480 ] = { 1, 3165 } -- ExpCallNode
+_dependIdMap[ 2481 ] = { 1, 3166 } -- ExpCallNode!
 _typeInfoList[291] = { parentId = 370, typeId = 2483, srcTypeId = 2480, mutable = false }
-_dependIdMap[ 2483 ] = { 1, 3168 }
+_dependIdMap[ 2483 ] = { 1, 3168 } -- &ExpCallNode
 _typeInfoList[292] = { parentId = 1, typeId = 2496, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[293] = { parentId = 1, typeId = 2497, nilable = true, orgTypeId = 2496 }
 _typeInfoList[294] = { parentId = 1, typeId = 2499, srcTypeId = 2496, mutable = false }
-_dependIdMap[ 2512 ] = { 1, 3210 }
-_dependIdMap[ 2513 ] = { 1, 3211 }
+_dependIdMap[ 2512 ] = { 1, 3210 } -- ExpDDDNode
+_dependIdMap[ 2513 ] = { 1, 3211 } -- ExpDDDNode!
 _typeInfoList[295] = { parentId = 370, typeId = 2515, srcTypeId = 2512, mutable = false }
-_dependIdMap[ 2515 ] = { 1, 3213 }
+_dependIdMap[ 2515 ] = { 1, 3213 } -- &ExpDDDNode
 _typeInfoList[296] = { parentId = 1, typeId = 2528, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[297] = { parentId = 1, typeId = 2529, nilable = true, orgTypeId = 2528 }
 _typeInfoList[298] = { parentId = 1, typeId = 2531, srcTypeId = 2528, mutable = false }
-_dependIdMap[ 2538 ] = { 1, 3249 }
-_dependIdMap[ 2539 ] = { 1, 3250 }
+_dependIdMap[ 2538 ] = { 1, 3249 } -- ExpParenNode
+_dependIdMap[ 2539 ] = { 1, 3250 } -- ExpParenNode!
 _typeInfoList[299] = { parentId = 370, typeId = 2541, srcTypeId = 2538, mutable = false }
-_dependIdMap[ 2541 ] = { 1, 3252 }
+_dependIdMap[ 2541 ] = { 1, 3252 } -- &ExpParenNode
 _typeInfoList[300] = { parentId = 1, typeId = 2554, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[301] = { parentId = 1, typeId = 2555, nilable = true, orgTypeId = 2554 }
 _typeInfoList[302] = { parentId = 1, typeId = 2557, srcTypeId = 2554, mutable = false }
-_dependIdMap[ 2564 ] = { 1, 3288 }
-_dependIdMap[ 2565 ] = { 1, 3289 }
+_dependIdMap[ 2564 ] = { 1, 3288 } -- ExpMacroExpNode
+_dependIdMap[ 2565 ] = { 1, 3289 } -- ExpMacroExpNode!
 _typeInfoList[303] = { parentId = 370, typeId = 2567, srcTypeId = 2564, mutable = false }
-_dependIdMap[ 2567 ] = { 1, 3291 }
+_dependIdMap[ 2567 ] = { 1, 3291 } -- &ExpMacroExpNode
 _typeInfoList[304] = { parentId = 1, typeId = 2571, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[305] = { parentId = 1, typeId = 2572, nilable = true, orgTypeId = 2571 }
@@ -939,10 +939,10 @@ _typeInfoList[308] = { parentId = 1, typeId = 2586, srcTypeId = 2583, mutable = 
 _typeInfoList[309] = { parentId = 1, typeId = 2587, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[310] = { parentId = 1, typeId = 2588, nilable = true, orgTypeId = 2587 }
-_dependIdMap[ 2596 ] = { 1, 3333 }
-_dependIdMap[ 2597 ] = { 1, 3334 }
+_dependIdMap[ 2596 ] = { 1, 3333 } -- ExpMacroStatNode
+_dependIdMap[ 2597 ] = { 1, 3334 } -- ExpMacroStatNode!
 _typeInfoList[311] = { parentId = 370, typeId = 2599, srcTypeId = 2596, mutable = false }
-_dependIdMap[ 2599 ] = { 1, 3336 }
+_dependIdMap[ 2599 ] = { 1, 3336 } -- &ExpMacroStatNode
 _typeInfoList[312] = { parentId = 1, typeId = 2603, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[313] = { parentId = 1, typeId = 2604, nilable = true, orgTypeId = 2603 }
@@ -953,52 +953,52 @@ _typeInfoList[316] = { parentId = 1, typeId = 2618, srcTypeId = 2615, mutable = 
 _typeInfoList[317] = { parentId = 1, typeId = 2619, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[318] = { parentId = 1, typeId = 2620, nilable = true, orgTypeId = 2619 }
-_dependIdMap[ 2628 ] = { 1, 3378 }
-_dependIdMap[ 2629 ] = { 1, 3379 }
+_dependIdMap[ 2628 ] = { 1, 3378 } -- StmtExpNode
+_dependIdMap[ 2629 ] = { 1, 3379 } -- StmtExpNode!
 _typeInfoList[319] = { parentId = 370, typeId = 2631, srcTypeId = 2628, mutable = false }
-_dependIdMap[ 2631 ] = { 1, 3381 }
+_dependIdMap[ 2631 ] = { 1, 3381 } -- &StmtExpNode
 _typeInfoList[320] = { parentId = 1, typeId = 2644, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[321] = { parentId = 1, typeId = 2645, nilable = true, orgTypeId = 2644 }
 _typeInfoList[322] = { parentId = 1, typeId = 2647, srcTypeId = 2644, mutable = false }
-_dependIdMap[ 2654 ] = { 1, 3420 }
-_dependIdMap[ 2655 ] = { 1, 3421 }
+_dependIdMap[ 2654 ] = { 1, 3420 } -- ExpOmitEnumNode
+_dependIdMap[ 2655 ] = { 1, 3421 } -- ExpOmitEnumNode!
 _typeInfoList[323] = { parentId = 370, typeId = 2657, srcTypeId = 2654, mutable = false }
-_dependIdMap[ 2657 ] = { 1, 3423 }
+_dependIdMap[ 2657 ] = { 1, 3423 } -- &ExpOmitEnumNode
 _typeInfoList[324] = { parentId = 1, typeId = 2670, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[325] = { parentId = 1, typeId = 2671, nilable = true, orgTypeId = 2670 }
 _typeInfoList[326] = { parentId = 1, typeId = 2673, srcTypeId = 2670, mutable = false }
-_dependIdMap[ 2683 ] = { 1, 3471 }
-_dependIdMap[ 2684 ] = { 1, 3472 }
+_dependIdMap[ 2683 ] = { 1, 3471 } -- RefFieldNode
+_dependIdMap[ 2684 ] = { 1, 3472 } -- RefFieldNode!
 _typeInfoList[327] = { parentId = 370, typeId = 2686, srcTypeId = 2683, mutable = false }
-_dependIdMap[ 2686 ] = { 1, 3474 }
+_dependIdMap[ 2686 ] = { 1, 3474 } -- &RefFieldNode
 _typeInfoList[328] = { parentId = 370, typeId = 2690, srcTypeId = 793, mutable = false }
-_dependIdMap[ 2690 ] = { 1, 3478 }
+_dependIdMap[ 2690 ] = { 1, 3478 } -- &AccessSymbolInfo!
 _typeInfoList[329] = { parentId = 1, typeId = 2700, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[330] = { parentId = 1, typeId = 2701, nilable = true, orgTypeId = 2700 }
 _typeInfoList[331] = { parentId = 1, typeId = 2703, srcTypeId = 2700, mutable = false }
-_dependIdMap[ 2722 ] = { 1, 3535 }
-_dependIdMap[ 2723 ] = { 1, 3536 }
+_dependIdMap[ 2722 ] = { 1, 3535 } -- GetFieldNode
+_dependIdMap[ 2723 ] = { 1, 3536 } -- GetFieldNode!
 _typeInfoList[332] = { parentId = 370, typeId = 2725, srcTypeId = 2722, mutable = false }
-_dependIdMap[ 2725 ] = { 1, 3538 }
+_dependIdMap[ 2725 ] = { 1, 3538 } -- &GetFieldNode
 _typeInfoList[333] = { parentId = 1, typeId = 2738, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[334] = { parentId = 1, typeId = 2739, nilable = true, orgTypeId = 2738 }
 _typeInfoList[335] = { parentId = 1, typeId = 2741, srcTypeId = 2738, mutable = false }
-_dependIdMap[ 2763 ] = { 1, 3583 }
-_dependIdMap[ 2764 ] = { 1, 3584 }
+_dependIdMap[ 2763 ] = { 1, 3583 } -- VarInfo
+_dependIdMap[ 2764 ] = { 1, 3584 } -- VarInfo!
 _typeInfoList[336] = { parentId = 370, typeId = 2766, srcTypeId = 1676, mutable = false }
-_dependIdMap[ 2766 ] = { 1, 3586 }
-_dependIdMap[ 2779 ] = { 1, 3599 }
-_dependIdMap[ 2780 ] = { 1, 3600 }
-_dependIdMap[ 2793 ] = { 1, 3646 }
-_dependIdMap[ 2794 ] = { 1, 3647 }
+_dependIdMap[ 2766 ] = { 1, 3586 } -- &RefTypeNode!
+_dependIdMap[ 2779 ] = { 1, 3599 } -- DeclVarMode
+_dependIdMap[ 2780 ] = { 1, 3600 } -- DeclVarMode!
+_dependIdMap[ 2793 ] = { 1, 3646 } -- DeclVarNode
+_dependIdMap[ 2794 ] = { 1, 3647 } -- DeclVarNode!
 _typeInfoList[337] = { parentId = 370, typeId = 2796, srcTypeId = 2793, mutable = false }
-_dependIdMap[ 2796 ] = { 1, 3649 }
+_dependIdMap[ 2796 ] = { 1, 3649 } -- &DeclVarNode
 _typeInfoList[338] = { parentId = 370, typeId = 2800, srcTypeId = 2763, mutable = false }
-_dependIdMap[ 2800 ] = { 1, 3653 }
+_dependIdMap[ 2800 ] = { 1, 3653 } -- &VarInfo
 _typeInfoList[339] = { parentId = 1, typeId = 2801, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {2800}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[340] = { parentId = 1, typeId = 2802, nilable = true, orgTypeId = 2801 }
@@ -1027,8 +1027,8 @@ _typeInfoList[355] = { parentId = 1, typeId = 2833, nilable = true, orgTypeId = 
 _typeInfoList[356] = { parentId = 1, typeId = 2835, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {2800}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[357] = { parentId = 1, typeId = 2836, nilable = true, orgTypeId = 2835 }
-_dependIdMap[ 2877 ] = { 1, 3737 }
-_dependIdMap[ 2878 ] = { 1, 3738 }
+_dependIdMap[ 2877 ] = { 1, 3737 } -- DeclFuncInfo
+_dependIdMap[ 2878 ] = { 1, 3738 } -- DeclFuncInfo!
 _typeInfoList[358] = { parentId = 1, typeId = 2880, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[359] = { parentId = 1, typeId = 2881, nilable = true, orgTypeId = 2880 }
@@ -1037,50 +1037,50 @@ _typeInfoList[361] = { parentId = 1, typeId = 2884, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[362] = { parentId = 1, typeId = 2885, nilable = true, orgTypeId = 2884 }
 _typeInfoList[363] = { parentId = 1, typeId = 2887, srcTypeId = 2884, mutable = false }
-_dependIdMap[ 2912 ] = { 1, 3778 }
-_dependIdMap[ 2913 ] = { 1, 3779 }
+_dependIdMap[ 2912 ] = { 1, 3778 } -- DeclFuncNode
+_dependIdMap[ 2913 ] = { 1, 3779 } -- DeclFuncNode!
 _typeInfoList[364] = { parentId = 370, typeId = 2915, srcTypeId = 2912, mutable = false }
-_dependIdMap[ 2915 ] = { 1, 3781 }
+_dependIdMap[ 2915 ] = { 1, 3781 } -- &DeclFuncNode
 _typeInfoList[365] = { parentId = 1, typeId = 2928, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[366] = { parentId = 1, typeId = 2929, nilable = true, orgTypeId = 2928 }
 _typeInfoList[367] = { parentId = 1, typeId = 2931, srcTypeId = 2928, mutable = false }
-_dependIdMap[ 2938 ] = { 1, 3817 }
-_dependIdMap[ 2939 ] = { 1, 3818 }
+_dependIdMap[ 2938 ] = { 1, 3817 } -- DeclMethodNode
+_dependIdMap[ 2939 ] = { 1, 3818 } -- DeclMethodNode!
 _typeInfoList[368] = { parentId = 370, typeId = 2941, srcTypeId = 2938, mutable = false }
-_dependIdMap[ 2941 ] = { 1, 3820 }
+_dependIdMap[ 2941 ] = { 1, 3820 } -- &DeclMethodNode
 _typeInfoList[369] = { parentId = 1, typeId = 2954, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[370] = { parentId = 1, typeId = 2955, nilable = true, orgTypeId = 2954 }
 _typeInfoList[371] = { parentId = 1, typeId = 2957, srcTypeId = 2954, mutable = false }
-_dependIdMap[ 2964 ] = { 1, 3856 }
-_dependIdMap[ 2965 ] = { 1, 3857 }
+_dependIdMap[ 2964 ] = { 1, 3856 } -- DeclConstrNode
+_dependIdMap[ 2965 ] = { 1, 3857 } -- DeclConstrNode!
 _typeInfoList[372] = { parentId = 370, typeId = 2967, srcTypeId = 2964, mutable = false }
-_dependIdMap[ 2967 ] = { 1, 3859 }
+_dependIdMap[ 2967 ] = { 1, 3859 } -- &DeclConstrNode
 _typeInfoList[373] = { parentId = 1, typeId = 2980, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[374] = { parentId = 1, typeId = 2981, nilable = true, orgTypeId = 2980 }
 _typeInfoList[375] = { parentId = 1, typeId = 2983, srcTypeId = 2980, mutable = false }
-_dependIdMap[ 2990 ] = { 1, 3895 }
-_dependIdMap[ 2991 ] = { 1, 3896 }
+_dependIdMap[ 2990 ] = { 1, 3895 } -- DeclDestrNode
+_dependIdMap[ 2991 ] = { 1, 3896 } -- DeclDestrNode!
 _typeInfoList[376] = { parentId = 370, typeId = 2993, srcTypeId = 2990, mutable = false }
-_dependIdMap[ 2993 ] = { 1, 3898 }
+_dependIdMap[ 2993 ] = { 1, 3898 } -- &DeclDestrNode
 _typeInfoList[377] = { parentId = 1, typeId = 3006, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[378] = { parentId = 1, typeId = 3007, nilable = true, orgTypeId = 3006 }
 _typeInfoList[379] = { parentId = 1, typeId = 3009, srcTypeId = 3006, mutable = false }
-_dependIdMap[ 3016 ] = { 1, 3937 }
-_dependIdMap[ 3017 ] = { 1, 3938 }
+_dependIdMap[ 3016 ] = { 1, 3937 } -- ExpCallSuperNode
+_dependIdMap[ 3017 ] = { 1, 3938 } -- ExpCallSuperNode!
 _typeInfoList[380] = { parentId = 370, typeId = 3019, srcTypeId = 3016, mutable = false }
-_dependIdMap[ 3019 ] = { 1, 3940 }
+_dependIdMap[ 3019 ] = { 1, 3940 } -- &ExpCallSuperNode
 _typeInfoList[381] = { parentId = 1, typeId = 3032, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[382] = { parentId = 1, typeId = 3033, nilable = true, orgTypeId = 3032 }
 _typeInfoList[383] = { parentId = 1, typeId = 3035, srcTypeId = 3032, mutable = false }
-_dependIdMap[ 3045 ] = { 1, 4000 }
-_dependIdMap[ 3046 ] = { 1, 4001 }
+_dependIdMap[ 3045 ] = { 1, 4000 } -- DeclMemberNode
+_dependIdMap[ 3046 ] = { 1, 4001 } -- DeclMemberNode!
 _typeInfoList[384] = { parentId = 370, typeId = 3048, srcTypeId = 3045, mutable = false }
-_dependIdMap[ 3048 ] = { 1, 4003 }
+_dependIdMap[ 3048 ] = { 1, 4003 } -- &DeclMemberNode
 _typeInfoList[385] = { parentId = 1, typeId = 3061, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[386] = { parentId = 1, typeId = 3062, nilable = true, orgTypeId = 3061 }
@@ -1089,18 +1089,18 @@ _typeInfoList[388] = { parentId = 1, typeId = 3104, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[389] = { parentId = 1, typeId = 3105, nilable = true, orgTypeId = 3104 }
 _typeInfoList[390] = { parentId = 1, typeId = 3107, srcTypeId = 3104, mutable = false }
-_dependIdMap[ 3117 ] = { 1, 4098 }
-_dependIdMap[ 3118 ] = { 1, 4099 }
+_dependIdMap[ 3117 ] = { 1, 4098 } -- DeclArgDDDNode
+_dependIdMap[ 3118 ] = { 1, 4099 } -- DeclArgDDDNode!
 _typeInfoList[391] = { parentId = 370, typeId = 3120, srcTypeId = 3117, mutable = false }
-_dependIdMap[ 3120 ] = { 1, 4101 }
+_dependIdMap[ 3120 ] = { 1, 4101 } -- &DeclArgDDDNode
 _typeInfoList[392] = { parentId = 1, typeId = 3133, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[393] = { parentId = 1, typeId = 3134, nilable = true, orgTypeId = 3133 }
 _typeInfoList[394] = { parentId = 1, typeId = 3136, srcTypeId = 3133, mutable = false }
-_dependIdMap[ 3140 ] = { 1, 4128 }
-_dependIdMap[ 3141 ] = { 1, 4129 }
+_dependIdMap[ 3140 ] = { 1, 4128 } -- AdvertiseInfo
+_dependIdMap[ 3141 ] = { 1, 4129 } -- AdvertiseInfo!
 _typeInfoList[395] = { parentId = 370, typeId = 3152, srcTypeId = 847, mutable = false }
-_dependIdMap[ 3152 ] = { 1, 4173 }
+_dependIdMap[ 3152 ] = { 1, 4173 } -- &DeclClassNode
 _typeInfoList[396] = { parentId = 1, typeId = 3156, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[397] = { parentId = 1, typeId = 3157, nilable = true, orgTypeId = 3156 }
@@ -1141,10 +1141,10 @@ _typeInfoList[420] = { parentId = 1, typeId = 3200, nilable = true, orgTypeId = 
 _typeInfoList[421] = { parentId = 1, typeId = 3202, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {25, 13}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[422] = { parentId = 1, typeId = 3203, nilable = true, orgTypeId = 3202 }
-_dependIdMap[ 3238 ] = { 1, 4281 }
-_dependIdMap[ 3239 ] = { 1, 4282 }
+_dependIdMap[ 3238 ] = { 1, 4281 } -- DeclEnumNode
+_dependIdMap[ 3239 ] = { 1, 4282 } -- DeclEnumNode!
 _typeInfoList[423] = { parentId = 370, typeId = 3241, srcTypeId = 3238, mutable = false }
-_dependIdMap[ 3241 ] = { 1, 4284 }
+_dependIdMap[ 3241 ] = { 1, 4284 } -- &DeclEnumNode
 _typeInfoList[424] = { parentId = 1, typeId = 3245, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {304}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[425] = { parentId = 1, typeId = 3246, nilable = true, orgTypeId = 3245 }
@@ -1155,68 +1155,68 @@ _typeInfoList[428] = { parentId = 1, typeId = 3260, srcTypeId = 3257, mutable = 
 _typeInfoList[429] = { parentId = 1, typeId = 3261, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {304}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[430] = { parentId = 1, typeId = 3262, nilable = true, orgTypeId = 3261 }
-_dependIdMap[ 3279 ] = { 1, 4335 }
-_dependIdMap[ 3280 ] = { 1, 4336 }
+_dependIdMap[ 3279 ] = { 1, 4335 } -- DeclMacroNode
+_dependIdMap[ 3280 ] = { 1, 4336 } -- DeclMacroNode!
 _typeInfoList[431] = { parentId = 370, typeId = 3282, srcTypeId = 3279, mutable = false }
-_dependIdMap[ 3282 ] = { 1, 4338 }
+_dependIdMap[ 3282 ] = { 1, 4338 } -- &DeclMacroNode
 _typeInfoList[432] = { parentId = 1, typeId = 3295, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[433] = { parentId = 1, typeId = 3296, nilable = true, orgTypeId = 3295 }
 _typeInfoList[434] = { parentId = 1, typeId = 3298, srcTypeId = 3295, mutable = false }
-_dependIdMap[ 3311 ] = { 1, 4378 }
-_dependIdMap[ 3312 ] = { 1, 4379 }
+_dependIdMap[ 3311 ] = { 1, 4378 } -- LiteralNilNode
+_dependIdMap[ 3312 ] = { 1, 4379 } -- LiteralNilNode!
 _typeInfoList[435] = { parentId = 370, typeId = 3314, srcTypeId = 3311, mutable = false }
-_dependIdMap[ 3314 ] = { 1, 4381 }
+_dependIdMap[ 3314 ] = { 1, 4381 } -- &LiteralNilNode
 _typeInfoList[436] = { parentId = 1, typeId = 3327, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[437] = { parentId = 1, typeId = 3328, nilable = true, orgTypeId = 3327 }
 _typeInfoList[438] = { parentId = 1, typeId = 3330, srcTypeId = 3327, mutable = false }
-_dependIdMap[ 3334 ] = { 1, 4417 }
-_dependIdMap[ 3335 ] = { 1, 4418 }
+_dependIdMap[ 3334 ] = { 1, 4417 } -- LiteralCharNode
+_dependIdMap[ 3335 ] = { 1, 4418 } -- LiteralCharNode!
 _typeInfoList[439] = { parentId = 370, typeId = 3337, srcTypeId = 3334, mutable = false }
-_dependIdMap[ 3337 ] = { 1, 4420 }
+_dependIdMap[ 3337 ] = { 1, 4420 } -- &LiteralCharNode
 _typeInfoList[440] = { parentId = 1, typeId = 3350, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[441] = { parentId = 1, typeId = 3351, nilable = true, orgTypeId = 3350 }
 _typeInfoList[442] = { parentId = 1, typeId = 3353, srcTypeId = 3350, mutable = false }
-_dependIdMap[ 3363 ] = { 1, 4462 }
-_dependIdMap[ 3364 ] = { 1, 4463 }
+_dependIdMap[ 3363 ] = { 1, 4462 } -- LiteralIntNode
+_dependIdMap[ 3364 ] = { 1, 4463 } -- LiteralIntNode!
 _typeInfoList[443] = { parentId = 370, typeId = 3366, srcTypeId = 3363, mutable = false }
-_dependIdMap[ 3366 ] = { 1, 4465 }
+_dependIdMap[ 3366 ] = { 1, 4465 } -- &LiteralIntNode
 _typeInfoList[444] = { parentId = 1, typeId = 3379, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[445] = { parentId = 1, typeId = 3380, nilable = true, orgTypeId = 3379 }
 _typeInfoList[446] = { parentId = 1, typeId = 3382, srcTypeId = 3379, mutable = false }
-_dependIdMap[ 3392 ] = { 1, 4507 }
-_dependIdMap[ 3393 ] = { 1, 4508 }
+_dependIdMap[ 3392 ] = { 1, 4507 } -- LiteralRealNode
+_dependIdMap[ 3393 ] = { 1, 4508 } -- LiteralRealNode!
 _typeInfoList[447] = { parentId = 370, typeId = 3395, srcTypeId = 3392, mutable = false }
-_dependIdMap[ 3395 ] = { 1, 4510 }
+_dependIdMap[ 3395 ] = { 1, 4510 } -- &LiteralRealNode
 _typeInfoList[448] = { parentId = 1, typeId = 3408, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[449] = { parentId = 1, typeId = 3409, nilable = true, orgTypeId = 3408 }
 _typeInfoList[450] = { parentId = 1, typeId = 3411, srcTypeId = 3408, mutable = false }
-_dependIdMap[ 3421 ] = { 1, 4549 }
-_dependIdMap[ 3422 ] = { 1, 4550 }
+_dependIdMap[ 3421 ] = { 1, 4549 } -- LiteralArrayNode
+_dependIdMap[ 3422 ] = { 1, 4550 } -- LiteralArrayNode!
 _typeInfoList[451] = { parentId = 370, typeId = 3424, srcTypeId = 3421, mutable = false }
-_dependIdMap[ 3424 ] = { 1, 4552 }
+_dependIdMap[ 3424 ] = { 1, 4552 } -- &LiteralArrayNode
 _typeInfoList[452] = { parentId = 1, typeId = 3437, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[453] = { parentId = 1, typeId = 3438, nilable = true, orgTypeId = 3437 }
 _typeInfoList[454] = { parentId = 1, typeId = 3440, srcTypeId = 3437, mutable = false }
-_dependIdMap[ 3447 ] = { 1, 4588 }
-_dependIdMap[ 3448 ] = { 1, 4589 }
+_dependIdMap[ 3447 ] = { 1, 4588 } -- LiteralListNode
+_dependIdMap[ 3448 ] = { 1, 4589 } -- LiteralListNode!
 _typeInfoList[455] = { parentId = 370, typeId = 3450, srcTypeId = 3447, mutable = false }
-_dependIdMap[ 3450 ] = { 1, 4591 }
+_dependIdMap[ 3450 ] = { 1, 4591 } -- &LiteralListNode
 _typeInfoList[456] = { parentId = 1, typeId = 3463, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[457] = { parentId = 1, typeId = 3464, nilable = true, orgTypeId = 3463 }
 _typeInfoList[458] = { parentId = 1, typeId = 3466, srcTypeId = 3463, mutable = false }
-_dependIdMap[ 3473 ] = { 1, 4621 }
-_dependIdMap[ 3474 ] = { 1, 4622 }
-_dependIdMap[ 3485 ] = { 1, 4642 }
-_dependIdMap[ 3486 ] = { 1, 4643 }
+_dependIdMap[ 3473 ] = { 1, 4621 } -- PairItem
+_dependIdMap[ 3474 ] = { 1, 4622 } -- PairItem!
+_dependIdMap[ 3485 ] = { 1, 4642 } -- LiteralMapNode
+_dependIdMap[ 3486 ] = { 1, 4643 } -- LiteralMapNode!
 _typeInfoList[459] = { parentId = 370, typeId = 3488, srcTypeId = 3485, mutable = false }
-_dependIdMap[ 3488 ] = { 1, 4645 }
+_dependIdMap[ 3488 ] = { 1, 4645 } -- &LiteralMapNode
 _typeInfoList[460] = { parentId = 1, typeId = 3492, baseId = 1, txt = 'Map',
         staticFlag = false, accessMode = 1, kind = 5, mutable = true, itemTypeId = {1394, 1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[461] = { parentId = 1, typeId = 3493, nilable = true, orgTypeId = 3492 }
@@ -1233,10 +1233,10 @@ _typeInfoList[468] = { parentId = 1, typeId = 3512, nilable = true, orgTypeId = 
 _typeInfoList[469] = { parentId = 1, typeId = 3514, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {3473}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[470] = { parentId = 1, typeId = 3515, nilable = true, orgTypeId = 3514 }
-_dependIdMap[ 3526 ] = { 1, 4699 }
-_dependIdMap[ 3527 ] = { 1, 4700 }
+_dependIdMap[ 3526 ] = { 1, 4699 } -- LiteralStringNode
+_dependIdMap[ 3527 ] = { 1, 4700 } -- LiteralStringNode!
 _typeInfoList[471] = { parentId = 370, typeId = 3529, srcTypeId = 3526, mutable = false }
-_dependIdMap[ 3529 ] = { 1, 4702 }
+_dependIdMap[ 3529 ] = { 1, 4702 } -- &LiteralStringNode
 _typeInfoList[472] = { parentId = 1, typeId = 3533, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[473] = { parentId = 1, typeId = 3534, nilable = true, orgTypeId = 3533 }
@@ -1247,18 +1247,18 @@ _typeInfoList[476] = { parentId = 1, typeId = 3548, srcTypeId = 3545, mutable = 
 _typeInfoList[477] = { parentId = 1, typeId = 3549, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1394}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[478] = { parentId = 1, typeId = 3550, nilable = true, orgTypeId = 3549 }
-_dependIdMap[ 3561 ] = { 1, 4747 }
-_dependIdMap[ 3562 ] = { 1, 4748 }
+_dependIdMap[ 3561 ] = { 1, 4747 } -- LiteralBoolNode
+_dependIdMap[ 3562 ] = { 1, 4748 } -- LiteralBoolNode!
 _typeInfoList[479] = { parentId = 370, typeId = 3564, srcTypeId = 3561, mutable = false }
-_dependIdMap[ 3564 ] = { 1, 4750 }
+_dependIdMap[ 3564 ] = { 1, 4750 } -- &LiteralBoolNode
 _typeInfoList[480] = { parentId = 1, typeId = 3577, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[481] = { parentId = 1, typeId = 3578, nilable = true, orgTypeId = 3577 }
 _typeInfoList[482] = { parentId = 1, typeId = 3580, srcTypeId = 3577, mutable = false }
-_dependIdMap[ 3587 ] = { 1, 4786 }
-_dependIdMap[ 3588 ] = { 1, 4787 }
+_dependIdMap[ 3587 ] = { 1, 4786 } -- LiteralSymbolNode
+_dependIdMap[ 3588 ] = { 1, 4787 } -- LiteralSymbolNode!
 _typeInfoList[483] = { parentId = 370, typeId = 3590, srcTypeId = 3587, mutable = false }
-_dependIdMap[ 3590 ] = { 1, 4789 }
+_dependIdMap[ 3590 ] = { 1, 4789 } -- &LiteralSymbolNode
 _typeInfoList[484] = { parentId = 1, typeId = 3603, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {393}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[485] = { parentId = 1, typeId = 3604, nilable = true, orgTypeId = 3603 }
@@ -1355,7 +1355,7 @@ accessMode = 4, kind = 11, valTypeId = 16, enumValList = {Class = 0,Interface = 
 _typeInfoList[546] = { parentId = 200, typeId = 3880, txt = 'ExpSymbolMode',
 accessMode = 4, kind = 11, valTypeId = 16, enumValList = {Field = 2,FieldNil = 3,Fn = 1,Get = 4,GetNil = 5,Symbol = 0,} }
 _typeInfoList[547] = { parentId = 200, typeId = 3888, baseId = 1, txt = 'TransUnit',
-        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {3926, 4044, 4047, 5134}, }
+        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {3926, 4044, 4047, 5135}, }
 _typeInfoList[548] = { parentId = 200, typeId = 3889, nilable = true, orgTypeId = 3888 }
 _typeInfoList[549] = { parentId = 1, typeId = 3903, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 3, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
@@ -1373,21 +1373,21 @@ _typeInfoList[557] = { parentId = 3888, typeId = 4045, nilable = true, orgTypeId
 _typeInfoList[558] = { parentId = 3888, typeId = 4047, baseId = 1, txt = 'get_warnMessList',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {3906}, children = {}, }
 _typeInfoList[559] = { parentId = 3888, typeId = 4048, nilable = true, orgTypeId = 4047 }
-_typeInfoList[560] = { parentId = 200, typeId = 5122, baseId = 1, txt = 'ASTInfo',
-        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {5125, 5128, 5131}, }
-_typeInfoList[561] = { parentId = 200, typeId = 5123, nilable = true, orgTypeId = 5122 }
-_typeInfoList[562] = { parentId = 5122, typeId = 5125, baseId = 1, txt = 'get_node',
+_typeInfoList[560] = { parentId = 200, typeId = 5123, baseId = 1, txt = 'ASTInfo',
+        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {5126, 5129, 5132}, }
+_typeInfoList[561] = { parentId = 200, typeId = 5124, nilable = true, orgTypeId = 5123 }
+_typeInfoList[562] = { parentId = 5123, typeId = 5126, baseId = 1, txt = 'get_node',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1394}, children = {}, }
-_typeInfoList[563] = { parentId = 5122, typeId = 5126, nilable = true, orgTypeId = 5125 }
-_typeInfoList[564] = { parentId = 5122, typeId = 5128, baseId = 1, txt = 'get_moduleTypeInfo',
+_typeInfoList[563] = { parentId = 5123, typeId = 5127, nilable = true, orgTypeId = 5126 }
+_typeInfoList[564] = { parentId = 5123, typeId = 5129, baseId = 1, txt = 'get_moduleTypeInfo',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {393}, children = {}, }
-_typeInfoList[565] = { parentId = 5122, typeId = 5129, nilable = true, orgTypeId = 5128 }
-_typeInfoList[566] = { parentId = 5122, typeId = 5131, baseId = 1, txt = '__init',
+_typeInfoList[565] = { parentId = 5123, typeId = 5130, nilable = true, orgTypeId = 5129 }
+_typeInfoList[566] = { parentId = 5123, typeId = 5132, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1394, 393}, retTypeId = {}, children = {}, }
-_typeInfoList[567] = { parentId = 5122, typeId = 5132, nilable = true, orgTypeId = 5131 }
-_typeInfoList[568] = { parentId = 3888, typeId = 5134, baseId = 1, txt = 'createAST',
-        staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {264, 13, 26}, retTypeId = {5122}, children = {}, }
-_typeInfoList[569] = { parentId = 3888, typeId = 5135, nilable = true, orgTypeId = 5134 }
+_typeInfoList[567] = { parentId = 5123, typeId = 5133, nilable = true, orgTypeId = 5132 }
+_typeInfoList[568] = { parentId = 3888, typeId = 5135, baseId = 1, txt = 'createAST',
+        staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {264, 13, 26}, retTypeId = {5123}, children = {}, }
+_typeInfoList[569] = { parentId = 3888, typeId = 5136, nilable = true, orgTypeId = 5135 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = true }

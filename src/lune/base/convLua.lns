@@ -282,6 +282,7 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
       }
 
       typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
+      
       if typeInfo.$nilable {
 	 pickupTypeId( typeInfo.get_orgTypeInfo(), true, false );
       }
@@ -540,8 +541,10 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
             }
             if valid {
                self.writeln(
-                  "_dependIdMap[ %d ] = { %d, %d }"
-                  ( typeInfo.$typeId, moduleIndex, extId ),
+                  // "_dependIdMap[ %d ] = { %d, %d }"
+                  // ( typeInfo.$typeId, moduleIndex, extId ),
+                  "_dependIdMap[ %d ] = { %d, %d } -- %s"
+                  ( typeInfo.$typeId, moduleIndex, extId, typeInfo.getTxt() ),
                   baseIndent );
             }
          }
@@ -692,7 +695,7 @@ pub override fn convFilter.processBlock(
          word = "do";
       }  
       case .Repeat {
-      word = "";
+         word = "";
       }  
       case .For {
          word = "do";

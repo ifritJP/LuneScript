@@ -4097,12 +4097,16 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
     local opTxt = nextToken.txt
     
     if opTxt == "@@" then
-      local castType = self:analyzeRefType( Ast.AccessMode.Local, false )
+      local castType = self:analyzeRefType( Ast.AccessMode.Local, false ):get_expType()
       
-      if exp:get_expType():get_nilable() and not castType:get_expType():get_nilable() then
-        self:addErrMess( firstToken.pos, string.format( "can't cast from nilable to not nilable  -- %s->%s", exp:get_expType():getTxt(  ), castType:get_expType():getTxt(  )) )
+      local expType = exp:get_expType()
+      
+      if expType:get_nilable() and not castType:get_nilable() then
+        self:addErrMess( firstToken.pos, string.format( "can't cast from nilable to not nilable  -- %s->%s", expType:getTxt(  ), castType:getTxt(  )) )
+      elseif not expType:get_mutable() and castType:get_mutable() then
+        castType = self:createModifier( castType, false )
       end
-      exp = Ast.ExpCastNode.new(firstToken.pos, castType:get_expTypeList(), exp)
+      exp = Ast.ExpCastNode.new(firstToken.pos, {castType}, exp)
     elseif nextToken.kind == Parser.TokenKind.Ope then
       if Parser.isOp2( opTxt ) then
         local opLevel = op2levelMap[opTxt]
