@@ -1067,7 +1067,7 @@ Test test = new Test( 10 );
 print( test.$val );  -- 10
 #+END_SRC
 
-**** advertise
+*** advertise
 
 LuneScript は、
 メンバのメソッドを自分のメソッドとして透過的に利用することが出来る。
