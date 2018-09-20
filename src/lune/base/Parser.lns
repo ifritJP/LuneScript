@@ -184,6 +184,21 @@ pub class Token {
       self.pos = pos;
       self.commentList = unwrap commentList default [];
    }
+
+   pub fn getExcludedDelimitTxt() : str {
+      if self.kind ~= .Str {
+         return self.txt;
+      }
+      switch self.txt[1] {
+         case ?\', ?\" {
+            return self.txt.sub( 2, #self.txt - 1 );
+         }
+         case ?` {
+            return self.txt.sub( 1 + 3, #self.txt - 3 );
+         }
+      }
+      error( "illegal delimit -- %s" (self.txt) );
+   }
    
    pub fn set_commentList( commentList: Token[] ) mut {
       self.commentList = commentList;

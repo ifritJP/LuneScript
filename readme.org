@@ -24,3 +24,9 @@ LuneScript is a transcompiler for Lua.
 - LuneScript runs on Lua and is easy to install as it requires no Lua standard modules.
 - Supports Lua 5.2, 5.3.
 - LuneScript is developed by self hosting.
+
+* description
+
+https://qiita.com/dwarfJP/items/21d4d4099ab0feb68eaf
+
+(Japanese)

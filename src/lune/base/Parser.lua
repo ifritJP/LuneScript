@@ -222,6 +222,21 @@ function Token:__init(kind, txt, pos, commentList)
   self.pos = pos
   self.commentList = _lune.unwrapDefault( commentList, {})
 end
+function Token:getExcludedDelimitTxt(  )
+  if self.kind ~= TokenKind.Str then
+    return self.txt
+  end
+  do
+    local _switchExp = string.byte( self.txt, 1 )
+    if _switchExp == 39 or _switchExp == 34 then
+      return self.txt:sub( 2, #self.txt - 1 )
+    elseif _switchExp == 96 then
+      return self.txt:sub( 1 + 3, #self.txt - 3 )
+    end
+  end
+  
+  error( string.format( "illegal delimit -- %s", self.txt) )
+end
 function Token:set_commentList( commentList )
   self.commentList = commentList
 end

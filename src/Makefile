@@ -1,6 +1,12 @@
 LUA=lua5.3
 #LUA=lua5.2
 
+LUA_INC_DIR=
+ifneq ($(LUA_INC_DIR),)
+LUA_CFLAGS=-I$(LUA_INC_DIR)
+endif
+
+
 NDIR=$(shell pwd)
 
 .PHONY: help exec
@@ -46,6 +52,7 @@ define buildLns
 	$(call transwork,$1,$2,dumpNode)
 	$(call transwork,$1,$2,frontInterface)
 	$(call transwork,$1,$2,front)
+	$(call transwork,$1,$2,glueFilter)
 endef
 
 release-check:
@@ -72,9 +79,11 @@ release-check:
 # - 上記の比較が全て同じなら、 candidate を orginal とする。
 test-comp:
 	rm -rf work
+	mkdir -p work/glue
 	mkdir -p work/1/lune/base
 	mkdir -p work/2/lune/base
 	mkdir -p work/3/lune/base
+	mkdir -p work/newglue
 	@cp lune/base/base*.lua lune/base/*.lns work/1/lune/base
 	@cp lune/base/base*.lua lune/base/*.lns work/2/lune/base
 	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
@@ -111,7 +120,10 @@ test-error:
 	rm test/error/dis_mutable.lns
 
 test-comp2:
+	$(call exeLune,.,test/start.lns,glue, work/glue 2>&1)
+	$(MAKE) build-glue
 	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
+
 
 
 	grep -v 'warning:' work/test1.result > work/test.result
@@ -122,8 +134,8 @@ test-comp2:
 	$(call exeComp,.,test/comp-5.lns,test/comp-5.lns,test.comp-5 17 15) >> work/test1.result
 	$(call exeComp,.,test/comp2.lns,test/compSub.lns,test.compSub 5 6) >> work/test1.result
 	$(MAKE) -s TEST_DIR=. test-error | grep -e 'error:' -e 'warning:' >> work/test1.result
-
 #		sed 's/.*error:/error:/' >> work/test1.result
+
 
 # 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
 	$(call buildLns,work/1,../2)
@@ -131,6 +143,9 @@ test-comp2:
 	diff -r work/2 work/3
 
 	cp -a test work/3
+	$(call exeLune,work/3,test/glue.lns,glue, ../newglue 2>&1)
+	$(MAKE) build-glue GLUE_DIR=work/newglue
+
 	$(call exeLune,work/3,test/start.lns,ast,)
 	$(call exeLune,work/3,test/start.lns,lua,)
 	$(call exeLune,work/3,test/start.lns,exe,2>&1) | tee work/test2.result
@@ -145,6 +160,9 @@ test-comp2:
 #sed 's/.*error:/error:/' | tee -a work/test2.result
 
 
+
+
+
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
 	$(call exeLune,work/3,test/Sub2.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Sub3.lns,save,) > /dev/null
@@ -155,11 +173,13 @@ test-comp2:
 	$(call exeLune,work/3,test/Class3.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Class4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/start.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/glue.lns,save,) > /dev/null
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result
 
 
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
+	diff -r work/glue work/newglue
 
 	$(MAKE) accept-package ACCEPT=y
 
@@ -170,3 +190,8 @@ ifndef ACCEPT
 endif
 	cp work/3/lune/base/*.lua lune/base/
 	cp work/3/lune/base/*.meta lune/base/
+
+GLUE_DIR=work/glue
+build-glue:
+	gcc $(GLUE_DIR)/test_glueTest_glue.c test/glue.c -I$(GLUE_DIR) \
+		-std=c99 -fPIC -shared -o test/glueTest.so $(LUA_CFLAGS)

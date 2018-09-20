@@ -142,6 +142,34 @@ External.func2( 10 );
 print( "val", External.val );
 #+END_SRC
 
+** glue コード自動生成
+
+Lua の外部モジュールは、 Lua スクリプトと、C 等の Native Library のケースがある。
+
+Lua から Native Library を利用するには、
+Lua 用インタフェースの glue が必要である。
+
+LuneScript では、glue を自動生成する機能を持つ。
+
+次の例は、 test.external モジュールの glue を生成する。
+
+#+BEGIN_SRC lns
+module External require "test.external" glue {
+   pub static fn func1( val:int );
+   pub fn func2( val:int );
+}
+#+END_SRC
+
+このとき生成される glue ソースは、 glue/lns_glue_test_external.c となる。
+
+glue ソースは、 module で定義したメソッドに対応する各関数を生成する。
+この関数は、Lua VM から与えられた引数を取り出し、 Native の関数を呼び出す。
+
+    
+
+
+
+
 * nil 条件演算子
 
 nilable のデータを扱うには、 unwrap しなければならない。

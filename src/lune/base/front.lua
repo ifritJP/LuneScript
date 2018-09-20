@@ -30,6 +30,10 @@ local Option = require( 'lune.base.Option' )
 
 local dumpNode = require( 'lune.base.dumpNode' )
 
+local glueFilter = require( 'lune.base.glueFilter' )
+
+local Depend = require( 'lune.base.Depend' )
+
 function _luneGetLocal( varName )
   local index = 1
   
@@ -170,7 +174,7 @@ local function loadFromTxt( txt )
 end
 
 function Front:loadFile( path, mod, onlyMeta )
-  local ast = self:createAst( path, mod, mod )
+  local ast = self:createAst( path, mod, nil, TransUnit.AnalyzeMode.Compile )
   
   local stream = Util.memStream.new()
   
@@ -190,6 +194,40 @@ function Front:searchModule( mod )
   
   lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
   return package.searchpath( mod, lnsSearchPath )
+end
+
+function Front:searchLuaFile( moduleFullName, addSearchPath )
+  local luaSearchPath = package.path
+  
+  do
+    local _exp = addSearchPath
+    if _exp ~= nil then
+    
+        luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path )
+      end
+  end
+  
+  return package.searchpath( moduleFullName, luaSearchPath )
+end
+
+function Front:checkUptodateMeta( metaPath, addSearchPath )
+  local meta = self:loadLua( metaPath )
+  
+  for moduleFullName, dependInfo in pairs( meta._dependModuleMap ) do
+    do
+      local moduleLuaPath = self:searchLuaFile( moduleFullName, addSearchPath )
+      if moduleLuaPath ~= nil then
+      
+          local moduleLnsPath = moduleLuaPath:gsub( "%.lua$", ".lns" )
+          
+          if not Util.getReadyCode( moduleLnsPath, metaPath ) then
+            return nil
+          end
+        end
+    end
+    
+  end
+  return meta
 end
 
 function Front:loadModule( mod )
@@ -214,17 +252,11 @@ function Front:loadModule( mod )
             
                 local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
                 
-                local luaSearchPath = package.path
-                
-                local bakSearchPath = package.path
-                
                 do
                   local _exp = self.option.outputDir
                   if _exp ~= nil then
                   
-                      luaSearchPath = string.format( "%s/?.lua;%s", _exp, package.path )
-                      luaPath = package.searchpath( mod, luaSearchPath )
-                      package.path = luaSearchPath
+                      luaPath = self:searchLuaFile( mod, _exp )
                     end
                 end
                 
@@ -239,21 +271,20 @@ function Front:loadModule( mod )
                         
                         if Util.getReadyCode( lnsPath, metaPath ) then
                           loadVal = self:loadLua( _exp )
-                          local meta = self:loadLua( metaPath )
+                          local meta = self:checkUptodateMeta( metaPath, self.option.outputDir )
                           
-                          local info = {}
-                          
-                          info['mod'] = loadVal
-                          info['meta'] = meta
-                          self.loadedMap[mod] = info
+                          if meta then
+                            local info = {}
+                            
+                            info['mod'] = loadVal
+                            info['meta'] = meta
+                            self.loadedMap[mod] = info
+                          end
                         end
                       end
                     end
                 end
                 
-                if self.option.outputDir then
-                  package.path = bakSearchPath
-                end
                 if loadVal == nil then
                   local meta, workVal = self:loadFile( lnsPath, mod, false )
                   
@@ -296,17 +327,11 @@ function Front:loadMeta( mod )
             
                 local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
                 
-                local luaSearchPath = package.path
-                
-                local bakSearchPath = package.path
-                
                 do
                   local _exp = self.option.outputDir
                   if _exp ~= nil then
                   
-                      luaSearchPath = string.format( "%s/?.lua;%s", _exp, package.path )
-                      luaPath = package.searchpath( mod, luaSearchPath )
-                      package.path = luaSearchPath
+                      luaPath = self:searchLuaFile( mod, _exp )
                     end
                 end
                 
@@ -320,16 +345,15 @@ function Front:loadMeta( mod )
                         local metaPath = string.gsub( _exp, "%.lua$", ".meta" )
                         
                         if Util.getReadyCode( lnsPath, metaPath ) then
-                          meta = self:loadLua( metaPath )
-                          self.loadedMetaMap[mod] = meta
+                          meta = self:checkUptodateMeta( metaPath, self.option.outputDir )
+                          if meta then
+                            self.loadedMetaMap[mod] = meta
+                          end
                         end
                       end
                     end
                 end
                 
-                if self.option.outputDir then
-                  package.path = bakSearchPath
-                end
                 if meta == nil then
                   local metawork, luaTxt = self:loadFile( lnsPath, mod, true )
                   
@@ -360,7 +384,7 @@ function Front:exec(  )
   mod = string.gsub( mod, "%.lns$", "" )
   do
     local _switchExp = self.option.mode
-    if _switchExp == "token" then
+    if _switchExp == Option.ModeKind.Token then
       local parser = createPaser( self.option.scriptPath, mod )
       
       while true do
@@ -374,30 +398,36 @@ function Front:exec(  )
           
         print( token.kind, token.pos.lineNo, token.pos.column, token.txt )
       end
-    elseif _switchExp == "ast" then
+    elseif _switchExp == Option.ModeKind.Ast then
       Util.profile( self.option.validProf, function (  )
-        local ast = self:createAst( self.option.scriptPath, mod )
+        local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
         
         ast:get_node():processFilter( dumpNode.dumpFilter.new(), "", 0 )
       end
       , self.option.scriptPath .. ".profi" )
-    elseif _switchExp == "diag" then
+    elseif _switchExp == Option.ModeKind.Diag then
       Util.setErrorCode( 0 )
-      self:createAst( self.option.scriptPath, mod, nil, "diag" )
-    elseif _switchExp == "comp" then
-      self:createAst( self.option.scriptPath, mod, self.option.analyzeModule, "comp", self.option.analyzePos )
-    elseif _switchExp == "lua" or _switchExp == "LUA" then
-      local ast = self:createAst( self.option.scriptPath, mod )
+      self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Diag )
+    elseif _switchExp == Option.ModeKind.Complete then
+      self:createAst( self.option.scriptPath, mod, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+    elseif _switchExp == Option.ModeKind.Glue then
+      local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+      
+      local glue = glueFilter.glueFilter.new(self.option.outputDir)
+      
+      ast:get_node():processFilter( glue )
+    elseif _switchExp == Option.ModeKind.Lua or _switchExp == Option.ModeKind.LuaMeta then
+      local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
       
       local convMode = convLua.ConvMode.Convert
       
-      if self.option.mode == "LUA" then
+      if self.option.mode == Option.ModeKind.LuaMeta then
         convMode = convLua.ConvMode.ConvMeta
       end
       convert( ast, self.option.scriptPath, io.stdout, io.stdout, convMode, false )
-    elseif _switchExp == "save" or _switchExp == "SAVE" then
+    elseif _switchExp == Option.ModeKind.Save or _switchExp == Option.ModeKind.SaveMeta then
       Util.profile( self.option.validProf, function (  )
-        local ast = self:createAst( self.option.scriptPath, mod )
+        local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
         
         local luaPath = self.option.scriptPath:gsub( "%.lns$", ".lua" )
         
@@ -453,7 +483,7 @@ function Front:exec(  )
         end
       end
       , self.option.scriptPath .. ".profi" )
-    elseif _switchExp == "exe" then
+    elseif _switchExp == Option.ModeKind.Exec then
       self:loadModule( mod )
     else 
       print( "illegal mode" )

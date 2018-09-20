@@ -1,0 +1,333 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Ast;
+import lune.base.Parser;
+
+class glueGenerator {
+   let mut srcStream:oStream;
+   let mut headerStream:oStream;
+}
+
+fn glueGenerator.write( txt:str ) mut {
+   self.srcStream.write( txt );
+}
+
+fn glueGenerator.writeHeader( txt:str ) mut {
+   self.headerStream.write( txt );
+}
+
+fn glueGenerator.outputMethod( classFullName:str, methodNode:&Ast.DeclMethodNode ) mut {
+   let declInfo = methodNode.$declInfo;
+   if! declInfo.$name {
+      if declInfo.$staticFlag {
+         self.write( "static method %s.%s" (classFullName, _exp.txt ) );
+      }
+      else {
+         self.write( "method %s.%s" (classFullName, _exp.txt ) );
+      }
+   }
+}
+
+fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, &Ast.TypeInfo, str {
+   let argType = argNode.$expType;
+   let mut orgType = (argType.$nilable and argType.$orgTypeInfo or argType).$srcTypeInfo;
+   let mut typeTxt = "";
+   if orgType == Ast.builtinTypeInt {
+      typeTxt = "int";
+   }
+   elseif orgType == Ast.builtinTypeReal {
+      typeTxt = "double";
+   }
+   elseif orgType == Ast.builtinTypeString {
+      typeTxt = "const char *";
+   }
+   let mut argName = "";
+   if argNode.$kind == Ast.nodeKindDeclArg {
+      argName = (argNode@@Ast.DeclArgNode).$name.txt;
+   }
+   return typeTxt, orgType, argName;
+}
+
+fn glueGenerator.outputPrototype( node:&Ast.DeclMethodNode ) mut
+{
+   self.write(
+      "static int lns_glue_%s( lua_State * pLua )" (node.$expType.getTxt() ) );
+}
+
+fn glueGenerator.outputUserPrototype(
+   node:&Ast.DeclMethodNode, gluePrefix:str ) mut
+{
+   let expType = node.$expType;
+
+   self.writeHeader( "extern int %s%s( lua_State * pLua"
+                     (gluePrefix, expType.getTxt() ) );
+
+   let declInfo = node.$declInfo;
+   let mut addFlag = true;
+   foreach argNode in declInfo.$argList {
+      let typeTxt, argType, argName = self.getArgInfo( argNode );
+      if typeTxt ~= "" {
+         if addFlag {
+            self.writeHeader( ", " );
+         }  
+         addFlag = true;
+         
+         self.writeHeader( "%s %s" ( typeTxt, argName ) );
+         if argType == Ast.builtinTypeString {
+            self.writeHeader( ", int size_%s" ( argName ) );
+         }  
+      }  
+   }
+   
+   self.writeHeader( " )" );
+}
+
+
+fn glueGenerator.outputPrototypeList( methodNodeList:List<&Ast.DeclMethodNode> ) mut
+{
+   foreach node in methodNodeList {
+      self.outputPrototype( node );
+      self.write( ";\n" );
+   }
+}
+
+fn glueGenerator.outputUserPrototypeList(
+   methodNodeList:List<&Ast.DeclMethodNode>, gluePrefix:str ) mut
+{
+   foreach node in methodNodeList {
+      self.outputUserPrototype( node, gluePrefix );
+      self.writeHeader( ";\n" );
+   }
+}
+
+
+
+fn glueGenerator.outputFuncReg(
+   symbolName:str, methodNodeList:List<&Ast.DeclMethodNode> ) mut
+{
+   self.write( "static const luaL_Reg %s[] = {\n" (symbolName) );
+   foreach node in methodNodeList {
+      if! let nameToken = node.$declInfo.$name {
+         let name = nameToken.txt;
+         self.write( '  { "%s", lns_glue_%s },\n' (name, name) );
+      }
+   }
+   self.write( '  { NULL, NULL }\n};\n' );
+}
+
+fn glueGenerator.outputCommonFunc( moduleSymbolFull:str ) mut
+{
+   self.writeHeader(```
+extern void * lns_glue_get_%s( lua_State * pLua, int index );
+extern void * lns_glue_new_%s( lua_State * pLua, size_t size );
+``` (moduleSymbolFull,moduleSymbolFull) );
+   
+   self.write( 
+   ```
+void * lns_glue_get_%s( lua_State * pLua, int index )
+{
+    return luaL_checkudata( pLua, index, s_full_class_name);
+}
+
+static void lns_glue_setupObjMethod(
+    lua_State * pLua, const char * pName, const luaL_Reg * pReg )
+{
+    luaL_newmetatable(pLua, pName );
+    lua_pushvalue(pLua, -1);
+    lua_setfield(pLua, -2, "__index");
+
+#if LUA_VERSION_NUM >= 502
+    luaL_setfuncs(pLua, pReg, 0);
+
+    lua_pop(pLua, 1);
+#else
+    luaL_register(pLua, NULL, pReg );
+
+    lua_pop(pLua, 1);
+#endif
+}
+
+void * lns_glue_new_%s( lua_State * pLua, size_t size )
+{
+    void * pBuf = lua_newuserdata( pLua, size );
+    if ( pBuf == NULL ) {
+        return NULL;
+    }
+    
+#if LUA_VERSION_NUM >= 502
+    luaL_setmetatable( pLua, s_full_class_name );
+#else
+    luaL_getmetatable( pLua, s_full_class_name );
+    lua_setmetatable( pLua, -2 );
+#endif
+
+    return pBuf;
+}
+
+int luaopen_%s( lua_State * pLua )
+{
+    lns_glue_setupObjMethod( pLua, s_full_class_name, s_lua_method_info );
+
+#if LUA_VERSION_NUM >= 502
+    luaL_newlib( pLua, s_lua_func_info );
+#else
+    luaL_register( pLua, s_full_class_name, s_lua_func_info );
+#endif
+    return 1;
+}
+``` (moduleSymbolFull, moduleSymbolFull, moduleSymbolFull) );
+}
+
+fn glueGenerator.outputMethod( node:&Ast.DeclMethodNode, gluePrefix:str ) mut {
+   let declInfo = node.$declInfo;
+   let mut name = "";
+   if! declInfo.$name {
+      name = gluePrefix .. _exp.txt;
+   }
+   else {
+      return;
+   }
+   
+   self.outputPrototype( node );
+   self.write( "{\n" );
+
+   let mut callTxtList:str[] = [];
+   foreach argNode, index in declInfo.$argList {
+      let typeTxt, argType, argName = self.getArgInfo( argNode );
+      let addVal = declInfo.$staticFlag and 0 or 1;
+      if typeTxt ~= "" {
+         switch argType {
+            case Ast.builtinTypeInt {
+               self.write( 
+                  "  %s %s = luaL_checkinteger( pLua, %d );\n"
+                  ( typeTxt, argName, index + addVal ) );
+               callTxtList.insert( argName );
+            }
+            case Ast.builtinTypeReal {
+               self.write(
+                  "  %s %s = luaL_checknumber( pLua, %d );\n"
+                  ( typeTxt, argName, index + addVal ) );
+               callTxtList.insert( argName );
+            }
+            case Ast.builtinTypeString {
+               self.write(
+                  "  size_t size_%s = 0;\n" ( argName ) ..
+                  "  const char * %s = luaL_checklstring( pLua, %d, &size_%s );\n"
+                  ( argName, index + addVal, argName ) );
+               callTxtList.insert( argName );
+               callTxtList.insert( "size_" .. argName );
+            }
+         }
+      }
+   }
+
+   self.write( "  return %s( pLua" (name) );
+   foreach argTxt, index in callTxtList {
+      self.write( ", " );
+      self.write( argTxt );
+   }
+
+   self.write( ");\n" );
+   self.write( "}\n" );
+}
+
+fn glueGenerator.outputClass(
+   moduleFullName:str, node:&Ast.DeclClassNode, gluePrefix:str ) mut
+{
+   let moduleSymbolFull = moduleFullName.gsub( "%.", "_" );
+
+   let mut staticMethodNodeList:List<&Ast.DeclMethodNode> = [];
+   let mut methodNodeList:List<&Ast.DeclMethodNode> = [];
+   foreach fieldNode in node.$fieldList {
+      if fieldNode.$kind == Ast.nodeKindDeclMethod {
+         let methodNode = fieldNode@@Ast.DeclMethodNode;
+         if methodNode.$declInfo.$staticFlag {
+            staticMethodNodeList.insert( methodNode );
+         }
+         else {
+            methodNodeList.insert( methodNode );
+         }
+      }
+   }
+
+
+   // ヘッダの生成
+   self.writeHeader( '#include <lauxlib.h>\n' );
+   self.outputUserPrototypeList( staticMethodNodeList, gluePrefix );
+   self.outputUserPrototypeList( methodNodeList, gluePrefix );
+
+
+   // ソースの生成
+   self.write( '#include "%s_glue.h"\n' (moduleSymbolFull) );
+   
+   self.outputPrototypeList( staticMethodNodeList );
+   self.outputPrototypeList( methodNodeList );
+
+   self.write( 'static const char * s_full_class_name = "%s";\n' (moduleFullName ) );
+   
+   self.outputFuncReg( "s_lua_func_info", staticMethodNodeList );
+   self.outputFuncReg( "s_lua_method_info", methodNodeList );
+
+   let classSymbolFull = moduleSymbolFull .. "_" .. node.$name.txt;
+   self.outputCommonFunc( moduleSymbolFull );
+
+
+   foreach methodNode in methodNodeList {
+      self.outputMethod( methodNode, gluePrefix );
+   }
+   foreach methodNode in staticMethodNodeList {
+      self.outputMethod( methodNode, gluePrefix );
+   }
+}
+
+pub class glueFilter extend Ast.Filter {
+   let outputDir:str!;
+}
+
+pub override fn glueFilter.processRoot( node: &Ast.RootNode ) mut
+{
+   fn createFile( filename:str ):oStream {
+      let filePath = "%s/%s" (unwrap self.outputDir default ".", filename);               
+      if! io.open( filePath, "w") {
+         return _exp;
+      }
+      error( "open error -- %s " (filePath) );
+   }
+   
+   if! let nodeList = node.$nodeManager.getDeclClassNodeList() {
+      foreach node in nodeList {
+         if! let moduleName = node.$moduleName {
+            let moduleSymbolName = moduleName.getExcludedDelimitTxt().gsub( "%.", "_" );
+            let mut glue = new glueGenerator(
+               createFile( moduleSymbolName .. "_glue.c" ),
+               createFile( moduleSymbolName .. "_glue.h" ) );
+            
+            if! node.$gluePrefix {
+               glue.outputClass( moduleSymbolName, node, _exp );
+            }
+         }
+      }
+   }
+}

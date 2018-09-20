@@ -1,0 +1,17 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="org-mode-document.css" />
+
+#+TITLE: TODO
+
+- module 宣言したモジュールの glue コード自動生成
+- form の型宣言
+- 戻り値を持つ関数の、return 有無を確認するフロー解析
+- let で初期値を入れないようにフロー解析
+- "%s" (val) の %s と val の対応チェック。
+- import as 対応
+- 独自クラスの generics 対応
+- meta 情報の削減
+- C へのトランスコード

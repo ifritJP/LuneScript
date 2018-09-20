@@ -29,6 +29,8 @@ import lune.base.TransUnit;
 import lune.base.Util;
 import lune.base.Option;
 import lune.base.dumpNode;
+import lune.base.glueFilter;
+import lune.base.Depend;
 
 global fn _luneGetLocal( varName:str ):stem!
 {
@@ -101,7 +103,8 @@ fn createPaser( path:str, mod:str ): Parser.Parser
 }
 
 fn Front.createAst( path:str, mod:str, analyzeModule:str!,
-                    analyzeMode:str!, pos:&Parser.Position! ): &TransUnit.ASTInfo
+                    analyzeMode:TransUnit.AnalyzeMode,
+                    pos:&Parser.Position! ): &TransUnit.ASTInfo
 {
    let mut transUnit = new TransUnit.TransUnit(
       new convLua.MacroEvalImp( self.option.mode ), analyzeModule, analyzeMode, pos );
@@ -132,7 +135,7 @@ fn loadFromTxt( txt:str ): stem {
 
 fn Front.loadFile( path:str, mod:str, onlyMeta:bool ): stem, stem
 {
-   let ast = self.createAst( path, mod, mod );
+   let ast = self.createAst( path, mod, nil, .Compile );
    
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
@@ -151,7 +154,37 @@ fn Front.searchModule( mod:str ): str! {
    lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" );
    return package.searchpath( mod, lnsSearchPath );
 }
-      
+
+fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
+   let mut luaSearchPath = package.path;
+   if! addSearchPath {
+      luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path );
+   }
+   return package.searchpath( moduleFullName, luaSearchPath );
+}
+
+/**
+指定のメタファイルが最新で更新が必要ないか調べる。
+
+@param metaPath メタファイルのパス
+@return stem! 最新の場合、ロードしたメタ情報。 最新でない場合は nil。
+*/
+fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
+   let meta = self.loadLua( metaPath )@@TransUnit._MetaInfo;
+   foreach dependInfo, moduleFullName in meta._dependModuleMap {
+      if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
+         let moduleLnsPath = moduleLuaPath.gsub( "%.lua$", ".lns" );
+         if not Util.getReadyCode( moduleLnsPath, metaPath ) {
+            // 依存するモジュールが更新されている場合、
+            // 作成済みのメタファイルは使えないので nil を返す。
+            return nil;
+         }
+      }
+   }
+   return meta;
+}
+
+     
 fn Front.loadModule( mod:str ) mut : stem!, stem {
    if self.loadedMap[ mod ] == nil {
       if! self.convertedMap[ mod ] {
@@ -168,14 +201,10 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
       else {
          if! let lnsPath = self.searchModule( mod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
-            let mut luaSearchPath = package.path;
-            let bakSearchPath = package.path;
 
             if! self.option.outputDir {
-	       luaSearchPath = string.format( "%s/?.lua;%s", _exp, package.path );
-	       luaPath = package.searchpath( mod, luaSearchPath );
-	       package.path = luaSearchPath;
-            }     
+               luaPath = self.searchLuaFile( mod, _exp );
+            }
 
             let mut loadVal:stem! = nil;
             if! luaPath {
@@ -183,17 +212,17 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
 	          let metaPath = string.gsub( _exp, "%.lua$", ".meta" );
 	          if Util.getReadyCode( lnsPath, metaPath ) {
 	             loadVal = self.loadLua( _exp );
-	             let meta = self.loadLua( metaPath );
+                     let meta = self.checkUptodateMeta(
+                        metaPath, self.option.outputDir );
 
-	             let mut info:Map<str,stem> = {};
-	             info.mod = loadVal;
-	             info.meta = meta;
-	             self.loadedMap[ mod ] = info;
+                     if meta {
+	                let mut info:Map<str,stem> = {};
+	                info.mod = loadVal;
+	                info.meta = meta;
+	                self.loadedMap[ mod ] = info;
+                     }
                   }           
                }  
-            }  
-            if self.option.outputDir {
-	       package.path = bakSearchPath;
             }  
             if loadVal == nil {
 	       let meta, workVal = self.loadFile( lnsPath, mod, false );
@@ -221,13 +250,9 @@ fn Front.loadMeta( mod:str ) mut : stem {
       else {
          if! let lnsPath = self.searchModule( mod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
-            let mut luaSearchPath = package.path;
-            let bakSearchPath = package.path;
 
             if! self.option.outputDir {
-	       luaSearchPath = string.format( "%s/?.lua;%s", _exp, package.path );
-	       luaPath = package.searchpath( mod, luaSearchPath );
-	       package.path = luaSearchPath;
+               luaPath = self.searchLuaFile( mod, _exp );
             }  
 
             let mut meta:stem! = nil;
@@ -235,13 +260,14 @@ fn Front.loadMeta( mod:str ) mut : stem {
                if Util.getReadyCode( lnsPath, _exp ) {
 	          let metaPath = string.gsub( _exp, "%.lua$", ".meta" );
 	          if Util.getReadyCode( lnsPath, metaPath ) {
-	             meta = self.loadLua( metaPath );
-	             self.loadedMetaMap[ mod ] = meta;
+	             //meta = self.loadLua( metaPath );
+                     meta = self.checkUptodateMeta(
+                        metaPath, self.option.outputDir );
+                     if meta {
+	                self.loadedMetaMap[ mod ] = meta;
+                     }
                   }  
                }  
-            }  
-            if self.option.outputDir {
-	       package.path = bakSearchPath;
             }  
             if meta == nil {
 	       let metawork, luaTxt = self.loadFile( lnsPath, mod, true );
@@ -264,7 +290,7 @@ pub fn Front.exec() mut
    mod = string.gsub( mod, "%.lns$", "" );
    
    switch self.option.mode {
-      case "token" {
+      case .Token {
          let mut parser = createPaser( self.option.scriptPath, mod );
          while true {
             let! token = parser.getToken() {
@@ -273,36 +299,41 @@ pub fn Front.exec() mut
             print( token.kind, token.pos.lineNo, token.pos.column, token.txt );
          }
       }
-      case "ast" {
+      case .Ast {
          Util.profile(
 	    self.option.validProf,
 	    fn() {
-	       let ast = self.createAst( self.option.scriptPath, mod );
+	       let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
 	       ast.$node.processFilter( new dumpNode.dumpFilter(), "", 0 );
 	    }, self.option.scriptPath .. ".profi" );
       }
-      case "diag" {
+      case .Diag {
          Util.setErrorCode( 0 );
-         self.createAst( self.option.scriptPath, mod, nil, "diag" );
+         self.createAst( self.option.scriptPath, mod, nil, .Diag );
       }
-      case "comp" {
+      case .Complete {
          self.createAst( self.option.scriptPath, mod,
-		         self.option.analyzeModule, "comp", self.option.analyzePos );
+		         self.option.analyzeModule, .Complete, self.option.analyzePos );
       }
-      case "lua", "LUA" {
-         let ast = self.createAst( self.option.scriptPath, mod );
+      case .Glue {
+         let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+         let mut glue = new glueFilter.glueFilter( self.option.outputDir );
+         ast.$node.processFilter( glue );
+      }
+      case .Lua, .LuaMeta {
+         let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
          let mut convMode = convLua.ConvMode.Convert;
-         if self.option.mode == "LUA" {
+         if self.option.mode == .LuaMeta {
             convMode = .ConvMeta;
          }
          convert( ast, self.option.scriptPath,
                   io.stdout, io.stdout, convMode, false );
       }
-      case "save", "SAVE" {
+      case .Save, .SaveMeta {
          Util.profile(           
 	    self.option.validProf,       
       	    fn () {
-	       let ast = self.createAst( self.option.scriptPath, mod );
+	       let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
 	       let mut luaPath = self.option.scriptPath.gsub( "%.lns$", ".lua" );
 	       let mut metaPath = self.option.scriptPath.gsub( "%.lns$", ".meta" );
 	       if self.option.outputDir {
@@ -341,7 +372,7 @@ pub fn Front.exec() mut
                }
       	    }, self.option.scriptPath .. ".profi" );
       }
-      case "exe" {
+      case .Exec {
          self.loadModule( mod );
       }
       default {

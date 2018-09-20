@@ -801,7 +801,7 @@ function convFilter:processDeclEnum( node, parent, baseIndent )
   end
   local typeInfo = node:get_expType()
   
-  if typeInfo:get_accessMode() ~= Ast.AccessMode.Pri then
+  if typeInfo:get_accessMode() == Ast.AccessMode.Pub then
     self.pubEnumId2EnumTypeInfo[typeInfo:get_typeId()] = typeInfo
   end
   self:writeln( string.format( "%s._val2NameMap = {}", node:get_name().txt), baseIndent )

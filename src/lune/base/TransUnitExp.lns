@@ -70,8 +70,9 @@ fn TransUnit.analyzeExpList(
 
    self.pushback();
 
-   return new Ast.ExpListNode( unwrap pos default new Parser.Position( 0, 0 ),
-                               expTypeList, expList );
+   return Ast.ExpListNode.create(
+      self.nodeManager, unwrap pos default new Parser.Position( 0, 0 ),
+      expTypeList, expList );
 }
 
 fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
@@ -107,12 +108,14 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
       kind = Ast.nodeKindLiteralList;
       typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
                                                       [ itemTypeInfo ] ) ];
-      return new Ast.LiteralListNode( token.pos, typeInfoList, expList );
+      return Ast.LiteralListNode.create(
+         self.nodeManager, token.pos, typeInfoList, expList );
    }
    else {
       typeInfoList = [ Ast.NormalTypeInfo.createArray( .Local, self.getCurrentClass(),
                                                        [ itemTypeInfo ] ) ];
-      return new Ast.LiteralArrayNode( token.pos, typeInfoList, expList );
+      return Ast.LiteralArrayNode.create(
+         self.nodeManager, token.pos, typeInfoList, expList );
    }
    //return self.createNode( kind, token.pos, typeInfo, expList );
 }
@@ -180,7 +183,8 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Ast.LiteralMapNode {
    self.checkToken( nextToken, "}" );
    // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
    //                      { "map": map, "pairList": pairList } );
-   return new Ast.LiteralMapNode( token.pos,[ typeInfo ], map, pairList );
+   return Ast.LiteralMapNode.create(
+      self.nodeManager, token.pos,[ typeInfo ], map, pairList );
 }
 
 fn TransUnit.analyzeExpRefItem(
@@ -230,8 +234,8 @@ fn TransUnit.analyzeExpRefItem(
       typeInfo = self.createModifier( typeInfo, false );
    }
    
-   return new Ast.ExpRefItemNode(
-      token.pos, [ typeInfo ], exp, nilAccess, nil, indexExp );
+   return Ast.ExpRefItemNode.create(
+      self.nodeManager, token.pos, [ typeInfo ], exp, nilAccess, nil, indexExp );
 }
 
 
@@ -432,7 +436,8 @@ fn TransUnit.evalMacro(
 
    // return self.createNode(
    //     nodeKindExpMacroExp, firstToken.pos, builtinTypeNone, stmtList );
-   return new Ast.ExpMacroExpNode( firstToken.pos, [ Ast.builtinTypeNone ], stmtList );
+   return Ast.ExpMacroExpNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], stmtList );
 
 }
 
@@ -528,8 +533,9 @@ fn TransUnit.analyzeExpCont(
                      retTypeInfoList = retList;
                      self.useNilAccess = true;
                   }
-                  exp = new Ast.ExpCallNode(
-                     firstToken.pos, retTypeInfoList, exp, nilAccess, expList );
+                  exp = Ast.ExpCallNode.create(
+                     self.nodeManager, firstToken.pos,
+                     retTypeInfoList, exp, nilAccess, expList );
                }
 
                nextToken = self.getToken();
@@ -714,7 +720,7 @@ fn TransUnit.dumpSymbolComp( writer: Writer.Writer, scope: &Ast.Scope, pattern: 
 
 fn TransUnit.checkComp( token:&Parser.Token, callback:form ) 
 {
-   if self.analyzeMode == "comp" and
+   if self.analyzeMode == .Complete and
       self.analyzePos.lineNo == token.pos.lineNo and
       self.analyzePos.column >= token.pos.column and
       self.analyzePos.column <= token.pos.column + #token.txt 
@@ -743,7 +749,7 @@ fn TransUnit.checkComp( token:&Parser.Token, callback:form )
 fn TransUnit.checkFieldComp(
    getterFlag:bool, token:&Parser.Token, prefixExp: &Ast.Node ) 
 {
-   if self.analyzeMode ~= "comp" {
+   if self.analyzeMode ~= .Complete {
       return;
    }
    let prefixSymbolInfoList = prefixExp.getSymbolInfo();
@@ -773,7 +779,7 @@ fn TransUnit.checkFieldComp(
 fn TransUnit.checkEnumComp(
    token:&Parser.Token, enumTypeInfo: &Ast.EnumTypeInfo ) 
 {
-   if self.analyzeMode ~= "comp" {
+   if self.analyzeMode ~= .Complete {
       return;
    }
    self.checkComp(
@@ -810,8 +816,8 @@ fn TransUnit.analyzeExpField(
       if accessNil {
          self.useNilAccess = true;
       }
-      return new Ast.RefFieldNode(
-         firstToken.pos, [ Ast.builtinTypeSymbol ],
+      return Ast.RefFieldNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeSymbol ],
          token, nil, accessNil, unwrap prefixExp );
          //token, accessNil, unwrap prefixExp );
    }
@@ -879,12 +885,14 @@ fn TransUnit.analyzeExpField(
       if not typeInfo.$nilable {
          typeInfo = typeInfo.$nilableTypeInfo;
       }
-      return new Ast.ExpRefItemNode(
-         token.pos, [ typeInfo ], prefixExp, accessNil, token.txt, nil );
+      return Ast.ExpRefItemNode.create(
+         self.nodeManager, token.pos,
+         [ typeInfo ], prefixExp, accessNil, token.txt, nil );
    }
    elseif prefixExpType.equals( Ast.builtinTypeStem ) {
-      return new Ast.ExpRefItemNode(
-         token.pos, [ Ast.builtinTypeStem_ ], prefixExp, accessNil, token.txt, nil );
+      return Ast.ExpRefItemNode.create(
+         self.nodeManager, token.pos,
+         [ Ast.builtinTypeStem_ ], prefixExp, accessNil, token.txt, nil );
    }
    else {
       self.error( "illegal type -- %s, %d"
@@ -911,7 +919,7 @@ fn TransUnit.analyzeExpField(
                   token.pos, "Type can't access this symbol. -- %s" (_exp.$name) );    
             }
          }
-         elseif _exp.$staticFlag {
+         elseif _exp.$staticFlag and _exp.$typeInfo.$kind ~= .Method {
             // インスタンスから、 static メンバにアクセスした場合エラー
             self.addErrMess(
                token.pos, "can't access this symbol. -- %s" (token.txt) );
@@ -947,14 +955,14 @@ fn TransUnit.analyzeExpField(
    }
    
    if! getterTypeInfo {
-      return new Ast.GetFieldNode(
-         firstToken.pos, [ typeInfo ],
+      return Ast.GetFieldNode.create(
+         self.nodeManager, firstToken.pos, [ typeInfo ],
          token, accessSymbolInfo, accessNil, prefixExp, _exp );
          //token, canBeLeft, accessNil, prefixExp, _exp );
    }
    else {
-      return new Ast.RefFieldNode(
-         firstToken.pos, [ typeInfo ],
+      return Ast.RefFieldNode.create(
+         self.nodeManager, firstToken.pos, [ typeInfo ],
          token, accessSymbolInfo, accessNil, prefixExp );
          //token, canBeLeft, accessNil, prefixExp );
    }
@@ -973,8 +981,8 @@ fn TransUnit.analyzeExpSymbol(
    }
    elseif mode == .Symbol {
       if self.macroMode == .Analyze {
-         exp = new Ast.LiteralSymbolNode(
-            firstToken.pos, [ Ast.builtinTypeSymbol ], token );
+         exp = Ast.LiteralSymbolNode.create(
+            self.nodeManager, firstToken.pos, [ Ast.builtinTypeSymbol ], token );
       }
       else {
          self.checkSymbolComp( token );
@@ -988,8 +996,8 @@ fn TransUnit.analyzeExpSymbol(
          if typeInfo.equals( Ast.builtinTypeSymbol ) {
             skipFlag = true;
          }
-         exp = new Ast.ExpRefNode(
-            firstToken.pos, [ typeInfo ], token,
+         exp = Ast.ExpRefNode.create(
+            self.nodeManager, firstToken.pos, [ typeInfo ], token,
             new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
       }
    }
@@ -1048,7 +1056,8 @@ fn TransUnit.analyzeExpOp2(
          elseif not expType.$mutable and castType.$mutable {
             castType = self.createModifier( castType, false );
          }
-         exp = new Ast.ExpCastNode( firstToken.pos, [ castType ], exp );
+         exp = Ast.ExpCastNode.create(
+            self.nodeManager, firstToken.pos, [ castType ], exp );
       }
       elseif nextToken.kind == Parser.TokenKind.Ope {
          if Parser.isOp2( opTxt ) {
@@ -1247,8 +1256,8 @@ fn TransUnit.analyzeExpOp2(
                }
             }
 
-            exp = new Ast.ExpOp2Node(
-               firstToken.pos, [ retType ], nextToken, exp, exp2 );
+            exp = Ast.ExpOp2Node.create(
+               self.nodeManager, firstToken.pos, [ retType ], nextToken, exp, exp2 );
          }
          else {
             self.error( "illegal op" );
@@ -1301,8 +1310,8 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
             }
          }
          let newToken = new Parser.Token( Parser.TokenKind.Str, format, token.pos );
-         let literalStr = new Ast.LiteralStringNode(
-            token.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
+         let literalStr = Ast.LiteralStringNode.create(
+            self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
          expStrList.insert(  literalStr );
       }
       else {
@@ -1325,15 +1334,15 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
          }
          let newToken = new Parser.Token(
             token.kind, string.format( format, token.txt ), token.pos );
-         let literalStr = new Ast.LiteralStringNode(
-            token.pos, [ Ast.builtinTypeString ], newToken, [] );
+         let literalStr = Ast.LiteralStringNode.create(
+            self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [] );
          expStrList.insert( literalStr );
       }
       prevToken = token;
    }
 
-   return new Ast.ExpMacroStatNode(
-      firstToken.pos, [ Ast.builtinTypeStat ], expStrList );
+   return Ast.ExpMacroStatNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeStat ], expStrList );
 }
 
 
@@ -1357,8 +1366,8 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
       self.addErrMess( firstToken.pos, "This class doesn't have super-class." );
    }
 
-   return new Ast.ExpCallSuperNode(
-      firstToken.pos, [ Ast.builtinTypeNone ], superType, expList );
+   return Ast.ExpCallSuperNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], superType, expList );
 }
 
 fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
@@ -1372,7 +1381,8 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
       if not exp.$expType.$nilable {
          self.addErrMess( exp.$pos, "this value is not nilable." );
       }
-      return new Ast.StmtExpNode( nextToken.pos, [ Ast.builtinTypeNone ], exp );
+      return Ast.StmtExpNode.create(
+         self.nodeManager, nextToken.pos, [ Ast.builtinTypeNone ], exp );
    }
 
    self.pushback();
@@ -1412,7 +1422,8 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
 
    self.useUnwrapExp = true;
 
-   return new Ast.ExpUnwrapNode( firstToken.pos, [ unwrapType ], expNode, insNode );
+   return Ast.ExpUnwrapNode.create(
+      self.nodeManager, firstToken.pos, [ unwrapType ], expNode, insNode );
 }
 
 
@@ -1421,7 +1432,7 @@ fn TransUnit.analyzeExp(
 {
    let firstToken = self.getToken();
    let mut token = firstToken;
-   let mut exp:Ast.Node = new Ast.NoneNode( firstToken.pos, [ Ast.builtinTypeNone ] );
+   let mut exp:Ast.Node = self.createNoneNode( firstToken.pos );
 
    if token.kind == Parser.TokenKind.Dlmt {
       if token.txt == "." {
@@ -1438,8 +1449,9 @@ fn TransUnit.analyzeExp(
                      self.addErrMess( token.pos, "This module not import -- %s"
                                       ( _exp.getTxt() ) );
                   }  
-                  exp = new Ast.ExpOmitEnumNode( token.pos, [ enumTyepInfo ],
-                                                 nextToken, enumTyepInfo );
+                  exp = Ast.ExpOmitEnumNode.create(
+                     self.nodeManager, token.pos, [ enumTyepInfo ],
+                     nextToken, enumTyepInfo );
                   exp = self.analyzeExpCont( firstToken, exp, false );
                }
                else {
@@ -1456,7 +1468,8 @@ fn TransUnit.analyzeExp(
          }
       }
       elseif token.txt == "..." {
-         return new Ast.ExpDDDNode( firstToken.pos, [ Ast.builtinTypeNone ], token );
+         return Ast.ExpDDDNode.create(
+            self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], token );
       }
       elseif token.txt == '[' or token.txt == '[@' {
          exp = self.analyzeListConst( token );
@@ -1467,7 +1480,8 @@ fn TransUnit.analyzeExp(
       elseif token.txt == "(" {
          exp = self.analyzeExp( false );
          self.checkNextToken( ")" );
-         exp = new Ast.ExpParenNode( firstToken.pos, exp.$expTypeList, exp );
+         exp = Ast.ExpParenNode.create(
+            self.nodeManager, firstToken.pos, exp.$expTypeList, exp );
          exp = self.analyzeExpCont( firstToken, exp, false );
       }
    }
@@ -1514,7 +1528,8 @@ fn TransUnit.analyzeExp(
       self.checkMatchValType( exp.$pos, initTypeInfo, argList,
                               exp.$expType.$itemTypeInfoList );
 
-      exp = new Ast.ExpNewNode( firstToken.pos, exp.$expTypeList, exp, argList );
+      exp = Ast.ExpNewNode.create(
+         self.nodeManager, firstToken.pos, exp.$expTypeList, exp, argList );
       exp = self.analyzeExpCont( firstToken, exp, false );
    }
 
@@ -1595,19 +1610,21 @@ fn TransUnit.analyzeExp(
             }
          }
 
-         exp = new Ast.ExpOp1Node(
-            firstToken.pos, [ typeInfo ], token, self.macroMode, exp );
+         exp = Ast.ExpOp1Node.create(
+            self.nodeManager, firstToken.pos, [ typeInfo ], token, self.macroMode, exp );
          return self.analyzeExpOp2( firstToken, exp, prevOpLevel );
       }
    }
 
    if token.kind == Parser.TokenKind.Int {
-      exp = new Ast.LiteralIntNode( firstToken.pos, [ Ast.builtinTypeInt ],
-                                    token, tonumber( token.txt )@@int );
+      exp = Ast.LiteralIntNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
+         token, tonumber( token.txt )@@int );
    }
    elseif token.kind == Parser.TokenKind.Real {
-      exp = new Ast.LiteralRealNode( firstToken.pos, [ Ast.builtinTypeReal ],
-                                     token, tonumber( token.txt ) );
+      exp = Ast.LiteralRealNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeReal ],
+         token, tonumber( token.txt ) );
    }
    elseif token.kind == Parser.TokenKind.Char {
       let mut num = 0;
@@ -1617,7 +1634,8 @@ fn TransUnit.analyzeExp(
       else {
          num = unwrap quotedChar2Code[ token.txt.sub( 2, 2 ) ];
       }
-      exp = new Ast.LiteralCharNode( firstToken.pos, [ Ast.builtinTypeChar ], token, num );
+      exp = Ast.LiteralCharNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeChar ], token, num );
    }
    elseif token.kind == Parser.TokenKind.Str {
       let mut nextToken = self.getToken();
@@ -1631,8 +1649,9 @@ fn TransUnit.analyzeExp(
          self.checkToken( nextToken, ")" );
          nextToken = self.getToken();
       }
-      exp = new Ast.LiteralStringNode(
-         firstToken.pos, [ Ast.builtinTypeString ], token, formatArgList );
+      exp = Ast.LiteralStringNode.create(
+         self.nodeManager, firstToken.pos,
+         [ Ast.builtinTypeString ], token, formatArgList );
       token = nextToken;
       if token.txt == "[" or token.txt == "$[" {
          exp = self.analyzeExpRefItem( token, exp, token.txt == "$[" );
@@ -1655,19 +1674,21 @@ fn TransUnit.analyzeExp(
       let! symbolTypeInfo = Ast.sym2builtInTypeMap[ token.txt ] {
          self.error( "unknown type -- %s" ( token.txt ) );
       };
-      exp = new Ast.ExpRefNode(
-         firstToken.pos, [ Ast.builtinTypeNone ], token,
+      exp = Ast.ExpRefNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], token,
          new Ast.AccessSymbolInfo( symbolTypeInfo, nil, false ) );
    }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" )
    {  
-      exp = new Ast.LiteralBoolNode( firstToken.pos, [ Ast.builtinTypeBool ], token );
+      exp = Ast.LiteralBoolNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeBool ], token );
    }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "nil" or token.txt == "null" )
    {
-      exp = new Ast.LiteralNilNode( firstToken.pos, [ Ast.builtinTypeNil ] );
+      exp = Ast.LiteralNilNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNil ] );
    }
 
    if exp.$kind == Ast.nodeKindNone {

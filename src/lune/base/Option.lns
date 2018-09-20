@@ -33,11 +33,12 @@ pub enum ModeKind {
    Ast = "ast",
    Diag = "diag",
    Complete = "comp",
-   lua = "lua",
+   Lua = "lua",
    LuaMeta = "LUA",
    Save = "save",
    SaveMeta = "SAVE",
    Exec = "exe",
+   Glue = "glue",
 }
 
 pub class Option {
@@ -122,7 +123,7 @@ usage: [-prof] src.lns mode [mode-option]
                         unwrap lineNo, unwrap column );
                   }
                }
-               case .Save, .SaveMeta {
+               case .Save, .SaveMeta, .Glue {
                   option.outputDir = arg;
                }
                default {

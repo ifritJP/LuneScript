@@ -759,7 +759,7 @@ pub override fn convFilter.processDeclEnum(
    
    let typeInfo = node.$expType@@Ast.EnumTypeInfo;
 
-   if typeInfo.$accessMode ~= .Pri {
+   if typeInfo.$accessMode == .Pub {
       self.pubEnumId2EnumTypeInfo[ typeInfo.$typeId ] = typeInfo;
    }
 

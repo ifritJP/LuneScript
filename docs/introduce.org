@@ -1067,6 +1067,69 @@ Test test = new Test( 10 );
 print( test.$val );  -- 10
 #+END_SRC
 
+**** advertise
+
+LuneScript は、
+メンバのメソッドを自分のメソッドとして透過的に利用することが出来る。
+
+次の例で説明する。
+
+#+BEGIN_SRC lns
+class Hoge {
+   pub fn func() {
+      print( "Hoge.func()" );
+   }
+}
+class Foo {
+   pri let hoge:Hoge;
+   pub fn __init() {
+      self.hoge = new Hoge();
+   }
+   advertise hoge;
+}
+let foo = new Foo();
+foo.func(); // Hoge.func()
+#+END_SRC
+
+上の例では、クラス Foo はメンバに Hoge クラスの hoge を持つ。
+そしてクラス Foo は、メンバ hoge を advertise している。
+これによって、クラス Foo は Hoge クラスのメソッド func() を持つことになり、
+foo.func() を実行すると、内部的に Foo.hoge.func() が実行される。
+
+なお advertise は、advertise しているクラスに同名のメソッドがある場合、
+そちらのメソッドを優先する。
+
+例えば次の例では、クラス Hoge はメソッド func1(), func2() を持ち、
+クラス Foo はメソッド func1() を持つ。
+この場合、クラス Foo のメソッド func1() が優先される。
+
+#+BEGIN_SRC lns
+class Hoge {
+   pub fn func1() {
+      print( "Hoge.func1()" );
+   }
+   pub fn func2() {
+      print( "Hoge.func2()" );
+   }
+}
+class Foo {
+   pri let hoge:Hoge;
+   pub fn __init() {
+      self.hoge = new Hoge();
+   }
+   pub fn func1() {
+      print( "Foo.func1()" );
+   }
+   advertise hoge;
+}
+let foo = new Foo();
+foo.func1(); // Foo.func()
+foo.func2(); // Hoge.func()
+#+END_SRC
+
+
+
+
 *** 継承
 
 LuneScript は、クラスの継承をサポートする。
@@ -1113,6 +1176,23 @@ class Sub extend Super {
 インタフェースは、メソッドの型だけを宣言可能なクラスである。
 
 メンバを持つことや、メソッドの処理を定義することは出来ない。
+
+次の例は、クラス Test で インタフェース IF をインプリメントしている。
+
+#+BEGIN_SRC lns
+interface IF {
+  pub fn func();
+}
+class Test extend (IF) {
+  pub fn func() {
+     print( "Test.func" );
+  }
+}
+fn sub( obj:IF ) {
+  obj.func();
+}
+sub( new Test() );
+#+END_SRC
 
 *** メソッド 呼び出し
 

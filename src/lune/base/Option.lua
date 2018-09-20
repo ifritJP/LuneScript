@@ -51,8 +51,8 @@ ModeKind.Diag = 'diag'
 ModeKind._val2NameMap['diag'] = 'Diag'
 ModeKind.Complete = 'comp'
 ModeKind._val2NameMap['comp'] = 'Complete'
-ModeKind.lua = 'lua'
-ModeKind._val2NameMap['lua'] = 'lua'
+ModeKind.Lua = 'lua'
+ModeKind._val2NameMap['lua'] = 'Lua'
 ModeKind.LuaMeta = 'LUA'
 ModeKind._val2NameMap['LUA'] = 'LuaMeta'
 ModeKind.Save = 'save'
@@ -61,6 +61,8 @@ ModeKind.SaveMeta = 'SAVE'
 ModeKind._val2NameMap['SAVE'] = 'SaveMeta'
 ModeKind.Exec = 'exe'
 ModeKind._val2NameMap['exe'] = 'Exec'
+ModeKind.Glue = 'glue'
+ModeKind._val2NameMap['glue'] = 'Glue'
 
 local Option = {}
 _moduleObj.Option = Option
@@ -149,7 +151,7 @@ usage: [-prof] src.lns mode [mode-option]
               column = math.floor(tonumber( arg ))
               option.analyzePos = Parser.Position.new(_lune.unwrap( lineNo), _lune.unwrap( column))
             end
-          elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta then
+          elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta or _switchExp == ModeKind.Glue then
             option.outputDir = arg
           else 
           end

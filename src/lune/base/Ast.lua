@@ -1191,6 +1191,10 @@ function NilableTypeInfo:get_scope( ... )
   return self.orgTypeInfo:get_scope( ... )
 end       
 
+function NilableTypeInfo:getFullName( ... )
+  return self.orgTypeInfo:getFullName( ... )
+end       
+
 do
   end
 
@@ -1353,6 +1357,10 @@ end
 
 function ModifierTypeInfo:get_scope( ... )
   return self.srcTypeInfo:get_scope( ... )
+end       
+
+function ModifierTypeInfo:getFullName( ... )
+  return self.srcTypeInfo:getFullName( ... )
 end       
 
 do
@@ -2507,19 +2515,55 @@ local function getNodeKindName( kind )
   return _lune.unwrap( nodeKind2NameMap[kind])
 end
 _moduleObj.getNodeKindName = getNodeKindName
-
--- none
-
-function Filter:processNone( node, ... )
+local NodeManager = {}
+_moduleObj.NodeManager = NodeManager
+function NodeManager.new(  )
+  local obj = {}
+  NodeManager.setmeta( obj )
+  if obj.__init then obj:__init(  ); end
+return obj
 end
+function NodeManager:__init() 
+  self.nodeKind2NodeList = {}
+end
+function NodeManager:getList( kind )
+  return self.nodeKind2NodeList[kind]
+end
+function NodeManager:addNode( node )
+  local list = self.nodeKind2NodeList[node:get_kind()]
+  
+      if  nil == list then
+        local _list = list
+        
+        list = {}
+        self.nodeKind2NodeList[node:get_kind()] = list
+      end
+    
+  table.insert( list, node )
+end
+function NodeManager.setmeta( obj )
+  setmetatable( obj, { __index = NodeManager  } )
+end
+do
+  end
 
--- none
 
 -- none
 
 local nodeKindNone = regKind( [[None]] )
 
 _moduleObj.nodeKindNone = nodeKindNone
+
+function Filter:processNone( node, ... )
+end
+
+-- none
+
+function NodeManager:getNoneNodeList(  )
+  return self:getList( _moduleObj.nodeKindNone )
+end
+
+-- none
 
 local NoneNode = {}
 setmetatable( NoneNode, { __index = Node } )
@@ -2549,6 +2593,12 @@ function NoneNode:__init(pos, typeList)
   -- none
   
 end
+function NoneNode.create( nodeMan, pos, typeList )
+  local node = NoneNode.new(pos, typeList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function NoneNode.setmeta( obj )
   setmetatable( obj, { __index = NoneNode  } )
 end
@@ -2558,16 +2608,20 @@ do
 
 -- none
 
+local nodeKindSubfile = regKind( [[Subfile]] )
+
+_moduleObj.nodeKindSubfile = nodeKindSubfile
+
 function Filter:processSubfile( node, ... )
 end
 
 -- none
 
+function NodeManager:getSubfileNodeList(  )
+  return self:getList( _moduleObj.nodeKindSubfile )
+end
+
 -- none
-
-local nodeKindSubfile = regKind( [[Subfile]] )
-
-_moduleObj.nodeKindSubfile = nodeKindSubfile
 
 local SubfileNode = {}
 setmetatable( SubfileNode, { __index = Node } )
@@ -2597,6 +2651,12 @@ function SubfileNode:__init(pos, typeList)
   -- none
   
 end
+function SubfileNode.create( nodeMan, pos, typeList )
+  local node = SubfileNode.new(pos, typeList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function SubfileNode.setmeta( obj )
   setmetatable( obj, { __index = SubfileNode  } )
 end
@@ -2606,16 +2666,20 @@ do
 
 -- none
 
+local nodeKindImport = regKind( [[Import]] )
+
+_moduleObj.nodeKindImport = nodeKindImport
+
 function Filter:processImport( node, ... )
 end
 
 -- none
 
+function NodeManager:getImportNodeList(  )
+  return self:getList( _moduleObj.nodeKindImport )
+end
+
 -- none
-
-local nodeKindImport = regKind( [[Import]] )
-
-_moduleObj.nodeKindImport = nodeKindImport
 
 local ImportNode = {}
 setmetatable( ImportNode, { __index = Node } )
@@ -2646,6 +2710,12 @@ function ImportNode:__init(pos, typeList, modulePath, moduleTypeInfo)
   self.moduleTypeInfo = moduleTypeInfo
   -- none
   
+end
+function ImportNode.create( nodeMan, pos, typeList, modulePath, moduleTypeInfo )
+  local node = ImportNode.new(pos, typeList, modulePath, moduleTypeInfo)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function ImportNode.setmeta( obj )
   setmetatable( obj, { __index = ImportNode  } )
@@ -2720,18 +2790,37 @@ end
 do
   end
 
--- none
-
-function Filter:processRoot( node, ... )
+function TypeInfo:getFullName( importInfo )
+  local typeInfo = self
+  
+  local name = typeInfo:get_rawTxt()
+  
+  while not importInfo[typeInfo] do
+    typeInfo = typeInfo:get_parentInfo()
+    if typeInfo == _moduleObj.headTypeInfo then
+      break
+    end
+    name = typeInfo:get_rawTxt() .. "." .. name
+  end
+  return name
 end
-
--- none
 
 -- none
 
 local nodeKindRoot = regKind( [[Root]] )
 
 _moduleObj.nodeKindRoot = nodeKindRoot
+
+function Filter:processRoot( node, ... )
+end
+
+-- none
+
+function NodeManager:getRootNodeList(  )
+  return self:getList( _moduleObj.nodeKindRoot )
+end
+
+-- none
 
 local RootNode = {}
 setmetatable( RootNode, { __index = Node } )
@@ -2747,13 +2836,13 @@ end
 function RootNode:canBeLeft(  )
   return false
 end
-function RootNode.new( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, importModule2moduleInfo, typeId2ClassMap )
+function RootNode.new( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
   local obj = {}
   RootNode.setmeta( obj )
-  if obj.__init then obj:__init( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, importModule2moduleInfo, typeId2ClassMap ); end
+  if obj.__init then obj:__init( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap ); end
 return obj
 end
-function RootNode:__init(pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, importModule2moduleInfo, typeId2ClassMap) 
+function RootNode:__init(pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap) 
   Node.__init( self, _moduleObj.nodeKindRoot, pos, typeList)
   
   -- none
@@ -2762,10 +2851,17 @@ function RootNode:__init(pos, typeList, children, moduleTypeInfo, provideNode, l
   self.moduleTypeInfo = moduleTypeInfo
   self.provideNode = provideNode
   self.luneHelperInfo = luneHelperInfo
+  self.nodeManager = nodeManager
   self.importModule2moduleInfo = importModule2moduleInfo
   self.typeId2ClassMap = typeId2ClassMap
   -- none
   
+end
+function RootNode.create( nodeMan, pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
+  local node = RootNode.new(pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function RootNode.setmeta( obj )
   setmetatable( obj, { __index = RootNode  } )
@@ -2781,6 +2877,9 @@ function RootNode:get_provideNode()
 end
 function RootNode:get_luneHelperInfo()       
   return self.luneHelperInfo         
+end
+function RootNode:get_nodeManager()       
+  return self.nodeManager         
 end
 function RootNode:get_importModule2moduleInfo()       
   return self.importModule2moduleInfo         
@@ -2798,16 +2897,20 @@ end
 
 -- none
 
+local nodeKindRefType = regKind( [[RefType]] )
+
+_moduleObj.nodeKindRefType = nodeKindRefType
+
 function Filter:processRefType( node, ... )
 end
 
 -- none
 
+function NodeManager:getRefTypeNodeList(  )
+  return self:getList( _moduleObj.nodeKindRefType )
+end
+
 -- none
-
-local nodeKindRefType = regKind( [[RefType]] )
-
-_moduleObj.nodeKindRefType = nodeKindRefType
 
 local RefTypeNode = {}
 setmetatable( RefTypeNode, { __index = Node } )
@@ -2840,6 +2943,12 @@ function RefTypeNode:__init(pos, typeList, name, refFlag, mutFlag, array)
   self.array = array
   -- none
   
+end
+function RefTypeNode.create( nodeMan, pos, typeList, name, refFlag, mutFlag, array )
+  local node = RefTypeNode.new(pos, typeList, name, refFlag, mutFlag, array)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function RefTypeNode.setmeta( obj )
   setmetatable( obj, { __index = RefTypeNode  } )
@@ -2912,16 +3021,20 @@ BlockKind._val2NameMap[15] = 'IfUnwrap'
 
 -- none
 
+local nodeKindBlock = regKind( [[Block]] )
+
+_moduleObj.nodeKindBlock = nodeKindBlock
+
 function Filter:processBlock( node, ... )
 end
 
 -- none
 
+function NodeManager:getBlockNodeList(  )
+  return self:getList( _moduleObj.nodeKindBlock )
+end
+
 -- none
-
-local nodeKindBlock = regKind( [[Block]] )
-
-_moduleObj.nodeKindBlock = nodeKindBlock
 
 local BlockNode = {}
 setmetatable( BlockNode, { __index = Node } )
@@ -2952,6 +3065,12 @@ function BlockNode:__init(pos, typeList, blockKind, stmtList)
   self.stmtList = stmtList
   -- none
   
+end
+function BlockNode.create( nodeMan, pos, typeList, blockKind, stmtList )
+  local node = BlockNode.new(pos, typeList, blockKind, stmtList)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function BlockNode.setmeta( obj )
   setmetatable( obj, { __index = BlockNode  } )
@@ -2999,16 +3118,20 @@ do
 
 -- none
 
+local nodeKindIf = regKind( [[If]] )
+
+_moduleObj.nodeKindIf = nodeKindIf
+
 function Filter:processIf( node, ... )
 end
 
 -- none
 
+function NodeManager:getIfNodeList(  )
+  return self:getList( _moduleObj.nodeKindIf )
+end
+
 -- none
-
-local nodeKindIf = regKind( [[If]] )
-
-_moduleObj.nodeKindIf = nodeKindIf
 
 local IfNode = {}
 setmetatable( IfNode, { __index = Node } )
@@ -3039,6 +3162,12 @@ function IfNode:__init(pos, typeList, stmtList)
   -- none
   
 end
+function IfNode.create( nodeMan, pos, typeList, stmtList )
+  local node = IfNode.new(pos, typeList, stmtList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function IfNode.setmeta( obj )
   setmetatable( obj, { __index = IfNode  } )
 end
@@ -3051,16 +3180,20 @@ do
 
 -- none
 
+local nodeKindExpList = regKind( [[ExpList]] )
+
+_moduleObj.nodeKindExpList = nodeKindExpList
+
 function Filter:processExpList( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpListNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpList )
+end
+
 -- none
-
-local nodeKindExpList = regKind( [[ExpList]] )
-
-_moduleObj.nodeKindExpList = nodeKindExpList
 
 local ExpListNode = {}
 setmetatable( ExpListNode, { __index = Node } )
@@ -3084,6 +3217,12 @@ function ExpListNode:__init(pos, typeList, expList)
   self.expList = expList
   -- none
   
+end
+function ExpListNode.create( nodeMan, pos, typeList, expList )
+  local node = ExpListNode.new(pos, typeList, expList)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function ExpListNode.setmeta( obj )
   setmetatable( obj, { __index = ExpListNode  } )
@@ -3142,16 +3281,20 @@ do
 
 -- none
 
+local nodeKindSwitch = regKind( [[Switch]] )
+
+_moduleObj.nodeKindSwitch = nodeKindSwitch
+
 function Filter:processSwitch( node, ... )
 end
 
 -- none
 
+function NodeManager:getSwitchNodeList(  )
+  return self:getList( _moduleObj.nodeKindSwitch )
+end
+
 -- none
-
-local nodeKindSwitch = regKind( [[Switch]] )
-
-_moduleObj.nodeKindSwitch = nodeKindSwitch
 
 local SwitchNode = {}
 setmetatable( SwitchNode, { __index = Node } )
@@ -3184,6 +3327,12 @@ function SwitchNode:__init(pos, typeList, exp, caseList, default)
   -- none
   
 end
+function SwitchNode.create( nodeMan, pos, typeList, exp, caseList, default )
+  local node = SwitchNode.new(pos, typeList, exp, caseList, default)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function SwitchNode.setmeta( obj )
   setmetatable( obj, { __index = SwitchNode  } )
 end
@@ -3202,16 +3351,20 @@ do
 
 -- none
 
+local nodeKindWhile = regKind( [[While]] )
+
+_moduleObj.nodeKindWhile = nodeKindWhile
+
 function Filter:processWhile( node, ... )
 end
 
 -- none
 
+function NodeManager:getWhileNodeList(  )
+  return self:getList( _moduleObj.nodeKindWhile )
+end
+
 -- none
-
-local nodeKindWhile = regKind( [[While]] )
-
-_moduleObj.nodeKindWhile = nodeKindWhile
 
 local WhileNode = {}
 setmetatable( WhileNode, { __index = Node } )
@@ -3243,6 +3396,12 @@ function WhileNode:__init(pos, typeList, exp, block)
   -- none
   
 end
+function WhileNode.create( nodeMan, pos, typeList, exp, block )
+  local node = WhileNode.new(pos, typeList, exp, block)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function WhileNode.setmeta( obj )
   setmetatable( obj, { __index = WhileNode  } )
 end
@@ -3258,16 +3417,20 @@ do
 
 -- none
 
+local nodeKindRepeat = regKind( [[Repeat]] )
+
+_moduleObj.nodeKindRepeat = nodeKindRepeat
+
 function Filter:processRepeat( node, ... )
 end
 
 -- none
 
+function NodeManager:getRepeatNodeList(  )
+  return self:getList( _moduleObj.nodeKindRepeat )
+end
+
 -- none
-
-local nodeKindRepeat = regKind( [[Repeat]] )
-
-_moduleObj.nodeKindRepeat = nodeKindRepeat
 
 local RepeatNode = {}
 setmetatable( RepeatNode, { __index = Node } )
@@ -3299,6 +3462,12 @@ function RepeatNode:__init(pos, typeList, block, exp)
   -- none
   
 end
+function RepeatNode.create( nodeMan, pos, typeList, block, exp )
+  local node = RepeatNode.new(pos, typeList, block, exp)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function RepeatNode.setmeta( obj )
   setmetatable( obj, { __index = RepeatNode  } )
 end
@@ -3314,16 +3483,20 @@ do
 
 -- none
 
+local nodeKindFor = regKind( [[For]] )
+
+_moduleObj.nodeKindFor = nodeKindFor
+
 function Filter:processFor( node, ... )
 end
 
 -- none
 
+function NodeManager:getForNodeList(  )
+  return self:getList( _moduleObj.nodeKindFor )
+end
+
 -- none
-
-local nodeKindFor = regKind( [[For]] )
-
-_moduleObj.nodeKindFor = nodeKindFor
 
 local ForNode = {}
 setmetatable( ForNode, { __index = Node } )
@@ -3358,6 +3531,12 @@ function ForNode:__init(pos, typeList, block, val, init, to, delta)
   -- none
   
 end
+function ForNode.create( nodeMan, pos, typeList, block, val, init, to, delta )
+  local node = ForNode.new(pos, typeList, block, val, init, to, delta)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ForNode.setmeta( obj )
   setmetatable( obj, { __index = ForNode  } )
 end
@@ -3382,16 +3561,20 @@ do
 
 -- none
 
+local nodeKindApply = regKind( [[Apply]] )
+
+_moduleObj.nodeKindApply = nodeKindApply
+
 function Filter:processApply( node, ... )
 end
 
 -- none
 
+function NodeManager:getApplyNodeList(  )
+  return self:getList( _moduleObj.nodeKindApply )
+end
+
 -- none
-
-local nodeKindApply = regKind( [[Apply]] )
-
-_moduleObj.nodeKindApply = nodeKindApply
 
 local ApplyNode = {}
 setmetatable( ApplyNode, { __index = Node } )
@@ -3424,6 +3607,12 @@ function ApplyNode:__init(pos, typeList, varList, exp, block)
   -- none
   
 end
+function ApplyNode.create( nodeMan, pos, typeList, varList, exp, block )
+  local node = ApplyNode.new(pos, typeList, varList, exp, block)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ApplyNode.setmeta( obj )
   setmetatable( obj, { __index = ApplyNode  } )
 end
@@ -3442,16 +3631,20 @@ do
 
 -- none
 
+local nodeKindForeach = regKind( [[Foreach]] )
+
+_moduleObj.nodeKindForeach = nodeKindForeach
+
 function Filter:processForeach( node, ... )
 end
 
 -- none
 
+function NodeManager:getForeachNodeList(  )
+  return self:getList( _moduleObj.nodeKindForeach )
+end
+
 -- none
-
-local nodeKindForeach = regKind( [[Foreach]] )
-
-_moduleObj.nodeKindForeach = nodeKindForeach
 
 local ForeachNode = {}
 setmetatable( ForeachNode, { __index = Node } )
@@ -3485,6 +3678,12 @@ function ForeachNode:__init(pos, typeList, val, key, exp, block)
   -- none
   
 end
+function ForeachNode.create( nodeMan, pos, typeList, val, key, exp, block )
+  local node = ForeachNode.new(pos, typeList, val, key, exp, block)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ForeachNode.setmeta( obj )
   setmetatable( obj, { __index = ForeachNode  } )
 end
@@ -3506,16 +3705,20 @@ do
 
 -- none
 
+local nodeKindForsort = regKind( [[Forsort]] )
+
+_moduleObj.nodeKindForsort = nodeKindForsort
+
 function Filter:processForsort( node, ... )
 end
 
 -- none
 
+function NodeManager:getForsortNodeList(  )
+  return self:getList( _moduleObj.nodeKindForsort )
+end
+
 -- none
-
-local nodeKindForsort = regKind( [[Forsort]] )
-
-_moduleObj.nodeKindForsort = nodeKindForsort
 
 local ForsortNode = {}
 setmetatable( ForsortNode, { __index = Node } )
@@ -3550,6 +3753,12 @@ function ForsortNode:__init(pos, typeList, val, key, exp, block, sort)
   -- none
   
 end
+function ForsortNode.create( nodeMan, pos, typeList, val, key, exp, block, sort )
+  local node = ForsortNode.new(pos, typeList, val, key, exp, block, sort)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ForsortNode.setmeta( obj )
   setmetatable( obj, { __index = ForsortNode  } )
 end
@@ -3574,16 +3783,20 @@ do
 
 -- none
 
+local nodeKindReturn = regKind( [[Return]] )
+
+_moduleObj.nodeKindReturn = nodeKindReturn
+
 function Filter:processReturn( node, ... )
 end
 
 -- none
 
+function NodeManager:getReturnNodeList(  )
+  return self:getList( _moduleObj.nodeKindReturn )
+end
+
 -- none
-
-local nodeKindReturn = regKind( [[Return]] )
-
-_moduleObj.nodeKindReturn = nodeKindReturn
 
 local ReturnNode = {}
 setmetatable( ReturnNode, { __index = Node } )
@@ -3614,6 +3827,12 @@ function ReturnNode:__init(pos, typeList, expList)
   -- none
   
 end
+function ReturnNode.create( nodeMan, pos, typeList, expList )
+  local node = ReturnNode.new(pos, typeList, expList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ReturnNode.setmeta( obj )
   setmetatable( obj, { __index = ReturnNode  } )
 end
@@ -3626,16 +3845,20 @@ do
 
 -- none
 
+local nodeKindBreak = regKind( [[Break]] )
+
+_moduleObj.nodeKindBreak = nodeKindBreak
+
 function Filter:processBreak( node, ... )
 end
 
 -- none
 
+function NodeManager:getBreakNodeList(  )
+  return self:getList( _moduleObj.nodeKindBreak )
+end
+
 -- none
-
-local nodeKindBreak = regKind( [[Break]] )
-
-_moduleObj.nodeKindBreak = nodeKindBreak
 
 local BreakNode = {}
 setmetatable( BreakNode, { __index = Node } )
@@ -3665,6 +3888,12 @@ function BreakNode:__init(pos, typeList)
   -- none
   
 end
+function BreakNode.create( nodeMan, pos, typeList )
+  local node = BreakNode.new(pos, typeList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function BreakNode.setmeta( obj )
   setmetatable( obj, { __index = BreakNode  } )
 end
@@ -3674,16 +3903,20 @@ do
 
 -- none
 
+local nodeKindProvide = regKind( [[Provide]] )
+
+_moduleObj.nodeKindProvide = nodeKindProvide
+
 function Filter:processProvide( node, ... )
 end
 
 -- none
 
+function NodeManager:getProvideNodeList(  )
+  return self:getList( _moduleObj.nodeKindProvide )
+end
+
 -- none
-
-local nodeKindProvide = regKind( [[Provide]] )
-
-_moduleObj.nodeKindProvide = nodeKindProvide
 
 local ProvideNode = {}
 setmetatable( ProvideNode, { __index = Node } )
@@ -3714,6 +3947,12 @@ function ProvideNode:__init(pos, typeList, val)
   -- none
   
 end
+function ProvideNode.create( nodeMan, pos, typeList, val )
+  local node = ProvideNode.new(pos, typeList, val)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ProvideNode.setmeta( obj )
   setmetatable( obj, { __index = ProvideNode  } )
 end
@@ -3726,16 +3965,20 @@ do
 
 -- none
 
+local nodeKindExpNew = regKind( [[ExpNew]] )
+
+_moduleObj.nodeKindExpNew = nodeKindExpNew
+
 function Filter:processExpNew( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpNewNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpNew )
+end
+
 -- none
-
-local nodeKindExpNew = regKind( [[ExpNew]] )
-
-_moduleObj.nodeKindExpNew = nodeKindExpNew
 
 local ExpNewNode = {}
 setmetatable( ExpNewNode, { __index = Node } )
@@ -3767,6 +4010,12 @@ function ExpNewNode:__init(pos, typeList, symbol, argList)
   -- none
   
 end
+function ExpNewNode.create( nodeMan, pos, typeList, symbol, argList )
+  local node = ExpNewNode.new(pos, typeList, symbol, argList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpNewNode.setmeta( obj )
   setmetatable( obj, { __index = ExpNewNode  } )
 end
@@ -3782,16 +4031,20 @@ do
 
 -- none
 
+local nodeKindExpUnwrap = regKind( [[ExpUnwrap]] )
+
+_moduleObj.nodeKindExpUnwrap = nodeKindExpUnwrap
+
 function Filter:processExpUnwrap( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpUnwrapNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpUnwrap )
+end
+
 -- none
-
-local nodeKindExpUnwrap = regKind( [[ExpUnwrap]] )
-
-_moduleObj.nodeKindExpUnwrap = nodeKindExpUnwrap
 
 local ExpUnwrapNode = {}
 setmetatable( ExpUnwrapNode, { __index = Node } )
@@ -3823,6 +4076,12 @@ function ExpUnwrapNode:__init(pos, typeList, exp, default)
   -- none
   
 end
+function ExpUnwrapNode.create( nodeMan, pos, typeList, exp, default )
+  local node = ExpUnwrapNode.new(pos, typeList, exp, default)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = ExpUnwrapNode  } )
 end
@@ -3838,16 +4097,20 @@ do
 
 -- none
 
+local nodeKindExpRef = regKind( [[ExpRef]] )
+
+_moduleObj.nodeKindExpRef = nodeKindExpRef
+
 function Filter:processExpRef( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpRefNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpRef )
+end
+
 -- none
-
-local nodeKindExpRef = regKind( [[ExpRef]] )
-
-_moduleObj.nodeKindExpRef = nodeKindExpRef
 
 local ExpRefNode = {}
 setmetatable( ExpRefNode, { __index = Node } )
@@ -3873,6 +4136,12 @@ function ExpRefNode:__init(pos, typeList, token, symbolInfo)
   -- none
   
 end
+function ExpRefNode.create( nodeMan, pos, typeList, token, symbolInfo )
+  local node = ExpRefNode.new(pos, typeList, token, symbolInfo)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpRefNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefNode  } )
 end
@@ -3896,16 +4165,20 @@ end
 
 -- none
 
+local nodeKindExpOp2 = regKind( [[ExpOp2]] )
+
+_moduleObj.nodeKindExpOp2 = nodeKindExpOp2
+
 function Filter:processExpOp2( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpOp2NodeList(  )
+  return self:getList( _moduleObj.nodeKindExpOp2 )
+end
+
 -- none
-
-local nodeKindExpOp2 = regKind( [[ExpOp2]] )
-
-_moduleObj.nodeKindExpOp2 = nodeKindExpOp2
 
 local ExpOp2Node = {}
 setmetatable( ExpOp2Node, { __index = Node } )
@@ -3938,6 +4211,12 @@ function ExpOp2Node:__init(pos, typeList, op, exp1, exp2)
   -- none
   
 end
+function ExpOp2Node.create( nodeMan, pos, typeList, op, exp1, exp2 )
+  local node = ExpOp2Node.new(pos, typeList, op, exp1, exp2)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpOp2Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp2Node  } )
 end
@@ -3956,16 +4235,20 @@ do
 
 -- none
 
+local nodeKindUnwrapSet = regKind( [[UnwrapSet]] )
+
+_moduleObj.nodeKindUnwrapSet = nodeKindUnwrapSet
+
 function Filter:processUnwrapSet( node, ... )
 end
 
 -- none
 
+function NodeManager:getUnwrapSetNodeList(  )
+  return self:getList( _moduleObj.nodeKindUnwrapSet )
+end
+
 -- none
-
-local nodeKindUnwrapSet = regKind( [[UnwrapSet]] )
-
-_moduleObj.nodeKindUnwrapSet = nodeKindUnwrapSet
 
 local UnwrapSetNode = {}
 setmetatable( UnwrapSetNode, { __index = Node } )
@@ -3998,6 +4281,12 @@ function UnwrapSetNode:__init(pos, typeList, dstExpList, srcExpList, unwrapBlock
   -- none
   
 end
+function UnwrapSetNode.create( nodeMan, pos, typeList, dstExpList, srcExpList, unwrapBlock )
+  local node = UnwrapSetNode.new(pos, typeList, dstExpList, srcExpList, unwrapBlock)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function UnwrapSetNode.setmeta( obj )
   setmetatable( obj, { __index = UnwrapSetNode  } )
 end
@@ -4016,16 +4305,20 @@ do
 
 -- none
 
+local nodeKindIfUnwrap = regKind( [[IfUnwrap]] )
+
+_moduleObj.nodeKindIfUnwrap = nodeKindIfUnwrap
+
 function Filter:processIfUnwrap( node, ... )
 end
 
 -- none
 
+function NodeManager:getIfUnwrapNodeList(  )
+  return self:getList( _moduleObj.nodeKindIfUnwrap )
+end
+
 -- none
-
-local nodeKindIfUnwrap = regKind( [[IfUnwrap]] )
-
-_moduleObj.nodeKindIfUnwrap = nodeKindIfUnwrap
 
 local IfUnwrapNode = {}
 setmetatable( IfUnwrapNode, { __index = Node } )
@@ -4059,6 +4352,12 @@ function IfUnwrapNode:__init(pos, typeList, varNameList, expNodeList, block, nil
   -- none
   
 end
+function IfUnwrapNode.create( nodeMan, pos, typeList, varNameList, expNodeList, block, nilBlock )
+  local node = IfUnwrapNode.new(pos, typeList, varNameList, expNodeList, block, nilBlock)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function IfUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = IfUnwrapNode  } )
 end
@@ -4080,16 +4379,20 @@ do
 
 -- none
 
+local nodeKindExpCast = regKind( [[ExpCast]] )
+
+_moduleObj.nodeKindExpCast = nodeKindExpCast
+
 function Filter:processExpCast( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpCastNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpCast )
+end
+
 -- none
-
-local nodeKindExpCast = regKind( [[ExpCast]] )
-
-_moduleObj.nodeKindExpCast = nodeKindExpCast
 
 local ExpCastNode = {}
 setmetatable( ExpCastNode, { __index = Node } )
@@ -4119,6 +4422,12 @@ function ExpCastNode:__init(pos, typeList, exp)
   self.exp = exp
   -- none
   
+end
+function ExpCastNode.create( nodeMan, pos, typeList, exp )
+  local node = ExpCastNode.new(pos, typeList, exp)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function ExpCastNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCastNode  } )
@@ -4156,16 +4465,20 @@ MacroMode._val2NameMap[2] = 'Analyze'
 
 -- none
 
+local nodeKindExpOp1 = regKind( [[ExpOp1]] )
+
+_moduleObj.nodeKindExpOp1 = nodeKindExpOp1
+
 function Filter:processExpOp1( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpOp1NodeList(  )
+  return self:getList( _moduleObj.nodeKindExpOp1 )
+end
+
 -- none
-
-local nodeKindExpOp1 = regKind( [[ExpOp1]] )
-
-_moduleObj.nodeKindExpOp1 = nodeKindExpOp1
 
 local ExpOp1Node = {}
 setmetatable( ExpOp1Node, { __index = Node } )
@@ -4198,6 +4511,12 @@ function ExpOp1Node:__init(pos, typeList, op, macroMode, exp)
   -- none
   
 end
+function ExpOp1Node.create( nodeMan, pos, typeList, op, macroMode, exp )
+  local node = ExpOp1Node.new(pos, typeList, op, macroMode, exp)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpOp1Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp1Node  } )
 end
@@ -4216,16 +4535,20 @@ do
 
 -- none
 
+local nodeKindExpRefItem = regKind( [[ExpRefItem]] )
+
+_moduleObj.nodeKindExpRefItem = nodeKindExpRefItem
+
 function Filter:processExpRefItem( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpRefItemNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpRefItem )
+end
+
 -- none
-
-local nodeKindExpRefItem = regKind( [[ExpRefItem]] )
-
-_moduleObj.nodeKindExpRefItem = nodeKindExpRefItem
 
 local ExpRefItemNode = {}
 setmetatable( ExpRefItemNode, { __index = Node } )
@@ -4256,6 +4579,12 @@ function ExpRefItemNode:__init(pos, typeList, val, nilAccess, symbol, index)
   -- none
   
 end
+function ExpRefItemNode.create( nodeMan, pos, typeList, val, nilAccess, symbol, index )
+  local node = ExpRefItemNode.new(pos, typeList, val, nilAccess, symbol, index)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpRefItemNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefItemNode  } )
 end
@@ -4284,16 +4613,20 @@ end
 
 -- none
 
+local nodeKindExpCall = regKind( [[ExpCall]] )
+
+_moduleObj.nodeKindExpCall = nodeKindExpCall
+
 function Filter:processExpCall( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpCallNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpCall )
+end
+
 -- none
-
-local nodeKindExpCall = regKind( [[ExpCall]] )
-
-_moduleObj.nodeKindExpCall = nodeKindExpCall
 
 local ExpCallNode = {}
 setmetatable( ExpCallNode, { __index = Node } )
@@ -4326,6 +4659,12 @@ function ExpCallNode:__init(pos, typeList, func, nilAccess, argList)
   -- none
   
 end
+function ExpCallNode.create( nodeMan, pos, typeList, func, nilAccess, argList )
+  local node = ExpCallNode.new(pos, typeList, func, nilAccess, argList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpCallNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallNode  } )
 end
@@ -4344,16 +4683,20 @@ do
 
 -- none
 
+local nodeKindExpDDD = regKind( [[ExpDDD]] )
+
+_moduleObj.nodeKindExpDDD = nodeKindExpDDD
+
 function Filter:processExpDDD( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpDDDNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpDDD )
+end
+
 -- none
-
-local nodeKindExpDDD = regKind( [[ExpDDD]] )
-
-_moduleObj.nodeKindExpDDD = nodeKindExpDDD
 
 local ExpDDDNode = {}
 setmetatable( ExpDDDNode, { __index = Node } )
@@ -4384,6 +4727,12 @@ function ExpDDDNode:__init(pos, typeList, token)
   -- none
   
 end
+function ExpDDDNode.create( nodeMan, pos, typeList, token )
+  local node = ExpDDDNode.new(pos, typeList, token)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpDDDNode.setmeta( obj )
   setmetatable( obj, { __index = ExpDDDNode  } )
 end
@@ -4396,16 +4745,20 @@ do
 
 -- none
 
+local nodeKindExpParen = regKind( [[ExpParen]] )
+
+_moduleObj.nodeKindExpParen = nodeKindExpParen
+
 function Filter:processExpParen( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpParenNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpParen )
+end
+
 -- none
-
-local nodeKindExpParen = regKind( [[ExpParen]] )
-
-_moduleObj.nodeKindExpParen = nodeKindExpParen
 
 local ExpParenNode = {}
 setmetatable( ExpParenNode, { __index = Node } )
@@ -4436,6 +4789,12 @@ function ExpParenNode:__init(pos, typeList, exp)
   -- none
   
 end
+function ExpParenNode.create( nodeMan, pos, typeList, exp )
+  local node = ExpParenNode.new(pos, typeList, exp)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpParenNode.setmeta( obj )
   setmetatable( obj, { __index = ExpParenNode  } )
 end
@@ -4448,16 +4807,20 @@ do
 
 -- none
 
+local nodeKindExpMacroExp = regKind( [[ExpMacroExp]] )
+
+_moduleObj.nodeKindExpMacroExp = nodeKindExpMacroExp
+
 function Filter:processExpMacroExp( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpMacroExpNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpMacroExp )
+end
+
 -- none
-
-local nodeKindExpMacroExp = regKind( [[ExpMacroExp]] )
-
-_moduleObj.nodeKindExpMacroExp = nodeKindExpMacroExp
 
 local ExpMacroExpNode = {}
 setmetatable( ExpMacroExpNode, { __index = Node } )
@@ -4488,6 +4851,12 @@ function ExpMacroExpNode:__init(pos, typeList, stmtList)
   -- none
   
 end
+function ExpMacroExpNode.create( nodeMan, pos, typeList, stmtList )
+  local node = ExpMacroExpNode.new(pos, typeList, stmtList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpMacroExpNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroExpNode  } )
 end
@@ -4500,16 +4869,20 @@ do
 
 -- none
 
+local nodeKindExpMacroStat = regKind( [[ExpMacroStat]] )
+
+_moduleObj.nodeKindExpMacroStat = nodeKindExpMacroStat
+
 function Filter:processExpMacroStat( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpMacroStatNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpMacroStat )
+end
+
 -- none
-
-local nodeKindExpMacroStat = regKind( [[ExpMacroStat]] )
-
-_moduleObj.nodeKindExpMacroStat = nodeKindExpMacroStat
 
 local ExpMacroStatNode = {}
 setmetatable( ExpMacroStatNode, { __index = Node } )
@@ -4540,6 +4913,12 @@ function ExpMacroStatNode:__init(pos, typeList, expStrList)
   -- none
   
 end
+function ExpMacroStatNode.create( nodeMan, pos, typeList, expStrList )
+  local node = ExpMacroStatNode.new(pos, typeList, expStrList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpMacroStatNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatNode  } )
 end
@@ -4552,16 +4931,20 @@ do
 
 -- none
 
+local nodeKindStmtExp = regKind( [[StmtExp]] )
+
+_moduleObj.nodeKindStmtExp = nodeKindStmtExp
+
 function Filter:processStmtExp( node, ... )
 end
 
 -- none
 
+function NodeManager:getStmtExpNodeList(  )
+  return self:getList( _moduleObj.nodeKindStmtExp )
+end
+
 -- none
-
-local nodeKindStmtExp = regKind( [[StmtExp]] )
-
-_moduleObj.nodeKindStmtExp = nodeKindStmtExp
 
 local StmtExpNode = {}
 setmetatable( StmtExpNode, { __index = Node } )
@@ -4592,6 +4975,12 @@ function StmtExpNode:__init(pos, typeList, exp)
   -- none
   
 end
+function StmtExpNode.create( nodeMan, pos, typeList, exp )
+  local node = StmtExpNode.new(pos, typeList, exp)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function StmtExpNode.setmeta( obj )
   setmetatable( obj, { __index = StmtExpNode  } )
 end
@@ -4604,16 +4993,20 @@ do
 
 -- none
 
+local nodeKindExpOmitEnum = regKind( [[ExpOmitEnum]] )
+
+_moduleObj.nodeKindExpOmitEnum = nodeKindExpOmitEnum
+
 function Filter:processExpOmitEnum( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpOmitEnumNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpOmitEnum )
+end
+
 -- none
-
-local nodeKindExpOmitEnum = regKind( [[ExpOmitEnum]] )
-
-_moduleObj.nodeKindExpOmitEnum = nodeKindExpOmitEnum
 
 local ExpOmitEnumNode = {}
 setmetatable( ExpOmitEnumNode, { __index = Node } )
@@ -4645,6 +5038,12 @@ function ExpOmitEnumNode:__init(pos, typeList, valToken, enumTypeInfo)
   -- none
   
 end
+function ExpOmitEnumNode.create( nodeMan, pos, typeList, valToken, enumTypeInfo )
+  local node = ExpOmitEnumNode.new(pos, typeList, valToken, enumTypeInfo)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpOmitEnumNode.setmeta( obj )
   setmetatable( obj, { __index = ExpOmitEnumNode  } )
 end
@@ -4660,16 +5059,20 @@ do
 
 -- none
 
+local nodeKindRefField = regKind( [[RefField]] )
+
+_moduleObj.nodeKindRefField = nodeKindRefField
+
 function Filter:processRefField( node, ... )
 end
 
 -- none
 
+function NodeManager:getRefFieldNodeList(  )
+  return self:getList( _moduleObj.nodeKindRefField )
+end
+
 -- none
-
-local nodeKindRefField = regKind( [[RefField]] )
-
-_moduleObj.nodeKindRefField = nodeKindRefField
 
 local RefFieldNode = {}
 setmetatable( RefFieldNode, { __index = Node } )
@@ -4699,6 +5102,12 @@ function RefFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
   self.prefix = prefix
   -- none
   
+end
+function RefFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAccess, prefix )
+  local node = RefFieldNode.new(pos, typeList, field, symbolInfo, nilAccess, prefix)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function RefFieldNode.setmeta( obj )
   setmetatable( obj, { __index = RefFieldNode  } )
@@ -4733,16 +5142,20 @@ end
 
 -- none
 
+local nodeKindGetField = regKind( [[GetField]] )
+
+_moduleObj.nodeKindGetField = nodeKindGetField
+
 function Filter:processGetField( node, ... )
 end
 
 -- none
 
+function NodeManager:getGetFieldNodeList(  )
+  return self:getList( _moduleObj.nodeKindGetField )
+end
+
 -- none
-
-local nodeKindGetField = regKind( [[GetField]] )
-
-_moduleObj.nodeKindGetField = nodeKindGetField
 
 local GetFieldNode = {}
 setmetatable( GetFieldNode, { __index = Node } )
@@ -4773,6 +5186,12 @@ function GetFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
   self.getterTypeInfo = getterTypeInfo
   -- none
   
+end
+function GetFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
+  local node = GetFieldNode.new(pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function GetFieldNode.setmeta( obj )
   setmetatable( obj, { __index = GetFieldNode  } )
@@ -4865,16 +5284,20 @@ DeclVarMode._val2NameMap[2] = 'Unwrap'
 
 -- none
 
+local nodeKindDeclVar = regKind( [[DeclVar]] )
+
+_moduleObj.nodeKindDeclVar = nodeKindDeclVar
+
 function Filter:processDeclVar( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclVarNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclVar )
+end
+
 -- none
-
-local nodeKindDeclVar = regKind( [[DeclVar]] )
-
-_moduleObj.nodeKindDeclVar = nodeKindDeclVar
 
 local DeclVarNode = {}
 setmetatable( DeclVarNode, { __index = Node } )
@@ -4915,6 +5338,12 @@ function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList
   self.syncBlock = syncBlock
   -- none
   
+end
+function DeclVarNode.create( nodeMan, pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+  local node = DeclVarNode.new(pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function DeclVarNode.setmeta( obj )
   setmetatable( obj, { __index = DeclVarNode  } )
@@ -5008,16 +5437,20 @@ do
 
 -- none
 
+local nodeKindDeclFunc = regKind( [[DeclFunc]] )
+
+_moduleObj.nodeKindDeclFunc = nodeKindDeclFunc
+
 function Filter:processDeclFunc( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclFuncNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclFunc )
+end
+
 -- none
-
-local nodeKindDeclFunc = regKind( [[DeclFunc]] )
-
-_moduleObj.nodeKindDeclFunc = nodeKindDeclFunc
 
 local DeclFuncNode = {}
 setmetatable( DeclFuncNode, { __index = Node } )
@@ -5048,6 +5481,12 @@ function DeclFuncNode:__init(pos, typeList, declInfo)
   -- none
   
 end
+function DeclFuncNode.create( nodeMan, pos, typeList, declInfo )
+  local node = DeclFuncNode.new(pos, typeList, declInfo)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclFuncNode.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncNode  } )
 end
@@ -5060,16 +5499,20 @@ do
 
 -- none
 
+local nodeKindDeclMethod = regKind( [[DeclMethod]] )
+
+_moduleObj.nodeKindDeclMethod = nodeKindDeclMethod
+
 function Filter:processDeclMethod( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclMethodNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclMethod )
+end
+
 -- none
-
-local nodeKindDeclMethod = regKind( [[DeclMethod]] )
-
-_moduleObj.nodeKindDeclMethod = nodeKindDeclMethod
 
 local DeclMethodNode = {}
 setmetatable( DeclMethodNode, { __index = Node } )
@@ -5100,6 +5543,12 @@ function DeclMethodNode:__init(pos, typeList, declInfo)
   -- none
   
 end
+function DeclMethodNode.create( nodeMan, pos, typeList, declInfo )
+  local node = DeclMethodNode.new(pos, typeList, declInfo)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclMethodNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMethodNode  } )
 end
@@ -5112,16 +5561,20 @@ do
 
 -- none
 
+local nodeKindDeclConstr = regKind( [[DeclConstr]] )
+
+_moduleObj.nodeKindDeclConstr = nodeKindDeclConstr
+
 function Filter:processDeclConstr( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclConstrNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclConstr )
+end
+
 -- none
-
-local nodeKindDeclConstr = regKind( [[DeclConstr]] )
-
-_moduleObj.nodeKindDeclConstr = nodeKindDeclConstr
 
 local DeclConstrNode = {}
 setmetatable( DeclConstrNode, { __index = Node } )
@@ -5152,6 +5605,12 @@ function DeclConstrNode:__init(pos, typeList, declInfo)
   -- none
   
 end
+function DeclConstrNode.create( nodeMan, pos, typeList, declInfo )
+  local node = DeclConstrNode.new(pos, typeList, declInfo)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclConstrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclConstrNode  } )
 end
@@ -5164,16 +5623,20 @@ do
 
 -- none
 
+local nodeKindDeclDestr = regKind( [[DeclDestr]] )
+
+_moduleObj.nodeKindDeclDestr = nodeKindDeclDestr
+
 function Filter:processDeclDestr( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclDestrNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclDestr )
+end
+
 -- none
-
-local nodeKindDeclDestr = regKind( [[DeclDestr]] )
-
-_moduleObj.nodeKindDeclDestr = nodeKindDeclDestr
 
 local DeclDestrNode = {}
 setmetatable( DeclDestrNode, { __index = Node } )
@@ -5204,6 +5667,12 @@ function DeclDestrNode:__init(pos, typeList, declInfo)
   -- none
   
 end
+function DeclDestrNode.create( nodeMan, pos, typeList, declInfo )
+  local node = DeclDestrNode.new(pos, typeList, declInfo)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclDestrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclDestrNode  } )
 end
@@ -5216,16 +5685,20 @@ do
 
 -- none
 
+local nodeKindExpCallSuper = regKind( [[ExpCallSuper]] )
+
+_moduleObj.nodeKindExpCallSuper = nodeKindExpCallSuper
+
 function Filter:processExpCallSuper( node, ... )
 end
 
 -- none
 
+function NodeManager:getExpCallSuperNodeList(  )
+  return self:getList( _moduleObj.nodeKindExpCallSuper )
+end
+
 -- none
-
-local nodeKindExpCallSuper = regKind( [[ExpCallSuper]] )
-
-_moduleObj.nodeKindExpCallSuper = nodeKindExpCallSuper
 
 local ExpCallSuperNode = {}
 setmetatable( ExpCallSuperNode, { __index = Node } )
@@ -5257,6 +5730,12 @@ function ExpCallSuperNode:__init(pos, typeList, superType, expList)
   -- none
   
 end
+function ExpCallSuperNode.create( nodeMan, pos, typeList, superType, expList )
+  local node = ExpCallSuperNode.new(pos, typeList, superType, expList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function ExpCallSuperNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallSuperNode  } )
 end
@@ -5272,16 +5751,20 @@ do
 
 -- none
 
+local nodeKindDeclMember = regKind( [[DeclMember]] )
+
+_moduleObj.nodeKindDeclMember = nodeKindDeclMember
+
 function Filter:processDeclMember( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclMemberNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclMember )
+end
+
 -- none
-
-local nodeKindDeclMember = regKind( [[DeclMember]] )
-
-_moduleObj.nodeKindDeclMember = nodeKindDeclMember
 
 local DeclMemberNode = {}
 setmetatable( DeclMemberNode, { __index = Node } )
@@ -5319,6 +5802,12 @@ function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticF
   -- none
   
 end
+function DeclMemberNode.create( nodeMan, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
+  local node = DeclMemberNode.new(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclMemberNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMemberNode  } )
 end
@@ -5352,16 +5841,20 @@ do
 
 -- none
 
+local nodeKindDeclArg = regKind( [[DeclArg]] )
+
+_moduleObj.nodeKindDeclArg = nodeKindDeclArg
+
 function Filter:processDeclArg( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclArgNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclArg )
+end
+
 -- none
-
-local nodeKindDeclArg = regKind( [[DeclArg]] )
-
-_moduleObj.nodeKindDeclArg = nodeKindDeclArg
 
 local DeclArgNode = {}
 setmetatable( DeclArgNode, { __index = Node } )
@@ -5393,6 +5886,12 @@ function DeclArgNode:__init(pos, typeList, name, argType)
   -- none
   
 end
+function DeclArgNode.create( nodeMan, pos, typeList, name, argType )
+  local node = DeclArgNode.new(pos, typeList, name, argType)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclArgNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgNode  } )
 end
@@ -5408,16 +5907,20 @@ do
 
 -- none
 
+local nodeKindDeclArgDDD = regKind( [[DeclArgDDD]] )
+
+_moduleObj.nodeKindDeclArgDDD = nodeKindDeclArgDDD
+
 function Filter:processDeclArgDDD( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclArgDDDNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclArgDDD )
+end
+
 -- none
-
-local nodeKindDeclArgDDD = regKind( [[DeclArgDDD]] )
-
-_moduleObj.nodeKindDeclArgDDD = nodeKindDeclArgDDD
 
 local DeclArgDDDNode = {}
 setmetatable( DeclArgDDDNode, { __index = Node } )
@@ -5446,6 +5949,12 @@ function DeclArgDDDNode:__init(pos, typeList)
   
   -- none
   
+end
+function DeclArgDDDNode.create( nodeMan, pos, typeList )
+  local node = DeclArgDDDNode.new(pos, typeList)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function DeclArgDDDNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgDDDNode  } )
@@ -5485,16 +5994,20 @@ do
 
 -- none
 
+local nodeKindDeclClass = regKind( [[DeclClass]] )
+
+_moduleObj.nodeKindDeclClass = nodeKindDeclClass
+
 function Filter:processDeclClass( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclClassNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclClass )
+end
+
 -- none
-
-local nodeKindDeclClass = regKind( [[DeclClass]] )
-
-_moduleObj.nodeKindDeclClass = nodeKindDeclClass
 
 local DeclClassNode = {}
 setmetatable( DeclClassNode, { __index = Node } )
@@ -5510,19 +6023,20 @@ end
 function DeclClassNode:canBeLeft(  )
   return false
 end
-function DeclClassNode.new( pos, typeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
+function DeclClassNode.new( pos, typeList, accessMode, name, gluePrefix, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
   local obj = {}
   DeclClassNode.setmeta( obj )
-  if obj.__init then obj:__init( pos, typeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet ); end
+  if obj.__init then obj:__init( pos, typeList, accessMode, name, gluePrefix, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet ); end
 return obj
 end
-function DeclClassNode:__init(pos, typeList, accessMode, name, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
+function DeclClassNode:__init(pos, typeList, accessMode, name, gluePrefix, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
   Node.__init( self, _moduleObj.nodeKindDeclClass, pos, typeList)
   
   -- none
   
   self.accessMode = accessMode
   self.name = name
+  self.gluePrefix = gluePrefix
   self.fieldList = fieldList
   self.moduleName = moduleName
   self.memberList = memberList
@@ -5534,6 +6048,12 @@ function DeclClassNode:__init(pos, typeList, accessMode, name, fieldList, module
   -- none
   
 end
+function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePrefix, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
+  local node = DeclClassNode.new(pos, typeList, accessMode, name, gluePrefix, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclClassNode.setmeta( obj )
   setmetatable( obj, { __index = DeclClassNode  } )
 end
@@ -5542,6 +6062,9 @@ function DeclClassNode:get_accessMode()
 end
 function DeclClassNode:get_name()       
   return self.name         
+end
+function DeclClassNode:get_gluePrefix()       
+  return self.gluePrefix         
 end
 function DeclClassNode:get_fieldList()       
   return self.fieldList         
@@ -5573,16 +6096,20 @@ do
 
 -- none
 
+local nodeKindDeclEnum = regKind( [[DeclEnum]] )
+
+_moduleObj.nodeKindDeclEnum = nodeKindDeclEnum
+
 function Filter:processDeclEnum( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclEnumNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclEnum )
+end
+
 -- none
-
-local nodeKindDeclEnum = regKind( [[DeclEnum]] )
-
-_moduleObj.nodeKindDeclEnum = nodeKindDeclEnum
 
 local DeclEnumNode = {}
 setmetatable( DeclEnumNode, { __index = Node } )
@@ -5616,6 +6143,12 @@ function DeclEnumNode:__init(pos, typeList, accessMode, name, valueNameList, sco
   -- none
   
 end
+function DeclEnumNode.create( nodeMan, pos, typeList, accessMode, name, valueNameList, scope )
+  local node = DeclEnumNode.new(pos, typeList, accessMode, name, valueNameList, scope)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function DeclEnumNode.setmeta( obj )
   setmetatable( obj, { __index = DeclEnumNode  } )
 end
@@ -5637,16 +6170,20 @@ do
 
 -- none
 
+local nodeKindDeclMacro = regKind( [[DeclMacro]] )
+
+_moduleObj.nodeKindDeclMacro = nodeKindDeclMacro
+
 function Filter:processDeclMacro( node, ... )
 end
 
 -- none
 
+function NodeManager:getDeclMacroNodeList(  )
+  return self:getList( _moduleObj.nodeKindDeclMacro )
+end
+
 -- none
-
-local nodeKindDeclMacro = regKind( [[DeclMacro]] )
-
-_moduleObj.nodeKindDeclMacro = nodeKindDeclMacro
 
 local DeclMacroNode = {}
 setmetatable( DeclMacroNode, { __index = Node } )
@@ -5676,6 +6213,12 @@ function DeclMacroNode:__init(pos, typeList, declInfo)
   self.declInfo = declInfo
   -- none
   
+end
+function DeclMacroNode.create( nodeMan, pos, typeList, declInfo )
+  local node = DeclMacroNode.new(pos, typeList, declInfo)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function DeclMacroNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMacroNode  } )
@@ -5709,16 +6252,20 @@ do
 
 -- none
 
+local nodeKindLiteralNil = regKind( [[LiteralNil]] )
+
+_moduleObj.nodeKindLiteralNil = nodeKindLiteralNil
+
 function Filter:processLiteralNil( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralNilNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralNil )
+end
+
 -- none
-
-local nodeKindLiteralNil = regKind( [[LiteralNil]] )
-
-_moduleObj.nodeKindLiteralNil = nodeKindLiteralNil
 
 local LiteralNilNode = {}
 setmetatable( LiteralNilNode, { __index = Node } )
@@ -5748,6 +6295,12 @@ function LiteralNilNode:__init(pos, typeList)
   -- none
   
 end
+function LiteralNilNode.create( nodeMan, pos, typeList )
+  local node = LiteralNilNode.new(pos, typeList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralNilNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
 end
@@ -5757,16 +6310,20 @@ do
 
 -- none
 
+local nodeKindLiteralChar = regKind( [[LiteralChar]] )
+
+_moduleObj.nodeKindLiteralChar = nodeKindLiteralChar
+
 function Filter:processLiteralChar( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralCharNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralChar )
+end
+
 -- none
-
-local nodeKindLiteralChar = regKind( [[LiteralChar]] )
-
-_moduleObj.nodeKindLiteralChar = nodeKindLiteralChar
 
 local LiteralCharNode = {}
 setmetatable( LiteralCharNode, { __index = Node } )
@@ -5798,6 +6355,12 @@ function LiteralCharNode:__init(pos, typeList, token, num)
   -- none
   
 end
+function LiteralCharNode.create( nodeMan, pos, typeList, token, num )
+  local node = LiteralCharNode.new(pos, typeList, token, num)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralCharNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralCharNode  } )
 end
@@ -5813,16 +6376,20 @@ do
 
 -- none
 
+local nodeKindLiteralInt = regKind( [[LiteralInt]] )
+
+_moduleObj.nodeKindLiteralInt = nodeKindLiteralInt
+
 function Filter:processLiteralInt( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralIntNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralInt )
+end
+
 -- none
-
-local nodeKindLiteralInt = regKind( [[LiteralInt]] )
-
-_moduleObj.nodeKindLiteralInt = nodeKindLiteralInt
 
 local LiteralIntNode = {}
 setmetatable( LiteralIntNode, { __index = Node } )
@@ -5854,6 +6421,12 @@ function LiteralIntNode:__init(pos, typeList, token, num)
   -- none
   
 end
+function LiteralIntNode.create( nodeMan, pos, typeList, token, num )
+  local node = LiteralIntNode.new(pos, typeList, token, num)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralIntNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralIntNode  } )
 end
@@ -5869,16 +6442,20 @@ do
 
 -- none
 
+local nodeKindLiteralReal = regKind( [[LiteralReal]] )
+
+_moduleObj.nodeKindLiteralReal = nodeKindLiteralReal
+
 function Filter:processLiteralReal( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralRealNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralReal )
+end
+
 -- none
-
-local nodeKindLiteralReal = regKind( [[LiteralReal]] )
-
-_moduleObj.nodeKindLiteralReal = nodeKindLiteralReal
 
 local LiteralRealNode = {}
 setmetatable( LiteralRealNode, { __index = Node } )
@@ -5910,6 +6487,12 @@ function LiteralRealNode:__init(pos, typeList, token, num)
   -- none
   
 end
+function LiteralRealNode.create( nodeMan, pos, typeList, token, num )
+  local node = LiteralRealNode.new(pos, typeList, token, num)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralRealNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralRealNode  } )
 end
@@ -5925,16 +6508,20 @@ do
 
 -- none
 
+local nodeKindLiteralArray = regKind( [[LiteralArray]] )
+
+_moduleObj.nodeKindLiteralArray = nodeKindLiteralArray
+
 function Filter:processLiteralArray( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralArrayNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralArray )
+end
+
 -- none
-
-local nodeKindLiteralArray = regKind( [[LiteralArray]] )
-
-_moduleObj.nodeKindLiteralArray = nodeKindLiteralArray
 
 local LiteralArrayNode = {}
 setmetatable( LiteralArrayNode, { __index = Node } )
@@ -5965,6 +6552,12 @@ function LiteralArrayNode:__init(pos, typeList, expList)
   -- none
   
 end
+function LiteralArrayNode.create( nodeMan, pos, typeList, expList )
+  local node = LiteralArrayNode.new(pos, typeList, expList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralArrayNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralArrayNode  } )
 end
@@ -5977,16 +6570,20 @@ do
 
 -- none
 
+local nodeKindLiteralList = regKind( [[LiteralList]] )
+
+_moduleObj.nodeKindLiteralList = nodeKindLiteralList
+
 function Filter:processLiteralList( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralListNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralList )
+end
+
 -- none
-
-local nodeKindLiteralList = regKind( [[LiteralList]] )
-
-_moduleObj.nodeKindLiteralList = nodeKindLiteralList
 
 local LiteralListNode = {}
 setmetatable( LiteralListNode, { __index = Node } )
@@ -6016,6 +6613,12 @@ function LiteralListNode:__init(pos, typeList, expList)
   self.expList = expList
   -- none
   
+end
+function LiteralListNode.create( nodeMan, pos, typeList, expList )
+  local node = LiteralListNode.new(pos, typeList, expList)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function LiteralListNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralListNode  } )
@@ -6056,16 +6659,20 @@ do
 
 -- none
 
+local nodeKindLiteralMap = regKind( [[LiteralMap]] )
+
+_moduleObj.nodeKindLiteralMap = nodeKindLiteralMap
+
 function Filter:processLiteralMap( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralMapNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralMap )
+end
+
 -- none
-
-local nodeKindLiteralMap = regKind( [[LiteralMap]] )
-
-_moduleObj.nodeKindLiteralMap = nodeKindLiteralMap
 
 local LiteralMapNode = {}
 setmetatable( LiteralMapNode, { __index = Node } )
@@ -6097,6 +6704,12 @@ function LiteralMapNode:__init(pos, typeList, map, pairList)
   -- none
   
 end
+function LiteralMapNode.create( nodeMan, pos, typeList, map, pairList )
+  local node = LiteralMapNode.new(pos, typeList, map, pairList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralMapNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralMapNode  } )
 end
@@ -6112,16 +6725,20 @@ do
 
 -- none
 
+local nodeKindLiteralString = regKind( [[LiteralString]] )
+
+_moduleObj.nodeKindLiteralString = nodeKindLiteralString
+
 function Filter:processLiteralString( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralStringNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralString )
+end
+
 -- none
-
-local nodeKindLiteralString = regKind( [[LiteralString]] )
-
-_moduleObj.nodeKindLiteralString = nodeKindLiteralString
 
 local LiteralStringNode = {}
 setmetatable( LiteralStringNode, { __index = Node } )
@@ -6153,6 +6770,12 @@ function LiteralStringNode:__init(pos, typeList, token, argList)
   -- none
   
 end
+function LiteralStringNode.create( nodeMan, pos, typeList, token, argList )
+  local node = LiteralStringNode.new(pos, typeList, token, argList)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralStringNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralStringNode  } )
 end
@@ -6168,16 +6791,20 @@ do
 
 -- none
 
+local nodeKindLiteralBool = regKind( [[LiteralBool]] )
+
+_moduleObj.nodeKindLiteralBool = nodeKindLiteralBool
+
 function Filter:processLiteralBool( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralBoolNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralBool )
+end
+
 -- none
-
-local nodeKindLiteralBool = regKind( [[LiteralBool]] )
-
-_moduleObj.nodeKindLiteralBool = nodeKindLiteralBool
 
 local LiteralBoolNode = {}
 setmetatable( LiteralBoolNode, { __index = Node } )
@@ -6208,6 +6835,12 @@ function LiteralBoolNode:__init(pos, typeList, token)
   -- none
   
 end
+function LiteralBoolNode.create( nodeMan, pos, typeList, token )
+  local node = LiteralBoolNode.new(pos, typeList, token)
+  
+  nodeMan:addNode( node )
+  return node
+end
 function LiteralBoolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralBoolNode  } )
 end
@@ -6220,16 +6853,20 @@ do
 
 -- none
 
+local nodeKindLiteralSymbol = regKind( [[LiteralSymbol]] )
+
+_moduleObj.nodeKindLiteralSymbol = nodeKindLiteralSymbol
+
 function Filter:processLiteralSymbol( node, ... )
 end
 
 -- none
 
+function NodeManager:getLiteralSymbolNodeList(  )
+  return self:getList( _moduleObj.nodeKindLiteralSymbol )
+end
+
 -- none
-
-local nodeKindLiteralSymbol = regKind( [[LiteralSymbol]] )
-
-_moduleObj.nodeKindLiteralSymbol = nodeKindLiteralSymbol
 
 local LiteralSymbolNode = {}
 setmetatable( LiteralSymbolNode, { __index = Node } )
@@ -6259,6 +6896,12 @@ function LiteralSymbolNode:__init(pos, typeList, token)
   self.token = token
   -- none
   
+end
+function LiteralSymbolNode.create( nodeMan, pos, typeList, token )
+  local node = LiteralSymbolNode.new(pos, typeList, token)
+  
+  nodeMan:addNode( node )
+  return node
 end
 function LiteralSymbolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSymbolNode  } )

@@ -2098,6 +2098,25 @@ pub fn getNodeKindName( kind: int ): str {
 // let nodeKindLiteralBool = regKind( 'LiteralBool' );
 // let nodeKindLiteralSymbol = regKind( 'LiteralSymbol' );
 
+pub class NodeManager {
+   let mut nodeKind2NodeList:Map<int,List<&Node>>;
+
+   pub fn __init() {
+      self.nodeKind2NodeList = {};
+   }
+
+   pub fn getList(kind:int) : &List<&Node>! {
+      return self.nodeKind2NodeList[ kind ];
+   }
+   pub fn addNode(node:&Node) mut {
+      let! mut list = self.nodeKind2NodeList[ node.$kind ] {
+         list = [];
+         self.nodeKind2NodeList[ node.$kind ] = list;
+      };
+      list.insert( node );
+   }
+}
+
 macro _declNodeClass(
    baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
    fieldInfoList:Map<str,str>[] )
@@ -2108,6 +2127,7 @@ macro _declNodeClass(
 
       let mut fieldStatList:stat[] = [];
       let mut argList:stat[] = [];
+      let mut argSymList:stat[] = [];
       let mut initStatList:stat[] = [];
       let mut relateStat:stat[] = [];
       
@@ -2118,6 +2138,7 @@ macro _declNodeClass(
                   pri let mut ,,,varName : ,,,typeName { pub };
                });  
                argList.insert( `{ ,,,varName: ,,,typeName, } );
+               argSymList.insert( `{, ,,,varName } );
                initStatList.insert( `{ self.,,,varName = ,,,varName; } );
             }   
          }  
@@ -2149,19 +2170,29 @@ macro _declNodeClass(
 
       relateStat.insert( `{
          pub fn Filter. ,,,"process%s" (baseName) ( node: &,,_className, ... ) mut {
-         };               
+         };
+         pub fn NodeManager. ,,,"get%sList" (,,,,_className) () : &List<&,,_className>! {
+            return self.getList( ,,_nodeKindSym )@@List<&,,_className> !;
+         }
       } );
       
    }
 
    pub proto class ,,_className extend ,,super;
-   ,,relateStat;
    pub let ,,_nodeKindSym = regKind( ,,baseName );
+   ,,relateStat;
    pub class ,,_className extend ,,super {
       ,,fieldStatList;
-      pub fn __init( pos: &Parser.Position, typeList: &List<&TypeInfo>, ,,argList ) {
+      pro fn __init( pos: &Parser.Position, typeList: &List<&TypeInfo>, ,,argList ) {
          ,,superStat;
          ,,initStatList;
+      }
+      pub static fn create( nodeMan:NodeManager, pos: &Parser.Position,
+                            typeList: &List<&TypeInfo>, ,,argList ) : ,,_className
+      {
+         let mut node = new ,,_className( pos, typeList ,,argSymList );
+         nodeMan.addNode( node );
+         return node;
       }
    }
 }
@@ -2199,11 +2230,25 @@ pub class ModuleInfo {
    }
 }
 
+pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,ModuleInfo> ) : str {
+   let mut typeInfo = self;
+   let mut name = typeInfo.$rawTxt;
+   while not importInfo[ typeInfo ] {
+      typeInfo = typeInfo.$parentInfo;
+      if typeInfo == headTypeInfo {
+         break;
+      }
+      name = typeInfo.$rawTxt .. "." .. name;
+   }
+   return name;
+}
+
 _declNodeClass( "Root", Node, false, false,
                 [ { "children": "List<&Node>" },
                   { "moduleTypeInfo": "&TypeInfo" },
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "LuneHelperInfo" },
+                  { "nodeManager": "NodeManager" },
                   { "importModule2moduleInfo": "Map<&TypeInfo,ModuleInfo>" },
                   { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]
 );
@@ -2557,6 +2602,7 @@ pub class AdvertiseInfo {
 _declNodeClass( "DeclClass", Node, false, false,
                 [ { "accessMode": "AccessMode" },
                   { "name": "&Parser.Token" },
+                  { "gluePrefix": "str!" },
                   { "fieldList": "List<&Node>" },
                   { "moduleName": "&Parser.Token!" },
                   { "memberList": "List<&DeclMemberNode>" },

@@ -1,0 +1,9 @@
+module Test require 'test.glueTest' glue 'hoge_' {
+   pub static fn create(val:int): Test;
+   pub static fn func1( val:int, txt:str, list:int[] ) : int;
+   pub fn func2( val:int ): str;
+}
+
+Test.func1( 10, "abc", [] );
+let age = Test.create( 100 );
+age.func2( 2 );

@@ -97,7 +97,8 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
          }
       }
    }
-   return new Ast.ReturnNode( token.pos, [ Ast.builtinTypeNone ], expList );
+   return Ast.ReturnNode.create(
+      self.nodeManager, token.pos, [ Ast.builtinTypeNone ], expList );
 }
 
 fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
@@ -164,7 +165,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
          self.checkNextToken( ";" );
          // statement = self.createNode(
          //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
-         statement = new Ast.BreakNode( token.pos, [ Ast.builtinTypeNone ] );
+         statement = Ast.BreakNode.create(
+            self.nodeManager, token.pos, [ Ast.builtinTypeNone ] );
       }
       elseif token.txt == "unwrap" {
          statement = self.analyzeUnwrap( token );
@@ -203,7 +205,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
          self.checkToken( nextToken, ";" );
          // statement = self.createNode(
          //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
-         statement = new Ast.StmtExpNode( exp.$pos, [ Ast.builtinTypeNone ], exp );
+         statement = Ast.StmtExpNode.create(
+            self.nodeManager, exp.$pos, [ Ast.builtinTypeNone ], exp );
       }
    }
 

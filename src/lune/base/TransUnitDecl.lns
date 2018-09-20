@@ -117,8 +117,9 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
       typeInfo = self.createModifier( typeInfo, false );
    }
 
-   return new Ast.RefTypeNode( firstToken.pos, [ typeInfo ],
-                               name, refFlag, mutFlag, arrayMode );
+   return Ast.RefTypeNode.create(
+      self.nodeManager, firstToken.pos, [ typeInfo ],
+      name, refFlag, mutFlag, arrayMode );
 }
 
 fn TransUnit.analyzeDeclArgList(
@@ -138,7 +139,8 @@ fn TransUnit.analyzeDeclArgList(
       let mut argName = nextToken;
       if argName.txt == "..." {
          argList.insert( 
-            new Ast.DeclArgDDDNode( argName.pos, [ Ast.builtinTypeDDD ] ) );
+            Ast.DeclArgDDDNode.create(
+               self.nodeManager, argName.pos, [ Ast.builtinTypeDDD ] ) );
          self.scope.addLocalVar(
             false, true, argName.txt, Ast.builtinTypeDDD, false );
       }
@@ -152,8 +154,9 @@ fn TransUnit.analyzeDeclArgList(
 
          self.checkNextToken( ":" );
          let refType = self.analyzeRefType( accessMode, false );
-         let arg = new Ast.DeclArgNode( argName.pos, refType.$expTypeList,
-                                        argName, refType );    
+         let arg = Ast.DeclArgNode.create(
+            self.nodeManager, argName.pos, refType.$expTypeList,
+            argName, refType );    
          
          self.scope.addLocalVar( false, true, argName.txt, refType.$expType, mutable );
          argList.insert( arg );
@@ -237,10 +240,11 @@ pub fn TransUnit.createAST(
 
       let mut luneHelperInfo =
          new Ast.LuneHelperInfo( self.useNilAccess, self.useUnwrapExp );
-      let mut rootNode = new Ast.RootNode(
-         new Parser.Position( 0, 0 ), [ Ast.builtinTypeNone ], children,
-         moduleTypeInfo, nil,     
-         luneHelperInfo, self.importModule2ModuleInfo, self.typeId2ClassMap );
+      let mut rootNode = Ast.RootNode.create(
+         self.nodeManager, new Parser.Position( 0, 0 ),
+         [ Ast.builtinTypeNone ], children,
+         moduleTypeInfo, nil, luneHelperInfo, self.nodeManager,
+         self.importModule2ModuleInfo, self.typeId2ClassMap );
       ast = rootNode;
       if! self.provideNode {
          if lastStatement ~= _exp {
@@ -266,7 +270,7 @@ pub fn TransUnit.createAST(
       }
       Util.err( "has error" );
    }
-   if self.analyzeMode == "diag" or self.analyzeMode == "comp" {
+   if self.analyzeMode == .Diag or self.analyzeMode == .Complete {
       os.exit( 0 );
    }
 
@@ -325,8 +329,8 @@ fn TransUnit.analyzeDeclMacro(
 
 
       self.macroScope = nil;
-      ast = new Ast.BlockNode(
-         firstToken.pos, [ Ast.builtinTypeNone ], .Macro, stmtList );
+      ast = Ast.BlockNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], .Macro, stmtList );
    }
    else {
       self.pushback();
@@ -359,7 +363,8 @@ fn TransUnit.analyzeDeclMacro(
 
 
    let mut declMacroInfo = new Ast.DeclMacroInfo( nameToken, argList, ast, tokenList ) ;
-   let mut node = new Ast.DeclMacroNode( firstToken.pos, [ typeInfo ], declMacroInfo );
+   let mut node = Ast.DeclMacroNode.create(
+      self.nodeManager, firstToken.pos, [ typeInfo ], declMacroInfo );
 
    let macroObj = self.macroEval.eval( node );
 
@@ -574,8 +579,9 @@ fn TransUnit.analyzeDeclEnum(
    self.scope.addEnum( accessMode, name.txt, enumTypeInfo );
 
    
-   return new Ast.DeclEnumNode(
-      firstToken.pos, [ enumTypeInfo ], accessMode, name, valueList, scope );
+   return Ast.DeclEnumNode.create(
+      self.nodeManager, firstToken.pos,
+      [ enumTypeInfo ], accessMode, name, valueList, scope );
 }
 
 
@@ -687,8 +693,8 @@ fn TransUnit.analyzeDeclMember(
       let symbolInfo = self.scope.addMember(
          varName.txt, typeInfo, accessMode, staticFlag, mutable );
 
-      return new Ast.DeclMemberNode(
-         firstToken.pos, [ typeInfo ], varName, refType, symbolInfo,
+      return Ast.DeclMemberNode.create(
+         self.nodeManager, firstToken.pos, [ typeInfo ], varName, refType, symbolInfo,
          staticFlag, accessMode, getterMutable, getterMode, setterMode );
    }
 
@@ -705,7 +711,7 @@ fn TransUnit.analyzeDeclMethod(
 
 fn TransUnit.analyzeClassBody(
    classAccessMode: Ast.AccessMode, firstToken: &Parser.Token,
-   mode:DeclClassMode, classTypeInfo: &Ast.TypeInfo,
+   mode:DeclClassMode, gluePrefix:str!, classTypeInfo: &Ast.TypeInfo,
    name:&Parser.Token, moduleName: &Parser.Token!, mut nextToken:&Parser.Token ) mut :
    Ast.DeclClassNode, &Parser.Token, Map<str,bool>
 {
@@ -716,9 +722,9 @@ fn TransUnit.analyzeClassBody(
    let mut initStmtList:List<&Ast.Node> = [];
    let mut advertiseList:Ast.AdvertiseInfo[] = [];
    let mut trustList:List<&Ast.TypeInfo> = [];
-   let mut node = new Ast.DeclClassNode(
-      firstToken.pos, [ classTypeInfo ],
-      classAccessMode, name, fieldList, moduleName,
+   let mut node = Ast.DeclClassNode.create(
+      self.nodeManager, firstToken.pos, [ classTypeInfo ],
+      classAccessMode, name, gluePrefix, fieldList, moduleName,
       memberList, self.scope, initStmtList, advertiseList, trustList, {} );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
    let mut declCtorNode:Ast.Node! = nil;
@@ -873,9 +879,17 @@ fn TransUnit.analyzeDeclClass(
    let name = self.getSymbolToken();
 
    let mut moduleName: &Parser.Token! = nil;
+   let mut gluePrefix:str! = nil;
    if mode == .Module {
       self.checkNextToken( "require" );
       moduleName = self.getToken();
+      let nextToken = self.getToken();
+      if nextToken.txt == "glue" {
+         gluePrefix = self.getToken().getExcludedDelimitTxt();
+      }
+      else {
+         self.pushback();
+      }
    }
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
@@ -884,7 +898,8 @@ fn TransUnit.analyzeDeclClass(
    self.checkToken( nextToken, "{" );
 
    let mut node, workNextToken, mut methodNameSet = self.analyzeClassBody(
-      classAccessMode, firstToken, mode, classTypeInfo, name, moduleName, nextToken );
+      classAccessMode, firstToken, mode, gluePrefix,
+      classTypeInfo, name, moduleName, nextToken );
    nextToken = workNextToken;
    
 
@@ -1105,6 +1120,7 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
+   let orgStaticFlag = staticFlag;
    if moduleFlag {
       // module で Lua の外部モジュールを宣言した場合、
       // モジュール名でメンバにアクセスできるように、
@@ -1247,34 +1263,47 @@ fn TransUnit.analyzeDeclFunc(
 
    
 
-   let mut node:Ast.Node = self.createNoneNode( firstToken.pos );
+   let mut node = self.createNoneNode( firstToken.pos );
+   let mut needNode = false;
+
+   let mut body:Ast.BlockNode! = nil;
    if token.txt == ";" {
-      node = self.createNoneNode( firstToken.pos );
+      if moduleFlag {
+         needNode = true;
+      }
    }
    else {
+      needNode = true;
       if abstructFlag {
          self.addErrMess( token.pos, "abstruct method can't have body." );
       }
       
       self.pushback();
-      let body = self.analyzeBlock( .Func, scope );
+      body = self.analyzeBlock( .Func, scope );
+   }
+
+   if needNode {
       let mut info = new Ast.DeclFuncInfo(
-         classNameToken, name, argList, staticFlag, accessMode,
+         classNameToken, name, argList, orgStaticFlag, accessMode,
          body, retTypeInfoList );
       // node = self.createNode( kind, firstToken.pos, [ typeInfo ], info );
 
       switch ( kind ) {
          case Ast.nodeKindDeclConstr {
-            node = new Ast.DeclConstrNode( firstToken.pos, [ typeInfo ], info );
+            node = Ast.DeclConstrNode.create(
+               self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
          case Ast.nodeKindDeclDestr {
-            node = new Ast.DeclDestrNode( firstToken.pos, [ typeInfo ], info );
+            node = Ast.DeclDestrNode.create(
+               self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
          case Ast.nodeKindDeclMethod {
-            node = new Ast.DeclMethodNode( firstToken.pos, [ typeInfo ], info );
+            node = Ast.DeclMethodNode.create(
+               self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
          case Ast.nodeKindDeclFunc {
-            node = new Ast.DeclFuncNode( firstToken.pos, [ typeInfo ], info );
+            node = Ast.DeclFuncNode.create(
+               self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
          default {
             self.error( "illegal kind -- %d" (kind) );
@@ -1578,8 +1607,8 @@ fn TransUnit.analyzeDeclVar(
 
    self.checkNextToken( ";" );
 
-   let mut node = new Ast.DeclVarNode(
-      firstToken.pos, [ Ast.builtinTypeNone ], mode, accessMode, false,
+   let mut node = Ast.DeclVarNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], mode, accessMode, false,
       varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock,
       thenBlock, syncSymbolList, syncBlock );
 
@@ -1641,7 +1670,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
       self.pushback();
    }
 
-   return new Ast.IfUnwrapNode(
-      firstToken.pos, [ Ast.builtinTypeNone ],
+   return Ast.IfUnwrapNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
       varNameList, expNodeList, block, elseBlock );
 }
