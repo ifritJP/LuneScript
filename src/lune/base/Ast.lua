@@ -3932,23 +3932,23 @@ end
 function ProvideNode:canBeLeft(  )
   return false
 end
-function ProvideNode.new( pos, typeList, val )
+function ProvideNode.new( pos, typeList, symbol )
   local obj = {}
   ProvideNode.setmeta( obj )
-  if obj.__init then obj:__init( pos, typeList, val ); end
+  if obj.__init then obj:__init( pos, typeList, symbol ); end
 return obj
 end
-function ProvideNode:__init(pos, typeList, val) 
+function ProvideNode:__init(pos, typeList, symbol) 
   Node.__init( self, _moduleObj.nodeKindProvide, pos, typeList)
   
   -- none
   
-  self.val = val
+  self.symbol = symbol
   -- none
   
 end
-function ProvideNode.create( nodeMan, pos, typeList, val )
-  local node = ProvideNode.new(pos, typeList, val)
+function ProvideNode.create( nodeMan, pos, typeList, symbol )
+  local node = ProvideNode.new(pos, typeList, symbol)
   
   nodeMan:addNode( node )
   return node
@@ -3956,8 +3956,8 @@ end
 function ProvideNode.setmeta( obj )
   setmetatable( obj, { __index = ProvideNode  } )
 end
-function ProvideNode:get_val()       
-  return self.val         
+function ProvideNode:get_symbol()       
+  return self.symbol         
 end
 do
   end

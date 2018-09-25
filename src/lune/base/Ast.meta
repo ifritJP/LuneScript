@@ -2993,10 +2993,10 @@ _typeInfoList[1338] = { parentId = 1, typeId = 3099, baseId = 1, txt = 'List',
 _typeInfoList[1339] = { parentId = 1, typeId = 3100, nilable = true, orgTypeId = 3099 }
 _typeInfoList[1340] = { parentId = 1, typeId = 3102, srcTypeId = 3099, mutable = false }
 _typeInfoList[1341] = { parentId = 1931, typeId = 3103, baseId = 1, txt = 'create',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1695, 245, 3102, 1576}, retTypeId = {1931}, children = {}, }
+        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1695, 245, 3102, 452}, retTypeId = {1931}, children = {}, }
 _typeInfoList[1342] = { parentId = 1931, typeId = 3104, nilable = true, orgTypeId = 3103 }
-_typeInfoList[1343] = { parentId = 1931, typeId = 3106, baseId = 1, txt = 'get_val',
-        staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1576}, children = {}, }
+_typeInfoList[1343] = { parentId = 1931, typeId = 3106, baseId = 1, txt = 'get_symbol',
+        staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {452}, children = {}, }
 _typeInfoList[1344] = { parentId = 1931, typeId = 3107, nilable = true, orgTypeId = 3106 }
 _typeInfoList[1345] = { parentId = 200, typeId = 3118, baseId = 918, txt = 'ExpNewNode',
         staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {3136, 3146, 3149, 3163, 3166, 3169}, }
@@ -4849,6 +4849,7 @@ _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Parser' ] = { id = 1, use = true }
 _dependModuleMap[ 'lune.base.Util' ] = { id = 2, use = false }
 _moduleObj._moduleTypeId = 200
+_moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----
 return _moduleObj

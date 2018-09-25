@@ -25,13 +25,13 @@ children = {198, } }
 _typeInfoList[2] = { parentId = 196, typeId = 198, txt = 'base', kind = 12, 
 children = {200, } }
 _typeInfoList[3] = { parentId = 198, typeId = 200, txt = 'front', kind = 12, 
-children = {8244, } }
-_typeInfoList[4] = { parentId = 1, typeId = 8241, baseId = 1, txt = 'List',
+children = {8247, } }
+_typeInfoList[4] = { parentId = 1, typeId = 8244, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[5] = { parentId = 1, typeId = 8242, nilable = true, orgTypeId = 8241 }
-_typeInfoList[6] = { parentId = 200, typeId = 8244, baseId = 1, txt = 'exec',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {8241}, retTypeId = {}, children = {}, }
-_typeInfoList[7] = { parentId = 200, typeId = 8245, nilable = true, orgTypeId = 8244 }
+_typeInfoList[5] = { parentId = 1, typeId = 8245, nilable = true, orgTypeId = 8244 }
+_typeInfoList[6] = { parentId = 200, typeId = 8247, baseId = 1, txt = 'exec',
+        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {8244}, retTypeId = {}, children = {}, }
+_typeInfoList[7] = { parentId = 200, typeId = 8248, nilable = true, orgTypeId = 8247 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = false }
@@ -45,6 +45,7 @@ _dependModuleMap[ 'lune.base.dumpNode' ] = { id = 8, use = false }
 _dependModuleMap[ 'lune.base.frontInterface' ] = { id = 9, use = false }
 _dependModuleMap[ 'lune.base.glueFilter' ] = { id = 10, use = false }
 _moduleObj._moduleTypeId = 200
+_moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----
 return _moduleObj

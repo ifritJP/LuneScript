@@ -172,6 +172,7 @@ fn TransUnit.analyzeDeclArgList(
 pub class ASTInfo {
    pri let node: Ast.Node { pub };
    pri let moduleTypeInfo: Ast.TypeInfo { pub };
+   pri let moduleSymbolKind: Ast.SymbolKind { pub };
 }
 
 pub fn TransUnit.createAST(
@@ -182,6 +183,7 @@ pub fn TransUnit.createAST(
    self.registBuiltInScope();
 
    let mut moduleTypeInfo = Ast.headTypeInfo;
+   let mut moduleSymbolKind = Ast.SymbolKind.Typ;
 
    if! moduleName {
       apply txt of string.gmatch( _exp, '[^%.]+' ) {
@@ -251,6 +253,7 @@ pub fn TransUnit.createAST(
             self.addErrMess( _exp.$pos, "'provide' must be last." );
          }
          rootNode.set_provide( _exp );
+         moduleSymbolKind = _exp.$symbol.$kind;
       }
    }
 
@@ -274,7 +277,7 @@ pub fn TransUnit.createAST(
       os.exit( 0 );
    }
 
-   return new ASTInfo( unwrap ast, moduleTypeInfo );
+   return new ASTInfo( unwrap ast, moduleTypeInfo, moduleSymbolKind );
 }
 
 
@@ -1572,8 +1575,8 @@ fn TransUnit.analyzeDeclVar(
 
       // unwrap ブロックに変数を登録
       foreach letVarInfo, index in letVarList {
-         self.scope.addLocalVar(
-            false, true, "_" .. letVarInfo.varName.txt,
+         self.addLocalVar(
+            letVarInfo.varName.pos, false, true, "_" .. letVarInfo.varName.txt,
             orgExpTypeList[ index ], false );
       }
       
@@ -1651,10 +1654,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
 
    foreach expType, index in typeInfoList {
       let varName = varNameList[ index ];
-      if self.scope.getSymbolTypeInfo( varName, self.scope, self.moduleScope ) {
-         self.addErrMess( firstToken.pos, "shadowing variable -- %s" (varName) );
-      }
-      scope.addLocalVar( false, true, varName, expType, false );
+      self.addLocalVar( firstToken.pos, false, true, varName, expType, false );
    }
    
    let block = self.analyzeBlock( .IfUnwrap, scope );

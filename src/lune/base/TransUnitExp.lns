@@ -62,8 +62,8 @@ fn TransUnit.analyzeExpList(
    } token.txt ~= ",";
 
    // 最終ノードが複数の値を持つ場合は、その型を追加する
-   foreach expType, index in expList[ #expList ].$expTypeList {
-      if index ~= 1 {
+   foreach expType, listIndex in expList[ #expList ].$expTypeList {
+      if listIndex ~= 1 {
          expTypeList.insert( expType );
       }
    }

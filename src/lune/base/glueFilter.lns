@@ -50,24 +50,28 @@ fn glueGenerator.outputMethod( classFullName:str, methodNode:&Ast.DeclMethodNode
    }
 }
 
-fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, &Ast.TypeInfo, str {
+fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, str, &Ast.TypeInfo, str {
    let argType = argNode.$expType;
    let mut orgType = (argType.$nilable and argType.$orgTypeInfo or argType).$srcTypeInfo;
    let mut typeTxt = "";
+   let mut nilableTypeTxt = "";
    if orgType == Ast.builtinTypeInt {
       typeTxt = "int";
+      nilableTypeTxt = typeTxt .. " *";
    }
    elseif orgType == Ast.builtinTypeReal {
       typeTxt = "double";
+      nilableTypeTxt = typeTxt .. " *";
    }
    elseif orgType == Ast.builtinTypeString {
       typeTxt = "const char *";
+      nilableTypeTxt = typeTxt;
    }
    let mut argName = "";
    if argNode.$kind == Ast.nodeKindDeclArg {
       argName = (argNode@@Ast.DeclArgNode).$name.txt;
    }
-   return typeTxt, orgType, argName;
+   return typeTxt, argType.$nilable and nilableTypeTxt or typeTxt, orgType, argName;
 }
 
 fn glueGenerator.outputPrototype( node:&Ast.DeclMethodNode ) mut
@@ -85,16 +89,10 @@ fn glueGenerator.outputUserPrototype(
                      (gluePrefix, expType.getTxt() ) );
 
    let declInfo = node.$declInfo;
-   let mut addFlag = true;
    foreach argNode in declInfo.$argList {
-      let typeTxt, argType, argName = self.getArgInfo( argNode );
+      let typeTxt, argTypeTxt, argType, argName = self.getArgInfo( argNode );
       if typeTxt ~= "" {
-         if addFlag {
-            self.writeHeader( ", " );
-         }  
-         addFlag = true;
-         
-         self.writeHeader( "%s %s" ( typeTxt, argName ) );
+         self.writeHeader( ", %s %s" ( argTypeTxt, argName ) );
          if argType == Ast.builtinTypeString {
             self.writeHeader( ", int size_%s" ( argName ) );
          }  
@@ -140,9 +138,10 @@ fn glueGenerator.outputFuncReg(
 fn glueGenerator.outputCommonFunc( moduleSymbolFull:str ) mut
 {
    self.writeHeader(```
+extern int luaopen_%s( lua_State * pLua );
 extern void * lns_glue_get_%s( lua_State * pLua, int index );
 extern void * lns_glue_new_%s( lua_State * pLua, size_t size );
-``` (moduleSymbolFull,moduleSymbolFull) );
+``` (moduleSymbolFull,moduleSymbolFull, moduleSymbolFull) );
    
    self.write( 
    ```
@@ -200,6 +199,15 @@ int luaopen_%s( lua_State * pLua )
 ``` (moduleSymbolFull, moduleSymbolFull, moduleSymbolFull) );
 }
 
+class GlueArgInfo {
+   let index:int {pub};
+   let argName:str {pub};
+   let callArgName:str {pub};
+   let callTxt:str {pub};
+   let setTxt:str {pub};
+   let typeInfo&Ast.TypeInfo {pub};
+}
+
 fn glueGenerator.outputMethod( node:&Ast.DeclMethodNode, gluePrefix:str ) mut {
    let declInfo = node.$declInfo;
    let mut name = "";
@@ -213,40 +221,86 @@ fn glueGenerator.outputMethod( node:&Ast.DeclMethodNode, gluePrefix:str ) mut {
    self.outputPrototype( node );
    self.write( "{\n" );
 
-   let mut callTxtList:str[] = [];
+   let mut glueArgInfoList:GlueArgInfo[] = [];
    foreach argNode, index in declInfo.$argList {
-      let typeTxt, argType, argName = self.getArgInfo( argNode );
-      let addVal = declInfo.$staticFlag and 0 or 1;
+      let typeTxt, argTypeTxt, argType, argName = self.getArgInfo( argNode );
       if typeTxt ~= "" {
+         let addVal = declInfo.$staticFlag and 0 or 1;
+         let mut callArgName = argName;
+
+         self.write( "  %s %s = " ( typeTxt, argName ) );
+
          switch argType {
             case Ast.builtinTypeInt {
-               self.write( 
-                  "  %s %s = luaL_checkinteger( pLua, %d );\n"
-                  ( typeTxt, argName, index + addVal ) );
-               callTxtList.insert( argName );
+               self.write( "0;\n" );
             }
             case Ast.builtinTypeReal {
-               self.write(
-                  "  %s %s = luaL_checknumber( pLua, %d );\n"
-                  ( typeTxt, argName, index + addVal ) );
-               callTxtList.insert( argName );
+               self.write( "0.0;\n" );
+            }
+            case Ast.builtinTypeString {
+               self.write( "NULL;\n" );
+            }
+         }
+         
+         
+         if argNode.$expType.$nilable {
+            if argType ~= Ast.builtinTypeString {
+               callArgName = "_p%s" (argName);
+               self.write( "  %s %s = NULL;\n" ( argTypeTxt, callArgName ) );
+            }
+         }
+
+  // 
+         // }
+
+         let mut setTxt = "";
+         let mut callTxt = "";
+         
+         switch argType {
+            case Ast.builtinTypeInt {
+               setTxt = "  %s = luaL_checkinteger( pLua, %d );\n"
+                        ( argName, index + addVal );
+               callTxt = callArgName;
+            }
+            case Ast.builtinTypeReal {
+               setTxt = "  %s = luaL_checknumber( pLua, %d );\n"
+                        ( argName, index + addVal );
+               callTxt = callArgName;
             }
             case Ast.builtinTypeString {
                self.write(
-                  "  size_t size_%s = 0;\n" ( argName ) ..
-                  "  const char * %s = luaL_checklstring( pLua, %d, &size_%s );\n"
-                  ( argName, index + addVal, argName ) );
-               callTxtList.insert( argName );
-               callTxtList.insert( "size_" .. argName );
+                  "  size_t size_%s = 0;\n" ( argName ) );
+               setTxt = "  %s = luaL_checklstring( pLua, %d, &size_%s );\n"
+                        ( argName,  index + addVal, argName );
+               callTxt = "%s, size_%s" (argName , argName );
             }
          }
+
+         glueArgInfoList.insert(
+            new GlueArgInfo( index + addVal, argName, callArgName,
+                             callTxt, setTxt, argNode.$expType ) );
       }
    }
 
+   foreach glueArgInfo in glueArgInfoList {
+      if glueArgInfo.$typeInfo.$nilable {
+         self.write( '  if ( !lua_isnoneornil( pLua, %d ) ) {\n' (glueArgInfo.$index ) );
+         self.write( '  ' );
+      }
+      self.write( glueArgInfo.$setTxt );
+      if glueArgInfo.$typeInfo.$nilable {
+         if glueArgInfo.$callArgName ~= glueArgInfo.$argName {
+            self.write( '    %s = &%s;\n'
+               (glueArgInfo.$callArgName, glueArgInfo.$argName) );
+         }
+         self.write( '  }\n' );
+      }
+   }
+   
    self.write( "  return %s( pLua" (name) );
-   foreach argTxt, index in callTxtList {
+   foreach glueArgInfo in glueArgInfoList {
       self.write( ", " );
-      self.write( argTxt );
+      self.write( glueArgInfo.$callTxt );
    }
 
    self.write( ");\n" );
@@ -320,13 +374,13 @@ pub override fn glueFilter.processRoot( node: &Ast.RootNode ) mut
       foreach node in nodeList {
          if! let moduleName = node.$moduleName {
             let moduleSymbolName = moduleName.getExcludedDelimitTxt().gsub( "%.", "_" );
-            let mut glue = new glueGenerator(
-               createFile( moduleSymbolName .. "_glue.c" ),
-               createFile( moduleSymbolName .. "_glue.h" ) );
-            
             if! node.$gluePrefix {
+               let mut glue = new glueGenerator(
+                  createFile( moduleSymbolName .. "_glue.c" ),
+                  createFile( moduleSymbolName .. "_glue.h" ) );
+               
                glue.outputClass( moduleSymbolName, node, _exp );
-            }
+            }  
          }
       }
    }

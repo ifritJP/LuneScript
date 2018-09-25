@@ -1,5 +1,6 @@
 import test.Sub2;
 import test.Sub3;
+import test.Sub3_2;
 import test.Sub4;
 
 print( "sub2globalfun", sub2globalfun() );
@@ -13,13 +14,15 @@ enumVal3 = unwrap Sub2.enumTestSub._from( enumVal3 );
    let val = new Sub3( 1 );
    print( "Sub3.func() %d" ( val.func() ));
    print( "Sub4() %d" ( Sub4( 1 ) ));
+
+   print( "Sub3_2: %s" (Sub3_2.func()) );
 }
 
 fn func( val : int) {
     print( "abc%s%s" (val,"ab") );
     print( "%X" ("123"[2]) );
-    forsort val, key in { "C": 3, "A": 1, "B": 2 } {
-	print( key, val );
+    forsort val2, key in { "C": 3, "A": 1, "B": 2 } {
+	print( key, val2 );
     }
 }
 let data : int = 20;

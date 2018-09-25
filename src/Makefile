@@ -15,7 +15,7 @@ help:
 	@echo usage:
 	@echo "  make test-comp"
 	@echo "  make release-check"
-
+	@echo "  make build-glue [LUA_INC_DIR=path]"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -120,7 +120,7 @@ test-error:
 	rm test/error/dis_mutable.lns
 
 test-comp2:
-	$(call exeLune,.,test/start.lns,glue, work/glue 2>&1)
+	$(call exeLune,.,test/start.lns,glue,work/glue 2>&1)
 	$(MAKE) build-glue
 	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
 
@@ -143,7 +143,7 @@ test-comp2:
 	diff -r work/2 work/3
 
 	cp -a test work/3
-	$(call exeLune,work/3,test/glue.lns,glue, ../newglue 2>&1)
+	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 	$(MAKE) build-glue GLUE_DIR=work/newglue
 
 	$(call exeLune,work/3,test/start.lns,ast,)
@@ -166,6 +166,7 @@ test-comp2:
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
 	$(call exeLune,work/3,test/Sub2.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Sub3.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Sub3_2.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Sub4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/simple.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Class1.lns,save,) > /dev/null
@@ -173,7 +174,7 @@ test-comp2:
 	$(call exeLune,work/3,test/Class3.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Class4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/start.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/glue.lns,save,) > /dev/null
+#	$(call exeLune,work/3,test/glue.lns,save,) > /dev/null
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result
 
 

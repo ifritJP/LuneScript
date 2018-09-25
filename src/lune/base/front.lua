@@ -146,7 +146,7 @@ function Front:createAst( path, mod, analyzeModule, analyzeMode, pos )
 end
 
 local function convert( ast, streamName, stream, metaStream, convMode, inMacro )
-  local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo() )
+  local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind() )
   
   ast:get_node():processFilter( conv, nil, 0 )
 end

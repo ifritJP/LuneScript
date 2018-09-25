@@ -2375,7 +2375,7 @@ _declNodeClass( "Return", Node, false, false,
 _declNodeClass( "Break", Node, false, false, [] );
 
 _declNodeClass( "Provide", Node, false, false,
-                [ { "val": "&Node" } ]
+                [ { "symbol": "&SymbolInfo" } ]
 );     
 
 _declNodeClass( "ExpNew", Node, false, true,

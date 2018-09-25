@@ -1,0 +1,11 @@
+pub class Hoge3_2 {
+    pub let val:int;
+    pub fn func(): int {
+        return self.val;
+    }
+    pub static fn test() {
+    }
+}
+
+pub let hoge3_2 = new Hoge3_2( 1 );
+provide hoge3_2;

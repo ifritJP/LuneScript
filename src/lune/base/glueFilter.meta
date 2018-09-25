@@ -3,8 +3,8 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo4232 = {}
-  _typeId2ClassInfoMap[ 4232 ] = _classInfo4232
+  local _classInfo4256 = {}
+  _typeId2ClassInfoMap[ 4256 ] = _classInfo4256
   end
 do
   local _classInfo196 = {}
@@ -328,7 +328,7 @@ children = {198, } }
 _typeInfoList[5] = { parentId = 196, typeId = 198, txt = 'base', kind = 12, 
 children = {200, } }
 _typeInfoList[6] = { parentId = 198, typeId = 200, txt = 'glueFilter', kind = 12, 
-children = {4232, } }
+children = {4256, } }
 _dependIdMap[ 202 ] = { 2, 200 } -- Parser
 _dependIdMap[ 207 ] = { 2, 345 } -- TxtStream
 _dependIdMap[ 208 ] = { 2, 346 } -- TxtStream!
@@ -1582,21 +1582,22 @@ _typeInfoList[722] = { parentId = 1, typeId = 4152, nilable = true, orgTypeId = 
 _typeInfoList[723] = { parentId = 1, typeId = 4154, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {370}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[724] = { parentId = 1, typeId = 4155, nilable = true, orgTypeId = 4154 }
-_typeInfoList[725] = { parentId = 200, typeId = 4232, baseId = 1364, txt = 'glueFilter',
-        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {4236, 4239}, }
-_typeInfoList[726] = { parentId = 200, typeId = 4233, nilable = true, orgTypeId = 4232 }
-_typeInfoList[727] = { parentId = 1, typeId = 4235, srcTypeId = 26, mutable = false }
-_typeInfoList[728] = { parentId = 4232, typeId = 4236, baseId = 1, txt = '__init',
-        staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {4235}, retTypeId = {}, children = {}, }
-_typeInfoList[729] = { parentId = 4232, typeId = 4237, nilable = true, orgTypeId = 4236 }
-_typeInfoList[730] = { parentId = 4232, typeId = 4239, baseId = 1, txt = 'processRoot',
+_typeInfoList[725] = { parentId = 200, typeId = 4256, baseId = 1364, txt = 'glueFilter',
+        staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {4260, 4263}, }
+_typeInfoList[726] = { parentId = 200, typeId = 4257, nilable = true, orgTypeId = 4256 }
+_typeInfoList[727] = { parentId = 1, typeId = 4259, srcTypeId = 26, mutable = false }
+_typeInfoList[728] = { parentId = 4256, typeId = 4260, baseId = 1, txt = '__init',
+        staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {4259}, retTypeId = {}, children = {}, }
+_typeInfoList[729] = { parentId = 4256, typeId = 4261, nilable = true, orgTypeId = 4260 }
+_typeInfoList[730] = { parentId = 4256, typeId = 4263, baseId = 1, txt = 'processRoot',
         staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {1638}, retTypeId = {}, children = {}, }
-_typeInfoList[731] = { parentId = 4232, typeId = 4240, nilable = true, orgTypeId = 4239 }
+_typeInfoList[731] = { parentId = 4256, typeId = 4264, nilable = true, orgTypeId = 4263 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = true }
 _dependModuleMap[ 'lune.base.Parser' ] = { id = 2, use = true }
 _moduleObj._moduleTypeId = 200
+_moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----
 return _moduleObj

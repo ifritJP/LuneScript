@@ -1592,7 +1592,7 @@ _typeInfoList[729] = { parentId = 4213, typeId = 4218, baseId = 1, txt = '_from'
         staticFlag = true, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {223}, retTypeId = {4214}, children = {}, }
 _typeInfoList[730] = { parentId = 4213, typeId = 4219, nilable = true, orgTypeId = 4218 }
 _typeInfoList[731] = { parentId = 200, typeId = 4602, baseId = 1, txt = 'createFilter',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 84, 84, 4213, 13, 370}, retTypeId = {1364}, children = {}, }
+        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25, 84, 84, 4213, 13, 370, 475}, retTypeId = {1364}, children = {}, }
 _typeInfoList[732] = { parentId = 200, typeId = 4603, nilable = true, orgTypeId = 4602 }
 _typeInfoList[733] = { parentId = 200, typeId = 4605, baseId = 1414, txt = 'MacroEvalImp',
         staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {4609, 4613}, }
@@ -1609,6 +1609,7 @@ _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = true }
 _dependModuleMap[ 'lune.base.Parser' ] = { id = 2, use = true }
 _dependModuleMap[ 'lune.base.Util' ] = { id = 3, use = false }
 _moduleObj._moduleTypeId = 200
+_moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----
 return _moduleObj

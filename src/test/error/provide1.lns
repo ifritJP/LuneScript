@@ -1,7 +1,7 @@
 pub class Hoge {
 }
 
-pub let var = 1;
+let var = 1;
 pub let var2 = 1;
 pub let var3 = 1;
 

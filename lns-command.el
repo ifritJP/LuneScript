@@ -47,7 +47,46 @@
   
 (defun lns-command-get-command (&rest args)
   (append (list lns-lua-command "-e" "require( 'lune.base.base' )" " ") args))
-  
-  
+
+
+(defun lns-command-exec (callback async owner-file input outbuf mode op-list)
+  (let ((out-buf (lns-get-buffer (or outbuf "*lns-process*") t))
+	result process)
+    (when (not owner-file)
+      (setq owner-file buffer-file-name))
+    (setq process
+	  (apply 'lns-execute-command
+	   (if async
+	       (lexical-let ((lex-buf out-buf)
+			     (lex-callback callback))
+		 (lambda (process event)
+		   (condition-case err
+		       (let (json)
+			 ;;(setq json (lns-json-get lex-buf :candidateList))
+			 (setq json (lns-complete-from-json lex-buf))
+			 (funcall lex-callback json nil))
+		     (error nil
+			    (funcall lex-callback nil t)))
+		   ))
+	     nil)
+	   out-buf
+	   input
+	   (lns-convert-path-2-proj-relative-path owner-file) mode op-list))
+    (when (not async)
+      (condition-case err
+	  (funcall callback
+		   ;;(lns-json-get out-buf :candidateList) nil)
+		   (lns-complete-from-json out-buf) nil)
+	(error nil
+	       (funcall callback nil t))))
+    process
+    ))
+
+
+(defun lns-command-compile ()
+  (let* ((command-info (lns-command-get-info))
+	 (owner-file (plist-get command-info :owner))
+	 (analyze-module (plist-get command-info :module)))
+    (lns-command-exec (lambda (json result)) nil nil "" nil "save" nil)))
 
 (provide 'lns-command)

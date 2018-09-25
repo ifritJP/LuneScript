@@ -116,7 +116,8 @@ fn convert(
    mut stream:oStream, mut metaStream:oStream, convMode:convLua.ConvMode, inMacro:bool )  
 {
    let mut conv = convLua.createFilter(
-      streamName, stream, metaStream, convMode, inMacro, ast.$moduleTypeInfo );
+      streamName, stream, metaStream,
+      convMode, inMacro, ast.$moduleTypeInfo, ast.$moduleSymbolKind );
    ast.$node.processFilter( conv, nil, 0 );
 }
 
@@ -341,7 +342,7 @@ pub fn Front.exec() mut
 	          luaPath = string.format(
                      "%s/%s.lua", self.option.outputDir, filename );
 	          metaPath = string.format(
-                     "%s/%s.meta", self.option.outputDir, filename );          
+                     "%s/%s.meta", self.option.outputDir, filename );
 	       }
 	       
 	       if luaPath ~= self.option.scriptPath {

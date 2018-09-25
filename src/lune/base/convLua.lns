@@ -69,12 +69,15 @@ class convFilter extend Ast.Filter (oStream) {
    pri let mut needIndent: bool;
    pri let mut macroDepth: int;
    pri let moduleTypeInfo: &Ast.TypeInfo;
+   pri let moduleSymbolKind: Ast.SymbolKind;
 
    
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
-                  convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo )
+                  convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
+                  moduleSymbolKind: Ast.SymbolKind ) 
    {
       //Util.errorLog( "__init: %s" (mode) );
+      self.moduleSymbolKind = moduleSymbolKind;
       self.macroDepth = 0;
       self.streamName = streamName;
       self.stream = stream;
@@ -563,10 +566,14 @@ fn convFilter.outputMeta( node: Ast.RootNode, baseIndent: int ) mut
    }
    
    let mut moduleTypeInfo = self.moduleTypeInfo;
+   let mut moduleSymbolKind = Ast.SymbolKind.Typ;
    if! node.$provideNode {
-      moduleTypeInfo = _exp.$val.$expType;
+      moduleTypeInfo = _exp.$symbol.$typeInfo;
+      moduleSymbolKind = _exp.$symbol.$kind;
    }
    self.writeln( "_moduleObj._moduleTypeId = %d" (moduleTypeInfo.$typeId ),
+                 baseIndent );
+   self.writeln( "_moduleObj._moduleSymbolKind = %d" (moduleSymbolKind),
                  baseIndent );
    self.writeln( "_moduleObj._moduleMutable = %s" (moduleTypeInfo.$mutable ),
                  baseIndent );
@@ -666,7 +673,8 @@ end
 
    if! node.$provideNode {
       self.write( "return " );
-      filter( _exp.$val, self, node, baseIndent );
+      self.write( _exp.$symbol.$name );
+      //filter( _exp.$symbol, self, node, baseIndent );
       self.writeln( "", baseIndent );
    }
    else { 
@@ -823,8 +831,10 @@ pub override fn convFilter.processDeclClass(
    if! node.$moduleName {
       self.writeln(
          string.format( "local %s = require( %s )", className, _exp.txt ), baseIndent );
-      if node.$accessMode ~= .Pri {
-         self.writeln( "_moduleObj.%s = %s" (className, className ), baseIndent );
+      switch node.$accessMode {
+         case .Pub, .Pro {
+            self.writeln( "_moduleObj.%s = %s" (className, className ), baseIndent );
+         }
       }
       return;
    }
@@ -1478,8 +1488,8 @@ pub override fn convFilter.processSwitch(
          self.write( "elseif " );
       }
       let expList = caseInfo.get_expList();
-      foreach expNode, index in expList.get_expList() {
-         if index ~= 1 {
+      foreach expNode, listIndex in expList.get_expList() {
+         if listIndex ~= 1 {
             self.write( " or " );
          }  
 
@@ -2050,10 +2060,11 @@ pub override fn convFilter.processLiteralSymbol(
 
 pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
-   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo ) : Ast.Filter
+   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
+   moduleSymbolKind: &Ast.SymbolKind ) : Ast.Filter
 {
    return new convFilter( streamName, stream, metaStream,
-                          convMode, inMacro, moduleTypeInfo );
+                          convMode, inMacro, moduleTypeInfo, moduleSymbolKind );
 }
 
 
@@ -2064,7 +2075,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
    {   
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", oStream, oStream, .Exec, true, Ast.headTypeInfo );
+         "macro", oStream, oStream, .Exec, true, Ast.headTypeInfo, .Typ );
 
       conv.processDeclMacro( node, node, 0 );
 

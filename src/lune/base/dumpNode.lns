@@ -470,8 +470,7 @@ pub override fn dumpFilter.processReturn(
 pub override fn dumpFilter.processProvide(
    node: &Ast.ProvideNode, prefix: str, depth: int ) mut
 {
-   dump( prefix, depth, node, "" );
-   filter( node.$val,  self, prefix .. "  ", depth + 1 );
+   dump( prefix, depth, node, node.$symbol.$name );
 }
 
 pub override fn dumpFilter.processLiteralList( 

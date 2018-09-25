@@ -72,7 +72,6 @@ local function profile( validTest, func, path )
     return func(  )
   end
   local ProFi = require( 'ProFi' )
-  _moduleObj.ProFi = ProFi
   
   ProFi.start(  )
   local result = func(  )

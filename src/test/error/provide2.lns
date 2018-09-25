@@ -1,4 +1,4 @@
-pub class Hoge {
+class Hoge {
 }
 
 pub class Hoge2 {

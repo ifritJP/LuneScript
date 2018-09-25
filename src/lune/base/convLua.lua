@@ -132,13 +132,14 @@ ConvMode._val2NameMap[2] = 'ConvMeta'
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Filter } )
-function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
+function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind )
   local obj = {}
   convFilter.setmeta( obj )
-  if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo ); end
+  if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind ); end
 return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo) 
+function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind) 
+  self.moduleSymbolKind = moduleSymbolKind
   self.macroDepth = 0
   self.streamName = streamName
   self.stream = stream
@@ -621,15 +622,19 @@ function convFilter:outputMeta( node, baseIndent )
   
   local moduleTypeInfo = self.moduleTypeInfo
   
+  local moduleSymbolKind = Ast.SymbolKind.Typ
+  
   do
     local _exp = node:get_provideNode()
     if _exp ~= nil then
     
-        moduleTypeInfo = _exp:get_val():get_expType()
+        moduleTypeInfo = _exp:get_symbol():get_typeInfo()
+        moduleSymbolKind = _exp:get_symbol():get_kind()
       end
   end
   
   self:writeln( string.format( "_moduleObj._moduleTypeId = %d", moduleTypeInfo:get_typeId()), baseIndent )
+  self:writeln( string.format( "_moduleObj._moduleSymbolKind = %d", moduleSymbolKind), baseIndent )
   self:writeln( string.format( "_moduleObj._moduleMutable = %s", moduleTypeInfo:get_mutable()), baseIndent )
   self:writeln( "----- meta -----", baseIndent )
   if self.stream ~= self.metaStream then
@@ -720,7 +725,7 @@ end
     if _exp ~= nil then
     
         self:write( "return " )
-        filter( _exp:get_val(), self, node, baseIndent )
+        self:write( _exp:get_symbol():get_name() )
         self:writeln( "", baseIndent )
       else
     
@@ -871,9 +876,13 @@ function convFilter:processDeclClass( node, parent, baseIndent )
     if _exp ~= nil then
     
         self:writeln( string.format( "local %s = require( %s )", className, _exp.txt ), baseIndent )
-        if node:get_accessMode() ~= Ast.AccessMode.Pri then
-          self:writeln( string.format( "_moduleObj.%s = %s", className, className), baseIndent )
+        do
+          local _switchExp = node:get_accessMode()
+          if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Pro then
+            self:writeln( string.format( "_moduleObj.%s = %s", className, className), baseIndent )
+          end
         end
+        
         return 
       end
   end
@@ -1509,8 +1518,8 @@ function convFilter:processSwitch( node, parent, baseIndent )
     end
     local expList = caseInfo:get_expList(  )
     
-    for index, expNode in pairs( expList:get_expList(  ) ) do
-      if index ~= 1 then
+    for listIndex, expNode in pairs( expList:get_expList(  ) ) do
+      if listIndex ~= 1 then
         self:write( " or " )
       end
       self:write( "_switchExp == " )
@@ -2098,8 +2107,8 @@ end
 
 -- none
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo )
-  return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo)
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind )
+  return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind)
 end
 _moduleObj.createFilter = createFilter
 local MacroEvalImp = {}
@@ -2108,7 +2117,7 @@ _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:eval( node )
   local oStream = Util.memStream.new()
   
-  local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo)
+  local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ)
   
   conv:processDeclMacro( node, node, 0 )
   local chunk, err = load( oStream:get_txt(  ) )

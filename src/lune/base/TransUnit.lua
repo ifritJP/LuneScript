@@ -339,6 +339,12 @@ end
 -- none
 -- none
 -- none
+function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable )
+  if self.scope:getSymbolTypeInfo( name, self.scope, self.moduleScope ) then
+    self:addErrMess( pos, string.format( "shadowing variable -- %s", name) )
+  end
+  self.scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
+end
 function TransUnit.setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
 end
@@ -439,21 +445,22 @@ _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable, _dependModuleMap, _dependIdMap )
+function _MetaInfo.new( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap )
   local obj = {}
   _MetaInfo.setmeta( obj )
   if obj.__init then
-    obj:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable, _dependModuleMap, _dependIdMap )
+    obj:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap )
   end        
   return obj 
 end         
-function _MetaInfo:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleMutable, _dependModuleMap, _dependIdMap ) 
+function _MetaInfo:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap ) 
 
 self._typeId2ClassInfoMap = _typeId2ClassInfoMap
   self._typeInfoList = _typeInfoList
   self._varName2InfoMap = _varName2InfoMap
   self._funcName2InfoMap = _funcName2InfoMap
   self._moduleTypeId = _moduleTypeId
+  self._moduleSymbolKind = _moduleSymbolKind
   self._moduleMutable = _moduleMutable
   self._dependModuleMap = _dependModuleMap
   self._dependIdMap = _dependIdMap
@@ -1439,7 +1446,9 @@ function TransUnit:analyzeImport( token )
   self.scope = self.moduleScope
   local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo._moduleTypeId])
   
-  self.scope:add( Ast.SymbolKind.Typ, false, false, moduleToken.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo._moduleMutable, true )
+  local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind:_from( metaInfo._moduleSymbolKind ))
+  
+  self.scope:add( moduleSymbolKind, false, false, moduleToken.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo._moduleMutable, true )
   self:checkToken( nextToken, ";" )
   if self.moduleScope ~= self.scope then
     self:error( "illegal top scope." )
@@ -1568,7 +1577,7 @@ function TransUnit:analyzeFor( firstToken )
   if not exp1:get_expType():equals( Ast.builtinTypeInt ) then
     self:addErrMess( exp1:get_pos(), string.format( "exp1 is not int -- %s", exp1:get_expType():getTxt(  )) )
   end
-  self.scope:addLocalVar( false, true, val.txt, exp1:get_expType(), false )
+  self:addLocalVar( exp1:get_pos(), false, true, val.txt, exp1:get_expType(), false )
   self:checkNextToken( "," )
   local exp2 = self:analyzeExp( false )
   
@@ -1615,7 +1624,7 @@ function TransUnit:analyzeApply( token )
     end
     table.insert( varList, var )
     nextToken = self:getToken(  )
-    scope:addLocalVar( false, true, var.txt, Ast.builtinTypeStem, false )
+    self:addLocalVar( var.pos, false, true, var.txt, Ast.builtinTypeStem, false )
   until nextToken.txt ~= ","
   self:checkToken( nextToken, "of" )
   local exp = self:analyzeExp( false )
@@ -1639,15 +1648,15 @@ function TransUnit:analyzeForeach( token, sortFlag )
   local nextToken = Parser.getEofToken(  )
   
   for index = 1, 2 do
-    local sym = self:getToken(  )
+    local symbol = self:getToken(  )
     
-    if sym.kind ~= Parser.TokenKind.Symb then
+    if symbol.kind ~= Parser.TokenKind.Symb then
       self:error( "illegal symbol" )
     end
     if index == 1 then
-      valSymbol = sym
+      valSymbol = symbol
     else 
-      keySymbol = sym
+      keySymbol = symbol
     end
     nextToken = self:getToken(  )
     if nextToken.txt ~= "," then
@@ -1660,12 +1669,12 @@ function TransUnit:analyzeForeach( token, sortFlag )
   local itemTypeInfoList = exp:get_expType():get_itemTypeInfoList(  )
   
   if exp:get_expType():get_kind(  ) == Ast.TypeInfoKind.Map then
-    self.scope:addLocalVar( false, true, valSymbol.txt, itemTypeInfoList[2], false )
+    self:addLocalVar( exp:get_pos(), false, true, valSymbol.txt, itemTypeInfoList[2], false )
     do
       local _exp = keySymbol
       if _exp ~= nil then
       
-          self.scope:addLocalVar( false, true, _exp.txt, itemTypeInfoList[1], false )
+          self:addLocalVar( _exp.pos, false, true, _exp.txt, itemTypeInfoList[1], false )
         end
     end
     
@@ -1675,7 +1684,7 @@ function TransUnit:analyzeForeach( token, sortFlag )
       local _exp = keySymbol
       if _exp ~= nil then
       
-          self.scope:addLocalVar( false, false, _exp.txt, Ast.builtinTypeInt, false )
+          self:addLocalVar( _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, false )
         else
       
           self.scope:addLocalVar( false, false, "__index", Ast.builtinTypeInt, false )
@@ -1696,47 +1705,26 @@ function TransUnit:analyzeForeach( token, sortFlag )
 end
 
 function TransUnit:analyzeProvide( firstToken )
-  local val = self:analyzeExp( true )
+  local token = self:getSymbolToken(  )
+  
+  local symbolNode = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, true )
   
   self:checkNextToken( ";" )
-  do
-    local _switchExp = val:get_kind()
-    if _switchExp == Ast.nodeKindExpRef then
-      local expRefNode = val
-      
-    end
-  end
+  local symbolInfoList = symbolNode:getSymbolInfo(  )
   
-  local node = Ast.ProvideNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, val )
+  if #symbolInfoList ~= 1 then
+    self:error( "'provide' must be symbol." )
+  end
+  local symbolInfo = symbolInfoList[1]
+  
+  local node = Ast.ProvideNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, symbolInfo )
   
   if self.provideNode then
     self:addErrMess( firstToken.pos, "multiple provide" )
   end
   self.provideNode = node
-  if node:get_val():get_kind() == Ast.nodeKindExpRef then
-    local expRefNode = node:get_val()
-    
-    do
-      local __sorted = {}
-      local __map = self.moduleScope:get_symbol2TypeInfoMap()
-      for __key in pairs( __map ) do
-        table.insert( __sorted, __key )
-      end
-      table.sort( __sorted )
-      for __index, symbol in ipairs( __sorted ) do
-        symbolInfo = __map[ symbol ]
-        do
-          if expRefNode:get_symbolInfo():get_symbolId() == symbolInfo:get_symbolId() then
-            if symbolInfo:get_accessMode() ~= Ast.AccessMode.Pub then
-              self:addErrMess( firstToken.pos, string.format( "provide variable must be 'pub'.  -- %s", symbolInfo:get_accessMode()) )
-            end
-          elseif symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
-            self:addErrMess( firstToken.pos, string.format( "variable (%s) can't set 'pub'.", symbolInfo:get_name()) )
-          end
-        end
-      end
-    end
-    
+  if symbolInfo:get_accessMode() ~= Ast.AccessMode.Pub then
+    self:addErrMess( firstToken.pos, string.format( "provide variable must be 'pub'.  -- %s", symbolInfo:get_accessMode()) )
   end
   return node
 end
@@ -1868,24 +1856,28 @@ _moduleObj.ASTInfo = ASTInfo
 function ASTInfo.setmeta( obj )
   setmetatable( obj, { __index = ASTInfo  } )
 end
-function ASTInfo.new( node, moduleTypeInfo )
+function ASTInfo.new( node, moduleTypeInfo, moduleSymbolKind )
   local obj = {}
   ASTInfo.setmeta( obj )
   if obj.__init then
-    obj:__init( node, moduleTypeInfo )
+    obj:__init( node, moduleTypeInfo, moduleSymbolKind )
   end        
   return obj 
 end         
-function ASTInfo:__init( node, moduleTypeInfo ) 
+function ASTInfo:__init( node, moduleTypeInfo, moduleSymbolKind ) 
 
 self.node = node
   self.moduleTypeInfo = moduleTypeInfo
+  self.moduleSymbolKind = moduleSymbolKind
   end
 function ASTInfo:get_node()       
   return self.node         
 end
 function ASTInfo:get_moduleTypeInfo()       
   return self.moduleTypeInfo         
+end
+function ASTInfo:get_moduleSymbolKind()       
+  return self.moduleSymbolKind         
 end
 do
   end
@@ -1894,6 +1886,8 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
   self.moduleName = _lune.unwrapDefault( moduleName, "")
   self:registBuiltInScope(  )
   local moduleTypeInfo = Ast.headTypeInfo
+  
+  local moduleSymbolKind = Ast.SymbolKind.Typ
   
   do
     local _exp = moduleName
@@ -1964,6 +1958,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
             self:addErrMess( _exp:get_pos(), "'provide' must be last." )
           end
           rootNode:set_provide( _exp )
+          moduleSymbolKind = _exp:get_symbol():get_kind()
         end
     end
     
@@ -1990,7 +1985,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
   if self.analyzeMode == AnalyzeMode.Diag or self.analyzeMode == AnalyzeMode.Complete then
     os.exit( 0 )
   end
-  return ASTInfo.new(_lune.unwrap( ast), moduleTypeInfo)
+  return ASTInfo.new(_lune.unwrap( ast), moduleTypeInfo, moduleSymbolKind)
 end
 
 function TransUnit:analyzeDeclMacro( accessMode, firstToken )
@@ -3148,7 +3143,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
     local scope = self:pushScope( false )
     
     for index, letVarInfo in pairs( letVarList ) do
-      self.scope:addLocalVar( false, true, "_" .. letVarInfo.varName.txt, orgExpTypeList[index], false )
+      self:addLocalVar( letVarInfo.varName.pos, false, true, "_" .. letVarInfo.varName.txt, orgExpTypeList[index], false )
     end
     unwrapBlock = self:analyzeBlock( Ast.BlockKind.LetUnwrap, scope )
     self:popScope(  )
@@ -3215,10 +3210,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
   for index, expType in pairs( typeInfoList ) do
     local varName = varNameList[index]
     
-    if self.scope:getSymbolTypeInfo( varName, self.scope, self.moduleScope ) then
-      self:addErrMess( firstToken.pos, string.format( "shadowing variable -- %s", varName) )
-    end
-    scope:addLocalVar( false, true, varName, expType, false )
+    self:addLocalVar( firstToken.pos, false, true, varName, expType, false )
   end
   local block = self:analyzeBlock( Ast.BlockKind.IfUnwrap, scope )
   
@@ -3284,8 +3276,8 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
     
     index = index + 1
   until token.txt ~= ","
-  for index, expType in pairs( expList[#expList]:get_expTypeList() ) do
-    if index ~= 1 then
+  for listIndex, expType in pairs( expList[#expList]:get_expTypeList() ) do
+    if listIndex ~= 1 then
       table.insert( expTypeList, expType )
     end
   end

@@ -313,6 +313,16 @@ pub class TransUnit {
    pri fn analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node!,
                           expectTypeList: List<&Ast.TypeInfo>!, contExpect: bool! ): Ast.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node;
+
+   pri fn addLocalVar(
+      pos:&Parser.Position, argFlag:bool,
+      canBeLeft:bool, name:str, typeInfo: &Ast.TypeInfo, mutable:bool ) mut
+   {
+      if self.scope.getSymbolTypeInfo( name, self.scope, self.moduleScope ) {
+         self.addErrMess( pos, "shadowing variable -- %s" (name) );
+      }
+      self.scope.addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable );
+   }
 }
 
 
@@ -390,6 +400,7 @@ pub class _MetaInfo {
    pub let _varName2InfoMap: Map<str,Map<str,stem>>;
    pub let _funcName2InfoMap: Map<str,stem>;
    pub let _moduleTypeId: int;
+   pub let _moduleSymbolKind: int;
    pub let _moduleMutable: bool;
    pub let _dependModuleMap: Map<str,Map<str,stem>>;
    pub let _dependIdMap: Map<int,int[]>;
@@ -1483,8 +1494,9 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
    let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo._moduleTypeId ];
+   let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo._moduleSymbolKind );
    self.scope.add(
-      Ast.SymbolKind.Typ, false, false, moduleToken.txt,
+      moduleSymbolKind, false, false, moduleToken.txt,
       moduleTypeInfo, .Local, true, metaInfo._moduleMutable, true );
 
    self.checkToken( nextToken, ";" );
@@ -1646,7 +1658,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Ast.ForNode {
       self.addErrMess( exp1.$pos,
                        "exp1 is not int -- %s" (exp1.$expType.getTxt()) );
    }
-   self.scope.addLocalVar( false, true, val.txt, exp1.$expType, false );
+   self.addLocalVar( exp1.$pos, false, true, val.txt, exp1.$expType, false );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExp( false );
    if not exp2.$expType.equals( Ast.builtinTypeInt ) {
@@ -1688,7 +1700,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
       } 
       varList.insert( var );
       nextToken = self.getToken();
-      scope.addLocalVar( false, true, var.txt, Ast.builtinTypeStem, false );
+      self.addLocalVar( var.pos, false, true, var.txt, Ast.builtinTypeStem, false );
    } nextToken.txt ~= ",";
    self.checkToken( nextToken, "of" );
 
@@ -1710,15 +1722,15 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
    let mut keySymbol:&Parser.Token! = nil;
    let mut nextToken:&Parser.Token = Parser.getEofToken();
    for index = 1, 2 {
-      let sym = self.getToken();
-      if sym.kind ~= Parser.TokenKind.Symb {
+      let symbol = self.getToken();
+      if symbol.kind ~= Parser.TokenKind.Symb {
          self.error( "illegal symbol" );
       } 
       if index == 1 {
-         valSymbol = sym;
+         valSymbol = symbol;
       } 
       else {
-         keySymbol = sym;
+         keySymbol = symbol;
       } 
       nextToken = self.getToken();
       if nextToken.txt ~= "," {
@@ -1731,11 +1743,11 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
 
    let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
    if exp.$expType.get_kind() == .Map {
-      self.scope.addLocalVar(
-         false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false );
+      self.addLocalVar(
+         exp.$pos, false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false );
       if! keySymbol {
-         self.scope.addLocalVar(
-            false, true, _exp.txt, itemTypeInfoList[ 1 ], false );
+         self.addLocalVar(
+            _exp.$pos, false, true, _exp.txt, itemTypeInfoList[ 1 ], false );
       }  
    } 
    elseif exp.$expType.get_kind() == .List or
@@ -1744,7 +1756,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
       self.scope.addLocalVar(
          false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );
       if! keySymbol {
-         self.scope.addLocalVar( false, false, _exp.txt, Ast.builtinTypeInt, false );
+         self.addLocalVar( _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, false );
       }
       else {
          self.scope.addLocalVar( false, false, "__index", Ast.builtinTypeInt, false );
@@ -1771,41 +1783,30 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
    }
 }
 
-fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Ast.Node {
-   let val = self.analyzeExp( true );
+fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Ast.ProvideNode {
+   let token = self.getSymbolToken();
+   let symbolNode = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
    self.checkNextToken( ";" );
 
-   switch val.$kind {
-      case Ast.nodeKindExpRef {
-         let expRefNode = val@@Ast.ExpRefNode;
-      }
+   let symbolInfoList = symbolNode.getSymbolInfo();
+   if #symbolInfoList ~= 1 {
+      self.error( "'provide' must be symbol." );
    }
+   let symbolInfo = symbolInfoList[ 1 ];
+
    
    let mut node = Ast.ProvideNode.create(
-      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], val );
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], symbolInfo );
    if self.provideNode {
       self.addErrMess( firstToken.pos, "multiple provide" );
    }
    self.provideNode = node;
 
 
-   if node.$val.$kind == Ast.nodeKindExpRef {
-      let expRefNode = node.$val@@Ast.ExpRefNode;
-
-      forsort symbolInfo, symbol in self.moduleScope.$symbol2TypeInfoMap {
-         if expRefNode.$symbolInfo.$symbolId == symbolInfo.$symbolId {
-            if symbolInfo.$accessMode ~= .Pub {
-               self.addErrMess( firstToken.pos,
-                                "provide variable must be 'pub'.  -- %s"
-                                (symbolInfo.$accessMode));
-            }
-         }
-         elseif symbolInfo.$accessMode == .Pub {
-            self.addErrMess(
-               firstToken.pos,   
-               "variable (%s) can't set 'pub'." ( symbolInfo.$name ) );
-         }
-      }
+   if symbolInfo.$accessMode ~= .Pub {
+      self.addErrMess( firstToken.pos,
+                       "provide variable must be 'pub'.  -- %s"
+                       (symbolInfo.$accessMode));
    }
 
    return node;

@@ -66,6 +66,7 @@
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "mut"
 		   "__init", "mut" "pub" "pro" "pri" "form" "advertise" "provide"
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
+		   "glue"
 		   "abstruct" "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
@@ -229,6 +230,8 @@
          ))
   (set (make-local-variable 'isearch-wrap-function) 'lns-isearch-wrap-function)
   (set (make-local-variable 'lns-proj-dir) (lns-proj-search))
+
+  (local-set-key (kbd "C-c C-e") 'lns-dispatch-mode)
   )
 
 

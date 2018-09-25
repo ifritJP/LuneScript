@@ -66,6 +66,7 @@ _typeInfoList[25] = { parentId = 200, typeId = 253, nilable = true, orgTypeId = 
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _moduleObj._moduleTypeId = 200
+_moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----
 return _moduleObj
