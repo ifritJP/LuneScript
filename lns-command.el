@@ -60,19 +60,20 @@
 	       (lexical-let ((lex-buf out-buf)
 			     (lex-callback callback))
 		 (lambda (process event)
-		   (condition-case err
-		       (let (json)
-			 ;;(setq json (lns-json-get lex-buf :candidateList))
-			 (setq json (lns-complete-from-json lex-buf))
-			 (funcall lex-callback json nil))
-		     (error nil
-			    (funcall lex-callback nil t)))
+		   (when lex-callback
+		     (condition-case err
+			 (let (json)
+			   ;;(setq json (lns-json-get lex-buf :candidateList))
+			   (setq json (lns-complete-from-json lex-buf))
+			   (funcall lex-callback json nil))
+		       (error nil
+			      (funcall lex-callback nil t))))
 		   ))
 	     nil)
 	   out-buf
 	   input
 	   (lns-convert-path-2-proj-relative-path owner-file) mode op-list))
-    (when (not async)
+    (when (and callback (not async))
       (condition-case err
 	  (funcall callback
 		   ;;(lns-json-get out-buf :candidateList) nil)
@@ -83,10 +84,21 @@
     ))
 
 
-(defun lns-command-compile ()
+(defun lns-command-compile-meta ()
+  (lns-command-compile-meta t))
+
+
+(defun lns-command-compile (&optional meta)
   (let* ((command-info (lns-command-get-info))
 	 (owner-file (plist-get command-info :owner))
 	 (analyze-module (plist-get command-info :module)))
-    (lns-command-exec (lambda (json result)) nil nil "" nil "save" nil)))
+    (lns-command-exec nil nil nil "" nil (if meta "SAVE" "save") nil)))
+
+(defun lns-command-glue ()
+  (let* ((command-info (lns-command-get-info))
+	 (owner-file (plist-get command-info :owner))
+	 (analyze-module (plist-get command-info :module)))
+    (lns-command-exec nil nil nil "" nil "glue" nil)))
+
 
 (provide 'lns-command)

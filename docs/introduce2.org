@@ -144,31 +144,215 @@ print( "val", External.val );
 
 ** glue コード自動生成
 
-Lua の外部モジュールは、 Lua スクリプトと、C 等の Native Library のケースがある。
+Lua の外部モジュールには、次の 2 つのケースがある。
+
+- Lua スクリプトで構成されるケース
+- C 等の Native Library を利用するケース
 
 Lua から Native Library を利用するには、
-Lua 用インタフェースの glue が必要である。
+Lua 用のインタフェースを持つ glue が必要である。
 
-LuneScript では、glue を自動生成する機能を持つ。
+LuneScript は、この glue を自動生成する機能を持つ。
 
-次の例は、 test.external モジュールの glue を生成する。
+LuneScript の glue 自動生成機能は、
+swig に代表される C/C++ 等のソースから Lua の glue を自動生成する機能ではなく、
+LuneScript で module 宣言したモジュールの glue コードを自動生成する機能である。
+
+#+BEGIN_SRC txt
+swig:		C/C++ ==> glue
+LuneScript:	Lns   ==> glue
+#+END_SRC
+
+*** 使用方法
+
+glue を生成するには、 module 定義時に glue キーワードを指定する。
+    
+次は、 test.ext モジュールの glue を生成するサンプルである。
 
 #+BEGIN_SRC lns
-module External require "test.external" glue {
-   pub static fn func1( val:int );
-   pub fn func2( val:int );
+module External require "test.ext" glue 'hoge_' {
+   pub static fn create( val:int ): External;
+   pub fn add( val:int ):int;
+}
+
+let obj = External.create( 1 );
+print( obj.add( 10 ) ); // 11
+#+END_SRC
+
+ここで指定した "test.ext" と 'hoge_' は、 glue を生成する際に利用される。
+
+このソースから glue コードを生成するには、次のコマンドを実行する。
+
+#+BEGIN_SRC txt
+$ lua lune/base/base.lua src.lns glue [dir]
+#+END_SRC
+
+ここで、 src.lns は入力元のソースで、 dir は出力先のディレクトリのパスを指定する。
+
+このコマンドによって、次の 2 つの glue コードが生成される。
+
+- test_ext_glue.c
+- test_ext_glue.h  
+
+test_ext_glue.c は、次の内容を持つ。
+
+#+BEGIN_SRC c
+#include "test_ext_glue.h"
+static int lns_glue_create( lua_State * pLua );
+static int lns_glue_add( lua_State * pLua );
+static const char * s_full_class_name = "test_ext";
+static const luaL_Reg s_lua_func_info[] = {
+  { "create", lns_glue_create },
+  { NULL, NULL }
+};
+static const luaL_Reg s_lua_method_info[] = {
+  { "add", lns_glue_add },
+  { NULL, NULL }
+};
+void * lns_glue_get_test_ext( lua_State * pLua, int index )
+{
+    return luaL_checkudata( pLua, index, s_full_class_name);
+}
+
+static void lns_glue_setupObjMethod(
+    lua_State * pLua, const char * pName, const luaL_Reg * pReg )
+{
+    luaL_newmetatable(pLua, pName );
+    lua_pushvalue(pLua, -1);
+    lua_setfield(pLua, -2, "__index");
+
+#if LUA_VERSION_NUM >= 502
+    luaL_setfuncs(pLua, pReg, 0);
+
+    lua_pop(pLua, 1);
+#else
+    luaL_register(pLua, NULL, pReg );
+
+    lua_pop(pLua, 1);
+#endif
+}
+
+void * lns_glue_new_test_ext( lua_State * pLua, size_t size )
+{
+    void * pBuf = lua_newuserdata( pLua, size );
+    if ( pBuf == NULL ) {
+        return NULL;
+    }
+    
+#if LUA_VERSION_NUM >= 502
+    luaL_setmetatable( pLua, s_full_class_name );
+#else
+    luaL_getmetatable( pLua, s_full_class_name );
+    lua_setmetatable( pLua, -2 );
+#endif
+
+    return pBuf;
+}
+
+int luaopen_test_ext( lua_State * pLua )
+{
+    lns_glue_setupObjMethod( pLua, s_full_class_name, s_lua_method_info );
+
+#if LUA_VERSION_NUM >= 502
+    luaL_newlib( pLua, s_lua_func_info );
+#else
+    luaL_register( pLua, s_full_class_name, s_lua_func_info );
+#endif
+    return 1;
+}
+static int lns_glue_add( lua_State * pLua ){
+  int val = 0;
+  val = luaL_checkinteger( pLua, 2 );
+  return hoge_add( pLua, val);
+}
+static int lns_glue_create( lua_State * pLua ){
+  int val = 0;
+  val = luaL_checkinteger( pLua, 1 );
+  return hoge_create( pLua, val);
 }
 #+END_SRC
 
-このとき生成される glue ソースは、 glue/lns_glue_test_external.c となる。
+この test_ext_glue.c は、
+LuneScript で定義している create() と add() のメソッドを Lua に登録するコードである。
 
-glue ソースは、 module で定義したメソッドに対応する各関数を生成する。
-この関数は、Lua VM から与えられた引数を取り出し、 Native の関数を呼び出す。
+LuneScript で定義している create() と add() に対応する関数は、
+lns_glue_create() と lns_glue_add() が対応している。
 
-    
+なお、この関数はそれぞれ hoge_create() と hoge_add() をコールしている。
+この *hoge_* は、 LuneScript のコード上で指定した glue の文字列が利用される。
+
+test_ext_glue.h は次の内容を持つ。
+
+#+BEGIN_SRC c
+#include <lauxlib.h>
+extern int hoge_create( lua_State * pLua, int val );
+extern int hoge_add( lua_State * pLua, int val );
+extern int luaopen_test_ext( lua_State * pLua );
+extern void * lns_glue_get_test_ext( lua_State * pLua, int index );
+extern void * lns_glue_new_test_ext( lua_State * pLua, size_t size );
+#+END_SRC
+
+ここで、hoge_create() と hoge_add() は次の型となっている。
+
+#+BEGIN_SRC c
+extern int hoge_create( lua_State * pLua, int val );
+extern int hoge_add( lua_State * pLua, int val );
+#+END_SRC
+
+第一引数の lua_State * と戻り値の int は、
+Lua の glue インタフェースと同じ意味を持つ。
+
+第二引数の int は、 LuneScript で定義しているメソッドの引数が入る。
+これは、 LuneScript で自動生成している test_ext_glue.c が
+Lua のスタックから値を取り出して値を設定している。
+
+Lua の glue では、関数引数を得るため API をコールする必要があるが、
+LuneScript で glue を生成した場合は、
+glue コード内で関数引数を得る API を実行している。
+これにより、 ユーザは関数引数を得る API をコールする必要はない。
+
+ただし、LuneScript 側で定義しているメソッドの引数の型が
+int(int!), real(real!), str(str!) 型以外だった場合、
+LuneScript で生成する glue では対応できないため、
+別途ユーザ側での対応が必要である。
+
+また glue の戻り値については、
+ユーザ側で Lua の glue インタフェースと同じ制御を行なう必要がある。
 
 
+hoge_create() と hoge_add() を別途定義することで、
+test.ext モジュールが完成する。
 
+例えば次のように定義する(glue.c)。
+
+#+BEGIN_SRC c
+// glue.c
+#include <test_ext_glue.h>
+
+typedef struct {
+    int val;
+} glue_t;
+
+int hoge_create( lua_State * pLua, int val )
+{
+    glue_t * pGlue = (glue_t*)lns_glue_new_test_ext( pLua, sizeof( glue_t ) );
+    pGlue->val = val;
+    return 1;
+}
+
+int hoge_add( lua_State * pLua, int val )
+{
+    glue_t * pGlue = lns_glue_get_test_ext( pLua, 1 );
+    lua_pushinteger( pLua, val + pGlue->val );
+    return 1;
+}
+#+END_SRC
+
+ちなみにビルドは次のように行なう。
+
+#+BEGIN_SRC txt
+$ gcc -std=c99 -fPIC -shared -o test/ext.so glue.c test_ext_glue.c 
+#+END_SRC
 
 * nil 条件演算子
 

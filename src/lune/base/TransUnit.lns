@@ -38,6 +38,13 @@ enum DeclClassMode {
    Module
 }
 
+enum DeclFuncMode {
+   Func,
+   Class,
+   Module,
+   Glue,
+}
+
 enum ExpSymbolMode {
    Symbol,
    Fn,
@@ -297,7 +304,7 @@ pub class TransUnit {
       mode:Ast.DeclVarMode,
       accessMode: Ast.AccessMode, firstToken: &Parser.Token ): Ast.Node;
    pri fn analyzeDeclFunc(
-      moduleFlag: bool, abstructFlag: bool,
+      declFuncMode: DeclFuncMode, abstructFlag: bool,
       overrideFlag: bool, accessMode: Ast.AccessMode, staticFlag: bool,
       classNameToken: &Parser.Token!,
       firstToken: &Parser.Token, name: &Parser.Token! ) : Ast.Node;

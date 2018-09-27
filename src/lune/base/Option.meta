@@ -3,57 +3,57 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo381 = {}
-  _typeId2ClassInfoMap[ 381 ] = _classInfo381
-  _classInfo381.mode = {
-    name='mode', staticFlag = false, accessMode = '1', typeId = 373 }
-  _classInfo381.analyzeModule = {
-    name='analyzeModule', staticFlag = false, accessMode = '1', typeId = 384 }
-  _classInfo381.analyzePos = {
-    name='analyzePos', staticFlag = false, accessMode = '1', typeId = 385 }
-  _classInfo381.outputDir = {
-    name='outputDir', staticFlag = false, accessMode = '1', typeId = 384 }
-  _classInfo381.scriptPath = {
-    name='scriptPath', staticFlag = false, accessMode = '1', typeId = 25 }
-  _classInfo381.validProf = {
-    name='validProf', staticFlag = false, accessMode = '1', typeId = 13 }
-  end
+   local _classInfo381 = {}
+   _typeId2ClassInfoMap[ 381 ] = _classInfo381
+   _classInfo381.mode = {
+     name='mode', staticFlag = false, accessMode = '1', typeId = 373 }
+   _classInfo381.analyzeModule = {
+     name='analyzeModule', staticFlag = false, accessMode = '1', typeId = 384 }
+   _classInfo381.analyzePos = {
+     name='analyzePos', staticFlag = false, accessMode = '1', typeId = 385 }
+   _classInfo381.outputDir = {
+     name='outputDir', staticFlag = false, accessMode = '1', typeId = 384 }
+   _classInfo381.scriptPath = {
+     name='scriptPath', staticFlag = false, accessMode = '1', typeId = 25 }
+   _classInfo381.validProf = {
+     name='validProf', staticFlag = false, accessMode = '1', typeId = 13 }
+end
 do
-  local _classInfo196 = {}
-  _typeId2ClassInfoMap[ 196 ] = _classInfo196
-  end
+   local _classInfo196 = {}
+   _typeId2ClassInfoMap[ 196 ] = _classInfo196
+end
 do
-  local _classInfo198 = {}
-  _typeId2ClassInfoMap[ 198 ] = _classInfo198
-  end
+   local _classInfo198 = {}
+   _typeId2ClassInfoMap[ 198 ] = _classInfo198
+end
 do
-  local _classInfo200 = {}
-  _typeId2ClassInfoMap[ 200 ] = _classInfo200
-  _classInfo200.version = {
-    name='version', staticFlag = false, accessMode = 1, typeId = 210 }
-  end
+   local _classInfo200 = {}
+   _typeId2ClassInfoMap[ 200 ] = _classInfo200
+   _classInfo200.version = {
+     name='version', staticFlag = false, accessMode = 1, typeId = 210 }
+end
 do
-  local _classInfo210 = {}
-  _typeId2ClassInfoMap[ 210 ] = _classInfo210
-  end
+   local _classInfo210 = {}
+   _typeId2ClassInfoMap[ 210 ] = _classInfo210
+end
 do
-  local _classInfo245 = {}
-  _typeId2ClassInfoMap[ 245 ] = _classInfo245
-  _classInfo245.column = {
-    name='column', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo245.lineNo = {
-    name='lineNo', staticFlag = false, accessMode = 1, typeId = 223 }
-  end
+   local _classInfo245 = {}
+   _typeId2ClassInfoMap[ 245 ] = _classInfo245
+   _classInfo245.column = {
+     name='column', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo245.lineNo = {
+     name='lineNo', staticFlag = false, accessMode = 1, typeId = 223 }
+end
 do
-  local _classInfo255 = {}
-  _typeId2ClassInfoMap[ 255 ] = _classInfo255
-  _classInfo255.kind = {
-    name='kind', staticFlag = false, accessMode = 1, typeId = 244 }
-  _classInfo255.pos = {
-    name='pos', staticFlag = false, accessMode = 1, typeId = 245 }
-  _classInfo255.txt = {
-    name='txt', staticFlag = false, accessMode = 1, typeId = 210 }
-  end
+   local _classInfo255 = {}
+   _typeId2ClassInfoMap[ 255 ] = _classInfo255
+   _classInfo255.kind = {
+     name='kind', staticFlag = false, accessMode = 1, typeId = 244 }
+   _classInfo255.pos = {
+     name='pos', staticFlag = false, accessMode = 1, typeId = 245 }
+   _classInfo255.txt = {
+     name='txt', staticFlag = false, accessMode = 1, typeId = 210 }
+end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.version = {

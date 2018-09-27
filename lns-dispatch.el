@@ -1,3 +1,5 @@
+(require 'lns-command)
+
 (defvar lns-dispatch-prev-window-conf nil)
 
 (defvar lns-dispatch-buf-name "lns dispatcher")
@@ -7,6 +9,7 @@
 	   :submenu
 	   ((:name "lua" :bind "l" :action lns-command-compile)
 	    (:name "&meta" :bind "m" :action lns-command-compile-meta)
+	    (:name "glue" :bind "g" :action lns-command-glue)
 	    ))
     ))
 

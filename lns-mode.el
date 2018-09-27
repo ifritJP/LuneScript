@@ -26,6 +26,8 @@
 ;; (add-to-list 'auto-mode-alist '("\\.lns$" . lns-mode))
 
 
+(require 'lns-dispatch)
+
 (defalias 'lns--prog-mode
   (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
 

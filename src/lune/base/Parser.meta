@@ -3,79 +3,79 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo345 = {}
-  _typeId2ClassInfoMap[ 345 ] = _classInfo345
-  end
+   local _classInfo345 = {}
+   _typeId2ClassInfoMap[ 345 ] = _classInfo345
+end
 do
-  local _classInfo359 = {}
-  _typeId2ClassInfoMap[ 359 ] = _classInfo359
-  _classInfo359.lineNo = {
-    name='lineNo', staticFlag = false, accessMode = '1', typeId = 362 }
-  _classInfo359.column = {
-    name='column', staticFlag = false, accessMode = '1', typeId = 362 }
-  end
+   local _classInfo359 = {}
+   _typeId2ClassInfoMap[ 359 ] = _classInfo359
+   _classInfo359.lineNo = {
+     name='lineNo', staticFlag = false, accessMode = '1', typeId = 362 }
+   _classInfo359.column = {
+     name='column', staticFlag = false, accessMode = '1', typeId = 362 }
+end
 do
-  local _classInfo374 = {}
-  _typeId2ClassInfoMap[ 374 ] = _classInfo374
-  _classInfo374.kind = {
-    name='kind', staticFlag = false, accessMode = '1', typeId = 377 }
-  _classInfo374.txt = {
-    name='txt', staticFlag = false, accessMode = '1', typeId = 348 }
-  _classInfo374.pos = {
-    name='pos', staticFlag = false, accessMode = '1', typeId = 378 }
-  end
+   local _classInfo374 = {}
+   _typeId2ClassInfoMap[ 374 ] = _classInfo374
+   _classInfo374.kind = {
+     name='kind', staticFlag = false, accessMode = '1', typeId = 377 }
+   _classInfo374.txt = {
+     name='txt', staticFlag = false, accessMode = '1', typeId = 348 }
+   _classInfo374.pos = {
+     name='pos', staticFlag = false, accessMode = '1', typeId = 378 }
+end
 do
-  local _classInfo404 = {}
-  _typeId2ClassInfoMap[ 404 ] = _classInfo404
-  end
+   local _classInfo404 = {}
+   _typeId2ClassInfoMap[ 404 ] = _classInfo404
+end
 do
-  local _classInfo418 = {}
-  _typeId2ClassInfoMap[ 418 ] = _classInfo418
-  end
+   local _classInfo418 = {}
+   _typeId2ClassInfoMap[ 418 ] = _classInfo418
+end
 do
-  local _classInfo431 = {}
-  _typeId2ClassInfoMap[ 431 ] = _classInfo431
-  end
+   local _classInfo431 = {}
+   _typeId2ClassInfoMap[ 431 ] = _classInfo431
+end
 do
-  local _classInfo550 = {}
-  _typeId2ClassInfoMap[ 550 ] = _classInfo550
-  end
+   local _classInfo550 = {}
+   _typeId2ClassInfoMap[ 550 ] = _classInfo550
+end
 do
-  local _classInfo196 = {}
-  _typeId2ClassInfoMap[ 196 ] = _classInfo196
-  end
+   local _classInfo196 = {}
+   _typeId2ClassInfoMap[ 196 ] = _classInfo196
+end
 do
-  local _classInfo198 = {}
-  _typeId2ClassInfoMap[ 198 ] = _classInfo198
-  end
+   local _classInfo198 = {}
+   _typeId2ClassInfoMap[ 198 ] = _classInfo198
+end
 do
-  local _classInfo200 = {}
-  _typeId2ClassInfoMap[ 200 ] = _classInfo200
-  _classInfo200.noneToken = {
-    name='noneToken', staticFlag = false, accessMode = 1, typeId = 391 }
-  end
+   local _classInfo200 = {}
+   _typeId2ClassInfoMap[ 200 ] = _classInfo200
+   _classInfo200.noneToken = {
+     name='noneToken', staticFlag = false, accessMode = 1, typeId = 391 }
+end
 do
-  local _classInfo348 = {}
-  _typeId2ClassInfoMap[ 348 ] = _classInfo348
-  end
+   local _classInfo348 = {}
+   _typeId2ClassInfoMap[ 348 ] = _classInfo348
+end
 do
-  local _classInfo378 = {}
-  _typeId2ClassInfoMap[ 378 ] = _classInfo378
-  _classInfo378.column = {
-    name='column', staticFlag = false, accessMode = 1, typeId = 362 }
-  _classInfo378.lineNo = {
-    name='lineNo', staticFlag = false, accessMode = 1, typeId = 362 }
-  end
+   local _classInfo378 = {}
+   _typeId2ClassInfoMap[ 378 ] = _classInfo378
+   _classInfo378.column = {
+     name='column', staticFlag = false, accessMode = 1, typeId = 362 }
+   _classInfo378.lineNo = {
+     name='lineNo', staticFlag = false, accessMode = 1, typeId = 362 }
+end
 do
-  local _classInfo391 = {}
-  _typeId2ClassInfoMap[ 391 ] = _classInfo391
-  _classInfo391.kind = {
-    name='kind', staticFlag = false, accessMode = 1, typeId = 377 }
-  _classInfo391.pos = {
-    name='pos', staticFlag = false, accessMode = 1, typeId = 378 }
-  _classInfo391.txt = {
-    name='txt', staticFlag = false, accessMode = 1, typeId = 348 }
-  end
+   local _classInfo391 = {}
+   _typeId2ClassInfoMap[ 391 ] = _classInfo391
+   _classInfo391.kind = {
+     name='kind', staticFlag = false, accessMode = 1, typeId = 377 }
+   _classInfo391.pos = {
+     name='pos', staticFlag = false, accessMode = 1, typeId = 378 }
+   _classInfo391.txt = {
+     name='txt', staticFlag = false, accessMode = 1, typeId = 348 }
+end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.noneToken = {

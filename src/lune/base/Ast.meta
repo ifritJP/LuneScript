@@ -3,847 +3,847 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo373 = {}
-  _typeId2ClassInfoMap[ 373 ] = _classInfo373
-  end
-do
-  local _classInfo388 = {}
-  _typeId2ClassInfoMap[ 388 ] = _classInfo388
-  end
-do
-  local _classInfo391 = {}
-  _typeId2ClassInfoMap[ 391 ] = _classInfo391
-  end
-do
-  local _classInfo424 = {}
-  _typeId2ClassInfoMap[ 424 ] = _classInfo424
-  end
-do
-  local _classInfo497 = {}
-  _typeId2ClassInfoMap[ 497 ] = _classInfo497
-  end
-do
-  local _classInfo546 = {}
-  _typeId2ClassInfoMap[ 546 ] = _classInfo546
-  _classInfo546.hasData = {
-    name='hasData', staticFlag = false, accessMode = '1', typeId = 500 }
-  _classInfo546.symbolInfo = {
-    name='symbolInfo', staticFlag = false, accessMode = '1', typeId = 452 }
-  end
-do
-  local _classInfo866 = {}
-  _typeId2ClassInfoMap[ 866 ] = _classInfo866
-  end
-do
-  local _classInfo918 = {}
-  _typeId2ClassInfoMap[ 918 ] = _classInfo918
-  end
-do
-  local _classInfo921 = {}
-  _typeId2ClassInfoMap[ 921 ] = _classInfo921
-  end
-do
-  local _classInfo924 = {}
-  _typeId2ClassInfoMap[ 924 ] = _classInfo924
-  end
-do
-  local _classInfo1036 = {}
-  _typeId2ClassInfoMap[ 1036 ] = _classInfo1036
-  end
-do
-  local _classInfo1148 = {}
-  _typeId2ClassInfoMap[ 1148 ] = _classInfo1148
-  end
-do
-  local _classInfo1201 = {}
-  _typeId2ClassInfoMap[ 1201 ] = _classInfo1201
-  end
-do
-  local _classInfo1213 = {}
-  _typeId2ClassInfoMap[ 1213 ] = _classInfo1213
-  end
-do
-  local _classInfo1276 = {}
-  _typeId2ClassInfoMap[ 1276 ] = _classInfo1276
-  end
-do
-  local _classInfo1566 = {}
-  _typeId2ClassInfoMap[ 1566 ] = _classInfo1566
-  end
-do
-  local _classInfo1616 = {}
-  _typeId2ClassInfoMap[ 1616 ] = _classInfo1616
-  _classInfo1616.name = {
-    name='name', staticFlag = false, accessMode = '1', typeId = 210 }
-  _classInfo1616.scope = {
-    name='scope', staticFlag = false, accessMode = '1', typeId = 489 }
-  _classInfo1616.typeInfo = {
-    name='typeInfo', staticFlag = false, accessMode = '1', typeId = 406 }
-  end
-do
-  local _classInfo1622 = {}
-  _typeId2ClassInfoMap[ 1622 ] = _classInfo1622
-  end
-do
-  local _classInfo1625 = {}
-  _typeId2ClassInfoMap[ 1625 ] = _classInfo1625
-  end
-do
-  local _classInfo1628 = {}
-  _typeId2ClassInfoMap[ 1628 ] = _classInfo1628
-  end
-do
-  local _classInfo1631 = {}
-  _typeId2ClassInfoMap[ 1631 ] = _classInfo1631
-  end
-do
-  local _classInfo1659 = {}
-  _typeId2ClassInfoMap[ 1659 ] = _classInfo1659
-  _classInfo1659.val = {
-    name='val', staticFlag = false, accessMode = '1', typeId = 71 }
-  _classInfo1659.typeInfo = {
-    name='typeInfo', staticFlag = false, accessMode = '1', typeId = 406 }
-  end
-do
-  local _classInfo1665 = {}
-  _typeId2ClassInfoMap[ 1665 ] = _classInfo1665
-  _classInfo1665.func = {
-    name='func', staticFlag = false, accessMode = '1', typeId = 1668 }
-  _classInfo1665.declInfo = {
-    name='declInfo', staticFlag = false, accessMode = '1', typeId = 1669 }
-  _classInfo1665.symbol2MacroValInfoMap = {
-    name='symbol2MacroValInfoMap', staticFlag = false, accessMode = '1', typeId = 1673 }
-  end
-do
-  local _classInfo1695 = {}
-  _typeId2ClassInfoMap[ 1695 ] = _classInfo1695
-  end
-do
-  local _classInfo1769 = {}
-  _typeId2ClassInfoMap[ 1769 ] = _classInfo1769
-  end
-do
-  local _classInfo1820 = {}
-  _typeId2ClassInfoMap[ 1820 ] = _classInfo1820
-  end
-do
-  local _classInfo1877 = {}
-  _typeId2ClassInfoMap[ 1877 ] = _classInfo1877
-  end
-do
-  local _classInfo1931 = {}
-  _typeId2ClassInfoMap[ 1931 ] = _classInfo1931
-  end
-do
-  local _classInfo1934 = {}
-  _typeId2ClassInfoMap[ 1934 ] = _classInfo1934
-  end
-do
-  local _classInfo1946 = {}
-  _typeId2ClassInfoMap[ 1946 ] = _classInfo1946
-  end
-do
-  local _classInfo2007 = {}
-  _typeId2ClassInfoMap[ 2007 ] = _classInfo2007
-  end
-do
-  local _classInfo2123 = {}
-  _typeId2ClassInfoMap[ 2123 ] = _classInfo2123
-  end
-do
-  local _classInfo2200 = {}
-  _typeId2ClassInfoMap[ 2200 ] = _classInfo2200
-  end
-do
-  local _classInfo2263 = {}
-  _typeId2ClassInfoMap[ 2263 ] = _classInfo2263
-  end
-do
-  local _classInfo2284 = {}
-  _typeId2ClassInfoMap[ 2284 ] = _classInfo2284
-  end
-do
-  local _classInfo2414 = {}
-  _typeId2ClassInfoMap[ 2414 ] = _classInfo2414
-  end
-do
-  local _classInfo2438 = {}
-  _typeId2ClassInfoMap[ 2438 ] = _classInfo2438
-  end
-do
-  local _classInfo2514 = {}
-  _typeId2ClassInfoMap[ 2514 ] = _classInfo2514
-  end
-do
-  local _classInfo2577 = {}
-  _typeId2ClassInfoMap[ 2577 ] = _classInfo2577
-  end
-do
-  local _classInfo2649 = {}
-  _typeId2ClassInfoMap[ 2649 ] = _classInfo2649
-  end
-do
-  local _classInfo2724 = {}
-  _typeId2ClassInfoMap[ 2724 ] = _classInfo2724
-  end
-do
-  local _classInfo2805 = {}
-  _typeId2ClassInfoMap[ 2805 ] = _classInfo2805
-  end
-do
-  local _classInfo2883 = {}
-  _typeId2ClassInfoMap[ 2883 ] = _classInfo2883
-  end
-do
-  local _classInfo2952 = {}
-  _typeId2ClassInfoMap[ 2952 ] = _classInfo2952
-  end
-do
-  local _classInfo3007 = {}
-  _typeId2ClassInfoMap[ 3007 ] = _classInfo3007
-  end
-do
-  local _classInfo3118 = {}
-  _typeId2ClassInfoMap[ 3118 ] = _classInfo3118
-  end
-do
-  local _classInfo3181 = {}
-  _typeId2ClassInfoMap[ 3181 ] = _classInfo3181
-  end
-do
-  local _classInfo3244 = {}
-  _typeId2ClassInfoMap[ 3244 ] = _classInfo3244
-  end
-do
-  local _classInfo3310 = {}
-  _typeId2ClassInfoMap[ 3310 ] = _classInfo3310
-  end
-do
-  local _classInfo3379 = {}
-  _typeId2ClassInfoMap[ 3379 ] = _classInfo3379
-  end
-do
-  local _classInfo3451 = {}
-  _typeId2ClassInfoMap[ 3451 ] = _classInfo3451
-  end
-do
-  local _classInfo3535 = {}
-  _typeId2ClassInfoMap[ 3535 ] = _classInfo3535
-  end
-do
-  local _classInfo3606 = {}
-  _typeId2ClassInfoMap[ 3606 ] = _classInfo3606
-  end
-do
-  local _classInfo3678 = {}
-  _typeId2ClassInfoMap[ 3678 ] = _classInfo3678
-  end
-do
-  local _classInfo3753 = {}
-  _typeId2ClassInfoMap[ 3753 ] = _classInfo3753
-  end
-do
-  local _classInfo3816 = {}
-  _typeId2ClassInfoMap[ 3816 ] = _classInfo3816
-  end
-do
-  local _classInfo3873 = {}
-  _typeId2ClassInfoMap[ 3873 ] = _classInfo3873
-  end
-do
-  local _classInfo3930 = {}
-  _typeId2ClassInfoMap[ 3930 ] = _classInfo3930
-  end
-do
-  local _classInfo3996 = {}
-  _typeId2ClassInfoMap[ 3996 ] = _classInfo3996
-  end
-do
-  local _classInfo4062 = {}
-  _typeId2ClassInfoMap[ 4062 ] = _classInfo4062
-  end
-do
-  local _classInfo4122 = {}
-  _typeId2ClassInfoMap[ 4122 ] = _classInfo4122
-  end
-do
-  local _classInfo4191 = {}
-  _typeId2ClassInfoMap[ 4191 ] = _classInfo4191
-  end
-do
-  local _classInfo4273 = {}
-  _typeId2ClassInfoMap[ 4273 ] = _classInfo4273
-  end
-do
-  local _classInfo4339 = {}
-  _typeId2ClassInfoMap[ 4339 ] = _classInfo4339
-  end
-do
-  local _classInfo4402 = {}
-  _typeId2ClassInfoMap[ 4402 ] = _classInfo4402
-  end
-do
-  local _classInfo4523 = {}
-  _typeId2ClassInfoMap[ 4523 ] = _classInfo4523
-  end
-do
-  local _classInfo4564 = {}
-  _typeId2ClassInfoMap[ 4564 ] = _classInfo4564
-  end
-do
-  local _classInfo4621 = {}
-  _typeId2ClassInfoMap[ 4621 ] = _classInfo4621
-  end
-do
-  local _classInfo4678 = {}
-  _typeId2ClassInfoMap[ 4678 ] = _classInfo4678
-  end
-do
-  local _classInfo4735 = {}
-  _typeId2ClassInfoMap[ 4735 ] = _classInfo4735
-  end
-do
-  local _classInfo4795 = {}
-  _typeId2ClassInfoMap[ 4795 ] = _classInfo4795
-  end
-do
-  local _classInfo4876 = {}
-  _typeId2ClassInfoMap[ 4876 ] = _classInfo4876
-  end
-do
-  local _classInfo5010 = {}
-  _typeId2ClassInfoMap[ 5010 ] = _classInfo5010
-  end
-do
-  local _classInfo5058 = {}
-  _typeId2ClassInfoMap[ 5058 ] = _classInfo5058
-  end
-do
-  local _classInfo5253 = {}
-  _typeId2ClassInfoMap[ 5253 ] = _classInfo5253
-  end
-do
-  local _classInfo5328 = {}
-  _typeId2ClassInfoMap[ 5328 ] = _classInfo5328
-  end
-do
-  local _classInfo5389 = {}
-  _typeId2ClassInfoMap[ 5389 ] = _classInfo5389
-  end
-do
-  local _classInfo5446 = {}
-  _typeId2ClassInfoMap[ 5446 ] = _classInfo5446
-  end
-do
-  local _classInfo5509 = {}
-  _typeId2ClassInfoMap[ 5509 ] = _classInfo5509
-  end
-do
-  local _classInfo5572 = {}
-  _typeId2ClassInfoMap[ 5572 ] = _classInfo5572
-  end
-do
-  local _classInfo5632 = {}
-  _typeId2ClassInfoMap[ 5632 ] = _classInfo5632
-  end
-do
-  local _classInfo5689 = {}
-  _typeId2ClassInfoMap[ 5689 ] = _classInfo5689
-  end
-do
-  local _classInfo5740 = {}
-  _typeId2ClassInfoMap[ 5740 ] = _classInfo5740
-  end
-do
-  local _classInfo5761 = {}
-  _typeId2ClassInfoMap[ 5761 ] = _classInfo5761
-  end
-do
-  local _classInfo5842 = {}
-  _typeId2ClassInfoMap[ 5842 ] = _classInfo5842
-  end
-do
-  local _classInfo5911 = {}
-  _typeId2ClassInfoMap[ 5911 ] = _classInfo5911
-  end
-do
-  local _classInfo5968 = {}
-  _typeId2ClassInfoMap[ 5968 ] = _classInfo5968
-  end
-do
-  local _classInfo196 = {}
-  _typeId2ClassInfoMap[ 196 ] = _classInfo196
-  end
-do
-  local _classInfo198 = {}
-  _typeId2ClassInfoMap[ 198 ] = _classInfo198
-  end
-do
-  local _classInfo200 = {}
-  _typeId2ClassInfoMap[ 200 ] = _classInfo200
-  _classInfo200.builtInTypeIdSet = {
-    name='builtInTypeIdSet', staticFlag = false, accessMode = 1, typeId = 407 }
-  _classInfo200.builtinTypeArray = {
-    name='builtinTypeArray', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeBool = {
-    name='builtinTypeBool', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeChar = {
-    name='builtinTypeChar', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeDDD = {
-    name='builtinTypeDDD', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeForm = {
-    name='builtinTypeForm', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeInt = {
-    name='builtinTypeInt', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeList = {
-    name='builtinTypeList', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeMap = {
-    name='builtinTypeMap', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeNil = {
-    name='builtinTypeNil', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeNone = {
-    name='builtinTypeNone', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeReal = {
-    name='builtinTypeReal', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeStat = {
-    name='builtinTypeStat', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeStem = {
-    name='builtinTypeStem', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeStem_ = {
-    name='builtinTypeStem_', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeString = {
-    name='builtinTypeString', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.builtinTypeSymbol = {
-    name='builtinTypeSymbol', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.headTypeInfo = {
-    name='headTypeInfo', staticFlag = false, accessMode = 1, typeId = 406 }
-  _classInfo200.nodeKind = {
-    name='nodeKind', staticFlag = false, accessMode = 1, typeId = 1683 }
-  _classInfo200.nodeKindApply = {
-    name='nodeKindApply', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindBlock = {
-    name='nodeKindBlock', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindBreak = {
-    name='nodeKindBreak', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclArg = {
-    name='nodeKindDeclArg', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclArgDDD = {
-    name='nodeKindDeclArgDDD', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclClass = {
-    name='nodeKindDeclClass', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclConstr = {
-    name='nodeKindDeclConstr', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclDestr = {
-    name='nodeKindDeclDestr', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclEnum = {
-    name='nodeKindDeclEnum', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclFunc = {
-    name='nodeKindDeclFunc', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclMacro = {
-    name='nodeKindDeclMacro', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclMember = {
-    name='nodeKindDeclMember', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclMethod = {
-    name='nodeKindDeclMethod', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindDeclVar = {
-    name='nodeKindDeclVar', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpCall = {
-    name='nodeKindExpCall', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpCallSuper = {
-    name='nodeKindExpCallSuper', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpCast = {
-    name='nodeKindExpCast', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpDDD = {
-    name='nodeKindExpDDD', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpList = {
-    name='nodeKindExpList', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpMacroExp = {
-    name='nodeKindExpMacroExp', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpMacroStat = {
-    name='nodeKindExpMacroStat', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpNew = {
-    name='nodeKindExpNew', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpOmitEnum = {
-    name='nodeKindExpOmitEnum', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpOp1 = {
-    name='nodeKindExpOp1', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpOp2 = {
-    name='nodeKindExpOp2', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpParen = {
-    name='nodeKindExpParen', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpRef = {
-    name='nodeKindExpRef', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpRefItem = {
-    name='nodeKindExpRefItem', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindExpUnwrap = {
-    name='nodeKindExpUnwrap', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindFor = {
-    name='nodeKindFor', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindForeach = {
-    name='nodeKindForeach', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindForsort = {
-    name='nodeKindForsort', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindGetField = {
-    name='nodeKindGetField', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindIf = {
-    name='nodeKindIf', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindIfUnwrap = {
-    name='nodeKindIfUnwrap', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindImport = {
-    name='nodeKindImport', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralArray = {
-    name='nodeKindLiteralArray', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralBool = {
-    name='nodeKindLiteralBool', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralChar = {
-    name='nodeKindLiteralChar', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralInt = {
-    name='nodeKindLiteralInt', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralList = {
-    name='nodeKindLiteralList', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralMap = {
-    name='nodeKindLiteralMap', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralNil = {
-    name='nodeKindLiteralNil', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralReal = {
-    name='nodeKindLiteralReal', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralString = {
-    name='nodeKindLiteralString', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindLiteralSymbol = {
-    name='nodeKindLiteralSymbol', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindNone = {
-    name='nodeKindNone', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindProvide = {
-    name='nodeKindProvide', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindRefField = {
-    name='nodeKindRefField', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindRefType = {
-    name='nodeKindRefType', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindRepeat = {
-    name='nodeKindRepeat', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindReturn = {
-    name='nodeKindReturn', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindRoot = {
-    name='nodeKindRoot', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindStmtExp = {
-    name='nodeKindStmtExp', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindSubfile = {
-    name='nodeKindSubfile', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindSwitch = {
-    name='nodeKindSwitch', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindUnwrapSet = {
-    name='nodeKindUnwrapSet', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.nodeKindWhile = {
-    name='nodeKindWhile', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.rootScope = {
-    name='rootScope', staticFlag = false, accessMode = 1, typeId = 424 }
-  _classInfo200.rootTypeId = {
-    name='rootTypeId', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo200.sym2builtInTypeMap = {
-    name='sym2builtInTypeMap', staticFlag = false, accessMode = 1, typeId = 400 }
-  _classInfo200.typeInfoKind = {
-    name='typeInfoKind', staticFlag = false, accessMode = 1, typeId = 394 }
-  end
-do
-  local _classInfo210 = {}
-  _typeId2ClassInfoMap[ 210 ] = _classInfo210
-  end
-do
-  local _classInfo245 = {}
-  _typeId2ClassInfoMap[ 245 ] = _classInfo245
-  _classInfo245.column = {
-    name='column', staticFlag = false, accessMode = 1, typeId = 223 }
-  _classInfo245.lineNo = {
-    name='lineNo', staticFlag = false, accessMode = 1, typeId = 223 }
-  end
-do
-  local _classInfo255 = {}
-  _typeId2ClassInfoMap[ 255 ] = _classInfo255
-  _classInfo255.kind = {
-    name='kind', staticFlag = false, accessMode = 1, typeId = 244 }
-  _classInfo255.pos = {
-    name='pos', staticFlag = false, accessMode = 1, typeId = 245 }
-  _classInfo255.txt = {
-    name='txt', staticFlag = false, accessMode = 1, typeId = 210 }
-  end
-do
-  local _classInfo406 = {}
-  _typeId2ClassInfoMap[ 406 ] = _classInfo406
-  end
-do
-  local _classInfo452 = {}
-  _typeId2ClassInfoMap[ 452 ] = _classInfo452
-  end
-do
-  local _classInfo489 = {}
-  _typeId2ClassInfoMap[ 489 ] = _classInfo489
-  end
-do
-  local _classInfo622 = {}
-  _typeId2ClassInfoMap[ 622 ] = _classInfo622
-  end
-do
-  local _classInfo869 = {}
-  _typeId2ClassInfoMap[ 869 ] = _classInfo869
-  end
-do
-  local _classInfo1226 = {}
-  _typeId2ClassInfoMap[ 1226 ] = _classInfo1226
-  end
-do
-  local _classInfo1576 = {}
-  _typeId2ClassInfoMap[ 1576 ] = _classInfo1576
-  end
-do
-  local _classInfo1634 = {}
-  _typeId2ClassInfoMap[ 1634 ] = _classInfo1634
-  end
-do
-  local _classInfo1669 = {}
-  _typeId2ClassInfoMap[ 1669 ] = _classInfo1669
-  end
-do
-  local _classInfo1772 = {}
-  _typeId2ClassInfoMap[ 1772 ] = _classInfo1772
-  end
-do
-  local _classInfo1823 = {}
-  _typeId2ClassInfoMap[ 1823 ] = _classInfo1823
-  end
-do
-  local _classInfo1880 = {}
-  _typeId2ClassInfoMap[ 1880 ] = _classInfo1880
-  end
-do
-  local _classInfo2010 = {}
-  _typeId2ClassInfoMap[ 2010 ] = _classInfo2010
-  end
-do
-  local _classInfo2032 = {}
-  _typeId2ClassInfoMap[ 2032 ] = _classInfo2032
-  _classInfo2032.name = {
-    name='name', staticFlag = false, accessMode = 1, typeId = 210 }
-  _classInfo2032.scope = {
-    name='scope', staticFlag = false, accessMode = 1, typeId = 489 }
-  _classInfo2032.typeInfo = {
-    name='typeInfo', staticFlag = false, accessMode = 1, typeId = 406 }
-  end
-do
-  local _classInfo2126 = {}
-  _typeId2ClassInfoMap[ 2126 ] = _classInfo2126
-  end
-do
-  local _classInfo2203 = {}
-  _typeId2ClassInfoMap[ 2203 ] = _classInfo2203
-  end
-do
-  local _classInfo2287 = {}
-  _typeId2ClassInfoMap[ 2287 ] = _classInfo2287
-  end
-do
-  local _classInfo2350 = {}
-  _typeId2ClassInfoMap[ 2350 ] = _classInfo2350
-  end
-do
-  local _classInfo2441 = {}
-  _typeId2ClassInfoMap[ 2441 ] = _classInfo2441
-  end
-do
-  local _classInfo2517 = {}
-  _typeId2ClassInfoMap[ 2517 ] = _classInfo2517
-  end
-do
-  local _classInfo2580 = {}
-  _typeId2ClassInfoMap[ 2580 ] = _classInfo2580
-  end
-do
-  local _classInfo2652 = {}
-  _typeId2ClassInfoMap[ 2652 ] = _classInfo2652
-  end
-do
-  local _classInfo2727 = {}
-  _typeId2ClassInfoMap[ 2727 ] = _classInfo2727
-  end
-do
-  local _classInfo2808 = {}
-  _typeId2ClassInfoMap[ 2808 ] = _classInfo2808
-  end
-do
-  local _classInfo2886 = {}
-  _typeId2ClassInfoMap[ 2886 ] = _classInfo2886
-  end
-do
-  local _classInfo2955 = {}
-  _typeId2ClassInfoMap[ 2955 ] = _classInfo2955
-  end
-do
-  local _classInfo3010 = {}
-  _typeId2ClassInfoMap[ 3010 ] = _classInfo3010
-  end
-do
-  local _classInfo3061 = {}
-  _typeId2ClassInfoMap[ 3061 ] = _classInfo3061
-  end
-do
-  local _classInfo3121 = {}
-  _typeId2ClassInfoMap[ 3121 ] = _classInfo3121
-  end
-do
-  local _classInfo3184 = {}
-  _typeId2ClassInfoMap[ 3184 ] = _classInfo3184
-  end
-do
-  local _classInfo3247 = {}
-  _typeId2ClassInfoMap[ 3247 ] = _classInfo3247
-  end
-do
-  local _classInfo3313 = {}
-  _typeId2ClassInfoMap[ 3313 ] = _classInfo3313
-  end
-do
-  local _classInfo3382 = {}
-  _typeId2ClassInfoMap[ 3382 ] = _classInfo3382
-  end
-do
-  local _classInfo3454 = {}
-  _typeId2ClassInfoMap[ 3454 ] = _classInfo3454
-  end
-do
-  local _classInfo3538 = {}
-  _typeId2ClassInfoMap[ 3538 ] = _classInfo3538
-  end
-do
-  local _classInfo3609 = {}
-  _typeId2ClassInfoMap[ 3609 ] = _classInfo3609
-  end
-do
-  local _classInfo3681 = {}
-  _typeId2ClassInfoMap[ 3681 ] = _classInfo3681
-  end
-do
-  local _classInfo3756 = {}
-  _typeId2ClassInfoMap[ 3756 ] = _classInfo3756
-  end
-do
-  local _classInfo3819 = {}
-  _typeId2ClassInfoMap[ 3819 ] = _classInfo3819
-  end
-do
-  local _classInfo3876 = {}
-  _typeId2ClassInfoMap[ 3876 ] = _classInfo3876
-  end
-do
-  local _classInfo3933 = {}
-  _typeId2ClassInfoMap[ 3933 ] = _classInfo3933
-  end
-do
-  local _classInfo3999 = {}
-  _typeId2ClassInfoMap[ 3999 ] = _classInfo3999
-  end
-do
-  local _classInfo4065 = {}
-  _typeId2ClassInfoMap[ 4065 ] = _classInfo4065
-  end
-do
-  local _classInfo4125 = {}
-  _typeId2ClassInfoMap[ 4125 ] = _classInfo4125
-  end
-do
-  local _classInfo4194 = {}
-  _typeId2ClassInfoMap[ 4194 ] = _classInfo4194
-  end
-do
-  local _classInfo4276 = {}
-  _typeId2ClassInfoMap[ 4276 ] = _classInfo4276
-  end
-do
-  local _classInfo4405 = {}
-  _typeId2ClassInfoMap[ 4405 ] = _classInfo4405
-  end
-do
-  local _classInfo4420 = {}
-  _typeId2ClassInfoMap[ 4420 ] = _classInfo4420
-  end
-do
-  local _classInfo4567 = {}
-  _typeId2ClassInfoMap[ 4567 ] = _classInfo4567
-  end
-do
-  local _classInfo4624 = {}
-  _typeId2ClassInfoMap[ 4624 ] = _classInfo4624
-  end
-do
-  local _classInfo4681 = {}
-  _typeId2ClassInfoMap[ 4681 ] = _classInfo4681
-  end
-do
-  local _classInfo4738 = {}
-  _typeId2ClassInfoMap[ 4738 ] = _classInfo4738
-  end
-do
-  local _classInfo4798 = {}
-  _typeId2ClassInfoMap[ 4798 ] = _classInfo4798
-  end
-do
-  local _classInfo4879 = {}
-  _typeId2ClassInfoMap[ 4879 ] = _classInfo4879
-  end
-do
-  local _classInfo5013 = {}
-  _typeId2ClassInfoMap[ 5013 ] = _classInfo5013
-  end
-do
-  local _classInfo5106 = {}
-  _typeId2ClassInfoMap[ 5106 ] = _classInfo5106
-  end
-do
-  local _classInfo5256 = {}
-  _typeId2ClassInfoMap[ 5256 ] = _classInfo5256
-  end
-do
-  local _classInfo5331 = {}
-  _typeId2ClassInfoMap[ 5331 ] = _classInfo5331
-  end
-do
-  local _classInfo5392 = {}
-  _typeId2ClassInfoMap[ 5392 ] = _classInfo5392
-  end
-do
-  local _classInfo5449 = {}
-  _typeId2ClassInfoMap[ 5449 ] = _classInfo5449
-  end
-do
-  local _classInfo5512 = {}
-  _typeId2ClassInfoMap[ 5512 ] = _classInfo5512
-  end
-do
-  local _classInfo5575 = {}
-  _typeId2ClassInfoMap[ 5575 ] = _classInfo5575
-  end
-do
-  local _classInfo5635 = {}
-  _typeId2ClassInfoMap[ 5635 ] = _classInfo5635
-  end
-do
-  local _classInfo5692 = {}
-  _typeId2ClassInfoMap[ 5692 ] = _classInfo5692
-  end
-do
-  local _classInfo5764 = {}
-  _typeId2ClassInfoMap[ 5764 ] = _classInfo5764
-  end
-do
-  local _classInfo5845 = {}
-  _typeId2ClassInfoMap[ 5845 ] = _classInfo5845
-  end
-do
-  local _classInfo5914 = {}
-  _typeId2ClassInfoMap[ 5914 ] = _classInfo5914
-  end
-do
-  local _classInfo5971 = {}
-  _typeId2ClassInfoMap[ 5971 ] = _classInfo5971
-  end
+   local _classInfo373 = {}
+   _typeId2ClassInfoMap[ 373 ] = _classInfo373
+end
+do
+   local _classInfo388 = {}
+   _typeId2ClassInfoMap[ 388 ] = _classInfo388
+end
+do
+   local _classInfo391 = {}
+   _typeId2ClassInfoMap[ 391 ] = _classInfo391
+end
+do
+   local _classInfo424 = {}
+   _typeId2ClassInfoMap[ 424 ] = _classInfo424
+end
+do
+   local _classInfo497 = {}
+   _typeId2ClassInfoMap[ 497 ] = _classInfo497
+end
+do
+   local _classInfo546 = {}
+   _typeId2ClassInfoMap[ 546 ] = _classInfo546
+   _classInfo546.hasData = {
+     name='hasData', staticFlag = false, accessMode = '1', typeId = 500 }
+   _classInfo546.symbolInfo = {
+     name='symbolInfo', staticFlag = false, accessMode = '1', typeId = 452 }
+end
+do
+   local _classInfo866 = {}
+   _typeId2ClassInfoMap[ 866 ] = _classInfo866
+end
+do
+   local _classInfo918 = {}
+   _typeId2ClassInfoMap[ 918 ] = _classInfo918
+end
+do
+   local _classInfo921 = {}
+   _typeId2ClassInfoMap[ 921 ] = _classInfo921
+end
+do
+   local _classInfo924 = {}
+   _typeId2ClassInfoMap[ 924 ] = _classInfo924
+end
+do
+   local _classInfo1036 = {}
+   _typeId2ClassInfoMap[ 1036 ] = _classInfo1036
+end
+do
+   local _classInfo1148 = {}
+   _typeId2ClassInfoMap[ 1148 ] = _classInfo1148
+end
+do
+   local _classInfo1201 = {}
+   _typeId2ClassInfoMap[ 1201 ] = _classInfo1201
+end
+do
+   local _classInfo1213 = {}
+   _typeId2ClassInfoMap[ 1213 ] = _classInfo1213
+end
+do
+   local _classInfo1276 = {}
+   _typeId2ClassInfoMap[ 1276 ] = _classInfo1276
+end
+do
+   local _classInfo1566 = {}
+   _typeId2ClassInfoMap[ 1566 ] = _classInfo1566
+end
+do
+   local _classInfo1616 = {}
+   _typeId2ClassInfoMap[ 1616 ] = _classInfo1616
+   _classInfo1616.name = {
+     name='name', staticFlag = false, accessMode = '1', typeId = 210 }
+   _classInfo1616.scope = {
+     name='scope', staticFlag = false, accessMode = '1', typeId = 489 }
+   _classInfo1616.typeInfo = {
+     name='typeInfo', staticFlag = false, accessMode = '1', typeId = 406 }
+end
+do
+   local _classInfo1622 = {}
+   _typeId2ClassInfoMap[ 1622 ] = _classInfo1622
+end
+do
+   local _classInfo1625 = {}
+   _typeId2ClassInfoMap[ 1625 ] = _classInfo1625
+end
+do
+   local _classInfo1628 = {}
+   _typeId2ClassInfoMap[ 1628 ] = _classInfo1628
+end
+do
+   local _classInfo1631 = {}
+   _typeId2ClassInfoMap[ 1631 ] = _classInfo1631
+end
+do
+   local _classInfo1659 = {}
+   _typeId2ClassInfoMap[ 1659 ] = _classInfo1659
+   _classInfo1659.val = {
+     name='val', staticFlag = false, accessMode = '1', typeId = 71 }
+   _classInfo1659.typeInfo = {
+     name='typeInfo', staticFlag = false, accessMode = '1', typeId = 406 }
+end
+do
+   local _classInfo1665 = {}
+   _typeId2ClassInfoMap[ 1665 ] = _classInfo1665
+   _classInfo1665.func = {
+     name='func', staticFlag = false, accessMode = '1', typeId = 1668 }
+   _classInfo1665.declInfo = {
+     name='declInfo', staticFlag = false, accessMode = '1', typeId = 1669 }
+   _classInfo1665.symbol2MacroValInfoMap = {
+     name='symbol2MacroValInfoMap', staticFlag = false, accessMode = '1', typeId = 1673 }
+end
+do
+   local _classInfo1695 = {}
+   _typeId2ClassInfoMap[ 1695 ] = _classInfo1695
+end
+do
+   local _classInfo1769 = {}
+   _typeId2ClassInfoMap[ 1769 ] = _classInfo1769
+end
+do
+   local _classInfo1820 = {}
+   _typeId2ClassInfoMap[ 1820 ] = _classInfo1820
+end
+do
+   local _classInfo1877 = {}
+   _typeId2ClassInfoMap[ 1877 ] = _classInfo1877
+end
+do
+   local _classInfo1931 = {}
+   _typeId2ClassInfoMap[ 1931 ] = _classInfo1931
+end
+do
+   local _classInfo1934 = {}
+   _typeId2ClassInfoMap[ 1934 ] = _classInfo1934
+end
+do
+   local _classInfo1946 = {}
+   _typeId2ClassInfoMap[ 1946 ] = _classInfo1946
+end
+do
+   local _classInfo2007 = {}
+   _typeId2ClassInfoMap[ 2007 ] = _classInfo2007
+end
+do
+   local _classInfo2123 = {}
+   _typeId2ClassInfoMap[ 2123 ] = _classInfo2123
+end
+do
+   local _classInfo2200 = {}
+   _typeId2ClassInfoMap[ 2200 ] = _classInfo2200
+end
+do
+   local _classInfo2263 = {}
+   _typeId2ClassInfoMap[ 2263 ] = _classInfo2263
+end
+do
+   local _classInfo2284 = {}
+   _typeId2ClassInfoMap[ 2284 ] = _classInfo2284
+end
+do
+   local _classInfo2414 = {}
+   _typeId2ClassInfoMap[ 2414 ] = _classInfo2414
+end
+do
+   local _classInfo2438 = {}
+   _typeId2ClassInfoMap[ 2438 ] = _classInfo2438
+end
+do
+   local _classInfo2514 = {}
+   _typeId2ClassInfoMap[ 2514 ] = _classInfo2514
+end
+do
+   local _classInfo2577 = {}
+   _typeId2ClassInfoMap[ 2577 ] = _classInfo2577
+end
+do
+   local _classInfo2649 = {}
+   _typeId2ClassInfoMap[ 2649 ] = _classInfo2649
+end
+do
+   local _classInfo2724 = {}
+   _typeId2ClassInfoMap[ 2724 ] = _classInfo2724
+end
+do
+   local _classInfo2805 = {}
+   _typeId2ClassInfoMap[ 2805 ] = _classInfo2805
+end
+do
+   local _classInfo2883 = {}
+   _typeId2ClassInfoMap[ 2883 ] = _classInfo2883
+end
+do
+   local _classInfo2952 = {}
+   _typeId2ClassInfoMap[ 2952 ] = _classInfo2952
+end
+do
+   local _classInfo3007 = {}
+   _typeId2ClassInfoMap[ 3007 ] = _classInfo3007
+end
+do
+   local _classInfo3118 = {}
+   _typeId2ClassInfoMap[ 3118 ] = _classInfo3118
+end
+do
+   local _classInfo3181 = {}
+   _typeId2ClassInfoMap[ 3181 ] = _classInfo3181
+end
+do
+   local _classInfo3244 = {}
+   _typeId2ClassInfoMap[ 3244 ] = _classInfo3244
+end
+do
+   local _classInfo3310 = {}
+   _typeId2ClassInfoMap[ 3310 ] = _classInfo3310
+end
+do
+   local _classInfo3379 = {}
+   _typeId2ClassInfoMap[ 3379 ] = _classInfo3379
+end
+do
+   local _classInfo3451 = {}
+   _typeId2ClassInfoMap[ 3451 ] = _classInfo3451
+end
+do
+   local _classInfo3535 = {}
+   _typeId2ClassInfoMap[ 3535 ] = _classInfo3535
+end
+do
+   local _classInfo3606 = {}
+   _typeId2ClassInfoMap[ 3606 ] = _classInfo3606
+end
+do
+   local _classInfo3678 = {}
+   _typeId2ClassInfoMap[ 3678 ] = _classInfo3678
+end
+do
+   local _classInfo3753 = {}
+   _typeId2ClassInfoMap[ 3753 ] = _classInfo3753
+end
+do
+   local _classInfo3816 = {}
+   _typeId2ClassInfoMap[ 3816 ] = _classInfo3816
+end
+do
+   local _classInfo3873 = {}
+   _typeId2ClassInfoMap[ 3873 ] = _classInfo3873
+end
+do
+   local _classInfo3930 = {}
+   _typeId2ClassInfoMap[ 3930 ] = _classInfo3930
+end
+do
+   local _classInfo3996 = {}
+   _typeId2ClassInfoMap[ 3996 ] = _classInfo3996
+end
+do
+   local _classInfo4062 = {}
+   _typeId2ClassInfoMap[ 4062 ] = _classInfo4062
+end
+do
+   local _classInfo4122 = {}
+   _typeId2ClassInfoMap[ 4122 ] = _classInfo4122
+end
+do
+   local _classInfo4191 = {}
+   _typeId2ClassInfoMap[ 4191 ] = _classInfo4191
+end
+do
+   local _classInfo4273 = {}
+   _typeId2ClassInfoMap[ 4273 ] = _classInfo4273
+end
+do
+   local _classInfo4339 = {}
+   _typeId2ClassInfoMap[ 4339 ] = _classInfo4339
+end
+do
+   local _classInfo4402 = {}
+   _typeId2ClassInfoMap[ 4402 ] = _classInfo4402
+end
+do
+   local _classInfo4523 = {}
+   _typeId2ClassInfoMap[ 4523 ] = _classInfo4523
+end
+do
+   local _classInfo4564 = {}
+   _typeId2ClassInfoMap[ 4564 ] = _classInfo4564
+end
+do
+   local _classInfo4621 = {}
+   _typeId2ClassInfoMap[ 4621 ] = _classInfo4621
+end
+do
+   local _classInfo4678 = {}
+   _typeId2ClassInfoMap[ 4678 ] = _classInfo4678
+end
+do
+   local _classInfo4735 = {}
+   _typeId2ClassInfoMap[ 4735 ] = _classInfo4735
+end
+do
+   local _classInfo4795 = {}
+   _typeId2ClassInfoMap[ 4795 ] = _classInfo4795
+end
+do
+   local _classInfo4876 = {}
+   _typeId2ClassInfoMap[ 4876 ] = _classInfo4876
+end
+do
+   local _classInfo5010 = {}
+   _typeId2ClassInfoMap[ 5010 ] = _classInfo5010
+end
+do
+   local _classInfo5058 = {}
+   _typeId2ClassInfoMap[ 5058 ] = _classInfo5058
+end
+do
+   local _classInfo5253 = {}
+   _typeId2ClassInfoMap[ 5253 ] = _classInfo5253
+end
+do
+   local _classInfo5328 = {}
+   _typeId2ClassInfoMap[ 5328 ] = _classInfo5328
+end
+do
+   local _classInfo5389 = {}
+   _typeId2ClassInfoMap[ 5389 ] = _classInfo5389
+end
+do
+   local _classInfo5446 = {}
+   _typeId2ClassInfoMap[ 5446 ] = _classInfo5446
+end
+do
+   local _classInfo5509 = {}
+   _typeId2ClassInfoMap[ 5509 ] = _classInfo5509
+end
+do
+   local _classInfo5572 = {}
+   _typeId2ClassInfoMap[ 5572 ] = _classInfo5572
+end
+do
+   local _classInfo5632 = {}
+   _typeId2ClassInfoMap[ 5632 ] = _classInfo5632
+end
+do
+   local _classInfo5689 = {}
+   _typeId2ClassInfoMap[ 5689 ] = _classInfo5689
+end
+do
+   local _classInfo5740 = {}
+   _typeId2ClassInfoMap[ 5740 ] = _classInfo5740
+end
+do
+   local _classInfo5761 = {}
+   _typeId2ClassInfoMap[ 5761 ] = _classInfo5761
+end
+do
+   local _classInfo5842 = {}
+   _typeId2ClassInfoMap[ 5842 ] = _classInfo5842
+end
+do
+   local _classInfo5911 = {}
+   _typeId2ClassInfoMap[ 5911 ] = _classInfo5911
+end
+do
+   local _classInfo5968 = {}
+   _typeId2ClassInfoMap[ 5968 ] = _classInfo5968
+end
+do
+   local _classInfo196 = {}
+   _typeId2ClassInfoMap[ 196 ] = _classInfo196
+end
+do
+   local _classInfo198 = {}
+   _typeId2ClassInfoMap[ 198 ] = _classInfo198
+end
+do
+   local _classInfo200 = {}
+   _typeId2ClassInfoMap[ 200 ] = _classInfo200
+   _classInfo200.builtInTypeIdSet = {
+     name='builtInTypeIdSet', staticFlag = false, accessMode = 1, typeId = 407 }
+   _classInfo200.builtinTypeArray = {
+     name='builtinTypeArray', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeBool = {
+     name='builtinTypeBool', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeChar = {
+     name='builtinTypeChar', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeDDD = {
+     name='builtinTypeDDD', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeForm = {
+     name='builtinTypeForm', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeInt = {
+     name='builtinTypeInt', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeList = {
+     name='builtinTypeList', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeMap = {
+     name='builtinTypeMap', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeNil = {
+     name='builtinTypeNil', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeNone = {
+     name='builtinTypeNone', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeReal = {
+     name='builtinTypeReal', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeStat = {
+     name='builtinTypeStat', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeStem = {
+     name='builtinTypeStem', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeStem_ = {
+     name='builtinTypeStem_', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeString = {
+     name='builtinTypeString', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.builtinTypeSymbol = {
+     name='builtinTypeSymbol', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.headTypeInfo = {
+     name='headTypeInfo', staticFlag = false, accessMode = 1, typeId = 406 }
+   _classInfo200.nodeKind = {
+     name='nodeKind', staticFlag = false, accessMode = 1, typeId = 1683 }
+   _classInfo200.nodeKindApply = {
+     name='nodeKindApply', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindBlock = {
+     name='nodeKindBlock', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindBreak = {
+     name='nodeKindBreak', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclArg = {
+     name='nodeKindDeclArg', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclArgDDD = {
+     name='nodeKindDeclArgDDD', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclClass = {
+     name='nodeKindDeclClass', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclConstr = {
+     name='nodeKindDeclConstr', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclDestr = {
+     name='nodeKindDeclDestr', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclEnum = {
+     name='nodeKindDeclEnum', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclFunc = {
+     name='nodeKindDeclFunc', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclMacro = {
+     name='nodeKindDeclMacro', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclMember = {
+     name='nodeKindDeclMember', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclMethod = {
+     name='nodeKindDeclMethod', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindDeclVar = {
+     name='nodeKindDeclVar', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpCall = {
+     name='nodeKindExpCall', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpCallSuper = {
+     name='nodeKindExpCallSuper', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpCast = {
+     name='nodeKindExpCast', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpDDD = {
+     name='nodeKindExpDDD', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpList = {
+     name='nodeKindExpList', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpMacroExp = {
+     name='nodeKindExpMacroExp', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpMacroStat = {
+     name='nodeKindExpMacroStat', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpNew = {
+     name='nodeKindExpNew', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpOmitEnum = {
+     name='nodeKindExpOmitEnum', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpOp1 = {
+     name='nodeKindExpOp1', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpOp2 = {
+     name='nodeKindExpOp2', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpParen = {
+     name='nodeKindExpParen', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpRef = {
+     name='nodeKindExpRef', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpRefItem = {
+     name='nodeKindExpRefItem', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindExpUnwrap = {
+     name='nodeKindExpUnwrap', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindFor = {
+     name='nodeKindFor', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindForeach = {
+     name='nodeKindForeach', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindForsort = {
+     name='nodeKindForsort', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindGetField = {
+     name='nodeKindGetField', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindIf = {
+     name='nodeKindIf', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindIfUnwrap = {
+     name='nodeKindIfUnwrap', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindImport = {
+     name='nodeKindImport', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralArray = {
+     name='nodeKindLiteralArray', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralBool = {
+     name='nodeKindLiteralBool', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralChar = {
+     name='nodeKindLiteralChar', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralInt = {
+     name='nodeKindLiteralInt', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralList = {
+     name='nodeKindLiteralList', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralMap = {
+     name='nodeKindLiteralMap', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralNil = {
+     name='nodeKindLiteralNil', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralReal = {
+     name='nodeKindLiteralReal', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralString = {
+     name='nodeKindLiteralString', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindLiteralSymbol = {
+     name='nodeKindLiteralSymbol', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindNone = {
+     name='nodeKindNone', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindProvide = {
+     name='nodeKindProvide', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindRefField = {
+     name='nodeKindRefField', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindRefType = {
+     name='nodeKindRefType', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindRepeat = {
+     name='nodeKindRepeat', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindReturn = {
+     name='nodeKindReturn', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindRoot = {
+     name='nodeKindRoot', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindStmtExp = {
+     name='nodeKindStmtExp', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindSubfile = {
+     name='nodeKindSubfile', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindSwitch = {
+     name='nodeKindSwitch', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindUnwrapSet = {
+     name='nodeKindUnwrapSet', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.nodeKindWhile = {
+     name='nodeKindWhile', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.rootScope = {
+     name='rootScope', staticFlag = false, accessMode = 1, typeId = 424 }
+   _classInfo200.rootTypeId = {
+     name='rootTypeId', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo200.sym2builtInTypeMap = {
+     name='sym2builtInTypeMap', staticFlag = false, accessMode = 1, typeId = 400 }
+   _classInfo200.typeInfoKind = {
+     name='typeInfoKind', staticFlag = false, accessMode = 1, typeId = 394 }
+end
+do
+   local _classInfo210 = {}
+   _typeId2ClassInfoMap[ 210 ] = _classInfo210
+end
+do
+   local _classInfo245 = {}
+   _typeId2ClassInfoMap[ 245 ] = _classInfo245
+   _classInfo245.column = {
+     name='column', staticFlag = false, accessMode = 1, typeId = 223 }
+   _classInfo245.lineNo = {
+     name='lineNo', staticFlag = false, accessMode = 1, typeId = 223 }
+end
+do
+   local _classInfo255 = {}
+   _typeId2ClassInfoMap[ 255 ] = _classInfo255
+   _classInfo255.kind = {
+     name='kind', staticFlag = false, accessMode = 1, typeId = 244 }
+   _classInfo255.pos = {
+     name='pos', staticFlag = false, accessMode = 1, typeId = 245 }
+   _classInfo255.txt = {
+     name='txt', staticFlag = false, accessMode = 1, typeId = 210 }
+end
+do
+   local _classInfo406 = {}
+   _typeId2ClassInfoMap[ 406 ] = _classInfo406
+end
+do
+   local _classInfo452 = {}
+   _typeId2ClassInfoMap[ 452 ] = _classInfo452
+end
+do
+   local _classInfo489 = {}
+   _typeId2ClassInfoMap[ 489 ] = _classInfo489
+end
+do
+   local _classInfo622 = {}
+   _typeId2ClassInfoMap[ 622 ] = _classInfo622
+end
+do
+   local _classInfo869 = {}
+   _typeId2ClassInfoMap[ 869 ] = _classInfo869
+end
+do
+   local _classInfo1226 = {}
+   _typeId2ClassInfoMap[ 1226 ] = _classInfo1226
+end
+do
+   local _classInfo1576 = {}
+   _typeId2ClassInfoMap[ 1576 ] = _classInfo1576
+end
+do
+   local _classInfo1634 = {}
+   _typeId2ClassInfoMap[ 1634 ] = _classInfo1634
+end
+do
+   local _classInfo1669 = {}
+   _typeId2ClassInfoMap[ 1669 ] = _classInfo1669
+end
+do
+   local _classInfo1772 = {}
+   _typeId2ClassInfoMap[ 1772 ] = _classInfo1772
+end
+do
+   local _classInfo1823 = {}
+   _typeId2ClassInfoMap[ 1823 ] = _classInfo1823
+end
+do
+   local _classInfo1880 = {}
+   _typeId2ClassInfoMap[ 1880 ] = _classInfo1880
+end
+do
+   local _classInfo2010 = {}
+   _typeId2ClassInfoMap[ 2010 ] = _classInfo2010
+end
+do
+   local _classInfo2032 = {}
+   _typeId2ClassInfoMap[ 2032 ] = _classInfo2032
+   _classInfo2032.name = {
+     name='name', staticFlag = false, accessMode = 1, typeId = 210 }
+   _classInfo2032.scope = {
+     name='scope', staticFlag = false, accessMode = 1, typeId = 489 }
+   _classInfo2032.typeInfo = {
+     name='typeInfo', staticFlag = false, accessMode = 1, typeId = 406 }
+end
+do
+   local _classInfo2126 = {}
+   _typeId2ClassInfoMap[ 2126 ] = _classInfo2126
+end
+do
+   local _classInfo2203 = {}
+   _typeId2ClassInfoMap[ 2203 ] = _classInfo2203
+end
+do
+   local _classInfo2287 = {}
+   _typeId2ClassInfoMap[ 2287 ] = _classInfo2287
+end
+do
+   local _classInfo2350 = {}
+   _typeId2ClassInfoMap[ 2350 ] = _classInfo2350
+end
+do
+   local _classInfo2441 = {}
+   _typeId2ClassInfoMap[ 2441 ] = _classInfo2441
+end
+do
+   local _classInfo2517 = {}
+   _typeId2ClassInfoMap[ 2517 ] = _classInfo2517
+end
+do
+   local _classInfo2580 = {}
+   _typeId2ClassInfoMap[ 2580 ] = _classInfo2580
+end
+do
+   local _classInfo2652 = {}
+   _typeId2ClassInfoMap[ 2652 ] = _classInfo2652
+end
+do
+   local _classInfo2727 = {}
+   _typeId2ClassInfoMap[ 2727 ] = _classInfo2727
+end
+do
+   local _classInfo2808 = {}
+   _typeId2ClassInfoMap[ 2808 ] = _classInfo2808
+end
+do
+   local _classInfo2886 = {}
+   _typeId2ClassInfoMap[ 2886 ] = _classInfo2886
+end
+do
+   local _classInfo2955 = {}
+   _typeId2ClassInfoMap[ 2955 ] = _classInfo2955
+end
+do
+   local _classInfo3010 = {}
+   _typeId2ClassInfoMap[ 3010 ] = _classInfo3010
+end
+do
+   local _classInfo3061 = {}
+   _typeId2ClassInfoMap[ 3061 ] = _classInfo3061
+end
+do
+   local _classInfo3121 = {}
+   _typeId2ClassInfoMap[ 3121 ] = _classInfo3121
+end
+do
+   local _classInfo3184 = {}
+   _typeId2ClassInfoMap[ 3184 ] = _classInfo3184
+end
+do
+   local _classInfo3247 = {}
+   _typeId2ClassInfoMap[ 3247 ] = _classInfo3247
+end
+do
+   local _classInfo3313 = {}
+   _typeId2ClassInfoMap[ 3313 ] = _classInfo3313
+end
+do
+   local _classInfo3382 = {}
+   _typeId2ClassInfoMap[ 3382 ] = _classInfo3382
+end
+do
+   local _classInfo3454 = {}
+   _typeId2ClassInfoMap[ 3454 ] = _classInfo3454
+end
+do
+   local _classInfo3538 = {}
+   _typeId2ClassInfoMap[ 3538 ] = _classInfo3538
+end
+do
+   local _classInfo3609 = {}
+   _typeId2ClassInfoMap[ 3609 ] = _classInfo3609
+end
+do
+   local _classInfo3681 = {}
+   _typeId2ClassInfoMap[ 3681 ] = _classInfo3681
+end
+do
+   local _classInfo3756 = {}
+   _typeId2ClassInfoMap[ 3756 ] = _classInfo3756
+end
+do
+   local _classInfo3819 = {}
+   _typeId2ClassInfoMap[ 3819 ] = _classInfo3819
+end
+do
+   local _classInfo3876 = {}
+   _typeId2ClassInfoMap[ 3876 ] = _classInfo3876
+end
+do
+   local _classInfo3933 = {}
+   _typeId2ClassInfoMap[ 3933 ] = _classInfo3933
+end
+do
+   local _classInfo3999 = {}
+   _typeId2ClassInfoMap[ 3999 ] = _classInfo3999
+end
+do
+   local _classInfo4065 = {}
+   _typeId2ClassInfoMap[ 4065 ] = _classInfo4065
+end
+do
+   local _classInfo4125 = {}
+   _typeId2ClassInfoMap[ 4125 ] = _classInfo4125
+end
+do
+   local _classInfo4194 = {}
+   _typeId2ClassInfoMap[ 4194 ] = _classInfo4194
+end
+do
+   local _classInfo4276 = {}
+   _typeId2ClassInfoMap[ 4276 ] = _classInfo4276
+end
+do
+   local _classInfo4405 = {}
+   _typeId2ClassInfoMap[ 4405 ] = _classInfo4405
+end
+do
+   local _classInfo4420 = {}
+   _typeId2ClassInfoMap[ 4420 ] = _classInfo4420
+end
+do
+   local _classInfo4567 = {}
+   _typeId2ClassInfoMap[ 4567 ] = _classInfo4567
+end
+do
+   local _classInfo4624 = {}
+   _typeId2ClassInfoMap[ 4624 ] = _classInfo4624
+end
+do
+   local _classInfo4681 = {}
+   _typeId2ClassInfoMap[ 4681 ] = _classInfo4681
+end
+do
+   local _classInfo4738 = {}
+   _typeId2ClassInfoMap[ 4738 ] = _classInfo4738
+end
+do
+   local _classInfo4798 = {}
+   _typeId2ClassInfoMap[ 4798 ] = _classInfo4798
+end
+do
+   local _classInfo4879 = {}
+   _typeId2ClassInfoMap[ 4879 ] = _classInfo4879
+end
+do
+   local _classInfo5013 = {}
+   _typeId2ClassInfoMap[ 5013 ] = _classInfo5013
+end
+do
+   local _classInfo5106 = {}
+   _typeId2ClassInfoMap[ 5106 ] = _classInfo5106
+end
+do
+   local _classInfo5256 = {}
+   _typeId2ClassInfoMap[ 5256 ] = _classInfo5256
+end
+do
+   local _classInfo5331 = {}
+   _typeId2ClassInfoMap[ 5331 ] = _classInfo5331
+end
+do
+   local _classInfo5392 = {}
+   _typeId2ClassInfoMap[ 5392 ] = _classInfo5392
+end
+do
+   local _classInfo5449 = {}
+   _typeId2ClassInfoMap[ 5449 ] = _classInfo5449
+end
+do
+   local _classInfo5512 = {}
+   _typeId2ClassInfoMap[ 5512 ] = _classInfo5512
+end
+do
+   local _classInfo5575 = {}
+   _typeId2ClassInfoMap[ 5575 ] = _classInfo5575
+end
+do
+   local _classInfo5635 = {}
+   _typeId2ClassInfoMap[ 5635 ] = _classInfo5635
+end
+do
+   local _classInfo5692 = {}
+   _typeId2ClassInfoMap[ 5692 ] = _classInfo5692
+end
+do
+   local _classInfo5764 = {}
+   _typeId2ClassInfoMap[ 5764 ] = _classInfo5764
+end
+do
+   local _classInfo5845 = {}
+   _typeId2ClassInfoMap[ 5845 ] = _classInfo5845
+end
+do
+   local _classInfo5914 = {}
+   _typeId2ClassInfoMap[ 5914 ] = _classInfo5914
+end
+do
+   local _classInfo5971 = {}
+   _typeId2ClassInfoMap[ 5971 ] = _classInfo5971
+end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 _varName2InfoMap.builtInTypeIdSet = {

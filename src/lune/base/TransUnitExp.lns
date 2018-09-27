@@ -1003,7 +1003,7 @@ fn TransUnit.analyzeExpSymbol(
    }
    elseif mode == .Fn {
       exp = self.analyzeDeclFunc(
-         false, false, false, .Local, false, nil, token, nil );
+         .Func, false, false, .Local, false, nil, token, nil );
    }
    else {
       self.error( "illegal mode -- %s" ( mode ) );

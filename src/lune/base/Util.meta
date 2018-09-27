@@ -3,21 +3,21 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-  local _classInfo207 = {}
-  _typeId2ClassInfoMap[ 207 ] = _classInfo207
-  end
+   local _classInfo207 = {}
+   _typeId2ClassInfoMap[ 207 ] = _classInfo207
+end
 do
-  local _classInfo196 = {}
-  _typeId2ClassInfoMap[ 196 ] = _classInfo196
-  end
+   local _classInfo196 = {}
+   _typeId2ClassInfoMap[ 196 ] = _classInfo196
+end
 do
-  local _classInfo198 = {}
-  _typeId2ClassInfoMap[ 198 ] = _classInfo198
-  end
+   local _classInfo198 = {}
+   _typeId2ClassInfoMap[ 198 ] = _classInfo198
+end
 do
-  local _classInfo200 = {}
-  _typeId2ClassInfoMap[ 200 ] = _classInfo200
-  end
+   local _classInfo200 = {}
+   _typeId2ClassInfoMap[ 200 ] = _classInfo200
+end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
 local _typeInfoList = {}

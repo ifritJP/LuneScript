@@ -615,7 +615,7 @@ fn TransUnit.analyzeDecl(
    }
    elseif token.txt == "fn" {
       return self.analyzeDeclFunc(
-         false, abstructFlag, overrideFlag,
+         .Func, abstructFlag, overrideFlag,
          accessMode, staticFlag, nil, firstToken, nil );
    }
    elseif token.txt == "class" {
@@ -702,12 +702,13 @@ fn TransUnit.analyzeDeclMember(
    }
 
 fn TransUnit.analyzeDeclMethod(
-   moduleFlag: bool, abstructFlag: bool, overrideFlag: bool, accessMode: Ast.AccessMode,
+   declFuncMode: DeclFuncMode,
+   abstructFlag: bool, overrideFlag: bool, accessMode: Ast.AccessMode,
    staticFlag: bool, className: &Parser.Token,
    firstToken: &Parser.Token, name: &Parser.Token ) mut : Ast.Node
 {
    let mut node = self.analyzeDeclFunc(
-      moduleFlag, abstructFlag,
+      declFuncMode, abstructFlag,
       overrideFlag, accessMode, staticFlag, className, name, name );
    return node;
 }
@@ -792,8 +793,18 @@ fn TransUnit.analyzeClassBody(
       }
       elseif token.txt == "fn" {
          let nameToken = self.getToken();
+         let mut declFuncMode = DeclFuncMode.Class;
+         if mode == .Module {
+            if gluePrefix {
+               declFuncMode = .Glue;
+            }
+            else {
+               declFuncMode = .Module;
+            }
+         }
+
          let methodNode = self.analyzeDeclMethod(
-            mode == .Module, abstructFlag, overrideFlag,
+            declFuncMode, abstructFlag, overrideFlag,
             accessMode, staticFlag, name, token, nameToken );
          fieldList.insert( methodNode );
          methodNameSet[ nameToken.txt ] = true;
@@ -1062,7 +1073,7 @@ pri fn TransUnit.addMethod( className: str, methodNode: Ast.Node, name: str ) mu
 
 
 fn TransUnit.analyzeDeclFunc(
-   moduleFlag: bool, abstructFlag: bool, overrideFlag: bool,
+   declFuncMode: DeclFuncMode, abstructFlag: bool, overrideFlag: bool,
    accessMode: Ast.AccessMode,
    mut staticFlag: bool, mut classNameToken: &Parser.Token!,
    firstToken: &Parser.Token, mut name: &Parser.Token! ) mut : Ast.Node
@@ -1124,7 +1135,7 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let orgStaticFlag = staticFlag;
-   if moduleFlag {
+   if declFuncMode == .Module {
       // module で Lua の外部モジュールを宣言した場合、
       // モジュール名でメンバにアクセスできるように、
       // 強制的に static にする。
@@ -1271,7 +1282,7 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut body:Ast.BlockNode! = nil;
    if token.txt == ";" {
-      if moduleFlag {
+      if declFuncMode == .Module or declFuncMode == .Glue {
          needNode = true;
       }
    }
@@ -1653,6 +1664,9 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
    let mut scope = self.pushScope( false );
 
    foreach expType, index in typeInfoList {
+      if index > #varNameList {
+         break;
+      }
       let varName = varNameList[ index ];
       self.addLocalVar( firstToken.pos, false, true, varName, expType, false );
    }
