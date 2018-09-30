@@ -550,3 +550,11 @@ GlueTest.func1( 10, "abc", [] );
 let age = GlueTest.create( 100 );
 age.func2( 2 );
 age.func2( 2, 3, 4.0, "xyz" );
+
+
+_print( `{ "%X" (0x1 & 0x3 ) } );
+_print( `{ "%X" (0x1 | 0x2 ) } );
+_print( `{ "%X" (0x1 ~ 0x3 ) } );
+_print( `{ "%X" (0x10 |>> 2 ) } );
+_print( `{ "%X" (0x1 |<< 2 ) } );
+_print( `{ "%X" (~2 ) } );

@@ -406,20 +406,20 @@ children = {200, } }
 _typeInfoList[6] = { parentId = 198, typeId = 200, txt = 'TransUnit', kind = 12, 
 children = {4352, 4360, 4595, 4627, 5600, } }
 _dependIdMap[ 202 ] = { 2, 200 } -- Parser
-_dependIdMap[ 207 ] = { 2, 345 } -- TxtStream
-_dependIdMap[ 208 ] = { 2, 346 } -- TxtStream!
+_dependIdMap[ 207 ] = { 2, 354 } -- TxtStream
+_dependIdMap[ 208 ] = { 2, 355 } -- TxtStream!
 _typeInfoList[7] = { parentId = 1, typeId = 210, srcTypeId = 25, mutable = false }
-_dependIdMap[ 220 ] = { 2, 359 } -- Position
-_dependIdMap[ 221 ] = { 2, 360 } -- Position!
+_dependIdMap[ 220 ] = { 2, 368 } -- Position
+_dependIdMap[ 221 ] = { 2, 369 } -- Position!
 _typeInfoList[8] = { parentId = 1, typeId = 223, srcTypeId = 16, mutable = false }
-_dependIdMap[ 227 ] = { 2, 366 } -- TokenKind
-_dependIdMap[ 228 ] = { 2, 367 } -- TokenKind!
-_dependIdMap[ 241 ] = { 2, 374 } -- Token
-_dependIdMap[ 242 ] = { 2, 375 } -- Token!
+_dependIdMap[ 227 ] = { 2, 375 } -- TokenKind
+_dependIdMap[ 228 ] = { 2, 376 } -- TokenKind!
+_dependIdMap[ 241 ] = { 2, 383 } -- Token
+_dependIdMap[ 242 ] = { 2, 384 } -- Token!
 _typeInfoList[9] = { parentId = 202, typeId = 244, srcTypeId = 227, mutable = false }
-_dependIdMap[ 244 ] = { 2, 377 } -- &TokenKind
+_dependIdMap[ 244 ] = { 2, 386 } -- &TokenKind
 _typeInfoList[10] = { parentId = 202, typeId = 245, srcTypeId = 220, mutable = false }
-_dependIdMap[ 245 ] = { 2, 378 } -- &Position
+_dependIdMap[ 245 ] = { 2, 387 } -- &Position
 _typeInfoList[11] = { parentId = 1, typeId = 246, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {241}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[12] = { parentId = 1, typeId = 247, nilable = true, orgTypeId = 246 }
@@ -427,20 +427,20 @@ _typeInfoList[13] = { parentId = 1, typeId = 249, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {241}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[14] = { parentId = 1, typeId = 250, nilable = true, orgTypeId = 249 }
 _typeInfoList[15] = { parentId = 202, typeId = 255, srcTypeId = 241, mutable = false }
-_dependIdMap[ 255 ] = { 2, 391 } -- &Token
+_dependIdMap[ 255 ] = { 2, 400 } -- &Token
 _typeInfoList[16] = { parentId = 1, typeId = 259, baseId = 1, txt = 'List',
         staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {241}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[17] = { parentId = 1, typeId = 260, nilable = true, orgTypeId = 259 }
-_dependIdMap[ 268 ] = { 2, 404 } -- Parser
-_dependIdMap[ 269 ] = { 2, 405 } -- Parser!
+_dependIdMap[ 268 ] = { 2, 413 } -- Parser
+_dependIdMap[ 269 ] = { 2, 414 } -- Parser!
 _typeInfoList[18] = { parentId = 202, typeId = 271, srcTypeId = 242, mutable = false }
-_dependIdMap[ 271 ] = { 2, 407 } -- &Token!
-_dependIdMap[ 281 ] = { 2, 418 } -- WrapParser
-_dependIdMap[ 282 ] = { 2, 419 } -- WrapParser!
-_dependIdMap[ 293 ] = { 2, 431 } -- StreamParser
-_dependIdMap[ 294 ] = { 2, 432 } -- StreamParser!
-_dependIdMap[ 320 ] = { 2, 550 } -- DummyParser
-_dependIdMap[ 321 ] = { 2, 551 } -- DummyParser!
+_dependIdMap[ 271 ] = { 2, 416 } -- &Token!
+_dependIdMap[ 281 ] = { 2, 427 } -- WrapParser
+_dependIdMap[ 282 ] = { 2, 428 } -- WrapParser!
+_dependIdMap[ 293 ] = { 2, 440 } -- StreamParser
+_dependIdMap[ 294 ] = { 2, 441 } -- StreamParser!
+_dependIdMap[ 320 ] = { 2, 559 } -- DummyParser
+_dependIdMap[ 321 ] = { 2, 560 } -- DummyParser!
 _dependIdMap[ 373 ] = { 1, 200 } -- Ast
 _dependIdMap[ 384 ] = { 1, 373 } -- IdProvider
 _dependIdMap[ 385 ] = { 1, 374 } -- IdProvider!

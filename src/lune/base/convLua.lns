@@ -46,6 +46,24 @@ pub enum ConvMode {
    ConvMeta,
 }
 
+let hasBitOpFlag = _VERSION.gsub( "^[^%d]+", "" ).find( "^5%.3" ) ~= nil;
+
+enum BitOpKind {
+   And,
+   Or,
+   Xor,
+   LShift,
+   RShift,
+}
+
+let bitBinOpMap = {
+   "&": BitOpKind.And,
+   "|": BitOpKind.Or,
+   "~": BitOpKind.Xor,
+   "|>>": BitOpKind.RShift,
+   "|<<": BitOpKind.LShift,
+};
+
 class convFilter extend Ast.Filter (oStream) {
    pri let streamName: str;
    pri let mut stream: oStream;
@@ -1805,10 +1823,21 @@ pub override fn convFilter.processExpOp1(
       filter( node.$exp,  self, node );
       self.write( " )" );
    }
+   elseif op == "~" {
+      if hasBitOpFlag {
+         self.write( op );
+         filter( node.$exp,  self, node );
+      }
+      else {
+         self.write( "bit32.bnot( " );
+         filter( node.$exp,  self, node );
+         self.write( " )" );
+      }
+   }
    else {
       if op == "not" {
          op = op .. " ";
-      }   
+      }
       self.write( op );
       filter( node.$exp,  self, node );
    } 
@@ -1843,13 +1872,64 @@ pub override fn convFilter.processExpOp2(
    if node.$expType.equals( Ast.builtinTypeInt ) and node.$op.txt == "/" {
       intCast = true;
       self.write( "math.floor(" );
-   } 
-   
-   filter( node.$exp1,  self, node );
+   }
 
-   self.write( " " .. node.$op.txt .. " " );
+   let mut opTxt = node.$op.txt;
 
-   filter( node.$exp2,  self, node );
+   if! bitBinOpMap[ opTxt ] {
+      // ビット演算の処理
+      if hasBitOpFlag {
+         // ビット演算子を持っている場合
+         switch _exp {
+            case .LShift {
+               opTxt = "<<";
+            }  
+            case .RShift {
+               opTxt = ">>";
+            }  
+         }
+         filter( node.$exp1,  self, node );
+         self.write( " " .. opTxt .. " " );
+         filter( node.$exp2,  self, node );
+      }
+      else {
+         // ビット演算子を持っていない場合、ビット演算モジュールに置き換え
+         let mut binfunc = "";
+         let mut exp2Mod = "";
+         switch _exp {
+            case .And {
+               binfunc = "band";
+            }
+            case .Or {
+               binfunc = "bor";
+            }
+            case .Xor {
+               binfunc = "bxor";
+            }
+            case .LShift {
+               binfunc = "lshift";
+            }
+            case .RShift {
+               binfunc = "lshift";
+               exp2Mod = "-";
+            }
+            default {
+               Util.err( "illegal op -- %s" (opTxt) );
+            }
+         }
+         self.write( "bit32.%s(" (binfunc) );
+         filter( node.$exp1,  self, node );
+         self.write( ", " );
+         self.write( exp2Mod );
+         filter( node.$exp2,  self, node );
+         self.write( " )" );
+      }
+   }
+   else {
+      filter( node.$exp1,  self, node );
+      self.write( " " .. opTxt .. " " );
+      filter( node.$exp2,  self, node );
+   }  
 
    if intCast {
       self.write( ")" );

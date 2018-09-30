@@ -303,31 +303,24 @@ extern int hoge_add( lua_State * pLua, int val );
 Lua の glue インタフェースと同じ意味を持つ。
 
 第二引数の int は、 LuneScript で定義しているメソッドの引数が入る。
-この引数には、 LuneScript が自動生成している test_ext_glue.c によって
-Lua のスタックから値を取り出され、値が設定される。
-
-具体的には、上記サンプル test_ext_glue.c で定義している
-~lns_glue_add( lua_State * pLua )~ 関数内の
-~val = luaL_checkinteger( pLua, 2 );~ がその処理である。
+これは、 LuneScript で自動生成している test_ext_glue.c が
+Lua のスタックから値を取り出して値を設定している。
 
 Lua の glue では、関数引数を得るため API をコールする必要があるが、
 LuneScript で glue を生成した場合は、
-glue コード内で関数引数を得る API が実行されるため、
-ユーザが関数引数を得る API をコールする必要はない。
-
+glue コード内で関数引数を得る API を実行している。
+これにより、 ユーザは関数引数を得る API をコールする必要はない。
 
 ただし、LuneScript 側で定義しているメソッドの引数の型が
-int(int!), real(real!), str(str!) 以外の型だった場合、
+int(int!), real(real!), str(str!) 型以外だった場合、
 LuneScript で生成する glue では対応できないため、
 別途ユーザ側での対応が必要である。
 
 また glue の戻り値については、
 ユーザ側で Lua の glue インタフェースと同じ制御を行なう必要がある。
 
-具体的には lua_push 系の関数呼び出しと、
-return による戻り値の個数指定である。
 
-glue 生成後、hoge_create() と hoge_add() を別途定義することで、
+hoge_create() と hoge_add() を別途定義することで、
 test.ext モジュールが完成する。
 
 例えば次のように定義する(glue.c)。
@@ -354,22 +347,6 @@ int hoge_add( lua_State * pLua, int val )
     return 1;
 }
 #+END_SRC
-
-ここで lns_glue_new_test_ext() は、 test.ext クラスのインスタンスを生成する関数であり、
-test_ext_glue.c に生成される。
-
-この関数は、指定サイズのデータを test.ext クラスのインスタンスとして生成し、
-アドレスを返す。
-上記例では、glue_t を test.ext クラスのインスタンスとして生成している。
-
-lns_glue_get_test_ext() は、
-引数で指定したインデックスの VM スタック上にある
-test.ext クラスのインスタンスアドレスを取得する。
-
-上記の例では、 add メソッドの第一引数に格納されている test.ext クラスのインスタンス
-glue_t のアドレスを取得している。
-
-
 
 ちなみにビルドは次のように行なう。
 
@@ -417,9 +394,9 @@ print( foo$.bar$.hoge$[1] );
 #+END_SRC
 
 上記の場合 foo.bar, foo.bar.hoge のいずれかが nil だった場合、
-~foo$.bar$.hoge$[1]~ の結果は nil になる。
+foo$.bar$.hoge$[1] の結果は nil になる。
 foo.bar, foo.bar.hoge 全てが nil でなければ、
-~foo$.bar$.hoge$[1]~ は、foo.bar.hoge の値を返す。
+foo$.bar$.hoge$[1] は、foo.bar.hoge の値を返す。
 
 なお、 nil 条件演算子の結果は nilable 型となる。
 

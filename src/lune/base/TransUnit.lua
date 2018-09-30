@@ -375,7 +375,7 @@ regOpLevel( 2, {"<", ">", "<=", ">=", "~=", "=="} )
 regOpLevel( 2, {"|"} )
 regOpLevel( 2, {"~"} )
 regOpLevel( 2, {"&"} )
-regOpLevel( 2, {"<<", ">>"} )
+regOpLevel( 2, {"|<<", "|>>"} )
 regOpLevel( 2, {".."} )
 regOpLevel( 2, {"+", "-"} )
 regOpLevel( 2, {"*", "/", "//", "%"} )
@@ -4248,7 +4248,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   end
                   
                   retType = Ast.builtinTypeBool
-               elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "<<" or _switchExp == ">>" then
+               elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "|<<" or _switchExp == "|>>" then
                   if not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt ) or not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt ) then
                      self:addErrMess( nextToken.pos, string.format( "no int type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
@@ -4567,6 +4567,12 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
                typeInfo = Ast.builtinTypeString
             elseif _switchExp == "`" then
                typeInfo = Ast.builtinTypeNone
+            elseif _switchExp == "~" then
+               if not expType:equals( Ast.builtinTypeInt ) then
+                  self:addErrMess( token.pos, string.format( 'unmatch type for "~" -- %s', expType:getTxt(  )) )
+               end
+               
+               typeInfo = Ast.builtinTypeInt
             else 
                
                   self:error( "unknown op1" )

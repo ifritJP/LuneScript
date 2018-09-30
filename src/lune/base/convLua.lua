@@ -123,6 +123,35 @@ ConvMode._val2NameMap[1] = 'Convert'
 ConvMode.ConvMeta = 2
 ConvMode._val2NameMap[2] = 'ConvMeta'
 
+local hasBitOpFlag = _VERSION:gsub( "^[^%d]+", "" ):find( "^5%.3" ) ~= nil
+local BitOpKind = {}
+BitOpKind._val2NameMap = {}
+function BitOpKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "BitOpKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function BitOpKind:_from( val )
+   if self._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+BitOpKind.And = 0
+BitOpKind._val2NameMap[0] = 'And'
+BitOpKind.Or = 1
+BitOpKind._val2NameMap[1] = 'Or'
+BitOpKind.Xor = 2
+BitOpKind._val2NameMap[2] = 'Xor'
+BitOpKind.LShift = 3
+BitOpKind._val2NameMap[3] = 'LShift'
+BitOpKind.RShift = 4
+BitOpKind._val2NameMap[4] = 'RShift'
+
+local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
 local convFilter = {}
 setmetatable( convFilter, { __index = Filter } )
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind )
@@ -1849,6 +1878,17 @@ function convFilter:processExpOp1( node, parent )
       self:write( "_luneGetLocal( " )
       filter( node:get_exp(), self, node )
       self:write( " )" )
+   elseif op == "~" then
+      if hasBitOpFlag then
+         self:write( op )
+         filter( node:get_exp(), self, node )
+      else
+       
+         self:write( "bit32.bnot( " )
+         filter( node:get_exp(), self, node )
+         self:write( " )" )
+      end
+      
    else
     
       if op == "not" then
@@ -1889,9 +1929,61 @@ function convFilter:processExpOp2( node, parent )
       self:write( "math.floor(" )
    end
    
-   filter( node:get_exp1(), self, node )
-   self:write( " " .. node:get_op().txt .. " " )
-   filter( node:get_exp2(), self, node )
+   local opTxt = node:get_op().txt
+   do
+      local _exp = bitBinOpMap[opTxt]
+      if _exp ~= nil then
+         if hasBitOpFlag then
+            do
+               local _switchExp = _exp
+               if _switchExp == BitOpKind.LShift then
+                  opTxt = "<<"
+               elseif _switchExp == BitOpKind.RShift then
+                  opTxt = ">>"
+               end
+            end
+            
+            filter( node:get_exp1(), self, node )
+            self:write( " " .. opTxt .. " " )
+            filter( node:get_exp2(), self, node )
+         else
+          
+            local binfunc = ""
+            local exp2Mod = ""
+            do
+               local _switchExp = _exp
+               if _switchExp == BitOpKind.And then
+                  binfunc = "band"
+               elseif _switchExp == BitOpKind.Or then
+                  binfunc = "bor"
+               elseif _switchExp == BitOpKind.Xor then
+                  binfunc = "bxor"
+               elseif _switchExp == BitOpKind.LShift then
+                  binfunc = "lshift"
+               elseif _switchExp == BitOpKind.RShift then
+                  binfunc = "lshift"
+                  exp2Mod = "-"
+               else 
+                  
+                     Util.err( string.format( "illegal op -- %s", opTxt) )
+               end
+            end
+            
+            self:write( string.format( "bit32.%s(", binfunc) )
+            filter( node:get_exp1(), self, node )
+            self:write( ", " )
+            self:write( exp2Mod )
+            filter( node:get_exp2(), self, node )
+            self:write( " )" )
+         end
+         
+      else
+         filter( node:get_exp1(), self, node )
+         self:write( " " .. opTxt .. " " )
+         filter( node:get_exp2(), self, node )
+      end
+   end
+   
    if intCast then
       self:write( ")" )
    end

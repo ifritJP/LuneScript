@@ -85,6 +85,9 @@ local function createReserveInfo( luaMode )
    multiCharDelimitMap["<"] = {"<="}
    multiCharDelimitMap[">"] = {">="}
    if not luaMode then
+      multiCharDelimitMap["|"] = {"|<", "|>"}
+      multiCharDelimitMap["|<"] = {"|<<"}
+      multiCharDelimitMap["|>"] = {"|>>"}
       multiCharDelimitMap["["] = {"[@"}
       multiCharDelimitMap["~"] = {"~=", "~~"}
       multiCharDelimitMap["$"] = {"$[", "$.", "$("}
@@ -361,8 +364,8 @@ op2Set['%'] = true
 op2Set['&'] = true
 op2Set['~'] = true
 op2Set['|'] = true
-op2Set['>>'] = true
-op2Set['<<'] = true
+op2Set['|>>'] = true
+op2Set['|<<'] = true
 op2Set['..'] = true
 op2Set['<'] = true
 op2Set['<='] = true
