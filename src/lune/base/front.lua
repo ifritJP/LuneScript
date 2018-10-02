@@ -191,6 +191,11 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
                return nil
             end
             
+            local moduleMetaPath = moduleLuaPath:gsub( "%.lua$", ".meta" )
+            if Util.existFile( moduleMetaPath ) and not Util.getReadyCode( moduleMetaPath, metaPath ) then
+               return nil
+            end
+            
          end
       end
       

@@ -208,6 +208,8 @@ function convFilter:getCanonicalName( typeInfo )
 end
 function convFilter:close(  )
 end
+function convFilter:flush(  )
+end
 function convFilter:writeRaw( txt )
    local stream = self.stream
    if self.outMetaFlag then

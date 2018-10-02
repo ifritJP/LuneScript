@@ -840,6 +840,9 @@ fn TransUnit.analyzeExpField(
          accessNil = false;
       }
    }
+   if accessNil {
+      self.useNilAccess = true;
+   }
 
    let mut getterTypeInfo:Ast.TypeInfo! = nil;
    let mut symbolInfo:Ast.SymbolInfo! = nil;

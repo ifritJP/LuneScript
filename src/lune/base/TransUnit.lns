@@ -458,6 +458,7 @@ fn TransUnit.registBuiltInScope() mut {
             "__attrib": { "type": [ "interface" ] },
             "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+            "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
          },
       },
       { 
@@ -466,6 +467,7 @@ fn TransUnit.registBuiltInScope() mut {
             "read": { "type": [ "mut" ], "arg": [ "&stem!" ], "ret": [ "str!" ] },
             "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+            "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
          }, 
       },
       { 

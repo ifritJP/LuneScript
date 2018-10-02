@@ -145,6 +145,8 @@ class convFilter extend Ast.Filter (oStream) {
 
    pub fn close() mut {
    }
+   pub fn flush() mut {
+   }
    pub fn writeRaw( txt: str ) mut {
       let mut stream = self.stream;
       if self.outMetaFlag {

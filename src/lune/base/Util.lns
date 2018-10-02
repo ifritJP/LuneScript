@@ -34,6 +34,8 @@ pub class memStream extend (oStream) {
    }
    pub fn close() mut {
    }
+   pub fn flush() mut {
+   }
 }
 
 pri let mut debugFlag = true;
@@ -108,6 +110,13 @@ pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
    {
       return false;
    };
-
    return luaTime >= lnsTime;
+}
+
+pub fn existFile( path:str ): bool {
+   let! mut fileObj = io.open( path ) {
+      return false;
+   };
+   fileObj.close();
+   return true;
 }

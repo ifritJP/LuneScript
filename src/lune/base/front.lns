@@ -160,6 +160,7 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
    let mut luaSearchPath = package.path;
    if! addSearchPath {
       luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path );
+      //luaSearchPath = string.format( "%s/?.lua", _exp );
    }
    return package.searchpath( moduleFullName, luaSearchPath );
 }
@@ -178,6 +179,12 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
          if not Util.getReadyCode( moduleLnsPath, metaPath ) {
             // 依存するモジュールが更新されている場合、
             // 作成済みのメタファイルは使えないので nil を返す。
+            return nil;
+         }
+         let moduleMetaPath = moduleLuaPath.gsub( "%.lua$", ".meta" );
+         if Util.existFile( moduleMetaPath ) and
+            not Util.getReadyCode( moduleMetaPath, metaPath )
+         {
             return nil;
          }
       }
