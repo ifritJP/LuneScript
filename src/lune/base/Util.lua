@@ -1,5 +1,6 @@
 --lune/base/Util.lns
 local _moduleObj = {}
+local __mod__ = 'lune.base.Util'
 local Depend = require( 'lune.base.Depend' )
 local memStream = {}
 _moduleObj.memStream = memStream

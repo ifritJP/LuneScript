@@ -3,16 +3,16 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-   local _classInfo202 = {}
-   _typeId2ClassInfoMap[ 202 ] = _classInfo202
+   local _classInfo208 = {}
+   _typeId2ClassInfoMap[ 208 ] = _classInfo208
 end
 do
-   local _classInfo204 = {}
-   _typeId2ClassInfoMap[ 204 ] = _classInfo204
+   local _classInfo210 = {}
+   _typeId2ClassInfoMap[ 210 ] = _classInfo210
 end
 do
-   local _classInfo206 = {}
-   _typeId2ClassInfoMap[ 206 ] = _classInfo206
+   local _classInfo212 = {}
+   _typeId2ClassInfoMap[ 212 ] = _classInfo212
 end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
@@ -20,18 +20,18 @@ local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
 local _dependIdMap = {}
 _moduleObj._dependIdMap = _dependIdMap
-_typeInfoList[1] = { parentId = 1, typeId = 202, txt = 'lune', kind = 12, 
-children = {204, } }
-_typeInfoList[2] = { parentId = 202, typeId = 204, txt = 'base', kind = 12, 
-children = {206, } }
-_typeInfoList[3] = { parentId = 204, typeId = 206, txt = 'Depend', kind = 12, 
-children = {208, } }
-_typeInfoList[4] = { parentId = 206, typeId = 208, baseId = 1, txt = 'getFileLastModifiedTime',
+_typeInfoList[1] = { parentId = 1, typeId = 208, txt = 'lune', kind = 12, 
+children = {210, } }
+_typeInfoList[2] = { parentId = 208, typeId = 210, txt = 'base', kind = 12, 
+children = {212, } }
+_typeInfoList[3] = { parentId = 210, typeId = 212, txt = 'Depend', kind = 12, 
+children = {214, } }
+_typeInfoList[4] = { parentId = 212, typeId = 214, baseId = 1, txt = 'getFileLastModifiedTime',
         staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {20}, children = {}, }
-_typeInfoList[5] = { parentId = 206, typeId = 209, nilable = true, orgTypeId = 208 }
+_typeInfoList[5] = { parentId = 212, typeId = 215, nilable = true, orgTypeId = 214 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
-_moduleObj._moduleTypeId = 206
+_moduleObj._moduleTypeId = 212
 _moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----

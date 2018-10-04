@@ -1,5 +1,6 @@
 --lune/base/glueFilter.lns
 local _moduleObj = {}
+local __mod__ = 'lune.base.glueFilter'
 if not _ENV._lune then
    _lune = {}
 end

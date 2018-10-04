@@ -635,6 +635,8 @@ pub override fn convFilter.processRoot(
    if self.needModuleObj {
       self.writeln( "local _moduleObj = {}" );
    }
+   self.writeln(
+      "local __mod__ = '%s'" (node.$moduleTypeInfo.getFullName({})) );
 
    if node.$luneHelperInfo.$useNilAccess or node.$luneHelperInfo.$useUnwrapExp {
       self.writeln( ```
@@ -1947,7 +1949,7 @@ pub override fn convFilter.processExpRef(
       if self.needModuleObj {
          self.write( "_moduleObj." );
       }
-   } 
+   }
    self.write( node.$token.txt );
 };
 

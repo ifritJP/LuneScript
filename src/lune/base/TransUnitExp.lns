@@ -989,16 +989,16 @@ fn TransUnit.analyzeExpSymbol(
       }
       else {
          self.checkSymbolComp( token );
-         
+
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             token.txt, self.scope, self.moduleScope )
-         {
+         {  
             self.error( "not found type -- " .. token.txt );
-         };
+         }; 
          let typeInfo = symbolInfo.$typeInfo;
          if typeInfo.equals( Ast.builtinTypeSymbol ) {
             skipFlag = true;
-         }
+         }  
          exp = Ast.ExpRefNode.create(
             self.nodeManager, firstToken.pos, [ typeInfo ], token,
             new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
@@ -1670,6 +1670,14 @@ fn TransUnit.analyzeExp(
       else {
          self.pushback();
       }
+   }
+   elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
+      exp = Ast.LiteralIntNode.create(
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
+         new Parser.Token( .Int, "%d" (token.pos.lineNo),
+                           token.pos, nil ), token.pos.lineNo );
+   }
+   elseif token.kind == Parser.TokenKind.Symb and token.txt == "__func__" {
    }
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" {
       exp = self.analyzeExpSymbol( firstToken, token, .Fn, nil, false );

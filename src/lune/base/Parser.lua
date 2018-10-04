@@ -1,5 +1,6 @@
 --lune/base/Parser.lns
 local _moduleObj = {}
+local __mod__ = 'lune.base.Parser'
 if not _ENV._lune then
    _lune = {}
 end

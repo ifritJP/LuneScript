@@ -1,5 +1,6 @@
 --lune/base/Depend.lns
 local _moduleObj = {}
+local __mod__ = 'lune.base.Depend'
 if not _ENV._lune then
    _lune = {}
 end

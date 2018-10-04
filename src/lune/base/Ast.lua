@@ -1,5 +1,6 @@
 --lune/base/Ast.lns
 local _moduleObj = {}
+local __mod__ = 'lune.base.Ast'
 if not _ENV._lune then
    _lune = {}
 end

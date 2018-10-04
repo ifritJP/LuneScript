@@ -468,6 +468,7 @@ fn TransUnit.registBuiltInScope() mut {
             "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
             "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
+            "seek": { "type": [ "mut" ], "arg": [ "str", "int"], "ret": [ "int!", "str!" ] },
          }, 
       },
       { 
@@ -490,6 +491,7 @@ fn TransUnit.registBuiltInScope() mut {
          "os": {
             "clock": { "arg": [], "ret": ["int"] },
             "exit": { "arg": [ "int!" ], "ret": [] },
+            "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
          },
       },
       { 
@@ -563,6 +565,9 @@ fn TransUnit.registBuiltInScope() mut {
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
 
    self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, false, true );
+   self.scope.addVar( .Global, "__mod__", Ast.builtinTypeString, false, true );
+   self.scope.addVar( .Global, "__line__", Ast.builtinTypeInt, false, true );
+   self.scope.addVar( .Global, "__func__", Ast.builtinTypeString, false, true );
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, name in builtinClassInfo {

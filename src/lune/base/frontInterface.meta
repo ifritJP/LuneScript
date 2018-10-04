@@ -3,20 +3,20 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
+   local _classInfo214 = {}
+   _typeId2ClassInfoMap[ 214 ] = _classInfo214
+end
+do
    local _classInfo208 = {}
    _typeId2ClassInfoMap[ 208 ] = _classInfo208
 end
 do
-   local _classInfo202 = {}
-   _typeId2ClassInfoMap[ 202 ] = _classInfo202
+   local _classInfo210 = {}
+   _typeId2ClassInfoMap[ 210 ] = _classInfo210
 end
 do
-   local _classInfo204 = {}
-   _typeId2ClassInfoMap[ 204 ] = _classInfo204
-end
-do
-   local _classInfo206 = {}
-   _typeId2ClassInfoMap[ 206 ] = _classInfo206
+   local _classInfo212 = {}
+   _typeId2ClassInfoMap[ 212 ] = _classInfo212
 end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
@@ -24,48 +24,48 @@ local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
 local _dependIdMap = {}
 _moduleObj._dependIdMap = _dependIdMap
-_typeInfoList[1] = { parentId = 1, typeId = 202, txt = 'lune', kind = 12, 
-children = {204, } }
-_typeInfoList[2] = { parentId = 202, typeId = 204, txt = 'base', kind = 12, 
-children = {206, } }
-_typeInfoList[3] = { parentId = 204, typeId = 206, txt = 'frontInterface', kind = 12, 
-children = {208, 246, 249, 252, 255, 258, } }
-_typeInfoList[4] = { parentId = 206, typeId = 208, baseId = 1, txt = 'frontInterface',
-        staticFlag = false, accessMode = 1, kind = 7, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {212, 215, 218, 221, 224}, }
-_typeInfoList[5] = { parentId = 206, typeId = 209, nilable = true, orgTypeId = 208 }
-_typeInfoList[6] = { parentId = 208, typeId = 212, baseId = 1, txt = 'loadModule',
+_typeInfoList[1] = { parentId = 1, typeId = 208, txt = 'lune', kind = 12, 
+children = {210, } }
+_typeInfoList[2] = { parentId = 208, typeId = 210, txt = 'base', kind = 12, 
+children = {212, } }
+_typeInfoList[3] = { parentId = 210, typeId = 212, txt = 'frontInterface', kind = 12, 
+children = {214, 252, 255, 258, 261, 264, } }
+_typeInfoList[4] = { parentId = 212, typeId = 214, baseId = 1, txt = 'frontInterface',
+        staticFlag = false, accessMode = 1, kind = 7, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {218, 221, 224, 227, 230}, }
+_typeInfoList[5] = { parentId = 212, typeId = 215, nilable = true, orgTypeId = 214 }
+_typeInfoList[6] = { parentId = 214, typeId = 218, baseId = 1, txt = 'loadModule',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {7, 7}, children = {}, }
-_typeInfoList[7] = { parentId = 208, typeId = 213, nilable = true, orgTypeId = 212 }
-_typeInfoList[8] = { parentId = 208, typeId = 215, baseId = 1, txt = 'loadMeta',
+_typeInfoList[7] = { parentId = 214, typeId = 219, nilable = true, orgTypeId = 218 }
+_typeInfoList[8] = { parentId = 214, typeId = 221, baseId = 1, txt = 'loadMeta',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {7}, children = {}, }
-_typeInfoList[9] = { parentId = 208, typeId = 216, nilable = true, orgTypeId = 215 }
-_typeInfoList[10] = { parentId = 208, typeId = 218, baseId = 1, txt = 'searchModule',
+_typeInfoList[9] = { parentId = 214, typeId = 222, nilable = true, orgTypeId = 221 }
+_typeInfoList[10] = { parentId = 214, typeId = 224, baseId = 1, txt = 'searchModule',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {26}, children = {}, }
-_typeInfoList[11] = { parentId = 208, typeId = 219, nilable = true, orgTypeId = 218 }
-_typeInfoList[12] = { parentId = 208, typeId = 221, baseId = 1, txt = 'error',
+_typeInfoList[11] = { parentId = 214, typeId = 225, nilable = true, orgTypeId = 224 }
+_typeInfoList[12] = { parentId = 214, typeId = 227, baseId = 1, txt = 'error',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
-_typeInfoList[13] = { parentId = 208, typeId = 222, nilable = true, orgTypeId = 221 }
-_typeInfoList[14] = { parentId = 208, typeId = 224, baseId = 1, txt = '__init',
+_typeInfoList[13] = { parentId = 214, typeId = 228, nilable = true, orgTypeId = 227 }
+_typeInfoList[14] = { parentId = 214, typeId = 230, baseId = 1, txt = '__init',
         staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[15] = { parentId = 208, typeId = 225, nilable = true, orgTypeId = 224 }
-_typeInfoList[16] = { parentId = 206, typeId = 246, baseId = 1, txt = 'setFront',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {208}, retTypeId = {}, children = {}, }
-_typeInfoList[17] = { parentId = 206, typeId = 247, nilable = true, orgTypeId = 246 }
-_typeInfoList[18] = { parentId = 206, typeId = 249, baseId = 1, txt = 'loadModule',
+_typeInfoList[15] = { parentId = 214, typeId = 231, nilable = true, orgTypeId = 230 }
+_typeInfoList[16] = { parentId = 212, typeId = 252, baseId = 1, txt = 'setFront',
+        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {214}, retTypeId = {}, children = {}, }
+_typeInfoList[17] = { parentId = 212, typeId = 253, nilable = true, orgTypeId = 252 }
+_typeInfoList[18] = { parentId = 212, typeId = 255, baseId = 1, txt = 'loadModule',
         staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {7, 7}, children = {}, }
-_typeInfoList[19] = { parentId = 206, typeId = 250, nilable = true, orgTypeId = 249 }
-_typeInfoList[20] = { parentId = 206, typeId = 252, baseId = 1, txt = 'loadMeta',
+_typeInfoList[19] = { parentId = 212, typeId = 256, nilable = true, orgTypeId = 255 }
+_typeInfoList[20] = { parentId = 212, typeId = 258, baseId = 1, txt = 'loadMeta',
         staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {7}, children = {}, }
-_typeInfoList[21] = { parentId = 206, typeId = 253, nilable = true, orgTypeId = 252 }
-_typeInfoList[22] = { parentId = 206, typeId = 255, baseId = 1, txt = 'searchModule',
+_typeInfoList[21] = { parentId = 212, typeId = 259, nilable = true, orgTypeId = 258 }
+_typeInfoList[22] = { parentId = 212, typeId = 261, baseId = 1, txt = 'searchModule',
         staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {26}, children = {}, }
-_typeInfoList[23] = { parentId = 206, typeId = 256, nilable = true, orgTypeId = 255 }
-_typeInfoList[24] = { parentId = 206, typeId = 258, baseId = 1, txt = 'error',
+_typeInfoList[23] = { parentId = 212, typeId = 262, nilable = true, orgTypeId = 261 }
+_typeInfoList[24] = { parentId = 212, typeId = 264, baseId = 1, txt = 'error',
         staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {}, children = {}, }
-_typeInfoList[25] = { parentId = 206, typeId = 259, nilable = true, orgTypeId = 258 }
+_typeInfoList[25] = { parentId = 212, typeId = 265, nilable = true, orgTypeId = 264 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
-_moduleObj._moduleTypeId = 206
+_moduleObj._moduleTypeId = 212
 _moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----

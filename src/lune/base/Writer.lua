@@ -1,5 +1,6 @@
 --lune/base/Writer.lns
 local _moduleObj = {}
+local __mod__ = 'lune.base.Writer'
 if not _ENV._lune then
    _lune = {}
 end

@@ -1,5 +1,6 @@
 --lune/base/convLua.lns
 local _moduleObj = {}
+local __mod__ = 'lune.base.convLua'
 if not _ENV._lune then
    _lune = {}
 end
@@ -718,6 +719,7 @@ function convFilter:processRoot( node, parent )
       self:writeln( "local _moduleObj = {}" )
    end
    
+   self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( {} )) )
    if node:get_luneHelperInfo():get_useNilAccess() or node:get_luneHelperInfo():get_useUnwrapExp() then
       self:writeln( [==[
 if not _ENV._lune then
