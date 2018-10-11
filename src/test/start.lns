@@ -6,6 +6,7 @@ import test.Class1;
 import test.Class2;
 import test.Class3;
 import test.Class4;
+import test.mapping;
 
 macro _print( symbol2:stat, format:str! ) {
    {
@@ -561,3 +562,5 @@ _print( `{ "%X" (~2 ) } );
 
 _print( `{ __mod__ } );
 _print( `{ __line__ } );
+
+mapping.test();

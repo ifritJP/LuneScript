@@ -3,16 +3,16 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-   local _classInfo208 = {}
-   _typeId2ClassInfoMap[ 208 ] = _classInfo208
+   local _classInfo214 = {}
+   _typeId2ClassInfoMap[ 214 ] = _classInfo214
 end
 do
-   local _classInfo210 = {}
-   _typeId2ClassInfoMap[ 210 ] = _classInfo210
+   local _classInfo216 = {}
+   _typeId2ClassInfoMap[ 216 ] = _classInfo216
 end
 do
-   local _classInfo212 = {}
-   _typeId2ClassInfoMap[ 212 ] = _classInfo212
+   local _classInfo218 = {}
+   _typeId2ClassInfoMap[ 218 ] = _classInfo218
 end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
@@ -20,18 +20,18 @@ local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
 local _dependIdMap = {}
 _moduleObj._dependIdMap = _dependIdMap
-_typeInfoList[1] = { parentId = 1, typeId = 208, txt = 'lune', kind = 12, 
-children = {210, } }
-_typeInfoList[2] = { parentId = 208, typeId = 210, txt = 'base', kind = 12, 
-children = {212, } }
-_typeInfoList[3] = { parentId = 210, typeId = 212, txt = 'front', kind = 12, 
-children = {18472, } }
-_typeInfoList[4] = { parentId = 1, typeId = 18469, baseId = 1, txt = 'List',
-        staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[5] = { parentId = 1, typeId = 18470, nilable = true, orgTypeId = 18469 }
-_typeInfoList[6] = { parentId = 212, typeId = 18472, baseId = 1, txt = 'exec',
-        staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {18469}, retTypeId = {}, children = {}, }
-_typeInfoList[7] = { parentId = 212, typeId = 18473, nilable = true, orgTypeId = 18472 }
+_typeInfoList[1] = { skind = 2, parentId = 1, typeId = 214, txt = 'lune', kind = 12, 
+children = {216, } }
+_typeInfoList[2] = { skind = 2, parentId = 214, typeId = 216, txt = 'base', kind = 12, 
+children = {218, } }
+_typeInfoList[3] = { skind = 2, parentId = 216, typeId = 218, txt = 'front', kind = 12, 
+children = {12334, } }
+_typeInfoList[4] = { skind=3, parentId = 1, typeId = 12331, baseId = 1, txt = 'List',
+        abstructFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[5] = { skind = 0, parentId = 1, typeId = 12332, nilable = true, orgTypeId = 12331 }
+_typeInfoList[6] = { skind=3, parentId = 218, typeId = 12334, baseId = 1, txt = 'exec',
+        abstructFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {12331}, retTypeId = {}, children = {}, }
+_typeInfoList[7] = { skind = 0, parentId = 218, typeId = 12335, nilable = true, orgTypeId = 12334 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = false }
@@ -44,7 +44,7 @@ _dependModuleMap[ 'lune.base.convLua' ] = { id = 7, use = false }
 _dependModuleMap[ 'lune.base.dumpNode' ] = { id = 8, use = false }
 _dependModuleMap[ 'lune.base.frontInterface' ] = { id = 9, use = false }
 _dependModuleMap[ 'lune.base.glueFilter' ] = { id = 10, use = false }
-_moduleObj._moduleTypeId = 212
+_moduleObj._moduleTypeId = 218
 _moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----

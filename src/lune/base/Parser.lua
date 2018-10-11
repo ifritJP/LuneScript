@@ -17,6 +17,102 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+      
+function _lune._fromMapSub( val, memKind )
+   if type( memKind ) == "function" then
+      return memKind( val )
+   end
+   if string.find( memKind, "!$" ) then
+      if val == nil then
+         return nil, true
+      end
+      memKind = memKind:sub( 1, #memKind - 1 )
+   end
+   local valType = type( val )
+   if memKind == "stem" then
+      if valType == "number" or valType == "string" or valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "int" then
+      if valType == "number" then
+         return math.floor( val )
+      end
+      return nil
+   end
+   if memKind == "real" then
+      if valType == "number" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "bool" then
+      if valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "str" then
+      if valType == "string" then
+         return val
+      end
+      return nil
+   end
+   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
+   then
+      if valType == "table" then
+         local tbl = {}
+         for index, mem in ipairs( val ) do
+            local kind = string.gsub( memKind, "^[%a]+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local memval, valid = _lune._fromMapSub( mem, kind )
+            if memval == nil and not valid then
+               return nil
+            end
+            tbl[ index ] = memval
+         end
+         return tbl
+      end
+      return nil
+   end
+   if string.find( memKind, "^Map" ) then
+      if valType == "table" then
+         local tbl = {}
+         for key, mem in pairs( val ) do
+            local kind = string.gsub( memKind, "^%a+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local delimitIndex = string.find( kind, ",", 1, true )
+            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
+            local valKind = string.sub( kind, delimitIndex + 1 )
+            local mapKey = _lune._fromMapSub( key, keyKind )
+            local mapVal = _lune._fromMapSub( mem, valKind )
+            if mapKey == nil or mapVal == nil then
+               return nil
+            end
+            tbl[ mapKey ] = mapVal
+         end
+         return tbl
+      end
+      return nil
+   end
+end
+
+
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
+      if val == nil and not valid then
+         return false
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+
 local Util = require( 'lune.base.Util' )
 local luaKeywordSet = {}
 luaKeywordSet["let"] = true
@@ -175,8 +271,8 @@ function TokenKind:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function TokenKind:_from( val )
-   if self._val2NameMap[ val ] then
+function TokenKind._from( val )
+   if TokenKind._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -531,8 +627,13 @@ function StreamParser:parse(  )
             local token = val:sub( tokenIndex, tokenEndIndex )
             local startIndex = 1
             while true do
-               if token:find( '^[%d]', startIndex ) then
-                  local endIndex, intFlag = analyzeNumber( token, startIndex )
+               if token:find( '^[%d]', startIndex ) or token:find( '^-[%d]', startIndex ) then
+                  local checkIndex = startIndex
+                  if string.byte( token, 1 ) == 45 then
+                     checkIndex = checkIndex + 1
+                  end
+                  
+                  local endIndex, intFlag = analyzeNumber( token, checkIndex )
                   local info = createInfo( intFlag and TokenKind.Int or TokenKind.Real, token:sub( startIndex, endIndex ), columnIndex + startIndex )
                   table.insert( list, info )
                   startIndex = endIndex + 1

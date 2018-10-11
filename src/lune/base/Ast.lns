@@ -53,6 +53,14 @@ pub let mut typeInfoKind:Map<str,TypeInfo> = {};
 pub let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
 pub let mut builtInTypeIdSet:Map<int,&TypeInfo> = {};
 
+pub enum SerializeKind {
+   Nilable,
+   Modifier,
+   Module,
+   Normal,
+   Enum,
+}
+
 pub enum TypeInfoKind {
    Root,
    Macro,
@@ -534,7 +542,7 @@ pub fn Scope.getSymbolInfo(
 }
 
 pub fn Scope.getTypeInfo(
-   name: str, fromScope:Scope, onlySameNsFlag:bool ) : TypeInfo!
+   name: str, fromScope:&Scope, onlySameNsFlag:bool ) : TypeInfo!
 {
    let! symbolInfo = self.getSymbolInfo(name, fromScope, onlySameNsFlag ) {
       return nil;
@@ -551,7 +559,7 @@ pub fn Scope.getTypeInfo(
 @param fromScope シンボルを参照する位置のスコープ
 */
 pub fn Scope.getSymbolTypeInfo(
-   name: str, fromScope:Scope, moduleScope:Scope ) : &SymbolInfo!
+   name: str, fromScope:&Scope, moduleScope:&Scope ) : &SymbolInfo!
 {
    let mut typeInfo:TypeInfo! = nil;
    let mut validThisScope = false;
@@ -839,8 +847,8 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
-         '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
-            parentId, self.typeId, self.orgTypeInfo.$typeId ) );
+         '{ skind = %d, parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
+            SerializeKind.Nilable, parentId, self.typeId, self.orgTypeInfo.$typeId ) );
    }
 
    pub override fn equals( typeInfo: &TypeInfo ): bool {
@@ -877,8 +885,8 @@ pub class ModifierTypeInfo extend TypeInfo {
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
-         '{ parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n' (
-            parentId, self.typeId, self.srcTypeInfo.$typeId,
+         '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n' (
+            SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo.$typeId,
             self.mutable and true or false ) );
    }
 
@@ -956,8 +964,9 @@ pub class ModuleTypeInfo extend TypeInfo {
    pub override fn serialize(
       stream: oStream, validChildrenSet: Map<int,&TypeInfo>! )
    {  
-      let txt = "{ parentId = %d, typeId = %d, txt = '%s', kind = %d, "
-          ( self.getParentId(), self.typeId, self.rawTxt, TypeInfoKind.Module );
+      let txt = "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', kind = %d, "
+          ( SerializeKind.Module,
+            self.getParentId(), self.typeId, self.rawTxt, TypeInfoKind.Module );
       stream.write( txt .. '\n' );
 
       stream.write( "children = {" );
@@ -1274,7 +1283,7 @@ pub class NormalTypeInfo extend TypeInfo {
       let parentId = self.getParentId();
       if self.nilable {
          stream.write(
-            '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
+            '{ parentId=%d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
                parentId, self.typeId, self.orgTypeInfo.$typeId ) );
          return;
       } 
@@ -1292,10 +1301,10 @@ pub class NormalTypeInfo extend TypeInfo {
          return work .. "}, ";
       } 
 
-      let txt = ```{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ```
-          ( parentId, self.typeId, self.get_baseId(), self.rawTxt,
-            self.staticFlag, self.accessMode, self.kind, self.mutable );
+      let txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
+        abstructFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ```
+          ( SerializeKind.Normal, parentId, self.typeId, self.get_baseId(), self.rawTxt,
+            self.abstructFlag, self.staticFlag, self.accessMode, self.kind, self.mutable );
 
       let mut children:List<&TypeInfo> = [];
       let! set = validChildrenSet {
@@ -1686,11 +1695,11 @@ pub static fn NormalTypeInfo.createEnum(
    scope.addMethod( getEnumName, AccessMode.Pub, false, true );
 
    let mut fromVal = NormalTypeInfo.createFunc(
-      false, true, nil, .Method, info,
+      false, true, nil, .Func, info,
       true, true, true, AccessMode.Pub,
       "_from", [ NormalTypeInfo.createModifier( valTypeInfo,false ) ],
       [ info.$nilableTypeInfo ], false );
-   scope.addMethod( fromVal, AccessMode.Pub, true, true );
+   scope.addFunc( fromVal, AccessMode.Pub, true, true );
    
    return info;
 }
@@ -1698,9 +1707,9 @@ pub static fn NormalTypeInfo.createEnum(
 pub override fn EnumTypeInfo.serialize(
    stream: oStream, validChildrenSet: Map<int,&TypeInfo>! )
 {
-   let txt = ```{ parentId = %d, typeId = %d, txt = '%s',
+   let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ```
-       ( self.getParentId(), self.typeId, self.rawTxt,
+       ( SerializeKind.Enum, self.getParentId(), self.typeId, self.rawTxt,
          self.accessMode, TypeInfoKind.Enum, self.valTypeInfo.$typeId );
    stream.write( txt );
 
@@ -1759,20 +1768,15 @@ pub override fn NormalTypeInfo.isInheritFrom( other:&TypeInfo ) : bool
       return false;
    }
    let mut baseTypeInfo = self.$baseTypeInfo;
-   while baseTypeInfo ~= headTypeInfo {
-      if otherTypeId == baseTypeInfo.$typeId {
+   if baseTypeInfo ~= headTypeInfo {
+      if baseTypeInfo.isInheritFrom( other ) {
          return true;
-      } 
-      baseTypeInfo = baseTypeInfo.$baseTypeInfo;
+      }
    };
    foreach ifType in self.$interfaceList {
-      let mut workType = ifType;
-      while workType ~= headTypeInfo {
-         if otherTypeId == workType.$typeId {
-            return true;
-         }
-         workType = workType.$baseTypeInfo;
-      }; 
+      if ifType.isInheritFrom( other ) {
+         return true;
+      }
    }
    return false;
 }
@@ -2210,6 +2214,7 @@ pub proto class ProvideNode extend Node;
 pub class LuneHelperInfo {
    pri let useNilAccess:bool { pub };
    pri let useUnwrapExp:bool { pub };
+   pri let hasClassDef:bool { pub };
 }
 
 pub class ModuleInfo {

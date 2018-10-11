@@ -424,15 +424,14 @@ fn StreamParser.parse() mut : Token[]! {
    };
 
    /*
-    ソースをコメント、文字列、その他(ステートメント候補)に
-    カテゴライズした結果を登録する。
+ソースをコメント、文字列、その他(ステートメント候補)に
+カテゴライズした結果を登録する。
 
-    この関数内でステートメント候補の文字列をトークン毎に分割して登録する。
+この関数内でステートメント候補の文字列をトークン毎に分割して登録する。
 
-    @param kind カテゴライズの種類
-    @param val カテゴライズした文字列
-    @param column 現在の解析行内の位置
-
+@param kind カテゴライズの種類。 その他は .Symb を指定する。
+@param val カテゴライズした文字列
+@param column 現在の解析行内の位置
     */
 
    let addVal = fn ( kind: TokenKind, val: str, column: int ) : stem {
@@ -508,9 +507,15 @@ fn StreamParser.parse() mut : Token[]! {
             let token:str = val.sub( tokenIndex, tokenEndIndex );
             let mut startIndex = 1;
             while true {
-               if token.find( '^[%d]', startIndex ) {
+               if token.find( '^[%d]', startIndex ) or
+                  token.find( '^-[%d]', startIndex )
+               {              
                   // 数値の場合
-                  let endIndex, intFlag = analyzeNumber( token, startIndex );
+                  let mut checkIndex = startIndex;
+                  if token[1] == ?- {
+                     checkIndex = checkIndex + 1;
+                  }
+                  let endIndex, intFlag = analyzeNumber( token, checkIndex );
                   let mut info = createInfo(
                      intFlag and TokenKind.Int or TokenKind.Real,
                      token.sub( startIndex, endIndex ), columnIndex + startIndex );

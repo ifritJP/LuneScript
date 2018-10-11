@@ -240,8 +240,8 @@ pub fn TransUnit.createAST(
          }  
       }
 
-      let mut luneHelperInfo =
-         new Ast.LuneHelperInfo( self.useNilAccess, self.useUnwrapExp );
+      let mut luneHelperInfo = new Ast.LuneHelperInfo(
+         self.useNilAccess, self.useUnwrapExp, self.hasClassDef );
       let mut rootNode = Ast.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
          [ Ast.builtinTypeNone ], children,
@@ -892,6 +892,8 @@ fn TransUnit.analyzeDeclClass(
 {
    let name = self.getSymbolToken();
 
+   self.hasClassDef = true;
+
    let mut moduleName: &Parser.Token! = nil;
    let mut gluePrefix:str! = nil;
    if mode == .Module {
@@ -908,6 +910,8 @@ fn TransUnit.analyzeDeclClass(
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
       mode ~= .Interface, classAbstructFlag, firstToken, name, classAccessMode );
+
+   let mut classScope = self.scope;
 
    self.checkToken( nextToken, "{" );
 
@@ -931,7 +935,7 @@ fn TransUnit.analyzeDeclClass(
       // getter
       let getterName = "get_" .. memberName.txt;
       let mut accessMode = memberNode.$getterMode;
-      if accessMode ~= .None and not self.scope.getTypeInfoChild( getterName )
+      if accessMode ~= .None and not classScope.getTypeInfoChild( getterName )
       {
          let mutable = memberNode.$getterMutable;
          let mut getterMemberType = memberType;
@@ -945,7 +949,7 @@ fn TransUnit.analyzeDeclClass(
             getterName, [], [ getterMemberType ] );
          self.popScope();
          
-         self.scope.addMethod(
+         classScope.addMethod(
             retTypeInfo, accessMode, memberNode.$staticFlag, false );
          methodNameSet[ getterName ] = true;
       }
@@ -953,9 +957,9 @@ fn TransUnit.analyzeDeclClass(
       let setterName = "set_" .. memberName.txt;
       accessMode = memberNode.$setterMode;
       if memberNode.$setterMode ~= .None and
-         not self.scope.getTypeInfoChild( setterName )
+         not classScope.getTypeInfoChild( setterName )
       {   
-         self.scope.addMethod(
+         classScope.addMethod(
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ),
                .Method, parentInfo, true, false,
@@ -967,7 +971,11 @@ fn TransUnit.analyzeDeclClass(
       }   
    }
 
-   if not self.scope.getTypeInfoChild( "__init" ) {
+   let mut ctorAccessMode = Ast.AccessMode.Pub;
+   if! let ctorTypeInfo = classScope.getTypeInfoChild( "__init" ) {
+      ctorAccessMode = ctorTypeInfo.$accessMode;
+   }
+   else {
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
          let superScope = unwrap classTypeInfo.$baseTypeInfo.$scope;
          let superTypeInfo = unwrap superScope.getTypeInfoChild( "__init" );
@@ -984,7 +992,7 @@ fn TransUnit.analyzeDeclClass(
          .Method, parentInfo, true, false, false, .Pub,
          "__init", memberTypeList, [] );
       self.popScope();
-      self.scope.addMethod( initTypeInfo, .Pub, false, false );
+      classScope.addMethod( initTypeInfo, .Pub, false, false );
       methodNameSet[ "__init" ] = true;
 
       // メンバーをセット済みにする
@@ -994,6 +1002,7 @@ fn TransUnit.analyzeDeclClass(
          }
       }
    }
+
 
    // advertise の処理
    foreach advertiseInfo in node.$advertiseList {
@@ -1009,7 +1018,7 @@ fn TransUnit.analyzeDeclClass(
                   if not methodNameSet[ childName ] {
                      let impMtdType = Ast.NormalTypeInfo.createAdvertiseMethodFrom(
                         classTypeInfo, child );
-                     self.scope.addMethod(
+                     classScope.addMethod(
                         impMtdType, child.$accessMode, child.$staticFlag, false );
                   }
                }
@@ -1023,16 +1032,89 @@ fn TransUnit.analyzeDeclClass(
    }
 
 
+   if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+      if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
+         not classTypeInfo.$baseTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+         self.addErrMess(
+            firstToken.pos,
+            "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt() ) );
+      }
+      
+      // Mapping の制限チェック
+      fn isAvailableMapping( typeInfo:&Ast.TypeInfo ): bool {
+         switch typeInfo.$kind {
+            case .Prim, .Enum {
+               return true;
+            }
+            case .Stem {
+               // stem は mapping 不能なデータもあるが、
+               // それは実行時エラーとする。
+               return true;
+            }
+            case .Class, .IF {
+               if typeInfo.equals( Ast.builtinTypeString ) {
+                  return true;
+               }
+               return typeInfo.isInheritFrom( typeInfoMappingIF );
+            }
+            case .List, .Array {
+               return isAvailableMapping( typeInfo.$itemTypeInfoList[1] );
+            }
+            case .Map {
+               if isAvailableMapping( typeInfo.$itemTypeInfoList[2] ) {
+                  let keyType = typeInfo.$itemTypeInfoList[1];
+                  if keyType.equals( Ast.builtinTypeString ) or
+                     keyType.$kind == .Prim or keyType.$kind == .Enum
+                  {
+                     return true;
+                  }
+               }
+               return false;
+            }
+            case .Nilable {
+               return isAvailableMapping( typeInfo.$orgTypeInfo );
+            }
+            default {
+               return false;
+            }
+         }
+      }
+      foreach memberNode in node.$memberList {
+         let memberType = memberNode.$expType;
+         if not isAvailableMapping( memberType ) {
+            self.addErrMess(
+               memberNode.$pos,
+               "member type is not Mapping -- %s" ( memberType.getTxt()) );
+         }
+      }
+
+      // _toMap の追加
+      let mapType = Ast.NormalTypeInfo.createMap(
+         .Pub, classTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem );
+      let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
+         false, false, nil, .Method, classTypeInfo,
+         true, false, false, .Pub, "_toMap", [], [ mapType ], true );
+      classScope.addMethod( toMapFuncTypeInfo, .Pub, false, false );
+
+      // _fromMap の追加
+      let fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
+         false, false, nil, .Func, classTypeInfo,
+         true, false, true, .Pub, "_fromMap",
+         [ self.createModifier( mapType, false ) ],
+         [ classTypeInfo.$nilableTypeInfo ], true );
+      classScope.addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false );
+   }
+   
    fn checkOverrideMethod( scope:&Ast.Scope ) {
       scope.filterTypeInfoField(
-         true, self.scope,
+         true, classScope,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if symbolInfo.$kind == .Mtd {
-               let impMethodType = self.scope.getTypeInfoField(
-                  symbolInfo.$name, true, self.scope );
                let mut noImp = false;
-               if! impMethodType {
-                  if _exp.$abstructFlag {
+               if! let impMethodType = classScope.getTypeInfoField(
+                  symbolInfo.$name, true, classScope )
+               {              
+                  if impMethodType.$abstructFlag {
                      noImp = true;
                   }
                }

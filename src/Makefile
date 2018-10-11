@@ -43,6 +43,7 @@ endef
 define buildLns
 	$(call transwork,$1,$2,Depend)
 	$(call transwork,$1,$2,Util)
+	$(call transwork,$1,$2,frontInterface)
 	$(call transwork,$1,$2,Writer)
 	$(call transwork,$1,$2,Parser)
 	$(call transwork,$1,$2,Option)
@@ -50,7 +51,6 @@ define buildLns
 	$(call transwork,$1,$2,TransUnit)
 	$(call transwork,$1,$2,convLua)
 	$(call transwork,$1,$2,dumpNode)
-	$(call transwork,$1,$2,frontInterface)
 	$(call transwork,$1,$2,front)
 	$(call transwork,$1,$2,glueFilter)
 endef
@@ -174,6 +174,7 @@ test-comp2:
 	$(call exeLune,work/3,test/Class3.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Class4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/start.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/mapping.lns,save,) > /dev/null
 #	$(call exeLune,work/3,test/glue.lns,save,) > /dev/null
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result
 

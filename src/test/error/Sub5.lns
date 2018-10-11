@@ -1,0 +1,4 @@
+pub enum Sub5enum {
+   val1,
+   val2,
+}

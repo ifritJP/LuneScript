@@ -133,3 +133,21 @@ abstruct class Super4 {
 {
    let val = new Super4(); // error
 }
+
+class TestMap0 extend (Mapping) {
+}
+
+class TestMap extend (Mapping) {
+   pub let val:int!;
+   pub let val2:stem;
+   let map1:Map<int,TestMap0>;
+   let map1:Map<TestMap0,int>; // error
+   let map2:Map<Super3,int>;  // error
+   let map3:Map<int,Super3>;  // error
+}
+
+class SuperMap {
+}
+
+class SubMap extend SuperMap (Mapping) { // error
+}

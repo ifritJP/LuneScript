@@ -59,6 +59,102 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+      
+function _lune._fromMapSub( val, memKind )
+   if type( memKind ) == "function" then
+      return memKind( val )
+   end
+   if string.find( memKind, "!$" ) then
+      if val == nil then
+         return nil, true
+      end
+      memKind = memKind:sub( 1, #memKind - 1 )
+   end
+   local valType = type( val )
+   if memKind == "stem" then
+      if valType == "number" or valType == "string" or valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "int" then
+      if valType == "number" then
+         return math.floor( val )
+      end
+      return nil
+   end
+   if memKind == "real" then
+      if valType == "number" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "bool" then
+      if valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "str" then
+      if valType == "string" then
+         return val
+      end
+      return nil
+   end
+   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
+   then
+      if valType == "table" then
+         local tbl = {}
+         for index, mem in ipairs( val ) do
+            local kind = string.gsub( memKind, "^[%a]+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local memval, valid = _lune._fromMapSub( mem, kind )
+            if memval == nil and not valid then
+               return nil
+            end
+            tbl[ index ] = memval
+         end
+         return tbl
+      end
+      return nil
+   end
+   if string.find( memKind, "^Map" ) then
+      if valType == "table" then
+         local tbl = {}
+         for key, mem in pairs( val ) do
+            local kind = string.gsub( memKind, "^%a+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local delimitIndex = string.find( kind, ",", 1, true )
+            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
+            local valKind = string.sub( kind, delimitIndex + 1 )
+            local mapKey = _lune._fromMapSub( key, keyKind )
+            local mapVal = _lune._fromMapSub( mem, valKind )
+            if mapKey == nil or mapVal == nil then
+               return nil
+            end
+            tbl[ mapKey ] = mapVal
+         end
+         return tbl
+      end
+      return nil
+   end
+end
+
+
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
+      if val == nil and not valid then
+         return false
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+
 
 
 
@@ -76,8 +172,8 @@ function DeclClassMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function DeclClassMode:_from( val )
-   if self._val2NameMap[ val ] then
+function DeclClassMode._from( val )
+   if DeclClassMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -99,8 +195,8 @@ function DeclFuncMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function DeclFuncMode:_from( val )
-   if self._val2NameMap[ val ] then
+function DeclFuncMode._from( val )
+   if DeclFuncMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -124,8 +220,8 @@ function ExpSymbolMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function ExpSymbolMode:_from( val )
-   if self._val2NameMap[ val ] then
+function ExpSymbolMode._from( val )
+   if ExpSymbolMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -154,8 +250,8 @@ function AnalyzeMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function AnalyzeMode:_from( val )
-   if self._val2NameMap[ val ] then
+function AnalyzeMode._from( val )
+   if AnalyzeMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -177,8 +273,10 @@ function TransUnit.new( macroEval, analyzeModule, mode, pos )
    return obj
 end
 function TransUnit:__init(macroEval, analyzeModule, mode, pos) 
+   self.hasClassDef = false
    self.nodeManager = Ast.NodeManager.new()
    self.importModuleName2ModuleInfo = {}
+   self.importModule2ModuleInfoCurrent = {}
    self.importModule2ModuleInfo = {}
    self.macroScope = nil
    self.validMutControl = true
@@ -394,40 +492,12 @@ quotedChar2Code['r'] = 13
 quotedChar2Code['\\'] = 92
 quotedChar2Code['"'] = 34
 quotedChar2Code["'"] = 39
-local _TypeInfo = {}
-_moduleObj._TypeInfo = _TypeInfo
-function _TypeInfo.setmeta( obj )
-  setmetatable( obj, { __index = _TypeInfo  } )
-end
-function _TypeInfo.new( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode, valTypeId, enumValList, mutable, srcTypeId )
-   local obj = {}
-   _TypeInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode, valTypeId, enumValList, mutable, srcTypeId )
-   end        
-   return obj 
-end         
-function _TypeInfo:__init( abstructFlag, baseId, ifList, itemTypeId, argTypeId, retTypeId, parentId, typeId, txt, kind, staticFlag, nilable, orgTypeId, children, accessMode, valTypeId, enumValList, mutable, srcTypeId ) 
-
-   self.abstructFlag = abstructFlag
-   self.baseId = baseId
-   self.ifList = ifList
-   self.itemTypeId = itemTypeId
-   self.argTypeId = argTypeId
-   self.retTypeId = retTypeId
-   self.parentId = parentId
-   self.typeId = typeId
-   self.txt = txt
-   self.kind = kind
-   self.staticFlag = staticFlag
-   self.nilable = nilable
-   self.orgTypeId = orgTypeId
-   self.children = children
-   self.accessMode = accessMode
-   self.valTypeId = valTypeId
-   self.enumValList = enumValList
-   self.mutable = mutable
-   self.srcTypeId = srcTypeId
+function TransUnit:createModifier( typeInfo, mutable )
+   if not self.validMutControl then
+      return typeInfo
+   end
+   
+   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable )
 end
 
 local _MetaInfo = {}
@@ -456,19 +526,523 @@ function _MetaInfo:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap
    self._dependIdMap = _dependIdMap
 end
 
+local ImportParam = {}
+function ImportParam.setmeta( obj )
+  setmetatable( obj, { __index = ImportParam  } )
+end
+function ImportParam.new( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope )
+   local obj = {}
+   ImportParam.setmeta( obj )
+   if obj.__init then
+      obj:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope )
+   end        
+   return obj 
+end         
+function ImportParam:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope ) 
+
+   self.transUnit = transUnit
+   self.typeId2Scope = typeId2Scope
+   self.typeId2TypeInfo = typeId2TypeInfo
+   self.metaInfo = metaInfo
+   self.scope = scope
+end
+
+local _TypeInfo = {}
+function _TypeInfo.new(  )
+   local obj = {}
+   _TypeInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function _TypeInfo:__init() 
+   self.parentId = Ast.rootTypeId
+   self.typeId = Ast.rootTypeId
+   self.skind = Ast.SerializeKind.Normal
+end
+function _TypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfo  } )
+end
+function _TypeInfo:_toMap()
+  return self
+end
+function _TypeInfo._fromMap( val )
+  local obj = _TypeInfo._fromMapSub( {}, val )
+  if obj then
+     _TypeInfo.setmeta( obj )
+  end
+  return obj
+end
+
+function _TypeInfo._fromMapSub( obj, val )
+   local memInfo = {}
+   table.insert( memInfo, { name = "skind", kind = Ast.SerializeKind._from } )
+   table.insert( memInfo, { name = "parentId", kind = "int" } )
+   table.insert( memInfo, { name = "typeId", kind = "int" } )
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end
+
+local _TypeInfoNilable = {}
+setmetatable( _TypeInfoNilable, { __index = _TypeInfo } )
+function _TypeInfoNilable:createTypeInfo( param )
+   local orgTypeInfo = _lune.unwrap( param.typeId2TypeInfo[self.orgTypeId])
+   local newTypeInfo = orgTypeInfo:get_nilableTypeInfo(  )
+   param.typeId2TypeInfo[self.typeId] = _lune.unwrap( newTypeInfo)
+   return newTypeInfo, nil
+end
+function _TypeInfoNilable.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoNilable  } )
+end
+function _TypeInfoNilable.new( nilable, orgTypeId )
+   local obj = {}
+   _TypeInfoNilable.setmeta( obj )
+   if obj.__init then
+      obj:__init( nilable, orgTypeId )
+   end        
+   return obj 
+end         
+function _TypeInfoNilable:__init( nilable, orgTypeId ) 
+
+   self.nilable = nilable
+   self.orgTypeId = orgTypeId
+end
+function _TypeInfoNilable:_toMap()
+  return self
+end
+function _TypeInfoNilable._fromMap( val )
+  local obj = _TypeInfoNilable._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoNilable.setmeta( obj )
+  end
+  return obj
+end
+
+function _TypeInfoNilable._fromMapSub( obj, val )
+   if not _TypeInfo._fromMapSub( obj, val ) then
+      return nil
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "nilable", kind = "bool" } )
+   table.insert( memInfo, { name = "orgTypeId", kind = "int" } )
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end
+
+local _TypeInfoModifier = {}
+setmetatable( _TypeInfoModifier, { __index = _TypeInfo } )
+function _TypeInfoModifier:createTypeInfo( param )
+   local srcTypeInfo = param.typeId2TypeInfo[self.srcTypeId]
+   if  nil == srcTypeInfo then
+      local _srcTypeInfo = srcTypeInfo
+   
+      return nil, string.format( "not found srcType -- %d, %d", self.parentId, self.srcTypeId)
+   end
+   
+   local newTypeInfo = param.transUnit:createModifier( srcTypeInfo, _lune.unwrapDefault( self.mutable, false) )
+   param.typeId2TypeInfo[self.typeId] = newTypeInfo
+   return newTypeInfo, nil
+end
+function _TypeInfoModifier.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoModifier  } )
+end
+function _TypeInfoModifier.new( srcTypeId, mutable )
+   local obj = {}
+   _TypeInfoModifier.setmeta( obj )
+   if obj.__init then
+      obj:__init( srcTypeId, mutable )
+   end        
+   return obj 
+end         
+function _TypeInfoModifier:__init( srcTypeId, mutable ) 
+
+   self.srcTypeId = srcTypeId
+   self.mutable = mutable
+end
+function _TypeInfoModifier:_toMap()
+  return self
+end
+function _TypeInfoModifier._fromMap( val )
+  local obj = _TypeInfoModifier._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoModifier.setmeta( obj )
+  end
+  return obj
+end
+
+function _TypeInfoModifier._fromMapSub( obj, val )
+   if not _TypeInfo._fromMapSub( obj, val ) then
+      return nil
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "srcTypeId", kind = "int" } )
+   table.insert( memInfo, { name = "mutable", kind = "bool" } )
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end
+
+local _TypeInfoModule = {}
+setmetatable( _TypeInfoModule, { __index = _TypeInfo } )
+function _TypeInfoModule:createTypeInfo( param )
+   local parentInfo = Ast.headTypeInfo
+   if self.parentId ~= Ast.rootTypeId then
+      local workTypeInfo = param.typeId2TypeInfo[self.parentId]
+      if  nil == workTypeInfo then
+         local _workTypeInfo = workTypeInfo
+      
+         Util.err( string.format( "not found parentInfo %s %s", self.parentId, self.txt) )
+      end
+      
+      parentInfo = workTypeInfo
+   end
+   
+   local parentScope = param.typeId2Scope[self.parentId]
+   if  nil == parentScope then
+      local _parentScope = parentScope
+   
+      return nil, string.format( "not found parentScope %s %s", self.parentId, self.txt)
+   end
+   
+   local newTypeInfo = parentScope:getTypeInfoChild( self.txt )
+   do
+      local _exp = newTypeInfo
+      if _exp ~= nil then
+         param.typeId2Scope[self.typeId] = _exp:get_scope()
+         if not _exp:get_scope() then
+            return nil, string.format( "not found scope %s %s %s %s %s", parentScope, self.parentId, self.typeId, self.txt, _exp:getTxt(  ))
+         end
+         
+         param.typeId2TypeInfo[self.typeId] = _exp
+      else
+         local scope = Ast.Scope.new(parentScope, true, {})
+         local mutable = false
+         if self.typeId == param.metaInfo._moduleTypeId then
+            mutable = param.metaInfo._moduleMutable
+         end
+         
+         local workTypeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, true, self.txt, mutable )
+         newTypeInfo = workTypeInfo
+         param.typeId2Scope[self.typeId] = scope
+         param.typeId2TypeInfo[self.typeId] = workTypeInfo
+         parentScope:addClass( self.txt, workTypeInfo )
+      end
+   end
+   
+   return newTypeInfo, nil
+end
+function _TypeInfoModule.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoModule  } )
+end
+function _TypeInfoModule.new( txt )
+   local obj = {}
+   _TypeInfoModule.setmeta( obj )
+   if obj.__init then
+      obj:__init( txt )
+   end        
+   return obj 
+end         
+function _TypeInfoModule:__init( txt ) 
+
+   self.txt = txt
+end
+function _TypeInfoModule:_toMap()
+  return self
+end
+function _TypeInfoModule._fromMap( val )
+  local obj = _TypeInfoModule._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoModule.setmeta( obj )
+  end
+  return obj
+end
+
+function _TypeInfoModule._fromMapSub( obj, val )
+   if not _TypeInfo._fromMapSub( obj, val ) then
+      return nil
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "txt", kind = "str" } )
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end
+
+local _TypeInfoNormal = {}
+setmetatable( _TypeInfoNormal, { __index = _TypeInfo } )
+function _TypeInfoNormal:createTypeInfo( param )
+   local newTypeInfo = nil
+   if self.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[self.typeId] or self.kind == Ast.TypeInfoKind.List or self.kind == Ast.TypeInfoKind.Array or self.kind == Ast.TypeInfoKind.Map then
+      local parentInfo = Ast.headTypeInfo
+      if self.parentId ~= Ast.rootTypeId then
+         local workTypeInfo = param.typeId2TypeInfo[self.parentId]
+         if  nil == workTypeInfo then
+            local _workTypeInfo = workTypeInfo
+         
+            return nil, string.format( "not found parentInfo %s %s", self.parentId, self.txt)
+         end
+         
+         parentInfo = workTypeInfo
+      end
+      
+      local itemTypeInfo = {}
+      for __index, typeId in pairs( self.itemTypeId ) do
+         table.insert( itemTypeInfo, _lune.unwrap( param.typeId2TypeInfo[typeId]) )
+      end
+      
+      local argTypeInfo = {}
+      for __index, typeId in pairs( self.argTypeId ) do
+         if not param.typeId2TypeInfo[typeId] then
+            return nil, string.format( "not found -- %s.%s, %d, %d", parentInfo:getTxt(  ), self.txt, typeId, #self.argTypeId)
+         end
+         
+         table.insert( argTypeInfo, _lune.unwrap( param.typeId2TypeInfo[typeId]) )
+      end
+      
+      local retTypeInfo = {}
+      for __index, typeId in pairs( self.retTypeId ) do
+         table.insert( retTypeInfo, _lune.unwrap( param.typeId2TypeInfo[typeId]) )
+      end
+      
+      local baseInfo = _lune.unwrap( param.typeId2TypeInfo[self.baseId])
+      local interfaceList = {}
+      for __index, ifTypeId in pairs( self.ifList ) do
+         table.insert( interfaceList, _lune.unwrap( param.typeId2TypeInfo[ifTypeId]) )
+      end
+      
+      local parentScope = param.typeId2Scope[self.parentId]
+      if  nil == parentScope then
+         local _parentScope = parentScope
+      
+         return nil, string.format( "not found parentScope %s %s", self.parentId, self.txt)
+      end
+      
+      if self.txt ~= "" then
+         newTypeInfo = parentScope:getTypeInfoChild( self.txt )
+      end
+      
+      if newTypeInfo and (self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF ) then
+         do
+            local _exp = newTypeInfo
+            if _exp ~= nil then
+               param.typeId2Scope[self.typeId] = _exp:get_scope()
+               if not _exp:get_scope() then
+                  Util.err( string.format( "not found scope %s %s %s %s %s", parentScope, self.parentId, self.typeId, self.txt, _exp:getTxt(  )) )
+               end
+               
+               param.typeId2TypeInfo[self.typeId] = _exp
+            end
+         end
+         
+         
+      else
+       
+         if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
+            local baseScope = _lune.unwrap( param.typeId2Scope[self.baseId])
+            local scope = Ast.Scope.new(parentScope, true, {baseScope})
+            local workTypeInfo = Ast.NormalTypeInfo.createClass( self.kind == Ast.TypeInfoKind.Class, self.abstructFlag, scope, baseInfo, interfaceList, parentInfo, true, Ast.AccessMode.Pub, self.txt )
+            newTypeInfo = workTypeInfo
+            param.typeId2Scope[self.typeId] = scope
+            param.typeId2TypeInfo[self.typeId] = workTypeInfo
+            parentScope:addClass( self.txt, workTypeInfo )
+         else
+          
+            local scope = nil
+            if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method then
+               scope = Ast.Scope.new(parentScope, false, {})
+            end
+            
+            local typeInfoKind = _lune.unwrap( Ast.TypeInfoKind._from( self.kind ))
+            local mutable = true
+            do
+               local _exp = self.mutable
+               if _exp ~= nil then
+                  if not _exp then
+                     mutable = false
+                  end
+                  
+               end
+            end
+            
+            local workTypeInfo = Ast.NormalTypeInfo.create( self.abstructFlag, scope, baseInfo, interfaceList, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable )
+            newTypeInfo = workTypeInfo
+            param.typeId2TypeInfo[self.typeId] = workTypeInfo
+            if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method then
+               local symbolKind = Ast.SymbolKind.Fun
+               if self.kind == Ast.TypeInfoKind.Method then
+                  symbolKind = Ast.SymbolKind.Mtd
+               end
+               
+               local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
+               local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
+               workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, workTypeInfo, accessMode, self.staticFlag, false, true )
+               param.typeId2Scope[self.typeId] = scope
+            end
+            
+         end
+         
+      end
+      
+   else
+    
+      newTypeInfo = param.scope:getTypeInfo( self.txt, param.scope, false )
+      if not newTypeInfo then
+         for key, val in pairs( self ) do
+            Util.errorLog( string.format( "error: illegal self %s:%s", key, val) )
+         end
+         
+      end
+      
+      param.typeId2TypeInfo[self.typeId] = _lune.unwrap( newTypeInfo)
+   end
+   
+   return newTypeInfo, nil
+end
+function _TypeInfoNormal.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoNormal  } )
+end
+function _TypeInfoNormal.new( abstructFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children )
+   local obj = {}
+   _TypeInfoNormal.setmeta( obj )
+   if obj.__init then
+      obj:__init( abstructFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children )
+   end        
+   return obj 
+end         
+function _TypeInfoNormal:__init( abstructFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children ) 
+
+   self.abstructFlag = abstructFlag
+   self.baseId = baseId
+   self.txt = txt
+   self.staticFlag = staticFlag
+   self.accessMode = accessMode
+   self.kind = kind
+   self.mutable = mutable
+   self.ifList = ifList
+   self.itemTypeId = itemTypeId
+   self.argTypeId = argTypeId
+   self.retTypeId = retTypeId
+   self.children = children
+end
+function _TypeInfoNormal:_toMap()
+  return self
+end
+function _TypeInfoNormal._fromMap( val )
+  local obj = _TypeInfoNormal._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoNormal.setmeta( obj )
+  end
+  return obj
+end
+
+function _TypeInfoNormal._fromMapSub( obj, val )
+   if not _TypeInfo._fromMapSub( obj, val ) then
+      return nil
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "abstructFlag", kind = "bool" } )
+   table.insert( memInfo, { name = "baseId", kind = "int" } )
+   table.insert( memInfo, { name = "txt", kind = "str" } )
+   table.insert( memInfo, { name = "staticFlag", kind = "bool" } )
+   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from } )
+   table.insert( memInfo, { name = "kind", kind = Ast.TypeInfoKind._from } )
+   table.insert( memInfo, { name = "mutable", kind = "bool" } )
+   table.insert( memInfo, { name = "ifList", kind = "List<int>" } )
+   table.insert( memInfo, { name = "itemTypeId", kind = "List<int>" } )
+   table.insert( memInfo, { name = "argTypeId", kind = "List<int>" } )
+   table.insert( memInfo, { name = "retTypeId", kind = "List<int>" } )
+   table.insert( memInfo, { name = "children", kind = "List<int>" } )
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end
+
+local _TypeInfoEnum = {}
+setmetatable( _TypeInfoEnum, { __index = _TypeInfo } )
+function _TypeInfoEnum:createTypeInfo( param )
+   local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
+   local parentInfo = _lune.unwrap( param.typeId2TypeInfo[self.parentId])
+   local name2EnumValInfo = {}
+   local parentScope = _lune.unwrap( parentInfo:get_scope())
+   local scope = Ast.Scope.new(parentScope, true, {})
+   param.typeId2Scope[self.typeId] = scope
+   local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune.unwrap( parentInfo), true, accessMode, self.txt, _lune.unwrap( param.typeId2TypeInfo[self.valTypeId]), name2EnumValInfo )
+   local newTypeInfo = enumTypeInfo
+   param.typeId2TypeInfo[self.typeId] = enumTypeInfo
+   for valName, valData in pairs( self.enumValList ) do
+      name2EnumValInfo[valName] = Ast.EnumValInfo.new(valName, valData)
+      scope:addEnumVal( valName, enumTypeInfo )
+   end
+   
+   parentScope:addEnum( accessMode, self.txt, enumTypeInfo )
+   return newTypeInfo, nil
+end
+function _TypeInfoEnum.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoEnum  } )
+end
+function _TypeInfoEnum.new( txt, accessMode, valTypeId, enumValList )
+   local obj = {}
+   _TypeInfoEnum.setmeta( obj )
+   if obj.__init then
+      obj:__init( txt, accessMode, valTypeId, enumValList )
+   end        
+   return obj 
+end         
+function _TypeInfoEnum:__init( txt, accessMode, valTypeId, enumValList ) 
+
+   self.txt = txt
+   self.accessMode = accessMode
+   self.valTypeId = valTypeId
+   self.enumValList = enumValList
+end
+function _TypeInfoEnum:_toMap()
+  return self
+end
+function _TypeInfoEnum._fromMap( val )
+  local obj = _TypeInfoEnum._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoEnum.setmeta( obj )
+  end
+  return obj
+end
+
+function _TypeInfoEnum._fromMapSub( obj, val )
+   if not _TypeInfo._fromMapSub( obj, val ) then
+      return nil
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "txt", kind = "str" } )
+   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from } )
+   table.insert( memInfo, { name = "valTypeId", kind = "int" } )
+   table.insert( memInfo, { name = "enumValList", kind = "Map<str,stem>" } )
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end
+
 local typeInfoListInsert = Ast.headTypeInfo
 _moduleObj.typeInfoListInsert = typeInfoListInsert
 
 local typeInfoListRemove = Ast.headTypeInfo
 _moduleObj.typeInfoListRemove = typeInfoListRemove
 
-function TransUnit:createModifier( typeInfo, mutable )
-   if not self.validMutControl then
-      return typeInfo
-   end
-   
-   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable )
-end
+local typeInfoMappingIF = Ast.headTypeInfo
+_moduleObj.typeInfoMappingIF = typeInfoMappingIF
+
+local typeInfoMappingToMap = Ast.headTypeInfo
+_moduleObj.typeInfoMappingToMap = typeInfoMappingToMap
 
 local readyBuiltin = false
 function TransUnit:registBuiltInScope(  )
@@ -477,7 +1051,7 @@ function TransUnit:registBuiltInScope(  )
    end
    
    readyBuiltin = true
-   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"&stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
+   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["load"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["table"] = {["unpack"] = {["arg"] = {"&stem"}, ["ret"] = {"..."}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {""}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
    local function getTypeInfo( typeName )
       local mutable = true
       if typeName:find( "^&" ) then
@@ -533,6 +1107,10 @@ function TransUnit:registBuiltInScope(  )
             parentInfo = self:pushClass( classFlag, false, nil, interfaceList, true, name, Ast.AccessMode.Pub )
             Ast.builtInTypeIdSet[parentInfo:get_typeId(  )] = parentInfo
             Ast.builtInTypeIdSet[parentInfo:get_nilableTypeInfo():get_typeId()] = parentInfo:get_nilableTypeInfo()
+            if name == "Mapping" then
+               _moduleObj.typeInfoMappingIF = parentInfo
+            end
+            
          end
          
          if not builtinModuleName2Scope[name] then
@@ -580,14 +1158,22 @@ function TransUnit:registBuiltInScope(  )
                            self.scope:add( methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun, not methodFlag, not methodFlag, fieldName, typeInfo, Ast.AccessMode.Pub, not methodFlag, mutable, true )
                            if methodFlag then
                               do
-                                 local _switchExp = (name )
+                                 local _switchExp = name
                                  if _switchExp == "List" then
                                     do
-                                       local _switchExp = (fieldName )
+                                       local _switchExp = fieldName
                                        if _switchExp == "insert" then
                                           _moduleObj.typeInfoListInsert = typeInfo
                                        elseif _switchExp == "remove" then
                                           _moduleObj.typeInfoListRemove = typeInfo
+                                       end
+                                    end
+                                    
+                                 elseif _switchExp == "Mapping" then
+                                    do
+                                       local _switchExp = fieldName
+                                       if _switchExp == "_toMap" then
+                                          _moduleObj.typeInfoMappingToMap = typeInfo
                                        end
                                     end
                                     
@@ -983,12 +1569,15 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
    self.metaTypeId2TypeInfoMap = metaTypeId2TypeInfoMap
 end
 
-function TransUnit:processImport( modulePath )
+function TransUnit:processImport( modulePath, moduleInfoMap )
    do
       local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
       if moduleInfo ~= nil then
          local metaInfo = frontInterface.loadMeta( modulePath )
-         return metaInfo, moduleInfo:get_importId2localTypeInfoMap()
+         local typeId2TypeInfo = moduleInfo:get_importId2localTypeInfoMap()
+         local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo._moduleTypeId])
+         moduleInfoMap[moduleTypeInfo] = moduleInfo
+         return metaInfo, typeId2TypeInfo
       end
    end
    
@@ -1001,7 +1590,7 @@ function TransUnit:processImport( modulePath )
    local dependLibId2DependInfo = {}
    for dependName, dependInfo in pairs( metaInfo._dependModuleMap ) do
       if dependInfo['use'] then
-         local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName )
+         local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName, {} )
          local id = math.floor((_lune.unwrap( dependInfo['id']) ))
          dependLibId2DependInfo[id] = DependModuleInfo.new(id, metaTypeId2TypeInfoMap)
       end
@@ -1048,262 +1637,102 @@ function TransUnit:processImport( modulePath )
    end
    
    local newId2OldIdMap = {}
-   local function registTypeInfo( atomInfo )
-      local newTypeInfo = nil
+   local _typeInfoList = {}
+   local _typeInfoNormalList = {}
+   for __index, atomInfo in pairs( metaInfo._typeInfoList ) do
       do
-         local _exp = atomInfo.srcTypeId
-         if _exp ~= nil then
-            local srcTypeInfo = typeId2TypeInfo[_exp]
-            if  nil == srcTypeInfo then
-               local _srcTypeInfo = srcTypeInfo
-            
-               Util.err( string.format( "not found srcType -- %s: %d, %d", modulePath, atomInfo.parentId, _exp) )
+         local skind = atomInfo['skind']
+         if skind ~= nil then
+            local actInfo = nil
+            local kind = _lune.unwrap( Ast.SerializeKind._from( math.floor(skind) ))
+            do
+               local _switchExp = kind
+               if _switchExp == Ast.SerializeKind.Enum then
+                  actInfo = _TypeInfoEnum._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.Module then
+                  actInfo = _TypeInfoModule._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.Normal then
+                  do
+                     local _exp = _TypeInfoNormal._fromMap( atomInfo )
+                     if _exp ~= nil then
+                        table.insert( _typeInfoNormalList, _exp )
+                        actInfo = _exp
+                     end
+                  end
+                  
+               elseif _switchExp == Ast.SerializeKind.Nilable then
+                  actInfo = _TypeInfoNilable._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.Modifier then
+                  actInfo = _TypeInfoModifier._fromMap( atomInfo )
+               else 
+                  
+                     Util.err( string.format( "unknown skind -- %d", skind) )
+               end
             end
             
-            newTypeInfo = self:createModifier( srcTypeInfo, _lune.unwrapDefault( atomInfo.mutable, false) )
-            typeId2TypeInfo[atomInfo.typeId] = newTypeInfo
-         else
-            if atomInfo.kind == Ast.TypeInfoKind.Enum then
-               local accessMode = _lune.unwrap( Ast.AccessMode:_from( atomInfo.accessMode ))
-               local parentInfo = _lune.unwrap( typeId2TypeInfo[atomInfo.parentId])
-               local name2EnumValInfo = {}
-               local parentScope = _lune.unwrap( parentInfo:get_scope())
-               local scope = Ast.Scope.new(parentScope, true, {})
-               typeId2Scope[atomInfo.typeId] = scope
-               local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune.unwrap( parentInfo), true, accessMode, atomInfo.txt, _lune.unwrap( typeId2TypeInfo[atomInfo.valTypeId]), name2EnumValInfo )
-               newTypeInfo = enumTypeInfo
-               typeId2TypeInfo[atomInfo.typeId] = enumTypeInfo
-               for valName, valData in pairs( atomInfo.enumValList ) do
-                  name2EnumValInfo[valName] = Ast.EnumValInfo.new(valName, valData)
-                  scope:addEnumVal( valName, enumTypeInfo )
-               end
-               
-               parentScope:addEnum( accessMode, atomInfo.txt, enumTypeInfo )
-            elseif atomInfo.kind == Ast.TypeInfoKind.Module then
-               local parentInfo = Ast.headTypeInfo
-               if atomInfo.parentId ~= Ast.rootTypeId then
-                  local workTypeInfo = typeId2TypeInfo[atomInfo.parentId]
-                  if  nil == workTypeInfo then
-                     local _workTypeInfo = workTypeInfo
-                  
-                     Util.err( string.format( "not found parentInfo %s %s", atomInfo.parentId, atomInfo.txt) )
-                  end
-                  
-                  parentInfo = workTypeInfo
-               end
-               
-               local parentScope = typeId2Scope[atomInfo.parentId]
-               if  nil == parentScope then
-                  local _parentScope = parentScope
-               
-                  self:error( string.format( "not found parentScope %s %s", atomInfo.parentId, atomInfo.txt) )
-               end
-               
-               newTypeInfo = parentScope:getTypeInfoChild( atomInfo.txt )
-               do
-                  local _exp = newTypeInfo
-                  if _exp ~= nil then
-                     typeId2Scope[atomInfo.typeId] = _exp:get_scope()
-                     if not _exp:get_scope() then
-                        Util.err( string.format( "not found scope %s %s %s %s %s", parentScope, atomInfo.parentId, atomInfo.typeId, atomInfo.txt, _exp:getTxt(  )) )
-                     end
-                     
-                     typeId2TypeInfo[atomInfo.typeId] = _exp
-                  else
-                     local scope = Ast.Scope.new(parentScope, true, {})
-                     local mutable = false
-                     if atomInfo.typeId == metaInfo._moduleTypeId then
-                        mutable = metaInfo._moduleMutable
-                     end
-                     
-                     local workTypeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, true, atomInfo.txt, mutable )
-                     newTypeInfo = workTypeInfo
-                     typeId2Scope[atomInfo.typeId] = scope
-                     typeId2TypeInfo[atomInfo.typeId] = workTypeInfo
-                     parentScope:addClass( atomInfo.txt, workTypeInfo )
-                  end
-               end
-               
-            elseif atomInfo.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[atomInfo.typeId] or atomInfo.kind == Ast.TypeInfoKind.List or atomInfo.kind == Ast.TypeInfoKind.Array or atomInfo.kind == Ast.TypeInfoKind.Map or atomInfo.nilable then
-               if atomInfo.nilable then
-                  local orgTypeInfo = _lune.unwrap( typeId2TypeInfo[atomInfo.orgTypeId])
-                  newTypeInfo = orgTypeInfo:get_nilableTypeInfo(  )
-                  typeId2TypeInfo[atomInfo.typeId] = _lune.unwrap( newTypeInfo)
+            do
+               local _exp = actInfo
+               if _exp ~= nil then
+                  table.insert( _typeInfoList, _exp )
                else
-                
-                  local parentInfo = Ast.headTypeInfo
-                  if atomInfo.parentId ~= Ast.rootTypeId then
-                     local workTypeInfo = typeId2TypeInfo[atomInfo.parentId]
-                     if  nil == workTypeInfo then
-                        local _workTypeInfo = workTypeInfo
-                     
-                        Util.err( string.format( "not found parentInfo %s %s", atomInfo.parentId, atomInfo.txt) )
-                     end
-                     
-                     parentInfo = workTypeInfo
-                  end
-                  
-                  local itemTypeInfo = {}
-                  for __index, typeId in pairs( atomInfo.itemTypeId ) do
-                     table.insert( itemTypeInfo, _lune.unwrap( typeId2TypeInfo[typeId]) )
-                  end
-                  
-                  local argTypeInfo = {}
-                  for __index, typeId in pairs( atomInfo.argTypeId ) do
-                     if not typeId2TypeInfo[typeId] then
-                        Util.log( string.format( "not found -- %s, %s.%s, %d, %d", modulePath, parentInfo:getTxt(  ), atomInfo.txt, typeId, #atomInfo.argTypeId) )
-                     end
-                     
-                     table.insert( argTypeInfo, _lune.unwrap( typeId2TypeInfo[typeId]) )
-                  end
-                  
-                  local retTypeInfo = {}
-                  for __index, typeId in pairs( atomInfo.retTypeId ) do
-                     table.insert( retTypeInfo, _lune.unwrap( typeId2TypeInfo[typeId]) )
-                  end
-                  
-                  local baseInfo = _lune.unwrap( typeId2TypeInfo[atomInfo.baseId])
-                  local interfaceList = {}
-                  for __index, ifTypeId in pairs( atomInfo.ifList ) do
-                     table.insert( interfaceList, _lune.unwrap( typeId2TypeInfo[ifTypeId]) )
-                  end
-                  
-                  local parentScope = typeId2Scope[atomInfo.parentId]
-                  if  nil == parentScope then
-                     local _parentScope = parentScope
-                  
-                     self:error( string.format( "not found parentScope %s %s", atomInfo.parentId, atomInfo.txt) )
-                  end
-                  
-                  if atomInfo.txt ~= "" then
-                     newTypeInfo = parentScope:getTypeInfoChild( atomInfo.txt )
-                  end
-                  
-                  if newTypeInfo and (atomInfo.kind == Ast.TypeInfoKind.Class or atomInfo.kind == Ast.TypeInfoKind.IF ) then
-                     do
-                        local _exp = newTypeInfo
-                        if _exp ~= nil then
-                           typeId2Scope[atomInfo.typeId] = _exp:get_scope()
-                           if not _exp:get_scope() then
-                              Util.err( string.format( "not found scope %s %s %s %s %s", parentScope, atomInfo.parentId, atomInfo.typeId, atomInfo.txt, _exp:getTxt(  )) )
-                           end
-                           
-                           typeId2TypeInfo[atomInfo.typeId] = _exp
-                        end
-                     end
-                     
-                     
-                  else
-                   
-                     if atomInfo.kind == Ast.TypeInfoKind.Class or atomInfo.kind == Ast.TypeInfoKind.IF then
-                        local baseScope = _lune.unwrap( typeId2Scope[atomInfo.baseId])
-                        local scope = Ast.Scope.new(parentScope, true, {baseScope})
-                        local workTypeInfo = Ast.NormalTypeInfo.createClass( atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag, scope, baseInfo, interfaceList, parentInfo, true, Ast.AccessMode.Pub, atomInfo.txt )
-                        newTypeInfo = workTypeInfo
-                        typeId2Scope[atomInfo.typeId] = scope
-                        typeId2TypeInfo[atomInfo.typeId] = workTypeInfo
-                        parentScope:addClass( atomInfo.txt, workTypeInfo )
-                     else
-                      
-                        local scope = nil
-                        if atomInfo.kind == Ast.TypeInfoKind.Func or atomInfo.kind == Ast.TypeInfoKind.Method then
-                           scope = Ast.Scope.new(parentScope, false, {})
-                        end
-                        
-                        local typeInfoKind = _lune.unwrap( Ast.TypeInfoKind:_from( atomInfo.kind ))
-                        local mutable = true
-                        do
-                           local _exp = atomInfo.mutable
-                           if _exp ~= nil then
-                              if not _exp then
-                                 mutable = false
-                              end
-                              
-                           end
-                        end
-                        
-                        local workTypeInfo = Ast.NormalTypeInfo.create( atomInfo.abstructFlag, scope, baseInfo, interfaceList, parentInfo, atomInfo.staticFlag, typeInfoKind, atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable )
-                        newTypeInfo = workTypeInfo
-                        typeId2TypeInfo[atomInfo.typeId] = workTypeInfo
-                        if atomInfo.kind == Ast.TypeInfoKind.Func or atomInfo.kind == Ast.TypeInfoKind.Method then
-                           local symbolKind = Ast.SymbolKind.Fun
-                           if atomInfo.kind == Ast.TypeInfoKind.Method then
-                              symbolKind = Ast.SymbolKind.Mtd
-                           end
-                           
-                           local accessMode = _lune.unwrap( Ast.AccessMode:_from( atomInfo.accessMode ))
-                           local workParentScope = _lune.unwrap( typeId2Scope[atomInfo.parentId])
-                           workParentScope:add( symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func, atomInfo.txt, workTypeInfo, accessMode, atomInfo.staticFlag, false, true )
-                           typeId2Scope[atomInfo.typeId] = scope
-                        end
-                        
-                     end
-                     
-                  end
-                  
-               end
-               
-            else
-             
-               newTypeInfo = self.scope:getTypeInfo( atomInfo.txt, self.scope, false )
-               if not newTypeInfo then
                   for key, val in pairs( atomInfo ) do
-                     Util.errorLog( string.format( "error: illegal atomInfo %s:%s", key, val) )
+                     Util.errorLog( string.format( "table: %s:%s", key, val) )
                   end
                   
+                  Util.err( string.format( "_TypeInfo%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
+                  ) )
                end
-               
-               typeId2TypeInfo[atomInfo.typeId] = _lune.unwrap( newTypeInfo)
             end
             
          end
       end
       
-      return _lune.unwrap( newTypeInfo)
    end
    
-   for __index, atomInfo in pairs( metaInfo._typeInfoList ) do
-      registTypeInfo( atomInfo )
-   end
-   
-   for __index, atomInfo in pairs( metaInfo._typeInfoList ) do
+   local importParam = ImportParam.new(self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope)
+   for __index, atomInfo in pairs( _typeInfoList ) do
+      local newTypeInfo, errMess = atomInfo:createTypeInfo( importParam )
       do
-         local children = atomInfo.children
-         if children ~= nil then
-            if #children > 0 then
-               local scope = _lune.unwrap( typeId2Scope[atomInfo.typeId])
-               for __index, childId in pairs( children ) do
-                  local typeInfo = typeId2TypeInfo[childId]
-                  if  nil == typeInfo then
-                     local _typeInfo = typeInfo
-                  
-                     Util.err( string.format( "not found childId -- %s, %d, %s(%d)", modulePath, childId, atomInfo.txt, atomInfo.typeId) )
-                  end
-                  
-                  local symbolKind = Ast.SymbolKind.Typ
-                  local addFlag = true
-                  do
-                     local _switchExp = typeInfo:get_kind()
-                     if _switchExp == Ast.TypeInfoKind.Func then
-                        symbolKind = Ast.SymbolKind.Fun
-                     elseif _switchExp == Ast.TypeInfoKind.Method then
-                        symbolKind = Ast.SymbolKind.Mtd
-                     elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
-                        symbolKind = Ast.SymbolKind.Typ
-                     elseif _switchExp == Ast.TypeInfoKind.Enum then
-                        addFlag = false
-                     end
-                  end
-                  
-                  if addFlag then
-                     scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
-                  end
-                  
+         local _exp = errMess
+         if _exp ~= nil then
+            Util.err( string.format( "%s: %s", modulePath, _exp) )
+         end
+      end
+      
+   end
+   
+   for __index, atomInfo in pairs( _typeInfoNormalList ) do
+      if #atomInfo.children > 0 then
+         local scope = _lune.unwrap( typeId2Scope[atomInfo.typeId])
+         for __index, childId in pairs( atomInfo.children ) do
+            local typeInfo = typeId2TypeInfo[childId]
+            if  nil == typeInfo then
+               local _typeInfo = typeInfo
+            
+               Util.err( string.format( "not found childId -- %s, %d, %s(%d)", modulePath, childId, atomInfo.txt, atomInfo.typeId) )
+            end
+            
+            local symbolKind = Ast.SymbolKind.Typ
+            local addFlag = true
+            do
+               local _switchExp = typeInfo:get_kind()
+               if _switchExp == Ast.TypeInfoKind.Func then
+                  symbolKind = Ast.SymbolKind.Fun
+               elseif _switchExp == Ast.TypeInfoKind.Method then
+                  symbolKind = Ast.SymbolKind.Mtd
+               elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
+                  symbolKind = Ast.SymbolKind.Typ
+               elseif _switchExp == Ast.TypeInfoKind.Enum then
+                  addFlag = false
                end
-               
+            end
+            
+            if addFlag then
+               scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
             end
             
          end
+         
       end
       
    end
@@ -1329,7 +1758,7 @@ function TransUnit:processImport( modulePath )
                   for fieldName, fieldInfo in pairs( classInfo ) do
                      local typeId = fieldInfo['typeId']
                      local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[typeId])
-                     self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode:_from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), (_lune.unwrapDefault( fieldInfo['staticFlag'], false) ), (_lune.unwrapDefault( fieldInfo['mutable'], false) ) )
+                     self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), (_lune.unwrapDefault( fieldInfo['staticFlag'], false) ), (_lune.unwrapDefault( fieldInfo['mutable'], false) ) )
                   end
                   
                else
@@ -1361,8 +1790,8 @@ function TransUnit:processImport( modulePath )
       
    end
    
-   for __index, atomInfo in pairs( metaInfo._typeInfoList ) do
-      if atomInfo.parentId == Ast.rootTypeId and (atomInfo.kind == Ast.TypeInfoKind.Class or atomInfo.kind == Ast.TypeInfoKind.Module or atomInfo.kind == Ast.TypeInfoKind.IF ) then
+   for __index, atomInfo in pairs( _typeInfoList ) do
+      if atomInfo.parentId == Ast.rootTypeId and (atomInfo.skind == Ast.SerializeKind.Normal or atomInfo.skind == Ast.SerializeKind.Module ) then
          registMember( atomInfo.typeId )
       end
       
@@ -1388,6 +1817,7 @@ function TransUnit:processImport( modulePath )
    local moduleInfo = Ast.ModuleInfo.new(modulePath, newId2OldIdMap)
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
+   moduleInfoMap[moduleTypeInfo] = moduleInfo
    return metaInfo, typeId2TypeInfo
 end
 
@@ -1413,10 +1843,10 @@ function TransUnit:analyzeImport( token )
       
    end
    
-   local metaInfo, typeId2TypeInfo = self:processImport( modulePath )
+   local metaInfo, typeId2TypeInfo = self:processImport( modulePath, self.importModule2ModuleInfoCurrent )
    self.scope = self.moduleScope
    local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo._moduleTypeId])
-   local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind:_from( metaInfo._moduleSymbolKind ))
+   local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind._from( metaInfo._moduleSymbolKind ))
    self.scope:add( moduleSymbolKind, false, false, moduleToken.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo._moduleMutable, true )
    self:checkToken( nextToken, ";" )
    if self.moduleScope ~= self.scope then
@@ -1910,7 +2340,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
          
       end
       
-      local luneHelperInfo = Ast.LuneHelperInfo.new(self.useNilAccess, self.useUnwrapExp)
+      local luneHelperInfo = Ast.LuneHelperInfo.new(self.useNilAccess, self.useUnwrapExp, self.hasClassDef)
       local rootNode = Ast.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, moduleTypeInfo, nil, luneHelperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2ClassMap )
       ast = rootNode
       do
@@ -2501,6 +2931,7 @@ end
 
 function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
    local name = self:getSymbolToken(  )
+   self.hasClassDef = true
    local moduleName = nil
    local gluePrefix = nil
    if mode == DeclClassMode.Module then
@@ -2517,6 +2948,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode )
+   local classScope = self.scope
    self:checkToken( nextToken, "{" )
    local node, workNextToken, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
    nextToken = workNextToken
@@ -2531,7 +2963,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       local memberName = memberNode:get_name()
       local getterName = "get_" .. memberName.txt
       local accessMode = memberNode:get_getterMode()
-      if accessMode ~= Ast.AccessMode.None and not self.scope:getTypeInfoChild( getterName ) then
+      if accessMode ~= Ast.AccessMode.None and not classScope:getTypeInfoChild( getterName ) then
          local mutable = memberNode:get_getterMutable()
          local getterMemberType = memberType
          if memberType:get_mutable() and not mutable then
@@ -2540,44 +2972,50 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          
          local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, getterName, {}, {getterMemberType} )
          self:popScope(  )
-         self.scope:addMethod( retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
+         classScope:addMethod( retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
          methodNameSet[getterName] = true
       end
       
       local setterName = "set_" .. memberName.txt
       accessMode = memberNode:get_setterMode()
-      if memberNode:get_setterMode() ~= Ast.AccessMode.None and not self.scope:getTypeInfoChild( setterName ) then
-         self.scope:addMethod( Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, setterName, {memberType}, nil, true ), accessMode, memberNode:get_staticFlag(), true )
+      if memberNode:get_setterMode() ~= Ast.AccessMode.None and not classScope:getTypeInfoChild( setterName ) then
+         classScope:addMethod( Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, setterName, {memberType}, nil, true ), accessMode, memberNode:get_staticFlag(), true )
          self:popScope(  )
          methodNameSet[setterName] = true
       end
       
    end
    
-   if not self.scope:getTypeInfoChild( "__init" ) then
-      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
-         local superScope = _lune.unwrap( classTypeInfo:get_baseTypeInfo():get_scope())
-         local superTypeInfo = _lune.unwrap( superScope:getTypeInfoChild( "__init" ))
-         for __index, argType in pairs( superTypeInfo:get_argTypeInfoList() ) do
-            if not argType:get_nilable() then
-               self:addErrMess( firstToken.pos, "not found '__init' decl." )
+   local ctorAccessMode = Ast.AccessMode.Pub
+   do
+      local ctorTypeInfo = classScope:getTypeInfoChild( "__init" )
+      if ctorTypeInfo ~= nil then
+         ctorAccessMode = ctorTypeInfo:get_accessMode()
+      else
+         if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
+            local superScope = _lune.unwrap( classTypeInfo:get_baseTypeInfo():get_scope())
+            local superTypeInfo = _lune.unwrap( superScope:getTypeInfoChild( "__init" ))
+            for __index, argType in pairs( superTypeInfo:get_argTypeInfoList() ) do
+               if not argType:get_nilable() then
+                  self:addErrMess( firstToken.pos, "not found '__init' decl." )
+               end
+               
+            end
+            
+         end
+         
+         local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, Ast.AccessMode.Pub, "__init", memberTypeList, {} )
+         self:popScope(  )
+         classScope:addMethod( initTypeInfo, Ast.AccessMode.Pub, false, false )
+         methodNameSet["__init"] = true
+         for __index, memberNode in pairs( node:get_memberList() ) do
+            if not memberNode:get_staticFlag() then
+               memberNode:get_symbolInfo():set_hasValueFlag( true )
             end
             
          end
          
       end
-      
-      local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, Ast.AccessMode.Pub, "__init", memberTypeList, {} )
-      self:popScope(  )
-      self.scope:addMethod( initTypeInfo, Ast.AccessMode.Pub, false, false )
-      methodNameSet["__init"] = true
-      for __index, memberNode in pairs( node:get_memberList() ) do
-         if not memberNode:get_staticFlag() then
-            memberNode:get_symbolInfo():set_hasValueFlag( true )
-         end
-         
-      end
-      
    end
    
    for __index, advertiseInfo in pairs( node:get_advertiseList() ) do
@@ -2590,7 +3028,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
                   local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
                   if not methodNameSet[childName] then
                      local impMtdType = Ast.NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, child )
-                     self.scope:addMethod( impMtdType, child:get_accessMode(), child:get_staticFlag(), false )
+                     classScope:addMethod( impMtdType, child:get_accessMode(), child:get_staticFlag(), false )
                   end
                   
                end
@@ -2605,15 +3043,69 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
    end
    
+   if classTypeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF ) then
+      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( _moduleObj.typeInfoMappingIF ) then
+         self:addErrMess( firstToken.pos, string.format( "must extend Mapping at %s", classTypeInfo:get_baseTypeInfo():getTxt(  )) )
+      end
+      
+      local function isAvailableMapping( typeInfo )
+         do
+            local _switchExp = typeInfo:get_kind()
+            if _switchExp == Ast.TypeInfoKind.Prim or _switchExp == Ast.TypeInfoKind.Enum then
+               return true
+            elseif _switchExp == Ast.TypeInfoKind.Stem then
+               return true
+            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+               if typeInfo:equals( Ast.builtinTypeString ) then
+                  return true
+               end
+               
+               return typeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF )
+            elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+               return isAvailableMapping( typeInfo:get_itemTypeInfoList()[1] )
+            elseif _switchExp == Ast.TypeInfoKind.Map then
+               if isAvailableMapping( typeInfo:get_itemTypeInfoList()[2] ) then
+                  local keyType = typeInfo:get_itemTypeInfoList()[1]
+                  if keyType:equals( Ast.builtinTypeString ) or keyType:get_kind() == Ast.TypeInfoKind.Prim or keyType:get_kind() == Ast.TypeInfoKind.Enum then
+                     return true
+                  end
+                  
+               end
+               
+               return false
+            elseif _switchExp == Ast.TypeInfoKind.Nilable then
+               return isAvailableMapping( typeInfo:get_orgTypeInfo() )
+            else 
+               
+                  return false
+            end
+         end
+         
+      end
+      
+      for __index, memberNode in pairs( node:get_memberList() ) do
+         local memberType = memberNode:get_expType()
+         if not isAvailableMapping( memberType ) then
+            self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s", memberType:getTxt(  )) )
+         end
+         
+      end
+      
+      local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem )
+      local toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "_toMap", {}, {mapType}, true )
+      classScope:addMethod( toMapFuncTypeInfo, Ast.AccessMode.Pub, false, false )
+      local fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromMap", {self:createModifier( mapType, false )}, {classTypeInfo:get_nilableTypeInfo()}, true )
+      classScope:addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false )
+   end
+   
    local function checkOverrideMethod( scope )
-      scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
+      scope:filterTypeInfoField( true, classScope, function ( symbolInfo )
          if symbolInfo:get_kind() == Ast.SymbolKind.Mtd then
-            local impMethodType = self.scope:getTypeInfoField( symbolInfo:get_name(), true, self.scope )
             local noImp = false
             do
-               local _exp = impMethodType
-               if _exp ~= nil then
-                  if _exp:get_abstructFlag() then
+               local impMethodType = classScope:getTypeInfoField( symbolInfo:get_name(), true, classScope )
+               if impMethodType ~= nil then
+                  if impMethodType:get_abstructFlag() then
                      noImp = true
                   end
                   
@@ -3953,6 +4445,10 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       local scope = _lune.unwrap( prefixExpType:get_scope())
       local fieldName = token.txt
       if mode == ExpSymbolMode.Get then
+         if not self.importModule2ModuleInfoCurrent[prefixExpType:getModule(  )] then
+            self:addErrMess( token.pos, string.format( "need to import module -- %s", prefixExpType:getModule(  ):getTxt(  )) )
+         end
+         
          fieldName = "get_" .. fieldName
          getterTypeInfo = Ast.headTypeInfo
       end
@@ -4376,9 +4872,9 @@ function TransUnit:analyzeSuper( firstToken )
    if nextToken.txt ~= ")" then
       self:pushback(  )
       expList = self:analyzeExpList( false )
+      self:checkNextToken( ")" )
    end
    
-   self:checkNextToken( ")" )
    self:checkNextToken( ";" )
    local classType = self:getCurrentClass(  )
    local superType = classType:get_baseTypeInfo(  )

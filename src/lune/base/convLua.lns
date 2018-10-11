@@ -24,6 +24,7 @@ SOFTWARE.
 
 import lune.base.Ast;
 import lune.base.Util;
+import lune.base.TransUnit;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -196,6 +197,21 @@ builtInModuleSet[ "math" ] = true;
 builtInModuleSet[ "debug" ] = true;
 //builtInModuleSet[ "_luneScript" ] = true;
 
+
+fn convFilter.getFullName( typeInfo:&Ast.TypeInfo ): str {
+   let! mut moduleName = self.typeInfo2ModuleName[ typeInfo.getModule() ] {
+      moduleName = "";
+   }
+   then {
+      // Util.errorLog( "hoge: %s %s"
+      //                (node.$expType.getModule().getTxt(),
+      //                  self.moduleTypeInfo.getTxt() ) );
+      
+      moduleName = moduleName.gsub( ".*%.", "" );
+      moduleName = moduleName .. ".";
+   };
+   return "%s%s" (moduleName, typeInfo.getTxt().gsub( "&", "" ) );
+}
 
 fn convFilter.pushIndent( newIndent:int! ) mut {
    let indent = unwrap newIndent default self.$indent + stepIndent;
@@ -638,7 +654,10 @@ pub override fn convFilter.processRoot(
    self.writeln(
       "local __mod__ = '%s'" (node.$moduleTypeInfo.getFullName({})) );
 
-   if node.$luneHelperInfo.$useNilAccess or node.$luneHelperInfo.$useUnwrapExp {
+   if node.$luneHelperInfo.$useNilAccess or
+      node.$luneHelperInfo.$useUnwrapExp or
+      node.$luneHelperInfo.$hasClassDef
+   {  
       self.writeln( ```
 if not _ENV._lune then
    _lune = {}
@@ -705,14 +724,112 @@ end
 ``` );
       }
    }
-   
+   if node.$luneHelperInfo.$hasClassDef {
+      self.writeln(
+```      
+function _lune._fromMapSub( val, memKind )
+   if type( memKind ) == "function" then
+      return memKind( val )
+   end
+   if string.find( memKind, "!$" ) then
+      if val == nil then
+         return nil, true
+      end
+      memKind = memKind:sub( 1, #memKind - 1 )
+   end
+   local valType = type( val )
+   if memKind == "stem" then
+      if valType == "number" or valType == "string" or valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "int" then
+      if valType == "number" then
+         return math.floor( val )
+      end
+      return nil
+   end
+   if memKind == "real" then
+      if valType == "number" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "bool" then
+      if valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "str" then
+      if valType == "string" then
+         return val
+      end
+      return nil
+   end
+   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
+   then
+      if valType == "table" then
+         local tbl = {}
+         for index, mem in ipairs( val ) do
+            local kind = string.gsub( memKind, "^[%a]+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local memval, valid = _lune._fromMapSub( mem, kind )
+            if memval == nil and not valid then
+               return nil
+            end
+            tbl[ index ] = memval
+         end
+         return tbl
+      end
+      return nil
+   end
+   if string.find( memKind, "^Map" ) then
+      if valType == "table" then
+         local tbl = {}
+         for key, mem in pairs( val ) do
+            local kind = string.gsub( memKind, "^%a+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local delimitIndex = string.find( kind, ",", 1, true )
+            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
+            local valKind = string.sub( kind, delimitIndex + 1 )
+            local mapKey = _lune._fromMapSub( key, keyKind )
+            local mapVal = _lune._fromMapSub( mem, valKind )
+            if mapKey == nil or mapVal == nil then
+               return nil
+            end
+            tbl[ mapKey ] = mapVal
+         end
+         return tbl
+      end
+      return nil
+   end
+end
+
+
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
+      if val == nil and not valid then
+         return false
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+``` );
+   }
 
    let children:List<&Ast.Node> = node.get_children();
 
    foreach child in children {
       filter( child, self, node );
       self.writeln( "" );
-   }
+   }  
 
    self.outputMeta( node );
 
@@ -721,11 +838,11 @@ end
       self.write( _exp.$symbol.$name );
       //filter( _exp.$symbol, self, node, baseIndent );
       self.writeln( "" );
-   }
+   }  
    else { 
       self.writeln( "return _moduleObj" );
-   }
-};
+   }  
+}; 
 
 pub override fn convFilter.processSubfile( 
    node: Ast.SubfileNode, parent: &Ast.Node ) mut
@@ -826,13 +943,14 @@ pub override fn convFilter.processDeclEnum(
    end
    return string.format( "illegal val -- %%s", val )
 end 
-function %s:_from( val )
-   if self._val2NameMap[ val ] then
+function %s._from( val )
+   if %s._val2NameMap[ val ] then
       return val
    end
    return nil
 end 
-    ``` (node.$name.txt, self.getCanonicalName( typeInfo ), node.$name.txt ) );
+    ``` (node.$name.txt, self.getCanonicalName( typeInfo ),
+         node.$name.txt, node.$name.txt ) );
    foreach valName in node.$valueNameList {
       let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
       let mut valTxt = "%s" (valInfo.$val);
@@ -1046,6 +1164,60 @@ end
       self.popIndent();
       self.writeln( "end" );
    }
+
+   // Mapping
+   if classTypeInfo.isInheritFrom( TransUnit.typeInfoMappingIF ) {
+      self.writeln( ```
+function %s:_toMap()
+  return self
+end
+function %s._fromMap( val )
+  local obj = %s._fromMapSub( {}, val )
+  if obj then
+     %s.setmeta( obj )
+  end
+  return obj
+end
+``` (classTypeInfo.getTxt(), classTypeInfo.getTxt(),
+      classTypeInfo.getTxt(), classTypeInfo.getTxt() ));
+      
+      self.writeln( 'function %s._fromMapSub( obj, val )' (classTypeInfo.getTxt() ));
+      
+      if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
+         self.writeln( ```
+   if not %s._fromMapSub( obj, val ) then
+      return nil
+   end
+``` (self.getFullName( classTypeInfo.$baseTypeInfo )) );
+      }
+
+      self.writeln( '   local memInfo = {}' );
+
+      foreach memberNode in node.$memberList {
+         let memberType = memberNode.$expType;
+         let mut kindTxt = '"%s"' (memberType.getTxt().gsub( "&", "" ));
+         switch memberType.$kind {
+            case .Class, .IF {
+               if not memberType.equals( Ast.builtinTypeString ) {
+                  kindTxt = '%s._fromMap' (self.getFullName(memberType));
+               }
+            }
+            case .Enum {
+               kindTxt = '%s._from' (self.getFullName(memberType));
+            }
+         }
+         self.writeln(
+            '   table.insert( memInfo, { name = "%s", kind = %s } )'
+            ( memberNode.$name.txt, kindTxt ) );
+      }
+      
+      self.writeln( ```
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end``` (classTypeInfo.getTxt() ));
+   }
 };    
 
 pub override fn convFilter.processDeclMember( 
@@ -1212,9 +1384,10 @@ pub override fn convFilter.processExpCallSuper(
    node: Ast.ExpCallSuperNode, parent: &Ast.Node ) mut
 {
    let typeInfo:Ast.TypeInfo = node.get_superType();
-   self.write( "%s.__init( self, " ( typeInfo.getTxt() ) );
+   self.write( "%s.__init( self " ( typeInfo.getTxt() ) );
 
    if! node.$expList {
+      self.write( "," );
       filter( _exp, self, node );
    }
    self.writeln( ")" );
@@ -1741,10 +1914,14 @@ pub override fn convFilter.processExpCall(
             let fieldExpType = fieldNode.$expType;
             let canonicalName = self.getCanonicalName( prefixType );
             let mut methodName = fieldNode.$field.txt;
+            let mut delimit = ":";
             if methodName == "get__txt" {
                methodName = "_getTxt";
-            }  
-            self.write( "%s:%s( " (canonicalName, methodName ) );
+            }
+            if fieldExpType.$kind == .Func {
+               delimit = ".";
+            }
+            self.write( "%s%s%s( " (canonicalName, delimit, methodName ) );
             if fieldExpType.$staticFlag {
                setArgFlag = false;
             }
@@ -2025,18 +2202,7 @@ pub override fn convFilter.processRefField(
 pub override fn convFilter.processExpOmitEnum( 
    node: &Ast.ExpOmitEnumNode, parent: &Ast.Node ) mut
 {
-   let! mut moduleName = self.typeInfo2ModuleName[ node.$expType.getModule() ] {
-      moduleName = "";
-   }
-   then {
-      // Util.errorLog( "hoge: %s %s"
-      //                (node.$expType.getModule().getTxt(),
-      //                  self.moduleTypeInfo.getTxt() ) );
-      
-      moduleName = moduleName.gsub( ".*%.", "" );
-      moduleName = moduleName .. ".";
-   };
-   self.write( "%s%s.%s" (moduleName, node.$expType.getTxt(), node.$valToken.txt ) );
+   self.write( "%s.%s" ( self.getFullName( node.$expType ), node.$valToken.txt ) );
 };
 
 pub override fn convFilter.processGetField(

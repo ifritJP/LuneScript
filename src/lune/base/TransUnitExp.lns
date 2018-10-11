@@ -864,6 +864,11 @@ fn TransUnit.analyzeExpField(
       let scope = unwrap prefixExpType.$scope;
       let mut fieldName = token.txt;
       if mode == .Get {
+         if not self.importModule2ModuleInfoCurrent[ prefixExpType.getModule() ] {
+            // enum の名前を取得するには、そのモジュールのインポートが必要
+            self.addErrMess( token.pos, "need to import module -- %s"
+                             ( prefixExpType.getModule().getTxt() ) );
+         }
          fieldName = "get_" .. fieldName;
          getterTypeInfo = Ast.headTypeInfo;
       }
@@ -1358,9 +1363,9 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
    if nextToken.txt ~= ")" {
       self.pushback();
       expList = self.analyzeExpList( false );
+      self.checkNextToken( ")" );
    }
 
-   self.checkNextToken( ")" );
    self.checkNextToken( ";" );
 
    let classType = self.getCurrentClass();

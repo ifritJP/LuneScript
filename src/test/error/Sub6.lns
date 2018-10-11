@@ -1,0 +1,5 @@
+import test.error.Sub5;
+
+pub fn func(): Sub5.Sub5enum {
+   return .val1;
+}

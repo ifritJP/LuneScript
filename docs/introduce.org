@@ -110,9 +110,13 @@ Lua へトランスコンパイルしたファイルは、Lua コマンドでそ
 - Lua のトランスコンパイラ LuneScript の紹介 3
   - provide, enum の紹介
   - https://qiita.com/dwarfJP/items/7b573f9c7961d2b8f10a
-- Lua のトランスコンパイラ LuneScript の紹介 4 (mutable)
+- Lua のトランスコンパイラ LuneScript の紹介 4
   - mutable の紹介
   - https://qiita.com/dwarfJP/items/29540d0767d50cfce896
+- Lua のトランスコンパイラ LuneScript の紹介 5 
+  - Class と Map 間の変換
+  - https://qiita.com/dwarfJP/items/c8604dcff99354cf2f04
+  
 
 番外
 

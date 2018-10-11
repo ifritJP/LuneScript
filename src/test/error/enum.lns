@@ -1,3 +1,7 @@
+import test.error.Sub6;
+
+Sub6.func().$_txt;
+
 enum testEnum {
    val1,
    val2,

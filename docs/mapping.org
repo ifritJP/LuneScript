@@ -1,0 +1,181 @@
+# -*- coding:utf-8 -*-
+#+AUTHOR: ifritJP
+#+STARTUP: nofold
+#+OPTIONS: ^:{}
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="org-mode-document.css" />
+
+#+TITLE: Lua のトランスコンパイラ LuneScript の紹介 5 (Class と Map 間の変換)
+
+LuneScript は、 Lua へのトランスコンパイルを目的とした言語です。
+
+LuneScript を利用することで、規模の大きい Lua スクリプトを効率良く開発出来ます。
+
+この記事は https://qiita.com/dwarfJP/items/21d4d4099ab0feb68eaf の続きです。
+
+上記の記事で紹介出来なかった機能について説明します。
+
+* LuneScript のクラスと、Lua のテーブルの長所
+
+LuneScript のクラスと Map は、Lua では単なるテーブルです。
+  
+Lua のテーブルをクラスとして扱うことで、
+クラスのメンバが存在することを保証することができます。
+
+例えば、Lua で次のようなコードがあった場合、
+
+#+BEGIN_SRC lua
+local function func( obj )
+  return obj.val + 1;
+end
+#+END_SRC
+
+上記関数 func() では、
+引数 obj はテーブルで、val というキーでアクセスできる値を持っていることを
+期待しています。
+
+しかし、 obj がテーブルである保証はないですし、
+obj が val キーでアクセスできる値を持っている保証もありません。
+
+これを、次のように LuneScript のクラスを定義することで保証出来ます。
+
+#+BEGIN_SRC lns
+class Test {
+  pub val:int;
+}
+fn func( obj:&Test ) {
+  return obj.val + 1;
+}
+#+END_SRC
+
+このようにクラスを定義することで、
+obj が Test クラスのインスタンスであり、
+obj には val のメンバがあることが保証されます。
+
+一方で Lua のテーブルは、どのような値も格納できる特徴があるため、
+JSON などのデータ記述言語で表現された情報との親和性が高いという利点があります。
+
+例えば、上記の LuneScript の Test クラスのインスタンス(valの値が 0 の時)を
+JSON で表現した場合、次のようになります。
+
+#+BEGIN_SRC lns
+{
+  "val": 0
+}
+#+END_SRC
+
+LuneScript では、 上記の JSON データは Map 型のデータとして扱います。
+LuneScript の Map 型は、 Lua のテーブルとほぼ同じ性質を持ち、
+次のように val データにアクセスできます。
+
+#+BEGIN_SRC lns
+let obj = {
+  "val": 0
+};
+print( obj.val );
+#+END_SRC
+
+ここで注意すべき点は、 ~obj.val~ の型が ~int!~ になる、ということです。
+
+なぜならば、上記の obj は ~Map<str,int>~ 型となります。
+そして、 ~obj.val~ は ~obj[ "val" ]~ のシンタックスシュガーであり、
+Map<key,val> 型の key にアクセスした際の戻り値の型は、
+その val の nilable 型となるため、 ~obj.val~ は int! となります。
+
+~obj.val~ が int! となるということは、次の処理がエラーとなります。
+
+#+BEGIN_SRC lns
+fn func( obj:&Map<str,int> ) {
+  return obj.val + 1; // error -- int! + 1
+}
+let obj = {
+  "val": 0
+};
+func( obj );
+#+END_SRC
+
+上記処理の ~obj.val + 1~ は int! + 1 となるため、コンパイルエラーとなります。
+このコンパイルエラーを回避するには、unwrap する必要があります。
+
+Lua ではコンパイルエラーは発生しませんが、
+そもそも obj.val が存在するという保証もありません。
+
+Lua のテーブルや、 LuneScript の Map は、
+JSON などのデータ記述言語で表現された情報との親和性が高い利点がありますが、
+それを直接使用してコードを書くと、常に nil チェックが必要となり不便です。
+
+また、 LuneScript のクラスであればメンバ名の補完が出来ますが、
+Map のキー名は補完が利かないという欠点もあります。
+
+
+LuneScript のクラスと、Map の長所を活かしつつ、
+楽にコードを書くために、
+LuneScript ではクラスと Map の相互変換をサポートしています。
+
+* クラスと Map の相互変換
+
+クラスと Map の相互変換用に、次の関数を用意しています。
+
+- _toMap()
+- _fromMap()
+  
+_toMap() は、クラスインスタンスのメソッドであり、
+_fromMap() は、クラスの静的メソッドです。
+
+例えば次のように利用します。
+
+#+BEGIN_SRC lns
+class Test extend (Mapping) {
+  pub let val:int;
+}
+let obj = new Test( 1 );
+let map = obj._toMap();  // map = { "val": 1 }
+let obj2 = unwrap Test._fromMap( { "val": 2 } ); // equal new Test( 2 );
+#+END_SRC
+
+上記のサンプルでは、Test クラスと Map との相互変換を示しています。
+
+相互変換を行なうクラスは、 Mapping インタフェースを extend する必要があります。
+
+Mapping インタフェースを extend することで、
+_toMap(), _fromMap() が利用できます。
+
+なお _fromMap() の戻り値は、そのクラスの nilable 型となります。
+これは、_fromMap() に与えられた Map 型のデータに、
+このクラスを構成するための情報に抜けがある場合に nil が返るためです。
+
+* クラスと Map の相互変換の制約
+
+上記の通り、相互変換を行なうクラスは、
+Mapping インタフェースを extend する必要があります。
+
+Mapping インタフェースを extend するクラスは次の制約を持ちます。
+
+- メンバは次の型でなければならない
+  - bool
+  - int
+  - real
+  - str
+  - enum
+  - stem 
+    - *この stem は、bool, int, real, str のいずれかを示す。*
+    - *これ以外の値を保持した場合、 _fromMap() 実行時に変換失敗(nil)となる。*
+  - Mapping インタフェースを extend しているクラス
+  - 上記の型の Map, List, Array 
+    - ただし Map の場合、 key は上記 stem と同じ条件を満さなければならない。
+  - 上記の型の nilable 
+- Mapping を extend しているクラスを継承するクラスも、同じ制約を持つ。
+
+また、 _fromMap() は次の制限を持ちます。
+
+- 変換元となる Map のデータに、
+  変換先のクラスには不要なデータがあった場合でも、エラーにならない。
+- _fromMap() のアクセス制限は、そのクラスのコンストラクタと同じになる。
+- あるクラスのインスタンス obj1 と、
+  その obj1._toMap() して得られた Map データから _fromMap() して得られた obj2 は、
+  obj1 == obj2 にはならない。
+
+_toMap() は次の制限を持ちます。
+
+- _toMap() のアクセス制限は pub になる。
+- _toMap() した Map のデータには、pub 以外のメンバも 含まれるため、
+  _toMap() することでアクセス制限が崩れる。

@@ -108,8 +108,11 @@ pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
       Depend.getFileLastModifiedTime( luaPath ),
       Depend.getFileLastModifiedTime( lnsPath )
    {
+      // errorLog( "getReadyCode: false, %s %s" (luaPath, lnsPath ) );
       return false;
    };
+   // errorLog( "getReadyCode: %s %s %s (%f, %f)"
+   //           (luaTime >= lnsTime, luaPath, lnsPath, luaTime, lnsTime ) );
    return luaTime >= lnsTime;
 }
 

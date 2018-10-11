@@ -105,6 +105,7 @@ pub class TransUnit {
    /** インポートしているモジュールの TypeInfo -> シンボル情報 */
    pri let mut importModule2ModuleInfo: Map<&Ast.TypeInfo,Ast.ModuleInfo>;
    pri let mut importModuleName2ModuleInfo: Map<str,Ast.ModuleInfo>;
+   pri let mut importModule2ModuleInfoCurrent: Map<&Ast.TypeInfo,&Ast.ModuleInfo>;
 
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
@@ -118,6 +119,7 @@ pub class TransUnit {
 
    pri let mut useUnwrapExp: bool;
    pri let mut useNilAccess: bool;
+   pri let mut hasClassDef: bool;
 
    /** provide ノード */
    pri let mut provideNode: Ast.ProvideNode!;
@@ -127,8 +129,10 @@ pub class TransUnit {
    pub fn __init( macroEval: Ast.MacroEval,
                   analyzeModule:str!, mode:AnalyzeMode!, pos:&Parser.Position! )
    {
+      self.hasClassDef = false;
       self.nodeManager = new Ast.NodeManager();
       self.importModuleName2ModuleInfo = {};
+      self.importModule2ModuleInfoCurrent = {};
       self.importModule2ModuleInfo = {};
       self.macroScope = nil;
       self.validMutControl = true;
@@ -377,33 +381,16 @@ quotedChar2Code[ '\\' ] = ?\\; // \\
 quotedChar2Code[ '"' ] = ?\";  // "
 quotedChar2Code[ "'" ] = ?\';  // '
 
-pub class _TypeInfo {
-   pub let abstructFlag: bool;
-   pub let baseId: int;
-   pub let ifList: int[];
-   pub let itemTypeId: int[];
-   pub let argTypeId: int[];
-   pub let retTypeId: int[];
-   pub let parentId: int;
-   pub let typeId: int;
-   pub let txt: str;
-   pub let kind: int;
-   pub let staticFlag: bool;
-   pub let nilable: bool;
-   pub let orgTypeId: int;
-   pub let children: int[]!;
-   pub let accessMode: int;
-   pub let valTypeId: int;
-   pub let enumValList: Map<str,stem>;
-   pub let mutable: bool!;
-   pub let srcTypeId: int!;
+fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
+   if not self.validMutControl {
+      return typeInfo;
+   }
+   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable );
 }
 
-
 pub class _MetaInfo {
-   //pub let _className2InfoMap: Map<str,Map<str,stem>>;
    pub let _typeId2ClassInfoMap: Map<int,Map<str,stem>>;
-   pub let _typeInfoList: _TypeInfo[];
+   pub let _typeInfoList: Map<str,stem>[];
    pub let _varName2InfoMap: Map<str,Map<str,stem>>;
    pub let _funcName2InfoMap: Map<str,stem>;
    pub let _moduleTypeId: int;
@@ -413,15 +400,301 @@ pub class _MetaInfo {
    pub let _dependIdMap: Map<int,int[]>;
 }
 
+class ImportParam {
+   pub let transUnit:&TransUnit;
+   pub let mut typeId2Scope:Map<int,Ast.Scope>;
+   pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
+   pub let metaInfo:_MetaInfo;
+   pub let scope:Ast.Scope;
+}
+
+abstruct class _TypeInfo extend (Mapping) {
+   pub let skind: Ast.SerializeKind;
+   pub let parentId: int;
+   pub let typeId: int;
+   pub fn __init() {
+      self.parentId = Ast.rootTypeId;
+      self.typeId = Ast.rootTypeId;
+      self.skind = .Normal;
+   }
+
+   /**
+このインスタンスから TypeInfo を生成する。
+
+@param param 作業情報
+@return Ast.TypeInfo! 生成した型情報。 失敗した場合は nil。
+@return str! エラー情報。成功した場合は nil。
+   */
+   pub abstruct fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!;
+}
+
+class _TypeInfoNilable extend _TypeInfo {
+   pub let nilable:bool;
+   pub let orgTypeId:int;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let orgTypeInfo = unwrap param.typeId2TypeInfo[ self.orgTypeId ];
+      let newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
+      param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+      return newTypeInfo,nil;
+   }
+}
+
+class _TypeInfoModifier extend _TypeInfo {
+   pub let srcTypeId:int;
+   pub let mutable:bool;
+
+   pub override fn createTypeInfo( param:ImportParam ):
+      Ast.TypeInfo!, str!
+   {  
+      let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
+         return nil, "not found srcType -- %d, %d" ( self.parentId, self.srcTypeId );
+      };
+      let newTypeInfo = param.transUnit.createModifier(
+         srcTypeInfo, unwrap self.mutable default false);
+      param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      return newTypeInfo, nil;
+   }
+}
+
+class _TypeInfoModule extend _TypeInfo {
+   pub let txt:str;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {  
+      let mut parentInfo = Ast.headTypeInfo;
+      if self.parentId ~= Ast.rootTypeId {
+         let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
+            Util.err( "not found parentInfo %s %s"
+                      ( self.parentId, self.txt ) );
+         };   
+         parentInfo = workTypeInfo;
+      }   
+      let! mut parentScope = param.typeId2Scope[ self.parentId ] {
+         return nil, "not found parentScope %s %s" ( self.parentId, self.txt );
+      };  
+
+      let mut newTypeInfo = parentScope.getTypeInfoChild( self.txt );
+      if! newTypeInfo {
+         param.typeId2Scope[ self.typeId ] = _exp.$scope;
+         if not _exp.$scope {
+            return nil, "not found scope %s %s %s %s %s" ( parentScope, self.parentId,
+                                                           self.typeId,
+                                                           self.txt, _exp.getTxt() );
+         }
+         param.typeId2TypeInfo[ self.typeId ] = _exp;
+      }
+      else {
+         let mut scope = new Ast.Scope( parentScope, true, [] );
+
+         let mut mutable = false;
+         if self.typeId == param.metaInfo._moduleTypeId {
+            mutable = param.metaInfo._moduleMutable;
+         }  
+         let workTypeInfo = Ast.NormalTypeInfo.createModule(
+            scope, parentInfo, true, self.txt, mutable );
+
+         newTypeInfo = workTypeInfo;
+         param.typeId2Scope[ self.typeId ] = scope;
+         param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
+         parentScope.addClass( self.txt, workTypeInfo );
+      }
+      return newTypeInfo, nil;
+   }
+}
+
+class _TypeInfoNormal extend _TypeInfo {
+   pub let abstructFlag: bool;
+   pub let baseId:int;
+   pub let txt:str;
+   pub let staticFlag:bool;
+   pub let accessMode:Ast.AccessMode;
+   pub let kind:Ast.TypeInfoKind;
+   pub let mutable:bool;
+   pub let ifList: int[];
+   pub let itemTypeId: int[];
+   pub let argTypeId: int[];
+   pub let retTypeId: int[];
+   pub let children: int[];
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let mut newTypeInfo:Ast.TypeInfo! = nil;
+      if self.parentId ~= Ast.rootTypeId or
+         not Ast.builtInTypeIdSet[ self.typeId ] or
+         self.kind == Ast.TypeInfoKind.List or
+         self.kind == Ast.TypeInfoKind.Array or
+         self.kind == Ast.TypeInfoKind.Map
+      {
+         let mut parentInfo = Ast.headTypeInfo;
+         if self.parentId ~= Ast.rootTypeId {
+            let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
+               return nil, "not found parentInfo %s %s" ( self.parentId, self.txt );
+            };   
+            parentInfo = workTypeInfo;
+         }   
+         
+         let mut itemTypeInfo:List<&Ast.TypeInfo> = [];
+         foreach typeId in self.itemTypeId {
+            itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+         }   
+         let mut argTypeInfo:List<&Ast.TypeInfo> = [];
+         foreach typeId in self.argTypeId {
+            if not param.typeId2TypeInfo[ typeId ] {
+               return nil, "not found -- %s.%s, %d, %d" ( parentInfo.getTxt(),
+                                                              self.txt,
+                                                              typeId,
+                                                              #self.argTypeId );
+            }    
+            argTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+         }   
+         let mut retTypeInfo:List<&Ast.TypeInfo> = [];
+         foreach typeId in self.retTypeId {
+            retTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+         }   
+         
+         let baseInfo = unwrap param.typeId2TypeInfo[ self.baseId ];
+         let mut interfaceList:List<&Ast.TypeInfo> = [];
+         foreach ifTypeId in self.ifList {
+            interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
+         }  
+
+         let! mut parentScope = param.typeId2Scope[ self.parentId ] {
+            return nil, "not found parentScope %s %s" ( self.parentId, self.txt );
+         };  
+
+         if self.txt ~= "" {
+            newTypeInfo = parentScope.getTypeInfoChild( self.txt );
+         }   
+         if newTypeInfo and ( self.kind == Ast.TypeInfoKind.Class or
+                              self.kind == Ast.TypeInfoKind.IF )
+         {                                
+            if! newTypeInfo {
+               param.typeId2Scope[ self.typeId ] = _exp.$scope;
+               if not _exp.$scope {
+                  Util.err( "not found scope %s %s %s %s %s"
+                            ( parentScope, self.parentId,
+                              self.typeId,
+                              self.txt, _exp.getTxt() ) );
+               }     
+               param.typeId2TypeInfo[ self.typeId ] = _exp;
+            };   
+         }  
+         else {
+            if self.kind == Ast.TypeInfoKind.Class or
+               self.kind == Ast.TypeInfoKind.IF
+            {             
+               let baseScope = unwrap param.typeId2Scope[ self.baseId ];
+
+               let mut scope = new Ast.Scope(
+                  parentScope, true, [ baseScope ] );
+
+               let workTypeInfo = Ast.NormalTypeInfo.createClass(
+                  self.kind == Ast.TypeInfoKind.Class, self.abstructFlag,
+                  scope, baseInfo, interfaceList,
+                  parentInfo, true, .Pub, self.txt );
+               newTypeInfo = workTypeInfo;
+               param.typeId2Scope[ self.typeId ] = scope;
+
+
+               param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
+
+               parentScope.addClass( self.txt, workTypeInfo );
+            }    
+            else {
+               let mut scope:Ast.Scope! = nil;
+
+               if self.kind == Ast.TypeInfoKind.Func or
+                  self.kind == Ast.TypeInfoKind.Method
+               {     
+                  scope = new Ast.Scope( parentScope, false, [] );
+               }     
+
+
+               let typeInfoKind = unwrap Ast.TypeInfoKind._from( self.kind );
+               let mut mutable = true;
+               if! self.mutable {
+                  if not _exp {
+                     mutable = false;
+                  }  
+               }  
+               let workTypeInfo = Ast.NormalTypeInfo.create(
+                  self.abstructFlag, scope, baseInfo,
+                  interfaceList, parentInfo, self.staticFlag, typeInfoKind,
+                  self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable );
+               newTypeInfo = workTypeInfo;
+
+               param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
+
+               if self.kind == Ast.TypeInfoKind.Func or
+                  self.kind == Ast.TypeInfoKind.Method
+               {  
+                  let mut symbolKind = Ast.SymbolKind.Fun;
+                  if self.kind == Ast.TypeInfoKind.Method {
+                     symbolKind = Ast.SymbolKind.Mtd;
+                  }
+                  let accessMode =
+                     unwrap Ast.AccessMode._from( self.accessMode );
+                  let mut workParentScope =
+                     unwrap param.typeId2Scope[ self.parentId ];
+                  workParentScope.add(
+                     symbolKind, false, self.kind == Ast.TypeInfoKind.Func,
+                     self.txt, workTypeInfo, accessMode,
+                     self.staticFlag, false, true );
+                  param.typeId2Scope[ self.typeId ] = scope;
+               }
+            }
+         }
+      }
+      else {
+         newTypeInfo = param.scope.getTypeInfo( self.txt, param.scope, false );
+         if not newTypeInfo {
+            foreach val, key in self@@Map<str,stem> {
+               Util.errorLog( "error: illegal self %s:%s" ( key, val ) );
+            }
+         }
+         param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+      }
+      return newTypeInfo, nil;
+   }
+}
+
+class _TypeInfoEnum extend _TypeInfo {
+   pub let txt:str;
+   pub let accessMode:Ast.AccessMode;
+   pub let valTypeId:int;
+   pub let enumValList: Map<str,stem>;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
+      let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
+      let mut parentScope = unwrap parentInfo.$scope;
+      let mut scope = new Ast.Scope( parentScope, true, [] );
+      
+      param.typeId2Scope[ self.typeId ] = scope;
+      let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
+         scope, unwrap parentInfo, true, accessMode, self.txt,
+         unwrap param.typeId2TypeInfo[ self.valTypeId ],
+         name2EnumValInfo );
+      let newTypeInfo = enumTypeInfo;
+      param.typeId2TypeInfo[ self.typeId ] = enumTypeInfo;
+      foreach valData, valName in self.enumValList {
+         name2EnumValInfo[ valName ] = new Ast.EnumValInfo( valName, valData );
+         scope.addEnumVal( valName, enumTypeInfo );
+      }
+      parentScope.addEnum( accessMode, self.txt, enumTypeInfo );
+      return newTypeInfo, nil;
+   }
+}
+
+
 pub let mut typeInfoListInsert = Ast.headTypeInfo;
 pub let mut typeInfoListRemove = Ast.headTypeInfo;
-
-fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
-   if not self.validMutControl {
-      return typeInfo;
-   }
-   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable );
-}
+pub let mut typeInfoMappingIF = Ast.headTypeInfo;
+pub let mut typeInfoMappingToMap = Ast.headTypeInfo;
 
 
 let mut readyBuiltin = false;
@@ -470,6 +743,12 @@ fn TransUnit.registBuiltInScope() mut {
             "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
             "seek": { "type": [ "mut" ], "arg": [ "str", "int"], "ret": [ "int!", "str!" ] },
          }, 
+      },
+      { 
+         "Mapping": {
+            "__attrib": { "type": [ "interface" ] },
+            "_toMap": { "type": [ "method" ], "arg": [], "ret": [ ] },
+         },
       },
       { 
          "io": {
@@ -589,6 +868,9 @@ fn TransUnit.registBuiltInScope() mut {
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
+            if name == "Mapping" {
+               typeInfoMappingIF = parentInfo;
+            }
          }
          if not builtinModuleName2Scope[ name ]
          {  
@@ -639,9 +921,9 @@ fn TransUnit.registBuiltInScope() mut {
                         not methodFlag, not methodFlag,
                         fieldName, typeInfo, .Pub, not methodFlag, mutable, true );
                      if methodFlag {
-                        switch ( name ) {
+                        switch name {
                            case "List" {
-                              switch ( fieldName ) {
+                              switch fieldName {
                                  case "insert" {      
                                     typeInfoListInsert = typeInfo;
                                  }        
@@ -649,8 +931,15 @@ fn TransUnit.registBuiltInScope() mut {
                                     typeInfoListRemove = typeInfo;
                                  }        
                               }       
-                           }       
-                        }       
+                           }
+                           case "Mapping" {
+                              switch fieldName {
+                                 case "_toMap" {
+                                    typeInfoMappingToMap = typeInfo;
+                                 }
+                              }
+                           }
+                        }
                      }
                   }
                }
@@ -664,7 +953,6 @@ fn TransUnit.registBuiltInScope() mut {
 
    self.scope = self.topScope;
 }
-
 
 fn TransUnit.error( mess: str ) mut {
    let mut pos:&Parser.Position = new Parser.Position( 0, 0 );
@@ -1043,12 +1331,16 @@ class DependModuleInfo {
 }
 
 
-fn TransUnit.processImport( modulePath:str ) mut :
+fn TransUnit.processImport(
+   modulePath:str, moduleInfoMap:Map<&Ast.TypeInfo,&Ast.ModuleInfo> ) mut :
    &_MetaInfo, &Map<int,&Ast.TypeInfo>
 {
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
       let metaInfo = frontInterface.loadMeta( modulePath )@@_MetaInfo;
-      return metaInfo, moduleInfo.$importId2localTypeInfoMap;
+      let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
+      let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo._moduleTypeId ];
+      moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
+      return metaInfo, typeId2TypeInfo;
    }
    
    let mut nameList:str[] = [];
@@ -1062,7 +1354,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
    let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
    foreach dependInfo, dependName in metaInfo._dependModuleMap {
       if dependInfo.use {
-         let workModuleInfo, metaTypeId2TypeInfoMap = self.processImport( dependName );
+         let workModuleInfo, metaTypeId2TypeInfoMap =
+            self.processImport( dependName, {} );
          let id = (unwrap dependInfo.id)@@int;
          dependLibId2DependInfo[ id ] =
             new DependModuleInfo( id, metaTypeId2TypeInfoMap );
@@ -1113,269 +1406,92 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    let mut newId2OldIdMap: Map<&Ast.TypeInfo,int> = {};
 
-   fn registTypeInfo( atomInfo: _TypeInfo ): &Ast.TypeInfo {
-      let mut newTypeInfo: &Ast.TypeInfo! = nil;
-      if! atomInfo.srcTypeId {
-         let! srcTypeInfo = typeId2TypeInfo[ _exp ] {
-            Util.err( "not found srcType -- %s: %d, %d"
-                      ( modulePath, atomInfo.parentId, _exp ) );
-         };
-         newTypeInfo = self.createModifier(
-            srcTypeInfo, unwrap atomInfo.mutable default false);
-         typeId2TypeInfo[ atomInfo.typeId ] = newTypeInfo;
-      }
-      else {
-         if atomInfo.kind == Ast.TypeInfoKind.Enum {
-            let accessMode = unwrap Ast.AccessMode._from( atomInfo.accessMode );
-            let parentInfo = unwrap typeId2TypeInfo[ atomInfo.parentId ];
-            let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
-            let mut parentScope = unwrap parentInfo.$scope;
-            let mut scope = new Ast.Scope( parentScope, true, [] );
-            
-            typeId2Scope[ atomInfo.typeId ] = scope;
-            let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
-               scope, unwrap parentInfo, true, accessMode, atomInfo.txt,
-               unwrap typeId2TypeInfo[ atomInfo.valTypeId ],
-               name2EnumValInfo );
-            newTypeInfo = enumTypeInfo;
-            typeId2TypeInfo[ atomInfo.typeId ] = enumTypeInfo;
-            foreach valData, valName in atomInfo.enumValList {
-               name2EnumValInfo[ valName ] = new Ast.EnumValInfo( valName, valData );
-               scope.addEnumVal( valName, enumTypeInfo );
-            }  
-            parentScope.addEnum( accessMode, atomInfo.txt, enumTypeInfo );
-         }  
-         elseif atomInfo.kind == Ast.TypeInfoKind.Module {
-            let mut parentInfo = Ast.headTypeInfo;
-            if atomInfo.parentId ~= Ast.rootTypeId {
-               let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
-                  Util.err( "not found parentInfo %s %s"
-                            ( atomInfo.parentId, atomInfo.txt ) );
-               };   
-               parentInfo = workTypeInfo;
-            }   
-            let! mut parentScope = typeId2Scope[ atomInfo.parentId ] {
-               self.error( "not found parentScope %s %s"
-                           ( atomInfo.parentId, atomInfo.txt ) );
-            };  
-
-            newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
-            if! newTypeInfo {
-               typeId2Scope[ atomInfo.typeId ] = _exp.$scope;
-               if not _exp.$scope {
-                  Util.err( "not found scope %s %s %s %s %s"
-                            ( parentScope, atomInfo.parentId,
-                              atomInfo.typeId,
-                              atomInfo.txt, _exp.getTxt() ) );
-               }
-               typeId2TypeInfo[ atomInfo.typeId ] = _exp;
+   let mut _typeInfoList:List<_TypeInfo> = [];
+   let mut _typeInfoNormalList:List<_TypeInfoNormal> = [];
+   foreach atomInfo in metaInfo._typeInfoList {
+      if! let skind = atomInfo.skind {
+         let mut actInfo:_TypeInfo! = nil;
+         let kind = unwrap Ast.SerializeKind._from( skind@@int );
+         switch kind {
+            case .Enum {
+               actInfo = _TypeInfoEnum._fromMap( atomInfo );
             }
-            else {
-               let mut scope = new Ast.Scope( parentScope, true, [] );
-
-               let mut mutable = false;
-               if atomInfo.typeId == metaInfo._moduleTypeId {
-                  mutable = metaInfo._moduleMutable;
-               }  
-               let workTypeInfo = Ast.NormalTypeInfo.createModule(
-                  scope, parentInfo, true, atomInfo.txt, mutable );
-
-               newTypeInfo = workTypeInfo;
-               typeId2Scope[ atomInfo.typeId ] = scope;
-               typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-               parentScope.addClass( atomInfo.txt, workTypeInfo );
-            }   
-         }  
-         elseif atomInfo.parentId ~= Ast.rootTypeId or
-            not Ast.builtInTypeIdSet[ atomInfo.typeId ] or
-            atomInfo.kind == Ast.TypeInfoKind.List or
-            atomInfo.kind == Ast.TypeInfoKind.Array or
-            atomInfo.kind == Ast.TypeInfoKind.Map or
-            atomInfo.nilable
-         {  
-            if atomInfo.nilable {
-               let orgTypeInfo = unwrap typeId2TypeInfo[ atomInfo.orgTypeId ];
-               newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
-               typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
-            }  
-            else {
-               let mut parentInfo = Ast.headTypeInfo;
-               if atomInfo.parentId ~= Ast.rootTypeId {
-                  let! workTypeInfo = typeId2TypeInfo[ atomInfo.parentId ] {
-                     Util.err( "not found parentInfo %s %s"
-                               ( atomInfo.parentId, atomInfo.txt ) );
-                  };   
-                  parentInfo = workTypeInfo;
-               }   
-               
-               let mut itemTypeInfo:List<&Ast.TypeInfo> = [];
-               foreach typeId in atomInfo.itemTypeId {
-                  itemTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-               }   
-               let mut argTypeInfo:List<&Ast.TypeInfo> = [];
-               foreach typeId in atomInfo.argTypeId {
-                  if not typeId2TypeInfo[ typeId ] {
-                     Util.log( "not found -- %s, %s.%s, %d, %d"
-                               ( modulePath, parentInfo.getTxt(), atomInfo.txt,
-                                 typeId, #atomInfo.argTypeId ) );  
-                  }    
-                  argTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-               }   
-               let mut retTypeInfo:List<&Ast.TypeInfo> = [];
-               foreach typeId in atomInfo.retTypeId {
-                  retTypeInfo.insert( unwrap typeId2TypeInfo[ typeId ] );
-               }   
-               
-               let baseInfo = unwrap typeId2TypeInfo[ atomInfo.baseId ];
-               let mut interfaceList:List<&Ast.TypeInfo> = [];
-               foreach ifTypeId in atomInfo.ifList {
-                  interfaceList.insert( unwrap typeId2TypeInfo[ ifTypeId ] );
-               }  
-
-               let! mut parentScope = typeId2Scope[ atomInfo.parentId ] {
-                  self.error( "not found parentScope %s %s"
-                              ( atomInfo.parentId, atomInfo.txt ) );
-               };  
-
-               if atomInfo.txt ~= "" {
-                  newTypeInfo = parentScope.getTypeInfoChild( atomInfo.txt );
-               }   
-               if newTypeInfo and ( atomInfo.kind == Ast.TypeInfoKind.Class or
-                                    atomInfo.kind == Ast.TypeInfoKind.IF )
-               {                                
-                  if! newTypeInfo {
-                     typeId2Scope[ atomInfo.typeId ] = _exp.$scope;
-                     if not _exp.$scope {
-                        Util.err( "not found scope %s %s %s %s %s"
-                                  ( parentScope, atomInfo.parentId,
-                                    atomInfo.typeId,
-                                    atomInfo.txt, _exp.getTxt() ) );
-                     }     
-                     typeId2TypeInfo[ atomInfo.typeId ] = _exp;
-                  };   
-               }  
-               else {
-                  if atomInfo.kind == Ast.TypeInfoKind.Class or
-                     atomInfo.kind == Ast.TypeInfoKind.IF
-                  {             
-                     let baseScope = unwrap typeId2Scope[ atomInfo.baseId ];
-
-                     let mut scope = new Ast.Scope(
-                        parentScope, true, [ baseScope ] );
-
-                     let workTypeInfo = Ast.NormalTypeInfo.createClass(
-                        atomInfo.kind == Ast.TypeInfoKind.Class, atomInfo.abstructFlag,
-                        scope, baseInfo, interfaceList,
-                        parentInfo, true, .Pub, atomInfo.txt );
-                     newTypeInfo = workTypeInfo;
-                     typeId2Scope[ atomInfo.typeId ] = scope;
-
-
-                     typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-
-                     parentScope.addClass( atomInfo.txt, workTypeInfo );
-                  }    
-                  else {
-                     let mut scope:Ast.Scope! = nil;
-
-                     if atomInfo.kind == Ast.TypeInfoKind.Func or
-                        atomInfo.kind == Ast.TypeInfoKind.Method
-                     {     
-                        scope = new Ast.Scope( parentScope, false, [] );
-                     }     
-
-
-                     let typeInfoKind = unwrap Ast.TypeInfoKind._from( atomInfo.kind );
-                     let mut mutable = true;
-                     if! atomInfo.mutable {
-                        if not _exp {
-                           mutable = false;
-                        }  
-                     }  
-                     let workTypeInfo = Ast.NormalTypeInfo.create(
-                        atomInfo.abstructFlag, scope, baseInfo,
-                        interfaceList, parentInfo, atomInfo.staticFlag, typeInfoKind,
-                        atomInfo.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable );
-                     newTypeInfo = workTypeInfo;
-
-                     typeId2TypeInfo[ atomInfo.typeId ] = workTypeInfo;
-
-                     if atomInfo.kind == Ast.TypeInfoKind.Func or
-                        atomInfo.kind == Ast.TypeInfoKind.Method
-                     {  
-                        let mut symbolKind = Ast.SymbolKind.Fun;
-                        if atomInfo.kind == Ast.TypeInfoKind.Method {
-                           symbolKind = Ast.SymbolKind.Mtd;
-                        }
-                        let accessMode =
-                           unwrap Ast.AccessMode._from( atomInfo.accessMode );
-                        let mut workParentScope =
-                           unwrap typeId2Scope[ atomInfo.parentId ];
-                        workParentScope.add(
-                           symbolKind, false, atomInfo.kind == Ast.TypeInfoKind.Func,
-                           atomInfo.txt, workTypeInfo, accessMode,
-                           atomInfo.staticFlag, false, true );
-                        typeId2Scope[ atomInfo.typeId ] = scope;
-                     }  
-                  }  
-               }   
-            }  
+            case .Module {
+               actInfo = _TypeInfoModule._fromMap( atomInfo );
+            }
+            case .Normal {
+               if! _TypeInfoNormal._fromMap( atomInfo ) { 
+                  _typeInfoNormalList.insert( _exp );
+                  actInfo = _exp;
+               }
+            }
+            case .Nilable {
+               actInfo = _TypeInfoNilable._fromMap( atomInfo );
+            }
+            case .Modifier {
+               actInfo = _TypeInfoModifier._fromMap( atomInfo );
+            }
+            default {
+               Util.err( "unknown skind -- %d" (skind) );
+            }
+         }
+         if! actInfo {
+            _typeInfoList.insert( _exp );
          }
          else {
-            newTypeInfo = self.scope.getTypeInfo(
-               atomInfo.txt, self.scope, false );
-            if not newTypeInfo {
-               foreach val, key in atomInfo@@Map<str,stem> {
-                  Util.errorLog( "error: illegal atomInfo %s:%s" ( key, val ) );
-               }  
-            }  
-            typeId2TypeInfo[ atomInfo.typeId ] = unwrap newTypeInfo;
+            foreach val, key in atomInfo {
+               Util.errorLog( "table: %s:%s" (key,val) );
+            }
+            Util.err( "_TypeInfo%s._fromMap error" (kind.$_txt) );
          }
       }
-      return unwrap newTypeInfo;
    }
+   
 
    // 初めに child 以外で TypeInfo を登録
-   foreach atomInfo in metaInfo._typeInfoList {
-      registTypeInfo( atomInfo );
+   let mut importParam = new ImportParam(
+      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope );
+   foreach atomInfo in _typeInfoList {
+      let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
+      if! errMess {
+         Util.err( "%s: %s" ( modulePath, _exp ) );
+      }
    }
 
    // 次に child を登録
-   foreach atomInfo in metaInfo._typeInfoList {
-      if! let children = atomInfo.children {
-         if #children > 0 {
-            let mut scope = unwrap typeId2Scope[ atomInfo.typeId ];
-            foreach childId in children {
-               let! typeInfo = typeId2TypeInfo[ childId ] {
-                  Util.err( "not found childId -- %s, %d, %s(%d)"
-                            (modulePath, childId, atomInfo.txt, atomInfo.typeId ) );
-               };
-               let mut symbolKind = Ast.SymbolKind.Typ;
-               let mut addFlag = true;
-               switch typeInfo.$kind {
-                  case .Func {
-                     symbolKind = Ast.SymbolKind.Fun;
-                  }  
-                  case .Method {
-                     symbolKind = Ast.SymbolKind.Mtd;
-                  }  
-                  case .Class, .Module
-                  {              
-                     symbolKind = Ast.SymbolKind.Typ;
-                  }  
-                  case .Enum {
-                     addFlag = false;
-                  }  
+   foreach atomInfo in _typeInfoNormalList {
+      if #atomInfo.children > 0 {
+         let mut scope = unwrap typeId2Scope[ atomInfo.typeId ];
+         foreach childId in atomInfo.children {
+            let! typeInfo = typeId2TypeInfo[ childId ] {
+               Util.err( "not found childId -- %s, %d, %s(%d)"
+                         (modulePath, childId, atomInfo.txt, atomInfo.typeId ) );
+            };
+            let mut symbolKind = Ast.SymbolKind.Typ;
+            let mut addFlag = true;
+            switch typeInfo.$kind {
+               case .Func {
+                  symbolKind = Ast.SymbolKind.Fun;
                }  
-
-               if addFlag {
-                  scope.add( symbolKind, false,
-                             typeInfo.$kind == .Func,
-                             typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
-                             typeInfo.$staticFlag, typeInfo.$mutable, true );
+               case .Method {
+                  symbolKind = Ast.SymbolKind.Mtd;
+               }  
+               case .Class, .Module
+               {              
+                  symbolKind = Ast.SymbolKind.Typ;
+               }  
+               case .Enum {
+                  addFlag = false;
                }  
             }  
-         }
+
+            if addFlag {
+               scope.add( symbolKind, false,
+                          typeInfo.$kind == .Func,
+                          typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
+                          typeInfo.$staticFlag, typeInfo.$mutable, true );
+            }  
+         }  
       }
    }
 
@@ -1436,11 +1552,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
          self.popModule();
       }
    }
-   foreach atomInfo in metaInfo._typeInfoList {
+   foreach atomInfo in _typeInfoList {
       if atomInfo.parentId == Ast.rootTypeId and
-         ( atomInfo.kind == Ast.TypeInfoKind.Class or
-           atomInfo.kind == Ast.TypeInfoKind.Module or
-           atomInfo.kind == Ast.TypeInfoKind.IF )
+         ( atomInfo.skind == .Normal or atomInfo.skind == .Module )
       {
          registMember( atomInfo.typeId );
       } 
@@ -1472,6 +1586,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    let moduleInfo = new Ast.ModuleInfo( modulePath, newId2OldIdMap );
    self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
+   moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
 
    return metaInfo, typeId2TypeInfo;
 }
@@ -1500,7 +1615,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
       } 
    }
 
-   let metaInfo, typeId2TypeInfo = self.processImport( modulePath );
+   let metaInfo, typeId2TypeInfo = self.processImport(
+      modulePath, self.importModule2ModuleInfoCurrent );
 
    // スコープを元に戻す
    self.scope = self.moduleScope;

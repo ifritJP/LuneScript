@@ -1,0 +1,58 @@
+fn dumpTable( prefix:str, tbl:&Map<str,stem> ) {
+   forsort val, key in tbl {
+      let dispKey = prefix .. "." .. key;
+      if type( val ) == "table" {
+         dumpTable( dispKey, val@@Map<str,stem> );
+      }
+      else {
+         print( dispKey, val );
+      }
+   }  
+}
+
+class Test extend (Mapping) {
+   let val1:Map<str,str> {pub};
+}
+
+class Super extend (Mapping) {
+   let val1:int {pub};
+}
+
+class Sub extend Super (Mapping) {
+   let val2:real {pub};
+   pro fn __init() {
+      super( 0 );
+      self.val2 = 1.0;
+   }
+}
+
+enum EnumTest {
+   val = "xyz",
+}
+
+class SubSub extend Sub (Mapping) {
+   let val3:str {pub};
+   let val4:Test {pub};
+   let val5:EnumTest {pub};
+   pub fn __init() {
+      super();
+      self.val3 = "abc";
+      self.val4 = new Test( { "test": "hoge" } );
+      self.val5 = .val;
+   }
+}
+
+pub fn test() {
+   let hoge = new SubSub();
+   let map = hoge._toMap();
+
+
+   dumpTable( "", map );
+
+   if! let hoge2 = SubSub._fromMap( map ) {
+      print( hoge2.$val1, hoge2.$val2, hoge2.$val3 );
+      foreach val, key in hoge2.$val4.$val1 {
+         print( key, val );
+      }  
+   }
+}

@@ -59,8 +59,105 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+      
+function _lune._fromMapSub( val, memKind )
+   if type( memKind ) == "function" then
+      return memKind( val )
+   end
+   if string.find( memKind, "!$" ) then
+      if val == nil then
+         return nil, true
+      end
+      memKind = memKind:sub( 1, #memKind - 1 )
+   end
+   local valType = type( val )
+   if memKind == "stem" then
+      if valType == "number" or valType == "string" or valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "int" then
+      if valType == "number" then
+         return math.floor( val )
+      end
+      return nil
+   end
+   if memKind == "real" then
+      if valType == "number" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "bool" then
+      if valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "str" then
+      if valType == "string" then
+         return val
+      end
+      return nil
+   end
+   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
+   then
+      if valType == "table" then
+         local tbl = {}
+         for index, mem in ipairs( val ) do
+            local kind = string.gsub( memKind, "^[%a]+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local memval, valid = _lune._fromMapSub( mem, kind )
+            if memval == nil and not valid then
+               return nil
+            end
+            tbl[ index ] = memval
+         end
+         return tbl
+      end
+      return nil
+   end
+   if string.find( memKind, "^Map" ) then
+      if valType == "table" then
+         local tbl = {}
+         for key, mem in pairs( val ) do
+            local kind = string.gsub( memKind, "^%a+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local delimitIndex = string.find( kind, ",", 1, true )
+            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
+            local valKind = string.sub( kind, delimitIndex + 1 )
+            local mapKey = _lune._fromMapSub( key, keyKind )
+            local mapVal = _lune._fromMapSub( mem, valKind )
+            if mapKey == nil or mapVal == nil then
+               return nil
+            end
+            tbl[ mapKey ] = mapVal
+         end
+         return tbl
+      end
+      return nil
+   end
+end
+
+
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
+      if val == nil and not valid then
+         return false
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+
 local Ast = require( 'lune.base.Ast' )
 local Util = require( 'lune.base.Util' )
+local TransUnit = require( 'lune.base.TransUnit' )
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
@@ -110,8 +207,8 @@ function ConvMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function ConvMode:_from( val )
-   if self._val2NameMap[ val ] then
+function ConvMode._from( val )
+   if ConvMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -134,8 +231,8 @@ function BitOpKind:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function BitOpKind:_from( val )
-   if self._val2NameMap[ val ] then
+function BitOpKind._from( val )
+   if BitOpKind._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -262,6 +359,21 @@ builtInModuleSet["string"] = true
 builtInModuleSet["table"] = true
 builtInModuleSet["math"] = true
 builtInModuleSet["debug"] = true
+function convFilter:getFullName( typeInfo )
+   local moduleName = self.typeInfo2ModuleName[typeInfo:getModule(  )]
+   if  nil == moduleName then
+      local _moduleName = moduleName
+   
+      moduleName = ""
+   else
+      
+         moduleName = moduleName:gsub( ".*%.", "" )
+         moduleName = moduleName .. "."
+   end
+   
+   return string.format( "%s%s", moduleName, typeInfo:getTxt(  ):gsub( "&", "" ))
+end
+
 function convFilter:pushIndent( newIndent )
    local indent = _lune.unwrapDefault( newIndent, self:get_indent() + stepIndent)
    table.insert( self.indentQueue, indent )
@@ -720,7 +832,7 @@ function convFilter:processRoot( node, parent )
    end
    
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( {} )) )
-   if node:get_luneHelperInfo():get_useNilAccess() or node:get_luneHelperInfo():get_useUnwrapExp() then
+   if node:get_luneHelperInfo():get_useNilAccess() or node:get_luneHelperInfo():get_useUnwrapExp() or node:get_luneHelperInfo():get_hasClassDef() then
       self:writeln( [==[
 if not _ENV._lune then
    _lune = {}
@@ -788,6 +900,105 @@ end
 ]==] )
       end
       
+   end
+   
+   if node:get_luneHelperInfo():get_hasClassDef() then
+      self:writeln( [==[      
+function _lune._fromMapSub( val, memKind )
+   if type( memKind ) == "function" then
+      return memKind( val )
+   end
+   if string.find( memKind, "!$" ) then
+      if val == nil then
+         return nil, true
+      end
+      memKind = memKind:sub( 1, #memKind - 1 )
+   end
+   local valType = type( val )
+   if memKind == "stem" then
+      if valType == "number" or valType == "string" or valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "int" then
+      if valType == "number" then
+         return math.floor( val )
+      end
+      return nil
+   end
+   if memKind == "real" then
+      if valType == "number" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "bool" then
+      if valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "str" then
+      if valType == "string" then
+         return val
+      end
+      return nil
+   end
+   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
+   then
+      if valType == "table" then
+         local tbl = {}
+         for index, mem in ipairs( val ) do
+            local kind = string.gsub( memKind, "^[%a]+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local memval, valid = _lune._fromMapSub( mem, kind )
+            if memval == nil and not valid then
+               return nil
+            end
+            tbl[ index ] = memval
+         end
+         return tbl
+      end
+      return nil
+   end
+   if string.find( memKind, "^Map" ) then
+      if valType == "table" then
+         local tbl = {}
+         for key, mem in pairs( val ) do
+            local kind = string.gsub( memKind, "^%a+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local delimitIndex = string.find( kind, ",", 1, true )
+            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
+            local valKind = string.sub( kind, delimitIndex + 1 )
+            local mapKey = _lune._fromMapSub( key, keyKind )
+            local mapVal = _lune._fromMapSub( mem, valKind )
+            if mapKey == nil or mapVal == nil then
+               return nil
+            end
+            tbl[ mapKey ] = mapVal
+         end
+         return tbl
+      end
+      return nil
+   end
+end
+
+
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
+      if val == nil and not valid then
+         return false
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+]==] )
    end
    
    local children = node:get_children(  )
@@ -893,13 +1104,13 @@ function convFilter:processDeclEnum( node, parent )
    end
    return string.format( "illegal val -- %%s", val )
 end 
-function %s:_from( val )
-   if self._val2NameMap[ val ] then
+function %s._from( val )
+   if %s._val2NameMap[ val ] then
       return val
    end
    return nil
 end 
-    ]==], node:get_name().txt, self:getCanonicalName( typeInfo ), node:get_name().txt) )
+    ]==], node:get_name().txt, self:getCanonicalName( typeInfo ), node:get_name().txt, node:get_name().txt) )
    for __index, valName in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
       local valTxt = string.format( "%s", valInfo:get_val())
@@ -1119,6 +1330,55 @@ end
       self:writeln( "end" )
    end
    
+   if classTypeInfo:isInheritFrom( TransUnit.typeInfoMappingIF ) then
+      self:writeln( string.format( [==[
+function %s:_toMap()
+  return self
+end
+function %s._fromMap( val )
+  local obj = %s._fromMapSub( {}, val )
+  if obj then
+     %s.setmeta( obj )
+  end
+  return obj
+end
+]==], classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  )) )
+      self:writeln( string.format( 'function %s._fromMapSub( obj, val )', classTypeInfo:getTxt(  )) )
+      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
+         self:writeln( string.format( [==[
+   if not %s._fromMapSub( obj, val ) then
+      return nil
+   end
+]==], self:getFullName( classTypeInfo:get_baseTypeInfo() )) )
+      end
+      
+      self:writeln( '   local memInfo = {}' )
+      for __index, memberNode in pairs( node:get_memberList() ) do
+         local memberType = memberNode:get_expType()
+         local kindTxt = string.format( '"%s"', memberType:getTxt(  ):gsub( "&", "" ))
+         do
+            local _switchExp = memberType:get_kind()
+            if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+               if not memberType:equals( Ast.builtinTypeString ) then
+                  kindTxt = string.format( '%s._fromMap', self:getFullName( memberType ))
+               end
+               
+            elseif _switchExp == Ast.TypeInfoKind.Enum then
+               kindTxt = string.format( '%s._from', self:getFullName( memberType ))
+            end
+         end
+         
+         self:writeln( string.format( '   table.insert( memInfo, { name = "%s", kind = %s } )', memberNode:get_name().txt, kindTxt) )
+      end
+      
+      self:writeln( string.format( [==[
+   if not _lune._fromMap( obj, val, memInfo ) then
+      return nil
+   end
+   return obj
+end]==], classTypeInfo:getTxt(  )) )
+   end
+   
 end
 
 
@@ -1258,10 +1518,11 @@ end
 
 function convFilter:processExpCallSuper( node, parent )
    local typeInfo = node:get_superType(  )
-   self:write( string.format( "%s.__init( self, ", typeInfo:getTxt(  )) )
+   self:write( string.format( "%s.__init( self ", typeInfo:getTxt(  )) )
    do
       local _exp = node:get_expList()
       if _exp ~= nil then
+         self:write( "," )
          filter( _exp, self, node )
       end
    end
@@ -1799,11 +2060,16 @@ function convFilter:processExpCall( node, parent )
             local fieldExpType = fieldNode:get_expType()
             local canonicalName = self:getCanonicalName( prefixType )
             local methodName = fieldNode:get_field().txt
+            local delimit = ":"
             if methodName == "get__txt" then
                methodName = "_getTxt"
             end
             
-            self:write( string.format( "%s:%s( ", canonicalName, methodName) )
+            if fieldExpType:get_kind() == Ast.TypeInfoKind.Func then
+               delimit = "."
+            end
+            
+            self:write( string.format( "%s%s%s( ", canonicalName, delimit, methodName) )
             if fieldExpType:get_staticFlag() then
                setArgFlag = false
             else
@@ -2087,18 +2353,7 @@ end
 
 
 function convFilter:processExpOmitEnum( node, parent )
-   local moduleName = self.typeInfo2ModuleName[node:get_expType():getModule(  )]
-   if  nil == moduleName then
-      local _moduleName = moduleName
-   
-      moduleName = ""
-   else
-      
-         moduleName = moduleName:gsub( ".*%.", "" )
-         moduleName = moduleName .. "."
-   end
-   
-   self:write( string.format( "%s%s.%s", moduleName, node:get_expType():getTxt(  ), node:get_valToken().txt) )
+   self:write( string.format( "%s.%s", self:getFullName( node:get_expType() ), node:get_valToken().txt) )
 end
 
 

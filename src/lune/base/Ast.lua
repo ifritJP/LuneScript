@@ -17,6 +17,102 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+      
+function _lune._fromMapSub( val, memKind )
+   if type( memKind ) == "function" then
+      return memKind( val )
+   end
+   if string.find( memKind, "!$" ) then
+      if val == nil then
+         return nil, true
+      end
+      memKind = memKind:sub( 1, #memKind - 1 )
+   end
+   local valType = type( val )
+   if memKind == "stem" then
+      if valType == "number" or valType == "string" or valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "int" then
+      if valType == "number" then
+         return math.floor( val )
+      end
+      return nil
+   end
+   if memKind == "real" then
+      if valType == "number" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "bool" then
+      if valType == "boolean" then
+         return val
+      end
+      return nil
+   end
+   if memKind == "str" then
+      if valType == "string" then
+         return val
+      end
+      return nil
+   end
+   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
+   then
+      if valType == "table" then
+         local tbl = {}
+         for index, mem in ipairs( val ) do
+            local kind = string.gsub( memKind, "^[%a]+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local memval, valid = _lune._fromMapSub( mem, kind )
+            if memval == nil and not valid then
+               return nil
+            end
+            tbl[ index ] = memval
+         end
+         return tbl
+      end
+      return nil
+   end
+   if string.find( memKind, "^Map" ) then
+      if valType == "table" then
+         local tbl = {}
+         for key, mem in pairs( val ) do
+            local kind = string.gsub( memKind, "^%a+<", "" )
+            kind = string.gsub( kind, ">$", ""  )
+            local delimitIndex = string.find( kind, ",", 1, true )
+            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
+            local valKind = string.sub( kind, delimitIndex + 1 )
+            local mapKey = _lune._fromMapSub( key, keyKind )
+            local mapVal = _lune._fromMapSub( mem, valKind )
+            if mapKey == nil or mapVal == nil then
+               return nil
+            end
+            tbl[ mapKey ] = mapVal
+         end
+         return tbl
+      end
+      return nil
+   end
+end
+
+
+function _lune._fromMap( obj, map, memInfoList )
+   if type( map ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
+      if val == nil and not valid then
+         return false
+      end
+      obj[ memInfo.name ] = val
+   end
+   return true
+end
+
 local Parser = require( 'lune.base.Parser' )
 local Util = require( 'lune.base.Util' )
 local IdProvider = {}
@@ -63,6 +159,34 @@ _moduleObj.sym2builtInTypeMap = sym2builtInTypeMap
 local builtInTypeIdSet = {}
 _moduleObj.builtInTypeIdSet = builtInTypeIdSet
 
+local SerializeKind = {}
+_moduleObj.SerializeKind = SerializeKind
+SerializeKind._val2NameMap = {}
+function SerializeKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "SerializeKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function SerializeKind._from( val )
+   if SerializeKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+SerializeKind.Nilable = 0
+SerializeKind._val2NameMap[0] = 'Nilable'
+SerializeKind.Modifier = 1
+SerializeKind._val2NameMap[1] = 'Modifier'
+SerializeKind.Module = 2
+SerializeKind._val2NameMap[2] = 'Module'
+SerializeKind.Normal = 3
+SerializeKind._val2NameMap[3] = 'Normal'
+SerializeKind.Enum = 4
+SerializeKind._val2NameMap[4] = 'Enum'
+
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
 TypeInfoKind._val2NameMap = {}
@@ -73,8 +197,8 @@ function TypeInfoKind:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function TypeInfoKind:_from( val )
-   if self._val2NameMap[ val ] then
+function TypeInfoKind._from( val )
+   if TypeInfoKind._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -124,8 +248,8 @@ function SymbolKind:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function SymbolKind:_from( val )
-   if self._val2NameMap[ val ] then
+function SymbolKind._from( val )
+   if SymbolKind._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -154,8 +278,8 @@ function AccessMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function AccessMode:_from( val )
-   if self._val2NameMap[ val ] then
+function AccessMode._from( val )
+   if AccessMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -1028,7 +1152,7 @@ function NilableTypeInfo:get_display_stirng(  )
 end
 function NilableTypeInfo:serialize( stream, validChildrenSet )
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', SerializeKind.Nilable, parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
 end
 function NilableTypeInfo:equals( typeInfo )
    if not typeInfo:get_nilable() then
@@ -1181,7 +1305,7 @@ function ModifierTypeInfo:get_display_stirng(  )
 end
 function ModifierTypeInfo:serialize( stream, validChildrenSet )
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', parentId, self.typeId, self.srcTypeInfo:get_typeId(), self.mutable and true or false) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo:get_typeId(), self.mutable and true or false) )
 end
 function ModifierTypeInfo:canEvalWith( other, opTxt )
    return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other, opTxt )
@@ -1335,7 +1459,7 @@ function ModuleTypeInfo.new( scope, externalFlag, txt, parentInfo, typeId, mutab
    return obj
 end
 function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mutable) 
-   TypeInfo.__init( self, scope)
+   TypeInfo.__init( self ,scope)
    
    self.externalFlag = externalFlag
    self.rawTxt = txt
@@ -1374,7 +1498,7 @@ function ModuleTypeInfo:canEvalWith( other, opTxt )
    return false
 end
 function ModuleTypeInfo:serialize( stream, validChildrenSet )
-   local txt = string.format( "{ parentId = %d, typeId = %d, txt = '%s', kind = %d, ", self:getParentId(  ), self.typeId, self.rawTxt, TypeInfoKind.Module)
+   local txt = string.format( "{ skind = %d, parentId = %d, typeId = %d, txt = '%s', kind = %d, ", SerializeKind.Module, self:getParentId(  ), self.typeId, self.rawTxt, TypeInfoKind.Module)
    stream:write( txt .. '\n' )
    stream:write( "children = {" )
    local set = validChildrenSet
@@ -1453,7 +1577,7 @@ function EnumTypeInfo.new( scope, externalFlag, accessMode, txt, parentInfo, typ
    return obj
 end
 function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo, name2EnumValInfo) 
-   TypeInfo.__init( self, scope)
+   TypeInfo.__init( self ,scope)
    
    self.externalFlag = externalFlag
    self.accessMode = accessMode
@@ -1535,7 +1659,7 @@ function NormalTypeInfo.new( abstructFlag, scope, baseTypeInfo, interfaceList, o
    return obj
 end
 function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
-   TypeInfo.__init( self, scope)
+   TypeInfo.__init( self ,scope)
    
    if type( kind ) ~= "number" then
       Util.printStackTrace(  )
@@ -1676,7 +1800,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    
    local parentId = self:getParentId(  )
    if self.nilable then
-      stream:write( string.format( '{ parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
+      stream:write( string.format( '{ parentId=%d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
       return 
    end
    
@@ -1696,8 +1820,8 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
       return work .. "}, "
    end
    
-   local txt = string.format( [==[{ parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.staticFlag, self.accessMode, self.kind, self.mutable)
+   local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
+        abstructFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstructFlag, self.staticFlag, self.accessMode, self.kind, self.mutable)
    local children = {}
    local set = validChildrenSet
    if  nil == set then
@@ -2028,14 +2152,14 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
    local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, idProv:get_id(), valTypeInfo, name2EnumValInfo)
    local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( getEnumName, AccessMode.Pub, false, true )
-   local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, true, AccessMode.Pub, "_from", {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
-   scope:addMethod( fromVal, AccessMode.Pub, true, true )
+   local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "_from", {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
+   scope:addFunc( fromVal, AccessMode.Pub, true, true )
    return info
 end
 
 function EnumTypeInfo:serialize( stream, validChildrenSet )
-   local txt = string.format( [==[{ parentId = %d, typeId = %d, txt = '%s',
-accessMode = %d, kind = %d, valTypeId = %d, ]==], self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId())
+   local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
+accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId())
    stream:write( txt )
    stream:write( "enumValList = {" )
    do
@@ -2096,25 +2220,18 @@ function NormalTypeInfo:isInheritFrom( other )
    end
    
    local baseTypeInfo = self:get_baseTypeInfo()
-   while baseTypeInfo ~= _moduleObj.headTypeInfo do
-      if otherTypeId == baseTypeInfo:get_typeId() then
+   if baseTypeInfo ~= _moduleObj.headTypeInfo then
+      if baseTypeInfo:isInheritFrom( other ) then
          return true
       end
       
-      baseTypeInfo = baseTypeInfo:get_baseTypeInfo()
    end
    
    
    for __index, ifType in pairs( self:get_interfaceList() ) do
-      local workType = ifType
-      while workType ~= _moduleObj.headTypeInfo do
-         if otherTypeId == workType:get_typeId() then
-            return true
-         end
-         
-         workType = workType:get_baseTypeInfo()
+      if ifType:isInheritFrom( other ) then
+         return true
       end
-      
       
    end
    
@@ -2549,7 +2666,7 @@ function NoneNode.new( pos, typeList )
    return obj
 end
 function NoneNode:__init(pos, typeList) 
-   Node.__init( self, _moduleObj.nodeKindNone, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindNone, pos, typeList)
    
    
    
@@ -2597,7 +2714,7 @@ function SubfileNode.new( pos, typeList )
    return obj
 end
 function SubfileNode:__init(pos, typeList) 
-   Node.__init( self, _moduleObj.nodeKindSubfile, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindSubfile, pos, typeList)
    
    
    
@@ -2645,7 +2762,7 @@ function ImportNode.new( pos, typeList, modulePath, moduleTypeInfo )
    return obj
 end
 function ImportNode:__init(pos, typeList, modulePath, moduleTypeInfo) 
-   Node.__init( self, _moduleObj.nodeKindImport, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindImport, pos, typeList)
    
    
    self.modulePath = modulePath
@@ -2674,24 +2791,28 @@ _moduleObj.LuneHelperInfo = LuneHelperInfo
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end
-function LuneHelperInfo.new( useNilAccess, useUnwrapExp )
+function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasClassDef )
    local obj = {}
    LuneHelperInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( useNilAccess, useUnwrapExp )
+      obj:__init( useNilAccess, useUnwrapExp, hasClassDef )
    end        
    return obj 
 end         
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp ) 
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasClassDef ) 
 
    self.useNilAccess = useNilAccess
    self.useUnwrapExp = useUnwrapExp
+   self.hasClassDef = hasClassDef
 end
 function LuneHelperInfo:get_useNilAccess()       
    return self.useNilAccess         
 end
 function LuneHelperInfo:get_useUnwrapExp()       
    return self.useUnwrapExp         
+end
+function LuneHelperInfo:get_hasClassDef()       
+   return self.hasClassDef         
 end
 
 local ModuleInfo = {}
@@ -2772,7 +2893,7 @@ function RootNode.new( pos, typeList, children, moduleTypeInfo, provideNode, lun
    return obj
 end
 function RootNode:__init(pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap) 
-   Node.__init( self, _moduleObj.nodeKindRoot, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindRoot, pos, typeList)
    
    
    self.children = children
@@ -2852,7 +2973,7 @@ function RefTypeNode.new( pos, typeList, name, refFlag, mutFlag, array )
    return obj
 end
 function RefTypeNode:__init(pos, typeList, name, refFlag, mutFlag, array) 
-   Node.__init( self, _moduleObj.nodeKindRefType, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindRefType, pos, typeList)
    
    
    self.name = name
@@ -2893,8 +3014,8 @@ function BlockKind:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function BlockKind:_from( val )
-   if self._val2NameMap[ val ] then
+function BlockKind._from( val )
+   if BlockKind._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -2966,7 +3087,7 @@ function BlockNode.new( pos, typeList, blockKind, stmtList )
    return obj
 end
 function BlockNode:__init(pos, typeList, blockKind, stmtList) 
-   Node.__init( self, _moduleObj.nodeKindBlock, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindBlock, pos, typeList)
    
    
    self.blockKind = blockKind
@@ -3051,7 +3172,7 @@ function IfNode.new( pos, typeList, stmtList )
    return obj
 end
 function IfNode:__init(pos, typeList, stmtList) 
-   Node.__init( self, _moduleObj.nodeKindIf, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindIf, pos, typeList)
    
    
    self.stmtList = stmtList
@@ -3097,7 +3218,7 @@ function ExpListNode.new( pos, typeList, expList )
    return obj
 end
 function ExpListNode:__init(pos, typeList, expList) 
-   Node.__init( self, _moduleObj.nodeKindExpList, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpList, pos, typeList)
    
    
    self.expList = expList
@@ -3196,7 +3317,7 @@ function SwitchNode.new( pos, typeList, exp, caseList, default )
    return obj
 end
 function SwitchNode:__init(pos, typeList, exp, caseList, default) 
-   Node.__init( self, _moduleObj.nodeKindSwitch, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindSwitch, pos, typeList)
    
    
    self.exp = exp
@@ -3256,7 +3377,7 @@ function WhileNode.new( pos, typeList, exp, block )
    return obj
 end
 function WhileNode:__init(pos, typeList, exp, block) 
-   Node.__init( self, _moduleObj.nodeKindWhile, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindWhile, pos, typeList)
    
    
    self.exp = exp
@@ -3312,7 +3433,7 @@ function RepeatNode.new( pos, typeList, block, exp )
    return obj
 end
 function RepeatNode:__init(pos, typeList, block, exp) 
-   Node.__init( self, _moduleObj.nodeKindRepeat, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindRepeat, pos, typeList)
    
    
    self.block = block
@@ -3368,7 +3489,7 @@ function ForNode.new( pos, typeList, block, val, init, to, delta )
    return obj
 end
 function ForNode:__init(pos, typeList, block, val, init, to, delta) 
-   Node.__init( self, _moduleObj.nodeKindFor, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindFor, pos, typeList)
    
    
    self.block = block
@@ -3436,7 +3557,7 @@ function ApplyNode.new( pos, typeList, varList, exp, block )
    return obj
 end
 function ApplyNode:__init(pos, typeList, varList, exp, block) 
-   Node.__init( self, _moduleObj.nodeKindApply, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindApply, pos, typeList)
    
    
    self.varList = varList
@@ -3496,7 +3617,7 @@ function ForeachNode.new( pos, typeList, val, key, exp, block )
    return obj
 end
 function ForeachNode:__init(pos, typeList, val, key, exp, block) 
-   Node.__init( self, _moduleObj.nodeKindForeach, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindForeach, pos, typeList)
    
    
    self.val = val
@@ -3560,7 +3681,7 @@ function ForsortNode.new( pos, typeList, val, key, exp, block, sort )
    return obj
 end
 function ForsortNode:__init(pos, typeList, val, key, exp, block, sort) 
-   Node.__init( self, _moduleObj.nodeKindForsort, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindForsort, pos, typeList)
    
    
    self.val = val
@@ -3628,7 +3749,7 @@ function ReturnNode.new( pos, typeList, expList )
    return obj
 end
 function ReturnNode:__init(pos, typeList, expList) 
-   Node.__init( self, _moduleObj.nodeKindReturn, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindReturn, pos, typeList)
    
    
    self.expList = expList
@@ -3680,7 +3801,7 @@ function BreakNode.new( pos, typeList )
    return obj
 end
 function BreakNode:__init(pos, typeList) 
-   Node.__init( self, _moduleObj.nodeKindBreak, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindBreak, pos, typeList)
    
    
    
@@ -3728,7 +3849,7 @@ function ProvideNode.new( pos, typeList, symbol )
    return obj
 end
 function ProvideNode:__init(pos, typeList, symbol) 
-   Node.__init( self, _moduleObj.nodeKindProvide, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindProvide, pos, typeList)
    
    
    self.symbol = symbol
@@ -3780,7 +3901,7 @@ function ExpNewNode.new( pos, typeList, symbol, argList )
    return obj
 end
 function ExpNewNode:__init(pos, typeList, symbol, argList) 
-   Node.__init( self, _moduleObj.nodeKindExpNew, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpNew, pos, typeList)
    
    
    self.symbol = symbol
@@ -3836,7 +3957,7 @@ function ExpUnwrapNode.new( pos, typeList, exp, default )
    return obj
 end
 function ExpUnwrapNode:__init(pos, typeList, exp, default) 
-   Node.__init( self, _moduleObj.nodeKindExpUnwrap, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpUnwrap, pos, typeList)
    
    
    self.exp = exp
@@ -3886,7 +4007,7 @@ function ExpRefNode.new( pos, typeList, token, symbolInfo )
    return obj
 end
 function ExpRefNode:__init(pos, typeList, token, symbolInfo) 
-   Node.__init( self, _moduleObj.nodeKindExpRef, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpRef, pos, typeList)
    
    
    self.token = token
@@ -3950,7 +4071,7 @@ function ExpOp2Node.new( pos, typeList, op, exp1, exp2 )
    return obj
 end
 function ExpOp2Node:__init(pos, typeList, op, exp1, exp2) 
-   Node.__init( self, _moduleObj.nodeKindExpOp2, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpOp2, pos, typeList)
    
    
    self.op = op
@@ -4010,7 +4131,7 @@ function UnwrapSetNode.new( pos, typeList, dstExpList, srcExpList, unwrapBlock )
    return obj
 end
 function UnwrapSetNode:__init(pos, typeList, dstExpList, srcExpList, unwrapBlock) 
-   Node.__init( self, _moduleObj.nodeKindUnwrapSet, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindUnwrapSet, pos, typeList)
    
    
    self.dstExpList = dstExpList
@@ -4070,7 +4191,7 @@ function IfUnwrapNode.new( pos, typeList, varNameList, expNodeList, block, nilBl
    return obj
 end
 function IfUnwrapNode:__init(pos, typeList, varNameList, expNodeList, block, nilBlock) 
-   Node.__init( self, _moduleObj.nodeKindIfUnwrap, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindIfUnwrap, pos, typeList)
    
    
    self.varNameList = varNameList
@@ -4134,7 +4255,7 @@ function ExpCastNode.new( pos, typeList, exp )
    return obj
 end
 function ExpCastNode:__init(pos, typeList, exp) 
-   Node.__init( self, _moduleObj.nodeKindExpCast, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpCast, pos, typeList)
    
    
    self.exp = exp
@@ -4163,8 +4284,8 @@ function MacroMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function MacroMode:_from( val )
-   if self._val2NameMap[ val ] then
+function MacroMode._from( val )
+   if MacroMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -4210,7 +4331,7 @@ function ExpOp1Node.new( pos, typeList, op, macroMode, exp )
    return obj
 end
 function ExpOp1Node:__init(pos, typeList, op, macroMode, exp) 
-   Node.__init( self, _moduleObj.nodeKindExpOp1, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpOp1, pos, typeList)
    
    
    self.op = op
@@ -4267,7 +4388,7 @@ function ExpRefItemNode.new( pos, typeList, val, nilAccess, symbol, index )
    return obj
 end
 function ExpRefItemNode:__init(pos, typeList, val, nilAccess, symbol, index) 
-   Node.__init( self, _moduleObj.nodeKindExpRefItem, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpRefItem, pos, typeList)
    
    
    self.val = val
@@ -4339,7 +4460,7 @@ function ExpCallNode.new( pos, typeList, func, nilAccess, argList )
    return obj
 end
 function ExpCallNode:__init(pos, typeList, func, nilAccess, argList) 
-   Node.__init( self, _moduleObj.nodeKindExpCall, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpCall, pos, typeList)
    
    
    self.func = func
@@ -4399,7 +4520,7 @@ function ExpDDDNode.new( pos, typeList, token )
    return obj
 end
 function ExpDDDNode:__init(pos, typeList, token) 
-   Node.__init( self, _moduleObj.nodeKindExpDDD, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpDDD, pos, typeList)
    
    
    self.token = token
@@ -4451,7 +4572,7 @@ function ExpParenNode.new( pos, typeList, exp )
    return obj
 end
 function ExpParenNode:__init(pos, typeList, exp) 
-   Node.__init( self, _moduleObj.nodeKindExpParen, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpParen, pos, typeList)
    
    
    self.exp = exp
@@ -4503,7 +4624,7 @@ function ExpMacroExpNode.new( pos, typeList, stmtList )
    return obj
 end
 function ExpMacroExpNode:__init(pos, typeList, stmtList) 
-   Node.__init( self, _moduleObj.nodeKindExpMacroExp, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpMacroExp, pos, typeList)
    
    
    self.stmtList = stmtList
@@ -4555,7 +4676,7 @@ function ExpMacroStatNode.new( pos, typeList, expStrList )
    return obj
 end
 function ExpMacroStatNode:__init(pos, typeList, expStrList) 
-   Node.__init( self, _moduleObj.nodeKindExpMacroStat, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpMacroStat, pos, typeList)
    
    
    self.expStrList = expStrList
@@ -4607,7 +4728,7 @@ function StmtExpNode.new( pos, typeList, exp )
    return obj
 end
 function StmtExpNode:__init(pos, typeList, exp) 
-   Node.__init( self, _moduleObj.nodeKindStmtExp, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindStmtExp, pos, typeList)
    
    
    self.exp = exp
@@ -4659,7 +4780,7 @@ function ExpOmitEnumNode.new( pos, typeList, valToken, enumTypeInfo )
    return obj
 end
 function ExpOmitEnumNode:__init(pos, typeList, valToken, enumTypeInfo) 
-   Node.__init( self, _moduleObj.nodeKindExpOmitEnum, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpOmitEnum, pos, typeList)
    
    
    self.valToken = valToken
@@ -4712,7 +4833,7 @@ function RefFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix )
    return obj
 end
 function RefFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix) 
-   Node.__init( self, _moduleObj.nodeKindRefField, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindRefField, pos, typeList)
    
    
    self.field = field
@@ -4784,7 +4905,7 @@ function GetFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix, 
    return obj
 end
 function GetFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
-   Node.__init( self, _moduleObj.nodeKindGetField, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindGetField, pos, typeList)
    
    
    self.field = field
@@ -4869,8 +4990,8 @@ function DeclVarMode:_getTxt( val )
    end
    return string.format( "illegal val -- %s", val )
 end 
-function DeclVarMode:_from( val )
-   if self._val2NameMap[ val ] then
+function DeclVarMode._from( val )
+   if DeclVarMode._val2NameMap[ val ] then
       return val
    end
    return nil
@@ -4916,7 +5037,7 @@ function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, 
    return obj
 end
 function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
-   Node.__init( self, _moduleObj.nodeKindDeclVar, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclVar, pos, typeList)
    
    
    self.mode = mode
@@ -5057,7 +5178,7 @@ function DeclFuncNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclFuncNode:__init(pos, typeList, declInfo) 
-   Node.__init( self, _moduleObj.nodeKindDeclFunc, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclFunc, pos, typeList)
    
    
    self.declInfo = declInfo
@@ -5109,7 +5230,7 @@ function DeclMethodNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclMethodNode:__init(pos, typeList, declInfo) 
-   Node.__init( self, _moduleObj.nodeKindDeclMethod, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclMethod, pos, typeList)
    
    
    self.declInfo = declInfo
@@ -5161,7 +5282,7 @@ function DeclConstrNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclConstrNode:__init(pos, typeList, declInfo) 
-   Node.__init( self, _moduleObj.nodeKindDeclConstr, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclConstr, pos, typeList)
    
    
    self.declInfo = declInfo
@@ -5213,7 +5334,7 @@ function DeclDestrNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclDestrNode:__init(pos, typeList, declInfo) 
-   Node.__init( self, _moduleObj.nodeKindDeclDestr, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclDestr, pos, typeList)
    
    
    self.declInfo = declInfo
@@ -5265,7 +5386,7 @@ function ExpCallSuperNode.new( pos, typeList, superType, expList )
    return obj
 end
 function ExpCallSuperNode:__init(pos, typeList, superType, expList) 
-   Node.__init( self, _moduleObj.nodeKindExpCallSuper, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindExpCallSuper, pos, typeList)
    
    
    self.superType = superType
@@ -5321,7 +5442,7 @@ function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFla
    return obj
 end
 function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode) 
-   Node.__init( self, _moduleObj.nodeKindDeclMember, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclMember, pos, typeList)
    
    
    self.name = name
@@ -5401,7 +5522,7 @@ function DeclArgNode.new( pos, typeList, name, argType )
    return obj
 end
 function DeclArgNode:__init(pos, typeList, name, argType) 
-   Node.__init( self, _moduleObj.nodeKindDeclArg, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclArg, pos, typeList)
    
    
    self.name = name
@@ -5457,7 +5578,7 @@ function DeclArgDDDNode.new( pos, typeList )
    return obj
 end
 function DeclArgDDDNode:__init(pos, typeList) 
-   Node.__init( self, _moduleObj.nodeKindDeclArgDDD, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclArgDDD, pos, typeList)
    
    
    
@@ -5531,7 +5652,7 @@ function DeclClassNode.new( pos, typeList, accessMode, name, gluePrefix, fieldLi
    return obj
 end
 function DeclClassNode:__init(pos, typeList, accessMode, name, gluePrefix, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
-   Node.__init( self, _moduleObj.nodeKindDeclClass, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclClass, pos, typeList)
    
    
    self.accessMode = accessMode
@@ -5623,7 +5744,7 @@ function DeclEnumNode.new( pos, typeList, accessMode, name, valueNameList, scope
    return obj
 end
 function DeclEnumNode:__init(pos, typeList, accessMode, name, valueNameList, scope) 
-   Node.__init( self, _moduleObj.nodeKindDeclEnum, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclEnum, pos, typeList)
    
    
    self.accessMode = accessMode
@@ -5687,7 +5808,7 @@ function DeclMacroNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclMacroNode:__init(pos, typeList, declInfo) 
-   Node.__init( self, _moduleObj.nodeKindDeclMacro, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindDeclMacro, pos, typeList)
    
    
    self.declInfo = declInfo
@@ -5756,7 +5877,7 @@ function LiteralNilNode.new( pos, typeList )
    return obj
 end
 function LiteralNilNode:__init(pos, typeList) 
-   Node.__init( self, _moduleObj.nodeKindLiteralNil, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralNil, pos, typeList)
    
    
    
@@ -5804,7 +5925,7 @@ function LiteralCharNode.new( pos, typeList, token, num )
    return obj
 end
 function LiteralCharNode:__init(pos, typeList, token, num) 
-   Node.__init( self, _moduleObj.nodeKindLiteralChar, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralChar, pos, typeList)
    
    
    self.token = token
@@ -5860,7 +5981,7 @@ function LiteralIntNode.new( pos, typeList, token, num )
    return obj
 end
 function LiteralIntNode:__init(pos, typeList, token, num) 
-   Node.__init( self, _moduleObj.nodeKindLiteralInt, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralInt, pos, typeList)
    
    
    self.token = token
@@ -5916,7 +6037,7 @@ function LiteralRealNode.new( pos, typeList, token, num )
    return obj
 end
 function LiteralRealNode:__init(pos, typeList, token, num) 
-   Node.__init( self, _moduleObj.nodeKindLiteralReal, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralReal, pos, typeList)
    
    
    self.token = token
@@ -5972,7 +6093,7 @@ function LiteralArrayNode.new( pos, typeList, expList )
    return obj
 end
 function LiteralArrayNode:__init(pos, typeList, expList) 
-   Node.__init( self, _moduleObj.nodeKindLiteralArray, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralArray, pos, typeList)
    
    
    self.expList = expList
@@ -6024,7 +6145,7 @@ function LiteralListNode.new( pos, typeList, expList )
    return obj
 end
 function LiteralListNode:__init(pos, typeList, expList) 
-   Node.__init( self, _moduleObj.nodeKindLiteralList, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralList, pos, typeList)
    
    
    self.expList = expList
@@ -6101,7 +6222,7 @@ function LiteralMapNode.new( pos, typeList, map, pairList )
    return obj
 end
 function LiteralMapNode:__init(pos, typeList, map, pairList) 
-   Node.__init( self, _moduleObj.nodeKindLiteralMap, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralMap, pos, typeList)
    
    
    self.map = map
@@ -6157,7 +6278,7 @@ function LiteralStringNode.new( pos, typeList, token, argList )
    return obj
 end
 function LiteralStringNode:__init(pos, typeList, token, argList) 
-   Node.__init( self, _moduleObj.nodeKindLiteralString, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralString, pos, typeList)
    
    
    self.token = token
@@ -6213,7 +6334,7 @@ function LiteralBoolNode.new( pos, typeList, token )
    return obj
 end
 function LiteralBoolNode:__init(pos, typeList, token) 
-   Node.__init( self, _moduleObj.nodeKindLiteralBool, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralBool, pos, typeList)
    
    
    self.token = token
@@ -6265,7 +6386,7 @@ function LiteralSymbolNode.new( pos, typeList, token )
    return obj
 end
 function LiteralSymbolNode:__init(pos, typeList, token) 
-   Node.__init( self, _moduleObj.nodeKindLiteralSymbol, pos, typeList)
+   Node.__init( self ,_moduleObj.nodeKindLiteralSymbol, pos, typeList)
    
    
    self.token = token
