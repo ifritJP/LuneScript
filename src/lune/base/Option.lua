@@ -176,6 +176,7 @@ function Option.setmeta( obj )
 end
 
 local function analyze( argList )
+
    if #argList < 2 then
       print( [==[
 usage: [-prof] src.lns mode [mode-option]

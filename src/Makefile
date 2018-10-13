@@ -56,8 +56,8 @@ define buildLns
 endef
 
 release-check:
-	$(MAKE) test-comp
-	$(MAKE) test-comp LUA=lua5.2
+	$(MAKE) test-comp LUA_INC_DIR=../../lctags/external/lua/lua-5.3.4/src/
+	$(MAKE) test-comp LUA=lua5.2 LUA_INC_DIR=../../lctags/external/lua/lua-5.2.4/src/
 
 # LuneScript 自身のソースを Lua に変換する。
 #
@@ -175,6 +175,7 @@ test-comp2:
 	$(call exeLune,work/3,test/Class4.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/start.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/mapping.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/funcSym.lns,save,) > /dev/null
 #	$(call exeLune,work/3,test/glue.lns,save,) > /dev/null
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result
 

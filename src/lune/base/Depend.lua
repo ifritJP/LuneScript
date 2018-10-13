@@ -47,6 +47,7 @@ function _lune.nilacc( val, fieldName, access, ... )
 end
 
 local function getFileLastModifiedTime( path )
+
    local file = io.open( path )
    do
       local _exp = file

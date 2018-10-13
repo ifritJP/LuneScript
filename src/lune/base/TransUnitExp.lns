@@ -864,7 +864,9 @@ fn TransUnit.analyzeExpField(
       let scope = unwrap prefixExpType.$scope;
       let mut fieldName = token.txt;
       if mode == .Get {
-         if not self.importModule2ModuleInfoCurrent[ prefixExpType.getModule() ] {
+         let moduleType = prefixExpType.getModule();
+         if not moduleType.equals( self.moduleType ) and
+            not self.importModule2ModuleInfoCurrent[ moduleType ] {
             // enum の名前を取得するには、そのモジュールのインポートが必要
             self.addErrMess( token.pos, "need to import module -- %s"
                              ( prefixExpType.getModule().getTxt() ) );
@@ -1003,7 +1005,11 @@ fn TransUnit.analyzeExpSymbol(
          let typeInfo = symbolInfo.$typeInfo;
          if typeInfo.equals( Ast.builtinTypeSymbol ) {
             skipFlag = true;
-         }  
+         }
+         if token.txt == "__func__" {
+            self.has__func__Symbol = true;
+         }
+         
          exp = Ast.ExpRefNode.create(
             self.nodeManager, firstToken.pos, [ typeInfo ], token,
             new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
@@ -1152,6 +1158,13 @@ fn TransUnit.analyzeExpOp2(
                   {  
                      self.addWarnMess( exp.$pos, "this value never be 'false'" );
                   }
+                  elseif exp2.$kind == Ast.nodeKindLiteralBool {
+                     let valList = exp2.getLiteral();
+                     if not valList[1] {
+                        self.addErrMess( exp2.$pos, "this value never be 'true'" );
+                     }
+                  }
+                  
                   if workToken.txt == "or" {
                      // A and B or C の場合、 A and B の演算結果は B の型とし、
                      // B or C の演算結果に処理を廻す。
@@ -1681,8 +1694,6 @@ fn TransUnit.analyzeExp(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
          new Parser.Token( .Int, "%d" (token.pos.lineNo),
                            token.pos, nil ), token.pos.lineNo );
-   }
-   elseif token.kind == Parser.TokenKind.Symb and token.txt == "__func__" {
    }
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" {
       exp = self.analyzeExpSymbol( firstToken, token, .Fn, nil, false );

@@ -123,6 +123,7 @@ local dumpNode = require( 'lune.base.dumpNode' )
 local glueFilter = require( 'lune.base.glueFilter' )
 local Depend = require( 'lune.base.Depend' )
 function _luneGetLocal( varName )
+
    local index = 1
    while true do
       local name, val = debug.getlocal( 3, index )
@@ -141,6 +142,7 @@ function _luneGetLocal( varName )
 end
 
 function _luneSym2Str( val )
+
    do
       local _exp = val
       if _exp ~= nil then
@@ -181,12 +183,14 @@ function Front:__init( option, loadedMap, loadedMetaMap, convertedMap )
 end
 
 function Front:error( message )
+
    Util.errorLog( message )
    Util.printStackTrace(  )
    os.exit( 1 )
 end
 
 function Front:loadLua( path )
+
    local chunk, err = loadfile( path )
    do
       local _exp = err
@@ -206,6 +210,7 @@ function Front:loadLua( path )
 end
 
 local function createPaser( path, mod )
+
    local parser = Parser.StreamParser.create( path, false, mod )
    do
       local _exp = parser
@@ -218,16 +223,19 @@ local function createPaser( path, mod )
 end
 
 function Front:createAst( path, mod, analyzeModule, analyzeMode, pos )
+
    local transUnit = TransUnit.TransUnit.new(convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos)
    return transUnit:createAST( createPaser( path, mod ), false, mod )
 end
 
 local function convert( ast, streamName, stream, metaStream, convMode, inMacro )
+
    local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind() )
    ast:get_node():processFilter( conv, nil, 0 )
 end
 
 local function loadFromTxt( txt )
+
    local chunk, err = load( txt )
    do
       local _exp = err
@@ -247,6 +255,7 @@ local function loadFromTxt( txt )
 end
 
 function Front:loadFile( path, mod, onlyMeta )
+
    local ast = self:createAst( path, mod, nil, TransUnit.AnalyzeMode.Compile )
    local stream = Util.memStream.new()
    local metaStream = Util.memStream.new()
@@ -260,12 +269,14 @@ function Front:loadFile( path, mod, onlyMeta )
 end
 
 function Front:searchModule( mod )
+
    local lnsSearchPath = package.path
    lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
    return package.searchpath( mod, lnsSearchPath )
 end
 
 function Front:searchLuaFile( moduleFullName, addSearchPath )
+
    local luaSearchPath = package.path
    do
       local _exp = addSearchPath
@@ -278,6 +289,7 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
 end
 
 function Front:checkUptodateMeta( metaPath, addSearchPath )
+
    local meta = self:loadLua( metaPath )
    for moduleFullName, dependInfo in pairs( meta._dependModuleMap ) do
       do
@@ -302,6 +314,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
 end
 
 function Front:loadModule( mod )
+
    if self.loadedMap[mod] == nil then
       do
          local _exp = self.convertedMap[mod]
@@ -376,6 +389,7 @@ function Front:loadModule( mod )
 end
 
 function Front:loadMeta( mod )
+
    if self.loadedMetaMap[mod] == nil then
       do
          local _exp = self.loadedMap[mod]
@@ -437,6 +451,7 @@ function Front:loadMeta( mod )
 end
 
 function Front:exec(  )
+
    local mod = string.gsub( self.option.scriptPath, "/", "." )
    mod = string.gsub( mod, "%.lns$", "" )
    do
@@ -456,6 +471,7 @@ function Front:exec(  )
          
       elseif _switchExp == Option.ModeKind.Ast then
          Util.profile( self.option.validProf, function (  )
+         
             local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
             ast:get_node():processFilter( dumpNode.dumpFilter.new(), "", 0 )
          end
@@ -479,6 +495,7 @@ function Front:exec(  )
          convert( ast, self.option.scriptPath, io.stdout, io.stdout, convMode, false )
       elseif _switchExp == Option.ModeKind.Save or _switchExp == Option.ModeKind.SaveMeta then
          Util.profile( self.option.validProf, function (  )
+         
             local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
             local luaPath = self.option.scriptPath:gsub( "%.lns$", ".lua" )
             local metaPath = self.option.scriptPath:gsub( "%.lns$", ".meta" )
@@ -537,6 +554,7 @@ function Front:exec(  )
 end
 
 local function exec( args )
+
    local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
    if version < 5.2 then
       io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version after 5.2." ) )

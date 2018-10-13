@@ -44,8 +44,7 @@ class SubSub extend Sub (Mapping) {
 
 pub fn test() {
    let hoge = new SubSub();
-   let map = hoge._toMap();
-
+   let mut map = hoge._toMap();
 
    dumpTable( "", map );
 

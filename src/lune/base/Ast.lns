@@ -2235,12 +2235,15 @@ pub class ModuleInfo {
    }
 }
 
-pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,ModuleInfo> ) : str {
+pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,stem>, localFlag:bool! ) : str {
    let mut typeInfo = self;
    let mut name = typeInfo.$rawTxt;
    while not importInfo[ typeInfo ] {
       typeInfo = typeInfo.$parentInfo;
       if typeInfo == headTypeInfo {
+         break;
+      }
+      if localFlag and typeInfo.isModule() and not importInfo[ typeInfo ] {
          break;
       }
       name = typeInfo.$rawTxt .. "." .. name;
@@ -2560,6 +2563,7 @@ pub class DeclFuncInfo {
    pri let accessMode: AccessMode { pub };
    pri let body: &BlockNode! { pub };
    pri let retTypeInfoList: List<&TypeInfo> { pub };
+   pri let has__func__Symbol:bool { pub };
 }
 _declNodeClass( "DeclFunc", Node, false, true,
                 [ { "declInfo": "DeclFuncInfo" } ]
@@ -2608,6 +2612,7 @@ _declNodeClass( "DeclClass", Node, false, false,
                 [ { "accessMode": "AccessMode" },
                   { "name": "&Parser.Token" },
                   { "gluePrefix": "str!" },
+                  { "declStmtList": "List<&Node>" },
                   { "fieldList": "List<&Node>" },
                   { "moduleName": "&Parser.Token!" },
                   { "memberList": "List<&DeclMemberNode>" },

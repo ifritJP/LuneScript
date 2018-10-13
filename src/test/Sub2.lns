@@ -18,9 +18,32 @@ pub enum enumTestSub {
    val2,
    val3
 }
+pub let testEnum:enumTestSub! = nil;
 
 pub module External require "test.external" {
    pub static let val:int;
    pub static fn func1( val:int );
    pub fn func2( val:int );
+}
+
+pub class Test {
+   pub enum Hoge {
+      val,
+   }
+
+   pub fn func() {
+      let hoge = Test.Hoge.val;
+      if hoge == .val {
+         print( hoge );
+      }
+   }
+}
+
+fn main() {
+   let test = new Test();
+   test.func();
+
+   let mut val = Test.Hoge.val;
+   val = .val;
+   print( val.$_txt );
 }

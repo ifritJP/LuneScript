@@ -135,10 +135,12 @@ luaKeywordSet["function"] = true
 luaKeywordSet["then"] = true
 luaKeywordSet["until"] = true
 local function isLuaKeyword( txt )
+
    return luaKeywordSet[txt]
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
 local function createReserveInfo( luaMode )
+
    local keywordSet = {}
    local typeSet = {}
    local builtInSet = {}
@@ -219,6 +221,7 @@ function TxtStream:__init(txt)
    self.eof = false
 end
 function TxtStream:read( mode )
+
    if self.eof then
       return nil
    end
@@ -237,6 +240,7 @@ function TxtStream:read( mode )
    return self.txt:sub( self.start )
 end
 function TxtStream:close(  )
+
 end
 function TxtStream.setmeta( obj )
   setmetatable( obj, { __index = TxtStream  } )
@@ -316,6 +320,7 @@ function Token:__init(kind, txt, pos, commentList)
    self.commentList = _lune.unwrapDefault( commentList, {})
 end
 function Token:getExcludedDelimitTxt(  )
+
    if self.kind ~= TokenKind.Str then
       return self.txt
    end
@@ -332,6 +337,7 @@ function Token:getExcludedDelimitTxt(  )
    error( string.format( "illegal delimit -- %s", self.txt) )
 end
 function Token:set_commentList( commentList )
+
    self.commentList = commentList
 end
 function Token.setmeta( obj )
@@ -362,10 +368,12 @@ local WrapParser = {}
 setmetatable( WrapParser, { __index = Parser } )
 _moduleObj.WrapParser = WrapParser
 function WrapParser:getToken(  )
+
    local token = self.parser:getToken(  )
    return token
 end
 function WrapParser:getStreamName(  )
+
    return self.name
 end
 function WrapParser.setmeta( obj )
@@ -389,6 +397,7 @@ local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
 _moduleObj.StreamParser = StreamParser
 function StreamParser.setStdinStream( moduleName )
+
    StreamParser.stdinStreamModuleName = moduleName
    StreamParser.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
 end
@@ -412,9 +421,11 @@ function StreamParser:__init(stream, name, luaMode)
    self.multiCharDelimitMap = multiCharDelimitMap
 end
 function StreamParser:getStreamName(  )
+
    return self.streamName
 end
 function StreamParser.create( path, luaMode, moduleName )
+
    local stream = TxtStream.new(StreamParser.stdinTxt)
    if StreamParser.stdinStreamModuleName ~= moduleName then
       stream = io.open( path, "r" )
@@ -485,15 +496,19 @@ op1Set[',,'] = true
 op1Set[',,,'] = true
 op1Set[',,,,'] = true
 local function isOp2( ope )
+
    return op2Set[ope]
 end
 _moduleObj.isOp2 = isOp2
 local function isOp1( ope )
+
    return op1Set[ope]
 end
 _moduleObj.isOp1 = isOp1
 function StreamParser:parse(  )
+
    local function readLine(  )
+   
       if self.eof then
          return nil
       end
@@ -517,6 +532,7 @@ function StreamParser:parse(  )
    local list = {}
    local startIndex = 1
    local multiComment = function ( comIndex, termStr )
+   
       local searchIndex = comIndex
       local comment = ""
       while true do
@@ -536,7 +552,9 @@ function StreamParser:parse(  )
    end
    
    local addVal = function ( kind, val, column )
+   
       local function createInfo( tokenKind, token, tokenColumn )
+      
          if tokenKind == TokenKind.Symb then
             if self.keywordSet[token] then
                tokenKind = TokenKind.Kywd
@@ -552,6 +570,7 @@ function StreamParser:parse(  )
       end
       
       local function analyzeNumber( token, beginIndex )
+      
          local nonNumIndex = token:find( '[^%d]', beginIndex )
          if  nil == nonNumIndex then
             local _nonNumIndex = nonNumIndex
@@ -816,6 +835,7 @@ function StreamParser:parse(  )
 end
 
 function StreamParser:getToken(  )
+
    if #self.lineTokenList < self.pos then
       self.pos = 1
       self.lineTokenList = {}
@@ -839,6 +859,7 @@ end
 
 local eofToken = Token.new(TokenKind.Eof, "<EOF>", Position.new(0, 0), {})
 local function getEofToken(  )
+
    return eofToken
 end
 _moduleObj.getEofToken = getEofToken
@@ -846,9 +867,11 @@ local DummyParser = {}
 setmetatable( DummyParser, { __index = Parser } )
 _moduleObj.DummyParser = DummyParser
 function DummyParser:getToken(  )
+
    return eofToken
 end
 function DummyParser:getStreamName(  )
+
    return "dummy"
 end
 function DummyParser.setmeta( obj )

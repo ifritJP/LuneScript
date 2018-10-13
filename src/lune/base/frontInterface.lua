@@ -119,15 +119,19 @@ end
 
 local dummyFront = {}
 function dummyFront:loadModule( mod )
+
    error( "not implements" )
 end
 function dummyFront:loadMeta( mod )
+
    error( "not implements" )
 end
 function dummyFront:searchModule( mod )
+
    error( "not implements" )
 end
 function dummyFront:error( message )
+
    error( "not implements" )
 end
 function dummyFront.setmeta( obj )
@@ -147,22 +151,27 @@ end
 
 __luneScript = dummyFront.new()
 local function setFront( newFront )
+
    __luneScript = newFront
 end
 _moduleObj.setFront = setFront
 local function loadModule( mod )
+
    return __luneScript:loadModule( mod )
 end
 _moduleObj.loadModule = loadModule
 local function loadMeta( mod )
+
    return __luneScript:loadMeta( mod )
 end
 _moduleObj.loadMeta = loadMeta
 local function searchModule( mod )
+
    return __luneScript:searchModule( mod )
 end
 _moduleObj.searchModule = searchModule
 local function error( message )
+
    __luneScript:error( message )
 end
 _moduleObj.error = error

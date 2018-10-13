@@ -193,6 +193,7 @@ pub fn TransUnit.createAST(
       }
    }
    self.moduleScope = self.scope;
+   self.moduleType = moduleTypeInfo;
 
    
    self.parser = parser;
@@ -720,6 +721,7 @@ fn TransUnit.analyzeClassBody(
    Ast.DeclClassNode, &Parser.Token, Map<str,bool>
 {
    let mut memberName2Node: Map<str,Ast.DeclMemberNode> = {};
+   let mut declStmtList: List<&Ast.Node> = [];
    let mut fieldList:List<&Ast.Node> = [];
    let mut memberList:List<&Ast.DeclMemberNode> = [];
    let mut methodNameSet: Map<str,bool> = {};
@@ -728,7 +730,7 @@ fn TransUnit.analyzeClassBody(
    let mut trustList:List<&Ast.TypeInfo> = [];
    let mut node = Ast.DeclClassNode.create(
       self.nodeManager, firstToken.pos, [ classTypeInfo ],
-      classAccessMode, name, gluePrefix, fieldList, moduleName,
+      classAccessMode, name, gluePrefix, declStmtList, fieldList, moduleName,
       memberList, self.scope, initStmtList, advertiseList, trustList, {} );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
    let mut declCtorNode:Ast.Node! = nil;
@@ -792,7 +794,7 @@ fn TransUnit.analyzeClassBody(
          memberName2Node[ memberNode.$name.txt ] = memberNode;
       }
       elseif token.txt == "fn" {
-         let nameToken = self.getToken();
+         let nameToken = self.getSymbolToken();
          let mut declFuncMode = DeclFuncMode.Class;
          if mode == .Module {
             if gluePrefix {
@@ -843,6 +845,16 @@ fn TransUnit.analyzeClassBody(
          advertiseList.insert( new Ast.AdvertiseInfo( memberNode, prefix ) );
       }
       elseif token.txt == ";" {
+      }
+      elseif token.txt == "enum" {
+         if accessMode ~= .Pri and
+             ( classAccessMode == .Pri or classAccessMode == .Local )
+         {
+            self.addErrMess( token.pos,
+                             "unmatch access mode, class('%s') and enum('%s')"
+                             (classAccessMode.$_txt, accessMode.$_txt ) );
+         }
+         declStmtList.insert( self.analyzeDeclEnum( accessMode, token ) );
       }
       else {
          self.error( "illegal field" );
@@ -1089,8 +1101,9 @@ fn TransUnit.analyzeDeclClass(
       }
 
       // _toMap の追加
-      let mapType = Ast.NormalTypeInfo.createMap(
-         .Pub, classTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem );
+      let mapType = self.createModifier( 
+         Ast.NormalTypeInfo.createMap(
+            .Pub, classTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem ), false );
       let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Method, classTypeInfo,
          true, false, false, .Pub, "_toMap", [], [ mapType ], true );
@@ -1100,8 +1113,7 @@ fn TransUnit.analyzeDeclClass(
       let fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromMap",
-         [ self.createModifier( mapType, false ) ],
-         [ classTypeInfo.$nilableTypeInfo ], true );
+         [ mapType ], [ classTypeInfo.$nilableTypeInfo ], true );
       classScope.addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false );
    }
    
@@ -1243,7 +1255,7 @@ fn TransUnit.analyzeDeclFunc(
    
    self.checkToken( token, "(" );
 
-   let mut scope = self.pushScope( false );
+   let mut funcBodyScope = self.pushScope( false );
 
    let mut argList:List<&Ast.Node> = [];
    token = self.analyzeDeclArgList( accessMode, argList );
@@ -1269,7 +1281,7 @@ fn TransUnit.analyzeDeclFunc(
          mutable = true;
       }
       // self シンボルを登録
-      let mut classTypeInfo:&Ast.TypeInfo = unwrap scope.$parent.$ownerTypeInfo;
+      let mut classTypeInfo:&Ast.TypeInfo = unwrap funcBodyScope.$parent.$ownerTypeInfo;
       if classTypeInfo.$mutable and not mutable {
          classTypeInfo = self.createModifier( classTypeInfo, false );
       }
@@ -1295,12 +1307,13 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      abstructFlag, false, scope,
+      abstructFlag, false, funcBodyScope,
       typeKind, self.getCurrentNamespaceTypeInfo(),
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList, mutable );
+   
    if! name {
-      let mut parentScope = scope.get_parent();
+      let mut parentScope = funcBodyScope.get_parent();
       if accessMode == .Global {
          parentScope = Ast.rootScope;
       }
@@ -1319,7 +1332,7 @@ fn TransUnit.analyzeDeclFunc(
          self.addErrMess( firstToken.pos, "can't override anonymous func" );
       };
       let! overrideType =
-         self.scope.$parent.getTypeInfoField( funcName, false, scope )
+         self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
       {
          self.addErrMess( firstToken.pos, "not found override -- " .. funcName );
       }
@@ -1348,16 +1361,13 @@ fn TransUnit.analyzeDeclFunc(
    else {
       if! name {
          if _exp.txt ~= "__init" and
-            self.scope.$parent.getTypeInfoField( _exp.txt, false, scope )
+            self.scope.$parent.getTypeInfoField( _exp.txt, false, funcBodyScope )
          {          
             // override 宣言していないのに、オーバーライドしている場合エラー
             self.error( "mismatch override --" .. funcName );
          }
       }
    }
-
-
-   
 
    let mut node = self.createNoneNode( firstToken.pos );
    let mut needNode = false;
@@ -1373,15 +1383,19 @@ fn TransUnit.analyzeDeclFunc(
       if abstructFlag {
          self.addErrMess( token.pos, "abstruct method can't have body." );
       }
+
+      let __func__Symbol = funcBodyScope.addLocalVar(
+         false, false, "__func__", Ast.builtinTypeString, false );
+      self.has__func__Symbol = false;
       
       self.pushback();
-      body = self.analyzeBlock( .Func, scope );
+      body = self.analyzeBlock( .Func, funcBodyScope );
    }
 
    if needNode {
       let mut info = new Ast.DeclFuncInfo(
          classNameToken, name, argList, orgStaticFlag, accessMode,
-         body, retTypeInfoList );
+         body, retTypeInfoList, self.has__func__Symbol );
       // node = self.createNode( kind, firstToken.pos, [ typeInfo ], info );
 
       switch ( kind ) {

@@ -11,3 +11,8 @@ fn func( val:int! ) {
    func( val1 or val2 );
    func( 1 and 2 ); // error
 }
+
+{
+   let val:int! = 1;
+   print( val and false or 1 );
+}

@@ -1,0 +1,17 @@
+class Hoge {
+   pub static fn test() {
+      print( __func__ );
+   }  
+}
+fn test( aaa:form ) {
+   print( __func__ );
+   fn func() {
+      print( __func__ );
+   }
+   func();
+   aaa();
+}
+pub fn main() {
+   test( fn() { print( __func__ ); } ); 
+   Hoge.test();
+}

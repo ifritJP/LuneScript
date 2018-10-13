@@ -73,6 +73,21 @@ func( .val1, .val1 );
    };
 }
 
+pub class Test {
+   pub enum Hoge {
+      val,
+   }
+}
+
+class Test2 {
+   enum Hoge {
+      val,
+   }
+   pub enum Hoge2 { // error
+      val,
+   }
+}
+
 {
    let val1:testEnum = 1; // error
    testEnum._from( "1" ); // error
@@ -82,3 +97,4 @@ func( .val1, .val1 );
    let val1 = testEnum.val1;
    val1 = .val4;
 }
+

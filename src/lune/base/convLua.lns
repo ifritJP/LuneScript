@@ -125,23 +125,13 @@ class convFilter extend Ast.Filter (oStream) {
       return 0;
    }
 
+   fn getFullName( typeInfo:&Ast.TypeInfo ): str {
+      let mut enumName = typeInfo.getFullName( self.typeInfo2ModuleName, true );
+      return "%s" (enumName.gsub( "&", "" ) );
+   }
 
    fn getCanonicalName( typeInfo:&Ast.TypeInfo ): str {
-      let mut canonicalName = typeInfo.$rawTxt;
-
-      if self.moduleTypeInfo == typeInfo.getModule() {
-         return canonicalName;
-      }     
-      
-      let mut workType = typeInfo.$parentInfo;
-      while workType ~= Ast.headTypeInfo {
-         canonicalName = "%s.%s" (workType.$rawTxt, canonicalName);
-         if self.typeInfo2ModuleName[ workType ] {
-            break;
-         }
-         workType = workType.$parentInfo;
-      }
-      return canonicalName;
+      return self.getFullName( typeInfo );
    }
 
    pub fn close() mut {
@@ -197,21 +187,6 @@ builtInModuleSet[ "math" ] = true;
 builtInModuleSet[ "debug" ] = true;
 //builtInModuleSet[ "_luneScript" ] = true;
 
-
-fn convFilter.getFullName( typeInfo:&Ast.TypeInfo ): str {
-   let! mut moduleName = self.typeInfo2ModuleName[ typeInfo.getModule() ] {
-      moduleName = "";
-   }
-   then {
-      // Util.errorLog( "hoge: %s %s"
-      //                (node.$expType.getModule().getTxt(),
-      //                  self.moduleTypeInfo.getTxt() ) );
-      
-      moduleName = moduleName.gsub( ".*%.", "" );
-      moduleName = moduleName .. ".";
-   };
-   return "%s%s" (moduleName, typeInfo.getTxt().gsub( "&", "" ) );
-}
 
 fn convFilter.pushIndent( newIndent:int! ) mut {
    let indent = unwrap newIndent default self.$indent + stepIndent;
@@ -646,7 +621,7 @@ pub override fn convFilter.processRoot(
 {
    self.writeln( "--%s" ( self.streamName ) );
 
-   self.needModuleObj = node.$provideNode and false or true;
+   self.needModuleObj = node.$provideNode == nil;
    
    if self.needModuleObj {
       self.writeln( "local _moduleObj = {}" );
@@ -921,21 +896,31 @@ pub override fn convFilter.processStmtExp(
 pub override fn convFilter.processDeclEnum(
    node: Ast.DeclEnumNode, parent: &Ast.Node ) mut
 {
-   let access = node.$accessMode == .Global and "" or "local ";
-   self.writeln( "%s%s = {}" (access, node.$name.txt) );
-   if node.$accessMode == .Pub {
+   let mut access = node.$accessMode == .Global and "" or "local ";
+   let mut enumFullName = node.$name.txt;
+   let typeInfo = node.$expType@@Ast.EnumTypeInfo;
+   let parentInfo = typeInfo.$parentInfo;
+   let mut isTopNS = true;
+   if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
+      enumFullName = "%s.%s" (self.getFullName( parentInfo ), enumFullName );
+      access = "";
+      isTopNS = false;
+   }
+   
+   
+   self.writeln( "%s%s = {}" (access, enumFullName) );
+   if isTopNS and node.$accessMode == .Pub {
       if self.needModuleObj {
-         self.writeln( "_moduleObj.%s = %s" ( node.$name.txt, node.$name.txt ) );
+         self.writeln( "_moduleObj.%s = %s" ( enumFullName, enumFullName ) );
       }
    }
    
-   let typeInfo = node.$expType@@Ast.EnumTypeInfo;
 
    if typeInfo.$accessMode == .Pub {
       self.pubEnumId2EnumTypeInfo[ typeInfo.$typeId ] = typeInfo;
    }
 
-   self.writeln( "%s._val2NameMap = {}" (node.$name.txt) );
+   self.writeln( "%s._val2NameMap = {}" (enumFullName) );
    self.writeln( ```function %s:_getTxt( val )
    local name = self._val2NameMap[ val ]
    if name then
@@ -949,18 +934,18 @@ function %s._from( val )
    end
    return nil
 end 
-    ``` (node.$name.txt, self.getCanonicalName( typeInfo ),
-         node.$name.txt, node.$name.txt ) );
+    ``` (enumFullName, enumFullName,
+         enumFullName, enumFullName ) );
    foreach valName in node.$valueNameList {
       let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
       let mut valTxt = "%s" (valInfo.$val);
       if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ) {
          valTxt = "'%s'" (valInfo.$val);
       }
-      self.writeln( "%s.%s = %s" (node.$name.txt, valName.txt, valTxt ) );
+      self.writeln( "%s.%s = %s" (enumFullName, valName.txt, valTxt ) );
 
       self.writeln( "%s._val2NameMap[%s] = '%s'"
-         (node.$name.txt, valTxt, valName.txt ) );
+         (enumFullName, valTxt, valName.txt ) );
    }
 }
 
@@ -1019,6 +1004,12 @@ pub override fn convFilter.processDeclClass(
          self.writeln( string.format( "_moduleObj.%s = %s", className, className ) );
       }
    }
+
+   foreach declNode in node.$declStmtList {
+      filter( declNode, self, node );
+   }
+
+   
    let mut hasConstrFlag = false;
    let mut hasDestrFlag = false;
    let mut memberList: List<&Ast.DeclMemberNode> = [];
@@ -1393,6 +1384,20 @@ pub override fn convFilter.processExpCallSuper(
    self.writeln( ")" );
 };  
 
+fn convFilter.process__func__symbol(
+   has__func__Symbol:bool, classType:&Ast.TypeInfo, mut funcName:str ) mut
+{
+   if has__func__Symbol {
+      let mut nameSpace = "";
+      if classType ~= Ast.headTypeInfo {
+         nameSpace = self.getFullName( classType );
+      }
+      if funcName == "" {
+         funcName = "<anonymous>";
+      }
+      self.writeln( "local __func__ = '%s.%s'" (nameSpace, funcName) );
+   }  
+}
 
 pub override fn convFilter.processDeclMethod( 
    node: Ast.DeclMethodNode, parent: &Ast.Node ) mut
@@ -1415,12 +1420,11 @@ pub override fn convFilter.processDeclMethod(
       } 
       filter( arg, self, node );
    }
-   self.write( " )" );
+   self.writeln( " )" );
    if! declInfo.$body {
+      self.process__func__symbol(
+         declInfo.$has__func__Symbol, node.$expType.$parentInfo, methodName );
       filter( _exp, self, node );
-   }
-   else {
-      self.writeln("" );
    }
    self.writeln( "end" );
 };    
@@ -1647,18 +1651,18 @@ pub override fn convFilter.processDeclFunc(
       } 
       filter( arg, self, node );
    }
-   self.write( " )" );
+   self.writeln( " )" );
    // foreach refType, index in declInfo.get_retTypeList() {
    //    if index > 1 {
    //   self.write( ", " )
    //    }
    //filter( //    refType,  self, node, baseIndent )
    // }
-   if! declInfo.$body { 
+
+   if! declInfo.$body {
+      self.process__func__symbol(
+         declInfo.$has__func__Symbol, node.$expType.$parentInfo, name );
       filter( _exp,  self, node );
-   }
-   else {
-      self.writeln( "" );
    }
    self.writeln( "end" );
 
@@ -2212,8 +2216,7 @@ pub override fn convFilter.processGetField(
    let prefixType = prefixNode.$expType;
    let mut fieldTxt = node.get_field().txt;
    if fieldTxt == "_txt" and prefixType.$kind == Ast.TypeInfoKind.Enum {
-      let canonicalName = self.getCanonicalName( prefixType );
-      self.write( "%s:_getTxt( " (canonicalName ) );
+      self.write( "%s:_getTxt( " (self.getFullName( prefixType ) ) );
       filter( prefixNode, self, node );
       self.writeln( ")" );
    }

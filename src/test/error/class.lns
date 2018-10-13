@@ -146,8 +146,16 @@ class TestMap extend (Mapping) {
    let map3:Map<int,Super3>;  // error
 }
 
+{
+   let obj = new TestMap0();
+   let mut map = obj._toMap();
+   map.val = 1; // error
+}
+
+
 class SuperMap {
 }
 
 class SubMap extend SuperMap (Mapping) { // error
 }
+

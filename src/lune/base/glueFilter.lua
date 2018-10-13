@@ -134,14 +134,17 @@ function glueGenerator:__init( srcStream, headerStream )
 end
 
 function glueGenerator:write( txt )
+
    self.srcStream:write( txt )
 end
 
 function glueGenerator:writeHeader( txt )
+
    self.headerStream:write( txt )
 end
 
 function glueGenerator:outputMethod( classFullName, methodNode )
+
    local declInfo = methodNode:get_declInfo()
    do
       local _exp = declInfo:get_name()
@@ -159,6 +162,7 @@ function glueGenerator:outputMethod( classFullName, methodNode )
 end
 
 function glueGenerator:getArgInfo( argNode )
+
    local argType = argNode:get_expType()
    local orgType = (argType:get_nilable() and argType:get_orgTypeInfo() or argType ):get_srcTypeInfo()
    local typeTxt = ""
@@ -183,10 +187,12 @@ function glueGenerator:getArgInfo( argNode )
 end
 
 function glueGenerator:outputPrototype( node )
+
    self:write( string.format( "static int lns_glue_%s( lua_State * pLua )", node:get_expType():getTxt(  )) )
 end
 
 function glueGenerator:outputUserPrototype( node, gluePrefix )
+
    local expType = node:get_expType()
    self:writeHeader( string.format( "extern int %s%s( lua_State * pLua", gluePrefix, expType:getTxt(  )) )
    local declInfo = node:get_declInfo()
@@ -206,6 +212,7 @@ function glueGenerator:outputUserPrototype( node, gluePrefix )
 end
 
 function glueGenerator:outputPrototypeList( methodNodeList )
+
    for __index, node in pairs( methodNodeList ) do
       self:outputPrototype( node )
       self:write( ";\n" )
@@ -214,6 +221,7 @@ function glueGenerator:outputPrototypeList( methodNodeList )
 end
 
 function glueGenerator:outputUserPrototypeList( methodNodeList, gluePrefix )
+
    for __index, node in pairs( methodNodeList ) do
       self:outputUserPrototype( node, gluePrefix )
       self:writeHeader( ";\n" )
@@ -222,6 +230,7 @@ function glueGenerator:outputUserPrototypeList( methodNodeList, gluePrefix )
 end
 
 function glueGenerator:outputFuncReg( symbolName, methodNodeList )
+
    self:write( string.format( "static const luaL_Reg %s[] = {\n", symbolName) )
    for __index, node in pairs( methodNodeList ) do
       do
@@ -238,6 +247,7 @@ function glueGenerator:outputFuncReg( symbolName, methodNodeList )
 end
 
 function glueGenerator:outputCommonFunc( moduleSymbolFull )
+
    self:writeHeader( string.format( [==[
 extern int luaopen_%s( lua_State * pLua );
 extern void * lns_glue_get_%s( lua_State * pLua, int index );
@@ -339,6 +349,7 @@ function GlueArgInfo:get_typeInfo()
 end
 
 function glueGenerator:outputMethod( node, gluePrefix )
+
    local declInfo = node:get_declInfo()
    local name = ""
    do
@@ -428,6 +439,7 @@ function glueGenerator:outputMethod( node, gluePrefix )
 end
 
 function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
+
    local moduleSymbolFull = moduleFullName:gsub( "%.", "_" )
    local staticMethodNodeList = {}
    local methodNodeList = {}
@@ -486,7 +498,9 @@ function glueFilter:__init( outputDir )
 end
 
 function glueFilter:processRoot( node )
+
    local function createFile( filename )
+   
       local filePath = string.format( "%s/%s", _lune.unwrapDefault( self.outputDir, "."), filename)
       do
          local _exp = io.open( filePath, "w" )

@@ -113,11 +113,14 @@ function memStream:__init()
    self.txt = ""
 end
 function memStream:write( val )
+
    self.txt = self.txt .. val
 end
 function memStream:close(  )
+
 end
 function memStream:flush(  )
+
 end
 function memStream.setmeta( obj )
   setmetatable( obj, { __index = memStream  } )
@@ -128,19 +131,23 @@ end
 
 local debugFlag = true
 local function setDebugFlag( flag )
+
    debugFlag = flag
 end
 _moduleObj.setDebugFlag = setDebugFlag
 local errorCode = 1
 local function setErrorCode( code )
+
    errorCode = code
 end
 _moduleObj.setErrorCode = setErrorCode
 local function errorLog( message )
+
    io.stderr:write( message .. "\n" )
 end
 _moduleObj.errorLog = errorLog
 local function err( message )
+
    if debugFlag then
       error( message )
    end
@@ -150,6 +157,7 @@ local function err( message )
 end
 _moduleObj.err = err
 local function log( message )
+
    if debugFlag then
       errorLog( message )
    end
@@ -157,6 +165,7 @@ local function log( message )
 end
 _moduleObj.log = log
 local function printStackTrace(  )
+
    for level = 2, 6 do
       local debugInfo = debug.getinfo( level )
       if debugInfo then
@@ -168,6 +177,7 @@ local function printStackTrace(  )
 end
 _moduleObj.printStackTrace = printStackTrace
 local function profile( validTest, func, path )
+
    if not validTest then
       return func(  )
    end
@@ -181,6 +191,7 @@ local function profile( validTest, func, path )
 end
 _moduleObj.profile = profile
 local function getReadyCode( lnsPath, luaPath )
+
    local luaTime, lnsTime = Depend.getFileLastModifiedTime( luaPath ), Depend.getFileLastModifiedTime( lnsPath )
    if  nil == luaTime or  nil == lnsTime then
       local _luaTime = luaTime
@@ -193,6 +204,7 @@ local function getReadyCode( lnsPath, luaPath )
 end
 _moduleObj.getReadyCode = getReadyCode
 local function existFile( path )
+
    local fileObj = io.open( path )
    if  nil == fileObj then
       local _fileObj = fileObj

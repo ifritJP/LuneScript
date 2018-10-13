@@ -67,6 +67,7 @@ pub class TransUnit {
 
    /** モジュール名 */
    pri let mut moduleName: str;
+   pri let mut moduleType: &Ast.TypeInfo;
 
    pri let mut topScope: Ast.Scope;
    /** モジュールの最上位スコープ */
@@ -110,6 +111,8 @@ pub class TransUnit {
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
 
+   pri let mut has__func__Symbol: bool;
+
    /** 解析モード */
    pri let analyzeMode: AnalyzeMode;
    /** 解析対象位置 */
@@ -129,6 +132,7 @@ pub class TransUnit {
    pub fn __init( macroEval: Ast.MacroEval,
                   analyzeModule:str!, mode:AnalyzeMode!, pos:&Parser.Position! )
    {
+      self.has__func__Symbol = false;
       self.hasClassDef = false;
       self.nodeManager = new Ast.NodeManager();
       self.importModuleName2ModuleInfo = {};
@@ -137,6 +141,7 @@ pub class TransUnit {
       self.macroScope = nil;
       self.validMutControl = true;
       self.moduleName = "";
+      self.moduleType = Ast.headTypeInfo;
       self.parser = new Parser.DummyParser();
       self.subfileList = [];
       self.pushbackList = [];
