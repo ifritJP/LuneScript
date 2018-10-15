@@ -996,7 +996,7 @@ pub override fn convFilter.processDeclClass(
    if baseInfo.get_typeId() ~= Ast.rootTypeId {
       self.writeln(
          "setmetatable( %s, { __index = %s } )"
-         ( className, (unwrap baseInfo).getTxt() ) );
+         ( className, self.getFullName( unwrap baseInfo ) ) );
    }
    
    if nodeInfo.get_accessMode() == .Pub {
@@ -1375,7 +1375,7 @@ pub override fn convFilter.processExpCallSuper(
    node: Ast.ExpCallSuperNode, parent: &Ast.Node ) mut
 {
    let typeInfo:Ast.TypeInfo = node.get_superType();
-   self.write( "%s.__init( self " ( typeInfo.getTxt() ) );
+   self.write( "%s.__init( self " ( self.getFullName( typeInfo ) ) );              
 
    if! node.$expList {
       self.write( "," );

@@ -116,7 +116,7 @@ end
 local Ast = require( 'lune.base.Ast' )
 local Parser = require( 'lune.base.Parser' )
 local dumpFilter = {}
-setmetatable( dumpFilter, { __index = Filter } )
+setmetatable( dumpFilter, { __index = Ast.Filter } )
 _moduleObj.dumpFilter = dumpFilter
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )

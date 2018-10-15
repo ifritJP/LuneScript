@@ -1465,11 +1465,13 @@ fn TransUnit.analyzeExp(
                
                if enumTyepInfo.getEnumValInfo( nextToken.txt ) {
                   if _exp.$externalFlag and
-                     not self.importModule2ModuleInfo[ _exp.getModule().$srcTypeInfo ]
-                  {              
+                     not self.importModule2ModuleInfoCurrent[ _exp.getModule().$srcTypeInfo ]
+                  {
+                     let fullname = _exp.getFullName(
+                        self.importModule2ModuleInfo, true );
                      self.addErrMess( token.pos, "This module not import -- %s"
-                                      ( _exp.getTxt() ) );
-                  }  
+                                      ( fullname ) );
+                  }
                   exp = Ast.ExpOmitEnumNode.create(
                      self.nodeManager, token.pos, [ enumTyepInfo ],
                      nextToken, enumTyepInfo );

@@ -251,7 +251,7 @@ BitOpKind._val2NameMap[4] = 'RShift'
 
 local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
 local convFilter = {}
-setmetatable( convFilter, { __index = Filter } )
+setmetatable( convFilter, { __index = Ast.Filter } )
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind )
    local obj = {}
    convFilter.setmeta( obj )
@@ -1181,7 +1181,7 @@ function convFilter:processDeclClass( node, parent )
    self:writeln( string.format( "local %s = {}", className ) )
    local baseInfo = node:get_expType(  ):get_baseTypeInfo(  )
    if baseInfo:get_typeId(  ) ~= Ast.rootTypeId then
-      self:writeln( string.format( "setmetatable( %s, { __index = %s } )", className, (_lune.unwrap( baseInfo) ):getTxt(  )) )
+      self:writeln( string.format( "setmetatable( %s, { __index = %s } )", className, self:getFullName( _lune.unwrap( baseInfo) )) )
    end
    
    if nodeInfo:get_accessMode(  ) == Ast.AccessMode.Pub then
@@ -1537,7 +1537,7 @@ end
 function convFilter:processExpCallSuper( node, parent )
 
    local typeInfo = node:get_superType(  )
-   self:write( string.format( "%s.__init( self ", typeInfo:getTxt(  )) )
+   self:write( string.format( "%s.__init( self ", self:getFullName( typeInfo )) )
    do
       local _exp = node:get_expList()
       if _exp ~= nil then
@@ -2588,7 +2588,7 @@ local function createFilter( streamName, stream, metaStream, convMode, inMacro, 
 end
 _moduleObj.createFilter = createFilter
 local MacroEvalImp = {}
-setmetatable( MacroEvalImp, { __index = MacroEval } )
+setmetatable( MacroEvalImp, { __index = Ast.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:eval( node )
 

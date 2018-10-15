@@ -567,3 +567,16 @@ _print( `{ __line__ } );
 mapping.test();
 
 funcSym.main();
+
+class SubIF extend Sub2.IF {
+   pub fn __init() {
+      super( 1 );
+   }
+   pub fn sub( val: Sub2.enumTestSub ) {
+      print( val );
+   }
+}
+{
+   let sub = new SubIF();
+   sub.sub( .val1 );
+}

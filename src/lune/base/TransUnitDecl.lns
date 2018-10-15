@@ -1103,10 +1103,11 @@ fn TransUnit.analyzeDeclClass(
       // _toMap の追加
       let mapType = self.createModifier( 
          Ast.NormalTypeInfo.createMap(
-            .Pub, classTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem ), false );
+            .Pub, classTypeInfo, Ast.builtinTypeString,
+            self.createModifier( Ast.builtinTypeStem, false ) ), false );
       let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Method, classTypeInfo,
-         true, false, false, .Pub, "_toMap", [], [ mapType ], true );
+         true, false, false, .Pub, "_toMap", [], [ mapType ], false );
       classScope.addMethod( toMapFuncTypeInfo, .Pub, false, false );
 
       // _fromMap の追加

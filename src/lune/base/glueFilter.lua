@@ -479,7 +479,7 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
 end
 
 local glueFilter = {}
-setmetatable( glueFilter, { __index = Filter } )
+setmetatable( glueFilter, { __index = Ast.Filter } )
 _moduleObj.glueFilter = glueFilter
 function glueFilter.setmeta( obj )
   setmetatable( obj, { __index = glueFilter  } )

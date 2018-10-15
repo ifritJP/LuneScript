@@ -3168,8 +3168,8 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          
       end
       
-      local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem ), false )
-      local toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "_toMap", {}, {mapType}, true )
+      local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, false ) ), false )
+      local toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "_toMap", {}, {mapType}, false )
       classScope:addMethod( toMapFuncTypeInfo, Ast.AccessMode.Pub, false, false )
       local fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromMap", {mapType}, {classTypeInfo:get_nilableTypeInfo()}, true )
       classScope:addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false )
@@ -4033,7 +4033,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
 end
 
 local MacroPaser = {}
-setmetatable( MacroPaser, { __index = Parser } )
+setmetatable( MacroPaser, { __index = Parser.Parser } )
 function MacroPaser.new( tokenList, name )
    local obj = {}
    MacroPaser.setmeta( obj )
@@ -5083,8 +5083,9 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
                   local nextToken = self:getToken(  )
                   self:checkEnumComp( nextToken, enumTyepInfo )
                   if enumTyepInfo:getEnumValInfo( nextToken.txt ) then
-                     if _exp:get_externalFlag() and not self.importModule2ModuleInfo[_exp:getModule(  ):get_srcTypeInfo()] then
-                        self:addErrMess( token.pos, string.format( "This module not import -- %s", _exp:getTxt(  )) )
+                     if _exp:get_externalFlag() and not self.importModule2ModuleInfoCurrent[_exp:getModule(  ):get_srcTypeInfo()] then
+                        local fullname = _exp:getFullName( self.importModule2ModuleInfo, true )
+                        self:addErrMess( token.pos, string.format( "This module not import -- %s", fullname) )
                      end
                      
                      exp = Ast.ExpOmitEnumNode.create( self.nodeManager, token.pos, {enumTyepInfo}, nextToken, enumTyepInfo )

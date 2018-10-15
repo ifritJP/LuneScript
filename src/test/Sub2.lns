@@ -47,3 +47,7 @@ fn main() {
    val = .val;
    print( val.$_txt );
 }
+
+pub class IF {
+   pub let val:int;
+}

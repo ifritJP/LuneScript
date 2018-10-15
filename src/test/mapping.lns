@@ -1,4 +1,4 @@
-fn dumpTable( prefix:str, tbl:&Map<str,stem> ) {
+fn dumpTable( prefix:str, tbl:&Map<str,&stem> ) {
    forsort val, key in tbl {
       let dispKey = prefix .. "." .. key;
       if type( val ) == "table" {
