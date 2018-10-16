@@ -159,3 +159,11 @@ class SuperMap {
 class SubMap extend SuperMap (Mapping) { // error
 }
 
+class PriClass {
+}
+
+pub class PubClass {
+   pub fn func(): PriClass { // error
+      return new PriClass();
+   }
+}

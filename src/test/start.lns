@@ -580,3 +580,22 @@ class SubIF extend Sub2.IF {
    let sub = new SubIF();
    sub.sub( .val1 );
 }
+
+macro _test() {
+   {
+      let mut fileObj = unwrap io.open( "test/data.lua" );
+      let txt = unwrap fileObj.read( "*a" );
+      let val = unwrap load( txt )$();
+      let val2 = unwrap val$.a;
+      let mut val3:stat[] = [];
+      foreach val4, key in val2@@Map<str,stem> {
+         val3.insert( `{ ,,,key = ,,val4, } );
+      }
+   }
+   enum MacroTest {
+      ,,val3
+   }
+}
+_test();
+
+print( MacroTest.A234, MacroTest.B234 );

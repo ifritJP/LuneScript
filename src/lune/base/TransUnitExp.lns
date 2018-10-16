@@ -1513,6 +1513,14 @@ fn TransUnit.analyzeExp(
       exp = self.analyzeRefType( .Local, false );
 
       let classTypeInfo = exp.$expType;
+      if classTypeInfo.$externalFlag {
+         switch classTypeInfo.$accessMode {
+            case .Pri, .Local {
+               self.addErrMess( token.pos, "Can't access -- %s"
+                                (classTypeInfo.$accessMode.$_txt ) ); 
+            }
+         }
+      }
       if classTypeInfo.$abstructFlag {
          self.addErrMess( token.pos, "abstruct class can't new" );
       }

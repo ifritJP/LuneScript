@@ -103,6 +103,15 @@ pub enum AccessMode {
    Global,
 }
 
+pub fn isPubToExternal( mode:AccessMode ): bool {
+   switch mode {
+      case .Pub, .Pro, .Global {
+         return true;
+      }
+   }
+   return false;
+}
+
 let mut txt2AccessModeMap:Map<str,AccessMode> = {};
 txt2AccessModeMap.none = .None;
 txt2AccessModeMap.pub = .Pub;
@@ -271,7 +280,7 @@ pub let mut rootScope = new Scope( nil, false, [] );
 let dummyList:List<&TypeInfo> = [];
 let mut rootChildren:List<&TypeInfo> = [];
 
-class TypeData {
+pub class TypeData {
    pri let mut children:List<&TypeInfo> {pub};
    pub fn addChildren( child:&TypeInfo ) mut {
       self.children.insert( child );
@@ -2214,7 +2223,7 @@ pub proto class ProvideNode extend Node;
 pub class LuneHelperInfo {
    pri let useNilAccess:bool { pub };
    pri let useUnwrapExp:bool { pub };
-   pri let hasClassDef:bool { pub };
+   pri let hasMappingClassDef:bool { pub };
 }
 
 pub class ModuleInfo {

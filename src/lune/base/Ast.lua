@@ -17,102 +17,6 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-      
-function _lune._fromMapSub( val, memKind )
-   if type( memKind ) == "function" then
-      return memKind( val )
-   end
-   if string.find( memKind, "!$" ) then
-      if val == nil then
-         return nil, true
-      end
-      memKind = memKind:sub( 1, #memKind - 1 )
-   end
-   local valType = type( val )
-   if memKind == "stem" then
-      if valType == "number" or valType == "string" or valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "int" then
-      if valType == "number" then
-         return math.floor( val )
-      end
-      return nil
-   end
-   if memKind == "real" then
-      if valType == "number" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "bool" then
-      if valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "str" then
-      if valType == "string" then
-         return val
-      end
-      return nil
-   end
-   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
-   then
-      if valType == "table" then
-         local tbl = {}
-         for index, mem in ipairs( val ) do
-            local kind = string.gsub( memKind, "^[%a]+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local memval, valid = _lune._fromMapSub( mem, kind )
-            if memval == nil and not valid then
-               return nil
-            end
-            tbl[ index ] = memval
-         end
-         return tbl
-      end
-      return nil
-   end
-   if string.find( memKind, "^Map" ) then
-      if valType == "table" then
-         local tbl = {}
-         for key, mem in pairs( val ) do
-            local kind = string.gsub( memKind, "^%a+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local delimitIndex = string.find( kind, ",", 1, true )
-            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
-            local valKind = string.sub( kind, delimitIndex + 1 )
-            local mapKey = _lune._fromMapSub( key, keyKind )
-            local mapVal = _lune._fromMapSub( mem, valKind )
-            if mapKey == nil or mapVal == nil then
-               return nil
-            end
-            tbl[ mapKey ] = mapVal
-         end
-         return tbl
-      end
-      return nil
-   end
-end
-
-
-function _lune._fromMap( obj, map, memInfoList )
-   if type( map ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
-      if val == nil and not valid then
-         return false
-      end
-      obj[ memInfo.name ] = val
-   end
-   return true
-end
-
 local Parser = require( 'lune.base.Parser' )
 local Util = require( 'lune.base.Util' )
 local IdProvider = {}
@@ -301,6 +205,18 @@ AccessMode._val2NameMap[4] = 'Local'
 AccessMode.Global = 5
 AccessMode._val2NameMap[5] = 'Global'
 
+local function isPubToExternal( mode )
+
+   do
+      local _switchExp = mode
+      if _switchExp == AccessMode.Pub or _switchExp == AccessMode.Pro or _switchExp == AccessMode.Global then
+         return true
+      end
+   end
+   
+   return false
+end
+_moduleObj.isPubToExternal = isPubToExternal
 local txt2AccessModeMap = {}
 txt2AccessModeMap['none'] = AccessMode.None
 txt2AccessModeMap['pub'] = AccessMode.Pub
@@ -479,6 +395,7 @@ _moduleObj.rootScope = rootScope
 local dummyList = {}
 local rootChildren = {}
 local TypeData = {}
+_moduleObj.TypeData = TypeData
 function TypeData:addChildren( child )
 
    table.insert( self.children, child )
@@ -2940,19 +2857,19 @@ _moduleObj.LuneHelperInfo = LuneHelperInfo
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end
-function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasClassDef )
+function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef )
    local obj = {}
    LuneHelperInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( useNilAccess, useUnwrapExp, hasClassDef )
+      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef )
    end        
    return obj 
 end         
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasClassDef ) 
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef ) 
 
    self.useNilAccess = useNilAccess
    self.useUnwrapExp = useUnwrapExp
-   self.hasClassDef = hasClassDef
+   self.hasMappingClassDef = hasMappingClassDef
 end
 function LuneHelperInfo:get_useNilAccess()       
    return self.useNilAccess         
@@ -2960,8 +2877,8 @@ end
 function LuneHelperInfo:get_useUnwrapExp()       
    return self.useUnwrapExp         
 end
-function LuneHelperInfo:get_hasClassDef()       
-   return self.hasClassDef         
+function LuneHelperInfo:get_hasMappingClassDef()       
+   return self.hasMappingClassDef         
 end
 
 local ModuleInfo = {}

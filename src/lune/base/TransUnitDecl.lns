@@ -242,7 +242,7 @@ pub fn TransUnit.createAST(
       }
 
       let mut luneHelperInfo = new Ast.LuneHelperInfo(
-         self.useNilAccess, self.useUnwrapExp, self.hasClassDef );
+         self.useNilAccess, self.useUnwrapExp, self.hasMappingClassDef );
       let mut rootNode = Ast.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
          [ Ast.builtinTypeNone ], children,
@@ -904,8 +904,6 @@ fn TransUnit.analyzeDeclClass(
 {
    let name = self.getSymbolToken();
 
-   self.hasClassDef = true;
-
    let mut moduleName: &Parser.Token! = nil;
    let mut gluePrefix:str! = nil;
    if mode == .Module {
@@ -1045,6 +1043,8 @@ fn TransUnit.analyzeDeclClass(
 
 
    if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+      self.hasMappingClassDef = true;
+      
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
          not classTypeInfo.$baseTypeInfo.isInheritFrom( typeInfoMappingIF ) {
          self.addErrMess(
@@ -1116,6 +1116,13 @@ fn TransUnit.analyzeDeclClass(
          true, false, true, .Pub, "_fromMap",
          [ mapType ], [ classTypeInfo.$nilableTypeInfo ], true );
       classScope.addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false );
+
+      // _fromStem の追加
+      let fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
+         false, false, nil, .Func, classTypeInfo,
+         true, false, true, .Pub, "_fromStem",
+         [ Ast.builtinTypeStem_ ], [ classTypeInfo.$nilableTypeInfo ], true );
+      classScope.addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false );
    }
    
    fn checkOverrideMethod( scope:&Ast.Scope ) {
@@ -1274,6 +1281,7 @@ fn TransUnit.analyzeDeclFunc(
       mutable = true;
    }
 
+   let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
    if kind == Ast.nodeKindDeclMethod or
       kind == Ast.nodeKindDeclConstr or
       kind == Ast.nodeKindDeclDestr
@@ -1283,6 +1291,11 @@ fn TransUnit.analyzeDeclFunc(
       }
       // self シンボルを登録
       let mut classTypeInfo:&Ast.TypeInfo = unwrap funcBodyScope.$parent.$ownerTypeInfo;
+      if not Ast.isPubToExternal( classTypeInfo.$accessMode ) {
+         pubToExtFlag = false;
+      }
+
+      
       if classTypeInfo.$mutable and not mutable {
          classTypeInfo = self.createModifier( classTypeInfo, false );
       }
@@ -1301,8 +1314,14 @@ fn TransUnit.analyzeDeclFunc(
    let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
    if token.txt == ":" {
       repeat {
-         let refType = self.analyzeRefType( accessMode, true );
-         retTypeInfoList.insert( refType.$expType );
+         let refTypeNode = self.analyzeRefType( accessMode, true );
+         let retType = refTypeNode.$expType;
+         if pubToExtFlag and not Ast.isPubToExternal( retType.$accessMode )
+         {
+            self.addErrMess( refTypeNode.$pos,
+                             "this is not public type -- %s" (retType.getTxt()) );
+         }
+         retTypeInfoList.insert( retType );
          token = self.getToken();
       } token.txt ~= ",";
    }

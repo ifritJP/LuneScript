@@ -122,7 +122,7 @@ pub class TransUnit {
 
    pri let mut useUnwrapExp: bool;
    pri let mut useNilAccess: bool;
-   pri let mut hasClassDef: bool;
+   pri let mut hasMappingClassDef: bool;
 
    /** provide ノード */
    pri let mut provideNode: Ast.ProvideNode!;
@@ -133,7 +133,7 @@ pub class TransUnit {
                   analyzeModule:str!, mode:AnalyzeMode!, pos:&Parser.Position! )
    {
       self.has__func__Symbol = false;
-      self.hasClassDef = false;
+      self.hasMappingClassDef = false;
       self.nodeManager = new Ast.NodeManager();
       self.importModuleName2ModuleInfo = {};
       self.importModule2ModuleInfoCurrent = {};
@@ -776,6 +776,9 @@ fn TransUnit.registBuiltInScope() mut {
             "clock": { "arg": [], "ret": ["int"] },
             "exit": { "arg": [ "int!" ], "ret": [] },
             "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
+            "date": {"arg": [ "str!", "stem!" ], "ret": [ "stem!"] },
+            "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
+            "difftime": {"arg": [ "stem", "stem" ], "ret": [ "int"] },
          },
       },
       { 

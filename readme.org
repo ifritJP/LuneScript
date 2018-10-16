@@ -25,3 +25,199 @@ LuneScript is a transcompiler for Lua.
 - Supports Lua 5.2, 5.3.
 - LuneScript is developed by self hosting.
 
+* Specification
+
+** Values and types
+
+LuneScript handles the following values.
+
+- nil
+- Integer (int)
+- real (real)
+- String (str)
+- Boolean (bool)
+- List
+- Map (Map)
+- Sequence
+- Class
+- macro
+- Function
+- stem
+
+*** nil
+
+nil is the same as nil in Lua.
+
+You can also use null in LuneScript.
+
+null is nil's alias.
+
+With null support, JSON can be handled as it is in LuneScript.
+
+*** integer, real number
+
+LuneScript handles integers and real numbers separately.
+
+As a result, 10/3 becomes 3, and 10 / 3.0 becomes 3.3333 ....
+
+**** Numeric literals
+
+The numerical literal is C89-like things adopted.
+
+- Integer supports decimal and hexadecimal representation
+- Real numbers are decimal and exponential representation by e.
+
+Additional ASCII character code representation is possible.
+
+#+BEGIN_SRC lns
+let val = ?a;  // 0x61
+#+END_SRC
+
+Expand the characters following ~? ~ Into ACSII code as described above.
+Characters other than ASCII are not supported.
+
+Characters such as 'and' must be quoted with \ as '? \'.
+
+**** Arithmetic operation
+
+We adopt the same arithmetic as the four arithmetic operations of numerical values for Lua.
+
+The result of binomial operation changes type as follows.
+
+- int and int result in int.
+- The result of real and real is real.
+- The operation result of int and real is real.
+  
+However, if the result of int and int operation fall outside the range of int,
+It will be real as an internal value at runtime, but the type on LuneScript will remain int.
+To round the result to int, you need to cast it with ~ @ @ int ~.
+
+**** Bit operation
+
+Supports bit operation.
+It can also be used with Lua 5.2.
+
+The bit length is 32 bits for Lua 5.2.
+The bit length of Lua 5.3 depends on the environment.
+
+- Logical AND (&)
+
+#+BEGIN_SRC lns
+1 & 3 == 1
+#+END_SRC
+
+- Logical OR  (|)
+  
+#+BEGIN_SRC lns
+1 | 2 == 3
+#+END_SRC
+
+- XOR (~)
+  
+#+BEGIN_SRC lns
+1 ~ 3 == 2
+#+END_SRC
+  
+- Logical Left Shift  (|<<)
+  
+#+BEGIN_SRC lns
+1 |<< 2 == 4
+#+END_SRC
+  
+- Logical Right Shift (|>>)
+
+#+BEGIN_SRC lns
+0x10 |>> 2 == 4
+#+END_SRC
+
+- Bit inversion (~)
+  
+#+BEGIN_SRC lns
+~2 == 0xfffffffd  
+#+END_SRC
+
+The character string is the same as Lua and has no terminator.
+   
+String literals are enclosed in "or '.
+Multiple line literals are enclosed in `` `.
+
+Use txt [N] to access the Nth character in the string.
+However, txt [N] is read-only and characters can not be rewritten.
+
+#+BEGIN_SRC lns
+let txt = "1234";
+txt[2] // ?2
+#+END_SRC
+
+Also, a format format similar to Python is available.
+
+#+BEGIN_SRC lns
+"""
+from here ...
+So far the string """
+"10 +%s =%d" ("1", 11) // "10 + 1 = 11"
+#+END_SRC
+
+**** String concatenation
+
+String concatenation uses the same .. as Lua.
+
+*** Boolean (bool)
+
+It has true and false.
+
+
+*** List, array, map
+
+In LuneScript, Lua's table is divided into lists, arrays, and maps.
+
+The list is a sequence of Lua,
+Arrays are fixed-length lists,
+Map is Lua's table.
+
+Each literal is declared as follows.
+
+#+BEGIN_SRC lns
+let list = [ 1, 2, 3 ];
+let array = [@ 'a', 'b', 'c' ];
+let map = { "A": 10, "B": 11, "C": 12 };
+#+END_SRC
+
+**** List
+
+Objects in the list order values and manage values.
+
+#+BEGIN_SRC lns
+let name : itemType[];
+#+END_SRC
+
+The type of value that can be held in the list is limited to one.
+However, if it is a list of stem! Type described later, all values can be retained.
+
+For example, the following will be a list with elements of type int.
+
+#+BEGIN_SRC lns
+let name : int[];
+#+END_SRC
+
+Objects in the list have insert and remove methods.
+
+#+BEGIN_SRC lns
+let mut list:int[] = [];
+list.insert( 1 );  // [ 1 ]
+list.insert( 2 );  // [ 1, 2 ]
+list.insert( 3 );  // [ 1, 2, 3 ]
+list.remove();     // [ 1, 2 ]
+#+END_SRC
+
+To access the elements of the list,
+Specify the index of the element with [N] as follows.
+
+#+BEGIN_SRC lns
+let list = ['a','b','c'];
+print( list[ 1 ] ); -- 'a'
+#+END_SRC
+
+Processing when the index of an element specifies
+out of the range of the list is *undefined*.
+

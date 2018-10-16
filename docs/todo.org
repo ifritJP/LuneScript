@@ -35,8 +35,7 @@
 - [X] meta 情報の削減
 - [X] module 宣言したモジュールの glue コード自動生成
 
-
 * テストコード
 
-- [ ] import したモジュール内の class の extend 
-- [ ] import したモジュール内の enum の omit アクセス
+- [X] 外部のモジュールで宣言された、コンストラクタを持つ class を extend 
+- [X] 間接 import したモジュール内の enum の omit アクセス

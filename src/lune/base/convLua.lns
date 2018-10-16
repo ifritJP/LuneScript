@@ -518,6 +518,19 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
 
    let mut wroteTypeIdSet:Map<int,bool> = {};
    fn outputTypeInfo( typeInfo: Ast.TypeInfo ) {
+      switch typeInfo.$kind {
+         case .Class, .IF {
+            switch typeInfo.$accessMode {
+               case .Pub, .Pro, .Global {
+               }
+               default {
+                  Util.errorLog( "skip: %s %s"
+                                 (self.getFullName( typeInfo )) );  
+                  return;
+               }
+            }
+         }
+      }
       let typeId = typeInfo.get_typeId();
       if wroteTypeIdSet[ typeId ] {
          return;
@@ -631,7 +644,7 @@ pub override fn convFilter.processRoot(
 
    if node.$luneHelperInfo.$useNilAccess or
       node.$luneHelperInfo.$useUnwrapExp or
-      node.$luneHelperInfo.$hasClassDef
+      node.$luneHelperInfo.$hasMappingClassDef
    {  
       self.writeln( ```
 if not _ENV._lune then
@@ -699,7 +712,7 @@ end
 ``` );
       }
    }
-   if node.$luneHelperInfo.$hasClassDef {
+   if node.$luneHelperInfo.$hasMappingClassDef {
       self.writeln(
 ```      
 function _lune._fromMapSub( val, memKind )
@@ -1169,7 +1182,11 @@ function %s._fromMap( val )
   end
   return obj
 end
+function %s._fromStem( val )
+  return %s._fromMap( val )
+end
 ``` (classTypeInfo.getTxt(), classTypeInfo.getTxt(),
+      classTypeInfo.getTxt(), classTypeInfo.getTxt(),
       classTypeInfo.getTxt(), classTypeInfo.getTxt() ));
       
       self.writeln( 'function %s._fromMapSub( obj, val )' (classTypeInfo.getTxt() ));

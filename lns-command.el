@@ -85,7 +85,7 @@
 
 
 (defun lns-command-compile-meta ()
-  (lns-command-compile-meta t))
+  (lns-command-compile t))
 
 
 (defun lns-command-compile (&optional meta)

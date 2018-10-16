@@ -59,102 +59,6 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-      
-function _lune._fromMapSub( val, memKind )
-   if type( memKind ) == "function" then
-      return memKind( val )
-   end
-   if string.find( memKind, "!$" ) then
-      if val == nil then
-         return nil, true
-      end
-      memKind = memKind:sub( 1, #memKind - 1 )
-   end
-   local valType = type( val )
-   if memKind == "stem" then
-      if valType == "number" or valType == "string" or valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "int" then
-      if valType == "number" then
-         return math.floor( val )
-      end
-      return nil
-   end
-   if memKind == "real" then
-      if valType == "number" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "bool" then
-      if valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "str" then
-      if valType == "string" then
-         return val
-      end
-      return nil
-   end
-   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
-   then
-      if valType == "table" then
-         local tbl = {}
-         for index, mem in ipairs( val ) do
-            local kind = string.gsub( memKind, "^[%a]+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local memval, valid = _lune._fromMapSub( mem, kind )
-            if memval == nil and not valid then
-               return nil
-            end
-            tbl[ index ] = memval
-         end
-         return tbl
-      end
-      return nil
-   end
-   if string.find( memKind, "^Map" ) then
-      if valType == "table" then
-         local tbl = {}
-         for key, mem in pairs( val ) do
-            local kind = string.gsub( memKind, "^%a+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local delimitIndex = string.find( kind, ",", 1, true )
-            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
-            local valKind = string.sub( kind, delimitIndex + 1 )
-            local mapKey = _lune._fromMapSub( key, keyKind )
-            local mapVal = _lune._fromMapSub( mem, valKind )
-            if mapKey == nil or mapVal == nil then
-               return nil
-            end
-            tbl[ mapKey ] = mapVal
-         end
-         return tbl
-      end
-      return nil
-   end
-end
-
-
-function _lune._fromMap( obj, map, memInfoList )
-   if type( map ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
-      if val == nil and not valid then
-         return false
-      end
-      obj[ memInfo.name ] = val
-   end
-   return true
-end
-
 local Ast = require( 'lune.base.Ast' )
 local Util = require( 'lune.base.Util' )
 local TransUnit = require( 'lune.base.TransUnit' )
@@ -696,6 +600,22 @@ function convFilter:outputMeta( node )
    local wroteTypeIdSet = {}
    local function outputTypeInfo( typeInfo )
    
+      do
+         local _switchExp = typeInfo:get_kind()
+         if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+            do
+               local _switchExp = typeInfo:get_accessMode()
+               if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Pro or _switchExp == Ast.AccessMode.Global then
+               else 
+                  
+                     Util.errorLog( string.format( "skip: %s %s", self:getFullName( typeInfo )) )
+                     return 
+               end
+            end
+            
+         end
+      end
+      
       local typeId = typeInfo:get_typeId(  )
       if wroteTypeIdSet[typeId] then
          return 
@@ -824,7 +744,7 @@ function convFilter:processRoot( node, parent )
    end
    
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( {} )) )
-   if node:get_luneHelperInfo():get_useNilAccess() or node:get_luneHelperInfo():get_useUnwrapExp() or node:get_luneHelperInfo():get_hasClassDef() then
+   if node:get_luneHelperInfo():get_useNilAccess() or node:get_luneHelperInfo():get_useUnwrapExp() or node:get_luneHelperInfo():get_hasMappingClassDef() then
       self:writeln( [==[
 if not _ENV._lune then
    _lune = {}
@@ -894,7 +814,7 @@ end
       
    end
    
-   if node:get_luneHelperInfo():get_hasClassDef() then
+   if node:get_luneHelperInfo():get_hasMappingClassDef() then
       self:writeln( [==[      
 function _lune._fromMapSub( val, memKind )
    if type( memKind ) == "function" then
@@ -1353,7 +1273,10 @@ function %s._fromMap( val )
   end
   return obj
 end
-]==], classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  )) )
+function %s._fromStem( val )
+  return %s._fromMap( val )
+end
+]==], classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  )) )
       self:writeln( string.format( 'function %s._fromMapSub( obj, val )', classTypeInfo:getTxt(  )) )
       if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
          self:writeln( string.format( [==[

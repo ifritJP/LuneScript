@@ -48,7 +48,7 @@ pub fn test() {
 
    dumpTable( "", map );
 
-   if! let hoge2 = SubSub._fromMap( map ) {
+   if! let hoge2 = SubSub._fromStem( map ) {
       print( hoge2.$val1, hoge2.$val2, hoge2.$val3 );
       foreach val, key in hoge2.$val4.$val1 {
          print( key, val );
