@@ -162,7 +162,7 @@ pub class TransUnit {
       self.typeId2MacroInfo = {};
       self.macroMode = .None;
       self.symbol2ValueMapForMacro = {};
-      self.analyzeMode = unwrap mode default AnalyzeMode.Complete;
+      self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
       self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
       self.provideNode = nil;
@@ -717,7 +717,7 @@ fn TransUnit.registBuiltInScope() mut {
             "error": { "arg": [ "str" ], "ret": [] },
             "print": { "arg": [ "&..." ], "ret": [] },
             "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
-            "load": { "arg": [ "str" ], "ret": ["form!", "str"] },
+            "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str"] },
             "loadfile": { "arg": [ "str" ], "ret": ["form!", "str"] },
             "require": { "arg": [ "str" ], "ret": ["stem!"] },
             "collectgarbage": { "arg": [ ], "ret": [] },
@@ -851,6 +851,9 @@ fn TransUnit.registBuiltInScope() mut {
 
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
 
+   let mapType = Ast.NormalTypeInfo.createMap(
+      .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem );
+   self.scope.addVar( .Global, "_ENV", mapType, false, true );
    self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, false, true );
    self.scope.addVar( .Global, "__mod__", Ast.builtinTypeString, false, true );
    self.scope.addVar( .Global, "__line__", Ast.builtinTypeInt, false, true );

@@ -117,9 +117,10 @@ LuneScript ではクラスと Map の相互変換をサポートしています�
 
 - _toMap()
 - _fromMap()
+- _fromStem()
   
 _toMap() は、クラスインスタンスのメソッドであり、
-_fromMap() は、クラスの静的メソッドです。
+_fromMap(), _fromStem() は、クラスの静的メソッドです。
 
 例えば次のように利用します。
 
@@ -137,11 +138,15 @@ let obj2 = unwrap Test._fromMap( { "val": 2 } ); // equal new Test( 2 );
 相互変換を行なうクラスは、 Mapping インタフェースを extend する必要があります。
 
 Mapping インタフェースを extend することで、
-_toMap(), _fromMap() が利用できます。
+_toMap(), _fromMap(), _fromStem() が利用できます。
 
 なお _fromMap() の戻り値は、そのクラスの nilable 型となります。
 これは、_fromMap() に与えられた Map 型のデータに、
 このクラスを構成するための情報に抜けがある場合に nil が返るためです。
+
+_fromMap() と _fromStem() は、引数の型が違うだけです。
+_fromMap() は引数が &Map<str,&stem> ですが、
+_fromStem() は引数が stem! となります。
 
 * クラスと Map の相互変換の制約
 

@@ -599,3 +599,15 @@ macro _test() {
 _test();
 
 print( MacroTest.A234, MacroTest.B234 );
+
+
+macro _test( txt:str ) {
+   {
+      let val = _lnsLoad( "aa", txt )$.val;
+   }
+   print( ,,val, type( ,,val ) );
+}
+
+_test( ```
+pub let val = 100;
+``` );

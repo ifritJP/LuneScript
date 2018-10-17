@@ -138,9 +138,9 @@ local function convert( ast, streamName, stream, metaStream, convMode, inMacro )
    ast:get_node():processFilter( conv, nil, 0 )
 end
 
-local function loadFromTxt( txt )
+local function loadFromLuaTxt( txt )
 
-   local chunk, err = load( txt )
+   local chunk, err = load( txt, "", "bt", _ENV )
    do
       local _exp = err
       if _exp ~= nil then
@@ -158,18 +158,32 @@ local function loadFromTxt( txt )
    error( "failed to error" )
 end
 
-function Front:loadFile( path, mod, onlyMeta )
+local function loadFromAst( ast, streamName, onlyMeta )
 
-   local ast = self:createAst( path, mod, nil, TransUnit.AnalyzeMode.Compile )
    local stream = Util.memStream.new()
    local metaStream = Util.memStream.new()
-   convert( ast, path, stream, metaStream, convLua.ConvMode.Exec, false )
-   local meta = loadFromTxt( metaStream:get_txt() )
+   convert( ast, streamName, stream, metaStream, convLua.ConvMode.Exec, false )
+   local meta = loadFromLuaTxt( metaStream:get_txt() )
    if onlyMeta then
       return meta, stream:get_txt()
    end
    
-   return meta, loadFromTxt( stream:get_txt() )
+   return meta, loadFromLuaTxt( stream:get_txt() )
+end
+
+function Front:loadFromLnsTxt( name, txt, onlyMeta )
+
+   local transUnit = TransUnit.TransUnit.new(convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil)
+   local stream = Parser.TxtStream.new(txt)
+   local parser = Parser.StreamParser.new(stream, name, false)
+   local ast = transUnit:createAST( parser, false, nil )
+   return loadFromAst( ast, name, onlyMeta )
+end
+
+function Front:loadFile( path, mod, onlyMeta )
+
+   local ast = self:createAst( path, mod, nil, TransUnit.AnalyzeMode.Compile )
+   return loadFromAst( ast, path, onlyMeta )
 end
 
 function Front:searchModule( mod )
@@ -228,7 +242,7 @@ function Front:loadModule( mod )
             end
             
             local info = {}
-            info['mod'] = loadFromTxt( _exp )
+            info['mod'] = loadFromLuaTxt( _exp )
             info['meta'] = self.loadedMetaMap[mod]
             self.loadedMap[mod] = info
          else

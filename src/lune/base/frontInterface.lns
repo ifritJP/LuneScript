@@ -25,6 +25,7 @@ SOFTWARE.
 pub interface frontInterface {
    pub fn loadModule( mod:str ): stem, stem;
    pub fn loadMeta( mod:str ): stem;
+   pub fn loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -34,6 +35,9 @@ class dummyFront extend (frontInterface) {
       error( "not implements" );
    }
    pub fn loadMeta( mod:str ): stem {
+      error( "not implements" );
+   }
+   pub fn loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem {
       error( "not implements" );
    }
    pub fn searchModule( mod:str ): str! {
@@ -52,6 +56,10 @@ pub fn setFront( newFront:frontInterface ) {
 
 pub fn loadModule( mod:str ): stem, stem {
    return __luneScript.loadModule( mod );
+}
+
+pub fn loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem {
+   return __luneScript.loadFromLnsTxt( name, txt, onlyMeta );
 }
 
 pub fn loadMeta( mod:str ): stem {

@@ -25,6 +25,7 @@ SOFTWARE.
 import lune.base.Ast;
 import lune.base.Util;
 import lune.base.TransUnit;
+import lune.base.frontInterface;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -2405,8 +2406,17 @@ pub class MacroEvalImp extend Ast.MacroEval {
       conv.processDeclMacro( node, node );
 
       //Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
+
+      let mut newEnv:Map<str,stem> = {};
+      foreach val, key in _ENV {
+         newEnv[ key ] = val;
+      }
+      newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): stem {
+         let metaInfo, mut val = frontInterface.loadFromLnsTxt( name, txt, false );
+         return val;
+      };
       
-      let chunk, err = load( oStream.get_txt() );
+      let chunk, err = load( oStream.get_txt(), "", "bt", newEnv );
       if err {
          Util.err( err );
       }

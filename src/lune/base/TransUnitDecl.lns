@@ -288,7 +288,7 @@ fn TransUnit.analyzeDeclMacro(
    let nameToken = self.getToken();
    self.checkNextToken( "(" );
 
-   let scope = self.pushScope( false );
+   let mut scope = self.pushScope( false );
 
    let mut workArgList: List<&Ast.Node> = [];
    let mut argList: List<&Ast.DeclArgNode> = [];
@@ -320,6 +320,14 @@ fn TransUnit.analyzeDeclMacro(
       // }
 
       self.macroScope = scope;
+
+      let funcType = Ast.NormalTypeInfo.createFunc(
+         false, true, nil, .Func, Ast.headTypeInfo, false, true,
+         true, .Global, "_lnsLoad",
+         [ Ast.builtinTypeString, Ast.builtinTypeString ],
+         [ Ast.builtinTypeStem ], false );
+      scope.addLocalVar( false, false, "_lnsLoad", funcType, false );
+      
       
       let mut bakParser = self.parser;
       self.parser = parser;

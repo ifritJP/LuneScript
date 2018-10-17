@@ -62,6 +62,7 @@ end
 local Ast = require( 'lune.base.Ast' )
 local Util = require( 'lune.base.Util' )
 local TransUnit = require( 'lune.base.TransUnit' )
+local frontInterface = require( 'lune.base.frontInterface' )
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
@@ -2518,7 +2519,18 @@ function MacroEvalImp:eval( node )
    local oStream = Util.memStream.new()
    local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ)
    conv:processDeclMacro( node, node )
-   local chunk, err = load( oStream:get_txt(  ) )
+   local newEnv = {}
+   for key, val in pairs( _ENV ) do
+      newEnv[key] = val
+   end
+   
+   newEnv["_lnsLoad"] = function ( name, txt )
+   
+      local metaInfo, val = frontInterface.loadFromLnsTxt( name, txt, false )
+      return val
+   end
+   
+   local chunk, err = load( oStream:get_txt(  ), "", "bt", newEnv )
    if err then
       Util.err( err )
    end

@@ -73,6 +73,7 @@ class Front extend (frontInterface.frontInterface) {
    pub fn loadModule( mod:str ): stem, stem;
    pub fn loadMeta( mod:str ): stem;
    pub fn searchModule( mod:str ): str;
+   pub fn loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem;
    pub fn error( message:str );
 }
 
@@ -121,9 +122,9 @@ fn convert(
    ast.$node.processFilter( conv, nil, 0 );
 }
 
-fn loadFromTxt( txt:str ): stem {
+fn loadFromLuaTxt( txt:str ): stem {
    //--print( txt )
-   let chunk, err = load( txt );
+   let chunk, err = load( txt, "", "bt", _ENV );
    if! err {
       print( _exp );
    }     
@@ -134,20 +135,36 @@ fn loadFromTxt( txt:str ): stem {
 }
 
 
-fn Front.loadFile( path:str, mod:str, onlyMeta:bool ): stem, stem
-{
-   let ast = self.createAst( path, mod, nil, .Compile );
-   
+fn loadFromAst(ast:&TransUnit.ASTInfo, streamName:str, onlyMeta:bool ) : stem, stem {
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
 
-   convert( ast, path, stream, metaStream, .Exec, false );
+   convert( ast, streamName, stream, metaStream, .Exec, false );
    
-   let mut meta = loadFromTxt( metaStream.$txt );
+   let mut meta = loadFromLuaTxt( metaStream.$txt );
    if onlyMeta {
       return meta, stream.$txt;
    }
-   return meta, loadFromTxt( stream.$txt );
+   return meta, loadFromLuaTxt( stream.$txt );
+}
+
+fn Front.loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem
+{
+   let mut transUnit = new TransUnit.TransUnit(
+      new convLua.MacroEvalImp( self.option.mode ), nil, nil, nil );
+   let mut stream = new Parser.TxtStream( txt );
+   let mut parser = new Parser.StreamParser( stream, name, false );
+
+   let ast = transUnit.createAST( parser, false, nil );
+   
+   return loadFromAst( ast, name, onlyMeta );
+}
+
+fn Front.loadFile( path:str, mod:str, onlyMeta:bool ): stem, stem
+{
+   let ast = self.createAst( path, mod, nil, .Compile );
+
+   return loadFromAst( ast, path, onlyMeta );
 }
 
 fn Front.searchModule( mod:str ): str! {
@@ -201,7 +218,7 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
          }
 
 	 let mut info:Map<str,stem> = {};
-	 info.mod = loadFromTxt( _exp );
+	 info.mod = loadFromLuaTxt( _exp );
 	 info.meta = self.loadedMetaMap[ mod ];
 
 	 self.loadedMap[ mod ] = info;

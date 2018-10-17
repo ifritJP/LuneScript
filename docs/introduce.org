@@ -273,6 +273,8 @@ let array = [@ 'a', 'b', 'c' ];
 let map = { "A": 10, "B": 11, "C": 12 };
 #+END_SRC
 
+リスト、配列の最初の要素のインデックスは 1 です。
+
 **** リスト
 
 リストのオブジェクトは、順序付けて値を管理します。
@@ -376,6 +378,29 @@ let map2 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
 let map3 = { "a": 'z', "b": 'y', "c": 'x' };	// Map<str,str>
 let map4 = { "a": 1, "b": 'Z' };		// Map<str,stem>
 #+END_SRC
+
+*** 関数(form)
+
+form は、関数を保持する型です。
+
+例えば、次の test 関数の引数 func は、 form 型です。
+
+#+BEGIN_SRC lns
+fn test( func:form ) {
+   func(); // "hoge"
+}
+test( fn () { print( "hoge" ); } );
+#+END_SRC
+
+この func 引数に関数オブジェクト ~fn () { print( "hoge" );~ を与えており、
+test() 関数内で func() が実行されています。
+
+なお form 型の変数は、次の型の関数として扱われます。
+
+#+BEGIN_SRC lns
+fn func(...):...;
+#+END_SRC
+
 
 *** stem
 
@@ -1297,7 +1322,7 @@ macro _name ( decl-arg-list ) {
 続いてマクロ名 _name を指定する。マクロ名は _ で始まらなければならない。
 
 decl-arg-list は、マクロで使用する引数を宣言する。
-マクロの引数は、プリミティブでなければならない。
+マクロの引数は、 *プリミティブな値* でなければならない。
 
 macro-statement は、 expand-statement で使用する変数を設定する処理を書く。
 expand-statement で書いた内容が、マクロで展開される。
@@ -1321,31 +1346,31 @@ expand-statement の print が展開されている。
 C のような定数に名前を付けるためにマクロは利用できない。
 そのような使い方をしたい場合は enum を使用すること。
 
-*** macro-statement で利用できる追加 syntax
+*** マクロ内で利用できる追加 syntax
 
-macro-statement 内では、次の特殊な syntax を追加で利用できる。
+マクロ内では、次の特殊な syntax を追加で利用できる。
 
 - ,,,,
 - ,,,
 - ,,
 - ~`{ }~
 
-,,,, は、直後に続く *シンボル* を *文字列に変換* する演算子である。
-,,, は、直後に続く *式* を評価して得られた *文字列をシンボルに変換* する演算子である。
+,,,, は、直後に続く式を評価して得られた *シンボル* を *文字列に変換* する演算子である。
+,,, は、直後に続く式を評価して得られた *文字列* を *シンボルに変換* する演算子である。
 
 ~`{}~ は、 ~`{}~  内で書いたステートメントを、そのままの値とすることが出来る。
 macro-statement 内で ~`{}~ で書いたステートメントは、
-macro-expand で展開することができる。
+expand-statement で展開することができる。
 ~`{}~  内では変数の参照や関数の実行を書いても、
 macro-statement 内では評価されない。
-macro-expand で展開時に評価される。
+expand-statement で展開時に評価される。
 
 ,, は、直後に続く *式* を評価する演算子である。
 ,,、 ,,,、 ,,,,、 は、 macro-statement の ~`{}~  内で利用することで、
 式を評価することが出来る。
 
-macro-expand で ,, を利用すると、直後の変数を展開する。
-macro-expand では、式の評価ではなく、変数を展開に限定される。
+macro-statement で ,, を利用すると、直後の式を評価するが、
+expand-statement では、式の評価ではなく、変数の展開に限定される。
 
 
 例えば次のマクロでは、
@@ -1415,6 +1440,45 @@ mfunc1( 10 );					// ,,stat4( 10 );
 
 マクロはステートメントを定義する箇所であれば、どこでも呼び出せる。
 マクロ内でクラスや関数を定義することもできる。
+
+*** macro-statement 内で利用可能な関数
+
+macro-statement 内では、 次の関数が利用できる。
+
+- 標準関数
+- _lnsLoad()
+  
+ここで _lnsLoad() 関数は次の型である。
+
+#+BEGIN_SRC lns
+fn _lnsLoad( name:str, txt:str ): stem;
+#+END_SRC
+
+この関数は、指定の txt の lunescript コードをロードし、
+ロード結果を返すものである。
+
+例えば次のサンプルでは、
+  
+#+BEGIN_SRC lns
+macro _test( txt:str ) {
+   {
+      let val = _lnsLoad( "aa", txt )$.val;
+   }
+   print( ,,val, type( ,,val ) );   // 100, number
+}
+
+_test( ```
+pub let val = 100;
+``` );
+#+END_SRC
+
+_test() マクロに ~pub let val = 100;~ を与えており、
+これを _lnsLoad() でロードすることで、その val に 100 が格納されたモジュールが返される。
+そして、そのモジュールの val を、変数 val に代入し、
+expand-statement で print() している。
+
+なお、 _lnsLoad() の第一引数の name は、
+ロードする lunescript コードの名前を指定する。
 
 *** マクロの意義
 

@@ -1386,6 +1386,15 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
    if superType.equals( Ast.headTypeInfo ) {
       self.addErrMess( firstToken.pos, "This class doesn't have super-class." );
    }
+   else {
+      let! superScope = superType.$scope {
+         self.error( "not found super scope" );
+      };
+      let! superCtorType = superScope.getTypeInfoChild( "__init" ) {
+         self.error( "not found super '__init'" );
+      };        
+      self.checkMatchValType( firstToken.$pos, superCtorType, expList, [] );
+   }
 
    return Ast.ExpCallSuperNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], superType, expList );
@@ -1558,7 +1567,7 @@ fn TransUnit.analyzeExp(
 
       self.checkMatchValType( exp.$pos, initTypeInfo, argList,
                               exp.$expType.$itemTypeInfoList );
-
+      
       exp = Ast.ExpNewNode.create(
          self.nodeManager, firstToken.pos, exp.$expTypeList, exp, argList );
       exp = self.analyzeExpCont( firstToken, exp, false );
