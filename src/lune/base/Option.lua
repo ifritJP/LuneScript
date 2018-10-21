@@ -61,6 +61,8 @@ ModeKind.Exec = 'exe'
 ModeKind._val2NameMap['exe'] = 'Exec'
 ModeKind.Glue = 'glue'
 ModeKind._val2NameMap['glue'] = 'Glue'
+ModeKind.Version = 'ver'
+ModeKind._val2NameMap['ver'] = 'Version'
 
 local Option = {}
 _moduleObj.Option = Option

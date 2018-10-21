@@ -26,6 +26,7 @@ local Option = require( 'lune.base.Option' )
 local dumpNode = require( 'lune.base.dumpNode' )
 local glueFilter = require( 'lune.base.glueFilter' )
 local Depend = require( 'lune.base.Depend' )
+local version = "1.0.1"
 function _luneGetLocal( varName )
 
    local index = 1
@@ -463,6 +464,8 @@ function Front:exec(  )
          , self.option.scriptPath .. ".profi" )
       elseif _switchExp == Option.ModeKind.Exec then
          self:loadModule( mod )
+      elseif _switchExp == Option.ModeKind.Version then
+         print( string.format( "LuneScript: version %s", version) )
       else 
          
             print( "illegal mode" )

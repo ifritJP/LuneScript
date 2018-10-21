@@ -39,6 +39,7 @@ pub enum ModeKind {
    SaveMeta = "SAVE",
    Exec = "exe",
    Glue = "glue",
+   Version = "ver",
 }
 
 pub class Option {

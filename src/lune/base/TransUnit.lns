@@ -224,10 +224,10 @@ pub class TransUnit {
 
    pri fn pushModule( externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
    {
-      let mut typeInfo = Ast.headTypeInfo;
+      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
          typeInfo = _exp;
-         self.scope = unwrap typeInfo.$scope;
+         self.scope = unwrap Ast.getScope( typeInfo );
       }
       else {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
@@ -256,10 +256,10 @@ pub class TransUnit {
       externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
-      let mut typeInfo = Ast.headTypeInfo;
+      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
          typeInfo = _exp;
-         self.scope = unwrap typeInfo.$scope;
+         self.scope = unwrap Ast.getScope( typeInfo );
          switch ( _exp.$kind ) {
             case .Class {
                if not classFlag {
@@ -315,7 +315,7 @@ pub class TransUnit {
    pri fn analyzeDeclFunc(
       declFuncMode: DeclFuncMode, abstructFlag: bool,
       overrideFlag: bool, accessMode: Ast.AccessMode, staticFlag: bool,
-      classNameToken: &Parser.Token!,
+      mut classTypeInfo: &Ast.TypeInfo!,
       firstToken: &Parser.Token, name: &Parser.Token! ) : Ast.Node;
    pri fn analyzeDeclClass(
       abstructFlag:bool, classAccessMode: Ast.AccessMode,
@@ -468,7 +468,7 @@ class _TypeInfoModule extend _TypeInfo {
 
    pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
    {  
-      let mut parentInfo = Ast.headTypeInfo;
+      let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if self.parentId ~= Ast.rootTypeId {
          let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
             Util.err( "not found parentInfo %s %s"
@@ -532,7 +532,7 @@ class _TypeInfoNormal extend _TypeInfo {
          self.kind == Ast.TypeInfoKind.Array or
          self.kind == Ast.TypeInfoKind.Map
       {
-         let mut parentInfo = Ast.headTypeInfo;
+         let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if self.parentId ~= Ast.rootTypeId {
             let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
                return nil, "not found parentInfo %s %s" ( self.parentId, self.txt );
@@ -676,7 +676,7 @@ class _TypeInfoEnum extend _TypeInfo {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
       let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
       let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
-      let mut parentScope = unwrap parentInfo.$scope;
+      let mut parentScope = unwrap Ast.getScope( parentInfo );
       let mut scope = new Ast.Scope( parentScope, true, [] );
       
       param.typeId2Scope[ self.typeId ] = scope;
@@ -696,10 +696,10 @@ class _TypeInfoEnum extend _TypeInfo {
 }
 
 
-pub let mut typeInfoListInsert = Ast.headTypeInfo;
-pub let mut typeInfoListRemove = Ast.headTypeInfo;
-pub let mut typeInfoMappingIF = Ast.headTypeInfo;
-pub let mut typeInfoMappingToMap = Ast.headTypeInfo;
+pub let mut typeInfoListInsert:&Ast.TypeInfo = Ast.headTypeInfo;
+pub let mut typeInfoListRemove:&Ast.TypeInfo = Ast.headTypeInfo;
+pub let mut typeInfoMappingIF:&Ast.TypeInfo = Ast.headTypeInfo;
+pub let mut typeInfoMappingToMap:&Ast.TypeInfo = Ast.headTypeInfo;
 
 
 let mut readyBuiltin = false;
@@ -829,7 +829,7 @@ fn TransUnit.registBuiltInScope() mut {
          mutable = false;
          typeName = typeName.gsub( "^&", "" );
       }
-      let mut typeInfo = Ast.headTypeInfo;
+      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if typeName.find( "!$" ) {
          let orgTypeName = typeName.gsub( "!$", "" );
          typeInfo = unwrap self.scope.getTypeInfo(
@@ -861,7 +861,7 @@ fn TransUnit.registBuiltInScope() mut {
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, name in builtinClassInfo {
-         let mut parentInfo = Ast.headTypeInfo;
+         let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if name ~= "" {
             let mut classFlag = true;
             if name2FieldInfo$.__attrib$.type$[1] == "interface" {
@@ -1208,7 +1208,7 @@ fn TransUnit.checkSymbol( token: &Parser.Token ) mut : &Parser.Token {
       token.kind ~= Parser.TokenKind.Kywd and
       token.kind ~= Parser.TokenKind.Type
    {
-      self.error( "illegal symbol" );
+      self.addErrMess( token.pos, "illegal symbol -- '%s'" ( token.txt) );
    }
    return token;
 }
@@ -1392,7 +1392,7 @@ fn TransUnit.processImport(
       }
    }
 
-   let mut moduleTypeInfo = Ast.headTypeInfo;
+   let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    foreach moduleName, index in nameList {
       let mut mutable = false;
       if index == #nameList {

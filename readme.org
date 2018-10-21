@@ -24,3 +24,1399 @@ LuneScript is a transcompiler for Lua.
 - LuneScript runs on Lua and is easy to install as it requires no Lua standard modules.
 - Supports Lua 5.2, 5.3.
 - LuneScript is developed by self hosting.
+
+* Specification
+
+** Values and types
+
+LuneScript handles the following values.
+
+- nil
+- Integer (int)
+- real (real)
+- String (str)
+- Boolean (bool)
+- List
+- Map (Map)
+- Sequence
+- Class
+- macro
+- Function
+- stem
+
+*** nil
+
+nil is the same as nil in Lua.
+
+You can also use null in LuneScript.
+
+null is nil's alias.
+
+With null support, JSON can be handled as it is in LuneScript.
+
+*** integer, real number
+
+LuneScript handles integers and real numbers separately.
+
+As a result, 10/3 becomes 3, and 10 / 3.0 becomes 3.3333 ....
+
+**** Numeric literals
+
+The numerical literal is C89-like things adopted.
+
+- Integer supports decimal and hexadecimal representation
+- Real numbers are decimal and exponential representation by e.
+
+Additional ASCII character code representation is possible.
+
+#+BEGIN_SRC lns
+let val = ?a;  // 0x61
+#+END_SRC
+
+Expand the characters following ~?~ Into ACSII code as described above.
+Characters other than ASCII are not supported.
+
+Characters such as 'and' must be quoted with \ as '? \'.
+
+**** Arithmetic operation
+
+We adopt the same arithmetic as the four arithmetic operations of numerical values for Lua.
+
+The result of binomial operation changes type as follows.
+
+- int and int result in int.
+- The result of real and real is real.
+- The operation result of int and real is real.
+  
+However, if the result of int and int operation fall outside the range of int,
+It will be real as an internal value at runtime, but the type on LuneScript will remain int.
+To round the result to int, you need to cast it with ~@@int~.
+
+**** Bit operation
+
+Supports bit operation.
+It can also be used with Lua 5.2.
+
+The bit length is 32 bits for Lua 5.2.
+The bit length of Lua 5.3 depends on the environment.
+
+- Logical AND (&)
+
+#+BEGIN_SRC lns
+1 & 3 == 1
+#+END_SRC
+
+- Logical OR  (|)
+  
+#+BEGIN_SRC lns
+1 | 2 == 3
+#+END_SRC
+
+- XOR (~)
+  
+#+BEGIN_SRC lns
+1 ~ 3 == 2
+#+END_SRC
+  
+- Logical Left Shift  (|<<)
+  
+#+BEGIN_SRC lns
+1 |<< 2 == 4
+#+END_SRC
+  
+- Logical Right Shift (|>>)
+
+#+BEGIN_SRC lns
+0x10 |>> 2 == 4
+#+END_SRC
+
+- Bit inversion (~)
+  
+#+BEGIN_SRC lns
+~2 == 0xfffffffd  
+#+END_SRC
+
+The character string is the same as Lua and has no terminator.
+   
+String literals are enclosed in "or '.
+Multiple line literals are enclosed in `` `.
+
+Use txt [N] to access the Nth character in the string.
+However, txt [N] is read-only and characters can not be rewritten.
+
+#+BEGIN_SRC lns
+let txt = "1234";
+txt[2] // ?2
+#+END_SRC
+
+Also, a format format similar to Python is available.
+
+#+BEGIN_SRC lns
+"""
+from here ...
+So far the string """
+"10 +%s =%d" ("1", 11) // "10 + 1 = 11"
+#+END_SRC
+
+**** String concatenation
+
+String concatenation uses the same .. as Lua.
+
+*** Boolean (bool)
+
+It has true and false.
+
+
+*** List, array, map
+
+In LuneScript, Lua's table is divided into lists, arrays, and maps.
+
+The list is a sequence of Lua,
+Arrays are fixed-length lists,
+Map is Lua's table.
+
+Each literal is declared as follows.
+
+#+BEGIN_SRC lns
+let list = [ 1, 2, 3 ];
+let array = [@ 'a', 'b', 'c' ];
+let map = { "A": 10, "B": 11, "C": 12 };
+#+END_SRC
+
+**** List
+
+Objects in the list order values and manage values.
+
+#+BEGIN_SRC lns
+let name : itemType[];
+#+END_SRC
+
+The type of value that can be held in the list is limited to one.
+However, if it is a list of stem! Type described later, all values can be retained.
+
+For example, the following will be a list with elements of type int.
+
+#+BEGIN_SRC lns
+let name : int[];
+#+END_SRC
+
+Objects in the list have insert and remove methods.
+
+#+BEGIN_SRC lns
+let mut list:int[] = [];
+list.insert( 1 );  // [ 1 ]
+list.insert( 2 );  // [ 1, 2 ]
+list.insert( 3 );  // [ 1, 2, 3 ]
+list.remove();     // [ 1, 2 ]
+#+END_SRC
+
+To access the elements of the list,
+Specify the index of the element with [N] as follows.
+
+#+BEGIN_SRC lns
+let list = ['a','b','c'];
+print( list[ 1 ] ); -- 'a'
+#+END_SRC
+
+Processing when the index of an element specifies
+out of the range of the list is *undefined*.
+
+**** Arrays
+
+Array objects are fixed-length lists.
+It is the same as the list except that the size is fixed.
+
+#+BEGIN_SRC lns
+let mut list = [@ 1, 2 ];
+list.insert( 1 );  // error
+#+END_SRC
+
+Because it is fixed in size, you can not insert or remove.
+
+**** Map
+
+Objects on the map manage key / value ties.
+
+#+BEGIN_SRC lns
+let name : Map<keyType,valType>;
+#+END_SRC
+
+Map type is declared with keyType and valType as described above.
+
+For example, the following declaration is a map whose key is int type and value is str type.
+
+#+BEGIN_SRC lns
+let val : Map<int,str>;
+#+END_SRC
+
+To access the value, specify as follows:
+
+#+BEGIN_SRC lns
+let map = { "A": 10, "B": 11, "C": 12 };
+print( map[ "A" ], map.B );
+#+END_SRC
+
+If the key is a character string,
+You can access it as a member of the map object like map.B.
+
+You can not set nil for the key and value of the map object.
+
+**** List, type of map constructor
+
+#+BEGIN_SRC lns
+let list = [ 1, 2, 3 ];
+let map = { "A": 10, "B": 11, "C": 12 };
+#+END_SRC
+
+Lists, maps can declare literals as described above.
+The types of lists and maps generated at this time are determined by the values ​​to be configured.
+
+If the keys or values ​​used in the map constructor are all of the same type,
+The key of the map, the type of the value will be the type of that key, value.
+If one is different, it becomes stem type.
+
+Specifically, it is as follows.
+
+#+BEGIN_SRC lns
+let list1 = [ 1, 2, 3 ];			// int[]
+let list1 = [ 'a', 'b', 'c' ];			// str[]
+let list1 = [ 'a', 1, 'c' ];			// stem[]
+let map1 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
+let map2 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
+let map3 = { "a": 'z', "b": 'y', "c": 'x' };	// Map<str,str>
+let map4 = { "a": 1, "b": 'Z' };		// Map<str,stem>
+#+END_SRC
+
+*** stem
+
+stem is a type that can hold all values ​​except nil.
+
+LuneScript is a static typed language,
+If a value different from the assumed type is given, a compile error will occur.
+
+On the other hand, the stem type is a type that can handle all types except nil,
+No compilation error will occur no matter what value other than nil is given.
+
+stem! is a type that can handle all values ​​including nil.
+There is no problem considering it as the Lua variable itself.
+
+*** ! Type (nilable)
+
+nilable is a type that can hold nil.
+Conversely, if it is not nilable, nil can not be retained.
+As a result, while dealing with non-nilable type,
+You do not have to worry about runtime errors with nil.
+
+** Type conversion
+
+Values ​​of some types can convert types.
+
+To convert, use the following format.
+
+#+BEGIN_SRC lns
+val@@type
+#+END_SRC
+
+This declares converting the value of val to type.
+
+For example, the following converts val to int.
+
+#+BEGIN_SRC lns
+val@@int
+#+END_SRC
+
+*** Numeric type conversion
+
+Numeric type values ​​can be converted to different types.
+Rounding occurs in the conversion.
+
+- int to real
+  - Convert from integer to real number
+- real to int
+  - Convert real numbers to integers
+  - Equivalent to calling math.floor().
+
+*** Type conversion with stem type
+
+Any type can be converted to stem type and interchangeable.
+
+- Convert from arbitrary type to stem type
+  - You can implicitly convert without specifying with ~@@stem~.
+- Convert from stem type to arbitrary type
+  - It is necessary to explicitly indicate with ~@@type~.
+  - At this time, it does not judge what type of conversion source value was.
+  - The behavior when the source value type and the destination type do not match *undefined*
+
+** Comment
+
+Comment adopts C ++ style.
+Single line comment ~//~, multiple line comment ~/* */~ can be specified.
+
+#+BEGIN_SRC lns
+// Comment up to end of line
+/* from here~
+Comment so far */
+#+END_SRC
+
+** operator
+
+In principle, the same operator as Lua is used.
+
+Note that // (truncate division) of Lua 5.3 will be a one-line comment.
+
+In LuneScript, integers / are automatically rounded down.
+
+** Variable declaration
+
+#+BEGIN_SRC lns
+[ pub | global ] let name [: type] = evp;
+#+END_SRC
+
+Variable declaration is done with let.
+
+Specify variable followed by let.
+Type the variable with type: followed by the variable name.
+
+However, if the type can be inferred from the value of the variable declaration initialization, the type specification can be omitted.
+
+For example, the following declares an val variable of type int.
+
+#+BEGIN_SRC lns
+let val: int;
+#+END_SRC
+
+All variables are local.
+However, by defining it as the top level scope,
+It becomes global data within that module.
+
+If pub is specified before the let of the variable defined in the top level scope,
+It is a variable that can be referred to from an external module.
+
+Also, declaring global instead of pub is a global variable in the VM.
+However, it is registered on a global basis,
+It is the timing to import a module containing this declaration.
+
+The operation when the global symbol of the same name is defined is undefined.
+
+It is not possible to declare variables of the same name within the same scope.
+
+*** mutable control
+
+Mutable control is indispensable for variables.
+Be sure to refer to here.
+
+https://qiita.com/dwarfJP/items/29540d0767d50cfce896
+
+*** Variable declaration of nilable
+
+It becomes nilable by appending! To the type to be declared.
+
+For example, the following val is a nilable type of int,
+Where int and nil can be set,
+val2 is a variable that can not be set to nil.
+
+Substituting nil for a non-nilable variable results in a compile error.
+
+#+BEGIN_SRC lns
+let val: int! = 1;
+let val2: int = nil; // error
+#+END_SRC
+
+Although nilable may be nil,
+Non-nilable types will not be nil.
+In other words, while using non-nilable type,
+You can guarantee that nil access errors will not occur at unintended timing.
+
+A nilable type value can not be used as it is as it is.
+
+In the following example, val of type int! Can not be used as an operation as an operation, resulting in a compile error.
+
+#+BEGIN_SRC lns
+let val: int! = 1;
+let val2 =  val + 1; // error
+#+END_SRC
+
+To return to the original value from the nilable type, use one of the following syntax.
+
+- unwrap
+- unwrap!
+- let!
+- sync!
+- if!
+- if! let
+
+** nilable related specification
+
+This section describes nilable related specifications.
+
+*** Acquiring map type value
+
+When accessing an element of map type, the result is always nilable type.
+
+For example, the following map.B is int!
+
+#+BEGIN_SRC lns
+let map = { "A": 10, "B": 11, "C": 12 };
+let val = map.B; // int! 
+#+END_SRC
+
+*** unwrap
+
+unwrap is an expression that converts the immediately following expression from nilable to non-nilable.
+
+
+#+BEGIN_SRC lns
+unwrap exp [ default insexp ]
+#+END_SRC
+
+The evaluation result of unwrap is the type which is not nilable of exp.
+
+Exp must be passed an expression whose evaluation result is nilable.
+Insexp will pass an alternative expression when exp is nil.
+The type of insexp must be a non-nilable type of exp.
+For example, if exp is int!, Insexp must be of type int.
+If default is omitted and exp is nil, the program terminates with an error.
+
+If exp is not nilable, a compile error will occur.
+
+#+BEGIN_SRC lns
+{
+  let val: int! = nil;
+  let val2 = unwrap val default 0;
+  print( "%d", val ); // 0
+}
+{
+  let val: int! = 1;
+  let val2 = unwrap val default 0;
+  print( "%d", val ); // 1
+}
+#+END_SRC
+
+In the above example,
+Since val is nil in the first unwrap, default evaluation result is returned,
+In the second unwrap, val is 1, so 1 is returned.
+
+*** unwrap!
+
+unwrap! performs the above unwrap processing and assignment to a variable at the same time.
+     
+#+BEGIN_SRC lns
+unwrap! symbol {, symbol }  = exp[, exp ] block [then thenblock];
+#+END_SRC
+
+If exp is not nil, assign the result of unwrap to symbol.
+
+If any of exp is nil, execute block block.
+Within this block you need to do one of the following:
+
+- Set an appropriate value for symbol
+Exit the scope defining - symbol.
+
+If the above processing is not performed, the subsequent operation is undefined.
+
+Also in the block block, with the symbol _exp% d,
+You can access the unwrap result of exp.
+% d is a number starting from 1, corresponding to the order of symbol.
+
+Within this block block, the value of symbol is undefined.
+
+then the block is executed if exp is not all nil.
+You can access symbol from within this block.
+
+#+BEGIN_SRC lns
+fn test( arg:int! ) {
+  let val = 0;
+
+  unwrap! val = arg { print( 0 ); return; } then { val = val + 1; }
+  print( val );
+}
+test( 1 );  // print( 2 );
+test( 2 );  // print( 3 );
+test( nil );  // print( 0 );
+#+END_SRC
+
+*** let!
+
+let! performs variable declaration and unwrap at the same time.
+    
+#+BEGIN_SRC lns
+let! symbol {, symbol } = exp[, exp ] block [ then thenblock ];
+#+END_SRC
+
+The treatment of block and thenblock is the same as unwrap !.
+If proper processing is not done, the value of symbol is undefined.
+
+Within the block block you can refer to the unwrap result of exp with the name '_' + symbol.
+
+Within the then block block you can refer to the value with symbol.
+
+#+BEGIN_SRC lns
+fn test( arg:int! ) {
+  let! val = func() { print( 0 ); return; } do { val = val + 1; }
+  print( val );
+}
+test( 1 );  // print( 2 );
+test( 2 );  // print( 3 );
+test( nil );  // print( 0 );
+#+END_SRC
+
+
+**** sync!
+
+sync! performs unwrap processing.
+
+#+BEGIN_SRC lns
+sync! symbol {, symbol } = exp[, exp ] block [then thenblock] do doblock;
+#+END_SRC
+
+The treatment of exp, symbol, and then block is almost the same as unwrap !.
+The difference is that the scope of symbol is restricted to thenblock and doblock.
+
+doblock is a block to be executed after processing block and thenblock.
+
+sync! performs the following processing after completion of doblock block processing.
+
+- If the scope using sync! has the same symbol as the symbol name declared in symbol,
+It reflects the value of symbol at the end of the doblock block.
+
+However, it is not reflected when doblock is exited by return etc etc.
+
+* From the symbol declared with sync!
+To the symbol of the same name in the upper scope, it must be a substitutable relationship. *
+
+For example, the following executes sync! In the test () function.
+This sync! Stores the result of func () in val,
+You are changing val with doblock.
+When doblock finishes, the value of val is reflected in the val of the outer scope.
+
+#+BEGIN_SRC lns
+fn test( arg:int!, arg2:int! ) {
+  let mut val = 1;
+  let val2 = 1;
+  sync! val, val3 = arg, arg2 { print( 0 ); return; } do { val = arg + arg2; }
+  print( val );
+}
+test( nil );  // print( 0 );
+#+END_SRC
+
+**** if!
+
+if! is a conditional branch by unwrap processing.
+
+#+BEGIN_SRC lns
+if! exp block [ else elseblock ];
+#+END_SRC
+
+exp specifies a nilable expression.
+If exp is not nil, execute block.
+If exp is nil, execute elseblock.
+
+In the processing in block you can access _exp, the result of unwrap of exp.
+
+**** if! let
+
+if! let is a conditional branch by unwrap processing.
+
+#+BEGIN_SRC lns
+if! let var[,var,...] = exp[,exp,...] block [ else elseblock ];
+#+END_SRC
+
+exp specifies a nilable expression.
+If exp is not nil, execute block.
+If exp is nil, execute elseblock.
+
+Processing within block can access variables declared with var.
+The variable of var contains the unwrap result of exp.
+
+
+** General control statement
+
+Supports the same control statements (if, while, for, repeat) as Lua.
+
+Like Lua, there is no continue.
+
+*** if
+
+#+BEGIN_SRC lns
+if exp {
+}
+elseif exp {
+}
+else {
+}
+#+END_SRC
+    
+if has the same syntax as Lua.
+However, blocks are declared with {}. This block is mandatory.
+You can not write only one sentence without declaring blocks like C.
+
+*** switch
+
+#+BEGIN_SRC lns
+switch exp {
+  case condexp [, condexp] {
+  }
+  case condexp {
+  }
+  default {
+  }
+}
+#+END_SRC
+    
+switch searches for condexp matching the result of exp and executes the matching block.
+If it does not match any condexp, execute default block.
+Multiple condexp can be specified, separated by.
+If more than one is specified, execute a block that matches one of them.
+
+*** while, repeat
+
+#+BEGIN_SRC lns
+while exp {
+}
+
+repeat {
+} exp;
+#+END_SRC
+    
+while, repeat has the same syntax as Lua.
+However, blocks are declared with {}. This block is mandatory.
+You can not write only one sentence without declaring blocks like C.
+
+*** for
+
+#+BEGIN_SRC lns
+for name = exp1, exp2, exp3 {
+}
+#+END_SRC
+
+for is a type control that does not use an iterator.
+Each type that uses an iterator shall be each.
+
+Declare blocks as {}. This block is mandatory.
+You can not write only one sentence without declaring blocks like C.
+
+*** foreach
+
+#+BEGIN_SRC lns
+foreach val [, index ] in listObj {
+}
+foreach val [ , index ] in arrayObj {
+}
+foreach val [, key ] in mapObj {
+}
+#+END_SRC
+
+foreach processes elements held by objects of List, Array, and Map.
+
+Val holds the elements held by each object, and body is executed.
+index is the index of the element, and key is the key associated with the element.
+index, key can be omitted.
+
+*** apply
+
+#+BEGIN_SRC lns
+apply val {,val2 } of exp {
+}
+#+END_SRC
+    
+apply is a type for using an iterator.
+Declare blocks as {}. This block is mandatory.
+You can not write only one sentence without declaring blocks like C.
+
+val contains the values ​​enumerated by the iterator.
+If the iterator enumerates multiple values, declare val2, val3 ... that store that value.
+
+The specification of exp is the same as that of Lua's for.
+
+*** goto
+
+Do not support goto
+
+
+** Function declaration
+
+#+BEGIN_SRC lns
+[ pub | global ] fn name( arglist ) : retTypeList {
+}
+#+END_SRC
+
+Function declaration is performed with fn as described above, and function name is specified by name.
+name is optional.
+Declare the argument with arglist and declare it by omitting the let of variable declaration.
+The return type is declared with retTypeList. Type declaration is the same as after variable declaration.
+Functions can return multiple values. retTypeList declares a minute type of value to return.
+
+When exposing a function to an external module, declare pub before fn.
+The publicly available function, however, must be a function defined in the top level scope.
+For example, functions defined in blocks such as if and while can not be published.
+
+In the function defined in the top level scope,
+If global is specified instead of pub, it becomes global within the VM.
+However, it is the timing of importing the module containing this declaration, which is registered.
+
+The behavior when a global symbol of the same name is defined is * undefined *.
+
+
+With respect to function declaration, it has the following restrictions.
+- Does not support function overloading
+- Do not support operator overloading
+
+#+BEGIN_SRC lns
+fn plus( val1: int, val2: int ) : int {
+  return val1 + val2;
+}
+fn plus1( val1: int, val2: int ) : int, int {
+  return val1 + 1, val2 + 1;
+}
+#+END_SRC
+
+*** Variable length argument
+
+The variable length argument uses Lua's ....
+
+Each value of ... is handled as stem! Type.
+
+#+BEGIN_SRC lns
+fn hoge( ... ) : stem! {
+  let val: stem! = ...;
+  return val;
+}
+#+END_SRC
+
+For example, the above function returns the first argument given to the argument,
+The type at this time is stem!
+
+*** Function call
+
+Function calls are made with function object ().
+
+** Class declaration
+   
+Supports classes for object oriented programming.
+
+Regarding classes, it has the following restrictions.
+- Multiple inheritance is not supported.
+- generics (template) is not supported.
+- All are overridable methods.
+  - Override can not be suppressed.
+- The same name method with different arguments between inheritance can not be defined.
+  - However, the constructor is an exception and the same name (__init).
+
+Indicates the minimum sample of the class declaration.
+
+#+BEGIN_SRC lns
+class Hoge {
+}
+#+END_SRC
+
+This sample declares a class named Hoge.
+Because we do not have members and methods,
+It will not be used realistically, but this is the smallest as a class declaration.
+
+When publishing class to an external module, declare it with pub as follows.
+
+#+BEGIN_SRC lns
+pub class Hoge {
+}
+#+END_SRC
+
+*** Members, methods
+
+A class can have members (variables) and methods (functions).
+
+For example, the following have members of val1, val2 and methods of func ().
+
+#+BEGIN_SRC lns
+class Hoge {
+  let val1:int;
+  let val2:int;
+  pub fn func( val:int ): int {
+     return val + self.val1 + self.val2;
+  }
+}
+#+END_SRC
+
+When accessing your own instance from the processing of a method,
+Use self (for C ++ this).
+
+In C ++, when accessing its own members and methods from method processing,
+It is possible to directly access the method via the this pointer as follows, as it is.
+
+#+BEGIN_SRC cpp
+this->val = 1;
+val = 1;
+#+END_SRC
+
+On the other hand, in LuneScript you must use self.
+
+**** Access control
+
+In LuneScript, you can control access of members and methods.
+
+For access control, specify 'pub', 'pro', 'pri'.
+
+The meaning of each is as follows. (Same as C ++)
+
+- pub
+  - Accessible from anywhere
+- pro
+  - Accessible from subclass
+- pri
+  - Accessible only from within this class
+    
+If access control is not specified, the default pri is used.
+
+In the following example, val1 is pri, val2 is pro, and func is pub.
+
+#+BEGIN_SRC lns
+class Hoge {
+  pri let val1:int;
+  pro let val2:int;
+  pub fn func( val:int ): int {
+     return val + self.val1 + self.val2;
+  }
+}
+#+END_SRC
+
+*** Instance generation
+
+Use new to instantiate the class.
+
+Next, we create an instance of Hoge class.
+
+#+BEGIN_SRC lns
+class Hoge {
+}
+let hoge = new Hoge();
+#+END_SRC
+
+After the new operator, specify the class.
+If a class has members,
+The value of the member to be set as follows is specified by () of the class after new.
+
+#+BEGIN_SRC lns
+class Hoge {
+  let val1:int;
+  let val2:int;
+}
+let hoge = new Hoge(1,2);
+#+END_SRC
+
+*** Constructor
+
+A class can have a constructor.
+The constructor initializes all members of the class.
+
+For example, in the following cases, val1 and val2 are initialized in the constructor.
+
+#+BEGIN_SRC lns
+class Hoge {
+  let val1:int;
+  let val2:int;
+  pub fn __init() {
+    self.val1 = 0;
+    self.val2 = 0;
+  }
+}
+let hoge = new Hoge();
+#+END_SRC
+
+At this time, do not specify a value for the argument specified after the class name following new.
+The argument of new is an argument of that class,
+Since the constructor of the class of this example does not have arguments, value is not specified for new.
+
+If you do not create a constructor on your own,
+A constructor that automatically has all members as arguments is generated.
+The argument of the constructor generated at this time is the order of declaration of the member.
+
+When creating a constructor on its own, there are the following restrictions.
+
+- All members must be initialized.
+- Do not declare members after constructor declaration.
+- Do not use return.
+  
+To call the constructor of the superclass, use super ().
+super () needs to be called at the beginning of the constructor.
+
+If you inherit a class, you must create the constructor yourself.
+
+*** static
+
+By adding static when declaring members and methods,
+You can create static members and methods.
+
+The following is a sample of a class with the static member val, method func ().
+
+#+BEGIN_SRC lns
+class Hoge {
+  static let val:int;
+  __init {
+    Hoge.val = 1;
+  }
+  pub static fn func():int {
+     return 2;
+  }
+}
+print( Hoge.val, Hoge.func() ); // 1, 2
+#+END_SRC
+
+Static members and methods can be used without creating instances.
+
+**** __init block
+
+It is a block that initializes static members.
+
+A class with a static member must declare an __init block.
+
+The __init block has the following restrictions.
+
+- All static members must be initialized.
+- Do not declare static members after the __init block.
+
+*** Accessor
+
+You can simultaneously declare accessors when declaring members.
+
+This accessor declares getter and setter in this order,
+Specify the access authority (pub / pro / pri) in the declaration part.
+
+For example,
+Pub's getter and pri's setter are created for member val.
+
+#+BEGIN_SRC lns
+  let pri val : int { pub, pri };
+#+END_SRC
+
+The getter and setter created are methods of get_val (), set_val ().
+If a method with the same name exists, this declaration is ignored.
+
+If accessor declaration {} is omitted, no accessor is created.
+If only getter is specified and setter is omitted, only getter is created.
+
+**** getter access
+
+When accessing member getters,
+You can access not only .get_member () but also. $ member.
+
+If the member member itself is a pub instead of an accessor
+Can be accessed with $ member.
+
+#+BEGIN_SRC lns
+class Test {
+  pri val: int { pub };
+}
+Test test = new Test( 10 );
+print( test.$val );  -- 10
+#+END_SRC
+
+*** advertise
+
+LuneScript,
+You can transparently use member methods as your own methods.
+
+It is explained in the following example.
+
+#+BEGIN_SRC lns
+class Hoge {
+   pub fn func() {
+      print( "Hoge.func()" );
+   }
+}
+class Foo {
+   pri let hoge:Hoge;
+   pub fn __init() {
+      self.hoge = new Hoge();
+   }
+   advertise hoge;
+}
+let foo = new Foo();
+foo.func(); // Hoge.func()
+#+END_SRC
+
+In the above example, the class Foo has the member Hoge class hoge.
+And class Foo has advertise member hoge.
+As a result, the class Foo has the method func () of the Hoge class,
+When foo.func () is executed, Foo.hoge.func () is executed internally.
+
+If advertise has a method with the same name in the class being advertized,
+We prioritize those methods.
+
+For example, in the following example, class Hoge has methods func1 () and func2 ()
+Class Foo has method func1 ().
+In this case, method func1 () of class Foo takes precedence.
+
+#+BEGIN_SRC lns
+class Hoge {
+   pub fn func1() {
+      print( "Hoge.func1()" );
+   }
+   pub fn func2() {
+      print( "Hoge.func2()" );
+   }
+}
+class Foo {
+   pri let hoge:Hoge;
+   pub fn __init() {
+      self.hoge = new Hoge();
+   }
+   pub fn func1() {
+      print( "Foo.func1()" );
+   }
+   advertise hoge;
+}
+let foo = new Foo();
+foo.func1(); // Foo.func()
+foo.func2(); // Hoge.func()
+#+END_SRC
+
+
+
+*** inheritance
+
+LuneScript supports class inheritance.
+However, multiple inheritance is not supported.
+
+Instead, it supports interfaces.
+
+Declare inheritance with extend as follows.
+
+#+BEGIN_SRC lns
+class Super {
+}
+class Sub extend Super {
+  pub fn __init() {
+     super();
+  }
+}
+#+END_SRC
+
+In this example, the Sub class inherits the Super class.
+
+*** override
+
+All methods can be overridden.
+
+When overriding a method, you must declare override as follows.
+
+#+BEGIN_SRC lns
+class Super {
+  pub fn func() {
+  }
+}
+class Sub extend Super {
+  pub fn __init() {
+     super();
+  }
+  pub override fn func() {
+  }
+}
+#+END_SRC
+
+*** Interface
+
+An interface is a class that can declare only the type of a method.
+
+It is impossible to have members and define the processing of methods.
+
+The following example implements interface IF in class Test.
+
+#+BEGIN_SRC lns
+interface IF {
+  pub fn func();
+}
+class Test extend (IF) {
+  pub fn func() {
+     print( "Test.func" );
+  }
+}
+fn sub( obj:IF ) {
+  obj.func();
+}
+sub( new Test() );
+#+END_SRC
+
+*** Method invocation
+
+Method calls are done as follows.
+
+#+BEGIN_SRC cpp
+Hoge hoge;
+Hoge.sub();
+hoge.func();
+#+END_SRC
+
+Hoge.sub () is a class method,
+hoge.func () is an instance method.
+
+Class method is *classSymbol.Method()*,
+The method is called with *instance.Method()*.
+
+Instead of using ':' and '.' Like Lua, both use '.'.
+
+*** prototype declaration
+
+LuneScript analyzes in order from the top of the script.
+
+The symbols referenced in the script must be predefined.
+For example, to declare a variable of class TEST type, it is necessary to define the class TEST in advance.
+
+Also, to define alternate classes to reference,
+It is necessary to prototype either one.
+
+The following is an example when Class A and Class B refer to each.
+
+#+BEGIN_SRC lns
+class Super {
+}
+pub proto class ClassB extend Super;
+class ClassA {
+  let val: ClassB;
+}
+pub class ClassB extend Super{
+  let val: ClassA;
+}
+#+END_SRC
+
+Proto is declared as above.
+
+In prototype declaration and actual definition,
+You must declare the same things like pub and extend.
+
+** macro
+
+LuneScript adopts a simple macro.
+
+It is not an original macro such as Lisp, it is a simple function to the last.
+
+The macro is defined as follows.
+
+#+BEGIN_SRC lns
+macro _name ( decl-arg-list ) {
+  { macro-statement }
+  expand-statement
+}
+#+END_SRC
+
+Macro definition begins with reserved word macro.
+Then specify the macro name _name. The macro name must begin with _.
+
+decl-arg-list declares arguments to be used in macros.
+The argument of the macro must be a primitive.
+
+The macro - statement describes the process of setting the variable to be used in the expand - statement.
+The contents written in expand-statement are expanded by macro.
+
+The following is an example of a simple macro.
+
+#+BEGIN_SRC lns
+macro _hello( word: str ) {
+  print( "hello" .. str ); 
+}
+_hello( "world" ); // print( "hello" .. "world" );
+#+END_SRC
+
+In this example there is no macro-statement, there is only expand-statement,
+The print of expand - statement is expanded.
+
+
+Within a macro, you can write the process just like any other function.
+However, only part of the standard function can be used within the macro-statement.
+
+Macros can not be used to name constants like C.
+Use enum if you want to use it like that.
+
+*** Additional syntax available with macro-statement
+
+Within a macro-statement, you can use the following special syntax additionally.
+
+- ,,,,
+- ,,,
+- ,,
+- ~`{}~
+
+',,,,' are operators that convert the immediately following *symbol* to the *character string*.
+',,,' is an operator that converts a character string obtained by evaluating immediately following *expression* into a symbol.
+
+~`{}~ can write a statement written in ~`{}~ as it is.
+Statements written in ~`{}~ in macro, it can be expanded by macro-expand.
+Within ~`{}~ you write variable reference or function execution,
+It is not evaluated in the macro-statement.
+It is evaluated when expanded by macro-expand.
+
+',,' is an operator that evaluates immediately following *expression*.
+',,' ',,,' ',,,,' are used within ~`{}~ of macro-statement,
+Expressions can be evaluated.
+
+With macro-expand, use ',,' to expand the immediately following variable.
+In macro-expand, variables are expanded, not evaluation of expressions.
+
+
+For example, in the next macro,
+
+#+BEGIN_SRC lns
+macro _test2( val:int, funcxx:sym ) {
+    {
+        fn func(val2:int):str {
+            return "mfunc%d" (val2);
+        }
+        let message = "hello %d %s" ( val, ,,,,funcxx );
+        let stat = `{ print( "macro stat" ); };
+        let stat2 = `{
+            for index = 1, 10 {
+                print( "hoge %d" ( index ) );
+            }
+        };
+        let mut stat3:stat[] = [];
+        for index = 1, 4 {
+            stat3.insert( `{ print( "foo %d" ( ,,index ) ); } );
+        }
+        let stat4 = ,,,func( 1 );
+    }
+    print( ,,message );
+    ,,funcxx( "macro test2" );
+    ,,stat;
+    ,,stat2;
+    ,,stat3;
+    ,,stat4( 10 );
+}
+fn mfunc1( val: int ) {
+    print( "mfunc1", val );
+}
+
+_test2( 1, print );
+#+END_SRC
+
+It is expanded as follows by macro expansion.
+
+#+BEGIN_SRC lns
+print( "hello 1 print" );			// print( ,,message );
+print( "macro test2" );				// ,,funcxx( "macro test2" );
+print( "macro stat" );				// ,,stat
+for index = 1, 10 {				// ,,stat2
+  print( "hoge %d" ( index ) );
+}
+print( "foo %d" ( 1 ) );			// ,,stat3
+print( "foo %d" ( 2 ) );
+print( "foo %d" ( 3 ) );
+print( "foo %d" ( 4 ) );
+mfunc1( 10 );					// ,,stat4( 10 );
+#+END_SRC
+
+The points to pay attention to here are the following points.
+
+- print is passed by macro call of _test 2 (1, print)
+  This does not pass function objects held by print,
+  I pass the print symbol itself.
+- stat 2 expands the for statement itself,
+  stat3 expands the statement list created by the for statement.
+  
+
+As mentioned above, the following types can be used in macros in addition to the usual types.
+
+- sym type to store symbols
+- Stat type to store the statement
+
+A macro can be called anywhere as long as it defines a statement.
+It is also possible to define classes and functions in macros.
+
+*** Significance of macro
+
+There are some restrictions on macros compared to normal functions.
+Also, the processing that can be performed with macros can be realized by combining functions and the like.
+
+So what is the significance of using macros?
+
+It is "to decide the motion statically by using a macro".
+
+When the same processing is realized by a function, it becomes dynamic processing.
+On the other hand, if it is realized by a macro, it becomes static processing.
+
+What's pleased about this?
+
+It is the same as the static typed language is better than the dynamically typed language.
+
+Statically analyze information by statically processing it.
+
+For example, most of object-oriented function overrides,
+It can be solved statically by using macros.
+By making static function calls rather than dynamic function overrides,
+It becomes easy to follow the source code.
+
+It is not good to use macros extensively,
+It is not ideal to make dynamic processing such as function override easily.
+
+Dynamic processing and macros need to be translated appropriately.
+
+
+
+** module
+
+LuneScript is one file and one module.
+Each module has a different namespace.
+
+For example lune / base / Parser.lns,
+It becomes the namespace of lune.base.Parser.
+
+Functions and classes declared pub in the script file are
+Accessible from external module.
+
+*** import
+
+When declaring import when using external module.
+
+import must be declared at the top level scope of the script.
+
+#+BEGIN_SRC lns
+import hoge.foo.module1;
+#+END_SRC
+
+In the above, search hoge / foo / module1.lns from the search path and make it available.
+
+To access the class and function of module1
+Access it like module1.class, module1.func.
+
+Imported symbols (in the above case, module 1) can not be treated as variables.
+
+Modules can not be cross-referenced.
+
+For example, when there is Module A, Module B,
+Import Module B from Module A,
+Module A can not be imported from Module B.
+
+
+*** require
+
+Declare when using Lua's external module.
+
+#+BEGIN_SRC lns
+let mod: stem! = require( 'module' );
+#+END_SRC
+
+The result of require is stem! type.
+
+Modules can not be cross-referenced.
+
+* emacs correspondence
+
+We have prepared a major mode lns - mode.el of emacs for LuneScript editing.
+
+https://github.com/ifritJP/LuneScript
+
+Please use emacs user.
+
+* Self hosting
+
+LuneScript transcompiler is developed with LuneScript except for a few parts.
+
+Specifically, within the LuneScript source code size of about 385 KB,
+99.99% is developed with LuneScript. The remaining 0.01% is Lua.
+
+Developing with self hosting has the following advantages.
+
+- Can be used in a script of a certain scale.
+- Minimize the script creation for testing only.
+- Because you will be beat down that language, you can realize the strengths and weaknesses of that language.
+- Disadvantages can be found at an early stage, so you can consider improvement measures immediately.
+
+If there are people thinking about designing and developing languages ​​by themselves,
+I would like to develop with self-hosting.

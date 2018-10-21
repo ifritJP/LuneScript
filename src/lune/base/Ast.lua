@@ -446,8 +446,18 @@ do
    TypeManager.info2Data = {}
 end
 
+local typeInfo2ScopeMap = {}
+local function getScope( typeInfo )
+
+   return typeInfo2ScopeMap[typeInfo]
+end
+_moduleObj.getScope = getScope
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
+function TypeInfo:get_scope(  )
+
+   return typeInfo2ScopeMap[self]
+end
 function TypeInfo.new( scope )
    local obj = {}
    TypeInfo.setmeta( obj )
@@ -455,6 +465,7 @@ function TypeInfo.new( scope )
    return obj
 end
 function TypeInfo:__init(scope) 
+   typeInfo2ScopeMap[self] = scope
    self.scope = scope
    do
       local _exp = scope
@@ -615,9 +626,6 @@ function TypeInfo:get_mutable(  )
 end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
-end
-function TypeInfo:get_scope()       
-   return self.scope         
 end
 
 function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
@@ -1176,6 +1184,10 @@ end
 function NilableTypeInfo:get_typeId()       
    return self.typeId         
 end
+function NilableTypeInfo:get_scope( ... )
+   return self.orgTypeInfo:get_scope( ... )
+end       
+
 function NilableTypeInfo:isModule( ... )
    return self.orgTypeInfo:isModule( ... )
 end       
@@ -1268,10 +1280,6 @@ function NilableTypeInfo:get_mutable( ... )
    return self.orgTypeInfo:get_mutable( ... )
 end       
 
-function NilableTypeInfo:get_scope( ... )
-   return self.orgTypeInfo:get_scope( ... )
-end       
-
 function NilableTypeInfo:getFullName( ... )
    return self.orgTypeInfo:getFullName( ... )
 end       
@@ -1333,6 +1341,10 @@ end
 function ModifierTypeInfo:get_mutable()       
    return self.mutable         
 end
+function ModifierTypeInfo:get_scope( ... )
+   return self.srcTypeInfo:get_scope( ... )
+end       
+
 function ModifierTypeInfo:isModule( ... )
    return self.srcTypeInfo:isModule( ... )
 end       
@@ -1409,10 +1421,6 @@ function ModifierTypeInfo:get_autoFlag( ... )
    return self.srcTypeInfo:get_autoFlag( ... )
 end       
 
-function ModifierTypeInfo:get_orgTypeInfo( ... )
-   return self.srcTypeInfo:get_orgTypeInfo( ... )
-end       
-
 function ModifierTypeInfo:get_baseTypeInfo( ... )
    return self.srcTypeInfo:get_baseTypeInfo( ... )
 end       
@@ -1435,10 +1443,6 @@ end
 
 function ModifierTypeInfo:addChildren( ... )
    return self.srcTypeInfo:addChildren( ... )
-end       
-
-function ModifierTypeInfo:get_scope( ... )
-   return self.srcTypeInfo:get_scope( ... )
 end       
 
 function ModifierTypeInfo:getFullName( ... )
@@ -2125,6 +2129,17 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
    local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutable)
    typeInfo2ModifierMap[srcTypeInfo] = modifier
    return modifier
+end
+
+function ModifierTypeInfo:get_orgTypeInfo(  )
+
+   local orgType = self.srcTypeInfo:get_orgTypeInfo()
+   if self.mutable or not orgType:get_mutable() then
+      return orgType
+   end
+   
+   return NormalTypeInfo.createModifier( orgType, false )
+   
 end
 
 local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
@@ -5381,17 +5396,17 @@ _moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncInfo  } )
 end
-function DeclFuncInfo.new( className, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+function DeclFuncInfo.new( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
    local obj = {}
    DeclFuncInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( className, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
+      obj:__init( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
    end        
    return obj 
 end         
-function DeclFuncInfo:__init( className, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol ) 
+function DeclFuncInfo:__init( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol ) 
 
-   self.className = className
+   self.classTypeInfo = classTypeInfo
    self.name = name
    self.argList = argList
    self.staticFlag = staticFlag
@@ -5400,8 +5415,8 @@ function DeclFuncInfo:__init( className, name, argList, staticFlag, accessMode, 
    self.retTypeInfoList = retTypeInfoList
    self.has__func__Symbol = has__func__Symbol
 end
-function DeclFuncInfo:get_className()       
-   return self.className         
+function DeclFuncInfo:get_classTypeInfo()       
+   return self.classTypeInfo         
 end
 function DeclFuncInfo:get_name()       
    return self.name         

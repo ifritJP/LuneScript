@@ -40,9 +40,9 @@ do
    local _classInfo275 = {}
    _typeId2ClassInfoMap[ 275 ] = _classInfo275
    _classInfo275.column = {
-     name='column', staticFlag = false, accessMode = 1, typeId = 253 }
+     name='column', staticFlag = false, accessMode = 1, typeId = 247 }
    _classInfo275.lineNo = {
-     name='lineNo', staticFlag = false, accessMode = 1, typeId = 253 }
+     name='lineNo', staticFlag = false, accessMode = 1, typeId = 247 }
 end
 do
    local _classInfo285 = {}
@@ -73,16 +73,16 @@ _dependIdMap[ 232 ] = { 1, 230 } -- Parser
 _dependIdMap[ 237 ] = { 1, 390 } -- TxtStream
 _dependIdMap[ 238 ] = { 1, 391 } -- TxtStream!
 _typeInfoList[5] = { skind = 1, parentId = 1, typeId = 240, srcTypeId = 25, mutable = false }
-_dependIdMap[ 250 ] = { 1, 404 } -- Position
-_dependIdMap[ 251 ] = { 1, 405 } -- Position!
-_typeInfoList[6] = { skind = 1, parentId = 1, typeId = 253, srcTypeId = 16, mutable = false }
+_typeInfoList[6] = { skind = 1, parentId = 1, typeId = 247, srcTypeId = 16, mutable = false }
+_dependIdMap[ 251 ] = { 1, 405 } -- Position
+_dependIdMap[ 252 ] = { 1, 406 } -- Position!
 _dependIdMap[ 257 ] = { 1, 411 } -- TokenKind
 _dependIdMap[ 258 ] = { 1, 412 } -- TokenKind!
 _dependIdMap[ 271 ] = { 1, 419 } -- Token
 _dependIdMap[ 272 ] = { 1, 420 } -- Token!
 _typeInfoList[7] = { skind = 1, parentId = 232, typeId = 274, srcTypeId = 257, mutable = false }
 _dependIdMap[ 274 ] = { 1, 422 } -- &TokenKind
-_typeInfoList[8] = { skind = 1, parentId = 232, typeId = 275, srcTypeId = 250, mutable = false }
+_typeInfoList[8] = { skind = 1, parentId = 232, typeId = 275, srcTypeId = 251, mutable = false }
 _dependIdMap[ 275 ] = { 1, 423 } -- &Position
 _typeInfoList[9] = { skind=3, parentId = 1, typeId = 276, baseId = 1, txt = 'List',
         abstructFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {271}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
@@ -103,10 +103,10 @@ _dependIdMap[ 311 ] = { 1, 463 } -- WrapParser
 _dependIdMap[ 312 ] = { 1, 464 } -- WrapParser!
 _dependIdMap[ 323 ] = { 1, 476 } -- StreamParser
 _dependIdMap[ 324 ] = { 1, 477 } -- StreamParser!
-_dependIdMap[ 350 ] = { 1, 595 } -- DummyParser
-_dependIdMap[ 351 ] = { 1, 596 } -- DummyParser!
+_dependIdMap[ 350 ] = { 1, 596 } -- DummyParser
+_dependIdMap[ 351 ] = { 1, 597 } -- DummyParser!
 _typeInfoList[17] = { skind = 4, parentId = 230, typeId = 409, txt = 'ModeKind',
-accessMode = 1, kind = 11, valTypeId = 25, enumValList = {Ast = 'ast',Complete = 'comp',Diag = 'diag',Exec = 'exe',Glue = 'glue',Lua = 'lua',LuaMeta = 'LUA',Save = 'save',SaveMeta = 'SAVE',Token = 'token',Unknown = '',} }
+accessMode = 1, kind = 11, valTypeId = 25, enumValList = {Ast = 'ast',Complete = 'comp',Diag = 'diag',Exec = 'exe',Glue = 'glue',Lua = 'lua',LuaMeta = 'LUA',Save = 'save',SaveMeta = 'SAVE',Token = 'token',Unknown = '',Version = 'ver',} }
 _typeInfoList[18] = { skind = 0, parentId = 230, typeId = 410, nilable = true, orgTypeId = 409 }
 _typeInfoList[19] = { skind=3, parentId = 409, typeId = 411, baseId = 1, txt = 'get__txt',
         abstructFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
@@ -118,7 +118,7 @@ _typeInfoList[23] = { skind=3, parentId = 230, typeId = 417, baseId = 1, txt = '
         abstructFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {422}, }
 _typeInfoList[24] = { skind = 0, parentId = 230, typeId = 418, nilable = true, orgTypeId = 417 }
 _typeInfoList[25] = { skind = 1, parentId = 1, typeId = 420, srcTypeId = 26, mutable = false }
-_typeInfoList[26] = { skind = 1, parentId = 232, typeId = 421, srcTypeId = 251, mutable = false }
+_typeInfoList[26] = { skind = 1, parentId = 232, typeId = 421, srcTypeId = 252, mutable = false }
 _typeInfoList[27] = { skind=3, parentId = 417, typeId = 422, baseId = 1, txt = '__init',
         abstructFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[28] = { skind = 0, parentId = 417, typeId = 423, nilable = true, orgTypeId = 422 }

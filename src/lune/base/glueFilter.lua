@@ -47,24 +47,6 @@ function glueGenerator:writeHeader( txt )
    self.headerStream:write( txt )
 end
 
-function glueGenerator:outputMethod( classFullName, methodNode )
-
-   local declInfo = methodNode:get_declInfo()
-   do
-      local _exp = declInfo:get_name()
-      if _exp ~= nil then
-         if declInfo:get_staticFlag() then
-            self:write( string.format( "static method %s.%s", classFullName, _exp.txt) )
-         else
-          
-            self:write( string.format( "method %s.%s", classFullName, _exp.txt) )
-         end
-         
-      end
-   end
-   
-end
-
 function glueGenerator:getArgInfo( argNode )
 
    local argType = argNode:get_expType()

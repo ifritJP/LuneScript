@@ -182,7 +182,7 @@ pub fn TransUnit.createAST(
 
    self.registBuiltInScope();
 
-   let mut moduleTypeInfo = Ast.headTypeInfo;
+   let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
 
    if! moduleName {
@@ -491,14 +491,15 @@ fn TransUnit.analyzeDeclEnum(
 
    let mut scope = self.pushScope( true );
 
-   let mut enumTypeInfo = Ast.headTypeInfo;
+   let mut enumTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    
    let mut nextToken = self.getToken();
    let mut number = 0.0;
-   let mut prevValTypeInfo = Ast.headTypeInfo;
-   let mut valTypeInfo = Ast.headTypeInfo;
+   let mut prevValTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+   let mut valTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    while nextToken.txt ~= "}" {
-      let valName = nextToken;
+      let valName = self.checkSymbol(nextToken);
+      
       nextToken = self.getToken();
 
       let mut enumVal:stem = number;
@@ -649,9 +650,31 @@ fn TransUnit.analyzeDecl(
    return nil;
 }
 
+
+fn TransUnit.checkPublic( pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut {
+   let mut checkedTypeSet:Map<&Ast.TypeInfo,bool> = {};
+   fn checkPub( workType:&Ast.TypeInfo ) {
+      if checkedTypeSet[ workType ] {
+         return;
+      }
+      checkedTypeSet[ workType ] = true;
+      if workType.$kind ~= .List and workType.$kind ~= .Map and
+         not Ast.isPubToExternal( workType.$accessMode )
+      {     
+         self.addErrMess( pos, "not public this type -- %s" ( workType.getTxt()) );
+      }
+      else {
+         foreach itemType in workType.$itemTypeInfoList {
+            checkPub( itemType );
+         }
+      }
+   }
+   checkPub( typeInfo );
+}
+
 fn TransUnit.analyzeDeclMember(
-   accessMode: Ast.AccessMode, staticFlag: bool, firstToken: &Parser.Token ) mut:
-   Ast.DeclMemberNode
+   classTypeInfo: &Ast.TypeInfo, accessMode: Ast.AccessMode,
+   staticFlag: bool, firstToken: &Parser.Token ) mut: Ast.DeclMemberNode
 {
       let mut nextToken = self.getToken();
       let mut mutable = false;
@@ -664,6 +687,7 @@ fn TransUnit.analyzeDeclMember(
       let refType = self.analyzeRefType( accessMode, false );
       token = self.getToken();
 
+      // accessor
       let mut getterMode = Ast.AccessMode.None;
       let mut getterMutable = true;
       let mut setterMode = Ast.AccessMode.None;
@@ -694,12 +718,20 @@ fn TransUnit.analyzeDeclMember(
          token = self.getToken();
       }
 
-      // accessor
       self.checkToken( token, ";" );
 
       let mut typeInfo = refType.$expType;
       if typeInfo.$mutable and not mutable {
          typeInfo = self.createModifier( typeInfo, false );
+      }
+
+      if Ast.isPubToExternal( classTypeInfo.$accessMode ) {
+         if Ast.isPubToExternal( accessMode ) or
+            Ast.isPubToExternal( getterMode ) or
+            Ast.isPubToExternal( setterMode )
+         {  
+            self.checkPublic( refType.$pos, typeInfo );
+         }
       }
          
       let symbolInfo = self.scope.addMember(
@@ -711,14 +743,13 @@ fn TransUnit.analyzeDeclMember(
    }
 
 fn TransUnit.analyzeDeclMethod(
-   declFuncMode: DeclFuncMode,
+   classTypeInfo: &Ast.TypeInfo, declFuncMode: DeclFuncMode,
    abstructFlag: bool, overrideFlag: bool, accessMode: Ast.AccessMode,
-   staticFlag: bool, className: &Parser.Token,
-   firstToken: &Parser.Token, name: &Parser.Token ) mut : Ast.Node
+   staticFlag: bool, firstToken: &Parser.Token, name: &Parser.Token ) mut : Ast.Node
 {
    let mut node = self.analyzeDeclFunc(
       declFuncMode, abstructFlag,
-      overrideFlag, accessMode, staticFlag, className, name, name );
+      overrideFlag, accessMode, staticFlag, classTypeInfo, name, name );
    return node;
 }
 
@@ -796,7 +827,8 @@ fn TransUnit.analyzeClassBody(
             self.addErrMess(
                token.pos, "static member can't declare after '__init' block." );
          }
-         let memberNode = self.analyzeDeclMember( accessMode, staticFlag, token );
+         let memberNode = self.analyzeDeclMember(
+            classTypeInfo, accessMode, staticFlag, token );
          fieldList.insert( memberNode );
          memberList.insert( memberNode );
          memberName2Node[ memberNode.$name.txt ] = memberNode;
@@ -814,8 +846,8 @@ fn TransUnit.analyzeClassBody(
          }
 
          let methodNode = self.analyzeDeclMethod(
-            declFuncMode, abstructFlag, overrideFlag,
-            accessMode, staticFlag, name, token, nameToken );
+            classTypeInfo, declFuncMode, abstructFlag, overrideFlag,
+            accessMode, staticFlag, token, nameToken );
          fieldList.insert( methodNode );
          methodNameSet[ nameToken.txt ] = true;
          if nameToken.txt == "__init" {
@@ -1172,9 +1204,9 @@ fn TransUnit.analyzeDeclClass(
    return node;
 }   
 
-pri fn TransUnit.addMethod( className: str, methodNode: Ast.Node, name: str ) mut {
-   let classTypeInfo = self.scope.getTypeInfo(
-      className, self.scope, false );
+pri fn TransUnit.addMethod(
+   classTypeInfo: &Ast.TypeInfo, methodNode: Ast.Node, name: str ) mut
+{
    let mut classNodeInfo = unwrap self.typeInfo2ClassNode[ classTypeInfo ];
 
    classNodeInfo.$outerMethodSet[ name ] = true;
@@ -1182,10 +1214,12 @@ pri fn TransUnit.addMethod( className: str, methodNode: Ast.Node, name: str ) mu
 }
 
 
+
+
 fn TransUnit.analyzeDeclFunc(
    declFuncMode: DeclFuncMode, abstructFlag: bool, overrideFlag: bool,
    accessMode: Ast.AccessMode,
-   mut staticFlag: bool, mut classNameToken: &Parser.Token!,
+   mut staticFlag: bool, mut classTypeInfo: &Ast.TypeInfo!,
    firstToken: &Parser.Token, mut name: &Parser.Token! ) mut : Ast.Node
 {
    let mut token = self.getToken();
@@ -1201,13 +1235,19 @@ fn TransUnit.analyzeDeclFunc(
    let mut needPopFlag = false;
    if token.txt == "." {
       needPopFlag = true;
-      classNameToken = name;
-      
-      let classTypeInfo = unwrap self.scope.getTypeInfoChild( (unwrap name).txt );
 
-      self.pushClass(
-         classTypeInfo.$kind == .Class,
-         classTypeInfo.$abstructFlag, nil, nil, false, (unwrap name).txt, .Pub );
+      let className = (unwrap name).txt;
+      
+      classTypeInfo = self.scope.getTypeInfoChild( className );
+
+      if! classTypeInfo {
+         self.pushClass(
+            _exp.$kind == .Class,
+            _exp.$abstructFlag, nil, nil, false, className, .Pub );
+      }
+      else {
+         self.error( "not found class -- %s" (className) );
+      }
 
       name = self.getSymbolToken();
       token = self.getToken();
@@ -1215,7 +1255,7 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut kind = Ast.nodeKindDeclConstr;
    let mut typeKind = Ast.TypeInfoKind.Func;
-   if classNameToken {
+   if classTypeInfo {
       if not staticFlag {
          typeKind = .Method;
       }
@@ -1290,30 +1330,34 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
-   if kind == Ast.nodeKindDeclMethod or
-      kind == Ast.nodeKindDeclConstr or
-      kind == Ast.nodeKindDeclDestr
-   {
-      if kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr {
-         mutable = true;
-      }
-      // self シンボルを登録
-      let mut classTypeInfo:&Ast.TypeInfo = unwrap funcBodyScope.$parent.$ownerTypeInfo;
-      if not Ast.isPubToExternal( classTypeInfo.$accessMode ) {
-         pubToExtFlag = false;
-      }
 
-      
-      if classTypeInfo.$mutable and not mutable {
-         classTypeInfo = self.createModifier( classTypeInfo, false );
-      }
-      self.scope.add(
-         .Var, false, true, "self",
-         classTypeInfo, .Pri, false, mutable, true );
+   if! classTypeInfo {
+      if kind == Ast.nodeKindDeclMethod or
+         kind == Ast.nodeKindDeclConstr or
+         kind == Ast.nodeKindDeclDestr
+      {
+         let mut workClass = _exp;
+         if kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr {
+            mutable = true;
+         }  
+         // self シンボルを登録
 
-      if not classTypeInfo.$abstructFlag and abstructFlag {
-         self.addErrMess( firstToken.pos,
-                          "no abstruct class does not have abstruct method" );
+         if not Ast.isPubToExternal( workClass.$accessMode ) {
+            pubToExtFlag = false;
+         }  
+
+         
+         if workClass.$mutable and not mutable {
+            workClass = self.createModifier( workClass, false );
+         }  
+         self.scope.add(
+            .Var, false, true, "self",
+            workClass, .Pri, false, mutable, true );
+
+         if not workClass.$abstructFlag and abstructFlag {
+            self.addErrMess( firstToken.pos,
+                             "no abstruct class does not have abstruct method" );
+         }  
       }
    }
 
@@ -1345,6 +1389,15 @@ fn TransUnit.analyzeDeclFunc(
       if accessMode == .Global {
          parentScope = Ast.rootScope;
       }
+
+      if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
+         let matchFlag, err = Ast.TypeInfo.checkMatchType(
+            prottype.$argTypeInfoList, argTypeList, false );
+         if not matchFlag {
+            self.addErrMess( _exp.pos, err );
+         }
+      }
+      
       
       if kind == Ast.nodeKindDeclFunc {
          parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
@@ -1422,7 +1475,7 @@ fn TransUnit.analyzeDeclFunc(
 
    if needNode {
       let mut info = new Ast.DeclFuncInfo(
-         classNameToken, name, argList, orgStaticFlag, accessMode,
+         classTypeInfo, name, argList, orgStaticFlag, accessMode,
          body, retTypeInfoList, self.has__func__Symbol );
       // node = self.createNode( kind, firstToken.pos, [ typeInfo ], info );
 
@@ -1452,7 +1505,7 @@ fn TransUnit.analyzeDeclFunc(
    self.popScope();
 
    if needPopFlag {
-      self.addMethod( (unwrap classNameToken).txt, node, funcName );
+      self.addMethod( unwrap classTypeInfo, node, funcName );
       self.popClass();
    }
 
@@ -1678,6 +1731,11 @@ fn TransUnit.analyzeDeclVar(
       let varInfo = new Ast.VarInfo(
          varName, letVarInfo.varType, typeInfo );
       varList.insert( varInfo );
+
+      if Ast.isPubToExternal( accessMode ) {
+         self.checkPublic( varName.pos, typeInfo );
+      }
+      
       if not letVarInfo.varType and typeInfo.equals( Ast.builtinTypeNil ) {
          self.addErrMess(
             varName.pos, 'need type -- %s' ( varName.txt ) ); 

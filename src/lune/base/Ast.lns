@@ -302,13 +302,25 @@ class TypeManager {
 }
 
 
+let mut typeInfo2ScopeMap:Map<&TypeInfo,Scope> = {};
+
+pub fn getScope( typeInfo:&TypeInfo ): Scope! {
+   return typeInfo2ScopeMap[ typeInfo ];
+}
+
 pub class TypeInfo {
 
    // この TypeInfo のスコープ。
    // class, func など名前空間を持つ TypeInfo は有効。
-   pri let scope: Scope! { pub };
+   pri let scope: Scope!;
+
+   pub fn get_scope(): Scope! {
+      return typeInfo2ScopeMap[ self ];
+   }
+   
 
    pub fn __init( scope: Scope! ) {
+      typeInfo2ScopeMap[ self ] = scope;
       self.scope = scope;
       if! scope {
          _exp.set_ownerTypeInfo( self );
@@ -724,7 +736,7 @@ fn dumpScope( scope: Scope!, prefix:str ) {
 
 
 
-pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
+pub let mut headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
 
@@ -902,7 +914,7 @@ pub class ModifierTypeInfo extend TypeInfo {
    pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
       return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other, opTxt );
    }
-   
+
 
    advertise srcTypeInfo;
 }
@@ -1647,6 +1659,15 @@ pub static fn NormalTypeInfo.createModifier(
    typeInfo2ModifierMap[ srcTypeInfo ] = modifier;
    return modifier;
 }
+
+pub override fn ModifierTypeInfo.get_orgTypeInfo(): &TypeInfo {
+   let orgType = self.srcTypeInfo.$orgTypeInfo;
+   if self.mutable or not orgType.$mutable {
+      return orgType;
+   }
+   return NormalTypeInfo.createModifier( orgType, false );;
+}
+
 
 pub let builtinTypeNone:TypeInfo = 
    NormalTypeInfo.createBuiltin( "None", "", .Prim );
@@ -2565,7 +2586,7 @@ _declNodeClass( "DeclVar", Node, false, false,
 );
 
 pub class DeclFuncInfo {
-   pri let className: &Parser.Token! { pub };
+   pri let classTypeInfo: &TypeInfo! { pub };
    pri let name: &Parser.Token! { pub };
    pri let argList: List<&Node> { pub };
    pri let staticFlag: bool { pub };

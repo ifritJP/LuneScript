@@ -1,0 +1,9 @@
+enum aaa {
+   val1,
+   val2,
+}
+
+fn func( val:aaa! ) {
+}
+
+func( .

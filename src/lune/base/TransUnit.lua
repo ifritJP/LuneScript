@@ -365,7 +365,7 @@ function TransUnit:pushModule( externalFlag, name, mutable )
       local _exp = self.scope:getTypeInfoChild( name )
       if _exp ~= nil then
          typeInfo = _exp
-         self.scope = _lune.unwrap( typeInfo:get_scope())
+         self.scope = _lune.unwrap( Ast.getScope( typeInfo ))
       else
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
          local parentScope = self.scope
@@ -393,7 +393,7 @@ function TransUnit:pushClass( classFlag, abstructFlag, baseInfo, interfaceList, 
       local _exp = self.scope:getTypeInfoChild( name )
       if _exp ~= nil then
          typeInfo = _exp
-         self.scope = _lune.unwrap( typeInfo:get_scope())
+         self.scope = _lune.unwrap( Ast.getScope( typeInfo ))
          do
             local _switchExp = (_exp:get_kind() )
             if _switchExp == Ast.TypeInfoKind.Class then
@@ -1008,7 +1008,7 @@ function _TypeInfoEnum:createTypeInfo( param )
    local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
    local parentInfo = _lune.unwrap( param.typeId2TypeInfo[self.parentId])
    local name2EnumValInfo = {}
-   local parentScope = _lune.unwrap( parentInfo:get_scope())
+   local parentScope = _lune.unwrap( Ast.getScope( parentInfo ))
    local scope = Ast.Scope.new(parentScope, true, {})
    param.typeId2Scope[self.typeId] = scope
    local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune.unwrap( parentInfo), true, accessMode, self.txt, _lune.unwrap( param.typeId2TypeInfo[self.valTypeId]), name2EnumValInfo )
@@ -1494,7 +1494,7 @@ end
 function TransUnit:checkSymbol( token )
 
    if token.kind ~= Parser.TokenKind.Symb and token.kind ~= Parser.TokenKind.Kywd and token.kind ~= Parser.TokenKind.Type then
-      self:error( "illegal symbol" )
+      self:addErrMess( token.pos, string.format( "illegal symbol -- '%s'", token.txt) )
    end
    
    return token
@@ -2653,7 +2653,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    local prevValTypeInfo = Ast.headTypeInfo
    local valTypeInfo = Ast.headTypeInfo
    while nextToken.txt ~= "}" do
-      local valName = nextToken
+      local valName = self:checkSymbol( nextToken )
       nextToken = self:getToken(  )
       local enumVal = number
       do
@@ -2780,7 +2780,32 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    return nil
 end
 
-function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
+function TransUnit:checkPublic( pos, typeInfo )
+
+   local checkedTypeSet = {}
+   local function checkPub( workType )
+   
+      if checkedTypeSet[workType] then
+         return 
+      end
+      
+      checkedTypeSet[workType] = true
+      if workType:get_kind() ~= Ast.TypeInfoKind.List and workType:get_kind() ~= Ast.TypeInfoKind.Map and not Ast.isPubToExternal( workType:get_accessMode() ) then
+         self:addErrMess( pos, string.format( "not public this type -- %s", workType:getTxt(  )) )
+      else
+       
+         for __index, itemType in pairs( workType:get_itemTypeInfoList() ) do
+            checkPub( itemType )
+         end
+         
+      end
+      
+   end
+   
+   checkPub( typeInfo )
+end
+
+function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, firstToken )
 
    local nextToken = self:getToken(  )
    local mutable = false
@@ -2832,13 +2857,20 @@ function TransUnit:analyzeDeclMember( accessMode, staticFlag, firstToken )
       typeInfo = self:createModifier( typeInfo, false )
    end
    
+   if Ast.isPubToExternal( classTypeInfo:get_accessMode() ) then
+      if Ast.isPubToExternal( accessMode ) or Ast.isPubToExternal( getterMode ) or Ast.isPubToExternal( setterMode ) then
+         self:checkPublic( refType:get_pos(), typeInfo )
+      end
+      
+   end
+   
    local symbolInfo = self.scope:addMember( varName.txt, typeInfo, accessMode, staticFlag, mutable )
    return Ast.DeclMemberNode.create( self.nodeManager, firstToken.pos, {typeInfo}, varName, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
 end
 
-function TransUnit:analyzeDeclMethod( declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, className, firstToken, name )
+function TransUnit:analyzeDeclMethod( classTypeInfo, declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, firstToken, name )
 
-   local node = self:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, className, name, name )
+   local node = self:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, classTypeInfo, name, name )
    return node
 end
 
@@ -2912,7 +2944,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
             self:addErrMess( token.pos, "static member can't declare after '__init' block." )
          end
          
-         local memberNode = self:analyzeDeclMember( accessMode, staticFlag, token )
+         local memberNode = self:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, token )
          table.insert( fieldList, memberNode )
          table.insert( memberList, memberNode )
          memberName2Node[memberNode:get_name().txt] = memberNode
@@ -2929,7 +2961,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
             
          end
          
-         local methodNode = self:analyzeDeclMethod( declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, name, token, nameToken )
+         local methodNode = self:analyzeDeclMethod( classTypeInfo, declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, token, nameToken )
          table.insert( fieldList, methodNode )
          methodNameSet[nameToken.txt] = true
          if nameToken.txt == "__init" then
@@ -3240,15 +3272,14 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    return node
 end
 
-function TransUnit:addMethod( className, methodNode, name )
+function TransUnit:addMethod( classTypeInfo, methodNode, name )
 
-   local classTypeInfo = self.scope:getTypeInfo( className, self.scope, false )
    local classNodeInfo = _lune.unwrap( self.typeInfo2ClassNode[classTypeInfo])
    classNodeInfo:get_outerMethodSet()[name] = true
    table.insert( classNodeInfo:get_fieldList(), methodNode )
 end
 
-function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, classNameToken, firstToken, name )
+function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, accessMode, staticFlag, classTypeInfo, firstToken, name )
 
    local token = self:getToken(  )
    do
@@ -3267,16 +3298,24 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
    local needPopFlag = false
    if token.txt == "." then
       needPopFlag = true
-      classNameToken = name
-      local classTypeInfo = _lune.unwrap( self.scope:getTypeInfoChild( (_lune.unwrap( name) ).txt ))
-      self:pushClass( classTypeInfo:get_kind() == Ast.TypeInfoKind.Class, classTypeInfo:get_abstructFlag(), nil, nil, false, (_lune.unwrap( name) ).txt, Ast.AccessMode.Pub )
+      local className = (_lune.unwrap( name) ).txt
+      classTypeInfo = self.scope:getTypeInfoChild( className )
+      do
+         local _exp = classTypeInfo
+         if _exp ~= nil then
+            self:pushClass( _exp:get_kind() == Ast.TypeInfoKind.Class, _exp:get_abstructFlag(), nil, nil, false, className, Ast.AccessMode.Pub )
+         else
+            self:error( string.format( "not found class -- %s", className) )
+         end
+      end
+      
       name = self:getSymbolToken(  )
       token = self:getToken(  )
    end
    
    local kind = Ast.nodeKindDeclConstr
    local typeKind = Ast.TypeInfoKind.Func
-   if classNameToken then
+   if classTypeInfo then
       if not staticFlag then
          typeKind = Ast.TypeInfoKind.Method
       end
@@ -3353,25 +3392,31 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
    end
    
    local pubToExtFlag = Ast.isPubToExternal( accessMode )
-   if kind == Ast.nodeKindDeclMethod or kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr then
-      if kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr then
-         mutable = true
+   do
+      local _exp = classTypeInfo
+      if _exp ~= nil then
+         if kind == Ast.nodeKindDeclMethod or kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr then
+            local workClass = _exp
+            if kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr then
+               mutable = true
+            end
+            
+            if not Ast.isPubToExternal( workClass:get_accessMode() ) then
+               pubToExtFlag = false
+            end
+            
+            if workClass:get_mutable() and not mutable then
+               workClass = self:createModifier( workClass, false )
+            end
+            
+            self.scope:add( Ast.SymbolKind.Var, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable, true )
+            if not workClass:get_abstructFlag() and abstructFlag then
+               self:addErrMess( firstToken.pos, "no abstruct class does not have abstruct method" )
+            end
+            
+         end
+         
       end
-      
-      local classTypeInfo = _lune.unwrap( funcBodyScope:get_parent():get_ownerTypeInfo())
-      if not Ast.isPubToExternal( classTypeInfo:get_accessMode() ) then
-         pubToExtFlag = false
-      end
-      
-      if classTypeInfo:get_mutable() and not mutable then
-         classTypeInfo = self:createModifier( classTypeInfo, false )
-      end
-      
-      self.scope:add( Ast.SymbolKind.Var, false, true, "self", classTypeInfo, Ast.AccessMode.Pri, false, mutable, true )
-      if not classTypeInfo:get_abstructFlag() and abstructFlag then
-         self:addErrMess( firstToken.pos, "no abstruct class does not have abstruct method" )
-      end
-      
    end
    
    local retTypeInfoList = {}
@@ -3395,6 +3440,17 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
          local parentScope = funcBodyScope:get_parent(  )
          if accessMode == Ast.AccessMode.Global then
             parentScope = Ast.rootScope
+         end
+         
+         do
+            local prottype = parentScope:getTypeInfoChild( typeInfo:get_rawTxt() )
+            if prottype ~= nil then
+               local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false )
+               if not matchFlag then
+                  self:addErrMess( _exp.pos, err )
+               end
+               
+            end
          end
          
          if kind == Ast.nodeKindDeclFunc then
@@ -3480,7 +3536,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
    end
    
    if needNode then
-      local info = Ast.DeclFuncInfo.new(classNameToken, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, self.has__func__Symbol)
+      local info = Ast.DeclFuncInfo.new(classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, self.has__func__Symbol)
       do
          local _switchExp = (kind )
          if _switchExp == Ast.nodeKindDeclConstr then
@@ -3501,7 +3557,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
    
    self:popScope(  )
    if needPopFlag then
-      self:addMethod( (_lune.unwrap( classNameToken) ).txt, node, funcName )
+      self:addMethod( _lune.unwrap( classTypeInfo), node, funcName )
       self:popClass(  )
    end
    
@@ -3696,6 +3752,10 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       local typeInfo = typeInfoList[index]
       local varInfo = Ast.VarInfo.new(varName, letVarInfo.varType, typeInfo)
       table.insert( varList, varInfo )
+      if Ast.isPubToExternal( accessMode ) then
+         self:checkPublic( varName.pos, typeInfo )
+      end
+      
       if not letVarInfo.varType and typeInfo:equals( Ast.builtinTypeNil ) then
          self:addErrMess( varName.pos, string.format( 'need type -- %s', varName.txt) )
       end
@@ -4059,7 +4119,10 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    do
       local _exp = expList
       if _exp ~= nil then
-         expNodeList = _exp:get_expList()
+         for __index, node in pairs( _exp:get_expList() ) do
+            table.insert( expNodeList, node )
+         end
+         
       end
    end
    
@@ -5129,13 +5192,18 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
          do
             local _exp = expectType
             if _exp ~= nil then
-               if _exp:get_kind() == Ast.TypeInfoKind.Enum then
-                  local enumTyepInfo = _exp:get_srcTypeInfo()
+               local orgExpectType = _exp
+               if orgExpectType:get_nilable() then
+                  orgExpectType = orgExpectType:get_orgTypeInfo()
+               end
+               
+               if orgExpectType:get_kind() == Ast.TypeInfoKind.Enum then
+                  local enumTyepInfo = orgExpectType:get_srcTypeInfo()
                   local nextToken = self:getToken(  )
                   self:checkEnumComp( nextToken, enumTyepInfo )
                   if enumTyepInfo:getEnumValInfo( nextToken.txt ) then
-                     if _exp:get_externalFlag() and not self.importModule2ModuleInfoCurrent[_exp:getModule(  ):get_srcTypeInfo()] then
-                        local fullname = _exp:getFullName( self.importModule2ModuleInfo, true )
+                     if orgExpectType:get_externalFlag() and not self.importModule2ModuleInfoCurrent[orgExpectType:getModule(  ):get_srcTypeInfo()] then
+                        local fullname = orgExpectType:getFullName( self.importModule2ModuleInfo, true )
                         self:addErrMess( token.pos, string.format( "This module not import -- %s", fullname) )
                      end
                      
@@ -5143,12 +5211,12 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
                      exp = self:analyzeExpCont( firstToken, exp, false )
                   else
                    
-                     self:error( string.format( "illegal enum val -- %s.%s", _exp:getTxt(  ), nextToken.txt) )
+                     self:error( string.format( "illegal enum val -- %s.%s", orgExpectType:getTxt(  ), nextToken.txt) )
                   end
                   
                else
                 
-                  self:error( string.format( "illegal type for '.' -- %s", _exp:getTxt(  )) )
+                  self:error( string.format( "illegal type for '.' -- %s", orgExpectType:getTxt(  )) )
                end
                
             else

@@ -94,8 +94,15 @@ class Test2 {
    testEnum._from( "1" ); // error
 }
 
+
+enum Foo {
+   "hoge",  // error
+   1,       // error
+   1.0,     // error
+}
+
 {
    let val1 = testEnum.val1;
-   val1 = .val4;
+   val1 = .val4;  // errror
 }
 

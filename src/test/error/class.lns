@@ -167,3 +167,11 @@ pub class PubClass {
       return new PriClass();
    }
 }
+
+interface IFTest {
+   pub fn func( val:int );
+}
+
+class IFTest2 extend (IFTest) {
+   pub fn func( val:str );
+}

@@ -1401,8 +1401,8 @@ end
 function convFilter:processDeclConstr( node, parent )
 
    local declInfo = node:get_declInfo(  )
-   local classNameToken = _lune.unwrap( declInfo:get_className(  ))
-   local className = classNameToken.txt
+   local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
+   local className = self:getFullName( classTypeInfo )
    self:write( string.format( "function %s.new( ", className ) )
    local argTxt = ""
    local argList = declInfo:get_argList(  )
@@ -1445,7 +1445,7 @@ end
 
 function convFilter:processDeclDestr( node, parent )
 
-   self:writeln( string.format( "function %s.__free( self )", _lune.nilacc( node:get_declInfo():get_className(), "txt" )) )
+   self:writeln( string.format( "function %s.__free( self )", _lune.nilacc( node:get_declInfo():get_classTypeInfo(), 'getTxt', 'callmtd'  )) )
    filter( _lune.unwrap( node:get_declInfo():get_body()), self, node )
    local classTypeInfo = node:get_expType():get_parentInfo()
    do
@@ -1501,8 +1501,8 @@ function convFilter:processDeclMethod( node, parent )
    
    local methodNodeToken = _lune.unwrap( declInfo:get_name(  ))
    local methodName = methodNodeToken.txt
-   local classNameToken = _lune.unwrap( declInfo:get_className(  ))
-   self:write( string.format( "function %s%s%s( ", classNameToken.txt, delimit, methodName) )
+   local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
+   self:write( string.format( "function %s%s%s( ", self:getFullName( classTypeInfo ), delimit, methodName) )
    local argList = declInfo:get_argList(  )
    for index, arg in pairs( argList ) do
       if index > 1 then

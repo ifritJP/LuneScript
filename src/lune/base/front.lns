@@ -32,6 +32,8 @@ import lune.base.dumpNode;
 import lune.base.glueFilter;
 import lune.base.Depend;
 
+let version = "1.0.1";
+
 global fn _luneGetLocal( varName:str ):stem!
 {
    let mut index = 1;
@@ -96,7 +98,7 @@ fn Front.loadLua( path:str ):stem {
 
 fn createPaser( path:str, mod:str ): Parser.Parser
 {
-   let parser = Parser.StreamParser.create( path, false, mod );
+   let mut parser = Parser.StreamParser.create( path, false, mod );
    if! parser {
       return _exp;
    }
@@ -399,6 +401,9 @@ pub fn Front.exec() mut
       }
       case .Exec {
          self.loadModule( mod );
+      }
+      case .Version {
+         print( "LuneScript: version %s" (version) );
       }
       default {
          print( "illegal mode" );

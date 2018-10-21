@@ -38,18 +38,6 @@ fn glueGenerator.writeHeader( txt:str ) mut {
    self.headerStream.write( txt );
 }
 
-fn glueGenerator.outputMethod( classFullName:str, methodNode:&Ast.DeclMethodNode ) mut {
-   let declInfo = methodNode.$declInfo;
-   if! declInfo.$name {
-      if declInfo.$staticFlag {
-         self.write( "static method %s.%s" (classFullName, _exp.txt ) );
-      }
-      else {
-         self.write( "method %s.%s" (classFullName, _exp.txt ) );
-      }
-   }
-}
-
 fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, str, &Ast.TypeInfo, str {
    let argType = argNode.$expType;
    let mut orgType = (argType.$nilable and argType.$orgTypeInfo or argType).$srcTypeInfo;

@@ -279,7 +279,9 @@ fn TransUnit.checkMatchValType(
    let mut expNodeList:List<&Ast.Node> = [];
 
    if! expList {
-      expNodeList = _exp.$expList;
+      foreach node in _exp.$expList {
+         expNodeList.insert( node );
+      }
    }
    self.checkMatchType( funcTypeInfo.getTxt(), pos, argTypeList, expNodeList, false );
 }
@@ -1467,16 +1469,21 @@ fn TransUnit.analyzeExp(
    if token.kind == Parser.TokenKind.Dlmt {
       if token.txt == "." {
          if! expectType {
-            if _exp.$kind == .Enum {
-               let enumTyepInfo = _exp.$srcTypeInfo@@Ast.EnumTypeInfo;
+            let mut orgExpectType = _exp;
+            if orgExpectType.$nilable {
+               orgExpectType = orgExpectType.$orgTypeInfo;
+            }
+            if orgExpectType.$kind == .Enum {
+               let enumTyepInfo = orgExpectType.$srcTypeInfo@@Ast.EnumTypeInfo;
                let nextToken = self.getToken();
                self.checkEnumComp( nextToken, enumTyepInfo );
                
                if enumTyepInfo.getEnumValInfo( nextToken.txt ) {
-                  if _exp.$externalFlag and
-                     not self.importModule2ModuleInfoCurrent[ _exp.getModule().$srcTypeInfo ]
+                  if orgExpectType.$externalFlag and
+                     not self.importModule2ModuleInfoCurrent[
+                        orgExpectType.getModule().$srcTypeInfo ]
                   {
-                     let fullname = _exp.getFullName(
+                     let fullname = orgExpectType.getFullName(
                         self.importModule2ModuleInfo, true );
                      self.addErrMess( token.pos, "This module not import -- %s"
                                       ( fullname ) );
@@ -1488,11 +1495,11 @@ fn TransUnit.analyzeExp(
                }
                else {
                   self.error( "illegal enum val -- %s.%s"
-                              (_exp.getTxt(), nextToken.txt) );
+                              (orgExpectType.getTxt(), nextToken.txt) );
                }
             }
             else {
-               self.error( "illegal type for '.' -- %s" (_exp.getTxt() ) );
+               self.error( "illegal type for '.' -- %s" (orgExpectType.getTxt() ) );
             }
          }
          else {

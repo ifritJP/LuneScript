@@ -1329,8 +1329,8 @@ pub override fn convFilter.processDeclConstr(
    node: Ast.DeclConstrNode, parent: &Ast.Node ) mut
 {
    let declInfo = node.get_declInfo();
-   let classNameToken = unwrap declInfo.get_className();
-   let className = classNameToken.txt;
+   let classTypeInfo = unwrap declInfo.$classTypeInfo;
+   let className = self.getFullName( classTypeInfo );
    self.write( string.format( "function %s.new( ", className ) );
 
    let mut argTxt = "";
@@ -1376,7 +1376,8 @@ pub override fn convFilter.processDeclConstr(
 pub override fn convFilter.processDeclDestr( 
    node: Ast.DeclDestrNode, parent: &Ast.Node ) mut
 {
-   self.writeln( "function %s.__free( self )" ( node.$declInfo.$className$.txt ) );
+   self.writeln( "function %s.__free( self )"
+      ( node.$declInfo.$classTypeInfo$.getTxt$() ) );
 
    filter( unwrap node.$declInfo.$body, self, node );
 
@@ -1427,9 +1428,9 @@ pub override fn convFilter.processDeclMethod(
    }  
    let methodNodeToken = unwrap declInfo.get_name();
    let methodName = methodNodeToken.txt;
-   let classNameToken = unwrap declInfo.get_className();
+   let classTypeInfo = unwrap declInfo.$classTypeInfo;
    self.write( "function %s%s%s( "
-               ( classNameToken.txt, delimit, methodName ) );
+               ( self.getFullName( classTypeInfo ), delimit, methodName ) );
 
    let argList = declInfo.get_argList();
    foreach arg, index in argList {
