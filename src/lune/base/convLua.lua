@@ -357,14 +357,14 @@ function convFilter:outputMeta( node )
          return 
       end
       
-      if not forceFlag and typeInfo:get_accessMode(  ) ~= Ast.AccessMode.Pub then
+      if not forceFlag and not Ast.isPubToExternal( typeInfo:get_accessMode() ) then
          return 
       end
       
       if typeId2TypeInfo[typeInfo:get_typeId(  )] then
          if pickupChildFlag and not typeInfo:get_nilable() then
             for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
-               if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
+               if Ast.isPubToExternal( itemTypeInfo:get_accessMode() ) and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
                   pickupTypeId( itemTypeInfo, true, true )
                end
                
@@ -1398,6 +1398,23 @@ function convFilter:processExpNew( node, parent )
 end
 
 
+function convFilter:process__func__symbol( has__func__Symbol, classType, funcName )
+
+   if has__func__Symbol then
+      local nameSpace = ""
+      if classType ~= Ast.headTypeInfo then
+         nameSpace = self:getFullName( classType )
+      end
+      
+      if funcName == "" then
+         funcName = "<anonymous>"
+      end
+      
+      self:writeln( string.format( "local __func__ = '%s.%s'", nameSpace, funcName) )
+   end
+   
+end
+
 function convFilter:processDeclConstr( node, parent )
 
    local declInfo = node:get_declInfo(  )
@@ -1435,6 +1452,7 @@ function convFilter:processDeclConstr( node, parent )
    do
       local _exp = declInfo:get_body()
       if _exp ~= nil then
+         self:process__func__symbol( declInfo:get_has__func__Symbol(), node:get_expType():get_parentInfo(), "__init" )
          filter( _exp, self, node )
       end
    end
@@ -1446,6 +1464,7 @@ end
 function convFilter:processDeclDestr( node, parent )
 
    self:writeln( string.format( "function %s.__free( self )", _lune.nilacc( node:get_declInfo():get_classTypeInfo(), 'getTxt', 'callmtd'  )) )
+   self:process__func__symbol( node:get_declInfo():get_has__func__Symbol(), node:get_expType():get_parentInfo(), "__free" )
    filter( _lune.unwrap( node:get_declInfo():get_body()), self, node )
    local classTypeInfo = node:get_expType():get_parentInfo()
    do
@@ -1473,23 +1492,6 @@ function convFilter:processExpCallSuper( node, parent )
    self:writeln( ")" )
 end
 
-
-function convFilter:process__func__symbol( has__func__Symbol, classType, funcName )
-
-   if has__func__Symbol then
-      local nameSpace = ""
-      if classType ~= Ast.headTypeInfo then
-         nameSpace = self:getFullName( classType )
-      end
-      
-      if funcName == "" then
-         funcName = "<anonymous>"
-      end
-      
-      self:writeln( string.format( "local __func__ = '%s.%s'", nameSpace, funcName) )
-   end
-   
-end
 
 function convFilter:processDeclMethod( node, parent )
 

@@ -295,7 +295,7 @@ fn glueGenerator.outputMethod( node:&Ast.DeclMethodNode, gluePrefix:str ) mut {
    self.write( "}\n" );
 }
 
-fn glueGenerator.outputClass(
+pub fn glueGenerator.outputClass(
    moduleFullName:str, node:&Ast.DeclClassNode, gluePrefix:str ) mut
 {
    let moduleSymbolFull = moduleFullName.gsub( "%.", "_" );

@@ -40,6 +40,11 @@ class SubSub extend Sub (Mapping) {
       self.val4 = new Test( { "test": "hoge" } );
       self.val5 = .val;
    }
+   pub fn func() {
+      forsort val, key in self._toMap() {
+         print( key, type( val ) );
+      }
+   }
 }
 
 pub fn test() {
@@ -52,6 +57,7 @@ pub fn test() {
       print( hoge2.$val1, hoge2.$val2, hoge2.$val3 );
       foreach val, key in hoge2.$val4.$val1 {
          print( key, val );
-      }  
+      }
+      hoge2.func();
    }
 }

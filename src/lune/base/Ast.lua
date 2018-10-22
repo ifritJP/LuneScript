@@ -392,6 +392,20 @@ end
 local rootScope = Scope.new(nil, false, {})
 _moduleObj.rootScope = rootScope
 
+function Scope:isInnerOf( scope )
+
+   local workScope = self
+   while workScope ~= _moduleObj.rootScope do
+      if workScope == scope then
+         return true
+      end
+      
+      workScope = workScope.parent
+   end
+   
+   return false
+end
+
 local dummyList = {}
 local rootChildren = {}
 local TypeData = {}
@@ -1011,9 +1025,7 @@ function NormalSymbolInfo:canAccess( fromScope )
       elseif _switchExp == AccessMode.Local then
          return self
       elseif _switchExp == AccessMode.Pri then
-         local nsClass = self.scope:getClassTypeInfo(  )
-         local fromClass = fromScope:getClassTypeInfo(  )
-         if nsClass == fromClass then
+         if fromScope:isInnerOf( self.scope ) then
             return self
          end
          

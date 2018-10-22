@@ -167,6 +167,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
          //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
          statement = Ast.BreakNode.create(
             self.nodeManager, token.pos, [ Ast.builtinTypeNone ] );
+         if #self.loopScopeQueue == 0 {
+            self.addErrMess( token.pos, "no loop syntax." );
+         }
       }
       elseif token.txt == "unwrap" {
          statement = self.analyzeUnwrap( token );

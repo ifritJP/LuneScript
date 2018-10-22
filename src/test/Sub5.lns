@@ -1,0 +1,5 @@
+pub class Test {
+   pro fn func() {
+      print( __mod__, __func__ );
+   };
+}

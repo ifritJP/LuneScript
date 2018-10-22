@@ -114,6 +114,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/arg.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/unwrap.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/operand.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/loop.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
@@ -170,6 +171,8 @@ test-comp2:
 	$(call exeLune,work/3,test/Sub3.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Sub3_2.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Sub4.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Sub5.lns,save,) > /dev/null
+	$(call exeLune,work/3,test/Sub6.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/simple.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Class1.lns,save,) > /dev/null
 	$(call exeLune,work/3,test/Class2.lns,save,) > /dev/null

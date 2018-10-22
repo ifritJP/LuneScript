@@ -305,14 +305,17 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
       if typeInfo.get_typeId() == Ast.rootTypeId {
          return;
       }
-      if not forceFlag and typeInfo.get_accessMode() ~= .Pub {
+      // if not forceFlag and typeInfo.get_accessMode() ~= .Pub {
+      //    return;
+      // }
+      if not forceFlag and not Ast.isPubToExternal( typeInfo.$accessMode ) {
          return;
       }
 
       if typeId2TypeInfo[ typeInfo.get_typeId() ] {
          if pickupChildFlag and not typeInfo.$nilable {
 	    foreach itemTypeInfo in typeInfo.get_children() {
-               if itemTypeInfo.$accessMode == .Pub and
+               if Ast.isPubToExternal( itemTypeInfo.$accessMode ) and
                    ( itemTypeInfo.get_kind() == Ast.TypeInfoKind.Class or
                      itemTypeInfo.get_kind() == Ast.TypeInfoKind.IF or
                      itemTypeInfo.get_kind() == Ast.TypeInfoKind.Func or
@@ -1325,6 +1328,21 @@ pub override fn convFilter.processExpNew(
    self.write( ")" );
 };
 
+fn convFilter.process__func__symbol(
+   has__func__Symbol:bool, classType:&Ast.TypeInfo, mut funcName:str ) mut
+{
+   if has__func__Symbol {
+      let mut nameSpace = "";
+      if classType ~= Ast.headTypeInfo {
+         nameSpace = self.getFullName( classType );
+      }
+      if funcName == "" {
+         funcName = "<anonymous>";
+      }
+      self.writeln( "local __func__ = '%s.%s'" (nameSpace, funcName) );
+   }  
+}
+
 pub override fn convFilter.processDeclConstr( 
    node: Ast.DeclConstrNode, parent: &Ast.Node ) mut
 {
@@ -1368,6 +1386,9 @@ pub override fn convFilter.processDeclConstr(
    // }
    self.write( string.format( "function %s:__init(%s) ", className, argTxt ) );
    if! declInfo.$body {
+      self.process__func__symbol(
+         declInfo.$has__func__Symbol, node.$expType.$parentInfo, "__init" );
+      
       filter( _exp,  self, node );
    }
    self.writeln( "end" );
@@ -1379,6 +1400,9 @@ pub override fn convFilter.processDeclDestr(
    self.writeln( "function %s.__free( self )"
       ( node.$declInfo.$classTypeInfo$.getTxt$() ) );
 
+   self.process__func__symbol(
+      node.$declInfo.$has__func__Symbol, node.$expType.$parentInfo, "__free" );
+   
    filter( unwrap node.$declInfo.$body, self, node );
 
    let classTypeInfo = node.$expType.$parentInfo;
@@ -1402,21 +1426,6 @@ pub override fn convFilter.processExpCallSuper(
    }
    self.writeln( ")" );
 };  
-
-fn convFilter.process__func__symbol(
-   has__func__Symbol:bool, classType:&Ast.TypeInfo, mut funcName:str ) mut
-{
-   if has__func__Symbol {
-      let mut nameSpace = "";
-      if classType ~= Ast.headTypeInfo {
-         nameSpace = self.getFullName( classType );
-      }
-      if funcName == "" {
-         funcName = "<anonymous>";
-      }
-      self.writeln( "local __func__ = '%s.%s'" (nameSpace, funcName) );
-   }  
-}
 
 pub override fn convFilter.processDeclMethod( 
    node: Ast.DeclMethodNode, parent: &Ast.Node ) mut

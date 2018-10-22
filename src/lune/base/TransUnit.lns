@@ -129,9 +129,13 @@ pub class TransUnit {
    /** NodeKind -> Node[]  */
    pri let mut nodeManager: Ast.NodeManager;
 
+   /** ループ系制御構文(for 等)の Scope */
+   pri let mut loopScopeQueue: List<&Ast.Scope>;
+
    pub fn __init( macroEval: Ast.MacroEval,
                   analyzeModule:str!, mode:AnalyzeMode!, pos:&Parser.Position! )
    {
+      self.loopScopeQueue = [];
       self.has__func__Symbol = false;
       self.hasMappingClassDef = false;
       self.nodeManager = new Ast.NodeManager();
@@ -251,16 +255,26 @@ pub class TransUnit {
    
 
    pri fn pushClass(
-      classFlag:bool, abstructFlag: bool,
-      baseInfo: &Ast.TypeInfo!, interfaceList: List<&Ast.TypeInfo>!,
-      externalFlag: bool, name:str,
+      classFlag:bool, abstructFlag: bool, baseInfo: &Ast.TypeInfo!,
+      interfaceList: List<&Ast.TypeInfo>!, externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
          typeInfo = _exp;
+
+         if typeInfo.$abstructFlag ~= abstructFlag {
+            self.addErrMess( self.currentToken.pos,
+                             "mismatch class abstruct for prototpye" );
+         }  
+         if typeInfo.$accessMode ~= accessMode {
+            self.addErrMess( self.currentToken.pos,
+                             "mismatch class accessmode(%s) for prototpye accessmode(%s)"
+                             (accessMode.$_txt, typeInfo.$accessMode.$_txt));
+         }
+         
          self.scope = unwrap Ast.getScope( typeInfo );
-         switch ( _exp.$kind ) {
+         switch ( typeInfo.$kind ) {
             case .Class {
                if not classFlag {
                   self.addErrMess(
@@ -386,7 +400,7 @@ quotedChar2Code[ '\\' ] = ?\\; // \\
 quotedChar2Code[ '"' ] = ?\";  // "
 quotedChar2Code[ "'" ] = ?\';  // '
 
-fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
+pub fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
    if not self.validMutControl {
       return typeInfo;
    }
@@ -1306,10 +1320,22 @@ fn TransUnit.analyzeBlock(
       self.pushScope( false );
    }
 
+   let mut loopFlag = false;
+   switch blockKind {
+      case .For, .Apply, .While, .Repeat, .Foreach {
+         loopFlag = true;
+         self.loopScopeQueue.insert( self.scope );
+      }
+   }
+
    let mut stmtList:List<&Ast.Node> = [];
    self.analyzeStatementList( stmtList, "}" );
 
    self.checkNextToken( "}" );
+
+   if loopFlag {
+      self.loopScopeQueue.remove();
+   }
 
    if not scope {
       self.popScope();

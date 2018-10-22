@@ -273,6 +273,7 @@ function TransUnit.new( macroEval, analyzeModule, mode, pos )
    return obj
 end
 function TransUnit:__init(macroEval, analyzeModule, mode, pos) 
+   self.loopScopeQueue = {}
    self.has__func__Symbol = false
    self.hasMappingClassDef = false
    self.nodeManager = Ast.NodeManager.new()
@@ -393,9 +394,19 @@ function TransUnit:pushClass( classFlag, abstructFlag, baseInfo, interfaceList, 
       local _exp = self.scope:getTypeInfoChild( name )
       if _exp ~= nil then
          typeInfo = _exp
+         if typeInfo:get_abstructFlag() ~= abstructFlag then
+            self:addErrMess( self.currentToken.pos, "mismatch class abstruct for prototpye" )
+         end
+         
+         if typeInfo:get_accessMode() ~= accessMode then
+            self:addErrMess( self.currentToken.pos, string.format( "mismatch class accessmode(%s) for prototpye accessmode(%s)", Ast.AccessMode:_getTxt( accessMode)
+            , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
+            ) )
+         end
+         
          self.scope = _lune.unwrap( Ast.getScope( typeInfo ))
          do
-            local _switchExp = (_exp:get_kind() )
+            local _switchExp = (typeInfo:get_kind() )
             if _switchExp == Ast.TypeInfoKind.Class then
                if not classFlag then
                   self:addErrMess( self.currentToken.pos, string.format( "define interface already -- %s", name) )
@@ -1597,9 +1608,22 @@ function TransUnit:analyzeBlock( blockKind, scope )
       self:pushScope( false )
    end
    
+   local loopFlag = false
+   do
+      local _switchExp = blockKind
+      if _switchExp == Ast.BlockKind.For or _switchExp == Ast.BlockKind.Apply or _switchExp == Ast.BlockKind.While or _switchExp == Ast.BlockKind.Repeat or _switchExp == Ast.BlockKind.Foreach then
+         loopFlag = true
+         table.insert( self.loopScopeQueue, self.scope )
+      end
+   end
+   
    local stmtList = {}
    self:analyzeStatementList( stmtList, "}" )
    self:checkNextToken( "}" )
+   if loopFlag then
+      table.remove( self.loopScopeQueue )
+   end
+   
    if not scope then
       self:popScope(  )
    end
@@ -3061,6 +3085,10 @@ end
 function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
 
    local name = self:getSymbolToken(  )
+   if classAccessMode == Ast.AccessMode.Local then
+      classAccessMode = Ast.AccessMode.Pri
+   end
+   
    local moduleName = nil
    local gluePrefix = nil
    if mode == DeclClassMode.Module then
@@ -3079,6 +3107,17 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode )
    local classScope = self.scope
    self:checkToken( nextToken, "{" )
+   local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, false ) ), false )
+   if classTypeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF ) then
+      self.hasMappingClassDef = true
+      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( _moduleObj.typeInfoMappingIF ) then
+         self:addErrMess( firstToken.pos, string.format( "must extend Mapping at %s", classTypeInfo:get_baseTypeInfo():getTxt(  )) )
+      end
+      
+      local toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "_toMap", {}, {mapType}, false )
+      classScope:addMethod( toMapFuncTypeInfo, Ast.AccessMode.Pub, false, false )
+   end
+   
    local node, workNextToken, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
    nextToken = workNextToken
    local parentInfo = classTypeInfo
@@ -3173,11 +3212,6 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    if classTypeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF ) then
-      self.hasMappingClassDef = true
-      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( _moduleObj.typeInfoMappingIF ) then
-         self:addErrMess( firstToken.pos, string.format( "must extend Mapping at %s", classTypeInfo:get_baseTypeInfo():getTxt(  )) )
-      end
-      
       local function isAvailableMapping( typeInfo )
       
          do
@@ -3222,9 +3256,6 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          
       end
       
-      local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, false ) ), false )
-      local toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "_toMap", {}, {mapType}, false )
-      classScope:addMethod( toMapFuncTypeInfo, Ast.AccessMode.Pub, false, false )
       local fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromMap", {mapType}, {classTypeInfo:get_nilableTypeInfo()}, true )
       classScope:addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false )
       local fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromStem", {Ast.builtinTypeStem_}, {classTypeInfo:get_nilableTypeInfo()}, true )
@@ -3260,12 +3291,19 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
        )
    end
    
-   if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
-      checkOverrideMethod( _lune.unwrap( classTypeInfo:get_baseTypeInfo():get_scope()) )
-   end
-   
-   for __index, ifType in pairs( classTypeInfo:get_interfaceList() ) do
-      checkOverrideMethod( _lune.unwrap( ifType:get_scope()) )
+   if not classAbstructFlag then
+      local workTypeInfo = classTypeInfo
+      repeat 
+         if workTypeInfo ~= Ast.headTypeInfo then
+            checkOverrideMethod( _lune.unwrap( workTypeInfo:get_scope()) )
+         end
+         
+         for __index, ifType in pairs( workTypeInfo:get_interfaceList() ) do
+            checkOverrideMethod( _lune.unwrap( ifType:get_scope()) )
+         end
+         
+         workTypeInfo = workTypeInfo:get_baseTypeInfo()
+      until workTypeInfo == Ast.headTypeInfo
    end
    
    self:popClass(  )
@@ -3303,7 +3341,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
       do
          local _exp = classTypeInfo
          if _exp ~= nil then
-            self:pushClass( _exp:get_kind() == Ast.TypeInfoKind.Class, _exp:get_abstructFlag(), nil, nil, false, className, Ast.AccessMode.Pub )
+            self:pushClass( _exp:get_kind() == Ast.TypeInfoKind.Class, _exp:get_abstructFlag(), nil, nil, false, className, _exp:get_accessMode() )
          else
             self:error( string.format( "not found class -- %s", className) )
          end
@@ -3311,6 +3349,10 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
       
       name = self:getSymbolToken(  )
       token = self:getToken(  )
+      if accessMode == Ast.AccessMode.Local then
+         accessMode = Ast.AccessMode.Pri
+      end
+      
    end
    
    local kind = Ast.nodeKindDeclConstr
@@ -3409,7 +3451,10 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
                workClass = self:createModifier( workClass, false )
             end
             
-            self.scope:add( Ast.SymbolKind.Var, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable, true )
+            if not staticFlag then
+               self.scope:add( Ast.SymbolKind.Var, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable, true )
+            end
+            
             if not workClass:get_abstructFlag() and abstructFlag then
                self:addErrMess( firstToken.pos, "no abstruct class does not have abstruct method" )
             end
@@ -4660,16 +4705,19 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
          
          fieldName = "get_" .. fieldName
          getterTypeInfo = Ast.headTypeInfo
-      end
-      
-      do
-         local _exp = scope:getTypeInfoChild( fieldName )
-         if _exp ~= nil then
-            typeInfo = _exp
-         else
-            self:addErrMess( token.pos, string.format( "not found enum field -- %s", token.txt) )
-            typeInfo = Ast.builtinTypeInt
+         typeInfo = Ast.builtinTypeString
+      else
+       
+         do
+            local _exp = scope:getTypeInfoChild( fieldName )
+            if _exp ~= nil then
+               typeInfo = _exp
+            else
+               self:addErrMess( token.pos, string.format( "not found enum field -- %s", token.txt) )
+               typeInfo = Ast.builtinTypeInt
+            end
          end
+         
       end
       
    elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Map then
@@ -5554,6 +5602,10 @@ function TransUnit:analyzeStatement( termTxt )
       elseif token.txt == "break" then
          self:checkNextToken( ";" )
          statement = Ast.BreakNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone} )
+         if #self.loopScopeQueue == 0 then
+            self:addErrMess( token.pos, "no loop syntax." )
+         end
+         
       elseif token.txt == "unwrap" then
          statement = self:analyzeUnwrap( token )
       elseif token.txt == "sync" then

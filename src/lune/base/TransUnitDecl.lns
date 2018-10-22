@@ -939,10 +939,14 @@ fn TransUnit.analyzeClassBody(
 }
 
 fn TransUnit.analyzeDeclClass(
-   classAbstructFlag: bool,  classAccessMode: Ast.AccessMode,
+   classAbstructFlag: bool,  mut classAccessMode: Ast.AccessMode,
    firstToken: &Parser.Token, mode:DeclClassMode ) mut : Ast.DeclClassNode
 {
    let name = self.getSymbolToken();
+
+   if classAccessMode == .Local {
+      classAccessMode = .Pri;
+   }
 
    let mut moduleName: &Parser.Token! = nil;
    let mut gluePrefix:str! = nil;
@@ -964,6 +968,30 @@ fn TransUnit.analyzeDeclClass(
    let mut classScope = self.scope;
 
    self.checkToken( nextToken, "{" );
+
+
+   let mapType = self.createModifier( 
+      Ast.NormalTypeInfo.createMap(
+         .Pub, classTypeInfo, Ast.builtinTypeString,
+         self.createModifier( Ast.builtinTypeStem, false ) ), false );
+   if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+      self.hasMappingClassDef = true;
+      
+      if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
+         not classTypeInfo.$baseTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+         self.addErrMess(
+            firstToken.pos,
+            "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt() ) );
+      }
+      // _toMap の追加
+      let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
+         false, false, nil, .Method, classTypeInfo,
+         true, false, false, .Pub, "_toMap", [], [ mapType ], false );
+      classScope.addMethod( toMapFuncTypeInfo, .Pub, false, false );
+   }
+
+   
+   
 
    let mut node, workNextToken, mut methodNameSet = self.analyzeClassBody(
       classAccessMode, firstToken, mode, gluePrefix,
@@ -1083,15 +1111,6 @@ fn TransUnit.analyzeDeclClass(
 
 
    if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
-      self.hasMappingClassDef = true;
-      
-      if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
-         not classTypeInfo.$baseTypeInfo.isInheritFrom( typeInfoMappingIF ) {
-         self.addErrMess(
-            firstToken.pos,
-            "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt() ) );
-      }
-      
       // Mapping の制限チェック
       fn isAvailableMapping( typeInfo:&Ast.TypeInfo ): bool {
          switch typeInfo.$kind {
@@ -1140,16 +1159,6 @@ fn TransUnit.analyzeDeclClass(
          }
       }
 
-      // _toMap の追加
-      let mapType = self.createModifier( 
-         Ast.NormalTypeInfo.createMap(
-            .Pub, classTypeInfo, Ast.builtinTypeString,
-            self.createModifier( Ast.builtinTypeStem, false ) ), false );
-      let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
-         false, false, nil, .Method, classTypeInfo,
-         true, false, false, .Pub, "_toMap", [], [ mapType ], false );
-      classScope.addMethod( toMapFuncTypeInfo, .Pub, false, false );
-
       // _fromMap の追加
       let fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
@@ -1188,15 +1197,20 @@ fn TransUnit.analyzeDeclClass(
             }
             return true;
          } );
-      
    }
-   
-   // extend のメソッドがオーバーライドされているか確認
-   if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
-      checkOverrideMethod( unwrap classTypeInfo.$baseTypeInfo.$scope );
-   }
-   foreach ifType in classTypeInfo.$interfaceList {
-      checkOverrideMethod( unwrap ifType.$scope );
+
+   if not classAbstructFlag {
+      let mut workTypeInfo = classTypeInfo;
+      repeat {
+         // extend のメソッドがオーバーライドされているか確認
+         if workTypeInfo ~= Ast.headTypeInfo {
+            checkOverrideMethod( unwrap workTypeInfo.$scope );
+         }  
+         foreach ifType in workTypeInfo.$interfaceList {
+            checkOverrideMethod( unwrap ifType.$scope );
+         }
+         workTypeInfo = workTypeInfo.$baseTypeInfo;
+      } workTypeInfo == Ast.headTypeInfo;
    }
 
    self.popClass();
@@ -1218,7 +1232,7 @@ pri fn TransUnit.addMethod(
 
 fn TransUnit.analyzeDeclFunc(
    declFuncMode: DeclFuncMode, abstructFlag: bool, overrideFlag: bool,
-   accessMode: Ast.AccessMode,
+   mut accessMode: Ast.AccessMode,
    mut staticFlag: bool, mut classTypeInfo: &Ast.TypeInfo!,
    firstToken: &Parser.Token, mut name: &Parser.Token! ) mut : Ast.Node
 {
@@ -1243,7 +1257,7 @@ fn TransUnit.analyzeDeclFunc(
       if! classTypeInfo {
          self.pushClass(
             _exp.$kind == .Class,
-            _exp.$abstructFlag, nil, nil, false, className, .Pub );
+            _exp.$abstructFlag, nil, nil, false, className, _exp.$accessMode );
       }
       else {
          self.error( "not found class -- %s" (className) );
@@ -1251,6 +1265,10 @@ fn TransUnit.analyzeDeclFunc(
 
       name = self.getSymbolToken();
       token = self.getToken();
+
+      if accessMode == .Local {
+         accessMode = .Pri;
+      }
    }
 
    let mut kind = Ast.nodeKindDeclConstr;
@@ -1349,10 +1367,12 @@ fn TransUnit.analyzeDeclFunc(
          
          if workClass.$mutable and not mutable {
             workClass = self.createModifier( workClass, false );
-         }  
-         self.scope.add(
-            .Var, false, true, "self",
-            workClass, .Pri, false, mutable, true );
+         }
+         if not staticFlag {
+            self.scope.add(
+               .Var, false, true, "self",
+               workClass, .Pri, false, mutable, true );
+         }
 
          if not workClass.$abstructFlag and abstructFlag {
             self.addErrMess( firstToken.pos,

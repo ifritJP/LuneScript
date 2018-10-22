@@ -9,7 +9,11 @@
 * 機能
 
 - [ ] prototype 宣言しかしていないメソッドを持つクラスのエラー出力対応。
+     
+- [ ] 同じ名前を global 宣言しているモジュールをインポートすると、 
+      prototype 宣言の型チェック処理が動いてしまう。
 
+- [ ] List オブジェクトの insert() 等の補完が効かない。
 - [ ] import のフォーマットバージョンチェック
 - [ ] import 時の typeId のリセット
 - [ ] form の型宣言
@@ -34,7 +38,6 @@
 - [ ] "%s" (val) の %s と val の対応チェック
 - [ ] import as 対応
 - [ ] import のモジュールがない時に TransUnit を続けられるようにする。
-- [ ] 'pro' のメソッドが外部モジュールで override できない。
 - [ ] 独自クラスの generics 対応
 - [ ] C へのトランスコード
 
@@ -49,6 +52,19 @@
 - [X] meta 情報の削減
 - [X] メソッドの prototype 宣言と、実際の定義が違う時に、型チェックしていない。
 - [X] interface を implement しているときに、 関数の引数チェックしていない。
+- [X] enum の nilable から $_txt すると、型が str でなく get__txt 型になっている
+- [X] proto 宣言と、実際の宣言時で abstruct の違いがエラーにならない。
+- [X] ループ外で break を実行してもエラーしない。
+- [X] static メソッドから self が参照できる。
+- [X] abstruct な Super クラスが実装していないメソッドを、
+      サブクラスが実装していない場合にエラーが出ない。
+- [X] interface を extend している abstruct クラスで、
+      メソッドを実装しないとエラーになる。
+- [X] 'pro' のメソッドが外部モジュールで override できない。
+- [X] 'pro' のメソッドが外部モジュールで call できない。
+- [X] Mapping の処理がクラス宣言後なので、
+      クラス宣言内部から _toMap() 等が利用できない。
+- [X] コンストラクタで __func__ を使うと nil になる。
   
 
 

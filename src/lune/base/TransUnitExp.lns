@@ -875,15 +875,17 @@ fn TransUnit.analyzeExpField(
          }
          fieldName = "get_" .. fieldName;
          getterTypeInfo = Ast.headTypeInfo;
-      }
-
-      if! scope.getTypeInfoChild( fieldName ) {
-         typeInfo = _exp;
+         typeInfo = Ast.builtinTypeString;
       }
       else {
-         self.addErrMess( token.pos,
-                          "not found enum field -- %s" (token.txt));
-         typeInfo = Ast.builtinTypeInt;
+         if! scope.getTypeInfoChild( fieldName ) {
+            typeInfo = _exp;
+         }  
+         else {
+            self.addErrMess( token.pos,
+                             "not found enum field -- %s" (token.txt));
+            typeInfo = Ast.builtinTypeInt;
+         }
       }
    }
    elseif prefixExpType.get_kind() == .Map {

@@ -2,6 +2,7 @@ subfile use test.startsub;
 import test.simple;
 import lune.base.Writer;
 import test.Sub2;
+import test.Sub6;
 import test.Class1;
 import test.Class2;
 import test.Class3;
@@ -450,6 +451,7 @@ _print( `{ Sub2.External.val } );
    _print( `{ enumTest.val4 } );
    let mut val2 = 0;
    val2 = enumTest.val1;
+   let val3:str = enumTest.val1.$_txt;
 
    enum enumTest2 {
       val1 = 1.0,
@@ -458,7 +460,7 @@ _print( `{ Sub2.External.val } );
       val4
    }
    _print( `{ enumTest2.val4 } );
-   
+   _print( `{ val3 } );
 }
 
 {
@@ -533,12 +535,16 @@ enum TESTENUM2 {
 
 class TestDest {
    let mut val:int;
+   pub fn __init( val:int ) {
+      self.val = val;
+      print( "%s" (__func__) );
+   }
    fn __free() {
       self.val = self.val * 10;
-      print( "__free(): %d" (self.val) );
+      print( "__free(): %d %s" (self.val, __func__) );
    }
 }
-// new TestDest( 100 );
+new TestDest( 100 );
 
 
 module GlueTest require 'test.glueTest' glue 'hoge_' {
@@ -611,3 +617,4 @@ macro _test( txt:str ) {
 _test( ```
 pub let val = 100;
 ``` );
+

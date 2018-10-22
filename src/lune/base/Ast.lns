@@ -272,11 +272,31 @@ pub class Scope {
       new DataOwnerInfo( true, symbolInfo );
    }
 
+   
    pub fn getNSTypeInfo(): TypeInfo;
 }
 
 // 最上位のスコープ
 pub let mut rootScope = new Scope( nil, false, [] );
+
+/**
+このスコープが scope の同じか内部のスコープか調べる。
+
+@return bool: 同じか内部のスコープの場合 true。
+*/
+pub fn Scope.isInnerOf( scope:&Scope ): bool {
+   let mut workScope = self;
+   while workScope ~= rootScope {
+      if workScope == scope {
+         return true;
+      }
+      workScope = workScope.parent;
+   }
+   return false;
+}
+
+
+
 let dummyList:List<&TypeInfo> = [];
 let mut rootChildren:List<&TypeInfo> = [];
 
@@ -800,11 +820,15 @@ pub override fn NormalSymbolInfo.canAccess( fromScope:&Scope ): &SymbolInfo!
          return self;
       } 
       case .Pri {
-         let nsClass = self.scope.getClassTypeInfo();
-         let fromClass = fromScope.getClassTypeInfo();
-         if nsClass == fromClass {
+         // let nsClass = self.scope.getClassTypeInfo();
+         // let fromClass = fromScope.getClassTypeInfo();
+         // if nsClass == fromClass {
+         //    return self;
+         // }  
+         // return nil;
+         if fromScope.isInnerOf( self.scope ) {
             return self;
-         }  
+         }
          return nil;
       } 
    }
@@ -1878,7 +1902,7 @@ pub static fn TypeInfo.checkMatchType(
    return true, "";
 }
 
-static fn TypeInfo.canEvalWithBase(
+pub static fn TypeInfo.canEvalWithBase(
    dist:&TypeInfo, distMut:bool, other:&TypeInfo, opTxt:str ) : bool
 {
    let otherMut = other.$mutable;

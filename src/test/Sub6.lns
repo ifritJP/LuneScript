@@ -1,0 +1,13 @@
+import test.Sub5;
+
+class Test extend Sub5.Test {
+   pub override fn func() {
+      print( __mod__, __func__ );
+   }
+   pub fn sub() {
+      self.func();
+   }
+}
+
+let test = new Test();
+test.sub();

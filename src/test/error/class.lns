@@ -175,3 +175,36 @@ interface IFTest {
 class IFTest2 extend (IFTest) {
    pub fn func( val:str );
 }
+
+
+pub proto abstruct class TestAbs;
+class TestAbs { // error
+}
+
+pub proto abstruct class TestProto;
+abstruct class TestProto {  // error
+}
+
+interface IF {
+   pub fn func();
+}
+abstruct class extIF extend (IF) {
+}
+class extIF2 extend (IF) { // error
+}
+class subIF extend extIF { // error
+}
+class subIF2 extend extIF {
+   pub fn func() {
+   }
+}
+
+
+class StaticClass {
+   let val:int;
+   static fn func() {
+      self.val; // error
+   }
+}
+
+
