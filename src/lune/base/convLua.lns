@@ -719,11 +719,11 @@ end
    if node.$luneHelperInfo.$hasMappingClassDef {
       self.writeln(
 ```      
-function _lune._fromMapSub( val, memKind )
+function _lune._fromMapSub( val, memKind, nilable )
    if type( memKind ) == "function" then
-      return memKind( val )
+      return memKind( val ), nilable
    end
-   if string.find( memKind, "!$" ) then
+   if nilable then
       if val == nil then
          return nil, true
       end
@@ -1208,7 +1208,12 @@ end
       foreach memberNode in node.$memberList {
          let memberType = memberNode.$expType;
          let mut kindTxt = '"%s"' (memberType.getTxt().gsub( "&", "" ));
-         switch memberType.$kind {
+         let mut orgMemberType = memberType;
+         if memberType.$nilable {
+            orgMemberType = memberType.$orgTypeInfo;
+         }
+         
+         switch orgMemberType.$kind {
             case .Class, .IF {
                if not memberType.equals( Ast.builtinTypeString ) {
                   kindTxt = '%s._fromMap' (self.getFullName(memberType));
@@ -1219,8 +1224,8 @@ end
             }
          }
          self.writeln(
-            '   table.insert( memInfo, { name = "%s", kind = %s } )'
-            ( memberNode.$name.txt, kindTxt ) );
+            '   table.insert( memInfo, { name = "%s", kind = %s, nilable = %s } )'
+            ( memberNode.$name.txt, kindTxt, memberType.$nilable ) );
       }
       
       self.writeln( ```

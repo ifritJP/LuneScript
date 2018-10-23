@@ -25,7 +25,6 @@
 (require 'lns-command)
 
 (require 'flymake)
-;;c++のflymakeでmakefileを不要にする
 (defun flymake-lns-init ()
   (let* ((command-info (lns-command-get-info))
 	 (command-list (lns-command-get-command

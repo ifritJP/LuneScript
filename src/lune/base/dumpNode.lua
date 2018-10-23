@@ -358,7 +358,7 @@ function dumpFilter:processSwitch( node, prefix, depth )
 
    dump( prefix, depth, node, "" )
    filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
-   local caseList = node:get_caseList(  )
+   local caseList = node:get_caseList()
    for __index, caseInfo in pairs( caseList ) do
       filter( caseInfo:get_expList(), self, prefix .. "  ", depth + 1 )
       filter( caseInfo:get_block(), self, prefix .. "  ", depth + 1 )

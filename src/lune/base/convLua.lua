@@ -817,11 +817,11 @@ end
    
    if node:get_luneHelperInfo():get_hasMappingClassDef() then
       self:writeln( [==[      
-function _lune._fromMapSub( val, memKind )
+function _lune._fromMapSub( val, memKind, nilable )
    if type( memKind ) == "function" then
-      return memKind( val )
+      return memKind( val ), nilable
    end
-   if string.find( memKind, "!$" ) then
+   if nilable then
       if val == nil then
          return nil, true
       end
@@ -1291,8 +1291,13 @@ end
       for __index, memberNode in pairs( node:get_memberList() ) do
          local memberType = memberNode:get_expType()
          local kindTxt = string.format( '"%s"', memberType:getTxt(  ):gsub( "&", "" ))
+         local orgMemberType = memberType
+         if memberType:get_nilable() then
+            orgMemberType = memberType:get_orgTypeInfo()
+         end
+         
          do
-            local _switchExp = memberType:get_kind()
+            local _switchExp = orgMemberType:get_kind()
             if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
                if not memberType:equals( Ast.builtinTypeString ) then
                   kindTxt = string.format( '%s._fromMap', self:getFullName( memberType ))
@@ -1303,7 +1308,7 @@ end
             end
          end
          
-         self:writeln( string.format( '   table.insert( memInfo, { name = "%s", kind = %s } )', memberNode:get_name().txt, kindTxt) )
+         self:writeln( string.format( '   table.insert( memInfo, { name = "%s", kind = %s, nilable = %s } )', memberNode:get_name().txt, kindTxt, memberType:get_nilable()) )
       end
       
       self:writeln( string.format( [==[

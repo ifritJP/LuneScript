@@ -189,8 +189,6 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Ast.LiteralMapNode {
 
 fn TransUnit.analyzeExpRefItem(
    token: &Parser.Token, exp: &Ast.Node, mut nilAccess:bool ) mut : Ast.Node {
-   let indexExp = self.analyzeExp( false );
-   self.checkNextToken( "]" );
 
    let mut expType = exp.$expType;
 
@@ -203,9 +201,12 @@ fn TransUnit.analyzeExpRefItem(
       }
    }
 
+   let mut expectItemType:&Ast.TypeInfo! = nil;
    let mut typeInfo = Ast.builtinTypeStem_;
    if expType.$kind == .Map {
-      typeInfo = expType.get_itemTypeInfoList()[2];
+      let itemTypeList = expType.get_itemTypeInfoList();
+      typeInfo = itemTypeList[2];
+      expectItemType = itemTypeList[1];
       if not typeInfo.equals( Ast.builtinTypeStem_ ) and not typeInfo.$nilable {
          typeInfo = typeInfo.$nilableTypeInfo;
       }
@@ -233,6 +234,10 @@ fn TransUnit.analyzeExpRefItem(
    if typeInfo.$mutable and not expType.$mutable {
       typeInfo = self.createModifier( typeInfo, false );
    }
+
+   let indexExp = self.analyzeExp( false, nil, expectItemType );
+   self.checkNextToken( "]" );
+   
    
    return Ast.ExpRefItemNode.create(
       self.nodeManager, token.pos, [ typeInfo ], exp, nilAccess, nil, indexExp );
@@ -399,7 +404,7 @@ fn TransUnit.evalMacro(
    if argList {
       foreach arg, index in argList {
          if arg.get_kind() == Ast.nodeKindDeclArg {
-            let argInfo = arg@@Ast.DeclArgNode;
+            let argInfo = arg;
             let argType = argInfo.$argType;
             let argName = argInfo.$name.txt;
             //scope.add( argName, argType.expType );
@@ -1062,7 +1067,8 @@ fn TransUnit.analyzeExpOp2(
       let opTxt = nextToken.txt;
 
       if opTxt == "@@" {
-         let mut castType = self.analyzeRefType( .Local, false ).$expType;
+         let castTypeNode = self.analyzeRefType( .Local, false );
+         let mut castType = castTypeNode.$expType;
 
          let expType = exp.$expType;
          
@@ -1074,6 +1080,22 @@ fn TransUnit.analyzeExpOp2(
          elseif not expType.$mutable and castType.$mutable {
             castType = self.createModifier( castType, false );
          }
+
+         if castType.canEvalWith( expType, "=" ) {
+            // "str"@@str のように、意味のないキャストはエラー
+            self.addWarnMess( castTypeNode.$pos,
+                              "This cast doesn't need. (%s <- %s)"
+                              ( castType.getTxt(), expType.getTxt() ) );
+         }
+         elseif not expType.canEvalWith( castType, "=" ) {
+            if not Ast.isNumberType( expType ) and not Ast.isNumberType( castType ) {
+               // キャスト先の型からキャスト元の型へ互換性がない場合はエラー
+               self.addErrMess( castTypeNode.$pos,
+                                "This type can't cast. (%s <- %s)"
+                                ( castType.getTxt(), expType.getTxt() ) );
+            }
+         }
+         
          exp = Ast.ExpCastNode.create(
             self.nodeManager, firstToken.pos, [ castType ], exp );
       }
@@ -1252,7 +1274,7 @@ fn TransUnit.analyzeExpOp2(
                   }
                   retType = Ast.builtinTypeString;
                }
-               case "+", "-", "*", "/", "//", "%" {
+               case "+", "-", "*", "/", "%" {
                   if ( not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt ) and
                        not Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt ) ) or
                       ( not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt ) and
@@ -1264,8 +1286,8 @@ fn TransUnit.analyzeExpOp2(
                                                      exp2Type.getTxt() ) );
                   }
 
-                  if Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt ) or
-                     Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt )
+                  if exp1Type.equals( Ast.builtinTypeReal ) or
+                     exp2Type.equals( Ast.builtinTypeReal )
                   {
                      retType = Ast.builtinTypeReal;
                   }

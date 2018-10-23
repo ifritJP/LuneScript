@@ -290,7 +290,7 @@ pub override fn dumpFilter.processSwitch(
 {
    dump( prefix, depth, node, "");
    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
-   let caseList = node.get_caseList()@@Ast.CaseInfo[];
+   let caseList = node.$caseList;
    foreach caseInfo in caseList {
       filter( caseInfo.$expList, self, prefix .. "  ", depth + 1 );
       filter( caseInfo.$block, self, prefix .. "  ", depth + 1 );

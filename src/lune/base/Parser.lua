@@ -370,7 +370,6 @@ op2Set['+'] = true
 op2Set['-'] = true
 op2Set['*'] = true
 op2Set['/'] = true
-op2Set['//'] = true
 op2Set['^'] = true
 op2Set['%'] = true
 op2Set['&'] = true

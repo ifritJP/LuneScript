@@ -182,6 +182,11 @@ pub fn TransUnit.createAST(
 
    self.registBuiltInScope();
 
+   // if not macroFlag {
+   //    Util.errorLog( "%s: %s: %s" ( __func__, moduleName, Ast.pushIdProvier() ) );
+      
+   // }
+
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
 

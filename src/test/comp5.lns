@@ -1,0 +1,7 @@
+enum Hoge {
+   val1,
+   val2,
+}
+
+let mut map:Map<Hoge,Hoge> = {};
+map[ .

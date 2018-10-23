@@ -60,11 +60,11 @@ function _lune.unwrapDefault( val, defval )
 end
 
       
-function _lune._fromMapSub( val, memKind )
+function _lune._fromMapSub( val, memKind, nilable )
    if type( memKind ) == "function" then
-      return memKind( val )
+      return memKind( val ), nilable
    end
-   if string.find( memKind, "!$" ) then
+   if nilable then
       if val == nil then
          return nil, true
       end
@@ -604,9 +604,9 @@ end
 
 function _TypeInfo._fromMapSub( obj, val )
    local memInfo = {}
-   table.insert( memInfo, { name = "skind", kind = Ast.SerializeKind._from } )
-   table.insert( memInfo, { name = "parentId", kind = "int" } )
-   table.insert( memInfo, { name = "typeId", kind = "int" } )
+   table.insert( memInfo, { name = "skind", kind = Ast.SerializeKind._from, nilable = false } )
+   table.insert( memInfo, { name = "parentId", kind = "int", nilable = false } )
+   table.insert( memInfo, { name = "typeId", kind = "int", nilable = false } )
    if not _lune._fromMap( obj, val, memInfo ) then
       return nil
    end
@@ -658,8 +658,8 @@ function _TypeInfoNilable._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "nilable", kind = "bool" } )
-   table.insert( memInfo, { name = "orgTypeId", kind = "int" } )
+   table.insert( memInfo, { name = "nilable", kind = "bool", nilable = false } )
+   table.insert( memInfo, { name = "orgTypeId", kind = "int", nilable = false } )
    if not _lune._fromMap( obj, val, memInfo ) then
       return nil
    end
@@ -717,8 +717,8 @@ function _TypeInfoModifier._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "srcTypeId", kind = "int" } )
-   table.insert( memInfo, { name = "mutable", kind = "bool" } )
+   table.insert( memInfo, { name = "srcTypeId", kind = "int", nilable = false } )
+   table.insert( memInfo, { name = "mutable", kind = "bool", nilable = false } )
    if not _lune._fromMap( obj, val, memInfo ) then
       return nil
    end
@@ -810,7 +810,7 @@ function _TypeInfoModule._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "txt", kind = "str" } )
+   table.insert( memInfo, { name = "txt", kind = "str", nilable = false } )
    if not _lune._fromMap( obj, val, memInfo ) then
       return nil
    end
@@ -937,7 +937,7 @@ function _TypeInfoNormal:createTypeInfo( param )
     
       newTypeInfo = param.scope:getTypeInfo( self.txt, param.scope, false )
       if not newTypeInfo then
-         for key, val in pairs( self ) do
+         for key, val in pairs( self:_toMap(  ) ) do
             Util.errorLog( string.format( "error: illegal self %s:%s", key, val) )
          end
          
@@ -994,18 +994,18 @@ function _TypeInfoNormal._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "abstructFlag", kind = "bool" } )
-   table.insert( memInfo, { name = "baseId", kind = "int" } )
-   table.insert( memInfo, { name = "txt", kind = "str" } )
-   table.insert( memInfo, { name = "staticFlag", kind = "bool" } )
-   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from } )
-   table.insert( memInfo, { name = "kind", kind = Ast.TypeInfoKind._from } )
-   table.insert( memInfo, { name = "mutable", kind = "bool" } )
-   table.insert( memInfo, { name = "ifList", kind = "List<int>" } )
-   table.insert( memInfo, { name = "itemTypeId", kind = "List<int>" } )
-   table.insert( memInfo, { name = "argTypeId", kind = "List<int>" } )
-   table.insert( memInfo, { name = "retTypeId", kind = "List<int>" } )
-   table.insert( memInfo, { name = "children", kind = "List<int>" } )
+   table.insert( memInfo, { name = "abstructFlag", kind = "bool", nilable = false } )
+   table.insert( memInfo, { name = "baseId", kind = "int", nilable = false } )
+   table.insert( memInfo, { name = "txt", kind = "str", nilable = false } )
+   table.insert( memInfo, { name = "staticFlag", kind = "bool", nilable = false } )
+   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from, nilable = false } )
+   table.insert( memInfo, { name = "kind", kind = Ast.TypeInfoKind._from, nilable = false } )
+   table.insert( memInfo, { name = "mutable", kind = "bool", nilable = false } )
+   table.insert( memInfo, { name = "ifList", kind = "List<int>", nilable = false } )
+   table.insert( memInfo, { name = "itemTypeId", kind = "List<int>", nilable = false } )
+   table.insert( memInfo, { name = "argTypeId", kind = "List<int>", nilable = false } )
+   table.insert( memInfo, { name = "retTypeId", kind = "List<int>", nilable = false } )
+   table.insert( memInfo, { name = "children", kind = "List<int>", nilable = false } )
    if not _lune._fromMap( obj, val, memInfo ) then
       return nil
    end
@@ -1071,10 +1071,10 @@ function _TypeInfoEnum._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "txt", kind = "str" } )
-   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from } )
-   table.insert( memInfo, { name = "valTypeId", kind = "int" } )
-   table.insert( memInfo, { name = "enumValList", kind = "Map<str,stem>" } )
+   table.insert( memInfo, { name = "txt", kind = "str", nilable = false } )
+   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from, nilable = false } )
+   table.insert( memInfo, { name = "valTypeId", kind = "int", nilable = false } )
+   table.insert( memInfo, { name = "enumValList", kind = "Map<str,stem>", nilable = false } )
    if not _lune._fromMap( obj, val, memInfo ) then
       return nil
    end
@@ -1845,7 +1845,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                   for fieldName, fieldInfo in pairs( classInfo ) do
                      local typeId = fieldInfo['typeId']
                      local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[typeId])
-                     self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), (_lune.unwrapDefault( fieldInfo['staticFlag'], false) ), (_lune.unwrapDefault( fieldInfo['mutable'], false) ) )
+                     self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), _lune.unwrapDefault( fieldInfo['staticFlag'], false), _lune.unwrapDefault( fieldInfo['mutable'], false) )
                   end
                   
                else
@@ -4084,8 +4084,6 @@ end
 
 function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
 
-   local indexExp = self:analyzeExp( false )
-   self:checkNextToken( "]" )
    local expType = exp:get_expType()
    if nilAccess then
       if not expType:get_nilable() then
@@ -4097,9 +4095,12 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
       
    end
    
+   local expectItemType = nil
    local typeInfo = Ast.builtinTypeStem_
    if expType:get_kind() == Ast.TypeInfoKind.Map then
-      typeInfo = expType:get_itemTypeInfoList(  )[2]
+      local itemTypeList = expType:get_itemTypeInfoList(  )
+      typeInfo = itemTypeList[2]
+      expectItemType = itemTypeList[1]
       if not typeInfo:equals( Ast.builtinTypeStem_ ) and not typeInfo:get_nilable() then
          typeInfo = typeInfo:get_nilableTypeInfo()
       end
@@ -4123,6 +4124,8 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
       typeInfo = self:createModifier( typeInfo, false )
    end
    
+   local indexExp = self:analyzeExp( false, nil, expectItemType )
+   self:checkNextToken( "]" )
    return Ast.ExpRefItemNode.create( self.nodeManager, token.pos, {typeInfo}, exp, nilAccess, nil, indexExp )
 end
 
@@ -4873,12 +4876,22 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
       local nextToken = self:getToken(  )
       local opTxt = nextToken.txt
       if opTxt == "@@" then
-         local castType = self:analyzeRefType( Ast.AccessMode.Local, false ):get_expType()
+         local castTypeNode = self:analyzeRefType( Ast.AccessMode.Local, false )
+         local castType = castTypeNode:get_expType()
          local expType = exp:get_expType()
          if expType:get_nilable() and not castType:get_nilable() then
             self:addErrMess( firstToken.pos, string.format( "can't cast from nilable to not nilable  -- %s->%s", expType:getTxt(  ), castType:getTxt(  )) )
          elseif not expType:get_mutable() and castType:get_mutable() then
             castType = self:createModifier( castType, false )
+         end
+         
+         if castType:canEvalWith( expType, "=" ) then
+            self:addWarnMess( castTypeNode:get_pos(), string.format( "This cast doesn't need. (%s <- %s)", castType:getTxt(  ), expType:getTxt(  )) )
+         elseif not expType:canEvalWith( castType, "=" ) then
+            if not Ast.isNumberType( expType ) and not Ast.isNumberType( castType ) then
+               self:addErrMess( castTypeNode:get_pos(), string.format( "This type can't cast. (%s <- %s)", castType:getTxt(  ), expType:getTxt(  )) )
+            end
+            
          end
          
          exp = Ast.ExpCastNode.create( self.nodeManager, firstToken.pos, {castType}, exp )
@@ -5034,12 +5047,12 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   end
                   
                   retType = Ast.builtinTypeString
-               elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "//" or _switchExp == "%" then
+               elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "%" then
                   if (not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt ) and not Ast.builtinTypeReal:canEvalWith( exp1Type, opTxt ) ) or (not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt ) and not Ast.builtinTypeReal:canEvalWith( exp2Type, opTxt ) ) then
                      self:addErrMess( nextToken.pos, string.format( "no numeric type %s or %s", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
                   
-                  if Ast.builtinTypeReal:canEvalWith( exp1Type, opTxt ) or Ast.builtinTypeReal:canEvalWith( exp2Type, opTxt ) then
+                  if exp1Type:equals( Ast.builtinTypeReal ) or exp2Type:equals( Ast.builtinTypeReal ) then
                      retType = Ast.builtinTypeReal
                   else
                    

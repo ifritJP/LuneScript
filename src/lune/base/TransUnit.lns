@@ -669,7 +669,7 @@ class _TypeInfoNormal extend _TypeInfo {
       else {
          newTypeInfo = param.scope.getTypeInfo( self.txt, param.scope, false );
          if not newTypeInfo {
-            foreach val, key in self@@Map<str,stem> {
+            foreach val, key in self._toMap() {
                Util.errorLog( "error: illegal self %s:%s" ( key, val ) );
             }
          }
@@ -1556,8 +1556,8 @@ fn TransUnit.processImport(
                   self.scope.addMember(
                      fieldName, fieldTypeInfo,
                      unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
-                     (unwrap fieldInfo.staticFlag default false)@@bool,
-                     (unwrap fieldInfo.mutable default false)@@bool );
+                     unwrap fieldInfo.staticFlag default false,
+                     unwrap fieldInfo.mutable default false );
                }  
             }  
             else {

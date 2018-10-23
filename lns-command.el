@@ -46,7 +46,11 @@
 	  :dir (lns-get-proj-dir))))
   
 (defun lns-command-get-command (&rest args)
-  (append (list lns-lua-command "-e" "require( 'lune.base.base' )" " ") args))
+  (let (command)
+    (if (functionp lns-lua-command)
+	(setq command (funcall lns-lua-command))
+      (setq command lns-lua-command))
+    (append (list command "-e" "require( 'lune.base.base' )" " ") args)))
 
 
 (defun lns-command-exec (callback async owner-file input outbuf mode op-list)

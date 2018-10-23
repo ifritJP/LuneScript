@@ -1726,6 +1726,16 @@ pub let builtinTypeStat:TypeInfo =
 
 pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
 
+let mut numberTypeMap:Map<&TypeInfo,bool> = {};
+numberTypeMap[ builtinTypeInt ] = true;
+numberTypeMap[ builtinTypeChar ] = true;
+numberTypeMap[ builtinTypeReal ] = true;
+
+pub fn isNumberType( typeInfo:&TypeInfo ): bool {
+   return numberTypeMap[ typeInfo.$srcTypeInfo ] and true or false;
+}
+
+
 pub static fn NormalTypeInfo.createEnum(
    scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
    accessMode: AccessMode, enumName: str, valTypeInfo:&TypeInfo, 
@@ -1965,7 +1975,15 @@ pub static fn TypeInfo.canEvalWithBase(
             dist == builtinTypeChar and otherSrc == builtinTypeInt
          {  
             return true;
-         }  
+         }
+         // int から real の代入を暗黙変換を許可すると
+         // [ 1, 1.0 ] の型が List<stem> ではなく List<real> なってしまうので
+         // 許可しない。
+         // if dist == builtinTypeReal and
+         //     ( otherSrc == builtinTypeInt or otherSrc == builtinTypeChar )
+         // {
+         //    return true;
+         // }
          return false;
       }       
       case .List, .Array {
@@ -2974,4 +2992,10 @@ pub override fn ExpOp2Node.getLiteral(): stem![], List<&TypeInfo> {
    }
 
    return [],[];
+}
+
+
+
+pub fn pushIdProvier(): int {
+   return idProv.$id;
 }

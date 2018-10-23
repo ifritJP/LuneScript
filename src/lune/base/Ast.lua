@@ -2202,6 +2202,15 @@ _moduleObj.builtinTypeStat = builtinTypeStat
 local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
 
+local numberTypeMap = {}
+numberTypeMap[_moduleObj.builtinTypeInt] = true
+numberTypeMap[_moduleObj.builtinTypeChar] = true
+numberTypeMap[_moduleObj.builtinTypeReal] = true
+local function isNumberType( typeInfo )
+
+   return numberTypeMap[typeInfo:get_srcTypeInfo()] and true or false
+end
+_moduleObj.isNumberType = isNumberType
 function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode, enumName, valTypeInfo, name2EnumValInfo )
 
    if Parser.isLuaKeyword( enumName ) then
@@ -7128,4 +7137,9 @@ function ExpOp2Node:getLiteral(  )
    return {}, {}
 end
 
+local function pushIdProvier(  )
+
+   return idProv:get_id()
+end
+_moduleObj.pushIdProvier = pushIdProvier
 return _moduleObj

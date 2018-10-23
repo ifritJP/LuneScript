@@ -1,0 +1,21 @@
+class Test {
+   pub fn func() {
+   }
+}
+
+class Sub extend Test {
+}
+
+
+{
+   let test = new Sub();
+   let val:form = test.func@@form; // error
+   let val2:stem = test.func;
+   let val3:form = val2@@form;
+
+   let test2 = test@@Test; // error
+}
+
+{
+   let val:real = 1@@real;
+}
