@@ -31,20 +31,26 @@ enum EnumTest {
 }
 
 class SubSub extend Sub (Mapping) {
-   let val3:str {pub};
-   let val4:Test {pub};
-   let val5:EnumTest {pub};
+   let val3:&str! {pub};
+   let val4:&Test! {pub};
+   let val5:&EnumTest! {pub};
+   let val6:&Map<str,List<Test>>;
    pub fn __init() {
       super();
       self.val3 = "abc";
       self.val4 = new Test( { "test": "hoge" } );
       self.val5 = .val;
+      self.val6 = { "XXX": [ new Test( { "test": "hoge" } ) ] };
    }
    pub fn func() {
       forsort val, key in self._toMap() {
          print( key, type( val ) );
       }
    }
+}
+
+class MapTest extend (Mapping) {
+   let val:List<List<Map<str,int>>>;
 }
 
 pub fn test() {
@@ -55,9 +61,15 @@ pub fn test() {
 
    if! let hoge2 = SubSub._fromStem( map ) {
       print( hoge2.$val1, hoge2.$val2, hoge2.$val3 );
-      foreach val, key in hoge2.$val4.$val1 {
+      foreach val, key in unwrap hoge2.$val4$.$val1 {
          print( key, val );
       }
       hoge2.func();
    }
+
+   let val = {
+      "val": [ [ { "hoge": 1 }, { "foo": "a" } ] ]
+   }; 
+   let obj, mess = MapTest._fromMap( val );
+   print( obj ~= nil, mess );
 }

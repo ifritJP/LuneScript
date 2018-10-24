@@ -14,5 +14,10 @@ fn func( val:int! ) {
 
 {
    let val:int! = 1;
-   print( val and false or 1 );
+   print( val and false or 1 );  // error
+}
+
+{
+   let map:Map<int,int> = {};
+   let size = #map; // error
 }

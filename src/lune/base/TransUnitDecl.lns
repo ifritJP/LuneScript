@@ -270,6 +270,12 @@ pub fn TransUnit.createAST(
       }
    }
 
+   foreach pos, protoType in self.protoFuncMap {
+      self.addErrMess(
+         pos, "This function doesn't have body. -- %s" ( protoType.getTxt() ) );
+   }
+   
+
    foreach mess in self.warnMessList {
       Util.errorLog( mess );
    }
@@ -1168,14 +1174,18 @@ fn TransUnit.analyzeDeclClass(
       let fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromMap",
-         [ mapType ], [ classTypeInfo.$nilableTypeInfo ], true );
+         [ mapType ],
+         [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
+         true );
       classScope.addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false );
 
       // _fromStem の追加
       let fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromStem",
-         [ Ast.builtinTypeStem_ ], [ classTypeInfo.$nilableTypeInfo ], true );
+         [ Ast.builtinTypeStem_ ],
+         [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
+         true );  
       classScope.addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false );
    }
    
@@ -1421,6 +1431,8 @@ fn TransUnit.analyzeDeclFunc(
          if not matchFlag {
             self.addErrMess( _exp.pos, err );
          }
+
+         self.protoFuncMap[ prottype ] = nil;
       }
       
       
@@ -1478,10 +1490,17 @@ fn TransUnit.analyzeDeclFunc(
    let mut node = self.createNoneNode( firstToken.pos );
    let mut needNode = false;
 
+   // 関数 Body の解析
    let mut body:Ast.BlockNode! = nil;
    if token.txt == ";" {
+      // プロトタイプ宣言
       if declFuncMode == .Module or declFuncMode == .Glue {
          needNode = true;
+      }
+      else {
+         if not abstructFlag {
+            self.protoFuncMap[ typeInfo ] = firstToken.pos;
+         }
       }
    }
    else {

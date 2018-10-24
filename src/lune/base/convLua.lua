@@ -817,95 +817,82 @@ end
    
    if node:get_luneHelperInfo():get_hasMappingClassDef() then
       self:writeln( [==[      
-function _lune._fromMapSub( val, memKind, nilable )
-   if type( memKind ) == "function" then
-      return memKind( val ), nilable
-   end
-   if nilable then
-      if val == nil then
-         return nil, true
-      end
-      memKind = memKind:sub( 1, #memKind - 1 )
-   end
-   local valType = type( val )
-   if memKind == "stem" then
-      if valType == "number" or valType == "string" or valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "int" then
-      if valType == "number" then
-         return math.floor( val )
-      end
-      return nil
-   end
-   if memKind == "real" then
-      if valType == "number" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "bool" then
-      if valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "str" then
-      if valType == "string" then
-         return val
-      end
-      return nil
-   end
-   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
-   then
-      if valType == "table" then
-         local tbl = {}
-         for index, mem in ipairs( val ) do
-            local kind = string.gsub( memKind, "^[%a]+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local memval, valid = _lune._fromMapSub( mem, kind )
-            if memval == nil and not valid then
-               return nil
-            end
-            tbl[ index ] = memval
-         end
-         return tbl
-      end
-      return nil
-   end
-   if string.find( memKind, "^Map" ) then
-      if valType == "table" then
-         local tbl = {}
-         for key, mem in pairs( val ) do
-            local kind = string.gsub( memKind, "^%a+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local delimitIndex = string.find( kind, ",", 1, true )
-            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
-            local valKind = string.sub( kind, delimitIndex + 1 )
-            local mapKey = _lune._fromMapSub( key, keyKind )
-            local mapVal = _lune._fromMapSub( mem, valKind )
-            if mapKey == nil or mapVal == nil then
-               return nil
-            end
-            tbl[ mapKey ] = mapVal
-         end
-         return tbl
-      end
-      return nil
-   end
+function _lune._toStem( val )
+   return val
 end
-
-
+function _lune._toInt( val )
+   if type( val ) == "number" then
+      return math.floor( val )
+   end
+   return nil
+end
+function _lune._toReal( val )
+   if type( val ) == "number" then
+      return val
+   end
+   return nil
+end
+function _lune._toBool( val )
+   if type( val ) == "boolean" then
+      return val
+   end
+   return nil
+end
+function _lune._toStr( val )
+   if type( val ) == "string" then
+      return val
+   end
+   return nil
+end
+function _lune._toList( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toValInfo = toValInfoList[ 1 ]
+      for index, mem in ipairs( val ) do
+         local memval, mess = toValInfo.func( mem, toValInfo.child )
+         if memval == nil and not toValInfo.nilable then
+            if mess then
+              return nil, string.format( "%d.%s", index, mess )
+            end
+            return nil, index
+         end
+         tbl[ index ] = memval
+      end
+      return tbl
+   end
+   return nil
+end
+function _lune._toMap( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toKeyInfo = toValInfoList[ 1 ]
+      local toValInfo = toValInfoList[ 2 ]
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
+end
 function _lune._fromMap( obj, map, memInfoList )
    if type( map ) ~= "table" then
       return false
    end
    for index, memInfo in ipairs( memInfoList ) do
-      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
-      if val == nil and not valid then
-         return false
+      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
       end
       obj[ memInfo.name ] = val
    end
@@ -1268,11 +1255,11 @@ function %s:_toMap()
   return self
 end
 function %s._fromMap( val )
-  local obj = %s._fromMapSub( {}, val )
+  local obj, mes = %s._fromMapSub( {}, val )
   if obj then
      %s.setmeta( obj )
   end
-  return obj
+  return obj, mes
 end
 function %s._fromStem( val )
   return %s._fromMap( val )
@@ -1281,39 +1268,78 @@ end
       self:writeln( string.format( 'function %s._fromMapSub( obj, val )', classTypeInfo:getTxt(  )) )
       if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
          self:writeln( string.format( [==[
-   if not %s._fromMapSub( obj, val ) then
-      return nil
+   local result, mes = %s._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
    end
 ]==], self:getFullName( classTypeInfo:get_baseTypeInfo() )) )
       end
       
       self:writeln( '   local memInfo = {}' )
-      for __index, memberNode in pairs( node:get_memberList() ) do
-         local memberType = memberNode:get_expType()
-         local kindTxt = string.format( '"%s"', memberType:getTxt(  ):gsub( "&", "" ))
-         local orgMemberType = memberType
-         if memberType:get_nilable() then
-            orgMemberType = memberType:get_orgTypeInfo()
+      local function getMapInfo( typeInfo )
+      
+         local orgTypeInfo = typeInfo:get_srcTypeInfo()
+         if typeInfo:get_nilable() then
+            orgTypeInfo = typeInfo:get_orgTypeInfo()
          end
          
+         local child = "{}"
+         local funcTxt = ""
          do
-            local _switchExp = orgMemberType:get_kind()
-            if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-               if not memberType:equals( Ast.builtinTypeString ) then
-                  kindTxt = string.format( '%s._fromMap', self:getFullName( memberType ))
+            local _switchExp = orgTypeInfo:get_kind()
+            if _switchExp == Ast.TypeInfoKind.Stem then
+               funcTxt = '_lune._toStem'
+            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+               if not orgTypeInfo:equals( Ast.builtinTypeString ) then
+                  funcTxt = string.format( '%s._fromMap', self:getFullName( orgTypeInfo ))
+               else
+                
+                  funcTxt = '_lune._toStr'
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Enum then
-               kindTxt = string.format( '%s._from', self:getFullName( memberType ))
+               funcTxt = string.format( '%s._from', self:getFullName( orgTypeInfo ))
+            elseif _switchExp == Ast.TypeInfoKind.Prim then
+               do
+                  local _switchExp = orgTypeInfo
+                  if _switchExp == Ast.builtinTypeInt then
+                     funcTxt = '_lune._toInt'
+                  elseif _switchExp == Ast.builtinTypeReal then
+                     funcTxt = '_lune._toReal'
+                  elseif _switchExp == Ast.builtinTypeBool then
+                     funcTxt = '_lune._toBool'
+                  else 
+                     
+                        Util.err( string.format( "unknown type -- %s", orgTypeInfo:getTxt(  )) )
+                  end
+               end
+               
+            elseif _switchExp == Ast.TypeInfoKind.Map then
+               funcTxt = '_lune._toMap'
+               local itemList = orgTypeInfo:get_itemTypeInfoList()
+               local keyFuncTxt, keyNilable, keyChild = getMapInfo( itemList[1] )
+               local valFuncTxt, valNilable, valChild = getMapInfo( itemList[2] )
+               child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, keyNilable, keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
+            elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+               funcTxt = '_lune._toList'
+               local itemList = orgTypeInfo:get_itemTypeInfoList()
+               local valFuncTxt, valNilable, valChild = getMapInfo( itemList[1] )
+               child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
             end
          end
          
-         self:writeln( string.format( '   table.insert( memInfo, { name = "%s", kind = %s, nilable = %s } )', memberNode:get_name().txt, kindTxt, memberType:get_nilable()) )
+         return funcTxt, typeInfo:get_nilable(), child
+      end
+      
+      for __index, memberNode in pairs( node:get_memberList() ) do
+         local funcTxt, nilable, child = getMapInfo( memberNode:get_expType() )
+         self:writeln( string.format( '   table.insert( memInfo, { name = "%s", func = %s, nilable = %s, child = %s } )', memberNode:get_name().txt, funcTxt, nilable, child) )
       end
       
       self:writeln( string.format( [==[
-   if not _lune._fromMap( obj, val, memInfo ) then
-      return nil
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
    end
    return obj
 end]==], classTypeInfo:getTxt(  )) )

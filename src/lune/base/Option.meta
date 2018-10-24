@@ -3,19 +3,19 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-   local _classInfo417 = {}
-   _typeId2ClassInfoMap[ 417 ] = _classInfo417
-   _classInfo417.mode = {
-     name='mode', staticFlag = false, accessMode = '1', typeId = 409 }
-   _classInfo417.analyzeModule = {
-     name='analyzeModule', staticFlag = false, accessMode = '1', typeId = 424 }
-   _classInfo417.analyzePos = {
-     name='analyzePos', staticFlag = false, accessMode = '1', typeId = 425 }
-   _classInfo417.outputDir = {
-     name='outputDir', staticFlag = false, accessMode = '1', typeId = 424 }
-   _classInfo417.scriptPath = {
+   local _classInfo420 = {}
+   _typeId2ClassInfoMap[ 420 ] = _classInfo420
+   _classInfo420.mode = {
+     name='mode', staticFlag = false, accessMode = '1', typeId = 412 }
+   _classInfo420.analyzeModule = {
+     name='analyzeModule', staticFlag = false, accessMode = '1', typeId = 427 }
+   _classInfo420.analyzePos = {
+     name='analyzePos', staticFlag = false, accessMode = '1', typeId = 428 }
+   _classInfo420.outputDir = {
+     name='outputDir', staticFlag = false, accessMode = '1', typeId = 427 }
+   _classInfo420.scriptPath = {
      name='scriptPath', staticFlag = false, accessMode = '1', typeId = 25 }
-   _classInfo417.validProf = {
+   _classInfo420.validProf = {
      name='validProf', staticFlag = false, accessMode = '1', typeId = 13 }
 end
 do
@@ -68,7 +68,7 @@ children = {228, } }
 _typeInfoList[3] = { skind = 2, parentId = 226, typeId = 228, txt = 'base', kind = 12, 
 children = {230, } }
 _typeInfoList[4] = { skind = 2, parentId = 228, typeId = 230, txt = 'Option', kind = 12, 
-children = {409, 417, 432, } }
+children = {412, 420, 435, } }
 _dependIdMap[ 232 ] = { 1, 230 } -- Parser
 _dependIdMap[ 237 ] = { 1, 390 } -- TxtStream
 _dependIdMap[ 238 ] = { 1, 391 } -- TxtStream!
@@ -103,31 +103,31 @@ _dependIdMap[ 311 ] = { 1, 479 } -- WrapParser
 _dependIdMap[ 312 ] = { 1, 480 } -- WrapParser!
 _dependIdMap[ 323 ] = { 1, 496 } -- StreamParser
 _dependIdMap[ 324 ] = { 1, 497 } -- StreamParser!
-_dependIdMap[ 350 ] = { 1, 620 } -- DummyParser
-_dependIdMap[ 351 ] = { 1, 621 } -- DummyParser!
-_typeInfoList[17] = { skind = 4, parentId = 230, typeId = 409, txt = 'ModeKind',
+_dependIdMap[ 353 ] = { 1, 623 } -- DummyParser
+_dependIdMap[ 354 ] = { 1, 624 } -- DummyParser!
+_typeInfoList[17] = { skind = 4, parentId = 230, typeId = 412, txt = 'ModeKind',
 accessMode = 1, kind = 11, valTypeId = 25, enumValList = {Ast = 'ast',Complete = 'comp',Diag = 'diag',Exec = 'exe',Glue = 'glue',Lua = 'lua',LuaMeta = 'LUA',Save = 'save',SaveMeta = 'SAVE',Token = 'token',Unknown = '',Version = 'ver',} }
-_typeInfoList[18] = { skind = 0, parentId = 230, typeId = 410, nilable = true, orgTypeId = 409 }
-_typeInfoList[19] = { skind=3, parentId = 409, typeId = 411, baseId = 1, txt = 'get__txt',
+_typeInfoList[18] = { skind = 0, parentId = 230, typeId = 413, nilable = true, orgTypeId = 412 }
+_typeInfoList[19] = { skind=3, parentId = 412, typeId = 414, baseId = 1, txt = 'get__txt',
         abstructFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {25}, children = {}, }
-_typeInfoList[20] = { skind = 0, parentId = 409, typeId = 412, nilable = true, orgTypeId = 411 }
-_typeInfoList[21] = { skind=3, parentId = 409, typeId = 414, baseId = 1, txt = '_from',
-        abstructFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {240}, retTypeId = {410}, children = {}, }
-_typeInfoList[22] = { skind = 0, parentId = 409, typeId = 415, nilable = true, orgTypeId = 414 }
-_typeInfoList[23] = { skind=3, parentId = 230, typeId = 417, baseId = 1, txt = 'Option',
-        abstructFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {426}, }
-_typeInfoList[24] = { skind = 0, parentId = 230, typeId = 418, nilable = true, orgTypeId = 417 }
-_typeInfoList[25] = { skind = 1, parentId = 1, typeId = 424, srcTypeId = 26, mutable = false }
-_typeInfoList[26] = { skind = 1, parentId = 232, typeId = 425, srcTypeId = 252, mutable = false }
-_typeInfoList[27] = { skind=3, parentId = 417, typeId = 426, baseId = 1, txt = '__init',
+_typeInfoList[20] = { skind = 0, parentId = 412, typeId = 415, nilable = true, orgTypeId = 414 }
+_typeInfoList[21] = { skind=3, parentId = 412, typeId = 417, baseId = 1, txt = '_from',
+        abstructFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {240}, retTypeId = {413}, children = {}, }
+_typeInfoList[22] = { skind = 0, parentId = 412, typeId = 418, nilable = true, orgTypeId = 417 }
+_typeInfoList[23] = { skind=3, parentId = 230, typeId = 420, baseId = 1, txt = 'Option',
+        abstructFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {429}, }
+_typeInfoList[24] = { skind = 0, parentId = 230, typeId = 421, nilable = true, orgTypeId = 420 }
+_typeInfoList[25] = { skind = 1, parentId = 1, typeId = 427, srcTypeId = 26, mutable = false }
+_typeInfoList[26] = { skind = 1, parentId = 232, typeId = 428, srcTypeId = 252, mutable = false }
+_typeInfoList[27] = { skind=3, parentId = 420, typeId = 429, baseId = 1, txt = '__init',
         abstructFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[28] = { skind = 0, parentId = 417, typeId = 427, nilable = true, orgTypeId = 426 }
-_typeInfoList[29] = { skind=3, parentId = 1, typeId = 429, baseId = 1, txt = 'List',
+_typeInfoList[28] = { skind = 0, parentId = 420, typeId = 430, nilable = true, orgTypeId = 429 }
+_typeInfoList[29] = { skind=3, parentId = 1, typeId = 432, baseId = 1, txt = 'List',
         abstructFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {25}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[30] = { skind = 0, parentId = 1, typeId = 430, nilable = true, orgTypeId = 429 }
-_typeInfoList[31] = { skind=3, parentId = 230, typeId = 432, baseId = 1, txt = 'analyze',
-        abstructFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {429}, retTypeId = {417}, children = {}, }
-_typeInfoList[32] = { skind = 0, parentId = 230, typeId = 433, nilable = true, orgTypeId = 432 }
+_typeInfoList[30] = { skind = 0, parentId = 1, typeId = 433, nilable = true, orgTypeId = 432 }
+_typeInfoList[31] = { skind=3, parentId = 230, typeId = 435, baseId = 1, txt = 'analyze',
+        abstructFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {432}, retTypeId = {420}, children = {}, }
+_typeInfoList[32] = { skind = 0, parentId = 230, typeId = 436, nilable = true, orgTypeId = 435 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Parser' ] = { id = 1, use = true }

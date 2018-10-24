@@ -208,9 +208,9 @@ pub class Token {
    }
 }
 
-pub class Parser {
-   pub fn getToken() mut : &Token!;
-   pub fn getStreamName(): str;
+pub abstruct class Parser {
+   pub abstruct fn getToken() mut : &Token!;
+   pub abstruct fn getStreamName(): str;
 }
 
 pub class WrapParser extend Parser {
@@ -281,6 +281,8 @@ pub class StreamParser extend Parser {
       return new StreamParser(
          stream, path, luaMode or string.find( path, "%.lua$" ) and true );
    }
+
+   pub override fn getToken() mut : &Token!;
 }
 
 // macro _declTokenKind( name_array:str[@] ) {

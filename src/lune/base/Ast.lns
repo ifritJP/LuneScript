@@ -47,7 +47,7 @@ pub let rootTypeId = idProv.getNewId();
 
 
 pub proto class TypeInfo;
-pub proto class SymbolInfo;
+pub proto abstruct class SymbolInfo;
 
 pub let mut typeInfoKind:Map<str,TypeInfo> = {};
 pub let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
@@ -125,37 +125,37 @@ pub fn txt2AccessMode( accessMode:str ) : AccessMode! {
 
 
 /** シンボル情報 */
-pub class SymbolInfo {
+pub abstruct class SymbolInfo {
    /** 左辺値になれる場合 true */
-   pub fn get_canBeLeft(): bool;
+   pub abstruct fn get_canBeLeft(): bool;
    /** 右辺値になれる場合 true */
-   pub fn get_canBeRight(): bool;
+   pub abstruct fn get_canBeRight(): bool;
    /** このシンボルの ID */
-   pub fn get_symbolId(): int;
+   pub abstruct fn get_symbolId(): int;
    /** このシンボルが属するスコープ */
-   pub fn get_scope(): Scope;
+   pub abstruct fn get_scope(): Scope;
    /** シンボルのアクセス */
-   pub fn get_accessMode(): AccessMode;
+   pub abstruct fn get_accessMode(): AccessMode;
    /** */
-   pub fn get_staticFlag(): bool;
+   pub abstruct fn get_staticFlag(): bool;
    /** シンボルの名前 */
-   pub fn get_name(): str;
+   pub abstruct fn get_name(): str;
    /** シンボルの型 */
-   pub fn get_typeInfo(): TypeInfo;
+   pub abstruct fn get_typeInfo(): TypeInfo;
    /** このシンボルが mut かどうか */
-   pub fn get_mutable(): bool;
+   pub abstruct fn get_mutable(): bool;
    /** このシンボルの種類 SymbolKind */
-   pub fn get_kind(): SymbolKind;
+   pub abstruct fn get_kind(): SymbolKind;
    /** このシンボルがデータを保持しているかどうか */
-   pub fn get_hasValueFlag(): bool;
-   pub fn set_hasValueFlag( arg:bool );
+   pub abstruct fn get_hasValueFlag(): bool;
+   pub abstruct fn set_hasValueFlag( arg:bool );
 
    /**
 このシンボルにアクセス可能かどうか調べる。
 
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub fn canAccess( fromScope:&Scope ): &SymbolInfo!;
+   pub abstruct fn canAccess( fromScope:&Scope ): &SymbolInfo!;
 }
 
 
@@ -2086,7 +2086,7 @@ pub class NamespaceInfo {
 }
 
 
-pub proto class MacroEval;
+pub proto abstruct class MacroEval;
 pub proto class ExpListNode extend Node;
 pub proto class DeclArgNode extend Node;
 
@@ -2707,8 +2707,8 @@ _declNodeClass( "DeclMacro", Node, false, false,
                 [ { "declInfo": "DeclMacroInfo" } ]
 );
 
-pub class MacroEval {
-   pub fn eval( macroNode: DeclMacroNode ): form;
+pub abstruct class MacroEval {
+   pub abstruct fn eval( macroNode: DeclMacroNode ): form;
 }
 
 _declNodeClass( "LiteralNil", Node, false, true, [] );

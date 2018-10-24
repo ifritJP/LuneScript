@@ -54,6 +54,12 @@
 
 {
    class Test {
+      pub let val:int;
+      let val2:int {pub};
+      pub fn __init() {
+         self.val = 0;
+         self.val2 = 0;
+      }
       pub fn func(): int {
          return 1;
       }
@@ -62,6 +68,8 @@
    let val:int = test$.func$(); // error
    let func:form! = fn (): int { return 0; };
    let val2:stem = func$(); // error
+   let val3:int = test$.val; // error
+   let val4:int = test$.$val; // error
 }
 
 unwrap 1;

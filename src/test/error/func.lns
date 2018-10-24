@@ -66,3 +66,7 @@
    global fn func2() { // error
    }
 }
+
+{
+   fn func(); // error
+}

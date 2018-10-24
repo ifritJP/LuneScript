@@ -4,8 +4,8 @@ class Test {
       Test.val = 0;
    }
    pri let mut val1:int {pub};
-      pub fn __init( val:int ) {
-      super( 1 );
+   pub fn __init( val:int ) {
+      super( 1 ); // error
       self.val1 = val;
       return; // error: return
    }
@@ -200,11 +200,19 @@ class subIF2 extend extIF {
 }
 
 
+class SuperArg {
+   let val:int;
+}
+
+class SubArg extend SuperArg {
+   pub fn __init() {
+      super( 1.0 ); // error
+   }
+}
+
 class StaticClass {
    let val:int;
    static fn func() {
       self.val; // error
    }
 }
-
-

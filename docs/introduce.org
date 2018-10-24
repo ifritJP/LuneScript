@@ -275,6 +275,15 @@ let map = { "A": 10, "B": 11, "C": 12 };
 
 リスト、配列の最初の要素のインデックスは 1 です。
 
+リスト、配列の長さを取得するには # を使用します。
+
+#+BEGIN_SRC lns
+let list = [ 1, 2, 3 ];
+print( #list ) // 3
+#+END_SRC
+
+マップのサイズ(アイテムの個数)を取得することは出来ません。 ( Lua の制限 )
+
 **** リスト
 
 リストのオブジェクトは、順序付けて値を管理します。
@@ -995,6 +1004,56 @@ class Hoge {
 }
 #+END_SRC
 
+*** abstruct
+
+メソッドは、実態を持たずに型だけ宣言することが出来る。
+
+#+BEGIN_SRC lns
+abstruct class Hoge {
+  pub abstruct fn func( val:int ): int;
+}
+#+END_SRC
+
+実態を持たないメソッドは abstruct として宣言する必要がある。
+
+abstruct メソッドを持つクラスは abstruct クラスとして宣言する必要がある。
+
+abstruct クラスは、そのクラス単独では new できない。
+必ず継承する必要がある。
+
+*** メソッドの外部定義
+
+メソッドは、クラス定義の外部で定義することが出来る。
+
+*ただし、同一ファイルで定義する必要がある。*
+
+たとえば次のクラスは、
+
+#+BEGIN_SRC lns
+class Hoge {
+  fn func() {
+  }
+}
+#+END_SRC
+
+次のようにも定義できる。
+
+#+BEGIN_SRC lns
+class Hoge {
+}
+fn Hoge.func() {
+}
+#+END_SRC
+
+また、次のようにも宣言できる。
+
+#+BEGIN_SRC lns
+class Hoge {
+  fn func();
+}
+fn Hoge.func() {
+}
+#+END_SRC
 
 *** インスタンスの生成
 

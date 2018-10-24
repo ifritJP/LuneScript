@@ -229,6 +229,9 @@ fn TransUnit.analyzeExpRefItem(
 
    if nilAccess {
       self.useNilAccess = true;
+      if not typeInfo.$nilable {
+         typeInfo = typeInfo.$nilableTypeInfo;
+      }
    }
 
    if typeInfo.$mutable and not expType.$mutable {
@@ -1629,7 +1632,6 @@ fn TransUnit.analyzeExp(
             case "#" {
                if expType.$kind ~= .List and
                   expType.$kind ~= .Array and
-                  expType.$kind ~= .Map and
                   not Ast.builtinTypeString.canEvalWith( expType, "=" )
                {
                   self.addErrMess(

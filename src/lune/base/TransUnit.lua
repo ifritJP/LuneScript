@@ -60,95 +60,82 @@ function _lune.unwrapDefault( val, defval )
 end
 
       
-function _lune._fromMapSub( val, memKind, nilable )
-   if type( memKind ) == "function" then
-      return memKind( val ), nilable
-   end
-   if nilable then
-      if val == nil then
-         return nil, true
-      end
-      memKind = memKind:sub( 1, #memKind - 1 )
-   end
-   local valType = type( val )
-   if memKind == "stem" then
-      if valType == "number" or valType == "string" or valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "int" then
-      if valType == "number" then
-         return math.floor( val )
-      end
-      return nil
-   end
-   if memKind == "real" then
-      if valType == "number" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "bool" then
-      if valType == "boolean" then
-         return val
-      end
-      return nil
-   end
-   if memKind == "str" then
-      if valType == "string" then
-         return val
-      end
-      return nil
-   end
-   if string.find( memKind, "^Array" ) or string.find( memKind, "^List" )
-   then
-      if valType == "table" then
-         local tbl = {}
-         for index, mem in ipairs( val ) do
-            local kind = string.gsub( memKind, "^[%a]+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local memval, valid = _lune._fromMapSub( mem, kind )
-            if memval == nil and not valid then
-               return nil
-            end
-            tbl[ index ] = memval
-         end
-         return tbl
-      end
-      return nil
-   end
-   if string.find( memKind, "^Map" ) then
-      if valType == "table" then
-         local tbl = {}
-         for key, mem in pairs( val ) do
-            local kind = string.gsub( memKind, "^%a+<", "" )
-            kind = string.gsub( kind, ">$", ""  )
-            local delimitIndex = string.find( kind, ",", 1, true )
-            local keyKind = string.sub( kind, 1, delimitIndex - 1 )
-            local valKind = string.sub( kind, delimitIndex + 1 )
-            local mapKey = _lune._fromMapSub( key, keyKind )
-            local mapVal = _lune._fromMapSub( mem, valKind )
-            if mapKey == nil or mapVal == nil then
-               return nil
-            end
-            tbl[ mapKey ] = mapVal
-         end
-         return tbl
-      end
-      return nil
-   end
+function _lune._toStem( val )
+   return val
 end
-
-
+function _lune._toInt( val )
+   if type( val ) == "number" then
+      return math.floor( val )
+   end
+   return nil
+end
+function _lune._toReal( val )
+   if type( val ) == "number" then
+      return val
+   end
+   return nil
+end
+function _lune._toBool( val )
+   if type( val ) == "boolean" then
+      return val
+   end
+   return nil
+end
+function _lune._toStr( val )
+   if type( val ) == "string" then
+      return val
+   end
+   return nil
+end
+function _lune._toList( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toValInfo = toValInfoList[ 1 ]
+      for index, mem in ipairs( val ) do
+         local memval, mess = toValInfo.func( mem, toValInfo.child )
+         if memval == nil and not toValInfo.nilable then
+            if mess then
+              return nil, string.format( "%d.%s", index, mess )
+            end
+            return nil, index
+         end
+         tbl[ index ] = memval
+      end
+      return tbl
+   end
+   return nil
+end
+function _lune._toMap( val, toValInfoList )
+   if type( val ) == "table" then
+      local tbl = {}
+      local toKeyInfo = toValInfoList[ 1 ]
+      local toValInfo = toValInfoList[ 2 ]
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
+end
 function _lune._fromMap( obj, map, memInfoList )
    if type( map ) ~= "table" then
       return false
    end
    for index, memInfo in ipairs( memInfoList ) do
-      local val, valid = _lune._fromMapSub( map[ memInfo.name ], memInfo.kind )
-      if val == nil and not valid then
-         return false
+      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
       end
       obj[ memInfo.name ] = val
    end
@@ -273,6 +260,7 @@ function TransUnit.new( macroEval, analyzeModule, mode, pos )
    return obj
 end
 function TransUnit:__init(macroEval, analyzeModule, mode, pos) 
+   self.protoFuncMap = {}
    self.loopScopeQueue = {}
    self.has__func__Symbol = false
    self.hasMappingClassDef = false
@@ -592,11 +580,11 @@ function _TypeInfo:_toMap()
   return self
 end
 function _TypeInfo._fromMap( val )
-  local obj = _TypeInfo._fromMapSub( {}, val )
+  local obj, mes = _TypeInfo._fromMapSub( {}, val )
   if obj then
      _TypeInfo.setmeta( obj )
   end
-  return obj
+  return obj, mes
 end
 function _TypeInfo._fromStem( val )
   return _TypeInfo._fromMap( val )
@@ -604,11 +592,12 @@ end
 
 function _TypeInfo._fromMapSub( obj, val )
    local memInfo = {}
-   table.insert( memInfo, { name = "skind", kind = Ast.SerializeKind._from, nilable = false } )
-   table.insert( memInfo, { name = "parentId", kind = "int", nilable = false } )
-   table.insert( memInfo, { name = "typeId", kind = "int", nilable = false } )
-   if not _lune._fromMap( obj, val, memInfo ) then
-      return nil
+   table.insert( memInfo, { name = "skind", func = Ast.SerializeKind._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "typeId", func = _lune._toInt, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
    end
    return obj
 end
@@ -642,26 +631,28 @@ function _TypeInfoNilable:_toMap()
   return self
 end
 function _TypeInfoNilable._fromMap( val )
-  local obj = _TypeInfoNilable._fromMapSub( {}, val )
+  local obj, mes = _TypeInfoNilable._fromMapSub( {}, val )
   if obj then
      _TypeInfoNilable.setmeta( obj )
   end
-  return obj
+  return obj, mes
 end
 function _TypeInfoNilable._fromStem( val )
   return _TypeInfoNilable._fromMap( val )
 end
 
 function _TypeInfoNilable._fromMapSub( obj, val )
-   if not _TypeInfo._fromMapSub( obj, val ) then
-      return nil
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "nilable", kind = "bool", nilable = false } )
-   table.insert( memInfo, { name = "orgTypeId", kind = "int", nilable = false } )
-   if not _lune._fromMap( obj, val, memInfo ) then
-      return nil
+   table.insert( memInfo, { name = "nilable", func = _lune._toBool, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "orgTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
    end
    return obj
 end
@@ -701,26 +692,28 @@ function _TypeInfoModifier:_toMap()
   return self
 end
 function _TypeInfoModifier._fromMap( val )
-  local obj = _TypeInfoModifier._fromMapSub( {}, val )
+  local obj, mes = _TypeInfoModifier._fromMapSub( {}, val )
   if obj then
      _TypeInfoModifier.setmeta( obj )
   end
-  return obj
+  return obj, mes
 end
 function _TypeInfoModifier._fromStem( val )
   return _TypeInfoModifier._fromMap( val )
 end
 
 function _TypeInfoModifier._fromMapSub( obj, val )
-   if not _TypeInfo._fromMapSub( obj, val ) then
-      return nil
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "srcTypeId", kind = "int", nilable = false } )
-   table.insert( memInfo, { name = "mutable", kind = "bool", nilable = false } )
-   if not _lune._fromMap( obj, val, memInfo ) then
-      return nil
+   table.insert( memInfo, { name = "srcTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "mutable", func = _lune._toBool, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
    end
    return obj
 end
@@ -794,25 +787,27 @@ function _TypeInfoModule:_toMap()
   return self
 end
 function _TypeInfoModule._fromMap( val )
-  local obj = _TypeInfoModule._fromMapSub( {}, val )
+  local obj, mes = _TypeInfoModule._fromMapSub( {}, val )
   if obj then
      _TypeInfoModule.setmeta( obj )
   end
-  return obj
+  return obj, mes
 end
 function _TypeInfoModule._fromStem( val )
   return _TypeInfoModule._fromMap( val )
 end
 
 function _TypeInfoModule._fromMapSub( obj, val )
-   if not _TypeInfo._fromMapSub( obj, val ) then
-      return nil
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "txt", kind = "str", nilable = false } )
-   if not _lune._fromMap( obj, val, memInfo ) then
-      return nil
+   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
    end
    return obj
 end
@@ -978,36 +973,38 @@ function _TypeInfoNormal:_toMap()
   return self
 end
 function _TypeInfoNormal._fromMap( val )
-  local obj = _TypeInfoNormal._fromMapSub( {}, val )
+  local obj, mes = _TypeInfoNormal._fromMapSub( {}, val )
   if obj then
      _TypeInfoNormal.setmeta( obj )
   end
-  return obj
+  return obj, mes
 end
 function _TypeInfoNormal._fromStem( val )
   return _TypeInfoNormal._fromMap( val )
 end
 
 function _TypeInfoNormal._fromMapSub( obj, val )
-   if not _TypeInfo._fromMapSub( obj, val ) then
-      return nil
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "abstructFlag", kind = "bool", nilable = false } )
-   table.insert( memInfo, { name = "baseId", kind = "int", nilable = false } )
-   table.insert( memInfo, { name = "txt", kind = "str", nilable = false } )
-   table.insert( memInfo, { name = "staticFlag", kind = "bool", nilable = false } )
-   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from, nilable = false } )
-   table.insert( memInfo, { name = "kind", kind = Ast.TypeInfoKind._from, nilable = false } )
-   table.insert( memInfo, { name = "mutable", kind = "bool", nilable = false } )
-   table.insert( memInfo, { name = "ifList", kind = "List<int>", nilable = false } )
-   table.insert( memInfo, { name = "itemTypeId", kind = "List<int>", nilable = false } )
-   table.insert( memInfo, { name = "argTypeId", kind = "List<int>", nilable = false } )
-   table.insert( memInfo, { name = "retTypeId", kind = "List<int>", nilable = false } )
-   table.insert( memInfo, { name = "children", kind = "List<int>", nilable = false } )
-   if not _lune._fromMap( obj, val, memInfo ) then
-      return nil
+   table.insert( memInfo, { name = "abstructFlag", func = _lune._toBool, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "baseId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "staticFlag", func = _lune._toBool, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "kind", func = Ast.TypeInfoKind._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "mutable", func = _lune._toBool, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "itemTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "argTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "retTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "children", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
    end
    return obj
 end
@@ -1055,28 +1052,31 @@ function _TypeInfoEnum:_toMap()
   return self
 end
 function _TypeInfoEnum._fromMap( val )
-  local obj = _TypeInfoEnum._fromMapSub( {}, val )
+  local obj, mes = _TypeInfoEnum._fromMapSub( {}, val )
   if obj then
      _TypeInfoEnum.setmeta( obj )
   end
-  return obj
+  return obj, mes
 end
 function _TypeInfoEnum._fromStem( val )
   return _TypeInfoEnum._fromMap( val )
 end
 
 function _TypeInfoEnum._fromMapSub( obj, val )
-   if not _TypeInfo._fromMapSub( obj, val ) then
-      return nil
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "txt", kind = "str", nilable = false } )
-   table.insert( memInfo, { name = "accessMode", kind = Ast.AccessMode._from, nilable = false } )
-   table.insert( memInfo, { name = "valTypeId", kind = "int", nilable = false } )
-   table.insert( memInfo, { name = "enumValList", kind = "Map<str,stem>", nilable = false } )
-   if not _lune._fromMap( obj, val, memInfo ) then
-      return nil
+   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "valTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "enumValList", func = _lune._toMap, nilable = false, child = { { func = _lune._toStr, nilable = false, child = {} }, 
+{ func = _lune._toStem, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
    end
    return obj
 end
@@ -2468,6 +2468,10 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
       end
    end
    
+   for protoType, pos in pairs( self.protoFuncMap ) do
+      self:addErrMess( pos, string.format( "This function doesn't have body. -- %s", protoType:getTxt(  )) )
+   end
+   
    for __index, mess in pairs( self.warnMessList ) do
       Util.errorLog( mess )
    end
@@ -3256,9 +3260,9 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
          
       end
       
-      local fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromMap", {mapType}, {classTypeInfo:get_nilableTypeInfo()}, true )
+      local fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromMap", {mapType}, {classTypeInfo:get_nilableTypeInfo(), Ast.builtinTypeString:get_nilableTypeInfo()}, true )
       classScope:addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false )
-      local fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromStem", {Ast.builtinTypeStem_}, {classTypeInfo:get_nilableTypeInfo()}, true )
+      local fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_fromStem", {Ast.builtinTypeStem_}, {classTypeInfo:get_nilableTypeInfo(), Ast.builtinTypeString:get_nilableTypeInfo()}, true )
       classScope:addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false )
    end
    
@@ -3495,6 +3499,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
                   self:addErrMess( _exp.pos, err )
                end
                
+               self.protoFuncMap[prottype] = nil
             end
          end
          
@@ -3565,6 +3570,12 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstructFlag, overrideFlag, ac
    if token.txt == ";" then
       if declFuncMode == DeclFuncMode.Module or declFuncMode == DeclFuncMode.Glue then
          needNode = true
+      else
+       
+         if not abstructFlag then
+            self.protoFuncMap[typeInfo] = firstToken.pos
+         end
+         
       end
       
    else
@@ -4118,6 +4129,10 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    
    if nilAccess then
       self.useNilAccess = true
+      if not typeInfo:get_nilable() then
+         typeInfo = typeInfo:get_nilableTypeInfo()
+      end
+      
    end
    
    if typeInfo:get_mutable() and not expType:get_mutable() then
@@ -5364,7 +5379,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
                
                typeInfo = expType
             elseif _switchExp == "#" then
-               if expType:get_kind() ~= Ast.TypeInfoKind.List and expType:get_kind() ~= Ast.TypeInfoKind.Array and expType:get_kind() ~= Ast.TypeInfoKind.Map and not Ast.builtinTypeString:canEvalWith( expType, "=" ) then
+               if expType:get_kind() ~= Ast.TypeInfoKind.List and expType:get_kind() ~= Ast.TypeInfoKind.Array and not Ast.builtinTypeString:canEvalWith( expType, "=" ) then
                   self:addErrMess( token.pos, string.format( 'unmatch type for "#" -- %s', expType:getTxt(  )) )
                end
                

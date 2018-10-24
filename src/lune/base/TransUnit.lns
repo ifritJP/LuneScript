@@ -132,9 +132,16 @@ pub class TransUnit {
    /** ループ系制御構文(for 等)の Scope */
    pri let mut loopScopeQueue: List<&Ast.Scope>;
 
+   /**
+プロトタイプだけの関数のタイプ Map。
+解析終了時に、この  Map に残っているとエラー。
+   */
+   pri let mut protoFuncMap:Map<&Ast.TypeInfo,&Parser.Position>;
+
    pub fn __init( macroEval: Ast.MacroEval,
                   analyzeModule:str!, mode:AnalyzeMode!, pos:&Parser.Position! )
    {
+      self.protoFuncMap = {};
       self.loopScopeQueue = [];
       self.has__func__Symbol = false;
       self.hasMappingClassDef = false;

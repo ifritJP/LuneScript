@@ -8,19 +8,23 @@
 
 * 機能
 
-- [ ] prototype 宣言しかしていないメソッドを持つクラスのエラー出力対応。
-     
+- [ ] Class にキャストする際、メタメソッドを持たないテーブルはエラーとする。
+- [ ] stem からキャストする際に動的にタイプチェックし、
+      マッチしていない場合は nil を返す @@@ 演算子を追加する。
+- [ ] 依存ソース一覧(subfile,import)を出力する機能を追加する。
+
 - [ ] 同じ名前を global 宣言しているモジュールをインポートすると、 
       prototype 宣言の型チェック処理が動いてしまう。
 - [ ] Set を対応する
-- [ ] List, Map, Array の kind を Class にする。
 
 - [ ] import 処理で lns ソースを解析する際、TypeId の IdProvider が同じものなので、
       TypeId の整合性が取れないことがある。
+      import 時の typeId のリセット
+
+- [ ] List, Map, Array の kind を Class にする。
 
 - [ ] List オブジェクトの insert() 等の補完が効かない。
 - [ ] import のフォーマットバージョンチェック
-- [ ] import 時の typeId のリセット
 - [ ] form の型宣言
 - [ ] メソッドの form 対応
 - [ ] デフォルトコンストラクタを持つクラスを継承したときに、
@@ -49,8 +53,6 @@
 
 * テストコード
 
-- [ ] Mapping で、メンバの型が Class の nilable だった場合、 _fromMap に失敗する。
-- [ ] super の引数チェック
 - [X] 外部のモジュールで宣言された、コンストラクタを持つ class を extend 
 - [X] 間接 import したモジュール内の enum の omit アクセス
 - [X] 引数が enum の nilable だった場合、補完が効かない。
@@ -74,7 +76,11 @@
 - [X] コンストラクタで __func__ を使うと nil になる。
 - [X] method から form へのキャストが出来てしまう。  
 - [X] Map のキーが enum だった場合、補完が利かない。
-  
+- [X] let val:List<Hoge>! のとき、 val$[1] のアクセス結果が Hoge になっている。
+      本来は Hoge! であるべき。
+- [X] Mapping で、メンバの型が Class の nilable だった場合、 _fromMap に失敗する。
+- [X] super の引数チェック
+- [X] prototype 宣言しかしていないメソッドを持つクラスのエラー出力対応。
 
 
 * ドキュメント
