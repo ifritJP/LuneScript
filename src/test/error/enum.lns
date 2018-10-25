@@ -34,6 +34,9 @@ testEnum4 = 1; // error
 testEnum4.val1 = 1; // error
 testEnum4.val1 = testEnum4.val1; // error
 
+if testEnum4 == 1 { // error
+}
+
 
 fn func( enum1: testEnum, enum4: testEnum4 ): testEnum4 {
    return .val1;

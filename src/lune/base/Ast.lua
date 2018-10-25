@@ -218,12 +218,12 @@ local function isPubToExternal( mode )
 end
 _moduleObj.isPubToExternal = isPubToExternal
 local txt2AccessModeMap = {}
-txt2AccessModeMap['none'] = AccessMode.None
-txt2AccessModeMap['pub'] = AccessMode.Pub
-txt2AccessModeMap['pro'] = AccessMode.Pro
-txt2AccessModeMap['pri'] = AccessMode.Pri
-txt2AccessModeMap['local'] = AccessMode.Local
-txt2AccessModeMap['global'] = AccessMode.Global
+txt2AccessModeMap["none"] = AccessMode.None
+txt2AccessModeMap["pub"] = AccessMode.Pub
+txt2AccessModeMap["pro"] = AccessMode.Pro
+txt2AccessModeMap["pri"] = AccessMode.Pri
+txt2AccessModeMap["local"] = AccessMode.Local
+txt2AccessModeMap["global"] = AccessMode.Global
 local function txt2AccessMode( accessMode )
 
    return txt2AccessModeMap[accessMode]
@@ -514,7 +514,7 @@ function TypeInfo:canEvalWith( other, opTxt )
 
    return false
 end
-function TypeInfo:get_abstructFlag(  )
+function TypeInfo:get_abstractFlag(  )
 
    return false
 end
@@ -1216,8 +1216,8 @@ function NilableTypeInfo:isInheritFrom( ... )
    return self.orgTypeInfo:isInheritFrom( ... )
 end       
 
-function NilableTypeInfo:get_abstructFlag( ... )
-   return self.orgTypeInfo:get_abstructFlag( ... )
+function NilableTypeInfo:get_abstractFlag( ... )
+   return self.orgTypeInfo:get_abstractFlag( ... )
 end       
 
 function NilableTypeInfo:get_externalFlag( ... )
@@ -1373,8 +1373,8 @@ function ModifierTypeInfo:isInheritFrom( ... )
    return self.srcTypeInfo:isInheritFrom( ... )
 end       
 
-function ModifierTypeInfo:get_abstructFlag( ... )
-   return self.srcTypeInfo:get_abstructFlag( ... )
+function ModifierTypeInfo:get_abstractFlag( ... )
+   return self.srcTypeInfo:get_abstractFlag( ... )
 end       
 
 function ModifierTypeInfo:equals( ... )
@@ -1681,20 +1681,20 @@ end
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
-function NormalTypeInfo.new( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
+function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
+   if obj.__init then obj:__init( abstractFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
    return obj
 end
-function NormalTypeInfo:__init(abstructFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
+function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
    TypeInfo.__init( self ,scope)
    
    if type( kind ) ~= "number" then
       Util.printStackTrace(  )
    end
    
-   self.abstructFlag = abstructFlag
+   self.abstractFlag = abstractFlag
    self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
    self.interfaceList = _lune.unwrapDefault( interfaceList, {})
    self.autoFlag = autoFlag
@@ -1857,7 +1857,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    end
    
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        abstructFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstructFlag, self.staticFlag, self.accessMode, self.kind, self.mutable)
+        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutable)
    local children = {}
    local set = validChildrenSet
    if  nil == set then
@@ -1930,7 +1930,7 @@ function NormalTypeInfo:equals( typeInfo )
 
    return self:equalsSub( typeInfo )
 end
-function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable )
+function NormalTypeInfo.create( abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable )
 
    if kind == TypeInfoKind.Prim then
       do
@@ -1944,7 +1944,7 @@ function NormalTypeInfo.create( abstructFlag, scope, baseInfo, interfaceList, pa
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, AccessMode.Pub, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, AccessMode.Pub, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -1983,8 +1983,8 @@ end
 function NormalTypeInfo:get_autoFlag()       
    return self.autoFlag         
 end
-function NormalTypeInfo:get_abstructFlag()       
-   return self.abstructFlag         
+function NormalTypeInfo:get_abstractFlag()       
+   return self.abstractFlag         
 end
 function NormalTypeInfo:get_orgTypeInfo()       
    return self.orgTypeInfo         
@@ -2093,7 +2093,7 @@ function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleNam
    return info
 end
 
-function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, className )
+function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, className )
 
    do
       local _exp = _moduleObj.sym2builtInTypeMap[className]
@@ -2107,18 +2107,18 @@ function NormalTypeInfo.createClass( classFlag, abstructFlag, scope, baseInfo, i
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstructFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
    return info
 end
 
-function NormalTypeInfo.createFunc( abstructFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
+function NormalTypeInfo.createFunc( abstractFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
 
    if not builtinFlag and Parser.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
+   local info = NormalTypeInfo.new(abstractFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
    return info
 end
 

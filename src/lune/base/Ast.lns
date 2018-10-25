@@ -47,7 +47,7 @@ pub let rootTypeId = idProv.getNewId();
 
 
 pub proto class TypeInfo;
-pub proto abstruct class SymbolInfo;
+pub proto abstract class SymbolInfo;
 
 pub let mut typeInfoKind:Map<str,TypeInfo> = {};
 pub let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
@@ -113,49 +113,49 @@ pub fn isPubToExternal( mode:AccessMode ): bool {
 }
 
 let mut txt2AccessModeMap:Map<str,AccessMode> = {};
-txt2AccessModeMap.none = .None;
-txt2AccessModeMap.pub = .Pub;
-txt2AccessModeMap.pro = .Pro;
-txt2AccessModeMap.pri = .Pri;
-txt2AccessModeMap.local = .Local;
-txt2AccessModeMap.global = .Global;
+txt2AccessModeMap[ "none" ] = .None;
+txt2AccessModeMap[ "pub" ] = .Pub;
+txt2AccessModeMap[ "pro" ] = .Pro;
+txt2AccessModeMap[ "pri" ] = .Pri;
+txt2AccessModeMap[ "local" ] = .Local;
+txt2AccessModeMap[ "global" ] = .Global;
 pub fn txt2AccessMode( accessMode:str ) : AccessMode! {
    return txt2AccessModeMap[ accessMode ];
 }
 
 
 /** シンボル情報 */
-pub abstruct class SymbolInfo {
+pub abstract class SymbolInfo {
    /** 左辺値になれる場合 true */
-   pub abstruct fn get_canBeLeft(): bool;
+   pub abstract fn get_canBeLeft(): bool;
    /** 右辺値になれる場合 true */
-   pub abstruct fn get_canBeRight(): bool;
+   pub abstract fn get_canBeRight(): bool;
    /** このシンボルの ID */
-   pub abstruct fn get_symbolId(): int;
+   pub abstract fn get_symbolId(): int;
    /** このシンボルが属するスコープ */
-   pub abstruct fn get_scope(): Scope;
+   pub abstract fn get_scope(): Scope;
    /** シンボルのアクセス */
-   pub abstruct fn get_accessMode(): AccessMode;
+   pub abstract fn get_accessMode(): AccessMode;
    /** */
-   pub abstruct fn get_staticFlag(): bool;
+   pub abstract fn get_staticFlag(): bool;
    /** シンボルの名前 */
-   pub abstruct fn get_name(): str;
+   pub abstract fn get_name(): str;
    /** シンボルの型 */
-   pub abstruct fn get_typeInfo(): TypeInfo;
+   pub abstract fn get_typeInfo(): TypeInfo;
    /** このシンボルが mut かどうか */
-   pub abstruct fn get_mutable(): bool;
+   pub abstract fn get_mutable(): bool;
    /** このシンボルの種類 SymbolKind */
-   pub abstruct fn get_kind(): SymbolKind;
+   pub abstract fn get_kind(): SymbolKind;
    /** このシンボルがデータを保持しているかどうか */
-   pub abstruct fn get_hasValueFlag(): bool;
-   pub abstruct fn set_hasValueFlag( arg:bool );
+   pub abstract fn get_hasValueFlag(): bool;
+   pub abstract fn set_hasValueFlag( arg:bool );
 
    /**
 このシンボルにアクセス可能かどうか調べる。
 
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub abstruct fn canAccess( fromScope:&Scope ): &SymbolInfo!;
+   pub abstract fn canAccess( fromScope:&Scope ): &SymbolInfo!;
 }
 
 
@@ -375,7 +375,7 @@ pub class TypeInfo {
       return false;
    }
    
-   pub fn get_abstructFlag(): bool {
+   pub fn get_abstractFlag(): bool {
       return false;
    }
    
@@ -1139,7 +1139,7 @@ pub class NormalTypeInfo extend TypeInfo {
    // コンパイラで自動生成された型情報の場合 true。 accessor 等。
    pri let autoFlag: bool { pub };
    /** */
-   pri let abstructFlag: bool { pub };
+   pri let abstractFlag: bool { pub };
 
    // unwrap 後の TypeInfo。 無効な場合は headTypeInfo。
    pri let mut orgTypeInfo: &TypeInfo { pub };
@@ -1155,7 +1155,7 @@ pub class NormalTypeInfo extend TypeInfo {
    // このメソッドが mutable かどうか。
    pri let mutable: bool {pub};
 
-   fn __init( abstructFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
+   fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
               interfaceList: List<&TypeInfo>!, orgTypeInfo: TypeInfo!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
               accessMode: AccessMode,
@@ -1169,7 +1169,7 @@ pub class NormalTypeInfo extend TypeInfo {
          Util.printStackTrace();
       }
       
-      self.abstructFlag = abstructFlag;
+      self.abstractFlag = abstractFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
       self.autoFlag = autoFlag;
@@ -1347,9 +1347,9 @@ pub class NormalTypeInfo extend TypeInfo {
       } 
 
       let txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        abstructFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ```
+        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ```
           ( SerializeKind.Normal, parentId, self.typeId, self.get_baseId(), self.rawTxt,
-            self.abstructFlag, self.staticFlag, self.accessMode, self.kind, self.mutable );
+            self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutable );
 
       let mut children:List<&TypeInfo> = [];
       let! set = validChildrenSet {
@@ -1464,7 +1464,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
 
    pub static fn create(
-      abstructFlag: bool, scope: Scope!, baseInfo: &TypeInfo,
+      abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo,
       interfaceList: List<&TypeInfo>, parentInfo: &TypeInfo, staticFlag: bool,
       kind: TypeInfoKind, txt: str, itemTypeInfo: List<&TypeInfo>,
       argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
@@ -1479,7 +1479,7 @@ pub class NormalTypeInfo extend TypeInfo {
       idProv.increment();
       //typeIdSeed = typeIdSeed + 1;
       let mut info = new NormalTypeInfo(
-         abstructFlag, scope, baseInfo, interfaceList, nil, false, true,
+         abstractFlag, scope, baseInfo, interfaceList, nil, false, true,
          staticFlag, AccessMode.Pub, txt, parentInfo, idProv.$id, kind,
          itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable ); 
       return info;
@@ -1610,7 +1610,7 @@ pub static fn NormalTypeInfo.createModule(
 
 
 pub static fn NormalTypeInfo.createClass(
-   classFlag: bool, abstructFlag: bool, scope: Scope!,
+   classFlag: bool, abstractFlag: bool, scope: Scope!,
    baseInfo: TypeInfo!, interfaceList: List<&TypeInfo>!,
    parentInfo: &TypeInfo, externalFlag: bool,
    accessMode: AccessMode, className: str ): &TypeInfo
@@ -1631,7 +1631,7 @@ pub static fn NormalTypeInfo.createClass(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    let mut info = new NormalTypeInfo(
-      abstructFlag, scope, baseInfo, interfaceList, nil, false,
+      abstractFlag, scope, baseInfo, interfaceList, nil, false,
       externalFlag, false, accessMode,
       className, parentInfo, idProv.$id,
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true );
@@ -1639,7 +1639,7 @@ pub static fn NormalTypeInfo.createClass(
 }
 
 pub static fn NormalTypeInfo.createFunc(
-   abstructFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
+   abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
    parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool,
    staticFlag: bool, accessMode: AccessMode, funcName: str, argTypeList: List<&TypeInfo>!,
    retTypeInfoList: List<&TypeInfo>!, mutable: bool! ): &TypeInfo
@@ -1651,7 +1651,7 @@ pub static fn NormalTypeInfo.createFunc(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    let mut info = new NormalTypeInfo(
-      abstructFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag,
+      abstractFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, idProv.$id,
       kind, [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [], mutable );
@@ -2086,7 +2086,7 @@ pub class NamespaceInfo {
 }
 
 
-pub proto abstruct class MacroEval;
+pub proto abstract class MacroEval;
 pub proto class ExpListNode extend Node;
 pub proto class DeclArgNode extend Node;
 
@@ -2707,8 +2707,8 @@ _declNodeClass( "DeclMacro", Node, false, false,
                 [ { "declInfo": "DeclMacroInfo" } ]
 );
 
-pub abstruct class MacroEval {
-   pub abstruct fn eval( macroNode: DeclMacroNode ): form;
+pub abstract class MacroEval {
+   pub abstract fn eval( macroNode: DeclMacroNode ): form;
 }
 
 _declNodeClass( "LiteralNil", Node, false, true, [] );

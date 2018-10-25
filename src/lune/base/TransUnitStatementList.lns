@@ -27,7 +27,9 @@ subfile owner lune.base.TransUnit;
 fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
    let mut expList: Ast.ExpListNode! = nil;
    let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-   if funcTypeInfo == Ast.headTypeInfo {
+   if funcTypeInfo == Ast.headTypeInfo or
+      ( funcTypeInfo.$kind ~= .Func and funcTypeInfo.$kind ~= .Method )
+   {  
       self.addErrMess(
          token.pos,
          "'return' could not use here" );
@@ -126,6 +128,10 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
             nextToken = self.getToken();
          }
          statement = self.analyzeDecl( accessMode, staticFlag, token, nextToken );
+         if not statement {
+            self.addErrMess( nextToken.pos,
+                             "This token is illegal -- %s" (nextToken.txt) );
+         }
       }
       elseif token.txt == "{" {
          self.pushback();

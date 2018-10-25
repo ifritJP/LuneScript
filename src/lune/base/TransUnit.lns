@@ -262,7 +262,7 @@ pub class TransUnit {
    
 
    pri fn pushClass(
-      classFlag:bool, abstructFlag: bool, baseInfo: &Ast.TypeInfo!,
+      classFlag:bool, abstractFlag: bool, baseInfo: &Ast.TypeInfo!,
       interfaceList: List<&Ast.TypeInfo>!, externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
@@ -270,9 +270,9 @@ pub class TransUnit {
       if! self.scope.getTypeInfoChild( name ) {
          typeInfo = _exp;
 
-         if typeInfo.$abstructFlag ~= abstructFlag {
+         if typeInfo.$abstractFlag ~= abstractFlag {
             self.addErrMess( self.currentToken.pos,
-                             "mismatch class abstruct for prototpye" );
+                             "mismatch class abstract for prototpye" );
          }  
          if typeInfo.$accessMode ~= accessMode {
             self.addErrMess( self.currentToken.pos,
@@ -310,7 +310,7 @@ pub class TransUnit {
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true, inheritList );
          typeInfo = Ast.NormalTypeInfo.createClass(
-            classFlag, abstructFlag, scope, baseInfo, interfaceList,
+            classFlag, abstractFlag, scope, baseInfo, interfaceList,
             parentInfo, externalFlag, accessMode, name );
 
          parentScope.addClass( name, typeInfo );
@@ -334,12 +334,12 @@ pub class TransUnit {
       mode:Ast.DeclVarMode,
       accessMode: Ast.AccessMode, firstToken: &Parser.Token ): Ast.Node;
    pri fn analyzeDeclFunc(
-      declFuncMode: DeclFuncMode, abstructFlag: bool,
+      declFuncMode: DeclFuncMode, abstractFlag: bool,
       overrideFlag: bool, accessMode: Ast.AccessMode, staticFlag: bool,
       mut classTypeInfo: &Ast.TypeInfo!,
       firstToken: &Parser.Token, name: &Parser.Token! ) : Ast.Node;
    pri fn analyzeDeclClass(
-      abstructFlag:bool, classAccessMode: Ast.AccessMode,
+      abstractFlag:bool, classAccessMode: Ast.AccessMode,
       classToken: &Parser.Token, mode:DeclClassMode ): Ast.Node;
    pri fn analyzeExp( skipOp2Flag: bool, opLevel: int!,
                       expectType:&Ast.TypeInfo! ): Ast.Node;
@@ -434,7 +434,7 @@ class ImportParam {
    pub let scope:Ast.Scope;
 }
 
-abstruct class _TypeInfo extend (Mapping) {
+abstract class _TypeInfo extend (Mapping) {
    pub let skind: Ast.SerializeKind;
    pub let parentId: int;
    pub let typeId: int;
@@ -451,7 +451,7 @@ abstruct class _TypeInfo extend (Mapping) {
 @return Ast.TypeInfo! 生成した型情報。 失敗した場合は nil。
 @return str! エラー情報。成功した場合は nil。
    */
-   pub abstruct fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!;
+   pub abstract fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!;
 }
 
 class _TypeInfoNilable extend _TypeInfo {
@@ -531,7 +531,7 @@ class _TypeInfoModule extend _TypeInfo {
 }
 
 class _TypeInfoNormal extend _TypeInfo {
-   pub let abstructFlag: bool;
+   pub let abstractFlag: bool;
    pub let baseId:int;
    pub let txt:str;
    pub let staticFlag:bool;
@@ -617,7 +617,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   parentScope, true, [ baseScope ] );
 
                let workTypeInfo = Ast.NormalTypeInfo.createClass(
-                  self.kind == Ast.TypeInfoKind.Class, self.abstructFlag,
+                  self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
                   scope, baseInfo, interfaceList,
                   parentInfo, true, .Pub, self.txt );
                newTypeInfo = workTypeInfo;
@@ -646,7 +646,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   }  
                }  
                let workTypeInfo = Ast.NormalTypeInfo.create(
-                  self.abstructFlag, scope, baseInfo,
+                  self.abstractFlag, scope, baseInfo,
                   interfaceList, parentInfo, self.staticFlag, typeInfoKind,
                   self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable );
                newTypeInfo = workTypeInfo;
@@ -1553,7 +1553,7 @@ fn TransUnit.processImport(
 
       switch ( classTypeInfo.$kind ) {
          case .Class {
-            self.pushClass( true, classTypeInfo.$abstructFlag,
+            self.pushClass( true, classTypeInfo.$abstractFlag,
                             nil, nil, true, classTypeInfo.getTxt(), .Pub );
             if! metaInfo._typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;

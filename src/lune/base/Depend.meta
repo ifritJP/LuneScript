@@ -27,7 +27,7 @@ children = {230, } }
 _typeInfoList[3] = { skind = 2, parentId = 228, typeId = 230, txt = 'Depend', kind = 12, 
 children = {232, } }
 _typeInfoList[4] = { skind=3, parentId = 230, typeId = 232, baseId = 1, txt = 'getFileLastModifiedTime',
-        abstructFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {20}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {20}, children = {}, }
 _typeInfoList[5] = { skind = 0, parentId = 230, typeId = 233, nilable = true, orgTypeId = 232 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap

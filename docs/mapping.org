@@ -140,9 +140,16 @@ let obj2 = unwrap Test._fromMap( { "val": 2 } ); // equal new Test( 2 );
 Mapping インタフェースを extend することで、
 _toMap(), _fromMap(), _fromStem() が利用できます。
 
-なお _fromMap() の戻り値は、そのクラスの nilable 型となります。
+クラス Test の _fromMap() は次の型になります。
+
+#+BEGIN_SRC lns
+pub static fn Test._fromMap( val:&Map<str,&stem> ): Test!, str!;
+#+END_SRC
+
+上記の通り、_fromMap() の戻り値はそのクラスの nilable 型と str! になります。
 これは、_fromMap() に与えられた Map 型のデータに、
-このクラスを構成するための情報に抜けがある場合に nil が返るためです。
+このクラスを構成するための情報に抜けがある場合に nil が返るためであり、
+str! は、どの構成情報に抜けがあったかを示すメッセージになります。
 
 _fromMap() と _fromStem() は、引数の型が違うだけです。
 _fromMap() は引数が &Map<str,&stem> ですが、

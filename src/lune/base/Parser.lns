@@ -208,9 +208,9 @@ pub class Token {
    }
 }
 
-pub abstruct class Parser {
-   pub abstruct fn getToken() mut : &Token!;
-   pub abstruct fn getStreamName(): str;
+pub abstract class Parser {
+   pub abstract fn getToken() mut : &Token!;
+   pub abstract fn getStreamName(): str;
 }
 
 pub class WrapParser extend Parser {

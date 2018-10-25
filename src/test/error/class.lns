@@ -101,7 +101,7 @@ class Super1 {
 class Sub1 extend Super1 { // error: no __init
 }
 
-abstruct class Super2 {
+abstract class Super2 {
    pri let val:int!;
    pub fn func1() {
    }
@@ -109,7 +109,7 @@ abstruct class Super2 {
    }
    pub fn func3() {
    }
-   pub abstruct fn func4() { // error
+   pub abstract fn func4() { // error
    }
 }
 
@@ -123,11 +123,11 @@ class Sub2 extend Super2 { // error
 }
 
 class Super3 {
-   pub abstruct fn func4();  // error
+   pub abstract fn func4();  // error
 }
 
-abstruct class Super4 {
-   pub abstruct fn func4();
+abstract class Super4 {
+   pub abstract fn func4();
 }
 
 {
@@ -177,18 +177,18 @@ class IFTest2 extend (IFTest) {
 }
 
 
-pub proto abstruct class TestAbs;
+pub proto abstract class TestAbs;
 class TestAbs { // error
 }
 
-pub proto abstruct class TestProto;
-abstruct class TestProto {  // error
+pub proto abstract class TestProto;
+abstract class TestProto {  // error
 }
 
 interface IF {
    pub fn func();
 }
-abstruct class extIF extend (IF) {
+abstract class extIF extend (IF) {
 }
 class extIF2 extend (IF) { // error
 }

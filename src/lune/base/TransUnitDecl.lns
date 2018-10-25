@@ -215,10 +215,10 @@ pub fn TransUnit.createAST(
 
       let mut token = self.getTokenNoErr();
       if token ~= Parser.getEofToken() {
-         Util.err( "%s:%d:%d:(%s) not eof -- %s"
-                   ( self.parser.getStreamName(),
-                     token.pos.lineNo, token.pos.column,
-                     token.kind.$_txt, token.txt ) );
+         self.error( "%s:%d:%d:(%s) not eof -- %s"
+                     ( self.parser.getStreamName(),
+                       token.pos.lineNo, token.pos.column,
+                       token.kind.$_txt, token.txt ) );
       }
 
       foreach subModule in self.subfileList {
@@ -399,7 +399,7 @@ fn TransUnit.analyzeDeclMacro(
 }
 
 fn TransUnit.analyzePushClass(
-   classFlag: bool, abstructFlag: bool,
+   classFlag: bool, abstractFlag: bool,
    firstToken:&Parser.Token, name:&Parser.Token, accessMode:Ast.AccessMode ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
@@ -460,7 +460,7 @@ fn TransUnit.analyzePushClass(
    }
    
    let classTypeInfo = self.pushClass(
-      classFlag, abstructFlag, typeInfo, interfaceList, false, name.txt, accessMode );
+      classFlag, abstractFlag, typeInfo, interfaceList, false, name.txt, accessMode );
    return nextToken, classTypeInfo;
 }
 
@@ -468,9 +468,9 @@ fn TransUnit.analyzeDeclProto(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.Node
 {
    let mut nextToken = self.getToken();
-   let mut abstructFlag = false;
-   if nextToken.txt == "abstruct" {
-      abstructFlag = true;
+   let mut abstractFlag = false;
+   if nextToken.txt == "abstract" {
+      abstractFlag = true;
       nextToken = self.getToken();
    }
 
@@ -479,7 +479,7 @@ fn TransUnit.analyzeDeclProto(
       let name = self.getSymbolToken();
       
       nextToken = self.analyzePushClass(
-         nextToken.txt ~= "interface", abstructFlag, firstToken, name, accessMode );
+         nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode );
       self.popClass();
       self.checkToken( nextToken, ";" );
    }
@@ -625,9 +625,9 @@ fn TransUnit.analyzeDecl(
       token = self.getToken();
    }
 
-   let mut abstructFlag = false;
-   if token.txt == "abstruct" {
-      abstructFlag = true;
+   let mut abstractFlag = false;
+   if token.txt == "abstract" {
+      abstractFlag = true;
       token = self.getToken();
    }
 
@@ -636,11 +636,11 @@ fn TransUnit.analyzeDecl(
    }
    elseif token.txt == "fn" {
       return self.analyzeDeclFunc(
-         .Func, abstructFlag, overrideFlag,
+         .Func, abstractFlag, overrideFlag,
          accessMode, staticFlag, nil, firstToken, nil );
    }
    elseif token.txt == "class" {
-      return self.analyzeDeclClass( abstructFlag, accessMode, firstToken, .Class );
+      return self.analyzeDeclClass( abstractFlag, accessMode, firstToken, .Class );
    }
    elseif token.txt == "interface" {
       return self.analyzeDeclClass( true, accessMode, firstToken, .Interface );
@@ -755,11 +755,11 @@ fn TransUnit.analyzeDeclMember(
 
 fn TransUnit.analyzeDeclMethod(
    classTypeInfo: &Ast.TypeInfo, declFuncMode: DeclFuncMode,
-   abstructFlag: bool, overrideFlag: bool, accessMode: Ast.AccessMode,
+   abstractFlag: bool, overrideFlag: bool, accessMode: Ast.AccessMode,
    staticFlag: bool, firstToken: &Parser.Token, name: &Parser.Token ) mut : Ast.Node
 {
    let mut node = self.analyzeDeclFunc(
-      declFuncMode, abstructFlag,
+      declFuncMode, abstractFlag,
       overrideFlag, accessMode, staticFlag, classTypeInfo, name, name );
    return node;
 }
@@ -812,14 +812,14 @@ fn TransUnit.analyzeClassBody(
          overrideFlag = true;
          token = self.getToken();
       }   
-      let mut abstructFlag = false;
-      if token.txt == "abstruct" {
-         abstructFlag = true;
+      let mut abstractFlag = false;
+      if token.txt == "abstract" {
+         abstractFlag = true;
          token = self.getToken();
       }
       elseif mode == .Interface {
          // 現状 interface にデフォルト処理を書けない。
-         abstructFlag = true;
+         abstractFlag = true;
       }
           
 
@@ -857,7 +857,7 @@ fn TransUnit.analyzeClassBody(
          }
 
          let methodNode = self.analyzeDeclMethod(
-            classTypeInfo, declFuncMode, abstructFlag, overrideFlag,
+            classTypeInfo, declFuncMode, abstractFlag, overrideFlag,
             accessMode, staticFlag, token, nameToken );
          fieldList.insert( methodNode );
          methodNameSet[ nameToken.txt ] = true;
@@ -1174,7 +1174,7 @@ fn TransUnit.analyzeDeclClass(
       let fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromMap",
-         [ mapType ],
+         [ mapType.$nilableTypeInfo ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
          true );
       classScope.addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false );
@@ -1198,7 +1198,7 @@ fn TransUnit.analyzeDeclClass(
                if! let impMethodType = classScope.getTypeInfoField(
                   symbolInfo.$name, true, classScope )
                {              
-                  if impMethodType.$abstructFlag {
+                  if impMethodType.$abstractFlag {
                      noImp = true;
                   }
                }
@@ -1246,7 +1246,7 @@ pri fn TransUnit.addMethod(
 
 
 fn TransUnit.analyzeDeclFunc(
-   declFuncMode: DeclFuncMode, abstructFlag: bool, overrideFlag: bool,
+   declFuncMode: DeclFuncMode, abstractFlag: bool, overrideFlag: bool,
    mut accessMode: Ast.AccessMode,
    mut staticFlag: bool, mut classTypeInfo: &Ast.TypeInfo!,
    firstToken: &Parser.Token, mut name: &Parser.Token! ) mut : Ast.Node
@@ -1272,7 +1272,7 @@ fn TransUnit.analyzeDeclFunc(
       if! classTypeInfo {
          self.pushClass(
             _exp.$kind == .Class,
-            _exp.$abstructFlag, nil, nil, false, className, _exp.$accessMode );
+            _exp.$abstractFlag, nil, nil, false, className, _exp.$accessMode );
       }
       else {
          self.error( "not found class -- %s" (className) );
@@ -1389,9 +1389,9 @@ fn TransUnit.analyzeDeclFunc(
                workClass, .Pri, false, mutable, true );
          }
 
-         if not workClass.$abstructFlag and abstructFlag {
+         if not workClass.$abstractFlag and abstractFlag {
             self.addErrMess( firstToken.pos,
-                             "no abstruct class does not have abstruct method" );
+                             "no abstract class does not have abstract method" );
          }  
       }
    }
@@ -1414,7 +1414,7 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      abstructFlag, false, funcBodyScope,
+      abstractFlag, false, funcBodyScope,
       typeKind, self.getCurrentNamespaceTypeInfo(),
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList, mutable );
@@ -1498,15 +1498,15 @@ fn TransUnit.analyzeDeclFunc(
          needNode = true;
       }
       else {
-         if not abstructFlag {
+         if not abstractFlag {
             self.protoFuncMap[ typeInfo ] = firstToken.pos;
          }
       }
    }
    else {
       needNode = true;
-      if abstructFlag {
-         self.addErrMess( token.pos, "abstruct method can't have body." );
+      if abstractFlag {
+         self.addErrMess( token.pos, "abstract method can't have body." );
       }
 
       let __func__Symbol = funcBodyScope.addLocalVar(

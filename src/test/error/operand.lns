@@ -21,3 +21,11 @@ fn func( val:int! ) {
    let map:Map<int,int> = {};
    let size = #map; // error
 }
+
+print( 1 < 2 );
+print( 1.0 < 2 );
+print( 1 < 2.0 );
+print( 1.0 < 2.0 );
+print( "1" < 2.0 ); // error
+print( 1 < "2.0" ); // error
+print( "1" < "2.0" );

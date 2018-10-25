@@ -1104,6 +1104,11 @@ fn TransUnit.analyzeExpOp2(
       }
       elseif nextToken.kind == Parser.TokenKind.Ope {
          if Parser.isOp2( opTxt ) {
+            if not exp.canBeRight() {
+               self.addErrMess(
+                  exp.$pos, "This can't evaluate for '%s' -- %s"
+                  ( opTxt, Ast.getNodeKindName( exp.$kind ) ) );
+            }
             let! opLevel = op2levelMap[ opTxt ] {
                self.error( "unknown op -- %s %s" (opTxt, prevOpLevel ) );
             };
@@ -1127,6 +1132,14 @@ fn TransUnit.analyzeExpOp2(
             
             let mut exp2:&Ast.Node = self.analyzeExp( false, opLevel, enumTypeInfo );
             let mut exp2NodeList = [ exp2 ];
+
+            if not exp2.canBeRight() {
+               self.addErrMess(
+                  exp2.$pos, "This can't evaluate for '%s' -- %s"
+                  ( opTxt, Ast.getNodeKindName( exp2.$kind ) ) );
+            }
+            
+
             if opTxt == "=" {
                let workToken = self.getToken();
                if workToken.txt == "," {
@@ -1232,11 +1245,16 @@ fn TransUnit.analyzeExpOp2(
                   }
                }
                case "<", ">", "<=", ">=" {
-                  if ( not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt ) and
-                       not Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt ) ) or
-                      ( not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt ) and
-                        not Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt ) )
+                  if Ast.builtinTypeString.canEvalWith( exp1Type, "=" ) and
+                     Ast.builtinTypeString.canEvalWith( exp2Type, "=" ) or
+                      ( Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt ) or
+                        Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt ) ) and
+                     ( Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt ) or
+                        Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt ) )
                   {
+                     ;
+                  }
+                  else {
                      self.addErrMess(
                         nextToken.pos,
                         "no numeric type %s or %s"
@@ -1547,7 +1565,7 @@ fn TransUnit.analyzeExp(
          exp = self.analyzeExp( false );
          self.checkNextToken( ")" );
          exp = Ast.ExpParenNode.create(
-            self.nodeManager, firstToken.pos, exp.$expTypeList, exp );
+            self.nodeManager, firstToken.pos, [ exp.$expType ], exp );
          exp = self.analyzeExpCont( firstToken, exp, false );
       }
    }
@@ -1564,8 +1582,8 @@ fn TransUnit.analyzeExp(
             }
          }
       }
-      if classTypeInfo.$abstructFlag {
-         self.addErrMess( token.pos, "abstruct class can't new" );
+      if classTypeInfo.$abstractFlag {
+         self.addErrMess( token.pos, "abstract class can't new" );
       }
       
       let classScope = classTypeInfo.get_scope();

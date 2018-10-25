@@ -69,7 +69,7 @@
 		   "__init", "mut" "pub" "pro" "pri" "form" "advertise" "provide"
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
 		   "glue"
-		   "abstruct" "trust" "import" "as" "not" "and" "or" "break" "new" )))
+		   "abstract" "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
 				      '("let" "let\!" "let\*" "if" "elseif" "else" "while"

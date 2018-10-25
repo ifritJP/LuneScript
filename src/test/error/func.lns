@@ -70,3 +70,10 @@
 {
    fn func(); // error
 }
+
+{
+   fn func(): int, int {
+      return 1,  2;
+   }  
+   let val1, val2 = (func()); // error
+}

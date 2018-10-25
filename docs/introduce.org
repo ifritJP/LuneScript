@@ -1004,21 +1004,21 @@ class Hoge {
 }
 #+END_SRC
 
-*** abstruct
+*** abstract
 
 メソッドは、実態を持たずに型だけ宣言することが出来る。
 
 #+BEGIN_SRC lns
-abstruct class Hoge {
-  pub abstruct fn func( val:int ): int;
+abstract class Hoge {
+  pub abstract fn func( val:int ): int;
 }
 #+END_SRC
 
-実態を持たないメソッドは abstruct として宣言する必要がある。
+実態を持たないメソッドは abstract として宣言する必要がある。
 
-abstruct メソッドを持つクラスは abstruct クラスとして宣言する必要がある。
+abstract メソッドを持つクラスは abstract クラスとして宣言する必要がある。
 
-abstruct クラスは、そのクラス単独では new できない。
+abstract クラスは、そのクラス単独では new できない。
 必ず継承する必要がある。
 
 *** メソッドの外部定義
