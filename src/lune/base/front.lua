@@ -26,7 +26,6 @@ local Option = require( 'lune.base.Option' )
 local dumpNode = require( 'lune.base.dumpNode' )
 local glueFilter = require( 'lune.base.glueFilter' )
 local Depend = require( 'lune.base.Depend' )
-local version = "1.0.1"
 function _luneGetLocal( varName )
 
    local index = 1
@@ -133,9 +132,9 @@ function Front:createAst( path, mod, analyzeModule, analyzeMode, pos )
    return transUnit:createAST( createPaser( path, mod ), false, mod )
 end
 
-local function convert( ast, streamName, stream, metaStream, convMode, inMacro )
+function Front:convert( ast, streamName, stream, metaStream, convMode, inMacro )
 
-   local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind() )
+   local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind(), self.option.useLuneModule )
    ast:get_node():processFilter( conv, nil, 0 )
 end
 
@@ -159,11 +158,11 @@ local function loadFromLuaTxt( txt )
    error( "failed to error" )
 end
 
-local function loadFromAst( ast, streamName, onlyMeta )
+function Front:loadFromAst( ast, streamName, onlyMeta )
 
    local stream = Util.memStream.new()
    local metaStream = Util.memStream.new()
-   convert( ast, streamName, stream, metaStream, convLua.ConvMode.Exec, false )
+   self:convert( ast, streamName, stream, metaStream, convLua.ConvMode.Exec, false )
    local meta = loadFromLuaTxt( metaStream:get_txt() )
    if onlyMeta then
       return meta, stream:get_txt()
@@ -178,13 +177,13 @@ function Front:loadFromLnsTxt( name, txt, onlyMeta )
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.StreamParser.new(stream, name, false)
    local ast = transUnit:createAST( parser, false, nil )
-   return loadFromAst( ast, name, onlyMeta )
+   return self:loadFromAst( ast, name, onlyMeta )
 end
 
 function Front:loadFile( path, mod, onlyMeta )
 
    local ast = self:createAst( path, mod, nil, TransUnit.AnalyzeMode.Compile )
-   return loadFromAst( ast, path, onlyMeta )
+   return self:loadFromAst( ast, path, onlyMeta )
 end
 
 function Front:searchModule( mod )
@@ -411,7 +410,7 @@ function Front:exec(  )
             convMode = convLua.ConvMode.ConvMeta
          end
          
-         convert( ast, self.option.scriptPath, io.stdout, io.stdout, convMode, false )
+         self:convert( ast, self.option.scriptPath, io.stdout, io.stdout, convMode, false )
       elseif _switchExp == Option.ModeKind.Save or _switchExp == Option.ModeKind.SaveMeta then
          Util.profile( self.option.validProf, function (  )
          
@@ -449,7 +448,7 @@ function Front:exec(  )
                   
                end
                
-               convert( ast, self.option.scriptPath, stream, metaStream, convMode, false )
+               self:convert( ast, self.option.scriptPath, stream, metaStream, convMode, false )
                fileObj:close(  )
                do
                   local _exp = metaFileObj
@@ -464,8 +463,6 @@ function Front:exec(  )
          , self.option.scriptPath .. ".profi" )
       elseif _switchExp == Option.ModeKind.Exec then
          self:loadModule( mod )
-      elseif _switchExp == Option.ModeKind.Version then
-         print( string.format( "LuneScript: version %s", version) )
       else 
          
             print( "illegal mode" )

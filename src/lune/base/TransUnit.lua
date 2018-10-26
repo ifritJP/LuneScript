@@ -166,12 +166,20 @@ function DeclClassMode._from( val )
    return nil
 end 
     
+DeclClassMode.__allList = {}
+function DeclClassMode._allList()
+   return DeclClassMode.__allList
+end
+
 DeclClassMode.Class = 0
 DeclClassMode._val2NameMap[0] = 'Class'
+DeclClassMode.__allList[1] = DeclClassMode.Class
 DeclClassMode.Interface = 1
 DeclClassMode._val2NameMap[1] = 'Interface'
+DeclClassMode.__allList[2] = DeclClassMode.Interface
 DeclClassMode.Module = 2
 DeclClassMode._val2NameMap[2] = 'Module'
+DeclClassMode.__allList[3] = DeclClassMode.Module
 
 local DeclFuncMode = {}
 DeclFuncMode._val2NameMap = {}
@@ -189,14 +197,23 @@ function DeclFuncMode._from( val )
    return nil
 end 
     
+DeclFuncMode.__allList = {}
+function DeclFuncMode._allList()
+   return DeclFuncMode.__allList
+end
+
 DeclFuncMode.Func = 0
 DeclFuncMode._val2NameMap[0] = 'Func'
+DeclFuncMode.__allList[1] = DeclFuncMode.Func
 DeclFuncMode.Class = 1
 DeclFuncMode._val2NameMap[1] = 'Class'
+DeclFuncMode.__allList[2] = DeclFuncMode.Class
 DeclFuncMode.Module = 2
 DeclFuncMode._val2NameMap[2] = 'Module'
+DeclFuncMode.__allList[3] = DeclFuncMode.Module
 DeclFuncMode.Glue = 3
 DeclFuncMode._val2NameMap[3] = 'Glue'
+DeclFuncMode.__allList[4] = DeclFuncMode.Glue
 
 local ExpSymbolMode = {}
 ExpSymbolMode._val2NameMap = {}
@@ -214,18 +231,29 @@ function ExpSymbolMode._from( val )
    return nil
 end 
     
+ExpSymbolMode.__allList = {}
+function ExpSymbolMode._allList()
+   return ExpSymbolMode.__allList
+end
+
 ExpSymbolMode.Symbol = 0
 ExpSymbolMode._val2NameMap[0] = 'Symbol'
+ExpSymbolMode.__allList[1] = ExpSymbolMode.Symbol
 ExpSymbolMode.Fn = 1
 ExpSymbolMode._val2NameMap[1] = 'Fn'
+ExpSymbolMode.__allList[2] = ExpSymbolMode.Fn
 ExpSymbolMode.Field = 2
 ExpSymbolMode._val2NameMap[2] = 'Field'
+ExpSymbolMode.__allList[3] = ExpSymbolMode.Field
 ExpSymbolMode.FieldNil = 3
 ExpSymbolMode._val2NameMap[3] = 'FieldNil'
+ExpSymbolMode.__allList[4] = ExpSymbolMode.FieldNil
 ExpSymbolMode.Get = 4
 ExpSymbolMode._val2NameMap[4] = 'Get'
+ExpSymbolMode.__allList[5] = ExpSymbolMode.Get
 ExpSymbolMode.GetNil = 5
 ExpSymbolMode._val2NameMap[5] = 'GetNil'
+ExpSymbolMode.__allList[6] = ExpSymbolMode.GetNil
 
 local AnalyzeMode = {}
 _moduleObj.AnalyzeMode = AnalyzeMode
@@ -244,12 +272,20 @@ function AnalyzeMode._from( val )
    return nil
 end 
     
+AnalyzeMode.__allList = {}
+function AnalyzeMode._allList()
+   return AnalyzeMode.__allList
+end
+
 AnalyzeMode.Compile = 0
 AnalyzeMode._val2NameMap[0] = 'Compile'
+AnalyzeMode.__allList[1] = AnalyzeMode.Compile
 AnalyzeMode.Diag = 1
 AnalyzeMode._val2NameMap[1] = 'Diag'
+AnalyzeMode.__allList[2] = AnalyzeMode.Diag
 AnalyzeMode.Complete = 2
 AnalyzeMode._val2NameMap[2] = 'Complete'
+AnalyzeMode.__allList[3] = AnalyzeMode.Complete
 
 local TransUnit = {}
 _moduleObj.TransUnit = TransUnit
@@ -5521,67 +5557,65 @@ function TransUnit:analyzeReturn( token )
    local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
    if funcTypeInfo == Ast.headTypeInfo or (funcTypeInfo:get_kind() ~= Ast.TypeInfoKind.Func and funcTypeInfo:get_kind() ~= Ast.TypeInfoKind.Method ) then
       self:addErrMess( token.pos, "'return' could not use here" )
-   else
-    
-      local nextToken = self:getToken(  )
-      local retTypeList = funcTypeInfo:get_retTypeInfoList()
-      if nextToken.txt ~= ";" then
-         self:pushback(  )
-         expList = self:analyzeExpList( false, nil, retTypeList )
-         self:checkNextToken( ";" )
-      end
-      
-      do
-         local _exp = expList
-         if _exp ~= nil then
-            local expTypeList = _exp:get_expTypeList()
-            if #retTypeList == 0 and #expTypeList > 0 then
-               self:addErrMess( token.pos, "this function can't return value." )
+   end
+   
+   local nextToken = self:getToken(  )
+   local retTypeList = funcTypeInfo:get_retTypeInfoList()
+   if nextToken.txt ~= ";" then
+      self:pushback(  )
+      expList = self:analyzeExpList( false, nil, retTypeList )
+      self:checkNextToken( ";" )
+   end
+   
+   do
+      local _exp = expList
+      if _exp ~= nil then
+         local expTypeList = _exp:get_expTypeList()
+         if #retTypeList == 0 and #expTypeList > 0 then
+            self:addErrMess( token.pos, "this function can't return value." )
+         end
+         
+         for index, retType in pairs( retTypeList ) do
+            local expType = expTypeList[index]
+            if not retType:canEvalWith( expType, "=" ) then
+               self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", index, retType:getTxt(  ), retType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
             end
             
-            for index, retType in pairs( retTypeList ) do
-               local expType = expTypeList[index]
-               if not retType:canEvalWith( expType, "=" ) then
-                  self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", index, retType:getTxt(  ), retType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
+            if index == #retTypeList then
+               if #retTypeList < #expTypeList and not retType:equals( Ast.builtinTypeDDD ) then
+                  self:addErrMess( token.pos, "over return value" )
                end
                
-               if index == #retTypeList then
-                  if #retTypeList < #expTypeList and not retType:equals( Ast.builtinTypeDDD ) then
-                     self:addErrMess( token.pos, "over return value" )
-                  end
-                  
-               elseif index == #expTypeList then
-                  if expType:equals( Ast.builtinTypeDDD ) then
-                     for retIndex = index, #retTypeList do
-                        local workRetType = retTypeList[retIndex]
-                        if not workRetType:canEvalWith( Ast.builtinTypeStem_, "=" ) then
-                           self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", retIndex, workRetType:getTxt(  ), workRetType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
-                        end
-                        
+            elseif index == #expTypeList then
+               if expType:equals( Ast.builtinTypeDDD ) then
+                  for retIndex = index, #retTypeList do
+                     local workRetType = retTypeList[retIndex]
+                     if not workRetType:canEvalWith( Ast.builtinTypeStem_, "=" ) then
+                        self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", retIndex, workRetType:getTxt(  ), workRetType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
                      end
                      
-                  else
-                   
-                     self:addErrMess( token.pos, string.format( "short return value -- %d < %d", #expTypeList, #retTypeList) )
                   end
                   
-                  break
+               else
+                
+                  self:addErrMess( token.pos, string.format( "short return value -- %d < %d", #expTypeList, #retTypeList) )
                end
                
-            end
-            
-         else
-            if funcTypeInfo:getTxt(  ) == "__init" then
-               self:addErrMess( token.pos, "__init method can't return" )
-            end
-            
-            if #retTypeList ~= 0 then
-               self:addErrMess( token.pos, "no return value" )
+               break
             end
             
          end
+         
+      else
+         if funcTypeInfo:getTxt(  ) == "__init" then
+            self:addErrMess( token.pos, "__init method can't return" )
+         end
+         
+         if #retTypeList ~= 0 then
+            self:addErrMess( token.pos, "no return value" )
+         end
+         
       end
-      
    end
    
    return Ast.ReturnNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, expList )
@@ -5681,6 +5715,16 @@ function TransUnit:analyzeStatement( termTxt )
          statement = Ast.StmtExpNode.create( self.nodeManager, exp:get_pos(), {Ast.builtinTypeNone}, exp )
       end
       
+   end
+   
+   do
+      local _exp = statement
+      if _exp ~= nil then
+         if not _exp:canBeStatement(  ) then
+            self:addErrMess( _exp:get_pos(), string.format( "This node can't be statement. -- %s", Ast.getNodeKindName( _exp:get_kind() )) )
+         end
+         
+      end
    end
    
    return statement

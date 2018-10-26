@@ -24,8 +24,9 @@ SOFTWARE.
 
 import lune.base.Parser;
 import lune.base.Util;
+import lune.base.LuaMod;
 
-pub let version = "00.01";
+let version = "1.0.2";
 
 pub enum ModeKind {
    Unknown = "",
@@ -39,7 +40,6 @@ pub enum ModeKind {
    SaveMeta = "SAVE",
    Exec = "exe",
    Glue = "glue",
-   Version = "ver",
 }
 
 pub class Option {
@@ -49,27 +49,59 @@ pub class Option {
    pub let outputDir:str!;
    pub let mut scriptPath: str;
    pub let mut validProf:bool;
+   pub let mut useLuneModule:bool;
    pub fn __init() {
       self.validProf = false;
       self.mode = .Unknown;
       self.scriptPath = "";
+      self.useLuneModule = false;
    }
+}
+
+pub fn outputLuneMod( dir:str! ):str! {
+   let mut path = "_lune.lua";
+   if! dir {
+      if _exp ~= "" {
+         path = _exp.gsub( "/$", "" ) .. "/" .. path;
+      }
+   }
+   let! mut fileObj = io.open( path, "w" ) {
+      return "failed to open -- %s" ( path );
+   };
+
+   fileObj.write( LuaMod.getCode( .Init ) );
+   fileObj.write( LuaMod.getCode( .NilAcc ) );
+   fileObj.write( LuaMod.getCode( .Unwrap ) );
+   fileObj.write( LuaMod.getCode( .Mapping ) );
+   fileObj.write( LuaMod.getCode( .Finalize ) );
+   
+   fileObj.close();
 }
 
 pub fn analyze( argList: str[] ) : Option {
 
-   if #argList < 2 {
+   fn printUsage() {
       print( ```
-usage: [-prof] src.lns mode [mode-option]
+usage:
+  <type1> [-prof] [-r] src.lns mode [mode-option]
+  <type2> -mklunemod dir
+  <type3> --version
+
+* type1
   - src.lns ast
   - src.lns comp [-i] module line column
   - src.lns [lua|LUA] 
   - src.lns [save|SAVE] output-dir
   - src.lns exe
+
+  -r: use 'require( "lune.base._lune" )'
+
+* type2
+  dir: output directory.
 ``` );
       os.exit( 1 );
    }
-
+   
    let mut option = new Option();
    let mut useStdInFlag = false;
    let mut lineNo:int! = nil;
@@ -89,6 +121,21 @@ usage: [-prof] src.lns mode [mode-option]
             }
             case "--nodebug" {
                Util.setDebugFlag( false );
+            }
+            case "--version" {
+               print( "LuneScript: version %s" (version) );
+               os.exit( 0 );
+            }
+            case "-mklunemod" {
+               let path = (#argList > index) and argList[ index + 1 ] or nil;
+               if! let mess = outputLuneMod( path ) {
+                  Util.errorLog( mess );
+                  os.exit( 1 );
+               }              
+               os.exit( 0 );
+            }
+            case "-r" {
+               option.useLuneModule = true;
             }
             default {
                Util.log( "unknown option -- %s" (arg) );
@@ -134,6 +181,10 @@ usage: [-prof] src.lns mode [mode-option]
       }
 
       index = index + 1;
+   }
+
+   if option.scriptPath == "" or option.mode == .Unknown {
+      printUsage();
    }
 
    if useStdInFlag and option.analyzeModule {

@@ -26,6 +26,7 @@ import lune.base.Ast;
 import lune.base.Util;
 import lune.base.TransUnit;
 import lune.base.frontInterface;
+import lune.base.LuaMod;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -91,11 +92,12 @@ class convFilter extend Ast.Filter (oStream) {
    pri let moduleTypeInfo: &Ast.TypeInfo;
    pri let moduleSymbolKind: Ast.SymbolKind;
    pri let mut needModuleObj: bool;
+   pri let separateLuneModule: bool;
 
    
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-                  moduleSymbolKind: Ast.SymbolKind ) 
+                  moduleSymbolKind: Ast.SymbolKind, separateLuneModule:bool ) 
    {
       //Util.errorLog( "__init: %s" (mode) );
       self.needModuleObj = true;
@@ -117,6 +119,7 @@ class convFilter extend Ast.Filter (oStream) {
       self.pubEnumId2EnumTypeInfo = {};
       self.needIndent = false;
       self.moduleTypeInfo = moduleTypeInfo;
+      self.separateLuneModule = separateLuneModule;
    }
 
    fn get_indent(): int {
@@ -646,161 +649,24 @@ pub override fn convFilter.processRoot(
    self.writeln(
       "local __mod__ = '%s'" (node.$moduleTypeInfo.getFullName({})) );
 
-   if node.$luneHelperInfo.$useNilAccess or
-      node.$luneHelperInfo.$useUnwrapExp or
-      node.$luneHelperInfo.$hasMappingClassDef
-   {  
+   if self.separateLuneModule {
+      self.writeln( '_lune = require( "lune.base._lune" )' );
+   }
+   else {
       self.writeln( ```
 if not _ENV._lune then
    _lune = {}
 end``` );
+      
       if node.$luneHelperInfo.$useNilAccess {
-         self.writeln( ```
-function _lune.nilacc( val, fieldName, access, ... )
-   if not val then
-      return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
-      if typeId == "table" then
-         return val[ ... ]
-      elseif typeId == "string" then
-         return string.byte( val, ... )
-      end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-``` );
+         self.writeln( LuaMod.getCode( .NilAcc ) );
       }
       if node.$luneHelperInfo.$useUnwrapExp {
-         self.writeln(```
-function _lune.unwrap( val )
-   if val == nil then
-      __luneScript:error( 'unwrap val is nil' )
-   end
-   return val
-end 
-function _lune.unwrapDefault( val, defval )
-   if val == nil then
-      return defval
-   end
-   return val
-end
-``` );
+         self.writeln( LuaMod.getCode( .Unwrap ) );
       }
-   }
-   if node.$luneHelperInfo.$hasMappingClassDef {
-      self.writeln(
-```      
-function _lune._toStem( val )
-   return val
-end
-function _lune._toInt( val )
-   if type( val ) == "number" then
-      return math.floor( val )
-   end
-   return nil
-end
-function _lune._toReal( val )
-   if type( val ) == "number" then
-      return val
-   end
-   return nil
-end
-function _lune._toBool( val )
-   if type( val ) == "boolean" then
-      return val
-   end
-   return nil
-end
-function _lune._toStr( val )
-   if type( val ) == "string" then
-      return val
-   end
-   return nil
-end
-function _lune._toList( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toValInfo = toValInfoList[ 1 ]
-      for index, mem in ipairs( val ) do
-         local memval, mess = toValInfo.func( mem, toValInfo.child )
-         if memval == nil and not toValInfo.nilable then
-            if mess then
-              return nil, string.format( "%d.%s", index, mess )
-            end
-            return nil, index
-         end
-         tbl[ index ] = memval
-      end
-      return tbl
-   end
-   return nil
-end
-function _lune._toMap( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toKeyInfo = toValInfoList[ 1 ]
-      local toValInfo = toValInfoList[ 2 ]
-      for key, mem in pairs( val ) do
-         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
-         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
-         if mapKey == nil or mapVal == nil then
-            if mapKey == nil then
-               return nil
-            end
-            if keySub == nil then
-               return nil, mapKey
-            end
-            return nil, string.format( "%s.%s", mapKey, keySub)
-         end
-         tbl[ mapKey ] = mapVal
-      end
-      return tbl
-   end
-   return nil
-end
-function _lune._fromMap( obj, map, memInfoList )
-   if type( map ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
-      if val == nil and not memInfo.nilable then
-         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
-      end
-      obj[ memInfo.name ] = val
-   end
-   return true
-end
-``` );
+      if node.$luneHelperInfo.$hasMappingClassDef {
+         self.writeln( LuaMod.getCode( .Mapping ));
+      }
    }
 
    let children:List<&Ast.Node> = node.get_children();
@@ -939,8 +805,16 @@ function %s._from( val )
    return nil
 end 
     ``` (enumFullName, enumFullName,
-         enumFullName, enumFullName ) );
-   foreach valName in node.$valueNameList {
+          enumFullName, enumFullName ) );
+   self.writeln( 
+```
+%s.__allList = {}
+function %s._allList()
+   return %s.__allList
+end
+``` (enumFullName, enumFullName, enumFullName ) );
+   
+   foreach valName, index in node.$valueNameList {
       let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
       let mut valTxt = "%s" (valInfo.$val);
       if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ) {
@@ -950,6 +824,8 @@ end
 
       self.writeln( "%s._val2NameMap[%s] = '%s'"
          (enumFullName, valTxt, valName.txt ) );
+      self.writeln( "%s.__allList[%d] = %s.%s"
+         (enumFullName, index, enumFullName, valName.txt ) );
    }
 }
 
@@ -2439,10 +2315,11 @@ pub override fn convFilter.processLiteralSymbol(
 pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
    convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-   moduleSymbolKind: &Ast.SymbolKind ) : Ast.Filter
+   moduleSymbolKind: &Ast.SymbolKind, separateLuneModule:bool ) : Ast.Filter
 {
-   return new convFilter( streamName, stream, metaStream,
-                          convMode, inMacro, moduleTypeInfo, moduleSymbolKind );
+   return new convFilter(
+      streamName, stream, metaStream,
+      convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule );
 }
 
 
@@ -2453,7 +2330,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
    {   
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", oStream, oStream, .Exec, true, Ast.headTypeInfo, .Typ );
+         "macro", oStream, oStream, .Exec, true, Ast.headTypeInfo, .Typ, false );
 
       conv.processDeclMacro( node, node );
 

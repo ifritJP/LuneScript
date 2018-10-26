@@ -1,6 +1,9 @@
 --lune/base/frontInterface.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.frontInterface'
+if not _ENV._lune then
+   _lune = {}
+end
 local frontInterface = {}
 _moduleObj.frontInterface = frontInterface
 function frontInterface.setmeta( obj )

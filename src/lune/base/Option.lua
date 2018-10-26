@@ -19,9 +19,8 @@ end
 
 local Parser = require( 'lune.base.Parser' )
 local Util = require( 'lune.base.Util' )
-local version = "00.01"
-_moduleObj.version = version
-
+local LuaMod = require( 'lune.base.LuaMod' )
+local version = "1.0.2"
 local ModeKind = {}
 _moduleObj.ModeKind = ModeKind
 ModeKind._val2NameMap = {}
@@ -39,30 +38,44 @@ function ModeKind._from( val )
    return nil
 end 
     
+ModeKind.__allList = {}
+function ModeKind._allList()
+   return ModeKind.__allList
+end
+
 ModeKind.Unknown = ''
 ModeKind._val2NameMap[''] = 'Unknown'
+ModeKind.__allList[1] = ModeKind.Unknown
 ModeKind.Token = 'token'
 ModeKind._val2NameMap['token'] = 'Token'
+ModeKind.__allList[2] = ModeKind.Token
 ModeKind.Ast = 'ast'
 ModeKind._val2NameMap['ast'] = 'Ast'
+ModeKind.__allList[3] = ModeKind.Ast
 ModeKind.Diag = 'diag'
 ModeKind._val2NameMap['diag'] = 'Diag'
+ModeKind.__allList[4] = ModeKind.Diag
 ModeKind.Complete = 'comp'
 ModeKind._val2NameMap['comp'] = 'Complete'
+ModeKind.__allList[5] = ModeKind.Complete
 ModeKind.Lua = 'lua'
 ModeKind._val2NameMap['lua'] = 'Lua'
+ModeKind.__allList[6] = ModeKind.Lua
 ModeKind.LuaMeta = 'LUA'
 ModeKind._val2NameMap['LUA'] = 'LuaMeta'
+ModeKind.__allList[7] = ModeKind.LuaMeta
 ModeKind.Save = 'save'
 ModeKind._val2NameMap['save'] = 'Save'
+ModeKind.__allList[8] = ModeKind.Save
 ModeKind.SaveMeta = 'SAVE'
 ModeKind._val2NameMap['SAVE'] = 'SaveMeta'
+ModeKind.__allList[9] = ModeKind.SaveMeta
 ModeKind.Exec = 'exe'
 ModeKind._val2NameMap['exe'] = 'Exec'
+ModeKind.__allList[10] = ModeKind.Exec
 ModeKind.Glue = 'glue'
 ModeKind._val2NameMap['glue'] = 'Glue'
-ModeKind.Version = 'ver'
-ModeKind._val2NameMap['ver'] = 'Version'
+ModeKind.__allList[11] = ModeKind.Glue
 
 local Option = {}
 _moduleObj.Option = Option
@@ -76,21 +89,60 @@ function Option:__init()
    self.validProf = false
    self.mode = ModeKind.Unknown
    self.scriptPath = ""
+   self.useLuneModule = false
 end
 function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
 
+local function outputLuneMod( dir )
+
+   local path = "_lune.lua"
+   do
+      local _exp = dir
+      if _exp ~= nil then
+         if _exp ~= "" then
+            path = _exp:gsub( "/$", "" ) .. "/" .. path
+         end
+         
+      end
+   end
+   
+   local fileObj = io.open( path, "w" )
+   if  nil == fileObj then
+      local _fileObj = fileObj
+   
+      return string.format( "failed to open -- %s", path)
+   end
+   
+   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Init ) )
+   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.NilAcc ) )
+   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Unwrap ) )
+   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
+   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Finalize ) )
+   fileObj:close(  )
+end
+_moduleObj.outputLuneMod = outputLuneMod
 local function analyze( argList )
 
-   if #argList < 2 then
+   local function printUsage(  )
+   
       print( [==[
-usage: [-prof] src.lns mode [mode-option]
+usage:
+  <type1> [-prof] [-r] src.lns mode [mode-option]
+  <type2> -mklunemod dir
+
+* type1
   - src.lns ast
   - src.lns comp [-i] module line column
   - src.lns [lua|LUA] 
   - src.lns [save|SAVE] output-dir
   - src.lns exe
+
+  -r: use 'require( "lune.base._lune" )'
+
+* type2
+  dir: output directory.
 ]==] )
       os.exit( 1 )
    end
@@ -111,6 +163,22 @@ usage: [-prof] src.lns mode [mode-option]
                option.validProf = true
             elseif _switchExp == "--nodebug" then
                Util.setDebugFlag( false )
+            elseif _switchExp == "--version" then
+               print( string.format( "LuneScript: version %s", version) )
+               os.exit( 0 )
+            elseif _switchExp == "-mklunemod" then
+               local path = (#argList > index ) and argList[index + 1] or nil
+               do
+                  local mess = outputLuneMod( path )
+                  if mess ~= nil then
+                     Util.errorLog( mess )
+                     os.exit( 1 )
+                  end
+               end
+               
+               os.exit( 0 )
+            elseif _switchExp == "-r" then
+               option.useLuneModule = true
             else 
                
                   Util.log( string.format( "unknown option -- %s", arg) )
@@ -159,6 +227,10 @@ usage: [-prof] src.lns mode [mode-option]
       end
       
       index = index + 1
+   end
+   
+   if option.scriptPath == "" or option.mode == ModeKind.Unknown then
+      printUsage(  )
    end
    
    if useStdInFlag and option.analyzeModule then

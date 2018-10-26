@@ -32,8 +32,6 @@ import lune.base.dumpNode;
 import lune.base.glueFilter;
 import lune.base.Depend;
 
-let version = "1.0.1";
-
 global fn _luneGetLocal( varName:str ):stem!
 {
    let mut index = 1;
@@ -114,13 +112,13 @@ fn Front.createAst( path:str, mod:str, analyzeModule:str!,
    return transUnit.createAST( createPaser( path, mod ), false, mod );
 }
 
-fn convert(
+fn Front.convert(
    ast:&TransUnit.ASTInfo, streamName:str,
    mut stream:oStream, mut metaStream:oStream, convMode:convLua.ConvMode, inMacro:bool )  
 {
    let mut conv = convLua.createFilter(
-      streamName, stream, metaStream,
-      convMode, inMacro, ast.$moduleTypeInfo, ast.$moduleSymbolKind );
+      streamName, stream, metaStream, convMode, inMacro,
+      ast.$moduleTypeInfo, ast.$moduleSymbolKind, self.option.useLuneModule );
    ast.$node.processFilter( conv, nil, 0 );
 }
 
@@ -137,11 +135,13 @@ fn loadFromLuaTxt( txt:str ): stem {
 }
 
 
-fn loadFromAst(ast:&TransUnit.ASTInfo, streamName:str, onlyMeta:bool ) : stem, stem {
+fn Front.loadFromAst(ast:&TransUnit.ASTInfo, streamName:str, onlyMeta:bool ) :
+   stem, stem
+{
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
 
-   convert( ast, streamName, stream, metaStream, .Exec, false );
+   self.convert( ast, streamName, stream, metaStream, .Exec, false );
    
    let mut meta = loadFromLuaTxt( metaStream.$txt );
    if onlyMeta {
@@ -159,14 +159,14 @@ fn Front.loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem
 
    let ast = transUnit.createAST( parser, false, nil );
    
-   return loadFromAst( ast, name, onlyMeta );
+   return self.loadFromAst( ast, name, onlyMeta );
 }
 
 fn Front.loadFile( path:str, mod:str, onlyMeta:bool ): stem, stem
 {
    let ast = self.createAst( path, mod, nil, .Compile );
 
-   return loadFromAst( ast, path, onlyMeta );
+   return self.loadFromAst( ast, path, onlyMeta );
 }
 
 fn Front.searchModule( mod:str ): str! {
@@ -353,8 +353,8 @@ pub fn Front.exec() mut
          if self.option.mode == .LuaMeta {
             convMode = .ConvMeta;
          }
-         convert( ast, self.option.scriptPath,
-                  io.stdout, io.stdout, convMode, false );
+         self.convert( ast, self.option.scriptPath,
+                       io.stdout, io.stdout, convMode, false );
       }
       case .Save, .SaveMeta {
          Util.profile(           
@@ -390,8 +390,8 @@ pub fn Front.exec() mut
                      }
                   }
 	             
-	          convert( ast, self.option.scriptPath,
-                           stream, metaStream, convMode, false );
+	          self.convert( ast, self.option.scriptPath,
+                                stream, metaStream, convMode, false );
 	          fileObj.close();
 	          if! metaFileObj {     
 		     _exp.close();
@@ -401,9 +401,6 @@ pub fn Front.exec() mut
       }
       case .Exec {
          self.loadModule( mod );
-      }
-      case .Version {
-         print( "LuneScript: version %s" (version) );
       }
       default {
          print( "illegal mode" );

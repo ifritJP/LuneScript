@@ -72,4 +72,6 @@
    let val4:int = test$.$val; // error
 }
 
-unwrap 1;
+{
+   let val = unwrap 1;
+}

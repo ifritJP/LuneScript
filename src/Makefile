@@ -41,6 +41,7 @@ define exeComp
 endef
 
 define buildLns
+	$(call transwork,$1,$2,LuaMod)
 	$(call transwork,$1,$2,Depend)
 	$(call transwork,$1,$2,Util)
 	$(call transwork,$1,$2,frontInterface)
@@ -55,9 +56,31 @@ define buildLns
 	$(call transwork,$1,$2,glueFilter)
 endef
 
+
+define build-testcode
+	$(call exeLune,work/3,test/Sub2.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Sub3.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Sub3_2.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Sub4.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Sub5.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Sub6.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/simple.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Class1.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Class2.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Class3.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/Class4.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/start.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/mapping.lns,$1 save,) > /dev/null
+	$(call exeLune,work/3,test/funcSym.lns,$1 save,) > /dev/null
+endef
+
 release-check:
 	$(MAKE) test-comp LUA_INC_DIR=../../lctags/external/lua/lua-5.3.4/src/
 	$(MAKE) test-comp LUA=lua5.2 LUA_INC_DIR=../../lctags/external/lua/lua-5.2.4/src/
+
+build:
+	$(call buildLns,.,.)
+
 
 # LuneScript 自身のソースを Lua に変換する。
 #
@@ -117,6 +140,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/loop.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/cast.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/prototype.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/statement.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
@@ -148,6 +172,9 @@ test-comp2:
 	diff -r work/2 work/3
 
 	cp -a test work/3
+	$(call exeLune,work/3,-mklunemod,lune/base)
+
+
 	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 	$(MAKE) build-glue GLUE_DIR=work/newglue
 
@@ -171,26 +198,17 @@ test-comp2:
 
 
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
-	$(call exeLune,work/3,test/Sub2.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Sub3.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Sub3_2.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Sub4.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Sub5.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Sub6.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/simple.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Class1.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Class2.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Class3.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/Class4.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/start.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/mapping.lns,save,) > /dev/null
-	$(call exeLune,work/3,test/funcSym.lns,save,) > /dev/null
-#	$(call exeLune,work/3,test/glue.lns,save,) > /dev/null
+	$(call build-testcode)
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result
+
+# テストスクリプトを lua 化して、 _lune をロードしてテスト。
+	$(call build-testcode,-r)
+	(cd work/3; $(LUA) test/start.lua) > work/test4.result
 
 
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
+	diff work/test3.result work/test4.result
 	diff -r work/glue work/newglue
 
 	$(MAKE) accept-package ACCEPT=y

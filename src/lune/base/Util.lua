@@ -1,6 +1,9 @@
 --lune/base/Util.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.Util'
+if not _ENV._lune then
+   _lune = {}
+end
 local Depend = require( 'lune.base.Depend' )
 local memStream = {}
 _moduleObj.memStream = memStream

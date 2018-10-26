@@ -63,6 +63,7 @@ local Ast = require( 'lune.base.Ast' )
 local Util = require( 'lune.base.Util' )
 local TransUnit = require( 'lune.base.TransUnit' )
 local frontInterface = require( 'lune.base.frontInterface' )
+local LuaMod = require( 'lune.base.LuaMod' )
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
@@ -119,12 +120,20 @@ function ConvMode._from( val )
    return nil
 end 
     
+ConvMode.__allList = {}
+function ConvMode._allList()
+   return ConvMode.__allList
+end
+
 ConvMode.Exec = 0
 ConvMode._val2NameMap[0] = 'Exec'
+ConvMode.__allList[1] = ConvMode.Exec
 ConvMode.Convert = 1
 ConvMode._val2NameMap[1] = 'Convert'
+ConvMode.__allList[2] = ConvMode.Convert
 ConvMode.ConvMeta = 2
 ConvMode._val2NameMap[2] = 'ConvMeta'
+ConvMode.__allList[3] = ConvMode.ConvMeta
 
 local hasBitOpFlag = _VERSION:gsub( "^[^%d]+", "" ):find( "^5%.3" ) ~= nil
 local BitOpKind = {}
@@ -143,27 +152,37 @@ function BitOpKind._from( val )
    return nil
 end 
     
+BitOpKind.__allList = {}
+function BitOpKind._allList()
+   return BitOpKind.__allList
+end
+
 BitOpKind.And = 0
 BitOpKind._val2NameMap[0] = 'And'
+BitOpKind.__allList[1] = BitOpKind.And
 BitOpKind.Or = 1
 BitOpKind._val2NameMap[1] = 'Or'
+BitOpKind.__allList[2] = BitOpKind.Or
 BitOpKind.Xor = 2
 BitOpKind._val2NameMap[2] = 'Xor'
+BitOpKind.__allList[3] = BitOpKind.Xor
 BitOpKind.LShift = 3
 BitOpKind._val2NameMap[3] = 'LShift'
+BitOpKind.__allList[4] = BitOpKind.LShift
 BitOpKind.RShift = 4
 BitOpKind._val2NameMap[4] = 'RShift'
+BitOpKind.__allList[5] = BitOpKind.RShift
 
 local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
 local convFilter = {}
 setmetatable( convFilter, { __index = Ast.Filter } )
-function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind )
+function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule )
    local obj = {}
    convFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind ); end
+   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule ); end
    return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind) 
+function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule) 
    self.needModuleObj = true
    self.indentQueue = {0}
    self.moduleSymbolKind = moduleSymbolKind
@@ -183,6 +202,7 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.pubEnumId2EnumTypeInfo = {}
    self.needIndent = false
    self.moduleTypeInfo = moduleTypeInfo
+   self.separateLuneModule = separateLuneModule
 end
 function convFilter:get_indent(  )
 
@@ -745,160 +765,26 @@ function convFilter:processRoot( node, parent )
    end
    
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( {} )) )
-   if node:get_luneHelperInfo():get_useNilAccess() or node:get_luneHelperInfo():get_useUnwrapExp() or node:get_luneHelperInfo():get_hasMappingClassDef() then
+   if self.separateLuneModule then
+      self:writeln( '_lune = require( "lune.base._lune" )' )
+   else
+    
       self:writeln( [==[
 if not _ENV._lune then
    _lune = {}
 end]==] )
       if node:get_luneHelperInfo():get_useNilAccess() then
-         self:writeln( [==[
-function _lune.nilacc( val, fieldName, access, ... )
-   if not val then
-      return nil
-   end
-   if fieldName then
-      local field = val[ fieldName ]
-      if not field then
-         return nil
-      end
-      if access == "item" then
-         local typeId = type( field )
-         if typeId == "table" then
-            return field[ ... ]
-         elseif typeId == "string" then
-            return string.byte( field, ... )
-         end
-      elseif access == "call" then
-         return field( ... )
-      elseif access == "callmtd" then
-         return field( val, ... )
-      end
-      return field
-   end
-   if access == "item" then
-      local typeId = type( val )
-      if typeId == "table" then
-         return val[ ... ]
-      elseif typeId == "string" then
-         return string.byte( val, ... )
-      end
-   elseif access == "call" then
-      return val( ... )
-   elseif access == "list" then
-      local list, arg = ...
-      if not list then
-         return nil
-      end
-      return val( list, arg )
-   end
-   error( string.format( "illegal access -- %s", access ) )
-end
-]==] )
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.NilAcc ) )
       end
       
       if node:get_luneHelperInfo():get_useUnwrapExp() then
-         self:writeln( [==[
-function _lune.unwrap( val )
-   if val == nil then
-      __luneScript:error( 'unwrap val is nil' )
-   end
-   return val
-end 
-function _lune.unwrapDefault( val, defval )
-   if val == nil then
-      return defval
-   end
-   return val
-end
-]==] )
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unwrap ) )
       end
       
-   end
-   
-   if node:get_luneHelperInfo():get_hasMappingClassDef() then
-      self:writeln( [==[      
-function _lune._toStem( val )
-   return val
-end
-function _lune._toInt( val )
-   if type( val ) == "number" then
-      return math.floor( val )
-   end
-   return nil
-end
-function _lune._toReal( val )
-   if type( val ) == "number" then
-      return val
-   end
-   return nil
-end
-function _lune._toBool( val )
-   if type( val ) == "boolean" then
-      return val
-   end
-   return nil
-end
-function _lune._toStr( val )
-   if type( val ) == "string" then
-      return val
-   end
-   return nil
-end
-function _lune._toList( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toValInfo = toValInfoList[ 1 ]
-      for index, mem in ipairs( val ) do
-         local memval, mess = toValInfo.func( mem, toValInfo.child )
-         if memval == nil and not toValInfo.nilable then
-            if mess then
-              return nil, string.format( "%d.%s", index, mess )
-            end
-            return nil, index
-         end
-         tbl[ index ] = memval
+      if node:get_luneHelperInfo():get_hasMappingClassDef() then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
       end
-      return tbl
-   end
-   return nil
-end
-function _lune._toMap( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toKeyInfo = toValInfoList[ 1 ]
-      local toValInfo = toValInfoList[ 2 ]
-      for key, mem in pairs( val ) do
-         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
-         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
-         if mapKey == nil or mapVal == nil then
-            if mapKey == nil then
-               return nil
-            end
-            if keySub == nil then
-               return nil, mapKey
-            end
-            return nil, string.format( "%s.%s", mapKey, keySub)
-         end
-         tbl[ mapKey ] = mapVal
-      end
-      return tbl
-   end
-   return nil
-end
-function _lune._fromMap( obj, map, memInfoList )
-   if type( map ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
-      if val == nil and not memInfo.nilable then
-         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
-      end
-      obj[ memInfo.name ] = val
-   end
-   return true
-end
-]==] )
+      
    end
    
    local children = node:get_children(  )
@@ -1024,7 +910,13 @@ function %s._from( val )
    return nil
 end 
     ]==], enumFullName, enumFullName, enumFullName, enumFullName) )
-   for __index, valName in pairs( node:get_valueNameList() ) do
+   self:writeln( string.format( [==[
+%s.__allList = {}
+function %s._allList()
+   return %s.__allList
+end
+]==], enumFullName, enumFullName, enumFullName) )
+   for index, valName in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
       local valTxt = string.format( "%s", valInfo:get_val())
       if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
@@ -1033,6 +925,7 @@ end
       
       self:writeln( string.format( "%s.%s = %s", enumFullName, valName.txt, valTxt) )
       self:writeln( string.format( "%s._val2NameMap[%s] = '%s'", enumFullName, valTxt, valName.txt) )
+      self:writeln( string.format( "%s.__allList[%d] = %s.%s", enumFullName, index, enumFullName, valName.txt) )
    end
    
 end
@@ -2539,9 +2432,9 @@ function convFilter:processLiteralSymbol( node, parent )
 end
 
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind )
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule )
 
-   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind)
+   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule)
 end
 _moduleObj.createFilter = createFilter
 local MacroEvalImp = {}
@@ -2550,7 +2443,7 @@ _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:eval( node )
 
    local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ)
+   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, false)
    conv:processDeclMacro( node, node )
    local newEnv = {}
    for key, val in pairs( _ENV ) do

@@ -34,71 +34,71 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
          token.pos,
          "'return' could not use here" );
    }
-   else{
-      let nextToken = self.getToken();
 
-      let retTypeList = funcTypeInfo.$retTypeInfoList;
-      if nextToken.txt ~= ";" {
-         self.pushback();
-         expList = self.analyzeExpList( false, nil, retTypeList );
-         self.checkNextToken( ";" );
-      }  
-      if! expList {
-         let expTypeList = _exp.$expTypeList;
-         if #retTypeList == 0 and #expTypeList > 0 {
-            self.addErrMess( token.pos,
-                             "this function can't return value." );   
-         }
-         foreach retType, index in retTypeList {
-            let expType = expTypeList[ index ];
-            if not retType.canEvalWith( expType, "=" ) {
-               self.addErrMess(
-                  token.pos,
-                  "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
-                  (index,
-                    retType.getTxt(), retType.get_typeId(),
-                    expType.getTxt(), expType.get_typeId()));
-            }
-            if index == #retTypeList {
-               if #retTypeList < #expTypeList and 
-                  not retType.equals( Ast.builtinTypeDDD )
-               {                           
-                  self.addErrMess( token.pos, "over return value");
-               }
-            }
-            elseif index == #expTypeList {
-               if expType.equals( Ast.builtinTypeDDD ) {
-                  for retIndex = index, #retTypeList {
-                     let workRetType = retTypeList[ retIndex ];
-                     if not workRetType.canEvalWith( Ast.builtinTypeStem_, "=" ) {
-                        self.addErrMess(
-                           token.pos,
-                           "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
-                           (retIndex,  
-                             workRetType.getTxt(), workRetType.get_typeId(),
-                             expType.getTxt(), expType.get_typeId()));
-                     }        
-                  }
-               }
-               else {
-                  self.addErrMess( token.pos,
-                                   "short return value -- %d < %d"
-                                   (#expTypeList, #retTypeList ));
-               }
-               break;
-            }
-         }
+   let nextToken = self.getToken();
+
+   let retTypeList = funcTypeInfo.$retTypeInfoList;
+   if nextToken.txt ~= ";" {
+      self.pushback();
+      expList = self.analyzeExpList( false, nil, retTypeList );
+      self.checkNextToken( ";" );
+   }  
+   if! expList {
+      let expTypeList = _exp.$expTypeList;
+      if #retTypeList == 0 and #expTypeList > 0 {
+         self.addErrMess( token.pos,
+                          "this function can't return value." );   
       }
-      else {
-         if funcTypeInfo.getTxt() == "__init" {
-            // フロー解析するのが面倒なので、 __init 内では return を禁止。
-            self.addErrMess( token.pos, "__init method can't return" );
+      foreach retType, index in retTypeList {
+         let expType = expTypeList[ index ];
+         if not retType.canEvalWith( expType, "=" ) {
+            self.addErrMess(
+               token.pos,
+               "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
+               (index,
+                 retType.getTxt(), retType.get_typeId(),
+                 expType.getTxt(), expType.get_typeId()));
          }
-         if #retTypeList ~= 0 {
-            self.addErrMess( token.pos, "no return value" );
+         if index == #retTypeList {
+            if #retTypeList < #expTypeList and 
+               not retType.equals( Ast.builtinTypeDDD )
+            {                           
+               self.addErrMess( token.pos, "over return value");
+            }
+         }
+         elseif index == #expTypeList {
+            if expType.equals( Ast.builtinTypeDDD ) {
+               for retIndex = index, #retTypeList {
+                  let workRetType = retTypeList[ retIndex ];
+                  if not workRetType.canEvalWith( Ast.builtinTypeStem_, "=" ) {
+                     self.addErrMess(
+                        token.pos,
+                        "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)"
+                        (retIndex,  
+                          workRetType.getTxt(), workRetType.get_typeId(),
+                          expType.getTxt(), expType.get_typeId()));
+                  }        
+               }
+            }
+            else {
+               self.addErrMess( token.pos,
+                                "short return value -- %d < %d"
+                                (#expTypeList, #retTypeList ));
+            }
+            break;
          }
       }
    }
+   else {
+      if funcTypeInfo.getTxt() == "__init" {
+         // フロー解析するのが面倒なので、 __init 内では return を禁止。
+         self.addErrMess( token.pos, "__init method can't return" );
+      }
+      if #retTypeList ~= 0 {
+         self.addErrMess( token.pos, "no return value" );
+      }
+   }
+
    return Ast.ReturnNode.create(
       self.nodeManager, token.pos, [ Ast.builtinTypeNone ], expList );
 }
@@ -216,6 +216,13 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
          //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
          statement = Ast.StmtExpNode.create(
             self.nodeManager, exp.$pos, [ Ast.builtinTypeNone ], exp );
+      }
+   }
+
+   if! statement {
+      if not _exp.canBeStatement() {
+         self.addErrMess( _exp.$pos, "This node can't be statement. -- %s"
+                          (Ast.getNodeKindName( _exp.$kind ) ) );
       }
    }
 

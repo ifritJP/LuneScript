@@ -82,16 +82,26 @@ function SerializeKind._from( val )
    return nil
 end 
     
+SerializeKind.__allList = {}
+function SerializeKind._allList()
+   return SerializeKind.__allList
+end
+
 SerializeKind.Nilable = 0
 SerializeKind._val2NameMap[0] = 'Nilable'
+SerializeKind.__allList[1] = SerializeKind.Nilable
 SerializeKind.Modifier = 1
 SerializeKind._val2NameMap[1] = 'Modifier'
+SerializeKind.__allList[2] = SerializeKind.Modifier
 SerializeKind.Module = 2
 SerializeKind._val2NameMap[2] = 'Module'
+SerializeKind.__allList[3] = SerializeKind.Module
 SerializeKind.Normal = 3
 SerializeKind._val2NameMap[3] = 'Normal'
+SerializeKind.__allList[4] = SerializeKind.Normal
 SerializeKind.Enum = 4
 SerializeKind._val2NameMap[4] = 'Enum'
+SerializeKind.__allList[5] = SerializeKind.Enum
 
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
@@ -110,34 +120,53 @@ function TypeInfoKind._from( val )
    return nil
 end 
     
+TypeInfoKind.__allList = {}
+function TypeInfoKind._allList()
+   return TypeInfoKind.__allList
+end
+
 TypeInfoKind.Root = 0
 TypeInfoKind._val2NameMap[0] = 'Root'
+TypeInfoKind.__allList[1] = TypeInfoKind.Root
 TypeInfoKind.Macro = 1
 TypeInfoKind._val2NameMap[1] = 'Macro'
+TypeInfoKind.__allList[2] = TypeInfoKind.Macro
 TypeInfoKind.Prim = 2
 TypeInfoKind._val2NameMap[2] = 'Prim'
+TypeInfoKind.__allList[3] = TypeInfoKind.Prim
 TypeInfoKind.List = 3
 TypeInfoKind._val2NameMap[3] = 'List'
+TypeInfoKind.__allList[4] = TypeInfoKind.List
 TypeInfoKind.Array = 4
 TypeInfoKind._val2NameMap[4] = 'Array'
+TypeInfoKind.__allList[5] = TypeInfoKind.Array
 TypeInfoKind.Map = 5
 TypeInfoKind._val2NameMap[5] = 'Map'
+TypeInfoKind.__allList[6] = TypeInfoKind.Map
 TypeInfoKind.Class = 6
 TypeInfoKind._val2NameMap[6] = 'Class'
+TypeInfoKind.__allList[7] = TypeInfoKind.Class
 TypeInfoKind.IF = 7
 TypeInfoKind._val2NameMap[7] = 'IF'
+TypeInfoKind.__allList[8] = TypeInfoKind.IF
 TypeInfoKind.Func = 8
 TypeInfoKind._val2NameMap[8] = 'Func'
+TypeInfoKind.__allList[9] = TypeInfoKind.Func
 TypeInfoKind.Method = 9
 TypeInfoKind._val2NameMap[9] = 'Method'
+TypeInfoKind.__allList[10] = TypeInfoKind.Method
 TypeInfoKind.Nilable = 10
 TypeInfoKind._val2NameMap[10] = 'Nilable'
+TypeInfoKind.__allList[11] = TypeInfoKind.Nilable
 TypeInfoKind.Enum = 11
 TypeInfoKind._val2NameMap[11] = 'Enum'
+TypeInfoKind.__allList[12] = TypeInfoKind.Enum
 TypeInfoKind.Module = 12
 TypeInfoKind._val2NameMap[12] = 'Module'
+TypeInfoKind.__allList[13] = TypeInfoKind.Module
 TypeInfoKind.Stem = 13
 TypeInfoKind._val2NameMap[13] = 'Stem'
+TypeInfoKind.__allList[14] = TypeInfoKind.Stem
 
 local function isBuiltin( typeId )
 
@@ -162,18 +191,29 @@ function SymbolKind._from( val )
    return nil
 end 
     
+SymbolKind.__allList = {}
+function SymbolKind._allList()
+   return SymbolKind.__allList
+end
+
 SymbolKind.Typ = 0
 SymbolKind._val2NameMap[0] = 'Typ'
+SymbolKind.__allList[1] = SymbolKind.Typ
 SymbolKind.Mbr = 1
 SymbolKind._val2NameMap[1] = 'Mbr'
+SymbolKind.__allList[2] = SymbolKind.Mbr
 SymbolKind.Mtd = 2
 SymbolKind._val2NameMap[2] = 'Mtd'
+SymbolKind.__allList[3] = SymbolKind.Mtd
 SymbolKind.Fun = 3
 SymbolKind._val2NameMap[3] = 'Fun'
+SymbolKind.__allList[4] = SymbolKind.Fun
 SymbolKind.Var = 4
 SymbolKind._val2NameMap[4] = 'Var'
+SymbolKind.__allList[5] = SymbolKind.Var
 SymbolKind.Arg = 5
 SymbolKind._val2NameMap[5] = 'Arg'
+SymbolKind.__allList[6] = SymbolKind.Arg
 
 local AccessMode = {}
 _moduleObj.AccessMode = AccessMode
@@ -192,18 +232,29 @@ function AccessMode._from( val )
    return nil
 end 
     
+AccessMode.__allList = {}
+function AccessMode._allList()
+   return AccessMode.__allList
+end
+
 AccessMode.None = 0
 AccessMode._val2NameMap[0] = 'None'
+AccessMode.__allList[1] = AccessMode.None
 AccessMode.Pub = 1
 AccessMode._val2NameMap[1] = 'Pub'
+AccessMode.__allList[2] = AccessMode.Pub
 AccessMode.Pro = 2
 AccessMode._val2NameMap[2] = 'Pro'
+AccessMode.__allList[3] = AccessMode.Pro
 AccessMode.Pri = 3
 AccessMode._val2NameMap[3] = 'Pri'
+AccessMode.__allList[4] = AccessMode.Pri
 AccessMode.Local = 4
 AccessMode._val2NameMap[4] = 'Local'
+AccessMode.__allList[5] = AccessMode.Local
 AccessMode.Global = 5
 AccessMode._val2NameMap[5] = 'Global'
+AccessMode.__allList[6] = AccessMode.Global
 
 local function isPubToExternal( mode )
 
@@ -2220,9 +2271,12 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
    idProv:increment(  )
    local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, idProv:get_id(), valTypeInfo, name2EnumValInfo)
    local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( getEnumName, AccessMode.Pub, false, true )
+   scope:addMethod( getEnumName, AccessMode.Pub, false, false )
    local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "_from", {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
-   scope:addFunc( fromVal, AccessMode.Pub, true, true )
+   scope:addFunc( fromVal, AccessMode.Pub, true, false )
+   local allListType = NormalTypeInfo.createList( AccessMode.Pub, info, {info} )
+   local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "_allList", {}, {NormalTypeInfo.createModifier( allListType, false )}, false )
+   scope:addFunc( allList, AccessMode.Pub, true, false )
    return info
 end
 
@@ -2544,6 +2598,10 @@ function Node:canBeRight(  )
 
    return false
 end
+function Node:canBeStatement(  )
+
+   return false
+end
 function Node.setmeta( obj )
   setmetatable( obj, { __index = Node  } )
 end
@@ -2748,6 +2806,10 @@ function NoneNode:canBeLeft(  )
 
    return false
 end
+function NoneNode:canBeStatement(  )
+
+   return true
+end
 function NoneNode.new( pos, typeList )
    local obj = {}
    NoneNode.setmeta( obj )
@@ -2802,6 +2864,10 @@ function SubfileNode:canBeLeft(  )
 
    return false
 end
+function SubfileNode:canBeStatement(  )
+
+   return true
+end
 function SubfileNode.new( pos, typeList )
    local obj = {}
    SubfileNode.setmeta( obj )
@@ -2855,6 +2921,10 @@ end
 function ImportNode:canBeLeft(  )
 
    return false
+end
+function ImportNode:canBeStatement(  )
+
+   return true
 end
 function ImportNode.new( pos, typeList, modulePath, moduleTypeInfo )
    local obj = {}
@@ -2998,6 +3068,10 @@ function RootNode:canBeLeft(  )
 
    return false
 end
+function RootNode:canBeStatement(  )
+
+   return false
+end
 function RootNode.new( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
@@ -3085,6 +3159,10 @@ function RefTypeNode:canBeLeft(  )
 
    return false
 end
+function RefTypeNode:canBeStatement(  )
+
+   return false
+end
 function RefTypeNode.new( pos, typeList, name, refFlag, mutFlag, array )
    local obj = {}
    RefTypeNode.setmeta( obj )
@@ -3141,38 +3219,59 @@ function BlockKind._from( val )
    return nil
 end 
     
+BlockKind.__allList = {}
+function BlockKind._allList()
+   return BlockKind.__allList
+end
+
 BlockKind.If = 0
 BlockKind._val2NameMap[0] = 'If'
+BlockKind.__allList[1] = BlockKind.If
 BlockKind.Elseif = 1
 BlockKind._val2NameMap[1] = 'Elseif'
+BlockKind.__allList[2] = BlockKind.Elseif
 BlockKind.Else = 2
 BlockKind._val2NameMap[2] = 'Else'
+BlockKind.__allList[3] = BlockKind.Else
 BlockKind.While = 3
 BlockKind._val2NameMap[3] = 'While'
+BlockKind.__allList[4] = BlockKind.While
 BlockKind.Switch = 4
 BlockKind._val2NameMap[4] = 'Switch'
+BlockKind.__allList[5] = BlockKind.Switch
 BlockKind.Repeat = 5
 BlockKind._val2NameMap[5] = 'Repeat'
+BlockKind.__allList[6] = BlockKind.Repeat
 BlockKind.For = 6
 BlockKind._val2NameMap[6] = 'For'
+BlockKind.__allList[7] = BlockKind.For
 BlockKind.Apply = 7
 BlockKind._val2NameMap[7] = 'Apply'
+BlockKind.__allList[8] = BlockKind.Apply
 BlockKind.Foreach = 8
 BlockKind._val2NameMap[8] = 'Foreach'
+BlockKind.__allList[9] = BlockKind.Foreach
 BlockKind.Macro = 13
 BlockKind._val2NameMap[13] = 'Macro'
+BlockKind.__allList[10] = BlockKind.Macro
 BlockKind.Func = 10
 BlockKind._val2NameMap[10] = 'Func'
+BlockKind.__allList[11] = BlockKind.Func
 BlockKind.Default = 11
 BlockKind._val2NameMap[11] = 'Default'
+BlockKind.__allList[12] = BlockKind.Default
 BlockKind.Block = 12
 BlockKind._val2NameMap[12] = 'Block'
+BlockKind.__allList[13] = BlockKind.Block
 BlockKind.Macro = 13
 BlockKind._val2NameMap[13] = 'Macro'
+BlockKind.__allList[14] = BlockKind.Macro
 BlockKind.LetUnwrap = 14
 BlockKind._val2NameMap[14] = 'LetUnwrap'
+BlockKind.__allList[15] = BlockKind.LetUnwrap
 BlockKind.IfUnwrap = 15
 BlockKind._val2NameMap[15] = 'IfUnwrap'
+BlockKind.__allList[16] = BlockKind.IfUnwrap
 
 
 local nodeKindBlock = regKind( [[Block]] )
@@ -3204,6 +3303,10 @@ end
 function BlockNode:canBeLeft(  )
 
    return false
+end
+function BlockNode:canBeStatement(  )
+
+   return true
 end
 function BlockNode.new( pos, typeList, blockKind, stmtList )
    local obj = {}
@@ -3296,6 +3399,10 @@ function IfNode:canBeLeft(  )
 
    return false
 end
+function IfNode:canBeStatement(  )
+
+   return true
+end
 function IfNode.new( pos, typeList, stmtList )
    local obj = {}
    IfNode.setmeta( obj )
@@ -3345,6 +3452,10 @@ function ExpListNode:processFilter( filter, ... )
 
    local argList = {...}
    filter:processExpList( self, table.unpack( argList ) )
+end
+function ExpListNode:canBeStatement(  )
+
+   return false
 end
 function ExpListNode.new( pos, typeList, expList )
    local obj = {}
@@ -3453,6 +3564,10 @@ function SwitchNode:canBeLeft(  )
 
    return false
 end
+function SwitchNode:canBeStatement(  )
+
+   return true
+end
 function SwitchNode.new( pos, typeList, exp, caseList, default )
    local obj = {}
    SwitchNode.setmeta( obj )
@@ -3519,6 +3634,10 @@ function WhileNode:canBeLeft(  )
 
    return false
 end
+function WhileNode:canBeStatement(  )
+
+   return true
+end
 function WhileNode.new( pos, typeList, exp, block )
    local obj = {}
    WhileNode.setmeta( obj )
@@ -3581,6 +3700,10 @@ function RepeatNode:canBeLeft(  )
 
    return false
 end
+function RepeatNode:canBeStatement(  )
+
+   return true
+end
 function RepeatNode.new( pos, typeList, block, exp )
    local obj = {}
    RepeatNode.setmeta( obj )
@@ -3642,6 +3765,10 @@ end
 function ForNode:canBeLeft(  )
 
    return false
+end
+function ForNode:canBeStatement(  )
+
+   return true
 end
 function ForNode.new( pos, typeList, block, val, init, to, delta )
    local obj = {}
@@ -3717,6 +3844,10 @@ function ApplyNode:canBeLeft(  )
 
    return false
 end
+function ApplyNode:canBeStatement(  )
+
+   return true
+end
 function ApplyNode.new( pos, typeList, varList, exp, block )
    local obj = {}
    ApplyNode.setmeta( obj )
@@ -3782,6 +3913,10 @@ end
 function ForeachNode:canBeLeft(  )
 
    return false
+end
+function ForeachNode:canBeStatement(  )
+
+   return true
 end
 function ForeachNode.new( pos, typeList, val, key, exp, block )
    local obj = {}
@@ -3852,6 +3987,10 @@ end
 function ForsortNode:canBeLeft(  )
 
    return false
+end
+function ForsortNode:canBeStatement(  )
+
+   return true
 end
 function ForsortNode.new( pos, typeList, val, key, exp, block, sort )
    local obj = {}
@@ -3927,6 +4066,10 @@ function ReturnNode:canBeLeft(  )
 
    return false
 end
+function ReturnNode:canBeStatement(  )
+
+   return true
+end
 function ReturnNode.new( pos, typeList, expList )
    local obj = {}
    ReturnNode.setmeta( obj )
@@ -3985,6 +4128,10 @@ function BreakNode:canBeLeft(  )
 
    return false
 end
+function BreakNode:canBeStatement(  )
+
+   return true
+end
 function BreakNode.new( pos, typeList )
    local obj = {}
    BreakNode.setmeta( obj )
@@ -4038,6 +4185,10 @@ end
 function ProvideNode:canBeLeft(  )
 
    return false
+end
+function ProvideNode:canBeStatement(  )
+
+   return true
 end
 function ProvideNode.new( pos, typeList, symbol )
    local obj = {}
@@ -4096,6 +4247,10 @@ end
 function ExpNewNode:canBeLeft(  )
 
    return false
+end
+function ExpNewNode:canBeStatement(  )
+
+   return true
 end
 function ExpNewNode.new( pos, typeList, symbol, argList )
    local obj = {}
@@ -4159,6 +4314,10 @@ function ExpUnwrapNode:canBeLeft(  )
 
    return false
 end
+function ExpUnwrapNode:canBeStatement(  )
+
+   return false
+end
 function ExpUnwrapNode.new( pos, typeList, exp, default )
    local obj = {}
    ExpUnwrapNode.setmeta( obj )
@@ -4212,6 +4371,10 @@ function ExpRefNode:processFilter( filter, ... )
 
    local argList = {...}
    filter:processExpRef( self, table.unpack( argList ) )
+end
+function ExpRefNode:canBeStatement(  )
+
+   return false
 end
 function ExpRefNode.new( pos, typeList, token, symbolInfo )
    local obj = {}
@@ -4320,6 +4483,11 @@ function ExpOp2Node:get_exp2()
 end
 
 
+function ExpOp2Node:canBeStatement(  )
+
+   return self:get_op().txt == '='
+end
+
 
 local nodeKindUnwrapSet = regKind( [[UnwrapSet]] )
 _moduleObj.nodeKindUnwrapSet = nodeKindUnwrapSet
@@ -4350,6 +4518,10 @@ end
 function UnwrapSetNode:canBeLeft(  )
 
    return false
+end
+function UnwrapSetNode:canBeStatement(  )
+
+   return true
 end
 function UnwrapSetNode.new( pos, typeList, dstExpList, srcExpList, unwrapBlock )
    local obj = {}
@@ -4416,6 +4588,10 @@ end
 function IfUnwrapNode:canBeLeft(  )
 
    return false
+end
+function IfUnwrapNode:canBeStatement(  )
+
+   return true
 end
 function IfUnwrapNode.new( pos, typeList, varNameList, expNodeList, block, nilBlock )
    local obj = {}
@@ -4487,6 +4663,10 @@ function ExpCastNode:canBeLeft(  )
 
    return false
 end
+function ExpCastNode:canBeStatement(  )
+
+   return false
+end
 function ExpCastNode.new( pos, typeList, exp )
    local obj = {}
    ExpCastNode.setmeta( obj )
@@ -4531,12 +4711,20 @@ function MacroMode._from( val )
    return nil
 end 
     
+MacroMode.__allList = {}
+function MacroMode._allList()
+   return MacroMode.__allList
+end
+
 MacroMode.None = 0
 MacroMode._val2NameMap[0] = 'None'
+MacroMode.__allList[1] = MacroMode.None
 MacroMode.Expand = 1
 MacroMode._val2NameMap[1] = 'Expand'
+MacroMode.__allList[2] = MacroMode.Expand
 MacroMode.Analyze = 2
 MacroMode._val2NameMap[2] = 'Analyze'
+MacroMode.__allList[3] = MacroMode.Analyze
 
 
 local nodeKindExpOp1 = regKind( [[ExpOp1]] )
@@ -4566,6 +4754,10 @@ function ExpOp1Node:canBeRight(  )
    return true
 end
 function ExpOp1Node:canBeLeft(  )
+
+   return false
+end
+function ExpOp1Node:canBeStatement(  )
 
    return false
 end
@@ -4630,6 +4822,10 @@ end
 function ExpRefItemNode:canBeRight(  )
 
    return true
+end
+function ExpRefItemNode:canBeStatement(  )
+
+   return false
 end
 function ExpRefItemNode.new( pos, typeList, val, nilAccess, symbol, index )
    local obj = {}
@@ -4710,6 +4906,10 @@ function ExpCallNode:canBeLeft(  )
 
    return false
 end
+function ExpCallNode:canBeStatement(  )
+
+   return true
+end
 function ExpCallNode.new( pos, typeList, func, nilAccess, argList )
    local obj = {}
    ExpCallNode.setmeta( obj )
@@ -4776,6 +4976,10 @@ function ExpDDDNode:canBeLeft(  )
 
    return false
 end
+function ExpDDDNode:canBeStatement(  )
+
+   return false
+end
 function ExpDDDNode.new( pos, typeList, token )
    local obj = {}
    ExpDDDNode.setmeta( obj )
@@ -4831,6 +5035,10 @@ function ExpParenNode:canBeRight(  )
    return true
 end
 function ExpParenNode:canBeLeft(  )
+
+   return false
+end
+function ExpParenNode:canBeStatement(  )
 
    return false
 end
@@ -4892,6 +5100,10 @@ function ExpMacroExpNode:canBeLeft(  )
 
    return false
 end
+function ExpMacroExpNode:canBeStatement(  )
+
+   return true
+end
 function ExpMacroExpNode.new( pos, typeList, stmtList )
    local obj = {}
    ExpMacroExpNode.setmeta( obj )
@@ -4947,6 +5159,10 @@ function ExpMacroStatNode:canBeRight(  )
    return true
 end
 function ExpMacroStatNode:canBeLeft(  )
+
+   return false
+end
+function ExpMacroStatNode:canBeStatement(  )
 
    return false
 end
@@ -5035,6 +5251,11 @@ function StmtExpNode:get_exp()
 end
 
 
+function StmtExpNode:canBeStatement(  )
+
+   return self:get_exp():canBeStatement(  )
+end
+
 
 local nodeKindExpOmitEnum = regKind( [[ExpOmitEnum]] )
 _moduleObj.nodeKindExpOmitEnum = nodeKindExpOmitEnum
@@ -5065,6 +5286,10 @@ end
 function ExpOmitEnumNode:canBeLeft(  )
 
    return true
+end
+function ExpOmitEnumNode:canBeStatement(  )
+
+   return false
 end
 function ExpOmitEnumNode.new( pos, typeList, valToken, enumTypeInfo )
    local obj = {}
@@ -5123,6 +5348,10 @@ end
 function RefFieldNode:canBeRight(  )
 
    return true
+end
+function RefFieldNode:canBeStatement(  )
+
+   return false
 end
 function RefFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix )
    local obj = {}
@@ -5201,6 +5430,10 @@ end
 function GetFieldNode:canBeRight(  )
 
    return true
+end
+function GetFieldNode:canBeStatement(  )
+
+   return false
 end
 function GetFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
    local obj = {}
@@ -5303,12 +5536,20 @@ function DeclVarMode._from( val )
    return nil
 end 
     
+DeclVarMode.__allList = {}
+function DeclVarMode._allList()
+   return DeclVarMode.__allList
+end
+
 DeclVarMode.Let = 0
 DeclVarMode._val2NameMap[0] = 'Let'
+DeclVarMode.__allList[1] = DeclVarMode.Let
 DeclVarMode.Sync = 1
 DeclVarMode._val2NameMap[1] = 'Sync'
+DeclVarMode.__allList[2] = DeclVarMode.Sync
 DeclVarMode.Unwrap = 2
 DeclVarMode._val2NameMap[2] = 'Unwrap'
+DeclVarMode.__allList[3] = DeclVarMode.Unwrap
 
 
 local nodeKindDeclVar = regKind( [[DeclVar]] )
@@ -5340,6 +5581,10 @@ end
 function DeclVarNode:canBeLeft(  )
 
    return false
+end
+function DeclVarNode:canBeStatement(  )
+
+   return true
 end
 function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
    local obj = {}
@@ -5492,6 +5737,10 @@ function DeclFuncNode:canBeLeft(  )
 
    return false
 end
+function DeclFuncNode:canBeStatement(  )
+
+   return true
+end
 function DeclFuncNode.new( pos, typeList, declInfo )
    local obj = {}
    DeclFuncNode.setmeta( obj )
@@ -5549,6 +5798,10 @@ end
 function DeclMethodNode:canBeLeft(  )
 
    return false
+end
+function DeclMethodNode:canBeStatement(  )
+
+   return true
 end
 function DeclMethodNode.new( pos, typeList, declInfo )
    local obj = {}
@@ -5608,6 +5861,10 @@ function DeclConstrNode:canBeLeft(  )
 
    return false
 end
+function DeclConstrNode:canBeStatement(  )
+
+   return true
+end
 function DeclConstrNode.new( pos, typeList, declInfo )
    local obj = {}
    DeclConstrNode.setmeta( obj )
@@ -5666,6 +5923,10 @@ function DeclDestrNode:canBeLeft(  )
 
    return false
 end
+function DeclDestrNode:canBeStatement(  )
+
+   return true
+end
 function DeclDestrNode.new( pos, typeList, declInfo )
    local obj = {}
    DeclDestrNode.setmeta( obj )
@@ -5723,6 +5984,10 @@ end
 function ExpCallSuperNode:canBeLeft(  )
 
    return false
+end
+function ExpCallSuperNode:canBeStatement(  )
+
+   return true
 end
 function ExpCallSuperNode.new( pos, typeList, superType, expList )
    local obj = {}
@@ -5785,6 +6050,10 @@ end
 function DeclMemberNode:canBeLeft(  )
 
    return false
+end
+function DeclMemberNode:canBeStatement(  )
+
+   return true
 end
 function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
    local obj = {}
@@ -5872,6 +6141,10 @@ function DeclArgNode:canBeLeft(  )
 
    return false
 end
+function DeclArgNode:canBeStatement(  )
+
+   return false
+end
 function DeclArgNode.new( pos, typeList, name, argType )
    local obj = {}
    DeclArgNode.setmeta( obj )
@@ -5931,6 +6204,10 @@ function DeclArgDDDNode:canBeRight(  )
    return false
 end
 function DeclArgDDDNode:canBeLeft(  )
+
+   return false
+end
+function DeclArgDDDNode:canBeStatement(  )
 
    return false
 end
@@ -6013,6 +6290,10 @@ end
 function DeclClassNode:canBeLeft(  )
 
    return false
+end
+function DeclClassNode:canBeStatement(  )
+
+   return true
 end
 function DeclClassNode.new( pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
    local obj = {}
@@ -6116,6 +6397,10 @@ function DeclEnumNode:canBeLeft(  )
 
    return false
 end
+function DeclEnumNode:canBeStatement(  )
+
+   return true
+end
 function DeclEnumNode.new( pos, typeList, accessMode, name, valueNameList, scope )
    local obj = {}
    DeclEnumNode.setmeta( obj )
@@ -6185,6 +6470,10 @@ end
 function DeclMacroNode:canBeLeft(  )
 
    return false
+end
+function DeclMacroNode:canBeStatement(  )
+
+   return true
 end
 function DeclMacroNode.new( pos, typeList, declInfo )
    local obj = {}
@@ -6261,6 +6550,10 @@ function LiteralNilNode:canBeLeft(  )
 
    return false
 end
+function LiteralNilNode:canBeStatement(  )
+
+   return false
+end
 function LiteralNilNode.new( pos, typeList )
    local obj = {}
    LiteralNilNode.setmeta( obj )
@@ -6312,6 +6605,10 @@ function LiteralCharNode:canBeRight(  )
    return true
 end
 function LiteralCharNode:canBeLeft(  )
+
+   return false
+end
+function LiteralCharNode:canBeStatement(  )
 
    return false
 end
@@ -6377,6 +6674,10 @@ function LiteralIntNode:canBeLeft(  )
 
    return false
 end
+function LiteralIntNode:canBeStatement(  )
+
+   return false
+end
 function LiteralIntNode.new( pos, typeList, token, num )
    local obj = {}
    LiteralIntNode.setmeta( obj )
@@ -6436,6 +6737,10 @@ function LiteralRealNode:canBeRight(  )
    return true
 end
 function LiteralRealNode:canBeLeft(  )
+
+   return false
+end
+function LiteralRealNode:canBeStatement(  )
 
    return false
 end
@@ -6501,6 +6806,10 @@ function LiteralArrayNode:canBeLeft(  )
 
    return false
 end
+function LiteralArrayNode:canBeStatement(  )
+
+   return false
+end
 function LiteralArrayNode.new( pos, typeList, expList )
    local obj = {}
    LiteralArrayNode.setmeta( obj )
@@ -6556,6 +6865,10 @@ function LiteralListNode:canBeRight(  )
    return true
 end
 function LiteralListNode:canBeLeft(  )
+
+   return false
+end
+function LiteralListNode:canBeStatement(  )
 
    return false
 end
@@ -6642,6 +6955,10 @@ function LiteralMapNode:canBeLeft(  )
 
    return false
 end
+function LiteralMapNode:canBeStatement(  )
+
+   return false
+end
 function LiteralMapNode.new( pos, typeList, map, pairList )
    local obj = {}
    LiteralMapNode.setmeta( obj )
@@ -6701,6 +7018,10 @@ function LiteralStringNode:canBeRight(  )
    return true
 end
 function LiteralStringNode:canBeLeft(  )
+
+   return false
+end
+function LiteralStringNode:canBeStatement(  )
 
    return false
 end
@@ -6766,6 +7087,10 @@ function LiteralBoolNode:canBeLeft(  )
 
    return false
 end
+function LiteralBoolNode:canBeStatement(  )
+
+   return false
+end
 function LiteralBoolNode.new( pos, typeList, token )
    local obj = {}
    LiteralBoolNode.setmeta( obj )
@@ -6821,6 +7146,10 @@ function LiteralSymbolNode:canBeRight(  )
    return true
 end
 function LiteralSymbolNode:canBeLeft(  )
+
+   return false
+end
+function LiteralSymbolNode:canBeStatement(  )
 
    return false
 end

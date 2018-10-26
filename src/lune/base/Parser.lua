@@ -186,28 +186,44 @@ function TokenKind._from( val )
    return nil
 end 
     
+TokenKind.__allList = {}
+function TokenKind._allList()
+   return TokenKind.__allList
+end
+
 TokenKind.Cmnt = 0
 TokenKind._val2NameMap[0] = 'Cmnt'
+TokenKind.__allList[1] = TokenKind.Cmnt
 TokenKind.Str = 1
 TokenKind._val2NameMap[1] = 'Str'
+TokenKind.__allList[2] = TokenKind.Str
 TokenKind.Int = 2
 TokenKind._val2NameMap[2] = 'Int'
+TokenKind.__allList[3] = TokenKind.Int
 TokenKind.Real = 3
 TokenKind._val2NameMap[3] = 'Real'
+TokenKind.__allList[4] = TokenKind.Real
 TokenKind.Char = 4
 TokenKind._val2NameMap[4] = 'Char'
+TokenKind.__allList[5] = TokenKind.Char
 TokenKind.Symb = 5
 TokenKind._val2NameMap[5] = 'Symb'
+TokenKind.__allList[6] = TokenKind.Symb
 TokenKind.Dlmt = 6
 TokenKind._val2NameMap[6] = 'Dlmt'
+TokenKind.__allList[7] = TokenKind.Dlmt
 TokenKind.Kywd = 7
 TokenKind._val2NameMap[7] = 'Kywd'
+TokenKind.__allList[8] = TokenKind.Kywd
 TokenKind.Ope = 8
 TokenKind._val2NameMap[8] = 'Ope'
+TokenKind.__allList[9] = TokenKind.Ope
 TokenKind.Type = 9
 TokenKind._val2NameMap[9] = 'Type'
+TokenKind.__allList[10] = TokenKind.Type
 TokenKind.Eof = 10
 TokenKind._val2NameMap[10] = 'Eof'
+TokenKind.__allList[11] = TokenKind.Eof
 
 local Token = {}
 _moduleObj.Token = Token

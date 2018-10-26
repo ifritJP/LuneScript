@@ -1,6 +1,8 @@
 import test.error.Sub6;
 
-Sub6.func().$_txt;
+{
+   let val = Sub6.func().$_txt;
+}
 Sub6.func2( .val1 );
 
 enum testEnum {
@@ -59,6 +61,12 @@ func( .val1, .val1 );
 }
 
 {
+   let mut list = testEnum4._allList();
+   list.insert( testEnum4.val1 );
+}
+
+
+{
    let valtest = testEnum3.val4; // error
 }
 
@@ -108,4 +116,3 @@ enum Foo {
    let val1 = testEnum.val1;
    val1 = .val4;  // errror
 }
-
