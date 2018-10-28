@@ -61,7 +61,7 @@ func( .val1, .val1 );
 }
 
 {
-   let mut list = testEnum4._allList();
+   let mut list = testEnum4.$_allList;
    list.insert( testEnum4.val1 );
 }
 

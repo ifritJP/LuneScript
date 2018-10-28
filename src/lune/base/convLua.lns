@@ -809,7 +809,7 @@ end
    self.writeln( 
 ```
 %s.__allList = {}
-function %s._allList()
+function %s.get__allList()
    return %s.__allList
 end
 ``` (enumFullName, enumFullName, enumFullName ) );

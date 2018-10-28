@@ -453,7 +453,7 @@ _print( `{ Sub2.External.val } );
    val2 = enumTest.val1;
    let val3:str = enumTest.val1.$_txt;
 
-   foreach val in enumTest._allList() {
+   foreach val in enumTest.$_allList {
       _print( `{ val.$_txt } );
    }
    

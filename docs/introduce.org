@@ -64,7 +64,7 @@ LuneScript は、次のモードを持ちます。
 コマンドを実行するには、次を実行します。   
 
 #+BEGIN_SRC txt
-lua lune/base/base.lua src.lns mode
+$ lua lune/base/base.lua [-r] src.lns mode
 #+END_SRC
 
 ここで、 lune/base/base.lua は LuneScript をインストールした環境にあわせて
@@ -242,9 +242,10 @@ txt[ 2 ] // ?2
 また、Python に似た format 書式を利用可能です。
 
 #+BEGIN_SRC lns
-"""
+```
 ここから〜
-ここまで文字列"""
+ここまで文字列```
+
 "10 + %s = %d" ("1", 11) // "10 + 1 = 11"
 #+END_SRC
 
@@ -1613,6 +1614,87 @@ let mod: stem! = require( 'module' );
 require の結果は stem! 型となる。
 
 モジュールは、相互参照出来ない。
+
+** _lune.lua モジュール
+
+前述している通り LuneScript で Lua へトランスコンパイルしたファイルは、
+Lua コマンドでそのまま実行できます。
+この時、外部モジュールを必要としません。
+
+これは、トランスコンパイルした Lua コード内に、
+処理に必要なコードを全て含めていることを示します。
+
+例えば次の処理コードをトランスコンパイルすると、
+
+#+BEGIN_SRC lns
+fn func( val:int! ):int {
+   return 1 + unwrap val default 0;
+}
+#+END_SRC
+
+
+Lua コードは次のようにだいぶ長くなります。
+
+#+BEGIN_SRC lua -n
+--mini.lns
+local _moduleObj = {}
+local __mod__ = 'mini'
+if not _ENV._lune then
+   _lune = {}
+end
+function _lune.unwrap( val )
+   if val == nil then
+      __luneScript:error( 'unwrap val is nil' )
+   end
+   return val
+end 
+function _lune.unwrapDefault( val, defval )
+   if val == nil then
+      return defval
+   end
+   return val
+end
+
+local function func( val )
+   return 1 + _lune.unwrapDefault( val, 0)
+end
+
+return _moduleObj
+#+END_SRC
+
+この 4 〜 18 行目が unwrap に必要な処理となります。
+なお、このコードは全ての Lua ファイルに出力されます。
+
+このコード自体は共通処理であるため、
+トランスコンパイルする際に *-r* オプションを指定することで、
+別モジュールとして require して共通処理をまとめることができます。
+
+具体的には次のように -r オプションを指定します。
+
+#+BEGIN_SRC txt
+$ lua lune/base/base.lua -r src.lns save
+#+END_SRC
+
+この -r オプションを指定した場合、上記のコードは次のように変換され、
+かなりスッキリします。
+
+#+BEGIN_SRC lua
+--mini.lns
+local _moduleObj = {}
+local __mod__ = 'mini'
+_lune = require( "lune.base._lune" )
+local function func( val )
+   return 1 + _lune.unwrapDefault( val, 0)
+end
+
+return _moduleObj
+#+END_SRC
+
+なお、require( "lune.base._lune" ) が挿入されるため、
+このモジュールがロード出来るようにセットしておく必要があります。
+トランスコンパイラが動作する環境であれば意識する必要はありませんが、
+変換後の Lua ソースをどこか別の環境で実行するような場合は注意が必要です。
+
 
 * emacs 対応
 

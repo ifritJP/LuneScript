@@ -39,7 +39,7 @@ function ModeKind._from( val )
 end 
     
 ModeKind.__allList = {}
-function ModeKind._allList()
+function ModeKind.get__allList()
    return ModeKind.__allList
 end
 
@@ -131,6 +131,7 @@ local function analyze( argList )
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod dir
+  <type3> --version
 
 * type1
   - src.lns ast

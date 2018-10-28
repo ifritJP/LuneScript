@@ -139,7 +139,7 @@ The bit length of Lua 5.3 depends on the environment.
 The character string is the same as Lua and has no terminator.
    
 String literals are enclosed in "or '.
-Multiple line literals are enclosed in `` `.
+Multiple line literals are enclosed in ```.
 
 Use txt [N] to access the Nth character in the string.
 However, txt [N] is read-only and characters can not be rewritten.
@@ -152,9 +152,10 @@ txt[2] // ?2
 Also, a format format similar to Python is available.
 
 #+BEGIN_SRC lns
-"""
+```
 from here ...
-So far the string """
+So far the string ```
+
 "10 +%s =%d" ("1", 11) // "10 + 1 = 11"
 #+END_SRC
 
@@ -1395,6 +1396,89 @@ let mod: stem! = require( 'module' );
 The result of require is stem! type.
 
 Modules can not be cross-referenced.
+
+
+** _ lune.lua module
+
+As mentioned above, files that were trans-compiled into Lua with LuneScript,
+It can be executed as it is with the Lua command.
+At this time, no external module is required.
+
+This means that within the transcoded Lua code,
+Indicates that all code necessary for processing is included.
+
+For example, if you transcompile the following processing code,
+
+#+BEGIN_SRC lns
+fn func( val:int! ):int {
+   return 1 + unwrap val default 0;
+}
+#+END_SRC
+
+Lua code will be very long as follows.
+
+#+BEGIN_SRC lua -n
+--mini.lns
+local _moduleObj = {}
+local __mod__ = 'mini'
+if not _ENV._lune then
+   _lune = {}
+end
+function _lune.unwrap( val )
+   if val == nil then
+      __luneScript:error( 'unwrap val is nil' )
+   end
+   return val
+end 
+function _lune.unwrapDefault( val, defval )
+   if val == nil then
+      return defval
+   end
+   return val
+end
+
+local function func( val )
+   return 1 + _lune.unwrapDefault( val, 0)
+end
+
+return _moduleObj
+#+END_SRC
+
+The 4th to 18th lines are required for unwrap.
+This code is output to all Lua files.
+
+Since this code itself is common processing,
+By specifying the * -r * option when transcoding,
+It is possible to summarize common processing by requiring as separate module.
+
+Specifically, specify the -r option as follows.
+
+#+BEGIN_SRC txt
+$ lua lune/base/base.lua -r src.lns save
+#+END_SRC
+
+
+When this -r option is specified, the above code is converted as follows,
+It clears considerably.
+
+#+BEGIN_SRC lua
+--mini.lns
+local _moduleObj = {}
+local __mod__ = 'mini'
+_lune = require( "lune.base._lune" )
+local function func( val )
+   return 1 + _lune.unwrapDefault( val, 0)
+end
+
+return _moduleObj
+#+END_SRC
+
+Since require ("lune.base._lune") is inserted,
+It is necessary to set this module so that it can be loaded.
+It is not necessary to be conscious of it in the environment where the trans compiler operates,
+Care should be taken when executing the converted Lua source somewhere in another environment.
+
+
 
 * emacs correspondence
 

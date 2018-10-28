@@ -35,7 +35,7 @@ function CodeKind._from( val )
 end 
     
 CodeKind.__allList = {}
-function CodeKind._allList()
+function CodeKind.get__allList()
    return CodeKind.__allList
 end
 

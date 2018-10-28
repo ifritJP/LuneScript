@@ -1769,7 +1769,7 @@ pub static fn NormalTypeInfo.createEnum(
    let mut allList = NormalTypeInfo.createFunc(
       false, true, nil, .Func, info,
       true, true, true, AccessMode.Pub,
-      "_allList", [],
+      "get__allList", [],
       [ NormalTypeInfo.createModifier( allListType, false ) ], false );
    scope.addFunc( allList, AccessMode.Pub, true, false );
    

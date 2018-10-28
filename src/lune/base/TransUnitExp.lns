@@ -642,7 +642,7 @@ fn TransUnit.dumpComp(
          let typeInfo = symbolInfo.$typeInfo;
          writer.write( "type", "%s" ( symbolInfo.$kind.$_txt ) );
          switch ( symbolInfo.$kind ) {
-            case .Mtd {
+            case .Mtd, .Fun {
                writer.write( "displayTxt", "$%s"
                              ( typeInfo.$rawTxt.gsub( "^get_", "") ) );
             }  
@@ -705,7 +705,7 @@ fn TransUnit.dumpFieldComp(
             symbol ~= "self"
          {
             if! getterPattern {
-               if symbolInfo.$kind == .Mtd {
+               if symbolInfo.$kind == .Mtd or symbolInfo.$kind == .Fun {
                   let typeInfo = symbolInfo.$typeInfo;
                   let retList = typeInfo.$retTypeInfoList;
                   if #retList == 1 {
@@ -882,8 +882,21 @@ fn TransUnit.analyzeExpField(
                              ( prefixExpType.getModule().getTxt() ) );
          }
          fieldName = "get_" .. fieldName;
+         if! let funcType = scope.getTypeInfoChild( fieldName ) {
+            let retTypeList = funcType.$retTypeInfoList;
+            if #retTypeList == 0 {
+               self.addErrMess(
+                  token.$pos, "The func (%s) doesn't return value." (funcType.getTxt()) );
+            }
+            else {
+               typeInfo = retTypeList[ 1 ];
+            }
+         }
+         else {
+            self.addErrMess( token.$pos, "not found -- %s." ( fieldName ) );
+            typeInfo = Ast.builtinTypeNone;
+         }
          getterTypeInfo = Ast.headTypeInfo;
-         typeInfo = Ast.builtinTypeString;
       }
       else {
          if! scope.getTypeInfoChild( fieldName ) {

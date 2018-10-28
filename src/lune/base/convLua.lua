@@ -121,7 +121,7 @@ function ConvMode._from( val )
 end 
     
 ConvMode.__allList = {}
-function ConvMode._allList()
+function ConvMode.get__allList()
    return ConvMode.__allList
 end
 
@@ -153,7 +153,7 @@ function BitOpKind._from( val )
 end 
     
 BitOpKind.__allList = {}
-function BitOpKind._allList()
+function BitOpKind.get__allList()
    return BitOpKind.__allList
 end
 
@@ -912,7 +912,7 @@ end
     ]==], enumFullName, enumFullName, enumFullName, enumFullName) )
    self:writeln( string.format( [==[
 %s.__allList = {}
-function %s._allList()
+function %s.get__allList()
    return %s.__allList
 end
 ]==], enumFullName, enumFullName, enumFullName) )

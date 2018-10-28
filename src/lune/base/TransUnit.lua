@@ -167,7 +167,7 @@ function DeclClassMode._from( val )
 end 
     
 DeclClassMode.__allList = {}
-function DeclClassMode._allList()
+function DeclClassMode.get__allList()
    return DeclClassMode.__allList
 end
 
@@ -198,7 +198,7 @@ function DeclFuncMode._from( val )
 end 
     
 DeclFuncMode.__allList = {}
-function DeclFuncMode._allList()
+function DeclFuncMode.get__allList()
    return DeclFuncMode.__allList
 end
 
@@ -232,7 +232,7 @@ function ExpSymbolMode._from( val )
 end 
     
 ExpSymbolMode.__allList = {}
-function ExpSymbolMode._allList()
+function ExpSymbolMode.get__allList()
    return ExpSymbolMode.__allList
 end
 
@@ -273,7 +273,7 @@ function AnalyzeMode._from( val )
 end 
     
 AnalyzeMode.__allList = {}
-function AnalyzeMode._allList()
+function AnalyzeMode.get__allList()
    return AnalyzeMode.__allList
 end
 
@@ -4536,7 +4536,7 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
          ) )
          do
             local _switchExp = (symbolInfo:get_kind() )
-            if _switchExp == Ast.SymbolKind.Mtd then
+            if _switchExp == Ast.SymbolKind.Mtd or _switchExp == Ast.SymbolKind.Fun then
                writer:write( "displayTxt", string.format( "$%s", typeInfo:get_rawTxt():gsub( "^get_", "" )) )
             elseif _switchExp == Ast.SymbolKind.Mbr then
                writer:write( "displayTxt", string.format( "$%s: %s", symbolInfo:get_name(), typeInfo:getTxt(  )) )
@@ -4594,7 +4594,7 @@ function TransUnit:dumpFieldComp( writer, isPrefixType, prefixTypeInfo, pattern,
          do
             local _exp = getterPattern
             if _exp ~= nil then
-               if symbolInfo:get_kind() == Ast.SymbolKind.Mtd then
+               if symbolInfo:get_kind() == Ast.SymbolKind.Mtd or symbolInfo:get_kind() == Ast.SymbolKind.Fun then
                   local typeInfo = symbolInfo:get_typeInfo()
                   local retList = typeInfo:get_retTypeInfoList()
                   if #retList == 1 then
@@ -4758,8 +4758,24 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
          end
          
          fieldName = "get_" .. fieldName
+         do
+            local funcType = scope:getTypeInfoChild( fieldName )
+            if funcType ~= nil then
+               local retTypeList = funcType:get_retTypeInfoList()
+               if #retTypeList == 0 then
+                  self:addErrMess( token.pos, string.format( "The func (%s) doesn't return value.", funcType:getTxt(  )) )
+               else
+                
+                  typeInfo = retTypeList[1]
+               end
+               
+            else
+               self:addErrMess( token.pos, string.format( "not found -- %s.", fieldName) )
+               typeInfo = Ast.builtinTypeNone
+            end
+         end
+         
          getterTypeInfo = Ast.headTypeInfo
-         typeInfo = Ast.builtinTypeString
       else
        
          do

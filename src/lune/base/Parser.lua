@@ -187,7 +187,7 @@ function TokenKind._from( val )
 end 
     
 TokenKind.__allList = {}
-function TokenKind._allList()
+function TokenKind.get__allList()
    return TokenKind.__allList
 end
 

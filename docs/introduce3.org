@@ -284,3 +284,32 @@ fn func( val:EnumVal ) {
 - switch-case
 - return
 - 2項演算
+- Map のキー
+
+** enum 値のリスト
+
+get__allList() を使用することで、
+enum 型の全 enum 値を要素に持つリストを取得することができます。
+
+例えば次のコードでは、 EnumVal の全 enum 値の文字列表現を出力します。
+
+#+BEGIN_SRC lns
+enum EnumVal {
+   val1,
+   val2,
+   val3,
+   val4,
+}
+foreach val in EnumVal.$_allList {
+   print( val.$_txt );
+}
+#+END_SRC
+
+このコードの出力結果は次になります。
+
+#+BEGIN_SRC lns
+EnumVal.val1
+EnumVal.val2
+EnumVal.val3
+EnumVal.val4
+#+END_SRC

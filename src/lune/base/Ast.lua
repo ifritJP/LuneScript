@@ -83,7 +83,7 @@ function SerializeKind._from( val )
 end 
     
 SerializeKind.__allList = {}
-function SerializeKind._allList()
+function SerializeKind.get__allList()
    return SerializeKind.__allList
 end
 
@@ -121,7 +121,7 @@ function TypeInfoKind._from( val )
 end 
     
 TypeInfoKind.__allList = {}
-function TypeInfoKind._allList()
+function TypeInfoKind.get__allList()
    return TypeInfoKind.__allList
 end
 
@@ -192,7 +192,7 @@ function SymbolKind._from( val )
 end 
     
 SymbolKind.__allList = {}
-function SymbolKind._allList()
+function SymbolKind.get__allList()
    return SymbolKind.__allList
 end
 
@@ -233,7 +233,7 @@ function AccessMode._from( val )
 end 
     
 AccessMode.__allList = {}
-function AccessMode._allList()
+function AccessMode.get__allList()
    return AccessMode.__allList
 end
 
@@ -2275,7 +2275,7 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
    local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "_from", {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
    scope:addFunc( fromVal, AccessMode.Pub, true, false )
    local allListType = NormalTypeInfo.createList( AccessMode.Pub, info, {info} )
-   local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "_allList", {}, {NormalTypeInfo.createModifier( allListType, false )}, false )
+   local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "get__allList", {}, {NormalTypeInfo.createModifier( allListType, false )}, false )
    scope:addFunc( allList, AccessMode.Pub, true, false )
    return info
 end
@@ -3220,7 +3220,7 @@ function BlockKind._from( val )
 end 
     
 BlockKind.__allList = {}
-function BlockKind._allList()
+function BlockKind.get__allList()
    return BlockKind.__allList
 end
 
@@ -4712,7 +4712,7 @@ function MacroMode._from( val )
 end 
     
 MacroMode.__allList = {}
-function MacroMode._allList()
+function MacroMode.get__allList()
    return MacroMode.__allList
 end
 
@@ -5537,7 +5537,7 @@ function DeclVarMode._from( val )
 end 
     
 DeclVarMode.__allList = {}
-function DeclVarMode._allList()
+function DeclVarMode.get__allList()
    return DeclVarMode.__allList
 end
 
