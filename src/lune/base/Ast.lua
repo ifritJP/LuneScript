@@ -1,7 +1,7 @@
 --lune/base/Ast.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.Ast'
-if not _ENV._lune then
+if not _lune then
    _lune = {}
 end
 function _lune.unwrap( val )

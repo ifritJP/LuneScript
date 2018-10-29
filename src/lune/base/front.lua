@@ -1,7 +1,7 @@
 --lune/base/front.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.front'
-if not _ENV._lune then
+if not _lune then
    _lune = {}
 end
 function _lune.unwrap( val )
@@ -67,23 +67,21 @@ function _luneSym2Str( val )
 end
 
 local Front = {}
-function Front.setmeta( obj )
-  setmetatable( obj, { __index = Front  } )
-end
-function Front.new( option, loadedMap, loadedMetaMap, convertedMap )
+function Front.new( option )
    local obj = {}
    Front.setmeta( obj )
-   if obj.__init then
-      obj:__init( option, loadedMap, loadedMetaMap, convertedMap )
-   end        
-   return obj 
-end         
-function Front:__init( option, loadedMap, loadedMetaMap, convertedMap ) 
-
+   if obj.__init then obj:__init( option ); end
+   return obj
+end
+function Front:__init(option) 
    self.option = option
-   self.loadedMap = loadedMap
-   self.loadedMetaMap = loadedMetaMap
-   self.convertedMap = convertedMap
+   self.loadedMap = {}
+   self.loadedMetaMap = {}
+   self.convertedMap = {}
+   frontInterface.setFront( self )
+end
+function Front.setmeta( obj )
+  setmetatable( obj, { __index = Front  } )
 end
 
 function Front:error( message )
@@ -368,101 +366,155 @@ function Front:loadMeta( mod )
    error( string.format( "load meta error, %s", mod) )
 end
 
+local function scriptPath2Module( path )
+
+   local mod = string.gsub( path, "/", "." )
+   return string.gsub( mod, "%.lns$", "" )
+end
+_moduleObj.scriptPath2Module = scriptPath2Module
+function Front:dumpTokenize(  )
+
+   frontInterface.setFront( self )
+   local mod = scriptPath2Module( self.option.scriptPath )
+   local parser = createPaser( self.option.scriptPath, mod )
+   while true do
+      local token = parser:getToken(  )
+      if  nil == token then
+         local _token = token
+      
+         break
+      end
+      
+      print( token.kind, token.pos.lineNo, token.pos.column, token.txt )
+   end
+   
+end
+
+function Front:dumpAst(  )
+
+   frontInterface.setFront( self )
+   local mod = scriptPath2Module( self.option.scriptPath )
+   Util.profile( self.option.validProf, function (  )
+   
+      local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+      ast:get_node():processFilter( dumpNode.dumpFilter.new(), "", 0 )
+   end
+   , self.option.scriptPath .. ".profi" )
+end
+
+function Front:checkDiag(  )
+
+   frontInterface.setFront( self )
+   local mod = scriptPath2Module( self.option.scriptPath )
+   Util.setErrorCode( 0 )
+   self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Diag )
+end
+
+function Front:complete(  )
+
+   frontInterface.setFront( self )
+   local mod = scriptPath2Module( self.option.scriptPath )
+   self:createAst( self.option.scriptPath, mod, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+end
+
+function Front:createGlue(  )
+
+   frontInterface.setFront( self )
+   local mod = scriptPath2Module( self.option.scriptPath )
+   local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+   local glue = glueFilter.glueFilter.new(self.option.outputDir)
+   ast:get_node():processFilter( glue )
+end
+
+function Front:convertToLua(  )
+
+   frontInterface.setFront( self )
+   local mod = scriptPath2Module( self.option.scriptPath )
+   local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+   local convMode = convLua.ConvMode.Convert
+   if self.option.mode == Option.ModeKind.LuaMeta then
+      convMode = convLua.ConvMode.ConvMeta
+   end
+   
+   self:convert( ast, self.option.scriptPath, io.stdout, io.stdout, convMode, false )
+end
+
+function Front:saveToLua(  )
+
+   frontInterface.setFront( self )
+   local mod = scriptPath2Module( self.option.scriptPath )
+   Util.profile( self.option.validProf, function (  )
+   
+      local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+      local luaPath = self.option.scriptPath:gsub( "%.lns$", ".lua" )
+      local metaPath = self.option.scriptPath:gsub( "%.lns$", ".meta" )
+      if self.option.outputDir then
+         local filename = mod:gsub( "%.", "/" )
+         luaPath = string.format( "%s/%s.lua", self.option.outputDir, filename )
+         metaPath = string.format( "%s/%s.meta", self.option.outputDir, filename )
+      end
+      
+      if luaPath ~= self.option.scriptPath then
+         local fileObj = io.open( luaPath, "w" )
+         if  nil == fileObj then
+            local _fileObj = fileObj
+         
+            error( string.format( "write open error -- %s", luaPath) )
+         end
+         
+         local stream = fileObj
+         local metaFileObj = nil
+         local metaStream = stream
+         local convMode = convLua.ConvMode.Convert
+         if self.option.mode == "SAVE" then
+            convMode = convLua.ConvMode.ConvMeta
+            do
+               local _exp = io.open( metaPath, "w" )
+               if _exp ~= nil then
+                  metaStream = _exp
+               else
+                  error( string.format( "write open error -- %s", metaPath) )
+               end
+            end
+            
+         end
+         
+         self:convert( ast, self.option.scriptPath, stream, metaStream, convMode, false )
+         fileObj:close(  )
+         do
+            local _exp = metaFileObj
+            if _exp ~= nil then
+               _exp:close(  )
+            end
+         end
+         
+      end
+      
+   end
+   , self.option.scriptPath .. ".profi" )
+end
+
 function Front:exec(  )
 
-   local mod = string.gsub( self.option.scriptPath, "/", "." )
-   mod = string.gsub( mod, "%.lns$", "" )
    do
       local _switchExp = self.option.mode
       if _switchExp == Option.ModeKind.Token then
-         local parser = createPaser( self.option.scriptPath, mod )
-         while true do
-            local token = parser:getToken(  )
-            if  nil == token then
-               local _token = token
-            
-               break
-            end
-            
-            print( token.kind, token.pos.lineNo, token.pos.column, token.txt )
-         end
-         
+         self:dumpTokenize(  )
       elseif _switchExp == Option.ModeKind.Ast then
-         Util.profile( self.option.validProf, function (  )
-         
-            local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
-            ast:get_node():processFilter( dumpNode.dumpFilter.new(), "", 0 )
-         end
-         , self.option.scriptPath .. ".profi" )
+         self:dumpAst(  )
       elseif _switchExp == Option.ModeKind.Diag then
-         Util.setErrorCode( 0 )
-         self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Diag )
+         self:checkDiag(  )
       elseif _switchExp == Option.ModeKind.Complete then
-         self:createAst( self.option.scriptPath, mod, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+         self:complete(  )
       elseif _switchExp == Option.ModeKind.Glue then
-         local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
-         local glue = glueFilter.glueFilter.new(self.option.outputDir)
-         ast:get_node():processFilter( glue )
+         self:createGlue(  )
       elseif _switchExp == Option.ModeKind.Lua or _switchExp == Option.ModeKind.LuaMeta then
-         local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
-         local convMode = convLua.ConvMode.Convert
-         if self.option.mode == Option.ModeKind.LuaMeta then
-            convMode = convLua.ConvMode.ConvMeta
-         end
-         
-         self:convert( ast, self.option.scriptPath, io.stdout, io.stdout, convMode, false )
+         self:convertToLua(  )
       elseif _switchExp == Option.ModeKind.Save or _switchExp == Option.ModeKind.SaveMeta then
-         Util.profile( self.option.validProf, function (  )
-         
-            local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
-            local luaPath = self.option.scriptPath:gsub( "%.lns$", ".lua" )
-            local metaPath = self.option.scriptPath:gsub( "%.lns$", ".meta" )
-            if self.option.outputDir then
-               local filename = mod:gsub( "%.", "/" )
-               luaPath = string.format( "%s/%s.lua", self.option.outputDir, filename )
-               metaPath = string.format( "%s/%s.meta", self.option.outputDir, filename )
-            end
-            
-            if luaPath ~= self.option.scriptPath then
-               local fileObj = io.open( luaPath, "w" )
-               if  nil == fileObj then
-                  local _fileObj = fileObj
-               
-                  error( string.format( "write open error -- %s", luaPath) )
-               end
-               
-               local stream = fileObj
-               local metaFileObj = nil
-               local metaStream = stream
-               local convMode = convLua.ConvMode.Convert
-               if self.option.mode == "SAVE" then
-                  convMode = convLua.ConvMode.ConvMeta
-                  do
-                     local _exp = io.open( metaPath, "w" )
-                     if _exp ~= nil then
-                        metaStream = _exp
-                     else
-                        error( string.format( "write open error -- %s", metaPath) )
-                     end
-                  end
-                  
-               end
-               
-               self:convert( ast, self.option.scriptPath, stream, metaStream, convMode, false )
-               fileObj:close(  )
-               do
-                  local _exp = metaFileObj
-                  if _exp ~= nil then
-                     _exp:close(  )
-                  end
-               end
-               
-            end
-            
-         end
-         , self.option.scriptPath .. ".profi" )
+         self:saveToLua(  )
       elseif _switchExp == Option.ModeKind.Exec then
-         self:loadModule( mod )
+         frontInterface.setFront( self )
+         self:loadModule( scriptPath2Module( self.option.scriptPath ) )
       else 
          
             print( "illegal mode" )
@@ -475,13 +527,12 @@ local function exec( args )
 
    local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
    if version < 5.2 then
-      io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version after 5.2." ) )
+      io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version >= 5.2." ) )
       os.exit( 1 )
    end
    
    local option = Option.analyze( args )
-   local front = Front.new(option, {}, {}, {})
-   frontInterface.setFront( front )
+   local front = Front.new(option)
    front:exec(  )
 end
 _moduleObj.exec = exec

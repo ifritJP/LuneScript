@@ -6,13 +6,20 @@ ifneq ($(LUA_INC_DIR),)
 LUA_CFLAGS=-I$(LUA_INC_DIR)
 endif
 
+ifneq ($(findstring $(MAKECMDGOALS),"install" "uninstall"),)
+LUA_DIR_SCRIPT='for path in string.gmatch( package.path, "[^;]+" ) do if not path:find( "^%./" ) then print( (path:gsub( "/%?%.lua", "" )) ); break end end'
+LUA_MOD_DIR=$(shell echo $(LUA_DIR_SCRIPT) | $(LUA) 2> /dev/null)
+endif
+
+INSTALL=/usr/bin/install -c
 
 NDIR=$(shell pwd)
 
-.PHONY: help exec
+.PHONY: help exec build build-glue accept-package check_lua_mod_dir install uninstall
 
 help:
 	@echo usage:
+	@echo "  make install"
 	@echo "  make test-comp"
 	@echo "  make release-check"
 	@echo "  make build-glue [LUA_INC_DIR=path]"
@@ -225,3 +232,29 @@ GLUE_DIR=work/glue
 build-glue:
 	gcc $(GLUE_DIR)/test_glueTest_glue.c test/glue.c -I$(GLUE_DIR) \
 		-std=c99 -fPIC -shared -o test/glueTest.so $(LUA_CFLAGS)
+
+
+check_lua_mod_dir:
+ifeq ($(LUA_MOD_DIR),)
+	@echo not found lua command.
+	@echo please retry following command.
+	@echo 
+	@echo "    make install LUA='your lua command'".
+	@echo 
+	@exit 1
+endif
+
+install: check_lua_mod_dir
+	$(MAKE) build
+	@mkdir -p $(LUA_MOD_DIR)/lune/base
+	@cat lnsc | sed "s@#!.*@#! /usr/bin/env $(abspath $(LUA))@g" > /tmp/lnsc
+	@chmod +x /tmp/lnsc
+	@$(INSTALL) /tmp/lnsc /usr/bin
+	@echo installed -- /usr/bin/lnsc
+	@rm /tmp/lnsc
+	@$(INSTALL) lune/base/* $(LUA_MOD_DIR)/lune/base
+	@echo installed -- $(LUA_MOD_DIR)/lune
+
+uninstall: check_lua_mod_dir
+	rm /usr/bin/lnsc
+	rm -rf $(LUA_MOD_DIR)/lune

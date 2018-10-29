@@ -1,7 +1,7 @@
 --lune/base/TransUnit.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.TransUnit'
-if not _ENV._lune then
+if not _lune then
    _lune = {}
 end
 function _lune.nilacc( val, fieldName, access, ... )

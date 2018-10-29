@@ -654,7 +654,7 @@ pub override fn convFilter.processRoot(
    }
    else {
       self.writeln( ```
-if not _ENV._lune then
+if not _lune then
    _lune = {}
 end``` );
       

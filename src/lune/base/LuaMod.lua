@@ -1,7 +1,7 @@
 --lune/base/LuaMod.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.LuaMod'
-if not _ENV._lune then
+if not _lune then
    _lune = {}
 end
 function _lune.unwrap( val )

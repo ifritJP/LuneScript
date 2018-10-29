@@ -70,6 +70,15 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMetaMap:Map<str,stem>;
    let mut convertedMap:Map<str,str>;
 
+   pub fn __init( option:Option.Option ) {
+      self.option = option;
+      self.loadedMap = {};
+      self.loadedMetaMap = {};
+      self.convertedMap = {};
+
+      frontInterface.setFront( self );
+   }
+
    pub fn loadModule( mod:str ): stem, stem;
    pub fn loadMeta( mod:str ): stem;
    pub fn searchModule( mod:str ): str;
@@ -310,103 +319,155 @@ fn Front.loadMeta( mod:str ) mut : stem {
    error( "load meta error, %s" ( mod ) );
 }
 
+pub fn scriptPath2Module( path:str ):str {
+   let mod = string.gsub( path, "/", "." );
+   return string.gsub( mod, "%.lns$", "" );
+}
+
+pub fn Front.dumpTokenize() mut {
+   frontInterface.setFront( self );
+
+   let mod = scriptPath2Module( self.option.scriptPath );
+   let mut parser = createPaser( self.option.scriptPath, mod );
+   while true {
+      let! token = parser.getToken() {
+         break;
+      };
+      print( token.kind, token.pos.lineNo, token.pos.column, token.txt );
+   }
+}
+
+pub fn Front.dumpAst() mut {
+   frontInterface.setFront( self );
+
+   let mod = scriptPath2Module( self.option.scriptPath );
+   Util.profile(
+      self.option.validProf,
+      fn() {
+	 let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+	 ast.$node.processFilter( new dumpNode.dumpFilter(), "", 0 );
+      }, self.option.scriptPath .. ".profi" );
+}
+
+pub fn Front.checkDiag() mut {
+   frontInterface.setFront( self );
+
+   let mod = scriptPath2Module( self.option.scriptPath );
+   Util.setErrorCode( 0 );
+   self.createAst( self.option.scriptPath, mod, nil, .Diag );
+}
+
+pub fn Front.complete() mut {
+   frontInterface.setFront( self );
+
+   let mod = scriptPath2Module( self.option.scriptPath );
+   self.createAst( self.option.scriptPath, mod,
+		   self.option.analyzeModule, .Complete, self.option.analyzePos );
+}
+
+pub fn Front.createGlue() mut {
+   frontInterface.setFront( self );
+
+   let mod = scriptPath2Module( self.option.scriptPath );
+   let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+   let mut glue = new glueFilter.glueFilter( self.option.outputDir );
+   ast.$node.processFilter( glue );
+}
+
+pub fn Front.convertToLua() mut {
+   frontInterface.setFront( self );
+
+   let mod = scriptPath2Module( self.option.scriptPath );
+   let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+   let mut convMode = convLua.ConvMode.Convert;
+   if self.option.mode == .LuaMeta {
+      convMode = .ConvMeta;
+   }
+   self.convert( ast, self.option.scriptPath,
+                 io.stdout, io.stdout, convMode, false );
+}
+
+pub fn Front.saveToLua() mut {
+   frontInterface.setFront( self );
+   
+   let mod = scriptPath2Module( self.option.scriptPath );
+   Util.profile(           
+      self.option.validProf,       
+      fn () {
+	 let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+	 let mut luaPath = self.option.scriptPath.gsub( "%.lns$", ".lua" );
+	 let mut metaPath = self.option.scriptPath.gsub( "%.lns$", ".meta" );
+	 if self.option.outputDir {
+	    let filename = mod.gsub( "%.", "/" );
+	    luaPath = string.format(
+               "%s/%s.lua", self.option.outputDir, filename );
+	    metaPath = string.format(
+               "%s/%s.meta", self.option.outputDir, filename );
+	 }
+	 
+	 if luaPath ~= self.option.scriptPath {
+	    let! mut fileObj = io.open( luaPath, "w" ) {
+               error( "write open error -- %s" (luaPath) );
+            };
+	    let mut stream = fileObj;
+
+	    let mut metaFileObj:oStream! = nil;
+	    let mut metaStream:oStream = stream;
+            let mut convMode = convLua.ConvMode.Convert;
+	    if self.option.mode == "SAVE" {
+               convMode = .ConvMeta;
+               if! io.open( metaPath, "w" ) {
+		  metaStream = _exp;
+               }
+               else {
+                  error( "write open error -- %s" (metaPath) );
+               }
+            }
+	    
+	    self.convert( ast, self.option.scriptPath,
+                          stream, metaStream, convMode, false );
+	    fileObj.close();
+	    if! metaFileObj {     
+	       _exp.close();
+	    }
+         }
+      }, self.option.scriptPath .. ".profi" );
+}
+
 
 pub fn Front.exec() mut
 {
-   let mut mod = string.gsub( self.option.scriptPath, "/", "." );
-   mod = string.gsub( mod, "%.lns$", "" );
-   
    switch self.option.mode {
       case .Token {
-         let mut parser = createPaser( self.option.scriptPath, mod );
-         while true {
-            let! token = parser.getToken() {
-               break;
-            };
-            print( token.kind, token.pos.lineNo, token.pos.column, token.txt );
-         }
+         self.dumpTokenize();
       }
       case .Ast {
-         Util.profile(
-	    self.option.validProf,
-	    fn() {
-	       let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
-	       ast.$node.processFilter( new dumpNode.dumpFilter(), "", 0 );
-	    }, self.option.scriptPath .. ".profi" );
+         self.dumpAst();
       }
       case .Diag {
-         Util.setErrorCode( 0 );
-         self.createAst( self.option.scriptPath, mod, nil, .Diag );
+         self.checkDiag();
       }
       case .Complete {
-         self.createAst( self.option.scriptPath, mod,
-		         self.option.analyzeModule, .Complete, self.option.analyzePos );
+         self.complete();
       }
       case .Glue {
-         let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
-         let mut glue = new glueFilter.glueFilter( self.option.outputDir );
-         ast.$node.processFilter( glue );
+         self.createGlue();
       }
       case .Lua, .LuaMeta {
-         let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
-         let mut convMode = convLua.ConvMode.Convert;
-         if self.option.mode == .LuaMeta {
-            convMode = .ConvMeta;
-         }
-         self.convert( ast, self.option.scriptPath,
-                       io.stdout, io.stdout, convMode, false );
+         self.convertToLua();
       }
       case .Save, .SaveMeta {
-         Util.profile(           
-	    self.option.validProf,       
-      	    fn () {
-	       let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
-	       let mut luaPath = self.option.scriptPath.gsub( "%.lns$", ".lua" );
-	       let mut metaPath = self.option.scriptPath.gsub( "%.lns$", ".meta" );
-	       if self.option.outputDir {
-	          let filename = mod.gsub( "%.", "/" );
-	          luaPath = string.format(
-                     "%s/%s.lua", self.option.outputDir, filename );
-	          metaPath = string.format(
-                     "%s/%s.meta", self.option.outputDir, filename );
-	       }
-	       
-	       if luaPath ~= self.option.scriptPath {
-	          let! mut fileObj = io.open( luaPath, "w" ) {
-                     error( "write open error -- %s" (luaPath) );
-                  };
-	          let mut stream = fileObj;
-
-	          let mut metaFileObj:oStream! = nil;
-	          let mut metaStream:oStream = stream;
-                  let mut convMode = convLua.ConvMode.Convert;
-	          if self.option.mode == "SAVE" {
-                     convMode = .ConvMeta;
-                     if! io.open( metaPath, "w" ) {
-		        metaStream = _exp;
-                     }
-                     else {
-                        error( "write open error -- %s" (metaPath) );
-                     }
-                  }
-	             
-	          self.convert( ast, self.option.scriptPath,
-                                stream, metaStream, convMode, false );
-	          fileObj.close();
-	          if! metaFileObj {     
-		     _exp.close();
-	          }
-               }
-      	    }, self.option.scriptPath .. ".profi" );
+         self.saveToLua();
       }
       case .Exec {
-         self.loadModule( mod );
+         frontInterface.setFront( self );
+         
+         self.loadModule( scriptPath2Module( self.option.scriptPath ) );
       }
       default {
          print( "illegal mode" );
-      }        
+      }
    }
-   
 }
 
 pub fn exec( args: str[] ) {
@@ -415,13 +476,12 @@ pub fn exec( args: str[] ) {
    if version < 5.2 {
       io.stderr.write(
          string.format( "LuneScript doesn't support this lua version(%s). %s\n",
-		        version, "please use the version after 5.2.") );
+		        version, "please use the version >= 5.2.") );
       os.exit( 1 );
    }  
    
    let mut option = Option.analyze( args );
-   let mut front = new Front( option, {}, {}, {} );
-   frontInterface.setFront( front );
+   let mut front = new Front( option );
 
    front.exec();
 }

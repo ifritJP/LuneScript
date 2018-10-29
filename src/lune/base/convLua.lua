@@ -1,7 +1,7 @@
 --lune/base/convLua.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.convLua'
-if not _ENV._lune then
+if not _lune then
    _lune = {}
 end
 function _lune.nilacc( val, fieldName, access, ... )
@@ -770,7 +770,7 @@ function convFilter:processRoot( node, parent )
    else
     
       self:writeln( [==[
-if not _ENV._lune then
+if not _lune then
    _lune = {}
 end]==] )
       if node:get_luneHelperInfo():get_useNilAccess() then
