@@ -1964,9 +1964,11 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
       else {
          if expNode.$expType.$nilable {
             let refNode = expNode@@Ast.ExpRefNode;
+            let symbolInfo = refNode.$symbolInfo;
             varNameList.insert( refNode.$token.txt );
-            self.addLocalVar( firstToken.pos, false, false, refNode.$token.txt,
-                              expNode.$expType.$orgTypeInfo, false, true );
+            self.addLocalVar(
+               firstToken.pos, false, expNode.canBeLeft(), refNode.$token.txt,
+               expNode.$expType.$orgTypeInfo, symbolInfo.$mutable,  true );
          }
          else {
             self.addErrMess( expNode.$pos,

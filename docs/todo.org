@@ -9,6 +9,9 @@
 * 機能
 
 
+- [ ] SymbolInfo の canBeLeft と mutable の扱いを整理する。
+      本来は、 canBeLeft は変数自体の書き換えで、mutable はオブジェクトの操作。
+      mutable は、 expTypeInfo の mutable で制御すべき。
 - [ ] macro 内の変数に mut を設定しても上書きが無視される。
 - [ ] macro 内の `{} がエラーになる。
 - [ ] 空文、空のブロック文の時に、 Lua のバージョンによっては nop を入れる。

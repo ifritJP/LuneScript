@@ -3998,8 +3998,9 @@ function TransUnit:analyzeWhen( firstToken )
        
          if expNode:get_expType():get_nilable() then
             local refNode = expNode
+            local symbolInfo = refNode:get_symbolInfo()
             table.insert( varNameList, refNode:get_token().txt )
-            self:addLocalVar( firstToken.pos, false, false, refNode:get_token().txt, expNode:get_expType():get_orgTypeInfo(), false, true )
+            self:addLocalVar( firstToken.pos, false, expNode:canBeLeft(  ), refNode:get_token().txt, expNode:get_expType():get_orgTypeInfo(), symbolInfo:get_mutable(), true )
          else
           
             self:addErrMess( expNode:get_pos(), string.format( "This type isn't nilable. -- %s", expNode:get_expType():getTxt(  )) )

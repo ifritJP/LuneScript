@@ -1,14 +1,16 @@
-let! val1, val2:int! = 1, nil {
-   val2 = 2;
-}
-then {
-   print( val1, val2 );
-};
+{
+   let! val1, val2:int! = 1, nil {
+      val2 = 2;
+   }  
+   then {
+      print( val1, val2 );
+   }; 
 
-let val1 = 1; // error
-let val2 = 1; // error
+   let val1 = 1; // error
+   let val2 = 1; // error
 
-if! let val1 = val2 {  // error
+   if! let val1 = val2 {  // error
+   }
 }
 
 {
@@ -19,9 +21,11 @@ if! let val1 = val2 {  // error
    class Test {
       let val:int;
       
-      pub fn func( val:int!, val2:int! ): int { // error
+      pub fn func( val:int!, mut val2:int! ): int { // error
          let val3 = 1;
          when! val, val2 {
+            val = 1; // error
+            val2 = 2;
             return val + val2;
          }
          else {
