@@ -56,7 +56,7 @@ fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, str, &Ast.TypeInfo, str {
       nilableTypeTxt = typeTxt;
    }
    let mut argName = "";
-   if argNode.$kind == Ast.nodeKindDeclArg {
+   if argNode.$kind == Ast.NodeKind.$DeclArg {
       argName = (argNode@@Ast.DeclArgNode).$name.txt;
    }
    return typeTxt, argType.$nilable and nilableTypeTxt or typeTxt, orgType, argName;
@@ -303,7 +303,7 @@ pub fn glueGenerator.outputClass(
    let mut staticMethodNodeList:List<&Ast.DeclMethodNode> = [];
    let mut methodNodeList:List<&Ast.DeclMethodNode> = [];
    foreach fieldNode in node.$fieldList {
-      if fieldNode.$kind == Ast.nodeKindDeclMethod {
+      if fieldNode.$kind == Ast.NodeKind.$DeclMethod {
          let methodNode = fieldNode@@Ast.DeclMethodNode;
          if methodNode.$declInfo.$staticFlag {
             staticMethodNodeList.insert( methodNode );

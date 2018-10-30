@@ -3,16 +3,16 @@ local _moduleObj = {}
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-   local _classInfo226 = {}
-   _typeId2ClassInfoMap[ 226 ] = _classInfo226
+   local _classInfo229 = {}
+   _typeId2ClassInfoMap[ 229 ] = _classInfo229
 end
 do
-   local _classInfo228 = {}
-   _typeId2ClassInfoMap[ 228 ] = _classInfo228
+   local _classInfo231 = {}
+   _typeId2ClassInfoMap[ 231 ] = _classInfo231
 end
 do
-   local _classInfo230 = {}
-   _typeId2ClassInfoMap[ 230 ] = _classInfo230
+   local _classInfo233 = {}
+   _typeId2ClassInfoMap[ 233 ] = _classInfo233
 end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
@@ -20,18 +20,18 @@ local _typeInfoList = {}
 _moduleObj._typeInfoList = _typeInfoList
 local _dependIdMap = {}
 _moduleObj._dependIdMap = _dependIdMap
-_typeInfoList[1] = { skind = 2, parentId = 1, typeId = 226, txt = 'lune', kind = 12, 
-children = {228, } }
-_typeInfoList[2] = { skind = 2, parentId = 226, typeId = 228, txt = 'base', kind = 12, 
-children = {230, } }
-_typeInfoList[3] = { skind = 2, parentId = 228, typeId = 230, txt = 'Depend', kind = 12, 
-children = {232, } }
-_typeInfoList[4] = { skind=3, parentId = 230, typeId = 232, baseId = 1, txt = 'getFileLastModifiedTime',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {25}, retTypeId = {20}, children = {}, }
-_typeInfoList[5] = { skind = 0, parentId = 230, typeId = 233, nilable = true, orgTypeId = 232 }
+_typeInfoList[1] = { skind = 2, parentId = 1, typeId = 229, txt = 'lune', kind = 12, 
+children = {231, } }
+_typeInfoList[2] = { skind = 2, parentId = 229, typeId = 231, txt = 'base', kind = 12, 
+children = {233, } }
+_typeInfoList[3] = { skind = 2, parentId = 231, typeId = 233, txt = 'Depend', kind = 12, 
+children = {235, } }
+_typeInfoList[4] = { skind=3, parentId = 233, typeId = 235, baseId = 1, txt = 'getFileLastModifiedTime',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {28}, retTypeId = {23}, children = {}, }
+_typeInfoList[5] = { skind = 0, parentId = 233, typeId = 236, nilable = true, orgTypeId = 235 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
-_moduleObj._moduleTypeId = 230
+_moduleObj._moduleTypeId = 233
 _moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true
 ----- meta -----

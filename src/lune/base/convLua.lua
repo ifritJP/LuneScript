@@ -1004,17 +1004,17 @@ function convFilter:processDeclClass( node, parent )
    local methodNameSet = {}
    for __index, field in pairs( fieldList ) do
       local ignoreFlag = false
-      if field:get_kind() == Ast.nodeKind['DeclConstr'] then
+      if field:get_kind() == Ast.NodeKind.get_DeclConstr() then
          hasConstrFlag = true
          methodNameSet["__init"] = true
       end
       
-      if field:get_kind() == Ast.nodeKind['DeclDestr'] then
+      if field:get_kind() == Ast.NodeKind.get_DeclDestr() then
          hasDestrFlag = true
          methodNameSet["__free"] = true
       end
       
-      if field:get_kind() == Ast.nodeKind['DeclMember'] then
+      if field:get_kind() == Ast.NodeKind.get_DeclMember() then
          local declMemberNode = field
          if not declMemberNode:get_staticFlag() then
             table.insert( memberList, declMemberNode )
@@ -1022,7 +1022,7 @@ function convFilter:processDeclClass( node, parent )
          
       end
       
-      if field:get_kind() == Ast.nodeKind['DeclMethod'] then
+      if field:get_kind() == Ast.NodeKind.get_DeclMethod() then
          local methodNode = field
          local declInfo = methodNode:get_declInfo(  )
          local methodNameToken = _lune.unwrap( declInfo:get_name(  ))
@@ -1354,7 +1354,7 @@ function convFilter:processDeclConstr( node, parent )
       end
       
       filter( arg, self, node )
-      if arg:get_kind(  ) == Ast.nodeKind['DeclArg'] then
+      if arg:get_kind(  ) == Ast.NodeKind.get_DeclArg() then
          argTxt = argTxt .. (arg ):get_name().txt
       else
        
@@ -1518,13 +1518,40 @@ function convFilter:processIfUnwrap( node, parent )
    
    self:write( " then" )
    filter( node:get_block(), self, node )
-   if node:get_nilBlock() then
-      self:write( "else" )
-      filter( _lune.unwrap( node:get_nilBlock()), self, node )
+   do
+      local _exp = node:get_nilBlock()
+      if _exp ~= nil then
+         self:write( "else" )
+         filter( _exp, self, node )
+      end
    end
    
    self:writeln( "end" )
    self:popIndent(  )
+   self:writeln( "end" )
+end
+
+function convFilter:processWhen( node, parent )
+
+   self:write( "if " )
+   for index, varName in pairs( node:get_varNameList() ) do
+      self:write( string.format( "%s ~= nil", varName) )
+      if index ~= #node:get_varNameList() then
+         self:write( " and " )
+      end
+      
+   end
+   
+   self:write( " then" )
+   filter( node:get_block(), self, node )
+   do
+      local _exp = node:get_elseBlock()
+      if _exp ~= nil then
+         self:write( "else" )
+         filter( _exp, self, node )
+      end
+   end
+   
    self:writeln( "end" )
 end
 
@@ -1732,7 +1759,7 @@ function convFilter:processIf( node, parent )
       if index == 1 then
          self:write( "if " )
          filter( val:get_exp(), self, node )
-      elseif val:get_kind() == "elseif" then
+      elseif val:get_kind() == Ast.IfKind.ElseIf then
          self:write( "elseif " )
          filter( val:get_exp(), self, node )
       else
@@ -1934,7 +1961,7 @@ function convFilter:processExpCall( node, parent )
    local wroteFuncFlag = false
    local setArgFlag = false
    
-   if node:get_func():get_kind() == Ast.nodeKind['RefField'] then
+   if node:get_func():get_kind() == Ast.NodeKind.get_RefField() then
       local fieldNode = node:get_func()
       local prefixNode = fieldNode:get_prefix()
       local prefixType = prefixNode:get_expType()
@@ -2246,7 +2273,7 @@ function convFilter:processRefField( node, parent )
     
       filter( prefix, self, node )
       local delimit = "."
-      if parent:get_kind() == Ast.nodeKind['ExpCall'] then
+      if parent:get_kind() == Ast.NodeKind.get_ExpCall() then
          if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
             delimit = ":"
          else

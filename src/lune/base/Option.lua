@@ -121,6 +121,7 @@ local function outputLuneMod( dir )
    fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
    fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Finalize ) )
    fileObj:close(  )
+   return nil
 end
 _moduleObj.outputLuneMod = outputLuneMod
 local function analyze( argList )
@@ -198,7 +199,6 @@ usage:
                   option.mode = mode
                else
                   Util.err( string.format( "unknown mode -- %s", arg) )
-                  os.exit( 1 )
                end
             end
             

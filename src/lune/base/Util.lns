@@ -52,7 +52,7 @@ pub fn errorLog( message: str ) {
    io.stderr.write( message .. "\n" );
 }
 
-pub fn err( message:str ) {
+pub fn err( message:str ): __ {
    if debugFlag {
       error( message );
    }

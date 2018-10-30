@@ -623,3 +623,19 @@ _test( ```
 pub let val = 100;
 ``` );
 
+
+{
+   fn sub():int! {
+      return 0;
+   }  
+   fn func( val:int!, val2:int! ): int {
+      let val3 = 1;
+      when! val, val2 {
+         return val + val2;
+      }
+      return 0;
+   }
+   _print( `{ func( 1, 2 ) } );
+   _print( `{ func( nil, 2 ) } );
+   _print( `{ func( 1, nil ) } );
+}

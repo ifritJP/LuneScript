@@ -898,21 +898,21 @@ pub override fn convFilter.processDeclClass(
    let mut methodNameSet: Map<str,bool> = {};
    foreach field in fieldList {
       let mut ignoreFlag = false;
-      if field.$kind == Ast.nodeKind.DeclConstr {
+      if field.$kind == Ast.NodeKind.$DeclConstr {
          hasConstrFlag = true;
          methodNameSet[ "__init" ] = true;
       }
-      if field.$kind == Ast.nodeKind.DeclDestr {
+      if field.$kind == Ast.NodeKind.$DeclDestr {
          hasDestrFlag = true;
          methodNameSet[ "__free" ] = true;
       }
-      if field.$kind == Ast.nodeKind.DeclMember {
+      if field.$kind == Ast.NodeKind.$DeclMember {
          let declMemberNode = field@@Ast.DeclMemberNode;
          if not declMemberNode.$staticFlag {
             memberList.insert( declMemberNode );
          }
       }
-      if field.$kind == Ast.nodeKind.DeclMethod {
+      if field.$kind == Ast.NodeKind.$DeclMethod {
          let methodNode = field@@Ast.DeclMethodNode;
          let declInfo = methodNode.get_declInfo();
          let methodNameToken = unwrap declInfo.get_name();
@@ -1185,7 +1185,7 @@ pub override fn convFilter.processDeclMacro(
       //       argTxt = argTxt .. ", ";
       //    }   
       //    filter( arg, self, node, baseIndent );
-      //    if arg.get_kind() == Ast.nodeKind.DeclArg {
+      //    if arg.get_kind() == Ast.NodeKind.$DeclArg {
       //       argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
       //    }
       //    else {
@@ -1278,7 +1278,7 @@ pub override fn convFilter.processDeclConstr(
       } 
       filter( arg, self, node );
 
-      if arg.get_kind() == Ast.nodeKind.DeclArg {
+      if arg.get_kind() == Ast.NodeKind.$DeclArg {
          argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
       }
       else {
@@ -1443,15 +1443,37 @@ pub override fn convFilter.processIfUnwrap(
    filter( node.$block, self, node );
 
 
-   if node.$nilBlock {
+   if! node.$nilBlock {
       self.write( "else" );
-
-      filter( unwrap node.$nilBlock, self, node );
+      filter( _exp, self, node );
    }
    self.writeln( "end" );
    self.popIndent();
    self.writeln( "end" );
 }       
+
+
+pub override fn convFilter.processWhen(
+   node: Ast.WhenNode, parent: &Ast.Node ) mut
+{
+   self.write( "if " );
+   foreach varName, index in node.$varNameList {
+      self.write( "%s ~= nil" (varName) );
+      if index ~= #node.$varNameList {
+         self.write( " and " );
+      }
+   }
+   self.write( " then" );
+   
+   filter( node.$block, self, node );
+
+   if! node.$elseBlock {
+      self.write( "else" );
+      filter( _exp, self, node );
+   }
+   self.writeln( "end" );
+}       
+
 
 pub override fn convFilter.processDeclVar( 
    node: Ast.DeclVarNode, parent: &Ast.Node ) mut
@@ -1647,7 +1669,7 @@ pub override fn convFilter.processIf(
          self.write( "if " );
          filter( val.$exp,  self, node );
       }    
-      elseif val.$kind == "elseif" {
+      elseif val.$kind == .ElseIf {
          self.write( "elseif " );
          filter( val.$exp,  self, node );
       }   
@@ -1884,7 +1906,7 @@ pub override fn convFilter.processExpCall(
       
    }
    
-   if node.$func.$kind == Ast.nodeKind.RefField {
+   if node.$func.$kind == Ast.NodeKind.$RefField {
       _fieldCall( RefFieldNode );
    }
    
@@ -2136,7 +2158,7 @@ pub override fn convFilter.processRefField(
       filter( prefix,  self, node );
       
       let mut delimit = ".";
-      if parent.$kind == Ast.nodeKind.ExpCall {
+      if parent.$kind == Ast.NodeKind.$ExpCall {
          if node.get_expType().get_kind() == Ast.TypeInfoKind.Method {
             delimit = ":";
          }

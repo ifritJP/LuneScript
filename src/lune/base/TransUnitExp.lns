@@ -31,23 +31,25 @@ fn TransUnit.analyzeExpList(
    let mut expList:List<&Ast.Node> = [];
    let mut pos:Parser.Position! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
-   if! expNode {
-      pos = _exp.$pos;
-      expList.insert( _exp );
-      expTypeList.insert( _exp.$expType );
+   when! expNode {
+      pos = expNode.$pos;
+      expList.insert( expNode );
+      expTypeList.insert( expNode.$expType );
    }
 
    let mut index = 1;
    repeat {
       let mut expectType:&Ast.TypeInfo! = nil;
-      if! expectTypeList {
-         if #_exp > 0 {
+      when! expectTypeList {
+         if #expectTypeList > 0 {
             let mut checkIndex = index;
-            if index > #_exp and contExpect {
-               checkIndex = #_exp;
+            if index > #expectTypeList and contExpect {
+               checkIndex = #expectTypeList;
             }
-            if checkIndex <= #_exp and _exp[ checkIndex ] ~= Ast.builtinTypeNone {
-               expectType = _exp[ checkIndex ];
+            if checkIndex <= #expectTypeList and
+               expectTypeList[ checkIndex ] ~= Ast.builtinTypeNone
+            {           
+               expectType = expectTypeList[ checkIndex ];
             }
          }
       }
@@ -102,10 +104,10 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
          }
       }
    }
-   let mut kind = Ast.nodeKindLiteralArray;
+   let mut kind = Ast.NodeKind.$LiteralArray;
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    if token.txt == '[' {
-      kind = Ast.nodeKindLiteralList;
+      kind = Ast.NodeKind.$LiteralList;
       typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
                                                       [ itemTypeInfo ] ) ];
       return Ast.LiteralListNode.create(
@@ -286,8 +288,8 @@ fn TransUnit.checkMatchValType(
 
    let mut expNodeList:List<&Ast.Node> = [];
 
-   if! expList {
-      foreach node in _exp.$expList {
+   when! expList {
+      foreach node in expList.$expList {
          expNodeList.insert( node );
       }
    }
@@ -327,22 +329,22 @@ fn TransUnit.evalMacro(
    macroTypeInfo: &Ast.TypeInfo, expList: &Ast.ExpListNode! ) mut : Ast.ExpMacroExpNode
 {
 
-   if! expList {
-      if _exp.get_expList() {
-         foreach exp in _exp.get_expList() {
+   when! expList {
+      if expList.get_expList() {
+         foreach exp in expList.get_expList() {
             let kind = exp.$kind;
-            if kind ~= Ast.nodeKindLiteralNil and
-               kind ~= Ast.nodeKindLiteralChar and
-               kind ~= Ast.nodeKindLiteralInt and
-               kind ~= Ast.nodeKindLiteralReal and
-               kind ~= Ast.nodeKindLiteralArray and
-               kind ~= Ast.nodeKindLiteralList and
-               kind ~= Ast.nodeKindLiteralMap and
-               kind ~= Ast.nodeKindLiteralString and
-               kind ~= Ast.nodeKindLiteralBool and
-               kind ~= Ast.nodeKindLiteralSymbol and
-               kind ~= Ast.nodeKindRefField and
-               kind ~= Ast.nodeKindExpMacroStat
+            if kind ~= Ast.NodeKind.$LiteralNil and
+               kind ~= Ast.NodeKind.$LiteralChar and
+               kind ~= Ast.NodeKind.$LiteralInt and
+               kind ~= Ast.NodeKind.$LiteralReal and
+               kind ~= Ast.NodeKind.$LiteralArray and
+               kind ~= Ast.NodeKind.$LiteralList and
+               kind ~= Ast.NodeKind.$LiteralMap and
+               kind ~= Ast.NodeKind.$LiteralString and
+               kind ~= Ast.NodeKind.$LiteralBool and
+               kind ~= Ast.NodeKind.$LiteralSymbol and
+               kind ~= Ast.NodeKind.$RefField and
+               kind ~= Ast.NodeKind.$ExpMacroStat
             {
                self.error( "Macro arguments must be literal value." );
             }
@@ -355,8 +357,8 @@ fn TransUnit.evalMacro(
    let mut argValMap:Map<int,stem> = {};
    let mut macroArgValMap:Map<str,stem> = {};
    let macroArgNodeList = macroInfo.declInfo.$argList;
-   if! expList {
-      foreach argNode, index in _exp.get_expList() {
+   when! expList {
+      foreach argNode, index in expList.get_expList() {
          //let val, typeInfo = getLiteralValue( argNode );
          let valList, typeInfoList = argNode.getLiteral();
          let typeInfo = typeInfoList[1];
@@ -406,7 +408,7 @@ fn TransUnit.evalMacro(
    let argList = macroInfo.declInfo.$argList;
    if argList {
       foreach arg, index in argList {
-         if arg.get_kind() == Ast.nodeKindDeclArg {
+         if arg.get_kind() == Ast.NodeKind.$DeclArg {
             let argInfo = arg;
             let argType = argInfo.$argType;
             let argName = argInfo.$name.txt;
@@ -426,7 +428,7 @@ fn TransUnit.evalMacro(
 
 
    let mut parser = new MacroPaser( macroInfo.$declInfo.$tokenList,
-                                "macro %s" (macroTypeInfo.getTxt()) );
+                                    "macro %s" (macroTypeInfo.getTxt()) );
    let mut bakParser = self.parser;
    self.parser = parser;
 
@@ -496,7 +498,7 @@ fn TransUnit.analyzeExpCont(
                // 引数の型チェック
                let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
                if funcTypeInfo.$kind == .Method and
-                  exp.$kind == Ast.nodeKindRefField
+                  exp.$kind == Ast.NodeKind.$RefField
                {
                   let refField = exp@@Ast.RefFieldNode;
                   let classType = refField.$prefix.$expType;
@@ -507,9 +509,9 @@ fn TransUnit.analyzeExpCont(
                   exp.$pos, funcTypeInfo, expList, genericTypeList );
 
                if funcTypeInfo.equals( typeInfoListInsert ) {
-                  if! expList {
-                     if _exp.$expType.$nilable {
-                        self.addErrMess( _exp.$pos, "list can't insert nilable" );
+                  when! expList {
+                     if expList.$expType.$nilable {
+                        self.addErrMess( expList.$pos, "list can't insert nilable" );
                      }
                   }
                }
@@ -543,9 +545,18 @@ fn TransUnit.analyzeExpCont(
                      retTypeInfoList = retList;
                      self.useNilAccess = true;
                   }
+
+                  let mut errorFuncFlag = false;
+                  if #retTypeInfoList > 0 {
+                     let retType = retTypeInfoList[1];
+                     if retType == Ast.builtinTypeNeverRet {
+                        errorFuncFlag = true;
+                     }
+                  }
+                  
                   exp = Ast.ExpCallNode.create(
                      self.nodeManager, firstToken.pos,
-                     retTypeInfoList, exp, nilAccess, expList );
+                     retTypeInfoList, exp, errorFuncFlag, nilAccess, expList );
                }
 
                nextToken = self.getToken();
@@ -597,11 +608,11 @@ fn TransUnit.analyzeAccessClassField(
    if mode == .Get or mode == .GetNil {
       let fieldSymbolInfo = classScope.getSymbolInfo(
          "get_%s" (token.txt), self.scope, false );
-      if! fieldSymbolInfo {
-         if ( _exp.get_kind() == .Mtd )
+      when! fieldSymbolInfo {
+         if ( fieldSymbolInfo.get_kind() == .Mtd or fieldSymbolInfo.get_kind() == .Fun )
          {
-            let retTypeList = _exp.$typeInfo.get_retTypeInfoList();
-            symbolInfo = _exp;
+            let retTypeList = fieldSymbolInfo.$typeInfo.get_retTypeInfoList();
+            symbolInfo = fieldSymbolInfo;
             if #retTypeList > 0 {
                fieldTypeInfo = retTypeList[ 1 ];
             }
@@ -616,8 +627,8 @@ fn TransUnit.analyzeAccessClassField(
       //    token.txt, true, self.scope );
       symbolInfo = classScope.getSymbolInfoField(
          token.txt, true, self.scope );
-      if! symbolInfo {
-         fieldTypeInfo = _exp.$typeInfo;
+      when! symbolInfo {
+         fieldTypeInfo = symbolInfo.$typeInfo;
       }
    }
    if not fieldTypeInfo {
@@ -704,12 +715,12 @@ fn TransUnit.dumpFieldComp(
          if symbol ~= "__init" and symbol ~= "__free" and
             symbol ~= "self"
          {
-            if! getterPattern {
+            when! getterPattern {
                if symbolInfo.$kind == .Mtd or symbolInfo.$kind == .Fun {
                   let typeInfo = symbolInfo.$typeInfo;
                   let retList = typeInfo.$retTypeInfoList;
                   if #retList == 1 {
-                     return self.dumpComp( writer, _exp, symbolInfo, true );
+                     return self.dumpComp( writer, getterPattern, symbolInfo, true );
                   }
                }
                return true;
@@ -1213,7 +1224,7 @@ fn TransUnit.analyzeExpOp2(
                   {  
                      self.addWarnMess( exp.$pos, "this value never be 'false'" );
                   }
-                  elseif exp2.$kind == Ast.nodeKindLiteralBool {
+                  elseif exp2.$kind == Ast.NodeKind.$LiteralBool {
                      let valList = exp2.getLiteral();
                      if not valList[1] {
                         self.addErrMess( exp2.$pos, "this value never be 'true'" );
@@ -1373,7 +1384,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
 
          let mut format = token.txt == ",,," and "'%s '" or '"\'%s\'"';
 
-         if token.txt == ",," and exp.$kind == Ast.nodeKindExpRef
+         if token.txt == ",," and exp.$kind == Ast.NodeKind.$ExpRef
          {
             let refToken = (exp@@Ast.ExpRefNode).get_token();
             let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
@@ -1809,7 +1820,7 @@ fn TransUnit.analyzeExp(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeNil ] );
    }
 
-   if exp.$kind == Ast.nodeKindNone {
+   if exp.$kind == Ast.NodeKind.$None {
       self.error( "illegal exp" );
    }
 

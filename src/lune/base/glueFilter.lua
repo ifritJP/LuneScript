@@ -65,7 +65,7 @@ function glueGenerator:getArgInfo( argNode )
    end
    
    local argName = ""
-   if argNode:get_kind() == Ast.nodeKindDeclArg then
+   if argNode:get_kind() == Ast.NodeKind.get_DeclArg() then
       argName = (argNode ):get_name().txt
    end
    
@@ -330,7 +330,7 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    local staticMethodNodeList = {}
    local methodNodeList = {}
    for __index, fieldNode in pairs( node:get_fieldList() ) do
-      if fieldNode:get_kind() == Ast.nodeKindDeclMethod then
+      if fieldNode:get_kind() == Ast.NodeKind.get_DeclMethod() then
          local methodNode = fieldNode
          if methodNode:get_declInfo():get_staticFlag() then
             table.insert( staticMethodNodeList, methodNode )

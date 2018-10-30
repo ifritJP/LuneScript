@@ -162,6 +162,20 @@ pub override fn dumpFilter.processIfUnwrap(
    }
 }
 
+pub override fn dumpFilter.processWhen( 
+   node: &Ast.WhenNode, prefix: str, depth: int ) mut
+{
+   dump( prefix, depth, node, "" );
+   foreach expNode, index in node.$expNodeList {
+      filter( expNode, self, prefix .. "  ", depth + 1 );
+   }
+   filter( node.$block, self, prefix .. "  ", depth + 1 );
+   if! node.$elseBlock {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
+}
+
+
 pub override fn dumpFilter.processDeclVar( 
    node: &Ast.DeclVarNode, prefix: str, depth: int ) mut
 {

@@ -185,6 +185,23 @@ function dumpFilter:processIfUnwrap( node, prefix, depth )
    
 end
 
+function dumpFilter:processWhen( node, prefix, depth )
+
+   dump( prefix, depth, node, "" )
+   for index, expNode in pairs( node:get_expNodeList() ) do
+      filter( expNode, self, prefix .. "  ", depth + 1 )
+   end
+   
+   filter( node:get_block(), self, prefix .. "  ", depth + 1 )
+   do
+      local _exp = node:get_elseBlock()
+      if _exp ~= nil then
+         filter( _exp, self, prefix .. "  ", depth + 1 )
+      end
+   end
+   
+end
+
 function dumpFilter:processDeclVar( node, prefix, depth )
 
    local varName = ""

@@ -11,6 +11,40 @@ let val2 = 1; // error
 if! let val1 = val2 {  // error
 }
 
+{
+   fn sub():int! {
+      return 0;
+   }  
+
+   class Test {
+      let val:int;
+      
+      pub fn func( val:int!, val2:int! ): int { // error
+         let val3 = 1;
+         when! val, val2 {
+            return val + val2;
+         }
+         else {
+            return val + 1;
+         }
+         when! self.val { // error
+            return 1;
+         }  
+         when! sub() { // error
+            return 2;
+         }  
+         when! 1 { // error
+            return 3;
+         }  
+         when! val3 { // error
+            return 4;
+         }  
+         return 0;
+      }  
+   }  
+}
+
+
 if! let val3 = val2 {
    print( val3 );
 }

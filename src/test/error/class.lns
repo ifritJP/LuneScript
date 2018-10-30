@@ -119,6 +119,7 @@ class Sub2 extend Super2 { // error
    pub override fn func2(arg:int) mut { // error
    }
    pub override fn func3() mut : int { // error
+      return 1;
    }
 }
 

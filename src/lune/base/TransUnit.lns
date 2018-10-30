@@ -352,11 +352,13 @@ pub class TransUnit {
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node;
 
    pri fn addLocalVar(
-      pos:&Parser.Position, argFlag:bool,
-      canBeLeft:bool, name:str, typeInfo: &Ast.TypeInfo, mutable:bool ) mut
+      pos:&Parser.Position, argFlag:bool, canBeLeft:bool,
+      name:str, typeInfo: &Ast.TypeInfo, mutable:bool, allowShadow:bool! ) mut
    {
-      if self.scope.getSymbolTypeInfo( name, self.scope, self.moduleScope ) {
-         self.addErrMess( pos, "shadowing variable -- %s" (name) );
+      if not allowShadow {
+         if self.scope.getSymbolTypeInfo( name, self.scope, self.moduleScope ) {
+            self.addErrMess( pos, "shadowing variable -- %s" (name) );
+         }
       }
       self.scope.addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable );
    }
@@ -735,7 +737,7 @@ fn TransUnit.registBuiltInScope() mut {
       { 
          "": {
             "type": { "arg": [ "&stem!" ], "ret": ["str"] },
-            "error": { "arg": [ "str" ], "ret": [] },
+            "error": { "arg": [ "str" ], "ret": [ "__" ] },
             "print": { "arg": [ "&..." ], "ret": [] },
             "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
             "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str"] },
@@ -795,7 +797,7 @@ fn TransUnit.registBuiltInScope() mut {
          
          "os": {
             "clock": { "arg": [], "ret": ["int"] },
-            "exit": { "arg": [ "int!" ], "ret": [] },
+            "exit": { "arg": [ "int!" ], "ret": [ "__" ] },
             "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
             "date": {"arg": [ "str!", "stem!" ], "ret": [ "stem!"] },
             "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
@@ -1026,7 +1028,7 @@ fn TransUnit.pushbackToken( token: &Parser.Token ) mut {
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
 }
 
-fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position ): str {
+fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position ) {
    if! val {
       switch type( _exp ) {
          case "boolean" {
@@ -1059,7 +1061,7 @@ fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position )
             }   
             tokenList.insert(
                new Parser.Token( Parser.TokenKind.Dlmt, "}" (_exp), pos ) );
-         }   
+         }
       } 
    }
 }
@@ -1253,8 +1255,8 @@ fn TransUnit.checkNextToken( txt: str ) mut : &Parser.Token {
 /**
 次のトークンが、スペースの空きがなく、連続したトークンであるか確認する。
 
-@return 1 次のトークン
-@return 2 連続したトークンだった場合 true
+@return &Parser.Token 次のトークン
+@return bool 連続したトークンだった場合 true
 */
 fn TransUnit.getContinueToken() mut : &Parser.Token, bool {
    let! prevToken = self.currentToken {
@@ -1273,14 +1275,23 @@ fn TransUnit.getContinueToken() mut : &Parser.Token, bool {
 
 
 fn TransUnit.analyzeStatementList(
-   stmtList: List<&Ast.Node>, termTxt: str! ) : Ast.Node!
+   stmtList: List<&Ast.Node>, termTxt: str! ) mut : Ast.Node!
 {
+   let mut breakKind = Ast.BreakKind.None;
+   if #stmtList > 0 {
+      breakKind = stmtList[ #stmtList ].getBreakKind();
+   }
+   
    let mut lastStatement:Ast.Node! = nil;
    while true {
       let statement = self.analyzeStatement( termTxt );
       if! statement {
+         if breakKind ~= .None {
+            self.addErrMess( _exp.$pos, "This statement is not reached" );
+         }
          stmtList.insert( _exp );
          lastStatement = statement;
+         breakKind = _exp.getBreakKind();
       } 
       else {
          break;
@@ -1293,7 +1304,7 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Ast.Node> ) mut : Ast.
    let statement = self.analyzeStatement();
 
    if! statement {
-      if _exp.$kind ~= Ast.nodeKindSubfile {
+      if _exp.$kind ~= Ast.NodeKind.$Subfile {
          self.error( "subfile must have 'subfile' declaration at top." );
       } 
    }
@@ -1744,13 +1755,13 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
    self.pushback();
    
    let mut list:Ast.IfStmtInfo[] = [];
-   list.insert( new Ast.IfStmtInfo( "if", self.analyzeExp( false ),
+   list.insert( new Ast.IfStmtInfo( .If, self.analyzeExp( false ),
                                     self.analyzeBlock( .If ) ) );
 
    nextToken = self.getToken( true );
    if nextToken.txt == "elseif" {
       while nextToken.txt == "elseif" {
-         list.insert( new Ast.IfStmtInfo( "elseif", self.analyzeExp( false ),
+         list.insert( new Ast.IfStmtInfo( .ElseIf, self.analyzeExp( false ),
                                           self.analyzeBlock( .Elseif ) ));
          nextToken = self.getToken( true );
       } 
@@ -1758,7 +1769,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
 
    if nextToken.txt == "else" {
       list.insert( new Ast.IfStmtInfo(
-         "else", self.createNoneNode( nextToken.pos ),
+         .Else, self.createNoneNode( nextToken.pos ),
          self.analyzeBlock( .Else ) ));
    }
    else {
@@ -1879,7 +1890,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
    self.checkToken( nextToken, "of" );
 
    let exp = self.analyzeExp( false );
-   if exp.$kind ~= Ast.nodeKindExpCall {
+   if exp.$kind ~= Ast.NodeKind.$ExpCall {
       self.error( "not call" );
    }
 

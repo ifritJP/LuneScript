@@ -190,8 +190,8 @@ pub fn TransUnit.createAST(
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
 
-   if! moduleName {
-      apply txt of string.gmatch( _exp, '[^%.]+' ) {
+   when! moduleName {
+      apply txt of string.gmatch( moduleName, '[^%.]+' ) {
          // moduleTypeInfo = unwrap self.pushClass(
          //    true, false, nil, nil, false, txt@@str, "pub" );
          moduleTypeInfo = self.pushModule( false, txt@@str, true );
@@ -263,8 +263,8 @@ pub fn TransUnit.createAST(
       }
    }
 
-   if! moduleName {
-      apply txt of string.gmatch( _exp, '[^%.]+' ) {
+   when! moduleName {
+      apply txt of string.gmatch( moduleName, '[^%.]+' ) {
          //self.popClass();
          self.popModule();
       }
@@ -306,7 +306,7 @@ fn TransUnit.analyzeDeclMacro(
    let mut nextToken = self.analyzeDeclArgList( accessMode, workArgList );
    let mut argTypeList: List<&Ast.TypeInfo> = [];
    foreach argNode, index in workArgList {
-      if argNode.$kind == Ast.nodeKindDeclArg {
+      if argNode.$kind == Ast.NodeKind.$DeclArg {
          argList.insert( argNode@@Ast.DeclArgNode );
       }
       else {
@@ -445,8 +445,8 @@ fn TransUnit.analyzePushClass(
    }
 
    let mut typeInfo:Ast.TypeInfo! = nil;
-   if! baseRef {
-      let baseTypeInfo = _exp.get_expType(); 
+   when! baseRef {
+      let baseTypeInfo = baseRef.get_expType(); 
       typeInfo = baseTypeInfo;
       let! initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
          // プロトタイプ宣言時は __init がないこともある。
@@ -913,13 +913,13 @@ fn TransUnit.analyzeClassBody(
    }
 
    if mode ~= .Module {
-      if! declCtorNode {
+      when! declCtorNode {
          foreach memberNode, memberName in memberName2Node {
             if not memberNode.$staticFlag {
                let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
                let typeInfo = symbolInfo.$typeInfo;
                if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
-                  self.addErrMess( _exp.$pos,
+                  self.addErrMess( declCtorNode.$pos,
                                    "does not set member -- %s.%s %s"
                                    ( name.txt, memberName, symbolInfo.$symbolId ) );
                }  
@@ -1269,10 +1269,11 @@ fn TransUnit.analyzeDeclFunc(
       
       classTypeInfo = self.scope.getTypeInfoChild( className );
 
-      if! classTypeInfo {
+      when! classTypeInfo {
          self.pushClass(
-            _exp.$kind == .Class,
-            _exp.$abstractFlag, nil, nil, false, className, _exp.$accessMode );
+            classTypeInfo.$kind == .Class,
+            classTypeInfo.$abstractFlag, nil, nil, false, className,
+            classTypeInfo.$accessMode );
       }
       else {
          self.error( "not found class -- %s" (className) );
@@ -1286,7 +1287,7 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
-   let mut kind = Ast.nodeKindDeclConstr;
+   let mut kind = Ast.NodeKind.$DeclConstr;
    let mut typeKind = Ast.TypeInfoKind.Func;
    if classTypeInfo {
       if not staticFlag {
@@ -1294,7 +1295,7 @@ fn TransUnit.analyzeDeclFunc(
       }
       switch (unwrap name).txt {
          case "__init" {
-            kind = Ast.nodeKindDeclConstr;
+            kind = Ast.NodeKind.$DeclConstr;
             foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
                if not symbolInfo.$staticFlag {
                   // 一旦全てのメンバを値なし状態にセットする
@@ -1303,15 +1304,15 @@ fn TransUnit.analyzeDeclFunc(
             }
          }
          case "__free" {
-            kind = Ast.nodeKindDeclDestr;
+            kind = Ast.NodeKind.$DeclDestr;
          }
          default {
-            kind = Ast.nodeKindDeclMethod;
+            kind = Ast.NodeKind.$DeclMethod;
          }
       }
    }
    else {
-      kind = Ast.nodeKindDeclFunc;
+      kind = Ast.NodeKind.$DeclFunc;
       if not staticFlag {
          staticFlag = true;
       }
@@ -1326,10 +1327,10 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let mut funcName = "";
-   if! name {
-      funcName = _exp.txt;
+   when! name {
+      funcName = name.txt;
 
-      if kind == Ast.nodeKindDeclFunc {
+      if kind == Ast.NodeKind.$DeclFunc {
          switch accessMode {
             case .Pub, .Global {
                if self.scope ~= self.moduleScope {
@@ -1364,13 +1365,13 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
 
-   if! classTypeInfo {
-      if kind == Ast.nodeKindDeclMethod or
-         kind == Ast.nodeKindDeclConstr or
-         kind == Ast.nodeKindDeclDestr
+   when! classTypeInfo {
+      if kind == Ast.NodeKind.$DeclMethod or
+         kind == Ast.NodeKind.$DeclConstr or
+         kind == Ast.NodeKind.$DeclDestr
       {
-         let mut workClass = _exp;
-         if kind == Ast.nodeKindDeclConstr or kind == Ast.nodeKindDeclDestr {
+         let mut workClass = classTypeInfo;
+         if kind == Ast.NodeKind.$DeclConstr or kind == Ast.NodeKind.$DeclDestr {
             mutable = true;
          }  
          // self シンボルを登録
@@ -1419,7 +1420,7 @@ fn TransUnit.analyzeDeclFunc(
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList, mutable );
    
-   if! name {
+   when! name {
       let mut parentScope = funcBodyScope.get_parent();
       if accessMode == .Global {
          parentScope = Ast.rootScope;
@@ -1429,14 +1430,14 @@ fn TransUnit.analyzeDeclFunc(
          let matchFlag, err = Ast.TypeInfo.checkMatchType(
             prottype.$argTypeInfoList, argTypeList, false );
          if not matchFlag {
-            self.addErrMess( _exp.pos, err );
+            self.addErrMess( name.pos, err );
          }
 
          self.protoFuncMap[ prottype ] = nil;
       }
       
       
-      if kind == Ast.nodeKindDeclFunc {
+      if kind == Ast.NodeKind.$DeclFunc {
          parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
       }
       else {
@@ -1477,9 +1478,9 @@ fn TransUnit.analyzeDeclFunc(
       };
    }
    else {
-      if! name {
-         if _exp.txt ~= "__init" and
-            self.scope.$parent.getTypeInfoField( _exp.txt, false, funcBodyScope )
+      when! name {
+         if name.txt ~= "__init" and
+            self.scope.$parent.getTypeInfoField( name.txt, false, funcBodyScope )
          {          
             // override 宣言していないのに、オーバーライドしている場合エラー
             self.error( "mismatch override --" .. funcName );
@@ -1515,6 +1516,29 @@ fn TransUnit.analyzeDeclFunc(
       
       self.pushback();
       body = self.analyzeBlock( .Func, funcBodyScope );
+      when! body {
+         if #retTypeInfoList ~= 0
+         {
+            let breakKind = body.getBreakKind( .Return );
+            if retTypeInfoList[ 1 ] ~= Ast.builtinTypeNeverRet {        
+               switch breakKind {
+                  case .Return, .NeverRet {
+                  }  
+                  default {
+                     self.addErrMess( firstToken.pos,
+                                      "This funcion doesn't have return." );
+                  }  
+               }  
+            }
+            else {
+               if breakKind ~= .NeverRet {
+                  self.addErrMess( firstToken.pos,
+                                   "This funcion must be never return. -- %s"
+                                   (breakKind.$_txt ));
+               }              
+            }
+         }
+      }
    }
 
    if needNode {
@@ -1524,19 +1548,19 @@ fn TransUnit.analyzeDeclFunc(
       // node = self.createNode( kind, firstToken.pos, [ typeInfo ], info );
 
       switch ( kind ) {
-         case Ast.nodeKindDeclConstr {
+         case Ast.NodeKind.$DeclConstr {
             node = Ast.DeclConstrNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
-         case Ast.nodeKindDeclDestr {
+         case Ast.NodeKind.$DeclDestr {
             node = Ast.DeclDestrNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
-         case Ast.nodeKindDeclMethod {
+         case Ast.NodeKind.$DeclMethod {
             node = Ast.DeclMethodNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
-         case Ast.nodeKindDeclFunc {
+         case Ast.NodeKind.$DeclFunc {
             node = Ast.DeclFuncNode.create(
                self.nodeManager, firstToken.pos, [ typeInfo ], info );
          }
@@ -1629,8 +1653,8 @@ fn TransUnit.analyzeLetAndInitExp(
    let mut orgExpTypeList: List<&Ast.TypeInfo> = [];
    
    // 型推論の解決と、宣言されている型と初期値との整合性を確認
-   if! expList {
-      foreach exp, index in _exp.$expList {
+   when! expList {
+      foreach exp, index in expList.$expList {
          if not exp.canBeRight() {
             self.addErrMess( exp.$pos,
                              "this node can not be r-value. -- %s"
@@ -1640,10 +1664,10 @@ fn TransUnit.analyzeLetAndInitExp(
 
       //  初期化値の型を反映する
       let mut expTypeList: List<&Ast.TypeInfo> = [];
-      foreach expType, index in _exp.$expTypeList {
+      foreach expType, index in expList.$expTypeList {
          let processedFlag = false;
-         if index == #_exp.$expTypeList and
-            _exp.$expTypeList[ index ].equals( Ast.builtinTypeDDD )
+         if index == #expList.$expTypeList and
+            expList.$expTypeList[ index ].equals( Ast.builtinTypeDDD )
          {        
             // 最終要素が ... の場合
             // ... なら、残りの変数宣言の分 stem をセットする
@@ -1911,6 +1935,61 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
    }
 
    return Ast.IfUnwrapNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
+      varNameList, expNodeList, block, elseBlock );
+}
+
+fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
+{
+   let mut nextToken, continueFlag = self.getContinueToken();
+   let mut varNameList:str[] = [];
+
+   if not ( continueFlag and nextToken.txt == "!" ) {
+      self.pushback();
+      self.addErrMess( nextToken.pos, "'when' need '!'" );
+   }
+
+   let symListNode = self.analyzeExpList( false );
+
+   let mut scope = self.pushScope( false );
+
+   let mut expNodeList:List<&Ast.Node> = [];
+   
+   foreach expNode in symListNode.$expList {
+      expNodeList.insert( expNode );
+      if expNode.$kind ~= Ast.NodeKind.$ExpRef {
+         self.addErrMess( expNode.$pos,
+                          "'when' support only local variables or arguments." );
+      }
+      else {
+         if expNode.$expType.$nilable {
+            let refNode = expNode@@Ast.ExpRefNode;
+            varNameList.insert( refNode.$token.txt );
+            self.addLocalVar( firstToken.pos, false, false, refNode.$token.txt,
+                              expNode.$expType.$orgTypeInfo, false, true );
+         }
+         else {
+            self.addErrMess( expNode.$pos,
+                             "This type isn't nilable. -- %s"
+                             ( expNode.$expType.getTxt() ) );
+         }
+      }
+   }
+
+   let block = self.analyzeBlock( .IfUnwrap, scope );
+
+   self.popScope();
+
+   let mut elseBlock:Ast.BlockNode! = nil;
+   nextToken = self.getToken( true );
+   if nextToken.txt == "else" {
+      elseBlock = self.analyzeBlock( .When );
+   }
+   else {
+      self.pushback();
+   }
+
+   return Ast.WhenNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
       varNameList, expNodeList, block, elseBlock );
 }

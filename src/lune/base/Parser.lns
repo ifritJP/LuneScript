@@ -435,7 +435,7 @@ fn StreamParser.parse() mut : Token[]! {
 @param column 現在の解析行内の位置
     */
 
-   let addVal = fn ( kind: TokenKind, val: str, column: int ) : stem {
+   let addVal = fn ( kind: TokenKind, val: str, column: int ) {
       fn createInfo( mut tokenKind: TokenKind, token: str, tokenColumn: int ): Token {
          if tokenKind == .Symb {
             if self.keywordSet[ token ] {

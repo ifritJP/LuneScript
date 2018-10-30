@@ -1,5 +1,70 @@
-{
-   break;
+fn func(val:int) {
+   while true {
+      switch val {
+         default {
+            return;
+         }
+      }
+   }
+   return;  // error
 }
 
-return 1;
+fn func(val:int) {
+   while 1 {
+      switch val {
+         default {
+            return;
+         }
+      }
+   }
+   return;
+}
+
+fn func(val:int) {
+   while 1 {
+      switch val {
+         default {
+            break;
+         }
+      }
+   }
+   return;
+}
+
+fn func(val:int) {
+   while true {
+      switch val {
+         case 1 {
+            return;
+         }
+         default {
+            return;
+         }
+      }
+   }
+   return; // error
+}
+
+fn func(val:int) {
+   while true {
+      switch val {
+         case 1 {
+            break;
+         }
+         default {
+            return;
+         }
+      }
+   }
+   return;
+}
+
+
+
+
+{
+   break; // error
+}
+
+return 1;  // error
+

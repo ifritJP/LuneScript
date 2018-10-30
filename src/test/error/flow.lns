@@ -1,0 +1,78 @@
+{
+   fn func1(): __ { // error
+   }
+}
+
+{
+   fn func(val:int):__ {  // error
+      if val == 1 {  
+         return;  // error
+      }  
+   }  
+}
+
+{
+   fn func(val:int):__ {
+      error( "" );
+   }  
+}
+
+{
+   fn func(val:int):__ { // error
+      if val == 1 {
+         error( "" );
+      }
+   }  
+}
+
+{
+   fn func(val:int):__ {
+      if val == 1 {
+         error( "" );
+      }
+      else {
+         error( "" );
+      }
+   }  
+}
+
+{
+   fn func(val:int):__ {
+      if val == 1 {
+         error( "" );
+      }
+      error( "" );
+   }  
+}
+
+{
+   fn func(val:int):__ {
+      if val == 1 {
+         return;  // error
+      }
+      error( "" );
+   }  
+}
+
+{
+   fn func(val:int):__ {  // error
+      switch val {
+         case 1 {
+            error( "" );
+         }
+      }
+   }  
+}
+
+{
+   fn func(val:int):__ {
+      switch val {
+         case 1 {
+            error( "" );
+         }
+         default {
+            error( "" );
+         }
+      }
+   }  
+}

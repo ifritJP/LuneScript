@@ -570,6 +570,7 @@ nilable 型から本来の値に戻すには、次のいずれかの syntax を�
 - sync!
 - if!
 - if! let
+- when!  
   
   
 ** nilable 関連の仕様
@@ -749,11 +750,27 @@ if! let var[,var,...] = exp[,exp,...] block [ else elseblock ];
 #+END_SRC
 
 exp には nilable な式を指定します。
-exp が nil でなかった場合、 block を実行します。
-exp が nil だった場合、 elseblock を実行します。
+全ての exp が nil でなかった場合、 block を実行します。
+いずれかの exp が nil だった場合、 elseblock を実行します。
 
 block 内の処理では var で宣言した変数にアクセス出来ます。
 var の変数には exp の unwrap の結果が格納されます。
+
+**** when!
+
+when! は、unwrap 処理による条件分岐です。
+
+#+BEGIN_SRC lns
+if! var[,var,...] block [ else elseblock ];
+#+END_SRC
+
+var には変数を指定します。
+全ての var が nil でなかった場合、 block を実行します。
+いずれかの var が nil だった場合、 elseblock を実行します。
+
+block 内の処理では var は unwrap された型となります。
+また、block 内では var に値を代入することは出来ません。
+
 
 ** 一般制御文
 
@@ -895,6 +912,22 @@ fn plus1( val1: int, val2: int ) : int, int {
   return val1 + 1, val2 + 1;
 }
 #+END_SRC
+
+*** 処理を戻さない関数
+
+os.exit() など、その関数をコールすると処理を戻さない関数があります。
+
+そのような関数を作成する場合、
+戻り値の型として次のように ~__~ を宣言する必要があります。
+
+#+BEGIN_SRC lns
+fn func( ... ) : __ {
+   os.exit( 1 );
+}
+#+END_SRC
+
+なお、 戻り値の型に ~__~ を指定した場合は、
+return などで関数の処理を抜けることは出来ません。
 
 
 *** 可変長引数

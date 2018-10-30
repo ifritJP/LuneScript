@@ -76,6 +76,7 @@ pub fn outputLuneMod( dir:str! ):str! {
    fileObj.write( LuaMod.getCode( .Finalize ) );
    
    fileObj.close();
+   return nil;
 }
 
 pub fn analyze( argList: str[] ) : Option {
@@ -153,7 +154,6 @@ usage:
             }
             else {
                Util.err( "unknown mode -- %s" ( arg ) );
-               os.exit( 1 );
             }
          }
          else {
