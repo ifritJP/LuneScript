@@ -2805,6 +2805,52 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    return Ast.DeclEnumNode.create( self.nodeManager, firstToken.pos, {enumTypeInfo}, accessMode, name, valueList, scope )
 end
 
+function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token )
+
+   local retTypeInfoList = {}
+   if token.txt == ":" then
+      while true do
+         local refTypeNode = self:analyzeRefType( accessMode, true )
+         local retType = refTypeNode:get_expType()
+         if pubToExtFlag and not Ast.isPubToExternal( retType:get_accessMode() ) then
+            self:addErrMess( refTypeNode:get_pos(), string.format( "this is not public type -- %s", retType:getTxt(  )) )
+         end
+         
+         table.insert( retTypeInfoList, retType )
+         token = self:getToken(  )
+         if token.txt ~= "," then
+            break
+         end
+         
+      end
+      
+   end
+   
+   return retTypeInfoList, token
+end
+
+function TransUnit:analyzeDeclForm( accessMode, firstToken )
+
+   local name = self:getSymbolToken(  )
+   self:checkNextToken( "(" )
+   local argList = {}
+   local funcBodyScope = self:pushScope( false )
+   local nextToken = self:analyzeDeclArgList( accessMode, argList )
+   self:checkToken( nextToken, ")" )
+   local retTypeList = {}
+   nextToken = self:getToken(  )
+   retTypeList, nextToken = self:analyzeRetTypeList( Ast.isPubToExternal( accessMode ), accessMode, nextToken )
+   self:checkToken( nextToken, ";" )
+   self:popScope(  )
+   local argTypeInfoList = {}
+   for __index, argNode in pairs( argList ) do
+      table.insert( argTypeInfoList, argNode:get_expType() )
+   end
+   
+   local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, self:getCurrentNamespaceTypeInfo(  ), false, false, false, accessMode, name.txt, argTypeInfoList, retTypeList, false )
+   self.scope:add( Ast.SymbolKind.Fun, false, false, name.txt, formType, accessMode, false, false, false )
+end
+
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
 
    if not staticFlag then
@@ -2843,6 +2889,9 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
       return self:analyzeDeclMacro( accessMode, firstToken )
    elseif token.txt == "enum" then
       return self:analyzeDeclEnum( accessMode, firstToken )
+   elseif token.txt == "form" then
+      self:analyzeDeclForm( accessMode, firstToken )
+      return self:createNoneNode( firstToken.pos )
    end
    
    return nil
@@ -3042,7 +3091,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          end
          
          hasInitBlock = true
-         for symbolName, symbolInfo in pairs( self.scope:get_symbol2TypeInfoMap() ) do
+         for symbolName, symbolInfo in pairs( self.scope:get_symbol2SymbolInfoMap() ) do
             if symbolInfo:get_staticFlag() then
                symbolInfo:set_hasValueFlag( false )
             end
@@ -3404,7 +3453,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          local _switchExp = (_lune.unwrap( name) ).txt
          if _switchExp == "__init" then
             kind = Ast.NodeKind.get_DeclConstr()
-            for symbolName, symbolInfo in pairs( self.scope:get_symbol2TypeInfoMap() ) do
+            for symbolName, symbolInfo in pairs( self.scope:get_symbol2SymbolInfoMap() ) do
                if not symbolInfo:get_staticFlag() then
                   symbolInfo:set_hasValueFlag( false )
                end
@@ -3497,19 +3546,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    local retTypeInfoList = {}
-   if token.txt == ":" then
-      repeat 
-         local refTypeNode = self:analyzeRefType( accessMode, true )
-         local retType = refTypeNode:get_expType()
-         if pubToExtFlag and not Ast.isPubToExternal( retType:get_accessMode() ) then
-            self:addErrMess( refTypeNode:get_pos(), string.format( "this is not public type -- %s", retType:getTxt(  )) )
-         end
-         
-         table.insert( retTypeInfoList, retType )
-         token = self:getToken(  )
-      until token.txt ~= ","
-   end
-   
+   retTypeInfoList, token = self:analyzeRetTypeList( pubToExtFlag, accessMode, token )
    local typeInfo = Ast.NormalTypeInfo.createFunc( abstractFlag, false, funcBodyScope, typeKind, self:getCurrentNamespaceTypeInfo(  ), false, false, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
    if name ~= nil then
       local parentScope = funcBodyScope:get_parent(  )
@@ -4554,7 +4591,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    end
    
    if not fieldTypeInfo then
-      for name, val in pairs( classScope:get_symbol2TypeInfoMap() ) do
+      for name, val in pairs( classScope:get_symbol2SymbolInfoMap() ) do
          Util.log( string.format( "debug: %s, %s", name, val) )
       end
       
@@ -4660,6 +4697,7 @@ function TransUnit:dumpSymbolComp( writer, scope, pattern )
    end
     )
 end
+
 
 function TransUnit:checkComp( token, callback )
 

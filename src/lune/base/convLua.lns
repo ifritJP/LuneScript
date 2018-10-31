@@ -89,6 +89,7 @@ class convFilter extend Ast.Filter (oStream) {
    pri let mut pubFuncName2InfoMap: Map<str,PubFuncInfo>;
    pri let mut needIndent: bool;
    pri let mut macroDepth: int;
+   pri let mut macroVarSymMap: Map<&Ast.SymbolInfo,bool>;
    pri let moduleTypeInfo: &Ast.TypeInfo;
    pri let moduleSymbolKind: Ast.SymbolKind;
    pri let mut needModuleObj: bool;
@@ -100,6 +101,7 @@ class convFilter extend Ast.Filter (oStream) {
                   moduleSymbolKind: Ast.SymbolKind, separateLuneModule:bool ) 
    {
       //Util.errorLog( "__init: %s" (mode) );
+      self.macroVarSymMap = {};
       self.needModuleObj = true;
       self.indentQueue = [ 0 ];
       self.moduleSymbolKind = moduleSymbolKind;
@@ -478,7 +480,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
                              ( classTypeId, classTypeId) );
                
-               forsort symbolInfo, fieldName in scope.$symbol2TypeInfoMap {
+               forsort symbolInfo, fieldName in scope.$symbol2SymbolInfoMap {
                   let typeInfo = symbolInfo.$typeInfo;
                   if symbolInfo.$kind == Ast.SymbolKind.Mbr or
                      symbolInfo.$kind == Ast.SymbolKind.Var //or
@@ -1225,13 +1227,18 @@ pub override fn convFilter.processDeclMacro(
 pub override fn convFilter.processExpMacroStat( 
    node: Ast.ExpMacroStatNode, parent: &Ast.Node ) mut
 {
-   foreach token, index in node.get_expStrList() {
-      if index ~= 1 {
-         self.write( '..' );
-      }    
-      
-      filter( token, self, node );
-   }  
+   if #node.$expStrList == 0 {
+      self.write( "''" );
+   }
+   else {
+      foreach token, index in node.$expStrList {
+         if index ~= 1 {
+            self.write( '..' );
+         }    
+         
+         filter( token, self, node );
+      }
+   }
 };    
 
 
@@ -1569,10 +1576,11 @@ pub override fn convFilter.processDeclVar(
 
    if self.macroDepth > 0 {
       self.writeln( "" );
-      foreach var, index in varList {
-         let varName = var.$name.txt;
+      foreach symbolInfo, index in node.$symbolInfoList {
+         let varName = symbolInfo.$name;
          self.writeln( "table.insert( macroVar._names, '%s' )" ( varName ) );
          self.writeln( "macroVar.%s = %s" ( varName, varName ) );
+         self.macroVarSymMap[ symbolInfo ] = true;
       }
    }  
 };    
@@ -2092,11 +2100,16 @@ pub override fn convFilter.processExpOp2(
 pub override fn convFilter.processExpRef( 
    node: Ast.ExpRefNode, parent: &Ast.Node ) mut
 {
-   if node.$symbolInfo.$accessMode == .Pub and
-      node.$symbolInfo.$kind == Ast.SymbolKind.Var
-   {  
-      if self.needModuleObj {
-         self.write( "_moduleObj." );
+   if self.macroVarSymMap[ node.$symbolInfo.getOrg() ] {
+      self.write( "macroVar." );
+   }
+   else {
+      if node.$symbolInfo.$accessMode == .Pub and
+         node.$symbolInfo.$kind == Ast.SymbolKind.Var
+      {  
+         if self.needModuleObj {
+            self.write( "_moduleObj." );
+         }  
       }
    }
    self.write( node.$token.txt );

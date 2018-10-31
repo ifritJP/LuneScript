@@ -612,7 +612,7 @@ class _TypeInfoNormal extend _TypeInfo {
          else {
             if self.kind == Ast.TypeInfoKind.Class or
                self.kind == Ast.TypeInfoKind.IF
-            {             
+            {
                let baseScope = unwrap param.typeId2Scope[ self.baseId ];
 
                let mut scope = new Ast.Scope(

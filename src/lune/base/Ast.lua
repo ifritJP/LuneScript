@@ -300,6 +300,10 @@ end
 local NormalSymbolInfo = {}
 setmetatable( NormalSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.NormalSymbolInfo = NormalSymbolInfo
+function NormalSymbolInfo:getOrg(  )
+
+   return self
+end
 function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag )
    local obj = {}
    NormalSymbolInfo.setmeta( obj )
@@ -392,7 +396,7 @@ function Scope.new( parent, classFlag, inheritList )
 end
 function Scope:__init(parent, classFlag, inheritList) 
    self.parent = _lune.unwrapDefault( parent, self)
-   self.symbol2TypeInfoMap = {}
+   self.symbol2SymbolInfoMap = {}
    self.inheritList = inheritList
    self.classFlag = classFlag
    self.symbolId2DataOwnerInfo = {}
@@ -408,7 +412,7 @@ end
 function Scope:getTypeInfoChild( name )
 
    do
-      local _exp = self.symbol2TypeInfoMap[name]
+      local _exp = self.symbol2SymbolInfoMap[name]
       if _exp ~= nil then
          return _exp:get_typeInfo()
       end
@@ -418,7 +422,7 @@ function Scope:getTypeInfoChild( name )
 end
 function Scope:getSymbolInfoChild( name )
 
-   return self.symbol2TypeInfoMap[name]
+   return self.symbol2SymbolInfoMap[name]
 end
 function Scope:setData( symbolInfo )
 
@@ -433,8 +437,8 @@ end
 function Scope:get_parent()       
    return self.parent         
 end
-function Scope:get_symbol2TypeInfoMap()       
-   return self.symbol2TypeInfoMap         
+function Scope:get_symbol2SymbolInfoMap()       
+   return self.symbol2SymbolInfoMap         
 end
 function Scope:get_inheritList()       
    return self.inheritList         
@@ -693,11 +697,12 @@ function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
 
+
 function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
 
    if self.classFlag then
       if includeSelfFlag then
-         for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
+         for __index, symbolInfo in pairs( self.symbol2SymbolInfoMap ) do
             if symbolInfo:canAccess( fromScope ) then
                if not callback( symbolInfo ) then
                   return false
@@ -729,7 +734,7 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
    if self.classFlag then
       if includeSelfFlag then
          do
-            local _exp = self.symbol2TypeInfoMap[name]
+            local _exp = self.symbol2SymbolInfoMap[name]
             if _exp ~= nil then
                local symbolInfo = _exp:canAccess( fromScope )
                if  nil == symbolInfo then
@@ -776,7 +781,7 @@ end
 function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
 
    do
-      local _exp = self.symbol2TypeInfoMap[name]
+      local _exp = self.symbol2SymbolInfoMap[name]
       if _exp ~= nil then
          local symbolInfo = _exp:canAccess( fromScope )
          if  nil == symbolInfo then
@@ -858,7 +863,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
    
    if validThisScope then
       do
-         local _exp = self.symbol2TypeInfoMap[name]
+         local _exp = self.symbol2SymbolInfoMap[name]
          if _exp ~= nil then
             return _exp:canAccess( fromScope )
          end
@@ -877,7 +882,7 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
 
    if self.classFlag then
       do
-         local _exp = self.symbol2TypeInfoMap["self"]
+         local _exp = self.symbol2SymbolInfoMap["self"]
          if _exp ~= nil then
             callback( _exp )
          end
@@ -886,7 +891,7 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
    end
    
    if moduleScope == fromScope or not self.classFlag then
-      for __index, symbolInfo in pairs( self.symbol2TypeInfoMap ) do
+      for __index, symbolInfo in pairs( self.symbol2SymbolInfoMap ) do
          if not callback( symbolInfo ) then
             return 
          end
@@ -904,7 +909,7 @@ end
 function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable, hasValueFlag )
 
    local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag)
-   self.symbol2TypeInfoMap[name] = symbolInfo
+   self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo
 end
 
@@ -969,7 +974,7 @@ local function dumpScopeSub( scope, prefix, readyIdSet )
          
          do
             local __sorted = {}
-            local __map = _exp:get_symbol2TypeInfoMap()
+            local __map = _exp:get_symbol2SymbolInfoMap()
             for __key in pairs( __map ) do
                table.insert( __sorted, __key )
             end
@@ -1090,6 +1095,10 @@ end
 local AccessSymbolInfo = {}
 setmetatable( AccessSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.AccessSymbolInfo = AccessSymbolInfo
+function AccessSymbolInfo:getOrg(  )
+
+   return self.symbolInfo:getOrg(  )
+end
 function AccessSymbolInfo:get_mutable(  )
 
    do

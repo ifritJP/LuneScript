@@ -35,11 +35,11 @@ define cutMeta
 endef
 
 define transwork
-	(cd $1; $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2)
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2)
 endef
 
 define exeLune
-	(cd $1; $(LUA) lune/base/base.lua $2 $3 $4)
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua $2 $3 $4)
 endef
 
 define exeComp

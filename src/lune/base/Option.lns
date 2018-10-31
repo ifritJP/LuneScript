@@ -44,11 +44,17 @@ pub enum ModeKind {
 
 pub class Option {
    pub let mut mode:ModeKind;
+   /** 解析対象のモジール名。 comp モードの時に使用。 */
    pub let analyzeModule:str!;
+   /** 解析位置。comp モードの時に使用。 */
    pub let analyzePos: Parser.Position!;
+   /** 出力ディレクトリ。 save, SAVE モードの時に使用*/
    pub let outputDir:str!;
+   /** 処理対象のスクリプトファイルパス */
    pub let mut scriptPath: str;
+   /** プロファイルする場合 true */
    pub let mut validProf:bool;
+   /** true の場合 require( 'lune.base._lune' ) する */
    pub let mut useLuneModule:bool;
    pub fn __init() {
       self.validProf = false;

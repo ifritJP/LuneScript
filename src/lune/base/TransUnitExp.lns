@@ -632,7 +632,7 @@ fn TransUnit.analyzeAccessClassField(
       }
    }
    if not fieldTypeInfo {
-      foreach val, name in classScope.$symbol2TypeInfoMap {
+      foreach val, name in classScope.$symbol2SymbolInfoMap {
          Util.log( "debug: %s, %s" ( name, val ) );
       }
       self.error( "not found field typeInfo: %s.%s"
@@ -644,7 +644,7 @@ fn TransUnit.analyzeAccessClassField(
 
 fn TransUnit.dumpComp(
    writer: Writer.Writer, pattern: str,
-   symbolInfo: Ast.SymbolInfo, getterFlag:bool ): bool
+   symbolInfo: &Ast.SymbolInfo, getterFlag:bool ): bool
 {
    let symbol = symbolInfo.$name;
    if pattern == "" or symbol.find( pattern ) {
@@ -697,7 +697,7 @@ fn TransUnit.dumpFieldComp(
 
    scope.filterTypeInfoField(
       true, self.scope,
-      fn ( symbolInfo: Ast.SymbolInfo ) : bool {
+      fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
          if ( isPrefixType ) {
             if not symbolInfo.$staticFlag and
                not symbolInfo.$typeInfo.$staticFlag and
@@ -734,12 +734,14 @@ fn TransUnit.dumpFieldComp(
 fn TransUnit.dumpSymbolComp( writer: Writer.Writer, scope: &Ast.Scope, pattern: str ) {
    scope.filterSymbolTypeInfo(
       scope, self.moduleScope,
-      fn ( symbolInfo: Ast.SymbolInfo ) : bool {
+      fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
          return self.dumpComp(writer, pattern, symbolInfo, false );
       });    
 }
 
-fn TransUnit.checkComp( token:&Parser.Token, callback:form ) 
+form checkCompForm( jsonWriter: Writer.JSON, prefix:str  );
+
+fn TransUnit.checkComp( token:&Parser.Token, callback:checkCompForm ) 
 {
    if self.analyzeMode == .Complete and
       self.analyzePos.lineNo == token.pos.lineNo and

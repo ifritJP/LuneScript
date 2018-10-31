@@ -326,7 +326,7 @@ fn TransUnit.analyzeDeclMacro(
       let mut parser = new Parser.WrapParser(
          self.parser, "decl macro %s" (nameToken.txt) );
 
-      // foreach symbolInfo, symbol in scope.$symbol2TypeInfoMap {
+      // foreach symbolInfo, symbol in scope.$symbol2SymbolInfoMap {
       //    scope.add( symbol, symbolInfo.$typeInfo, "local", false );
       // }
 
@@ -609,6 +609,65 @@ fn TransUnit.analyzeDeclEnum(
 }
 
 
+fn TransUnit.analyzeRetTypeList(
+   pubToExtFlag:bool, accessMode:Ast.AccessMode, mut token:&Parser.Token ) mut :
+   List<&Ast.TypeInfo>, &Parser.Token
+{
+   let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
+   if token.txt == ":" {
+      while true {
+         let refTypeNode = self.analyzeRefType( accessMode, true );
+         let retType = refTypeNode.$expType;
+         if pubToExtFlag and not Ast.isPubToExternal( retType.$accessMode )
+         {  
+            self.addErrMess( refTypeNode.$pos,
+                             "this is not public type -- %s" (retType.getTxt()) );
+         }  
+         retTypeInfoList.insert( retType );
+         token = self.getToken();
+         if token.txt ~= "," {
+            break;
+         }  
+      }
+   }
+   return retTypeInfoList, token;
+}
+
+
+fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Token ) mut {
+   let name = self.getSymbolToken();
+   self.checkNextToken( "(" );
+   let mut argList:List<&Ast.Node> = [];
+
+   let mut funcBodyScope = self.pushScope( false );
+   
+   let mut nextToken = self.analyzeDeclArgList( accessMode, argList );
+
+   self.checkToken( nextToken, ")" );
+
+   let mut retTypeList:List<&Ast.TypeInfo> = [];
+   nextToken = self.getToken();
+   retTypeList, nextToken = self.analyzeRetTypeList(
+      Ast.isPubToExternal( accessMode ), accessMode, nextToken );
+
+   self.checkToken( nextToken, ";" );
+
+   self.popScope();
+
+   let mut argTypeInfoList:List<&Ast.TypeInfo> = [];
+   foreach argNode in argList {
+      argTypeInfoList.insert( argNode.$expType );
+   }
+
+   let formType = Ast.NormalTypeInfo.createFunc(
+      false, false, nil, .Func,
+      self.getCurrentNamespaceTypeInfo(), false, false,
+      false, accessMode, name.txt, argTypeInfoList, retTypeList, false );
+
+   self.scope.add(
+      .Fun, false, false, name.txt, formType, accessMode, false, false, false );
+}
+
 fn TransUnit.analyzeDecl(
    accessMode: Ast.AccessMode, mut staticFlag: bool,
    firstToken: &Parser.Token, mut token: &Parser.Token ) mut : Ast.Node!
@@ -656,7 +715,11 @@ fn TransUnit.analyzeDecl(
    }
    elseif token.txt == "enum" {
       return self.analyzeDeclEnum( accessMode, firstToken );
-   }  
+   }
+   elseif token.txt == "form" {
+      self.analyzeDeclForm( accessMode, firstToken );
+      return self.createNoneNode( firstToken.pos );
+   }
 
    return nil;
 }
@@ -870,7 +933,7 @@ fn TransUnit.analyzeClassBody(
             self.error( "%s can not have __init method" (mode) );
          }
          hasInitBlock = true;
-         foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
+         foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
             if symbolInfo.$staticFlag {
                // 一旦全てのメンバを値なし状態にセットする
                symbolInfo.set_hasValueFlag( false );
@@ -1244,7 +1307,6 @@ pri fn TransUnit.addMethod(
 
 
 
-
 fn TransUnit.analyzeDeclFunc(
    declFuncMode: DeclFuncMode, abstractFlag: bool, overrideFlag: bool,
    mut accessMode: Ast.AccessMode,
@@ -1296,7 +1358,7 @@ fn TransUnit.analyzeDeclFunc(
       switch (unwrap name).txt {
          case "__init" {
             kind = Ast.NodeKind.$DeclConstr;
-            foreach symbolInfo, symbolName in self.scope.$symbol2TypeInfoMap {
+            foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
                if not symbolInfo.$staticFlag {
                   // 一旦全てのメンバを値なし状態にセットする
                   symbolInfo.set_hasValueFlag( false );
@@ -1397,22 +1459,9 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
-   
-   
+
    let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
-   if token.txt == ":" {
-      repeat {
-         let refTypeNode = self.analyzeRefType( accessMode, true );
-         let retType = refTypeNode.$expType;
-         if pubToExtFlag and not Ast.isPubToExternal( retType.$accessMode )
-         {
-            self.addErrMess( refTypeNode.$pos,
-                             "this is not public type -- %s" (retType.getTxt()) );
-         }
-         retTypeInfoList.insert( retType );
-         token = self.getToken();
-      } token.txt ~= ",";
-   }
+   retTypeInfoList, token = self.analyzeRetTypeList( pubToExtFlag, accessMode, token );
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       abstractFlag, false, funcBodyScope,

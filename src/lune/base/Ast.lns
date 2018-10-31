@@ -156,6 +156,8 @@ pub abstract class SymbolInfo {
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
    pub abstract fn canAccess( fromScope:&Scope ): &SymbolInfo!;
+
+   pub abstract fn getOrg(): &SymbolInfo;
 }
 
 
@@ -189,6 +191,11 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let kind: SymbolKind { pub };
    /** このシンボルがデータを保持しているかどうか */
    pri let hasValueFlag: bool { pub, pub };
+
+   pub override fn getOrg(): &SymbolInfo {
+      return self;
+   }
+
 
    pub fn __init(
       kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
@@ -230,8 +237,8 @@ pub class Scope {
    // 親のスコープ。 これが self と等しい場合は root。
    pri let mut parent: Scope { pub };
    // このスコープに登録されているシンボル情報。
-   // シンボル名 → TypeInfo のマップ。
-   pri let mut symbol2TypeInfoMap: Map<str,&SymbolInfo> { pub };
+   // シンボル名 → SymbolInfo のマップ。
+   pri let mut symbol2SymbolInfoMap: Map<str,&SymbolInfo> { pub };
    // このスコープがクラスのスコープかどうか。
    pri let classFlag: bool;
    // 継承しているスコープ。
@@ -242,7 +249,7 @@ pub class Scope {
       
    pub fn __init( parent: Scope!, classFlag: bool, inheritList: List<&Scope> ) {
       self.parent = unwrap parent default self;
-      self.symbol2TypeInfoMap = {};
+      self.symbol2SymbolInfoMap = {};
       self.inheritList = inheritList;
       self.classFlag = classFlag;
       self.symbolId2DataOwnerInfo = {};
@@ -257,14 +264,14 @@ pub class Scope {
    }
    
    pub fn getTypeInfoChild( name: str ) : &TypeInfo! {
-      if! self.symbol2TypeInfoMap[ name ] {
+      if! self.symbol2SymbolInfoMap[ name ] {
          return _exp.$typeInfo;
       } 
       return nil;
    }
 
    pub fn getSymbolInfoChild( name: str ) : &SymbolInfo! {
-      return self.symbol2TypeInfoMap[ name ];
+      return self.symbol2SymbolInfoMap[ name ];
    }
    
    pub fn setData( symbolInfo:&SymbolInfo ) mut {
@@ -481,12 +488,14 @@ pub class TypeInfo {
    }
 }
 
+pub form filterForm( symbolInfo:&SymbolInfo ): bool;
+
 pub fn Scope.filterTypeInfoField(
-   includeSelfFlag: bool!, fromScope:&Scope, callback:form ):bool
+   includeSelfFlag: bool!, fromScope:&Scope, callback:filterForm ):bool
 {
    if self.classFlag {
       if includeSelfFlag {
-         foreach symbolInfo in self.symbol2TypeInfoMap {
+         foreach symbolInfo in self.symbol2SymbolInfoMap {
             if symbolInfo.canAccess( fromScope ) {
                if not callback( symbolInfo ) {
                   return false;
@@ -511,7 +520,7 @@ pub fn Scope.getSymbolInfoField(
 {
    if self.classFlag {
       if includeSelfFlag {
-         if! self.symbol2TypeInfoMap$[ name ] {
+         if! self.symbol2SymbolInfoMap$[ name ] {
             let! symbolInfo = _exp.canAccess( fromScope ) {
                return nil;
             };
@@ -552,7 +561,7 @@ pub fn Scope.getTypeInfoField(
 pub fn Scope.getSymbolInfo(
    name: str, fromScope:&Scope, onlySameNsFlag:bool ) : &SymbolInfo!
 {
-   if! self.symbol2TypeInfoMap[ name ] {
+   if! self.symbol2SymbolInfoMap[ name ] {
       let! symbolInfo = _exp.canAccess( fromScope ) {
          return nil;
       };
@@ -623,7 +632,7 @@ pub fn Scope.getSymbolTypeInfo(
       validThisScope = true;
    }
    if validThisScope {
-      if! self.symbol2TypeInfoMap[ name ] {
+      if! self.symbol2SymbolInfoMap[ name ] {
          return _exp.canAccess( fromScope );
       } 
    }
@@ -635,15 +644,15 @@ pub fn Scope.getSymbolTypeInfo(
 
 
 pub fn Scope.filterSymbolTypeInfo(
-   fromScope:&Scope, moduleScope:&Scope, callback:form )
+   fromScope:&Scope, moduleScope:&Scope, callback:filterForm )
 {
    if self.classFlag {
-      if! self.symbol2TypeInfoMap[ "self" ] {
+      if! self.symbol2SymbolInfoMap[ "self" ] {
          callback( _exp );
       }
    }
    if moduleScope == fromScope or not self.classFlag {
-      foreach symbolInfo in self.symbol2TypeInfoMap {
+      foreach symbolInfo in self.symbol2SymbolInfoMap {
          if not callback( symbolInfo ) {
             return;
          }  
@@ -663,7 +672,7 @@ pub fn Scope.add( kind: SymbolKind, canBeLeft:bool, canBeRight:bool,
    let mut symbolInfo = new NormalSymbolInfo(
       kind, canBeLeft, canBeRight,
       self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag );
-   self.symbol2TypeInfoMap[ name ] = symbolInfo;
+   self.symbol2SymbolInfoMap[ name ] = symbolInfo;
    return symbolInfo;
 }
 
@@ -741,7 +750,7 @@ fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
          Util.err("illegal");
       }   
       
-      forsort symbolInfo, symbol in _exp.$symbol2TypeInfoMap {
+      forsort symbolInfo, symbol in _exp.$symbol2SymbolInfoMap {
          Util.log( "scope: %s, %s, %s" ( prefix, _exp, symbol ) );
          if! let subScope = symbolInfo.$typeInfo.$scope {
             dumpScopeSub( subScope, prefix .. "  ", readyIdSet );
@@ -841,6 +850,10 @@ pub class AccessSymbolInfo extend SymbolInfo {
    pri let symbolInfo: SymbolInfo {pub};
    pri let prefixTypeInfo: TypeInfo! {pub};
    pri let overrideCanBeLeft: bool;
+
+   pub override fn getOrg(): &SymbolInfo {
+      return self.symbolInfo.getOrg();
+   }
 
    pub override fn get_mutable(): bool {
       if! self.prefixTypeInfo {

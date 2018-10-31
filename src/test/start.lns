@@ -639,3 +639,25 @@ pub let val = 100;
    _print( `{ func( nil, 2 ) } );
    _print( `{ func( 1, nil ) } );
 }
+
+{
+   macro _test() {
+      {  
+         let mut val = `{};
+         val = `{ print( "test" ); };
+      }  
+      ,,val;
+   }  
+   _test();
+}
+
+{
+   form form1( val:int ): int;
+   fn sub1( val:int ):int {
+      return 10 + val;
+   }  
+   fn func( testfunc:form1, val:int ) {
+      _print( `{ testfunc( val ) + 2 } );
+   }  
+   func( sub1, 3 );
+ }

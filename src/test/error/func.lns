@@ -77,3 +77,22 @@
    }  
    let val1, val2 = (func()); // error
 }
+
+{
+   form form1( val:int ): int;
+   fn sub1( val:int ):int {
+      return 10 + val;
+   }  
+   fn sub2( val:int, val2:int ):int {
+      return 10 + val;
+   }  
+   fn sub3( val:int ):real {
+      return 10.0 + val;
+   }  
+   fn func( testfunc:form1, val:int ) {
+      print( testfunc( val ) + 2 );
+   }  
+   func( sub1, 3 );
+   func( sub2, 3 ); // error
+   func( sub3, 3 ); // error
+}

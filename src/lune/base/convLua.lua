@@ -183,6 +183,7 @@ function convFilter.new( streamName, stream, metaStream, convMode, inMacro, modu
    return obj
 end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule) 
+   self.macroVarSymMap = {}
    self.needModuleObj = true
    self.indentQueue = {0}
    self.moduleSymbolKind = moduleSymbolKind
@@ -547,7 +548,7 @@ function convFilter:outputMeta( node )
                      self:writeln( string.format( "_typeId2ClassInfoMap[ %d ] = _classInfo%d", classTypeId, classTypeId) )
                      do
                         local __sorted = {}
-                        local __map = scope:get_symbol2TypeInfoMap()
+                        local __map = scope:get_symbol2SymbolInfoMap()
                         for __key in pairs( __map ) do
                            table.insert( __sorted, __key )
                         end
@@ -1296,12 +1297,18 @@ end
 
 function convFilter:processExpMacroStat( node, parent )
 
-   for index, token in pairs( node:get_expStrList(  ) ) do
-      if index ~= 1 then
-         self:write( '..' )
+   if #node:get_expStrList() == 0 then
+      self:write( "''" )
+   else
+    
+      for index, token in pairs( node:get_expStrList() ) do
+         if index ~= 1 then
+            self:write( '..' )
+         end
+         
+         filter( token, self, node )
       end
       
-      filter( token, self, node )
    end
    
 end
@@ -1661,10 +1668,11 @@ function convFilter:processDeclVar( node, parent )
    
    if self.macroDepth > 0 then
       self:writeln( "" )
-      for index, var in pairs( varList ) do
-         local varName = var:get_name().txt
+      for index, symbolInfo in pairs( node:get_symbolInfoList() ) do
+         local varName = symbolInfo:get_name()
          self:writeln( string.format( "table.insert( macroVar._names, '%s' )", varName) )
          self:writeln( string.format( "macroVar.%s = %s", varName, varName) )
+         self.macroVarSymMap[symbolInfo] = true
       end
       
    end
@@ -2198,9 +2206,15 @@ end
 
 function convFilter:processExpRef( node, parent )
 
-   if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
-      if self.needModuleObj then
-         self:write( "_moduleObj." )
+   if self.macroVarSymMap[node:get_symbolInfo():getOrg(  )] then
+      self:write( "macroVar." )
+   else
+    
+      if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
+         if self.needModuleObj then
+            self:write( "_moduleObj." )
+         end
+         
       end
       
    end
