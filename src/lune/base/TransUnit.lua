@@ -2847,8 +2847,8 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
       table.insert( argTypeInfoList, argNode:get_expType() )
    end
    
-   local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, self:getCurrentNamespaceTypeInfo(  ), false, false, false, accessMode, name.txt, argTypeInfoList, retTypeList, false )
-   self.scope:add( Ast.SymbolKind.Fun, false, false, name.txt, formType, accessMode, false, false, false )
+   local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, name.txt, argTypeInfoList, retTypeList, false )
+   self.scope:add( Ast.SymbolKind.Fun, false, false, name.txt, formType, accessMode, true, false, false )
 end
 
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )

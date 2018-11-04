@@ -652,11 +652,10 @@ pub let val = 100;
 }
 
 {
-   form form1( val:int ): int;
    fn sub1( val:int ):int {
       return 10 + val;
    }  
-   fn func( testfunc:form1, val:int ) {
+   fn func( testfunc:Sub2.form1, val:int ) {
       _print( `{ testfunc( val ) + 2 } );
    }  
    func( sub1, 3 );

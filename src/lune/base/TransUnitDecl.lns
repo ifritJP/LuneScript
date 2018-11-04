@@ -662,10 +662,10 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
    let formType = Ast.NormalTypeInfo.createFunc(
       false, false, nil, .Func,
       self.getCurrentNamespaceTypeInfo(), false, false,
-      false, accessMode, name.txt, argTypeInfoList, retTypeList, false );
+      true, accessMode, name.txt, argTypeInfoList, retTypeList, false );
 
    self.scope.add(
-      .Fun, false, false, name.txt, formType, accessMode, false, false, false );
+      .Fun, false, false, name.txt, formType, accessMode, true, false, false );
 }
 
 fn TransUnit.analyzeDecl(

@@ -1244,7 +1244,7 @@ _typeInfoList[291] = { skind=3, parentId = 448, typeId = 935, baseId = 1, txt = 
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {16}, children = {}, }
 _typeInfoList[292] = { skind = 0, parentId = 448, typeId = 936, nilable = true, orgTypeId = 935 }
 _typeInfoList[293] = { skind=3, parentId = 233, typeId = 938, baseId = 1, txt = 'filterForm',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {555}, retTypeId = {16}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {555}, retTypeId = {16}, children = {}, }
 _typeInfoList[294] = { skind = 0, parentId = 233, typeId = 939, nilable = true, orgTypeId = 938 }
 _typeInfoList[295] = { skind=3, parentId = 506, typeId = 941, baseId = 1, txt = 'filterTypeInfoField',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {17, 592, 938}, retTypeId = {16}, children = {}, }
