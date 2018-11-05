@@ -1468,7 +1468,7 @@ fn TransUnit.analyzeDeclFunc(
       typeKind, self.getCurrentNamespaceTypeInfo(),
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList, mutable );
-   
+
    when! name {
       let mut parentScope = funcBodyScope.get_parent();
       if accessMode == .Global {
@@ -1482,10 +1482,17 @@ fn TransUnit.analyzeDeclFunc(
             self.addErrMess( name.pos, err );
          }
 
-         self.protoFuncMap[ prottype ] = nil;
+         if self.protoFuncMap[ prottype ] {
+            self.protoFuncMap[ prottype ] = nil;     
+         }
+         else {
+            if not prottype.$autoFlag {
+               self.addErrMess( token.pos, "multiple define -- %s" (name.txt) );
+            }
+         }
       }
       
-      
+
       if kind == Ast.NodeKind.$DeclFunc {
          parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
       }

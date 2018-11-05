@@ -1362,7 +1362,6 @@ fn TransUnit.analyzeExpOp2(
          return exp;
       }
    }
-   return self.analyzeExpOp2( firstToken, exp, prevOpLevel );
 }
 
 fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacroStatNode {

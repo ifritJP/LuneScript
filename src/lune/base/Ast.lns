@@ -2088,10 +2088,12 @@ pub enum BreakKind {
 pub enum CheckBreakMode {
    /** フローを解析する */
    Normal,
-   /** フローを解析する (return の解析) */
+   /** フローを解析する (return 有無の解析)  */
    Return,
-   /** フローを解析しない (return の解析) */
+   /** フローを解析しない */
    IgnoreFlow,
+   /** フローを解析しない (return 有無の解析) */
+   IgnoreFlowReturn,
 }
 
 pub class Node {
@@ -2131,7 +2133,7 @@ pub class Node {
 
 @param checkMode モード
 */
-   pub fn getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
+   pub fn getBreakKind( checkMode:CheckBreakMode ): BreakKind {
       return .None;
    }
 }
@@ -2348,7 +2350,8 @@ macro _declNodeClass(
 }
 
 _declNodeClass( "None", Node, false, false, true, []);
-_declNodeClass( "Subfile", Node, false, false, true, []);
+_declNodeClass( "Subfile", Node, false, false, true,
+                [ { "usePath": "str!" } ]);
 _declNodeClass( "Import", Node, false, false, true,
                 [ { "modulePath": "str" },
                   { "moduleTypeInfo": "&TypeInfo" } ]
@@ -2442,18 +2445,49 @@ _declNodeClass( "Block", Node, false, false, true,
                 [ { "blockKind": "BlockKind" },
                   { "stmtList": "List<&Node>" } ]
 );
-pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
-   if checkMode == .IgnoreFlow {
-      foreach stmt in self.stmtList {
-         let node = self.stmtList[ #self.stmtList ];
-         let kind = node.getBreakKind( checkMode );
-         if kind == .Return {
-            return .Return;
+
+
+macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
+   {
+      let mut noneStat:stat[] = [];
+      if returnNoneStat {
+         noneStat.insert( `{ return .None } );
+      }
+   }
+
+   if ,,checkMode == .IgnoreFlowReturn {
+      if ,, work == .Return {
+         return .Return;
+      }
+      if ,, work == .NeverRet {
+         return .NeverRet;
+      }
+   }
+   else {
+      switch ,,work {
+         case .None {
+            if ,,checkMode == .Normal or ,,checkMode == .Return {
+               ,,noneStat;
+            }
          }
-         elseif kind == .NeverRet {
-            return .NeverRet;
+         default {
+            if ,,kind == .None or ,,kind > work {
+               kind = work;               
+            }
          }
       }
+   }
+}
+
+
+pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   if checkMode ~= .Normal and checkMode ~= .Return {
+      let mut kind = BreakKind.None;
+      foreach stmt in self.stmtList {
+         let work = stmt.getBreakKind( checkMode );
+         _setBreakKind(work, kind, false, checkMode );
+      }
+      return kind;
    }
    else {
       if #self.stmtList > 0 {
@@ -2480,37 +2514,7 @@ _declNodeClass( "If", Node, false, false, true,
 );
 
 
-macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
-   {
-      let mut noneStat:stat[] = [];
-      if returnNoneStat {
-         noneStat.insert( `{ return .None } );
-      }
-   }
-
-   if ,,checkMode == .IgnoreFlow {
-      if ,, work == .Return {
-         return .Return;
-      }
-      if ,, work == .NeverRet {
-         return .NeverRet;
-      }
-   }
-   else {
-      switch ,,work {
-         case .None {
-            ,,noneStat;
-         }
-         default {
-            if ,,kind == .None or ,,kind > work {
-               kind = work;               
-            }
-         }
-      }
-   }
-}
-
-pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
+pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    let mut hasElseFlag = false;
    let mut kind = BreakKind.None;
    foreach stmtInfo in self.stmtList {
@@ -2520,14 +2524,15 @@ pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
          hasElseFlag = true;
       }
    }
-   if hasElseFlag {
+   if hasElseFlag or ( checkMode ~= .Normal and checkMode ~= .Return ) {
       return kind;
    }
+   
    return .None;
 }
 
 
-_declNodeClass( "ExpList", Node, true, true, false,
+_declNodeClass( "ExpList", Node, nil, nil, false,
                 [ { "expList": "List<&Node>" } ]
 );
 pub override fn ExpListNode.canBeLeft():bool {
@@ -2558,7 +2563,7 @@ _declNodeClass( "Switch", Node, false, false, true,
                   { "default": "&BlockNode!" } ]
 );
 
-pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind
+pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
    let mut kind = BreakKind.None;
    foreach caseInfo in self.caseList {
@@ -2574,6 +2579,19 @@ pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind
    return .None;
 }
 
+
+macro _declLoopGetBreakKind( node:sym, blockMem:sym ) {
+
+   pub override fn ,,node.getBreakKind( checkMode:CheckBreakMode ): BreakKind
+   {  
+      let mut kind = BreakKind.None;
+      if checkMode ~= .Normal and checkMode ~= .Return {
+         return self. ,,blockMem .getBreakKind( checkMode );
+      }
+      return .None;
+   }  
+}
+
 _declNodeClass( "While", Node, false, false, true,
                 [ { "exp": "&Node" },
                   { "block": "&BlockNode" } ]
@@ -2584,6 +2602,8 @@ _declNodeClass( "Repeat", Node, false, false, true,
                   { "exp": "&Node" } ]
 );
 
+_declLoopGetBreakKind( RepeatNode, block );
+
 _declNodeClass( "For", Node, false, false, true,
                 [ { "block": "&BlockNode" },
                   { "val": "&Parser.Token" },
@@ -2592,11 +2612,17 @@ _declNodeClass( "For", Node, false, false, true,
                   { "delta": "&Node!" }] 
 );
 
+_declLoopGetBreakKind( ForNode, block );
+
+
 _declNodeClass( "Apply", Node, false, false, true,
                 [ { "varList": "List<&Parser.Token>" },
                   { "exp": "&Node" },
                   { "block": "&BlockNode" } ]
 );
+
+_declLoopGetBreakKind( ApplyNode, block );
+
 
 _declNodeClass( "Foreach", Node, false, false, true,
                 [ { "val": "&Parser.Token" },
@@ -2604,6 +2630,9 @@ _declNodeClass( "Foreach", Node, false, false, true,
                   { "exp": "&Node" },
                   { "block": "&BlockNode" } ]
 );
+
+_declLoopGetBreakKind( ForeachNode, block );
+
 
 _declNodeClass( "Forsort", Node, false, false, true,
                 [ { "val": "&Parser.Token" },
@@ -2613,16 +2642,19 @@ _declNodeClass( "Forsort", Node, false, false, true,
                   { "sort": "bool" } ]
 );
 
+_declLoopGetBreakKind( ForsortNode, block );
+
+
 _declNodeClass( "Return", Node, false, false, true,
                 [ { "expList": "&ExpListNode!" } ]
 );
-pub override fn ReturnNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
+pub override fn ReturnNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Return;
 }
 
 _declNodeClass( "Break", Node, false, false, true, [] );
 
-pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
+pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Break;
 }
 
@@ -2677,7 +2709,7 @@ _declNodeClass( "IfUnwrap", Node, false, false, true,
                   { "nilBlock": "&BlockNode!" } ]
 );
 
-pub override fn IfUnwrapNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
+pub override fn IfUnwrapNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    let mut kind = self.block.getBreakKind( checkMode );
    let mut work = kind;
    _setBreakKind( work, kind, true, checkMode );
@@ -2697,7 +2729,7 @@ _declNodeClass( "When", Node, false, false, true,
                   { "elseBlock": "&BlockNode!" } ]
 );
 
-pub override fn WhenNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
+pub override fn WhenNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    let mut kind = self.block.getBreakKind( checkMode );
    let mut work = kind;
    _setBreakKind( work, kind, true, checkMode );
@@ -2726,7 +2758,7 @@ _declNodeClass( "ExpOp1", Node, false, true, false,
                   { "exp": "&Node" } ]
 );
 
-_declNodeClass( "ExpRefItem", Node, true, true, false,
+_declNodeClass( "ExpRefItem", Node, nil, true, false,
                 [ { "val": "&Node" },
                   { "nilAccess": "bool" },
                   { "symbol": "str!" },
@@ -2747,7 +2779,7 @@ _declNodeClass( "ExpCall", Node, false, true, true,
                   { "argList": "&ExpListNode!" } ]
 );
 
-pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
+pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    if self.errorFunc {
       return .NeverRet;
    }
@@ -2767,13 +2799,14 @@ _declNodeClass( "ExpMacroExp", Node, false, false, true,
                 [ { "stmtList": "List<&Node>" } ]
 );
 
-pub override fn ExpMacroExpNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind {
-   if checkMode == .IgnoreFlow {
+pub override fn ExpMacroExpNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   if checkMode ~= .Normal and checkMode ~= .Return {
+      let mut kind = BreakKind.None;
       foreach stmt in self.stmtList {
-         if stmt.getBreakKind( checkMode ) == .Return {
-            return .Return;
-         }
+         let work = stmt.getBreakKind( checkMode );
+         _setBreakKind(work, kind, false, checkMode );
       }
+      return kind;
    }
    else {
       if #self.stmtList > 0 {
@@ -2795,7 +2828,7 @@ pub override fn StmtExpNode.canBeStatement():bool {
    return self.$exp.canBeStatement();
 }
 
-pub override fn StmtExpNode.getBreakKind( checkMode:CheckBreakMode! ):BreakKind {
+pub override fn StmtExpNode.getBreakKind( checkMode:CheckBreakMode ):BreakKind {
    return self.$exp.getBreakKind( checkMode );
 }
 
@@ -2804,7 +2837,7 @@ _declNodeClass( "ExpOmitEnum", Node, true, true, false,
                   { "enumTypeInfo": "&EnumTypeInfo" }]
 );
 
-_declNodeClass( "RefField", Node, true, true, false,
+_declNodeClass( "RefField", Node, nil, true, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&AccessSymbolInfo!" },
@@ -2821,7 +2854,7 @@ pub override fn RefFieldNode.canBeLeft():bool {
    return false;
 }
 
-_declNodeClass( "GetField", Node, false, true, false,
+_declNodeClass( "GetField", Node, nil, true, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&AccessSymbolInfo!" },
@@ -2869,9 +2902,9 @@ _declNodeClass( "DeclVar", Node, false, false, true,
                   { "syncBlock": "&BlockNode!" } ]
 );
 
-pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind
+pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
-   if checkMode == .IgnoreFlow {
+   if checkMode ~= .Normal and checkMode ~= .Return {
       if! let block = self.unwrapBlock {
          let kind = block.getBreakKind( checkMode );
          switch kind {
@@ -3096,40 +3129,56 @@ pub fn Node.getSymbolInfo(): List<&AccessSymbolInfo> {
 }
 
 
-pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode! ): BreakKind
+pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
-   if checkMode == .IgnoreFlow {
+   if checkMode ~= .Normal and checkMode ~= .Return {
+      let mut kind = BreakKind.None;
       foreach stmt in self.block.$stmtList {
          let work = stmt.getBreakKind( checkMode );
-         if work == .Return {
-            return work;
-         }
+         _setBreakKind(work, kind, false, checkMode );
       }
+      return kind;
    }
    else {
-      if self.exp.$kind == NodeKind.$LiteralBool {
-         let boolNode = self.exp@@LiteralBoolNode;
-         if boolNode.$token.txt ~= "true" {
-            return .None;
-         }  
-
-         let mut kind = BreakKind.None;
-         foreach stmt in self.block.$stmtList {
-            let mut mode = checkMode;
-            if checkMode == .Return {
-               mode = .IgnoreFlow;
-            }
-            let work = stmt.getBreakKind( mode );
-
-            _setBreakKind(work, kind, false, checkMode );
+      if self.exp.$expType.$nilable {
+         return .None;
+      }
+      if self.exp.$expType.equals( builtinTypeBool ) {
+         if self.exp.$kind == NodeKind.$LiteralBool {
+            let boolNode = self.exp@@LiteralBoolNode;
+            if boolNode.$token.txt == "false" {
+               return .None;
+            }  
          }
-         if kind == .Break {
+         else {
             return .None;
          }        
-         return kind;
       }
+      // 条件式が次のもの以外は無条件ループ。
+      //  - nilable でない
+      //  - bool 型の式でない
+      //  - false でもない
+      
+
+      // 無条件ループ用のフロー解析に変更する。
+      let mut mode = CheckBreakMode.IgnoreFlow;
+      if checkMode == .Return {
+         mode = .IgnoreFlowReturn;
+      }
+      let mut kind = BreakKind.None;
+      foreach stmt in self.block.$stmtList {
+         let work = stmt.getBreakKind( mode );
+         
+         _setBreakKind(work, kind, false, mode );
+      }
+      if kind == .Break {
+         return .None;
+      }
+      if kind == .Return {
+         return .Return;
+      }
+      return .NeverRet;
    }
-   return .None;
 }
 
 

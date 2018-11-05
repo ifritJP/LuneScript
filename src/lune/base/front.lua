@@ -26,6 +26,7 @@ local Option = require( 'lune.base.Option' )
 local dumpNode = require( 'lune.base.dumpNode' )
 local glueFilter = require( 'lune.base.glueFilter' )
 local Depend = require( 'lune.base.Depend' )
+local OutputDepend = require( 'lune.base.OutputDepend' )
 function _luneGetLocal( varName )
 
    local index = 1
@@ -124,10 +125,22 @@ local function createPaser( path, mod )
    error( "failed to open " .. path )
 end
 
-function Front:createAst( path, mod, analyzeModule, analyzeMode, pos )
+local function scriptPath2Module( path )
+
+   local mod = string.gsub( path, "/", "." )
+   return string.gsub( mod, "%.lns$", "" )
+end
+_moduleObj.scriptPath2Module = scriptPath2Module
+function Front:createPaser(  )
+
+   local mod = scriptPath2Module( self.option.scriptPath )
+   return createPaser( self.option.scriptPath, mod )
+end
+
+function Front:createAst( parser, mod, analyzeModule, analyzeMode, pos )
 
    local transUnit = TransUnit.TransUnit.new(convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos)
-   return transUnit:createAST( createPaser( path, mod ), false, mod )
+   return transUnit:createAST( parser, false, mod )
 end
 
 function Front:convert( ast, streamName, stream, metaStream, convMode, inMacro )
@@ -180,7 +193,7 @@ end
 
 function Front:loadFile( path, mod, onlyMeta )
 
-   local ast = self:createAst( path, mod, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( createPaser( path, mod ), mod, nil, TransUnit.AnalyzeMode.Compile )
    return self:loadFromAst( ast, path, onlyMeta )
 end
 
@@ -366,17 +379,10 @@ function Front:loadMeta( mod )
    error( string.format( "load meta error, %s", mod) )
 end
 
-local function scriptPath2Module( path )
-
-   local mod = string.gsub( path, "/", "." )
-   return string.gsub( mod, "%.lns$", "" )
-end
-_moduleObj.scriptPath2Module = scriptPath2Module
 function Front:dumpTokenize(  )
 
    frontInterface.setFront( self )
-   local mod = scriptPath2Module( self.option.scriptPath )
-   local parser = createPaser( self.option.scriptPath, mod )
+   local parser = self:createPaser(  )
    while true do
       local token = parser:getToken(  )
       if  nil == token then
@@ -396,7 +402,7 @@ function Front:dumpAst(  )
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.profile( self.option.validProf, function (  )
    
-      local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+      local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
       ast:get_node():processFilter( dumpNode.dumpFilter.new(), "", 0 )
    end
    , self.option.scriptPath .. ".profi" )
@@ -407,21 +413,21 @@ function Front:checkDiag(  )
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.setErrorCode( 0 )
-   self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Diag )
+   self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Diag )
 end
 
 function Front:complete(  )
 
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
-   self:createAst( self.option.scriptPath, mod, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+   self:createAst( self:createPaser(  ), mod, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
 end
 
 function Front:createGlue(  )
 
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
-   local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
    local glue = glueFilter.glueFilter.new(self.option.outputDir)
    ast:get_node():processFilter( glue )
 end
@@ -430,7 +436,7 @@ function Front:convertToLua(  )
 
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
-   local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
    local convMode = convLua.ConvMode.Convert
    if self.option.mode == Option.ModeKind.LuaMeta then
       convMode = convLua.ConvMode.ConvMeta
@@ -445,7 +451,7 @@ function Front:saveToLua(  )
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.profile( self.option.validProf, function (  )
    
-      local ast = self:createAst( self.option.scriptPath, mod, nil, TransUnit.AnalyzeMode.Compile )
+      local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
       local luaPath = self.option.scriptPath:gsub( "%.lns$", ".lua" )
       local metaPath = self.option.scriptPath:gsub( "%.lns$", ".meta" )
       if self.option.outputDir then
@@ -488,6 +494,13 @@ function Front:saveToLua(  )
             end
          end
          
+      end
+      
+      do
+         local dependsStream = self.option.dependsStream
+         if dependsStream ~= nil then
+            ast:get_node():processFilter( OutputDepend.createFilter( dependsStream ) )
+         end
       end
       
    end

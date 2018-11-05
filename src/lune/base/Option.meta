@@ -19,6 +19,8 @@ do
      name='validProf', staticFlag = false, accessMode = '1', typeId = 16 }
    _classInfo477.useLuneModule = {
      name='useLuneModule', staticFlag = false, accessMode = '1', typeId = 16 }
+   _classInfo477.dependsStream = {
+     name='dependsStream', staticFlag = false, accessMode = '1', typeId = 91 }
 end
 do
    local _classInfo229 = {}

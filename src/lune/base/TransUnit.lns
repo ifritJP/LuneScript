@@ -1279,7 +1279,7 @@ fn TransUnit.analyzeStatementList(
 {
    let mut breakKind = Ast.BreakKind.None;
    if #stmtList > 0 {
-      breakKind = stmtList[ #stmtList ].getBreakKind();
+      breakKind = stmtList[ #stmtList ].getBreakKind( .Normal );
    }
    
    let mut lastStatement:Ast.Node! = nil;
@@ -1287,11 +1287,12 @@ fn TransUnit.analyzeStatementList(
       let statement = self.analyzeStatement( termTxt );
       if! statement {
          if breakKind ~= .None {
-            self.addErrMess( _exp.$pos, "This statement is not reached" );
+            self.addErrMess( _exp.$pos,
+                             "This statement is not reached -- %s" (breakKind.$_txt) );
          }
          stmtList.insert( _exp );
          lastStatement = statement;
-         breakKind = _exp.getBreakKind();
+         breakKind = _exp.getBreakKind( .Normal );
       } 
       else {
          break;
@@ -1718,11 +1719,13 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Ast.SubfileNode {
          moduleName = "%s%s" (moduleName, nextToken.txt);
       } 
    }
+   let mut usePath:str! = nil;
    if moduleName == "" {
       self.addErrMess( token.pos, "illegal subfile" );
    }
    else {
       if mode.txt == "use" {
+         usePath = moduleName;
          if frontInterface.searchModule( moduleName ) {
             self.subfileList.insert( moduleName );
          }   
@@ -1744,7 +1747,7 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) mut : Ast.SubfileNode {
       } 
    }
    return Ast.SubfileNode.create(
-      self.nodeManager, token.pos, [ Ast.builtinTypeNone ] );
+      self.nodeManager, token.pos, [ Ast.builtinTypeNone ], usePath );
 }
 
 fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {

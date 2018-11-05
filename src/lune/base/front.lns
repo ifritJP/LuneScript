@@ -31,6 +31,7 @@ import lune.base.Option;
 import lune.base.dumpNode;
 import lune.base.glueFilter;
 import lune.base.Depend;
+import lune.base.OutputDepend;
 
 global fn _luneGetLocal( varName:str ):stem!
 {
@@ -65,7 +66,7 @@ global fn _luneSym2Str( val:stem! ):str! {
 }
 
 class Front extend (frontInterface.frontInterface) {
-   let option:Option.Option;
+   let mut option:Option.Option;
    let mut loadedMap:Map<str,Map<str,stem>>;
    let mut loadedMetaMap:Map<str,stem>;
    let mut convertedMap:Map<str,str>;
@@ -112,13 +113,25 @@ fn createPaser( path:str, mod:str ): Parser.Parser
    error( "failed to open " .. path );
 }
 
-fn Front.createAst( path:str, mod:str, analyzeModule:str!,
+pub fn scriptPath2Module( path:str ):str {
+   let mod = string.gsub( path, "/", "." );
+   return string.gsub( mod, "%.lns$", "" );
+}
+
+fn Front.createPaser(): Parser.Parser
+{
+   let mod = scriptPath2Module( self.option.scriptPath );
+   return createPaser( self.option.scriptPath, mod );
+}
+
+
+fn Front.createAst( parser:Parser.Parser, mod:str, analyzeModule:str!,
                     analyzeMode:TransUnit.AnalyzeMode,
                     pos:&Parser.Position! ): &TransUnit.ASTInfo
 {
    let mut transUnit = new TransUnit.TransUnit(
       new convLua.MacroEvalImp( self.option.mode ), analyzeModule, analyzeMode, pos );
-   return transUnit.createAST( createPaser( path, mod ), false, mod );
+   return transUnit.createAST( parser, false, mod );
 }
 
 fn Front.convert(
@@ -173,7 +186,7 @@ fn Front.loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem
 
 fn Front.loadFile( path:str, mod:str, onlyMeta:bool ): stem, stem
 {
-   let ast = self.createAst( path, mod, nil, .Compile );
+   let ast = self.createAst( createPaser( path, mod ), mod, nil, .Compile );
 
    return self.loadFromAst( ast, path, onlyMeta );
 }
@@ -319,16 +332,10 @@ fn Front.loadMeta( mod:str ) mut : stem {
    error( "load meta error, %s" ( mod ) );
 }
 
-pub fn scriptPath2Module( path:str ):str {
-   let mod = string.gsub( path, "/", "." );
-   return string.gsub( mod, "%.lns$", "" );
-}
-
 pub fn Front.dumpTokenize() mut {
    frontInterface.setFront( self );
 
-   let mod = scriptPath2Module( self.option.scriptPath );
-   let mut parser = createPaser( self.option.scriptPath, mod );
+   let mut parser = self.createPaser();
    while true {
       let! token = parser.getToken() {
          break;
@@ -344,7 +351,7 @@ pub fn Front.dumpAst() mut {
    Util.profile(
       self.option.validProf,
       fn() {
-	 let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+	 let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
 	 ast.$node.processFilter( new dumpNode.dumpFilter(), "", 0 );
       }, self.option.scriptPath .. ".profi" );
 }
@@ -354,14 +361,14 @@ pub fn Front.checkDiag() mut {
 
    let mod = scriptPath2Module( self.option.scriptPath );
    Util.setErrorCode( 0 );
-   self.createAst( self.option.scriptPath, mod, nil, .Diag );
+   self.createAst( self.createPaser(), mod, nil, .Diag );
 }
 
 pub fn Front.complete() mut {
    frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   self.createAst( self.option.scriptPath, mod,
+   self.createAst( self.createPaser(), mod,
 		   self.option.analyzeModule, .Complete, self.option.analyzePos );
 }
 
@@ -369,7 +376,7 @@ pub fn Front.createGlue() mut {
    frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+   let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
    let mut glue = new glueFilter.glueFilter( self.option.outputDir );
    ast.$node.processFilter( glue );
 }
@@ -378,7 +385,7 @@ pub fn Front.convertToLua() mut {
    frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+   let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
    let mut convMode = convLua.ConvMode.Convert;
    if self.option.mode == .LuaMeta {
       convMode = .ConvMeta;
@@ -394,7 +401,7 @@ pub fn Front.saveToLua() mut {
    Util.profile(           
       self.option.validProf,       
       fn () {
-	 let ast = self.createAst( self.option.scriptPath, mod, nil, .Compile );
+	 let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
 	 let mut luaPath = self.option.scriptPath.gsub( "%.lns$", ".lua" );
 	 let mut metaPath = self.option.scriptPath.gsub( "%.lns$", ".meta" );
 	 if self.option.outputDir {
@@ -430,6 +437,9 @@ pub fn Front.saveToLua() mut {
 	    if! metaFileObj {     
 	       _exp.close();
 	    }
+         }
+         if! let mut dependsStream = self.option.dependsStream {
+            ast.$node.processFilter( OutputDepend.createFilter( dependsStream ) );
          }
       }, self.option.scriptPath .. ".profi" );
 }

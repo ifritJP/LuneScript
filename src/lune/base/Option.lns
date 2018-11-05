@@ -56,6 +56,9 @@ pub class Option {
    pub let mut validProf:bool;
    /** true の場合 require( 'lune.base._lune' ) する */
    pub let mut useLuneModule:bool;
+   /** 依存ファイル情報の出力先ストリーム */
+   pub let mut dependsStream:oStream!;
+
    pub fn __init() {
       self.validProf = false;
       self.mode = .Unknown;
@@ -97,11 +100,12 @@ usage:
 * type1
   - src.lns ast
   - src.lns comp [-i] module line column
-  - src.lns [lua|LUA] 
-  - src.lns [save|SAVE] output-dir
+  - src.lns <lua|LUA>
+  - src.lns [--depends dependfile] <save|SAVE> output-dir
   - src.lns exe
 
   -r: use 'require( "lune.base._lune" )'
+  --depends: output dependfile
 
 * type2
   dir: output directory.
@@ -143,6 +147,17 @@ usage:
             }
             case "-r" {
                option.useLuneModule = true;
+            }
+            case "--depends" {
+               if #argList > index {
+                  if! let stream = io.open( argList[ index + 1 ], "w" ) {
+                     option.dependsStream = stream;
+                  }
+                  else {
+                     Util.err( "failed to open -- %s" (argList[ index + 1 ]) );
+                  }
+               }
+               index = index + 1;
             }
             default {
                Util.log( "unknown option -- %s" (arg) );

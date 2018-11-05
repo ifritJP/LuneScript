@@ -1,63 +1,155 @@
-fn func(val:int) {
-   while true {
-      switch val {
-         default {
-            return;
-         }
-      }
-   }
-   return;  // error
+{
+   fn func(val:int):int {
+      while true {
+         switch val {
+            default {
+               return 1;
+            }  
+         }  
+      }  
+      return 1;  // error
+   }  
 }
 
-fn func(val:int) {
-   while 1 {
-      switch val {
-         default {
-            return;
-         }
+{
+   fn func(val:int):int {
+      while 1 {
+         switch val {
+            default {
+               return 1;
+            }  
+         }  
       }
-   }
-   return;
+      return 1; // error
+   }  
 }
 
-fn func(val:int) {
-   while 1 {
-      switch val {
-         default {
-            break;
-         }
-      }
-   }
-   return;
+{
+   fn func(val:int):int {
+      while true {
+         switch val {
+            default {
+               break;
+            }  
+         }  
+      }  
+      return 1;
+   }  
 }
 
-fn func(val:int) {
-   while true {
-      switch val {
-         case 1 {
-            return;
-         }
-         default {
-            return;
-         }
-      }
-   }
-   return; // error
+{
+   fn func(val:int):int {
+      while true {
+         switch val {
+            case 1 {
+               return 1;
+            }  
+            default {
+               return 1;
+            }  
+         }  
+      }  
+      return 1; // error
+   }  
 }
 
-fn func(val:int) {
-   while true {
-      switch val {
-         case 1 {
-            break;
-         }
-         default {
-            return;
+{
+   fn func(val:int):int {
+      while true {
+         switch val {
+            case 1 {
+               break;
+            }  
+            default {
+               return 1;
+            }  
+         }  
+      }
+      return 1;
+   }
+}
+
+
+{
+   fn func(val:int[]): int {
+      while true {
+         foreach item in val {
+            if item == 1 {
+               return 1;
+            }
          }
       }
+      return 1; // error
    }
-   return;
 }
+
+
+{
+   fn func(val:int[]): int {
+      while true {
+         forsort item in val {
+            if item == 1 {
+               return 1;
+            }
+         }
+      }  
+      return 1; // error
+   }  
+}
+
+
+{
+   fn func(val:int): int {
+      while true {
+         while val == 1 {
+            if val {
+               return 1;
+            }
+         }
+      }
+      return 1; // error
+   }  
+}
+
+{
+   fn func(val:int): int {
+      while true {
+         repeat {
+            if val == 1 {
+               return 1;
+            }
+         } val == 1;
+      }  
+      return 1; // error
+   }
+}
+
+{
+   fn func(val:int): int {
+      while true {
+         for index = 1, 10 {
+            if val == 1 {
+               return 1;
+            }
+         }
+      }  
+      return 1; // error
+   }
+}
+
+{
+   fn func(val:int): int {
+      while true {
+         apply item of string.gmatch( "aaa", "a") {
+            if val == 1 {
+               return 1;
+            }
+         }
+      }
+      return 1; // error
+   }
+}
+
 
 
 

@@ -2648,6 +2648,9 @@ CheckBreakMode.__allList[2] = CheckBreakMode.Return
 CheckBreakMode.IgnoreFlow = 2
 CheckBreakMode._val2NameMap[2] = 'IgnoreFlow'
 CheckBreakMode.__allList[3] = CheckBreakMode.IgnoreFlow
+CheckBreakMode.IgnoreFlowReturn = 3
+CheckBreakMode._val2NameMap[3] = 'IgnoreFlowReturn'
+CheckBreakMode.__allList[4] = CheckBreakMode.IgnoreFlowReturn
 
 local Node = {}
 _moduleObj.Node = Node
@@ -2971,26 +2974,30 @@ function SubfileNode:canBeStatement(  )
 
    return true
 end
-function SubfileNode.new( pos, typeList )
+function SubfileNode.new( pos, typeList, usePath )
    local obj = {}
    SubfileNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList ); end
+   if obj.__init then obj:__init( pos, typeList, usePath ); end
    return obj
 end
-function SubfileNode:__init(pos, typeList) 
+function SubfileNode:__init(pos, typeList, usePath) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Subfile']), pos, typeList)
    
    
+   self.usePath = usePath
    
 end
-function SubfileNode.create( nodeMan, pos, typeList )
+function SubfileNode.create( nodeMan, pos, typeList, usePath )
 
-   local node = SubfileNode.new(pos, typeList)
+   local node = SubfileNode.new(pos, typeList, usePath)
    nodeMan:addNode( node )
    return node
 end
 function SubfileNode.setmeta( obj )
   setmetatable( obj, { __index = SubfileNode  } )
+end
+function SubfileNode:get_usePath()       
+   return self.usePath         
 end
 
 
@@ -3457,20 +3464,46 @@ function BlockNode:get_stmtList()
 end
 
 
+
 function BlockNode:getBreakKind( checkMode )
 
-   if checkMode == CheckBreakMode.IgnoreFlow then
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      local kind = BreakKind.None
       for __index, stmt in pairs( self.stmtList ) do
-         local node = self.stmtList[#self.stmtList]
-         local kind = node:getBreakKind( checkMode )
-         if kind == BreakKind.Return then
-            return BreakKind.Return
-         elseif kind == BreakKind.NeverRet then
-            return BreakKind.NeverRet
+         local work = stmt:getBreakKind( checkMode )
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
+            if work == BreakKind.Return then
+               return BreakKind.Return
+            end
+            
+            if work == BreakKind.NeverRet then
+               return BreakKind.NeverRet
+            end
+            
+         else
+          
+            do
+               local _switchExp = work
+               if _switchExp == BreakKind.None then
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     
+                  end
+                  
+               else 
+                  
+                     if kind == BreakKind.None or kind > work then
+                        kind = work
+                     end
+                     
+               end
+            end
+            
          end
+         
          
       end
       
+      return kind
    else
     
       if #self.stmtList > 0 then
@@ -3609,14 +3642,13 @@ function IfNode:get_stmtList()
 end
 
 
-
 function IfNode:getBreakKind( checkMode )
 
    local hasElseFlag = false
    local kind = BreakKind.None
    for __index, stmtInfo in pairs( self.stmtList ) do
       local work = stmtInfo:get_block():getBreakKind( checkMode )
-      if checkMode == CheckBreakMode.IgnoreFlow then
+      if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
             return BreakKind.Return
          end
@@ -3630,7 +3662,10 @@ function IfNode:getBreakKind( checkMode )
          do
             local _switchExp = work
             if _switchExp == BreakKind.None then
-               return BreakKind.None
+               if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                  return BreakKind.None
+               end
+               
             else 
                
                   if kind == BreakKind.None or kind > work then
@@ -3649,7 +3684,7 @@ function IfNode:getBreakKind( checkMode )
       
    end
    
-   if hasElseFlag then
+   if hasElseFlag or (checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return ) then
       return kind
    end
    
@@ -3840,7 +3875,7 @@ function SwitchNode:getBreakKind( checkMode )
    local kind = BreakKind.None
    for __index, caseInfo in pairs( self.caseList ) do
       local work = caseInfo:get_block():getBreakKind( checkMode )
-      if checkMode == CheckBreakMode.IgnoreFlow then
+      if checkMode == CheckBreakMode.IgnoreFlowReturn then
          if work == BreakKind.Return then
             return BreakKind.Return
          end
@@ -3854,7 +3889,10 @@ function SwitchNode:getBreakKind( checkMode )
          do
             local _switchExp = work
             if _switchExp == BreakKind.None then
-               return BreakKind.None
+               if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                  return BreakKind.None
+               end
+               
             else 
                
                   if kind == BreakKind.None or kind > work then
@@ -3873,7 +3911,7 @@ function SwitchNode:getBreakKind( checkMode )
       local block = self.default
       if block ~= nil then
          local work = block:getBreakKind( checkMode )
-         if checkMode == CheckBreakMode.IgnoreFlow then
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
             end
@@ -3887,7 +3925,10 @@ function SwitchNode:getBreakKind( checkMode )
             do
                local _switchExp = work
                if _switchExp == BreakKind.None then
-                  return BreakKind.None
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     return BreakKind.None
+                  end
+                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
@@ -3906,6 +3947,7 @@ function SwitchNode:getBreakKind( checkMode )
    
    return BreakKind.None
 end
+
 
 function NodeKind.get_While(  )
 
@@ -4045,6 +4087,17 @@ function RepeatNode:get_exp()
 end
 
 
+function RepeatNode:getBreakKind( checkMode )
+
+   local kind = BreakKind.None
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      return self.block:getBreakKind( checkMode )
+   end
+   
+   return BreakKind.None
+end
+
+
 function NodeKind.get_For(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['For'])
@@ -4126,6 +4179,17 @@ function ForNode:get_delta()
 end
 
 
+function ForNode:getBreakKind( checkMode )
+
+   local kind = BreakKind.None
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      return self.block:getBreakKind( checkMode )
+   end
+   
+   return BreakKind.None
+end
+
+
 function NodeKind.get_Apply(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Apply'])
@@ -4196,6 +4260,17 @@ function ApplyNode:get_exp()
 end
 function ApplyNode:get_block()       
    return self.block         
+end
+
+
+function ApplyNode:getBreakKind( checkMode )
+
+   local kind = BreakKind.None
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      return self.block:getBreakKind( checkMode )
+   end
+   
+   return BreakKind.None
 end
 
 
@@ -4273,6 +4348,17 @@ function ForeachNode:get_exp()
 end
 function ForeachNode:get_block()       
    return self.block         
+end
+
+
+function ForeachNode:getBreakKind( checkMode )
+
+   local kind = BreakKind.None
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      return self.block:getBreakKind( checkMode )
+   end
+   
+   return BreakKind.None
 end
 
 
@@ -4354,6 +4440,17 @@ function ForsortNode:get_block()
 end
 function ForsortNode:get_sort()       
    return self.sort         
+end
+
+
+function ForsortNode:getBreakKind( checkMode )
+
+   local kind = BreakKind.None
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      return self.block:getBreakKind( checkMode )
+   end
+   
+   return BreakKind.None
 end
 
 
@@ -4995,7 +5092,7 @@ function IfUnwrapNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
    local work = kind
-   if checkMode == CheckBreakMode.IgnoreFlow then
+   if checkMode == CheckBreakMode.IgnoreFlowReturn then
       if work == BreakKind.Return then
          return BreakKind.Return
       end
@@ -5009,7 +5106,10 @@ function IfUnwrapNode:getBreakKind( checkMode )
       do
          local _switchExp = work
          if _switchExp == BreakKind.None then
-            return BreakKind.None
+            if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+               return BreakKind.None
+            end
+            
          else 
             
                if kind == BreakKind.None or kind > work then
@@ -5026,7 +5126,7 @@ function IfUnwrapNode:getBreakKind( checkMode )
       local block = self.nilBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
-         if checkMode == CheckBreakMode.IgnoreFlow then
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
             end
@@ -5040,7 +5140,10 @@ function IfUnwrapNode:getBreakKind( checkMode )
             do
                local _switchExp = work
                if _switchExp == BreakKind.None then
-                  return BreakKind.None
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     return BreakKind.None
+                  end
+                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
@@ -5141,7 +5244,7 @@ function WhenNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
    local work = kind
-   if checkMode == CheckBreakMode.IgnoreFlow then
+   if checkMode == CheckBreakMode.IgnoreFlowReturn then
       if work == BreakKind.Return then
          return BreakKind.Return
       end
@@ -5155,7 +5258,10 @@ function WhenNode:getBreakKind( checkMode )
       do
          local _switchExp = work
          if _switchExp == BreakKind.None then
-            return BreakKind.None
+            if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+               return BreakKind.None
+            end
+            
          else 
             
                if kind == BreakKind.None or kind > work then
@@ -5172,7 +5278,7 @@ function WhenNode:getBreakKind( checkMode )
       local block = self.elseBlock
       if block ~= nil then
          work = block:getBreakKind( checkMode )
-         if checkMode == CheckBreakMode.IgnoreFlow then
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
             if work == BreakKind.Return then
                return BreakKind.Return
             end
@@ -5186,7 +5292,10 @@ function WhenNode:getBreakKind( checkMode )
             do
                local _switchExp = work
                if _switchExp == BreakKind.None then
-                  return BreakKind.None
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     return BreakKind.None
+                  end
+                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
@@ -5741,14 +5850,43 @@ end
 
 function ExpMacroExpNode:getBreakKind( checkMode )
 
-   if checkMode == CheckBreakMode.IgnoreFlow then
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      local kind = BreakKind.None
       for __index, stmt in pairs( self.stmtList ) do
-         if stmt:getBreakKind( checkMode ) == BreakKind.Return then
-            return BreakKind.Return
+         local work = stmt:getBreakKind( checkMode )
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
+            if work == BreakKind.Return then
+               return BreakKind.Return
+            end
+            
+            if work == BreakKind.NeverRet then
+               return BreakKind.NeverRet
+            end
+            
+         else
+          
+            do
+               local _switchExp = work
+               if _switchExp == BreakKind.None then
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     
+                  end
+                  
+               else 
+                  
+                     if kind == BreakKind.None or kind > work then
+                        kind = work
+                     end
+                     
+               end
+            end
+            
          end
+         
          
       end
       
+      return kind
    else
     
       if #self.stmtList > 0 then
@@ -6311,7 +6449,7 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
-   if checkMode == CheckBreakMode.IgnoreFlow then
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       do
          local block = self.unwrapBlock
          if block ~= nil then
@@ -6363,7 +6501,7 @@ function DeclVarNode:getBreakKind( checkMode )
          local block = self.unwrapBlock
          if block ~= nil then
             work = block:getBreakKind( checkMode )
-            if checkMode == CheckBreakMode.IgnoreFlow then
+            if checkMode == CheckBreakMode.IgnoreFlowReturn then
                if work == BreakKind.Return then
                   return BreakKind.Return
                end
@@ -6377,7 +6515,10 @@ function DeclVarNode:getBreakKind( checkMode )
                do
                   local _switchExp = work
                   if _switchExp == BreakKind.None then
-                     return BreakKind.None
+                     if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                        return BreakKind.None
+                     end
+                     
                   else 
                      
                         if kind == BreakKind.None or kind > work then
@@ -6394,7 +6535,7 @@ function DeclVarNode:getBreakKind( checkMode )
                local thenBlock = self.thenBlock
                if thenBlock ~= nil then
                   work = thenBlock:getBreakKind( checkMode )
-                  if checkMode == CheckBreakMode.IgnoreFlow then
+                  if checkMode == CheckBreakMode.IgnoreFlowReturn then
                      if work == BreakKind.Return then
                         return BreakKind.Return
                      end
@@ -6408,7 +6549,10 @@ function DeclVarNode:getBreakKind( checkMode )
                      do
                         local _switchExp = work
                         if _switchExp == BreakKind.None then
-                           return BreakKind.None
+                           if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                              return BreakKind.None
+                           end
+                           
                         else 
                            
                               if kind == BreakKind.None or kind > work then
@@ -6425,7 +6569,7 @@ function DeclVarNode:getBreakKind( checkMode )
                      local syncBlock = self.syncBlock
                      if syncBlock ~= nil then
                         work = syncBlock:getBreakKind( checkMode )
-                        if checkMode == CheckBreakMode.IgnoreFlow then
+                        if checkMode == CheckBreakMode.IgnoreFlowReturn then
                            if work == BreakKind.Return then
                               return BreakKind.Return
                            end
@@ -6439,7 +6583,10 @@ function DeclVarNode:getBreakKind( checkMode )
                            do
                               local _switchExp = work
                               if _switchExp == BreakKind.None then
-                                 return BreakKind.None
+                                 if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                                    return BreakKind.None
+                                 end
+                                 
                               else 
                                  
                                     if kind == BreakKind.None or kind > work then
@@ -8113,70 +8260,114 @@ end
 
 function WhileNode:getBreakKind( checkMode )
 
-   if checkMode == CheckBreakMode.IgnoreFlow then
+   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+      local kind = BreakKind.None
       for __index, stmt in pairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( checkMode )
-         if work == BreakKind.Return then
-            return work
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
+            if work == BreakKind.Return then
+               return BreakKind.Return
+            end
+            
+            if work == BreakKind.NeverRet then
+               return BreakKind.NeverRet
+            end
+            
+         else
+          
+            do
+               local _switchExp = work
+               if _switchExp == BreakKind.None then
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     
+                  end
+                  
+               else 
+                  
+                     if kind == BreakKind.None or kind > work then
+                        kind = work
+                     end
+                     
+               end
+            end
+            
          end
+         
          
       end
       
+      return kind
    else
     
-      if self.exp:get_kind() == NodeKind.get_LiteralBool() then
-         local boolNode = self.exp
-         if boolNode:get_token().txt ~= "true" then
-            return BreakKind.None
-         end
-         
-         local kind = BreakKind.None
-         for __index, stmt in pairs( self.block:get_stmtList() ) do
-            local mode = checkMode
-            if checkMode == CheckBreakMode.Return then
-               mode = CheckBreakMode.IgnoreFlow
-            end
-            
-            local work = stmt:getBreakKind( mode )
-            if checkMode == CheckBreakMode.IgnoreFlow then
-               if work == BreakKind.Return then
-                  return BreakKind.Return
-               end
-               
-               if work == BreakKind.NeverRet then
-                  return BreakKind.NeverRet
-               end
-               
-            else
-             
-               do
-                  local _switchExp = work
-                  if _switchExp == BreakKind.None then
-                     
-                  else 
-                     
-                        if kind == BreakKind.None or kind > work then
-                           kind = work
-                        end
-                        
-                  end
-               end
-               
-            end
-            
-            
-         end
-         
-         if kind == BreakKind.Break then
-            return BreakKind.None
-         end
-         
-         return kind
+      if self.exp:get_expType():get_nilable() then
+         return BreakKind.None
       end
       
+      if self.exp:get_expType():equals( _moduleObj.builtinTypeBool ) then
+         if self.exp:get_kind() == NodeKind.get_LiteralBool() then
+            local boolNode = self.exp
+            if boolNode:get_token().txt == "false" then
+               return BreakKind.None
+            end
+            
+         else
+          
+            return BreakKind.None
+         end
+         
+      end
+      
+      local mode = CheckBreakMode.IgnoreFlow
+      if checkMode == CheckBreakMode.Return then
+         mode = CheckBreakMode.IgnoreFlowReturn
+      end
+      
+      local kind = BreakKind.None
+      for __index, stmt in pairs( self.block:get_stmtList() ) do
+         local work = stmt:getBreakKind( mode )
+         if mode == CheckBreakMode.IgnoreFlowReturn then
+            if work == BreakKind.Return then
+               return BreakKind.Return
+            end
+            
+            if work == BreakKind.NeverRet then
+               return BreakKind.NeverRet
+            end
+            
+         else
+          
+            do
+               local _switchExp = work
+               if _switchExp == BreakKind.None then
+                  if mode == CheckBreakMode.Normal or mode == CheckBreakMode.Return then
+                     
+                  end
+                  
+               else 
+                  
+                     if kind == BreakKind.None or kind > work then
+                        kind = work
+                     end
+                     
+               end
+            end
+            
+         end
+         
+         
+      end
+      
+      if kind == BreakKind.Break then
+         return BreakKind.None
+      end
+      
+      if kind == BreakKind.Return then
+         return BreakKind.Return
+      end
+      
+      return BreakKind.NeverRet
    end
    
-   return BreakKind.None
 end
 
 function LiteralNilNode:getLiteral(  )

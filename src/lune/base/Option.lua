@@ -137,11 +137,12 @@ usage:
 * type1
   - src.lns ast
   - src.lns comp [-i] module line column
-  - src.lns [lua|LUA] 
-  - src.lns [save|SAVE] output-dir
+  - src.lns <lua|LUA>
+  - src.lns [--depends dependfile] <save|SAVE> output-dir
   - src.lns exe
 
   -r: use 'require( "lune.base._lune" )'
+  --depends: output dependfile
 
 * type2
   dir: output directory.
@@ -181,6 +182,20 @@ usage:
                os.exit( 0 )
             elseif _switchExp == "-r" then
                option.useLuneModule = true
+            elseif _switchExp == "--depends" then
+               if #argList > index then
+                  do
+                     local stream = io.open( argList[index + 1], "w" )
+                     if stream ~= nil then
+                        option.dependsStream = stream
+                     else
+                        Util.err( string.format( "failed to open -- %s", argList[index + 1]) )
+                     end
+                  end
+                  
+               end
+               
+               index = index + 1
             else 
                
                   Util.log( string.format( "unknown option -- %s", arg) )

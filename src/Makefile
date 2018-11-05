@@ -59,6 +59,7 @@ define buildLns
 	$(call transwork,$1,$2,TransUnit)
 	$(call transwork,$1,$2,convLua)
 	$(call transwork,$1,$2,dumpNode)
+	$(call transwork,$1,$2,OutputDepend)
 	$(call transwork,$1,$2,front)
 	$(call transwork,$1,$2,glueFilter)
 endef
@@ -158,6 +159,8 @@ test-comp2:
 	$(call exeLune,.,test/start.lns,glue,work/glue 2>&1)
 	$(MAKE) build-glue
 	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
+	$(call exeLune,.,test/start.lns,save,--depends work/1/start.dep)
+
 
 
 
@@ -213,10 +216,13 @@ test-comp2:
 	$(call build-testcode,-r)
 	(cd work/3; $(LUA) test/start.lua) > work/test4.result
 
+	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
+
 
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
+	diff work/1/start.dep work/3/start.dep
 	diff -r work/glue work/newglue
 
 	$(MAKE) accept-package ACCEPT=y

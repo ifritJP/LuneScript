@@ -1590,7 +1590,7 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
 
    local breakKind = Ast.BreakKind.None
    if #stmtList > 0 then
-      breakKind = stmtList[#stmtList]:getBreakKind(  )
+      breakKind = stmtList[#stmtList]:getBreakKind( Ast.CheckBreakMode.Normal )
    end
    
    local lastStatement = nil
@@ -1600,12 +1600,13 @@ function TransUnit:analyzeStatementList( stmtList, termTxt )
          local _exp = statement
          if _exp ~= nil then
             if breakKind ~= Ast.BreakKind.None then
-               self:addErrMess( _exp:get_pos(), "This statement is not reached" )
+               self:addErrMess( _exp:get_pos(), string.format( "This statement is not reached -- %s", Ast.BreakKind:_getTxt( breakKind)
+               ) )
             end
             
             table.insert( stmtList, _exp )
             lastStatement = statement
-            breakKind = _exp:getBreakKind(  )
+            breakKind = _exp:getBreakKind( Ast.CheckBreakMode.Normal )
          else
             break
          end
@@ -2016,11 +2017,13 @@ function TransUnit:analyzeSubfile( token )
       
    end
    
+   local usePath = nil
    if moduleName == "" then
       self:addErrMess( token.pos, "illegal subfile" )
    else
     
       if mode.txt == "use" then
+         usePath = moduleName
          if frontInterface.searchModule( moduleName ) then
             table.insert( self.subfileList, moduleName )
          else
@@ -2040,7 +2043,7 @@ function TransUnit:analyzeSubfile( token )
       
    end
    
-   return Ast.SubfileNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone} )
+   return Ast.SubfileNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, usePath )
 end
 
 function TransUnit:analyzeIf( token )
@@ -3562,7 +3565,16 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
                self:addErrMess( name.pos, err )
             end
             
-            self.protoFuncMap[prottype] = nil
+            if self.protoFuncMap[prottype] then
+               self.protoFuncMap[prottype] = nil
+            else
+             
+               if not prottype:get_autoFlag() then
+                  self:addErrMess( token.pos, string.format( "multiple define -- %s", name.txt) )
+               end
+               
+            end
+            
          end
       end
       
@@ -5234,7 +5246,6 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
       
    end
    
-   return self:analyzeExpOp2( firstToken, exp, prevOpLevel )
 end
 
 function TransUnit:analyzeExpMacroStat( firstToken )
