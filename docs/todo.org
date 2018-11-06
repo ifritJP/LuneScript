@@ -8,6 +8,8 @@
 
 * 機能
 
+- [ ] import しているシンボルを、自分のモジュールのシンボルとして公開する。
+      モジュールの相互参照で切り出したときに、変更を最小にする。
 - [ ] macro を pub に出来るように。
 - [ ] string 系の組込みメソッド拡充。
 - [ ] form 型の変数に関数オブジェクトを代入した時に、
@@ -112,6 +114,9 @@
 - [X] form を pub 宣言した型名を、外部からその型名でアクセスできない。
 - [X] while true {} のループ内の for 文などから return した場合、 return なしになる。
 - [X] 同じ型の関数を複数宣言してもエラーにならない。
+- [X] 外部モジュールで宣言した form を、引数にもつ __init を pub にするとエラー。
+- [X] 外部モジュールで宣言した super class のメンバに代入できない。 immutable 扱いになる。
+- [X] 外部モジュールの pro メソッドが、 pub として登録されている。
 
 
 * ドキュメント
@@ -124,3 +129,27 @@
 - [X] Lua 5.2 で bit 演算子を利用した場合、 bit モジュールを利用するように変換する
 - [X] module 宣言したモジュールの glue コード自動生成
 - [X] enum の全要素リストを取れるようにする。      
+
+* advent
+
+- [ ] 値
+- [ ] enum
+- [ ] 変数
+- [ ] 分岐
+- [ ] foreach 等の loop
+- [ ] 関数
+- [ ] nilable, unwrap, map
+- [ ] nil 条件演算子
+- [ ] provide
+- [ ] クラス 基本
+- [ ] クラス accessor
+- [ ] クラス 継承, override, abstract
+- [ ] クラス advertise
+- [ ] インタフェース
+- [ ] mapping
+- [ ] import
+- [ ] require, module
+- [ ] subfile
+- [ ] macro
+- [ ] make  
+

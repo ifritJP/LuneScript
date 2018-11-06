@@ -91,8 +91,12 @@
    }  
    fn func( testfunc:form1, val:int ) {
       print( testfunc( val ) + 2 );
-   }  
+   }
    func( sub1, 3 );
    func( sub2, 3 ); // error
    func( sub3, 3 ); // error
+
+   form form2( val:int ): int;
+   let test2:form2 = fn( val:int ):int { return 1; };
+   func( test2, 1 );
 }

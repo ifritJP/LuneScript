@@ -10,19 +10,19 @@ do
    local _classInfo412 = {}
    _typeId2ClassInfoMap[ 412 ] = _classInfo412
    _classInfo412.lineNo = {
-     name='lineNo', staticFlag = false, accessMode = '1', typeId = 408 }
+     name='lineNo', staticFlag = false, mutable = false,accessMode = '1', typeId = 408 }
    _classInfo412.column = {
-     name='column', staticFlag = false, accessMode = '1', typeId = 408 }
+     name='column', staticFlag = false, mutable = false,accessMode = '1', typeId = 408 }
 end
 do
    local _classInfo437 = {}
    _typeId2ClassInfoMap[ 437 ] = _classInfo437
    _classInfo437.kind = {
-     name='kind', staticFlag = false, accessMode = '1', typeId = 444 }
+     name='kind', staticFlag = false, mutable = false,accessMode = '1', typeId = 444 }
    _classInfo437.txt = {
-     name='txt', staticFlag = false, accessMode = '1', typeId = 400 }
+     name='txt', staticFlag = false, mutable = false,accessMode = '1', typeId = 400 }
    _classInfo437.pos = {
-     name='pos', staticFlag = false, accessMode = '1', typeId = 445 }
+     name='pos', staticFlag = false, mutable = false,accessMode = '1', typeId = 445 }
 end
 do
    local _classInfo471 = {}

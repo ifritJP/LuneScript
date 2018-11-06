@@ -568,14 +568,15 @@ class _TypeInfoNormal extend _TypeInfo {
             itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
          }   
          let mut argTypeInfo:List<&Ast.TypeInfo> = [];
-         foreach typeId in self.argTypeId {
-            if not param.typeId2TypeInfo[ typeId ] {
-               return nil, "not found -- %s.%s, %d, %d" ( parentInfo.getTxt(),
-                                                              self.txt,
-                                                              typeId,
-                                                              #self.argTypeId );
-            }    
-            argTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+         foreach typeId, index in self.argTypeId {
+            if! let argType = param.typeId2TypeInfo[ typeId ] {
+               argTypeInfo.insert( argType );
+            }
+            else {
+               let mess = "not found arg (index:%d) -- %s.%s, %d, %d"
+                   ( index, parentInfo.getTxt(), self.txt, typeId, #self.argTypeId );
+               return nil, mess;
+            }
          }   
          let mut retTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId in self.retTypeId {
@@ -647,7 +648,9 @@ class _TypeInfoNormal extend _TypeInfo {
                      mutable = false;
                   }  
                }  
+               let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
                let workTypeInfo = Ast.NormalTypeInfo.create(
+                  accessMode,
                   self.abstractFlag, scope, baseInfo,
                   interfaceList, parentInfo, self.staticFlag, typeInfoKind,
                   self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable );
@@ -662,8 +665,6 @@ class _TypeInfoNormal extend _TypeInfo {
                   if self.kind == Ast.TypeInfoKind.Method {
                      symbolKind = Ast.SymbolKind.Mtd;
                   }
-                  let accessMode =
-                     unwrap Ast.AccessMode._from( self.accessMode );
                   let mut workParentScope =
                      unwrap param.typeId2Scope[ self.parentId ];
                   workParentScope.add(
@@ -1546,7 +1547,7 @@ fn TransUnit.processImport(
                           typeInfo.$kind == .Func,
                           typeInfo.getTxt(), typeInfo, typeInfo.$accessMode,
                           typeInfo.$staticFlag, typeInfo.$mutable, true );
-            }  
+            }
          }  
       }
    }

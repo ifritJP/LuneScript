@@ -460,6 +460,13 @@ function Front:saveToLua(  )
          metaPath = string.format( "%s/%s.meta", self.option.outputDir, filename )
       end
       
+      do
+         local dependsStream = self.option.dependsStream
+         if dependsStream ~= nil then
+            ast:get_node():processFilter( OutputDepend.createFilter( dependsStream ) )
+         end
+      end
+      
       if luaPath ~= self.option.scriptPath then
          local fileObj = io.open( luaPath, "w" )
          if  nil == fileObj then
@@ -494,13 +501,6 @@ function Front:saveToLua(  )
             end
          end
          
-      end
-      
-      do
-         local dependsStream = self.option.dependsStream
-         if dependsStream ~= nil then
-            ast:get_node():processFilter( OutputDepend.createFilter( dependsStream ) )
-         end
       end
       
    end

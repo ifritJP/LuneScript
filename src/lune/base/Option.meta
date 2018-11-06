@@ -6,21 +6,21 @@ do
    local _classInfo477 = {}
    _typeId2ClassInfoMap[ 477 ] = _classInfo477
    _classInfo477.mode = {
-     name='mode', staticFlag = false, accessMode = '1', typeId = 462 }
+     name='mode', staticFlag = false, mutable = true,accessMode = '1', typeId = 462 }
    _classInfo477.analyzeModule = {
-     name='analyzeModule', staticFlag = false, accessMode = '1', typeId = 484 }
+     name='analyzeModule', staticFlag = false, mutable = false,accessMode = '1', typeId = 484 }
    _classInfo477.analyzePos = {
-     name='analyzePos', staticFlag = false, accessMode = '1', typeId = 485 }
+     name='analyzePos', staticFlag = false, mutable = false,accessMode = '1', typeId = 485 }
    _classInfo477.outputDir = {
-     name='outputDir', staticFlag = false, accessMode = '1', typeId = 484 }
+     name='outputDir', staticFlag = false, mutable = false,accessMode = '1', typeId = 484 }
    _classInfo477.scriptPath = {
-     name='scriptPath', staticFlag = false, accessMode = '1', typeId = 28 }
+     name='scriptPath', staticFlag = false, mutable = true,accessMode = '1', typeId = 28 }
    _classInfo477.validProf = {
-     name='validProf', staticFlag = false, accessMode = '1', typeId = 16 }
+     name='validProf', staticFlag = false, mutable = true,accessMode = '1', typeId = 16 }
    _classInfo477.useLuneModule = {
-     name='useLuneModule', staticFlag = false, accessMode = '1', typeId = 16 }
+     name='useLuneModule', staticFlag = false, mutable = true,accessMode = '1', typeId = 16 }
    _classInfo477.dependsStream = {
-     name='dependsStream', staticFlag = false, accessMode = '1', typeId = 91 }
+     name='dependsStream', staticFlag = false, mutable = true,accessMode = '1', typeId = 91 }
 end
 do
    local _classInfo229 = {}
@@ -70,6 +70,8 @@ children = {233, } }
 _typeInfoList[4] = { skind = 2, parentId = 231, typeId = 233, txt = 'Option', kind = 12, 
 children = {462, 477, 489, 495, } }
 _dependIdMap[ 235 ] = { 2, 233 } -- Parser
+_dependIdMap[ 237 ] = { 2, 288 } -- isLuaKeyword
+_dependIdMap[ 238 ] = { 2, 289 } -- isLuaKeyword!
 _dependIdMap[ 240 ] = { 2, 393 } -- TxtStream
 _dependIdMap[ 241 ] = { 2, 394 } -- TxtStream!
 _typeInfoList[5] = { skind = 1, parentId = 1, typeId = 243, srcTypeId = 28, mutable = false }
@@ -82,10 +84,14 @@ _typeInfoList[7] = { skind=3, parentId = 1, typeId = 268, baseId = 1, txt = 'Lis
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {260}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[8] = { skind = 0, parentId = 1, typeId = 269, nilable = true, orgTypeId = 268 }
 _typeInfoList[9] = { skind = 1, parentId = 1, typeId = 271, srcTypeId = 268, mutable = false }
+_dependIdMap[ 278 ] = { 2, 427 } -- _from
+_dependIdMap[ 279 ] = { 2, 428 } -- _from!
 _typeInfoList[10] = { skind=3, parentId = 1, typeId = 281, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {260}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[11] = { skind = 0, parentId = 1, typeId = 282, nilable = true, orgTypeId = 281 }
 _typeInfoList[12] = { skind = 1, parentId = 1, typeId = 284, srcTypeId = 281, mutable = false }
+_dependIdMap[ 285 ] = { 2, 434 } -- get__allList
+_dependIdMap[ 286 ] = { 2, 435 } -- get__allList!
 _dependIdMap[ 288 ] = { 2, 437 } -- Token
 _dependIdMap[ 289 ] = { 2, 438 } -- Token!
 _typeInfoList[13] = { skind = 1, parentId = 235, typeId = 291, srcTypeId = 260, mutable = false }
@@ -93,7 +99,7 @@ _dependIdMap[ 291 ] = { 2, 444 } -- &TokenKind
 _typeInfoList[14] = { skind = 1, parentId = 235, typeId = 292, srcTypeId = 254, mutable = false }
 _dependIdMap[ 292 ] = { 2, 445 } -- &Position
 _typeInfoList[15] = { skind=3, parentId = 1, typeId = 293, baseId = 1, txt = 'List',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {288}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 3, kind = 3, mutable = true, itemTypeId = {288}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[16] = { skind = 0, parentId = 1, typeId = 294, nilable = true, orgTypeId = 293 }
 _typeInfoList[17] = { skind=3, parentId = 1, typeId = 296, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {288}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
@@ -111,6 +117,16 @@ _dependIdMap[ 328 ] = { 2, 489 } -- WrapParser
 _dependIdMap[ 329 ] = { 2, 490 } -- WrapParser!
 _dependIdMap[ 340 ] = { 2, 506 } -- StreamParser
 _dependIdMap[ 341 ] = { 2, 507 } -- StreamParser!
+_dependIdMap[ 343 ] = { 2, 514 } -- setStdinStream
+_dependIdMap[ 344 ] = { 2, 515 } -- setStdinStream!
+_dependIdMap[ 352 ] = { 2, 552 } -- create
+_dependIdMap[ 353 ] = { 2, 553 } -- create!
+_dependIdMap[ 358 ] = { 2, 580 } -- isOp2
+_dependIdMap[ 359 ] = { 2, 581 } -- isOp2!
+_dependIdMap[ 361 ] = { 2, 583 } -- isOp1
+_dependIdMap[ 362 ] = { 2, 584 } -- isOp1!
+_dependIdMap[ 367 ] = { 2, 630 } -- getEofToken
+_dependIdMap[ 368 ] = { 2, 631 } -- getEofToken!
 _dependIdMap[ 370 ] = { 2, 633 } -- DummyParser
 _dependIdMap[ 371 ] = { 2, 634 } -- DummyParser!
 _typeInfoList[23] = { skind = 4, parentId = 233, typeId = 462, txt = 'ModeKind',

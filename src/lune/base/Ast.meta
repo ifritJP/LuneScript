@@ -26,9 +26,9 @@ do
    local _classInfo659 = {}
    _typeId2ClassInfoMap[ 659 ] = _classInfo659
    _classInfo659.hasData = {
-     name='hasData', staticFlag = false, accessMode = '1', typeId = 610 }
+     name='hasData', staticFlag = false, mutable = false,accessMode = '1', typeId = 610 }
    _classInfo659.symbolInfo = {
-     name='symbolInfo', staticFlag = false, accessMode = '1', typeId = 555 }
+     name='symbolInfo', staticFlag = false, mutable = false,accessMode = '1', typeId = 555 }
 end
 do
    local _classInfo746 = {}
@@ -78,11 +78,11 @@ do
    local _classInfo1860 = {}
    _typeId2ClassInfoMap[ 1860 ] = _classInfo1860
    _classInfo1860.name = {
-     name='name', staticFlag = false, accessMode = '1', typeId = 243 }
+     name='name', staticFlag = false, mutable = false,accessMode = '1', typeId = 243 }
    _classInfo1860.scope = {
-     name='scope', staticFlag = false, accessMode = '1', typeId = 592 }
+     name='scope', staticFlag = false, mutable = false,accessMode = '1', typeId = 592 }
    _classInfo1860.typeInfo = {
-     name='typeInfo', staticFlag = false, accessMode = '1', typeId = 466 }
+     name='typeInfo', staticFlag = false, mutable = false,accessMode = '1', typeId = 466 }
 end
 do
    local _classInfo1870 = {}
@@ -104,19 +104,19 @@ do
    local _classInfo1911 = {}
    _typeId2ClassInfoMap[ 1911 ] = _classInfo1911
    _classInfo1911.val = {
-     name='val', staticFlag = false, accessMode = '1', typeId = 77 }
+     name='val', staticFlag = false, mutable = false,accessMode = '1', typeId = 77 }
    _classInfo1911.typeInfo = {
-     name='typeInfo', staticFlag = false, accessMode = '1', typeId = 466 }
+     name='typeInfo', staticFlag = false, mutable = false,accessMode = '1', typeId = 466 }
 end
 do
    local _classInfo1921 = {}
    _typeId2ClassInfoMap[ 1921 ] = _classInfo1921
    _classInfo1921.func = {
-     name='func', staticFlag = false, accessMode = '1', typeId = 1928 }
+     name='func', staticFlag = false, mutable = false,accessMode = '1', typeId = 1928 }
    _classInfo1921.declInfo = {
-     name='declInfo', staticFlag = false, accessMode = '1', typeId = 1929 }
+     name='declInfo', staticFlag = false, mutable = false,accessMode = '1', typeId = 1929 }
    _classInfo1921.symbol2MacroValInfoMap = {
-     name='symbol2MacroValInfoMap', staticFlag = false, accessMode = '1', typeId = 1933 }
+     name='symbol2MacroValInfoMap', staticFlag = false, mutable = false,accessMode = '1', typeId = 1933 }
 end
 do
    local _classInfo1955 = {}
@@ -806,6 +806,8 @@ children = {233, } }
 _typeInfoList[6] = { skind = 2, parentId = 231, typeId = 233, txt = 'Ast', kind = 12, 
 children = {429, 448, 451, 473, 488, 503, 506, 509, 524, 539, 548, 603, 659, 746, 797, 938, 1014, 1073, 1076, 1079, 1195, 1311, 1368, 1384, 1451, 1708, 1766, 1776, 1791, 1860, 1870, 1873, 1876, 1879, 1911, 1921, 1952, 1955, 1990, 2050, 2114, 2184, 2245, 2248, 2267, 2334, 2461, 2528, 2555, 2641, 2656, 2685, 2830, 2861, 2953, 3026, 3111, 3199, 3293, 3384, 3466, 3534, 3667, 3740, 3813, 3889, 3968, 4050, 4156, 4253, 4311, 4341, 4423, 4508, 4587, 4654, 4721, 4801, 4877, 4950, 5029, 5118, 5188, 5208, 5265, 5396, 5447, 5514, 5581, 5648, 5718, 5809, 5963, 6018, 6245, 6330, 6405, 6472, 6545, 6618, 6688, 6755, 6813, 6841, 6932, 7011, 7078, 7511, } }
 _dependIdMap[ 235 ] = { 1, 233 } -- Parser
+_dependIdMap[ 237 ] = { 1, 288 } -- isLuaKeyword
+_dependIdMap[ 238 ] = { 1, 289 } -- isLuaKeyword!
 _dependIdMap[ 240 ] = { 1, 393 } -- TxtStream
 _dependIdMap[ 241 ] = { 1, 394 } -- TxtStream!
 _typeInfoList[7] = { skind = 1, parentId = 1, typeId = 243, srcTypeId = 28, mutable = false }
@@ -818,10 +820,14 @@ _typeInfoList[9] = { skind=3, parentId = 1, typeId = 268, baseId = 1, txt = 'Lis
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {260}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[10] = { skind = 0, parentId = 1, typeId = 269, nilable = true, orgTypeId = 268 }
 _typeInfoList[11] = { skind = 1, parentId = 1, typeId = 271, srcTypeId = 268, mutable = false }
+_dependIdMap[ 278 ] = { 1, 427 } -- _from
+_dependIdMap[ 279 ] = { 1, 428 } -- _from!
 _typeInfoList[12] = { skind=3, parentId = 1, typeId = 281, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {260}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[13] = { skind = 0, parentId = 1, typeId = 282, nilable = true, orgTypeId = 281 }
 _typeInfoList[14] = { skind = 1, parentId = 1, typeId = 284, srcTypeId = 281, mutable = false }
+_dependIdMap[ 285 ] = { 1, 434 } -- get__allList
+_dependIdMap[ 286 ] = { 1, 435 } -- get__allList!
 _dependIdMap[ 288 ] = { 1, 437 } -- Token
 _dependIdMap[ 289 ] = { 1, 438 } -- Token!
 _typeInfoList[15] = { skind = 1, parentId = 235, typeId = 291, srcTypeId = 260, mutable = false }
@@ -829,7 +835,7 @@ _dependIdMap[ 291 ] = { 1, 444 } -- &TokenKind
 _typeInfoList[16] = { skind = 1, parentId = 235, typeId = 292, srcTypeId = 254, mutable = false }
 _dependIdMap[ 292 ] = { 1, 445 } -- &Position
 _typeInfoList[17] = { skind=3, parentId = 1, typeId = 293, baseId = 1, txt = 'List',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {288}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 3, kind = 3, mutable = true, itemTypeId = {288}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[18] = { skind = 0, parentId = 1, typeId = 294, nilable = true, orgTypeId = 293 }
 _typeInfoList[19] = { skind=3, parentId = 1, typeId = 296, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {288}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
@@ -847,6 +853,16 @@ _dependIdMap[ 328 ] = { 1, 489 } -- WrapParser
 _dependIdMap[ 329 ] = { 1, 490 } -- WrapParser!
 _dependIdMap[ 340 ] = { 1, 506 } -- StreamParser
 _dependIdMap[ 341 ] = { 1, 507 } -- StreamParser!
+_dependIdMap[ 343 ] = { 1, 514 } -- setStdinStream
+_dependIdMap[ 344 ] = { 1, 515 } -- setStdinStream!
+_dependIdMap[ 352 ] = { 1, 552 } -- create
+_dependIdMap[ 353 ] = { 1, 553 } -- create!
+_dependIdMap[ 358 ] = { 1, 580 } -- isOp2
+_dependIdMap[ 359 ] = { 1, 581 } -- isOp2!
+_dependIdMap[ 361 ] = { 1, 583 } -- isOp1
+_dependIdMap[ 362 ] = { 1, 584 } -- isOp1!
+_dependIdMap[ 367 ] = { 1, 630 } -- getEofToken
+_dependIdMap[ 368 ] = { 1, 631 } -- getEofToken!
 _dependIdMap[ 370 ] = { 1, 633 } -- DummyParser
 _dependIdMap[ 371 ] = { 1, 634 } -- DummyParser!
 _typeInfoList[25] = { skind=3, parentId = 233, typeId = 429, baseId = 1, txt = 'IdProvider',
@@ -1771,7 +1787,7 @@ _typeInfoList[645] = { skind=3, parentId = 1, typeId = 1555, baseId = 1, txt = '
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {466}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[646] = { skind = 0, parentId = 1, typeId = 1556, nilable = true, orgTypeId = 1555 }
 _typeInfoList[647] = { skind=3, parentId = 1451, typeId = 1558, baseId = 1, txt = 'create',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {16, 507, 466, 1546, 466, 16, 488, 28, 1549, 1552, 1555, 17}, retTypeId = {466}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {524, 16, 507, 466, 1546, 466, 16, 488, 28, 1549, 1552, 1555, 17}, retTypeId = {466}, children = {}, }
 _typeInfoList[648] = { skind = 0, parentId = 1451, typeId = 1559, nilable = true, orgTypeId = 1558 }
 _typeInfoList[649] = { skind=3, parentId = 1451, typeId = 1561, baseId = 1, txt = 'get_externalFlag',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {610}, children = {}, }

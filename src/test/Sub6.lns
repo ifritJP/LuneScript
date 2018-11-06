@@ -1,13 +1,16 @@
 import test.Sub5;
 
 class Test extend Sub5.Test {
-   pub override fn func() {
+   pub fn __init( hoge:Sub5.testForm! ) {
+   }
+   pro override fn func() {
       print( __mod__, __func__ );
    }
-   pub fn sub() {
+   pub fn sub() mut {
       self.func();
+      self.val = 1;
    }
 }
 
-let test = new Test();
+let mut test = new Test( fn () {} );
 test.sub();

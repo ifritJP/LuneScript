@@ -434,8 +434,9 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                let memberTypeInfo:Ast.TypeInfo = memberNode.get_expType();
                self.writeln( "_classInfo%d.%s = {" ( classTypeId, memberName ) );
                self.writeln(
-                  "  name='%s', staticFlag = %s, " ( memberName,
-                                                     memberNode.$staticFlag ) ..
+                  "  name='%s', staticFlag = %s, mutable = %s,"
+                  ( memberName, memberNode.$staticFlag,
+                    memberNode.$symbolInfo.$mutable ) ..
                   "accessMode = '%s', typeId = %d }"
                   ( memberNode.$accessMode, memberTypeInfo.get_typeId() ) );
 
@@ -588,7 +589,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                   orgTypeInfo = typeInfo.$orgTypeInfo;
                }
                switch orgTypeInfo.$kind {
-                  case .IF, .Map, .Enum, .List, .Array, .Class, .Module {
+                  case .IF, .Map, .Enum, .List, .Array, .Class, .Module, .Func {
                      valid = true;
                   }
                   // default {

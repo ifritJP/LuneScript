@@ -875,12 +875,17 @@ function _TypeInfoNormal:createTypeInfo( param )
       end
       
       local argTypeInfo = {}
-      for __index, typeId in pairs( self.argTypeId ) do
-         if not param.typeId2TypeInfo[typeId] then
-            return nil, string.format( "not found -- %s.%s, %d, %d", parentInfo:getTxt(  ), self.txt, typeId, #self.argTypeId)
+      for index, typeId in pairs( self.argTypeId ) do
+         do
+            local argType = param.typeId2TypeInfo[typeId]
+            if argType ~= nil then
+               table.insert( argTypeInfo, argType )
+            else
+               local mess = string.format( "not found arg (index:%d) -- %s.%s, %d, %d", index, parentInfo:getTxt(  ), self.txt, typeId, #self.argTypeId)
+               return nil, mess
+            end
          end
          
-         table.insert( argTypeInfo, _lune.unwrap( param.typeId2TypeInfo[typeId]) )
       end
       
       local retTypeInfo = {}
@@ -948,7 +953,8 @@ function _TypeInfoNormal:createTypeInfo( param )
                end
             end
             
-            local workTypeInfo = Ast.NormalTypeInfo.create( self.abstractFlag, scope, baseInfo, interfaceList, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable )
+            local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
+            local workTypeInfo = Ast.NormalTypeInfo.create( accessMode, self.abstractFlag, scope, baseInfo, interfaceList, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable )
             newTypeInfo = workTypeInfo
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
             if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method then
@@ -957,7 +963,6 @@ function _TypeInfoNormal:createTypeInfo( param )
                   symbolKind = Ast.SymbolKind.Mtd
                end
                
-               local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
                local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
                workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, workTypeInfo, accessMode, self.staticFlag, false, true )
                param.typeId2Scope[self.typeId] = scope

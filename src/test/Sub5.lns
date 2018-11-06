@@ -1,4 +1,11 @@
+pub form testForm();
+
 pub class Test {
+   pro let mut val:int;
+   pro fn __init() {
+      self.val = 1;
+   }
+   
    pro fn func() {
       print( __mod__, __func__ );
    };

@@ -496,7 +496,7 @@ function convFilter:outputMeta( node )
                      local memberName = memberNode:get_name().txt
                      local memberTypeInfo = memberNode:get_expType(  )
                      self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, memberName) )
-                     self:writeln( string.format( "  name='%s', staticFlag = %s, ", memberName, memberNode:get_staticFlag()) .. string.format( "accessMode = '%s', typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId(  )) )
+                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutable = %s,", memberName, memberNode:get_staticFlag(), memberNode:get_symbolInfo():get_mutable()) .. string.format( "accessMode = '%s', typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId(  )) )
                      pickupTypeId( memberTypeInfo, true )
                   end
                   
@@ -698,7 +698,7 @@ function convFilter:outputMeta( node )
                            
                            do
                               local _switchExp = orgTypeInfo:get_kind()
-                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
+                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
                                  valid = true
                               end
                            end

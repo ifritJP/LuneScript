@@ -1476,7 +1476,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
 
    pub static fn create(
-      abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo,
+      accessMode:AccessMode, abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo,
       interfaceList: List<&TypeInfo>, parentInfo: &TypeInfo, staticFlag: bool,
       kind: TypeInfoKind, txt: str, itemTypeInfo: List<&TypeInfo>,
       argTypeInfoList: List<&TypeInfo>, retTypeInfoList: List<&TypeInfo>,
@@ -1492,7 +1492,7 @@ pub class NormalTypeInfo extend TypeInfo {
       //typeIdSeed = typeIdSeed + 1;
       let mut info = new NormalTypeInfo(
          abstractFlag, scope, baseInfo, interfaceList, nil, false, true,
-         staticFlag, AccessMode.Pub, txt, parentInfo, idProv.$id, kind,
+         staticFlag, accessMode, txt, parentInfo, idProv.$id, kind,
          itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable ); 
       return info;
    }

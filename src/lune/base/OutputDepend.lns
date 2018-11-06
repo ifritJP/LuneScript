@@ -42,6 +42,7 @@ pub override fn convFilter.processRoot(
 {
    let moduleFull = node.$moduleTypeInfo.getFullName( {} );
    self.stream.write( "%s.lua: \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
+   self.stream.write( "  %s.lns \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
    if! let importList = node.$nodeManager.getImportNodeList() {
       foreach impNode in importList {
          self.stream.write( "  %s.lua \\\n" (impNode.$modulePath.gsub("%.", "/")) );

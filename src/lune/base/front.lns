@@ -411,7 +411,12 @@ pub fn Front.saveToLua() mut {
 	    metaPath = string.format(
                "%s/%s.meta", self.option.outputDir, filename );
 	 }
-	 
+
+
+         if! let mut dependsStream = self.option.dependsStream {
+            ast.$node.processFilter( OutputDepend.createFilter( dependsStream ) );
+         }
+         
 	 if luaPath ~= self.option.scriptPath {
 	    let! mut fileObj = io.open( luaPath, "w" ) {
                error( "write open error -- %s" (luaPath) );
@@ -437,9 +442,6 @@ pub fn Front.saveToLua() mut {
 	    if! metaFileObj {     
 	       _exp.close();
 	    }
-         }
-         if! let mut dependsStream = self.option.dependsStream {
-            ast.$node.processFilter( OutputDepend.createFilter( dependsStream ) );
          }
       }, self.option.scriptPath .. ".profi" );
 }

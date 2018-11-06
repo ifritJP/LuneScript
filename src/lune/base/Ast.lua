@@ -1989,7 +1989,7 @@ function NormalTypeInfo:equals( typeInfo )
 
    return self:equalsSub( typeInfo )
 end
-function NormalTypeInfo.create( abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable )
+function NormalTypeInfo.create( accessMode, abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable )
 
    if kind == TypeInfoKind.Prim then
       do
@@ -2003,7 +2003,7 @@ function NormalTypeInfo.create( abstractFlag, scope, baseInfo, interfaceList, pa
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, AccessMode.Pub, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, accessMode, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
