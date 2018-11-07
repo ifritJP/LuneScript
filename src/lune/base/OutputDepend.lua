@@ -17,6 +17,8 @@ function convFilter.new( stream )
    return obj
 end
 function convFilter:__init(stream) 
+   Ast.Filter.__init( self )
+   
    self.stream = stream
 end
 function convFilter.setmeta( obj )

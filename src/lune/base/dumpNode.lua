@@ -35,6 +35,7 @@ function dumpFilter.new(  )
 end         
 function dumpFilter:__init(  ) 
 
+   Ast.Filter.__init( self )
 end
 
 local function dump( prefix, depth, node, txt )

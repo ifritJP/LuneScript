@@ -311,6 +311,8 @@ function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, s
    return obj
 end
 function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag) 
+   SymbolInfo.__init( self )
+   
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
    self.canBeLeft = canBeLeft
@@ -1141,6 +1143,7 @@ function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
 end         
 function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft ) 
 
+   SymbolInfo.__init( self )
    self.symbolInfo = symbolInfo
    self.prefixTypeInfo = prefixTypeInfo
    self.overrideCanBeLeft = overrideCanBeLeft
@@ -1247,6 +1250,7 @@ function NilableTypeInfo.new( orgTypeInfo, typeId )
 end         
 function NilableTypeInfo:__init( orgTypeInfo, typeId ) 
 
+   TypeInfo.__init( self )
    self.orgTypeInfo = orgTypeInfo
    self.typeId = typeId
 end
@@ -1400,6 +1404,7 @@ function ModifierTypeInfo.new( srcTypeInfo, typeId, mutable )
 end         
 function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutable ) 
 
+   TypeInfo.__init( self )
    self.srcTypeInfo = srcTypeInfo
    self.typeId = typeId
    self.mutable = mutable
@@ -2539,13 +2544,13 @@ function TypeInfo.canEvalWithBase( dist, distMut, other, opTxt )
             return true
          end
          
-         if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) then
+         if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dist:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
          return true
       elseif _switchExp == TypeInfoKind.Method then
-         if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) then
+         if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dist:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
@@ -6961,23 +6966,24 @@ function ExpCallSuperNode:canBeStatement(  )
 
    return true
 end
-function ExpCallSuperNode.new( pos, typeList, superType, expList )
+function ExpCallSuperNode.new( pos, typeList, superType, methodType, expList )
    local obj = {}
    ExpCallSuperNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, superType, expList ); end
+   if obj.__init then obj:__init( pos, typeList, superType, methodType, expList ); end
    return obj
 end
-function ExpCallSuperNode:__init(pos, typeList, superType, expList) 
+function ExpCallSuperNode:__init(pos, typeList, superType, methodType, expList) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpCallSuper']), pos, typeList)
    
    
    self.superType = superType
+   self.methodType = methodType
    self.expList = expList
    
 end
-function ExpCallSuperNode.create( nodeMan, pos, typeList, superType, expList )
+function ExpCallSuperNode.create( nodeMan, pos, typeList, superType, methodType, expList )
 
-   local node = ExpCallSuperNode.new(pos, typeList, superType, expList)
+   local node = ExpCallSuperNode.new(pos, typeList, superType, methodType, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -6986,6 +6992,9 @@ function ExpCallSuperNode.setmeta( obj )
 end
 function ExpCallSuperNode:get_superType()       
    return self.superType         
+end
+function ExpCallSuperNode:get_methodType()       
+   return self.methodType         
 end
 function ExpCallSuperNode:get_expList()       
    return self.expList         

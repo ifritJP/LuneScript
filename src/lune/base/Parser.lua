@@ -309,6 +309,7 @@ function WrapParser.new( parser, name )
 end         
 function WrapParser:__init( parser, name ) 
 
+   Parser.__init( self )
    self.parser = parser
    self.name = name
 end
@@ -328,6 +329,8 @@ function StreamParser.new( stream, name, luaMode )
    return obj
 end
 function StreamParser:__init(stream, name, luaMode) 
+   Parser.__init( self )
+   
    self.eof = false
    self.stream = stream
    self.streamName = name
@@ -806,6 +809,7 @@ function DummyParser.new(  )
 end         
 function DummyParser:__init(  ) 
 
+   Parser.__init( self )
 end
 
 return _moduleObj

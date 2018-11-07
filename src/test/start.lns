@@ -659,4 +659,5 @@ pub let val = 100;
       _print( `{ testfunc( val ) + 2 } );
    }  
    func( sub1, 3 );
- }
+}
+

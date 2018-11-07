@@ -97,6 +97,24 @@
    func( sub3, 3 ); // error
 
    form form2( val:int ): int;
-   let test2:form2 = fn( val:int ):int { return 1; };
+   let test2:form2 = fn( val:int ) {}; // error
    func( test2, 1 );
+
+   form form3():int!;
+
+   let test3:form3 = fn() {};
+}
+
+abstract class Super {
+   pub abstract fn func2();
+   pub abstract fn func() : int;
+}
+
+abstract class Sub extend Super {
+   pub override fn func2() {
+      super();
+   }
+   pub override fn func(): int {
+      return super();
+   }
 }

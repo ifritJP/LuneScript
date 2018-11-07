@@ -1349,6 +1349,8 @@ fn TransUnit.analyzeDeclFunc(
       }
    }
 
+
+   let mut isCtorFlag = false;
    let mut kind = Ast.NodeKind.$DeclConstr;
    let mut typeKind = Ast.TypeInfoKind.Func;
    if classTypeInfo {
@@ -1357,6 +1359,7 @@ fn TransUnit.analyzeDeclFunc(
       }
       switch (unwrap name).txt {
          case "__init" {
+            isCtorFlag = true;
             kind = Ast.NodeKind.$DeclConstr;
             foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
                if not symbolInfo.$staticFlag {
@@ -1569,6 +1572,18 @@ fn TransUnit.analyzeDeclFunc(
       let __func__Symbol = funcBodyScope.addLocalVar(
          false, false, "__func__", Ast.builtinTypeString, false );
       self.has__func__Symbol = false;
+
+
+      when! classTypeInfo {
+         if! let overrideType =
+            self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
+         {
+            if not overrideType.$abstractFlag {
+               funcBodyScope.addLocalVar( false, false, "super", overrideType, false );
+            }
+         }
+      }
+      
       
       self.pushback();
       body = self.analyzeBlock( .Func, funcBodyScope );
@@ -1592,6 +1607,18 @@ fn TransUnit.analyzeDeclFunc(
                                    "This funcion must be never return. -- %s"
                                    (breakKind.$_txt ));
                }              
+            }
+         }
+         if isCtorFlag {
+            when! classTypeInfo {
+               if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
+                  // Super クラスを持っている場合
+                  if #body.$stmtList == 0 or
+                     body.$stmtList[ 1 ].$kind ~= Ast.nodeKind.ExpCallSuper
+                  {                 
+                     self.addErrMess( body.$pos, "__init must call super() with first." );
+                  }
+               }
             }
          }
       }

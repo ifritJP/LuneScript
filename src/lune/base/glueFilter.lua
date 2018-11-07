@@ -380,6 +380,7 @@ function glueFilter.new( outputDir )
 end         
 function glueFilter:__init( outputDir ) 
 
+   Ast.Filter.__init( self )
    self.outputDir = outputDir
 end
 

@@ -250,6 +250,7 @@ pub class StreamParser extend Parser {
    let builtInSet :Map<str,bool>;
    let multiCharDelimitMap : Map<str,str[@]>;
    pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
+      super();
       self.eof = false;
       self.stream = stream;
       self.streamName = name;

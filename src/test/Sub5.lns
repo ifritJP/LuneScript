@@ -10,3 +10,32 @@ pub class Test {
       print( __mod__, __func__ );
    };
 }
+
+class Super {
+   pro let val:int;
+   pro fn __init() {
+      self.val = 100;
+   }
+   pub fn func(val:int): int {
+      print( __func__, self.val, val );
+      return val + 1000;
+   }
+}
+
+class Sub extend Super {
+}
+
+class SubSub extend Sub {
+   pub fn __init() {
+      super();
+   }
+   pub override fn func(val:int):int {
+      print( __func__, self.val );
+      return super( 1 );
+   }
+}
+
+{
+   let test = new SubSub();
+   print( test.func( 20 ) );
+}

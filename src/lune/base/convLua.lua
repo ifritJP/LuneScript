@@ -183,6 +183,8 @@ function convFilter.new( streamName, stream, metaStream, convMode, inMacro, modu
    return obj
 end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule) 
+   Ast.Filter.__init( self )
+   
    self.macroVarSymMap = {}
    self.needModuleObj = true
    self.indentQueue = {0}
@@ -1075,6 +1077,16 @@ end
 function %s:__init( %s ) 
 ]==], className, argTxt, className, argTxt, className, argTxt) )
       self:pushIndent(  )
+      if baseInfo ~= Ast.headTypeInfo then
+         do
+            local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
+            if superInit ~= nil then
+               self:writeln( string.format( "%s.__init( self )", self:getFullName( baseInfo )) )
+            end
+         end
+         
+      end
+      
       for __index, member in pairs( memberList ) do
          local memberName = member:get_name().txt
          self:writeln( string.format( "self.%s = %s", memberName, memberName ) )
@@ -1341,7 +1353,9 @@ function convFilter:process__func__symbol( has__func__Symbol, classType, funcNam
          funcName = "<anonymous>"
       end
       
+      self:pushIndent(  )
       self:writeln( string.format( "local __func__ = '%s.%s'", nameSpace, funcName) )
+      self:popIndent(  )
    end
    
 end
@@ -1410,8 +1424,8 @@ end
 
 function convFilter:processExpCallSuper( node, parent )
 
-   local typeInfo = node:get_superType(  )
-   self:write( string.format( "%s.__init( self ", self:getFullName( typeInfo )) )
+   local typeInfo = node:get_superType()
+   self:write( string.format( "%s.%s( self ", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
    do
       local _exp = node:get_expList()
       if _exp ~= nil then
@@ -2021,6 +2035,15 @@ function convFilter:processExpCall( node, parent )
       end
       
       
+   elseif node:get_func():get_kind() == Ast.NodeKind.get_ExpRef() then
+      local refNode = node:get_func()
+      if refNode:get_token().txt == "super" then
+         wroteFuncFlag = true
+         setArgFlag = true
+         local funcType = refNode:get_expType()
+         self:write( string.format( "%s.%s( self ", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
+      end
+      
    end
    
    if not wroteFuncFlag then
@@ -2206,20 +2229,27 @@ end
 
 function convFilter:processExpRef( node, parent )
 
-   if self.macroVarSymMap[node:get_symbolInfo():getOrg(  )] then
-      self:write( "macroVar." )
+   if node:get_token().txt == "super" then
+      local funcType = node:get_expType()
+      self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
    else
     
-      if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
-         if self.needModuleObj then
-            self:write( "_moduleObj." )
+      if self.macroVarSymMap[node:get_symbolInfo():getOrg(  )] then
+         self:write( "macroVar." )
+      else
+       
+         if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
+            if self.needModuleObj then
+               self:write( "_moduleObj." )
+            end
+            
          end
          
       end
       
+      self:write( node:get_token().txt )
    end
    
-   self:write( node:get_token().txt )
 end
 
 
@@ -2529,6 +2559,7 @@ function MacroEvalImp.new( mode )
 end         
 function MacroEvalImp:__init( mode ) 
 
+   Ast.MacroEval.__init( self )
    self.mode = mode
 end
 

@@ -302,6 +302,7 @@ class MacroPaser extend Parser.Parser {
    let name: str;
 
    pub fn __init( tokenList: &List<&Parser.Token>, name: str ) {
+      super();
       self.pos = 1;
       self.tokenList = tokenList;
       self.name = name;
@@ -1453,23 +1454,48 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
 
    self.checkNextToken( ";" );
 
+
    let classType = self.getCurrentClass();
-   let superType = classType.get_baseTypeInfo();
-   if superType.equals( Ast.headTypeInfo ) {
-      self.addErrMess( firstToken.pos, "This class doesn't have super-class." );
-   }
-   else {
-      let! superScope = superType.$scope {
-         self.error( "not found super scope" );
-      };
-      let! superCtorType = superScope.getTypeInfoChild( "__init" ) {
-         self.error( "not found super '__init'" );
-      };        
-      self.checkMatchValType( firstToken.$pos, superCtorType, expList, [] );
+   
+   let currentFunc = self.getCurrentNamespaceTypeInfo();
+   if currentFunc.$kind == .Method {
+      let superType = classType.get_baseTypeInfo();
+      if superType.equals( Ast.headTypeInfo ) {
+         self.addErrMess( firstToken.pos, "This class doesn't have super-class." );
+      }     
+      else {
+         if currentFunc.$rawTxt == "__init" {
+            let! superScope = superType.$scope {
+               self.error( "not found super scope" );
+            };    
+            let! superCtorType = superScope.getTypeInfoChild( "__init" ) {
+               self.error( "not found super '__init'" );
+            }; 
+            self.checkMatchValType( firstToken.$pos, superCtorType, expList, [] );
+            return Ast.ExpCallSuperNode.create(
+               self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
+               superType, superCtorType, expList );
+         }
+         else {
+            if! let superFunc = (unwrap superType.$scope).getTypeInfoField(
+               currentFunc.$rawTxt, true, self.scope )
+            {
+               if superFunc.$abstractFlag {
+                  self.addErrMess( firstToken.pos, "super is abstract." );
+               }
+               self.checkMatchValType( firstToken.$pos, superFunc, expList, [] );
+               return Ast.ExpCallSuperNode.create(
+                  self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
+                  superType, superFunc, expList );
+            }
+            self.addErrMess( firstToken.pos, "this is not override method." );
+            return self.createNoneNode( firstToken.pos );
+         }
+      }
    }
 
-   return Ast.ExpCallSuperNode.create(
-      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], superType, expList );
+   self.addErrMess( firstToken.pos, "super can't call here." );
+   return self.createNoneNode( firstToken.pos );
 }
 
 fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {

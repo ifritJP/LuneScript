@@ -663,6 +663,7 @@ function _TypeInfoNilable.new( nilable, orgTypeId )
 end         
 function _TypeInfoNilable:__init( nilable, orgTypeId ) 
 
+   _TypeInfo.__init( self )
    self.nilable = nilable
    self.orgTypeId = orgTypeId
 end
@@ -724,6 +725,7 @@ function _TypeInfoModifier.new( srcTypeId, mutable )
 end         
 function _TypeInfoModifier:__init( srcTypeId, mutable ) 
 
+   _TypeInfo.__init( self )
    self.srcTypeId = srcTypeId
    self.mutable = mutable
 end
@@ -820,6 +822,7 @@ function _TypeInfoModule.new( txt )
 end         
 function _TypeInfoModule:__init( txt ) 
 
+   _TypeInfo.__init( self )
    self.txt = txt
 end
 function _TypeInfoModule:_toMap()
@@ -1000,6 +1003,7 @@ function _TypeInfoNormal.new( abstractFlag, baseId, txt, staticFlag, accessMode,
 end         
 function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children ) 
 
+   _TypeInfo.__init( self )
    self.abstractFlag = abstractFlag
    self.baseId = baseId
    self.txt = txt
@@ -1087,6 +1091,7 @@ function _TypeInfoEnum.new( txt, accessMode, valTypeId, enumValList )
 end         
 function _TypeInfoEnum:__init( txt, accessMode, valTypeId, enumValList ) 
 
+   _TypeInfo.__init( self )
    self.txt = txt
    self.accessMode = accessMode
    self.valTypeId = valTypeId
@@ -3450,6 +3455,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
    end
    
+   local isCtorFlag = false
    local kind = Ast.NodeKind.get_DeclConstr()
    local typeKind = Ast.TypeInfoKind.Func
    if classTypeInfo then
@@ -3460,6 +3466,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       do
          local _switchExp = (_lune.unwrap( name) ).txt
          if _switchExp == "__init" then
+            isCtorFlag = true
             kind = Ast.NodeKind.get_DeclConstr()
             for symbolName, symbolInfo in pairs( self.scope:get_symbol2SymbolInfoMap() ) do
                if not symbolInfo:get_staticFlag() then
@@ -3663,6 +3670,19 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
       local __func__Symbol = funcBodyScope:addLocalVar( false, false, "__func__", Ast.builtinTypeString, false )
       self.has__func__Symbol = false
+      if classTypeInfo ~= nil then
+         do
+            local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope )
+            if overrideType ~= nil then
+               if not overrideType:get_abstractFlag() then
+                  funcBodyScope:addLocalVar( false, false, "super", overrideType, false )
+               end
+               
+            end
+         end
+         
+      end
+      
       self:pushback(  )
       body = self:analyzeBlock( Ast.BlockKind.Func, funcBodyScope )
       if body ~= nil then
@@ -3683,6 +3703,19 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
                if breakKind ~= Ast.BreakKind.NeverRet then
                   self:addErrMess( firstToken.pos, string.format( "This funcion must be never return. -- %s", Ast.BreakKind:_getTxt( breakKind)
                   ) )
+               end
+               
+            end
+            
+         end
+         
+         if isCtorFlag then
+            if classTypeInfo ~= nil then
+               if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
+                  if #body:get_stmtList() == 0 or body:get_stmtList()[1]:get_kind() ~= Ast.nodeKind['ExpCallSuper'] then
+                     self:addErrMess( body:get_pos(), "__init must call super() with first." )
+                  end
+                  
                end
                
             end
@@ -4337,6 +4370,8 @@ function MacroPaser.new( tokenList, name )
    return obj
 end
 function MacroPaser:__init(tokenList, name) 
+   Parser.Parser.__init( self )
+   
    self.pos = 1
    self.tokenList = tokenList
    self.name = name
@@ -5331,29 +5366,54 @@ function TransUnit:analyzeSuper( firstToken )
    
    self:checkNextToken( ";" )
    local classType = self:getCurrentClass(  )
-   local superType = classType:get_baseTypeInfo(  )
-   if superType:equals( Ast.headTypeInfo ) then
-      self:addErrMess( firstToken.pos, "This class doesn't have super-class." )
-   else
-    
-      local superScope = superType:get_scope()
-      if  nil == superScope then
-         local _superScope = superScope
-      
-         self:error( "not found super scope" )
+   local currentFunc = self:getCurrentNamespaceTypeInfo(  )
+   if currentFunc:get_kind() == Ast.TypeInfoKind.Method then
+      local superType = classType:get_baseTypeInfo(  )
+      if superType:equals( Ast.headTypeInfo ) then
+         self:addErrMess( firstToken.pos, "This class doesn't have super-class." )
+      else
+       
+         if currentFunc:get_rawTxt() == "__init" then
+            local superScope = superType:get_scope()
+            if  nil == superScope then
+               local _superScope = superScope
+            
+               self:error( "not found super scope" )
+            end
+            
+            local superCtorType = superScope:getTypeInfoChild( "__init" )
+            if  nil == superCtorType then
+               local _superCtorType = superCtorType
+            
+               self:error( "not found super '__init'" )
+            end
+            
+            self:checkMatchValType( firstToken.pos, superCtorType, expList, {} )
+            return Ast.ExpCallSuperNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, superType, superCtorType, expList )
+         else
+          
+            do
+               local superFunc = (_lune.unwrap( superType:get_scope()) ):getTypeInfoField( currentFunc:get_rawTxt(), true, self.scope )
+               if superFunc ~= nil then
+                  if superFunc:get_abstractFlag() then
+                     self:addErrMess( firstToken.pos, "super is abstract." )
+                  end
+                  
+                  self:checkMatchValType( firstToken.pos, superFunc, expList, {} )
+                  return Ast.ExpCallSuperNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, superType, superFunc, expList )
+               end
+            end
+            
+            self:addErrMess( firstToken.pos, "this is not override method." )
+            return self:createNoneNode( firstToken.pos )
+         end
+         
       end
       
-      local superCtorType = superScope:getTypeInfoChild( "__init" )
-      if  nil == superCtorType then
-         local _superCtorType = superCtorType
-      
-         self:error( "not found super '__init'" )
-      end
-      
-      self:checkMatchValType( firstToken.pos, superCtorType, expList, {} )
    end
    
-   return Ast.ExpCallSuperNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, superType, expList )
+   self:addErrMess( firstToken.pos, "super can't call here." )
+   return self:createNoneNode( firstToken.pos )
 end
 
 function TransUnit:analyzeUnwrap( firstToken )

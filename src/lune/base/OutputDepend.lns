@@ -33,6 +33,7 @@ class convFilter extend Ast.Filter {
    
    pub fn __init( stream:oStream ) 
    {
+      super();
       self.stream = stream;
    }
 }

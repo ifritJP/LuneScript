@@ -100,6 +100,7 @@ class convFilter extend Ast.Filter (oStream) {
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
                   moduleSymbolKind: Ast.SymbolKind, separateLuneModule:bool ) 
    {
+      super();
       //Util.errorLog( "__init: %s" (mode) );
       self.macroVarSymMap = {};
       self.needModuleObj = true;
@@ -966,6 +967,15 @@ function %s:__init( %s )
             ( className, argTxt, className,
               argTxt, className, argTxt ) );
       self.pushIndent();
+
+      if baseInfo ~= Ast.headTypeInfo {
+         // Super クラスを持つ場合、その Super クラスの __init をコールする。
+         if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
+            self.writeln( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
+         }
+      }
+
+      
       foreach member in memberList {
          let memberName = member.$name.txt;
          self.writeln( string.format( "self.%s = %s", memberName, memberName ));
@@ -1265,7 +1275,9 @@ fn convFilter.process__func__symbol(
       if funcName == "" {
          funcName = "<anonymous>";
       }
+      self.pushIndent();
       self.writeln( "local __func__ = '%s.%s'" (nameSpace, funcName) );
+      self.popIndent();
    }  
 }
 
@@ -1343,8 +1355,9 @@ pub override fn convFilter.processDeclDestr(
 pub override fn convFilter.processExpCallSuper( 
    node: Ast.ExpCallSuperNode, parent: &Ast.Node ) mut
 {
-   let typeInfo:Ast.TypeInfo = node.get_superType();
-   self.write( "%s.__init( self " ( self.getFullName( typeInfo ) ) );              
+   let typeInfo:Ast.TypeInfo = node.$superType;
+   self.write( "%s.%s( self "
+               ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) ); 
 
    if! node.$expList {
       self.write( "," );
@@ -1912,12 +1925,21 @@ pub override fn convFilter.processExpCall(
             }
          }  
       }     
-      
    }
    
    if node.$func.$kind == Ast.NodeKind.$RefField {
       _fieldCall( RefFieldNode );
    }
+   elseif node.$func.$kind == Ast.NodeKind.$ExpRef {
+      let refNode = node.$func@@Ast.ExpRefNode;
+      if refNode.$token.txt == "super" {
+         wroteFuncFlag = true;
+         setArgFlag = true;
+         let funcType = refNode.$expType;
+         self.write( "%s.%s( self " ( self.getFullName( funcType.$parentInfo ),
+                                      funcType.$rawTxt ) );
+      }
+   }  
    
 
    if not wroteFuncFlag {
@@ -2101,19 +2123,26 @@ pub override fn convFilter.processExpOp2(
 pub override fn convFilter.processExpRef( 
    node: Ast.ExpRefNode, parent: &Ast.Node ) mut
 {
-   if self.macroVarSymMap[ node.$symbolInfo.getOrg() ] {
-      self.write( "macroVar." );
+   if node.$token.txt == "super" {
+      let funcType = node.$expType;
+      self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
+                            funcType.$rawTxt ) );
    }
    else {
-      if node.$symbolInfo.$accessMode == .Pub and
-         node.$symbolInfo.$kind == Ast.SymbolKind.Var
-      {  
-         if self.needModuleObj {
-            self.write( "_moduleObj." );
+      if self.macroVarSymMap[ node.$symbolInfo.getOrg() ] {
+         self.write( "macroVar." );
+      }  
+      else {
+         if node.$symbolInfo.$accessMode == .Pub and
+            node.$symbolInfo.$kind == Ast.SymbolKind.Var
+         {  
+            if self.needModuleObj {
+               self.write( "_moduleObj." );
+            }  
          }  
-      }
+      }  
+      self.write( node.$token.txt );
    }
-   self.write( node.$token.txt );
 };
 
 pub override fn convFilter.processExpRefItem( 

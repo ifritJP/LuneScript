@@ -202,6 +202,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       accessMode: AccessMode, staticFlag: bool, name: str, 
       typeInfo: &TypeInfo, mutable: bool!, hasValueFlag: bool )
    {
+      super();
       NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
       self.canBeLeft = canBeLeft;
@@ -2037,7 +2038,8 @@ pub static fn TypeInfo.canEvalWithBase(
          if not TypeInfo.checkMatchType( dist.$argTypeInfoList,
                                          otherSrc.$argTypeInfoList, false ) or
             not TypeInfo.checkMatchType( dist.$retTypeInfoList,
-                                         otherSrc.$retTypeInfoList, false )
+                                         otherSrc.$retTypeInfoList, false ) or
+            #dist.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
          }
@@ -2047,7 +2049,8 @@ pub static fn TypeInfo.canEvalWithBase(
          if not TypeInfo.checkMatchType( dist.$argTypeInfoList,
                                          otherSrc.$argTypeInfoList, false ) or
             not TypeInfo.checkMatchType( dist.$retTypeInfoList,
-                                         otherSrc.$retTypeInfoList, false )
+                                         otherSrc.$retTypeInfoList, false ) or
+            #dist.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
          }
@@ -2981,6 +2984,7 @@ _declNodeClass( "DeclDestr", Node, false, false, true,
 
 _declNodeClass( "ExpCallSuper", Node, false, false, true,
                 [ { "superType": "&TypeInfo" },
+                  { "methodType": "&TypeInfo" },
                   { "expList": "&ExpListNode!" } ]
 );
 

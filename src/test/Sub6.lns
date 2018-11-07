@@ -2,6 +2,7 @@ import test.Sub5;
 
 class Test extend Sub5.Test {
    pub fn __init( hoge:Sub5.testForm! ) {
+      super();
    }
    pro override fn func() {
       print( __mod__, __func__ );
