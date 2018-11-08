@@ -137,9 +137,9 @@ function Front:createPaser(  )
    return createPaser( self.option.scriptPath, mod )
 end
 
-function Front:createAst( parser, mod, analyzeModule, analyzeMode, pos )
+function Front:createAst( importModuleInfo, parser, mod, analyzeModule, analyzeMode, pos )
 
-   local transUnit = TransUnit.TransUnit.new(convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos)
+   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos)
    return transUnit:createAST( parser, false, mod )
 end
 
@@ -182,18 +182,18 @@ function Front:loadFromAst( ast, streamName, onlyMeta )
    return meta, loadFromLuaTxt( stream:get_txt() )
 end
 
-function Front:loadFromLnsTxt( name, txt, onlyMeta )
+function Front:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
 
-   local transUnit = TransUnit.TransUnit.new(convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil)
+   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil)
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.StreamParser.new(stream, name, false)
    local ast = transUnit:createAST( parser, false, nil )
    return self:loadFromAst( ast, name, onlyMeta )
 end
 
-function Front:loadFile( path, mod, onlyMeta )
+function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
 
-   local ast = self:createAst( createPaser( path, mod ), mod, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( importModuleInfo, createPaser( path, mod ), mod, nil, TransUnit.AnalyzeMode.Compile )
    return self:loadFromAst( ast, path, onlyMeta )
 end
 
@@ -292,7 +292,7 @@ function Front:loadModule( mod )
                   end
                   
                   if loadVal == nil then
-                     local meta, workVal = self:loadFile( lnsPath, mod, false )
+                     local meta, workVal = self:loadFile( frontInterface.ImportModuleInfo.new(), lnsPath, mod, false )
                      local info = {}
                      info['mod'] = workVal
                      info['meta'] = meta
@@ -317,7 +317,7 @@ function Front:loadModule( mod )
    error( string.format( "load error, %s", mod) )
 end
 
-function Front:loadMeta( mod )
+function Front:loadMeta( importModuleInfo, mod )
 
    if self.loadedMetaMap[mod] == nil then
       do
@@ -356,7 +356,7 @@ function Front:loadMeta( mod )
                   end
                   
                   if meta == nil then
-                     local metawork, luaTxt = self:loadFile( lnsPath, mod, true )
+                     local metawork, luaTxt = self:loadFile( importModuleInfo, lnsPath, mod, true )
                      self.loadedMetaMap[mod] = metawork
                      self.convertedMap[mod] = luaTxt
                   end
@@ -402,7 +402,7 @@ function Front:dumpAst(  )
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.profile( self.option.validProf, function (  )
    
-      local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
+      local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
       ast:get_node():processFilter( dumpNode.dumpFilter.new(), "", 0 )
    end
    , self.option.scriptPath .. ".profi" )
@@ -413,21 +413,21 @@ function Front:checkDiag(  )
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.setErrorCode( 0 )
-   self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Diag )
+   self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Diag )
 end
 
 function Front:complete(  )
 
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
-   self:createAst( self:createPaser(  ), mod, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+   self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
 end
 
 function Front:createGlue(  )
 
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
-   local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
    local glue = glueFilter.glueFilter.new(self.option.outputDir)
    ast:get_node():processFilter( glue )
 end
@@ -436,7 +436,7 @@ function Front:convertToLua(  )
 
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
-   local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
    local convMode = convLua.ConvMode.Convert
    if self.option.mode == Option.ModeKind.LuaMeta then
       convMode = convLua.ConvMode.ConvMeta
@@ -451,7 +451,7 @@ function Front:saveToLua(  )
    local mod = scriptPath2Module( self.option.scriptPath )
    Util.profile( self.option.validProf, function (  )
    
-      local ast = self:createAst( self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
+      local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, nil, TransUnit.AnalyzeMode.Compile )
       local luaPath = self.option.scriptPath:gsub( "%.lns$", ".lua" )
       local metaPath = self.option.scriptPath:gsub( "%.lns$", ".meta" )
       if self.option.outputDir then

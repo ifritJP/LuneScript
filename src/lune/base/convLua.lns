@@ -67,12 +67,18 @@ let bitBinOpMap = {
    "|<<": BitOpKind.LShift,
 };
 
+class ModuleInfo extend (Ast.ModuleInfoIF){
+   let assignName:str {pub};
+   let modulePath:str {pub};
+}
+
+
 class convFilter extend Ast.Filter (oStream) {
    pri let streamName: str;
    pri let mut stream: oStream;
    pri let mut metaStream: oStream;
    pri let mut outMetaFlag: bool;
-   pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,str>;
+   pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,ModuleInfo>;
    pri let convMode: ConvMode;
    pri let inMacro: bool;
    pri let mut indentQueue: List<int>;
@@ -224,8 +230,10 @@ pub override fn convFilter.processImport(
    node: Ast.ImportNode, parent: &Ast.Node ) mut
 {
    let module = node.get_modulePath();
-   let moduleName = string.gsub( module, ".*%.", "" );
-   self.typeInfo2ModuleName[ node.$moduleTypeInfo ] = module;
+   let mut moduleName = module.gsub( ".*%.", "" );
+   moduleName = node.$assignName;
+   self.typeInfo2ModuleName[ node.$moduleTypeInfo ] =
+      new ModuleInfo( moduleName, module );
    //if self.convMode == "exe" or self.convMode == "ast" {
    if self.convMode == .Exec {
       self.write(
@@ -2406,7 +2414,9 @@ pub class MacroEvalImp extend Ast.MacroEval {
          newEnv[ key ] = val;
       }
       newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): stem {
-         let metaInfo, mut val = frontInterface.loadFromLnsTxt( name, txt, false );
+         let mut importModuleInfo = new frontInterface.ImportModuleInfo();
+         let metaInfo, mut val =
+            frontInterface.loadFromLnsTxt( importModuleInfo, name, txt, false );
          return val;
       };
       

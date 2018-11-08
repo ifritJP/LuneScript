@@ -5,6 +5,11 @@ import test.error.Sub6;
 }
 Sub6.func2( .val1 );
 
+{
+   let val = new Sub6.Test();
+   Sub6.func3( 1 );
+}
+
 enum testEnum {
    val1,
    val2,

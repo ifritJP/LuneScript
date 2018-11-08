@@ -62,6 +62,9 @@ pub enum AnalyzeMode {
 
 pub class TransUnit {
 
+   /** */
+   pri let mut importModuleInfo: frontInterface.ImportModuleInfo;
+   
    /** true の場合は mut 制御が有効 */
    pri let mut validMutControl: bool;
 
@@ -138,9 +141,11 @@ pub class TransUnit {
    */
    pri let mut protoFuncMap:Map<&Ast.TypeInfo,&Parser.Position>;
 
-   pub fn __init( macroEval: Ast.MacroEval,
+   pub fn __init( importModuleInfo:frontInterface.ImportModuleInfo,
+                  macroEval: Ast.MacroEval,
                   analyzeModule:str!, mode:AnalyzeMode!, pos:&Parser.Position! )
    {
+      self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
       self.loopScopeQueue = [];
       self.has__func__Symbol = false;
@@ -161,7 +166,7 @@ pub class TransUnit {
       // self.scope = Ast.rootScope;
       // self.topScope = Ast.rootScope;
       // self.moduleScope = Ast.rootScope;
-      self.scope = new Ast.Scope( Ast.rootScope, true, [] );
+      self.scope = new Ast.Scope( Ast.rootScope, true, nil );
       self.topScope = self.scope;
       self.moduleScope = self.scope;
       self.typeId2ClassMap = {};
@@ -194,9 +199,10 @@ pub class TransUnit {
    }
    
 
-   pri fn pushScope( classFlag: bool, inheritList: Ast.Scope[]! ) mut : Ast.Scope {
-      self.scope = new Ast.Scope( self.scope, classFlag,
-                                  unwrap inheritList default []);
+   pri fn pushScope( classFlag: bool, inheritScope: Ast.Scope!,
+                     ifScopeList:List<Ast.Scope>! ) mut : Ast.Scope
+   {  
+      self.scope = new Ast.Scope( self.scope, classFlag, inheritScope, ifScopeList );
       return self.scope;
    }
 
@@ -302,13 +308,19 @@ pub class TransUnit {
       }
       else {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
-         let mut inheritList:Ast.Scope[] = [];
-         if! baseInfo {
-            inheritList = [ unwrap _exp.get_scope() ];
+         let mut inheritScope:Ast.Scope! = nil;
+         when! baseInfo {
+            inheritScope = unwrap baseInfo.$scope;
+         }
+         let mut ifScopeList:List<Ast.Scope> = [];
+         when! interfaceList {
+            foreach ifType in interfaceList {
+               ifScopeList.insert( unwrap ifType.get_scope() );
+            }
          }
          
          let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true, inheritList );
+         let mut scope = self.pushScope( true, inheritScope, ifScopeList );
          typeInfo = Ast.NormalTypeInfo.createClass(
             classFlag, abstractFlag, scope, baseInfo, interfaceList,
             parentInfo, externalFlag, accessMode, name );
@@ -514,7 +526,7 @@ class _TypeInfoModule extend _TypeInfo {
          param.typeId2TypeInfo[ self.typeId ] = _exp;
       }
       else {
-         let mut scope = new Ast.Scope( parentScope, true, [] );
+         let mut scope = new Ast.Scope( parentScope, true, nil );
 
          let mut mutable = false;
          if self.typeId == param.metaInfo._moduleTypeId {
@@ -617,7 +629,7 @@ class _TypeInfoNormal extend _TypeInfo {
                let baseScope = unwrap param.typeId2Scope[ self.baseId ];
 
                let mut scope = new Ast.Scope(
-                  parentScope, true, [ baseScope ] );
+                  parentScope, true, baseScope );
 
                let workTypeInfo = Ast.NormalTypeInfo.createClass(
                   self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
@@ -637,7 +649,7 @@ class _TypeInfoNormal extend _TypeInfo {
                if self.kind == Ast.TypeInfoKind.Func or
                   self.kind == Ast.TypeInfoKind.Method
                {     
-                  scope = new Ast.Scope( parentScope, false, [] );
+                  scope = new Ast.Scope( parentScope, false, nil );
                }     
 
 
@@ -701,7 +713,7 @@ class _TypeInfoEnum extend _TypeInfo {
       let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
       let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
       let mut parentScope = unwrap Ast.getScope( parentInfo );
-      let mut scope = new Ast.Scope( parentScope, true, [] );
+      let mut scope = new Ast.Scope( parentScope, true, nil );
       
       param.typeId2Scope[ self.typeId ] = scope;
       let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
@@ -1392,11 +1404,17 @@ fn TransUnit.processImport(
    modulePath:str, moduleInfoMap:Map<&Ast.TypeInfo,&Ast.ModuleInfo> ) mut :
    &_MetaInfo, &Map<int,&Ast.TypeInfo>
 {
+   if not self.importModuleInfo.add( modulePath ) {
+      self.error( "recursive import: %s -> %s"
+                  ( self.importModuleInfo.getFull(), modulePath ) );
+   }
+   
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
-      let metaInfo = frontInterface.loadMeta( modulePath )@@_MetaInfo;
+      let metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )@@_MetaInfo;
       let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
       let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo._moduleTypeId ];
       moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
+      self.importModuleInfo.remove();
       return metaInfo, typeId2TypeInfo;
    }
    
@@ -1404,8 +1422,8 @@ fn TransUnit.processImport(
    apply txt of string.gmatch( modulePath, '[^%.]+' ) {
       nameList.insert( txt@@str );
    }
-   
-   let metaInfo = frontInterface.loadMeta( modulePath )@@_MetaInfo;
+
+   let metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )@@_MetaInfo;
 
    // 依存するモジュールのメタ情報を読み込み
    let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
@@ -1640,11 +1658,14 @@ fn TransUnit.processImport(
 
    //dumpScope( self.rootScope, "" );
 
-   let moduleInfo = new Ast.ModuleInfo( modulePath, newId2OldIdMap );
+   let moduleInfo = new Ast.ModuleInfo(
+      modulePath, nameList[#nameList], newId2OldIdMap );
    self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
    moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
 
+   self.importModuleInfo.remove();
+   
    return metaInfo, typeId2TypeInfo;
 }
 
@@ -1678,12 +1699,19 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    // スコープを元に戻す
    self.scope = self.moduleScope;
 
+
+   let mut assignName = moduleToken;
+   if nextToken.txt == "as" {
+      assignName = self.getSymbolToken();
+      nextToken = self.getToken();
+   }
+
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
    let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo._moduleTypeId ];
    let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo._moduleSymbolKind );
    self.scope.add(
-      moduleSymbolKind, false, false, moduleToken.txt,
+      moduleSymbolKind, false, false, assignName.txt,
       moduleTypeInfo, .Local, true, metaInfo._moduleMutable, true );
 
    self.checkToken( nextToken, ";" );
@@ -1695,7 +1723,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
 
    
    return Ast.ImportNode.create(
-      self.nodeManager, token.pos, [ Ast.builtinTypeNone ], modulePath, moduleTypeInfo );
+      self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
+      modulePath, assignName.txt, moduleTypeInfo );
 }
 
 

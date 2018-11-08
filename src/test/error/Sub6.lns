@@ -6,3 +6,9 @@ pub fn func(): Sub5.Sub5enum {
 
 pub fn func2( val:Sub5.Sub5enum ) {
 }
+
+pub class Test {
+}
+
+pub fn func3( val:Test ) {
+}

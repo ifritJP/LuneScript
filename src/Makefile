@@ -150,6 +150,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/prototype.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/statement.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/flow.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/import.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)

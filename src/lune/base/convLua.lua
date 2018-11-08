@@ -174,6 +174,30 @@ BitOpKind._val2NameMap[4] = 'RShift'
 BitOpKind.__allList[5] = BitOpKind.RShift
 
 local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
+local ModuleInfo = {}
+function ModuleInfo.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfo  } )
+end
+function ModuleInfo.new( assignName, modulePath )
+   local obj = {}
+   ModuleInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( assignName, modulePath )
+   end        
+   return obj 
+end         
+function ModuleInfo:__init( assignName, modulePath ) 
+
+   self.assignName = assignName
+   self.modulePath = modulePath
+end
+function ModuleInfo:get_assignName()       
+   return self.assignName         
+end
+function ModuleInfo:get_modulePath()       
+   return self.modulePath         
+end
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Ast.Filter } )
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule )
@@ -314,8 +338,9 @@ end
 function convFilter:processImport( node, parent )
 
    local module = node:get_modulePath(  )
-   local moduleName = string.gsub( module, ".*%.", "" )
-   self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = module
+   local moduleName = module:gsub( ".*%.", "" )
+   moduleName = node:get_assignName()
+   self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = ModuleInfo.new(moduleName, module)
    if self.convMode == ConvMode.Exec then
       self:write( string.format( "local %s = __luneScript:loadModule( '%s' )", moduleName, module) )
    else
@@ -2523,7 +2548,8 @@ function MacroEvalImp:eval( node )
    
    newEnv["_lnsLoad"] = function ( name, txt )
    
-      local metaInfo, val = frontInterface.loadFromLnsTxt( name, txt, false )
+      local importModuleInfo = frontInterface.ImportModuleInfo.new()
+      local metaInfo, val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt, false )
       return val
    end
    

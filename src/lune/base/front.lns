@@ -80,10 +80,11 @@ class Front extend (frontInterface.frontInterface) {
       frontInterface.setFront( self );
    }
 
-   pub fn loadModule( mod:str ): stem, stem;
-   pub fn loadMeta( mod:str ): stem;
+   pub fn loadModule( mod:str ): stem!, stem;
+   pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ): stem;
+   pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
+                          name:str, txt:str, onlyMeta:bool ): stem, stem;
    pub fn searchModule( mod:str ): str;
-   pub fn loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem;
    pub fn error( message:str );
 }
 
@@ -125,12 +126,14 @@ fn Front.createPaser(): Parser.Parser
 }
 
 
-fn Front.createAst( parser:Parser.Parser, mod:str, analyzeModule:str!,
+fn Front.createAst( importModuleInfo:frontInterface.ImportModuleInfo,
+                    parser:Parser.Parser, mod:str, analyzeModule:str!,
                     analyzeMode:TransUnit.AnalyzeMode,
                     pos:&Parser.Position! ): &TransUnit.ASTInfo
 {
    let mut transUnit = new TransUnit.TransUnit(
-      new convLua.MacroEvalImp( self.option.mode ), analyzeModule, analyzeMode, pos );
+      importModuleInfo, new convLua.MacroEvalImp( self.option.mode ),
+      analyzeModule, analyzeMode, pos );
    return transUnit.createAST( parser, false, mod );
 }
 
@@ -172,10 +175,12 @@ fn Front.loadFromAst(ast:&TransUnit.ASTInfo, streamName:str, onlyMeta:bool ) :
    return meta, loadFromLuaTxt( stream.$txt );
 }
 
-fn Front.loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem
+fn Front.loadFromLnsTxt(
+   importModuleInfo:frontInterface.ImportModuleInfo,
+   name:str, txt:str, onlyMeta:bool ): stem, stem
 {
    let mut transUnit = new TransUnit.TransUnit(
-      new convLua.MacroEvalImp( self.option.mode ), nil, nil, nil );
+      importModuleInfo, new convLua.MacroEvalImp( self.option.mode ), nil, nil, nil );
    let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.StreamParser( stream, name, false );
 
@@ -184,9 +189,11 @@ fn Front.loadFromLnsTxt( name:str, txt:str, onlyMeta:bool ): stem, stem
    return self.loadFromAst( ast, name, onlyMeta );
 }
 
-fn Front.loadFile( path:str, mod:str, onlyMeta:bool ): stem, stem
+fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
+                   path:str, mod:str, onlyMeta:bool ): stem, stem
 {
-   let ast = self.createAst( createPaser( path, mod ), mod, nil, .Compile );
+   let ast = self.createAst( importModuleInfo,
+                             createPaser( path, mod ), mod, nil, .Compile );
 
    return self.loadFromAst( ast, path, onlyMeta );
 }
@@ -274,7 +281,8 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
                }  
             }  
             if loadVal == nil {
-	       let meta, workVal = self.loadFile( lnsPath, mod, false );
+	       let meta, workVal = self.loadFile(
+                  new frontInterface.ImportModuleInfo(), lnsPath, mod, false );
 	       let mut info:Map<str,stem> = {};
 	       info.mod = workVal;
 	       info.meta = meta;
@@ -291,7 +299,7 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
 }
 
 
-fn Front.loadMeta( mod:str ) mut : stem {
+fn Front.loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : stem {
    if self.loadedMetaMap[ mod ] == nil {
       if! self.loadedMap[ mod ] {
          self.loadedMetaMap[ mod ] = _exp.meta;
@@ -319,7 +327,8 @@ fn Front.loadMeta( mod:str ) mut : stem {
                }  
             }  
             if meta == nil {
-	       let metawork, luaTxt = self.loadFile( lnsPath, mod, true );
+	       let metawork, luaTxt =
+                  self.loadFile( importModuleInfo, lnsPath, mod, true );
 	       self.loadedMetaMap[ mod ] = metawork;
                self.convertedMap[ mod ] = luaTxt@@str;
             }  
@@ -351,7 +360,9 @@ pub fn Front.dumpAst() mut {
    Util.profile(
       self.option.validProf,
       fn() {
-	 let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
+	 let ast = self.createAst(
+            new frontInterface.ImportModuleInfo(),
+            self.createPaser(), mod, nil, .Compile );
 	 ast.$node.processFilter( new dumpNode.dumpFilter(), "", 0 );
       }, self.option.scriptPath .. ".profi" );
 }
@@ -361,14 +372,15 @@ pub fn Front.checkDiag() mut {
 
    let mod = scriptPath2Module( self.option.scriptPath );
    Util.setErrorCode( 0 );
-   self.createAst( self.createPaser(), mod, nil, .Diag );
+   self.createAst( new frontInterface.ImportModuleInfo(),
+                   self.createPaser(), mod, nil, .Diag );
 }
 
 pub fn Front.complete() mut {
    frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   self.createAst( self.createPaser(), mod,
+   self.createAst( new frontInterface.ImportModuleInfo(), self.createPaser(), mod,
 		   self.option.analyzeModule, .Complete, self.option.analyzePos );
 }
 
@@ -376,7 +388,8 @@ pub fn Front.createGlue() mut {
    frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
+   let ast = self.createAst( new frontInterface.ImportModuleInfo(),
+                             self.createPaser(), mod, nil, .Compile );
    let mut glue = new glueFilter.glueFilter( self.option.outputDir );
    ast.$node.processFilter( glue );
 }
@@ -385,7 +398,8 @@ pub fn Front.convertToLua() mut {
    frontInterface.setFront( self );
 
    let mod = scriptPath2Module( self.option.scriptPath );
-   let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
+   let ast = self.createAst( new frontInterface.ImportModuleInfo(),
+                             self.createPaser(), mod, nil, .Compile );
    let mut convMode = convLua.ConvMode.Convert;
    if self.option.mode == .LuaMeta {
       convMode = .ConvMeta;
@@ -401,7 +415,9 @@ pub fn Front.saveToLua() mut {
    Util.profile(           
       self.option.validProf,       
       fn () {
-	 let ast = self.createAst( self.createPaser(), mod, nil, .Compile );
+	 let ast = self.createAst(
+            new frontInterface.ImportModuleInfo(),
+            self.createPaser(), mod, nil, .Compile );
 	 let mut luaPath = self.option.scriptPath.gsub( "%.lns$", ".lua" );
 	 let mut metaPath = self.option.scriptPath.gsub( "%.lns$", ".meta" );
 	 if self.option.outputDir {

@@ -458,6 +458,29 @@ fn TransUnit.analyzePushClass(
          }
       };
    }
+
+   // interface 間の、メソッドのミスマッチをチェックする
+   let mut symbol2TypeInfo:Map<str,&Ast.TypeInfo> = {};
+   foreach ifType in interfaceList {
+      ifType.$scope$.filterTypeInfoField$(
+         true, self.scope,
+         fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+            if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
+               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=" ) {
+                  self.addErrMess(
+                     firstToken.pos,      
+                     "mismatch method type -- %s.%s, %s.%s"
+                     (symbolInfo.$typeInfo.$parentInfo.getTxt(), symbolInfo.$name,
+                       ifFuncType.$parentInfo.getTxt(), ifFuncType.getTxt()));
+               }
+            }
+            else {
+               symbol2TypeInfo[ symbolInfo.$name ] = symbolInfo.$typeInfo;
+            }
+            return true;
+         } );
+   }
+   
    
    let classTypeInfo = self.pushClass(
       classFlag, abstractFlag, typeInfo, interfaceList, false, name.txt, accessMode );
@@ -1278,9 +1301,9 @@ fn TransUnit.analyzeDeclClass(
    }
 
    if not classAbstructFlag {
+      // extend のメソッドがオーバーライドされているか確認
       let mut workTypeInfo = classTypeInfo;
       repeat {
-         // extend のメソッドがオーバーライドされているか確認
          if workTypeInfo ~= Ast.headTypeInfo {
             checkOverrideMethod( unwrap workTypeInfo.$scope );
          }  
@@ -1538,11 +1561,21 @@ fn TransUnit.analyzeDeclFunc(
    }
    else {
       when! name {
-         if name.txt ~= "__init" and
-            self.scope.$parent.getTypeInfoField( name.txt, false, funcBodyScope )
-         {          
-            // override 宣言していないのに、オーバーライドしている場合エラー
-            self.error( "mismatch override --" .. funcName );
+         if name.txt ~= "__init" {
+            if self.scope.$parent.getTypeInfoField( name.txt, false, funcBodyScope ) {
+               // override 宣言していないのに、オーバーライドしている場合エラー
+               self.addErrMess( firstToken.pos, "mismatch override --" .. funcName );
+            }  
+            else {
+               if! let ifFunc =
+                  self.scope.$parent.getSymbolInfoIfField( name.txt, funcBodyScope )
+               {  
+                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, "=" ) {
+                     self.addErrMess( firstToken.pos,
+                                      "mismatch method type -- %s" (funcName));
+                  }
+               }  
+            }  
          }
       }
    }
@@ -1766,7 +1799,7 @@ fn TransUnit.analyzeLetAndInitExp(
                   self.addErrMess(
                      firstPos,
                      "unmatch value type (index = %d) %s(%d) <- %s(%d)"
-                     ( subIndex, argType.getTxt(), argType.$typeId,
+                     ( subIndex, argType.getTxt( true ), argType.$typeId,
                        Ast.builtinTypeStem_.getTxt(), Ast.builtinTypeStem_.$typeId ));
                }
                expTypeList.insert( checkType );
@@ -1793,7 +1826,9 @@ fn TransUnit.analyzeLetAndInitExp(
                   self.addErrMess(
                      firstPos,
                      "unmatch value type (index:%d) %s <- %s"
-                     (index, argType.getTxt(), expTypeInfo.getTxt()));
+                     (index,
+                       argType.getTxt( true ),
+                       expTypeInfo.getTxt( true )));
                }
             }
             expTypeList.insert( expTypeInfo );
@@ -1807,7 +1842,7 @@ fn TransUnit.analyzeLetAndInitExp(
                self.addErrMess(
                   firstPos,
                   "unmatch value type (index:%d) %s <- nil"
-                  (index, varType.getTxt()));
+                  (index, varType.getTxt( true )));
             }
          }
       }
@@ -2051,7 +2086,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
             varNameList.insert( refNode.$token.txt );
             self.addLocalVar(
                firstToken.pos, false, expNode.canBeLeft(), refNode.$token.txt,
-               expNode.$expType.$orgTypeInfo, symbolInfo.$mutable,  true );
+               expNode.$expType.$orgTypeInfo, symbolInfo.$mutable, true );
          }
          else {
             self.addErrMess( expNode.$pos,

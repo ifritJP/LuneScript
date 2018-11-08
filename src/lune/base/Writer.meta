@@ -89,7 +89,7 @@ _typeInfoList[33] = { skind=3, parentId = 310, typeId = 343, baseId = 1, txt = '
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {28, 10}, retTypeId = {}, children = {}, }
 _typeInfoList[34] = { skind = 0, parentId = 310, typeId = 344, nilable = true, orgTypeId = 343 }
 _typeInfoList[35] = { skind=3, parentId = 310, typeId = 346, baseId = 1, txt = 'fin',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[36] = { skind = 0, parentId = 310, typeId = 347, nilable = true, orgTypeId = 346 }
 _typeInfoList[37] = { skind = 1, parentId = 1, typeId = 357, srcTypeId = 28, mutable = false }
 _typeInfoList[38] = { skind=3, parentId = 233, typeId = 364, baseId = 1, txt = 'JSON',

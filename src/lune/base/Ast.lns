@@ -243,17 +243,22 @@ pub class Scope {
    // このスコープがクラスのスコープかどうか。
    pri let classFlag: bool;
    // 継承しているスコープ。
-   pri let inheritList: List<&Scope> { pub };
+   pri let inherit: &Scope!;
+   // 継承しているスコープ。
+   pri let ifScopeList: List<&Scope>;
    /** 所有権情報 */
    pri let mut symbolId2DataOwnerInfo: Map<int,DataOwnerInfo>;
       
       
-   pub fn __init( parent: Scope!, classFlag: bool, inheritList: List<&Scope> ) {
+   pub fn __init( parent: Scope!, classFlag: bool,
+                  inherit: &Scope!, ifScopeList:List<&Scope>! )
+   {  
       self.parent = unwrap parent default self;
       self.symbol2SymbolInfoMap = {};
-      self.inheritList = inheritList;
+      self.inherit = inherit;
       self.classFlag = classFlag;
       self.symbolId2DataOwnerInfo = {};
+      self.ifScopeList = unwrap ifScopeList default [];
    }
 
    pub fn isRoot(): bool {
@@ -285,7 +290,7 @@ pub class Scope {
 }
 
 // 最上位のスコープ
-pub let mut rootScope = new Scope( nil, false, [] );
+pub let mut rootScope = new Scope( nil, false, nil );
 
 /**
 このスコープが scope の同じか内部のスコープか調べる。
@@ -336,6 +341,11 @@ pub fn getScope( typeInfo:&TypeInfo ): Scope! {
    return typeInfo2ScopeMap[ typeInfo ];
 }
 
+pub interface ModuleInfoIF {
+   pub fn get_assignName():str;
+   pub fn get_modulePath():str;
+}
+
 pub class TypeInfo {
 
    // この TypeInfo のスコープ。
@@ -372,10 +382,12 @@ pub class TypeInfo {
       return false;
    }
 
-   pub fn getTxt() : str {
+   pub fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
       return "";
    }
-   
+
    pro static fn canEvalWithBase(
       dist:&TypeInfo, distMut: bool, other:&TypeInfo, opTxt:str ): bool;
 
@@ -487,6 +499,33 @@ pub class TypeInfo {
    pub fn get_mutable(): bool {
       return true;
    }
+
+   pub fn getParentFullName( importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str {
+      let mut typeInfo:&TypeInfo = self;
+      let mut name = "";
+      let! mut infoMap = importInfo {
+         infoMap = {};
+      };
+      while not infoMap[ typeInfo ] {
+         typeInfo = typeInfo.$parentInfo;
+         if typeInfo == typeInfo.$parentInfo {
+            break;
+         }
+         let mut txt = typeInfo.$rawTxt;
+         if localFlag {
+            if! let moduleInfo = infoMap[ typeInfo ] {
+               txt = moduleInfo.$assignName;
+            }  
+            else {
+               if typeInfo.isModule() {
+                  break;
+               }
+            }
+         }
+         name = txt .. "." .. name;
+      }
+      return name;
+   }
 }
 
 pub form filterForm( symbolInfo:&SymbolInfo ): bool;
@@ -504,11 +543,9 @@ pub fn Scope.filterTypeInfoField(
             }  
          }  
       }
-      if self.inheritList {
-         foreach scope in self.inheritList {
-            if not scope.filterTypeInfoField( true, fromScope, callback ) {
-               return false;
-            }
+      if! let scope = self.inherit {
+         if not scope.filterTypeInfoField( true, fromScope, callback ) {
+            return false;
          }
       } 
    }
@@ -528,18 +565,55 @@ pub fn Scope.getSymbolInfoField(
             return symbolInfo;
          }  
       } 
-      if self.inheritList {
-         foreach scope in self.inheritList {
-            let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
-            if symbolInfo {
-               return symbolInfo;
-            }   
-         }  
+      if! let scope = self.inherit {
+         let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
+         if symbolInfo {
+            return symbolInfo;
+         }   
       } 
    }
 
    return nil;
 }
+
+
+pub fn Scope.getSymbolInfoIfField( name: str, fromScope:&Scope ) : &SymbolInfo!
+{
+   if self.classFlag {
+      foreach scope in self.ifScopeList {
+         if! let symbolInfo = scope.getSymbolInfoField( name, true, fromScope ) {
+            return symbolInfo;
+         }
+      } 
+   }
+
+   if! let scope = self.inherit {
+      if! let symbolInfo = scope.getSymbolInfoIfField( name, fromScope ) {
+         return symbolInfo;
+      }
+   } 
+
+   return nil;
+}
+
+pub fn Scope.filterSymbolInfoIfField( fromScope:&Scope, callback:filterForm ) : bool
+{
+   foreach scope in self.ifScopeList {
+      if not scope.filterTypeInfoField( true, fromScope, callback ) {
+         return false;
+      }
+   }
+
+   if! let scope = self.inherit {
+      if not scope.filterSymbolInfoIfField( fromScope, callback ) {
+         return false;
+      }
+   } 
+   
+   return true;
+}
+
+
 
 pub fn Scope.getTypeInfoField(
    name: str, includeSelfFlag: bool!, fromScope:&Scope ) : TypeInfo!
@@ -569,12 +643,10 @@ pub fn Scope.getSymbolInfo(
       return symbolInfo;
    }
    if not onlySameNsFlag {
-      if self.inheritList {
-         foreach scope in self.inheritList {
-            let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
-            if symbolInfo {
-               return symbolInfo;
-            }   
+      if! let scope = self.inherit {
+         let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
+         if symbolInfo {
+            return symbolInfo;
          }   
       } 
    }
@@ -896,8 +968,10 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn get_nilable(): bool {
       return true;
    } 
-   pub override fn getTxt() : str {
-      return self.orgTypeInfo.getTxt() .. "!";
+   pub override fn getTxt( fullName:bool!,
+                           importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
+      return self.orgTypeInfo.getTxt( fullName, importInfo, localFlag ) .. "!";
    }
    pub override fn get_display_stirng(): str {
       return self.orgTypeInfo.$display_stirng .. "!";
@@ -926,8 +1000,10 @@ pub class ModifierTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
    pri let mutable: bool { pub };
 
-   pub override fn getTxt() : str {
-      let mut txt = self.srcTypeInfo.getTxt();
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
+      let mut txt = self.srcTypeInfo.getTxt( fullName, importInfo, localFlag );
       if not self.mutable {
          txt = "&" .. txt;
       }
@@ -1008,7 +1084,9 @@ pub class ModuleTypeInfo extend TypeInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn getTxt() : str {
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
       return self.rawTxt;
    }
 
@@ -1107,7 +1185,9 @@ pub class EnumTypeInfo extend TypeInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn getTxt() : str {
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   { 
       return self.rawTxt;
    }
 
@@ -1272,9 +1352,15 @@ pub class NormalTypeInfo extend TypeInfo {
       return self.baseTypeInfo.$typeId or rootTypeId;
    }
 
-   pub override fn getTxt() : str {
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      let mut parentTxt = "";
+      if fullName {
+         parentTxt = self.getParentFullName( importInfo, localFlag );
+      }
       if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo) {
-         return (unwrap self.orgTypeInfo).getTxt() .. "!";
+         return parentTxt .. (unwrap self.orgTypeInfo).getTxt( fullName, importInfo, localFlag ) .. "!";
       } 
       // if self.kind == .Array {
       //    let! _exp = self.itemTypeInfoList[1] {
@@ -1294,13 +1380,13 @@ pub class NormalTypeInfo extend TypeInfo {
             if index ~= 1 {
                txt = txt .. ",";
             }   
-            txt = txt .. typeInfo.getTxt();
+            txt = txt .. typeInfo.getTxt( fullName, importInfo, localFlag );
          }  
 
-         return txt .. ">";
+         return parentTxt .. txt .. ">";
       } 
       if self.$rawTxt {
-         return self.$rawTxt;
+         return parentTxt .. self.$rawTxt;
       } 
       return "";
    }
@@ -1536,8 +1622,7 @@ pub static fn NormalTypeInfo.createBuiltin(
       {  
          scope = new Scope(
             rootScope,
-            kind == .Class or kind == .Module or
-            kind == .IF or kind == .List, [] );
+            kind == .Class or kind == .Module or kind == .IF or kind == .List, nil );
       }  
    } 
    
@@ -1883,7 +1968,8 @@ pub static fn TypeInfo.checkMatchType(
             if not argType.equals( builtinTypeDDD ) {
                if not argType.canEvalWith( expType, "=" ) {
                   return false, "exp(%d) type mismatch %s <- %s"
-                  ( index, argType.getTxt(), expType.getTxt());
+                  ( index, argType.getTxt( true ),
+                    expType.getTxt(true ));
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
                   return false, "over exp. expect: %d: actual: %d"
@@ -1899,7 +1985,8 @@ pub static fn TypeInfo.checkMatchType(
                   let workArgType = dstTypeList[ argIndex ];
                   if not workArgType.canEvalWith( builtinTypeStem_, "=" ) {
                      return false, "exp(%d) type mismatch %s <- %s"
-                     ( argIndex, workArgType.getTxt(), builtinTypeStem_.getTxt());
+                     ( argIndex, workArgType.getTxt( true ),
+                       builtinTypeStem_.getTxt());
                   }
                }
             }
@@ -1909,7 +1996,8 @@ pub static fn TypeInfo.checkMatchType(
                   let argTypeInfo = dstTypeList[ argIndex ];
                   if not argTypeInfo.canEvalWith( workExpType, "=" ) {
                      return false, "exp(%d) type mismatch %s <- %s"
-                     ( argIndex, argTypeInfo.getTxt(), workExpType.getTxt() );
+                     ( argIndex, argTypeInfo.getTxt( true ),
+                       workExpType.getTxt( true ) );
                   }
                   workExpType = builtinTypeNil;
                }
@@ -1919,7 +2007,8 @@ pub static fn TypeInfo.checkMatchType(
          else {
             if not argType.canEvalWith( expType, "=" ) {
                return false, "exp(%d) type mismatch %s <- %s"
-               ( index, argType.getTxt(), expType.getTxt());
+               ( index, argType.getTxt( true ),
+                 expType.getTxt( true ));
             }  
          }  
       }
@@ -1928,7 +2017,7 @@ pub static fn TypeInfo.checkMatchType(
       foreach argType, index in dstTypeList {
          if not argType.canEvalWith( builtinTypeNil, "=" ) {
             return false, "exp(%d) type mismatch %s <- nil"
-            ( index, argType.getTxt());
+            ( index, argType.getTxt( true ));
          }
       }
    }
@@ -2357,6 +2446,7 @@ _declNodeClass( "Subfile", Node, false, false, true,
                 [ { "usePath": "str!" } ]);
 _declNodeClass( "Import", Node, false, false, true,
                 [ { "modulePath": "str" },
+                  { "assignName": "str" },
                   { "moduleTypeInfo": "&TypeInfo" } ]
 );
 
@@ -2369,38 +2459,29 @@ pub class LuneHelperInfo {
    pri let hasMappingClassDef:bool { pub };
 }
 
-pub class ModuleInfo {
+pub class ModuleInfo extend (ModuleInfoIF) {
    pri let fullName:str{ pub };
-   //pri let symbolInfo:&SymbolInfo { pub };
    pri let localTypeInfo2importIdMap:Map<&TypeInfo,int> { pub };
    pri let mut importId2localTypeInfoMap:Map<int,&TypeInfo> { pub& };
+   pri let assignName:str{ pub };
 
-   //pub fn __init( fullName:str, symbolInfo:&SymbolInfo, idMap:Map<int,int> ) {
-   pub fn __init( fullName:str, idMap:Map<&TypeInfo,int> ) {
+   pub fn __init( fullName:str, assignName:str, idMap:Map<&TypeInfo,int> ) {
       self.fullName = fullName;
-      //self.symbolInfo = symbolInfo;
+      self.assignName = assignName;
       self.localTypeInfo2importIdMap = idMap;
       self.importId2localTypeInfoMap = {};
       foreach importId, typeInfo in idMap {
          self.importId2localTypeInfoMap[ importId ] = typeInfo;
       }
    }
+
+   pub fn get_modulePath(): str {
+      return self.fullName;
+   }
 }
 
-pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,stem>, localFlag:bool! ) : str {
-   let mut typeInfo = self;
-   let mut name = typeInfo.$rawTxt;
-   while not importInfo[ typeInfo ] {
-      typeInfo = typeInfo.$parentInfo;
-      if typeInfo == headTypeInfo {
-         break;
-      }
-      if localFlag and typeInfo.isModule() and not importInfo[ typeInfo ] {
-         break;
-      }
-      name = typeInfo.$rawTxt .. "." .. name;
-   }
-   return name;
+pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,ModuleInfoIF>, localFlag:bool! ) : str {
+   return self.getParentFullName( importInfo, localFlag ) .. self.$rawTxt;
 }
 
 _declNodeClass( "Root", Node, false, false, false,

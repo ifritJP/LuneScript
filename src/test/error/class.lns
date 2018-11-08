@@ -174,7 +174,7 @@ interface IFTest {
 }
 
 class IFTest2 extend (IFTest) {
-   pub fn func( val:str );
+   pub fn func( val:str ); // error
 }
 
 
@@ -211,9 +211,40 @@ class SubArg extend SuperArg {
    }
 }
 
+
+interface TestIF {
+   pub fn func(val:int):int;
+}
+
+interface TestIF2 {
+   pub fn func(val:str):int;
+}
+
+abstract class SuperTest extend (TestIF,TestIF2) { // error
+}
+
+class SubTest extend SuperTest {
+   fn func(val:int):int {
+      return 1;
+   }
+}
+
+
+interface TestIF3 {
+   pub fn func(val:int):int;
+}
+
+class SuperTest2 extend (TestIF,TestIF3) {
+   pub fn func(val:int):int {
+      return 0;
+   }
+}
+
+
 class StaticClass {
    let val:int;
    static fn func() {
       self.val; // error
    }
 }
+

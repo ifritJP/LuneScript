@@ -1,7 +1,8 @@
 subfile use test.startsub;
 import test.simple;
 import lune.base.Writer;
-import test.Sub2;
+//import test.Sub2;
+import test.Sub2 as SUB2;
 import test.Sub6;
 import test.Class1;
 import test.Class2;
@@ -27,7 +28,7 @@ print( "classB.func()", classB.func() );
 print( "classB.sub()", classB.sub() );
 let hoge = classB.func2();
 print( "Hoge.func()", hoge.func() );
-Sub2.sub2val = 10;
+SUB2.sub2val = 10;
 print( "Hoge.func()", hoge.func() );
 
 let func3ret = classB.func3() ;
@@ -342,10 +343,10 @@ _print( `{ ClassAA.$val } );
    let classAA = new ClassAA();
 }
 
-Sub2.External.func1( 100 );
-Sub2.External.func2( 10 );
-Sub2.External.func2( 20 );
-_print( `{ Sub2.External.val } );
+SUB2.External.func1( 100 );
+SUB2.External.func2( 10 );
+SUB2.External.func2( 20 );
+_print( `{ SUB2.External.val } );
 
 {
    let foo = {
@@ -579,11 +580,11 @@ mapping.test();
 
 funcSym.main();
 
-class SubIF extend Sub2.IF {
+class SubIF extend SUB2.IF {
    pub fn __init() {
       super( 1 );
    }
-   pub fn sub( val: Sub2.enumTestSub ) {
+   pub fn sub( val: SUB2.enumTestSub ) {
       print( val );
    }
 }
@@ -655,7 +656,7 @@ pub let val = 100;
    fn sub1( val:int ):int {
       return 10 + val;
    }  
-   fn func( testfunc:Sub2.form1, val:int ) {
+   fn func( testfunc:SUB2.form1, val:int ) {
       _print( `{ testfunc( val ) + 2 } );
    }  
    func( sub1, 3 );

@@ -1115,14 +1115,16 @@ fn TransUnit.analyzeExpOp2(
             // "str"@@str のように、意味のないキャストはエラー
             self.addWarnMess( castTypeNode.$pos,
                               "This cast doesn't need. (%s <- %s)"
-                              ( castType.getTxt(), expType.getTxt() ) );
+                              ( castType.getTxt( true ),
+                                expType.getTxt( true ) ) );          
          }
          elseif not expType.canEvalWith( castType, "=" ) {
             if not Ast.isNumberType( expType ) and not Ast.isNumberType( castType ) {
                // キャスト先の型からキャスト元の型へ互換性がない場合はエラー
                self.addErrMess( castTypeNode.$pos,
                                 "This type can't cast. (%s <- %s)"
-                                ( castType.getTxt(), expType.getTxt() ) );
+                                ( castType.getTxt( true ),
+                                  expType.getTxt( true ) ) );            
             }
          }
          
@@ -1285,7 +1287,8 @@ fn TransUnit.analyzeExpOp2(
                      self.addErrMess(
                         nextToken.pos,
                         "no numeric type %s or %s"
-                        ( exp1Type.getTxt(), exp2Type.getTxt() ) );
+                        ( exp1Type.getTxt(true),
+                          exp2Type.getTxt(true) ) );   
                   }
                   retType = Ast.builtinTypeBool;
                }
@@ -1295,8 +1298,9 @@ fn TransUnit.analyzeExpOp2(
                   {
                      self.addErrMess(
                         nextToken.pos,
-                        "not compatible type %s or %s" ( exp1Type.getTxt(),
-                                                         exp2Type.getTxt() ) );
+                        "not compatible type %s or %s"
+                        ( exp1Type.getTxt(true),
+                          exp2Type.getTxt(true) ) );
                   }
                   retType = Ast.builtinTypeBool;
                }
@@ -1306,8 +1310,8 @@ fn TransUnit.analyzeExpOp2(
                   {
                      self.addErrMess(
                         nextToken.pos,
-                        "no int type %s or %s" ( exp1Type.getTxt(),
-                                                 exp2Type.getTxt() ) );
+                        "no int type %s or %s"
+                        ( exp1Type.getTxt(), exp2Type.getTxt() ) );
                   }
                   retType = Ast.builtinTypeInt;
                }
@@ -1317,8 +1321,8 @@ fn TransUnit.analyzeExpOp2(
                   {
                      self.addErrMess(
                         nextToken.pos,
-                        "no string type %s or %s" ( exp1Type.getTxt(),
-                                                    exp2Type.getTxt() ) );
+                        "no string type %s or %s"
+                        ( exp1Type.getTxt(), exp2Type.getTxt() ) );
                   }
                   retType = Ast.builtinTypeString;
                }
@@ -1330,8 +1334,8 @@ fn TransUnit.analyzeExpOp2(
                   {
                      self.addErrMess(
                         nextToken.pos,
-                        "no numeric type %s or %s" ( exp1Type.getTxt(),
-                                                     exp2Type.getTxt() ) );
+                        "no numeric type %s or %s"
+                        ( exp1Type.getTxt(), exp2Type.getTxt() ) );
                   }
 
                   if exp1Type.equals( Ast.builtinTypeReal ) or
@@ -1543,7 +1547,8 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
          if not unwrapType.canEvalWith( insType, "=" ) {
             self.addErrMess(
                _exp.$pos,
-               "unmatch type: %s <- %s" ( unwrapType.getTxt(), insType.getTxt() ) );
+               "unmatch type: %s <- %s"
+               ( unwrapType.getTxt(true), insType.getTxt(true) ) );
          }
       }
    }

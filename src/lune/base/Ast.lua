@@ -390,18 +390,19 @@ end
 
 local Scope = {}
 _moduleObj.Scope = Scope
-function Scope.new( parent, classFlag, inheritList )
+function Scope.new( parent, classFlag, inherit, ifScopeList )
    local obj = {}
    Scope.setmeta( obj )
-   if obj.__init then obj:__init( parent, classFlag, inheritList ); end
+   if obj.__init then obj:__init( parent, classFlag, inherit, ifScopeList ); end
    return obj
 end
-function Scope:__init(parent, classFlag, inheritList) 
+function Scope:__init(parent, classFlag, inherit, ifScopeList) 
    self.parent = _lune.unwrapDefault( parent, self)
    self.symbol2SymbolInfoMap = {}
-   self.inheritList = inheritList
+   self.inherit = inherit
    self.classFlag = classFlag
    self.symbolId2DataOwnerInfo = {}
+   self.ifScopeList = _lune.unwrapDefault( ifScopeList, {})
 end
 function Scope:isRoot(  )
 
@@ -442,11 +443,8 @@ end
 function Scope:get_symbol2SymbolInfoMap()       
    return self.symbol2SymbolInfoMap         
 end
-function Scope:get_inheritList()       
-   return self.inheritList         
-end
 
-local rootScope = Scope.new(nil, false, {})
+local rootScope = Scope.new(nil, false, nil)
 _moduleObj.rootScope = rootScope
 
 function Scope:isInnerOf( scope )
@@ -523,6 +521,23 @@ local function getScope( typeInfo )
    return typeInfo2ScopeMap[typeInfo]
 end
 _moduleObj.getScope = getScope
+local ModuleInfoIF = {}
+_moduleObj.ModuleInfoIF = ModuleInfoIF
+function ModuleInfoIF.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfoIF  } )
+end
+function ModuleInfoIF.new(  )
+   local obj = {}
+   ModuleInfoIF.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end        
+   return obj 
+end         
+function ModuleInfoIF:__init(  ) 
+
+end
+
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
 function TypeInfo:get_scope(  )
@@ -563,7 +578,7 @@ function TypeInfo:isInheritFrom( other )
 
    return false
 end
-function TypeInfo:getTxt(  )
+function TypeInfo:getTxt( fullName, importInfo, localFlag )
 
    return ""
 end
@@ -695,6 +710,44 @@ function TypeInfo:get_mutable(  )
 
    return true
 end
+function TypeInfo:getParentFullName( importInfo, localFlag )
+
+   local typeInfo = self
+   local name = ""
+   local infoMap = importInfo
+   if  nil == infoMap then
+      local _infoMap = infoMap
+   
+      infoMap = {}
+   end
+   
+   while not infoMap[typeInfo] do
+      typeInfo = typeInfo:get_parentInfo()
+      if typeInfo == typeInfo:get_parentInfo() then
+         break
+      end
+      
+      local txt = typeInfo:get_rawTxt()
+      if localFlag then
+         do
+            local moduleInfo = infoMap[typeInfo]
+            if moduleInfo ~= nil then
+               txt = moduleInfo:get_assignName()
+            else
+               if typeInfo:isModule(  ) then
+                  break
+               end
+               
+            end
+         end
+         
+      end
+      
+      name = txt .. "." .. name
+   end
+   
+   return name
+end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
@@ -716,14 +769,14 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
          
       end
       
-      if self.inheritList then
-         for __index, scope in pairs( self.inheritList ) do
+      do
+         local scope = self.inherit
+         if scope ~= nil then
             if not scope:filterTypeInfoField( true, fromScope, callback ) then
                return false
             end
             
          end
-         
       end
       
    end
@@ -751,20 +804,73 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope )
          
       end
       
-      if self.inheritList then
-         for __index, scope in pairs( self.inheritList ) do
+      do
+         local scope = self.inherit
+         if scope ~= nil then
             local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
             if symbolInfo then
                return symbolInfo
             end
             
          end
-         
       end
       
    end
    
    return nil
+end
+
+function Scope:getSymbolInfoIfField( name, fromScope )
+
+   if self.classFlag then
+      for __index, scope in pairs( self.ifScopeList ) do
+         do
+            local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
+            if symbolInfo ~= nil then
+               return symbolInfo
+            end
+         end
+         
+      end
+      
+   end
+   
+   do
+      local scope = self.inherit
+      if scope ~= nil then
+         do
+            local symbolInfo = scope:getSymbolInfoIfField( name, fromScope )
+            if symbolInfo ~= nil then
+               return symbolInfo
+            end
+         end
+         
+      end
+   end
+   
+   return nil
+end
+
+function Scope:filterSymbolInfoIfField( fromScope, callback )
+
+   for __index, scope in pairs( self.ifScopeList ) do
+      if not scope:filterTypeInfoField( true, fromScope, callback ) then
+         return false
+      end
+      
+   end
+   
+   do
+      local scope = self.inherit
+      if scope ~= nil then
+         if not scope:filterSymbolInfoIfField( fromScope, callback ) then
+            return false
+         end
+         
+      end
+   end
+   
+   return true
 end
 
 function Scope:getTypeInfoField( name, includeSelfFlag, fromScope )
@@ -797,15 +903,15 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag )
    end
    
    if not onlySameNsFlag then
-      if self.inheritList then
-         for __index, scope in pairs( self.inheritList ) do
+      do
+         local scope = self.inherit
+         if scope ~= nil then
             local symbolInfo = scope:getSymbolInfoField( name, true, fromScope )
             if symbolInfo then
                return symbolInfo
             end
             
          end
-         
       end
       
    end
@@ -1216,9 +1322,9 @@ function NilableTypeInfo:get_nilable(  )
 
    return true
 end
-function NilableTypeInfo:getTxt(  )
+function NilableTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   return self.orgTypeInfo:getTxt(  ) .. "!"
+   return self.orgTypeInfo:getTxt( fullName, importInfo, localFlag ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng(  )
 
@@ -1356,6 +1462,10 @@ function NilableTypeInfo:get_mutable( ... )
    return self.orgTypeInfo:get_mutable( ... )
 end       
 
+function NilableTypeInfo:getParentFullName( ... )
+   return self.orgTypeInfo:getParentFullName( ... )
+end       
+
 function NilableTypeInfo:getFullName( ... )
    return self.orgTypeInfo:getFullName( ... )
 end       
@@ -1364,9 +1474,9 @@ end
 local ModifierTypeInfo = {}
 setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModifierTypeInfo = ModifierTypeInfo
-function ModifierTypeInfo:getTxt(  )
+function ModifierTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   local txt = self.srcTypeInfo:getTxt(  )
+   local txt = self.srcTypeInfo:getTxt( fullName, importInfo, localFlag )
    if not self.mutable then
       txt = "&" .. txt
    end
@@ -1522,6 +1632,10 @@ function ModifierTypeInfo:addChildren( ... )
    return self.srcTypeInfo:addChildren( ... )
 end       
 
+function ModifierTypeInfo:getParentFullName( ... )
+   return self.srcTypeInfo:getParentFullName( ... )
+end       
+
 function ModifierTypeInfo:getFullName( ... )
    return self.srcTypeInfo:getFullName( ... )
 end       
@@ -1570,7 +1684,7 @@ function ModuleTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
 end
-function ModuleTypeInfo:getTxt(  )
+function ModuleTypeInfo:getTxt( fullName, importInfo, localFlag )
 
    return self.rawTxt
 end
@@ -1695,7 +1809,7 @@ function EnumTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
 end
-function EnumTypeInfo:getTxt(  )
+function EnumTypeInfo:getTxt( fullName, importInfo, localFlag )
 
    return self.rawTxt
 end
@@ -1834,10 +1948,15 @@ function NormalTypeInfo:get_baseId(  )
 
    return self.baseTypeInfo:get_typeId() or _moduleObj.rootTypeId
 end
-function NormalTypeInfo:getTxt(  )
+function NormalTypeInfo:getTxt( fullName, importInfo, localFlag )
 
+   local parentTxt = ""
+   if fullName then
+      parentTxt = self:getParentFullName( importInfo, localFlag )
+   end
+   
    if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
-      return (_lune.unwrap( self.orgTypeInfo) ):getTxt(  ) .. "!"
+      return parentTxt .. (_lune.unwrap( self.orgTypeInfo) ):getTxt( fullName, importInfo, localFlag ) .. "!"
    end
    
    if #self.itemTypeInfoList > 0 then
@@ -1847,14 +1966,14 @@ function NormalTypeInfo:getTxt(  )
             txt = txt .. ","
          end
          
-         txt = txt .. typeInfo:getTxt(  )
+         txt = txt .. typeInfo:getTxt( fullName, importInfo, localFlag )
       end
       
-      return txt .. ">"
+      return parentTxt .. txt .. ">"
    end
    
    if self:get_rawTxt() then
-      return self:get_rawTxt()
+      return parentTxt .. self:get_rawTxt()
    end
    
    return ""
@@ -2097,7 +2216,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
    do
       local _switchExp = kind
       if _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
-         scope = Scope.new(_moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List, {})
+         scope = Scope.new(_moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List, nil)
       end
    end
    
@@ -2391,7 +2510,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
          if #dstTypeList == index then
             if not argType:equals( _moduleObj.builtinTypeDDD ) then
                if not argType:canEvalWith( expType, "=" ) then
-                  return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt(  ), expType:getTxt(  ))
+                  return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt( true ), expType:getTxt( true ))
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -2406,7 +2525,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
                for argIndex = index, #dstTypeList do
                   local workArgType = dstTypeList[argIndex]
                   if not workArgType:canEvalWith( _moduleObj.builtinTypeStem_, "=" ) then
-                     return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, workArgType:getTxt(  ), _moduleObj.builtinTypeStem_:getTxt(  ))
+                     return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, workArgType:getTxt( true ), _moduleObj.builtinTypeStem_:getTxt(  ))
                   end
                   
                end
@@ -2417,7 +2536,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
                for argIndex = index, #dstTypeList do
                   local argTypeInfo = dstTypeList[argIndex]
                   if not argTypeInfo:canEvalWith( workExpType, "=" ) then
-                     return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, argTypeInfo:getTxt(  ), workExpType:getTxt(  ))
+                     return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, argTypeInfo:getTxt( true ), workExpType:getTxt( true ))
                   end
                   
                   workExpType = _moduleObj.builtinTypeNil
@@ -2429,7 +2548,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
          else
           
             if not argType:canEvalWith( expType, "=" ) then
-               return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt(  ), expType:getTxt(  ))
+               return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt( true ), expType:getTxt( true ))
             end
             
          end
@@ -2439,7 +2558,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
    elseif not allowDstShort then
       for index, argType in pairs( dstTypeList ) do
          if not argType:canEvalWith( _moduleObj.builtinTypeNil, "=" ) then
-            return false, string.format( "exp(%d) type mismatch %s <- nil", index, argType:getTxt(  ))
+            return false, string.format( "exp(%d) type mismatch %s <- nil", index, argType:getTxt( true ))
          end
          
       end
@@ -3044,23 +3163,24 @@ function ImportNode:canBeStatement(  )
 
    return true
 end
-function ImportNode.new( pos, typeList, modulePath, moduleTypeInfo )
+function ImportNode.new( pos, typeList, modulePath, assignName, moduleTypeInfo )
    local obj = {}
    ImportNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, modulePath, moduleTypeInfo ); end
+   if obj.__init then obj:__init( pos, typeList, modulePath, assignName, moduleTypeInfo ); end
    return obj
 end
-function ImportNode:__init(pos, typeList, modulePath, moduleTypeInfo) 
+function ImportNode:__init(pos, typeList, modulePath, assignName, moduleTypeInfo) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Import']), pos, typeList)
    
    
    self.modulePath = modulePath
+   self.assignName = assignName
    self.moduleTypeInfo = moduleTypeInfo
    
 end
-function ImportNode.create( nodeMan, pos, typeList, modulePath, moduleTypeInfo )
+function ImportNode.create( nodeMan, pos, typeList, modulePath, assignName, moduleTypeInfo )
 
-   local node = ImportNode.new(pos, typeList, modulePath, moduleTypeInfo)
+   local node = ImportNode.new(pos, typeList, modulePath, assignName, moduleTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -3069,6 +3189,9 @@ function ImportNode.setmeta( obj )
 end
 function ImportNode:get_modulePath()       
    return self.modulePath         
+end
+function ImportNode:get_assignName()       
+   return self.assignName         
 end
 function ImportNode:get_moduleTypeInfo()       
    return self.moduleTypeInfo         
@@ -3107,20 +3230,25 @@ end
 
 local ModuleInfo = {}
 _moduleObj.ModuleInfo = ModuleInfo
-function ModuleInfo.new( fullName, idMap )
+function ModuleInfo.new( fullName, assignName, idMap )
    local obj = {}
    ModuleInfo.setmeta( obj )
-   if obj.__init then obj:__init( fullName, idMap ); end
+   if obj.__init then obj:__init( fullName, assignName, idMap ); end
    return obj
 end
-function ModuleInfo:__init(fullName, idMap) 
+function ModuleInfo:__init(fullName, assignName, idMap) 
    self.fullName = fullName
+   self.assignName = assignName
    self.localTypeInfo2importIdMap = idMap
    self.importId2localTypeInfoMap = {}
    for typeInfo, importId in pairs( idMap ) do
       self.importId2localTypeInfoMap[importId] = typeInfo
    end
    
+end
+function ModuleInfo:get_modulePath(  )
+
+   return self.fullName
 end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
@@ -3134,25 +3262,13 @@ end
 function ModuleInfo:get_importId2localTypeInfoMap()       
    return self.importId2localTypeInfoMap         
 end
+function ModuleInfo:get_assignName()       
+   return self.assignName         
+end
 
 function TypeInfo:getFullName( importInfo, localFlag )
 
-   local typeInfo = self
-   local name = typeInfo:get_rawTxt()
-   while not importInfo[typeInfo] do
-      typeInfo = typeInfo:get_parentInfo()
-      if typeInfo == _moduleObj.headTypeInfo then
-         break
-      end
-      
-      if localFlag and typeInfo:isModule(  ) and not importInfo[typeInfo] then
-         break
-      end
-      
-      name = typeInfo:get_rawTxt() .. "." .. name
-   end
-   
-   return name
+   return self:getParentFullName( importInfo, localFlag ) .. self:get_rawTxt()
 end
 
 function NodeKind.get_Root(  )

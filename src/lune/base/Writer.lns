@@ -89,7 +89,7 @@ pub class XML extend (Writer) {
       self.writeValue( val );
       self.endElement();
    }
-   pub fn fin() {
+   pub fn fin() mut {
    }
 }
 
