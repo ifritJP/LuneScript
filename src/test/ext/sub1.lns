@@ -1,0 +1,21 @@
+import test.ext.sub3;
+import test.ext.sub2;
+
+macro mk() {
+   {
+      let mut nameList:stat[] = [];
+      for index = 1, 1 {
+         nameList.insert( `{
+            pub class ,,,"Test%s" (index) {
+               pub fn get( val:sub3.,,,"Test%s" (index) ) {
+               }
+               pub fn get2( val:sub2.,,,"Test%s" (index) ) {
+               }
+            }
+         });
+      }
+   }  
+   ,,nameList;
+}
+
+mk();

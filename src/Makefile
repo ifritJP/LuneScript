@@ -82,12 +82,24 @@ define build-testcode
 	$(call exeLune,work/3,test/funcSym.lns,$1 save,) > /dev/null
 endef
 
+# meta 情報の更新時に正常に解析できるかテスト。
+define test-meta-update
+	-(cd $1; rm test/ext/*.lua test/ext/*.meta )
+	$(call exeLune,$1,test/ext/sub3.lns,SAVE,)
+	$(call exeLune,$1,test/ext/sub2.lns,SAVE,)
+	(cd $1; rm test/ext/sub3.lua test/ext/sub3.meta )
+	$(call exeLune,$1,test/ext/sub1.lns,SAVE,)
+endef
+
 release-check:
 	$(MAKE) test-comp LUA_INC_DIR=../../lctags/external/lua/lua-5.3.4/src/
 	$(MAKE) test-comp LUA=lua5.2 LUA_INC_DIR=../../lctags/external/lua/lua-5.2.4/src/
 
 build:
 	$(call buildLns,.,.)
+
+test-save:
+	$(call test-meta-update,.)
 
 
 # LuneScript 自身のソースを Lua に変換する。
@@ -219,6 +231,8 @@ test-comp2:
 
 	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
 
+
+	$(call test-meta-update,work/3)
 
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result

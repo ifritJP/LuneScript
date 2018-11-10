@@ -313,7 +313,8 @@ function TransUnit:__init(importModuleInfo, macroEval, analyzeModule, mode, pos)
    self.subfileList = {}
    self.pushbackList = {}
    self.usedTokenList = {}
-   self.scope = Ast.Scope.new(Ast.rootScope, true, nil)
+   self.globalScope = Ast.Scope.new(Ast.rootScope, false, nil)
+   self.scope = Ast.Scope.new(self.globalScope, true, nil)
    self.topScope = self.scope
    self.moduleScope = self.scope
    self.typeId2ClassMap = {}
@@ -1856,6 +1857,29 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
          end
       end
       
+      if newTypeInfo ~= nil then
+         if newTypeInfo:get_accessMode() == Ast.AccessMode.Global then
+            do
+               local _switchExp = newTypeInfo:get_kind()
+               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class then
+                  self.globalScope:addClass( newTypeInfo:get_rawTxt(), newTypeInfo )
+               elseif _switchExp == Ast.TypeInfoKind.Func then
+                  self.globalScope:addFunc( newTypeInfo, Ast.AccessMode.Global, newTypeInfo:get_staticFlag(), newTypeInfo:get_mutable() )
+               elseif _switchExp == Ast.TypeInfoKind.Enum then
+                  self.globalScope:addEnum( Ast.AccessMode.Global, newTypeInfo:get_rawTxt(), newTypeInfo )
+               elseif _switchExp == Ast.TypeInfoKind.Nilable then
+                  
+               else 
+                  
+                     Util.err( string.format( "%s: not support kind -- %s", __func__, Ast.TypeInfoKind:_getTxt( newTypeInfo:get_kind())
+                     ) )
+               end
+            end
+            
+         end
+         
+      end
+      
    end
    
    for __index, atomInfo in pairs( _typeInfoNormalList ) do
@@ -2463,6 +2487,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
 
    self.moduleName = _lune.unwrapDefault( moduleName, "")
    self:registBuiltInScope(  )
+   local processInfo = Ast.pushProcessInfo(  )
    local moduleTypeInfo = Ast.headTypeInfo
    local moduleSymbolKind = Ast.SymbolKind.Typ
    if moduleName ~= nil then
@@ -2519,7 +2544,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
       end
       
       local luneHelperInfo = Ast.LuneHelperInfo.new(self.useNilAccess, self.useUnwrapExp, self.hasMappingClassDef)
-      local rootNode = Ast.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, moduleTypeInfo, nil, luneHelperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2ClassMap )
+      local rootNode = Ast.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, processInfo, moduleTypeInfo, nil, luneHelperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2ClassMap )
       ast = rootNode
       do
          local _exp = self.provideNode
@@ -2542,6 +2567,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
       
    end
    
+   Ast.popProcessInfo(  )
    for protoType, pos in pairs( self.protoFuncMap ) do
       self:addErrMess( pos, string.format( "This function doesn't have body. -- %s", protoType:getTxt(  )) )
    end
@@ -3601,11 +3627,12 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    
    local retTypeInfoList = {}
    retTypeInfoList, token = self:analyzeRetTypeList( pubToExtFlag, accessMode, token )
-   local typeInfo = Ast.NormalTypeInfo.createFunc( abstractFlag, false, funcBodyScope, typeKind, self:getCurrentNamespaceTypeInfo(  ), false, false, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
+   local namespaceInfo = self:getCurrentNamespaceTypeInfo(  )
+   local typeInfo = Ast.NormalTypeInfo.createFunc( abstractFlag, false, funcBodyScope, typeKind, namespaceInfo, false, false, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
    if name ~= nil then
       local parentScope = funcBodyScope:get_parent(  )
       if accessMode == Ast.AccessMode.Global then
-         parentScope = Ast.rootScope
+         parentScope = self.globalScope
       end
       
       do
@@ -5073,6 +5100,22 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
          if  nil == symbolInfo then
             local _symbolInfo = symbolInfo
          
+            local work = self.scope
+            while true do
+               print( work, self.globalScope, Ast.rootScope )
+               if work == work:get_parent() then
+                  break
+               end
+               
+               work = work:get_parent()
+            end
+            
+            self.scope:filterSymbolTypeInfo( self.scope, self.moduleScope, function ( workSymbolInfo )
+            
+               print( "sym", workSymbolInfo:get_name() )
+               return true
+            end
+             )
             self:error( "not found type -- " .. token.txt )
          end
          

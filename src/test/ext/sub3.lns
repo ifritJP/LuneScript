@@ -1,0 +1,14 @@
+macro mk() {
+   {
+      let mut nameList:stat[] = [];
+      for index = 1, 1 {
+         nameList.insert( `{
+            pub class ,,,"Test%s" (index) {
+            }
+         });
+      }
+   }  
+   ,,nameList;
+}
+
+mk();

@@ -51,6 +51,7 @@ function IdProvider:get_id()
 end
 
 local idProv = IdProvider.new(1)
+local userStartId = 1000
 local rootTypeId = idProv:getNewId(  )
 _moduleObj.rootTypeId = rootTypeId
 
@@ -2316,6 +2317,10 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
    do
       local _exp = typeInfo2ModifierMap[srcTypeInfo]
       if _exp ~= nil then
+         if _exp:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
+            Util.err( "on cache" )
+         end
+         
          return _exp
       end
    end
@@ -2323,6 +2328,11 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
    idProv:increment(  )
    local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutable)
    typeInfo2ModifierMap[srcTypeInfo] = modifier
+   if modifier:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
+      Util.printStackTrace(  )
+      Util.err( string.format( "off cache: %s %s %s", srcTypeInfo:getTxt(  ), modifier:get_typeId(), srcTypeInfo:get_typeId()) )
+   end
+   
    return modifier
 end
 
@@ -3271,6 +3281,25 @@ function TypeInfo:getFullName( importInfo, localFlag )
    return self:getParentFullName( importInfo, localFlag ) .. self:get_rawTxt()
 end
 
+local ProcessInfo = {}
+_moduleObj.ProcessInfo = ProcessInfo
+function ProcessInfo.setmeta( obj )
+  setmetatable( obj, { __index = ProcessInfo  } )
+end
+function ProcessInfo.new( typeInfo2ModifierMap, idProvier )
+   local obj = {}
+   ProcessInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( typeInfo2ModifierMap, idProvier )
+   end        
+   return obj 
+end         
+function ProcessInfo:__init( typeInfo2ModifierMap, idProvier ) 
+
+   self.typeInfo2ModifierMap = typeInfo2ModifierMap
+   self.idProvier = idProvier
+end
+
 function NodeKind.get_Root(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Root'])
@@ -3309,17 +3338,18 @@ function RootNode:canBeStatement(  )
 
    return false
 end
-function RootNode.new( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
+function RootNode.new( pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap ); end
+   if obj.__init then obj:__init( pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap ); end
    return obj
 end
-function RootNode:__init(pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap) 
+function RootNode:__init(pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
    
    
    self.children = children
+   self.processInfo = processInfo
    self.moduleTypeInfo = moduleTypeInfo
    self.provideNode = provideNode
    self.luneHelperInfo = luneHelperInfo
@@ -3328,9 +3358,9 @@ function RootNode:__init(pos, typeList, children, moduleTypeInfo, provideNode, l
    self.typeId2ClassMap = typeId2ClassMap
    
 end
-function RootNode.create( nodeMan, pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
+function RootNode.create( nodeMan, pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
 
-   local node = RootNode.new(pos, typeList, children, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap)
+   local node = RootNode.new(pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap)
    nodeMan:addNode( node )
    return node
 end
@@ -3339,6 +3369,9 @@ function RootNode.setmeta( obj )
 end
 function RootNode:get_children()       
    return self.children         
+end
+function RootNode:get_processInfo()       
+   return self.processInfo         
 end
 function RootNode:get_moduleTypeInfo()       
    return self.moduleTypeInfo         
@@ -8723,9 +8756,34 @@ function ExpOp2Node:getLiteral(  )
    return {}, {}
 end
 
-local function pushIdProvier(  )
+local processInfoQueue = {}
+local function pushProcessInfo( processInfo )
 
-   return idProv:get_id()
+   if #processInfoQueue == 0 then
+      if idProv:get_id() >= userStartId then
+         Util.err( "builtinId is over" )
+      end
+      
+   end
+   
+   table.insert( processInfoQueue, ProcessInfo.new(typeInfo2ModifierMap, idProv) )
+   if processInfo ~= nil then
+      idProv = processInfo.idProvier
+      typeInfo2ModifierMap = processInfo.typeInfo2ModifierMap
+   else
+      idProv = IdProvider.new(userStartId)
+      typeInfo2ModifierMap = {}
+   end
+   
+   return ProcessInfo.new(typeInfo2ModifierMap, idProv)
 end
-_moduleObj.pushIdProvier = pushIdProvier
+_moduleObj.pushProcessInfo = pushProcessInfo
+local function popProcessInfo(  )
+
+   local info = processInfoQueue[#processInfoQueue]
+   idProv = info.idProvier
+   typeInfo2ModifierMap = info.typeInfo2ModifierMap
+   table.remove( processInfoQueue )
+end
+_moduleObj.popProcessInfo = popProcessInfo
 return _moduleObj

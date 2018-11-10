@@ -651,6 +651,8 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
 pub override fn convFilter.processRoot( 
    node: Ast.RootNode, parent: &Ast.Node ) mut
 {
+   Ast.pushProcessInfo( node.$processInfo );
+   
    self.writeln( "--%s" ( self.streamName ) );
 
    self.needModuleObj = node.$provideNode == nil;
@@ -689,6 +691,7 @@ end``` );
    }  
 
    self.outputMeta( node );
+   
 
    if! node.$provideNode {
       self.write( "return " );
@@ -698,7 +701,9 @@ end``` );
    }  
    else { 
       self.writeln( "return _moduleObj" );
-   }  
+   }
+
+   Ast.popProcessInfo();
 }; 
 
 pub override fn convFilter.processSubfile( 

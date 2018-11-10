@@ -1038,7 +1038,23 @@ fn TransUnit.analyzeExpSymbol(
 
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             token.txt, self.scope, self.moduleScope )
-         {  
+         {
+            let mut work = self.scope;
+            while true {
+               print( work, self.globalScope, Ast.rootScope );
+               if work == work.$parent {
+                  break;
+               }
+               work = work.$parent;
+            }
+
+            self.scope.filterSymbolTypeInfo(
+               self.scope, self.moduleScope,
+               fn ( workSymbolInfo:&Ast.SymbolInfo ): bool {
+                  print( "sym", workSymbolInfo.$name );
+                  return true;
+               } );
+            
             self.error( "not found type -- " .. token.txt );
          }; 
          let typeInfo = symbolInfo.$typeInfo;

@@ -62,7 +62,6 @@ pub enum AnalyzeMode {
 
 pub class TransUnit {
 
-   /** */
    pri let mut importModuleInfo: frontInterface.ImportModuleInfo;
    
    /** true の場合は mut 制御が有効 */
@@ -72,6 +71,7 @@ pub class TransUnit {
    pri let mut moduleName: str;
    pri let mut moduleType: &Ast.TypeInfo;
 
+   pri let mut globalScope: Ast.Scope;
    pri let mut topScope: Ast.Scope;
    /** モジュールの最上位スコープ */
    pri let mut moduleScope: Ast.Scope;
@@ -166,7 +166,9 @@ pub class TransUnit {
       // self.scope = Ast.rootScope;
       // self.topScope = Ast.rootScope;
       // self.moduleScope = Ast.rootScope;
-      self.scope = new Ast.Scope( Ast.rootScope, true, nil );
+      self.globalScope = new Ast.Scope( Ast.rootScope, false, nil );
+      
+      self.scope = new Ast.Scope( self.globalScope, true, nil );
       self.topScope = self.scope;
       self.moduleScope = self.scope;
       self.typeId2ClassMap = {};
@@ -1408,7 +1410,8 @@ fn TransUnit.processImport(
       self.error( "recursive import: %s -> %s"
                   ( self.importModuleInfo.getFull(), modulePath ) );
    }
-   
+
+
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
       let metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )@@_MetaInfo;
       let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
@@ -1530,6 +1533,29 @@ fn TransUnit.processImport(
       let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
       if! errMess {
          Util.err( "%s: %s" ( modulePath, _exp ) );
+      }
+      when! newTypeInfo {
+         if newTypeInfo.$accessMode == .Global {
+            switch newTypeInfo.$kind {
+               case .IF, .Class {
+                  self.globalScope.addClass( newTypeInfo.$rawTxt, newTypeInfo );
+               }
+               case .Func {
+                  self.globalScope.addFunc(
+                     newTypeInfo, .Global, newTypeInfo.$staticFlag, newTypeInfo.$mutable);
+               }
+               case .Enum {
+                  self.globalScope.addEnum( .Global, newTypeInfo.$rawTxt, newTypeInfo );
+               }
+               case .Nilable {
+                  ; // nop
+               }
+               default {
+                  Util.err( "%s: not support kind -- %s"
+                            (__func__, newTypeInfo.$kind.$_txt) );
+               }
+            }
+         }
       }
    }
 

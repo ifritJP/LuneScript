@@ -40,6 +40,12 @@ pub class IdProvider {
 }
 
 let mut idProv = new IdProvider( 1 );
+/**
+ビルトインでないユーザが定義した型情報の ID 開始番号。
+
+import 等で、別モジュールを解析する際に、モジュール毎の開始番号として使用する。
+*/
+let userStartId = 1000;
 
 pub let rootTypeId = idProv.getNewId();
 //let mut typeIdSeed = rootTypeId + 1;
@@ -1772,6 +1778,9 @@ pub static fn NormalTypeInfo.createModifier(
    srcTypeInfo: &TypeInfo, mutable: bool ): &TypeInfo
 {
    if! typeInfo2ModifierMap[ srcTypeInfo ] {
+      if _exp.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
+         Util.err( "on cache" );
+      }  
       return _exp;
    }
    
@@ -1779,6 +1788,11 @@ pub static fn NormalTypeInfo.createModifier(
    idProv.increment();
    let modifier = new ModifierTypeInfo( srcTypeInfo, idProv.$id, mutable ); 
    typeInfo2ModifierMap[ srcTypeInfo ] = modifier;
+   if modifier.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
+      Util.printStackTrace();
+      Util.err( "off cache: %s %s %s"
+                (srcTypeInfo.getTxt(), modifier.$typeId, srcTypeInfo.$typeId));
+   }
    return modifier;
 }
 
@@ -2484,8 +2498,15 @@ pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,ModuleInfoIF>, localFlag:
    return self.getParentFullName( importInfo, localFlag ) .. self.$rawTxt;
 }
 
+
+pub class ProcessInfo {
+   pub let mut typeInfo2ModifierMap:Map<&TypeInfo,TypeInfo>;
+   pub let mut idProvier:IdProvider;
+}
+
 _declNodeClass( "Root", Node, false, false, false,
                 [ { "children": "List<&Node>" },
+                  { "processInfo": "ProcessInfo" },
                   { "moduleTypeInfo": "&TypeInfo" },
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "LuneHelperInfo" },
@@ -3459,7 +3480,32 @@ pub override fn ExpOp2Node.getLiteral(): stem![], List<&TypeInfo> {
 }
 
 
+let mut processInfoQueue:List<ProcessInfo> = [];
 
-pub fn pushIdProvier(): int {
-   return idProv.$id;
+pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
+
+   if #processInfoQueue == 0 {
+      if idProv.$id >= userStartId {
+         Util.err( "builtinId is over" );
+      }
+   }
+
+   
+   processInfoQueue.insert( new ProcessInfo( typeInfo2ModifierMap, idProv ) );
+   when! processInfo {
+      idProv = processInfo.idProvier;
+      typeInfo2ModifierMap = processInfo.typeInfo2ModifierMap;
+   }
+   else {
+      idProv = new IdProvider( userStartId );
+      typeInfo2ModifierMap = {};
+   }
+   return new ProcessInfo( typeInfo2ModifierMap, idProv );
+}
+
+pub fn popProcessInfo() {
+   let mut info = processInfoQueue[ #processInfoQueue ];
+   idProv = info.idProvier;
+   typeInfo2ModifierMap = info.typeInfo2ModifierMap;
+   processInfoQueue.remove();
 }

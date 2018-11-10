@@ -182,10 +182,7 @@ pub fn TransUnit.createAST(
 
    self.registBuiltInScope();
 
-   // if not macroFlag {
-   //    Util.errorLog( "%s: %s: %s" ( __func__, moduleName, Ast.pushIdProvier() ) );
-      
-   // }
+   let mut processInfo = Ast.pushProcessInfo();
 
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
@@ -250,7 +247,7 @@ pub fn TransUnit.createAST(
          self.useNilAccess, self.useUnwrapExp, self.hasMappingClassDef );
       let mut rootNode = Ast.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
-         [ Ast.builtinTypeNone ], children,
+         [ Ast.builtinTypeNone ], children, processInfo,
          moduleTypeInfo, nil, luneHelperInfo, self.nodeManager,
          self.importModule2ModuleInfo, self.typeId2ClassMap );
       ast = rootNode;
@@ -269,6 +266,9 @@ pub fn TransUnit.createAST(
          self.popModule();
       }
    }
+
+   Ast.popProcessInfo();
+   
 
    foreach pos, protoType in self.protoFuncMap {
       self.addErrMess(
@@ -1466,7 +1466,7 @@ fn TransUnit.analyzeDeclFunc(
 
          if not Ast.isPubToExternal( workClass.$accessMode ) {
             pubToExtFlag = false;
-         }  
+         }
 
          
          if workClass.$mutable and not mutable {
@@ -1481,7 +1481,7 @@ fn TransUnit.analyzeDeclFunc(
          if not workClass.$abstractFlag and abstractFlag {
             self.addErrMess( firstToken.pos,
                              "no abstract class does not have abstract method" );
-         }  
+         }
       }
    }
 
@@ -1489,16 +1489,19 @@ fn TransUnit.analyzeDeclFunc(
    let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
    retTypeInfoList, token = self.analyzeRetTypeList( pubToExtFlag, accessMode, token );
 
+   let namespaceInfo = self.getCurrentNamespaceTypeInfo();
+   
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       abstractFlag, false, funcBodyScope,
-      typeKind, self.getCurrentNamespaceTypeInfo(),
+      typeKind, namespaceInfo,
       false, false, staticFlag, accessMode,
       funcName, argTypeList, retTypeInfoList, mutable );
 
    when! name {
       let mut parentScope = funcBodyScope.get_parent();
       if accessMode == .Global {
-         parentScope = Ast.rootScope;
+         //parentScope = Ast.rootScope;
+         parentScope = self.globalScope;
       }
 
       if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {

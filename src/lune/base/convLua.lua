@@ -786,6 +786,7 @@ end
 
 function convFilter:processRoot( node, parent )
 
+   Ast.pushProcessInfo( node:get_processInfo() )
    self:writeln( string.format( "--%s", self.streamName) )
    self.needModuleObj = node:get_provideNode() == nil
    if self.needModuleObj then
@@ -833,6 +834,7 @@ end]==] )
       end
    end
    
+   Ast.popProcessInfo(  )
 end
 
 
