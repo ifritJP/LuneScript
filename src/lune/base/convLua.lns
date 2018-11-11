@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import lune.base.Ver;
 import lune.base.Ast;
 import lune.base.Util;
 import lune.base.TransUnit;
@@ -236,8 +237,7 @@ pub override fn convFilter.processImport(
       new ModuleInfo( moduleName, module );
    //if self.convMode == "exe" or self.convMode == "ast" {
    if self.convMode == .Exec {
-      self.write(
-         "local %s = __luneScript:loadModule( '%s' )" ( moduleName, module) );
+      self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
    }
    else {
       self.write( "local %s = require( '%s' )" ( moduleName, module ) );
@@ -280,6 +280,9 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
    }
    
    self.writeln( "----- meta -----" );
+
+   self.writeln( "_moduleObj.__version = '%s'" (Ver.version ) );
+   self.writeln( "_moduleObj.__formatVersion = '%s'" (Ver.metaVersion ) );
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
@@ -680,6 +683,9 @@ end``` );
       }
       if node.$luneHelperInfo.$hasMappingClassDef {
          self.writeln( LuaMod.getCode( .Mapping ));
+      }
+      if self.convMode == .Exec {
+         self.writeln( LuaMod.getCode( .LoadModule ) );
       }
    }
 

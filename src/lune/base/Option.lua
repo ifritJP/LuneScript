@@ -20,7 +20,7 @@ end
 local Parser = require( 'lune.base.Parser' )
 local Util = require( 'lune.base.Util' )
 local LuaMod = require( 'lune.base.LuaMod' )
-local version = "1.0.2"
+local Ver = require( 'lune.base.Ver' )
 local ModeKind = {}
 _moduleObj.ModeKind = ModeKind
 ModeKind._val2NameMap = {}
@@ -90,6 +90,7 @@ function Option:__init()
    self.mode = ModeKind.Unknown
    self.scriptPath = ""
    self.useLuneModule = false
+   self.updateOnLoad = false
 end
 function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
@@ -135,14 +136,17 @@ usage:
   <type3> --version
 
 * type1
-  - src.lns ast
-  - src.lns comp [-i] module line column
-  - src.lns <lua|LUA>
-  - src.lns [--depends dependfile] <save|SAVE> output-dir
-  - src.lns exe
+  - src.lns [common_op] ast
+  - src.lns [common_op] comp [-i] module line column
+  - src.lns [common_op] <lua|LUA>
+  - src.lns [common_op] [--depends dependfile] <save|SAVE> output-dir
+  - src.lns [common_op] exe
 
   -r: use 'require( "lune.base._lune" )'
   --depends: output dependfile
+
+  common_op:
+    -u: update meta and lua on load.
 
 * type2
   dir: output directory.
@@ -167,7 +171,7 @@ usage:
             elseif _switchExp == "--nodebug" then
                Util.setDebugFlag( false )
             elseif _switchExp == "--version" then
-               print( string.format( "LuneScript: version %s", version) )
+               print( string.format( "LuneScript: version %s", Ver.version) )
                os.exit( 0 )
             elseif _switchExp == "-mklunemod" then
                local path = (#argList > index ) and argList[index + 1] or nil
@@ -182,6 +186,8 @@ usage:
                os.exit( 0 )
             elseif _switchExp == "-r" then
                option.useLuneModule = true
+            elseif _switchExp == "-u" then
+               option.updateOnLoad = true
             elseif _switchExp == "--depends" then
                if #argList > index then
                   do

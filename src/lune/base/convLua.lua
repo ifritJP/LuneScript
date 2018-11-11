@@ -59,6 +59,7 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+local Ver = require( 'lune.base.Ver' )
 local Ast = require( 'lune.base.Ast' )
 local Util = require( 'lune.base.Util' )
 local TransUnit = require( 'lune.base.TransUnit' )
@@ -342,7 +343,7 @@ function convFilter:processImport( node, parent )
    moduleName = node:get_assignName()
    self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = ModuleInfo.new(moduleName, module)
    if self.convMode == ConvMode.Exec then
-      self:write( string.format( "local %s = __luneScript:loadModule( '%s' )", moduleName, module) )
+      self:write( string.format( "local %s = _lune.loadModule( '%s' )", moduleName, module) )
    else
     
       self:write( string.format( "local %s = require( '%s' )", moduleName, module) )
@@ -363,6 +364,8 @@ function convFilter:outputMeta( node )
    end
    
    self:writeln( "----- meta -----" )
+   self:writeln( string.format( "_moduleObj.__version = '%s'", Ver.version) )
+   self:writeln( string.format( "_moduleObj.__formatVersion = '%s'", Ver.metaVersion) )
    local importModuleType2Index = {}
    local importNameMap = {}
    do
@@ -812,6 +815,10 @@ end]==] )
       
       if node:get_luneHelperInfo():get_hasMappingClassDef() then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
+      end
+      
+      if self.convMode == ConvMode.Exec then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
       end
       
    end

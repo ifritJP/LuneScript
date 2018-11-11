@@ -565,16 +565,17 @@ _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap )
+function _MetaInfo.new( __formatVersion, _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap )
    local obj = {}
    _MetaInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap )
+      obj:__init( __formatVersion, _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap )
    end        
    return obj 
 end         
-function _MetaInfo:__init( _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap ) 
+function _MetaInfo:__init( __formatVersion, _typeId2ClassInfoMap, _typeInfoList, _varName2InfoMap, _funcName2InfoMap, _moduleTypeId, _moduleSymbolKind, _moduleMutable, _dependModuleMap, _dependIdMap ) 
 
+   self.__formatVersion = __formatVersion
    self._typeId2ClassInfoMap = _typeId2ClassInfoMap
    self._typeInfoList = _typeInfoList
    self._varName2InfoMap = _varName2InfoMap

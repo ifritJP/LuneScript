@@ -25,8 +25,7 @@ SOFTWARE.
 import lune.base.Parser;
 import lune.base.Util;
 import lune.base.LuaMod;
-
-let version = "1.0.2";
+import lune.base.Ver;
 
 pub enum ModeKind {
    Unknown = "",
@@ -58,12 +57,15 @@ pub class Option {
    pub let mut useLuneModule:bool;
    /** 依存ファイル情報の出力先ストリーム */
    pub let mut dependsStream:oStream!;
+   /** ロード時に meta 等を更新する  */
+   pub let mut updateOnLoad:bool;
 
    pub fn __init() {
       self.validProf = false;
       self.mode = .Unknown;
       self.scriptPath = "";
       self.useLuneModule = false;
+      self.updateOnLoad = false;
    }
 }
 
@@ -98,14 +100,17 @@ usage:
   <type3> --version
 
 * type1
-  - src.lns ast
-  - src.lns comp [-i] module line column
-  - src.lns <lua|LUA>
-  - src.lns [--depends dependfile] <save|SAVE> output-dir
-  - src.lns exe
+  - src.lns [common_op] ast
+  - src.lns [common_op] comp [-i] module line column
+  - src.lns [common_op] <lua|LUA>
+  - src.lns [common_op] [--depends dependfile] <save|SAVE> output-dir
+  - src.lns [common_op] exe
 
   -r: use 'require( "lune.base._lune" )'
   --depends: output dependfile
+
+  common_op:
+    -u: update meta and lua on load.
 
 * type2
   dir: output directory.
@@ -134,7 +139,7 @@ usage:
                Util.setDebugFlag( false );
             }
             case "--version" {
-               print( "LuneScript: version %s" (version) );
+               print( "LuneScript: version %s" (Ver.version) );
                os.exit( 0 );
             }
             case "-mklunemod" {
@@ -147,6 +152,9 @@ usage:
             }
             case "-r" {
                option.useLuneModule = true;
+            }
+            case "-u" {
+               option.updateOnLoad = true;
             }
             case "--depends" {
                if #argList > index {

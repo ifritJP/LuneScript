@@ -1,5 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
+_moduleObj.__version = '1.0.2'
+_moduleObj.__formatVersion = '1.0.0'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -26,22 +28,22 @@ children = {1003, } }
 _typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'base', kind = 12, 
 children = {1005, } }
 _typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'front', kind = 12, 
-children = {13861, 13864, 13927, 14021, } }
-_typeInfoList[5] = { skind=3, parentId = 1005, typeId = 13861, baseId = 1, txt = '_luneGetLocal',
+children = {13863, 13866, 13929, 14026, } }
+_typeInfoList[5] = { skind=3, parentId = 1005, typeId = 13863, baseId = 1, txt = '_luneGetLocal',
         abstractFlag = false, staticFlag = true, accessMode = 5, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {28}, retTypeId = {11}, children = {}, }
-_typeInfoList[6] = { skind = 0, parentId = 1005, typeId = 13862, nilable = true, orgTypeId = 13861 }
-_typeInfoList[7] = { skind=3, parentId = 1005, typeId = 13864, baseId = 1, txt = '_luneSym2Str',
+_typeInfoList[6] = { skind = 0, parentId = 1005, typeId = 13864, nilable = true, orgTypeId = 13863 }
+_typeInfoList[7] = { skind=3, parentId = 1005, typeId = 13866, baseId = 1, txt = '_luneSym2Str',
         abstractFlag = false, staticFlag = true, accessMode = 5, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {11}, retTypeId = {29}, children = {}, }
-_typeInfoList[8] = { skind = 0, parentId = 1005, typeId = 13865, nilable = true, orgTypeId = 13864 }
-_typeInfoList[9] = { skind=3, parentId = 1005, typeId = 13927, baseId = 1, txt = 'scriptPath2Module',
+_typeInfoList[8] = { skind = 0, parentId = 1005, typeId = 13867, nilable = true, orgTypeId = 13866 }
+_typeInfoList[9] = { skind=3, parentId = 1005, typeId = 13929, baseId = 1, txt = 'scriptPath2Module',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {28}, retTypeId = {28}, children = {}, }
-_typeInfoList[10] = { skind = 0, parentId = 1005, typeId = 13928, nilable = true, orgTypeId = 13927 }
-_typeInfoList[11] = { skind=3, parentId = 1, typeId = 14018, baseId = 1, txt = 'List',
+_typeInfoList[10] = { skind = 0, parentId = 1005, typeId = 13930, nilable = true, orgTypeId = 13929 }
+_typeInfoList[11] = { skind=3, parentId = 1, typeId = 14023, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {28}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[12] = { skind = 0, parentId = 1, typeId = 14019, nilable = true, orgTypeId = 14018 }
-_typeInfoList[13] = { skind=3, parentId = 1005, typeId = 14021, baseId = 1, txt = 'exec',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {14018}, retTypeId = {}, children = {}, }
-_typeInfoList[14] = { skind = 0, parentId = 1005, typeId = 14022, nilable = true, orgTypeId = 14021 }
+_typeInfoList[12] = { skind = 0, parentId = 1, typeId = 14024, nilable = true, orgTypeId = 14023 }
+_typeInfoList[13] = { skind=3, parentId = 1005, typeId = 14026, baseId = 1, txt = 'exec',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {14023}, retTypeId = {}, children = {}, }
+_typeInfoList[14] = { skind = 0, parentId = 1005, typeId = 14027, nilable = true, orgTypeId = 14026 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = false }
@@ -51,10 +53,11 @@ _dependModuleMap[ 'lune.base.OutputDepend' ] = { id = 4, use = false }
 _dependModuleMap[ 'lune.base.Parser' ] = { id = 5, use = false }
 _dependModuleMap[ 'lune.base.TransUnit' ] = { id = 6, use = false }
 _dependModuleMap[ 'lune.base.Util' ] = { id = 7, use = false }
-_dependModuleMap[ 'lune.base.convLua' ] = { id = 8, use = false }
-_dependModuleMap[ 'lune.base.dumpNode' ] = { id = 9, use = false }
-_dependModuleMap[ 'lune.base.frontInterface' ] = { id = 10, use = false }
-_dependModuleMap[ 'lune.base.glueFilter' ] = { id = 11, use = false }
+_dependModuleMap[ 'lune.base.Ver' ] = { id = 8, use = false }
+_dependModuleMap[ 'lune.base.convLua' ] = { id = 9, use = false }
+_dependModuleMap[ 'lune.base.dumpNode' ] = { id = 10, use = false }
+_dependModuleMap[ 'lune.base.frontInterface' ] = { id = 11, use = false }
+_dependModuleMap[ 'lune.base.glueFilter' ] = { id = 12, use = false }
 _moduleObj._moduleTypeId = 1005
 _moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true

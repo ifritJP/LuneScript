@@ -48,6 +48,7 @@ define exeComp
 endef
 
 define buildLns
+	$(call transwork,$1,$2,Ver)
 	$(call transwork,$1,$2,LuaMod)
 	$(call transwork,$1,$2,Depend)
 	$(call transwork,$1,$2,Util)
@@ -231,12 +232,21 @@ test-comp2:
 
 	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
 
+# オプション -u 付きで save して実行テスト
+	mkdir -p work/4
+	cp -a test work/4
+	cp -a work/3/lune work/4
+	$(call exeLune,work/3,test/start.lns,-u save ../4,)
+	(cd work/4; $(LUA) test/start.lua) > work/test5.result
+
 
 	$(call test-meta-update,work/3)
 
+# diff で、修正前と修正後の差分がないことを確認
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
+	diff work/test4.result work/test5.result
 	diff work/1/start.dep work/3/start.dep
 	diff -r work/glue work/newglue
 

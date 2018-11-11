@@ -27,6 +27,7 @@ local dumpNode = require( 'lune.base.dumpNode' )
 local glueFilter = require( 'lune.base.glueFilter' )
 local Depend = require( 'lune.base.Depend' )
 local OutputDepend = require( 'lune.base.OutputDepend' )
+local Ver = require( 'lune.base.Ver' )
 function _luneGetLocal( varName )
 
    local index = 1
@@ -169,17 +170,12 @@ local function loadFromLuaTxt( txt )
    error( "failed to error" )
 end
 
-function Front:loadFromAst( ast, streamName, onlyMeta )
+function Front:convertFromAst( ast, streamName, mode )
 
    local stream = Util.memStream.new()
    local metaStream = Util.memStream.new()
-   self:convert( ast, streamName, stream, metaStream, convLua.ConvMode.Exec, false )
-   local meta = loadFromLuaTxt( metaStream:get_txt() )
-   if onlyMeta then
-      return meta, stream:get_txt()
-   end
-   
-   return meta, loadFromLuaTxt( stream:get_txt() )
+   self:convert( ast, streamName, stream, metaStream, mode, false )
+   return metaStream:get_txt(), stream:get_txt()
 end
 
 function Front:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
@@ -188,13 +184,53 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.StreamParser.new(stream, name, false)
    local ast = transUnit:createAST( parser, false, nil )
-   return self:loadFromAst( ast, name, onlyMeta )
+   local metaTxt, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.Exec )
+   local meta = loadFromLuaTxt( metaTxt )
+   if onlyMeta then
+      return meta, luaTxt
+   end
+   
+   return meta, loadFromLuaTxt( luaTxt )
 end
 
 function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
 
    local ast = self:createAst( importModuleInfo, createPaser( path, mod ), mod, nil, TransUnit.AnalyzeMode.Compile )
-   return self:loadFromAst( ast, path, onlyMeta )
+   local convMode = convLua.ConvMode.Exec
+   local metaTxt, luaTxt = self:convertFromAst( ast, path, convMode )
+   if self.option.updateOnLoad then
+      local function saveFile( suffix, txt )
+      
+         local newpath = ""
+         do
+            local dir = self.option.outputDir
+            if dir ~= nil then
+               newpath = string.format( "%s/%s%s", dir, mod:gsub( "%.", "/" ), suffix)
+            else
+               newpath = path:gsub( ".lns$", suffix )
+            end
+         end
+         
+         do
+            local fileObj = io.open( newpath, "w" )
+            if fileObj ~= nil then
+               fileObj:write( txt )
+               fileObj:close(  )
+            end
+         end
+         
+      end
+      
+      saveFile( ".lua", luaTxt )
+      saveFile( ".meta", metaTxt )
+   end
+   
+   local meta = loadFromLuaTxt( metaTxt )
+   if onlyMeta then
+      return meta, luaTxt
+   end
+   
+   return meta, loadFromLuaTxt( luaTxt )
 end
 
 function Front:searchModule( mod )
@@ -220,6 +256,10 @@ end
 function Front:checkUptodateMeta( metaPath, addSearchPath )
 
    local meta = self:loadLua( metaPath )
+   if meta.__formatVersion ~= Ver.metaVersion then
+      return nil
+   end
+   
    for moduleFullName, dependInfo in pairs( meta._dependModuleMap ) do
       do
          local moduleLuaPath = self:searchLuaFile( moduleFullName, addSearchPath )
@@ -246,14 +286,14 @@ function Front:loadModule( mod )
 
    if self.loadedMap[mod] == nil then
       do
-         local _exp = self.convertedMap[mod]
-         if _exp ~= nil then
+         local luaTxt = self.convertedMap[mod]
+         if luaTxt ~= nil then
             if not self.loadedMetaMap[mod] then
                error( string.format( "nothing meta -- %s", mod) )
             end
             
             local info = {}
-            info['mod'] = loadFromLuaTxt( _exp )
+            info['mod'] = loadFromLuaTxt( luaTxt )
             info['meta'] = self.loadedMetaMap[mod]
             self.loadedMap[mod] = info
          else
@@ -262,33 +302,33 @@ function Front:loadModule( mod )
                if lnsPath ~= nil then
                   local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
                   do
-                     local _exp = self.option.outputDir
-                     if _exp ~= nil then
-                        luaPath = self:searchLuaFile( mod, _exp )
+                     local dir = self.option.outputDir
+                     if dir ~= nil then
+                        luaPath = self:searchLuaFile( mod, dir )
                      end
                   end
                   
                   local loadVal = nil
-                  do
-                     local _exp = luaPath
-                     if _exp ~= nil then
-                        if Util.getReadyCode( lnsPath, _exp ) then
-                           local metaPath = string.gsub( _exp, "%.lua$", ".meta" )
-                           if Util.getReadyCode( lnsPath, metaPath ) then
-                              loadVal = self:loadLua( _exp )
-                              local meta = self:checkUptodateMeta( metaPath, self.option.outputDir )
-                              if meta then
-                                 local info = {}
-                                 info['mod'] = loadVal
-                                 info['meta'] = meta
-                                 self.loadedMap[mod] = info
-                              end
-                              
+                  if luaPath ~= nil then
+                     if Util.getReadyCode( lnsPath, luaPath ) then
+                        local metaPath = string.gsub( luaPath, "%.lua$", ".meta" )
+                        if Util.getReadyCode( lnsPath, metaPath ) then
+                           loadVal = self:loadLua( luaPath )
+                           local meta = self:checkUptodateMeta( metaPath, self.option.outputDir )
+                           if meta then
+                              local info = {}
+                              info['mod'] = loadVal
+                              info['meta'] = meta
+                              self.loadedMap[mod] = info
+                           else
+                            
+                              loadVal = nil
                            end
                            
                         end
                         
                      end
+                     
                   end
                   
                   if loadVal == nil then
@@ -330,29 +370,26 @@ function Front:loadMeta( importModuleInfo, mod )
                if lnsPath ~= nil then
                   local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
                   do
-                     local _exp = self.option.outputDir
-                     if _exp ~= nil then
-                        luaPath = self:searchLuaFile( mod, _exp )
+                     local dir = self.option.outputDir
+                     if dir ~= nil then
+                        luaPath = self:searchLuaFile( mod, dir )
                      end
                   end
                   
                   local meta = nil
-                  do
-                     local _exp = luaPath
-                     if _exp ~= nil then
-                        if Util.getReadyCode( lnsPath, _exp ) then
-                           local metaPath = string.gsub( _exp, "%.lua$", ".meta" )
-                           if Util.getReadyCode( lnsPath, metaPath ) then
-                              meta = self:checkUptodateMeta( metaPath, self.option.outputDir )
-                              if meta then
-                                 self.loadedMetaMap[mod] = meta
-                              end
-                              
+                  if luaPath ~= nil then
+                     if Util.getReadyCode( lnsPath, luaPath ) then
+                        local metaPath = string.gsub( luaPath, "%.lua$", ".meta" )
+                        if Util.getReadyCode( lnsPath, metaPath ) then
+                           meta = self:checkUptodateMeta( metaPath, self.option.outputDir )
+                           if meta ~= nil then
+                              self.loadedMetaMap[mod] = meta
                            end
                            
                         end
                         
                      end
+                     
                   end
                   
                   if meta == nil then

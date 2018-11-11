@@ -32,6 +32,7 @@ import lune.base.dumpNode;
 import lune.base.glueFilter;
 import lune.base.Depend;
 import lune.base.OutputDepend;
+import lune.base.Ver;
 
 global fn _luneGetLocal( varName:str ):stem!
 {
@@ -160,19 +161,15 @@ fn loadFromLuaTxt( txt:str ): stem {
 }
 
 
-fn Front.loadFromAst(ast:&TransUnit.ASTInfo, streamName:str, onlyMeta:bool ) :
-   stem, stem
+fn Front.convertFromAst(
+   ast:&TransUnit.ASTInfo, streamName:str, mode:convLua.ConvMode ) : str, str
 {
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
 
-   self.convert( ast, streamName, stream, metaStream, .Exec, false );
-   
-   let mut meta = loadFromLuaTxt( metaStream.$txt );
-   if onlyMeta {
-      return meta, stream.$txt;
-   }
-   return meta, loadFromLuaTxt( stream.$txt );
+   self.convert( ast, streamName, stream, metaStream, mode, false );
+
+   return metaStream.$txt, stream.$txt;
 }
 
 fn Front.loadFromLnsTxt(
@@ -185,8 +182,14 @@ fn Front.loadFromLnsTxt(
    let mut parser = new Parser.StreamParser( stream, name, false );
 
    let ast = transUnit.createAST( parser, false, nil );
-   
-   return self.loadFromAst( ast, name, onlyMeta );
+
+
+   let mut metaTxt, luaTxt = self.convertFromAst( ast, name, .Exec );
+   let mut meta = loadFromLuaTxt( metaTxt );
+   if onlyMeta {
+      return meta, luaTxt;
+   }
+   return meta, loadFromLuaTxt( luaTxt );
 }
 
 fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
@@ -195,7 +198,32 @@ fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
    let ast = self.createAst( importModuleInfo,
                              createPaser( path, mod ), mod, nil, .Compile );
 
-   return self.loadFromAst( ast, path, onlyMeta );
+   let mut convMode = convLua.ConvMode.Exec;
+   let mut metaTxt, luaTxt = self.convertFromAst( ast, path, convMode );
+
+   if self.option.updateOnLoad {
+      fn saveFile( suffix:str, txt:str ){
+         let mut newpath = "";
+         if! let dir = self.option.outputDir {
+            newpath = "%s/%s%s" ( dir, mod.gsub( "%.", "/" ), suffix );
+         }
+         else {
+            newpath = path.gsub( ".lns$", suffix );
+         }
+         if! let mut fileObj = io.open( newpath, "w" ) {
+            fileObj.write( txt );
+            fileObj.close();
+         }
+      }
+      saveFile( ".lua", luaTxt );
+      saveFile( ".meta", metaTxt );
+   }
+
+   let mut meta = loadFromLuaTxt( metaTxt );
+   if onlyMeta {
+      return meta, luaTxt;
+   }
+   return meta, loadFromLuaTxt( luaTxt );
 }
 
 fn Front.searchModule( mod:str ): str! {
@@ -221,6 +249,9 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
 */
 fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
    let meta = self.loadLua( metaPath )@@TransUnit._MetaInfo;
+   if meta.$__formatVersion ~= Ver.metaVersion {
+      return nil;
+   }
    foreach dependInfo, moduleFullName in meta._dependModuleMap {
       if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
          let moduleLnsPath = moduleLuaPath.gsub( "%.lua$", ".lns" );
@@ -243,13 +274,13 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
      
 fn Front.loadModule( mod:str ) mut : stem!, stem {
    if self.loadedMap[ mod ] == nil {
-      if! self.convertedMap[ mod ] {
+      if! let luaTxt = self.convertedMap[ mod ] {
          if not self.loadedMetaMap[ mod ] {
             error( "nothing meta -- %s" ( mod ) );
          }
 
 	 let mut info:Map<str,stem> = {};
-	 info.mod = loadFromLuaTxt( _exp );
+	 info.mod = loadFromLuaTxt( luaTxt );
 	 info.meta = self.loadedMetaMap[ mod ];
 
 	 self.loadedMap[ mod ] = info;
@@ -258,16 +289,16 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
          if! let lnsPath = self.searchModule( mod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 
-            if! self.option.outputDir {
-               luaPath = self.searchLuaFile( mod, _exp );
+            if! let dir = self.option.outputDir {
+               luaPath = self.searchLuaFile( mod, dir );
             }
 
             let mut loadVal:stem! = nil;
-            if! luaPath {
-               if Util.getReadyCode( lnsPath, _exp ) {
-	          let metaPath = string.gsub( _exp, "%.lua$", ".meta" );
+            when! luaPath {
+               if Util.getReadyCode( lnsPath, luaPath ) {
+	          let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
 	          if Util.getReadyCode( lnsPath, metaPath ) {
-	             loadVal = self.loadLua( _exp );
+	             loadVal = self.loadLua( luaPath );
                      let meta = self.checkUptodateMeta(
                         metaPath, self.option.outputDir );
 
@@ -276,6 +307,9 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
 	                info.mod = loadVal;
 	                info.meta = meta;
 	                self.loadedMap[ mod ] = info;
+                     }
+                     else {
+                        loadVal = nil;
                      }
                   }           
                }  
@@ -308,19 +342,18 @@ fn Front.loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) m
          if! let lnsPath = self.searchModule( mod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 
-            if! self.option.outputDir {
-               luaPath = self.searchLuaFile( mod, _exp );
+            if! let dir = self.option.outputDir {
+               luaPath = self.searchLuaFile( mod, dir );
             }  
 
             let mut meta:stem! = nil;
-            if! luaPath {
-               if Util.getReadyCode( lnsPath, _exp ) {
-	          let metaPath = string.gsub( _exp, "%.lua$", ".meta" );
+            when! luaPath {
+               if Util.getReadyCode( lnsPath, luaPath ) {
+	          let metaPath = string.gsub( luaPath, "%.lua$", ".meta" );
 	          if Util.getReadyCode( lnsPath, metaPath ) {
-	             //meta = self.loadLua( metaPath );
                      meta = self.checkUptodateMeta(
                         metaPath, self.option.outputDir );
-                     if meta {
+                     when! meta {
 	                self.loadedMetaMap[ mod ] = meta;
                      }
                   }  

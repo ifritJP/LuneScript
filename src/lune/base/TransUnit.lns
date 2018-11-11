@@ -431,6 +431,7 @@ pub fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.
 }
 
 pub class _MetaInfo {
+   pub let __formatVersion:str;
    pub let _typeId2ClassInfoMap: Map<int,Map<str,stem>>;
    pub let _typeInfoList: Map<str,stem>[];
    pub let _varName2InfoMap: Map<str,Map<str,stem>>;

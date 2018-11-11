@@ -1,5 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
+_moduleObj.__version = '1.0.2'
+_moduleObj.__formatVersion = '1.0.0'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do

@@ -48,12 +48,15 @@ CodeKind.__allList[2] = CodeKind.NilAcc
 CodeKind.Unwrap = 2
 CodeKind._val2NameMap[2] = 'Unwrap'
 CodeKind.__allList[3] = CodeKind.Unwrap
-CodeKind.Mapping = 3
-CodeKind._val2NameMap[3] = 'Mapping'
-CodeKind.__allList[4] = CodeKind.Mapping
-CodeKind.Finalize = 4
-CodeKind._val2NameMap[4] = 'Finalize'
-CodeKind.__allList[5] = CodeKind.Finalize
+CodeKind.LoadModule = 3
+CodeKind._val2NameMap[3] = 'LoadModule'
+CodeKind.__allList[4] = CodeKind.LoadModule
+CodeKind.Mapping = 4
+CodeKind._val2NameMap[4] = 'Mapping'
+CodeKind.__allList[5] = CodeKind.Mapping
+CodeKind.Finalize = 5
+CodeKind._val2NameMap[5] = 'Finalize'
+CodeKind.__allList[6] = CodeKind.Finalize
 
 local codeMap = {}
 codeMap[CodeKind.Init] = [==[
@@ -114,6 +117,14 @@ function _lune.unwrapDefault( val, defval )
       return defval
    end
    return val
+end
+]==]
+codeMap[CodeKind.LoadModule] = [==[
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
 end
 ]==]
 codeMap[CodeKind.Mapping] = [==[      

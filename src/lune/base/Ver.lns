@@ -1,0 +1,4 @@
+/** lns バージョン */
+pub let version = "1.0.2";
+/** meta フォーマットバージョン */
+pub let metaVersion = "1.0.0";

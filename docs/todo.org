@@ -130,6 +130,7 @@
 
 * ドキュメント
 
+- [ ] -u オプション
 - [ ] import as 対応
 - [ ] __func__, __line__, __mod__ のサポート
 - [ ] form の型宣言
@@ -139,7 +140,7 @@
 - [X] map 型からの Class 生成(fromMap)、 Class からの map 生成 (toMap)
 - [X] Lua 5.2 で bit 演算子を利用した場合、 bit モジュールを利用するように変換する
 - [X] module 宣言したモジュールの glue コード自動生成
-- [X] enum の全要素リストを取れるようにする。      
+- [X] enum の全要素リストを取れるようにする。
 
 * advent
 

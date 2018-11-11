@@ -1,5 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
+_moduleObj.__version = '1.0.2'
+_moduleObj.__formatVersion = '1.0.0'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -9,6 +11,8 @@ end
 do
    local _classInfo6839 = {}
    _typeId2ClassInfoMap[ 6839 ] = _classInfo6839
+   _classInfo6839.__formatVersion = {
+     name='__formatVersion', staticFlag = false, mutable = false,accessMode = '1', typeId = 1016 }
    _classInfo6839._typeId2ClassInfoMap = {
      name='_typeId2ClassInfoMap', staticFlag = false, mutable = false,accessMode = '1', typeId = 6852 }
    _classInfo6839._typeInfoList = {
@@ -2601,7 +2605,7 @@ _typeInfoList[1180] = { skind=3, parentId = 1, typeId = 6881, baseId = 1, txt = 
 _typeInfoList[1181] = { skind = 0, parentId = 1, typeId = 6882, nilable = true, orgTypeId = 6881 }
 _typeInfoList[1182] = { skind = 1, parentId = 1, typeId = 6884, srcTypeId = 6881, mutable = false }
 _typeInfoList[1183] = { skind=3, parentId = 6839, typeId = 6885, baseId = 1, txt = '__init',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {6852, 6859, 6866, 6870, 1023, 1023, 1415, 6877, 6884}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1016, 6852, 6859, 6866, 6870, 1023, 1023, 1415, 6877, 6884}, retTypeId = {}, children = {}, }
 _typeInfoList[1184] = { skind = 0, parentId = 6839, typeId = 6886, nilable = true, orgTypeId = 6885 }
 _typeInfoList[1185] = { skind=3, parentId = 1005, typeId = 8095, baseId = 1, txt = 'ASTInfo',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {8102, 8105, 8108, 8111}, }

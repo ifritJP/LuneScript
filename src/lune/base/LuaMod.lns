@@ -26,6 +26,7 @@ pub enum CodeKind {
    Init,
    NilAcc,
    Unwrap,
+   LoadModule,
    Mapping,
    Finalize,
 }
@@ -95,6 +96,14 @@ function _lune.unwrapDefault( val, defval )
 end
 ```;
 
+codeMap[ .LoadModule ] =```
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+```;
 
 codeMap[ .Mapping ] = ```      
 function _lune._toStem( val )
