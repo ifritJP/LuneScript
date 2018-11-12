@@ -17,8 +17,15 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-local Parser = require( 'lune.base.Parser' )
-local Util = require( 'lune.base.Util' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Util = _lune.loadModule( 'lune.base.Util' )
 local IdProvider = {}
 _moduleObj.IdProvider = IdProvider
 function IdProvider:increment(  )

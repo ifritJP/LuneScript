@@ -17,6 +17,13 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
 local CodeKind = {}
 _moduleObj.CodeKind = CodeKind
 CodeKind._val2NameMap = {}

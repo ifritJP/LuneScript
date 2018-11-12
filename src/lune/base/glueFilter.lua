@@ -17,8 +17,15 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-local Ast = require( 'lune.base.Ast' )
-local Parser = require( 'lune.base.Parser' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Parser = _lune.loadModule( 'lune.base.Parser' )
 local glueGenerator = {}
 function glueGenerator.setmeta( obj )
   setmetatable( obj, { __index = glueGenerator  } )

@@ -142,14 +142,21 @@ function _lune._fromMap( obj, map, memInfoList )
    return true
 end
 
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
 
 
 
-local Parser = require( 'lune.base.Parser' )
-local Util = require( 'lune.base.Util' )
-local Ast = require( 'lune.base.Ast' )
-local Writer = require( 'lune.base.Writer' )
-local frontInterface = require( 'lune.base.frontInterface' )
+
+local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Util = _lune.loadModule( 'lune.base.Util' )
+local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Writer = _lune.loadModule( 'lune.base.Writer' )
+local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local DeclClassMode = {}
 DeclClassMode._val2NameMap = {}
 function DeclClassMode:_getTxt( val )

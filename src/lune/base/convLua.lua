@@ -59,12 +59,19 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-local Ver = require( 'lune.base.Ver' )
-local Ast = require( 'lune.base.Ast' )
-local Util = require( 'lune.base.Util' )
-local TransUnit = require( 'lune.base.TransUnit' )
-local frontInterface = require( 'lune.base.frontInterface' )
-local LuaMod = require( 'lune.base.LuaMod' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Ver = _lune.loadModule( 'lune.base.Ver' )
+local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Util = _lune.loadModule( 'lune.base.Util' )
+local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
+local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
@@ -342,13 +349,7 @@ function convFilter:processImport( node, parent )
    local moduleName = module:gsub( ".*%.", "" )
    moduleName = node:get_assignName()
    self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = ModuleInfo.new(moduleName, module)
-   if self.convMode == ConvMode.Exec then
-      self:write( string.format( "local %s = _lune.loadModule( '%s' )", moduleName, module) )
-   else
-    
-      self:write( string.format( "local %s = require( '%s' )", moduleName, module) )
-   end
-   
+   self:write( string.format( "local %s = _lune.loadModule( '%s' )", moduleName, module) )
 end
 
 
@@ -660,7 +661,7 @@ function convFilter:outputMeta( node )
                if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Pro or _switchExp == Ast.AccessMode.Global then
                else 
                   
-                     Util.errorLog( string.format( "skip: %s %s", self:getFullName( typeInfo )) )
+                     Util.errorLog( string.format( "skip: %s %s", typeInfo:get_accessMode(), self:getFullName( typeInfo )) )
                      return 
                end
             end
@@ -817,10 +818,7 @@ end]==] )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
       end
       
-      if self.convMode == ConvMode.Exec then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
-      end
-      
+      self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
    end
    
    local children = node:get_children(  )

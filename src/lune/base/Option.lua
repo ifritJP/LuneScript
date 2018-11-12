@@ -17,10 +17,17 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-local Parser = require( 'lune.base.Parser' )
-local Util = require( 'lune.base.Util' )
-local LuaMod = require( 'lune.base.LuaMod' )
-local Ver = require( 'lune.base.Ver' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Util = _lune.loadModule( 'lune.base.Util' )
+local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
+local Ver = _lune.loadModule( 'lune.base.Ver' )
 local ModeKind = {}
 _moduleObj.ModeKind = ModeKind
 ModeKind._val2NameMap = {}
@@ -116,11 +123,10 @@ local function outputLuneMod( dir )
       return string.format( "failed to open -- %s", path)
    end
    
-   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Init ) )
-   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.NilAcc ) )
-   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Unwrap ) )
-   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
-   fileObj:write( LuaMod.getCode( LuaMod.CodeKind.Finalize ) )
+   for __index, kind in pairs( LuaMod.CodeKind.get__allList() ) do
+      fileObj:write( LuaMod.getCode( kind ) )
+   end
+   
    fileObj:close(  )
    return nil
 end

@@ -59,7 +59,14 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-local Util = require( 'lune.base.Util' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Util = _lune.loadModule( 'lune.base.Util' )
 local Writer = {}
 _moduleObj.Writer = Writer
 function Writer.setmeta( obj )

@@ -4,7 +4,14 @@ local __mod__ = 'lune.base.Util'
 if not _lune then
    _lune = {}
 end
-local Depend = require( 'lune.base.Depend' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Depend = _lune.loadModule( 'lune.base.Depend' )
 local memStream = {}
 _moduleObj.memStream = memStream
 function memStream.new(  )

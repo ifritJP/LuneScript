@@ -80,12 +80,10 @@ pub fn outputLuneMod( dir:str! ):str! {
       return "failed to open -- %s" ( path );
    };
 
-   fileObj.write( LuaMod.getCode( .Init ) );
-   fileObj.write( LuaMod.getCode( .NilAcc ) );
-   fileObj.write( LuaMod.getCode( .Unwrap ) );
-   fileObj.write( LuaMod.getCode( .Mapping ) );
-   fileObj.write( LuaMod.getCode( .Finalize ) );
-   
+   foreach kind in LuaMod.CodeKind.$_allList {
+      fileObj.write( LuaMod.getCode( kind ) );
+   }
+
    fileObj.close();
    return nil;
 }

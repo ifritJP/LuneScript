@@ -70,7 +70,8 @@ pub interface frontInterface {
 
 class dummyFront extend (frontInterface) {
    pub fn loadModule( mod:str ): stem!, stem {
-      error( "not implements" );
+      // error( "not implements" );
+      return require( mod ), {};
    }
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): stem {
       error( "not implements" );

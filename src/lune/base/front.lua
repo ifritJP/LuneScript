@@ -17,17 +17,24 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-local frontInterface = require( 'lune.base.frontInterface' )
-local Parser = require( 'lune.base.Parser' )
-local convLua = require( 'lune.base.convLua' )
-local TransUnit = require( 'lune.base.TransUnit' )
-local Util = require( 'lune.base.Util' )
-local Option = require( 'lune.base.Option' )
-local dumpNode = require( 'lune.base.dumpNode' )
-local glueFilter = require( 'lune.base.glueFilter' )
-local Depend = require( 'lune.base.Depend' )
-local OutputDepend = require( 'lune.base.OutputDepend' )
-local Ver = require( 'lune.base.Ver' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+local Parser = _lune.loadModule( 'lune.base.Parser' )
+local convLua = _lune.loadModule( 'lune.base.convLua' )
+local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
+local Util = _lune.loadModule( 'lune.base.Util' )
+local Option = _lune.loadModule( 'lune.base.Option' )
+local dumpNode = _lune.loadModule( 'lune.base.dumpNode' )
+local glueFilter = _lune.loadModule( 'lune.base.glueFilter' )
+local Depend = _lune.loadModule( 'lune.base.Depend' )
+local OutputDepend = _lune.loadModule( 'lune.base.OutputDepend' )
+local Ver = _lune.loadModule( 'lune.base.Ver' )
 function _luneGetLocal( varName )
 
    local index = 1

@@ -2512,18 +2512,18 @@ _dependIdMap[ 6473 ] = { 5, 1055 } -- ImportModuleInfo
 _dependIdMap[ 6474 ] = { 5, 1056 } -- ImportModuleInfo!
 _dependIdMap[ 6488 ] = { 5, 1089 } -- frontInterface
 _dependIdMap[ 6489 ] = { 5, 1090 } -- frontInterface!
-_dependIdMap[ 6509 ] = { 5, 1141 } -- setFront
-_dependIdMap[ 6510 ] = { 5, 1142 } -- setFront!
-_dependIdMap[ 6512 ] = { 5, 1144 } -- loadModule
-_dependIdMap[ 6513 ] = { 5, 1145 } -- loadModule!
-_dependIdMap[ 6515 ] = { 5, 1147 } -- loadFromLnsTxt
-_dependIdMap[ 6516 ] = { 5, 1148 } -- loadFromLnsTxt!
-_dependIdMap[ 6518 ] = { 5, 1150 } -- loadMeta
-_dependIdMap[ 6519 ] = { 5, 1151 } -- loadMeta!
-_dependIdMap[ 6521 ] = { 5, 1153 } -- searchModule
-_dependIdMap[ 6522 ] = { 5, 1154 } -- searchModule!
-_dependIdMap[ 6524 ] = { 5, 1156 } -- error
-_dependIdMap[ 6525 ] = { 5, 1157 } -- error!
+_dependIdMap[ 6509 ] = { 5, 1144 } -- setFront
+_dependIdMap[ 6510 ] = { 5, 1145 } -- setFront!
+_dependIdMap[ 6512 ] = { 5, 1147 } -- loadModule
+_dependIdMap[ 6513 ] = { 5, 1148 } -- loadModule!
+_dependIdMap[ 6515 ] = { 5, 1150 } -- loadFromLnsTxt
+_dependIdMap[ 6516 ] = { 5, 1151 } -- loadFromLnsTxt!
+_dependIdMap[ 6518 ] = { 5, 1153 } -- loadMeta
+_dependIdMap[ 6519 ] = { 5, 1154 } -- loadMeta!
+_dependIdMap[ 6521 ] = { 5, 1156 } -- searchModule
+_dependIdMap[ 6522 ] = { 5, 1157 } -- searchModule!
+_dependIdMap[ 6524 ] = { 5, 1159 } -- error
+_dependIdMap[ 6525 ] = { 5, 1160 } -- error!
 _typeInfoList[1127] = { skind = 4, parentId = 1005, typeId = 6572, txt = 'AnalyzeMode',
 accessMode = 1, kind = 11, valTypeId = 19, enumValList = {Compile = 0,Complete = 2,Diag = 1,} }
 _typeInfoList[1128] = { skind = 0, parentId = 1005, typeId = 6573, nilable = true, orgTypeId = 6572 }

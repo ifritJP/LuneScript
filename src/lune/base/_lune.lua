@@ -52,6 +52,12 @@ function _lune.unwrapDefault( val, defval )
    end
    return val
 end
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
       
 function _lune._toStem( val )
    return val

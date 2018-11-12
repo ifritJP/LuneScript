@@ -235,13 +235,14 @@ pub override fn convFilter.processImport(
    moduleName = node.$assignName;
    self.typeInfo2ModuleName[ node.$moduleTypeInfo ] =
       new ModuleInfo( moduleName, module );
+   self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
    //if self.convMode == "exe" or self.convMode == "ast" {
-   if self.convMode == .Exec {
-      self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
-   }
-   else {
-      self.write( "local %s = require( '%s' )" ( moduleName, module ) );
-   }
+   // if self.convMode == .Exec {
+   //    self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
+   // }
+   // else {
+   //    self.write( "local %s = require( '%s' )" ( moduleName, module ) );
+   // }
 };
 
 
@@ -547,7 +548,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                }
                default {
                   Util.errorLog( "skip: %s %s"
-                                 (self.getFullName( typeInfo )) );  
+                                 (typeInfo.$accessMode, self.getFullName( typeInfo )) );
                   return;
                }
             }
@@ -684,9 +685,7 @@ end``` );
       if node.$luneHelperInfo.$hasMappingClassDef {
          self.writeln( LuaMod.getCode( .Mapping ));
       }
-      if self.convMode == .Exec {
-         self.writeln( LuaMod.getCode( .LoadModule ) );
-      }
+      self.writeln( LuaMod.getCode( .LoadModule ) );
    }
 
    let children:List<&Ast.Node> = node.get_children();

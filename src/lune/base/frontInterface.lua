@@ -4,7 +4,14 @@ local __mod__ = 'lune.base.frontInterface'
 if not _lune then
    _lune = {}
 end
-local Util = require( 'lune.base.Util' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Util = _lune.loadModule( 'lune.base.Util' )
 local ImportModuleInfo = {}
 _moduleObj.ImportModuleInfo = ImportModuleInfo
 function ImportModuleInfo.new(  )
@@ -69,7 +76,7 @@ end
 local dummyFront = {}
 function dummyFront:loadModule( mod )
 
-   error( "not implements" )
+   return require( mod ), {}
 end
 function dummyFront:loadMeta( importModuleInfo, mod )
 

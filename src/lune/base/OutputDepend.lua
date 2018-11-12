@@ -4,10 +4,17 @@ local __mod__ = 'lune.base.OutputDepend'
 if not _lune then
    _lune = {}
 end
-local Ast = require( 'lune.base.Ast' )
-local Util = require( 'lune.base.Util' )
-local TransUnit = require( 'lune.base.TransUnit' )
-local frontInterface = require( 'lune.base.frontInterface' )
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Util = _lune.loadModule( 'lune.base.Util' )
+local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
+local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local convFilter = {}
 setmetatable( convFilter, { __index = Ast.Filter } )
 function convFilter.new( stream )
