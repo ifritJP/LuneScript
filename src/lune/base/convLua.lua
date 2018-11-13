@@ -444,27 +444,18 @@ function convFilter:outputMeta( node )
          end
          
          local typeInfoList = typeInfo:get_itemTypeInfoList(  )
-         if typeInfoList then
-            for __index, itemTypeInfo in pairs( typeInfoList ) do
-               pickupTypeId( itemTypeInfo, true, false )
-            end
-            
+         for __index, itemTypeInfo in pairs( typeInfoList ) do
+            pickupTypeId( itemTypeInfo, true, false )
          end
          
          typeInfoList = typeInfo:get_argTypeInfoList(  )
-         if typeInfoList then
-            for __index, itemTypeInfo in pairs( typeInfoList ) do
-               pickupTypeId( itemTypeInfo, true, false )
-            end
-            
+         for __index, itemTypeInfo in pairs( typeInfoList ) do
+            pickupTypeId( itemTypeInfo, true, false )
          end
          
          typeInfoList = typeInfo:get_retTypeInfoList(  )
-         if typeInfoList then
-            for __index, itemTypeInfo in pairs( typeInfoList ) do
-               pickupTypeId( itemTypeInfo, true, true )
-            end
-            
+         for __index, itemTypeInfo in pairs( typeInfoList ) do
+            pickupTypeId( itemTypeInfo, true, true )
          end
          
          if pickupChildFlag then
@@ -818,7 +809,10 @@ end]==] )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
       end
       
-      self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
+      if node:get_nodeManager():getImportNodeList(  ) then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
+      end
+      
    end
    
    local children = node:get_children(  )
@@ -1293,13 +1287,9 @@ end
 
 function convFilter:processExpMacroExp( node, parent )
 
-   local stmtList = node:get_stmtList(  )
-   if stmtList then
-      for __index, stmt in pairs( stmtList ) do
-         filter( stmt, self, node )
-         self:writeln( "" )
-      end
-      
+   for __index, stmt in pairs( node:get_stmtList() ) do
+      filter( stmt, self, node )
+      self:writeln( "" )
    end
    
 end
@@ -2392,10 +2382,7 @@ function convFilter:processGetField( node, parent )
          delimit = "."
       end
       
-      if node:get_getterTypeInfo(  ) then
-         fieldTxt = string.format( "get_%s()", fieldTxt)
-      end
-      
+      fieldTxt = string.format( "get_%s()", fieldTxt)
       self:write( delimit .. fieldTxt )
    end
    
@@ -2561,20 +2548,17 @@ function MacroEvalImp:eval( node )
    end
    
    local chunk, err = load( oStream:get_txt(  ), "", "bt", newEnv )
-   if err then
+   if err ~= nil then
       Util.err( err )
    end
    
-   do
-      local _exp = chunk
-      if _exp ~= nil then
-         local mod = _exp(  )
-         if not mod then
-            Util.err( "macro load error" )
-         end
-         
-         return (_lune.unwrap( mod) )
+   if chunk ~= nil then
+      local mod = chunk(  )
+      if not mod then
+         Util.err( "macro load error" )
       end
+      
+      return (_lune.unwrap( mod) )
    end
    
    Util.err( "failed to load -- " .. node:get_declInfo():get_name() )

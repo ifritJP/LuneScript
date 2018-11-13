@@ -331,24 +331,22 @@ fn TransUnit.evalMacro(
 {
 
    when! expList {
-      if expList.get_expList() {
-         foreach exp in expList.get_expList() {
-            let kind = exp.$kind;
-            if kind ~= Ast.NodeKind.$LiteralNil and
-               kind ~= Ast.NodeKind.$LiteralChar and
-               kind ~= Ast.NodeKind.$LiteralInt and
-               kind ~= Ast.NodeKind.$LiteralReal and
-               kind ~= Ast.NodeKind.$LiteralArray and
-               kind ~= Ast.NodeKind.$LiteralList and
-               kind ~= Ast.NodeKind.$LiteralMap and
-               kind ~= Ast.NodeKind.$LiteralString and
-               kind ~= Ast.NodeKind.$LiteralBool and
-               kind ~= Ast.NodeKind.$LiteralSymbol and
-               kind ~= Ast.NodeKind.$RefField and
-               kind ~= Ast.NodeKind.$ExpMacroStat
-            {
-               self.error( "Macro arguments must be literal value." );
-            }
+      foreach exp in expList.get_expList() {
+         let kind = exp.$kind;
+         if kind ~= Ast.NodeKind.$LiteralNil and
+            kind ~= Ast.NodeKind.$LiteralChar and
+            kind ~= Ast.NodeKind.$LiteralInt and
+            kind ~= Ast.NodeKind.$LiteralReal and
+            kind ~= Ast.NodeKind.$LiteralArray and
+            kind ~= Ast.NodeKind.$LiteralList and
+            kind ~= Ast.NodeKind.$LiteralMap and
+            kind ~= Ast.NodeKind.$LiteralString and
+            kind ~= Ast.NodeKind.$LiteralBool and
+            kind ~= Ast.NodeKind.$LiteralSymbol and
+            kind ~= Ast.NodeKind.$RefField and
+            kind ~= Ast.NodeKind.$ExpMacroStat
+         {
+            self.error( "Macro arguments must be literal value." );
          }
       }
    }
@@ -406,20 +404,17 @@ fn TransUnit.evalMacro(
    //let scope = self.pushScope();
 
 
-   let argList = macroInfo.declInfo.$argList;
-   if argList {
-      foreach arg, index in argList {
-         if arg.get_kind() == Ast.NodeKind.$DeclArg {
-            let argInfo = arg;
-            let argType = argInfo.$argType;
-            let argName = argInfo.$name.txt;
-            //scope.add( argName, argType.expType );
-            self.symbol2ValueMapForMacro[ argName ] =
-               new Ast.MacroValInfo( argValMap[ index ], argType.$expType );
-         }
-         else {
-            self.error( "not support ... in macro" );
-         }
+   foreach arg, index in macroInfo.declInfo.$argList {
+      if arg.get_kind() == Ast.NodeKind.$DeclArg {
+         let argInfo = arg;
+         let argType = argInfo.$argType;
+         let argName = argInfo.$name.txt;
+         //scope.add( argName, argType.expType );
+         self.symbol2ValueMapForMacro[ argName ] =
+            new Ast.MacroValInfo( argValMap[ index ], argType.$expType );
+      }
+      else {
+         self.error( "not support ... in macro" );
       }
    }
 

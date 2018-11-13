@@ -142,11 +142,8 @@ function dumpFilter:processExpMacroExp( node, prefix, depth )
 
    dump( prefix, depth, node, "" )
    local stmtList = node:get_stmtList(  )
-   if stmtList then
-      for __index, stmt in pairs( stmtList ) do
-         filter( stmt, self, prefix .. "  ", depth + 1 )
-      end
-      
+   for __index, stmt in pairs( stmtList ) do
+      filter( stmt, self, prefix .. "  ", depth + 1 )
    end
    
 end
@@ -369,7 +366,7 @@ function dumpFilter:processIf( node, prefix, depth )
    dump( prefix, depth, node, "" )
    local stmtList = node:get_stmtList(  )
    for index, stmt in pairs( stmtList ) do
-      if stmt:get_exp() then
+      if stmt:get_exp():get_kind() ~= Ast.nodeKind['None'] then
          filter( stmt:get_exp(), self, prefix .. "  ", depth + 1 )
       end
       

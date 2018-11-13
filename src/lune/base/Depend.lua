@@ -46,13 +46,6 @@ function _lune.nilacc( val, fieldName, access, ... )
    error( string.format( "illegal access -- %s", access ) )
 end
 
-function _lune.loadModule( mod )
-   if __luneScript then
-      return  __luneScript:loadModule( mod )
-   end
-   return require( mod )
-end
-
 local function getFileLastModifiedTime( path )
 
    local file = io.open( path )

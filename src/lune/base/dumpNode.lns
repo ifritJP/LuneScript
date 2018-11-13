@@ -116,10 +116,8 @@ pub override fn dumpFilter.processExpMacroExp(
 {
    dump( prefix, depth, node, "" );
    let stmtList = node.get_stmtList();
-   if  stmtList {
-      foreach stmt in stmtList {
-         filter( stmt, self,  prefix .. "  ", depth + 1 );
-      }
+   foreach stmt in stmtList {
+      filter( stmt, self,  prefix .. "  ", depth + 1 );
    }
 };
 pub override fn dumpFilter.processDeclMacro( 
@@ -293,7 +291,7 @@ pub override fn dumpFilter.processIf(
    dump( prefix, depth, node, "");
    let stmtList = node.get_stmtList();
    foreach stmt, index in stmtList {
-      if stmt.$exp {
+      if stmt.$exp.$kind ~= Ast.nodeKind.None {
 	 filter( stmt.$exp, self, prefix .. "  ", depth + 1 );
       }   	
       filter( stmt.$block, self, prefix .. "  ", depth + 1 );

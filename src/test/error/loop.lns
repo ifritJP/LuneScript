@@ -102,7 +102,7 @@
    fn func(val:int): int {
       while true {
          while val == 1 {
-            if val {
+            if val == 2 {
                return 1;
             }
          }

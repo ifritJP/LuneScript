@@ -1980,11 +1980,7 @@ function NormalTypeInfo:getTxt( fullName, importInfo, localFlag )
       return parentTxt .. txt .. ">"
    end
    
-   if self:get_rawTxt() then
-      return parentTxt .. self:get_rawTxt()
-   end
-   
-   return ""
+   return parentTxt .. self:get_rawTxt()
 end
 function NormalTypeInfo:get_display_stirng(  )
 
@@ -2083,7 +2079,7 @@ function NormalTypeInfo:equalsSub( typeInfo )
       return false
    end
    
-   if self.itemTypeInfoList then
+   do
       if #self.itemTypeInfoList ~= #typeInfo:get_itemTypeInfoList() then
          return false
       end
@@ -2097,7 +2093,7 @@ function NormalTypeInfo:equalsSub( typeInfo )
       
    end
    
-   if self.retTypeInfoList then
+   do
       if #self.retTypeInfoList ~= #typeInfo:get_retTypeInfoList() then
          return false
       end

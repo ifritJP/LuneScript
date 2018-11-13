@@ -1391,10 +1391,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
          return parentTxt .. txt .. ">";
       } 
-      if self.$rawTxt {
-         return parentTxt .. self.$rawTxt;
-      } 
-      return "";
+      return parentTxt .. self.$rawTxt;
    }
 
    pub override fn get_display_stirng(): str {
@@ -1511,7 +1508,7 @@ pub class NormalTypeInfo extend TypeInfo {
          return false;
       }
 
-      if self.itemTypeInfoList {
+      {
          if #self.itemTypeInfoList ~= #typeInfo.$itemTypeInfoList {
             return false;
          }  
@@ -1522,10 +1519,10 @@ pub class NormalTypeInfo extend TypeInfo {
                //      typeInfo.getTxt(), typeInfo.$typeId ) );
                return false;
             }   
-         }  
-      } 
+         }
+      }
 
-      if self.retTypeInfoList {
+      {
          if #self.retTypeInfoList ~= #typeInfo.$retTypeInfoList {
             // error( "illegal %s:%d %s:%d"
             //    ( self.getTxt(), self.typeId,
@@ -1539,8 +1536,8 @@ pub class NormalTypeInfo extend TypeInfo {
                //      typeInfo.getTxt(), typeInfo.$typeId ) );
                return false;
             }   
-         }  
-      } 
+         }
+      }
 
       if self.orgTypeInfo ~= headTypeInfo and
          not self.orgTypeInfo.equals( typeInfo.$orgTypeInfo )
@@ -2379,18 +2376,16 @@ macro _declNodeClass(
       let mut initStatList:stat[] = [];
       let mut relateStat:stat[] = [];
       
-      if fieldInfoList {
-         foreach fieldInfo in fieldInfoList {
-            foreach typeName, varName in fieldInfo {
-               fieldStatList.insert( `{
-                  pri let mut ,,,varName : ,,,typeName { pub };
-               });  
-               argList.insert( `{ ,,,varName: ,,,typeName, } );
-               argSymList.insert( `{, ,,,varName } );
-               initStatList.insert( `{ self.,,,varName = ,,,varName; } );
-            }   
-         }  
-      } 
+      foreach fieldInfo in fieldInfoList {
+         foreach typeName, varName in fieldInfo {
+            fieldStatList.insert( `{
+               pri let mut ,,,varName : ,,,typeName { pub };
+            });  
+            argList.insert( `{ ,,,varName: ,,,typeName, } );
+            argSymList.insert( `{, ,,,varName } );
+            initStatList.insert( `{ self.,,,varName = ,,,varName; } );
+         }   
+      }  
 
       fieldStatList.insert( `{
          pub override fn processFilter( filter: Filter, ... ) {

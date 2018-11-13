@@ -756,7 +756,7 @@ fn TransUnit.registBuiltInScope() mut {
             "error": { "arg": [ "str" ], "ret": [ "__" ] },
             "print": { "arg": [ "&..." ], "ret": [] },
             "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
-            "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str"] },
+            "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
             "loadfile": { "arg": [ "str" ], "ret": ["form!", "str"] },
             "require": { "arg": [ "str" ], "ret": ["stem!"] },
             "collectgarbage": { "arg": [ ], "ret": [] },
@@ -855,7 +855,7 @@ fn TransUnit.registBuiltInScope() mut {
       },
       {
          "debug": {
-            "getinfo": { "arg": ["int"], "ret": ["stem"] },
+            "getinfo": { "arg": ["int"], "ret": ["stem!"] },
             "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
          },
       }
@@ -1142,16 +1142,11 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token {
                   macroVal.typeInfo.get_kind() == .List
                {   
                   let strList = (unwrap macroVal.val)@@str[];
-                  if strList {
-                     for index = #strList, 1, -1 {
-                        self.pushbackStr(
-                           "macroVal %s[%d]" (nextToken.txt, index),
-                           strList[ index ] );
-                     }     
-                  }    
-                  else {
-                     self.error( "macro val is nil %s" (nextToken.txt) );
-                  }    
+                  for index = #strList, 1, -1 {
+                     self.pushbackStr(
+                        "macroVal %s[%d]" (nextToken.txt, index),
+                        strList[ index ] );
+                  }
                }
                else {
                   let mut tokenList: List<&Parser.Token> = [];
@@ -1815,14 +1810,37 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
    self.pushback();
    
    let mut list:Ast.IfStmtInfo[] = [];
-   list.insert( new Ast.IfStmtInfo( .If, self.analyzeExp( false ),
-                                    self.analyzeBlock( .If ) ) );
+   let ifExp = self.analyzeExp( false );
+   list.insert( new Ast.IfStmtInfo( .If, ifExp, self.analyzeBlock( .If ) ) );
+
+   fn checkCond( condExp:&Ast.Node ) {
+      switch condExp.$expType.$kind {
+         case .Nilable, .Stem {
+            ;  
+         }  
+         case .Prim {
+            if not condExp.$expType.equals( Ast.builtinTypeBool ) {
+               self.addErrMess(
+                  condExp.$pos, "This exp never be false -- %s"
+                  ( condExp.$expType.getTxt()) );
+            }  
+         }  
+         default {
+            self.addErrMess(
+               condExp.$pos, "This exp never be false -- %s"
+               ( condExp.$expType.getTxt()) );
+         }  
+      }
+   }
+   checkCond( ifExp );
 
    nextToken = self.getToken( true );
    if nextToken.txt == "elseif" {
       while nextToken.txt == "elseif" {
-         list.insert( new Ast.IfStmtInfo( .ElseIf, self.analyzeExp( false ),
+         let condExp = self.analyzeExp( false );
+         list.insert( new Ast.IfStmtInfo( .ElseIf, condExp,
                                           self.analyzeBlock( .Elseif ) ));
+         checkCond( condExp );
          nextToken = self.getToken( true );
       } 
    }

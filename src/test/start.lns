@@ -132,13 +132,11 @@ macro _classtest( macroVal: int, fieldInfoList: Map<str,str>[] ) {
       let name = ,,,"classTest%d" (macroVal);
       let mut field:stat[] = [];
 
-      if fieldInfoList {
-         foreach fieldInfo in fieldInfoList {
-            foreach typeName, varName in fieldInfo {
-               field.insert( `{
-                  pri let ,,,varName : ,,,typeName { pub };
-               });
-            }
+      foreach fieldInfo in fieldInfoList {
+         foreach typeName, varName in fieldInfo {
+            field.insert( `{
+               pri let ,,,varName : ,,,typeName { pub };
+            });
          }
       }
    }

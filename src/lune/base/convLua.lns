@@ -367,23 +367,17 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
          }
          
 	 let mut typeInfoList: &List<&Ast.TypeInfo> = typeInfo.get_itemTypeInfoList();
-         if typeInfoList {
-	    foreach itemTypeInfo in typeInfoList {
-               pickupTypeId( itemTypeInfo, true, false );
-	    }
-         }
+	 foreach itemTypeInfo in typeInfoList {
+            pickupTypeId( itemTypeInfo, true, false );
+	 }
 	 typeInfoList = typeInfo.get_argTypeInfoList();
-         if typeInfoList {
-	    foreach itemTypeInfo in typeInfoList {
-               pickupTypeId( itemTypeInfo, true, false );
-	    }
-         }
+	 foreach itemTypeInfo in typeInfoList {
+            pickupTypeId( itemTypeInfo, true, false );
+	 }
 	 typeInfoList = typeInfo.get_retTypeInfoList();
-         if typeInfoList {
-	    foreach itemTypeInfo in typeInfoList {
-               pickupTypeId( itemTypeInfo, true, true );
-	    }
-         }
+	 foreach itemTypeInfo in typeInfoList {
+            pickupTypeId( itemTypeInfo, true, true );
+	 }
          if pickupChildFlag {
 	    foreach itemTypeInfo in typeInfo.get_children() {
                if itemTypeInfo.$accessMode == .Pub and
@@ -685,7 +679,9 @@ end``` );
       if node.$luneHelperInfo.$hasMappingClassDef {
          self.writeln( LuaMod.getCode( .Mapping ));
       }
-      self.writeln( LuaMod.getCode( .LoadModule ) );
+      if node.$nodeManager.getImportNodeList() {
+         self.writeln( LuaMod.getCode( .LoadModule ) );
+      }
    }
 
    let children:List<&Ast.Node> = node.get_children();
@@ -1191,13 +1187,10 @@ pub override fn convFilter.processDeclMember(
 pub override fn convFilter.processExpMacroExp( 
    node: Ast.ExpMacroExpNode, parent: &Ast.Node ) mut
 {
-   let stmtList = node.get_stmtList();
-   if  stmtList {
-      foreach stmt in stmtList {
-         filter( stmt, self, node );
-         self.writeln( "" );
-      }    
-   } 
+   foreach stmt in node.$stmtList {
+      filter( stmt, self, node );
+      self.writeln( "" );
+   }    
 };
 
 pub override fn convFilter.processDeclMacro( 
@@ -2258,9 +2251,8 @@ pub override fn convFilter.processGetField(
       else {
          delimit = ".";
       }   
-      if node.get_getterTypeInfo() {
-         fieldTxt = "get_%s()" ( fieldTxt );
-      }   
+
+      fieldTxt = "get_%s()" ( fieldTxt );
       self.write( delimit .. fieldTxt );
    }
 };  
@@ -2431,11 +2423,11 @@ pub class MacroEvalImp extend Ast.MacroEval {
       };
       
       let chunk, err = load( oStream.get_txt(), "", "bt", newEnv );
-      if err {
+      when! err {
          Util.err( err );
       }
-      if! chunk {
-         let mod = _exp();
+      when! chunk {
+         let mod = chunk();
          if not mod {
             Util.err( "macro load error" );
          }   

@@ -78,9 +78,11 @@ _moduleObj.log = log
 local function printStackTrace(  )
 
    for level = 2, 6 do
-      local debugInfo = debug.getinfo( level )
-      if debugInfo then
-         errorLog( string.format( "-- %s %s", debugInfo["short_src"], debugInfo['currentline']) )
+      do
+         local debugInfo = debug.getinfo( level )
+         if debugInfo ~= nil then
+            errorLog( string.format( "-- %s %s", debugInfo['short_src'], debugInfo['currentline']) )
+         end
       end
       
    end

@@ -5,8 +5,8 @@ _moduleObj.__formatVersion = '1.0.0'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-   local _classInfo8484 = {}
-   _typeId2ClassInfoMap[ 8484 ] = _classInfo8484
+   local _classInfo8483 = {}
+   _typeId2ClassInfoMap[ 8483 ] = _classInfo8483
 end
 do
    local _classInfo1001 = {}
@@ -332,7 +332,7 @@ children = {1003, } }
 _typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'base', kind = 12, 
 children = {1005, } }
 _typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'convLua', kind = 12, 
-children = {8005, 8481, 8484, } }
+children = {8005, 8480, 8483, } }
 _typeInfoList[5] = { skind = 1, parentId = 1, typeId = 1010, srcTypeId = 28, mutable = false }
 _dependIdMap[ 1011 ] = { 3, 1005 } -- Parser
 _dependIdMap[ 1013 ] = { 3, 1061 } -- isLuaKeyword
@@ -2479,18 +2479,18 @@ _typeInfoList[1135] = { skind = 1, parentId = 1, typeId = 8016, srcTypeId = 8013
 _typeInfoList[1136] = { skind=3, parentId = 8005, typeId = 8017, baseId = 1, txt = 'get__allList',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {8016}, children = {}, }
 _typeInfoList[1137] = { skind = 0, parentId = 8005, typeId = 8018, nilable = true, orgTypeId = 8017 }
-_typeInfoList[1138] = { skind=3, parentId = 1005, typeId = 8481, baseId = 1, txt = 'createFilter',
+_typeInfoList[1138] = { skind=3, parentId = 1005, typeId = 8480, baseId = 1, txt = 'createFilter',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {28, 90, 90, 8005, 16, 1204, 1372, 16}, retTypeId = {2337}, children = {}, }
-_typeInfoList[1139] = { skind = 0, parentId = 1005, typeId = 8482, nilable = true, orgTypeId = 8481 }
-_typeInfoList[1140] = { skind=3, parentId = 1005, typeId = 8484, baseId = 2449, txt = 'MacroEvalImp',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {8492, 8505}, }
-_typeInfoList[1141] = { skind = 0, parentId = 1005, typeId = 8485, nilable = true, orgTypeId = 8484 }
-_typeInfoList[1142] = { skind=3, parentId = 8484, typeId = 8492, baseId = 1, txt = 'eval',
+_typeInfoList[1139] = { skind = 0, parentId = 1005, typeId = 8481, nilable = true, orgTypeId = 8480 }
+_typeInfoList[1140] = { skind=3, parentId = 1005, typeId = 8483, baseId = 2449, txt = 'MacroEvalImp',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {8491, 8505}, }
+_typeInfoList[1141] = { skind = 0, parentId = 1005, typeId = 8484, nilable = true, orgTypeId = 8483 }
+_typeInfoList[1142] = { skind=3, parentId = 8483, typeId = 8491, baseId = 1, txt = 'eval',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {5567}, retTypeId = {40}, children = {}, }
-_typeInfoList[1143] = { skind = 0, parentId = 8484, typeId = 8493, nilable = true, orgTypeId = 8492 }
-_typeInfoList[1144] = { skind=3, parentId = 8484, typeId = 8505, baseId = 1, txt = '__init',
+_typeInfoList[1143] = { skind = 0, parentId = 8483, typeId = 8492, nilable = true, orgTypeId = 8491 }
+_typeInfoList[1144] = { skind=3, parentId = 8483, typeId = 8505, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1010}, retTypeId = {}, children = {}, }
-_typeInfoList[1145] = { skind = 0, parentId = 8484, typeId = 8506, nilable = true, orgTypeId = 8505 }
+_typeInfoList[1145] = { skind = 0, parentId = 8483, typeId = 8506, nilable = true, orgTypeId = 8505 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = true }
