@@ -169,7 +169,7 @@ class convFilter extend Ast.Filter (oStream) {
       stream.write( txt );
    }
 
-   pub fn write( mut txt: str ) mut {
+   pub fn write( mut txt: str ) mut : stem!, str! {
       while true {
          if! let index = string.find( txt, "\n" ) {
             self.writeRaw( txt.sub( 1, index ) );
@@ -182,6 +182,7 @@ class convFilter extend Ast.Filter (oStream) {
       if #txt > 0 {
          self.writeRaw( txt );
       }
+      return self, nil;
    }
 }
 

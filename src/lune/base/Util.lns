@@ -29,8 +29,9 @@ pub class memStream extend (oStream) {
    pub fn __init() {
       self.txt = "";
    }
-   pub fn write( val: str ) mut {
+   pub fn write( val: str ) mut : stem!, str! {
       self.txt = self.txt .. val;
+      return self, nil;
    }
    pub fn close() mut {
    }

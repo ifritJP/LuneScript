@@ -151,6 +151,35 @@
 }
 
 
+{
+   fn ite( param:int, prev:stem! ) : int!, str {
+      let mut prevInt:int = 0;
+      if prev == param {
+         return nil, "";
+      }  
+      when! prev {
+         prevInt = prev@@int;
+      }  
+      else {
+         prevInt = 0;
+      }  
+      let next = prevInt + 1;
+      return next, string.format( "%d", next );
+   }  
+
+   form iteForm( param:int, prev:stem! ) : int!, str;
+
+   fn testIte( max:int ): iteForm, int, int! {
+      return ite, max, nil;
+   }  
+
+   apply value1, value2 of testIte( 10 ) {
+      when! value1 { // error
+      }  
+      when! value2 { // error
+      }
+   }  
+}
 
 
 

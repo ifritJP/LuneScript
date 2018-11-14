@@ -8,7 +8,7 @@
 
 * 機能
 
-
+- [ ] 型固定の可変長引数対応
 - [ ] 引数を 2 つの型に限定することが出来ない。
       例えば int、str どちらかに限定できない。現状だと stem になってしまう。
 - [ ] import を先頭以外に書けるようにする。
@@ -23,7 +23,6 @@
 - [ ] string 系の組込みメソッド拡充。
 - [ ] form 型の変数に関数オブジェクトを代入した時に、
       関数の引数が参照型から、非参照型を指定してもエラーにならない。
-- [ ] 型固定の可変長引数対応
 - [ ] 配列の繰り返し要素指定定義。
 - [ ] lua5.1 の対応
 - [ ] SymbolInfo の canBeLeft と mutable の扱いを整理する。
@@ -134,6 +133,7 @@
 - [X] 自分自身を import すると処理が返ってこない。
 - [X] if で、条件不成立にならない式を書けてしまう。
     if "" { }  等。
+- [X] apply of で列挙される型が stem になってしまっている。
 
 
 * ドキュメント
@@ -152,15 +152,17 @@
 
 * advent
 
+- [X] 紹介
+- [X] setup
+- [X] hello world
 - [X] 値
 - [X] enum
 - [X] 変数
-- [ ] 分岐
-- [ ] foreach 等の loop
-- [ ] 関数
+- [X] 分岐
+- [X] foreach 等の loop
+- [ ] 関数, form
 - [ ] nilable, unwrap, map
 - [ ] nil 条件演算子
-- [ ] provide
 - [ ] クラス 基本
 - [ ] クラス accessor
 - [ ] クラス 継承, abstract
@@ -168,9 +170,15 @@
 - [ ] クラス advertise
 - [ ] インタフェース
 - [ ] mapping
-- [ ] import
+- [ ] import, provide
 - [ ] require, module
 - [ ] subfile
 - [ ] macro
-- [ ] make  
+- [ ] make
+- [ ] glue
+- [ ] LuneScript を作ってみての感想
+      - こんな機能が欲しかった
+	- accessor の自動生成
+        - advertise 
+      - 近年の言語の調査
 

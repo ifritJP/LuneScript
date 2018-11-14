@@ -26,6 +26,7 @@ end
 function memStream:write( val )
 
    self.txt = self.txt .. val
+   return self, nil
 end
 function memStream:close(  )
 

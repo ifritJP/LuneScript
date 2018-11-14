@@ -739,7 +739,8 @@ pub let mut typeInfoListInsert:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoListRemove:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoMappingIF:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoMappingToMap:&Ast.TypeInfo = Ast.headTypeInfo;
-
+let mut typeInfoStrGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
+let mut typeInfoStringGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
 
 let mut readyBuiltin = false;
 
@@ -773,7 +774,7 @@ fn TransUnit.registBuiltInScope() mut {
       {
          "oStream": {
             "__attrib": { "type": [ "interface" ] },
-            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!"] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
             "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
          },
@@ -782,7 +783,7 @@ fn TransUnit.registBuiltInScope() mut {
          "luaStream": {
             "__attrib": { "inplements": [ "iStream", "oStream" ] },
             "read": { "type": [ "mut" ], "arg": [ "&stem!" ], "ret": [ "str!" ] },
-            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ ] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!" ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
             "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
             "seek": { "type": [ "mut" ], "arg": [ "str", "int"], "ret": [ "int!", "str!" ] },
@@ -826,7 +827,7 @@ fn TransUnit.registBuiltInScope() mut {
             "byte": { "arg": [ "str", "int" ], "ret": ["int"] },
             "format": { "arg": [ "str", "..." ], "ret": ["str"] },
             "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
-            "gmatch": { "arg": [ "str", "str" ], "ret": ["stem!"] },
+            "gmatch": { "arg": [ "str", "str" ], "ret": ["form", "stem!", "stem!"] },
             "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str"] },
             "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
          },
@@ -837,7 +838,7 @@ fn TransUnit.registBuiltInScope() mut {
             "byte": { "type": [ "method" ], "arg": [ "int" ], "ret": ["int"] },
             "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
             "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
-            "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["stem!"] },
+            "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["form", "stem!", "stem!"] },
             "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str"] },
             "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
          },  
@@ -970,23 +971,36 @@ fn TransUnit.registBuiltInScope() mut {
                         methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
                         not methodFlag, not methodFlag,
                         fieldName, typeInfo, .Pub, not methodFlag, mutable, true );
-                     if methodFlag {
-                        switch name {
-                           case "List" {
-                              switch fieldName {
-                                 case "insert" {      
-                                    typeInfoListInsert = typeInfo;
-                                 }        
-                                 case "remove" {
-                                    typeInfoListRemove = typeInfo;
-                                 }        
-                              }       
+
+                     switch name {
+                        case "List" {
+                           switch fieldName {
+                              case "insert" {      
+                                 typeInfoListInsert = typeInfo;
+                              }        
+                              case "remove" {
+                                 typeInfoListRemove = typeInfo;
+                              }        
+                           }       
+                        }
+                        case "Mapping" {
+                           switch fieldName {
+                              case "_toMap" {
+                                 typeInfoMappingToMap = typeInfo;
+                              }
                            }
-                           case "Mapping" {
-                              switch fieldName {
-                                 case "_toMap" {
-                                    typeInfoMappingToMap = typeInfo;
-                                 }
+                        }
+                        case "str" {
+                           switch fieldName {
+                              case "gmatch" {
+                                 typeInfoStrGMatch = typeInfo;
+                              }
+                           }
+                        }
+                        case "string" {
+                           switch fieldName {
+                              case "gmatch" {
+                                 typeInfoStringGMatch = typeInfo;
                               }
                            }
                         }
@@ -1419,7 +1433,7 @@ fn TransUnit.processImport(
    
    let mut nameList:str[] = [];
    apply txt of string.gmatch( modulePath, '[^%.]+' ) {
-      nameList.insert( txt@@str );
+      nameList.insert( txt );
    }
 
    let metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )@@_MetaInfo;
@@ -1963,13 +1977,50 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
       } 
       varList.insert( var );
       nextToken = self.getToken();
-      self.addLocalVar( var.pos, false, true, var.txt, Ast.builtinTypeStem, false );
    } nextToken.txt ~= ",";
    self.checkToken( nextToken, "of" );
 
    let exp = self.analyzeExp( false );
-   if exp.$kind ~= Ast.NodeKind.$ExpCall {
-      self.error( "not call" );
+
+   let expTypeList = exp.$expTypeList;
+   if #expTypeList < 3 {
+      self.addErrMess( exp.$pos, "apply must have 3 values -- %s" (#expTypeList) );
+   }
+
+
+   let mut itemTypeList:List<&Ast.TypeInfo> = [];
+   let mut defaultItemType = Ast.builtinTypeStem_;
+   if exp.$kind == Ast.nodeKind.ExpCall {
+      let callNode = exp@@Ast.ExpCallNode;
+      let callFuncType = callNode.$func.$expType;
+      if callFuncType.equals( typeInfoStrGMatch ) or
+         callFuncType.equals( typeInfoStringGMatch )
+      {
+         itemTypeList.insert( Ast.builtinTypeString );
+         defaultItemType = Ast.builtinTypeString.$nilableTypeInfo;
+      }
+      else {
+         if #callFuncType.$retTypeInfoList == 0 {
+            self.addErrMess( exp.$pos, "apply value must return iterator function." );
+         }
+         let iteFunc = callFuncType.$retTypeInfoList[ 1 ];
+         foreach itemType, index in iteFunc.$retTypeInfoList {
+            let mut workType = itemType;
+            if index == 1 {
+               if itemType.$nilable {
+                  workType = workType.$orgTypeInfo;
+               }
+            }
+            itemTypeList.insert( workType );
+         }
+      }
+   }
+   foreach var, index in varList {
+      let mut itemType = defaultItemType;
+      if index <= #itemTypeList {
+         itemType = itemTypeList[ index ];
+      }
+      self.addLocalVar( var.pos, false, true, var.txt, itemType, false );
    }
 
    let block = self.analyzeBlock( .Apply, scope );

@@ -299,6 +299,7 @@ function convFilter:write( txt )
       self:writeRaw( txt )
    end
    
+   return self, nil
 end
 function convFilter.setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )

@@ -40,7 +40,7 @@ _typeInfoList[7] = { skind=3, parentId = 1012, typeId = 1020, baseId = 1, txt = 
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[8] = { skind = 0, parentId = 1012, typeId = 1021, nilable = true, orgTypeId = 1020 }
 _typeInfoList[9] = { skind=3, parentId = 1012, typeId = 1023, baseId = 1, txt = 'write',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {28}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {28}, retTypeId = {11, 29}, children = {}, }
 _typeInfoList[10] = { skind = 0, parentId = 1012, typeId = 1024, nilable = true, orgTypeId = 1023 }
 _typeInfoList[11] = { skind=3, parentId = 1012, typeId = 1026, baseId = 1, txt = 'close',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }

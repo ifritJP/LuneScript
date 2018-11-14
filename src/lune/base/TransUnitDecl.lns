@@ -191,7 +191,7 @@ pub fn TransUnit.createAST(
       apply txt of string.gmatch( moduleName, '[^%.]+' ) {
          // moduleTypeInfo = unwrap self.pushClass(
          //    true, false, nil, nil, false, txt@@str, "pub" );
-         moduleTypeInfo = self.pushModule( false, txt@@str, true );
+         moduleTypeInfo = self.pushModule( false, txt, true );
       }
    }
    self.moduleScope = self.scope;
