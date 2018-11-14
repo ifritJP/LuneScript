@@ -4,10 +4,10 @@ local __mod__ = 'lune.base.Ver'
 if not _lune then
    _lune = {}
 end
-local version = "1.0.2"
+local version = "1.0.3"
 _moduleObj.version = version
 
-local metaVersion = "1.0.0"
+local metaVersion = "1.0.1"
 _moduleObj.metaVersion = metaVersion
 
 return _moduleObj
