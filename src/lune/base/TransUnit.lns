@@ -758,7 +758,7 @@ fn TransUnit.registBuiltInScope() mut {
             "print": { "arg": [ "&..." ], "ret": [] },
             "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
             "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
-            "loadfile": { "arg": [ "str" ], "ret": ["form!", "str"] },
+            "loadfile": { "arg": [ "str" ], "ret": ["form!", "str!"] },
             "require": { "arg": [ "str" ], "ret": ["stem!"] },
             "collectgarbage": { "arg": [ ], "ret": [] },
             "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },

@@ -103,17 +103,14 @@ end
 function Front:loadLua( path )
 
    local chunk, err = loadfile( path )
-   do
-      local _exp = err
-      if _exp ~= nil then
-         Util.errorLog( _exp )
-      end
+   if err ~= nil then
+      Util.errorLog( err )
    end
    
    do
       local _exp = chunk
       if _exp ~= nil then
-         return _exp(  )
+         return _lune.unwrap( _exp(  ))
       end
    end
    
@@ -170,7 +167,7 @@ local function loadFromLuaTxt( txt )
    do
       local _exp = chunk
       if _exp ~= nil then
-         return _exp(  )
+         return _lune.unwrap( _exp(  ))
       end
    end
    

@@ -97,11 +97,11 @@ fn Front.error( message:str ) {
 
 fn Front.loadLua( path:str ):stem {
    let chunk, err = loadfile( path );
-   if! err {
-      Util.errorLog( _exp );
+   when! err {
+      Util.errorLog( err );
    }
    if! chunk {
-      return _exp();
+      return unwrap _exp();
    }
    error( "failed to error" );
 }
@@ -155,7 +155,7 @@ fn loadFromLuaTxt( txt:str ): stem {
       print( _exp );
    }     
    if! chunk {
-      return _exp();
+      return unwrap _exp();
    }
    error( "failed to error" );
 }

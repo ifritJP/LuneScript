@@ -104,6 +104,9 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
          }
       }
    }
+   if itemTypeInfo.equals( Ast.builtinTypeDDD ) {
+      itemTypeInfo = Ast.builtinTypeStem_;
+   }
    let mut kind = Ast.NodeKind.$LiteralArray;
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    if token.txt == '[' {
@@ -389,8 +392,10 @@ fn TransUnit.evalMacro(
 
    let func = macroInfo.func;
    //let macroVars:Map<str,stem!> = func( table.unpack( argVal ) )@@Map<str,stem!>;
-   let macroVars:Map<str,stem!> = func( macroArgValMap )@@Map<str,stem!>;
-
+   let mut macroVars:&Map<str,stem!> = {};
+   if! let macroRet = func( macroArgValMap ) {
+      macroVars = macroRet@@Map<str,stem!>;
+   }
    foreach name in (unwrap macroVars._names)@@str[] {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
       let typeInfo = valInfo.typeInfo or Ast.builtinTypeStem_;
@@ -1548,6 +1553,9 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
    let expType = expNode.$expType;
    if not expType.$nilable {
       unwrapType = expType;
+   }
+   elseif expType.equals( Ast.builtinTypeDDD ) {
+      unwrapType = Ast.builtinTypeStem;
    }
    else {
       unwrapType = unwrap expType.$orgTypeInfo;

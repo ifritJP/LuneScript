@@ -1899,7 +1899,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    self.typeId = typeId
    if kind == TypeInfoKind.Root then
       self.nilable = false
-   elseif txt == "nil" then
+   elseif txt == "nil" or txt == "..." then
       self.nilable = true
       self.nilableTypeInfo = self
       self.orgTypeInfo = self

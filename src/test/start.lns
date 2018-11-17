@@ -686,3 +686,18 @@ pub let val = 100;
       print( string.format( '%d "%s"',  value1 + 0, value2.sub( 1 ) ) );
    }
 }
+
+{
+   fn func( val:int, ... ) : int, int, ... {
+      let argList = [ ... ];
+      let mut total = val;
+      foreach arg in argList {
+         when! arg {
+            total = total + arg@@int;
+         }  
+      }  
+      return total, val, ...;
+   }  
+
+   print( func( 1, 2, 3, 4 ) ); // 10 1 2 3 4 
+}

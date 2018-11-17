@@ -1295,11 +1295,11 @@ pub class NormalTypeInfo extend TypeInfo {
          self.nilable = false;
          // dummyRootTypeInfo = self;
       } 
-      elseif txt == "nil" {
+      elseif txt == "nil" or txt == "..." {
          self.nilable = true;
          self.nilableTypeInfo = self;
          self.orgTypeInfo = self;
-      } 
+      }
       elseif not orgTypeInfo {
          if! parentInfo {
             _exp.addChildren( self );
@@ -2389,7 +2389,7 @@ macro _declNodeClass(
 
       fieldStatList.insert( `{
          pub override fn processFilter( filter: Filter, ... ) {
-            let argList:stem[] = [ ... ];
+            let argList:stem![] = [ ... ];
 
             filter.,,,"process%s" (baseName) (self, table.unpack( argList ) );
          } } );
