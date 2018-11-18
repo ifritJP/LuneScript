@@ -8457,6 +8457,10 @@ function WhileNode:getBreakKind( checkMode )
          
       end
       
+      if kind == BreakKind.Break then
+         return BreakKind.None
+      end
+      
       return kind
    else
     
@@ -8479,10 +8483,6 @@ function WhileNode:getBreakKind( checkMode )
       end
       
       local mode = CheckBreakMode.IgnoreFlow
-      if checkMode == CheckBreakMode.Return then
-         mode = CheckBreakMode.IgnoreFlowReturn
-      end
-      
       local kind = BreakKind.None
       for __index, stmt in pairs( self.block:get_stmtList() ) do
          local work = stmt:getBreakKind( mode )

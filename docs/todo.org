@@ -8,6 +8,8 @@
 
 * 機能
 
+  
+- [ ] let! のブロックがフロー解析対象になっていない。
 - [ ] 戻り値を持たない関数の結果を、変数に代入できてしまう。
 - [ ] foreach の変数名が shadow チェック対象になっていない。
 - [ ] 型固定の可変長引数対応
@@ -163,7 +165,7 @@
 - [X] 分岐
 - [X] foreach 等の loop
 - [X] 関数, form
-- [ ] nilable, unwrap, map
+- [X] nilable, unwrap, map
 - [ ] nil 条件演算子
 - [ ] クラス 基本
 - [ ] クラス accessor

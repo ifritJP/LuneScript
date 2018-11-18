@@ -3238,6 +3238,9 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
          let work = stmt.getBreakKind( checkMode );
          _setBreakKind(work, kind, false, checkMode );
       }
+      if kind == .Break {
+         return .None;
+      }
       return kind;
    }
    else {
@@ -3263,9 +3266,9 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 
       // 無条件ループ用のフロー解析に変更する。
       let mut mode = CheckBreakMode.IgnoreFlow;
-      if checkMode == .Return {
-         mode = .IgnoreFlowReturn;
-      }
+      // if checkMode == .Return {
+      //    mode = .IgnoreFlowReturn;
+      // }
       let mut kind = BreakKind.None;
       foreach stmt in self.block.$stmtList {
          let work = stmt.getBreakKind( mode );

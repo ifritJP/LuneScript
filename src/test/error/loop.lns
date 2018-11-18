@@ -189,3 +189,16 @@
 
 return 1;  // error
 
+
+{
+   fn func(val:int): __ {  // error
+      while true {
+         if val == 1 {
+            break;
+         }  
+      }  
+   }  
+   func( 1 );
+   print( 1 );  // error
+}
+

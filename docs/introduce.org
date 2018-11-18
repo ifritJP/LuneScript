@@ -652,9 +652,9 @@ then ブロックは、 exp が全て nil でなかった場合に実行され�
 
 #+BEGIN_SRC lns
 fn test( arg:int! ) {
-  let val = 0;
+  let mut val = 0;
 
-  unwrap! val = arg { print( 0 ); return; } then { val = val + 1; }
+  unwrap! val = arg { print( 0 ); return; } then { val = val + 1; };
   print( val );
 }
 test( 1 );  // print( 2 );
