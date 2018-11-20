@@ -241,7 +241,14 @@ function Front:searchModule( mod )
 
    local lnsSearchPath = package.path
    lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
-   return package.searchpath( mod, lnsSearchPath )
+   local foundPath = package.searchpath( mod, lnsSearchPath )
+   if  nil == foundPath then
+      local _foundPath = foundPath
+   
+      return nil
+   end
+   
+   return foundPath:gsub( "^./", "" )
 end
 
 function Front:searchLuaFile( moduleFullName, addSearchPath )
@@ -254,7 +261,14 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
       end
    end
    
-   return package.searchpath( moduleFullName, luaSearchPath )
+   local foundPath = package.searchpath( moduleFullName, luaSearchPath )
+   if  nil == foundPath then
+      local _foundPath = foundPath
+   
+      return nil
+   end
+   
+   return foundPath:gsub( "^./", "" )
 end
 
 function Front:checkUptodateMeta( metaPath, addSearchPath )

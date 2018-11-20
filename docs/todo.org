@@ -8,7 +8,8 @@
 
 * 機能
 
-  
+- [ ] json 型を追加する。 json 型は Map のサブセットで、
+      key,value に設定可能な型を制限する。 json 型を mapping する jmapping を追加。
 - [ ] let! のブロックがフロー解析対象になっていない。
 - [ ] 戻り値を持たない関数の結果を、変数に代入できてしまう。
 - [ ] foreach の変数名が shadow チェック対象になっていない。
@@ -138,6 +139,7 @@
 - [X] if で、条件不成立にならない式を書けてしまう。
     if "" { }  等。
 - [X] apply of で列挙される型が stem になってしまっている。
+- [X] -u で lua を作ると、 lua のコメントの先頭に挿入されるパスが ./ が付いてしまう
 
 
 * ドキュメント
@@ -166,14 +168,14 @@
 - [X] foreach 等の loop
 - [X] 関数, form
 - [X] nilable, unwrap, map
-- [ ] nil 条件演算子
-- [ ] クラス 基本
+- [X] クラス 基本
 - [ ] クラス accessor
 - [ ] クラス 継承, abstract
 - [ ] クラス override, super
 - [ ] クラス advertise
 - [ ] インタフェース
 - [ ] mapping
+- [ ] nil 条件演算子
 - [ ] import, provide
 - [ ] require, module
 - [ ] subfile
