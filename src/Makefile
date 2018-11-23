@@ -125,6 +125,7 @@ test-comp:
 	rm -rf work
 	mkdir -p work/glue
 	mkdir -p work/1/lune/base
+	mkdir -p work/1/test
 	mkdir -p work/2/lune/base
 	mkdir -p work/3/lune/base
 	mkdir -p work/newglue
@@ -133,6 +134,7 @@ test-comp:
 	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
 	$(call buildLns,.,work/1)
 	$(MAKE) test-comp2
+
 
 test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/nilable1.lns,exe,2>&1)
@@ -175,7 +177,7 @@ test-comp2:
 	$(call exeLune,.,test/start.lns,exe,2>&1) > work/test1.result
 	$(call exeLune,.,test/start.lns,save,--depends work/1/start.dep)
 
-
+	$(call exeLune,.,test/Sub2.lns,SAVE,work/1)
 
 
 	grep -v 'warning:' work/test1.result > work/test.result
@@ -236,11 +238,14 @@ test-comp2:
 	mkdir -p work/4
 	cp -a test work/4
 	cp -a work/3/lune work/4
-	$(call exeLune,work/3,test/start.lns,-u save ../4,)
+	$(call exeLune,work/3,test/start.lns,-u SAVE ../4,)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
 
 	$(call test-meta-update,work/3)
+
+# メタフォーマットバージョンを上げなくて良いか確認
+	$(MAKE) check-meta-format
 
 # diff で、修正前と修正後の差分がないことを確認
 	diff work/test1.result work/test2.result
@@ -259,6 +264,24 @@ ifndef ACCEPT
 endif
 	cp work/3/lune/base/*.lua lune/base/
 	cp work/3/lune/base/*.meta lune/base/
+
+
+ifneq ($(findstring $(MAKECMDGOALS),"check-meta-format" ),)
+VER_PICK=grep 'local metaVersion' | awk '//{print $$4}'
+ORG_VER=$(shell cat lune/base/Ver.lua | $(VER_PICK))
+NEW_VER=$(shell cat work/3/lune/base/Ver.lua | $(VER_PICK))
+endif
+
+check-meta-format:
+# メタフォーマットバージョンが同じ場合は、メタ情報が一致しているかどうか比較
+ifeq ($(ORG_VER),$(NEW_VER))
+	@diff work/1/test/Sub2.meta work/4/test/Sub2.meta > /dev/null || \
+	(echo need to change the meta format version.; exit 1;)
+else
+	@echo meta format version ok.
+endif
+
+
 
 GLUE_DIR=work/glue
 build-glue:

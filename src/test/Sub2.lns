@@ -53,3 +53,8 @@ pub class IF {
 }
 
 pub form form1( val:int ): int;
+
+pub fn testext(): int, real, str, Map<int,real>,List<int>, int!, real!, str!, Map<int,real>!,List<int>!
+{
+   return 1, 1.0, "", {}, [], nil, nil, nil, nil, nil;
+}
