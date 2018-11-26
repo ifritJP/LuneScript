@@ -7,8 +7,9 @@ LUA_CFLAGS=-I$(LUA_INC_DIR)
 endif
 
 ifneq ($(findstring $(MAKECMDGOALS),"install" "uninstall"),)
-LUA_DIR_SCRIPT='for path in string.gmatch( package.path, "[^;]+" ) do if not path:find( "^%./" ) then print( (path:gsub( "/%?%.lua", "" )) ); break end end'
-LUA_MOD_DIR=$(shell echo $(LUA_DIR_SCRIPT) | $(LUA) 2> /dev/null)
+# LUA_DIR_SCRIPT='for path in string.gmatch( package.path, "[^;]+" ) do if not path:find( "^%./" ) then print( (path:gsub( "/%?%.lua", "" )) ); break end end'
+# LUA_MOD_DIR=$(shell echo $(LUA_DIR_SCRIPT) | $(LUA) 2> /dev/null)
+include lune.mk
 endif
 
 INSTALL=/usr/bin/install -c
@@ -300,7 +301,7 @@ ifeq ($(LUA_MOD_DIR),)
 endif
 
 install: check_lua_mod_dir
-	$(MAKE) build
+	$(MAKE) build LUA=$(LUA)
 	@mkdir -p $(LUA_MOD_DIR)/lune/base
 	@cat lnsc | sed "s@#!.*@#! /usr/bin/env $(abspath $(LUA))@g" > /tmp/lnsc
 	@chmod +x /tmp/lnsc
