@@ -1,3 +1,12 @@
+local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
+if version < 5.2 then
+   io.stderr:write(
+      string.format(
+	 "LuneScript doesn't support this lua version(%s). %s\n",
+	 version, "please use the version >= 5.2." ) )
+   os.exit( 1 )
+end
+
 local lua = arg[-1]
 
 local dir = arg[0]:gsub( "setup.lua$", "" )
