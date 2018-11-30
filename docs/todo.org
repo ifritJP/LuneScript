@@ -8,6 +8,7 @@
 
 * 機能
 
+- [ ] table.unpack を list, array のメソッドに変更する
 - [ ] getter を省略して setter だけ生成できるように
 - [ ] 同名のメソッドを持つメンバを複数 advertise したときの動作が未定義。
 - [ ] meta ファイルの更新を必要な時だけ行なう。

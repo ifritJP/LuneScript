@@ -26,11 +26,15 @@
 
 (require 'flycheck)
 
+(require 'cl)
+
+(setq flycheck-lunescript-executable lns-lua-command)
+
 (flycheck-define-checker lunescript
   "A LuneScript syntax checker.
 
 See URL `https://github.com/ifritJP/LuneScript'."
-  :command ("lua5.3"
+  :command ("lunescript"
 	    (eval (nth 1 (lns-command-get-command)))
 	    (eval (nth 2 (lns-command-get-command)))
 	    (eval (nth 3 (lns-command-get-command)))
