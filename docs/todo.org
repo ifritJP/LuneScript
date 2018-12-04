@@ -164,6 +164,9 @@
 - [X] Lua 5.2 で bit 演算子を利用した場合、 bit モジュールを利用するように変換する
 - [X] module 宣言したモジュールの glue コード自動生成
 - [X] enum の全要素リストを取れるようにする。
+- [X] bool 値との比較演算
+  
+  
 
 * advent
 
@@ -184,7 +187,7 @@
 - [X] クラス advertise
 - [X] インタフェース
 - [X] mapping
-- [ ] nil 条件演算子
+- [X] nil 条件演算子
 - [ ] import, provide
 - [ ] require, module
 - [ ] subfile
@@ -195,5 +198,8 @@
       - こんな機能が欲しかった
 	- accessor の自動生成
         - advertise 
+      - コーディングの矯正
+	- python のインデント
+	- bool の比較
       - 近年の言語の調査
 

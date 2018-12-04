@@ -1318,6 +1318,14 @@ fn TransUnit.analyzeExpOp2(
                         ( exp1Type.getTxt(true),
                           exp2Type.getTxt(true) ) );
                   }
+                  if exp1Type.equals( Ast.builtinTypeBool ) and
+                     exp2Type.equals( Ast.builtinTypeBool ) and
+                     ( exp.$kind == Ast.NodeKind.$LiteralBool or
+                       exp2.$kind == Ast.NodeKind.$LiteralBool )
+                  {
+                     self.addWarnMess( exp.$pos, "this operation is deprecated." );
+                  }
+                  
                   retType = Ast.builtinTypeBool;
                }
                case "^", "|", "~", "&", "|<<", "|>>" {

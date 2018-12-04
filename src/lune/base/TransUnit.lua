@@ -5420,6 +5420,10 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                      self:addErrMess( nextToken.pos, string.format( "not compatible type %s or %s", exp1Type:getTxt( true ), exp2Type:getTxt( true )) )
                   end
                   
+                  if exp1Type:equals( Ast.builtinTypeBool ) and exp2Type:equals( Ast.builtinTypeBool ) and (exp:get_kind() == Ast.NodeKind.get_LiteralBool() or exp2:get_kind() == Ast.NodeKind.get_LiteralBool() ) then
+                     self:addWarnMess( exp:get_pos(), "this operation is deprecated." )
+                  end
+                  
                   retType = Ast.builtinTypeBool
                elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "|<<" or _switchExp == "|>>" then
                   if not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt ) or not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt ) then

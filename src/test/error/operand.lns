@@ -29,3 +29,37 @@ print( 1.0 < 2.0 );
 print( "1" < 2.0 ); // error
 print( 1 < "2.0" ); // error
 print( "1" < "2.0" );
+
+{
+   let val1 = true;
+   if val1 == true { // error
+   }
+   if val1 == false { // error
+   }
+   if val1 ~= false { // error
+   }
+   if val1 ~= true { // error
+   }
+   switch val1 {
+      case true {
+      }
+   }
+   let val2:bool! = true;
+   if val2 == true {
+   }
+   if val2 == false {
+   }
+   if val2 ~= false {
+   }
+   if val2 ~= true {
+   }
+   let val3:stem = true;
+   if val3 == true {
+   }
+   if val3 == false {
+   }
+   if val3 ~= false {
+   }
+   if val3 ~= true {
+   }
+}
