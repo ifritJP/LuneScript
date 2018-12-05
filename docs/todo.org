@@ -8,6 +8,7 @@
 
 * 機能
 
+- [ ] string.format の引数が bool の場合、自動で and "true" or "false" を付加する。
 - [ ] __func__ が nil になることがある。
 - [ ] map の型宣言で、 value の型宣言しなくてもエラーにならない。 Map<int> ができてしまう。
 - [ ] table.unpack を list, array のメソッドに変更する
@@ -188,7 +189,7 @@
 - [X] インタフェース
 - [X] mapping
 - [X] nil 条件演算子
-- [ ] import, provide
+- [X] import, provide
 - [ ] require, module
 - [ ] subfile
 - [ ] macro

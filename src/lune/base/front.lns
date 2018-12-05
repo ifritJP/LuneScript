@@ -150,7 +150,7 @@ fn Front.convert(
 
 fn loadFromLuaTxt( txt:str ): stem {
    //--print( txt )
-   let chunk, err = load( txt, "", "bt", _ENV );
+   let chunk, err = load( txt, "", "bt", _G );
    if! err {
       print( _exp );
    }     

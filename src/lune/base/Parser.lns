@@ -501,7 +501,7 @@ fn StreamParser.parse() mut : Token[]! {
          let mut searchIndex = 1;
          while true {
             // 空白系以外の何らかの文字領域を探す
-            let! tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex ) {
+            let! tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex ) {
                break;
             };
             let columnIndex = column + tokenIndex - 2;

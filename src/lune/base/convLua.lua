@@ -143,7 +143,8 @@ ConvMode.ConvMeta = 2
 ConvMode._val2NameMap[2] = 'ConvMeta'
 ConvMode.__allList[3] = ConvMode.ConvMeta
 
-local hasBitOpFlag = _VERSION:gsub( "^[^%d]+", "" ):find( "^5%.3" ) ~= nil
+local luaVer = _VERSION:gsub( "^[^%d]+", "" )
+local hasBitOpFlag = luaVer >= "5.3"
 local BitOpKind = {}
 BitOpKind._val2NameMap = {}
 function BitOpKind:_getTxt( val )
@@ -2537,7 +2538,7 @@ function MacroEvalImp:eval( node )
    local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, false)
    conv:processDeclMacro( node, node )
    local newEnv = {}
-   for key, val in pairs( _ENV ) do
+   for key, val in pairs( _G ) do
       newEnv[key] = val
    end
    

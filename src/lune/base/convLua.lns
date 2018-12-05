@@ -50,7 +50,12 @@ pub enum ConvMode {
    ConvMeta,
 }
 
-let hasBitOpFlag = _VERSION.gsub( "^[^%d]+", "" ).find( "^5%.3" ) ~= nil;
+/**
+bit 演算子を持っているかどうか。
+5.3 以上は持っているとする。
+               */
+let luaVer = _VERSION.gsub( "^[^%d]+", "" );
+let hasBitOpFlag = luaVer >= "5.3";
 
 enum BitOpKind {
    And,
@@ -2413,7 +2418,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
       //Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
 
       let mut newEnv:Map<str,stem> = {};
-      foreach val, key in _ENV {
+      foreach val, key in _G {
          newEnv[ key ] = val;
       }
       newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): stem {

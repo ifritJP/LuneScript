@@ -156,7 +156,7 @@ end
 
 local function loadFromLuaTxt( txt )
 
-   local chunk, err = load( txt, "", "bt", _ENV )
+   local chunk, err = load( txt, "", "bt", _G )
    do
       local _exp = err
       if _exp ~= nil then

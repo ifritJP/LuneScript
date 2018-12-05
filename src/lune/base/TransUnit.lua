@@ -1198,6 +1198,7 @@ function TransUnit:registBuiltInScope(  )
    local builtinModuleName2Scope = {}
    local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem )
    self.scope:addVar( Ast.AccessMode.Global, "_ENV", mapType, false, true )
+   self.scope:addVar( Ast.AccessMode.Global, "_G", mapType, false, true )
    self.scope:addVar( Ast.AccessMode.Global, "_VERSION", Ast.builtinTypeString, false, true )
    self.scope:addVar( Ast.AccessMode.Global, "__mod__", Ast.builtinTypeString, false, true )
    self.scope:addVar( Ast.AccessMode.Global, "__line__", Ast.builtinTypeInt, false, true )
@@ -3300,7 +3301,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
                local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
                local typeInfo = symbolInfo:get_typeInfo()
                if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
-                  self:addErrMess( declCtorNode:get_pos(), string.format( "does not set member -- %s.%s %s", name.txt, memberName, symbolInfo:get_symbolId()) )
+                  self:addErrMess( declCtorNode:get_pos(), string.format( "does not set member -- %s.%s", name.txt, memberName) )
                end
                
             end
@@ -3318,7 +3319,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
             local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
             local typeInfo = symbolInfo:get_typeInfo()
             if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
-               self:addErrMess( memberNode:get_pos(), string.format( "does not set member -- %s %s", memberName, symbolInfo:get_symbolId()) )
+               self:addErrMess( memberNode:get_pos(), string.format( "does not set member -- %s", memberName) )
             end
             
          end

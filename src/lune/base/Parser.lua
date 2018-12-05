@@ -562,7 +562,7 @@ function StreamParser:parse(  )
       if kind == TokenKind.Symb then
          local searchIndex = 1
          while true do
-            local tokenIndex, tokenEndIndex = string.find( val, "[%g]+", searchIndex )
+            local tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex )
             if  nil == tokenIndex or  nil == tokenEndIndex then
                local _tokenIndex = tokenIndex
                local _tokenEndIndex = tokenEndIndex

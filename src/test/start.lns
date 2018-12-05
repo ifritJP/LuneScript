@@ -558,10 +558,16 @@ module GlueTest require 'test.glueTest' glue 'hoge_' {
    //pub fn func2( val:int ): str;
 }
 
-GlueTest.func1( 10, "abc", [] );
-let age = GlueTest.create( 100 );
-age.func2( 2 );
-age.func2( 2, 3, 4.0, "xyz" );
+{
+   let version = tonumber( _VERSION.gsub( "^[^%d]+", "" ), nil );
+   if version >= 5.2 {
+      print( "version", version );
+      GlueTest.func1( 10, "abc", [] );
+      let age = GlueTest.create( 100 );
+      age.func2( 2 );
+      age.func2( 2, 3, 4.0, "xyz" );
+   }
+}
 
 
 _print( `{ "%X" (0x1 & 0x3 ) } );

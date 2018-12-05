@@ -1006,8 +1006,8 @@ fn TransUnit.analyzeClassBody(
                let typeInfo = symbolInfo.$typeInfo;
                if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
                   self.addErrMess( declCtorNode.$pos,
-                                   "does not set member -- %s.%s %s"
-                                   ( name.txt, memberName, symbolInfo.$symbolId ) );
+                                   "does not set member -- %s.%s"
+                                   ( name.txt, memberName ) );
                }  
             }  
          }  
@@ -1025,8 +1025,7 @@ fn TransUnit.analyzeClassBody(
             let typeInfo = symbolInfo.$typeInfo;
             if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
                self.addErrMess( memberNode.$pos,
-                                "does not set member -- %s %s"
-                                ( memberName, symbolInfo.$symbolId ) );
+                                "does not set member -- %s" ( memberName ) );
             }  
          }  
       }
