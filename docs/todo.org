@@ -40,7 +40,6 @@
 - [ ] 配列の繰り返し要素指定定義。
 - [ ] lua5.1 の対応
       - [ ] package.searchpath() が 5.1 はない。
-      - [ ] string.format の引数が bool の場合、自動で and "true" or "false" を付加する。
 - [ ] SymbolInfo の canBeLeft と mutable の扱いを整理する。
       本来は、 canBeLeft は変数自体の書き換えで、mutable はオブジェクトの操作。
       mutable は、 expTypeInfo の mutable で制御すべき。
@@ -88,7 +87,8 @@
 - [ ] emacs のカーソル位置にあるシンボルの型確認
 - [ ] let で初期値を入れずに済むフロー解析
 - [ ] let!  等の nil ブロックのフロー解析。
-- [ ] "%s" (val) の %s と val の対応チェック
+- [X] "%s" (val) の %s と val の対応チェック
+      - [ ] lua5.1 の場合、 %s の val は tostring() する。
 - [ ] import のモジュールがない時に TransUnit を続けられるようにする。
 - [ ] 独自クラスの generics 対応
 

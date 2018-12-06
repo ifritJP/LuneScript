@@ -40,7 +40,10 @@ See URL `https://github.com/ifritJP/LuneScript'."
 	    (eval (nth 3 (lns-command-get-command)))
 	    (eval (lns-convert-path-2-proj-relative-path
 		   (plist-get (lns-command-get-info) :owner)))
-	    "diag" "--nodebug")
+	    "diag" "--nodebug"
+	    (eval (if lns-target-lua-ver "-ol" ""))
+	    (eval (if lns-target-lua-ver lns-target-lua-ver ""))
+	    )
   :error-patterns
   ((error line-start (file-name) ":" line ":" column ":" (message) line-end))
   :modes lns-mode

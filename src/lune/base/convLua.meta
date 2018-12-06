@@ -1,12 +1,12 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.2'
+_moduleObj.__formatVersion = '1.0.3'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
-   local _classInfo8483 = {}
-   _typeId2ClassInfoMap[ 8483 ] = _classInfo8483
+   local _classInfo8559 = {}
+   _typeId2ClassInfoMap[ 8559 ] = _classInfo8559
 end
 do
    local _classInfo1001 = {}
@@ -313,12 +313,16 @@ do
    _typeId2ClassInfoMap[ 5983 ] = _classInfo5983
 end
 do
-   local _classInfo6041 = {}
-   _typeId2ClassInfoMap[ 6041 ] = _classInfo6041
+   local _classInfo6044 = {}
+   _typeId2ClassInfoMap[ 6044 ] = _classInfo6044
 end
 do
-   local _classInfo6087 = {}
-   _typeId2ClassInfoMap[ 6087 ] = _classInfo6087
+   local _classInfo6090 = {}
+   _typeId2ClassInfoMap[ 6090 ] = _classInfo6090
+end
+do
+   local _classInfo6518 = {}
+   _typeId2ClassInfoMap[ 6518 ] = _classInfo6518
 end
 local _varName2InfoMap = {}
 _moduleObj._varName2InfoMap = _varName2InfoMap
@@ -332,37 +336,37 @@ children = {1003, } }
 _typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'base', kind = 12, 
 children = {1005, } }
 _typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'convLua', kind = 12, 
-children = {8005, 8480, 8483, } }
+children = {8101, 8556, 8559, } }
 _typeInfoList[5] = { skind = 1, parentId = 1, typeId = 1009, srcTypeId = 14, mutable = false }
 _typeInfoList[6] = { skind = 1, parentId = 1, typeId = 1010, srcTypeId = 27, mutable = false }
-_dependIdMap[ 1011 ] = { 3, 1005 } -- Parser
-_dependIdMap[ 1013 ] = { 3, 1061 } -- isLuaKeyword
-_dependIdMap[ 1014 ] = { 3, 1062 } -- isLuaKeyword!
-_dependIdMap[ 1016 ] = { 3, 1166 } -- TxtStream
-_dependIdMap[ 1017 ] = { 3, 1167 } -- TxtStream!
+_dependIdMap[ 1011 ] = { 4, 1005 } -- Parser
+_dependIdMap[ 1013 ] = { 4, 1061 } -- isLuaKeyword
+_dependIdMap[ 1014 ] = { 4, 1062 } -- isLuaKeyword!
+_dependIdMap[ 1016 ] = { 4, 1166 } -- TxtStream
+_dependIdMap[ 1017 ] = { 4, 1167 } -- TxtStream!
 _typeInfoList[7] = { skind = 1, parentId = 1, typeId = 1025, srcTypeId = 18, mutable = false }
-_dependIdMap[ 1029 ] = { 3, 1186 } -- Position
-_dependIdMap[ 1030 ] = { 3, 1187 } -- Position!
-_dependIdMap[ 1035 ] = { 3, 1196 } -- TokenKind
-_dependIdMap[ 1036 ] = { 3, 1197 } -- TokenKind!
+_dependIdMap[ 1029 ] = { 4, 1186 } -- Position
+_dependIdMap[ 1030 ] = { 4, 1187 } -- Position!
+_dependIdMap[ 1035 ] = { 4, 1196 } -- TokenKind
+_dependIdMap[ 1036 ] = { 4, 1197 } -- TokenKind!
 _typeInfoList[8] = { skind=3, parentId = 1, typeId = 1043, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1035}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[9] = { skind = 0, parentId = 1, typeId = 1044, nilable = true, orgTypeId = 1043 }
 _typeInfoList[10] = { skind = 1, parentId = 1, typeId = 1046, srcTypeId = 1043, mutable = false }
-_dependIdMap[ 1053 ] = { 3, 1201 } -- _from
-_dependIdMap[ 1054 ] = { 3, 1202 } -- _from!
+_dependIdMap[ 1053 ] = { 4, 1201 } -- _from
+_dependIdMap[ 1054 ] = { 4, 1202 } -- _from!
 _typeInfoList[11] = { skind=3, parentId = 1, typeId = 1056, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1035}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[12] = { skind = 0, parentId = 1, typeId = 1057, nilable = true, orgTypeId = 1056 }
 _typeInfoList[13] = { skind = 1, parentId = 1, typeId = 1059, srcTypeId = 1056, mutable = false }
-_dependIdMap[ 1060 ] = { 3, 1208 } -- get__allList
-_dependIdMap[ 1061 ] = { 3, 1209 } -- get__allList!
-_dependIdMap[ 1063 ] = { 3, 1211 } -- Token
-_dependIdMap[ 1064 ] = { 3, 1212 } -- Token!
+_dependIdMap[ 1060 ] = { 4, 1208 } -- get__allList
+_dependIdMap[ 1061 ] = { 4, 1209 } -- get__allList!
+_dependIdMap[ 1063 ] = { 4, 1211 } -- Token
+_dependIdMap[ 1064 ] = { 4, 1212 } -- Token!
 _typeInfoList[14] = { skind = 1, parentId = 1011, typeId = 1066, srcTypeId = 1035, mutable = false }
-_dependIdMap[ 1066 ] = { 3, 1218 } -- &TokenKind
+_dependIdMap[ 1066 ] = { 4, 1218 } -- &TokenKind
 _typeInfoList[15] = { skind = 1, parentId = 1011, typeId = 1067, srcTypeId = 1029, mutable = false }
-_dependIdMap[ 1067 ] = { 3, 1219 } -- &Position
+_dependIdMap[ 1067 ] = { 4, 1219 } -- &Position
 _typeInfoList[16] = { skind=3, parentId = 1, typeId = 1068, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 3, kind = 3, mutable = true, itemTypeId = {1063}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[17] = { skind = 0, parentId = 1, typeId = 1069, nilable = true, orgTypeId = 1068 }
@@ -370,30 +374,30 @@ _typeInfoList[18] = { skind=3, parentId = 1, typeId = 1071, baseId = 1, txt = 'L
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1063}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[19] = { skind = 0, parentId = 1, typeId = 1072, nilable = true, orgTypeId = 1071 }
 _typeInfoList[20] = { skind = 1, parentId = 1011, typeId = 1077, srcTypeId = 1063, mutable = false }
-_dependIdMap[ 1077 ] = { 3, 1232 } -- &Token
+_dependIdMap[ 1077 ] = { 4, 1232 } -- &Token
 _typeInfoList[21] = { skind=3, parentId = 1, typeId = 1081, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1063}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[22] = { skind = 0, parentId = 1, typeId = 1082, nilable = true, orgTypeId = 1081 }
-_dependIdMap[ 1090 ] = { 3, 1245 } -- Parser
-_dependIdMap[ 1091 ] = { 3, 1246 } -- Parser!
+_dependIdMap[ 1090 ] = { 4, 1245 } -- Parser
+_dependIdMap[ 1091 ] = { 4, 1246 } -- Parser!
 _typeInfoList[23] = { skind = 1, parentId = 1011, typeId = 1093, srcTypeId = 1064, mutable = false }
-_dependIdMap[ 1093 ] = { 3, 1252 } -- &Token!
-_dependIdMap[ 1103 ] = { 3, 1263 } -- WrapParser
-_dependIdMap[ 1104 ] = { 3, 1264 } -- WrapParser!
-_dependIdMap[ 1115 ] = { 3, 1280 } -- StreamParser
-_dependIdMap[ 1116 ] = { 3, 1281 } -- StreamParser!
-_dependIdMap[ 1118 ] = { 3, 1288 } -- setStdinStream
-_dependIdMap[ 1119 ] = { 3, 1289 } -- setStdinStream!
-_dependIdMap[ 1127 ] = { 3, 1326 } -- create
-_dependIdMap[ 1128 ] = { 3, 1327 } -- create!
-_dependIdMap[ 1133 ] = { 3, 1354 } -- isOp2
-_dependIdMap[ 1134 ] = { 3, 1355 } -- isOp2!
-_dependIdMap[ 1136 ] = { 3, 1357 } -- isOp1
-_dependIdMap[ 1137 ] = { 3, 1358 } -- isOp1!
-_dependIdMap[ 1142 ] = { 3, 1404 } -- getEofToken
-_dependIdMap[ 1143 ] = { 3, 1405 } -- getEofToken!
-_dependIdMap[ 1145 ] = { 3, 1407 } -- DummyParser
-_dependIdMap[ 1146 ] = { 3, 1408 } -- DummyParser!
+_dependIdMap[ 1093 ] = { 4, 1252 } -- &Token!
+_dependIdMap[ 1103 ] = { 4, 1263 } -- WrapParser
+_dependIdMap[ 1104 ] = { 4, 1264 } -- WrapParser!
+_dependIdMap[ 1115 ] = { 4, 1280 } -- StreamParser
+_dependIdMap[ 1116 ] = { 4, 1281 } -- StreamParser!
+_dependIdMap[ 1118 ] = { 4, 1288 } -- setStdinStream
+_dependIdMap[ 1119 ] = { 4, 1289 } -- setStdinStream!
+_dependIdMap[ 1127 ] = { 4, 1326 } -- create
+_dependIdMap[ 1128 ] = { 4, 1327 } -- create!
+_dependIdMap[ 1133 ] = { 4, 1354 } -- isOp2
+_dependIdMap[ 1134 ] = { 4, 1355 } -- isOp2!
+_dependIdMap[ 1136 ] = { 4, 1357 } -- isOp1
+_dependIdMap[ 1137 ] = { 4, 1358 } -- isOp1!
+_dependIdMap[ 1142 ] = { 4, 1404 } -- getEofToken
+_dependIdMap[ 1143 ] = { 4, 1405 } -- getEofToken!
+_dependIdMap[ 1145 ] = { 4, 1407 } -- DummyParser
+_dependIdMap[ 1146 ] = { 4, 1408 } -- DummyParser!
 _dependIdMap[ 1157 ] = { 1, 1005 } -- Ast
 _dependIdMap[ 1176 ] = { 1, 1202 } -- IdProvider
 _dependIdMap[ 1177 ] = { 1, 1203 } -- IdProvider!
@@ -2251,256 +2255,281 @@ _typeInfoList[971] = { skind = 1, parentId = 1, typeId = 5990, srcTypeId = 5988,
 _typeInfoList[972] = { skind=3, parentId = 1, typeId = 5994, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 3, kind = 3, mutable = true, itemTypeId = {2403}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[973] = { skind = 0, parentId = 1, typeId = 5995, nilable = true, orgTypeId = 5994 }
-_typeInfoList[974] = { skind=3, parentId = 1, typeId = 6009, baseId = 1, txt = 'List',
+_typeInfoList[974] = { skind = 1, parentId = 1, typeId = 5997, srcTypeId = 5994, mutable = false }
+_typeInfoList[975] = { skind=3, parentId = 1, typeId = 6010, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 2, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[975] = { skind = 0, parentId = 1, typeId = 6010, nilable = true, orgTypeId = 6009 }
-_typeInfoList[976] = { skind = 1, parentId = 1, typeId = 6012, srcTypeId = 6009, mutable = false }
-_typeInfoList[977] = { skind=3, parentId = 1, typeId = 6013, baseId = 1, txt = 'List',
+_typeInfoList[976] = { skind = 0, parentId = 1, typeId = 6011, nilable = true, orgTypeId = 6010 }
+_typeInfoList[977] = { skind = 1, parentId = 1, typeId = 6013, srcTypeId = 6010, mutable = false }
+_typeInfoList[978] = { skind=3, parentId = 1, typeId = 6014, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 2, kind = 3, mutable = true, itemTypeId = {2403}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[978] = { skind = 0, parentId = 1, typeId = 6014, nilable = true, orgTypeId = 6013 }
-_typeInfoList[979] = { skind=3, parentId = 1, typeId = 6019, baseId = 1, txt = 'List',
+_typeInfoList[979] = { skind = 0, parentId = 1, typeId = 6015, nilable = true, orgTypeId = 6014 }
+_typeInfoList[980] = { skind = 1, parentId = 1, typeId = 6017, srcTypeId = 6014, mutable = false }
+_typeInfoList[981] = { skind=3, parentId = 1, typeId = 6021, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[980] = { skind = 0, parentId = 1, typeId = 6020, nilable = true, orgTypeId = 6019 }
-_typeInfoList[981] = { skind = 1, parentId = 1, typeId = 6022, srcTypeId = 6019, mutable = false }
-_typeInfoList[982] = { skind=3, parentId = 1, typeId = 6023, baseId = 1, txt = 'List',
+_typeInfoList[982] = { skind = 0, parentId = 1, typeId = 6022, nilable = true, orgTypeId = 6021 }
+_typeInfoList[983] = { skind = 1, parentId = 1, typeId = 6024, srcTypeId = 6021, mutable = false }
+_typeInfoList[984] = { skind=3, parentId = 1, typeId = 6025, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {2403}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[983] = { skind = 0, parentId = 1, typeId = 6024, nilable = true, orgTypeId = 6023 }
-_dependIdMap[ 6026 ] = { 1, 7865 } -- create
-_dependIdMap[ 6027 ] = { 1, 7866 } -- create!
-_dependIdMap[ 6035 ] = { 1, 7880 } -- get_LiteralBool
-_dependIdMap[ 6036 ] = { 1, 7881 } -- get_LiteralBool!
-_dependIdMap[ 6038 ] = { 1, 7883 } -- LiteralBoolNode
-_dependIdMap[ 6039 ] = { 1, 7884 } -- LiteralBoolNode!
-_typeInfoList[984] = { skind = 1, parentId = 1157, typeId = 6041, srcTypeId = 6038, mutable = false }
-_dependIdMap[ 6041 ] = { 1, 7886 } -- &LiteralBoolNode
-_typeInfoList[985] = { skind=3, parentId = 1, typeId = 6045, baseId = 1, txt = 'List',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {6041}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[986] = { skind = 0, parentId = 1, typeId = 6046, nilable = true, orgTypeId = 6045 }
-_typeInfoList[987] = { skind = 1, parentId = 1, typeId = 6048, srcTypeId = 6046, mutable = false }
-_typeInfoList[988] = { skind=3, parentId = 1, typeId = 6064, baseId = 1, txt = 'List',
+_typeInfoList[985] = { skind = 0, parentId = 1, typeId = 6026, nilable = true, orgTypeId = 6025 }
+_typeInfoList[986] = { skind = 1, parentId = 1, typeId = 6028, srcTypeId = 6025, mutable = false }
+_dependIdMap[ 6029 ] = { 1, 7868 } -- create
+_dependIdMap[ 6030 ] = { 1, 7869 } -- create!
+_dependIdMap[ 6038 ] = { 1, 7883 } -- get_LiteralBool
+_dependIdMap[ 6039 ] = { 1, 7884 } -- get_LiteralBool!
+_dependIdMap[ 6041 ] = { 1, 7886 } -- LiteralBoolNode
+_dependIdMap[ 6042 ] = { 1, 7887 } -- LiteralBoolNode!
+_typeInfoList[987] = { skind = 1, parentId = 1157, typeId = 6044, srcTypeId = 6041, mutable = false }
+_dependIdMap[ 6044 ] = { 1, 7889 } -- &LiteralBoolNode
+_typeInfoList[988] = { skind=3, parentId = 1, typeId = 6048, baseId = 1, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {6044}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[989] = { skind = 0, parentId = 1, typeId = 6049, nilable = true, orgTypeId = 6048 }
+_typeInfoList[990] = { skind = 1, parentId = 1, typeId = 6051, srcTypeId = 6049, mutable = false }
+_typeInfoList[991] = { skind=3, parentId = 1, typeId = 6067, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 2, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[989] = { skind = 0, parentId = 1, typeId = 6065, nilable = true, orgTypeId = 6064 }
-_typeInfoList[990] = { skind = 1, parentId = 1, typeId = 6067, srcTypeId = 6064, mutable = false }
-_typeInfoList[991] = { skind=3, parentId = 1, typeId = 6071, baseId = 1, txt = 'List',
+_typeInfoList[992] = { skind = 0, parentId = 1, typeId = 6068, nilable = true, orgTypeId = 6067 }
+_typeInfoList[993] = { skind = 1, parentId = 1, typeId = 6070, srcTypeId = 6067, mutable = false }
+_typeInfoList[994] = { skind=3, parentId = 1, typeId = 6074, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[992] = { skind = 0, parentId = 1, typeId = 6072, nilable = true, orgTypeId = 6071 }
-_typeInfoList[993] = { skind = 1, parentId = 1, typeId = 6074, srcTypeId = 6071, mutable = false }
-_dependIdMap[ 6075 ] = { 1, 7935 } -- create
-_dependIdMap[ 6076 ] = { 1, 7936 } -- create!
-_dependIdMap[ 6081 ] = { 1, 7947 } -- get_LiteralSymbol
-_dependIdMap[ 6082 ] = { 1, 7948 } -- get_LiteralSymbol!
-_dependIdMap[ 6084 ] = { 1, 7950 } -- LiteralSymbolNode
-_dependIdMap[ 6085 ] = { 1, 7951 } -- LiteralSymbolNode!
-_typeInfoList[994] = { skind = 1, parentId = 1157, typeId = 6087, srcTypeId = 6084, mutable = false }
-_dependIdMap[ 6087 ] = { 1, 7953 } -- &LiteralSymbolNode
-_typeInfoList[995] = { skind=3, parentId = 1, typeId = 6091, baseId = 1, txt = 'List',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {6087}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[996] = { skind = 0, parentId = 1, typeId = 6092, nilable = true, orgTypeId = 6091 }
-_typeInfoList[997] = { skind = 1, parentId = 1, typeId = 6094, srcTypeId = 6092, mutable = false }
-_typeInfoList[998] = { skind=3, parentId = 1, typeId = 6110, baseId = 1, txt = 'List',
+_typeInfoList[995] = { skind = 0, parentId = 1, typeId = 6075, nilable = true, orgTypeId = 6074 }
+_typeInfoList[996] = { skind = 1, parentId = 1, typeId = 6077, srcTypeId = 6074, mutable = false }
+_dependIdMap[ 6078 ] = { 1, 7938 } -- create
+_dependIdMap[ 6079 ] = { 1, 7939 } -- create!
+_dependIdMap[ 6084 ] = { 1, 7950 } -- get_LiteralSymbol
+_dependIdMap[ 6085 ] = { 1, 7951 } -- get_LiteralSymbol!
+_dependIdMap[ 6087 ] = { 1, 7953 } -- LiteralSymbolNode
+_dependIdMap[ 6088 ] = { 1, 7954 } -- LiteralSymbolNode!
+_typeInfoList[997] = { skind = 1, parentId = 1157, typeId = 6090, srcTypeId = 6087, mutable = false }
+_dependIdMap[ 6090 ] = { 1, 7956 } -- &LiteralSymbolNode
+_typeInfoList[998] = { skind=3, parentId = 1, typeId = 6094, baseId = 1, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {6090}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[999] = { skind = 0, parentId = 1, typeId = 6095, nilable = true, orgTypeId = 6094 }
+_typeInfoList[1000] = { skind = 1, parentId = 1, typeId = 6097, srcTypeId = 6095, mutable = false }
+_typeInfoList[1001] = { skind=3, parentId = 1, typeId = 6113, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 2, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[999] = { skind = 0, parentId = 1, typeId = 6111, nilable = true, orgTypeId = 6110 }
-_typeInfoList[1000] = { skind = 1, parentId = 1, typeId = 6113, srcTypeId = 6110, mutable = false }
-_typeInfoList[1001] = { skind=3, parentId = 1, typeId = 6117, baseId = 1, txt = 'List',
+_typeInfoList[1002] = { skind = 0, parentId = 1, typeId = 6114, nilable = true, orgTypeId = 6113 }
+_typeInfoList[1003] = { skind = 1, parentId = 1, typeId = 6116, srcTypeId = 6113, mutable = false }
+_typeInfoList[1004] = { skind=3, parentId = 1, typeId = 6120, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1002] = { skind = 0, parentId = 1, typeId = 6118, nilable = true, orgTypeId = 6117 }
-_typeInfoList[1003] = { skind = 1, parentId = 1, typeId = 6120, srcTypeId = 6117, mutable = false }
-_dependIdMap[ 6121 ] = { 1, 8002 } -- create
-_dependIdMap[ 6122 ] = { 1, 8003 } -- create!
-_typeInfoList[1004] = { skind=3, parentId = 1, typeId = 6127, baseId = 1, txt = 'List',
+_typeInfoList[1005] = { skind = 0, parentId = 1, typeId = 6121, nilable = true, orgTypeId = 6120 }
+_typeInfoList[1006] = { skind = 1, parentId = 1, typeId = 6123, srcTypeId = 6120, mutable = false }
+_dependIdMap[ 6124 ] = { 1, 8005 } -- create
+_dependIdMap[ 6125 ] = { 1, 8006 } -- create!
+_typeInfoList[1007] = { skind=3, parentId = 1, typeId = 6130, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1711}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1005] = { skind = 0, parentId = 1, typeId = 6128, nilable = true, orgTypeId = 6127 }
-_typeInfoList[1006] = { skind=3, parentId = 1, typeId = 6136, baseId = 1, txt = 'List',
+_typeInfoList[1008] = { skind = 0, parentId = 1, typeId = 6131, nilable = true, orgTypeId = 6130 }
+_typeInfoList[1009] = { skind=3, parentId = 1, typeId = 6139, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1007] = { skind = 0, parentId = 1, typeId = 6137, nilable = true, orgTypeId = 6136 }
-_typeInfoList[1008] = { skind=3, parentId = 1, typeId = 6139, baseId = 1, txt = 'List',
+_typeInfoList[1010] = { skind = 0, parentId = 1, typeId = 6140, nilable = true, orgTypeId = 6139 }
+_typeInfoList[1011] = { skind=3, parentId = 1, typeId = 6142, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1009] = { skind = 0, parentId = 1, typeId = 6140, nilable = true, orgTypeId = 6139 }
-_typeInfoList[1010] = { skind=3, parentId = 1, typeId = 6145, baseId = 1, txt = 'List',
+_typeInfoList[1012] = { skind = 0, parentId = 1, typeId = 6143, nilable = true, orgTypeId = 6142 }
+_typeInfoList[1013] = { skind=3, parentId = 1, typeId = 6148, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1011] = { skind = 0, parentId = 1, typeId = 6146, nilable = true, orgTypeId = 6145 }
-_typeInfoList[1012] = { skind=3, parentId = 1, typeId = 6148, baseId = 1, txt = 'List',
+_typeInfoList[1014] = { skind = 0, parentId = 1, typeId = 6149, nilable = true, orgTypeId = 6148 }
+_typeInfoList[1015] = { skind=3, parentId = 1, typeId = 6151, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1013] = { skind = 0, parentId = 1, typeId = 6149, nilable = true, orgTypeId = 6148 }
-_typeInfoList[1014] = { skind=3, parentId = 1, typeId = 6154, baseId = 1, txt = 'List',
+_typeInfoList[1016] = { skind = 0, parentId = 1, typeId = 6152, nilable = true, orgTypeId = 6151 }
+_typeInfoList[1017] = { skind=3, parentId = 1, typeId = 6157, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1015] = { skind = 0, parentId = 1, typeId = 6155, nilable = true, orgTypeId = 6154 }
-_typeInfoList[1016] = { skind=3, parentId = 1, typeId = 6157, baseId = 1, txt = 'List',
+_typeInfoList[1018] = { skind = 0, parentId = 1, typeId = 6158, nilable = true, orgTypeId = 6157 }
+_typeInfoList[1019] = { skind=3, parentId = 1, typeId = 6160, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1017] = { skind = 0, parentId = 1, typeId = 6158, nilable = true, orgTypeId = 6157 }
-_typeInfoList[1018] = { skind=3, parentId = 1, typeId = 6163, baseId = 1, txt = 'List',
+_typeInfoList[1020] = { skind = 0, parentId = 1, typeId = 6161, nilable = true, orgTypeId = 6160 }
+_typeInfoList[1021] = { skind=3, parentId = 1, typeId = 6166, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1019] = { skind = 0, parentId = 1, typeId = 6164, nilable = true, orgTypeId = 6163 }
-_typeInfoList[1020] = { skind=3, parentId = 1, typeId = 6166, baseId = 1, txt = 'List',
+_typeInfoList[1022] = { skind = 0, parentId = 1, typeId = 6167, nilable = true, orgTypeId = 6166 }
+_typeInfoList[1023] = { skind=3, parentId = 1, typeId = 6169, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1021] = { skind = 0, parentId = 1, typeId = 6167, nilable = true, orgTypeId = 6166 }
-_typeInfoList[1022] = { skind=3, parentId = 1, typeId = 6172, baseId = 1, txt = 'List',
+_typeInfoList[1024] = { skind = 0, parentId = 1, typeId = 6170, nilable = true, orgTypeId = 6169 }
+_typeInfoList[1025] = { skind=3, parentId = 1, typeId = 6175, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1023] = { skind = 0, parentId = 1, typeId = 6173, nilable = true, orgTypeId = 6172 }
-_typeInfoList[1024] = { skind=3, parentId = 1, typeId = 6175, baseId = 1, txt = 'List',
+_typeInfoList[1026] = { skind = 0, parentId = 1, typeId = 6176, nilable = true, orgTypeId = 6175 }
+_typeInfoList[1027] = { skind=3, parentId = 1, typeId = 6178, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1025] = { skind = 0, parentId = 1, typeId = 6176, nilable = true, orgTypeId = 6175 }
-_typeInfoList[1026] = { skind=3, parentId = 1, typeId = 6181, baseId = 1, txt = 'List',
+_typeInfoList[1028] = { skind = 0, parentId = 1, typeId = 6179, nilable = true, orgTypeId = 6178 }
+_typeInfoList[1029] = { skind=3, parentId = 1, typeId = 6184, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1027] = { skind = 0, parentId = 1, typeId = 6182, nilable = true, orgTypeId = 6181 }
-_typeInfoList[1028] = { skind=3, parentId = 1, typeId = 6184, baseId = 1, txt = 'List',
+_typeInfoList[1030] = { skind = 0, parentId = 1, typeId = 6185, nilable = true, orgTypeId = 6184 }
+_typeInfoList[1031] = { skind=3, parentId = 1, typeId = 6187, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1029] = { skind = 0, parentId = 1, typeId = 6185, nilable = true, orgTypeId = 6184 }
-_typeInfoList[1030] = { skind=3, parentId = 1, typeId = 6190, baseId = 1, txt = 'List',
+_typeInfoList[1032] = { skind = 0, parentId = 1, typeId = 6188, nilable = true, orgTypeId = 6187 }
+_typeInfoList[1033] = { skind=3, parentId = 1, typeId = 6193, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1031] = { skind = 0, parentId = 1, typeId = 6191, nilable = true, orgTypeId = 6190 }
-_typeInfoList[1032] = { skind=3, parentId = 1, typeId = 6193, baseId = 1, txt = 'List',
+_typeInfoList[1034] = { skind = 0, parentId = 1, typeId = 6194, nilable = true, orgTypeId = 6193 }
+_typeInfoList[1035] = { skind=3, parentId = 1, typeId = 6196, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1033] = { skind = 0, parentId = 1, typeId = 6194, nilable = true, orgTypeId = 6193 }
-_typeInfoList[1034] = { skind=3, parentId = 1, typeId = 6199, baseId = 1, txt = 'List',
+_typeInfoList[1036] = { skind = 0, parentId = 1, typeId = 6197, nilable = true, orgTypeId = 6196 }
+_typeInfoList[1037] = { skind=3, parentId = 1, typeId = 6202, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1035] = { skind = 0, parentId = 1, typeId = 6200, nilable = true, orgTypeId = 6199 }
-_typeInfoList[1036] = { skind=3, parentId = 1, typeId = 6202, baseId = 1, txt = 'List',
+_typeInfoList[1038] = { skind = 0, parentId = 1, typeId = 6203, nilable = true, orgTypeId = 6202 }
+_typeInfoList[1039] = { skind=3, parentId = 1, typeId = 6205, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1037] = { skind = 0, parentId = 1, typeId = 6203, nilable = true, orgTypeId = 6202 }
-_typeInfoList[1038] = { skind=3, parentId = 1, typeId = 6208, baseId = 1, txt = 'List',
+_typeInfoList[1040] = { skind = 0, parentId = 1, typeId = 6206, nilable = true, orgTypeId = 6205 }
+_typeInfoList[1041] = { skind=3, parentId = 1, typeId = 6211, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1039] = { skind = 0, parentId = 1, typeId = 6209, nilable = true, orgTypeId = 6208 }
-_typeInfoList[1040] = { skind=3, parentId = 1, typeId = 6211, baseId = 1, txt = 'List',
+_typeInfoList[1042] = { skind = 0, parentId = 1, typeId = 6212, nilable = true, orgTypeId = 6211 }
+_typeInfoList[1043] = { skind=3, parentId = 1, typeId = 6214, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1041] = { skind = 0, parentId = 1, typeId = 6212, nilable = true, orgTypeId = 6211 }
-_typeInfoList[1042] = { skind=3, parentId = 1, typeId = 6217, baseId = 1, txt = 'List',
+_typeInfoList[1044] = { skind = 0, parentId = 1, typeId = 6215, nilable = true, orgTypeId = 6214 }
+_typeInfoList[1045] = { skind=3, parentId = 1, typeId = 6220, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1043] = { skind = 0, parentId = 1, typeId = 6218, nilable = true, orgTypeId = 6217 }
-_typeInfoList[1044] = { skind=3, parentId = 1, typeId = 6220, baseId = 1, txt = 'List',
+_typeInfoList[1046] = { skind = 0, parentId = 1, typeId = 6221, nilable = true, orgTypeId = 6220 }
+_typeInfoList[1047] = { skind=3, parentId = 1, typeId = 6223, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1045] = { skind = 0, parentId = 1, typeId = 6221, nilable = true, orgTypeId = 6220 }
-_typeInfoList[1046] = { skind=3, parentId = 1, typeId = 6226, baseId = 1, txt = 'List',
+_typeInfoList[1048] = { skind = 0, parentId = 1, typeId = 6224, nilable = true, orgTypeId = 6223 }
+_typeInfoList[1049] = { skind=3, parentId = 1, typeId = 6229, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1047] = { skind = 0, parentId = 1, typeId = 6227, nilable = true, orgTypeId = 6226 }
-_typeInfoList[1048] = { skind=3, parentId = 1, typeId = 6229, baseId = 1, txt = 'List',
+_typeInfoList[1050] = { skind = 0, parentId = 1, typeId = 6230, nilable = true, orgTypeId = 6229 }
+_typeInfoList[1051] = { skind=3, parentId = 1, typeId = 6232, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1049] = { skind = 0, parentId = 1, typeId = 6230, nilable = true, orgTypeId = 6229 }
-_typeInfoList[1050] = { skind=3, parentId = 1, typeId = 6235, baseId = 1, txt = 'List',
+_typeInfoList[1052] = { skind = 0, parentId = 1, typeId = 6233, nilable = true, orgTypeId = 6232 }
+_typeInfoList[1053] = { skind=3, parentId = 1, typeId = 6238, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1051] = { skind = 0, parentId = 1, typeId = 6236, nilable = true, orgTypeId = 6235 }
-_typeInfoList[1052] = { skind=3, parentId = 1, typeId = 6238, baseId = 1, txt = 'List',
+_typeInfoList[1054] = { skind = 0, parentId = 1, typeId = 6239, nilable = true, orgTypeId = 6238 }
+_typeInfoList[1055] = { skind=3, parentId = 1, typeId = 6241, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1053] = { skind = 0, parentId = 1, typeId = 6239, nilable = true, orgTypeId = 6238 }
-_typeInfoList[1054] = { skind=3, parentId = 1, typeId = 6244, baseId = 1, txt = 'List',
+_typeInfoList[1056] = { skind = 0, parentId = 1, typeId = 6242, nilable = true, orgTypeId = 6241 }
+_typeInfoList[1057] = { skind=3, parentId = 1, typeId = 6247, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1055] = { skind = 0, parentId = 1, typeId = 6245, nilable = true, orgTypeId = 6244 }
-_typeInfoList[1056] = { skind=3, parentId = 1, typeId = 6247, baseId = 1, txt = 'List',
+_typeInfoList[1058] = { skind = 0, parentId = 1, typeId = 6248, nilable = true, orgTypeId = 6247 }
+_typeInfoList[1059] = { skind=3, parentId = 1, typeId = 6250, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1057] = { skind = 0, parentId = 1, typeId = 6248, nilable = true, orgTypeId = 6247 }
-_typeInfoList[1058] = { skind=3, parentId = 1, typeId = 6253, baseId = 1, txt = 'List',
+_typeInfoList[1060] = { skind = 0, parentId = 1, typeId = 6251, nilable = true, orgTypeId = 6250 }
+_typeInfoList[1061] = { skind=3, parentId = 1, typeId = 6256, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {11}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1059] = { skind = 0, parentId = 1, typeId = 6254, nilable = true, orgTypeId = 6253 }
-_typeInfoList[1060] = { skind=3, parentId = 1, typeId = 6256, baseId = 1, txt = 'List',
+_typeInfoList[1062] = { skind = 0, parentId = 1, typeId = 6257, nilable = true, orgTypeId = 6256 }
+_typeInfoList[1063] = { skind=3, parentId = 1, typeId = 6259, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1204}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1061] = { skind = 0, parentId = 1, typeId = 6257, nilable = true, orgTypeId = 6256 }
-_dependIdMap[ 6262 ] = { 1, 8389 } -- pushProcessInfo
-_dependIdMap[ 6263 ] = { 1, 8390 } -- pushProcessInfo!
-_dependIdMap[ 6265 ] = { 1, 8395 } -- popProcessInfo
-_dependIdMap[ 6266 ] = { 1, 8396 } -- popProcessInfo!
-_typeInfoList[1062] = { skind = 1, parentId = 1, typeId = 6268, srcTypeId = 1513, mutable = false }
-_typeInfoList[1063] = { skind = 1, parentId = 1, typeId = 6269, srcTypeId = 1781, mutable = false }
-_typeInfoList[1064] = { skind = 1, parentId = 1, typeId = 6270, srcTypeId = 1890, mutable = false }
-_typeInfoList[1065] = { skind = 1, parentId = 1, typeId = 6271, srcTypeId = 2023, mutable = false }
-_typeInfoList[1066] = { skind = 1, parentId = 1, typeId = 6272, srcTypeId = 2092, mutable = false }
-_typeInfoList[1067] = { skind = 1, parentId = 1, typeId = 6273, srcTypeId = 2163, mutable = false }
-_typeInfoList[1068] = { skind = 1, parentId = 1, typeId = 6274, srcTypeId = 2517, mutable = false }
-_typeInfoList[1069] = { skind = 1, parentId = 1, typeId = 6275, srcTypeId = 2543, mutable = false }
-_typeInfoList[1070] = { skind = 1, parentId = 1, typeId = 6276, srcTypeId = 2586, mutable = false }
-_typeInfoList[1071] = { skind = 1, parentId = 1, typeId = 6277, srcTypeId = 2632, mutable = false }
-_typeInfoList[1072] = { skind = 1, parentId = 1, typeId = 6278, srcTypeId = 2750, mutable = false }
-_typeInfoList[1073] = { skind = 1, parentId = 1, typeId = 6279, srcTypeId = 2850, mutable = false }
-_typeInfoList[1074] = { skind = 1, parentId = 1, typeId = 6280, srcTypeId = 2933, mutable = false }
-_typeInfoList[1075] = { skind = 1, parentId = 1, typeId = 6281, srcTypeId = 3038, mutable = false }
-_typeInfoList[1076] = { skind = 1, parentId = 1, typeId = 6282, srcTypeId = 3093, mutable = false }
-_typeInfoList[1077] = { skind = 1, parentId = 1, typeId = 6283, srcTypeId = 3160, mutable = false }
-_typeInfoList[1078] = { skind = 1, parentId = 1, typeId = 6284, srcTypeId = 3225, mutable = false }
-_typeInfoList[1079] = { skind = 1, parentId = 1, typeId = 6285, srcTypeId = 3274, mutable = false }
-_typeInfoList[1080] = { skind = 1, parentId = 1, typeId = 6286, srcTypeId = 3326, mutable = false }
-_typeInfoList[1081] = { skind = 1, parentId = 1, typeId = 6287, srcTypeId = 3387, mutable = false }
-_typeInfoList[1082] = { skind = 1, parentId = 1, typeId = 6288, srcTypeId = 3451, mutable = false }
-_typeInfoList[1083] = { skind = 1, parentId = 1, typeId = 6289, srcTypeId = 3509, mutable = false }
-_typeInfoList[1084] = { skind = 1, parentId = 1, typeId = 6290, srcTypeId = 3570, mutable = false }
-_typeInfoList[1085] = { skind = 1, parentId = 1, typeId = 6291, srcTypeId = 3620, mutable = false }
-_typeInfoList[1086] = { skind = 1, parentId = 1, typeId = 6292, srcTypeId = 3662, mutable = false }
-_typeInfoList[1087] = { skind = 1, parentId = 1, typeId = 6293, srcTypeId = 3708, mutable = false }
-_typeInfoList[1088] = { skind = 1, parentId = 1, typeId = 6294, srcTypeId = 3757, mutable = false }
-_typeInfoList[1089] = { skind = 1, parentId = 1, typeId = 6295, srcTypeId = 3806, mutable = false }
-_typeInfoList[1090] = { skind = 1, parentId = 1, typeId = 6296, srcTypeId = 3855, mutable = false }
-_typeInfoList[1091] = { skind = 1, parentId = 1, typeId = 6297, srcTypeId = 3907, mutable = false }
-_typeInfoList[1092] = { skind = 1, parentId = 1, typeId = 6298, srcTypeId = 3959, mutable = false }
-_typeInfoList[1093] = { skind = 1, parentId = 1, typeId = 6299, srcTypeId = 4035, mutable = false }
-_typeInfoList[1094] = { skind = 1, parentId = 1, typeId = 6300, srcTypeId = 4111, mutable = false }
-_typeInfoList[1095] = { skind = 1, parentId = 1, typeId = 6301, srcTypeId = 4185, mutable = false }
-_typeInfoList[1096] = { skind = 1, parentId = 1, typeId = 6302, srcTypeId = 4237, mutable = false }
-_typeInfoList[1097] = { skind = 1, parentId = 1, typeId = 6303, srcTypeId = 4292, mutable = false }
-_typeInfoList[1098] = { skind = 1, parentId = 1, typeId = 6304, srcTypeId = 4350, mutable = false }
-_typeInfoList[1099] = { skind = 1, parentId = 1, typeId = 6305, srcTypeId = 4396, mutable = false }
-_typeInfoList[1100] = { skind = 1, parentId = 1, typeId = 6306, srcTypeId = 4442, mutable = false }
-_typeInfoList[1101] = { skind = 1, parentId = 1, typeId = 6307, srcTypeId = 4500, mutable = false }
-_typeInfoList[1102] = { skind = 1, parentId = 1, typeId = 6308, srcTypeId = 4555, mutable = false }
-_typeInfoList[1103] = { skind = 1, parentId = 1, typeId = 6309, srcTypeId = 4604, mutable = false }
-_typeInfoList[1104] = { skind = 1, parentId = 1, typeId = 6310, srcTypeId = 4653, mutable = false }
-_typeInfoList[1105] = { skind = 1, parentId = 1, typeId = 6311, srcTypeId = 4709, mutable = false }
-_typeInfoList[1106] = { skind = 1, parentId = 1, typeId = 6312, srcTypeId = 4811, mutable = false }
-_typeInfoList[1107] = { skind = 1, parentId = 1, typeId = 6313, srcTypeId = 4968, mutable = false }
-_typeInfoList[1108] = { skind = 1, parentId = 1, typeId = 6314, srcTypeId = 5014, mutable = false }
-_typeInfoList[1109] = { skind = 1, parentId = 1, typeId = 6315, srcTypeId = 5060, mutable = false }
-_typeInfoList[1110] = { skind = 1, parentId = 1, typeId = 6316, srcTypeId = 5106, mutable = false }
-_typeInfoList[1111] = { skind = 1, parentId = 1, typeId = 6317, srcTypeId = 5152, mutable = false }
-_typeInfoList[1112] = { skind = 1, parentId = 1, typeId = 6318, srcTypeId = 5204, mutable = false }
-_typeInfoList[1113] = { skind = 1, parentId = 1, typeId = 6319, srcTypeId = 5267, mutable = false }
-_typeInfoList[1114] = { skind = 1, parentId = 1, typeId = 6320, srcTypeId = 5316, mutable = false }
-_typeInfoList[1115] = { skind = 1, parentId = 1, typeId = 6321, srcTypeId = 5368, mutable = false }
-_typeInfoList[1116] = { skind = 1, parentId = 1, typeId = 6322, srcTypeId = 5510, mutable = false }
-_typeInfoList[1117] = { skind = 1, parentId = 1, typeId = 6323, srcTypeId = 5574, mutable = false }
-_typeInfoList[1118] = { skind = 1, parentId = 1, typeId = 6324, srcTypeId = 5626, mutable = false }
-_typeInfoList[1119] = { skind = 1, parentId = 1, typeId = 6325, srcTypeId = 5669, mutable = false }
-_typeInfoList[1120] = { skind = 1, parentId = 1, typeId = 6326, srcTypeId = 5718, mutable = false }
-_typeInfoList[1121] = { skind = 1, parentId = 1, typeId = 6327, srcTypeId = 5767, mutable = false }
-_typeInfoList[1122] = { skind = 1, parentId = 1, typeId = 6328, srcTypeId = 5816, mutable = false }
-_typeInfoList[1123] = { skind = 1, parentId = 1, typeId = 6329, srcTypeId = 5862, mutable = false }
-_typeInfoList[1124] = { skind = 1, parentId = 1, typeId = 6330, srcTypeId = 5920, mutable = false }
-_typeInfoList[1125] = { skind = 1, parentId = 1, typeId = 6331, srcTypeId = 5987, mutable = false }
-_typeInfoList[1126] = { skind = 1, parentId = 1, typeId = 6332, srcTypeId = 6045, mutable = false }
-_typeInfoList[1127] = { skind = 1, parentId = 1, typeId = 6333, srcTypeId = 6091, mutable = false }
-_typeInfoList[1128] = { skind = 4, parentId = 1005, typeId = 8005, txt = 'ConvMode',
+_typeInfoList[1064] = { skind = 0, parentId = 1, typeId = 6260, nilable = true, orgTypeId = 6259 }
+_dependIdMap[ 6265 ] = { 1, 8391 } -- pushProcessInfo
+_dependIdMap[ 6266 ] = { 1, 8392 } -- pushProcessInfo!
+_dependIdMap[ 6268 ] = { 1, 8397 } -- popProcessInfo
+_dependIdMap[ 6269 ] = { 1, 8398 } -- popProcessInfo!
+_typeInfoList[1065] = { skind = 1, parentId = 1, typeId = 6303, srcTypeId = 1513, mutable = false }
+_typeInfoList[1066] = { skind = 1, parentId = 1, typeId = 6304, srcTypeId = 1781, mutable = false }
+_typeInfoList[1067] = { skind = 1, parentId = 1, typeId = 6305, srcTypeId = 1890, mutable = false }
+_typeInfoList[1068] = { skind = 1, parentId = 1, typeId = 6306, srcTypeId = 2023, mutable = false }
+_typeInfoList[1069] = { skind = 1, parentId = 1, typeId = 6307, srcTypeId = 2092, mutable = false }
+_typeInfoList[1070] = { skind = 1, parentId = 1, typeId = 6308, srcTypeId = 2163, mutable = false }
+_typeInfoList[1071] = { skind = 1, parentId = 1, typeId = 6309, srcTypeId = 2517, mutable = false }
+_typeInfoList[1072] = { skind = 1, parentId = 1, typeId = 6310, srcTypeId = 2543, mutable = false }
+_typeInfoList[1073] = { skind = 1, parentId = 1, typeId = 6311, srcTypeId = 2586, mutable = false }
+_typeInfoList[1074] = { skind = 1, parentId = 1, typeId = 6312, srcTypeId = 2632, mutable = false }
+_typeInfoList[1075] = { skind = 1, parentId = 1, typeId = 6313, srcTypeId = 2750, mutable = false }
+_typeInfoList[1076] = { skind = 1, parentId = 1, typeId = 6314, srcTypeId = 2850, mutable = false }
+_typeInfoList[1077] = { skind = 1, parentId = 1, typeId = 6315, srcTypeId = 2933, mutable = false }
+_typeInfoList[1078] = { skind = 1, parentId = 1, typeId = 6316, srcTypeId = 3038, mutable = false }
+_typeInfoList[1079] = { skind = 1, parentId = 1, typeId = 6317, srcTypeId = 3093, mutable = false }
+_typeInfoList[1080] = { skind = 1, parentId = 1, typeId = 6318, srcTypeId = 3160, mutable = false }
+_typeInfoList[1081] = { skind = 1, parentId = 1, typeId = 6319, srcTypeId = 3225, mutable = false }
+_typeInfoList[1082] = { skind = 1, parentId = 1, typeId = 6320, srcTypeId = 3274, mutable = false }
+_typeInfoList[1083] = { skind = 1, parentId = 1, typeId = 6321, srcTypeId = 3326, mutable = false }
+_typeInfoList[1084] = { skind = 1, parentId = 1, typeId = 6322, srcTypeId = 3387, mutable = false }
+_typeInfoList[1085] = { skind = 1, parentId = 1, typeId = 6323, srcTypeId = 3451, mutable = false }
+_typeInfoList[1086] = { skind = 1, parentId = 1, typeId = 6324, srcTypeId = 3509, mutable = false }
+_typeInfoList[1087] = { skind = 1, parentId = 1, typeId = 6325, srcTypeId = 3570, mutable = false }
+_typeInfoList[1088] = { skind = 1, parentId = 1, typeId = 6326, srcTypeId = 3620, mutable = false }
+_typeInfoList[1089] = { skind = 1, parentId = 1, typeId = 6327, srcTypeId = 3662, mutable = false }
+_typeInfoList[1090] = { skind = 1, parentId = 1, typeId = 6328, srcTypeId = 3708, mutable = false }
+_typeInfoList[1091] = { skind = 1, parentId = 1, typeId = 6329, srcTypeId = 3757, mutable = false }
+_typeInfoList[1092] = { skind = 1, parentId = 1, typeId = 6330, srcTypeId = 3806, mutable = false }
+_typeInfoList[1093] = { skind = 1, parentId = 1, typeId = 6331, srcTypeId = 3855, mutable = false }
+_typeInfoList[1094] = { skind = 1, parentId = 1, typeId = 6332, srcTypeId = 3907, mutable = false }
+_typeInfoList[1095] = { skind = 1, parentId = 1, typeId = 6333, srcTypeId = 3959, mutable = false }
+_typeInfoList[1096] = { skind = 1, parentId = 1, typeId = 6334, srcTypeId = 4035, mutable = false }
+_typeInfoList[1097] = { skind = 1, parentId = 1, typeId = 6335, srcTypeId = 4111, mutable = false }
+_typeInfoList[1098] = { skind = 1, parentId = 1, typeId = 6336, srcTypeId = 4185, mutable = false }
+_typeInfoList[1099] = { skind = 1, parentId = 1, typeId = 6337, srcTypeId = 4237, mutable = false }
+_typeInfoList[1100] = { skind = 1, parentId = 1, typeId = 6338, srcTypeId = 4292, mutable = false }
+_typeInfoList[1101] = { skind = 1, parentId = 1, typeId = 6339, srcTypeId = 4350, mutable = false }
+_typeInfoList[1102] = { skind = 1, parentId = 1, typeId = 6340, srcTypeId = 4396, mutable = false }
+_typeInfoList[1103] = { skind = 1, parentId = 1, typeId = 6341, srcTypeId = 4442, mutable = false }
+_typeInfoList[1104] = { skind = 1, parentId = 1, typeId = 6342, srcTypeId = 4500, mutable = false }
+_typeInfoList[1105] = { skind = 1, parentId = 1, typeId = 6343, srcTypeId = 4555, mutable = false }
+_typeInfoList[1106] = { skind = 1, parentId = 1, typeId = 6344, srcTypeId = 4604, mutable = false }
+_typeInfoList[1107] = { skind = 1, parentId = 1, typeId = 6345, srcTypeId = 4653, mutable = false }
+_typeInfoList[1108] = { skind = 1, parentId = 1, typeId = 6346, srcTypeId = 4709, mutable = false }
+_typeInfoList[1109] = { skind = 1, parentId = 1, typeId = 6347, srcTypeId = 4811, mutable = false }
+_typeInfoList[1110] = { skind = 1, parentId = 1, typeId = 6348, srcTypeId = 4968, mutable = false }
+_typeInfoList[1111] = { skind = 1, parentId = 1, typeId = 6349, srcTypeId = 5014, mutable = false }
+_typeInfoList[1112] = { skind = 1, parentId = 1, typeId = 6350, srcTypeId = 5060, mutable = false }
+_typeInfoList[1113] = { skind = 1, parentId = 1, typeId = 6351, srcTypeId = 5106, mutable = false }
+_typeInfoList[1114] = { skind = 1, parentId = 1, typeId = 6352, srcTypeId = 5152, mutable = false }
+_typeInfoList[1115] = { skind = 1, parentId = 1, typeId = 6353, srcTypeId = 5204, mutable = false }
+_typeInfoList[1116] = { skind = 1, parentId = 1, typeId = 6354, srcTypeId = 5267, mutable = false }
+_typeInfoList[1117] = { skind = 1, parentId = 1, typeId = 6355, srcTypeId = 5316, mutable = false }
+_typeInfoList[1118] = { skind = 1, parentId = 1, typeId = 6356, srcTypeId = 5368, mutable = false }
+_typeInfoList[1119] = { skind = 1, parentId = 1, typeId = 6357, srcTypeId = 5510, mutable = false }
+_typeInfoList[1120] = { skind = 1, parentId = 1, typeId = 6358, srcTypeId = 5574, mutable = false }
+_typeInfoList[1121] = { skind = 1, parentId = 1, typeId = 6359, srcTypeId = 5626, mutable = false }
+_typeInfoList[1122] = { skind = 1, parentId = 1, typeId = 6360, srcTypeId = 5669, mutable = false }
+_typeInfoList[1123] = { skind = 1, parentId = 1, typeId = 6361, srcTypeId = 5718, mutable = false }
+_typeInfoList[1124] = { skind = 1, parentId = 1, typeId = 6362, srcTypeId = 5767, mutable = false }
+_typeInfoList[1125] = { skind = 1, parentId = 1, typeId = 6363, srcTypeId = 5816, mutable = false }
+_typeInfoList[1126] = { skind = 1, parentId = 1, typeId = 6364, srcTypeId = 5862, mutable = false }
+_typeInfoList[1127] = { skind = 1, parentId = 1, typeId = 6365, srcTypeId = 5920, mutable = false }
+_typeInfoList[1128] = { skind = 1, parentId = 1, typeId = 6366, srcTypeId = 5987, mutable = false }
+_typeInfoList[1129] = { skind = 1, parentId = 1, typeId = 6367, srcTypeId = 6048, mutable = false }
+_typeInfoList[1130] = { skind = 1, parentId = 1, typeId = 6368, srcTypeId = 6094, mutable = false }
+_dependIdMap[ 6472 ] = { 3, 1005 } -- LuaVer
+_dependIdMap[ 6474 ] = { 3, 1007 } -- BitOp
+_dependIdMap[ 6475 ] = { 3, 1008 } -- BitOp!
+_typeInfoList[1131] = { skind=3, parentId = 1, typeId = 6482, baseId = 1, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {6474}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[1132] = { skind = 0, parentId = 1, typeId = 6483, nilable = true, orgTypeId = 6482 }
+_typeInfoList[1133] = { skind = 1, parentId = 1, typeId = 6485, srcTypeId = 6482, mutable = false }
+_dependIdMap[ 6492 ] = { 3, 1013 } -- _from
+_dependIdMap[ 6493 ] = { 3, 1014 } -- _from!
+_typeInfoList[1134] = { skind=3, parentId = 1, typeId = 6495, baseId = 1, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {6474}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[1135] = { skind = 0, parentId = 1, typeId = 6496, nilable = true, orgTypeId = 6495 }
+_typeInfoList[1136] = { skind = 1, parentId = 1, typeId = 6498, srcTypeId = 6495, mutable = false }
+_dependIdMap[ 6499 ] = { 3, 1020 } -- get__allList
+_dependIdMap[ 6500 ] = { 3, 1021 } -- get__allList!
+_dependIdMap[ 6502 ] = { 3, 1023 } -- LuaVerInfo
+_dependIdMap[ 6503 ] = { 3, 1024 } -- LuaVerInfo!
+_typeInfoList[1137] = { skind = 1, parentId = 6472, typeId = 6505, srcTypeId = 6474, mutable = false }
+_dependIdMap[ 6505 ] = { 3, 1031 } -- &BitOp
+_typeInfoList[1138] = { skind = 1, parentId = 6472, typeId = 6518, srcTypeId = 6502, mutable = false }
+_dependIdMap[ 6518 ] = { 3, 1045 } -- &LuaVerInfo
+_typeInfoList[1139] = { skind = 4, parentId = 1005, typeId = 8101, txt = 'ConvMode',
 accessMode = 1, kind = 11, valTypeId = 18, enumValList = {ConvMeta = 2,Convert = 1,Exec = 0,} }
-_typeInfoList[1129] = { skind = 0, parentId = 1005, typeId = 8006, nilable = true, orgTypeId = 8005 }
-_typeInfoList[1130] = { skind=3, parentId = 8005, typeId = 8007, baseId = 1, txt = 'get__txt',
+_typeInfoList[1140] = { skind = 0, parentId = 1005, typeId = 8102, nilable = true, orgTypeId = 8101 }
+_typeInfoList[1141] = { skind=3, parentId = 8101, typeId = 8103, baseId = 1, txt = 'get__txt',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
-_typeInfoList[1131] = { skind = 0, parentId = 8005, typeId = 8008, nilable = true, orgTypeId = 8007 }
-_typeInfoList[1132] = { skind=3, parentId = 8005, typeId = 8010, baseId = 1, txt = '_from',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1025}, retTypeId = {8006}, children = {}, }
-_typeInfoList[1133] = { skind = 0, parentId = 8005, typeId = 8011, nilable = true, orgTypeId = 8010 }
-_typeInfoList[1134] = { skind=3, parentId = 1, typeId = 8013, baseId = 1, txt = 'List',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {8005}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[1135] = { skind = 0, parentId = 1, typeId = 8014, nilable = true, orgTypeId = 8013 }
-_typeInfoList[1136] = { skind = 1, parentId = 1, typeId = 8016, srcTypeId = 8013, mutable = false }
-_typeInfoList[1137] = { skind=3, parentId = 8005, typeId = 8017, baseId = 1, txt = 'get__allList',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {8016}, children = {}, }
-_typeInfoList[1138] = { skind = 0, parentId = 8005, typeId = 8018, nilable = true, orgTypeId = 8017 }
-_typeInfoList[1139] = { skind=3, parentId = 1005, typeId = 8480, baseId = 1, txt = 'createFilter',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27, 89, 89, 8005, 15, 1204, 1372, 15}, retTypeId = {2337}, children = {}, }
-_typeInfoList[1140] = { skind = 0, parentId = 1005, typeId = 8481, nilable = true, orgTypeId = 8480 }
-_typeInfoList[1141] = { skind=3, parentId = 1005, typeId = 8483, baseId = 2449, txt = 'MacroEvalImp',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {8491, 8505}, }
-_typeInfoList[1142] = { skind = 0, parentId = 1005, typeId = 8484, nilable = true, orgTypeId = 8483 }
-_typeInfoList[1143] = { skind=3, parentId = 8483, typeId = 8491, baseId = 1, txt = 'eval',
+_typeInfoList[1142] = { skind = 0, parentId = 8101, typeId = 8104, nilable = true, orgTypeId = 8103 }
+_typeInfoList[1143] = { skind=3, parentId = 8101, typeId = 8106, baseId = 1, txt = '_from',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1025}, retTypeId = {8102}, children = {}, }
+_typeInfoList[1144] = { skind = 0, parentId = 8101, typeId = 8107, nilable = true, orgTypeId = 8106 }
+_typeInfoList[1145] = { skind=3, parentId = 1, typeId = 8109, baseId = 1, txt = 'List',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {8101}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+_typeInfoList[1146] = { skind = 0, parentId = 1, typeId = 8110, nilable = true, orgTypeId = 8109 }
+_typeInfoList[1147] = { skind = 1, parentId = 1, typeId = 8112, srcTypeId = 8109, mutable = false }
+_typeInfoList[1148] = { skind=3, parentId = 8101, typeId = 8113, baseId = 1, txt = 'get__allList',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {8112}, children = {}, }
+_typeInfoList[1149] = { skind = 0, parentId = 8101, typeId = 8114, nilable = true, orgTypeId = 8113 }
+_typeInfoList[1150] = { skind=3, parentId = 1005, typeId = 8556, baseId = 1, txt = 'createFilter',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27, 93, 93, 8101, 15, 1204, 1372, 15, 6518}, retTypeId = {2337}, children = {}, }
+_typeInfoList[1151] = { skind = 0, parentId = 1005, typeId = 8557, nilable = true, orgTypeId = 8556 }
+_typeInfoList[1152] = { skind=3, parentId = 1005, typeId = 8559, baseId = 2449, txt = 'MacroEvalImp',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {8567, 8581}, }
+_typeInfoList[1153] = { skind = 0, parentId = 1005, typeId = 8560, nilable = true, orgTypeId = 8559 }
+_typeInfoList[1154] = { skind=3, parentId = 8559, typeId = 8567, baseId = 1, txt = 'eval',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {5567}, retTypeId = {39}, children = {}, }
-_typeInfoList[1144] = { skind = 0, parentId = 8483, typeId = 8492, nilable = true, orgTypeId = 8491 }
-_typeInfoList[1145] = { skind=3, parentId = 8483, typeId = 8505, baseId = 1, txt = '__init',
+_typeInfoList[1155] = { skind = 0, parentId = 8559, typeId = 8568, nilable = true, orgTypeId = 8567 }
+_typeInfoList[1156] = { skind=3, parentId = 8559, typeId = 8581, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1010}, retTypeId = {}, children = {}, }
-_typeInfoList[1146] = { skind = 0, parentId = 8483, typeId = 8506, nilable = true, orgTypeId = 8505 }
+_typeInfoList[1157] = { skind = 0, parentId = 8559, typeId = 8582, nilable = true, orgTypeId = 8581 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = true }
 _dependModuleMap[ 'lune.base.LuaMod' ] = { id = 2, use = false }
-_dependModuleMap[ 'lune.base.Parser' ] = { id = 3, use = true }
-_dependModuleMap[ 'lune.base.TransUnit' ] = { id = 4, use = false }
-_dependModuleMap[ 'lune.base.Util' ] = { id = 5, use = false }
-_dependModuleMap[ 'lune.base.Ver' ] = { id = 6, use = false }
-_dependModuleMap[ 'lune.base.frontInterface' ] = { id = 7, use = false }
+_dependModuleMap[ 'lune.base.LuaVer' ] = { id = 3, use = true }
+_dependModuleMap[ 'lune.base.Parser' ] = { id = 4, use = true }
+_dependModuleMap[ 'lune.base.TransUnit' ] = { id = 5, use = false }
+_dependModuleMap[ 'lune.base.Util' ] = { id = 6, use = false }
+_dependModuleMap[ 'lune.base.Ver' ] = { id = 7, use = false }
+_dependModuleMap[ 'lune.base.frontInterface' ] = { id = 8, use = false }
 _moduleObj._moduleTypeId = 1005
 _moduleObj._moduleSymbolKind = 0
 _moduleObj._moduleMutable = true

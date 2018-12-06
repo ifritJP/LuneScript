@@ -134,7 +134,7 @@ fn Front.createAst( importModuleInfo:frontInterface.ImportModuleInfo,
 {
    let mut transUnit = new TransUnit.TransUnit(
       importModuleInfo, new convLua.MacroEvalImp( self.option.mode ),
-      analyzeModule, analyzeMode, pos );
+      analyzeModule, analyzeMode, pos, self.option.targetLuaVer );
    return transUnit.createAST( parser, false, mod );
 }
 
@@ -144,7 +144,8 @@ fn Front.convert(
 {
    let mut conv = convLua.createFilter(
       streamName, stream, metaStream, convMode, inMacro,
-      ast.$moduleTypeInfo, ast.$moduleSymbolKind, self.option.useLuneModule );
+      ast.$moduleTypeInfo, ast.$moduleSymbolKind,
+      self.option.useLuneModule, self.option.targetLuaVer );
    ast.$node.processFilter( conv, nil, 0 );
 }
 
@@ -177,7 +178,8 @@ fn Front.loadFromLnsTxt(
    name:str, txt:str, onlyMeta:bool ): stem, stem
 {
    let mut transUnit = new TransUnit.TransUnit(
-      importModuleInfo, new convLua.MacroEvalImp( self.option.mode ), nil, nil, nil );
+      importModuleInfo, new convLua.MacroEvalImp( self.option.mode ),
+      nil, nil, nil, self.option.targetLuaVer );
    let mut stream = new Parser.TxtStream( txt );
    let mut parser = new Parser.StreamParser( stream, name, false );
 

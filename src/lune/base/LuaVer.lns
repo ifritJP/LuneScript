@@ -1,0 +1,31 @@
+pub enum BitOp {
+   /** ビット演算子がある */
+   HasOp,
+   /** ビット演算モジュールがある */
+   HasMod,
+   /** ビット演算はない */
+   Cant,
+}
+
+pub class LuaVerInfo {
+   let hasBitOp: BitOp {pub};
+   let hasTableUnpack: bool {pub};
+   let canConvStem2Str: bool {pub};
+}
+
+pub let ver51 = new LuaVerInfo( .Cant, false, false );
+pub let ver52 = new LuaVerInfo( .HasMod, true, true );
+pub let ver53 = new LuaVerInfo( .HasOp, true, true );
+
+fn getCurrentVer(): &LuaVerInfo {
+   let luaVer = _VERSION.gsub( "^[^%d]+", "" );
+   if luaVer >= "5.3" {
+      return ver53;
+   }
+   elseif luaVer >= "5.2" {
+      return ver52;
+   }
+   return ver51;
+}
+
+pub let curVer = getCurrentVer();

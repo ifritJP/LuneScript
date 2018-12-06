@@ -1,0 +1,55 @@
+string.format( "%d, %A", 1, {} ); // error
+string.format( "%d, %a", 1, {} ); // error
+string.format( "%d, %E", 1, {} ); // error
+string.format( "%d, %e", 1, {} ); // error
+string.format( "%d, %f", 1, {} ); // error
+string.format( "%d, %G", 1, {} ); // error
+string.format( "%d, %g", 1, {} ); // error
+string.format( "%d, %c", 1, {} ); // error
+string.format( "%d, %d", 1, {} ); // error
+string.format( "%d, %i", 1, {} ); // error
+string.format( "%d, %o", 1, {} ); // error
+string.format( "%d, %u", 1, {} ); // error
+string.format( "%d, %X", 1, {} ); // error
+string.format( "%d, %x", 1, {} ); // error
+
+string.format( "%s" ); // error
+
+
+
+string.format( "%A", 1.0 );
+string.format( "%a", 1.0 );
+string.format( "%E", 1.0 );
+string.format( "%e", 1.0 );
+string.format( "%f", 1.0 );
+string.format( "%G", 1.0 );
+string.format( "%g", 1.0 );
+string.format( "%c", 1 );
+string.format( "%d", 1 );
+string.format( "%i", 1 );
+string.format( "%o", 1 );
+string.format( "%u", 1 );
+string.format( "%X", 1 );
+string.format( "%x", 1 );
+string.format( "%s", {} );
+string.format( "%q", {} );
+
+
+print( "%d %A" ( 1, {} ) );  // error
+print( "%d %a" ( 1, {} ) );  // error
+print( "%d %E" ( 1, {} ) );  // error
+print( "%d %e" ( 1, {} ) );  // error
+print( "%d %f" ( 1, {} ) );  // error
+print( "%d %G" ( 1, {} ) );  // error
+print( "%d %g" ( 1, {} ) );  // error
+print( "%d %c" ( 1, {} ) );  // error
+print( "%d %d" ( 1, {} ) );  // error
+print( "%d %i" ( 1, {} ) );  // error
+print( "%d %o" ( 1, {} ) );  // error
+print( "%d %u" ( 1, {} ) );  // error
+print( "%d %X" ( 1, {} ) );  // error
+print( "%d %x" ( 1, {} ) );  // error
+print( "%s" );
+
+let formatTxt = "%d";
+string.format( formatTxt, "str" );

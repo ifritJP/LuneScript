@@ -3174,7 +3174,7 @@ _declNodeClass( "LiteralMap", Node, false, true, false,
 
 _declNodeClass( "LiteralString", Node, false, true, false,
                 [ { "token": "&Parser.Token" },
-                  { "argList": "List<&Node>" } ]
+                  { "argList": "&List<&Node>" } ]
 );
 
 _declNodeClass( "LiteralBool", Node, false, true, false,
@@ -3507,3 +3507,19 @@ pub fn popProcessInfo() {
    typeInfo2ModifierMap = info.typeInfo2ModifierMap;
    processInfoQueue.remove();
 }
+
+pub enum BitOpKind {
+   And,
+   Or,
+   Xor,
+   LShift,
+   RShift,
+}
+
+pub let bitBinOpMap = {
+   "&": BitOpKind.And,
+   "|": BitOpKind.Or,
+   "~": BitOpKind.Xor,
+   "|>>": BitOpKind.RShift,
+   "|<<": BitOpKind.LShift,
+};

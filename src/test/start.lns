@@ -570,12 +570,12 @@ module GlueTest require 'test.glueTest' glue 'hoge_' {
 }
 
 
-_print( `{ "%X" (0x1 & 0x3 ) } );
-_print( `{ "%X" (0x1 | 0x2 ) } );
-_print( `{ "%X" (0x1 ~ 0x3 ) } );
-_print( `{ "%X" (0x10 |>> 2 ) } );
-_print( `{ "%X" (0x1 |<< 2 ) } );
-_print( `{ "%X" (~2 ) } );
+_print( `{ "%X" (0x1 & 0x3 ) } ); // skip-lua51
+_print( `{ "%X" (0x1 | 0x2 ) } ); // skip-lua51
+_print( `{ "%X" (0x1 ~ 0x3 ) } ); // skip-lua51
+_print( `{ "%X" (0x10 |>> 2 ) } ); // skip-lua51
+_print( `{ "%X" (0x1 |<< 2 ) } ); // skip-lua51
+_print( `{ "%X" (~2 ) } ); // skip-lua51
 
 _print( `{ __mod__ } );
 _print( `{ __line__ } );

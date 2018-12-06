@@ -22,7 +22,12 @@
 ;; SOFTWARE.
 
 (defvar lns-lua-command "lua5.3"
-  "lua command")
+  "lua command. This var can set string and function.
+function must return string.")
+
+(defvar lns-target-lua-ver nil
+  "target lua version. 51 or 52 or 53.")
+
 
 (defvar lns-max-size-search-subfile 10000)
 
@@ -44,14 +49,22 @@
 	  :module analyze-module
 	  :script (buffer-file-name)
 	  :dir (lns-get-proj-dir))))
-  
+
+(defun lns-command-add-command (command-list args)
+  (dolist (arg args)
+    (if (listp arg)
+	(setq command-list (lns-command-add-command command-list arg))
+      (add-to-list 'command-list arg t)))
+  command-list)
+    
+
 (defun lns-command-get-command (&rest args)
   (let (command)
     (if (functionp lns-lua-command)
 	(setq command (funcall lns-lua-command))
       (setq command lns-lua-command))
-    (append (list command "-e" "require( 'lune.base.base' )" " ") args)))
-
+    (lns-command-add-command
+     (list command "-e" "require( 'lune.base.base' )" " ") args)))
 
 (defun lns-command-exec (callback async owner-file input outbuf mode op-list)
   (let ((out-buf (lns-get-buffer (or outbuf "*lns-process*") t))

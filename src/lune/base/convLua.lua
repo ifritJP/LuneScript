@@ -72,6 +72,7 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
+local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
@@ -143,46 +144,6 @@ ConvMode.ConvMeta = 2
 ConvMode._val2NameMap[2] = 'ConvMeta'
 ConvMode.__allList[3] = ConvMode.ConvMeta
 
-local luaVer = _VERSION:gsub( "^[^%d]+", "" )
-local hasBitOpFlag = luaVer >= "5.3"
-local BitOpKind = {}
-BitOpKind._val2NameMap = {}
-function BitOpKind:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "BitOpKind.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end 
-function BitOpKind._from( val )
-   if BitOpKind._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end 
-    
-BitOpKind.__allList = {}
-function BitOpKind.get__allList()
-   return BitOpKind.__allList
-end
-
-BitOpKind.And = 0
-BitOpKind._val2NameMap[0] = 'And'
-BitOpKind.__allList[1] = BitOpKind.And
-BitOpKind.Or = 1
-BitOpKind._val2NameMap[1] = 'Or'
-BitOpKind.__allList[2] = BitOpKind.Or
-BitOpKind.Xor = 2
-BitOpKind._val2NameMap[2] = 'Xor'
-BitOpKind.__allList[3] = BitOpKind.Xor
-BitOpKind.LShift = 3
-BitOpKind._val2NameMap[3] = 'LShift'
-BitOpKind.__allList[4] = BitOpKind.LShift
-BitOpKind.RShift = 4
-BitOpKind._val2NameMap[4] = 'RShift'
-BitOpKind.__allList[5] = BitOpKind.RShift
-
-local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
 local ModuleInfo = {}
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
@@ -209,13 +170,13 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Ast.Filter } )
-function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule )
+function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer )
    local obj = {}
    convFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule ); end
+   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer ); end
    return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule) 
+function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer) 
    Ast.Filter.__init( self )
    
    self.macroVarSymMap = {}
@@ -239,6 +200,7 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.needIndent = false
    self.moduleTypeInfo = moduleTypeInfo
    self.separateLuneModule = separateLuneModule
+   self.targetLuaVer = targetLuaVer
 end
 function convFilter:get_indent(  )
 
@@ -2085,16 +2047,16 @@ function convFilter:processExpCall( node, parent )
    end
    
    do
-      local _exp = node:get_argList()
-      if _exp ~= nil then
+      local argList = node:get_argList()
+      if argList ~= nil then
          if wroteFuncFlag and setArgFlag then
-            if #_exp:get_expList() > 0 then
+            if #argList:get_expList() > 0 then
                self:write( ", " )
             end
             
          end
          
-         filter( _exp, self, node )
+         filter( argList, self, node )
       end
    end
    
@@ -2136,7 +2098,7 @@ function convFilter:processExpOp1( node, parent )
       filter( node:get_exp(), self, node )
       self:write( " )" )
    elseif op == "~" then
-      if hasBitOpFlag then
+      if self.targetLuaVer:get_hasBitOp() == LuaVer.BitOp.HasOp then
          self:write( op )
          filter( node:get_exp(), self, node )
       else
@@ -2191,14 +2153,14 @@ function convFilter:processExpOp2( node, parent )
    
    local opTxt = node:get_op().txt
    do
-      local _exp = bitBinOpMap[opTxt]
+      local _exp = Ast.bitBinOpMap[opTxt]
       if _exp ~= nil then
-         if hasBitOpFlag then
+         if self.targetLuaVer:get_hasBitOp() == LuaVer.BitOp.HasOp then
             do
                local _switchExp = _exp
-               if _switchExp == BitOpKind.LShift then
+               if _switchExp == Ast.BitOpKind.LShift then
                   opTxt = "<<"
-               elseif _switchExp == BitOpKind.RShift then
+               elseif _switchExp == Ast.BitOpKind.RShift then
                   opTxt = ">>"
                end
             end
@@ -2212,15 +2174,15 @@ function convFilter:processExpOp2( node, parent )
             local exp2Mod = ""
             do
                local _switchExp = _exp
-               if _switchExp == BitOpKind.And then
+               if _switchExp == Ast.BitOpKind.And then
                   binfunc = "band"
-               elseif _switchExp == BitOpKind.Or then
+               elseif _switchExp == Ast.BitOpKind.Or then
                   binfunc = "bor"
-               elseif _switchExp == BitOpKind.Xor then
+               elseif _switchExp == Ast.BitOpKind.Xor then
                   binfunc = "bxor"
-               elseif _switchExp == BitOpKind.LShift then
+               elseif _switchExp == Ast.BitOpKind.LShift then
                   binfunc = "lshift"
-               elseif _switchExp == BitOpKind.RShift then
+               elseif _switchExp == Ast.BitOpKind.RShift then
                   binfunc = "lshift"
                   exp2Mod = "-"
                else 
@@ -2457,7 +2419,7 @@ end
 
 function convFilter:processLiteralChar( node, parent )
 
-   self:write( string.format( "%g", node:get_num() ) )
+   self:write( string.format( "%d", node:get_num() ) )
 end
 
 
@@ -2524,9 +2486,9 @@ function convFilter:processLiteralSymbol( node, parent )
 end
 
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule )
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer )
 
-   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule)
+   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer)
 end
 _moduleObj.createFilter = createFilter
 local MacroEvalImp = {}
@@ -2535,7 +2497,7 @@ _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:eval( node )
 
    local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, false)
+   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, false, LuaVer.curVer)
    conv:processDeclMacro( node, node )
    local newEnv = {}
    for key, val in pairs( _G ) do

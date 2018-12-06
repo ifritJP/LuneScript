@@ -144,13 +144,13 @@ end
 
 function Front:createAst( importModuleInfo, parser, mod, analyzeModule, analyzeMode, pos )
 
-   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos)
+   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos, self.option.targetLuaVer)
    return transUnit:createAST( parser, false, mod )
 end
 
 function Front:convert( ast, streamName, stream, metaStream, convMode, inMacro )
 
-   local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind(), self.option.useLuneModule )
+   local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind(), self.option.useLuneModule, self.option.targetLuaVer )
    ast:get_node():processFilter( conv, nil, 0 )
 end
 
@@ -184,7 +184,7 @@ end
 
 function Front:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
 
-   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil)
+   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil, self.option.targetLuaVer)
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.StreamParser.new(stream, name, false)
    local ast = transUnit:createAST( parser, false, nil )

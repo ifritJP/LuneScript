@@ -53,6 +53,7 @@ define buildLns
 	$(call transwork,$1,$2,LuaMod)
 	$(call transwork,$1,$2,Depend)
 	$(call transwork,$1,$2,Util)
+	$(call transwork,$1,$2,LuaVer)
 	$(call transwork,$1,$2,frontInterface)
 	$(call transwork,$1,$2,Writer)
 	$(call transwork,$1,$2,Parser)
@@ -168,6 +169,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/statement.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/flow.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/import.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/strformat.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
@@ -243,6 +245,10 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,-u SAVE ../4,)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
+ifneq ($(wildcard $(LUA51)),)
+	$(MAKE) test-lua51
+endif
+
 
 	$(call test-meta-update,work/3)
 
@@ -258,6 +264,18 @@ test-comp2:
 	diff -r work/glue work/newglue
 
 	$(MAKE) accept-package ACCEPT=y
+
+
+test-lua51:
+# lua5.1 にトランスコンパイルして実行テスト
+	mkdir -p work/5
+	cp -a test work/5
+	cp -a work/3/lune work/5
+	grep -v skip-lua51 work/3/test/start.lns > work/3/test/start_mod.lns
+	mv work/3/test/start_mod.lns work/3/test/start.lns
+	$(call exeLune,work/3,test/start.lns,-u -ol 51 SAVE ../5,)
+	(cd work/5; $(LUA51) test/start.lua) > work/test6.result
+
 
 accept-package:
 ifndef ACCEPT

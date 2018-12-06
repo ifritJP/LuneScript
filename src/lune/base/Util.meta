@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.2'
+_moduleObj.__formatVersion = '1.0.3'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -34,7 +34,7 @@ children = {1005, } }
 _typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'Util', kind = 12, 
 children = {1012, 1035, 1038, 1041, 1044, 1047, 1050, 1053, 1077, 1081, } }
 _typeInfoList[5] = { skind=3, parentId = 1005, typeId = 1012, baseId = 1, txt = 'memStream',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {89}, argTypeId = {}, retTypeId = {}, children = {1020, 1023, 1026, 1029, 1032}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {93}, argTypeId = {}, retTypeId = {}, children = {1020, 1023, 1026, 1029, 1032}, }
 _typeInfoList[6] = { skind = 0, parentId = 1005, typeId = 1013, nilable = true, orgTypeId = 1012 }
 _typeInfoList[7] = { skind=3, parentId = 1012, typeId = 1020, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }

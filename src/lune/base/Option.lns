@@ -26,6 +26,7 @@ import lune.base.Parser;
 import lune.base.Util;
 import lune.base.LuaMod;
 import lune.base.Ver;
+import lune.base.LuaVer;
 
 pub enum ModeKind {
    Unknown = "",
@@ -59,6 +60,8 @@ pub class Option {
    pub let mut dependsStream:oStream!;
    /** ロード時に meta 等を更新する  */
    pub let mut updateOnLoad:bool;
+   /** 変換先の Lua バージョン*/
+   pub let mut targetLuaVer:&LuaVer.LuaVerInfo;
 
    pub fn __init() {
       self.validProf = false;
@@ -66,6 +69,7 @@ pub class Option {
       self.scriptPath = "";
       self.useLuneModule = false;
       self.updateOnLoad = false;
+      self.targetLuaVer = LuaVer.curVer;
    }
 }
 
@@ -100,11 +104,12 @@ usage:
 * type1
   - src.lns [common_op] ast
   - src.lns [common_op] comp [-i] module line column
-  - src.lns [common_op] <lua|LUA>
-  - src.lns [common_op] [--depends dependfile] <save|SAVE> output-dir
+  - src.lns [common_op] [-ol ver] <lua|LUA>
+  - src.lns [common_op] [-ol ver] [--depends dependfile] <save|SAVE> output-dir
   - src.lns [common_op] exe
 
   -r: use 'require( "lune.base._lune" )'
+  -ol: output lua version. ver = 51 or 52 or 53.
   --depends: output dependfile
 
   common_op:
@@ -161,6 +166,22 @@ usage:
                   }
                   else {
                      Util.err( "failed to open -- %s" (argList[ index + 1 ]) );
+                  }
+               }
+               index = index + 1;
+            }
+            case "-ol" {
+               if #argList > index {
+                  switch argList[ index + 1 ] {
+                     case "51" {
+                        option.targetLuaVer = LuaVer.ver51;
+                     }
+                     case "52" {
+                        option.targetLuaVer = LuaVer.ver52;
+                     }
+                     case "53" {
+                        option.targetLuaVer = LuaVer.ver53;
+                     }
                   }
                }
                index = index + 1;

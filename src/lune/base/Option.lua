@@ -28,6 +28,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
+local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local ModeKind = {}
 _moduleObj.ModeKind = ModeKind
 ModeKind._val2NameMap = {}
@@ -98,6 +99,7 @@ function Option:__init()
    self.scriptPath = ""
    self.useLuneModule = false
    self.updateOnLoad = false
+   self.targetLuaVer = LuaVer.curVer
 end
 function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
@@ -144,11 +146,12 @@ usage:
 * type1
   - src.lns [common_op] ast
   - src.lns [common_op] comp [-i] module line column
-  - src.lns [common_op] <lua|LUA>
-  - src.lns [common_op] [--depends dependfile] <save|SAVE> output-dir
+  - src.lns [common_op] [-ol ver] <lua|LUA>
+  - src.lns [common_op] [-ol ver] [--depends dependfile] <save|SAVE> output-dir
   - src.lns [common_op] exe
 
   -r: use 'require( "lune.base._lune" )'
+  -ol: output lua version. ver = 51 or 52 or 53.
   --depends: output dependfile
 
   common_op:
@@ -202,6 +205,22 @@ usage:
                         option.dependsStream = stream
                      else
                         Util.err( string.format( "failed to open -- %s", argList[index + 1]) )
+                     end
+                  end
+                  
+               end
+               
+               index = index + 1
+            elseif _switchExp == "-ol" then
+               if #argList > index then
+                  do
+                     local _switchExp = argList[index + 1]
+                     if _switchExp == "51" then
+                        option.targetLuaVer = LuaVer.ver51
+                     elseif _switchExp == "52" then
+                        option.targetLuaVer = LuaVer.ver52
+                     elseif _switchExp == "53" then
+                        option.targetLuaVer = LuaVer.ver53
                      end
                   end
                   

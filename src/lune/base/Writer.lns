@@ -50,7 +50,7 @@ pub class XML extend (Writer) {
       }
 
       if type( val ) == "number" {
-         return "%g" ( val );
+         return "%g" ( val@@real );
       }
       let mut txt = "%s" ( val );
       txt = string.gsub( txt, '&', "&amp;" );
@@ -271,7 +271,7 @@ pub class JSON extend (Writer) {
       let mut txt = "";
       let typeId = type( val );
       if typeId == "number" {
-         txt = "%g" ( val );
+         txt = "%g" ( val@@real );
       }
       elseif typeId == "boolean" {
          txt = val and "true" or "false";

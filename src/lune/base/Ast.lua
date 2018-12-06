@@ -8789,4 +8789,45 @@ local function popProcessInfo(  )
    table.remove( processInfoQueue )
 end
 _moduleObj.popProcessInfo = popProcessInfo
+local BitOpKind = {}
+_moduleObj.BitOpKind = BitOpKind
+BitOpKind._val2NameMap = {}
+function BitOpKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "BitOpKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function BitOpKind._from( val )
+   if BitOpKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+BitOpKind.__allList = {}
+function BitOpKind.get__allList()
+   return BitOpKind.__allList
+end
+
+BitOpKind.And = 0
+BitOpKind._val2NameMap[0] = 'And'
+BitOpKind.__allList[1] = BitOpKind.And
+BitOpKind.Or = 1
+BitOpKind._val2NameMap[1] = 'Or'
+BitOpKind.__allList[2] = BitOpKind.Or
+BitOpKind.Xor = 2
+BitOpKind._val2NameMap[2] = 'Xor'
+BitOpKind.__allList[3] = BitOpKind.Xor
+BitOpKind.LShift = 3
+BitOpKind._val2NameMap[3] = 'LShift'
+BitOpKind.__allList[4] = BitOpKind.LShift
+BitOpKind.RShift = 4
+BitOpKind._val2NameMap[4] = 'RShift'
+BitOpKind.__allList[5] = BitOpKind.RShift
+
+local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
+_moduleObj.bitBinOpMap = bitBinOpMap
+
 return _moduleObj

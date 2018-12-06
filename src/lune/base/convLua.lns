@@ -28,6 +28,7 @@ import lune.base.Util;
 import lune.base.TransUnit;
 import lune.base.frontInterface;
 import lune.base.LuaMod;
+import lune.base.LuaVer;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -49,29 +50,6 @@ pub enum ConvMode {
    /** lua への変換と、 Meta 情報生成を行なう */
    ConvMeta,
 }
-
-/**
-bit 演算子を持っているかどうか。
-5.3 以上は持っているとする。
-               */
-let luaVer = _VERSION.gsub( "^[^%d]+", "" );
-let hasBitOpFlag = luaVer >= "5.3";
-
-enum BitOpKind {
-   And,
-   Or,
-   Xor,
-   LShift,
-   RShift,
-}
-
-let bitBinOpMap = {
-   "&": BitOpKind.And,
-   "|": BitOpKind.Or,
-   "~": BitOpKind.Xor,
-   "|>>": BitOpKind.RShift,
-   "|<<": BitOpKind.LShift,
-};
 
 class ModuleInfo extend (Ast.ModuleInfoIF){
    let assignName:str {pub};
@@ -106,11 +84,13 @@ class convFilter extend Ast.Filter (oStream) {
    pri let moduleSymbolKind: Ast.SymbolKind;
    pri let mut needModuleObj: bool;
    pri let separateLuneModule: bool;
+   pri let targetLuaVer:&LuaVer.LuaVerInfo;
 
    
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-                  moduleSymbolKind: Ast.SymbolKind, separateLuneModule:bool ) 
+                  moduleSymbolKind: Ast.SymbolKind, separateLuneModule:bool,
+                  targetLuaVer:&LuaVer.LuaVerInfo ) 
    {
       super();
       //Util.errorLog( "__init: %s" (mode) );
@@ -135,6 +115,7 @@ class convFilter extend Ast.Filter (oStream) {
       self.needIndent = false;
       self.moduleTypeInfo = moduleTypeInfo;
       self.separateLuneModule = separateLuneModule;
+      self.targetLuaVer = targetLuaVer;
    }
 
    fn get_indent(): int {
@@ -1973,13 +1954,13 @@ pub override fn convFilter.processExpCall(
    }  
 
    
-   if! node.$argList {
+   if! let argList = node.$argList {
       if wroteFuncFlag and setArgFlag {
-         if #_exp.$expList > 0 {
+         if #argList.$expList > 0 {
             self.write( ", " );
-         }    
-      } 
-      filter( _exp,  self, node );
+         }
+      }
+      filter( argList,  self, node );
    }
    self.write( " )" );
 };   
@@ -2025,7 +2006,7 @@ pub override fn convFilter.processExpOp1(
       self.write( " )" );
    }
    elseif op == "~" {
-      if hasBitOpFlag {
+      if self.targetLuaVer.$hasBitOp == .HasOp {
          self.write( op );
          filter( node.$exp,  self, node );
       }
@@ -2077,9 +2058,9 @@ pub override fn convFilter.processExpOp2(
 
    let mut opTxt = node.$op.txt;
 
-   if! bitBinOpMap[ opTxt ] {
+   if! Ast.bitBinOpMap[ opTxt ] {
       // ビット演算の処理
-      if hasBitOpFlag {
+      if self.targetLuaVer.$hasBitOp == .HasOp {
          // ビット演算子を持っている場合
          switch _exp {
             case .LShift {
@@ -2327,7 +2308,7 @@ pub override fn convFilter.processLiteralArray(
 pub override fn convFilter.processLiteralChar( 
    node: Ast.LiteralCharNode, parent: &Ast.Node ) mut
 {
-   self.write( string.format( "%g", node.$num ) );
+   self.write( string.format( "%d", node.$num ) );
 };
 
 pub override fn convFilter.processLiteralInt( 
@@ -2396,11 +2377,12 @@ pub override fn convFilter.processLiteralSymbol(
 pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
    convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-   moduleSymbolKind: &Ast.SymbolKind, separateLuneModule:bool ) : Ast.Filter
+   moduleSymbolKind: &Ast.SymbolKind, separateLuneModule:bool,
+   targetLuaVer:&LuaVer.LuaVerInfo ) : Ast.Filter
 {
    return new convFilter(
-      streamName, stream, metaStream,
-      convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule );
+      streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo,
+      moduleSymbolKind, separateLuneModule, targetLuaVer );
 }
 
 
@@ -2411,7 +2393,8 @@ pub class MacroEvalImp extend Ast.MacroEval {
    {   
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
-         "macro", oStream, oStream, .Exec, true, Ast.headTypeInfo, .Typ, false );
+         "macro", oStream, oStream, .Exec, true,
+         Ast.headTypeInfo, .Typ, false, LuaVer.curVer ); 
 
       conv.processDeclMacro( node, node );
 

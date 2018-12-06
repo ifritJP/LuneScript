@@ -31,6 +31,7 @@ import lune.base.Util;
 import lune.base.Ast;
 import lune.base.Writer;
 import lune.base.frontInterface;
+import lune.base.LuaVer;
 
 enum DeclClassMode {
    Class,
@@ -141,10 +142,13 @@ pub class TransUnit {
    */
    pri let mut protoFuncMap:Map<&Ast.TypeInfo,&Parser.Position>;
 
+   pri let targetLuaVer:&LuaVer.LuaVerInfo;
+
    pub fn __init( importModuleInfo:frontInterface.ImportModuleInfo,
-                  macroEval: Ast.MacroEval,
-                  analyzeModule:str!, mode:AnalyzeMode!, pos:&Parser.Position! )
+                  macroEval: Ast.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
+                  pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo )
    {
+      self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
       self.loopScopeQueue = [];
@@ -741,6 +745,14 @@ pub let mut typeInfoMappingIF:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoMappingToMap:&Ast.TypeInfo = Ast.headTypeInfo;
 let mut typeInfoStrGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
 let mut typeInfoStringGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
+let mut typeInfoStringForm:&Ast.TypeInfo = Ast.headTypeInfo;
+
+pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
+   if typeInfo == typeInfoStringForm {
+      return true;
+   }
+   return false;
+}
 
 let mut readyBuiltin = false;
 
@@ -757,6 +769,7 @@ fn TransUnit.registBuiltInScope() mut {
             "error": { "arg": [ "str" ], "ret": [ "__" ] },
             "print": { "arg": [ "&..." ], "ret": [] },
             "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
+            "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
             "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
             "loadfile": { "arg": [ "str" ], "ret": ["form!", "str!"] },
             "require": { "arg": [ "str" ], "ret": ["stem!"] },
@@ -1003,6 +1016,9 @@ fn TransUnit.registBuiltInScope() mut {
                               case "gmatch" {
                                  typeInfoStringGMatch = typeInfo;
                               }
+                              case "format" {
+                                 typeInfoStringForm = typeInfo;
+                              }
                            }
                         }
                      }
@@ -1068,7 +1084,7 @@ fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position )
             tokenList.insert( new Parser.Token( kind, token, pos ) );
          }   
          case "number" {
-            let num = "%g" (_exp);
+            let num = "%g" (_exp@@real);
             let mut kind = Parser.TokenKind.Int;
             if string.find( num, ".", 1, true ) {
                kind = Parser.TokenKind.Real;
@@ -1521,7 +1537,7 @@ fn TransUnit.processImport(
                actInfo = _TypeInfoModifier._fromMap( atomInfo );
             }
             default {
-               Util.err( "unknown skind -- %d" (skind) );
+               Util.err( "unknown skind -- %d" (skind@@int) );
             }
          }
          if! actInfo {

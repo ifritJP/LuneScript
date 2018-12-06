@@ -30,7 +30,10 @@
   (let* ((command-info (lns-command-get-info))
 	 (command-list (lns-command-get-command
 			(lns-convert-path-2-proj-relative-path
-			 (plist-get command-info :owner)) "diag" "--nodebug")))
+			 (plist-get command-info :owner)) "diag" "--nodebug"
+			 (when lns-target-lua-ver
+			   (list "-ol" lns-target-lua-ver))
+			 )))
     (list (car command-list) (cdr command-list)
 	  (plist-get command-info :dir))))
 

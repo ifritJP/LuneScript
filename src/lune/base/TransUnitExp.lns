@@ -451,7 +451,201 @@ fn TransUnit.evalMacro(
    //     nodeKindExpMacroExp, firstToken.pos, builtinTypeNone, stmtList );
    return Ast.ExpMacroExpNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], stmtList );
+}
 
+/**
+format の書式から %? を検索して、リストを返す。
+*/
+fn findForm( format:str ): List<str> {
+   let mut remain = format;
+   let mut opList:List<str> = [];
+
+   while true {
+      let mut pos:int!, mut endPos:int! = nil, nil;
+      if! let index, endIndex = remain.find( "^%%[%d]*%a" ) {
+         pos, endPos = index, endIndex;
+      }  
+      else {
+         if! let index, endIndex = remain.find( "[^%%]%%[%d]*%a" ) {
+            pos, endPos = index + 1, endIndex;
+         }      
+      }  
+
+      when! pos, endPos {
+         let op = remain.sub( pos, endPos );
+         opList.insert( op );
+         remain = remain.sub( endPos + 1 );
+      }
+      else {
+         break;
+      }
+   }
+   return opList;
+}
+
+fn TransUnit.checkStringFormat(
+   pos:&Parser.Position, formatTxt:str, argTypeList:&List<&Ast.TypeInfo> ) mut
+{
+   let opList = findForm( formatTxt );
+   let mut dstTypeList:List<&Ast.TypeInfo> = [];
+
+   
+   
+   if #opList > #argTypeList {
+      self.addErrMess( pos,
+                       "argument number is mismatch -- %d > %d"
+                       ( #opList, #argTypeList ) );   
+      return;
+   }
+   
+   foreach op, index in opList {
+      let mut argType = argTypeList[ index ];
+      if argType.$kind == .Enum {
+         let enumType = argType.$srcTypeInfo@@Ast.EnumTypeInfo;
+         argType = enumType.$valTypeInfo;
+      }
+      switch op[ #op ] {
+         case ?s, ?q {
+            // if not argType.equals( Ast.builtinTypeString ) {
+            //    self.addErrMess( pos, "argument(%d) type must be string" (index) );
+            // }
+         }
+         case ?A, ?a, ?E, ?e, ?f, ?G, ?g {
+            if not argType.equals( Ast.builtinTypeReal ) {
+               self.addErrMess( pos, "argument(%d) type must be real -- %s"
+                                (index, argType.getTxt() ) );                      
+            }
+         }
+         default {
+            if not argType.equals( Ast.builtinTypeInt ) {
+               self.addErrMess( pos, "argument(%d) type must be int -- %s"
+                                (index, argType.getTxt() ) );                     
+            }
+         }
+      }
+   }
+}
+
+fn TransUnit.analyzeExpCall(
+   firstToken:&Parser.Token, mut exp: Ast.Node, nextToken:&Parser.Token ) mut :
+   Ast.Node, &Parser.Token
+{
+   let mut macroFlag = false;
+   let mut funcTypeInfo = exp.$expType;
+   let mut nilAccess = nextToken.txt == "$(";
+
+   if nilAccess {
+      if funcTypeInfo.$nilable {
+         funcTypeInfo = funcTypeInfo.$orgTypeInfo;
+      }
+      else {
+         nilAccess = false;
+      }
+   }
+
+   if funcTypeInfo.get_kind() == .Macro {
+      macroFlag = true;
+      self.symbol2ValueMapForMacro = {};
+      self.macroMode = .Analyze;
+   }
+
+   let work = self.getToken();
+   let mut argList: Ast.ExpListNode! = nil;
+   if work.txt ~= ")" {
+      self.pushback();
+      argList = self.analyzeExpList(
+         false, nil, funcTypeInfo.$argTypeInfoList );
+      self.checkNextToken( ")" );
+   }
+
+   // 引数の型チェック
+   let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
+   if funcTypeInfo.$kind == .Method and
+      exp.$kind == Ast.NodeKind.$RefField
+   {
+      let refField = exp@@Ast.RefFieldNode;
+      let classType = refField.$prefix.$expType;
+      genericTypeList = classType.$itemTypeInfoList;
+   }
+
+   self.checkMatchValType(
+      exp.$pos, funcTypeInfo, argList, genericTypeList );
+
+   if funcTypeInfo.equals( typeInfoListInsert ) {
+      when! argList {
+         if argList.$expType.$nilable {
+            self.addErrMess( argList.$pos, "list can't insert nilable" );
+         }
+      }
+   }
+
+   if macroFlag {
+      self.macroMode = .None;
+      exp = self.evalMacro( firstToken, funcTypeInfo, argList );
+   }
+   else {
+      switch( funcTypeInfo.$kind ) {
+         case .Method, .Func {
+         }
+         default {
+            self.error( "can't call the type -- %s, %s"
+                        ( funcTypeInfo.getTxt(),
+                          funcTypeInfo.$kind.$_txt ) );
+         }
+      }
+      let mut retTypeInfoList:&List<&Ast.TypeInfo> =
+         funcTypeInfo.get_retTypeInfoList();
+      if nilAccess {
+         let mut retList:List<&Ast.TypeInfo> = [];
+         foreach retType in funcTypeInfo.get_retTypeInfoList() {
+            if retType.$nilable {
+               retList.insert( retType );
+            }
+            else {
+               retList.insert( retType.$nilableTypeInfo );
+            }
+         }
+         retTypeInfoList = retList;
+         self.useNilAccess = true;
+      }
+
+      let mut errorFuncFlag = false;
+      if #retTypeInfoList > 0 {
+         let retType = retTypeInfoList[1];
+         if retType == Ast.builtinTypeNeverRet {
+            errorFuncFlag = true;
+         }
+      }
+
+      switch funcTypeInfo {
+         case typeInfoStringForm {
+            when! argList {
+               let mut formArgTypeList:List<&Ast.TypeInfo> = [];
+               let mut formatTxt = "";
+               if #argList.$expList > 0 {
+                  let argNode = argList.$expList[ 1 ];
+                  if argNode.$kind == Ast.NodeKind.$LiteralString {
+                     let workForm = argNode.getLiteral();
+                     if #workForm >= 1 {
+                        formatTxt = tostring( unwrap workForm[ 1 ] default "" );
+                     }
+                  }
+               }
+               foreach argType, index in argList.$expTypeList {
+                  if index ~= 1 {
+                     formArgTypeList.insert( argType );
+                  }
+               }
+               self.checkStringFormat( firstToken.pos, formatTxt, formArgTypeList );
+            }
+         }
+      }
+      exp = Ast.ExpCallNode.create(
+         self.nodeManager, firstToken.pos,
+         retTypeInfoList, exp, errorFuncFlag, nilAccess, argList );
+   }
+
+   return exp, self.getToken();
 }
 
 fn TransUnit.analyzeExpCont(
@@ -467,100 +661,9 @@ fn TransUnit.analyzeExpCont(
                nextToken = self.getToken();
             }
             if nextToken.txt == "(" or nextToken.txt == "$(" {
-               let mut macroFlag = false;
-               let mut funcTypeInfo = exp.$expType;
-               let mut nilAccess = nextToken.txt == "$(";
-
-               if nilAccess {
-                  if funcTypeInfo.$nilable {
-                     funcTypeInfo = funcTypeInfo.$orgTypeInfo;
-                  }
-                  else {
-                     nilAccess = false;
-                  }
-               }
-
-               if funcTypeInfo.get_kind() == .Macro {
-                  macroFlag = true;
-                  self.symbol2ValueMapForMacro = {};
-                  self.macroMode = .Analyze;
-               }
-
                matchFlag = true;
-               let work = self.getToken();
-               let mut expList: Ast.ExpListNode! = nil;
-               if work.txt ~= ")" {
-                  self.pushback();
-                  expList = self.analyzeExpList(
-                     false, nil, funcTypeInfo.$argTypeInfoList );
-                  self.checkNextToken( ")" );
-               }
 
-               // 引数の型チェック
-               let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
-               if funcTypeInfo.$kind == .Method and
-                  exp.$kind == Ast.NodeKind.$RefField
-               {
-                  let refField = exp@@Ast.RefFieldNode;
-                  let classType = refField.$prefix.$expType;
-                  genericTypeList = classType.$itemTypeInfoList;
-               }
-
-               self.checkMatchValType(
-                  exp.$pos, funcTypeInfo, expList, genericTypeList );
-
-               if funcTypeInfo.equals( typeInfoListInsert ) {
-                  when! expList {
-                     if expList.$expType.$nilable {
-                        self.addErrMess( expList.$pos, "list can't insert nilable" );
-                     }
-                  }
-               }
-
-               if macroFlag {
-                  self.macroMode = .None;
-                  exp = self.evalMacro( firstToken, funcTypeInfo, expList );
-               }
-               else {
-                  switch( funcTypeInfo.$kind ) {
-                     case .Method, .Func {
-                     }
-                     default {
-                        self.error( "can't call the type -- %s, %s"
-                                    ( funcTypeInfo.getTxt(),
-                                      funcTypeInfo.$kind.$_txt ) );
-                     }
-                  }
-                  let mut retTypeInfoList:&List<&Ast.TypeInfo> =
-                      funcTypeInfo.get_retTypeInfoList();
-                  if nilAccess {
-                     let mut retList:List<&Ast.TypeInfo> = [];
-                     foreach retType in funcTypeInfo.get_retTypeInfoList() {
-                        if retType.$nilable {
-                           retList.insert( retType );
-                        }
-                        else {
-                           retList.insert( retType.$nilableTypeInfo );
-                        }
-                     }
-                     retTypeInfoList = retList;
-                     self.useNilAccess = true;
-                  }
-
-                  let mut errorFuncFlag = false;
-                  if #retTypeInfoList > 0 {
-                     let retType = retTypeInfoList[1];
-                     if retType == Ast.builtinTypeNeverRet {
-                        errorFuncFlag = true;
-                     }
-                  }
-                  
-                  exp = Ast.ExpCallNode.create(
-                     self.nodeManager, firstToken.pos,
-                     retTypeInfoList, exp, errorFuncFlag, nilAccess, expList );
-               }
-
-               nextToken = self.getToken();
+               exp, nextToken = self.analyzeExpCall( firstToken, exp, nextToken );
             }
          } not matchFlag;
       }
@@ -1329,6 +1432,11 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeBool;
                }
                case "^", "|", "~", "&", "|<<", "|>>" {
+                  if self.targetLuaVer.$hasBitOp == .Cant {
+                     self.addErrMess( nextToken.pos,
+                                      "this lua version can't use bit operand." );
+                  }
+                  
                   if not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt ) or
                      not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt )
                   {
@@ -1821,16 +1929,17 @@ fn TransUnit.analyzeExp(
    }
    elseif token.kind == Parser.TokenKind.Str {
       let mut nextToken = self.getToken();
-      let mut formatArgList:List<&Ast.Node> = [];
+      let mut formatArgList:&List<&Ast.Node> = [];
       if nextToken.txt == "(" {
-         repeat {
-            let arg = self.analyzeExp( false );
-            formatArgList.insert( arg );
-            nextToken = self.getToken();
-         } nextToken.txt ~= ",";
-         self.checkToken( nextToken, ")" );
+         let argNodeList = self.analyzeExpList( false, nil );
+         self.checkNextToken( ")" );
          nextToken = self.getToken();
+
+         formatArgList = argNodeList.$expList;
+
+         self.checkStringFormat( token.pos, token.txt, argNodeList.$expTypeList );
       }
+
       exp = Ast.LiteralStringNode.create(
          self.nodeManager, firstToken.pos,
          [ Ast.builtinTypeString ], token, formatArgList );
