@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.3'
+_moduleObj.__formatVersion = '1.0.4'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -81,7 +81,7 @@ _typeInfoList[22] = { skind = 0, parentId = 1023, typeId = 1034, nilable = true,
 _typeInfoList[23] = { skind=3, parentId = 1023, typeId = 1036, baseId = 1, txt = 'get_hasTableUnpack',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1032}, children = {}, }
 _typeInfoList[24] = { skind = 0, parentId = 1023, typeId = 1037, nilable = true, orgTypeId = 1036 }
-_typeInfoList[25] = { skind=3, parentId = 1023, typeId = 1039, baseId = 1, txt = 'get_canConvStem2Str',
+_typeInfoList[25] = { skind=3, parentId = 1023, typeId = 1039, baseId = 1, txt = 'get_canFormStem2Str',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1032}, children = {}, }
 _typeInfoList[26] = { skind = 0, parentId = 1023, typeId = 1040, nilable = true, orgTypeId = 1039 }
 _typeInfoList[27] = { skind=3, parentId = 1023, typeId = 1042, baseId = 1, txt = '__init',

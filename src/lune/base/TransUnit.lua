@@ -1258,7 +1258,7 @@ function TransUnit:registBuiltInScope(  )
                end
                table.sort( __sorted )
                for __index, fieldName in ipairs( __sorted ) do
-                  info = __map[ fieldName ]
+                  local info = __map[ fieldName ]
                   do
                      if fieldName ~= "__attrib" then
                         if _lune.nilacc( info['type'], nil, 'item', 1) == "member" then
@@ -1415,13 +1415,13 @@ local function expandVal( tokenList, val, pos )
             elseif _switchExp == "string" then
                table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '[[%s]]', _exp), pos) )
             elseif _switchExp == "table" then
-               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, string.format( "{", _exp), pos) )
+               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, "{", pos) )
                for key, item in pairs( _exp ) do
                   expandVal( tokenList, item, pos )
-                  table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, string.format( ",", _exp), pos) )
+                  table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, ",", pos) )
                end
                
-               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, string.format( "}", _exp), pos) )
+               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, "}", pos) )
             end
          end
          
@@ -1778,13 +1778,24 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
    
    local metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )
    local dependLibId2DependInfo = {}
-   for dependName, dependInfo in pairs( metaInfo._dependModuleMap ) do
-      if dependInfo['use'] then
-         local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName, {} )
-         local id = math.floor((_lune.unwrap( dependInfo['id']) ))
-         dependLibId2DependInfo[id] = DependModuleInfo.new(id, metaTypeId2TypeInfoMap)
+   do
+      local __sorted = {}
+      local __map = metaInfo._dependModuleMap
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
       end
-      
+      table.sort( __sorted )
+      for __index, dependName in ipairs( __sorted ) do
+         local dependInfo = __map[ dependName ]
+         do
+            if dependInfo['use'] then
+               local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName, {} )
+               local id = math.floor((_lune.unwrap( dependInfo['id']) ))
+               dependLibId2DependInfo[id] = DependModuleInfo.new(id, metaTypeId2TypeInfoMap)
+            end
+            
+         end
+      end
    end
    
    local typeId2TypeInfo = {}
@@ -4687,7 +4698,73 @@ local function findForm( format )
    
    return opList
 end
+_moduleObj.findForm = findForm
+local FormType = {}
+_moduleObj.FormType = FormType
+FormType._val2NameMap = {}
+function FormType:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "FormType.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function FormType._from( val )
+   if FormType._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+FormType.__allList = {}
+function FormType.get__allList()
+   return FormType.__allList
+end
 
+FormType.Match = 0
+FormType._val2NameMap[0] = 'Match'
+FormType.__allList[1] = FormType.Match
+FormType.NeedConv = 1
+FormType._val2NameMap[1] = 'NeedConv'
+FormType.__allList[2] = FormType.NeedConv
+FormType.Unmatch = 2
+FormType._val2NameMap[2] = 'Unmatch'
+FormType.__allList[3] = FormType.Unmatch
+
+local function isMatchStringFormatType( opKind, argType, luaVer )
+
+   if argType:get_kind() == Ast.TypeInfoKind.Enum then
+      local enumType = argType:get_srcTypeInfo()
+      argType = enumType:get_valTypeInfo()
+   end
+   
+   do
+      local _switchExp = string.byte( opKind, #opKind )
+      if _switchExp == 115 or _switchExp == 113 then
+         if not argType:equals( Ast.builtinTypeString ) then
+            if not luaVer:get_canFormStem2Str() then
+               return FormType.NeedConv, Ast.builtinTypeString
+            end
+            
+         end
+         
+      elseif _switchExp == 65 or _switchExp == 97 or _switchExp == 69 or _switchExp == 101 or _switchExp == 102 or _switchExp == 71 or _switchExp == 103 then
+         if not argType:equals( Ast.builtinTypeReal ) then
+            return FormType.Unmatch, Ast.builtinTypeReal
+         end
+         
+      else 
+         
+            if not argType:equals( Ast.builtinTypeInt ) then
+               return FormType.Unmatch, Ast.builtinTypeInt
+            end
+            
+      end
+   end
+   
+   return FormType.Match, Ast.builtinTypeNone
+end
+_moduleObj.isMatchStringFormatType = isMatchStringFormatType
 function TransUnit:checkStringFormat( pos, formatTxt, argTypeList )
 
    local opList = findForm( formatTxt )
@@ -4699,26 +4776,10 @@ function TransUnit:checkStringFormat( pos, formatTxt, argTypeList )
    
    for index, op in pairs( opList ) do
       local argType = argTypeList[index]
-      if argType:get_kind() == Ast.TypeInfoKind.Enum then
-         local enumType = argType:get_srcTypeInfo()
-         argType = enumType:get_valTypeInfo()
-      end
-      
-      do
-         local _switchExp = string.byte( op, #op )
-         if _switchExp == 115 or _switchExp == 113 then
-         elseif _switchExp == 65 or _switchExp == 97 or _switchExp == 69 or _switchExp == 101 or _switchExp == 102 or _switchExp == 71 or _switchExp == 103 then
-            if not argType:equals( Ast.builtinTypeReal ) then
-               self:addErrMess( pos, string.format( "argument(%d) type must be real -- %s", index, argType:getTxt(  )) )
-            end
-            
-         else 
-            
-               if not argType:equals( Ast.builtinTypeInt ) then
-                  self:addErrMess( pos, string.format( "argument(%d) type must be int -- %s", index, argType:getTxt(  )) )
-               end
-               
-         end
+      local match, reqType = isMatchStringFormatType( op, argType, self.targetLuaVer )
+      if match == FormType.Unmatch then
+         local mess = string.format( "type must be %s -- %s", reqType:getTxt(  ), argType:getTxt(  ))
+         self:addErrMess( pos, string.format( "argument(%d) %s", index, mess) )
       end
       
    end

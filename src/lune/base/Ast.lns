@@ -2495,8 +2495,8 @@ pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,ModuleInfoIF>, localFlag:
 
 
 pub class ProcessInfo {
-   pub let mut typeInfo2ModifierMap:Map<&TypeInfo,TypeInfo>;
-   pub let mut idProvier:IdProvider;
+   let mut typeInfo2ModifierMap:Map<&TypeInfo,TypeInfo> {pub};
+   let mut idProvier:IdProvider {pub};
 }
 
 _declNodeClass( "Root", Node, false, false, false,
@@ -3491,8 +3491,8 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
    
    processInfoQueue.insert( new ProcessInfo( typeInfo2ModifierMap, idProv ) );
    when! processInfo {
-      idProv = processInfo.idProvier;
-      typeInfo2ModifierMap = processInfo.typeInfo2ModifierMap;
+      idProv = processInfo.$idProvier;
+      typeInfo2ModifierMap = processInfo.$typeInfo2ModifierMap;
    }
    else {
       idProv = new IdProvider( userStartId );
@@ -3503,8 +3503,8 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 
 pub fn popProcessInfo() {
    let mut info = processInfoQueue[ #processInfoQueue ];
-   idProv = info.idProvier;
-   typeInfo2ModifierMap = info.typeInfo2ModifierMap;
+   idProv = info.$idProvier;
+   typeInfo2ModifierMap = info.$typeInfo2ModifierMap;
    processInfoQueue.remove();
 }
 

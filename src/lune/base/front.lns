@@ -341,7 +341,9 @@ fn Front.loadModule( mod:str ) mut : stem!, stem {
 }
 
 
-fn Front.loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : stem {
+fn Front.loadMeta(
+   importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : stem
+{
    if self.loadedMetaMap[ mod ] == nil {
       if! self.loadedMap[ mod ] {
          self.loadedMetaMap[ mod ] = _exp.meta;

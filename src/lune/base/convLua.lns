@@ -1842,7 +1842,7 @@ pub override fn convFilter.processForsort(
    self.write( key );
    self.writeln( " in ipairs( __sorted ) do" );
    self.pushIndent();
-   self.writeln( string.format( "%s = __map[ %s ]", node.$val.txt, key ) );
+   self.writeln( string.format( "local %s = __map[ %s ]", node.$val.txt, key ) );
    filter( node.$block, self, node );
    //self.popIndent();
    self.writeln( "end" );
@@ -2332,7 +2332,9 @@ pub override fn convFilter.processLiteralString(
    let mut txt = node.get_token().txt;
    if string.find( txt, '^```' ) {
       txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
-   }  
+   }
+   let opList = TransUnit.findForm( txt );
+
    let argList = node.get_argList();
    if #argList > 0 {
       self.write( string.format( 'string.format( %s, ', txt ) );
@@ -2340,7 +2342,20 @@ pub override fn convFilter.processLiteralString(
          if index > 1 {
             self.write( ", " );
          }      
-         filter( val,  self, node );
+
+         let mut match = TransUnit.FormType.Match;
+         if index <= #opList {
+            match = TransUnit.isMatchStringFormatType(
+               opList[ index ], val.$expType, self.targetLuaVer );
+         }
+         if match == .NeedConv {
+            self.write( "tostring( " );
+            filter( val, self, node );
+            self.write( ")" );
+         }
+         else {
+            filter( val, self, node );
+         }
       }   
       self.write( ")" );
    }

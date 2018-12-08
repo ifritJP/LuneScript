@@ -191,7 +191,7 @@
 - [X] mapping
 - [X] nil 条件演算子
 - [X] import, provide
-- [ ] require, module
+- [X] require, module
 - [ ] subfile
 - [ ] macro
 - [ ] make

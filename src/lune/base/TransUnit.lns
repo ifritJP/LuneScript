@@ -1100,14 +1100,12 @@ fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position )
          }   
          case "table" {
             tokenList.insert(
-               new Parser.Token( Parser.TokenKind.Dlmt, "{" (_exp), pos ) );
+               new Parser.Token( Parser.TokenKind.Dlmt, "{", pos ) );
             foreach item, key in _exp@@stem![] {
                expandVal( tokenList, item, pos );
-               tokenList.insert(
-                  new Parser.Token( Parser.TokenKind.Dlmt, "," (_exp), pos ) );
+               tokenList.insert( new Parser.Token( Parser.TokenKind.Dlmt, ",", pos ) );
             }   
-            tokenList.insert(
-               new Parser.Token( Parser.TokenKind.Dlmt, "}" (_exp), pos ) );
+            tokenList.insert( new Parser.Token( Parser.TokenKind.Dlmt, "}", pos ) );
          }
       } 
    }
@@ -1457,7 +1455,7 @@ fn TransUnit.processImport(
 
    // 依存するモジュールのメタ情報を読み込み
    let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
-   foreach dependInfo, dependName in metaInfo._dependModuleMap {
+   forsort dependInfo, dependName in metaInfo._dependModuleMap {
       if dependInfo.use {
          let workModuleInfo, metaTypeId2TypeInfoMap =
             self.processImport( dependName, {} );

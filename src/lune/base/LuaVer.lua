@@ -41,19 +41,19 @@ _moduleObj.LuaVerInfo = LuaVerInfo
 function LuaVerInfo.setmeta( obj )
   setmetatable( obj, { __index = LuaVerInfo  } )
 end
-function LuaVerInfo.new( hasBitOp, hasTableUnpack, canConvStem2Str )
+function LuaVerInfo.new( hasBitOp, hasTableUnpack, canFormStem2Str )
    local obj = {}
    LuaVerInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( hasBitOp, hasTableUnpack, canConvStem2Str )
+      obj:__init( hasBitOp, hasTableUnpack, canFormStem2Str )
    end        
    return obj 
 end         
-function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canConvStem2Str ) 
+function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str ) 
 
    self.hasBitOp = hasBitOp
    self.hasTableUnpack = hasTableUnpack
-   self.canConvStem2Str = canConvStem2Str
+   self.canFormStem2Str = canFormStem2Str
 end
 function LuaVerInfo:get_hasBitOp()       
    return self.hasBitOp         
@@ -61,8 +61,8 @@ end
 function LuaVerInfo:get_hasTableUnpack()       
    return self.hasTableUnpack         
 end
-function LuaVerInfo:get_canConvStem2Str()       
-   return self.canConvStem2Str         
+function LuaVerInfo:get_canFormStem2Str()       
+   return self.canFormStem2Str         
 end
 
 local ver51 = LuaVerInfo.new(BitOp.Cant, false, false)

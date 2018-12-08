@@ -456,7 +456,7 @@ fn TransUnit.evalMacro(
 /**
 format の書式から %? を検索して、リストを返す。
 */
-fn findForm( format:str ): List<str> {
+pub fn findForm( format:str ): List<str> {
    let mut remain = format;
    let mut opList:List<str> = [];
 
@@ -483,14 +483,48 @@ fn findForm( format:str ): List<str> {
    return opList;
 }
 
+pub enum FormType {
+   Match,
+   NeedConv,
+   Unmatch,
+}
+pub fn isMatchStringFormatType(
+   opKind:str, mut argType:&Ast.TypeInfo, luaVer:&LuaVer.LuaVerInfo ):
+   FormType, &Ast.TypeInfo
+{
+   if argType.$kind == .Enum {
+      let enumType = argType.$srcTypeInfo@@Ast.EnumTypeInfo;
+      argType = enumType.$valTypeInfo;
+   }
+   switch opKind[ #opKind ] {
+      case ?s, ?q {
+         if not argType.equals( Ast.builtinTypeString ) {
+            if not luaVer.$canFormStem2Str {
+               return .NeedConv, Ast.builtinTypeString;
+            }
+         }
+      }
+      case ?A, ?a, ?E, ?e, ?f, ?G, ?g {
+         if not argType.equals( Ast.builtinTypeReal ) {
+            return .Unmatch, Ast.builtinTypeReal;
+         }
+      }
+      default {
+         if not argType.equals( Ast.builtinTypeInt ) {
+            return .Unmatch, Ast.builtinTypeInt;
+         }
+      }
+   }
+   return .Match, Ast.builtinTypeNone;
+}
+
+
 fn TransUnit.checkStringFormat(
    pos:&Parser.Position, formatTxt:str, argTypeList:&List<&Ast.TypeInfo> ) mut
 {
    let opList = findForm( formatTxt );
    let mut dstTypeList:List<&Ast.TypeInfo> = [];
 
-   
-   
    if #opList > #argTypeList {
       self.addErrMess( pos,
                        "argument number is mismatch -- %d > %d"
@@ -499,29 +533,11 @@ fn TransUnit.checkStringFormat(
    }
    
    foreach op, index in opList {
-      let mut argType = argTypeList[ index ];
-      if argType.$kind == .Enum {
-         let enumType = argType.$srcTypeInfo@@Ast.EnumTypeInfo;
-         argType = enumType.$valTypeInfo;
-      }
-      switch op[ #op ] {
-         case ?s, ?q {
-            // if not argType.equals( Ast.builtinTypeString ) {
-            //    self.addErrMess( pos, "argument(%d) type must be string" (index) );
-            // }
-         }
-         case ?A, ?a, ?E, ?e, ?f, ?G, ?g {
-            if not argType.equals( Ast.builtinTypeReal ) {
-               self.addErrMess( pos, "argument(%d) type must be real -- %s"
-                                (index, argType.getTxt() ) );                      
-            }
-         }
-         default {
-            if not argType.equals( Ast.builtinTypeInt ) {
-               self.addErrMess( pos, "argument(%d) type must be int -- %s"
-                                (index, argType.getTxt() ) );                     
-            }
-         }
+      let argType = argTypeList[ index ];
+      let match, reqType = isMatchStringFormatType( op, argType, self.targetLuaVer );
+      if match == .Unmatch {
+         let mut mess = "type must be %s -- %s" ( reqType.getTxt(), argType.getTxt() );
+         self.addErrMess( pos, "argument(%d) %s" (index, mess ) );
       }
    }
 }

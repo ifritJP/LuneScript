@@ -347,7 +347,7 @@ function convFilter:outputMeta( node )
          end
          table.sort( __sorted )
          for __index, importName in ipairs( __sorted ) do
-            typeInfo = __map[ importName ]
+            local typeInfo = __map[ importName ]
             do
                index = index + 1
                importModuleType2Index[typeInfo] = index
@@ -468,7 +468,7 @@ function convFilter:outputMeta( node )
       end
       table.sort( __sorted )
       for __index, classTypeId in ipairs( __sorted ) do
-         classTypeInfo = __map[ classTypeId ]
+         local classTypeInfo = __map[ classTypeId ]
          do
             if classTypeInfo:get_accessMode() == Ast.AccessMode.Pub then
                pickupTypeId( classTypeInfo, true, validChildrenSet[classTypeInfo] == nil and not classTypeInfo:get_externalFlag() )
@@ -521,7 +521,7 @@ function convFilter:outputMeta( node )
          end
          table.sort( __sorted )
          for __index, classTypeId in ipairs( __sorted ) do
-            classTypeInfo = __map[ classTypeId ]
+            local classTypeInfo = __map[ classTypeId ]
             do
                local scope = _lune.unwrap( classTypeInfo:get_scope())
                if not Ast.isBuiltin( classTypeId ) then
@@ -540,7 +540,7 @@ function convFilter:outputMeta( node )
                         end
                         table.sort( __sorted )
                         for __index, fieldName in ipairs( __sorted ) do
-                           symbolInfo = __map[ fieldName ]
+                           local symbolInfo = __map[ fieldName ]
                            do
                               local typeInfo = symbolInfo:get_typeInfo()
                               if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
@@ -578,7 +578,7 @@ function convFilter:outputMeta( node )
       end
       table.sort( __sorted )
       for __index, varName in ipairs( __sorted ) do
-         varInfo = __map[ varName ]
+         local varInfo = __map[ varName ]
          do
             self:writeln( string.format( "_varName2InfoMap.%s = {", varName ) )
             self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId(), true) )
@@ -595,7 +595,7 @@ function convFilter:outputMeta( node )
       end
       table.sort( __sorted )
       for __index, funcName in ipairs( __sorted ) do
-         funcInfo = __map[ funcName ]
+         local funcInfo = __map[ funcName ]
          do
             pickupTypeId( funcInfo.typeInfo, true )
          end
@@ -660,7 +660,7 @@ function convFilter:outputMeta( node )
       end
       table.sort( __sorted )
       for __index, typeId in ipairs( __sorted ) do
-         typeInfo = __map[ typeId ]
+         local typeInfo = __map[ typeId ]
          do
             outputTypeInfo( typeInfo )
             local moduleTypeInfo = typeInfo:getModule(  )
@@ -715,7 +715,7 @@ function convFilter:outputMeta( node )
       end
       table.sort( __sorted )
       for __index, name in ipairs( __sorted ) do
-         moduleTypeInfo = __map[ name ]
+         local moduleTypeInfo = __map[ name ]
          do
             self:writeln( string.format( "_dependModuleMap[ '%s' ] = { id = %d, use = %s }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), exportNeedModuleTypeInfo[moduleTypeInfo] or false) )
          end
@@ -1935,7 +1935,7 @@ function convFilter:processForsort( node, parent )
    self:write( key )
    self:writeln( " in ipairs( __sorted ) do" )
    self:pushIndent(  )
-   self:writeln( string.format( "%s = __map[ %s ]", node:get_val().txt, key ) )
+   self:writeln( string.format( "local %s = __map[ %s ]", node:get_val().txt, key ) )
    filter( node:get_block(), self, node )
    self:writeln( "end" )
    self:popIndent(  )
@@ -2442,6 +2442,7 @@ function convFilter:processLiteralString( node, parent )
       txt = '[==[' .. txt:sub( 4, -4 ) .. ']==]'
    end
    
+   local opList = TransUnit.findForm( txt )
    local argList = node:get_argList(  )
    if #argList > 0 then
       self:write( string.format( 'string.format( %s, ', txt ) )
@@ -2450,7 +2451,20 @@ function convFilter:processLiteralString( node, parent )
             self:write( ", " )
          end
          
-         filter( val, self, node )
+         local match = TransUnit.FormType.Match
+         if index <= #opList then
+            match = TransUnit.isMatchStringFormatType( opList[index], val:get_expType(), self.targetLuaVer )
+         end
+         
+         if match == TransUnit.FormType.NeedConv then
+            self:write( "tostring( " )
+            filter( val, self, node )
+            self:write( ")" )
+         else
+          
+            filter( val, self, node )
+         end
+         
       end
       
       self:write( ")" )

@@ -10,7 +10,7 @@ pub enum BitOp {
 pub class LuaVerInfo {
    let hasBitOp: BitOp {pub};
    let hasTableUnpack: bool {pub};
-   let canConvStem2Str: bool {pub};
+   let canFormStem2Str: bool {pub};
 }
 
 pub let ver51 = new LuaVerInfo( .Cant, false, false );

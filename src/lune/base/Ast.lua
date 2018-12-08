@@ -1096,7 +1096,7 @@ local function dumpScopeSub( scope, prefix, readyIdSet )
             end
             table.sort( __sorted )
             for __index, symbol in ipairs( __sorted ) do
-               symbolInfo = __map[ symbol ]
+               local symbolInfo = __map[ symbol ]
                do
                   Util.log( string.format( "scope: %s, %s, %s", prefix, _exp, symbol) )
                   do
@@ -2441,7 +2441,7 @@ accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getPa
       end
       table.sort( __sorted )
       for __index, __key in ipairs( __sorted ) do
-         enumValInfo = __map[ __key ]
+         local enumValInfo = __map[ __key ]
          do
             if self.valTypeInfo:equals( _moduleObj.builtinTypeString ) then
                stream:write( string.format( "%s = '%s',", enumValInfo:get_name(), enumValInfo:get_val()) )
@@ -3301,6 +3301,12 @@ function ProcessInfo:__init( typeInfo2ModifierMap, idProvier )
 
    self.typeInfo2ModifierMap = typeInfo2ModifierMap
    self.idProvier = idProvier
+end
+function ProcessInfo:get_typeInfo2ModifierMap()       
+   return self.typeInfo2ModifierMap         
+end
+function ProcessInfo:get_idProvier()       
+   return self.idProvier         
 end
 
 function NodeKind.get_Root(  )
@@ -8771,8 +8777,8 @@ local function pushProcessInfo( processInfo )
    
    table.insert( processInfoQueue, ProcessInfo.new(typeInfo2ModifierMap, idProv) )
    if processInfo ~= nil then
-      idProv = processInfo.idProvier
-      typeInfo2ModifierMap = processInfo.typeInfo2ModifierMap
+      idProv = processInfo:get_idProvier()
+      typeInfo2ModifierMap = processInfo:get_typeInfo2ModifierMap()
    else
       idProv = IdProvider.new(userStartId)
       typeInfo2ModifierMap = {}
@@ -8784,8 +8790,8 @@ _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
 
    local info = processInfoQueue[#processInfoQueue]
-   idProv = info.idProvier
-   typeInfo2ModifierMap = info.typeInfo2ModifierMap
+   idProv = info:get_idProvier()
+   typeInfo2ModifierMap = info:get_typeInfo2ModifierMap()
    table.remove( processInfoQueue )
 end
 _moduleObj.popProcessInfo = popProcessInfo
