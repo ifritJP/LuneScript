@@ -4,10 +4,10 @@ import lune.base.Writer;
 //import test.Sub2;
 import test.Sub2 as SUB2;
 import test.Sub6;
-import test.Class1;
-import test.Class2;
-import test.Class3;
-import test.Class4;
+import test.Class1; // skip-lua51
+import test.Class2; // skip-lua51
+import test.Class3; // skip-lua51
+import test.Class4; // skip-lua51
 import test.mapping;
 import test.funcSym;
 
@@ -543,10 +543,10 @@ class TestDest {
       self.val = val;
       print( "%s" (__func__) );
    }
-   fn __free() {
-      self.val = self.val * 10;
-      print( "__free(): %d %s" (self.val, __func__) );
-   }
+   fn __free() {                                        // skip-lua51
+      self.val = self.val * 10;                         // skip-lua51
+      print( "__free(): %d %s" (self.val, __func__) );  // skip-lua51
+   }                                                    // skip-lua51
 }
 new TestDest( 100 );
 
@@ -559,14 +559,10 @@ module GlueTest require 'test.glueTest' glue 'hoge_' {
 }
 
 {
-   let version = tonumber( _VERSION.gsub( "^[^%d]+", "" ), nil );
-   if version >= 5.2 {
-      print( "version", version );
-      GlueTest.func1( 10, "abc", [] );
-      let age = GlueTest.create( 100 );
-      age.func2( 2 );
-      age.func2( 2, 3, 4.0, "xyz" );
-   }
+   GlueTest.func1( 10, "abc", [] );
+   let age = GlueTest.create( 100 );
+   age.func2( 2 );
+   age.func2( 2, 3, 4.0, "xyz" );
 }
 
 
@@ -706,4 +702,11 @@ pub let val = 100;
    }  
 
    print( func( 1, 2, 3, 4 ) ); // 10 1 2 3 4 
+}
+
+{
+   let list = [ 1, 2, 3 ];
+   print( list.unpack() );
+   let array = [@ 1, 2, 3 ];
+   print( array.unpack() );
 }

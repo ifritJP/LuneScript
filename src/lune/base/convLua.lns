@@ -656,7 +656,10 @@ pub override fn convFilter.processRoot(
 if not _lune then
    _lune = {}
 end``` );
-      
+
+      if not self.targetLuaVer.$hasTableUnpack {
+         self.writeln( LuaMod.getCode( .Unpack ) );
+      }
       if node.$luneHelperInfo.$useNilAccess {
          self.writeln( LuaMod.getCode( .NilAcc ) );
       }
@@ -1884,42 +1887,47 @@ pub override fn convFilter.processExpCall(
       if node.$nilAccess {
          wroteFuncFlag = true;
          setArgFlag = true;
-         if prefixType.$kind == Ast.TypeInfoKind.List {
-            self.write( "_lune.nilacc( table.%s, nil, 'list', " (fieldNode.$field.txt ) );
-            filter( prefixNode, self, fieldNode );
+         switch prefixType.$kind {
+            case .List, .Array {
+               self.write( "_lune.nilacc( table.%s, nil, 'list', "
+                           (fieldNode.$field.txt ) );
+               filter( prefixNode, self, fieldNode );
+            }
+            default {
+               self.write( "_lune.nilacc( " );
+               filter( prefixNode, self, fieldNode );
+               self.write( ", '%s', 'callmtd' " (fieldNode.$field.txt ) );
+            }
          }
-         else {
-            self.write( "_lune.nilacc( " );
-            filter( prefixNode, self, fieldNode );
-            self.write( ", '%s', 'callmtd' " (fieldNode.$field.txt ) );
-         } 
       }
       else {
-         if prefixType.$kind == Ast.TypeInfoKind.List {
-            setArgFlag = true;
-            wroteFuncFlag = true;
-            self.write( "table.%s( " (fieldNode.$field.txt ) );
-            filter( prefixNode, self, fieldNode );
-         }
-         elseif prefixType.$kind == Ast.TypeInfoKind.Enum {
-            wroteFuncFlag = true;
-            let fieldExpType = fieldNode.$expType;
-            let canonicalName = self.getCanonicalName( prefixType );
-            let mut methodName = fieldNode.$field.txt;
-            let mut delimit = ":";
-            if methodName == "get__txt" {
-               methodName = "_getTxt";
-            }
-            if fieldExpType.$kind == .Func {
-               delimit = ".";
-            }
-            self.write( "%s%s%s( " (canonicalName, delimit, methodName ) );
-            if fieldExpType.$staticFlag {
-               setArgFlag = false;
-            }
-            else {
-               filter( prefixNode, self, fieldNode );
+         switch prefixType.$kind {
+            case .List, .Array {
                setArgFlag = true;
+               wroteFuncFlag = true;
+               self.write( "table.%s( " (fieldNode.$field.txt ) );
+               filter( prefixNode, self, fieldNode );
+            }
+            case .Enum {
+               wroteFuncFlag = true;
+               let fieldExpType = fieldNode.$expType;
+               let canonicalName = self.getCanonicalName( prefixType );
+               let mut methodName = fieldNode.$field.txt;
+               let mut delimit = ":";
+               if methodName == "get__txt" {
+                  methodName = "_getTxt";
+               }  
+               if fieldExpType.$kind == .Func {
+                  delimit = ".";
+               }  
+               self.write( "%s%s%s( " (canonicalName, delimit, methodName ) );
+               if fieldExpType.$staticFlag {
+                  setArgFlag = false;
+               }  
+               else {
+                  filter( prefixNode, self, fieldNode );
+                  setArgFlag = true;
+               }
             }
          }  
       }     
@@ -1951,7 +1959,15 @@ pub override fn convFilter.processExpCall(
          filter( node.$func, self, node );
          self.write( "( " );
       }
-   }  
+   }
+
+   let mut convStrFlag = false;
+   
+   if not self.targetLuaVer.$canFormStem2Str and
+      TransUnit.isStrFormFunc( node.$func.$expType )
+   {
+      convStrFlag = true;
+   }
 
    
    if! let argList = node.$argList {
@@ -1960,7 +1976,24 @@ pub override fn convFilter.processExpCall(
             self.write( ", " );
          }
       }
-      filter( argList,  self, node );
+      if convStrFlag {
+         foreach argNode, index in argList.$expList {
+            if index ~= 1 {
+               self.write( ", " );
+            }
+            if not argNode.$expType.equals( Ast.builtinTypeString ) {
+               self.write( "tostring( " );
+               filter( argNode, self, node );
+               self.write( ")" );
+            }
+            else {
+               filter( argNode, self, node );
+            }
+         }
+      }
+      else {
+         filter( argList,  self, node );
+      }
    }
    self.write( " )" );
 };   

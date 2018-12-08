@@ -1,4 +1,7 @@
 local _lune = {}
+if not table.unpack then
+   table.unpack = unpack
+end
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil

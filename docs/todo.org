@@ -192,7 +192,7 @@
 - [X] nil 条件演算子
 - [X] import, provide
 - [X] require, module
-- [ ] subfile
+- [ ] クロスコンパイル  
 - [ ] macro
 - [ ] make
 - [ ] glue
@@ -200,8 +200,9 @@
       - こんな機能が欲しかった
 	- accessor の自動生成
         - advertise 
-      - コーディングの矯正
+      - コーディングルールの強制
 	- python のインデント
 	- bool の比較
       - 近年の言語の調査
 
+- [ ] subfile

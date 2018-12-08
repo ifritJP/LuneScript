@@ -1619,13 +1619,14 @@ pub static fn NormalTypeInfo.createBuiltin(
 
    let mut scope:Scope! = nil;
    switch kind {
-      case .List, .Class, .Module,
+      case .Array, .List, .Class, .Module,
            .IF, .Func, .Method,
            .Macro
       {  
          scope = new Scope(
             rootScope,
-            kind == .Class or kind == .Module or kind == .IF or kind == .List, nil );
+            kind == .Class or kind == .Module or
+            kind == .IF or kind == .List or kind == .Array, nil );
       }  
    } 
    
@@ -2391,7 +2392,7 @@ macro _declNodeClass(
          pub override fn processFilter( filter: Filter, ... ) {
             let argList:stem![] = [ ... ];
 
-            filter.,,,"process%s" (baseName) (self, table.unpack( argList ) );
+            filter.,,,"process%s" (baseName) (self, argList.unpack() );
          } } );
 
       if! canBeRightFlag {
@@ -3360,7 +3361,7 @@ pub override fn LiteralStringNode.getLiteral(): stem![], List<&TypeInfo> {
             argTbl.insert( argTxt );
          }
       }   
-      return [ string.format( txt, table.unpack( argTbl ) )], [builtinTypeString];
+      return [ string.format( txt, argTbl.unpack() )], [builtinTypeString];
    }
    return [txt], [builtinTypeString];
 }

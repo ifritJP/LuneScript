@@ -391,7 +391,7 @@ fn TransUnit.evalMacro(
    }
 
    let func = macroInfo.func;
-   //let macroVars:Map<str,stem!> = func( table.unpack( argVal ) )@@Map<str,stem!>;
+   //let macroVars:Map<str,stem!> = func( argVal.unpack() )@@Map<str,stem!>;
    let mut macroVars:&Map<str,stem!> = {};
    if! let macroRet = func( macroArgValMap ) {
       macroVars = macroRet@@Map<str,stem!>;
@@ -713,8 +713,13 @@ fn TransUnit.analyzeAccessClassField(
    mut classTypeInfo: &Ast.TypeInfo, mode:ExpSymbolMode, token:&Parser.Token ) mut :
    &Ast.TypeInfo, &Ast.SymbolInfo!, bool
 {
-   if classTypeInfo.get_kind() == .List {
-      classTypeInfo = Ast.builtinTypeList;
+   switch classTypeInfo.get_kind() {
+      case .List {
+         classTypeInfo = Ast.builtinTypeList;
+      }
+      case .Array {
+         classTypeInfo = Ast.builtinTypeArray;
+      }
    }
    let className = classTypeInfo.getTxt();
    let! classScope = classTypeInfo.$scope {
@@ -992,7 +997,8 @@ fn TransUnit.analyzeExpField(
    if prefixExpType.get_kind() == .Class or
       prefixExpType.get_kind() == .Module or
       prefixExpType.get_kind() == .IF or
-      prefixExpType.get_kind() == .List
+      prefixExpType.get_kind() == .List or 
+      prefixExpType.get_kind() == .Array
    {
       let mut getterFlag = false;
       typeInfo, symbolInfo, getterFlag =

@@ -24,6 +24,7 @@ SOFTWARE.
 
 pub enum CodeKind {
    Init,
+   Unpack,
    NilAcc,
    Unwrap,
    LoadModule,
@@ -36,6 +37,13 @@ let mut codeMap:Map<CodeKind,str> = {};
 codeMap[ .Init] = ```
 local _lune = {}
 ```;
+
+codeMap[ .Unpack ] = ```
+if not table.unpack then
+   table.unpack = unpack
+end
+```;
+
 
 codeMap[ .NilAcc ] = ```
 function _lune.nilacc( val, fieldName, access, ... )

@@ -761,6 +761,10 @@ function convFilter:processRoot( node, parent )
 if not _lune then
    _lune = {}
 end]==] )
+      if not self.targetLuaVer:get_hasTableUnpack() then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
+      end
+      
       if node:get_luneHelperInfo():get_useNilAccess() then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.NilAcc ) )
       end
@@ -1976,46 +1980,52 @@ function convFilter:processExpCall( node, parent )
       if node:get_nilAccess() then
          wroteFuncFlag = true
          setArgFlag = true
-         if prefixType:get_kind() == Ast.TypeInfoKind.List then
-            self:write( string.format( "_lune.nilacc( table.%s, nil, 'list', ", fieldNode:get_field().txt) )
-            filter( prefixNode, self, fieldNode )
-         else
-          
-            self:write( "_lune.nilacc( " )
-            filter( prefixNode, self, fieldNode )
-            self:write( string.format( ", '%s', 'callmtd' ", fieldNode:get_field().txt) )
+         do
+            local _switchExp = prefixType:get_kind()
+            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+               self:write( string.format( "_lune.nilacc( table.%s, nil, 'list', ", fieldNode:get_field().txt) )
+               filter( prefixNode, self, fieldNode )
+            else 
+               
+                  self:write( "_lune.nilacc( " )
+                  filter( prefixNode, self, fieldNode )
+                  self:write( string.format( ", '%s', 'callmtd' ", fieldNode:get_field().txt) )
+            end
          end
          
       else
        
-         if prefixType:get_kind() == Ast.TypeInfoKind.List then
-            setArgFlag = true
-            wroteFuncFlag = true
-            self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
-            filter( prefixNode, self, fieldNode )
-         elseif prefixType:get_kind() == Ast.TypeInfoKind.Enum then
-            wroteFuncFlag = true
-            local fieldExpType = fieldNode:get_expType()
-            local canonicalName = self:getCanonicalName( prefixType )
-            local methodName = fieldNode:get_field().txt
-            local delimit = ":"
-            if methodName == "get__txt" then
-               methodName = "_getTxt"
-            end
-            
-            if fieldExpType:get_kind() == Ast.TypeInfoKind.Func then
-               delimit = "."
-            end
-            
-            self:write( string.format( "%s%s%s( ", canonicalName, delimit, methodName) )
-            if fieldExpType:get_staticFlag() then
-               setArgFlag = false
-            else
-             
-               filter( prefixNode, self, fieldNode )
+         do
+            local _switchExp = prefixType:get_kind()
+            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
                setArgFlag = true
+               wroteFuncFlag = true
+               self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
+               filter( prefixNode, self, fieldNode )
+            elseif _switchExp == Ast.TypeInfoKind.Enum then
+               wroteFuncFlag = true
+               local fieldExpType = fieldNode:get_expType()
+               local canonicalName = self:getCanonicalName( prefixType )
+               local methodName = fieldNode:get_field().txt
+               local delimit = ":"
+               if methodName == "get__txt" then
+                  methodName = "_getTxt"
+               end
+               
+               if fieldExpType:get_kind() == Ast.TypeInfoKind.Func then
+                  delimit = "."
+               end
+               
+               self:write( string.format( "%s%s%s( ", canonicalName, delimit, methodName) )
+               if fieldExpType:get_staticFlag() then
+                  setArgFlag = false
+               else
+                
+                  filter( prefixNode, self, fieldNode )
+                  setArgFlag = true
+               end
+               
             end
-            
          end
          
       end
@@ -2046,6 +2056,11 @@ function convFilter:processExpCall( node, parent )
       
    end
    
+   local convStrFlag = false
+   if not self.targetLuaVer:get_canFormStem2Str() and TransUnit.isStrFormFunc( node:get_func():get_expType() ) then
+      convStrFlag = true
+   end
+   
    do
       local argList = node:get_argList()
       if argList ~= nil then
@@ -2056,7 +2071,28 @@ function convFilter:processExpCall( node, parent )
             
          end
          
-         filter( argList, self, node )
+         if convStrFlag then
+            for index, argNode in pairs( argList:get_expList() ) do
+               if index ~= 1 then
+                  self:write( ", " )
+               end
+               
+               if not argNode:get_expType():equals( Ast.builtinTypeString ) then
+                  self:write( "tostring( " )
+                  filter( argNode, self, node )
+                  self:write( ")" )
+               else
+                
+                  filter( argNode, self, node )
+               end
+               
+            end
+            
+         else
+          
+            filter( argList, self, node )
+         end
+         
       end
    end
    

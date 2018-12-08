@@ -1,6 +1,11 @@
 LUA=lua5.3
 #LUA=lua5.2
 
+
+
+LUA51=lua5.1
+LUA51_INC=/usr/include/lua5.1
+
 LUA_INC_DIR=
 ifneq ($(LUA_INC_DIR),)
 LUA_CFLAGS=-I$(LUA_INC_DIR)
@@ -267,14 +272,23 @@ endif
 
 
 test-lua51:
-# lua5.1 にトランスコンパイルして実行テスト
+# lua5.1 にクロスコンパイルして実行テスト
 	mkdir -p work/5
-	cp -a test work/5
 	cp -a work/3/lune work/5
-	grep -v skip-lua51 work/3/test/start.lns > work/3/test/start_mod.lns
-	mv work/3/test/start_mod.lns work/3/test/start.lns
-	$(call exeLune,work/3,test/start.lns,-u -ol 51 SAVE ../5,)
-	(cd work/5; $(LUA51) test/start.lua) > work/test6.result
+	cp -a test work/5
+	grep -v skip-lua51 work/3/test/start.lns > work/5/test/start.lns
+	$(call exeLune,work/5,test/start.lns,exe,) | sed 's/\.0//g' > work/test6.result
+
+	mkdir -p work/6
+	cp -a work/3/lune work/6
+	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
+	cp -a test work/6
+	mv work/6/test/glueTest51.so work/6/test/glueTest.so 
+	grep -v skip-lua51 work/3/test/start.lns > work/6/test/start.lns
+	$(call exeLune,work/6,test/start.lns,-u -ol 51 SAVE,)
+	(cd work/6; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7.result
+
+	diff work/test6.result  work/test7.result 
 
 
 accept-package:
@@ -306,7 +320,7 @@ endif
 GLUE_DIR=work/glue
 build-glue:
 	gcc $(GLUE_DIR)/test_glueTest_glue.c test/glue.c -I$(GLUE_DIR) \
-		-std=c99 -fPIC -shared -o test/glueTest.so $(LUA_CFLAGS)
+		-std=c99 -fPIC -shared -o test/glueTest$(LUA_GLUE).so $(LUA_CFLAGS)
 
 
 check_lua_mod_dir:

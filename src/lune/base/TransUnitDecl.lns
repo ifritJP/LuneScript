@@ -71,7 +71,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             self.pushback();
             self.checkNextToken( ']' );
          }   
-      }   
+      }
       elseif token.txt == "<" {
          let mut genericList: List<&Ast.TypeInfo> = [];
          let mut nextToken: &Parser.Token = Parser.getEofToken();
@@ -755,8 +755,8 @@ fn TransUnit.checkPublic( pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut {
          return;
       }
       checkedTypeSet[ workType ] = true;
-      if workType.$kind ~= .List and workType.$kind ~= .Map and
-         not Ast.isPubToExternal( workType.$accessMode )
+      if workType.$kind ~= .Array and workType.$kind ~= .List
+         and workType.$kind ~= .Map and not Ast.isPubToExternal( workType.$accessMode )
       {     
          self.addErrMess( pos, "not public this type -- %s" ( workType.getTxt()) );
       }

@@ -741,6 +741,8 @@ class _TypeInfoEnum extend _TypeInfo {
 
 pub let mut typeInfoListInsert:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoListRemove:&Ast.TypeInfo = Ast.headTypeInfo;
+pub let mut typeInfoListUnpack:&Ast.TypeInfo = Ast.headTypeInfo;
+pub let mut typeInfoArrayUnpack:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoMappingIF:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoMappingToMap:&Ast.TypeInfo = Ast.headTypeInfo;
 let mut typeInfoStrGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -748,7 +750,7 @@ let mut typeInfoStringGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
 let mut typeInfoStringForm:&Ast.TypeInfo = Ast.headTypeInfo;
 
 pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
-   if typeInfo == typeInfoStringForm {
+   if typeInfo.equals( typeInfoStringForm ) {
       return true;
    }
    return false;
@@ -857,14 +859,15 @@ fn TransUnit.registBuiltInScope() mut {
          },  
       },
       { 
-         "table": {
-            "unpack": { "arg": [ "&stem" ], "ret": ["..."] },
-         },  
-      },
-      { 
          "List": {
             "insert": { "type": [ "mut" ], "arg": [ "&stem" ], "ret": [""] },
             "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": [""] },
+            "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+         },
+      },
+      { 
+         "Array": {
+            "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          },
       },
       {
@@ -994,8 +997,18 @@ fn TransUnit.registBuiltInScope() mut {
                               }        
                               case "remove" {
                                  typeInfoListRemove = typeInfo;
-                              }        
+                              }
+                              case "unpack" {
+                                 typeInfoListUnpack = typeInfo;
+                              }
                            }       
+                        }
+                        case "Array" {
+                           switch fieldName {
+                              case "unpack" {
+                                 typeInfoArrayUnpack = typeInfo;
+                              }
+                           }
                         }
                         case "Mapping" {
                            switch fieldName {

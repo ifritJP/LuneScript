@@ -42,25 +42,33 @@ end
 CodeKind.Init = 0
 CodeKind._val2NameMap[0] = 'Init'
 CodeKind.__allList[1] = CodeKind.Init
-CodeKind.NilAcc = 1
-CodeKind._val2NameMap[1] = 'NilAcc'
-CodeKind.__allList[2] = CodeKind.NilAcc
-CodeKind.Unwrap = 2
-CodeKind._val2NameMap[2] = 'Unwrap'
-CodeKind.__allList[3] = CodeKind.Unwrap
-CodeKind.LoadModule = 3
-CodeKind._val2NameMap[3] = 'LoadModule'
-CodeKind.__allList[4] = CodeKind.LoadModule
-CodeKind.Mapping = 4
-CodeKind._val2NameMap[4] = 'Mapping'
-CodeKind.__allList[5] = CodeKind.Mapping
-CodeKind.Finalize = 5
-CodeKind._val2NameMap[5] = 'Finalize'
-CodeKind.__allList[6] = CodeKind.Finalize
+CodeKind.Unpack = 1
+CodeKind._val2NameMap[1] = 'Unpack'
+CodeKind.__allList[2] = CodeKind.Unpack
+CodeKind.NilAcc = 2
+CodeKind._val2NameMap[2] = 'NilAcc'
+CodeKind.__allList[3] = CodeKind.NilAcc
+CodeKind.Unwrap = 3
+CodeKind._val2NameMap[3] = 'Unwrap'
+CodeKind.__allList[4] = CodeKind.Unwrap
+CodeKind.LoadModule = 4
+CodeKind._val2NameMap[4] = 'LoadModule'
+CodeKind.__allList[5] = CodeKind.LoadModule
+CodeKind.Mapping = 5
+CodeKind._val2NameMap[5] = 'Mapping'
+CodeKind.__allList[6] = CodeKind.Mapping
+CodeKind.Finalize = 6
+CodeKind._val2NameMap[6] = 'Finalize'
+CodeKind.__allList[7] = CodeKind.Finalize
 
 local codeMap = {}
 codeMap[CodeKind.Init] = [==[
 local _lune = {}
+]==]
+codeMap[CodeKind.Unpack] = [==[
+if not table.unpack then
+   table.unpack = unpack
+end
 ]==]
 codeMap[CodeKind.NilAcc] = [==[
 function _lune.nilacc( val, fieldName, access, ... )
