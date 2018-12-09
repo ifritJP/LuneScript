@@ -54,12 +54,18 @@ CodeKind.__allList[4] = CodeKind.Unwrap
 CodeKind.LoadModule = 4
 CodeKind._val2NameMap[4] = 'LoadModule'
 CodeKind.__allList[5] = CodeKind.LoadModule
-CodeKind.Mapping = 5
-CodeKind._val2NameMap[5] = 'Mapping'
-CodeKind.__allList[6] = CodeKind.Mapping
-CodeKind.Finalize = 6
-CodeKind._val2NameMap[6] = 'Finalize'
-CodeKind.__allList[7] = CodeKind.Finalize
+CodeKind.LoadStr51 = 5
+CodeKind._val2NameMap[5] = 'LoadStr51'
+CodeKind.__allList[6] = CodeKind.LoadStr51
+CodeKind.LoadStr52 = 6
+CodeKind._val2NameMap[6] = 'LoadStr52'
+CodeKind.__allList[7] = CodeKind.LoadStr52
+CodeKind.Mapping = 7
+CodeKind._val2NameMap[7] = 'Mapping'
+CodeKind.__allList[8] = CodeKind.Mapping
+CodeKind.Finalize = 8
+CodeKind._val2NameMap[8] = 'Finalize'
+CodeKind.__allList[9] = CodeKind.Finalize
 
 local codeMap = {}
 codeMap[CodeKind.Init] = [==[
@@ -133,6 +139,23 @@ function _lune.loadModule( mod )
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
+end
+]==]
+codeMap[CodeKind.LoadStr51] = [==[
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
+   end
+   return func
+end
+]==]
+codeMap[CodeKind.LoadStr52] = [==[
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
+   end
+   return load( txt, "", "bt", env )
 end
 ]==]
 codeMap[CodeKind.Mapping] = [==[      

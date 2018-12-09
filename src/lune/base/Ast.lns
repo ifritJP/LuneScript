@@ -2467,6 +2467,7 @@ pub class LuneHelperInfo {
    pri let useNilAccess:bool { pub };
    pri let useUnwrapExp:bool { pub };
    pri let hasMappingClassDef:bool { pub };
+   pri let useLoad:bool { pub };
 }
 
 pub class ModuleInfo extend (ModuleInfoIF) {

@@ -46,6 +46,27 @@ function _lune.nilacc( val, fieldName, access, ... )
    error( string.format( "illegal access -- %s", access ) )
 end
 
+function _lune.unwrap( val )
+   if val == nil then
+      __luneScript:error( 'unwrap val is nil' )
+   end
+   return val
+end 
+function _lune.unwrapDefault( val, defval )
+   if val == nil then
+      return defval
+   end
+   return val
+end
+
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local function getFileLastModifiedTime( path )
 
    local file = io.open( path )
@@ -69,6 +90,40 @@ local function getFileLastModifiedTime( path )
    return nil
 end
 _moduleObj.getFileLastModifiedTime = getFileLastModifiedTime
-local list = {1}
-table.insert( list, 1 )
+local function searchpath51( mod, pathPattern )
+
+   for path in string.gmatch( pathPattern, "[^;]+" ) do
+      do
+         local index = path:find( "%?.l[un][as]$" )
+         if index ~= nil then
+            local dir = path:sub( 1, index - 1 )
+            local suffix = path:sub( #path - 3 )
+            local target = dir .. mod:gsub( "%.", "/" ) .. suffix
+            do
+               local fileObj = io.open( target )
+               if fileObj ~= nil then
+                  fileObj:close(  )
+                  return target
+               end
+            end
+            
+         end
+      end
+      
+   end
+   
+   return nil
+end
+
+
+local searchpathForm = searchpath51
+if LuaVer.curVer:get_hasSearchPath() then
+   searchpathForm = (_lune.unwrap( _lune.nilacc( _G['package'], nil, 'item', 'searchpath')) )
+end
+
+local function searchpath( mod, pathPattern )
+
+   return searchpathForm( mod, pathPattern )
+end
+_moduleObj.searchpath = searchpath
 return _moduleObj

@@ -1186,6 +1186,10 @@ fn TransUnit.analyzeExpSymbol(
          if typeInfo.equals( Ast.builtinTypeSymbol ) {
             skipFlag = true;
          }
+         if typeInfo.equals( typeInfoLuneLoad ) {
+            self.useLoad = true;
+         }
+         
          if token.txt == "__func__" {
             self.has__func__Symbol = true;
          }

@@ -127,6 +127,7 @@ pub class TransUnit {
    pri let mut useUnwrapExp: bool;
    pri let mut useNilAccess: bool;
    pri let mut hasMappingClassDef: bool;
+   pri let mut useLoad: bool;
 
    /** provide ノード */
    pri let mut provideNode: Ast.ProvideNode!;
@@ -154,6 +155,7 @@ pub class TransUnit {
       self.loopScopeQueue = [];
       self.has__func__Symbol = false;
       self.hasMappingClassDef = false;
+      self.useLoad = false;
       self.nodeManager = new Ast.NodeManager();
       self.importModuleName2ModuleInfo = {};
       self.importModule2ModuleInfoCurrent = {};
@@ -739,6 +741,7 @@ class _TypeInfoEnum extend _TypeInfo {
 }
 
 
+pub let mut typeInfoLuneLoad:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoListInsert:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoListRemove:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoListUnpack:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -755,6 +758,63 @@ pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
    }
    return false;
 }
+
+fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
+   switch name {
+      case "" {
+         switch fieldName {
+            case "_load" {
+               typeInfoLuneLoad = typeInfo;
+            }
+         }
+      }
+      case "List" {
+         switch fieldName {
+            case "insert" {      
+               typeInfoListInsert = typeInfo;
+            }        
+            case "remove" {
+               typeInfoListRemove = typeInfo;
+            }  
+            case "unpack" {
+               typeInfoListUnpack = typeInfo;
+            }  
+         }       
+      }  
+      case "Array" {
+         switch fieldName {
+            case "unpack" {
+               typeInfoArrayUnpack = typeInfo;
+            }  
+         }  
+      }  
+      case "Mapping" {
+         switch fieldName {
+            case "_toMap" {
+               typeInfoMappingToMap = typeInfo;
+            }  
+         }  
+      }  
+      case "str" {
+         switch fieldName {
+            case "gmatch" {
+               typeInfoStrGMatch = typeInfo;
+            }  
+         }  
+      }  
+      case "string" {
+         switch fieldName {
+            case "gmatch" {
+               typeInfoStringGMatch = typeInfo;
+            }  
+            case "format" {
+               typeInfoStringForm = typeInfo;
+            }  
+         }  
+      }  
+   }  
+}
+
 
 let mut readyBuiltin = false;
 
@@ -777,6 +837,7 @@ fn TransUnit.registBuiltInScope() mut {
             "require": { "arg": [ "str" ], "ret": ["stem!"] },
             "collectgarbage": { "arg": [ ], "ret": [] },
             "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
+            "_load": { "arg": [ "str", "stem!" ], "ret": ["form!", "str!"] },
          }, 
       },
       {
@@ -949,91 +1010,48 @@ fn TransUnit.registBuiltInScope() mut {
             forsort info, fieldName in name2FieldInfo {
                if fieldName ~= "__attrib" {
 
-                  if info.type$[1] == "member" {
-                     self.scope.addMember(
-                        fieldName,
-                        getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, true );
-                  }
-                  else {
-                     let mut argTypeList: List<&Ast.TypeInfo> = [];
-                     foreach argType in unwrap info[ "arg" ] {
-                        argTypeList.insert( getTypeInfo( argType ) );
+                  if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
+                     if info.type$[1] == "member" {
+                        self.scope.addMember(
+                           fieldName,
+                           getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, true );
                      }  
+                     else {
+                        let mut argTypeList: List<&Ast.TypeInfo> = [];
+                        foreach argType in unwrap info[ "arg" ] {
+                           argTypeList.insert( getTypeInfo( argType ) );
+                        }  
 
-                     let mut retTypeList: List<&Ast.TypeInfo> = [];
-                     foreach retType in unwrap info[ "ret" ] {
-                        let retTypeInfo = getTypeInfo( retType );
-                        retTypeList.insert( retTypeInfo );
-                     }
+                        let mut retTypeList: List<&Ast.TypeInfo> = [];
+                        foreach retType in unwrap info[ "ret" ] {
+                           let retTypeInfo = getTypeInfo( retType );
+                           retTypeList.insert( retTypeInfo );
+                        }  
 
-                     let funcType = info.type$[1];
-                     let methodFlag = funcType == "method" or funcType == "mut";
-                     let mutable = funcType == "mut";
+                        let funcType = info.type$[1];
+                        let methodFlag = funcType == "method" or funcType == "mut";
+                        let mutable = funcType == "mut";
 
-                     self.pushScope( false );
-                     
-                     let typeInfo = Ast.NormalTypeInfo.createFunc(
-                        false, true, self.scope,
-                        methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
-                        parentInfo, false, true, not methodFlag, .Pub,
-                        fieldName, argTypeList, retTypeList, mutable );
-                     
-                     self.popScope();
-                     
-                     Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
-                     if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
-                        Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
-                     }
-                     self.scope.add(
-                        methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
-                        not methodFlag, not methodFlag,
-                        fieldName, typeInfo, .Pub, not methodFlag, mutable, true );
+                        self.pushScope( false );
+                        
+                        let typeInfo = Ast.NormalTypeInfo.createFunc(
+                           false, true, self.scope,
+                           methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
+                           parentInfo, false, true, not methodFlag, .Pub,
+                           fieldName, argTypeList, retTypeList, mutable );
+                        
+                        self.popScope();
+                        
+                        Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
+                        if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
+                           Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
+                        }  
+                        self.scope.add(
+                           methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
+                           not methodFlag, not methodFlag,
+                           fieldName, typeInfo, .Pub, not methodFlag, mutable, true );
 
-                     switch name {
-                        case "List" {
-                           switch fieldName {
-                              case "insert" {      
-                                 typeInfoListInsert = typeInfo;
-                              }        
-                              case "remove" {
-                                 typeInfoListRemove = typeInfo;
-                              }
-                              case "unpack" {
-                                 typeInfoListUnpack = typeInfo;
-                              }
-                           }       
-                        }
-                        case "Array" {
-                           switch fieldName {
-                              case "unpack" {
-                                 typeInfoArrayUnpack = typeInfo;
-                              }
-                           }
-                        }
-                        case "Mapping" {
-                           switch fieldName {
-                              case "_toMap" {
-                                 typeInfoMappingToMap = typeInfo;
-                              }
-                           }
-                        }
-                        case "str" {
-                           switch fieldName {
-                              case "gmatch" {
-                                 typeInfoStrGMatch = typeInfo;
-                              }
-                           }
-                        }
-                        case "string" {
-                           switch fieldName {
-                              case "gmatch" {
-                                 typeInfoStringGMatch = typeInfo;
-                              }
-                              case "format" {
-                                 typeInfoStringForm = typeInfo;
-                              }
-                           }
-                        }
+                        setupBuiltinTypeInfo( name, fieldName, typeInfo );
                      }
                   }
                }

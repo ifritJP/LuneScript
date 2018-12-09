@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.front'
 if not _lune then
    _lune = {}
 end
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
+   end
+   return load( txt, "", "bt", env )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -156,7 +163,7 @@ end
 
 local function loadFromLuaTxt( txt )
 
-   local chunk, err = load( txt, "", "bt", _G )
+   local chunk, err = _lune.loadstring52( txt )
    do
       local _exp = err
       if _exp ~= nil then
@@ -241,7 +248,7 @@ function Front:searchModule( mod )
 
    local lnsSearchPath = package.path
    lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
-   local foundPath = package.searchpath( mod, lnsSearchPath )
+   local foundPath = Depend.searchpath( mod, lnsSearchPath )
    if  nil == foundPath then
       local _foundPath = foundPath
    
@@ -261,7 +268,7 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
       end
    end
    
-   local foundPath = package.searchpath( moduleFullName, luaSearchPath )
+   local foundPath = Depend.searchpath( moduleFullName, luaSearchPath )
    if  nil == foundPath then
       local _foundPath = foundPath
    
@@ -594,11 +601,6 @@ end
 local function exec( args )
 
    local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
-   if version < 5.2 then
-      io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version >= 5.2." ) )
-      os.exit( 1 )
-   end
-   
    local option = Option.analyze( args )
    local front = Front.new(option)
    front:exec(  )

@@ -244,7 +244,8 @@ pub fn TransUnit.createAST(
       }
 
       let mut luneHelperInfo = new Ast.LuneHelperInfo(
-         self.useNilAccess, self.useUnwrapExp, self.hasMappingClassDef );
+         self.useNilAccess, self.useUnwrapExp,
+         self.hasMappingClassDef, self.useLoad );
       let mut rootNode = Ast.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
          [ Ast.builtinTypeNone ], children, processInfo,

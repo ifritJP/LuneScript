@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.5'
+_moduleObj.__formatVersion = '1.0.6'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -30,7 +30,7 @@ children = {1005, } }
 _typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'LuaMod', kind = 12, 
 children = {1007, 1029, } }
 _typeInfoList[5] = { skind = 4, parentId = 1005, typeId = 1007, txt = 'CodeKind',
-accessMode = 1, kind = 11, valTypeId = 18, enumValList = {Finalize = 6,Init = 0,LoadModule = 4,Mapping = 5,NilAcc = 2,Unpack = 1,Unwrap = 3,} }
+accessMode = 1, kind = 11, valTypeId = 18, enumValList = {Finalize = 8,Init = 0,LoadModule = 4,LoadStr51 = 5,LoadStr52 = 6,Mapping = 7,NilAcc = 2,Unpack = 1,Unwrap = 3,} }
 _typeInfoList[6] = { skind = 0, parentId = 1005, typeId = 1008, nilable = true, orgTypeId = 1007 }
 _typeInfoList[7] = { skind=3, parentId = 1007, typeId = 1009, baseId = 1, txt = 'get__txt',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }

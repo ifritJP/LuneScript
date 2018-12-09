@@ -28,6 +28,8 @@ pub enum CodeKind {
    NilAcc,
    Unwrap,
    LoadModule,
+   LoadStr51,
+   LoadStr52,
    Mapping,
    Finalize,
 }
@@ -43,7 +45,6 @@ if not table.unpack then
    table.unpack = unpack
 end
 ```;
-
 
 codeMap[ .NilAcc ] = ```
 function _lune.nilacc( val, fieldName, access, ... )
@@ -113,6 +114,26 @@ function _lune.loadModule( mod )
 end
 ```;
 
+
+codeMap[ .LoadStr51 ] =```
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
+   end
+   return func
+end
+```;
+
+codeMap[ .LoadStr52 ] =```
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
+   end
+   return load( txt, "", "bt", env )
+end
+```;
+   
 codeMap[ .Mapping ] = ```      
 function _lune._toStem( val )
    return val

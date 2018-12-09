@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.5'
+_moduleObj.__formatVersion = '1.0.6'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -98,7 +98,7 @@ _typeInfoList[6] = { skind=3, parentId = 1005, typeId = 1061, baseId = 1, txt = 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {16}, children = {}, }
 _typeInfoList[7] = { skind = 0, parentId = 1005, typeId = 1062, nilable = true, orgTypeId = 1061 }
 _typeInfoList[8] = { skind=3, parentId = 1005, typeId = 1166, baseId = 1, txt = 'TxtStream',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {84}, argTypeId = {}, retTypeId = {}, children = {1175, 1178, 1183}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {87}, argTypeId = {}, retTypeId = {}, children = {1175, 1178, 1183}, }
 _typeInfoList[9] = { skind = 0, parentId = 1005, typeId = 1167, nilable = true, orgTypeId = 1166 }
 _typeInfoList[10] = { skind = 1, parentId = 1, typeId = 1174, srcTypeId = 27, mutable = false }
 _typeInfoList[11] = { skind=3, parentId = 1166, typeId = 1175, baseId = 1, txt = '__init',
@@ -192,7 +192,7 @@ _typeInfoList[71] = { skind=3, parentId = 1280, typeId = 1288, baseId = 1, txt =
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
 _typeInfoList[72] = { skind = 0, parentId = 1280, typeId = 1289, nilable = true, orgTypeId = 1288 }
 _typeInfoList[73] = { skind=3, parentId = 1280, typeId = 1313, baseId = 1, txt = '__init',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {84, 27, 16}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {87, 27, 16}, retTypeId = {}, children = {}, }
 _typeInfoList[74] = { skind = 0, parentId = 1280, typeId = 1314, nilable = true, orgTypeId = 1313 }
 _typeInfoList[75] = { skind=3, parentId = 1280, typeId = 1323, baseId = 1, txt = 'getStreamName',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1174}, children = {}, }

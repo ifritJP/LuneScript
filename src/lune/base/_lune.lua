@@ -61,6 +61,19 @@ function _lune.loadModule( mod )
    end
    return require( mod )
 end
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
+   end
+   return func
+end
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
+   end
+   return load( txt, "", "bt", env )
+end
       
 function _lune._toStem( val )
    return val

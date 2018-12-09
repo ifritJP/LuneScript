@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import lune.base.LuaVer;
+
 /**
 path の最終更新日時を取得する。
 
@@ -51,5 +53,28 @@ pub fn getFileLastModifiedTime( path: str ): real! {
 }
 
 
-let mut list = [1];
-list.insert( 1 );
+fn searchpath51( mod:str, pathPattern:str ) : str! {
+   apply path of string.gmatch( pathPattern, "[^;]+" ) {
+      if! let index = path.find( "%?.l[un][as]$" ) {
+         let dir = path.sub( 1, index - 1 );
+         let suffix = path.sub( #path - 3 );
+         let target = dir .. mod.gsub( "%.", "/" ) .. suffix;
+         if! let mut fileObj = io.open( target ) {
+            fileObj.close();
+            return target;
+         }
+      }
+   }
+   return nil;
+}
+
+form SearchpathForm( mod:str, pathPattern:str ) : str!;
+
+let mut searchpathForm:SearchpathForm = searchpath51;
+if LuaVer.curVer.$hasSearchPath {
+   searchpathForm = (unwrap _G.package$.searchpath)@@SearchpathForm;
+}
+
+pub fn searchpath( mod:str, pathPattern:str ) : str! {
+   return searchpathForm( mod, pathPattern );
+}

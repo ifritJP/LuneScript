@@ -3217,19 +3217,20 @@ _moduleObj.LuneHelperInfo = LuneHelperInfo
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end
-function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef )
+function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad )
    local obj = {}
    LuneHelperInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef )
+      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad )
    end        
    return obj 
 end         
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef ) 
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad ) 
 
    self.useNilAccess = useNilAccess
    self.useUnwrapExp = useUnwrapExp
    self.hasMappingClassDef = hasMappingClassDef
+   self.useLoad = useLoad
 end
 function LuneHelperInfo:get_useNilAccess()       
    return self.useNilAccess         
@@ -3239,6 +3240,9 @@ function LuneHelperInfo:get_useUnwrapExp()
 end
 function LuneHelperInfo:get_hasMappingClassDef()       
    return self.hasMappingClassDef         
+end
+function LuneHelperInfo:get_useLoad()       
+   return self.useLoad         
 end
 
 local ModuleInfo = {}

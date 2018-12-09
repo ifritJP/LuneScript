@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.convLua'
 if not _lune then
    _lune = {}
 end
+function _lune.loadstring52( txt, env )
+   if not env then
+      return load( txt )
+   end
+   return load( txt, "", "bt", env )
+end
+
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -763,6 +770,10 @@ if not _lune then
 end]==] )
       if not self.targetLuaVer:get_hasTableUnpack() then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
+      end
+      
+      if node:get_luneHelperInfo():get_useLoad() then
+         self:writeln( self.targetLuaVer:getLoadCode(  ) )
       end
       
       if node:get_luneHelperInfo():get_useNilAccess() then
@@ -2254,6 +2265,8 @@ function convFilter:processExpRef( node, parent )
    if node:get_token().txt == "super" then
       local funcType = node:get_expType()
       self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
+   elseif node:get_expType():equals( TransUnit.typeInfoLuneLoad ) then
+      self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
    else
     
       if self.macroVarSymMap[node:get_symbolInfo():getOrg(  )] then
@@ -2561,7 +2574,7 @@ function MacroEvalImp:eval( node )
       return val
    end
    
-   local chunk, err = load( oStream:get_txt(  ), "", "bt", newEnv )
+   local chunk, err = _lune.loadstring52( oStream:get_txt(  ), newEnv )
    if err ~= nil then
       Util.err( err )
    end

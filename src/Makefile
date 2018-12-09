@@ -136,10 +136,12 @@ test-comp:
 	mkdir -p work/1/test
 	mkdir -p work/2/lune/base
 	mkdir -p work/3/lune/base
+	mkdir -p work/5/lune/base
 	mkdir -p work/newglue
 	@cp lune/base/base*.lua lune/base/*.lns work/1/lune/base
 	@cp lune/base/base*.lua lune/base/*.lns work/2/lune/base
 	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
+	@cp lune/base/base*.lua lune/base/*.lns work/5/lune/base
 	$(call buildLns,.,work/1)
 	$(MAKE) test-comp2
 
@@ -250,7 +252,7 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,-u SAVE ../4,)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
-ifneq ($(wildcard $(LUA51)),)
+ifneq ($(shell which $(LUA51)),)
 	$(MAKE) test-lua51
 endif
 
@@ -272,23 +274,33 @@ endif
 
 
 test-lua51:
-# lua5.1 にクロスコンパイルして実行テスト
-	mkdir -p work/5
-	cp -a work/3/lune work/5
+# LuneScript を Lua 5.1 にクロスコンパイルして実行
+	$(call buildLns,work/3,../5 -ol 51)
+	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	cp -a test work/5
-	grep -v skip-lua51 work/3/test/start.lns > work/5/test/start.lns
-	$(call exeLune,work/5,test/start.lns,exe,) | sed 's/\.0//g' > work/test6.result
+	mv work/5/test/glueTest51.so work/5/test/glueTest.so 
+	grep -v skip-lua51 test/start.lns > work/5/test/start.lns
+	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
 
+# 比較用にクロスコンパイル前のテスト結果を取得
 	mkdir -p work/6
 	cp -a work/3/lune work/6
-	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	cp -a test work/6
-	mv work/6/test/glueTest51.so work/6/test/glueTest.so 
-	grep -v skip-lua51 work/3/test/start.lns > work/6/test/start.lns
-	$(call exeLune,work/6,test/start.lns,-u -ol 51 SAVE,)
-	(cd work/6; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7.result
+	grep -v skip-lua51 test/start.lns > work/6/test/start.lns
+	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
+
+# サンプルを lua5.1 にクロスコンパイルして実行テスト
+	mkdir -p work/7
+	cp -a work/3/lune work/7
+	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
+	cp -a test work/7
+	mv work/7/test/glueTest51.so work/7/test/glueTest.so 
+	grep -v skip-lua51 test/start.lns > work/7/test/start.lns
+	$(call exeLune,work/7,test/start.lns,-u -ol 51 SAVE,)
+	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test8.result
 
 	diff work/test6.result  work/test7.result 
+	diff work/test7.result  work/test8.result 
 
 
 accept-package:

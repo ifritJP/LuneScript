@@ -4,6 +4,14 @@ local __mod__ = 'lune.base.LuaVer'
 if not _lune then
    _lune = {}
 end
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local BitOp = {}
 _moduleObj.BitOp = BitOp
 BitOp._val2NameMap = {}
@@ -38,22 +46,34 @@ BitOp.__allList[3] = BitOp.Cant
 
 local LuaVerInfo = {}
 _moduleObj.LuaVerInfo = LuaVerInfo
+function LuaVerInfo:isSupport( symbol )
+
+   return not self.noSupportSymMap[symbol]
+end
+function LuaVerInfo:getLoadCode(  )
+
+   return LuaMod.getCode( self.loadKind )
+end
 function LuaVerInfo.setmeta( obj )
   setmetatable( obj, { __index = LuaVerInfo  } )
 end
-function LuaVerInfo.new( hasBitOp, hasTableUnpack, canFormStem2Str )
+function LuaVerInfo.new( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, loadKind, noSupportSymMap )
    local obj = {}
    LuaVerInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( hasBitOp, hasTableUnpack, canFormStem2Str )
+      obj:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, loadKind, noSupportSymMap )
    end        
    return obj 
 end         
-function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str ) 
+function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, loadKind, noSupportSymMap ) 
 
    self.hasBitOp = hasBitOp
    self.hasTableUnpack = hasTableUnpack
    self.canFormStem2Str = canFormStem2Str
+   self.hasSearchPath = hasSearchPath
+   self.loadStrFuncName = loadStrFuncName
+   self.loadKind = loadKind
+   self.noSupportSymMap = noSupportSymMap
 end
 function LuaVerInfo:get_hasBitOp()       
    return self.hasBitOp         
@@ -64,14 +84,30 @@ end
 function LuaVerInfo:get_canFormStem2Str()       
    return self.canFormStem2Str         
 end
+function LuaVerInfo:get_hasSearchPath()       
+   return self.hasSearchPath         
+end
+function LuaVerInfo:get_loadStrFuncName()       
+   return self.loadStrFuncName         
+end
 
-local ver51 = LuaVerInfo.new(BitOp.Cant, false, false)
+local function symbolList2Map( list )
+
+   local map = {}
+   for __index, name in pairs( list ) do
+      map[name] = true
+   end
+   
+   return map
+end
+
+local ver51 = LuaVerInfo.new(BitOp.Cant, false, false, false, "loadstring51", LuaMod.CodeKind.LoadStr51, symbolList2Map( {"package.searchpath"} ))
 _moduleObj.ver51 = ver51
 
-local ver52 = LuaVerInfo.new(BitOp.HasMod, true, true)
+local ver52 = LuaVerInfo.new(BitOp.HasMod, true, true, true, "loadstring52", LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver52 = ver52
 
-local ver53 = LuaVerInfo.new(BitOp.HasOp, true, true)
+local ver53 = LuaVerInfo.new(BitOp.HasOp, true, true, true, "loadstring52", LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver53 = ver53
 
 local function getCurrentVer(  )

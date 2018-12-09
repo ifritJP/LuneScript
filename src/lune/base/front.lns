@@ -151,7 +151,8 @@ fn Front.convert(
 
 fn loadFromLuaTxt( txt:str ): stem {
    //--print( txt )
-   let chunk, err = load( txt, "", "bt", _G );
+   //let chunk, err = load( txt, "", "bt", _G );
+   let chunk, err = _load( txt );
    if! err {
       print( _exp );
    }     
@@ -231,7 +232,8 @@ fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
 fn Front.searchModule( mod:str ): str! {
    let mut lnsSearchPath = package.path;
    lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" );
-   let! foundPath = package.searchpath( mod, lnsSearchPath ) {
+   //let! foundPath = package.searchpath( mod, lnsSearchPath ) {
+   let! foundPath = Depend.searchpath( mod, lnsSearchPath ) {
       return nil;
    };
    return foundPath.gsub( "^./", "" );
@@ -243,7 +245,8 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
       luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path );
       //luaSearchPath = string.format( "%s/?.lua", _exp );
    }
-   let! foundPath = package.searchpath( moduleFullName, luaSearchPath ) {
+   //let! foundPath = package.searchpath( moduleFullName, luaSearchPath ) {
+   let! foundPath = Depend.searchpath( moduleFullName, luaSearchPath ) {
       return nil;
    };
    return foundPath.gsub( "^./", "" );
@@ -544,12 +547,12 @@ pub fn Front.exec() mut
 pub fn exec( args: str[] ) {
    let version = tonumber( _VERSION.gsub( "^[^%d]+", "" ), nil );
 
-   if version < 5.2 {
-      io.stderr.write(
-         string.format( "LuneScript doesn't support this lua version(%s). %s\n",
-		        version, "please use the version >= 5.2.") );
-      os.exit( 1 );
-   }  
+   // if version < 5.2 {
+   //    io.stderr.write(
+   //       string.format( "LuneScript doesn't support this lua version(%s). %s\n",
+   //      	        version, "please use the version >= 5.2.") );
+   //    os.exit( 1 );
+   // }  
    
    let mut option = Option.analyze( args );
    let mut front = new Front( option );

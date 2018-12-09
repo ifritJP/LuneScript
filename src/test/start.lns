@@ -597,7 +597,7 @@ macro _test() {
    {
       let mut fileObj = unwrap io.open( "test/data.lua" );
       let txt = unwrap fileObj.read( "*a" );
-      let val = unwrap load( txt )$();
+      let val = unwrap _load( txt )$();
       let val2 = unwrap val$.a;
       let mut val3:stat[] = [];
       foreach val4, key in val2@@Map<str,stem> {

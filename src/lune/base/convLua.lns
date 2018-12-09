@@ -660,6 +660,9 @@ end``` );
       if not self.targetLuaVer.$hasTableUnpack {
          self.writeln( LuaMod.getCode( .Unpack ) );
       }
+      if node.$luneHelperInfo.$useLoad {
+         self.writeln( self.targetLuaVer.getLoadCode() );
+      }
       if node.$luneHelperInfo.$useNilAccess {
          self.writeln( LuaMod.getCode( .NilAcc ) );
       }
@@ -2159,6 +2162,9 @@ pub override fn convFilter.processExpRef(
       self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
                             funcType.$rawTxt ) );
    }
+   elseif node.$expType.equals( TransUnit.typeInfoLuneLoad ) {
+      self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
+   }
    else {
       if self.macroVarSymMap[ node.$symbolInfo.getOrg() ] {
          self.write( "macroVar." );
@@ -2459,7 +2465,8 @@ pub class MacroEvalImp extend Ast.MacroEval {
          return val;
       };
       
-      let chunk, err = load( oStream.get_txt(), "", "bt", newEnv );
+      //let chunk, err = load( oStream.get_txt(), "", "bt", newEnv );
+      let chunk, err = _load( oStream.get_txt(), newEnv );
       when! err {
          Util.err( err );
       }
