@@ -1,0 +1,143 @@
+--lune/base/frontInterface.lns
+local _moduleObj = {}
+local __mod__ = 'lune.base.frontInterface'
+if not _lune then
+   _lune = {}
+end
+function _lune.loadModule( mod )
+   if __luneScript then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
+local Util = _lune.loadModule( 'lune.base.Util' )
+local ImportModuleInfo = {}
+_moduleObj.ImportModuleInfo = ImportModuleInfo
+function ImportModuleInfo.new(  )
+   local obj = {}
+   ImportModuleInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function ImportModuleInfo:__init() 
+   self.moduleSet = {}
+   self.moduleList = {}
+end
+function ImportModuleInfo:add( modulePath )
+
+   if self.moduleSet[modulePath] then
+      return false
+   end
+   
+   self.moduleSet[modulePath] = true
+   table.insert( self.moduleList, modulePath )
+   return true
+end
+function ImportModuleInfo:remove(  )
+
+   if #self.moduleList == 0 then
+      Util.err( "self.moduleList is 0" )
+   end
+   
+   self.moduleSet[self.moduleList[#self.moduleList]] = nil
+   table.remove( self.moduleList )
+end
+function ImportModuleInfo:getFull(  )
+
+   local txt = ""
+   for __index, modulePath in pairs( self.moduleList ) do
+      txt = string.format( "%s -> %s", txt, modulePath)
+   end
+   
+   return txt
+end
+function ImportModuleInfo.setmeta( obj )
+  setmetatable( obj, { __index = ImportModuleInfo  } )
+end
+
+local frontInterface = {}
+_moduleObj.frontInterface = frontInterface
+function frontInterface.setmeta( obj )
+  setmetatable( obj, { __index = frontInterface  } )
+end
+function frontInterface.new(  )
+   local obj = {}
+   frontInterface.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end        
+   return obj 
+end         
+function frontInterface:__init(  ) 
+
+end
+
+local dummyFront = {}
+function dummyFront:loadModule( mod )
+
+   return require( mod ), {}
+end
+function dummyFront:loadMeta( importModuleInfo, mod )
+
+   error( "not implements" )
+end
+function dummyFront:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
+
+   error( "not implements" )
+end
+function dummyFront:searchModule( mod )
+
+   error( "not implements" )
+end
+function dummyFront:error( message )
+
+   error( "not implements" )
+end
+function dummyFront.setmeta( obj )
+  setmetatable( obj, { __index = dummyFront  } )
+end
+function dummyFront.new(  )
+   local obj = {}
+   dummyFront.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end        
+   return obj 
+end         
+function dummyFront:__init(  ) 
+
+end
+
+__luneScript = dummyFront.new()
+local function setFront( newFront )
+
+   __luneScript = newFront
+end
+_moduleObj.setFront = setFront
+local function loadModule( mod )
+
+   return __luneScript:loadModule( mod )
+end
+_moduleObj.loadModule = loadModule
+local function loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
+
+   return __luneScript:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
+end
+_moduleObj.loadFromLnsTxt = loadFromLnsTxt
+local function loadMeta( importModuleInfo, mod )
+
+   return __luneScript:loadMeta( importModuleInfo, mod )
+end
+_moduleObj.loadMeta = loadMeta
+local function searchModule( mod )
+
+   return __luneScript:searchModule( mod )
+end
+_moduleObj.searchModule = searchModule
+local function error( message )
+
+   __luneScript:error( message )
+end
+_moduleObj.error = error
+return _moduleObj

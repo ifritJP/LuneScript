@@ -1,0 +1,243 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Parser;
+import lune.base.Util;
+import lune.base.LuaMod;
+import lune.base.Ver;
+import lune.base.LuaVer;
+
+pub enum ModeKind {
+   Unknown = "",
+   Token = "token",
+   Ast = "ast",
+   Diag = "diag",
+   Complete = "comp",
+   Lua = "lua",
+   LuaMeta = "LUA",
+   Save = "save",
+   SaveMeta = "SAVE",
+   Exec = "exe",
+   Glue = "glue",
+}
+
+pub class Option {
+   pub let mut mode:ModeKind;
+   /** 解析対象のモジール名。 comp モードの時に使用。 */
+   pub let analyzeModule:str!;
+   /** 解析位置。comp モードの時に使用。 */
+   pub let analyzePos: Parser.Position!;
+   /** 出力ディレクトリ。 save, SAVE モードの時に使用*/
+   pub let outputDir:str!;
+   /** 処理対象のスクリプトファイルパス */
+   pub let mut scriptPath: str;
+   /** プロファイルする場合 true */
+   pub let mut validProf:bool;
+   /** true の場合 require( 'lune.base._lune' ) する */
+   pub let mut useLuneModule:bool;
+   /** 依存ファイル情報の出力先ストリーム */
+   pub let mut dependsStream:oStream!;
+   /** ロード時に meta 等を更新する  */
+   pub let mut updateOnLoad:bool;
+   /** 変換先の Lua バージョン*/
+   pub let mut targetLuaVer:&LuaVer.LuaVerInfo;
+
+   pub fn __init() {
+      self.validProf = false;
+      self.mode = .Unknown;
+      self.scriptPath = "";
+      self.useLuneModule = false;
+      self.updateOnLoad = false;
+      self.targetLuaVer = LuaVer.curVer;
+   }
+}
+
+pub fn outputLuneMod( dir:str! ):str! {
+   let mut path = "_lune.lua";
+   if! dir {
+      if _exp ~= "" {
+         path = _exp.gsub( "/$", "" ) .. "/" .. path;
+      }
+   }
+   let! mut fileObj = io.open( path, "w" ) {
+      return "failed to open -- %s" ( path );
+   };
+
+   foreach kind in LuaMod.CodeKind.$_allList {
+      fileObj.write( LuaMod.getCode( kind ) );
+   }
+
+   fileObj.close();
+   return nil;
+}
+
+pub fn analyze( argList: str[] ) : Option {
+
+   fn printUsage() {
+      print( ```
+usage:
+  <type1> [-prof] [-r] src.lns mode [mode-option]
+  <type2> -mklunemod dir
+  <type3> --version
+
+* type1
+  - src.lns [common_op] ast
+  - src.lns [common_op] comp [-i] module line column
+  - src.lns [common_op] [-ol ver] <lua|LUA>
+  - src.lns [common_op] [-ol ver] [--depends dependfile] <save|SAVE> output-dir
+  - src.lns [common_op] exe
+
+  -r: use 'require( "lune.base._lune" )'
+  -ol: output lua version. ver = 51 or 52 or 53.
+  --depends: output dependfile
+
+  common_op:
+    -u: update meta and lua on load.
+
+* type2
+  dir: output directory.
+``` );
+      os.exit( 1 );
+   }
+   
+   let mut option = new Option();
+   let mut useStdInFlag = false;
+   let mut lineNo:int! = nil;
+   let mut column:int! = nil;
+
+   let mut index = 1;
+   while #argList >= index {
+      let arg = argList[ index ];
+
+      if arg.find( "^-" ) {
+         switch ( arg ) {
+            case "-i" {     
+               useStdInFlag = true;
+            }
+            case "-prof" {
+               option.validProf = true;
+            }
+            case "--nodebug" {
+               Util.setDebugFlag( false );
+            }
+            case "--version" {
+               print( "LuneScript: version %s" (Ver.version) );
+               os.exit( 0 );
+            }
+            case "-mklunemod" {
+               let path = (#argList > index) and argList[ index + 1 ] or nil;
+               if! let mess = outputLuneMod( path ) {
+                  Util.errorLog( mess );
+                  os.exit( 1 );
+               }              
+               os.exit( 0 );
+            }
+            case "-r" {
+               option.useLuneModule = true;
+            }
+            case "-u" {
+               option.updateOnLoad = true;
+            }
+            case "--depends" {
+               if #argList > index {
+                  if! let stream = io.open( argList[ index + 1 ], "w" ) {
+                     option.dependsStream = stream;
+                  }
+                  else {
+                     Util.err( "failed to open -- %s" (argList[ index + 1 ]) );
+                  }
+               }
+               index = index + 1;
+            }
+            case "-ol" {
+               if #argList > index {
+                  switch argList[ index + 1 ] {
+                     case "51" {
+                        option.targetLuaVer = LuaVer.ver51;
+                     }
+                     case "52" {
+                        option.targetLuaVer = LuaVer.ver52;
+                     }
+                     case "53" {
+                        option.targetLuaVer = LuaVer.ver53;
+                     }
+                  }
+               }
+               index = index + 1;
+            }
+            default {
+               Util.log( "unknown option -- %s" (arg) );
+               os.exit( 1 );
+            }
+         }
+      }
+      else {
+         if option.scriptPath == "" {
+            option.scriptPath = arg;
+         }
+         elseif option.mode == "" {
+            if! let mode = ModeKind._from( arg ) {
+               option.mode = mode;
+            }
+            else {
+               Util.err( "unknown mode -- %s" ( arg ) );
+            }
+         }
+         else {
+            switch( option.mode ) {
+               case .Complete {
+                  if not option.analyzeModule {
+                     option.analyzeModule = arg;
+                  }
+                  elseif not lineNo {
+                     lineNo = tonumber( arg )@@int;
+                  }
+                  elseif not column {
+                     column = tonumber( arg )@@int;
+                     option.analyzePos = new Parser.Position(
+                        unwrap lineNo, unwrap column );
+                  }
+               }
+               case .Save, .SaveMeta, .Glue {
+                  option.outputDir = arg;
+               }
+               default {
+               }
+            }
+         }
+      }
+
+      index = index + 1;
+   }
+
+   if option.scriptPath == "" or option.mode == .Unknown {
+      printUsage();
+   }
+
+   if useStdInFlag and option.analyzeModule {
+      Parser.StreamParser.setStdinStream( unwrap option.analyzeModule );
+   }
+
+   return option;
+}

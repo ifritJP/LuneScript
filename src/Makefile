@@ -105,7 +105,7 @@ release-check:
 #	$(MAKE) test-comp LUA=lua5.1 LUA_INC_DIR=/usr/include/lua5.1/
 
 build:
-	$(call buildLns,.,.)
+	$(call buildLns,$(LNSDIR),.)
 
 test-save:
 	$(call test-meta-update,.)
@@ -270,8 +270,7 @@ endif
 	diff work/1/start.dep work/3/start.dep
 	diff -r work/glue work/newglue
 
-	$(MAKE) accept-package ACCEPT=y
-
+	$(MAKE) accept-package ACCEPT=y ENABLE_LUA51=$(shell which $(LUA51))
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
@@ -283,11 +282,9 @@ test-lua51:
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
 
 # 比較用にクロスコンパイル前のテスト結果を取得
-	mkdir -p work/6
-	cp -a work/3/lune work/6
-	cp -a test work/6
-	grep -v skip-lua51 test/start.lns > work/6/test/start.lns
-	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
+	$(MAKE) test-lua51-sub LUA=$(LUA51) 
+
+	diff -r work/5/lune work/6/lune
 
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	mkdir -p work/7
@@ -300,7 +297,18 @@ test-lua51:
 	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test8.result
 
 	diff work/test6.result  work/test7.result 
-	diff work/test7.result  work/test8.result 
+	diff work/test7.result  work/test8.result
+
+
+test-lua51-sub:
+	mkdir -p work/6/lune/base
+	@cp lune/base/base*.lua lune/base/*.lns work/6/lune/base
+	$(call buildLns,work/5,../6)
+	cp -a test work/6
+	mv work/6/test/glueTest51.so work/6/test/glueTest.so 
+	grep -v skip-lua51 test/start.lns > work/6/test/start.lns
+	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
+
 
 
 accept-package:
@@ -310,7 +318,11 @@ ifndef ACCEPT
 endif
 	cp work/3/lune/base/*.lua lune/base/
 	cp work/3/lune/base/*.meta lune/base/
-
+ifneq ($(ENABLE_LUA51),)
+	cp work/6/lune/base/*.lns legacy/lua51/lune/base/
+	cp work/6/lune/base/*.lua legacy/lua51/lune/base/
+	cp work/6/lune/base/*.meta legacy/lua51/lune/base/
+endif
 
 ifneq ($(findstring $(MAKECMDGOALS),"check-meta-format" ),)
 VER_PICK=grep 'local metaVersion' | awk '//{print $$4}'
@@ -346,14 +358,14 @@ ifeq ($(LUA_MOD_DIR),)
 endif
 
 install: check_lua_mod_dir
-	$(MAKE) build LUA=$(LUA)
+	$(MAKE) build LUA=$(LUA) LNSDIR=$(LNSDIR)
 	@mkdir -p $(LUA_MOD_DIR)/lune/base
 	@cat lnsc | sed "s@#!.*@#! /usr/bin/env $(abspath $(LUA))@g" > /tmp/lnsc
 	@chmod +x /tmp/lnsc
 	@$(INSTALL) /tmp/lnsc /usr/bin
 	@echo installed -- /usr/bin/lnsc
 	@rm /tmp/lnsc
-	@$(INSTALL) lune/base/* $(LUA_MOD_DIR)/lune/base
+	@$(INSTALL) $(LNSDIR)/lune/base/* $(LUA_MOD_DIR)/lune/base
 	@echo installed -- $(LUA_MOD_DIR)/lune
 
 uninstall: check_lua_mod_dir

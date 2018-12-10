@@ -4,11 +4,12 @@ local __mod__ = 'lune.base.front'
 if not _lune then
    _lune = {}
 end
-function _lune.loadstring52( txt, env )
-   if not env then
-      return load( txt )
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
    end
-   return load( txt, "", "bt", env )
+   return func
 end
 
 function _lune.unwrap( val )
@@ -67,7 +68,7 @@ function _luneSym2Str( val )
       local _exp = val
       if _exp ~= nil then
          if type( _exp ) ~= "table" then
-            return string.format( "%s", _exp )
+            return string.format( "%s", tostring( _exp) )
          end
          
          local txt = ""
@@ -163,7 +164,7 @@ end
 
 local function loadFromLuaTxt( txt )
 
-   local chunk, err = _lune.loadstring52( txt )
+   local chunk, err = _lune.loadstring51( txt )
    do
       local _exp = err
       if _exp ~= nil then
@@ -264,7 +265,7 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
    do
       local _exp = addSearchPath
       if _exp ~= nil then
-         luaSearchPath = string.format( "%s/?.lua;%s", addSearchPath, package.path )
+         luaSearchPath = string.format( "%s/?.lua;%s", tostring( addSearchPath), package.path )
       end
    end
    
@@ -518,8 +519,8 @@ function Front:saveToLua(  )
       local metaPath = self.option.scriptPath:gsub( "%.lns$", ".meta" )
       if self.option.outputDir then
          local filename = mod:gsub( "%.", "/" )
-         luaPath = string.format( "%s/%s.lua", self.option.outputDir, filename )
-         metaPath = string.format( "%s/%s.meta", self.option.outputDir, filename )
+         luaPath = string.format( "%s/%s.lua", tostring( self.option.outputDir), filename )
+         metaPath = string.format( "%s/%s.meta", tostring( self.option.outputDir), filename )
       end
       
       do
@@ -602,7 +603,7 @@ local function exec( args )
 
    local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
    if version < 5.1 then
-      io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version >= 5.1." ) )
+      io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", tostring( version), "please use the version >= 5.1." ) )
       os.exit( 1 )
    end
    

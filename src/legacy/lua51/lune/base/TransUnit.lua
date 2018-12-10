@@ -784,7 +784,7 @@ function _TypeInfoModule:createTypeInfo( param )
       if  nil == workTypeInfo then
          local _workTypeInfo = workTypeInfo
       
-         Util.err( string.format( "not found parentInfo %s %s", self.parentId, self.txt) )
+         Util.err( string.format( "not found parentInfo %s %s", tostring( self.parentId), self.txt) )
       end
       
       parentInfo = workTypeInfo
@@ -794,7 +794,7 @@ function _TypeInfoModule:createTypeInfo( param )
    if  nil == parentScope then
       local _parentScope = parentScope
    
-      return nil, string.format( "not found parentScope %s %s", self.parentId, self.txt)
+      return nil, string.format( "not found parentScope %s %s", tostring( self.parentId), self.txt)
    end
    
    local newTypeInfo = parentScope:getTypeInfoChild( self.txt )
@@ -803,7 +803,7 @@ function _TypeInfoModule:createTypeInfo( param )
       if _exp ~= nil then
          param.typeId2Scope[self.typeId] = _exp:get_scope()
          if not _exp:get_scope() then
-            return nil, string.format( "not found scope %s %s %s %s %s", parentScope, self.parentId, self.typeId, self.txt, _exp:getTxt(  ))
+            return nil, string.format( "not found scope %s %s %s %s %s", tostring( parentScope), tostring( self.parentId), tostring( self.typeId), self.txt, _exp:getTxt(  ))
          end
          
          param.typeId2TypeInfo[self.typeId] = _exp
@@ -881,7 +881,7 @@ function _TypeInfoNormal:createTypeInfo( param )
          if  nil == workTypeInfo then
             local _workTypeInfo = workTypeInfo
          
-            return nil, string.format( "not found parentInfo %s %s", self.parentId, self.txt)
+            return nil, string.format( "not found parentInfo %s %s", tostring( self.parentId), self.txt)
          end
          
          parentInfo = workTypeInfo
@@ -921,7 +921,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       if  nil == parentScope then
          local _parentScope = parentScope
       
-         return nil, string.format( "not found parentScope %s %s", self.parentId, self.txt)
+         return nil, string.format( "not found parentScope %s %s", tostring( self.parentId), self.txt)
       end
       
       if self.txt ~= "" then
@@ -934,7 +934,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             if _exp ~= nil then
                param.typeId2Scope[self.typeId] = _exp:get_scope()
                if not _exp:get_scope() then
-                  Util.err( string.format( "not found scope %s %s %s %s %s", parentScope, self.parentId, self.typeId, self.txt, _exp:getTxt(  )) )
+                  Util.err( string.format( "not found scope %s %s %s %s %s", tostring( parentScope), tostring( self.parentId), tostring( self.typeId), self.txt, _exp:getTxt(  )) )
                end
                
                param.typeId2TypeInfo[self.typeId] = _exp
@@ -995,7 +995,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       newTypeInfo = param.scope:getTypeInfo( self.txt, param.scope, false )
       if not newTypeInfo then
          for key, val in pairs( self:_toMap(  ) ) do
-            Util.errorLog( string.format( "error: illegal self %s:%s", key, val) )
+            Util.errorLog( string.format( "error: illegal self %s:%s", key, tostring( val)) )
          end
          
       end
@@ -1434,7 +1434,7 @@ local function expandVal( tokenList, val, pos )
          do
             local _switchExp = type( _exp )
             if _switchExp == "boolean" then
-               local token = string.format( "%s", _exp)
+               local token = string.format( "%s", tostring( _exp))
                local kind = Parser.TokenKind.Kywd
                table.insert( tokenList, Parser.Token.new(kind, token, pos) )
             elseif _switchExp == "number" then
@@ -1446,7 +1446,7 @@ local function expandVal( tokenList, val, pos )
                
                table.insert( tokenList, Parser.Token.new(kind, num, pos) )
             elseif _switchExp == "string" then
-               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '[[%s]]', _exp), pos) )
+               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '[[%s]]', tostring( _exp)), pos) )
             elseif _switchExp == "table" then
                table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, "{", pos) )
                for key, item in pairs( _exp ) do
@@ -1551,7 +1551,7 @@ function TransUnit:getTokenNoErr(  )
                      nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos)
                      self:pushbackToken( nextToken )
                   elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) then
-                     nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", _lune.unwrap( macroVal.val)), nextToken.pos)
+                     nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", tostring( _lune.unwrap( macroVal.val))), nextToken.pos)
                      self:pushbackToken( nextToken )
                   else
                    
@@ -1910,7 +1910,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                   table.insert( _typeInfoList, _exp )
                else
                   for key, val in pairs( atomInfo ) do
-                     Util.errorLog( string.format( "table: %s:%s", key, val) )
+                     Util.errorLog( string.format( "table: %s:%s", key, tostring( val)) )
                   end
                   
                   Util.err( string.format( "_TypeInfo%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
@@ -2329,7 +2329,7 @@ function TransUnit:analyzeApply( token )
    local exp = self:analyzeExp( false )
    local expTypeList = exp:get_expTypeList()
    if #expTypeList < 3 then
-      self:addErrMess( exp:get_pos(), string.format( "apply must have 3 values -- %s", #expTypeList) )
+      self:addErrMess( exp:get_pos(), string.format( "apply must have 3 values -- %s", tostring( #expTypeList)) )
    end
    
    local itemTypeList = {}
@@ -2460,7 +2460,7 @@ function TransUnit:analyzeProvide( firstToken )
    
    self.provideNode = node
    if symbolInfo:get_accessMode() ~= Ast.AccessMode.Pub then
-      self:addErrMess( firstToken.pos, string.format( "provide variable must be 'pub'.  -- %s", symbolInfo:get_accessMode()) )
+      self:addErrMess( firstToken.pos, string.format( "provide variable must be 'pub'.  -- %s", tostring( symbolInfo:get_accessMode())) )
    end
    
    return node
@@ -3303,7 +3303,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          
       elseif token.txt == "__init" then
          if mode ~= DeclClassMode.Class then
-            self:error( string.format( "%s can not have __init method", mode) )
+            self:error( string.format( "%s can not have __init method", tostring( mode)) )
          end
          
          hasInitBlock = true
@@ -3511,7 +3511,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
             
          else 
             
-               self:error( string.format( "advertise member type is illegal -- %s", advertiseInfo:get_member():get_name()) )
+               self:error( string.format( "advertise member type is illegal -- %s", tostring( advertiseInfo:get_member():get_name())) )
          end
       end
       
@@ -5000,7 +5000,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    if  nil == classScope then
       local _classScope = classScope
    
-      self:error( string.format( "not found field: %s, %s, %s", classScope, className, classTypeInfo) )
+      self:error( string.format( "not found field: %s, %s, %s", tostring( classScope), className, tostring( classTypeInfo)) )
    end
    
    local symbolInfo = nil
@@ -5033,7 +5033,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    
    if not fieldTypeInfo then
       for name, val in pairs( classScope:get_symbol2SymbolInfoMap() ) do
-         Util.log( string.format( "debug: %s, %s", name, val) )
+         Util.log( string.format( "debug: %s, %s", name, tostring( val)) )
       end
       
       self:error( string.format( "not found field typeInfo: %s.%s", className, token.txt) )
@@ -5451,7 +5451,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       exp = self:analyzeDeclFunc( DeclFuncMode.Func, false, false, Ast.AccessMode.Local, false, nil, token, nil )
    else
     
-      self:error( string.format( "illegal mode -- %s", mode) )
+      self:error( string.format( "illegal mode -- %s", tostring( mode)) )
    end
    
    return self:analyzeExpCont( firstToken, _lune.unwrap( exp), skipFlag )
@@ -5512,7 +5512,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             if  nil == opLevel then
                local _opLevel = opLevel
             
-               self:error( string.format( "unknown op -- %s %s", opTxt, prevOpLevel) )
+               self:error( string.format( "unknown op -- %s %s", opTxt, tostring( prevOpLevel)) )
             end
             
             do

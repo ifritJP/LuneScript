@@ -1,10 +1,15 @@
 local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
-if version < 5.2 then
+if version < 5.1 then
    io.stderr:write(
       string.format(
 	 "LuneScript doesn't support this lua version(%s). %s\n",
-	 version, "please use the version >= 5.2." ) )
+	 version, "please use the version >= 5.1." ) )
    os.exit( 1 )
+end
+
+local lunedir = "."
+if version < 5.2 then
+   lunedir = "legacy/lua51"
 end
 
 local lua = arg[-1]
@@ -51,7 +56,8 @@ lua = process:read( '*l' ):gsub( '\n', '' )
 process:close()
 
 local mkobj = io.open( "lune.mk", "w" )
-mkobj:write( string.format( "LUA=%s\nLUA_MOD_DIR=%s\n", lua, modDir ) )
+mkobj:write( string.format( "LUA=%s\nLUA_MOD_DIR=%s\nLNSDIR=%s\n",
+			    lua, modDir, lunedir ) )
 mkobj:close()
 
 print( [[

@@ -4,11 +4,12 @@ local __mod__ = 'lune.base.convLua'
 if not _lune then
    _lune = {}
 end
-function _lune.loadstring52( txt, env )
-   if not env then
-      return load( txt )
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
    end
-   return load( txt, "", "bt", env )
+   return func
 end
 
 function _lune.nilacc( val, fieldName, access, ... )
@@ -489,7 +490,7 @@ function convFilter:outputMeta( node )
                      local memberName = memberNode:get_name().txt
                      local memberTypeInfo = memberNode:get_expType(  )
                      self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, memberName) )
-                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutable = %s,", memberName, memberNode:get_staticFlag(), memberNode:get_symbolInfo():get_mutable()) .. string.format( "accessMode = '%s', typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId(  )) )
+                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutable = %s,", memberName, tostring( memberNode:get_staticFlag()), tostring( memberNode:get_symbolInfo():get_mutable())) .. string.format( "accessMode = '%s', typeId = %d }", tostring( memberNode:get_accessMode()), memberTypeInfo:get_typeId(  )) )
                      pickupTypeId( memberTypeInfo, true )
                   end
                   
@@ -537,7 +538,7 @@ function convFilter:outputMeta( node )
                      local className = classTypeInfo:getTxt(  )
                      self:writeln( "do" )
                      self:pushIndent(  )
-                     self:writeln( string.format( "local _classInfo%s = {}", classTypeId) )
+                     self:writeln( string.format( "local _classInfo%s = {}", tostring( classTypeId)) )
                      self:writeln( string.format( "_typeId2ClassInfoMap[ %d ] = _classInfo%d", classTypeId, classTypeId) )
                      do
                         local __sorted = {}
@@ -553,7 +554,7 @@ function convFilter:outputMeta( node )
                               if symbolInfo:get_kind() == Ast.SymbolKind.Mbr or symbolInfo:get_kind() == Ast.SymbolKind.Var then
                                  if symbolInfo:get_accessMode() == Ast.AccessMode.Pub then
                                     self:writeln( string.format( "_classInfo%d.%s = {", classTypeId, fieldName) )
-                                    self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, symbolInfo:get_staticFlag()) .. string.format( "accessMode = %d, typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )) )
+                                    self:writeln( string.format( "  name='%s', staticFlag = %s, ", fieldName, tostring( symbolInfo:get_staticFlag())) .. string.format( "accessMode = %d, typeId = %d }", symbolInfo:get_accessMode(), typeInfo:get_typeId(  )) )
                                     pickupTypeId( typeInfo )
                                  end
                                  
@@ -588,7 +589,7 @@ function convFilter:outputMeta( node )
          local varInfo = __map[ varName ]
          do
             self:writeln( string.format( "_varName2InfoMap.%s = {", varName ) )
-            self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId(), true) )
+            self:writeln( string.format( "  name='%s', accessMode = %d, typeId = %d, mutable = %s }", varName, varInfo.accessMode, varInfo.typeInfo:get_typeId(), tostring( true)) )
             pickupTypeId( varInfo.typeInfo, true )
          end
       end
@@ -623,7 +624,7 @@ function convFilter:outputMeta( node )
                if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Pro or _switchExp == Ast.AccessMode.Global then
                else 
                   
-                     Util.errorLog( string.format( "skip: %s %s", typeInfo:get_accessMode(), self:getFullName( typeInfo )) )
+                     Util.errorLog( string.format( "skip: %s %s", tostring( typeInfo:get_accessMode()), self:getFullName( typeInfo )) )
                      return 
                end
             end
@@ -724,7 +725,7 @@ function convFilter:outputMeta( node )
       for __index, name in ipairs( __sorted ) do
          local moduleTypeInfo = __map[ name ]
          do
-            self:writeln( string.format( "_dependModuleMap[ '%s' ] = { id = %d, use = %s }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), exportNeedModuleTypeInfo[moduleTypeInfo] or false) )
+            self:writeln( string.format( "_dependModuleMap[ '%s' ] = { id = %d, use = %s }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), tostring( exportNeedModuleTypeInfo[moduleTypeInfo] or false)) )
          end
       end
    end
@@ -741,7 +742,7 @@ function convFilter:outputMeta( node )
    
    self:writeln( string.format( "_moduleObj._moduleTypeId = %d", moduleTypeInfo:get_typeId()) )
    self:writeln( string.format( "_moduleObj._moduleSymbolKind = %d", moduleSymbolKind) )
-   self:writeln( string.format( "_moduleObj._moduleMutable = %s", moduleTypeInfo:get_mutable()) )
+   self:writeln( string.format( "_moduleObj._moduleMutable = %s", tostring( moduleTypeInfo:get_mutable())) )
    self:writeln( "----- meta -----" )
    if self.stream ~= self.metaStream then
       self:writeln( "return _moduleObj" )
@@ -926,9 +927,9 @@ end
 ]==], enumFullName, enumFullName, enumFullName) )
    for index, valName in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
-      local valTxt = string.format( "%s", valInfo:get_val())
+      local valTxt = string.format( "%s", tostring( valInfo:get_val()))
       if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
-         valTxt = string.format( "'%s'", valInfo:get_val())
+         valTxt = string.format( "'%s'", tostring( valInfo:get_val()))
       end
       
       self:writeln( string.format( "%s.%s = %s", enumFullName, valName.txt, valTxt) )
@@ -1230,12 +1231,12 @@ end
                local itemList = orgTypeInfo:get_itemTypeInfoList()
                local keyFuncTxt, keyNilable, keyChild = getMapInfo( itemList[1] )
                local valFuncTxt, valNilable, valChild = getMapInfo( itemList[2] )
-               child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, keyNilable, keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
+               child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, tostring( keyNilable), keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
             elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
                funcTxt = '_lune._toList'
                local itemList = orgTypeInfo:get_itemTypeInfoList()
                local valFuncTxt, valNilable, valChild = getMapInfo( itemList[1] )
-               child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
+               child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
             end
          end
          
@@ -1244,7 +1245,7 @@ end
       
       for __index, memberNode in pairs( node:get_memberList() ) do
          local funcTxt, nilable, child = getMapInfo( memberNode:get_expType() )
-         self:writeln( string.format( '   table.insert( memInfo, { name = "%s", func = %s, nilable = %s, child = %s } )', memberNode:get_name().txt, funcTxt, nilable, child) )
+         self:writeln( string.format( '   table.insert( memInfo, { name = "%s", func = %s, nilable = %s, child = %s } )', memberNode:get_name().txt, funcTxt, tostring( nilable), child) )
       end
       
       self:writeln( string.format( [==[
@@ -1409,7 +1410,7 @@ end
 
 function convFilter:processDeclDestr( node, parent )
 
-   self:writeln( string.format( "function %s.__free( self )", _lune.nilacc( node:get_declInfo():get_classTypeInfo(), 'getTxt', 'callmtd'  )) )
+   self:writeln( string.format( "function %s.__free( self )", tostring( _lune.nilacc( node:get_declInfo():get_classTypeInfo(), 'getTxt', 'callmtd'  ))) )
    self:process__func__symbol( node:get_declInfo():get_has__func__Symbol(), node:get_expType():get_parentInfo(), "__free" )
    filter( _lune.unwrap( node:get_declInfo():get_body()), self, node )
    local classTypeInfo = node:get_expType():get_parentInfo()
@@ -2599,7 +2600,7 @@ function MacroEvalImp:eval( node )
       return val
    end
    
-   local chunk, err = _lune.loadstring52( oStream:get_txt(  ), newEnv )
+   local chunk, err = _lune.loadstring51( oStream:get_txt(  ), newEnv )
    if err ~= nil then
       Util.err( err )
    end

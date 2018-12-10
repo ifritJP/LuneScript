@@ -1,0 +1,753 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Util;
+
+let mut luaKeywordSet:Map<str,bool> = {};
+luaKeywordSet[ "let" ] = true;
+luaKeywordSet[ "if" ] = true;
+luaKeywordSet[ "else" ] = true;
+luaKeywordSet[ "elseif" ] = true;
+luaKeywordSet[ "while" ] = true;
+luaKeywordSet[ "for" ] = true;
+luaKeywordSet[ "in" ] = true;
+luaKeywordSet[ "return" ] = true;
+luaKeywordSet[ "break" ] = true;
+luaKeywordSet[ "nil" ] = true;
+luaKeywordSet[ "true" ] = true;
+luaKeywordSet[ "false" ] = true;
+luaKeywordSet[ "{" ] = true;
+luaKeywordSet[ "}" ] = true;
+luaKeywordSet[ "do" ] = true;
+luaKeywordSet[ "require" ] = true;
+luaKeywordSet[ "function" ] = true;
+luaKeywordSet[ "then" ] = true;
+luaKeywordSet[ "until" ] = true;
+
+pub fn isLuaKeyword( txt:str ) : bool! {
+   return luaKeywordSet[ txt ];
+}
+
+
+fn createReserveInfo( luaMode: bool! ) :
+   Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,str[@]> {
+      let mut keywordSet:Map<str,bool> = {};
+      let mut typeSet:Map<str,bool> = {};
+      let mut builtInSet:Map<str,bool> = {};
+
+      builtInSet[ "require" ] = true;
+      foreach val, key in luaKeywordSet {
+         if not builtInSet[ key ] {
+            keywordSet[ key ] = true;
+         }
+      } 
+
+
+      if not luaMode {
+         keywordSet[ "null" ] = true;
+         keywordSet[ "let" ] = true;
+         keywordSet[ "mut" ] = true;
+         keywordSet[ "pub" ] = true;
+         keywordSet[ "pro" ] = true;
+         keywordSet[ "pri" ] = true;
+         keywordSet[ "fn" ] = true;
+         keywordSet[ "each" ] = true;
+         keywordSet[ "form" ] = true;
+         keywordSet[ "class" ] = true;
+         builtInSet[ "super" ] = true;
+         keywordSet[ "static" ] = true;
+         keywordSet[ "advertise" ] = true;
+         keywordSet[ "import" ] = true;
+         keywordSet[ "new" ] = true;
+         keywordSet[ "!" ] = true;
+         keywordSet[ "unwrap" ] = true;
+         keywordSet[ "sync" ] = true;
+
+         typeSet[ "int" ] = true;
+         typeSet[ "real" ] = true;
+         typeSet[ "stem" ] = true;
+         typeSet[ "str" ] = true;
+         typeSet[ "Map" ] = true;
+         typeSet[ "bool" ] = true;
+      } 
+
+      // 2文字以上の演算子
+      let mut multiCharDelimitMap: Map<str,str[@]> = {};
+      multiCharDelimitMap[ "=" ] = [@ "==" ];
+      multiCharDelimitMap[ "<" ] = [@ "<=" ];
+      multiCharDelimitMap[ ">" ] = [@ ">=" ];
+
+      if not luaMode {
+         multiCharDelimitMap[ "|" ] = [@ "|<", "|>"];
+         multiCharDelimitMap[ "|<" ] = [@ "|<<"];
+         multiCharDelimitMap[ "|>" ] = [@ "|>>"];
+         multiCharDelimitMap[ "[" ] = [@ "[@" ];
+         multiCharDelimitMap[ "~" ] = [@ "~=", "~~" ];
+         multiCharDelimitMap[ "$" ] = [@ "$[", "$.", "$(" ];
+         multiCharDelimitMap[ "$." ] = [@ "$.$" ];
+         multiCharDelimitMap[ "." ] = [@ "..", ".$" ];
+         multiCharDelimitMap[ ".." ] = [@ "..." ];
+         multiCharDelimitMap[ "," ] = [@ ",," ];
+         multiCharDelimitMap[ ",," ] = [@ ",,," ];
+         multiCharDelimitMap[ ",,," ] = [@ ",,,," ];
+         multiCharDelimitMap[ "@" ] = [@ "@@" ];
+         multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
+      } 
+      else {
+         multiCharDelimitMap[ "." ] = [@ ".." ];
+         multiCharDelimitMap[ "~" ] = [@ "~=" ];
+      } 
+
+      return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
+   }  
+
+// pub class Stream {
+//    pub fn read( mode:str ): str!;
+//    //pub fn read( mode:str ): str;
+// }
+
+pub class TxtStream extend (iStream) {
+   pri let txt: str;
+   pri let mut start: int;
+   pri let mut eof: bool;
+   pub fn __init( txt: str ) {
+      self.txt = txt;
+      self.start = 1;
+      self.eof = false;
+   }
+   pub fn read( mode:str ) mut : str! {
+      //pub override fn read( mode:str ): str{
+      if self.eof {
+         return nil;
+      }
+      let index = self.txt.find( "\n", self.start, true );
+      if! index {
+         let txt = self.txt.sub( self.start, _exp - 1 );
+         self.start = _exp + 1;                
+         return txt;
+      }
+      self.eof = true;
+      return self.txt.sub( self.start);
+   }
+   pub fn close() mut {
+   }
+}
+
+
+
+pub class Position {
+   pub let lineNo: int;
+   pub let column: int;
+}
+
+pub enum TokenKind {
+   Cmnt,
+   Str,
+   Int,
+   Real,
+   Char, 
+   Symb,
+   Dlmt,
+   Kywd,
+   Ope,
+   Type,
+   Eof,
+}
+
+pub class Token {
+   pub let kind: TokenKind;
+   pub let txt: str;
+   pub let pos: &Position;
+   pri let mut commentList: Token[] { pub };
+
+   pub fn __init( kind: TokenKind, txt: str, pos: &Position, commentList: Token[]! ) {
+      self.kind = kind;
+      self.txt = txt;
+      self.pos = pos;
+      self.commentList = unwrap commentList default [];
+   }
+
+   pub fn getExcludedDelimitTxt() : str {
+      if self.kind ~= .Str {
+         return self.txt;
+      }
+      switch self.txt[1] {
+         case ?\', ?\" {
+            return self.txt.sub( 2, #self.txt - 1 );
+         }
+         case ?` {
+            return self.txt.sub( 1 + 3, #self.txt - 3 );
+         }
+      }
+      error( "illegal delimit -- %s" (self.txt) );
+   }
+   
+   pub fn set_commentList( commentList: Token[] ) mut {
+      self.commentList = commentList;
+   }
+}
+
+pub abstract class Parser {
+   pub abstract fn getToken() mut : &Token!;
+   pub abstract fn getStreamName(): str;
+}
+
+pub class WrapParser extend Parser {
+   let mut parser: Parser;
+   let name: str;
+   pub override fn getToken() mut : &Token! {
+      let mut token = self.parser.getToken();
+      return token;
+   }
+   pub override fn getStreamName(): &str {
+      return self.name;
+   }
+}
+
+pub class StreamParser extend Parser {
+   /** stdin に紐付けている*/
+   static let mut stdinStreamModuleName: str!;
+   static let mut stdinTxt: str;
+
+   __init {
+      StreamParser.stdinStreamModuleName = nil;
+      StreamParser.stdinTxt = "";
+   }
+   pub static fn setStdinStream( moduleName:str ){
+      StreamParser.stdinStreamModuleName = moduleName;
+      StreamParser.stdinTxt = unwrap io.stdin.read( '*a' ) default "";
+   }
+
+   let mut eof: bool;
+   let mut stream : iStream;
+   let streamName: str;
+   let mut lineNo : int;
+   let mut pos : int;
+   let mut lineTokenList : Token[];
+   let keywordSet : Map<str,bool>;
+   let typeSet : Map<str,bool>;
+   let builtInSet :Map<str,bool>;
+   let multiCharDelimitMap : Map<str,str[@]>;
+   pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
+      super();
+      self.eof = false;
+      self.stream = stream;
+      self.streamName = name;
+      self.lineNo = 0;
+      self.pos = 1;
+      self.lineTokenList = [];
+
+      let keywordSet, typeSet, builtInSet, multiCharDelimitMap =
+         createReserveInfo( luaMode );
+
+      self.keywordSet = keywordSet;
+      self.typeSet = typeSet;
+      self.builtInSet = builtInSet;
+      self.multiCharDelimitMap = multiCharDelimitMap;
+   }
+
+   pub override fn getStreamName(): &str {
+      return self.streamName;
+   }
+
+   pub static fn create( path: str, luaMode: bool, moduleName:str ): StreamParser! {
+      let mut stream = new TxtStream( StreamParser.stdinTxt );
+      if StreamParser.stdinStreamModuleName ~= moduleName {
+         unwrap! stream = io.open( path, "r" ) {
+            return nil;
+         };
+      }
+
+      return new StreamParser(
+         stream, path, luaMode or string.find( path, "%.lua$" ) and true );
+   }
+
+   pub override fn getToken() mut : &Token!;
+}
+
+// macro _declTokenKind( name_array:str[@] ) {
+//    {
+//       let mut field_array: stat[] = [];
+//       let mut stat_array: stat[] = [];
+//       let mut init_array: stat[] = [];
+//       foreach name, index in name_array {
+//          field_array.insert( `{
+//             pub static let ,,,name:int;
+//          });
+//          init_array.insert( `{
+//             TokenKind.,,,name = ,,index;
+//          });
+//          stat_array.insert( `{
+//             kind2Txt[ ,,index ] = ,,name;
+//             pub let ,,,"kind%s" (name) = ,,index;
+//          });
+//       }
+//    }  
+//    pub class TokenKind {
+//       ,,field_array;
+//       __init {
+//          ,,init_array;
+//       }
+//    }
+//    ,,stat_array;
+// }
+
+
+// let mut kind2Txt:Map<str,str> = {};
+
+// _declTokenKind(
+//    [@ "Cmnt", "Str", "Int", "Real", "Char", 
+//      "Symb", "Dlmt", "Kywd", "Ope", "Type", "Eof" ] );
+
+//pub let kind = new TokenKind();
+
+pub let noneToken = new Token( .Eof, "", new Position( 0, 0 ), [] );
+
+
+let mut quotedCharSet:Map<int,bool> = {};
+quotedCharSet[ 'a' ] = true;
+quotedCharSet[ 'b' ] = true;
+quotedCharSet[ 'f' ] = true;
+quotedCharSet[ 'n' ] = true;
+quotedCharSet[ 'r' ] = true;
+quotedCharSet[ 't' ] = true;
+quotedCharSet[ 'v' ] = true;
+quotedCharSet[ '\\' ] = true;
+quotedCharSet[ '"' ] = true;
+quotedCharSet[ "'" ] = true;
+
+
+let mut op2Set:Map<int,bool> = {};
+op2Set[ '+' ] = true;
+op2Set[ '-' ] = true;
+op2Set[ '*' ] = true;
+op2Set[ '/' ] = true;
+op2Set[ '^' ] = true;
+op2Set[ '%' ] = true;
+op2Set[ '&' ] = true;
+op2Set[ '~' ] = true;
+op2Set[ '|' ] = true;
+op2Set[ '|>>' ] = true;
+op2Set[ '|<<' ] = true;
+op2Set[ '..' ] = true;
+op2Set[ '<' ] = true;
+op2Set[ '<=' ] = true;
+op2Set[ '>' ] = true;
+op2Set[ '>=' ] = true;
+op2Set[ '==' ] = true;
+op2Set[ '~=' ] = true;
+op2Set[ 'and' ] = true;
+op2Set[ 'or' ] = true;
+op2Set[ '@' ] = true;
+op2Set[ '=' ] = true;
+
+let mut op1Set:Map<int,bool> = {};
+op1Set[ '-' ] = true;
+op1Set[ 'not' ] = true;
+op1Set[ '#' ] = true;
+op1Set[ '~' ] = true;
+op1Set[ '*' ] = true;
+op1Set[ '`' ] = true;
+op1Set[ ',,' ] = true;
+op1Set[ ',,,' ] = true;
+op1Set[ ',,,,' ] = true;
+
+
+// pub static fn getKindTxt( kind: int ) : str {
+//    return unwrap kind2Txt[ kind ];
+// }
+
+pub static fn isOp2( ope: str ) : stem! {
+   return op2Set[ ope ];
+}
+
+pub static fn isOp1( ope: str ) : stem! {
+   return op1Set[ ope ];
+}
+
+fn StreamParser.parse() mut : Token[]! {
+   fn readLine() : str! {
+      if self.eof {
+         return nil;
+      }
+      self.lineNo = self.lineNo + 1;
+      let line = self.stream.read( '*l' );
+      if not line {
+         self.eof = true;
+      }
+      return line;
+   }
+   let! mut rawLine = readLine() { return nil; };
+
+   let mut list: Token[] = [];
+   let mut startIndex = 1;
+
+   /*
+    複数行コメントの処理。
+
+    @param comIndex 現在の解析行内の複数行コメント開始位置
+    @param termStr 複数行コメントの終端文字列
+    */
+   let multiComment = fn ( comIndex: int, termStr: str ): str, int {
+      let mut searchIndex = comIndex;
+      let mut comment = "";
+      while true {
+         if! let termIndex, termEndIndex = string.find(
+            rawLine, termStr, searchIndex, true )
+         {        
+            comment = comment .. rawLine.sub( searchIndex, termEndIndex );
+            return comment, termEndIndex + 1;
+         }
+         comment = comment .. rawLine.sub( searchIndex ) .. "\n";
+         searchIndex = 1;
+         rawLine = unwrap readLine();
+      }
+   };
+
+   /*
+ソースをコメント、文字列、その他(ステートメント候補)に
+カテゴライズした結果を登録する。
+
+この関数内でステートメント候補の文字列をトークン毎に分割して登録する。
+
+@param kind カテゴライズの種類。 その他は .Symb を指定する。
+@param val カテゴライズした文字列
+@param column 現在の解析行内の位置
+    */
+
+   let addVal = fn ( kind: TokenKind, val: str, column: int ) {
+      fn createInfo( mut tokenKind: TokenKind, token: str, tokenColumn: int ): Token {
+         if tokenKind == .Symb {
+            if self.keywordSet[ token ] {
+               tokenKind = .Kywd;
+            }
+            elseif self.typeSet[ token ] {
+               tokenKind = .Type;
+            }
+            elseif op2Set[ token ] or op1Set[ token ] {
+               tokenKind = .Ope;
+            }
+         }
+         return new Token( tokenKind, token,
+                           new Position( self.lineNo, tokenColumn ), [] );
+      }
+
+      /*
+        token の startIndex から始まる数値表現領域を特定する
+
+        @param token 文字列
+        @param startIndex token 内の検索開始位置。 この位置から数値表現が始まる。
+        @return int 数値表現の終了位置
+        @return bool 整数かどうか
+        */
+      fn analyzeNumber( token: &str, beginIndex: int ) : int, bool {
+         let! mut nonNumIndex = token.find( '[^%d]', beginIndex ) {
+            return #token, true;
+         };
+         let mut intFlag = true;
+         let mut nonNumChar = token.byte( nonNumIndex );
+         if nonNumChar == ?. { // .
+            intFlag = false;
+            unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ) {
+               return #token, intFlag;
+            };
+            nonNumChar = token.byte( nonNumIndex );
+         }
+         if nonNumChar == ?X or nonNumChar == ?x { // X or x
+            unwrap! nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 ) {
+               return #token, intFlag;
+            };
+            nonNumChar = token.byte( nonNumIndex );
+         }
+         if nonNumChar == ?E or nonNumChar == ?e { // E or e
+            intFlag = false;
+            let nextChar = token.byte( nonNumIndex + 1 );
+            if nextChar == ?- or nextChar == ?+ { // '-' or '+'
+               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 ) {
+                  return #token, intFlag;
+               };
+            }
+            else {
+               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ) {
+                  return #token, intFlag;
+               };
+            }
+         }
+         return nonNumIndex - 1, intFlag;
+      }
+
+      if kind == .Symb {
+         let mut searchIndex = 1;
+         while true {
+            // 空白系以外の何らかの文字領域を探す
+            let! tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex ) {
+               break;
+            };
+            let columnIndex = column + tokenIndex - 2;
+            searchIndex = tokenEndIndex + 1;
+            let token:str = val.sub( tokenIndex, tokenEndIndex );
+            let mut startIndex = 1;
+            while true {
+               if token.find( '^[%d]', startIndex ) or
+                  token.find( '^-[%d]', startIndex )
+               {              
+                  // 数値の場合
+                  let mut checkIndex = startIndex;
+                  if token[1] == ?- {
+                     checkIndex = checkIndex + 1;
+                  }
+                  let endIndex, intFlag = analyzeNumber( token, checkIndex );
+                  let mut info = createInfo(
+                     intFlag and TokenKind.Int or TokenKind.Real,
+                     token.sub( startIndex, endIndex ), columnIndex + startIndex );
+                  list.insert( info );
+                  startIndex = endIndex + 1;
+               }
+               else {
+                  // 区切り文字を探す
+                  if! string.find( token, '[^%w_]', startIndex ) {
+                     let index = _exp;
+                     if index > startIndex {
+                        let mut info = createInfo(
+                           .Symb, token.sub( startIndex, index - 1 ),
+                           columnIndex + startIndex );
+                        list.insert( info );
+                     }
+                     let mut delimit = token.sub( index, index );
+                     let mut candidateList = self.multiCharDelimitMap[ delimit ];
+                     while candidateList {
+                        let mut findFlag = false;
+                        foreach candidate in unwrap ( candidateList ) {
+                           if candidate == token.sub(
+                              index, index + #candidate - 1 )
+                           {
+                              delimit = candidate;
+                              candidateList = self.multiCharDelimitMap[ delimit ];
+                              findFlag = true;
+                              break;
+                           }
+                        }
+                        if not findFlag {
+                           break;
+                        }
+                     }
+                     startIndex = index + #delimit;
+
+                     let mut workKind = TokenKind.Dlmt;
+                     if op2Set[ delimit ] or op1Set[ delimit ] {
+                        workKind = .Ope;
+                     }
+                     if delimit == "..." {
+                        workKind = .Symb;
+                     }
+                     if delimit == "?" {
+                        let nextChar = token.sub( index, startIndex );
+                        list.insert( createInfo(
+                           .Char, nextChar, columnIndex + startIndex ) );
+                        startIndex = startIndex + 1;
+                     }
+                     else {
+                        list.insert( createInfo(
+                           workKind, delimit, columnIndex + index ) );
+                     }
+                  }
+                  else {
+                     if startIndex <= #token {
+                        list.insert( createInfo(                         
+                           .Symb, token.sub( startIndex ),  
+                           columnIndex + startIndex ) );
+                     }
+                     break;
+                  }
+               }
+            }
+         }
+      }
+      else {
+         list.insert( createInfo( kind, val, column ) );
+      }
+   };
+
+   // 検索開始位置。
+   // 領域開始位置と検索開始位置が異なる場合がある。
+   // たとえば、 0.12e-2 のときに - の部分が検索開始位置、 0 の部分が領域開始位置になる
+   let mut searchIndex = startIndex;
+
+   // 領域をカテゴライズする
+   while true {
+      let mut syncIndexFlag = true;
+      //let pattern = ```[/%-%?"%'%`%[].```;
+      let pattern = ```[/%-%?"%'%`].```;
+      let! index = string.find( rawLine, pattern, searchIndex ) {
+         addVal( .Symb, rawLine.sub( startIndex ), startIndex );
+         return list;
+      };
+
+      let findChar = string.byte( rawLine, index );
+      let nextChar = string.byte( rawLine, index + 1 );
+
+      if findChar == ?- and nextChar ~= ?- {
+         searchIndex = index + 1;
+         syncIndexFlag = false;
+      }
+      else {
+         if startIndex < index {
+            addVal( .Symb, rawLine.sub( startIndex, index - 1 ), startIndex );
+         }
+         if findChar == ?/ {
+            // コメント処理
+            if nextChar == ?* {
+               // 複数行コメントの場合
+               let comment, nextIndex = multiComment( index + 2, "*/" );
+               addVal( .Cmnt, "/*" .. comment, index );
+               searchIndex = nextIndex;
+            }
+            elseif nextChar == ?/ {
+               // 1行コメント
+               addVal( .Cmnt, rawLine.sub( index ), index );
+               searchIndex = #rawLine + 1;
+            }
+            else {
+               addVal( .Ope, "/", index );
+               searchIndex = index + 1;
+            }
+         }
+         // elseif findChar == ?\' and nextChar == ?\' { // コメント処理
+         //     if string.byte( rawLine, index + 2 ) == ?\' {
+         //         // 複数行コメントの場合
+         //         let comment, nextIndex = multiComment( index + 3, "'''" );
+         //         addVal( kindCmnt, "'''" .. comment, index );
+         //         searchIndex = nextIndex;
+         //     }
+         //     else {
+         //         // 1行コメント
+         //         addVal( kindCmnt, rawLine.sub( index ), index );
+         //         searchIndex = #rawLine + 1;
+         //     }
+         // }
+         // elseif findChar == ?\[ {
+         //     if nextChar == ?@ {
+         //         addVal( kindDlmt, "[@", index );
+         //         searchIndex = index + 2;
+         //     }
+         //     else {
+         //         addVal( kindDlmt, "[", index );
+         //         searchIndex = index + 1;
+         //     }
+         // }
+         elseif findChar == ?\' or findChar == ?\" {
+            // 文字列の場合
+            let mut workIndex = index + 1;
+            let workPattern = '["\'\\]';
+            while true {
+               let! endIndex = string.find( rawLine, workPattern, workIndex ) {
+                  Util.err( "%s:%d:%d: error: illegal string -- %s"
+                            ( self.getStreamName(), self.lineNo, index, rawLine ) );
+               };
+               let workChar = string.byte( rawLine, endIndex );
+               if workChar == findChar {
+                  addVal( .Str, rawLine.sub( index, endIndex ), index );
+                  searchIndex = endIndex + 1;
+                  break;
+               }        
+               elseif workChar == ?\\ {
+                  workIndex = workIndex + 2;
+               }        
+               else {
+                  workIndex = workIndex + 1;
+               }        
+            }
+         }
+         elseif findChar == ?` {
+            if ( nextChar == findChar and
+                 string.byte( rawLine, index + 2 ) == ?` )
+            { // '```'
+               // 複数行文字列の場合
+               let txt, nextIndex = multiComment( index + 3, '```' );
+               addVal( .Str, '```' .. txt, index );
+               searchIndex = nextIndex;
+            }
+            else {
+               addVal( .Ope, '`', index );
+               searchIndex = index + 1;
+            }
+         }
+         elseif findChar == ?? {
+            let mut codeChar = rawLine.sub( index + 1, index + 1 );
+            if nextChar == ?\\ {
+               let quoted = rawLine.sub( index + 2, index + 2 );
+               if quotedCharSet[ quoted ] {
+                  codeChar = rawLine.sub( index + 1, index + 2 );
+               }
+               else {
+                  codeChar = quoted;
+               }
+               searchIndex = index + 3;
+            }
+            else {
+               searchIndex = index + 2;
+            }
+            addVal( .Char, codeChar, index );
+         }
+         else {
+            Util.err( "%s:%d:%d: error: illegal syntax -- %s"
+                      ( self.getStreamName(), self.lineNo, index, rawLine ) );
+         }
+      }
+      if syncIndexFlag {
+         startIndex = searchIndex;
+      }
+   }
+}
+
+pub override fn StreamParser.getToken() mut : &Token! {
+   if #self.lineTokenList < self.pos {
+      self.pos = 1;
+      self.lineTokenList = [];
+      while #self.lineTokenList == 0 {
+         let! mut workList = self.parse() {
+            return nil;
+         };               
+         self.lineTokenList = workList;
+      }
+   }
+
+   let token = self.lineTokenList[ self.pos ];
+   self.pos = self.pos + 1;
+
+   return token;
+}
+
+let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0 ), [] );
+pub fn getEofToken(): &Token {
+   return eofToken;
+}
+pub class DummyParser extend Parser {
+   pub override fn getToken() mut : &Token! {
+      return eofToken;
+   }
+   pub override fn getStreamName(): str {
+      return "dummy";
+   }
+}

@@ -4,6 +4,10 @@ local __mod__ = 'lune.base.Ast'
 if not _lune then
    _lune = {}
 end
+if not table.unpack then
+   table.unpack = unpack
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -1098,7 +1102,7 @@ local function dumpScopeSub( scope, prefix, readyIdSet )
             for __index, symbol in ipairs( __sorted ) do
                local symbolInfo = __map[ symbol ]
                do
-                  Util.log( string.format( "scope: %s, %s, %s", prefix, _exp, symbol) )
+                  Util.log( string.format( "scope: %s, %s, %s", prefix, tostring( _exp), symbol) )
                   do
                      local subScope = symbolInfo:get_typeInfo():get_scope()
                      if subScope ~= nil then
@@ -1205,7 +1209,7 @@ function NormalSymbolInfo:canAccess( fromScope )
       end
    end
    
-   Util.err( string.format( "illegl accessmode -- %s, %s", self:get_accessMode(), self:get_name()) )
+   Util.err( string.format( "illegl accessmode -- %s, %s", tostring( self:get_accessMode()), self:get_name()) )
 end
 
 local AccessSymbolInfo = {}
@@ -1503,7 +1507,7 @@ end
 function ModifierTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo:get_typeId(), self.mutable and true or false) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo:get_typeId(), tostring( self.mutable and true or false)) )
 end
 function ModifierTypeInfo:canEvalWith( other, opTxt )
 
@@ -2045,7 +2049,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    end
    
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutable)
+        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, tostring( self.abstractFlag), tostring( self.staticFlag), self.accessMode, self.kind, tostring( self.mutable))
    local children = {}
    local set = validChildrenSet
    if  nil == set then
@@ -2075,7 +2079,7 @@ function NormalTypeInfo:equalsSub( typeInfo )
    end
    
    if (self.orgTypeInfo ~= typeInfo:get_orgTypeInfo() ) then
-      Util.log( string.format( "%s, %s", self.orgTypeInfo, typeInfo:get_orgTypeInfo()) )
+      Util.log( string.format( "%s, %s", tostring( self.orgTypeInfo), tostring( typeInfo:get_orgTypeInfo())) )
       return false
    end
    
@@ -2243,7 +2247,7 @@ end
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
 
    if #itemTypeInfo == 0 then
-      Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
+      Util.err( string.format( "illegal list type: %s", tostring( itemTypeInfo)) )
    end
    
    idProv:increment(  )
@@ -2333,7 +2337,7 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
    typeInfo2ModifierMap[srcTypeInfo] = modifier
    if modifier:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
       Util.printStackTrace(  )
-      Util.err( string.format( "off cache: %s %s %s", srcTypeInfo:getTxt(  ), modifier:get_typeId(), srcTypeInfo:get_typeId()) )
+      Util.err( string.format( "off cache: %s %s %s", srcTypeInfo:getTxt(  ), tostring( modifier:get_typeId()), tostring( srcTypeInfo:get_typeId())) )
    end
    
    return modifier
@@ -2444,10 +2448,10 @@ accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getPa
          local enumValInfo = __map[ __key ]
          do
             if self.valTypeInfo:equals( _moduleObj.builtinTypeString ) then
-               stream:write( string.format( "%s = '%s',", enumValInfo:get_name(), enumValInfo:get_val()) )
+               stream:write( string.format( "%s = '%s',", enumValInfo:get_name(), tostring( enumValInfo:get_val())) )
             else
              
-               stream:write( string.format( "%s = %s,", enumValInfo:get_name(), enumValInfo:get_val()) )
+               stream:write( string.format( "%s = %s,", enumValInfo:get_name(), tostring( enumValInfo:get_val())) )
             end
             
          end
@@ -8668,7 +8672,7 @@ function ExpMacroStatNode:getLiteral(  )
 
    local txt = ""
    for __index, token in pairs( self.expStrList ) do
-      txt = string.format( "%s%s", txt, token:getLiteral(  )[1])
+      txt = string.format( "%s%s", txt, tostring( token:getLiteral(  )[1]))
    end
    
    return {txt}, {self:get_expType(  )}

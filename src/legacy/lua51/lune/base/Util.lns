@@ -1,0 +1,125 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Depend;
+
+pub class memStream extend (oStream) {
+   let mut txt: str { pub };
+   pub fn __init() {
+      self.txt = "";
+   }
+   pub fn write( val: str ) mut : stem!, str! {
+      self.txt = self.txt .. val;
+      return self, nil;
+   }
+   pub fn close() mut {
+   }
+   pub fn flush() mut {
+   }
+}
+
+pri let mut debugFlag = true;
+pub fn setDebugFlag( flag:bool ) {
+   debugFlag = flag;
+}
+pri let mut errorCode = 1;
+pub fn setErrorCode( code:int ) {
+   errorCode = code;
+}
+
+
+pub fn errorLog( message: str ) {
+   io.stderr.write( message .. "\n" );
+}
+
+pub fn err( message:str ): __ {
+   if debugFlag {
+      error( message );
+   }
+   errorLog( message );
+   os.exit( errorCode );
+}
+
+pub fn log( message:str ) {
+   if debugFlag {
+      errorLog( message );
+   }
+}
+
+pub fn printStackTrace() {
+   for level = 2, 6 {
+      if! let debugInfo = debug.getinfo( level ) {
+         errorLog( "-- %s %s" ( debugInfo.short_src,
+                                debugInfo.currentline ) );
+      }
+   }
+}
+
+pub fn profile( validTest:bool, func: form, path: str ): stem! {
+   if not validTest {
+      return func();
+   }
+
+   module ProFi require 'ProFi' {
+      pub static fn start();
+      pub static fn stop();
+      pub static fn writeReport(arg:str);
+   }
+
+   ProFi.start();
+   
+   let result:stem! = func();
+   
+   ProFi.stop();
+   ProFi.writeReport( path );
+   
+   
+   return result;
+}
+
+
+/**
+path で指定した lns コードに対応した Lua コードが存在する場合、
+その Lua コードのパスを返す。
+*/
+pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
+   let! luaTime, lnsTime =
+      Depend.getFileLastModifiedTime( luaPath ),
+      Depend.getFileLastModifiedTime( lnsPath )
+   {
+      // errorLog( "getReadyCode: false, %s %s" (luaPath, lnsPath ) );
+      return false;
+   };
+   // errorLog( "getReadyCode: %s %s %s (%f, %f)"
+   //           (luaTime >= lnsTime, luaPath, lnsPath, luaTime, lnsTime ) );
+   return luaTime >= lnsTime;
+}
+
+pub fn existFile( path:str ): bool {
+   let! mut fileObj = io.open( path ) {
+      return false;
+   };
+   fileObj.close();
+   return true;
+}

@@ -1,0 +1,301 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Util;
+
+pub interface Writer {
+   pub fn startParent( name:str, arrayFlag:bool ) mut;
+   pub fn startElement( name:str ) mut;
+   pub fn endElement() mut;
+   pub fn writeValue( val:stem ) mut;
+   pub fn write( name:str, val:stem ) mut;
+   pub fn fin() mut;
+}
+
+pub class XML extend (Writer) {
+   pri let mut stream: oStream;
+   pri let mut elementList:str[];
+   pri let mut depth: int;
+
+   pub fn __init( stream:oStream ) {
+      self.stream = stream;
+      self.elementList = [];
+      self.depth = 0;
+   }
+
+   pri static fn convertXmlTxt( val:stem ): str {
+      if val == "" {
+         return "";
+      }
+
+      if type( val ) == "number" {
+         return "%g" ( val@@real );
+      }
+      let mut txt = "%s" ( val );
+      txt = string.gsub( txt, '&', "&amp;" );
+      txt = string.gsub( txt, '>', "&gt;" );
+      txt = string.gsub( txt, '<', "&lt;" );
+      txt = string.gsub( txt, '"', "&quot;" );
+      txt = string.gsub( txt, "'", "&apos;" );
+      return txt;
+   }
+   
+   pub fn startElement( name:str ) mut {
+      self.elementList.insert( name );
+      self.stream.write( '<%s>' ( name ) );
+      self.depth = self.depth + 1;
+   }
+
+   pub fn startParent( name:str, arrayFlag:bool ) mut {
+      self.startElement( name );
+   }
+   pub fn endElement() mut {
+      let name = self.elementList.remove();
+      self.stream.write( '</%s>' ( name ) );
+      self.depth = self.depth - 1;
+      if self.depth == 0 {
+         self.stream.write( '\n' );
+      }
+      elseif self.depth < 0 {
+         Util.err( "illegal depth" );
+      }
+   }
+   pub fn writeValue( val:stem ) mut {
+      self.stream.write( XML.convertXmlTxt( val ) );
+   }
+   pub fn write( name:str, val:stem ) mut {
+      self.startElement( name );
+      self.writeValue( val );
+      self.endElement();
+   }
+   pub fn fin() mut {
+   }
+}
+
+class JsonLayer {
+   pub let mut state: str;
+   pub let arrayFlag: bool;
+   pub let name: str;
+   pub let madeByArrayFlag: bool;
+   pub let mut elementNameSet: Map<str,bool>;
+   pub let parentFlag: bool;
+   pub let mut openElement: bool;
+}
+
+pub class JSON extend (Writer) {
+
+   pri let mut stream:oStream;
+   pri let mut layerQueue:JsonLayer[];
+   pri let mut prevName:str;
+
+   pri fn startLayer( arrayFlag: bool, madeByArrayFlag: bool ) mut {
+      let mut info = new JsonLayer(
+         'none', // none, named, valued, termed
+         arrayFlag, 
+         self.prevName,
+         madeByArrayFlag,
+         {},
+         true,
+         false );   
+
+      self.layerQueue.insert( info );
+      self.stream.write( arrayFlag and "[" or "{" );
+   }
+   
+   pub fn __init( stream:oStream ) {
+      self.stream = stream;
+      self.layerQueue = [];
+      self.prevName = "";
+      self.startLayer( false, false );
+   }
+
+   pri fn getLayerInfo(): JsonLayer! {
+      if #self.layerQueue == 0 {
+         return nil;
+      }     
+      return self.layerQueue[ #self.layerQueue ];
+   }  
+
+   pub fn endLayer() mut {
+      if #self.layerQueue == 0 {
+         Util.err( "illegal depth" );
+      }
+
+      while #self.layerQueue > 0 {
+         let info = unwrap self.getLayerInfo();
+         if info.arrayFlag {
+	    self.stream.write( ']' );
+         }
+         else {
+	    self.stream.write( '}' );
+         }
+         self.layerQueue.remove();
+         let parentInfo = self.getLayerInfo();
+         if not parentInfo$.madeByArrayFlag {
+	    break;
+         }
+      }
+      if #self.layerQueue == 0 {
+         self.stream.write( '\n' );
+      }
+   }
+
+   pub fn equalLayerState( state:str ): bool {
+      return self.layerQueue[ #self.layerQueue ].state == state;
+   }  
+
+   pub fn isArrayLayer(): bool {
+      return self.layerQueue[ #self.layerQueue ].arrayFlag;
+   }
+
+   pub fn setLayerState( state:str ) mut {
+      self.layerQueue[ #self.layerQueue ].state = state;
+   }
+
+   pub fn getLayerName(): &str {
+      return self.layerQueue[ #self.layerQueue ].name;
+   }
+
+   pub fn addElementName( name:str ) {
+      let mut info = unwrap self.getLayerInfo();
+      let mut nameSet = info.elementNameSet;
+      if not info.arrayFlag and nameSet[ name ] {
+         Util.err( "exist same name: " .. name );
+      }
+      nameSet[ name ] = true;
+   }
+
+   pub fn startParent( name:str, arrayFlag:bool ) mut {
+      self.addElementName( name );
+
+      if self.equalLayerState( 'termed' ) or
+         self.equalLayerState( 'named' ) or
+         self.equalLayerState( 'valued' )
+      {     
+         self.stream.write( "," );
+      }
+      elseif self.equalLayerState( 'none' ) {
+         ;
+      }
+
+      let parentInfo = self.getLayerInfo();
+      if not arrayFlag and parentInfo$.arrayFlag {
+         self.startLayer( false, true );
+      }
+      
+      self.stream.write( '"%s": ' ( name ) );
+      self.startLayer( arrayFlag, false );
+      self.prevName = name;
+   }
+
+   pub fn startElement( name:str ) mut {
+      self.addElementName( name );
+
+      if self.equalLayerState( 'termed' ) {
+         self.stream.write( "," );
+      }
+      elseif self.equalLayerState( 'named' ) {
+         Util.err( 'illegal layer state' );
+      }
+      elseif self.equalLayerState( 'none' ) {
+         ;
+      }
+      if self.isArrayLayer() {
+         self.startLayer( false, true );
+      }
+
+      let mut info = unwrap self.getLayerInfo();
+
+      if info.openElement {
+         Util.err( 'illegal openElement' );
+      }
+      info.openElement = true;
+      
+      self.stream.write(  '"%s": ' ( name ) );
+      self.setLayerState( 'named' );
+      self.prevName = name;
+   }  
+
+   pub fn endElement() mut {
+      if self.equalLayerState( 'none' ) or self.equalLayerState( 'termed' ) {
+         self.endLayer();
+      }
+      elseif self.equalLayerState( 'valued' ) {
+         let mut info = unwrap self.getLayerInfo();
+         if info.openElement {
+	    info.openElement = false;
+         }        
+         if self.getLayerInfo()$.madeByArrayFlag {
+	    self.endLayer();
+         }
+      }
+      else  {
+         Util.err( 'illegal layer state %s'  (self.getLayerName() ) );
+      }
+      self.setLayerState( 'termed' );
+   }
+
+   pri static fn convertJsonTxt( mut txt:str ):str {
+      if txt == "" {
+         return "";
+      }  
+      txt = string.gsub( txt, '"', '\\"' );
+      txt = string.gsub( txt, '\\', '\\\\' );
+      txt = string.gsub( txt, '\n', '\\n' );
+      return txt;
+   }  
+
+
+   pub fn writeValue( val: stem ) mut {
+      let mut txt = "";
+      let typeId = type( val );
+      if typeId == "number" {
+         txt = "%g" ( val@@real );
+      }
+      elseif typeId == "boolean" {
+         txt = val and "true" or "false";
+      }
+      else {
+         txt = '"%s"' (JSON.convertJsonTxt( '%s' ( val ) ));
+      }
+      
+      self.stream.write( txt );
+      self.setLayerState( 'valued' );
+   }
+
+   pub fn write( name:str, val:stem ) mut {
+      self.startElement( name );
+      self.writeValue( val );
+      self.endElement();
+   }  
+
+   pub fn fin() mut {
+      if self.equalLayerState( 'none' ) or self.equalLayerState( 'termed' ) {
+         self.endLayer();
+      }
+      else {
+         Util.err( 'illegal' );
+      }
+   }  
+}
