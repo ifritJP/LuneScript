@@ -19,6 +19,7 @@
 - [ ] json 型を追加する。 json 型は Map のサブセットで、
       key,value に設定可能な型を制限する。 json 型を mapping する jmapping を追加。
 - [ ] let! のブロックがフロー解析対象になっていない。
+- [ ] if! let の else で、  nilable の値にアクセス出来るようにする。
 - [ ] 戻り値を持たない関数の結果を、変数に代入できてしまう。
 - [ ] foreach の変数名が shadow チェック対象になっていない。
 - [ ] 型固定の可変長引数対応
@@ -192,7 +193,7 @@
 - [X] nil 条件演算子
 - [X] import, provide
 - [X] require, module
-- [ ] クロスコンパイル  
+- [X] クロスコンパイル  
 - [ ] macro
 - [ ] make
 - [ ] glue
