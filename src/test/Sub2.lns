@@ -39,6 +39,14 @@ pub class Test {
    }
 }
 
+pub alge AlgeTest {
+   Val1,
+   Val2,
+   Val3( int ),
+   Val4( int, str ),
+   Val5( AlgeTest ),
+}  
+
 fn main() {
    let test = new Test();
    test.func();
@@ -46,6 +54,13 @@ fn main() {
    let mut val = Test.Hoge.val;
    val = .val;
    print( val.$_txt );
+
+   let algeTest = AlgeTest.Val1;
+   match algeTest {
+      case .Val1 {
+         print( algeTest.$_txt );
+      }
+   }
 }
 
 pub class IF {
@@ -58,3 +73,4 @@ pub fn testext(): int, real, str, Map<int,real>,List<int>, int!, real!, str!, Ma
 {
    return 1, 1.0, "", {}, [], nil, nil, nil, nil, nil;
 }
+

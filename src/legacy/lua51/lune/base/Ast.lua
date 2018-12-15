@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.Ast'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
 if not table.unpack then
    table.unpack = unpack
 end
@@ -114,6 +121,9 @@ SerializeKind.__allList[4] = SerializeKind.Normal
 SerializeKind.Enum = 4
 SerializeKind._val2NameMap[4] = 'Enum'
 SerializeKind.__allList[5] = SerializeKind.Enum
+SerializeKind.Alge = 5
+SerializeKind._val2NameMap[5] = 'Alge'
+SerializeKind.__allList[6] = SerializeKind.Alge
 
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
@@ -179,6 +189,9 @@ TypeInfoKind.__allList[13] = TypeInfoKind.Module
 TypeInfoKind.Stem = 13
 TypeInfoKind._val2NameMap[13] = 'Stem'
 TypeInfoKind.__allList[14] = TypeInfoKind.Stem
+TypeInfoKind.Alge = 14
+TypeInfoKind._val2NameMap[14] = 'Alge'
+TypeInfoKind.__allList[15] = TypeInfoKind.Alge
 
 local function isBuiltin( typeId )
 
@@ -972,7 +985,7 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
             validThisScope = true
          elseif (_exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.Module ) and name == "self" then
             validThisScope = true
-         elseif _exp:get_kind() == TypeInfoKind.Enum then
+         elseif _exp:get_kind() == TypeInfoKind.Enum or _exp:get_kind() == TypeInfoKind.Alge then
             validThisScope = true
          end
          
@@ -1054,6 +1067,16 @@ function Scope:addEnumVal( name, typeInfo )
 end
 
 function Scope:addEnum( accessMode, name, typeInfo )
+
+   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
+end
+
+function Scope:addAlgeVal( name, typeInfo )
+
+   self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, true, true )
+end
+
+function Scope:addAlge( accessMode, name, typeInfo )
 
    self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
 end
@@ -1869,6 +1892,138 @@ function EnumTypeInfo:get_name2EnumValInfo()
    return self.name2EnumValInfo         
 end
 
+local AlgeValInfo = {}
+_moduleObj.AlgeValInfo = AlgeValInfo
+function AlgeValInfo:serialize( stream )
+
+   stream:write( string.format( "{ name = '%s', typeList = {", self.name) )
+   do
+      local __sorted = {}
+      local __map = self.typeList
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, index in ipairs( __sorted ) do
+         local typeInfo = __map[ index ]
+         do
+            if index > 1 then
+               stream:write( ", " )
+            end
+            
+            stream:write( string.format( "%d", typeInfo:get_typeId()) )
+         end
+      end
+   end
+   
+   stream:write( "}" )
+end
+function AlgeValInfo.setmeta( obj )
+  setmetatable( obj, { __index = AlgeValInfo  } )
+end
+function AlgeValInfo.new( name, typeList )
+   local obj = {}
+   AlgeValInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( name, typeList )
+   end        
+   return obj 
+end         
+function AlgeValInfo:__init( name, typeList ) 
+
+   self.name = name
+   self.typeList = typeList
+end
+function AlgeValInfo:get_name()       
+   return self.name         
+end
+function AlgeValInfo:get_typeList()       
+   return self.typeList         
+end
+
+local AlgeTypeInfo = {}
+setmetatable( AlgeTypeInfo, { __index = TypeInfo } )
+_moduleObj.AlgeTypeInfo = AlgeTypeInfo
+function AlgeTypeInfo.new( scope, externalFlag, accessMode, txt, parentInfo, typeId )
+   local obj = {}
+   AlgeTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( scope, externalFlag, accessMode, txt, parentInfo, typeId ); end
+   return obj
+end
+function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, typeId) 
+   TypeInfo.__init( self ,scope)
+   
+   self.externalFlag = externalFlag
+   self.accessMode = accessMode
+   self.rawTxt = txt
+   self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
+   self.typeId = typeId
+   self.valInfoList = {}
+   do
+      local _exp = parentInfo
+      if _exp ~= nil then
+         _exp:addChildren( self )
+      end
+   end
+   
+   self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
+   idProv:increment(  )
+   scope:set_ownerTypeInfo( self )
+end
+function AlgeTypeInfo:addValInfo( valInfo )
+
+   table.insert( self.valInfoList, valInfo )
+end
+function AlgeTypeInfo:isModule(  )
+
+   return false
+end
+function AlgeTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Alge
+end
+function AlgeTypeInfo:getParentId(  )
+
+   return self.parentInfo:get_typeId()
+end
+function AlgeTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self.rawTxt
+end
+function AlgeTypeInfo:get_display_stirng(  )
+
+   return self:getTxt(  )
+end
+function AlgeTypeInfo:canEvalWith( other, opTxt )
+
+   return self == other:get_srcTypeInfo()
+end
+function AlgeTypeInfo:get_mutable(  )
+
+   return true
+end
+function AlgeTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = AlgeTypeInfo  } )
+end
+function AlgeTypeInfo:get_externalFlag()       
+   return self.externalFlag         
+end
+function AlgeTypeInfo:get_parentInfo()       
+   return self.parentInfo         
+end
+function AlgeTypeInfo:get_typeId()       
+   return self.typeId         
+end
+function AlgeTypeInfo:get_rawTxt()       
+   return self.rawTxt         
+end
+function AlgeTypeInfo:get_accessMode()       
+   return self.accessMode         
+end
+function AlgeTypeInfo:get_nilableTypeInfo()       
+   return self.nilableTypeInfo         
+end
+
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
@@ -2454,6 +2609,47 @@ accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getPa
                stream:write( string.format( "%s = %s,", enumValInfo:get_name(), tostring( enumValInfo:get_val())) )
             end
             
+         end
+      end
+   end
+   
+   stream:write( "} }\n" )
+end
+
+function NormalTypeInfo.createAlge( scope, parentInfo, externalFlag, accessMode, algeName )
+
+   if Parser.isLuaKeyword( algeName ) then
+      Util.err( string.format( "This symbol can not use for a alge. -- %s", algeName) )
+   end
+   
+   idProv:increment(  )
+   local info = AlgeTypeInfo.new(scope, externalFlag, accessMode, algeName, parentInfo, idProv:get_id())
+   local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, {_moduleObj.builtinTypeString}, false )
+   scope:addMethod( getEnumName, AccessMode.Pub, false, false )
+   return info
+end
+
+function AlgeTypeInfo:serialize( stream, validChildrenSet )
+
+   local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
+accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Alge)
+   stream:write( txt )
+   stream:write( "algeValList = {" )
+   do
+      local __sorted = {}
+      local __map = self.valInfoList
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, index in ipairs( __sorted ) do
+         local algeValInfo = __map[ index ]
+         do
+            if index > 1 then
+               stream:write( "," )
+            end
+            
+            algeValInfo:serialize( oStream )
          end
       end
    end
@@ -7587,6 +7783,83 @@ function DeclEnumNode:get_valueNameList()
    return self.valueNameList         
 end
 function DeclEnumNode:get_scope()       
+   return self.scope         
+end
+
+
+function NodeKind.get_DeclAlge(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['DeclAlge'])
+end
+
+
+regKind( [[DeclAlge]] )
+function Filter:processDeclAlge( node, ... )
+
+end
+
+
+function NodeManager:getDeclAlgeNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclAlge']) )
+end
+
+
+local DeclAlgeNode = {}
+setmetatable( DeclAlgeNode, { __index = Node } )
+_moduleObj.DeclAlgeNode = DeclAlgeNode
+function DeclAlgeNode:processFilter( filter, ... )
+
+   local argList = {...}
+   filter:processDeclAlge( self, table.unpack( argList ) )
+end
+function DeclAlgeNode:canBeRight(  )
+
+   return false
+end
+function DeclAlgeNode:canBeLeft(  )
+
+   return false
+end
+function DeclAlgeNode:canBeStatement(  )
+
+   return true
+end
+function DeclAlgeNode.new( pos, typeList, accessMode, name, valueInfoList, scope )
+   local obj = {}
+   DeclAlgeNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, accessMode, name, valueInfoList, scope ); end
+   return obj
+end
+function DeclAlgeNode:__init(pos, typeList, accessMode, name, valueInfoList, scope) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclAlge']), pos, typeList)
+   
+   
+   self.accessMode = accessMode
+   self.name = name
+   self.valueInfoList = valueInfoList
+   self.scope = scope
+   
+end
+function DeclAlgeNode.create( nodeMan, pos, typeList, accessMode, name, valueInfoList, scope )
+
+   local node = DeclAlgeNode.new(pos, typeList, accessMode, name, valueInfoList, scope)
+   nodeMan:addNode( node )
+   return node
+end
+function DeclAlgeNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclAlgeNode  } )
+end
+function DeclAlgeNode:get_accessMode()       
+   return self.accessMode         
+end
+function DeclAlgeNode:get_name()       
+   return self.name         
+end
+function DeclAlgeNode:get_valueInfoList()       
+   return self.valueInfoList         
+end
+function DeclAlgeNode:get_scope()       
    return self.scope         
 end
 

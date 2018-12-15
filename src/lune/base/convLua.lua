@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.convLua'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
 function _lune.loadstring52( txt, env )
    if not env then
       return load( txt )
@@ -204,6 +211,7 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.pubVarName2InfoMap = {}
    self.pubFuncName2InfoMap = {}
    self.pubEnumId2EnumTypeInfo = {}
+   self.pubAlgeId2AlgeTypeInfo = {}
    self.needIndent = false
    self.moduleTypeInfo = moduleTypeInfo
    self.separateLuneModule = separateLuneModule
@@ -656,6 +664,10 @@ function convFilter:outputMeta( node )
       typeId2TypeInfo[typeId] = typeInfo
    end
    
+   for typeId, typeInfo in pairs( self.pubAlgeId2AlgeTypeInfo ) do
+      typeId2TypeInfo[typeId] = typeInfo
+   end
+   
    self:writeln( "local _dependIdMap = {}" )
    self:writeln( "_moduleObj._dependIdMap = _dependIdMap" )
    local exportNeedModuleTypeInfo = {}
@@ -691,7 +703,7 @@ function convFilter:outputMeta( node )
                            
                            do
                               local _switchExp = orgTypeInfo:get_kind()
-                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
+                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
                                  valid = true
                               end
                            end
@@ -768,6 +780,7 @@ function convFilter:processRoot( node, parent )
 if not _lune then
    _lune = {}
 end]==] )
+      self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
       if node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
       end
@@ -936,6 +949,76 @@ end
       self:writeln( string.format( "%s.__allList[%d] = %s.%s", enumFullName, index, enumFullName, valName.txt) )
    end
    
+end
+
+function convFilter:processDeclAlge( node, parent )
+
+   local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
+   local algeFullName = node:get_algeType():get_rawTxt()
+   local typeInfo = node:get_expType()
+   local parentInfo = typeInfo:get_parentInfo()
+   local isTopNS = true
+   if parentInfo ~= Ast.headTypeInfo and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
+      algeFullName = string.format( "%s.%s", self:getFullName( parentInfo ), algeFullName)
+      access = ""
+      isTopNS = false
+   end
+   
+   self:writeln( string.format( "%s%s = {}", access, algeFullName) )
+   if isTopNS and node:get_accessMode() == Ast.AccessMode.Pub then
+      if self.needModuleObj then
+         self:writeln( string.format( "_moduleObj.%s = %s", algeFullName, algeFullName) )
+      end
+      
+   end
+   
+   if typeInfo:get_accessMode() == Ast.AccessMode.Pub then
+      self.pubAlgeId2AlgeTypeInfo[typeInfo:get_typeId()] = typeInfo
+   end
+   
+   self:writeln( string.format( [==[function %s:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "%s.%%s", name )
+   end
+   return string.format( "illegal val -- %%s", val )
+end 
+]==], algeFullName, algeFullName) )
+   do
+      local __sorted = {}
+      local __map = node:get_algeType():get_valInfoMap()
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local valInfo = __map[ __key ]
+         do
+            self:writeln( string.format( '%s.%s = { "%s" }', algeFullName, valInfo:get_name(), valInfo:get_name()) )
+         end
+      end
+   end
+   
+end
+
+function convFilter:processNewAlgeVal( node, parent )
+
+   local valInfo = node:get_valInfo()
+   self:write( string.format( '_lune.newAlge( %s.%s', self:getFullName( node:get_algeTypeInfo() ), valInfo:get_name()) )
+   if #valInfo:get_typeList() > 0 then
+      self:write( ", {" )
+      for index, exp in pairs( node:get_paramList() ) do
+         if index > 1 then
+            self:write( "," )
+         end
+         
+         filter( exp, self, node )
+      end
+      
+      self:write( "}" )
+   end
+   
+   self:write( ")" )
 end
 
 function convFilter:getDestrClass( classTypeInfo )
@@ -1843,6 +1926,44 @@ function convFilter:processSwitch( node, parent )
 end
 
 
+function convFilter:processMatch( node, parent )
+
+   self:writeln( "do" )
+   self:pushIndent(  )
+   self:write( "local _matchExp = " )
+   filter( node:get_val(), self, node )
+   self:writeln( "" )
+   local fullName = self:getFullName( node:get_algeTypeInfo() )
+   for index, caseInfo in pairs( node:get_caseList() ) do
+      if index == 1 then
+         self:write( "if " )
+      else
+       
+         self:write( "elseif " )
+      end
+      
+      self:writeln( string.format( "_matchExp[1] == %s.%s[1] then", fullName, caseInfo:get_valInfo():get_name()) )
+      for paramNum, paramName in pairs( caseInfo:get_valParamNameList() ) do
+         self:writeln( string.format( "   local %s = _matchExp[2][%d]", paramName, paramNum) )
+      end
+      
+      filter( caseInfo:get_block(), self, node )
+   end
+   
+   do
+      local _exp = node:get_defaultBlock()
+      if _exp ~= nil then
+         self:writeln( "else " )
+         filter( _exp, self, node )
+      end
+   end
+   
+   self:writeln( "end" )
+   self:popIndent(  )
+   self:writeln( "end" )
+end
+
+
 function convFilter:processWhile( node, parent )
 
    self:write( "while " )
@@ -2013,7 +2134,7 @@ function convFilter:processExpCall( node, parent )
                wroteFuncFlag = true
                self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
                filter( prefixNode, self, fieldNode )
-            elseif _switchExp == Ast.TypeInfoKind.Enum then
+            elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
                wroteFuncFlag = true
                local fieldExpType = fieldNode:get_expType()
                local canonicalName = self:getCanonicalName( prefixType )
@@ -2405,7 +2526,7 @@ function convFilter:processGetField( node, parent )
    local prefixNode = node:get_prefix(  )
    local prefixType = prefixNode:get_expType()
    local fieldTxt = node:get_field(  ).txt
-   if fieldTxt == "_txt" and prefixType:get_kind() == Ast.TypeInfoKind.Enum then
+   if fieldTxt == "_txt" and (prefixType:get_kind() == Ast.TypeInfoKind.Enum or prefixType:get_kind() == Ast.TypeInfoKind.Alge ) then
       self:write( string.format( "%s:_getTxt( ", self:getFullName( prefixType )) )
       filter( prefixNode, self, node )
       self:writeln( ")" )
@@ -2525,12 +2646,12 @@ function convFilter:processLiteralString( node, parent )
             self:write( ", " )
          end
          
-         local match = TransUnit.FormType.Match
+         local matchFlag = TransUnit.FormType.Match
          if index <= #opList then
-            match = TransUnit.isMatchStringFormatType( opList[index], val:get_expType(), self.targetLuaVer )
+            matchFlag = TransUnit.isMatchStringFormatType( opList[index], val:get_expType(), self.targetLuaVer )
          end
          
-         if match == TransUnit.FormType.NeedConv then
+         if matchFlag == TransUnit.FormType.NeedConv then
             self:write( "tostring( " )
             filter( val, self, node )
             self:write( ")" )

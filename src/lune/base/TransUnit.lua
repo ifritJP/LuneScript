@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.TransUnit'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -304,7 +311,7 @@ function TransUnit.new( importModuleInfo, macroEval, analyzeModule, mode, pos, t
    return obj
 end
 function TransUnit:__init(importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer) 
-   self.helperInfo = Ast.LuneHelperInfo.new(false, false, false, false, false)
+   self.helperInfo = Ast.LuneHelperInfo.new(false, false, false, false, false, false)
    self.targetLuaVer = targetLuaVer
    self.importModuleInfo = importModuleInfo
    self.protoFuncMap = {}
@@ -1145,6 +1152,124 @@ function _TypeInfoEnum._fromMapSub( obj, val )
    return obj
 end
 
+local _TypeInfoAlgeVal = {}
+function _TypeInfoAlgeVal.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoAlgeVal  } )
+end
+function _TypeInfoAlgeVal.new( name, typeList )
+   local obj = {}
+   _TypeInfoAlgeVal.setmeta( obj )
+   if obj.__init then
+      obj:__init( name, typeList )
+   end        
+   return obj 
+end         
+function _TypeInfoAlgeVal:__init( name, typeList ) 
+
+   self.name = name
+   self.typeList = typeList
+end
+function _TypeInfoAlgeVal:_toMap()
+  return self
+end
+function _TypeInfoAlgeVal._fromMap( val )
+  local obj, mes = _TypeInfoAlgeVal._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoAlgeVal.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoAlgeVal._fromStem( val )
+  return _TypeInfoAlgeVal._fromMap( val )
+end
+
+function _TypeInfoAlgeVal._fromMapSub( obj, val )
+   local memInfo = {}
+   table.insert( memInfo, { name = "name", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "typeList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
+local _TypeInfoAlge = {}
+setmetatable( _TypeInfoAlge, { __index = _TypeInfo } )
+function _TypeInfoAlge:createTypeInfo( param )
+
+   local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
+   local parentInfo = _lune.unwrap( param.typeId2TypeInfo[self.parentId])
+   local name2AlgeValInfo = {}
+   local parentScope = _lune.unwrap( Ast.getScope( parentInfo ))
+   local scope = Ast.Scope.new(parentScope, true, nil)
+   param.typeId2Scope[self.typeId] = scope
+   local algeTypeInfo = Ast.NormalTypeInfo.createAlge( scope, _lune.unwrap( parentInfo), true, accessMode, self.txt )
+   local newTypeInfo = algeTypeInfo
+   param.typeId2TypeInfo[self.typeId] = algeTypeInfo
+   for __index, valInfo in pairs( self.algeValList ) do
+      local typeInfoList = {}
+      for __index, orgTypeId in pairs( valInfo.typeList ) do
+         table.insert( typeInfoList, _lune.unwrap( param.typeId2TypeInfo[orgTypeId]) )
+      end
+      
+      local algeVal = Ast.AlgeValInfo.new(valInfo.name, typeInfoList)
+      scope:addAlgeVal( valInfo.name, algeTypeInfo )
+      algeTypeInfo:addValInfo( algeVal )
+   end
+   
+   parentScope:addAlge( accessMode, self.txt, algeTypeInfo )
+   return newTypeInfo, nil
+end
+function _TypeInfoAlge.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoAlge  } )
+end
+function _TypeInfoAlge.new( txt, accessMode, algeValList )
+   local obj = {}
+   _TypeInfoAlge.setmeta( obj )
+   if obj.__init then
+      obj:__init( txt, accessMode, algeValList )
+   end        
+   return obj 
+end         
+function _TypeInfoAlge:__init( txt, accessMode, algeValList ) 
+
+   _TypeInfo.__init( self )
+   self.txt = txt
+   self.accessMode = accessMode
+   self.algeValList = algeValList
+end
+function _TypeInfoAlge:_toMap()
+  return self
+end
+function _TypeInfoAlge._fromMap( val )
+  local obj, mes = _TypeInfoAlge._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoAlge.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoAlge._fromStem( val )
+  return _TypeInfoAlge._fromMap( val )
+end
+
+function _TypeInfoAlge._fromMapSub( obj, val )
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "algeValList", func = _lune._toList, nilable = false, child = { { func = _TypeInfoAlgeVal._fromMap, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
 local typeInfoLuneLoad = Ast.headTypeInfo
 _moduleObj.typeInfoLuneLoad = typeInfoLuneLoad
 
@@ -1883,6 +2008,8 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                local _switchExp = kind
                if _switchExp == Ast.SerializeKind.Enum then
                   actInfo = _TypeInfoEnum._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.Alge then
+                  actInfo = _TypeInfoAlge._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Module then
                   actInfo = _TypeInfoModule._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Normal then
@@ -2250,6 +2377,69 @@ function TransUnit:analyzeSwitch( firstToken )
    
    self:checkNextToken( "}" )
    return Ast.SwitchNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, exp, caseList, defaultBlock )
+end
+
+function TransUnit:analyzeMatch( firstToken )
+
+   local exp = self:analyzeExp( false )
+   if exp:get_expType():get_kind() ~= Ast.TypeInfoKind.Alge then
+      self:error( "match must have alge value" )
+   end
+   
+   local algeTypeInfo = exp:get_expType():get_srcTypeInfo()
+   self:checkNextToken( "{" )
+   local caseList = {}
+   local nextToken = self:getToken(  )
+   while (nextToken.txt == "case" ) do
+      self:checkNextToken( "." )
+      local valNameToken = self:getToken(  )
+      local valInfo = algeTypeInfo:getValInfo( valNameToken.txt )
+      if  nil == valInfo then
+         local _valInfo = valInfo
+      
+         self:error( string.format( "not found val -- %s", valNameToken.txt) )
+      end
+      
+      local valParamNameList = {}
+      nextToken = self:getToken(  )
+      local blockScope = self:pushScope( false )
+      if nextToken.txt == "(" then
+         for __index, paramType in pairs( valInfo:get_typeList() ) do
+            local paramName = self:getSymbolToken(  )
+            blockScope:addLocalVar( false, false, paramName.txt, paramType, false )
+            table.insert( valParamNameList, paramName.txt )
+            nextToken = self:getToken(  )
+            if nextToken.txt ~= "," then
+               break
+            end
+            
+         end
+         
+         self:checkToken( nextToken, ")" )
+      else
+       
+         self:pushback(  )
+      end
+      
+      if #valParamNameList ~= #valInfo:get_typeList() then
+         self:addErrMess( valNameToken.pos, string.format( "unmatch param -- %d != %d", #valParamNameList, #valInfo:get_typeList()) )
+      end
+      
+      local block = self:analyzeBlock( Ast.BlockKind.Match, blockScope )
+      self:popScope(  )
+      local matchCase = Ast.MatchCase.new(valInfo, valParamNameList, block)
+      table.insert( caseList, matchCase )
+      nextToken = self:getToken(  )
+   end
+   
+   local defaultBlock = nil
+   if nextToken.txt == "default" then
+      defaultBlock = self:analyzeBlock( Ast.BlockKind.Block )
+      nextToken = self:getToken(  )
+   end
+   
+   self:checkToken( nextToken, "}" )
+   return Ast.MatchNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, exp, algeTypeInfo, caseList, defaultBlock )
 end
 
 function TransUnit:analyzeWhile( token )
@@ -3021,6 +3211,49 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    return Ast.DeclEnumNode.create( self.nodeManager, firstToken.pos, {enumTypeInfo}, accessMode, name, valueList, scope )
 end
 
+function TransUnit:analyzeDeclAlge( accessMode, firstToken )
+
+   local name = self:getSymbolToken(  )
+   self:checkNextToken( "{" )
+   local scope = self.scope
+   local algeScope = self:pushScope( true )
+   local algeTypeInfo = Ast.NormalTypeInfo.createAlge( algeScope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
+   scope:addAlge( accessMode, name.txt, algeTypeInfo )
+   local nextToken = self:getToken(  )
+   while nextToken.txt ~= "}" do
+      local valName = self:checkSymbol( nextToken )
+      nextToken = self:getToken(  )
+      local typeInfoList = {}
+      if nextToken.txt == "(" then
+         while true do
+            local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false )
+            table.insert( typeInfoList, typeNode:get_expType() )
+            nextToken = self:getToken(  )
+            if nextToken.txt ~= "," then
+               self:checkToken( nextToken, ")" )
+               nextToken = self:getToken(  )
+               break
+            end
+            
+         end
+         
+      end
+      
+      algeScope:addAlgeVal( valName.txt, algeTypeInfo )
+      local algeValInfo = Ast.AlgeValInfo.new(valName.txt, typeInfoList)
+      algeTypeInfo:addValInfo( algeValInfo )
+      if nextToken.txt == "}" then
+         break
+      end
+      
+      self:checkToken( nextToken, "," )
+      nextToken = self:getToken(  )
+   end
+   
+   self:popScope(  )
+   return Ast.DeclAlgeNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, accessMode, algeTypeInfo, algeScope )
+end
+
 function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token )
 
    local retTypeInfoList = {}
@@ -3105,6 +3338,8 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
       return self:analyzeDeclMacro( accessMode, firstToken )
    elseif token.txt == "enum" then
       return self:analyzeDeclEnum( accessMode, firstToken )
+   elseif token.txt == "alge" then
+      return self:analyzeDeclAlge( accessMode, firstToken )
    elseif token.txt == "form" then
       self:analyzeDeclForm( accessMode, firstToken )
       return self:createNoneNode( firstToken.pos )
@@ -5264,7 +5499,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
          
       end
       
-   elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Enum then
+   elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Enum or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Alge then
       local scope = _lune.unwrap( prefixExpType:get_scope())
       local fieldName = token.txt
       if mode == ExpSymbolMode.Get then
@@ -5397,11 +5632,58 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    
 end
 
+function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
+
+   local symbolToken = self:getSymbolToken(  )
+   do
+      local valInfo = algeTypeInfo:getValInfo( symbolToken.txt )
+      if valInfo ~= nil then
+         local argList = {}
+         if #valInfo:get_typeList() > 0 then
+            self:checkNextToken( "(" )
+            for index, typeInfo in pairs( valInfo:get_typeList() ) do
+               table.insert( argList, self:analyzeExp( false ) )
+               if index ~= #valInfo:get_typeList() then
+                  self:checkNextToken( "," )
+               end
+               
+            end
+            
+            self:checkNextToken( ")" )
+         end
+         
+         return Ast.NewAlgeValNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, valInfo, argList )
+      else
+         self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )
+         return Ast.NewAlgeValNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, Ast.AlgeValInfo.new("", {}), {} )
+      end
+   end
+   
+end
+
 function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFlag )
 
    local exp = nil
    if mode == ExpSymbolMode.Field or mode == ExpSymbolMode.Get or mode == ExpSymbolMode.FieldNil or mode == ExpSymbolMode.GetNil then
-      exp = self:analyzeExpField( firstToken, token, mode, _lune.unwrap( prefixExp) )
+      if prefixExp ~= nil then
+         exp = self:analyzeExpField( firstToken, token, mode, prefixExp )
+         do
+            local expType = exp:get_expType()
+            if expType ~= nil then
+               if expType:get_kind() == Ast.TypeInfoKind.Alge and prefixExp:get_expType():isModule(  ) then
+                  local nextToken = self:getToken(  )
+                  if nextToken.txt == "." then
+                     return self:analyzeNewAlge( firstToken, expType, exp )
+                  end
+                  
+                  self:pushback(  )
+               end
+               
+            end
+         end
+         
+      end
+      
    elseif mode == ExpSymbolMode.Symbol then
       if self.macroMode == Ast.MacroMode.Analyze then
          exp = Ast.LiteralSymbolNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeSymbol}, token )
@@ -5432,6 +5714,15 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
          end
          
          local typeInfo = symbolInfo:get_typeInfo()
+         if typeInfo:get_kind() == Ast.TypeInfoKind.Alge and symbolInfo:get_kind() == Ast.SymbolKind.Typ then
+            local nextToken = self:getToken(  )
+            if nextToken.txt == "." then
+               return self:analyzeNewAlge( firstToken, typeInfo, nil )
+            end
+            
+            self:pushback(  )
+         end
+         
          if typeInfo:equals( Ast.builtinTypeSymbol ) then
             skipFlag = true
          end
@@ -6252,6 +6543,8 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:analyzeWhen( token )
       elseif token.txt == "switch" then
          statement = self:analyzeSwitch( token )
+      elseif token.txt == "match" then
+         statement = self:analyzeMatch( token )
       elseif token.txt == "while" then
          statement = self:analyzeWhile( token )
       elseif token.txt == "repeat" then

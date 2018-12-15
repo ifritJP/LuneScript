@@ -64,18 +64,18 @@
     lns-keyword (lns-make-regex-or
 		 '("self" "fn" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
-		   "nil" "null" "true" "switch" "case" "default" "extend" "proto"
+		   "nil" "null" "true" "switch" "match" "case" "default" "extend" "proto"
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "mut"
 		   "__init", "mut" "pub" "pro" "pri" "form" "advertise" "provide"
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
-		   "glue" "when"
+		   "glue" "when" "alge"
 		   "abstract" "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or
 				      '("let" "let\!" "let\*" "if" "elseif" "else" "while"
 					"repeat" "for" "apply" "foreach" "forsort"
 					"class" "pub" "pro" "pri" "form" "advertise"
-					"switch" "proto" "case" "interface"
+					"switch" "match" "proto" "case" "interface"
 					"wrap" "static" "trust" "import" "''"))
 				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst

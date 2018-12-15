@@ -31,6 +31,7 @@ pub enum CodeKind {
    LoadStr51,
    LoadStr52,
    Mapping,
+   Alge,
    Finalize,
 }
 
@@ -218,6 +219,16 @@ function _lune._fromMap( obj, map, memInfoList )
 end
 ```;   
 
+codeMap[ .Alge ] = ```
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+```;
+
+      
 codeMap[ .Finalize ] = ```
 return _lune
 ```;

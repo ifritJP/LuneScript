@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.TransUnit'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -1138,6 +1145,124 @@ function _TypeInfoEnum._fromMapSub( obj, val )
    table.insert( memInfo, { name = "valTypeId", func = _lune._toInt, nilable = false, child = {} } )
    table.insert( memInfo, { name = "enumValList", func = _lune._toMap, nilable = false, child = { { func = _lune._toStr, nilable = false, child = {} }, 
 { func = _lune._toStem, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
+local _TypeInfoAlgeVal = {}
+function _TypeInfoAlgeVal.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoAlgeVal  } )
+end
+function _TypeInfoAlgeVal.new( name, typeList )
+   local obj = {}
+   _TypeInfoAlgeVal.setmeta( obj )
+   if obj.__init then
+      obj:__init( name, typeList )
+   end        
+   return obj 
+end         
+function _TypeInfoAlgeVal:__init( name, typeList ) 
+
+   self.name = name
+   self.typeList = typeList
+end
+function _TypeInfoAlgeVal:_toMap()
+  return self
+end
+function _TypeInfoAlgeVal._fromMap( val )
+  local obj, mes = _TypeInfoAlgeVal._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoAlgeVal.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoAlgeVal._fromStem( val )
+  return _TypeInfoAlgeVal._fromMap( val )
+end
+
+function _TypeInfoAlgeVal._fromMapSub( obj, val )
+   local memInfo = {}
+   table.insert( memInfo, { name = "name", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "typeList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
+local _TypeInfoAlge = {}
+setmetatable( _TypeInfoAlge, { __index = _TypeInfo } )
+function _TypeInfoAlge:createTypeInfo( param )
+
+   local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
+   local parentInfo = _lune.unwrap( param.typeId2TypeInfo[self.parentId])
+   local name2EnumValInfo = {}
+   local parentScope = _lune.unwrap( Ast.getScope( parentInfo ))
+   local scope = Ast.Scope.new(parentScope, true, nil)
+   param.typeId2Scope[self.typeId] = scope
+   local algeTypeInfo = Ast.NormalTypeInfo.createAlge( scope, _lune.unwrap( parentInfo), true, accessMode, self.txt )
+   local newTypeInfo = algeTypeInfo
+   param.typeId2TypeInfo[self.typeId] = algeTypeInfo
+   for __index, valInfo in pairs( self.algeValList ) do
+      local typeInfoList = {}
+      for __index, orgTypeId in pairs( valInfo.typeList ) do
+         table.insert( typeInfoList, _lune.unwrap( param.typeId2TypeInfo[orgTypeId]) )
+      end
+      
+      local algeVal = Ast.AlgeValInfo.new(valInfo.name, typeInfoList)
+      scope:addEnumVal( valInfo.name, algeTypeInfo )
+      algeTypeInfo:addValInfo( algeVal )
+   end
+   
+   parentScope:addAlge( accessMode, self.txt, algeTypeInfo )
+   return newTypeInfo, nil
+end
+function _TypeInfoAlge.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoAlge  } )
+end
+function _TypeInfoAlge.new( txt, accessMode, algeValList )
+   local obj = {}
+   _TypeInfoAlge.setmeta( obj )
+   if obj.__init then
+      obj:__init( txt, accessMode, algeValList )
+   end        
+   return obj 
+end         
+function _TypeInfoAlge:__init( txt, accessMode, algeValList ) 
+
+   _TypeInfo.__init( self )
+   self.txt = txt
+   self.accessMode = accessMode
+   self.algeValList = algeValList
+end
+function _TypeInfoAlge:_toMap()
+  return self
+end
+function _TypeInfoAlge._fromMap( val )
+  local obj, mes = _TypeInfoAlge._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoAlge.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoAlge._fromStem( val )
+  return _TypeInfoAlge._fromMap( val )
+end
+
+function _TypeInfoAlge._fromMapSub( obj, val )
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "algeValList", func = _lune._toList, nilable = false, child = { { func = _TypeInfoAlgeVal._fromMap, nilable = false, child = {} } } } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -3021,6 +3146,49 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    return Ast.DeclEnumNode.create( self.nodeManager, firstToken.pos, {enumTypeInfo}, accessMode, name, valueList, scope )
 end
 
+function TransUnit:analyzeDeclAlge( accessMode, firstToken )
+
+   local name = self:getSymbolToken(  )
+   self:checkNextToken( "{" )
+   local valueList = {}
+   local scope = self:pushScope( true )
+   local algeTypeInfo = Ast.NormalTypeInfo.createAlge( scope, self:getCurrentNamespaceTypeInfo(  ), false, accessMode, name.txt )
+   local nextToken = self:getToken(  )
+   while nextToken.txt ~= "}" do
+      local valName = self:checkSymbol( nextToken )
+      nextToken = self:getToken(  )
+      local typeInfoList = {}
+      if nextToken.txt == "(" then
+         while true do
+            local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false )
+            table.insert( typeInfoList, typeNode:get_expType() )
+            nextToken = self:getToken(  )
+            if nextToken.txt ~= "," then
+               self:checkToken( nextToken, ")" )
+               nextToken = self:getToken(  )
+               break
+            end
+            
+         end
+         
+      end
+      
+      scope:addAlgeVal( valName.txt, algeTypeInfo )
+      local algeValInfo = Ast.AlgeValInfo.new(valName.txt, typeInfoList)
+      table.insert( valueList, algeValInfo )
+      if nextToken.txt == "}" then
+         break
+      end
+      
+      self:checkToken( nextToken, "," )
+      nextToken = self:getToken(  )
+   end
+   
+   self:popScope(  )
+   self.scope:addAlge( accessMode, name.txt, algeTypeInfo )
+   return Ast.DeclAlgeNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, accessMode, name, valueList, scope )
+end
+
 function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token )
 
    local retTypeInfoList = {}
@@ -3105,6 +3273,8 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
       return self:analyzeDeclMacro( accessMode, firstToken )
    elseif token.txt == "enum" then
       return self:analyzeDeclEnum( accessMode, firstToken )
+   elseif token.txt == "alge" then
+      return self:analyzeDeclAlge( accessMode, firstToken )
    elseif token.txt == "form" then
       self:analyzeDeclForm( accessMode, firstToken )
       return self:createNoneNode( firstToken.pos )

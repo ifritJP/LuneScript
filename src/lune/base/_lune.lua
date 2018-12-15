@@ -156,4 +156,10 @@ function _lune._fromMap( obj, map, memInfoList )
    end
    return true
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
 return _lune

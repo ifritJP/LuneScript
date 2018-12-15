@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.Option'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )

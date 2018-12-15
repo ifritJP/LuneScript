@@ -65,6 +65,7 @@ pub enum SerializeKind {
    Module,
    Normal,
    Enum,
+   Alge,
 }
 
 pub enum TypeInfoKind {
@@ -82,6 +83,7 @@ pub enum TypeInfoKind {
    Enum,    
    Module,
    Stem,
+   Alge,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -703,7 +705,7 @@ pub fn Scope.getSymbolTypeInfo(
                _exp.$kind == .Module ) and name == "self" {
          validThisScope = true;
       }
-      elseif _exp.$kind == .Enum {
+      elseif _exp.$kind == .Enum or _exp.$kind == .Alge {
          validThisScope = true;
       }
    } 
@@ -787,6 +789,18 @@ pub fn Scope.addEnumVal( name:str, typeInfo: &TypeInfo ) mut
 }
 
 pub fn Scope.addEnum( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
+{
+   self.add( SymbolKind.Typ, false, false,
+             name, typeInfo, accessMode, true, true, true );
+}
+
+pub fn Scope.addAlgeVal( name:str, typeInfo: &TypeInfo ) mut
+{
+   self.add( SymbolKind.Mbr, false, true,
+             name, typeInfo, .Pub, true, true, true );
+}
+
+pub fn Scope.addAlge( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Typ, false, false,
              name, typeInfo, accessMode, true, true, true );
@@ -1213,6 +1227,102 @@ pub class EnumTypeInfo extend TypeInfo {
       return true;
    };
 }
+
+
+
+pub class AlgeValInfo {
+   pri let name: str {pub};
+   pri let typeList:&List<&TypeInfo> {pub};
+
+   pub fn serialize( stream: oStream ) {
+      stream.write( "{ name = '%s', typeList = {" (self.name) );
+      forsort typeInfo, index in self.typeList {
+         if index > 1 {
+            stream.write( ", " );
+         }
+         stream.write( "%d" ( typeInfo.$typeId ) );
+      }
+      stream.write( "}" );
+   }
+}
+
+pub class AlgeTypeInfo extend TypeInfo {
+   // 外部モジュールで定義した TypeInfo かどうか
+   pri let externalFlag: bool { pub };
+   // 親のタイプ。メソッドの親はクラスとなる。
+   pri let mut parentInfo: &TypeInfo { pub };
+   // タイプ ID
+   pri let typeId: int { pub };
+   // タイプ名の文字列。配列などの [] は含まない。
+   pri let rawTxt: str { pub };
+   // アクセスモード "pub", "pro", "pri"
+   pri let accessMode: AccessMode { pub };
+   pri let nilableTypeInfo: &TypeInfo { pub };
+
+   pri let mut valInfoList:List<&AlgeValInfo>;
+   
+
+   pub fn __init( scope: Scope, externalFlag: bool, accessMode: AccessMode,
+                  txt: str, parentInfo: &TypeInfo!, typeId: int )
+   {
+      super( scope );
+
+      self.externalFlag = externalFlag;
+      self.accessMode = accessMode;
+      self.rawTxt = txt;
+      self.parentInfo = unwrap parentInfo default headTypeInfo;
+      self.typeId = typeId;
+      self.valInfoList = [];
+
+      if! parentInfo {
+         _exp.addChildren( self );
+      }
+
+      self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
+      idProv.increment();
+      //typeIdSeed = typeIdSeed + 1;
+      
+
+      scope.set_ownerTypeInfo( self );
+   }
+
+   pub fn addValInfo( valInfo:&AlgeValInfo ) mut {
+      self.valInfoList.insert( valInfo );
+   }
+
+   pub override fn isModule(): bool {
+      return false;
+   }
+
+   pub override fn get_kind(): TypeInfoKind {
+      return .Alge;
+   } 
+   
+   pub override fn getParentId(): int {
+      return self.parentInfo.$typeId;
+   }
+
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   { 
+      return self.rawTxt;
+   }
+
+   pub override fn get_display_stirng(): str {
+      return self.getTxt();
+   }
+   
+   pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
+      return self == other.$srcTypeInfo;
+   }
+
+   pub override fn get_mutable(): bool {
+      return true;
+   };
+}
+
+
+
 
 
 pub class NormalTypeInfo extend TypeInfo {
@@ -1905,6 +2015,50 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
       else {
          stream.write( "%s = %s," (enumValInfo.$name, enumValInfo.$val) );
       }
+   }
+   stream.write( "} }\n" );
+}
+
+
+
+pub static fn NormalTypeInfo.createAlge(
+   scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
+   accessMode: AccessMode, algeName: str ): AlgeTypeInfo
+{
+   if Parser.isLuaKeyword( algeName ) {
+      Util.err( "This symbol can not use for a alge. -- %s"
+                (algeName) );
+   }
+   
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
+   let mut info = new AlgeTypeInfo(
+      scope, externalFlag, accessMode, algeName, parentInfo, idProv.$id );
+
+   let mut getEnumName = NormalTypeInfo.createFunc(
+      false, true, nil, .Method, info,
+      true, true, false, AccessMode.Pub,
+      "get__txt", nil, [ builtinTypeString ], false );
+   scope.addMethod( getEnumName, AccessMode.Pub, false, false );
+
+   return info;
+}
+
+pub override fn AlgeTypeInfo.serialize(
+   stream: oStream, validChildrenSet: Map<int,&TypeInfo>! )
+{
+   let txt = ```{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
+accessMode = %d, kind = %d, ```
+       ( SerializeKind.Alge, self.getParentId(), self.typeId, self.rawTxt,
+         self.accessMode, TypeInfoKind.Alge );
+   stream.write( txt );
+
+   stream.write( "algeValList = {" );
+   forsort algeValInfo, index in self.valInfoList {
+      if index > 1 {
+         stream.write( "," );
+      }
+      algeValInfo.serialize( oStream );
    }
    stream.write( "} }\n" );
 }
@@ -3129,6 +3283,13 @@ _declNodeClass( "DeclEnum", Node, false, false, true,
                 [ { "accessMode": "AccessMode" },
                   { "name": "&Parser.Token" },
                   { "valueNameList": "List<&Parser.Token>" },
+                  { "scope": "&Scope" } ]
+);
+
+_declNodeClass( "DeclAlge", Node, false, false, true,
+                [ { "accessMode": "AccessMode" },
+                  { "name": "&Parser.Token" },
+                  { "valueInfoList": "List<&AlgeValInfo>" },
                   { "scope": "&Scope" } ]
 );
 

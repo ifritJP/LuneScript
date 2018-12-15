@@ -734,6 +734,45 @@ class _TypeInfoEnum extend _TypeInfo {
    }
 }
 
+class _TypeInfoAlgeVal extend (Mapping) {
+   pub let name:str;
+   pub let typeList:&List<int>;
+}
+
+class _TypeInfoAlge extend _TypeInfo {
+   pub let txt:str;
+   pub let accessMode:Ast.AccessMode;
+   pub let algeValList: &List<&_TypeInfoAlgeVal>;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
+      let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
+      let mut parentScope = unwrap Ast.getScope( parentInfo );
+      let mut scope = new Ast.Scope( parentScope, true, nil );
+      
+      param.typeId2Scope[ self.typeId ] = scope;
+      let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
+         scope, unwrap parentInfo, true, accessMode, self.txt );
+      let newTypeInfo = algeTypeInfo;
+      param.typeId2TypeInfo[ self.typeId ] = algeTypeInfo;
+      foreach valInfo in self.algeValList {
+         let mut typeInfoList:List<&Ast.TypeInfo> = [];
+         foreach orgTypeId in valInfo.typeList {
+            typeInfoList.insert( unwrap param.typeId2TypeInfo[ orgTypeId ] );
+         }
+         let algeVal = new Ast.AlgeValInfo( valInfo.name, typeInfoList );
+         scope.addEnumVal( valInfo.name, algeTypeInfo );
+         algeTypeInfo.addValInfo( algeVal );
+      }
+      parentScope.addAlge( accessMode, self.txt, algeTypeInfo );
+      return newTypeInfo, nil;
+   }
+}
+
+
+
 
 pub let mut typeInfoLuneLoad:&Ast.TypeInfo = Ast.headTypeInfo;
 pub let mut typeInfoListInsert:&Ast.TypeInfo = Ast.headTypeInfo;

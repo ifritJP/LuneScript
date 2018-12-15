@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.6'
+_moduleObj.__formatVersion = '1.0.7'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -28,23 +28,23 @@ children = {1003, } }
 _typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'base', kind = 12, 
 children = {1005, } }
 _typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'front', kind = 12, 
-children = {14121, 14124, 14187, 14284, } }
+children = {14851, 14854, 14917, 15014, } }
 _typeInfoList[5] = { skind = 1, parentId = 1, typeId = 1009, srcTypeId = 14, mutable = false }
-_typeInfoList[6] = { skind=3, parentId = 1005, typeId = 14121, baseId = 1, txt = '_luneGetLocal',
+_typeInfoList[6] = { skind=3, parentId = 1005, typeId = 14851, baseId = 1, txt = '_luneGetLocal',
         abstractFlag = false, staticFlag = true, accessMode = 5, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {11}, children = {}, }
-_typeInfoList[7] = { skind = 0, parentId = 1005, typeId = 14122, nilable = true, orgTypeId = 14121 }
-_typeInfoList[8] = { skind=3, parentId = 1005, typeId = 14124, baseId = 1, txt = '_luneSym2Str',
+_typeInfoList[7] = { skind = 0, parentId = 1005, typeId = 14852, nilable = true, orgTypeId = 14851 }
+_typeInfoList[8] = { skind=3, parentId = 1005, typeId = 14854, baseId = 1, txt = '_luneSym2Str',
         abstractFlag = false, staticFlag = true, accessMode = 5, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {11}, retTypeId = {28}, children = {}, }
-_typeInfoList[9] = { skind = 0, parentId = 1005, typeId = 14125, nilable = true, orgTypeId = 14124 }
-_typeInfoList[10] = { skind=3, parentId = 1005, typeId = 14187, baseId = 1, txt = 'scriptPath2Module',
+_typeInfoList[9] = { skind = 0, parentId = 1005, typeId = 14855, nilable = true, orgTypeId = 14854 }
+_typeInfoList[10] = { skind=3, parentId = 1005, typeId = 14917, baseId = 1, txt = 'scriptPath2Module',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {27}, children = {}, }
-_typeInfoList[11] = { skind = 0, parentId = 1005, typeId = 14188, nilable = true, orgTypeId = 14187 }
-_typeInfoList[12] = { skind=3, parentId = 1, typeId = 14281, baseId = 1, txt = 'List',
+_typeInfoList[11] = { skind = 0, parentId = 1005, typeId = 14918, nilable = true, orgTypeId = 14917 }
+_typeInfoList[12] = { skind=3, parentId = 1, typeId = 15011, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {27}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[13] = { skind = 0, parentId = 1, typeId = 14282, nilable = true, orgTypeId = 14281 }
-_typeInfoList[14] = { skind=3, parentId = 1005, typeId = 14284, baseId = 1, txt = 'exec',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {14281}, retTypeId = {}, children = {}, }
-_typeInfoList[15] = { skind = 0, parentId = 1005, typeId = 14285, nilable = true, orgTypeId = 14284 }
+_typeInfoList[13] = { skind = 0, parentId = 1, typeId = 15012, nilable = true, orgTypeId = 15011 }
+_typeInfoList[14] = { skind=3, parentId = 1005, typeId = 15014, baseId = 1, txt = 'exec',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {15011}, retTypeId = {}, children = {}, }
+_typeInfoList[15] = { skind = 0, parentId = 1005, typeId = 15015, nilable = true, orgTypeId = 15014 }
 local _dependModuleMap = {}
 _moduleObj._dependModuleMap = _dependModuleMap
 _dependModuleMap[ 'lune.base.Ast' ] = { id = 1, use = false }

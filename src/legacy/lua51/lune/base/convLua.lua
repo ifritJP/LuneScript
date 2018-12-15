@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.convLua'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
 function _lune.loadstring51( txt, env )
    local func = loadstring( txt )
    if func and env then
@@ -205,6 +212,7 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.pubVarName2InfoMap = {}
    self.pubFuncName2InfoMap = {}
    self.pubEnumId2EnumTypeInfo = {}
+   self.pubAlgeId2AlgeTypeInfo = {}
    self.needIndent = false
    self.moduleTypeInfo = moduleTypeInfo
    self.separateLuneModule = separateLuneModule
@@ -657,6 +665,10 @@ function convFilter:outputMeta( node )
       typeId2TypeInfo[typeId] = typeInfo
    end
    
+   for typeId, typeInfo in pairs( self.pubAlgeId2AlgeTypeInfo ) do
+      typeId2TypeInfo[typeId] = typeInfo
+   end
+   
    self:writeln( "local _dependIdMap = {}" )
    self:writeln( "_moduleObj._dependIdMap = _dependIdMap" )
    local exportNeedModuleTypeInfo = {}
@@ -692,7 +704,7 @@ function convFilter:outputMeta( node )
                            
                            do
                               local _switchExp = orgTypeInfo:get_kind()
-                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
+                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
                                  valid = true
                               end
                            end
@@ -769,6 +781,7 @@ function convFilter:processRoot( node, parent )
 if not _lune then
    _lune = {}
 end]==] )
+      self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
       if node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
       end
@@ -935,6 +948,46 @@ end
       self:writeln( string.format( "%s.%s = %s", enumFullName, valName.txt, valTxt) )
       self:writeln( string.format( "%s._val2NameMap[%s] = '%s'", enumFullName, valTxt, valName.txt) )
       self:writeln( string.format( "%s.__allList[%d] = %s.%s", enumFullName, index, enumFullName, valName.txt) )
+   end
+   
+end
+
+function convFilter:processDeclAlge( node, parent )
+
+   local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
+   local algeFullName = node:get_name().txt
+   local typeInfo = node:get_expType()
+   local parentInfo = typeInfo:get_parentInfo()
+   local isTopNS = true
+   if parentInfo ~= Ast.headTypeInfo and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
+      algeFullName = string.format( "%s.%s", self:getFullName( parentInfo ), algeFullName)
+      access = ""
+      isTopNS = false
+   end
+   
+   self:writeln( string.format( "%s%s = {}", access, algeFullName) )
+   if isTopNS and node:get_accessMode() == Ast.AccessMode.Pub then
+      if self.needModuleObj then
+         self:writeln( string.format( "_moduleObj.%s = %s", algeFullName, algeFullName) )
+      end
+      
+   end
+   
+   if typeInfo:get_accessMode() == Ast.AccessMode.Pub then
+      self.pubAlgeId2AlgeTypeInfo[typeInfo:get_typeId()] = typeInfo
+   end
+   
+   self:writeln( string.format( [==[function %s:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "%s.%%s", name )
+   end
+   return string.format( "illegal val -- %%s", val )
+end 
+]==], algeFullName, algeFullName) )
+   self:writeln( string.format( "local %s = {}", algeFullName) )
+   for index, valInfo in pairs( node:get_valueInfoList() ) do
+      self:writeln( string.format( '[%s.%s = { "%s" }', algeFullName, valInfo:get_name(), valInfo:get_name()) )
    end
    
 end

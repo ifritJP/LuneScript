@@ -4,6 +4,13 @@ local __mod__ = 'lune.base.LuaVer'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   if not vals then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )

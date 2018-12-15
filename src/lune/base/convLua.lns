@@ -73,6 +73,8 @@ class convFilter extend Ast.Filter (oStream) {
    pri let mut classId2MemberList: Map<str,List<&Ast.DeclMemberNode>>;
    // enum TypeId -> EnumTypeInfo
    pri let mut pubEnumId2EnumTypeInfo: Map<int,&Ast.EnumTypeInfo>;
+   // enum TypeId -> AlgeTypeInfo
+   pri let mut pubAlgeId2AlgeTypeInfo: Map<int,&Ast.AlgeTypeInfo>;
    // public 変数名 → 変数情報
    pri let mut pubVarName2InfoMap: Map<str,PubVerInfo>;
    // public 関数名 → 関数情報
@@ -112,6 +114,7 @@ class convFilter extend Ast.Filter (oStream) {
       self.pubVarName2InfoMap = {};
       self.pubFuncName2InfoMap = {};
       self.pubEnumId2EnumTypeInfo = {};
+      self.pubAlgeId2AlgeTypeInfo = {};
       self.needIndent = false;
       self.moduleTypeInfo = moduleTypeInfo;
       self.separateLuneModule = separateLuneModule;
@@ -561,7 +564,11 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
    foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {
       typeId2TypeInfo[ typeId ] = typeInfo;
    }
+   foreach typeInfo, typeId in self.pubAlgeId2AlgeTypeInfo {
+      typeId2TypeInfo[ typeId ] = typeInfo;
+   }
 
+   
 
    self.writeln( "local _dependIdMap = {}" );
    self.writeln( "_moduleObj._dependIdMap = _dependIdMap" );
@@ -583,7 +590,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                   orgTypeInfo = typeInfo.$orgTypeInfo;
                }
                switch orgTypeInfo.$kind {
-                  case .IF, .Map, .Enum, .List, .Array, .Class, .Module, .Func {
+                  case .IF, .Map, .Enum, .Alge, .List, .Array, .Class, .Module, .Func {
                      valid = true;
                   }
                   // default {
@@ -657,6 +664,9 @@ if not _lune then
    _lune = {}
 end``` );
 
+
+      self.writeln( LuaMod.getCode( .Alge ) );
+      
       if node.$luneHelperInfo.$useUnpack and not self.targetLuaVer.$hasTableUnpack {
          self.writeln( LuaMod.getCode( .Unpack ) );
       }
@@ -839,6 +849,67 @@ end
          (enumFullName, index, enumFullName, valName.txt ) );
    }
 }
+
+
+pub override fn convFilter.processDeclAlge(
+   node: Ast.DeclAlgeNode, parent: &Ast.Node ) mut
+{
+   let mut access = node.$accessMode == .Global and "" or "local ";
+   let mut algeFullName = node.$algeType.$rawTxt;
+   let typeInfo = node.$expType@@Ast.AlgeTypeInfo;
+   let parentInfo = typeInfo.$parentInfo;
+   let mut isTopNS = true;
+   if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
+      algeFullName = "%s.%s" (self.getFullName( parentInfo ), algeFullName );
+      access = "";
+      isTopNS = false;
+   }
+   
+   
+   self.writeln( "%s%s = {}" (access, algeFullName) );
+   if isTopNS and node.$accessMode == .Pub {
+      if self.needModuleObj {
+         self.writeln( "_moduleObj.%s = %s" ( algeFullName, algeFullName ) );
+      }
+   }
+   
+
+   if typeInfo.$accessMode == .Pub {
+      self.pubAlgeId2AlgeTypeInfo[ typeInfo.$typeId ] = typeInfo;
+   }
+
+   self.writeln( ```function %s:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "%s.%%s", name )
+   end
+   return string.format( "illegal val -- %%s", val )
+end 
+``` (algeFullName, algeFullName ) );
+   forsort valInfo in node.$algeType.$valInfoMap {
+      self.writeln( '%s.%s = { "%s" }' (algeFullName, valInfo.$name, valInfo.$name ) );
+   }
+}
+
+pub override fn convFilter.processNewAlgeVal(
+   node: Ast.NewAlgeValNode, parent: &Ast.Node ) mut
+{
+   let valInfo = node.$valInfo;
+   self.write( '_lune.newAlge( %s.%s'
+               (self.getFullName( node.$algeTypeInfo ), valInfo.$name ) );
+   if #valInfo.$typeList > 0 {
+      self.write( ", {" );
+      foreach exp, index in node.$paramList {
+         if index > 1 {
+            self.write( "," );
+         }
+         filter( exp, self, node );
+      }
+      self.write( "}" );
+   }
+   self.write( ")" );
+}
+
 
 
 fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : Ast.TypeInfo!
@@ -1748,6 +1819,42 @@ pub override fn convFilter.processSwitch(
    self.writeln( "end" );
 };  
 
+
+pub override fn convFilter.processMatch( 
+   node: Ast.MatchNode, parent: &Ast.Node ) mut
+{
+   self.writeln( "do" );
+   self.pushIndent();
+   self.write( "local _matchExp = " );
+   filter( node.$val,  self, node );
+   self.writeln( "" );
+
+   let fullName = self.getFullName( node.$algeTypeInfo );
+   foreach caseInfo, index in node.$caseList {
+      if index == 1 {
+         self.write( "if " );
+      } 
+      else {
+         self.write( "elseif " );
+      }
+      self.writeln( "_matchExp[1] == %s.%s[1] then"
+                    (fullName, caseInfo.$valInfo.$name ) );
+      foreach paramName, paramNum in caseInfo.$valParamNameList {
+         self.writeln( "   local %s = _matchExp[2][%d]" (paramName, paramNum ) );
+      }
+      filter( caseInfo.$block, self, node );
+   }
+   if! node.$defaultBlock {
+      self.writeln( "else " );
+      filter( _exp, self, node );
+   }
+   self.writeln( "end" );
+   self.popIndent();
+   
+   self.writeln( "end" );
+};  
+
+
 pub override fn convFilter.processWhile( 
    node: Ast.WhileNode, parent: &Ast.Node ) mut
 {
@@ -1911,7 +2018,7 @@ pub override fn convFilter.processExpCall(
                self.write( "table.%s( " (fieldNode.$field.txt ) );
                filter( prefixNode, self, fieldNode );
             }
-            case .Enum {
+            case .Enum, .Alge {
                wroteFuncFlag = true;
                let fieldExpType = fieldNode.$expType;
                let canonicalName = self.getCanonicalName( prefixType );
@@ -2281,7 +2388,9 @@ pub override fn convFilter.processGetField(
    let prefixNode = node.get_prefix();
    let prefixType = prefixNode.$expType;
    let mut fieldTxt = node.get_field().txt;
-   if fieldTxt == "_txt" and prefixType.$kind == Ast.TypeInfoKind.Enum {
+   if fieldTxt == "_txt" and
+       ( prefixType.$kind == .Enum or prefixType.$kind == .Alge )
+   {  
       self.write( "%s:_getTxt( " (self.getFullName( prefixType ) ) );
       filter( prefixNode, self, node );
       self.writeln( ")" );
@@ -2400,12 +2509,12 @@ pub override fn convFilter.processLiteralString(
             self.write( ", " );
          }      
 
-         let mut match = TransUnit.FormType.Match;
+         let mut matchFlag = TransUnit.FormType.Match;
          if index <= #opList {
-            match = TransUnit.isMatchStringFormatType(
+            matchFlag = TransUnit.isMatchStringFormatType(
                opList[ index ], val.$expType, self.targetLuaVer );
          }
-         if match == .NeedConv {
+         if matchFlag == .NeedConv {
             self.write( "tostring( " );
             filter( val, self, node );
             self.write( ")" );

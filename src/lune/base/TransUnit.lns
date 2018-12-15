@@ -146,7 +146,8 @@ pub class TransUnit {
                   macroEval: Ast.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo )
    {
-      self.helperInfo = new Ast.LuneHelperInfo( false, false, false, false, false );
+      self.helperInfo = new Ast.LuneHelperInfo(
+         false, false, false, false, false, false );
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
@@ -733,6 +734,45 @@ class _TypeInfoEnum extend _TypeInfo {
       return newTypeInfo, nil;
    }
 }
+
+class _TypeInfoAlgeVal extend (Mapping) {
+   pub let name:str;
+   pub let typeList:&List<int>;
+}
+
+class _TypeInfoAlge extend _TypeInfo {
+   pub let txt:str;
+   pub let accessMode:Ast.AccessMode;
+   pub let algeValList: &List<&_TypeInfoAlgeVal>;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
+      let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      let mut name2AlgeValInfo:Map<str,Ast.AlgeValInfo> = {};
+      let mut parentScope = unwrap Ast.getScope( parentInfo );
+      let mut scope = new Ast.Scope( parentScope, true, nil );
+      
+      param.typeId2Scope[ self.typeId ] = scope;
+      let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
+         scope, unwrap parentInfo, true, accessMode, self.txt );
+      let newTypeInfo = algeTypeInfo;
+      param.typeId2TypeInfo[ self.typeId ] = algeTypeInfo;
+      foreach valInfo in self.algeValList {
+         let mut typeInfoList:List<&Ast.TypeInfo> = [];
+         foreach orgTypeId in valInfo.typeList {
+            typeInfoList.insert( unwrap param.typeId2TypeInfo[ orgTypeId ] );
+         }
+         let algeVal = new Ast.AlgeValInfo( valInfo.name, typeInfoList );
+         scope.addAlgeVal( valInfo.name, algeTypeInfo );
+         algeTypeInfo.addValInfo( algeVal );
+      }
+      parentScope.addAlge( accessMode, self.txt, algeTypeInfo );
+      return newTypeInfo, nil;
+   }
+}
+
+
 
 
 pub let mut typeInfoLuneLoad:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -1544,6 +1584,9 @@ fn TransUnit.processImport(
             case .Enum {
                actInfo = _TypeInfoEnum._fromMap( atomInfo );
             }
+            case .Alge {
+               actInfo = _TypeInfoAlge._fromMap( atomInfo );
+            }
             case .Module {
                actInfo = _TypeInfoModule._fromMap( atomInfo );
             }
@@ -1942,6 +1985,70 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Ast.SwitchNode {
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
       exp, caseList, defaultBlock );
 }
+
+
+fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Ast.MatchNode {
+   let exp = self.analyzeExp( false );
+
+   if exp.$expType.$kind ~= .Alge {
+      self.error( "match must have alge value" );
+   }
+
+   let algeTypeInfo = exp.$expType.$srcTypeInfo@@Ast.AlgeTypeInfo;
+   
+   self.checkNextToken( "{" );
+
+   let mut caseList: List<&Ast.MatchCase> = [];
+   
+   let mut nextToken = self.getToken();
+   while ( nextToken.txt == "case" ) {
+      self.checkNextToken( "." );
+      let valNameToken = self.getToken();
+      let! valInfo = algeTypeInfo.getValInfo( valNameToken.txt ) {
+         self.error( "not found val -- %s" (valNameToken.txt) );
+      };
+      let mut valParamNameList:List<str> = [];
+      nextToken = self.getToken();
+      let mut blockScope = self.pushScope( false );
+      if nextToken.txt == "(" {
+         foreach paramType in valInfo.$typeList {
+            let paramName = self.getSymbolToken();
+            blockScope.addLocalVar( false, false, paramName.txt, paramType, false );
+            valParamNameList.insert( paramName.txt );
+            nextToken = self.getToken();
+            if nextToken.txt ~= "," {
+               break;
+            }
+         }
+         self.checkToken( nextToken, ")" );
+      }
+      else {
+         self.pushback();
+      }
+      if #valParamNameList ~= #valInfo.$typeList {
+         self.addErrMess( valNameToken.pos,
+                          "unmatch param -- %d != %d"
+                          (#valParamNameList, #valInfo.$typeList ) );
+      }
+      let block = self.analyzeBlock( .Match, blockScope );
+      self.popScope();
+      let matchCase = new Ast.MatchCase( valInfo, valParamNameList, block );
+      
+      caseList.insert( matchCase );
+      nextToken = self.getToken();
+   }
+   let mut defaultBlock:&Ast.Node! = nil;
+   if nextToken.txt == "default" {
+      defaultBlock = self.analyzeBlock( .Block );
+      nextToken = self.getToken();
+   }
+   self.checkToken( nextToken, "}" );
+
+   return Ast.MatchNode.create(
+      self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
+      exp, algeTypeInfo, caseList, defaultBlock );
+}
+
 
 
 fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Ast.WhileNode {

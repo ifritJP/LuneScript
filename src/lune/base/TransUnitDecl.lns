@@ -630,6 +630,63 @@ fn TransUnit.analyzeDeclEnum(
 }
 
 
+
+fn TransUnit.analyzeDeclAlge(
+   accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.DeclAlgeNode
+{
+   let name = self.getSymbolToken();
+
+   self.checkNextToken( "{" );
+
+   let mut scope = self.scope;
+   let mut algeScope = self.pushScope( true );
+
+   let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
+      algeScope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
+   scope.addAlge( accessMode, name.txt, algeTypeInfo );
+   
+   let mut nextToken = self.getToken();
+   while nextToken.txt ~= "}" {
+      let valName = self.checkSymbol(nextToken);
+      
+      nextToken = self.getToken();
+
+      let mut typeInfoList:List<&Ast.TypeInfo> = [];
+      if nextToken.txt == "(" {
+         while true {
+            let typeNode = self.analyzeRefType( .Pub, false );
+            typeInfoList.insert( typeNode.$expType );
+            nextToken = self.getToken();
+            if nextToken.txt ~= "," {
+               self.checkToken( nextToken, ")" );
+               nextToken = self.getToken();
+               break;
+            }
+         }
+      }
+      
+      algeScope.addAlgeVal( valName.txt, algeTypeInfo );
+      let algeValInfo = new Ast.AlgeValInfo( valName.txt, typeInfoList );
+      algeTypeInfo.addValInfo( algeValInfo );
+
+      if nextToken.txt == "}" {
+         break;
+      }
+      self.checkToken( nextToken, "," );
+      nextToken = self.getToken();
+   }
+
+   self.popScope();
+
+   
+   return Ast.DeclAlgeNode.create(
+      self.nodeManager, firstToken.pos,
+      [ algeTypeInfo ], accessMode, algeTypeInfo, algeScope );
+}
+
+
+
+
 fn TransUnit.analyzeRetTypeList(
    pubToExtFlag:bool, accessMode:Ast.AccessMode, mut token:&Parser.Token ) mut :
    List<&Ast.TypeInfo>, &Parser.Token
@@ -736,6 +793,9 @@ fn TransUnit.analyzeDecl(
    }
    elseif token.txt == "enum" {
       return self.analyzeDeclEnum( accessMode, firstToken );
+   }
+   elseif token.txt == "alge" {
+      return self.analyzeDeclAlge( accessMode, firstToken );
    }
    elseif token.txt == "form" {
       self.analyzeDeclForm( accessMode, firstToken );

@@ -710,3 +710,32 @@ pub let val = 100;
    let array = [@ 1, 2, 3 ];
    print( array.unpack() );
 }
+
+{
+   fn sub( algeTest:SUB2.AlgeTest ) {
+      match algeTest {
+         case .Val1 {
+            print( algeTest.$_txt, 1 );
+         }  
+         case .Val2 {
+            print( algeTest.$_txt, 2 );
+         }  
+         case .Val3( x ) {
+            print( algeTest.$_txt, x + 10 );
+         }  
+         case .Val4( x, y ) {
+            print( algeTest.$_txt, x + 10, y .. "X" );
+         }  
+         case .Val5( x ) {
+            print( algeTest.$_txt );
+            sub( x );
+         }  
+      }  
+   }  
+
+   sub( SUB2.AlgeTest.Val1 );
+   sub( SUB2.AlgeTest.Val2 );
+   sub( SUB2.AlgeTest.Val3( 3 ) );
+   sub( SUB2.AlgeTest.Val4( 4, "abc" ) );
+   sub( SUB2.AlgeTest.Val5( SUB2.AlgeTest.Val5( SUB2.AlgeTest.Val3( 5 ) ) ) );
+}
