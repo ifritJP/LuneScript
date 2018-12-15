@@ -1,0 +1,8 @@
+pub alge AlgeTest {
+   Val1,
+   Val2,
+}  
+
+{
+   let test1 = AlgeTest.Val1( 1 );
+}

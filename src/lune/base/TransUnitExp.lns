@@ -1155,17 +1155,23 @@ fn TransUnit.analyzeNewAlge(
    let symbolToken = self.getSymbolToken();
 
    if! let valInfo = algeTypeInfo.getValInfo( symbolToken.txt ) {
-      let mut argList:List<Ast.Node> = [];
+      let mut argList:List<&Ast.Node> = [];
       if #valInfo.$typeList > 0 {
          self.checkNextToken( "(" );
          foreach typeInfo, index in valInfo.$typeList {
-            argList.insert( self.analyzeExp( false ) );
+            let argExp = self.analyzeExp( false );
+            argList.insert( argExp );
             if index ~= #valInfo.$typeList {
                self.checkNextToken( "," );
             }
          }
          self.checkNextToken( ")" );
       }
+
+      self.checkMatchType(
+         "call", symbolToken.pos, valInfo.$typeList, argList, false );
+
+      
       return Ast.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos, [ algeTypeInfo ],
          symbolToken, prefix, algeTypeInfo, valInfo, argList );

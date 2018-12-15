@@ -185,18 +185,18 @@
 - [X] foreach 等の loop
 - [X] 関数, form
 - [X] nilable, unwrap, map
+- [X] クロスコンパイル  
 - [X] クラス 基本
 - [X] クラス accessor
 - [X] クラス 継承
-- [X] クラス override, super, abstract
 - [X] クラス advertise
+- [X] クラス override, super, abstract
 - [ ] alge  
 - [X] インタフェース
 - [X] mapping
 - [X] nil 条件演算子
 - [X] import, provide
 - [X] require, module
-- [X] クロスコンパイル  
 - [ ] macro
 - [ ] make
 

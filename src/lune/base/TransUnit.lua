@@ -2406,7 +2406,12 @@ function TransUnit:analyzeMatch( firstToken )
       if nextToken.txt == "(" then
          for __index, paramType in pairs( valInfo:get_typeList() ) do
             local paramName = self:getSymbolToken(  )
-            blockScope:addLocalVar( false, false, paramName.txt, paramType, false )
+            local workType = paramType
+            if paramType:get_mutable() and not exp:get_expType():get_mutable() then
+               workType = self:createModifier( workType, false )
+            end
+            
+            blockScope:addLocalVar( false, false, paramName.txt, workType, false )
             table.insert( valParamNameList, paramName.txt )
             nextToken = self:getToken(  )
             if nextToken.txt ~= "," then
@@ -5642,7 +5647,8 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          if #valInfo:get_typeList() > 0 then
             self:checkNextToken( "(" )
             for index, typeInfo in pairs( valInfo:get_typeList() ) do
-               table.insert( argList, self:analyzeExp( false ) )
+               local argExp = self:analyzeExp( false )
+               table.insert( argList, argExp )
                if index ~= #valInfo:get_typeList() then
                   self:checkNextToken( "," )
                end
@@ -5652,6 +5658,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
             self:checkNextToken( ")" )
          end
          
+         self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false )
          return Ast.NewAlgeValNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, valInfo, argList )
       else
          self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )

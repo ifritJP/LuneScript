@@ -2013,7 +2013,11 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Ast.MatchNode {
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
             let paramName = self.getSymbolToken();
-            blockScope.addLocalVar( false, false, paramName.txt, paramType, false );
+            let mut workType = paramType;
+            if paramType.$mutable and not exp.$expType.$mutable {
+               workType = self.createModifier( workType, false );
+            }
+            blockScope.addLocalVar( false, false, paramName.txt, workType, false );
             valParamNameList.insert( paramName.txt );
             nextToken = self.getToken();
             if nextToken.txt ~= "," {

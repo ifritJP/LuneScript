@@ -1,0 +1,11 @@
+pub alge AlgeTest {
+   Val1,
+   Val2,
+   Val3( int ),
+}  
+
+{
+   let test1 = AlgeTest.Val1;
+   let test2 = AlgeTest.Val2;
+   let test3 = AlgeTest.Val3( 1, 1 );
+}

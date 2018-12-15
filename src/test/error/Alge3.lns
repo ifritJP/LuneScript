@@ -1,0 +1,31 @@
+pub class Hoge {
+   pri let val:int {pub,pub};
+}
+
+pub alge AlgeTest {
+   Val1,
+   Val2,
+   Val3( int ),
+   Val4( int, str, Hoge ),
+   Val5( AlgeTest ),
+}  
+
+{
+   let test1 = AlgeTest.Val1;
+   let test2 = AlgeTest.Val2;
+   let test3 = AlgeTest.Val3( 1.0 ); // error
+   let test4 = AlgeTest.Val4( 1, "abc", 1 ); // error
+   let test5 = AlgeTest.Val5( 1 ); // error
+   match test4 {
+      case .Val4( x, y, z ) {
+         print( z.$val );
+         z.set_val( 1 ); // error
+      }
+   }
+   let mut test42 = AlgeTest.Val4( 1, "abc", new Hoge( 1 ) );
+   match test42 {
+      case .Val4( x, y, z ) {
+         z.set_val( 1 );
+      }
+   }
+}
