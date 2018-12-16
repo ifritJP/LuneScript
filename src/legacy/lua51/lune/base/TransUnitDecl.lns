@@ -648,6 +648,9 @@ fn TransUnit.analyzeDeclAlge(
    let mut nextToken = self.getToken();
    while nextToken.txt ~= "}" {
       let valName = self.checkSymbol(nextToken);
+      if algeTypeInfo.getValInfo( valName.txt ) {
+         self.addErrMess( valName.pos, "multiple symbole -- %s" (valName.txt) );
+      }
       
       nextToken = self.getToken();
 

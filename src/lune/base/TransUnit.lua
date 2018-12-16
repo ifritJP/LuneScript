@@ -3260,6 +3260,10 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    local nextToken = self:getToken(  )
    while nextToken.txt ~= "}" do
       local valName = self:checkSymbol( nextToken )
+      if algeTypeInfo:getValInfo( valName.txt ) then
+         self:addErrMess( valName.pos, string.format( "multiple symbole -- %s", valName.txt) )
+      end
+      
       nextToken = self:getToken(  )
       local typeInfoList = {}
       if nextToken.txt == "(" then

@@ -4,6 +4,7 @@ pub class Hoge {
 
 pub alge AlgeTest {
    Val1,
+   Val1,
    Val2,
    Val3( int ),
    Val4( int, str, Hoge ),

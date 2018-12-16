@@ -191,7 +191,7 @@
 - [X] クラス 継承
 - [X] クラス advertise
 - [X] クラス override, super, abstract
-- [ ] alge  
+- [X] alge  
 - [X] インタフェース
 - [X] mapping
 - [X] nil 条件演算子
