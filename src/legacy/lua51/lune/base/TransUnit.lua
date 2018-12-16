@@ -2435,6 +2435,10 @@ function TransUnit:analyzeMatch( firstToken )
       if nextToken.txt == "(" then
          for __index, paramType in pairs( valInfo:get_typeList() ) do
             local paramName = self:getSymbolToken(  )
+            if self.scope:getTypeInfo( paramName.txt, self.scope, true ) then
+               self:addErrMess( paramName.pos, string.format( "shadowing variable -- %s", paramName.txt) )
+            end
+            
             local workType = paramType
             if paramType:get_mutable() and not exp:get_expType():get_mutable() then
                workType = self:createModifier( workType, false )

@@ -2013,6 +2013,11 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Ast.MatchNode {
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
             let paramName = self.getSymbolToken();
+            if self.scope.getTypeInfo( paramName.txt, self.scope, true ) {
+               self.addErrMess( paramName.pos,
+                                "shadowing variable -- %s" (paramName.txt) );
+            }
+            
             let mut workType = paramType;
             if paramType.$mutable and not exp.$expType.$mutable {
                workType = self.createModifier( workType, false );
