@@ -1009,7 +1009,7 @@ fn TransUnit.analyzeExpField(
          }
       }
    }
-   elseif prefixExpType.get_kind() == .Enum {
+   elseif prefixExpType.get_kind() == .Enum or prefixExpType.get_kind() == .Alge {
       let scope = unwrap prefixExpType.$scope;
       let mut fieldName = token.txt;
       if mode == .Get {
@@ -1148,6 +1148,42 @@ fn TransUnit.analyzeExpField(
    }
 }
 
+fn TransUnit.analyzeNewAlge(
+   firstToken:&Parser.Token,
+   algeTypeInfo:&Ast.AlgeTypeInfo, prefix:&Ast.Node! ) mut : Ast.NewAlgeValNode
+{
+   let symbolToken = self.getSymbolToken();
+
+   if! let valInfo = algeTypeInfo.getValInfo( symbolToken.txt ) {
+      let mut argList:List<&Ast.Node> = [];
+      if #valInfo.$typeList > 0 {
+         self.checkNextToken( "(" );
+         foreach typeInfo, index in valInfo.$typeList {
+            let argExp = self.analyzeExp( false );
+            argList.insert( argExp );
+            if index ~= #valInfo.$typeList {
+               self.checkNextToken( "," );
+            }
+         }
+         self.checkNextToken( ")" );
+      }
+
+      self.checkMatchType(
+         "call", symbolToken.pos, valInfo.$typeList, argList, false );
+
+      
+      return Ast.NewAlgeValNode.create(
+         self.nodeManager, firstToken.pos, [ algeTypeInfo ],
+         symbolToken, prefix, algeTypeInfo, valInfo, argList );
+   }
+   else {
+      self.addErrMess( symbolToken.pos, "not found Alge -- %s" (symbolToken.txt) );
+      return Ast.NewAlgeValNode.create(
+         self.nodeManager, firstToken.pos, [ algeTypeInfo ],
+         symbolToken, prefix, algeTypeInfo, new Ast.AlgeValInfo("", []), [] );
+   }
+}
+
 fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, token: &Parser.Token,
    mode: ExpSymbolMode, prefixExp: &Ast.Node!, mut skipFlag: bool ) mut : Ast.Node
@@ -1157,7 +1193,20 @@ fn TransUnit.analyzeExpSymbol(
    if mode == .Field or mode == .Get or
       mode == .FieldNil or mode == .GetNil
    {
-      exp = self.analyzeExpField( firstToken, token, mode, unwrap prefixExp );
+      when! prefixExp {
+         exp = self.analyzeExpField( firstToken, token, mode, prefixExp );
+
+         if! let expType = exp$.$expType {
+            if expType.$kind == .Alge and prefixExp.$expType.isModule() {
+               let nextToken = self.getToken();
+               if nextToken.txt == "." {
+                  return self.analyzeNewAlge(
+                     firstToken, expType@@&Ast.AlgeTypeInfo, exp );
+               }
+               self.pushback();
+            }
+         }
+      }
    }
    elseif mode == .Symbol {
       if self.macroMode == .Analyze {
@@ -1189,6 +1238,16 @@ fn TransUnit.analyzeExpSymbol(
             self.error( "not found type -- " .. token.txt );
          }; 
          let typeInfo = symbolInfo.$typeInfo;
+
+         if typeInfo.$kind == .Alge and symbolInfo.$kind == .Typ {
+            let nextToken = self.getToken();
+            if nextToken.txt == "." {
+               return self.analyzeNewAlge(
+                  firstToken, typeInfo@@&Ast.AlgeTypeInfo, nil );
+            }
+            self.pushback();
+         }
+         
          if typeInfo.equals( Ast.builtinTypeSymbol ) {
             skipFlag = true;
          }
@@ -1199,7 +1258,7 @@ fn TransUnit.analyzeExpSymbol(
          if token.txt == "__func__" {
             self.has__func__Symbol = true;
          }
-         
+
          exp = Ast.ExpRefNode.create(
             self.nodeManager, firstToken.pos, [ typeInfo ], token,
             new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );

@@ -5,7 +5,8 @@ if not _lune then
    _lune = {}
 end
 function _lune.newAlge( kind, vals )
-   if not vals then
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
       return kind
    end
    return { kind[ 1 ], vals }
@@ -952,10 +953,65 @@ end
    
 end
 
+function convFilter:getMapInfo( typeInfo )
+
+   local orgTypeInfo = typeInfo:get_srcTypeInfo()
+   if typeInfo:get_nilable() then
+      orgTypeInfo = typeInfo:get_orgTypeInfo()
+   end
+   
+   local child = "{}"
+   local funcTxt = ""
+   do
+      local _switchExp = orgTypeInfo:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Stem then
+         funcTxt = '_lune._toStem'
+      elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+         if not orgTypeInfo:equals( Ast.builtinTypeString ) then
+            funcTxt = string.format( '%s._fromMap', self:getFullName( orgTypeInfo ))
+         else
+          
+            funcTxt = '_lune._toStr'
+         end
+         
+      elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
+         funcTxt = string.format( '%s._from', self:getFullName( orgTypeInfo ))
+      elseif _switchExp == Ast.TypeInfoKind.Prim then
+         do
+            local _switchExp = orgTypeInfo
+            if _switchExp == Ast.builtinTypeInt then
+               funcTxt = '_lune._toInt'
+            elseif _switchExp == Ast.builtinTypeReal then
+               funcTxt = '_lune._toReal'
+            elseif _switchExp == Ast.builtinTypeBool then
+               funcTxt = '_lune._toBool'
+            else 
+               
+                  Util.err( string.format( "unknown type -- %s", orgTypeInfo:getTxt(  )) )
+            end
+         end
+         
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         funcTxt = '_lune._toMap'
+         local itemList = orgTypeInfo:get_itemTypeInfoList()
+         local keyFuncTxt, keyNilable, keyChild = self:getMapInfo( itemList[1] )
+         local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[2] )
+         child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, tostring( keyNilable), keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
+      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+         funcTxt = '_lune._toList'
+         local itemList = orgTypeInfo:get_itemTypeInfoList()
+         local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[1] )
+         child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
+      end
+   end
+   
+   return funcTxt, typeInfo:get_nilable(), child
+end
+
 function convFilter:processDeclAlge( node, parent )
 
    local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
-   local algeFullName = node:get_name().txt
+   local algeFullName = node:get_algeType():get_rawTxt()
    local typeInfo = node:get_expType()
    local parentInfo = typeInfo:get_parentInfo()
    local isTopNS = true
@@ -966,6 +1022,7 @@ function convFilter:processDeclAlge( node, parent )
    end
    
    self:writeln( string.format( "%s%s = {}", access, algeFullName) )
+   self:writeln( string.format( "%s._name2Val = {}", algeFullName) )
    if isTopNS and node:get_accessMode() == Ast.AccessMode.Pub then
       if self.needModuleObj then
          self:writeln( string.format( "_moduleObj.%s = %s", algeFullName, algeFullName) )
@@ -985,11 +1042,63 @@ function convFilter:processDeclAlge( node, parent )
    return string.format( "illegal val -- %%s", val )
 end 
 ]==], algeFullName, algeFullName) )
-   self:writeln( string.format( "local %s = {}", algeFullName) )
-   for index, valInfo in pairs( node:get_valueInfoList() ) do
-      self:writeln( string.format( '[%s.%s = { "%s" }', algeFullName, valInfo:get_name(), valInfo:get_name()) )
+   self:writeln( string.format( [==[
+function %s._from( val )
+   return _lune._AlgeFrom( %s, val )
+end
+]==], algeFullName, algeFullName) )
+   do
+      local __sorted = {}
+      local __map = node:get_algeType():get_valInfoMap()
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local valInfo = __map[ __key ]
+         do
+            self:write( string.format( '%s.%s = { "%s"', algeFullName, valInfo:get_name(), valInfo:get_name()) )
+            local memInfoTxt = ""
+            if #valInfo:get_typeList() > 0 then
+               self:write( ", {" )
+               for index, paramType in pairs( valInfo:get_typeList() ) do
+                  if index > 1 then
+                     self:write( "," )
+                  end
+                  
+                  local funcTxt, nilable, child = self:getMapInfo( paramType )
+                  self:write( string.format( "{ func=%s, nilable=%s, child=%s }", funcTxt, tostring( nilable), child) )
+               end
+               
+               self:write( "}" )
+            end
+            
+            self:writeln( "}" )
+            self:writeln( string.format( '%s._name2Val["%s"] = %s.%s', algeFullName, valInfo:get_name(), algeFullName, valInfo:get_name()) )
+         end
+      end
    end
    
+end
+
+function convFilter:processNewAlgeVal( node, parent )
+
+   local valInfo = node:get_valInfo()
+   self:write( string.format( '_lune.newAlge( %s.%s', self:getFullName( node:get_algeTypeInfo() ), valInfo:get_name()) )
+   if #valInfo:get_typeList() > 0 then
+      self:write( ", {" )
+      for index, exp in pairs( node:get_paramList() ) do
+         if index > 1 then
+            self:write( "," )
+         end
+         
+         filter( exp, self, node )
+      end
+      
+      self:write( "}" )
+   end
+   
+   self:write( ")" )
 end
 
 function convFilter:getDestrClass( classTypeInfo )
@@ -1241,63 +1350,8 @@ end
       end
       
       self:writeln( '   local memInfo = {}' )
-      local function getMapInfo( typeInfo )
-      
-         local orgTypeInfo = typeInfo:get_srcTypeInfo()
-         if typeInfo:get_nilable() then
-            orgTypeInfo = typeInfo:get_orgTypeInfo()
-         end
-         
-         local child = "{}"
-         local funcTxt = ""
-         do
-            local _switchExp = orgTypeInfo:get_kind()
-            if _switchExp == Ast.TypeInfoKind.Stem then
-               funcTxt = '_lune._toStem'
-            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-               if not orgTypeInfo:equals( Ast.builtinTypeString ) then
-                  funcTxt = string.format( '%s._fromMap', self:getFullName( orgTypeInfo ))
-               else
-                
-                  funcTxt = '_lune._toStr'
-               end
-               
-            elseif _switchExp == Ast.TypeInfoKind.Enum then
-               funcTxt = string.format( '%s._from', self:getFullName( orgTypeInfo ))
-            elseif _switchExp == Ast.TypeInfoKind.Prim then
-               do
-                  local _switchExp = orgTypeInfo
-                  if _switchExp == Ast.builtinTypeInt then
-                     funcTxt = '_lune._toInt'
-                  elseif _switchExp == Ast.builtinTypeReal then
-                     funcTxt = '_lune._toReal'
-                  elseif _switchExp == Ast.builtinTypeBool then
-                     funcTxt = '_lune._toBool'
-                  else 
-                     
-                        Util.err( string.format( "unknown type -- %s", orgTypeInfo:getTxt(  )) )
-                  end
-               end
-               
-            elseif _switchExp == Ast.TypeInfoKind.Map then
-               funcTxt = '_lune._toMap'
-               local itemList = orgTypeInfo:get_itemTypeInfoList()
-               local keyFuncTxt, keyNilable, keyChild = getMapInfo( itemList[1] )
-               local valFuncTxt, valNilable, valChild = getMapInfo( itemList[2] )
-               child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, tostring( keyNilable), keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
-            elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
-               funcTxt = '_lune._toList'
-               local itemList = orgTypeInfo:get_itemTypeInfoList()
-               local valFuncTxt, valNilable, valChild = getMapInfo( itemList[1] )
-               child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
-            end
-         end
-         
-         return funcTxt, typeInfo:get_nilable(), child
-      end
-      
       for __index, memberNode in pairs( node:get_memberList() ) do
-         local funcTxt, nilable, child = getMapInfo( memberNode:get_expType() )
+         local funcTxt, nilable, child = self:getMapInfo( memberNode:get_expType() )
          self:writeln( string.format( '   table.insert( memInfo, { name = "%s", func = %s, nilable = %s, child = %s } )', memberNode:get_name().txt, funcTxt, tostring( nilable), child) )
       end
       
@@ -1897,6 +1951,44 @@ function convFilter:processSwitch( node, parent )
 end
 
 
+function convFilter:processMatch( node, parent )
+
+   self:writeln( "do" )
+   self:pushIndent(  )
+   self:write( "local _matchExp = " )
+   filter( node:get_val(), self, node )
+   self:writeln( "" )
+   local fullName = self:getFullName( node:get_algeTypeInfo() )
+   for index, caseInfo in pairs( node:get_caseList() ) do
+      if index == 1 then
+         self:write( "if " )
+      else
+       
+         self:write( "elseif " )
+      end
+      
+      self:writeln( string.format( "_matchExp[1] == %s.%s[1] then", fullName, caseInfo:get_valInfo():get_name()) )
+      for paramNum, paramName in pairs( caseInfo:get_valParamNameList() ) do
+         self:writeln( string.format( "   local %s = _matchExp[2][%d]", paramName, paramNum) )
+      end
+      
+      filter( caseInfo:get_block(), self, node )
+   end
+   
+   do
+      local _exp = node:get_defaultBlock()
+      if _exp ~= nil then
+         self:writeln( "else " )
+         filter( _exp, self, node )
+      end
+   end
+   
+   self:writeln( "end" )
+   self:popIndent(  )
+   self:writeln( "end" )
+end
+
+
 function convFilter:processWhile( node, parent )
 
    self:write( "while " )
@@ -2067,7 +2159,7 @@ function convFilter:processExpCall( node, parent )
                wroteFuncFlag = true
                self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
                filter( prefixNode, self, fieldNode )
-            elseif _switchExp == Ast.TypeInfoKind.Enum then
+            elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
                wroteFuncFlag = true
                local fieldExpType = fieldNode:get_expType()
                local canonicalName = self:getCanonicalName( prefixType )
@@ -2459,7 +2551,7 @@ function convFilter:processGetField( node, parent )
    local prefixNode = node:get_prefix(  )
    local prefixType = prefixNode:get_expType()
    local fieldTxt = node:get_field(  ).txt
-   if fieldTxt == "_txt" and prefixType:get_kind() == Ast.TypeInfoKind.Enum then
+   if fieldTxt == "_txt" and (prefixType:get_kind() == Ast.TypeInfoKind.Enum or prefixType:get_kind() == Ast.TypeInfoKind.Alge ) then
       self:write( string.format( "%s:_getTxt( ", self:getFullName( prefixType )) )
       filter( prefixNode, self, node )
       self:writeln( ")" )
@@ -2579,12 +2671,12 @@ function convFilter:processLiteralString( node, parent )
             self:write( ", " )
          end
          
-         local match = TransUnit.FormType.Match
+         local matchFlag = TransUnit.FormType.Match
          if index <= #opList then
-            match = TransUnit.isMatchStringFormatType( opList[index], val:get_expType(), self.targetLuaVer )
+            matchFlag = TransUnit.isMatchStringFormatType( opList[index], val:get_expType(), self.targetLuaVer )
          end
          
-         if match == TransUnit.FormType.NeedConv then
+         if matchFlag == TransUnit.FormType.NeedConv then
             self:write( "tostring( " )
             filter( val, self, node )
             self:write( ")" )

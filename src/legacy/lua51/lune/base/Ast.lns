@@ -1242,7 +1242,7 @@ pub class AlgeValInfo {
          }
          stream.write( "%d" ( typeInfo.$typeId ) );
       }
-      stream.write( "}" );
+      stream.write( "} }" );
    }
 }
 
@@ -1259,7 +1259,7 @@ pub class AlgeTypeInfo extend TypeInfo {
    pri let accessMode: AccessMode { pub };
    pri let nilableTypeInfo: &TypeInfo { pub };
 
-   pri let mut valInfoList:List<&AlgeValInfo>;
+   pri let mut valInfoMap:Map<str,&AlgeValInfo> {pub};
    
 
    pub fn __init( scope: Scope, externalFlag: bool, accessMode: AccessMode,
@@ -1272,7 +1272,7 @@ pub class AlgeTypeInfo extend TypeInfo {
       self.rawTxt = txt;
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.typeId = typeId;
-      self.valInfoList = [];
+      self.valInfoMap = {};
 
       if! parentInfo {
          _exp.addChildren( self );
@@ -1287,7 +1287,11 @@ pub class AlgeTypeInfo extend TypeInfo {
    }
 
    pub fn addValInfo( valInfo:&AlgeValInfo ) mut {
-      self.valInfoList.insert( valInfo );
+      self.valInfoMap[ valInfo.$name ] = valInfo;
+   }
+
+   pub fn getValInfo( name:str ) : &AlgeValInfo! {
+      return self.valInfoMap[ name ];
    }
 
    pub override fn isModule(): bool {
@@ -2035,11 +2039,11 @@ pub static fn NormalTypeInfo.createAlge(
    let mut info = new AlgeTypeInfo(
       scope, externalFlag, accessMode, algeName, parentInfo, idProv.$id );
 
-   let mut getEnumName = NormalTypeInfo.createFunc(
+   let mut getAlgeName = NormalTypeInfo.createFunc(
       false, true, nil, .Method, info,
       true, true, false, AccessMode.Pub,
       "get__txt", nil, [ builtinTypeString ], false );
-   scope.addMethod( getEnumName, AccessMode.Pub, false, false );
+   scope.addMethod( getAlgeName, AccessMode.Pub, false, false );
 
    return info;
 }
@@ -2054,11 +2058,15 @@ accessMode = %d, kind = %d, ```
    stream.write( txt );
 
    stream.write( "algeValList = {" );
-   forsort algeValInfo, index in self.valInfoList {
-      if index > 1 {
+   let mut firstFlag = true;
+   forsort algeValInfo in self.valInfoMap {
+      if not firstFlag {
          stream.write( "," );
       }
-      algeValInfo.serialize( oStream );
+      else {
+         firstFlag = false;
+      }
+      algeValInfo.serialize( stream );
    }
    stream.write( "} }\n" );
 }
@@ -2623,6 +2631,7 @@ pub class LuneHelperInfo {
    pub let mut hasMappingClassDef:bool;
    pub let mut useLoad:bool;
    pub let mut useUnpack:bool;
+   pub let mut useAlge:bool;
 }
 
 pub class ModuleInfo extend (ModuleInfoIF) {
@@ -2684,6 +2693,7 @@ pub enum BlockKind {
    Else,
    While,
    Switch,
+   Match,
    Repeat,
    For,
    Apply,
@@ -3288,11 +3298,32 @@ _declNodeClass( "DeclEnum", Node, false, false, true,
 
 _declNodeClass( "DeclAlge", Node, false, false, true,
                 [ { "accessMode": "AccessMode" },
-                  { "name": "&Parser.Token" },
-                  { "valueInfoList": "List<&AlgeValInfo>" },
+                  { "algeType": "&AlgeTypeInfo"},
                   { "scope": "&Scope" } ]
 );
 
+
+_declNodeClass( "NewAlgeVal", Node, false, true, false,
+                [ { "name": "&Parser.Token" },
+                  { "prefix": "&Node!" },
+                  { "algeTypeInfo": "&AlgeTypeInfo" },
+                  { "valInfo": "&AlgeValInfo" },
+                  { "paramList": "&List<&Node>" } ]
+);
+
+pub class MatchCase {
+   pri let valInfo: &AlgeValInfo {pub};
+   pri let valParamNameList: &List<str> {pub};
+   pri let block: &BlockNode {pub};
+}
+
+_declNodeClass( "Match", Node, false, false, true,
+                [ { "val": "&Node" },
+                  { "algeTypeInfo": "&AlgeTypeInfo" },
+                  { "caseList": "&List<&MatchCase>" },
+                  { "defaultBlock": "&Node!" }
+                ]              
+);
 
 _declNodeClass( "DeclMacro", Node, false, false, true,
                 [ { "declInfo": "DeclMacroInfo" } ]

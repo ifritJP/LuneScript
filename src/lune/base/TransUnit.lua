@@ -5,7 +5,8 @@ if not _lune then
    _lune = {}
 end
 function _lune.newAlge( kind, vals )
-   if not vals then
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
       return kind
    end
    return { kind[ 1 ], vals }
@@ -147,6 +148,34 @@ function _lune._fromMap( obj, map, memInfoList )
       obj[ memInfo.name ] = val
    end
    return true
+end
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
 end
 
 function _lune.loadModule( mod )
@@ -3758,45 +3787,75 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    end
    
    if classTypeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF ) then
-      local function isAvailableMapping( typeInfo )
+      local function isAvailableMapping( typeInfo, checkedTypeMap )
       
-         do
-            local _switchExp = typeInfo:get_kind()
-            if _switchExp == Ast.TypeInfoKind.Prim or _switchExp == Ast.TypeInfoKind.Enum then
-               return true
-            elseif _switchExp == Ast.TypeInfoKind.Stem then
-               return true
-            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-               if typeInfo:equals( Ast.builtinTypeString ) then
+         local function isAvailableMappingSub(  )
+         
+            do
+               local _switchExp = typeInfo:get_kind()
+               if _switchExp == Ast.TypeInfoKind.Prim or _switchExp == Ast.TypeInfoKind.Enum then
                   return true
-               end
-               
-               return typeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF )
-            elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
-               return isAvailableMapping( typeInfo:get_itemTypeInfoList()[1] )
-            elseif _switchExp == Ast.TypeInfoKind.Map then
-               if isAvailableMapping( typeInfo:get_itemTypeInfoList()[2] ) then
-                  local keyType = typeInfo:get_itemTypeInfoList()[1]
-                  if keyType:equals( Ast.builtinTypeString ) or keyType:get_kind() == Ast.TypeInfoKind.Prim or keyType:get_kind() == Ast.TypeInfoKind.Enum then
+               elseif _switchExp == Ast.TypeInfoKind.Alge then
+                  local algeTypeInfo = typeInfo
+                  for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
+                     for __index, paramType in pairs( valInfo:get_typeList() ) do
+                        if not isAvailableMapping( paramType, checkedTypeMap ) then
+                           return false
+                        end
+                        
+                     end
+                     
+                  end
+                  
+                  return true
+               elseif _switchExp == Ast.TypeInfoKind.Stem then
+                  return true
+               elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+                  if typeInfo:equals( Ast.builtinTypeString ) then
                      return true
                   end
                   
-               end
-               
-               return false
-            elseif _switchExp == Ast.TypeInfoKind.Nilable then
-               return isAvailableMapping( typeInfo:get_orgTypeInfo() )
-            else 
-               
+                  return typeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF )
+               elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+                  return isAvailableMapping( typeInfo:get_itemTypeInfoList()[1], checkedTypeMap )
+               elseif _switchExp == Ast.TypeInfoKind.Map then
+                  if isAvailableMapping( typeInfo:get_itemTypeInfoList()[2], checkedTypeMap ) then
+                     local keyType = typeInfo:get_itemTypeInfoList()[1]
+                     if keyType:equals( Ast.builtinTypeString ) or keyType:get_kind() == Ast.TypeInfoKind.Prim or keyType:get_kind() == Ast.TypeInfoKind.Enum then
+                        return true
+                     end
+                     
+                  end
+                  
                   return false
+               elseif _switchExp == Ast.TypeInfoKind.Nilable then
+                  return isAvailableMapping( typeInfo:get_orgTypeInfo(), checkedTypeMap )
+               else 
+                  
+                     return false
+               end
+            end
+            
+         end
+         
+         typeInfo = typeInfo:get_srcTypeInfo()
+         do
+            local _exp = checkedTypeMap[typeInfo]
+            if _exp ~= nil then
+               return _exp
             end
          end
          
+         checkedTypeMap[typeInfo] = true
+         local result = isAvailableMappingSub(  )
+         checkedTypeMap[typeInfo] = result
+         return result
       end
       
+      local checkedTypeMap = {}
       for __index, memberNode in pairs( node:get_memberList() ) do
          local memberType = memberNode:get_expType()
-         if not isAvailableMapping( memberType ) then
+         if not isAvailableMapping( memberType, checkedTypeMap ) then
             self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s", memberType:getTxt(  )) )
          end
          

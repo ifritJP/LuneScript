@@ -149,6 +149,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
       elseif token.txt == "switch" {
          statement = self.analyzeSwitch( token );
       }
+      elseif token.txt == "match" {
+         statement = self.analyzeMatch( token );
+      }
       elseif token.txt == "while" {
          statement = self.analyzeWhile( token );
       }

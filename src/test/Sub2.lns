@@ -39,13 +39,66 @@ pub class Test {
    }
 }
 
+pub class Hoge2 extend (Mapping) {
+   pri let val:int {pub};
+}
+
 pub alge AlgeTest {
    Val1,
    Val2,
    Val3( int ),
-   Val4( int, str ),
+   Val4( int, str, Hoge2 ),
    Val5( AlgeTest ),
-}  
+}
+
+pub class Test2 extend (Mapping) {
+   pri let algetest:AlgeTest {pub};
+}
+
+fn check( mess:str, test1:AlgeTest ) {
+   match test1 {
+      case .Val1 {
+         print( mess, test1.$_txt );
+      }  
+      case .Val2 {
+         print( mess, test1.$_txt, 2 );
+      }
+      case .Val3( x ) {
+         print( mess, test1.$_txt, x + 10 );
+      }
+      case .Val4( x, y, z ) {
+         print( mess, test1.$_txt, x + 10, y .. "X", z.$val );
+      }
+      case .Val5( x ) {
+         print( mess, test1.$_txt );
+         check( mess, x );
+      }
+      default {
+         print( mess, "default" );
+      }
+   }
+}
+
+fn testMap( algeTest:AlgeTest ) {
+   let name = algeTest.$_txt;
+   let test = new Test2( algeTest );
+   check( name, test.$algetest );
+
+   let map = test._toMap();
+   foreach val, key in map {
+      foreach val2, key2 in val@@Map<stem,stem> {
+         print( key, key2, val2 );
+      }  
+   }  
+   let test2, err = Test2._fromMap(map);
+   when! test2 {
+      check( name .. "-2", test2.$algetest );
+   }  
+   else {
+      print( "NG", err );
+   }  
+}
+
 
 fn main() {
    let test = new Test();
@@ -55,12 +108,11 @@ fn main() {
    val = .val;
    print( val.$_txt );
 
-   let algeTest = AlgeTest.Val1;
-   match algeTest {
-      case .Val1 {
-         print( algeTest.$_txt );
-      }
-   }
+   testMap( AlgeTest.Val1 );
+   testMap( AlgeTest.Val2 );
+   testMap( AlgeTest.Val3( 1) );
+   testMap( AlgeTest.Val4( 1, "abc", new Hoge2( 10 )) );
+   testMap( AlgeTest.Val5( AlgeTest.Val1 ) );
 }
 
 pub class IF {

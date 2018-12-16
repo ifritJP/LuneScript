@@ -723,19 +723,19 @@ pub let val = 100;
          case .Val3( x ) {
             print( algeTest.$_txt, x + 10 );
          }  
-         case .Val4( x, y ) {
+         case .Val4( x, y, z ) {
             print( algeTest.$_txt, x + 10, y .. "X" );
          }  
          case .Val5( x ) {
             print( algeTest.$_txt );
             sub( x );
-         }  
-      }  
-   }  
+         }
+      }
+   }
 
    sub( SUB2.AlgeTest.Val1 );
    sub( SUB2.AlgeTest.Val2 );
    sub( SUB2.AlgeTest.Val3( 3 ) );
-   sub( SUB2.AlgeTest.Val4( 4, "abc" ) );
+   sub( SUB2.AlgeTest.Val4( 4, "abc", new SUB2.Hoge2( 1 ) ) );
    sub( SUB2.AlgeTest.Val5( SUB2.AlgeTest.Val5( SUB2.AlgeTest.Val3( 5 ) ) ) );
 }

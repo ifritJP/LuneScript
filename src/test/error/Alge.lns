@@ -4,5 +4,5 @@ pub alge AlgeTest {
 }  
 
 {
-   let test1 = AlgeTest.Val1( 1 );
+   let test1 = AlgeTest.Val1( 1 ); // error
 }

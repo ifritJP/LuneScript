@@ -1266,47 +1266,74 @@ fn TransUnit.analyzeDeclClass(
 
    if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
       // Mapping の制限チェック
-      fn isAvailableMapping( typeInfo:&Ast.TypeInfo ): bool {
-         switch typeInfo.$kind {
-            case .Prim, .Enum {
-               return true;
-            }
-            case .Stem {
-               // stem は mapping 不能なデータもあるが、
-               // それは実行時エラーとする。
-               return true;
-            }
-            case .Class, .IF {
-               if typeInfo.equals( Ast.builtinTypeString ) {
+      fn isAvailableMapping(
+         mut typeInfo:&Ast.TypeInfo, checkedTypeMap:Map<&Ast.TypeInfo,bool> ): bool
+      {
+         fn isAvailableMappingSub(): bool {
+            switch typeInfo.$kind {
+               case .Prim, .Enum {
                   return true;
-               }
-               return typeInfo.isInheritFrom( typeInfoMappingIF );
-            }
-            case .List, .Array {
-               return isAvailableMapping( typeInfo.$itemTypeInfoList[1] );
-            }
-            case .Map {
-               if isAvailableMapping( typeInfo.$itemTypeInfoList[2] ) {
-                  let keyType = typeInfo.$itemTypeInfoList[1];
-                  if keyType.equals( Ast.builtinTypeString ) or
-                     keyType.$kind == .Prim or keyType.$kind == .Enum
-                  {
+               }  
+               case .Alge {
+                  let algeTypeInfo = typeInfo@@Ast.AlgeTypeInfo;
+                  foreach valInfo in algeTypeInfo.$valInfoMap {
+                     foreach paramType in valInfo.$typeList {
+                        if not isAvailableMapping( paramType, checkedTypeMap ) {
+                           return false;
+                        }  
+                     }  
+                  }  
+                  return true;
+               }  
+               case .Stem {
+                  // stem は mapping 不能なデータもあるが、
+                  // それは実行時エラーとする。
+                  return true;
+               }  
+               case .Class, .IF {
+                  if typeInfo.equals( Ast.builtinTypeString ) {
                      return true;
-                  }
-               }
-               return false;
-            }
-            case .Nilable {
-               return isAvailableMapping( typeInfo.$orgTypeInfo );
-            }
-            default {
-               return false;
-            }
+                  }  
+                  return typeInfo.isInheritFrom( typeInfoMappingIF );
+               }  
+               case .List, .Array {
+                  return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );
+               }  
+               case .Map {
+                  if isAvailableMapping( typeInfo.$itemTypeInfoList[2], checkedTypeMap ) {
+                     let keyType = typeInfo.$itemTypeInfoList[1];
+                     if keyType.equals( Ast.builtinTypeString ) or
+                        keyType.$kind == .Prim or keyType.$kind == .Enum
+                     {  
+                        return true;
+                     }  
+                  }  
+                  return false;
+               }  
+               case .Nilable {
+                  return isAvailableMapping( typeInfo.$orgTypeInfo, checkedTypeMap );
+               }  
+               default {
+                  return false;
+               }  
+            }  
          }
+
+         typeInfo = typeInfo.$srcTypeInfo;
+         if! checkedTypeMap[ typeInfo ] {
+            return _exp;            
+         }
+         // チェック前は暫定的に true にする
+         checkedTypeMap[ typeInfo ] = true;
+         let result = isAvailableMappingSub();
+         checkedTypeMap[ typeInfo ] = result;
+         return result;
       }
+
+      let mut checkedTypeMap:Map<&Ast.TypeInfo,bool> = {};
       foreach memberNode in node.$memberList {
          let memberType = memberNode.$expType;
-         if not isAvailableMapping( memberType ) {
+         if not isAvailableMapping( memberType, checkedTypeMap ) {
             self.addErrMess(
                memberNode.$pos,
                "member type is not Mapping -- %s" ( memberType.getTxt()) );

@@ -638,12 +638,12 @@ fn TransUnit.analyzeDeclAlge(
 
    self.checkNextToken( "{" );
 
-   let mut valueList:List<&Ast.AlgeValInfo> = [];
+   let mut scope = self.scope;
+   let mut algeScope = self.pushScope( true );
 
-   let mut scope = self.pushScope( true );
-
-   let algeTypeInfo = Ast.NormalTypeInfo.createAlge(
-      scope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
+   let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
+      algeScope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
+   scope.addAlge( accessMode, name.txt, algeTypeInfo );
    
    let mut nextToken = self.getToken();
    while nextToken.txt ~= "}" {
@@ -665,9 +665,9 @@ fn TransUnit.analyzeDeclAlge(
          }
       }
       
-      scope.addAlgeVal( valName.txt, algeTypeInfo );
+      algeScope.addAlgeVal( valName.txt, algeTypeInfo );
       let algeValInfo = new Ast.AlgeValInfo( valName.txt, typeInfoList );
-      valueList.insert( algeValInfo );
+      algeTypeInfo.addValInfo( algeValInfo );
 
       if nextToken.txt == "}" {
          break;
@@ -678,11 +678,10 @@ fn TransUnit.analyzeDeclAlge(
 
    self.popScope();
 
-   self.scope.addAlge( accessMode, name.txt, algeTypeInfo );
    
    return Ast.DeclAlgeNode.create(
       self.nodeManager, firstToken.pos,
-      [ algeTypeInfo ], accessMode, name, valueList, scope );
+      [ algeTypeInfo ], accessMode, algeTypeInfo, algeScope );
 }
 
 
@@ -1267,47 +1266,74 @@ fn TransUnit.analyzeDeclClass(
 
    if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
       // Mapping の制限チェック
-      fn isAvailableMapping( typeInfo:&Ast.TypeInfo ): bool {
-         switch typeInfo.$kind {
-            case .Prim, .Enum {
-               return true;
-            }
-            case .Stem {
-               // stem は mapping 不能なデータもあるが、
-               // それは実行時エラーとする。
-               return true;
-            }
-            case .Class, .IF {
-               if typeInfo.equals( Ast.builtinTypeString ) {
+      fn isAvailableMapping(
+         mut typeInfo:&Ast.TypeInfo, checkedTypeMap:Map<&Ast.TypeInfo,bool> ): bool
+      {
+         fn isAvailableMappingSub(): bool {
+            switch typeInfo.$kind {
+               case .Prim, .Enum {
                   return true;
-               }
-               return typeInfo.isInheritFrom( typeInfoMappingIF );
-            }
-            case .List, .Array {
-               return isAvailableMapping( typeInfo.$itemTypeInfoList[1] );
-            }
-            case .Map {
-               if isAvailableMapping( typeInfo.$itemTypeInfoList[2] ) {
-                  let keyType = typeInfo.$itemTypeInfoList[1];
-                  if keyType.equals( Ast.builtinTypeString ) or
-                     keyType.$kind == .Prim or keyType.$kind == .Enum
-                  {
+               }  
+               case .Alge {
+                  let algeTypeInfo = typeInfo@@Ast.AlgeTypeInfo;
+                  foreach valInfo in algeTypeInfo.$valInfoMap {
+                     foreach paramType in valInfo.$typeList {
+                        if not isAvailableMapping( paramType, checkedTypeMap ) {
+                           return false;
+                        }  
+                     }  
+                  }  
+                  return true;
+               }  
+               case .Stem {
+                  // stem は mapping 不能なデータもあるが、
+                  // それは実行時エラーとする。
+                  return true;
+               }  
+               case .Class, .IF {
+                  if typeInfo.equals( Ast.builtinTypeString ) {
                      return true;
-                  }
-               }
-               return false;
-            }
-            case .Nilable {
-               return isAvailableMapping( typeInfo.$orgTypeInfo );
-            }
-            default {
-               return false;
-            }
+                  }  
+                  return typeInfo.isInheritFrom( typeInfoMappingIF );
+               }  
+               case .List, .Array {
+                  return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );
+               }  
+               case .Map {
+                  if isAvailableMapping( typeInfo.$itemTypeInfoList[2], checkedTypeMap ) {
+                     let keyType = typeInfo.$itemTypeInfoList[1];
+                     if keyType.equals( Ast.builtinTypeString ) or
+                        keyType.$kind == .Prim or keyType.$kind == .Enum
+                     {  
+                        return true;
+                     }  
+                  }  
+                  return false;
+               }  
+               case .Nilable {
+                  return isAvailableMapping( typeInfo.$orgTypeInfo, checkedTypeMap );
+               }  
+               default {
+                  return false;
+               }  
+            }  
          }
+
+         typeInfo = typeInfo.$srcTypeInfo;
+         if! checkedTypeMap[ typeInfo ] {
+            return _exp;            
+         }
+         // チェック前は暫定的に true にする
+         checkedTypeMap[ typeInfo ] = true;
+         let result = isAvailableMappingSub();
+         checkedTypeMap[ typeInfo ] = result;
+         return result;
       }
+
+      let mut checkedTypeMap:Map<&Ast.TypeInfo,bool> = {};
       foreach memberNode in node.$memberList {
          let memberType = memberNode.$expType;
-         if not isAvailableMapping( memberType ) {
+         if not isAvailableMapping( memberType, checkedTypeMap ) {
             self.addErrMess(
                memberNode.$pos,
                "member type is not Mapping -- %s" ( memberType.getTxt()) );

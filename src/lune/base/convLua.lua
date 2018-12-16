@@ -5,7 +5,8 @@ if not _lune then
    _lune = {}
 end
 function _lune.newAlge( kind, vals )
-   if not vals then
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
       return kind
    end
    return { kind[ 1 ], vals }
@@ -951,6 +952,61 @@ end
    
 end
 
+function convFilter:getMapInfo( typeInfo )
+
+   local orgTypeInfo = typeInfo:get_srcTypeInfo()
+   if typeInfo:get_nilable() then
+      orgTypeInfo = typeInfo:get_orgTypeInfo()
+   end
+   
+   local child = "{}"
+   local funcTxt = ""
+   do
+      local _switchExp = orgTypeInfo:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Stem then
+         funcTxt = '_lune._toStem'
+      elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+         if not orgTypeInfo:equals( Ast.builtinTypeString ) then
+            funcTxt = string.format( '%s._fromMap', self:getFullName( orgTypeInfo ))
+         else
+          
+            funcTxt = '_lune._toStr'
+         end
+         
+      elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
+         funcTxt = string.format( '%s._from', self:getFullName( orgTypeInfo ))
+      elseif _switchExp == Ast.TypeInfoKind.Prim then
+         do
+            local _switchExp = orgTypeInfo
+            if _switchExp == Ast.builtinTypeInt then
+               funcTxt = '_lune._toInt'
+            elseif _switchExp == Ast.builtinTypeReal then
+               funcTxt = '_lune._toReal'
+            elseif _switchExp == Ast.builtinTypeBool then
+               funcTxt = '_lune._toBool'
+            else 
+               
+                  Util.err( string.format( "unknown type -- %s", orgTypeInfo:getTxt(  )) )
+            end
+         end
+         
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         funcTxt = '_lune._toMap'
+         local itemList = orgTypeInfo:get_itemTypeInfoList()
+         local keyFuncTxt, keyNilable, keyChild = self:getMapInfo( itemList[1] )
+         local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[2] )
+         child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, keyNilable, keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
+      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+         funcTxt = '_lune._toList'
+         local itemList = orgTypeInfo:get_itemTypeInfoList()
+         local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[1] )
+         child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
+      end
+   end
+   
+   return funcTxt, typeInfo:get_nilable(), child
+end
+
 function convFilter:processDeclAlge( node, parent )
 
    local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
@@ -965,6 +1021,7 @@ function convFilter:processDeclAlge( node, parent )
    end
    
    self:writeln( string.format( "%s%s = {}", access, algeFullName) )
+   self:writeln( string.format( "%s._name2Val = {}", algeFullName) )
    if isTopNS and node:get_accessMode() == Ast.AccessMode.Pub then
       if self.needModuleObj then
          self:writeln( string.format( "_moduleObj.%s = %s", algeFullName, algeFullName) )
@@ -984,6 +1041,11 @@ function convFilter:processDeclAlge( node, parent )
    return string.format( "illegal val -- %%s", val )
 end 
 ]==], algeFullName, algeFullName) )
+   self:writeln( string.format( [==[
+function %s._from( val )
+   return _lune._AlgeFrom( %s, val )
+end
+]==], algeFullName, algeFullName) )
    do
       local __sorted = {}
       local __map = node:get_algeType():get_valInfoMap()
@@ -994,7 +1056,24 @@ end
       for __index, __key in ipairs( __sorted ) do
          local valInfo = __map[ __key ]
          do
-            self:writeln( string.format( '%s.%s = { "%s" }', algeFullName, valInfo:get_name(), valInfo:get_name()) )
+            self:write( string.format( '%s.%s = { "%s"', algeFullName, valInfo:get_name(), valInfo:get_name()) )
+            local memInfoTxt = ""
+            if #valInfo:get_typeList() > 0 then
+               self:write( ", {" )
+               for index, paramType in pairs( valInfo:get_typeList() ) do
+                  if index > 1 then
+                     self:write( "," )
+                  end
+                  
+                  local funcTxt, nilable, child = self:getMapInfo( paramType )
+                  self:write( string.format( "{ func=%s, nilable=%s, child=%s }", funcTxt, nilable, child) )
+               end
+               
+               self:write( "}" )
+            end
+            
+            self:writeln( "}" )
+            self:writeln( string.format( '%s._name2Val["%s"] = %s.%s', algeFullName, valInfo:get_name(), algeFullName, valInfo:get_name()) )
          end
       end
    end
@@ -1270,63 +1349,8 @@ end
       end
       
       self:writeln( '   local memInfo = {}' )
-      local function getMapInfo( typeInfo )
-      
-         local orgTypeInfo = typeInfo:get_srcTypeInfo()
-         if typeInfo:get_nilable() then
-            orgTypeInfo = typeInfo:get_orgTypeInfo()
-         end
-         
-         local child = "{}"
-         local funcTxt = ""
-         do
-            local _switchExp = orgTypeInfo:get_kind()
-            if _switchExp == Ast.TypeInfoKind.Stem then
-               funcTxt = '_lune._toStem'
-            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-               if not orgTypeInfo:equals( Ast.builtinTypeString ) then
-                  funcTxt = string.format( '%s._fromMap', self:getFullName( orgTypeInfo ))
-               else
-                
-                  funcTxt = '_lune._toStr'
-               end
-               
-            elseif _switchExp == Ast.TypeInfoKind.Enum then
-               funcTxt = string.format( '%s._from', self:getFullName( orgTypeInfo ))
-            elseif _switchExp == Ast.TypeInfoKind.Prim then
-               do
-                  local _switchExp = orgTypeInfo
-                  if _switchExp == Ast.builtinTypeInt then
-                     funcTxt = '_lune._toInt'
-                  elseif _switchExp == Ast.builtinTypeReal then
-                     funcTxt = '_lune._toReal'
-                  elseif _switchExp == Ast.builtinTypeBool then
-                     funcTxt = '_lune._toBool'
-                  else 
-                     
-                        Util.err( string.format( "unknown type -- %s", orgTypeInfo:getTxt(  )) )
-                  end
-               end
-               
-            elseif _switchExp == Ast.TypeInfoKind.Map then
-               funcTxt = '_lune._toMap'
-               local itemList = orgTypeInfo:get_itemTypeInfoList()
-               local keyFuncTxt, keyNilable, keyChild = getMapInfo( itemList[1] )
-               local valFuncTxt, valNilable, valChild = getMapInfo( itemList[2] )
-               child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, keyNilable, keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
-            elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
-               funcTxt = '_lune._toList'
-               local itemList = orgTypeInfo:get_itemTypeInfoList()
-               local valFuncTxt, valNilable, valChild = getMapInfo( itemList[1] )
-               child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
-            end
-         end
-         
-         return funcTxt, typeInfo:get_nilable(), child
-      end
-      
       for __index, memberNode in pairs( node:get_memberList() ) do
-         local funcTxt, nilable, child = getMapInfo( memberNode:get_expType() )
+         local funcTxt, nilable, child = self:getMapInfo( memberNode:get_expType() )
          self:writeln( string.format( '   table.insert( memInfo, { name = "%s", func = %s, nilable = %s, child = %s } )', memberNode:get_name().txt, funcTxt, nilable, child) )
       end
       

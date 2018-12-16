@@ -1,0 +1,15 @@
+class Hoge {
+   pri let val:int {pub,pub};
+}
+
+alge AlgeTest {
+   Val1,
+   Val2,
+   Val3( int ),
+   Val4( int, str, Hoge ),
+   Val5( AlgeTest ),
+}
+
+class Test extend (Mapping) {
+   pri let val:AlgeTest {pub}; // error
+}

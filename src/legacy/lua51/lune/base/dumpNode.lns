@@ -97,6 +97,26 @@ pub override fn dumpFilter.processDeclEnum(
    }
 }
 
+pub override fn dumpFilter.processDeclAlge(
+   node: &Ast.DeclAlgeNode, prefix: str, depth: int ) mut
+{
+   let algeTypeInfo = node.$algeType;
+   dump( prefix, depth, node, algeTypeInfo.$rawTxt );
+   forsort valInfo in algeTypeInfo.$valInfoMap {
+      print( "%s  %s: %s" ( prefix, algeTypeInfo.$rawTxt, valInfo.$name ) );
+   }
+}
+
+pub override fn dumpFilter.processNewAlgeVal(
+   node: &Ast.NewAlgeValNode, prefix: str, depth: int ) mut
+{
+   dump( prefix, depth, node, node.$name.txt );
+   foreach exp in node.$paramList {
+      filter( exp, self, prefix .. "  ", depth + 1 );
+   }
+}
+
+
 pub override fn dumpFilter.processDeclClass( 
    node: &Ast.DeclClassNode, prefix: str, depth: int ) mut
 {
@@ -308,6 +328,20 @@ pub override fn dumpFilter.processSwitch(
       filter( caseInfo.$block, self, prefix .. "  ", depth + 1 );
    }
    if! node.get_default() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
+};
+pub override fn dumpFilter.processMatch( 
+   node: &Ast.MatchNode, prefix: str, depth: int ) mut
+{
+   dump( prefix, depth, node, "");
+   filter( node.$val, self, prefix .. "  ", depth + 1 );
+   let caseList = node.$caseList;
+   foreach caseInfo in caseList {
+      filter( caseInfo.$block, self,
+              prefix .. "  " .. caseInfo.$valInfo.$name, depth + 1 );
+   }
+   if! node.$defaultBlock {
       filter( _exp, self, prefix .. "  ", depth + 1 );
    }
 };

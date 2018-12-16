@@ -5,7 +5,8 @@ if not _lune then
    _lune = {}
 end
 function _lune.newAlge( kind, vals )
-   if not vals then
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
       return kind
    end
    return { kind[ 1 ], vals }

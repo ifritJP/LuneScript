@@ -5,7 +5,8 @@ if not _lune then
    _lune = {}
 end
 function _lune.newAlge( kind, vals )
-   if not vals then
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
       return kind
    end
    return { kind[ 1 ], vals }
@@ -124,6 +125,36 @@ function dumpFilter:processDeclEnum( node, prefix, depth )
    for __index, name in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
       print( string.format( "%s  %s: %s", prefix, name.txt, tostring( valInfo:get_val())) )
+   end
+   
+end
+
+function dumpFilter:processDeclAlge( node, prefix, depth )
+
+   local algeTypeInfo = node:get_algeType()
+   dump( prefix, depth, node, algeTypeInfo:get_rawTxt() )
+   do
+      local __sorted = {}
+      local __map = algeTypeInfo:get_valInfoMap()
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local valInfo = __map[ __key ]
+         do
+            print( string.format( "%s  %s: %s", prefix, algeTypeInfo:get_rawTxt(), valInfo:get_name()) )
+         end
+      end
+   end
+   
+end
+
+function dumpFilter:processNewAlgeVal( node, prefix, depth )
+
+   dump( prefix, depth, node, node:get_name().txt )
+   for __index, exp in pairs( node:get_paramList() ) do
+      filter( exp, self, prefix .. "  ", depth + 1 )
    end
    
 end
@@ -395,6 +426,25 @@ function dumpFilter:processSwitch( node, prefix, depth )
    
    do
       local _exp = node:get_default(  )
+      if _exp ~= nil then
+         filter( _exp, self, prefix .. "  ", depth + 1 )
+      end
+   end
+   
+end
+
+
+function dumpFilter:processMatch( node, prefix, depth )
+
+   dump( prefix, depth, node, "" )
+   filter( node:get_val(), self, prefix .. "  ", depth + 1 )
+   local caseList = node:get_caseList()
+   for __index, caseInfo in pairs( caseList ) do
+      filter( caseInfo:get_block(), self, prefix .. "  " .. caseInfo:get_valInfo():get_name(), depth + 1 )
+   end
+   
+   do
+      local _exp = node:get_defaultBlock()
       if _exp ~= nil then
          filter( _exp, self, prefix .. "  ", depth + 1 )
       end

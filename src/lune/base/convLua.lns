@@ -851,6 +851,70 @@ end
 }
 
 
+fn convFilter.getMapInfo( typeInfo:&Ast.TypeInfo ): str, bool, str {
+   let mut orgTypeInfo = typeInfo.$srcTypeInfo;
+   if typeInfo.$nilable {
+      orgTypeInfo = typeInfo.$orgTypeInfo;
+   }
+   
+
+   let mut child = "{}";
+   let mut funcTxt = "";
+   switch orgTypeInfo.$kind {
+      case .Stem {
+         funcTxt = '_lune._toStem';
+      }
+      case .Class, .IF {
+         if not orgTypeInfo.equals( Ast.builtinTypeString ) {
+            funcTxt = '%s._fromMap' (self.getFullName(orgTypeInfo));
+         }
+         else {
+            funcTxt = '_lune._toStr';
+         }
+      }
+      case .Enum, .Alge {
+         funcTxt = '%s._from' (self.getFullName(orgTypeInfo));
+      }
+      case .Prim {
+         switch orgTypeInfo {
+            case Ast.builtinTypeInt {
+               funcTxt = '_lune._toInt';
+            }
+            case Ast.builtinTypeReal {
+               funcTxt = '_lune._toReal';
+            }
+            case Ast.builtinTypeBool {
+               funcTxt = '_lune._toBool';
+            }
+            default {
+               Util.err( "unknown type -- %s" (orgTypeInfo.getTxt()) );
+            }
+         }
+      }
+      case .Map {
+         funcTxt = '_lune._toMap';
+         let itemList = orgTypeInfo.$itemTypeInfoList;
+         let keyFuncTxt, keyNilable, keyChild = self.getMapInfo( itemList[1] );
+         let valFuncTxt, valNilable, valChild = self.getMapInfo( itemList[2] );
+
+         child = "{ { func = %s, nilable = %s, child = %s }, \n"
+             (keyFuncTxt, keyNilable, keyChild) ..
+            "{ func = %s, nilable = %s, child = %s } }"
+             (valFuncTxt, valNilable, valChild);
+      }
+      case .List, .Array {
+         funcTxt = '_lune._toList';
+         let itemList = orgTypeInfo.$itemTypeInfoList;
+         let valFuncTxt, valNilable, valChild = self.getMapInfo( itemList[1] );
+
+         child = "{ { func = %s, nilable = %s, child = %s } }"
+             (valFuncTxt, valNilable, valChild);
+      }
+   }
+   return funcTxt, typeInfo.$nilable, child;
+}
+
+
 pub override fn convFilter.processDeclAlge(
    node: Ast.DeclAlgeNode, parent: &Ast.Node ) mut
 {
@@ -867,6 +931,7 @@ pub override fn convFilter.processDeclAlge(
    
    
    self.writeln( "%s%s = {}" (access, algeFullName) );
+   self.writeln( "%s._name2Val = {}" (algeFullName) );
    if isTopNS and node.$accessMode == .Pub {
       if self.needModuleObj {
          self.writeln( "_moduleObj.%s = %s" ( algeFullName, algeFullName ) );
@@ -886,8 +951,28 @@ pub override fn convFilter.processDeclAlge(
    return string.format( "illegal val -- %%s", val )
 end 
 ``` (algeFullName, algeFullName ) );
+   self.writeln( ```
+function %s._from( val )
+   return _lune._AlgeFrom( %s, val )
+end
+``` (algeFullName, algeFullName) );    
    forsort valInfo in node.$algeType.$valInfoMap {
-      self.writeln( '%s.%s = { "%s" }' (algeFullName, valInfo.$name, valInfo.$name ) );
+      self.write( '%s.%s = { "%s"' (algeFullName, valInfo.$name, valInfo.$name ) );
+      let mut memInfoTxt = "";
+      if #valInfo.$typeList > 0 {
+         self.write( ", {" );
+         foreach paramType, index in valInfo.$typeList {
+            if index > 1 {
+               self.write( "," );
+            }
+            let funcTxt, nilable, child = self.getMapInfo( paramType );
+            self.write( "{ func=%s, nilable=%s, child=%s }" (funcTxt, nilable, child) );
+         }
+         self.write( "}" );
+      }
+      self.writeln( "}" );
+      self.writeln( '%s._name2Val["%s"] = %s.%s'
+                    ( algeFullName, valInfo.$name, algeFullName, valInfo.$name ) );
    }
 }
 
@@ -924,6 +1009,7 @@ fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : Ast.TypeInfo!
    }
    return nil;
 }
+
 
 pub override fn convFilter.processDeclClass( 
    node: Ast.DeclClassNode, parent: &Ast.Node ) mut
@@ -1160,72 +1246,9 @@ end
 
       self.writeln( '   local memInfo = {}' );
 
-      fn getMapInfo( typeInfo:&Ast.TypeInfo ): str, bool, str {
-         let mut orgTypeInfo = typeInfo.$srcTypeInfo;
-         if typeInfo.$nilable {
-            orgTypeInfo = typeInfo.$orgTypeInfo;
-         }
-         
-
-         let mut child = "{}";
-         let mut funcTxt = "";
-         switch orgTypeInfo.$kind {
-            case .Stem {
-               funcTxt = '_lune._toStem';
-            }
-            case .Class, .IF {
-               if not orgTypeInfo.equals( Ast.builtinTypeString ) {
-                  funcTxt = '%s._fromMap' (self.getFullName(orgTypeInfo));
-               }
-               else {
-                  funcTxt = '_lune._toStr';
-               }
-            }
-            case .Enum {
-               funcTxt = '%s._from' (self.getFullName(orgTypeInfo));
-            }
-            case .Prim {
-               switch orgTypeInfo {
-                  case Ast.builtinTypeInt {
-                     funcTxt = '_lune._toInt';
-                  }
-                  case Ast.builtinTypeReal {
-                     funcTxt = '_lune._toReal';
-                  }
-                  case Ast.builtinTypeBool {
-                     funcTxt = '_lune._toBool';
-                  }
-                  default {
-                     Util.err( "unknown type -- %s" (orgTypeInfo.getTxt()) );
-                  }
-               }
-            }
-            case .Map {
-               funcTxt = '_lune._toMap';
-               let itemList = orgTypeInfo.$itemTypeInfoList;
-               let keyFuncTxt, keyNilable, keyChild = getMapInfo( itemList[1] );
-               let valFuncTxt, valNilable, valChild = getMapInfo( itemList[2] );
-
-               child = "{ { func = %s, nilable = %s, child = %s }, \n"
-                   (keyFuncTxt, keyNilable, keyChild) ..
-                  "{ func = %s, nilable = %s, child = %s } }"
-                   (valFuncTxt, valNilable, valChild);
-            }
-            case .List, .Array {
-               funcTxt = '_lune._toList';
-               let itemList = orgTypeInfo.$itemTypeInfoList;
-               let valFuncTxt, valNilable, valChild = getMapInfo( itemList[1] );
-
-               child = "{ { func = %s, nilable = %s, child = %s } }"
-                   (valFuncTxt, valNilable, valChild);
-            }
-         }
-         return funcTxt, typeInfo.$nilable, child;
-      }
-
       
       foreach memberNode in node.$memberList {
-         let funcTxt, nilable, child = getMapInfo( memberNode.$expType );
+         let funcTxt, nilable, child = self.getMapInfo( memberNode.$expType );
          self.writeln(
             '   table.insert( memInfo, { name = "%s", func = %s, nilable = %s, child = %s } )'
             ( memberNode.$name.txt, funcTxt, nilable, child ) );

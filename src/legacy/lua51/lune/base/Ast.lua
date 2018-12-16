@@ -5,7 +5,8 @@ if not _lune then
    _lune = {}
 end
 function _lune.newAlge( kind, vals )
-   if not vals then
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
       return kind
    end
    return { kind[ 1 ], vals }
@@ -1916,7 +1917,7 @@ function AlgeValInfo:serialize( stream )
       end
    end
    
-   stream:write( "}" )
+   stream:write( "} }" )
 end
 function AlgeValInfo.setmeta( obj )
   setmetatable( obj, { __index = AlgeValInfo  } )
@@ -1958,7 +1959,7 @@ function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
    self.rawTxt = txt
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
    self.typeId = typeId
-   self.valInfoList = {}
+   self.valInfoMap = {}
    do
       local _exp = parentInfo
       if _exp ~= nil then
@@ -1972,7 +1973,11 @@ function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, t
 end
 function AlgeTypeInfo:addValInfo( valInfo )
 
-   table.insert( self.valInfoList, valInfo )
+   self.valInfoMap[valInfo:get_name()] = valInfo
+end
+function AlgeTypeInfo:getValInfo( name )
+
+   return self.valInfoMap[name]
 end
 function AlgeTypeInfo:isModule(  )
 
@@ -2022,6 +2027,9 @@ function AlgeTypeInfo:get_accessMode()
 end
 function AlgeTypeInfo:get_nilableTypeInfo()       
    return self.nilableTypeInfo         
+end
+function AlgeTypeInfo:get_valInfoMap()       
+   return self.valInfoMap         
 end
 
 local NormalTypeInfo = {}
@@ -2624,8 +2632,8 @@ function NormalTypeInfo.createAlge( scope, parentInfo, externalFlag, accessMode,
    
    idProv:increment(  )
    local info = AlgeTypeInfo.new(scope, externalFlag, accessMode, algeName, parentInfo, idProv:get_id())
-   local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( getEnumName, AccessMode.Pub, false, false )
+   local getAlgeName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, {_moduleObj.builtinTypeString}, false )
+   scope:addMethod( getAlgeName, AccessMode.Pub, false, false )
    return info
 end
 
@@ -2635,21 +2643,25 @@ function AlgeTypeInfo:serialize( stream, validChildrenSet )
 accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ), self.typeId, self.rawTxt, self.accessMode, TypeInfoKind.Alge)
    stream:write( txt )
    stream:write( "algeValList = {" )
+   local firstFlag = true
    do
       local __sorted = {}
-      local __map = self.valInfoList
+      local __map = self.valInfoMap
       for __key in pairs( __map ) do
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, index in ipairs( __sorted ) do
-         local algeValInfo = __map[ index ]
+      for __index, __key in ipairs( __sorted ) do
+         local algeValInfo = __map[ __key ]
          do
-            if index > 1 then
+            if not firstFlag then
                stream:write( "," )
+            else
+             
+               firstFlag = false
             end
             
-            algeValInfo:serialize( oStream )
+            algeValInfo:serialize( stream )
          end
       end
    end
@@ -3417,21 +3429,22 @@ _moduleObj.LuneHelperInfo = LuneHelperInfo
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end
-function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack )
+function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge )
    local obj = {}
    LuneHelperInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack )
+      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge )
    end        
    return obj 
 end         
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack ) 
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge ) 
 
    self.useNilAccess = useNilAccess
    self.useUnwrapExp = useUnwrapExp
    self.hasMappingClassDef = hasMappingClassDef
    self.useLoad = useLoad
    self.useUnpack = useUnpack
+   self.useAlge = useAlge
 end
 
 local ModuleInfo = {}
@@ -3714,42 +3727,45 @@ BlockKind.__allList[4] = BlockKind.While
 BlockKind.Switch = 4
 BlockKind._val2NameMap[4] = 'Switch'
 BlockKind.__allList[5] = BlockKind.Switch
-BlockKind.Repeat = 5
-BlockKind._val2NameMap[5] = 'Repeat'
-BlockKind.__allList[6] = BlockKind.Repeat
-BlockKind.For = 6
-BlockKind._val2NameMap[6] = 'For'
-BlockKind.__allList[7] = BlockKind.For
-BlockKind.Apply = 7
-BlockKind._val2NameMap[7] = 'Apply'
-BlockKind.__allList[8] = BlockKind.Apply
-BlockKind.Foreach = 8
-BlockKind._val2NameMap[8] = 'Foreach'
-BlockKind.__allList[9] = BlockKind.Foreach
-BlockKind.Macro = 13
-BlockKind._val2NameMap[13] = 'Macro'
-BlockKind.__allList[10] = BlockKind.Macro
-BlockKind.Func = 10
-BlockKind._val2NameMap[10] = 'Func'
-BlockKind.__allList[11] = BlockKind.Func
-BlockKind.Default = 11
-BlockKind._val2NameMap[11] = 'Default'
-BlockKind.__allList[12] = BlockKind.Default
-BlockKind.Block = 12
-BlockKind._val2NameMap[12] = 'Block'
-BlockKind.__allList[13] = BlockKind.Block
-BlockKind.Macro = 13
-BlockKind._val2NameMap[13] = 'Macro'
-BlockKind.__allList[14] = BlockKind.Macro
-BlockKind.LetUnwrap = 14
-BlockKind._val2NameMap[14] = 'LetUnwrap'
-BlockKind.__allList[15] = BlockKind.LetUnwrap
-BlockKind.IfUnwrap = 15
-BlockKind._val2NameMap[15] = 'IfUnwrap'
-BlockKind.__allList[16] = BlockKind.IfUnwrap
-BlockKind.When = 16
-BlockKind._val2NameMap[16] = 'When'
-BlockKind.__allList[17] = BlockKind.When
+BlockKind.Match = 5
+BlockKind._val2NameMap[5] = 'Match'
+BlockKind.__allList[6] = BlockKind.Match
+BlockKind.Repeat = 6
+BlockKind._val2NameMap[6] = 'Repeat'
+BlockKind.__allList[7] = BlockKind.Repeat
+BlockKind.For = 7
+BlockKind._val2NameMap[7] = 'For'
+BlockKind.__allList[8] = BlockKind.For
+BlockKind.Apply = 8
+BlockKind._val2NameMap[8] = 'Apply'
+BlockKind.__allList[9] = BlockKind.Apply
+BlockKind.Foreach = 9
+BlockKind._val2NameMap[9] = 'Foreach'
+BlockKind.__allList[10] = BlockKind.Foreach
+BlockKind.Macro = 14
+BlockKind._val2NameMap[14] = 'Macro'
+BlockKind.__allList[11] = BlockKind.Macro
+BlockKind.Func = 11
+BlockKind._val2NameMap[11] = 'Func'
+BlockKind.__allList[12] = BlockKind.Func
+BlockKind.Default = 12
+BlockKind._val2NameMap[12] = 'Default'
+BlockKind.__allList[13] = BlockKind.Default
+BlockKind.Block = 13
+BlockKind._val2NameMap[13] = 'Block'
+BlockKind.__allList[14] = BlockKind.Block
+BlockKind.Macro = 14
+BlockKind._val2NameMap[14] = 'Macro'
+BlockKind.__allList[15] = BlockKind.Macro
+BlockKind.LetUnwrap = 15
+BlockKind._val2NameMap[15] = 'LetUnwrap'
+BlockKind.__allList[16] = BlockKind.LetUnwrap
+BlockKind.IfUnwrap = 16
+BlockKind._val2NameMap[16] = 'IfUnwrap'
+BlockKind.__allList[17] = BlockKind.IfUnwrap
+BlockKind.When = 17
+BlockKind._val2NameMap[17] = 'When'
+BlockKind.__allList[18] = BlockKind.When
 
 function NodeKind.get_Block(  )
 
@@ -7825,25 +7841,24 @@ function DeclAlgeNode:canBeStatement(  )
 
    return true
 end
-function DeclAlgeNode.new( pos, typeList, accessMode, name, valueInfoList, scope )
+function DeclAlgeNode.new( pos, typeList, accessMode, algeType, scope )
    local obj = {}
    DeclAlgeNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, accessMode, name, valueInfoList, scope ); end
+   if obj.__init then obj:__init( pos, typeList, accessMode, algeType, scope ); end
    return obj
 end
-function DeclAlgeNode:__init(pos, typeList, accessMode, name, valueInfoList, scope) 
+function DeclAlgeNode:__init(pos, typeList, accessMode, algeType, scope) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclAlge']), pos, typeList)
    
    
    self.accessMode = accessMode
-   self.name = name
-   self.valueInfoList = valueInfoList
+   self.algeType = algeType
    self.scope = scope
    
 end
-function DeclAlgeNode.create( nodeMan, pos, typeList, accessMode, name, valueInfoList, scope )
+function DeclAlgeNode.create( nodeMan, pos, typeList, accessMode, algeType, scope )
 
-   local node = DeclAlgeNode.new(pos, typeList, accessMode, name, valueInfoList, scope)
+   local node = DeclAlgeNode.new(pos, typeList, accessMode, algeType, scope)
    nodeMan:addNode( node )
    return node
 end
@@ -7853,14 +7868,198 @@ end
 function DeclAlgeNode:get_accessMode()       
    return self.accessMode         
 end
-function DeclAlgeNode:get_name()       
-   return self.name         
-end
-function DeclAlgeNode:get_valueInfoList()       
-   return self.valueInfoList         
+function DeclAlgeNode:get_algeType()       
+   return self.algeType         
 end
 function DeclAlgeNode:get_scope()       
    return self.scope         
+end
+
+
+function NodeKind.get_NewAlgeVal(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['NewAlgeVal'])
+end
+
+
+regKind( [[NewAlgeVal]] )
+function Filter:processNewAlgeVal( node, ... )
+
+end
+
+
+function NodeManager:getNewAlgeValNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']) )
+end
+
+
+local NewAlgeValNode = {}
+setmetatable( NewAlgeValNode, { __index = Node } )
+_moduleObj.NewAlgeValNode = NewAlgeValNode
+function NewAlgeValNode:processFilter( filter, ... )
+
+   local argList = {...}
+   filter:processNewAlgeVal( self, table.unpack( argList ) )
+end
+function NewAlgeValNode:canBeRight(  )
+
+   return true
+end
+function NewAlgeValNode:canBeLeft(  )
+
+   return false
+end
+function NewAlgeValNode:canBeStatement(  )
+
+   return false
+end
+function NewAlgeValNode.new( pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
+   local obj = {}
+   NewAlgeValNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList ); end
+   return obj
+end
+function NewAlgeValNode:__init(pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']), pos, typeList)
+   
+   
+   self.name = name
+   self.prefix = prefix
+   self.algeTypeInfo = algeTypeInfo
+   self.valInfo = valInfo
+   self.paramList = paramList
+   
+end
+function NewAlgeValNode.create( nodeMan, pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
+
+   local node = NewAlgeValNode.new(pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
+   nodeMan:addNode( node )
+   return node
+end
+function NewAlgeValNode.setmeta( obj )
+  setmetatable( obj, { __index = NewAlgeValNode  } )
+end
+function NewAlgeValNode:get_name()       
+   return self.name         
+end
+function NewAlgeValNode:get_prefix()       
+   return self.prefix         
+end
+function NewAlgeValNode:get_algeTypeInfo()       
+   return self.algeTypeInfo         
+end
+function NewAlgeValNode:get_valInfo()       
+   return self.valInfo         
+end
+function NewAlgeValNode:get_paramList()       
+   return self.paramList         
+end
+
+
+local MatchCase = {}
+_moduleObj.MatchCase = MatchCase
+function MatchCase.setmeta( obj )
+  setmetatable( obj, { __index = MatchCase  } )
+end
+function MatchCase.new( valInfo, valParamNameList, block )
+   local obj = {}
+   MatchCase.setmeta( obj )
+   if obj.__init then
+      obj:__init( valInfo, valParamNameList, block )
+   end        
+   return obj 
+end         
+function MatchCase:__init( valInfo, valParamNameList, block ) 
+
+   self.valInfo = valInfo
+   self.valParamNameList = valParamNameList
+   self.block = block
+end
+function MatchCase:get_valInfo()       
+   return self.valInfo         
+end
+function MatchCase:get_valParamNameList()       
+   return self.valParamNameList         
+end
+function MatchCase:get_block()       
+   return self.block         
+end
+
+function NodeKind.get_Match(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['Match'])
+end
+
+
+regKind( [[Match]] )
+function Filter:processMatch( node, ... )
+
+end
+
+
+function NodeManager:getMatchNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['Match']) )
+end
+
+
+local MatchNode = {}
+setmetatable( MatchNode, { __index = Node } )
+_moduleObj.MatchNode = MatchNode
+function MatchNode:processFilter( filter, ... )
+
+   local argList = {...}
+   filter:processMatch( self, table.unpack( argList ) )
+end
+function MatchNode:canBeRight(  )
+
+   return false
+end
+function MatchNode:canBeLeft(  )
+
+   return false
+end
+function MatchNode:canBeStatement(  )
+
+   return true
+end
+function MatchNode.new( pos, typeList, val, algeTypeInfo, caseList, defaultBlock )
+   local obj = {}
+   MatchNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, val, algeTypeInfo, caseList, defaultBlock ); end
+   return obj
+end
+function MatchNode:__init(pos, typeList, val, algeTypeInfo, caseList, defaultBlock) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Match']), pos, typeList)
+   
+   
+   self.val = val
+   self.algeTypeInfo = algeTypeInfo
+   self.caseList = caseList
+   self.defaultBlock = defaultBlock
+   
+end
+function MatchNode.create( nodeMan, pos, typeList, val, algeTypeInfo, caseList, defaultBlock )
+
+   local node = MatchNode.new(pos, typeList, val, algeTypeInfo, caseList, defaultBlock)
+   nodeMan:addNode( node )
+   return node
+end
+function MatchNode.setmeta( obj )
+  setmetatable( obj, { __index = MatchNode  } )
+end
+function MatchNode:get_val()       
+   return self.val         
+end
+function MatchNode:get_algeTypeInfo()       
+   return self.algeTypeInfo         
+end
+function MatchNode:get_caseList()       
+   return self.caseList         
+end
+function MatchNode:get_defaultBlock()       
+   return self.defaultBlock         
 end
 
 
