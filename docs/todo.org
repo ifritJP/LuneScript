@@ -197,7 +197,7 @@
 - [X] nil 条件演算子
 - [X] import, provide
 - [X] require, module
-- [ ] macro
+- [X] macro
 - [ ] make
 
 - [ ] LuneScript を作ってみての感想

@@ -1611,7 +1611,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
          }
 
 
-         let mut format = token.txt == ",,," and "'%s '" or '"\'%s\'"';
+         let mut format = token.txt == ",,," and "' %s '" or '"\'%s\'"';
 
          if token.txt == ",," and exp.$kind == Ast.NodeKind.$ExpRef
          {
@@ -1619,7 +1619,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
             let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
             if macroInfo {
                if (unwrap macroInfo).typeInfo.equals( Ast.builtinTypeSymbol ) {
-                  format = "'%s '";
+                  format = "' %s '";
                }
             }
             else {
@@ -1633,7 +1633,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
          let newToken = new Parser.Token( Parser.TokenKind.Str, format, token.pos );
          let literalStr = Ast.LiteralStringNode.create(
             self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
-         expStrList.insert(  literalStr );
+         expStrList.insert( literalStr );
       }
       else {
          if token.txt == "{" {

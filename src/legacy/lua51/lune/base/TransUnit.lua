@@ -1626,6 +1626,74 @@ function TransUnit:newPushback( tokenList )
    self.currentToken = self.usedTokenList[#self.usedTokenList]
 end
 
+function TransUnit:expandMacroVal( token )
+
+   local tokenTxt = token.txt
+   if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' then
+      local nextToken = self:getTokenNoErr(  )
+      local macroVal = self.symbol2ValueMapForMacro[nextToken.txt]
+      if  nil == macroVal then
+         local _macroVal = macroVal
+      
+         self:error( string.format( "unknown macro val %s", nextToken.txt) )
+      end
+      
+      if tokenTxt == ',,' then
+         if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
+            local txtList = (_lune.unwrap( macroVal.val) )
+            for index = #txtList, 1, -1 do
+               nextToken = Parser.Token.new(nextToken.kind, txtList[index], nextToken.pos)
+               self:pushbackToken( nextToken )
+            end
+            
+         elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) then
+            self:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ) )
+         elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
+            local strList = (_lune.unwrap( macroVal.val) )
+            for index = #strList, 1, -1 do
+               self:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index] )
+            end
+            
+         else
+          
+            local tokenList = {}
+            expandVal( tokenList, macroVal.val, nextToken.pos )
+            self:newPushback( tokenList )
+         end
+         
+      elseif tokenTxt == ',,,' then
+         if macroVal.typeInfo:equals( Ast.builtinTypeString ) then
+            nextToken = Parser.Token.new(nextToken.kind, (_lune.unwrap( macroVal.val) ), nextToken.pos)
+            self:pushbackToken( nextToken )
+         end
+         
+      elseif tokenTxt == ',,,,' then
+         if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
+            local txtList = (_lune.unwrap( macroVal.val) )
+            local newToken = ""
+            for __index, txt in pairs( txtList ) do
+               newToken = string.format( "%s%s", newToken, txt)
+            end
+            
+            nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos)
+            self:pushbackToken( nextToken )
+         elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) then
+            nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", tostring( _lune.unwrap( macroVal.val))), nextToken.pos)
+            self:pushbackToken( nextToken )
+         else
+          
+            self:error( string.format( "not support this symbol -- %s%s", tokenTxt, nextToken.txt) )
+         end
+         
+      end
+      
+      nextToken = self:getTokenNoErr(  )
+      token = nextToken
+   end
+   
+   return token
+end
+
 function TransUnit:getTokenNoErr(  )
 
    if #self.pushbackList > 0 then
@@ -1661,63 +1729,7 @@ function TransUnit:getTokenNoErr(  )
       local _exp = token
       if _exp ~= nil then
          if self.macroMode == Ast.MacroMode.Expand then
-            local tokenTxt = _exp.txt
-            if tokenTxt == ',,' or tokenTxt == ',,,,' then
-               local nextToken = self:getTokenNoErr(  )
-               local macroVal = self.symbol2ValueMapForMacro[nextToken.txt]
-               if  nil == macroVal then
-                  local _macroVal = macroVal
-               
-                  self:error( string.format( "unknown macro val %s", nextToken.txt) )
-               end
-               
-               if tokenTxt == ',,' then
-                  if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
-                     local txtList = (_lune.unwrap( macroVal.val) )
-                     for index = #txtList, 1, -1 do
-                        nextToken = Parser.Token.new(nextToken.kind, txtList[index], nextToken.pos)
-                        self:pushbackToken( nextToken )
-                     end
-                     
-                  elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) then
-                     self:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ) )
-                  elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
-                     local strList = (_lune.unwrap( macroVal.val) )
-                     for index = #strList, 1, -1 do
-                        self:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index] )
-                     end
-                     
-                  else
-                   
-                     local tokenList = {}
-                     expandVal( tokenList, macroVal.val, nextToken.pos )
-                     self:newPushback( tokenList )
-                  end
-                  
-               elseif tokenTxt == ',,,,' then
-                  if macroVal.typeInfo:equals( Ast.builtinTypeSymbol ) then
-                     local txtList = (_lune.unwrap( macroVal.val) )
-                     local newToken = ""
-                     for __index, txt in pairs( txtList ) do
-                        newToken = string.format( "%s%s", newToken, txt)
-                     end
-                     
-                     nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos)
-                     self:pushbackToken( nextToken )
-                  elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) then
-                     nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", tostring( _lune.unwrap( macroVal.val))), nextToken.pos)
-                     self:pushbackToken( nextToken )
-                  else
-                   
-                     self:error( string.format( "not support this symbol -- %s%s", tokenTxt, nextToken.txt) )
-                  end
-                  
-               end
-               
-               nextToken = self:getTokenNoErr(  )
-               token = nextToken
-            end
-            
+            token = self:expandMacroVal( _exp )
          end
          
       end
@@ -6089,13 +6101,13 @@ function TransUnit:analyzeExpMacroStat( firstToken )
             self:pushback(  )
          end
          
-         local format = token.txt == ",,," and "'%s '" or '"\'%s\'"'
+         local format = token.txt == ",,," and "' %s '" or '"\'%s\'"'
          if token.txt == ",," and exp:get_kind() == Ast.NodeKind.get_ExpRef() then
             local refToken = (exp ):get_token(  )
             local macroInfo = self.symbol2ValueMapForMacro[refToken.txt]
             if macroInfo then
                if (_lune.unwrap( macroInfo) ).typeInfo:equals( Ast.builtinTypeSymbol ) then
-                  format = "'%s '"
+                  format = "' %s '"
                end
                
             else

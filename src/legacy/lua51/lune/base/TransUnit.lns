@@ -365,6 +365,7 @@ pub class TransUnit {
    pri fn analyzeExpList( skipOp2Flag: bool, expNode: Ast.Node!,
                           expectTypeList: List<&Ast.TypeInfo>!, contExpect: bool! ): Ast.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node;
+   pri fn getTokenNoErr() mut : &Parser.Token;
 
    pri fn addLocalVar(
       pos:&Parser.Position, argFlag:bool, canBeLeft:bool,
@@ -1183,6 +1184,82 @@ fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
 }
 
+fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
+{
+   let tokenTxt = token.txt;
+   if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
+      let mut nextToken = self.getTokenNoErr();
+
+      let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
+         self.error( "unknown macro val %s" (nextToken.txt) );
+      };
+      
+      if tokenTxt == ',,' {
+         //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
+         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
+            let txtList = (unwrap macroVal.val)@@str[];
+            for index = #txtList, 1, -1 {
+               nextToken = new Parser.Token(
+                  nextToken.kind, txtList[ index ], nextToken.pos );
+               self.pushbackToken( nextToken );
+            }    
+         }   
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
+            self.pushbackStr( "macroVal %s" (nextToken.txt),
+                              (unwrap macroVal.val)@@str );                       
+         }   
+         elseif macroVal.typeInfo.get_kind() == .Array or
+            macroVal.typeInfo.get_kind() == .List
+         {   
+            let strList = (unwrap macroVal.val)@@str[];
+            for index = #strList, 1, -1 {
+               self.pushbackStr(
+                  "macroVal %s[%d]" (nextToken.txt, index),
+                  strList[ index ] );
+            }
+         }
+         else {
+            let mut tokenList: List<&Parser.Token> = [];
+            expandVal( tokenList, macroVal.val, nextToken.pos );
+            
+            self.newPushback( tokenList );
+         } 
+      }
+      elseif tokenTxt == ',,,' {
+         if macroVal.typeInfo.equals( Ast.builtinTypeString ) {
+            nextToken = new Parser.Token(
+               nextToken.kind, (unwrap macroVal.val)@@str, nextToken.pos );
+            self.pushbackToken( nextToken );
+         }
+      }
+      elseif tokenTxt == ',,,,' {
+         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
+            let txtList = (unwrap macroVal.val)@@str[];
+            let mut newToken = "";
+            foreach txt in txtList {
+               newToken = "%s%s" (newToken, txt);
+            } 
+            nextToken = new Parser.Token(
+               Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos );
+            self.pushbackToken( nextToken );
+         } 
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
+            nextToken = new Parser.Token(
+               Parser.TokenKind.Str, "'%s'" (unwrap macroVal.val), nextToken.pos );
+            self.pushbackToken( nextToken );
+         } 
+         else {
+            self.error( "not support this symbol -- %s%s"
+                        (tokenTxt, nextToken.txt) );
+         } 
+      } 
+      nextToken = self.getTokenNoErr();
+
+      token = nextToken;
+   }
+   return token;
+}
+
 fn TransUnit.getTokenNoErr() mut : &Parser.Token {
    if #self.pushbackList > 0 {
       if self.currentToken ~= Parser.getEofToken() {
@@ -1210,70 +1287,7 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token {
 
    if! token {
       if self.macroMode == .Expand {
-         let tokenTxt = _exp.txt;
-         if tokenTxt == ',,' or tokenTxt == ',,,,' {
-            let mut nextToken = self.getTokenNoErr();
-
-            let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
-               self.error( "unknown macro val %s" (nextToken.txt) );
-            };
-            
-            if tokenTxt == ',,' {
-               //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
-               if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
-                  let txtList = (unwrap macroVal.val)@@str[];
-                  for index = #txtList, 1, -1 {
-                     nextToken = new Parser.Token(
-                        nextToken.kind, txtList[ index ], nextToken.pos );
-                     self.pushbackToken( nextToken );
-                  }    
-               }   
-               elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
-                  self.pushbackStr( "macroVal %s" (nextToken.txt),
-                                    (unwrap macroVal.val)@@str );                       
-               }   
-               elseif macroVal.typeInfo.get_kind() == .Array or
-                  macroVal.typeInfo.get_kind() == .List
-               {   
-                  let strList = (unwrap macroVal.val)@@str[];
-                  for index = #strList, 1, -1 {
-                     self.pushbackStr(
-                        "macroVal %s[%d]" (nextToken.txt, index),
-                        strList[ index ] );
-                  }
-               }
-               else {
-                  let mut tokenList: List<&Parser.Token> = [];
-                  expandVal( tokenList, macroVal.val, nextToken.pos );
-                  
-                  self.newPushback( tokenList );
-               } 
-            } 
-            elseif tokenTxt == ',,,,' {
-               if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
-                  let txtList = (unwrap macroVal.val)@@str[];
-                  let mut newToken = "";
-                  foreach txt in txtList {
-                     newToken = "%s%s" (newToken, txt);
-                  } 
-                  nextToken = new Parser.Token(
-                     Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos );
-                  self.pushbackToken( nextToken );
-               } 
-               elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
-                  nextToken = new Parser.Token(
-                     Parser.TokenKind.Str, "'%s'" (unwrap macroVal.val), nextToken.pos );
-                  self.pushbackToken( nextToken );
-               } 
-               else {
-                  self.error( "not support this symbol -- %s%s"
-                              (tokenTxt, nextToken.txt) );
-               } 
-            } 
-            nextToken = self.getTokenNoErr();
-
-            token = nextToken;
-         }
+         token = self.expandMacroVal( _exp );
       }
    }
    // if! token {
