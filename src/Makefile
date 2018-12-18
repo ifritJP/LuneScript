@@ -256,8 +256,10 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,-u SAVE ../4,)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
+ifdef LUA51
 ifneq ($(shell which $(LUA51)),)
 	$(MAKE) test-lua51
+endif
 endif
 
 
@@ -274,7 +276,11 @@ endif
 	diff work/1/start.dep work/3/start.dep
 	diff -r work/glue work/newglue
 
+ifdef LUA51
 	$(MAKE) accept-package ACCEPT=y ENABLE_LUA51=$(shell which $(LUA51))
+else
+	$(MAKE) accept-package ACCEPT=y
+endif
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行

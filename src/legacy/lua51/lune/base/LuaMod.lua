@@ -4,14 +4,6 @@ local __mod__ = 'lune.base.LuaMod'
 if not _lune then
    _lune = {}
 end
-function _lune.newAlge( kind, vals )
-   local memInfoList = kind[ 2 ]
-   if not memInfoList then
-      return kind
-   end
-   return { kind[ 1 ], vals }
-end
-
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -74,9 +66,12 @@ CodeKind.__allList[8] = CodeKind.Mapping
 CodeKind.Alge = 8
 CodeKind._val2NameMap[8] = 'Alge'
 CodeKind.__allList[9] = CodeKind.Alge
-CodeKind.Finalize = 9
-CodeKind._val2NameMap[9] = 'Finalize'
-CodeKind.__allList[10] = CodeKind.Finalize
+CodeKind.AlgeMapping = 9
+CodeKind._val2NameMap[9] = 'AlgeMapping'
+CodeKind.__allList[10] = CodeKind.AlgeMapping
+CodeKind.Finalize = 10
+CodeKind._val2NameMap[10] = 'Finalize'
+CodeKind.__allList[11] = CodeKind.Finalize
 
 local codeMap = {}
 codeMap[CodeKind.Init] = [==[
@@ -251,6 +246,8 @@ function _lune._fromMap( obj, map, memInfoList )
    end
    return true
 end
+]==]
+codeMap[CodeKind.AlgeMapping] = [==[
 function _lune._fromList( obj, list, memInfoList )
    if type( list ) ~= "table" then
       return false

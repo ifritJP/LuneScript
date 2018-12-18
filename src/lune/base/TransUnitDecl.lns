@@ -634,6 +634,8 @@ fn TransUnit.analyzeDeclEnum(
 fn TransUnit.analyzeDeclAlge(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.DeclAlgeNode
 {
+   self.helperInfo.useAlge = true;
+   
    let name = self.getSymbolToken();
 
    self.checkNextToken( "{" );

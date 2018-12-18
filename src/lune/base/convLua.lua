@@ -4,14 +4,6 @@ local __mod__ = 'lune.base.convLua'
 if not _lune then
    _lune = {}
 end
-function _lune.newAlge( kind, vals )
-   local memInfoList = kind[ 2 ]
-   if not memInfoList then
-      return kind
-   end
-   return { kind[ 1 ], vals }
-end
-
 function _lune.loadstring52( txt, env )
    if not env then
       return load( txt )
@@ -781,7 +773,11 @@ function convFilter:processRoot( node, parent )
 if not _lune then
    _lune = {}
 end]==] )
-      self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
+      if node:get_luneHelperInfo().useAlge then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.AlgeMapping ) )
+      end
+      
       if node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
       end

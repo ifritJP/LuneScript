@@ -4,14 +4,6 @@ local __mod__ = 'lune.base.TransUnit'
 if not _lune then
    _lune = {}
 end
-function _lune.newAlge( kind, vals )
-   local memInfoList = kind[ 2 ]
-   if not memInfoList then
-      return kind
-   end
-   return { kind[ 1 ], vals }
-end
-
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -148,34 +140,6 @@ function _lune._fromMap( obj, map, memInfoList )
       obj[ memInfo.name ] = val
    end
    return true
-end
-function _lune._fromList( obj, list, memInfoList )
-   if type( list ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, key = memInfo.func( list[ index ], memInfo.child )
-      if val == nil and not memInfo.nilable then
-         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
-      end
-      obj[ index ] = val
-   end
-   return true
-end
-function _lune._AlgeFrom( Alge, val )
-   local work = Alge._name2Val[ val[ 1 ] ]
-   if not work then
-      return nil
-   end
-   if #work == 1 then
-     return work
-   end
-   local paramList = {}
-   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
-   if not result then
-      return nil, mess
-   end
-   return { work[ 1 ], paramList }
 end
 
 function _lune.loadModule( mod )
@@ -2051,6 +2015,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                   actInfo = _TypeInfoEnum._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Alge then
                   actInfo = _TypeInfoAlge._fromMap( atomInfo )
+                  self.helperInfo.useAlge = true
                elseif _switchExp == Ast.SerializeKind.Module then
                   actInfo = _TypeInfoModule._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Normal then
@@ -3263,6 +3228,7 @@ end
 
 function TransUnit:analyzeDeclAlge( accessMode, firstToken )
 
+   self.helperInfo.useAlge = true
    local name = self:getSymbolToken(  )
    self:checkNextToken( "{" )
    local scope = self.scope

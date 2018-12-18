@@ -156,6 +156,13 @@ function _lune._fromMap( obj, map, memInfoList )
    end
    return true
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
 function _lune._fromList( obj, list, memInfoList )
    if type( list ) ~= "table" then
       return false
@@ -183,12 +190,5 @@ function _lune._AlgeFrom( Alge, val )
       return nil, mess
    end
    return { work[ 1 ], paramList }
-end
-function _lune.newAlge( kind, vals )
-   local memInfoList = kind[ 2 ]
-   if not memInfoList then
-      return kind
-   end
-   return { kind[ 1 ], vals }
 end
 return _lune

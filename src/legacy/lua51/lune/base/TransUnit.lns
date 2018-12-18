@@ -1600,6 +1600,7 @@ fn TransUnit.processImport(
             }
             case .Alge {
                actInfo = _TypeInfoAlge._fromMap( atomInfo );
+               self.helperInfo.useAlge = true;
             }
             case .Module {
                actInfo = _TypeInfoModule._fromMap( atomInfo );

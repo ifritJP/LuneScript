@@ -32,6 +32,7 @@ pub enum CodeKind {
    LoadStr52,
    Mapping,
    Alge,
+   AlgeMapping,
    Finalize,
 }
 
@@ -217,6 +218,9 @@ function _lune._fromMap( obj, map, memInfoList )
    end
    return true
 end
+```;
+
+codeMap[ .AlgeMapping ] = ```
 function _lune._fromList( obj, list, memInfoList )
    if type( list ) ~= "table" then
       return false
@@ -245,7 +249,7 @@ function _lune._AlgeFrom( Alge, val )
    end
    return { work[ 1 ], paramList }
 end
-```;   
+```;
 
 codeMap[ .Alge ] = ```
 function _lune.newAlge( kind, vals )

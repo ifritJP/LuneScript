@@ -4,14 +4,6 @@ local __mod__ = 'lune.base.Ast'
 if not _lune then
    _lune = {}
 end
-function _lune.newAlge( kind, vals )
-   local memInfoList = kind[ 2 ]
-   if not memInfoList then
-      return kind
-   end
-   return { kind[ 1 ], vals }
-end
-
 if not table.unpack then
    table.unpack = unpack
 end

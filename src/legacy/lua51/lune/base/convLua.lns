@@ -665,8 +665,10 @@ if not _lune then
 end``` );
 
 
-      self.writeln( LuaMod.getCode( .Alge ) );
-      
+      if node.$luneHelperInfo.$useAlge {
+         self.writeln( LuaMod.getCode( .Alge ) );
+         self.writeln( LuaMod.getCode( .AlgeMapping ) );
+      }
       if node.$luneHelperInfo.$useUnpack and not self.targetLuaVer.$hasTableUnpack {
          self.writeln( LuaMod.getCode( .Unpack ) );
       }
