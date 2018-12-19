@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.7'
+_moduleObj.__formatVersion = '1.0.9'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -1564,16 +1564,16 @@ _typeInfoList[592] = { skind=3, parentId = 1, typeId = 4385, baseId = 1, txt = '
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {4381}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 _typeInfoList[593] = { skind = 0, parentId = 1, typeId = 4386, nilable = true, orgTypeId = 4385 }
 _typeInfoList[594] = { skind = 1, parentId = 1, typeId = 4388, srcTypeId = 4386, mutable = false }
-_typeInfoList[595] = { skind=3, parentId = 1, typeId = 4404, baseId = 1, txt = 'List',
+_typeInfoList[595] = { skind=3, parentId = 1, typeId = 4401, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 2, kind = 3, mutable = true, itemTypeId = {1202}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[596] = { skind = 0, parentId = 1, typeId = 4405, nilable = true, orgTypeId = 4404 }
-_typeInfoList[597] = { skind = 1, parentId = 1, typeId = 4407, srcTypeId = 4404, mutable = false }
-_typeInfoList[598] = { skind=3, parentId = 1, typeId = 4411, baseId = 1, txt = 'List',
+_typeInfoList[596] = { skind = 0, parentId = 1, typeId = 4402, nilable = true, orgTypeId = 4401 }
+_typeInfoList[597] = { skind = 1, parentId = 1, typeId = 4404, srcTypeId = 4401, mutable = false }
+_typeInfoList[598] = { skind=3, parentId = 1, typeId = 4408, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1202}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
-_typeInfoList[599] = { skind = 0, parentId = 1, typeId = 4412, nilable = true, orgTypeId = 4411 }
-_typeInfoList[600] = { skind = 1, parentId = 1, typeId = 4414, srcTypeId = 4411, mutable = false }
-_dependIdMap[ 4415 ] = { 1, 5536 } -- create
-_dependIdMap[ 4416 ] = { 1, 5537 } -- create!
+_typeInfoList[599] = { skind = 0, parentId = 1, typeId = 4409, nilable = true, orgTypeId = 4408 }
+_typeInfoList[600] = { skind = 1, parentId = 1, typeId = 4411, srcTypeId = 4408, mutable = false }
+_dependIdMap[ 4412 ] = { 1, 5533 } -- create
+_dependIdMap[ 4413 ] = { 1, 5534 } -- create!
 _dependIdMap[ 4433 ] = { 1, 5560 } -- get_ExpDDD
 _dependIdMap[ 4434 ] = { 1, 5561 } -- get_ExpDDD!
 _dependIdMap[ 4436 ] = { 1, 5563 } -- ExpDDDNode

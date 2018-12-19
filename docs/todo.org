@@ -9,11 +9,9 @@
 * 機能
 
 - [ ] enum 値を追加した時、その enum 側を利用している switch などを簡単にチェックできる機能を追加する。
-- [ ] 型名単体が rvalue になっている。
 - [ ] autocomplete で、処理中に次を処理して重くなる。
 - [ ] __func__ が nil になることがある。
 - [ ] map の型宣言で、 value の型宣言しなくてもエラーにならない。 Map<int> ができてしまう。
-- [ ] table.unpack を list, array のメソッドに変更する
 - [ ] getter を省略して setter だけ生成できるように
 - [ ] 同名のメソッドを持つメンバを複数 advertise したときの動作が未定義。
 - [ ] meta ファイルの更新を必要な時だけ行なう。
@@ -23,7 +21,6 @@
       key,value に設定可能な型を制限する。 json 型を mapping する jmapping を追加。
 - [ ] let! のブロックがフロー解析対象になっていない。
 - [ ] if! let の else で、  nilable の値にアクセス出来るようにする。
-- [ ] 戻り値を持たない関数の結果を、変数に代入できてしまう。
 - [ ] foreach の変数名が shadow チェック対象になっていない。
 - [ ] 型固定の可変長引数対応
 - [ ] 引数を 2 つの型に限定することが出来ない。
@@ -64,9 +61,6 @@
       prototype 宣言の型チェック処理が動いてしまう。
 - [ ] Set を対応する
 
-- [ ] import 処理で lns ソースを解析する際、TypeId の IdProvider が同じものなので、
-      TypeId の整合性が取れないことがある。
-      import 時の typeId のリセット
       
 - [ ] List, Map, Array の kind を Class にする。
 
@@ -155,6 +149,12 @@
     if "" { }  等。
 - [X] apply of で列挙される型が stem になってしまっている。
 - [X] -u で lua を作ると、 lua のコメントの先頭に挿入されるパスが ./ が付いてしまう
+- [X] 型名単体が rvalue になっている。
+- [X] table.unpack を list, array のメソッドに変更する
+- [X] 戻り値を持たない関数の結果を、変数に代入できてしまう。
+- [X] import 処理で lns ソースを解析する際、TypeId の IdProvider が同じものなので、
+      TypeId の整合性が取れないことがある。
+      import 時の typeId のリセット
 
 
 * ドキュメント

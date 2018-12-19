@@ -5953,10 +5953,6 @@ function ExpCallNode:processFilter( filter, ... )
    local argList = {...}
    filter:processExpCall( self, table.unpack( argList ) )
 end
-function ExpCallNode:canBeRight(  )
-
-   return true
-end
 function ExpCallNode:canBeLeft(  )
 
    return false
@@ -6003,6 +5999,16 @@ function ExpCallNode:get_argList()
    return self.argList         
 end
 
+
+function ExpCallNode:canBeRight(  )
+
+   local expType = self:get_expType()
+   if expType:equals( _moduleObj.builtinTypeNone ) or expType:equals( _moduleObj.builtinTypeNeverRet ) then
+      return false
+   end
+   
+   return true
+end
 
 function ExpCallNode:getBreakKind( checkMode )
 

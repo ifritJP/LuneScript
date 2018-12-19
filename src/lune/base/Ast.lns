@@ -3039,12 +3039,22 @@ pub override fn ExpRefItemNode.canBeLeft(): bool {
    return self.$val.$expType.$mutable and not self.nilAccess;
 }
 
-_declNodeClass( "ExpCall", Node, false, true, true,
+_declNodeClass( "ExpCall", Node, false, nil, true,
                 [ { "func": "&Node" },
                   { "errorFunc": "bool" },
                   { "nilAccess": "bool" },
                   { "argList": "&ExpListNode!" } ]
 );
+pub override fn ExpCallNode.canBeRight():bool {
+   let expType = self.$expType;
+   if expType.equals( builtinTypeNone ) or
+      expType.equals( builtinTypeNeverRet )
+   {
+      return false;
+   }
+   return true;
+}
+
 
 pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    if self.errorFunc {

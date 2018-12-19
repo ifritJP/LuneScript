@@ -24,6 +24,9 @@ SOFTWARE.
 
 import lune.base.Util;
 
+/**
+インポートしたモジュールを管理する。
+*/
 pub class ImportModuleInfo {
    let mut moduleSet:Map<str,bool>;
    let mut moduleList:List<str>;
@@ -60,24 +63,51 @@ pub class ImportModuleInfo {
 }
 
 pub interface frontInterface {
-   pub fn loadModule( mod:str ): stem!, stem;
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): stem;
+   /**
+指定の LuneScript のモジュールをロードする。
+
+このメソッドは、 トランスコンパイルと実行を同時に行なうケースで、
+Lua からも利用される。
+
+@param mod モジュール (foo.bar)
+@return stem! ロードしたモジュール。 失敗した場合 nil
+@return &stem ロードしたモジュールのメタ情報。
+   */
+   pub fn loadModule( mod:str ): stem!, &stem;
+
+   /**
+指定の LuneScript のモジュールからメタ情報をロードする。
+
+@param importModuleInfo ロード時のインポートモジュールを管理する。
+@param mod モジュール (foo.bar)
+@return &stem ロードしたモジュールのメタ情報。
+   */
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem;
+   /**
+LuneScript のコード文字列からロードする。
+
+@param importModuleInfo ロード時のインポートモジュールを管理する。
+@param ロード名
+@param txt LuneScript のコード文字列
+@return &stem ロードしたモジュールのメタ情報。
+@return stem ロードしたモジュール。
+   */
    pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
-                          name:str, txt:str, onlyMeta:bool ): stem, stem;
+                          name:str, txt:str ): &stem, stem;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ): stem!, stem {
+   pub fn loadModule( mod:str ): stem!, &stem {
       // error( "not implements" );
       return require( mod ), {};
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): stem {
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
-                          name:str, txt:str, onlyMeta:bool ): stem, stem {
+                          name:str, txt:str ): &stem, stem {
       error( "not implements" );
    }
    pub fn searchModule( mod:str ): str! {
@@ -94,16 +124,16 @@ pub fn setFront( newFront:frontInterface ) {
    __luneScript = newFront;
 }
 
-pub fn loadModule( mod:str ): stem!, stem {
+pub fn loadModule( mod:str ): stem!, &stem {
    return __luneScript.loadModule( mod );
 }
 
 pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
-                       name:str, txt:str, onlyMeta:bool ): stem, stem {
-   return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta );
+                       name:str, txt:str ): &stem, stem {
+   return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 
-pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): stem {
+pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem {
    return __luneScript.loadMeta( importModuleInfo, mod );
 }
 

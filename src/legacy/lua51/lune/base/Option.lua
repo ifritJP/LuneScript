@@ -99,6 +99,8 @@ function Option:__init()
    self.scriptPath = ""
    self.useLuneModule = false
    self.updateOnLoad = false
+   self.byteCompile = false
+   self.stripDebugInfo = false
    self.targetLuaVer = LuaVer.curVer
 end
 function Option.setmeta( obj )
@@ -146,12 +148,15 @@ usage:
 * type1
   - src.lns [common_op] ast
   - src.lns [common_op] comp [-i] module line column
-  - src.lns [common_op] [-ol ver] <lua|LUA>
-  - src.lns [common_op] [-ol ver] [--depends dependfile] <save|SAVE> output-dir
+  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>
+  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir
   - src.lns [common_op] exe
 
   -r: use 'require( "lune.base._lune" )'
   -ol: output lua version. ver = 51 or 52 or 53.
+  -ob: output bytecompiled-code.
+      -ob0 is without debug information. 
+      -ob1 is with debug information. 
   --depends: output dependfile
 
   common_op:
@@ -227,6 +232,12 @@ usage:
                end
                
                index = index + 1
+            elseif _switchExp == "-ob0" or _switchExp == "-ob1" then
+               option.byteCompile = true
+               if arg == "-ob0" then
+                  option.stripDebugInfo = true
+               end
+               
             else 
                
                   Util.log( string.format( "unknown option -- %s", arg) )

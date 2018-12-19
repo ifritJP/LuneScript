@@ -2613,7 +2613,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
       newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): stem {
          let mut importModuleInfo = new frontInterface.ImportModuleInfo();
          let metaInfo, mut val =
-            frontInterface.loadFromLnsTxt( importModuleInfo, name, txt, false );
+            frontInterface.loadFromLnsTxt( importModuleInfo, name, txt );
          return val;
       };
       

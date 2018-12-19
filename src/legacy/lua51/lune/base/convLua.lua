@@ -2737,7 +2737,7 @@ function MacroEvalImp:eval( node )
    newEnv["_lnsLoad"] = function ( name, txt )
    
       local importModuleInfo = frontInterface.ImportModuleInfo.new()
-      local metaInfo, val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt, false )
+      local metaInfo, val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
       return val
    end
    

@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.7'
+_moduleObj.__formatVersion = '1.0.9'
 local _typeId2ClassInfoMap = {}
 _moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap
 do
@@ -25,6 +25,10 @@ do
      name='dependsStream', staticFlag = false, mutable = true,accessMode = '1', typeId = 97 }
    _classInfo1328.updateOnLoad = {
      name='updateOnLoad', staticFlag = false, mutable = true,accessMode = '1', typeId = 15 }
+   _classInfo1328.byteCompile = {
+     name='byteCompile', staticFlag = false, mutable = true,accessMode = '1', typeId = 15 }
+   _classInfo1328.stripDebugInfo = {
+     name='stripDebugInfo', staticFlag = false, mutable = true,accessMode = '1', typeId = 15 }
    _classInfo1328.targetLuaVer = {
      name='targetLuaVer', staticFlag = false, mutable = true,accessMode = '1', typeId = 1285 }
 end

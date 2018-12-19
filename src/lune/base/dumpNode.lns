@@ -28,6 +28,8 @@ import lune.base.Parser;
 pub class dumpFilter extend Ast.Filter {
 }
 
+let mut localFilter = new dumpFilter();
+
 fn dump( prefix: str, depth: int, node: &Ast.Node, txt: str ) {
    let mut typeStr = "";
    let expType = node.get_expType();
@@ -41,7 +43,7 @@ fn dump( prefix: str, depth: int, node: &Ast.Node, txt: str ) {
 }
 
 fn filter( node: &Ast.Node, filter: &dumpFilter, prefix:str, depth:int ) {
-   node.processFilter( dumpFilter, prefix, depth );
+   node.processFilter( localFilter, prefix, depth );
 }
 
 fn getTxt( token: Parser.Token ): str {

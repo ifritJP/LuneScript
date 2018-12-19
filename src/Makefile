@@ -41,7 +41,7 @@ define cutMeta
 endef
 
 define transwork
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2)
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2 $(BYTECOMP))
 endef
 
 define exeLune
@@ -181,6 +181,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/Alge2.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/Alge3.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/Alge4.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/exp.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
@@ -256,9 +257,11 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,-u SAVE ../4,)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
 
+ifeq ($(MAKECMDGOALS),test-comp2)
 ifdef LUA51
 ifneq ($(shell which $(LUA51)),)
 	$(MAKE) test-lua51
+endif
 endif
 endif
 
@@ -269,6 +272,16 @@ endif
 	$(MAKE) check-meta-format
 
 # diff で、修正前と修正後の差分がないことを確認
+	$(MAKE) diff-result
+
+ifdef LUA51
+	$(MAKE) accept-package ACCEPT=y ENABLE_LUA51=$(shell which $(LUA51))
+else
+	$(MAKE) accept-package ACCEPT=y
+endif
+
+
+diff-result:
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
@@ -276,11 +289,6 @@ endif
 	diff work/1/start.dep work/3/start.dep
 	diff -r work/glue work/newglue
 
-ifdef LUA51
-	$(MAKE) accept-package ACCEPT=y ENABLE_LUA51=$(shell which $(LUA51))
-else
-	$(MAKE) accept-package ACCEPT=y
-endif
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行

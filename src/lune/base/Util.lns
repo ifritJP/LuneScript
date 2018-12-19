@@ -82,9 +82,9 @@ pub fn profile( validTest:bool, func: form, path: str ): stem! {
    }
 
    module ProFi require 'ProFi' {
-      pub static fn start();
-      pub static fn stop();
-      pub static fn writeReport(arg:str);
+      pub fn start();
+      pub fn stop();
+      pub fn writeReport(arg:str);
    }
 
    ProFi.start();

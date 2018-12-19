@@ -45,6 +45,7 @@ function dumpFilter:__init(  )
    Ast.Filter.__init( self )
 end
 
+local localFilter = dumpFilter.new()
 local function dump( prefix, depth, node, txt )
 
    local typeStr = ""
@@ -58,7 +59,7 @@ end
 
 local function filter( node, filter, prefix, depth )
 
-   node:processFilter( dumpFilter, prefix, depth )
+   node:processFilter( localFilter, prefix, depth )
 end
 
 local function getTxt( token )

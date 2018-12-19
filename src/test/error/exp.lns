@@ -1,0 +1,33 @@
+{
+   print( oStream ); // error
+   let val = oStream; // error
+}
+
+{
+   fn func() {
+   }
+   
+   print( func() );  // error
+   let val = func();  // error
+
+   if func() { // error
+   }
+
+   if not func() { // error
+   }
+}
+
+{
+   fn func2():__ {
+      while true {
+      }  
+   }  
+   print( func2() );  // error
+   let val2 = func2(); // error
+
+   if func2() { // error
+   }
+   if not func2() { // error
+   }
+}
+

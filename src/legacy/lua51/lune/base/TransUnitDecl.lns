@@ -1698,7 +1698,7 @@ fn TransUnit.analyzeDeclFunc(
          self.addErrMess( token.pos, "abstract method can't have body." );
       }
 
-      let __func__Symbol = funcBodyScope.addLocalVar(
+      funcBodyScope.addLocalVar(
          false, false, "__func__", Ast.builtinTypeString, false );
       self.has__func__Symbol = false;
 
@@ -1869,8 +1869,8 @@ fn TransUnit.analyzeLetAndInitExp(
       foreach exp, index in expList.$expList {
          if not exp.canBeRight() {
             self.addErrMess( exp.$pos,
-                             "this node can not be r-value. -- %s"
-                             (Ast.getNodeKindName( exp.$kind ) ) );
+                             "this node(%d) can not be r-value. -- %s"
+                             (index, Ast.getNodeKindName( exp.$kind ) ) );
          }
       }
 

@@ -97,10 +97,10 @@ local function profile( validTest, func, path )
    end
    
    local ProFi = require( 'ProFi' )
-   ProFi.start(  )
+   ProFi:start(  )
    local result = func(  )
-   ProFi.stop(  )
-   ProFi.writeReport( path )
+   ProFi:stop(  )
+   ProFi:writeReport( path )
    return result
 end
 _moduleObj.profile = profile

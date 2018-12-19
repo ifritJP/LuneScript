@@ -941,6 +941,7 @@ fn TransUnit.registBuiltInScope() mut {
             "gmatch": { "arg": [ "str", "str" ], "ret": ["form", "stem!", "stem!"] },
             "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str"] },
             "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
+            "dump": { "arg": [ "form", "bool!" ], "ret": ["str"] },
          },
       },
       { 
@@ -957,7 +958,7 @@ fn TransUnit.registBuiltInScope() mut {
       { 
          "List": {
             "insert": { "type": [ "mut" ], "arg": [ "&stem" ], "ret": [""] },
-            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": [""] },
+            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["stem!"] },
             "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          },
       },

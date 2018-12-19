@@ -82,7 +82,7 @@ function dummyFront:loadMeta( importModuleInfo, mod )
 
    error( "not implements" )
 end
-function dummyFront:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
+function dummyFront:loadFromLnsTxt( importModuleInfo, name, txt )
 
    error( "not implements" )
 end
@@ -120,9 +120,9 @@ local function loadModule( mod )
    return __luneScript:loadModule( mod )
 end
 _moduleObj.loadModule = loadModule
-local function loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
+local function loadFromLnsTxt( importModuleInfo, name, txt )
 
-   return __luneScript:loadFromLnsTxt( importModuleInfo, name, txt, onlyMeta )
+   return __luneScript:loadFromLnsTxt( importModuleInfo, name, txt )
 end
 _moduleObj.loadFromLnsTxt = loadFromLnsTxt
 local function loadMeta( importModuleInfo, mod )
