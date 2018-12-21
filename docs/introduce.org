@@ -42,6 +42,8 @@ LuneScript は、次の特徴を持ちます。
 - 既存の Lua の外部モジュールを LuneScript から利用可能。
 - LuneScript は Lua 上で動作し、Lua 標準モジュール以外を必要としないため、導入が簡単。
 - *Lua5.1*, Lua5.2, 5.3 をサポート。 (追記: 12/18)
+  - Lua5.1 については次を参照してください。
+  - https://qiita.com/dwarfJP/items/c6b7e8281ffe948dc10b  
 - LuneScript はセルフホスティングで開発している。
 
 * LuneScript の使用方法
@@ -50,9 +52,15 @@ LuneScript は github で開発しています。
   
 https://github.com/ifritJP/LuneScript
 
-開発中なためインストール手段を用意していませんが、
-前述の通り LuneScript は単なる Lua なので、
-src/lune/base/ 以下のスクリプトを適宜コピーするだけで動きます。
++開発中なためインストール手段を用意していませんが、+
++前述の通り LuneScript は単なる Lua なので、
+src/lune/base/ 以下のスクリプトを適宜コピーするだけで動きます。+
+
+*2018/12/21 追記*
+
+導入方法は次を参照してください。
+
+https://qiita.com/dwarfJP/items/584dae280e76e458194b
 
 ** コマンド
 
