@@ -93,6 +93,11 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
                accessMode, self.getCurrentClass(),
                [ genericList[1] ] or [ Ast.builtinTypeStem ] );
          }
+         elseif typeInfo.$kind == .Array {
+            typeInfo = Ast.NormalTypeInfo.createArray(
+               accessMode, self.getCurrentClass(),
+               [ genericList[1] ] or [ Ast.builtinTypeStem ] );
+         }
          else {
             self.error( string.format( "not support generic: %s",
                                        typeInfo.getTxt() ) );

@@ -2729,6 +2729,8 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
             typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), genericList[1] or Ast.builtinTypeStem, genericList[2] or Ast.builtinTypeStem )
          elseif typeInfo:get_kind() == Ast.TypeInfoKind.List then
             typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
+         elseif typeInfo:get_kind() == Ast.TypeInfoKind.Array then
+            typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
          else
           
             self:error( string.format( "not support generic: %s", typeInfo:getTxt(  ) ) )
