@@ -309,7 +309,7 @@ function TransUnit:__init(importModuleInfo, macroEval, analyzeModule, mode, pos,
    self.importModuleInfo = importModuleInfo
    self.protoFuncMap = {}
    self.loopScopeQueue = {}
-   self.has__func__Symbol = false
+   self.has__func__Symbol = {}
    self.nodeManager = Ast.NodeManager.new()
    self.importModuleName2ModuleInfo = {}
    self.importModule2ModuleInfoCurrent = {}
@@ -1917,6 +1917,7 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
 end
 
 function TransUnit:processImport( modulePath, moduleInfoMap )
+   local __func__ = 'TransUnit.processImport'
 
    if not self.importModuleInfo:add( modulePath ) then
       self:error( string.format( "recursive import: %s -> %s", self.importModuleInfo:getFull(  ), modulePath) )
@@ -4179,7 +4180,6 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       end
       
       funcBodyScope:addLocalVar( false, false, "__func__", Ast.builtinTypeString, false )
-      self.has__func__Symbol = false
       if classTypeInfo ~= nil then
          do
             local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope )
@@ -4237,7 +4237,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    if needNode then
-      local info = Ast.DeclFuncInfo.new(classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, self.has__func__Symbol)
+      local info = Ast.DeclFuncInfo.new(classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, self.has__func__Symbol[typeInfo] ~= nil)
       do
          local _switchExp = (kind )
          if _switchExp == Ast.NodeKind.get_DeclConstr() then
@@ -4256,6 +4256,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
    end
    
+   self.has__func__Symbol[typeInfo] = nil
    self:popScope(  )
    if needPopFlag then
       self:addMethod( _lune.unwrap( classTypeInfo), node, funcName )
@@ -5796,7 +5797,8 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
          end
          
          if token.txt == "__func__" then
-            self.has__func__Symbol = true
+            local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
+            self.has__func__Symbol[funcTypeInfo] = true
          end
          
          exp = Ast.ExpRefNode.create( self.nodeManager, firstToken.pos, {typeInfo}, token, Ast.AccessSymbolInfo.new(symbolInfo, nil, true) )

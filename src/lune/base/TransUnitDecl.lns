@@ -1705,7 +1705,7 @@ fn TransUnit.analyzeDeclFunc(
 
       funcBodyScope.addLocalVar(
          false, false, "__func__", Ast.builtinTypeString, false );
-      self.has__func__Symbol = false;
+      //self.has__func__Symbol = false;
 
 
       when! classTypeInfo {
@@ -1761,7 +1761,7 @@ fn TransUnit.analyzeDeclFunc(
    if needNode {
       let mut info = new Ast.DeclFuncInfo(
          classTypeInfo, name, argList, orgStaticFlag, accessMode,
-         body, retTypeInfoList, self.has__func__Symbol );
+         body, retTypeInfoList, self.has__func__Symbol[ typeInfo ] ~= nil );
       // node = self.createNode( kind, firstToken.pos, [ typeInfo ], info );
 
       switch ( kind ) {
@@ -1786,6 +1786,7 @@ fn TransUnit.analyzeDeclFunc(
          }
       }
    }
+   self.has__func__Symbol[ typeInfo ] = nil;
 
    self.popScope();
 

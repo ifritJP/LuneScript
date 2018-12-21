@@ -4,7 +4,7 @@ SRC_DIR=$(PROJ_DIR)/
 
 
 
-.PHONY: test
+.PHONY: test all build setup
 
 # define comp
 # 	@echo "$1 -> $2"
@@ -41,6 +41,7 @@ LUA_LIST=$(SRCS:.lns=.lua)
 all:
 	@echo make setup
 	@echo make build
+	@echo make test
 
 setup:
 	mkdir -p depends

@@ -115,7 +115,7 @@ pub class TransUnit {
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
 
-   pri let mut has__func__Symbol: bool;
+   pri let mut has__func__Symbol: Map<&Ast.TypeInfo,bool>;
 
    /** 解析モード */
    pri let analyzeMode: AnalyzeMode;
@@ -152,7 +152,7 @@ pub class TransUnit {
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
       self.loopScopeQueue = [];
-      self.has__func__Symbol = false;
+      self.has__func__Symbol = {};
       self.nodeManager = new Ast.NodeManager();
       self.importModuleName2ModuleInfo = {};
       self.importModule2ModuleInfoCurrent = {};

@@ -10,7 +10,6 @@
 
 - [ ] enum 値を追加した時、その enum 側を利用している switch などを簡単にチェックできる機能を追加する。
 - [ ] autocomplete で、処理中に次を処理して重くなる。
-- [ ] __func__ が nil になることがある。
 - [ ] map の型宣言で、 value の型宣言しなくてもエラーにならない。 Map<int> ができてしまう。
 - [ ] getter を省略して setter だけ生成できるように
 - [ ] 同名のメソッドを持つメンバを複数 advertise したときの動作が未定義。
@@ -155,6 +154,7 @@
 - [X] import 処理で lns ソースを解析する際、TypeId の IdProvider が同じものなので、
       TypeId の整合性が取れないことがある。
       import 時の typeId のリセット
+- [X] __func__ が nil になることがある。
 
 
 * ドキュメント

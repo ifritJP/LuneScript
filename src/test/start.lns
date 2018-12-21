@@ -541,6 +541,9 @@ class TestDest {
    let mut val:int;
    pub fn __init( val:int ) {
       self.val = val;
+      fn inner() {
+         print( "%s" (__func__) );
+      }
       print( "%s" (__func__) );
    }
    fn __free() {                                        // skip-lua51
