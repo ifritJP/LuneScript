@@ -1,12 +1,23 @@
-PROJ_ROOT=test/proj
+PROJ_DIR=test/proj
+MKFILE=$(PROJ_DIR)/Makefile
+SRC_DIR=$(PROJ_DIR)/
 
+
+
+.PHONY: test
+
+# define comp
+# 	@echo "$1 -> $2"
+# 	lnsc $1 --depends depends/$(shell echo $1 | sed 's@/@.@g').d SAVE
+# endef
 
 define comp
 	@echo "$1 -> $2"
-	@(cd ../..; lua5.3 lune/base/base.lua $(PROJ_ROOT)/$1 --depends $(PROJ_ROOT)/depends/$1.d.tmp SAVE)
-	@cat depends/$1.d.tmp | sed 's@$(PROJ_ROOT)/@@g' > depends/$1.d
+	@(cd ../..; lua5.3 lune/base/base.lua $(PROJ_DIR)/$1 --depends $(PROJ_DIR)/depends/$1.d.tmp SAVE)
+	@cat depends/$1.d.tmp | sed 's@$(PROJ_DIR)/@@g' > depends/$1.d
 	@rm depends/$1.d.tmp
 endef
+
 
 
 %.meta: %.lns
@@ -17,7 +28,9 @@ SRCS += Mod1.lns
 SRCS += Mod2.lns
 SRCS += Mod3.lns
 SRCS += Mod4.lns
-#SRCS := $(addprefix $(PROJ_ROOT)/,$(SRCS))
+
+SRCS := $(addprefix $(SRC_DIR),$(SRCS))
+
 
 META_LIST=$(SRCS:.lns=.meta)
 LUA_LIST=$(SRCS:.lns=.lua)
@@ -40,15 +53,16 @@ clean:
 
 
 test:
+	@$(MAKE) -f $(MKFILE) setup
 	@echo =======================
-	touch Mod4.lns
-	@$(MAKE) build
+	touch $(SRC_DIR)Mod4.lns
+	@$(MAKE) -f $(MKFILE) build
 	@echo =======================
-	touch Mod3.lns
-	@$(MAKE) build
+	touch $(SRC_DIR)Mod3.lns
+	@$(MAKE) -f $(MKFILE) build
 	@echo =======================
-	touch Mod2.lns
-	@$(MAKE) build
+	touch $(SRC_DIR)Mod2.lns
+	@$(MAKE) -f $(MKFILE) build
 	@echo =======================
-	touch Mod1.lns
-	@$(MAKE) build
+	touch $(SRC_DIR)Mod1.lns
+	@$(MAKE) -f $(MKFILE) build
