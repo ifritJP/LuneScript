@@ -1,0 +1,3 @@
+pub fn func(): str {
+   return __func__;
+}

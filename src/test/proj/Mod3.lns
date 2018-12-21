@@ -1,0 +1,5 @@
+import test.proj.Mod4;
+
+pub fn func(): str {
+   return "%s -> %s" (__func__, Mod4.func() );
+}

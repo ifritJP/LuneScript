@@ -1,1 +1,6 @@
 src/work
+src/test/proj/*.meta
+src/test/proj/*.lua
+src/test/proj/depends/*.d
+src/test/start.lua
+src/test/glueTest*.so

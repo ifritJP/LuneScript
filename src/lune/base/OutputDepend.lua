@@ -35,13 +35,13 @@ end
 function convFilter:processRoot( node, parent )
 
    local moduleFull = node:get_moduleTypeInfo():getFullName( {} )
-   self.stream:write( string.format( "%s.lua: \\\n", moduleFull:gsub( "%.", "/" )) )
+   self.stream:write( string.format( "%s.meta: \\\n", moduleFull:gsub( "%.", "/" )) )
    self.stream:write( string.format( "  %s.lns \\\n", moduleFull:gsub( "%.", "/" )) )
    do
       local importList = node:get_nodeManager():getImportNodeList(  )
       if importList ~= nil then
          for __index, impNode in pairs( importList ) do
-            self.stream:write( string.format( "  %s.lua \\\n", impNode:get_modulePath():gsub( "%.", "/" )) )
+            self.stream:write( string.format( "  %s.meta \\\n", impNode:get_modulePath():gsub( "%.", "/" )) )
          end
          
       end

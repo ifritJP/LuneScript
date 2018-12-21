@@ -42,11 +42,11 @@ pub override fn convFilter.processRoot(
    node: Ast.RootNode, parent: &Ast.Node ) mut
 {
    let moduleFull = node.$moduleTypeInfo.getFullName( {} );
-   self.stream.write( "%s.lua: \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
+   self.stream.write( "%s.meta: \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
    self.stream.write( "  %s.lns \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
    if! let importList = node.$nodeManager.getImportNodeList() {
       foreach impNode in importList {
-         self.stream.write( "  %s.lua \\\n" (impNode.$modulePath.gsub("%.", "/")) );
+         self.stream.write( "  %s.meta \\\n" (impNode.$modulePath.gsub("%.", "/")) );
       }
    }
    if! let subfileList = node.$nodeManager.getSubfileNodeList() {
