@@ -24,6 +24,22 @@ SOFTWARE.
 
 import lune.base.Util;
 
+pub class ModuleId {
+   let idStr:str {pub};
+   pub static let tempId:ModuleId;
+
+   _lune_control default__init;
+   
+   __init {
+      ModuleId.tempId = new ModuleId( "0:0" );
+   }
+}
+pub static fn ModuleId.createId( modTime:real, buildCount:int ):ModuleId {
+   return new ModuleId( "%g:%d" (modTime, buildCount ) );
+}
+
+
+
 /**
 インポートしたモジュールを管理する。
 */

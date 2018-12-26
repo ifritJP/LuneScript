@@ -115,7 +115,7 @@ pub class TransUnit {
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
 
-   pri let mut has__func__Symbol: bool;
+   pri let mut has__func__Symbol: Map<&Ast.TypeInfo,bool>;
 
    /** 解析モード */
    pri let analyzeMode: AnalyzeMode;
@@ -142,17 +142,21 @@ pub class TransUnit {
 
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
 
-   pub fn __init( importModuleInfo:frontInterface.ImportModuleInfo,
+   pri let moduleId:frontInterface.ModuleId;
+
+   pub fn __init( moduleId:&frontInterface.ModuleId,
+                  importModuleInfo:frontInterface.ImportModuleInfo,
                   macroEval: Ast.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo )
    {
+      self.moduleId = moduleId;
       self.helperInfo = new Ast.LuneHelperInfo(
          false, false, false, false, false, false );
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
       self.loopScopeQueue = [];
-      self.has__func__Symbol = false;
+      self.has__func__Symbol = {};
       self.nodeManager = new Ast.NodeManager();
       self.importModuleName2ModuleInfo = {};
       self.importModule2ModuleInfoCurrent = {};
@@ -930,6 +934,7 @@ fn TransUnit.registBuiltInScope() mut {
             "date": {"arg": [ "str!", "stem!" ], "ret": [ "stem!"] },
             "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
             "difftime": {"arg": [ "stem", "stem" ], "ret": [ "int"] },
+            "rename": {"arg": [ "str", "str" ], "ret": [ "stem!", "str!"] },
          },
       },
       { 
@@ -1443,8 +1448,7 @@ fn TransUnit.analyzeLuneControl( firstToken: &Parser.Token ) mut {
          self.validMutControl = false;
       } 
       default {
-         self.addErrMess(
-            nextToken.pos, "unknown option -- %s" (nextToken.txt) );
+         self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );
       } 
    }
    self.checkNextToken( ";" );

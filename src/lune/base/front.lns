@@ -34,6 +34,8 @@ import lune.base.Depend;
 import lune.base.OutputDepend;
 import lune.base.Ver;
 
+let forceUpdateMeta = true;
+
 global fn _luneGetLocal( varName:str ):stem!
 {
    let mut index = 1;
@@ -136,6 +138,7 @@ fn Front.createAst( importModuleInfo:frontInterface.ImportModuleInfo,
                     pos:&Parser.Position! ): &TransUnit.ASTInfo
 {
    let mut transUnit = new TransUnit.TransUnit(
+      frontInterface.ModuleId.createId( 0.0, 0 ),
       importModuleInfo, new convLua.MacroEvalImp( self.option.mode ),
       analyzeModule, analyzeMode, pos, self.option.targetLuaVer );
    return transUnit.createAST( parser, false, mod );
@@ -192,6 +195,7 @@ fn Front.loadFromLnsTxt(
    name:str, txt:str ): &stem, stem
 {
    let mut transUnit = new TransUnit.TransUnit(
+      frontInterface.ModuleId.tempId,
       importModuleInfo, new convLua.MacroEvalImp( self.option.mode ),
       nil, nil, nil, self.option.targetLuaVer );
    let mut stream = new Parser.TxtStream( txt );
@@ -214,7 +218,8 @@ fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
    let mut metaTxt, luaTxt = self.convertFromAst( ast, path, convMode );
 
    if self.option.updateOnLoad {
-      fn saveFile( suffix:str, txt:str, byteCompile:bool, stripDebugInfo:bool ){
+      fn saveFile( suffix:str, txt:str, byteCompile:bool,
+                   stripDebugInfo:bool, checkUpdate:bool ){
          let mut newpath = "";
          if! let dir = self.option.outputDir {
             newpath = "%s/%s%s" ( dir, mod.gsub( "%.", "/" ), suffix );
@@ -222,17 +227,27 @@ fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
          else {
             newpath = path.gsub( ".lns$", suffix );
          }
-         if! let mut fileObj = io.open( newpath, "w" ) {
-            let mut saveTxt = txt;
-            if byteCompile {
-               saveTxt = byteCompileFromLuaTxt( saveTxt, stripDebugInfo );
+         let mut saveTxt = txt;
+         if byteCompile {
+            saveTxt = byteCompileFromLuaTxt( saveTxt, stripDebugInfo );
+         }
+         if not forceUpdateMeta and checkUpdate {
+            if! let mut fileObj = io.open( newpath ) {
+               let oldTxt = fileObj.read( "*a" );
+               if saveTxt == oldTxt {
+                  // 同じ場合はセーブしない
+                  return;
+               }
             }
+         }
+         if! let mut fileObj = io.open( newpath, "w" ) {
             fileObj.write( saveTxt );
             fileObj.close();
          }
       }
-      saveFile( ".lua", luaTxt, self.option.byteCompile, self.option.stripDebugInfo );
-      saveFile( ".meta", metaTxt, self.option.byteCompile, true );
+      saveFile( ".lua", luaTxt, self.option.byteCompile,
+                self.option.stripDebugInfo, false );
+      saveFile( ".meta", metaTxt, self.option.byteCompile, true, true );
    }
 
    let mut meta = loadFromLuaTxt( metaTxt );
@@ -530,12 +545,13 @@ pub fn Front.saveToLua() mut {
             };
 	    let mut stream:oStream = fileObj;
 
-	    let mut metaFileObj:oStream! = nil;
+	    let mut metaFileObj:luaStream! = nil;
 	    let mut metaStream:oStream = stream;
             let mut convMode = convLua.ConvMode.Convert;
+            let tempMetaPath = metaPath .. ".tmp";
 	    if self.option.mode == "SAVE" {
                convMode = .ConvMeta;
-               if! io.open( metaPath, "w" ) {
+               if! io.open( tempMetaPath, "w+" ) {
                   metaFileObj = _exp;
 		  metaStream = _exp;
                }
@@ -550,8 +566,22 @@ pub fn Front.saveToLua() mut {
                stream, metaStream, self.option.dependsStream );
             
 	    fileObj.close();
-	    when! metaFileObj {     
+	    when! metaFileObj {
+               metaFileObj.flush();
+               metaFileObj.seek( "set", 0 );
+               let oldMetaTxt = metaFileObj.read( "*a" );
 	       metaFileObj.close();
+               let mut newMetaTxt = "";
+               if! let mut oldFileObj = io.open( metaPath ) {
+                  newMetaTxt = unwrap oldFileObj.read( "*a" ) default "";
+                  oldFileObj.close();
+               }
+               if forceUpdateMeta or newMetaTxt ~= oldMetaTxt {
+                  os.rename( tempMetaPath, metaPath );
+               }
+               else {
+                  os.remove( tempMetaPath );
+               }
 	    }
          }
       }, self.option.scriptPath .. ".profi" );

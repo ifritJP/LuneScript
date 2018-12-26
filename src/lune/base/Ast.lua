@@ -26,6 +26,7 @@ end
 
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
+local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local IdProvider = {}
 _moduleObj.IdProvider = IdProvider
 function IdProvider:increment(  )

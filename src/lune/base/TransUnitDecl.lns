@@ -918,6 +918,49 @@ fn TransUnit.analyzeDeclMethod(
    return node;
 }
 
+fn TransUnit.addDefaultConstructor(
+   pos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, classScope:Ast.Scope,
+   memberNodeList:&List<&Ast.DeclMemberNode>, methodNameSet:Map<str,bool> ) mut
+{
+   if classScope.getTypeInfoChild( "__init" ) {
+      self.addErrMess( pos, "already declare __init()." );
+   }
+   
+   if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
+      let superScope = unwrap classTypeInfo.$baseTypeInfo.$scope;
+      let superTypeInfo = unwrap superScope.getTypeInfoChild( "__init" );
+      foreach argType in superTypeInfo.$argTypeInfoList {
+         if not argType.$nilable {
+            self.addErrMess( pos, "not found '__init' decl." );
+         }
+      }
+   }
+
+   let mut memberTypeList:List<&Ast.TypeInfo> = [];
+   foreach memberNode in memberNodeList {
+      if not memberNode.$staticFlag {
+         memberTypeList.insert( memberNode.$expType );
+      }
+   }
+   
+   // デフォルトコンストラクタの登録
+   let initTypeInfo = Ast.NormalTypeInfo.createFunc(
+      false, false, self.pushScope( false ),
+      .Method, classTypeInfo, true, false, false, .Pub,
+      "__init", memberTypeList, [] );
+   self.popScope();
+   classScope.addMethod( initTypeInfo, .Pub, false, false );
+   methodNameSet[ "__init" ] = true;
+
+   // メンバーをセット済みにする
+   foreach memberNode in memberNodeList {
+      if not memberNode.$staticFlag {
+         memberNode.$symbolInfo.set_hasValueFlag( true );
+      }
+   }
+}
+
+
 fn TransUnit.analyzeClassBody(
    classAccessMode: Ast.AccessMode, firstToken: &Parser.Token,
    mode:DeclClassMode, gluePrefix:str!, classTypeInfo: &Ast.TypeInfo,
@@ -940,6 +983,107 @@ fn TransUnit.analyzeClassBody(
    let mut declCtorNode:Ast.Node! = nil;
    let mut hasInitBlock = false;
    let mut hasStaticMember = false;
+
+   fn processLet( token:&Parser.Token, staticFlag:bool, accessMode:Ast.AccessMode ) {
+      if staticFlag {
+         hasStaticMember = true;
+      }
+      if mode == .Interface {
+         self.addErrMess( token.pos, "interface can not have member" );
+      }
+      if not staticFlag and declCtorNode {
+         self.addErrMess(
+            token.pos, "member can't declare after '__init' method." );
+      }
+      elseif staticFlag and hasInitBlock {
+         self.addErrMess(
+            token.pos, "static member can't declare after '__init' block." );
+      }
+      let memberNode = self.analyzeDeclMember(
+         classTypeInfo, accessMode, staticFlag, token );
+      fieldList.insert( memberNode );
+      memberList.insert( memberNode );
+      memberName2Node[ memberNode.$name.txt ] = memberNode;
+   }
+
+   fn processFn( token:&Parser.Token, staticFlag:bool, accessMode:Ast.AccessMode,
+                 abstractFlag:bool, overrideFlag:bool ) {
+      let nameToken = self.getSymbolToken();
+      let mut declFuncMode = DeclFuncMode.Class;
+      if mode == .Module {
+         if gluePrefix {
+            declFuncMode = .Glue;
+         }
+         else {
+            declFuncMode = .Module;
+         }
+      }
+
+      let methodNode = self.analyzeDeclMethod(
+         classTypeInfo, declFuncMode, abstractFlag, overrideFlag,
+         accessMode, staticFlag, token, nameToken );
+      fieldList.insert( methodNode );
+      methodNameSet[ nameToken.txt ] = true;
+      if nameToken.txt == "__init" {
+         declCtorNode = methodNode;
+      }
+   }
+
+   fn processInit() {
+      if mode ~= .Class {
+         self.error( "%s can not have __init method" (mode) );
+      }
+      hasInitBlock = true;
+      foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
+         if symbolInfo.$staticFlag {
+            // 一旦全てのメンバを値なし状態にセットする
+            symbolInfo.set_hasValueFlag( false );
+         }
+      }
+      
+      self.checkNextToken( "{" );
+      self.analyzeStatementList( initStmtList, "}" );
+      self.checkNextToken( "}" );
+   }
+
+   fn processAdvertise() {
+      let memberToken = self.getSymbolToken();
+      nextToken = self.getToken();
+      let mut prefix = "";
+      if nextToken.txt ~= ";" and nextToken.txt ~= "{" {
+         prefix = nextToken.txt;
+         nextToken = self.getToken();
+      }
+      self.checkToken( nextToken, ";" );
+      let! memberNode = memberName2Node[ memberToken.txt ] {
+         self.error( "not found member -- %s" (memberToken.txt) );
+      };
+      advertiseList.insert( new Ast.AdvertiseInfo( memberNode, prefix ) );
+   }
+
+   fn processEnum( token:&Parser.Token, accessMode:Ast.AccessMode ) {
+      if accessMode ~= .Pri and
+          ( classAccessMode == .Pri or classAccessMode == .Local )
+      {
+         self.addErrMess( token.pos,
+                          "unmatch access mode, class('%s') and enum('%s')"
+                          (classAccessMode.$_txt, accessMode.$_txt ) );
+      }
+      declStmtList.insert( self.analyzeDeclEnum( accessMode, token ) );
+   }
+
+   fn processLuneControl() {
+      nextToken = self.getToken();
+      if nextToken.txt == "default__init" {
+         declCtorNode = self.createNoneNode( nextToken.pos );
+         self.addDefaultConstructor(
+            nextToken.pos, classTypeInfo, self.scope, memberList, methodNameSet );
+      }
+      else {
+         self.error( "unknown option -- %s" (nextToken.txt) );
+      }
+      self.checkNextToken( ";" );
+   }
    
    while true {
       let mut token = self.getToken();
@@ -978,89 +1122,25 @@ fn TransUnit.analyzeClassBody(
           
 
       if token.txt == "let" {
-         if staticFlag {
-            hasStaticMember = true;
-         }
-         if mode == .Interface {
-            self.addErrMess( token.pos, "interface can not have member" );
-         }
-         if not staticFlag and declCtorNode {
-            self.addErrMess(
-               token.pos, "member can't declare after '__init' method." );
-         }
-         elseif staticFlag and hasInitBlock {
-            self.addErrMess(
-               token.pos, "static member can't declare after '__init' block." );
-         }
-         let memberNode = self.analyzeDeclMember(
-            classTypeInfo, accessMode, staticFlag, token );
-         fieldList.insert( memberNode );
-         memberList.insert( memberNode );
-         memberName2Node[ memberNode.$name.txt ] = memberNode;
+         processLet( token, staticFlag, accessMode );
       }
       elseif token.txt == "fn" {
-         let nameToken = self.getSymbolToken();
-         let mut declFuncMode = DeclFuncMode.Class;
-         if mode == .Module {
-            if gluePrefix {
-               declFuncMode = .Glue;
-            }
-            else {
-               declFuncMode = .Module;
-            }
-         }
-
-         let methodNode = self.analyzeDeclMethod(
-            classTypeInfo, declFuncMode, abstractFlag, overrideFlag,
-            accessMode, staticFlag, token, nameToken );
-         fieldList.insert( methodNode );
-         methodNameSet[ nameToken.txt ] = true;
-         if nameToken.txt == "__init" {
-            declCtorNode = methodNode;
-         }
+         processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
       }
       elseif token.txt == "__init" {
-         if mode ~= .Class {
-            self.error( "%s can not have __init method" (mode) );
-         }
-         hasInitBlock = true;
-         foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
-            if symbolInfo.$staticFlag {
-               // 一旦全てのメンバを値なし状態にセットする
-               symbolInfo.set_hasValueFlag( false );
-            }
-         }
-         
-         self.checkNextToken( "{" );
-         self.analyzeStatementList( initStmtList, "}" );
-         self.checkNextToken( "}" );
+         processInit();
       }
       elseif token.txt == "advertise" {
-         let memberToken = self.getSymbolToken();
-         nextToken = self.getToken();
-         let mut prefix = "";
-         if nextToken.txt ~= ";" and nextToken.txt ~= "{" {
-            prefix = nextToken.txt;
-            nextToken = self.getToken();
-         }
-         self.checkToken( nextToken, ";" );
-         let! memberNode = memberName2Node[ memberToken.txt ] {
-            self.error( "not found member -- %s" (memberToken.txt) );
-         };
-         advertiseList.insert( new Ast.AdvertiseInfo( memberNode, prefix ) );
+         processAdvertise();
       }
       elseif token.txt == ";" {
       }
       elseif token.txt == "enum" {
-         if accessMode ~= .Pri and
-             ( classAccessMode == .Pri or classAccessMode == .Local )
-         {
-            self.addErrMess( token.pos,
-                             "unmatch access mode, class('%s') and enum('%s')"
-                             (classAccessMode.$_txt, accessMode.$_txt ) );
-         }
-         declStmtList.insert( self.analyzeDeclEnum( accessMode, token ) );
+         processEnum( token, accessMode );
       }
+      elseif token.txt == "_lune_control" {
+         processLuneControl();
+      }  
       else {
          self.error( "illegal field" );
       }
@@ -1165,14 +1245,9 @@ fn TransUnit.analyzeDeclClass(
 
    let parentInfo = classTypeInfo;
 
-   let mut memberTypeList:List<&Ast.TypeInfo> = [];
-
    // accessor の生成
    foreach memberNode in node.$memberList {
       let memberType = memberNode.$expType;
-      if not memberNode.$staticFlag {
-         memberTypeList.insert( memberType );
-      }
       let memberName = memberNode.$name;
       // getter
       let getterName = "get_" .. memberName.txt;
@@ -1218,31 +1293,8 @@ fn TransUnit.analyzeDeclClass(
       ctorAccessMode = ctorTypeInfo.$accessMode;
    }
    else {
-      if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
-         let superScope = unwrap classTypeInfo.$baseTypeInfo.$scope;
-         let superTypeInfo = unwrap superScope.getTypeInfoChild( "__init" );
-         foreach argType in superTypeInfo.$argTypeInfoList {
-            if not argType.$nilable {
-               self.addErrMess( firstToken.pos, "not found '__init' decl." );
-            }
-         }
-      }
-      
-      // デフォルトコンストラクタの登録
-      let initTypeInfo = Ast.NormalTypeInfo.createFunc(
-         false, false, self.pushScope( false ),
-         .Method, parentInfo, true, false, false, .Pub,
-         "__init", memberTypeList, [] );
-      self.popScope();
-      classScope.addMethod( initTypeInfo, .Pub, false, false );
-      methodNameSet[ "__init" ] = true;
-
-      // メンバーをセット済みにする
-      foreach memberNode in node.$memberList {
-         if not memberNode.$staticFlag {
-            memberNode.$symbolInfo.set_hasValueFlag( true );
-         }
-      }
+      self.addDefaultConstructor(
+         firstToken.pos, classTypeInfo, classScope, node.$memberList, methodNameSet );
    }
 
 
@@ -1606,7 +1658,7 @@ fn TransUnit.analyzeDeclFunc(
          let matchFlag, err = Ast.TypeInfo.checkMatchType(
             prottype.$argTypeInfoList, argTypeList, false );
          if not matchFlag {
-            self.addErrMess( name.pos, err );
+            self.addErrMess( name.pos, "mismatch functype: " .. err );
          }
 
          if self.protoFuncMap[ prottype ] {

@@ -570,6 +570,9 @@ pub override fn dumpFilter.processLiteralString(
    node: &Ast.LiteralStringNode, prefix: str, depth: int ) mut
 {
    dump( prefix, depth, node, node.get_token().txt );
+   foreach param in node.$argList {
+      filter( param, self, prefix .. "  ", depth + 1 );
+   }
 };  
 pub override fn dumpFilter.processLiteralBool( 
    node: &Ast.LiteralBoolNode, prefix: str, depth: int ) mut

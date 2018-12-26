@@ -12,6 +12,35 @@ function _lune.loadModule( mod )
 end
 
 local Util = _lune.loadModule( 'lune.base.Util' )
+local ModuleId = {}
+_moduleObj.ModuleId = ModuleId
+function ModuleId.setmeta( obj )
+  setmetatable( obj, { __index = ModuleId  } )
+end
+function ModuleId.new( idStr )
+   local obj = {}
+   ModuleId.setmeta( obj )
+   if obj.__init then
+      obj:__init( idStr )
+   end        
+   return obj 
+end         
+function ModuleId:__init( idStr ) 
+
+   self.idStr = idStr
+end
+function ModuleId:get_idStr()       
+   return self.idStr         
+end
+do
+   ModuleId.tempId = ModuleId.new("0:0")
+end
+
+function ModuleId.createId( modTime, buildCount )
+
+   return ModuleId.new(string.format( "%g:%d", modTime, buildCount))
+end
+
 local ImportModuleInfo = {}
 _moduleObj.ImportModuleInfo = ImportModuleInfo
 function ImportModuleInfo.new(  )

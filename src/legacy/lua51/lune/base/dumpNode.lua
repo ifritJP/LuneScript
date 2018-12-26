@@ -722,6 +722,10 @@ end
 function dumpFilter:processLiteralString( node, prefix, depth )
 
    dump( prefix, depth, node, node:get_token(  ).txt )
+   for __index, param in pairs( node:get_argList() ) do
+      filter( param, self, prefix .. "  ", depth + 1 )
+   end
+   
 end
 
 

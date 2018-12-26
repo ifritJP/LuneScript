@@ -8,6 +8,28 @@
 
 * 機能
 
+ビルドの条件
+
+#+BEGIN_SRC txt
+mod1.meta: mod1.lns mod2.meta
+#+END_SRC
+
+上記依存関係の時、次のいずれかの条件が成立する時に meta ファイルを更新する。
+
+- 更新時間が mod1.lns > mod1.meta
+- 更新時間が mod2.meta > mod1.meta かつ、
+  mod2.meta 内の ID が、 mod1.meta 内に保持している mod2.meta の ID と異なる。
+  
+meta ファイル内に、ビルド時の lns ファイルの更新時間と、ビルド回数から ID を生成する。
+
+  ID = "lnsファイルの更新時間"."ビルド回数"
+
+
+
+mod2.meta: mod2.lns
+
+  
+- [ ] __init ブロック内で、プロトタイプ宣言している static メソッドを使うと nil エラー。
 - [ ] enum 値を追加した時、その enum 側を利用している switch などを簡単にチェックできる機能を追加する。
 - [ ] autocomplete で、処理中に次を処理して重くなる。
 - [ ] map の型宣言で、 value の型宣言しなくてもエラーにならない。 Map<int> ができてしまう。
@@ -171,6 +193,12 @@
 - [X] module 宣言したモジュールの glue コード自動生成
 - [X] enum の全要素リストを取れるようにする。
 - [X] bool 値との比較演算
+- [X] クラス宣言のメソッド内から、自分自身のクラスを new できない。 
+      メソッドの分離定義すると new できる。
+      デフォルトコンストラクタを使用することを宣言できるようにする。
+   
+     
+      
   
   
 
@@ -199,7 +227,7 @@
 - [X] import, provide
 - [X] require, module
 - [X] macro
-- [ ] make
+- [X] make
 
 - [ ] LuneScript を作ってみての感想
       - こんな機能が欲しかった

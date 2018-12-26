@@ -297,19 +297,20 @@ AnalyzeMode.__allList[3] = AnalyzeMode.Complete
 
 local TransUnit = {}
 _moduleObj.TransUnit = TransUnit
-function TransUnit.new( importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer )
+function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer )
    local obj = {}
    TransUnit.setmeta( obj )
-   if obj.__init then obj:__init( importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer ); end
+   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer ); end
    return obj
 end
-function TransUnit:__init(importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer) 
+function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer) 
+   self.moduleId = moduleId
    self.helperInfo = Ast.LuneHelperInfo.new(false, false, false, false, false, false)
    self.targetLuaVer = targetLuaVer
    self.importModuleInfo = importModuleInfo
    self.protoFuncMap = {}
    self.loopScopeQueue = {}
-   self.has__func__Symbol = false
+   self.has__func__Symbol = {}
    self.nodeManager = Ast.NodeManager.new()
    self.importModuleName2ModuleInfo = {}
    self.importModule2ModuleInfoCurrent = {}
@@ -1367,7 +1368,7 @@ function TransUnit:registBuiltInScope(  )
    end
    
    readyBuiltin = true
-   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"stem!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}}}, {["Array"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
+   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"stem!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}}}, {["Array"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
    local function getTypeInfo( typeName )
    
       local mutable = true
@@ -1917,6 +1918,7 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
 end
 
 function TransUnit:processImport( modulePath, moduleInfoMap )
+   local __func__ = 'TransUnit.processImport'
 
    if not self.importModuleInfo:add( modulePath ) then
       self:error( string.format( "recursive import: %s -> %s", self.importModuleInfo:getFull(  ), modulePath) )
@@ -3464,6 +3466,45 @@ function TransUnit:analyzeDeclMethod( classTypeInfo, declFuncMode, abstractFlag,
    return node
 end
 
+function TransUnit:addDefaultConstructor( pos, classTypeInfo, classScope, memberNodeList, methodNameSet )
+
+   if classScope:getTypeInfoChild( "__init" ) then
+      self:addErrMess( pos, "already declare __init()." )
+   end
+   
+   if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
+      local superScope = _lune.unwrap( classTypeInfo:get_baseTypeInfo():get_scope())
+      local superTypeInfo = _lune.unwrap( superScope:getTypeInfoChild( "__init" ))
+      for __index, argType in pairs( superTypeInfo:get_argTypeInfoList() ) do
+         if not argType:get_nilable() then
+            self:addErrMess( pos, "not found '__init' decl." )
+         end
+         
+      end
+      
+   end
+   
+   local memberTypeList = {}
+   for __index, memberNode in pairs( memberNodeList ) do
+      if not memberNode:get_staticFlag() then
+         table.insert( memberTypeList, memberNode:get_expType() )
+      end
+      
+   end
+   
+   local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "__init", memberTypeList, {} )
+   self:popScope(  )
+   classScope:addMethod( initTypeInfo, Ast.AccessMode.Pub, false, false )
+   methodNameSet["__init"] = true
+   for __index, memberNode in pairs( memberNodeList ) do
+      if not memberNode:get_staticFlag() then
+         memberNode:get_symbolInfo():set_hasValueFlag( true )
+      end
+      
+   end
+   
+end
+
 function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
 
    local memberName2Node = {}
@@ -3479,6 +3520,116 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    local declCtorNode = nil
    local hasInitBlock = false
    local hasStaticMember = false
+   local function processLet( token, staticFlag, accessMode )
+   
+      if staticFlag then
+         hasStaticMember = true
+      end
+      
+      if mode == DeclClassMode.Interface then
+         self:addErrMess( token.pos, "interface can not have member" )
+      end
+      
+      if not staticFlag and declCtorNode then
+         self:addErrMess( token.pos, "member can't declare after '__init' method." )
+      elseif staticFlag and hasInitBlock then
+         self:addErrMess( token.pos, "static member can't declare after '__init' block." )
+      end
+      
+      local memberNode = self:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, token )
+      table.insert( fieldList, memberNode )
+      table.insert( memberList, memberNode )
+      memberName2Node[memberNode:get_name().txt] = memberNode
+   end
+   
+   local function processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag )
+   
+      local nameToken = self:getSymbolToken(  )
+      local declFuncMode = DeclFuncMode.Class
+      if mode == DeclClassMode.Module then
+         if gluePrefix then
+            declFuncMode = DeclFuncMode.Glue
+         else
+          
+            declFuncMode = DeclFuncMode.Module
+         end
+         
+      end
+      
+      local methodNode = self:analyzeDeclMethod( classTypeInfo, declFuncMode, abstractFlag, overrideFlag, accessMode, staticFlag, token, nameToken )
+      table.insert( fieldList, methodNode )
+      methodNameSet[nameToken.txt] = true
+      if nameToken.txt == "__init" then
+         declCtorNode = methodNode
+      end
+      
+   end
+   
+   local function processInit(  )
+   
+      if mode ~= DeclClassMode.Class then
+         self:error( string.format( "%s can not have __init method", tostring( mode)) )
+      end
+      
+      hasInitBlock = true
+      for symbolName, symbolInfo in pairs( self.scope:get_symbol2SymbolInfoMap() ) do
+         if symbolInfo:get_staticFlag() then
+            symbolInfo:set_hasValueFlag( false )
+         end
+         
+      end
+      
+      self:checkNextToken( "{" )
+      self:analyzeStatementList( initStmtList, "}" )
+      self:checkNextToken( "}" )
+   end
+   
+   local function processAdvertise(  )
+   
+      local memberToken = self:getSymbolToken(  )
+      nextToken = self:getToken(  )
+      local prefix = ""
+      if nextToken.txt ~= ";" and nextToken.txt ~= "{" then
+         prefix = nextToken.txt
+         nextToken = self:getToken(  )
+      end
+      
+      self:checkToken( nextToken, ";" )
+      local memberNode = memberName2Node[memberToken.txt]
+      if  nil == memberNode then
+         local _memberNode = memberNode
+      
+         self:error( string.format( "not found member -- %s", memberToken.txt) )
+      end
+      
+      table.insert( advertiseList, Ast.AdvertiseInfo.new(memberNode, prefix) )
+   end
+   
+   local function processEnum( token, accessMode )
+   
+      if accessMode ~= Ast.AccessMode.Pri and (classAccessMode == Ast.AccessMode.Pri or classAccessMode == Ast.AccessMode.Local ) then
+         self:addErrMess( token.pos, string.format( "unmatch access mode, class('%s') and enum('%s')", Ast.AccessMode:_getTxt( classAccessMode)
+         , Ast.AccessMode:_getTxt( accessMode)
+         ) )
+      end
+      
+      table.insert( declStmtList, self:analyzeDeclEnum( accessMode, token ) )
+   end
+   
+   local function processLuneControl(  )
+   
+      nextToken = self:getToken(  )
+      if nextToken.txt == "default__init" then
+         declCtorNode = self:createNoneNode( nextToken.pos )
+         self:addDefaultConstructor( nextToken.pos, classTypeInfo, self.scope, memberList, methodNameSet )
+      else
+       
+         self:error( string.format( "unknown option -- %s", nextToken.txt) )
+      end
+      
+      self:checkNextToken( ";" )
+   end
+   
    while true do
       local token = self:getToken(  )
       if token.txt == "}" then
@@ -3520,87 +3671,18 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       end
       
       if token.txt == "let" then
-         if staticFlag then
-            hasStaticMember = true
-         end
-         
-         if mode == DeclClassMode.Interface then
-            self:addErrMess( token.pos, "interface can not have member" )
-         end
-         
-         if not staticFlag and declCtorNode then
-            self:addErrMess( token.pos, "member can't declare after '__init' method." )
-         elseif staticFlag and hasInitBlock then
-            self:addErrMess( token.pos, "static member can't declare after '__init' block." )
-         end
-         
-         local memberNode = self:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, token )
-         table.insert( fieldList, memberNode )
-         table.insert( memberList, memberNode )
-         memberName2Node[memberNode:get_name().txt] = memberNode
+         processLet( token, staticFlag, accessMode )
       elseif token.txt == "fn" then
-         local nameToken = self:getSymbolToken(  )
-         local declFuncMode = DeclFuncMode.Class
-         if mode == DeclClassMode.Module then
-            if gluePrefix then
-               declFuncMode = DeclFuncMode.Glue
-            else
-             
-               declFuncMode = DeclFuncMode.Module
-            end
-            
-         end
-         
-         local methodNode = self:analyzeDeclMethod( classTypeInfo, declFuncMode, abstractFlag, overrideFlag, accessMode, staticFlag, token, nameToken )
-         table.insert( fieldList, methodNode )
-         methodNameSet[nameToken.txt] = true
-         if nameToken.txt == "__init" then
-            declCtorNode = methodNode
-         end
-         
+         processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag )
       elseif token.txt == "__init" then
-         if mode ~= DeclClassMode.Class then
-            self:error( string.format( "%s can not have __init method", tostring( mode)) )
-         end
-         
-         hasInitBlock = true
-         for symbolName, symbolInfo in pairs( self.scope:get_symbol2SymbolInfoMap() ) do
-            if symbolInfo:get_staticFlag() then
-               symbolInfo:set_hasValueFlag( false )
-            end
-            
-         end
-         
-         self:checkNextToken( "{" )
-         self:analyzeStatementList( initStmtList, "}" )
-         self:checkNextToken( "}" )
+         processInit(  )
       elseif token.txt == "advertise" then
-         local memberToken = self:getSymbolToken(  )
-         nextToken = self:getToken(  )
-         local prefix = ""
-         if nextToken.txt ~= ";" and nextToken.txt ~= "{" then
-            prefix = nextToken.txt
-            nextToken = self:getToken(  )
-         end
-         
-         self:checkToken( nextToken, ";" )
-         local memberNode = memberName2Node[memberToken.txt]
-         if  nil == memberNode then
-            local _memberNode = memberNode
-         
-            self:error( string.format( "not found member -- %s", memberToken.txt) )
-         end
-         
-         table.insert( advertiseList, Ast.AdvertiseInfo.new(memberNode, prefix) )
+         processAdvertise(  )
       elseif token.txt == ";" then
       elseif token.txt == "enum" then
-         if accessMode ~= Ast.AccessMode.Pri and (classAccessMode == Ast.AccessMode.Pri or classAccessMode == Ast.AccessMode.Local ) then
-            self:addErrMess( token.pos, string.format( "unmatch access mode, class('%s') and enum('%s')", Ast.AccessMode:_getTxt( classAccessMode)
-            , Ast.AccessMode:_getTxt( accessMode)
-            ) )
-         end
-         
-         table.insert( declStmtList, self:analyzeDeclEnum( accessMode, token ) )
+         processEnum( token, accessMode )
+      elseif token.txt == "_lune_control" then
+         processLuneControl(  )
       else
        
          self:error( "illegal field" )
@@ -3684,13 +3766,8 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    local node, workNextToken, methodNameSet = self:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
    nextToken = workNextToken
    local parentInfo = classTypeInfo
-   local memberTypeList = {}
    for __index, memberNode in pairs( node:get_memberList() ) do
       local memberType = memberNode:get_expType()
-      if not memberNode:get_staticFlag() then
-         table.insert( memberTypeList, memberType )
-      end
-      
       local memberName = memberNode:get_name()
       local getterName = "get_" .. memberName.txt
       local accessMode = memberNode:get_getterMode()
@@ -3723,29 +3800,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       if ctorTypeInfo ~= nil then
          ctorAccessMode = ctorTypeInfo:get_accessMode()
       else
-         if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
-            local superScope = _lune.unwrap( classTypeInfo:get_baseTypeInfo():get_scope())
-            local superTypeInfo = _lune.unwrap( superScope:getTypeInfoChild( "__init" ))
-            for __index, argType in pairs( superTypeInfo:get_argTypeInfoList() ) do
-               if not argType:get_nilable() then
-                  self:addErrMess( firstToken.pos, "not found '__init' decl." )
-               end
-               
-            end
-            
-         end
-         
-         local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, false, Ast.AccessMode.Pub, "__init", memberTypeList, {} )
-         self:popScope(  )
-         classScope:addMethod( initTypeInfo, Ast.AccessMode.Pub, false, false )
-         methodNameSet["__init"] = true
-         for __index, memberNode in pairs( node:get_memberList() ) do
-            if not memberNode:get_staticFlag() then
-               memberNode:get_symbolInfo():set_hasValueFlag( true )
-            end
-            
-         end
-         
+         self:addDefaultConstructor( firstToken.pos, classTypeInfo, classScope, node:get_memberList(), methodNameSet )
       end
    end
    
@@ -4069,7 +4124,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          if prottype ~= nil then
             local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false )
             if not matchFlag then
-               self:addErrMess( name.pos, err )
+               self:addErrMess( name.pos, "mismatch functype: " .. err )
             end
             
             if self.protoFuncMap[prottype] then
@@ -4179,7 +4234,6 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       end
       
       funcBodyScope:addLocalVar( false, false, "__func__", Ast.builtinTypeString, false )
-      self.has__func__Symbol = false
       if classTypeInfo ~= nil then
          do
             local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope )
@@ -4237,7 +4291,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    if needNode then
-      local info = Ast.DeclFuncInfo.new(classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, self.has__func__Symbol)
+      local info = Ast.DeclFuncInfo.new(classTypeInfo, name, argList, orgStaticFlag, accessMode, body, retTypeInfoList, self.has__func__Symbol[typeInfo] ~= nil)
       do
          local _switchExp = (kind )
          if _switchExp == Ast.NodeKind.get_DeclConstr() then
@@ -4256,6 +4310,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       
    end
    
+   self.has__func__Symbol[typeInfo] = nil
    self:popScope(  )
    if needPopFlag then
       self:addMethod( _lune.unwrap( classTypeInfo), node, funcName )
@@ -5796,7 +5851,8 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
          end
          
          if token.txt == "__func__" then
-            self.has__func__Symbol = true
+            local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
+            self.has__func__Symbol[funcTypeInfo] = true
          end
          
          exp = Ast.ExpRefNode.create( self.nodeManager, firstToken.pos, {typeInfo}, token, Ast.AccessSymbolInfo.new(symbolInfo, nil, true) )

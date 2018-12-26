@@ -1265,7 +1265,8 @@ fn TransUnit.analyzeExpSymbol(
          }
          
          if token.txt == "__func__" {
-            self.has__func__Symbol = true;
+            let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
+            self.has__func__Symbol[ funcTypeInfo ] = true;
          }
 
          exp = Ast.ExpRefNode.create(

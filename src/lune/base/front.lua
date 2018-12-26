@@ -42,6 +42,7 @@ local glueFilter = _lune.loadModule( 'lune.base.glueFilter' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local OutputDepend = _lune.loadModule( 'lune.base.OutputDepend' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
+local forceUpdateMeta = true
 function _luneGetLocal( varName )
 
    local index = 1
@@ -163,7 +164,7 @@ end
 
 function Front:createAst( importModuleInfo, parser, mod, analyzeModule, analyzeMode, pos )
 
-   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos, self.option.targetLuaVer)
+   local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.createId( 0.0, 0 ), importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos, self.option.targetLuaVer)
    return transUnit:createAST( parser, false, mod )
 end
 
@@ -211,7 +212,7 @@ end
 
 function Front:loadFromLnsTxt( importModuleInfo, name, txt )
 
-   local transUnit = TransUnit.TransUnit.new(importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil, self.option.targetLuaVer)
+   local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil, self.option.targetLuaVer)
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.StreamParser.new(stream, name, false)
    local ast = transUnit:createAST( parser, false, nil )
@@ -226,7 +227,7 @@ function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
    local convMode = convLua.ConvMode.Exec
    local metaTxt, luaTxt = self:convertFromAst( ast, path, convMode )
    if self.option.updateOnLoad then
-      local function saveFile( suffix, txt, byteCompile, stripDebugInfo )
+      local function saveFile( suffix, txt, byteCompile, stripDebugInfo, checkUpdate )
       
          local newpath = ""
          do
@@ -238,14 +239,28 @@ function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
             end
          end
          
+         local saveTxt = txt
+         if byteCompile then
+            saveTxt = byteCompileFromLuaTxt( saveTxt, stripDebugInfo )
+         end
+         
+         if not forceUpdateMeta and checkUpdate then
+            do
+               local fileObj = io.open( newpath )
+               if fileObj ~= nil then
+                  local oldTxt = fileObj:read( "*a" )
+                  if saveTxt == oldTxt then
+                     return 
+                  end
+                  
+               end
+            end
+            
+         end
+         
          do
             local fileObj = io.open( newpath, "w" )
             if fileObj ~= nil then
-               local saveTxt = txt
-               if byteCompile then
-                  saveTxt = byteCompileFromLuaTxt( saveTxt, stripDebugInfo )
-               end
-               
                fileObj:write( saveTxt )
                fileObj:close(  )
             end
@@ -253,8 +268,8 @@ function Front:loadFile( importModuleInfo, path, mod, onlyMeta )
          
       end
       
-      saveFile( ".lua", luaTxt, self.option.byteCompile, self.option.stripDebugInfo )
-      saveFile( ".meta", metaTxt, self.option.byteCompile, true )
+      saveFile( ".lua", luaTxt, self.option.byteCompile, self.option.stripDebugInfo, false )
+      saveFile( ".meta", metaTxt, self.option.byteCompile, true, true )
    end
    
    local meta = loadFromLuaTxt( metaTxt )
@@ -592,10 +607,11 @@ function Front:saveToLua(  )
          local metaFileObj = nil
          local metaStream = stream
          local convMode = convLua.ConvMode.Convert
+         local tempMetaPath = metaPath .. ".tmp"
          if self.option.mode == "SAVE" then
             convMode = convLua.ConvMode.ConvMeta
             do
-               local _exp = io.open( metaPath, "w" )
+               local _exp = io.open( tempMetaPath, "w+" )
                if _exp ~= nil then
                   metaFileObj = _exp
                   metaStream = _exp
@@ -609,7 +625,26 @@ function Front:saveToLua(  )
          self:convertToLuaFromStream( convMode, self.option.scriptPath, mod, self.option.byteCompile, self.option.stripDebugInfo, stream, metaStream, self.option.dependsStream )
          fileObj:close(  )
          if metaFileObj ~= nil then
+            metaFileObj:flush(  )
+            metaFileObj:seek( "set", 0 )
+            local oldMetaTxt = metaFileObj:read( "*a" )
             metaFileObj:close(  )
+            local newMetaTxt = ""
+            do
+               local oldFileObj = io.open( metaPath )
+               if oldFileObj ~= nil then
+                  newMetaTxt = _lune.unwrapDefault( oldFileObj:read( "*a" ), "")
+                  oldFileObj:close(  )
+               end
+            end
+            
+            if forceUpdateMeta or newMetaTxt ~= oldMetaTxt then
+               os.rename( tempMetaPath, metaPath )
+            else
+             
+               os.remove( tempMetaPath )
+            end
+            
          end
          
       end
