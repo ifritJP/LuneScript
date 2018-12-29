@@ -104,43 +104,10 @@ stem 型のまま LuneScript で扱うのは使い勝手が悪い。
 
 module は、外部モジュールの型を定義する。
 
-module 宣言は、class 宣言とほぼ同じで次のように宣言する。
+詳しくは次の記事を参考にしてください。
 
-#+BEGIN_SRC lns
-module External require "test.external" {
-   pub static let val:int;
-   pub static fn func1();
-   pub fn func2( val:int );
-}
-#+END_SRC
-
-上記の例は、次のような test.external の Lua モジュールを
-LuneScript の External モジュールとして宣言している。
-
-#+BEGIN_SRC lua
-local obj = {}
-
-function obj.func1()
-   print( "func1" )
-end
-
-obj.val = 0
-
-function obj:func2( val )
-   self.val = self.val + val
-   print( "func2", self.val )
-end
-
-return obj
-#+END_SRC
-
-この module で宣言することで、次のようにアクセスできる。
-
-#+BEGIN_SRC lns
-External.func1();
-External.func2( 10 );
-print( "val", External.val );
-#+END_SRC
+- トランスコンパイラ LuneScript 入門 - require/module 編
+  - https://qiita.com/dwarfJP/items/d7965afcaa0746ad2f59
 
 ** glue コード自動生成
 
@@ -356,68 +323,9 @@ $ gcc -std=c99 -fPIC -shared -o test/ext.so glue.c test_ext_glue.c
 
 * nil 条件演算子
 
-nilable のデータを扱うには、 unwrap しなければならない。
+nil 条件演算子 については、次を参考にしてください。
 
-しかし、 JSON などのような深い階層構造を持つデータで
-1 つ 1 つ unwrap するのは、 処理が煩雑になってしまう。
+- トランスコンパイラ LuneScript 入門 - nil 条件演算子 編
+  - https://qiita.com/dwarfJP/items/e63893a19a507b63c561
 
-#+BEGIN_SRC lns
-let foo = {
-   "bar": {
-      "hoge": [ 'a', 'b', 'c' ],
-   }
-};
-#+END_SRC
-
-上記 JSON データの ~foo.bar.hoge[1]~ にアクセスするには
-次のような処理が必要になる。
-
-#+BEGIN_SRC lns
-if! foo.bar {
-  if! _exp.hoge {
-     print( _exp[1] );   // print( foo.bar.hoge[1] );
-  }
-}
-#+END_SRC
-
-bar, hoge の存在をチェックすることに意味があるのであれば、
-上記の処理は意味のあるコードと言えるが、
-bar, hoge の存在のチェックに意味はなく、
-単に ~foo.bar.hoge[1]~ のデータにアクセスすることが目的であれば、
-上記の処理は手間がかかるだけのコードとなる。
-
-このような場合に nil条件演算子を利用する。
-nil条件演算子を利用して ~foo.bar.hoge[1]~ にアクセスすると、次のように書ける。
-
-#+BEGIN_SRC lns
-print( foo$.bar$.hoge$[1] );
-#+END_SRC
-
-上記の場合 foo.bar, foo.bar.hoge のいずれかが nil だった場合、
-foo$.bar$.hoge$[1] の結果は nil になる。
-foo.bar, foo.bar.hoge 全てが nil でなければ、
-foo$.bar$.hoge$[1] は、foo.bar.hoge の値を返す。
-
-なお、 nil 条件演算子の結果は nilable 型となる。
-
-例えば次のようなクラスがあった時、
-
-#+BEGIN_SRC lns
-class Test {
-  let val:int;
-  pub fn func(): int {
-    return self.val;
-  }
-}
-fn sub( test:Test! ): int {
-  return test$.func$() + 1; // error
-}
-#+END_SRC
-
-
-sub() 関数内の ~test$.func$() + 1~ でコンパイルエラーする。
-本来 Test クラスのメソッド func() の戻り値は int 型であるが、
-nil 条件演算子によって func() メソッドの評価結果が nil を返す可能性があるため、
-戻り値が int 型から int! 型に変わり、
-int! + int の演算は出来ないためエラーとなっている。
 
