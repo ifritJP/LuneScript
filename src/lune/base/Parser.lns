@@ -179,12 +179,17 @@ pub class Token {
    pub let kind: TokenKind;
    pub let txt: str;
    pub let pos: &Position;
+   /** 直前のトークンと連続しているトークンかどうか。 true の場合連続。 */
+   pub let consecutive: bool; 
    pri let mut commentList: Token[] { pub };
 
-   pub fn __init( kind: TokenKind, txt: str, pos: &Position, commentList: Token[]! ) {
+   pub fn __init( kind: TokenKind, txt: str, pos: &Position,
+                  consecutive:bool, commentList: Token[]! )
+   {  
       self.kind = kind;
       self.txt = txt;
       self.pos = pos;
+      self.consecutive = consecutive;
       self.commentList = unwrap commentList default [];
    }
 
@@ -225,6 +230,8 @@ pub class WrapParser extend Parser {
    }
 }
 
+pub let noneToken = new Token( .Eof, "", new Position( 0, -1 ), false, [] );
+
 pub class StreamParser extend Parser {
    /** stdin に紐付けている*/
    static let mut stdinStreamModuleName: str!;
@@ -243,6 +250,7 @@ pub class StreamParser extend Parser {
    let mut stream : iStream;
    let streamName: str;
    let mut lineNo : int;
+   let mut prevToken: &Token;
    let mut pos : int;
    let mut lineTokenList : Token[];
    let keywordSet : Map<str,bool>;
@@ -257,6 +265,7 @@ pub class StreamParser extend Parser {
       self.lineNo = 0;
       self.pos = 1;
       self.lineTokenList = [];
+      self.prevToken = noneToken;
 
       let keywordSet, typeSet, builtInSet, multiCharDelimitMap =
          createReserveInfo( luaMode );
@@ -322,7 +331,6 @@ pub class StreamParser extend Parser {
 
 //pub let kind = new TokenKind();
 
-pub let noneToken = new Token( .Eof, "", new Position( 0, 0 ), [] );
 
 
 let mut quotedCharSet:Map<int,bool> = {};
@@ -449,8 +457,16 @@ fn StreamParser.parse() mut : Token[]! {
                tokenKind = .Ope;
             }
          }
-         return new Token( tokenKind, token,
-                           new Position( self.lineNo, tokenColumn ), [] );
+         let mut consecutive = false;
+         if self.prevToken.pos.lineNo == self.lineNo and
+            self.prevToken.pos.column + #self.prevToken.txt == tokenColumn
+         {
+            consecutive = true;
+         }
+         let mut newToken = new Token(
+            tokenKind, token, new Position( self.lineNo, tokenColumn ), consecutive, [] );
+         self.prevToken = newToken;
+         return newToken;
       }
 
       /*
@@ -739,7 +755,7 @@ pub override fn StreamParser.getToken() mut : &Token! {
    return token;
 }
 
-let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0 ), [] );
+let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0 ), false, [] );
 pub fn getEofToken(): &Token {
    return eofToken;
 }

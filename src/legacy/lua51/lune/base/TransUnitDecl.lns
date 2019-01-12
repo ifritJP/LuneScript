@@ -252,7 +252,7 @@ pub fn TransUnit.createAST(
          self.nodeManager, new Parser.Position( 0, 0 ),
          [ Ast.builtinTypeNone ], children, processInfo,
          moduleTypeInfo, nil, self.helperInfo, self.nodeManager,
-         self.importModule2ModuleInfo, self.typeId2ClassMap );
+         self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap );
       ast = rootNode;
       if! self.provideNode {
          if lastStatement ~= _exp {
@@ -299,6 +299,20 @@ pub fn TransUnit.createAST(
 fn TransUnit.analyzeDeclMacro(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.Node
 {
+   let mut pubFlag = false;
+   switch accessMode {
+      case .Pub {
+         pubFlag = true;
+      }
+      case .Local, .None {
+      }
+      default {
+         self.addErrMess( firstToken.pos,
+                          "macro not support this access mode. -- %s"
+                          ( accessMode.$_txt ) );
+      }
+   }
+   
    let nameToken = self.getToken();
    self.checkNextToken( "(" );
 
@@ -324,7 +338,7 @@ fn TransUnit.analyzeDeclMacro(
 
    nextToken = self.getToken();
 
-   let mut ast : Ast.Node! = nil;
+   let mut stmtBlock : Ast.BlockNode! = nil;
    if nextToken.txt == "{" {
       let mut parser = new Parser.WrapParser(
          self.parser, "decl macro %s" (nameToken.txt) );
@@ -355,7 +369,7 @@ fn TransUnit.analyzeDeclMacro(
 
 
       self.macroScope = nil;
-      ast = Ast.BlockNode.create(
+      stmtBlock = Ast.BlockNode.create(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], .Macro, stmtList );
    }
    else {
@@ -384,18 +398,20 @@ fn TransUnit.analyzeDeclMacro(
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       false, false, scope, .Macro, self.getCurrentNamespaceTypeInfo(),
-      false, false, false, accessMode, nameToken.txt, argTypeList );
-   self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
+      false, false, true, accessMode, nameToken.txt, argTypeList );
+   //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
+   self.scope.addMacro( typeInfo, accessMode );
 
 
-   let mut declMacroInfo = new Ast.DeclMacroInfo( nameToken, argList, ast, tokenList ) ;
+   let mut declMacroInfo = new Ast.DeclMacroInfo(
+      pubFlag, nameToken, argList, stmtBlock, tokenList ) ;
    let mut node = Ast.DeclMacroNode.create(
       self.nodeManager, firstToken.pos, [ typeInfo ], declMacroInfo );
 
    let macroObj = self.macroEval.eval( node );
 
    self.typeId2MacroInfo[ typeInfo.get_typeId() ] =
-      new Ast.MacroInfo( macroObj, declMacroInfo, self.symbol2ValueMapForMacro );
+      new Ast.DefMacroInfo( macroObj, declMacroInfo, self.symbol2ValueMapForMacro );
    self.symbol2ValueMapForMacro = {};
 
    return node;

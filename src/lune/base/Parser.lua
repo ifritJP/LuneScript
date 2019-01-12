@@ -234,16 +234,17 @@ TokenKind.__allList[11] = TokenKind.Eof
 
 local Token = {}
 _moduleObj.Token = Token
-function Token.new( kind, txt, pos, commentList )
+function Token.new( kind, txt, pos, consecutive, commentList )
    local obj = {}
    Token.setmeta( obj )
-   if obj.__init then obj:__init( kind, txt, pos, commentList ); end
+   if obj.__init then obj:__init( kind, txt, pos, consecutive, commentList ); end
    return obj
 end
-function Token:__init(kind, txt, pos, commentList) 
+function Token:__init(kind, txt, pos, consecutive, commentList) 
    self.kind = kind
    self.txt = txt
    self.pos = pos
+   self.consecutive = consecutive
    self.commentList = _lune.unwrapDefault( commentList, {})
 end
 function Token:getExcludedDelimitTxt(  )
@@ -321,6 +322,9 @@ function WrapParser:__init( parser, name )
    self.name = name
 end
 
+local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1), false, {})
+_moduleObj.noneToken = noneToken
+
 local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
 _moduleObj.StreamParser = StreamParser
@@ -344,6 +348,7 @@ function StreamParser:__init(stream, name, luaMode)
    self.lineNo = 0
    self.pos = 1
    self.lineTokenList = {}
+   self.prevToken = _moduleObj.noneToken
    local keywordSet, typeSet, builtInSet, multiCharDelimitMap = createReserveInfo( luaMode )
    self.keywordSet = keywordSet
    self.typeSet = typeSet
@@ -376,9 +381,6 @@ do
    StreamParser.stdinStreamModuleName = nil
    StreamParser.stdinTxt = ""
 end
-
-local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, 0), {})
-_moduleObj.noneToken = noneToken
 
 local quotedCharSet = {}
 quotedCharSet['a'] = true
@@ -495,7 +497,14 @@ function StreamParser:parse(  )
             
          end
          
-         return Token.new(tokenKind, token, Position.new(self.lineNo, tokenColumn), {})
+         local consecutive = false
+         if self.prevToken.pos.lineNo == self.lineNo and self.prevToken.pos.column + #self.prevToken.txt == tokenColumn then
+            consecutive = true
+         end
+         
+         local newToken = Token.new(tokenKind, token, Position.new(self.lineNo, tokenColumn), consecutive, {})
+         self.prevToken = newToken
+         return newToken
       end
       
       local function analyzeNumber( token, beginIndex )
@@ -786,7 +795,7 @@ function StreamParser:getToken(  )
    return token
 end
 
-local eofToken = Token.new(TokenKind.Eof, "<EOF>", Position.new(0, 0), {})
+local eofToken = Token.new(TokenKind.Eof, "<EOF>", Position.new(0, 0), false, {})
 local function getEofToken(  )
 
    return eofToken

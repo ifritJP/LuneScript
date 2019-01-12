@@ -828,6 +828,14 @@ pub fn Scope.addFunc(
              typeInfo, accessMode, staticFlag, mutable, true );
 }
 
+pub fn Scope.addMacro(
+   typeInfo: &TypeInfo, accessMode:AccessMode ) mut
+{
+   self.add( SymbolKind.Fun, false, false, typeInfo.getTxt(),
+             typeInfo, accessMode, true, false, true );
+}
+
+
 pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Typ, false, false, name, typeInfo,
@@ -2417,23 +2425,16 @@ pub class NamespaceInfo {
 pub proto abstract class MacroEval;
 pub proto class ExpListNode extend Node;
 pub proto class DeclArgNode extend Node;
+pub proto class BlockNode extend Node;
 
 pub class DeclMacroInfo {
+   pri let pubFlag: bool {pub};
    pri let name: &Parser.Token { pub };
    pri let argList: List<&DeclArgNode> { pub };
-   pri let ast: &Node! { pub };
+   /** macro-statment の BlockNode */
+   pri let stmtBlock: &BlockNode! { pub };
+   /** expand-statemnt の token リスト */
    pri let tokenList: List<&Parser.Token> { pub };
-}
-
-pub class MacroValInfo {
-   pub let val: stem!;
-   pub let typeInfo: TypeInfo;
-}
-
-pub class MacroInfo {
-   pub let func: form;
-   pub let declInfo: DeclMacroInfo;
-   pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
 }
 
 let mut nodeKind2NameMap: Map<int,str> = {};
@@ -2666,6 +2667,24 @@ pub class ProcessInfo {
    let mut idProvier:IdProvider {pub};
 }
 
+pub class MacroValInfo {
+   pub let val: stem!;
+   pub let typeInfo: TypeInfo;
+}
+
+pub class MacroArgInfo {
+   pri let name:str {pub};
+   pri let typeInfo: &TypeInfo {pub};
+}
+
+pub abstract class MacroInfo {
+   pub let func: form;
+   pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
+   pub abstract fn getArgList():&List<&MacroArgInfo>;
+   pub abstract fn getTokenList():&List<&Parser.Token>;
+   pub abstract fn get_name():str;
+}
+
 _declNodeClass( "Root", Node, false, false, false,
                 [ { "children": "List<&Node>" },
                   { "processInfo": "ProcessInfo" },
@@ -2674,6 +2693,7 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "luneHelperInfo": "LuneHelperInfo" },
                   { "nodeManager": "NodeManager" },
                   { "importModule2moduleInfo": "Map<&TypeInfo,ModuleInfo>" },
+                  { "typeId2MacroInfo": "Map<int,&MacroInfo>" },
                   { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]
 );
 
@@ -3115,7 +3135,7 @@ _declNodeClass( "ExpOmitEnum", Node, true, true, false,
                   { "enumTypeInfo": "&EnumTypeInfo" }]
 );
 
-_declNodeClass( "RefField", Node, nil, true, false,
+_declNodeClass( "RefField", Node, nil, nil, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&AccessSymbolInfo!" },
@@ -3130,6 +3150,15 @@ pub override fn RefFieldNode.canBeLeft():bool {
    //    return _exp;
    // }
    return false;
+}
+pub override fn RefFieldNode.canBeRight():bool {
+   if! self.$symbolInfo {
+      return _exp.$canBeRight;
+   }
+   // if! self.overrideCanBeLeft {
+   //    return _exp;
+   // }
+   return true;
 }
 
 _declNodeClass( "GetField", Node, nil, true, false,
@@ -3341,6 +3370,7 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
 );
 
 pub abstract class MacroEval {
+   pub abstract fn evalFromCode( name:str, argNameList:&List<str>, code:str ): form;
    pub abstract fn eval( macroNode: DeclMacroNode ): form;
 }
 
@@ -3681,6 +3711,37 @@ pub override fn ExpOp2Node.getLiteral(): stem![], List<&TypeInfo> {
    }
 
    return [],[];
+}
+
+pub class DefMacroInfo extend MacroInfo {
+   pub let declInfo: DeclMacroInfo;
+   pri let mut argList:List<&MacroArgInfo>;
+
+   pub override fn get_name():str {
+      return self.declInfo.$name.txt;
+   }
+   
+   pub override fn getArgList():&List<&MacroArgInfo> {
+      return self.argList;
+   }
+   pub override fn getTokenList():&List<&Parser.Token>{
+      return self.declInfo.$tokenList;
+   }
+   
+   pub fn __init( func: form, declInfo: DeclMacroInfo, 
+                  symbol2MacroValInfoMap: Map<str,MacroValInfo> )
+   {
+      super( func, symbol2MacroValInfoMap );
+      self.declInfo = declInfo;
+      self.argList = [];
+      foreach argNode in declInfo.$argList {
+         if argNode.get_kind() == NodeKind.$DeclArg {
+            let argType = argNode.$argType.$expType;
+            let argName = argNode.$name.txt;
+            self.argList.insert( new MacroArgInfo( argName, argType ) );
+         }
+      }
+   }
 }
 
 

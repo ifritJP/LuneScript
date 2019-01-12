@@ -329,7 +329,7 @@ function Front:checkUptodateMeta( metaPath, addSearchPath )
       return nil
    end
    
-   for moduleFullName, dependInfo in pairs( meta._dependModuleMap ) do
+   for moduleFullName, dependInfo in pairs( meta.__dependModuleMap ) do
       do
          local moduleLuaPath = self:searchLuaFile( moduleFullName, addSearchPath )
          if moduleLuaPath ~= nil then

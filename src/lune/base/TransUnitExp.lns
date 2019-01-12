@@ -358,7 +358,7 @@ fn TransUnit.evalMacro(
 
    let mut argValMap:Map<int,stem> = {};
    let mut macroArgValMap:Map<str,stem> = {};
-   let macroArgNodeList = macroInfo.declInfo.$argList;
+   let macroArgNodeList = macroInfo.getArgList();
    when! expList {
       foreach argNode, index in expList.get_expList() {
          //let val, typeInfo = getLiteralValue( argNode );
@@ -385,7 +385,7 @@ fn TransUnit.evalMacro(
             argValMap[ index ] = val;
             let declArgNode = macroArgNodeList[ index ];
             
-            macroArgValMap[ declArgNode.$name.txt ] = val;
+            macroArgValMap[ declArgNode.$name ] = val;
          };
       }
    }
@@ -409,14 +409,13 @@ fn TransUnit.evalMacro(
    //let scope = self.pushScope();
 
 
-   foreach arg, index in macroInfo.declInfo.$argList {
-      if arg.get_kind() == Ast.NodeKind.$DeclArg {
-         let argInfo = arg;
-         let argType = argInfo.$argType;
-         let argName = argInfo.$name.txt;
+   foreach arg, index in macroInfo.getArgList() {
+      if arg.$typeInfo ~= Ast.builtinTypeDDD {
+         let argType = arg.$typeInfo;
+         let argName = arg.$name;
          //scope.add( argName, argType.expType );
          self.symbol2ValueMapForMacro[ argName ] =
-            new Ast.MacroValInfo( argValMap[ index ], argType.$expType );
+            new Ast.MacroValInfo( argValMap[ index ], argType );
       }
       else {
          self.error( "not support ... in macro" );
@@ -428,7 +427,7 @@ fn TransUnit.evalMacro(
    // }
 
 
-   let mut parser = new MacroPaser( macroInfo.$declInfo.$tokenList,
+   let mut parser = new MacroPaser( macroInfo.getTokenList(),
                                     "macro %s" (macroTypeInfo.getTxt()) );
    let mut bakParser = self.parser;
    self.parser = parser;
@@ -1099,7 +1098,7 @@ fn TransUnit.analyzeExpField(
             {
                // クラスシンボルから、 static でないメンバにアクセスした場合エラー
                self.addErrMess(
-                  token.pos, "Type can't access this symbol. -- %s" (_exp.$name) );    
+                  token.pos, "Type can't access this symbol. -- %s" (_exp.$name) );
             }
          }
          elseif _exp.$staticFlag and _exp.$typeInfo.$kind ~= .Method {
@@ -1640,7 +1639,8 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
                }
             }
          }
-         let newToken = new Parser.Token( Parser.TokenKind.Str, format, token.pos );
+         let newToken = new Parser.Token(
+            Parser.TokenKind.Str, format, token.pos, false );
          let literalStr = Ast.LiteralStringNode.create(
             self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
          expStrList.insert( literalStr );
@@ -1664,7 +1664,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Ast.ExpMacro
             format = "'%s'";
          }
          let newToken = new Parser.Token(
-            token.kind, string.format( format, token.txt ), token.pos );
+            token.kind, string.format( format, token.txt ), token.pos, false );
          let literalStr = Ast.LiteralStringNode.create(
             self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [] );
          expStrList.insert( literalStr );
@@ -2056,7 +2056,7 @@ fn TransUnit.analyzeExp(
       exp = Ast.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
          new Parser.Token( .Int, "%d" (token.pos.lineNo),
-                           token.pos, nil ), token.pos.lineNo );
+                           token.pos, false, nil ), token.pos.lineNo );
    }  
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" {
       exp = self.analyzeExpSymbol( firstToken, token, .Fn, nil, false );

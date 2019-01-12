@@ -755,3 +755,5 @@ class Test3 {
    let test3 = Test3.create();
    print( test3.$val );
 }
+
+SUB2.MacroTest2( "abc", 123 );

@@ -1090,6 +1090,11 @@ function Scope:addFunc( typeInfo, accessMode, staticFlag, mutable )
    self:add( SymbolKind.Fun, true, true, typeInfo:getTxt(  ), typeInfo, accessMode, staticFlag, mutable, true )
 end
 
+function Scope:addMacro( typeInfo, accessMode )
+
+   self:add( SymbolKind.Fun, false, false, typeInfo:getTxt(  ), typeInfo, accessMode, true, false, true )
+end
+
 function Scope:addClass( name, typeInfo )
 
    self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true, true )
@@ -3077,25 +3082,30 @@ end
 
 
 
+
 local DeclMacroInfo = {}
 _moduleObj.DeclMacroInfo = DeclMacroInfo
 function DeclMacroInfo.setmeta( obj )
   setmetatable( obj, { __index = DeclMacroInfo  } )
 end
-function DeclMacroInfo.new( name, argList, ast, tokenList )
+function DeclMacroInfo.new( pubFlag, name, argList, stmtBlock, tokenList )
    local obj = {}
    DeclMacroInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( name, argList, ast, tokenList )
+      obj:__init( pubFlag, name, argList, stmtBlock, tokenList )
    end        
    return obj 
 end         
-function DeclMacroInfo:__init( name, argList, ast, tokenList ) 
+function DeclMacroInfo:__init( pubFlag, name, argList, stmtBlock, tokenList ) 
 
+   self.pubFlag = pubFlag
    self.name = name
    self.argList = argList
-   self.ast = ast
+   self.stmtBlock = stmtBlock
    self.tokenList = tokenList
+end
+function DeclMacroInfo:get_pubFlag()       
+   return self.pubFlag         
 end
 function DeclMacroInfo:get_name()       
    return self.name         
@@ -3103,50 +3113,11 @@ end
 function DeclMacroInfo:get_argList()       
    return self.argList         
 end
-function DeclMacroInfo:get_ast()       
-   return self.ast         
+function DeclMacroInfo:get_stmtBlock()       
+   return self.stmtBlock         
 end
 function DeclMacroInfo:get_tokenList()       
    return self.tokenList         
-end
-
-local MacroValInfo = {}
-_moduleObj.MacroValInfo = MacroValInfo
-function MacroValInfo.setmeta( obj )
-  setmetatable( obj, { __index = MacroValInfo  } )
-end
-function MacroValInfo.new( val, typeInfo )
-   local obj = {}
-   MacroValInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( val, typeInfo )
-   end        
-   return obj 
-end         
-function MacroValInfo:__init( val, typeInfo ) 
-
-   self.val = val
-   self.typeInfo = typeInfo
-end
-
-local MacroInfo = {}
-_moduleObj.MacroInfo = MacroInfo
-function MacroInfo.setmeta( obj )
-  setmetatable( obj, { __index = MacroInfo  } )
-end
-function MacroInfo.new( func, declInfo, symbol2MacroValInfoMap )
-   local obj = {}
-   MacroInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( func, declInfo, symbol2MacroValInfoMap )
-   end        
-   return obj 
-end         
-function MacroInfo:__init( func, declInfo, symbol2MacroValInfoMap ) 
-
-   self.func = func
-   self.declInfo = declInfo
-   self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
 end
 
 local nodeKind2NameMap = {}
@@ -3508,6 +3479,69 @@ function ProcessInfo:get_idProvier()
    return self.idProvier         
 end
 
+local MacroValInfo = {}
+_moduleObj.MacroValInfo = MacroValInfo
+function MacroValInfo.setmeta( obj )
+  setmetatable( obj, { __index = MacroValInfo  } )
+end
+function MacroValInfo.new( val, typeInfo )
+   local obj = {}
+   MacroValInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( val, typeInfo )
+   end        
+   return obj 
+end         
+function MacroValInfo:__init( val, typeInfo ) 
+
+   self.val = val
+   self.typeInfo = typeInfo
+end
+
+local MacroArgInfo = {}
+_moduleObj.MacroArgInfo = MacroArgInfo
+function MacroArgInfo.setmeta( obj )
+  setmetatable( obj, { __index = MacroArgInfo  } )
+end
+function MacroArgInfo.new( name, typeInfo )
+   local obj = {}
+   MacroArgInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( name, typeInfo )
+   end        
+   return obj 
+end         
+function MacroArgInfo:__init( name, typeInfo ) 
+
+   self.name = name
+   self.typeInfo = typeInfo
+end
+function MacroArgInfo:get_name()       
+   return self.name         
+end
+function MacroArgInfo:get_typeInfo()       
+   return self.typeInfo         
+end
+
+local MacroInfo = {}
+_moduleObj.MacroInfo = MacroInfo
+function MacroInfo.setmeta( obj )
+  setmetatable( obj, { __index = MacroInfo  } )
+end
+function MacroInfo.new( func, symbol2MacroValInfoMap )
+   local obj = {}
+   MacroInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( func, symbol2MacroValInfoMap )
+   end        
+   return obj 
+end         
+function MacroInfo:__init( func, symbol2MacroValInfoMap ) 
+
+   self.func = func
+   self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
+end
+
 function NodeKind.get_Root(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['Root'])
@@ -3546,13 +3580,13 @@ function RootNode:canBeStatement(  )
 
    return false
 end
-function RootNode.new( pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
+function RootNode.new( pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap ); end
+   if obj.__init then obj:__init( pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
    return obj
 end
-function RootNode:__init(pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap) 
+function RootNode:__init(pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
    
    
@@ -3563,12 +3597,13 @@ function RootNode:__init(pos, typeList, children, processInfo, moduleTypeInfo, p
    self.luneHelperInfo = luneHelperInfo
    self.nodeManager = nodeManager
    self.importModule2moduleInfo = importModule2moduleInfo
+   self.typeId2MacroInfo = typeId2MacroInfo
    self.typeId2ClassMap = typeId2ClassMap
    
 end
-function RootNode.create( nodeMan, pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap )
+function RootNode.create( nodeMan, pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
 
-   local node = RootNode.new(pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2ClassMap)
+   local node = RootNode.new(pos, typeList, children, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
    nodeMan:addNode( node )
    return node
 end
@@ -3595,6 +3630,9 @@ function RootNode:get_nodeManager()
 end
 function RootNode:get_importModule2moduleInfo()       
    return self.importModule2moduleInfo         
+end
+function RootNode:get_typeId2MacroInfo()       
+   return self.typeId2MacroInfo         
 end
 function RootNode:get_typeId2ClassMap()       
    return self.typeId2ClassMap         
@@ -6500,10 +6538,6 @@ function RefFieldNode:processFilter( filter, ... )
    local argList = {...}
    filter:processRefField( self, table.unpack( argList ) )
 end
-function RefFieldNode:canBeRight(  )
-
-   return true
-end
 function RefFieldNode:canBeStatement(  )
 
    return false
@@ -6557,6 +6591,18 @@ function RefFieldNode:canBeLeft(  )
    end
    
    return false
+end
+
+function RefFieldNode:canBeRight(  )
+
+   do
+      local _exp = self:get_symbolInfo()
+      if _exp ~= nil then
+         return _exp:get_canBeRight()
+      end
+   end
+   
+   return true
 end
 
 function NodeKind.get_GetField(  )
@@ -9231,6 +9277,46 @@ function ExpOp2Node:getLiteral(  )
    end
    
    return {}, {}
+end
+
+local DefMacroInfo = {}
+setmetatable( DefMacroInfo, { __index = MacroInfo } )
+_moduleObj.DefMacroInfo = DefMacroInfo
+function DefMacroInfo:get_name(  )
+
+   return self.declInfo:get_name().txt
+end
+function DefMacroInfo:getArgList(  )
+
+   return self.argList
+end
+function DefMacroInfo:getTokenList(  )
+
+   return self.declInfo:get_tokenList()
+end
+function DefMacroInfo.new( func, declInfo, symbol2MacroValInfoMap )
+   local obj = {}
+   DefMacroInfo.setmeta( obj )
+   if obj.__init then obj:__init( func, declInfo, symbol2MacroValInfoMap ); end
+   return obj
+end
+function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap) 
+   MacroInfo.__init( self ,func, symbol2MacroValInfoMap)
+   
+   self.declInfo = declInfo
+   self.argList = {}
+   for __index, argNode in pairs( declInfo:get_argList() ) do
+      if argNode:get_kind(  ) == NodeKind.get_DeclArg() then
+         local argType = argNode:get_argType():get_expType()
+         local argName = argNode:get_name().txt
+         table.insert( self.argList, MacroArgInfo.new(argName, argType) )
+      end
+      
+   end
+   
+end
+function DefMacroInfo.setmeta( obj )
+  setmetatable( obj, { __index = DefMacroInfo  } )
 end
 
 local processInfoQueue = {}

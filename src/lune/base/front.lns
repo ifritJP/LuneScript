@@ -294,7 +294,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
    if meta.$__formatVersion ~= Ver.metaVersion {
       return nil;
    }
-   foreach dependInfo, moduleFullName in meta._dependModuleMap {
+   foreach dependInfo, moduleFullName in meta.__dependModuleMap {
       if! let moduleLuaPath = self.searchLuaFile( moduleFullName, addSearchPath ) {
          let moduleLnsPath = moduleLuaPath.gsub( "%.lua$", ".lns" );
          if not Util.getReadyCode( moduleLnsPath, metaPath ) {

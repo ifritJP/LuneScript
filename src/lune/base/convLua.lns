@@ -29,6 +29,7 @@ import lune.base.TransUnit;
 import lune.base.frontInterface;
 import lune.base.LuaMod;
 import lune.base.LuaVer;
+import lune.base.Parser;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -408,8 +409,9 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
    }
    classId2TypeInfo = self.classId2TypeInfo;
 
-   self.writeln( "local _typeId2ClassInfoMap = {}" );
-   self.writeln( "_moduleObj._typeId2ClassInfoMap = _typeId2ClassInfoMap" );
+   // 公開クラス情報処理
+   self.writeln( "local __typeId2ClassInfoMap = {}" );
+   self.writeln( "_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap" );
 
    forsort classTypeInfo, classTypeId in classId2TypeInfo {
       if classTypeInfo.$accessMode == .Pub {
@@ -420,8 +422,8 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
 
          self.writeln( "do" );
          self.pushIndent();
-         self.writeln( "local _classInfo%d = {}" (classTypeId) );
-         self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
+         self.writeln( "local __classInfo%d = {}" (classTypeId) );
+         self.writeln( "__typeId2ClassInfoMap[ %d ] = __classInfo%d"
                        (classTypeId, classTypeId) );
 
          
@@ -429,7 +431,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
             if memberNode.$accessMode ~= .Pri {
                let memberName = memberNode.$name.txt;
                let memberTypeInfo:Ast.TypeInfo = memberNode.get_expType();
-               self.writeln( "_classInfo%d.%s = {" ( classTypeId, memberName ) );
+               self.writeln( "__classInfo%d.%s = {" ( classTypeId, memberName ) );
                self.writeln(
                   "  name='%s', staticFlag = %s, mutable = %s,"
                   ( memberName, memberNode.$staticFlag,
@@ -447,6 +449,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
    }
 
 
+   // 公開クラスから、各メンバ、メソッドの公開情報登録
    let mut pickupedClassMap: Map<int,Ast.TypeInfo> = {};
    while true {
       let mut workClassMap: Map<int,Ast.TypeInfo> = {};
@@ -456,7 +459,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
             pickupedClassMap[ classTypeId ] = classTypeInfo;
             workClassMap[ classTypeId ] = classTypeInfo;
             hasWorkClassFlag = true;
-         }  
+         }
       }
 
       if not hasWorkClassFlag {
@@ -474,8 +477,8 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                let className = classTypeInfo.getTxt();
                self.writeln( "do" );
                self.pushIndent();
-               self.writeln( "local _classInfo%s = {}" (classTypeId) );
-               self.writeln( "_typeId2ClassInfoMap[ %d ] = _classInfo%d"
+               self.writeln( "local __classInfo%s = {}" (classTypeId) );
+               self.writeln( "__typeId2ClassInfoMap[ %d ] = __classInfo%d"
                              ( classTypeId, classTypeId) );
                
                forsort symbolInfo, fieldName in scope.$symbol2SymbolInfoMap {
@@ -485,7 +488,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                   //symbolInfo.$kind == Ast.SymbolKind.Typ
                   {
                      if symbolInfo.$accessMode == .Pub {
-                        self.writeln( "_classInfo%d.%s = {" ( classTypeId, fieldName ) );
+                        self.writeln( "__classInfo%d.%s = {" ( classTypeId, fieldName ) );
                         self.writeln(
                            "  name='%s', staticFlag = %s, "
                            ( fieldName,  symbolInfo.$staticFlag ) ..
@@ -503,23 +506,105 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
       }
    }
 
-   self.writeln( "local _varName2InfoMap = {}" );
-   self.writeln( "_moduleObj._varName2InfoMap = _varName2InfoMap" );
+
+   // 公開マクロ情報
+   self.writeln( "local __macroName2InfoMap = {}" );
+   self.writeln( "_moduleObj.__macroName2InfoMap = __macroName2InfoMap" );
+   if! let declMacroNodeList = node.$nodeManager.getDeclMacroNodeList() {
+      foreach macroDeclNode in declMacroNodeList {
+         let declInfo = macroDeclNode.$declInfo;
+         if declInfo.$pubFlag {
+            let macroInfo = unwrap node.$typeId2MacroInfo[ macroDeclNode.$expType.$typeId ];
+            
+            let macroTypeInfo = macroDeclNode.$expType;
+            pickupTypeId( macroTypeInfo, true );
+            
+            self.writeln( "do" );
+            self.pushIndent();
+            self.writeln( "local info = {}" );
+            self.writeln( "__macroName2InfoMap[ %d ] = info" (macroTypeInfo.$typeId) );
+            self.writeln( "info.name = %q" (declInfo.$name.txt));
+            self.write( "info.argList = {" );
+            foreach argNode, index in declInfo.$argList {
+               if index ~= 1 {
+                  self.write( "," );
+               }
+               self.write( "{name=%q,typeId=%d}"
+                           (argNode.$name.txt, argNode.$expType.$typeId ) );
+            }
+            self.writeln( "}" );
+            self.write( "info.symList = {" );
+            let mut firstFlag = true;
+            foreach symInfo, name in macroInfo.symbol2MacroValInfoMap {
+               if firstFlag {
+                  firstFlag = false;
+               }
+               else {
+                  self.write( "," );
+               }
+               self.write( "{name=%q,typeId=%d}"
+                           ( name, symInfo.typeInfo.$typeId ) );
+               pickupTypeId( symInfo.typeInfo, true );
+            }
+            self.writeln( "}" );
+            
+            if! let stmtBlock = declInfo.$stmtBlock {
+               let mut memStream = new Util.memStream();
+               
+               let mut filter = new convFilter(
+                  declInfo.$name.txt, memStream, memStream, .Convert, false,
+                  Ast.headTypeInfo, .Typ, self.separateLuneModule, self.targetLuaVer );
+
+               filter.macroDepth = filter.macroDepth + 1;
+               filter.processBlock( stmtBlock, node );
+               filter.macroDepth = filter.macroDepth - 1;
+               
+               memStream.close();
+               self.writeln( 'info.stmtBlock = %q' (memStream.$txt ) );
+            }
+
+            self.writeln( 'info.tokenList = {' );
+            let mut prevLineNo = -1;
+            foreach token, index in declInfo.$tokenList {
+               if index > 1 {
+                  self.write( "," );
+               }
+               if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo {
+                  self.write( "{%d,%q}," (Parser.TokenKind.Dlmt,"\n") );
+               }
+               prevLineNo = token.pos.lineNo;
+               self.write( "{%d,%q}" (token.kind, token.txt) );
+            }
+            self.writeln( '}' );
+
+            
+            self.popIndent();
+            self.writeln( "end" );
+         }
+      }
+   }
+   
+
+   // 公開変数情報の処理
+   self.writeln( "local __varName2InfoMap = {}" );
+   self.writeln( "_moduleObj.__varName2InfoMap = __varName2InfoMap" );
 
    forsort varInfo, varName in self.pubVarName2InfoMap {
-      self.writeln( string.format( "_varName2InfoMap.%s = {", varName ) );
+      self.writeln( string.format( "__varName2InfoMap.%s = {", varName ) );
       self.writeln(
          "  name='%s', accessMode = %d, typeId = %d, mutable = %s }"
          ( varName, varInfo.accessMode, varInfo.typeInfo.$typeId, true ) );
       pickupTypeId( varInfo.$typeInfo, true );
    }
 
+   // 公開関数情報の処理
    forsort funcInfo, funcName in self.pubFuncName2InfoMap {
       pickupTypeId( funcInfo.$typeInfo, true );
    }
 
-   self.writeln( "local _typeInfoList = {}" );
-   self.writeln( "_moduleObj._typeInfoList = _typeInfoList" );
+   // 型情報の処理
+   self.writeln( "local __typeInfoList = {}" );
+   self.writeln( "_moduleObj.__typeInfoList = __typeInfoList" );
    
    let mut listIndex = 1;
 
@@ -544,7 +629,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
       }
       wroteTypeIdSet[ typeId ] = true;
       if checkExportTypeInfo( typeInfo ) {
-         self.write( "_typeInfoList[%d] = " (listIndex) );
+         self.write( "__typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
 
          let mut validChildren = validChildrenSet[ typeInfo ];
@@ -569,9 +654,12 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
    }
 
    
-
-   self.writeln( "local _dependIdMap = {}" );
-   self.writeln( "_moduleObj._dependIdMap = _dependIdMap" );
+   // 依存モジュールが公開している情報のマッピング情報処理。
+   // このモジュールが公開するメソッドや変数が使用している型が、
+   // 依存モジュールで公開している型の場合、
+   // このモジュール内での typeid と、依存モジュール内での typeid の紐付け
+   self.writeln( "local __dependIdMap = {}" );
+   self.writeln( "_moduleObj.__dependIdMap = __dependIdMap" );
    let mut exportNeedModuleTypeInfo:Map<&Ast.TypeInfo,bool> = {};
    forsort typeInfo, typeId in typeId2TypeInfo {
       outputTypeInfo( typeInfo );
@@ -603,20 +691,20 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                self.writeln(
                   // "_dependIdMap[ %d ] = { %d, %d }"
                   // ( typeInfo.$typeId, moduleIndex, extId ),
-                  "_dependIdMap[ %d ] = { %d, %d } -- %s"
+                  "__dependIdMap[ %d ] = { %d, %d } -- %s"
                   ( typeInfo.$typeId, moduleIndex, extId, typeInfo.getTxt() ) );
             }
          }
       }
    }
 
-   self.writeln( "local _dependModuleMap = {}" );
-   self.writeln( "_moduleObj._dependModuleMap = _dependModuleMap" );
-
+   // 依存モジュール情報処理
+   self.writeln( "local __dependModuleMap = {}" );
+   self.writeln( "_moduleObj.__dependModuleMap = __dependModuleMap" );
    
    forsort moduleTypeInfo, name in importNameMap {
       self.writeln(
-         "_dependModuleMap[ '%s' ] = { id = %d, use = %s }"
+         "__dependModuleMap[ '%s' ] = { id = %d, use = %s }"
          ( name, unwrap importModuleType2Index[ moduleTypeInfo ],
            exportNeedModuleTypeInfo[ moduleTypeInfo ] or false ) );
    }
@@ -627,9 +715,9 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
       moduleTypeInfo = _exp.$symbol.$typeInfo;
       moduleSymbolKind = _exp.$symbol.$kind;
    }
-   self.writeln( "_moduleObj._moduleTypeId = %d" (moduleTypeInfo.$typeId ) );
-   self.writeln( "_moduleObj._moduleSymbolKind = %d" (moduleSymbolKind) );
-   self.writeln( "_moduleObj._moduleMutable = %s" (moduleTypeInfo.$mutable ) );
+   self.writeln( "_moduleObj.__moduleTypeId = %d" (moduleTypeInfo.$typeId ) );
+   self.writeln( "_moduleObj.__moduleSymbolKind = %d" (moduleSymbolKind) );
+   self.writeln( "_moduleObj.__moduleMutable = %s" (moduleTypeInfo.$mutable ) );
 
    self.writeln( "----- meta -----" );
 
@@ -1282,57 +1370,70 @@ pub override fn convFilter.processExpMacroExp(
    }    
 };
 
+
+form outputMacroStmtBlock();
+
+pub fn convFilter.outputDeclMacro(
+   name:str, astNameList:&List<str>, callback:outputMacroStmtBlock ) mut
+{
+   self.write( "local function %s(" ( name ) );
+
+   // let argTxt = "";
+   // foreach arg, index in macroInfo.get_argList() {
+   //    if index > 1 {
+   //       self.write( ", " );
+   //       argTxt = argTxt .. ", ";
+   //    }   
+   //    filter( arg, self, node, baseIndent );
+   //    if arg.get_kind() == Ast.NodeKind.$DeclArg {
+   //       argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
+   //    }
+   //    else {
+   //       error( "not support ... in macro %s" ( node.get_declInfo().$name.txt ) );
+   //    }
+   // }
+
+   // self.writeln( ")", baseIndent );
+
+   self.writeln( "__macroArgs )" );
+   self.pushIndent();
+   foreach argName in astNameList {
+      self.writeln( "local %s = __macroArgs.%s" (argName, argName ) );
+   } 
+
+   self.writeln( "local macroVar = {}" );
+   self.writeln( "macroVar._names = {}" );
+
+   self.macroDepth = self.macroDepth + 1;
+
+   callback();
+   
+   self.macroDepth = self.macroDepth - 1;
+   
+   self.writeln( "" );
+   self.writeln( "return macroVar" );
+   self.popIndent();
+   self.writeln( "end" );
+   self.writeln( "return %s" ( name ) );
+}
+
 pub override fn convFilter.processDeclMacro( 
    node: Ast.DeclMacroNode, parent: &Ast.Node ) mut
 {
    if self.inMacro {
-      let nodeInfo = node.get_declInfo();
-      let name = nodeInfo.get_name();
-
-      self.write( "local function %s(" ( name.txt ) );
-
-      // let argTxt = "";
-      // foreach arg, index in nodeInfo.get_argList() {
-      //    if index > 1 {
-      //       self.write( ", " );
-      //       argTxt = argTxt .. ", ";
-      //    }   
-      //    filter( arg, self, node, baseIndent );
-      //    if arg.get_kind() == Ast.NodeKind.$DeclArg {
-      //       argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
-      //    }
-      //    else {
-      //       error( "not support ... in macro %s" ( node.get_declInfo().$name.txt ) );
-      //    }
-      // }
-
-      // self.writeln( ")", baseIndent );
-
-      self.writeln( "__macroArgs )" );
-      self.pushIndent();
-      foreach arg, index in nodeInfo.get_argList() {
-         let argName = arg.$name.txt;
-         self.writeln( "local %s = __macroArgs.%s"
-                       (argName, argName ) );
-      } 
-
-      self.writeln( "local macroVar = {}" );
-      self.writeln( "macroVar._names = {}" );
-
-      self.macroDepth = self.macroDepth + 1;
-
-      if! nodeInfo.get_ast() {
-         filter( _exp, self, node );
+      let macroInfo = node.get_declInfo();
+      let mut argNameList:List<str> = [];
+      foreach arg in macroInfo.$argList {
+         argNameList.insert( arg.$name.txt );
       }
-      
-      self.macroDepth = self.macroDepth - 1;
-      
-      self.writeln( "" );
-      self.writeln( "return macroVar" );
-      self.popIndent();
-      self.writeln( "end" );
-      self.writeln( "return %s" ( name.txt ) );
-   }      
+      self.outputDeclMacro(
+         macroInfo.$name.txt, argNameList,
+         fn () {
+            if! let stmtBlock = macroInfo.$stmtBlock {
+               filter( stmtBlock, self, node );
+            }
+         });   
+   }
 };        
 
 pub override fn convFilter.processExpMacroStat( 
@@ -2595,15 +2696,7 @@ pub fn createFilter(
 pub class MacroEvalImp extend Ast.MacroEval {
    pri let mode: str;
 
-   pub override fn eval( node: Ast.DeclMacroNode ): form
-   {   
-      let mut oStream = new Util.memStream();
-      let mut conv = new convFilter(
-         "macro", oStream, oStream, .Exec, true,
-         Ast.headTypeInfo, .Typ, false, LuaVer.curVer ); 
-
-      conv.processDeclMacro( node, node );
-
+   fn evalFromMacroCode( code:str ): form {
       //Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
 
       let mut newEnv:Map<str,stem> = {};
@@ -2617,8 +2710,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
          return val;
       };
       
-      //let chunk, err = load( oStream.get_txt(), "", "bt", newEnv );
-      let chunk, err = _load( oStream.get_txt(), newEnv );
+      let chunk, err = _load( code, newEnv );
       when! err {
          Util.err( err );
       }
@@ -2629,6 +2721,34 @@ pub class MacroEvalImp extend Ast.MacroEval {
          }   
          return (unwrap mod)@@form;
       }
-      Util.err( "failed to load -- " .. node.$declInfo.$name );
+      Util.err( "failed to load" );
+   }
+
+   pub override fn evalFromCode( name:str, argNameList:&List<str>, code:str ): form {
+      let mut oStream = new Util.memStream();
+      let mut conv = new convFilter(
+         "macro", oStream, oStream, .Exec, true,
+         Ast.headTypeInfo, .Typ, false, LuaVer.curVer ); 
+
+      conv.outputDeclMacro(
+         name, argNameList,
+         fn () {
+            conv.write( code );
+         });
+      
+      return self.evalFromMacroCode( oStream.$txt );
+   }
+   
+   
+   pub override fn eval( node: Ast.DeclMacroNode ): form
+   {   
+      let mut oStream = new Util.memStream();
+      let mut conv = new convFilter(
+         "macro", oStream, oStream, .Exec, true,
+         Ast.headTypeInfo, .Typ, false, LuaVer.curVer ); 
+
+      conv.processDeclMacro( node, node );
+
+      return self.evalFromMacroCode( oStream.$txt );
    }  
 }     
