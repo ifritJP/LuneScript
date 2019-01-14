@@ -4,7 +4,7 @@ source = {
    url = "git://github.com/ifritJP/LuneScript"
 }
 description = {
-   summary = "Transcompiler for Lua.",
+   summary = "LuneScript is nil safety trans-compiler for Lua.",
    detailed = [[
 LuneScript is a Transcompiler for Lua.
 
@@ -55,5 +55,5 @@ build = {
          lnsc = "src/lnsc.lua"
       }
    },
-   copy_directories = { "docs", "src" }
+   copy_directories = { "docs" }
 }
