@@ -32,6 +32,7 @@ dependencies = {
 build = {
    type = "builtin",
    modules = {
+      [ "lune.base._lune" ] = "src/legacy/lua51/lune/base/_lune.lua",
       [ "lune.base.base" ] = "src/legacy/lua51/lune/base/base.lua",
       [ "lune.base.Ver" ] = "src/legacy/lua51/lune/base/Ver.lua",
       [ "lune.base.LuaMod" ] = "src/legacy/lua51/lune/base/LuaMod.lua",
