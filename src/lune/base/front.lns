@@ -259,7 +259,11 @@ fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
 
 fn Front.searchModule( mod:str ): str! {
    let mut lnsSearchPath = package.path;
-   lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" );
+   //lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" );
+
+   lnsSearchPath = lnsSearchPath.gsub( "%.lua$", ".lns" );
+   lnsSearchPath = lnsSearchPath.gsub( "%.lua;", ".lns;" );
+   
    //let! foundPath = package.searchpath( mod, lnsSearchPath ) {
    let! foundPath = Depend.searchpath( mod, lnsSearchPath ) {
       return nil;

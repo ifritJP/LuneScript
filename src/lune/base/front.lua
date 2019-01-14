@@ -283,7 +283,8 @@ end
 function Front:searchModule( mod )
 
    local lnsSearchPath = package.path
-   lnsSearchPath = string.gsub( lnsSearchPath, "%.lua", ".lns" )
+   lnsSearchPath = lnsSearchPath:gsub( "%.lua$", ".lns" )
+   lnsSearchPath = lnsSearchPath:gsub( "%.lua;", ".lns;" )
    local foundPath = Depend.searchpath( mod, lnsSearchPath )
    if  nil == foundPath then
       local _foundPath = foundPath

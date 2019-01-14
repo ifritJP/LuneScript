@@ -383,7 +383,7 @@ endif
 install: check_lua_mod_dir
 	$(MAKE) build LUA=$(LUA) LNSDIR=$(LNSDIR)
 	@mkdir -p $(LUA_MOD_DIR)/lune/base
-	@cat lnsc | sed "s@#!.*@#! /usr/bin/env $(abspath $(LUA))@g" > /tmp/lnsc
+	@cat lnsc.lua | sed "s@#!.*@#! /usr/bin/env $(abspath $(LUA))@g" > /tmp/lnsc
 	@chmod +x /tmp/lnsc
 	@$(INSTALL) /tmp/lnsc /usr/bin
 	@echo installed -- /usr/bin/lnsc
