@@ -298,6 +298,7 @@ diff-result:
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
 	$(call buildLns,work/3,../5 -ol 51)
+	$(call exeLune,work/5,-mklunemod,lune/base)
 	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	cp -a test work/5
 	mv work/5/test/glueTest51.so work/5/test/glueTest.so 
@@ -325,11 +326,12 @@ test-lua51:
 
 test-lua51-sub:
 	mkdir -p work/6/lune/base
-	@cp lune/base/base*.lua lune/base/*.lns work/6/lune/base
+	@cp lune/base/base.lua lune/base/_lune.lua lune/base/*.lns work/6/lune/base
 	$(call buildLns,work/5,../6)
 	cp -a test work/6
 	mv work/6/test/glueTest51.so work/6/test/glueTest.so 
 	grep -v skip-lua51 test/start.lns > work/6/test/start.lns
+	$(call exeLune,work/6,-mklunemod,lune/base)
 	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
 
 
