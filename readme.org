@@ -22,9 +22,22 @@ LuneScript is a transcompiler for Lua.
   There is no performance deterioration.
 - Existing Lua external modules can be used from LuneScript.
 - LuneScript runs on Lua and is easy to install as it requires no Lua standard modules.
-- Supports Lua 5.2, 5.3.
+- Supports Lua 5.1, 5.2, 5.3.
 - LuneScript is developed by self hosting.
+
+* Setup LuneScript
+
+- In case of lua5.1
   
+#+BEGIN_SRC sh
+$ luarocks install lunescript51
+#+END_SRC  
+
+- In case of lua5.2, lua5.3
+  
+#+BEGIN_SRC sh
+$ luarocks install lunescript
+#+END_SRC  
   
 * Usage of lnsc command
 
@@ -35,7 +48,7 @@ LuneScript is a transcompiler for Lua.
 - create hello.lns.
    
 #+NAME: hello.lns
-#+BEGIN_SRC sh
+#+BEGIN_SRC lns
 print( "Hello world." );
 #+END_SRC
 
