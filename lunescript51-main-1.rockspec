@@ -1,7 +1,7 @@
 package = "lunescript51"
 version = "main-1"
 source = {
-   url = "git+https://github.com/ifritJP/LuneScript.git"
+   url = "git://github.com/ifritJP/LuneScript"
 }
 description = {
    summary = "Transcompiler for Lua.",
