@@ -158,6 +158,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Writer = _lune.loadModule( 'lune.base.Writer' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+
 local DeclClassMode = {}
 DeclClassMode._val2NameMap = {}
 function DeclClassMode:_getTxt( val )
@@ -304,6 +305,7 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer) 
+   self.ignoreToCheckSymbol_ = false
    self.moduleId = moduleId
    self.helperInfo = Ast.LuneHelperInfo.new(false, false, false, false, false, false)
    self.targetLuaVer = targetLuaVer
@@ -1069,8 +1071,13 @@ function _TypeInfoNormal:createTypeInfo( param )
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
             if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method or self.kind == Ast.TypeInfoKind.Macro then
                local symbolKind = Ast.SymbolKind.Fun
-               if self.kind == Ast.TypeInfoKind.Method then
-                  symbolKind = Ast.SymbolKind.Mtd
+               do
+                  local _switchExp = self.kind
+                  if _switchExp == Ast.TypeInfoKind.Method then
+                     symbolKind = Ast.SymbolKind.Mtd
+                  elseif _switchExp == Ast.TypeInfoKind.Macro then
+                     symbolKind = Ast.SymbolKind.Mac
+                  end
                end
                
                local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
@@ -1845,18 +1852,60 @@ function TransUnit:pushbackStr( name, statement )
    
 end
 
-function TransUnit:checkSymbol( token )
+local SymbolMode = {}
+SymbolMode._val2NameMap = {}
+function SymbolMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "SymbolMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function SymbolMode._from( val )
+   if SymbolMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+SymbolMode.__allList = {}
+function SymbolMode.get__allList()
+   return SymbolMode.__allList
+end
+
+SymbolMode.Must_ = 0
+SymbolMode._val2NameMap[0] = 'Must_'
+SymbolMode.__allList[1] = SymbolMode.Must_
+SymbolMode.MustNot_ = 1
+SymbolMode._val2NameMap[1] = 'MustNot_'
+SymbolMode.__allList[2] = SymbolMode.MustNot_
+
+local specialSymbolMap = {["__init"] = true, ["__free"] = true, ["__"] = true, ["_exp"] = true}
+function TransUnit:checkSymbol( token, mode )
 
    if token.kind ~= Parser.TokenKind.Symb and token.kind ~= Parser.TokenKind.Kywd and token.kind ~= Parser.TokenKind.Type then
       self:addErrMess( token.pos, string.format( "illegal symbol -- '%s'", token.txt) )
    end
    
+   local frontChar = string.byte( token.txt, 1 )
+   if mode == SymbolMode.Must_ and frontChar ~= 95 then
+      self:addErrMess( token.pos, string.format( "macro name must begin with '_' -- '%s'", token.txt) )
+   elseif mode == SymbolMode.MustNot_ and frontChar == 95 then
+      if not self.ignoreToCheckSymbol_ then
+         if not specialSymbolMap[token.txt] then
+            self:addErrMess( token.pos, string.format( "symbol must not begin with '_' -- '%s'", token.txt) )
+         end
+         
+      end
+      
+   end
+   
    return token
 end
 
-function TransUnit:getSymbolToken(  )
+function TransUnit:getSymbolToken( mode )
 
-   return self:checkSymbol( self:getToken(  ) )
+   return self:checkSymbol( self:getToken(  ), mode )
 end
 
 function TransUnit:checkToken( token, txt )
@@ -1935,6 +1984,8 @@ function TransUnit:analyzeLuneControl( firstToken )
       local _switchExp = (nextToken.txt )
       if _switchExp == "disable_mut_control" then
          self.validMutControl = false
+      elseif _switchExp == "ignore_symbol_" then
+         self.ignoreToCheckSymbol_ = true
       else 
          
             self:addErrMess( nextToken.pos, string.format( "unknown option -- %s", nextToken.txt) )
@@ -2038,12 +2089,19 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
    do
       local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
       if moduleInfo ~= nil then
-         local metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )
-         local typeId2TypeInfo = moduleInfo:get_importId2localTypeInfoMap()
-         local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
-         moduleInfoMap[moduleTypeInfo] = moduleInfo
-         self.importModuleInfo:remove(  )
-         return metaInfo, typeId2TypeInfo
+         do
+            local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
+            if metaInfoStem ~= nil then
+               local metaInfo = metaInfoStem
+               local typeId2TypeInfo = moduleInfo:get_importId2localTypeInfoMap()
+               local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
+               moduleInfoMap[moduleTypeInfo] = moduleInfo
+               self.importModuleInfo:remove(  )
+               return metaInfo, typeId2TypeInfo
+            end
+         end
+         
+         self:error( "failed to load meta -- " .. modulePath )
       end
    end
    
@@ -2052,7 +2110,14 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
       table.insert( nameList, txt )
    end
    
-   local metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )
+   local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
+   if  nil == metaInfoStem then
+      local _metaInfoStem = metaInfoStem
+   
+      self:error( "failed to load meta -- " .. modulePath )
+   end
+   
+   local metaInfo = metaInfoStem
    local dependLibId2DependInfo = {}
    do
       local __sorted = {}
@@ -2399,7 +2464,7 @@ function TransUnit:analyzeImport( token )
    self.scope = self.moduleScope
    local assignName = moduleToken
    if nextToken.txt == "as" then
-      assignName = self:getSymbolToken(  )
+      assignName = self:getSymbolToken( SymbolMode.MustNot_ )
       nextToken = self:getToken(  )
    end
    
@@ -2570,7 +2635,7 @@ function TransUnit:analyzeMatch( firstToken )
       local blockScope = self:pushScope( false )
       if nextToken.txt == "(" then
          for __index, paramType in pairs( valInfo:get_typeList() ) do
-            local paramName = self:getSymbolToken(  )
+            local paramName = self:getSymbolToken( SymbolMode.MustNot_ )
             if self.scope:getTypeInfo( paramName.txt, self.scope, true ) then
                self:addErrMess( paramName.pos, string.format( "shadowing variable -- %s", paramName.txt) )
             end
@@ -2681,7 +2746,7 @@ function TransUnit:analyzeApply( token )
    local varList = {}
    local nextToken = Parser.getEofToken(  )
    repeat 
-      local var = self:getSymbolToken(  )
+      local var = self:getSymbolToken( SymbolMode.MustNot_ )
       if var.kind ~= Parser.TokenKind.Symb then
          self:error( "illegal symbol" )
       end
@@ -2808,7 +2873,7 @@ end
 
 function TransUnit:analyzeProvide( firstToken )
 
-   local token = self:getSymbolToken(  )
+   local token = self:getSymbolToken( SymbolMode.MustNot_ )
    local symbolNode = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, true )
    self:checkNextToken( ";" )
    local symbolInfoList = symbolNode:getSymbolInfo(  )
@@ -2847,7 +2912,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
    end
    
    local typeInfo = Ast.builtinTypeStem_
-   self:checkSymbol( token )
+   self:checkSymbol( token, SymbolMode.MustNot_ )
    local name = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, true )
    typeInfo = name:get_expType()
    local continueToken, continueFlag = self:getContinueToken(  )
@@ -2941,7 +3006,7 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
          self.scope:addLocalVar( false, true, argName.txt, Ast.builtinTypeDDD, false )
       else
        
-         argName = self:checkSymbol( argName )
+         argName = self:checkSymbol( argName, SymbolMode.MustNot_ )
          if self.scope:getSymbolTypeInfo( argName.txt, self.scope, self.moduleScope ) then
             self:addErrMess( argName.pos, string.format( "shadowing variable -- %s", argName.txt) )
          end
@@ -3110,7 +3175,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
       end
    end
    
-   local nameToken = self:getToken(  )
+   local nameToken = self:getSymbolToken( SymbolMode.Must_ )
    self:checkNextToken( "(" )
    local scope = self:pushScope( false )
    local workArgList = {}
@@ -3291,7 +3356,7 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
    end
    
    if nextToken.txt == "class" or nextToken.txt == "interface" then
-      local name = self:getSymbolToken(  )
+      local name = self:getSymbolToken( SymbolMode.MustNot_ )
       nextToken = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode )
       self:popClass(  )
       self:checkToken( nextToken, ";" )
@@ -3305,7 +3370,7 @@ end
 
 function TransUnit:analyzeDeclEnum( accessMode, firstToken )
 
-   local name = self:getSymbolToken(  )
+   local name = self:getSymbolToken( SymbolMode.MustNot_ )
    self:checkNextToken( "{" )
    local valueList = {}
    local valueName2Info = {}
@@ -3316,7 +3381,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    local prevValTypeInfo = Ast.headTypeInfo
    local valTypeInfo = Ast.headTypeInfo
    while nextToken.txt ~= "}" do
-      local valName = self:checkSymbol( nextToken )
+      local valName = self:checkSymbol( nextToken, SymbolMode.MustNot_ )
       nextToken = self:getToken(  )
       local enumVal = number
       do
@@ -3403,7 +3468,7 @@ end
 function TransUnit:analyzeDeclAlge( accessMode, firstToken )
 
    self.helperInfo.useAlge = true
-   local name = self:getSymbolToken(  )
+   local name = self:getSymbolToken( SymbolMode.MustNot_ )
    self:checkNextToken( "{" )
    local scope = self.scope
    local algeScope = self:pushScope( true )
@@ -3411,7 +3476,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    scope:addAlge( accessMode, name.txt, algeTypeInfo )
    local nextToken = self:getToken(  )
    while nextToken.txt ~= "}" do
-      local valName = self:checkSymbol( nextToken )
+      local valName = self:checkSymbol( nextToken, SymbolMode.MustNot_ )
       if algeTypeInfo:getValInfo( valName.txt ) then
          self:addErrMess( valName.pos, string.format( "multiple symbole -- %s", valName.txt) )
       end
@@ -3474,7 +3539,7 @@ end
 
 function TransUnit:analyzeDeclForm( accessMode, firstToken )
 
-   local name = self:getSymbolToken(  )
+   local name = self:getSymbolToken( SymbolMode.MustNot_ )
    self:checkNextToken( "(" )
    local argList = {}
    local funcBodyScope = self:pushScope( false )
@@ -3576,7 +3641,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
       nextToken = self:getToken(  )
    end
    
-   local varName = self:checkSymbol( nextToken )
+   local varName = self:checkSymbol( nextToken, SymbolMode.MustNot_ )
    local token = self:getToken(  )
    local refType = self:analyzeRefType( accessMode, false )
    token = self:getToken(  )
@@ -3714,7 +3779,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    
    local function processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag )
    
-      local nameToken = self:getSymbolToken(  )
+      local nameToken = self:getSymbolToken( SymbolMode.MustNot_ )
       local declFuncMode = DeclFuncMode.Class
       if mode == DeclClassMode.Module then
          if gluePrefix then
@@ -3756,7 +3821,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    
    local function processAdvertise(  )
    
-      local memberToken = self:getSymbolToken(  )
+      local memberToken = self:getSymbolToken( SymbolMode.MustNot_ )
       nextToken = self:getToken(  )
       local prefix = ""
       if nextToken.txt ~= ";" and nextToken.txt ~= "{" then
@@ -3899,7 +3964,7 @@ end
 
 function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
 
-   local name = self:getSymbolToken(  )
+   local name = self:getSymbolToken( SymbolMode.MustNot_ )
    if classAccessMode == Ast.AccessMode.Local then
       classAccessMode = Ast.AccessMode.Pri
    end
@@ -4141,10 +4206,10 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    do
       local _exp = name
       if _exp ~= nil then
-         name = self:checkSymbol( _exp )
+         name = self:checkSymbol( _exp, SymbolMode.MustNot_ )
       else
          if token.txt ~= "(" then
-            name = self:checkSymbol( token )
+            name = self:checkSymbol( token, SymbolMode.MustNot_ )
             token = self:getToken(  )
          end
          
@@ -4162,7 +4227,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          self:error( string.format( "not found class -- %s", className) )
       end
       
-      name = self:getSymbolToken(  )
+      name = self:getSymbolToken( SymbolMode.MustNot_ )
       token = self:getToken(  )
       if accessMode == Ast.AccessMode.Local then
          accessMode = Ast.AccessMode.Pri
@@ -4522,7 +4587,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
          nextToken = self:getToken(  )
       end
       
-      local varName = self:checkSymbol( nextToken )
+      local varName = self:checkSymbol( nextToken, SymbolMode.MustNot_ )
       nextToken = self:getToken(  )
       local typeInfo = Ast.builtinTypeNone
       if nextToken.txt == ":" then
@@ -5920,7 +5985,7 @@ end
 
 function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
 
-   local symbolToken = self:getSymbolToken(  )
+   local symbolToken = self:getSymbolToken( SymbolMode.MustNot_ )
    do
       local valInfo = algeTypeInfo:getValInfo( symbolToken.txt )
       if valInfo ~= nil then

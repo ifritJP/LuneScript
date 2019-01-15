@@ -24,6 +24,8 @@ SOFTWARE.
 
 import lune.base.Util;
 
+_lune_control ignore_symbol_;
+
 pub class ModuleId {
    let idStr:str {pub};
    pub static let tempId:ModuleId;
@@ -98,7 +100,7 @@ Lua からも利用される。
 @param mod モジュール (foo.bar)
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem;
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -119,7 +121,7 @@ class dummyFront extend (frontInterface) {
       // error( "not implements" );
       return require( mod ), {};
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem {
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem! {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
@@ -149,7 +151,7 @@ pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 
-pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem {
+pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem! {
    return __luneScript.loadMeta( importModuleInfo, mod );
 }
 

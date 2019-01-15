@@ -2394,13 +2394,13 @@ function convFilter:processExpOp1( node, parent )
          filter( node:get_exp(), self, node )
       else
        
-         self:write( "_luneSym2Str( " )
+         self:write( "__luneSym2Str( " )
          filter( node:get_exp(), self, node )
          self:write( " )" )
       end
       
    elseif op == ",," then
-      self:write( "_luneGetLocal( " )
+      self:write( "__luneGetLocal( " )
       filter( node:get_exp(), self, node )
       self:write( " )" )
    elseif op == "~" then

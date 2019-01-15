@@ -34,9 +34,11 @@ import lune.base.Depend;
 import lune.base.OutputDepend;
 import lune.base.Ver;
 
+_lune_control ignore_symbol_;
+
 let forceUpdateMeta = true;
 
-global fn _luneGetLocal( varName:str ):stem!
+global fn __luneGetLocal( varName:str ):stem!
 {
    let mut index = 1;
    while true {
@@ -53,7 +55,7 @@ global fn _luneGetLocal( varName:str ):stem!
    error( "not found -- " .. varName );
 }
 
-global fn _luneSym2Str( val:stem! ):str! {
+global fn __luneSym2Str( val:stem! ):str! {
    if! val {
       if type( _exp ) ~= "table" {
          return string.format( "%s", _exp );
@@ -89,7 +91,7 @@ class Front extend (frontInterface.frontInterface) {
    }
 
    pub fn loadModule( mod:str ): stem!, &stem;
-   pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ): &stem;
+   pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ): &stem!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
                           name:str, txt:str ): &stem, stem;
    pub fn searchModule( mod:str ): str;
@@ -371,7 +373,7 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
 
 
 fn Front.loadMeta(
-   importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : stem
+   importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut : &stem!
 {
    if self.loadedMetaMap[ mod ] == nil {
       if! self.loadedMap[ mod ] {
@@ -407,10 +409,7 @@ fn Front.loadMeta(
          }
       }
    }
-   if! self.loadedMetaMap[ mod ] {
-      return unwrap _exp;
-   }
-   error( "load meta error, %s" ( mod ) );
+   return self.loadedMetaMap[ mod ];
 }
 
 pub fn Front.dumpTokenize() mut {

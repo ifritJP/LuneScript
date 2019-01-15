@@ -43,8 +43,9 @@ local glueFilter = _lune.loadModule( 'lune.base.glueFilter' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local OutputDepend = _lune.loadModule( 'lune.base.OutputDepend' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
+
 local forceUpdateMeta = true
-function _luneGetLocal( varName )
+function __luneGetLocal( varName )
 
    local index = 1
    while true do
@@ -63,7 +64,7 @@ function _luneGetLocal( varName )
    error( "not found -- " .. varName )
 end
 
-function _luneSym2Str( val )
+function __luneSym2Str( val )
 
    do
       local _exp = val
@@ -478,14 +479,7 @@ function Front:loadMeta( importModuleInfo, mod )
       
    end
    
-   do
-      local _exp = self.loadedMetaMap[mod]
-      if _exp ~= nil then
-         return _lune.unwrap( _exp)
-      end
-   end
-   
-   error( string.format( "load meta error, %s", mod) )
+   return self.loadedMetaMap[mod]
 end
 
 function Front:dumpTokenize(  )

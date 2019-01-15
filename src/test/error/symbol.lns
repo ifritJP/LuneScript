@@ -1,0 +1,11 @@
+let _val = 1;
+fn _func1() {
+}
+fn func2( _val:int ) {
+}
+class _Test {
+   fn _func() {
+   }
+}
+macro Hoge() {
+}

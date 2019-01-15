@@ -40,7 +40,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
       token = self.getToken();
    }
    let mut typeInfo = Ast.builtinTypeStem_;
-   self.checkSymbol( token );
+   self.checkSymbol( token, .MustNot_ );
 
 
    let name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
@@ -150,7 +150,7 @@ fn TransUnit.analyzeDeclArgList(
             false, true, argName.txt, Ast.builtinTypeDDD, false );
       }
       else {
-         argName = self.checkSymbol( argName );
+         argName = self.checkSymbol( argName, .MustNot_ );
 
          if self.scope.getSymbolTypeInfo( argName.txt, self.scope, self.moduleScope ) {
             self.addErrMess( argName.pos,
@@ -313,7 +313,7 @@ fn TransUnit.analyzeDeclMacro(
       }
    }
    
-   let nameToken = self.getToken();
+   let nameToken = self.getSymbolToken( .Must_ );
    self.checkNextToken( "(" );
 
    let mut scope = self.pushScope( false );
@@ -518,7 +518,7 @@ fn TransUnit.analyzeDeclProto(
 
    
    if nextToken.txt == "class" or nextToken.txt == "interface" {
-      let name = self.getSymbolToken();
+      let name = self.getSymbolToken( .MustNot_ );
       
       nextToken = self.analyzePushClass(
          nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode );
@@ -534,7 +534,7 @@ fn TransUnit.analyzeDeclProto(
 fn TransUnit.analyzeDeclEnum(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.DeclEnumNode
 {
-   let name = self.getSymbolToken();
+   let name = self.getSymbolToken( .MustNot_ );
 
    self.checkNextToken( "{" );
 
@@ -551,7 +551,7 @@ fn TransUnit.analyzeDeclEnum(
    let mut prevValTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut valTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    while nextToken.txt ~= "}" {
-      let valName = self.checkSymbol(nextToken);
+      let valName = self.checkSymbol(nextToken, .MustNot_ );
       
       nextToken = self.getToken();
 
@@ -657,7 +657,7 @@ fn TransUnit.analyzeDeclAlge(
 {
    self.helperInfo.useAlge = true;
    
-   let name = self.getSymbolToken();
+   let name = self.getSymbolToken( .MustNot_ );
 
    self.checkNextToken( "{" );
 
@@ -670,7 +670,7 @@ fn TransUnit.analyzeDeclAlge(
    
    let mut nextToken = self.getToken();
    while nextToken.txt ~= "}" {
-      let valName = self.checkSymbol(nextToken);
+      let valName = self.checkSymbol( nextToken, .MustNot_ );
       if algeTypeInfo.getValInfo( valName.txt ) {
          self.addErrMess( valName.pos, "multiple symbole -- %s" (valName.txt) );
       }
@@ -739,7 +739,7 @@ fn TransUnit.analyzeRetTypeList(
 
 
 fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Token ) mut {
-   let name = self.getSymbolToken();
+   let name = self.getSymbolToken( .MustNot_ );
    self.checkNextToken( "(" );
    let mut argList:List<&Ast.Node> = [];
 
@@ -863,7 +863,7 @@ fn TransUnit.analyzeDeclMember(
          mutable = true;
          nextToken = self.getToken();
       }
-      let varName = self.checkSymbol(nextToken);
+      let varName = self.checkSymbol( nextToken, .MustNot_ );
       let mut token = self.getToken();
       let refType = self.analyzeRefType( accessMode, false );
       token = self.getToken();
@@ -1024,7 +1024,7 @@ fn TransUnit.analyzeClassBody(
 
    fn processFn( token:&Parser.Token, staticFlag:bool, accessMode:Ast.AccessMode,
                  abstractFlag:bool, overrideFlag:bool ) {
-      let nameToken = self.getSymbolToken();
+      let nameToken = self.getSymbolToken( .MustNot_ );
       let mut declFuncMode = DeclFuncMode.Class;
       if mode == .Module {
          if gluePrefix {
@@ -1063,7 +1063,7 @@ fn TransUnit.analyzeClassBody(
    }
 
    fn processAdvertise() {
-      let memberToken = self.getSymbolToken();
+      let memberToken = self.getSymbolToken( .MustNot_ );
       nextToken = self.getToken();
       let mut prefix = "";
       if nextToken.txt ~= ";" and nextToken.txt ~= "{" {
@@ -1202,7 +1202,7 @@ fn TransUnit.analyzeDeclClass(
    classAbstructFlag: bool,  mut classAccessMode: Ast.AccessMode,
    firstToken: &Parser.Token, mode:DeclClassMode ) mut : Ast.DeclClassNode
 {
-   let name = self.getSymbolToken();
+   let name = self.getSymbolToken( .MustNot_ );
 
    if classAccessMode == .Local {
       classAccessMode = .Pri;
@@ -1500,11 +1500,11 @@ fn TransUnit.analyzeDeclFunc(
 {
    let mut token = self.getToken();
    if! name {
-      name = self.checkSymbol( _exp );
+      name = self.checkSymbol( _exp, .MustNot_ );
    }
    else {
       if token.txt ~= "(" {
-         name = self.checkSymbol( token );
+         name = self.checkSymbol( token, .MustNot_ );
          token = self.getToken();
       }
    }
@@ -1526,7 +1526,7 @@ fn TransUnit.analyzeDeclFunc(
          self.error( "not found class -- %s" (className) );
       }
 
-      name = self.getSymbolToken();
+      name = self.getSymbolToken( .MustNot_ );
       token = self.getToken();
 
       if accessMode == .Local {
@@ -1906,7 +1906,7 @@ fn TransUnit.analyzeLetAndInitExp(
          mutable = true;
          nextToken = self.getToken();
       }
-      let varName = self.checkSymbol( nextToken );
+      let varName = self.checkSymbol( nextToken, .MustNot_ );
       nextToken = self.getToken();
       let mut typeInfo = Ast.builtinTypeNone;
       if nextToken.txt == ":" {

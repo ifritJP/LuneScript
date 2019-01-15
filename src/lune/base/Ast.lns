@@ -95,12 +95,20 @@ pub fn isBuiltin( typeId: int ) : bool {
 pub proto class Scope;
 
 pub enum SymbolKind {
+   /** 型 */
    Typ,
+   /** メンバ */
    Mbr,
+   /** メソッド */
    Mtd,
+   /** 関数 */
    Fun,
+   /** 変数 */
    Var,
+   /** 引数 */
    Arg,
+   /** マクロ */
+   Mac,
 }
 
 pub enum AccessMode {
@@ -831,7 +839,7 @@ pub fn Scope.addFunc(
 pub fn Scope.addMacro(
    typeInfo: &TypeInfo, accessMode:AccessMode ) mut
 {
-   self.add( SymbolKind.Fun, false, false, typeInfo.getTxt(),
+   self.add( SymbolKind.Mac, false, false, typeInfo.getTxt(),
              typeInfo, accessMode, true, false, true );
 }
 
@@ -2102,7 +2110,7 @@ pub override fn NilableTypeInfo.canEvalWith( other:&TypeInfo, opTxt:str ): bool 
    return self.$orgTypeInfo.canEvalWith( otherSrc, opTxt );
 }
    
-macro checkEqualsItemType( type1:sym, type2:sym, index:int ) {
+macro _checkEqualsItemType( type1:sym, type2:sym, index:int ) {
    if not (unwrap ,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
       unwrap ,,type2.$itemTypeInfoList[ ,,index ], "=" )
    {
@@ -2286,7 +2294,7 @@ pub static fn TypeInfo.canEvalWithBase(
             // literalMap の [], [@] は互換有りとする
             return true;
          }  
-         checkEqualsItemType( dist, otherSrc, 1 );
+         _checkEqualsItemType( dist, otherSrc, 1 );
          return true;
       }       
       case .Map {
@@ -2296,8 +2304,8 @@ pub static fn TypeInfo.canEvalWithBase(
             // literalMap の {} は互換有りとする
             return true;
          }  
-         checkEqualsItemType( dist, otherSrc, 1 );
-         checkEqualsItemType( dist, otherSrc, 2 );
+         _checkEqualsItemType( dist, otherSrc, 1 );
+         _checkEqualsItemType( dist, otherSrc, 2 );
          return true;
       }       
       case .Class, .IF {
@@ -2531,9 +2539,9 @@ macro _declNodeClass(
    canBeStatementFlag:bool!, fieldInfoList:Map<str,str>[] )
 {
    {
-      let _className = ,,,"%sNode" (baseName);
-      let _nodeKindSym = ,,,"%s" (baseName);
-      let _nodeKindGetter = ,,,"get_%s" (baseName);
+      let className = ,,,"%sNode" (baseName);
+      let nodeKindSym = ,,,"%s" (baseName);
+      let nodeKindGetter = ,,,"get_%s" (baseName);
 
       let mut fieldStatList:stat[] = [];
       let mut argList:stat[] = [];
@@ -2579,36 +2587,36 @@ macro _declNodeClass(
       }
       
       let superStat = `{
-         super( unwrap nodeKind. ,,_nodeKindSym, pos, typeList );
+         super( unwrap nodeKind. ,,nodeKindSym, pos, typeList );
       };
 
       relateStat.insert( `{
-         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,_className, ... ) mut {
+         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, ... ) mut {
          };
-         pub fn NodeManager. ,,,"get%sList" (,,,,_className) () : &List<&,,_className>! {
-            return self.getList( unwrap nodeKind. ,,_nodeKindSym )@@List<&,,_className> !;
+         pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className>! {
+            return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className> !;
          }
       } );
       
    }
 
-   pub static fn NodeKind.,,_nodeKindGetter (): int {
-      return unwrap nodeKind. ,,_nodeKindSym;
+   pub static fn NodeKind.,,nodeKindGetter (): int {
+      return unwrap nodeKind. ,,nodeKindSym;
    }
    
-   pub proto class ,,_className extend ,,super;
+   pub proto class ,,className extend ,,super;
    regKind( ,,baseName );
    ,,relateStat;
-   pub class ,,_className extend ,,super {
+   pub class ,,className extend ,,super {
       ,,fieldStatList;
       pro fn __init( pos: &Parser.Position, typeList: &List<&TypeInfo>, ,,argList ) {
          ,,superStat;
          ,,initStatList;
       }
       pub static fn create( nodeMan:NodeManager, pos: &Parser.Position,
-                            typeList: &List<&TypeInfo>, ,,argList ) : ,,_className
+                            typeList: &List<&TypeInfo>, ,,argList ) : ,,className
       {
-         let mut node = new ,,_className( pos, typeList ,,argSymList );
+         let mut node = new ,,className( pos, typeList ,,argSymList );
          nodeMan.addNode( node );
          return node;
       }

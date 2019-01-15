@@ -2282,13 +2282,13 @@ pub override fn convFilter.processExpOp1(
          filter( node.$exp,  self, node );
       }     
       else {
-         self.write( "_luneSym2Str( " );
+         self.write( "__luneSym2Str( " );
          filter( node.$exp,  self, node );
          self.write( " )" );
       }   
    }
    elseif op == ",," {
-      self.write( "_luneGetLocal( " );
+      self.write( "__luneGetLocal( " );
       filter( node.$exp,  self, node );
       self.write( " )" );
    }

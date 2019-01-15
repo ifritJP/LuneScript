@@ -111,6 +111,16 @@ test-save:
 	$(call test-meta-update,.)
 
 
+BUILD_COUNTER=build.counter
+build-countup:
+	@echo $$(($$(head -n 1 $(BUILD_COUNTER)) + 1)) > $(BUILD_COUNTER)
+	@echo build -- $$(cat $(BUILD_COUNTER))
+
+define mk_lune_proj_dir
+	mkdir -p $1/lune/base
+	cp $(BUILD_COUNTER) $1
+endef
+
 # LuneScript 自身のソースを Lua に変換する。
 #
 # 次の手順で実行する。
@@ -130,13 +140,14 @@ test-save:
 #   work/test2.result, work/test3.result を比較し、同じになっているか確認する。
 # - 上記の比較が全て同じなら、 candidate を orginal とする。
 test-comp:
+	$(MAKE) build-countup
 	rm -rf work
 	mkdir -p work/glue
-	mkdir -p work/1/lune/base
+	$(call mk_lune_proj_dir,work/1)
 	mkdir -p work/1/test
-	mkdir -p work/2/lune/base
-	mkdir -p work/3/lune/base
-	mkdir -p work/5/lune/base
+	$(call mk_lune_proj_dir,work/2)
+	$(call mk_lune_proj_dir,work/3)
+	$(call mk_lune_proj_dir,work/5)
 	mkdir -p work/newglue
 	@cp lune/base/base*.lua lune/base/*.lns work/1/lune/base
 	@cp lune/base/base*.lua lune/base/*.lns work/2/lune/base
@@ -182,6 +193,8 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/Alge3.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/Alge4.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/exp.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/symbol.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
 
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
@@ -256,7 +269,7 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
 
 # オプション -u 付きで save して実行テスト
-	mkdir -p work/4
+	$(call mk_lune_proj_dir,work/4)
 	cp -a test work/4
 	cp -a work/3/lune work/4
 	$(call exeLune,work/3,test/start.lns,-u SAVE ../4,)
@@ -273,6 +286,9 @@ endif
 
 	$(call test-meta-update,work/3)
 
+# rockspec の更新が必要かどうか
+	$(MAKE) check-rockspec
+
 # メタフォーマットバージョンを上げなくて良いか確認
 	$(MAKE) check-meta-format
 
@@ -284,6 +300,17 @@ ifdef LUA51
 else
 	$(MAKE) accept-package ACCEPT=y
 endif
+
+define check-rockspec-op
+	@grep 'lune.base' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
+	@find $2 -iname '*.lua' | sort > work/$1.2.list
+	diff work/$1.list work/$1.2.list
+	@rm work/$1.list work/$1.2.list
+endef
+
+check-rockspec:
+	$(call check-rockspec-op,lunescript-main-1.rockspec,lune/base/)
+	$(call check-rockspec-op,lunescript51-main-1.rockspec,legacy/lua51/lune/base/)
 
 
 diff-result:
@@ -311,7 +338,7 @@ test-lua51:
 	diff -r work/5/lune work/6/lune
 
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
-	mkdir -p work/7
+	$(call mk_lune_proj_dir,work/7)
 	cp -a work/3/lune work/7
 	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	cp -a test work/7
@@ -325,7 +352,7 @@ test-lua51:
 
 
 test-lua51-sub:
-	mkdir -p work/6/lune/base
+	$(call mk_lune_proj_dir,work/6)
 	@cp lune/base/base.lua lune/base/_lune.lua lune/base/*.lns work/6/lune/base
 	$(call buildLns,work/5,../6)
 	cp -a test work/6
@@ -338,6 +365,7 @@ test-lua51-sub:
 
 accept-package:
 ifndef ACCEPT
+	$(MAKE) -i diff-result
 	@read -p "accept? $1 (y/n): " ANS; \
 	if [ $${ANS}x != yx ]; then exit 1; fi;
 endif

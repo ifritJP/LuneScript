@@ -233,6 +233,9 @@ SymbolKind.__allList[5] = SymbolKind.Var
 SymbolKind.Arg = 5
 SymbolKind._val2NameMap[5] = 'Arg'
 SymbolKind.__allList[6] = SymbolKind.Arg
+SymbolKind.Mac = 6
+SymbolKind._val2NameMap[6] = 'Mac'
+SymbolKind.__allList[7] = SymbolKind.Mac
 
 local AccessMode = {}
 _moduleObj.AccessMode = AccessMode
@@ -1092,7 +1095,7 @@ end
 
 function Scope:addMacro( typeInfo, accessMode )
 
-   self:add( SymbolKind.Fun, false, false, typeInfo:getTxt(  ), typeInfo, accessMode, true, false, true )
+   self:add( SymbolKind.Mac, false, false, typeInfo:getTxt(  ), typeInfo, accessMode, true, false, true )
 end
 
 function Scope:addClass( name, typeInfo )

@@ -29,6 +29,13 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+
+local function getBuildCount(  )
+
+   return 26
+end
+
+
 local ModeKind = {}
 _moduleObj.ModeKind = ModeKind
 ModeKind._val2NameMap = {}
@@ -185,7 +192,7 @@ usage:
             elseif _switchExp == "--nodebug" then
                Util.setDebugFlag( false )
             elseif _switchExp == "--version" then
-               print( string.format( "LuneScript: version %s", Ver.version) )
+               print( string.format( "LuneScript: version %s.%d (%s)", Ver.version, getBuildCount(  ), _VERSION) )
                os.exit( 0 )
             elseif _switchExp == "-mklunemod" then
                local path = (#argList > index ) and argList[index + 1] or nil

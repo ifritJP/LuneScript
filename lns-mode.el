@@ -87,7 +87,8 @@
 (defvar lns-font-lock-keywords
   `((,lns-builtin . font-lock-builtin-face)
     (,lns-keyword . font-lock-keyword-face)
-    ("\\<_exp[0-9]*\\>" . font-lock-warning-face)
+    ("\\<_exp\\>" . font-lock-warning-face)
+    ("\\<_[a-zA-Z0-9_]+\\>" . font-lock-warning-face)
     ;;("\\<let\\|unwrap\\|if\\>" . font-lock-keyword-face)
     ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|\\$[\\.\\[(]\\|#\\|\\!\\|_lune_control" .
      font-lock-warning-face)

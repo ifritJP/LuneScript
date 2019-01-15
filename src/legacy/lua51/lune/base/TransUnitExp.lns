@@ -1160,7 +1160,7 @@ fn TransUnit.analyzeNewAlge(
    firstToken:&Parser.Token,
    algeTypeInfo:&Ast.AlgeTypeInfo, prefix:&Ast.Node! ) mut : Ast.NewAlgeValNode
 {
-   let symbolToken = self.getSymbolToken();
+   let symbolToken = self.getSymbolToken( .MustNot_ );
 
    if! let valInfo = algeTypeInfo.getValInfo( symbolToken.txt ) {
       let mut argList:List<&Ast.Node> = [];

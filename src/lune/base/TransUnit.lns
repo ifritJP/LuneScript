@@ -33,6 +33,8 @@ import lune.base.Writer;
 import lune.base.frontInterface;
 import lune.base.LuaVer;
 
+_lune_control ignore_symbol_;
+
 enum DeclClassMode {
    Class,
    Interface,
@@ -144,11 +146,15 @@ pub class TransUnit {
 
    pri let moduleId:frontInterface.ModuleId;
 
+   /** true の場合、 _ で始まるシンボル名チェックをしない */
+   pri let mut ignoreToCheckSymbol_:bool;
+
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
                   macroEval: Ast.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo )
    {
+      self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
       self.helperInfo = new Ast.LuneHelperInfo(
          false, false, false, false, false, false );
@@ -693,10 +699,15 @@ class _TypeInfoNormal extend _TypeInfo {
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
 
                if self.kind == .Func or self.kind == .Method or self.kind == .Macro
-               {  
+               {
                   let mut symbolKind = Ast.SymbolKind.Fun;
-                  if self.kind == Ast.TypeInfoKind.Method {
-                     symbolKind = Ast.SymbolKind.Mtd;
+                  switch self.kind {
+                     case .Method {
+                        symbolKind = Ast.SymbolKind.Mtd;
+                     }
+                     case .Macro {
+                        symbolKind = Ast.SymbolKind.Mac;
+                     }
                   }
                   let mut workParentScope =
                      unwrap param.typeId2Scope[ self.parentId ];
@@ -1119,7 +1130,7 @@ fn TransUnit.registBuiltInScope() mut {
    self.scope = self.topScope;
 }
 
-fn TransUnit.error( mess: str ) mut {
+fn TransUnit.error( mess: str ) mut : __ {
    let mut pos:&Parser.Position = new Parser.Position( 0, 0 );
    let mut txt = "";
    if self.currentToken ~= Parser.getEofToken() {
@@ -1365,18 +1376,43 @@ fn TransUnit.pushbackStr( name: str, statement: str ) mut {
    }
 }
 
-fn TransUnit.checkSymbol( token: &Parser.Token ) mut : &Parser.Token {
+enum SymbolMode {
+   Must_,
+   MustNot_,
+}
+
+let specialSymbolMap = {
+   "__init":true,
+   "__free":true,
+   "__":true,
+   "_exp":true,
+};
+
+fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.Token {
    if token.kind ~= Parser.TokenKind.Symb and
       token.kind ~= Parser.TokenKind.Kywd and
       token.kind ~= Parser.TokenKind.Type
    {
       self.addErrMess( token.pos, "illegal symbol -- '%s'" ( token.txt) );
    }
+   let frontChar = token.txt[1];
+   if mode == .Must_ and frontChar ~= ?_ { 
+      self.addErrMess(
+         token.pos, "macro name must begin with '_' -- '%s'" ( token.txt ) );
+   }
+   elseif mode == .MustNot_ and frontChar == ?_ {
+      if not self.ignoreToCheckSymbol_ {
+         if not specialSymbolMap[ token.txt ] {
+            self.addErrMess(
+               token.pos, "symbol must not begin with '_' -- '%s'" ( token.txt ) );
+         }
+      }
+   }
    return token;
 }
 
-fn TransUnit.getSymbolToken() mut : &Parser.Token {
-   return self.checkSymbol( self.getToken() );
+fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Parser.Token {
+   return self.checkSymbol( self.getToken(), mode );
 }
 
 
@@ -1463,7 +1499,10 @@ fn TransUnit.analyzeLuneControl( firstToken: &Parser.Token ) mut {
    switch ( nextToken.txt ) {
       case "disable_mut_control" {
          self.validMutControl = false;
-      } 
+      }
+      case "ignore_symbol_" {
+         self.ignoreToCheckSymbol_ = true;
+      }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );
       } 
@@ -1564,12 +1603,16 @@ fn TransUnit.processImport(
 
 
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
-      let metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )@@_MetaInfo;
-      let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
-      let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
-      moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
-      self.importModuleInfo.remove();
-      return metaInfo, typeId2TypeInfo;
+      if! let metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
+      {
+         let metaInfo = metaInfoStem@@_MetaInfo;
+         let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
+         let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
+         moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
+         self.importModuleInfo.remove();
+         return metaInfo, typeId2TypeInfo;
+      }
+      self.error( "failed to load meta -- " .. modulePath );
    }
    
    let mut nameList:str[] = [];
@@ -1577,7 +1620,10 @@ fn TransUnit.processImport(
       nameList.insert( txt );
    }
 
-   let metaInfo = frontInterface.loadMeta( self.importModuleInfo, modulePath )@@_MetaInfo;
+   let! metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath ) {
+      self.error( "failed to load meta -- " .. modulePath );
+   };
+   let metaInfo = metaInfoStem@@_MetaInfo;
 
    // 依存するモジュールのメタ情報を読み込み
    let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
@@ -1943,7 +1989,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
 
    let mut assignName = moduleToken;
    if nextToken.txt == "as" {
-      assignName = self.getSymbolToken();
+      assignName = self.getSymbolToken( .MustNot_ );
       nextToken = self.getToken();
    }
 
@@ -2134,7 +2180,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Ast.MatchNode {
       let mut blockScope = self.pushScope( false );
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
-            let paramName = self.getSymbolToken();
+            let paramName = self.getSymbolToken( .MustNot_ );
             if self.scope.getTypeInfo( paramName.txt, self.scope, true ) {
                self.addErrMess( paramName.pos,
                                 "shadowing variable -- %s" (paramName.txt) );
@@ -2249,7 +2295,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
    let mut varList:List<&Parser.Token> = [];
    let mut nextToken:&Parser.Token = Parser.getEofToken();
    repeat {
-      let var = self.getSymbolToken();
+      let var = self.getSymbolToken( .MustNot_ );
       if var.kind ~= Parser.TokenKind.Symb {
          self.error( "illegal symbol" );
       } 
@@ -2376,7 +2422,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
 }
 
 fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Ast.ProvideNode {
-   let token = self.getSymbolToken();
+   let token = self.getSymbolToken( .MustNot_ );
    let symbolNode = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
    self.checkNextToken( ";" );
 

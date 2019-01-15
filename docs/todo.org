@@ -28,7 +28,7 @@ meta ファイル内に、ビルド時の lns ファイルの更新時間と、�
 
 mod2.meta: mod2.lns
 
-  
+- [ ] switch の式化  
 - [ ] __init ブロック内で、プロトタイプ宣言している static メソッドを使うと nil エラー。
 - [ ] enum 値を追加した時、その enum 側を利用している switch などを簡単にチェックできる機能を追加する。
 - [ ] autocomplete で、処理中に次を処理して重くなる。
@@ -55,13 +55,10 @@ mod2.meta: mod2.lns
 - [ ] import しているシンボルを、自分のモジュールのシンボルとして公開する。
       モジュールの相互参照で切り出したときに、変更を最小にする。
       alias な感じ。
-- [ ] macro を pub に出来るように。
 - [ ] string 系の組込みメソッド拡充。
 - [ ] form 型の変数に関数オブジェクトを代入した時に、
       関数の引数が参照型から、非参照型を指定してもエラーにならない。
 - [ ] 配列の繰り返し要素指定定義。
-- [ ] lua5.1 の対応
-      - [ ] package.searchpath() が 5.1 はない。
 - [ ] SymbolInfo の canBeLeft と mutable の扱いを整理する。
       本来は、 canBeLeft は変数自体の書き換えで、mutable はオブジェクトの操作。
       mutable は、 expTypeInfo の mutable で制御すべき。
@@ -74,7 +71,6 @@ mod2.meta: mod2.lns
       - func
       - var
 - [ ] 後置 ! の対応。 unwrap のシンタックスシュガー。 ただし unwrap の default はなし。
-- [ ] Class にキャストする際、メタメソッドを持たないテーブルはエラーとする。
 - [ ] stem からキャストする際に動的にタイプチェックし、
       マッチしていない場合は nil を返す @@@ 演算子を追加する。
 
@@ -108,7 +104,6 @@ mod2.meta: mod2.lns
 - [ ] let!  等の nil ブロックのフロー解析。
 - [X] "%s" (val) の %s と val の対応チェック
       - [ ] lua5.1 の場合、 %s の val は tostring() する。
-- [ ] import のモジュールがない時に TransUnit を続けられるようにする。
 - [ ] 独自クラスの generics 対応
 
 
@@ -177,7 +172,12 @@ mod2.meta: mod2.lns
       TypeId の整合性が取れないことがある。
       import 時の typeId のリセット
 - [X] __func__ が nil になることがある。
-
+- [X] マクロ以外のシンボル名の先頭に _ を使っている場合のチェック
+- [X] lua5.1 の対応
+      - [X] package.searchpath() が 5.1 はない。
+- [X] import のモジュールがない時に TransUnit を続けられるようにする。
+      - TransUnit の解析は続けないが、強制エラー終了しないように修正。
+- [X] macro を pub に出来るように。
 
 * ドキュメント
 

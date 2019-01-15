@@ -126,7 +126,7 @@ pub fn testext(): int, real, str, Map<int,real>,List<int>, int!, real!, str!, Ma
    return 1, 1.0, "", {}, [], nil, nil, nil, nil, nil;
 }
 
-pub macro MacroTest2(txt:str,val:int) {
+pub macro _MacroTest2(txt:str,val:int) {
    {
       let val2 = "xyz%s%d"(txt,val);
    }

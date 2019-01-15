@@ -12,6 +12,7 @@ function _lune.loadModule( mod )
 end
 
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local ModuleId = {}
 _moduleObj.ModuleId = ModuleId
 function ModuleId.setmeta( obj )

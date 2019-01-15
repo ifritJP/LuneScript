@@ -4,5 +4,5 @@ pub let var = 1;
 }
 pub let var3 = 1;
 
-provide var;  // error
+provide var;
 
