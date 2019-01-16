@@ -240,7 +240,6 @@ class SuperTest2 extend (TestIF,TestIF3) {
    }
 }
 
-
 class StaticClass {
    let val:int;
    static fn func() {

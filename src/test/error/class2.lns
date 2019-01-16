@@ -1,0 +1,7 @@
+class TestAcc {
+   let val:int { non, pub };
+}
+{
+   let test = new TestAcc( 1 );
+   print( test.$val );  // error
+}

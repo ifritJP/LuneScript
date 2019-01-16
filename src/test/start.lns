@@ -194,11 +194,21 @@ print( (new GetTest()).$val );
 
 class GetTest2 {
    let val: int { pub };
+   let val2: int { non, pub };
    pub fn __init() {
       self.val = 200;
+      self.val2 = 1;
+   }
+   pub fn getVal2(): int {
+      return self.val2;
    }
 }
-print( (new GetTest2()).$val );
+
+{
+   let mut test2 = new GetTest2();
+   test2.set_val2( 1 );
+   print( test2.$val, test2.getVal2() );
+}
 
 {
    fn TestRetDDD(): ... {

@@ -83,10 +83,16 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
          } nextToken.txt ~= ",";
          self.checkToken( nextToken, '>' );
          if typeInfo.$kind == .Map {
+            let! keyType = genericList[1] {
+               keyType = Ast.builtinTypeStem;
+               self.addErrMess( firstToken.pos, "Key type is unknown" );
+            };
+            let! valType = genericList[ 2 ] {
+               valType = Ast.builtinTypeStem;
+               self.addErrMess( firstToken.pos, "Value type is unknown" );
+            };
             typeInfo = Ast.NormalTypeInfo.createMap(
-               accessMode, self.getCurrentClass(),
-               genericList[1] or Ast.builtinTypeStem,
-               genericList[2] or Ast.builtinTypeStem );
+               accessMode, self.getCurrentClass(), keyType, valType );
          }
          elseif typeInfo.$kind == .List {
             typeInfo = Ast.NormalTypeInfo.createList(
@@ -887,6 +893,13 @@ fn TransUnit.analyzeDeclMember(
                      workToken = self.getToken();
                   }
                }
+               case "non" {
+                  workToken = self.getToken();
+               }
+               default {
+                  self.addErrMess( workToken.pos,
+                                   "access mode is invalid -- %s" (workToken.txt) );
+               }
             }
             return mode, workToken;
          }
@@ -934,6 +947,16 @@ fn TransUnit.analyzeDeclMethod(
    return node;
 }
 
+
+/**
+デフォルトコンストラクタの追加処理
+
+@param pos クラスの定義位置
+@param classTypeInfo クラス情報
+@param classScope クラスのスコープ
+@param memberNodeList メンバーノードリスト
+@param methodNameSet メソッド名の集合
+*/
 fn TransUnit.addDefaultConstructor(
    pos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, classScope:Ast.Scope,
    memberNodeList:&List<&Ast.DeclMemberNode>, methodNameSet:Map<str,bool> ) mut
@@ -1304,6 +1327,7 @@ fn TransUnit.analyzeDeclClass(
       }   
    }
 
+   // デフォルトコンストタクタ設定
    let mut ctorAccessMode = Ast.AccessMode.Pub;
    if! let ctorTypeInfo = classScope.getTypeInfoChild( "__init" ) {
       ctorAccessMode = ctorTypeInfo.$accessMode;

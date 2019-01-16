@@ -2950,7 +2950,23 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
          until nextToken.txt ~= ","
          self:checkToken( nextToken, '>' )
          if typeInfo:get_kind() == Ast.TypeInfoKind.Map then
-            typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), genericList[1] or Ast.builtinTypeStem, genericList[2] or Ast.builtinTypeStem )
+            local keyType = genericList[1]
+            if  nil == keyType then
+               local _keyType = keyType
+            
+               keyType = Ast.builtinTypeStem
+               self:addErrMess( firstToken.pos, "Key type is unknown" )
+            end
+            
+            local valType = genericList[2]
+            if  nil == valType then
+               local _valType = valType
+            
+               valType = Ast.builtinTypeStem
+               self:addErrMess( firstToken.pos, "Value type is unknown" )
+            end
+            
+            typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), keyType, valType )
          elseif typeInfo:get_kind() == Ast.TypeInfoKind.List then
             typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
          elseif typeInfo:get_kind() == Ast.TypeInfoKind.Array then
@@ -3663,6 +3679,11 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
                   workToken = self:getToken(  )
                end
                
+            elseif _switchExp == "non" then
+               workToken = self:getToken(  )
+            else 
+               
+                  self:addErrMess( workToken.pos, string.format( "access mode is invalid -- %s", workToken.txt) )
             end
          end
          
