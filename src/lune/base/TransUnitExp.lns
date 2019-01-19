@@ -104,8 +104,13 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
          }
       }
    }
-   if itemTypeInfo.equals( Ast.builtinTypeDDD ) {
-      itemTypeInfo = Ast.builtinTypeStem_;
+   if itemTypeInfo.$kind == .DDD {
+      if #itemTypeInfo.$itemTypeInfoList > 0 {
+         itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
+      }
+      else {
+         itemTypeInfo = Ast.builtinTypeStem_;
+      }
    }
    let mut kind = Ast.NodeKind.$LiteralArray;
    let mut typeInfoList = [ Ast.builtinTypeNone ];
@@ -410,7 +415,7 @@ fn TransUnit.evalMacro(
 
 
    foreach arg, index in macroInfo.getArgList() {
-      if arg.$typeInfo ~= Ast.builtinTypeDDD {
+      if arg.$typeInfo.$kind ~= .DDD {
          let argType = arg.$typeInfo;
          let argName = arg.$name;
          //scope.add( argName, argType.expType );
@@ -584,10 +589,11 @@ fn TransUnit.analyzeExpCall(
 
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
-   if funcTypeInfo.$kind == .Method and
-      exp.$kind == Ast.NodeKind.$RefField
+   let mut refFieldNode:&Ast.RefFieldNode! = nil;
+   if funcTypeInfo.$kind == .Method and exp.$kind == Ast.NodeKind.$RefField
    {
       let refField = exp@@Ast.RefFieldNode;
+      refFieldNode = refField;
       let classType = refField.$prefix.$expType;
       genericTypeList = classType.$itemTypeInfoList;
    }
@@ -619,6 +625,21 @@ fn TransUnit.analyzeExpCall(
       }
       let mut retTypeInfoList:&List<&Ast.TypeInfo> =
          funcTypeInfo.get_retTypeInfoList();
+      when! refFieldNode {
+         if funcTypeInfo.equals( typeInfoListUnpack ) or
+            funcTypeInfo.equals( typeInfoArrayUnpack )
+         {
+            // unpack の型を list の要素の DDD 型にする
+            let prefixType = refFieldNode.$prefix.$expType;
+            if #prefixType.$itemTypeInfoList > 0 {
+               let dddType = Ast.NormalTypeInfo.createDDD(
+                  prefixType.$itemTypeInfoList[ 1 ], false );
+               retTypeInfoList = [ dddType ];
+            }
+         }
+      }
+         
+      
       if nilAccess {
          let mut retList:List<&Ast.TypeInfo> = [];
          foreach retType in funcTypeInfo.get_retTypeInfoList() {
@@ -1412,6 +1433,15 @@ fn TransUnit.analyzeExpOp2(
             let exp1Type = exp.$expType;
             let exp2Type = exp2.$expType;
 
+            if opTxt ~= "=" {
+               if exp1Type.$kind == .DDD {
+                  self.addErrMess( exp.$pos, "... can't evaluate for %s" (opTxt) );
+               }
+               elseif exp2Type.$kind == .DDD {
+                  self.addErrMess( exp2.$pos, "... can't evaluate for %s" (opTxt) );
+               }
+            }
+            
             switch opTxt {
                case "or" {
                   if exp1Type.equals( exp2Type ) {
@@ -1771,8 +1801,13 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
    if not expType.$nilable {
       unwrapType = expType;
    }
-   elseif expType.equals( Ast.builtinTypeDDD ) {
-      unwrapType = Ast.builtinTypeStem;
+   elseif expType.$kind == .DDD {
+      if #expType.$itemTypeInfoList > 0 {
+         unwrapType = expType.$itemTypeInfoList[ 1 ];
+      }
+      else {
+         unwrapType = Ast.builtinTypeStem;
+      }
    }
    else {
       unwrapType = unwrap expType.$orgTypeInfo;
@@ -1928,17 +1963,21 @@ fn TransUnit.analyzeExp(
          let mut macroExpFlag = false;
          let expType = exp.$expType;
 
+         if expType.$kind == .DDD {
+            self.addErrMess( exp.$pos, "... can't evaluate for '%s'." (token.txt) );
+         }
+
          switch ( token.txt ) {
             case "-" {
                if not expType.equals( Ast.builtinTypeInt ) and
                   not expType.equals( Ast.builtinTypeReal )
-               {  
+               {
                   self.addErrMess(
                      token.pos,
                      'unmatch type for "-" -- %s' ( expType.getTxt() ) );
-               }  
+               }
                typeInfo = expType;
-            }  
+            }
             case "#" {
                if expType.$kind ~= .List and
                   expType.$kind ~= .Array and
@@ -1956,7 +1995,7 @@ fn TransUnit.analyzeExp(
                if not expType.$nilable and
                   not expType.equals( Ast.builtinTypeBool ) and
                   not expType.equals( Ast.builtinTypeStem ) and
-                  not expType.equals( Ast.builtinTypeDDD )
+                  expType.$kind ~= .DDD
                {  
                   self.addErrMess( token.pos, "this 'not' operand never be false" );
                }  

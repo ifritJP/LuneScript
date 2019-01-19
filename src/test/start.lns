@@ -767,3 +767,14 @@ class Test3 {
 }
 
 SUB2._MacroTest2( "abc", 123 );
+
+{
+   foreach val in [ SUB2.DDDfunc( 1, 2, 3 ) ] {
+      print( val + 10 );
+   }
+   foreach val in [ SUB2.DDDfunc2( "1", nil, "3" ) ] {
+      when! val {
+         print( "abc" .. val );
+      }
+   }
+}

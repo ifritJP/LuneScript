@@ -806,6 +806,60 @@ function _TypeInfoNilable._fromMapSub( obj, val )
    return obj
 end
 
+local _TypeInfoDDD = {}
+setmetatable( _TypeInfoDDD, { __index = _TypeInfo } )
+function _TypeInfoDDD:createTypeInfo( param )
+
+   local itemTypeInfo = _lune.unwrap( param.typeId2TypeInfo[self.itemTypeId])
+   local newTypeInfo = Ast.NormalTypeInfo.createDDD( itemTypeInfo, true )
+   param.typeId2TypeInfo[self.typeId] = _lune.unwrap( newTypeInfo)
+   return newTypeInfo, nil
+end
+function _TypeInfoDDD.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoDDD  } )
+end
+function _TypeInfoDDD.new( itemTypeId )
+   local obj = {}
+   _TypeInfoDDD.setmeta( obj )
+   if obj.__init then
+      obj:__init( itemTypeId )
+   end        
+   return obj 
+end         
+function _TypeInfoDDD:__init( itemTypeId ) 
+
+   _TypeInfo.__init( self )
+   self.itemTypeId = itemTypeId
+end
+function _TypeInfoDDD:_toMap()
+  return self
+end
+function _TypeInfoDDD._fromMap( val )
+  local obj, mes = _TypeInfoDDD._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoDDD.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoDDD._fromStem( val )
+  return _TypeInfoDDD._fromMap( val )
+end
+
+function _TypeInfoDDD._fromMapSub( obj, val )
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "itemTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
 local _TypeInfoModifier = {}
 setmetatable( _TypeInfoModifier, { __index = _TypeInfo } )
 function _TypeInfoModifier:createTypeInfo( param )
@@ -2186,6 +2240,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
          local skind = atomInfo['skind']
          if skind ~= nil then
             local actInfo = nil
+            local mess = nil
             local kind = _lune.unwrap( Ast.SerializeKind._from( math.floor(skind) ))
             do
                local _switchExp = kind
@@ -2207,6 +2262,8 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                   
                elseif _switchExp == Ast.SerializeKind.Nilable then
                   actInfo = _TypeInfoNilable._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.DDD then
+                  actInfo, mess = _TypeInfoDDD._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Modifier then
                   actInfo = _TypeInfoModifier._fromMap( atomInfo )
                else 
@@ -2224,7 +2281,11 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                      Util.errorLog( string.format( "table: %s:%s", key, tostring( val)) )
                   end
                   
-                  Util.err( string.format( "_TypeInfo%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
+                  if mess ~= nil then
+                     Util.errorLog( mess )
+                  end
+                  
+                  Util.err( string.format( "_TypeInfo.%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
                   ) )
                end
             end
@@ -2949,31 +3010,47 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
             nextToken = self:getToken(  )
          until nextToken.txt ~= ","
          self:checkToken( nextToken, '>' )
-         if typeInfo:get_kind() == Ast.TypeInfoKind.Map then
-            local keyType = genericList[1]
-            if  nil == keyType then
-               local _keyType = keyType
-            
-               keyType = Ast.builtinTypeStem
-               self:addErrMess( firstToken.pos, "Key type is unknown" )
+         local function checkGenericTypeCount( count )
+         
+            if #genericList ~= count then
+               self:addErrMess( firstToken.pos, string.format( "generic type count is unmatch. -- %d", #genericList) )
             end
             
-            local valType = genericList[2]
-            if  nil == valType then
-               local _valType = valType
-            
-               valType = Ast.builtinTypeStem
-               self:addErrMess( firstToken.pos, "Value type is unknown" )
+         end
+         
+         do
+            local _switchExp = typeInfo:get_kind()
+            if _switchExp == Ast.TypeInfoKind.Map then
+               local keyType = genericList[1]
+               if  nil == keyType then
+                  local _keyType = keyType
+               
+                  keyType = Ast.builtinTypeStem
+                  self:addErrMess( firstToken.pos, "Key type is unknown" )
+               end
+               
+               local valType = genericList[2]
+               if  nil == valType then
+                  local _valType = valType
+               
+                  valType = Ast.builtinTypeStem
+                  self:addErrMess( firstToken.pos, "Value type is unknown" )
+               end
+               
+               typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), keyType, valType )
+            elseif _switchExp == Ast.TypeInfoKind.List then
+               checkGenericTypeCount( 1 )
+               typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
+            elseif _switchExp == Ast.TypeInfoKind.Array then
+               checkGenericTypeCount( 1 )
+               typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
+            elseif _switchExp == Ast.TypeInfoKind.DDD then
+               checkGenericTypeCount( 1 )
+               typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false )
+            else 
+               
+                  self:error( string.format( "not support generic: %s", typeInfo:getTxt(  ) ) )
             end
-            
-            typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), keyType, valType )
-         elseif typeInfo:get_kind() == Ast.TypeInfoKind.List then
-            typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
-         elseif typeInfo:get_kind() == Ast.TypeInfoKind.Array then
-            typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1]} or {Ast.builtinTypeStem} )
-         else
-          
-            self:error( string.format( "not support generic: %s", typeInfo:getTxt(  ) ) )
          end
          
       else
@@ -2990,8 +3067,11 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
       token = self:getToken(  )
    end
    
-   if not allowDDD and typeInfo:equals( Ast.builtinTypeDDD ) then
-      self:addErrMess( firstToken.pos, string.format( "invalid type. -- '%s'", typeInfo:getTxt(  )) )
+   if not allowDDD then
+      if typeInfo:get_kind() == Ast.TypeInfoKind.DDD then
+         self:addErrMess( firstToken.pos, string.format( "invalid type. -- '%s'", typeInfo:getTxt(  )) )
+      end
+      
    end
    
    if refFlag then
@@ -3018,8 +3098,17 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
       
       local argName = nextToken
       if argName.txt == "..." then
-         table.insert( argList, Ast.DeclArgDDDNode.create( self.nodeManager, argName.pos, {Ast.builtinTypeDDD} ) )
-         self.scope:addLocalVar( false, true, argName.txt, Ast.builtinTypeDDD, false )
+         local workToken, flag = self:getContinueToken(  )
+         self:pushback(  )
+         local dddTypeInfo = Ast.builtinTypeDDD
+         if flag and workToken.txt == "<" then
+            self:pushbackToken( nextToken )
+            local refTypeNode = self:analyzeRefType( accessMode, true )
+            dddTypeInfo = refTypeNode:get_expType()
+         end
+         
+         table.insert( argList, Ast.DeclArgDDDNode.create( self.nodeManager, argName.pos, {dddTypeInfo} ) )
+         self.scope:addLocalVar( false, true, argName.txt, dddTypeInfo, false )
       else
        
          argName = self:checkSymbol( argName, SymbolMode.MustNot_ )
@@ -4648,27 +4737,39 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       local expTypeList = {}
       for index, expType in pairs( expList:get_expTypeList() ) do
          local processedFlag = false
-         if index == #expList:get_expTypeList() and expList:get_expTypeList()[index]:equals( Ast.builtinTypeDDD ) then
+         if index == #expList:get_expTypeList() and expType:get_kind() == Ast.TypeInfoKind.DDD then
+            local dddItemType = Ast.builtinTypeStem_
+            if #expType:get_itemTypeInfoList() > 0 then
+               dddItemType = expType:get_itemTypeInfoList()[1]
+            end
+            
             for subIndex = index, #letVarList do
                local argType = typeInfoList[subIndex]
-               local checkType = Ast.builtinTypeStem_
+               local checkType = dddItemType
                if unwrapFlag then
-                  checkType = Ast.builtinTypeStem
+                  checkType = dddItemType:get_orgTypeInfo()
                end
                
                if not argType:equals( Ast.builtinTypeNone ) and not argType:canEvalWith( checkType, "=" ) then
-                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s(%d) <- %s(%d)", subIndex, argType:getTxt( true ), argType:get_typeId(), Ast.builtinTypeStem_:getTxt(  ), Ast.builtinTypeStem_:get_typeId()) )
+                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s(%d) <- %s(%d)", subIndex, argType:getTxt( true ), argType:get_typeId(), dddItemType:getTxt(  ), dddItemType:get_typeId()) )
                end
                
                table.insert( expTypeList, checkType )
-               table.insert( orgExpTypeList, Ast.builtinTypeStem_ )
+               table.insert( orgExpTypeList, dddItemType )
             end
             
          else
           
             local expTypeInfo = expType
-            if expType:equals( Ast.builtinTypeDDD ) then
-               expTypeInfo = Ast.builtinTypeStem_
+            if expType:get_kind() == Ast.TypeInfoKind.DDD then
+               local itemList = expType:get_itemTypeInfoList()
+               if #itemList > 0 then
+                  expTypeInfo = itemList[1]
+               else
+                
+                  expTypeInfo = Ast.builtinTypeStem_
+               end
+               
             end
             
             table.insert( orgExpTypeList, expTypeInfo )
@@ -5012,8 +5113,14 @@ function TransUnit:analyzeListConst( token )
       
    end
    
-   if itemTypeInfo:equals( Ast.builtinTypeDDD ) then
-      itemTypeInfo = Ast.builtinTypeStem_
+   if itemTypeInfo:get_kind() == Ast.TypeInfoKind.DDD then
+      if #itemTypeInfo:get_itemTypeInfoList() > 0 then
+         itemTypeInfo = itemTypeInfo:get_itemTypeInfoList()[1]
+      else
+       
+         itemTypeInfo = Ast.builtinTypeStem_
+      end
+      
    end
    
    local kind = Ast.NodeKind.get_LiteralArray()
@@ -5276,7 +5383,7 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
    end
    
    for index, arg in pairs( macroInfo:getArgList(  ) ) do
-      if arg:get_typeInfo() ~= Ast.builtinTypeDDD then
+      if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
          self.symbol2ValueMapForMacro[argName] = Ast.MacroValInfo.new(argValMap[index], argType)
@@ -5459,8 +5566,10 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
    end
    
    local genericTypeList = funcTypeInfo:get_itemTypeInfoList()
+   local refFieldNode = nil
    if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Method and exp:get_kind() == Ast.NodeKind.get_RefField() then
       local refField = exp
+      refFieldNode = refField
       local classType = refField:get_prefix():get_expType()
       genericTypeList = classType:get_itemTypeInfoList()
    end
@@ -5492,6 +5601,18 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       end
       
       local retTypeInfoList = funcTypeInfo:get_retTypeInfoList(  )
+      if refFieldNode ~= nil then
+         if funcTypeInfo:equals( _moduleObj.typeInfoListUnpack ) or funcTypeInfo:equals( _moduleObj.typeInfoArrayUnpack ) then
+            local prefixType = refFieldNode:get_prefix():get_expType()
+            if #prefixType:get_itemTypeInfoList() > 0 then
+               local dddType = Ast.NormalTypeInfo.createDDD( prefixType:get_itemTypeInfoList()[1], false )
+               retTypeInfoList = {dddType}
+            end
+            
+         end
+         
+      end
+      
       if nilAccess then
          local retList = {}
          for __index, retType in pairs( funcTypeInfo:get_retTypeInfoList(  ) ) do
@@ -6232,6 +6353,15 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             
             local exp1Type = exp:get_expType()
             local exp2Type = exp2:get_expType()
+            if opTxt ~= "=" then
+               if exp1Type:get_kind() == Ast.TypeInfoKind.DDD then
+                  self:addErrMess( exp:get_pos(), string.format( "... can't evaluate for %s", opTxt) )
+               elseif exp2Type:get_kind() == Ast.TypeInfoKind.DDD then
+                  self:addErrMess( exp2:get_pos(), string.format( "... can't evaluate for %s", opTxt) )
+               end
+               
+            end
+            
             do
                local _switchExp = opTxt
                if _switchExp == "or" then
@@ -6538,8 +6668,14 @@ function TransUnit:analyzeExpUnwrap( firstToken )
    local expType = expNode:get_expType()
    if not expType:get_nilable() then
       unwrapType = expType
-   elseif expType:equals( Ast.builtinTypeDDD ) then
-      unwrapType = Ast.builtinTypeStem
+   elseif expType:get_kind() == Ast.TypeInfoKind.DDD then
+      if #expType:get_itemTypeInfoList() > 0 then
+         unwrapType = expType:get_itemTypeInfoList()[1]
+      else
+       
+         unwrapType = Ast.builtinTypeStem
+      end
+      
    else
     
       unwrapType = _lune.unwrap( expType:get_orgTypeInfo())
@@ -6673,6 +6809,10 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
          local typeInfo = Ast.builtinTypeNone
          local macroExpFlag = false
          local expType = exp:get_expType()
+         if expType:get_kind() == Ast.TypeInfoKind.DDD then
+            self:addErrMess( exp:get_pos(), string.format( "... can't evaluate for '%s'.", token.txt) )
+         end
+         
          do
             local _switchExp = (token.txt )
             if _switchExp == "-" then
@@ -6689,7 +6829,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
                typeInfo = Ast.builtinTypeInt
             elseif _switchExp == "not" then
                typeInfo = Ast.builtinTypeBool
-               if not expType:get_nilable() and not expType:equals( Ast.builtinTypeBool ) and not expType:equals( Ast.builtinTypeStem ) and not expType:equals( Ast.builtinTypeDDD ) then
+               if not expType:get_nilable() and not expType:equals( Ast.builtinTypeBool ) and not expType:equals( Ast.builtinTypeStem ) and expType:get_kind() ~= Ast.TypeInfoKind.DDD then
                   self:addErrMess( token.pos, "this 'not' operand never be false" )
                end
                
@@ -6821,55 +6961,22 @@ function TransUnit:analyzeReturn( token )
       self:checkNextToken( ";" )
    end
    
-   do
-      local _exp = expList
-      if _exp ~= nil then
-         local expTypeList = _exp:get_expTypeList()
-         if #retTypeList == 0 and #expTypeList > 0 then
-            self:addErrMess( token.pos, "this function can't return value." )
-         end
-         
-         for index, retType in pairs( retTypeList ) do
-            local expType = expTypeList[index]
-            if not retType:canEvalWith( expType, "=" ) then
-               self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", index, retType:getTxt(  ), retType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
-            end
-            
-            if index == #retTypeList then
-               if #retTypeList < #expTypeList and not retType:equals( Ast.builtinTypeDDD ) then
-                  self:addErrMess( token.pos, "over return value" )
-               end
-               
-            elseif index == #expTypeList then
-               if expType:equals( Ast.builtinTypeDDD ) then
-                  for retIndex = index, #retTypeList do
-                     local workRetType = retTypeList[retIndex]
-                     if not workRetType:canEvalWith( Ast.builtinTypeStem_, "=" ) then
-                        self:addErrMess( token.pos, string.format( "return type of arg(%d) is not compatible -- %s(%d) and %s(%d)", retIndex, workRetType:getTxt(  ), workRetType:get_typeId(  ), expType:getTxt(  ), expType:get_typeId(  )) )
-                     end
-                     
-                  end
-                  
-               else
-                
-                  self:addErrMess( token.pos, string.format( "short return value -- %d < %d", #expTypeList, #retTypeList) )
-               end
-               
-               break
-            end
-            
-         end
-         
-      else
-         if funcTypeInfo:getTxt(  ) == "__init" then
-            self:addErrMess( token.pos, "__init method can't return" )
-         end
-         
-         if #retTypeList ~= 0 then
-            self:addErrMess( token.pos, "no return value" )
-         end
-         
+   if funcTypeInfo:getTxt(  ) == "__init" then
+      self:addErrMess( token.pos, "__init method can't return" )
+   end
+   
+   if expList ~= nil then
+      local expNodeList = {}
+      for __index, exp in pairs( expList:get_expList() ) do
+         table.insert( expNodeList, exp )
       end
+      
+      self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false )
+   else
+      if #retTypeList ~= 0 then
+         self:addErrMess( token.pos, "no return value" )
+      end
+      
    end
    
    return Ast.ReturnNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, expList )
@@ -6975,14 +7082,11 @@ function TransUnit:analyzeStatement( termTxt )
       
    end
    
-   do
-      local _exp = statement
-      if _exp ~= nil then
-         if not _exp:canBeStatement(  ) then
-            self:addErrMess( _exp:get_pos(), string.format( "This node can't be statement. -- %s", Ast.getNodeKindName( _exp:get_kind() )) )
-         end
-         
+   if statement ~= nil then
+      if not statement:canBeStatement(  ) then
+         self:addErrMess( statement:get_pos(), string.format( "This node can't be statement. -- %s", Ast.getNodeKindName( statement:get_kind() )) )
       end
+      
    end
    
    return statement

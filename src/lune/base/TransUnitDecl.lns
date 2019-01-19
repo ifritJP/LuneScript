@@ -82,32 +82,49 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             nextToken = self.getToken();
          } nextToken.txt ~= ",";
          self.checkToken( nextToken, '>' );
-         if typeInfo.$kind == .Map {
-            let! keyType = genericList[1] {
-               keyType = Ast.builtinTypeStem;
-               self.addErrMess( firstToken.pos, "Key type is unknown" );
-            };
-            let! valType = genericList[ 2 ] {
-               valType = Ast.builtinTypeStem;
-               self.addErrMess( firstToken.pos, "Value type is unknown" );
-            };
-            typeInfo = Ast.NormalTypeInfo.createMap(
-               accessMode, self.getCurrentClass(), keyType, valType );
+
+         fn checkGenericTypeCount( count:int ) {
+            if #genericList ~= count {
+               self.addErrMess(
+                  firstToken.pos,     
+                  "generic type count is unmatch. -- %d" (#genericList) );
+            }
          }
-         elseif typeInfo.$kind == .List {
-            typeInfo = Ast.NormalTypeInfo.createList(
-               accessMode, self.getCurrentClass(),
-               [ genericList[1] ] or [ Ast.builtinTypeStem ] );
+         
+         switch typeInfo.$kind {
+            case .Map {
+               let! keyType = genericList[1] {
+                  keyType = Ast.builtinTypeStem;
+                  self.addErrMess( firstToken.pos, "Key type is unknown" );
+               }; 
+               let! valType = genericList[ 2 ] {
+                  valType = Ast.builtinTypeStem;
+                  self.addErrMess( firstToken.pos, "Value type is unknown" );
+               }; 
+               typeInfo = Ast.NormalTypeInfo.createMap(
+                  accessMode, self.getCurrentClass(), keyType, valType );
+            }
+            case .List {
+               checkGenericTypeCount( 1 );
+               typeInfo = Ast.NormalTypeInfo.createList(
+                  accessMode, self.getCurrentClass(),
+                  [ genericList[1] ] or [ Ast.builtinTypeStem ] );
+            }
+            case .Array {
+               checkGenericTypeCount( 1 );
+               typeInfo = Ast.NormalTypeInfo.createArray(
+                  accessMode, self.getCurrentClass(),
+                  [ genericList[1] ] or [ Ast.builtinTypeStem ] );
+            }
+            case .DDD {
+               checkGenericTypeCount( 1 );
+               typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false );
+            }
+            default {
+               self.error( string.format( "not support generic: %s",
+                                          typeInfo.getTxt() ) );
+            }
          }
-         elseif typeInfo.$kind == .Array {
-            typeInfo = Ast.NormalTypeInfo.createArray(
-               accessMode, self.getCurrentClass(),
-               [ genericList[1] ] or [ Ast.builtinTypeStem ] );
-         }
-         else {
-            self.error( string.format( "not support generic: %s",
-                                       typeInfo.getTxt() ) );
-         }   
       }   
       else {
          self.pushback();
@@ -119,9 +136,11 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
       typeInfo = unwrap typeInfo.get_nilableTypeInfo();
       token = self.getToken();
    }
-   if not allowDDD and typeInfo.equals( Ast.builtinTypeDDD ) {
-      self.addErrMess(
-         firstToken.pos, "invalid type. -- '%s'" (typeInfo.getTxt() ) );
+
+   if not allowDDD {
+      if typeInfo.$kind == .DDD {
+         self.addErrMess( firstToken.pos, "invalid type. -- '%s'" (typeInfo.getTxt() ) );
+      }
    }
 
    if refFlag {
@@ -149,11 +168,20 @@ fn TransUnit.analyzeDeclArgList(
       }
       let mut argName = nextToken;
       if argName.txt == "..." {
+         let workToken, flag = self.getContinueToken();
+         self.pushback();
+
+         let mut dddTypeInfo = Ast.builtinTypeDDD;
+         if flag and workToken.txt == "<" {
+            self.pushbackToken( nextToken );
+            let refTypeNode = self.analyzeRefType( accessMode, true );
+            dddTypeInfo = refTypeNode.$expType;
+         }
+         
          argList.insert( 
             Ast.DeclArgDDDNode.create(
-               self.nodeManager, argName.pos, [ Ast.builtinTypeDDD ] ) );
-         self.scope.addLocalVar(
-            false, true, argName.txt, Ast.builtinTypeDDD, false );
+               self.nodeManager, argName.pos, [ dddTypeInfo ] ) );
+         self.scope.addLocalVar( false, true, argName.txt, dddTypeInfo, false );
       }
       else {
          argName = self.checkSymbol( argName, .MustNot_ );
@@ -1976,16 +2004,19 @@ fn TransUnit.analyzeLetAndInitExp(
       let mut expTypeList: List<&Ast.TypeInfo> = [];
       foreach expType, index in expList.$expTypeList {
          let processedFlag = false;
-         if index == #expList.$expTypeList and
-            expList.$expTypeList[ index ].equals( Ast.builtinTypeDDD )
-         {        
+         if index == #expList.$expTypeList and expType.$kind == .DDD
+         {
+            let mut dddItemType = Ast.builtinTypeStem_;
+            if #expType.$itemTypeInfoList > 0 {
+               dddItemType = expType.$itemTypeInfoList[ 1 ];
+            }
             // 最終要素が ... の場合
             // ... なら、残りの変数宣言の分 stem をセットする
             for subIndex = index, #letVarList {
                let argType = typeInfoList[ subIndex ];
-               let mut checkType = Ast.builtinTypeStem_;
+               let mut checkType = dddItemType;
                if unwrapFlag {
-                  checkType = Ast.builtinTypeStem;
+                  checkType = dddItemType.$orgTypeInfo;
                }
                if not argType.equals( Ast.builtinTypeNone ) and
                   not argType.canEvalWith( checkType, "=" )
@@ -1994,17 +2025,23 @@ fn TransUnit.analyzeLetAndInitExp(
                      firstPos,
                      "unmatch value type (index = %d) %s(%d) <- %s(%d)"
                      ( subIndex, argType.getTxt( true ), argType.$typeId,
-                       Ast.builtinTypeStem_.getTxt(), Ast.builtinTypeStem_.$typeId ));
+                       dddItemType.getTxt(), dddItemType.$typeId ));
                }
                expTypeList.insert( checkType );
-               orgExpTypeList.insert( Ast.builtinTypeStem_ );
+               orgExpTypeList.insert( dddItemType );
             }
          }
          else {
             // 最終要素でない場合
             let mut expTypeInfo: &Ast.TypeInfo = expType;
-            if expType.equals( Ast.builtinTypeDDD ) {
-               expTypeInfo = Ast.builtinTypeStem_;
+            if expType.$kind == .DDD {
+               let itemList = expType.$itemTypeInfoList;
+               if #itemList > 0 {
+                  expTypeInfo = itemList[ 1 ];
+               }
+               else {
+                  expTypeInfo = Ast.builtinTypeStem_;
+               }
             }
             orgExpTypeList.insert( expTypeInfo );
             if unwrapFlag and expTypeInfo.$nilable {

@@ -14,7 +14,7 @@ fn func(): int, ... {
    let! mut val1000:int, mut val2000, mut val3000:stem = func() {
       val1000, val2000, val3000 = 1, 2, 3;
    };
-   let val:... = 1;
+   let val:... = 1; // error
 }
 
 {
@@ -90,3 +90,17 @@ func4( 1, func5() ); // error
 func4( 1, 2, func5() );
 func6( func5() );
 func7( func5() );
+
+{
+   fn func1( ...<int> ): ...<int> {
+      return 1, 2, "a";  // error
+   }  
+
+   fn func2(): ...<int> {
+      return 1, nil, 3;  // error
+   }  
+   
+   foreach val in [ func1( 1, 2, "a" ) ] {  // error
+      print( val + 10 );
+   }
+}

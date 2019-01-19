@@ -63,3 +63,11 @@ print( "1" < "2.0" );
    if val3 ~= true {
    }
 }
+
+{
+   fn func( ... ) {
+      let val = ... + 1; // error
+      let val2 = ...;
+      let val3 = #...;
+   }
+}

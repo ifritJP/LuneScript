@@ -36,6 +36,9 @@ macro _defGetBuildCount() {
             count = tonumber( txt )@@int;
          }
       }
+      if count == 0 {
+         error( "error -- build.counter" );
+      }
    }
    fn getBuildCount(): int {
       return ,,count;

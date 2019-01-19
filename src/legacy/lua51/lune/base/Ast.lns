@@ -67,6 +67,7 @@ pub enum SerializeKind {
    Normal,
    Enum,
    Alge,
+   DDD,
 }
 
 pub enum TypeInfoKind {
@@ -85,6 +86,7 @@ pub enum TypeInfoKind {
    Module,
    Stem,
    Alge,
+   DDD,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -406,7 +408,7 @@ pub class TypeInfo {
    }
 
    pro static fn canEvalWithBase(
-      dist:&TypeInfo, distMut: bool, other:&TypeInfo, opTxt:str ): bool;
+      dest:&TypeInfo, destMut: bool, other:&TypeInfo, opTxt:str ): bool;
 
    pub fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
       return false;
@@ -848,7 +850,7 @@ pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Typ, false, false, name, typeInfo,
              typeInfo.$accessMode, true, true, true );
-} 
+}
 
 fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
    if! scope {
@@ -988,7 +990,6 @@ pub class AccessSymbolInfo extend SymbolInfo {
 }
 
 
-
 pub proto class Node;
 pub proto class DeclClassNode extend Node;
 
@@ -1039,7 +1040,7 @@ pub class ModifierTypeInfo extend TypeInfo {
 
    pub override fn getTxt(
       fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
-   {  
+   {
       let mut txt = self.srcTypeInfo.getTxt( fullName, importInfo, localFlag );
       if not self.mutable {
          txt = "&" .. txt;
@@ -1901,7 +1902,7 @@ pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
 }
 
 
-let mut typeInfo2ModifierMap:Map<&TypeInfo,TypeInfo> = {};
+let mut typeInfo2ModifierMap:Map<&TypeInfo,&TypeInfo> = {};
 
 pub static fn NormalTypeInfo.createModifier(
    srcTypeInfo: &TypeInfo, mutable: bool ): &TypeInfo
@@ -1943,7 +1944,7 @@ pub let builtinTypeStem:TypeInfo =
 pub let builtinTypeNil:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Nil", "nil" , .Prim );
 pub let builtinTypeDDD:TypeInfo =
-   NormalTypeInfo.createBuiltin( "DDD", "..." , .Prim );
+   NormalTypeInfo.createBuiltin( "DDD", "..." , .DDD );
 pub let builtinTypeBool:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim );
 pub let builtinTypeInt:TypeInfo = 
@@ -1968,6 +1969,106 @@ pub let builtinTypeStat:TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim );
 
 pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
+
+
+pub proto class DDDTypeInfo extend TypeInfo;
+
+let mut typeInfo2DDDMap:Map<&TypeInfo,&DDDTypeInfo> = {};
+
+pub class DDDTypeInfo extend TypeInfo {
+   pri let typeInfo: &TypeInfo { pub };
+   pri let typeId: int { pub };
+   pri let externalFlag: bool {pub};
+   pri let itemTypeInfoList: &List<&TypeInfo> {pub};
+   
+   pub override fn get_scope(): Scope! {
+      return nil;
+   }
+
+   pub fn __init( typeId:int, typeInfo:&TypeInfo, externalFlag:bool )
+   {
+      super( nil );
+      self.typeId = typeId;
+      //self.typeInfo = typeInfo.$nilableTypeInfo;
+      self.typeInfo = typeInfo;
+      self.externalFlag = externalFlag;
+      self.itemTypeInfoList = [ self.typeInfo ];
+
+      typeInfo2DDDMap[ typeInfo ] = self;
+   }
+
+   pub override fn isModule(): bool {
+      return false;
+   }
+
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
+      return "...<" .. self.typeInfo.getTxt( fullName, importInfo, localFlag ) .. ">";
+   }
+
+   pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
+      return self.typeInfo.canEvalWith( other, opTxt );
+   }
+   
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+      stream.write(
+         '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d }\n'
+         ( SerializeKind.DDD, self.typeId,
+           self.typeInfo.$typeId, headTypeInfo.$typeId ) );
+   }
+
+   pub override fn get_display_stirng(): str {
+      return self.getTxt();
+   }
+
+   pub override fn getModule(): &TypeInfo {
+      return self.$typeInfo.getModule();
+   }
+   pub override fn get_rawTxt(): str {
+      return self.getTxt();
+   }  
+   pub override fn get_kind(): TypeInfoKind {
+      return .DDD;
+   } 
+   pub override fn get_nilable(): bool {
+      return self.typeInfo.$nilable;
+   }
+   pub override fn get_nilableTypeInfo(): &TypeInfo {
+      return self;
+   }
+   pub override fn get_mutable(): bool {
+      return self.$typeInfo.$mutable;
+   }
+   pub override fn get_accessMode(): AccessMode {
+      // export 出来るように pub 固定にする。
+      // accessMode 毎にインスタンスを作ることも出来るが、
+      // ほぼ無駄なので pub 固定とする。
+      return .Pub;
+   }
+}
+
+
+pub static fn NormalTypeInfo.createDDD(
+   typeInfo:&TypeInfo, externalFlag:bool ): DDDTypeInfo
+{
+   if! typeInfo2DDDMap[ typeInfo ] {
+      if _exp.$typeId < userStartId and typeInfo.$typeId >= userStartId {
+         Util.err( "on cache" );
+      }  
+      return _exp;
+   }
+   
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
+   return new DDDTypeInfo( idProv.$id, typeInfo, externalFlag );
+}
+
+
+
+
+
+
 
 let mut numberTypeMap:Map<&TypeInfo,bool> = {};
 numberTypeMap[ builtinTypeInt ] = true;
@@ -2149,17 +2250,50 @@ pub static fn TypeInfo.checkMatchType(
    dstTypeList: &List<&TypeInfo>,
    expTypeList: &List<&TypeInfo>, allowDstShort:bool ) : bool, str
 {
+   fn checkDstTypeFrom( index:int, srcType:&TypeInfo, srcType2nd:&TypeInfo): bool, str {
+      let mut workExpType = srcType;
+      for dstIndex = index, #dstTypeList {
+         let workDstType = dstTypeList[ dstIndex ];
+         if not workDstType.canEvalWith( workExpType, "=" ) {
+            return false, "exp(%d) type mismatch %s <- %s"
+            ( dstIndex, workDstType.getTxt( true ),
+              workExpType.getTxt( true ) );
+         }
+         workExpType = srcType2nd;
+      }
+      return true, "";
+   }
+   fn checkSrcTypeFrom( index:int, dstType:&TypeInfo ) : bool, str {
+      for srcIndex = index, #expTypeList {
+         let expType = expTypeList[ srcIndex ];
+         let mut checkType = expType;
+         if expType.$kind == .DDD {
+            if #expType.$itemTypeInfoList > 0 {
+               checkType = expType.$itemTypeInfoList[ 1 ];
+            }
+            else {
+               checkType = builtinTypeStem_;
+            }
+         }
+         if not dstType.canEvalWith( checkType, "=" ) {
+            return false, "exp(%d) type mismatch %s <- %s"
+            ( srcIndex, dstType.getTxt( true ), expType.getTxt( true ) );
+         }
+      }
+      return true, "";
+   }
+   
    if #expTypeList > 0 {
       foreach expType, index in expTypeList {
          if #dstTypeList == 0 {
             return false, "over exp. expect:0, actual:%d" ( #expTypeList);
          }
-         let argType = dstTypeList[ index ];
+         let dstType = dstTypeList[ index ];
          if #dstTypeList == index {
-            if not argType.equals( builtinTypeDDD ) {
-               if not argType.canEvalWith( expType, "=" ) {
+            if dstType.$srcTypeInfo.$kind ~= .DDD {
+               if not dstType.canEvalWith( expType, "=" ) {
                   return false, "exp(%d) type mismatch %s <- %s"
-                  ( index, argType.getTxt( true ),
+                  ( index, dstType.getTxt( true ),
                     expType.getTxt(true ));
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
@@ -2167,48 +2301,50 @@ pub static fn TypeInfo.checkMatchType(
                   (#dstTypeList, #expTypeList );
                }
             }
+            else {
+               let mut dddItemType = builtinTypeStem_;
+               if #dstType.$itemTypeInfoList > 0 {
+                  dddItemType = dstType.$itemTypeInfoList[ 1 ];
+               }
+               let result, mess = checkSrcTypeFrom( index, dddItemType );
+               if not result {
+                  return result, mess;
+               }
+            }
             break;
          }
          elseif #expTypeList == index {
             // 最終実引数処理
-            if expType.equals( builtinTypeDDD ) {
-               for argIndex = index, #dstTypeList {
-                  let workArgType = dstTypeList[ argIndex ];
-                  if not workArgType.canEvalWith( builtinTypeStem_, "=" ) {
-                     return false, "exp(%d) type mismatch %s <- %s"
-                     ( argIndex, workArgType.getTxt( true ),
-                       builtinTypeStem_.getTxt());
-                  }
+            let mut srcType = expType;
+            let mut srcType2nd = builtinTypeNil;
+            if expType.$kind == .DDD {
+               srcType = builtinTypeStem_;
+               srcType2nd = builtinTypeStem_;
+               if #expType.$itemTypeInfoList > 0 {
+                  srcType = expType.$itemTypeInfoList[ 1 ];
+                  srcType2nd = srcType;
                }
             }
-            else {
-               let mut workExpType = expType;
-               for argIndex = index, #dstTypeList {
-                  let argTypeInfo = dstTypeList[ argIndex ];
-                  if not argTypeInfo.canEvalWith( workExpType, "=" ) {
-                     return false, "exp(%d) type mismatch %s <- %s"
-                     ( argIndex, argTypeInfo.getTxt( true ),
-                       workExpType.getTxt( true ) );
-                  }
-                  workExpType = builtinTypeNil;
-               }
+            let result, mess = checkDstTypeFrom( index, srcType, srcType2nd );
+            if not result {
+               return result, mess;
             }
             break;
          }
          else {
-            if not argType.canEvalWith( expType, "=" ) {
+            if not dstType.canEvalWith( expType, "=" ) {
                return false, "exp(%d) type mismatch %s <- %s"
-               ( index, argType.getTxt( true ),
+               ( index, dstType.getTxt( true ),
                  expType.getTxt( true ));
             }  
          }  
       }
    }
    elseif not allowDstShort {
-      foreach argType, index in dstTypeList {
-         if not argType.canEvalWith( builtinTypeNil, "=" ) {
+      foreach dstType, index in dstTypeList {
+         if not dstType.canEvalWith( builtinTypeNil, "=" ) {
             return false, "exp(%d) type mismatch %s <- nil"
-            ( index, argType.getTxt( true ));
+            ( index, dstType.getTxt( true ));
          }
       }
    }
@@ -2216,10 +2352,15 @@ pub static fn TypeInfo.checkMatchType(
 }
 
 pub static fn TypeInfo.canEvalWithBase(
-   dist:&TypeInfo, distMut:bool, other:&TypeInfo, opTxt:str ) : bool
+   dest:&TypeInfo, destMut:bool, other:&TypeInfo, opTxt:str ) : bool
 {
    let otherMut = other.$mutable;
-   let otherSrc = other.$srcTypeInfo;
+   let mut otherSrc = other.$srcTypeInfo;
+   if otherSrc.$kind == .DDD {
+      if #otherSrc.$itemTypeInfoList > 0 {
+         otherSrc = otherSrc.$itemTypeInfoList[ 1 ];
+      }
+   }
 
    if opTxt == "=" and
       otherSrc ~= builtinTypeNil and
@@ -2227,62 +2368,68 @@ pub static fn TypeInfo.canEvalWithBase(
       otherSrc.$kind ~= .Prim and
       otherSrc.$kind ~= .Func and
       otherSrc.$kind ~= .Enum and
-      distMut and not otherMut
+      destMut and not otherMut
    {
       return false;
    }
-   
-   if dist == builtinTypeStem_ or dist == builtinTypeDDD {
+
+   if dest == builtinTypeStem_ {
       return true;
    }
-   if not dist.$nilable and otherSrc.$nilable {
+   if dest.$srcTypeInfo.$kind == .DDD {
+      if #dest.$itemTypeInfoList > 0 {
+         return dest.$itemTypeInfoList[ 1 ].canEvalWith( other, opTxt );
+      }
+      return true;
+   }
+   if not dest.$nilable and otherSrc.$nilable {
       return false;
    }
-   if dist == builtinTypeStem and not otherSrc.$nilable {
+   if dest == builtinTypeStem and not otherSrc.$nilable {
       return true;
    }
-   if dist == builtinTypeForm and otherSrc.$kind == .Func {
+   if dest == builtinTypeForm and otherSrc.$kind == .Func {
       return true;
    }
    if otherSrc == builtinTypeNil {
-      if dist.$kind ~= .Nilable {
+      if dest.$kind ~= .Nilable {
          return false;
       } 
       return true;
    }
-   if dist.$typeId == otherSrc.$typeId {
+   if dest.$typeId == otherSrc.$typeId {
       return true;
    }
-   if dist.$kind ~= otherSrc.$kind {
-      if dist.$kind == .Nilable {
+   if dest.$kind ~= otherSrc.$kind {
+      if dest.$kind == .Nilable {
          if otherSrc.$nilable {
-            return dist.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
+            return dest.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
          }
-         return dist.$orgTypeInfo.canEvalWith( otherSrc, opTxt );
+         return dest.$orgTypeInfo.canEvalWith( otherSrc, opTxt );
       }
-      elseif ( dist.$kind == .Class or dist.$kind == .IF ) and
+      elseif ( dest.$kind == .Class or dest.$kind == .IF ) and
          ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
       {
-         return otherSrc.isInheritFrom( dist );
+         return otherSrc.isInheritFrom( dest );
       }
       elseif otherSrc.$kind == .Enum {
          let enumTypeInfo = otherSrc@@EnumTypeInfo;
-         return dist.$canEvalWith( enumTypeInfo.$valTypeInfo, opTxt );
+         return dest.$canEvalWith( enumTypeInfo.$valTypeInfo, opTxt );
       }
       return false;
    }
    // TypeInfoKind が等しい
-   switch ( dist.$kind ) {
+   switch ( dest.$kind ) {
       case .Prim {
-         if dist == builtinTypeInt and otherSrc == builtinTypeChar or
-            dist == builtinTypeChar and otherSrc == builtinTypeInt
+         if dest == builtinTypeInt and otherSrc == builtinTypeChar or
+            dest == builtinTypeChar and otherSrc == builtinTypeInt
          {  
             return true;
          }
          // int から real の代入を暗黙変換を許可すると
          // [ 1, 1.0 ] の型が List<stem> ではなく List<real> なってしまうので
          // 許可しない。
-         // if dist == builtinTypeReal and
+         // if dest == builtinTypeReal and
          //     ( otherSrc == builtinTypeInt or otherSrc == builtinTypeChar )
          // {
          //    return true;
@@ -2294,7 +2441,7 @@ pub static fn TypeInfo.canEvalWithBase(
             // literalMap の [], [@] は互換有りとする
             return true;
          }  
-         _checkEqualsItemType( dist, otherSrc, 1 );
+         _checkEqualsItemType( dest, otherSrc, 1 );
          return true;
       }       
       case .Map {
@@ -2304,40 +2451,40 @@ pub static fn TypeInfo.canEvalWithBase(
             // literalMap の {} は互換有りとする
             return true;
          }  
-         _checkEqualsItemType( dist, otherSrc, 1 );
-         _checkEqualsItemType( dist, otherSrc, 2 );
+         _checkEqualsItemType( dest, otherSrc, 1 );
+         _checkEqualsItemType( dest, otherSrc, 2 );
          return true;
       }       
       case .Class, .IF {
-         return otherSrc.isInheritFrom( dist );
+         return otherSrc.isInheritFrom( dest );
       }       
       case .Func {
-         if dist == builtinTypeForm {
+         if dest == builtinTypeForm {
             return true;
          }  
-         if not TypeInfo.checkMatchType( dist.$argTypeInfoList,
+         if not TypeInfo.checkMatchType( dest.$argTypeInfoList,
                                          otherSrc.$argTypeInfoList, false ) or
-            not TypeInfo.checkMatchType( dist.$retTypeInfoList,
+            not TypeInfo.checkMatchType( dest.$retTypeInfoList,
                                          otherSrc.$retTypeInfoList, false ) or
-            #dist.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
+            #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
          }
          return true;
       }       
       case .Method {
-         if not TypeInfo.checkMatchType( dist.$argTypeInfoList,
+         if not TypeInfo.checkMatchType( dest.$argTypeInfoList,
                                          otherSrc.$argTypeInfoList, false ) or
-            not TypeInfo.checkMatchType( dist.$retTypeInfoList,
+            not TypeInfo.checkMatchType( dest.$retTypeInfoList,
                                          otherSrc.$retTypeInfoList, false ) or
-            #dist.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
+            #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
          }
          return true;
       }
       case .Nilable {
-         return dist.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
+         return dest.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
       }
       default {
          return false;
@@ -2671,8 +2818,9 @@ pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,ModuleInfoIF>, localFlag:
 
 
 pub class ProcessInfo {
-   let mut typeInfo2ModifierMap:Map<&TypeInfo,TypeInfo> {pub};
    let mut idProvier:IdProvider {pub};
+   let mut typeInfo2ModifierMap:Map<&TypeInfo,&TypeInfo> {pub};
+   let mut typeInfo2DDDMap:Map<&TypeInfo,&DDDTypeInfo> {pub};
 }
 
 pub class MacroValInfo {
@@ -3764,16 +3912,19 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
    }
 
    
-   processInfoQueue.insert( new ProcessInfo( typeInfo2ModifierMap, idProv ) );
+   processInfoQueue.insert(
+      new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap ) );
    when! processInfo {
       idProv = processInfo.$idProvier;
       typeInfo2ModifierMap = processInfo.$typeInfo2ModifierMap;
+      typeInfo2DDDMap = processInfo.$typeInfo2DDDMap;
    }
    else {
       idProv = new IdProvider( userStartId );
       typeInfo2ModifierMap = {};
+      typeInfo2DDDMap = {};
    }
-   return new ProcessInfo( typeInfo2ModifierMap, idProv );
+   return new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap );
 }
 
 pub fn popProcessInfo() {

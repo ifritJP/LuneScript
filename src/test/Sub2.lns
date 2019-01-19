@@ -132,3 +132,14 @@ pub macro _MacroTest2(txt:str,val:int) {
    }
    print( ,,val2, ,,txt, ,,val );
 }
+
+
+pub fn DDDfunc( ...<int> ): ...<int> {
+   let list = [ ... ];
+   return 0, list.unpack();
+}
+
+pub fn DDDfunc2( ...<str!> ): ...<str!> {
+   let list = [ ... ];
+   return "0", list.unpack();
+}

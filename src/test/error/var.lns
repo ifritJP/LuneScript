@@ -1,5 +1,7 @@
 {
    let val:Map<int> = {};  // error
+   let val2:Array<int,int> = [@];
+   let val2:List<int,int> = [];
 }
 
 

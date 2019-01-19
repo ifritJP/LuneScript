@@ -28,6 +28,9 @@ meta ファイル内に、ビルド時の lns ファイルの更新時間と、�
 
 mod2.meta: mod2.lns
 
+- [ ] ... を最終要素以外にも定義できてしまう。
+- [ ] 関数内の関数で __func__ を使用した場合、モジュール名が __func__ に付かない。
+       mod.func.inner にならずに func.inner になる。
 - [ ] switch の式化  
 - [ ] __init ブロック内で、プロトタイプ宣言している static メソッドを使うと nil エラー。
 - [ ] enum 値を追加した時、その enum 側を利用している switch などを簡単にチェックできる機能を追加する。
@@ -40,7 +43,6 @@ mod2.meta: mod2.lns
       key,value に設定可能な型を制限する。 json 型を mapping する jmapping を追加。
 - [ ] let! のブロックがフロー解析対象になっていない。
 - [ ] if! let の else で、  nilable の値にアクセス出来るようにする。
-- [ ] 型固定の可変長引数対応
 - [ ] 引数を 2 つの型に限定することが出来ない。
       例えば int、str どちらかに限定できない。現状だと stem になってしまう。
 - [ ] import を先頭以外に書けるようにする。
@@ -201,6 +203,7 @@ mod2.meta: mod2.lns
 - [X] getter を省略して setter だけ生成できるように
 - [X] "%s" (val) の %s と val の対応チェック
       - [X] lua5.1 の場合、 %s の val は tostring() する。
+- [X] 型固定の可変長引数対応
    
      
       
@@ -233,8 +236,7 @@ mod2.meta: mod2.lns
 - [X] require, module
 - [X] macro
 - [X] make
-
-- [ ] LuneScript を作ってみての感想
+- [X] LuneScript を作ってみての感想
       - こんな機能が欲しかった
 	- accessor の自動生成
         - advertise 

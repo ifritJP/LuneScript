@@ -509,6 +509,19 @@ class _TypeInfoNilable extend _TypeInfo {
    }
 }
 
+class _TypeInfoDDD extend _TypeInfo {
+   pub let itemTypeId:int;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
+      let newTypeInfo = Ast.NormalTypeInfo.createDDD( itemTypeInfo, true );
+      param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+      return newTypeInfo,nil;
+   }
+}
+
+
 class _TypeInfoModifier extend _TypeInfo {
    pub let srcTypeId:int;
    pub let mutable:bool;
@@ -972,7 +985,7 @@ fn TransUnit.registBuiltInScope() mut {
             "dump": { "arg": [ "form", "bool!" ], "ret": ["str"] },
          },
       },
-      { 
+      {
          "str": {
             "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
             "byte": { "type": [ "method" ], "arg": [ "int" ], "ret": ["int"] },
@@ -981,7 +994,7 @@ fn TransUnit.registBuiltInScope() mut {
             "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["form", "stem!", "stem!"] },
             "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str"] },
             "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
-         },  
+         },
       },
       { 
          "List": {
@@ -1686,6 +1699,7 @@ fn TransUnit.processImport(
    foreach atomInfo in metaInfo.__typeInfoList {
       if! let skind = atomInfo.skind {
          let mut actInfo:_TypeInfo! = nil;
+         let mut mess:str! = nil;
          let kind = unwrap Ast.SerializeKind._from( skind@@int );
          switch kind {
             case .Enum {
@@ -1707,6 +1721,9 @@ fn TransUnit.processImport(
             case .Nilable {
                actInfo = _TypeInfoNilable._fromMap( atomInfo );
             }
+            case .DDD {
+               actInfo, mess = _TypeInfoDDD._fromMap( atomInfo );
+            }
             case .Modifier {
                actInfo = _TypeInfoModifier._fromMap( atomInfo );
             }
@@ -1721,7 +1738,10 @@ fn TransUnit.processImport(
             foreach val, key in atomInfo {
                Util.errorLog( "table: %s:%s" (key,val) );
             }
-            Util.err( "_TypeInfo%s._fromMap error" (kind.$_txt) );
+            when! mess {
+               Util.errorLog( mess );
+            }
+            Util.err( "_TypeInfo.%s._fromMap error" (kind.$_txt) );
          }
       }
    }

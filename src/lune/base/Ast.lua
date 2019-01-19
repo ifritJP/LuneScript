@@ -114,6 +114,9 @@ SerializeKind.__allList[5] = SerializeKind.Enum
 SerializeKind.Alge = 5
 SerializeKind._val2NameMap[5] = 'Alge'
 SerializeKind.__allList[6] = SerializeKind.Alge
+SerializeKind.DDD = 6
+SerializeKind._val2NameMap[6] = 'DDD'
+SerializeKind.__allList[7] = SerializeKind.DDD
 
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
@@ -182,6 +185,9 @@ TypeInfoKind.__allList[14] = TypeInfoKind.Stem
 TypeInfoKind.Alge = 14
 TypeInfoKind._val2NameMap[14] = 'Alge'
 TypeInfoKind.__allList[15] = TypeInfoKind.Alge
+TypeInfoKind.DDD = 15
+TypeInfoKind._val2NameMap[15] = 'DDD'
+TypeInfoKind.__allList[16] = TypeInfoKind.DDD
 
 local function isBuiltin( typeId )
 
@@ -2525,7 +2531,7 @@ _moduleObj.builtinTypeStem = builtinTypeStem
 local builtinTypeNil = NormalTypeInfo.createBuiltin( "Nil", "nil", TypeInfoKind.Prim )
 _moduleObj.builtinTypeNil = builtinTypeNil
 
-local builtinTypeDDD = NormalTypeInfo.createBuiltin( "DDD", "...", TypeInfoKind.Prim )
+local builtinTypeDDD = NormalTypeInfo.createBuiltin( "DDD", "...", TypeInfoKind.DDD )
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
 local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
@@ -2563,6 +2569,111 @@ _moduleObj.builtinTypeStat = builtinTypeStat
 
 local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
+
+
+local typeInfo2DDDMap = {}
+local DDDTypeInfo = {}
+setmetatable( DDDTypeInfo, { __index = TypeInfo } )
+_moduleObj.DDDTypeInfo = DDDTypeInfo
+function DDDTypeInfo:get_scope(  )
+
+   return nil
+end
+function DDDTypeInfo.new( typeId, typeInfo, externalFlag )
+   local obj = {}
+   DDDTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( typeId, typeInfo, externalFlag ); end
+   return obj
+end
+function DDDTypeInfo:__init(typeId, typeInfo, externalFlag) 
+   TypeInfo.__init( self ,nil)
+   
+   self.typeId = typeId
+   self.typeInfo = typeInfo
+   self.externalFlag = externalFlag
+   self.itemTypeInfoList = {self.typeInfo}
+   typeInfo2DDDMap[typeInfo] = self
+end
+function DDDTypeInfo:isModule(  )
+
+   return false
+end
+function DDDTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return "...<" .. self.typeInfo:getTxt( fullName, importInfo, localFlag ) .. ">"
+end
+function DDDTypeInfo:canEvalWith( other, opTxt )
+
+   return self.typeInfo:canEvalWith( other, opTxt )
+end
+function DDDTypeInfo:serialize( stream, validChildrenSet )
+
+   stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d }\n', SerializeKind.DDD, self.typeId, self.typeInfo:get_typeId(), _moduleObj.headTypeInfo:get_typeId()) )
+end
+function DDDTypeInfo:get_display_stirng(  )
+
+   return self:getTxt(  )
+end
+function DDDTypeInfo:getModule(  )
+
+   return self.typeInfo:getModule(  )
+end
+function DDDTypeInfo:get_rawTxt(  )
+
+   return self:getTxt(  )
+end
+function DDDTypeInfo:get_kind(  )
+
+   return TypeInfoKind.DDD
+end
+function DDDTypeInfo:get_nilable(  )
+
+   return self.typeInfo:get_nilable()
+end
+function DDDTypeInfo:get_nilableTypeInfo(  )
+
+   return self
+end
+function DDDTypeInfo:get_mutable(  )
+
+   return self.typeInfo:get_mutable()
+end
+function DDDTypeInfo:get_accessMode(  )
+
+   return AccessMode.Pub
+end
+function DDDTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = DDDTypeInfo  } )
+end
+function DDDTypeInfo:get_typeInfo()       
+   return self.typeInfo         
+end
+function DDDTypeInfo:get_typeId()       
+   return self.typeId         
+end
+function DDDTypeInfo:get_externalFlag()       
+   return self.externalFlag         
+end
+function DDDTypeInfo:get_itemTypeInfoList()       
+   return self.itemTypeInfoList         
+end
+
+function NormalTypeInfo.createDDD( typeInfo, externalFlag )
+
+   do
+      local _exp = typeInfo2DDDMap[typeInfo]
+      if _exp ~= nil then
+         if _exp:get_typeId() < userStartId and typeInfo:get_typeId() >= userStartId then
+            Util.err( "on cache" )
+         end
+         
+         return _exp
+      end
+   end
+   
+   idProv:increment(  )
+   return DDDTypeInfo.new(idProv:get_id(), typeInfo, externalFlag)
+end
 
 local numberTypeMap = {}
 numberTypeMap[_moduleObj.builtinTypeInt] = true
@@ -2722,55 +2833,100 @@ end
 
 function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
 
+   local function checkDstTypeFrom( index, srcType, srcType2nd )
+   
+      local workExpType = srcType
+      for dstIndex = index, #dstTypeList do
+         local workDstType = dstTypeList[dstIndex]
+         if not workDstType:canEvalWith( workExpType, "=" ) then
+            return false, string.format( "exp(%d) type mismatch %s <- %s", dstIndex, workDstType:getTxt( true ), workExpType:getTxt( true ))
+         end
+         
+         workExpType = srcType2nd
+      end
+      
+      return true, ""
+   end
+   
+   local function checkSrcTypeFrom( index, dstType )
+   
+      for srcIndex = index, #expTypeList do
+         local expType = expTypeList[srcIndex]
+         local checkType = expType
+         if expType:get_kind() == TypeInfoKind.DDD then
+            if #expType:get_itemTypeInfoList() > 0 then
+               checkType = expType:get_itemTypeInfoList()[1]
+            else
+             
+               checkType = _moduleObj.builtinTypeStem_
+            end
+            
+         end
+         
+         if not dstType:canEvalWith( checkType, "=" ) then
+            return false, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
+         end
+         
+      end
+      
+      return true, ""
+   end
+   
    if #expTypeList > 0 then
       for index, expType in pairs( expTypeList ) do
          if #dstTypeList == 0 then
             return false, string.format( "over exp. expect:0, actual:%d", #expTypeList)
          end
          
-         local argType = dstTypeList[index]
+         local dstType = dstTypeList[index]
          if #dstTypeList == index then
-            if not argType:equals( _moduleObj.builtinTypeDDD ) then
-               if not argType:canEvalWith( expType, "=" ) then
-                  return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt( true ), expType:getTxt( true ))
+            if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
+               if not dstType:canEvalWith( expType, "=" ) then
+                  return false, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
                   return false, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList)
                end
                
+            else
+             
+               local dddItemType = _moduleObj.builtinTypeStem_
+               if #dstType:get_itemTypeInfoList() > 0 then
+                  dddItemType = dstType:get_itemTypeInfoList()[1]
+               end
+               
+               local result, mess = checkSrcTypeFrom( index, dddItemType )
+               if not result then
+                  return result, mess
+               end
+               
             end
             
             break
          elseif #expTypeList == index then
-            if expType:equals( _moduleObj.builtinTypeDDD ) then
-               for argIndex = index, #dstTypeList do
-                  local workArgType = dstTypeList[argIndex]
-                  if not workArgType:canEvalWith( _moduleObj.builtinTypeStem_, "=" ) then
-                     return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, workArgType:getTxt( true ), _moduleObj.builtinTypeStem_:getTxt(  ))
-                  end
-                  
+            local srcType = expType
+            local srcType2nd = _moduleObj.builtinTypeNil
+            if expType:get_kind() == TypeInfoKind.DDD then
+               srcType = _moduleObj.builtinTypeStem_
+               srcType2nd = _moduleObj.builtinTypeStem_
+               if #expType:get_itemTypeInfoList() > 0 then
+                  srcType = expType:get_itemTypeInfoList()[1]
+                  srcType2nd = srcType
                end
                
-            else
-             
-               local workExpType = expType
-               for argIndex = index, #dstTypeList do
-                  local argTypeInfo = dstTypeList[argIndex]
-                  if not argTypeInfo:canEvalWith( workExpType, "=" ) then
-                     return false, string.format( "exp(%d) type mismatch %s <- %s", argIndex, argTypeInfo:getTxt( true ), workExpType:getTxt( true ))
-                  end
-                  
-                  workExpType = _moduleObj.builtinTypeNil
-               end
-               
+            end
+            
+            local result, mess = checkDstTypeFrom( index, srcType, srcType2nd )
+            if not result then
+               return result, mess
             end
             
             break
          else
           
-            if not argType:canEvalWith( expType, "=" ) then
-               return false, string.format( "exp(%d) type mismatch %s <- %s", index, argType:getTxt( true ), expType:getTxt( true ))
+            if not dstType:canEvalWith( expType, "=" ) then
+               return false, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
             end
             
          end
@@ -2778,9 +2934,9 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
       end
       
    elseif not allowDstShort then
-      for index, argType in pairs( dstTypeList ) do
-         if not argType:canEvalWith( _moduleObj.builtinTypeNil, "=" ) then
-            return false, string.format( "exp(%d) type mismatch %s <- nil", index, argType:getTxt( true ))
+      for index, dstType in pairs( dstTypeList ) do
+         if not dstType:canEvalWith( _moduleObj.builtinTypeNil, "=" ) then
+            return false, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
          end
          
       end
@@ -2790,63 +2946,78 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
    return true, ""
 end
 
-function TypeInfo.canEvalWithBase( dist, distMut, other, opTxt )
+function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
 
    local otherMut = other:get_mutable()
    local otherSrc = other:get_srcTypeInfo()
-   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and distMut and not otherMut then
+   if otherSrc:get_kind() == TypeInfoKind.DDD then
+      if #otherSrc:get_itemTypeInfoList() > 0 then
+         otherSrc = otherSrc:get_itemTypeInfoList()[1]
+      end
+      
+   end
+   
+   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and destMut and not otherMut then
       return false
    end
    
-   if dist == _moduleObj.builtinTypeStem_ or dist == _moduleObj.builtinTypeDDD then
+   if dest == _moduleObj.builtinTypeStem_ then
       return true
    end
    
-   if not dist:get_nilable() and otherSrc:get_nilable() then
+   if dest:get_srcTypeInfo():get_kind() == TypeInfoKind.DDD then
+      if #dest:get_itemTypeInfoList() > 0 then
+         return dest:get_itemTypeInfoList()[1]:canEvalWith( other, opTxt )
+      end
+      
+      return true
+   end
+   
+   if not dest:get_nilable() and otherSrc:get_nilable() then
       return false
    end
    
-   if dist == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then
+   if dest == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then
       return true
    end
    
-   if dist == _moduleObj.builtinTypeForm and otherSrc:get_kind() == TypeInfoKind.Func then
+   if dest == _moduleObj.builtinTypeForm and otherSrc:get_kind() == TypeInfoKind.Func then
       return true
    end
    
    if otherSrc == _moduleObj.builtinTypeNil then
-      if dist:get_kind() ~= TypeInfoKind.Nilable then
+      if dest:get_kind() ~= TypeInfoKind.Nilable then
          return false
       end
       
       return true
    end
    
-   if dist:get_typeId() == otherSrc:get_typeId() then
+   if dest:get_typeId() == otherSrc:get_typeId() then
       return true
    end
    
-   if dist:get_kind() ~= otherSrc:get_kind() then
-      if dist:get_kind() == TypeInfoKind.Nilable then
+   if dest:get_kind() ~= otherSrc:get_kind() then
+      if dest:get_kind() == TypeInfoKind.Nilable then
          if otherSrc:get_nilable() then
-            return dist:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
+            return dest:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
          end
          
-         return dist:get_orgTypeInfo():canEvalWith( otherSrc, opTxt )
-      elseif (dist:get_kind() == TypeInfoKind.Class or dist:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
-         return otherSrc:isInheritFrom( dist )
+         return dest:get_orgTypeInfo():canEvalWith( otherSrc, opTxt )
+      elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
+         return otherSrc:isInheritFrom( dest )
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
          local enumTypeInfo = otherSrc
-         return dist:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt )
+         return dest:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt )
       end
       
       return false
    end
    
    do
-      local _switchExp = (dist:get_kind() )
+      local _switchExp = (dest:get_kind() )
       if _switchExp == TypeInfoKind.Prim then
-         if dist == _moduleObj.builtinTypeInt and otherSrc == _moduleObj.builtinTypeChar or dist == _moduleObj.builtinTypeChar and otherSrc == _moduleObj.builtinTypeInt then
+         if dest == _moduleObj.builtinTypeInt and otherSrc == _moduleObj.builtinTypeChar or dest == _moduleObj.builtinTypeChar and otherSrc == _moduleObj.builtinTypeInt then
             return true
          end
          
@@ -2856,7 +3027,7 @@ function TypeInfo.canEvalWithBase( dist, distMut, other, opTxt )
             return true
          end
          
-         if not (_lune.unwrap( dist:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
+         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
             return false
          end
          
@@ -2867,37 +3038,37 @@ function TypeInfo.canEvalWithBase( dist, distMut, other, opTxt )
             return true
          end
          
-         if not (_lune.unwrap( dist:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
+         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
             return false
          end
          
          
-         if not (_lune.unwrap( dist:get_itemTypeInfoList()[2]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[2]), "=" ) then
+         if not (_lune.unwrap( dest:get_itemTypeInfoList()[2]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[2]), "=" ) then
             return false
          end
          
          
          return true
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
-         return otherSrc:isInheritFrom( dist )
+         return otherSrc:isInheritFrom( dest )
       elseif _switchExp == TypeInfoKind.Func then
-         if dist == _moduleObj.builtinTypeForm then
+         if dest == _moduleObj.builtinTypeForm then
             return true
          end
          
-         if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dist:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if not TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
          return true
       elseif _switchExp == TypeInfoKind.Method then
-         if not TypeInfo.checkMatchType( dist:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dist:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dist:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if not TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
          return true
       elseif _switchExp == TypeInfoKind.Nilable then
-         return dist:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
+         return dest:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
       else 
          
             return false
@@ -3458,24 +3629,28 @@ _moduleObj.ProcessInfo = ProcessInfo
 function ProcessInfo.setmeta( obj )
   setmetatable( obj, { __index = ProcessInfo  } )
 end
-function ProcessInfo.new( typeInfo2ModifierMap, idProvier )
+function ProcessInfo.new( idProvier, typeInfo2ModifierMap, typeInfo2DDDMap )
    local obj = {}
    ProcessInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( typeInfo2ModifierMap, idProvier )
+      obj:__init( idProvier, typeInfo2ModifierMap, typeInfo2DDDMap )
    end        
    return obj 
 end         
-function ProcessInfo:__init( typeInfo2ModifierMap, idProvier ) 
+function ProcessInfo:__init( idProvier, typeInfo2ModifierMap, typeInfo2DDDMap ) 
 
-   self.typeInfo2ModifierMap = typeInfo2ModifierMap
    self.idProvier = idProvier
+   self.typeInfo2ModifierMap = typeInfo2ModifierMap
+   self.typeInfo2DDDMap = typeInfo2DDDMap
+end
+function ProcessInfo:get_idProvier()       
+   return self.idProvier         
 end
 function ProcessInfo:get_typeInfo2ModifierMap()       
    return self.typeInfo2ModifierMap         
 end
-function ProcessInfo:get_idProvier()       
-   return self.idProvier         
+function ProcessInfo:get_typeInfo2DDDMap()       
+   return self.typeInfo2DDDMap         
 end
 
 local MacroValInfo = {}
@@ -9328,16 +9503,18 @@ local function pushProcessInfo( processInfo )
       
    end
    
-   table.insert( processInfoQueue, ProcessInfo.new(typeInfo2ModifierMap, idProv) )
+   table.insert( processInfoQueue, ProcessInfo.new(idProv, typeInfo2ModifierMap, typeInfo2DDDMap) )
    if processInfo ~= nil then
       idProv = processInfo:get_idProvier()
       typeInfo2ModifierMap = processInfo:get_typeInfo2ModifierMap()
+      typeInfo2DDDMap = processInfo:get_typeInfo2DDDMap()
    else
       idProv = IdProvider.new(userStartId)
       typeInfo2ModifierMap = {}
+      typeInfo2DDDMap = {}
    end
    
-   return ProcessInfo.new(typeInfo2ModifierMap, idProv)
+   return ProcessInfo.new(idProv, typeInfo2ModifierMap, typeInfo2DDDMap)
 end
 _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
