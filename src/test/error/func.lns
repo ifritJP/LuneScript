@@ -102,7 +102,16 @@
 
    form form3():int!;
 
-   let test3:form3 = fn() {};
+   let test3:form3 = fn() {}; // error
+}
+
+{
+   fn func( ..., ...<int> ) { // error
+   }  
+
+   fn func2(): ...<int>, ...  { // error
+      return 1;
+   }  
 }
 
 abstract class Super {
@@ -112,10 +121,10 @@ abstract class Super {
 
 abstract class Sub extend Super {
    pub override fn func2() {
-      super();
+      super(); // error
    }
    pub override fn func(): int {
-      return super();
+      return super(); // error
    }
 }
 

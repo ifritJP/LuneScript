@@ -249,6 +249,9 @@ fn TransUnit.analyzeExpRefItem(
    }
 
    let indexExp = self.analyzeExp( false, nil, expectItemType );
+   if not indexExp.canBeRight() {
+      self.addErrMess( indexExp.$pos, "This node can't use index" );
+   }
    self.checkNextToken( "]" );
    
    

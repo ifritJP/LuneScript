@@ -1,0 +1,9 @@
+class Test {
+   static fn func();
+   __init {
+      Test.func();  // error
+   }
+}
+
+fn Test.func() {
+}

@@ -57,11 +57,14 @@
     }
 }
 
+
+{
+   let mut val:Map<str,int> = {};
+   val[ str ] = 1;  // error
+}
+
 {
    let mut val2:Map<str,stem> = {};
    (unwrap val2.abc).zz = 1; // error
    val2.abc.zz = 1; // error
 }
-
-
-

@@ -455,6 +455,10 @@ function Scope:setData( symbolInfo )
 
    self.symbolId2DataOwnerInfo[symbolInfo:get_symbolId()] = DataOwnerInfo.new(true, symbolInfo)
 end
+function Scope:remove( name )
+
+   self.symbol2SymbolInfoMap[name] = nil
+end
 function Scope.setmeta( obj )
   setmetatable( obj, { __index = Scope  } )
 end

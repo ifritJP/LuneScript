@@ -52,12 +52,27 @@ $ luarocks install lunescript
 print( "Hello world." );
 #+END_SRC
 
-- execute 'lnsc' command.
+- execute hello.lns with 'lnsc' command.
   
 #+BEGIN_SRC sh
 $ lnsc hello.lns exe
+Hello world.
 #+END_SRC
 
+- transcompile
+  
+#+BEGIN_SRC sh
+$ lnsc hello.lns SAVE
+#+END_SRC
+
+This command generates files (hello.lua and hello.meta).
+
+- execute hello.lua with 'lua' command.
+  
+#+BEGIN_SRC sh
+$ lua hello.lua
+Hello world.
+#+END_SRC
   
 
 * Specification

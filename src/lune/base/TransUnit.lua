@@ -3084,10 +3084,15 @@ end
 function TransUnit:analyzeDeclArgList( accessMode, argList )
 
    local nextToken = Parser.noneToken
+   local hasDDDFlag = false
    repeat 
       nextToken = self:getToken(  )
       if nextToken.txt == ")" then
          break
+      end
+      
+      if hasDDDFlag then
+         self:addErrMess( nextToken.pos, "Argument exists after '...'." )
       end
       
       local mutable = false
@@ -3098,6 +3103,7 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
       
       local argName = nextToken
       if argName.txt == "..." then
+         hasDDDFlag = true
          local workToken, flag = self:getContinueToken(  )
          self:pushback(  )
          local dddTypeInfo = Ast.builtinTypeDDD
@@ -3622,9 +3628,18 @@ function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token )
 
    local retTypeInfoList = {}
    if token.txt == ":" then
+      local hasDDDFlag = false
       while true do
          local refTypeNode = self:analyzeRefType( accessMode, true )
+         if hasDDDFlag then
+            self:addErrMess( refTypeNode:get_pos(), "Type exists after '...'." )
+         end
+         
          local retType = refTypeNode:get_expType()
+         if retType:get_kind() == Ast.TypeInfoKind.DDD then
+            hasDDDFlag = true
+         end
+         
          if pubToExtFlag and not Ast.isPubToExternal( retType:get_accessMode() ) then
             self:addErrMess( refTypeNode:get_pos(), string.format( "this is not public type -- %s", retType:getTxt(  )) )
          end
@@ -3857,6 +3872,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    local fieldList = {}
    local memberList = {}
    local methodNameSet = {}
+   local ptoroStaticMethodFuncTypeList = {}
    local initStmtList = {}
    local advertiseList = {}
    local trustList = {}
@@ -3908,12 +3924,22 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          declCtorNode = methodNode
       end
       
+      if staticFlag and methodNode:get_kind() == Ast.NodeKind.get_None() then
+         do
+            local funcType = self.scope:getTypeInfoChild( nameToken.txt )
+            if funcType ~= nil then
+               table.insert( ptoroStaticMethodFuncTypeList, funcType )
+            end
+         end
+         
+      end
+      
    end
    
-   local function processInit(  )
+   local function processInitBlock(  )
    
       if mode ~= DeclClassMode.Class then
-         self:error( string.format( "%s can not have __init method", mode) )
+         self:error( string.format( "%s can not have __init block.", mode) )
       end
       
       hasInitBlock = true
@@ -4020,7 +4046,15 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       elseif token.txt == "fn" then
          processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag )
       elseif token.txt == "__init" then
-         processInit(  )
+         for __index, funcType in pairs( ptoroStaticMethodFuncTypeList ) do
+            self.scope:remove( funcType:get_rawTxt() )
+         end
+         
+         processInitBlock(  )
+         for __index, funcType in pairs( ptoroStaticMethodFuncTypeList ) do
+            self.scope:addFunc( funcType, funcType:get_accessMode(), funcType:get_staticFlag(), false )
+         end
+         
       elseif token.txt == "advertise" then
          processAdvertise(  )
       elseif token.txt == ";" then
@@ -5244,6 +5278,10 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    end
    
    local indexExp = self:analyzeExp( false, nil, expectItemType )
+   if not indexExp:canBeRight(  ) then
+      self:addErrMess( indexExp:get_pos(), "This node can't use index" )
+   end
+   
    self:checkNextToken( "]" )
    return Ast.ExpRefItemNode.create( self.nodeManager, token.pos, {typeInfo}, exp, nilAccess, nil, indexExp )
 end

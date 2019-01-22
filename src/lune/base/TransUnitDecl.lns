@@ -156,11 +156,17 @@ fn TransUnit.analyzeDeclArgList(
    accessMode:Ast.AccessMode, argList: List<&Ast.Node> ) mut : &Parser.Token
 {
    let mut nextToken: &Parser.Token = Parser.noneToken;
+   let mut hasDDDFlag = false;
    repeat {
       nextToken = self.getToken();
       if nextToken.txt == ")" {
          break;
       }
+
+      if hasDDDFlag {
+         self.addErrMess( nextToken.pos, "Argument exists after '...'." );
+      }
+      
       let mut mutable = false;
       if nextToken.txt == "mut" {
          mutable = true;
@@ -168,6 +174,7 @@ fn TransUnit.analyzeDeclArgList(
       }
       let mut argName = nextToken;
       if argName.txt == "..." {
+         hasDDDFlag = true;
          let workToken, flag = self.getContinueToken();
          self.pushback();
 
@@ -753,9 +760,16 @@ fn TransUnit.analyzeRetTypeList(
 {
    let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
    if token.txt == ":" {
+      let mut hasDDDFlag = false;
       while true {
          let refTypeNode = self.analyzeRefType( accessMode, true );
+         if hasDDDFlag {
+            self.addErrMess( refTypeNode.$pos, "Type exists after '...'." );
+         }
          let retType = refTypeNode.$expType;
+         if retType.$kind == .DDD {
+            hasDDDFlag = true;
+         }
          if pubToExtFlag and not Ast.isPubToExternal( retType.$accessMode )
          {  
             self.addErrMess( refTypeNode.$pos,
@@ -1039,6 +1053,7 @@ fn TransUnit.analyzeClassBody(
    let mut fieldList:List<&Ast.Node> = [];
    let mut memberList:List<&Ast.DeclMemberNode> = [];
    let mut methodNameSet: Map<str,bool> = {};
+   let mut ptoroStaticMethodFuncTypeList:List<&Ast.TypeInfo> = [];
    let mut initStmtList:List<&Ast.Node> = [];
    let mut advertiseList:Ast.AdvertiseInfo[] = [];
    let mut trustList:List<&Ast.TypeInfo> = [];
@@ -1094,11 +1109,17 @@ fn TransUnit.analyzeClassBody(
       if nameToken.txt == "__init" {
          declCtorNode = methodNode;
       }
+      if staticFlag and methodNode.$kind == Ast.NodeKind.$None {
+         // メソッドのプロトタイプ宣言の場合 none になる。
+         if! let funcType = self.scope.getTypeInfoChild( nameToken.txt ) {
+            ptoroStaticMethodFuncTypeList.insert( funcType );
+         }
+      }
    }
 
-   fn processInit() {
+   fn processInitBlock() {
       if mode ~= .Class {
-         self.error( "%s can not have __init method" (mode) );
+         self.error( "%s can not have __init block." (mode) );
       }
       hasInitBlock = true;
       foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
@@ -1195,7 +1216,19 @@ fn TransUnit.analyzeClassBody(
          processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
       }
       elseif token.txt == "__init" {
-         processInit();
+         // __init ブロックからプロトタイプ宣言しかない static メソッドを
+         // コールできないので、スコープから外す。
+         foreach funcType in ptoroStaticMethodFuncTypeList {
+            self.scope.remove( funcType.$rawTxt );
+         }
+         
+         processInitBlock();
+
+         //スコープから外したメソッド情報を戻す。
+         foreach funcType in ptoroStaticMethodFuncTypeList {
+            self.scope.addFunc(
+               funcType, funcType.$accessMode, funcType.$staticFlag, false );
+         }
       }
       elseif token.txt == "advertise" {
          processAdvertise();

@@ -304,6 +304,9 @@ pub class Scope {
       new DataOwnerInfo( true, symbolInfo );
    }
 
+   pub fn remove( name: str ) mut {
+      self.symbol2SymbolInfoMap[ name ] = nil;
+   }
    
    pub fn getNSTypeInfo(): TypeInfo;
 }
