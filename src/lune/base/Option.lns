@@ -31,9 +31,9 @@ import lune.base.LuaVer;
 macro _defGetBuildCount() {
    {
       let mut count = 0;
-      if! let mut fileObj = io.open( "build.counter" ) {
+      if! let mut fileObj = io.open( "build.counter" ## ) {
          if! let txt = fileObj.read( "*l" ) {
-            count = tonumber( txt )@@int;
+            count = tonumber( txt ## )@@int;
          }
       }
       if count == 0 {
@@ -61,6 +61,15 @@ pub enum ModeKind {
    Glue = "glue",
 }
 
+pub class TransCtrlInfo {
+   pub let mut checkingDefineAbbr:bool;
+   pub let mut stopByWarning:bool;
+}
+
+pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
+   return new TransCtrlInfo( true, false );
+}
+
 pub class Option {
    pub let mut mode:ModeKind;
    /** 解析対象のモジール名。 comp モードの時に使用。 */
@@ -86,6 +95,8 @@ pub class Option {
    /** 変換先の Lua バージョン*/
    pub let mut targetLuaVer:&LuaVer.LuaVerInfo;
 
+   pub let mut transCtrlInfo:TransCtrlInfo;
+
    pub fn __init() {
       self.validProf = false;
       self.mode = .Unknown;
@@ -95,6 +106,7 @@ pub class Option {
       self.byteCompile = false;
       self.stripDebugInfo = false;
       self.targetLuaVer = LuaVer.curVer;
+      self.transCtrlInfo = TransCtrlInfo.create_normal();
    }
 }
 
@@ -142,6 +154,8 @@ usage:
 
   common_op:
     -u: update meta and lua on load.
+    -Werror: error by warrning.
+    --disable-checking-define-abbr: disable checking for ##.
 
 * type2
   dir: output directory.
@@ -158,7 +172,7 @@ usage:
    while #argList >= index {
       let arg = argList[ index ];
 
-      if arg.find( "^-" ) {
+      if arg.find( "^-" ## ) {
          switch ( arg ) {
             case "-i" {     
                useStdInFlag = true;
@@ -187,6 +201,12 @@ usage:
             }
             case "-u" {
                option.updateOnLoad = true;
+            }
+            case "-Werror" {
+               option.transCtrlInfo.stopByWarning = true;
+            }
+            case "--disable-checking-define-abbr" {
+               option.transCtrlInfo.checkingDefineAbbr = false;
             }
             case "--depends" {
                if #argList > index {
@@ -246,10 +266,10 @@ usage:
                      option.analyzeModule = arg;
                   }
                   elseif not lineNo {
-                     lineNo = tonumber( arg )@@int;
+                     lineNo = tonumber( arg ## )@@int;
                   }
                   elseif not column {
-                     column = tonumber( arg )@@int;
+                     column = tonumber( arg ## )@@int;
                      option.analyzePos = new Parser.Position(
                         unwrap lineNo, unwrap column );
                   }

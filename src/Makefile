@@ -41,7 +41,7 @@ define cutMeta
 endef
 
 define transwork
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2 $(BYTECOMP))
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2 $(BYTECOMP) -Werror)
 endef
 
 define exeLune
@@ -56,6 +56,7 @@ endef
 define buildLns
 	$(call transwork,$1,$2,Ver)
 	$(call transwork,$1,$2,LuaMod)
+	$(call transwork,$1,$2,Code)
 	$(call transwork,$1,$2,Depend)
 	$(call transwork,$1,$2,Util)
 	$(call transwork,$1,$2,LuaVer)
@@ -198,6 +199,9 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/static.lns,exe,2>&1)
 
+
+	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG
+
 	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
 	rm test/error/dis_mutable.lns
@@ -305,14 +309,16 @@ endif
 
 define check-rockspec-op
 	@grep 'lune.base' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
-	@find $2 -iname '*.lua' | sort > work/$1.2.list
+	@(cd $2; find lune/base -iname '*.lua' ) | sed 's@^@$3@g' | sort > work/$1.2.list
 	diff work/$1.list work/$1.2.list
 	@rm work/$1.list work/$1.2.list
 endef
 
 check-rockspec:
-	$(call check-rockspec-op,lunescript-main-1.rockspec,lune/base/)
-	$(call check-rockspec-op,lunescript51-main-1.rockspec,legacy/lua51/lune/base/)
+	$(call check-rockspec-op,lunescript-main-1.rockspec,work/3,)
+ifdef LUA51
+	$(call check-rockspec-op,lunescript51-main-1.rockspec,work/6,legacy/lua51/)
+endif
 
 
 diff-result:

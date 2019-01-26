@@ -1,0 +1,15 @@
+pub enum ID {
+   nothing_define_abbr,
+}
+
+pub fn format( id:ID, mess:str ): str {
+   return string.format( "%05d:%s", id, mess );
+}
+
+pub fn isMessageOf( id:ID, mess:str ): bool {
+   let pat = "^%05d:" (id);
+   if mess.find( pat ## ) {
+      return true;
+   }
+   return false;
+}

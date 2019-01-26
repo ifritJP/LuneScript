@@ -71,7 +71,7 @@ pub class XML extend (Writer) {
       self.startElement( name );
    }
    pub fn endElement() mut {
-      let name = self.elementList.remove();
+      let name = self.elementList.remove(##);
       self.stream.write( '</%s>' ( name ) );
       self.depth = self.depth - 1;
       if self.depth == 0 {
@@ -150,7 +150,7 @@ pub class JSON extend (Writer) {
          else {
 	    self.stream.write( '}' );
          }
-         self.layerQueue.remove();
+         self.layerQueue.remove(##);
          let parentInfo = self.getLayerInfo();
          if not parentInfo$.madeByArrayFlag {
 	    break;

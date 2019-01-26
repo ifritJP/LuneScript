@@ -113,6 +113,7 @@ fn createReserveInfo( luaMode: bool! ) :
          multiCharDelimitMap[ ",,," ] = [@ ",,,," ];
          multiCharDelimitMap[ "@" ] = [@ "@@" ];
          multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
+         multiCharDelimitMap[ "#" ] = [@ "##" ];
       } 
       else {
          multiCharDelimitMap[ "." ] = [@ ".." ];
@@ -148,7 +149,7 @@ pub class TxtStream extend (iStream) {
          return txt;
       }
       self.eof = true;
-      return self.txt.sub( self.start);
+      return self.txt.sub( self.start## );
    }
    pub fn close() mut {
    }
@@ -289,7 +290,7 @@ pub class StreamParser extend Parser {
       }
 
       return new StreamParser(
-         stream, path, luaMode or string.find( path, "%.lua$" ) and true );
+         stream, path, luaMode or string.find( path, "%.lua$" ## ) and true );
    }
 
    pub override fn getToken() mut : &Token!;
@@ -427,7 +428,7 @@ fn StreamParser.parse() mut : Token[]! {
             comment = comment .. rawLine.sub( searchIndex, termEndIndex );
             return comment, termEndIndex + 1;
          }
-         comment = comment .. rawLine.sub( searchIndex ) .. "\n";
+         comment = comment .. rawLine.sub( searchIndex ## ) .. "\n";
          searchIndex = 1;
          rawLine = unwrap readLine();
       }
@@ -478,20 +479,20 @@ fn StreamParser.parse() mut : Token[]! {
         @return bool 整数かどうか
         */
       fn analyzeNumber( token: &str, beginIndex: int ) : int, bool {
-         let! mut nonNumIndex = token.find( '[^%d]', beginIndex ) {
+         let! mut nonNumIndex = token.find( '[^%d]', beginIndex ## ) {
             return #token, true;
          };
          let mut intFlag = true;
          let mut nonNumChar = token.byte( nonNumIndex );
          if nonNumChar == ?. { // .
             intFlag = false;
-            unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ) {
+            unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ## ) {
                return #token, intFlag;
             };
             nonNumChar = token.byte( nonNumIndex );
          }
          if nonNumChar == ?X or nonNumChar == ?x { // X or x
-            unwrap! nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 ) {
+            unwrap! nonNumIndex = token.find( '[^%da-fA-F]', nonNumIndex + 1 ## ) {
                return #token, intFlag;
             };
             nonNumChar = token.byte( nonNumIndex );
@@ -500,12 +501,12 @@ fn StreamParser.parse() mut : Token[]! {
             intFlag = false;
             let nextChar = token.byte( nonNumIndex + 1 );
             if nextChar == ?- or nextChar == ?+ { // '-' or '+'
-               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 ) {
+               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 2 ## ) {
                   return #token, intFlag;
                };
             }
             else {
-               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ) {
+               unwrap! nonNumIndex = token.find( '[^%d]', nonNumIndex + 1 ## ) {
                   return #token, intFlag;
                };
             }
@@ -517,7 +518,8 @@ fn StreamParser.parse() mut : Token[]! {
          let mut searchIndex = 1;
          while true {
             // 空白系以外の何らかの文字領域を探す
-            let! tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex ) {
+            let! tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex ## )
+            {
                break;
             };
             let columnIndex = column + tokenIndex - 2;
@@ -525,8 +527,8 @@ fn StreamParser.parse() mut : Token[]! {
             let token:str = val.sub( tokenIndex, tokenEndIndex );
             let mut startIndex = 1;
             while true {
-               if token.find( '^[%d]', startIndex ) or
-                  token.find( '^-[%d]', startIndex )
+               if token.find( '^[%d]', startIndex ## ) or
+                  token.find( '^-[%d]', startIndex ## )
                {              
                   // 数値の場合
                   let mut checkIndex = startIndex;
@@ -542,7 +544,7 @@ fn StreamParser.parse() mut : Token[]! {
                }
                else {
                   // 区切り文字を探す
-                  if! string.find( token, '[^%w_]', startIndex ) {
+                  if! string.find( token, '[^%w_]', startIndex ## ) {
                      let index = _exp;
                      if index > startIndex {
                         let mut info = createInfo(
@@ -590,9 +592,10 @@ fn StreamParser.parse() mut : Token[]! {
                   }
                   else {
                      if startIndex <= #token {
-                        list.insert( createInfo(                         
-                           .Symb, token.sub( startIndex ),  
-                           columnIndex + startIndex ) );
+                        list.insert(
+                           createInfo(                
+                              .Symb, token.sub( startIndex ##),
+                              columnIndex + startIndex ) );
                      }
                      break;
                   }
@@ -615,8 +618,8 @@ fn StreamParser.parse() mut : Token[]! {
       let mut syncIndexFlag = true;
       //let pattern = ```[/%-%?"%'%`%[].```;
       let pattern = ```[/%-%?"%'%`].```;
-      let! index = string.find( rawLine, pattern, searchIndex ) {
-         addVal( .Symb, rawLine.sub( startIndex ), startIndex );
+      let! index = string.find( rawLine, pattern, searchIndex ## ) {
+         addVal( .Symb, rawLine.sub( startIndex ##), startIndex );
          return list;
       };
 
@@ -641,7 +644,7 @@ fn StreamParser.parse() mut : Token[]! {
             }
             elseif nextChar == ?/ {
                // 1行コメント
-               addVal( .Cmnt, rawLine.sub( index ), index );
+               addVal( .Cmnt, rawLine.sub( index ## ), index );
                searchIndex = #rawLine + 1;
             }
             else {
@@ -677,7 +680,7 @@ fn StreamParser.parse() mut : Token[]! {
             let mut workIndex = index + 1;
             let workPattern = '["\'\\]';
             while true {
-               let! endIndex = string.find( rawLine, workPattern, workIndex ) {
+               let! endIndex = string.find( rawLine, workPattern, workIndex ## ) {
                   Util.err( "%s:%d:%d: error: illegal string -- %s"
                             ( self.getStreamName(), self.lineNo, index, rawLine ) );
                };

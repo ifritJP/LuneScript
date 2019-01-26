@@ -35,7 +35,7 @@ fn dump( prefix: str, depth: int, node: &Ast.Node, txt: str ) {
    let expType = node.get_expType();
    if expType.equals( Ast.builtinTypeNone ) {
       typeStr = "(%d:%s:%s)" ( expType.get_typeId(),
-                               expType.getTxt(),
+                               expType.getTxt(##),
                                expType.get_kind() );
    }
    print( "%s: %s %s %s"
@@ -145,12 +145,12 @@ pub override fn dumpFilter.processExpMacroExp(
 pub override fn dumpFilter.processDeclMacro( 
    node: &Ast.DeclMacroNode, prefix: str, depth: int ) mut
 {
-   dump( prefix, depth, node, node.get_expType().getTxt() );
+   dump( prefix, depth, node, node.get_expType().getTxt(##) );
 };
 pub override fn dumpFilter.processExpMacroStat( 
    node: &Ast.ExpMacroStatNode, prefix: str, depth: int ) mut
 {
-   dump( prefix, depth, node, node.get_expType().getTxt() );
+   dump( prefix, depth, node, node.get_expType().getTxt(##) );
    foreach node in node.get_expStrList() {
       filter( node, self, prefix .. "  ", depth + 1 );
    }
@@ -297,7 +297,7 @@ pub override fn dumpFilter.processExpCallSuper(
    node: &Ast.ExpCallSuperNode, prefix: str, depth: int ) mut
 {
    let typeInfo:Ast.TypeInfo = node.get_superType();
-   dump( prefix, depth, node, typeInfo.getTxt() );
+   dump( prefix, depth, node, typeInfo.getTxt(##) );
 };
 pub override fn dumpFilter.processRefType( 
    node: &Ast.RefTypeNode, prefix: str, depth: int ) mut
@@ -479,7 +479,7 @@ pub override fn dumpFilter.processExpRef(
 pub override fn dumpFilter.processExpRefItem( 
    node: &Ast.ExpRefItemNode, prefix: str, depth: int ) mut
 {
-   dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt() );
+   dump( prefix, depth, node, "seq[exp] " .. node.get_expType().getTxt(##) );
    filter( node.$val, self, prefix .. "  ", depth + 1 );
    if! node.$index {
       filter( _exp, self, prefix .. "  ", depth + 1 );
@@ -495,7 +495,7 @@ pub override fn dumpFilter.processExpOmitEnum(
    node: &Ast.ExpOmitEnumNode, prefix: str, depth: int ) mut
 {
    dump( prefix, depth, node,
-         "%s.%s" (node.$expType.getTxt(), node.$valToken.txt ) );
+         "%s.%s" (node.$expType.getTxt(##), node.$valToken.txt ) );
 };
 
 pub override fn dumpFilter.processGetField( 

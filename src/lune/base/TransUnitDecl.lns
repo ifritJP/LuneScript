@@ -27,17 +27,17 @@ subfile owner lune.base.TransUnit;
 fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
    Ast.RefTypeNode
 {
-   let firstToken = self.getToken();
+   let firstToken = self.getToken(##);
    let mut token = firstToken;
    let mut refFlag = false;
    if token.txt == "&" {
       refFlag = true;
-      token = self.getToken();
+      token = self.getToken(##);
    }
    let mut mutFlag = false;
    if token.txt == "mut" {
       mutFlag = true;
-      token = self.getToken();
+      token = self.getToken(##);
    }
    let mut typeInfo = Ast.builtinTypeStem_;
    self.checkSymbol( token, .MustNot_ );
@@ -50,7 +50,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
    token = continueToken;
    if continueFlag and token.txt == "!" {
       typeInfo = unwrap typeInfo.get_nilableTypeInfo();
-      token = self.getToken();
+      token = self.getToken(##);
    }
 
    let mut arrayMode = "no";
@@ -66,7 +66,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             typeInfo = Ast.NormalTypeInfo.createArray(
                accessMode, self.getCurrentClass(), [ typeInfo ] );
          }   
-         token = self.getToken();
+         token = self.getToken(##);
          if token.txt ~= ']' {
             self.pushback();
             self.checkNextToken( ']' );
@@ -79,7 +79,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             let typeExp = self.analyzeRefType( accessMode, false );
 
             genericList.insert( typeExp.$expType );
-            nextToken = self.getToken();
+            nextToken = self.getToken(##);
          } nextToken.txt ~= ",";
          self.checkToken( nextToken, '>' );
 
@@ -122,7 +122,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             }
             default {
                self.error( string.format( "not support generic: %s",
-                                          typeInfo.getTxt() ) );
+                                          typeInfo.getTxt(##) ) );
             }
          }
       }   
@@ -130,16 +130,17 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
          self.pushback();
          break;
       }
-      token = self.getToken();
+      token = self.getToken(##);
    }
    if token.txt == "!" {
       typeInfo = unwrap typeInfo.get_nilableTypeInfo();
-      token = self.getToken();
+      token = self.getToken(##);
    }
 
    if not allowDDD {
       if typeInfo.$kind == .DDD {
-         self.addErrMess( firstToken.pos, "invalid type. -- '%s'" (typeInfo.getTxt() ) );
+         self.addErrMess( firstToken.pos,
+                          "invalid type. -- '%s'" (typeInfo.getTxt(##) ) );
       }
    }
 
@@ -158,7 +159,7 @@ fn TransUnit.analyzeDeclArgList(
    let mut nextToken: &Parser.Token = Parser.noneToken;
    let mut hasDDDFlag = false;
    repeat {
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       if nextToken.txt == ")" {
          break;
       }
@@ -170,7 +171,7 @@ fn TransUnit.analyzeDeclArgList(
       let mut mutable = false;
       if nextToken.txt == "mut" {
          mutable = true;
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
       let mut argName = nextToken;
       if argName.txt == "..." {
@@ -207,7 +208,7 @@ fn TransUnit.analyzeDeclArgList(
          self.scope.addLocalVar( false, true, argName.txt, refType.$expType, mutable );
          argList.insert( arg );
       }
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
    } nextToken.txt ~= ",";
 
    self.checkToken( nextToken, ")" );
@@ -228,7 +229,7 @@ pub fn TransUnit.createAST(
 
    self.registBuiltInScope();
 
-   let mut processInfo = Ast.pushProcessInfo();
+   let mut processInfo = Ast.pushProcessInfo(##);
 
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
@@ -250,11 +251,11 @@ pub fn TransUnit.createAST(
 
    let mut lastStatement:Ast.Node! = nil;
    if macroFlag {
-      ast = self.analyzeBlock( .Macro );
+      ast = self.analyzeBlock( .Macro ##);
    }
    else {
       let mut children:List<&Ast.Node> = [];
-      lastStatement = self.analyzeStatementList( children );
+      lastStatement = self.analyzeStatementList( children ## );
 
       let mut token = self.getTokenNoErr();
       if token ~= Parser.getEofToken() {
@@ -316,7 +317,7 @@ pub fn TransUnit.createAST(
 
    foreach pos, protoType in self.protoFuncMap {
       self.addErrMess(
-         pos, "This function doesn't have body. -- %s" ( protoType.getTxt() ) );
+         pos, "This function doesn't have body. -- %s" ( protoType.getTxt(##) ) );
    }
    
 
@@ -329,6 +330,10 @@ pub fn TransUnit.createAST(
       }
       Util.err( "has error" );
    }
+   if self.ctrl_info.stopByWarning and #self.warnMessList > 0 {
+      Util.err( "has error" );
+   }
+   
    if self.analyzeMode == .Diag or self.analyzeMode == .Complete {
       os.exit( 0 );
    }
@@ -357,7 +362,7 @@ fn TransUnit.analyzeDeclMacro(
    let nameToken = self.getSymbolToken( .Must_ );
    self.checkNextToken( "(" );
 
-   let mut scope = self.pushScope( false );
+   let mut scope = self.pushScope( false ## );
 
    let mut workArgList: List<&Ast.Node> = [];
    let mut argList: List<&Ast.DeclArgNode> = [];
@@ -377,7 +382,7 @@ fn TransUnit.analyzeDeclMacro(
 
    self.checkNextToken( "{" );
 
-   nextToken = self.getToken();
+   nextToken = self.getToken(##);
 
    let mut stmtBlock : Ast.BlockNode! = nil;
    if nextToken.txt == "{" {
@@ -424,7 +429,7 @@ fn TransUnit.analyzeDeclMacro(
    let mut braceCount = 0;
 
    while true {
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       if nextToken.txt == "{" {
          braceCount = braceCount + 1;
       }
@@ -439,7 +444,7 @@ fn TransUnit.analyzeDeclMacro(
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       false, false, scope, .Macro, self.getCurrentNamespaceTypeInfo(),
-      false, false, true, accessMode, nameToken.txt, argTypeList );
+      false, false, true, accessMode, nameToken.txt, argTypeList ## );
    //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
    self.scope.addMacro( typeInfo, accessMode );
 
@@ -463,25 +468,25 @@ fn TransUnit.analyzePushClass(
    firstToken:&Parser.Token, name:&Parser.Token, accessMode:Ast.AccessMode ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
-   let mut nextToken = self.getToken();
+   let mut nextToken = self.getToken(##);
    let mut baseRef:Ast.Node! = nil;
    let mut interfaceList:List<&Ast.TypeInfo> = [];
    if nextToken.txt == "extend" {
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       if nextToken.txt ~= "(" {
          self.pushback();
          sync! baseRef = self.analyzeRefType( accessMode, false ) {}
          do {
             if baseRef.$expType.$kind ~= .Class {
                self.addErrMess( baseRef.$pos,
-                                "%s is not class." ( baseRef.$expType.getTxt() ) );
+                                "%s is not class." ( baseRef.$expType.getTxt(##) ) );
             }
          };
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
       if nextToken.txt == "(" {
          while true {
-            nextToken = self.getToken();
+            nextToken = self.getToken(##);
             if nextToken.txt == ")" {
                break;
             }
@@ -489,10 +494,10 @@ fn TransUnit.analyzePushClass(
             let ifType = self.analyzeRefType( accessMode, false );
             if ifType.$expType.$kind ~= .IF {
                self.error( "%s is not interface -- %d"
-                           (ifType.$expType.getTxt(), ifType.$expType.$kind ) );
+                           (ifType.$expType.getTxt(##), ifType.$expType.$kind ) );
             }
             interfaceList.insert( ifType.$expType );
-            nextToken = self.getToken();
+            nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
                if nextToken.txt == ")" {
                   break;
@@ -500,7 +505,7 @@ fn TransUnit.analyzePushClass(
                self.error( "illegal token" );
             }
          }
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
    }
 
@@ -530,8 +535,8 @@ fn TransUnit.analyzePushClass(
                   self.addErrMess(
                      firstToken.pos,      
                      "mismatch method type -- %s.%s, %s.%s"
-                     (symbolInfo.$typeInfo.$parentInfo.getTxt(), symbolInfo.$name,
-                       ifFuncType.$parentInfo.getTxt(), ifFuncType.getTxt()));
+                     (symbolInfo.$typeInfo.$parentInfo.getTxt(##), symbolInfo.$name,
+                       ifFuncType.$parentInfo.getTxt(##), ifFuncType.getTxt(##)));
                }
             }
             else {
@@ -543,18 +548,18 @@ fn TransUnit.analyzePushClass(
    
    
    let classTypeInfo = self.pushClass(
-      classFlag, abstractFlag, typeInfo, interfaceList, false, name.txt, accessMode );
+      classFlag, abstractFlag, typeInfo, interfaceList, false, name.txt, accessMode ## );
    return nextToken, classTypeInfo;
 }
 
 fn TransUnit.analyzeDeclProto(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.Node
 {
-   let mut nextToken = self.getToken();
+   let mut nextToken = self.getToken(##);
    let mut abstractFlag = false;
    if nextToken.txt == "abstract" {
       abstractFlag = true;
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
    }
 
    
@@ -583,18 +588,18 @@ fn TransUnit.analyzeDeclEnum(
    let mut valueName2Info:Map<str,Ast.EnumValInfo> = {};
 
 
-   let mut scope = self.pushScope( true );
+   let mut scope = self.pushScope( true ## );
 
    let mut enumTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    
-   let mut nextToken = self.getToken();
+   let mut nextToken = self.getToken(##);
    let mut number = 0.0;
    let mut prevValTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut valTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    while nextToken.txt ~= "}" {
       let valName = self.checkSymbol(nextToken, .MustNot_ );
       
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
 
       let mut enumVal:stem = number;
       switch ( prevValTypeInfo ) {
@@ -606,7 +611,7 @@ fn TransUnit.analyzeDeclEnum(
       }
       
       if nextToken.txt == "=" {
-         let exp = self.analyzeExp( false );
+         let exp = self.analyzeExp( false ## );
          let valList, typeInfoList = exp.getLiteral();
          if #valList ~= 1 or #typeInfoList ~= 1 {
             self.error( "illegal enum val -- %d %d" ( #valList, #typeInfoList ) );
@@ -629,10 +634,10 @@ fn TransUnit.analyzeDeclEnum(
             }  
             default {
                self.error( "illegal enum val type -- %s"
-                           (valTypeInfo.getTxt() ) );
+                           (valTypeInfo.getTxt(##) ) );
             }
          }
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
       else {
          switch ( prevValTypeInfo ) {
@@ -644,7 +649,7 @@ fn TransUnit.analyzeDeclEnum(
             }
             default {
                self.addErrMess( valName.pos,
-                                "illegal enum val type -- %s" (valTypeInfo.getTxt()) );
+                                "illegal enum val type -- %s" (valTypeInfo.getTxt(##)) );
             }
          }
       }
@@ -652,7 +657,7 @@ fn TransUnit.analyzeDeclEnum(
       {        
          self.addErrMess( valName.$pos,
                           "multiple enum val type. %s, %s"
-                          (valTypeInfo.getTxt(), prevValTypeInfo.getTxt()) );
+                          (valTypeInfo.getTxt(##), prevValTypeInfo.getTxt(##)) );
       }
       prevValTypeInfo = valTypeInfo;
 
@@ -671,7 +676,7 @@ fn TransUnit.analyzeDeclEnum(
          break;
       }
       self.checkToken( nextToken, "," );
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       number = number + 1;
    }
 
@@ -703,30 +708,30 @@ fn TransUnit.analyzeDeclAlge(
    self.checkNextToken( "{" );
 
    let mut scope = self.scope;
-   let mut algeScope = self.pushScope( true );
+   let mut algeScope = self.pushScope( true ## );
 
    let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
       algeScope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
    scope.addAlge( accessMode, name.txt, algeTypeInfo );
    
-   let mut nextToken = self.getToken();
+   let mut nextToken = self.getToken(##);
    while nextToken.txt ~= "}" {
       let valName = self.checkSymbol( nextToken, .MustNot_ );
       if algeTypeInfo.getValInfo( valName.txt ) {
          self.addErrMess( valName.pos, "multiple symbole -- %s" (valName.txt) );
       }
       
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
 
       let mut typeInfoList:List<&Ast.TypeInfo> = [];
       if nextToken.txt == "(" {
          while true {
             let typeNode = self.analyzeRefType( .Pub, false );
             typeInfoList.insert( typeNode.$expType );
-            nextToken = self.getToken();
+            nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
                self.checkToken( nextToken, ")" );
-               nextToken = self.getToken();
+               nextToken = self.getToken(##);
                break;
             }
          }
@@ -740,7 +745,7 @@ fn TransUnit.analyzeDeclAlge(
          break;
       }
       self.checkToken( nextToken, "," );
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
    }
 
    self.popScope();
@@ -773,10 +778,10 @@ fn TransUnit.analyzeRetTypeList(
          if pubToExtFlag and not Ast.isPubToExternal( retType.$accessMode )
          {  
             self.addErrMess( refTypeNode.$pos,
-                             "this is not public type -- %s" (retType.getTxt()) );
+                             "this is not public type -- %s" (retType.getTxt(##)) );
          }  
          retTypeInfoList.insert( retType );
-         token = self.getToken();
+         token = self.getToken(##);
          if token.txt ~= "," {
             break;
          }  
@@ -791,14 +796,14 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
    self.checkNextToken( "(" );
    let mut argList:List<&Ast.Node> = [];
 
-   let mut funcBodyScope = self.pushScope( false );
+   let mut funcBodyScope = self.pushScope( false ## );
    
    let mut nextToken = self.analyzeDeclArgList( accessMode, argList );
 
    self.checkToken( nextToken, ")" );
 
    let mut retTypeList:List<&Ast.TypeInfo> = [];
-   nextToken = self.getToken();
+   nextToken = self.getToken(##);
    retTypeList, nextToken = self.analyzeRetTypeList(
       Ast.isPubToExternal( accessMode ), accessMode, nextToken );
 
@@ -827,19 +832,19 @@ fn TransUnit.analyzeDecl(
    if not staticFlag {
       if token.txt == "static" {
          staticFlag = true;
-         token = self.getToken();
+         token = self.getToken(##);
       }
    }
    let mut overrideFlag = false;
    if token.txt == "override" {
       overrideFlag = true;
-      token = self.getToken();
+      token = self.getToken(##);
    }
 
    let mut abstractFlag = false;
    if token.txt == "abstract" {
       abstractFlag = true;
-      token = self.getToken();
+      token = self.getToken(##);
    }
 
    if token.txt == "let" {
@@ -890,7 +895,7 @@ fn TransUnit.checkPublic( pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut {
       if workType.$kind ~= .Array and workType.$kind ~= .List
          and workType.$kind ~= .Map and not Ast.isPubToExternal( workType.$accessMode )
       {     
-         self.addErrMess( pos, "not public this type -- %s" ( workType.getTxt()) );
+         self.addErrMess( pos, "not public this type -- %s" ( workType.getTxt(##)) );
       }
       else {
          foreach itemType in workType.$itemTypeInfoList {
@@ -905,16 +910,16 @@ fn TransUnit.analyzeDeclMember(
    classTypeInfo: &Ast.TypeInfo, accessMode: Ast.AccessMode,
    staticFlag: bool, firstToken: &Parser.Token ) mut: Ast.DeclMemberNode
 {
-      let mut nextToken = self.getToken();
+      let mut nextToken = self.getToken(##);
       let mut mutable = false;
       if nextToken.txt == "mut" {
          mutable = true;
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
       let varName = self.checkSymbol( nextToken, .MustNot_ );
-      let mut token = self.getToken();
+      let mut token = self.getToken(##);
       let refType = self.analyzeRefType( accessMode, false );
-      token = self.getToken();
+      token = self.getToken(##);
 
       // accessor
       let mut getterMode = Ast.AccessMode.None;
@@ -925,18 +930,18 @@ fn TransUnit.analyzeDeclMember(
          fn analyzeAccessorMode(): Ast.AccessMode, &Parser.Token
          {        
             let mut mode = Ast.AccessMode.None;
-            let mut workToken = self.getToken();
+            let mut workToken = self.getToken(##);
             switch workToken.txt {
                case "pub", "pri", "pro" {
                   mode = unwrap Ast.txt2AccessMode( workToken.txt );
-                  workToken = self.getToken();
+                  workToken = self.getToken(##);
                   if workToken.txt == "&" {
                      getterMutable = false;
-                     workToken = self.getToken();
+                     workToken = self.getToken(##);
                   }
                }
                case "non" {
-                  workToken = self.getToken();
+                  workToken = self.getToken(##);
                }
                default {
                   self.addErrMess( workToken.pos,
@@ -951,7 +956,7 @@ fn TransUnit.analyzeDeclMember(
             setterMode, nextToken = analyzeAccessorMode();
          }
          self.checkToken( nextToken, "}" );
-         token = self.getToken();
+         token = self.getToken(##);
       }
 
       self.checkToken( token, ";" );
@@ -1026,9 +1031,9 @@ fn TransUnit.addDefaultConstructor(
    
    // デフォルトコンストラクタの登録
    let initTypeInfo = Ast.NormalTypeInfo.createFunc(
-      false, false, self.pushScope( false ),
+      false, false, self.pushScope( false ## ),
       .Method, classTypeInfo, true, false, false, .Pub,
-      "__init", memberTypeList, [] );
+      "__init", memberTypeList, [] ## );
    self.popScope();
    classScope.addMethod( initTypeInfo, .Pub, false, false );
    methodNameSet[ "__init" ] = true;
@@ -1136,11 +1141,11 @@ fn TransUnit.analyzeClassBody(
 
    fn processAdvertise() {
       let memberToken = self.getSymbolToken( .MustNot_ );
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       let mut prefix = "";
       if nextToken.txt ~= ";" and nextToken.txt ~= "{" {
          prefix = nextToken.txt;
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
       self.checkToken( nextToken, ";" );
       let! memberNode = memberName2Node[ memberToken.txt ] {
@@ -1161,7 +1166,7 @@ fn TransUnit.analyzeClassBody(
    }
 
    fn processLuneControl() {
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       if nextToken.txt == "default__init" {
          declCtorNode = self.createNoneNode( nextToken.pos );
          self.addDefaultConstructor(
@@ -1174,7 +1179,7 @@ fn TransUnit.analyzeClassBody(
    }
    
    while true {
-      let mut token = self.getToken();
+      let mut token = self.getToken(##);
       if token.txt == "}" {
          break;
       }   
@@ -1182,7 +1187,7 @@ fn TransUnit.analyzeClassBody(
          accessMode = .Pri;
       }
       then {
-         token = self.getToken();
+         token = self.getToken(##);
       };
       if mode == .Interface and accessMode ~= .Pub {
          self.addErrMess( token.pos, "interface's fields must be 'pub'." );
@@ -1191,17 +1196,17 @@ fn TransUnit.analyzeClassBody(
       let mut staticFlag = false;
       if token.txt == "static" {
          staticFlag = true;
-         token = self.getToken();
+         token = self.getToken(##);
       }   
       let mut overrideFlag = false;
       if token.txt == "override" {
          overrideFlag = true;
-         token = self.getToken();
+         token = self.getToken(##);
       }   
       let mut abstractFlag = false;
       if token.txt == "abstract" {
          abstractFlag = true;
-         token = self.getToken();
+         token = self.getToken(##);
       }
       elseif mode == .Interface {
          // 現状 interface にデフォルト処理を書けない。
@@ -1296,10 +1301,10 @@ fn TransUnit.analyzeDeclClass(
    let mut gluePrefix:str! = nil;
    if mode == .Module {
       self.checkNextToken( "require" );
-      moduleName = self.getToken();
-      let nextToken = self.getToken();
+      moduleName = self.getToken(##);
+      let nextToken = self.getToken(##);
       if nextToken.txt == "glue" {
-         gluePrefix = self.getToken().getExcludedDelimitTxt();
+         gluePrefix = self.getToken(##).getExcludedDelimitTxt();
       }
       else {
          self.pushback();
@@ -1325,7 +1330,7 @@ fn TransUnit.analyzeDeclClass(
          not classTypeInfo.$baseTypeInfo.isInheritFrom( typeInfoMappingIF ) {
          self.addErrMess(
             firstToken.pos,
-            "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt() ) );
+            "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt(##) ) );
       }
       // _toMap の追加
       let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
@@ -1360,10 +1365,10 @@ fn TransUnit.analyzeDeclClass(
             getterMemberType = self.createModifier( memberType, false );
          }
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
-            false, false, self.pushScope( false ),
+            false, false, self.pushScope( false ## ),
             .Method, parentInfo, true, false,
             memberNode.$staticFlag, accessMode,
-            getterName, [], [ getterMemberType ] );
+            getterName, [], [ getterMemberType ] ## );
          self.popScope();
          
          classScope.addMethod(
@@ -1378,7 +1383,7 @@ fn TransUnit.analyzeDeclClass(
       {   
          classScope.addMethod(
             Ast.NormalTypeInfo.createFunc(
-               false, false, self.pushScope( false ),
+               false, false, self.pushScope( false ## ),
                .Method, parentInfo, true, false,
                memberNode.$staticFlag, accessMode,
                setterName, [ memberType ], nil, true 
@@ -1409,7 +1414,7 @@ fn TransUnit.analyzeDeclClass(
                   child.$accessMode ~= .Pri and
                   not child.$staticFlag
                {
-                  let childName = advertiseInfo.$prefix .. child.getTxt();
+                  let childName = advertiseInfo.$prefix .. child.getTxt(##);
                   if not methodNameSet[ childName ] {
                      let impMtdType = Ast.NormalTypeInfo.createAdvertiseMethodFrom(
                         classTypeInfo, child );
@@ -1499,7 +1504,7 @@ fn TransUnit.analyzeDeclClass(
          if not isAvailableMapping( memberType, checkedTypeMap ) {
             self.addErrMess(
                memberNode.$pos,
-               "member type is not Mapping -- %s" ( memberType.getTxt()) );
+               "member type is not Mapping -- %s" ( memberType.getTxt(##)) );
          }
       }
 
@@ -1583,14 +1588,14 @@ fn TransUnit.analyzeDeclFunc(
    mut staticFlag: bool, mut classTypeInfo: &Ast.TypeInfo!,
    firstToken: &Parser.Token, mut name: &Parser.Token! ) mut : Ast.Node
 {
-   let mut token = self.getToken();
+   let mut token = self.getToken(##);
    if! name {
       name = self.checkSymbol( _exp, .MustNot_ );
    }
    else {
       if token.txt ~= "(" {
          name = self.checkSymbol( token, .MustNot_ );
-         token = self.getToken();
+         token = self.getToken(##);
       }
    }
    let mut needPopFlag = false;
@@ -1605,14 +1610,14 @@ fn TransUnit.analyzeDeclFunc(
          self.pushClass(
             classTypeInfo.$kind == .Class,
             classTypeInfo.$abstractFlag, nil, nil, false, className,
-            classTypeInfo.$accessMode );
+            classTypeInfo.$accessMode ## );
       }
       else {
          self.error( "not found class -- %s" (className) );
       }
 
       name = self.getSymbolToken( .MustNot_ );
-      token = self.getToken();
+      token = self.getToken(##);
 
       if accessMode == .Local {
          accessMode = .Pri;
@@ -1684,7 +1689,7 @@ fn TransUnit.analyzeDeclFunc(
    
    self.checkToken( token, "(" );
 
-   let mut funcBodyScope = self.pushScope( false );
+   let mut funcBodyScope = self.pushScope( false ## );
 
    let mut argList:List<&Ast.Node> = [];
    token = self.analyzeDeclArgList( accessMode, argList );
@@ -1694,11 +1699,11 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    self.checkToken( token, ")" );
-   token = self.getToken();
+   token = self.getToken(##);
 
    let mut mutable = false;
    if token.txt == "mut" {
-      token = self.getToken();
+      token = self.getToken(##);
       mutable = true;
    }
 
@@ -1758,7 +1763,7 @@ fn TransUnit.analyzeDeclFunc(
       if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
          let matchFlag, err = Ast.TypeInfo.checkMatchType(
             prottype.$argTypeInfoList, argTypeList, false );
-         if not matchFlag {
+         if matchFlag ~= .Match {
             self.addErrMess( name.pos, "mismatch functype: " .. err );
          }
 
@@ -1986,19 +1991,19 @@ fn TransUnit.analyzeLetAndInitExp(
    repeat {
       // 変数名と : で明示している型情報を取得。
       let mut mutable = initMutable;
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       if nextToken.txt == "mut" {
          mutable = true;
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
       let varName = self.checkSymbol( nextToken, .MustNot_ );
-      nextToken = self.getToken();
+      nextToken = self.getToken(##);
       let mut typeInfo = Ast.builtinTypeNone;
       if nextToken.txt == ":" {
          let refType = self.analyzeRefType( accessMode, false );
          letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
          typeInfo = refType.$expType;
-         nextToken = self.getToken();
+         nextToken = self.getToken(##);
       }
       else {
          letVarList.insert( new LetVarInfo( mutable, varName, nil ) );
@@ -2014,7 +2019,7 @@ fn TransUnit.analyzeLetAndInitExp(
    // 初期値の式を取得
    let mut expList:Ast.ExpListNode! = nil;
    if nextToken.txt == "=" {
-      expList = self.analyzeExpList( false );
+      expList = self.analyzeExpList( false ## );
       if not expList {
          self.error( "expList is nil" );
       }
@@ -2057,8 +2062,8 @@ fn TransUnit.analyzeLetAndInitExp(
                   self.addErrMess(
                      firstPos,
                      "unmatch value type (index = %d) %s(%d) <- %s(%d)"
-                     ( subIndex, argType.getTxt( true ), argType.$typeId,
-                       dddItemType.getTxt(), dddItemType.$typeId ));
+                     ( subIndex, argType.getTxt( true ## ), argType.$typeId,
+                       dddItemType.getTxt(##), dddItemType.$typeId ));
                }
                expTypeList.insert( checkType );
                orgExpTypeList.insert( dddItemType );
@@ -2091,8 +2096,8 @@ fn TransUnit.analyzeLetAndInitExp(
                      firstPos,
                      "unmatch value type (index:%d) %s <- %s"
                      (index,
-                       argType.getTxt( true ),
-                       expTypeInfo.getTxt( true )));
+                       argType.getTxt( true ## ),
+                       expTypeInfo.getTxt( true ## )));
                }
             }
             expTypeList.insert( expTypeInfo );
@@ -2106,7 +2111,7 @@ fn TransUnit.analyzeLetAndInitExp(
                self.addErrMess(
                   firstPos,
                   "unmatch value type (index:%d) %s <- nil"
-                  (index, varType.getTxt( true )));
+                  (index, varType.getTxt( true ## )));
             }
          }
       }
@@ -2167,7 +2172,7 @@ fn TransUnit.analyzeDeclVar(
 
    let mut syncScope:Ast.Scope = self.scope;
    if mode == .Sync {
-      syncScope = self.pushScope( false );
+      syncScope = self.pushScope( false ## );
    }
 
 
@@ -2214,13 +2219,13 @@ fn TransUnit.analyzeDeclVar(
    let mut unwrapBlock: Ast.BlockNode! = nil;
    let mut thenBlock: Ast.BlockNode! = nil;
    if unwrapFlag {
-      let scope = self.pushScope( false );
+      let scope = self.pushScope( false ## );
 
       // unwrap ブロックに変数を登録
       foreach letVarInfo, index in letVarList {
          self.addLocalVar(
             letVarInfo.varName.pos, false, true, "_" .. letVarInfo.varName.txt,
-            orgExpTypeList[ index ], false );
+            orgExpTypeList[ index ], false ## );
       }
       
       unwrapBlock = self.analyzeBlock( .LetUnwrap, scope );
@@ -2263,7 +2268,7 @@ fn TransUnit.analyzeDeclVar(
 
 fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
 {
-   let mut nextToken = self.getToken();
+   let mut nextToken = self.getToken(##);
    let mut typeInfoList:List<&Ast.TypeInfo> = [];
    let mut varNameList:str[] = [];
 
@@ -2282,7 +2287,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
    }
    else {
       self.pushback();
-      let exp = self.analyzeExp( false );
+      let exp = self.analyzeExp( false ## );
       expNodeList.insert( exp );
       if exp.$expType.$nilable {
          typeInfoList.insert( exp.$expType.$orgTypeInfo );
@@ -2293,14 +2298,14 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
       varNameList.insert( "_exp" );
    }
 
-   let mut scope = self.pushScope( false );
+   let mut scope = self.pushScope( false ## );
 
    foreach expType, index in typeInfoList {
       if index > #varNameList {
          break;
       }
       let varName = varNameList[ index ];
-      self.addLocalVar( firstToken.pos, false, true, varName, expType, false );
+      self.addLocalVar( firstToken.pos, false, true, varName, expType, false ## );
    }
    
    let block = self.analyzeBlock( .IfUnwrap, scope );
@@ -2310,7 +2315,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
    let mut elseBlock:Ast.BlockNode! = nil;
    nextToken = self.getToken( true );
    if nextToken.txt == "else" {
-      elseBlock = self.analyzeBlock( .IfUnwrap );
+      elseBlock = self.analyzeBlock( .IfUnwrap ## );
    }
    else {
       self.pushback();
@@ -2331,9 +2336,9 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
       self.addErrMess( nextToken.pos, "'when' need '!'" );
    }
 
-   let symListNode = self.analyzeExpList( false );
+   let symListNode = self.analyzeExpList( false ## );
 
-   let mut scope = self.pushScope( false );
+   let mut scope = self.pushScope( false ## );
 
    let mut expNodeList:List<&Ast.Node> = [];
    
@@ -2355,7 +2360,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
          else {
             self.addErrMess( expNode.$pos,
                              "This type isn't nilable. -- %s"
-                             ( expNode.$expType.getTxt() ) );
+                             ( expNode.$expType.getTxt(##) ) );
          }
       }
    }
@@ -2367,7 +2372,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
    let mut elseBlock:Ast.BlockNode! = nil;
    nextToken = self.getToken( true );
    if nextToken.txt == "else" {
-      elseBlock = self.analyzeBlock( .When );
+      elseBlock = self.analyzeBlock( .When ## );
    }
    else {
       self.pushback();

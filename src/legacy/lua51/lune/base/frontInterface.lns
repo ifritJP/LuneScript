@@ -68,7 +68,7 @@ pub class ImportModuleInfo {
          Util.err( "self.moduleList is 0" );
       }
       self.moduleSet[ self.moduleList[ #self.moduleList ] ] = nil;
-      self.moduleList.remove();
+      self.moduleList.remove(##);
    }
 
    pub fn getFull() :str {

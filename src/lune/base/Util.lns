@@ -78,7 +78,7 @@ pub fn printStackTrace() {
 
 pub fn profile( validTest:bool, func: form, path: str ): stem! {
    if not validTest {
-      return func();
+      return func(##);
    }
 
    module ProFi require 'ProFi' {
@@ -89,7 +89,7 @@ pub fn profile( validTest:bool, func: form, path: str ): stem! {
 
    ProFi.start();
    
-   let result:stem! = func();
+   let result:stem! = func(##);
    
    ProFi.stop();
    ProFi.writeReport( path );
@@ -117,7 +117,7 @@ pub fn getReadyCode( lnsPath:str, luaPath:str ): bool {
 }
 
 pub fn existFile( path:str ): bool {
-   let! mut fileObj = io.open( path ) {
+   let! mut fileObj = io.open( path## ) {
       return false;
    };
    fileObj.close();

@@ -35,16 +35,16 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
          "'return' could not use here" );
    }
 
-   let nextToken = self.getToken();
+   let nextToken = self.getToken(##);
 
    let retTypeList = funcTypeInfo.$retTypeInfoList;
    if nextToken.txt ~= ";" {
       self.pushback();
-      expList = self.analyzeExpList( false, nil, retTypeList );
+      expList = self.analyzeExpList( false, nil, retTypeList ## );
       self.checkNextToken( ";" );
    }
 
-   if funcTypeInfo.getTxt() == "__init" {
+   if funcTypeInfo.getTxt(##) == "__init" {
       // フロー解析するのが面倒なので、 __init 内では return を禁止。
       self.addErrMess( token.pos, "__init method can't return" );
    }
@@ -88,7 +88,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
          let staticFlag = (token.txt == "static");
          let mut nextToken = token;
          if token.txt ~= "static" {
-            nextToken = self.getToken();
+            nextToken = self.getToken(##);
          }
          statement = self.analyzeDecl( accessMode, staticFlag, token, nextToken );
          if not statement {
@@ -98,7 +98,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
       }
       elseif token.txt == "{" {
          self.pushback();
-         statement = self.analyzeBlock( .Block );
+         statement = self.analyzeBlock( .Block ## );
       }
       elseif token.txt == "super" {
          statement = self.analyzeSuper( token );
@@ -173,12 +173,12 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
       }
       else {
          self.pushback();
-         let mut exp = self.analyzeExp( false );
-         let mut nextToken = self.getToken();
+         let mut exp = self.analyzeExp( false ## );
+         let mut nextToken = self.getToken(##);
          if nextToken.txt == "," {
-            exp = self.analyzeExpList( true, exp );
+            exp = self.analyzeExpList( true, exp ## );
             exp = self.analyzeExpOp2( token, exp, nil );
-            nextToken = self.getToken();
+            nextToken = self.getToken(##);
          }
          self.checkToken( nextToken, ";" );
          // statement = self.createNode(

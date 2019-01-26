@@ -94,7 +94,7 @@ func7( func5() );
 {
    fn func1( ...<int> ): ...<int> {
       return 1, 2, "a";  // error
-   }  
+   }
 
    fn func2(): ...<int> {
       return 1, nil, 3;  // error
@@ -103,4 +103,19 @@ func7( func5() );
    foreach val in [ func1( 1, 2, "a" ) ] {  // error
       print( val + 10 );
    }
+}
+
+{
+   fn func( val:int, val2:int!, val3:int! ): int {
+      return 0;
+   }  
+   fn func2( ...<int> ) {
+      func( ...## ); // error
+   }
+   fn func3( ... ) {
+   }
+   func( 1 ); // warn
+   func2( 1 ## ); // error
+   func3( 2 ## );
+   func3( ## );
 }

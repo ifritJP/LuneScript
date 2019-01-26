@@ -65,7 +65,7 @@ fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, str, &Ast.TypeInfo, str {
 fn glueGenerator.outputPrototype( node:&Ast.DeclMethodNode ) mut
 {
    self.write(
-      "static int lns_glue_%s( lua_State * pLua )" (node.$expType.getTxt() ) );
+      "static int lns_glue_%s( lua_State * pLua )" (node.$expType.getTxt(##) ) );
 }
 
 fn glueGenerator.outputUserPrototype(
@@ -74,7 +74,7 @@ fn glueGenerator.outputUserPrototype(
    let expType = node.$expType;
 
    self.writeHeader( "extern int %s%s( lua_State * pLua"
-                     (gluePrefix, expType.getTxt() ) );
+                     (gluePrefix, expType.getTxt(##) ) );
 
    let declInfo = node.$declInfo;
    foreach argNode in declInfo.$argList {

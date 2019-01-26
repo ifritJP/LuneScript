@@ -32,7 +32,7 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 
 local function getBuildCount(  )
 
-   return 125
+   return 206
 end
 
 
@@ -92,6 +92,30 @@ ModeKind.Glue = 'glue'
 ModeKind._val2NameMap['glue'] = 'Glue'
 ModeKind.__allList[11] = ModeKind.Glue
 
+local TransCtrlInfo = {}
+_moduleObj.TransCtrlInfo = TransCtrlInfo
+function TransCtrlInfo.setmeta( obj )
+  setmetatable( obj, { __index = TransCtrlInfo  } )
+end
+function TransCtrlInfo.new( checkingDefineAbbr, stopByWarning )
+   local obj = {}
+   TransCtrlInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( checkingDefineAbbr, stopByWarning )
+   end        
+   return obj 
+end         
+function TransCtrlInfo:__init( checkingDefineAbbr, stopByWarning ) 
+
+   self.checkingDefineAbbr = checkingDefineAbbr
+   self.stopByWarning = stopByWarning
+end
+
+function TransCtrlInfo.create_normal(  )
+
+   return TransCtrlInfo.new(true, false)
+end
+
 local Option = {}
 _moduleObj.Option = Option
 function Option.new(  )
@@ -109,6 +133,7 @@ function Option:__init()
    self.byteCompile = false
    self.stripDebugInfo = false
    self.targetLuaVer = LuaVer.curVer
+   self.transCtrlInfo = TransCtrlInfo.create_normal(  )
 end
 function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
@@ -168,6 +193,8 @@ usage:
 
   common_op:
     -u: update meta and lua on load.
+    -Werror: error by warrning.
+    --disable-checking-define-abbr: disable checking for ##.
 
 * type2
   dir: output directory.
@@ -209,6 +236,10 @@ usage:
                option.useLuneModule = true
             elseif _switchExp == "-u" then
                option.updateOnLoad = true
+            elseif _switchExp == "-Werror" then
+               option.transCtrlInfo.stopByWarning = true
+            elseif _switchExp == "--disable-checking-define-abbr" then
+               option.transCtrlInfo.checkingDefineAbbr = false
             elseif _switchExp == "--depends" then
                if #argList > index then
                   do

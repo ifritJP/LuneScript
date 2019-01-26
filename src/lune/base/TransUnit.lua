@@ -158,6 +158,8 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Writer = _lune.loadModule( 'lune.base.Writer' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+local Option = _lune.loadModule( 'lune.base.Option' )
+local Code = _lune.loadModule( 'lune.base.Code' )
 
 local DeclClassMode = {}
 DeclClassMode._val2NameMap = {}
@@ -298,13 +300,14 @@ AnalyzeMode.__allList[3] = AnalyzeMode.Complete
 
 local TransUnit = {}
 _moduleObj.TransUnit = TransUnit
-function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer )
+function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info )
    local obj = {}
    TransUnit.setmeta( obj )
-   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer ); end
+   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info ); end
    return obj
 end
-function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer) 
+function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
+   self.ctrl_info = ctrl_info
    self.ignoreToCheckSymbol_ = false
    self.moduleId = moduleId
    self.helperInfo = Ast.LuneHelperInfo.new(false, false, false, false, false, false)
@@ -3264,6 +3267,10 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
       Util.err( "has error" )
    end
    
+   if self.ctrl_info.stopByWarning and #self.warnMessList > 0 then
+      Util.err( "has error" )
+   end
+   
    if self.analyzeMode == AnalyzeMode.Diag or self.analyzeMode == AnalyzeMode.Complete then
       os.exit( 0 )
    end
@@ -4502,7 +4509,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          local prottype = parentScope:getTypeInfoChild( typeInfo:get_rawTxt() )
          if prottype ~= nil then
             local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false )
-            if not matchFlag then
+            if matchFlag ~= Ast.MatchType.Match then
                self:addErrMess( name.pos, "mismatch functype: " .. err )
             end
             
@@ -5079,6 +5086,7 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
    end
    
    local index = 1
+   local abbrNode = nil
    repeat 
       local expectType = nil
       if expectTypeList ~= nil then
@@ -5105,12 +5113,26 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
       table.insert( expTypeList, exp:get_expType() )
       local token = self:getToken(  )
       index = index + 1
+      if token.txt == "##" then
+         if exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
+            self:addErrMess( token.pos, "'##' can't use with '...'" )
+         end
+         
+         abbrNode = Ast.AbbrNode.create( self.nodeManager, token.pos, {Ast.builtinTypeAbbr} )
+         self:getToken(  )
+         break
+      end
+      
    until token.txt ~= ","
    for listIndex, expType in pairs( expList[#expList]:get_expTypeList() ) do
       if listIndex ~= 1 then
          table.insert( expTypeList, expType )
       end
       
+   end
+   
+   if abbrNode ~= nil then
+      table.insert( expList, abbrNode )
    end
    
    self:pushback(  )
@@ -5302,9 +5324,18 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       
    end
    
-   local match, mess = Ast.TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
-   if not match then
-      self:addErrMess( pos, string.format( "%s: %s", message, mess) )
+   local result, mess = Ast.TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
+   do
+      local _switchExp = result
+      if _switchExp == Ast.MatchType.Error then
+         self:addErrMess( pos, string.format( "%s: %s", message, mess) )
+      elseif _switchExp == Ast.MatchType.Warn then
+         if not self.ctrl_info.checkingDefineAbbr and Code.isMessageOf( Code.ID.nothing_define_abbr, mess ) then
+            return 
+         end
+         
+         self:addWarnMess( pos, string.format( "%s: %s", message, mess) )
+      end
    end
    
 end
@@ -5593,7 +5624,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       self:checkNextToken( ")" )
       if argList ~= nil then
          for __index, argNode in pairs( argList:get_expList() ) do
-            if not argNode:canBeRight(  ) then
+            if not argNode:canBeRight(  ) and argNode:get_kind() ~= Ast.NodeKind.get_Abbr() then
                self:addErrMess( argNode:get_pos(), string.format( "this node can't be r-value. -- %s", Ast.getNodeKindName( argNode:get_kind() )) )
             end
             
@@ -6740,6 +6771,10 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
    local firstToken = self:getToken(  )
    local token = firstToken
    local exp = self:createNoneNode( firstToken.pos )
+   if token.txt == "##" then
+      return Ast.AbbrNode.create( self.nodeManager, token.pos, {Ast.builtinTypeAbbr} )
+   end
+   
    if token.kind == Parser.TokenKind.Dlmt then
       if token.txt == "." then
          do

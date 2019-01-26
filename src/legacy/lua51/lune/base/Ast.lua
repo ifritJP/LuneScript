@@ -31,6 +31,7 @@ end
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+local Code = _lune.loadModule( 'lune.base.Code' )
 local IdProvider = {}
 _moduleObj.IdProvider = IdProvider
 function IdProvider:increment(  )
@@ -192,6 +193,9 @@ TypeInfoKind.__allList[15] = TypeInfoKind.Alge
 TypeInfoKind.DDD = 15
 TypeInfoKind._val2NameMap[15] = 'DDD'
 TypeInfoKind.__allList[16] = TypeInfoKind.DDD
+TypeInfoKind.Abbr = 16
+TypeInfoKind._val2NameMap[16] = 'Abbr'
+TypeInfoKind.__allList[17] = TypeInfoKind.Abbr
 
 local function isBuiltin( typeId )
 
@@ -2578,6 +2582,88 @@ _moduleObj.builtinTypeStat = builtinTypeStat
 local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
 
+local AbbrTypeInfo = {}
+setmetatable( AbbrTypeInfo, { __index = TypeInfo } )
+_moduleObj.AbbrTypeInfo = AbbrTypeInfo
+function AbbrTypeInfo:get_scope(  )
+
+   return nil
+end
+function AbbrTypeInfo.new( idProvider, rawTxt )
+   local obj = {}
+   AbbrTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( idProvider, rawTxt ); end
+   return obj
+end
+function AbbrTypeInfo:__init(idProvider, rawTxt) 
+   TypeInfo.__init( self ,nil)
+   
+   local typeId = idProvider:get_id() + 1
+   idProvider:increment(  )
+   self.typeId = typeId
+   self.rawTxt = rawTxt
+end
+function AbbrTypeInfo:isModule(  )
+
+   return false
+end
+function AbbrTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self.rawTxt
+end
+function AbbrTypeInfo:canEvalWith( other, opTxt )
+
+   return false
+end
+function AbbrTypeInfo:serialize( stream, validChildrenSet )
+
+   Util.err( "illegal call" )
+end
+function AbbrTypeInfo:get_display_stirng(  )
+
+   return self:getTxt(  )
+end
+function AbbrTypeInfo:getModule(  )
+
+   return _moduleObj.headTypeInfo
+end
+function AbbrTypeInfo:get_rawTxt(  )
+
+   return self:getTxt(  )
+end
+function AbbrTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Abbr
+end
+function AbbrTypeInfo:get_nilable(  )
+
+   return true
+end
+function AbbrTypeInfo:get_nilableTypeInfo(  )
+
+   return self
+end
+function AbbrTypeInfo:get_mutable(  )
+
+   return false
+end
+function AbbrTypeInfo:get_accessMode(  )
+
+   return AccessMode.Local
+end
+function AbbrTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = AbbrTypeInfo  } )
+end
+function AbbrTypeInfo:get_typeId()       
+   return self.typeId         
+end
+
+local builtinTypeAbbr = AbbrTypeInfo.new(idProv, "##")
+_moduleObj.builtinTypeAbbr = builtinTypeAbbr
+
+local builtinTypeAbbrNone = AbbrTypeInfo.new(idProv, "[##]")
+_moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
+
 
 local typeInfo2DDDMap = {}
 local DDDTypeInfo = {}
@@ -2792,7 +2878,7 @@ function NilableTypeInfo:canEvalWith( other, opTxt )
       return true
    end
    
-   if otherSrc == _moduleObj.builtinTypeNil then
+   if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       return true
    end
    
@@ -2839,6 +2925,38 @@ function NormalTypeInfo:isInheritFrom( other )
    return false
 end
 
+local MatchType = {}
+_moduleObj.MatchType = MatchType
+MatchType._val2NameMap = {}
+function MatchType:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "MatchType.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function MatchType._from( val )
+   if MatchType._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+MatchType.__allList = {}
+function MatchType.get__allList()
+   return MatchType.__allList
+end
+
+MatchType.Match = 0
+MatchType._val2NameMap[0] = 'Match'
+MatchType.__allList[1] = MatchType.Match
+MatchType.Warn = 1
+MatchType._val2NameMap[1] = 'Warn'
+MatchType.__allList[2] = MatchType.Warn
+MatchType.Error = 2
+MatchType._val2NameMap[2] = 'Error'
+MatchType.__allList[3] = MatchType.Error
+
 function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
 
    local function checkDstTypeFrom( index, srcType, srcType2nd )
@@ -2846,14 +2964,21 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
       local workExpType = srcType
       for dstIndex = index, #dstTypeList do
          local workDstType = dstTypeList[dstIndex]
+         local matchResult = MatchType.Match
          if not workDstType:canEvalWith( workExpType, "=" ) then
-            return false, string.format( "exp(%d) type mismatch %s <- %s", dstIndex, workDstType:getTxt( true ), workExpType:getTxt( true ))
+            local message = string.format( "exp(%d) type mismatch %s <- %s", dstIndex, workDstType:getTxt( true ), workExpType:getTxt( true ))
+            return MatchType.Error, message
+         elseif workExpType == _moduleObj.builtinTypeAbbrNone then
+            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", workDstType:getTxt( true )) )
+         end
+         
+         if matchResult ~= MatchType.Match then
          end
          
          workExpType = srcType2nd
       end
       
-      return true, ""
+      return MatchType.Match, ""
    end
    
    local function checkSrcTypeFrom( index, dstType )
@@ -2872,29 +2997,29 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
          end
          
          if not dstType:canEvalWith( checkType, "=" ) then
-            return false, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
          end
          
       end
       
-      return true, ""
+      return MatchType.Match, ""
    end
    
    if #expTypeList > 0 then
       for index, expType in pairs( expTypeList ) do
          if #dstTypeList == 0 then
-            return false, string.format( "over exp. expect:0, actual:%d", #expTypeList)
+            return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList)
          end
          
          local dstType = dstTypeList[index]
          if #dstTypeList == index then
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                if not dstType:canEvalWith( expType, "=" ) then
-                  return false, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
-                  return false, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList)
+                  return MatchType.Error, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList)
                end
                
             else
@@ -2905,7 +3030,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
                end
                
                local result, mess = checkSrcTypeFrom( index, dddItemType )
-               if not result then
+               if result ~= MatchType.Match then
                   return result, mess
                end
                
@@ -2914,7 +3039,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
             break
          elseif #expTypeList == index then
             local srcType = expType
-            local srcType2nd = _moduleObj.builtinTypeNil
+            local srcType2nd = _moduleObj.builtinTypeAbbrNone
             if expType:get_kind() == TypeInfoKind.DDD then
                srcType = _moduleObj.builtinTypeStem_
                srcType2nd = _moduleObj.builtinTypeStem_
@@ -2923,10 +3048,12 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
                   srcType2nd = srcType
                end
                
+            elseif expType == _moduleObj.builtinTypeAbbr then
+               srcType2nd = _moduleObj.builtinTypeAbbr
             end
             
             local result, mess = checkDstTypeFrom( index, srcType, srcType2nd )
-            if not result then
+            if result ~= MatchType.Match then
                return result, mess
             end
             
@@ -2934,7 +3061,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
          else
           
             if not dstType:canEvalWith( expType, "=" ) then
-               return false, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
             end
             
          end
@@ -2944,14 +3071,15 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
    elseif not allowDstShort then
       for index, dstType in pairs( dstTypeList ) do
          if not dstType:canEvalWith( _moduleObj.builtinTypeNil, "=" ) then
-            return false, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
          end
          
+         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) )
       end
       
    end
    
-   return true, ""
+   return MatchType.Match, ""
 end
 
 function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
@@ -2965,7 +3093,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
       
    end
    
-   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and destMut and not otherMut then
+   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and destMut and not otherMut then
       return false
    end
    
@@ -2993,7 +3121,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
       return true
    end
    
-   if otherSrc == _moduleObj.builtinTypeNil then
+   if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if dest:get_kind() ~= TypeInfoKind.Nilable then
          return false
       end
@@ -3064,13 +3192,13 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
             return true
          end
          
-         if not TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
          return true
       elseif _switchExp == TypeInfoKind.Method then
-         if not TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) or not TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
@@ -8371,6 +8499,67 @@ end
 function MacroEval:__init(  ) 
 
 end
+
+function NodeKind.get_Abbr(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['Abbr'])
+end
+
+
+regKind( [[Abbr]] )
+function Filter:processAbbr( node, ... )
+
+end
+
+
+function NodeManager:getAbbrNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['Abbr']) )
+end
+
+
+local AbbrNode = {}
+setmetatable( AbbrNode, { __index = Node } )
+_moduleObj.AbbrNode = AbbrNode
+function AbbrNode:processFilter( filter, ... )
+
+   local argList = {...}
+   filter:processAbbr( self, table.unpack( argList ) )
+end
+function AbbrNode:canBeRight(  )
+
+   return false
+end
+function AbbrNode:canBeLeft(  )
+
+   return false
+end
+function AbbrNode:canBeStatement(  )
+
+   return false
+end
+function AbbrNode.new( pos, typeList )
+   local obj = {}
+   AbbrNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList ); end
+   return obj
+end
+function AbbrNode:__init(pos, typeList) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Abbr']), pos, typeList)
+   
+   
+   
+end
+function AbbrNode.create( nodeMan, pos, typeList )
+
+   local node = AbbrNode.new(pos, typeList)
+   nodeMan:addNode( node )
+   return node
+end
+function AbbrNode.setmeta( obj )
+  setmetatable( obj, { __index = AbbrNode  } )
+end
+
 
 function NodeKind.get_LiteralNil(  )
 

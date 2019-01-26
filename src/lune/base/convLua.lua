@@ -2309,8 +2309,16 @@ function convFilter:processExpCall( node, parent )
    do
       local argList = node:get_argList()
       if argList ~= nil then
+         local expList = {}
+         for __index, expNode in pairs( argList:get_expList() ) do
+            if expNode:get_expType():get_kind() ~= Ast.TypeInfoKind.Abbr then
+               table.insert( expList, expNode )
+            end
+            
+         end
+         
          if wroteFuncFlag and setArgFlag then
-            if #argList:get_expList() > 0 then
+            if #expList > 0 then
                self:write( ", " )
             end
             
@@ -2318,8 +2326,8 @@ function convFilter:processExpCall( node, parent )
          
          if convStrFlag then
             local opList = {}
-            if #argList:get_expList() > 0 then
-               local argTxtList = argList:get_expList()[1]:getLiteral(  )
+            if #expList > 0 then
+               local argTxtList = expList[1]:getLiteral(  )
                if #argTxtList > 0 then
                   do
                      local argTxt = argTxtList[1]
@@ -2335,7 +2343,7 @@ function convFilter:processExpCall( node, parent )
                
             end
             
-            for index, argNode in pairs( argList:get_expList() ) do
+            for index, argNode in pairs( expList ) do
                local filtered = false
                if index > 1 then
                   self:write( ", " )
@@ -2374,6 +2382,10 @@ function convFilter:processExpList( node, parent )
 
    local expList = node:get_expList(  )
    for index, exp in pairs( expList ) do
+      if exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+         break
+      end
+      
       if index > 1 then
          self:write( ", " )
       end

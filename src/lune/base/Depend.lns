@@ -31,7 +31,7 @@ path の最終更新日時を取得する。
 @return 1970/1/1 0:0:0 からの秒数。 取得失敗した場合は nil。
 */
 pub fn getFileLastModifiedTime( path: str ): real! {
-   let mut file = io.open( path );
+   let mut file = io.open( path## );
    if! file {
       _exp.close();
    }
@@ -41,7 +41,7 @@ pub fn getFileLastModifiedTime( path: str ): real! {
    
    let mut stream = io.popen( "stat -c '%%Y' %s" (path) );
    if! stream$.read$('*a') {
-      return tonumber( _exp );
+      return tonumber( _exp## );
    }
    // if! stream {
    //     let val = _exp.read( '*a' );
@@ -55,11 +55,11 @@ pub fn getFileLastModifiedTime( path: str ): real! {
 
 fn searchpath51( mod:str, pathPattern:str ) : str! {
    apply path of string.gmatch( pathPattern, "[^;]+" ) {
-      if! let index = path.find( "%?.l[un][as]$" ) {
+      if! let index = path.find( "%?.l[un][as]$"## ) {
          let dir = path.sub( 1, index - 1 );
-         let suffix = path.sub( #path - 3 );
+         let suffix = path.sub( #path - 3 ## );
          let target = dir .. mod.gsub( "%.", "/" ) .. suffix;
-         if! let mut fileObj = io.open( target ) {
+         if! let mut fileObj = io.open( target## ) {
             fileObj.close();
             return target;
          }

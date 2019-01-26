@@ -41,7 +41,7 @@ class convFilter extend Ast.Filter {
 pub override fn convFilter.processRoot( 
    node: Ast.RootNode, parent: &Ast.Node ) mut
 {
-   let moduleFull = node.$moduleTypeInfo.getFullName( {} );
+   let moduleFull = node.$moduleTypeInfo.getFullName( {} ## );
    self.stream.write( "%s.meta: \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
    self.stream.write( "  %s.lns \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
    if! let importList = node.$nodeManager.getImportNodeList() {

@@ -1,0 +1,4 @@
+fn func( ... ) {
+}
+func(); // warn
+

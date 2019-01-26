@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.14'
+_moduleObj.__formatVersion = '1.0.15'
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -28,7 +28,7 @@ local __typeInfoList = {}
 _moduleObj.__typeInfoList = __typeInfoList
 local __dependIdMap = {}
 _moduleObj.__dependIdMap = __dependIdMap
-__typeInfoList[1] = { skind = 1, parentId = 1, typeId = 51, srcTypeId = 14, mutable = false }
+__typeInfoList[1] = { skind = 1, parentId = 1, typeId = 53, srcTypeId = 14, mutable = false }
 __typeInfoList[2] = { skind = 2, parentId = 1, typeId = 1001, txt = 'lune', kind = 12, 
 children = {1003, } }
 __typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'base', kind = 12, 
@@ -36,7 +36,7 @@ children = {1005, } }
 __typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'Util', kind = 12, 
 children = {1015, 1038, 1041, 1044, 1047, 1050, 1053, 1056, 1080, 1084, } }
 __typeInfoList[5] = { skind=3, parentId = 1005, typeId = 1015, baseId = 1, txt = 'memStream',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {96}, argTypeId = {}, retTypeId = {}, children = {1023, 1026, 1029, 1032, 1035}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {98}, argTypeId = {}, retTypeId = {}, children = {1023, 1026, 1029, 1032, 1035}, }
 __typeInfoList[6] = { skind = 0, parentId = 1005, typeId = 1016, nilable = true, orgTypeId = 1015 }
 __typeInfoList[7] = { skind=3, parentId = 1015, typeId = 1023, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }

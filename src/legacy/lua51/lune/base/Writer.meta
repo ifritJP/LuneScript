@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.14'
+_moduleObj.__formatVersion = '1.0.15'
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -40,7 +40,7 @@ local __typeInfoList = {}
 _moduleObj.__typeInfoList = __typeInfoList
 local __dependIdMap = {}
 _moduleObj.__dependIdMap = __dependIdMap
-__typeInfoList[1] = { skind = 1, parentId = 1, typeId = 51, srcTypeId = 14, mutable = false }
+__typeInfoList[1] = { skind = 1, parentId = 1, typeId = 53, srcTypeId = 14, mutable = false }
 __typeInfoList[2] = { skind = 2, parentId = 1, typeId = 1001, txt = 'lune', kind = 12, 
 children = {1003, } }
 __typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'base', kind = 12, 
@@ -76,7 +76,7 @@ __typeInfoList[22] = { skind=3, parentId = 1005, typeId = 1084, baseId = 1, txt 
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {1055}, argTypeId = {}, retTypeId = {}, children = {1094, 1104, 1107, 1110, 1114, 1117, 1120}, }
 __typeInfoList[23] = { skind = 0, parentId = 1005, typeId = 1085, nilable = true, orgTypeId = 1084 }
 __typeInfoList[24] = { skind=3, parentId = 1084, typeId = 1094, baseId = 1, txt = '__init',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {96}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {98}, retTypeId = {}, children = {}, }
 __typeInfoList[25] = { skind = 0, parentId = 1084, typeId = 1095, nilable = true, orgTypeId = 1094 }
 __typeInfoList[26] = { skind=3, parentId = 1084, typeId = 1104, baseId = 1, txt = 'startElement',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
@@ -101,7 +101,7 @@ __typeInfoList[39] = { skind=3, parentId = 1005, typeId = 1138, baseId = 1, txt 
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {1055}, argTypeId = {}, retTypeId = {}, children = {1154, 1166, 1171, 1174, 1177, 1180, 1183, 1186, 1189, 1192, 1198, 1201, 1204}, }
 __typeInfoList[40] = { skind = 0, parentId = 1005, typeId = 1139, nilable = true, orgTypeId = 1138 }
 __typeInfoList[41] = { skind=3, parentId = 1138, typeId = 1154, baseId = 1, txt = '__init',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {96}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {98}, retTypeId = {}, children = {}, }
 __typeInfoList[42] = { skind = 0, parentId = 1138, typeId = 1155, nilable = true, orgTypeId = 1154 }
 __typeInfoList[43] = { skind=3, parentId = 1138, typeId = 1166, baseId = 1, txt = 'endLayer',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }

@@ -166,7 +166,7 @@ end
 
 function Front:createAst( importModuleInfo, parser, mod, analyzeModule, analyzeMode, pos )
 
-   local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.createId( 0.0, 0 ), importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos, self.option.targetLuaVer)
+   local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.createId( 0.0, 0 ), importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), analyzeModule, analyzeMode, pos, self.option.targetLuaVer, self.option.transCtrlInfo)
    return transUnit:createAST( parser, false, mod )
 end
 
@@ -214,7 +214,7 @@ end
 
 function Front:loadFromLnsTxt( importModuleInfo, name, txt )
 
-   local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil, self.option.targetLuaVer)
+   local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp.new(self.option.mode), nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo)
    local stream = Parser.TxtStream.new(txt)
    local parser = Parser.StreamParser.new(stream, name, false)
    local ast = transUnit:createAST( parser, false, nil )
