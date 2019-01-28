@@ -119,3 +119,20 @@ func7( func5() );
    func3( 2 ## );
    func3( ## );
 }
+
+{
+   fn func( val:int ):int!, int! {
+      switch val {
+         case 0 {
+            return 1, 2;
+         }  
+         case 1 {
+            return 1; // warn
+         }  
+         case 2 {
+            return;  // warn
+         }  
+      }  
+      return 1, 2;
+   }  
+}

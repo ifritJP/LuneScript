@@ -778,3 +778,23 @@ SUB2._MacroTest2( "abc", 123 );
       }
    }
 }
+
+{
+   fn func( val:int ):int!, int! {
+      switch val {
+         case 0 {
+            return 1, 2;
+         }  
+         case 1 {
+            return 1##;
+         }  
+         case 2 {
+            return ##;
+         }  
+      }  
+      return 1, 2;
+   }
+   print( func( 0 ) );
+   print( func( 1 ) );
+   print( func( 2 ) );
+}
