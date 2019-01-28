@@ -3379,8 +3379,13 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
                
                end
                
-                  if baseRef:get_expType():get_kind() ~= Ast.TypeInfoKind.Class then
-                     self:addErrMess( baseRef:get_pos(), string.format( "%s is not class.", baseRef:get_expType():getTxt(  )) )
+                  local baseType = baseRef:get_expType()
+                  if baseType:get_kind() ~= Ast.TypeInfoKind.Class then
+                     self:addErrMess( baseRef:get_pos(), string.format( "%s is not class.", baseType:getTxt(  )) )
+                  end
+                  
+                  if Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( baseType:get_accessMode() ) then
+                     self:addErrMess( baseRef:get_pos(), string.format( "%s can't be external symbol.", baseType:getTxt(  )) )
                   end
                   
                _sync_baseRef = baseRef
@@ -3399,12 +3404,17 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
             end
             
             self:pushback(  )
-            local ifType = self:analyzeRefType( accessMode, false )
-            if ifType:get_expType():get_kind() ~= Ast.TypeInfoKind.IF then
-               self:error( string.format( "%s is not interface -- %d", ifType:get_expType():getTxt(  ), ifType:get_expType():get_kind()) )
+            local ifTypeNode = self:analyzeRefType( accessMode, false )
+            local ifType = ifTypeNode:get_expType()
+            if ifType:get_kind() ~= Ast.TypeInfoKind.IF then
+               self:error( string.format( "%s is not interface -- %d", ifType:getTxt(  ), ifType:get_kind()) )
             end
             
-            table.insert( interfaceList, ifType:get_expType() )
+            table.insert( interfaceList, ifType )
+            if Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( ifType:get_accessMode() ) then
+               self:addErrMess( ifTypeNode:get_pos(), string.format( "%s can't be external symbol.", ifType:getTxt(  )) )
+            end
+            
             nextToken = self:getToken(  )
             if nextToken.txt ~= "," then
                if nextToken.txt == ")" then
@@ -3475,6 +3485,10 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
    
    if nextToken.txt == "class" or nextToken.txt == "interface" then
       local name = self:getSymbolToken( SymbolMode.MustNot_ )
+      if accessMode == Ast.AccessMode.Local then
+         accessMode = Ast.AccessMode.Pri
+      end
+      
       nextToken = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode )
       self:popClass(  )
       self:checkToken( nextToken, ";" )

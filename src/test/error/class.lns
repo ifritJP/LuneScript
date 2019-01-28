@@ -240,6 +240,26 @@ class SuperTest2 extend (TestIF,TestIF3) {
    }
 }
 
+class Super5 {
+}
+proto class ClassB extend Super5;
+class ClassA {
+  let val: ClassB;
+}
+class ClassB extend Super5 {
+  let val: ClassA;
+}
+
+class Super6 {
+}
+pub class ClassC extend Super6 {
+}
+interface IFSuper {
+}
+pub class ClassD extend (IFSuper) {
+}
+
+
 class StaticClass {
    let val:int;
    static fn func() {

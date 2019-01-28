@@ -477,9 +477,16 @@ fn TransUnit.analyzePushClass(
          self.pushback();
          sync! baseRef = self.analyzeRefType( accessMode, false ) {}
          do {
-            if baseRef.$expType.$kind ~= .Class {
+            let baseType = baseRef.$expType;
+            if baseType.$kind ~= .Class {
                self.addErrMess( baseRef.$pos,
-                                "%s is not class." ( baseRef.$expType.getTxt(##) ) );
+                                "%s is not class." ( baseType.getTxt(##) ) );
+            }
+            if Ast.isPubToExternal( accessMode ) and 
+               not Ast.isPubToExternal( baseType.$accessMode )
+            {
+               self.addErrMess(
+                  baseRef.$pos, "%s can't be external symbol." ( baseType.getTxt(##) ) );
             }
          };
          nextToken = self.getToken(##);
@@ -491,12 +498,20 @@ fn TransUnit.analyzePushClass(
                break;
             }
             self.pushback();
-            let ifType = self.analyzeRefType( accessMode, false );
-            if ifType.$expType.$kind ~= .IF {
+            let ifTypeNode = self.analyzeRefType( accessMode, false );
+            let ifType = ifTypeNode.$expType;
+            if ifType.$kind ~= .IF {
                self.error( "%s is not interface -- %d"
-                           (ifType.$expType.getTxt(##), ifType.$expType.$kind ) );
+                           (ifType.getTxt(##), ifType.$kind ) );
             }
-            interfaceList.insert( ifType.$expType );
+            interfaceList.insert( ifType );
+            if Ast.isPubToExternal( accessMode ) and 
+               not Ast.isPubToExternal( ifType.$accessMode )
+            {
+               self.addErrMess( ifTypeNode.$pos,
+                                "%s can't be external symbol." ( ifType.getTxt(##) ) );
+            }
+            
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
                if nextToken.txt == ")" {
@@ -553,7 +568,7 @@ fn TransUnit.analyzePushClass(
 }
 
 fn TransUnit.analyzeDeclProto(
-   accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.Node
+   mut accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Ast.Node
 {
    let mut nextToken = self.getToken(##);
    let mut abstractFlag = false;
@@ -565,6 +580,10 @@ fn TransUnit.analyzeDeclProto(
    
    if nextToken.txt == "class" or nextToken.txt == "interface" {
       let name = self.getSymbolToken( .MustNot_ );
+
+      if accessMode == .Local {
+         accessMode = .Pri;
+      }
       
       nextToken = self.analyzePushClass(
          nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode );
