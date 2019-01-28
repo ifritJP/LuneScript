@@ -3,11 +3,11 @@
 #+STARTUP: nofold
 #+OPTIONS: ^:{}
 
-#+TITLE: What's a LuneScript
+#+TITLE: What's LuneScript
 
 LuneScript is a transcompiler for Lua.
 
-* feature of a LuneScript
+* feature of LuneScript
 
 - Learning cost is low because it is based on Lua and C syntax.
 - Because LuneScript is a statically typed language, simple checks can be found at compile time by type checking.
@@ -258,7 +258,7 @@ let mut list:int[] = [];
 list.insert( 1 );  // [ 1 ]
 list.insert( 2 );  // [ 1, 2 ]
 list.insert( 3 );  // [ 1, 2, 3 ]
-list.remove();     // [ 1, 2 ]
+list.remove(##);     // [ 1, 2 ]
 #+END_SRC
 
 To access the elements of the list,
@@ -266,7 +266,7 @@ Specify the index of the element with [N] as follows.
 
 #+BEGIN_SRC lns
 let list = ['a','b','c'];
-print( list[ 1 ] ); -- 'a'
+print( list[ 1 ] ); // 'a'
 #+END_SRC
 
 Processing when the index of an element specifies
@@ -330,8 +330,8 @@ Specifically, it is as follows.
 
 #+BEGIN_SRC lns
 let list1 = [ 1, 2, 3 ];			// int[]
-let list1 = [ 'a', 'b', 'c' ];			// str[]
-let list1 = [ 'a', 1, 'c' ];			// stem[]
+let list2 = [ 'a', 'b', 'c' ];			// str[]
+let list3 = [ 'a', 1, 'c' ];			// stem[]
 let map1 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
 let map2 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
 let map3 = { "a": 'z', "b": 'y', "c": 'x' };	// Map<str,str>
@@ -484,7 +484,7 @@ In the following example, val of type int! Can not be used as an operation as an
 
 #+BEGIN_SRC lns
 let val: int! = 1;
-let val2 =  val + 1; // error
+let val2 = val + 1; // error
 #+END_SRC
 
 To return to the original value from the nilable type, use one of the following syntax.
@@ -492,7 +492,6 @@ To return to the original value from the nilable type, use one of the following 
 - unwrap
 - unwrap!
 - let!
-- sync!
 - if!
 - if! let
 
@@ -534,12 +533,12 @@ If exp is not nilable, a compile error will occur.
 {
   let val: int! = nil;
   let val2 = unwrap val default 0;
-  print( "%d", val ); // 0
+  print( "%d" ( val2 ) ); // 0
 }
 {
   let val: int! = 1;
   let val2 = unwrap val default 0;
-  print( "%d", val ); // 1
+  print( "%d" ( val2 ) ); // 1
 }
 #+END_SRC
 
@@ -576,9 +575,9 @@ You can access symbol from within this block.
 
 #+BEGIN_SRC lns
 fn test( arg:int! ) {
-  let val = 0;
+  let mut val = 0;
 
-  unwrap! val = arg { print( 0 ); return; } then { val = val + 1; }
+  unwrap! val = arg { print( 0 ); return; } then { val = val + 1; };
   print( val );
 }
 test( 1 );  // print( 2 );
@@ -603,7 +602,7 @@ Within the then block block you can refer to the value with symbol.
 
 #+BEGIN_SRC lns
 fn test( arg:int! ) {
-  let! val = func() { print( 0 ); return; } do { val = val + 1; }
+  let! mut val = arg { print( 0 ); return; } then { val = val + 1; };
   print( val );
 }
 test( 1 );  // print( 2 );
@@ -611,44 +610,6 @@ test( 2 );  // print( 3 );
 test( nil );  // print( 0 );
 #+END_SRC
 
-
-**** sync!
-
-sync! performs unwrap processing.
-
-#+BEGIN_SRC lns
-sync! symbol {, symbol } = exp[, exp ] block [then thenblock] do doblock;
-#+END_SRC
-
-The treatment of exp, symbol, and then block is almost the same as unwrap !.
-The difference is that the scope of symbol is restricted to thenblock and doblock.
-
-doblock is a block to be executed after processing block and thenblock.
-
-sync! performs the following processing after completion of doblock block processing.
-
-- If the scope using sync! has the same symbol as the symbol name declared in symbol,
-It reflects the value of symbol at the end of the doblock block.
-
-However, it is not reflected when doblock is exited by return etc etc.
-
-* From the symbol declared with sync!
-To the symbol of the same name in the upper scope, it must be a substitutable relationship. *
-
-For example, the following executes sync! In the test () function.
-This sync! Stores the result of func () in val,
-You are changing val with doblock.
-When doblock finishes, the value of val is reflected in the val of the outer scope.
-
-#+BEGIN_SRC lns
-fn test( arg:int!, arg2:int! ) {
-  let mut val = 1;
-  let val2 = 1;
-  sync! val, val3 = arg, arg2 { print( 0 ); return; } do { val = arg + arg2; }
-  print( val );
-}
-test( nil );  // print( 0 );
-#+END_SRC
 
 **** if!
 
@@ -1000,13 +961,13 @@ The following is a sample of a class with the static member val, method func ().
 
 #+BEGIN_SRC lns
 class Hoge {
-  static let val:int;
-  __init {
-    Hoge.val = 1;
-  }
-  pub static fn func():int {
-     return 2;
-  }
+   pub static let val:int;
+   __init {
+      Hoge.val = 1;
+   }
+   pub static fn func():int {
+      return 2;
+   }
 }
 print( Hoge.val, Hoge.func() ); // 1, 2
 #+END_SRC
@@ -1054,10 +1015,10 @@ Can be accessed with $ member.
 
 #+BEGIN_SRC lns
 class Test {
-  pri val: int { pub };
+  pri let val: int { pub };
 }
-Test test = new Test( 10 );
-print( test.$val );  -- 10
+let test = new Test( 10 );
+print( test.$val );  // 10
 #+END_SRC
 
 *** advertise
@@ -1219,11 +1180,11 @@ The following is an example when Class A and Class B refer to each.
 #+BEGIN_SRC lns
 class Super {
 }
-pub proto class ClassB extend Super;
+proto class ClassB extend Super;
 class ClassA {
   let val: ClassB;
 }
-pub class ClassB extend Super{
+class ClassB extend Super{
   let val: ClassA;
 }
 #+END_SRC
@@ -1261,9 +1222,9 @@ The following is an example of a simple macro.
 
 #+BEGIN_SRC lns
 macro _hello( word: str ) {
-  print( "hello" .. str ); 
+  print( "hello " .. ,,word ); 
 }
-_hello( "world" ); // print( "hello" .. "world" );
+_hello( "world" ); // print( "hello " .. "world" );
 #+END_SRC
 
 In this example there is no macro-statement, there is only expand-statement,
