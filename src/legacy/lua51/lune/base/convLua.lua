@@ -403,7 +403,7 @@ function convFilter:outputMeta( node )
       
       typeId2TypeInfo[typeInfo:get_typeId(  )] = typeInfo
       if typeInfo:get_nilable() then
-         pickupTypeId( typeInfo:get_orgTypeInfo(  ), true, false )
+         pickupTypeId( typeInfo:get_nonnilableType(), true, false )
       else
        
          if typeInfo:get_kind() == Ast.TypeInfoKind.Class or typeInfo:get_kind() == Ast.TypeInfoKind.IF then
@@ -770,13 +770,13 @@ function convFilter:outputMeta( node )
                            valid = true
                         else
                          
-                           local orgTypeInfo = typeInfo
+                           local nonnilableType = typeInfo
                            if typeInfo:get_nilable() then
-                              orgTypeInfo = typeInfo:get_orgTypeInfo()
+                              nonnilableType = typeInfo:get_nonnilableType()
                            end
                            
                            do
-                              local _switchExp = orgTypeInfo:get_kind()
+                              local _switchExp = nonnilableType:get_kind()
                               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
                                  valid = true
                               end
@@ -1031,30 +1031,30 @@ end
 
 function convFilter:getMapInfo( typeInfo )
 
-   local orgTypeInfo = typeInfo:get_srcTypeInfo()
+   local nonnilableType = typeInfo:get_srcTypeInfo()
    if typeInfo:get_nilable() then
-      orgTypeInfo = typeInfo:get_orgTypeInfo()
+      nonnilableType = typeInfo:get_nonnilableType()
    end
    
    local child = "{}"
    local funcTxt = ""
    do
-      local _switchExp = orgTypeInfo:get_kind()
+      local _switchExp = nonnilableType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Stem then
          funcTxt = '_lune._toStem'
       elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-         if not orgTypeInfo:equals( Ast.builtinTypeString ) then
-            funcTxt = string.format( '%s._fromMap', self:getFullName( orgTypeInfo ))
+         if not nonnilableType:equals( Ast.builtinTypeString ) then
+            funcTxt = string.format( '%s._fromMap', self:getFullName( nonnilableType ))
          else
           
             funcTxt = '_lune._toStr'
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
-         funcTxt = string.format( '%s._from', self:getFullName( orgTypeInfo ))
+         funcTxt = string.format( '%s._from', self:getFullName( nonnilableType ))
       elseif _switchExp == Ast.TypeInfoKind.Prim then
          do
-            local _switchExp = orgTypeInfo
+            local _switchExp = nonnilableType
             if _switchExp == Ast.builtinTypeInt then
                funcTxt = '_lune._toInt'
             elseif _switchExp == Ast.builtinTypeReal then
@@ -1063,19 +1063,19 @@ function convFilter:getMapInfo( typeInfo )
                funcTxt = '_lune._toBool'
             else 
                
-                  Util.err( string.format( "unknown type -- %s", orgTypeInfo:getTxt(  )) )
+                  Util.err( string.format( "unknown type -- %s", nonnilableType:getTxt(  )) )
             end
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Map then
          funcTxt = '_lune._toMap'
-         local itemList = orgTypeInfo:get_itemTypeInfoList()
+         local itemList = nonnilableType:get_itemTypeInfoList()
          local keyFuncTxt, keyNilable, keyChild = self:getMapInfo( itemList[1] )
          local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[2] )
          child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, tostring( keyNilable), keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
       elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
          funcTxt = '_lune._toList'
-         local itemList = orgTypeInfo:get_itemTypeInfoList()
+         local itemList = nonnilableType:get_itemTypeInfoList()
          local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[1] )
          child = string.format( "{ { func = %s, nilable = %s, child = %s } }", valFuncTxt, tostring( valNilable), valChild)
       end

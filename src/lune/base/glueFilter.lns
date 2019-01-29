@@ -40,7 +40,7 @@ fn glueGenerator.writeHeader( txt:str ) mut {
 
 fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, str, &Ast.TypeInfo, str {
    let argType = argNode.$expType;
-   let mut orgType = (argType.$nilable and argType.$orgTypeInfo or argType).$srcTypeInfo;
+   let mut orgType = (argType.$nilable and argType.$nonnilableType or argType).$srcTypeInfo;
    let mut typeTxt = "";
    let mut nilableTypeTxt = "";
    if orgType == Ast.builtinTypeInt {

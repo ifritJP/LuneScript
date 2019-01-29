@@ -28,6 +28,7 @@ meta ファイル内に、ビルド時の lns ファイルの更新時間と、�
 
 mod2.meta: mod2.lns
 
+- [ ] interface を継承した interface を制限をまとめる
 - [ ] 関数内の関数で __func__ を使用した場合、モジュール名が __func__ に付かない。
        mod.func.inner にならずに func.inner になる。
 - [ ] switch の式化  

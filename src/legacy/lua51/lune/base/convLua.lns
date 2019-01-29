@@ -340,7 +340,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
       typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
       
       if typeInfo.$nilable {
-	 pickupTypeId( typeInfo.get_orgTypeInfo(), true, false );
+	 pickupTypeId( typeInfo.$nonnilableType, true, false );
       }
       else {
          if typeInfo.$kind == Ast.TypeInfoKind.Class or
@@ -673,11 +673,11 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                valid = true;
             }
             else {
-               let mut orgTypeInfo:&Ast.TypeInfo = typeInfo;
+               let mut nonnilableType:&Ast.TypeInfo = typeInfo;
                if typeInfo.$nilable {
-                  orgTypeInfo = typeInfo.$orgTypeInfo;
+                  nonnilableType = typeInfo.$nonnilableType;
                }
-               switch orgTypeInfo.$kind {
+               switch nonnilableType.$kind {
                   case .IF, .Map, .Enum, .Alge, .List, .Array, .Class, .Module, .Func {
                      valid = true;
                   }
@@ -942,31 +942,31 @@ end
 
 
 fn convFilter.getMapInfo( typeInfo:&Ast.TypeInfo ): str, bool, str {
-   let mut orgTypeInfo = typeInfo.$srcTypeInfo;
+   let mut nonnilableType = typeInfo.$srcTypeInfo;
    if typeInfo.$nilable {
-      orgTypeInfo = typeInfo.$orgTypeInfo;
+      nonnilableType = typeInfo.$nonnilableType;
    }
    
 
    let mut child = "{}";
    let mut funcTxt = "";
-   switch orgTypeInfo.$kind {
+   switch nonnilableType.$kind {
       case .Stem {
          funcTxt = '_lune._toStem';
       }
       case .Class, .IF {
-         if not orgTypeInfo.equals( Ast.builtinTypeString ) {
-            funcTxt = '%s._fromMap' (self.getFullName(orgTypeInfo));
+         if not nonnilableType.equals( Ast.builtinTypeString ) {
+            funcTxt = '%s._fromMap' (self.getFullName(nonnilableType));
          }
          else {
             funcTxt = '_lune._toStr';
          }
       }
       case .Enum, .Alge {
-         funcTxt = '%s._from' (self.getFullName(orgTypeInfo));
+         funcTxt = '%s._from' (self.getFullName(nonnilableType));
       }
       case .Prim {
-         switch orgTypeInfo {
+         switch nonnilableType {
             case Ast.builtinTypeInt {
                funcTxt = '_lune._toInt';
             }
@@ -977,13 +977,13 @@ fn convFilter.getMapInfo( typeInfo:&Ast.TypeInfo ): str, bool, str {
                funcTxt = '_lune._toBool';
             }
             default {
-               Util.err( "unknown type -- %s" (orgTypeInfo.getTxt(##)) );
+               Util.err( "unknown type -- %s" (nonnilableType.getTxt(##)) );
             }
          }
       }
       case .Map {
          funcTxt = '_lune._toMap';
-         let itemList = orgTypeInfo.$itemTypeInfoList;
+         let itemList = nonnilableType.$itemTypeInfoList;
          let keyFuncTxt, keyNilable, keyChild = self.getMapInfo( itemList[1] );
          let valFuncTxt, valNilable, valChild = self.getMapInfo( itemList[2] );
 
@@ -994,7 +994,7 @@ fn convFilter.getMapInfo( typeInfo:&Ast.TypeInfo ): str, bool, str {
       }
       case .List, .Array {
          funcTxt = '_lune._toList';
-         let itemList = orgTypeInfo.$itemTypeInfoList;
+         let itemList = nonnilableType.$itemTypeInfoList;
          let valFuncTxt, valNilable, valChild = self.getMapInfo( itemList[1] );
 
          child = "{ { func = %s, nilable = %s, child = %s } }"

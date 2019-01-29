@@ -57,7 +57,7 @@ end
 function glueGenerator:getArgInfo( argNode )
 
    local argType = argNode:get_expType()
-   local orgType = (argType:get_nilable() and argType:get_orgTypeInfo() or argType ):get_srcTypeInfo()
+   local orgType = (argType:get_nilable() and argType:get_nonnilableType() or argType ):get_srcTypeInfo()
    local typeTxt = ""
    local nilableTypeTxt = ""
    if orgType == Ast.builtinTypeInt then

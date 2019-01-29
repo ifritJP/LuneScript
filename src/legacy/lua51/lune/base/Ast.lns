@@ -87,7 +87,9 @@ pub enum TypeInfoKind {
    Module,
    Stem,
    Alge,
+   /** ... */
    DDD,
+   /** 省略 ## */
    Abbr,
 }
 
@@ -337,6 +339,13 @@ pub fn Scope.isInnerOf( scope:&Scope ): bool {
 let dummyList:List<&TypeInfo> = [];
 let mut rootChildren:List<&TypeInfo> = [];
 
+/**
+TypeInfo の付随した情報で、かつ mutable な情報。
+
+ある TypeInfo の子は、親宣言時には確定しない。
+子を宣言時に親の子リストに追加が必要だが、
+TypeInfo は基本的に &TypeInfo で扱うため TypeInfo のメンバに直接子リストを持たせられない。
+*/
 pub class TypeData {
    pri let mut children:List<&TypeInfo> {pub};
    pub fn addChildren( child:&TypeInfo ) mut {
@@ -344,6 +353,7 @@ pub class TypeData {
    }
 }
 
+/** TypeInfo と TypeData の紐付け管理 */
 class TypeManager {
    pri static let mut info2Data:Map<&TypeInfo,TypeData>;
 
@@ -390,78 +400,97 @@ pub class TypeInfo {
       TypeManager.add( self );
    }
 
+   /** この型がモジュールを示す型の場合 true  */
    pub fn isModule(): bool {
       return true;
    }
 
+   /** 親の typeId  */
    pub fn getParentId(): int {
       return rootTypeId;
    }
 
+   /** スーパークラスの typeId */
    pub fn get_baseId(): int {
       return rootTypeId;
    }
 
+   /** この型が other を継承しているかどうか */
    pub fn isInheritFrom( other:&TypeInfo ) : bool {
       return false;
    }
 
+   /** この型の名前を取得する。 */
    pub fn getTxt( fullName:bool!,
                   importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    {  
       return "";
    }
 
+   /** other 型から dest 型への opTxt の評価が可能かどうか */
    pro static fn canEvalWithBase(
       dest:&TypeInfo, destMut: bool, other:&TypeInfo, opTxt:str ): bool;
 
+   /** other 型からこの型への opTxt の評価が可能かどうか */
    pub fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
       return false;
    }
-   
+
+   /** この型が abstract かどうか */
    pub fn get_abstractFlag(): bool {
       return false;
    }
-   
+
+   /** この型情報を oStream にシリアライズする */
    pub fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       return;
    }
 
+   /** 表示用文字列取得 */
    pub fn get_display_stirng(): str {
       return "";
    }
 
+
+   /** Modifier の元となる型情報 */
    pub fn get_srcTypeInfo(): &TypeInfo {
       return self;
    }
 
+   /** この型と typeInfo が等しいかどうか */
    pub fn equals( typeInfo: &TypeInfo ): bool {
       return self == typeInfo.$srcTypeInfo;
    }
 
+   /** この型が外部モジュールで定義した型かどうか */
    pub fn get_externalFlag(): bool {
       return false;
    }
-   
+
+   /** この型が実装しているインタフェースリスト */
    pub fn get_interfaceList(): &List<&TypeInfo> {
       return dummyList;
-   }  
+   }
+   /** generics の型リスト */
    pub fn get_itemTypeInfoList(): &List<&TypeInfo> {
       return dummyList;
-   }  
+   }
+   /** 引数の型リスト */
    pub fn get_argTypeInfoList(): &List<&TypeInfo> {
       return dummyList;
-   }  
+   }
+   /** 戻り値の型リスト */
    pub fn get_retTypeInfoList(): &List<&TypeInfo> {
       return dummyList;
-   }  
+   }
+   /** 名前空間の親 */
    pub fn get_parentInfo(): &TypeInfo {
       return self;
    }
 
    /**
    この型情報に、 other から辿ることができるか？
-   具体的には other の名前空間の上位に、この型情報か？
+   具体的には other の名前空間の上位に、この型情報が宣言されているか？
    */
    pub fn hasRouteNamespaceFrom( mut other: &TypeInfo ): bool {
       while true {
@@ -475,56 +504,78 @@ pub class TypeInfo {
       }
       return false;
    }
+   /** この型が属しているモジュールを取得 */
    pub fn getModule(): &TypeInfo {
       if self.isModule() {
          return self;
       }
       return self.$parentInfo.getModule();
    }
+   /** シンプルな型名 */
    pub fn get_rawTxt(): str {
       return "";
-   }  
+   }
+   /** typeId を取得 */
    pub fn get_typeId(): int {
       return rootTypeId;
-   }  
+   }
+   /** 型の種別 */
    pub fn get_kind(): TypeInfoKind {
       return .Root;
-   } 
+   }
+   /**
+static な型か。
+
+メソッドでない関数は全て static となる。
+   */ 
    pub fn get_staticFlag(): bool {
       return false;
-   } 
+   }
+   /** アクセスモード */
    pub fn get_accessMode(): AccessMode {
       return AccessMode.Pri;
-   }  
+   }
+   /** ユーザ定義でなく自動的に生成したかどうか */
    pub fn get_autoFlag(): bool {
       return false;
-   }  
-   pub fn get_orgTypeInfo(): &TypeInfo {
+   }
+   /** 非 nilable の型情報 */
+   pub fn get_nonnilableType(): &TypeInfo {
       return self;
-   }  
+   }
+   /** super クラス。 継承していない場合は headTypeInfo。 */
    pub fn get_baseTypeInfo(): &TypeInfo {
       return self;
-   } 
+   }
+   /** nilable かどうか */
    pub fn get_nilable(): bool {
       return false;
    }
+   /** nilable な型情報 */
    pub fn get_nilableTypeInfo(): &TypeInfo {
       return self;
    }
+   /** TypeData の取得 */
    pub fn get_typeData(): TypeData {
       return unwrap TypeManager.getData( self ); 
    }
+   /** 子リスト取得 */
    pub fn get_children() : &List<&TypeInfo> {
       return self.$typeData.$children;
    }
+   /** 子の追加 */
    pub fn addChildren( child:TypeInfo ) {
       (unwrap TypeManager.getData( self )).addChildren( child );
    }
+   /** mutable かどうか */
    pub fn get_mutable(): bool {
       return true;
    }
 
-   pub fn getParentFullName( importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str {
+   /** 親の完全限定名を取得する */
+   pub fn getParentFullName(
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
       let mut typeInfo:&TypeInfo = self;
       let mut name = "";
       let! mut infoMap = importInfo {
@@ -552,8 +603,22 @@ pub class TypeInfo {
    }
 }
 
+/**
+列挙したシンボル情報を処理するコールバック。
+
+@return 列挙を続ける場合は true 
+*/
 pub form filterForm( symbolInfo:&SymbolInfo ): bool;
 
+/**
+このスコープからアクセス可能なフィールドを列挙し callback を実行する。
+
+@param includeSelfFlag true の場合、
+自分自身のスコープに登録されているシンボルを列挙対象にする。
+@param fromScope アクセスを開始しているスコープ。
+@param callback コールバック。
+@return bool 列挙を続ける場合 true
+*/
 pub fn Scope.filterTypeInfoField(
    includeSelfFlag: bool!, fromScope:&Scope, callback:filterForm ):bool
 {
@@ -577,6 +642,11 @@ pub fn Scope.filterTypeInfoField(
    return true;
 }
 
+/**
+このスコープからアクセス可能な name のフィールドを取得する。
+
+インタフェースは含めない。
+*/
 pub fn Scope.getSymbolInfoField(
    name: str, includeSelfFlag: bool!, fromScope:&Scope ) : &SymbolInfo!
 {
@@ -600,7 +670,11 @@ pub fn Scope.getSymbolInfoField(
    return nil;
 }
 
+/**
+このスコープからアクセス可能な name のフィールドを取得する。
 
+インタフェースを含む。
+*/
 pub fn Scope.getSymbolInfoIfField( name: str, fromScope:&Scope ) : &SymbolInfo!
 {
    if self.classFlag {
@@ -620,6 +694,11 @@ pub fn Scope.getSymbolInfoIfField( name: str, fromScope:&Scope ) : &SymbolInfo!
    return nil;
 }
 
+/**
+このスコープからアクセス可能なフィールドを列挙し callback を実行する。
+
+インタフェースを含む。
+*/
 pub fn Scope.filterSymbolInfoIfField( fromScope:&Scope, callback:filterForm ) : bool
 {
    foreach scope in self.ifScopeList {
@@ -857,6 +936,9 @@ pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
              typeInfo.$accessMode, true, true, true );
 }
 
+/**
+デバッグ用。 scope 内のシンボル情報を出力する。
+*/
 fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
    if! scope {
       if readyIdSet[ _exp ] {
@@ -876,13 +958,16 @@ fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
    };
 }
 
+/**
+デバッグ用。 scope 内のシンボル情報を出力する。
+*/
 fn dumpScope( scope: Scope!, prefix:str ) {
    dumpScopeSub( scope, prefix, {} );
 }
 
 
 
-pub let mut headTypeInfo:TypeInfo = new TypeInfo( rootScope );
+pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
 
@@ -999,7 +1084,7 @@ pub proto class Node;
 pub proto class DeclClassNode extend Node;
 
 pub class NilableTypeInfo extend TypeInfo {
-   pri let orgTypeInfo: &TypeInfo { pub };
+   pri let nonnilableType: &TypeInfo { pub };
    pri let typeId: int { pub };
 
    pub override fn get_kind(): TypeInfoKind {
@@ -1014,27 +1099,27 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn getTxt( fullName:bool!,
                            importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    {  
-      return self.orgTypeInfo.getTxt( fullName, importInfo, localFlag ) .. "!";
+      return self.nonnilableType.getTxt( fullName, importInfo, localFlag ) .. "!";
    }
    pub override fn get_display_stirng(): str {
-      return self.orgTypeInfo.$display_stirng .. "!";
+      return self.nonnilableType.$display_stirng .. "!";
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
-            SerializeKind.Nilable, parentId, self.typeId, self.orgTypeInfo.$typeId ) );
+            SerializeKind.Nilable, parentId, self.typeId, self.nonnilableType.$typeId ) );
    }
 
    pub override fn equals( typeInfo: &TypeInfo ): bool {
       if not typeInfo.$nilable {
          return false;
       }
-      return self.orgTypeInfo.equals( typeInfo );
+      return self.nonnilableType.equals( typeInfo );
    }
 
-   advertise orgTypeInfo;
+   advertise nonnilableType;
 }
 
 
@@ -1379,7 +1464,7 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let abstractFlag: bool { pub };
 
    // unwrap 後の TypeInfo。 無効な場合は headTypeInfo。
-   pri let mut orgTypeInfo: &TypeInfo { pub };
+   pri let mut nonnilableType: &TypeInfo { pub };
    // 基底クラス。 無効な場合は headTypeInfo。
    pri let baseTypeInfo: &TypeInfo { pub };
    // インタフェースのリスト。
@@ -1393,7 +1478,7 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let mutable: bool {pub};
 
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
-              interfaceList: List<&TypeInfo>!, orgTypeInfo: TypeInfo!,
+              interfaceList: List<&TypeInfo>!, nonnilableType: TypeInfo!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
               accessMode: AccessMode,
               txt: str, parentInfo: &TypeInfo!, typeId: int, kind: TypeInfoKind,
@@ -1418,7 +1503,7 @@ pub class NormalTypeInfo extend TypeInfo {
       self.itemTypeInfoList = unwrap itemTypeInfoList default [];
       self.argTypeInfoList = unwrap argTypeInfoList default [];
       self.retTypeInfoList = unwrap retTypeInfoList default [];
-      self.orgTypeInfo = unwrap orgTypeInfo default headTypeInfo;
+      self.nonnilableType = unwrap nonnilableType default headTypeInfo;
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.mutable = mutable and true or false;
 
@@ -1435,9 +1520,9 @@ pub class NormalTypeInfo extend TypeInfo {
       elseif txt == "nil" or txt == "..." {
          self.nilable = true;
          self.nilableTypeInfo = self;
-         self.orgTypeInfo = self;
+         self.nonnilableType = self;
       }
-      elseif not orgTypeInfo {
+      elseif not nonnilableType {
          if! parentInfo {
             _exp.addChildren( self );
          }  
@@ -1502,8 +1587,8 @@ pub class NormalTypeInfo extend TypeInfo {
       if fullName {
          parentTxt = self.getParentFullName( importInfo, localFlag );
       }
-      if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo) {
-         return parentTxt .. (unwrap self.orgTypeInfo).getTxt( fullName, importInfo, localFlag ) .. "!";
+      if self.nilable and (self.nilableTypeInfo ~= self.nonnilableType) {
+         return parentTxt .. (unwrap self.nonnilableType).getTxt( fullName, importInfo, localFlag ) .. "!";
       } 
       // if self.kind == .Array {
       //    let! _exp = self.itemTypeInfoList[1] {
@@ -1533,7 +1618,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pub override fn get_display_stirng(): str {
       if self.kind == .Nilable {
-         return (unwrap self.orgTypeInfo).get_display_stirng() .. "!";
+         return (unwrap self.nonnilableType).get_display_stirng() .. "!";
       }
       if self.kind == .Func or self.kind == .Method
       {
@@ -1569,7 +1654,7 @@ pub class NormalTypeInfo extend TypeInfo {
       if self.nilable {
          stream.write(
             '{ parentId=%d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
-               parentId, self.typeId, self.orgTypeInfo.$typeId ) );
+               parentId, self.typeId, self.nonnilableType.$typeId ) );
          return;
       } 
 
@@ -1637,9 +1722,9 @@ pub class NormalTypeInfo extend TypeInfo {
          return false;
       }
 
-      if ( self.orgTypeInfo ~= typeInfo.$orgTypeInfo )
+      if ( self.nonnilableType ~= typeInfo.$nonnilableType )
       { 
-         Util.log( "%s, %s" ( self.orgTypeInfo, typeInfo.$orgTypeInfo ) );
+         Util.log( "%s, %s" ( self.nonnilableType, typeInfo.$nonnilableType ) );
          //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
          //                                     typeInfo.getTxt(), typeInfo.typeId ) );
          return false;
@@ -1676,8 +1761,8 @@ pub class NormalTypeInfo extend TypeInfo {
          }
       }
 
-      if self.orgTypeInfo ~= headTypeInfo and
-         not self.orgTypeInfo.equals( typeInfo.$orgTypeInfo )
+      if self.nonnilableType ~= headTypeInfo and
+         not self.nonnilableType.equals( typeInfo.$nonnilableType )
       {     
          error( "illegal %s:%d %s:%d" ( self.getTxt(##), self.typeId,
                                         typeInfo.getTxt(##), typeInfo.$typeId ) );
@@ -1931,8 +2016,8 @@ pub static fn NormalTypeInfo.createModifier(
    return modifier;
 }
 
-pub override fn ModifierTypeInfo.get_orgTypeInfo(): &TypeInfo {
-   let orgType = self.srcTypeInfo.$orgTypeInfo;
+pub override fn ModifierTypeInfo.get_nonnilableType(): &TypeInfo {
+   let orgType = self.srcTypeInfo.$nonnilableType;
    if self.mutable or not orgType.$mutable {
       return orgType;
    }
@@ -2284,9 +2369,9 @@ pub override fn NilableTypeInfo.canEvalWith( other:&TypeInfo, opTxt:str ): bool 
       return true;
    }
    if otherSrc.$nilable {
-      return self.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
+      return self.$nonnilableType.canEvalWith( otherSrc.$nonnilableType, opTxt );
    }
-   return self.$orgTypeInfo.canEvalWith( otherSrc, opTxt );
+   return self.$nonnilableType.canEvalWith( otherSrc, opTxt );
 }
    
 macro _checkEqualsItemType( type1:sym, type2:sym, index:int ) {
@@ -2511,9 +2596,9 @@ pub static fn TypeInfo.canEvalWithBase(
    if dest.$kind ~= otherSrc.$kind {
       if dest.$kind == .Nilable {
          if otherSrc.$nilable {
-            return dest.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
+            return dest.$nonnilableType.canEvalWith( otherSrc.$nonnilableType, opTxt );
          }
-         return dest.$orgTypeInfo.canEvalWith( otherSrc, opTxt );
+         return dest.$nonnilableType.canEvalWith( otherSrc, opTxt );
       }
       elseif ( dest.$kind == .Class or dest.$kind == .IF ) and
          ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
@@ -2592,7 +2677,7 @@ pub static fn TypeInfo.canEvalWithBase(
          return true;
       }
       case .Nilable {
-         return dest.$orgTypeInfo.canEvalWith( otherSrc.$orgTypeInfo, opTxt );
+         return dest.$nonnilableType.canEvalWith( otherSrc.$nonnilableType, opTxt );
       }
       default {
          return false;

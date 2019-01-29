@@ -2844,7 +2844,7 @@ function TransUnit:analyzeApply( token )
             local workType = itemType
             if index == 1 then
                if itemType:get_nilable() then
-                  workType = workType:get_orgTypeInfo()
+                  workType = workType:get_nonnilableType()
                end
                
             end
@@ -4272,7 +4272,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
                   
                   return false
                elseif _switchExp == Ast.TypeInfoKind.Nilable then
-                  return isAvailableMapping( typeInfo:get_orgTypeInfo(), checkedTypeMap )
+                  return isAvailableMapping( typeInfo:get_nonnilableType(), checkedTypeMap )
                else 
                   
                      return false
@@ -4802,7 +4802,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                local argType = typeInfoList[subIndex]
                local checkType = dddItemType
                if unwrapFlag then
-                  checkType = dddItemType:get_orgTypeInfo()
+                  checkType = dddItemType:get_nonnilableType()
                end
                
                if not argType:equals( Ast.builtinTypeNone ) and not argType:canEvalWith( checkType, "=" ) then
@@ -4829,7 +4829,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
             
             table.insert( orgExpTypeList, expTypeInfo )
             if unwrapFlag and expTypeInfo:get_nilable() then
-               expTypeInfo = _lune.unwrap( expTypeInfo:get_orgTypeInfo())
+               expTypeInfo = _lune.unwrap( expTypeInfo:get_nonnilableType())
             end
             
             if index <= #typeInfoList then
@@ -5009,7 +5009,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
       local exp = self:analyzeExp( false )
       table.insert( expNodeList, exp )
       if exp:get_expType():get_nilable() then
-         table.insert( typeInfoList, exp:get_expType():get_orgTypeInfo() )
+         table.insert( typeInfoList, exp:get_expType():get_nonnilableType() )
       else
        
          table.insert( typeInfoList, exp:get_expType() )
@@ -5064,7 +5064,7 @@ function TransUnit:analyzeWhen( firstToken )
             local refNode = expNode
             local symbolInfo = refNode:get_symbolInfo()
             table.insert( varNameList, refNode:get_token().txt )
-            self:addLocalVar( firstToken.pos, false, expNode:canBeLeft(  ), refNode:get_token().txt, expNode:get_expType():get_orgTypeInfo(), symbolInfo:get_mutable(), true )
+            self:addLocalVar( firstToken.pos, false, expNode:canBeLeft(  ), refNode:get_token().txt, expNode:get_expType():get_nonnilableType(), symbolInfo:get_mutable(), true )
          else
           
             self:addErrMess( expNode:get_pos(), string.format( "This type isn't nilable. -- %s", expNode:get_expType():getTxt(  )) )
@@ -5225,7 +5225,7 @@ function TransUnit:analyzeMapConst( token )
             return typeInfo
          end
          
-         expType = _lune.unwrap( expType:get_orgTypeInfo())
+         expType = _lune.unwrap( expType:get_nonnilableType())
       end
       
       if not typeInfo:canEvalWith( expType, "=" ) then
@@ -5275,7 +5275,7 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
          nilAccess = false
       else
        
-         expType = _lune.unwrap( expType:get_orgTypeInfo())
+         expType = _lune.unwrap( expType:get_nonnilableType())
       end
       
    end
@@ -5616,7 +5616,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
    local nilAccess = nextToken.txt == "$("
    if nilAccess then
       if funcTypeInfo:get_nilable() then
-         funcTypeInfo = funcTypeInfo:get_orgTypeInfo()
+         funcTypeInfo = funcTypeInfo:get_nonnilableType()
       else
        
          nilAccess = false
@@ -5662,6 +5662,14 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       if argList ~= nil then
          if argList:get_expType():get_nilable() then
             self:addErrMess( argList:get_pos(), "list can't insert nilable" )
+         end
+         
+      end
+      
+   elseif funcTypeInfo:equals( _moduleObj.typeInfoListRemove ) then
+      if #genericTypeList > 0 then
+         if genericTypeList[1]:get_nilable() then
+            self:addWarnMess( exp:get_pos(), "remove() is dangerous for nilable's list." )
          end
          
       end
@@ -6048,7 +6056,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    self:checkFieldComp( mode == ExpSymbolMode.Get or mode == ExpSymbolMode.GetNil, token, prefixExp )
    if accessNil then
       if prefixExpType:get_nilable() then
-         prefixExpType = _lune.unwrap( prefixExpType:get_orgTypeInfo())
+         prefixExpType = _lune.unwrap( prefixExpType:get_nonnilableType())
       else
        
          accessNil = false
@@ -6400,7 +6408,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             do
                local prefixExpType = exp:get_expType()
                if prefixExpType:get_nilable() then
-                  prefixExpType = prefixExpType:get_orgTypeInfo()
+                  prefixExpType = prefixExpType:get_nonnilableType()
                end
                
                if prefixExpType:get_kind() == Ast.TypeInfoKind.Enum then
@@ -6761,7 +6769,7 @@ function TransUnit:analyzeExpUnwrap( firstToken )
       
    else
     
-      unwrapType = _lune.unwrap( expType:get_orgTypeInfo())
+      unwrapType = _lune.unwrap( expType:get_nonnilableType())
       do
          local _exp = insNode
          if _exp ~= nil then
@@ -6796,7 +6804,7 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
             if _exp ~= nil then
                local orgExpectType = _exp
                if orgExpectType:get_nilable() then
-                  orgExpectType = orgExpectType:get_orgTypeInfo()
+                  orgExpectType = orgExpectType:get_nonnilableType()
                end
                
                if orgExpectType:get_kind() == Ast.TypeInfoKind.Enum then

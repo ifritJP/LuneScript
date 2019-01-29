@@ -26,10 +26,11 @@
 {
    let mut val:int![] = [];
    val.insert( 1 );
-   val.insert( nil );
+   val.insert( nil ); // error
+   val.remove(##);    // warn
 }
 {
    let val:int![] = [];
-   val.insert( 1 );
-   val.remove( 1 );
+   val.insert( 1 ); // error
+   val.remove( 1 ); // error
 }

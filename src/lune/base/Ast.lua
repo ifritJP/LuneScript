@@ -710,7 +710,7 @@ function TypeInfo:get_autoFlag(  )
 
    return false
 end
-function TypeInfo:get_orgTypeInfo(  )
+function TypeInfo:get_nonnilableType(  )
 
    return self
 end
@@ -1371,16 +1371,16 @@ function NilableTypeInfo:get_nilable(  )
 end
 function NilableTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   return self.orgTypeInfo:getTxt( fullName, importInfo, localFlag ) .. "!"
+   return self.nonnilableType:getTxt( fullName, importInfo, localFlag ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng(  )
 
-   return self.orgTypeInfo:get_display_stirng() .. "!"
+   return self.nonnilableType:get_display_stirng() .. "!"
 end
 function NilableTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', SerializeKind.Nilable, parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, nilable = true, orgTypeId = %d }\n', SerializeKind.Nilable, parentId, self.typeId, self.nonnilableType:get_typeId()) )
 end
 function NilableTypeInfo:equals( typeInfo )
 
@@ -1388,133 +1388,133 @@ function NilableTypeInfo:equals( typeInfo )
       return false
    end
    
-   return self.orgTypeInfo:equals( typeInfo )
+   return self.nonnilableType:equals( typeInfo )
 end
 function NilableTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = NilableTypeInfo  } )
 end
-function NilableTypeInfo.new( orgTypeInfo, typeId )
+function NilableTypeInfo.new( nonnilableType, typeId )
    local obj = {}
    NilableTypeInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( orgTypeInfo, typeId )
+      obj:__init( nonnilableType, typeId )
    end        
    return obj 
 end         
-function NilableTypeInfo:__init( orgTypeInfo, typeId ) 
+function NilableTypeInfo:__init( nonnilableType, typeId ) 
 
    TypeInfo.__init( self )
-   self.orgTypeInfo = orgTypeInfo
+   self.nonnilableType = nonnilableType
    self.typeId = typeId
 end
-function NilableTypeInfo:get_orgTypeInfo()       
-   return self.orgTypeInfo         
+function NilableTypeInfo:get_nonnilableType()       
+   return self.nonnilableType         
 end
 function NilableTypeInfo:get_typeId()       
    return self.typeId         
 end
 function NilableTypeInfo:get_scope( ... )
-   return self.orgTypeInfo:get_scope( ... )
+   return self.nonnilableType:get_scope( ... )
 end       
 
 function NilableTypeInfo:isModule( ... )
-   return self.orgTypeInfo:isModule( ... )
+   return self.nonnilableType:isModule( ... )
 end       
 
 function NilableTypeInfo:getParentId( ... )
-   return self.orgTypeInfo:getParentId( ... )
+   return self.nonnilableType:getParentId( ... )
 end       
 
 function NilableTypeInfo:get_baseId( ... )
-   return self.orgTypeInfo:get_baseId( ... )
+   return self.nonnilableType:get_baseId( ... )
 end       
 
 function NilableTypeInfo:isInheritFrom( ... )
-   return self.orgTypeInfo:isInheritFrom( ... )
+   return self.nonnilableType:isInheritFrom( ... )
 end       
 
 function NilableTypeInfo:get_abstractFlag( ... )
-   return self.orgTypeInfo:get_abstractFlag( ... )
+   return self.nonnilableType:get_abstractFlag( ... )
 end       
 
 function NilableTypeInfo:get_externalFlag( ... )
-   return self.orgTypeInfo:get_externalFlag( ... )
+   return self.nonnilableType:get_externalFlag( ... )
 end       
 
 function NilableTypeInfo:get_interfaceList( ... )
-   return self.orgTypeInfo:get_interfaceList( ... )
+   return self.nonnilableType:get_interfaceList( ... )
 end       
 
 function NilableTypeInfo:get_itemTypeInfoList( ... )
-   return self.orgTypeInfo:get_itemTypeInfoList( ... )
+   return self.nonnilableType:get_itemTypeInfoList( ... )
 end       
 
 function NilableTypeInfo:get_argTypeInfoList( ... )
-   return self.orgTypeInfo:get_argTypeInfoList( ... )
+   return self.nonnilableType:get_argTypeInfoList( ... )
 end       
 
 function NilableTypeInfo:get_retTypeInfoList( ... )
-   return self.orgTypeInfo:get_retTypeInfoList( ... )
+   return self.nonnilableType:get_retTypeInfoList( ... )
 end       
 
 function NilableTypeInfo:get_parentInfo( ... )
-   return self.orgTypeInfo:get_parentInfo( ... )
+   return self.nonnilableType:get_parentInfo( ... )
 end       
 
 function NilableTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.orgTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.nonnilableType:hasRouteNamespaceFrom( ... )
 end       
 
 function NilableTypeInfo:getModule( ... )
-   return self.orgTypeInfo:getModule( ... )
+   return self.nonnilableType:getModule( ... )
 end       
 
 function NilableTypeInfo:get_rawTxt( ... )
-   return self.orgTypeInfo:get_rawTxt( ... )
+   return self.nonnilableType:get_rawTxt( ... )
 end       
 
 function NilableTypeInfo:get_staticFlag( ... )
-   return self.orgTypeInfo:get_staticFlag( ... )
+   return self.nonnilableType:get_staticFlag( ... )
 end       
 
 function NilableTypeInfo:get_accessMode( ... )
-   return self.orgTypeInfo:get_accessMode( ... )
+   return self.nonnilableType:get_accessMode( ... )
 end       
 
 function NilableTypeInfo:get_autoFlag( ... )
-   return self.orgTypeInfo:get_autoFlag( ... )
+   return self.nonnilableType:get_autoFlag( ... )
 end       
 
 function NilableTypeInfo:get_baseTypeInfo( ... )
-   return self.orgTypeInfo:get_baseTypeInfo( ... )
+   return self.nonnilableType:get_baseTypeInfo( ... )
 end       
 
 function NilableTypeInfo:get_nilableTypeInfo( ... )
-   return self.orgTypeInfo:get_nilableTypeInfo( ... )
+   return self.nonnilableType:get_nilableTypeInfo( ... )
 end       
 
 function NilableTypeInfo:get_typeData( ... )
-   return self.orgTypeInfo:get_typeData( ... )
+   return self.nonnilableType:get_typeData( ... )
 end       
 
 function NilableTypeInfo:get_children( ... )
-   return self.orgTypeInfo:get_children( ... )
+   return self.nonnilableType:get_children( ... )
 end       
 
 function NilableTypeInfo:addChildren( ... )
-   return self.orgTypeInfo:addChildren( ... )
+   return self.nonnilableType:addChildren( ... )
 end       
 
 function NilableTypeInfo:get_mutable( ... )
-   return self.orgTypeInfo:get_mutable( ... )
+   return self.nonnilableType:get_mutable( ... )
 end       
 
 function NilableTypeInfo:getParentFullName( ... )
-   return self.orgTypeInfo:getParentFullName( ... )
+   return self.nonnilableType:getParentFullName( ... )
 end       
 
 function NilableTypeInfo:getFullName( ... )
-   return self.orgTypeInfo:getFullName( ... )
+   return self.nonnilableType:getFullName( ... )
 end       
 
 
@@ -2046,13 +2046,13 @@ end
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
-function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
+function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, nonnilableType, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( abstractFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
+   if obj.__init then obj:__init( abstractFlag, scope, baseTypeInfo, interfaceList, nonnilableType, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
    return obj
 end
-function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, orgTypeInfo, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
+function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, nonnilableType, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
    TypeInfo.__init( self ,scope)
    
    if type( kind ) ~= "number" then
@@ -2071,7 +2071,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    self.itemTypeInfoList = _lune.unwrapDefault( itemTypeInfoList, {})
    self.argTypeInfoList = _lune.unwrapDefault( argTypeInfoList, {})
    self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
-   self.orgTypeInfo = _lune.unwrapDefault( orgTypeInfo, _moduleObj.headTypeInfo)
+   self.nonnilableType = _lune.unwrapDefault( nonnilableType, _moduleObj.headTypeInfo)
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
    self.mutable = mutable and true or false
    self.typeId = typeId
@@ -2080,8 +2080,8 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    elseif txt == "nil" or txt == "..." then
       self.nilable = true
       self.nilableTypeInfo = self
-      self.orgTypeInfo = self
-   elseif not orgTypeInfo then
+      self.nonnilableType = self
+   elseif not nonnilableType then
       do
          local _exp = parentInfo
          if _exp ~= nil then
@@ -2141,8 +2141,8 @@ function NormalTypeInfo:getTxt( fullName, importInfo, localFlag )
       parentTxt = self:getParentFullName( importInfo, localFlag )
    end
    
-   if self.nilable and (self.nilableTypeInfo ~= self.orgTypeInfo ) then
-      return parentTxt .. (_lune.unwrap( self.orgTypeInfo) ):getTxt( fullName, importInfo, localFlag ) .. "!"
+   if self.nilable and (self.nilableTypeInfo ~= self.nonnilableType ) then
+      return parentTxt .. (_lune.unwrap( self.nonnilableType) ):getTxt( fullName, importInfo, localFlag ) .. "!"
    end
    
    if #self.itemTypeInfoList > 0 then
@@ -2163,7 +2163,7 @@ end
 function NormalTypeInfo:get_display_stirng(  )
 
    if self.kind == TypeInfoKind.Nilable then
-      return (_lune.unwrap( self.orgTypeInfo) ):get_display_stirng(  ) .. "!"
+      return (_lune.unwrap( self.nonnilableType) ):get_display_stirng(  ) .. "!"
    end
    
    if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Method then
@@ -2201,7 +2201,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    
    local parentId = self:getParentId(  )
    if self.nilable then
-      stream:write( string.format( '{ parentId=%d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.orgTypeInfo:get_typeId()) )
+      stream:write( string.format( '{ parentId=%d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.nonnilableType:get_typeId()) )
       return 
    end
    
@@ -2252,8 +2252,8 @@ function NormalTypeInfo:equalsSub( typeInfo )
       return false
    end
    
-   if (self.orgTypeInfo ~= typeInfo:get_orgTypeInfo() ) then
-      Util.log( string.format( "%s, %s", self.orgTypeInfo, typeInfo:get_orgTypeInfo()) )
+   if (self.nonnilableType ~= typeInfo:get_nonnilableType() ) then
+      Util.log( string.format( "%s, %s", self.nonnilableType, typeInfo:get_nonnilableType()) )
       return false
    end
    
@@ -2285,7 +2285,7 @@ function NormalTypeInfo:equalsSub( typeInfo )
       
    end
    
-   if self.orgTypeInfo ~= _moduleObj.headTypeInfo and not self.orgTypeInfo:equals( typeInfo:get_orgTypeInfo() ) then
+   if self.nonnilableType ~= _moduleObj.headTypeInfo and not self.nonnilableType:equals( typeInfo:get_nonnilableType() ) then
       error( string.format( "illegal %s:%d %s:%d", self:getTxt(  ), self.typeId, typeInfo:getTxt(  ), typeInfo:get_typeId()) )
    end
    
@@ -2351,8 +2351,8 @@ end
 function NormalTypeInfo:get_abstractFlag()       
    return self.abstractFlag         
 end
-function NormalTypeInfo:get_orgTypeInfo()       
-   return self.orgTypeInfo         
+function NormalTypeInfo:get_nonnilableType()       
+   return self.nonnilableType         
 end
 function NormalTypeInfo:get_baseTypeInfo()       
    return self.baseTypeInfo         
@@ -2517,9 +2517,9 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
    return modifier
 end
 
-function ModifierTypeInfo:get_orgTypeInfo(  )
+function ModifierTypeInfo:get_nonnilableType(  )
 
-   local orgType = self.srcTypeInfo:get_orgTypeInfo()
+   local orgType = self.srcTypeInfo:get_nonnilableType()
    if self.mutable or not orgType:get_mutable() then
       return orgType
    end
@@ -2883,10 +2883,10 @@ function NilableTypeInfo:canEvalWith( other, opTxt )
    end
    
    if otherSrc:get_nilable() then
-      return self:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
+      return self:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt )
    end
    
-   return self:get_orgTypeInfo():canEvalWith( otherSrc, opTxt )
+   return self:get_nonnilableType():canEvalWith( otherSrc, opTxt )
 end
 
 
@@ -3132,10 +3132,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
    if dest:get_kind() ~= otherSrc:get_kind() then
       if dest:get_kind() == TypeInfoKind.Nilable then
          if otherSrc:get_nilable() then
-            return dest:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
+            return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt )
          end
          
-         return dest:get_orgTypeInfo():canEvalWith( otherSrc, opTxt )
+         return dest:get_nonnilableType():canEvalWith( otherSrc, opTxt )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
          return otherSrc:isInheritFrom( dest )
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
@@ -3200,7 +3200,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
          
          return true
       elseif _switchExp == TypeInfoKind.Nilable then
-         return dest:get_orgTypeInfo():canEvalWith( otherSrc:get_orgTypeInfo(), opTxt )
+         return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt )
       else 
          
             return false

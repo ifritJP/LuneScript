@@ -1498,7 +1498,7 @@ fn TransUnit.analyzeDeclClass(
                   return false;
                }  
                case .Nilable {
-                  return isAvailableMapping( typeInfo.$orgTypeInfo, checkedTypeMap );
+                  return isAvailableMapping( typeInfo.$nonnilableType, checkedTypeMap );
                }  
                default {
                   return false;
@@ -2073,7 +2073,7 @@ fn TransUnit.analyzeLetAndInitExp(
                let argType = typeInfoList[ subIndex ];
                let mut checkType = dddItemType;
                if unwrapFlag {
-                  checkType = dddItemType.$orgTypeInfo;
+                  checkType = dddItemType.$nonnilableType;
                }
                if not argType.equals( Ast.builtinTypeNone ) and
                   not argType.canEvalWith( checkType, "=" )
@@ -2102,7 +2102,7 @@ fn TransUnit.analyzeLetAndInitExp(
             }
             orgExpTypeList.insert( expTypeInfo );
             if unwrapFlag and expTypeInfo.$nilable {
-               expTypeInfo = unwrap expTypeInfo.$orgTypeInfo;
+               expTypeInfo = unwrap expTypeInfo.$nonnilableType;
             }
 
             if index <= #typeInfoList {
@@ -2309,7 +2309,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
       let exp = self.analyzeExp( false ## );
       expNodeList.insert( exp );
       if exp.$expType.$nilable {
-         typeInfoList.insert( exp.$expType.$orgTypeInfo );
+         typeInfoList.insert( exp.$expType.$nonnilableType );
       }
       else {
          typeInfoList.insert( exp.$expType );
@@ -2374,7 +2374,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
             varNameList.insert( refNode.$token.txt );
             self.addLocalVar(
                firstToken.pos, false, expNode.canBeLeft(), refNode.$token.txt,
-               expNode.$expType.$orgTypeInfo, symbolInfo.$mutable, true );
+               expNode.$expType.$nonnilableType, symbolInfo.$mutable, true );
          }
          else {
             self.addErrMess( expNode.$pos,

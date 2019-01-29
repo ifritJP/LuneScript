@@ -502,7 +502,7 @@ do
    __classInfo1005.builtinTypeSymbol = {
      name='builtinTypeSymbol', staticFlag = false, accessMode = 1, typeId = 1347 }
    __classInfo1005.headTypeInfo = {
-     name='headTypeInfo', staticFlag = false, accessMode = 1, typeId = 1329 }
+     name='headTypeInfo', staticFlag = false, accessMode = 1, typeId = 1347 }
    __classInfo1005.nodeKind = {
      name='nodeKind', staticFlag = false, accessMode = 1, typeId = 3148 }
    __classInfo1005.rootScope = {
@@ -907,7 +907,7 @@ __varName2InfoMap.builtinTypeString = {
 __varName2InfoMap.builtinTypeSymbol = {
   name='builtinTypeSymbol', accessMode = 1, typeId = 1347, mutable = true }
 __varName2InfoMap.headTypeInfo = {
-  name='headTypeInfo', accessMode = 1, typeId = 1329, mutable = true }
+  name='headTypeInfo', accessMode = 1, typeId = 1347, mutable = true }
 __varName2InfoMap.nodeKind = {
   name='nodeKind', accessMode = 1, typeId = 3148, mutable = true }
 __varName2InfoMap.rootScope = {
@@ -1371,7 +1371,7 @@ __typeInfoList[281] = { skind = 0, parentId = 1329, typeId = 1804, nilable = tru
 __typeInfoList[282] = { skind=3, parentId = 1329, typeId = 1806, baseId = 1, txt = 'get_autoFlag',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {15}, children = {}, }
 __typeInfoList[283] = { skind = 0, parentId = 1329, typeId = 1807, nilable = true, orgTypeId = 1806 }
-__typeInfoList[284] = { skind=3, parentId = 1329, typeId = 1809, baseId = 1, txt = 'get_orgTypeInfo',
+__typeInfoList[284] = { skind=3, parentId = 1329, typeId = 1809, baseId = 1, txt = 'get_nonnilableType',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1347}, children = {}, }
 __typeInfoList[285] = { skind = 0, parentId = 1329, typeId = 1810, nilable = true, orgTypeId = 1809 }
 __typeInfoList[286] = { skind=3, parentId = 1329, typeId = 1812, baseId = 1, txt = 'get_baseTypeInfo',
@@ -1578,7 +1578,7 @@ __typeInfoList[421] = { skind = 0, parentId = 2007, typeId = 2038, nilable = tru
 __typeInfoList[422] = { skind=3, parentId = 2007, typeId = 2040, baseId = 1, txt = 'equals',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1347}, retTypeId = {15}, children = {}, }
 __typeInfoList[423] = { skind = 0, parentId = 2007, typeId = 2041, nilable = true, orgTypeId = 2040 }
-__typeInfoList[424] = { skind=3, parentId = 2007, typeId = 2043, baseId = 1, txt = 'get_orgTypeInfo',
+__typeInfoList[424] = { skind=3, parentId = 2007, typeId = 2043, baseId = 1, txt = 'get_nonnilableType',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1347}, children = {}, }
 __typeInfoList[425] = { skind = 0, parentId = 2007, typeId = 2044, nilable = true, orgTypeId = 2043 }
 __typeInfoList[426] = { skind=3, parentId = 2007, typeId = 2046, baseId = 1, txt = 'get_typeId',
@@ -1759,7 +1759,7 @@ __typeInfoList[542] = { skind = 0, parentId = 2130, typeId = 2224, nilable = tru
 __typeInfoList[543] = { skind=3, parentId = 2130, typeId = 2226, baseId = 1, txt = 'get_autoFlag',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {15}, children = {}, }
 __typeInfoList[544] = { skind = 0, parentId = 2130, typeId = 2227, nilable = true, orgTypeId = 2226 }
-__typeInfoList[545] = { skind=3, parentId = 2130, typeId = 2229, baseId = 1, txt = 'get_orgTypeInfo',
+__typeInfoList[545] = { skind=3, parentId = 2130, typeId = 2229, baseId = 1, txt = 'get_nonnilableType',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1347}, children = {}, }
 __typeInfoList[546] = { skind = 0, parentId = 2130, typeId = 2230, nilable = true, orgTypeId = 2229 }
 __typeInfoList[547] = { skind=3, parentId = 2130, typeId = 2232, baseId = 1, txt = 'get_baseTypeInfo',
@@ -2097,7 +2097,7 @@ __typeInfoList[772] = { skind = 0, parentId = 2496, typeId = 2641, nilable = tru
 __typeInfoList[773] = { skind=3, parentId = 2496, typeId = 2643, baseId = 1, txt = 'get_abstractFlag',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1066}, children = {}, }
 __typeInfoList[774] = { skind = 0, parentId = 2496, typeId = 2644, nilable = true, orgTypeId = 2643 }
-__typeInfoList[775] = { skind=3, parentId = 2496, typeId = 2646, baseId = 1, txt = 'get_orgTypeInfo',
+__typeInfoList[775] = { skind=3, parentId = 2496, typeId = 2646, baseId = 1, txt = 'get_nonnilableType',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1347}, children = {}, }
 __typeInfoList[776] = { skind = 0, parentId = 2496, typeId = 2647, nilable = true, orgTypeId = 2646 }
 __typeInfoList[777] = { skind=3, parentId = 2496, typeId = 2649, baseId = 1, txt = 'get_baseTypeInfo',
@@ -2157,7 +2157,7 @@ __typeInfoList[812] = { skind = 0, parentId = 2496, typeId = 2734, nilable = tru
 __typeInfoList[813] = { skind=3, parentId = 2496, typeId = 2742, baseId = 1, txt = 'createModifier',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1347, 15}, retTypeId = {1347}, children = {}, }
 __typeInfoList[814] = { skind = 0, parentId = 2496, typeId = 2743, nilable = true, orgTypeId = 2742 }
-__typeInfoList[815] = { skind=3, parentId = 2130, typeId = 2745, baseId = 1, txt = 'get_orgTypeInfo',
+__typeInfoList[815] = { skind=3, parentId = 2130, typeId = 2745, baseId = 1, txt = 'get_nonnilableType',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1347}, children = {}, }
 __typeInfoList[816] = { skind = 0, parentId = 2130, typeId = 2746, nilable = true, orgTypeId = 2745 }
 __typeInfoList[817] = { skind=3, parentId = 1005, typeId = 2748, baseId = 1329, txt = 'AbbrTypeInfo',

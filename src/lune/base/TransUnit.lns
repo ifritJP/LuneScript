@@ -2360,7 +2360,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
             let mut workType = itemType;
             if index == 1 {
                if itemType.$nilable {
-                  workType = workType.$orgTypeInfo;
+                  workType = workType.$nonnilableType;
                }
             }
             itemTypeList.insert( workType );

@@ -167,7 +167,7 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Ast.LiteralMapNode {
          if expType.equals( Ast.builtinTypeNil ) {
             return typeInfo;
          }
-         expType = unwrap expType.$orgTypeInfo;
+         expType = unwrap expType.$nonnilableType;
       }
       if not typeInfo.canEvalWith( expType, "=" ) {
          if not typeInfo.equals( Ast.builtinTypeNone ) {
@@ -224,7 +224,7 @@ fn TransUnit.analyzeExpRefItem(
          nilAccess = false;
       }
       else {
-         expType = unwrap expType.$orgTypeInfo;
+         expType = unwrap expType.$nonnilableType;
       }
    }
 
@@ -586,7 +586,7 @@ fn TransUnit.analyzeExpCall(
 
    if nilAccess {
       if funcTypeInfo.$nilable {
-         funcTypeInfo = funcTypeInfo.$orgTypeInfo;
+         funcTypeInfo = funcTypeInfo.$nonnilableType;
       }
       else {
          nilAccess = false;
@@ -635,6 +635,13 @@ fn TransUnit.analyzeExpCall(
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "list can't insert nilable" );
+         }
+      }
+   }
+   elseif funcTypeInfo.equals( typeInfoListRemove ) {
+      if #genericTypeList > 0 {
+         if genericTypeList[ 1 ].$nilable {
+            self.addWarnMess( exp.$pos, "remove() is dangerous for nilable's list." );
          }
       }
    }
@@ -1039,7 +1046,7 @@ fn TransUnit.analyzeExpField(
       if prefixExpType.$nilable {
          // nil 条件演算で、 prefixExpType が nilable ならば、
          // prefixExpType を非 nilable にセットする
-         prefixExpType = unwrap prefixExpType.$orgTypeInfo;
+         prefixExpType = unwrap prefixExpType.$nonnilableType;
       }
       else {
          // prefixExpType が nilable でなければ、
@@ -1423,7 +1430,7 @@ fn TransUnit.analyzeExpOp2(
             {
                let mut prefixExpType = exp.$expType;
                if prefixExpType.$nilable {
-                  prefixExpType = prefixExpType.$orgTypeInfo;
+                  prefixExpType = prefixExpType.$nonnilableType;
                }  
                if prefixExpType.$kind == .Enum {
                   enumTypeInfo = prefixExpType.$srcTypeInfo@@Ast.EnumTypeInfo;
@@ -1841,7 +1848,7 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
       }
    }
    else {
-      unwrapType = unwrap expType.$orgTypeInfo;
+      unwrapType = unwrap expType.$nonnilableType;
       if! insNode {
          let insType = _exp.$expType;
          unwrapType = insType;
@@ -1879,7 +1886,7 @@ fn TransUnit.analyzeExp(
          if! expectType {
             let mut orgExpectType = _exp;
             if orgExpectType.$nilable {
-               orgExpectType = orgExpectType.$orgTypeInfo;
+               orgExpectType = orgExpectType.$nonnilableType;
             }  
             if orgExpectType.$kind == .Enum {
                let enumTyepInfo = orgExpectType.$srcTypeInfo@@Ast.EnumTypeInfo;
