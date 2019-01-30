@@ -39,6 +39,7 @@ fn TransUnit.analyzeExpList(
 
    let mut index = 1;
    let mut abbrNode:&Ast.AbbrNode! = nil;
+   let mut followOn = false;
    repeat {
       let mut expectType:&Ast.TypeInfo! = nil;
       when! expectTypeList {
@@ -60,9 +61,14 @@ fn TransUnit.analyzeExpList(
       }
       expList.insert( exp );
       expTypeList.insert( exp.$expType );
-      let token = self.getToken(##);
+      let mut token = self.getToken(##);
       index = index + 1;
 
+      if token.txt == "**" {
+         token = self.getToken(##);
+         followOn = true;
+      }
+      
       if token.txt == "##" {
          if exp.$expType.$kind == .DDD {
             self.addErrMess( token.pos, "'##' can't use with '...'" );
@@ -91,7 +97,7 @@ fn TransUnit.analyzeExpList(
 
    return Ast.ExpListNode.create(
       self.nodeManager, unwrap pos default new Parser.Position( 0, 0 ),
-      expTypeList, expList );
+      expTypeList, expList, followOn );
 }
 
 fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
@@ -279,8 +285,9 @@ fn TransUnit.analyzeExpRefItem(
 
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
-   expNodeList: &List<&Ast.Node>, allowDstShort:bool ) mut
+   expNodeList: &List<&Ast.Node>, allowDstShort:bool, warnForFollow:bool ) mut
 {
+   let mut warnForFollowSrcIndex:int! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
    foreach expNode, index in expNodeList {
       if index == #expNodeList {
@@ -292,8 +299,11 @@ fn TransUnit.checkMatchType(
          expTypeList.insert( expNode.$expType );
       }
    }
-   let result, mess = Ast.TypeInfo.checkMatchType( dstTypeList,
-                                                   expTypeList, allowDstShort );
+   if warnForFollow and #expTypeList > #expNodeList {
+      warnForFollowSrcIndex = #expNodeList + 1;
+   }
+   let result, mess = Ast.TypeInfo.checkMatchType(
+      dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex );
    switch result {
       case .Error {
          self.addErrMess( pos, "%s: %s" (message, mess ) );
@@ -324,13 +334,18 @@ fn TransUnit.checkMatchValType(
    }
 
    let mut expNodeList:List<&Ast.Node> = [];
+   let mut warnForFollow = true;
 
    when! expList {
       foreach node in expList.$expList {
          expNodeList.insert( node );
       }
+      if expList.$followOn {
+         warnForFollow = false;
+      }
    }
-   self.checkMatchType( funcTypeInfo.getTxt(##), pos, argTypeList, expNodeList, false );
+   self.checkMatchType(
+      funcTypeInfo.getTxt(##), pos, argTypeList, expNodeList, false, warnForFollow );
 }
 
 class MacroPaser extend Parser.Parser {
@@ -543,7 +558,9 @@ pub fn isMatchStringFormatType(
          }
       }
       default {
-         if not argType.equals( Ast.builtinTypeInt ) {
+         if not argType.equals( Ast.builtinTypeInt ) and
+            not argType.equals( Ast.builtinTypeChar )
+         {
             return .Unmatch, Ast.builtinTypeInt;
          }
       }
@@ -1236,7 +1253,7 @@ fn TransUnit.analyzeNewAlge(
       }
 
       self.checkMatchType(
-         "call", symbolToken.pos, valInfo.$typeList, argList, false );
+         "call", symbolToken.pos, valInfo.$typeList, argList, false, true );
 
       
       return Ast.NewAlgeValNode.create(
@@ -1352,7 +1369,7 @@ fn TransUnit.analyzeExpOpSet(
                        (Ast.getNodeKindName( exp.$kind ) ) );
    }
    self.checkMatchType(
-      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true );
+      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true, false );
 
    foreach symbolInfo in exp.getSymbolInfo() {
       if not symbolInfo.$mutable and symbolInfo.$hasValueFlag

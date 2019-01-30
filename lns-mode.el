@@ -90,7 +90,7 @@
     ("\\<_exp\\>" . font-lock-warning-face)
     ("\\<_[a-zA-Z0-9_]+\\>" . font-lock-warning-face)
     ;;("\\<let\\|unwrap\\|if\\>" . font-lock-keyword-face)
-    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|\\$[\\.\\[(]\\|#\\|\\!\\|_lune_control" .
+    ("@@\\?\\|@@\\|@\\|\\?\\|&\\|\\.\\$\\|\\$[\\.\\[(]\\|#\\|\\!\\|\*\*\\|_lune_control" .
      font-lock-warning-face)
     (,lns-type . font-lock-type-face)
     ;; (":\\s-*\\(\\w+\\)" . (1 font-lock-type-face nil t))

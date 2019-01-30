@@ -2499,6 +2499,7 @@ end
 local typeInfo2ModifierMap = {}
 function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
 
+   srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
    do
       local _exp = typeInfo2ModifierMap[srcTypeInfo]
       if _exp ~= nil then
@@ -2957,7 +2958,7 @@ MatchType.Error = 2
 MatchType._val2NameMap[2] = 'Error'
 MatchType.__allList[3] = MatchType.Error
 
-function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
+function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex )
 
    local function checkDstTypeFrom( index, srcType, srcType2nd )
    
@@ -3036,6 +3037,9 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
                
             end
             
+            if warnForFollowSrcIndex ~= nil then
+            end
+            
             break
          elseif #expTypeList == index then
             local srcType = expType
@@ -3057,11 +3061,17 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
                return result, mess
             end
             
+            if warnForFollowSrcIndex ~= nil then
+            end
+            
             break
          else
           
             if not dstType:canEvalWith( expType, "=" ) then
                return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+            end
+            
+            if warnForFollowSrcIndex ~= nil then
             end
             
          end
@@ -3192,13 +3202,13 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
             return true
          end
          
-         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
          return true
       elseif _switchExp == TypeInfoKind.Method then
-         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
@@ -4434,22 +4444,23 @@ function ExpListNode:canBeStatement(  )
 
    return false
 end
-function ExpListNode.new( pos, typeList, expList )
+function ExpListNode.new( pos, typeList, expList, followOn )
    local obj = {}
    ExpListNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, expList ); end
+   if obj.__init then obj:__init( pos, typeList, expList, followOn ); end
    return obj
 end
-function ExpListNode:__init(pos, typeList, expList) 
+function ExpListNode:__init(pos, typeList, expList, followOn) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpList']), pos, typeList)
    
    
    self.expList = expList
+   self.followOn = followOn
    
 end
-function ExpListNode.create( nodeMan, pos, typeList, expList )
+function ExpListNode.create( nodeMan, pos, typeList, expList, followOn )
 
-   local node = ExpListNode.new(pos, typeList, expList)
+   local node = ExpListNode.new(pos, typeList, expList, followOn)
    nodeMan:addNode( node )
    return node
 end
@@ -4458,6 +4469,9 @@ function ExpListNode.setmeta( obj )
 end
 function ExpListNode:get_expList()       
    return self.expList         
+end
+function ExpListNode:get_followOn()       
+   return self.followOn         
 end
 
 

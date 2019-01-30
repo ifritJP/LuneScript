@@ -87,9 +87,9 @@ func4( func2( 0 ) ); // error
 func4( func5() ); // error
 func4( func5(), 2, 3 );
 func4( 1, func5() ); // error
-func4( 1, 2, func5() );
-func6( func5() );
-func7( func5() );
+func4( 1, 2, func5() ); // warn
+func6( func5() ); // warn
+func7( func5() ); // warn
 
 {
    fn func1( ...<int> ): ...<int> {

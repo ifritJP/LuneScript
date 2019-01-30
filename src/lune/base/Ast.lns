@@ -389,7 +389,6 @@ pub class TypeInfo {
    pub fn get_scope(): Scope! {
       return typeInfo2ScopeMap[ self ];
    }
-   
 
    pub fn __init( scope: Scope! ) {
       typeInfo2ScopeMap[ self ] = scope;
@@ -1995,8 +1994,9 @@ pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
 let mut typeInfo2ModifierMap:Map<&TypeInfo,&TypeInfo> = {};
 
 pub static fn NormalTypeInfo.createModifier(
-   srcTypeInfo: &TypeInfo, mutable: bool ): &TypeInfo
+   mut srcTypeInfo: &TypeInfo, mutable: bool ): &TypeInfo
 {
+   srcTypeInfo = srcTypeInfo.$srcTypeInfo;
    if! typeInfo2ModifierMap[ srcTypeInfo ] {
       if _exp.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
          Util.err( "on cache" );
@@ -2023,7 +2023,6 @@ pub override fn ModifierTypeInfo.get_nonnilableType(): &TypeInfo {
    }
    return NormalTypeInfo.createModifier( orgType, false );
 }
-
 
 pub let builtinTypeNone:TypeInfo = 
    NormalTypeInfo.createBuiltin( "None", "", .Prim## );
@@ -2414,9 +2413,16 @@ pub enum MatchType {
    Error,
 }
 
+/**
+expTypeList の型から、 dstTypeList の型へ互換性があるかどうか確認する。
+
+@param warnForFollowSrcIndex
+   このインデックス以降の expTypeList をチェックする際、
+   dstTypeList の型が省略可能な場合 Warn を出す。
+*/
 pub static fn TypeInfo.checkMatchType(
-   dstTypeList: &List<&TypeInfo>,
-   expTypeList: &List<&TypeInfo>, allowDstShort:bool ) : MatchType, str
+   dstTypeList: &List<&TypeInfo>, expTypeList: &List<&TypeInfo>,
+   allowDstShort:bool, warnForFollowSrcIndex:int! ) : MatchType, str
 {
    // index 番以降の dstTypeList の要素が srcType, srcType2nd と等しいか調べる。
    // index 番目と srcType, index + 1 以降と srcType2nd を調べる。 
@@ -2495,6 +2501,12 @@ pub static fn TypeInfo.checkMatchType(
                   return result, mess;
                }
             }
+            when! warnForFollowSrcIndex {
+               if warnForFollowSrcIndex <= index and dstType.$nilable {
+                  return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
+                                                       expType.getTxt(true##) );
+               }
+            }
             break;
          }
          elseif #expTypeList == index {
@@ -2518,6 +2530,12 @@ pub static fn TypeInfo.checkMatchType(
             if result ~= .Match {
                return result, mess;
             }
+            when! warnForFollowSrcIndex {
+               if warnForFollowSrcIndex <= index and dstType.$nilable {
+                  return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
+                                                       expType.getTxt(true##) );
+               }
+            }
             break;
          }
          else {
@@ -2526,6 +2544,12 @@ pub static fn TypeInfo.checkMatchType(
                ( index, dstType.getTxt( true## ),
                  expType.getTxt( true## ));
             }  
+            when! warnForFollowSrcIndex {
+               if warnForFollowSrcIndex <= index and dstType.$nilable {
+                  return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
+                                                       expType.getTxt(true##) );
+               }
+            }
          }  
       }
    }
@@ -2655,10 +2679,10 @@ pub static fn TypeInfo.canEvalWithBase(
          if dest == builtinTypeForm {
             return true;
          }  
-         if TypeInfo.checkMatchType( dest.$argTypeInfoList,
-                                     otherSrc.$argTypeInfoList, false ) == .Error or
-            TypeInfo.checkMatchType( dest.$retTypeInfoList,
-                                     otherSrc.$retTypeInfoList, false ) == .Error or
+         if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
+                                     false, nil ) == .Error or
+            TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
+                                     false, nil ) == .Error or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
@@ -2666,10 +2690,10 @@ pub static fn TypeInfo.canEvalWithBase(
          return true;
       }       
       case .Method {
-         if TypeInfo.checkMatchType( dest.$argTypeInfoList,
-                                     otherSrc.$argTypeInfoList, false ) == .Error or
-            TypeInfo.checkMatchType( dest.$retTypeInfoList,
-                                     otherSrc.$retTypeInfoList, false ) == .Error or
+         if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
+                                     false, nil ) == .Error or
+            TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
+                                     false, nil ) == .Error or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
@@ -3170,7 +3194,8 @@ pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
 
 
 _declNodeClass( "ExpList", Node, nil, nil, false,
-                [ { "expList": "List<&Node>" } ]
+                [ { "expList": "List<&Node>" },
+                  { "followOn": "bool" } ]
 );
 pub override fn ExpListNode.canBeLeft():bool {
    foreach expNode in self.$expList {
@@ -4111,7 +4136,7 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 
    
    processInfoQueue.insert(
-      new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap ) );
+      new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap ) );   
    when! processInfo {
       idProv = processInfo.$idProvier;
       typeInfo2ModifierMap = processInfo.$typeInfo2ModifierMap;
@@ -4122,7 +4147,7 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
       typeInfo2ModifierMap = {};
       typeInfo2DDDMap = {};
    }
-   return new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap );
+   return new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap );       
 }
 
 pub fn popProcessInfo() {

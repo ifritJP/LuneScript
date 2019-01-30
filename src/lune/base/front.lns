@@ -170,7 +170,7 @@ fn loadFromChunk( chunk:form!, err:str! ): stem {
 
 fn loadFromLuaTxt( txt:str ): stem {
    //--print( txt )
-   return loadFromChunk( _load( txt ## ) );
+   return loadFromChunk( _load( txt ## )** );
 }
 
 fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {

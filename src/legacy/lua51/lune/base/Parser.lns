@@ -114,6 +114,7 @@ fn createReserveInfo( luaMode: bool! ) :
          multiCharDelimitMap[ "@" ] = [@ "@@" ];
          multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
          multiCharDelimitMap[ "#" ] = [@ "##" ];
+         multiCharDelimitMap[ "*" ] = [@ "**" ];
       } 
       else {
          multiCharDelimitMap[ "." ] = [@ ".." ];

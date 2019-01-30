@@ -1,7 +1,7 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.15'
+_moduleObj.__formatVersion = '1.0.17'
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -101,32 +101,32 @@ __dependIdMap[ 1007 ] = { 3, 1005 } -- Parser
 __typeInfoList[5] = { skind = 1, parentId = 1, typeId = 1009, srcTypeId = 14, mutable = false }
 __dependIdMap[ 1010 ] = { 3, 1061 } -- isLuaKeyword
 __dependIdMap[ 1011 ] = { 3, 1062 } -- isLuaKeyword!
-__dependIdMap[ 1013 ] = { 3, 1169 } -- TxtStream
-__dependIdMap[ 1014 ] = { 3, 1170 } -- TxtStream!
+__dependIdMap[ 1013 ] = { 3, 1172 } -- TxtStream
+__dependIdMap[ 1014 ] = { 3, 1173 } -- TxtStream!
 __typeInfoList[6] = { skind = 1, parentId = 1, typeId = 1016, srcTypeId = 27, mutable = false }
 __typeInfoList[7] = { skind = 1, parentId = 1, typeId = 1023, srcTypeId = 18, mutable = false }
-__dependIdMap[ 1027 ] = { 3, 1189 } -- Position
-__dependIdMap[ 1028 ] = { 3, 1190 } -- Position!
-__dependIdMap[ 1033 ] = { 3, 1199 } -- TokenKind
-__dependIdMap[ 1034 ] = { 3, 1200 } -- TokenKind!
+__dependIdMap[ 1027 ] = { 3, 1192 } -- Position
+__dependIdMap[ 1028 ] = { 3, 1193 } -- Position!
+__dependIdMap[ 1033 ] = { 3, 1202 } -- TokenKind
+__dependIdMap[ 1034 ] = { 3, 1203 } -- TokenKind!
 __typeInfoList[8] = { skind=3, parentId = 1, typeId = 1041, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1033}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[9] = { skind = 0, parentId = 1, typeId = 1042, nilable = true, orgTypeId = 1041 }
 __typeInfoList[10] = { skind = 1, parentId = 1, typeId = 1044, srcTypeId = 1041, mutable = false }
-__dependIdMap[ 1051 ] = { 3, 1204 } -- _from
-__dependIdMap[ 1052 ] = { 3, 1205 } -- _from!
+__dependIdMap[ 1051 ] = { 3, 1207 } -- _from
+__dependIdMap[ 1052 ] = { 3, 1208 } -- _from!
 __typeInfoList[11] = { skind=3, parentId = 1, typeId = 1054, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1033}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[12] = { skind = 0, parentId = 1, typeId = 1055, nilable = true, orgTypeId = 1054 }
 __typeInfoList[13] = { skind = 1, parentId = 1, typeId = 1057, srcTypeId = 1054, mutable = false }
-__dependIdMap[ 1058 ] = { 3, 1211 } -- get__allList
-__dependIdMap[ 1059 ] = { 3, 1212 } -- get__allList!
-__dependIdMap[ 1061 ] = { 3, 1214 } -- Token
-__dependIdMap[ 1062 ] = { 3, 1215 } -- Token!
+__dependIdMap[ 1058 ] = { 3, 1214 } -- get__allList
+__dependIdMap[ 1059 ] = { 3, 1215 } -- get__allList!
+__dependIdMap[ 1061 ] = { 3, 1217 } -- Token
+__dependIdMap[ 1062 ] = { 3, 1218 } -- Token!
 __typeInfoList[14] = { skind = 1, parentId = 1007, typeId = 1064, srcTypeId = 1033, mutable = false }
-__dependIdMap[ 1064 ] = { 3, 1221 } -- &TokenKind
+__dependIdMap[ 1064 ] = { 3, 1224 } -- &TokenKind
 __typeInfoList[15] = { skind = 1, parentId = 1007, typeId = 1065, srcTypeId = 1027, mutable = false }
-__dependIdMap[ 1065 ] = { 3, 1222 } -- &Position
+__dependIdMap[ 1065 ] = { 3, 1225 } -- &Position
 __typeInfoList[16] = { skind = 1, parentId = 1, typeId = 1066, srcTypeId = 15, mutable = false }
 __typeInfoList[17] = { skind=3, parentId = 1, typeId = 1067, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 3, kind = 3, mutable = true, itemTypeId = {1061}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
@@ -135,30 +135,30 @@ __typeInfoList[19] = { skind=3, parentId = 1, typeId = 1070, baseId = 1, txt = '
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1061}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[20] = { skind = 0, parentId = 1, typeId = 1071, nilable = true, orgTypeId = 1070 }
 __typeInfoList[21] = { skind = 1, parentId = 1007, typeId = 1076, srcTypeId = 1061, mutable = false }
-__dependIdMap[ 1076 ] = { 3, 1236 } -- &Token
+__dependIdMap[ 1076 ] = { 3, 1239 } -- &Token
 __typeInfoList[22] = { skind=3, parentId = 1, typeId = 1080, baseId = 1, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1061}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[23] = { skind = 0, parentId = 1, typeId = 1081, nilable = true, orgTypeId = 1080 }
-__dependIdMap[ 1089 ] = { 3, 1249 } -- Parser
-__dependIdMap[ 1090 ] = { 3, 1250 } -- Parser!
+__dependIdMap[ 1089 ] = { 3, 1252 } -- Parser
+__dependIdMap[ 1090 ] = { 3, 1253 } -- Parser!
 __typeInfoList[24] = { skind = 1, parentId = 1007, typeId = 1092, srcTypeId = 1062, mutable = false }
-__dependIdMap[ 1092 ] = { 3, 1256 } -- &Token!
-__dependIdMap[ 1102 ] = { 3, 1267 } -- WrapParser
-__dependIdMap[ 1103 ] = { 3, 1268 } -- WrapParser!
-__dependIdMap[ 1114 ] = { 3, 1287 } -- StreamParser
-__dependIdMap[ 1115 ] = { 3, 1288 } -- StreamParser!
-__dependIdMap[ 1117 ] = { 3, 1295 } -- setStdinStream
-__dependIdMap[ 1118 ] = { 3, 1296 } -- setStdinStream!
-__dependIdMap[ 1126 ] = { 3, 1333 } -- create
-__dependIdMap[ 1127 ] = { 3, 1334 } -- create!
-__dependIdMap[ 1132 ] = { 3, 1358 } -- isOp2
-__dependIdMap[ 1133 ] = { 3, 1359 } -- isOp2!
-__dependIdMap[ 1135 ] = { 3, 1361 } -- isOp1
-__dependIdMap[ 1136 ] = { 3, 1362 } -- isOp1!
-__dependIdMap[ 1141 ] = { 3, 1407 } -- getEofToken
-__dependIdMap[ 1142 ] = { 3, 1408 } -- getEofToken!
-__dependIdMap[ 1144 ] = { 3, 1410 } -- DummyParser
-__dependIdMap[ 1145 ] = { 3, 1411 } -- DummyParser!
+__dependIdMap[ 1092 ] = { 3, 1259 } -- &Token!
+__dependIdMap[ 1102 ] = { 3, 1270 } -- WrapParser
+__dependIdMap[ 1103 ] = { 3, 1271 } -- WrapParser!
+__dependIdMap[ 1114 ] = { 3, 1290 } -- StreamParser
+__dependIdMap[ 1115 ] = { 3, 1291 } -- StreamParser!
+__dependIdMap[ 1117 ] = { 3, 1298 } -- setStdinStream
+__dependIdMap[ 1118 ] = { 3, 1299 } -- setStdinStream!
+__dependIdMap[ 1126 ] = { 3, 1336 } -- create
+__dependIdMap[ 1127 ] = { 3, 1337 } -- create!
+__dependIdMap[ 1132 ] = { 3, 1361 } -- isOp2
+__dependIdMap[ 1133 ] = { 3, 1362 } -- isOp2!
+__dependIdMap[ 1135 ] = { 3, 1364 } -- isOp1
+__dependIdMap[ 1136 ] = { 3, 1365 } -- isOp1!
+__dependIdMap[ 1141 ] = { 3, 1410 } -- getEofToken
+__dependIdMap[ 1142 ] = { 3, 1411 } -- getEofToken!
+__dependIdMap[ 1144 ] = { 3, 1413 } -- DummyParser
+__dependIdMap[ 1145 ] = { 3, 1414 } -- DummyParser!
 __dependIdMap[ 1203 ] = { 1, 1005 } -- LuaMod
 __dependIdMap[ 1205 ] = { 1, 1007 } -- CodeKind
 __dependIdMap[ 1206 ] = { 1, 1008 } -- CodeKind!

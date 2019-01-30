@@ -4522,7 +4522,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       do
          local prottype = parentScope:getTypeInfoChild( typeInfo:get_rawTxt() )
          if prottype ~= nil then
-            local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false )
+            local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false, nil )
             if matchFlag ~= Ast.MatchType.Match then
                self:addErrMess( name.pos, "mismatch functype: " .. err )
             end
@@ -5101,6 +5101,7 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
    
    local index = 1
    local abbrNode = nil
+   local followOn = false
    repeat 
       local expectType = nil
       if expectTypeList ~= nil then
@@ -5127,6 +5128,11 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
       table.insert( expTypeList, exp:get_expType() )
       local token = self:getToken(  )
       index = index + 1
+      if token.txt == "**" then
+         token = self:getToken(  )
+         followOn = true
+      end
+      
       if token.txt == "##" then
          if exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
             self:addErrMess( token.pos, "'##' can't use with '...'" )
@@ -5150,7 +5156,7 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
    end
    
    self:pushback(  )
-   return Ast.ExpListNode.create( self.nodeManager, _lune.unwrapDefault( pos, Parser.Position.new(0, 0)), expTypeList, expList )
+   return Ast.ExpListNode.create( self.nodeManager, _lune.unwrapDefault( pos, Parser.Position.new(0, 0)), expTypeList, expList, followOn )
 end
 
 function TransUnit:analyzeListConst( token )
@@ -5322,8 +5328,9 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    return Ast.ExpRefItemNode.create( self.nodeManager, token.pos, {typeInfo}, exp, nilAccess, nil, indexExp )
 end
 
-function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allowDstShort )
+function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allowDstShort, warnForFollow )
 
+   local warnForFollowSrcIndex = nil
    local expTypeList = {}
    for index, expNode in pairs( expNodeList ) do
       if index == #expNodeList then
@@ -5338,7 +5345,11 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       
    end
    
-   local result, mess = Ast.TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort )
+   if warnForFollow and #expTypeList > #expNodeList then
+      warnForFollowSrcIndex = #expNodeList + 1
+   end
+   
+   local result, mess = Ast.TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex )
    do
       local _switchExp = result
       if _switchExp == Ast.MatchType.Error then
@@ -5366,14 +5377,19 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    end
    
    local expNodeList = {}
+   local warnForFollow = true
    if expList ~= nil then
       for __index, node in pairs( expList:get_expList() ) do
          table.insert( expNodeList, node )
       end
       
+      if expList:get_followOn() then
+         warnForFollow = false
+      end
+      
    end
    
-   self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false )
+   self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, warnForFollow )
 end
 
 local MacroPaser = {}
@@ -5578,7 +5594,7 @@ local function isMatchStringFormatType( opKind, argType, luaVer )
          
       else 
          
-            if not argType:equals( Ast.builtinTypeInt ) then
+            if not argType:equals( Ast.builtinTypeInt ) and not argType:equals( Ast.builtinTypeChar ) then
                return FormType.Unmatch, Ast.builtinTypeInt
             end
             
@@ -6237,7 +6253,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
             self:checkNextToken( ")" )
          end
          
-         self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false )
+         self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false, true )
          return Ast.NewAlgeValNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, valInfo, argList )
       else
          self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )
@@ -6341,7 +6357,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, exp2NodeList )
       self:addErrMess( exp:get_pos(), string.format( "this node can not be l-value. -- %s", Ast.getNodeKindName( exp:get_kind() )) )
    end
    
-   self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), exp2NodeList, true )
+   self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), exp2NodeList, true, false )
    for __index, symbolInfo in pairs( exp:getSymbolInfo(  ) ) do
       if not symbolInfo:get_mutable() and symbolInfo:get_hasValueFlag() then
          if self.validMutControl then
@@ -7066,7 +7082,7 @@ function TransUnit:analyzeReturn( token )
          table.insert( expNodeList, exp )
       end
       
-      self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false )
+      self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false, true )
    else
       if #retTypeList ~= 0 then
          self:addErrMess( token.pos, "no return value" )

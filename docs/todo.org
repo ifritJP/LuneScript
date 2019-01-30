@@ -28,6 +28,13 @@ meta ファイル内に、ビルド時の lns ファイルの更新時間と、�
 
 mod2.meta: mod2.lns
 
+- [ ] 多値を返す関数を、意図せずに多値として扱ってしまう。
+      例えば list.insert( func() ) で func() が int, int を返す場合、
+      本来は list 末尾に値を挿入したいのに、
+      末尾でない場所に格納されてしまい意図しない結果になる。
+      ※ 要検討
+      代入先が省略可能で、代入元が多値の第二引数以降なら warning を出す。
+  
 - [ ] interface を継承した interface を制限をまとめる
 - [ ] 関数内の関数で __func__ を使用した場合、モジュール名が __func__ に付かない。
        mod.func.inner にならずに func.inner になる。
@@ -167,7 +174,7 @@ mod2.meta: mod2.lns
     if "" { }  等。
 - [X] apply of で列挙される型が stem になってしまっている。
 - [X] -u で lua を作ると、 lua のコメントの先頭に挿入されるパスが ./ が付いてしまう
-- [X] 型名単体が rvalue になっている。
+- [X] 型名単体が r-value になっている。
 - [X] table.unpack を list, array のメソッドに変更する
 - [X] 戻り値を持たない関数の結果を、変数に代入できてしまう。
 - [X] import 処理で lns ソースを解析する際、TypeId の IdProvider が同じものなので、
