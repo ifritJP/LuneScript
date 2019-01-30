@@ -32,7 +32,7 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 
 local function getBuildCount(  )
 
-   return 154
+   return 156
 end
 
 

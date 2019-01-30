@@ -3038,6 +3038,11 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             if warnForFollowSrcIndex ~= nil then
+               if warnForFollowSrcIndex <= index and dstType:get_nilable() then
+                  local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Warn, mess
+               end
+               
             end
             
             break
@@ -3062,6 +3067,11 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             if warnForFollowSrcIndex ~= nil then
+               if warnForFollowSrcIndex <= index and dstType:get_nilable() then
+                  local warnMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Warn, warnMess
+               end
+               
             end
             
             break
@@ -3072,6 +3082,11 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             if warnForFollowSrcIndex ~= nil then
+               if warnForFollowSrcIndex <= index and dstType:get_nilable() then
+                  local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Warn, mess
+               end
+               
             end
             
          end

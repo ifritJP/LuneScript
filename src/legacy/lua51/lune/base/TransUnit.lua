@@ -5128,7 +5128,7 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
       table.insert( expTypeList, exp:get_expType() )
       local token = self:getToken(  )
       index = index + 1
-      if token.txt == "``" then
+      if token.txt == "**" then
          token = self:getToken(  )
          followOn = true
       end
@@ -5377,14 +5377,19 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    end
    
    local expNodeList = {}
+   local warnForFollow = true
    if expList ~= nil then
       for __index, node in pairs( expList:get_expList() ) do
          table.insert( expNodeList, node )
       end
       
+      if expList:get_followOn() then
+         warnForFollow = false
+      end
+      
    end
    
-   self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, true )
+   self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, warnForFollow )
 end
 
 local MacroPaser = {}

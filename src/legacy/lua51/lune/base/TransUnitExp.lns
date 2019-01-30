@@ -64,7 +64,7 @@ fn TransUnit.analyzeExpList(
       let mut token = self.getToken(##);
       index = index + 1;
 
-      if token.txt == "``" {
+      if token.txt == "**" {
          token = self.getToken(##);
          followOn = true;
       }
@@ -334,14 +334,18 @@ fn TransUnit.checkMatchValType(
    }
 
    let mut expNodeList:List<&Ast.Node> = [];
+   let mut warnForFollow = true;
 
    when! expList {
       foreach node in expList.$expList {
          expNodeList.insert( node );
       }
+      if expList.$followOn {
+         warnForFollow = false;
+      }
    }
    self.checkMatchType(
-      funcTypeInfo.getTxt(##), pos, argTypeList, expNodeList, false, true );
+      funcTypeInfo.getTxt(##), pos, argTypeList, expNodeList, false, warnForFollow );
 }
 
 class MacroPaser extend Parser.Parser {

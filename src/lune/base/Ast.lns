@@ -2503,8 +2503,9 @@ pub static fn TypeInfo.checkMatchType(
             }
             when! warnForFollowSrcIndex {
                if warnForFollowSrcIndex <= index and dstType.$nilable {
-                  return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
-                                                       expType.getTxt(true##) );
+                  let mess = "use '**' at arg(%d). %s <- %s"
+                      ( index, dstType.getTxt(true##), expType.getTxt(true##) );
+                  return .Warn, mess;
                }
             }
             break;
@@ -2532,8 +2533,9 @@ pub static fn TypeInfo.checkMatchType(
             }
             when! warnForFollowSrcIndex {
                if warnForFollowSrcIndex <= index and dstType.$nilable {
-                  return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
-                                                       expType.getTxt(true##) );
+                  let warnMess = "use '**' at arg(%d). %s <- %s"
+                      ( index, dstType.getTxt(true##), expType.getTxt(true##) );
+                  return .Warn, warnMess;
                }
             }
             break;
@@ -2546,8 +2548,9 @@ pub static fn TypeInfo.checkMatchType(
             }  
             when! warnForFollowSrcIndex {
                if warnForFollowSrcIndex <= index and dstType.$nilable {
-                  return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
-                                                       expType.getTxt(true##) );
+                  let mess = "use '**' at arg(%d). %s <- %s"
+                      ( index, dstType.getTxt(true##), expType.getTxt(true##) );
+                  return .Warn, mess;
                }
             }
          }  

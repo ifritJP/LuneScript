@@ -2502,10 +2502,11 @@ pub static fn TypeInfo.checkMatchType(
                }
             }
             when! warnForFollowSrcIndex {
-               // if warnForFollowSrcIndex <= index and dstType.$nilable {
-               //    return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
-               //                                         expType.getTxt(true##) );
-               // }
+               if warnForFollowSrcIndex <= index and dstType.$nilable {
+                  let mess = "use '**' at arg(%d). %s <- %s"
+                      ( index, dstType.getTxt(true##), expType.getTxt(true##) );
+                  return .Warn, mess;
+               }
             }
             break;
          }
@@ -2531,10 +2532,11 @@ pub static fn TypeInfo.checkMatchType(
                return result, mess;
             }
             when! warnForFollowSrcIndex {
-               // if warnForFollowSrcIndex <= index and dstType.$nilable {
-               //    return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
-               //                                         expType.getTxt(true##) );
-               // }
+               if warnForFollowSrcIndex <= index and dstType.$nilable {
+                  let warnMess = "use '**' at arg(%d). %s <- %s"
+                      ( index, dstType.getTxt(true##), expType.getTxt(true##) );
+                  return .Warn, warnMess;
+               }
             }
             break;
          }
@@ -2545,10 +2547,11 @@ pub static fn TypeInfo.checkMatchType(
                  expType.getTxt( true## ));
             }  
             when! warnForFollowSrcIndex {
-               // if warnForFollowSrcIndex <= index and dstType.$nilable {
-               //    return .Warn, "use '~~'. %s <- %s" (dstType.getTxt(true##),
-               //                                         expType.getTxt(true##) );
-               // }
+               if warnForFollowSrcIndex <= index and dstType.$nilable {
+                  let mess = "use '**' at arg(%d). %s <- %s"
+                      ( index, dstType.getTxt(true##), expType.getTxt(true##) );
+                  return .Warn, mess;
+               }
             }
          }  
       }
