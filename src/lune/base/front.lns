@@ -124,7 +124,7 @@ fn createPaser( path:str, mod:str ): Parser.Parser
 
 pub fn scriptPath2Module( path:str ):str {
    let mod = string.gsub( path, "/", "." );
-   return string.gsub( mod, "%.lns$", "" );
+   return ( string.gsub( mod, "%.lns$", "" ) );
 }
 
 fn Front.createPaser(): Parser.Parser
@@ -271,7 +271,7 @@ fn Front.searchModule( mod:str ): str! {
    let! foundPath = Depend.searchpath( mod, lnsSearchPath ) {
       return nil;
    };
-   return foundPath.gsub( "^./", "" );
+   return (foundPath.gsub( "^./", "" ));
 }
 
 fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
@@ -284,7 +284,7 @@ fn Front.searchLuaFile( moduleFullName:str, addSearchPath:str! ) : str! {
    let! foundPath = Depend.searchpath( moduleFullName, luaSearchPath ) {
       return nil;
    };
-   return foundPath.gsub( "^./", "" );
+   return (foundPath.gsub( "^./", "" ));
 }
 
 /**

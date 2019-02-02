@@ -1,0 +1,126 @@
+fn ret1() : int {
+   return 1;
+}
+fn ret2() : int, int {
+   return 1, 2;
+}
+fn ret3() : int, int, int {
+   return 1, 2, 3;
+}
+
+fn ret10() : int! {
+   return 1;
+}
+fn ret20() : int!, int! {
+   return 1, 2;
+}
+fn ret30() : int!, int!, int! {
+   return 1, 2, 3;
+}
+
+
+fn func1( val1:int! ) {
+}
+fn func2( val1:int!, val2:int! ) {
+}
+fn func3( val1:int!, val2:int!, val3:int! ) {
+}
+
+fn func10( val1:int ) {
+}
+fn func20( val1:int, val2:int ) {
+}
+fn func30( val1:int, val2:int, val3:int ) {
+}
+
+//=== func1
+func1( ret1() );
+func1( ret2() ); // error
+func10( ret1() );
+
+//=== func2
+func2( ret1() ); // warn ##
+func2( ret2() ); // warn **
+func2( ret3() ); // error
+
+func20( ret1() ); // error
+func20( ret2() );
+
+//=== func3
+func3( ret1() ); // warn ##
+func3( ret2() ); // warn ##
+func3( ret3() ); // warn **
+
+func30( ret1() ); // error
+func30( ret2() ); // error
+func30( ret3() );
+
+
+fn ret100( val:int ) : int {
+   return ret1();
+}
+fn ret110( val:int ) : int! {
+   return ret1();
+}
+fn ret200( val:int ) : int, int {
+   switch val {
+      case 1 {
+         return ret1(); // error
+      }
+      default {
+         return ret2();
+      }
+   }
+}
+fn ret210( val:int ) : int!, int! {
+   switch val {
+      case 0 {
+         return 0, 1;
+      }
+      case 1 {
+         return ret1();  // warn ##
+      }
+      default {
+         return ret2();  // warn ** 
+      }
+   }
+}
+
+
+{
+   let val1 = ret1();
+   let val10 = ret2();
+}
+{
+   let val1, val2 = ret1();  // error
+   let val10, val20 = ret2();
+   let val100, val200 = ret3();
+}
+{
+   let val1, val2, val3 = ret1(); // error
+   let val10, val20, val30 = ret2();  // error
+   let val100, val200, val300 = ret3();
+   let val1000, val2000, val3000:int! = ret3();
+}
+
+{
+   fn func( txt:str ) {
+      print( string.byte( txt.gsub( "b", "B" ) ) );  // warn ##
+      print( string.byte( txt.gsub( "b", "B" )## ) ); // warn **
+   }  
+   func( "abcb" );
+}
+
+{
+   fn func1(): int,int {
+      return 1, 2;
+   }  
+   fn func2( val1:int, val2:int!): int {
+      print( val1, val2 );
+      return 1;
+   }  
+
+   func2( func1()** );
+
+   print( func2( 1 ## )** );  // error
+}

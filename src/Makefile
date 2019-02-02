@@ -181,6 +181,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/mutable.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/var.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/arg.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/arg2.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/unwrap.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/operand.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/loop.lns,exe,2>&1)

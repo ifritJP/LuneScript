@@ -2424,6 +2424,17 @@ pub static fn TypeInfo.checkMatchType(
    dstTypeList: &List<&TypeInfo>, expTypeList: &List<&TypeInfo>,
    allowDstShort:bool, warnForFollowSrcIndex:int! ) : MatchType, str
 {
+   macro _checkWarnForFollow( index:sym, dstType:sym, expType:sym ) {
+      when! warnForFollowSrcIndex {
+         if warnForFollowSrcIndex <= ,,index and ,,dstType.$nilable {
+            let mess = "use '**' at arg(%d). %s <- %s"
+                ( ,,index, ,,dstType.getTxt(true##), ,,expType.getTxt(true##) );
+            return .Warn, mess;
+         }
+      }
+   }
+
+   
    // index 番以降の dstTypeList の要素が srcType, srcType2nd と等しいか調べる。
    // index 番目と srcType, index + 1 以降と srcType2nd を調べる。 
    // dstTypeList[ index ] == srcType
@@ -2468,6 +2479,8 @@ pub static fn TypeInfo.checkMatchType(
             return .Error, "exp(%d) type mismatch %s <- %s"
             ( srcIndex, dstType.getTxt( true## ), expType.getTxt( true## ) );
          }
+
+         _checkWarnForFollow( srcIndex, dstType, expType );
       }
       return .Match, "";
    }
