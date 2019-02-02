@@ -155,7 +155,7 @@ end
 local function scriptPath2Module( path )
 
    local mod = string.gsub( path, "/", "." )
-   return string.gsub( mod, "%.lns$", "" )
+   return (string.gsub( mod, "%.lns$", "" ) )
 end
 _moduleObj.scriptPath2Module = scriptPath2Module
 function Front:createPaser(  )
@@ -294,7 +294,7 @@ function Front:searchModule( mod )
       return nil
    end
    
-   return foundPath:gsub( "^./", "" )
+   return (foundPath:gsub( "^./", "" ) )
 end
 
 function Front:searchLuaFile( moduleFullName, addSearchPath )
@@ -314,7 +314,7 @@ function Front:searchLuaFile( moduleFullName, addSearchPath )
       return nil
    end
    
-   return foundPath:gsub( "^./", "" )
+   return (foundPath:gsub( "^./", "" ) )
 end
 
 function Front:checkUptodateMeta( metaPath, addSearchPath )

@@ -2960,6 +2960,7 @@ MatchType.__allList[3] = MatchType.Error
 
 function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex )
 
+   
    local function checkDstTypeFrom( index, srcType, srcType2nd )
    
       local workExpType = srcType
@@ -3000,6 +3001,15 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          if not dstType:canEvalWith( checkType, "=" ) then
             return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
          end
+         
+         if warnForFollowSrcIndex ~= nil then
+            if warnForFollowSrcIndex <= srcIndex and dstType:get_nilable() then
+               local mess = string.format( "use '**' at arg(%d). %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
+               return MatchType.Warn, mess
+            end
+            
+         end
+         
          
       end
       

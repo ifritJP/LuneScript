@@ -983,11 +983,11 @@ fn TransUnit.registBuiltInScope() mut {
       { 
          "string": {
             "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
-            "byte": { "arg": [ "str", "int" ], "ret": ["int"] },
+            "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["int"] },
             "format": { "arg": [ "str", "..." ], "ret": ["str"] },
             "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
             "gmatch": { "arg": [ "str", "str" ], "ret": ["form", "stem!", "stem!"] },
-            "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str"] },
+            "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },
             "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
             "dump": { "arg": [ "form", "bool!" ], "ret": ["str"] },
          },
@@ -995,11 +995,11 @@ fn TransUnit.registBuiltInScope() mut {
       {
          "str": {
             "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
-            "byte": { "type": [ "method" ], "arg": [ "int" ], "ret": ["int"] },
+            "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["int"] },
             "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
             "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
             "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["form", "stem!", "stem!"] },
-            "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str"] },
+            "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str", "int"] },
             "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
          },
       },

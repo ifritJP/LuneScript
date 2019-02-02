@@ -62,9 +62,14 @@ fn TransUnit.analyzeExpList(
       expList.insert( exp );
       expTypeList.insert( exp.$expType );
       let mut token = self.getToken(##);
-      index = index + 1;
 
       if token.txt == "**" {
+         if #exp.$expTypeList <= 1 {
+            self.addErrMess(
+               exp.$pos,
+               "This arg(%d) doesn't have multiple value. It must not use '**'" (index) );
+         }
+         
          token = self.getToken(##);
          followOn = true;
       }
@@ -79,6 +84,9 @@ fn TransUnit.analyzeExpList(
          self.getToken(##);
          break;
       }
+
+      index = index + 1;
+      
       
    } token.txt ~= ",";
 
@@ -289,8 +297,26 @@ fn TransUnit.checkMatchType(
 {
    let mut warnForFollowSrcIndex:int! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
-   foreach expNode, index in expNodeList {
-      if index == #expNodeList {
+
+   // expNodeList から、評価後の型リスト expTypeList を取得する。
+   // ## で省略を明示した場合、expNodeList の末尾には AbbrNode が入っている。
+   // 多値使用警告を正常に判定するため、一旦 AbbrNode を抜く。
+   let mut workExpNodeList = expNodeList;
+   let mut hasAbbr = false;
+   if #expNodeList > 0 {
+      if expNodeList[ #expNodeList ].$kind == Ast.NodeKind.$Abbr {
+         hasAbbr = true;
+         let mut workList:List<&Ast.Node> = [];
+         foreach node, index in expNodeList {
+            workList.insert( node );
+         }
+         workList.remove(##);
+         workExpNodeList = workList;
+      }
+   }
+   
+   foreach expNode, index in workExpNodeList {
+      if index == #workExpNodeList {
          foreach expType in expNode.$expTypeList {
             expTypeList.insert( expType );
          }
@@ -299,9 +325,14 @@ fn TransUnit.checkMatchType(
          expTypeList.insert( expNode.$expType );
       }
    }
-   if warnForFollow and #expTypeList > #expNodeList {
-      warnForFollowSrcIndex = #expNodeList + 1;
+   
+   if warnForFollow and #expTypeList > #workExpNodeList {
+      warnForFollowSrcIndex = #workExpNodeList + 1;
    }
+   if hasAbbr {
+      expTypeList.insert( Ast.builtinTypeAbbr );
+   }
+   
    let result, mess = Ast.TypeInfo.checkMatchType(
       dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex );
    switch result {
@@ -2119,7 +2150,7 @@ fn TransUnit.analyzeExp(
    elseif token.kind == Parser.TokenKind.Char {
       let mut num = 0;
       if #(token.txt) == 1 {
-         num = token.txt.byte( 1 );
+         num = token.txt.byte( 1 ## );
       }  
       else {
          num = unwrap quotedChar2Code[ token.txt.sub( 2, 2 ) ];
