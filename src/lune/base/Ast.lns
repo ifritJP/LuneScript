@@ -3029,8 +3029,12 @@ pub class ModuleInfo extend (ModuleInfoIF) {
    pri let localTypeInfo2importIdMap:Map<&TypeInfo,int> { pub };
    pri let mut importId2localTypeInfoMap:Map<int,&TypeInfo> { pub& };
    pri let assignName:str{ pub };
+   pri let moduleId:&frontInterface.ModuleId {pub};
 
-   pub fn __init( fullName:str, assignName:str, idMap:Map<&TypeInfo,int> ) {
+   pub fn __init( fullName:str, assignName:str, idMap:Map<&TypeInfo,int>,
+                  moduleId:&frontInterface.ModuleId )
+   {
+      self.moduleId = moduleId;
       self.fullName = fullName;
       self.assignName = assignName;
       self.localTypeInfo2importIdMap = idMap;
@@ -3076,6 +3080,8 @@ pub abstract class MacroInfo {
 
 _declNodeClass( "Root", Node, false, false, false,
                 [ { "children": "List<&Node>" },
+                  { "useModuleMacroMap": "Map<&TypeInfo,bool>" },
+                  { "moduleId": "&frontInterface.ModuleId" },
                   { "processInfo": "ProcessInfo" },
                   { "moduleTypeInfo": "&TypeInfo" },
                   { "provideNode": "&ProvideNode!" },
@@ -3760,7 +3766,7 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
 );
 
 pub abstract class MacroEval {
-   pub abstract fn evalFromCode( name:str, argNameList:&List<str>, code:str ): form;
+   pub abstract fn evalFromCode( name:str, argNameList:&List<str>, code:str! ): form;
    pub abstract fn eval( macroNode: DeclMacroNode ): form;
 }
 

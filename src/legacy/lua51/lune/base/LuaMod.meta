@@ -1,7 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.17'
+_moduleObj.__formatVersion = '1.0.21'
+_moduleObj.__buildId = "1549282422.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -54,6 +55,7 @@ __typeInfoList[18] = { skind = 0, parentId = 1005, typeId = 1030, nilable = true
 __typeInfoList[19] = { skind = 1, parentId = 1, typeId = 1032, srcTypeId = 14, mutable = false }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
+_moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0
 _moduleObj.__moduleMutable = true

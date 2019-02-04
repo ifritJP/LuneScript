@@ -1,3 +1,5 @@
+import test.Sub4;
+
 pub let mut sub2val = 1;
 sub2val = sub2val + 1;
 
@@ -131,6 +133,10 @@ pub macro _MacroTest2(txt:str,val:int) {
       let val2 = "xyz%s%d"(txt,val);
    }
    print( ,,val2, ,,txt, ,,val );
+}
+
+pub macro _MacroTest3(val:int) {
+   print( "HOGE", ,,val );
 }
 
 

@@ -412,6 +412,7 @@ fn TransUnit.evalMacro(
    firstToken: &Parser.Token,
    macroTypeInfo: &Ast.TypeInfo, expList: &Ast.ExpListNode! ) mut : Ast.ExpMacroExpNode
 {
+   self.useModuleMacroMap[ macroTypeInfo.getModule() ] = true;
 
    when! expList {
       foreach exp in expList.get_expList() {

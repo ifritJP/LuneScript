@@ -275,6 +275,8 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
 
    self.writeln( "_moduleObj.__version = '%s'" (Ver.version ) );
    self.writeln( "_moduleObj.__formatVersion = '%s'" (Ver.metaVersion ) );
+   self.writeln( "_moduleObj.__buildId = %q"
+                 ( node.$moduleId.getNextModuleId().$idStr) );
 
    let mut importModuleType2Index:Map<&Ast.TypeInfo,int> = {};
    let mut importNameMap:Map<str,&Ast.TypeInfo> = {};
@@ -698,16 +700,38 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
       }
    }
 
+   foreach flag, moduleTypeInfo in node.$useModuleMacroMap {
+      exportNeedModuleTypeInfo[ moduleTypeInfo ] = true;
+   }
+
    // 依存モジュール情報処理
    self.writeln( "local __dependModuleMap = {}" );
    self.writeln( "_moduleObj.__dependModuleMap = __dependModuleMap" );
-   
    forsort moduleTypeInfo, name in importNameMap {
       self.writeln(
-         "__dependModuleMap[ '%s' ] = { id = %d, use = %s }"
+         "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }"
          ( name, unwrap importModuleType2Index[ moduleTypeInfo ],
-           exportNeedModuleTypeInfo[ moduleTypeInfo ] or false ) );
+           exportNeedModuleTypeInfo[ moduleTypeInfo ] or false,
+           (unwrap node.$importModule2moduleInfo[ moduleTypeInfo ]).$moduleId.$idStr ) );
    }
+
+   // サブモジュール情報処理
+   self.write( "_moduleObj.__subModuleMap = {" );
+   if! let subfileList = node.$nodeManager.getSubfileNodeList() {
+      let mut firstFlag = true;
+      foreach subfileNode in subfileList {
+         if! let usePath = subfileNode.$usePath {
+            if firstFlag {
+               firstFlag = false;
+            }
+            else {
+               self.write( "," );
+            }
+            self.write( "%q" (usePath) );
+         }
+      }
+   }
+   self.writeln( "}" );
    
    let mut moduleTypeInfo = self.moduleTypeInfo;
    let mut moduleSymbolKind = Ast.SymbolKind.Typ;
@@ -2714,8 +2738,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
       }
       newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): stem {
          let mut importModuleInfo = new frontInterface.ImportModuleInfo();
-         let metaInfo, mut val =
-            frontInterface.loadFromLnsTxt( importModuleInfo, name, txt );
+         let mut val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt );
          return val;
       };
       
@@ -2733,7 +2756,7 @@ pub class MacroEvalImp extend Ast.MacroEval {
       Util.err( "failed to load" );
    }
 
-   pub override fn evalFromCode( name:str, argNameList:&List<str>, code:str ): form {
+   pub override fn evalFromCode( name:str, argNameList:&List<str>, code:str! ): form {
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", oStream, oStream, .Exec, true,
@@ -2742,7 +2765,9 @@ pub class MacroEvalImp extend Ast.MacroEval {
       conv.outputDeclMacro(
          name, argNameList,
          fn () {
-            conv.write( code );
+            when! code {
+               conv.write( code );
+            }
          });
       
       return self.evalFromMacroCode( oStream.$txt );

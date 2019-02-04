@@ -154,12 +154,15 @@ pub class TransUnit {
 
    pri let ctrl_info: &Option.TransCtrlInfo;
 
+   pri let mut useModuleMacroMap:Map<Ast.TypeInfo,bool>;
+
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
                   macroEval: Ast.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.useModuleMacroMap = {};
       self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
@@ -451,6 +454,7 @@ pub fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.
 
 pub class _MetaInfo {
    pub let __formatVersion:str;
+   pub let __buildId:str;
    pub let __typeId2ClassInfoMap: Map<int,Map<str,stem>>;
    pub let __typeInfoList: Map<str,stem>[];
    pub let __varName2InfoMap: Map<str,Map<str,stem>>;
@@ -471,7 +475,7 @@ class MacroMetaInfo extend (Mapping) {
    pub let name:str;
    pub let argList:&List<MacroMetaArgInfo>;
    pub let symList:&List<MacroMetaArgInfo>;
-   pub let stmtBlock:str;
+   pub let stmtBlock:str!;
    pub let tokenList:&List<&List<stem>>;
 }
 
@@ -1652,9 +1656,9 @@ fn TransUnit.processImport(
       if dependInfo.use {
          let workModuleInfo, metaTypeId2TypeInfoMap =
             self.processImport( dependName, {} );
-         let id = (unwrap dependInfo.id)@@int;
-         dependLibId2DependInfo[ id ] =
-            new DependModuleInfo( id, metaTypeId2TypeInfoMap );
+         let typeId = (unwrap dependInfo.typeId)@@int;
+         dependLibId2DependInfo[ typeId ] =
+            new DependModuleInfo( typeId, metaTypeId2TypeInfoMap );
       }
    }
 
@@ -1974,7 +1978,8 @@ fn TransUnit.processImport(
    //dumpScope( self.rootScope, "" );
 
    let moduleInfo = new Ast.ModuleInfo(
-      modulePath, nameList[#nameList], newId2OldIdMap );
+      modulePath, nameList[#nameList], newId2OldIdMap,
+      frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ) );
    self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
    moduleInfoMap[ moduleTypeInfo ] = moduleInfo;

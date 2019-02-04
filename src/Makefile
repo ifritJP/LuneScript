@@ -235,7 +235,7 @@ test-comp2:
 # 新しいトランコンパイラで再度自分自身をコンパイルした結果が同じになることを確認する。
 	$(call buildLns,work/1,../2)
 	$(call buildLns,work/2,../3)
-	diff -r work/2 work/3
+	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' work/2 work/3
 
 	cp -a test work/3
 	$(call exeLune,work/3,-mklunemod,lune/base)

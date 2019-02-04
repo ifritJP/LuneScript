@@ -27,6 +27,38 @@ import lune.base.Util;
 import lune.base.TransUnit;
 import lune.base.frontInterface;
 
+pub class DependInfo {
+   let targetModule:str;
+   let mut importModuleList:List<str>;
+   let mut subModList:List<str>;
+
+   pub fn __init( targetModule:str ) {
+      self.targetModule = targetModule;
+      self.importModuleList = [];
+      self.subModList = [];
+   }
+
+   pub fn addImpotModule( mod:str ) mut {
+      self.importModuleList.insert( mod );
+   }
+   pub fn addSubMod( path:str ) mut {
+      self.subModList.insert( path );
+   }
+
+   
+   pub fn output( stream:oStream ) {
+      stream.write( "%s.meta: \\\n" ( self.targetModule.gsub( "%.", "/" ) ) );
+      stream.write( "  %s.lns \\\n" ( self.targetModule.gsub( "%.", "/" ) ) );
+      foreach mod in self.importModuleList {
+         stream.write( "  %s.meta \\\n" (mod.gsub("%.", "/")) );
+      }  
+      foreach path in self.subModList {
+         stream.write( "  %s.lns \\\n" (path.gsub("%.", "/")) );
+      }
+   }  
+   
+}
+
 class convFilter extend Ast.Filter {
 
    let mut stream:oStream;
@@ -42,20 +74,22 @@ pub override fn convFilter.processRoot(
    node: Ast.RootNode, parent: &Ast.Node ) mut
 {
    let moduleFull = node.$moduleTypeInfo.getFullName( {} ## );
-   self.stream.write( "%s.meta: \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
-   self.stream.write( "  %s.lns \\\n" ( moduleFull.gsub( "%.", "/" ) ) );
+   let mut dependInfo = new DependInfo( moduleFull );
+   
    if! let importList = node.$nodeManager.getImportNodeList() {
       foreach impNode in importList {
-         self.stream.write( "  %s.meta \\\n" (impNode.$modulePath.gsub("%.", "/")) );
+         dependInfo.addImpotModule( impNode.$modulePath );
       }
    }
    if! let subfileList = node.$nodeManager.getSubfileNodeList() {
       foreach subfileNode in subfileList {
          if! let usePath = subfileNode.$usePath {
-            self.stream.write( "  %s.lns \\\n" (usePath.gsub("%.", "/")) );
+            dependInfo.addSubMod( usePath );
          }
       }
    }
+
+   dependInfo.output( self.stream );
 };
 
 pub fn createFilter( stream: oStream ) : Ast.Filter

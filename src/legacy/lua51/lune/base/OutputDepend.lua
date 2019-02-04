@@ -15,6 +15,44 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+local DependInfo = {}
+_moduleObj.DependInfo = DependInfo
+function DependInfo.new( targetModule )
+   local obj = {}
+   DependInfo.setmeta( obj )
+   if obj.__init then obj:__init( targetModule ); end
+   return obj
+end
+function DependInfo:__init(targetModule) 
+   self.targetModule = targetModule
+   self.importModuleList = {}
+   self.subModList = {}
+end
+function DependInfo:addImpotModule( mod )
+
+   table.insert( self.importModuleList, mod )
+end
+function DependInfo:addSubMod( path )
+
+   table.insert( self.subModList, path )
+end
+function DependInfo:output( stream )
+
+   stream:write( string.format( "%s.meta: \\\n", self.targetModule:gsub( "%.", "/" )) )
+   stream:write( string.format( "  %s.lns \\\n", self.targetModule:gsub( "%.", "/" )) )
+   for __index, mod in pairs( self.importModuleList ) do
+      stream:write( string.format( "  %s.meta \\\n", mod:gsub( "%.", "/" )) )
+   end
+   
+   for __index, path in pairs( self.subModList ) do
+      stream:write( string.format( "  %s.lns \\\n", path:gsub( "%.", "/" )) )
+   end
+   
+end
+function DependInfo.setmeta( obj )
+  setmetatable( obj, { __index = DependInfo  } )
+end
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Ast.Filter } )
 function convFilter.new( stream )
@@ -35,13 +73,12 @@ end
 function convFilter:processRoot( node, parent )
 
    local moduleFull = node:get_moduleTypeInfo():getFullName( {} )
-   self.stream:write( string.format( "%s.meta: \\\n", moduleFull:gsub( "%.", "/" )) )
-   self.stream:write( string.format( "  %s.lns \\\n", moduleFull:gsub( "%.", "/" )) )
+   local dependInfo = DependInfo.new(moduleFull)
    do
       local importList = node:get_nodeManager():getImportNodeList(  )
       if importList ~= nil then
          for __index, impNode in pairs( importList ) do
-            self.stream:write( string.format( "  %s.meta \\\n", impNode:get_modulePath():gsub( "%.", "/" )) )
+            dependInfo:addImpotModule( impNode:get_modulePath() )
          end
          
       end
@@ -54,7 +91,7 @@ function convFilter:processRoot( node, parent )
             do
                local usePath = subfileNode:get_usePath()
                if usePath ~= nil then
-                  self.stream:write( string.format( "  %s.lns \\\n", usePath:gsub( "%.", "/" )) )
+                  dependInfo:addSubMod( usePath )
                end
             end
             
@@ -63,6 +100,7 @@ function convFilter:processRoot( node, parent )
       end
    end
    
+   dependInfo:output( self.stream )
 end
 
 

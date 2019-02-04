@@ -307,6 +307,7 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
+   self.useModuleMacroMap = {}
    self.ctrl_info = ctrl_info
    self.ignoreToCheckSymbol_ = false
    self.moduleId = moduleId
@@ -578,17 +579,18 @@ _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo.setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( __formatVersion, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
+function _MetaInfo.new( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
    local obj = {}
    _MetaInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( __formatVersion, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
+      obj:__init( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
    end        
    return obj 
 end         
-function _MetaInfo:__init( __formatVersion, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap ) 
+function _MetaInfo:__init( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap ) 
 
    self.__formatVersion = __formatVersion
+   self.__buildId = __buildId
    self.__typeId2ClassInfoMap = __typeId2ClassInfoMap
    self.__typeInfoList = __typeInfoList
    self.__varName2InfoMap = __varName2InfoMap
@@ -682,7 +684,7 @@ function MacroMetaInfo._fromMapSub( obj, val )
    table.insert( memInfo, { name = "name", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "argList", func = _lune._toList, nilable = false, child = { { func = MacroMetaArgInfo._fromMap, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "symList", func = _lune._toList, nilable = false, child = { { func = MacroMetaArgInfo._fromMap, nilable = false, child = {} } } } )
-   table.insert( memInfo, { name = "stmtBlock", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "stmtBlock", func = _lune._toStr, nilable = true, child = {} } )
    table.insert( memInfo, { name = "tokenList", func = _lune._toList, nilable = false, child = { { func = _lune._toList, nilable = false, child = { { func = _lune._toStem, nilable = false, child = {} } } } } } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
@@ -2188,8 +2190,8 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
          do
             if dependInfo['use'] then
                local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName, {} )
-               local id = math.floor((_lune.unwrap( dependInfo['id']) ))
-               dependLibId2DependInfo[id] = DependModuleInfo.new(id, metaTypeId2TypeInfoMap)
+               local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
+               dependLibId2DependInfo[typeId] = DependModuleInfo.new(typeId, metaTypeId2TypeInfoMap)
             end
             
          end
@@ -2493,7 +2495,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
       self:popModule(  )
    end
    
-   local moduleInfo = Ast.ModuleInfo.new(modulePath, nameList[#nameList], newId2OldIdMap)
+   local moduleInfo = Ast.ModuleInfo.new(modulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ))
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    moduleInfoMap[moduleTypeInfo] = moduleInfo
@@ -3227,7 +3229,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
          
       end
       
-      local rootNode = Ast.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, processInfo, moduleTypeInfo, nil, self.helperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap )
+      local rootNode = Ast.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, self.useModuleMacroMap, self.moduleId, processInfo, moduleTypeInfo, nil, self.helperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap )
       ast = rootNode
       do
          local _exp = self.provideNode
@@ -5451,6 +5453,7 @@ end
 
 function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
 
+   self.useModuleMacroMap[macroTypeInfo:getModule(  )] = true
    if expList ~= nil then
       for __index, exp in pairs( expList:get_expList(  ) ) do
          local kind = exp:get_kind()

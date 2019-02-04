@@ -341,6 +341,7 @@ function convFilter:outputMeta( node )
    self:writeln( "----- meta -----" )
    self:writeln( string.format( "_moduleObj.__version = '%s'", Ver.version) )
    self:writeln( string.format( "_moduleObj.__formatVersion = '%s'", Ver.metaVersion) )
+   self:writeln( string.format( "_moduleObj.__buildId = %q", node:get_moduleId():getNextModuleId(  ):get_idStr()) )
    local importModuleType2Index = {}
    local importNameMap = {}
    do
@@ -798,6 +799,10 @@ function convFilter:outputMeta( node )
       end
    end
    
+   for moduleTypeInfo, flag in pairs( node:get_useModuleMacroMap() ) do
+      exportNeedModuleTypeInfo[moduleTypeInfo] = true
+   end
+   
    self:writeln( "local __dependModuleMap = {}" )
    self:writeln( "_moduleObj.__dependModuleMap = __dependModuleMap" )
    do
@@ -810,11 +815,37 @@ function convFilter:outputMeta( node )
       for __index, name in ipairs( __sorted ) do
          local moduleTypeInfo = __map[ name ]
          do
-            self:writeln( string.format( "__dependModuleMap[ '%s' ] = { id = %d, use = %s }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), tostring( exportNeedModuleTypeInfo[moduleTypeInfo] or false)) )
+            self:writeln( string.format( "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), tostring( exportNeedModuleTypeInfo[moduleTypeInfo] or false), (_lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo]) ):get_moduleId():get_idStr()) )
          end
       end
    end
    
+   self:write( "_moduleObj.__subModuleMap = {" )
+   do
+      local subfileList = node:get_nodeManager():getSubfileNodeList(  )
+      if subfileList ~= nil then
+         local firstFlag = true
+         for __index, subfileNode in pairs( subfileList ) do
+            do
+               local usePath = subfileNode:get_usePath()
+               if usePath ~= nil then
+                  if firstFlag then
+                     firstFlag = false
+                  else
+                   
+                     self:write( "," )
+                  end
+                  
+                  self:write( string.format( "%q", usePath) )
+               end
+            end
+            
+         end
+         
+      end
+   end
+   
+   self:writeln( "}" )
    local moduleTypeInfo = self.moduleTypeInfo
    local moduleSymbolKind = Ast.SymbolKind.Typ
    do
@@ -2839,7 +2870,7 @@ function MacroEvalImp:evalFromMacroCode( code )
    newEnv["_lnsLoad"] = function ( name, txt )
    
       local importModuleInfo = frontInterface.ImportModuleInfo.new()
-      local metaInfo, val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
+      local val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
       return val
    end
    
@@ -2865,7 +2896,10 @@ function MacroEvalImp:evalFromCode( name, argNameList, code )
    local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, false, LuaVer.curVer)
    conv:outputDeclMacro( name, argNameList, function (  )
    
-      conv:write( code )
+      if code ~= nil then
+         conv:write( code )
+      end
+      
    end
     )
    return self:evalFromMacroCode( oStream:get_txt() )

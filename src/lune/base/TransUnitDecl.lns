@@ -223,7 +223,8 @@ pub class ASTInfo {
 }
 
 pub fn TransUnit.createAST(
-   parser: Parser.Parser, macroFlag: bool, moduleName: str! ) mut : ASTInfo
+   parser: Parser.Parser, macroFlag: bool, moduleName: str! )
+   mut : ASTInfo
 {
    self.moduleName = unwrap moduleName default "";
 
@@ -292,7 +293,8 @@ pub fn TransUnit.createAST(
 
       let mut rootNode = Ast.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
-         [ Ast.builtinTypeNone ], children, processInfo,
+         [ Ast.builtinTypeNone ], children, self.useModuleMacroMap,
+         self.moduleId, processInfo,
          moduleTypeInfo, nil, self.helperInfo, self.nodeManager,
          self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap );
       ast = rootNode;

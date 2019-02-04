@@ -15,31 +15,47 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 
 local ModuleId = {}
 _moduleObj.ModuleId = ModuleId
+function ModuleId.new( modTime, buildCount )
+   local obj = {}
+   ModuleId.setmeta( obj )
+   if obj.__init then obj:__init( modTime, buildCount ); end
+   return obj
+end
+function ModuleId:__init(modTime, buildCount) 
+   self.modTime = modTime
+   self.buildCount = buildCount
+   self.idStr = string.format( "%f:%d", modTime, buildCount)
+end
+function ModuleId:getNextModuleId(  )
+
+   return ModuleId.new(self.modTime, self.buildCount + 1)
+end
 function ModuleId.setmeta( obj )
   setmetatable( obj, { __index = ModuleId  } )
 end
-function ModuleId.new( idStr )
-   local obj = {}
-   ModuleId.setmeta( obj )
-   if obj.__init then
-      obj:__init( idStr )
-   end        
-   return obj 
-end         
-function ModuleId:__init( idStr ) 
-
-   self.idStr = idStr
+function ModuleId:get_modTime()       
+   return self.modTime         
+end
+function ModuleId:get_buildCount()       
+   return self.buildCount         
 end
 function ModuleId:get_idStr()       
    return self.idStr         
 end
 do
-   ModuleId.tempId = ModuleId.new("0:0")
+   ModuleId.tempId = ModuleId.new(0.0, 0)
 end
 
 function ModuleId.createId( modTime, buildCount )
 
-   return ModuleId.new(string.format( "%g:%d", modTime, buildCount))
+   return ModuleId.new(modTime, buildCount)
+end
+
+function ModuleId.createIdFromTxt( idStr )
+
+   local modTime = tonumber( (idStr:gsub( ":.*", "" ) ) )
+   local buildCount = tonumber( (idStr:gsub( ".*:", "" ) ) )
+   return ModuleId.new(modTime, math.floor(buildCount))
 end
 
 local ImportModuleInfo = {}

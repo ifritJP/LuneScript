@@ -27,17 +27,32 @@ import lune.base.Util;
 _lune_control ignore_symbol_;
 
 pub class ModuleId {
+   let modTime:real {pub};
+   let buildCount:int {pub};
    let idStr:str {pub};
    pub static let tempId:ModuleId;
 
-   _lune_control default__init;
+   pub fn __init( modTime:real, buildCount:int ) {
+      self.modTime = modTime;
+      self.buildCount = buildCount;
+      self.idStr = "%f:%d" (modTime, buildCount );
+   }
+
+   pub fn getNextModuleId(): ModuleId {
+      return new ModuleId( self.modTime, self.buildCount + 1 );
+   }
    
    __init {
-      ModuleId.tempId = new ModuleId( "0:0" );
+      ModuleId.tempId = new ModuleId( 0.0, 0 );
    }
 }
 pub static fn ModuleId.createId( modTime:real, buildCount:int ):ModuleId {
-   return new ModuleId( "%g:%d" (modTime, buildCount ) );
+   return new ModuleId( modTime, buildCount );
+}
+pub static fn ModuleId.createIdFromTxt( idStr:str ):ModuleId {
+   let modTime = tonumber( ( idStr.gsub( ":.*", "" ) ) ## );
+   let buildCount = tonumber( ( idStr.gsub( ".*:", "" ) ) ## );
+   return new ModuleId( modTime, buildCount@@int );
 }
 
 
@@ -107,11 +122,9 @@ LuneScript のコード文字列からロードする。
 @param importModuleInfo ロード時のインポートモジュールを管理する。
 @param ロード名
 @param txt LuneScript のコード文字列
-@return &stem ロードしたモジュールのメタ情報。
 @return stem ロードしたモジュール。
    */
-   pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
-                          name:str, txt:str ): &stem, stem;
+   pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem;
    pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
@@ -124,8 +137,7 @@ class dummyFront extend (frontInterface) {
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem! {
       error( "not implements" );
    }
-   pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
-                          name:str, txt:str ): &stem, stem {
+   pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem {
       error( "not implements" );
    }
    pub fn searchModule( mod:str ): str! {
@@ -146,8 +158,7 @@ pub fn loadModule( mod:str ): stem!, &stem {
    return __luneScript.loadModule( mod );
 }
 
-pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo,
-                       name:str, txt:str ): &stem, stem {
+pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem {
    return __luneScript.loadFromLnsTxt( importModuleInfo, name, txt );
 }
 
