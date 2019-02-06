@@ -26,8 +26,19 @@ import lune.base.Util;
 
 _lune_control ignore_symbol_;
 
+/**
+モジュールの識別情報を管理する。
+*/
 pub class ModuleId {
+   /** ビルドした時の lns ファイルの最終更新日時 */
    let modTime:real {pub};
+   /**
+meta ファイルの内容が何回変ったか。
+対象の lns ファイル自体に修正がなくても、import しているモジュールが変った結果、
+meta ファイルの内容が変った場合はこのカウンタをインクリメントする。
+逆に lns ファイル自体に修正があっても、
+meta ファイルの内容が変らない場合はこのカウンタをインクリメントしない。
+   */ 
    let buildCount:int {pub};
    let idStr:str {pub};
    pub static let tempId:ModuleId;
@@ -41,7 +52,6 @@ pub class ModuleId {
    pub fn getNextModuleId(): ModuleId {
       return new ModuleId( self.modTime, self.buildCount + 1 );
    }
-   
    __init {
       ModuleId.tempId = new ModuleId( 0.0, 0 );
    }

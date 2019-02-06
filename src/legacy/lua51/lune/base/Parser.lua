@@ -133,6 +133,10 @@ function TxtStream:__init(txt)
    self.start = 1
    self.eof = false
 end
+function TxtStream:get_pos(  )
+
+   return self.start
+end
 function TxtStream:read( mode )
 
    if self.eof then
@@ -155,8 +159,19 @@ end
 function TxtStream:close(  )
 
 end
+function TxtStream:getHead(  )
+
+   return self.txt:sub( 1, self.start )
+end
+function TxtStream:getTail(  )
+
+   return self.txt:sub( self.start )
+end
 function TxtStream.setmeta( obj )
   setmetatable( obj, { __index = TxtStream  } )
+end
+function TxtStream:get_txt()       
+   return self.txt         
 end
 
 local Position = {}

@@ -32,7 +32,7 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 
 local function getBuildCount(  )
 
-   return 204
+   return 239
 end
 
 
@@ -134,6 +134,17 @@ function Option:__init()
    self.stripDebugInfo = false
    self.targetLuaVer = LuaVer.curVer
    self.transCtrlInfo = TransCtrlInfo.create_normal(  )
+end
+function Option:openDepend(  )
+
+   do
+      local path = self.dependsPath
+      if path ~= nil then
+         return io.open( path, "w" )
+      end
+   end
+   
+   return nil
 end
 function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
@@ -242,15 +253,7 @@ usage:
                option.transCtrlInfo.checkingDefineAbbr = false
             elseif _switchExp == "--depends" then
                if #argList > index then
-                  do
-                     local stream = io.open( argList[index + 1], "w" )
-                     if stream ~= nil then
-                        option.dependsStream = stream
-                     else
-                        Util.err( string.format( "failed to open -- %s", argList[index + 1]) )
-                     end
-                  end
-                  
+                  option.dependsPath = argList[index + 1]
                end
                
                index = index + 1

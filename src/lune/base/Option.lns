@@ -85,7 +85,9 @@ pub class Option {
    /** true の場合 require( 'lune.base._lune' ) する */
    pub let mut useLuneModule:bool;
    /** 依存ファイル情報の出力先ストリーム */
-   pub let mut dependsStream:oStream!;
+   //pub let mut dependsStream:oStream!;
+   /** 依存ファイル情報の出力先ファイルパス */
+   pub let mut dependsPath:str!;
    /** ロード時に meta 等を更新する  */
    pub let mut updateOnLoad:bool;
    /** セーブ時に byte コンパイルする */
@@ -107,6 +109,13 @@ pub class Option {
       self.stripDebugInfo = false;
       self.targetLuaVer = LuaVer.curVer;
       self.transCtrlInfo = TransCtrlInfo.create_normal();
+   }
+
+   pub fn openDepend(): mut oStream! {
+      if! let path = self.dependsPath {
+         return io.open( path, "w" );
+      }
+      return nil;
    }
 }
 
@@ -210,12 +219,13 @@ usage:
             }
             case "--depends" {
                if #argList > index {
-                  if! let stream = io.open( argList[ index + 1 ], "w" ) {
-                     option.dependsStream = stream;
-                  }
-                  else {
-                     Util.err( "failed to open -- %s" (argList[ index + 1 ]) );
-                  }
+                  option.dependsPath = argList[ index + 1 ];
+                  // if! let stream = io.open( argList[ index + 1 ], "w" ) {
+                  //    option.dependsStream = stream;
+                  // }
+                  // else {
+                  //    Util.err( "failed to open -- %s" (argList[ index + 1 ]) );
+                  // }
                }
                index = index + 1;
             }

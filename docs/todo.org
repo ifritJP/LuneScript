@@ -33,6 +33,7 @@ mod2.meta: mod2.lns
 
 * 機能
 
+- [ ] meta ファイルがあると、 meta が古くても以前の meta の情報を使用して補完している。
 - [ ] "%q" は lua5.3 でも文字列以外は指定できない。
 - [ ] lnsc でコンパイル指定した lns ファイルがないと、 .lua, .meta.tmp ファイルが残る。
 - [ ] interface を継承した interface を制限をまとめる

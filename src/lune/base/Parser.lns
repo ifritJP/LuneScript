@@ -130,13 +130,17 @@ fn createReserveInfo( luaMode: bool! ) :
 // }
 
 pub class TxtStream extend (iStream) {
-   pri let txt: str;
+   pri let txt: str {pub};
    pri let mut start: int;
    pri let mut eof: bool;
    pub fn __init( txt: str ) {
       self.txt = txt;
       self.start = 1;
       self.eof = false;
+   }
+
+   pub fn get_pos():int {
+      return self.start;
    }
    pub fn read( mode:str ) mut : str! {
       //pub override fn read( mode:str ): str{
@@ -153,6 +157,12 @@ pub class TxtStream extend (iStream) {
       return self.txt.sub( self.start## );
    }
    pub fn close() mut {
+   }
+   pub fn getHead() : str {
+      return self.txt.sub( 1, self.start );
+   }
+   pub fn getTail() : str {
+      return self.txt.sub( self.start ## );
    }
 }
 
