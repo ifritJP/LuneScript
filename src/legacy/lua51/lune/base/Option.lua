@@ -32,7 +32,7 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 
 local function getBuildCount(  )
 
-   return 239
+   return 241
 end
 
 
@@ -92,28 +92,61 @@ ModeKind.Glue = 'glue'
 ModeKind._val2NameMap['glue'] = 'Glue'
 ModeKind.__allList[11] = ModeKind.Glue
 
+local CheckingUptodateMode = {}
+_moduleObj.CheckingUptodateMode = CheckingUptodateMode
+CheckingUptodateMode._val2NameMap = {}
+function CheckingUptodateMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "CheckingUptodateMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function CheckingUptodateMode._from( val )
+   if CheckingUptodateMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+CheckingUptodateMode.__allList = {}
+function CheckingUptodateMode.get__allList()
+   return CheckingUptodateMode.__allList
+end
+
+CheckingUptodateMode.Skip = 'skip'
+CheckingUptodateMode._val2NameMap['skip'] = 'Skip'
+CheckingUptodateMode.__allList[1] = CheckingUptodateMode.Skip
+CheckingUptodateMode.Normal = 'normal'
+CheckingUptodateMode._val2NameMap['normal'] = 'Normal'
+CheckingUptodateMode.__allList[2] = CheckingUptodateMode.Normal
+CheckingUptodateMode.Touch = 'touch'
+CheckingUptodateMode._val2NameMap['touch'] = 'Touch'
+CheckingUptodateMode.__allList[3] = CheckingUptodateMode.Touch
+
 local TransCtrlInfo = {}
 _moduleObj.TransCtrlInfo = TransCtrlInfo
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )
 end
-function TransCtrlInfo.new( checkingDefineAbbr, stopByWarning )
+function TransCtrlInfo.new( checkingDefineAbbr, stopByWarning, uptodateMode )
    local obj = {}
    TransCtrlInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( checkingDefineAbbr, stopByWarning )
+      obj:__init( checkingDefineAbbr, stopByWarning, uptodateMode )
    end        
    return obj 
 end         
-function TransCtrlInfo:__init( checkingDefineAbbr, stopByWarning ) 
+function TransCtrlInfo:__init( checkingDefineAbbr, stopByWarning, uptodateMode ) 
 
    self.checkingDefineAbbr = checkingDefineAbbr
    self.stopByWarning = stopByWarning
+   self.uptodateMode = uptodateMode
 end
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(true, false)
+   return TransCtrlInfo.new(true, false, CheckingUptodateMode.Normal)
 end
 
 local Option = {}
@@ -254,6 +287,20 @@ usage:
             elseif _switchExp == "--depends" then
                if #argList > index then
                   option.dependsPath = argList[index + 1]
+               end
+               
+               index = index + 1
+            elseif _switchExp == "--uptodate" then
+               if #argList > index then
+                  do
+                     local mode = CheckingUptodateMode._from( argList[index + 1] )
+                     if mode ~= nil then
+                        option.transCtrlInfo.uptodateMode = mode
+                     else
+                        Util.errorLog( "illegal mode -- " .. argList[index + 1] )
+                     end
+                  end
+                  
                end
                
                index = index + 1

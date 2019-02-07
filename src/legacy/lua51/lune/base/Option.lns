@@ -61,13 +61,24 @@ pub enum ModeKind {
    Glue = "glue",
 }
 
+/** meta ファイルの更新必要性チェックモード */
+pub enum CheckingUptodateMode {
+   /** uptodate チェックせずに必ずビルドしなおす */
+   Skip = "skip",
+   /** 通常の uptodate チェックを行なう */
+   Normal = "normal",
+   /** uptodate だった場合は touch だけ行なう */
+   Touch = "touch",
+}
+
 pub class TransCtrlInfo {
    pub let mut checkingDefineAbbr:bool;
    pub let mut stopByWarning:bool;
+   pub let mut uptodateMode:CheckingUptodateMode;
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
-   return new TransCtrlInfo( true, false );
+   return new TransCtrlInfo( true, false, .Normal );
 }
 
 pub class Option {
@@ -226,6 +237,17 @@ usage:
                   // else {
                   //    Util.err( "failed to open -- %s" (argList[ index + 1 ]) );
                   // }
+               }
+               index = index + 1;
+            }
+            case "--uptodate" {
+               if #argList > index {
+                  if! let mode = CheckingUptodateMode._from( argList[ index + 1 ] ) {
+                     option.transCtrlInfo.uptodateMode = mode;
+                  }
+                  else {
+                     Util.errorLog( "illegal mode -- " .. argList[ index + 1 ] );
+                  }
                }
                index = index + 1;
             }

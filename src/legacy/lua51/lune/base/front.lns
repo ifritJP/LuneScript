@@ -298,13 +298,13 @@ fn getModuleId( lnsPath:str, mod:str, outdir:str!, mut metaInfo:&MetaForBuildId!
    return frontInterface.ModuleId.createId( fileTime, buildCount );
 }
 
-enum ModuleUptodate {
+alge ModuleUptodate {
    /** ファイルの更新が必要 */
    NeedUpdate,
    /** .meta ファイルの日付だけ更新が必要 */
-   NeedTouch,
+   NeedTouch( str, &MetaForBuildId ),
    /** 最新で処理不要 */
-   Uptodate,
+   Uptodate( &MetaForBuildId ),
 }
 
 /**
@@ -322,36 +322,40 @@ lnsPath で指定する lns ファイルを更新する必要があるかどう�
 @return str メタ情報内容そのものの文字列
 */
 fn Front.getModuleIdAndCheckUptodate( lnsPath:str, mod:str ):
-   &frontInterface.ModuleId, ModuleUptodate, &MetaForBuildId!, str
+   &frontInterface.ModuleId, ModuleUptodate
 {
    let mut uptodate = ModuleUptodate.NeedUpdate;
-   let metaInfo, metaPath, metaCode = getMetaInfo( lnsPath, mod, self.option.outputDir );
 
+   if self.option.transCtrlInfo.uptodateMode == .Skip {
+      // 必ず NeedUpdate にする
+      return frontInterface.ModuleId.tempId, uptodate;
+   }
+   
    /**
 dependModuleMap のモジュールのメタファイルが、 metaTime よりも古いかどうかを確認する。
 
 metaTime
    */
    fn checkDependUptodate(
-      metaTime:real, dependModuleMap:&Map<str,&DependMetaInfo> ): ModuleUptodate
+      metaTime:real, metaInfo:&MetaForBuildId, metaCode:str ): ModuleUptodate
    {  
-      foreach dependItem, depMod in dependModuleMap {
+      foreach dependItem, depMod in metaInfo.__dependModuleMap {
          let! modMetaPath = self.searchModuleFile(
             depMod, ".meta", self.option.outputDir )
          {
             // .meta ファイルがない場合、更新が必要
-            return .NeedUpdate;
+            return ModuleUptodate.NeedUpdate;
          };
          let! time = Depend.getFileLastModifiedTime( modMetaPath ) {
             // .meta ファイルの更新日時取得が出来ない場合、更新が必要
-            return .NeedUpdate;
+            return ModuleUptodate.NeedUpdate;
          };
          if time > metaTime {
             // インポート対象のモジュールのメタファイルの更新日時が
             // ビルド対象のモジュールのメタファイルよりも新しい場合、
             // .meta の内容を確認する。
             let! dependMeta = MetaForBuildId.LoadFromMeta( modMetaPath ) {
-               return .NeedUpdate;
+               return ModuleUptodate.NeedUpdate;
             };
             let orgMetaModuleId = frontInterface.ModuleId.createIdFromTxt(
                dependItem.buildId );
@@ -360,13 +364,19 @@ metaTime
                metaModuleId.$buildCount ~= orgMetaModuleId.$buildCount
             {
                // buildCount が一致しない場合、更新する。
-               return .NeedUpdate;
+               return ModuleUptodate.NeedUpdate;
             }
          }
       }
-      return .Uptodate;
+      if self.option.transCtrlInfo.uptodateMode == .Touch {
+         return ModuleUptodate.NeedTouch( metaCode, metaInfo );
+      }
+      return ModuleUptodate.Uptodate( metaInfo );
    }
-   
+
+
+   let metaInfo, metaPath, metaCode = getMetaInfo( lnsPath, mod, self.option.outputDir );
+
    
    when! metaInfo {
       // meta 情報があれば、 moduleId から更新済みかどうかを確認する
@@ -377,14 +387,14 @@ metaTime
          when! lnsTime, metaTime {
             if lnsTime == buildId.$modTime {
                // 更新済みならば、依存ファイルの状態を確認する
-               uptodate = checkDependUptodate( metaTime, metaInfo.__dependModuleMap );
+               uptodate = checkDependUptodate( metaTime, metaInfo, metaCode );
             }
          }
       }
    }
 
    let moduleId = getModuleId( lnsPath, mod, self.option.outputDir, metaInfo );
-   return moduleId, uptodate, metaInfo, metaCode;
+   return moduleId, uptodate;
 }
 
 fn Front.loadFile( importModuleInfo:frontInterface.ImportModuleInfo,
@@ -679,8 +689,7 @@ pub fn Front.convertLuaToStreamFromScript(
       }
    }
 
-   let moduleId, uptodate, metaInfo, metaCode =
-      self.getModuleIdAndCheckUptodate( path, mod );
+   let moduleId, uptodate = self.getModuleIdAndCheckUptodate( path, mod );
    if moduleId == frontInterface.ModuleId.tempId {
       Util.err( "not found -- %s" (path) );
    }
@@ -688,8 +697,8 @@ pub fn Front.convertLuaToStreamFromScript(
 
    let mut stream, mut metaStream, mut dependsStream = openOStream( uptodate );
 
-   switch uptodate {
-      case .Uptodate {
+   match uptodate {
+      case .Uptodate( metaInfo ) {
          Util.errorLog( "uptodate -- " .. path );
          outputDependInfo( dependsStream, metaInfo );
       }
@@ -732,7 +741,7 @@ pub fn Front.convertLuaToStreamFromScript(
             Util.err( "failed to open lua stream or meta stream" );
          }
       }
-      case .NeedTouch {
+      case .NeedTouch( metaCode, metaInfo ) {
          // Lns は解析せずにメタファイルの更新日時だけ更新する。
          
          Util.errorLog( "touch -- " .. path );
@@ -846,7 +855,7 @@ pub fn Front.saveToLua() mut {
          }
          else {
             let mut convMode = convLua.ConvMode.Convert;
-	    if self.option.mode == "SAVE" {
+	    if self.option.mode == .SaveMeta {
                convMode = .ConvMeta;
             }
 
@@ -862,31 +871,40 @@ pub fn Front.saveToLua() mut {
 	    let mut metaFileObj:luaStream! = nil;
             let tempMetaPath = metaPath .. ".tmp";
 
+            
             self.convertLuaToStreamFromScript(
                convMode, self.option.scriptPath, mod,
                self.option.byteCompile, self.option.stripDebugInfo,
                fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream!
                {
-	          let mut stream:oStream! = nil;
-                  if self.option.mode ~= "SAVE" or mode ~= .Uptodate {
+                  fn openLuaStream(): oStream! {
 	             let! mut fileObj = io.open( luaPath, "w" ) {
                         error( "write open error -- %s" (luaPath) );
-                     };    
-	             stream = fileObj;
+                     };
+                     return fileObj;
                   }
-
+	          let mut stream:oStream! = nil;
 	          let mut metaStream = stream;
-
-                  if mode ~= .Uptodate {
-                     let mut convMode = convLua.ConvMode.Convert;
-	             if self.option.mode == "SAVE" {
-                        convMode = .ConvMeta;
-                        if! io.open( tempMetaPath, "w+" ) {
-                           metaFileObj = _exp;
-		           metaStream = _exp;
-                        }     
-                        else {
-                           error( "write open error -- %s" (metaPath) );
+                  match mode {
+                     case .Uptodate( metaInfo ) {
+                        if self.option.mode ~= .SaveMeta {
+                           stream = openLuaStream();
+                           metaStream = stream;
+                        }
+                     }
+                     default {
+                        stream = openLuaStream();
+                        metaStream = stream;
+                        let mut convMode = convLua.ConvMode.Convert;
+	                if self.option.mode == .SaveMeta {
+                           convMode = .ConvMeta;
+                           if! io.open( tempMetaPath, "w+" ) {
+                              metaFileObj = _exp;
+		              metaStream = _exp;
+                           }     
+                           else {
+                              error( "write open error -- %s" (metaPath) );
+                           }  
                         }  
                      }
                   }

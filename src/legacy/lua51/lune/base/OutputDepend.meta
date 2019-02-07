@@ -2,12 +2,12 @@ local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
 _moduleObj.__formatVersion = '1.0.21'
-_moduleObj.__buildId = "1549469391.000000:1"
+_moduleObj.__buildId = "1549549503.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
-   local __classInfo9119 = {}
-   __typeId2ClassInfoMap[ 9119 ] = __classInfo9119
+   local __classInfo9155 = {}
+   __typeId2ClassInfoMap[ 9155 ] = __classInfo9155
 end
 do
    local __classInfo1001 = {}
@@ -383,7 +383,7 @@ children = {1003, } }
 __typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'base', kind = 12, 
 children = {1005, } }
 __typeInfoList[4] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'OutputDepend', kind = 12, 
-children = {9119, 9169, } }
+children = {9155, 9205, } }
 __dependIdMap[ 1007 ] = { 5, 1005 } -- Parser
 __typeInfoList[5] = { skind = 1, parentId = 1, typeId = 1009, srcTypeId = 14, mutable = false }
 __dependIdMap[ 1010 ] = { 5, 1061 } -- isLuaKeyword
@@ -2779,34 +2779,34 @@ __typeInfoList[1263] = { skind = 1, parentId = 1, typeId = 7078, srcTypeId = 659
 __typeInfoList[1264] = { skind = 1, parentId = 1, typeId = 7079, srcTypeId = 6666, mutable = false }
 __typeInfoList[1265] = { skind = 1, parentId = 1, typeId = 7080, srcTypeId = 6727, mutable = false }
 __typeInfoList[1266] = { skind = 1, parentId = 1, typeId = 7081, srcTypeId = 6773, mutable = false }
-__typeInfoList[1267] = { skind=3, parentId = 1005, typeId = 9119, baseId = 1, txt = 'DependInfo',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {9132, 9141, 9144, 9148}, }
-__typeInfoList[1268] = { skind = 0, parentId = 1005, typeId = 9120, nilable = true, orgTypeId = 9119 }
-__typeInfoList[1269] = { skind=3, parentId = 9119, typeId = 9132, baseId = 1, txt = '__init',
+__typeInfoList[1267] = { skind=3, parentId = 1005, typeId = 9155, baseId = 1, txt = 'DependInfo',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {9168, 9177, 9180, 9184}, }
+__typeInfoList[1268] = { skind = 0, parentId = 1005, typeId = 9156, nilable = true, orgTypeId = 9155 }
+__typeInfoList[1269] = { skind=3, parentId = 9155, typeId = 9168, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
-__typeInfoList[1270] = { skind = 0, parentId = 9119, typeId = 9133, nilable = true, orgTypeId = 9132 }
-__typeInfoList[1271] = { skind=3, parentId = 9119, typeId = 9141, baseId = 1, txt = 'addImpotModule',
+__typeInfoList[1270] = { skind = 0, parentId = 9155, typeId = 9169, nilable = true, orgTypeId = 9168 }
+__typeInfoList[1271] = { skind=3, parentId = 9155, typeId = 9177, baseId = 1, txt = 'addImpotModule',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
-__typeInfoList[1272] = { skind = 0, parentId = 9119, typeId = 9142, nilable = true, orgTypeId = 9141 }
-__typeInfoList[1273] = { skind=3, parentId = 9119, typeId = 9144, baseId = 1, txt = 'addSubMod',
+__typeInfoList[1272] = { skind = 0, parentId = 9155, typeId = 9178, nilable = true, orgTypeId = 9177 }
+__typeInfoList[1273] = { skind=3, parentId = 9155, typeId = 9180, baseId = 1, txt = 'addSubMod',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
-__typeInfoList[1274] = { skind = 0, parentId = 9119, typeId = 9145, nilable = true, orgTypeId = 9144 }
-__typeInfoList[1275] = { skind=3, parentId = 9119, typeId = 9148, baseId = 1, txt = 'output',
+__typeInfoList[1274] = { skind = 0, parentId = 9155, typeId = 9181, nilable = true, orgTypeId = 9180 }
+__typeInfoList[1275] = { skind=3, parentId = 9155, typeId = 9184, baseId = 1, txt = 'output',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {98}, retTypeId = {}, children = {}, }
-__typeInfoList[1276] = { skind = 0, parentId = 9119, typeId = 9149, nilable = true, orgTypeId = 9148 }
-__typeInfoList[1277] = { skind=3, parentId = 1005, typeId = 9169, baseId = 1, txt = 'createFilter',
+__typeInfoList[1276] = { skind = 0, parentId = 9155, typeId = 9185, nilable = true, orgTypeId = 9184 }
+__typeInfoList[1277] = { skind=3, parentId = 1005, typeId = 9205, baseId = 1, txt = 'createFilter',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {98}, retTypeId = {2689}, children = {}, }
-__typeInfoList[1278] = { skind = 0, parentId = 1005, typeId = 9170, nilable = true, orgTypeId = 9169 }
+__typeInfoList[1278] = { skind = 0, parentId = 1005, typeId = 9206, nilable = true, orgTypeId = 9205 }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1549469391.000000:1" }
-__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 2, use = false, buildId = "1549469391.000000:1" }
-__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 3, use = false, buildId = "1549469391.000000:1" }
-__dependModuleMap[ 'lune.base.Option' ] = { typeId = 4, use = false, buildId = "1549469391.000000:1" }
-__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 5, use = true, buildId = "1549469391.000000:1" }
-__dependModuleMap[ 'lune.base.TransUnit' ] = { typeId = 6, use = false, buildId = "1549469391.000000:1" }
-__dependModuleMap[ 'lune.base.Util' ] = { typeId = 7, use = false, buildId = "1549469391.000000:1" }
-__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 8, use = true, buildId = "1549469391.000000:1" }
+__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 2, use = false, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 3, use = false, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.Option' ] = { typeId = 4, use = false, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 5, use = true, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.TransUnit' ] = { typeId = 6, use = false, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 7, use = false, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 8, use = true, buildId = "1549549503.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0
