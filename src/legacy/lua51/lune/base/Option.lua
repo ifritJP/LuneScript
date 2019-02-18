@@ -32,7 +32,7 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 
 local function getBuildCount(  )
 
-   return 241
+   return 253
 end
 
 
@@ -114,11 +114,11 @@ function CheckingUptodateMode.get__allList()
    return CheckingUptodateMode.__allList
 end
 
-CheckingUptodateMode.Skip = 'skip'
-CheckingUptodateMode._val2NameMap['skip'] = 'Skip'
-CheckingUptodateMode.__allList[1] = CheckingUptodateMode.Skip
-CheckingUptodateMode.Normal = 'normal'
-CheckingUptodateMode._val2NameMap['normal'] = 'Normal'
+CheckingUptodateMode.Force = 'force'
+CheckingUptodateMode._val2NameMap['force'] = 'Force'
+CheckingUptodateMode.__allList[1] = CheckingUptodateMode.Force
+CheckingUptodateMode.Normal = 'none'
+CheckingUptodateMode._val2NameMap['none'] = 'Normal'
 CheckingUptodateMode.__allList[2] = CheckingUptodateMode.Normal
 CheckingUptodateMode.Touch = 'touch'
 CheckingUptodateMode._val2NameMap['touch'] = 'Touch'
@@ -146,7 +146,7 @@ end
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(true, false, CheckingUptodateMode.Normal)
+   return TransCtrlInfo.new(true, false, CheckingUptodateMode.Touch)
 end
 
 local Option = {}
@@ -239,6 +239,10 @@ usage:
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --disable-checking-define-abbr: disable checking for ##.
+    --uptodate <mode>: checking uptodate mode.
+            mode: skip check.
+            none: skip process when file is uptodate.
+            touch: touch meta file when file is uptodate.  (default)
 
 * type2
   dir: output directory.

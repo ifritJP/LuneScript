@@ -2,7 +2,7 @@ local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
 _moduleObj.__formatVersion = '1.0.21'
-_moduleObj.__buildId = "1550483403.000000:1"
+_moduleObj.__buildId = "1550498053.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -3098,15 +3098,15 @@ __typeInfoList[1408] = { skind=3, parentId = 1005, typeId = 10110, baseId = 1, t
 __typeInfoList[1409] = { skind = 0, parentId = 1005, typeId = 10111, nilable = true, orgTypeId = 10110 }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.Code' ] = { typeId = 2, use = false, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 3, use = true, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 4, use = true, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.Option' ] = { typeId = 5, use = true, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 6, use = true, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.Util' ] = { typeId = 7, use = false, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.Writer' ] = { typeId = 8, use = false, buildId = "1550483403.000000:1" }
-__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 9, use = true, buildId = "1550483403.000000:1" }
+__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.Code' ] = { typeId = 2, use = false, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 3, use = true, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 4, use = true, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.Option' ] = { typeId = 5, use = true, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 6, use = true, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 7, use = false, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.Writer' ] = { typeId = 8, use = false, buildId = "1550498053.000000:1" }
+__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 9, use = true, buildId = "1550498053.000000:1" }
 _moduleObj.__subModuleMap = {"lune.base.TransUnitDecl","lune.base.TransUnitExp","lune.base.TransUnitStatementList"}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0
