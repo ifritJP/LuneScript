@@ -4,7 +4,7 @@ SRC_DIR=$(PROJ_DIR)/
 
 
 
-.PHONY: test all build setup
+.PHONY: test all build setup exe
 
 # define comp
 # 	@echo "$1 -> $2"
@@ -48,6 +48,9 @@ setup:
 
 build: $(META_LIST)
 
+exe: build
+	@(cd ../..; lua5.3 $(PROJ_DIR)/Mod1.lua)
+
 
 clean:
 	@rm $(META_LIST) $(LUA_LIST) depends/*
@@ -57,13 +60,16 @@ test:
 	@$(MAKE) -f $(MKFILE) setup
 	@echo =======================
 	touch $(SRC_DIR)Mod4.lns
-	@$(MAKE) -f $(MKFILE) build
+	@$(MAKE) -f $(MKFILE) exe
 	@echo =======================
+	@sleep 0.5
 	touch $(SRC_DIR)Mod3.lns
-	@$(MAKE) -f $(MKFILE) build
+	@$(MAKE) -f $(MKFILE) exe
 	@echo =======================
+	@sleep 0.5
 	touch $(SRC_DIR)Mod2.lns
-	@$(MAKE) -f $(MKFILE) build
+	@$(MAKE) -f $(MKFILE) exe
 	@echo =======================
+	@sleep 0.5
 	touch $(SRC_DIR)Mod1.lns
-	@$(MAKE) -f $(MKFILE) build
+	@$(MAKE) -f $(MKFILE) exe

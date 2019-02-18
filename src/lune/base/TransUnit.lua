@@ -6129,6 +6129,15 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    elseif prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Enum or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Alge then
       local scope = _lune.unwrap( prefixExpType:get_scope())
       local fieldName = token.txt
+      local symbolInfoList = prefixExp:getSymbolInfo(  )
+      local isTypeSymbol = false
+      if #symbolInfoList > 0 then
+         if symbolInfoList[1]:get_kind() == Ast.SymbolKind.Typ then
+            isTypeSymbol = true
+         end
+         
+      end
+      
       if mode == ExpSymbolMode.Get then
          local moduleType = prefixExpType:getModule(  )
          if not moduleType:equals( self.moduleType ) and not self.importModule2ModuleInfoCurrent[moduleType] then
@@ -6139,6 +6148,10 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
          do
             local funcType = scope:getTypeInfoChild( fieldName )
             if funcType ~= nil then
+               if funcType:get_staticFlag() ~= isTypeSymbol then
+                  self:addErrMess( prefixExp:get_pos(), string.format( "Can't access -- %s, %s", fieldName, isTypeSymbol) )
+               end
+               
                local retTypeList = funcType:get_retTypeInfoList()
                if #retTypeList == 0 then
                   self:addErrMess( token.pos, string.format( "The func (%s) doesn't return value.", funcType:getTxt(  )) )
@@ -6160,8 +6173,15 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
             local _exp = scope:getTypeInfoChild( fieldName )
             if _exp ~= nil then
                typeInfo = _exp
+               if typeInfo:get_kind() == Ast.TypeInfoKind.Enum or typeInfo:get_kind() == Ast.TypeInfoKind.Alge then
+                  if not isTypeSymbol then
+                     self:addErrMess( token.pos, string.format( "can't access field -- %s", token.txt) )
+                  end
+                  
+               end
+               
             else
-               self:addErrMess( token.pos, string.format( "not found enum field -- %s", token.txt) )
+               self:addErrMess( token.pos, string.format( "not found field -- %s", token.txt) )
                typeInfo = Ast.builtinTypeInt
             end
          end

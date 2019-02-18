@@ -1127,6 +1127,13 @@ fn TransUnit.analyzeExpField(
    elseif prefixExpType.get_kind() == .Enum or prefixExpType.get_kind() == .Alge {
       let scope = unwrap prefixExpType.$scope;
       let mut fieldName = token.txt;
+      let symbolInfoList = prefixExp.getSymbolInfo();
+      let mut isTypeSymbol = false;
+      if #symbolInfoList > 0 {
+         if symbolInfoList[1].$kind == .Typ {
+            isTypeSymbol = true;
+         }  
+      }
       if mode == .Get {
          let moduleType = prefixExpType.getModule();
          if not moduleType.equals( self.moduleType ) and
@@ -1137,6 +1144,13 @@ fn TransUnit.analyzeExpField(
          }
          fieldName = "get_" .. fieldName;
          if! let funcType = scope.getTypeInfoChild( fieldName ) {
+
+            if funcType.$staticFlag ~= isTypeSymbol {
+               self.addErrMess(
+                  prefixExp.$pos, "Can't access -- %s, %s" ( fieldName, isTypeSymbol) );
+            }  
+            
+            
             let retTypeList = funcType.$retTypeInfoList;
             if #retTypeList == 0 {
                self.addErrMess(
@@ -1151,15 +1165,21 @@ fn TransUnit.analyzeExpField(
             self.addErrMess( token.$pos, "not found -- %s." ( fieldName ) );
             typeInfo = Ast.builtinTypeNone;
          }
+
          getterTypeInfo = Ast.headTypeInfo;
       }
       else {
          if! scope.getTypeInfoChild( fieldName ) {
             typeInfo = _exp;
-         }  
+            if typeInfo.$kind == .Enum or typeInfo.$kind == .Alge {
+               if not isTypeSymbol {
+                  self.addErrMess( token.pos, "can't access field -- %s" (token.txt));
+               }
+            }
+         }
          else {
             self.addErrMess( token.pos,
-                             "not found enum field -- %s" (token.txt));
+                             "not found field -- %s" (token.txt));
             typeInfo = Ast.builtinTypeInt;
          }
       }

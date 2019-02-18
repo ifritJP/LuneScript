@@ -2,7 +2,7 @@ local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
 _moduleObj.__formatVersion = '1.0.21'
-_moduleObj.__buildId = "1549549503.000000:1"
+_moduleObj.__buildId = "1550483403.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -2973,9 +2973,9 @@ __typeInfoList[1393] = { skind=3, parentId = 7082, typeId = 7301, baseId = 1, tx
 __typeInfoList[1394] = { skind = 0, parentId = 7082, typeId = 7302, nilable = true, orgTypeId = 7301 }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1549549503.000000:1" }
-__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 2, use = true, buildId = "1549549503.000000:1" }
-__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 3, use = true, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.Ast' ] = { typeId = 1, use = true, buildId = "1550483403.000000:1" }
+__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 2, use = true, buildId = "1550483403.000000:1" }
+__dependModuleMap[ 'lune.base.frontInterface' ] = { typeId = 3, use = true, buildId = "1550483403.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

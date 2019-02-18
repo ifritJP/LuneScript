@@ -533,7 +533,7 @@ ModuleUptodate._name2Val["Uptodate"] = ModuleUptodate.Uptodate
 function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
 
    local uptodate = _lune.newAlge( ModuleUptodate.NeedUpdate)
-   if self.option.transCtrlInfo.uptodateMode == Option.CheckingUptodateMode.Skip then
+   if self.option.transCtrlInfo.uptodateMode == Option.CheckingUptodateMode.Force then
       return frontInterface.ModuleId.tempId, uptodate
    end
    
@@ -597,6 +597,10 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    end
    
    local moduleId = getModuleId( lnsPath, mod, self.option.outputDir, metaInfo )
+   if moduleId == frontInterface.ModuleId.tempId then
+      Util.err( string.format( "not found -- %s", lnsPath) )
+   end
+   
    return moduleId, uptodate
 end
 
@@ -928,10 +932,6 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
    end
    
    local moduleId, uptodate = self:getModuleIdAndCheckUptodate( path, mod )
-   if moduleId == frontInterface.ModuleId.tempId then
-      Util.err( string.format( "not found -- %s", path) )
-   end
-   
    local stream, metaStream, dependsStream = openOStream( uptodate )
    do
       local _matchExp = uptodate
@@ -1027,20 +1027,47 @@ function Front:saveToLua(  )
    
       local headEndPos = 0
       local tailBeginPos = 0
-      local buildIdLine = ""
+      local oldBuildIdLine = ""
+      local newBuildIdLine = ""
       while true do
          local newLine = newStream:read( "*l" )
          local oldLine = oldStream:read( "*l" )
+         if oldLine ~= nil then
+            if #oldBuildIdLine == 0 then
+               if oldLine:find( "^_moduleObj.__buildId" ) then
+                  oldBuildIdLine = oldLine
+               end
+               
+            end
+            
+         end
+         
+         if newLine ~= nil then
+            if #newBuildIdLine == 0 then
+               if newLine:find( "^_moduleObj.__buildId" ) then
+                  newBuildIdLine = newLine
+               end
+               
+            end
+            
+         end
+         
          if newLine ~= oldLine then
             local cont = false
             if newLine ~= nil and oldLine ~= nil then
                if oldLine:find( "^_moduleObj.__buildId" ) then
-                  tailBeginPos = oldStream:get_pos()
-                  local oldBuildId = txt2ModuleId( oldLine )
-                  local newBuildId = txt2ModuleId( newLine )
-                  local worlBuildId = frontInterface.ModuleId.createId( newBuildId:get_modTime(), oldBuildId:get_buildCount() )
-                  buildIdLine = string.format( "_moduleObj.__buildId = %q", worlBuildId:get_idStr())
-                  cont = true
+                  if newLine:find( "^_moduleObj.__buildId" ) then
+                     tailBeginPos = newStream:get_pos()
+                     cont = true
+                  end
+                  
+               elseif oldLine:find( "^__dependModuleMap.*buildId =" ) and newLine:find( "^__dependModuleMap.*buildId =" ) then
+                  local oldSub = oldLine:gsub( "buildId =.*", "" )
+                  local newSub = newLine:gsub( "buildId =.*", "" )
+                  if oldSub == newSub then
+                     cont = true
+                  end
+                  
                end
                
             end
@@ -1052,15 +1079,19 @@ function Front:saveToLua(  )
          else
           
             if tailBeginPos == 0 then
-               headEndPos = oldStream:get_pos()
+               headEndPos = newStream:get_pos()
             end
             
             if not oldLine then
-               local txt = ""
-               if buildIdLine ~= "" then
-                  txt = string.format( "%s%s\n%s", oldStream:get_txt():sub( 1, headEndPos - 1 ), buildIdLine, oldStream:get_txt():sub( tailBeginPos ))
+               if tailBeginPos == 0 then
+                  return true, oldStream:get_txt()
                end
                
+               local oldBuildId = txt2ModuleId( oldBuildIdLine )
+               local newBuildId = txt2ModuleId( newBuildIdLine )
+               local worlBuildId = frontInterface.ModuleId.createId( newBuildId:get_modTime(), oldBuildId:get_buildCount() )
+               local buildIdLine = string.format( "_moduleObj.__buildId = %q", worlBuildId:get_idStr())
+               local txt = string.format( "%s%s\n%s", newStream:get_txt():sub( 1, headEndPos - 1 ), buildIdLine, newStream:get_txt():sub( tailBeginPos ))
                return true, txt
             end
             
@@ -1082,7 +1113,7 @@ function Front:saveToLua(  )
       end
       
       if luaPath == self.option.scriptPath then
-         Util.errorLog( "%s is illegal filename." )
+         Util.errorLog( string.format( "%s is illegal filename.", luaPath) )
       else
        
          local convMode = convLua.ConvMode.Convert
@@ -1106,6 +1137,32 @@ function Front:saveToLua(  )
                return fileObj
             end
             
+            local function openStreams( luaFlag )
+            
+               local stream = nil
+               if luaFlag then
+                  stream = openLuaStream(  )
+               end
+               
+               local metaStream = stream
+               local convMode = convLua.ConvMode.Convert
+               if self.option.mode == Option.ModeKind.SaveMeta then
+                  convMode = convLua.ConvMode.ConvMeta
+                  do
+                     local _exp = io.open( tempMetaPath, "w+" )
+                     if _exp ~= nil then
+                        metaFileObj = _exp
+                        metaStream = _exp
+                     else
+                        error( string.format( "write open error -- %s", metaPath) )
+                     end
+                  end
+                  
+               end
+               
+               return stream, metaStream
+            end
+            
             local stream = nil
             local metaStream = stream
             do
@@ -1113,30 +1170,14 @@ function Front:saveToLua(  )
                if _matchExp[1] == ModuleUptodate.Uptodate[1] then
                   local metaInfo = _matchExp[2][1]
                
-                  if self.option.mode ~= Option.ModeKind.SaveMeta then
-                     stream = openLuaStream(  )
-                     metaStream = stream
-                  end
-                  
+               elseif _matchExp[1] == ModuleUptodate.NeedTouch[1] then
+                  local metaCode = _matchExp[2][1]
+                  local metaInfo = _matchExp[2][2]
+               
+                  stream, metaStream = openStreams( false )
                else 
                do
-                  stream = openLuaStream(  )
-                  metaStream = stream
-                  local convMode = convLua.ConvMode.Convert
-                  if self.option.mode == Option.ModeKind.SaveMeta then
-                     convMode = convLua.ConvMode.ConvMeta
-                     do
-                        local _exp = io.open( tempMetaPath, "w+" )
-                        if _exp ~= nil then
-                           metaFileObj = _exp
-                           metaStream = _exp
-                        else
-                           error( string.format( "write open error -- %s", metaPath) )
-                        end
-                     end
-                     
-                  end
-                  
+                  stream, metaStream = openStreams( true )
                end
                end
             end

@@ -64,10 +64,10 @@ pub enum ModeKind {
 /** meta ファイルの更新必要性チェックモード */
 pub enum CheckingUptodateMode {
    /** uptodate チェックせずに必ずビルドしなおす */
-   Skip = "skip",
-   /** 通常の uptodate チェックを行なう */
-   Normal = "normal",
-   /** uptodate だった場合は touch だけ行なう */
+   Force = "force",
+   /** uptodate チェックし、 uptodate だった場合なにもしない */
+   Normal = "none",
+   /** uptodate チェックし、 uptodate だった場合 touch だけ行なう */
    Touch = "touch",
 }
 
@@ -78,7 +78,7 @@ pub class TransCtrlInfo {
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
-   return new TransCtrlInfo( true, false, .Normal );
+   return new TransCtrlInfo( true, false, .Touch );
 }
 
 pub class Option {
@@ -176,6 +176,10 @@ usage:
     -u: update meta and lua on load.
     -Werror: error by warrning.
     --disable-checking-define-abbr: disable checking for ##.
+    --uptodate <mode>: checking uptodate mode.
+            mode: skip check.
+            none: skip process when file is uptodate.
+            touch: touch meta file when file is uptodate.  (default)
 
 * type2
   dir: output directory.

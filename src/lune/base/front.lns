@@ -326,7 +326,7 @@ fn Front.getModuleIdAndCheckUptodate( lnsPath:str, mod:str ):
 {
    let mut uptodate = ModuleUptodate.NeedUpdate;
 
-   if self.option.transCtrlInfo.uptodateMode == .Skip {
+   if self.option.transCtrlInfo.uptodateMode == .Force {
       // 必ず NeedUpdate にする
       return frontInterface.ModuleId.tempId, uptodate;
    }
@@ -394,6 +394,9 @@ metaTime
    }
 
    let moduleId = getModuleId( lnsPath, mod, self.option.outputDir, metaInfo );
+   if moduleId == frontInterface.ModuleId.tempId {
+      Util.err( "not found -- %s" ( lnsPath ) );
+   }
    return moduleId, uptodate;
 }
 
@@ -690,10 +693,6 @@ pub fn Front.convertLuaToStreamFromScript(
    }
 
    let moduleId, uptodate = self.getModuleIdAndCheckUptodate( path, mod );
-   if moduleId == frontInterface.ModuleId.tempId {
-      Util.err( "not found -- %s" (path) );
-   }
-
 
    let mut stream, mut metaStream, mut dependsStream = openOStream( uptodate );
 
@@ -797,22 +796,43 @@ pub fn Front.saveToLua() mut {
    {
       let mut headEndPos = 0;
       let mut tailBeginPos = 0;
-      let mut buildIdLine = "";
+      let mut oldBuildIdLine = "";
+      let mut newBuildIdLine = "";
       while true {
          let newLine = newStream.read( "*l" );
          let oldLine = oldStream.read( "*l" );
+         when! oldLine {
+            if #oldBuildIdLine == 0 {
+               if oldLine.find( "^_moduleObj.__buildId" ## ) {
+                  oldBuildIdLine = oldLine;
+               }  
+            }
+         }
+         when! newLine {
+            if #newBuildIdLine == 0 {
+               if newLine.find( "^_moduleObj.__buildId" ## ) {
+                  newBuildIdLine = newLine;
+               }  
+            }
+         }
+         
          if newLine ~= oldLine {
             let mut cont = false;
             when! newLine, oldLine {
                if oldLine.find( "^_moduleObj.__buildId" ## ) {
-                  
-                  tailBeginPos = oldStream.$pos;
-                  let oldBuildId = txt2ModuleId( oldLine );
-                  let newBuildId = txt2ModuleId( newLine );
-                  let worlBuildId = frontInterface.ModuleId.createId(
-                     newBuildId.$modTime, oldBuildId.$buildCount );
-                  buildIdLine = "_moduleObj.__buildId = %q" (worlBuildId.$idStr);
-                  cont = true;
+                  if newLine.find( "^_moduleObj.__buildId" ## ) {
+                     tailBeginPos = newStream.$pos;
+                     cont = true;
+                  }
+               }
+               elseif oldLine.find( "^__dependModuleMap.*buildId =" ## ) and
+                  newLine.find( "^__dependModuleMap.*buildId =" ## )
+               {
+                  let oldSub = oldLine.gsub( "buildId =.*", "" );
+                  let newSub = newLine.gsub( "buildId =.*", "" );
+                  if oldSub == newSub {
+                     cont = true;
+                  }
                }
             }
             if not cont {
@@ -821,18 +841,25 @@ pub fn Front.saveToLua() mut {
          }
          else {
             if tailBeginPos == 0 {
-               headEndPos = oldStream.$pos;
+               headEndPos = newStream.$pos;
             }
             if not oldLine {
-               let mut txt = "";
-               if buildIdLine ~= "" {
-                  txt = "%s%s\n%s"
-                  ( oldStream.$txt.sub( 1, headEndPos - 1 ),
-                    buildIdLine,
-                    oldStream.$txt.sub( tailBeginPos## ) );
-               }  
+               // ファイル一致
+               if tailBeginPos == 0 {
+                  return true, oldStream.$txt;
+               }
+               
+               let oldBuildId = txt2ModuleId( oldBuildIdLine );
+               let newBuildId = txt2ModuleId( newBuildIdLine );
+               let worlBuildId = frontInterface.ModuleId.createId(
+                  newBuildId.$modTime, oldBuildId.$buildCount );
+               let buildIdLine = "_moduleObj.__buildId = %q" (worlBuildId.$idStr);
+               
+               let mut txt = "%s%s\n%s" ( newStream.$txt.sub( 1, headEndPos - 1 ),
+                                          buildIdLine,         
+                                          newStream.$txt.sub( tailBeginPos## ) );
                return true, txt;
-            }  
+            }
          }
       }
    }
@@ -851,7 +878,7 @@ pub fn Front.saveToLua() mut {
 	 }
 
 	 if luaPath == self.option.scriptPath {
-            Util.errorLog( "%s is illegal filename." );
+            Util.errorLog( "%s is illegal filename." (luaPath) );
          }
          else {
             let mut convMode = convLua.ConvMode.Convert;
@@ -883,29 +910,36 @@ pub fn Front.saveToLua() mut {
                      };
                      return fileObj;
                   }
+                  fn openStreams( luaFlag:bool ): oStream!, oStream!{
+	             let mut stream:oStream! = nil;
+                     if luaFlag {
+	                stream = openLuaStream();
+                     }
+
+                     let mut metaStream = stream;
+                     let mut convMode = convLua.ConvMode.Convert;
+                     if self.option.mode == .SaveMeta {
+                        convMode = .ConvMeta;
+                        if! io.open( tempMetaPath, "w+" ) {
+                           metaFileObj = _exp;
+		           metaStream = _exp;
+                        }
+                        else {
+                           error( "write open error -- %s" (metaPath) );
+                        }
+                     }
+                     return stream, metaStream;
+                  }
 	          let mut stream:oStream! = nil;
 	          let mut metaStream = stream;
                   match mode {
                      case .Uptodate( metaInfo ) {
-                        if self.option.mode ~= .SaveMeta {
-                           stream = openLuaStream();
-                           metaStream = stream;
-                        }
+                     }
+                     case .NeedTouch( metaCode, metaInfo ) {
+                        stream, metaStream = openStreams( false );
                      }
                      default {
-                        stream = openLuaStream();
-                        metaStream = stream;
-                        let mut convMode = convLua.ConvMode.Convert;
-	                if self.option.mode == .SaveMeta {
-                           convMode = .ConvMeta;
-                           if! io.open( tempMetaPath, "w+" ) {
-                              metaFileObj = _exp;
-		              metaStream = _exp;
-                           }     
-                           else {
-                              error( "write open error -- %s" (metaPath) );
-                           }  
-                        }  
+                        stream, metaStream = openStreams( true );
                      }
                   }
                   
@@ -920,6 +954,9 @@ pub fn Front.saveToLua() mut {
                      }
                      
 	             when! metaFileObj {
+	                // metaFileObj.close();
+                        // os.rename( tempMetaPath, metaPath );
+                        
                         // メタファイルが変っているかどうかを確認し、
                         // 変更がない場合は更新しない。
                         metaFileObj.flush();

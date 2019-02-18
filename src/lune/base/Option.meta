@@ -2,7 +2,7 @@ local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
 _moduleObj.__formatVersion = '1.0.21'
-_moduleObj.__buildId = "1549549503.000000:1"
+_moduleObj.__buildId = "1550483403.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -222,7 +222,7 @@ __typeInfoList[52] = { skind=3, parentId = 1333, typeId = 1345, baseId = 1, txt 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1344}, children = {}, }
 __typeInfoList[53] = { skind = 0, parentId = 1333, typeId = 1346, nilable = true, orgTypeId = 1345 }
 __typeInfoList[54] = { skind = 4, parentId = 1005, typeId = 1348, txt = 'CheckingUptodateMode',
-accessMode = 1, kind = 11, valTypeId = 27, enumValList = {Normal = 'normal',Skip = 'skip',Touch = 'touch',} }
+accessMode = 1, kind = 11, valTypeId = 27, enumValList = {Force = 'force',Normal = 'none',Touch = 'touch',} }
 __typeInfoList[55] = { skind = 0, parentId = 1005, typeId = 1349, nilable = true, orgTypeId = 1348 }
 __typeInfoList[56] = { skind=3, parentId = 1348, typeId = 1350, baseId = 1, txt = 'get__txt',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
@@ -268,11 +268,11 @@ __typeInfoList[83] = { skind=3, parentId = 1005, typeId = 1400, baseId = 1, txt 
 __typeInfoList[84] = { skind = 0, parentId = 1005, typeId = 1401, nilable = true, orgTypeId = 1400 }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = true, buildId = "1549549503.000000:1" }
-__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 2, use = true, buildId = "1549549503.000000:1" }
-__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 3, use = true, buildId = "1549549503.000000:1" }
-__dependModuleMap[ 'lune.base.Util' ] = { typeId = 4, use = false, buildId = "1549549503.000000:1" }
-__dependModuleMap[ 'lune.base.Ver' ] = { typeId = 5, use = false, buildId = "1549549503.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = true, buildId = "1550483403.000000:1" }
+__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 2, use = true, buildId = "1550483403.000000:1" }
+__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 3, use = true, buildId = "1550483403.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 4, use = false, buildId = "1550483403.000000:1" }
+__dependModuleMap[ 'lune.base.Ver' ] = { typeId = 5, use = false, buildId = "1550483403.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

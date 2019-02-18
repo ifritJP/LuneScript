@@ -78,6 +78,7 @@ func( .val1, .val1 );
 {
    let mut valtest = testEnum4._from( 0 );
    valtest = .val1;
+   valtest = .val1.val2; // error
    valtest = 1; // error
    if valtest == 1 { // error
    }
