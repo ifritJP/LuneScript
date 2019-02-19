@@ -27,6 +27,7 @@ import lune.base.Util;
 import lune.base.LuaMod;
 import lune.base.Ver;
 import lune.base.LuaVer;
+import lune.base.Log;
 
 macro _defGetBuildCount() {
    {
@@ -175,6 +176,8 @@ usage:
   common_op:
     -u: update meta and lua on load.
     -Werror: error by warrning.
+    --log <mode>: set log level.
+         mode: fatal, error, warn, info, debug, trace
     --disable-checking-define-abbr: disable checking for ##.
     --uptodate <mode>: checking uptodate mode.
             mode: skip check.
@@ -231,6 +234,18 @@ usage:
             }
             case "--disable-checking-define-abbr" {
                option.transCtrlInfo.checkingDefineAbbr = false;
+            }
+            case "--log" {
+               if #argList > index {
+                  let txt = argList[ index + 1 ];
+                  if! let level = Log.str2level( txt ) { 
+                     Log.setLevel( level );
+                  }
+                  else {
+                     Util.errorLog( "illegal level -- %s" ( txt ) );
+                  }
+               }
+               index = index + 1;
             }
             case "--depends" {
                if #argList > index {

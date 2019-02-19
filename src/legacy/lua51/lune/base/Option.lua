@@ -29,10 +29,11 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+local Log = _lune.loadModule( 'lune.base.Log' )
 
 local function getBuildCount(  )
 
-   return 253
+   return 267
 end
 
 
@@ -238,6 +239,8 @@ usage:
   common_op:
     -u: update meta and lua on load.
     -Werror: error by warrning.
+    --log <mode>: set log level.
+         mode: fatal, error, warn, info, debug, trace
     --disable-checking-define-abbr: disable checking for ##.
     --uptodate <mode>: checking uptodate mode.
             mode: skip check.
@@ -288,6 +291,21 @@ usage:
                option.transCtrlInfo.stopByWarning = true
             elseif _switchExp == "--disable-checking-define-abbr" then
                option.transCtrlInfo.checkingDefineAbbr = false
+            elseif _switchExp == "--log" then
+               if #argList > index then
+                  local txt = argList[index + 1]
+                  do
+                     local level = Log.str2level( txt )
+                     if level ~= nil then
+                        Log.setLevel( level )
+                     else
+                        Util.errorLog( string.format( "illegal level -- %s", txt) )
+                     end
+                  end
+                  
+               end
+               
+               index = index + 1
             elseif _switchExp == "--depends" then
                if #argList > index then
                   option.dependsPath = argList[index + 1]

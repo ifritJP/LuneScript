@@ -107,6 +107,8 @@ pub class TransUnit {
    pri let mut typeId2MacroInfo: Map<int,Ast.MacroInfo>;
    /** マクロのモード */
    pri let mut macroMode: Ast.MacroMode;
+   /** マクロをコールしている行番号 */
+   pri let mut macroCallLineNo: int;
    /** macro-expand 内で利用できるシンボルと値の紐付けマップ */
    pri let mut symbol2ValueMapForMacro: Map<str,Ast.MacroValInfo>;
    /** macro-statement の最上位スコープ */
@@ -162,6 +164,7 @@ pub class TransUnit {
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.macroCallLineNo = 0;
       self.useModuleMacroMap = {};
       self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
@@ -479,12 +482,16 @@ class MacroMetaInfo extend (Mapping) {
    pub let tokenList:&List<&List<stem>>;
 }
 
+proto abstract class _TypeInfo extend (Mapping);
+
 class ImportParam {
    pub let transUnit:&TransUnit;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
    pub let metaInfo:_MetaInfo;
    pub let scope:Ast.Scope;
+
+   pri let typeId2AtomMap:Map<int,&_TypeInfo>;
 }
 
 abstract class _TypeInfo extend (Mapping) {
@@ -507,13 +514,27 @@ abstract class _TypeInfo extend (Mapping) {
    pub abstract fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!;
 }
 
+pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo! {
+   if! let typeInfo = self.typeId2TypeInfo[ typeId ] {
+      return typeInfo;
+   }
+   if! let atom = self.typeId2AtomMap[ typeId ] {
+      if! let typeInfo = atom.createTypeInfo( self ) {
+         self.typeId2TypeInfo[ typeId ] = typeInfo;
+         return typeInfo;
+      }
+   }
+   return nil;
+}
+
 class _TypeInfoNilable extend _TypeInfo {
    pub let nilable:bool;
    pub let orgTypeId:int;
 
    pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
    {
-      let orgTypeInfo = unwrap param.typeId2TypeInfo[ self.orgTypeId ];
+      //let orgTypeInfo = unwrap param.typeId2TypeInfo[ self.orgTypeId ];
+      let orgTypeInfo = unwrap param.getTypeInfo( self.orgTypeId );
       let newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
       param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
       return newTypeInfo,nil;
@@ -525,7 +546,8 @@ class _TypeInfoDDD extend _TypeInfo {
 
    pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
    {
-      let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
+      //let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
+      let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId );
       let newTypeInfo = Ast.NormalTypeInfo.createDDD( itemTypeInfo, true );
       param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
       return newTypeInfo,nil;
@@ -540,7 +562,8 @@ class _TypeInfoModifier extend _TypeInfo {
    pub override fn createTypeInfo( param:ImportParam ):
       Ast.TypeInfo!, str!
    {  
-      let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
+      //let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
+      let! srcTypeInfo = param.getTypeInfo( self.srcTypeId ) {
          return nil, "not found srcType -- %d, %d" ( self.parentId, self.srcTypeId );
       };
       let newTypeInfo = param.transUnit.createModifier(
@@ -557,7 +580,8 @@ class _TypeInfoModule extend _TypeInfo {
    {  
       let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if self.parentId ~= Ast.rootTypeId {
-         let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
+         //let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
+         let! workTypeInfo = param.getTypeInfo( self.parentId ) {
             Util.err( "not found parentInfo %s %s"
                       ( self.parentId, self.txt ) );
          };   
@@ -621,7 +645,8 @@ class _TypeInfoNormal extend _TypeInfo {
       {
          let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if self.parentId ~= Ast.rootTypeId {
-            let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
+            //let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
+            let! workTypeInfo = param.getTypeInfo( self.parentId ) {
                return nil, "not found parentInfo %s %s" ( self.parentId, self.txt );
             };   
             parentInfo = workTypeInfo;
@@ -629,11 +654,13 @@ class _TypeInfoNormal extend _TypeInfo {
          
          let mut itemTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId in self.itemTypeId {
-            itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+            //itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+            itemTypeInfo.insert( unwrap param.getTypeInfo( typeId ) );
          }   
          let mut argTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId, index in self.argTypeId {
-            if! let argType = param.typeId2TypeInfo[ typeId ] {
+            //if! let argType = param.typeId2TypeInfo[ typeId ] {
+            if! let argType = param.getTypeInfo( typeId ) {
                argTypeInfo.insert( argType );
             }
             else {
@@ -644,13 +671,16 @@ class _TypeInfoNormal extend _TypeInfo {
          }   
          let mut retTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId in self.retTypeId {
-            retTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+            //retTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+            retTypeInfo.insert( unwrap param.getTypeInfo( typeId ) );
          }   
          
-         let baseInfo = unwrap param.typeId2TypeInfo[ self.baseId ];
+         //let baseInfo = unwrap param.typeId2TypeInfo[ self.baseId ];
+         let baseInfo = unwrap param.getTypeInfo( self.baseId );
          let mut interfaceList:List<&Ast.TypeInfo> = [];
          foreach ifTypeId in self.ifList {
-            interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
+            //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
+            interfaceList.insert( unwrap param.getTypeInfo( ifTypeId ) );
          }  
 
          let! mut parentScope = param.typeId2Scope[ self.parentId ] {
@@ -766,7 +796,8 @@ class _TypeInfoEnum extend _TypeInfo {
    pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
    {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
-      let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      let parentInfo = unwrap param.getTypeInfo( self.parentId );
       let mut name2EnumValInfo:Map<str,Ast.EnumValInfo> = {};
       let mut parentScope = unwrap Ast.getScope( parentInfo );
       let mut scope = new Ast.Scope( parentScope, true, nil ## );
@@ -774,7 +805,8 @@ class _TypeInfoEnum extend _TypeInfo {
       param.typeId2Scope[ self.typeId ] = scope;
       let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
          scope, unwrap parentInfo, true, accessMode, self.txt,
-         unwrap param.typeId2TypeInfo[ self.valTypeId ],
+         //unwrap param.typeId2TypeInfo[ self.valTypeId ],
+         unwrap param.getTypeInfo( self.valTypeId ),
          name2EnumValInfo );
       let newTypeInfo = enumTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = enumTypeInfo;
@@ -800,7 +832,8 @@ class _TypeInfoAlge extend _TypeInfo {
    pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
    {
       let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
-      let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      let parentInfo = unwrap param.getTypeInfo( self.parentId );
       let mut name2AlgeValInfo:Map<str,Ast.AlgeValInfo> = {};
       let mut parentScope = unwrap Ast.getScope( parentInfo );
       let mut scope = new Ast.Scope( parentScope, true, nil ## );
@@ -813,7 +846,8 @@ class _TypeInfoAlge extend _TypeInfo {
       foreach valInfo in self.algeValList {
          let mut typeInfoList:List<&Ast.TypeInfo> = [];
          foreach orgTypeId in valInfo.typeList {
-            typeInfoList.insert( unwrap param.typeId2TypeInfo[ orgTypeId ] );
+            //typeInfoList.insert( unwrap param.typeId2TypeInfo[ orgTypeId ] );
+            typeInfoList.insert( unwrap param.getTypeInfo( orgTypeId ) );
          }
          let algeVal = new Ast.AlgeValInfo( valInfo.name, typeInfoList );
          scope.addAlgeVal( valInfo.name, algeTypeInfo );
@@ -1257,20 +1291,38 @@ fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
                nextToken = new Parser.Token(
                   nextToken.kind, txtList[ index ], nextToken.pos, false ## );
                self.pushbackToken( nextToken );
-            }    
-         }   
+            }
+         }
          elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
             self.pushbackStr( "macroVal %s" (nextToken.txt),
                               (unwrap macroVal.val)@@str );                       
-         }   
+         }
          elseif macroVal.typeInfo.get_kind() == .Array or
             macroVal.typeInfo.get_kind() == .List
-         {   
+         {
             let strList = (unwrap macroVal.val)@@str[];
             for index = #strList, 1, -1 {
                self.pushbackStr(
                   "macroVal %s[%d]" (nextToken.txt, index),
                   strList[ index ] );
+            }
+         }
+         elseif macroVal.typeInfo.get_kind() == .Enum {
+            let fullname = macroVal.typeInfo.getFullName(
+               self.importModule2ModuleInfoCurrent, true );
+            let mut nameList:List<str> = [];
+            apply name of fullname.gmatch( "[^%.]+" ) {
+               nameList.insert( name );
+            }
+            nextToken = new Parser.Token(
+               .Symb, (unwrap macroVal.val)@@str, nextToken.pos, false ## );
+            self.pushbackToken( nextToken );
+            for index = #nameList, 1, -1 {
+               nextToken = new Parser.Token( .Dlmt, ".", nextToken.pos, false ## );
+               self.pushbackToken( nextToken );
+               nextToken = new Parser.Token(
+                  .Symb, nameList[ index ], nextToken.pos, false ## );
+               self.pushbackToken( nextToken );
             }
          }
          else {
@@ -1617,9 +1669,8 @@ class DependModuleInfo {
 }
 
 
-fn TransUnit.processImport(
-   modulePath:str, moduleInfoMap:Map<&Ast.TypeInfo,&Ast.ModuleInfo> ) mut :
-   &_MetaInfo, &Map<int,&Ast.TypeInfo>
+fn TransUnit.processImport( modulePath:str ) mut :
+   &_MetaInfo, &Map<int,&Ast.TypeInfo>, &Ast.ModuleInfo
 {
    if not self.importModuleInfo.add( modulePath ) {
       self.error( "recursive import: %s -> %s"
@@ -1633,9 +1684,8 @@ fn TransUnit.processImport(
          let metaInfo = metaInfoStem@@_MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
          let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
-         moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
          self.importModuleInfo.remove();
-         return metaInfo, typeId2TypeInfo;
+         return metaInfo, typeId2TypeInfo, moduleInfo;
       }
       self.error( "failed to load meta -- " .. modulePath );
    }
@@ -1655,7 +1705,7 @@ fn TransUnit.processImport(
    forsort dependInfo, dependName in metaInfo.__dependModuleMap {
       if dependInfo.use {
          let workModuleInfo, metaTypeId2TypeInfoMap =
-            self.processImport( dependName, {} );
+            self.processImport( dependName );
          let typeId = (unwrap dependInfo.typeId)@@int;
          dependLibId2DependInfo[ typeId ] =
             new DependModuleInfo( typeId, metaTypeId2TypeInfoMap );
@@ -1693,7 +1743,6 @@ fn TransUnit.processImport(
       self.popModule();
    }
 
-
    //self.moduleName2Info[ modulePath ] = metaInfo;
 
    foreach symbolInfo in Ast.sym2builtInTypeMap {
@@ -1707,6 +1756,7 @@ fn TransUnit.processImport(
    let mut newId2OldIdMap: Map<&Ast.TypeInfo,int> = {};
 
    let mut _typeInfoList:List<_TypeInfo> = [];
+   let mut id2atomMap:Map<int,_TypeInfo> = {};
    let mut _typeInfoNormalList:List<_TypeInfoNormal> = [];
    foreach atomInfo in metaInfo.__typeInfoList {
       if! let skind = atomInfo.skind {
@@ -1743,8 +1793,9 @@ fn TransUnit.processImport(
                Util.err( "unknown skind -- %d" (skind@@int) );
             }
          }
-         if! actInfo {
-            _typeInfoList.insert( _exp );
+         when! actInfo {
+            _typeInfoList.insert( actInfo );
+            id2atomMap[ actInfo.typeId ] = actInfo;
          }
          else {
             foreach val, key in atomInfo {
@@ -1763,7 +1814,7 @@ fn TransUnit.processImport(
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope );
+      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
       if! errMess {
@@ -1975,6 +2026,7 @@ fn TransUnit.processImport(
       self.popModule();
    }
 
+
    //dumpScope( self.rootScope, "" );
 
    let moduleInfo = new Ast.ModuleInfo(
@@ -1982,11 +2034,10 @@ fn TransUnit.processImport(
       frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ) );
    self.importModule2ModuleInfo[ moduleTypeInfo ] = moduleInfo;
    self.importModuleName2ModuleInfo[ modulePath ] = moduleInfo;
-   moduleInfoMap[ moduleTypeInfo ] = moduleInfo;
 
    self.importModuleInfo.remove();
    
-   return metaInfo, typeId2TypeInfo;
+   return metaInfo, typeId2TypeInfo, moduleInfo;
 }
 
 fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
@@ -2013,8 +2064,12 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
       } 
    }
 
-   let metaInfo, typeId2TypeInfo = self.processImport(
-      modulePath, self.importModule2ModuleInfoCurrent );
+   Ast.switchIdProvier( .Ext );
+   
+   let metaInfo, typeId2TypeInfo, moduleInfo = self.processImport( modulePath );
+
+   Ast.switchIdProvier( .Base );
+   
 
    // スコープを元に戻す
    self.scope = self.moduleScope;
@@ -2029,6 +2084,9 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Ast.Node {
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
    let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
+   self.importModule2ModuleInfoCurrent[ moduleTypeInfo ] =
+      moduleInfo.assign( assignName.txt );
+
    let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
    self.scope.add(
       moduleSymbolKind, false, false, assignName.txt,

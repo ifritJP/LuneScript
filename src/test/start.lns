@@ -768,6 +768,8 @@ class Test3 {
 
 SUB2._MacroTest2( "abc", 123 );
 SUB2._MacroTest3( 123 );
+SUB2._test( .val2 );
+
 
 {
    foreach val in [ SUB2.DDDfunc( 1, 2, 3 ) ] {

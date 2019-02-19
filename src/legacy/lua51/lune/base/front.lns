@@ -33,6 +33,7 @@ import lune.base.glueFilter;
 import lune.base.Depend;
 import lune.base.OutputDepend;
 import lune.base.Ver;
+import lune.base.Log;
 
 _lune_control ignore_symbol_;
 
@@ -344,10 +345,12 @@ metaTime
             depMod, ".meta", self.option.outputDir )
          {
             // .meta ファイルがない場合、更新が必要
+            Log._log( .Debug, `{ return "NeedUpdate"; } );
             return ModuleUptodate.NeedUpdate;
          };
          let! time = Depend.getFileLastModifiedTime( modMetaPath ) {
             // .meta ファイルの更新日時取得が出来ない場合、更新が必要
+            Log._log( .Debug, `{ return "NeedUpdate"; } );
             return ModuleUptodate.NeedUpdate;
          };
          if time > metaTime {
@@ -355,6 +358,7 @@ metaTime
             // ビルド対象のモジュールのメタファイルよりも新しい場合、
             // .meta の内容を確認する。
             let! dependMeta = MetaForBuildId.LoadFromMeta( modMetaPath ) {
+               Log._log( .Debug, `{ return "NeedUpdate"; } );
                return ModuleUptodate.NeedUpdate;
             };
             let orgMetaModuleId = frontInterface.ModuleId.createIdFromTxt(
@@ -364,6 +368,11 @@ metaTime
                metaModuleId.$buildCount ~= orgMetaModuleId.$buildCount
             {
                // buildCount が一致しない場合、更新する。
+               Log._log( .Debug, `{
+                  return "NeedUpdate: %s, %d, %d" ( modMetaPath,
+                                                    metaModuleId.$buildCount,
+                                                    orgMetaModuleId.$buildCount );
+               } );
                return ModuleUptodate.NeedUpdate;
             }
          }
@@ -377,7 +386,6 @@ metaTime
 
    let metaInfo, metaPath, metaCode = getMetaInfo( lnsPath, mod, self.option.outputDir );
 
-   
    when! metaInfo {
       // meta 情報があれば、 moduleId から更新済みかどうかを確認する
       let buildId = frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId );
@@ -391,6 +399,9 @@ metaTime
             }
          }
       }
+   }
+   else {
+      Log._log( .Debug, `{ return "not found meta"; } );
    }
 
    let moduleId = getModuleId( lnsPath, mod, self.option.outputDir, metaInfo );
@@ -791,7 +802,16 @@ pub fn Front.saveToLua() mut {
       let mut buildIdTxt = txt.gsub( "^_moduleObj.__buildId = ", "" ).gsub( '"', "" );
       return frontInterface.ModuleId.createIdFromTxt( buildIdTxt );
    }
-   
+
+   /**
+oldStream, newStream に格納されているモジュールのメタ情報が、
+モジュールのビルド ID 情報以外が一致しているかどうかを調べる。
+
+@param oldStream 古いメタ情報
+@param newStream 新しいメタ情報
+@return bool 一致している場合 true
+@return str 新しく書き込むメタ情報の文字列。
+   */
    fn checkDiff( oldStream:Parser.TxtStream, newStream:Parser.TxtStream ) : bool, str
    {
       let mut headEndPos = 0;
@@ -836,6 +856,7 @@ pub fn Front.saveToLua() mut {
                }
             }
             if not cont {
+               Log._log( .Debug, `{ return "<%s>, <%s>" (oldLine, newLine ); } );
                return false, "";
             }
          }
@@ -958,7 +979,7 @@ pub fn Front.saveToLua() mut {
                         // os.rename( tempMetaPath, metaPath );
                         
                         // メタファイルが変っているかどうかを確認し、
-                        // 変更がない場合は更新しない。
+                        // 変更がない場合はビルド情報だけ更新する。
                         metaFileObj.flush();
                         metaFileObj.seek( "set", 0 );
                         let! newMetaTxt = metaFileObj.read( "*a" ) {
@@ -995,6 +1016,7 @@ pub fn Front.saveToLua() mut {
 
 pub fn Front.exec() mut
 {
+   Log._log( .Trace, `{ return self.option.mode.$_txt; } );
    switch self.option.mode {
       case .Token {
          self.dumpTokenize();

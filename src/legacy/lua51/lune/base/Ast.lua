@@ -37,33 +37,46 @@ _moduleObj.IdProvider = IdProvider
 function IdProvider:increment(  )
 
    self.id = self.id + 1
+   if self.id >= self.maxId then
+      Util.err( "id is over" )
+   end
+   
 end
 function IdProvider:getNewId(  )
 
    local newId = self.id
    self.id = self.id + 1
+   if self.id >= self.maxId then
+      Util.err( "id is over" )
+   end
+   
    return newId
 end
 function IdProvider.setmeta( obj )
   setmetatable( obj, { __index = IdProvider  } )
 end
-function IdProvider.new( id )
+function IdProvider.new( id, maxId )
    local obj = {}
    IdProvider.setmeta( obj )
    if obj.__init then
-      obj:__init( id )
+      obj:__init( id, maxId )
    end        
    return obj 
 end         
-function IdProvider:__init( id ) 
+function IdProvider:__init( id, maxId ) 
 
    self.id = id
+   self.maxId = maxId
 end
 function IdProvider:get_id()       
    return self.id         
 end
 
-local idProv = IdProvider.new(1)
+local extStartId = 100000
+local extMaxId = 10000000
+local idProvBase = IdProvider.new(1, extStartId)
+local idProvExt = IdProvider.new(extStartId, extMaxId)
+local idProv = idProvBase
 local userStartId = 1000
 local rootTypeId = idProv:getNewId(  )
 _moduleObj.rootTypeId = rootTypeId
@@ -3775,6 +3788,10 @@ function ModuleInfo:get_modulePath(  )
 
    return self.fullName
 end
+function ModuleInfo:assign( assignName )
+
+   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId)
+end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
 end
@@ -3804,22 +3821,26 @@ _moduleObj.ProcessInfo = ProcessInfo
 function ProcessInfo.setmeta( obj )
   setmetatable( obj, { __index = ProcessInfo  } )
 end
-function ProcessInfo.new( idProvier, typeInfo2ModifierMap, typeInfo2DDDMap )
+function ProcessInfo.new( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2DDDMap )
    local obj = {}
    ProcessInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( idProvier, typeInfo2ModifierMap, typeInfo2DDDMap )
+      obj:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2DDDMap )
    end        
    return obj 
 end         
-function ProcessInfo:__init( idProvier, typeInfo2ModifierMap, typeInfo2DDDMap ) 
+function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2DDDMap ) 
 
    self.idProvier = idProvier
+   self.idProvierExt = idProvierExt
    self.typeInfo2ModifierMap = typeInfo2ModifierMap
    self.typeInfo2DDDMap = typeInfo2DDDMap
 end
 function ProcessInfo:get_idProvier()       
    return self.idProvier         
+end
+function ProcessInfo:get_idProvierExt()       
+   return self.idProvierExt         
 end
 function ProcessInfo:get_typeInfo2ModifierMap()       
    return self.typeInfo2ModifierMap         
@@ -6842,23 +6863,24 @@ function ExpOmitEnumNode:canBeStatement(  )
 
    return false
 end
-function ExpOmitEnumNode.new( pos, typeList, valToken, enumTypeInfo )
+function ExpOmitEnumNode.new( pos, typeList, valToken, valInfo, enumTypeInfo )
    local obj = {}
    ExpOmitEnumNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, valToken, enumTypeInfo ); end
+   if obj.__init then obj:__init( pos, typeList, valToken, valInfo, enumTypeInfo ); end
    return obj
 end
-function ExpOmitEnumNode:__init(pos, typeList, valToken, enumTypeInfo) 
+function ExpOmitEnumNode:__init(pos, typeList, valToken, valInfo, enumTypeInfo) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum']), pos, typeList)
    
    
    self.valToken = valToken
+   self.valInfo = valInfo
    self.enumTypeInfo = enumTypeInfo
    
 end
-function ExpOmitEnumNode.create( nodeMan, pos, typeList, valToken, enumTypeInfo )
+function ExpOmitEnumNode.create( nodeMan, pos, typeList, valToken, valInfo, enumTypeInfo )
 
-   local node = ExpOmitEnumNode.new(pos, typeList, valToken, enumTypeInfo)
+   local node = ExpOmitEnumNode.new(pos, typeList, valToken, valInfo, enumTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -6867,6 +6889,9 @@ function ExpOmitEnumNode.setmeta( obj )
 end
 function ExpOmitEnumNode:get_valToken()       
    return self.valToken         
+end
+function ExpOmitEnumNode:get_valInfo()       
+   return self.valInfo         
 end
 function ExpOmitEnumNode:get_enumTypeInfo()       
    return self.enumTypeInfo         
@@ -9626,18 +9651,39 @@ function ExpRefNode:getLiteral(  )
    
    local enumTypeInfo = typeInfo
    local val = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
-   return {val:get_val()}, {enumTypeInfo:get_valTypeInfo()}
+   return {val:get_name()}, {enumTypeInfo}
+end
+
+function ExpOmitEnumNode:getLiteral(  )
+
+   local enumTypeInfo = self.enumTypeInfo
+   local val = self.valInfo
+   return {val:get_name()}, {enumTypeInfo}
 end
 
 function ExpOp2Node:getLiteral(  )
 
+   local function getValType( valList, typeList )
+   
+      local typeInfo = typeList[1]:get_srcTypeInfo()
+      local val = _lune.unwrap( valList[1])
+      if typeInfo:get_kind() ~= TypeInfoKind.Enum then
+         return val, typeInfo
+      end
+      
+      local enumTypeInfo = typeInfo
+      local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( val ))
+      return valInfo:get_val(), enumTypeInfo:get_valTypeInfo()
+   end
+   
    local val1List, type1List = self:get_exp1():getLiteral(  )
    local val2List, type2List = self:get_exp2():getLiteral(  )
    if #val1List ~= 1 or #type1List ~= 1 or #val2List ~= 1 or #type2List ~= 1 then
       return {}, {}
    end
    
-   local val1, type1, val2, type2 = _lune.unwrap( val1List[1]), type1List[1]:get_srcTypeInfo(), _lune.unwrap( val2List[1]), type2List[1]:get_srcTypeInfo()
+   local val1, type1 = getValType( val1List, type1List )
+   local val2, type2 = getValType( val2List, type2List )
    if (type1 == _moduleObj.builtinTypeInt or type1 == _moduleObj.builtinTypeReal ) and (type2 == _moduleObj.builtinTypeInt or type2 == _moduleObj.builtinTypeReal ) then
       local retType = _moduleObj.builtinTypeInt
       if type1 == _moduleObj.builtinTypeReal or type2 == _moduleObj.builtinTypeReal then
@@ -9742,6 +9788,46 @@ function DefMacroInfo.setmeta( obj )
 end
 
 local processInfoQueue = {}
+local IdType = {}
+_moduleObj.IdType = IdType
+IdType._val2NameMap = {}
+function IdType:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "IdType.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function IdType._from( val )
+   if IdType._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+IdType.__allList = {}
+function IdType.get__allList()
+   return IdType.__allList
+end
+
+IdType.Base = 0
+IdType._val2NameMap[0] = 'Base'
+IdType.__allList[1] = IdType.Base
+IdType.Ext = 1
+IdType._val2NameMap[1] = 'Ext'
+IdType.__allList[2] = IdType.Ext
+
+local function switchIdProvier( idType )
+
+   if idType == IdType.Base then
+      idProv = idProvBase
+   else
+    
+      idProv = idProvExt
+   end
+   
+end
+_moduleObj.switchIdProvier = switchIdProvier
 local function pushProcessInfo( processInfo )
 
    if #processInfoQueue == 0 then
@@ -9751,24 +9837,29 @@ local function pushProcessInfo( processInfo )
       
    end
    
-   table.insert( processInfoQueue, ProcessInfo.new(idProv, typeInfo2ModifierMap, typeInfo2DDDMap) )
+   table.insert( processInfoQueue, ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap) )
    if processInfo ~= nil then
-      idProv = processInfo:get_idProvier()
+      idProvBase = processInfo:get_idProvier()
+      idProvExt = processInfo:get_idProvierExt()
       typeInfo2ModifierMap = processInfo:get_typeInfo2ModifierMap()
       typeInfo2DDDMap = processInfo:get_typeInfo2DDDMap()
    else
-      idProv = IdProvider.new(userStartId)
+      idProvBase = IdProvider.new(userStartId, extStartId)
+      idProvExt = IdProvider.new(extStartId, extMaxId)
       typeInfo2ModifierMap = {}
       typeInfo2DDDMap = {}
    end
    
-   return ProcessInfo.new(idProv, typeInfo2ModifierMap, typeInfo2DDDMap)
+   idProv = idProvBase
+   return ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap)
 end
 _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
 
    local info = processInfoQueue[#processInfoQueue]
-   idProv = info:get_idProvier()
+   idProvBase = info:get_idProvier()
+   idProvExt = info:get_idProvierExt()
+   idProv = idProvBase
    typeInfo2ModifierMap = info:get_typeInfo2ModifierMap()
    table.remove( processInfoQueue )
 end

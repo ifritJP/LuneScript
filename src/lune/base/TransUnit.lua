@@ -307,6 +307,7 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
+   self.macroCallLineNo = 0
    self.useModuleMacroMap = {}
    self.ctrl_info = ctrl_info
    self.ignoreToCheckSymbol_ = false
@@ -693,25 +694,27 @@ function MacroMetaInfo._fromMapSub( obj, val )
    return obj
 end
 
+
 local ImportParam = {}
 function ImportParam.setmeta( obj )
   setmetatable( obj, { __index = ImportParam  } )
 end
-function ImportParam.new( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope )
+function ImportParam.new( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, typeId2AtomMap )
    local obj = {}
    ImportParam.setmeta( obj )
    if obj.__init then
-      obj:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope )
+      obj:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, typeId2AtomMap )
    end        
    return obj 
 end         
-function ImportParam:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope ) 
+function ImportParam:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, typeId2AtomMap ) 
 
    self.transUnit = transUnit
    self.typeId2Scope = typeId2Scope
    self.typeId2TypeInfo = typeId2TypeInfo
    self.metaInfo = metaInfo
    self.scope = scope
+   self.typeId2AtomMap = typeId2AtomMap
 end
 
 local _TypeInfo = {}
@@ -755,11 +758,37 @@ function _TypeInfo._fromMapSub( obj, val )
    return obj
 end
 
+function ImportParam:getTypeInfo( typeId )
+
+   do
+      local typeInfo = self.typeId2TypeInfo[typeId]
+      if typeInfo ~= nil then
+         return typeInfo
+      end
+   end
+   
+   do
+      local atom = self.typeId2AtomMap[typeId]
+      if atom ~= nil then
+         do
+            local typeInfo = atom:createTypeInfo( self )
+            if typeInfo ~= nil then
+               self.typeId2TypeInfo[typeId] = typeInfo
+               return typeInfo
+            end
+         end
+         
+      end
+   end
+   
+   return nil
+end
+
 local _TypeInfoNilable = {}
 setmetatable( _TypeInfoNilable, { __index = _TypeInfo } )
 function _TypeInfoNilable:createTypeInfo( param )
 
-   local orgTypeInfo = _lune.unwrap( param.typeId2TypeInfo[self.orgTypeId])
+   local orgTypeInfo = _lune.unwrap( param:getTypeInfo( self.orgTypeId ))
    local newTypeInfo = orgTypeInfo:get_nilableTypeInfo(  )
    param.typeId2TypeInfo[self.typeId] = _lune.unwrap( newTypeInfo)
    return newTypeInfo, nil
@@ -815,7 +844,7 @@ local _TypeInfoDDD = {}
 setmetatable( _TypeInfoDDD, { __index = _TypeInfo } )
 function _TypeInfoDDD:createTypeInfo( param )
 
-   local itemTypeInfo = _lune.unwrap( param.typeId2TypeInfo[self.itemTypeId])
+   local itemTypeInfo = _lune.unwrap( param:getTypeInfo( self.itemTypeId ))
    local newTypeInfo = Ast.NormalTypeInfo.createDDD( itemTypeInfo, true )
    param.typeId2TypeInfo[self.typeId] = _lune.unwrap( newTypeInfo)
    return newTypeInfo, nil
@@ -869,7 +898,7 @@ local _TypeInfoModifier = {}
 setmetatable( _TypeInfoModifier, { __index = _TypeInfo } )
 function _TypeInfoModifier:createTypeInfo( param )
 
-   local srcTypeInfo = param.typeId2TypeInfo[self.srcTypeId]
+   local srcTypeInfo = param:getTypeInfo( self.srcTypeId )
    if  nil == srcTypeInfo then
       local _srcTypeInfo = srcTypeInfo
    
@@ -933,7 +962,7 @@ function _TypeInfoModule:createTypeInfo( param )
 
    local parentInfo = Ast.headTypeInfo
    if self.parentId ~= Ast.rootTypeId then
-      local workTypeInfo = param.typeId2TypeInfo[self.parentId]
+      local workTypeInfo = param:getTypeInfo( self.parentId )
       if  nil == workTypeInfo then
          local _workTypeInfo = workTypeInfo
       
@@ -1030,7 +1059,7 @@ function _TypeInfoNormal:createTypeInfo( param )
    if self.parentId ~= Ast.rootTypeId or not Ast.builtInTypeIdSet[self.typeId] or self.kind == Ast.TypeInfoKind.List or self.kind == Ast.TypeInfoKind.Array or self.kind == Ast.TypeInfoKind.Map then
       local parentInfo = Ast.headTypeInfo
       if self.parentId ~= Ast.rootTypeId then
-         local workTypeInfo = param.typeId2TypeInfo[self.parentId]
+         local workTypeInfo = param:getTypeInfo( self.parentId )
          if  nil == workTypeInfo then
             local _workTypeInfo = workTypeInfo
          
@@ -1042,13 +1071,13 @@ function _TypeInfoNormal:createTypeInfo( param )
       
       local itemTypeInfo = {}
       for __index, typeId in pairs( self.itemTypeId ) do
-         table.insert( itemTypeInfo, _lune.unwrap( param.typeId2TypeInfo[typeId]) )
+         table.insert( itemTypeInfo, _lune.unwrap( param:getTypeInfo( typeId )) )
       end
       
       local argTypeInfo = {}
       for index, typeId in pairs( self.argTypeId ) do
          do
-            local argType = param.typeId2TypeInfo[typeId]
+            local argType = param:getTypeInfo( typeId )
             if argType ~= nil then
                table.insert( argTypeInfo, argType )
             else
@@ -1061,13 +1090,13 @@ function _TypeInfoNormal:createTypeInfo( param )
       
       local retTypeInfo = {}
       for __index, typeId in pairs( self.retTypeId ) do
-         table.insert( retTypeInfo, _lune.unwrap( param.typeId2TypeInfo[typeId]) )
+         table.insert( retTypeInfo, _lune.unwrap( param:getTypeInfo( typeId )) )
       end
       
-      local baseInfo = _lune.unwrap( param.typeId2TypeInfo[self.baseId])
+      local baseInfo = _lune.unwrap( param:getTypeInfo( self.baseId ))
       local interfaceList = {}
       for __index, ifTypeId in pairs( self.ifList ) do
-         table.insert( interfaceList, _lune.unwrap( param.typeId2TypeInfo[ifTypeId]) )
+         table.insert( interfaceList, _lune.unwrap( param:getTypeInfo( ifTypeId )) )
       end
       
       local parentScope = param.typeId2Scope[self.parentId]
@@ -1235,12 +1264,12 @@ setmetatable( _TypeInfoEnum, { __index = _TypeInfo } )
 function _TypeInfoEnum:createTypeInfo( param )
 
    local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
-   local parentInfo = _lune.unwrap( param.typeId2TypeInfo[self.parentId])
+   local parentInfo = _lune.unwrap( param:getTypeInfo( self.parentId ))
    local name2EnumValInfo = {}
    local parentScope = _lune.unwrap( Ast.getScope( parentInfo ))
    local scope = Ast.Scope.new(parentScope, true, nil)
    param.typeId2Scope[self.typeId] = scope
-   local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune.unwrap( parentInfo), true, accessMode, self.txt, _lune.unwrap( param.typeId2TypeInfo[self.valTypeId]), name2EnumValInfo )
+   local enumTypeInfo = Ast.NormalTypeInfo.createEnum( scope, _lune.unwrap( parentInfo), true, accessMode, self.txt, _lune.unwrap( param:getTypeInfo( self.valTypeId )), name2EnumValInfo )
    local newTypeInfo = enumTypeInfo
    param.typeId2TypeInfo[self.typeId] = enumTypeInfo
    for valName, valData in pairs( self.enumValList ) do
@@ -1350,7 +1379,7 @@ setmetatable( _TypeInfoAlge, { __index = _TypeInfo } )
 function _TypeInfoAlge:createTypeInfo( param )
 
    local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
-   local parentInfo = _lune.unwrap( param.typeId2TypeInfo[self.parentId])
+   local parentInfo = _lune.unwrap( param:getTypeInfo( self.parentId ))
    local name2AlgeValInfo = {}
    local parentScope = _lune.unwrap( Ast.getScope( parentInfo ))
    local scope = Ast.Scope.new(parentScope, true, nil)
@@ -1361,7 +1390,7 @@ function _TypeInfoAlge:createTypeInfo( param )
    for __index, valInfo in pairs( self.algeValList ) do
       local typeInfoList = {}
       for __index, orgTypeId in pairs( valInfo.typeList ) do
-         table.insert( typeInfoList, _lune.unwrap( param.typeId2TypeInfo[orgTypeId]) )
+         table.insert( typeInfoList, _lune.unwrap( param:getTypeInfo( orgTypeId )) )
       end
       
       local algeVal = Ast.AlgeValInfo.new(valInfo.name, typeInfoList)
@@ -1776,6 +1805,22 @@ function TransUnit:expandMacroVal( token )
                self:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index] )
             end
             
+         elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
+            local fullname = macroVal.typeInfo:getFullName( self.importModule2ModuleInfoCurrent, true )
+            local nameList = {}
+            for name in fullname:gmatch( "[^%.]+" ) do
+               table.insert( nameList, name )
+            end
+            
+            nextToken = Parser.Token.new(Parser.TokenKind.Symb, (_lune.unwrap( macroVal.val) ), nextToken.pos, false)
+            self:pushbackToken( nextToken )
+            for index = #nameList, 1, -1 do
+               nextToken = Parser.Token.new(Parser.TokenKind.Dlmt, ".", nextToken.pos, false)
+               self:pushbackToken( nextToken )
+               nextToken = Parser.Token.new(Parser.TokenKind.Symb, nameList[index], nextToken.pos, false)
+               self:pushbackToken( nextToken )
+            end
+            
          else
           
             local tokenList = {}
@@ -2138,7 +2183,7 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
    self.metaTypeId2TypeInfoMap = metaTypeId2TypeInfoMap
 end
 
-function TransUnit:processImport( modulePath, moduleInfoMap )
+function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
    if not self.importModuleInfo:add( modulePath ) then
@@ -2154,9 +2199,8 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                local metaInfo = metaInfoStem
                local typeId2TypeInfo = moduleInfo:get_importId2localTypeInfoMap()
                local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
-               moduleInfoMap[moduleTypeInfo] = moduleInfo
                self.importModuleInfo:remove(  )
-               return metaInfo, typeId2TypeInfo
+               return metaInfo, typeId2TypeInfo, moduleInfo
             end
          end
          
@@ -2189,7 +2233,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
          local dependInfo = __map[ dependName ]
          do
             if dependInfo['use'] then
-               local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName, {} )
+               local workModuleInfo, metaTypeId2TypeInfoMap = self:processImport( dependName )
                local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
                dependLibId2DependInfo[typeId] = DependModuleInfo.new(typeId, metaTypeId2TypeInfoMap)
             end
@@ -2239,6 +2283,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
    
    local newId2OldIdMap = {}
    local _typeInfoList = {}
+   local id2atomMap = {}
    local _typeInfoNormalList = {}
    for __index, atomInfo in pairs( metaInfo.__typeInfoList ) do
       do
@@ -2277,22 +2322,20 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
                end
             end
             
-            do
-               local _exp = actInfo
-               if _exp ~= nil then
-                  table.insert( _typeInfoList, _exp )
-               else
-                  for key, val in pairs( atomInfo ) do
-                     Util.errorLog( string.format( "table: %s:%s", key, val) )
-                  end
-                  
-                  if mess ~= nil then
-                     Util.errorLog( mess )
-                  end
-                  
-                  Util.err( string.format( "_TypeInfo.%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
-                  ) )
+            if actInfo ~= nil then
+               table.insert( _typeInfoList, actInfo )
+               id2atomMap[actInfo.typeId] = actInfo
+            else
+               for key, val in pairs( atomInfo ) do
+                  Util.errorLog( string.format( "table: %s:%s", key, val) )
                end
+               
+               if mess ~= nil then
+                  Util.errorLog( mess )
+               end
+               
+               Util.err( string.format( "_TypeInfo.%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
+               ) )
             end
             
          end
@@ -2301,7 +2344,7 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
    end
    
    local orgId2MacroTypeInfo = {}
-   local importParam = ImportParam.new(self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope)
+   local importParam = ImportParam.new(self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, id2atomMap)
    for __index, atomInfo in pairs( _typeInfoList ) do
       local newTypeInfo, errMess = atomInfo:createTypeInfo( importParam )
       do
@@ -2498,9 +2541,8 @@ function TransUnit:processImport( modulePath, moduleInfoMap )
    local moduleInfo = Ast.ModuleInfo.new(modulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ))
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
-   moduleInfoMap[moduleTypeInfo] = moduleInfo
    self.importModuleInfo:remove(  )
-   return metaInfo, typeId2TypeInfo
+   return metaInfo, typeId2TypeInfo, moduleInfo
 end
 
 function TransUnit:analyzeImport( token )
@@ -2526,7 +2568,9 @@ function TransUnit:analyzeImport( token )
       
    end
    
-   local metaInfo, typeId2TypeInfo = self:processImport( modulePath, self.importModule2ModuleInfoCurrent )
+   Ast.switchIdProvier( Ast.IdType.Ext )
+   local metaInfo, typeId2TypeInfo, moduleInfo = self:processImport( modulePath )
+   Ast.switchIdProvier( Ast.IdType.Base )
    self.scope = self.moduleScope
    local assignName = moduleToken
    if nextToken.txt == "as" then
@@ -2535,6 +2579,7 @@ function TransUnit:analyzeImport( token )
    end
    
    local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
+   self.importModule2ModuleInfoCurrent[moduleTypeInfo] = moduleInfo:assign( assignName.txt )
    local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ))
    self.scope:add( moduleSymbolKind, false, false, assignName.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable, true )
    self:checkToken( nextToken, ";" )
@@ -5457,8 +5502,13 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
    if expList ~= nil then
       for __index, exp in pairs( expList:get_expList(  ) ) do
          local kind = exp:get_kind()
-         if kind ~= Ast.NodeKind.get_LiteralNil() and kind ~= Ast.NodeKind.get_LiteralChar() and kind ~= Ast.NodeKind.get_LiteralInt() and kind ~= Ast.NodeKind.get_LiteralReal() and kind ~= Ast.NodeKind.get_LiteralArray() and kind ~= Ast.NodeKind.get_LiteralList() and kind ~= Ast.NodeKind.get_LiteralMap() and kind ~= Ast.NodeKind.get_LiteralString() and kind ~= Ast.NodeKind.get_LiteralBool() and kind ~= Ast.NodeKind.get_LiteralSymbol() and kind ~= Ast.NodeKind.get_RefField() and kind ~= Ast.NodeKind.get_ExpMacroStat() then
-            self:error( "Macro arguments must be literal value." )
+         do
+            local _switchExp = kind
+            if _switchExp == Ast.NodeKind.get_LiteralNil() or _switchExp == Ast.NodeKind.get_LiteralChar() or _switchExp == Ast.NodeKind.get_LiteralInt() or _switchExp == Ast.NodeKind.get_LiteralReal() or _switchExp == Ast.NodeKind.get_LiteralArray() or _switchExp == Ast.NodeKind.get_LiteralList() or _switchExp == Ast.NodeKind.get_LiteralMap() or _switchExp == Ast.NodeKind.get_LiteralString() or _switchExp == Ast.NodeKind.get_LiteralBool() or _switchExp == Ast.NodeKind.get_LiteralSymbol() or _switchExp == Ast.NodeKind.get_RefField() or _switchExp == Ast.NodeKind.get_ExpMacroStat() or _switchExp == Ast.NodeKind.get_ExpOmitEnum() then
+            else 
+               
+                  self:error( "Macro arguments must be literal value." )
+            end
          end
          
       end
@@ -5520,10 +5570,11 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
       
    end
    
-   local parser = MacroPaser.new(macroInfo:getTokenList(  ), string.format( "macro %s", macroTypeInfo:getTxt(  )))
+   local parser = MacroPaser.new(macroInfo:getTokenList(  ), string.format( "%s:%d(macro %s)", self.parser:getStreamName(  ), firstToken.pos.lineNo, macroTypeInfo:getTxt(  )))
    local bakParser = self.parser
    self.parser = parser
    self.macroMode = Ast.MacroMode.Expand
+   self.macroCallLineNo = firstToken.pos.lineNo
    local stmtList = {}
    self:analyzeStatementList( stmtList, "}" )
    self.macroMode = Ast.MacroMode.None
@@ -6874,17 +6925,19 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
                   local enumTyepInfo = orgExpectType:get_srcTypeInfo()
                   local nextToken = self:getToken(  )
                   self:checkEnumComp( nextToken, enumTyepInfo )
-                  if enumTyepInfo:getEnumValInfo( nextToken.txt ) then
-                     if orgExpectType:get_externalFlag() and not self.importModule2ModuleInfoCurrent[orgExpectType:getModule(  ):get_srcTypeInfo()] then
-                        local fullname = orgExpectType:getFullName( self.importModule2ModuleInfo, true )
-                        self:addErrMess( token.pos, string.format( "This module not import -- %s", fullname) )
+                  do
+                     local valInfo = enumTyepInfo:getEnumValInfo( nextToken.txt )
+                     if valInfo ~= nil then
+                        if orgExpectType:get_externalFlag() and not self.importModule2ModuleInfoCurrent[orgExpectType:getModule(  ):get_srcTypeInfo()] then
+                           local fullname = orgExpectType:getFullName( self.importModule2ModuleInfo, true )
+                           self:addErrMess( token.pos, string.format( "This module not import -- %s", fullname) )
+                        end
+                        
+                        exp = Ast.ExpOmitEnumNode.create( self.nodeManager, token.pos, {enumTyepInfo}, nextToken, valInfo, enumTyepInfo )
+                        exp = self:analyzeExpCont( firstToken, exp, false )
+                     else
+                        self:error( string.format( "illegal enum val -- %s.%s", orgExpectType:getTxt(  ), nextToken.txt) )
                      end
-                     
-                     exp = Ast.ExpOmitEnumNode.create( self.nodeManager, token.pos, {enumTyepInfo}, nextToken, enumTyepInfo )
-                     exp = self:analyzeExpCont( firstToken, exp, false )
-                  else
-                   
-                     self:error( string.format( "illegal enum val -- %s.%s", orgExpectType:getTxt(  ), nextToken.txt) )
                   end
                   
                else
@@ -7070,7 +7123,12 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
       end
       
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" then
-      exp = Ast.LiteralIntNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeInt}, Parser.Token.new(Parser.TokenKind.Int, string.format( "%d", token.pos.lineNo), token.pos, false, nil), token.pos.lineNo )
+      local lineNo = token.pos.lineNo
+      if self.macroMode == Ast.MacroMode.Expand then
+         lineNo = self.macroCallLineNo
+      end
+      
+      exp = Ast.LiteralIntNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeInt}, Parser.Token.new(Parser.TokenKind.Int, string.format( "%d", lineNo), token.pos, false, nil), token.pos.lineNo )
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" then
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Fn, nil, false )
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "unwrap" then

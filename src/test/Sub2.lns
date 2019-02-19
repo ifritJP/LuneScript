@@ -101,6 +101,9 @@ fn testMap( algeTest:AlgeTest ) {
    }  
 }
 
+pub macro _test( val:enumTestSub ) {
+   print( ,,val.$_txt );
+}
 
 fn main() {
    let test = new Test();
@@ -115,6 +118,8 @@ fn main() {
    testMap( AlgeTest.Val3( 1) );
    testMap( AlgeTest.Val4( 1, "abc", new Hoge2( 10 )) );
    testMap( AlgeTest.Val5( AlgeTest.Val1 ) );
+
+   _test( .val1 );
 }
 
 pub class IF {
@@ -138,7 +143,6 @@ pub macro _MacroTest2(txt:str,val:int) {
 pub macro _MacroTest3(val:int) {
    print( "HOGE", ,,val );
 }
-
 
 pub fn DDDfunc( ...<int> ): ...<int> {
    let list = [ ... ];

@@ -1,0 +1,40 @@
+pub enum Level {
+   Fatal,
+   Err,
+   Warn,
+   Info,
+   Debug,
+   Trace,
+}
+
+let mut name2levelMap:Map<str,Level> = {};
+name2levelMap[ "fatal" ] = .Fatal;
+name2levelMap[ "error" ] = .Err;
+name2levelMap[ "warn" ] = .Warn;
+name2levelMap[ "info" ] = .Info;
+name2levelMap[ "debug" ] = .Debug;
+name2levelMap[ "trace" ] = .Trace;
+
+pub fn str2level( txt:str ) : Level! {
+   return name2levelMap[ txt ];
+}
+
+let mut outputLevel = Level.Err;
+
+pub fn setLevel( level:Level ) {
+   outputLevel = level;
+}
+
+pub form CreateMessage(): str;
+
+pub fn log( level:Level, funcName:str, lineNo:int, callback: CreateMessage ) {
+   if level <= outputLevel {
+      io.stderr.write( "%s:%s:%d:" (level.$_txt, funcName, lineNo)  );
+      io.stderr.write( callback() );
+      io.stderr.write( "\n" );
+   }
+}
+
+pub macro _log( level:Level, mess : stat ) {
+   Log.log( ,,level, __func__, __line__, fn ():str { ,,mess } );
+}

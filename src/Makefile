@@ -57,9 +57,10 @@ define buildLns
 	$(call transwork,$1,$2,Ver)
 	$(call transwork,$1,$2,LuaMod)
 	$(call transwork,$1,$2,Code)
+	$(call transwork,$1,$2,Log)
+	$(call transwork,$1,$2,LuaVer)
 	$(call transwork,$1,$2,Depend)
 	$(call transwork,$1,$2,Util)
-	$(call transwork,$1,$2,LuaVer)
 	$(call transwork,$1,$2,frontInterface)
 	$(call transwork,$1,$2,Writer)
 	$(call transwork,$1,$2,Parser)
@@ -234,8 +235,8 @@ test-comp2:
 	$(call exeComp,.,test/comp5.lns,test/comp5.lns,test.comp5 7 7) >> work/test1.result
 	$(MAKE) -s TEST_DIR=. test-error | grep -e 'error:' -e 'warning:' >> work/test1.result
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
-	$(MAKE) -C test/proj/ test MKFILE=Makefile SRC_DIR= | \
-		grep -v test/proj >> work/test1.result
+	$(MAKE) -C test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
+		grep -v /test/proj >> work/test1.result
 
 #		sed 's/.*error:/error:/' >> work/test1.result
 
@@ -266,8 +267,8 @@ test-comp2:
 	$(MAKE) -s TEST_DIR=work/3 test-error | grep -e 'error:' -e 'warning:' | \
 				tee -a work/test2.result
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
-	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile SRC_DIR= | \
-			grep -v test/proj >> work/test2.result
+	$(MAKE) -C work/3/test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
+			grep -v /test/proj >> work/test2.result
 #sed 's/.*error:/error:/' | tee -a work/test2.result
 
 

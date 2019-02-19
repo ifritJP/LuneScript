@@ -162,6 +162,7 @@ local glueFilter = _lune.loadModule( 'lune.base.glueFilter' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local OutputDepend = _lune.loadModule( 'lune.base.OutputDepend' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
+local Log = _lune.loadModule( 'lune.base.Log' )
 
 local forceUpdateMeta = true
 function __luneGetLocal( varName )
@@ -531,6 +532,7 @@ ModuleUptodate.Uptodate = { "Uptodate", {{ func=MetaForBuildId._fromMap, nilable
 ModuleUptodate._name2Val["Uptodate"] = ModuleUptodate.Uptodate
 
 function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
+   local __func__ = 'Front.getModuleIdAndCheckUptodate'
 
    local uptodate = _lune.newAlge( ModuleUptodate.NeedUpdate)
    if self.option.transCtrlInfo.uptodateMode == Option.CheckingUptodateMode.Force then
@@ -538,12 +540,19 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    end
    
    local function checkDependUptodate( metaTime, metaInfo, metaCode )
+      local __func__ = 'Front.getModuleIdAndCheckUptodate.checkDependUptodate'
    
       for depMod, dependItem in pairs( metaInfo.__dependModuleMap ) do
          local modMetaPath = self:searchModuleFile( depMod, ".meta", self.option.outputDir )
          if  nil == modMetaPath then
             local _modMetaPath = modMetaPath
          
+            Log.log( Log.Level.Debug, __func__, 348, function (  )
+            
+               return "NeedUpdate"
+            end
+             )
+            
             return _lune.newAlge( ModuleUptodate.NeedUpdate)
          end
          
@@ -551,6 +560,12 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          if  nil == time then
             local _time = time
          
+            Log.log( Log.Level.Debug, __func__, 353, function (  )
+            
+               return "NeedUpdate"
+            end
+             )
+            
             return _lune.newAlge( ModuleUptodate.NeedUpdate)
          end
          
@@ -559,12 +574,24 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             if  nil == dependMeta then
                local _dependMeta = dependMeta
             
+               Log.log( Log.Level.Debug, __func__, 361, function (  )
+               
+                  return "NeedUpdate"
+               end
+                )
+               
                return _lune.newAlge( ModuleUptodate.NeedUpdate)
             end
             
             local orgMetaModuleId = frontInterface.ModuleId.createIdFromTxt( dependItem.buildId )
             local metaModuleId = dependMeta:createModuleId(  )
             if metaModuleId:get_buildCount() ~= 0 and metaModuleId:get_buildCount() ~= orgMetaModuleId:get_buildCount() then
+               Log.log( Log.Level.Debug, __func__, 371, function (  )
+               
+                  return string.format( "NeedUpdate: %s, %d, %d", modMetaPath, metaModuleId:get_buildCount(), orgMetaModuleId:get_buildCount())
+               end
+                )
+               
                return _lune.newAlge( ModuleUptodate.NeedUpdate)
             end
             
@@ -593,6 +620,13 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          end
          
       end
+      
+   else
+      Log.log( Log.Level.Debug, __func__, 404, function (  )
+      
+         return "not found meta"
+      end
+       )
       
    end
    
@@ -1024,6 +1058,7 @@ function Front:saveToLua(  )
    end
    
    local function checkDiff( oldStream, newStream )
+      local __func__ = 'Front.saveToLua.checkDiff'
    
       local headEndPos = 0
       local tailBeginPos = 0
@@ -1073,6 +1108,12 @@ function Front:saveToLua(  )
             end
             
             if not cont then
+               Log.log( Log.Level.Debug, __func__, 859, function (  )
+               
+                  return string.format( "<%s>, <%s>", oldLine, newLine)
+               end
+                )
+               
                return false, ""
             end
             
@@ -1244,7 +1285,15 @@ function Front:saveToLua(  )
 end
 
 function Front:exec(  )
+   local __func__ = 'Front.exec'
 
+   Log.log( Log.Level.Trace, __func__, 1019, function (  )
+   
+      return Option.ModeKind:_getTxt( self.option.mode)
+      
+   end
+    )
+   
    do
       local _switchExp = self.option.mode
       if _switchExp == Option.ModeKind.Token then

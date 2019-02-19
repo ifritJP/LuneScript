@@ -606,16 +606,27 @@ function convFilter:outputMeta( node )
                self:writeln( "}" )
                self:write( "info.symList = {" )
                local firstFlag = true
-               for name, symInfo in pairs( macroInfo.symbol2MacroValInfoMap ) do
-                  if firstFlag then
-                     firstFlag = false
-                  else
-                   
-                     self:write( "," )
+               do
+                  local __sorted = {}
+                  local __map = macroInfo.symbol2MacroValInfoMap
+                  for __key in pairs( __map ) do
+                     table.insert( __sorted, __key )
                   end
-                  
-                  self:write( string.format( "{name=%q,typeId=%d}", name, symInfo.typeInfo:get_typeId()) )
-                  pickupTypeId( symInfo.typeInfo, true )
+                  table.sort( __sorted )
+                  for __index, name in ipairs( __sorted ) do
+                     local symInfo = __map[ name ]
+                     do
+                        if firstFlag then
+                           firstFlag = false
+                        else
+                         
+                           self:write( "," )
+                        end
+                        
+                        self:write( string.format( "{name=%q,typeId=%d}", name, symInfo.typeInfo:get_typeId()) )
+                        pickupTypeId( symInfo.typeInfo, true )
+                     end
+                  end
                end
                
                self:writeln( "}" )
@@ -1489,12 +1500,12 @@ end
 
 
 
-function convFilter:outputDeclMacro( name, astNameList, callback )
+function convFilter:outputDeclMacro( name, argNameList, callback )
 
    self:write( string.format( "local function %s(", name) )
    self:writeln( "__macroArgs )" )
    self:pushIndent(  )
-   for __index, argName in pairs( astNameList ) do
+   for __index, argName in pairs( argNameList ) do
       self:writeln( string.format( "local %s = __macroArgs.%s", argName, argName) )
    end
    

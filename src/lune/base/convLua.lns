@@ -537,7 +537,7 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
             self.writeln( "}" );
             self.write( "info.symList = {" );
             let mut firstFlag = true;
-            foreach symInfo, name in macroInfo.symbol2MacroValInfoMap {
+            forsort symInfo, name in macroInfo.symbol2MacroValInfoMap {
                if firstFlag {
                   firstFlag = false;
                }
@@ -1398,7 +1398,7 @@ pub override fn convFilter.processExpMacroExp(
 form outputMacroStmtBlock();
 
 pub fn convFilter.outputDeclMacro(
-   name:str, astNameList:&List<str>, callback:outputMacroStmtBlock ) mut
+   name:str, argNameList:&List<str>, callback:outputMacroStmtBlock ) mut
 {
    self.write( "local function %s(" ( name ) );
 
@@ -1421,7 +1421,7 @@ pub fn convFilter.outputDeclMacro(
 
    self.writeln( "__macroArgs )" );
    self.pushIndent(##);
-   foreach argName in astNameList {
+   foreach argName in argNameList {
       self.writeln( "local %s = __macroArgs.%s" (argName, argName ) );
    } 
 

@@ -2,4 +2,8 @@ pub fn func(): str {
    return __func__;
 }
 
+pub fn func2(): str {
+   return __func__;
+}
+
 

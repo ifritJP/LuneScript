@@ -29,19 +29,34 @@ import lune.base.Code;
 
 pub class IdProvider {
    let mut id:int {pub};
+   let maxId:int;
 
    pub fn increment() mut {
       self.id = self.id + 1;
+      if self.id >= self.maxId {
+         Util.err( "id is over" );
+      }
    }
    
    pub fn getNewId() mut : int {
       let newId = self.id;
       self.id = self.id + 1;
+      if self.id >= self.maxId {
+         Util.err( "id is over" );
+      }
       return newId;
    }
 }
 
-let mut idProv = new IdProvider( 1 );
+let extStartId = 100000;
+let extMaxId = 10000000;
+
+/** 解析対象モジュールの ID 管理 */
+let mut idProvBase = new IdProvider( 1, extStartId );
+/** import する外部モジュールの ID 管理 */
+let mut idProvExt = new IdProvider( extStartId, extMaxId );
+let mut idProv = idProvBase;
+
 /**
 ビルトインでないユーザが定義した型情報の ID 開始番号。
 
@@ -573,7 +588,7 @@ static な型か。
 
    /** 親の完全限定名を取得する */
    pub fn getParentFullName(
-      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
    {  
       let mut typeInfo:&TypeInfo = self;
       let mut name = "";
@@ -3031,7 +3046,7 @@ pub class ModuleInfo extend (ModuleInfoIF) {
    pri let assignName:str{ pub };
    pri let moduleId:&frontInterface.ModuleId {pub};
 
-   pub fn __init( fullName:str, assignName:str, idMap:Map<&TypeInfo,int>,
+   pub fn __init( fullName:str, assignName:str, idMap:&Map<&TypeInfo,int>,
                   moduleId:&frontInterface.ModuleId )
    {
       self.moduleId = moduleId;
@@ -3047,15 +3062,21 @@ pub class ModuleInfo extend (ModuleInfoIF) {
    pub fn get_modulePath(): str {
       return self.fullName;
    }
+
+   pub fn assign( assignName: str ): ModuleInfo {
+      return new ModuleInfo(
+         self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId );
+   }
 }
 
-pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,ModuleInfoIF>, localFlag:bool! ) : str {
+pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,&ModuleInfoIF>, localFlag:bool! ) : str {
    return self.getParentFullName( importInfo, localFlag ) .. self.$rawTxt;
 }
 
 
 pub class ProcessInfo {
    let mut idProvier:IdProvider {pub};
+   let mut idProvierExt:IdProvider {pub};
    let mut typeInfo2ModifierMap:Map<&TypeInfo,&TypeInfo> {pub};
    let mut typeInfo2DDDMap:Map<&TypeInfo,&DDDTypeInfo> {pub};
 }
@@ -3528,6 +3549,7 @@ pub override fn StmtExpNode.getBreakKind( checkMode:CheckBreakMode ):BreakKind {
 
 _declNodeClass( "ExpOmitEnum", Node, true, true, false,
                 [ { "valToken": "&Parser.Token" },
+                  { "valInfo": "&EnumValInfo" },
                   { "enumTypeInfo": "&EnumTypeInfo" }]
 );
 
@@ -4038,10 +4060,29 @@ pub override fn ExpRefNode.getLiteral(): stem![], List<&TypeInfo> {
    let enumTypeInfo = typeInfo@@EnumTypeInfo;
 
    let val = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
-   return [ val.$val ], [ enumTypeInfo.$valTypeInfo ];
+   return [ val.$name ], [ enumTypeInfo ];
+}
+
+pub override fn ExpOmitEnumNode.getLiteral(): stem![], List<&TypeInfo> {
+   let enumTypeInfo = self.enumTypeInfo;
+
+   let val = self.valInfo;
+   return [ val.$name ], [ enumTypeInfo ];
 }
 
 pub override fn ExpOp2Node.getLiteral(): stem![], List<&TypeInfo> {
+
+   fn getValType( valList:&List<stem!>, typeList:&List<&TypeInfo> ): &stem, &TypeInfo {
+      let typeInfo = typeList[ 1 ].$srcTypeInfo;
+      let val = unwrap valList[ 1 ];
+      if typeInfo.$kind ~= .Enum {
+         return val, typeInfo;
+      }
+      let enumTypeInfo = typeInfo@@EnumTypeInfo;
+      let valInfo = unwrap enumTypeInfo.getEnumValInfo( val@@str );
+      return valInfo.$val, enumTypeInfo.$valTypeInfo;
+   }
+   
    let val1List, mut type1List = self.$exp1.getLiteral();
    let val2List, mut type2List = self.$exp2.getLiteral();
 
@@ -4049,9 +4090,8 @@ pub override fn ExpOp2Node.getLiteral(): stem![], List<&TypeInfo> {
       return [], [];
    }
 
-   let val1, type1, val2, type2 =
-      unwrap val1List[1], type1List[1].$srcTypeInfo,
-      unwrap val2List[1], type2List[1].$srcTypeInfo;
+   let val1, type1 = getValType( val1List, type1List );
+   let val2, type2 = getValType( val2List, type2List );
    
 
    if ( type1 == builtinTypeInt or type1 == builtinTypeReal ) and
@@ -4148,6 +4188,19 @@ pub class DefMacroInfo extend MacroInfo {
 
 let mut processInfoQueue:List<ProcessInfo> = [];
 
+pub enum IdType {
+   Base,
+   Ext,
+}
+pub fn switchIdProvier( idType:IdType ) {
+   if idType == .Base {
+      idProv = idProvBase;
+   }
+   else {
+      idProv = idProvExt;
+   }  
+}
+
 pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 
    if #processInfoQueue == 0 {
@@ -4158,23 +4211,28 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 
    
    processInfoQueue.insert(
-      new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap ) );   
+      new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap ) );   
    when! processInfo {
-      idProv = processInfo.$idProvier;
+      idProvBase = processInfo.$idProvier;
+      idProvExt = processInfo.$idProvierExt;
       typeInfo2ModifierMap = processInfo.$typeInfo2ModifierMap;
       typeInfo2DDDMap = processInfo.$typeInfo2DDDMap;
    }
    else {
-      idProv = new IdProvider( userStartId );
+      idProvBase = new IdProvider( userStartId, extStartId );
+      idProvExt = new IdProvider( extStartId, extMaxId );
       typeInfo2ModifierMap = {};
       typeInfo2DDDMap = {};
    }
-   return new ProcessInfo( idProv, typeInfo2ModifierMap, typeInfo2DDDMap );       
+   idProv = idProvBase;
+   return new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap );       
 }
 
 pub fn popProcessInfo() {
    let mut info = processInfoQueue[ #processInfoQueue ];
-   idProv = info.$idProvier;
+   idProvBase = info.$idProvier;
+   idProvExt = info.$idProvierExt;
+   idProv = idProvBase;
    typeInfo2ModifierMap = info.$typeInfo2ModifierMap;
    processInfoQueue.remove(##);
 }

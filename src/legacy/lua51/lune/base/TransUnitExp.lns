@@ -417,20 +417,25 @@ fn TransUnit.evalMacro(
    when! expList {
       foreach exp in expList.get_expList() {
          let kind = exp.$kind;
-         if kind ~= Ast.NodeKind.$LiteralNil and
-            kind ~= Ast.NodeKind.$LiteralChar and
-            kind ~= Ast.NodeKind.$LiteralInt and
-            kind ~= Ast.NodeKind.$LiteralReal and
-            kind ~= Ast.NodeKind.$LiteralArray and
-            kind ~= Ast.NodeKind.$LiteralList and
-            kind ~= Ast.NodeKind.$LiteralMap and
-            kind ~= Ast.NodeKind.$LiteralString and
-            kind ~= Ast.NodeKind.$LiteralBool and
-            kind ~= Ast.NodeKind.$LiteralSymbol and
-            kind ~= Ast.NodeKind.$RefField and
-            kind ~= Ast.NodeKind.$ExpMacroStat
-         {
-            self.error( "Macro arguments must be literal value." );
+         switch kind {
+            case Ast.NodeKind.$LiteralNil,
+                 Ast.NodeKind.$LiteralChar,
+                 Ast.NodeKind.$LiteralInt,
+                 Ast.NodeKind.$LiteralReal,
+                 Ast.NodeKind.$LiteralArray,
+                 Ast.NodeKind.$LiteralList,
+                 Ast.NodeKind.$LiteralMap,
+                 Ast.NodeKind.$LiteralString,
+                 Ast.NodeKind.$LiteralBool,
+                 Ast.NodeKind.$LiteralSymbol,
+                 Ast.NodeKind.$RefField,
+                 Ast.NodeKind.$ExpMacroStat,
+                 Ast.NodeKind.$ExpOmitEnum
+            {
+            }
+            default {
+               self.error( "Macro arguments must be literal value." );
+            }
          }
       }
    }
@@ -508,14 +513,16 @@ fn TransUnit.evalMacro(
    // }
 
 
-   let mut parser = new MacroPaser( macroInfo.getTokenList(),
-                                    "macro %s" (macroTypeInfo.getTxt(##)) );
+   let mut parser = new MacroPaser(
+      macroInfo.getTokenList(),
+      "%s:%d(macro %s)" (self.parser.getStreamName(),
+                          firstToken.pos.lineNo, macroTypeInfo.getTxt(##)) );
    let mut bakParser = self.parser;
    self.parser = parser;
 
 
    self.macroMode = .Expand;
-
+   self.macroCallLineNo = firstToken.pos.lineNo;
 
    let mut stmtList:List<&Ast.Node> = [];
    self.analyzeStatementList( stmtList, "}" );
@@ -1962,7 +1969,7 @@ fn TransUnit.analyzeExp(
                let nextToken = self.getToken(##);
                self.checkEnumComp( nextToken, enumTyepInfo );
                
-               if enumTyepInfo.getEnumValInfo( nextToken.txt ) {
+               if! let valInfo = enumTyepInfo.getEnumValInfo( nextToken.txt ) {
                   if orgExpectType.$externalFlag and
                      not self.importModule2ModuleInfoCurrent[
                         orgExpectType.getModule().$srcTypeInfo ]
@@ -1974,7 +1981,7 @@ fn TransUnit.analyzeExp(
                   }  
                   exp = Ast.ExpOmitEnumNode.create(
                      self.nodeManager, token.pos, [ enumTyepInfo ],
-                     nextToken, enumTyepInfo );
+                     nextToken, valInfo, enumTyepInfo );
                   exp = self.analyzeExpCont( firstToken, exp, false );
                }  
                else {
@@ -2204,9 +2211,13 @@ fn TransUnit.analyzeExp(
       }  
    }  
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
+      let mut lineNo = token.pos.lineNo;
+      if self.macroMode == .Expand {
+         lineNo = self.macroCallLineNo;
+      }
       exp = Ast.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
-         new Parser.Token( .Int, "%d" (token.pos.lineNo),
+         new Parser.Token( .Int, "%d" (lineNo),
                            token.pos, false, nil ), token.pos.lineNo );
    }  
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" {
