@@ -165,6 +165,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
       elseif token.txt == "provide" {
          statement = self.analyzeProvide( token );
       }
+      elseif token.txt == "alias" {
+         return self.analyzeAlias( token );
+      }
       elseif token.txt == ";" {
          statement = self.createNoneNode( token.pos );
       }

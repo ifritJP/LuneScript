@@ -699,21 +699,22 @@ local ImportParam = {}
 function ImportParam.setmeta( obj )
   setmetatable( obj, { __index = ImportParam  } )
 end
-function ImportParam.new( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, typeId2AtomMap )
+function ImportParam.new( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap )
    local obj = {}
    ImportParam.setmeta( obj )
    if obj.__init then
-      obj:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, typeId2AtomMap )
+      obj:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap )
    end        
    return obj 
 end         
-function ImportParam:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, typeId2AtomMap ) 
+function ImportParam:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap ) 
 
    self.transUnit = transUnit
    self.typeId2Scope = typeId2Scope
    self.typeId2TypeInfo = typeId2TypeInfo
    self.metaInfo = metaInfo
    self.scope = scope
+   self.moduleTypeInfo = moduleTypeInfo
    self.typeId2AtomMap = typeId2AtomMap
 end
 
@@ -833,6 +834,70 @@ function _TypeInfoNilable._fromMapSub( obj, val )
    local memInfo = {}
    table.insert( memInfo, { name = "nilable", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "orgTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
+local _TypeInfoAlias = {}
+setmetatable( _TypeInfoAlias, { __index = _TypeInfo } )
+function _TypeInfoAlias:createTypeInfo( param )
+
+   local srcTypeInfo = _lune.unwrap( param:getTypeInfo( self.srcTypeId ))
+   local newTypeInfo = Ast.NormalTypeInfo.createAlias( self.rawTxt, true, Ast.AccessMode.Pub, param.moduleTypeInfo, srcTypeInfo )
+   param.typeId2TypeInfo[self.typeId] = _lune.unwrap( newTypeInfo)
+   local parentScope = param.typeId2Scope[self.parentId]
+   if  nil == parentScope then
+      local _parentScope = parentScope
+   
+      return nil, string.format( "not found parentScope %s %s", self.parentId, self.rawTxt)
+   end
+   
+   parentScope:addAliasForType( self.rawTxt, newTypeInfo )
+   return newTypeInfo, nil
+end
+function _TypeInfoAlias.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoAlias  } )
+end
+function _TypeInfoAlias.new( rawTxt, srcTypeId )
+   local obj = {}
+   _TypeInfoAlias.setmeta( obj )
+   if obj.__init then
+      obj:__init( rawTxt, srcTypeId )
+   end        
+   return obj 
+end         
+function _TypeInfoAlias:__init( rawTxt, srcTypeId ) 
+
+   _TypeInfo.__init( self )
+   self.rawTxt = rawTxt
+   self.srcTypeId = srcTypeId
+end
+function _TypeInfoAlias:_toMap()
+  return self
+end
+function _TypeInfoAlias._fromMap( val )
+  local obj, mes = _TypeInfoAlias._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoAlias.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoAlias._fromStem( val )
+  return _TypeInfoAlias._fromMap( val )
+end
+
+function _TypeInfoAlias._fromMapSub( obj, val )
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "rawTxt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "srcTypeId", func = _lune._toInt, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -2312,6 +2377,8 @@ function TransUnit:processImport( modulePath )
                   
                elseif _switchExp == Ast.SerializeKind.Nilable then
                   actInfo = _TypeInfoNilable._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.Alias then
+                  actInfo = _TypeInfoAlias._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.DDD then
                   actInfo, mess = _TypeInfoDDD._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Modifier then
@@ -2344,7 +2411,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local orgId2MacroTypeInfo = {}
-   local importParam = ImportParam.new(self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, id2atomMap)
+   local importParam = ImportParam.new(self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, id2atomMap)
    for __index, atomInfo in pairs( _typeInfoList ) do
       local newTypeInfo, errMess = atomInfo:createTypeInfo( importParam )
       do
@@ -3692,6 +3759,47 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    return Ast.DeclAlgeNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, accessMode, algeTypeInfo, algeScope )
 end
 
+function TransUnit:analyzeAlias( accessMode, firstToken )
+
+   if self.scope ~= self.moduleScope then
+      self:addErrMess( firstToken.pos, "alias must use at top scope." )
+   end
+   
+   local newToken = self:getToken(  )
+   self:checkNextToken( "=" )
+   local srcToken = self:getToken(  )
+   local symbolNode = self:analyzeExpSymbol( firstToken, srcToken, ExpSymbolMode.Symbol, nil, true )
+   local newTypeInfo = Ast.builtinTypeNone
+   local symbolInfoList = symbolNode:getSymbolInfo(  )
+   if #symbolInfoList >= 1 then
+      local symbolInfo = symbolInfoList[1]
+      if newToken.txt:find( "^_" ) and not srcToken.txt:find( "^_" ) or not newToken.txt:find( "^_" ) and srcToken.txt:find( "^_" ) then
+         self:addErrMess( firstToken.pos, string.format( "alias symbol unmatch. %s %s", newToken.txt, newToken.txt) )
+      else
+       
+         do
+            local _switchExp = symbolInfo:get_kind()
+            if _switchExp == Ast.SymbolKind.Typ or _switchExp == Ast.SymbolKind.Fun then
+               local aliasSymbolInfo = self.scope:addAlias( newToken.txt, false, accessMode, self.moduleType, symbolInfo )
+               newTypeInfo = aliasSymbolInfo:get_typeInfo()
+            else 
+               
+                  self:addErrMess( firstToken.pos, string.format( "can alias symbol -- %s. (%s)", srcToken.txt, Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
+                  ) )
+            end
+         end
+         
+      end
+      
+   else
+    
+      self:addErrMess( firstToken.pos, string.format( "not found symbold -- %s", srcToken.txt) )
+   end
+   
+   self:checkNextToken( ";" )
+   return Ast.AliasNode.create( self.nodeManager, firstToken.pos, {newTypeInfo}, newToken.txt, symbolNode, newTypeInfo )
+end
+
 function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token )
 
    local retTypeInfoList = {}
@@ -3790,6 +3898,8 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    elseif token.txt == "form" then
       self:analyzeDeclForm( accessMode, firstToken )
       return self:createNoneNode( firstToken.pos )
+   elseif token.txt == "alias" then
+      return self:analyzeAlias( accessMode, firstToken )
    end
    
    return nil

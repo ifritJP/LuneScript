@@ -84,6 +84,7 @@ pub enum SerializeKind {
    Enum,
    Alge,
    DDD,
+   Alias,
 }
 
 pub enum TypeInfoKind {
@@ -254,7 +255,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       self.mutable = mutable and true or false;
       self.hasValueFlag = hasValueFlag;
    }
-   
+
    /**
 このシンボルにアクセス可能かどうか調べる。
 
@@ -325,6 +326,10 @@ pub class Scope {
 
    pub fn remove( name: str ) mut {
       self.symbol2SymbolInfoMap[ name ] = nil;
+   }
+
+   pub fn addSymbol( symbolInfo: SymbolInfo ) mut {
+      self.symbol2SymbolInfoMap[ symbolInfo.$name ] = symbolInfo;
    }
    
    pub fn getNSTypeInfo(): TypeInfo;
@@ -434,13 +439,26 @@ pub class TypeInfo {
       return false;
    }
 
+   /** シンプルな型名 */
+   pub fn get_rawTxt(): str {
+      return "";
+   }
+   
    /** この型の名前を取得する。 */
-   pub fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   pro fn getTxtWithRaw(
+      raw:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo, ModuleInfoIF>!, localFlag:bool! ) : str
    {  
       return "";
    }
 
+   /** この型の名前を取得する。 */
+   pub fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+  
    /** other 型から dest 型への opTxt の評価が可能かどうか */
    pro static fn canEvalWithBase(
       dest:&TypeInfo, destMut: bool, other:&TypeInfo, opTxt:str ): bool;
@@ -460,9 +478,15 @@ pub class TypeInfo {
       return;
    }
 
+
+   /** 表示用文字列取得 */
+   pub fn get_display_stirng_with( raw:str ): str {
+      return "";
+   }
+
    /** 表示用文字列取得 */
    pub fn get_display_stirng(): str {
-      return "";
+      return self.get_display_stirng_with( "" );
    }
 
 
@@ -524,10 +548,6 @@ pub class TypeInfo {
          return self;
       }
       return self.$parentInfo.getModule();
-   }
-   /** シンプルな型名 */
-   pub fn get_rawTxt(): str {
-      return "";
    }
    /** typeId を取得 */
    pub fn get_typeId(): int {
@@ -616,6 +636,44 @@ static な型か。
       return name;
    }
 }
+
+
+pub class AliasTypeInfo extend TypeInfo {
+   pri let rawTxt: str { pub };
+   pri let accessMode: AccessMode { pub };
+   pri let parentInfo: &TypeInfo { pub };
+   pri let aliasSrcTypeInfo: &TypeInfo { pub };
+   pri let externalFlag:bool { pub };
+   pri let typeId: int { pub };
+
+   /** この型の名前を取得する。 */
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.rawTxt, fullName, importInfo, localFlag );
+   }
+
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+      let parentId = self.getParentId();
+      stream.write(
+         '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n' (
+            SerializeKind.Alias, parentId, self.typeId, self.rawTxt,
+            self.aliasSrcTypeInfo.$typeId ) );
+   }
+
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.rawTxt );
+   }
+
+   /** 親の typeId  */
+   pub override fn getParentId(): int {
+      return self.parentInfo.$typeId;
+   }
+   
+
+   advertise aliasSrcTypeInfo;
+}
+
 
 /**
 列挙したシンボル情報を処理するコールバック。
@@ -984,6 +1042,97 @@ fn dumpScope( scope: Scope!, prefix:str ) {
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
+pub class NilTypeInfo extend TypeInfo {
+   pri let typeId:int {pub};
+
+   pub fn __init() {
+      super( nil );
+
+      idProv.increment();
+      self.typeId = idProv.$id;
+   }
+   
+   /** この型がモジュールを示す型の場合 true  */
+   pub override fn isModule(): bool {
+      return false;
+   }
+
+   /** この型の名前を取得する。 */
+   pub override fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      raw:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
+      return "nil";
+   }
+   
+
+   /** other 型からこの型への opTxt の評価が可能かどうか */
+   pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
+      return other.$nilable;
+   }
+
+   /** 表示用文字列取得 */
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.getTxtWithRaw( raw ##);
+   }
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( "nil" );
+   }
+   
+
+   /** この型と typeInfo が等しいかどうか */
+   pub override fn equals( typeInfo: &TypeInfo ): bool {
+      return self == typeInfo.$srcTypeInfo;
+   }
+
+   /** 名前空間の親 */
+   pub override fn get_parentInfo(): &TypeInfo {
+      return headTypeInfo;
+   }
+
+   /**
+   この型情報に、 other から辿ることができるか？
+   具体的には other の名前空間の上位に、この型情報が宣言されているか？
+   */
+   pub override fn hasRouteNamespaceFrom( mut other: &TypeInfo ): bool {
+      return true;
+   }
+   
+   /** シンプルな型名 */
+   pub override fn get_rawTxt(): str {
+      return "nil";
+   }
+   /** 型の種別 */
+   pub override fn get_kind(): TypeInfoKind {
+      return .Prim;
+   }
+   /** super クラス。 継承していない場合は headTypeInfo。 */
+   pub override fn get_baseTypeInfo(): &TypeInfo {
+      return headTypeInfo;
+   }
+   /** nilable かどうか */
+   pub override fn get_nilable(): bool {
+      return true;
+   }
+   /** mutable かどうか */
+   pub override fn get_mutable(): bool {
+      return false;
+   }
+
+   /** 親の完全限定名を取得する */
+   pub override fn getParentFullName(
+      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return "nil";
+   }
+}
+
+
 
 pub fn Scope.getNSTypeInfo(): &TypeInfo {
    let mut scope = self;
@@ -1109,14 +1258,28 @@ pub class NilableTypeInfo extend TypeInfo {
    }
    pub override fn get_nilable(): bool {
       return true;
-   } 
-   pub override fn getTxt( fullName:bool!,
-                           importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   }
+
+   /** この型の名前を取得する。 */
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      raw:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    {  
-      return self.nonnilableType.getTxt( fullName, importInfo, localFlag ) .. "!";
+      return self.nonnilableType.getTxtWithRaw(
+         raw, fullName, importInfo, localFlag ) .. "!";
+   }
+
+
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.nonnilableType.get_display_stirng_with( raw ) .. "!";
    }
    pub override fn get_display_stirng(): str {
-      return self.nonnilableType.$display_stirng .. "!";
+      return self.get_display_stirng_with( self.$rawTxt );
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -1142,22 +1305,35 @@ pub class ModifierTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
    pri let mutable: bool { pub };
 
-   pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   /** この型の名前を取得する。 */
+   pub override fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    {
-      let mut txt = self.srcTypeInfo.getTxt( fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      raw:str,  fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      let mut txt = self.srcTypeInfo.getTxtWithRaw(
+         raw, fullName, importInfo, localFlag );
       if not self.mutable {
          txt = "&" .. txt;
       }
       return txt;
    }
-   pub override fn get_display_stirng(): str {
-      let mut txt = self.srcTypeInfo.get_display_stirng();
+
+   pub override fn get_display_stirng_with( raw:str ): str {
+      let mut txt = self.srcTypeInfo.get_display_stirng_with( raw );
       if self.mutable {
          txt = "mut " .. txt;
       }
       return txt;
    }
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt );
+   }
+   
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
@@ -1174,6 +1350,7 @@ pub class ModifierTypeInfo extend TypeInfo {
 
    advertise srcTypeInfo;
 }
+
 
 
 pub class ModuleTypeInfo extend TypeInfo {
@@ -1226,16 +1403,25 @@ pub class ModuleTypeInfo extend TypeInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   /** この型の名前を取得する。 */
+   pub override fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      rawTxt:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    {  
-      return self.rawTxt;
+      return rawTxt;
    }
 
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.getTxtWithRaw( raw ##);
+   }
    pub override fn get_display_stirng(): str {
-      return self.getTxt(##);
+      return self.get_display_stirng_with( self.$rawTxt );
    }
-
    pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
       return false;
    }
@@ -1327,14 +1513,24 @@ pub class EnumTypeInfo extend TypeInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   /** この型の名前を取得する。 */
+   pub override fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      rawTxt:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    { 
-      return self.rawTxt;
+      return rawTxt;
    }
 
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.getTxtWithRaw( raw ##);
+   }
    pub override fn get_display_stirng(): str {
-      return self.getTxt(##);
+      return self.get_display_stirng_with( self.$rawTxt );
    }
    
    pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
@@ -1428,14 +1624,24 @@ pub class AlgeTypeInfo extend TypeInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   /** この型の名前を取得する。 */
+   pub override fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      rawTxt:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    { 
-      return self.rawTxt;
+      return rawTxt;
    }
 
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.getTxtWithRaw( raw ##);
+   }
    pub override fn get_display_stirng(): str {
-      return self.getTxt(##);
+      return self.get_display_stirng_with( self.$rawTxt );
    }
    
    pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
@@ -1477,22 +1683,18 @@ pub class NormalTypeInfo extend TypeInfo {
    /** */
    pri let abstractFlag: bool { pub };
 
-   // unwrap 後の TypeInfo。 無効な場合は headTypeInfo。
-   pri let mut nonnilableType: &TypeInfo { pub };
    // 基底クラス。 無効な場合は headTypeInfo。
    pri let baseTypeInfo: &TypeInfo { pub };
    // インタフェースのリスト。
    pri let interfaceList: List<&TypeInfo> { pub };
 
-   // この型が nilable を表わす型かどうか。
-   pri let mut nilable: bool { pub };
    // この型の nilable 版の TypeInfo。 無効な場合は headTypeInfo。
    pri let mut nilableTypeInfo: &TypeInfo { pub };
    // このメソッドが mutable かどうか。
    pri let mutable: bool {pub};
 
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
-              interfaceList: List<&TypeInfo>!, nonnilableType: TypeInfo!,
+              interfaceList: List<&TypeInfo>!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
               accessMode: AccessMode,
               txt: str, parentInfo: &TypeInfo!, typeId: int, kind: TypeInfoKind,
@@ -1517,7 +1719,6 @@ pub class NormalTypeInfo extend TypeInfo {
       self.itemTypeInfoList = unwrap itemTypeInfoList default [];
       self.argTypeInfoList = unwrap argTypeInfoList default [];
       self.retTypeInfoList = unwrap retTypeInfoList default [];
-      self.nonnilableType = unwrap nonnilableType default headTypeInfo;
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.mutable = mutable and true or false;
 
@@ -1528,19 +1729,12 @@ pub class NormalTypeInfo extend TypeInfo {
 
       self.typeId = typeId;
       if kind == .Root {
-         self.nilable = false;
          // dummyRootTypeInfo = self;
-      } 
-      elseif txt == "nil" or txt == "..." {
-         self.nilable = true;
-         self.nilableTypeInfo = self;
-         self.nonnilableType = self;
       }
-      elseif not nonnilableType {
-         if! parentInfo {
-            _exp.addChildren( self );
+      else {
+         when! parentInfo {
+            parentInfo.addChildren( self );
          }  
-         self.nilable = false;
 
          let mut hasNilable = false;
 
@@ -1556,30 +1750,20 @@ pub class NormalTypeInfo extend TypeInfo {
             }
          }  
          if hasNilable {
-            if txt == "..." {
-               self.nilableTypeInfo = self;
-            }
-            else {
-               // self.nilableTypeInfo = new NormalTypeInfo(
-               //    false, nil, baseTypeInfo, interfaceList, self, autoFlag, externalFlag,
-               //    staticFlag, accessMode, "", parentInfo, typeId + 1,
-               //    .Nilable, itemTypeInfoList,
-               //    argTypeInfoList, retTypeInfoList );
-               self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
-               idProv.increment();
-               //typeIdSeed = typeIdSeed + 1;
-            }
+            self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
+            idProv.increment();
          }
          else {
             self.nilableTypeInfo = headTypeInfo;
          }
          idProv.increment();
-         //typeIdSeed = typeIdSeed + 1;
       } 
-      else {
-         self.nilable = true;
-         self.nilableTypeInfo = headTypeInfo;
-      } 
+   }
+
+
+   // この型が nilable を表わす型かどうか。
+   pub override fn get_nilable(): bool {
+      return false;
    }
 
    pub override fn isModule(): bool {
@@ -1594,16 +1778,20 @@ pub class NormalTypeInfo extend TypeInfo {
       return self.baseTypeInfo.$typeId or rootTypeId;
    }
 
-   pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   /** この型の名前を取得する。 */
+   pub override fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      raw:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
    {
       let mut parentTxt = "";
       if fullName {
          parentTxt = self.getParentFullName( importInfo, localFlag );
       }
-      if self.nilable and (self.nilableTypeInfo ~= self.nonnilableType) {
-         return parentTxt .. (unwrap self.nonnilableType).getTxt( fullName, importInfo, localFlag ) .. "!";
-      } 
       // if self.kind == .Array {
       //    let! _exp = self.itemTypeInfoList[1] {
       //       return "[@]";
@@ -1617,7 +1805,7 @@ pub class NormalTypeInfo extend TypeInfo {
       //    return _exp.getTxt() .. "[]";
       // } 
       if #self.itemTypeInfoList > 0 {
-         let mut txt = self.rawTxt .. "<";
+         let mut txt = raw .. "<";
          foreach typeInfo, index in self.itemTypeInfoList {
             if index ~= 1 {
                txt = txt .. ",";
@@ -1627,16 +1815,14 @@ pub class NormalTypeInfo extend TypeInfo {
 
          return parentTxt .. txt .. ">";
       } 
-      return parentTxt .. self.$rawTxt;
+      return parentTxt .. raw;
    }
 
-   pub override fn get_display_stirng(): str {
-      if self.kind == .Nilable {
-         return (unwrap self.nonnilableType).get_display_stirng() .. "!";
-      }
+
+   pub override fn get_display_stirng_with( raw:str ): str {
       if self.kind == .Func or self.kind == .Method
       {
-         let mut txt = self.$rawTxt .. "(";
+         let mut txt = raw .. "(";
          foreach argType, index in self.argTypeInfoList {
             if index ~= 1 {
                txt = txt .. ", ";
@@ -1655,9 +1841,13 @@ pub class NormalTypeInfo extend TypeInfo {
          }
          return txt;
       }
-      return self.getTxt(##);
+      return self.getTxtWithRaw( raw ##);
    }
 
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt );
+   }
+   
    
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       if self.typeId == rootTypeId {
@@ -1665,12 +1855,6 @@ pub class NormalTypeInfo extend TypeInfo {
       }
 
       let parentId = self.getParentId();
-      if self.nilable {
-         stream.write(
-            '{ parentId=%d, typeId = %d, nilable = true, orgTypeId = %d }\n' (
-               parentId, self.typeId, self.nonnilableType.$typeId ) );
-         return;
-      } 
 
       fn serializeTypeInfoList( name: str, list: &List<&TypeInfo>, onlyPub: bool! ): str {
          let mut work = name;
@@ -1721,7 +1905,7 @@ pub class NormalTypeInfo extend TypeInfo {
          self.staticFlag ~= typeInfo.$staticFlag or
          self.accessMode ~= typeInfo.$accessMode or
          self.autoFlag ~= typeInfo.$autoFlag or
-         self.nilable ~= typeInfo.$nilable or
+         self.$nilable ~= typeInfo.$nilable or
          self.rawTxt ~= typeInfo.$rawTxt or
          self.parentInfo ~= typeInfo.$parentInfo or
          self.baseTypeInfo ~= typeInfo.$baseTypeInfo or
@@ -1736,9 +1920,9 @@ pub class NormalTypeInfo extend TypeInfo {
          return false;
       }
 
-      if ( self.nonnilableType ~= typeInfo.$nonnilableType )
+      if ( self ~= typeInfo.$nonnilableType )
       { 
-         Util.log( "%s, %s" ( self.nonnilableType, typeInfo.$nonnilableType ) );
+         Util.log( "%s, %s" ( self, typeInfo.$nonnilableType ) );
          //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
          //                                     typeInfo.getTxt(), typeInfo.typeId ) );
          return false;
@@ -1775,8 +1959,7 @@ pub class NormalTypeInfo extend TypeInfo {
          }
       }
 
-      if self.nonnilableType ~= headTypeInfo and
-         not self.nonnilableType.equals( typeInfo.$nonnilableType )
+      if not self.equals( typeInfo.$nonnilableType )
       {     
          error( "illegal %s:%d %s:%d" ( self.getTxt(##), self.typeId,
                                         typeInfo.getTxt(##), typeInfo.$typeId ) );
@@ -1817,7 +2000,7 @@ pub class NormalTypeInfo extend TypeInfo {
       idProv.increment();
       //typeIdSeed = typeIdSeed + 1;
       let mut info = new NormalTypeInfo(
-         abstractFlag, scope, baseInfo, interfaceList, nil, false, true,
+         abstractFlag, scope, baseInfo, interfaceList, false, true,
          staticFlag, accessMode, txt, parentInfo, idProv.$id, kind,
          itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable ); 
       return info;
@@ -1830,6 +2013,22 @@ pub class NormalTypeInfo extend TypeInfo {
 
 idProv.increment();
 //typeIdSeed = typeIdSeed + 1;
+
+fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
+                  typeInfo:&TypeInfo, nilableTypeInfo:&TypeInfo )
+{
+   typeInfoKind[ idName ] = typeInfo;
+   sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
+      SymbolKind.Typ, false, false,
+      rootScope, AccessMode.Pub, false, typeTxt, typeInfo, false, true );
+   if nilableTypeInfo ~= headTypeInfo {
+      sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
+         SymbolKind.Typ, false, kind == .Func, rootScope,
+         AccessMode.Pub, false, typeTxt, nilableTypeInfo, false, true );
+      builtInTypeIdSet[ nilableTypeInfo.$typeId ] = nilableTypeInfo;
+   } 
+   builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
+}
 
 pub static fn NormalTypeInfo.createBuiltin(
    idName: str, typeTxt: str,
@@ -1867,25 +2066,14 @@ pub static fn NormalTypeInfo.createBuiltin(
    } 
    
    let mut info = new NormalTypeInfo(
-      false, scope, nil, nil, nil, false, false, false, AccessMode.Pub,
+      false, scope, nil, nil, false, false, false, AccessMode.Pub,
       typeTxt, headTypeInfo, typeId,
       kind, [], argTypeList, retTypeList, true );
    if scope {
       rootScope.addClass( typeTxt, info );
    } 
 
-   typeInfoKind[ idName ] = info;
-   sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
-      SymbolKind.Typ, false, false,
-      rootScope, AccessMode.Pub, false, typeTxt, info, false, true );
-   if info.$nilableTypeInfo ~= headTypeInfo {
-      sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
-         SymbolKind.Typ, false, kind == .Func, rootScope,
-         AccessMode.Pub, false, typeTxt, info.$nilableTypeInfo, false, true );
-      builtInTypeIdSet[ info.$nilableTypeInfo.$typeId ] = info.$nilableTypeInfo;
-   } 
-   
-   builtInTypeIdSet[ info.typeId ] = info;
+   registBuiltin( idName, typeTxt, kind, info, headTypeInfo );
    return info;
 }
 
@@ -1898,7 +2086,7 @@ pub static fn NormalTypeInfo.createList(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    return new NormalTypeInfo(
-      false, nil, nil, nil, nil, false, false, false, accessMode, "List",
+      false, nil, nil, nil, false, false, false, accessMode, "List",
       headTypeInfo, idProv.$id, .List, itemTypeInfo, nil, nil, true );
 }
 
@@ -1909,7 +2097,7 @@ pub static fn NormalTypeInfo.createArray(
    //   typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    return new NormalTypeInfo(
-      false, nil, nil, nil, nil, false, false, false, accessMode, "Array",
+      false, nil, nil, nil, false, false, false, accessMode, "Array",
       headTypeInfo, idProv.$id, .Array, itemTypeInfo, nil, nil, true );
 }
 
@@ -1920,7 +2108,7 @@ pub static fn NormalTypeInfo.createMap(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    return new NormalTypeInfo(
-      false, nil, nil, nil, nil, false, false, false, accessMode, "Map",
+      false, nil, nil, nil, false, false, false, accessMode, "Map",
       headTypeInfo, idProv.$id, .Map,
       [ keyTypeInfo, valTypeInfo ], nil, nil, true );
 }
@@ -1969,7 +2157,7 @@ pub static fn NormalTypeInfo.createClass(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    let mut info = new NormalTypeInfo(
-      abstractFlag, scope, baseInfo, interfaceList, nil, false,
+      abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
       className, parentInfo, idProv.$id,
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true );
@@ -1979,8 +2167,9 @@ pub static fn NormalTypeInfo.createClass(
 pub static fn NormalTypeInfo.createFunc(
    abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
    parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool,
-   staticFlag: bool, accessMode: AccessMode, funcName: str, argTypeList: List<&TypeInfo>!,
-   retTypeInfoList: List<&TypeInfo>!, mutable: bool! ): &TypeInfo
+   staticFlag: bool, accessMode: AccessMode, funcName: str,
+   argTypeList: &List<&TypeInfo>!,
+   retTypeInfoList: &List<&TypeInfo>!, mutable: bool! ): &TypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
@@ -1989,7 +2178,7 @@ pub static fn NormalTypeInfo.createFunc(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    let mut info = new NormalTypeInfo(
-      abstractFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag,
+      abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, idProv.$id,
       kind, [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [], mutable );
@@ -2039,113 +2228,42 @@ pub override fn ModifierTypeInfo.get_nonnilableType(): &TypeInfo {
    return NormalTypeInfo.createModifier( orgType, false );
 }
 
-pub let builtinTypeNone:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "None", "", .Prim## );
-pub let builtinTypeNeverRet:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Error", "__", .Prim## );
-pub let builtinTypeStem:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem## );
-pub let builtinTypeNil:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Nil", "nil" , .Prim## );
-pub let builtinTypeDDD:TypeInfo =
-   NormalTypeInfo.createBuiltin( "DDD", "..." , .DDD## );
-pub let builtinTypeBool:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim## );
-pub let builtinTypeInt:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Int", "int" , .Prim## );
-pub let builtinTypeReal:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Real", "real" , .Prim## );
-pub let builtinTypeChar:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "char", "char" , .Prim## );
-pub let builtinTypeString:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "String", "str" , .Class## );
-pub let builtinTypeMap:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
-pub let builtinTypeList:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "List", "List" , .List## );
-pub let builtinTypeArray:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
-pub let builtinTypeForm:TypeInfo =
-   NormalTypeInfo.createBuiltin( "Form", "form" , .Func, builtinTypeDDD );
-pub let builtinTypeSymbol:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
-pub let builtinTypeStat:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
-
-pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
-
-
-pub class AbbrTypeInfo extend TypeInfo {
-   pri let typeId: int { pub };
-   pri let rawTxt:str { pub };
-   
-   pub override fn get_scope(): Scope! {
-      return nil;
-   }
-
-   pub fn __init( idProvider:IdProvider, rawTxt:str )
-   {
-      super( nil );
-
-      let typeId = idProvider.$id + 1;
-      idProvider.increment();
-      
-      self.typeId = typeId;
-      self.rawTxt = rawTxt;
-   }
-
-   pub override fn isModule(): bool {
-      return false;
-   }
-
-   pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
-   {  
-      return self.rawTxt;
-   }
-
-   pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
-      return false;
-   }
-   
-   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
-      Util.err( "illegal call" );
-   }
-
-   pub override fn get_display_stirng(): str {
-      return self.getTxt(##);
-   }
-
-   pub override fn getModule(): &TypeInfo {
-      return headTypeInfo;
-   }
-   pub override fn get_rawTxt(): str {
-      return self.getTxt(##);
-   }  
-   pub override fn get_kind(): TypeInfoKind {
-      return .Abbr;
-   } 
-   pub override fn get_nilable(): bool {
-      return true;
-   }
-   pub override fn get_nilableTypeInfo(): &TypeInfo {
-      return self;
-   }
-   pub override fn get_mutable(): bool {
-      return false;
-   }
-   pub override fn get_accessMode(): AccessMode {
-      return .Local;
-   }
+pub static fn NormalTypeInfo.createAlias(
+   name:str, externalFlag:bool, accessMode:AccessMode,
+   parentInfo: &TypeInfo, typeInfo: &TypeInfo ): &AliasTypeInfo
+{
+   idProv.increment();
+   return new AliasTypeInfo(
+      name, accessMode, parentInfo, typeInfo.$srcTypeInfo, externalFlag, idProv.$id );
 }
 
-// pub let builtinTypeAbbr:TypeInfo = 
-//    NormalTypeInfo.createBuiltin( "Abbr", "#" , .Abbr );
-// pub let builtinTypeAbbrNone:TypeInfo = 
-//    NormalTypeInfo.createBuiltin( "AbbrNone", "#_" , .Abbr );
+pub fn Scope.addAlias( name:str, externalFlag:bool, accessMode:AccessMode,
+                       parentInfo: &TypeInfo, symbolInfo:&SymbolInfo ) mut : &SymbolInfo
+{
+   let aliasType = NormalTypeInfo.createAlias(
+      name, externalFlag, accessMode, parentInfo, symbolInfo.$typeInfo.$srcTypeInfo );
+   return self.add(
+      symbolInfo.$kind, false, symbolInfo.$canBeRight,
+      name, aliasType, accessMode, true, false, true );
+}
 
-pub let builtinTypeAbbr:TypeInfo = new AbbrTypeInfo( idProv, "##" );
-pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( idProv, "[##]" );
+pub fn Scope.addAliasForType( name:str, typeInfo:&TypeInfo ) mut : &SymbolInfo
+{
+   let mut skind = SymbolKind.Typ;
+   let mut canBeRight = false;
+   switch typeInfo.$kind {
+      case .Func {
+         skind = .Fun;
+         canBeRight = true;
+      }
+      case .Macro {
+         skind = .Mac;
+      }
+   }
+   
+   return self.add(
+      skind, false, canBeRight, name, typeInfo, typeInfo.$accessMode, true, false, true );
+}
 
 
 pub proto class DDDTypeInfo extend TypeInfo;
@@ -2178,12 +2296,6 @@ pub class DDDTypeInfo extend TypeInfo {
       return false;
    }
 
-   pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
-   {  
-      return "...<" .. self.typeInfo.getTxt( fullName, importInfo, localFlag ) .. ">";
-   }
-
    pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
       return self.typeInfo.canEvalWith( other, opTxt );
    }
@@ -2195,8 +2307,11 @@ pub class DDDTypeInfo extend TypeInfo {
            self.typeInfo.$typeId, headTypeInfo.$typeId ) );
    }
 
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.getTxtWithRaw( raw ##);
+   }
    pub override fn get_display_stirng(): str {
-      return self.getTxt(##);
+      return self.get_display_stirng_with( self.$rawTxt );
    }
 
    pub override fn getModule(): &TypeInfo {
@@ -2243,6 +2358,142 @@ pub static fn NormalTypeInfo.createDDD(
 
 
 
+pub let builtinTypeNone:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "None", "", .Prim## );
+pub let builtinTypeNeverRet:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Error", "__", .Prim## );
+pub let builtinTypeStem:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem## );
+pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
+
+pub let builtinTypeNil:TypeInfo = new NilTypeInfo();
+registBuiltin( "Nil", "nil", .Prim, builtinTypeNil, headTypeInfo );
+
+pub let builtinTypeDDD:TypeInfo =
+   NormalTypeInfo.createDDD( builtinTypeStem_, true );
+registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo );
+
+pub let builtinTypeBool:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim## );
+pub let builtinTypeInt:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Int", "int" , .Prim## );
+pub let builtinTypeReal:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Real", "real" , .Prim## );
+pub let builtinTypeChar:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "char", "char" , .Prim## );
+pub let builtinTypeString:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "String", "str" , .Class## );
+pub let builtinTypeMap:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
+pub let builtinTypeList:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "List", "List" , .List## );
+pub let builtinTypeArray:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
+pub let builtinTypeForm:TypeInfo =
+   NormalTypeInfo.createBuiltin( "Form", "form" , .Func, builtinTypeDDD );
+pub let builtinTypeSymbol:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
+pub let builtinTypeStat:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
+
+pub override fn DDDTypeInfo.getTxt(
+   fullName:bool!, importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+{
+   return self.getTxtWithRaw( "...", fullName, importInfo, localFlag );
+}
+
+pro override fn DDDTypeInfo.getTxtWithRaw(
+   raw:str, fullName:bool!,
+   importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+{
+   if self.typeInfo == builtinTypeStem_ {
+      return "...";
+   }
+   let txt = self.typeInfo.getTxtWithRaw( raw, fullName, importInfo, localFlag );
+   return "...<" .. txt .. ">";
+}
+
+
+
+
+pub class AbbrTypeInfo extend TypeInfo {
+   pri let typeId: int { pub };
+   pri let rawTxt:str { pub };
+   
+   pub override fn get_scope(): Scope! {
+      return nil;
+   }
+
+   pub fn __init( idProvider:IdProvider, rawTxt:str )
+   {
+      super( nil );
+
+      let typeId = idProvider.$id + 1;
+      idProvider.increment();
+      
+      self.typeId = typeId;
+      self.rawTxt = rawTxt;
+   }
+
+   pub override fn isModule(): bool {
+      return false;
+   }
+
+   /** この型の名前を取得する。 */
+   pub override fn getTxt( fullName:bool!,
+                  importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      rawTxt:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
+      return rawTxt;
+   }
+
+   pub override fn canEvalWith( other:&TypeInfo, opTxt:str ): bool {
+      return false;
+   }
+   
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+      Util.err( "illegal call" );
+   }
+
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.getTxtWithRaw( raw ##);
+   }
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt );
+   }
+
+   pub override fn getModule(): &TypeInfo {
+      return headTypeInfo;
+   }
+   pub override fn get_kind(): TypeInfoKind {
+      return .Abbr;
+   } 
+   pub override fn get_nilable(): bool {
+      return true;
+   }
+   pub override fn get_nilableTypeInfo(): &TypeInfo {
+      return self;
+   }
+   pub override fn get_mutable(): bool {
+      return false;
+   }
+   pub override fn get_accessMode(): AccessMode {
+      return .Local;
+   }
+}
+
+// pub let builtinTypeAbbr:TypeInfo = 
+//    NormalTypeInfo.createBuiltin( "Abbr", "#" , .Abbr );
+// pub let builtinTypeAbbrNone:TypeInfo = 
+//    NormalTypeInfo.createBuiltin( "AbbrNone", "#_" , .Abbr );
+
+pub let builtinTypeAbbr:TypeInfo = new AbbrTypeInfo( idProv, "##" );
+pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( idProv, "[##]" );
 
 
 
@@ -3597,6 +3848,11 @@ pub override fn GetFieldNode.canBeLeft():bool {
    return false;
 }
 
+
+_declNodeClass( "Alias", Node, false, false, true,
+                [ {"newName": "str" },
+                  {"srcNode": "&Node" },
+                  {"typeInfo": "&TypeInfo" } ] );
 
 pub class VarInfo {
    pri let name: &Parser.Token { pub };

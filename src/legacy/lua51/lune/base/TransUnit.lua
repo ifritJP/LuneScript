@@ -3692,6 +3692,43 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    return Ast.DeclAlgeNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, accessMode, algeTypeInfo, algeScope )
 end
 
+function TransUnit:analyzeAlias( firstToken )
+
+   if self.scope ~= self.moduleScope then
+      self:addErrMess( firstToken.pos, "alias must use at top scope." )
+   end
+   
+   local newToken = self:getToken(  )
+   self:checkNextToken( "=" )
+   local srcToken = self:getToken(  )
+   local newTypeInfo = Ast.builtinTypeNone
+   do
+      local symbolInfo = self.scope:getSymbolInfo( srcToken.txt, self.scope, false )
+      if symbolInfo ~= nil then
+         if newToken.txt:find( "^_" ) and not srcToken.txt:find( "^_" ) or not newToken.txt:find( "^_" ) and srcToken.txt:find( "^_" ) then
+            self:addErrMess( firstToken.pos, string.format( "alias symbol unmatch. %s %s", newToken.txt, newToken.txt) )
+         else
+          
+            do
+               local _switchExp = symbolInfo:get_kind()
+               if _switchExp == Ast.SymbolKind.Fun then
+                  local typeInfo = symbolInfo:get_typeInfo()
+                  newTypeInfo = Ast.NormalTypeInfo.createFunc( typeInfo:get_abstractFlag(), false, self.scope, typeInfo:get_kind(), typeInfo:get_parentInfo(), false, false, typeInfo:get_staticFlag(), typeInfo:get_accessMode(), newToken.txt, typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), typeInfo:get_mutable() )
+                  self.scope:addFunc( newTypeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable() )
+               end
+            end
+            
+         end
+         
+      else
+         self:addErrMess( firstToken.pos, string.format( "not found symbold -- %s", srcToken.txt) )
+      end
+   end
+   
+   self:checkNextToken( ";" )
+   return Ast.AliasNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, newToken.txt, newTypeInfo )
+end
+
 function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token )
 
    local retTypeInfoList = {}
@@ -7277,6 +7314,8 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:createNoneNode( token.pos )
       elseif token.txt == "provide" then
          statement = self:analyzeProvide( token )
+      elseif token.txt == "alias" then
+         return self:analyzeAlias( token )
       elseif token.txt == ";" then
          statement = self:createNoneNode( token.pos )
       elseif token.txt == ",," or token.txt == ",,," or token.txt == ",,,," then

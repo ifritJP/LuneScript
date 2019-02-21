@@ -777,7 +777,54 @@ fn TransUnit.analyzeDeclAlge(
       [ algeTypeInfo ], accessMode, algeTypeInfo, algeScope );
 }
 
+fn TransUnit.analyzeAlias( firstToken:&Parser.Token ) mut : Ast.AliasNode {
+   if self.scope ~= self.moduleScope {
+      self.addErrMess( firstToken.pos, "alias must use at top scope." );
+   }
 
+   let newToken = self.getToken(##);
+   self.checkNextToken( "=" );
+   let srcToken = self.getToken(##);
+   
+   let mut newTypeInfo = Ast.builtinTypeNone;
+   if! let symbolInfo = self.scope.getSymbolInfo( srcToken.txt, self.scope, false ) {
+      if newToken.txt.find( "^_" ##) and not srcToken.txt.find( "^_" ##) or
+         not newToken.txt.find( "^_" ##) and srcToken.txt.find( "^_" ## )
+      {
+         self.addErrMess( firstToken.pos,
+                          "alias symbol unmatch. %s %s" (newToken.txt, newToken.txt) );
+      }
+      else {
+         switch symbolInfo.$kind {
+            case .Fun {
+               let typeInfo = symbolInfo.$typeInfo;
+               newTypeInfo = Ast.NormalTypeInfo.createFunc(
+                  typeInfo.$abstractFlag, false, self.scope,
+                  typeInfo.$kind, typeInfo.$parentInfo, false, false,
+                  typeInfo.$staticFlag, typeInfo.$accessMode,
+                  newToken.txt, typeInfo.$argTypeInfoList,
+                  typeInfo.$retTypeInfoList, typeInfo.$mutable );
+               self.scope.addFunc( newTypeInfo, typeInfo.$accessMode,
+                                   typeInfo.$staticFlag, typeInfo.$mutable );
+            }
+            default {
+               self.addErrMess(
+                  firstToken.pos,
+                  "can alias symbol -- %s. (%s)"
+                  (srcToken.txt, symbolInfo.$kind.$_txt ) );
+            }
+         }
+      }
+   }
+   else {
+      self.addErrMess( firstToken.pos, "not found symbold -- %s" (srcToken.txt ) );
+   }
+   self.checkNextToken( ";" );
+   
+   return Ast.AliasNode.create(
+      self.nodeManager, firstToken.pos,
+      [ Ast.builtinTypeNone ], newToken.txt, newTypeInfo );
+}
 
 
 fn TransUnit.analyzeRetTypeList(

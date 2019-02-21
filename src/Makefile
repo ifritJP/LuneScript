@@ -11,6 +11,15 @@ ifneq ($(LUA_INC_DIR),)
 LUA_CFLAGS=-I$(LUA_INC_DIR)
 endif
 
+LNSC=~/.luarocks/bin/lnsc
+
+ifdef LNSC_ENABLE
+ifneq ($(LUA51),)
+ENABLE_LUA51:=$(shell which $(LUA51))
+endif
+LUAROCKS_VER:=$(shell luarocks | grep 'Lua version' | awk '//{print $$3}')
+endif
+
 ifneq ($(findstring $(MAKECMDGOALS),"install" "uninstall"),)
 # LUA_DIR_SCRIPT='for path in string.gmatch( package.path, "[^;]+" ) do if not path:find( "^%./" ) then print( (path:gsub( "/%?%.lua", "" )) ); break end end'
 # LUA_MOD_DIR=$(shell echo $(LUA_DIR_SCRIPT) | $(LUA) 2> /dev/null)
@@ -44,9 +53,15 @@ define transwork
 	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2 $(BYTECOMP) -Werror)
 endef
 
+ifndef LNSC_ENABLE
 define exeLune
 	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua $2 $3 $4)
 endef
+else
+define exeLune
+	(cd $1; $(LNSC) $2 $3 $4)
+endef
+endif
 
 define exeComp
 	echo lune | cat $3 - | $(call exeLune,$1,$2,comp -i,$4) | \
@@ -76,20 +91,20 @@ endef
 
 
 define build-testcode
-	$(call exeLune,work/3,test/Sub2.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Sub3.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Sub3_2.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Sub4.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Sub5.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Sub6.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/simple.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Class1.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Class2.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Class3.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/Class4.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/start.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/mapping.lns,$1 save,) > /dev/null
-	$(call exeLune,work/3,test/funcSym.lns,$1 save,) > /dev/null
+	$(call exeLune,$1,test/Sub2.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Sub3.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Sub3_2.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Sub4.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Sub5.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Sub6.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/simple.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Class1.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Class2.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Class3.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/Class4.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/start.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/mapping.lns,$2 save,) > /dev/null
+	$(call exeLune,$1,test/funcSym.lns,$2 save,) > /dev/null
 endef
 
 # meta 情報の更新時に正常に解析できるかテスト。
@@ -100,6 +115,41 @@ define test-meta-update
 	(cd $1; rm test/ext/sub3.lua test/ext/sub3.meta )
 	$(call exeLune,$1,test/ext/sub1.lns,SAVE,)
 endef
+
+luarocks-check:
+	$(MAKE) luarocks-check-sub LNSC_ENABLE=y 
+
+# luarocks でインストールして動作を確認する
+#
+# - 一旦アンインストール
+# - インストール
+# - 実行
+# - アンインストール
+define test-inst-from-luarocks
+	-(luarocks remove $1 --local)
+	(cd ..; luarocks make $1-main-1.rockspec --local)
+
+	$(LNSC)
+	(cd work/8; $(LNSC) test/start.lns exe) > work/test8.result
+
+	(luarocks remove $1 --local)
+endef
+
+luarocks-check-sub:
+ifeq ($(LUAROCKS_VER),5.1)
+ifneq ($(ENABLE_LUA51),)
+	mkdir -p work/8
+	cp -a work/3/lune work/8
+	$(call setup-lua51-test,work/8)
+	$(call test-inst-from-luarocks,lunescript51)
+	diff work/test7.result work/test8.result
+else
+	echo skip luarocks test
+endif
+else
+	$(call test-inst-from-luarocks,lunescript)
+	diff work/test.result work/test8.result
+endif
 
 release-check:
 	$(MAKE) test-comp LUA_INC_DIR=../../lctags/external/lua/lua-5.3.4/src/
@@ -140,6 +190,8 @@ endef
 #   出力を work/test2.result, work/test3.result に格納する
 # - work/test.result, work/test1.result と、
 #   work/test2.result, work/test3.result を比較し、同じになっているか確認する。
+#
+#
 # - 上記の比較が全て同じなら、 candidate を orginal とする。
 test-comp:
 	$(MAKE) build-countup
@@ -276,11 +328,11 @@ test-comp2:
 
 
 ## テストスクリプトを lua 化して、 lunescript なしで動かすテスト。
-	$(call build-testcode)
+	$(call build-testcode,work/3)
 	(cd work/3; $(LUA) test/start.lua) > work/test3.result
 
 # テストスクリプトを lua 化して、 _lune をロードしてテスト。
-	$(call build-testcode,-r)
+	$(call build-testcode,work/3,-r)
 	(cd work/3; $(LUA) test/start.lua) > work/test4.result
 
 	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
@@ -299,6 +351,8 @@ ifneq ($(shell which $(LUA51)),)
 endif
 endif
 endif
+
+	$(MAKE) luarocks-check
 
 
 	$(call test-meta-update,work/3)
@@ -341,14 +395,18 @@ diff-result:
 	diff -r work/glue work/newglue
 
 
+define setup-lua51-test
+	cp -a test $1
+	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
+	mv $1/test/glueTest51.so $1/test/glueTest.so 
+	grep -v skip-lua51 test/start.lns > $1/test/start.lns
+endef
+
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
 	$(call buildLns,work/3,../5 -ol 51)
 	$(call exeLune,work/5,-mklunemod,lune/base)
-	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
-	cp -a test work/5
-	mv work/5/test/glueTest51.so work/5/test/glueTest.so 
-	grep -v skip-lua51 test/start.lns > work/5/test/start.lns
+	$(call setup-lua51-test,work/5)
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
 
 # 比較用にクロスコンパイル前のテスト結果を取得
@@ -359,24 +417,19 @@ test-lua51:
 # サンプルを lua5.1 にクロスコンパイルして実行テスト
 	$(call mk_lune_proj_dir,work/7)
 	cp -a work/3/lune work/7
-	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
-	cp -a test work/7
-	mv work/7/test/glueTest51.so work/7/test/glueTest.so 
-	grep -v skip-lua51 test/start.lns > work/7/test/start.lns
+	$(call setup-lua51-test,work/7)
 	$(call exeLune,work/7,test/start.lns,-u -ol 51 SAVE,)
-	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test8.result
+	(cd work/7; $(LUA51) test/start.lua) | sed 's/\.0//g' > work/test7-2.result
 
 	diff work/test6.result  work/test7.result 
-	diff work/test7.result  work/test8.result
+	diff work/test7.result  work/test7-2.result
 
 
 test-lua51-sub:
 	$(call mk_lune_proj_dir,work/6)
 	@cp lune/base/base.lua lune/base/_lune.lua lune/base/*.lns work/6/lune/base
 	$(call buildLns,work/5,../6)
-	cp -a test work/6
-	mv work/6/test/glueTest51.so work/6/test/glueTest.so 
-	grep -v skip-lua51 test/start.lns > work/6/test/start.lns
+	$(call setup-lua51-test,work/6)
 	$(call exeLune,work/6,-mklunemod,lune/base)
 	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
 

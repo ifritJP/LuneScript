@@ -33,7 +33,7 @@ local Log = _lune.loadModule( 'lune.base.Log' )
 
 local function getBuildCount(  )
 
-   return 267
+   return 332
 end
 
 
@@ -214,7 +214,7 @@ end
 _moduleObj.outputLuneMod = outputLuneMod
 local function analyze( argList )
 
-   local function printUsage(  )
+   local function printUsage( code )
    
       print( [==[
 usage:
@@ -250,7 +250,7 @@ usage:
 * type2
   dir: output directory.
 ]==] )
-      os.exit( 1 )
+      os.exit( code )
    end
    
    local option = Option.new()
@@ -398,7 +398,7 @@ usage:
    end
    
    if option.scriptPath == "" or option.mode == ModeKind.Unknown then
-      printUsage(  )
+      printUsage( (#argList == 0 or argList[1] == "" ) and 0 or 1 )
    end
    
    if useStdInFlag and option.analyzeModule then

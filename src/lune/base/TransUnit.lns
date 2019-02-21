@@ -490,6 +490,7 @@ class ImportParam {
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
    pub let metaInfo:_MetaInfo;
    pub let scope:Ast.Scope;
+   pub let moduleTypeInfo: &Ast.TypeInfo;
 
    pri let typeId2AtomMap:Map<int,&_TypeInfo>;
 }
@@ -540,6 +541,29 @@ class _TypeInfoNilable extend _TypeInfo {
       return newTypeInfo,nil;
    }
 }
+
+
+class _TypeInfoAlias extend _TypeInfo {
+   pri let rawTxt:str;
+   pri let srcTypeId:int;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId );
+      let newTypeInfo = Ast.NormalTypeInfo.createAlias(
+         self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
+      param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+
+      let! mut parentScope = param.typeId2Scope[ self.parentId ] {
+         return nil, "not found parentScope %s %s" ( self.parentId, self.rawTxt );
+      };
+      parentScope.addAliasForType( self.rawTxt, newTypeInfo );
+
+      
+      return newTypeInfo,nil;
+   }
+}
+
 
 class _TypeInfoDDD extend _TypeInfo {
    pub let itemTypeId:int;
@@ -1454,7 +1478,9 @@ fn TransUnit.pushbackStr( name: str, statement: str ) mut {
 }
 
 enum SymbolMode {
+   /** _ で始まるシンボル */
    Must_,
+   /** _ で始まってはいけないシンボル */
    MustNot_,
 }
 
@@ -1783,6 +1809,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
             case .Nilable {
                actInfo = _TypeInfoNilable._fromMap( atomInfo );
             }
+            case .Alias {
+               actInfo = _TypeInfoAlias._fromMap( atomInfo );
+            }
             case .DDD {
                actInfo, mess = _TypeInfoDDD._fromMap( atomInfo );
             }
@@ -1814,7 +1843,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, id2atomMap );
+      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope,
+      moduleTypeInfo, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
       if! errMess {

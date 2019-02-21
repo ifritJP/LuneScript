@@ -59,7 +59,10 @@ exe: build
 
 
 clean:
-	@rm -f $(META_LIST) $(LUA_LIST) 
+	@rm -f $(META_LIST) $(LUA_LIST)
+
+clean_all:
+	@rm -f $(META_LIST) $(LUA_LIST) depends/*.d
 
 
 test:
@@ -67,6 +70,7 @@ test:
 	@$(MAKE) -f $(MKFILE) clean
 	@$(MAKE) -f $(MKFILE) build
 	@echo =======================
+	@sleep 1
 	touch $(SRC_DIR)Mod4.lns
 	@$(MAKE) -f $(MKFILE) exe
 	@echo =======================

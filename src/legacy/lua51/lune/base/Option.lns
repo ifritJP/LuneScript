@@ -152,7 +152,7 @@ pub fn outputLuneMod( dir:str! ):str! {
 
 pub fn analyze( argList: str[] ) : Option {
 
-   fn printUsage() {
+   fn printUsage(code:int) {
       print( ```
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
@@ -187,7 +187,7 @@ usage:
 * type2
   dir: output directory.
 ``` );
-      os.exit( 1 );
+      os.exit( code );
    }
    
    let mut option = new Option();
@@ -338,7 +338,7 @@ usage:
    }
 
    if option.scriptPath == "" or option.mode == .Unknown {
-      printUsage();
+      printUsage( (#argList == 0 or argList[1] == "") and 0 or 1 );
    }
 
    if useStdInFlag and option.analyzeModule {

@@ -777,7 +777,58 @@ fn TransUnit.analyzeDeclAlge(
       [ algeTypeInfo ], accessMode, algeTypeInfo, algeScope );
 }
 
+fn TransUnit.analyzeAlias(
+   accessMode: Ast.AccessMode, firstToken:&Parser.Token ) mut : Ast.AliasNode
+{
+   if self.scope ~= self.moduleScope {
+      self.addErrMess( firstToken.pos, "alias must use at top scope." );
+   }
 
+   let newToken = self.getToken(##);
+   self.checkNextToken( "=" );
+
+   let srcToken = self.getToken(##);
+   
+   let symbolNode = self.analyzeExpSymbol(
+      firstToken, srcToken, .Symbol, nil, true );
+      
+   
+   let mut newTypeInfo = Ast.builtinTypeNone;
+   let symbolInfoList = symbolNode.getSymbolInfo();
+   
+   if #symbolInfoList >= 1 {
+      let symbolInfo = symbolInfoList[ 1 ];
+      if newToken.txt.find( "^_" ##) and not srcToken.txt.find( "^_" ##) or
+         not newToken.txt.find( "^_" ##) and srcToken.txt.find( "^_" ## )
+      {
+         self.addErrMess( firstToken.pos,
+                          "alias symbol unmatch. %s %s" (newToken.txt, newToken.txt) );
+      }
+      else {
+         switch symbolInfo.$kind {
+            case .Typ, .Fun {
+               let aliasSymbolInfo = self.scope.addAlias(
+                  newToken.txt, false, accessMode, self.moduleType, symbolInfo );
+               newTypeInfo = aliasSymbolInfo.$typeInfo;
+            }
+            default {
+               self.addErrMess(
+                  firstToken.pos,
+                  "can alias symbol -- %s. (%s)"
+                  (srcToken.txt, symbolInfo.$kind.$_txt ) );
+            }
+         }
+      }
+   }
+   else {
+      self.addErrMess( firstToken.pos, "not found symbold -- %s" (srcToken.txt ) );
+   }
+   self.checkNextToken( ";" );
+   
+   return Ast.AliasNode.create(
+      self.nodeManager, firstToken.pos,
+      [ newTypeInfo ], newToken.txt, symbolNode, newTypeInfo );
+}
 
 
 fn TransUnit.analyzeRetTypeList(
@@ -900,6 +951,9 @@ fn TransUnit.analyzeDecl(
    elseif token.txt == "form" {
       self.analyzeDeclForm( accessMode, firstToken );
       return self.createNoneNode( firstToken.pos );
+   }
+   elseif token.txt == "alias" {
+      return self.analyzeAlias( accessMode, firstToken );
    }
 
    return nil;

@@ -1454,7 +1454,9 @@ fn TransUnit.pushbackStr( name: str, statement: str ) mut {
 }
 
 enum SymbolMode {
+   /** _ で始まるシンボル */
    Must_,
+   /** _ で始まってはいけないシンボル */
    MustNot_,
 }
 

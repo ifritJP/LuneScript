@@ -68,7 +68,7 @@
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "mut"
 		   "__init", "mut" "pub" "pro" "pri" "form" "advertise" "provide"
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
-		   "glue" "when" "alge" "non"
+		   "glue" "when" "alge" "non" "alias"
 		   "abstract" "trust" "import" "as" "not" "and" "or" "break" "new" )))
   (defconst
     lns-bloak-statement-head (concat (lns-make-regex-or

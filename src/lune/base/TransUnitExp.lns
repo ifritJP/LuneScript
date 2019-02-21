@@ -907,7 +907,7 @@ fn TransUnit.dumpComp(
             case .Mbr {
                writer.write( "displayTxt", "$%s: %s"
                              ( symbolInfo.$name, typeInfo.getTxt(##) ) );
-            }  
+            }
          }
       }
       else {

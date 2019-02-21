@@ -254,7 +254,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       self.mutable = mutable and true or false;
       self.hasValueFlag = hasValueFlag;
    }
-   
+
    /**
 このシンボルにアクセス可能かどうか調べる。
 
@@ -325,6 +325,10 @@ pub class Scope {
 
    pub fn remove( name: str ) mut {
       self.symbol2SymbolInfoMap[ name ] = nil;
+   }
+
+   pub fn addSymbol( symbolInfo: SymbolInfo ) mut {
+      self.symbol2SymbolInfoMap[ symbolInfo.$name ] = symbolInfo;
    }
    
    pub fn getNSTypeInfo(): TypeInfo;
@@ -864,6 +868,12 @@ pub fn Scope.add( kind: SymbolKind, canBeLeft:bool, canBeRight:bool,
       self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag );
    self.symbol2SymbolInfoMap[ name ] = symbolInfo;
    return symbolInfo;
+}
+
+pub fn Scope.addAlias( name:str, symbolInfo:&SymbolInfo ) mut {
+   self.add( symbolInfo.$kind, symbolInfo.$canBeLeft, symbolInfo.$canBeRight,
+             name, symbolInfo.$typeInfo, symbolInfo.$accessMode,
+             symbolInfo.$staticFlag, symbolInfo.$mutable, symbolInfo.$hasValueFlag );
 }
 
 pub fn Scope.addLocalVar(
@@ -1979,8 +1989,9 @@ pub static fn NormalTypeInfo.createClass(
 pub static fn NormalTypeInfo.createFunc(
    abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
    parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool,
-   staticFlag: bool, accessMode: AccessMode, funcName: str, argTypeList: List<&TypeInfo>!,
-   retTypeInfoList: List<&TypeInfo>!, mutable: bool! ): &TypeInfo
+   staticFlag: bool, accessMode: AccessMode, funcName: str,
+   argTypeList: &List<&TypeInfo>!,
+   retTypeInfoList: &List<&TypeInfo>!, mutable: bool! ): &TypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
@@ -3597,6 +3608,10 @@ pub override fn GetFieldNode.canBeLeft():bool {
    return false;
 }
 
+
+_declNodeClass( "Alias", Node, false, false, true,
+                [ {"name": "str" },
+                  {"typeInfo": "&TypeInfo" } ] );
 
 pub class VarInfo {
    pri let name: &Parser.Token { pub };

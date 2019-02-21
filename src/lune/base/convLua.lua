@@ -702,6 +702,16 @@ function convFilter:outputMeta( node )
       end
    end
    
+   do
+      local aliasNodeList = node:get_nodeManager():getAliasNodeList(  )
+      if aliasNodeList ~= nil then
+         for __index, aliasNode in pairs( aliasNodeList ) do
+            pickupTypeId( aliasNode:get_expType(), false )
+         end
+         
+      end
+   end
+   
    self:writeln( "local __typeInfoList = {}" )
    self:writeln( "_moduleObj.__typeInfoList = __typeInfoList" )
    local listIndex = 1
@@ -2730,6 +2740,16 @@ end
 
 function convFilter:processProvide( node, parent )
 
+end
+
+function convFilter:processAlias( node, parent )
+
+   self:write( string.format( "local %s = ", node:get_newName()) )
+   filter( node:get_srcNode(), self, node )
+   if Ast.isPubToExternal( node:get_expType():get_accessMode() ) then
+      self:write( string.format( "\n_moduleObj.%s = %s", node:get_newName(), node:get_newName()) )
+   end
+   
 end
 
 function convFilter:processLiteralList( node, parent )

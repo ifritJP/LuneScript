@@ -480,6 +480,10 @@ function Scope:remove( name )
 
    self.symbol2SymbolInfoMap[name] = nil
 end
+function Scope:addSymbol( symbolInfo )
+
+   self.symbol2SymbolInfoMap[symbolInfo:get_name()] = symbolInfo
+end
 function Scope.setmeta( obj )
   setmetatable( obj, { __index = Scope  } )
 end
@@ -1068,6 +1072,11 @@ function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, sta
    local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag)
    self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo
+end
+
+function Scope:addAlias( name, symbolInfo )
+
+   self:add( symbolInfo:get_kind(), symbolInfo:get_canBeLeft(), symbolInfo:get_canBeRight(), name, symbolInfo:get_typeInfo(), symbolInfo:get_accessMode(), symbolInfo:get_staticFlag(), symbolInfo:get_mutable(), symbolInfo:get_hasValueFlag() )
 end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
@@ -7079,6 +7088,75 @@ function GetFieldNode:canBeLeft(  )
    
    return false
 end
+
+function NodeKind.get_Alias(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['Alias'])
+end
+
+
+regKind( [[Alias]] )
+function Filter:processAlias( node, ... )
+
+end
+
+
+function NodeManager:getAliasNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['Alias']) )
+end
+
+
+local AliasNode = {}
+setmetatable( AliasNode, { __index = Node } )
+_moduleObj.AliasNode = AliasNode
+function AliasNode:processFilter( filter, ... )
+
+   local argList = {...}
+   filter:processAlias( self, table.unpack( argList ) )
+end
+function AliasNode:canBeRight(  )
+
+   return false
+end
+function AliasNode:canBeLeft(  )
+
+   return false
+end
+function AliasNode:canBeStatement(  )
+
+   return true
+end
+function AliasNode.new( pos, typeList, name, typeInfo )
+   local obj = {}
+   AliasNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, name, typeInfo ); end
+   return obj
+end
+function AliasNode:__init(pos, typeList, name, typeInfo) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Alias']), pos, typeList)
+   
+   
+   self.name = name
+   self.typeInfo = typeInfo
+   
+end
+function AliasNode.create( nodeMan, pos, typeList, name, typeInfo )
+
+   local node = AliasNode.new(pos, typeList, name, typeInfo)
+   nodeMan:addNode( node )
+   return node
+end
+function AliasNode.setmeta( obj )
+  setmetatable( obj, { __index = AliasNode  } )
+end
+function AliasNode:get_name()       
+   return self.name         
+end
+function AliasNode:get_typeInfo()       
+   return self.typeInfo         
+end
+
 
 local VarInfo = {}
 _moduleObj.VarInfo = VarInfo
