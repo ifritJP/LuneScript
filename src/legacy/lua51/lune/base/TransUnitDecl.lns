@@ -777,17 +777,27 @@ fn TransUnit.analyzeDeclAlge(
       [ algeTypeInfo ], accessMode, algeTypeInfo, algeScope );
 }
 
-fn TransUnit.analyzeAlias( firstToken:&Parser.Token ) mut : Ast.AliasNode {
+fn TransUnit.analyzeAlias(
+   accessMode: Ast.AccessMode, firstToken:&Parser.Token ) mut : Ast.AliasNode
+{
    if self.scope ~= self.moduleScope {
       self.addErrMess( firstToken.pos, "alias must use at top scope." );
    }
 
    let newToken = self.getToken(##);
    self.checkNextToken( "=" );
+
    let srcToken = self.getToken(##);
    
+   let symbolNode = self.analyzeExpSymbol(
+      firstToken, srcToken, .Symbol, nil, true );
+      
+   
    let mut newTypeInfo = Ast.builtinTypeNone;
-   if! let symbolInfo = self.scope.getSymbolInfo( srcToken.txt, self.scope, false ) {
+   let symbolInfoList = symbolNode.getSymbolInfo();
+   
+   if #symbolInfoList >= 1 {
+      let symbolInfo = symbolInfoList[ 1 ];
       if newToken.txt.find( "^_" ##) and not srcToken.txt.find( "^_" ##) or
          not newToken.txt.find( "^_" ##) and srcToken.txt.find( "^_" ## )
       {
@@ -796,16 +806,10 @@ fn TransUnit.analyzeAlias( firstToken:&Parser.Token ) mut : Ast.AliasNode {
       }
       else {
          switch symbolInfo.$kind {
-            case .Fun {
-               let typeInfo = symbolInfo.$typeInfo;
-               newTypeInfo = Ast.NormalTypeInfo.createFunc(
-                  typeInfo.$abstractFlag, false, self.scope,
-                  typeInfo.$kind, typeInfo.$parentInfo, false, false,
-                  typeInfo.$staticFlag, typeInfo.$accessMode,
-                  newToken.txt, typeInfo.$argTypeInfoList,
-                  typeInfo.$retTypeInfoList, typeInfo.$mutable );
-               self.scope.addFunc( newTypeInfo, typeInfo.$accessMode,
-                                   typeInfo.$staticFlag, typeInfo.$mutable );
+            case .Typ, .Fun {
+               let aliasSymbolInfo = self.scope.addAlias(
+                  newToken.txt, false, accessMode, self.moduleType, symbolInfo );
+               newTypeInfo = aliasSymbolInfo.$typeInfo;
             }
             default {
                self.addErrMess(
@@ -823,7 +827,7 @@ fn TransUnit.analyzeAlias( firstToken:&Parser.Token ) mut : Ast.AliasNode {
    
    return Ast.AliasNode.create(
       self.nodeManager, firstToken.pos,
-      [ Ast.builtinTypeNone ], newToken.txt, newTypeInfo );
+      [ newTypeInfo ], newToken.txt, symbolNode, newTypeInfo );
 }
 
 
@@ -947,6 +951,9 @@ fn TransUnit.analyzeDecl(
    elseif token.txt == "form" {
       self.analyzeDeclForm( accessMode, firstToken );
       return self.createNoneNode( firstToken.pos );
+   }
+   elseif token.txt == "alias" {
+      return self.analyzeAlias( accessMode, firstToken );
    }
 
    return nil;
@@ -1391,11 +1398,11 @@ fn TransUnit.analyzeDeclClass(
       Ast.NormalTypeInfo.createMap(
          .Pub, classTypeInfo, Ast.builtinTypeString,
          self.createModifier( Ast.builtinTypeStem, false ) ), false );
-   if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
       self.helperInfo.hasMappingClassDef = true;
       
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
-         not classTypeInfo.$baseTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+         not classTypeInfo.$baseTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
          self.addErrMess(
             firstToken.pos,
             "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt(##) ) );
@@ -1500,7 +1507,7 @@ fn TransUnit.analyzeDeclClass(
    }
 
 
-   if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
       // Mapping の制限チェック
       fn isAvailableMapping(
          mut typeInfo:&Ast.TypeInfo, checkedTypeMap:Map<&Ast.TypeInfo,bool> ): bool
@@ -1530,7 +1537,7 @@ fn TransUnit.analyzeDeclClass(
                   if typeInfo.equals( Ast.builtinTypeString ) {
                      return true;
                   }  
-                  return typeInfo.isInheritFrom( typeInfoMappingIF );
+                  return typeInfo.isInheritFrom( builtinFunc.mappingIF );
                }  
                case .List, .Array {
                   return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );

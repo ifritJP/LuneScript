@@ -703,6 +703,16 @@ function convFilter:outputMeta( node )
       end
    end
    
+   do
+      local aliasNodeList = node:get_nodeManager():getAliasNodeList(  )
+      if aliasNodeList ~= nil then
+         for __index, aliasNode in pairs( aliasNodeList ) do
+            pickupTypeId( aliasNode:get_expType(), false )
+         end
+         
+      end
+   end
+   
    self:writeln( "local __typeInfoList = {}" )
    self:writeln( "_moduleObj.__typeInfoList = __typeInfoList" )
    local listIndex = 1
@@ -1441,7 +1451,7 @@ end
       self:writeln( "end" )
    end
    
-   if classTypeInfo:isInheritFrom( TransUnit.typeInfoMappingIF ) then
+   if classTypeInfo:isInheritFrom( TransUnit.getBuiltinFunc(  ).mappingIF ) then
       self:writeln( string.format( [==[
 function %s:_toMap()
   return self
@@ -2579,7 +2589,7 @@ function convFilter:processExpRef( node, parent )
    if node:get_token().txt == "super" then
       local funcType = node:get_expType()
       self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-   elseif node:get_expType():equals( TransUnit.typeInfoLuneLoad ) then
+   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).luneLoad ) then
       self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
    else
     
@@ -2731,6 +2741,16 @@ end
 
 function convFilter:processProvide( node, parent )
 
+end
+
+function convFilter:processAlias( node, parent )
+
+   self:write( string.format( "local %s = ", node:get_newName()) )
+   filter( node:get_srcNode(), self, node )
+   if Ast.isPubToExternal( node:get_expType():get_accessMode() ) then
+      self:write( string.format( "\n_moduleObj.%s = %s", node:get_newName(), node:get_newName()) )
+   end
+   
 end
 
 function convFilter:processLiteralList( node, parent )

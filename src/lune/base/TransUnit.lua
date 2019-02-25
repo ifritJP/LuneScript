@@ -1515,33 +1515,41 @@ function _TypeInfoAlge._fromMapSub( obj, val )
    return obj
 end
 
-local typeInfoLuneLoad = Ast.headTypeInfo
-_moduleObj.typeInfoLuneLoad = typeInfoLuneLoad
+local BuiltinFuncType = {}
+_moduleObj.BuiltinFuncType = BuiltinFuncType
+function BuiltinFuncType.new(  )
+   local obj = {}
+   BuiltinFuncType.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function BuiltinFuncType:__init() 
+   self.luneLoad = Ast.headTypeInfo
+   self.listInsert = Ast.headTypeInfo
+   self.listRemove = Ast.headTypeInfo
+   self.listUnpack = Ast.headTypeInfo
+   self.listSort = Ast.headTypeInfo
+   self.arrayUnpack = Ast.headTypeInfo
+   self.arraySort = Ast.headTypeInfo
+   self.mappingIF = Ast.headTypeInfo
+   self.mappingToMap = Ast.headTypeInfo
+   self.strGMatch = Ast.headTypeInfo
+   self.stringGMatch = Ast.headTypeInfo
+   self.stringForm = Ast.headTypeInfo
+end
+function BuiltinFuncType.setmeta( obj )
+  setmetatable( obj, { __index = BuiltinFuncType  } )
+end
 
-local typeInfoListInsert = Ast.headTypeInfo
-_moduleObj.typeInfoListInsert = typeInfoListInsert
+local builtinFunc = BuiltinFuncType.new()
+local function getBuiltinFunc(  )
 
-local typeInfoListRemove = Ast.headTypeInfo
-_moduleObj.typeInfoListRemove = typeInfoListRemove
-
-local typeInfoListUnpack = Ast.headTypeInfo
-_moduleObj.typeInfoListUnpack = typeInfoListUnpack
-
-local typeInfoArrayUnpack = Ast.headTypeInfo
-_moduleObj.typeInfoArrayUnpack = typeInfoArrayUnpack
-
-local typeInfoMappingIF = Ast.headTypeInfo
-_moduleObj.typeInfoMappingIF = typeInfoMappingIF
-
-local typeInfoMappingToMap = Ast.headTypeInfo
-_moduleObj.typeInfoMappingToMap = typeInfoMappingToMap
-
-local typeInfoStrGMatch = Ast.headTypeInfo
-local typeInfoStringGMatch = Ast.headTypeInfo
-local typeInfoStringForm = Ast.headTypeInfo
+   return builtinFunc
+end
+_moduleObj.getBuiltinFunc = getBuiltinFunc
 local function isStrFormFunc( typeInfo )
 
-   if typeInfo:equals( typeInfoStringForm ) then
+   if typeInfo:equals( builtinFunc.stringForm ) then
       return true
    end
    
@@ -1556,7 +1564,7 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          do
             local _switchExp = fieldName
             if _switchExp == "_load" then
-               _moduleObj.typeInfoLuneLoad = typeInfo
+               builtinFunc.luneLoad = typeInfo
             end
          end
          
@@ -1564,11 +1572,13 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          do
             local _switchExp = fieldName
             if _switchExp == "insert" then
-               _moduleObj.typeInfoListInsert = typeInfo
+               builtinFunc.listInsert = typeInfo
             elseif _switchExp == "remove" then
-               _moduleObj.typeInfoListRemove = typeInfo
+               builtinFunc.listRemove = typeInfo
             elseif _switchExp == "unpack" then
-               _moduleObj.typeInfoListUnpack = typeInfo
+               builtinFunc.listUnpack = typeInfo
+            elseif _switchExp == "sort" then
+               builtinFunc.listSort = typeInfo
             end
          end
          
@@ -1576,7 +1586,9 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          do
             local _switchExp = fieldName
             if _switchExp == "unpack" then
-               _moduleObj.typeInfoArrayUnpack = typeInfo
+               builtinFunc.arrayUnpack = typeInfo
+            elseif _switchExp == "sort" then
+               builtinFunc.arraySort = typeInfo
             end
          end
          
@@ -1584,7 +1596,7 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          do
             local _switchExp = fieldName
             if _switchExp == "_toMap" then
-               _moduleObj.typeInfoMappingToMap = typeInfo
+               builtinFunc.mappingToMap = typeInfo
             end
          end
          
@@ -1592,7 +1604,7 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          do
             local _switchExp = fieldName
             if _switchExp == "gmatch" then
-               typeInfoStrGMatch = typeInfo
+               builtinFunc.strGMatch = typeInfo
             end
          end
          
@@ -1600,9 +1612,9 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
          do
             local _switchExp = fieldName
             if _switchExp == "gmatch" then
-               typeInfoStringGMatch = typeInfo
+               builtinFunc.stringGMatch = typeInfo
             elseif _switchExp == "format" then
-               typeInfoStringForm = typeInfo
+               builtinFunc.stringForm = typeInfo
             end
          end
          
@@ -1619,7 +1631,7 @@ function TransUnit:registBuiltInScope(  )
    end
    
    readyBuiltin = true
-   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"stem!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}}}, {["Array"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
+   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"stem!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
    local function getTypeInfo( typeName )
    
       local mutable = true
@@ -1680,7 +1692,7 @@ function TransUnit:registBuiltInScope(  )
             Ast.builtInTypeIdSet[parentInfo:get_typeId(  )] = parentInfo
             Ast.builtInTypeIdSet[parentInfo:get_nilableTypeInfo():get_typeId()] = parentInfo:get_nilableTypeInfo()
             if name == "Mapping" then
-               _moduleObj.typeInfoMappingIF = parentInfo
+               builtinFunc.mappingIF = parentInfo
             end
             
          end
@@ -2944,7 +2956,7 @@ function TransUnit:analyzeApply( token )
    if exp:get_kind() == Ast.nodeKind['ExpCall'] then
       local callNode = exp
       local callFuncType = callNode:get_func():get_expType()
-      if callFuncType:equals( typeInfoStrGMatch ) or callFuncType:equals( typeInfoStringGMatch ) then
+      if callFuncType:equals( builtinFunc.strGMatch ) or callFuncType:equals( builtinFunc.stringGMatch ) then
          table.insert( itemTypeList, Ast.builtinTypeString )
          defaultItemType = Ast.builtinTypeString:get_nilableTypeInfo()
       else
@@ -4310,9 +4322,9 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    local classScope = self.scope
    self:checkToken( nextToken, "{" )
    local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, false ) ), false )
-   if classTypeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF ) then
+   if classTypeInfo:isInheritFrom( builtinFunc.mappingIF ) then
       self.helperInfo.hasMappingClassDef = true
-      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( _moduleObj.typeInfoMappingIF ) then
+      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( builtinFunc.mappingIF ) then
          self:addErrMess( firstToken.pos, string.format( "must extend Mapping at %s", classTypeInfo:get_baseTypeInfo():getTxt(  )) )
       end
       
@@ -4386,7 +4398,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
    end
    
-   if classTypeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF ) then
+   if classTypeInfo:isInheritFrom( builtinFunc.mappingIF ) then
       local function isAvailableMapping( typeInfo, checkedTypeMap )
       
          local function isAvailableMappingSub(  )
@@ -4415,7 +4427,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
                      return true
                   end
                   
-                  return typeInfo:isInheritFrom( _moduleObj.typeInfoMappingIF )
+                  return typeInfo:isInheritFrom( builtinFunc.mappingIF )
                elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
                   return isAvailableMapping( typeInfo:get_itemTypeInfoList()[1], checkedTypeMap )
                elseif _switchExp == Ast.TypeInfoKind.Map then
@@ -5551,9 +5563,9 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    local argTypeList = funcTypeInfo:get_argTypeInfoList()
    do
       local _switchExp = funcTypeInfo
-      if _switchExp == _moduleObj.typeInfoListInsert then
+      if _switchExp == builtinFunc.listInsert then
          argTypeList = genericTypeList
-      elseif _switchExp == _moduleObj.typeInfoListRemove then
+      elseif _switchExp == builtinFunc.listRemove then
       end
    end
    
@@ -5815,6 +5827,65 @@ end
 
 function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
 
+   local function checkArgForStringForm( argList )
+   
+      local formArgTypeList = {}
+      local formatTxt = ""
+      if #argList:get_expList() > 0 then
+         local argNode = argList:get_expList()[1]
+         if argNode:get_kind() == Ast.NodeKind.get_LiteralString() then
+            local workForm = argNode:getLiteral(  )
+            if #workForm >= 1 then
+               formatTxt = tostring( _lune.unwrapDefault( workForm[1], "") )
+            end
+            
+         end
+         
+      end
+      
+      for index, argType in pairs( argList:get_expTypeList() ) do
+         if index ~= 1 then
+            table.insert( formArgTypeList, argType )
+         end
+         
+      end
+      
+      self:checkStringFormat( firstToken.pos, formatTxt, formArgTypeList )
+   end
+   
+   local function checkArgForSort( genericTypeList, argList )
+   
+      if #argList:get_expTypeList() > 0 then
+         local callback = argList:get_expTypeList()[1]
+         if callback == Ast.builtinTypeAbbr then
+            return 
+         end
+         
+         if #callback:get_retTypeInfoList() ~= 1 or not Ast.builtinTypeBool:equals( callback:get_retTypeInfoList()[1] ) then
+            self:addErrMess( firstToken.pos, string.format( "The callback's return type of sort() must be bool. -- '%s'", callback:get_retTypeInfoList()[1]:getTxt(  )) )
+         end
+         
+         if #callback:get_argTypeInfoList() ~= 2 then
+            self:addErrMess( firstToken.pos, string.format( "The callback's argument must have 2 arguments. -- '%s'", callback:get_display_stirng()) )
+         end
+         
+         if #genericTypeList == 1 then
+            for index, argType in pairs( callback:get_argTypeInfoList() ) do
+               if not genericTypeList[1]:equals( argType ) then
+                  self:addErrMess( firstToken.pos, string.format( "The callback's argument(%d) type must be -- '%s'", index, genericTypeList[1]:getTxt(  )) )
+               end
+               
+            end
+            
+         else
+          
+            self:addErrMess( firstToken.pos, "The generics of the list is illegal" )
+         end
+         
+      end
+      
+   end
+   
    local macroFlag = false
    local funcTypeInfo = exp:get_expType()
    local nilAccess = nextToken.txt == "$("
@@ -5862,7 +5933,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
    end
    
    self:checkMatchValType( exp:get_pos(), funcTypeInfo, argList, genericTypeList )
-   if funcTypeInfo:equals( _moduleObj.typeInfoListInsert ) then
+   if funcTypeInfo:equals( builtinFunc.listInsert ) then
       if argList ~= nil then
          if argList:get_expType():get_nilable() then
             self:addErrMess( argList:get_pos(), "list can't insert nilable" )
@@ -5870,7 +5941,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
          
       end
       
-   elseif funcTypeInfo:equals( _moduleObj.typeInfoListRemove ) then
+   elseif funcTypeInfo:equals( builtinFunc.listRemove ) then
       if #genericTypeList > 0 then
          if genericTypeList[1]:get_nilable() then
             self:addWarnMess( exp:get_pos(), "remove() is dangerous for nilable's list." )
@@ -5897,7 +5968,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       
       local retTypeInfoList = funcTypeInfo:get_retTypeInfoList(  )
       if refFieldNode ~= nil then
-         if funcTypeInfo:equals( _moduleObj.typeInfoListUnpack ) or funcTypeInfo:equals( _moduleObj.typeInfoArrayUnpack ) then
+         if funcTypeInfo:equals( builtinFunc.listUnpack ) or funcTypeInfo:equals( builtinFunc.arrayUnpack ) then
             local prefixType = refFieldNode:get_prefix():get_expType()
             if #prefixType:get_itemTypeInfoList() > 0 then
                local dddType = Ast.NormalTypeInfo.createDDD( prefixType:get_itemTypeInfoList()[1], false )
@@ -5933,35 +6004,16 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
          
       end
       
-      do
-         local _switchExp = funcTypeInfo
-         if _switchExp == typeInfoStringForm then
-            if argList ~= nil then
-               local formArgTypeList = {}
-               local formatTxt = ""
-               if #argList:get_expList() > 0 then
-                  local argNode = argList:get_expList()[1]
-                  if argNode:get_kind() == Ast.NodeKind.get_LiteralString() then
-                     local workForm = argNode:getLiteral(  )
-                     if #workForm >= 1 then
-                        formatTxt = tostring( _lune.unwrapDefault( workForm[1], "") )
-                     end
-                     
-                  end
-                  
-               end
-               
-               for index, argType in pairs( argList:get_expTypeList() ) do
-                  if index ~= 1 then
-                     table.insert( formArgTypeList, argType )
-                  end
-                  
-               end
-               
-               self:checkStringFormat( firstToken.pos, formatTxt, formArgTypeList )
+      if argList ~= nil then
+         do
+            local _switchExp = funcTypeInfo
+            if _switchExp == builtinFunc.stringForm then
+               checkArgForStringForm( argList )
+            elseif _switchExp == builtinFunc.listSort or _switchExp == builtinFunc.arraySort then
+               checkArgForSort( genericTypeList, argList )
             end
-            
          end
+         
       end
       
       exp = Ast.ExpCallNode.create( self.nodeManager, firstToken.pos, retTypeInfoList, exp, errorFuncFlag, nilAccess, argList )
@@ -6425,7 +6477,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       typeInfo = self:createModifier( typeInfo, false )
    end
    
-   if typeInfo:equals( _moduleObj.typeInfoListUnpack ) or typeInfo:equals( _moduleObj.typeInfoArrayUnpack ) then
+   if typeInfo:equals( builtinFunc.listUnpack ) or typeInfo:equals( builtinFunc.arrayUnpack ) then
       self.helperInfo.useUnpack = true
    end
    
@@ -6537,7 +6589,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
             skipFlag = true
          end
          
-         if typeInfo:equals( _moduleObj.typeInfoLuneLoad ) then
+         if typeInfo:equals( builtinFunc.luneLoad ) then
             self.helperInfo.useLoad = true
          end
          

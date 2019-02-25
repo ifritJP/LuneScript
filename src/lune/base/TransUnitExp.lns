@@ -357,10 +357,10 @@ fn TransUnit.checkMatchValType(
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
-      case typeInfoListInsert {
+      case builtinFunc.listInsert {
          argTypeList = genericTypeList;
       }
-      case typeInfoListRemove {
+      case builtinFunc.listRemove {
       }
    }
 
@@ -636,6 +636,63 @@ fn TransUnit.analyzeExpCall(
    firstToken:&Parser.Token, mut exp: Ast.Node, nextToken:&Parser.Token ) mut :
    Ast.Node, &Parser.Token
 {
+   fn checkArgForStringForm( argList:Ast.ExpListNode ) {
+      let mut formArgTypeList:List<&Ast.TypeInfo> = [];
+      let mut formatTxt = "";
+      if #argList.$expList > 0 {
+         let argNode = argList.$expList[ 1 ];
+         if argNode.$kind == Ast.NodeKind.$LiteralString {
+            let workForm = argNode.getLiteral();
+            if #workForm >= 1 {
+               formatTxt = tostring( unwrap workForm[ 1 ] default "" );
+            }
+         }
+      }
+      foreach argType, index in argList.$expTypeList {
+         if index ~= 1 {
+            formArgTypeList.insert( argType );
+         }
+      }
+      self.checkStringFormat( firstToken.pos, formatTxt, formArgTypeList );
+   }
+
+   fn checkArgForSort( genericTypeList:&List<&Ast.TypeInfo>, argList:Ast.ExpListNode ) {
+      if #argList.$expTypeList > 0 {
+         let callback = argList.$expTypeList[ 1 ];
+         if callback == Ast.builtinTypeAbbr {
+            return;
+         }
+         if #callback.$retTypeInfoList ~= 1 or
+            not Ast.builtinTypeBool.equals( callback.$retTypeInfoList[ 1 ] )
+         {
+            self.addErrMess(
+               firstToken.$pos,
+               "The callback's return type of sort() must be bool. -- '%s'"
+               (callback.$retTypeInfoList[ 1 ].getTxt(##)) );
+         }
+         if #callback.$argTypeInfoList ~= 2 {
+            self.addErrMess(
+               firstToken.$pos,
+               "The callback's argument must have 2 arguments. -- '%s'"
+               (callback.$display_stirng) );
+         }
+         if #genericTypeList == 1 {
+            foreach argType, index in callback.$argTypeInfoList {
+               if not genericTypeList[ 1 ].equals( argType ) {          
+                  self.addErrMess(
+                     firstToken.$pos,
+                     "The callback's argument(%d) type must be -- '%s'"
+                     ( index, genericTypeList[ 1 ].getTxt(##)) );
+               }
+            }
+         }
+         else {
+            self.addErrMess(
+               firstToken.$pos, "The generics of the list is illegal" );
+         }
+      }
+   }
+   
    let mut macroFlag = false;
    let mut funcTypeInfo = exp.$expType;
    let mut nilAccess = nextToken.txt == "$(";
@@ -687,14 +744,14 @@ fn TransUnit.analyzeExpCall(
    self.checkMatchValType(
       exp.$pos, funcTypeInfo, argList, genericTypeList );
 
-   if funcTypeInfo.equals( typeInfoListInsert ) {
+   if funcTypeInfo.equals( builtinFunc.listInsert ) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "list can't insert nilable" );
          }
       }
    }
-   elseif funcTypeInfo.equals( typeInfoListRemove ) {
+   elseif funcTypeInfo.equals( builtinFunc.listRemove ) {
       if #genericTypeList > 0 {
          if genericTypeList[ 1 ].$nilable {
             self.addWarnMess( exp.$pos, "remove() is dangerous for nilable's list." );
@@ -719,8 +776,8 @@ fn TransUnit.analyzeExpCall(
       let mut retTypeInfoList:&List<&Ast.TypeInfo> =
          funcTypeInfo.get_retTypeInfoList();
       when! refFieldNode {
-         if funcTypeInfo.equals( typeInfoListUnpack ) or
-            funcTypeInfo.equals( typeInfoArrayUnpack )
+         if funcTypeInfo.equals( builtinFunc.listUnpack ) or
+            funcTypeInfo.equals( builtinFunc.arrayUnpack )
          {
             // unpack の型を list の要素の DDD 型にする
             let prefixType = refFieldNode.$prefix.$expType;
@@ -755,26 +812,13 @@ fn TransUnit.analyzeExpCall(
          }
       }
 
-      switch funcTypeInfo {
-         case typeInfoStringForm {
-            when! argList {
-               let mut formArgTypeList:List<&Ast.TypeInfo> = [];
-               let mut formatTxt = "";
-               if #argList.$expList > 0 {
-                  let argNode = argList.$expList[ 1 ];
-                  if argNode.$kind == Ast.NodeKind.$LiteralString {
-                     let workForm = argNode.getLiteral();
-                     if #workForm >= 1 {
-                        formatTxt = tostring( unwrap workForm[ 1 ] default "" );
-                     }
-                  }
-               }
-               foreach argType, index in argList.$expTypeList {
-                  if index ~= 1 {
-                     formArgTypeList.insert( argType );
-                  }
-               }
-               self.checkStringFormat( firstToken.pos, formatTxt, formArgTypeList );
+      when! argList {
+         switch funcTypeInfo {
+            case builtinFunc.stringForm {
+               checkArgForStringForm( argList );
+            }
+            case builtinFunc.listSort, builtinFunc.arraySort {
+               checkArgForSort( genericTypeList, argList );
             }
          }
       }
@@ -1271,7 +1315,8 @@ fn TransUnit.analyzeExpField(
       typeInfo = self.createModifier( typeInfo, false );
    }
 
-   if typeInfo.equals( typeInfoListUnpack ) or typeInfo.equals( typeInfoArrayUnpack )
+   if typeInfo.equals( builtinFunc.listUnpack ) or
+      typeInfo.equals( builtinFunc.arrayUnpack )
    {
       self.helperInfo.useUnpack = true;
    }
@@ -1394,7 +1439,7 @@ fn TransUnit.analyzeExpSymbol(
          if typeInfo.equals( Ast.builtinTypeSymbol ) {
             skipFlag = true;
          }
-         if typeInfo.equals( typeInfoLuneLoad ) {
+         if typeInfo.equals( builtinFunc.luneLoad ) {
             self.helperInfo.useLoad = true;
          }
          

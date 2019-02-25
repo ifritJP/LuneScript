@@ -1335,7 +1335,7 @@ end
    }
 
    // Mapping
-   if classTypeInfo.isInheritFrom( TransUnit.typeInfoMappingIF ) {
+   if classTypeInfo.isInheritFrom( TransUnit.getBuiltinFunc().mappingIF ) {
       self.writeln( ```
 function %s:_toMap()
   return self
@@ -2453,7 +2453,7 @@ pub override fn convFilter.processExpRef(
       self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
                             funcType.$rawTxt ) );
    }
-   elseif node.$expType.equals( TransUnit.typeInfoLuneLoad ) {
+   elseif node.$expType.equals( TransUnit.getBuiltinFunc().luneLoad ) {
       self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
    }
    else {

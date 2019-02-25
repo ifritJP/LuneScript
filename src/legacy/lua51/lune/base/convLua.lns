@@ -604,6 +604,14 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
       pickupTypeId( funcInfo.$typeInfo, true ## );
    }
 
+   // alias
+   if! let aliasNodeList = node.$nodeManager.getAliasNodeList() {
+      foreach aliasNode in aliasNodeList {
+         pickupTypeId( aliasNode.$expType, false ## );
+      }
+   }
+      
+
    // 型情報の処理
    self.writeln( "local __typeInfoList = {}" );
    self.writeln( "_moduleObj.__typeInfoList = __typeInfoList" );
@@ -654,7 +662,6 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
    foreach typeInfo, typeId in self.pubAlgeId2AlgeTypeInfo {
       typeId2TypeInfo[ typeId ] = typeInfo;
    }
-
    
    // 依存モジュールが公開している情報のマッピング情報処理。
    // このモジュールが公開するメソッドや変数が使用している型が、
@@ -1328,7 +1335,7 @@ end
    }
 
    // Mapping
-   if classTypeInfo.isInheritFrom( TransUnit.typeInfoMappingIF ) {
+   if classTypeInfo.isInheritFrom( TransUnit.getBuiltinFunc().mappingIF ) {
       self.writeln( ```
 function %s:_toMap()
   return self
@@ -2446,7 +2453,7 @@ pub override fn convFilter.processExpRef(
       self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
                             funcType.$rawTxt ) );
    }
-   elseif node.$expType.equals( TransUnit.typeInfoLuneLoad ) {
+   elseif node.$expType.equals( TransUnit.getBuiltinFunc().luneLoad ) {
       self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
    }
    else {
@@ -2584,6 +2591,17 @@ pub override fn convFilter.processProvide(
    node: Ast.ProvideNode, parent:&Ast.Node ) mut
 {
 }
+
+pub override fn convFilter.processAlias(
+   node: &Ast.AliasNode, parent:&Ast.Node ) mut
+{
+   self.write( "local %s = " (node.$newName) );
+   filter( node.$srcNode, self, node );
+   if Ast.isPubToExternal( node.$expType.$accessMode ) {
+      self.write( "\n_moduleObj.%s = %s" (node.$newName, node.$newName) );
+   }
+}
+
 
 pub override fn convFilter.processLiteralList( 
    node: Ast.LiteralListNode, parent: &Ast.Node ) mut

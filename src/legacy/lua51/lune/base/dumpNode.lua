@@ -663,6 +663,11 @@ function dumpFilter:processProvide( node, prefix, depth )
    dump( prefix, depth, node, node:get_symbol():get_name() )
 end
 
+function dumpFilter:processAlias( node, prefix, depth )
+
+   dump( prefix, depth, node, string.format( "%s = %s", node:get_newName(), node:get_typeInfo():getTxt(  )) )
+end
+
 function dumpFilter:processLiteralList( node, prefix, depth )
 
    dump( prefix, depth, node, "[]" )

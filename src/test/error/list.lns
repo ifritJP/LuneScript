@@ -34,3 +34,13 @@
    val.insert( 1 ); // error
    val.remove( 1 ); // error
 }
+
+{
+   let list1 = [ 1, 4, 5, 3, 2 ];
+   list1.sort( fn ( val1:int, val2:int ) : bool { return val1 > val2; } ); // error
+   let mut list2 = [ 1, 4, 5, 3, 2 ];
+   list2.sort( fn ( val1:real, val2:int ) : bool { return val1 > val2; } ); // error
+   list2.sort( fn ( val1:int, val2:real ) : bool { return val1 > val2; } ); // error
+   list2.sort( fn ( val1:int, val2:int ) : int { return val1; } ); // error
+   list2.sort( fn ( val1:int, val2:int, val3:int ) : bool { return val1 > val2; } ); // error
+}

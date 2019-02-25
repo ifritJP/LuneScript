@@ -521,6 +521,12 @@ pub override fn dumpFilter.processProvide(
    dump( prefix, depth, node, node.$symbol.$name );
 }
 
+pub override fn dumpFilter.processAlias(
+   node: &Ast.AliasNode, prefix: str, depth: int ) mut
+{
+   dump( prefix, depth, node, "%s = %s" (node.$newName, node.$typeInfo.getTxt(##) ) );
+}
+
 pub override fn dumpFilter.processLiteralList( 
    node: &Ast.LiteralListNode, prefix: str, depth: int ) mut
 {

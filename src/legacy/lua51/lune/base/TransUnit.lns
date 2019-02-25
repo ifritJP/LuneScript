@@ -490,6 +490,7 @@ class ImportParam {
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
    pub let metaInfo:_MetaInfo;
    pub let scope:Ast.Scope;
+   pub let moduleTypeInfo: &Ast.TypeInfo;
 
    pri let typeId2AtomMap:Map<int,&_TypeInfo>;
 }
@@ -540,6 +541,29 @@ class _TypeInfoNilable extend _TypeInfo {
       return newTypeInfo,nil;
    }
 }
+
+
+class _TypeInfoAlias extend _TypeInfo {
+   pri let rawTxt:str;
+   pri let srcTypeId:int;
+
+   pub override fn createTypeInfo( param:ImportParam ): Ast.TypeInfo!, str!
+   {
+      let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId );
+      let newTypeInfo = Ast.NormalTypeInfo.createAlias(
+         self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
+      param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+
+      let! mut parentScope = param.typeId2Scope[ self.parentId ] {
+         return nil, "not found parentScope %s %s" ( self.parentId, self.rawTxt );
+      };
+      parentScope.addAliasForType( self.rawTxt, newTypeInfo );
+
+      
+      return newTypeInfo,nil;
+   }
+}
+
 
 class _TypeInfoDDD extend _TypeInfo {
    pub let itemTypeId:int;
@@ -859,21 +883,44 @@ class _TypeInfoAlge extend _TypeInfo {
 }
 
 
+pub class BuiltinFuncType {
+   pub let mut luneLoad:&Ast.TypeInfo;
+   pub let mut listInsert:&Ast.TypeInfo;
+   pub let mut listRemove:&Ast.TypeInfo;
+   pub let mut listUnpack:&Ast.TypeInfo;
+   pub let mut listSort:&Ast.TypeInfo;
+   pub let mut arrayUnpack:&Ast.TypeInfo;
+   pub let mut arraySort:&Ast.TypeInfo;
+   pub let mut mappingIF:&Ast.TypeInfo;
+   pub let mut mappingToMap:&Ast.TypeInfo;
+   pub let mut strGMatch:&Ast.TypeInfo;
+   pub let mut stringGMatch:&Ast.TypeInfo;
+   pub let mut stringForm:&Ast.TypeInfo;
 
+   pub fn __init() {
+      self.luneLoad = Ast.headTypeInfo;
+      self.listInsert = Ast.headTypeInfo;
+      self.listRemove = Ast.headTypeInfo;
+      self.listUnpack = Ast.headTypeInfo;
+      self.listSort = Ast.headTypeInfo;
+      self.arrayUnpack = Ast.headTypeInfo;
+      self.arraySort = Ast.headTypeInfo;
+      self.mappingIF = Ast.headTypeInfo;
+      self.mappingToMap = Ast.headTypeInfo;
+      self.strGMatch = Ast.headTypeInfo;
+      self.stringGMatch = Ast.headTypeInfo;
+      self.stringForm = Ast.headTypeInfo;
+   }
+}
 
-pub let mut typeInfoLuneLoad:&Ast.TypeInfo = Ast.headTypeInfo;
-pub let mut typeInfoListInsert:&Ast.TypeInfo = Ast.headTypeInfo;
-pub let mut typeInfoListRemove:&Ast.TypeInfo = Ast.headTypeInfo;
-pub let mut typeInfoListUnpack:&Ast.TypeInfo = Ast.headTypeInfo;
-pub let mut typeInfoArrayUnpack:&Ast.TypeInfo = Ast.headTypeInfo;
-pub let mut typeInfoMappingIF:&Ast.TypeInfo = Ast.headTypeInfo;
-pub let mut typeInfoMappingToMap:&Ast.TypeInfo = Ast.headTypeInfo;
-let mut typeInfoStrGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
-let mut typeInfoStringGMatch:&Ast.TypeInfo = Ast.headTypeInfo;
-let mut typeInfoStringForm:&Ast.TypeInfo = Ast.headTypeInfo;
+let mut builtinFunc = new BuiltinFuncType();
+
+pub fn getBuiltinFunc() : &BuiltinFuncType {
+   return builtinFunc;
+}
 
 pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
-   if typeInfo.equals( typeInfoStringForm ) {
+   if typeInfo.equals( builtinFunc.stringForm ) {
       return true;
    }
    return false;
@@ -884,51 +931,57 @@ fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
       case "" {
          switch fieldName {
             case "_load" {
-               typeInfoLuneLoad = typeInfo;
+               builtinFunc.luneLoad = typeInfo;
             }
          }
       }
       case "List" {
          switch fieldName {
             case "insert" {      
-               typeInfoListInsert = typeInfo;
+               builtinFunc.listInsert = typeInfo;
             }        
             case "remove" {
-               typeInfoListRemove = typeInfo;
+               builtinFunc.listRemove = typeInfo;
             }  
             case "unpack" {
-               typeInfoListUnpack = typeInfo;
+               builtinFunc.listUnpack = typeInfo;
+            }  
+            case "sort" {
+               builtinFunc.listSort = typeInfo;
             }  
          }       
       }  
       case "Array" {
          switch fieldName {
             case "unpack" {
-               typeInfoArrayUnpack = typeInfo;
+               builtinFunc.arrayUnpack = typeInfo;
+            }  
+            case "sort" {
+               builtinFunc.arraySort = typeInfo;
             }  
          }  
       }  
       case "Mapping" {
          switch fieldName {
             case "_toMap" {
-               typeInfoMappingToMap = typeInfo;
+               builtinFunc.mappingToMap = typeInfo;
             }  
          }  
       }  
       case "str" {
          switch fieldName {
             case "gmatch" {
-               typeInfoStrGMatch = typeInfo;
+               builtinFunc.strGMatch = typeInfo;
             }  
          }  
       }  
       case "string" {
          switch fieldName {
             case "gmatch" {
-               typeInfoStringGMatch = typeInfo;
+               builtinFunc.stringGMatch = typeInfo;
             }  
             case "format" {
-               typeInfoStringForm = typeInfo;
+               builtinFunc.stringForm = typeInfo;
             }  
          }  
       }  
@@ -1046,12 +1099,20 @@ fn TransUnit.registBuiltInScope() mut {
             "insert": { "type": [ "mut" ], "arg": [ "&stem" ], "ret": [""] },
             "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["stem!"] },
             "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+            "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },
          },
       },
       { 
          "Array": {
             "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+            "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },
          },
+      },
+      {
+         "math": {
+            "random": { "arg": [ "int!", "int!" ], "ret": ["real"] },
+            "randomseed": { "arg": [ "int!" ], "ret": [] },
+         }
       },
       {
          "debug": {
@@ -1120,7 +1181,7 @@ fn TransUnit.registBuiltInScope() mut {
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
             if name == "Mapping" {
-               typeInfoMappingIF = parentInfo;
+               builtinFunc.mappingIF = parentInfo;
             }
          }
          if not builtinModuleName2Scope[ name ]
@@ -1785,6 +1846,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
             case .Nilable {
                actInfo = _TypeInfoNilable._fromMap( atomInfo );
             }
+            case .Alias {
+               actInfo = _TypeInfoAlias._fromMap( atomInfo );
+            }
             case .DDD {
                actInfo, mess = _TypeInfoDDD._fromMap( atomInfo );
             }
@@ -1816,7 +1880,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope, id2atomMap );
+      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope,
+      moduleTypeInfo, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
       if! errMess {
@@ -2410,8 +2475,8 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
    if exp.$kind == Ast.nodeKind.ExpCall {
       let callNode = exp@@Ast.ExpCallNode;
       let callFuncType = callNode.$func.$expType;
-      if callFuncType.equals( typeInfoStrGMatch ) or
-         callFuncType.equals( typeInfoStringGMatch )
+      if callFuncType.equals( builtinFunc.strGMatch ) or
+         callFuncType.equals( builtinFunc.stringGMatch )
       {
          itemTypeList.insert( Ast.builtinTypeString );
          defaultItemType = Ast.builtinTypeString.$nilableTypeInfo;

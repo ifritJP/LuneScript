@@ -1450,7 +1450,7 @@ end
       self:writeln( "end" )
    end
    
-   if classTypeInfo:isInheritFrom( TransUnit.typeInfoMappingIF ) then
+   if classTypeInfo:isInheritFrom( TransUnit.getBuiltinFunc(  ).mappingIF ) then
       self:writeln( string.format( [==[
 function %s:_toMap()
   return self
@@ -2588,7 +2588,7 @@ function convFilter:processExpRef( node, parent )
    if node:get_token().txt == "super" then
       local funcType = node:get_expType()
       self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-   elseif node:get_expType():equals( TransUnit.typeInfoLuneLoad ) then
+   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).luneLoad ) then
       self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
    else
     

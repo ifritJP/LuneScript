@@ -1398,11 +1398,11 @@ fn TransUnit.analyzeDeclClass(
       Ast.NormalTypeInfo.createMap(
          .Pub, classTypeInfo, Ast.builtinTypeString,
          self.createModifier( Ast.builtinTypeStem, false ) ), false );
-   if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
       self.helperInfo.hasMappingClassDef = true;
       
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
-         not classTypeInfo.$baseTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+         not classTypeInfo.$baseTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
          self.addErrMess(
             firstToken.pos,
             "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt(##) ) );
@@ -1507,7 +1507,7 @@ fn TransUnit.analyzeDeclClass(
    }
 
 
-   if classTypeInfo.isInheritFrom( typeInfoMappingIF ) {
+   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
       // Mapping の制限チェック
       fn isAvailableMapping(
          mut typeInfo:&Ast.TypeInfo, checkedTypeMap:Map<&Ast.TypeInfo,bool> ): bool
@@ -1537,7 +1537,7 @@ fn TransUnit.analyzeDeclClass(
                   if typeInfo.equals( Ast.builtinTypeString ) {
                      return true;
                   }  
-                  return typeInfo.isInheritFrom( typeInfoMappingIF );
+                  return typeInfo.isInheritFrom( builtinFunc.mappingIF );
                }  
                case .List, .Array {
                   return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );

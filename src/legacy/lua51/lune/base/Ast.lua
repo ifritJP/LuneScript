@@ -135,6 +135,9 @@ SerializeKind.__allList[6] = SerializeKind.Alge
 SerializeKind.DDD = 6
 SerializeKind._val2NameMap[6] = 'DDD'
 SerializeKind.__allList[7] = SerializeKind.DDD
+SerializeKind.Alias = 7
+SerializeKind._val2NameMap[7] = 'Alias'
+SerializeKind.__allList[8] = SerializeKind.Alias
 
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
@@ -631,9 +634,17 @@ function TypeInfo:isInheritFrom( other )
 
    return false
 end
-function TypeInfo:getTxt( fullName, importInfo, localFlag )
+function TypeInfo:get_rawTxt(  )
 
    return ""
+end
+function TypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
+   return ""
+end
+function TypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
 end
 function TypeInfo:canEvalWith( other, opTxt )
 
@@ -647,9 +658,13 @@ function TypeInfo:serialize( stream, validChildrenSet )
 
    return 
 end
-function TypeInfo:get_display_stirng(  )
+function TypeInfo:get_display_stirng_with( raw )
 
    return ""
+end
+function TypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( "" )
 end
 function TypeInfo:get_srcTypeInfo(  )
 
@@ -706,10 +721,6 @@ function TypeInfo:getModule(  )
    end
    
    return self:get_parentInfo():getModule(  )
-end
-function TypeInfo:get_rawTxt(  )
-
-   return ""
 end
 function TypeInfo:get_typeId(  )
 
@@ -804,6 +815,182 @@ end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
+
+local AliasTypeInfo = {}
+setmetatable( AliasTypeInfo, { __index = TypeInfo } )
+_moduleObj.AliasTypeInfo = AliasTypeInfo
+function AliasTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self.rawTxt, fullName, importInfo, localFlag )
+end
+function AliasTypeInfo:serialize( stream, validChildrenSet )
+
+   local parentId = self:getParentId(  )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, rawTxt = %q, srcTypeId = %d }\n', SerializeKind.Alias, parentId, self.typeId, self.rawTxt, self.aliasSrcTypeInfo:get_typeId()) )
+end
+function AliasTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self.rawTxt )
+end
+function AliasTypeInfo:getParentId(  )
+
+   return self.parentInfo:get_typeId()
+end
+function AliasTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = AliasTypeInfo  } )
+end
+function AliasTypeInfo.new( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId )
+   local obj = {}
+   AliasTypeInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId )
+   end        
+   return obj 
+end         
+function AliasTypeInfo:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId ) 
+
+   TypeInfo.__init( self )
+   self.rawTxt = rawTxt
+   self.accessMode = accessMode
+   self.parentInfo = parentInfo
+   self.aliasSrcTypeInfo = aliasSrcTypeInfo
+   self.externalFlag = externalFlag
+   self.typeId = typeId
+end
+function AliasTypeInfo:get_rawTxt()       
+   return self.rawTxt         
+end
+function AliasTypeInfo:get_accessMode()       
+   return self.accessMode         
+end
+function AliasTypeInfo:get_parentInfo()       
+   return self.parentInfo         
+end
+function AliasTypeInfo:get_aliasSrcTypeInfo()       
+   return self.aliasSrcTypeInfo         
+end
+function AliasTypeInfo:get_externalFlag()       
+   return self.externalFlag         
+end
+function AliasTypeInfo:get_typeId()       
+   return self.typeId         
+end
+function AliasTypeInfo:get_scope( ... )
+   return self.aliasSrcTypeInfo:get_scope( ... )
+end       
+
+function AliasTypeInfo:isModule( ... )
+   return self.aliasSrcTypeInfo:isModule( ... )
+end       
+
+function AliasTypeInfo:get_baseId( ... )
+   return self.aliasSrcTypeInfo:get_baseId( ... )
+end       
+
+function AliasTypeInfo:isInheritFrom( ... )
+   return self.aliasSrcTypeInfo:isInheritFrom( ... )
+end       
+
+function AliasTypeInfo:getTxtWithRaw( ... )
+   return self.aliasSrcTypeInfo:getTxtWithRaw( ... )
+end       
+
+function AliasTypeInfo:canEvalWith( ... )
+   return self.aliasSrcTypeInfo:canEvalWith( ... )
+end       
+
+function AliasTypeInfo:get_abstractFlag( ... )
+   return self.aliasSrcTypeInfo:get_abstractFlag( ... )
+end       
+
+function AliasTypeInfo:get_display_stirng_with( ... )
+   return self.aliasSrcTypeInfo:get_display_stirng_with( ... )
+end       
+
+function AliasTypeInfo:get_srcTypeInfo( ... )
+   return self.aliasSrcTypeInfo:get_srcTypeInfo( ... )
+end       
+
+function AliasTypeInfo:equals( ... )
+   return self.aliasSrcTypeInfo:equals( ... )
+end       
+
+function AliasTypeInfo:get_interfaceList( ... )
+   return self.aliasSrcTypeInfo:get_interfaceList( ... )
+end       
+
+function AliasTypeInfo:get_itemTypeInfoList( ... )
+   return self.aliasSrcTypeInfo:get_itemTypeInfoList( ... )
+end       
+
+function AliasTypeInfo:get_argTypeInfoList( ... )
+   return self.aliasSrcTypeInfo:get_argTypeInfoList( ... )
+end       
+
+function AliasTypeInfo:get_retTypeInfoList( ... )
+   return self.aliasSrcTypeInfo:get_retTypeInfoList( ... )
+end       
+
+function AliasTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.aliasSrcTypeInfo:hasRouteNamespaceFrom( ... )
+end       
+
+function AliasTypeInfo:getModule( ... )
+   return self.aliasSrcTypeInfo:getModule( ... )
+end       
+
+function AliasTypeInfo:get_kind( ... )
+   return self.aliasSrcTypeInfo:get_kind( ... )
+end       
+
+function AliasTypeInfo:get_staticFlag( ... )
+   return self.aliasSrcTypeInfo:get_staticFlag( ... )
+end       
+
+function AliasTypeInfo:get_autoFlag( ... )
+   return self.aliasSrcTypeInfo:get_autoFlag( ... )
+end       
+
+function AliasTypeInfo:get_nonnilableType( ... )
+   return self.aliasSrcTypeInfo:get_nonnilableType( ... )
+end       
+
+function AliasTypeInfo:get_baseTypeInfo( ... )
+   return self.aliasSrcTypeInfo:get_baseTypeInfo( ... )
+end       
+
+function AliasTypeInfo:get_nilable( ... )
+   return self.aliasSrcTypeInfo:get_nilable( ... )
+end       
+
+function AliasTypeInfo:get_nilableTypeInfo( ... )
+   return self.aliasSrcTypeInfo:get_nilableTypeInfo( ... )
+end       
+
+function AliasTypeInfo:get_typeData( ... )
+   return self.aliasSrcTypeInfo:get_typeData( ... )
+end       
+
+function AliasTypeInfo:get_children( ... )
+   return self.aliasSrcTypeInfo:get_children( ... )
+end       
+
+function AliasTypeInfo:addChildren( ... )
+   return self.aliasSrcTypeInfo:addChildren( ... )
+end       
+
+function AliasTypeInfo:get_mutable( ... )
+   return self.aliasSrcTypeInfo:get_mutable( ... )
+end       
+
+function AliasTypeInfo:getParentFullName( ... )
+   return self.aliasSrcTypeInfo:getParentFullName( ... )
+end       
+
+function AliasTypeInfo:getFullName( ... )
+   return self.aliasSrcTypeInfo:getFullName( ... )
+end       
+
 
 
 function Scope:filterTypeInfoField( includeSelfFlag, fromScope, callback )
@@ -1074,11 +1261,6 @@ function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, sta
    return symbolInfo
 end
 
-function Scope:addAlias( name, symbolInfo )
-
-   self:add( symbolInfo:get_kind(), symbolInfo:get_canBeLeft(), symbolInfo:get_canBeRight(), name, symbolInfo:get_typeInfo(), symbolInfo:get_accessMode(), symbolInfo:get_staticFlag(), symbolInfo:get_mutable(), symbolInfo:get_hasValueFlag() )
-end
-
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
    self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable, true )
@@ -1188,6 +1370,88 @@ end
 
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.headTypeInfo = headTypeInfo
+
+local NilTypeInfo = {}
+setmetatable( NilTypeInfo, { __index = TypeInfo } )
+_moduleObj.NilTypeInfo = NilTypeInfo
+function NilTypeInfo.new(  )
+   local obj = {}
+   NilTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function NilTypeInfo:__init() 
+   TypeInfo.__init( self ,nil)
+   
+   idProv:increment(  )
+   self.typeId = idProv:get_id()
+end
+function NilTypeInfo:isModule(  )
+
+   return false
+end
+function NilTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function NilTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
+   return "nil"
+end
+function NilTypeInfo:canEvalWith( other, opTxt )
+
+   return other:get_nilable()
+end
+function NilTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
+end
+function NilTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( "nil" )
+end
+function NilTypeInfo:equals( typeInfo )
+
+   return self == typeInfo:get_srcTypeInfo()
+end
+function NilTypeInfo:get_parentInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function NilTypeInfo:hasRouteNamespaceFrom( other )
+
+   return true
+end
+function NilTypeInfo:get_rawTxt(  )
+
+   return "nil"
+end
+function NilTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Prim
+end
+function NilTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function NilTypeInfo:get_nilable(  )
+
+   return true
+end
+function NilTypeInfo:get_mutable(  )
+
+   return false
+end
+function NilTypeInfo:getParentFullName( importInfo, localFlag )
+
+   return "nil"
+end
+function NilTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = NilTypeInfo  } )
+end
+function NilTypeInfo:get_typeId()       
+   return self.typeId         
+end
 
 function Scope:getNSTypeInfo(  )
 
@@ -1397,11 +1661,19 @@ function NilableTypeInfo:get_nilable(  )
 end
 function NilableTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   return self.nonnilableType:getTxt( fullName, importInfo, localFlag ) .. "!"
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function NilableTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
+   return self.nonnilableType:getTxtWithRaw( raw, fullName, importInfo, localFlag ) .. "!"
+end
+function NilableTypeInfo:get_display_stirng_with( raw )
+
+   return self.nonnilableType:get_display_stirng_with( raw ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng(  )
 
-   return self.nonnilableType:get_display_stirng() .. "!"
+   return self:get_display_stirng_with( self:get_rawTxt() )
 end
 function NilableTypeInfo:serialize( stream, validChildrenSet )
 
@@ -1459,6 +1731,10 @@ function NilableTypeInfo:isInheritFrom( ... )
    return self.nonnilableType:isInheritFrom( ... )
 end       
 
+function NilableTypeInfo:get_rawTxt( ... )
+   return self.nonnilableType:get_rawTxt( ... )
+end       
+
 function NilableTypeInfo:get_abstractFlag( ... )
    return self.nonnilableType:get_abstractFlag( ... )
 end       
@@ -1493,10 +1769,6 @@ end
 
 function NilableTypeInfo:getModule( ... )
    return self.nonnilableType:getModule( ... )
-end       
-
-function NilableTypeInfo:get_rawTxt( ... )
-   return self.nonnilableType:get_rawTxt( ... )
 end       
 
 function NilableTypeInfo:get_staticFlag( ... )
@@ -1549,21 +1821,29 @@ setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModifierTypeInfo = ModifierTypeInfo
 function ModifierTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   local txt = self.srcTypeInfo:getTxt( fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function ModifierTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
+   local txt = self.srcTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
    if not self.mutable then
       txt = "&" .. txt
    end
    
    return txt
 end
-function ModifierTypeInfo:get_display_stirng(  )
+function ModifierTypeInfo:get_display_stirng_with( raw )
 
-   local txt = self.srcTypeInfo:get_display_stirng(  )
+   local txt = self.srcTypeInfo:get_display_stirng_with( raw )
    if self.mutable then
       txt = "mut " .. txt
    end
    
    return txt
+end
+function ModifierTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt() )
 end
 function ModifierTypeInfo:serialize( stream, validChildrenSet )
 
@@ -1621,6 +1901,10 @@ function ModifierTypeInfo:isInheritFrom( ... )
    return self.srcTypeInfo:isInheritFrom( ... )
 end       
 
+function ModifierTypeInfo:get_rawTxt( ... )
+   return self.srcTypeInfo:get_rawTxt( ... )
+end       
+
 function ModifierTypeInfo:get_abstractFlag( ... )
    return self.srcTypeInfo:get_abstractFlag( ... )
 end       
@@ -1659,10 +1943,6 @@ end
 
 function ModifierTypeInfo:getModule( ... )
    return self.srcTypeInfo:getModule( ... )
-end       
-
-function ModifierTypeInfo:get_rawTxt( ... )
-   return self.srcTypeInfo:get_rawTxt( ... )
 end       
 
 function ModifierTypeInfo:get_kind( ... )
@@ -1759,11 +2039,19 @@ function ModuleTypeInfo:getParentId(  )
 end
 function ModuleTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   return self.rawTxt
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function ModuleTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+
+   return rawTxt
+end
+function ModuleTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
 end
 function ModuleTypeInfo:get_display_stirng(  )
 
-   return self:getTxt(  )
+   return self:get_display_stirng_with( self:get_rawTxt() )
 end
 function ModuleTypeInfo:canEvalWith( other, opTxt )
 
@@ -1884,11 +2172,19 @@ function EnumTypeInfo:getParentId(  )
 end
 function EnumTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   return self.rawTxt
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function EnumTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+
+   return rawTxt
+end
+function EnumTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
 end
 function EnumTypeInfo:get_display_stirng(  )
 
-   return self:getTxt(  )
+   return self:get_display_stirng_with( self:get_rawTxt() )
 end
 function EnumTypeInfo:canEvalWith( other, opTxt )
 
@@ -2030,11 +2326,19 @@ function AlgeTypeInfo:getParentId(  )
 end
 function AlgeTypeInfo:getTxt( fullName, importInfo, localFlag )
 
-   return self.rawTxt
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function AlgeTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+
+   return rawTxt
+end
+function AlgeTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
 end
 function AlgeTypeInfo:get_display_stirng(  )
 
-   return self:getTxt(  )
+   return self:get_display_stirng_with( self:get_rawTxt() )
 end
 function AlgeTypeInfo:canEvalWith( other, opTxt )
 
@@ -2072,13 +2376,13 @@ end
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
-function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, nonnilableType, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
+function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( abstractFlag, scope, baseTypeInfo, interfaceList, nonnilableType, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
+   if obj.__init then obj:__init( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
    return obj
 end
-function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, nonnilableType, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
+function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
    TypeInfo.__init( self ,scope)
    
    if type( kind ) ~= "number" then
@@ -2097,25 +2401,16 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    self.itemTypeInfoList = _lune.unwrapDefault( itemTypeInfoList, {})
    self.argTypeInfoList = _lune.unwrapDefault( argTypeInfoList, {})
    self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
-   self.nonnilableType = _lune.unwrapDefault( nonnilableType, _moduleObj.headTypeInfo)
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
    self.mutable = mutable and true or false
    self.typeId = typeId
    if kind == TypeInfoKind.Root then
-      self.nilable = false
-   elseif txt == "nil" or txt == "..." then
-      self.nilable = true
-      self.nilableTypeInfo = self
-      self.nonnilableType = self
-   elseif not nonnilableType then
-      do
-         local _exp = parentInfo
-         if _exp ~= nil then
-            _exp:addChildren( self )
-         end
+   else
+    
+      if parentInfo ~= nil then
+         parentInfo:addChildren( self )
       end
       
-      self.nilable = false
       local hasNilable = false
       do
          local _switchExp = (kind )
@@ -2127,26 +2422,20 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
       end
       
       if hasNilable then
-         if txt == "..." then
-            self.nilableTypeInfo = self
-         else
-          
-            self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
-            idProv:increment(  )
-         end
-         
+         self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
+         idProv:increment(  )
       else
        
          self.nilableTypeInfo = _moduleObj.headTypeInfo
       end
       
       idProv:increment(  )
-   else
-    
-      self.nilable = true
-      self.nilableTypeInfo = _moduleObj.headTypeInfo
    end
    
+end
+function NormalTypeInfo:get_nilable(  )
+
+   return false
 end
 function NormalTypeInfo:isModule(  )
 
@@ -2162,17 +2451,17 @@ function NormalTypeInfo:get_baseId(  )
 end
 function NormalTypeInfo:getTxt( fullName, importInfo, localFlag )
 
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function NormalTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
    local parentTxt = ""
    if fullName then
       parentTxt = self:getParentFullName( importInfo, localFlag )
    end
    
-   if self.nilable and (self.nilableTypeInfo ~= self.nonnilableType ) then
-      return parentTxt .. (_lune.unwrap( self.nonnilableType) ):getTxt( fullName, importInfo, localFlag ) .. "!"
-   end
-   
    if #self.itemTypeInfoList > 0 then
-      local txt = self.rawTxt .. "<"
+      local txt = raw .. "<"
       for index, typeInfo in pairs( self.itemTypeInfoList ) do
          if index ~= 1 then
             txt = txt .. ","
@@ -2184,16 +2473,12 @@ function NormalTypeInfo:getTxt( fullName, importInfo, localFlag )
       return parentTxt .. txt .. ">"
    end
    
-   return parentTxt .. self:get_rawTxt()
+   return parentTxt .. raw
 end
-function NormalTypeInfo:get_display_stirng(  )
+function NormalTypeInfo:get_display_stirng_with( raw )
 
-   if self.kind == TypeInfoKind.Nilable then
-      return (_lune.unwrap( self.nonnilableType) ):get_display_stirng(  ) .. "!"
-   end
-   
    if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Method then
-      local txt = self:get_rawTxt() .. "("
+      local txt = raw .. "("
       for index, argType in pairs( self.argTypeInfoList ) do
          if index ~= 1 then
             txt = txt .. ", "
@@ -2217,7 +2502,11 @@ function NormalTypeInfo:get_display_stirng(  )
       return txt
    end
    
-   return self:getTxt(  )
+   return self:getTxtWithRaw( raw )
+end
+function NormalTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt() )
 end
 function NormalTypeInfo:serialize( stream, validChildrenSet )
 
@@ -2226,11 +2515,6 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    end
    
    local parentId = self:getParentId(  )
-   if self.nilable then
-      stream:write( string.format( '{ parentId=%d, typeId = %d, nilable = true, orgTypeId = %d }\n', parentId, self.typeId, self.nonnilableType:get_typeId()) )
-      return 
-   end
-   
    local function serializeTypeInfoList( name, list, onlyPub )
    
       local work = name
@@ -2274,12 +2558,12 @@ function NormalTypeInfo:equalsSub( typeInfo )
       return true
    end
    
-   if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.accessMode ~= typeInfo:get_accessMode() or self.autoFlag ~= typeInfo:get_autoFlag() or self.nilable ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() or self ~= typeInfo:get_srcTypeInfo() then
+   if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.accessMode ~= typeInfo:get_accessMode() or self.autoFlag ~= typeInfo:get_autoFlag() or self:get_nilable() ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.parentInfo ~= typeInfo:get_parentInfo() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() or self ~= typeInfo:get_srcTypeInfo() then
       return false
    end
    
-   if (self.nonnilableType ~= typeInfo:get_nonnilableType() ) then
-      Util.log( string.format( "%s, %s", tostring( self.nonnilableType), tostring( typeInfo:get_nonnilableType())) )
+   if (self ~= typeInfo:get_nonnilableType() ) then
+      Util.log( string.format( "%s, %s", tostring( self), tostring( typeInfo:get_nonnilableType())) )
       return false
    end
    
@@ -2311,7 +2595,7 @@ function NormalTypeInfo:equalsSub( typeInfo )
       
    end
    
-   if self.nonnilableType ~= _moduleObj.headTypeInfo and not self.nonnilableType:equals( typeInfo:get_nonnilableType() ) then
+   if not self:equals( typeInfo:get_nonnilableType() ) then
       error( string.format( "illegal %s:%d %s:%d", self:getTxt(  ), self.typeId, typeInfo:getTxt(  ), typeInfo:get_typeId()) )
    end
    
@@ -2335,7 +2619,7 @@ function NormalTypeInfo.create( accessMode, abstractFlag, scope, baseInfo, inter
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, nil, false, true, staticFlag, accessMode, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, true, staticFlag, accessMode, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -2377,17 +2661,11 @@ end
 function NormalTypeInfo:get_abstractFlag()       
    return self.abstractFlag         
 end
-function NormalTypeInfo:get_nonnilableType()       
-   return self.nonnilableType         
-end
 function NormalTypeInfo:get_baseTypeInfo()       
    return self.baseTypeInfo         
 end
 function NormalTypeInfo:get_interfaceList()       
    return self.interfaceList         
-end
-function NormalTypeInfo:get_nilable()       
-   return self.nilable         
 end
 function NormalTypeInfo:get_nilableTypeInfo()       
    return self.nilableTypeInfo         
@@ -2397,6 +2675,18 @@ function NormalTypeInfo:get_mutable()
 end
 
 idProv:increment(  )
+local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo )
+
+   _moduleObj.typeInfoKind[idName] = typeInfo
+   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, typeInfo, false, true)
+   if nilableTypeInfo ~= _moduleObj.headTypeInfo then
+      _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nilableTypeInfo, false, true)
+      _moduleObj.builtInTypeIdSet[nilableTypeInfo:get_typeId()] = nilableTypeInfo
+   end
+   
+   _moduleObj.builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
+end
+
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
 
    local typeId = idProv:get_id() + 1
@@ -2428,19 +2718,12 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
       end
    end
    
-   local info = NormalTypeInfo.new(false, scope, nil, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, {}, argTypeList, retTypeList, true)
+   local info = NormalTypeInfo.new(false, scope, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, {}, argTypeList, retTypeList, true)
    if scope then
       _moduleObj.rootScope:addClass( typeTxt, info )
    end
    
-   _moduleObj.typeInfoKind[idName] = info
-   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, info, false, true)
-   if info:get_nilableTypeInfo() ~= _moduleObj.headTypeInfo then
-      _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, info:get_nilableTypeInfo(), false, true)
-      _moduleObj.builtInTypeIdSet[info:get_nilableTypeInfo():get_typeId()] = info:get_nilableTypeInfo()
-   end
-   
-   _moduleObj.builtInTypeIdSet[info.typeId] = info
+   registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo )
    return info
 end
 
@@ -2451,19 +2734,19 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
    end
    
    idProv:increment(  )
-   return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, nil, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
+   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )
@@ -2498,7 +2781,7 @@ function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, i
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, nil, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
    return info
 end
 
@@ -2509,7 +2792,7 @@ function NormalTypeInfo.createFunc( abstractFlag, builtinFlag, scope, kind, pare
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, nil, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
+   local info = NormalTypeInfo.new(abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, {}, _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
    return info
 end
 
@@ -2554,138 +2837,34 @@ function ModifierTypeInfo:get_nonnilableType(  )
    return NormalTypeInfo.createModifier( orgType, false )
 end
 
-local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
-_moduleObj.builtinTypeNone = builtinTypeNone
+function NormalTypeInfo.createAlias( name, externalFlag, accessMode, parentInfo, typeInfo )
 
-local builtinTypeNeverRet = NormalTypeInfo.createBuiltin( "Error", "__", TypeInfoKind.Prim )
-_moduleObj.builtinTypeNeverRet = builtinTypeNeverRet
-
-local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
-_moduleObj.builtinTypeStem = builtinTypeStem
-
-local builtinTypeNil = NormalTypeInfo.createBuiltin( "Nil", "nil", TypeInfoKind.Prim )
-_moduleObj.builtinTypeNil = builtinTypeNil
-
-local builtinTypeDDD = NormalTypeInfo.createBuiltin( "DDD", "...", TypeInfoKind.DDD )
-_moduleObj.builtinTypeDDD = builtinTypeDDD
-
-local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
-_moduleObj.builtinTypeBool = builtinTypeBool
-
-local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", TypeInfoKind.Prim )
-_moduleObj.builtinTypeInt = builtinTypeInt
-
-local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKind.Prim )
-_moduleObj.builtinTypeReal = builtinTypeReal
-
-local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
-_moduleObj.builtinTypeChar = builtinTypeChar
-
-local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class )
-_moduleObj.builtinTypeString = builtinTypeString
-
-local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
-_moduleObj.builtinTypeMap = builtinTypeMap
-
-local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKind.List )
-_moduleObj.builtinTypeList = builtinTypeList
-
-local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
-_moduleObj.builtinTypeArray = builtinTypeArray
-
-local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Func, _moduleObj.builtinTypeDDD )
-_moduleObj.builtinTypeForm = builtinTypeForm
-
-local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKind.Prim )
-_moduleObj.builtinTypeSymbol = builtinTypeSymbol
-
-local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKind.Prim )
-_moduleObj.builtinTypeStat = builtinTypeStat
-
-local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
-_moduleObj.builtinTypeStem_ = builtinTypeStem_
-
-local AbbrTypeInfo = {}
-setmetatable( AbbrTypeInfo, { __index = TypeInfo } )
-_moduleObj.AbbrTypeInfo = AbbrTypeInfo
-function AbbrTypeInfo:get_scope(  )
-
-   return nil
+   idProv:increment(  )
+   return AliasTypeInfo.new(name, accessMode, parentInfo, typeInfo:get_srcTypeInfo(), externalFlag, idProv:get_id())
 end
-function AbbrTypeInfo.new( idProvider, rawTxt )
-   local obj = {}
-   AbbrTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( idProvider, rawTxt ); end
-   return obj
+
+function Scope:addAlias( name, externalFlag, accessMode, parentInfo, symbolInfo )
+
+   local aliasType = NormalTypeInfo.createAlias( name, externalFlag, accessMode, parentInfo, symbolInfo:get_typeInfo():get_srcTypeInfo() )
+   return self:add( symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, aliasType, accessMode, true, false, true )
 end
-function AbbrTypeInfo:__init(idProvider, rawTxt) 
-   TypeInfo.__init( self ,nil)
+
+function Scope:addAliasForType( name, typeInfo )
+
+   local skind = SymbolKind.Typ
+   local canBeRight = false
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == TypeInfoKind.Func then
+         skind = SymbolKind.Fun
+         canBeRight = true
+      elseif _switchExp == TypeInfoKind.Macro then
+         skind = SymbolKind.Mac
+      end
+   end
    
-   local typeId = idProvider:get_id() + 1
-   idProvider:increment(  )
-   self.typeId = typeId
-   self.rawTxt = rawTxt
+   return self:add( skind, false, canBeRight, name, typeInfo, typeInfo:get_accessMode(), true, false, true )
 end
-function AbbrTypeInfo:isModule(  )
-
-   return false
-end
-function AbbrTypeInfo:getTxt( fullName, importInfo, localFlag )
-
-   return self.rawTxt
-end
-function AbbrTypeInfo:canEvalWith( other, opTxt )
-
-   return false
-end
-function AbbrTypeInfo:serialize( stream, validChildrenSet )
-
-   Util.err( "illegal call" )
-end
-function AbbrTypeInfo:get_display_stirng(  )
-
-   return self:getTxt(  )
-end
-function AbbrTypeInfo:getModule(  )
-
-   return _moduleObj.headTypeInfo
-end
-function AbbrTypeInfo:get_rawTxt(  )
-
-   return self:getTxt(  )
-end
-function AbbrTypeInfo:get_kind(  )
-
-   return TypeInfoKind.Abbr
-end
-function AbbrTypeInfo:get_nilable(  )
-
-   return true
-end
-function AbbrTypeInfo:get_nilableTypeInfo(  )
-
-   return self
-end
-function AbbrTypeInfo:get_mutable(  )
-
-   return false
-end
-function AbbrTypeInfo:get_accessMode(  )
-
-   return AccessMode.Local
-end
-function AbbrTypeInfo.setmeta( obj )
-  setmetatable( obj, { __index = AbbrTypeInfo  } )
-end
-function AbbrTypeInfo:get_typeId()       
-   return self.typeId         
-end
-
-local builtinTypeAbbr = AbbrTypeInfo.new(idProv, "##")
-_moduleObj.builtinTypeAbbr = builtinTypeAbbr
-
-local builtinTypeAbbrNone = AbbrTypeInfo.new(idProv, "[##]")
-_moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
 
 local typeInfo2DDDMap = {}
@@ -2715,10 +2894,6 @@ function DDDTypeInfo:isModule(  )
 
    return false
 end
-function DDDTypeInfo:getTxt( fullName, importInfo, localFlag )
-
-   return "...<" .. self.typeInfo:getTxt( fullName, importInfo, localFlag ) .. ">"
-end
 function DDDTypeInfo:canEvalWith( other, opTxt )
 
    return self.typeInfo:canEvalWith( other, opTxt )
@@ -2727,9 +2902,13 @@ function DDDTypeInfo:serialize( stream, validChildrenSet )
 
    stream:write( string.format( '{ skind=%d, typeId = %d, itemTypeId = %d, parentId = %d }\n', SerializeKind.DDD, self.typeId, self.typeInfo:get_typeId(), _moduleObj.headTypeInfo:get_typeId()) )
 end
+function DDDTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
+end
 function DDDTypeInfo:get_display_stirng(  )
 
-   return self:getTxt(  )
+   return self:get_display_stirng_with( self:get_rawTxt() )
 end
 function DDDTypeInfo:getModule(  )
 
@@ -2791,6 +2970,163 @@ function NormalTypeInfo.createDDD( typeInfo, externalFlag )
    idProv:increment(  )
    return DDDTypeInfo.new(idProv:get_id(), typeInfo, externalFlag)
 end
+
+local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
+_moduleObj.builtinTypeNone = builtinTypeNone
+
+local builtinTypeNeverRet = NormalTypeInfo.createBuiltin( "Error", "__", TypeInfoKind.Prim )
+_moduleObj.builtinTypeNeverRet = builtinTypeNeverRet
+
+local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
+_moduleObj.builtinTypeStem = builtinTypeStem
+
+local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
+_moduleObj.builtinTypeStem_ = builtinTypeStem_
+
+local builtinTypeNil = NilTypeInfo.new()
+_moduleObj.builtinTypeNil = builtinTypeNil
+
+registBuiltin( "Nil", "nil", TypeInfoKind.Prim, _moduleObj.builtinTypeNil, _moduleObj.headTypeInfo )
+local builtinTypeDDD = NormalTypeInfo.createDDD( _moduleObj.builtinTypeStem_, true )
+_moduleObj.builtinTypeDDD = builtinTypeDDD
+
+registBuiltin( "DDD", "...", TypeInfoKind.DDD, _moduleObj.builtinTypeDDD, _moduleObj.headTypeInfo )
+local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
+_moduleObj.builtinTypeBool = builtinTypeBool
+
+local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", TypeInfoKind.Prim )
+_moduleObj.builtinTypeInt = builtinTypeInt
+
+local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKind.Prim )
+_moduleObj.builtinTypeReal = builtinTypeReal
+
+local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
+_moduleObj.builtinTypeChar = builtinTypeChar
+
+local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class )
+_moduleObj.builtinTypeString = builtinTypeString
+
+local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
+_moduleObj.builtinTypeMap = builtinTypeMap
+
+local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKind.List )
+_moduleObj.builtinTypeList = builtinTypeList
+
+local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
+_moduleObj.builtinTypeArray = builtinTypeArray
+
+local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Func, _moduleObj.builtinTypeDDD )
+_moduleObj.builtinTypeForm = builtinTypeForm
+
+local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKind.Prim )
+_moduleObj.builtinTypeSymbol = builtinTypeSymbol
+
+local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKind.Prim )
+_moduleObj.builtinTypeStat = builtinTypeStat
+
+function DDDTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self:getTxtWithRaw( "...", fullName, importInfo, localFlag )
+end
+
+function DDDTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
+   if self.typeInfo == _moduleObj.builtinTypeStem_ then
+      return "..."
+   end
+   
+   local txt = self.typeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+   return "...<" .. txt .. ">"
+end
+
+local AbbrTypeInfo = {}
+setmetatable( AbbrTypeInfo, { __index = TypeInfo } )
+_moduleObj.AbbrTypeInfo = AbbrTypeInfo
+function AbbrTypeInfo:get_scope(  )
+
+   return nil
+end
+function AbbrTypeInfo.new( idProvider, rawTxt )
+   local obj = {}
+   AbbrTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( idProvider, rawTxt ); end
+   return obj
+end
+function AbbrTypeInfo:__init(idProvider, rawTxt) 
+   TypeInfo.__init( self ,nil)
+   
+   local typeId = idProvider:get_id() + 1
+   idProvider:increment(  )
+   self.typeId = typeId
+   self.rawTxt = rawTxt
+end
+function AbbrTypeInfo:isModule(  )
+
+   return false
+end
+function AbbrTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function AbbrTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+
+   return rawTxt
+end
+function AbbrTypeInfo:canEvalWith( other, opTxt )
+
+   return false
+end
+function AbbrTypeInfo:serialize( stream, validChildrenSet )
+
+   Util.err( "illegal call" )
+end
+function AbbrTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
+end
+function AbbrTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt() )
+end
+function AbbrTypeInfo:getModule(  )
+
+   return _moduleObj.headTypeInfo
+end
+function AbbrTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Abbr
+end
+function AbbrTypeInfo:get_nilable(  )
+
+   return true
+end
+function AbbrTypeInfo:get_nilableTypeInfo(  )
+
+   return self
+end
+function AbbrTypeInfo:get_mutable(  )
+
+   return false
+end
+function AbbrTypeInfo:get_accessMode(  )
+
+   return AccessMode.Local
+end
+function AbbrTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = AbbrTypeInfo  } )
+end
+function AbbrTypeInfo:get_typeId()       
+   return self.typeId         
+end
+function AbbrTypeInfo:get_rawTxt()       
+   return self.rawTxt         
+end
+
+local builtinTypeAbbr = AbbrTypeInfo.new(idProv, "##")
+_moduleObj.builtinTypeAbbr = builtinTypeAbbr
+
+local builtinTypeAbbrNone = AbbrTypeInfo.new(idProv, "[##]")
+_moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
 local numberTypeMap = {}
 numberTypeMap[_moduleObj.builtinTypeInt] = true
@@ -7127,31 +7463,35 @@ function AliasNode:canBeStatement(  )
 
    return true
 end
-function AliasNode.new( pos, typeList, name, typeInfo )
+function AliasNode.new( pos, typeList, newName, srcNode, typeInfo )
    local obj = {}
    AliasNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, name, typeInfo ); end
+   if obj.__init then obj:__init( pos, typeList, newName, srcNode, typeInfo ); end
    return obj
 end
-function AliasNode:__init(pos, typeList, name, typeInfo) 
+function AliasNode:__init(pos, typeList, newName, srcNode, typeInfo) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Alias']), pos, typeList)
    
    
-   self.name = name
+   self.newName = newName
+   self.srcNode = srcNode
    self.typeInfo = typeInfo
    
 end
-function AliasNode.create( nodeMan, pos, typeList, name, typeInfo )
+function AliasNode.create( nodeMan, pos, typeList, newName, srcNode, typeInfo )
 
-   local node = AliasNode.new(pos, typeList, name, typeInfo)
+   local node = AliasNode.new(pos, typeList, newName, srcNode, typeInfo)
    nodeMan:addNode( node )
    return node
 end
 function AliasNode.setmeta( obj )
   setmetatable( obj, { __index = AliasNode  } )
 end
-function AliasNode:get_name()       
-   return self.name         
+function AliasNode:get_newName()       
+   return self.newName         
+end
+function AliasNode:get_srcNode()       
+   return self.srcNode         
 end
 function AliasNode:get_typeInfo()       
    return self.typeInfo         

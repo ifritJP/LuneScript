@@ -801,3 +801,16 @@ SUB2._test( .val2 );
    print( func( 1 ) );
    print( func( 2 ) );
 }
+
+
+{
+   let mut list = [ 1, 4, 5, 3, 2 ];
+   list.sort( fn ( val1:int, val2:int ) : bool { return val1 > val2; } );
+   foreach val in list {
+      print( val );
+   }
+   list.sort(##);
+   foreach val in list {
+      print( val );
+   }  
+}
