@@ -814,3 +814,54 @@ SUB2._test( .val2 );
       print( val );
    }  
 }
+{
+   let set = (@ "1", "2", "3", "4" );
+   forsort val in set {
+      print( val .. 1 );
+   }
+}
+{
+   let set = (@ 1, 2, 3, 4 );
+   let mut total = 0;
+   foreach val in set {
+      total = total + val;
+   }
+   print( total );
+   forsort val in set {
+      print( val + 1 );
+   }
+}
+{
+   let mut set:Set<int> = (@);
+   set.add( 1 + 2 );
+   foreach val in set {
+      print( val );
+   }
+   if set[ 3 ] {
+      print( "exist 3" );
+   }
+   if not set[ 1 ] {
+      print( "not exist 1" );
+   }
+   set.del( 3 );
+   foreach val in set {
+      print( val );
+   }
+}
+class SetTest extend (Mapping) {
+   let set:Set<int>;
+   pub fn func() {
+      foreach val in self.set {
+         print( val );
+      }
+   }
+}
+
+{
+   let setTest = new SetTest( (@ 1, 2, 3 ) );
+   let mapObj = setTest._toMap();
+   if! let setTest2 = SetTest._fromMap( mapObj ) {
+      setTest2.func();
+   }
+}
+

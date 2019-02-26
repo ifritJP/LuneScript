@@ -138,6 +138,9 @@ SerializeKind.__allList[7] = SerializeKind.DDD
 SerializeKind.Alias = 7
 SerializeKind._val2NameMap[7] = 'Alias'
 SerializeKind.__allList[8] = SerializeKind.Alias
+SerializeKind.Generic = 8
+SerializeKind._val2NameMap[8] = 'Generic'
+SerializeKind.__allList[9] = SerializeKind.Generic
 
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
@@ -212,6 +215,12 @@ TypeInfoKind.__allList[16] = TypeInfoKind.DDD
 TypeInfoKind.Abbr = 16
 TypeInfoKind._val2NameMap[16] = 'Abbr'
 TypeInfoKind.__allList[17] = TypeInfoKind.Abbr
+TypeInfoKind.Set = 17
+TypeInfoKind._val2NameMap[17] = 'Set'
+TypeInfoKind.__allList[18] = TypeInfoKind.Set
+TypeInfoKind.Generic = 18
+TypeInfoKind._val2NameMap[18] = 'Generic'
+TypeInfoKind.__allList[19] = TypeInfoKind.Generic
 
 local function isBuiltin( typeId )
 
@@ -646,7 +655,7 @@ function TypeInfo:getTxt( fullName, importInfo, localFlag )
 
    return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
 end
-function TypeInfo:canEvalWith( other, opTxt )
+function TypeInfo:canEvalWith( other, opTxt, gen2type )
 
    return false
 end
@@ -1296,6 +1305,11 @@ function Scope:addAlge( accessMode, name, typeInfo )
    self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
 end
 
+function Scope:addGeneric( accessMode, name, typeInfo )
+
+   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
+end
+
 function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutable )
 
    return self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable, true )
@@ -1398,7 +1412,7 @@ function NilTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
 
    return "nil"
 end
-function NilTypeInfo:canEvalWith( other, opTxt )
+function NilTypeInfo:canEvalWith( other, opTxt, gen2type )
 
    return other:get_nilable()
 end
@@ -1816,6 +1830,119 @@ function NilableTypeInfo:getFullName( ... )
 end       
 
 
+local GenericTypeInfo = {}
+setmetatable( GenericTypeInfo, { __index = TypeInfo } )
+_moduleObj.GenericTypeInfo = GenericTypeInfo
+function GenericTypeInfo.new( txt, moduleTypeInfo )
+   local obj = {}
+   GenericTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( txt, moduleTypeInfo ); end
+   return obj
+end
+function GenericTypeInfo:__init(txt, moduleTypeInfo) 
+   TypeInfo.__init( self ,nil)
+   
+   idProv:increment(  )
+   self.typeId = idProv:get_id()
+   self.txt = txt
+   self.moduleTypeInfo = moduleTypeInfo
+   idProv:increment(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
+end
+function GenericTypeInfo:isModule(  )
+
+   return false
+end
+function GenericTypeInfo:getParentId(  )
+
+   return self.moduleTypeInfo:get_typeId()
+end
+function GenericTypeInfo:get_parentInfo(  )
+
+   return self.moduleTypeInfo
+end
+function GenericTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function GenericTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
+   return self.txt
+end
+function GenericTypeInfo:canEvalWith( other, opTxt, gen2type )
+
+   if self == other:get_srcTypeInfo() then
+      return true
+   end
+   
+   do
+      local genType = gen2type[self]
+      if genType ~= nil then
+         return genType:canEvalWith( other, opTxt, gen2type )
+      end
+   end
+   
+   gen2type[self] = other
+   return true
+end
+function GenericTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
+end
+function GenericTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self.txt )
+end
+function GenericTypeInfo:equals( typeInfo )
+
+   return self == typeInfo:get_srcTypeInfo()
+end
+function GenericTypeInfo:hasRouteNamespaceFrom( other )
+
+   return true
+end
+function GenericTypeInfo:get_rawTxt(  )
+
+   return self.txt
+end
+function GenericTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Generic
+end
+function GenericTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function GenericTypeInfo:get_nilable(  )
+
+   return false
+end
+function GenericTypeInfo:get_mutable(  )
+
+   return false
+end
+function GenericTypeInfo:getParentFullName( importInfo, localFlag )
+
+   return ""
+end
+function GenericTypeInfo:serialize( stream, validChildrenSet )
+
+   local parentId = self:getParentId(  )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q }\n', SerializeKind.Generic, parentId, self.typeId, self.txt) )
+end
+function GenericTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = GenericTypeInfo  } )
+end
+function GenericTypeInfo:get_typeId()       
+   return self.typeId         
+end
+function GenericTypeInfo:get_txt()       
+   return self.txt         
+end
+function GenericTypeInfo:get_nilableTypeInfo()       
+   return self.nilableTypeInfo         
+end
+
 local ModifierTypeInfo = {}
 setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModifierTypeInfo = ModifierTypeInfo
@@ -1850,9 +1977,9 @@ function ModifierTypeInfo:serialize( stream, validChildrenSet )
    local parentId = self:getParentId(  )
    stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo:get_typeId(), tostring( self.mutable and true or false)) )
 end
-function ModifierTypeInfo:canEvalWith( other, opTxt )
+function ModifierTypeInfo:canEvalWith( other, opTxt, gen2type )
 
-   return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other, opTxt )
+   return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other, opTxt, gen2type )
 end
 function ModifierTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = ModifierTypeInfo  } )
@@ -2053,7 +2180,7 @@ function ModuleTypeInfo:get_display_stirng(  )
 
    return self:get_display_stirng_with( self:get_rawTxt() )
 end
-function ModuleTypeInfo:canEvalWith( other, opTxt )
+function ModuleTypeInfo:canEvalWith( other, opTxt, gen2type )
 
    return false
 end
@@ -2186,7 +2313,7 @@ function EnumTypeInfo:get_display_stirng(  )
 
    return self:get_display_stirng_with( self:get_rawTxt() )
 end
-function EnumTypeInfo:canEvalWith( other, opTxt )
+function EnumTypeInfo:canEvalWith( other, opTxt, gen2type )
 
    return self == other:get_srcTypeInfo()
 end
@@ -2231,23 +2358,12 @@ _moduleObj.AlgeValInfo = AlgeValInfo
 function AlgeValInfo:serialize( stream )
 
    stream:write( string.format( "{ name = '%s', typeList = {", self.name) )
-   do
-      local __sorted = {}
-      local __map = self.typeList
-      for __key in pairs( __map ) do
-         table.insert( __sorted, __key )
+   for index, typeInfo in pairs( self.typeList ) do
+      if index > 1 then
+         stream:write( ", " )
       end
-      table.sort( __sorted )
-      for __index, index in ipairs( __sorted ) do
-         local typeInfo = __map[ index ]
-         do
-            if index > 1 then
-               stream:write( ", " )
-            end
-            
-            stream:write( string.format( "%d", typeInfo:get_typeId()) )
-         end
-      end
+      
+      stream:write( string.format( "%d", typeInfo:get_typeId()) )
    end
    
    stream:write( "} }" )
@@ -2340,7 +2456,7 @@ function AlgeTypeInfo:get_display_stirng(  )
 
    return self:get_display_stirng_with( self:get_rawTxt() )
 end
-function AlgeTypeInfo:canEvalWith( other, opTxt )
+function AlgeTypeInfo:canEvalWith( other, opTxt, gen2type )
 
    return self == other:get_srcTypeInfo()
 end
@@ -2414,7 +2530,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
       local hasNilable = false
       do
          local _switchExp = (kind )
-         if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF then
+         if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF then
             hasNilable = true
          elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method then
             hasNilable = true
@@ -2713,8 +2829,8 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
    local scope = nil
    do
       local _switchExp = kind
-      if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
-         scope = Scope.new(_moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List or kind == TypeInfoKind.Array, nil)
+      if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
+         scope = Scope.new(_moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List or kind == TypeInfoKind.Array or kind == TypeInfoKind.Set, nil)
       end
    end
    
@@ -2725,6 +2841,16 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
    
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo )
    return info
+end
+
+function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo )
+
+   if #itemTypeInfo == 0 then
+      Util.err( string.format( "illegal set type: %s", tostring( itemTypeInfo)) )
+   end
+   
+   idProv:increment(  )
+   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
@@ -2783,6 +2909,11 @@ function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, i
    idProv:increment(  )
    local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
    return info
+end
+
+function NormalTypeInfo.createGeneric( txt, moduleTypeInfo )
+
+   return GenericTypeInfo.new(txt, moduleTypeInfo)
 end
 
 function NormalTypeInfo.createFunc( abstractFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
@@ -2894,9 +3025,9 @@ function DDDTypeInfo:isModule(  )
 
    return false
 end
-function DDDTypeInfo:canEvalWith( other, opTxt )
+function DDDTypeInfo:canEvalWith( other, opTxt, gen2type )
 
-   return self.typeInfo:canEvalWith( other, opTxt )
+   return self.typeInfo:canEvalWith( other, opTxt, gen2type )
 end
 function DDDTypeInfo:serialize( stream, validChildrenSet )
 
@@ -3009,6 +3140,9 @@ _moduleObj.builtinTypeString = builtinTypeString
 local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
 _moduleObj.builtinTypeMap = builtinTypeMap
 
+local builtinTypeSet = NormalTypeInfo.createBuiltin( "Set", "Set", TypeInfoKind.Set )
+_moduleObj.builtinTypeSet = builtinTypeSet
+
 local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKind.List )
 _moduleObj.builtinTypeList = builtinTypeList
 
@@ -3072,7 +3206,7 @@ function AbbrTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
 
    return rawTxt
 end
-function AbbrTypeInfo:canEvalWith( other, opTxt )
+function AbbrTypeInfo:canEvalWith( other, opTxt, gen2type )
 
    return false
 end
@@ -3230,7 +3364,7 @@ accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ), self
    stream:write( "} }\n" )
 end
 
-function NilableTypeInfo:canEvalWith( other, opTxt )
+function NilableTypeInfo:canEvalWith( other, opTxt, gen2type )
 
    local otherSrc = other:get_srcTypeInfo()
    if self == _moduleObj.builtinTypeStem_ then
@@ -3246,10 +3380,10 @@ function NilableTypeInfo:canEvalWith( other, opTxt )
    end
    
    if otherSrc:get_nilable() then
-      return self:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt )
+      return self:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt, gen2type )
    end
    
-   return self:get_nonnilableType():canEvalWith( otherSrc, opTxt )
+   return self:get_nonnilableType():canEvalWith( otherSrc, opTxt, gen2type )
 end
 
 
@@ -3316,8 +3450,44 @@ MatchType.Error = 2
 MatchType._val2NameMap[2] = 'Error'
 MatchType.__allList[3] = MatchType.Error
 
-function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex )
+function TypeInfo.checkMatchType( dstTypeListOrg, expTypeList, allowDstShort, warnForFollowSrcIndex )
 
+   
+   local dstTypeList = {}
+   local gen2Type = {}
+   do
+      for index, dstType in pairs( dstTypeListOrg ) do
+         table.insert( dstTypeList, dstType )
+         if dstType:get_kind() == TypeInfoKind.Generic then
+            do
+               local geneType = gen2Type[dstType]
+               if geneType ~= nil then
+                  dstTypeList[index] = geneType
+               else
+                  if #expTypeList >= index then
+                     local expType = expTypeList[index]
+                     if expType:get_kind() == TypeInfoKind.DDD then
+                        if #expType:get_itemTypeInfoList() > 0 then
+                           expType = expType:get_itemTypeInfoList()[1]
+                        else
+                         
+                           expType = _moduleObj.builtinTypeStem
+                        end
+                        
+                     end
+                     
+                     gen2Type[dstType] = expType
+                     dstTypeList[index] = expType
+                  end
+                  
+               end
+            end
+            
+         end
+         
+      end
+      
+   end
    
    local function checkDstTypeFrom( index, srcType, srcType2nd )
    
@@ -3325,7 +3495,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       for dstIndex = index, #dstTypeList do
          local workDstType = dstTypeList[dstIndex]
          local matchResult = MatchType.Match
-         if not workDstType:canEvalWith( workExpType, "=" ) then
+         if not workDstType:canEvalWith( workExpType, "=", gen2Type ) then
             local message = string.format( "exp(%d) type mismatch %s <- %s", dstIndex, workDstType:getTxt( true ), workExpType:getTxt( true ))
             return MatchType.Error, message
          elseif workExpType == _moduleObj.builtinTypeAbbrNone then
@@ -3356,7 +3526,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             
          end
          
-         if not dstType:canEvalWith( checkType, "=" ) then
+         if not dstType:canEvalWith( checkType, "=", gen2Type ) then
             return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
          end
          
@@ -3377,18 +3547,18 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
    if #expTypeList > 0 then
       for index, expType in pairs( expTypeList ) do
          if #dstTypeList == 0 then
-            return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList)
+            return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList), gen2Type
          end
          
          local dstType = dstTypeList[index]
          if #dstTypeList == index then
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
-               if not dstType:canEvalWith( expType, "=" ) then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+               if not dstType:canEvalWith( expType, "=", gen2Type ) then
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true )), gen2Type
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
-                  return MatchType.Error, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList)
+                  return MatchType.Error, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList), gen2Type
                end
                
             else
@@ -3400,7 +3570,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                
                local result, mess = checkSrcTypeFrom( index, dddItemType )
                if result ~= MatchType.Match then
-                  return result, mess
+                  return result, mess, gen2Type
                end
                
             end
@@ -3408,7 +3578,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index and dstType:get_nilable() then
                   local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, mess
+                  return MatchType.Warn, mess, gen2Type
                end
                
             end
@@ -3431,13 +3601,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             
             local result, mess = checkDstTypeFrom( index, srcType, srcType2nd )
             if result ~= MatchType.Match then
-               return result, mess
+               return result, mess, gen2Type
             end
             
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index and dstType:get_nilable() then
                   local warnMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, warnMess
+                  return MatchType.Warn, warnMess, gen2Type
                end
                
             end
@@ -3445,14 +3615,14 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             break
          else
           
-            if not dstType:canEvalWith( expType, "=" ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+            if not dstType:canEvalWith( expType, "=", gen2Type ) then
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true )), gen2Type
             end
             
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index and dstType:get_nilable() then
                   local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, mess
+                  return MatchType.Warn, mess, gen2Type
                end
                
             end
@@ -3463,19 +3633,19 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       
    elseif not allowDstShort then
       for index, dstType in pairs( dstTypeList ) do
-         if not dstType:canEvalWith( _moduleObj.builtinTypeNil, "=" ) then
-            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
+         if not dstType:canEvalWith( _moduleObj.builtinTypeNil, "=", gen2Type ) then
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true )), gen2Type
          end
          
-         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) )
+         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) ), gen2Type
       end
       
    end
    
-   return MatchType.Match, ""
+   return MatchType.Match, "", gen2Type
 end
 
-function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
+function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, gen2Type )
 
    local otherMut = other:get_mutable()
    local otherSrc = other:get_srcTypeInfo()
@@ -3496,7 +3666,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
    
    if dest:get_srcTypeInfo():get_kind() == TypeInfoKind.DDD then
       if #dest:get_itemTypeInfoList() > 0 then
-         return dest:get_itemTypeInfoList()[1]:canEvalWith( other, opTxt )
+         return dest:get_itemTypeInfoList()[1]:canEvalWith( other, opTxt, gen2Type )
       end
       
       return true
@@ -3529,15 +3699,15 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
    if dest:get_kind() ~= otherSrc:get_kind() then
       if dest:get_kind() == TypeInfoKind.Nilable then
          if otherSrc:get_nilable() then
-            return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt )
+            return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt, gen2Type )
          end
          
-         return dest:get_nonnilableType():canEvalWith( otherSrc, opTxt )
+         return dest:get_nonnilableType():canEvalWith( otherSrc, opTxt, gen2Type )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
          return otherSrc:isInheritFrom( dest )
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
          local enumTypeInfo = otherSrc
-         return dest:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt )
+         return dest:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt, gen2Type )
       end
       
       return false
@@ -3551,12 +3721,12 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
          end
          
          return false
-      elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array then
+      elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
             return true
          end
          
-         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
+         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=", gen2Type ) then
             return false
          end
          
@@ -3567,12 +3737,12 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
             return true
          end
          
-         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=" ) then
+         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=", gen2Type ) then
             return false
          end
          
          
-         if not (_lune.unwrap( dest:get_itemTypeInfoList()[2]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[2]), "=" ) then
+         if not (_lune.unwrap( dest:get_itemTypeInfoList()[2]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[2]), "=", gen2Type ) then
             return false
          end
          
@@ -3597,7 +3767,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
          
          return true
       elseif _switchExp == TypeInfoKind.Nilable then
-         return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt )
+         return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt, gen2Type )
       else 
          
             return false
@@ -3606,9 +3776,9 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt )
    
 end
 
-function NormalTypeInfo:canEvalWith( other, opTxt )
+function NormalTypeInfo:canEvalWith( other, opTxt, gen2Type )
 
-   return TypeInfo.canEvalWithBase( self, self:get_mutable(), other, opTxt )
+   return TypeInfo.canEvalWithBase( self, self:get_mutable(), other, opTxt, gen2Type )
 end
 
 local Filter = {}
@@ -4092,15 +4262,15 @@ _moduleObj.LuneHelperInfo = LuneHelperInfo
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end
-function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge )
+function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet )
    local obj = {}
    LuneHelperInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge )
+      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet )
    end        
    return obj 
 end         
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge ) 
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet ) 
 
    self.useNilAccess = useNilAccess
    self.useUnwrapExp = useUnwrapExp
@@ -4108,6 +4278,7 @@ function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, 
    self.useLoad = useLoad
    self.useUnpack = useUnpack
    self.useAlge = useAlge
+   self.useSet = useSet
 end
 
 local ModuleInfo = {}
@@ -9453,6 +9624,71 @@ function LiteralListNode:get_expList()
 end
 
 
+function NodeKind.get_LiteralSet(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['LiteralSet'])
+end
+
+
+regKind( [[LiteralSet]] )
+function Filter:processLiteralSet( node, ... )
+
+end
+
+
+function NodeManager:getLiteralSetNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['LiteralSet']) )
+end
+
+
+local LiteralSetNode = {}
+setmetatable( LiteralSetNode, { __index = Node } )
+_moduleObj.LiteralSetNode = LiteralSetNode
+function LiteralSetNode:processFilter( filter, ... )
+
+   local argList = {...}
+   filter:processLiteralSet( self, table.unpack( argList ) )
+end
+function LiteralSetNode:canBeRight(  )
+
+   return true
+end
+function LiteralSetNode:canBeLeft(  )
+
+   return false
+end
+function LiteralSetNode:canBeStatement(  )
+
+   return false
+end
+function LiteralSetNode.new( pos, typeList, expList )
+   local obj = {}
+   LiteralSetNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, expList ); end
+   return obj
+end
+function LiteralSetNode:__init(pos, typeList, expList) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralSet']), pos, typeList)
+   
+   
+   self.expList = expList
+   
+end
+function LiteralSetNode.create( nodeMan, pos, typeList, expList )
+
+   local node = LiteralSetNode.new(pos, typeList, expList)
+   nodeMan:addNode( node )
+   return node
+end
+function LiteralSetNode.setmeta( obj )
+  setmetatable( obj, { __index = LiteralSetNode  } )
+end
+function LiteralSetNode:get_expList()       
+   return self.expList         
+end
+
+
 local PairItem = {}
 _moduleObj.PairItem = PairItem
 function PairItem.setmeta( obj )
@@ -9960,6 +10196,29 @@ function LiteralArrayNode:getLiteral(  )
 end
 
 function LiteralListNode:getLiteral(  )
+
+   local list = {}
+   do
+      local _exp = self.expList
+      if _exp ~= nil then
+         for __index, val in pairs( _exp:get_expList(  ) ) do
+            local item = val:getLiteral(  )[1]
+            if  nil == item then
+               local _item = item
+            
+               return {}, {}
+            end
+            
+            table.insert( list, item )
+         end
+         
+      end
+   end
+   
+   return {list}, {self:get_expType(  )}
+end
+
+function LiteralSetNode:getLiteral(  )
 
    local list = {}
    do

@@ -1,0 +1,30 @@
+pub fn SetOr<T>( val1:Set<T>, val2:Set<T> ): Set<T> {
+   let mut set:Set<T> = (@);
+   foreach val in val1 {
+      set.add( val );
+   }
+   foreach val in val2 {
+      set.add( val );
+   }
+   return set;
+}
+
+pub fn SetAnd<T>( val1:Set<T>, val2:Set<T> ): Set<T> {
+   let mut set:Set<T> = (@);
+   foreach val in val1 {
+      if val2[ val ] {
+         set.add( val );
+      }
+   }
+   return set;
+}
+
+pub fn SetSub<T>( val1:Set<T>, val2:Set<T> ): Set<T> {
+   let mut set:Set<T> = (@);
+   foreach val in val1 {
+      if not val2[ val ] {
+         set.add( val );
+      }
+   }
+   return set;
+}

@@ -69,9 +69,12 @@ CodeKind.__allList[9] = CodeKind.Alge
 CodeKind.AlgeMapping = 9
 CodeKind._val2NameMap[9] = 'AlgeMapping'
 CodeKind.__allList[10] = CodeKind.AlgeMapping
-CodeKind.Finalize = 10
-CodeKind._val2NameMap[10] = 'Finalize'
-CodeKind.__allList[11] = CodeKind.Finalize
+CodeKind.SetMapping = 10
+CodeKind._val2NameMap[10] = 'SetMapping'
+CodeKind.__allList[11] = CodeKind.SetMapping
+CodeKind.Finalize = 11
+CodeKind._val2NameMap[11] = 'Finalize'
+CodeKind.__allList[12] = CodeKind.Finalize
 
 local codeMap = {}
 codeMap[CodeKind.Init] = [==[
@@ -245,6 +248,29 @@ function _lune._fromMap( obj, map, memInfoList )
       obj[ memInfo.name ] = val
    end
    return true
+end
+]==]
+codeMap[CodeKind.SetMapping] = [==[
+function _lune._toSet( val, toKeyInfo )
+   if type( val ) == "table" then
+      local tbl = {}
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal = _lune._toBool( mem )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
 end
 ]==]
 codeMap[CodeKind.AlgeMapping] = [==[

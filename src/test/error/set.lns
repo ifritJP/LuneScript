@@ -1,0 +1,35 @@
+{
+   let set = (@ "1", "2", "3", "4" );
+   forsort val in set {
+      let val1:int = val; // error
+   }
+}
+{
+   let set = (@ "1", "2", "3", "4" );
+   set[ "1" ] = 1;  // error
+}
+{
+   let mut set = (@ "1", "2", "3", "4" );
+   if! let val = set[ "1" ] {
+      print( val .. "1" );
+   }
+   set.add( 1 ); // error
+   set.del( 1 ); // error
+}
+{
+   fn func( set:Set<int> ) {
+      print( set[ 1 ] );
+   }
+   func( (@ 1, 2, 3, "a" ) ); // error
+}
+{
+   fn func( set:Set<int,int> ) { // error
+      print( set[ 1 ] );
+   }
+}
+{
+   let set:Set<int>! = nil;
+   if set$[ 1 ] { // error
+      print( "" );
+   }
+}

@@ -108,13 +108,19 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
                checkGenericTypeCount( 1 );
                typeInfo = Ast.NormalTypeInfo.createList(
                   accessMode, self.getCurrentClass(),
-                  [ genericList[1] ] or [ Ast.builtinTypeStem ] );
+                  [ genericList[1] or Ast.builtinTypeStem ] );
             }
             case .Array {
                checkGenericTypeCount( 1 );
                typeInfo = Ast.NormalTypeInfo.createArray(
                   accessMode, self.getCurrentClass(),
-                  [ genericList[1] ] or [ Ast.builtinTypeStem ] );
+                  [ genericList[1] or Ast.builtinTypeStem ] );
+            }
+            case .Set {
+               checkGenericTypeCount( 1 );
+               typeInfo = Ast.NormalTypeInfo.createSet(
+                  accessMode, self.getCurrentClass(),
+                  [ genericList[1] or Ast.builtinTypeStem ] );
             }
             case .DDD {
                checkGenericTypeCount( 1 );
@@ -548,7 +554,7 @@ fn TransUnit.analyzePushClass(
          true, self.scope,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
-               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=" ) {
+               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=", {} ) {
                   self.addErrMess(
                      firstToken.pos,      
                      "mismatch method type -- %s.%s, %s.%s"
@@ -968,6 +974,7 @@ fn TransUnit.checkPublic( pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut {
       }
       checkedTypeSet[ workType ] = true;
       if workType.$kind ~= .Array and workType.$kind ~= .List
+         and workType.$kind ~= .Set
          and workType.$kind ~= .Map and not Ast.isPubToExternal( workType.$accessMode )
       {     
          self.addErrMess( pos, "not public this type -- %s" ( workType.getTxt(##)) );
@@ -1539,7 +1546,7 @@ fn TransUnit.analyzeDeclClass(
                   }  
                   return typeInfo.isInheritFrom( builtinFunc.mappingIF );
                }  
-               case .List, .Array {
+               case .List, .Array, .Set {
                   return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );
                }  
                case .Map {
@@ -1759,13 +1766,31 @@ fn TransUnit.analyzeDeclFunc(
                }
             }
          }
-      }  
+      }
    }
    
+  
+   let mut funcBodyScope = self.pushScope( false ## );
+   // generic 宣言
+   if token.txt == "<" {
+      while true {
+         let genericSymToken = self.getSymbolToken( .MustNot_ );
+         let genericType = Ast.NormalTypeInfo.createGeneric(
+            genericSymToken.txt, self.moduleType );
+         funcBodyScope.addGeneric( accessMode, genericSymToken.txt, genericType );
+
+         let workToken = self.getToken(##);
+         if workToken.txt == ">" {
+            token = self.getToken(##);
+            break;
+         }
+         self.checkToken( workToken, "," );
+      }
+   }
+
    self.checkToken( token, "(" );
 
-   let mut funcBodyScope = self.pushScope( false ## );
-
+   
    let mut argList:List<&Ast.Node> = [];
    token = self.analyzeDeclArgList( accessMode, argList );
    let mut argTypeList:List<&Ast.TypeInfo> = [];
@@ -1888,7 +1913,7 @@ fn TransUnit.analyzeDeclFunc(
          if overrideType.$mutable ~= typeInfo.$mutable {
             self.addErrMess( firstToken.pos, "mismatch mutable -- %s" ( funcName ) );
          }
-         if not overrideType.canEvalWith( typeInfo, "=" ) {
+         if not overrideType.canEvalWith( typeInfo, "=", {} ) {
             self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
          }
       };
@@ -1904,7 +1929,7 @@ fn TransUnit.analyzeDeclFunc(
                if! let ifFunc =
                   self.scope.$parent.getSymbolInfoIfField( name.txt, funcBodyScope )
                {  
-                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, "=" ) {
+                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, "=", {} ) {
                      self.addErrMess( firstToken.pos,
                                       "mismatch method type -- %s" (funcName));
                   }
@@ -2132,7 +2157,7 @@ fn TransUnit.analyzeLetAndInitExp(
                   checkType = dddItemType.$nonnilableType;
                }
                if not argType.equals( Ast.builtinTypeNone ) and
-                  not argType.canEvalWith( checkType, "=" )
+                  not argType.canEvalWith( checkType, "=", {} )
                {
                   self.addErrMess(
                      firstPos,
@@ -2164,7 +2189,7 @@ fn TransUnit.analyzeLetAndInitExp(
             if index <= #typeInfoList {
                let argType = typeInfoList[ index ];
                if not argType.equals( Ast.builtinTypeNone ) and
-                  not argType.canEvalWith( expTypeInfo, "=" ) and
+                  not argType.canEvalWith( expTypeInfo, "=", {} ) and
                   not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ))
                {               
                   self.addErrMess(

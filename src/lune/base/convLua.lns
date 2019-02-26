@@ -687,7 +687,9 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
                   nonnilableType = typeInfo.$nonnilableType;
                }
                switch nonnilableType.$kind {
-                  case .IF, .Map, .Enum, .Alge, .List, .Array, .Class, .Module, .Func {
+                  case .IF, .Map, .Enum, .Alge, .List, .Array, .Set, .Class,
+                       .Module, .Func
+                  {                 
                      valid = true;
                   }
                   // default {
@@ -787,6 +789,9 @@ end``` );
       if node.$luneHelperInfo.$useAlge {
          self.writeln( LuaMod.getCode( .Alge ) );
          self.writeln( LuaMod.getCode( .AlgeMapping ) );
+      }
+      if node.$luneHelperInfo.$useSet {
+         self.writeln( LuaMod.getCode( .SetMapping ) );
       }
       if node.$luneHelperInfo.$useUnpack and not self.targetLuaVer.$hasTableUnpack {
          self.writeln( LuaMod.getCode( .Unpack ) );
@@ -1021,6 +1026,14 @@ fn convFilter.getMapInfo( typeInfo:&Ast.TypeInfo ): str, bool, str {
          child = "{ { func = %s, nilable = %s, child = %s }, \n"
              (keyFuncTxt, keyNilable, keyChild) ..
             "{ func = %s, nilable = %s, child = %s } }"
+             (valFuncTxt, valNilable, valChild);
+      }
+      case .Set {
+         funcTxt = '_lune._toSet';
+         let itemList = nonnilableType.$itemTypeInfoList;
+         let valFuncTxt, valNilable, valChild = self.getMapInfo( itemList[1] );
+
+         child = "{ func = %s, nilable = %s, child = %s }"
              (valFuncTxt, valNilable, valChild);
       }
       case .List, .Array {
@@ -2077,7 +2090,12 @@ pub override fn convFilter.processForeach(
       self.write( "__index" );
    }
    self.write( ", " );
-   self.write( node.$val.txt );
+   if! node.$val {
+      self.write( _exp.txt );
+   }
+   else {
+      self.write( "__val" );
+   }  
 
    self.write( " in pairs( " );
    filter( node.$exp,  self, node );
@@ -2112,7 +2130,9 @@ pub override fn convFilter.processForsort(
    self.write( key );
    self.writeln( " in ipairs( __sorted ) do" );
    self.pushIndent(##);
-   self.writeln( string.format( "local %s = __map[ %s ]", node.$val.txt, key ) );
+   if node.$exp.$expType.$kind == .Map {
+      self.writeln( string.format( "local %s = __map[ %s ]", node.$val.txt, key ) );
+   }
    filter( node.$block, self, node );
    //self.popIndent();
    self.writeln( "end" );
@@ -2175,6 +2195,23 @@ pub override fn convFilter.processExpCall(
                self.write( "table.%s( " (fieldNode.$field.txt ) );
                filter( prefixNode, self, fieldNode );
             }
+            case .Set {
+               setArgFlag = true;
+               wroteFuncFlag = true;
+               filter( prefixNode, self, fieldNode );
+               self.write( "[" );
+               if! let argList = node.$argList {
+                  filter( argList, self, fieldNode );
+               }
+               self.write( "]" );
+               if fieldNode.$field.txt == "add" {
+                  self.write( "= true" );
+               }
+               else {
+                  self.write( "= nil" );
+               }
+               return;
+            }
             case .Enum, .Alge {
                wroteFuncFlag = true;
                let fieldExpType = fieldNode.$expType;
@@ -2212,7 +2249,7 @@ pub override fn convFilter.processExpCall(
          self.write( "%s.%s( self " ( self.getFullName( funcType.$parentInfo ),
                                       funcType.$rawTxt ) );
       }
-   }  
+   }
    
 
    if not wroteFuncFlag {
@@ -2615,6 +2652,24 @@ pub override fn convFilter.processLiteralList(
    self.write( "}" );
 };  
 
+pub override fn convFilter.processLiteralSet( 
+   node: Ast.LiteralSetNode, parent: &Ast.Node ) mut
+{
+   self.write( "{" );
+   if! let expListNode = node.$expList {
+      foreach expNode, index in expListNode.$expList {
+         if index > 1 {
+            self.write( ", " );
+         }   
+         self.write( "[" );
+         filter( expNode, self, node );
+         self.write( "] = true" );
+      }
+   }
+
+   self.write( "}" );
+};  
+
 pub override fn convFilter.processLiteralMap( 
    node: Ast.LiteralMapNode, parent: &Ast.Node ) mut
 {
@@ -2632,7 +2687,6 @@ pub override fn convFilter.processLiteralMap(
 
    self.write( "}" );
 };  
-
 
 pub override fn convFilter.processLiteralArray( 
    node: Ast.LiteralArrayNode, parent: &Ast.Node ) mut

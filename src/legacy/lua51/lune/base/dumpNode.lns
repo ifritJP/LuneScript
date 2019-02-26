@@ -388,10 +388,12 @@ pub override fn dumpFilter.processForeach(
    node: &Ast.ForeachNode, prefix: str, depth: int ) mut
 {
    let mut index = "";
-   if! node.get_key() {
+   if! node.$key {
       index = _exp.txt;
    }
-   dump( prefix, depth, node, node.get_val().txt .. " " .. index );
+   if! node.$val {
+      dump( prefix, depth, node, _exp.txt .. " " .. index );
+   }
    filter( node.get_exp(), self, prefix .. "  ", depth + 1 );
    filter( node.get_block(), self, prefix .. "  ", depth + 1 );
 };  
@@ -531,6 +533,14 @@ pub override fn dumpFilter.processLiteralList(
    node: &Ast.LiteralListNode, prefix: str, depth: int ) mut
 {
    dump( prefix, depth, node, "[]" );
+   if! node.get_expList() {
+      filter( _exp, self, prefix .. "  ", depth + 1 );
+   }
+};  
+pub override fn dumpFilter.processLiteralSet( 
+   node: &Ast.LiteralSetNode, prefix: str, depth: int ) mut
+{
+   dump( prefix, depth, node, "(@)" );
    if! node.get_expList() {
       filter( _exp, self, prefix .. "  ", depth + 1 );
    }

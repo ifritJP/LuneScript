@@ -170,7 +170,7 @@ pub class TransUnit {
       self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
       self.helperInfo = new Ast.LuneHelperInfo(
-         false, false, false, false, false, false );
+         false, false, false, false, false, false, false );
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
@@ -579,6 +579,19 @@ class _TypeInfoDDD extend _TypeInfo {
 }
 
 
+class _TypeInfoGeneric extend _TypeInfo {
+   pub let txt:str;
+
+   pub override fn createTypeInfo( param:ImportParam ):
+      Ast.TypeInfo!, str!
+   {  
+      let newTypeInfo = Ast.NormalTypeInfo.createGeneric(
+         self.txt, param.moduleTypeInfo );
+      param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      return newTypeInfo, nil;
+   }
+}
+
 class _TypeInfoModifier extend _TypeInfo {
    pub let srcTypeId:int;
    pub let mutable:bool;
@@ -665,7 +678,8 @@ class _TypeInfoNormal extend _TypeInfo {
          not Ast.builtInTypeIdSet[ self.typeId ] or
          self.kind == Ast.TypeInfoKind.List or
          self.kind == Ast.TypeInfoKind.Array or
-         self.kind == Ast.TypeInfoKind.Map
+         self.kind == Ast.TypeInfoKind.Map or
+         self.kind == Ast.TypeInfoKind.Set
       {
          let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if self.parentId ~= Ast.rootTypeId {
@@ -896,6 +910,8 @@ pub class BuiltinFuncType {
    pub let mut strGMatch:&Ast.TypeInfo;
    pub let mut stringGMatch:&Ast.TypeInfo;
    pub let mut stringForm:&Ast.TypeInfo;
+   pub let mut setAdd:&Ast.TypeInfo;
+   pub let mut setDel:&Ast.TypeInfo;
 
    pub fn __init() {
       self.luneLoad = Ast.headTypeInfo;
@@ -910,6 +926,8 @@ pub class BuiltinFuncType {
       self.strGMatch = Ast.headTypeInfo;
       self.stringGMatch = Ast.headTypeInfo;
       self.stringForm = Ast.headTypeInfo;
+      self.setAdd = Ast.headTypeInfo;
+      self.setDel = Ast.headTypeInfo;
    }
 }
 
@@ -960,7 +978,17 @@ fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
                builtinFunc.arraySort = typeInfo;
             }  
          }  
-      }  
+      }
+      case "Set" {
+         switch fieldName {
+            case "add" {
+               builtinFunc.setAdd = typeInfo;
+            }
+            case "del" {
+               builtinFunc.setDel = typeInfo;
+            }
+         }
+      }
       case "Mapping" {
          switch fieldName {
             case "_toMap" {
@@ -1106,6 +1134,12 @@ fn TransUnit.registBuiltInScope() mut {
          "Array": {
             "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
             "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },
+         },
+      },
+      { 
+         "Set": {
+            "add": { "type": [ "mut" ], "arg": [ "stem" ], "ret": [] },
+            "del": { "type": [ "mut" ], "arg": [ "stem" ], "ret": [] },
          },
       },
       {
@@ -1852,6 +1886,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
             case .DDD {
                actInfo, mess = _TypeInfoDDD._fromMap( atomInfo );
             }
+            case .Generic {
+               actInfo, mess = _TypeInfoGeneric._fromMap( atomInfo );
+            }
             case .Modifier {
                actInfo = _TypeInfoModifier._fromMap( atomInfo );
             }
@@ -1890,6 +1927,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
       when! newTypeInfo {
          if newTypeInfo.$kind == .Macro {
             orgId2MacroTypeInfo[ atomInfo.typeId ] = newTypeInfo;
+         }
+         if newTypeInfo.$kind == .Set {
+            self.helperInfo.useSet = true;
          }
          if newTypeInfo.$accessMode == .Global {
             switch newTypeInfo.$kind {
@@ -2514,8 +2554,9 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
 
 fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.Node {
    let scope = self.pushScope( false## );
-   let mut valSymbol:&Parser.Token = Parser.getEofToken();
-   let mut keySymbol:&Parser.Token! = nil;
+   let mut mainSymbol:&Parser.Token = Parser.getEofToken();
+   let mut valSymbol:&Parser.Token! = nil;
+   let mut subSymbol:&Parser.Token! = nil;
    let mut nextToken:&Parser.Token = Parser.getEofToken();
    for index = 1, 2 {
       let symbol = self.getToken(##);
@@ -2523,10 +2564,11 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
          self.error( "illegal symbol" );
       } 
       if index == 1 {
+         mainSymbol = symbol;
          valSymbol = symbol;
       } 
       else {
-         keySymbol = symbol;
+         subSymbol = symbol;
       } 
       nextToken = self.getToken(##);
       if nextToken.txt ~= "," {
@@ -2540,18 +2582,31 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
    let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
    if exp.$expType.get_kind() == .Map {
       self.addLocalVar(
-         exp.$pos, false, true, valSymbol.txt, itemTypeInfoList[ 2 ], false## );
-      if! keySymbol {
+         exp.$pos, false, true, mainSymbol.txt, itemTypeInfoList[ 2 ], false## );
+      if! subSymbol {
          self.addLocalVar(
             _exp.$pos, false, true, _exp.txt, itemTypeInfoList[ 1 ], false## );
       }  
-   } 
+   }
+   elseif exp.$expType.get_kind() == .Set {
+      when! subSymbol {
+         self.addErrMess( subSymbol.pos, "Set can't use index" );
+      }
+      valSymbol = nil;
+      subSymbol = mainSymbol;
+      self.scope.addLocalVar(
+         false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
+   }
    elseif exp.$expType.get_kind() == .List or
       exp.$expType.get_kind() == .Array
-   { 
+   {
+      if sortFlag {
+         self.addErrMess( exp.$pos, "'%s' doesn't support forsort."
+                          (exp.$expType.get_kind().$_txt) );
+      }
       self.scope.addLocalVar(
-         false, true, valSymbol.txt, itemTypeInfoList[ 1 ], false );
-      if! keySymbol {
+         false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
+      if! subSymbol {
          self.addLocalVar(
             _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, false## );
       }
@@ -2571,12 +2626,12 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Ast.No
    if sortFlag {
       return Ast.ForsortNode.create(
          self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
-         valSymbol, keySymbol, exp, block, sortFlag );
+         mainSymbol, subSymbol, exp, block, sortFlag );
    }
    else {
       return Ast.ForeachNode.create(
          self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
-         valSymbol, keySymbol, exp, block );
+         valSymbol, subSymbol, exp, block );
    }
 }
 

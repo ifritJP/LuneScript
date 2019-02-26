@@ -122,7 +122,7 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
          if itemTypeInfo.equals( Ast.builtinTypeNone ) {
             itemTypeInfo = expType;
          }
-         elseif not itemTypeInfo.canEvalWith( expType, "=" ) {
+         elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
             if expType.equals( Ast.builtinTypeNil ) {
                itemTypeInfo = unwrap itemTypeInfo.$nilableTypeInfo;
             }
@@ -143,10 +143,8 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
          itemTypeInfo = Ast.builtinTypeStem_;
       }
    }
-   let mut kind = Ast.NodeKind.$LiteralArray;
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    if token.txt == '[' {
-      kind = Ast.NodeKind.$LiteralList;
       typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
                                                       [ itemTypeInfo ] ) ];
       return Ast.LiteralListNode.create(
@@ -158,7 +156,52 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Ast.Node {
       return Ast.LiteralArrayNode.create(
          self.nodeManager, token.pos, typeInfoList, expList );
    }
-   //return self.createNode( kind, token.pos, typeInfo, expList );
+}
+
+fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Ast.Node {
+
+   self.helperInfo.useSet = true;
+
+   
+   let nextToken = self.getToken(##);
+   let mut expList:Ast.ExpListNode! = nil;
+   let mut itemTypeInfo = Ast.builtinTypeNone;
+   if nextToken.txt ~= ")" {
+      self.pushback();
+      expList = self.analyzeExpList( false ## );
+      self.checkNextToken( ")" );
+      let nodeList: List<&Ast.Node> = (unwrap expList).$expList;
+      foreach exp in nodeList {
+         let expType = exp.$expType;
+         if itemTypeInfo.equals( Ast.builtinTypeNone ) {
+            itemTypeInfo = expType;
+         }
+         elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
+            if expType.equals( Ast.builtinTypeNil ) {
+               itemTypeInfo = unwrap itemTypeInfo.$nilableTypeInfo;
+            }
+            elseif expType.$nilable {
+               itemTypeInfo = Ast.builtinTypeStem_;
+            }
+            else {
+               itemTypeInfo = Ast.builtinTypeStem;
+            }
+         }
+      }
+   }
+   if itemTypeInfo.$kind == .DDD {
+      if #itemTypeInfo.$itemTypeInfoList > 0 {
+         itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
+      }
+      else {
+         itemTypeInfo = Ast.builtinTypeStem_;
+      }
+   }
+   let mut typeInfoList = [ Ast.builtinTypeNone ];
+   typeInfoList = [ Ast.NormalTypeInfo.createSet( .Local, self.getCurrentClass(),
+                                                  [ itemTypeInfo ] ) ];
+   return Ast.LiteralSetNode.create(
+      self.nodeManager, token.pos, typeInfoList, expList );
 }
 
 fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Ast.LiteralMapNode {
@@ -183,7 +226,7 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Ast.LiteralMapNode {
          }
          expType = unwrap expType.$nonnilableType;
       }
-      if not typeInfo.canEvalWith( expType, "=" ) {
+      if not typeInfo.canEvalWith( expType, "=", {} ) {
          if not typeInfo.equals( Ast.builtinTypeNone ) {
             typeInfo = Ast.builtinTypeStem;
          }
@@ -240,20 +283,27 @@ fn TransUnit.analyzeExpRefItem(
       else {
          expType = unwrap expType.$nonnilableType;
       }
+      if expType.$kind == .Set {
+         self.addErrMess( exp.$pos, "set doesn't support '$'." );
+      }
    }
 
    let mut expectItemType:&Ast.TypeInfo! = nil;
    let mut typeInfo = Ast.builtinTypeStem_;
-   if expType.$kind == .Map {
+   if expType.$kind == .Map or expType.$kind == .Set {
       let itemTypeList = expType.get_itemTypeInfoList();
-      typeInfo = itemTypeList[2];
+      if expType.$kind == .Map {
+         typeInfo = itemTypeList[2];
+      }
+      else {
+         typeInfo = itemTypeList[1];
+      }
       expectItemType = itemTypeList[1];
       if not typeInfo.equals( Ast.builtinTypeStem_ ) and not typeInfo.$nilable {
          typeInfo = typeInfo.$nilableTypeInfo;
       }
    }
-   elseif expType.$kind == .Array or
-      expType.$kind == .List
+   elseif expType.$kind == .Array or expType.$kind == .List
    {
       typeInfo = expType.get_itemTypeInfoList()[1];
    }
@@ -293,7 +343,8 @@ fn TransUnit.analyzeExpRefItem(
 
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
-   expNodeList: &List<&Ast.Node>, allowDstShort:bool, warnForFollow:bool ) mut
+   expNodeList: &List<&Ast.Node>, allowDstShort:bool, warnForFollow:bool ) mut :
+   &Map<&Ast.TypeInfo,&Ast.TypeInfo>
 {
    let mut warnForFollowSrcIndex:int! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
@@ -333,7 +384,7 @@ fn TransUnit.checkMatchType(
       expTypeList.insert( Ast.builtinTypeAbbr );
    }
    
-   let result, mess = Ast.TypeInfo.checkMatchType(
+   let result, mess, gen2Type = Ast.TypeInfo.checkMatchType(
       dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex );
    switch result {
       case .Error {
@@ -343,21 +394,23 @@ fn TransUnit.checkMatchType(
          if not self.ctrl_info.checkingDefineAbbr and
             Code.isMessageOf( .nothing_define_abbr, mess )
          {
-            return;
          }
-         self.addWarnMess( pos, "%s: %s" (message, mess ) );
+         else {
+            self.addWarnMess( pos, "%s: %s" (message, mess ) );
+         }
       }
    }
+   return gen2Type;
 }
 
 
 fn TransUnit.checkMatchValType(
    pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Ast.ExpListNode!,
-   genericTypeList: &List<&Ast.TypeInfo> ) mut
+   genericTypeList: &List<&Ast.TypeInfo> ) mut : &Map<&Ast.TypeInfo,&Ast.TypeInfo>
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
-      case builtinFunc.listInsert {
+      case builtinFunc.listInsert, builtinFunc.setAdd, builtinFunc.setDel {
          argTypeList = genericTypeList;
       }
       case builtinFunc.listRemove {
@@ -375,7 +428,7 @@ fn TransUnit.checkMatchValType(
          warnForFollow = false;
       }
    }
-   self.checkMatchType(
+   return self.checkMatchType(
       funcTypeInfo.getTxt(##), pos, argTypeList, expNodeList, false, warnForFollow );
 }
 
@@ -636,6 +689,7 @@ fn TransUnit.analyzeExpCall(
    firstToken:&Parser.Token, mut exp: Ast.Node, nextToken:&Parser.Token ) mut :
    Ast.Node, &Parser.Token
 {
+   // string.format() の引数チェック
    fn checkArgForStringForm( argList:Ast.ExpListNode ) {
       let mut formArgTypeList:List<&Ast.TypeInfo> = [];
       let mut formatTxt = "";
@@ -656,6 +710,7 @@ fn TransUnit.analyzeExpCall(
       self.checkStringFormat( firstToken.pos, formatTxt, formArgTypeList );
    }
 
+   // List.sort() の引数チェック 
    fn checkArgForSort( genericTypeList:&List<&Ast.TypeInfo>, argList:Ast.ExpListNode ) {
       if #argList.$expTypeList > 0 {
          let callback = argList.$expTypeList[ 1 ];
@@ -741,13 +796,20 @@ fn TransUnit.analyzeExpCall(
       genericTypeList = classType.$itemTypeInfoList;
    }
 
-   self.checkMatchValType(
+   let gen2Type = self.checkMatchValType(
       exp.$pos, funcTypeInfo, argList, genericTypeList );
 
    if funcTypeInfo.equals( builtinFunc.listInsert ) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "list can't insert nilable" );
+         }
+      }
+   }
+   if funcTypeInfo.equals( builtinFunc.setAdd ) {
+      when! argList {
+         if argList.$expType.$nilable {
+            self.addErrMess( argList.$pos, "set can't add nilable" );
          }
       }
    }
@@ -773,8 +835,16 @@ fn TransUnit.analyzeExpCall(
                           funcTypeInfo.$kind.$_txt ) );
          }
       }
-      let mut retTypeInfoList:&List<&Ast.TypeInfo> =
-         funcTypeInfo.get_retTypeInfoList();
+      let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
+      foreach retType, index in funcTypeInfo.$retTypeInfoList {
+         retTypeInfoList.insert( retType );
+         if retType.$kind == .Generic {
+            if! let genType = gen2Type[ retType ] {
+               retTypeInfoList[ index ] = genType;
+            }
+         }
+      }
+      
       when! refFieldNode {
          if funcTypeInfo.equals( builtinFunc.listUnpack ) or
             funcTypeInfo.equals( builtinFunc.arrayUnpack )
@@ -792,7 +862,7 @@ fn TransUnit.analyzeExpCall(
       
       if nilAccess {
          let mut retList:List<&Ast.TypeInfo> = [];
-         foreach retType in funcTypeInfo.get_retTypeInfoList() {
+         foreach retType in retTypeInfoList {
             if retType.$nilable {
                retList.insert( retType );
             }
@@ -885,6 +955,9 @@ fn TransUnit.analyzeAccessClassField(
       }
       case .Array {
          classTypeInfo = Ast.builtinTypeArray;
+      }
+      case .Set {
+         classTypeInfo = Ast.builtinTypeSet;
       }
    }
    let className = classTypeInfo.getTxt(##);
@@ -1156,6 +1229,10 @@ fn TransUnit.analyzeExpField(
    }
    if accessNil {
       self.helperInfo.useNilAccess = true;
+      if prefixExpType.get_kind() == .Set {
+         // 現状は set の accessNil はサポートしていない。
+         self.addErrMess( firstToken.pos, "Set does not support $." );
+      }
    }
 
    let mut getterTypeInfo:Ast.TypeInfo! = nil;
@@ -1164,7 +1241,8 @@ fn TransUnit.analyzeExpField(
       prefixExpType.get_kind() == .Module or
       prefixExpType.get_kind() == .IF or
       prefixExpType.get_kind() == .List or 
-      prefixExpType.get_kind() == .Array
+      prefixExpType.get_kind() == .Array or
+      prefixExpType.get_kind() == .Set
    {
       let mut getterFlag = false;
       typeInfo, symbolInfo, getterFlag =
@@ -1510,14 +1588,14 @@ fn TransUnit.analyzeExpOp2(
             castType = self.createModifier( castType, false );
          }
 
-         if castType.canEvalWith( expType, "=" ) {
+         if castType.canEvalWith( expType, "=", {} ) {
             // "str"@@str のように、意味のないキャストはエラー
             self.addWarnMess( castTypeNode.$pos,
                               "This cast doesn't need. (%s <- %s)"
                               ( castType.getTxt( true ## ),
                                 expType.getTxt( true ## ) ) );          
          }
-         elseif not expType.canEvalWith( castType, "=" ) {
+         elseif not expType.canEvalWith( castType, "=", {} ) {
             if not Ast.isNumberType( expType ) and not Ast.isNumberType( castType ) {
                // キャスト先の型からキャスト元の型へ互換性がない場合はエラー
                self.addErrMess( castTypeNode.$pos,
@@ -1606,10 +1684,10 @@ fn TransUnit.analyzeExpOp2(
                   if exp1Type.equals( exp2Type ) {
                      retType = exp1Type;
                   }
-                  elseif exp1Type.canEvalWith( exp2Type, "=") {
+                  elseif exp1Type.canEvalWith( exp2Type, "=", {}) {
                      retType = exp1Type;
                   }
-                  elseif exp2Type.canEvalWith( exp1Type, "=") {
+                  elseif exp2Type.canEvalWith( exp1Type, "=", {}) {
                      retType = exp2Type;
                   }
                   elseif exp2Type.equals( Ast.builtinTypeNil ) {
@@ -1661,10 +1739,10 @@ fn TransUnit.analyzeExpOp2(
                      elseif exp1Type.equals( Ast.builtinTypeBool ) or
                         exp2Type.equals( Ast.builtinTypeBool )
                      {
-                        if exp1Type.canEvalWith( exp2Type, "=" ) {
+                        if exp1Type.canEvalWith( exp2Type, "=", {} ) {
                            retType = exp1Type;
                         }
-                        elseif exp2Type.canEvalWith( exp1Type, "=" ) {
+                        elseif exp2Type.canEvalWith( exp1Type, "=", {} ) {
                            retType = exp2Type;
                         }  
                         else {
@@ -1682,12 +1760,12 @@ fn TransUnit.analyzeExpOp2(
                   }
                }
                case "<", ">", "<=", ">=" {
-                  if Ast.builtinTypeString.canEvalWith( exp1Type, "=" ) and
-                     Ast.builtinTypeString.canEvalWith( exp2Type, "=" ) or
-                      ( Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt ) or
-                        Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt ) ) and
-                     ( Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt ) or
-                        Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt ) )
+                  if Ast.builtinTypeString.canEvalWith( exp1Type, "=", {} ) and
+                     Ast.builtinTypeString.canEvalWith( exp2Type, "=", {} ) or
+                      ( Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt, {} ) or
+                        Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt, {} ) ) and
+                     ( Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt, {} ) or
+                        Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt, {} ) )
                   {
                      ;
                   }
@@ -1701,8 +1779,8 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeBool;
                }
                case "~=", "==" {
-                  if ( not exp1Type.canEvalWith( exp2Type, opTxt ) and
-                       not exp2Type.canEvalWith( exp1Type, opTxt ) )
+                  if ( not exp1Type.canEvalWith( exp2Type, opTxt, {} ) and
+                       not exp2Type.canEvalWith( exp1Type, opTxt, {} ) )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -1726,8 +1804,8 @@ fn TransUnit.analyzeExpOp2(
                                       "this lua version can't use bit operand." );
                   }
                   
-                  if not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt ) or
-                     not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt )
+                  if not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt, {} ) or
+                     not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt, {} )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -1748,10 +1826,10 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeString;
                }
                case "+", "-", "*", "/", "%" {
-                  if ( not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt ) and
-                       not Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt ) ) or
-                      ( not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt ) and
-                        not Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt) )
+                  if ( not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt, {} ) and
+                       not Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt, {} ) ) or
+                      ( not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt, {} ) and
+                        not Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt, {} ) )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -1974,7 +2052,7 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Ast.Node {
          let insType = _exp.$expType;
          unwrapType = insType;
 
-         if not unwrapType.canEvalWith( insType, "=" ) {
+         if not unwrapType.canEvalWith( insType, "=", {} ) {
             self.addErrMess(
                _exp.$pos,
                "unmatch type: %s <- %s"
@@ -2048,6 +2126,9 @@ fn TransUnit.analyzeExp(
       }  
       elseif token.txt == '[' or token.txt == '[@' {
          exp = self.analyzeListConst( token );
+      }
+      elseif token.txt == '(@' {
+         exp = self.analyzeSetConst( token );
       }  
       elseif token.txt == '{' {
          exp = self.analyzeMapConst( token );
@@ -2145,7 +2226,7 @@ fn TransUnit.analyzeExp(
             case "#" {
                if expType.$kind ~= .List and
                   expType.$kind ~= .Array and
-                  not Ast.builtinTypeString.canEvalWith( expType, "=" )
+                  not Ast.builtinTypeString.canEvalWith( expType, "=", {} )
                {  
                   self.addErrMess(
                      token.pos,

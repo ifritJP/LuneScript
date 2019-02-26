@@ -86,14 +86,14 @@
 
 {
    fn func(val:int[]): int {
-      while true {
-         forsort item in val {
-            if item == 1 {
-               return 1;
-            }
-         }
-      }  
-      return 1; // error
+      // while true {
+      //    forsort item in val { // error
+      //       if item == 1 {
+      //          return 1;
+      //       }
+      //    }
+      // }  
+      // return 1; // error
    }  
 }
 

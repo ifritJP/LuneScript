@@ -496,13 +496,19 @@ function dumpFilter:processForeach( node, prefix, depth )
 
    local index = ""
    do
-      local _exp = node:get_key(  )
+      local _exp = node:get_key()
       if _exp ~= nil then
          index = _exp.txt
       end
    end
    
-   dump( prefix, depth, node, node:get_val(  ).txt .. " " .. index )
+   do
+      local _exp = node:get_val()
+      if _exp ~= nil then
+         dump( prefix, depth, node, _exp.txt .. " " .. index )
+      end
+   end
+   
    filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
    filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
 end
@@ -671,6 +677,19 @@ end
 function dumpFilter:processLiteralList( node, prefix, depth )
 
    dump( prefix, depth, node, "[]" )
+   do
+      local _exp = node:get_expList(  )
+      if _exp ~= nil then
+         filter( _exp, self, prefix .. "  ", depth + 1 )
+      end
+   end
+   
+end
+
+
+function dumpFilter:processLiteralSet( node, prefix, depth )
+
+   dump( prefix, depth, node, "(@)" )
    do
       local _exp = node:get_expList(  )
       if _exp ~= nil then

@@ -798,7 +798,7 @@ function convFilter:outputMeta( node )
                            
                            do
                               local _switchExp = nonnilableType:get_kind()
-                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
+                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
                                  valid = true
                               end
                            end
@@ -908,6 +908,10 @@ end]==] )
       if node:get_luneHelperInfo().useAlge then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.AlgeMapping ) )
+      end
+      
+      if node:get_luneHelperInfo().useSet then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetMapping ) )
       end
       
       if node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() then
@@ -1124,6 +1128,11 @@ function convFilter:getMapInfo( typeInfo )
          local keyFuncTxt, keyNilable, keyChild = self:getMapInfo( itemList[1] )
          local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[2] )
          child = string.format( "{ { func = %s, nilable = %s, child = %s }, \n", keyFuncTxt, keyNilable, keyChild) .. string.format( "{ func = %s, nilable = %s, child = %s } }", valFuncTxt, valNilable, valChild)
+      elseif _switchExp == Ast.TypeInfoKind.Set then
+         funcTxt = '_lune._toSet'
+         local itemList = nonnilableType:get_itemTypeInfoList()
+         local valFuncTxt, valNilable, valChild = self:getMapInfo( itemList[1] )
+         child = string.format( "{ func = %s, nilable = %s, child = %s }", valFuncTxt, valNilable, valChild)
       elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
          funcTxt = '_lune._toList'
          local itemList = nonnilableType:get_itemTypeInfoList()
@@ -2201,7 +2210,15 @@ function convFilter:processForeach( node, parent )
    end
    
    self:write( ", " )
-   self:write( node:get_val().txt )
+   do
+      local _exp = node:get_val()
+      if _exp ~= nil then
+         self:write( _exp.txt )
+      else
+         self:write( "__val" )
+      end
+   end
+   
    self:write( " in pairs( " )
    filter( node:get_exp(), self, node )
    self:write( " ) " )
@@ -2236,7 +2253,10 @@ function convFilter:processForsort( node, parent )
    self:write( key )
    self:writeln( " in ipairs( __sorted ) do" )
    self:pushIndent(  )
-   self:writeln( string.format( "local %s = __map[ %s ]", node:get_val().txt, key ) )
+   if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Map then
+      self:writeln( string.format( "local %s = __map[ %s ]", node:get_val().txt, key ) )
+   end
+   
    filter( node:get_block(), self, node )
    self:writeln( "end" )
    self:popIndent(  )
@@ -2299,6 +2319,27 @@ function convFilter:processExpCall( node, parent )
                wroteFuncFlag = true
                self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
                filter( prefixNode, self, fieldNode )
+            elseif _switchExp == Ast.TypeInfoKind.Set then
+               setArgFlag = true
+               wroteFuncFlag = true
+               filter( prefixNode, self, fieldNode )
+               self:write( "[" )
+               do
+                  local argList = node:get_argList()
+                  if argList ~= nil then
+                     filter( argList, self, fieldNode )
+                  end
+               end
+               
+               self:write( "]" )
+               if fieldNode:get_field().txt == "add" then
+                  self:write( "= true" )
+               else
+                
+                  self:write( "= nil" )
+               end
+               
+               return 
             elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
                wroteFuncFlag = true
                local fieldExpType = fieldNode:get_expType()
@@ -2759,6 +2800,29 @@ function convFilter:processLiteralList( node, parent )
       local _exp = node:get_expList()
       if _exp ~= nil then
          filter( _exp, self, node )
+      end
+   end
+   
+   self:write( "}" )
+end
+
+
+function convFilter:processLiteralSet( node, parent )
+
+   self:write( "{" )
+   do
+      local expListNode = node:get_expList()
+      if expListNode ~= nil then
+         for index, expNode in pairs( expListNode:get_expList() ) do
+            if index > 1 then
+               self:write( ", " )
+            end
+            
+            self:write( "[" )
+            filter( expNode, self, node )
+            self:write( "] = true" )
+         end
+         
       end
    end
    

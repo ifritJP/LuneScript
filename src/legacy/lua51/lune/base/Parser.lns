@@ -103,6 +103,7 @@ fn createReserveInfo( luaMode: bool! ) :
          multiCharDelimitMap[ "|<" ] = [@ "|<<"];
          multiCharDelimitMap[ "|>" ] = [@ "|>>"];
          multiCharDelimitMap[ "[" ] = [@ "[@" ];
+         multiCharDelimitMap[ "(" ] = [@ "(@" ];
          multiCharDelimitMap[ "~" ] = [@ "~=", "~~" ];
          multiCharDelimitMap[ "$" ] = [@ "$[", "$.", "$(" ];
          multiCharDelimitMap[ "$." ] = [@ "$.$" ];

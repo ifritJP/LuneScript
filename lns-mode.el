@@ -80,7 +80,7 @@
 				     "\\|\\_<fn[ \t]*[^(]" ))
   (defconst
     lns-type (lns-make-regex-or
-	      '("int" "real" "sym" "stem" "Map" "Array" "List" "str" "bool")))
+	      '("int" "real" "sym" "stem" "Map" "Array" "List" "Set" "str" "bool")))
   )
   
 
