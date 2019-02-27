@@ -346,7 +346,7 @@ pub class StreamParser extend Parser {
 
 
 
-let mut quotedCharSet:Map<int,bool> = {};
+let mut quotedCharSet:Map<str,bool> = {};
 quotedCharSet[ 'a' ] = true;
 quotedCharSet[ 'b' ] = true;
 quotedCharSet[ 'f' ] = true;
@@ -359,7 +359,7 @@ quotedCharSet[ '"' ] = true;
 quotedCharSet[ "'" ] = true;
 
 
-let mut op2Set:Map<int,bool> = {};
+let mut op2Set:Map<str,bool> = {};
 op2Set[ '+' ] = true;
 op2Set[ '-' ] = true;
 op2Set[ '*' ] = true;
@@ -383,7 +383,7 @@ op2Set[ 'or' ] = true;
 op2Set[ '@' ] = true;
 op2Set[ '=' ] = true;
 
-let mut op1Set:Map<int,bool> = {};
+let mut op1Set:Map<str,bool> = {};
 op1Set[ '-' ] = true;
 op1Set[ 'not' ] = true;
 op1Set[ '#' ] = true;

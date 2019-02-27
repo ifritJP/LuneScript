@@ -1696,7 +1696,7 @@ function TransUnit:registBuiltInScope(  )
    end
    
    readyBuiltin = true
-   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"stem!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Set"] = {["add"] = {["type"] = {"mut"}, ["arg"] = {"stem"}, ["ret"] = {}}, ["del"] = {["type"] = {"mut"}, ["arg"] = {"stem"}, ["ret"] = {}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
+   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"&stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}, ["lower"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["upper"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["reverse"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}}}, {["List"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&stem"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"stem!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Set"] = {["add"] = {["type"] = {"mut"}, ["arg"] = {"stem"}, ["ret"] = {}}, ["del"] = {["type"] = {"mut"}, ["arg"] = {"stem"}, ["ret"] = {}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
    local function getTypeInfo( typeName )
    
       local mutable = true
@@ -2589,9 +2589,16 @@ function TransUnit:processImport( modulePath )
                if _exp ~= nil then
                   local classInfo = _exp
                   for fieldName, fieldInfo in pairs( classInfo ) do
-                     local typeId = fieldInfo['typeId']
-                     local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[typeId])
-                     self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), _lune.unwrapDefault( fieldInfo['staticFlag'], false), _lune.unwrapDefault( fieldInfo['mutable'], false) )
+                     do
+                        local typeId = fieldInfo['typeId']
+                        if typeId ~= nil then
+                           local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[math.floor(typeId)])
+                           self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), _lune.unwrapDefault( fieldInfo['staticFlag'], false), _lune.unwrapDefault( fieldInfo['mutable'], false) )
+                        else
+                           self:error( "not found fieldInfo.typeId" )
+                        end
+                     end
+                     
                   end
                   
                else
@@ -2640,7 +2647,15 @@ function TransUnit:processImport( modulePath )
    end
    
    for varName, varInfo in pairs( metaInfo.__varName2InfoMap ) do
-      self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[varInfo['typeId']]), _lune.unwrapDefault( varInfo['mutable'], false) )
+      do
+         local typeId = varInfo['typeId']
+         if typeId ~= nil then
+            self.scope:addStaticVar( false, true, varName, _lune.unwrap( typeId2TypeInfo[math.floor(typeId)]), _lune.unwrapDefault( varInfo['mutable'], false) )
+         else
+            self:error( "illegal varInfo.typeId" )
+         end
+      end
+      
    end
    
    for orgTypeId, macroInfoStem in pairs( metaInfo.__macroName2InfoMap ) do
@@ -2966,15 +2981,15 @@ function TransUnit:analyzeFor( firstToken )
    
    self:checkNextToken( "=" )
    local exp1 = self:analyzeExp( false )
-   if not exp1:get_expType():equals( Ast.builtinTypeInt ) then
-      self:addErrMess( exp1:get_pos(), string.format( "exp1 is not int -- %s", exp1:get_expType():getTxt(  )) )
+   if not Ast.isNumberType( exp1:get_expType() ) then
+      self:addErrMess( exp1:get_pos(), string.format( "exp1 is not number -- %s", exp1:get_expType():getTxt(  )) )
    end
    
    self:addLocalVar( exp1:get_pos(), false, true, val.txt, exp1:get_expType(), false )
    self:checkNextToken( "," )
    local exp2 = self:analyzeExp( false )
-   if not exp2:get_expType():equals( Ast.builtinTypeInt ) then
-      self:addErrMess( exp2:get_pos(), string.format( "exp2 is not int -- %s", exp2:get_expType():getTxt(  )) )
+   if not Ast.isNumberType( exp2:get_expType() ) then
+      self:addErrMess( exp2:get_pos(), string.format( "exp2 is not number -- %s", exp2:get_expType():getTxt(  )) )
    end
    
    local token = self:getToken(  )
@@ -2984,8 +2999,8 @@ function TransUnit:analyzeFor( firstToken )
       do
          local _exp = exp3
          if _exp ~= nil then
-            if not _exp:get_expType():equals( Ast.builtinTypeInt ) then
-               self:addErrMess( _exp:get_pos(), string.format( "exp is not int -- %s", _exp:get_expType():getTxt(  )) )
+            if not Ast.isNumberType( _exp:get_expType() ) then
+               self:addErrMess( _exp:get_pos(), string.format( "exp is not number -- %s", _exp:get_expType():getTxt(  )) )
             end
             
          end
@@ -4796,7 +4811,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       do
          local prottype = parentScope:getTypeInfoChild( typeInfo:get_rawTxt() )
          if prottype ~= nil then
-            local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false, nil )
+            local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false, nil, {} )
             if matchFlag ~= Ast.MatchType.Match then
                self:addErrMess( name.pos, "mismatch functype: " .. err )
             end
@@ -5614,13 +5629,16 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    
    local expectItemType = nil
    local typeInfo = Ast.builtinTypeStem_
+   local indexTypeInfo = Ast.builtinTypeInt
    if expType:get_kind() == Ast.TypeInfoKind.Map or expType:get_kind() == Ast.TypeInfoKind.Set then
       local itemTypeList = expType:get_itemTypeInfoList(  )
       if expType:get_kind() == Ast.TypeInfoKind.Map then
          typeInfo = itemTypeList[2]
+         indexTypeInfo = itemTypeList[1]
       else
        
          typeInfo = itemTypeList[1]
+         indexTypeInfo = itemTypeList[1]
       end
       
       expectItemType = itemTypeList[1]
@@ -5633,6 +5651,7 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    elseif expType:equals( Ast.builtinTypeString ) then
       typeInfo = Ast.builtinTypeInt
    elseif expType:equals( Ast.builtinTypeStem ) then
+      indexTypeInfo = Ast.builtinTypeStem
       typeInfo = Ast.builtinTypeStem
    else
     
@@ -5656,11 +5675,15 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
       self:addErrMess( indexExp:get_pos(), "This node can't use index" )
    end
    
+   if not indexTypeInfo:canEvalWith( indexExp:get_expType(), "=", {} ) then
+      self:addErrMess( indexExp:get_pos(), string.format( "unmatch index type -- %s, %s", indexTypeInfo:getTxt(  ), indexExp:get_expType():getTxt(  )) )
+   end
+   
    self:checkNextToken( "]" )
    return Ast.ExpRefItemNode.create( self.nodeManager, token.pos, {typeInfo}, exp, nilAccess, nil, indexExp )
 end
 
-function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allowDstShort, warnForFollow )
+function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allowDstShort, warnForFollow, applyGeneric )
 
    local warnForFollowSrcIndex = nil
    local expTypeList = {}
@@ -5701,7 +5724,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       table.insert( expTypeList, Ast.builtinTypeAbbr )
    end
    
-   local result, mess, gen2Type = Ast.TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex )
+   local result, mess, gen2Type = Ast.TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, Ast.GenericTypeInfo.createGen2TypeMap( applyGeneric ) )
    do
       local _switchExp = result
       if _switchExp == Ast.MatchType.Error then
@@ -5743,7 +5766,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       
    end
    
-   return self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, warnForFollow )
+   return self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, warnForFollow, true )
 end
 
 local MacroPaser = {}
@@ -6093,7 +6116,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       genericTypeList = classType:get_itemTypeInfoList()
    end
    
-   local gen2Type = self:checkMatchValType( exp:get_pos(), funcTypeInfo, argList, genericTypeList )
+   local gen2TypeMap = self:checkMatchValType( exp:get_pos(), funcTypeInfo, argList, genericTypeList )
    if funcTypeInfo:equals( builtinFunc.listInsert ) then
       if argList ~= nil then
          if argList:get_expType():get_nilable() then
@@ -6140,14 +6163,13 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       local retTypeInfoList = {}
       for index, retType in pairs( funcTypeInfo:get_retTypeInfoList() ) do
          table.insert( retTypeInfoList, retType )
-         if retType:get_kind() == Ast.TypeInfoKind.Generic then
-            do
-               local genType = gen2Type[retType]
-               if genType ~= nil then
-                  retTypeInfoList[index] = genType
-               end
+         do
+            local applyType = retType:applyGeneric( gen2TypeMap )
+            if applyType ~= nil then
+               retTypeInfoList[index] = applyType
+            else
+               self:addErrMess( firstToken.pos, string.format( "not support generics yet. -- %s", retType:getTxt(  )) )
             end
-            
          end
          
       end
@@ -6704,7 +6726,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
             self:checkNextToken( ")" )
          end
          
-         self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false, true )
+         self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false, true, false )
          return Ast.NewAlgeValNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, valInfo, argList )
       else
          self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )
@@ -6808,7 +6830,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, exp2NodeList )
       self:addErrMess( exp:get_pos(), string.format( "this node can not be l-value. -- %s", Ast.getNodeKindName( exp:get_kind() )) )
    end
    
-   self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), exp2NodeList, true, false )
+   self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), exp2NodeList, true, false, false )
    for __index, symbolInfo in pairs( exp:getSymbolInfo(  ) ) do
       if not symbolInfo:get_mutable() and symbolInfo:get_hasValueFlag() then
          if self.validMutControl then
@@ -7542,7 +7564,7 @@ function TransUnit:analyzeReturn( token )
          table.insert( expNodeList, exp )
       end
       
-      self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false, true )
+      self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false, true, false )
    else
       if #retTypeList ~= 0 then
          self:addErrMess( token.pos, "no return value" )

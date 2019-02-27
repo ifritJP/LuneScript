@@ -50,7 +50,7 @@ define cutMeta
 endef
 
 define transwork
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/base/$3.lns SAVE $2 $(BYTECOMP) -Werror)
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$3.lns SAVE $2 $(BYTECOMP) -Werror)
 endef
 
 ifndef LNSC_ENABLE
@@ -69,24 +69,25 @@ define exeComp
 endef
 
 define buildLns
-	$(call transwork,$1,$2,Ver)
-	$(call transwork,$1,$2,LuaMod)
-	$(call transwork,$1,$2,Code)
-	$(call transwork,$1,$2,Log)
-	$(call transwork,$1,$2,LuaVer)
-	$(call transwork,$1,$2,Depend)
+	$(call transwork,$1,$2,base/Ver)
+	$(call transwork,$1,$2,base/LuaMod)
+	$(call transwork,$1,$2,base/Code)
+	$(call transwork,$1,$2,base/Log)
+	$(call transwork,$1,$2,base/LuaVer)
+	$(call transwork,$1,$2,base/Depend)
+	$(call transwork,$1,$2,base/Util)
+	$(call transwork,$1,$2,base/frontInterface)
+	$(call transwork,$1,$2,base/Writer)
+	$(call transwork,$1,$2,base/Parser)
+	$(call transwork,$1,$2,base/Option)
+	$(call transwork,$1,$2,base/Ast)
+	$(call transwork,$1,$2,base/TransUnit)
+	$(call transwork,$1,$2,base/convLua)
+	$(call transwork,$1,$2,base/dumpNode)
+	$(call transwork,$1,$2,base/OutputDepend)
+	$(call transwork,$1,$2,base/front)
+	$(call transwork,$1,$2,base/glueFilter)
 	$(call transwork,$1,$2,Util)
-	$(call transwork,$1,$2,frontInterface)
-	$(call transwork,$1,$2,Writer)
-	$(call transwork,$1,$2,Parser)
-	$(call transwork,$1,$2,Option)
-	$(call transwork,$1,$2,Ast)
-	$(call transwork,$1,$2,TransUnit)
-	$(call transwork,$1,$2,convLua)
-	$(call transwork,$1,$2,dumpNode)
-	$(call transwork,$1,$2,OutputDepend)
-	$(call transwork,$1,$2,front)
-	$(call transwork,$1,$2,glueFilter)
 endef
 
 
@@ -204,9 +205,13 @@ test-comp:
 	$(call mk_lune_proj_dir,work/5)
 	mkdir -p work/newglue
 	@cp lune/base/base*.lua lune/base/*.lns work/1/lune/base
+	@cp lune/*.lns work/1/lune
 	@cp lune/base/base*.lua lune/base/*.lns work/2/lune/base
+	@cp lune/*.lns work/2/lune
 	@cp lune/base/base*.lua lune/base/*.lns work/3/lune/base
+	@cp lune/*.lns work/3/lune
 	@cp lune/base/base*.lua lune/base/*.lns work/5/lune/base
+	@cp lune/*.lns work/5/lune
 	$(call buildLns,.,work/1)
 	$(MAKE) test-comp2
 
@@ -260,6 +265,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/symbol.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/static.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/generics.lns,exe,2>&1)
 
 
 	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG
@@ -374,8 +380,8 @@ else
 endif
 
 define check-rockspec-op
-	@grep 'lune.base' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
-	@(cd $2; find lune/base -iname '*.lua' ) | sed 's@^@$3@g' | sort > work/$1.2.list
+	@grep 'lune\.' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
+	@(cd $2; find lune -iname '*.lua' ) | sed 's@^@$3@g' | sort > work/$1.2.list
 	diff work/$1.list work/$1.2.list
 	@rm work/$1.list work/$1.2.list
 endef
@@ -429,6 +435,7 @@ test-lua51:
 test-lua51-sub:
 	$(call mk_lune_proj_dir,work/6)
 	@cp lune/base/base.lua lune/base/_lune.lua lune/base/*.lns work/6/lune/base
+	@cp lune/*.lns work/6/lune
 	$(call buildLns,work/5,../6)
 	$(call setup-lua51-test,work/6)
 	$(call exeLune,work/6,-mklunemod,lune/base)
@@ -448,6 +455,7 @@ ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.lns legacy/lua51/lune/base/
 	cp work/6/lune/base/*.lua legacy/lua51/lune/base/
 	cp work/6/lune/base/*.meta legacy/lua51/lune/base/
+	cp work/6/lune/*.* legacy/lua51/lune/
 endif
 
 ifneq ($(findstring $(MAKECMDGOALS),"check-meta-format" ),)
@@ -492,6 +500,7 @@ install: check_lua_mod_dir
 	@echo installed -- /usr/bin/lnsc
 	@rm /tmp/lnsc
 	@$(INSTALL) $(LNSDIR)/lune/base/* $(LUA_MOD_DIR)/lune/base
+	@$(INSTALL) $(LNSDIR)/lune/*.* $(LUA_MOD_DIR)/lune
 	@echo installed -- $(LUA_MOD_DIR)/lune
 
 uninstall: check_lua_mod_dir

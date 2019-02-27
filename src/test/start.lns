@@ -865,3 +865,9 @@ class SetTest extend (Mapping) {
    }
 }
 
+{
+   fn func<T>( val:Map<int,T> ): T! {
+      return val[ 1 ];
+   }  
+   print( unwrap func( { 1:"123" } ) .. "abc" );
+}

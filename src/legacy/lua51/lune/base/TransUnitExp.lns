@@ -290,13 +290,17 @@ fn TransUnit.analyzeExpRefItem(
 
    let mut expectItemType:&Ast.TypeInfo! = nil;
    let mut typeInfo = Ast.builtinTypeStem_;
+   // 指定すべき index の型
+   let mut indexTypeInfo = Ast.builtinTypeInt;
    if expType.$kind == .Map or expType.$kind == .Set {
       let itemTypeList = expType.get_itemTypeInfoList();
       if expType.$kind == .Map {
          typeInfo = itemTypeList[2];
+         indexTypeInfo = itemTypeList[1];
       }
       else {
          typeInfo = itemTypeList[1];
+         indexTypeInfo = itemTypeList[1];
       }
       expectItemType = itemTypeList[1];
       if not typeInfo.equals( Ast.builtinTypeStem_ ) and not typeInfo.$nilable {
@@ -311,6 +315,7 @@ fn TransUnit.analyzeExpRefItem(
       typeInfo = Ast.builtinTypeInt;
    }
    elseif expType.equals( Ast.builtinTypeStem ) {
+      indexTypeInfo = Ast.builtinTypeStem;
       typeInfo = Ast.builtinTypeStem;
    }
    else {
@@ -333,6 +338,12 @@ fn TransUnit.analyzeExpRefItem(
    if not indexExp.canBeRight() {
       self.addErrMess( indexExp.$pos, "This node can't use index" );
    }
+   if not indexTypeInfo.canEvalWith( indexExp.$expType, "=", {} ) {
+      self.addErrMess( indexExp.$pos,
+                       "unmatch index type -- %s, %s"
+                       ( indexTypeInfo.getTxt(##), indexExp.$expType.getTxt(##) ) );
+   }
+   
    self.checkNextToken( "]" );
    
    
@@ -341,9 +352,21 @@ fn TransUnit.analyzeExpRefItem(
 }
 
 
+/**
+型の一致性を確認する。
+
+@param message 不一致時に出力するメッセージ
+@param pos 不一致時に出力するコードの場所
+@param dstTypeList 設定先の型のリスト
+@param expNodeList 設定する値の型リスト
+@param allowDstShort dstTypeList の要素数が expNodeList よりも少ないことを許容する場合 true
+@param warnForFollow true の場合、値を省略している時に警告を出力する
+@param applyGeneric true の場合、Generics 型を expNodeList の型から決定する
+*/
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
-   expNodeList: &List<&Ast.Node>, allowDstShort:bool, warnForFollow:bool ) mut :
+   expNodeList: &List<&Ast.Node>, allowDstShort:bool,
+   warnForFollow:bool, applyGeneric:bool ) mut :
    &Map<&Ast.TypeInfo,&Ast.TypeInfo>
 {
    let mut warnForFollowSrcIndex:int! = nil;
@@ -385,7 +408,8 @@ fn TransUnit.checkMatchType(
    }
    
    let result, mess, gen2Type = Ast.TypeInfo.checkMatchType(
-      dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex );
+      dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex,
+      Ast.GenericTypeInfo.createGen2TypeMap( applyGeneric ) ); 
    switch result {
       case .Error {
          self.addErrMess( pos, "%s: %s" (message, mess ) );
@@ -429,7 +453,8 @@ fn TransUnit.checkMatchValType(
       }
    }
    return self.checkMatchType(
-      funcTypeInfo.getTxt(##), pos, argTypeList, expNodeList, false, warnForFollow );
+      funcTypeInfo.getTxt(##), pos,
+      argTypeList, expNodeList, false, warnForFollow, true );
 }
 
 class MacroPaser extend Parser.Parser {
@@ -796,7 +821,7 @@ fn TransUnit.analyzeExpCall(
       genericTypeList = classType.$itemTypeInfoList;
    }
 
-   let gen2Type = self.checkMatchValType(
+   let gen2TypeMap = self.checkMatchValType(
       exp.$pos, funcTypeInfo, argList, genericTypeList );
 
    if funcTypeInfo.equals( builtinFunc.listInsert ) {
@@ -838,10 +863,13 @@ fn TransUnit.analyzeExpCall(
       let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
       foreach retType, index in funcTypeInfo.$retTypeInfoList {
          retTypeInfoList.insert( retType );
-         if retType.$kind == .Generic {
-            if! let genType = gen2Type[ retType ] {
-               retTypeInfoList[ index ] = genType;
-            }
+         if! let applyType = retType.applyGeneric( gen2TypeMap ) {
+            retTypeInfoList[ index ] = applyType;
+         }
+         else {
+            self.addErrMess(
+               firstToken.pos,
+               "not support generics yet. -- %s" (retType.getTxt(##)) );
          }
       }
       
@@ -1277,7 +1305,7 @@ fn TransUnit.analyzeExpField(
             if funcType.$staticFlag ~= isTypeSymbol {
                self.addErrMess(
                   prefixExp.$pos, "Can't access -- %s, %s" ( fieldName, isTypeSymbol) );
-            }  
+            }
             
             
             let retTypeList = funcType.$retTypeInfoList;
@@ -1435,7 +1463,7 @@ fn TransUnit.analyzeNewAlge(
       }
 
       self.checkMatchType(
-         "call", symbolToken.pos, valInfo.$typeList, argList, false, true );
+         "call", symbolToken.pos, valInfo.$typeList, argList, false, true, false );
 
       
       return Ast.NewAlgeValNode.create(
@@ -1551,7 +1579,7 @@ fn TransUnit.analyzeExpOpSet(
                        (Ast.getNodeKindName( exp.$kind ) ) );
    }
    self.checkMatchType(
-      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true, false );
+      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true, false, false );
 
    foreach symbolInfo in exp.getSymbolInfo() {
       if not symbolInfo.$mutable and symbolInfo.$hasValueFlag

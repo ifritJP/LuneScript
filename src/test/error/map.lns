@@ -57,6 +57,14 @@
     }
 }
 
+{
+   let mut val2:Map<int,int> = {};
+   val2[ 1.0 ] = 1; // error
+   val2[ "1.0" ] = 1; // error
+   val2[ 1 ] = 1.0; // error
+   val2[ 1 ] = "str"; // error
+}
+
 
 {
    let mut val:Map<str,int> = {};

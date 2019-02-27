@@ -821,6 +821,10 @@ function TypeInfo:getParentFullName( importInfo, localFlag )
    
    return name
 end
+function TypeInfo:applyGeneric( gen2TypeMap )
+
+   return self
+end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
@@ -844,6 +848,15 @@ end
 function AliasTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
+end
+function AliasTypeInfo:applyGeneric( gen2TypeMap )
+
+   local typeInfo = self.aliasSrcTypeInfo:applyGeneric( gen2TypeMap )
+   if typeInfo == self.aliasSrcTypeInfo then
+      return self
+   end
+   
+   return nil
 end
 function AliasTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = AliasTypeInfo  } )
@@ -1702,6 +1715,19 @@ function NilableTypeInfo:equals( typeInfo )
    
    return self.nonnilableType:equals( typeInfo )
 end
+function NilableTypeInfo:applyGeneric( gen2TypeMap )
+
+   local typeInfo = self.nonnilableType:applyGeneric( gen2TypeMap )
+   if typeInfo == self.nonnilableType then
+      return self
+   end
+   
+   if typeInfo ~= nil then
+      return typeInfo:get_nilableTypeInfo()
+   end
+   
+   return nil
+end
 function NilableTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = NilableTypeInfo  } )
 end
@@ -1849,6 +1875,18 @@ function GenericTypeInfo:__init(txt, moduleTypeInfo)
    idProv:increment(  )
    self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
 end
+function GenericTypeInfo.createGen2TypeMap( validApply )
+
+   if validApply then
+      return {[_moduleObj.headTypeInfo] = _moduleObj.headTypeInfo}
+   end
+   
+   return {}
+end
+function GenericTypeInfo.isValidApply( gen2Type )
+
+   return gen2Type[_moduleObj.headTypeInfo]
+end
 function GenericTypeInfo:isModule(  )
 
    return false
@@ -1875,11 +1913,19 @@ function GenericTypeInfo:canEvalWith( other, opTxt, gen2type )
       return true
    end
    
+   if other:get_nilable() then
+      return false
+   end
+   
    do
       local genType = gen2type[self]
       if genType ~= nil then
          return genType:canEvalWith( other, opTxt, gen2type )
       end
+   end
+   
+   if not GenericTypeInfo.isValidApply( gen2type ) then
+      return false
    end
    
    gen2type[self] = other
@@ -1929,6 +1975,10 @@ function GenericTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
    stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q }\n', SerializeKind.Generic, parentId, self.typeId, self.txt) )
+end
+function GenericTypeInfo:applyGeneric( gen2TypeMap )
+
+   return gen2TypeMap[self]
 end
 function GenericTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = GenericTypeInfo  } )
@@ -3450,44 +3500,8 @@ MatchType.Error = 2
 MatchType._val2NameMap[2] = 'Error'
 MatchType.__allList[3] = MatchType.Error
 
-function TypeInfo.checkMatchType( dstTypeListOrg, expTypeList, allowDstShort, warnForFollowSrcIndex )
+function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, gen2Type )
 
-   
-   local dstTypeList = {}
-   local gen2Type = {}
-   do
-      for index, dstType in pairs( dstTypeListOrg ) do
-         table.insert( dstTypeList, dstType )
-         if dstType:get_kind() == TypeInfoKind.Generic then
-            do
-               local geneType = gen2Type[dstType]
-               if geneType ~= nil then
-                  dstTypeList[index] = geneType
-               else
-                  if #expTypeList >= index then
-                     local expType = expTypeList[index]
-                     if expType:get_kind() == TypeInfoKind.DDD then
-                        if #expType:get_itemTypeInfoList() > 0 then
-                           expType = expType:get_itemTypeInfoList()[1]
-                        else
-                         
-                           expType = _moduleObj.builtinTypeStem
-                        end
-                        
-                     end
-                     
-                     gen2Type[dstType] = expType
-                     dstTypeList[index] = expType
-                  end
-                  
-               end
-            end
-            
-         end
-         
-      end
-      
-   end
    
    local function checkDstTypeFrom( index, srcType, srcType2nd )
    
@@ -3755,13 +3769,13 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, gen2Type )
             return true
          end
          
-         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, gen2Type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, gen2Type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
          return true
       elseif _switchExp == TypeInfoKind.Method then
-         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+         if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, gen2Type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, gen2Type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false
          end
          
@@ -3779,6 +3793,78 @@ end
 function NormalTypeInfo:canEvalWith( other, opTxt, gen2Type )
 
    return TypeInfo.canEvalWithBase( self, self:get_mutable(), other, opTxt, gen2Type )
+end
+
+function ModifierTypeInfo:applyGeneric( gen2TypeMap )
+
+   local typeInfo = self.srcTypeInfo:applyGeneric( gen2TypeMap )
+   if typeInfo == self.srcTypeInfo then
+      return self
+   end
+   
+   if typeInfo ~= nil then
+      return NormalTypeInfo.createModifier( typeInfo, false )
+   end
+   
+   return nil
+end
+
+function NormalTypeInfo:applyGeneric( gen2TypeMap )
+
+   local needNew = false
+   local fail = false
+   local function createGen( typeList )
+   
+      local typeInfoList = {}
+      for __index, srcType in pairs( typeList ) do
+         do
+            local typeInfo = srcType:applyGeneric( gen2TypeMap )
+            if typeInfo ~= nil then
+               table.insert( typeInfoList, typeInfo )
+               if srcType ~= typeInfo then
+                  needNew = true
+               end
+               
+            else
+               fail = true
+               break
+            end
+         end
+         
+      end
+      
+      return typeInfoList
+   end
+   
+   local itemTypeInfoList = createGen( self.itemTypeInfoList )
+   local argTypeInfoList = createGen( self.argTypeInfoList )
+   local retTypeInfoList = createGen( self.retTypeInfoList )
+   if fail then
+      return nil
+   end
+   
+   if not needNew then
+      return self
+   end
+   
+   do
+      local _switchExp = self:get_kind()
+      if _switchExp == TypeInfoKind.Set then
+         return NormalTypeInfo.createSet( self.accessMode, self.parentInfo, itemTypeInfoList )
+      elseif _switchExp == TypeInfoKind.List then
+         return NormalTypeInfo.createList( self.accessMode, self.parentInfo, itemTypeInfoList )
+      elseif _switchExp == TypeInfoKind.List then
+         return NormalTypeInfo.createArray( self.accessMode, self.parentInfo, itemTypeInfoList )
+      elseif _switchExp == TypeInfoKind.Map then
+         return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2] )
+      elseif _switchExp == TypeInfoKind.Func then
+         return NormalTypeInfo.createFunc( self.abstractFlag, false, self:get_scope(), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, argTypeInfoList, retTypeInfoList, self.mutable )
+      else 
+         
+            return nil
+      end
+   end
+   
 end
 
 local Filter = {}
@@ -10245,7 +10331,7 @@ function LiteralMapNode:getLiteral(  )
 
    local map = {}
    for key, val in pairs( self.map ) do
-      map[key:getLiteral(  )[1]] = val:getLiteral(  )[1]
+      map[_lune.unwrap( key:getLiteral(  )[1])] = val:getLiteral(  )[1]
    end
    
    return {map}, {self:get_expType(  )}

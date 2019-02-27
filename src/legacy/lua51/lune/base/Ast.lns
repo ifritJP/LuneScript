@@ -640,6 +640,10 @@ static な型か。
       }
       return name;
    }
+
+   pub fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      return self;
+   }
 }
 
 
@@ -674,7 +678,14 @@ pub class AliasTypeInfo extend TypeInfo {
    pub override fn getParentId(): int {
       return self.parentInfo.$typeId;
    }
-   
+
+   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      let typeInfo = self.aliasSrcTypeInfo.applyGeneric( gen2TypeMap );
+      if typeInfo == self.aliasSrcTypeInfo {
+         return self;
+      }
+      return nil;
+   }
 
    advertise aliasSrcTypeInfo;
 }
@@ -1308,6 +1319,17 @@ pub class NilableTypeInfo extend TypeInfo {
       return self.nonnilableType.equals( typeInfo );
    }
 
+   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      let typeInfo = self.nonnilableType.applyGeneric( gen2TypeMap );
+      if typeInfo == self.nonnilableType {
+         return self;
+      }
+      when! typeInfo {
+         return typeInfo.$nilableTypeInfo;
+      }
+      return nil;
+   }
+
    advertise nonnilableType;
 }
 
@@ -1328,6 +1350,16 @@ pub class GenericTypeInfo extend TypeInfo {
 
       idProv.increment();      
       self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
+   }
+
+   pub static fn createGen2TypeMap( validApply: bool ): Map<&TypeInfo,&TypeInfo> {
+      if validApply {
+         return { headTypeInfo: headTypeInfo };
+      }
+      return {};
+   }
+   pub static fn isValidApply( gen2Type:Map<&TypeInfo,&TypeInfo> ) : &TypeInfo! {
+      return gen2Type[ headTypeInfo ];
    }
 
    /** この型がモジュールを示す型の場合 true  */
@@ -1365,8 +1397,14 @@ pub class GenericTypeInfo extend TypeInfo {
       if self == other.$srcTypeInfo {
          return true;
       }
+      if other.$nilable {
+         return false;
+      }
       if! let genType = gen2type[ self ] {
          return genType.canEvalWith( other, opTxt, gen2type );
+      }
+      if not GenericTypeInfo.isValidApply( gen2type ) {
+         return false;
       }
       gen2type[ self ] = other;
       return true;
@@ -1428,6 +1466,10 @@ pub class GenericTypeInfo extend TypeInfo {
          '{ skind = %d, parentId = %d, typeId = %d, txt = %q }\n' (
             SerializeKind.Generic, parentId, self.typeId, self.txt ) );
    }
+
+   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      return gen2TypeMap[ self ];
+   }
 }
 
 
@@ -1438,8 +1480,8 @@ pub class ModifierTypeInfo extend TypeInfo {
    pri let mutable: bool { pub };
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
    {
       return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
    }
@@ -1465,7 +1507,6 @@ pub class ModifierTypeInfo extend TypeInfo {
    pub override fn get_display_stirng(): str {
       return self.get_display_stirng_with( self.$rawTxt );
    }
-   
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
@@ -1480,7 +1521,6 @@ pub class ModifierTypeInfo extend TypeInfo {
          return TypeInfo.canEvalWithBase(
             self.srcTypeInfo, self.mutable, other, opTxt, gen2type );
    }
-
 
    advertise srcTypeInfo;
 }
@@ -2215,7 +2255,7 @@ pub static fn NormalTypeInfo.createBuiltin(
 }
 
 pub static fn NormalTypeInfo.createSet(
-   accessMode: AccessMode, parentInfo: &TypeInfo, itemTypeInfo: List<&TypeInfo> ): &TypeInfo
+   accessMode: AccessMode, parentInfo: &TypeInfo, itemTypeInfo: &List<&TypeInfo> ): &TypeInfo
 {
    if #itemTypeInfo == 0 {
       Util.err( "illegal set type: %s" (itemTypeInfo) );
@@ -2228,7 +2268,7 @@ pub static fn NormalTypeInfo.createSet(
 }
 
 pub static fn NormalTypeInfo.createList(
-   accessMode: AccessMode, parentInfo: &TypeInfo, itemTypeInfo: List<&TypeInfo> ): &TypeInfo
+   accessMode: AccessMode, parentInfo: &TypeInfo, itemTypeInfo: &List<&TypeInfo> ): &TypeInfo
 {
    if #itemTypeInfo == 0 {
       Util.err( "illegal list type: %s" (itemTypeInfo) );
@@ -2242,7 +2282,7 @@ pub static fn NormalTypeInfo.createList(
 
 pub static fn NormalTypeInfo.createArray(
    accessMode: AccessMode,
-   parentInfo: &TypeInfo, itemTypeInfo: List<&TypeInfo> ): &TypeInfo
+   parentInfo: &TypeInfo, itemTypeInfo: &List<&TypeInfo> ): &TypeInfo
 {
    //   typeIdSeed = typeIdSeed + 1;
    idProv.increment();
@@ -2852,8 +2892,8 @@ expTypeList の型から、 dstTypeListOrg の型へ互換性があるかどう�
 @return Map<&TypeInfo,&TypeInfo> GenericTypeInfo → 実際に適応した型
 */
 pub static fn TypeInfo.checkMatchType(
-   dstTypeListOrg: &List<&TypeInfo>, expTypeList: &List<&TypeInfo>,
-   allowDstShort:bool, warnForFollowSrcIndex:int! ) :
+   dstTypeList: &List<&TypeInfo>, expTypeList: &List<&TypeInfo>,
+   allowDstShort:bool, warnForFollowSrcIndex:int!, gen2Type:Map<&TypeInfo,&TypeInfo> ) :
    MatchType, str, Map<&TypeInfo,&TypeInfo>
 {
    macro _checkWarnForFollow( index:sym, dstType:sym, expType:sym ) {
@@ -2865,36 +2905,6 @@ pub static fn TypeInfo.checkMatchType(
          }
       }
    }
-
-   let mut dstTypeList:List<&TypeInfo> = [];
-   let mut gen2Type:Map<&TypeInfo,&TypeInfo> = {};
-   {
-      // dstTypeListOrg から dstTypeList を生成する
-      foreach dstType, index in dstTypeListOrg {
-         dstTypeList.insert( dstType );
-         if dstType.$kind == .Generic {
-            if! let geneType = gen2Type[ dstType ] {
-               dstTypeList[ index ] = geneType;
-            }
-            else {
-               if #expTypeList >= index {
-                  let mut expType = expTypeList[ index ];
-                  if expType.$kind == .DDD {
-                     if #expType.$itemTypeInfoList > 0 {
-                        expType = expType.$itemTypeInfoList[ 1 ];
-                     }
-                     else {
-                        expType = builtinTypeStem;
-                     }
-                  }
-                  gen2Type[ dstType ] = expType;
-                  dstTypeList[ index ] = expType;
-               }
-            }
-         }
-      }
-   }
-
    
    // index 番以降の dstTypeList の要素が srcType, srcType2nd と等しいか調べる。
    // index 番目と srcType, index + 1 以降と srcType2nd を調べる。 
@@ -3160,9 +3170,9 @@ pub static fn TypeInfo.canEvalWithBase(
             return true;
          }  
          if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
-                                     false, nil ) == .Error or
+                                     false, nil, gen2Type ) == .Error or
             TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
-                                     false, nil ) == .Error or
+                                     false, nil, gen2Type ) == .Error or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
@@ -3171,9 +3181,9 @@ pub static fn TypeInfo.canEvalWithBase(
       }       
       case .Method {
          if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
-                                     false, nil ) == .Error or
+                                     false, nil, gen2Type ) == .Error or
             TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
-                                     false, nil ) == .Error or
+                                     false, nil, gen2Type ) == .Error or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
@@ -3196,6 +3206,85 @@ pub override fn NormalTypeInfo.canEvalWith(
    other:&TypeInfo, opTxt:str, gen2Type:Map<&TypeInfo,&TypeInfo> ) : bool {
    return TypeInfo.canEvalWithBase( self, self.$mutable, other, opTxt, gen2Type );
 }
+
+
+
+pub override fn ModifierTypeInfo.applyGeneric(
+   gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+{
+   let typeInfo = self.srcTypeInfo.applyGeneric( gen2TypeMap );
+   if typeInfo == self.srcTypeInfo {
+      return self;
+   }
+   when! typeInfo {
+      return NormalTypeInfo.createModifier( typeInfo, false );
+   }
+   return nil;
+}
+
+
+pub override fn NormalTypeInfo.applyGeneric(
+   gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+{
+   let mut needNew = false;
+   let mut fail = false;
+   fn createGen( typeList:&List<&TypeInfo> ): &List<&TypeInfo> {
+      let mut typeInfoList:List<&TypeInfo> = [];
+      foreach srcType in typeList {
+         if! let typeInfo = srcType.applyGeneric( gen2TypeMap ) {
+            typeInfoList.insert( typeInfo );
+            if srcType ~= typeInfo {
+               needNew = true;
+            }  
+         }
+         else {
+            fail = true;
+            break;
+         }     
+      }  
+      return typeInfoList;
+   }
+   
+   let itemTypeInfoList = createGen( self.itemTypeInfoList );
+   let argTypeInfoList = createGen( self.argTypeInfoList );
+   let retTypeInfoList = createGen( self.retTypeInfoList );
+   if fail {
+      return nil;
+   }
+   if not needNew {
+      return self;
+   }
+   switch self.$kind {
+      case .Set {
+         return NormalTypeInfo.createSet(
+            self.accessMode, self.parentInfo, itemTypeInfoList );
+      }
+      case .List {
+         return NormalTypeInfo.createList(
+            self.accessMode, self.parentInfo, itemTypeInfoList );
+      }
+      case .List {
+         return NormalTypeInfo.createArray(
+            self.accessMode, self.parentInfo, itemTypeInfoList );
+      }
+      case .Map {
+         return NormalTypeInfo.createMap(
+            self.accessMode, self.parentInfo,
+            itemTypeInfoList[ 1 ], itemTypeInfoList[ 2 ] );
+      }
+      case .Func {
+         return NormalTypeInfo.createFunc(
+            self.abstractFlag, false, self.$scope, self.kind,
+            self.parentInfo, self.autoFlag, self.externalFlag,
+            self.staticFlag, self.accessMode, self.rawTxt,
+            argTypeInfoList, retTypeInfoList, self.mutable );
+      }
+      default {
+         return nil;
+      }
+   }
+}
+
 
 
 pub class Filter {
@@ -4465,9 +4554,9 @@ pub override fn LiteralSetNode.getLiteral(): stem![], List<&TypeInfo> {
 }
 
 pub override fn LiteralMapNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut map:Map<str,stem!> = {};
+   let mut map:Map<stem,stem!> = {};
    foreach val, key in self.map {
-      map[ key.getLiteral()[1] ] = val.getLiteral()[1];
+      map[ unwrap key.getLiteral()[1] ] = val.getLiteral()[1];
    }
    return [map], [self.get_expType()];
 }

@@ -1862,7 +1862,7 @@ fn TransUnit.analyzeDeclFunc(
 
       if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
          let matchFlag, err = Ast.TypeInfo.checkMatchType(
-            prottype.$argTypeInfoList, argTypeList, false, nil );
+            prottype.$argTypeInfoList, argTypeList, false, nil, {} );
          if matchFlag ~= .Match {
             self.addErrMess( name.pos, "mismatch functype: " .. err );
          }

@@ -1,0 +1,43 @@
+{
+   fn func<T>( val:Map<int,T> ): T! {
+      return 1; // error
+   }
+}
+{
+   fn func<T>( val:Map<int,T> ): T {
+      return val; // error
+   }
+}
+{
+   fn func<T>( val:Map<int,T> ): T {
+      return val[ 1 ]; // error
+   }
+}
+{
+   fn func<T>( val:Map<int,T> ): T! {
+      return val[ 1 ];
+   }
+}
+{
+   fn sub<T1,T2>( val1:T1, val2:T2 ):T2, T1 {
+      return val2, val1;
+   }
+   fn func<T1,T2>( val1:T1, val2:T2 ): T1 {
+      let val3, val4 = sub( val1, val2 );
+      return val4;
+   }
+   print( func( 1, "a" ) );
+   func( 1 ); // error
+   func( 1, 2 );
+   func( 1, 2, 3 ); // error
+}
+{
+   fn sub<T1,T2>( val1:T1, val2:T2 ):T2, T1 {
+      return val1, val2; // error
+   }
+}
+{
+   fn sub<T>( val:T ):TT { // error
+      return val;
+   }
+}

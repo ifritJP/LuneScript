@@ -1,0 +1,86 @@
+local _moduleObj = {}
+----- meta -----
+_moduleObj.__version = '1.0.3'
+_moduleObj.__formatVersion = '1.0.25'
+_moduleObj.__buildId = "1551270238.000000:1"
+local __typeId2ClassInfoMap = {}
+_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
+do
+   local __classInfo1001 = {}
+   __typeId2ClassInfoMap[ 1001 ] = __classInfo1001
+end
+do
+   local __classInfo1003 = {}
+   __typeId2ClassInfoMap[ 1003 ] = __classInfo1003
+end
+local __macroName2InfoMap = {}
+_moduleObj.__macroName2InfoMap = __macroName2InfoMap
+local __varName2InfoMap = {}
+_moduleObj.__varName2InfoMap = __varName2InfoMap
+local __typeInfoList = {}
+_moduleObj.__typeInfoList = __typeInfoList
+local __dependIdMap = {}
+_moduleObj.__dependIdMap = __dependIdMap
+__typeInfoList[1] = { skind = 0, parentId = 1, typeId = 19, nilable = true, orgTypeId = 18 }
+__typeInfoList[2] = { skind = 2, parentId = 1, typeId = 1001, txt = 'lune', kind = 12, 
+children = {1003, } }
+__typeInfoList[3] = { skind = 2, parentId = 1001, typeId = 1003, txt = 'Util', kind = 12, 
+children = {1016, 1036, 1056, 1070, } }
+__typeInfoList[4] = { skind = 8, parentId = 1003, typeId = 1005, txt = "T" }
+__typeInfoList[5] = { skind = 0, parentId = 1003, typeId = 1006, nilable = true, orgTypeId = 1005 }
+__typeInfoList[6] = { skind=3, parentId = 1, typeId = 1007, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1005}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[7] = { skind = 0, parentId = 1, typeId = 1008, nilable = true, orgTypeId = 1007 }
+__typeInfoList[8] = { skind=3, parentId = 1, typeId = 1010, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1005}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[9] = { skind = 0, parentId = 1, typeId = 1011, nilable = true, orgTypeId = 1010 }
+__typeInfoList[10] = { skind=3, parentId = 1, typeId = 1013, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1005}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[11] = { skind = 0, parentId = 1, typeId = 1014, nilable = true, orgTypeId = 1013 }
+__typeInfoList[12] = { skind=3, parentId = 1003, typeId = 1016, baseId = 1, txt = 'SetOr',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1007, 1010}, retTypeId = {1013}, children = {}, }
+__typeInfoList[13] = { skind = 0, parentId = 1003, typeId = 1017, nilable = true, orgTypeId = 1016 }
+__typeInfoList[14] = { skind = 8, parentId = 1003, typeId = 1025, txt = "T" }
+__typeInfoList[15] = { skind = 0, parentId = 1003, typeId = 1026, nilable = true, orgTypeId = 1025 }
+__typeInfoList[16] = { skind=3, parentId = 1, typeId = 1027, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1025}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[17] = { skind = 0, parentId = 1, typeId = 1028, nilable = true, orgTypeId = 1027 }
+__typeInfoList[18] = { skind=3, parentId = 1, typeId = 1030, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1025}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[19] = { skind = 0, parentId = 1, typeId = 1031, nilable = true, orgTypeId = 1030 }
+__typeInfoList[20] = { skind=3, parentId = 1, typeId = 1033, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1025}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[21] = { skind = 0, parentId = 1, typeId = 1034, nilable = true, orgTypeId = 1033 }
+__typeInfoList[22] = { skind=3, parentId = 1003, typeId = 1036, baseId = 1, txt = 'SetAnd',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1027, 1030}, retTypeId = {1033}, children = {}, }
+__typeInfoList[23] = { skind = 0, parentId = 1003, typeId = 1037, nilable = true, orgTypeId = 1036 }
+__typeInfoList[24] = { skind = 8, parentId = 1003, typeId = 1045, txt = "T" }
+__typeInfoList[25] = { skind = 0, parentId = 1003, typeId = 1046, nilable = true, orgTypeId = 1045 }
+__typeInfoList[26] = { skind=3, parentId = 1, typeId = 1047, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1045}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[27] = { skind = 0, parentId = 1, typeId = 1048, nilable = true, orgTypeId = 1047 }
+__typeInfoList[28] = { skind=3, parentId = 1, typeId = 1050, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1045}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[29] = { skind = 0, parentId = 1, typeId = 1051, nilable = true, orgTypeId = 1050 }
+__typeInfoList[30] = { skind=3, parentId = 1, typeId = 1053, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1045}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[31] = { skind = 0, parentId = 1, typeId = 1054, nilable = true, orgTypeId = 1053 }
+__typeInfoList[32] = { skind=3, parentId = 1003, typeId = 1056, baseId = 1, txt = 'SetSub',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1047, 1050}, retTypeId = {1053}, children = {}, }
+__typeInfoList[33] = { skind = 0, parentId = 1003, typeId = 1057, nilable = true, orgTypeId = 1056 }
+__typeInfoList[34] = { skind = 8, parentId = 1003, typeId = 1065, txt = "T" }
+__typeInfoList[35] = { skind = 0, parentId = 1003, typeId = 1066, nilable = true, orgTypeId = 1065 }
+__typeInfoList[36] = { skind=3, parentId = 1, typeId = 1067, baseId = 1, txt = 'Set',
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 17, mutable = true, itemTypeId = {1065}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+__typeInfoList[37] = { skind = 0, parentId = 1, typeId = 1068, nilable = true, orgTypeId = 1067 }
+__typeInfoList[38] = { skind=3, parentId = 1003, typeId = 1070, baseId = 1, txt = 'SetLen',
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1067}, retTypeId = {18}, children = {}, }
+__typeInfoList[39] = { skind = 0, parentId = 1003, typeId = 1071, nilable = true, orgTypeId = 1070 }
+local __dependModuleMap = {}
+_moduleObj.__dependModuleMap = __dependModuleMap
+_moduleObj.__subModuleMap = {}
+_moduleObj.__moduleTypeId = 1003
+_moduleObj.__moduleSymbolKind = 0
+_moduleObj.__moduleMutable = true
+----- meta -----
+return _moduleObj

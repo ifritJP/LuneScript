@@ -71,7 +71,7 @@ class convFilter extend Ast.Filter (oStream) {
    // クラス TypeId → TypeInfo
    pri let mut classId2TypeInfo: Map<int,&Ast.TypeInfo>;
    // クラス TypeId → Member Node List
-   pri let mut classId2MemberList: Map<str,List<&Ast.DeclMemberNode>>;
+   pri let mut classId2MemberList: Map<int,List<&Ast.DeclMemberNode>>;
    // enum TypeId -> EnumTypeInfo
    pri let mut pubEnumId2EnumTypeInfo: Map<int,&Ast.EnumTypeInfo>;
    // enum TypeId -> AlgeTypeInfo

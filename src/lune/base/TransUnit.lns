@@ -156,7 +156,7 @@ pub class TransUnit {
 
    pri let ctrl_info: &Option.TransCtrlInfo;
 
-   pri let mut useModuleMacroMap:Map<Ast.TypeInfo,bool>;
+   pri let mut useModuleMacroMap:Map<&Ast.TypeInfo,bool>;
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
@@ -436,7 +436,7 @@ regOpLevel( 1, [@ "not", "#", "-", "~" ] );
 regOpLevel( 1, [@ "^" ] );
 
 
-let mut quotedChar2Code:Map<int,int> = {};
+let mut quotedChar2Code:Map<str,int> = {};
 quotedChar2Code[ 'a' ] = 7;    // \a
 quotedChar2Code[ 'b' ] = 8;    // \b
 quotedChar2Code[ 't' ] = 9;    // \t
@@ -467,7 +467,7 @@ pub class _MetaInfo {
    pub let __moduleMutable: bool;
    pub let __dependModuleMap: Map<str,Map<str,stem>>;
    pub let __dependIdMap: Map<int,int[]>;
-   pub let __macroName2InfoMap: Map<str,stem>;
+   pub let __macroName2InfoMap: Map<int,stem>;
 }
 
 class MacroMetaArgInfo extend (Mapping) {
@@ -1109,6 +1109,9 @@ fn TransUnit.registBuiltInScope() mut {
             "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },
             "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
             "dump": { "arg": [ "form", "bool!" ], "ret": ["str"] },
+            "lower": { "arg": [ "str" ], "ret": ["str"] },
+            "upper": { "arg": [ "str" ], "ret": ["str"] },
+            "reverse": { "arg": [ "str" ], "ret": ["str"] },
          },
       },
       {
@@ -1120,6 +1123,9 @@ fn TransUnit.registBuiltInScope() mut {
             "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["form", "stem!", "stem!"] },
             "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str", "int"] },
             "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
+            "lower": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+            "upper": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+            "reverse": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
          },
       },
       { 
@@ -2011,13 +2017,17 @@ fn TransUnit.processImport( modulePath:str ) mut :
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
-                  let typeId = fieldInfo.typeId;
-                  let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId ];
-                  self.scope.addMember(
-                     fieldName, fieldTypeInfo,
-                     unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
-                     unwrap fieldInfo.staticFlag default false,
-                     unwrap fieldInfo.mutable default false );
+                  if! let typeId = fieldInfo.typeId {
+                     let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId@@int ];
+                     self.scope.addMember(
+                        fieldName, fieldTypeInfo,
+                        unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
+                        unwrap fieldInfo.staticFlag default false,
+                        unwrap fieldInfo.mutable default false );
+                  }
+                  else {
+                     self.error( "not found fieldInfo.typeId" );
+                  }
                }  
             }  
             else {
@@ -2069,9 +2079,14 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 変数登録
    foreach varInfo, varName in metaInfo.__varName2InfoMap {
-      self.scope.addStaticVar(
-         false, true, varName, unwrap typeId2TypeInfo[ varInfo.typeId ],
-         unwrap varInfo.mutable default false );
+      if! let typeId = varInfo.typeId {
+         self.scope.addStaticVar(
+            false, true, varName, unwrap typeId2TypeInfo[ typeId@@int ],
+            unwrap varInfo.mutable default false );
+      }
+      else {
+         self.error( "illegal varInfo.typeId" );
+      }     
    }
 
    // マクロ登録
@@ -2453,25 +2468,25 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Ast.ForNode {
    }
    self.checkNextToken( "=" );
    let exp1 = self.analyzeExp( false## );
-   if not exp1.$expType.equals( Ast.builtinTypeInt ) {
+   if not Ast.isNumberType( exp1.$expType ) {
       self.addErrMess( exp1.$pos,
-                       "exp1 is not int -- %s" (exp1.$expType.getTxt(##)) );
+                       "exp1 is not number -- %s" (exp1.$expType.getTxt(##)) );
    }
    self.addLocalVar( exp1.$pos, false, true, val.txt, exp1.$expType, false## );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExp( false## );
-   if not exp2.$expType.equals( Ast.builtinTypeInt ) {
+   if not Ast.isNumberType( exp2.$expType ) {
       self.addErrMess( exp2.$pos,
-                       "exp2 is not int -- %s" (exp2.$expType.getTxt(##)) );
+                       "exp2 is not number -- %s" (exp2.$expType.getTxt(##)) );
    }
    let token = self.getToken(##);
    let mut exp3:Ast.Node! = nil;
    if token.txt == "," {
       exp3 = self.analyzeExp( false## );
       if! exp3 {
-         if not _exp.$expType.equals( Ast.builtinTypeInt ) {
+         if not Ast.isNumberType( _exp.$expType ) {
             self.addErrMess( _exp.$pos,
-                             "exp is not int -- %s" (_exp.$expType.getTxt(##)) );
+                             "exp is not number -- %s" (_exp.$expType.getTxt(##)) );
          }  
       } 
       
