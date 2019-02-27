@@ -451,6 +451,7 @@ ifndef ACCEPT
 endif
 	cp work/3/lune/base/*.lua lune/base/
 	cp work/3/lune/base/*.meta lune/base/
+	cp work/3/lune/*.* lune/
 ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.lns legacy/lua51/lune/base/
 	cp work/6/lune/base/*.lua legacy/lua51/lune/base/
