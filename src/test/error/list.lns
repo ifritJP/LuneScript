@@ -27,6 +27,7 @@
    let mut val:int![] = [];
    val.insert( 1 );
    val.insert( nil ); // error
+   val.insert( "a" ); // error
    val.remove(##);    // warn
 }
 {

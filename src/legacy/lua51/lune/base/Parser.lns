@@ -24,72 +24,72 @@ SOFTWARE.
 
 import lune.base.Util;
 
-let mut luaKeywordSet:Map<str,bool> = {};
-luaKeywordSet[ "let" ] = true;
-luaKeywordSet[ "if" ] = true;
-luaKeywordSet[ "else" ] = true;
-luaKeywordSet[ "elseif" ] = true;
-luaKeywordSet[ "while" ] = true;
-luaKeywordSet[ "for" ] = true;
-luaKeywordSet[ "in" ] = true;
-luaKeywordSet[ "return" ] = true;
-luaKeywordSet[ "break" ] = true;
-luaKeywordSet[ "nil" ] = true;
-luaKeywordSet[ "true" ] = true;
-luaKeywordSet[ "false" ] = true;
-luaKeywordSet[ "{" ] = true;
-luaKeywordSet[ "}" ] = true;
-luaKeywordSet[ "do" ] = true;
-luaKeywordSet[ "require" ] = true;
-luaKeywordSet[ "function" ] = true;
-luaKeywordSet[ "then" ] = true;
-luaKeywordSet[ "until" ] = true;
+let mut luaKeywordSet:Set<str> = (@);
+luaKeywordSet.add( "let" );
+luaKeywordSet.add( "if" );
+luaKeywordSet.add( "else" );
+luaKeywordSet.add( "elseif" );
+luaKeywordSet.add( "while" );
+luaKeywordSet.add( "for" );
+luaKeywordSet.add( "in" );
+luaKeywordSet.add( "return" );
+luaKeywordSet.add( "break" );
+luaKeywordSet.add( "nil" );
+luaKeywordSet.add( "true" );
+luaKeywordSet.add( "false" );
+luaKeywordSet.add( "{" );
+luaKeywordSet.add( "}" );
+luaKeywordSet.add( "do" );
+luaKeywordSet.add( "require" );
+luaKeywordSet.add( "function" );
+luaKeywordSet.add( "then" );
+luaKeywordSet.add( "until" );
 
-pub fn isLuaKeyword( txt:str ) : bool! {
-   return luaKeywordSet[ txt ];
+pub fn isLuaKeyword( txt:str ) : bool {
+   return luaKeywordSet.has( txt );
 }
 
 
 fn createReserveInfo( luaMode: bool! ) :
-   Map<str,bool>, Map<str,bool>, Map<str,bool>, Map<str,str[@]> {
-      let mut keywordSet:Map<str,bool> = {};
-      let mut typeSet:Map<str,bool> = {};
-      let mut builtInSet:Map<str,bool> = {};
+   Set<str>, Set<str>, Set<str>, Map<str,str[@]> {
+      let mut keywordSet:Set<str> = (@);
+      let mut typeSet:Set<str> = (@);
+      let mut builtInSet:Set<str> = (@);
 
-      builtInSet[ "require" ] = true;
-      foreach val, key in luaKeywordSet {
-         if not builtInSet[ key ] {
-            keywordSet[ key ] = true;
+      builtInSet.add( "require" );
+      foreach key in luaKeywordSet {
+         if not builtInSet.has( key ) {
+            keywordSet.add( key );
          }
       } 
 
 
       if not luaMode {
-         keywordSet[ "null" ] = true;
-         keywordSet[ "let" ] = true;
-         keywordSet[ "mut" ] = true;
-         keywordSet[ "pub" ] = true;
-         keywordSet[ "pro" ] = true;
-         keywordSet[ "pri" ] = true;
-         keywordSet[ "fn" ] = true;
-         keywordSet[ "each" ] = true;
-         keywordSet[ "form" ] = true;
-         keywordSet[ "class" ] = true;
-         builtInSet[ "super" ] = true;
-         keywordSet[ "static" ] = true;
-         keywordSet[ "advertise" ] = true;
-         keywordSet[ "import" ] = true;
-         keywordSet[ "new" ] = true;
-         keywordSet[ "!" ] = true;
-         keywordSet[ "unwrap" ] = true;
-         keywordSet[ "sync" ] = true;
+         keywordSet.add( "null" );
+         keywordSet.add( "let" );
+         keywordSet.add( "mut" );
+         keywordSet.add( "pub" );
+         keywordSet.add( "pro" );
+         keywordSet.add( "pri" );
+         keywordSet.add( "fn" );
+         keywordSet.add( "each" );
+         keywordSet.add( "form" );
+         keywordSet.add( "class" );
+         builtInSet.add( "super" );
+         keywordSet.add( "static" );
+         keywordSet.add( "advertise" );
+         keywordSet.add( "import" );
+         keywordSet.add( "new" );
+         keywordSet.add( "!" );
+         keywordSet.add( "unwrap" );
+         keywordSet.add( "sync" );
 
-         typeSet[ "int" ] = true;
-         typeSet[ "real" ] = true;
-         typeSet[ "stem" ] = true;
-         typeSet[ "str" ] = true;
-         typeSet[ "Map" ] = true;
-         typeSet[ "bool" ] = true;
+         typeSet.add( "int" );
+         typeSet.add( "real" );
+         typeSet.add( "stem" );
+         typeSet.add( "str" );
+         typeSet.add( "Map" );
+         typeSet.add( "bool" );
       } 
 
       // 2文字以上の演算子
@@ -266,9 +266,9 @@ pub class StreamParser extend Parser {
    let mut prevToken: &Token;
    let mut pos : int;
    let mut lineTokenList : Token[];
-   let keywordSet : Map<str,bool>;
-   let typeSet : Map<str,bool>;
-   let builtInSet :Map<str,bool>;
+   let keywordSet : Set<str>;
+   let typeSet : Set<str>;
+   let builtInSet :Set<str>;
    let multiCharDelimitMap : Map<str,str[@]>;
    pub fn __init( stream: iStream, name: str, luaMode: bool! ) {
       super();
@@ -308,103 +308,65 @@ pub class StreamParser extend Parser {
    pub override fn getToken() mut : &Token!;
 }
 
-// macro _declTokenKind( name_array:str[@] ) {
-//    {
-//       let mut field_array: stat[] = [];
-//       let mut stat_array: stat[] = [];
-//       let mut init_array: stat[] = [];
-//       foreach name, index in name_array {
-//          field_array.insert( `{
-//             pub static let ,,,name:int;
-//          });
-//          init_array.insert( `{
-//             TokenKind.,,,name = ,,index;
-//          });
-//          stat_array.insert( `{
-//             kind2Txt[ ,,index ] = ,,name;
-//             pub let ,,,"kind%s" (name) = ,,index;
-//          });
-//       }
-//    }  
-//    pub class TokenKind {
-//       ,,field_array;
-//       __init {
-//          ,,init_array;
-//       }
-//    }
-//    ,,stat_array;
-// }
+let mut quotedCharSet:Set<str> = (@);
+quotedCharSet.add( 'a' );
+quotedCharSet.add( 'b' );
+quotedCharSet.add( 'f' );
+quotedCharSet.add( 'n' );
+quotedCharSet.add( 'r' );
+quotedCharSet.add( 't' );
+quotedCharSet.add( 'v' );
+quotedCharSet.add( '\\' );
+quotedCharSet.add( '"' );
+quotedCharSet.add( "'" );
 
 
-// let mut kind2Txt:Map<str,str> = {};
+let mut op2Set:Set<str> = (@);
+op2Set.add( '+' );
+op2Set.add( '-' );
+op2Set.add( '*' );
+op2Set.add( '/' );
+op2Set.add( '^' );
+op2Set.add( '%' );
+op2Set.add( '&' );
+op2Set.add( '~' );
+op2Set.add( '|' );
+op2Set.add( '|>>' );
+op2Set.add( '|<<' );
+op2Set.add( '..' );
+op2Set.add( '<' );
+op2Set.add( '<=' );
+op2Set.add( '>' );
+op2Set.add( '>=' );
+op2Set.add( '==' );
+op2Set.add( '~=' );
+op2Set.add( 'and' );
+op2Set.add( 'or' );
+op2Set.add( '@' );
+op2Set.add( '=' );
 
-// _declTokenKind(
-//    [@ "Cmnt", "Str", "Int", "Real", "Char", 
-//      "Symb", "Dlmt", "Kywd", "Ope", "Type", "Eof" ] );
-
-//pub let kind = new TokenKind();
-
-
-
-let mut quotedCharSet:Map<str,bool> = {};
-quotedCharSet[ 'a' ] = true;
-quotedCharSet[ 'b' ] = true;
-quotedCharSet[ 'f' ] = true;
-quotedCharSet[ 'n' ] = true;
-quotedCharSet[ 'r' ] = true;
-quotedCharSet[ 't' ] = true;
-quotedCharSet[ 'v' ] = true;
-quotedCharSet[ '\\' ] = true;
-quotedCharSet[ '"' ] = true;
-quotedCharSet[ "'" ] = true;
-
-
-let mut op2Set:Map<str,bool> = {};
-op2Set[ '+' ] = true;
-op2Set[ '-' ] = true;
-op2Set[ '*' ] = true;
-op2Set[ '/' ] = true;
-op2Set[ '^' ] = true;
-op2Set[ '%' ] = true;
-op2Set[ '&' ] = true;
-op2Set[ '~' ] = true;
-op2Set[ '|' ] = true;
-op2Set[ '|>>' ] = true;
-op2Set[ '|<<' ] = true;
-op2Set[ '..' ] = true;
-op2Set[ '<' ] = true;
-op2Set[ '<=' ] = true;
-op2Set[ '>' ] = true;
-op2Set[ '>=' ] = true;
-op2Set[ '==' ] = true;
-op2Set[ '~=' ] = true;
-op2Set[ 'and' ] = true;
-op2Set[ 'or' ] = true;
-op2Set[ '@' ] = true;
-op2Set[ '=' ] = true;
-
-let mut op1Set:Map<str,bool> = {};
-op1Set[ '-' ] = true;
-op1Set[ 'not' ] = true;
-op1Set[ '#' ] = true;
-op1Set[ '~' ] = true;
-op1Set[ '*' ] = true;
-op1Set[ '`' ] = true;
-op1Set[ ',,' ] = true;
-op1Set[ ',,,' ] = true;
-op1Set[ ',,,,' ] = true;
+let mut op1Set:Set<str> = (@);
+op1Set.add( '-' );
+op1Set.add( 'not' );
+op1Set.add( '#' );
+op1Set.add( '~' );
+op1Set.add( '*' );
+op1Set.add( '`' );
+op1Set.add( ',,' );
+op1Set.add( ',,,' );
+op1Set.add( ',,,,' );
 
 
 // pub static fn getKindTxt( kind: int ) : str {
 //    return unwrap kind2Txt[ kind ];
 // }
 
-pub static fn isOp2( ope: str ) : stem! {
-   return op2Set[ ope ];
+pub static fn isOp2( ope: str ) : bool {
+   return op2Set.has( ope );
 }
 
-pub static fn isOp1( ope: str ) : stem! {
-   return op1Set[ ope ];
+pub static fn isOp1( ope: str ) : bool {
+   return op1Set.has( ope );
 }
 
 fn StreamParser.parse() mut : Token[]! {
@@ -460,13 +422,13 @@ fn StreamParser.parse() mut : Token[]! {
    let addVal = fn ( kind: TokenKind, val: str, column: int ) {
       fn createInfo( mut tokenKind: TokenKind, token: str, tokenColumn: int ): Token {
          if tokenKind == .Symb {
-            if self.keywordSet[ token ] {
+            if self.keywordSet.has( token ) {
                tokenKind = .Kywd;
             }
-            elseif self.typeSet[ token ] {
+            elseif self.typeSet.has( token ) {
                tokenKind = .Type;
             }
-            elseif op2Set[ token ] or op1Set[ token ] {
+            elseif op2Set.has( token ) or op1Set.has( token ) {
                tokenKind = .Ope;
             }
          }
@@ -585,7 +547,7 @@ fn StreamParser.parse() mut : Token[]! {
                      startIndex = index + #delimit;
 
                      let mut workKind = TokenKind.Dlmt;
-                     if op2Set[ delimit ] or op1Set[ delimit ] {
+                     if op2Set.has( delimit ) or op1Set.has( delimit ) {
                         workKind = .Ope;
                      }
                      if delimit == "..." {
@@ -728,7 +690,7 @@ fn StreamParser.parse() mut : Token[]! {
             let mut codeChar = rawLine.sub( index + 1, index + 1 );
             if nextChar == ?\\ {
                let quoted = rawLine.sub( index + 2, index + 2 );
-               if quotedCharSet[ quoted ] {
+               if quotedCharSet.has( quoted ) {
                   codeChar = rawLine.sub( index + 1, index + 2 );
                }
                else {

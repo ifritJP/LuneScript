@@ -41,10 +41,10 @@ pub class LuaVerInfo {
    let loadStrFuncName: str {pub};
    let canUseMetaGc: bool {pub};
    let loadKind: LuaMod.CodeKind;
-   let noSupportSymMap: &Map<str,bool>;
+   let noSupportSymMap: &Set<str>;
 
    pub fn isSupport( symbol:str ): bool {
-      return not self.noSupportSymMap[ symbol ];
+      return not self.noSupportSymMap.has( symbol );
    }
 
    pub fn getLoadCode(): str {
@@ -52,22 +52,13 @@ pub class LuaVerInfo {
    }
 }
 
-fn symbolList2Map( list:List<str> ): &Map<str,bool>
-{
-   let mut map:Map<str,bool> = {};
-   foreach name in list {
-      map[ name ] = true;
-   }
-   return map;
-}
-
 pub let ver51 = new LuaVerInfo( .Cant, false, false, false, "loadstring51",
-                                false, .LoadStr51,                     
-                                symbolList2Map( [ "package.searchpath" ]));
+                                false, .LoadStr51,
+                                (@ "package.searchpath" ));
 pub let ver52 = new LuaVerInfo( .HasMod, true, true, true, "loadstring52",
-                                true, .LoadStr52, {} );               
+                                true, .LoadStr52, (@) );
 pub let ver53 = new LuaVerInfo( .HasOp, true, true, true, "loadstring52",
-                                true, .LoadStr52, {} );               
+                                true, .LoadStr52, (@) );
 
 fn getCurrentVer(): &LuaVerInfo {
    let luaVer = _VERSION.gsub( "^[^%d]+", "" );

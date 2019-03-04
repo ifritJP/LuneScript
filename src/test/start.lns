@@ -832,15 +832,35 @@ SUB2._test( .val2 );
    }
 }
 {
+   let mut set1 = (@  1, 2, 3 );
+   let set2 = (@  2, 3, 4 );
+   macro _dumpSet( setExp:stat ) {
+      {  
+      }  
+      {  
+         print( "===== %s" (,,,,setExp) );
+         let set = ,,setExp;
+         foreach val in set {
+            print( val + 10 );
+         }  
+      }
+   }  
+
+   _dumpSet( `{ set1.clone().or(set2) } );
+   _dumpSet( `{ set1.clone().and(set2) } );
+   _dumpSet( `{ set1.clone().sub(set2) } );
+   print( "len:", set1.len() );
+}
+{
    let mut set:Set<int> = (@);
    set.add( 1 + 2 );
    foreach val in set {
       print( val );
    }
-   if set[ 3 ] {
+   if set.has( 3 ) {
       print( "exist 3" );
    }
-   if not set[ 1 ] {
+   if not set.has( 1 ) {
       print( "not exist 1" );
    }
    set.del( 3 );

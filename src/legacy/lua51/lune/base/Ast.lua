@@ -4,6 +4,76 @@ local __mod__ = 'lune.base.Ast'
 if not _lune then
    _lune = {}
 end
+function _lune._Set_or( setObj, otherSet )
+   for val in pairs( otherSet ) do
+      setObj[ val ] = true
+   end
+   return setObj
+end
+function _lune._Set_and( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if not otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_has( setObj, val )
+   return setObj[ val ] ~= nil
+end
+function _lune._Set_sub( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_len( setObj )
+   local total = 0
+   for val in pairs( setObj ) do
+      total = total + 1
+   end
+   return total
+end
+function _lune._Set_clone( setObj )
+   local obj = {}
+   for val in pairs( setObj ) do
+      obj[ val ] = true
+   end
+   return obj
+end
+
+function _lune._toSet( val, toKeyInfo )
+   if type( val ) == "table" then
+      local tbl = {}
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal = _lune._toBool( mem )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
+end
+
 if not table.unpack then
    table.unpack = unpack
 end
@@ -617,7 +687,6 @@ function TypeInfo.new( scope )
 end
 function TypeInfo:__init(scope) 
    typeInfo2ScopeMap[self] = scope
-   self.scope = scope
    do
       local _exp = scope
       if _exp ~= nil then
@@ -1009,6 +1078,10 @@ function AliasTypeInfo:getParentFullName( ... )
    return self.aliasSrcTypeInfo:getParentFullName( ... )
 end       
 
+function AliasTypeInfo:createGen2TypeMap( ... )
+   return self.aliasSrcTypeInfo:createGen2TypeMap( ... )
+end       
+
 function AliasTypeInfo:getFullName( ... )
    return self.aliasSrcTypeInfo:getFullName( ... )
 end       
@@ -1353,11 +1426,11 @@ local function dumpScopeSub( scope, prefix, readyIdSet )
    do
       local _exp = scope
       if _exp ~= nil then
-         if readyIdSet[_exp] then
+         if _lune._Set_has(readyIdSet, _exp ) then
             return 
          end
          
-         readyIdSet[_exp] = true
+         readyIdSet[_exp]= true
          if #prefix > 20 then
             Util.err( "illegal" )
          end
@@ -1397,6 +1470,11 @@ end
 
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.headTypeInfo = headTypeInfo
+
+function TypeInfo:createGen2TypeMap(  )
+
+   return {[_moduleObj.headTypeInfo] = _moduleObj.headTypeInfo}
+end
 
 local NilTypeInfo = {}
 setmetatable( NilTypeInfo, { __index = TypeInfo } )
@@ -1851,6 +1929,10 @@ function NilableTypeInfo:getParentFullName( ... )
    return self.nonnilableType:getParentFullName( ... )
 end       
 
+function NilableTypeInfo:createGen2TypeMap( ... )
+   return self.nonnilableType:createGen2TypeMap( ... )
+end       
+
 function NilableTypeInfo:getFullName( ... )
    return self.nonnilableType:getFullName( ... )
 end       
@@ -1875,12 +1957,8 @@ function GenericTypeInfo:__init(txt, moduleTypeInfo)
    idProv:increment(  )
    self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
 end
-function GenericTypeInfo.createGen2TypeMap( validApply )
+function GenericTypeInfo.createNoneGen2TypeMap(  )
 
-   if validApply then
-      return {[_moduleObj.headTypeInfo] = _moduleObj.headTypeInfo}
-   end
-   
    return {}
 end
 function GenericTypeInfo.isValidApply( gen2Type )
@@ -2164,6 +2242,10 @@ end
 
 function ModifierTypeInfo:getParentFullName( ... )
    return self.srcTypeInfo:getParentFullName( ... )
+end       
+
+function ModifierTypeInfo:createGen2TypeMap( ... )
+   return self.srcTypeInfo:createGen2TypeMap( ... )
 end       
 
 function ModifierTypeInfo:getFullName( ... )
@@ -2569,6 +2651,32 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
    self.mutable = mutable and true or false
+   local function setupGen2TypeMap(  )
+   
+      if self.baseTypeInfo == _moduleObj.headTypeInfo then
+         return {}
+      end
+      
+      local gen2TypeMap = {}
+      do
+         local _switchExp = kind
+         if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array then
+            if #self.itemTypeInfoList ~= #self.baseTypeInfo:get_itemTypeInfoList() then
+               Util.err( string.format( "unmatch generic type number -- %d, %d", #self.itemTypeInfoList, #self.baseTypeInfo:get_itemTypeInfoList()) )
+            end
+            
+            for index, appyType in pairs( self.itemTypeInfoList ) do
+               local genType = self.baseTypeInfo:get_itemTypeInfoList()[index]
+               gen2TypeMap[genType] = appyType
+            end
+            
+         end
+      end
+      
+      return gen2TypeMap
+   end
+   
+   self.gen2TypeMap = setupGen2TypeMap(  )
    self.typeId = typeId
    if kind == TypeInfoKind.Root then
    else
@@ -2598,6 +2706,15 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
       idProv:increment(  )
    end
    
+end
+function NormalTypeInfo:createGen2TypeMap(  )
+
+   local map = {[_moduleObj.headTypeInfo] = _moduleObj.headTypeInfo}
+   for genType, typeInfo in pairs( self.gen2TypeMap ) do
+      map[genType] = typeInfo
+   end
+   
+   return map
 end
 function NormalTypeInfo:get_nilable(  )
 
@@ -2840,6 +2957,11 @@ function NormalTypeInfo:get_mutable()
    return self.mutable         
 end
 
+function NormalTypeInfo.createGeneric( txt, moduleTypeInfo )
+
+   return GenericTypeInfo.new(txt, moduleTypeInfo)
+end
+
 idProv:increment(  )
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo )
 
@@ -2884,7 +3006,18 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
       end
    end
    
-   local info = NormalTypeInfo.new(false, scope, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, {}, argTypeList, retTypeList, true)
+   local genTypeList = {}
+   do
+      local _switchExp = kind
+      if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set then
+         table.insert( genTypeList, NormalTypeInfo.createGeneric( "T", _moduleObj.headTypeInfo ) )
+      elseif _switchExp == TypeInfoKind.Map then
+         table.insert( genTypeList, NormalTypeInfo.createGeneric( "K", _moduleObj.headTypeInfo ) )
+         table.insert( genTypeList, NormalTypeInfo.createGeneric( "V", _moduleObj.headTypeInfo ) )
+      end
+   end
+   
+   local info = NormalTypeInfo.new(false, scope, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, true)
    if scope then
       _moduleObj.rootScope:addClass( typeTxt, info )
    end
@@ -2893,6 +3026,45 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
    return info
 end
 
+local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
+_moduleObj.builtinTypeNone = builtinTypeNone
+
+local builtinTypeNeverRet = NormalTypeInfo.createBuiltin( "Error", "__", TypeInfoKind.Prim )
+_moduleObj.builtinTypeNeverRet = builtinTypeNeverRet
+
+local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
+_moduleObj.builtinTypeStem = builtinTypeStem
+
+local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
+_moduleObj.builtinTypeStem_ = builtinTypeStem_
+
+local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
+_moduleObj.builtinTypeBool = builtinTypeBool
+
+local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", TypeInfoKind.Prim )
+_moduleObj.builtinTypeInt = builtinTypeInt
+
+local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKind.Prim )
+_moduleObj.builtinTypeReal = builtinTypeReal
+
+local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
+_moduleObj.builtinTypeChar = builtinTypeChar
+
+local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class )
+_moduleObj.builtinTypeString = builtinTypeString
+
+local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
+_moduleObj.builtinTypeMap = builtinTypeMap
+
+local builtinTypeSet = NormalTypeInfo.createBuiltin( "Set", "Set", TypeInfoKind.Set )
+_moduleObj.builtinTypeSet = builtinTypeSet
+
+local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKind.List )
+_moduleObj.builtinTypeList = builtinTypeList
+
+local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
+_moduleObj.builtinTypeArray = builtinTypeArray
+
 function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo )
 
    if #itemTypeInfo == 0 then
@@ -2900,7 +3072,7 @@ function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo )
    end
    
    idProv:increment(  )
-   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, accessMode, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
@@ -2910,19 +3082,19 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
    end
    
    idProv:increment(  )
-   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, nil, nil, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )
@@ -2943,7 +3115,7 @@ function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleNam
    return info
 end
 
-function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, parentInfo, externalFlag, accessMode, className )
+function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, className )
 
    do
       local _exp = _moduleObj.sym2builtInTypeMap[className]
@@ -2957,13 +3129,8 @@ function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, i
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, true)
    return info
-end
-
-function NormalTypeInfo.createGeneric( txt, moduleTypeInfo )
-
-   return GenericTypeInfo.new(txt, moduleTypeInfo)
 end
 
 function NormalTypeInfo.createFunc( abstractFlag, builtinFlag, scope, kind, parentInfo, autoFlag, externalFlag, staticFlag, accessMode, funcName, argTypeList, retTypeInfoList, mutable )
@@ -3152,18 +3319,6 @@ function NormalTypeInfo.createDDD( typeInfo, externalFlag )
    return DDDTypeInfo.new(idProv:get_id(), typeInfo, externalFlag)
 end
 
-local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
-_moduleObj.builtinTypeNone = builtinTypeNone
-
-local builtinTypeNeverRet = NormalTypeInfo.createBuiltin( "Error", "__", TypeInfoKind.Prim )
-_moduleObj.builtinTypeNeverRet = builtinTypeNeverRet
-
-local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
-_moduleObj.builtinTypeStem = builtinTypeStem
-
-local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
-_moduleObj.builtinTypeStem_ = builtinTypeStem_
-
 local builtinTypeNil = NilTypeInfo.new()
 _moduleObj.builtinTypeNil = builtinTypeNil
 
@@ -3172,33 +3327,6 @@ local builtinTypeDDD = NormalTypeInfo.createDDD( _moduleObj.builtinTypeStem_, tr
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
 registBuiltin( "DDD", "...", TypeInfoKind.DDD, _moduleObj.builtinTypeDDD, _moduleObj.headTypeInfo )
-local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
-_moduleObj.builtinTypeBool = builtinTypeBool
-
-local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", TypeInfoKind.Prim )
-_moduleObj.builtinTypeInt = builtinTypeInt
-
-local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKind.Prim )
-_moduleObj.builtinTypeReal = builtinTypeReal
-
-local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
-_moduleObj.builtinTypeChar = builtinTypeChar
-
-local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class )
-_moduleObj.builtinTypeString = builtinTypeString
-
-local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
-_moduleObj.builtinTypeMap = builtinTypeMap
-
-local builtinTypeSet = NormalTypeInfo.createBuiltin( "Set", "Set", TypeInfoKind.Set )
-_moduleObj.builtinTypeSet = builtinTypeSet
-
-local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKind.List )
-_moduleObj.builtinTypeList = builtinTypeList
-
-local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
-_moduleObj.builtinTypeArray = builtinTypeArray
-
 local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Func, _moduleObj.builtinTypeDDD )
 _moduleObj.builtinTypeForm = builtinTypeForm
 
@@ -3312,13 +3440,13 @@ _moduleObj.builtinTypeAbbr = builtinTypeAbbr
 local builtinTypeAbbrNone = AbbrTypeInfo.new(idProv, "[##]")
 _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
-local numberTypeMap = {}
-numberTypeMap[_moduleObj.builtinTypeInt] = true
-numberTypeMap[_moduleObj.builtinTypeChar] = true
-numberTypeMap[_moduleObj.builtinTypeReal] = true
+local numberTypeSet = {}
+numberTypeSet[_moduleObj.builtinTypeInt]= true
+numberTypeSet[_moduleObj.builtinTypeChar]= true
+numberTypeSet[_moduleObj.builtinTypeReal]= true
 local function isNumberType( typeInfo )
 
-   return numberTypeMap[typeInfo:get_srcTypeInfo()] and true or false
+   return _lune._Set_has(numberTypeSet, typeInfo:get_srcTypeInfo() )
 end
 _moduleObj.isNumberType = isNumberType
 function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode, enumName, valTypeInfo, name2EnumValInfo )
@@ -3561,18 +3689,18 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
    if #expTypeList > 0 then
       for index, expType in pairs( expTypeList ) do
          if #dstTypeList == 0 then
-            return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList), gen2Type
+            return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList)
          end
          
          local dstType = dstTypeList[index]
          if #dstTypeList == index then
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                if not dstType:canEvalWith( expType, "=", gen2Type ) then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true )), gen2Type
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
-                  return MatchType.Error, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList), gen2Type
+                  return MatchType.Error, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList)
                end
                
             else
@@ -3584,7 +3712,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                
                local result, mess = checkSrcTypeFrom( index, dddItemType )
                if result ~= MatchType.Match then
-                  return result, mess, gen2Type
+                  return result, mess
                end
                
             end
@@ -3592,7 +3720,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index and dstType:get_nilable() then
                   local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, mess, gen2Type
+                  return MatchType.Warn, mess
                end
                
             end
@@ -3615,13 +3743,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             
             local result, mess = checkDstTypeFrom( index, srcType, srcType2nd )
             if result ~= MatchType.Match then
-               return result, mess, gen2Type
+               return result, mess
             end
             
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index and dstType:get_nilable() then
                   local warnMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, warnMess, gen2Type
+                  return MatchType.Warn, warnMess
                end
                
             end
@@ -3630,13 +3758,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          else
           
             if not dstType:canEvalWith( expType, "=", gen2Type ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true )), gen2Type
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
             end
             
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index and dstType:get_nilable() then
                   local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, mess, gen2Type
+                  return MatchType.Warn, mess
                end
                
             end
@@ -3648,15 +3776,15 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
    elseif not allowDstShort then
       for index, dstType in pairs( dstTypeList ) do
          if not dstType:canEvalWith( _moduleObj.builtinTypeNil, "=", gen2Type ) then
-            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true )), gen2Type
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
          end
          
-         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) ), gen2Type
+         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) )
       end
       
    end
    
-   return MatchType.Match, "", gen2Type
+   return MatchType.Match, ""
 end
 
 function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, gen2Type )
@@ -4552,18 +4680,18 @@ function RootNode:canBeStatement(  )
 
    return false
 end
-function RootNode.new( pos, typeList, children, useModuleMacroMap, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.new( pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, children, useModuleMacroMap, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
+   if obj.__init then obj:__init( pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
    return obj
 end
-function RootNode:__init(pos, typeList, children, useModuleMacroMap, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
+function RootNode:__init(pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
    Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
    
    
    self.children = children
-   self.useModuleMacroMap = useModuleMacroMap
+   self.useModuleMacroSet = useModuleMacroSet
    self.moduleId = moduleId
    self.processInfo = processInfo
    self.moduleTypeInfo = moduleTypeInfo
@@ -4575,9 +4703,9 @@ function RootNode:__init(pos, typeList, children, useModuleMacroMap, moduleId, p
    self.typeId2ClassMap = typeId2ClassMap
    
 end
-function RootNode.create( nodeMan, pos, typeList, children, useModuleMacroMap, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.create( nodeMan, pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
 
-   local node = RootNode.new(pos, typeList, children, useModuleMacroMap, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
+   local node = RootNode.new(pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
    nodeMan:addNode( node )
    return node
 end
@@ -4587,8 +4715,8 @@ end
 function RootNode:get_children()       
    return self.children         
 end
-function RootNode:get_useModuleMacroMap()       
-   return self.useModuleMacroMap         
+function RootNode:get_useModuleMacroSet()       
+   return self.useModuleMacroSet         
 end
 function RootNode:get_moduleId()       
    return self.moduleId         

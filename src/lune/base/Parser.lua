@@ -4,6 +4,76 @@ local __mod__ = 'lune.base.Parser'
 if not _lune then
    _lune = {}
 end
+function _lune._Set_or( setObj, otherSet )
+   for val in pairs( otherSet ) do
+      setObj[ val ] = true
+   end
+   return setObj
+end
+function _lune._Set_and( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if not otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_has( setObj, val )
+   return setObj[ val ] ~= nil
+end
+function _lune._Set_sub( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_len( setObj )
+   local total = 0
+   for val in pairs( setObj ) do
+      total = total + 1
+   end
+   return total
+end
+function _lune._Set_clone( setObj )
+   local obj = {}
+   for val in pairs( setObj ) do
+      obj[ val ] = true
+   end
+   return obj
+end
+
+function _lune._toSet( val, toKeyInfo )
+   if type( val ) == "table" then
+      local tbl = {}
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal = _lune._toBool( mem )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -26,28 +96,28 @@ end
 
 local Util = _lune.loadModule( 'lune.base.Util' )
 local luaKeywordSet = {}
-luaKeywordSet["let"] = true
-luaKeywordSet["if"] = true
-luaKeywordSet["else"] = true
-luaKeywordSet["elseif"] = true
-luaKeywordSet["while"] = true
-luaKeywordSet["for"] = true
-luaKeywordSet["in"] = true
-luaKeywordSet["return"] = true
-luaKeywordSet["break"] = true
-luaKeywordSet["nil"] = true
-luaKeywordSet["true"] = true
-luaKeywordSet["false"] = true
-luaKeywordSet["{"] = true
-luaKeywordSet["}"] = true
-luaKeywordSet["do"] = true
-luaKeywordSet["require"] = true
-luaKeywordSet["function"] = true
-luaKeywordSet["then"] = true
-luaKeywordSet["until"] = true
+luaKeywordSet["let"]= true
+luaKeywordSet["if"]= true
+luaKeywordSet["else"]= true
+luaKeywordSet["elseif"]= true
+luaKeywordSet["while"]= true
+luaKeywordSet["for"]= true
+luaKeywordSet["in"]= true
+luaKeywordSet["return"]= true
+luaKeywordSet["break"]= true
+luaKeywordSet["nil"]= true
+luaKeywordSet["true"]= true
+luaKeywordSet["false"]= true
+luaKeywordSet["{"]= true
+luaKeywordSet["}"]= true
+luaKeywordSet["do"]= true
+luaKeywordSet["require"]= true
+luaKeywordSet["function"]= true
+luaKeywordSet["then"]= true
+luaKeywordSet["until"]= true
 local function isLuaKeyword( txt )
 
-   return luaKeywordSet[txt]
+   return _lune._Set_has(luaKeywordSet, txt )
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
 local function createReserveInfo( luaMode )
@@ -55,39 +125,39 @@ local function createReserveInfo( luaMode )
    local keywordSet = {}
    local typeSet = {}
    local builtInSet = {}
-   builtInSet["require"] = true
-   for key, val in pairs( luaKeywordSet ) do
-      if not builtInSet[key] then
-         keywordSet[key] = true
+   builtInSet["require"]= true
+   for key, __val in pairs( luaKeywordSet ) do
+      if not _lune._Set_has(builtInSet, key ) then
+         keywordSet[key]= true
       end
       
    end
    
    if not luaMode then
-      keywordSet["null"] = true
-      keywordSet["let"] = true
-      keywordSet["mut"] = true
-      keywordSet["pub"] = true
-      keywordSet["pro"] = true
-      keywordSet["pri"] = true
-      keywordSet["fn"] = true
-      keywordSet["each"] = true
-      keywordSet["form"] = true
-      keywordSet["class"] = true
-      builtInSet["super"] = true
-      keywordSet["static"] = true
-      keywordSet["advertise"] = true
-      keywordSet["import"] = true
-      keywordSet["new"] = true
-      keywordSet["!"] = true
-      keywordSet["unwrap"] = true
-      keywordSet["sync"] = true
-      typeSet["int"] = true
-      typeSet["real"] = true
-      typeSet["stem"] = true
-      typeSet["str"] = true
-      typeSet["Map"] = true
-      typeSet["bool"] = true
+      keywordSet["null"]= true
+      keywordSet["let"]= true
+      keywordSet["mut"]= true
+      keywordSet["pub"]= true
+      keywordSet["pro"]= true
+      keywordSet["pri"]= true
+      keywordSet["fn"]= true
+      keywordSet["each"]= true
+      keywordSet["form"]= true
+      keywordSet["class"]= true
+      builtInSet["super"]= true
+      keywordSet["static"]= true
+      keywordSet["advertise"]= true
+      keywordSet["import"]= true
+      keywordSet["new"]= true
+      keywordSet["!"]= true
+      keywordSet["unwrap"]= true
+      keywordSet["sync"]= true
+      typeSet["int"]= true
+      typeSet["real"]= true
+      typeSet["stem"]= true
+      typeSet["str"]= true
+      typeSet["Map"]= true
+      typeSet["bool"]= true
    end
    
    local multiCharDelimitMap = {}
@@ -401,57 +471,57 @@ do
 end
 
 local quotedCharSet = {}
-quotedCharSet['a'] = true
-quotedCharSet['b'] = true
-quotedCharSet['f'] = true
-quotedCharSet['n'] = true
-quotedCharSet['r'] = true
-quotedCharSet['t'] = true
-quotedCharSet['v'] = true
-quotedCharSet['\\'] = true
-quotedCharSet['"'] = true
-quotedCharSet["'"] = true
+quotedCharSet['a']= true
+quotedCharSet['b']= true
+quotedCharSet['f']= true
+quotedCharSet['n']= true
+quotedCharSet['r']= true
+quotedCharSet['t']= true
+quotedCharSet['v']= true
+quotedCharSet['\\']= true
+quotedCharSet['"']= true
+quotedCharSet["'"]= true
 local op2Set = {}
-op2Set['+'] = true
-op2Set['-'] = true
-op2Set['*'] = true
-op2Set['/'] = true
-op2Set['^'] = true
-op2Set['%'] = true
-op2Set['&'] = true
-op2Set['~'] = true
-op2Set['|'] = true
-op2Set['|>>'] = true
-op2Set['|<<'] = true
-op2Set['..'] = true
-op2Set['<'] = true
-op2Set['<='] = true
-op2Set['>'] = true
-op2Set['>='] = true
-op2Set['=='] = true
-op2Set['~='] = true
-op2Set['and'] = true
-op2Set['or'] = true
-op2Set['@'] = true
-op2Set['='] = true
+op2Set['+']= true
+op2Set['-']= true
+op2Set['*']= true
+op2Set['/']= true
+op2Set['^']= true
+op2Set['%']= true
+op2Set['&']= true
+op2Set['~']= true
+op2Set['|']= true
+op2Set['|>>']= true
+op2Set['|<<']= true
+op2Set['..']= true
+op2Set['<']= true
+op2Set['<=']= true
+op2Set['>']= true
+op2Set['>=']= true
+op2Set['==']= true
+op2Set['~=']= true
+op2Set['and']= true
+op2Set['or']= true
+op2Set['@']= true
+op2Set['=']= true
 local op1Set = {}
-op1Set['-'] = true
-op1Set['not'] = true
-op1Set['#'] = true
-op1Set['~'] = true
-op1Set['*'] = true
-op1Set['`'] = true
-op1Set[',,'] = true
-op1Set[',,,'] = true
-op1Set[',,,,'] = true
+op1Set['-']= true
+op1Set['not']= true
+op1Set['#']= true
+op1Set['~']= true
+op1Set['*']= true
+op1Set['`']= true
+op1Set[',,']= true
+op1Set[',,,']= true
+op1Set[',,,,']= true
 local function isOp2( ope )
 
-   return op2Set[ope]
+   return _lune._Set_has(op2Set, ope )
 end
 _moduleObj.isOp2 = isOp2
 local function isOp1( ope )
 
-   return op1Set[ope]
+   return _lune._Set_has(op1Set, ope )
 end
 _moduleObj.isOp1 = isOp1
 function StreamParser:parse(  )
@@ -505,11 +575,11 @@ function StreamParser:parse(  )
       local function createInfo( tokenKind, token, tokenColumn )
       
          if tokenKind == TokenKind.Symb then
-            if self.keywordSet[token] then
+            if _lune._Set_has(self.keywordSet, token ) then
                tokenKind = TokenKind.Kywd
-            elseif self.typeSet[token] then
+            elseif _lune._Set_has(self.typeSet, token ) then
                tokenKind = TokenKind.Type
-            elseif op2Set[token] or op1Set[token] then
+            elseif _lune._Set_has(op2Set, token ) or _lune._Set_has(op1Set, token ) then
                tokenKind = TokenKind.Ope
             end
             
@@ -645,7 +715,7 @@ function StreamParser:parse(  )
                         
                         startIndex = index + #delimit
                         local workKind = TokenKind.Dlmt
-                        if op2Set[delimit] or op1Set[delimit] then
+                        if _lune._Set_has(op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
                            workKind = TokenKind.Ope
                         end
                         
@@ -761,7 +831,7 @@ function StreamParser:parse(  )
             local codeChar = rawLine:sub( index + 1, index + 1 )
             if nextChar == 92 then
                local quoted = rawLine:sub( index + 2, index + 2 )
-               if quotedCharSet[quoted] then
+               if _lune._Set_has(quotedCharSet, quoted ) then
                   codeChar = rawLine:sub( index + 1, index + 2 )
                else
                 

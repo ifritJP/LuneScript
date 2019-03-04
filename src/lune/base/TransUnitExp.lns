@@ -283,23 +283,21 @@ fn TransUnit.analyzeExpRefItem(
       else {
          expType = unwrap expType.$nonnilableType;
       }
-      if expType.$kind == .Set {
-         self.addErrMess( exp.$pos, "set doesn't support '$'." );
-      }
    }
 
    let mut expectItemType:&Ast.TypeInfo! = nil;
    let mut typeInfo = Ast.builtinTypeStem_;
    // 指定すべき index の型
    let mut indexTypeInfo = Ast.builtinTypeInt;
-   if expType.$kind == .Map or expType.$kind == .Set {
+   if expType.$kind == .Map {
       let itemTypeList = expType.get_itemTypeInfoList();
       if expType.$kind == .Map {
          typeInfo = itemTypeList[2];
          indexTypeInfo = itemTypeList[1];
       }
       else {
-         typeInfo = itemTypeList[1];
+         typeInfo = self.createModifier(
+            Ast.builtinTypeBool.$nilableTypeInfo, false );
          indexTypeInfo = itemTypeList[1];
       }
       expectItemType = itemTypeList[1];
@@ -366,7 +364,7 @@ fn TransUnit.analyzeExpRefItem(
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expNodeList: &List<&Ast.Node>, allowDstShort:bool,
-   warnForFollow:bool, applyGeneric:bool ) mut :
+   warnForFollow:bool, genericsClassType:&Ast.TypeInfo! ) mut :
    &Map<&Ast.TypeInfo,&Ast.TypeInfo>
 {
    let mut warnForFollowSrcIndex:int! = nil;
@@ -406,10 +404,14 @@ fn TransUnit.checkMatchType(
    if hasAbbr {
       expTypeList.insert( Ast.builtinTypeAbbr );
    }
-   
-   let result, mess, gen2Type = Ast.TypeInfo.checkMatchType(
-      dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex,
-      Ast.GenericTypeInfo.createGen2TypeMap( applyGeneric ) ); 
+
+   let mut gen2TypeMap = Ast.GenericTypeInfo.createNoneGen2TypeMap();
+   when! genericsClassType {
+      gen2TypeMap = genericsClassType.createGen2TypeMap();
+   }
+   let result, mess = Ast.TypeInfo.checkMatchType(
+      dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, gen2TypeMap );
+   //Ast.GenericTypeInfo.createGen2TypeMap( applyGeneric ) ); 
    switch result {
       case .Error {
          self.addErrMess( pos, "%s: %s" (message, mess ) );
@@ -424,13 +426,14 @@ fn TransUnit.checkMatchType(
          }
       }
    }
-   return gen2Type;
+   return gen2TypeMap;
 }
 
 
 fn TransUnit.checkMatchValType(
    pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Ast.ExpListNode!,
-   genericTypeList: &List<&Ast.TypeInfo> ) mut : &Map<&Ast.TypeInfo,&Ast.TypeInfo>
+   genericTypeList: &List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo! ) mut :
+   &Map<&Ast.TypeInfo,&Ast.TypeInfo>
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
@@ -454,7 +457,7 @@ fn TransUnit.checkMatchValType(
    }
    return self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
-      argTypeList, expNodeList, false, warnForFollow, true );
+      argTypeList, expNodeList, false, warnForFollow, genericsClass );
 }
 
 class MacroPaser extend Parser.Parser {
@@ -490,7 +493,7 @@ fn TransUnit.evalMacro(
    firstToken: &Parser.Token,
    macroTypeInfo: &Ast.TypeInfo, expList: &Ast.ExpListNode! ) mut : Ast.ExpMacroExpNode
 {
-   self.useModuleMacroMap[ macroTypeInfo.getModule() ] = true;
+   self.useModuleMacroSet.add( macroTypeInfo.getModule() );
 
    when! expList {
       foreach exp in expList.get_expList() {
@@ -813,16 +816,18 @@ fn TransUnit.analyzeExpCall(
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
    let mut refFieldNode:&Ast.RefFieldNode! = nil;
+   let mut genericsClass:&Ast.TypeInfo! = Ast.headTypeInfo;
    if funcTypeInfo.$kind == .Method and exp.$kind == Ast.NodeKind.$RefField
    {
       let refField = exp@@Ast.RefFieldNode;
       refFieldNode = refField;
       let classType = refField.$prefix.$expType;
       genericTypeList = classType.$itemTypeInfoList;
+      genericsClass = classType;
    }
 
    let gen2TypeMap = self.checkMatchValType(
-      exp.$pos, funcTypeInfo, argList, genericTypeList );
+      exp.$pos, funcTypeInfo, argList, genericTypeList, genericsClass );
 
    if funcTypeInfo.equals( builtinFunc.listInsert ) {
       when! argList {
@@ -867,9 +872,15 @@ fn TransUnit.analyzeExpCall(
             retTypeInfoList[ index ] = applyType;
          }
          else {
-            self.addErrMess(
-               firstToken.pos,
-               "not support generics yet. -- %s" (retType.getTxt(##)) );
+            if funcTypeInfo == builtinFunc.listRemove {
+               // pending: List.remove の戻り値設定を暫定対応
+               retTypeInfoList[ index ] = genericTypeList[ 1 ].$nilableTypeInfo;
+            }
+            else {
+               self.addErrMess(
+                  firstToken.pos,
+                  "not support generics yet. -- %s" (retType.getTxt(##)) );
+            }
          }
       }
       
@@ -1463,7 +1474,7 @@ fn TransUnit.analyzeNewAlge(
       }
 
       self.checkMatchType(
-         "call", symbolToken.pos, valInfo.$typeList, argList, false, true, false );
+         "call", symbolToken.pos, valInfo.$typeList, argList, false, true, nil );
 
       
       return Ast.NewAlgeValNode.create(
@@ -1551,7 +1562,7 @@ fn TransUnit.analyzeExpSymbol(
          
          if token.txt == "__func__" {
             let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-            self.has__func__Symbol[ funcTypeInfo ] = true;
+            self.has__func__Symbol.add( funcTypeInfo );
          }
 
          exp = Ast.ExpRefNode.create(
@@ -1579,7 +1590,7 @@ fn TransUnit.analyzeExpOpSet(
                        (Ast.getNodeKindName( exp.$kind ) ) );
    }
    self.checkMatchType(
-      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true, false, false );
+      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true, false, nil );
 
    foreach symbolInfo in exp.getSymbolInfo() {
       if not symbolInfo.$mutable and symbolInfo.$hasValueFlag
@@ -2003,7 +2014,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
             let! superCtorType = superScope.getTypeInfoChild( "__init" ) {
                self.error( "not found super '__init'" );
             }; 
-            self.checkMatchValType( firstToken.$pos, superCtorType, expList, [] );
+            self.checkMatchValType( firstToken.$pos, superCtorType, expList, [], nil );
             return Ast.ExpCallSuperNode.create(
                self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
                superType, superCtorType, expList );
@@ -2015,7 +2026,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
                if superFunc.$abstractFlag {
                   self.addErrMess( firstToken.pos, "super is abstract." );
                }
-               self.checkMatchValType( firstToken.$pos, superFunc, expList, [] );
+               self.checkMatchValType( firstToken.$pos, superFunc, expList, [], nil );
                return Ast.ExpCallSuperNode.create(
                   self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
                   superType, superFunc, expList );
@@ -2218,7 +2229,7 @@ fn TransUnit.analyzeExp(
       }  
 
       self.checkMatchValType( exp.$pos, initTypeInfo, argList,
-                              exp.$expType.$itemTypeInfoList );
+                              exp.$expType.$itemTypeInfoList, classTypeInfo );
       
       exp = Ast.ExpNewNode.create(
          self.nodeManager, firstToken.pos, exp.$expTypeList, exp, argList );

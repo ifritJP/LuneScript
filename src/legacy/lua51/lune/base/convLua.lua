@@ -4,6 +4,76 @@ local __mod__ = 'lune.base.convLua'
 if not _lune then
    _lune = {}
 end
+function _lune._Set_or( setObj, otherSet )
+   for val in pairs( otherSet ) do
+      setObj[ val ] = true
+   end
+   return setObj
+end
+function _lune._Set_and( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if not otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_has( setObj, val )
+   return setObj[ val ] ~= nil
+end
+function _lune._Set_sub( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_len( setObj )
+   local total = 0
+   for val in pairs( setObj ) do
+      total = total + 1
+   end
+   return total
+end
+function _lune._Set_clone( setObj )
+   local obj = {}
+   for val in pairs( setObj ) do
+      obj[ val ] = true
+   end
+   return obj
+end
+
+function _lune._toSet( val, toKeyInfo )
+   if type( val ) == "table" then
+      local tbl = {}
+      for key, mem in pairs( val ) do
+         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
+         local mapVal = _lune._toBool( mem )
+         if mapKey == nil or mapVal == nil then
+            if mapKey == nil then
+               return nil
+            end
+            if keySub == nil then
+               return nil, mapKey
+            end
+            return nil, string.format( "%s.%s", mapKey, keySub)
+         end
+         tbl[ mapKey ] = mapVal
+      end
+      return tbl
+   end
+   return nil
+end
+
 function _lune.loadstring51( txt, env )
    local func = loadstring( txt )
    if func and env then
@@ -188,7 +258,7 @@ end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer) 
    Ast.Filter.__init( self )
    
-   self.macroVarSymMap = {}
+   self.macroVarSymSet = {}
    self.needModuleObj = true
    self.indentQueue = {0}
    self.moduleSymbolKind = moduleSymbolKind
@@ -284,12 +354,6 @@ local function filter( node, filter, parent )
 end
 
 local stepIndent = 3
-local builtInModuleSet = {}
-builtInModuleSet["io"] = true
-builtInModuleSet["string"] = true
-builtInModuleSet["table"] = true
-builtInModuleSet["math"] = true
-builtInModuleSet["debug"] = true
 function convFilter:pushIndent( newIndent )
 
    local indent = _lune.unwrapDefault( newIndent, self:get_indent() + stepIndent)
@@ -369,7 +433,6 @@ function convFilter:outputMeta( node )
    end
    
    local typeId2TypeInfo = {}
-   local typeId2UseFlag = {}
    local pickupClassMap = {}
    local function checkExportTypeInfo( typeInfo )
    
@@ -736,11 +799,11 @@ function convFilter:outputMeta( node )
       end
       
       local typeId = typeInfo:get_typeId(  )
-      if wroteTypeIdSet[typeId] then
+      if _lune._Set_has(wroteTypeIdSet, typeId ) then
          return 
       end
       
-      wroteTypeIdSet[typeId] = true
+      wroteTypeIdSet[typeId]= true
       if checkExportTypeInfo( typeInfo ) then
          self:write( string.format( "__typeInfoList[%d] = ", listIndex) )
          listIndex = listIndex + 1
@@ -779,7 +842,7 @@ function convFilter:outputMeta( node )
          do
             outputTypeInfo( typeInfo )
             local moduleTypeInfo = typeInfo:getModule(  )
-            exportNeedModuleTypeInfo[moduleTypeInfo] = true
+            exportNeedModuleTypeInfo[moduleTypeInfo]= true
             do
                local moduleIndex = importModuleType2Index[moduleTypeInfo]
                if moduleIndex ~= nil then
@@ -820,8 +883,8 @@ function convFilter:outputMeta( node )
       end
    end
    
-   for moduleTypeInfo, flag in pairs( node:get_useModuleMacroMap() ) do
-      exportNeedModuleTypeInfo[moduleTypeInfo] = true
+   for moduleTypeInfo, __val in pairs( node:get_useModuleMacroSet() ) do
+      exportNeedModuleTypeInfo[moduleTypeInfo]= true
    end
    
    self:writeln( "local __dependModuleMap = {}" )
@@ -836,7 +899,7 @@ function convFilter:outputMeta( node )
       for __index, name in ipairs( __sorted ) do
          local moduleTypeInfo = __map[ name ]
          do
-            self:writeln( string.format( "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), tostring( exportNeedModuleTypeInfo[moduleTypeInfo] or false), (_lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo]) ):get_moduleId():get_idStr()) )
+            self:writeln( string.format( "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), tostring( _lune._Set_has(exportNeedModuleTypeInfo, moduleTypeInfo )), (_lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo]) ):get_moduleId():get_idStr()) )
          end
       end
    end
@@ -912,6 +975,7 @@ end]==] )
       end
       
       if node:get_luneHelperInfo().useSet then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetOp ) )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetMapping ) )
       end
       
@@ -1314,12 +1378,12 @@ function convFilter:processDeclClass( node, parent )
       local ignoreFlag = false
       if field:get_kind() == Ast.NodeKind.get_DeclConstr() then
          hasConstrFlag = true
-         methodNameSet["__init"] = true
+         methodNameSet["__init"]= true
       end
       
       if field:get_kind() == Ast.NodeKind.get_DeclDestr() then
          hasDestrFlag = true
-         methodNameSet["__free"] = true
+         methodNameSet["__free"]= true
       end
       
       if field:get_kind() == Ast.NodeKind.get_DeclMember() then
@@ -1334,11 +1398,11 @@ function convFilter:processDeclClass( node, parent )
          local methodNode = field
          local declInfo = methodNode:get_declInfo(  )
          local methodNameToken = _lune.unwrap( declInfo:get_name(  ))
-         if outerMethodSet[methodNameToken.txt] then
+         if _lune._Set_has(outerMethodSet, methodNameToken.txt ) then
             ignoreFlag = true
          end
          
-         methodNameSet[methodNameToken.txt] = true
+         methodNameSet[methodNameToken.txt]= true
       end
       
       if (not ignoreFlag ) then
@@ -1360,7 +1424,7 @@ function %s.setmeta( obj )
   setmetatable( obj, { __index = %s %s } )
 end]==], className, className, destTxt) )
    if not hasConstrFlag then
-      methodNameSet["__init"] = true
+      methodNameSet["__init"]= true
       local argTxt = ""
       for index, member in pairs( memberList ) do
          if index > 1 then
@@ -1406,24 +1470,24 @@ function %s:__init( %s )
       local memberNameToken = memberNode:get_name(  )
       local memberName = memberNameToken.txt
       local getterName = "get_" .. memberName
-      local autoFlag = not methodNameSet[getterName]
+      local autoFlag = not _lune._Set_has(methodNameSet, getterName )
       local prefix = memberNode:get_staticFlag() and className or "self"
       if memberNode:get_getterMode(  ) ~= Ast.AccessMode.None and autoFlag then
          self:writeln( string.format( [==[
 function %s:%s()       
    return %s.%s         
 end]==], className, getterName, prefix, memberName) )
-         methodNameSet[getterName] = true
+         methodNameSet[getterName]= true
       end
       
       local setterName = "set_" .. memberName
-      autoFlag = not methodNameSet[setterName]
+      autoFlag = not _lune._Set_has(methodNameSet, setterName )
       if memberNode:get_setterMode(  ) ~= Ast.AccessMode.None and autoFlag then
          self:writeln( string.format( [==[
 function %s:%s( %s )   
    %s.%s = %s              
 end]==], className, setterName, memberName, prefix, memberName, memberName) )
-         methodNameSet[setterName] = true
+         methodNameSet[setterName]= true
       end
       
    end
@@ -1434,7 +1498,7 @@ end]==], className, setterName, memberName, prefix, memberName, memberName) )
       for __index, child in pairs( memberType:get_children() ) do
          if child:get_kind() == Ast.TypeInfoKind.Method and child:get_accessMode() ~= Ast.AccessMode.Pri and not child:get_staticFlag() then
             local childName = advertiseInfo:get_prefix() .. child:getTxt(  )
-            if not methodNameSet[childName] then
+            if not _lune._Set_has(methodNameSet, childName ) then
                self:writeln( string.format( [==[
 function %s:%s( ... )
    return self.%s:%s( ... )
@@ -1945,7 +2009,7 @@ function convFilter:processDeclVar( node, parent )
          local varName = symbolInfo:get_name()
          self:writeln( string.format( "table.insert( macroVar._names, '%s' )", varName) )
          self:writeln( string.format( "macroVar.%s = %s", varName, varName) )
-         self.macroVarSymMap[symbolInfo] = true
+         self.macroVarSymSet[symbolInfo]= true
       end
       
    end
@@ -2290,11 +2354,72 @@ function convFilter:processExpCall( node, parent )
 
    local wroteFuncFlag = false
    local setArgFlag = false
+   local function fieldCall(  )
    
-   if node:get_func():get_kind() == Ast.NodeKind.get_RefField() then
       local fieldNode = node:get_func()
       local prefixNode = fieldNode:get_prefix()
+      local function processSet(  )
+      
+         setArgFlag = true
+         wroteFuncFlag = true
+         do
+            local _switchExp = fieldNode:get_field().txt
+            if _switchExp == "add" or _switchExp == "del" then
+               filter( prefixNode, self, fieldNode )
+               self:write( "[" )
+               do
+                  local argList = node:get_argList()
+                  if argList ~= nil then
+                     filter( argList, self, fieldNode )
+                  end
+               end
+               
+               self:write( "]" )
+               do
+                  local _switchExp = fieldNode:get_field().txt
+                  if _switchExp == "add" then
+                     self:write( "= true" )
+                  elseif _switchExp == "del" then
+                     self:write( "= nil" )
+                  end
+               end
+               
+               return false
+            end
+         end
+         
+         self:write( string.format( "_lune._Set_%s(", fieldNode:get_field().txt) )
+         filter( prefixNode, self, fieldNode )
+         return true
+      end
+      
       local prefixType = prefixNode:get_expType()
+      local function processEnumAlge(  )
+      
+         wroteFuncFlag = true
+         local fieldExpType = fieldNode:get_expType()
+         local canonicalName = self:getCanonicalName( prefixType )
+         local methodName = fieldNode:get_field().txt
+         local delimit = ":"
+         if methodName == "get__txt" then
+            methodName = "_getTxt"
+         end
+         
+         if fieldExpType:get_kind() == Ast.TypeInfoKind.Func then
+            delimit = "."
+         end
+         
+         self:write( string.format( "%s%s%s( ", canonicalName, delimit, methodName) )
+         if fieldExpType:get_staticFlag() then
+            setArgFlag = false
+         else
+          
+            filter( prefixNode, self, fieldNode )
+            setArgFlag = true
+         end
+         
+      end
+      
       if node:get_nilAccess() then
          wroteFuncFlag = true
          setArgFlag = true
@@ -2321,54 +2446,24 @@ function convFilter:processExpCall( node, parent )
                self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
                filter( prefixNode, self, fieldNode )
             elseif _switchExp == Ast.TypeInfoKind.Set then
-               setArgFlag = true
-               wroteFuncFlag = true
-               filter( prefixNode, self, fieldNode )
-               self:write( "[" )
-               do
-                  local argList = node:get_argList()
-                  if argList ~= nil then
-                     filter( argList, self, fieldNode )
-                  end
+               if not processSet(  ) then
+                  return false
                end
                
-               self:write( "]" )
-               if fieldNode:get_field().txt == "add" then
-                  self:write( "= true" )
-               else
-                
-                  self:write( "= nil" )
-               end
-               
-               return 
             elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
-               wroteFuncFlag = true
-               local fieldExpType = fieldNode:get_expType()
-               local canonicalName = self:getCanonicalName( prefixType )
-               local methodName = fieldNode:get_field().txt
-               local delimit = ":"
-               if methodName == "get__txt" then
-                  methodName = "_getTxt"
-               end
-               
-               if fieldExpType:get_kind() == Ast.TypeInfoKind.Func then
-                  delimit = "."
-               end
-               
-               self:write( string.format( "%s%s%s( ", canonicalName, delimit, methodName) )
-               if fieldExpType:get_staticFlag() then
-                  setArgFlag = false
-               else
-                
-                  filter( prefixNode, self, fieldNode )
-                  setArgFlag = true
-               end
-               
+               processEnumAlge(  )
             end
          end
          
       end
       
+      return true
+   end
+   
+   if node:get_func():get_kind() == Ast.NodeKind.get_RefField() then
+      if not fieldCall(  ) then
+         return 
+      end
       
    elseif node:get_func():get_kind() == Ast.NodeKind.get_ExpRef() then
       local refNode = node:get_func()
@@ -2634,7 +2729,7 @@ function convFilter:processExpRef( node, parent )
       self:write( "_lune." .. self.targetLuaVer:get_loadStrFuncName() )
    else
     
-      if self.macroVarSymMap[node:get_symbolInfo():getOrg(  )] then
+      if _lune._Set_has(self.macroVarSymSet, node:get_symbolInfo():getOrg(  ) ) then
          self:write( "macroVar." )
       else
        

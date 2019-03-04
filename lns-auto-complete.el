@@ -94,6 +94,8 @@
 (defvar lns-ac-point-symbol nil)
 (defvar lns-ac-process-field nil)
 (defvar lns-ac-process-symbol nil)
+(defvar lns-ac-req-more-field nil)
+(defvar lns-ac-req-more-symbol nil)
 
 (defun lns-ac-candidates-symbol ()
   (lns-ac-candidates :symbol)
@@ -118,10 +120,18 @@
     t
     )))
 
+
+(defun lns-ac-candidates-pos (pos let-list let-req-more
+				  let-prev-ac-point let-ac-process process-state)
+  )
+
 (defun lns-ac-candidates (mode)
   (lexical-let ((let-list (if (eq mode :symbol)
 			      'lns-ac-candidate-list-symbol
 			    'lns-ac-candidate-list-field))
+		(let-req-more (if (eq mode :symbol)
+				  'lns-ac-req-more-symbol
+				'lns-ac-req-more-field))
 		(let-prev-ac-point (if (eq mode :symbol)
 				       'lns-ac-point-symbol
 				     'lns-ac-point-field))
@@ -131,8 +141,10 @@
 		(process-state (if (eq mode :symbol)
 				   'lns-ac-process-state-symbol
 				 'lns-ac-process-state-field)))
-    (lns-ac-check-cancel let-prev-ac-point let-ac-process process-state)
-	
+
+    ;; kill-process しても動きつづける場合があるので、 cancel しない。
+    ;;(lns-ac-check-cancel let-prev-ac-point let-ac-process process-state)
+
     (cond
      ((eq (symbol-value process-state) :done)
       (set process-state :idle)
@@ -168,7 +180,8 @@
 	      )
 	    t (format "*%s-lns-process*" mode)))
       nil)
-     )))
+     ))
+    )
 
 (ac-define-source lns-field
   '((candidates . lns-ac-candidates-field)

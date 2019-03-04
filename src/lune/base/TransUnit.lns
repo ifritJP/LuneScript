@@ -122,7 +122,8 @@ pub class TransUnit {
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
 
-   pri let mut has__func__Symbol: Map<&Ast.TypeInfo,bool>;
+   /** __func__ シンボルを持つ関数 TypeInfo の set */
+   pri let mut has__func__Symbol: Set<&Ast.TypeInfo>;
 
    /** 解析モード */
    pri let analyzeMode: AnalyzeMode;
@@ -156,7 +157,7 @@ pub class TransUnit {
 
    pri let ctrl_info: &Option.TransCtrlInfo;
 
-   pri let mut useModuleMacroMap:Map<&Ast.TypeInfo,bool>;
+   pri let mut useModuleMacroSet:Set<&Ast.TypeInfo>;
 
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
@@ -165,7 +166,7 @@ pub class TransUnit {
                   ctrl_info: &Option.TransCtrlInfo )
    {
       self.macroCallLineNo = 0;
-      self.useModuleMacroMap = {};
+      self.useModuleMacroSet = (@);
       self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
@@ -175,7 +176,7 @@ pub class TransUnit {
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
       self.loopScopeQueue = [];
-      self.has__func__Symbol = {};
+      self.has__func__Symbol = (@);
       self.nodeManager = new Ast.NodeManager();
       self.importModuleName2ModuleInfo = {};
       self.importModule2ModuleInfoCurrent = {};
@@ -295,7 +296,8 @@ pub class TransUnit {
 
    pri fn pushClass(
       classFlag:bool, abstractFlag: bool, baseInfo: &Ast.TypeInfo!,
-      interfaceList: List<&Ast.TypeInfo>!, externalFlag: bool, name:str,
+      interfaceList: List<&Ast.TypeInfo>!,
+      genTypeList: List<&Ast.GenericTypeInfo>, externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -348,11 +350,15 @@ pub class TransUnit {
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true, inheritScope, ifScopeList );
          typeInfo = Ast.NormalTypeInfo.createClass(
-            classFlag, abstractFlag, scope, baseInfo, interfaceList,
+            classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList,
             parentInfo, externalFlag, accessMode, name );
 
          parentScope.addClass( name, typeInfo );
       }
+      foreach genType in genTypeList {
+         self.scope.addGeneric( accessMode, genType.$txt, genType );
+      }
+      
       let! mut namespace = defNamespace {
          namespace = new Ast.NamespaceInfo( name, self.scope, typeInfo );
       };
@@ -753,7 +759,7 @@ class _TypeInfoNormal extend _TypeInfo {
 
                let workTypeInfo = Ast.NormalTypeInfo.createClass(
                   self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
-                  scope, baseInfo, interfaceList,
+                  scope, baseInfo, interfaceList, [],
                   parentInfo, true, .Pub, self.txt );
                newTypeInfo = workTypeInfo;
                param.typeId2Scope[ self.typeId ] = scope;
@@ -912,6 +918,9 @@ pub class BuiltinFuncType {
    pub let mut stringForm:&Ast.TypeInfo;
    pub let mut setAdd:&Ast.TypeInfo;
    pub let mut setDel:&Ast.TypeInfo;
+   pub let mut setOr:&Ast.TypeInfo;
+   pub let mut setAnd:&Ast.TypeInfo;
+   pub let mut setSub:&Ast.TypeInfo;
 
    pub fn __init() {
       self.luneLoad = Ast.headTypeInfo;
@@ -928,6 +937,9 @@ pub class BuiltinFuncType {
       self.stringForm = Ast.headTypeInfo;
       self.setAdd = Ast.headTypeInfo;
       self.setDel = Ast.headTypeInfo;
+      self.setOr = Ast.headTypeInfo;
+      self.setAnd = Ast.headTypeInfo;
+      self.setSub = Ast.headTypeInfo;
    }
 }
 
@@ -986,6 +998,15 @@ fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
             }
             case "del" {
                builtinFunc.setDel = typeInfo;
+            }
+            case "or" {
+               builtinFunc.setOr = typeInfo;
+            }
+            case "and" {
+               builtinFunc.setAnd = typeInfo;
+            }
+            case "sub" {
+               builtinFunc.setSub = typeInfo;
             }
          }
       }
@@ -1129,23 +1150,29 @@ fn TransUnit.registBuiltInScope() mut {
          },
       },
       { 
-         "List": {
-            "insert": { "type": [ "mut" ], "arg": [ "&stem" ], "ret": [""] },
-            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["stem!"] },
+         "List<T>": {
+            "insert": { "type": [ "mut" ], "arg": [ "&T" ], "ret": [""] },
+            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
             "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
             "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },
          },
       },
       { 
-         "Array": {
+         "Array<T>": {
             "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
             "sort": { "type": [ "mut" ], "arg": [ "form!" ], "ret": [] },
          },
       },
       { 
-         "Set": {
-            "add": { "type": [ "mut" ], "arg": [ "stem" ], "ret": [] },
-            "del": { "type": [ "mut" ], "arg": [ "stem" ], "ret": [] },
+         "Set<T>": {
+            "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+            "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+            "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
+            "and": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
+            "or": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
+            "sub": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
+            "clone": { "type": [ "method" ], "arg": [], "ret": [ "Set<T>" ] },
+            "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
          },
       },
       {
@@ -1164,21 +1191,52 @@ fn TransUnit.registBuiltInScope() mut {
 
 
    fn getTypeInfo( mut typeName:str ) : &Ast.TypeInfo {
+
+      fn getTypeInfoFromScope(
+         scope:&Ast.Scope, symbol:str, genTyeList:List<&Ast.TypeInfo> ) :
+         &Ast.TypeInfo!
+      {
+         let! typeInfo = scope.getTypeInfo( symbol, scope, false ) {
+            return nil;
+         };
+         return typeInfo;
+      }
+      
       let mut mutable = true;
       if typeName.find( "^&" ## ) {
          mutable = false;
          typeName = typeName.gsub( "^&", "" );
       }
+      let mut genTypeList:List<&Ast.TypeInfo> = [];
+      let index, endIndex = typeName.find( "[%w]+<" ## );
+      when! index, endIndex {
+         let mut genTypeName = typeName.sub( endIndex ## );
+         if! let tailIndex = genTypeName.find( "[,>]" ## ) {
+            let genType = getTypeInfo( genTypeName.sub( 2, tailIndex - 1 ) );
+            genTypeList.insert( genType );
+         }
+         typeName = typeName.sub( 1, endIndex - 1 );
+      }
+
+      
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if typeName.find( "!$" ## ) {
          let orgTypeName = typeName.gsub( "!$", "" );
-         typeInfo = unwrap self.scope.getTypeInfo(
-            orgTypeName, self.scope, false );
+         if! getTypeInfoFromScope( self.scope, orgTypeName, genTypeList ) {       
+            typeInfo = _exp;
+         }
+         else {
+            Util.err( "not found builtin -- %s" (orgTypeName) );
+         }
          typeInfo = typeInfo.$nilableTypeInfo;
       }
       else {
-         typeInfo = unwrap self.scope.getTypeInfo(
-            typeName, self.scope, false );
+         if! getTypeInfoFromScope( self.scope, typeName, genTypeList ) {
+            typeInfo = _exp;
+         }
+         else {
+            Util.err( "not found builtin -- %s" (typeName) );
+         }
       }
       if mutable {
          return typeInfo;
@@ -1201,7 +1259,21 @@ fn TransUnit.registBuiltInScope() mut {
    self.scope.addVar( .Global, "__func__", Ast.builtinTypeString, false, true );
    
    foreach builtinClassInfo in builtInInfo {
-      foreach name2FieldInfo, name in builtinClassInfo {
+      foreach name2FieldInfo, className in builtinClassInfo {
+         let mut name = className;
+         let mut genTypeList:List<&Ast.GenericTypeInfo> = [];
+         if className.find( "<" ## ) {
+            name = "";
+            apply token of className.gmatch( "[^<>,%s]+" ) {
+               if #name == 0 {
+                  name = token;
+               }
+               else {
+                  genTypeList.insert(
+                     Ast.NormalTypeInfo.createGeneric( token, self.moduleType ) );
+               }
+            }
+         }
          let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if name ~= "" {
             let mut classFlag = true;
@@ -1216,7 +1288,7 @@ fn TransUnit.registBuiltInScope() mut {
                }              
             }
             parentInfo = self.pushClass(
-               classFlag, false, nil, interfaceList, true, name, .Pub ## );
+               classFlag, false, nil, interfaceList, genTypeList, true, name, .Pub ## );
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
@@ -2013,7 +2085,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       switch ( classTypeInfo.$kind ) {
          case .Class {
             self.pushClass( true, classTypeInfo.$abstractFlag,
-                            nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
+                            nil, nil, [], true, classTypeInfo.getTxt(##), .Pub ## );
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {

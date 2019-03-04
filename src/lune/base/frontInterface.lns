@@ -71,19 +71,19 @@ pub static fn ModuleId.createIdFromTxt( idStr:str ):ModuleId {
 インポートしたモジュールを管理する。
 */
 pub class ImportModuleInfo {
-   let mut moduleSet:Map<str,bool>;
+   let mut moduleSet:Set<str>;
    let mut moduleList:List<str>;
 
    pub fn __init() {
-      self.moduleSet = {};
+      self.moduleSet = (@);
       self.moduleList = [];
    }
 
    pub fn add( modulePath:str ) mut : bool {
-      if self.moduleSet[ modulePath ] {
+      if self.moduleSet.has( modulePath ) {
          return false;
       }
-      self.moduleSet[ modulePath ] = true;
+      self.moduleSet.add( modulePath );
       self.moduleList.insert( modulePath );
       return true;
    }
@@ -92,7 +92,7 @@ pub class ImportModuleInfo {
       if #self.moduleList == 0 {
          Util.err( "self.moduleList is 0" );
       }
-      self.moduleSet[ self.moduleList[ #self.moduleList ] ] = nil;
+      self.moduleSet.del( self.moduleList[ #self.moduleList ] );
       self.moduleList.remove(##);
    }
 

@@ -406,7 +406,7 @@ pub class TypeInfo {
 
    // この TypeInfo のスコープ。
    // class, func など名前空間を持つ TypeInfo は有効。
-   pri let scope: Scope!;
+   //pri let scope: &Scope!;
 
    pub fn get_scope(): Scope! {
       return typeInfo2ScopeMap[ self ];
@@ -414,7 +414,7 @@ pub class TypeInfo {
 
    pub fn __init( scope: Scope! ) {
       typeInfo2ScopeMap[ self ] = scope;
-      self.scope = scope;
+      //self.scope = scope;
       if! scope {
          _exp.set_ownerTypeInfo( self );
       }
@@ -1033,12 +1033,12 @@ pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
 /**
 デバッグ用。 scope 内のシンボル情報を出力する。
 */
-fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
+fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Set<Scope> ) {
    if! scope {
-      if readyIdSet[ _exp ] {
+      if readyIdSet.has( _exp ) {
          return;
       } 
-      readyIdSet[ _exp ] = true;
+      readyIdSet.add( _exp );
       if #prefix > 20 {
          Util.err("illegal");
       }   
@@ -1056,13 +1056,18 @@ fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Map<Scope,bool> ) {
 デバッグ用。 scope 内のシンボル情報を出力する。
 */
 fn dumpScope( scope: Scope!, prefix:str ) {
-   dumpScopeSub( scope, prefix, {} );
+   dumpScopeSub( scope, prefix, (@) );
 }
 
 
 
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
+
+pub fn TypeInfo.createGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+   return { headTypeInfo: headTypeInfo };
+}
+
 
 pub class NilTypeInfo extend TypeInfo {
    pri let typeId:int {pub};
@@ -1352,12 +1357,10 @@ pub class GenericTypeInfo extend TypeInfo {
       self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
    }
 
-   pub static fn createGen2TypeMap( validApply: bool ): Map<&TypeInfo,&TypeInfo> {
-      if validApply {
-         return { headTypeInfo: headTypeInfo };
-      }
+   pub static fn createNoneGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
       return {};
    }
+   
    pub static fn isValidApply( gen2Type:Map<&TypeInfo,&TypeInfo> ) : &TypeInfo! {
       return gen2Type[ headTypeInfo ];
    }
@@ -1870,6 +1873,8 @@ pub class NormalTypeInfo extend TypeInfo {
    // このメソッドが mutable かどうか。
    pri let mutable: bool {pub};
 
+   pri let gen2TypeMap:Map<&TypeInfo,&TypeInfo>;
+
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
               interfaceList: List<&TypeInfo>!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
@@ -1883,7 +1888,7 @@ pub class NormalTypeInfo extend TypeInfo {
       if type(kind) ~= "number" {
          Util.printStackTrace();
       }
-      
+
       self.abstractFlag = abstractFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
@@ -1898,6 +1903,31 @@ pub class NormalTypeInfo extend TypeInfo {
       self.retTypeInfoList = unwrap retTypeInfoList default [];
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.mutable = mutable and true or false;
+
+
+      fn setupGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+         if self.baseTypeInfo == headTypeInfo {
+            return {};
+         }
+         let mut gen2TypeMap:Map<&TypeInfo,&TypeInfo> = {};
+         switch kind {
+            case .Set, .Map, .List, .Array {
+               if #self.itemTypeInfoList ~= #self.baseTypeInfo.$itemTypeInfoList {
+                  Util.err( "unmatch generic type number -- %d, %d"
+                            (#self.itemTypeInfoList,
+                              #self.baseTypeInfo.$itemTypeInfoList ) );
+               }
+               foreach appyType, index in self.itemTypeInfoList {
+                  let genType = self.baseTypeInfo.$itemTypeInfoList[ index ];
+                  gen2TypeMap[ genType ] = appyType;
+               }  
+            }  
+         }
+         return gen2TypeMap;
+      }
+      
+      self.gen2TypeMap = setupGen2TypeMap();
+      
 
       // if dummyRootTypeInfo and not parentInfo {
       //     Util.debugLog();
@@ -1937,6 +1967,13 @@ pub class NormalTypeInfo extend TypeInfo {
       } 
    }
 
+   pub override fn createGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+      let mut map = { headTypeInfo: headTypeInfo };
+      foreach typeInfo, genType in self.gen2TypeMap {
+         map[ genType ] = typeInfo;
+      }
+      return map;
+   }
 
    // この型が nilable を表わす型かどうか。
    pub override fn get_nilable(): bool {
@@ -2186,6 +2223,12 @@ pub class NormalTypeInfo extend TypeInfo {
 }
 
 
+pub static fn NormalTypeInfo.createGeneric(
+   txt:str, moduleTypeInfo:&TypeInfo ) : &GenericTypeInfo
+{
+   return new GenericTypeInfo( txt, moduleTypeInfo );
+}
+
 //pub let typeInfoRoot = rootTypeInfo;
 
 idProv.increment();
@@ -2240,12 +2283,22 @@ pub static fn NormalTypeInfo.createBuiltin(
             kind == .Class or kind == .Module or
             kind == .IF or kind == .List or kind == .Array or kind == .Set, nil## );
       }  
-   } 
-   
+   }
+
+   let mut genTypeList:List<&TypeInfo> = [];
+   switch kind {
+      case .Array, .List, .Set {
+         genTypeList.insert( NormalTypeInfo.createGeneric( "T", headTypeInfo ) );
+      }
+      case .Map {
+         genTypeList.insert( NormalTypeInfo.createGeneric( "K", headTypeInfo ) );
+         genTypeList.insert( NormalTypeInfo.createGeneric( "V", headTypeInfo ) );
+      }
+   }
    let mut info = new NormalTypeInfo(
       false, scope, nil, nil, false, false, false, AccessMode.Pub,
       typeTxt, headTypeInfo, typeId,
-      kind, [], argTypeList, retTypeList, true );
+      kind, genTypeList, argTypeList, retTypeList, true );
    if scope {
       rootScope.addClass( typeTxt, info );
    } 
@@ -2254,8 +2307,36 @@ pub static fn NormalTypeInfo.createBuiltin(
    return info;
 }
 
+pub let builtinTypeNone:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "None", "", .Prim## );
+pub let builtinTypeNeverRet:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Error", "__", .Prim## );
+pub let builtinTypeStem:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem## );
+pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
+
+pub let builtinTypeBool:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim## );
+pub let builtinTypeInt:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Int", "int" , .Prim## );
+pub let builtinTypeReal:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Real", "real" , .Prim## );
+pub let builtinTypeChar:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "char", "char" , .Prim## );
+pub let builtinTypeString:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "String", "str" , .Class## );
+pub let builtinTypeMap:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
+pub let builtinTypeSet:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Set", "Set" , .Set## );
+pub let builtinTypeList:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "List", "List" , .List## );
+pub let builtinTypeArray:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
+
 pub static fn NormalTypeInfo.createSet(
-   accessMode: AccessMode, parentInfo: &TypeInfo, itemTypeInfo: &List<&TypeInfo> ): &TypeInfo
+   accessMode: AccessMode, parentInfo: &TypeInfo,
+   itemTypeInfo: &List<&TypeInfo> ): &TypeInfo
 {
    if #itemTypeInfo == 0 {
       Util.err( "illegal set type: %s" (itemTypeInfo) );
@@ -2263,12 +2344,14 @@ pub static fn NormalTypeInfo.createSet(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    return new NormalTypeInfo(
-      false, nil, nil, nil, false, false, false, accessMode, "Set",
-      headTypeInfo, idProv.$id, .Set, itemTypeInfo, nil, nil, true );
+      false, getScope( builtinTypeSet ), builtinTypeSet,
+      nil, false, false, false, accessMode,
+      "Set", headTypeInfo, idProv.$id, .Set, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createList(
-   accessMode: AccessMode, parentInfo: &TypeInfo, itemTypeInfo: &List<&TypeInfo> ): &TypeInfo
+   accessMode: AccessMode, parentInfo: &TypeInfo,
+   itemTypeInfo: &List<&TypeInfo> ): &TypeInfo
 {
    if #itemTypeInfo == 0 {
       Util.err( "illegal list type: %s" (itemTypeInfo) );
@@ -2276,8 +2359,9 @@ pub static fn NormalTypeInfo.createList(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    return new NormalTypeInfo(
-      false, nil, nil, nil, false, false, false, accessMode, "List",
-      headTypeInfo, idProv.$id, .List, itemTypeInfo, nil, nil, true );
+      false, getScope( builtinTypeList ), builtinTypeList,
+      nil, false, false, false, accessMode,
+      "List", headTypeInfo, idProv.$id, .List, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createArray(
@@ -2287,8 +2371,9 @@ pub static fn NormalTypeInfo.createArray(
    //   typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    return new NormalTypeInfo(
-      false, nil, nil, nil, false, false, false, accessMode, "Array",
-      headTypeInfo, idProv.$id, .Array, itemTypeInfo, nil, nil, true );
+      false, getScope( builtinTypeArray ), builtinTypeArray,
+      nil, false, false, false, accessMode,
+      "Array", headTypeInfo, idProv.$id, .Array, itemTypeInfo, nil, nil, true );
 }
 
 pub static fn NormalTypeInfo.createMap(
@@ -2298,8 +2383,9 @@ pub static fn NormalTypeInfo.createMap(
    //typeIdSeed = typeIdSeed + 1;
    idProv.increment();
    return new NormalTypeInfo(
-      false, nil, nil, nil, false, false, false, accessMode, "Map",
-      headTypeInfo, idProv.$id, .Map,
+      false, getScope( builtinTypeMap ), builtinTypeMap,
+      nil, false, false, false, accessMode,
+      "Map", headTypeInfo, idProv.$id, .Map,
       [ keyTypeInfo, valTypeInfo ], nil, nil, true );
 }
 
@@ -2328,7 +2414,7 @@ pub static fn NormalTypeInfo.createModule(
 pub static fn NormalTypeInfo.createClass(
    classFlag: bool, abstractFlag: bool, scope: Scope!,
    baseInfo: TypeInfo!, interfaceList: List<&TypeInfo>!,
-   parentInfo: &TypeInfo, externalFlag: bool,
+   genTypeList: &List<&GenericTypeInfo>, parentInfo: &TypeInfo, externalFlag: bool,
    accessMode: AccessMode, className: str ): &TypeInfo
 {
    // if className == "str" {
@@ -2350,15 +2436,10 @@ pub static fn NormalTypeInfo.createClass(
       abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
       className, parentInfo, idProv.$id,
-      classFlag and TypeInfoKind.Class or TypeInfoKind.IF, nil, nil, nil, true );
+      classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, true );
    return info;
 }
 
-pub static fn NormalTypeInfo.createGeneric(
-   txt:str, moduleTypeInfo:&TypeInfo ) : &GenericTypeInfo
-{
-   return new GenericTypeInfo( txt, moduleTypeInfo );
-}
 
 pub static fn NormalTypeInfo.createFunc(
    abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
@@ -2555,14 +2636,6 @@ pub static fn NormalTypeInfo.createDDD(
 
 
 
-pub let builtinTypeNone:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "None", "", .Prim## );
-pub let builtinTypeNeverRet:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Error", "__", .Prim## );
-pub let builtinTypeStem:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem## );
-pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
-
 pub let builtinTypeNil:TypeInfo = new NilTypeInfo();
 registBuiltin( "Nil", "nil", .Prim, builtinTypeNil, headTypeInfo );
 
@@ -2570,24 +2643,7 @@ pub let builtinTypeDDD:TypeInfo =
    NormalTypeInfo.createDDD( builtinTypeStem_, true );
 registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo );
 
-pub let builtinTypeBool:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim## );
-pub let builtinTypeInt:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Int", "int" , .Prim## );
-pub let builtinTypeReal:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Real", "real" , .Prim## );
-pub let builtinTypeChar:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "char", "char" , .Prim## );
-pub let builtinTypeString:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "String", "str" , .Class## );
-pub let builtinTypeMap:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
-pub let builtinTypeSet:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Set", "Set" , .Set## );
-pub let builtinTypeList:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "List", "List" , .List## );
-pub let builtinTypeArray:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
+
 pub let builtinTypeForm:TypeInfo =
    NormalTypeInfo.createBuiltin( "Form", "form" , .Func, builtinTypeDDD );
 pub let builtinTypeSymbol:TypeInfo = 
@@ -2698,13 +2754,13 @@ pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( idProv, "[##]" );
 
 
 
-let mut numberTypeMap:Map<&TypeInfo,bool> = {};
-numberTypeMap[ builtinTypeInt ] = true;
-numberTypeMap[ builtinTypeChar ] = true;
-numberTypeMap[ builtinTypeReal ] = true;
+let mut numberTypeSet:Set<&TypeInfo> = (@);
+numberTypeSet.add( builtinTypeInt );
+numberTypeSet.add( builtinTypeChar );
+numberTypeSet.add( builtinTypeReal );
 
 pub fn isNumberType( typeInfo:&TypeInfo ): bool {
-   return numberTypeMap[ typeInfo.$srcTypeInfo ] and true or false;
+   return numberTypeSet.has( typeInfo.$srcTypeInfo );
 }
 
 
@@ -2889,12 +2945,11 @@ expTypeList の型から、 dstTypeListOrg の型へ互換性があるかどう�
    dstTypeListOrg の型が省略可能な場合 Warn を出す。
 @return MatchType 適合結果
 @return str メッセージ
-@return Map<&TypeInfo,&TypeInfo> GenericTypeInfo → 実際に適応した型
 */
 pub static fn TypeInfo.checkMatchType(
    dstTypeList: &List<&TypeInfo>, expTypeList: &List<&TypeInfo>,
    allowDstShort:bool, warnForFollowSrcIndex:int!, gen2Type:Map<&TypeInfo,&TypeInfo> ) :
-   MatchType, str, Map<&TypeInfo,&TypeInfo>
+   MatchType, str
 {
    macro _checkWarnForFollow( index:sym, dstType:sym, expType:sym ) {
       when! warnForFollowSrcIndex {
@@ -2960,7 +3015,7 @@ pub static fn TypeInfo.checkMatchType(
    if #expTypeList > 0 {
       foreach expType, index in expTypeList {
          if #dstTypeList == 0 {
-            return .Error, "over exp. expect:0, actual:%d" ( #expTypeList), gen2Type;
+            return .Error, "over exp. expect:0, actual:%d" ( #expTypeList);
          }
          let dstType = dstTypeList[ index ];
          if #dstTypeList == index {
@@ -2969,11 +3024,11 @@ pub static fn TypeInfo.checkMatchType(
                if not dstType.canEvalWith( expType, "=", gen2Type ) {
                   return .Error, "exp(%d) type mismatch %s <- %s"
                   ( index, dstType.getTxt( true## ),
-                    expType.getTxt(true## )), gen2Type ;
+                    expType.getTxt(true## ));
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
                   return .Error, "over exp. expect: %d: actual: %d"
-                  (#dstTypeList, #expTypeList ), gen2Type;
+                  (#dstTypeList, #expTypeList );
                }
             }
             else {
@@ -2983,14 +3038,14 @@ pub static fn TypeInfo.checkMatchType(
                }
                let result, mess = checkSrcTypeFrom( index, dddItemType );
                if result ~= .Match {
-                  return result, mess, gen2Type;
+                  return result, mess;
                }
             }
             when! warnForFollowSrcIndex {
                if warnForFollowSrcIndex <= index and dstType.$nilable {
                   let mess = "use '**' at arg(%d). %s <- %s"
                       ( index, dstType.getTxt(true##), expType.getTxt(true##) );
-                  return .Warn, mess, gen2Type;
+                  return .Warn, mess;
                }
             }
             break;
@@ -3014,13 +3069,13 @@ pub static fn TypeInfo.checkMatchType(
             
             let result, mess = checkDstTypeFrom( index, srcType, srcType2nd );
             if result ~= .Match {
-               return result, mess, gen2Type;
+               return result, mess;
             }
             when! warnForFollowSrcIndex {
                if warnForFollowSrcIndex <= index and dstType.$nilable {
                   let warnMess = "use '**' at arg(%d). %s <- %s"
                       ( index, dstType.getTxt(true##), expType.getTxt(true##) );
-                  return .Warn, warnMess, gen2Type;
+                  return .Warn, warnMess;
                }
             }
             break;
@@ -3029,13 +3084,13 @@ pub static fn TypeInfo.checkMatchType(
             if not dstType.canEvalWith( expType, "=", gen2Type ) {
                return .Error, "exp(%d) type mismatch %s <- %s"
                ( index, dstType.getTxt( true## ),
-                 expType.getTxt( true## )), gen2Type;
+                 expType.getTxt( true## ));
             }  
             when! warnForFollowSrcIndex {
                if warnForFollowSrcIndex <= index and dstType.$nilable {
                   let mess = "use '**' at arg(%d). %s <- %s"
                       ( index, dstType.getTxt(true##), expType.getTxt(true##) );
-                  return .Warn, mess, gen2Type;
+                  return .Warn, mess;
                }
             }
          }  
@@ -3045,14 +3100,14 @@ pub static fn TypeInfo.checkMatchType(
       foreach dstType, index in dstTypeList {
          if not dstType.canEvalWith( builtinTypeNil, "=", gen2Type ) {
             return .Error, "exp(%d) type mismatch %s <- nil"
-            ( index, dstType.getTxt( true## )), gen2Type;
+            ( index, dstType.getTxt( true## ));
          }
          return .Warn, Code.format( .nothing_define_abbr,
                                     "use '##', instate of %s."
-                                    (dstType.getTxt(true##) ) ), gen2Type;
+                                    (dstType.getTxt(true##) ) );
       }
    }
-   return .Match, "", gen2Type;
+   return .Match, "";
 }
 
 pub static fn TypeInfo.canEvalWithBase(
@@ -3642,7 +3697,7 @@ pub abstract class MacroInfo {
 
 _declNodeClass( "Root", Node, false, false, false,
                 [ { "children": "List<&Node>" },
-                  { "useModuleMacroMap": "Map<&TypeInfo,bool>" },
+                  { "useModuleMacroSet": "&Set<&TypeInfo>" },
                   { "moduleId": "&frontInterface.ModuleId" },
                   { "processInfo": "ProcessInfo" },
                   { "moduleTypeInfo": "&TypeInfo" },
@@ -4290,7 +4345,7 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "initStmtList": "List<&Node>" },
                   { "advertiseList": "AdvertiseInfo[]" },
                   { "trustList": "List<&TypeInfo>" },
-                  { "outerMethodSet": "Map<str,bool>" } ]
+                  { "outerMethodSet": "Set<str>" } ]
 );
 
 _declNodeClass( "DeclEnum", Node, false, false, true,

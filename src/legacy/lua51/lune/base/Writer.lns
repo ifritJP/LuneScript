@@ -98,7 +98,7 @@ class JsonLayer {
    pub let arrayFlag: bool;
    pub let name: str;
    pub let madeByArrayFlag: bool;
-   pub let mut elementNameSet: Map<str,bool>;
+   pub let mut elementNameSet: Set<str>;
    pub let parentFlag: bool;
    pub let mut openElement: bool;
 }
@@ -115,7 +115,7 @@ pub class JSON extend (Writer) {
          arrayFlag, 
          self.prevName,
          madeByArrayFlag,
-         {},
+         (@),
          true,
          false );   
 
@@ -180,10 +180,10 @@ pub class JSON extend (Writer) {
    pub fn addElementName( name:str ) {
       let mut info = unwrap self.getLayerInfo();
       let mut nameSet = info.elementNameSet;
-      if not info.arrayFlag and nameSet[ name ] {
+      if not info.arrayFlag and nameSet.has( name ) {
          Util.err( "exist same name: " .. name );
       }
-      nameSet[ name ] = true;
+      nameSet.add( name );
    }
 
    pub fn startParent( name:str, arrayFlag:bool ) mut {

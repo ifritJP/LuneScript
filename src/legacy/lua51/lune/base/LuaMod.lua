@@ -72,9 +72,12 @@ CodeKind.__allList[10] = CodeKind.AlgeMapping
 CodeKind.SetMapping = 10
 CodeKind._val2NameMap[10] = 'SetMapping'
 CodeKind.__allList[11] = CodeKind.SetMapping
-CodeKind.Finalize = 11
-CodeKind._val2NameMap[11] = 'Finalize'
-CodeKind.__allList[12] = CodeKind.Finalize
+CodeKind.SetOp = 11
+CodeKind._val2NameMap[11] = 'SetOp'
+CodeKind.__allList[12] = CodeKind.SetOp
+CodeKind.Finalize = 12
+CodeKind._val2NameMap[12] = 'Finalize'
+CodeKind.__allList[13] = CodeKind.Finalize
 
 local codeMap = {}
 codeMap[CodeKind.Init] = [==[
@@ -248,6 +251,55 @@ function _lune._fromMap( obj, map, memInfoList )
       obj[ memInfo.name ] = val
    end
    return true
+end
+]==]
+codeMap[CodeKind.SetOp] = [==[
+function _lune._Set_or( setObj, otherSet )
+   for val in pairs( otherSet ) do
+      setObj[ val ] = true
+   end
+   return setObj
+end
+function _lune._Set_and( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if not otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_has( setObj, val )
+   return setObj[ val ] ~= nil
+end
+function _lune._Set_sub( setObj, otherSet )
+   local delValList = {}
+   for val in pairs( setObj ) do
+      if otherSet[ val ] then
+         table.insert( delValList, val )
+      end
+   end
+   for index, val in ipairs( delValList ) do
+      setObj[ val ] = nil
+   end
+   return setObj
+end
+function _lune._Set_len( setObj )
+   local total = 0
+   for val in pairs( setObj ) do
+      total = total + 1
+   end
+   return total
+end
+function _lune._Set_clone( setObj )
+   local obj = {}
+   for val in pairs( setObj ) do
+      obj[ val ] = true
+   end
+   return obj
 end
 ]==]
 codeMap[CodeKind.SetMapping] = [==[
