@@ -5659,30 +5659,24 @@ function TransUnit:analyzeSetConst( token )
       local nodeList = (_lune.unwrap( expList) ):get_expList()
       for __index, exp in pairs( nodeList ) do
          local expType = exp:get_expType()
-         if itemTypeInfo:equals( Ast.builtinTypeNone ) then
-            itemTypeInfo = expType
-         elseif not itemTypeInfo:canEvalWith( expType, "=", {} ) then
-            if expType:equals( Ast.builtinTypeNil ) then
-               itemTypeInfo = _lune.unwrap( itemTypeInfo:get_nilableTypeInfo())
-            elseif expType:get_nilable() then
-               itemTypeInfo = Ast.builtinTypeStem_
-            else
-             
-               itemTypeInfo = Ast.builtinTypeStem
+         if expType:get_nilable() then
+            self:addErrMess( exp:get_pos(), string.format( "'Set' object can't store nilable. -- %s", expType:getTxt(  )) )
+         else
+          
+            if itemTypeInfo:equals( Ast.builtinTypeNone ) then
+               itemTypeInfo = expType
+            elseif not itemTypeInfo:canEvalWith( expType, "=", {} ) then
+               if expType:equals( Ast.builtinTypeNil ) then
+                  itemTypeInfo = _lune.unwrap( itemTypeInfo:get_nilableTypeInfo())
+               else
+                
+                  itemTypeInfo = Ast.builtinTypeStem
+               end
+               
             end
             
          end
          
-      end
-      
-   end
-   
-   if itemTypeInfo:get_kind() == Ast.TypeInfoKind.DDD then
-      if #itemTypeInfo:get_itemTypeInfoList() > 0 then
-         itemTypeInfo = itemTypeInfo:get_itemTypeInfoList()[1]
-      else
-       
-         itemTypeInfo = Ast.builtinTypeStem_
       end
       
    end

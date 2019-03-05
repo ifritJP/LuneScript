@@ -173,28 +173,24 @@ fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Ast.Node {
       let nodeList: List<&Ast.Node> = (unwrap expList).$expList;
       foreach exp in nodeList {
          let expType = exp.$expType;
-         if itemTypeInfo.equals( Ast.builtinTypeNone ) {
-            itemTypeInfo = expType;
+         if expType.$nilable {
+            self.addErrMess(
+               exp.$pos,
+               "'Set' object can't store nilable. -- %s" (expType.getTxt(##)));
          }
-         elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
-            if expType.equals( Ast.builtinTypeNil ) {
-               itemTypeInfo = unwrap itemTypeInfo.$nilableTypeInfo;
+         else {
+            if itemTypeInfo.equals( Ast.builtinTypeNone ) {
+               itemTypeInfo = expType;
             }
-            elseif expType.$nilable {
-               itemTypeInfo = Ast.builtinTypeStem_;
-            }
-            else {
-               itemTypeInfo = Ast.builtinTypeStem;
+            elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
+               if expType.equals( Ast.builtinTypeNil ) {
+                  itemTypeInfo = unwrap itemTypeInfo.$nilableTypeInfo;
+               }
+               else {
+                  itemTypeInfo = Ast.builtinTypeStem;
+               }
             }
          }
-      }
-   }
-   if itemTypeInfo.$kind == .DDD {
-      if #itemTypeInfo.$itemTypeInfoList > 0 {
-         itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
-      }
-      else {
-         itemTypeInfo = Ast.builtinTypeStem_;
       }
    }
    let mut typeInfoList = [ Ast.builtinTypeNone ];

@@ -1,4 +1,7 @@
 {
+   let set = (@ 1, 2, 3, nil );
+}
+{
    let set = (@ "1", "2", "3", "4" );
    forsort val in set {
       let val1:int = val; // error
@@ -37,6 +40,8 @@
 }
 {
    let mut set = (@ 1, 2, 3 );
+   let val:int! = 1;
+   set.add( val );
    let mut set2 = (@ "1", "2", "3" );
    set2.or( set );  // error
    set2.and( set ); // error
