@@ -121,12 +121,9 @@
     )))
 
 
-(defun lns-ac-candidates-pos (pos let-list let-req-more
-				  let-prev-ac-point let-ac-process process-state)
-  )
-
 (defun lns-ac-candidates (mode)
-  (lexical-let ((let-list (if (eq mode :symbol)
+  (lexical-let ((let-ac-mode mode)
+		(let-list (if (eq mode :symbol)
 			      'lns-ac-candidate-list-symbol
 			    'lns-ac-candidate-list-field))
 		(let-req-more (if (eq mode :symbol)
@@ -151,6 +148,7 @@
       (set let-prev-ac-point nil)
       (symbol-value let-list))
      ((eq (symbol-value process-state) :processing)
+      (set let-req-more ac-point)
       nil)
      ((eq (symbol-value process-state) :idle)
       (set let-prev-ac-point ac-point)
@@ -160,20 +158,26 @@
 	    (lambda (candidate-list err)
 	      (cond
 	       (candidate-list
-		(set let-list
-		     (mapcar (lambda (candidate)
-			       (let* ((info (lns-json-val candidate :candidate))
-				      (item-txt (lns-candidate-get-displayTxt info)))
-				 item-txt))
-			     candidate-list))
-		;; field の内容を symbol にコピーする。
-		;; 現状は field も symbol も同じ結果になるため。
-		(setq lns-ac-candidate-list-symbol (symbol-value let-list))
-		(set process-state :done)
-		(set let-ac-process nil)
-		(ac-stop)
-		(ac-start)
-		(ac-update)
+		(if (eval let-req-more)
+		    ;; 問い合わせ中に要求があった場合は、その要求で再度処理
+		    (let ((ac-point (eval let-req-more)))
+		      (set let-req-more nil)
+		      (set process-state :idle)
+		      (lns-ac-candidate let-ac-mode))
+		  (set let-list
+		       (mapcar (lambda (candidate)
+				 (let* ((info (lns-json-val candidate :candidate))
+					(item-txt (lns-candidate-get-displayTxt info)))
+				   item-txt))
+			       candidate-list))
+		  ;; field の内容を symbol にコピーする。
+		  ;; 現状は field も symbol も同じ結果になるため。
+		  (setq lns-ac-candidate-list-symbol (symbol-value let-list))
+		  (set process-state :done)
+		  (set let-ac-process nil)
+		  (ac-stop)
+		  (ac-start)
+		  (ac-update))
 		)
 	       (t
 		(set process-state :idle)))

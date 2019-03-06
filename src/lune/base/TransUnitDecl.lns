@@ -70,7 +70,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
          if token.txt ~= ']' {
             self.pushback();
             self.checkNextToken( ']' );
-         }   
+         }
       }
       elseif token.txt == "<" {
          let mut genericList: List<&Ast.TypeInfo> = [];
@@ -83,12 +83,14 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
          } nextToken.txt ~= ",";
          self.checkToken( nextToken, '>' );
 
-         fn checkGenericTypeCount( count:int ) {
+         fn checkAlternateTypeCount( count:int ): bool {
             if #genericList ~= count {
                self.addErrMess(
                   firstToken.pos,     
                   "generic type count is unmatch. -- %d" (#genericList) );
+               return false;
             }
+            return true;
          }
          
          switch typeInfo.$kind {
@@ -105,26 +107,35 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
                   accessMode, self.getCurrentClass(), keyType, valType );
             }
             case .List {
-               checkGenericTypeCount( 1 );
-               typeInfo = Ast.NormalTypeInfo.createList(
-                  accessMode, self.getCurrentClass(),
-                  [ genericList[1] or Ast.builtinTypeStem ] );
+               if checkAlternateTypeCount( 1 ) {
+                  typeInfo = Ast.NormalTypeInfo.createList(
+                     accessMode, self.getCurrentClass(),
+                     [ genericList[1] or Ast.builtinTypeStem ] );
+               }
             }
             case .Array {
-               checkGenericTypeCount( 1 );
-               typeInfo = Ast.NormalTypeInfo.createArray(
-                  accessMode, self.getCurrentClass(),
-                  [ genericList[1] or Ast.builtinTypeStem ] );
+               if checkAlternateTypeCount( 1 ) {
+                  typeInfo = Ast.NormalTypeInfo.createArray(
+                     accessMode, self.getCurrentClass(),
+                     [ genericList[1] or Ast.builtinTypeStem ] );
+               }
             }
             case .Set {
-               checkGenericTypeCount( 1 );
-               typeInfo = Ast.NormalTypeInfo.createSet(
-                  accessMode, self.getCurrentClass(),
-                  [ genericList[1] or Ast.builtinTypeStem ] );
+               if checkAlternateTypeCount( 1 ) {
+                  typeInfo = Ast.NormalTypeInfo.createSet(
+                     accessMode, self.getCurrentClass(),
+                     [ genericList[1] or Ast.builtinTypeStem ] );
+               }
             }
             case .DDD {
-               checkGenericTypeCount( 1 );
-               typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false );
+               if checkAlternateTypeCount( 1 ) {
+                  typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false );
+               }
+            }
+            case .Class {
+               if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
+                  typeInfo = Ast.NormalTypeInfo.createGeneric( typeInfo, genericList );
+               }
             }
             default {
                self.error( string.format( "not support generic: %s",
@@ -472,8 +483,8 @@ fn TransUnit.analyzeDeclMacro(
 }
 
 fn TransUnit.analyzePushClass(
-   classFlag: bool, abstractFlag: bool,
-   firstToken:&Parser.Token, name:&Parser.Token, accessMode:Ast.AccessMode ) mut :
+   classFlag: bool, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
+   accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
    let mut nextToken = self.getToken(##);
@@ -572,8 +583,30 @@ fn TransUnit.analyzePushClass(
    
    let classTypeInfo = self.pushClass(
       classFlag, abstractFlag, typeInfo, interfaceList,
-      [], false, name.txt, accessMode ## );
+      altTypeList, false, name.txt, accessMode ## );
    return nextToken, classTypeInfo;
+}
+
+fn TransUnit.analyzeDeclAlternateType(
+   token:&Parser.Token, accessMode: Ast.AccessMode ) mut :
+   &Parser.Token, List<&Ast.AlternateTypeInfo>
+{
+   let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
+   let mut nextToken = token;
+   while true {
+      let genericSymToken = self.getSymbolToken( .MustNot_ );
+      let altType = Ast.NormalTypeInfo.createAlternate(
+         genericSymToken.txt, accessMode, self.moduleType );
+      altTypeList.insert( altType );
+
+      let workToken = self.getToken(##);
+      if workToken.txt == ">" {
+         nextToken = self.getToken(##);
+         break;
+      }
+      self.checkToken( workToken, "," );
+   }
+   return nextToken, altTypeList;
 }
 
 fn TransUnit.analyzeDeclProto(
@@ -590,12 +623,23 @@ fn TransUnit.analyzeDeclProto(
    if nextToken.txt == "class" or nextToken.txt == "interface" {
       let name = self.getSymbolToken( .MustNot_ );
 
+      // generic の型宣言解析
+      let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
+      {  
+         let mut workToken = self.getToken(##);
+         if workToken.txt == "<" {
+            workToken, altTypeList = self.analyzeDeclAlternateType(
+               workToken, accessMode );
+         }  
+         self.pushbackToken( workToken );
+      }  
+
       if accessMode == .Local {
          accessMode = .Pri;
       }
       
-      nextToken = self.analyzePushClass(
-         nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode );
+      nextToken = self.analyzePushClass( nextToken.txt ~= "interface", abstractFlag,
+                                         firstToken, name, accessMode, altTypeList );
       self.popClass();
       self.checkToken( nextToken, ";" );
    }
@@ -1376,6 +1420,17 @@ fn TransUnit.analyzeDeclClass(
 {
    let name = self.getSymbolToken( .MustNot_ );
 
+   // generic の型宣言解析
+   let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
+   {
+      let mut nextToken = self.getToken(##);
+      if nextToken.txt == "<" {
+         nextToken, altTypeList = self.analyzeDeclAlternateType(
+            nextToken, classAccessMode );
+      }
+      self.pushbackToken( nextToken );
+   }
+
    if classAccessMode == .Local {
       classAccessMode = .Pri;
    }
@@ -1395,7 +1450,8 @@ fn TransUnit.analyzeDeclClass(
    }
 
    let mut nextToken, classTypeInfo = self.analyzePushClass(
-      mode ~= .Interface, classAbstructFlag, firstToken, name, classAccessMode );
+      mode ~= .Interface, classAbstructFlag,
+      firstToken, name, classAccessMode, altTypeList );
 
    let mut classScope = self.scope;
 
@@ -1772,22 +1828,29 @@ fn TransUnit.analyzeDeclFunc(
    
   
    let mut funcBodyScope = self.pushScope( false ## );
+   let mut altTypeList:List<&Ast.TypeInfo> = [];
    // generic 宣言
    if token.txt == "<" {
-      while true {
-         let genericSymToken = self.getSymbolToken( .MustNot_ );
-         let genericType = Ast.NormalTypeInfo.createGeneric(
-            genericSymToken.txt, self.moduleType );
-         funcBodyScope.addGeneric( accessMode, genericSymToken.txt, genericType );
-
-         let workToken = self.getToken(##);
-         if workToken.txt == ">" {
-            token = self.getToken(##);
-            break;
-         }
-         self.checkToken( workToken, "," );
+      token, altTypeList = self.analyzeDeclAlternateType( token, accessMode );
+      foreach altType in altTypeList {
+         funcBodyScope.addAlternate( accessMode, altType.$rawTxt, altType );
       }
+
    }
+   //    while true {
+   //       let genericSymToken = self.getSymbolToken( .MustNot_ );
+   //       let genericType = Ast.NormalTypeInfo.createAlternate(
+   //          genericSymToken.txt, self.moduleType );
+   //       funcBodyScope.addAlternate( accessMode, genericSymToken.txt, genericType );
+
+   //       let workToken = self.getToken(##);
+   //       if workToken.txt == ">" {
+   //          token = self.getToken(##);
+   //          break;
+   //       }
+   //       self.checkToken( workToken, "," );
+   //    }
+   // }
 
    self.checkToken( token, "(" );
 

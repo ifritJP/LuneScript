@@ -16,6 +16,10 @@ class Test {
    pub fn func2( val:int ) mut {
       self.val1 = val;
    }
+   pub fn func3() {
+      print( self.val1 );
+      print( val1 ); // error
+   }
 }
 
 Test.func( 1 ); // error

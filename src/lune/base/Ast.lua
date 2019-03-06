@@ -204,9 +204,12 @@ SerializeKind.__allList[7] = SerializeKind.DDD
 SerializeKind.Alias = 7
 SerializeKind._val2NameMap[7] = 'Alias'
 SerializeKind.__allList[8] = SerializeKind.Alias
-SerializeKind.Generic = 8
-SerializeKind._val2NameMap[8] = 'Generic'
-SerializeKind.__allList[9] = SerializeKind.Generic
+SerializeKind.Alternate = 8
+SerializeKind._val2NameMap[8] = 'Alternate'
+SerializeKind.__allList[9] = SerializeKind.Alternate
+SerializeKind.Generic = 9
+SerializeKind._val2NameMap[9] = 'Generic'
+SerializeKind.__allList[10] = SerializeKind.Generic
 
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
@@ -284,9 +287,9 @@ TypeInfoKind.__allList[17] = TypeInfoKind.Abbr
 TypeInfoKind.Set = 17
 TypeInfoKind._val2NameMap[17] = 'Set'
 TypeInfoKind.__allList[18] = TypeInfoKind.Set
-TypeInfoKind.Generic = 18
-TypeInfoKind._val2NameMap[18] = 'Generic'
-TypeInfoKind.__allList[19] = TypeInfoKind.Generic
+TypeInfoKind.Alternate = 18
+TypeInfoKind._val2NameMap[18] = 'Alternate'
+TypeInfoKind.__allList[19] = TypeInfoKind.Alternate
 
 local function isBuiltin( typeId )
 
@@ -890,6 +893,10 @@ function TypeInfo:applyGeneric( gen2TypeMap )
 
    return self
 end
+function TypeInfo:get_genSrcTypeInfo(  )
+
+   return self
+end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
@@ -1072,6 +1079,10 @@ end
 
 function AliasTypeInfo:getParentFullName( ... )
    return self.aliasSrcTypeInfo:getParentFullName( ... )
+end       
+
+function AliasTypeInfo:get_genSrcTypeInfo( ... )
+   return self.aliasSrcTypeInfo:get_genSrcTypeInfo( ... )
 end       
 
 function AliasTypeInfo:createGen2TypeMap( ... )
@@ -1284,12 +1295,14 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
 
    local typeInfo = nil
    local validThisScope = false
+   local limitSymbol = false
    do
       local _exp = self.ownerTypeInfo
       if _exp ~= nil then
          if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or self == moduleScope or self == _moduleObj.rootScope then
             validThisScope = true
-         elseif (_exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.Module ) and name == "self" then
+         elseif _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.Module then
+            limitSymbol = true
             validThisScope = true
          elseif _exp:get_kind() == TypeInfoKind.Enum or _exp:get_kind() == TypeInfoKind.Alge then
             validThisScope = true
@@ -1302,9 +1315,12 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
    
    if validThisScope then
       do
-         local _exp = self.symbol2SymbolInfoMap[name]
-         if _exp ~= nil then
-            return _exp:canAccess( fromScope )
+         local symbolInfo = self.symbol2SymbolInfoMap[name]
+         if symbolInfo ~= nil then
+            if not limitSymbol or name == "self" or (symbolInfo:get_typeInfo():get_kind() == TypeInfoKind.Alternate and symbolInfo:get_kind() == SymbolKind.Typ ) then
+               return symbolInfo:canAccess( fromScope )
+            end
+            
          end
       end
       
@@ -1387,7 +1403,7 @@ function Scope:addAlge( accessMode, name, typeInfo )
    self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
 end
 
-function Scope:addGeneric( accessMode, name, typeInfo )
+function Scope:addAlternate( accessMode, name, typeInfo )
 
    self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
 end
@@ -1925,6 +1941,10 @@ function NilableTypeInfo:getParentFullName( ... )
    return self.nonnilableType:getParentFullName( ... )
 end       
 
+function NilableTypeInfo:get_genSrcTypeInfo( ... )
+   return self.nonnilableType:get_genSrcTypeInfo( ... )
+end       
+
 function NilableTypeInfo:createGen2TypeMap( ... )
    return self.nonnilableType:createGen2TypeMap( ... )
 end       
@@ -1934,54 +1954,55 @@ function NilableTypeInfo:getFullName( ... )
 end       
 
 
-local GenericTypeInfo = {}
-setmetatable( GenericTypeInfo, { __index = TypeInfo } )
-_moduleObj.GenericTypeInfo = GenericTypeInfo
-function GenericTypeInfo.new( txt, moduleTypeInfo )
+local AlternateTypeInfo = {}
+setmetatable( AlternateTypeInfo, { __index = TypeInfo } )
+_moduleObj.AlternateTypeInfo = AlternateTypeInfo
+function AlternateTypeInfo.new( txt, accessMode, moduleTypeInfo )
    local obj = {}
-   GenericTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( txt, moduleTypeInfo ); end
+   AlternateTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( txt, accessMode, moduleTypeInfo ); end
    return obj
 end
-function GenericTypeInfo:__init(txt, moduleTypeInfo) 
+function AlternateTypeInfo:__init(txt, accessMode, moduleTypeInfo) 
    TypeInfo.__init( self ,nil)
    
    idProv:increment(  )
    self.typeId = idProv:get_id()
    self.txt = txt
+   self.accessMode = accessMode
    self.moduleTypeInfo = moduleTypeInfo
    idProv:increment(  )
    self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
 end
-function GenericTypeInfo.createNoneGen2TypeMap(  )
+function AlternateTypeInfo.createNoneGen2TypeMap(  )
 
    return {}
 end
-function GenericTypeInfo.isValidApply( gen2Type )
+function AlternateTypeInfo.isValidApply( gen2Type )
 
-   return gen2Type[_moduleObj.headTypeInfo]
+   return gen2Type[_moduleObj.headTypeInfo] ~= nil
 end
-function GenericTypeInfo:isModule(  )
+function AlternateTypeInfo:isModule(  )
 
    return false
 end
-function GenericTypeInfo:getParentId(  )
+function AlternateTypeInfo:getParentId(  )
 
    return self.moduleTypeInfo:get_typeId()
 end
-function GenericTypeInfo:get_parentInfo(  )
+function AlternateTypeInfo:get_parentInfo(  )
 
    return self.moduleTypeInfo
 end
-function GenericTypeInfo:getTxt( fullName, importInfo, localFlag )
+function AlternateTypeInfo:getTxt( fullName, importInfo, localFlag )
 
    return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
 end
-function GenericTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function AlternateTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
 
    return self.txt
 end
-function GenericTypeInfo:canEvalWith( other, opTxt, gen2type )
+function AlternateTypeInfo:canEvalWith( other, opTxt, gen2type )
 
    if self == other:get_srcTypeInfo() then
       return true
@@ -1998,61 +2019,206 @@ function GenericTypeInfo:canEvalWith( other, opTxt, gen2type )
       end
    end
    
-   if not GenericTypeInfo.isValidApply( gen2type ) then
+   if not AlternateTypeInfo.isValidApply( gen2type ) then
       return false
    end
    
    gen2type[self] = other
    return true
 end
-function GenericTypeInfo:get_display_stirng_with( raw )
+function AlternateTypeInfo:get_display_stirng_with( raw )
 
    return self:getTxtWithRaw( raw )
 end
-function GenericTypeInfo:get_display_stirng(  )
+function AlternateTypeInfo:get_display_stirng(  )
 
    return self:get_display_stirng_with( self.txt )
 end
-function GenericTypeInfo:equals( typeInfo )
+function AlternateTypeInfo:equals( typeInfo )
 
    return self == typeInfo:get_srcTypeInfo()
 end
-function GenericTypeInfo:hasRouteNamespaceFrom( other )
+function AlternateTypeInfo:hasRouteNamespaceFrom( other )
 
    return true
 end
-function GenericTypeInfo:get_rawTxt(  )
+function AlternateTypeInfo:get_rawTxt(  )
 
    return self.txt
 end
-function GenericTypeInfo:get_kind(  )
+function AlternateTypeInfo:get_kind(  )
 
-   return TypeInfoKind.Generic
+   return TypeInfoKind.Alternate
 end
-function GenericTypeInfo:get_baseTypeInfo(  )
+function AlternateTypeInfo:get_baseTypeInfo(  )
 
    return _moduleObj.headTypeInfo
 end
-function GenericTypeInfo:get_nilable(  )
+function AlternateTypeInfo:get_nilable(  )
 
    return false
 end
-function GenericTypeInfo:get_mutable(  )
+function AlternateTypeInfo:get_mutable(  )
 
    return false
 end
-function GenericTypeInfo:getParentFullName( importInfo, localFlag )
+function AlternateTypeInfo:getParentFullName( importInfo, localFlag )
 
    return ""
+end
+function AlternateTypeInfo:serialize( stream, validChildrenSet )
+
+   local parentId = self:getParentId(  )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, accessMode = %d }\n', SerializeKind.Alternate, parentId, self.typeId, self.txt, self.accessMode) )
+end
+function AlternateTypeInfo:applyGeneric( gen2TypeMap )
+
+   return gen2TypeMap[self]
+end
+function AlternateTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = AlternateTypeInfo  } )
+end
+function AlternateTypeInfo:get_typeId()       
+   return self.typeId         
+end
+function AlternateTypeInfo:get_txt()       
+   return self.txt         
+end
+function AlternateTypeInfo:get_nilableTypeInfo()       
+   return self.nilableTypeInfo         
+end
+function AlternateTypeInfo:get_accessMode()       
+   return self.accessMode         
+end
+
+local GenericTypeInfo = {}
+setmetatable( GenericTypeInfo, { __index = TypeInfo } )
+_moduleObj.GenericTypeInfo = GenericTypeInfo
+function GenericTypeInfo.new( genSrcTypeInfo, itemTypeInfoList )
+   local obj = {}
+   GenericTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( genSrcTypeInfo, itemTypeInfoList ); end
+   return obj
+end
+function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList) 
+   TypeInfo.__init( self ,nil)
+   
+   idProv:increment(  )
+   self.typeId = idProv:get_id()
+   self.itemTypeInfoList = itemTypeInfoList
+   self.genSrcTypeInfo = genSrcTypeInfo
+   if #genSrcTypeInfo:get_itemTypeInfoList() ~= #itemTypeInfoList then
+      Util.err( string.format( "unmatch generic type number -- %d, %d", #genSrcTypeInfo:get_itemTypeInfoList(), #itemTypeInfoList) )
+   end
+   
+   local gen2TypeMap = {}
+   for index, altTypeInfo in pairs( genSrcTypeInfo:get_itemTypeInfoList() ) do
+      gen2TypeMap[altTypeInfo] = itemTypeInfoList[index]
+   end
+   
+   self.gen2TypeMap = gen2TypeMap
+   idProv:increment(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
+end
+function GenericTypeInfo:isInheritFrom( other )
+
+   local otherSrc = other:get_genSrcTypeInfo()
+   if not self.genSrcTypeInfo:isInheritFrom( otherSrc ) then
+      return false
+   end
+   
+   if otherSrc == other then
+      return false
+   end
+   
+   local genOther = other
+   for __index, altType in pairs( otherSrc:get_itemTypeInfoList() ) do
+      local genType = self.gen2TypeMap[altType]
+      if  nil == genType then
+         local _genType = genType
+      
+         return false
+      end
+      
+      local otherGenType = _lune.unwrap( genOther.gen2TypeMap[altType])
+      if not genType:isInheritFrom( otherGenType ) then
+         return false
+      end
+      
+   end
+   
+   return true
+end
+function GenericTypeInfo:get_srcTypeInfo(  )
+
+   return self
+end
+function GenericTypeInfo:canEvalWith( other, opTxt, gen2type )
+
+   local workMap = {}
+   for key, val in pairs( self.gen2TypeMap ) do
+      workMap[key] = val
+   end
+   
+   for key, val in pairs( gen2type ) do
+      workMap[key] = val
+   end
+   
+   return self.genSrcTypeInfo:canEvalWith( other, opTxt, workMap )
+end
+function GenericTypeInfo:equals( other )
+
+   if self == other:get_srcTypeInfo() then
+      return true
+   end
+   
+   if self:get_kind() ~= self:get_kind() or #self.itemTypeInfoList ~= #other:get_itemTypeInfoList() then
+      return false
+   end
+   
+   for index, typeInfo in pairs( other:get_itemTypeInfoList() ) do
+      local otherItem = self.itemTypeInfoList[index]
+      if not typeInfo:equals( otherItem ) then
+         return false
+      end
+      
+   end
+   
+   return true
 end
 function GenericTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q }\n', SerializeKind.Generic, parentId, self.typeId, self.txt) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {', SerializeKind.Generic, parentId, self.typeId, self.genSrcTypeInfo:get_typeId()) )
+   local count = 0
+   for __index, genType in pairs( self.gen2TypeMap ) do
+      if count > 0 then
+         stream:write( "," )
+      end
+      
+      stream:write( string.format( "%d", genType:get_typeId()) )
+   end
+   
+   stream:write( '} }\n' )
+end
+function GenericTypeInfo:createGen2TypeMap(  )
+
+   local map = {}
+   for genType, typeInfo in pairs( self.gen2TypeMap ) do
+      map[genType] = typeInfo
+   end
+   
+   return map
 end
 function GenericTypeInfo:applyGeneric( gen2TypeMap )
 
-   return gen2TypeMap[self]
+   local genSrcTypeInfo = self.genSrcTypeInfo:applyGeneric( gen2TypeMap )
+   if genSrcTypeInfo == self.genSrcTypeInfo then
+      return self
+   end
+   
+   Util.errorLog( string.format( "no support nest generic -- %s", self:getTxt(  )) )
+   return nil
 end
 function GenericTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = GenericTypeInfo  } )
@@ -2060,12 +2226,135 @@ end
 function GenericTypeInfo:get_typeId()       
    return self.typeId         
 end
-function GenericTypeInfo:get_txt()       
-   return self.txt         
+function GenericTypeInfo:get_itemTypeInfoList()       
+   return self.itemTypeInfoList         
 end
 function GenericTypeInfo:get_nilableTypeInfo()       
    return self.nilableTypeInfo         
 end
+function GenericTypeInfo:get_genSrcTypeInfo()       
+   return self.genSrcTypeInfo         
+end
+function GenericTypeInfo:get_scope( ... )
+   return self.genSrcTypeInfo:get_scope( ... )
+end       
+
+function GenericTypeInfo:isModule( ... )
+   return self.genSrcTypeInfo:isModule( ... )
+end       
+
+function GenericTypeInfo:getParentId( ... )
+   return self.genSrcTypeInfo:getParentId( ... )
+end       
+
+function GenericTypeInfo:get_baseId( ... )
+   return self.genSrcTypeInfo:get_baseId( ... )
+end       
+
+function GenericTypeInfo:get_rawTxt( ... )
+   return self.genSrcTypeInfo:get_rawTxt( ... )
+end       
+
+function GenericTypeInfo:getTxtWithRaw( ... )
+   return self.genSrcTypeInfo:getTxtWithRaw( ... )
+end       
+
+function GenericTypeInfo:getTxt( ... )
+   return self.genSrcTypeInfo:getTxt( ... )
+end       
+
+function GenericTypeInfo:get_abstractFlag( ... )
+   return self.genSrcTypeInfo:get_abstractFlag( ... )
+end       
+
+function GenericTypeInfo:get_display_stirng_with( ... )
+   return self.genSrcTypeInfo:get_display_stirng_with( ... )
+end       
+
+function GenericTypeInfo:get_display_stirng( ... )
+   return self.genSrcTypeInfo:get_display_stirng( ... )
+end       
+
+function GenericTypeInfo:get_externalFlag( ... )
+   return self.genSrcTypeInfo:get_externalFlag( ... )
+end       
+
+function GenericTypeInfo:get_interfaceList( ... )
+   return self.genSrcTypeInfo:get_interfaceList( ... )
+end       
+
+function GenericTypeInfo:get_argTypeInfoList( ... )
+   return self.genSrcTypeInfo:get_argTypeInfoList( ... )
+end       
+
+function GenericTypeInfo:get_retTypeInfoList( ... )
+   return self.genSrcTypeInfo:get_retTypeInfoList( ... )
+end       
+
+function GenericTypeInfo:get_parentInfo( ... )
+   return self.genSrcTypeInfo:get_parentInfo( ... )
+end       
+
+function GenericTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.genSrcTypeInfo:hasRouteNamespaceFrom( ... )
+end       
+
+function GenericTypeInfo:getModule( ... )
+   return self.genSrcTypeInfo:getModule( ... )
+end       
+
+function GenericTypeInfo:get_kind( ... )
+   return self.genSrcTypeInfo:get_kind( ... )
+end       
+
+function GenericTypeInfo:get_staticFlag( ... )
+   return self.genSrcTypeInfo:get_staticFlag( ... )
+end       
+
+function GenericTypeInfo:get_accessMode( ... )
+   return self.genSrcTypeInfo:get_accessMode( ... )
+end       
+
+function GenericTypeInfo:get_autoFlag( ... )
+   return self.genSrcTypeInfo:get_autoFlag( ... )
+end       
+
+function GenericTypeInfo:get_nonnilableType( ... )
+   return self.genSrcTypeInfo:get_nonnilableType( ... )
+end       
+
+function GenericTypeInfo:get_baseTypeInfo( ... )
+   return self.genSrcTypeInfo:get_baseTypeInfo( ... )
+end       
+
+function GenericTypeInfo:get_nilable( ... )
+   return self.genSrcTypeInfo:get_nilable( ... )
+end       
+
+function GenericTypeInfo:get_typeData( ... )
+   return self.genSrcTypeInfo:get_typeData( ... )
+end       
+
+function GenericTypeInfo:get_children( ... )
+   return self.genSrcTypeInfo:get_children( ... )
+end       
+
+function GenericTypeInfo:addChildren( ... )
+   return self.genSrcTypeInfo:addChildren( ... )
+end       
+
+function GenericTypeInfo:get_mutable( ... )
+   return self.genSrcTypeInfo:get_mutable( ... )
+end       
+
+function GenericTypeInfo:getParentFullName( ... )
+   return self.genSrcTypeInfo:getParentFullName( ... )
+end       
+
+function GenericTypeInfo:getFullName( ... )
+   return self.genSrcTypeInfo:getFullName( ... )
+end       
+
 
 local ModifierTypeInfo = {}
 setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
@@ -2238,6 +2527,10 @@ end
 
 function ModifierTypeInfo:getParentFullName( ... )
    return self.srcTypeInfo:getParentFullName( ... )
+end       
+
+function ModifierTypeInfo:get_genSrcTypeInfo( ... )
+   return self.srcTypeInfo:get_genSrcTypeInfo( ... )
 end       
 
 function ModifierTypeInfo:createGen2TypeMap( ... )
@@ -2953,9 +3246,9 @@ function NormalTypeInfo:get_mutable()
    return self.mutable         
 end
 
-function NormalTypeInfo.createGeneric( txt, moduleTypeInfo )
+function NormalTypeInfo.createAlternate( txt, accessMode, moduleTypeInfo )
 
-   return GenericTypeInfo.new(txt, moduleTypeInfo)
+   return AlternateTypeInfo.new(txt, accessMode, moduleTypeInfo)
 end
 
 idProv:increment(  )
@@ -3006,10 +3299,10 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
    do
       local _switchExp = kind
       if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set then
-         table.insert( genTypeList, NormalTypeInfo.createGeneric( "T", _moduleObj.headTypeInfo ) )
+         table.insert( genTypeList, NormalTypeInfo.createAlternate( "T", AccessMode.Pri, _moduleObj.headTypeInfo ) )
       elseif _switchExp == TypeInfoKind.Map then
-         table.insert( genTypeList, NormalTypeInfo.createGeneric( "K", _moduleObj.headTypeInfo ) )
-         table.insert( genTypeList, NormalTypeInfo.createGeneric( "V", _moduleObj.headTypeInfo ) )
+         table.insert( genTypeList, NormalTypeInfo.createAlternate( "K", AccessMode.Pri, _moduleObj.headTypeInfo ) )
+         table.insert( genTypeList, NormalTypeInfo.createAlternate( "V", AccessMode.Pri, _moduleObj.headTypeInfo ) )
       end
    end
    
@@ -3345,6 +3638,12 @@ function DDDTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
    
    local txt = self.typeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
    return "...<" .. txt .. ">"
+end
+
+function NormalTypeInfo.createGeneric( genSrcTypeInfo, itemTypeInfoList )
+
+   idProv:increment(  )
+   return GenericTypeInfo.new(genSrcTypeInfo, itemTypeInfoList)
 end
 
 local AbbrTypeInfo = {}
@@ -3794,7 +4093,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, gen2Type )
       
    end
    
-   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and destMut and not otherMut then
+   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and destMut and not otherMut then
       return false
    end
    
@@ -3852,7 +4151,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, gen2Type )
    end
    
    do
-      local _switchExp = (dest:get_kind() )
+      local _switchExp = dest:get_kind()
       if _switchExp == TypeInfoKind.Prim then
          if dest == _moduleObj.builtinTypeInt and otherSrc == _moduleObj.builtinTypeChar or dest == _moduleObj.builtinTypeChar and otherSrc == _moduleObj.builtinTypeInt then
             return true

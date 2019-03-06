@@ -296,8 +296,8 @@ pub class TransUnit {
 
    pri fn pushClass(
       classFlag:bool, abstractFlag: bool, baseInfo: &Ast.TypeInfo!,
-      interfaceList: List<&Ast.TypeInfo>!,
-      genTypeList: List<&Ast.GenericTypeInfo>, externalFlag: bool, name:str,
+      interfaceList: &List<&Ast.TypeInfo>!,
+      genTypeList: &List<&Ast.AlternateTypeInfo>, externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Ast.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -356,7 +356,7 @@ pub class TransUnit {
          parentScope.addClass( name, typeInfo );
       }
       foreach genType in genTypeList {
-         self.scope.addGeneric( accessMode, genType.$txt, genType );
+         self.scope.addAlternate( accessMode, genType.$txt, genType );
       }
       
       let! mut namespace = defNamespace {
@@ -585,14 +585,33 @@ class _TypeInfoDDD extend _TypeInfo {
 }
 
 
-class _TypeInfoGeneric extend _TypeInfo {
+class _TypeInfoAlternate extend _TypeInfo {
    pub let txt:str;
+   pub let accessMode:Ast.AccessMode;
 
    pub override fn createTypeInfo( param:ImportParam ):
       Ast.TypeInfo!, str!
    {  
-      let newTypeInfo = Ast.NormalTypeInfo.createGeneric(
-         self.txt, param.moduleTypeInfo );
+      let newTypeInfo = Ast.NormalTypeInfo.createAlternate(
+         self.txt, self.accessMode, param.moduleTypeInfo );
+      param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      return newTypeInfo, nil;
+   }
+}
+
+class _TypeInfoGeneric extend _TypeInfo {
+   pub let genSrcTypeId:int;
+   pub let genTypeList:&List<int>;
+   
+   pub override fn createTypeInfo( param:ImportParam ):
+      Ast.TypeInfo!, str!
+   {
+      let genSrcTypeInfo = unwrap param.getTypeInfo( self.genSrcTypeId );
+      let mut genTypeList:List<&Ast.TypeInfo> = [];
+      foreach typeId in self.genTypeList {
+         genTypeList.insert( unwrap param.getTypeInfo( typeId ) );
+      }
+      let newTypeInfo = Ast.NormalTypeInfo.createGeneric( genSrcTypeInfo, genTypeList );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
    }
@@ -757,9 +776,14 @@ class _TypeInfoNormal extend _TypeInfo {
                let mut scope = new Ast.Scope(
                   parentScope, true, baseScope ## );
 
+               let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
+               foreach itemType in itemTypeInfo {
+                  altTypeList.insert( itemType@@Ast.AlternateTypeInfo );
+               }
+               
                let workTypeInfo = Ast.NormalTypeInfo.createClass(
                   self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
-                  scope, baseInfo, interfaceList, [],
+                  scope, baseInfo, interfaceList, altTypeList,
                   parentInfo, true, .Pub, self.txt );
                newTypeInfo = workTypeInfo;
                param.typeId2Scope[ self.typeId ] = scope;
@@ -1261,7 +1285,7 @@ fn TransUnit.registBuiltInScope() mut {
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, className in builtinClassInfo {
          let mut name = className;
-         let mut genTypeList:List<&Ast.GenericTypeInfo> = [];
+         let mut genTypeList:List<&Ast.AlternateTypeInfo> = [];
          if className.find( "<" ## ) {
             name = "";
             apply token of className.gmatch( "[^<>,%s]+" ) {
@@ -1270,7 +1294,7 @@ fn TransUnit.registBuiltInScope() mut {
                }
                else {
                   genTypeList.insert(
-                     Ast.NormalTypeInfo.createGeneric( token, self.moduleType ) );
+                     Ast.NormalTypeInfo.createAlternate( token, .Pri, self.moduleType ) );
                }
             }
          }
@@ -1963,6 +1987,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
             }
             case .DDD {
                actInfo, mess = _TypeInfoDDD._fromMap( atomInfo );
+            }
+            case .Alternate {
+               actInfo, mess = _TypeInfoAlternate._fromMap( atomInfo );
             }
             case .Generic {
                actInfo, mess = _TypeInfoGeneric._fromMap( atomInfo );

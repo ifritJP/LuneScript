@@ -85,6 +85,7 @@ pub enum SerializeKind {
    Alge,
    DDD,
    Alias,
+   Alternate,
    Generic,
 }
 
@@ -109,7 +110,7 @@ pub enum TypeInfoKind {
    /** 省略 ## */
    Abbr,
    Set,
-   Generic,
+   Alternate,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -644,6 +645,10 @@ static な型か。
    pub fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
       return self;
    }
+
+   pub fn get_genSrcTypeInfo(): &TypeInfo {
+      return self;
+   }
 }
 
 
@@ -877,6 +882,7 @@ pub fn Scope.getSymbolTypeInfo(
 {
    let mut typeInfo:TypeInfo! = nil;
    let mut validThisScope = false;
+   let mut limitSymbol = false;
 
    if! self.ownerTypeInfo {
       if _exp.$kind == .Func or _exp.$kind == .Method or
@@ -884,8 +890,10 @@ pub fn Scope.getSymbolTypeInfo(
       { 
          validThisScope = true;
       } 
-      elseif ( _exp.$kind == .IF or _exp.$kind == .Class or
-               _exp.$kind == .Module ) and name == "self" {
+      elseif _exp.$kind == .IF or _exp.$kind == .Class or _exp.$kind == .Module 
+      {
+         // class 系の場合、アクセスできるシンボルは self と Alternate に限定する
+         limitSymbol = true;
          validThisScope = true;
       }
       elseif _exp.$kind == .Enum or _exp.$kind == .Alge {
@@ -896,9 +904,14 @@ pub fn Scope.getSymbolTypeInfo(
       validThisScope = true;
    }
    if validThisScope {
-      if! self.symbol2SymbolInfoMap[ name ] {
-         return _exp.canAccess( fromScope );
-      } 
+      if! let symbolInfo = self.symbol2SymbolInfoMap[ name ] {
+         if not limitSymbol or name == "self" or
+            ( symbolInfo.$typeInfo.$kind == .Alternate and
+              symbolInfo.$kind == .Typ )
+         {
+            return symbolInfo.canAccess( fromScope );
+         }
+      }
    }
    if self.parent ~= self {
       return self.parent.getSymbolTypeInfo( name, fromScope, moduleScope );
@@ -989,7 +1002,7 @@ pub fn Scope.addAlge( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
              name, typeInfo, accessMode, true, true, true );
 }
 
-pub fn Scope.addGeneric( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
+pub fn Scope.addAlternate( accessMode:AccessMode, name:str, typeInfo: &TypeInfo ) mut
 {
    self.add( SymbolKind.Typ, false, false,
              name, typeInfo, accessMode, true, true, true );
@@ -1338,19 +1351,26 @@ pub class NilableTypeInfo extend TypeInfo {
    advertise nonnilableType;
 }
 
-pub class GenericTypeInfo extend TypeInfo {
+/**
+Generic クラスや関数で利用する代用型。
+
+Set<T> の T を表わす型情報。
+*/
+pub class AlternateTypeInfo extend TypeInfo {
    pri let typeId:int {pub};
    pri let txt:str {pub};
    pri let moduleTypeInfo:&TypeInfo;
    pri let nilableTypeInfo: NilableTypeInfo {pub};
-
-   pub fn __init( txt:str, moduleTypeInfo:&TypeInfo ) {
+   pri let accessMode: AccessMode {pub};
+   
+   pub fn __init( txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo ) {
       super( nil );
 
       idProv.increment();
       self.typeId = idProv.$id;
 
       self.txt = txt;
+      self.accessMode = accessMode;
       self.moduleTypeInfo = moduleTypeInfo;
 
       idProv.increment();      
@@ -1361,8 +1381,8 @@ pub class GenericTypeInfo extend TypeInfo {
       return {};
    }
    
-   pub static fn isValidApply( gen2Type:Map<&TypeInfo,&TypeInfo> ) : &TypeInfo! {
-      return gen2Type[ headTypeInfo ];
+   pub static fn isValidApply( gen2Type:Map<&TypeInfo,&TypeInfo> ) : bool {
+      return gen2Type[ headTypeInfo ] ~= nil;
    }
 
    /** この型がモジュールを示す型の場合 true  */
@@ -1406,7 +1426,7 @@ pub class GenericTypeInfo extend TypeInfo {
       if! let genType = gen2type[ self ] {
          return genType.canEvalWith( other, opTxt, gen2type );
       }
-      if not GenericTypeInfo.isValidApply( gen2type ) {
+      if not AlternateTypeInfo.isValidApply( gen2type ) {
          return false;
       }
       gen2type[ self ] = other;
@@ -1441,7 +1461,7 @@ pub class GenericTypeInfo extend TypeInfo {
    }
    /** 型の種別 */
    pub override fn get_kind(): TypeInfoKind {
-      return .Generic;
+      return .Alternate;
    }
    /** super クラス。 継承していない場合は headTypeInfo。 */
    pub override fn get_baseTypeInfo(): &TypeInfo {
@@ -1466,14 +1486,153 @@ pub class GenericTypeInfo extend TypeInfo {
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, txt = %q }\n' (
-            SerializeKind.Generic, parentId, self.typeId, self.txt ) );
+         '{ skind = %d, parentId = %d, typeId = %d, txt = %q, accessMode = %d }\n' (
+            SerializeKind.Alternate, parentId, self.typeId, self.txt, self.accessMode ) );
    }
 
    pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
       return gen2TypeMap[ self ];
    }
 }
+
+
+/**
+Generic クラスの型確定後の型情報。
+
+Set<T> の Set<int> を表わす型情報。
+*/
+pub class GenericTypeInfo extend TypeInfo {
+   pri let typeId:int {pub};
+   pri let itemTypeInfoList:&List<&TypeInfo> {pub};
+   pri let nilableTypeInfo: NilableTypeInfo {pub};
+   pri let genSrcTypeInfo:&TypeInfo {pub};
+   pri let gen2TypeMap:&Map<&TypeInfo,&TypeInfo>;
+
+   pub fn __init( genSrcTypeInfo:&TypeInfo, itemTypeInfoList:&List<&TypeInfo> ) {
+      super( nil );
+
+      idProv.increment();
+      self.typeId = idProv.$id;
+
+      self.itemTypeInfoList = itemTypeInfoList;
+      self.genSrcTypeInfo = genSrcTypeInfo;
+
+      if #genSrcTypeInfo.$itemTypeInfoList ~= #itemTypeInfoList {
+         Util.err( "unmatch generic type number -- %d, %d"
+                   (#genSrcTypeInfo.$itemTypeInfoList, #itemTypeInfoList) );
+      }
+      let mut gen2TypeMap:Map<&TypeInfo,&TypeInfo> = {};
+      foreach altTypeInfo, index in genSrcTypeInfo.$itemTypeInfoList {
+         gen2TypeMap[ altTypeInfo ] = itemTypeInfoList[ index ];
+      }
+      self.gen2TypeMap = gen2TypeMap;
+      
+      idProv.increment();      
+      self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
+   }
+
+
+   /** この型が other を継承しているかどうか */
+   pub override fn isInheritFrom( other:&TypeInfo ) : bool {
+      let otherSrc = other.$genSrcTypeInfo;
+      if not self.genSrcTypeInfo.isInheritFrom( otherSrc ) {
+         // Generic 元が継承していない場合は、この Generic クラスも継承していない
+         return false;
+      }
+      // Generic 元が継承している
+      if otherSrc == other {
+         // otherSrc == other なら、 other は Generic でないので、この時点で確定
+         return false;
+      }
+      // other は Generic
+      let genOther = other@@GenericTypeInfo;
+      foreach altType in otherSrc.$itemTypeInfoList {
+         // otherSrc の altType に対応する Generic の型を取得し、
+         // それの派生状態を確認。
+         let! genType = self.gen2TypeMap[ altType ] {
+            return false;
+         };
+         let otherGenType = unwrap genOther.gen2TypeMap[ altType ];
+         if not genType.isInheritFrom( otherGenType ) {
+            return false;
+         }
+      }
+      return true;
+   }
+   
+   /** Modifier の元となる型情報 */
+   pub override fn get_srcTypeInfo(): &TypeInfo {
+      return self;
+   }
+   
+   /** other 型からこの型への opTxt の評価が可能かどうか */
+   pub override fn canEvalWith(
+      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool
+   {
+      let mut workMap:Map<&TypeInfo,&TypeInfo> = {};
+      foreach val, key in self.gen2TypeMap {
+         workMap[ key ] = val;
+      }
+      foreach val, key in gen2type {
+         workMap[ key ] = val;
+      }
+      return self.genSrcTypeInfo.canEvalWith( other, opTxt, workMap );
+   }
+
+   /** この型と typeInfo が等しいかどうか */
+   pub override fn equals( other: &TypeInfo ): bool {
+      if self == other.$srcTypeInfo {
+         return true;
+      }
+      if self.$kind ~= self.$kind or
+         #self.itemTypeInfoList ~= #other.$itemTypeInfoList
+      {
+         return false;
+      }
+      foreach typeInfo, index in other.$itemTypeInfoList {
+         let otherItem = self.itemTypeInfoList[ index ];
+         if not typeInfo.equals( otherItem ) {
+            return false;
+         }
+      }
+      return true;
+   }
+
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+      let parentId = self.getParentId();
+      stream.write(
+         '{ skind = %d, parentId = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {' (
+            SerializeKind.Generic, parentId, self.typeId, self.genSrcTypeInfo.$typeId ) );
+      let count = 0;
+      foreach genType in self.gen2TypeMap {
+         if count > 0 {
+            stream.write( "," );
+         }
+         stream.write( "%d" (genType.$typeId) );
+      }
+      stream.write( '} }\n' );
+   }
+
+   pub override fn createGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+      let mut map:Map<&TypeInfo,&TypeInfo> = {};
+      foreach typeInfo, genType in self.gen2TypeMap {
+         map[ genType ] = typeInfo;
+      }
+      return map;
+   }
+
+   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      let genSrcTypeInfo = self.genSrcTypeInfo.applyGeneric( gen2TypeMap );
+      if genSrcTypeInfo == self.genSrcTypeInfo {
+         return self;
+      }
+      Util.errorLog( "no support nest generic -- %s" (self.getTxt(##) ) );
+      return nil;
+   }
+
+   advertise genSrcTypeInfo;
+}
+
 
 
 
@@ -2223,10 +2382,10 @@ pub class NormalTypeInfo extend TypeInfo {
 }
 
 
-pub static fn NormalTypeInfo.createGeneric(
-   txt:str, moduleTypeInfo:&TypeInfo ) : &GenericTypeInfo
+pub static fn NormalTypeInfo.createAlternate(
+   txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo ) : &AlternateTypeInfo
 {
-   return new GenericTypeInfo( txt, moduleTypeInfo );
+   return new AlternateTypeInfo( txt, accessMode, moduleTypeInfo );
 }
 
 //pub let typeInfoRoot = rootTypeInfo;
@@ -2288,11 +2447,11 @@ pub static fn NormalTypeInfo.createBuiltin(
    let mut genTypeList:List<&TypeInfo> = [];
    switch kind {
       case .Array, .List, .Set {
-         genTypeList.insert( NormalTypeInfo.createGeneric( "T", headTypeInfo ) );
+         genTypeList.insert( NormalTypeInfo.createAlternate( "T", .Pri, headTypeInfo ) );
       }
       case .Map {
-         genTypeList.insert( NormalTypeInfo.createGeneric( "K", headTypeInfo ) );
-         genTypeList.insert( NormalTypeInfo.createGeneric( "V", headTypeInfo ) );
+         genTypeList.insert( NormalTypeInfo.createAlternate( "K", .Pri, headTypeInfo ) );
+         genTypeList.insert( NormalTypeInfo.createAlternate( "V", .Pri, headTypeInfo ) );
       }
    }
    let mut info = new NormalTypeInfo(
@@ -2414,7 +2573,7 @@ pub static fn NormalTypeInfo.createModule(
 pub static fn NormalTypeInfo.createClass(
    classFlag: bool, abstractFlag: bool, scope: Scope!,
    baseInfo: TypeInfo!, interfaceList: List<&TypeInfo>!,
-   genTypeList: &List<&GenericTypeInfo>, parentInfo: &TypeInfo, externalFlag: bool,
+   genTypeList: &List<&AlternateTypeInfo>, parentInfo: &TypeInfo, externalFlag: bool,
    accessMode: AccessMode, className: str ): &TypeInfo
 {
    // if className == "str" {
@@ -2668,8 +2827,12 @@ pro override fn DDDTypeInfo.getTxtWithRaw(
    return "...<" .. txt .. ">";
 }
 
-
-
+pub static fn NormalTypeInfo.createGeneric(
+   genSrcTypeInfo:&TypeInfo, itemTypeInfoList:&List<&TypeInfo> ): GenericTypeInfo
+{
+   idProv.increment();
+   return new GenericTypeInfo( genSrcTypeInfo, itemTypeInfoList );
+}
 
 pub class AbbrTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
@@ -3129,6 +3292,7 @@ pub static fn TypeInfo.canEvalWithBase(
       otherSrc.$kind ~= .Func and
       otherSrc.$kind ~= .Enum and
       otherSrc.$kind ~= .Abbr and
+      otherSrc.$kind ~= .Alternate and
       destMut and not otherMut
    {
       return false;
@@ -3181,7 +3345,7 @@ pub static fn TypeInfo.canEvalWithBase(
       return false;
    }
    // TypeInfoKind が等しい
-   switch ( dest.$kind ) {
+   switch dest.$kind {
       case .Prim {
          if dest == builtinTypeInt and otherSrc == builtinTypeChar or
             dest == builtinTypeChar and otherSrc == builtinTypeInt

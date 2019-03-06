@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.26'
-_moduleObj.__buildId = "1551788762.000000:1"
+_moduleObj.__formatVersion = '1.0.27'
+_moduleObj.__buildId = "1551869317.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -61,10 +61,10 @@ __typeInfoList[5] = { skind = 0, parentId = 1, typeId = 37, nilable = true, orgT
 __typeInfoList[6] = { skind = 0, parentId = 1, typeId = 42, nilable = true, orgTypeId = 41 }
 __typeInfoList[7] = { skind = 0, parentId = 1, typeId = 53, nilable = true, orgTypeId = 52 }
 __typeInfoList[8] = { skind = 1, parentId = 1, typeId = 66, srcTypeId = 51, mutable = false }
-__typeInfoList[9] = { skind = 8, parentId = 1, typeId = 249, txt = "T" }
+__typeInfoList[9] = { skind = 8, parentId = 1, typeId = 249, txt = "T", accessMode = 3 }
 __typeInfoList[10] = { skind = 0, parentId = 1, typeId = 250, nilable = true, orgTypeId = 249 }
 __typeInfoList[11] = { skind = 1, parentId = 1, typeId = 251, srcTypeId = 249, mutable = false }
-__typeInfoList[12] = { skind = 8, parentId = 1, typeId = 272, txt = "T" }
+__typeInfoList[12] = { skind = 8, parentId = 1, typeId = 272, txt = "T", accessMode = 3 }
 __typeInfoList[13] = { skind = 0, parentId = 1, typeId = 273, nilable = true, orgTypeId = 272 }
 __typeInfoList[14] = { skind = 1, parentId = 1, typeId = 277, srcTypeId = 35, mutable = false }
 __typeInfoList[15] = { skind = 2, parentId = 1, typeId = 1001, txt = 'lune', kind = 12, 
@@ -149,7 +149,7 @@ __dependIdMap[ 100036 ] = { 1, 1029 } -- getCode
 __dependIdMap[ 100037 ] = { 1, 1030 } -- getCode!
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = true, buildId = "1551788762.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = true, buildId = "1551869317.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

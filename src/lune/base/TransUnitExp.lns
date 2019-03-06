@@ -355,7 +355,7 @@ fn TransUnit.analyzeExpRefItem(
 @param expNodeList 設定する値の型リスト
 @param allowDstShort dstTypeList の要素数が expNodeList よりも少ないことを許容する場合 true
 @param warnForFollow true の場合、値を省略している時に警告を出力する
-@param applyGeneric true の場合、Generics 型を expNodeList の型から決定する
+@param applyGeneric true の場合、Alternates 型を expNodeList の型から決定する
 */
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
@@ -401,13 +401,13 @@ fn TransUnit.checkMatchType(
       expTypeList.insert( Ast.builtinTypeAbbr );
    }
 
-   let mut gen2TypeMap = Ast.GenericTypeInfo.createNoneGen2TypeMap();
+   let mut gen2TypeMap = Ast.AlternateTypeInfo.createNoneGen2TypeMap();
    when! genericsClassType {
       gen2TypeMap = genericsClassType.createGen2TypeMap();
    }
    let result, mess = Ast.TypeInfo.checkMatchType(
       dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, gen2TypeMap );
-   //Ast.GenericTypeInfo.createGen2TypeMap( applyGeneric ) ); 
+   //Ast.AlternateTypeInfo.createGen2TypeMap( applyGeneric ) ); 
    switch result {
       case .Error {
          self.addErrMess( pos, "%s: %s" (message, mess ) );
@@ -1002,7 +1002,7 @@ fn TransUnit.analyzeAccessClassField(
    };
    
    let mut symbolInfo:Ast.SymbolInfo! = nil;
-   let mut fieldTypeInfo:Ast.TypeInfo! = nil;
+   let mut fieldTypeInfo:&Ast.TypeInfo! = nil;
    let mut getterFlag = false;
    if mode == .Get or mode == .GetNil {
       let fieldSymbolInfo = classScope.getSymbolInfo(
@@ -1014,6 +1014,11 @@ fn TransUnit.analyzeAccessClassField(
             symbolInfo = fieldSymbolInfo;
             if #retTypeList > 0 {
                fieldTypeInfo = retTypeList[ 1 ];
+               when! fieldTypeInfo {
+                  if! fieldTypeInfo.applyGeneric( classTypeInfo.createGen2TypeMap() ) {
+                     fieldTypeInfo = _exp;
+                  }
+               }
             }
             getterFlag = true;
          }
@@ -2191,7 +2196,13 @@ fn TransUnit.analyzeExp(
       }  
       if classTypeInfo.$abstractFlag {
          self.addErrMess( token.pos, "abstract class can't new" );
-      }  
+      }
+      if #classTypeInfo.$itemTypeInfoList > 0 {
+         if classTypeInfo.$itemTypeInfoList[1].$kind == .Alternate {
+            self.addErrMess( token.pos, "Can't new generic class. -- %s"
+                             (classTypeInfo.getTxt(##) ));         
+         }
+      }
       
       let classScope = classTypeInfo.get_scope();
       let! initTypeInfo = (unwrap classScope).getTypeInfoChild( "__init" ) {

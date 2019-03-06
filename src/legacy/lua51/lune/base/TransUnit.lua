@@ -556,7 +556,7 @@ function TransUnit:pushClass( classFlag, abstractFlag, baseInfo, interfaceList, 
    end
    
    for __index, genType in pairs( genTypeList ) do
-      self.scope:addGeneric( accessMode, genType:get_txt(), genType )
+      self.scope:addAlternate( accessMode, genType:get_txt(), genType )
    end
    
    local namespace = defNamespace
@@ -1033,29 +1033,91 @@ function _TypeInfoDDD._fromMapSub( obj, val )
    return obj
 end
 
+local _TypeInfoAlternate = {}
+setmetatable( _TypeInfoAlternate, { __index = _TypeInfo } )
+function _TypeInfoAlternate:createTypeInfo( param )
+
+   local newTypeInfo = Ast.NormalTypeInfo.createAlternate( self.txt, self.accessMode, param.moduleTypeInfo )
+   param.typeId2TypeInfo[self.typeId] = newTypeInfo
+   return newTypeInfo, nil
+end
+function _TypeInfoAlternate.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoAlternate  } )
+end
+function _TypeInfoAlternate.new( txt, accessMode )
+   local obj = {}
+   _TypeInfoAlternate.setmeta( obj )
+   if obj.__init then
+      obj:__init( txt, accessMode )
+   end        
+   return obj 
+end         
+function _TypeInfoAlternate:__init( txt, accessMode ) 
+
+   _TypeInfo.__init( self )
+   self.txt = txt
+   self.accessMode = accessMode
+end
+function _TypeInfoAlternate:_toMap()
+  return self
+end
+function _TypeInfoAlternate._fromMap( val )
+  local obj, mes = _TypeInfoAlternate._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoAlternate.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoAlternate._fromStem( val )
+  return _TypeInfoAlternate._fromMap( val )
+end
+
+function _TypeInfoAlternate._fromMapSub( obj, val )
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
 local _TypeInfoGeneric = {}
 setmetatable( _TypeInfoGeneric, { __index = _TypeInfo } )
 function _TypeInfoGeneric:createTypeInfo( param )
 
-   local newTypeInfo = Ast.NormalTypeInfo.createGeneric( self.txt, param.moduleTypeInfo )
+   local genSrcTypeInfo = _lune.unwrap( param:getTypeInfo( self.genSrcTypeId ))
+   local genTypeList = {}
+   for __index, typeId in pairs( self.genTypeList ) do
+      table.insert( genTypeList, _lune.unwrap( param:getTypeInfo( typeId )) )
+   end
+   
+   local newTypeInfo = Ast.NormalTypeInfo.createGeneric( genSrcTypeInfo, genTypeList )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
    return newTypeInfo, nil
 end
 function _TypeInfoGeneric.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoGeneric  } )
 end
-function _TypeInfoGeneric.new( txt )
+function _TypeInfoGeneric.new( genSrcTypeId, genTypeList )
    local obj = {}
    _TypeInfoGeneric.setmeta( obj )
    if obj.__init then
-      obj:__init( txt )
+      obj:__init( genSrcTypeId, genTypeList )
    end        
    return obj 
 end         
-function _TypeInfoGeneric:__init( txt ) 
+function _TypeInfoGeneric:__init( genSrcTypeId, genTypeList ) 
 
    _TypeInfo.__init( self )
-   self.txt = txt
+   self.genSrcTypeId = genSrcTypeId
+   self.genTypeList = genTypeList
 end
 function _TypeInfoGeneric:_toMap()
   return self
@@ -1078,7 +1140,8 @@ function _TypeInfoGeneric._fromMapSub( obj, val )
    end
 
    local memInfo = {}
-   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "genSrcTypeId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "genTypeList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -1321,7 +1384,12 @@ function _TypeInfoNormal:createTypeInfo( param )
          if self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.IF then
             local baseScope = _lune.unwrap( param.typeId2Scope[self.baseId])
             local scope = Ast.Scope.new(parentScope, true, baseScope)
-            local workTypeInfo = Ast.NormalTypeInfo.createClass( self.kind == Ast.TypeInfoKind.Class, self.abstractFlag, scope, baseInfo, interfaceList, {}, parentInfo, true, Ast.AccessMode.Pub, self.txt )
+            local altTypeList = {}
+            for __index, itemType in pairs( itemTypeInfo ) do
+               table.insert( altTypeList, itemType )
+            end
+            
+            local workTypeInfo = Ast.NormalTypeInfo.createClass( self.kind == Ast.TypeInfoKind.Class, self.abstractFlag, scope, baseInfo, interfaceList, altTypeList, parentInfo, true, Ast.AccessMode.Pub, self.txt )
             newTypeInfo = workTypeInfo
             param.typeId2Scope[self.typeId] = scope
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
@@ -1869,7 +1937,7 @@ function TransUnit:registBuiltInScope(  )
                   name = token
                else
                 
-                  table.insert( genTypeList, Ast.NormalTypeInfo.createGeneric( token, self.moduleType ) )
+                  table.insert( genTypeList, Ast.NormalTypeInfo.createAlternate( token, Ast.AccessMode.Pri, self.moduleType ) )
                end
                
             end
@@ -2600,6 +2668,8 @@ function TransUnit:processImport( modulePath )
                   actInfo = _TypeInfoAlias._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.DDD then
                   actInfo, mess = _TypeInfoDDD._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.Alternate then
+                  actInfo, mess = _TypeInfoAlternate._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Generic then
                   actInfo, mess = _TypeInfoGeneric._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Modifier then
@@ -3382,12 +3452,14 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
             nextToken = self:getToken(  )
          until nextToken.txt ~= ","
          self:checkToken( nextToken, '>' )
-         local function checkGenericTypeCount( count )
+         local function checkAlternateTypeCount( count )
          
             if #genericList ~= count then
                self:addErrMess( firstToken.pos, string.format( "generic type count is unmatch. -- %d", #genericList) )
+               return false
             end
             
+            return true
          end
          
          do
@@ -3411,17 +3483,30 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
                
                typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), keyType, valType )
             elseif _switchExp == Ast.TypeInfoKind.List then
-               checkGenericTypeCount( 1 )
-               typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+               if checkAlternateTypeCount( 1 ) then
+                  typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+               end
+               
             elseif _switchExp == Ast.TypeInfoKind.Array then
-               checkGenericTypeCount( 1 )
-               typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+               if checkAlternateTypeCount( 1 ) then
+                  typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+               end
+               
             elseif _switchExp == Ast.TypeInfoKind.Set then
-               checkGenericTypeCount( 1 )
-               typeInfo = Ast.NormalTypeInfo.createSet( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+               if checkAlternateTypeCount( 1 ) then
+                  typeInfo = Ast.NormalTypeInfo.createSet( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+               end
+               
             elseif _switchExp == Ast.TypeInfoKind.DDD then
-               checkGenericTypeCount( 1 )
-               typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false )
+               if checkAlternateTypeCount( 1 ) then
+                  typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false )
+               end
+               
+            elseif _switchExp == Ast.TypeInfoKind.Class then
+               if checkAlternateTypeCount( #typeInfo:get_itemTypeInfoList() ) then
+                  typeInfo = Ast.NormalTypeInfo.createGeneric( typeInfo, genericList )
+               end
+               
             else 
                
                   self:error( string.format( "not support generic: %s", typeInfo:getTxt(  ) ) )
@@ -3733,7 +3818,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    return node
 end
 
-function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, accessMode )
+function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, accessMode, altTypeList )
 
    local nextToken = self:getToken(  )
    local baseRef = nil
@@ -3842,8 +3927,28 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
        )
    end
    
-   local classTypeInfo = self:pushClass( classFlag, abstractFlag, typeInfo, interfaceList, {}, false, name.txt, accessMode )
+   local classTypeInfo = self:pushClass( classFlag, abstractFlag, typeInfo, interfaceList, altTypeList, false, name.txt, accessMode )
    return nextToken, classTypeInfo
+end
+
+function TransUnit:analyzeDeclAlternateType( token, accessMode )
+
+   local altTypeList = {}
+   local nextToken = token
+   while true do
+      local genericSymToken = self:getSymbolToken( SymbolMode.MustNot_ )
+      local altType = Ast.NormalTypeInfo.createAlternate( genericSymToken.txt, accessMode, self.moduleType )
+      table.insert( altTypeList, altType )
+      local workToken = self:getToken(  )
+      if workToken.txt == ">" then
+         nextToken = self:getToken(  )
+         break
+      end
+      
+      self:checkToken( workToken, "," )
+   end
+   
+   return nextToken, altTypeList
 end
 
 function TransUnit:analyzeDeclProto( accessMode, firstToken )
@@ -3857,11 +3962,21 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
    
    if nextToken.txt == "class" or nextToken.txt == "interface" then
       local name = self:getSymbolToken( SymbolMode.MustNot_ )
+      local altTypeList = {}
+      do
+         local workToken = self:getToken(  )
+         if workToken.txt == "<" then
+            workToken, altTypeList = self:analyzeDeclAlternateType( workToken, accessMode )
+         end
+         
+         self:pushbackToken( workToken )
+      end
+      
       if accessMode == Ast.AccessMode.Local then
          accessMode = Ast.AccessMode.Pri
       end
       
-      nextToken = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode )
+      nextToken = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode, altTypeList )
       self:popClass(  )
       self:checkToken( nextToken, ";" )
    else
@@ -4545,6 +4660,16 @@ end
 function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
 
    local name = self:getSymbolToken( SymbolMode.MustNot_ )
+   local altTypeList = {}
+   do
+      local nextToken = self:getToken(  )
+      if nextToken.txt == "<" then
+         nextToken, altTypeList = self:analyzeDeclAlternateType( nextToken, classAccessMode )
+      end
+      
+      self:pushbackToken( nextToken )
+   end
+   
    if classAccessMode == Ast.AccessMode.Local then
       classAccessMode = Ast.AccessMode.Pri
    end
@@ -4564,7 +4689,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
    end
    
-   local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode )
+   local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode, altTypeList )
    local classScope = self.scope
    self:checkToken( nextToken, "{" )
    local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, false ) ), false )
@@ -4880,18 +5005,11 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    local funcBodyScope = self:pushScope( false )
+   local altTypeList = {}
    if token.txt == "<" then
-      while true do
-         local genericSymToken = self:getSymbolToken( SymbolMode.MustNot_ )
-         local genericType = Ast.NormalTypeInfo.createGeneric( genericSymToken.txt, self.moduleType )
-         funcBodyScope:addGeneric( accessMode, genericSymToken.txt, genericType )
-         local workToken = self:getToken(  )
-         if workToken.txt == ">" then
-            token = self:getToken(  )
-            break
-         end
-         
-         self:checkToken( workToken, "," )
+      token, altTypeList = self:analyzeDeclAlternateType( token, accessMode )
+      for __index, altType in pairs( altTypeList ) do
+         funcBodyScope:addAlternate( accessMode, altType:get_rawTxt(), altType )
       end
       
    end
@@ -5856,7 +5974,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       table.insert( expTypeList, Ast.builtinTypeAbbr )
    end
    
-   local gen2TypeMap = Ast.GenericTypeInfo.createNoneGen2TypeMap(  )
+   local gen2TypeMap = Ast.AlternateTypeInfo.createNoneGen2TypeMap(  )
    if genericsClassType ~= nil then
       gen2TypeMap = genericsClassType:createGen2TypeMap(  )
    end
@@ -6443,6 +6561,16 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
             symbolInfo = fieldSymbolInfo
             if #retTypeList > 0 then
                fieldTypeInfo = retTypeList[1]
+               if fieldTypeInfo ~= nil then
+                  do
+                     local _exp = fieldTypeInfo:applyGeneric( classTypeInfo:createGen2TypeMap(  ) )
+                     if _exp ~= nil then
+                        fieldTypeInfo = _exp
+                     end
+                  end
+                  
+               end
+               
             end
             
             getterFlag = true
@@ -7503,6 +7631,13 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
       
       if classTypeInfo:get_abstractFlag() then
          self:addErrMess( token.pos, "abstract class can't new" )
+      end
+      
+      if #classTypeInfo:get_itemTypeInfoList() > 0 then
+         if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
+            self:addErrMess( token.pos, string.format( "Can't new generic class. -- %s", classTypeInfo:getTxt(  )) )
+         end
+         
       end
       
       local classScope = classTypeInfo:get_scope(  )
