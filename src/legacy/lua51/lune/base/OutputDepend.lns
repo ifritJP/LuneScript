@@ -59,7 +59,7 @@ pub class DependInfo {
    
 }
 
-class convFilter extend Ast.Filter {
+class convFilter extend Ast.Filter<int> {
 
    let mut stream:oStream;
    
@@ -70,8 +70,8 @@ class convFilter extend Ast.Filter {
    }
 }
 
-pub override fn convFilter.processRoot( 
-   node: Ast.RootNode, parent: &Ast.Node ) mut
+pub override fn convFilter.processRoot(
+   node: Ast.RootNode, dummy: int ) mut
 {
    let moduleFull = node.$moduleTypeInfo.getFullName( {} ## );
    let mut dependInfo = new DependInfo( moduleFull );
@@ -92,7 +92,7 @@ pub override fn convFilter.processRoot(
    dependInfo.output( self.stream );
 };
 
-pub fn createFilter( stream: oStream ) : Ast.Filter
+pub fn createFilter( stream: oStream ) : Ast.Filter<int>
 {
    return new convFilter( stream );
 }

@@ -134,7 +134,8 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             }
             case .Class {
                if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
-                  typeInfo = Ast.NormalTypeInfo.createGeneric( typeInfo, genericList );
+                  typeInfo = Ast.NormalTypeInfo.createGeneric(
+                     typeInfo, genericList, self.moduleType );
                }
             }
             default {
@@ -417,7 +418,7 @@ fn TransUnit.analyzeDeclMacro(
       let funcType = Ast.NormalTypeInfo.createFunc(
          false, true, nil, .Func, Ast.headTypeInfo, false, true,
          true, .Global, "_lnsLoad",
-         [ Ast.builtinTypeString, Ast.builtinTypeString ],
+         nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
       scope.addLocalVar( false, false, "_lnsLoad", funcType, false );
       
@@ -463,7 +464,7 @@ fn TransUnit.analyzeDeclMacro(
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       false, false, scope, .Macro, self.getCurrentNamespaceTypeInfo(),
-      false, false, true, accessMode, nameToken.txt, argTypeList ## );
+      false, false, true, accessMode, nameToken.txt, nil, argTypeList ## );
    //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
    self.scope.addMacro( typeInfo, accessMode );
 
@@ -487,6 +488,13 @@ fn TransUnit.analyzePushClass(
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
+   // altTypeList のシンボルにアクセスできるように、一時的にスコープを掘る
+   let mut tempScope = self.pushScope( false## );
+   foreach altType in altTypeList {
+      tempScope.addAlternate( accessMode, altType.$rawTxt, altType );
+   }
+
+   
    let mut nextToken = self.getToken(##);
    let mut baseRef:Ast.Node! = nil;
    let mut interfaceList:List<&Ast.TypeInfo> = [];
@@ -543,19 +551,20 @@ fn TransUnit.analyzePushClass(
       }
    }
 
-   let mut typeInfo:Ast.TypeInfo! = nil;
+   let mut baseTypeInfo:Ast.TypeInfo! = nil;
    when! baseRef {
-      let baseTypeInfo = baseRef.get_expType(); 
-      typeInfo = baseTypeInfo;
-      let! initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
-         // プロトタイプ宣言時は __init がないこともある。
-      }     
-      then {
-         if initTypeInfo.$accessMode == .Pri {
-            self.addErrMess(
-               firstToken.pos, "The access mode of '__init' is 'pri'." );
-         }
-      };
+      baseTypeInfo = baseRef.get_expType();
+      when! baseTypeInfo {
+         let! initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
+            // プロトタイプ宣言時は __init がないこともある。
+         }     
+         then {
+            if initTypeInfo.$accessMode == .Pri {
+               self.addErrMess(
+                  firstToken.pos, "The access mode of '__init' is 'pri'." );
+            }  
+         };
+      }
    }
 
    // interface 間の、メソッドのミスマッチをチェックする
@@ -579,11 +588,16 @@ fn TransUnit.analyzePushClass(
             return true;
          } );
    }
+
+
+   // 一時的に掘ったスコープを戻す
+   self.popScope();
    
    
    let classTypeInfo = self.pushClass(
-      classFlag, abstractFlag, typeInfo, interfaceList,
+      classFlag, abstractFlag, baseTypeInfo, interfaceList,
       altTypeList, false, name.txt, accessMode ## );
+   
    return nextToken, classTypeInfo;
 }
 
@@ -942,7 +956,7 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
    let formType = Ast.NormalTypeInfo.createFunc(
       false, false, nil, .Func,
       self.getCurrentNamespaceTypeInfo(), false, false,
-      true, accessMode, name.txt, argTypeInfoList, retTypeList, false );
+      true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false );
 
    self.scope.add(
       .Fun, false, false, name.txt, formType, accessMode, true, false, false );
@@ -1160,7 +1174,7 @@ fn TransUnit.addDefaultConstructor(
    let initTypeInfo = Ast.NormalTypeInfo.createFunc(
       false, false, self.pushScope( false ## ),
       .Method, classTypeInfo, true, false, false, .Pub,
-      "__init", memberTypeList, [] ## );
+      "__init", nil, memberTypeList, [] ## );
    self.popScope();
    classScope.addMethod( initTypeInfo, .Pub, false, false );
    methodNameSet.add( "__init" );
@@ -1462,11 +1476,11 @@ fn TransUnit.analyzeDeclClass(
       Ast.NormalTypeInfo.createMap(
          .Pub, classTypeInfo, Ast.builtinTypeString,
          self.createModifier( Ast.builtinTypeStem, false ) ), false );
-   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
+   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF, nil ) {
       self.helperInfo.hasMappingClassDef = true;
       
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
-         not classTypeInfo.$baseTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
+         not classTypeInfo.$baseTypeInfo.isInheritFrom( builtinFunc.mappingIF, nil ) {
          self.addErrMess(
             firstToken.pos,
             "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt(##) ) );
@@ -1474,7 +1488,7 @@ fn TransUnit.analyzeDeclClass(
       // _toMap の追加
       let toMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Method, classTypeInfo,
-         true, false, false, .Pub, "_toMap", [], [ mapType ], false );
+         true, false, false, .Pub, "_toMap", nil, [], [ mapType ], false );
       classScope.addMethod( toMapFuncTypeInfo, .Pub, false, false );
    }
 
@@ -1507,7 +1521,7 @@ fn TransUnit.analyzeDeclClass(
             false, false, self.pushScope( false ## ),
             .Method, parentInfo, true, false,
             memberNode.$staticFlag, accessMode,
-            getterName, [], [ getterMemberType ] ## );
+            getterName, nil, [], [ getterMemberType ] ## );
          self.popScope();
          
          classScope.addMethod(
@@ -1525,7 +1539,7 @@ fn TransUnit.analyzeDeclClass(
                false, false, self.pushScope( false ## ),
                .Method, parentInfo, true, false,
                memberNode.$staticFlag, accessMode,
-               setterName, [ memberType ], nil, true 
+               setterName, nil, [ memberType ], nil, true 
             ), accessMode, memberNode.$staticFlag, true );
          self.popScope();
          methodNameSet.add( setterName );
@@ -1571,7 +1585,7 @@ fn TransUnit.analyzeDeclClass(
    }
 
 
-   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF ) {
+   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF, nil ) {
       // Mapping の制限チェック
       fn isAvailableMapping(
          mut typeInfo:&Ast.TypeInfo, checkedTypeMap:Map<&Ast.TypeInfo,bool> ): bool
@@ -1598,10 +1612,10 @@ fn TransUnit.analyzeDeclClass(
                   return true;
                }  
                case .Class, .IF {
-                  if typeInfo.equals( Ast.builtinTypeString ) {
+                  if typeInfo.equals( Ast.builtinTypeString ##) {
                      return true;
                   }  
-                  return typeInfo.isInheritFrom( builtinFunc.mappingIF );
+                  return typeInfo.isInheritFrom( builtinFunc.mappingIF, nil );
                }  
                case .List, .Array, .Set {
                   return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );
@@ -1609,7 +1623,7 @@ fn TransUnit.analyzeDeclClass(
                case .Map {
                   if isAvailableMapping( typeInfo.$itemTypeInfoList[2], checkedTypeMap ) {
                      let keyType = typeInfo.$itemTypeInfoList[1];
-                     if keyType.equals( Ast.builtinTypeString ) or
+                     if keyType.equals( Ast.builtinTypeString ## ) or
                         keyType.$kind == .Prim or keyType.$kind == .Enum
                      {  
                         return true;
@@ -1651,7 +1665,7 @@ fn TransUnit.analyzeDeclClass(
       let fromMapFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromMap",
-         [ mapType.$nilableTypeInfo ],
+         nil, [ mapType.$nilableTypeInfo ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
          true );
       classScope.addMethod( fromMapFuncTypeInfo, ctorAccessMode, true, false );
@@ -1660,7 +1674,7 @@ fn TransUnit.analyzeDeclClass(
       let fromStemFuncTypeInfo = Ast.NormalTypeInfo.createFunc(
          false, false, nil, .Func, classTypeInfo,
          true, false, true, .Pub, "_fromStem",
-         [ Ast.builtinTypeStem_ ],
+         nil, [ Ast.builtinTypeStem_ ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
          true );  
       classScope.addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false );
@@ -1837,20 +1851,6 @@ fn TransUnit.analyzeDeclFunc(
       }
 
    }
-   //    while true {
-   //       let genericSymToken = self.getSymbolToken( .MustNot_ );
-   //       let genericType = Ast.NormalTypeInfo.createAlternate(
-   //          genericSymToken.txt, self.moduleType );
-   //       funcBodyScope.addAlternate( accessMode, genericSymToken.txt, genericType );
-
-   //       let workToken = self.getToken(##);
-   //       if workToken.txt == ">" {
-   //          token = self.getToken(##);
-   //          break;
-   //       }
-   //       self.checkToken( workToken, "," );
-   //    }
-   // }
 
    self.checkToken( token, "(" );
 
@@ -1873,7 +1873,10 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
 
+   let mut alt2typeMap = Ast.AlternateTypeInfo.createDefaultAlt2typeMap( false );
    when! classTypeInfo {
+      alt2typeMap = classTypeInfo.createAlt2typeMap( false );
+      
       if kind == Ast.NodeKind.$DeclMethod or
          kind == Ast.NodeKind.$DeclConstr or
          kind == Ast.NodeKind.$DeclDestr
@@ -1915,7 +1918,7 @@ fn TransUnit.analyzeDeclFunc(
       abstractFlag, false, funcBodyScope,
       typeKind, namespaceInfo,
       false, false, staticFlag, accessMode,
-      funcName, argTypeList, retTypeInfoList, mutable );
+      funcName, altTypeList, argTypeList, retTypeInfoList, mutable );
 
    when! name {
       let mut parentScope = funcBodyScope.get_parent();
@@ -1926,7 +1929,7 @@ fn TransUnit.analyzeDeclFunc(
 
       if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
          let matchFlag, err = Ast.TypeInfo.checkMatchType(
-            prottype.$argTypeInfoList, argTypeList, false, nil, {} );
+            prottype.$argTypeInfoList, argTypeList, false, nil, alt2typeMap );
          if matchFlag ~= .Match {
             self.addErrMess( name.pos, "mismatch functype: " .. err );
          }
@@ -1977,7 +1980,19 @@ fn TransUnit.analyzeDeclFunc(
          if overrideType.$mutable ~= typeInfo.$mutable {
             self.addErrMess( firstToken.pos, "mismatch mutable -- %s" ( funcName ) );
          }
-         if not overrideType.canEvalWith( typeInfo, "=", {} ) {
+
+         if #overrideType.$itemTypeInfoList ~= #altTypeList {
+            self.addErrMess( firstToken.pos,
+                             "mismatch altTypeList -- %d, %d"
+                             (#overrideType.$itemTypeInfoList, #altTypeList) );
+         }
+         else {
+            foreach alterType, index in overrideType.$itemTypeInfoList {
+               alt2typeMap[ alterType ] = altTypeList[ index ];
+            }
+         }
+         
+         if not overrideType.canEvalWith( typeInfo, "=", alt2typeMap ) {
             self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
          }
       };
@@ -1993,7 +2008,7 @@ fn TransUnit.analyzeDeclFunc(
                if! let ifFunc =
                   self.scope.$parent.getSymbolInfoIfField( name.txt, funcBodyScope )
                {  
-                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, "=", {} ) {
+                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, "=", alt2typeMap ) {
                      self.addErrMess( firstToken.pos,
                                       "mismatch method type -- %s" (funcName));
                   }
@@ -2172,7 +2187,7 @@ fn TransUnit.analyzeLetAndInitExp(
       else {
          letVarList.insert( new LetVarInfo( mutable, varName, nil ) );
       }
-      if not typeInfo.equals( Ast.builtinTypeNone ) and
+      if not typeInfo.equals( Ast.builtinTypeNone ## ) and
          typeInfo.$mutable and not mutable
       {     
          typeInfo = self.createModifier( typeInfo, false );
@@ -2220,7 +2235,7 @@ fn TransUnit.analyzeLetAndInitExp(
                if unwrapFlag {
                   checkType = dddItemType.$nonnilableType;
                }
-               if not argType.equals( Ast.builtinTypeNone ) and
+               if not argType.equals( Ast.builtinTypeNone ## ) and
                   not argType.canEvalWith( checkType, "=", {} )
                {
                   self.addErrMess(
@@ -2252,9 +2267,9 @@ fn TransUnit.analyzeLetAndInitExp(
 
             if index <= #typeInfoList {
                let argType = typeInfoList[ index ];
-               if not argType.equals( Ast.builtinTypeNone ) and
+               if not argType.equals( Ast.builtinTypeNone ## ) and
                   not argType.canEvalWith( expTypeInfo, "=", {} ) and
-                  not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ))
+                  not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
                {               
                   self.addErrMess(
                      firstPos,
@@ -2282,7 +2297,7 @@ fn TransUnit.analyzeLetAndInitExp(
       // 変数の型を、型推論で初期値から設定
       foreach typeInfo, index in expTypeList {
          if #typeInfoList < index or
-            typeInfoList[ index ].equals( Ast.builtinTypeNone )
+            typeInfoList[ index ].equals( Ast.builtinTypeNone ## )
          {
             if typeInfo.$mutable and
                index <= #letVarList and not letVarList[ index ].mutable
@@ -2355,7 +2370,7 @@ fn TransUnit.analyzeDeclVar(
          self.checkPublic( varName.pos, typeInfo );
       }
       
-      if not letVarInfo.varType and typeInfo.equals( Ast.builtinTypeNil ) {
+      if not letVarInfo.varType and typeInfo.equals( Ast.builtinTypeNil ## ) {
          self.addErrMess(
             varName.pos, 'need type -- %s' ( varName.txt ) ); 
       }

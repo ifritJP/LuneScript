@@ -294,6 +294,11 @@ pub class TransUnit {
    }
    
 
+   /**
+指定クラスの Scope を push し、TypeInfo を取得する。
+ 
+クラスが生成済みの場合は baseInfo, interfaceList に nil を指定する。
+   */
    pri fn pushClass(
       classFlag:bool, abstractFlag: bool, baseInfo: &Ast.TypeInfo!,
       interfaceList: &List<&Ast.TypeInfo>!,
@@ -302,6 +307,7 @@ pub class TransUnit {
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
       if! self.scope.getTypeInfoChild( name ) {
+         // 宣言済み
          typeInfo = _exp;
 
          if typeInfo.$abstractFlag ~= abstractFlag {
@@ -313,6 +319,28 @@ pub class TransUnit {
                              "mismatch class accessmode(%s) for prototpye accessmode(%s)"
                              (accessMode.$_txt, typeInfo.$accessMode.$_txt));
          }
+         when! baseInfo {
+            if typeInfo.$baseTypeInfo ~= baseInfo {
+               self.addErrMess(
+                  self.currentToken.pos,
+                  "mismatch class base class(%s) for prototpye base class(%s)"
+                  (baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
+            }
+         }
+         when! interfaceList {
+            if #typeInfo.$interfaceList == #interfaceList {
+               foreach ifType, index in typeInfo.$interfaceList {
+                  if ifType ~= interfaceList[ index ] {
+                     self.addErrMess(
+                        self.currentToken.pos,
+                        "mismatch class interface(%s) for prototpye interface(%s)"
+                        (ifType.getTxt(##), interfaceList[ index ]));
+                  }
+               }
+            }
+         }
+
+         
          
          self.scope = unwrap Ast.getScope( typeInfo );
          switch ( typeInfo.$kind ) {
@@ -611,7 +639,8 @@ class _TypeInfoGeneric extend _TypeInfo {
       foreach typeId in self.genTypeList {
          genTypeList.insert( unwrap param.getTypeInfo( typeId ) );
       }
-      let newTypeInfo = Ast.NormalTypeInfo.createGeneric( genSrcTypeInfo, genTypeList );
+      let newTypeInfo = Ast.NormalTypeInfo.createGeneric(
+         genSrcTypeInfo, genTypeList, param.moduleTypeInfo );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
    }
@@ -974,7 +1003,7 @@ pub fn getBuiltinFunc() : &BuiltinFuncType {
 }
 
 pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
-   if typeInfo.equals( builtinFunc.stringForm ) {
+   if typeInfo.equals( builtinFunc.stringForm ## ) {
       return true;
    }
    return false;
@@ -1089,7 +1118,7 @@ fn TransUnit.registBuiltInScope() mut {
       {
          "iStream": {
             "__attrib": { "type": [ "interface" ] },
-            "read": { "type": [ "mut" ], "arg": [ "&stem!" ], "ret": [ "str!" ] },
+            "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
          },
       },
@@ -1104,7 +1133,7 @@ fn TransUnit.registBuiltInScope() mut {
       { 
          "luaStream": {
             "__attrib": { "inplements": [ "iStream", "oStream" ] },
-            "read": { "type": [ "mut" ], "arg": [ "&stem!" ], "ret": [ "str!" ] },
+            "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
             "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!" ] },
             "close": { "type": [ "mut" ], "arg": [], "ret": [] },
             "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
@@ -1357,7 +1386,7 @@ fn TransUnit.registBuiltInScope() mut {
                            false, true, self.scope,
                            methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
                            parentInfo, false, true, not methodFlag, .Pub,
-                           fieldName, argTypeList, retTypeList, mutable );
+                           fieldName, nil, argTypeList, retTypeList, mutable );
                         
                         self.popScope();
                         
@@ -1482,7 +1511,7 @@ fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
       
       if tokenTxt == ',,' {
          //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
-         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
+         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
             let txtList = (unwrap macroVal.val)@@str[];
             for index = #txtList, 1, -1 {
                nextToken = new Parser.Token(
@@ -1490,7 +1519,7 @@ fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
                self.pushbackToken( nextToken );
             }
          }
-         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) {
             self.pushbackStr( "macroVal %s" (nextToken.txt),
                               (unwrap macroVal.val)@@str );                       
          }
@@ -1530,14 +1559,14 @@ fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
          } 
       }
       elseif tokenTxt == ',,,' {
-         if macroVal.typeInfo.equals( Ast.builtinTypeString ) {
+         if macroVal.typeInfo.equals( Ast.builtinTypeString ## ) {
             nextToken = new Parser.Token(
                nextToken.kind, (unwrap macroVal.val)@@str, nextToken.pos, false ## );
             self.pushbackToken( nextToken );
          }
       }
       elseif tokenTxt == ',,,,' {
-         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ) {
+         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
             let txtList = (unwrap macroVal.val)@@str[];
             let mut newToken = "";
             foreach txt in txtList {
@@ -1547,7 +1576,7 @@ fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
                Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos, false ## );
             self.pushbackToken( nextToken );
          } 
-         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ) {
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) {
             nextToken = new Parser.Token(
                Parser.TokenKind.Str,
                "'%s'" (unwrap macroVal.val), nextToken.pos, false ##);
@@ -2396,7 +2425,7 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Ast.Node {
             ;  
          }  
          case .Prim {
-            if not condExp.$expType.equals( Ast.builtinTypeBool ) {
+            if not condExp.$expType.equals( Ast.builtinTypeBool ## ) {
                self.addErrMess(
                   condExp.$pos, "This exp never be false -- %s"
                   ( condExp.$expType.getTxt(##)) );
@@ -2629,8 +2658,8 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Ast.ApplyNode {
    if exp.$kind == Ast.nodeKind.ExpCall {
       let callNode = exp@@Ast.ExpCallNode;
       let callFuncType = callNode.$func.$expType;
-      if callFuncType.equals( builtinFunc.strGMatch ) or
-         callFuncType.equals( builtinFunc.stringGMatch )
+      if callFuncType.equals( builtinFunc.strGMatch ## ) or
+         callFuncType.equals( builtinFunc.stringGMatch ## )
       {
          itemTypeList.insert( Ast.builtinTypeString );
          defaultItemType = Ast.builtinTypeString.$nilableTypeInfo;

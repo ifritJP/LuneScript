@@ -443,7 +443,6 @@ end
 
 local glueFilter = {}
 setmetatable( glueFilter, { __index = Ast.Filter } )
-_moduleObj.glueFilter = glueFilter
 function glueFilter.setmeta( obj )
   setmetatable( obj, { __index = glueFilter  } )
 end
@@ -461,7 +460,12 @@ function glueFilter:__init( outputDir )
    self.outputDir = outputDir
 end
 
-function glueFilter:processRoot( node )
+local function createFilter( outputDir )
+
+   return glueFilter.new(outputDir)
+end
+_moduleObj.createFilter = createFilter
+function glueFilter:processRoot( node, dummy )
 
    local function createFile( filename )
    

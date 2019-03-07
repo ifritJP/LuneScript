@@ -143,7 +143,7 @@ pub class TxtStream extend (iStream) {
    pub fn get_pos():int {
       return self.start;
    }
-   pub fn read( mode:str ) mut : str! {
+   pub fn read( mode:stem! ) mut : str! {
       //pub override fn read( mode:str ): str{
       if self.eof {
          return nil;
@@ -238,7 +238,7 @@ pub class WrapParser extend Parser {
       let mut token = self.parser.getToken();
       return token;
    }
-   pub override fn getStreamName(): &str {
+   pub override fn getStreamName(): str {
       return self.name;
    }
 }
@@ -289,7 +289,7 @@ pub class StreamParser extend Parser {
       self.multiCharDelimitMap = multiCharDelimitMap;
    }
 
-   pub override fn getStreamName(): &str {
+   pub override fn getStreamName(): str {
       return self.streamName;
    }
 

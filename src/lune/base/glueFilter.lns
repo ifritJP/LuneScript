@@ -344,11 +344,15 @@ pub fn glueGenerator.outputClass(
    }
 }
 
-pub class glueFilter extend Ast.Filter {
+class glueFilter extend Ast.Filter<int> {
    let outputDir:str!;
 }
 
-pub override fn glueFilter.processRoot( node: &Ast.RootNode ) mut
+pub fn createFilter( outputDir:str! ): Ast.Filter<int> {
+   return new glueFilter( outputDir );
+}
+
+pub override fn glueFilter.processRoot( node: &Ast.RootNode, dummy:int ) mut
 {
    fn createFile( filename:str ):oStream {
       let filePath = "%s/%s" (unwrap self.outputDir default ".", filename);               

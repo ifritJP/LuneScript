@@ -9,9 +9,40 @@ fn test( aaa:form ) {
       print( __func__ );
    }
    func();
-   aaa();
+   aaa(##);
 }
 pub fn main() {
    test( fn() { print( __func__ ); } ); 
    Hoge.test();
 }
+
+class Data {
+   let val:int;
+   pub fn sub() {
+      print( __func__, self.val );
+   }
+}
+
+class Super<T> {
+   pub fn func(val:&T) {
+      print( __func__, val );
+   }
+}
+
+class Test extend Super<Data> {
+   pub override fn func(val:&Data) {
+      val.sub();
+   }
+}
+
+class Ctrl {
+   pub fn process<T>( obj:&Super<T>, val:&T ) {
+      obj.func( val );
+   }
+}
+
+let ctrl = new Ctrl();
+let mut test1 = new Test();
+ctrl.process( test1, new Data( 100 ) );
+ctrl.process( new Super<str>(), "abc" );
+ctrl.process( new Super<int>(), 1 );

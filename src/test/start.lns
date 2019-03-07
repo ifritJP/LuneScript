@@ -891,3 +891,74 @@ class SetTest extend (Mapping) {
    }  
    print( unwrap func( { 1:"123" } ) .. "abc" );
 }
+
+
+{
+   let test1 = new SUB2.TestGen<int>(1);
+   test1.func( 10 );
+   test1.func( nil );
+   test1.func2( 100 );
+   let test2 = new SUB2.TestGen<str>("a");
+   // SUB2.func( test2 );  // error
+
+   let mut test3 = new SUB2.TestGen<int>(10);
+   SUB2.func( test3 );
+
+   let test4 = new SUB2.TestGen<real>(10.0);
+   // SUB2.func( test4 );  // error
+}
+
+
+class GenTest {
+}
+class GenSub1 extend GenTest {
+}
+class GenSub2 extend GenTest {
+}
+
+{
+   fn func(test3:&SUB2.TestGen<GenTest>): &GenTest {
+      return test3.$val;
+   }  
+
+   let test5 = new SUB2.TestGen<GenTest>(new GenTest());
+   func( test5 );
+
+   let test6 = new SUB2.TestGen<GenSub1>(new GenSub1());
+   func( test6 );
+}
+
+// func( test3 );  // error
+
+abstract class Super<T> {
+   pub abstract fn func( val:T );
+}
+
+class TestGenSub extend Super<int> {
+   pub override fn func( val:int ) {
+      print( val );
+   }
+}
+
+{
+   let testsub = new TestGenSub();
+   testsub.func( 10 );
+   //testsub.func( "abc" );
+}
+
+class TestGenSub2<T> extend Super<T> {
+   pub override fn func( val:T ) {
+      print( val );
+   }
+}
+
+{
+   let testsub = new TestGenSub2<int>();
+   testsub.func( 10 );
+   //testsub.func( "abc" );
+}
+{
+   let testsub = new TestGenSub2<str>();
+   //testsub.func( 10 );
+   testsub.func( "abc" );
+}

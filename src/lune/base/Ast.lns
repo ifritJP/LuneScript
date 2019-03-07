@@ -438,7 +438,7 @@ pub class TypeInfo {
    }
 
    /** この型が other を継承しているかどうか */
-   pub fn isInheritFrom( other:&TypeInfo ) : bool {
+   pub fn isInheritFrom( other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool {
       return false;
    }
 
@@ -456,8 +456,8 @@ pub class TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
    {
       return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
    }
@@ -465,11 +465,11 @@ pub class TypeInfo {
    /** other 型から dest 型への opTxt の評価が可能かどうか */
    pro static fn canEvalWithBase(
       dest:&TypeInfo, destMut: bool, other:&TypeInfo,
-      opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool;
+      opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool;
 
    /** other 型からこの型への opTxt の評価が可能かどうか */
    pub fn canEvalWith( other:&TypeInfo, opTxt:str,
-                       gen2type:Map<&TypeInfo,&TypeInfo> ): bool
+                       alt2type:Map<&TypeInfo,&TypeInfo> ): bool
    {  
       return false;
    }
@@ -502,8 +502,8 @@ pub class TypeInfo {
    }
 
    /** この型と typeInfo が等しいかどうか */
-   pub fn equals( typeInfo: &TypeInfo ): bool {
-      return self == typeInfo.$srcTypeInfo;
+   pub fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+      return self == typeInfo;
    }
 
    /** この型が外部モジュールで定義した型かどうか */
@@ -642,13 +642,17 @@ static な型か。
       return name;
    }
 
-   pub fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+   pub fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
       return self;
    }
 
    pub fn get_genSrcTypeInfo(): &TypeInfo {
       return self;
    }
+}
+
+pub fn isGenericType( typeInfo: &TypeInfo ) : bool {
+   return typeInfo ~= typeInfo.$genSrcTypeInfo;
 }
 
 
@@ -684,8 +688,8 @@ pub class AliasTypeInfo extend TypeInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      let typeInfo = self.aliasSrcTypeInfo.applyGeneric( gen2TypeMap );
+   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      let typeInfo = self.aliasSrcTypeInfo.applyGeneric( alt2typeMap );
       if typeInfo == self.aliasSrcTypeInfo {
          return self;
       }
@@ -1018,21 +1022,21 @@ pub fn Scope.addMember( name:str, typeInfo: &TypeInfo, accessMode:AccessMode,
 pub fn Scope.addMethod(
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
 {
-   self.add( SymbolKind.Mtd, true, true, typeInfo.getTxt(##),
+   self.add( SymbolKind.Mtd, true, true, typeInfo.$rawTxt,
              typeInfo, accessMode, staticFlag, mutable, true );
 }
 
 pub fn Scope.addFunc(
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
 {
-   self.add( SymbolKind.Fun, true, true, typeInfo.getTxt(##),
+   self.add( SymbolKind.Fun, true, true, typeInfo.$rawTxt,
              typeInfo, accessMode, staticFlag, mutable, true );
 }
 
 pub fn Scope.addMacro(
    typeInfo: &TypeInfo, accessMode:AccessMode ) mut
 {
-   self.add( SymbolKind.Mac, false, false, typeInfo.getTxt(##),
+   self.add( SymbolKind.Mac, false, false, typeInfo.$rawTxt,
              typeInfo, accessMode, true, false, true );
 }
 
@@ -1077,7 +1081,13 @@ fn dumpScope( scope: Scope!, prefix:str ) {
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
-pub fn TypeInfo.createGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+/**
+
+*/
+pub fn TypeInfo.createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
+   if not detectFlag {
+      return {};
+   }
    return { headTypeInfo: headTypeInfo };
 }
 
@@ -1113,7 +1123,7 @@ pub class NilTypeInfo extend TypeInfo {
 
    /** other 型からこの型への opTxt の評価が可能かどうか */
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
    {  
       return other.$nilable;
    }
@@ -1128,8 +1138,8 @@ pub class NilTypeInfo extend TypeInfo {
    
 
    /** この型と typeInfo が等しいかどうか */
-   pub override fn equals( typeInfo: &TypeInfo ): bool {
-      return self == typeInfo.$srcTypeInfo;
+   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+      return self == typeInfo;
    }
 
    /** 名前空間の親 */
@@ -1226,7 +1236,7 @@ pub override fn NormalSymbolInfo.canAccess( fromScope:&Scope ): &SymbolInfo!
       case .Pro {
          let nsClass = self.scope.getClassTypeInfo();
          let fromClass = fromScope.getClassTypeInfo();
-         if fromClass.isInheritFrom( nsClass ) {
+         if fromClass.isInheritFrom( nsClass, nil ) {
             return self;
          }  
          return nil;
@@ -1330,15 +1340,15 @@ pub class NilableTypeInfo extend TypeInfo {
             SerializeKind.Nilable, parentId, self.typeId, self.nonnilableType.$typeId ) );
    }
 
-   pub override fn equals( typeInfo: &TypeInfo ): bool {
+   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
       if not typeInfo.$nilable {
          return false;
       }
-      return self.nonnilableType.equals( typeInfo );
+      return self.nonnilableType.equals( typeInfo.$nonnilableType, alt2type );
    }
 
-   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      let typeInfo = self.nonnilableType.applyGeneric( gen2TypeMap );
+   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      let typeInfo = self.nonnilableType.applyGeneric( alt2typeMap );
       if typeInfo == self.nonnilableType {
          return self;
       }
@@ -1377,12 +1387,15 @@ pub class AlternateTypeInfo extend TypeInfo {
       self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
    }
 
-   pub static fn createNoneGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+   pub static fn createDefaultAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
+      if detectFlag {
+         return { headTypeInfo: headTypeInfo };
+      }
       return {};
    }
    
-   pub static fn isValidApply( gen2Type:Map<&TypeInfo,&TypeInfo> ) : bool {
-      return gen2Type[ headTypeInfo ] ~= nil;
+   pub static fn isValidApply( alt2type:Map<&TypeInfo,&TypeInfo> ) : bool {
+      return alt2type[ headTypeInfo ] ~= nil;
    }
 
    /** この型がモジュールを示す型の場合 true  */
@@ -1415,7 +1428,7 @@ pub class AlternateTypeInfo extend TypeInfo {
 
    /** other 型からこの型への opTxt の評価が可能かどうか */
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
    {
       if self == other.$srcTypeInfo {
          return true;
@@ -1423,13 +1436,13 @@ pub class AlternateTypeInfo extend TypeInfo {
       if other.$nilable {
          return false;
       }
-      if! let genType = gen2type[ self ] {
-         return genType.canEvalWith( other, opTxt, gen2type );
+      if! let genType = alt2type[ self ] {
+         return genType.canEvalWith( other, opTxt, alt2type );
       }
-      if not AlternateTypeInfo.isValidApply( gen2type ) {
+      if not AlternateTypeInfo.isValidApply( alt2type ) {
          return false;
       }
-      gen2type[ self ] = other;
+      alt2type[ self ] = other;
       return true;
    }
 
@@ -1443,8 +1456,23 @@ pub class AlternateTypeInfo extend TypeInfo {
    
 
    /** この型と typeInfo が等しいかどうか */
-   pub override fn equals( typeInfo: &TypeInfo ): bool {
-      return self == typeInfo.$srcTypeInfo;
+   pub override fn equals(
+      typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
+   {  
+      if self == typeInfo {
+         return true;
+      }
+      when! alt2type {
+         if! let genType = alt2type[ self ] {
+            return genType.equals( typeInfo, alt2type );
+         }  
+         if not AlternateTypeInfo.isValidApply( alt2type ) {
+            return false;
+         }
+         alt2type[ self ] = typeInfo;
+         return true;
+      }
+      return false;
    }
 
    /**
@@ -1490,8 +1518,8 @@ pub class AlternateTypeInfo extend TypeInfo {
             SerializeKind.Alternate, parentId, self.typeId, self.txt, self.accessMode ) );
    }
 
-   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      return gen2TypeMap[ self ];
+   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      return alt2typeMap[ self ];
    }
 }
 
@@ -1506,13 +1534,18 @@ pub class GenericTypeInfo extend TypeInfo {
    pri let itemTypeInfoList:&List<&TypeInfo> {pub};
    pri let nilableTypeInfo: NilableTypeInfo {pub};
    pri let genSrcTypeInfo:&TypeInfo {pub};
-   pri let gen2TypeMap:&Map<&TypeInfo,&TypeInfo>;
+   pri let moduleTypeInfo:&TypeInfo;
+   pri let alt2typeMap:&Map<&TypeInfo,&TypeInfo>;
+   pri let hasAlter:bool;
 
-   pub fn __init( genSrcTypeInfo:&TypeInfo, itemTypeInfoList:&List<&TypeInfo> ) {
+   pub fn __init( genSrcTypeInfo:&TypeInfo,
+                  itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo )
+   {  
       super( nil );
 
       idProv.increment();
       self.typeId = idProv.$id;
+      self.moduleTypeInfo = moduleTypeInfo;
 
       self.itemTypeInfoList = itemTypeInfoList;
       self.genSrcTypeInfo = genSrcTypeInfo;
@@ -1521,39 +1554,63 @@ pub class GenericTypeInfo extend TypeInfo {
          Util.err( "unmatch generic type number -- %d, %d"
                    (#genSrcTypeInfo.$itemTypeInfoList, #itemTypeInfoList) );
       }
-      let mut gen2TypeMap:Map<&TypeInfo,&TypeInfo> = {};
+      let mut alt2typeMap:Map<&TypeInfo,&TypeInfo> = {};
+      let mut workAlt2typeMap = AlternateTypeInfo.createDefaultAlt2typeMap( false );
+      let mut hasAlter = false;
       foreach altTypeInfo, index in genSrcTypeInfo.$itemTypeInfoList {
-         gen2TypeMap[ altTypeInfo ] = itemTypeInfoList[ index ];
+         let itemType = itemTypeInfoList[ index ];
+         alt2typeMap[ altTypeInfo ] = itemType;
+         if itemType.applyGeneric( workAlt2typeMap ) ~= itemType {
+            hasAlter = true;
+         }
       }
-      self.gen2TypeMap = gen2TypeMap;
+      self.hasAlter = hasAlter;
+      self.alt2typeMap = alt2typeMap;
       
       idProv.increment();      
       self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
    }
 
+   pub override fn getModule(): &TypeInfo {
+      return self.moduleTypeInfo;
+   }
 
    /** この型が other を継承しているかどうか */
-   pub override fn isInheritFrom( other:&TypeInfo ) : bool {
+   pub override fn isInheritFrom(
+      other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
+   {
       let otherSrc = other.$genSrcTypeInfo;
-      if not self.genSrcTypeInfo.isInheritFrom( otherSrc ) {
+      
+      if not self.genSrcTypeInfo.isInheritFrom( otherSrc, alt2type ) {
          // Generic 元が継承していない場合は、この Generic クラスも継承していない
          return false;
       }
       // Generic 元が継承している
       if otherSrc == other {
          // otherSrc == other なら、 other は Generic でないので、この時点で確定
+         when! alt2type {
+            if self.genSrcTypeInfo == other {
+               return true;
+            }
+         }
          return false;
       }
       // other は Generic
       let genOther = other@@GenericTypeInfo;
+      let! mut workAlt2type = alt2type {
+         workAlt2type = AlternateTypeInfo.createDefaultAlt2typeMap( false );
+      };
       foreach altType in otherSrc.$itemTypeInfoList {
          // otherSrc の altType に対応する Generic の型を取得し、
          // それの派生状態を確認。
-         let! genType = self.gen2TypeMap[ altType ] {
+         let! genType = self.alt2typeMap[ altType ] {
             return false;
          };
-         let otherGenType = unwrap genOther.gen2TypeMap[ altType ];
-         if not genType.isInheritFrom( otherGenType ) {
+         let otherGenType = unwrap genOther.alt2typeMap[ altType ];
+         // if not genType.isInheritFrom( otherGenType, alt2type ) {
+         //    return false;
+         // }
+         if not otherGenType.canEvalWith( genType, "=", workAlt2type ) {
             return false;
          }
       }
@@ -1567,21 +1624,45 @@ pub class GenericTypeInfo extend TypeInfo {
    
    /** other 型からこの型への opTxt の評価が可能かどうか */
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
    {
-      let mut workMap:Map<&TypeInfo,&TypeInfo> = {};
-      foreach val, key in self.gen2TypeMap {
-         workMap[ key ] = val;
+      let otherSrc = other.$srcTypeInfo;
+      if self == otherSrc {
+         return true;
       }
-      foreach val, key in gen2type {
-         workMap[ key ] = val;
+
+      // other のスーパークラスを辿って、一致するか調べる
+      let mut work = otherSrc;
+      while true {
+         if work == headTypeInfo {
+            return false;
+         }
+         if self.genSrcTypeInfo == work.$genSrcTypeInfo {
+            break;
+         }
+         work = work.$baseTypeInfo;
       }
-      return self.genSrcTypeInfo.canEvalWith( other, opTxt, workMap );
+
+      // 一致する場合、汎化の型も同じか調べる
+      let otherGen = work@@GenericTypeInfo;
+      foreach val, key in self.alt2typeMap {
+         if not val.canEvalWith( unwrap otherGen.alt2typeMap[ key ], opTxt, alt2type ) {
+            return false;
+         }
+      }
+      return true;
+
+      // let otherSrc = other.$genSrcTypeInfo;
+      // foreach val, key in self.alt2typeMap {
+      //    alt2type[ key ] = val;
+      // }
+
+      // return self.genSrcTypeInfo.canEvalWith( other, opTxt, alt2type );
    }
 
    /** この型と typeInfo が等しいかどうか */
-   pub override fn equals( other: &TypeInfo ): bool {
-      if self == other.$srcTypeInfo {
+   pub override fn equals( other: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+      if self == other {
          return true;
       }
       if self.$kind ~= self.$kind or
@@ -1589,9 +1670,9 @@ pub class GenericTypeInfo extend TypeInfo {
       {
          return false;
       }
-      foreach typeInfo, index in other.$itemTypeInfoList {
-         let otherItem = self.itemTypeInfoList[ index ];
-         if not typeInfo.equals( otherItem ) {
+      foreach otherItem, index in other.$itemTypeInfoList {
+         let typeInfo = self.itemTypeInfoList[ index ];
+         if not typeInfo.equals( otherItem, alt2type ) {
             return false;
          }
       }
@@ -1604,7 +1685,7 @@ pub class GenericTypeInfo extend TypeInfo {
          '{ skind = %d, parentId = %d, typeId = %d, genSrcTypeId = %d, genTypeList = {' (
             SerializeKind.Generic, parentId, self.typeId, self.genSrcTypeInfo.$typeId ) );
       let count = 0;
-      foreach genType in self.gen2TypeMap {
+      foreach genType in self.alt2typeMap {
          if count > 0 {
             stream.write( "," );
          }
@@ -1613,16 +1694,19 @@ pub class GenericTypeInfo extend TypeInfo {
       stream.write( '} }\n' );
    }
 
-   pub override fn createGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+   pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
       let mut map:Map<&TypeInfo,&TypeInfo> = {};
-      foreach typeInfo, genType in self.gen2TypeMap {
+      foreach typeInfo, genType in self.alt2typeMap {
          map[ genType ] = typeInfo;
       }
       return map;
    }
 
-   pub override fn applyGeneric( gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      let genSrcTypeInfo = self.genSrcTypeInfo.applyGeneric( gen2TypeMap );
+   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+      if not self.hasAlter {
+         return self;         
+      }
+      let genSrcTypeInfo = self.genSrcTypeInfo.applyGeneric( alt2typeMap );
       if genSrcTypeInfo == self.genSrcTypeInfo {
          return self;
       }
@@ -1679,9 +1763,12 @@ pub class ModifierTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
+         // if isGenericType( self.srcTypeInfo ) {
+         //    return self.srcTypeInfo.canEvalWith( other, opTxt, alt2type );
+         // }
          return TypeInfo.canEvalWithBase(
-            self.srcTypeInfo, self.mutable, other, opTxt, gen2type );
+            self.srcTypeInfo, self.mutable, other, opTxt, alt2type );
    }
 
    advertise srcTypeInfo;
@@ -1759,7 +1846,7 @@ pub class ModuleTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt );
    }
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
       return false;
    }
 
@@ -1871,7 +1958,7 @@ pub class EnumTypeInfo extend TypeInfo {
    }
    
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
       return self == other.$srcTypeInfo;
    }
 
@@ -1983,7 +2070,7 @@ pub class AlgeTypeInfo extend TypeInfo {
    }
    
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
       return self == other.$srcTypeInfo;
    }
 
@@ -2032,7 +2119,7 @@ pub class NormalTypeInfo extend TypeInfo {
    // このメソッドが mutable かどうか。
    pri let mutable: bool {pub};
 
-   pri let gen2TypeMap:Map<&TypeInfo,&TypeInfo>;
+   pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
 
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
               interfaceList: List<&TypeInfo>!,
@@ -2064,11 +2151,11 @@ pub class NormalTypeInfo extend TypeInfo {
       self.mutable = mutable and true or false;
 
 
-      fn setupGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
+      fn setupAlt2typeMap(): Map<&TypeInfo,&TypeInfo> {
          if self.baseTypeInfo == headTypeInfo {
             return {};
          }
-         let mut gen2TypeMap:Map<&TypeInfo,&TypeInfo> = {};
+         let mut alt2typeMap:Map<&TypeInfo,&TypeInfo> = {};
          switch kind {
             case .Set, .Map, .List, .Array {
                if #self.itemTypeInfoList ~= #self.baseTypeInfo.$itemTypeInfoList {
@@ -2078,14 +2165,22 @@ pub class NormalTypeInfo extend TypeInfo {
                }
                foreach appyType, index in self.itemTypeInfoList {
                   let genType = self.baseTypeInfo.$itemTypeInfoList[ index ];
-                  gen2TypeMap[ genType ] = appyType;
-               }  
-            }  
+                  alt2typeMap[ genType ] = appyType;
+               }
+            }
+            case .Class, .IF {
+               if isGenericType( self.baseTypeInfo ) {
+                  let genericType = self.baseTypeInfo@@GenericTypeInfo;
+                  foreach genType, altType in genericType.createAlt2typeMap( false ) {
+                     alt2typeMap[ altType ] = genType;
+                  }
+               }
+            }
          }
-         return gen2TypeMap;
+         return alt2typeMap;
       }
       
-      self.gen2TypeMap = setupGen2TypeMap();
+      self.alt2typeMap = setupAlt2typeMap();
       
 
       // if dummyRootTypeInfo and not parentInfo {
@@ -2126,9 +2221,12 @@ pub class NormalTypeInfo extend TypeInfo {
       } 
    }
 
-   pub override fn createGen2TypeMap(): Map<&TypeInfo,&TypeInfo> {
-      let mut map = { headTypeInfo: headTypeInfo };
-      foreach typeInfo, genType in self.gen2TypeMap {
+   pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
+      let mut map:Map<&TypeInfo,&TypeInfo> = {};
+      if detectFlag {
+         map[ headTypeInfo ] = headTypeInfo;
+      }
+      foreach typeInfo, genType in self.alt2typeMap {
          map[ genType ] = typeInfo;
       }
       return map;
@@ -2266,9 +2364,7 @@ pub class NormalTypeInfo extend TypeInfo {
          serializeTypeInfoList( "children = {", children, true ) .. "}\n" );
    }
 
-   pub fn equalsSub( mut typeInfo: &TypeInfo ): bool {
-      typeInfo = typeInfo.$srcTypeInfo;
-
+   pub fn equalsSub( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
       if self.typeId == typeInfo.$typeId {
          return true;
       }
@@ -2281,8 +2377,9 @@ pub class NormalTypeInfo extend TypeInfo {
          self.$nilable ~= typeInfo.$nilable or
          self.rawTxt ~= typeInfo.$rawTxt or
          self.parentInfo ~= typeInfo.$parentInfo or
-         self.baseTypeInfo ~= typeInfo.$baseTypeInfo or
-         self ~= typeInfo.$srcTypeInfo
+         self.baseTypeInfo ~= typeInfo.$baseTypeInfo
+         //  or        
+         // self ~= typeInfo.$srcTypeInfo
       { 
          // errorLog( "%s, %s" ( self.externalFlag, typeInfo.externalFlag ) );
          // errorLog( "%s, %s" ( self.kind, typeInfo.kind ) );
@@ -2293,20 +2390,20 @@ pub class NormalTypeInfo extend TypeInfo {
          return false;
       }
 
-      if ( self ~= typeInfo.$nonnilableType )
-      { 
-         Util.log( "%s, %s" ( self, typeInfo.$nonnilableType ) );
-         //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
-         //                                     typeInfo.getTxt(), typeInfo.typeId ) );
-         return false;
-      }
+      // if ( self ~= typeInfo.$nonnilableType )
+      // { 
+      //    Util.log( "%s, %s" ( self, typeInfo.$nonnilableType ) );
+      //    //          error( "illegal %s:%d %s:%d" ( self.getTxt(), self.typeId,
+      //    //                                     typeInfo.getTxt(), typeInfo.typeId ) );
+      //    return false;
+      // }
 
       {
          if #self.itemTypeInfoList ~= #typeInfo.$itemTypeInfoList {
             return false;
          }  
          foreach item, index in self.itemTypeInfoList {
-            if not item.equals( typeInfo.$itemTypeInfoList[ index ] ) {
+            if not item.equals( typeInfo.$itemTypeInfoList[ index ], alt2type ) {
                // error( "illegal %s:%d %s:%d"
                //    ( self.getTxt(), self.typeId,
                //      typeInfo.getTxt(), typeInfo.$typeId ) );
@@ -2323,7 +2420,7 @@ pub class NormalTypeInfo extend TypeInfo {
             return false;
          }  
          foreach item, index in self.retTypeInfoList {
-            if not item.equals( typeInfo.$retTypeInfoList[ index ] ) {
+            if not item.equals( typeInfo.$retTypeInfoList[ index ], alt2type ) {
                // error( "illegal %s:%d %s:%d"
                //    ( self.getTxt(), self.typeId,
                //      typeInfo.getTxt(), typeInfo.$typeId ) );
@@ -2332,16 +2429,16 @@ pub class NormalTypeInfo extend TypeInfo {
          }
       }
 
-      if not self.equals( typeInfo.$nonnilableType )
-      {     
-         error( "illegal %s:%d %s:%d" ( self.getTxt(##), self.typeId,
-                                        typeInfo.getTxt(##), typeInfo.$typeId ) );
-      }
+      // if not self.equals( typeInfo.$nonnilableType )
+      // {     
+      //    error( "illegal %s:%d %s:%d" ( self.getTxt(##), self.typeId,
+      //                                   typeInfo.getTxt(##), typeInfo.$typeId ) );
+      // }
       return true;
    }
 
-   pub override fn equals( typeInfo: TypeInfo ): bool {
-      return self.equalsSub( typeInfo );
+   pub override fn equals( typeInfo: TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+      return self.equalsSub( typeInfo, alt2type );
    }
 
 
@@ -2604,7 +2701,7 @@ pub static fn NormalTypeInfo.createFunc(
    abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
    parentInfo: &TypeInfo, autoFlag: bool, externalFlag: bool,
    staticFlag: bool, accessMode: AccessMode, funcName: str,
-   argTypeList: &List<&TypeInfo>!,
+   altTypeList: &List<&TypeInfo>!, argTypeList: &List<&TypeInfo>!,
    retTypeInfoList: &List<&TypeInfo>!, mutable: bool! ): &TypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
@@ -2616,7 +2713,7 @@ pub static fn NormalTypeInfo.createFunc(
    let mut info = new NormalTypeInfo(
       abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, idProv.$id,
-      kind, [], unwrap argTypeList default [],
+      kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [], mutable );
    return info;
 }
@@ -2627,6 +2724,7 @@ pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
    return NormalTypeInfo.createFunc(
       false, false, typeInfo.$scope, typeInfo.$kind,
       classTypeInfo, true, false, false, typeInfo.$accessMode, typeInfo.$rawTxt,
+      typeInfo.$itemTypeInfoList,
       typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList, typeInfo.$mutable );
 }
 
@@ -2733,8 +2831,8 @@ pub class DDDTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool {
-      return self.typeInfo.canEvalWith( other, opTxt, gen2type );
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      return self.typeInfo.canEvalWith( other, opTxt, alt2type );
    }
    
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -2828,10 +2926,11 @@ pro override fn DDDTypeInfo.getTxtWithRaw(
 }
 
 pub static fn NormalTypeInfo.createGeneric(
-   genSrcTypeInfo:&TypeInfo, itemTypeInfoList:&List<&TypeInfo> ): GenericTypeInfo
+   genSrcTypeInfo:&TypeInfo,
+   itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo ): GenericTypeInfo
 {
    idProv.increment();
-   return new GenericTypeInfo( genSrcTypeInfo, itemTypeInfoList );
+   return new GenericTypeInfo( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo );
 }
 
 pub class AbbrTypeInfo extend TypeInfo {
@@ -2871,7 +2970,7 @@ pub class AbbrTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
       return false;
    }
    
@@ -2946,13 +3045,13 @@ pub static fn NormalTypeInfo.createEnum(
    let mut getEnumName = NormalTypeInfo.createFunc(
       false, true, nil, .Method, info,
       true, true, false, AccessMode.Pub,
-      "get__txt", nil, [ builtinTypeString ], false );
+      "get__txt", nil, nil, [ builtinTypeString ], false );
    scope.addMethod( getEnumName, AccessMode.Pub, false, false );
 
    let mut fromVal = NormalTypeInfo.createFunc(
       false, true, nil, .Func, info,
       true, true, true, AccessMode.Pub,
-      "_from", [ NormalTypeInfo.createModifier( valTypeInfo,false ) ],
+      "_from", nil, [ NormalTypeInfo.createModifier( valTypeInfo,false ) ],
       [ info.$nilableTypeInfo ], false );
    scope.addFunc( fromVal, AccessMode.Pub, true, false );
 
@@ -2960,7 +3059,7 @@ pub static fn NormalTypeInfo.createEnum(
    let mut allList = NormalTypeInfo.createFunc(
       false, true, nil, .Func, info,
       true, true, true, AccessMode.Pub,
-      "get__allList", [],
+      "get__allList", nil, nil,
       [ NormalTypeInfo.createModifier( allListType, false ) ], false );
    scope.addFunc( allList, AccessMode.Pub, true, false );
    
@@ -2978,7 +3077,7 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
 
    stream.write( "enumValList = {" );
    forsort enumValInfo in self.name2EnumValInfo {
-      if self.valTypeInfo.equals( builtinTypeString ) {
+      if self.valTypeInfo.equals( builtinTypeString## ) {
          stream.write( "%s = '%s'," (enumValInfo.$name, enumValInfo.$val) );
       }
       else {
@@ -3007,7 +3106,7 @@ pub static fn NormalTypeInfo.createAlge(
    let mut getAlgeName = NormalTypeInfo.createFunc(
       false, true, nil, .Method, info,
       true, true, false, AccessMode.Pub,
-      "get__txt", nil, [ builtinTypeString ], false );
+      "get__txt", nil, nil, [ builtinTypeString ], false );
    scope.addMethod( getAlgeName, AccessMode.Pub, false, false );
 
    return info;
@@ -3041,7 +3140,7 @@ accessMode = %d, kind = %d, ```
 
 // other 型の値を、この型の変数に設定できるか判定する。
 pub override fn NilableTypeInfo.canEvalWith(
-   other:&TypeInfo, opTxt:str, gen2type:Map<&TypeInfo,&TypeInfo> ): bool {
+   other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
    let otherSrc = other.$srcTypeInfo;
 
    if self == builtinTypeStem_ {
@@ -3055,21 +3154,22 @@ pub override fn NilableTypeInfo.canEvalWith(
    }
    if otherSrc.$nilable {
       return self.$nonnilableType.canEvalWith(
-         otherSrc.$nonnilableType, opTxt, gen2type );
+         otherSrc.$nonnilableType, opTxt, alt2type );
    }
-   return self.$nonnilableType.canEvalWith( otherSrc, opTxt, gen2type );
+   return self.$nonnilableType.canEvalWith( otherSrc, opTxt, alt2type );
 }
    
-macro _checkEqualsItemType( type1:sym, type2:sym, index:int, gen2type:sym ) {
+macro _checkEqualsItemType( type1:sym, type2:sym, index:int, alt2type:sym ) {
    if not (unwrap ,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
-      unwrap ,,type2.$itemTypeInfoList[ ,,index ], "=", ,,gen2type )
+      unwrap ,,type2.$itemTypeInfoList[ ,,index ], "=", ,,alt2type )
    {
       return false;
    }
 };
 
 // other のクラスが、この型のクラスの継承関係にあるか調べる
-pub override fn NormalTypeInfo.isInheritFrom( other:&TypeInfo ) : bool
+pub override fn NormalTypeInfo.isInheritFrom(
+   other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
 {
    let otherTypeId = other.$typeId;
    if self.$typeId == otherTypeId {
@@ -3082,12 +3182,12 @@ pub override fn NormalTypeInfo.isInheritFrom( other:&TypeInfo ) : bool
    }
    let mut baseTypeInfo = self.$baseTypeInfo;
    if baseTypeInfo ~= headTypeInfo {
-      if baseTypeInfo.isInheritFrom( other ) {
+      if baseTypeInfo.isInheritFrom( other, alt2type ) {
          return true;
       }
    };
    foreach ifType in self.$interfaceList {
-      if ifType.isInheritFrom( other ) {
+      if ifType.isInheritFrom( other, alt2type ) {
          return true;
       }
    }
@@ -3111,7 +3211,7 @@ expTypeList の型から、 dstTypeListOrg の型へ互換性があるかどう�
 */
 pub static fn TypeInfo.checkMatchType(
    dstTypeList: &List<&TypeInfo>, expTypeList: &List<&TypeInfo>,
-   allowDstShort:bool, warnForFollowSrcIndex:int!, gen2Type:Map<&TypeInfo,&TypeInfo> ) :
+   allowDstShort:bool, warnForFollowSrcIndex:int!, alt2type:Map<&TypeInfo,&TypeInfo> ) :
    MatchType, str
 {
    macro _checkWarnForFollow( index:sym, dstType:sym, expType:sym ) {
@@ -3135,7 +3235,7 @@ pub static fn TypeInfo.checkMatchType(
       for dstIndex = index, #dstTypeList {
          let workDstType = dstTypeList[ dstIndex ];
          let mut matchResult = MatchType.Match;
-         if not workDstType.canEvalWith( workExpType, "=", gen2Type ) {
+         if not workDstType.canEvalWith( workExpType, "=", alt2type ) {
             let message = "exp(%d) type mismatch %s <- %s"
                 ( dstIndex, workDstType.getTxt( true## ), workExpType.getTxt( true## ) );
             return .Error, message;
@@ -3165,7 +3265,7 @@ pub static fn TypeInfo.checkMatchType(
                checkType = builtinTypeStem_;
             }
          }
-         if not dstType.canEvalWith( checkType, "=", gen2Type ) {
+         if not dstType.canEvalWith( checkType, "=", alt2type ) {
             return .Error, "exp(%d) type mismatch %s <- %s"
             ( srcIndex, dstType.getTxt( true## ), expType.getTxt( true## ) );
          }
@@ -3184,7 +3284,7 @@ pub static fn TypeInfo.checkMatchType(
          if #dstTypeList == index {
             // dst の最終引数
             if dstType.$srcTypeInfo.$kind ~= .DDD {
-               if not dstType.canEvalWith( expType, "=", gen2Type ) {
+               if not dstType.canEvalWith( expType, "=", alt2type ) {
                   return .Error, "exp(%d) type mismatch %s <- %s"
                   ( index, dstType.getTxt( true## ),
                     expType.getTxt(true## ));
@@ -3244,7 +3344,7 @@ pub static fn TypeInfo.checkMatchType(
             break;
          }
          else {
-            if not dstType.canEvalWith( expType, "=", gen2Type ) {
+            if not dstType.canEvalWith( expType, "=", alt2type ) {
                return .Error, "exp(%d) type mismatch %s <- %s"
                ( index, dstType.getTxt( true## ),
                  expType.getTxt( true## ));
@@ -3261,7 +3361,7 @@ pub static fn TypeInfo.checkMatchType(
    }
    elseif not allowDstShort {
       foreach dstType, index in dstTypeList {
-         if not dstType.canEvalWith( builtinTypeNil, "=", gen2Type ) {
+         if not dstType.canEvalWith( builtinTypeNil, "=", alt2type ) {
             return .Error, "exp(%d) type mismatch %s <- nil"
             ( index, dstType.getTxt( true## ));
          }
@@ -3275,7 +3375,7 @@ pub static fn TypeInfo.checkMatchType(
 
 pub static fn TypeInfo.canEvalWithBase(
    dest:&TypeInfo, destMut:bool, other:&TypeInfo, opTxt:str,
-   gen2Type:Map<&TypeInfo,&TypeInfo> ) : bool
+   alt2type:Map<&TypeInfo,&TypeInfo> ) : bool
 {
    let otherMut = other.$mutable;
    let mut otherSrc = other.$srcTypeInfo;
@@ -3293,6 +3393,7 @@ pub static fn TypeInfo.canEvalWithBase(
       otherSrc.$kind ~= .Enum and
       otherSrc.$kind ~= .Abbr and
       otherSrc.$kind ~= .Alternate and
+      not isGenericType( otherSrc ) and
       destMut and not otherMut
    {
       return false;
@@ -3303,7 +3404,7 @@ pub static fn TypeInfo.canEvalWithBase(
    }
    if dest.$srcTypeInfo.$kind == .DDD {
       if #dest.$itemTypeInfoList > 0 {
-         return dest.$itemTypeInfoList[ 1 ].canEvalWith( other, opTxt, gen2Type );
+         return dest.$itemTypeInfoList[ 1 ].canEvalWith( other, opTxt, alt2type );
       }
       return true;
    }
@@ -3329,18 +3430,24 @@ pub static fn TypeInfo.canEvalWithBase(
       if dest.$kind == .Nilable {
          if otherSrc.$nilable {
             return dest.$nonnilableType.canEvalWith(
-               otherSrc.$nonnilableType, opTxt, gen2Type );
+               otherSrc.$nonnilableType, opTxt, alt2type );
          }
-         return dest.$nonnilableType.canEvalWith( otherSrc, opTxt, gen2Type );
+         return dest.$nonnilableType.canEvalWith( otherSrc, opTxt, alt2type );
       }
       elseif ( dest.$kind == .Class or dest.$kind == .IF ) and
          ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
       {
-         return otherSrc.isInheritFrom( dest );
+         return otherSrc.isInheritFrom( dest, alt2type );
       }
       elseif otherSrc.$kind == .Enum {
          let enumTypeInfo = otherSrc@@EnumTypeInfo;
-         return dest.$canEvalWith( enumTypeInfo.$valTypeInfo, opTxt, gen2Type );
+         return dest.canEvalWith( enumTypeInfo.$valTypeInfo, opTxt, alt2type );
+      }
+      elseif dest.$kind == .Alternate {
+         return dest.canEvalWith( otherSrc, opTxt, alt2type );
+      }
+      elseif isGenericType( dest ) {
+         return dest.canEvalWith( otherSrc, opTxt, alt2type );
       }
       return false;
    }
@@ -3367,7 +3474,7 @@ pub static fn TypeInfo.canEvalWithBase(
             // literalMap の [], [@] は互換有りとする
             return true;
          }  
-         _checkEqualsItemType( dest, otherSrc, 1, gen2Type );
+         _checkEqualsItemType( dest, otherSrc, 1, alt2type );
          return true;
       }       
       case .Map {
@@ -3377,21 +3484,21 @@ pub static fn TypeInfo.canEvalWithBase(
             // literalMap の {} は互換有りとする
             return true;
          }
-         _checkEqualsItemType( dest, otherSrc, 1, gen2Type );
-         _checkEqualsItemType( dest, otherSrc, 2, gen2Type );
+         _checkEqualsItemType( dest, otherSrc, 1, alt2type );
+         _checkEqualsItemType( dest, otherSrc, 2, alt2type );
          return true;
       }       
       case .Class, .IF {
-         return otherSrc.isInheritFrom( dest );
+         return otherSrc.isInheritFrom( dest, alt2type );
       }       
       case .Func {
          if dest == builtinTypeForm {
             return true;
          }  
          if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
-                                     false, nil, gen2Type ) == .Error or
+                                     false, nil, alt2type ) == .Error or
             TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
-                                     false, nil, gen2Type ) == .Error or
+                                     false, nil, alt2type ) == .Error or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
             return false;
@@ -3399,19 +3506,45 @@ pub static fn TypeInfo.canEvalWithBase(
          return true;
       }       
       case .Method {
-         if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
-                                     false, nil, gen2Type ) == .Error or
-            TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
-                                     false, nil, gen2Type ) == .Error or
+         // if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
+         //                             false, nil, alt2type ) == .Error or
+         //    TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
+         //                             false, nil, alt2type ) == .Error or
+         //    #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
+         // {
+         //    return false;
+         // }
+         if #dest.$argTypeInfoList ~= #otherSrc.$argTypeInfoList or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
-         {
+         {        
             return false;
+         }
+         foreach argType, index in dest.$argTypeInfoList {
+            let otherArgType = otherSrc.$argTypeInfoList[ index ];
+            if not argType.equals( otherArgType, alt2type ) {
+               Util.errorLog( "unmatch arg(%d) type -- %s(%d), %s(%d)"
+                              ( index, argType.getTxt(##), argType.$typeId, 
+                                otherArgType.getTxt(##), otherArgType.$typeId ));
+               return false;
+            }
+         }
+         foreach retType, index in dest.$retTypeInfoList {
+            let otherRetType = otherSrc.$retTypeInfoList[ index ];
+            if not retType.equals( otherRetType, alt2type ) {
+               Util.errorLog( "unmatch ret(%d) type -- %s(%d), %s(%d)"
+                              (index, retType.getTxt(##), retType.$typeId,
+                                otherRetType.getTxt(##), otherRetType.$typeId ));
+               return false;
+            }
          }
          return true;
       }
       case .Nilable {
          return dest.$nonnilableType.canEvalWith(
-            otherSrc.$nonnilableType, opTxt, gen2Type );
+            otherSrc.$nonnilableType, opTxt, alt2type );
+      }
+      case .Alternate {
+         return dest.canEvalWith( otherSrc, opTxt, alt2type );
       }
       default {
          return false;
@@ -3422,16 +3555,16 @@ pub static fn TypeInfo.canEvalWithBase(
 
 // other 型の値を、この型の変数に設定できるか判定する。
 pub override fn NormalTypeInfo.canEvalWith(
-   other:&TypeInfo, opTxt:str, gen2Type:Map<&TypeInfo,&TypeInfo> ) : bool {
-   return TypeInfo.canEvalWithBase( self, self.$mutable, other, opTxt, gen2Type );
+   other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ) : bool {
+   return TypeInfo.canEvalWithBase( self, self.$mutable, other, opTxt, alt2type );
 }
 
 
 
 pub override fn ModifierTypeInfo.applyGeneric(
-   gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+   alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
 {
-   let typeInfo = self.srcTypeInfo.applyGeneric( gen2TypeMap );
+   let typeInfo = self.srcTypeInfo.applyGeneric( alt2typeMap );
    if typeInfo == self.srcTypeInfo {
       return self;
    }
@@ -3443,14 +3576,14 @@ pub override fn ModifierTypeInfo.applyGeneric(
 
 
 pub override fn NormalTypeInfo.applyGeneric(
-   gen2TypeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+   alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
 {
    let mut needNew = false;
    let mut fail = false;
    fn createGen( typeList:&List<&TypeInfo> ): &List<&TypeInfo> {
       let mut typeInfoList:List<&TypeInfo> = [];
       foreach srcType in typeList {
-         if! let typeInfo = srcType.applyGeneric( gen2TypeMap ) {
+         if! let typeInfo = srcType.applyGeneric( alt2typeMap ) {
             typeInfoList.insert( typeInfo );
             if srcType ~= typeInfo {
                needNew = true;
@@ -3496,7 +3629,7 @@ pub override fn NormalTypeInfo.applyGeneric(
             self.abstractFlag, false, self.$scope, self.kind,
             self.parentInfo, self.autoFlag, self.externalFlag,
             self.staticFlag, self.accessMode, self.rawTxt,
-            argTypeInfoList, retTypeInfoList, self.mutable );
+            itemTypeInfoList, argTypeInfoList, retTypeInfoList, self.mutable );
       }
       default {
          return nil;
@@ -3506,7 +3639,7 @@ pub override fn NormalTypeInfo.applyGeneric(
 
 
 
-pub class Filter {
+pub class Filter<T> {
 }
 
 
@@ -3548,9 +3681,8 @@ pub class Node {
    pub fn getLiteral(): stem![], List<&TypeInfo> {
       return [nil], [builtinTypeNil];
    }
-   pub fn processFilter( filter: Filter, ... ) {
+   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
    }
-
    /** 代入式の左辺になれるかどうか */
    pub fn canBeLeft(): bool {
       return false;
@@ -3715,10 +3847,8 @@ macro _declNodeClass(
       }  
 
       fieldStatList.insert( `{
-         pub override fn processFilter( filter: Filter, ... ) {
-            let argList:stem![] = [ ... ];
-
-            filter.,,,"process%s" (baseName) (self, argList.unpack() );
+         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
+            filter.,,,"process%s" (baseName) (self, opt );
          } } );
 
       if! canBeRightFlag {
@@ -3745,7 +3875,7 @@ macro _declNodeClass(
       };
 
       relateStat.insert( `{
-         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, ... ) mut {
+         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
          };
          pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className>! {
             return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className> !;
@@ -4245,8 +4375,8 @@ _declNodeClass( "ExpCall", Node, false, nil, true,
 );
 pub override fn ExpCallNode.canBeRight():bool {
    let expType = self.$expType;
-   if expType.equals( builtinTypeNone ) or
-      expType.equals( builtinTypeNeverRet )
+   if expType.equals( builtinTypeNone## ) or
+      expType.equals( builtinTypeNeverRet## )
    {
       return false;
    }
@@ -4675,7 +4805,7 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       if self.exp.$expType.$nilable {
          return .None;
       }
-      if self.exp.$expType.equals( builtinTypeBool ) {
+      if self.exp.$expType.equals( builtinTypeBool ## ) {
          if self.exp.$kind == NodeKind.$LiteralBool {
             let boolNode = self.exp@@LiteralBoolNode;
             if boolNode.$token.txt == "false" {

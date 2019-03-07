@@ -95,7 +95,7 @@ class Front extend (frontInterface.frontInterface) {
    pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ): &stem!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
                           name:str, txt:str ): stem;
-   pub fn searchModule( mod:str ): str;
+   pub fn searchModule( mod:str ): str!;
    pub fn error( message:str );
 }
 
@@ -155,7 +155,7 @@ fn Front.convert(
       streamName, stream, metaStream, convMode, inMacro,
       ast.$moduleTypeInfo, ast.$moduleSymbolKind,
       self.option.useLuneModule, self.option.targetLuaVer );
-   ast.$node.processFilter( conv, nil, 0 );
+   ast.$node.processFilter( conv, new convLua.Opt( ast.$node ) );
 }
 
 fn loadFromChunk( chunk:form!, err:str! ): stem! {
@@ -625,7 +625,7 @@ pub fn Front.dumpAst() mut {
             new frontInterface.ImportModuleInfo(),
             self.createPaser(), mod, getModuleId( self.option.scriptPath, mod ## ),
             nil, .Compile ## );
-	 ast.$node.processFilter( new dumpNode.dumpFilter(), "", 0 );
+	 ast.$node.processFilter( dumpNode.createFilter(), new dumpNode.Opt( "", 0 ) );
       }, self.option.scriptPath .. ".profi" );
 }
 
@@ -655,8 +655,8 @@ pub fn Front.createGlue() mut {
                              self.createPaser(), mod,
                              getModuleId( self.option.scriptPath, mod ## ),
                              nil, .Compile ## );          
-   let mut glue = new glueFilter.glueFilter( self.option.outputDir );
-   ast.$node.processFilter( glue ## );
+   let mut filter = glueFilter.createFilter( self.option.outputDir );
+   ast.$node.processFilter( filter, 0 );
 }
 
 /**
@@ -721,7 +721,7 @@ pub fn Front.convertLuaToStreamFromScript(
                createPaser( path, mod ), mod, moduleId, nil, .Compile, ## );
 
             when! dependsStream {
-               ast.$node.processFilter( OutputDepend.createFilter( dependsStream ) ## );
+               ast.$node.processFilter( OutputDepend.createFilter( dependsStream ), 1 );
             }  
 
             let mut oStream = stream;

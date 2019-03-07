@@ -153,3 +153,24 @@ pub fn DDDfunc2( ...<str!> ): ...<str!> {
    let list = [ ... ];
    return "0", list.unpack();
 }
+
+
+pub fn dump( ...<stem> ) {
+   foreach val in [ ... ] {
+      io.stdout.write( "%s," (val) );
+   }
+   io.stdout.write( "\n" );
+}
+pub class TestGen<T> {
+   let val:T {pub};
+   pub fn func( val:T! ) {
+      dump( self.val, unwrap val default 0 );
+   }
+}
+pub fn TestGen.func2( val:T ) {
+   dump( self.val, unwrap val default 0 );
+}
+
+pub fn func( testgen:&TestGen<int> ) {
+   testgen.func( 1000 );
+}

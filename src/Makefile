@@ -81,9 +81,9 @@ define buildLns
 	$(call transwork,$1,$2,base/Parser)
 	$(call transwork,$1,$2,base/Option)
 	$(call transwork,$1,$2,base/Ast)
+	$(call transwork,$1,$2,base/dumpNode)
 	$(call transwork,$1,$2,base/TransUnit)
 	$(call transwork,$1,$2,base/convLua)
-	$(call transwork,$1,$2,base/dumpNode)
 	$(call transwork,$1,$2,base/OutputDepend)
 	$(call transwork,$1,$2,base/front)
 	$(call transwork,$1,$2,base/glueFilter)
@@ -128,7 +128,11 @@ luarocks-check:
 # - アンインストール
 define test-inst-from-luarocks
 	-(luarocks remove $1 --local)
-	(cd ..; luarocks make $1-main-1.rockspec --local)
+	cat ../$1-main-1.rockspec | sed 's@"src.*/lune/@"lune/@g' \
+			| sed 's@src/lnsc.lua@lnsc.lua@g' > work/8/$1-main-1.rockspec
+	cp -a lnsc.lua work/8
+	cp -a ../docs work/8
+	(cd work/8; luarocks make $1-main-1.rockspec --local)
 
 	$(LNSC)
 	(cd work/8; $(LNSC) test/start.lns exe) > work/test8.result
@@ -137,10 +141,10 @@ define test-inst-from-luarocks
 endef
 
 luarocks-check-sub:
+	mkdir -p work/8
 ifeq ($(LUAROCKS_VER),5.1)
 ifneq ($(ENABLE_LUA51),)
-	mkdir -p work/8
-	cp -a work/3/lune work/8
+	cp -a work/6/lune work/8
 	$(call setup-lua51-test,work/8)
 	$(call test-inst-from-luarocks,lunescript51)
 	diff work/test7.result work/test8.result
@@ -148,6 +152,7 @@ else
 	echo skip luarocks test
 endif
 else
+	cp -a work/3/lune work/8
 	$(call test-inst-from-luarocks,lunescript)
 	diff work/test.result work/test8.result
 endif
@@ -266,6 +271,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/static.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/generics.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/generics2.lns,exe,2>&1)
 
 
 	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG

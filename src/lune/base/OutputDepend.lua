@@ -140,7 +140,7 @@ function convFilter.setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )
 end
 
-function convFilter:processRoot( node, parent )
+function convFilter:processRoot( node, dummy )
 
    local moduleFull = node:get_moduleTypeInfo():getFullName( {} )
    local dependInfo = DependInfo.new(moduleFull)

@@ -96,9 +96,42 @@ end
 
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Opt = {}
+_moduleObj.Opt = Opt
+function Opt.new( prefix, depth )
+   local obj = {}
+   Opt.setmeta( obj )
+   if obj.__init then obj:__init( prefix, depth ); end
+   return obj
+end
+function Opt:__init(prefix, depth) 
+   self.prefix = prefix
+   self.depth = depth
+   self.next = nil
+end
+function Opt:get(  )
+
+   return self.prefix, self.depth
+end
+function Opt:nextOpt(  )
+
+   do
+      local _exp = self.next
+      if _exp ~= nil then
+         return _exp
+      end
+   end
+   
+   local opt = Opt.new(self.prefix .. "  ", self.depth + 1)
+   self.next = opt
+   return opt
+end
+function Opt.setmeta( obj )
+  setmetatable( obj, { __index = Opt  } )
+end
+
 local dumpFilter = {}
 setmetatable( dumpFilter, { __index = Ast.Filter } )
-_moduleObj.dumpFilter = dumpFilter
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
 end
@@ -115,6 +148,11 @@ function dumpFilter:__init(  )
    Ast.Filter.__init( self )
 end
 
+local function createFilter(  )
+
+   return dumpFilter.new()
+end
+_moduleObj.createFilter = createFilter
 local localFilter = dumpFilter.new()
 local function dump( prefix, depth, node, txt )
 
@@ -127,9 +165,9 @@ local function dump( prefix, depth, node, txt )
    print( string.format( "%s: %s %s %s", prefix, Ast.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
 end
 
-local function filter( node, filter, prefix, depth )
+local function filter( node, filter, opt )
 
-   node:processFilter( localFilter, prefix, depth )
+   node:processFilter( localFilter, opt )
 end
 
 local function getTxt( token )
@@ -137,52 +175,59 @@ local function getTxt( token )
    return token.txt
 end
 
-function dumpFilter:processNone( node, prefix, depth )
+function dumpFilter:processNone( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
 end
 
 
-function dumpFilter:processImport( node, prefix, depth )
+function dumpFilter:processImport( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_modulePath(  ) )
 end
 
 
-function dumpFilter:processRoot( node, prefix, depth )
+function dumpFilter:processRoot( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    for index, child in pairs( node:get_children(  ) ) do
-      filter( child, self, prefix .. "  ", depth + 1 )
+      filter( child, self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processSubfile( node, prefix, depth )
+function dumpFilter:processSubfile( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
 end
 
-function dumpFilter:processBlock( node, prefix, depth )
+function dumpFilter:processBlock( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    for index, statement in pairs( node:get_stmtList(  ) ) do
-      filter( statement, self, prefix .. "  ", depth + 1 )
+      filter( statement, self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processStmtExp( node, prefix, depth )
+function dumpFilter:processStmtExp( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processDeclEnum( node, prefix, depth )
+function dumpFilter:processDeclEnum( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_name().txt )
    local enumTypeInfo = node:get_expType()
    for __index, name in pairs( node:get_valueNameList() ) do
@@ -192,8 +237,9 @@ function dumpFilter:processDeclEnum( node, prefix, depth )
    
 end
 
-function dumpFilter:processDeclAlge( node, prefix, depth )
+function dumpFilter:processDeclAlge( node, opt )
 
+   local prefix, depth = opt:get(  )
    local algeTypeInfo = node:get_algeType()
    dump( prefix, depth, node, algeTypeInfo:get_rawTxt() )
    do
@@ -213,103 +259,113 @@ function dumpFilter:processDeclAlge( node, prefix, depth )
    
 end
 
-function dumpFilter:processNewAlgeVal( node, prefix, depth )
+function dumpFilter:processNewAlgeVal( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_name().txt )
    for __index, exp in pairs( node:get_paramList() ) do
-      filter( exp, self, prefix .. "  ", depth + 1 )
+      filter( exp, self, opt:nextOpt(  ) )
    end
    
 end
 
-function dumpFilter:processDeclClass( node, prefix, depth )
+function dumpFilter:processDeclClass( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_name(  ).txt )
    for index, field in pairs( node:get_fieldList(  ) ) do
-      filter( field, self, prefix .. "  ", depth + 1 )
+      filter( field, self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processDeclMember( node, prefix, depth )
+function dumpFilter:processDeclMember( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_name(  ).txt )
-   filter( node:get_refType(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_refType(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processExpMacroExp( node, prefix, depth )
+function dumpFilter:processExpMacroExp( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    local stmtList = node:get_stmtList(  )
    for __index, stmt in pairs( stmtList ) do
-      filter( stmt, self, prefix .. "  ", depth + 1 )
+      filter( stmt, self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processDeclMacro( node, prefix, depth )
+function dumpFilter:processDeclMacro( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_expType(  ):getTxt(  ) )
 end
 
 
-function dumpFilter:processExpMacroStat( node, prefix, depth )
+function dumpFilter:processExpMacroStat( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_expType(  ):getTxt(  ) )
    for __index, node in pairs( node:get_expStrList(  ) ) do
-      filter( node, self, prefix .. "  ", depth + 1 )
+      filter( node, self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processUnwrapSet( node, prefix, depth )
+function dumpFilter:processUnwrapSet( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_dstExpList(), self, prefix .. "  ", depth + 1 )
-   filter( node:get_srcExpList(), self, prefix .. "  ", depth + 1 )
+   filter( node:get_dstExpList(), self, opt:nextOpt(  ) )
+   filter( node:get_srcExpList(), self, opt:nextOpt(  ) )
    if node:get_unwrapBlock() then
-      filter( _lune.unwrap( node:get_unwrapBlock()), self, prefix .. "  ", depth + 1 )
+      filter( _lune.unwrap( node:get_unwrapBlock()), self, opt:nextOpt(  ) )
    end
    
 end
 
-function dumpFilter:processIfUnwrap( node, prefix, depth )
+function dumpFilter:processIfUnwrap( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    for index, expNode in pairs( node:get_expNodeList() ) do
-      filter( expNode, self, prefix .. "  ", depth + 1 )
+      filter( expNode, self, opt:nextOpt(  ) )
    end
    
-   filter( node:get_block(), self, prefix .. "  ", depth + 1 )
+   filter( node:get_block(), self, opt:nextOpt(  ) )
    if node:get_nilBlock() then
-      filter( _lune.unwrap( node:get_nilBlock()), self, prefix .. "  ", depth + 1 )
+      filter( _lune.unwrap( node:get_nilBlock()), self, opt:nextOpt(  ) )
    end
    
 end
 
-function dumpFilter:processWhen( node, prefix, depth )
+function dumpFilter:processWhen( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    for index, expNode in pairs( node:get_expNodeList() ) do
-      filter( expNode, self, prefix .. "  ", depth + 1 )
+      filter( expNode, self, opt:nextOpt(  ) )
    end
    
-   filter( node:get_block(), self, prefix .. "  ", depth + 1 )
+   filter( node:get_block(), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_elseBlock()
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
-function dumpFilter:processDeclVar( node, prefix, depth )
+function dumpFilter:processDeclVar( node, opt )
 
+   local prefix, depth = opt:get(  )
    local varName = ""
    for index, var in pairs( node:get_varList(  ) ) do
       if index > 1 then
@@ -329,7 +385,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
       do
          local _exp = var:get_refType()
          if _exp ~= nil then
-            filter( _exp, self, prefix .. "  ", depth + 1 )
+            filter( _exp, self, opt:nextOpt(  ) )
          end
       end
       
@@ -338,21 +394,21 @@ function dumpFilter:processDeclVar( node, prefix, depth )
    do
       local _exp = node:get_expList(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
    do
       local _exp = node:get_unwrapBlock()
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
    do
       local _exp = node:get_thenBlock()
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
@@ -360,7 +416,7 @@ function dumpFilter:processDeclVar( node, prefix, depth )
       do
          local _exp = var:get_refType()
          if _exp ~= nil then
-            filter( _exp, self, prefix .. "  ", depth + 1 )
+            filter( _exp, self, opt:nextOpt(  ) )
          end
       end
       
@@ -369,34 +425,38 @@ function dumpFilter:processDeclVar( node, prefix, depth )
    do
       local _exp = node:get_syncBlock()
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processDeclArg( node, prefix, depth )
+function dumpFilter:processDeclArg( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_name(  ).txt )
-   filter( node:get_argType(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_argType(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processDeclArgDDD( node, prefix, depth )
+function dumpFilter:processDeclArgDDD( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "..." )
 end
 
 
-function dumpFilter:processExpDDD( node, prefix, depth )
+function dumpFilter:processExpDDD( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "..." )
 end
 
 
-function dumpFilter:processDeclFuncInfo( node, declInfo, prefix, depth )
+function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
 
+   local prefix, depth = opt:get(  )
    local name = "<anonymous>"
    do
       local _exp = declInfo:get_name(  )
@@ -412,144 +472,154 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, prefix, depth )
    dump( prefix, depth, node, name )
    local argList = declInfo:get_argList(  )
    for index, arg in pairs( argList ) do
-      filter( arg, self, prefix .. "  ", depth + 1 )
+      filter( arg, self, opt:nextOpt(  ) )
    end
    
    do
       local _exp = declInfo:get_body(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
-function dumpFilter:processDeclFunc( node, prefix, depth )
+function dumpFilter:processDeclFunc( node, opt )
 
-   self:processDeclFuncInfo( node, node:get_declInfo(  ), prefix, depth )
+   self:processDeclFuncInfo( node, node:get_declInfo(  ), opt )
 end
 
 
-function dumpFilter:processDeclMethod( node, prefix, depth )
+function dumpFilter:processDeclMethod( node, opt )
 
-   self:processDeclFuncInfo( node, node:get_declInfo(  ), prefix, depth )
+   self:processDeclFuncInfo( node, node:get_declInfo(  ), opt )
 end
 
 
-function dumpFilter:processDeclConstr( node, prefix, depth )
+function dumpFilter:processDeclConstr( node, opt )
 
-   self:processDeclFuncInfo( node, node:get_declInfo(  ), prefix, depth )
+   self:processDeclFuncInfo( node, node:get_declInfo(  ), opt )
 end
 
 
-function dumpFilter:processDeclDestr( node, prefix, depth )
+function dumpFilter:processDeclDestr( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
 end
 
 
-function dumpFilter:processExpCallSuper( node, prefix, depth )
+function dumpFilter:processExpCallSuper( node, opt )
 
+   local prefix, depth = opt:get(  )
    local typeInfo = node:get_superType(  )
    dump( prefix, depth, node, typeInfo:getTxt(  ) )
 end
 
 
-function dumpFilter:processRefType( node, prefix, depth )
+function dumpFilter:processRefType( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, (node:get_refFlag(  ) and "&" or "" ) .. (node:get_mutFlag(  ) and "mut " or "" ) )
-   filter( node:get_name(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_name(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processIf( node, prefix, depth )
+function dumpFilter:processIf( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    local stmtList = node:get_stmtList(  )
    for index, stmt in pairs( stmtList ) do
       if stmt:get_exp():get_kind() ~= Ast.nodeKind['None'] then
-         filter( stmt:get_exp(), self, prefix .. "  ", depth + 1 )
+         filter( stmt:get_exp(), self, opt:nextOpt(  ) )
       end
       
-      filter( stmt:get_block(), self, prefix .. "  ", depth + 1 )
+      filter( stmt:get_block(), self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processSwitch( node, prefix, depth )
+function dumpFilter:processSwitch( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
    local caseList = node:get_caseList()
    for __index, caseInfo in pairs( caseList ) do
-      filter( caseInfo:get_expList(), self, prefix .. "  ", depth + 1 )
-      filter( caseInfo:get_block(), self, prefix .. "  ", depth + 1 )
+      filter( caseInfo:get_expList(), self, opt:nextOpt(  ) )
+      filter( caseInfo:get_block(), self, opt:nextOpt(  ) )
    end
    
    do
       local _exp = node:get_default(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processMatch( node, prefix, depth )
+function dumpFilter:processMatch( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_val(), self, prefix .. "  ", depth + 1 )
+   filter( node:get_val(), self, opt:nextOpt(  ) )
    local caseList = node:get_caseList()
    for __index, caseInfo in pairs( caseList ) do
-      filter( caseInfo:get_block(), self, prefix .. "  " .. caseInfo:get_valInfo():get_name(), depth + 1 )
+      filter( caseInfo:get_block(), self, Opt.new(prefix .. "  " .. caseInfo:get_valInfo():get_name(), depth + 1) )
    end
    
    do
       local _exp = node:get_defaultBlock()
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processWhile( node, prefix, depth )
+function dumpFilter:processWhile( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
-   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
+   filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processRepeat( node, prefix, depth )
+function dumpFilter:processRepeat( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_block(  ), self, opt:nextOpt(  ) )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processFor( node, prefix, depth )
+function dumpFilter:processFor( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_val(  ).txt )
-   filter( node:get_init(  ), self, prefix .. "  ", depth + 1 )
-   filter( node:get_to(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_init(  ), self, opt:nextOpt(  ) )
+   filter( node:get_to(  ), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_delta(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
-   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processApply( node, prefix, depth )
+function dumpFilter:processApply( node, opt )
 
+   local prefix, depth = opt:get(  )
    local varNames = ""
    local varList = node:get_varList(  )
    for index, var in pairs( varList ) do
@@ -557,13 +627,14 @@ function dumpFilter:processApply( node, prefix, depth )
    end
    
    dump( prefix, depth, node, varNames )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
-   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
+   filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processForeach( node, prefix, depth )
+function dumpFilter:processForeach( node, opt )
 
+   local prefix, depth = opt:get(  )
    local index = ""
    do
       local _exp = node:get_key()
@@ -579,13 +650,14 @@ function dumpFilter:processForeach( node, prefix, depth )
       end
    end
    
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
-   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
+   filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processForsort( node, prefix, depth )
+function dumpFilter:processForsort( node, opt )
 
+   local prefix, depth = opt:get(  )
    local index = ""
    do
       local _exp = node:get_key(  )
@@ -595,254 +667,282 @@ function dumpFilter:processForsort( node, prefix, depth )
    end
    
    dump( prefix, depth, node, node:get_val(  ).txt .. " " .. index )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
-   filter( node:get_block(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
+   filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processExpUnwrap( node, prefix, depth )
+function dumpFilter:processExpUnwrap( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_exp(), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_default()
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
-function dumpFilter:processExpCall( node, prefix, depth )
+function dumpFilter:processExpCall( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_func(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_func(  ), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_argList(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processExpList( node, prefix, depth )
+function dumpFilter:processExpList( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    local expList = node:get_expList(  )
    for index, exp in pairs( expList ) do
-      filter( exp, self, prefix .. "  ", depth + 1 )
+      filter( exp, self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processExpOp1( node, prefix, depth )
+function dumpFilter:processExpOp1( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_op(  ).txt )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processExpCast( node, prefix, depth )
+function dumpFilter:processExpCast( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processExpParen( node, prefix, depth )
+function dumpFilter:processExpParen( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "()" )
-   filter( node:get_exp(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processExpOp2( node, prefix, depth )
+function dumpFilter:processExpOp2( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_op(  ).txt )
-   filter( node:get_exp1(  ), self, prefix .. "  ", depth + 1 )
-   filter( node:get_exp2(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_exp1(  ), self, opt:nextOpt(  ) )
+   filter( node:get_exp2(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processExpNew( node, prefix, depth )
+function dumpFilter:processExpNew( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   filter( node:get_symbol(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_symbol(  ), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_argList(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processExpRef( node, prefix, depth )
+function dumpFilter:processExpRef( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_token(  ).txt )
 end
 
 
-function dumpFilter:processExpRefItem( node, prefix, depth )
+function dumpFilter:processExpRefItem( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "seq[exp] " .. node:get_expType(  ):getTxt(  ) )
-   filter( node:get_val(), self, prefix .. "  ", depth + 1 )
+   filter( node:get_val(), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_index()
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processRefField( node, prefix, depth )
+function dumpFilter:processRefField( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_field(  ).txt )
-   filter( node:get_prefix(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_prefix(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processExpOmitEnum( node, prefix, depth )
+function dumpFilter:processExpOmitEnum( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%s.%s", node:get_expType():getTxt(  ), node:get_valToken().txt) )
 end
 
 
-function dumpFilter:processGetField( node, prefix, depth )
+function dumpFilter:processGetField( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "get_" .. node:get_field(  ).txt )
-   filter( node:get_prefix(  ), self, prefix .. "  ", depth + 1 )
+   filter( node:get_prefix(  ), self, opt:nextOpt(  ) )
 end
 
 
-function dumpFilter:processReturn( node, prefix, depth )
+function dumpFilter:processReturn( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
    do
       local _exp = node:get_expList(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processProvide( node, prefix, depth )
+function dumpFilter:processProvide( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_symbol():get_name() )
 end
 
-function dumpFilter:processAlias( node, prefix, depth )
+function dumpFilter:processAlias( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%s = %s", node:get_newName(), node:get_typeInfo():getTxt(  )) )
 end
 
-function dumpFilter:processLiteralList( node, prefix, depth )
+function dumpFilter:processLiteralList( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "[]" )
    do
       local _exp = node:get_expList(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processLiteralSet( node, prefix, depth )
+function dumpFilter:processLiteralSet( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "(@)" )
    do
       local _exp = node:get_expList(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processLiteralMap( node, prefix, depth )
+function dumpFilter:processLiteralMap( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "{}" )
    local pairList = node:get_pairList(  )
    for __index, pair in pairs( pairList ) do
-      filter( pair:get_key(  ), self, prefix .. "  ", depth + 1 )
-      filter( pair:get_val(  ), self, prefix .. "  ", depth + 1 )
+      filter( pair:get_key(  ), self, opt:nextOpt(  ) )
+      filter( pair:get_val(  ), self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processLiteralArray( node, prefix, depth )
+function dumpFilter:processLiteralArray( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "[@]" )
    do
       local _exp = node:get_expList(  )
       if _exp ~= nil then
-         filter( _exp, self, prefix .. "  ", depth + 1 )
+         filter( _exp, self, opt:nextOpt(  ) )
       end
    end
    
 end
 
 
-function dumpFilter:processLiteralChar( node, prefix, depth )
+function dumpFilter:processLiteralChar( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%s(%s)", node:get_num(  ), node:get_token(  ).txt ) )
 end
 
 
-function dumpFilter:processLiteralInt( node, prefix, depth )
+function dumpFilter:processLiteralInt( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%s(%s)", node:get_num(  ), node:get_token(  ).txt ) )
 end
 
 
-function dumpFilter:processLiteralReal( node, prefix, depth )
+function dumpFilter:processLiteralReal( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, string.format( "%s(%s)", node:get_num(  ), node:get_token(  ).txt ) )
 end
 
 
-function dumpFilter:processLiteralString( node, prefix, depth )
+function dumpFilter:processLiteralString( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_token(  ).txt )
    for __index, param in pairs( node:get_argList() ) do
-      filter( param, self, prefix .. "  ", depth + 1 )
+      filter( param, self, opt:nextOpt(  ) )
    end
    
 end
 
 
-function dumpFilter:processLiteralBool( node, prefix, depth )
+function dumpFilter:processLiteralBool( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_token(  ).txt == "true" and "true" or "false" )
 end
 
 
-function dumpFilter:processLiteralNil( node, prefix, depth )
+function dumpFilter:processLiteralNil( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
 end
 
 
-function dumpFilter:processBreak( node, prefix, depth )
+function dumpFilter:processBreak( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
 end
 
 
-function dumpFilter:processLiteralSymbol( node, prefix, depth )
+function dumpFilter:processLiteralSymbol( node, opt )
 
+   local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_token(  ).txt )
 end
 

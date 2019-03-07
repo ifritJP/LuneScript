@@ -1,0 +1,120 @@
+fn dump( ...<stem> ) {
+   foreach val in [ ... ] {
+      io.stdout.write( "%s," (val) );
+   }
+   io.stdout.write( "\n" );
+}
+class Test<T> {
+   let val:T {pub};
+   pub fn func( val:T! ) {
+      dump( self.val, unwrap val default 0 );
+   }
+}
+pub fn Test.func2( val:T ) {
+   dump( self.val, unwrap val default 0 );
+}
+
+fn func( test1:&Test<int> ) {
+   test1.func( 1000 );
+}
+
+class GenTest {
+}
+class Sub1 extend GenTest {
+}
+class Sub2 extend GenTest {
+}
+
+
+{
+   let test1 = new Test<int>(1);
+   test1.func( 10 );
+   test1.func( nil );
+   test1.func2( 100 );
+
+   let test2 = new Test<str>("a");
+   func( test2 );  // error
+
+   let test3 = new Test<int>(10);
+   func( test3 );
+
+   let test4 = new Test<real>(10.0);
+   func( test4 );  // error
+
+
+   fn func2(test30:&Test<GenTest>): &GenTest {
+      return test30.$val;
+   }  
+
+   func2( test3 );  // error
+   
+   let test5 = new Test<GenTest>(new GenTest());
+   func2( test5 );
+
+   let test6 = new Test<Sub1>(new Sub1());
+   func2( test6 );
+
+}
+
+abstract class Super<T> {
+   pub abstract fn func( val:T );
+}
+
+class TestSub extend Super<int> {
+   pub override fn func( val:int ) {
+      print( val );
+   }
+}
+
+{
+   let testsub = new TestSub();
+   testsub.func( 10 );
+   testsub.func( "abc" ); // error
+}
+
+class TestSub2<T> extend Super<T> {
+   pub override fn func( val:T ) {
+      print( val );
+   }
+}
+
+{
+   let testsub = new TestSub2<int>();
+   testsub.func( 10 );
+   testsub.func( "abc" ); // error
+}
+{
+   let testsub = new TestSub2<str>();
+   testsub.func( 10 ); // error
+   testsub.func( "abc" );
+}
+
+
+class Data {
+   let val:int;
+   pub fn sub() {
+      print( __func__, self.val );
+   }
+}
+
+class Super2<T> {
+   pub fn func(val:&T) {
+      print( __func__, val );
+   }
+}
+
+class Test2 extend Super2<Data> {
+   pub override fn func(val:&Data) {
+      val.sub();
+   }
+}
+
+class Ctrl {
+   pub fn process<T>( obj:&Super2<T>, val:&T ) {
+      obj.func( val );
+   }
+}
+
+let ctrl = new Ctrl();
+let mut test = new Test2();
+ctrl.process( new Super2<str>(), 1 );

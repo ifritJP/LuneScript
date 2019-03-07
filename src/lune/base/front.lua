@@ -363,7 +363,7 @@ end
 function Front:convert( ast, streamName, stream, metaStream, convMode, inMacro )
 
    local conv = convLua.createFilter( streamName, stream, metaStream, convMode, inMacro, ast:get_moduleTypeInfo(), ast:get_moduleSymbolKind(), self.option.useLuneModule, self.option.targetLuaVer )
-   ast:get_node():processFilter( conv, nil, 0 )
+   ast:get_node():processFilter( conv, convLua.Opt.new(ast:get_node()) )
 end
 
 local function loadFromChunk( chunk, err )
@@ -980,7 +980,7 @@ function Front:dumpAst(  )
    Util.profile( self.option.validProf, function (  )
    
       local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
-      ast:get_node():processFilter( dumpNode.dumpFilter.new(), "", 0 )
+      ast:get_node():processFilter( dumpNode.createFilter(  ), dumpNode.Opt.new("", 0) )
    end
    , self.option.scriptPath .. ".profi" )
 end
@@ -1005,8 +1005,8 @@ function Front:createGlue(  )
    frontInterface.setFront( self )
    local mod = scriptPath2Module( self.option.scriptPath )
    local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
-   local glue = glueFilter.glueFilter.new(self.option.outputDir)
-   ast:get_node():processFilter( glue )
+   local filter = glueFilter.createFilter( self.option.outputDir )
+   ast:get_node():processFilter( filter, 0 )
 end
 
 
@@ -1049,7 +1049,7 @@ function Front:convertLuaToStreamFromScript( convMode, path, mod, byteCompile, s
          if stream ~= nil and metaStream ~= nil then
             local ast = self:createAst( frontInterface.ImportModuleInfo.new(), createPaser( path, mod ), mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
             if dependsStream ~= nil then
-               ast:get_node():processFilter( OutputDepend.createFilter( dependsStream ) )
+               ast:get_node():processFilter( OutputDepend.createFilter( dependsStream ), 1 )
             end
             
             local oStream = stream
