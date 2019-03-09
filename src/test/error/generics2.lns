@@ -110,11 +110,16 @@ class Test2 extend Super2<Data> {
 }
 
 class Ctrl {
-   pub fn process<T>( obj:&Super2<T>, val:&T ) {
+   pub fn process<T>( obj:Super2<T>, val:T ) {
       obj.func( val );
    }
 }
 
 let ctrl = new Ctrl();
-let mut test = new Test2();
-ctrl.process( new Super2<str>(), 1 );
+ctrl.process( new Test2(), new Data(10) );
+let data = new Data(10);
+ctrl.process( new Test2(), data ); // error
+let test = new Test2();
+ctrl.process( test, new Data(10) ); // error
+ctrl.process( new Super2<int>(), 1 );
+ctrl.process( new Super2<str>(), 1 ); // error

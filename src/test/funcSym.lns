@@ -46,3 +46,50 @@ let mut test1 = new Test();
 ctrl.process( test1, new Data( 100 ) );
 ctrl.process( new Super<str>(), "abc" );
 ctrl.process( new Super<int>(), 1 );
+
+interface IF<T> {
+   pub fn func(val:T):T;
+}
+
+class Test2 extend (IF<int>) {
+   pub fn func(val:int):int {
+      return val + 100;
+   }
+}
+
+{
+   fn func<T>(obj:IF<T>, val:T) {
+      print( __func__, obj.func( val ) );
+   }  
+
+   func( new Test2(), 1 );
+}
+
+interface IF2<T> {
+   pub fn func(val:T):T;
+}
+
+class Test3 extend (IF<int>, IF2<int>) {
+   pub fn func(val:int): int {
+      return val + 100;
+   }
+}
+
+class Test4<T> extend (IF<T>, IF2<T>) {
+   pub fn func(val:T): T {
+      return val;
+   }
+}
+
+{
+   fn sub1( obj:&IF<int> ) {
+      print( __func__, obj.func( 10 ) );
+   }
+   fn sub2( obj:&IF2<int> ) {
+      print( __func__, obj.func( 20 ) );
+   }
+   let test3 = new Test3();
+   sub1( test3 );
+   sub2( test3 );
+   sub2( new Test4<int>() );
+}

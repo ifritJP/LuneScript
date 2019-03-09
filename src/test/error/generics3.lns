@@ -1,0 +1,27 @@
+interface  IF<T> {
+   pub fn func(val:T): T;
+}
+
+interface IF2<T2> {
+   pub fn func(val:T2): T2;
+}
+
+class Test2<T> extend (IF<T>, IF2<T>) {
+   pub fn func(val:T): T {
+      return val;
+   }
+}
+
+{
+   fn sub1( obj:&IF<int> ) {
+      print( __func__, obj.func( 10 ) );
+   }
+   fn sub2( obj:&IF2<int> ) {
+      print( __func__, obj.func( 20 ) );
+   }
+   let test2 = new Test2<int>();
+   sub1( test2 );
+   sub2( test2 );
+   sub2( new Test2<int>() );
+   sub2( new Test2<str>() ); // error
+}

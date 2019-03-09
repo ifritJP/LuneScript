@@ -36,6 +36,14 @@
       return val1, val2; // error
    }
 }
+class Test<T,T> { // error
+   pub fn func<T>(val:T ) { // error
+      print( val );
+   }
+   pub fn func2<T1,T1>(val:T1 ) { //error
+      print( val );
+   }
+}
 {
    fn sub<T>( val:T ):TT { // error
       return val;

@@ -132,7 +132,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
                   typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false );
                }
             }
-            case .Class {
+            case .Class, .IF {
                if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
                   typeInfo = Ast.NormalTypeInfo.createGeneric(
                      typeInfo, genericList, self.moduleType );
@@ -498,6 +498,7 @@ fn TransUnit.analyzePushClass(
    let mut nextToken = self.getToken(##);
    let mut baseRef:Ast.Node! = nil;
    let mut interfaceList:List<&Ast.TypeInfo> = [];
+   let mut ifAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> = {};
    if nextToken.txt == "extend" {
       nextToken = self.getToken(##);
       if nextToken.txt ~= "(" {
@@ -531,6 +532,14 @@ fn TransUnit.analyzePushClass(
                self.error( "%s is not interface -- %d"
                            (ifType.getTxt(##), ifType.$kind ) );
             }
+
+            if Ast.isGenericType( ifType ) {
+               foreach genType, altType in ifType.createAlt2typeMap(false) {
+                  ifAlt2typeMap[ altType ] = genType;
+               }
+            }
+            
+            
             interfaceList.insert( ifType );
             if Ast.isPubToExternal( accessMode ) and 
                not Ast.isPubToExternal( ifType.$accessMode )
@@ -574,7 +583,7 @@ fn TransUnit.analyzePushClass(
          true, self.scope,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
-               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=", {} ) {
+               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=", ifAlt2typeMap ) {
                   self.addErrMess(
                      firstToken.pos,      
                      "mismatch method type -- %s.%s, %s.%s"
@@ -607,8 +616,23 @@ fn TransUnit.analyzeDeclAlternateType(
 {
    let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
    let mut nextToken = token;
+   let mut altNameSet:Set<str> = (@);
    while true {
       let genericSymToken = self.getSymbolToken( .MustNot_ );
+      if self.scope.getTypeInfo( genericSymToken.txt, self.scope, true) {
+         self.addErrMess( genericSymToken.pos,
+                          "shadowing Type -- %s" (genericSymToken.txt) );
+      }
+      else {
+         if altNameSet.has( genericSymToken.txt ) {
+            self.addErrMess( genericSymToken.pos,
+                             "multiple Type -- %s" (genericSymToken.txt) );
+         }
+         else {
+            altNameSet.add( genericSymToken.txt );
+         }
+      }
+      
       let altType = Ast.NormalTypeInfo.createAlternate(
          genericSymToken.txt, accessMode, self.moduleType );
       altTypeList.insert( altType );

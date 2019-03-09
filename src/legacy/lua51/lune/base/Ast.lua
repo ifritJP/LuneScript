@@ -2019,6 +2019,26 @@ function AlternateTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
 
    return self.txt
 end
+function AlternateTypeInfo.getAssign( typeInfo, alt2type )
+
+   if typeInfo:get_kind() ~= TypeInfoKind.Alternate then
+      return typeInfo
+   end
+   
+   local otherWork = typeInfo
+   while true do
+      do
+         local _exp = alt2type[otherWork]
+         if _exp ~= nil then
+            otherWork = _exp
+         else
+            return otherWork
+         end
+      end
+      
+   end
+   
+end
 function AlternateTypeInfo:canEvalWith( other, opTxt, alt2type )
 
    if self == other:get_srcTypeInfo() then
@@ -2029,10 +2049,11 @@ function AlternateTypeInfo:canEvalWith( other, opTxt, alt2type )
       return false
    end
    
+   local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
    do
       local genType = alt2type[self]
       if genType ~= nil then
-         return genType:canEvalWith( other, opTxt, alt2type )
+         return genType:canEvalWith( otherWork, opTxt, alt2type )
       end
    end
    
@@ -2040,7 +2061,7 @@ function AlternateTypeInfo:canEvalWith( other, opTxt, alt2type )
       return false
    end
    
-   alt2type[self] = other
+   alt2type[self] = otherWork
    return true
 end
 function AlternateTypeInfo:get_display_stirng_with( raw )
@@ -2058,10 +2079,11 @@ function AlternateTypeInfo:equals( typeInfo, alt2type )
    end
    
    if alt2type ~= nil then
+      local otherWork = AlternateTypeInfo.getAssign( typeInfo, alt2type )
       do
          local genType = alt2type[self]
          if genType ~= nil then
-            return genType:equals( typeInfo, alt2type )
+            return genType:equals( otherWork, alt2type )
          end
       end
       
@@ -2069,7 +2091,7 @@ function AlternateTypeInfo:equals( typeInfo, alt2type )
          return false
       end
       
-      alt2type[self] = typeInfo
+      alt2type[self] = otherWork
       return true
    end
    
@@ -2219,6 +2241,10 @@ function GenericTypeInfo:get_srcTypeInfo(  )
 end
 function GenericTypeInfo:canEvalWith( other, opTxt, alt2type )
 
+   if self:get_mutable() and not other:get_mutable() then
+      return false
+   end
+   
    local otherSrc = other:get_srcTypeInfo()
    if self == otherSrc then
       return true
@@ -2230,8 +2256,19 @@ function GenericTypeInfo:canEvalWith( other, opTxt, alt2type )
          return false
       end
       
-      if self.genSrcTypeInfo == work:get_genSrcTypeInfo() then
+      for altType, genType in pairs( work:createAlt2typeMap( false ) ) do
+         alt2type[altType] = genType
+      end
+      
+      if self.genSrcTypeInfo:equals( work:get_genSrcTypeInfo(), alt2type ) then
          break
+      end
+      
+      for __index, ifType in pairs( work:get_interfaceList() ) do
+         if self:canEvalWith( ifType, opTxt, alt2type ) then
+            return true
+         end
+         
       end
       
       work = work:get_baseTypeInfo()
@@ -2239,7 +2276,8 @@ function GenericTypeInfo:canEvalWith( other, opTxt, alt2type )
    
    local otherGen = work
    for key, val in pairs( self.alt2typeMap ) do
-      if not val:canEvalWith( _lune.unwrap( otherGen.alt2typeMap[key]), opTxt, alt2type ) then
+      local otherType = AlternateTypeInfo.getAssign( _lune.unwrap( otherGen.alt2typeMap[key]), alt2type )
+      if not val:canEvalWith( otherType, opTxt, alt2type ) then
          return false
       end
       
@@ -2254,6 +2292,14 @@ function GenericTypeInfo:equals( other, alt2type )
    end
    
    if self:get_kind() ~= self:get_kind() or #self.itemTypeInfoList ~= #other:get_itemTypeInfoList() then
+      return false
+   end
+   
+   if not isGenericType( other ) then
+      return false
+   end
+   
+   if not self.genSrcTypeInfo:equals( other:get_genSrcTypeInfo(), alt2type ) then
       return false
    end
    
@@ -3023,7 +3069,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    self.mutable = mutable and true or false
    local function setupAlt2typeMap(  )
    
-      if self.baseTypeInfo == _moduleObj.headTypeInfo then
+      if self.baseTypeInfo == _moduleObj.headTypeInfo and #self.interfaceList == 0 then
          return {}
       end
       
@@ -3045,6 +3091,17 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
                local genericType = self.baseTypeInfo
                for altType, genType in pairs( genericType:createAlt2typeMap( false ) ) do
                   alt2typeMap[altType] = genType
+               end
+               
+            end
+            
+            for __index, ifType in pairs( self.interfaceList ) do
+               if isGenericType( ifType ) then
+                  local genericType = ifType
+                  for altType, genType in pairs( genericType:createAlt2typeMap( false ) ) do
+                     alt2typeMap[altType] = genType
+                  end
+                  
                end
                
             end
@@ -4224,14 +4281,14 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          end
          
          return dest:get_nonnilableType():canEvalWith( otherSrc, opTxt, alt2type )
+      elseif isGenericType( dest ) then
+         return dest:canEvalWith( otherSrc, opTxt, alt2type )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
          return otherSrc:isInheritFrom( dest, alt2type )
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
          local enumTypeInfo = otherSrc
          return dest:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt, alt2type )
       elseif dest:get_kind() == TypeInfoKind.Alternate then
-         return dest:canEvalWith( otherSrc, opTxt, alt2type )
-      elseif isGenericType( dest ) then
          return dest:canEvalWith( otherSrc, opTxt, alt2type )
       end
       

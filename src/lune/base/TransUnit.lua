@@ -3522,7 +3522,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
                   typeInfo = Ast.NormalTypeInfo.createDDD( genericList[1], false )
                end
                
-            elseif _switchExp == Ast.TypeInfoKind.Class then
+            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
                if checkAlternateTypeCount( #typeInfo:get_itemTypeInfoList() ) then
                   typeInfo = Ast.NormalTypeInfo.createGeneric( typeInfo, genericList, self.moduleType )
                end
@@ -3848,6 +3848,7 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
    local nextToken = self:getToken(  )
    local baseRef = nil
    local interfaceList = {}
+   local ifAlt2typeMap = {}
    if nextToken.txt == "extend" then
       nextToken = self:getToken(  )
       if nextToken.txt ~= "(" then
@@ -3890,6 +3891,13 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
             local ifType = ifTypeNode:get_expType()
             if ifType:get_kind() ~= Ast.TypeInfoKind.IF then
                self:error( string.format( "%s is not interface -- %d", ifType:getTxt(  ), ifType:get_kind()) )
+            end
+            
+            if Ast.isGenericType( ifType ) then
+               for altType, genType in pairs( ifType:createAlt2typeMap( false ) ) do
+                  ifAlt2typeMap[altType] = genType
+               end
+               
             end
             
             table.insert( interfaceList, ifType )
@@ -3940,7 +3948,7 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
          do
             local ifFuncType = symbol2TypeInfo[symbolInfo:get_name()]
             if ifFuncType ~= nil then
-               if not ifFuncType:canEvalWith( symbolInfo:get_typeInfo(), "=", {} ) then
+               if not ifFuncType:canEvalWith( symbolInfo:get_typeInfo(), "=", ifAlt2typeMap ) then
                   self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s.%s, %s.%s", symbolInfo:get_typeInfo():get_parentInfo():getTxt(  ), symbolInfo:get_name(), ifFuncType:get_parentInfo():getTxt(  ), ifFuncType:getTxt(  )) )
                end
                
@@ -3963,8 +3971,22 @@ function TransUnit:analyzeDeclAlternateType( token, accessMode )
 
    local altTypeList = {}
    local nextToken = token
+   local altNameSet = {}
    while true do
       local genericSymToken = self:getSymbolToken( SymbolMode.MustNot_ )
+      if self.scope:getTypeInfo( genericSymToken.txt, self.scope, true ) then
+         self:addErrMess( genericSymToken.pos, string.format( "shadowing Type -- %s", genericSymToken.txt) )
+      else
+       
+         if _lune._Set_has(altNameSet, genericSymToken.txt ) then
+            self:addErrMess( genericSymToken.pos, string.format( "multiple Type -- %s", genericSymToken.txt) )
+         else
+          
+            altNameSet[genericSymToken.txt]= true
+         end
+         
+      end
+      
       local altType = Ast.NormalTypeInfo.createAlternate( genericSymToken.txt, accessMode, self.moduleType )
       table.insert( altTypeList, altType )
       local workToken = self:getToken(  )

@@ -1424,8 +1424,24 @@ pub class AlternateTypeInfo extend TypeInfo {
    {  
       return self.txt;
    }
-   
 
+   pub static fn getAssign(
+      typeInfo:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo> ) : &TypeInfo
+   {
+      if typeInfo.$kind ~= .Alternate {
+         return typeInfo;
+      }
+      let mut otherWork = typeInfo;
+      while true {
+         if! alt2type[ otherWork ] {
+            otherWork = _exp;
+         }
+         else {
+            return otherWork;
+         }
+      }
+   }
+   
    /** other 型からこの型への opTxt の評価が可能かどうか */
    pub override fn canEvalWith(
       other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
@@ -1436,13 +1452,15 @@ pub class AlternateTypeInfo extend TypeInfo {
       if other.$nilable {
          return false;
       }
+      //let mut otherWork = unwrap other.applyGeneric( alt2type ) default other;
+      let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
       if! let genType = alt2type[ self ] {
-         return genType.canEvalWith( other, opTxt, alt2type );
+         return genType.canEvalWith( otherWork, opTxt, alt2type );
       }
       if not AlternateTypeInfo.isValidApply( alt2type ) {
          return false;
       }
-      alt2type[ self ] = other;
+      alt2type[ self ] = otherWork;
       return true;
    }
 
@@ -1463,13 +1481,14 @@ pub class AlternateTypeInfo extend TypeInfo {
          return true;
       }
       when! alt2type {
+         let mut otherWork = AlternateTypeInfo.getAssign( typeInfo, alt2type );
          if! let genType = alt2type[ self ] {
-            return genType.equals( typeInfo, alt2type );
+            return genType.equals( otherWork, alt2type );
          }  
          if not AlternateTypeInfo.isValidApply( alt2type ) {
             return false;
          }
-         alt2type[ self ] = typeInfo;
+         alt2type[ self ] = otherWork;
          return true;
       }
       return false;
@@ -1626,6 +1645,10 @@ pub class GenericTypeInfo extend TypeInfo {
    pub override fn canEvalWith(
       other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
    {
+      if self.$mutable and not other.$mutable {
+         return false;
+      }
+
       let otherSrc = other.$srcTypeInfo;
       if self == otherSrc {
          return true;
@@ -1637,8 +1660,16 @@ pub class GenericTypeInfo extend TypeInfo {
          if work == headTypeInfo {
             return false;
          }
-         if self.genSrcTypeInfo == work.$genSrcTypeInfo {
+         foreach genType, altType in work.createAlt2typeMap( false ) {
+            alt2type[ altType ] = genType;
+         }  
+         if self.genSrcTypeInfo.equals( work.$genSrcTypeInfo, alt2type ) {
             break;
+         }
+         foreach ifType in work.$interfaceList {
+            if self.canEvalWith( ifType, opTxt, alt2type ) {
+               return true;
+            }
          }
          work = work.$baseTypeInfo;
       }
@@ -1646,18 +1677,13 @@ pub class GenericTypeInfo extend TypeInfo {
       // 一致する場合、汎化の型も同じか調べる
       let otherGen = work@@GenericTypeInfo;
       foreach val, key in self.alt2typeMap {
-         if not val.canEvalWith( unwrap otherGen.alt2typeMap[ key ], opTxt, alt2type ) {
+         let otherType = AlternateTypeInfo.getAssign(
+            unwrap otherGen.alt2typeMap[ key ], alt2type );
+         if not val.canEvalWith( otherType, opTxt, alt2type ) {
             return false;
          }
       }
       return true;
-
-      // let otherSrc = other.$genSrcTypeInfo;
-      // foreach val, key in self.alt2typeMap {
-      //    alt2type[ key ] = val;
-      // }
-
-      // return self.genSrcTypeInfo.canEvalWith( other, opTxt, alt2type );
    }
 
    /** この型と typeInfo が等しいかどうか */
@@ -1670,6 +1696,14 @@ pub class GenericTypeInfo extend TypeInfo {
       {
          return false;
       }
+      if not isGenericType( other ) {
+         return false;
+      }
+      
+      if not self.genSrcTypeInfo.equals( other.$genSrcTypeInfo, alt2type ) {
+         return false;
+      }
+      
       foreach otherItem, index in other.$itemTypeInfoList {
          let typeInfo = self.itemTypeInfoList[ index ];
          if not typeInfo.equals( otherItem, alt2type ) {
@@ -2152,7 +2186,8 @@ pub class NormalTypeInfo extend TypeInfo {
 
 
       fn setupAlt2typeMap(): Map<&TypeInfo,&TypeInfo> {
-         if self.baseTypeInfo == headTypeInfo {
+
+         if self.baseTypeInfo == headTypeInfo and #self.interfaceList == 0 {
             return {};
          }
          let mut alt2typeMap:Map<&TypeInfo,&TypeInfo> = {};
@@ -2173,6 +2208,14 @@ pub class NormalTypeInfo extend TypeInfo {
                   let genericType = self.baseTypeInfo@@GenericTypeInfo;
                   foreach genType, altType in genericType.createAlt2typeMap( false ) {
                      alt2typeMap[ altType ] = genType;
+                  }
+               }
+               foreach ifType in self.interfaceList {
+                  if isGenericType( ifType ) {
+                     let genericType = ifType@@GenericTypeInfo;
+                     foreach genType, altType in genericType.createAlt2typeMap( false ) {
+                        alt2typeMap[ altType ] = genType;
+                     }
                   }
                }
             }
@@ -3434,6 +3477,9 @@ pub static fn TypeInfo.canEvalWithBase(
          }
          return dest.$nonnilableType.canEvalWith( otherSrc, opTxt, alt2type );
       }
+      elseif isGenericType( dest ) {
+         return dest.canEvalWith( otherSrc, opTxt, alt2type );
+      }
       elseif ( dest.$kind == .Class or dest.$kind == .IF ) and
          ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
       {
@@ -3444,9 +3490,6 @@ pub static fn TypeInfo.canEvalWithBase(
          return dest.canEvalWith( enumTypeInfo.$valTypeInfo, opTxt, alt2type );
       }
       elseif dest.$kind == .Alternate {
-         return dest.canEvalWith( otherSrc, opTxt, alt2type );
-      }
-      elseif isGenericType( dest ) {
          return dest.canEvalWith( otherSrc, opTxt, alt2type );
       }
       return false;
