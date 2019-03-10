@@ -3524,6 +3524,14 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
                
             elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
                if checkAlternateTypeCount( #typeInfo:get_itemTypeInfoList() ) then
+                  for index, itemType in pairs( genericList ) do
+                     local altType = typeInfo:get_itemTypeInfoList()[index]
+                     if itemType:get_nilable() then
+                        self:addErrMess( firstToken.pos, string.format( "can't use nilable type -- %s", itemType:getTxt(  )) )
+                     end
+                     
+                  end
+                  
                   typeInfo = Ast.NormalTypeInfo.createGeneric( typeInfo, genericList, self.moduleType )
                end
                
@@ -3987,9 +3995,14 @@ function TransUnit:analyzeDeclAlternateType( token, accessMode )
          
       end
       
+      local workToken = self:getToken(  )
+      if workToken.txt == "!" then
+         self:addErrMess( workToken.pos, "not support nilable" )
+         workToken = self:getToken(  )
+      end
+      
       local altType = Ast.NormalTypeInfo.createAlternate( genericSymToken.txt, accessMode, self.moduleType )
       table.insert( altTypeList, altType )
-      local workToken = self:getToken(  )
       if workToken.txt == ">" then
          nextToken = self:getToken(  )
          break
@@ -5648,6 +5661,32 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    else
     
       self:pushback(  )
+   end
+   
+   local hasCond = false
+   for index, expNode in pairs( expNodeList ) do
+      if index ~= #expNodeList then
+         if Ast.isConditionalbe( expNode:get_expType() ) then
+            hasCond = true
+            break
+         end
+         
+      else
+       
+         for __index, expType in pairs( expNode:get_expTypeList() ) do
+            if Ast.isConditionalbe( expType ) then
+               hasCond = true
+               break
+            end
+            
+         end
+         
+      end
+      
+   end
+   
+   if not hasCond then
+      self:addErrMess( firstToken.pos, "This condition never be false" )
    end
    
    return Ast.IfUnwrapNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, varNameList, expNodeList, block, elseBlock )
@@ -7695,13 +7734,6 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
          self:addErrMess( token.pos, "abstract class can't new" )
       end
       
-      if #classTypeInfo:get_itemTypeInfoList() > 0 then
-         if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
-            self:addErrMess( token.pos, string.format( "Can't new generic class. -- %s", classTypeInfo:getTxt(  )) )
-         end
-         
-      end
-      
       local classScope = classTypeInfo:get_scope(  )
       local initTypeInfo = (_lune.unwrap( classScope) ):getTypeInfoChild( "__init" )
       if  nil == initTypeInfo then
@@ -7725,8 +7757,34 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
          self:addErrMess( token.pos, string.format( "can't access to __init of %s", classTypeInfo:getTxt(  )) )
       end
       
-      self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, exp:get_expType():get_itemTypeInfoList(), classTypeInfo )
-      exp = Ast.ExpNewNode.create( self.nodeManager, firstToken.pos, exp:get_expTypeList(), exp, argList )
+      local alt2type = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      if #classTypeInfo:get_itemTypeInfoList() > 0 then
+         if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
+            local genTypeList = {}
+            local detect = true
+            for __index, altType in pairs( classTypeInfo:get_itemTypeInfoList() ) do
+               do
+                  local _exp = alt2type[altType]
+                  if _exp ~= nil then
+                     table.insert( genTypeList, _exp )
+                  else
+                     self:addErrMess( token.pos, string.format( "Can't new generic class. -- %s", classTypeInfo:getTxt(  )) )
+                     detect = false
+                     break
+                  end
+               end
+               
+            end
+            
+            if detect then
+               classTypeInfo = Ast.NormalTypeInfo.createGeneric( classTypeInfo, genTypeList, self.moduleType )
+            end
+            
+         end
+         
+      end
+      
+      exp = Ast.ExpNewNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, exp, argList )
       exp = self:analyzeExpCont( firstToken, exp, false )
    end
    

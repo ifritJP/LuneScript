@@ -2191,7 +2191,7 @@ fn TransUnit.analyzeExp(
    if token.txt == "new" {
       exp = self.analyzeRefType( .Local, false );
 
-      let classTypeInfo = exp.$expType;
+      let mut classTypeInfo = exp.$expType;
       if classTypeInfo.$externalFlag {
          switch classTypeInfo.$accessMode {
             case .Pri, .Local {
@@ -2202,12 +2202,6 @@ fn TransUnit.analyzeExp(
       }  
       if classTypeInfo.$abstractFlag {
          self.addErrMess( token.pos, "abstract class can't new" );
-      }
-      if #classTypeInfo.$itemTypeInfoList > 0 {
-         if classTypeInfo.$itemTypeInfoList[1].$kind == .Alternate {
-            self.addErrMess( token.pos, "Can't new generic class. -- %s"
-                             (classTypeInfo.getTxt(##) ));         
-         }
       }
       
       let classScope = classTypeInfo.get_scope();
@@ -2223,29 +2217,50 @@ fn TransUnit.analyzeExp(
          self.pushback();
          argList = self.analyzeExpList( false, nil, initTypeInfo.$argTypeInfoList ## );
          self.checkNextToken( ")" );
-      }  
-
-      // 引数チェック
-      //let classScope = self.typeId2Scope[ classTypeInfo.get_typeId() ];
+      }
 
       if initTypeInfo.$accessMode == .Pub or
           ( initTypeInfo.$accessMode == .Pro and
             self.scope.getClassTypeInfo().isInheritFrom( classTypeInfo, nil ) ) or
           ( self.scope.getClassTypeInfo() == classTypeInfo )
-      {  
+      {
          // pub、 pro でサブクラス、 pri で同じクラスの場合はアクセス可能
-      }  
+      }
       else {
          self.addErrMess(
             token.pos,
             "can't access to __init of %s" (classTypeInfo.getTxt(##)));
-      }  
+      }
 
-      self.checkMatchValType( exp.$pos, initTypeInfo, argList,
-                              exp.$expType.$itemTypeInfoList, classTypeInfo );
+      let alt2type = self.checkMatchValType(
+         exp.$pos, initTypeInfo, argList,
+         classTypeInfo.$itemTypeInfoList, classTypeInfo );
+
+      if #classTypeInfo.$itemTypeInfoList > 0 {
+         if classTypeInfo.$itemTypeInfoList[1].$kind == .Alternate {
+            let mut genTypeList:List<&Ast.TypeInfo> = [];
+            let mut detect = true;
+            foreach altType in classTypeInfo.$itemTypeInfoList {
+               if! alt2type[ altType ] {
+                  genTypeList.insert( _exp );
+               }
+               else {
+                  self.addErrMess( token.pos, "Can't new generic class. -- %s"
+                                   (classTypeInfo.getTxt(##) ));
+                  detect = false;
+                  break;
+               }
+            }
+
+            if detect {
+               classTypeInfo = Ast.NormalTypeInfo.createGeneric(
+                  classTypeInfo, genTypeList, self.moduleType );
+            }
+         }
+      }
       
       exp = Ast.ExpNewNode.create(
-         self.nodeManager, firstToken.pos, exp.$expTypeList, exp, argList );
+         self.nodeManager, firstToken.pos, [ classTypeInfo ], exp, argList );
       exp = self.analyzeExpCont( firstToken, exp, false );
    }  
 

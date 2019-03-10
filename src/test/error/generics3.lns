@@ -1,3 +1,19 @@
+class Test<T> {
+   pub fn func(val:T):T {
+      return val;
+   }
+}
+
+{
+   let test = new Test<&Set<int>>();
+   let set = (@ 1, 2, 3 );
+   foreach val in test.func( set ) {
+      print( val );
+   }  
+   test.func( set ).add(4); // error
+}
+
+
 interface  IF<T> {
    pub fn func(val:T): T;
 }
@@ -24,4 +40,12 @@ class Test2<T> extend (IF<T>, IF2<T>) {
    sub2( test2 );
    sub2( new Test2<int>() );
    sub2( new Test2<str>() ); // error
+}
+
+class Test3<T1,T2> {
+   let val:T1;
+}
+
+{
+   let test3 = new Test3( 1 ); // error
 }

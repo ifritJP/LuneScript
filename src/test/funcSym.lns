@@ -93,3 +93,18 @@ class Test4<T> extend (IF<T>, IF2<T>) {
    sub2( test3 );
    sub2( new Test4<int>() );
 }
+
+
+class Test6<T> {
+   let val:T {pub};
+   pub fn func():T {
+      return self.val;
+   }
+}
+
+{
+   let test6 = new Test6(1);
+   print( test6.func() + 10 );
+   let test7 = new Test6("abc");
+   print( test7.func() .. "ABC" );
+}

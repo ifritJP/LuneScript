@@ -134,6 +134,14 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             }
             case .Class, .IF {
                if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
+                  foreach itemType, index in genericList {
+                     let altType = typeInfo.$itemTypeInfoList[ index ]@@Ast.AlternateTypeInfo;
+                     if itemType.$nilable {
+                        self.addErrMess(
+                           firstToken.pos,
+                           "can't use nilable type -- %s" (itemType.getTxt(##)) );
+                     }
+                  }
                   typeInfo = Ast.NormalTypeInfo.createGeneric(
                      typeInfo, genericList, self.moduleType );
                }
@@ -632,12 +640,16 @@ fn TransUnit.analyzeDeclAlternateType(
             altNameSet.add( genericSymToken.txt );
          }
       }
+      let mut workToken = self.getToken(##);
+      if workToken.txt == "!" {
+         self.addErrMess( workToken.pos, "not support nilable" );
+         workToken = self.getToken(##);
+      }
       
       let altType = Ast.NormalTypeInfo.createAlternate(
          genericSymToken.txt, accessMode, self.moduleType );
       altTypeList.insert( altType );
 
-      let workToken = self.getToken(##);
       if workToken.txt == ">" {
          nextToken = self.getToken(##);
          break;
@@ -2469,7 +2481,13 @@ fn TransUnit.analyzeDeclVar(
    return node;
 }
 
-fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
+/**
+if! の解析。
+
+@param firstToken if 部分のトークン
+@return if! のノード
+*/
+fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.IfUnwrapNode
 {
    let mut nextToken = self.getToken(##);
    let mut typeInfoList:List<&Ast.TypeInfo> = [];
@@ -2524,6 +2542,27 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node
       self.pushback();
    }
 
+   let mut hasCond = false;
+   foreach expNode, index in expNodeList {
+      if index ~= #expNodeList {
+         if Ast.isConditionalbe( expNode.$expType ) {
+            hasCond = true;
+            break;
+         }
+      }
+      else {
+         foreach expType in expNode.$expTypeList {
+            if Ast.isConditionalbe( expType ) {
+               hasCond = true;
+               break;
+            }
+         }
+      }
+   }
+   if not hasCond {
+      self.addErrMess( firstToken.pos, "This condition never be false" );
+   }
+   
    return Ast.IfUnwrapNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
       varNameList, expNodeList, block, elseBlock );

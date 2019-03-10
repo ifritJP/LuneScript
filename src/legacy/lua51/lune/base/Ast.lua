@@ -2128,7 +2128,7 @@ end
 function AlternateTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, accessMode = %d }\n', SerializeKind.Alternate, parentId, self.typeId, self.txt, self.accessMode) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q,accessMode = %d }', SerializeKind.Alternate, parentId, self.typeId, self.txt, self.accessMode) )
 end
 function AlternateTypeInfo:applyGeneric( alt2typeMap )
 
@@ -3495,6 +3495,15 @@ _moduleObj.builtinTypeList = builtinTypeList
 local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 _moduleObj.builtinTypeArray = builtinTypeArray
 
+local function isConditionalbe( typeInfo )
+
+   if typeInfo:get_nilable() or typeInfo:equals( _moduleObj.builtinTypeBool, nil ) then
+      return true
+   end
+   
+   return false
+end
+_moduleObj.isConditionalbe = isConditionalbe
 function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo )
 
    if #itemTypeInfo == 0 then

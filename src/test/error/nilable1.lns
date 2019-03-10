@@ -13,7 +13,7 @@
     fn get(): int[] {
         return [1];
     }
-    if! get()[1] {
+    if! get()[1] { // error
         print( _exp );
     }
 }

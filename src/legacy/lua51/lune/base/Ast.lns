@@ -1373,7 +1373,9 @@ pub class AlternateTypeInfo extend TypeInfo {
    pri let nilableTypeInfo: NilableTypeInfo {pub};
    pri let accessMode: AccessMode {pub};
    
-   pub fn __init( txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo ) {
+   pub fn __init( txt:str, accessMode:AccessMode,
+                  moduleTypeInfo:&TypeInfo )
+   {
       super( nil );
 
       idProv.increment();
@@ -1533,8 +1535,9 @@ pub class AlternateTypeInfo extend TypeInfo {
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, txt = %q, accessMode = %d }\n' (
-            SerializeKind.Alternate, parentId, self.typeId, self.txt, self.accessMode ) );
+         '{ skind = %d, parentId = %d, typeId = %d, txt = %q,accessMode = %d }'
+         ( SerializeKind.Alternate, parentId, self.typeId,
+           self.txt, self.accessMode ) );
    }
 
    pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
@@ -2590,8 +2593,10 @@ pub static fn NormalTypeInfo.createBuiltin(
          genTypeList.insert( NormalTypeInfo.createAlternate( "T", .Pri, headTypeInfo ) );
       }
       case .Map {
-         genTypeList.insert( NormalTypeInfo.createAlternate( "K", .Pri, headTypeInfo ) );
-         genTypeList.insert( NormalTypeInfo.createAlternate( "V", .Pri, headTypeInfo ) );
+         genTypeList.insert(
+            NormalTypeInfo.createAlternate( "K", .Pri, headTypeInfo ) );
+         genTypeList.insert(
+            NormalTypeInfo.createAlternate( "V", .Pri, headTypeInfo ) );
       }
    }
    let mut info = new NormalTypeInfo(
@@ -2632,6 +2637,14 @@ pub let builtinTypeList:TypeInfo =
    NormalTypeInfo.createBuiltin( "List", "List" , .List## );
 pub let builtinTypeArray:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
+
+
+pub fn isConditionalbe( typeInfo:&TypeInfo ) : bool {
+   if typeInfo.$nilable or typeInfo.equals( builtinTypeBool, nil ) {
+      return true;
+   }
+   return false;
+}
 
 pub static fn NormalTypeInfo.createSet(
    accessMode: AccessMode, parentInfo: &TypeInfo,

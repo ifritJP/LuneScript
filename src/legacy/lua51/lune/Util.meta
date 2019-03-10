@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.27'
-_moduleObj.__buildId = "1552142598.000000:1"
+_moduleObj.__formatVersion = '1.0.29'
+_moduleObj.__buildId = "1552194151.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do

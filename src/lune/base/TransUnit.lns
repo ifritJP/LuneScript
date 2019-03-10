@@ -1323,7 +1323,8 @@ fn TransUnit.registBuiltInScope() mut {
                }
                else {
                   genTypeList.insert(
-                     Ast.NormalTypeInfo.createAlternate( token, .Pri, self.moduleType ) );
+                     Ast.NormalTypeInfo.createAlternate(
+                        token, .Pri, self.moduleType ) );
                }
             }
          }
