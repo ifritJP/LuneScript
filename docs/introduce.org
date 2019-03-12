@@ -233,6 +233,14 @@ Mapping については次を参考にしてください。
   - https://qiita.com/dwarfJP/items/070a3d31c57903cb6933  
 
 
+** Generics
+
+LuneScript は Generics をサポートします。
+
+詳しくは次を参照してください。
+
+https://qiita.com/dwarfJP/private/50b119fd082fcc212c48
+
 ** nil 条件演算子
 
 nilable の値を簡単に扱う方法として、 nil 条件演算子をサポートしています。
