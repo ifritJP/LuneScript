@@ -606,6 +606,22 @@ pub override fn dumpFilter.processAlias(
    dump( prefix, depth, node, "%s = %s" (node.$newName, node.$typeInfo.getTxt(##) ) );
 }
 
+pub override fn dumpFilter.processBoxing(
+   node: &Ast.BoxingNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "" );
+   filter( node.$src, self, opt.nextOpt() );
+}
+
+pub override fn dumpFilter.processUnboxing(
+   node: &Ast.UnboxingNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "" );
+   filter( node.$src, self, opt.nextOpt() );
+}
+
 pub override fn dumpFilter.processLiteralList( 
    node: &Ast.LiteralListNode, opt:Opt ) mut
 {

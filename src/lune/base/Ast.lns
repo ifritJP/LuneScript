@@ -87,6 +87,7 @@ pub enum SerializeKind {
    Alias,
    Alternate,
    Generic,
+   Box,
 }
 
 pub enum TypeInfoKind {
@@ -111,6 +112,9 @@ pub enum TypeInfoKind {
    Abbr,
    Set,
    Alternate,
+   Box,
+   CanEvalCtrl,
+   Etc,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -651,6 +655,117 @@ static な型か。
    }
 }
 
+pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
+//let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
+
+
+pub class AutoBoxingInfo extend TypeInfo {
+   static let mut allObj:Map<&TypeInfo,&AutoBoxingInfo>;
+   
+   let mut count:int{pub};
+
+   pub fn __init() {
+      super( nil );
+      self.count = 0;
+      AutoBoxingInfo.allObj[ self ] = self;
+   }
+
+
+   __init {
+      AutoBoxingInfo.allObj = {};
+   }
+   
+
+   pub override fn get_kind(): TypeInfoKind {
+      return .Etc;
+   }
+
+   pub fn inc() mut {
+      let mut obj = unwrap AutoBoxingInfo.allObj[ self ];
+      obj.count = obj.count + 1;
+   }
+
+   pub fn unregist() {
+      AutoBoxingInfo.allObj[ self ] = nil;
+   }
+}
+
+pub class CanEvalCtrlTypeInfo extend TypeInfo {
+   pub static let detectAlt:CanEvalCtrlTypeInfo;
+   pub static let needAutoBoxing:CanEvalCtrlTypeInfo;
+   pub static let checkTypeTarget:CanEvalCtrlTypeInfo;
+
+   _lune_control default__init;
+
+   __init {
+      CanEvalCtrlTypeInfo.detectAlt = new CanEvalCtrlTypeInfo();
+      CanEvalCtrlTypeInfo.needAutoBoxing = new CanEvalCtrlTypeInfo();
+      CanEvalCtrlTypeInfo.checkTypeTarget = new CanEvalCtrlTypeInfo();
+   }
+
+   pub override fn get_kind(): TypeInfoKind {
+      return .CanEvalCtrl;
+   }
+
+   pub override fn get_typeId(): int {
+      return -1;
+   }
+
+   pub static fn createDefaultAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
+      if detectFlag {
+         return { CanEvalCtrlTypeInfo.detectAlt: headTypeInfo };
+      }
+      return {};
+   }
+   
+   pub static fn isValidApply( alt2type:Map<&TypeInfo,&TypeInfo> ) : bool {
+      return alt2type[ CanEvalCtrlTypeInfo.detectAlt ] ~= nil;
+   }
+
+   pub static fn setupNeedAutoBoxing( alt2type:Map<&TypeInfo,&TypeInfo> ) {
+      alt2type[ CanEvalCtrlTypeInfo.needAutoBoxing ] = new AutoBoxingInfo();
+   }
+
+   pub static fn updateNeedAutoBoxing( alt2type:Map<&TypeInfo,&TypeInfo> ) {
+      if! alt2type[ CanEvalCtrlTypeInfo.needAutoBoxing ] {
+         let mut autoBoxingInfo = _exp@@AutoBoxingInfo;
+         autoBoxingInfo.inc();
+      }
+      else {
+         Util.err( "no exist needAutoBoxing" );
+      }
+   }
+
+   pub static fn finishNeedAutoBoxing(
+      alt2type:Map<&TypeInfo,&TypeInfo>, count:int ): bool
+   { 
+      if! alt2type[ CanEvalCtrlTypeInfo.needAutoBoxing ] {
+         let mut autoBoxingInfo = _exp@@AutoBoxingInfo;
+         autoBoxingInfo.unregist();
+         return autoBoxingInfo.$count == count;
+      }
+      return false;
+   }
+   
+   /**
+dst に対して autoBoxing 可能かどうか調べる。
+
+追加で canEvalWith() を実行して評価可能かどうか確認する必要がある。
+   */
+   pub static fn canAutoBoxing( dst:&TypeInfo, src:&TypeInfo ): bool
+   {  
+      let dstSrc = dst.$srcTypeInfo.$nonnilableType;
+      if dstSrc.$kind ~= .Box {
+         return false;
+      }
+      let srcSrc = src.$srcTypeInfo.$nonnilableType;
+      if srcSrc.$kind == .Box {
+         return false;
+      }
+      return true;
+   }
+}
+
 pub fn isGenericType( typeInfo: &TypeInfo ) : bool {
    return typeInfo ~= typeInfo.$genSrcTypeInfo;
 }
@@ -1078,8 +1193,6 @@ fn dumpScope( scope: Scope!, prefix:str ) {
 
 
 
-pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
-//let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 
 /**
 
@@ -1088,7 +1201,7 @@ pub fn TypeInfo.createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
    if not detectFlag {
       return {};
    }
-   return { headTypeInfo: headTypeInfo };
+   return { CanEvalCtrlTypeInfo.detectAlt: headTypeInfo };
 }
 
 
@@ -1361,6 +1474,8 @@ pub class NilableTypeInfo extend TypeInfo {
    advertise nonnilableType;
 }
 
+
+
 /**
 Generic クラスや関数で利用する代用型。
 
@@ -1387,17 +1502,6 @@ pub class AlternateTypeInfo extend TypeInfo {
 
       idProv.increment();      
       self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
-   }
-
-   pub static fn createDefaultAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
-      if detectFlag {
-         return { headTypeInfo: headTypeInfo };
-      }
-      return {};
-   }
-   
-   pub static fn isValidApply( alt2type:Map<&TypeInfo,&TypeInfo> ) : bool {
-      return alt2type[ headTypeInfo ] ~= nil;
    }
 
    /** この型がモジュールを示す型の場合 true  */
@@ -1459,7 +1563,7 @@ pub class AlternateTypeInfo extend TypeInfo {
       if! let genType = alt2type[ self ] {
          return genType.canEvalWith( otherWork, opTxt, alt2type );
       }
-      if not AlternateTypeInfo.isValidApply( alt2type ) {
+      if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
          return false;
       }
       alt2type[ self ] = otherWork;
@@ -1487,7 +1591,7 @@ pub class AlternateTypeInfo extend TypeInfo {
          if! let genType = alt2type[ self ] {
             return genType.equals( otherWork, alt2type );
          }  
-         if not AlternateTypeInfo.isValidApply( alt2type ) {
+         if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
             return false;
          }
          alt2type[ self ] = otherWork;
@@ -1545,6 +1649,96 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 }
 
+let boxRootAltType = new AlternateTypeInfo( "_T", .Pub, headTypeInfo );
+let mut boxRootScope = new Scope( rootScope, true, nil## );
+
+pub class BoxTypeInfo extend TypeInfo {
+   pri let boxingType: &TypeInfo {pub};
+   pri let typeId: int { pub };
+   pri let itemTypeInfoList: &List<&TypeInfo> {pub};
+   pri let accessMode: AccessMode {pub};
+   pri let nilableTypeInfo: NilableTypeInfo {pub};
+
+   pub fn __init( typeId: int, accessMode:AccessMode, boxingType: &TypeInfo ) {
+      super( boxRootScope );
+      self.boxingType = boxingType;
+      self.typeId = typeId;
+      self.itemTypeInfoList = [ boxingType ];
+      self.accessMode = accessMode;
+
+      idProv.increment();
+      self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
+   }
+
+   pub override fn get_scope(): Scope! {
+      return super();
+   }
+
+   pub override fn get_kind(): TypeInfoKind {
+      return .Box;
+   }
+   pub override fn get_srcTypeInfo(): &TypeInfo {
+      return self;
+   }
+   pub override fn get_nonnilableType(): &TypeInfo {
+      return self;
+   }
+   pub override fn get_nilable(): bool {
+      return false;
+   }
+
+   /** この型の名前を取得する。 */
+   pub override fn getTxt(
+      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      raw:str, fullName:bool!,
+      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   {  
+      return "Nilable<" .. self.boxingType.getTxtWithRaw(
+         raw, fullName, importInfo, localFlag ) .. ">";
+   }
+
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt );
+   }
+
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return "Nilable<%s>" (self.boxingType.get_display_stirng_with( raw ) );
+   }
+
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+      let parentId = self.getParentId();
+      stream.write(
+         '{ skind = %d, parentId = %d, typeId = %d, accessMode = %d, boxingType = %d }\n' (
+            SerializeKind.Box, parentId, self.typeId,
+            self.accessMode, self.boxingType.$typeId ) );
+   }
+
+   pub override fn equals(
+      typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
+   {
+      if typeInfo.$kind ~= .Box {
+         return false;
+      }
+      let boxType = typeInfo@@BoxTypeInfo;
+      return self.boxingType.equals( boxType.boxingType, alt2type );
+   }
+
+   pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
+      let mut map:Map<&TypeInfo,&TypeInfo> =
+         CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag );
+      if self.boxingType ~= boxRootAltType {
+         map[ boxRootAltType ] = self.boxingType;
+      }
+      return map;
+   }
+
+   advertise boxingType;
+}
+
 
 /**
 Generic クラスの型確定後の型情報。
@@ -1577,7 +1771,7 @@ pub class GenericTypeInfo extend TypeInfo {
                    (#genSrcTypeInfo.$itemTypeInfoList, #itemTypeInfoList) );
       }
       let mut alt2typeMap:Map<&TypeInfo,&TypeInfo> = {};
-      let mut workAlt2typeMap = AlternateTypeInfo.createDefaultAlt2typeMap( false );
+      let mut workAlt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
       let mut hasAlter = false;
       foreach altTypeInfo, index in genSrcTypeInfo.$itemTypeInfoList {
          let itemType = itemTypeInfoList[ index ];
@@ -1620,7 +1814,7 @@ pub class GenericTypeInfo extend TypeInfo {
       // other は Generic
       let genOther = other@@GenericTypeInfo;
       let! mut workAlt2type = alt2type {
-         workAlt2type = AlternateTypeInfo.createDefaultAlt2typeMap( false );
+         workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
       };
       foreach altType in otherSrc.$itemTypeInfoList {
          // otherSrc の altType に対応する Generic の型を取得し、
@@ -1732,7 +1926,8 @@ pub class GenericTypeInfo extend TypeInfo {
    }
 
    pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
-      let mut map:Map<&TypeInfo,&TypeInfo> = {};
+      let mut map:Map<&TypeInfo,&TypeInfo> =
+         CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag );
       foreach typeInfo, genType in self.alt2typeMap {
          map[ genType ] = typeInfo;
       }
@@ -2195,7 +2390,7 @@ pub class NormalTypeInfo extend TypeInfo {
          }
          let mut alt2typeMap:Map<&TypeInfo,&TypeInfo> = {};
          switch kind {
-            case .Set, .Map, .List, .Array {
+            case .Set, .Map, .List, .Array, .Box {
                if #self.itemTypeInfoList ~= #self.baseTypeInfo.$itemTypeInfoList {
                   Util.err( "unmatch generic type number -- %d, %d"
                             (#self.itemTypeInfoList,
@@ -2268,10 +2463,8 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
-      let mut map:Map<&TypeInfo,&TypeInfo> = {};
-      if detectFlag {
-         map[ headTypeInfo ] = headTypeInfo;
-      }
+      let mut map:Map<&TypeInfo,&TypeInfo> =
+         CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag );
       foreach typeInfo, genType in self.alt2typeMap {
          map[ genType ] = typeInfo;
       }
@@ -2537,7 +2730,7 @@ idProv.increment();
 //typeIdSeed = typeIdSeed + 1;
 
 fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
-                  typeInfo:&TypeInfo, nilableTypeInfo:&TypeInfo )
+                  typeInfo:&TypeInfo, nilableTypeInfo:&TypeInfo, registScope:bool )
 {
    typeInfoKind[ idName ] = typeInfo;
    sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
@@ -2550,6 +2743,10 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
       builtInTypeIdSet[ nilableTypeInfo.$typeId ] = nilableTypeInfo;
    } 
    builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
+
+   if registScope {
+      rootScope.addClass( typeTxt, typeInfo );
+   } 
 }
 
 pub static fn NormalTypeInfo.createBuiltin(
@@ -2577,14 +2774,13 @@ pub static fn NormalTypeInfo.createBuiltin(
    let mut scope:Scope! = nil;
    switch kind {
       case .Array, .List, .Set, .Class, .Module,
-           .IF, .Func, .Method,
-           .Macro
+           .IF, .Func, .Method, .Macro
       {  
          scope = new Scope(
             rootScope,
-            kind == .Class or kind == .Module or
-            kind == .IF or kind == .List or kind == .Array or kind == .Set, nil## );
-      }  
+            kind == .Class or kind == .Module or kind == .IF or kind == .List or
+            kind == .Array or kind == .Set, nil## );
+      }
    }
 
    let mut genTypeList:List<&TypeInfo> = [];
@@ -2603,11 +2799,8 @@ pub static fn NormalTypeInfo.createBuiltin(
       false, scope, nil, nil, false, false, false, AccessMode.Pub,
       typeTxt, headTypeInfo, typeId,
       kind, genTypeList, argTypeList, retTypeList, true );
-   if scope {
-      rootScope.addClass( typeTxt, info );
-   } 
 
-   registBuiltin( idName, typeTxt, kind, info, headTypeInfo );
+   registBuiltin( idName, typeTxt, kind, info, headTypeInfo, scope ~= nil );
    return info;
 }
 
@@ -2639,12 +2832,47 @@ pub let builtinTypeArray:TypeInfo =
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
 
 
+idProv.increment();
+pub let builtinTypeBox = new BoxTypeInfo( idProv.$id, .Pub, boxRootAltType );
+registBuiltin( "Nilable", "Nilable", .Box, builtinTypeBox, headTypeInfo, true );
+
+
 pub fn isConditionalbe( typeInfo:&TypeInfo ) : bool {
    if typeInfo.$nilable or typeInfo.equals( builtinTypeBool, nil ) {
       return true;
    }
    return false;
 }
+
+
+let mut typeInfo2BoxMap:Map<&TypeInfo,&TypeInfo> = {};
+pub static fn NormalTypeInfo.createBox(
+   accessMode:AccessMode, nonnilableType: &TypeInfo ): &TypeInfo
+{
+   if! let boxType = typeInfo2BoxMap[ nonnilableType ] {
+      return boxType;
+   }
+   
+   idProv.increment();
+   let boxType = new BoxTypeInfo( idProv.$id, accessMode, nonnilableType );
+   typeInfo2BoxMap[ nonnilableType ] = boxType;
+   return boxType;
+}
+
+pub override fn BoxTypeInfo.applyGeneric(
+   alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+{
+   let typeInfo = self.boxingType.applyGeneric( alt2typeMap );
+   if typeInfo == self.boxingType {
+      return self;
+   }
+   when! typeInfo {
+      return NormalTypeInfo.createBox( self.accessMode, typeInfo );
+   }
+   return nil;
+}
+
+
 
 pub static fn NormalTypeInfo.createSet(
    accessMode: AccessMode, parentInfo: &TypeInfo,
@@ -2950,11 +3178,11 @@ pub static fn NormalTypeInfo.createDDD(
 
 
 pub let builtinTypeNil:TypeInfo = new NilTypeInfo();
-registBuiltin( "Nil", "nil", .Prim, builtinTypeNil, headTypeInfo );
+registBuiltin( "Nil", "nil", .Prim, builtinTypeNil, headTypeInfo, false );
 
 pub let builtinTypeDDD:TypeInfo =
    NormalTypeInfo.createDDD( builtinTypeStem_, true );
-registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo );
+registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo, false );
 
 
 pub let builtinTypeForm:TypeInfo =
@@ -3192,6 +3420,28 @@ accessMode = %d, kind = %d, ```
 }
 
 
+// other 型の値を、この型の変数に設定できるか判定する。
+pub override fn BoxTypeInfo.canEvalWith(
+   other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+{
+   if self == other {
+      return true;
+   }
+   if opTxt ~= "=" {
+      return false;
+   }
+   
+   if other.$nilable {
+      CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type );
+      return true;
+   }
+   
+   if self.boxingType.canEvalWith( other, opTxt, alt2type ) {
+      CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type );
+      return true;
+   }
+   return false;
+}
 
 
 // other 型の値を、この型の変数に設定できるか判定する。
@@ -3203,6 +3453,9 @@ pub override fn NilableTypeInfo.canEvalWith(
       return true;
    }  
    if otherSrc == builtinTypeNil or otherSrc.$kind == .Abbr {
+      if self.$nonnilableType.$kind == .Box {
+         return self.$nonnilableType.canEvalWith( otherSrc, opTxt, alt2type );
+      }
       return true;
    }  
    if self.typeId == otherSrc.$typeId {
@@ -3449,6 +3702,7 @@ pub static fn TypeInfo.canEvalWithBase(
       otherSrc.$kind ~= .Enum and
       otherSrc.$kind ~= .Abbr and
       otherSrc.$kind ~= .Alternate and
+      otherSrc.$kind ~= .Box and
       not isGenericType( otherSrc ) and
       destMut and not otherMut
    {
@@ -3465,6 +3719,9 @@ pub static fn TypeInfo.canEvalWithBase(
       return true;
    }
    if not dest.$nilable and otherSrc.$nilable {
+      if dest.$kind == .Box {
+         return dest.canEvalWith( otherSrc, opTxt, alt2type );
+      }
       return false;
    }
    if dest == builtinTypeStem and not otherSrc.$nilable {
@@ -3503,6 +3760,9 @@ pub static fn TypeInfo.canEvalWithBase(
          return dest.canEvalWith( enumTypeInfo.$valTypeInfo, opTxt, alt2type );
       }
       elseif dest.$kind == .Alternate {
+         return dest.canEvalWith( otherSrc, opTxt, alt2type );
+      }
+      elseif dest.$kind == .Box {
          return dest.canEvalWith( otherSrc, opTxt, alt2type );
       }
       return false;
@@ -3600,6 +3860,9 @@ pub static fn TypeInfo.canEvalWithBase(
             otherSrc.$nonnilableType, opTxt, alt2type );
       }
       case .Alternate {
+         return dest.canEvalWith( otherSrc, opTxt, alt2type );
+      }
+      case .Box {
          return dest.canEvalWith( otherSrc, opTxt, alt2type );
       }
       default {
@@ -4024,6 +4287,7 @@ pub class ProcessInfo {
    let mut idProvier:IdProvider {pub};
    let mut idProvierExt:IdProvider {pub};
    let mut typeInfo2ModifierMap:Map<&TypeInfo,&TypeInfo> {pub};
+   let mut typeInfo2BoxMap:Map<&TypeInfo,&TypeInfo> {pub};
    let mut typeInfo2DDDMap:Map<&TypeInfo,&DDDTypeInfo> {pub};
 }
 
@@ -4183,7 +4447,7 @@ pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
 
 
 _declNodeClass( "ExpList", Node, nil, nil, false,
-                [ { "expList": "List<&Node>" },
+                [ { "expList": "&List<&Node>" },
                   { "followOn": "bool" } ]
 );
 pub override fn ExpListNode.canBeLeft():bool {
@@ -4748,6 +5012,14 @@ _declNodeClass( "Abbr", Node, false, false, false,
 );
 
 
+_declNodeClass( "Boxing", Node, false, true, false,
+                [ { "src": "&Node" } ]
+);
+
+_declNodeClass( "Unboxing", Node, false, true, false,
+                [ { "src": "&Node" } ]
+);
+
 _declNodeClass( "LiteralNil", Node, false, true, false, [] );
 
 _declNodeClass( "LiteralChar", Node, false, true, false,
@@ -5180,21 +5452,25 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 
    
    processInfoQueue.insert(
-      new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap ) );   
+      new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap,
+                       typeInfo2BoxMap, typeInfo2DDDMap ) );   
    when! processInfo {
       idProvBase = processInfo.$idProvier;
       idProvExt = processInfo.$idProvierExt;
       typeInfo2ModifierMap = processInfo.$typeInfo2ModifierMap;
+      typeInfo2BoxMap = processInfo.$typeInfo2BoxMap;
       typeInfo2DDDMap = processInfo.$typeInfo2DDDMap;
    }
    else {
       idProvBase = new IdProvider( userStartId, extStartId );
       idProvExt = new IdProvider( extStartId, extMaxId );
       typeInfo2ModifierMap = {};
+      typeInfo2BoxMap = {};
       typeInfo2DDDMap = {};
    }
    idProv = idProvBase;
-   return new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap );       
+   return new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap,
+                           typeInfo2BoxMap, typeInfo2DDDMap );         
 }
 
 pub fn popProcessInfo() {
@@ -5203,6 +5479,7 @@ pub fn popProcessInfo() {
    idProvExt = info.$idProvierExt;
    idProv = idProvBase;
    typeInfo2ModifierMap = info.$typeInfo2ModifierMap;
+   typeInfo2BoxMap = info.$typeInfo2BoxMap;
    processInfoQueue.remove(##);
 }
 

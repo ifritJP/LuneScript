@@ -210,6 +210,9 @@ SerializeKind.__allList[9] = SerializeKind.Alternate
 SerializeKind.Generic = 9
 SerializeKind._val2NameMap[9] = 'Generic'
 SerializeKind.__allList[10] = SerializeKind.Generic
+SerializeKind.Box = 10
+SerializeKind._val2NameMap[10] = 'Box'
+SerializeKind.__allList[11] = SerializeKind.Box
 
 local TypeInfoKind = {}
 _moduleObj.TypeInfoKind = TypeInfoKind
@@ -290,6 +293,15 @@ TypeInfoKind.__allList[18] = TypeInfoKind.Set
 TypeInfoKind.Alternate = 18
 TypeInfoKind._val2NameMap[18] = 'Alternate'
 TypeInfoKind.__allList[19] = TypeInfoKind.Alternate
+TypeInfoKind.Box = 19
+TypeInfoKind._val2NameMap[19] = 'Box'
+TypeInfoKind.__allList[20] = TypeInfoKind.Box
+TypeInfoKind.CanEvalCtrl = 20
+TypeInfoKind._val2NameMap[20] = 'CanEvalCtrl'
+TypeInfoKind.__allList[21] = TypeInfoKind.CanEvalCtrl
+TypeInfoKind.Etc = 21
+TypeInfoKind._val2NameMap[21] = 'Etc'
+TypeInfoKind.__allList[22] = TypeInfoKind.Etc
 
 local function isBuiltin( typeId )
 
@@ -901,6 +913,135 @@ function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
 
+local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
+_moduleObj.headTypeInfo = headTypeInfo
+
+local AutoBoxingInfo = {}
+setmetatable( AutoBoxingInfo, { __index = TypeInfo } )
+_moduleObj.AutoBoxingInfo = AutoBoxingInfo
+function AutoBoxingInfo.new(  )
+   local obj = {}
+   AutoBoxingInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function AutoBoxingInfo:__init() 
+   TypeInfo.__init( self ,nil)
+   
+   self.count = 0
+   AutoBoxingInfo.allObj[self] = self
+end
+function AutoBoxingInfo:get_kind(  )
+
+   return TypeInfoKind.Etc
+end
+function AutoBoxingInfo:inc(  )
+
+   local obj = _lune.unwrap( AutoBoxingInfo.allObj[self])
+   obj.count = obj.count + 1
+end
+function AutoBoxingInfo:unregist(  )
+
+   AutoBoxingInfo.allObj[self] = nil
+end
+function AutoBoxingInfo.setmeta( obj )
+  setmetatable( obj, { __index = AutoBoxingInfo  } )
+end
+function AutoBoxingInfo:get_count()       
+   return self.count         
+end
+do
+   AutoBoxingInfo.allObj = {}
+end
+
+local CanEvalCtrlTypeInfo = {}
+setmetatable( CanEvalCtrlTypeInfo, { __index = TypeInfo } )
+_moduleObj.CanEvalCtrlTypeInfo = CanEvalCtrlTypeInfo
+function CanEvalCtrlTypeInfo:get_kind(  )
+
+   return TypeInfoKind.CanEvalCtrl
+end
+function CanEvalCtrlTypeInfo:get_typeId(  )
+
+   return -1
+end
+function CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
+
+   if detectFlag then
+      return {[CanEvalCtrlTypeInfo.detectAlt] = _moduleObj.headTypeInfo}
+   end
+   
+   return {}
+end
+function CanEvalCtrlTypeInfo.isValidApply( alt2type )
+
+   return alt2type[CanEvalCtrlTypeInfo.detectAlt] ~= nil
+end
+function CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2type )
+
+   alt2type[CanEvalCtrlTypeInfo.needAutoBoxing] = AutoBoxingInfo.new()
+end
+function CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
+
+   do
+      local _exp = alt2type[CanEvalCtrlTypeInfo.needAutoBoxing]
+      if _exp ~= nil then
+         local autoBoxingInfo = _exp
+         autoBoxingInfo:inc(  )
+      else
+         Util.err( "no exist needAutoBoxing" )
+      end
+   end
+   
+end
+function CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2type, count )
+
+   do
+      local _exp = alt2type[CanEvalCtrlTypeInfo.needAutoBoxing]
+      if _exp ~= nil then
+         local autoBoxingInfo = _exp
+         autoBoxingInfo:unregist(  )
+         return autoBoxingInfo:get_count() == count
+      end
+   end
+   
+   return false
+end
+function CanEvalCtrlTypeInfo.canAutoBoxing( dst, src )
+
+   local dstSrc = dst:get_srcTypeInfo():get_nonnilableType()
+   if dstSrc:get_kind() ~= TypeInfoKind.Box then
+      return false
+   end
+   
+   local srcSrc = src:get_srcTypeInfo():get_nonnilableType()
+   if srcSrc:get_kind() == TypeInfoKind.Box then
+      return false
+   end
+   
+   return true
+end
+function CanEvalCtrlTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = CanEvalCtrlTypeInfo  } )
+end
+function CanEvalCtrlTypeInfo.new(  )
+   local obj = {}
+   CanEvalCtrlTypeInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end        
+   return obj 
+end         
+function CanEvalCtrlTypeInfo:__init(  ) 
+
+   TypeInfo.__init( self )
+end
+do
+   CanEvalCtrlTypeInfo.detectAlt = CanEvalCtrlTypeInfo.new()
+   CanEvalCtrlTypeInfo.needAutoBoxing = CanEvalCtrlTypeInfo.new()
+   CanEvalCtrlTypeInfo.checkTypeTarget = CanEvalCtrlTypeInfo.new()
+end
+
 local function isGenericType( typeInfo )
 
    return typeInfo ~= typeInfo:get_genSrcTypeInfo()
@@ -1485,16 +1626,13 @@ local function dumpScope( scope, prefix )
    dumpScopeSub( scope, prefix, {} )
 end
 
-local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
-_moduleObj.headTypeInfo = headTypeInfo
-
 function TypeInfo:createAlt2typeMap( detectFlag )
 
    if not detectFlag then
       return {}
    end
    
-   return {[_moduleObj.headTypeInfo] = _moduleObj.headTypeInfo}
+   return {[CanEvalCtrlTypeInfo.detectAlt] = _moduleObj.headTypeInfo}
 end
 
 local NilTypeInfo = {}
@@ -1983,18 +2121,6 @@ function AlternateTypeInfo:__init(txt, accessMode, moduleTypeInfo)
    idProv:increment(  )
    self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
 end
-function AlternateTypeInfo.createDefaultAlt2typeMap( detectFlag )
-
-   if detectFlag then
-      return {[_moduleObj.headTypeInfo] = _moduleObj.headTypeInfo}
-   end
-   
-   return {}
-end
-function AlternateTypeInfo.isValidApply( alt2type )
-
-   return alt2type[_moduleObj.headTypeInfo] ~= nil
-end
 function AlternateTypeInfo:isModule(  )
 
    return false
@@ -2053,7 +2179,7 @@ function AlternateTypeInfo:canEvalWith( other, opTxt, alt2type )
       end
    end
    
-   if not AlternateTypeInfo.isValidApply( alt2type ) then
+   if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
       return false
    end
    
@@ -2083,7 +2209,7 @@ function AlternateTypeInfo:equals( typeInfo, alt2type )
          end
       end
       
-      if not AlternateTypeInfo.isValidApply( alt2type ) then
+      if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
          return false
       end
       
@@ -2146,6 +2272,197 @@ function AlternateTypeInfo:get_accessMode()
    return self.accessMode         
 end
 
+local boxRootAltType = AlternateTypeInfo.new("_T", AccessMode.Pub, _moduleObj.headTypeInfo)
+local boxRootScope = Scope.new(_moduleObj.rootScope, true, nil)
+local BoxTypeInfo = {}
+setmetatable( BoxTypeInfo, { __index = TypeInfo } )
+_moduleObj.BoxTypeInfo = BoxTypeInfo
+function BoxTypeInfo.new( typeId, accessMode, boxingType )
+   local obj = {}
+   BoxTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( typeId, accessMode, boxingType ); end
+   return obj
+end
+function BoxTypeInfo:__init(typeId, accessMode, boxingType) 
+   TypeInfo.__init( self ,boxRootScope)
+   
+   self.boxingType = boxingType
+   self.typeId = typeId
+   self.itemTypeInfoList = {boxingType}
+   self.accessMode = accessMode
+   idProv:increment(  )
+   self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
+end
+function BoxTypeInfo:get_scope(  )
+
+   return TypeInfo.get_scope( self  )
+end
+function BoxTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Box
+end
+function BoxTypeInfo:get_srcTypeInfo(  )
+
+   return self
+end
+function BoxTypeInfo:get_nonnilableType(  )
+
+   return self
+end
+function BoxTypeInfo:get_nilable(  )
+
+   return false
+end
+function BoxTypeInfo:getTxt( fullName, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+end
+function BoxTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+
+   return "Nilable<" .. self.boxingType:getTxtWithRaw( raw, fullName, importInfo, localFlag ) .. ">"
+end
+function BoxTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt() )
+end
+function BoxTypeInfo:get_display_stirng_with( raw )
+
+   return string.format( "Nilable<%s>", self.boxingType:get_display_stirng_with( raw ))
+end
+function BoxTypeInfo:serialize( stream, validChildrenSet )
+
+   local parentId = self:getParentId(  )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, accessMode = %d, boxingType = %d }\n', SerializeKind.Box, parentId, self.typeId, self.accessMode, self.boxingType:get_typeId()) )
+end
+function BoxTypeInfo:equals( typeInfo, alt2type )
+
+   if typeInfo:get_kind() ~= TypeInfoKind.Box then
+      return false
+   end
+   
+   local boxType = typeInfo
+   return self.boxingType:equals( boxType.boxingType, alt2type )
+end
+function BoxTypeInfo:createAlt2typeMap( detectFlag )
+
+   local map = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
+   if self.boxingType ~= boxRootAltType then
+      map[boxRootAltType] = self.boxingType
+   end
+   
+   return map
+end
+function BoxTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = BoxTypeInfo  } )
+end
+function BoxTypeInfo:get_boxingType()       
+   return self.boxingType         
+end
+function BoxTypeInfo:get_typeId()       
+   return self.typeId         
+end
+function BoxTypeInfo:get_itemTypeInfoList()       
+   return self.itemTypeInfoList         
+end
+function BoxTypeInfo:get_accessMode()       
+   return self.accessMode         
+end
+function BoxTypeInfo:get_nilableTypeInfo()       
+   return self.nilableTypeInfo         
+end
+function BoxTypeInfo:isModule( ... )
+   return self.boxingType:isModule( ... )
+end       
+
+function BoxTypeInfo:getParentId( ... )
+   return self.boxingType:getParentId( ... )
+end       
+
+function BoxTypeInfo:get_baseId( ... )
+   return self.boxingType:get_baseId( ... )
+end       
+
+function BoxTypeInfo:isInheritFrom( ... )
+   return self.boxingType:isInheritFrom( ... )
+end       
+
+function BoxTypeInfo:get_rawTxt( ... )
+   return self.boxingType:get_rawTxt( ... )
+end       
+
+function BoxTypeInfo:get_abstractFlag( ... )
+   return self.boxingType:get_abstractFlag( ... )
+end       
+
+function BoxTypeInfo:get_externalFlag( ... )
+   return self.boxingType:get_externalFlag( ... )
+end       
+
+function BoxTypeInfo:get_interfaceList( ... )
+   return self.boxingType:get_interfaceList( ... )
+end       
+
+function BoxTypeInfo:get_argTypeInfoList( ... )
+   return self.boxingType:get_argTypeInfoList( ... )
+end       
+
+function BoxTypeInfo:get_retTypeInfoList( ... )
+   return self.boxingType:get_retTypeInfoList( ... )
+end       
+
+function BoxTypeInfo:get_parentInfo( ... )
+   return self.boxingType:get_parentInfo( ... )
+end       
+
+function BoxTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.boxingType:hasRouteNamespaceFrom( ... )
+end       
+
+function BoxTypeInfo:getModule( ... )
+   return self.boxingType:getModule( ... )
+end       
+
+function BoxTypeInfo:get_staticFlag( ... )
+   return self.boxingType:get_staticFlag( ... )
+end       
+
+function BoxTypeInfo:get_autoFlag( ... )
+   return self.boxingType:get_autoFlag( ... )
+end       
+
+function BoxTypeInfo:get_baseTypeInfo( ... )
+   return self.boxingType:get_baseTypeInfo( ... )
+end       
+
+function BoxTypeInfo:get_typeData( ... )
+   return self.boxingType:get_typeData( ... )
+end       
+
+function BoxTypeInfo:get_children( ... )
+   return self.boxingType:get_children( ... )
+end       
+
+function BoxTypeInfo:addChildren( ... )
+   return self.boxingType:addChildren( ... )
+end       
+
+function BoxTypeInfo:get_mutable( ... )
+   return self.boxingType:get_mutable( ... )
+end       
+
+function BoxTypeInfo:getParentFullName( ... )
+   return self.boxingType:getParentFullName( ... )
+end       
+
+function BoxTypeInfo:get_genSrcTypeInfo( ... )
+   return self.boxingType:get_genSrcTypeInfo( ... )
+end       
+
+function BoxTypeInfo:getFullName( ... )
+   return self.boxingType:getFullName( ... )
+end       
+
+
 local GenericTypeInfo = {}
 setmetatable( GenericTypeInfo, { __index = TypeInfo } )
 _moduleObj.GenericTypeInfo = GenericTypeInfo
@@ -2168,7 +2485,7 @@ function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo
    end
    
    local alt2typeMap = {}
-   local workAlt2typeMap = AlternateTypeInfo.createDefaultAlt2typeMap( false )
+   local workAlt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    local hasAlter = false
    for index, altTypeInfo in pairs( genSrcTypeInfo:get_itemTypeInfoList() ) do
       local itemType = itemTypeInfoList[index]
@@ -2211,7 +2528,7 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
    if  nil == workAlt2type then
       local _workAlt2type = workAlt2type
    
-      workAlt2type = AlternateTypeInfo.createDefaultAlt2typeMap( false )
+      workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    end
    
    for __index, altType in pairs( otherSrc:get_itemTypeInfoList() ) do
@@ -2326,7 +2643,7 @@ function GenericTypeInfo:serialize( stream, validChildrenSet )
 end
 function GenericTypeInfo:createAlt2typeMap( detectFlag )
 
-   local map = {}
+   local map = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
    for genType, typeInfo in pairs( self.alt2typeMap ) do
       map[genType] = typeInfo
    end
@@ -3072,7 +3389,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
       local alt2typeMap = {}
       do
          local _switchExp = kind
-         if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array then
+         if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Box then
             if #self.itemTypeInfoList ~= #self.baseTypeInfo:get_itemTypeInfoList() then
                Util.err( string.format( "unmatch generic type number -- %d, %d", #self.itemTypeInfoList, #self.baseTypeInfo:get_itemTypeInfoList()) )
             end
@@ -3141,11 +3458,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
 end
 function NormalTypeInfo:createAlt2typeMap( detectFlag )
 
-   local map = {}
-   if detectFlag then
-      map[_moduleObj.headTypeInfo] = _moduleObj.headTypeInfo
-   end
-   
+   local map = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
    for genType, typeInfo in pairs( self.alt2typeMap ) do
       map[genType] = typeInfo
    end
@@ -3389,7 +3702,7 @@ function NormalTypeInfo.createAlternate( txt, accessMode, moduleTypeInfo )
 end
 
 idProv:increment(  )
-local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo )
+local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
    _moduleObj.typeInfoKind[idName] = typeInfo
    _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, typeInfo, false, true)
@@ -3399,6 +3712,10 @@ local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo )
    end
    
    _moduleObj.builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
+   if registScope then
+      _moduleObj.rootScope:addClass( typeTxt, typeInfo )
+   end
+   
 end
 
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
@@ -3444,11 +3761,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
    end
    
    local info = NormalTypeInfo.new(false, scope, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, true)
-   if scope then
-      _moduleObj.rootScope:addClass( typeTxt, info )
-   end
-   
-   registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo )
+   registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
 end
 
@@ -3491,6 +3804,11 @@ _moduleObj.builtinTypeList = builtinTypeList
 local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 _moduleObj.builtinTypeArray = builtinTypeArray
 
+idProv:increment(  )
+local builtinTypeBox = BoxTypeInfo.new(idProv:get_id(), AccessMode.Pub, boxRootAltType)
+_moduleObj.builtinTypeBox = builtinTypeBox
+
+registBuiltin( "Nilable", "Nilable", TypeInfoKind.Box, _moduleObj.builtinTypeBox, _moduleObj.headTypeInfo, true )
 local function isConditionalbe( typeInfo )
 
    if typeInfo:get_nilable() or typeInfo:equals( _moduleObj.builtinTypeBool, nil ) then
@@ -3500,6 +3818,36 @@ local function isConditionalbe( typeInfo )
    return false
 end
 _moduleObj.isConditionalbe = isConditionalbe
+local typeInfo2BoxMap = {}
+function NormalTypeInfo.createBox( accessMode, nonnilableType )
+
+   do
+      local boxType = typeInfo2BoxMap[nonnilableType]
+      if boxType ~= nil then
+         return boxType
+      end
+   end
+   
+   idProv:increment(  )
+   local boxType = BoxTypeInfo.new(idProv:get_id(), accessMode, nonnilableType)
+   typeInfo2BoxMap[nonnilableType] = boxType
+   return boxType
+end
+
+function BoxTypeInfo:applyGeneric( alt2typeMap )
+
+   local typeInfo = self.boxingType:applyGeneric( alt2typeMap )
+   if typeInfo == self.boxingType then
+      return self
+   end
+   
+   if typeInfo ~= nil then
+      return NormalTypeInfo.createBox( self.accessMode, typeInfo )
+   end
+   
+   return nil
+end
+
 function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo )
 
    if #itemTypeInfo == 0 then
@@ -3757,11 +4105,11 @@ end
 local builtinTypeNil = NilTypeInfo.new()
 _moduleObj.builtinTypeNil = builtinTypeNil
 
-registBuiltin( "Nil", "nil", TypeInfoKind.Prim, _moduleObj.builtinTypeNil, _moduleObj.headTypeInfo )
+registBuiltin( "Nil", "nil", TypeInfoKind.Prim, _moduleObj.builtinTypeNil, _moduleObj.headTypeInfo, false )
 local builtinTypeDDD = NormalTypeInfo.createDDD( _moduleObj.builtinTypeStem_, true )
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
-registBuiltin( "DDD", "...", TypeInfoKind.DDD, _moduleObj.builtinTypeDDD, _moduleObj.headTypeInfo )
+registBuiltin( "DDD", "...", TypeInfoKind.DDD, _moduleObj.builtinTypeDDD, _moduleObj.headTypeInfo, false )
 local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Func, _moduleObj.builtinTypeDDD )
 _moduleObj.builtinTypeForm = builtinTypeForm
 
@@ -3983,6 +4331,29 @@ accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ), self
    stream:write( "} }\n" )
 end
 
+function BoxTypeInfo:canEvalWith( other, opTxt, alt2type )
+
+   if self == other then
+      return true
+   end
+   
+   if opTxt ~= "=" then
+      return false
+   end
+   
+   if other:get_nilable() then
+      CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
+      return true
+   end
+   
+   if self.boxingType:canEvalWith( other, opTxt, alt2type ) then
+      CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
+      return true
+   end
+   
+   return false
+end
+
 function NilableTypeInfo:canEvalWith( other, opTxt, alt2type )
 
    local otherSrc = other:get_srcTypeInfo()
@@ -3991,6 +4362,10 @@ function NilableTypeInfo:canEvalWith( other, opTxt, alt2type )
    end
    
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
+      if self:get_nonnilableType():get_kind() == TypeInfoKind.Box then
+         return self:get_nonnilableType():canEvalWith( otherSrc, opTxt, alt2type )
+      end
+      
       return true
    end
    
@@ -4239,7 +4614,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
       
    end
    
-   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and not isGenericType( otherSrc ) and destMut and not otherMut then
+   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
       return false
    end
    
@@ -4256,6 +4631,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
    end
    
    if not dest:get_nilable() and otherSrc:get_nilable() then
+      if dest:get_kind() == TypeInfoKind.Box then
+         return dest:canEvalWith( otherSrc, opTxt, alt2type )
+      end
+      
       return false
    end
    
@@ -4294,6 +4673,8 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          local enumTypeInfo = otherSrc
          return dest:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt, alt2type )
       elseif dest:get_kind() == TypeInfoKind.Alternate then
+         return dest:canEvalWith( otherSrc, opTxt, alt2type )
+      elseif dest:get_kind() == TypeInfoKind.Box then
          return dest:canEvalWith( otherSrc, opTxt, alt2type )
       end
       
@@ -4374,6 +4755,8 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
       elseif _switchExp == TypeInfoKind.Nilable then
          return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), opTxt, alt2type )
       elseif _switchExp == TypeInfoKind.Alternate then
+         return dest:canEvalWith( otherSrc, opTxt, alt2type )
+      elseif _switchExp == TypeInfoKind.Box then
          return dest:canEvalWith( otherSrc, opTxt, alt2type )
       else 
          
@@ -5013,19 +5396,20 @@ _moduleObj.ProcessInfo = ProcessInfo
 function ProcessInfo.setmeta( obj )
   setmetatable( obj, { __index = ProcessInfo  } )
 end
-function ProcessInfo.new( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2DDDMap )
+function ProcessInfo.new( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap )
    local obj = {}
    ProcessInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2DDDMap )
+      obj:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap )
    end        
    return obj 
 end         
-function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2DDDMap ) 
+function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap ) 
 
    self.idProvier = idProvier
    self.idProvierExt = idProvierExt
    self.typeInfo2ModifierMap = typeInfo2ModifierMap
+   self.typeInfo2BoxMap = typeInfo2BoxMap
    self.typeInfo2DDDMap = typeInfo2DDDMap
 end
 function ProcessInfo:get_idProvier()       
@@ -5036,6 +5420,9 @@ function ProcessInfo:get_idProvierExt()
 end
 function ProcessInfo:get_typeInfo2ModifierMap()       
    return self.typeInfo2ModifierMap         
+end
+function ProcessInfo:get_typeInfo2BoxMap()       
+   return self.typeInfo2BoxMap         
 end
 function ProcessInfo:get_typeInfo2DDDMap()       
    return self.typeInfo2DDDMap         
@@ -9851,6 +10238,134 @@ function AbbrNode.setmeta( obj )
 end
 
 
+function NodeKind.get_Boxing(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['Boxing'])
+end
+
+
+regKind( [[Boxing]] )
+function Filter:processBoxing( node, opt )
+
+end
+
+
+function NodeManager:getBoxingNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['Boxing']) )
+end
+
+
+local BoxingNode = {}
+setmetatable( BoxingNode, { __index = Node } )
+_moduleObj.BoxingNode = BoxingNode
+function BoxingNode:processFilter( filter, opt )
+
+   filter:processBoxing( self, opt )
+end
+function BoxingNode:canBeRight(  )
+
+   return true
+end
+function BoxingNode:canBeLeft(  )
+
+   return false
+end
+function BoxingNode:canBeStatement(  )
+
+   return false
+end
+function BoxingNode.new( pos, typeList, src )
+   local obj = {}
+   BoxingNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, src ); end
+   return obj
+end
+function BoxingNode:__init(pos, typeList, src) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Boxing']), pos, typeList)
+   
+   
+   self.src = src
+   
+end
+function BoxingNode.create( nodeMan, pos, typeList, src )
+
+   local node = BoxingNode.new(pos, typeList, src)
+   nodeMan:addNode( node )
+   return node
+end
+function BoxingNode.setmeta( obj )
+  setmetatable( obj, { __index = BoxingNode  } )
+end
+function BoxingNode:get_src()       
+   return self.src         
+end
+
+
+function NodeKind.get_Unboxing(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['Unboxing'])
+end
+
+
+regKind( [[Unboxing]] )
+function Filter:processUnboxing( node, opt )
+
+end
+
+
+function NodeManager:getUnboxingNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['Unboxing']) )
+end
+
+
+local UnboxingNode = {}
+setmetatable( UnboxingNode, { __index = Node } )
+_moduleObj.UnboxingNode = UnboxingNode
+function UnboxingNode:processFilter( filter, opt )
+
+   filter:processUnboxing( self, opt )
+end
+function UnboxingNode:canBeRight(  )
+
+   return true
+end
+function UnboxingNode:canBeLeft(  )
+
+   return false
+end
+function UnboxingNode:canBeStatement(  )
+
+   return false
+end
+function UnboxingNode.new( pos, typeList, src )
+   local obj = {}
+   UnboxingNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, src ); end
+   return obj
+end
+function UnboxingNode:__init(pos, typeList, src) 
+   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Unboxing']), pos, typeList)
+   
+   
+   self.src = src
+   
+end
+function UnboxingNode.create( nodeMan, pos, typeList, src )
+
+   local node = UnboxingNode.new(pos, typeList, src)
+   nodeMan:addNode( node )
+   return node
+end
+function UnboxingNode.setmeta( obj )
+  setmetatable( obj, { __index = UnboxingNode  } )
+end
+function UnboxingNode:get_src()       
+   return self.src         
+end
+
+
 function NodeKind.get_LiteralNil(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['LiteralNil'])
@@ -11128,21 +11643,23 @@ local function pushProcessInfo( processInfo )
       
    end
    
-   table.insert( processInfoQueue, ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap) )
+   table.insert( processInfoQueue, ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap) )
    if processInfo ~= nil then
       idProvBase = processInfo:get_idProvier()
       idProvExt = processInfo:get_idProvierExt()
       typeInfo2ModifierMap = processInfo:get_typeInfo2ModifierMap()
+      typeInfo2BoxMap = processInfo:get_typeInfo2BoxMap()
       typeInfo2DDDMap = processInfo:get_typeInfo2DDDMap()
    else
       idProvBase = IdProvider.new(userStartId, extStartId)
       idProvExt = IdProvider.new(extStartId, extMaxId)
       typeInfo2ModifierMap = {}
+      typeInfo2BoxMap = {}
       typeInfo2DDDMap = {}
    end
    
    idProv = idProvBase
-   return ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2DDDMap)
+   return ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap)
 end
 _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
@@ -11152,6 +11669,7 @@ local function popProcessInfo(  )
    idProvExt = info:get_idProvierExt()
    idProv = idProvBase
    typeInfo2ModifierMap = info:get_typeInfo2ModifierMap()
+   typeInfo2BoxMap = info:get_typeInfo2BoxMap()
    table.remove( processInfoQueue )
 end
 _moduleObj.popProcessInfo = popProcessInfo

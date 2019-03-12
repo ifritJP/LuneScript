@@ -54,8 +54,12 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
       foreach exp in expList.$expList {
          expNodeList.insert( exp );
       }
-      self.checkMatchType( "return", token.pos,
-                           retTypeList, expNodeList, false, true, nil );
+      if! let alt2typeMap, newExpNodeList = self.checkMatchType(
+         "return", token.pos, retTypeList, expNodeList, false, true, nil )
+      {
+         expList = self.createExpListNode(
+            expList.$pos, expList.$followOn, newExpNodeList );
+      }
    }
    else {
       if #retTypeList ~= 0 {

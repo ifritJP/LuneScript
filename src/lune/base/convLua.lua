@@ -614,7 +614,13 @@ function convFilter:outputMeta( node )
          for __index, classTypeId in ipairs( __sorted ) do
             local classTypeInfo = __map[ classTypeId ]
             do
-               local scope = _lune.unwrap( classTypeInfo:get_scope())
+               local scope = classTypeInfo:get_scope()
+               if  nil == scope then
+                  local _scope = scope
+               
+                  Util.err( string.format( "%s.scope is nil", classTypeInfo:getTxt(  )) )
+               end
+               
                if not Ast.isBuiltin( classTypeId ) then
                   pickupTypeId( classTypeInfo, true, validChildrenSet[classTypeInfo] == nil and not classTypeInfo:get_externalFlag() )
                   if checkExportTypeInfo( classTypeInfo ) then
@@ -2469,6 +2475,10 @@ function convFilter:processExpCall( node, opt )
                
             elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
                processEnumAlge(  )
+            elseif _switchExp == Ast.TypeInfoKind.Box then
+               filter( prefixNode, self, fieldNode )
+               self:write( "[1]" )
+               return false
             end
          end
          
@@ -2905,6 +2915,19 @@ function convFilter:processAlias( node, opt )
       self:write( string.format( "\n_moduleObj.%s = %s", node:get_newName(), node:get_newName()) )
    end
    
+end
+
+function convFilter:processBoxing( node, opt )
+
+   self:write( "{" )
+   filter( node:get_src(), self, node )
+   self:write( "}" )
+end
+
+function convFilter:processUnboxing( node, opt )
+
+   filter( node:get_src(), self, node )
+   self:write( "[1]" )
 end
 
 function convFilter:processLiteralList( node, opt )

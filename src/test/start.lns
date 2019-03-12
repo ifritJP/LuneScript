@@ -962,3 +962,42 @@ class TestGenSub2<T> extend Super<T> {
    //testsub.func( 10 );
    testsub.func( "abc" );
 }
+
+{
+   let val:stem = { 1:"OK" };
+   if! let val2 = val[1] {
+      print( val2 );
+   }  
+}
+{
+   fn func3( val2:Nilable<int> ) {
+      if! val2.val() {
+         print( __func__, _exp + 1 );
+      }  
+      print( __func__, val2.val() );
+   }  
+
+   let val1:Nilable = 1;
+   let val2:Nilable<int> = nil;
+
+   func3( val1 );
+   func3( nil );
+}
+
+{
+   print( SUB2.Boxfunc( nil ) );
+   print( SUB2.Boxfunc( 1 ) );
+   print( SUB2.Boxfunc( SUB2.Boxfunc2( 10 ) ) );
+   print( SUB2.Boxfunc( SUB2.Boxfunc2( SUB2.Boxfunc3( 20 ) ) ) );
+   print( SUB2.Boxfunc( SUB2.Boxfunc2( SUB2.Boxfunc3( nil ) ) ) );
+}
+
+{
+   fn func<T>( val:Nilable<T> ): Nilable<T> {
+      return val;
+   }  
+
+   print( func( 1 ).val() );
+   print( func( 1.0 ).val() );
+   print( func( "str" ).val() );
+}

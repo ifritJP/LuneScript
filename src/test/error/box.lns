@@ -1,0 +1,22 @@
+{
+   fn func( val:Nilable<int> ) {
+   }  
+
+   func( 1 );
+   func( 1.0 );  // error
+   func( "str" ); // error
+}
+{
+   fn func( val:List<Nilable<int>> ) {
+   }
+   func( [ 1 ] ); // error
+   let val:Nilable = 1;
+   func( [ val ] );
+}
+{
+   fn func( val:Map<Nilable<int>,Nilable<int>> ) {
+   }
+   func( { 1:0 } ); // error
+   let val:Nilable = 1;
+   func( { val:val } );
+}

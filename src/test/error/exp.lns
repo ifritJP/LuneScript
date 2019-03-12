@@ -31,3 +31,7 @@
    }
 }
 
+{
+   let val:stem = { 1:"OK" };
+   let val2 = val[1][1]; // error
+}

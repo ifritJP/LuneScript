@@ -469,7 +469,9 @@ fn convFilter.outputMeta( node: Ast.RootNode ) mut
          break;
       }
       forsort classTypeInfo, classTypeId in workClassMap {
-         let scope = unwrap classTypeInfo.$scope;
+         let! scope = classTypeInfo.$scope {
+            Util.err( "%s.scope is nil" (classTypeInfo.getTxt(##)) );
+         };
 
          if not Ast.isBuiltin( classTypeId ) {
             pickupTypeId( classTypeInfo, true,
@@ -2259,6 +2261,11 @@ pub override fn convFilter.processExpCall(
             case .Enum, .Alge {
                processEnumAlge();
             }
+            case .Box {
+               filter( prefixNode, self, fieldNode );
+               self.write( "[1]" );
+               return false;
+            }
          }  
       }
       return true;
@@ -2668,6 +2675,23 @@ pub override fn convFilter.processAlias(
    if Ast.isPubToExternal( node.$expType.$accessMode ) {
       self.write( "\n_moduleObj.%s = %s" (node.$newName, node.$newName) );
    }
+}
+
+pub override fn convFilter.processBoxing(
+   node: Ast.BoxingNode, opt: Opt ) mut
+{
+   self.write( "{" );
+
+   filter( node.$src, self, node );
+
+   self.write( "}" );
+}
+
+pub override fn convFilter.processUnboxing(
+   node: Ast.UnboxingNode, opt: Opt ) mut
+{
+   filter( node.$src, self, node );
+   self.write( "[1]" );
 }
 
 

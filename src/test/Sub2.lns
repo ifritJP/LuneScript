@@ -174,3 +174,22 @@ pub fn TestGen.func2( val:T ) {
 pub fn func( testgen:&TestGen<int> ) {
    testgen.func( 1000 );
 }
+
+
+pub fn Boxfunc( val:Nilable<int>! ): int {
+   when! val {
+      if! val.val() {
+         return _exp;
+      }
+   }
+   return 0;
+}
+pub fn Boxfunc2( val:Nilable<int>! ): Nilable<int>! {
+   return val;
+}
+pub fn Boxfunc3( val:Nilable<int>! ): Nilable<int>! {
+   when! val {
+      return val.val();
+   }
+   return nil;
+}

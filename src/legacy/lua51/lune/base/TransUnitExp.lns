@@ -310,7 +310,7 @@ fn TransUnit.analyzeExpRefItem(
    }
    elseif expType.equals( Ast.builtinTypeStem ##) {
       indexTypeInfo = Ast.builtinTypeStem;
-      typeInfo = Ast.builtinTypeStem;
+      typeInfo = Ast.builtinTypeStem_;
    }
    else {
       self.addErrMess( exp.$pos,
@@ -361,7 +361,7 @@ fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expNodeList: &List<&Ast.Node>, allowDstShort:bool, warnForFollow:bool,
    genericsClassType:&Ast.TypeInfo! ) mut :
-   &Map<&Ast.TypeInfo,&Ast.TypeInfo>
+   &Map<&Ast.TypeInfo,&Ast.TypeInfo>, List<&Ast.Node>!
 {
    let mut warnForFollowSrcIndex:int! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
@@ -401,10 +401,13 @@ fn TransUnit.checkMatchType(
       expTypeList.insert( Ast.builtinTypeAbbr );
    }
 
-   let mut alt2typeMap = Ast.AlternateTypeInfo.createDefaultAlt2typeMap( false );
+   let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
    when! genericsClassType {
       alt2typeMap = genericsClassType.createAlt2typeMap( true );
    }
+
+   Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
+   
    let result, mess = Ast.TypeInfo.checkMatchType(
       dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2typeMap );
    //Ast.AlternateTypeInfo.createAlt2typeMap( applyGeneric ) ); 
@@ -422,15 +425,48 @@ fn TransUnit.checkMatchType(
          }
       }
    }
-   return alt2typeMap;
+
+
+   if #expNodeList ~= 0 {
+      let mut newExpNodeList:List<&Ast.Node> = [];
+      let mut autoBoxingCount = 0;
+      
+      foreach expNode, index in expNodeList {
+         newExpNodeList.insert( expNode );
+         if #dstTypeList >= index {
+            let dstType = dstTypeList[ index ];
+            //if dstType.$kind == .Box and expNode.$expType.$kind ~= .Box {
+            if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode.$expType ) {
+               autoBoxingCount = autoBoxingCount + 1;
+               newExpNodeList[ index ] = Ast.BoxingNode.create(
+                  self.nodeManager, expNode.$pos, [ dstType ], expNode );
+            }
+         }
+      }
+
+      if autoBoxingCount > 0 {
+         if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap,
+                                                              autoBoxingCount )
+         {
+            self.addErrMess( pos, "illegal auto boxing error -- %d" (autoBoxingCount) );
+         }
+         
+         return alt2typeMap, newExpNodeList;
+      }
+   }
+   if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 0 ) {
+      self.addErrMess( pos, "can't auto boxing error" );
+   }
+   
+   
+   return alt2typeMap, nil;
 }
 
 
 fn TransUnit.checkMatchValType(
    pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Ast.ExpListNode!,
-   genericTypeList: &List<&Ast.TypeInfo>,
-   genericsClass:&Ast.TypeInfo! ) mut :
-   &Map<&Ast.TypeInfo,&Ast.TypeInfo>
+   genericTypeList: &List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo! ) mut :
+   &Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Ast.ExpListNode!
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
@@ -452,9 +488,16 @@ fn TransUnit.checkMatchValType(
          warnForFollow = false;
       }
    }
-   return self.checkMatchType(
+
+   let alt2typeMap, newExpNodeList = self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
       argTypeList, expNodeList, false, warnForFollow, genericsClass );
+   
+   when! expList, newExpNodeList {
+      return alt2typeMap, self.createExpListNode( expList.$pos, expList.$followOn,
+                                                  newExpNodeList );
+   }
+   return alt2typeMap, expList;
 }
 
 class MacroPaser extend Parser.Parser {
@@ -823,8 +866,9 @@ fn TransUnit.analyzeExpCall(
       genericsClass = classType;
    }
 
-   let alt2typeMap = self.checkMatchValType(
+   let alt2typeMap, workArgList = self.checkMatchValType(
       exp.$pos, funcTypeInfo, argList, genericTypeList, genericsClass );
+   argList = workArgList;
 
    if funcTypeInfo.equals( builtinFunc.listInsert ##) {
       when! argList {
@@ -1263,6 +1307,10 @@ fn TransUnit.analyzeExpField(
          // nil 条件演算で、 prefixExpType が nilable ならば、
          // prefixExpType を非 nilable にセットする
          prefixExpType = unwrap prefixExpType.$nonnilableType;
+
+         if prefixExpType.$srcTypeInfo.$kind == .Box {
+            self.addErrMess( prefixExp.$pos, "Nilable can't support '$.' access yet" );
+         }
       }
       else {
          // prefixExpType が nilable でなければ、
@@ -1285,7 +1333,8 @@ fn TransUnit.analyzeExpField(
       prefixExpType.get_kind() == .IF or
       prefixExpType.get_kind() == .List or 
       prefixExpType.get_kind() == .Array or
-      prefixExpType.get_kind() == .Set
+      prefixExpType.get_kind() == .Set or
+      prefixExpType.get_kind() == .Box
    {
       let mut getterFlag = false;
       typeInfo, symbolInfo, getterFlag =
@@ -1477,8 +1526,11 @@ fn TransUnit.analyzeNewAlge(
          self.checkNextToken( ")" );
       }
 
-      self.checkMatchType(
-         "call", symbolToken.pos, valInfo.$typeList, argList, false, true, nil );
+      if! let alt2typeMap, mut newExpNodeList = self.checkMatchType(
+         "call", symbolToken.pos, valInfo.$typeList, argList, false, true, nil )
+      {
+         argList = newExpNodeList;
+      }
 
       
       return Ast.NewAlgeValNode.create(
@@ -1586,16 +1638,21 @@ fn TransUnit.analyzeExpSymbol(
 }
 
 fn TransUnit.analyzeExpOpSet(
-   exp: &Ast.Node, opeToken: &Parser.Token, exp2NodeList:List<&Ast.Node> ) mut
+   exp: &Ast.Node, opeToken: &Parser.Token, exp2NodeList:&List<&Ast.Node> ) mut :
+   &Ast.ExpListNode!
 {
    if not exp.canBeLeft() {
       self.addErrMess( exp.$pos,
                        "this node can not be l-value. -- %s"
                        (Ast.getNodeKindName( exp.$kind ) ) );
    }
-   self.checkMatchType(
-      "= operator", opeToken.pos,
-      exp.$expTypeList, exp2NodeList, true, false, nil );
+   let mut newExpListNode:&Ast.ExpListNode! = nil;
+   if! let alt2typeMap, newExpNodeList = self.checkMatchType(
+      "= operator", opeToken.pos, exp.$expTypeList, exp2NodeList, true, false, nil )
+   {
+      newExpListNode = self.createExpListNode(
+         exp2NodeList[1].$pos, false, newExpNodeList );
+   }
 
    foreach symbolInfo in exp.getSymbolInfo() {
       if not symbolInfo.$mutable and symbolInfo.$hasValueFlag
@@ -1608,6 +1665,7 @@ fn TransUnit.analyzeExpOpSet(
       }
       symbolInfo.set_hasValueFlag( true );
    }
+   return newExpListNode;
 }
 
 fn TransUnit.analyzeExpOp2(
@@ -1681,7 +1739,7 @@ fn TransUnit.analyzeExpOp2(
             }
             
             let mut exp2:&Ast.Node = self.analyzeExp( false, opLevel, enumTypeInfo );
-            let mut exp2NodeList = [ exp2 ];
+            let mut exp2NodeList:&List<&Ast.Node> = [ exp2 ];
 
             if not exp2.canBeRight() {
                self.addErrMess(
@@ -1891,7 +1949,9 @@ fn TransUnit.analyzeExpOp2(
                   }
                }
                case "=" {
-                  self.analyzeExpOpSet( exp, nextToken, exp2NodeList );
+                  if! self.analyzeExpOpSet( exp, nextToken, exp2NodeList ) {
+                     exp2 = _exp;
+                  }
                }
                default {
                   self.error( "unknown op " .. opTxt );
@@ -2196,10 +2256,10 @@ fn TransUnit.analyzeExp(
          switch classTypeInfo.$accessMode {
             case .Pri, .Local {
                self.addErrMess( token.pos, "Can't access -- %s"
-                                (classTypeInfo.$accessMode.$_txt ) ); 
-            }  
-         }  
-      }  
+                                (classTypeInfo.$accessMode.$_txt ) );
+            }
+         }
+      }
       if classTypeInfo.$abstractFlag {
          self.addErrMess( token.pos, "abstract class can't new" );
       }

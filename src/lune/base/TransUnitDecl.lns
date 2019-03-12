@@ -146,6 +146,11 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
                      typeInfo, genericList, self.moduleType );
                }
             }
+            case .Box {
+               if checkAlternateTypeCount( 1 ) {
+                  typeInfo = Ast.NormalTypeInfo.createBox( accessMode, genericList[1] );
+               }
+            }
             default {
                self.error( string.format( "not support generic: %s",
                                           typeInfo.getTxt(##) ) );
@@ -1909,7 +1914,7 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
 
-   let mut alt2typeMap = Ast.AlternateTypeInfo.createDefaultAlt2typeMap( false );
+   let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
    when! classTypeInfo {
       alt2typeMap = classTypeInfo.createAlt2typeMap( false );
       
@@ -2171,6 +2176,26 @@ fn TransUnit.analyzeDeclFunc(
    return node;
 }
 
+fn TransUnit.createExpListNode(
+   pos:&Parser.Position, followOn:bool, newExpList:&List<&Ast.Node> ) mut:
+   Ast.ExpListNode
+{
+   // 引数リストを更新する
+   let mut newExpTypeList:List<&Ast.TypeInfo> = [];
+   foreach expNode, listIndex in newExpList {
+      newExpTypeList.insert( expNode.$expType );
+   }     
+   // 最終ノードが複数の値を持つ場合は、その型を追加する
+   foreach expType, listIndex in newExpList[ #newExpList ].$expTypeList {
+      if listIndex ~= 1 {
+         newExpTypeList.insert( expType );
+      }     
+   }
+   return Ast.ExpListNode.create(
+      self.nodeManager, pos, newExpTypeList, newExpList, followOn );
+}
+
+
 class LetVarInfo {
    pub let mutable:bool;
    pub let varName: &Parser.Token;
@@ -2198,6 +2223,7 @@ fn TransUnit.analyzeLetAndInitExp(
    accessMode:Ast.AccessMode, unwrapFlag:bool ) mut :
    List<&Ast.TypeInfo>, LetVarInfo[], List<&Ast.TypeInfo>, Ast.ExpListNode!
 {
+   /** 宣言している変数の型リスト */
    let mut typeInfoList : List<&Ast.TypeInfo> = [];
    let mut letVarList:LetVarInfo[] = [];
 
@@ -2245,7 +2271,10 @@ fn TransUnit.analyzeLetAndInitExp(
    
    // 型推論の解決と、宣言されている型と初期値との整合性を確認
    when! expList {
+      let mut updateExpList = false;
+      let mut newExpList:List<&Ast.Node> = [];
       foreach exp, index in expList.$expList {
+         newExpList.insert( exp ) ;
          if not exp.canBeRight() {
             self.addErrMess( exp.$pos,
                              "this node(%d) can not be r-value. -- %s"
@@ -2259,12 +2288,11 @@ fn TransUnit.analyzeLetAndInitExp(
          let processedFlag = false;
          if index == #expList.$expTypeList and expType.$kind == .DDD
          {
+            // 最終要素が ... の場合、残りの変数宣言の分 stem をセットする
             let mut dddItemType = Ast.builtinTypeStem_;
             if #expType.$itemTypeInfoList > 0 {
                dddItemType = expType.$itemTypeInfoList[ 1 ];
             }
-            // 最終要素が ... の場合
-            // ... なら、残りの変数宣言の分 stem をセットする
             for subIndex = index, #letVarList {
                let argType = typeInfoList[ subIndex ];
                let mut checkType = dddItemType;
@@ -2302,21 +2330,57 @@ fn TransUnit.analyzeLetAndInitExp(
             }
 
             if index <= #typeInfoList {
-               let argType = typeInfoList[ index ];
-               if not argType.equals( Ast.builtinTypeNone ## ) and
-                  not argType.canEvalWith( expTypeInfo, "=", {} ) and
+               let varType = typeInfoList[ index ];
+               let mut alt2typeMap =
+                  Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
+               if varType.$kind == .Box {
+                  alt2typeMap = varType.createAlt2typeMap( true );
+               }
+               Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
+
+               if not varType.equals( Ast.builtinTypeNone ## ) and
+                  not varType.canEvalWith( expTypeInfo, "=", alt2typeMap ) and
                   not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
                {               
                   self.addErrMess(
                      firstPos,
                      "unmatch value type (index:%d) %s <- %s"
                      (index,
-                       argType.getTxt( true ## ),
+                       varType.getTxt( true ## ),
                        expTypeInfo.getTxt( true ## )));
+               }
+               if varType == Ast.builtinTypeBox {
+                  typeInfoList[ index ] = Ast.NormalTypeInfo.createBox(
+                     accessMode, expTypeInfo );
+               }
+               //if varType.$kind == .Box and expTypeInfo.$srcTypeInfo.$kind ~= .Box {
+               if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( varType, expTypeInfo ) {
+                  // auto boxing
+                  updateExpList = true;
+                  let exp = newExpList[ index ];
+                  newExpList[ index ] = Ast.BoxingNode.create(
+                     self.nodeManager, exp.$pos, [ varType ], exp );
+                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 1 ) {
+                     self.addErrMess( exp.$pos,
+                                      "auto boxing error %s <- %s"
+                                      ( varType.getTxt(##), expTypeInfo.getTxt(##)) );  
+                  }
+               }
+               else {
+                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 0 ) {
+                     self.addErrMess(
+                        newExpList[ index ].$pos,
+                        "illegal auto boxing error %s <- %s"
+                        ( varType.getTxt(##), expTypeInfo.getTxt(##)) );  
+                  }
                }
             }
             expTypeList.insert( expTypeInfo );
          }
+      }
+      if updateExpList {
+         // 引数リストを更新する
+         expList = self.createExpListNode( expList.$pos, expList.$followOn, newExpList );
       }
       // 宣言する変数の数より初期値が少ない場合、
       // nil で初期化されるため変数が nilable かどうか判定

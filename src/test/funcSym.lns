@@ -108,3 +108,19 @@ class Test6<T> {
    let test7 = new Test6("abc");
    print( test7.func() .. "ABC" );
 }
+
+class Test7<T> {
+   let val:T;
+   pub fn func<T2>(val:T2) : Map<T,T2> {
+      return { self.val: val };
+   }
+}
+{
+   let test7 = new Test7( "abc");
+   foreach val, key in test7.func( 1 ) {
+      print( key .. "xyz", val + 10 );
+   }
+   foreach val, key in test7.func( "ABC" ) {
+      print( key .. "xyz", val .. "XYZ" );
+   }
+}

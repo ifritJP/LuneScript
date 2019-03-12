@@ -273,6 +273,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/generics.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/generics2.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/generics3.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/box.lns,exe,2>&1)
 
 
 	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG

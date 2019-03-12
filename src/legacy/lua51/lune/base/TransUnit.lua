@@ -1169,6 +1169,62 @@ function _TypeInfoGeneric._fromMapSub( obj, val )
    return obj
 end
 
+local _TypeInfoBox = {}
+setmetatable( _TypeInfoBox, { __index = _TypeInfo } )
+function _TypeInfoBox:createTypeInfo( param )
+
+   local boxingType = _lune.unwrap( param:getTypeInfo( self.boxingType ))
+   local newTypeInfo = Ast.NormalTypeInfo.createBox( self.accessMode, boxingType )
+   param.typeId2TypeInfo[self.typeId] = newTypeInfo
+   return newTypeInfo, nil
+end
+function _TypeInfoBox.setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoBox  } )
+end
+function _TypeInfoBox.new( accessMode, boxingType )
+   local obj = {}
+   _TypeInfoBox.setmeta( obj )
+   if obj.__init then
+      obj:__init( accessMode, boxingType )
+   end        
+   return obj 
+end         
+function _TypeInfoBox:__init( accessMode, boxingType ) 
+
+   _TypeInfo.__init( self )
+   self.accessMode = accessMode
+   self.boxingType = boxingType
+end
+function _TypeInfoBox:_toMap()
+  return self
+end
+function _TypeInfoBox._fromMap( val )
+  local obj, mes = _TypeInfoBox._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoBox.setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoBox._fromStem( val )
+  return _TypeInfoBox._fromMap( val )
+end
+
+function _TypeInfoBox._fromMapSub( obj, val )
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "boxingType", func = _lune._toInt, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
 local _TypeInfoModifier = {}
 setmetatable( _TypeInfoModifier, { __index = _TypeInfo } )
 function _TypeInfoModifier:createTypeInfo( param )
@@ -1756,6 +1812,7 @@ function BuiltinFuncType:__init()
    self.setOr = Ast.headTypeInfo
    self.setAnd = Ast.headTypeInfo
    self.setSub = Ast.headTypeInfo
+   self.nilableVal = Ast.headTypeInfo
 end
 function BuiltinFuncType.setmeta( obj )
   setmetatable( obj, { __index = BuiltinFuncType  } )
@@ -1854,6 +1911,14 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
             end
          end
          
+      elseif _switchExp == "Nilable" then
+         do
+            local _switchExp = fieldName
+            if _switchExp == "val" then
+               builtinFunc.nilableVal = typeInfo
+            end
+         end
+         
       end
    end
    
@@ -1867,9 +1932,18 @@ function TransUnit:registBuiltInScope(  )
    end
    
    readyBuiltin = true
-   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}, ["lower"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["upper"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["reverse"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}}}, {["List<T>"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&T"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"T!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array<T>"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Set<T>"] = {["add"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["del"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["has"] = {["type"] = {"method"}, ["arg"] = {"T"}, ["ret"] = {"bool"}}, ["and"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["or"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["sub"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["clone"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"Set<T>"}}, ["len"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"int"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}}
+   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}, ["lower"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["upper"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["reverse"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}}}, {["List<T>"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&T"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"T!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array<T>"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Set<T>"] = {["add"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["del"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["has"] = {["type"] = {"method"}, ["arg"] = {"T"}, ["ret"] = {"bool"}}, ["and"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["or"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["sub"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["clone"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"Set<T>"}}, ["len"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"int"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable"] = {["val"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"_T!"}}}}}
    local function getTypeInfo( typeName )
    
+      do
+         local _switchExp = typeName
+         if _switchExp == "_T" then
+            return Ast.builtinTypeBox:get_boxingType()
+         elseif _switchExp == "_T!" then
+            return Ast.builtinTypeBox:get_boxingType():get_nilableTypeInfo()
+         end
+      end
+      
       local function getTypeInfoFromScope( scope, symbol, genTyeList )
       
          local typeInfo = scope:getTypeInfo( symbol, scope, false )
@@ -2694,6 +2768,8 @@ function TransUnit:processImport( modulePath )
                   actInfo, mess = _TypeInfoGeneric._fromMap( atomInfo )
                elseif _switchExp == Ast.SerializeKind.Modifier then
                   actInfo = _TypeInfoModifier._fromMap( atomInfo )
+               elseif _switchExp == Ast.SerializeKind.Box then
+                  actInfo = _TypeInfoBox._fromMap( atomInfo )
                else 
                   
                      Util.err( string.format( "unknown skind -- %d", math.floor(skind)) )
@@ -3533,6 +3609,11 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
                   end
                   
                   typeInfo = Ast.NormalTypeInfo.createGeneric( typeInfo, genericList, self.moduleType )
+               end
+               
+            elseif _switchExp == Ast.TypeInfoKind.Box then
+               if checkAlternateTypeCount( 1 ) then
+                  typeInfo = Ast.NormalTypeInfo.createBox( accessMode, genericList[1] )
                end
                
             else 
@@ -5094,7 +5175,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    local pubToExtFlag = Ast.isPubToExternal( accessMode )
-   local alt2typeMap = Ast.AlternateTypeInfo.createDefaultAlt2typeMap( false )
+   local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    if classTypeInfo ~= nil then
       alt2typeMap = classTypeInfo:createAlt2typeMap( false )
       if kind == Ast.NodeKind.get_DeclMethod() or kind == Ast.NodeKind.get_DeclConstr() or kind == Ast.NodeKind.get_DeclDestr() then
@@ -5344,6 +5425,23 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    return node
 end
 
+function TransUnit:createExpListNode( pos, followOn, newExpList )
+
+   local newExpTypeList = {}
+   for listIndex, expNode in pairs( newExpList ) do
+      table.insert( newExpTypeList, expNode:get_expType() )
+   end
+   
+   for listIndex, expType in pairs( newExpList[#newExpList]:get_expTypeList() ) do
+      if listIndex ~= 1 then
+         table.insert( newExpTypeList, expType )
+      end
+      
+   end
+   
+   return Ast.ExpListNode.create( self.nodeManager, pos, newExpTypeList, newExpList, followOn )
+end
+
 local LetVarInfo = {}
 function LetVarInfo.setmeta( obj )
   setmetatable( obj, { __index = LetVarInfo  } )
@@ -5406,7 +5504,10 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
    
    local orgExpTypeList = {}
    if expList ~= nil then
+      local updateExpList = false
+      local newExpList = {}
       for index, exp in pairs( expList:get_expList() ) do
+         table.insert( newExpList, exp )
          if not exp:canBeRight(  ) then
             self:addErrMess( exp:get_pos(), string.format( "this node(%d) can not be r-value. -- %s", index, Ast.getNodeKindName( exp:get_kind() )) )
          end
@@ -5457,9 +5558,35 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
             end
             
             if index <= #typeInfoList then
-               local argType = typeInfoList[index]
-               if not argType:equals( Ast.builtinTypeNone ) and not argType:canEvalWith( expTypeInfo, "=", {} ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
-                  self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s", index, argType:getTxt( true ), expTypeInfo:getTxt( true )) )
+               local varType = typeInfoList[index]
+               local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+               if varType:get_kind() == Ast.TypeInfoKind.Box then
+                  alt2typeMap = varType:createAlt2typeMap( true )
+               end
+               
+               Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap )
+               if not varType:equals( Ast.builtinTypeNone ) and not varType:canEvalWith( expTypeInfo, "=", alt2typeMap ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
+                  self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s", index, varType:getTxt( true ), expTypeInfo:getTxt( true )) )
+               end
+               
+               if varType == Ast.builtinTypeBox then
+                  typeInfoList[index] = Ast.NormalTypeInfo.createBox( accessMode, expTypeInfo )
+               end
+               
+               if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( varType, expTypeInfo ) then
+                  updateExpList = true
+                  local exp = newExpList[index]
+                  newExpList[index] = Ast.BoxingNode.create( self.nodeManager, exp:get_pos(), {varType}, exp )
+                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 1 ) then
+                     self:addErrMess( exp:get_pos(), string.format( "auto boxing error %s <- %s", varType:getTxt(  ), expTypeInfo:getTxt(  )) )
+                  end
+                  
+               else
+                
+                  if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 0 ) then
+                     self:addErrMess( newExpList[index]:get_pos(), string.format( "illegal auto boxing error %s <- %s", varType:getTxt(  ), expTypeInfo:getTxt(  )) )
+                  end
+                  
                end
                
             end
@@ -5467,6 +5594,10 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
             table.insert( expTypeList, expTypeInfo )
          end
          
+      end
+      
+      if updateExpList then
+         expList = self:createExpListNode( expList:get_pos(), expList:get_followOn(), newExpList )
       end
       
       for index, varType in pairs( typeInfoList ) do
@@ -6003,7 +6134,7 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
       typeInfo = Ast.builtinTypeInt
    elseif expType:equals( Ast.builtinTypeStem ) then
       indexTypeInfo = Ast.builtinTypeStem
-      typeInfo = Ast.builtinTypeStem
+      typeInfo = Ast.builtinTypeStem_
    else
     
       self:addErrMess( exp:get_pos(), string.format( "could not access with []. -- %s", expType:getTxt(  )) )
@@ -6075,11 +6206,12 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       table.insert( expTypeList, Ast.builtinTypeAbbr )
    end
    
-   local alt2typeMap = Ast.AlternateTypeInfo.createDefaultAlt2typeMap( false )
+   local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    if genericsClassType ~= nil then
       alt2typeMap = genericsClassType:createAlt2typeMap( true )
    end
    
+   Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap )
    local result, mess = Ast.TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2typeMap )
    do
       local _switchExp = result
@@ -6095,7 +6227,37 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       end
    end
    
-   return alt2typeMap
+   if #expNodeList ~= 0 then
+      local newExpNodeList = {}
+      local autoBoxingCount = 0
+      for index, expNode in pairs( expNodeList ) do
+         table.insert( newExpNodeList, expNode )
+         if #dstTypeList >= index then
+            local dstType = dstTypeList[index]
+            if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode:get_expType() ) then
+               autoBoxingCount = autoBoxingCount + 1
+               newExpNodeList[index] = Ast.BoxingNode.create( self.nodeManager, expNode:get_pos(), {dstType}, expNode )
+            end
+            
+         end
+         
+      end
+      
+      if autoBoxingCount > 0 then
+         if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, autoBoxingCount ) then
+            self:addErrMess( pos, string.format( "illegal auto boxing error -- %d", autoBoxingCount) )
+         end
+         
+         return alt2typeMap, newExpNodeList
+      end
+      
+   end
+   
+   if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 0 ) then
+      self:addErrMess( pos, "can't auto boxing error" )
+   end
+   
+   return alt2typeMap, nil
 end
 
 function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeList, genericsClass )
@@ -6122,7 +6284,12 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       
    end
    
-   return self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, warnForFollow, genericsClass )
+   local alt2typeMap, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, warnForFollow, genericsClass )
+   if expList ~= nil and newExpNodeList ~= nil then
+      return alt2typeMap, self:createExpListNode( expList:get_pos(), expList:get_followOn(), newExpNodeList )
+   end
+   
+   return alt2typeMap, expList
 end
 
 local MacroPaser = {}
@@ -6474,7 +6641,8 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       genericsClass = classType
    end
    
-   local alt2typeMap = self:checkMatchValType( exp:get_pos(), funcTypeInfo, argList, genericTypeList, genericsClass )
+   local alt2typeMap, workArgList = self:checkMatchValType( exp:get_pos(), funcTypeInfo, argList, genericTypeList, genericsClass )
+   argList = workArgList
    if funcTypeInfo:equals( builtinFunc.listInsert ) then
       if argList ~= nil then
          if argList:get_expType():get_nilable() then
@@ -6896,6 +7064,10 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    if accessNil then
       if prefixExpType:get_nilable() then
          prefixExpType = _lune.unwrap( prefixExpType:get_nonnilableType())
+         if prefixExpType:get_srcTypeInfo():get_kind() == Ast.TypeInfoKind.Box then
+            self:addErrMess( prefixExp:get_pos(), "Nilable can't support '$.' access yet" )
+         end
+         
       else
        
          accessNil = false
@@ -6913,7 +7085,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    
    local getterTypeInfo = nil
    local symbolInfo = nil
-   if prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Class or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Module or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.IF or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.List or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Array or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Set then
+   if prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Class or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Module or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.IF or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.List or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Array or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Set or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Box then
       local getterFlag = false
       typeInfo, symbolInfo, getterFlag = self:analyzeAccessClassField( prefixExpType, mode, token )
       if getterFlag then
@@ -7100,7 +7272,13 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
             self:checkNextToken( ")" )
          end
          
-         self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false, true, nil )
+         do
+            local alt2typeMap, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false, true, nil )
+            if alt2typeMap ~= nil and newExpNodeList ~= nil then
+               argList = newExpNodeList
+            end
+         end
+         
          return Ast.NewAlgeValNode.create( self.nodeManager, firstToken.pos, {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, valInfo, argList )
       else
          self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )
@@ -7204,7 +7382,14 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, exp2NodeList )
       self:addErrMess( exp:get_pos(), string.format( "this node can not be l-value. -- %s", Ast.getNodeKindName( exp:get_kind() )) )
    end
    
-   self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), exp2NodeList, true, false, nil )
+   local newExpListNode = nil
+   do
+      local alt2typeMap, newExpNodeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), exp2NodeList, true, false, nil )
+      if alt2typeMap ~= nil and newExpNodeList ~= nil then
+         newExpListNode = self:createExpListNode( exp2NodeList[1]:get_pos(), false, newExpNodeList )
+      end
+   end
+   
    for __index, symbolInfo in pairs( exp:getSymbolInfo(  ) ) do
       if not symbolInfo:get_mutable() and symbolInfo:get_hasValueFlag() then
          if self.validMutControl then
@@ -7216,6 +7401,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, exp2NodeList )
       symbolInfo:set_hasValueFlag( true )
    end
    
+   return newExpListNode
 end
 
 function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
@@ -7436,7 +7622,13 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   end
                   
                elseif _switchExp == "=" then
-                  self:analyzeExpOpSet( exp, nextToken, exp2NodeList )
+                  do
+                     local _exp = self:analyzeExpOpSet( exp, nextToken, exp2NodeList )
+                     if _exp ~= nil then
+                        exp2 = _exp
+                     end
+                  end
+                  
                else 
                   
                      self:error( "unknown op " .. opTxt )
@@ -7964,7 +8156,13 @@ function TransUnit:analyzeReturn( token )
          table.insert( expNodeList, exp )
       end
       
-      self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false, true, nil )
+      do
+         local alt2typeMap, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false, true, nil )
+         if alt2typeMap ~= nil and newExpNodeList ~= nil then
+            expList = self:createExpListNode( expList:get_pos(), expList:get_followOn(), newExpNodeList )
+         end
+      end
+      
    else
       if #retTypeList ~= 0 then
          self:addErrMess( token.pos, "no return value" )

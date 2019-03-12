@@ -646,6 +646,21 @@ class _TypeInfoGeneric extend _TypeInfo {
    }
 }
 
+class _TypeInfoBox extend _TypeInfo {
+   pub let accessMode:Ast.AccessMode;
+   pub let boxingType:int;
+   
+   pub override fn createTypeInfo( param:ImportParam ):
+      Ast.TypeInfo!, str!
+   {
+      let boxingType = unwrap param.getTypeInfo( self.boxingType );
+      let newTypeInfo = Ast.NormalTypeInfo.createBox( self.accessMode, boxingType );
+      param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
+      return newTypeInfo, nil;
+   }
+}
+
+
 class _TypeInfoModifier extend _TypeInfo {
    pub let srcTypeId:int;
    pub let mutable:bool;
@@ -974,6 +989,7 @@ pub class BuiltinFuncType {
    pub let mut setOr:&Ast.TypeInfo;
    pub let mut setAnd:&Ast.TypeInfo;
    pub let mut setSub:&Ast.TypeInfo;
+   pub let mut nilableVal:&Ast.TypeInfo;
 
    pub fn __init() {
       self.luneLoad = Ast.headTypeInfo;
@@ -993,6 +1009,7 @@ pub class BuiltinFuncType {
       self.setOr = Ast.headTypeInfo;
       self.setAnd = Ast.headTypeInfo;
       self.setSub = Ast.headTypeInfo;
+      self.nilableVal = Ast.headTypeInfo;
    }
 }
 
@@ -1087,7 +1104,14 @@ fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
             }  
          }  
       }  
-   }  
+      case "Nilable" {
+         switch fieldName {
+            case "val" {
+               builtinFunc.nilableVal = typeInfo;
+            }  
+         }
+      }
+   }
 }
 
 
@@ -1239,11 +1263,25 @@ fn TransUnit.registBuiltInScope() mut {
             "getinfo": { "arg": ["int"], "ret": ["stem!"] },
             "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
          },
+      },
+      {
+         "Nilable": {
+            "val": { "type": [ "method" ], "arg": [ ], "ret": [ "_T!" ] },
+         }
       }
    ]@@Map<str,Map<str,Map<str,str[]>>>[];
 
 
    fn getTypeInfo( mut typeName:str ) : &Ast.TypeInfo {
+
+      switch typeName {
+         case "_T" {
+            return Ast.builtinTypeBox.$boxingType;
+         }
+         case "_T!" {
+            return Ast.builtinTypeBox.$boxingType.$nilableTypeInfo;
+         }
+      }
 
       fn getTypeInfoFromScope(
          scope:&Ast.Scope, symbol:str, genTyeList:List<&Ast.TypeInfo> ) :
@@ -2026,6 +2064,9 @@ fn TransUnit.processImport( modulePath:str ) mut :
             }
             case .Modifier {
                actInfo = _TypeInfoModifier._fromMap( atomInfo );
+            }
+            case .Box {
+               actInfo = _TypeInfoBox._fromMap( atomInfo );
             }
             default {
                Util.err( "unknown skind -- %d" (skind@@int) );
