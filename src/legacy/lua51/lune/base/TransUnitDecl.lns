@@ -496,6 +496,103 @@ fn TransUnit.analyzeDeclMacro(
    return node;
 }
 
+fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Position ) mut :
+   &Parser.Token, &Ast.TypeInfo!, &List<&Ast.TypeInfo>, Map<&Ast.TypeInfo,&Ast.TypeInfo>
+{
+   let mut baseRef:Ast.Node! = nil;
+   let mut interfaceList:List<&Ast.TypeInfo> = [];
+   let mut ifAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> = {};
+   
+   let mut nextToken = self.getToken(##);
+   if nextToken.txt ~= "(" {
+      self.pushback();
+      sync! baseRef = self.analyzeRefType( accessMode, false ) {}
+      do {
+         let baseType = baseRef.$expType;
+         if baseType.$kind ~= .Class {
+            self.addErrMess( baseRef.$pos,
+                             "%s is not class." ( baseType.getTxt(##) ) );
+         }
+         if Ast.isPubToExternal( accessMode ) and 
+            not Ast.isPubToExternal( baseType.$accessMode )
+         {
+            self.addErrMess(
+               baseRef.$pos, "%s can't be external symbol." ( baseType.getTxt(##) ) );
+         }
+      };
+      nextToken = self.getToken(##);
+   }
+   if nextToken.txt == "(" {
+      while true {
+         nextToken = self.getToken(##);
+         if nextToken.txt == ")" {
+            break;
+         }
+         self.pushback();
+         let ifTypeNode = self.analyzeRefType( accessMode, false );
+         let ifType = ifTypeNode.$expType;
+         if ifType.$kind ~= .IF {
+            self.error( "%s is not interface -- %d"
+                        (ifType.getTxt(##), ifType.$kind ) );
+         }
+
+         if Ast.isGenericType( ifType ) {
+            foreach genType, altType in ifType.createAlt2typeMap(false) {
+               ifAlt2typeMap[ altType ] = genType;
+            }
+         }
+         
+         
+         interfaceList.insert( ifType );
+         if Ast.isPubToExternal( accessMode ) and 
+            not Ast.isPubToExternal( ifType.$accessMode )
+         {
+            self.addErrMess( ifTypeNode.$pos,
+                             "%s can't be external symbol." ( ifType.getTxt(##) ) );
+         }
+         
+         nextToken = self.getToken(##);
+         if nextToken.txt ~= "," {
+            if nextToken.txt == ")" {
+               break;
+            }
+            self.error( "illegal token" );
+         }
+      }
+      nextToken = self.getToken(##);
+   }
+
+   // interface 間の、メソッドのミスマッチをチェックする
+   let mut symbol2TypeInfo:Map<str,&Ast.TypeInfo> = {};
+   foreach ifType in interfaceList {
+      ifType.$scope$.filterTypeInfoField$(
+         true, self.scope,
+         fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+            if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
+               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=", ifAlt2typeMap ) {
+                  self.addErrMess(
+                     firstPos,
+                     "mismatch method type -- %s.%s, %s.%s"
+                     (symbolInfo.$typeInfo.$parentInfo.getTxt(##), symbolInfo.$name,
+                       ifFuncType.$parentInfo.getTxt(##), ifFuncType.getTxt(##)));
+               }
+            }
+            else {
+               symbol2TypeInfo[ symbolInfo.$name ] = symbolInfo.$typeInfo;
+            }
+            return true;
+         } );
+   }
+   
+
+
+   let mut baseTypeInfo:&Ast.TypeInfo! = nil;
+   when! baseRef {
+      baseTypeInfo = baseRef.$expType;
+   }
+   return nextToken, baseTypeInfo, interfaceList, ifAlt2typeMap;
+}
+
 fn TransUnit.analyzePushClass(
    classFlag: bool, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
@@ -509,73 +606,12 @@ fn TransUnit.analyzePushClass(
 
    
    let mut nextToken = self.getToken(##);
-   let mut baseRef:Ast.Node! = nil;
-   let mut interfaceList:List<&Ast.TypeInfo> = [];
-   let mut ifAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> = {};
+   let mut baseTypeInfo:&Ast.TypeInfo! = nil;
+   let mut interfaceList:&List<&Ast.TypeInfo> = [];
    if nextToken.txt == "extend" {
-      nextToken = self.getToken(##);
-      if nextToken.txt ~= "(" {
-         self.pushback();
-         sync! baseRef = self.analyzeRefType( accessMode, false ) {}
-         do {
-            let baseType = baseRef.$expType;
-            if baseType.$kind ~= .Class {
-               self.addErrMess( baseRef.$pos,
-                                "%s is not class." ( baseType.getTxt(##) ) );
-            }
-            if Ast.isPubToExternal( accessMode ) and 
-               not Ast.isPubToExternal( baseType.$accessMode )
-            {
-               self.addErrMess(
-                  baseRef.$pos, "%s can't be external symbol." ( baseType.getTxt(##) ) );
-            }
-         };
-         nextToken = self.getToken(##);
-      }
-      if nextToken.txt == "(" {
-         while true {
-            nextToken = self.getToken(##);
-            if nextToken.txt == ")" {
-               break;
-            }
-            self.pushback();
-            let ifTypeNode = self.analyzeRefType( accessMode, false );
-            let ifType = ifTypeNode.$expType;
-            if ifType.$kind ~= .IF {
-               self.error( "%s is not interface -- %d"
-                           (ifType.getTxt(##), ifType.$kind ) );
-            }
+      nextToken, baseTypeInfo, interfaceList = self.analyzeExtend(
+         accessMode, firstToken.pos );
 
-            if Ast.isGenericType( ifType ) {
-               foreach genType, altType in ifType.createAlt2typeMap(false) {
-                  ifAlt2typeMap[ altType ] = genType;
-               }
-            }
-            
-            
-            interfaceList.insert( ifType );
-            if Ast.isPubToExternal( accessMode ) and 
-               not Ast.isPubToExternal( ifType.$accessMode )
-            {
-               self.addErrMess( ifTypeNode.$pos,
-                                "%s can't be external symbol." ( ifType.getTxt(##) ) );
-            }
-            
-            nextToken = self.getToken(##);
-            if nextToken.txt ~= "," {
-               if nextToken.txt == ")" {
-                  break;
-               }
-               self.error( "illegal token" );
-            }
-         }
-         nextToken = self.getToken(##);
-      }
-   }
-
-   let mut baseTypeInfo:Ast.TypeInfo! = nil;
-   when! baseRef {
-      baseTypeInfo = baseRef.get_expType();
       when! baseTypeInfo {
          let! initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
             // プロトタイプ宣言時は __init がないこともある。
@@ -585,30 +621,8 @@ fn TransUnit.analyzePushClass(
                self.addErrMess(
                   firstToken.pos, "The access mode of '__init' is 'pri'." );
             }  
-         };
-      }
-   }
-
-   // interface 間の、メソッドのミスマッチをチェックする
-   let mut symbol2TypeInfo:Map<str,&Ast.TypeInfo> = {};
-   foreach ifType in interfaceList {
-      ifType.$scope$.filterTypeInfoField$(
-         true, self.scope,
-         fn ( symbolInfo:&Ast.SymbolInfo ): bool {
-            if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
-               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=", ifAlt2typeMap ) {
-                  self.addErrMess(
-                     firstToken.pos,      
-                     "mismatch method type -- %s.%s, %s.%s"
-                     (symbolInfo.$typeInfo.$parentInfo.getTxt(##), symbolInfo.$name,
-                       ifFuncType.$parentInfo.getTxt(##), ifFuncType.getTxt(##)));
-               }
-            }
-            else {
-               symbol2TypeInfo[ symbolInfo.$name ] = symbolInfo.$typeInfo;
-            }
-            return true;
-         } );
+         }; 
+      }  
    }
 
 
@@ -650,9 +664,15 @@ fn TransUnit.analyzeDeclAlternateType(
          self.addErrMess( workToken.pos, "not support nilable" );
          workToken = self.getToken(##);
       }
+      let mut baseTypeInfo:&Ast.TypeInfo! = nil;
+      let mut interfaceList:&List<&Ast.TypeInfo> = [];
+      if workToken.txt == ":" {
+         workToken, baseTypeInfo, interfaceList = self.analyzeExtend(
+            accessMode, token.pos );
+      }
       
       let altType = Ast.NormalTypeInfo.createAlternate(
-         genericSymToken.txt, accessMode, self.moduleType );
+         genericSymToken.txt, accessMode, self.moduleType, baseTypeInfo, interfaceList );
       altTypeList.insert( altType );
 
       if workToken.txt == ">" {
@@ -1657,7 +1677,10 @@ fn TransUnit.analyzeDeclClass(
                      return true;
                   }  
                   return typeInfo.isInheritFrom( builtinFunc.mappingIF, nil );
-               }  
+               }
+               case .Alternate {
+                  return typeInfo.isInheritFrom( builtinFunc.mappingIF, nil );
+               }
                case .List, .Array, .Set {
                   return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );
                }  
@@ -1674,7 +1697,7 @@ fn TransUnit.analyzeDeclClass(
                }  
                case .Nilable {
                   return isAvailableMapping( typeInfo.$nonnilableType, checkedTypeMap );
-               }  
+               }
                default {
                   return false;
                }  

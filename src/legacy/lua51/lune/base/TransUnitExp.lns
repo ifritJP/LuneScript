@@ -1076,8 +1076,10 @@ fn TransUnit.analyzeAccessClassField(
       //     token.txt, self.scope, false );
       // fieldTypeInfo = classScope.getTypeInfoField(
       //    token.txt, true, self.scope );
-      symbolInfo = classScope.getSymbolInfoField(
-         token.txt, true, self.scope );
+      symbolInfo = classScope.getSymbolInfoField( token.txt, true, self.scope );
+      if not symbolInfo {
+         symbolInfo = classScope.getSymbolInfoIfField( token.txt, self.scope );
+      }
       when! symbolInfo {
          fieldTypeInfo = symbolInfo.$typeInfo;
       }
@@ -1334,7 +1336,8 @@ fn TransUnit.analyzeExpField(
       prefixExpType.get_kind() == .List or 
       prefixExpType.get_kind() == .Array or
       prefixExpType.get_kind() == .Set or
-      prefixExpType.get_kind() == .Box
+      prefixExpType.get_kind() == .Box or
+      prefixExpType.get_kind() == .Alternate
    {
       let mut getterFlag = false;
       typeInfo, symbolInfo, getterFlag =

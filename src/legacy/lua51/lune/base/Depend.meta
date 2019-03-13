@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.32'
-_moduleObj.__buildId = "1552397308.000000:1"
+_moduleObj.__formatVersion = '1.0.33'
+_moduleObj.__buildId = "1552492444.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -40,8 +40,8 @@ __typeInfoList[7] = { skind=3, parentId = 1005, typeId = 1016, baseId = 1, txt =
 __typeInfoList[8] = { skind = 0, parentId = 1005, typeId = 1017, nilable = true, orgTypeId = 1016 }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = false, buildId = "1552397308.000000:1" }
-__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 2, use = false, buildId = "1552397308.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = false, buildId = "1552492444.000000:1" }
+__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 2, use = false, buildId = "1552492444.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

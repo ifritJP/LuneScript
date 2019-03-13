@@ -449,7 +449,7 @@ function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, s
    return obj
 end
 function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag) 
-   SymbolInfo.__init( self )
+   SymbolInfo.__init( self)
    
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
@@ -909,12 +909,72 @@ function TypeInfo:get_genSrcTypeInfo(  )
 
    return self
 end
+function TypeInfo:serializeTypeInfoList( name, list, onlyPub )
+
+   local work = name
+   for __index, typeInfo in pairs( list ) do
+      if not onlyPub or typeInfo:get_accessMode() == AccessMode.Pub then
+         if #work ~= #name then
+            work = work .. ", "
+         end
+         
+         work = string.format( "%s%d", work, typeInfo:get_typeId())
+      end
+      
+   end
+   
+   return work .. "}, "
+end
+function TypeInfo.createScope( parent, classFlag, baseInfo, interfaceList )
+
+   local inheritScope = nil
+   if baseInfo ~= nil then
+      inheritScope = _lune.unwrap( baseInfo:get_scope())
+   end
+   
+   local ifScopeList = {}
+   if interfaceList ~= nil then
+      for __index, ifType in pairs( interfaceList ) do
+         table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
+      end
+      
+   end
+   
+   return Scope.new(parent, classFlag, inheritScope, ifScopeList)
+end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
 
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.headTypeInfo = headTypeInfo
+
+function TypeInfo.isInherit( typeInfo, other, alt2type )
+
+   local baseTypeInfo = typeInfo:get_baseTypeInfo()
+   local interfaceList = typeInfo:get_interfaceList()
+   local otherTypeId = other:get_typeId()
+   if typeInfo:get_typeId() == otherTypeId then
+      return true
+   end
+   
+   if baseTypeInfo ~= _moduleObj.headTypeInfo then
+      if baseTypeInfo:isInheritFrom( other, alt2type ) then
+         return true
+      end
+      
+   end
+   
+   
+   for __index, ifType in pairs( typeInfo:get_interfaceList() ) do
+      if ifType:isInheritFrom( other, alt2type ) then
+         return true
+      end
+      
+   end
+   
+   return false
+end
 
 local AutoBoxingInfo = {}
 setmetatable( AutoBoxingInfo, { __index = TypeInfo } )
@@ -926,7 +986,7 @@ function AutoBoxingInfo.new(  )
    return obj
 end
 function AutoBoxingInfo:__init() 
-   TypeInfo.__init( self ,nil)
+   TypeInfo.__init( self,nil)
    
    self.count = 0
    AutoBoxingInfo.allObj[self] = self
@@ -1229,6 +1289,10 @@ end
 
 function AliasTypeInfo:get_genSrcTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_genSrcTypeInfo( ... )
+end       
+
+function AliasTypeInfo:serializeTypeInfoList( ... )
+   return self.aliasSrcTypeInfo:serializeTypeInfoList( ... )
 end       
 
 function AliasTypeInfo:createAlt2typeMap( ... )
@@ -1645,7 +1709,7 @@ function NilTypeInfo.new(  )
    return obj
 end
 function NilTypeInfo:__init() 
-   TypeInfo.__init( self ,nil)
+   TypeInfo.__init( self,nil)
    
    idProv:increment(  )
    self.typeId = idProv:get_id()
@@ -2092,6 +2156,10 @@ function NilableTypeInfo:get_genSrcTypeInfo( ... )
    return self.nonnilableType:get_genSrcTypeInfo( ... )
 end       
 
+function NilableTypeInfo:serializeTypeInfoList( ... )
+   return self.nonnilableType:serializeTypeInfoList( ... )
+end       
+
 function NilableTypeInfo:createAlt2typeMap( ... )
    return self.nonnilableType:createAlt2typeMap( ... )
 end       
@@ -2104,20 +2172,22 @@ end
 local AlternateTypeInfo = {}
 setmetatable( AlternateTypeInfo, { __index = TypeInfo } )
 _moduleObj.AlternateTypeInfo = AlternateTypeInfo
-function AlternateTypeInfo.new( txt, accessMode, moduleTypeInfo )
+function AlternateTypeInfo.new( txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList )
    local obj = {}
    AlternateTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( txt, accessMode, moduleTypeInfo ); end
+   if obj.__init then obj:__init( txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList ); end
    return obj
 end
-function AlternateTypeInfo:__init(txt, accessMode, moduleTypeInfo) 
-   TypeInfo.__init( self ,nil)
+function AlternateTypeInfo:__init(txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList) 
+   TypeInfo.__init( self,TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ))
    
    idProv:increment(  )
    self.typeId = idProv:get_id()
    self.txt = txt
    self.accessMode = accessMode
    self.moduleTypeInfo = moduleTypeInfo
+   self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
+   self.interfaceList = _lune.unwrapDefault( interfaceList, {})
    idProv:increment(  )
    self.nilableTypeInfo = NilableTypeInfo.new(self, idProv:get_id())
 end
@@ -2128,6 +2198,10 @@ end
 function AlternateTypeInfo:getParentId(  )
 
    return self.moduleTypeInfo:get_typeId()
+end
+function AlternateTypeInfo:get_baseId(  )
+
+   return self.baseTypeInfo:get_typeId()
 end
 function AlternateTypeInfo:get_parentInfo(  )
 
@@ -2161,6 +2235,97 @@ function AlternateTypeInfo.getAssign( typeInfo, alt2type )
    end
    
 end
+function AlternateTypeInfo:canSetFrom( other, opTxt, alt2type )
+
+   local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
+   do
+      local genType = alt2type[self]
+      if genType ~= nil then
+         if opTxt ~= nil then
+            return genType:canEvalWith( otherWork, opTxt, alt2type )
+         end
+         
+         return genType:equals( otherWork, alt2type )
+      end
+   end
+   
+   if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
+      return false
+   end
+   
+   if self.baseTypeInfo ~= _moduleObj.headTypeInfo then
+      if not other:isInheritFrom( self.baseTypeInfo, alt2type ) then
+         return false
+      end
+      
+   end
+   
+   
+   for __index, ifType in pairs( self.interfaceList ) do
+      if not other:isInheritFrom( ifType, alt2type ) then
+         return false
+      end
+      
+   end
+   
+   alt2type[self] = otherWork
+   return true
+end
+function AlternateTypeInfo:isInheritFrom( other, alt2type )
+
+   if alt2type ~= nil then
+      local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
+      if self == otherWork:get_srcTypeInfo() then
+         return true
+      end
+      
+      do
+         local genType = alt2type[self]
+         if genType ~= nil then
+            return genType:isInheritFrom( otherWork, alt2type )
+         end
+      end
+      
+      if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
+         return false
+      end
+      
+   end
+   
+   if self == other:get_srcTypeInfo() then
+      return true
+   end
+   
+   local function check(  )
+   
+      if self.baseTypeInfo ~= _moduleObj.headTypeInfo then
+         if self.baseTypeInfo:isInheritFrom( other, alt2type ) then
+            return true
+         end
+         
+      end
+      
+      
+      for __index, ifType in pairs( self.interfaceList ) do
+         if ifType:isInheritFrom( other, alt2type ) then
+            return true
+         end
+         
+      end
+      
+      return false
+   end
+   
+   if check(  ) then
+      if alt2type ~= nil then
+         alt2type[self] = other
+      end
+      
+      return true
+   end
+   
+   return false
+end
 function AlternateTypeInfo:canEvalWith( other, opTxt, alt2type )
 
    if self == other:get_srcTypeInfo() then
@@ -2171,20 +2336,7 @@ function AlternateTypeInfo:canEvalWith( other, opTxt, alt2type )
       return false
    end
    
-   local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
-   do
-      local genType = alt2type[self]
-      if genType ~= nil then
-         return genType:canEvalWith( otherWork, opTxt, alt2type )
-      end
-   end
-   
-   if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
-      return false
-   end
-   
-   alt2type[self] = otherWork
-   return true
+   return self:canSetFrom( other, opTxt, alt2type )
 end
 function AlternateTypeInfo:get_display_stirng_with( raw )
 
@@ -2201,20 +2353,7 @@ function AlternateTypeInfo:equals( typeInfo, alt2type )
    end
    
    if alt2type ~= nil then
-      local otherWork = AlternateTypeInfo.getAssign( typeInfo, alt2type )
-      do
-         local genType = alt2type[self]
-         if genType ~= nil then
-            return genType:equals( otherWork, alt2type )
-         end
-      end
-      
-      if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
-         return false
-      end
-      
-      alt2type[self] = otherWork
-      return true
+      return self:canSetFrom( typeInfo, nil, alt2type )
    end
    
    return false
@@ -2231,10 +2370,6 @@ function AlternateTypeInfo:get_kind(  )
 
    return TypeInfoKind.Alternate
 end
-function AlternateTypeInfo:get_baseTypeInfo(  )
-
-   return _moduleObj.headTypeInfo
-end
 function AlternateTypeInfo:get_nilable(  )
 
    return false
@@ -2250,7 +2385,9 @@ end
 function AlternateTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q,accessMode = %d }', SerializeKind.Alternate, parentId, self.typeId, self.txt, self.accessMode) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, ', SerializeKind.Alternate, parentId, self.typeId, self.txt) .. string.format( 'accessMode = %d, baseId = %d, ', self.accessMode, self:get_baseId()) )
+   stream:write( self:serializeTypeInfoList( "ifList = {", self.interfaceList ) )
+   stream:write( "}\n" )
 end
 function AlternateTypeInfo:applyGeneric( alt2typeMap )
 
@@ -2271,6 +2408,12 @@ end
 function AlternateTypeInfo:get_accessMode()       
    return self.accessMode         
 end
+function AlternateTypeInfo:get_baseTypeInfo()       
+   return self.baseTypeInfo         
+end
+function AlternateTypeInfo:get_interfaceList()       
+   return self.interfaceList         
+end
 
 local boxRootAltType = AlternateTypeInfo.new("_T", AccessMode.Pub, _moduleObj.headTypeInfo)
 local boxRootScope = Scope.new(_moduleObj.rootScope, true, nil)
@@ -2284,7 +2427,7 @@ function BoxTypeInfo.new( typeId, accessMode, boxingType )
    return obj
 end
 function BoxTypeInfo:__init(typeId, accessMode, boxingType) 
-   TypeInfo.__init( self ,boxRootScope)
+   TypeInfo.__init( self,boxRootScope)
    
    self.boxingType = boxingType
    self.typeId = typeId
@@ -2458,6 +2601,10 @@ function BoxTypeInfo:get_genSrcTypeInfo( ... )
    return self.boxingType:get_genSrcTypeInfo( ... )
 end       
 
+function BoxTypeInfo:serializeTypeInfoList( ... )
+   return self.boxingType:serializeTypeInfoList( ... )
+end       
+
 function BoxTypeInfo:getFullName( ... )
    return self.boxingType:getFullName( ... )
 end       
@@ -2473,7 +2620,7 @@ function GenericTypeInfo.new( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
    return obj
 end
 function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
-   TypeInfo.__init( self ,nil)
+   TypeInfo.__init( self,nil)
    
    idProv:increment(  )
    self.typeId = idProv:get_id()
@@ -2791,6 +2938,10 @@ function GenericTypeInfo:getParentFullName( ... )
    return self.genSrcTypeInfo:getParentFullName( ... )
 end       
 
+function GenericTypeInfo:serializeTypeInfoList( ... )
+   return self.genSrcTypeInfo:serializeTypeInfoList( ... )
+end       
+
 function GenericTypeInfo:getFullName( ... )
    return self.genSrcTypeInfo:getFullName( ... )
 end       
@@ -2973,6 +3124,10 @@ function ModifierTypeInfo:get_genSrcTypeInfo( ... )
    return self.srcTypeInfo:get_genSrcTypeInfo( ... )
 end       
 
+function ModifierTypeInfo:serializeTypeInfoList( ... )
+   return self.srcTypeInfo:serializeTypeInfoList( ... )
+end       
+
 function ModifierTypeInfo:createAlt2typeMap( ... )
    return self.srcTypeInfo:createAlt2typeMap( ... )
 end       
@@ -2992,7 +3147,7 @@ function ModuleTypeInfo.new( scope, externalFlag, txt, parentInfo, typeId, mutab
    return obj
 end
 function ModuleTypeInfo:__init(scope, externalFlag, txt, parentInfo, typeId, mutable) 
-   TypeInfo.__init( self ,scope)
+   TypeInfo.__init( self,scope)
    
    self.externalFlag = externalFlag
    self.rawTxt = txt
@@ -3126,7 +3281,7 @@ function EnumTypeInfo.new( scope, externalFlag, accessMode, txt, parentInfo, typ
    return obj
 end
 function EnumTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, typeId, valTypeInfo, name2EnumValInfo) 
-   TypeInfo.__init( self ,scope)
+   TypeInfo.__init( self,scope)
    
    self.externalFlag = externalFlag
    self.accessMode = accessMode
@@ -3262,7 +3417,7 @@ function AlgeTypeInfo.new( scope, externalFlag, accessMode, txt, parentInfo, typ
    return obj
 end
 function AlgeTypeInfo:__init(scope, externalFlag, accessMode, txt, parentInfo, typeId) 
-   TypeInfo.__init( self ,scope)
+   TypeInfo.__init( self,scope)
    
    self.externalFlag = externalFlag
    self.accessMode = accessMode
@@ -3360,7 +3515,7 @@ function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, a
    return obj
 end
 function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
-   TypeInfo.__init( self ,scope)
+   TypeInfo.__init( self,scope)
    
    if type( kind ) ~= "number" then
       Util.printStackTrace(  )
@@ -3547,23 +3702,6 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    end
    
    local parentId = self:getParentId(  )
-   local function serializeTypeInfoList( name, list, onlyPub )
-   
-      local work = name
-      for __index, typeInfo in pairs( list ) do
-         if not onlyPub or typeInfo:get_accessMode() == AccessMode.Pub then
-            if #work ~= #name then
-               work = work .. ", "
-            end
-            
-            work = string.format( "%s%d", work, typeInfo:get_typeId())
-         end
-         
-      end
-      
-      return work .. "}, "
-   end
-   
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutable)
    local children = {}
@@ -3581,7 +3719,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
       
    end
    
-   stream:write( txt .. serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. serializeTypeInfoList( "ifList = {", self.interfaceList ) .. serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. serializeTypeInfoList( "children = {", children, true ) .. "}\n" )
+   stream:write( txt .. self:serializeTypeInfoList( "itemTypeId = {", self.itemTypeInfoList ) .. self:serializeTypeInfoList( "ifList = {", self.interfaceList ) .. self:serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList ) .. self:serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList ) .. self:serializeTypeInfoList( "children = {", children, true ) .. "}\n" )
 end
 function NormalTypeInfo:equalsSub( typeInfo, alt2type )
 
@@ -3696,9 +3834,9 @@ function NormalTypeInfo:get_mutable()
    return self.mutable         
 end
 
-function NormalTypeInfo.createAlternate( txt, accessMode, moduleTypeInfo )
+function NormalTypeInfo.createAlternate( txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList )
 
-   return AlternateTypeInfo.new(txt, accessMode, moduleTypeInfo)
+   return AlternateTypeInfo.new(txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList)
 end
 
 idProv:increment(  )
@@ -4013,7 +4151,7 @@ function DDDTypeInfo.new( typeId, typeInfo, externalFlag )
    return obj
 end
 function DDDTypeInfo:__init(typeId, typeInfo, externalFlag) 
-   TypeInfo.__init( self ,nil)
+   TypeInfo.__init( self,nil)
    
    self.typeId = typeId
    self.typeInfo = typeInfo
@@ -4154,7 +4292,7 @@ function AbbrTypeInfo.new( idProvider, rawTxt )
    return obj
 end
 function AbbrTypeInfo:__init(idProvider, rawTxt) 
-   TypeInfo.__init( self ,nil)
+   TypeInfo.__init( self,nil)
    
    local typeId = idProvider:get_id() + 1
    idProvider:increment(  )
@@ -4384,8 +4522,7 @@ end
 
 function NormalTypeInfo:isInheritFrom( other, alt2type )
 
-   local otherTypeId = other:get_typeId()
-   if self:get_typeId() == otherTypeId then
+   if self:get_typeId() == other:get_typeId() then
       return true
    end
    
@@ -4393,23 +4530,7 @@ function NormalTypeInfo:isInheritFrom( other, alt2type )
       return false
    end
    
-   local baseTypeInfo = self:get_baseTypeInfo()
-   if baseTypeInfo ~= _moduleObj.headTypeInfo then
-      if baseTypeInfo:isInheritFrom( other, alt2type ) then
-         return true
-      end
-      
-   end
-   
-   
-   for __index, ifType in pairs( self:get_interfaceList() ) do
-      if ifType:isInheritFrom( other, alt2type ) then
-         return true
-      end
-      
-   end
-   
-   return false
+   return TypeInfo.isInherit( self, other, alt2type )
 end
 
 local MatchType = {}
@@ -4848,16 +4969,23 @@ _moduleObj.Filter = Filter
 function Filter.setmeta( obj )
   setmetatable( obj, { __index = Filter  } )
 end
-function Filter.new(  )
+function Filter.new( __alt2mapFunc )
    local obj = {}
    Filter.setmeta( obj )
    if obj.__init then
-      obj:__init(  )
+      obj:__init( __alt2mapFunc )
    end        
    return obj 
 end         
-function Filter:__init(  ) 
+function Filter:__init( __alt2mapFunc ) 
 
+   if not self.__alt2mapFunc then
+   self.__alt2mapFunc = __alt2mapFunc
+else
+   for key, val in pairs( __alt2mapFunc ) do
+      self.__alt2mapFunc[ key ] = val
+   end
+end
 end
 
 local BreakKind = {}
@@ -5163,7 +5291,7 @@ function NoneNode.new( pos, typeList )
    return obj
 end
 function NoneNode:__init(pos, typeList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['None']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['None']), pos, typeList)
    
    
    
@@ -5223,7 +5351,7 @@ function SubfileNode.new( pos, typeList, usePath )
    return obj
 end
 function SubfileNode:__init(pos, typeList, usePath) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Subfile']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Subfile']), pos, typeList)
    
    
    self.usePath = usePath
@@ -5287,7 +5415,7 @@ function ImportNode.new( pos, typeList, modulePath, assignName, moduleTypeInfo )
    return obj
 end
 function ImportNode:__init(pos, typeList, modulePath, assignName, moduleTypeInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Import']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Import']), pos, typeList)
    
    
    self.modulePath = modulePath
@@ -5535,7 +5663,7 @@ function RootNode.new( pos, typeList, children, useModuleMacroSet, moduleId, pro
    return obj
 end
 function RootNode:__init(pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
    
    
    self.children = children
@@ -5644,7 +5772,7 @@ function RefTypeNode.new( pos, typeList, name, refFlag, mutFlag, array )
    return obj
 end
 function RefTypeNode:__init(pos, typeList, name, refFlag, mutFlag, array) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['RefType']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['RefType']), pos, typeList)
    
    
    self.name = name
@@ -5797,7 +5925,7 @@ function BlockNode.new( pos, typeList, blockKind, stmtList )
    return obj
 end
 function BlockNode:__init(pos, typeList, blockKind, stmtList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Block']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Block']), pos, typeList)
    
    
    self.blockKind = blockKind
@@ -5978,7 +6106,7 @@ function IfNode.new( pos, typeList, stmtList )
    return obj
 end
 function IfNode:__init(pos, typeList, stmtList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['If']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['If']), pos, typeList)
    
    
    self.stmtList = stmtList
@@ -6083,7 +6211,7 @@ function ExpListNode.new( pos, typeList, expList, followOn )
    return obj
 end
 function ExpListNode:__init(pos, typeList, expList, followOn) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpList']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpList']), pos, typeList)
    
    
    self.expList = expList
@@ -6200,7 +6328,7 @@ function SwitchNode.new( pos, typeList, exp, caseList, default )
    return obj
 end
 function SwitchNode:__init(pos, typeList, exp, caseList, default) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Switch']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Switch']), pos, typeList)
    
    
    self.exp = exp
@@ -6351,7 +6479,7 @@ function WhileNode.new( pos, typeList, exp, block )
    return obj
 end
 function WhileNode:__init(pos, typeList, exp, block) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['While']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['While']), pos, typeList)
    
    
    self.exp = exp
@@ -6419,7 +6547,7 @@ function RepeatNode.new( pos, typeList, block, exp )
    return obj
 end
 function RepeatNode:__init(pos, typeList, block, exp) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Repeat']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Repeat']), pos, typeList)
    
    
    self.block = block
@@ -6498,7 +6626,7 @@ function ForNode.new( pos, typeList, block, val, init, to, delta )
    return obj
 end
 function ForNode:__init(pos, typeList, block, val, init, to, delta) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['For']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['For']), pos, typeList)
    
    
    self.block = block
@@ -6589,7 +6717,7 @@ function ApplyNode.new( pos, typeList, varList, exp, block )
    return obj
 end
 function ApplyNode:__init(pos, typeList, varList, exp, block) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Apply']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Apply']), pos, typeList)
    
    
    self.varList = varList
@@ -6672,7 +6800,7 @@ function ForeachNode.new( pos, typeList, val, key, exp, block )
    return obj
 end
 function ForeachNode:__init(pos, typeList, val, key, exp, block) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Foreach']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Foreach']), pos, typeList)
    
    
    self.val = val
@@ -6759,7 +6887,7 @@ function ForsortNode.new( pos, typeList, val, key, exp, block, sort )
    return obj
 end
 function ForsortNode:__init(pos, typeList, val, key, exp, block, sort) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Forsort']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Forsort']), pos, typeList)
    
    
    self.val = val
@@ -6850,7 +6978,7 @@ function ReturnNode.new( pos, typeList, expList )
    return obj
 end
 function ReturnNode:__init(pos, typeList, expList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Return']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Return']), pos, typeList)
    
    
    self.expList = expList
@@ -6919,7 +7047,7 @@ function BreakNode.new( pos, typeList )
    return obj
 end
 function BreakNode:__init(pos, typeList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Break']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Break']), pos, typeList)
    
    
    
@@ -6984,7 +7112,7 @@ function ProvideNode.new( pos, typeList, symbol )
    return obj
 end
 function ProvideNode:__init(pos, typeList, symbol) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Provide']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Provide']), pos, typeList)
    
    
    self.symbol = symbol
@@ -7048,7 +7176,7 @@ function ExpNewNode.new( pos, typeList, symbol, argList )
    return obj
 end
 function ExpNewNode:__init(pos, typeList, symbol, argList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpNew']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpNew']), pos, typeList)
    
    
    self.symbol = symbol
@@ -7116,7 +7244,7 @@ function ExpUnwrapNode.new( pos, typeList, exp, default )
    return obj
 end
 function ExpUnwrapNode:__init(pos, typeList, exp, default) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpUnwrap']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpUnwrap']), pos, typeList)
    
    
    self.exp = exp
@@ -7176,7 +7304,7 @@ function ExpRefNode.new( pos, typeList, token, symbolInfo )
    return obj
 end
 function ExpRefNode:__init(pos, typeList, token, symbolInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpRef']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpRef']), pos, typeList)
    
    
    self.token = token
@@ -7250,7 +7378,7 @@ function ExpOp2Node.new( pos, typeList, op, exp1, exp2 )
    return obj
 end
 function ExpOp2Node:__init(pos, typeList, op, exp1, exp2) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpOp2']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpOp2']), pos, typeList)
    
    
    self.op = op
@@ -7327,7 +7455,7 @@ function UnwrapSetNode.new( pos, typeList, dstExpList, srcExpList, unwrapBlock )
    return obj
 end
 function UnwrapSetNode:__init(pos, typeList, dstExpList, srcExpList, unwrapBlock) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['UnwrapSet']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['UnwrapSet']), pos, typeList)
    
    
    self.dstExpList = dstExpList
@@ -7399,7 +7527,7 @@ function IfUnwrapNode.new( pos, typeList, varNameList, expNodeList, block, nilBl
    return obj
 end
 function IfUnwrapNode:__init(pos, typeList, varNameList, expNodeList, block, nilBlock) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['IfUnwrap']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['IfUnwrap']), pos, typeList)
    
    
    self.varNameList = varNameList
@@ -7550,7 +7678,7 @@ function WhenNode.new( pos, typeList, varNameList, expNodeList, block, elseBlock
    return obj
 end
 function WhenNode:__init(pos, typeList, varNameList, expNodeList, block, elseBlock) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['When']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['When']), pos, typeList)
    
    
    self.varNameList = varNameList
@@ -7701,7 +7829,7 @@ function ExpCastNode.new( pos, typeList, exp )
    return obj
 end
 function ExpCastNode:__init(pos, typeList, exp) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpCast']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpCast']), pos, typeList)
    
    
    self.exp = exp
@@ -7797,7 +7925,7 @@ function ExpOp1Node.new( pos, typeList, op, macroMode, exp )
    return obj
 end
 function ExpOp1Node:__init(pos, typeList, op, macroMode, exp) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpOp1']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpOp1']), pos, typeList)
    
    
    self.op = op
@@ -7865,7 +7993,7 @@ function ExpRefItemNode.new( pos, typeList, val, nilAccess, symbol, index )
    return obj
 end
 function ExpRefItemNode:__init(pos, typeList, val, nilAccess, symbol, index) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpRefItem']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpRefItem']), pos, typeList)
    
    
    self.val = val
@@ -7946,7 +8074,7 @@ function ExpCallNode.new( pos, typeList, func, errorFunc, nilAccess, argList )
    return obj
 end
 function ExpCallNode:__init(pos, typeList, func, errorFunc, nilAccess, argList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpCall']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpCall']), pos, typeList)
    
    
    self.func = func
@@ -8041,7 +8169,7 @@ function ExpDDDNode.new( pos, typeList, token )
    return obj
 end
 function ExpDDDNode:__init(pos, typeList, token) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpDDD']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpDDD']), pos, typeList)
    
    
    self.token = token
@@ -8105,7 +8233,7 @@ function ExpParenNode.new( pos, typeList, exp )
    return obj
 end
 function ExpParenNode:__init(pos, typeList, exp) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpParen']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpParen']), pos, typeList)
    
    
    self.exp = exp
@@ -8169,7 +8297,7 @@ function ExpMacroExpNode.new( pos, typeList, stmtList )
    return obj
 end
 function ExpMacroExpNode:__init(pos, typeList, stmtList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpMacroExp']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpMacroExp']), pos, typeList)
    
    
    self.stmtList = stmtList
@@ -8283,7 +8411,7 @@ function ExpMacroStatNode.new( pos, typeList, expStrList )
    return obj
 end
 function ExpMacroStatNode:__init(pos, typeList, expStrList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpMacroStat']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpMacroStat']), pos, typeList)
    
    
    self.expStrList = expStrList
@@ -8343,7 +8471,7 @@ function StmtExpNode.new( pos, typeList, exp )
    return obj
 end
 function StmtExpNode:__init(pos, typeList, exp) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['StmtExp']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['StmtExp']), pos, typeList)
    
    
    self.exp = exp
@@ -8417,7 +8545,7 @@ function ExpOmitEnumNode.new( pos, typeList, valToken, valInfo, enumTypeInfo )
    return obj
 end
 function ExpOmitEnumNode:__init(pos, typeList, valToken, valInfo, enumTypeInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum']), pos, typeList)
    
    
    self.valToken = valToken
@@ -8481,7 +8609,7 @@ function RefFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix )
    return obj
 end
 function RefFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['RefField']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['RefField']), pos, typeList)
    
    
    self.field = field
@@ -8577,7 +8705,7 @@ function GetFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix, 
    return obj
 end
 function GetFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['GetField']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['GetField']), pos, typeList)
    
    
    self.field = field
@@ -8669,7 +8797,7 @@ function AliasNode.new( pos, typeList, newName, srcNode, typeInfo )
    return obj
 end
 function AliasNode:__init(pos, typeList, newName, srcNode, typeInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Alias']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Alias']), pos, typeList)
    
    
    self.newName = newName
@@ -8802,7 +8930,7 @@ function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, 
    return obj
 end
 function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclVar']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclVar']), pos, typeList)
    
    
    self.mode = mode
@@ -9126,7 +9254,7 @@ function DeclFuncNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclFuncNode:__init(pos, typeList, declInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclFunc']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclFunc']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -9190,7 +9318,7 @@ function DeclMethodNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclMethodNode:__init(pos, typeList, declInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclMethod']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclMethod']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -9254,7 +9382,7 @@ function DeclConstrNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclConstrNode:__init(pos, typeList, declInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclConstr']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclConstr']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -9318,7 +9446,7 @@ function DeclDestrNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclDestrNode:__init(pos, typeList, declInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclDestr']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclDestr']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -9382,7 +9510,7 @@ function ExpCallSuperNode.new( pos, typeList, superType, methodType, expList )
    return obj
 end
 function ExpCallSuperNode:__init(pos, typeList, superType, methodType, expList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['ExpCallSuper']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpCallSuper']), pos, typeList)
    
    
    self.superType = superType
@@ -9454,7 +9582,7 @@ function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFla
    return obj
 end
 function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclMember']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclMember']), pos, typeList)
    
    
    self.name = name
@@ -9546,7 +9674,7 @@ function DeclArgNode.new( pos, typeList, name, argType )
    return obj
 end
 function DeclArgNode:__init(pos, typeList, name, argType) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclArg']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclArg']), pos, typeList)
    
    
    self.name = name
@@ -9614,7 +9742,7 @@ function DeclArgDDDNode.new( pos, typeList )
    return obj
 end
 function DeclArgDDDNode:__init(pos, typeList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclArgDDD']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclArgDDD']), pos, typeList)
    
    
    
@@ -9700,7 +9828,7 @@ function DeclClassNode.new( pos, typeList, accessMode, name, gluePrefix, declStm
    return obj
 end
 function DeclClassNode:__init(pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclClass']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclClass']), pos, typeList)
    
    
    self.accessMode = accessMode
@@ -9808,7 +9936,7 @@ function DeclEnumNode.new( pos, typeList, accessMode, name, valueNameList, scope
    return obj
 end
 function DeclEnumNode:__init(pos, typeList, accessMode, name, valueNameList, scope) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclEnum']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclEnum']), pos, typeList)
    
    
    self.accessMode = accessMode
@@ -9884,7 +10012,7 @@ function DeclAlgeNode.new( pos, typeList, accessMode, algeType, scope )
    return obj
 end
 function DeclAlgeNode:__init(pos, typeList, accessMode, algeType, scope) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclAlge']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclAlge']), pos, typeList)
    
    
    self.accessMode = accessMode
@@ -9956,7 +10084,7 @@ function NewAlgeValNode.new( pos, typeList, name, prefix, algeTypeInfo, valInfo,
    return obj
 end
 function NewAlgeValNode:__init(pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']), pos, typeList)
    
    
    self.name = name
@@ -10065,7 +10193,7 @@ function MatchNode.new( pos, typeList, val, algeTypeInfo, caseList, defaultBlock
    return obj
 end
 function MatchNode:__init(pos, typeList, val, algeTypeInfo, caseList, defaultBlock) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Match']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Match']), pos, typeList)
    
    
    self.val = val
@@ -10141,7 +10269,7 @@ function DeclMacroNode.new( pos, typeList, declInfo )
    return obj
 end
 function DeclMacroNode:__init(pos, typeList, declInfo) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['DeclMacro']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclMacro']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -10222,7 +10350,7 @@ function AbbrNode.new( pos, typeList )
    return obj
 end
 function AbbrNode:__init(pos, typeList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Abbr']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Abbr']), pos, typeList)
    
    
    
@@ -10282,7 +10410,7 @@ function BoxingNode.new( pos, typeList, src )
    return obj
 end
 function BoxingNode:__init(pos, typeList, src) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Boxing']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Boxing']), pos, typeList)
    
    
    self.src = src
@@ -10346,7 +10474,7 @@ function UnboxingNode.new( pos, typeList, src )
    return obj
 end
 function UnboxingNode:__init(pos, typeList, src) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['Unboxing']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Unboxing']), pos, typeList)
    
    
    self.src = src
@@ -10410,7 +10538,7 @@ function LiteralNilNode.new( pos, typeList )
    return obj
 end
 function LiteralNilNode:__init(pos, typeList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralNil']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralNil']), pos, typeList)
    
    
    
@@ -10470,7 +10598,7 @@ function LiteralCharNode.new( pos, typeList, token, num )
    return obj
 end
 function LiteralCharNode:__init(pos, typeList, token, num) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralChar']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralChar']), pos, typeList)
    
    
    self.token = token
@@ -10538,7 +10666,7 @@ function LiteralIntNode.new( pos, typeList, token, num )
    return obj
 end
 function LiteralIntNode:__init(pos, typeList, token, num) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralInt']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralInt']), pos, typeList)
    
    
    self.token = token
@@ -10606,7 +10734,7 @@ function LiteralRealNode.new( pos, typeList, token, num )
    return obj
 end
 function LiteralRealNode:__init(pos, typeList, token, num) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralReal']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralReal']), pos, typeList)
    
    
    self.token = token
@@ -10674,7 +10802,7 @@ function LiteralArrayNode.new( pos, typeList, expList )
    return obj
 end
 function LiteralArrayNode:__init(pos, typeList, expList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralArray']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralArray']), pos, typeList)
    
    
    self.expList = expList
@@ -10738,7 +10866,7 @@ function LiteralListNode.new( pos, typeList, expList )
    return obj
 end
 function LiteralListNode:__init(pos, typeList, expList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralList']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralList']), pos, typeList)
    
    
    self.expList = expList
@@ -10802,7 +10930,7 @@ function LiteralSetNode.new( pos, typeList, expList )
    return obj
 end
 function LiteralSetNode:__init(pos, typeList, expList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralSet']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralSet']), pos, typeList)
    
    
    self.expList = expList
@@ -10891,7 +11019,7 @@ function LiteralMapNode.new( pos, typeList, map, pairList )
    return obj
 end
 function LiteralMapNode:__init(pos, typeList, map, pairList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralMap']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralMap']), pos, typeList)
    
    
    self.map = map
@@ -10959,7 +11087,7 @@ function LiteralStringNode.new( pos, typeList, token, argList )
    return obj
 end
 function LiteralStringNode:__init(pos, typeList, token, argList) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralString']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralString']), pos, typeList)
    
    
    self.token = token
@@ -11027,7 +11155,7 @@ function LiteralBoolNode.new( pos, typeList, token )
    return obj
 end
 function LiteralBoolNode:__init(pos, typeList, token) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralBool']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralBool']), pos, typeList)
    
    
    self.token = token
@@ -11091,7 +11219,7 @@ function LiteralSymbolNode.new( pos, typeList, token )
    return obj
 end
 function LiteralSymbolNode:__init(pos, typeList, token) 
-   Node.__init( self ,_lune.unwrap( _moduleObj.nodeKind['LiteralSymbol']), pos, typeList)
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralSymbol']), pos, typeList)
    
    
    self.token = token
@@ -11575,7 +11703,7 @@ function DefMacroInfo.new( func, declInfo, symbol2MacroValInfoMap )
    return obj
 end
 function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap) 
-   MacroInfo.__init( self ,func, symbol2MacroValInfoMap)
+   MacroInfo.__init( self,func, symbol2MacroValInfoMap)
    
    self.declInfo = declInfo
    self.argList = {}

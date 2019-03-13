@@ -428,7 +428,7 @@ function StreamParser.new( stream, name, luaMode )
    return obj
 end
 function StreamParser:__init(stream, name, luaMode) 
-   Parser.__init( self )
+   Parser.__init( self)
    
    self.eof = false
    self.stream = stream

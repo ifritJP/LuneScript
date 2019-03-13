@@ -1,0 +1,54 @@
+interface IF {
+   pub fn foo();
+}
+
+class Sub extend (Mapping) {
+}
+
+class SubSub extend Sub (IF) {
+   pub fn foo() {
+      print( __func__ );
+   }
+}
+
+class Sub2 {
+   pub fn bar() {
+      print( __func__ );
+   }
+}
+
+class Test<T:(IF)> {
+   let val:T;
+   pub fn func() {
+      self.val.foo();
+   }
+}
+
+{
+   fn func( test1:&Test ) {
+      test1.func();
+   }  
+
+   func( new Test( new Sub() ) ); // error
+   func( new Test( new SubSub() ) );
+   func( new Test( new Sub2() ) );  // error
+   func( new Test( 1 ) );  // error
+}
+
+class Test2<T:Sub2> {
+   let val:T;
+   pub fn func() {
+      self.val.bar();
+   }
+}
+
+{
+   fn func2( test2:&Test2 ) {
+      test2.func();
+   }  
+
+   func2( new Test2( new Sub() ) );  // error
+   func2( new Test2( new SubSub() ) );  // error
+   func2( new Test2( new Sub2() ) );
+   func2( new Test2( 1 ) );  // error
+}

@@ -426,9 +426,9 @@ function TransUnit:addWarnMess( pos, mess )
 
    table.insert( self.warnMessList, string.format( "%s:%d:%d: warning: %s", self.parser:getStreamName(  ), pos.lineNo, pos.column, mess) )
 end
-function TransUnit:pushScope( classFlag, inheritScope, ifScopeList )
+function TransUnit:pushScope( classFlag, baseInfo, interfaceList )
 
-   self.scope = Ast.Scope.new(self.scope, classFlag, inheritScope, ifScopeList)
+   self.scope = Ast.TypeInfo.createScope( self.scope, classFlag, baseInfo, interfaceList )
    return self.scope
 end
 function TransUnit:popScope(  )
@@ -555,21 +555,8 @@ function TransUnit:pushClass( classFlag, abstractFlag, baseInfo, interfaceList, 
          
       else
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
-         local inheritScope = nil
-         if baseInfo ~= nil then
-            inheritScope = _lune.unwrap( baseInfo:get_scope())
-         end
-         
-         local ifScopeList = {}
-         if interfaceList ~= nil then
-            for __index, ifType in pairs( interfaceList ) do
-               table.insert( ifScopeList, _lune.unwrap( ifType:get_scope(  )) )
-            end
-            
-         end
-         
          local parentScope = self.scope
-         local scope = self:pushScope( true, inheritScope, ifScopeList )
+         local scope = self:pushScope( true, baseInfo, interfaceList )
          typeInfo = Ast.NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, externalFlag, accessMode, name )
          parentScope:addClass( name, typeInfo )
       end
@@ -1057,26 +1044,34 @@ local _TypeInfoAlternate = {}
 setmetatable( _TypeInfoAlternate, { __index = _TypeInfo } )
 function _TypeInfoAlternate:createTypeInfo( param )
 
-   local newTypeInfo = Ast.NormalTypeInfo.createAlternate( self.txt, self.accessMode, param.moduleTypeInfo )
+   local baseInfo = _lune.unwrap( param:getTypeInfo( self.baseId ))
+   local interfaceList = {}
+   for __index, ifTypeId in pairs( self.ifList ) do
+      table.insert( interfaceList, _lune.unwrap( param:getTypeInfo( ifTypeId )) )
+   end
+   
+   local newTypeInfo = Ast.NormalTypeInfo.createAlternate( self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
    return newTypeInfo, nil
 end
 function _TypeInfoAlternate.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlternate  } )
 end
-function _TypeInfoAlternate.new( txt, accessMode )
+function _TypeInfoAlternate.new( txt, accessMode, baseId, ifList )
    local obj = {}
    _TypeInfoAlternate.setmeta( obj )
    if obj.__init then
-      obj:__init( txt, accessMode )
+      obj:__init( txt, accessMode, baseId, ifList )
    end        
    return obj 
 end         
-function _TypeInfoAlternate:__init( txt, accessMode ) 
+function _TypeInfoAlternate:__init( txt, accessMode, baseId, ifList ) 
 
    _TypeInfo.__init( self )
    self.txt = txt
    self.accessMode = accessMode
+   self.baseId = baseId
+   self.ifList = ifList
 end
 function _TypeInfoAlternate:_toMap()
   return self
@@ -1101,6 +1096,8 @@ function _TypeInfoAlternate._fromMapSub( obj, val )
    local memInfo = {}
    table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "baseId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -2594,7 +2591,7 @@ function ExtMacroInfo.new( name, func, symbol2MacroValInfoMap, argList, tokenLis
    return obj
 end
 function ExtMacroInfo:__init(name, func, symbol2MacroValInfoMap, argList, tokenList) 
-   Ast.MacroInfo.__init( self ,func, symbol2MacroValInfoMap)
+   Ast.MacroInfo.__init( self,func, symbol2MacroValInfoMap)
    
    self.name = name
    self.argList = argList
@@ -3927,6 +3924,109 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    return node
 end
 
+function TransUnit:analyzeExtend( accessMode, firstPos )
+
+   local baseRef = nil
+   local interfaceList = {}
+   local ifAlt2typeMap = {}
+   local nextToken = self:getToken(  )
+   if nextToken.txt ~= "(" then
+      self:pushback(  )
+      do
+         local _sync_baseRef
+         do
+            local baseRef = self:analyzeRefType( accessMode, false )
+            if  nil == baseRef then
+               local _baseRef = baseRef
+            
+            end
+            
+               local baseType = baseRef:get_expType()
+               if baseType:get_kind() ~= Ast.TypeInfoKind.Class then
+                  self:addErrMess( baseRef:get_pos(), string.format( "%s is not class.", baseType:getTxt(  )) )
+               end
+               
+               if Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( baseType:get_accessMode() ) then
+                  self:addErrMess( baseRef:get_pos(), string.format( "%s can't be external symbol.", baseType:getTxt(  )) )
+               end
+               
+            _sync_baseRef = baseRef
+         end
+         baseRef = _sync_baseRef
+      end
+      
+      nextToken = self:getToken(  )
+   end
+   
+   if nextToken.txt == "(" then
+      while true do
+         nextToken = self:getToken(  )
+         if nextToken.txt == ")" then
+            break
+         end
+         
+         self:pushback(  )
+         local ifTypeNode = self:analyzeRefType( accessMode, false )
+         local ifType = ifTypeNode:get_expType()
+         if ifType:get_kind() ~= Ast.TypeInfoKind.IF then
+            self:error( string.format( "%s is not interface -- %d", ifType:getTxt(  ), ifType:get_kind()) )
+         end
+         
+         if Ast.isGenericType( ifType ) then
+            for altType, genType in pairs( ifType:createAlt2typeMap( false ) ) do
+               ifAlt2typeMap[altType] = genType
+            end
+            
+         end
+         
+         table.insert( interfaceList, ifType )
+         if Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( ifType:get_accessMode() ) then
+            self:addErrMess( ifTypeNode:get_pos(), string.format( "%s can't be external symbol.", ifType:getTxt(  )) )
+         end
+         
+         nextToken = self:getToken(  )
+         if nextToken.txt ~= "," then
+            if nextToken.txt == ")" then
+               break
+            end
+            
+            self:error( "illegal token" )
+         end
+         
+      end
+      
+      nextToken = self:getToken(  )
+   end
+   
+   local symbol2TypeInfo = {}
+   for __index, ifType in pairs( interfaceList ) do
+      _lune.nilacc( ifType:get_scope(), 'filterTypeInfoField', 'callmtd' , true, self.scope, function ( symbolInfo )
+      
+         do
+            local ifFuncType = symbol2TypeInfo[symbolInfo:get_name()]
+            if ifFuncType ~= nil then
+               if not ifFuncType:canEvalWith( symbolInfo:get_typeInfo(), "=", ifAlt2typeMap ) then
+                  self:addErrMess( firstPos, string.format( "mismatch method type -- %s.%s, %s.%s", symbolInfo:get_typeInfo():get_parentInfo():getTxt(  ), symbolInfo:get_name(), ifFuncType:get_parentInfo():getTxt(  ), ifFuncType:getTxt(  )) )
+               end
+               
+            else
+               symbol2TypeInfo[symbolInfo:get_name()] = symbolInfo:get_typeInfo()
+            end
+         end
+         
+         return true
+      end
+       )
+   end
+   
+   local baseTypeInfo = nil
+   if baseRef ~= nil then
+      baseTypeInfo = baseRef:get_expType()
+   end
+   
+   return nextToken, baseTypeInfo, interfaceList, ifAlt2typeMap
+end
+
 function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, accessMode, altTypeList )
 
    local tempScope = self:pushScope( false )
@@ -3935,84 +4035,10 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
    end
    
    local nextToken = self:getToken(  )
-   local baseRef = nil
-   local interfaceList = {}
-   local ifAlt2typeMap = {}
-   if nextToken.txt == "extend" then
-      nextToken = self:getToken(  )
-      if nextToken.txt ~= "(" then
-         self:pushback(  )
-         do
-            local _sync_baseRef
-            do
-               local baseRef = self:analyzeRefType( accessMode, false )
-               if  nil == baseRef then
-                  local _baseRef = baseRef
-               
-               end
-               
-                  local baseType = baseRef:get_expType()
-                  if baseType:get_kind() ~= Ast.TypeInfoKind.Class then
-                     self:addErrMess( baseRef:get_pos(), string.format( "%s is not class.", baseType:getTxt(  )) )
-                  end
-                  
-                  if Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( baseType:get_accessMode() ) then
-                     self:addErrMess( baseRef:get_pos(), string.format( "%s can't be external symbol.", baseType:getTxt(  )) )
-                  end
-                  
-               _sync_baseRef = baseRef
-            end
-            baseRef = _sync_baseRef
-         end
-         
-         nextToken = self:getToken(  )
-      end
-      
-      if nextToken.txt == "(" then
-         while true do
-            nextToken = self:getToken(  )
-            if nextToken.txt == ")" then
-               break
-            end
-            
-            self:pushback(  )
-            local ifTypeNode = self:analyzeRefType( accessMode, false )
-            local ifType = ifTypeNode:get_expType()
-            if ifType:get_kind() ~= Ast.TypeInfoKind.IF then
-               self:error( string.format( "%s is not interface -- %d", ifType:getTxt(  ), ifType:get_kind()) )
-            end
-            
-            if Ast.isGenericType( ifType ) then
-               for altType, genType in pairs( ifType:createAlt2typeMap( false ) ) do
-                  ifAlt2typeMap[altType] = genType
-               end
-               
-            end
-            
-            table.insert( interfaceList, ifType )
-            if Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( ifType:get_accessMode() ) then
-               self:addErrMess( ifTypeNode:get_pos(), string.format( "%s can't be external symbol.", ifType:getTxt(  )) )
-            end
-            
-            nextToken = self:getToken(  )
-            if nextToken.txt ~= "," then
-               if nextToken.txt == ")" then
-                  break
-               end
-               
-               self:error( "illegal token" )
-            end
-            
-         end
-         
-         nextToken = self:getToken(  )
-      end
-      
-   end
-   
    local baseTypeInfo = nil
-   if baseRef ~= nil then
-      baseTypeInfo = baseRef:get_expType(  )
+   local interfaceList = {}
+   if nextToken.txt == "extend" then
+      nextToken, baseTypeInfo, interfaceList = self:analyzeExtend( accessMode, firstToken.pos )
       if baseTypeInfo ~= nil then
          local initTypeInfo = _lune.nilacc( baseTypeInfo:get_scope(), 'getTypeInfoChild', 'callmtd' , "__init" )
          if  nil == initTypeInfo then
@@ -4028,27 +4054,6 @@ function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, 
          
       end
       
-   end
-   
-   local symbol2TypeInfo = {}
-   for __index, ifType in pairs( interfaceList ) do
-      _lune.nilacc( ifType:get_scope(), 'filterTypeInfoField', 'callmtd' , true, self.scope, function ( symbolInfo )
-      
-         do
-            local ifFuncType = symbol2TypeInfo[symbolInfo:get_name()]
-            if ifFuncType ~= nil then
-               if not ifFuncType:canEvalWith( symbolInfo:get_typeInfo(), "=", ifAlt2typeMap ) then
-                  self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s.%s, %s.%s", symbolInfo:get_typeInfo():get_parentInfo():getTxt(  ), symbolInfo:get_name(), ifFuncType:get_parentInfo():getTxt(  ), ifFuncType:getTxt(  )) )
-               end
-               
-            else
-               symbol2TypeInfo[symbolInfo:get_name()] = symbolInfo:get_typeInfo()
-            end
-         end
-         
-         return true
-      end
-       )
    end
    
    self:popScope(  )
@@ -4082,7 +4087,13 @@ function TransUnit:analyzeDeclAlternateType( token, accessMode )
          workToken = self:getToken(  )
       end
       
-      local altType = Ast.NormalTypeInfo.createAlternate( genericSymToken.txt, accessMode, self.moduleType )
+      local baseTypeInfo = nil
+      local interfaceList = {}
+      if workToken.txt == ":" then
+         workToken, baseTypeInfo, interfaceList = self:analyzeExtend( accessMode, token.pos )
+      end
+      
+      local altType = Ast.NormalTypeInfo.createAlternate( genericSymToken.txt, accessMode, self.moduleType, baseTypeInfo, interfaceList )
       table.insert( altTypeList, altType )
       if workToken.txt == ">" then
          nextToken = self:getToken(  )
@@ -4942,6 +4953,8 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
                      return true
                   end
                   
+                  return typeInfo:isInheritFrom( builtinFunc.mappingIF, nil )
+               elseif _switchExp == Ast.TypeInfoKind.Alternate then
                   return typeInfo:isInheritFrom( builtinFunc.mappingIF, nil )
                elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set then
                   return isAvailableMapping( typeInfo:get_itemTypeInfoList()[1], checkedTypeMap )
@@ -6301,7 +6314,7 @@ function MacroPaser.new( tokenList, name )
    return obj
 end
 function MacroPaser:__init(tokenList, name) 
-   Parser.Parser.__init( self )
+   Parser.Parser.__init( self)
    
    self.pos = 1
    self.tokenList = tokenList
@@ -6851,6 +6864,10 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    
    if not symbolInfo then
       symbolInfo = classScope:getSymbolInfoField( token.txt, true, self.scope )
+      if not symbolInfo then
+         symbolInfo = classScope:getSymbolInfoIfField( token.txt, self.scope )
+      end
+      
       if symbolInfo ~= nil then
          fieldTypeInfo = symbolInfo:get_typeInfo()
       end
@@ -7085,7 +7102,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    
    local getterTypeInfo = nil
    local symbolInfo = nil
-   if prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Class or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Module or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.IF or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.List or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Array or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Set or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Box then
+   if prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Class or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Module or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.IF or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.List or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Array or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Set or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Box or prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Alternate then
       local getterFlag = false
       typeInfo, symbolInfo, getterFlag = self:analyzeAccessClassField( prefixExpType, mode, token )
       if getterFlag then

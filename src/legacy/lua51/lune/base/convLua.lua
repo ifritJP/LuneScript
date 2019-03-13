@@ -274,7 +274,7 @@ function convFilter.new( streamName, stream, metaStream, convMode, inMacro, modu
    return obj
 end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer) 
-   Ast.Filter.__init( self )
+   Ast.Filter.__init( self, {})
    
    self.macroVarSymSet = {}
    self.needModuleObj = true
@@ -1344,6 +1344,25 @@ function convFilter:getDestrClass( classTypeInfo )
    return nil
 end
 
+local function isGenericType( typeInfo )
+
+   if Ast.isGenericType( typeInfo ) then
+      return true
+   end
+   
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+         if #typeInfo:get_itemTypeInfoList() > 0 then
+            return true
+         end
+         
+      end
+   end
+   
+   return false
+end
+
 function convFilter:processDeclClass( node, opt )
 
    local nodeInfo = node
@@ -1351,6 +1370,7 @@ function convFilter:processDeclClass( node, opt )
    local className = classNameToken.txt
    local classTypeInfo = node:get_expType(  )
    local classTypeId = classTypeInfo:get_typeId()
+   local isGenericClass = isGenericType( classTypeInfo )
    if nodeInfo:get_accessMode(  ) == Ast.AccessMode.Pub then
       self.classId2TypeInfo[classTypeId] = classTypeInfo
    end
@@ -1450,8 +1470,12 @@ end]==], className, className, destTxt) )
    if not hasConstrFlag then
       methodNameSet["__init"]= true
       local argTxt = ""
+      if isGenericClass then
+         argTxt = "__alt2mapFunc"
+      end
+      
       for index, member in pairs( memberList ) do
-         if index > 1 then
+         if #argTxt > 0 then
             argTxt = argTxt .. ", "
          end
          
@@ -1470,11 +1494,29 @@ end
 function %s:__init( %s ) 
 ]==], className, argTxt, className, argTxt, className, argTxt) )
       self:pushIndent(  )
+      if isGenericClass then
+         self:writeln( [==[
+if not self.__alt2mapFunc then
+   self.__alt2mapFunc = __alt2mapFunc
+else
+   for key, val in pairs( __alt2mapFunc ) do
+      self.__alt2mapFunc[ key ] = val
+   end
+end]==] )
+      end
+      
       if baseInfo ~= Ast.headTypeInfo then
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               self:writeln( string.format( "%s.__init( self )", self:getFullName( baseInfo )) )
+               self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
+               if isGenericType( baseInfo ) then
+                  self:writeln( ", {} )" )
+               else
+                
+                  self:writeln( " )" )
+               end
+               
             end
          end
          
@@ -1563,8 +1605,8 @@ end
 function %s._fromStem( val )
   return %s._fromMap( val )
 end
-]==], classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  ), classTypeInfo:getTxt(  )) )
-      self:writeln( string.format( 'function %s._fromMapSub( obj, val )', classTypeInfo:getTxt(  )) )
+]==], className, className, className, className, className, className) )
+      self:writeln( string.format( 'function %s._fromMapSub( obj, val )', className) )
       if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
          self:writeln( string.format( [==[
    local result, mes = %s._fromMapSub( obj, val )
@@ -1580,13 +1622,13 @@ end
          self:writeln( string.format( '   table.insert( memInfo, { name = "%s", func = %s, nilable = %s, child = %s } )', memberNode:get_name().txt, funcTxt, tostring( nilable), child) )
       end
       
-      self:writeln( string.format( [==[
+      self:writeln( [==[
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
    end
    return obj
-end]==], classTypeInfo:getTxt(  )) )
+end]==] )
    end
    
 end
@@ -1677,6 +1719,20 @@ function convFilter:processExpNew( node, opt )
 
    filter( node:get_symbol(  ), self, node )
    self:write( ".new(" )
+   if isGenericType( node:get_expType() ) then
+      self:write( "{}" )
+      do
+         local _exp = node:get_argList(  )
+         if _exp ~= nil then
+            self:write( "," )
+         end
+      end
+      
+   else
+    
+      self:write( "" )
+   end
+   
    do
       local _exp = node:get_argList(  )
       if _exp ~= nil then
@@ -1713,10 +1769,16 @@ function convFilter:processDeclConstr( node, opt )
    local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
    local className = self:getFullName( classTypeInfo )
    self:write( string.format( "function %s.new( ", className ) )
+   local isGenericClass = isGenericType( classTypeInfo )
    local argTxt = ""
+   if isGenericClass then
+      argTxt = "__alt2mapFunc"
+   end
+   
+   self:write( argTxt )
    local argList = declInfo:get_argList(  )
    for index, arg in pairs( argList ) do
-      if index > 1 then
+      if #argTxt > 0 then
          self:write( ", " )
          argTxt = argTxt .. ", "
       end
@@ -1741,6 +1803,19 @@ function convFilter:processDeclConstr( node, opt )
    self:popIndent(  )
    self:writeln( "end" )
    self:write( string.format( "function %s:__init(%s) ", className, argTxt ) )
+   if isGenericClass then
+      self:pushIndent(  )
+      self:writeln( [==[
+if not self.__alt2mapFunc then
+   self.__alt2mapFunc = __alt2mapFunc
+else
+   for key, val in pairs( __alt2mapFunc ) do
+      self.__alt2mapFunc[ key ] = val
+   end
+end]==] )
+      self:popIndent(  )
+   end
+   
    do
       local _exp = declInfo:get_body()
       if _exp ~= nil then
@@ -1772,7 +1847,17 @@ end
 function convFilter:processExpCallSuper( node, opt )
 
    local typeInfo = node:get_superType()
-   self:write( string.format( "%s.%s( self ", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
+   if node:get_methodType():get_rawTxt() == "__init" then
+      self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
+      if isGenericType( typeInfo ) then
+         self:write( ", {}" )
+      end
+      
+   else
+    
+      self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
+   end
+   
    do
       local _exp = node:get_expList()
       if _exp ~= nil then

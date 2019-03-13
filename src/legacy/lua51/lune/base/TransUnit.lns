@@ -226,10 +226,14 @@ pub class TransUnit {
    }
    
 
-   pri fn pushScope( classFlag: bool, inheritScope: Ast.Scope!,
-                     ifScopeList:List<Ast.Scope>! ) mut : Ast.Scope
-   {  
-      self.scope = new Ast.Scope( self.scope, classFlag, inheritScope, ifScopeList );
+   // pri fn pushScope( classFlag: bool, inheritScope: Ast.Scope!,
+   //                   ifScopeList:List<Ast.Scope>! ) mut : Ast.Scope
+   pri fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
+                     interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope
+   {
+      // self.scope = new Ast.Scope( self.scope, classFlag, inheritScope, ifScopeList );
+      self.scope = Ast.TypeInfo.createScope(
+         self.scope, classFlag, baseInfo, interfaceList );
       return self.scope;
    }
 
@@ -364,19 +368,9 @@ pub class TransUnit {
       }
       else {
          let parentInfo = self.getCurrentNamespaceTypeInfo();
-         let mut inheritScope:Ast.Scope! = nil;
-         when! baseInfo {
-            inheritScope = unwrap baseInfo.$scope;
-         }
-         let mut ifScopeList:List<Ast.Scope> = [];
-         when! interfaceList {
-            foreach ifType in interfaceList {
-               ifScopeList.insert( unwrap ifType.get_scope() );
-            }
-         }
          
          let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true, inheritScope, ifScopeList );
+         let mut scope = self.pushScope( true, baseInfo, interfaceList );
          typeInfo = Ast.NormalTypeInfo.createClass(
             classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList,
             parentInfo, externalFlag, accessMode, name );
@@ -616,12 +610,20 @@ class _TypeInfoDDD extend _TypeInfo {
 class _TypeInfoAlternate extend _TypeInfo {
    pub let txt:str;
    pub let accessMode:Ast.AccessMode;
+   pub let baseId:int;
+   pub let ifList:&List<int>;
 
    pub override fn createTypeInfo( param:ImportParam ):
       Ast.TypeInfo!, str!
-   {  
+   {
+      let baseInfo = unwrap param.getTypeInfo( self.baseId );
+      let mut interfaceList:List<&Ast.TypeInfo> = [];
+      foreach ifTypeId in self.ifList {
+         //interfaceList.insert( unwrap param.typeId2TypeInfo[ ifTypeId ] );
+         interfaceList.insert( unwrap param.getTypeInfo( ifTypeId ) );
+      }  
       let newTypeInfo = Ast.NormalTypeInfo.createAlternate(
-         self.txt, self.accessMode, param.moduleTypeInfo );
+         self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
    }
@@ -1362,7 +1364,7 @@ fn TransUnit.registBuiltInScope() mut {
                else {
                   genTypeList.insert(
                      Ast.NormalTypeInfo.createAlternate(
-                        token, .Pri, self.moduleType ) );
+                        token, .Pri, self.moduleType ## ) );
                }
             }
          }

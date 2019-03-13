@@ -8,6 +8,12 @@
 
 * 機能
 
+- [ ] Generics クラスの Mapping 対応
+     - alternateType -> fromMap のマップを new, __init の引数に渡す。
+       その紐付け情報を利用して、getMapInfo() の時に該当の関数を返す。
+       
+       
+- [ ] "%d" に対する引数がオーバ時にエラーしない。
 - [ ] unwrap default の型チェックが出来ていない。
       例えば次のようなことが出来てしまう。
       let val:str! = "abc";

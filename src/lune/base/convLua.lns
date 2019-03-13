@@ -981,12 +981,13 @@ end
 }
 
 
-fn convFilter.getMapInfo( typeInfo:&Ast.TypeInfo ): str, bool, str {
+fn convFilter.getMapInfo(
+   typeInfo:&Ast.TypeInfo ): str, bool, str
+{
    let mut nonnilableType = typeInfo.$srcTypeInfo;
    if typeInfo.$nilable {
       nonnilableType = typeInfo.$nonnilableType;
    }
-   
 
    let mut child = "{}";
    let mut funcTxt = "";
@@ -1148,6 +1149,20 @@ fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : Ast.TypeInfo!
    return nil;
 }
 
+fn isGenericType( typeInfo:&Ast.TypeInfo ): bool {
+   if Ast.isGenericType( typeInfo ) {
+      return true;
+   }
+   switch typeInfo.$kind {
+      case .Class, .IF {
+         if #typeInfo.$itemTypeInfoList > 0 {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
 
 pub override fn convFilter.processDeclClass( 
    node: Ast.DeclClassNode, opt: Opt ) mut
@@ -1157,6 +1172,8 @@ pub override fn convFilter.processDeclClass(
    let className = classNameToken.txt;
    let classTypeInfo = node.get_expType();
    let classTypeId = classTypeInfo.$typeId;
+   let isGenericClass = isGenericType( classTypeInfo );
+
 
    if nodeInfo.get_accessMode() == .Pub {
       self.classId2TypeInfo[ classTypeId ] = classTypeInfo;
@@ -1245,10 +1262,15 @@ end```
       ( className, className, destTxt ) );
    
    if not hasConstrFlag {
+      // デフォルトコンストラクタ生成
       methodNameSet.add( "__init" );
       let mut argTxt = "";
+      if isGenericClass {
+         argTxt = "__alt2mapFunc";
+      }
+      
       foreach member, index in memberList {
-         if index > 1 {
+         if #argTxt > 0 {
             argTxt = argTxt .. ", ";
          }
          argTxt = argTxt .. member.$name.txt;
@@ -1270,13 +1292,30 @@ function %s:__init( %s )
               argTxt, className, argTxt ) );
       self.pushIndent(##);
 
+      if isGenericClass {
+         self.writeln( ```
+if not self.__alt2mapFunc then
+   self.__alt2mapFunc = __alt2mapFunc
+else
+   for key, val in pairs( __alt2mapFunc ) do
+      self.__alt2mapFunc[ key ] = val
+   end
+end``` );
+      }
+
       if baseInfo ~= Ast.headTypeInfo {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
          if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
-            self.writeln( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
+            // pending: super の alterType に対応する map を設定する
+            self.write( "%s.__init( self" ( self.getFullName( baseInfo ) ) );
+            if isGenericType( baseInfo ) {
+               self.writeln( ", {} )" );
+            }
+            else {
+               self.writeln( " )" );
+            }
          }
       }
-
       
       foreach member in memberList {
          let memberName = member.$name.txt;
@@ -1367,11 +1406,9 @@ end
 function %s._fromStem( val )
   return %s._fromMap( val )
 end
-``` (classTypeInfo.getTxt(##), classTypeInfo.getTxt(##),
-      classTypeInfo.getTxt(##), classTypeInfo.getTxt(##),
-      classTypeInfo.getTxt(##), classTypeInfo.getTxt(##) ));
+``` (className, className, className, className, className, className ));
       
-      self.writeln( 'function %s._fromMapSub( obj, val )' (classTypeInfo.getTxt(##) ));
+      self.writeln( 'function %s._fromMapSub( obj, val )' (className ));
       
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
          self.writeln( ```
@@ -1384,7 +1421,6 @@ end
 
       self.writeln( '   local memInfo = {}' );
 
-      
       foreach memberNode in node.$memberList {
          let funcTxt, nilable, child = self.getMapInfo( memberNode.$expType );
          self.writeln(
@@ -1398,7 +1434,7 @@ end
       return nil, mess
    end
    return obj
-end``` (classTypeInfo.getTxt(##) ));
+end```);
    }
 };    
 
@@ -1505,8 +1541,18 @@ pub override fn convFilter.processExpMacroStat(
 pub override fn convFilter.processExpNew( 
    node: Ast.ExpNewNode, opt: Opt ) mut
 {
-   filter( node.get_symbol(),  self, node );
+   filter( node.get_symbol(), self, node );
    self.write( ".new(" );
+   if isGenericType( node.$expType ) {
+      // pending: super の alterType に対応する map を設定する
+      self.write( "{}" );
+      if! node.get_argList() {
+         self.write( "," );
+      }
+   }
+   else {
+      self.write( "" );
+   }
    if! node.get_argList() {
       filter( _exp,  self, node );
    } 
@@ -1538,10 +1584,17 @@ pub override fn convFilter.processDeclConstr(
    let className = self.getFullName( classTypeInfo );
    self.write( string.format( "function %s.new( ", className ) );
 
+   let isGenericClass = isGenericType( classTypeInfo );
+
    let mut argTxt = "";
+   if isGenericClass {
+      argTxt = "__alt2mapFunc";
+   }
+   
+   self.write( argTxt );
    let argList = declInfo.get_argList();
    foreach arg, index in argList {
-      if index > 1 {
+      if #argTxt > 0 {
          self.write( ", " );
          argTxt = argTxt .. ", ";
       } 
@@ -1572,6 +1625,20 @@ pub override fn convFilter.processDeclConstr(
    //filter( //    refType,  self, node, baseIndent )
    // }
    self.write( string.format( "function %s:__init(%s) ", className, argTxt ) );
+   if isGenericClass {
+      self.pushIndent(##);
+      
+      self.writeln( ```
+if not self.__alt2mapFunc then
+   self.__alt2mapFunc = __alt2mapFunc
+else
+   for key, val in pairs( __alt2mapFunc ) do
+      self.__alt2mapFunc[ key ] = val
+   end
+end``` );
+      
+      self.popIndent();
+   }
    if! declInfo.$body {
       self.process__func__symbol(
          declInfo.$has__func__Symbol, node.$expType.$parentInfo, "__init" );
@@ -1605,8 +1672,18 @@ pub override fn convFilter.processExpCallSuper(
    node: Ast.ExpCallSuperNode, opt: Opt ) mut
 {
    let typeInfo:Ast.TypeInfo = node.$superType;
-   self.write( "%s.%s( self "
-               ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) ); 
+   if node.$methodType.$rawTxt == "__init" {
+      self.write( "%s.%s( self"
+                  ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
+      if isGenericType( typeInfo ) {
+         // pending: super の alterType に対応する map を設定する
+         self.write( ", {}" );
+      }
+   }
+   else {
+      self.write( "%s.%s( self"
+                  ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
+   }
 
    if! node.$expList {
       self.write( "," );

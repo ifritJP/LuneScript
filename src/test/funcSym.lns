@@ -124,3 +124,52 @@ class Test7<T> {
       print( key .. "xyz", val .. "XYZ" );
    }
 }
+
+interface IF3 {
+   pub fn foo();
+}
+
+class Sub extend (Mapping) {
+}
+
+class SubSub extend Sub (IF3) {
+   pub fn foo() {
+      print( __func__ );
+   }
+}
+
+class Sub2 {
+   pub fn bar() {
+      print( __func__ );
+   }
+}
+
+class Test8<T:(IF3)> {
+   let val:T;
+   pub fn func() {
+      self.val.foo();
+   }
+}
+
+{
+   fn func( test2:&Test8 ) {
+      test2.func();
+   }  
+
+   func( new Test8( new SubSub() ) );
+}
+
+class Test9<T:Sub2> {
+   let val:T;
+   pub fn func() {
+      self.val.bar();
+   }
+}
+
+{
+   fn func( test2:&Test9 ) {
+      test2.func();
+   }  
+
+   func( new Test9( new Sub2() ) );
+}

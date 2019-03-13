@@ -653,10 +653,65 @@ static な型か。
    pub fn get_genSrcTypeInfo(): &TypeInfo {
       return self;
    }
+
+   pro fn serializeTypeInfoList(
+      name: str, list: &List<&TypeInfo>, onlyPub: bool! ): str
+   {  
+      let mut work = name;
+      foreach typeInfo in list {
+         if not onlyPub or typeInfo.$accessMode == .Pub  {
+            if #work ~=  #name {
+               work = work .. ", ";
+            }    
+            work = "%s%d" (work, typeInfo.$typeId );
+         }   
+      }  
+      return work .. "}, ";
+   }
+
+   pub static fn createScope(
+      parent: Scope!, classFlag: bool,
+      baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : Scope
+   {
+      let mut inheritScope:Scope! = nil;
+      when! baseInfo {
+         inheritScope = unwrap baseInfo.$scope;
+      }
+      let mut ifScopeList:List<&Scope> = [];
+      when! interfaceList {
+         foreach ifType in interfaceList {
+            ifScopeList.insert( unwrap ifType.$scope );
+         }
+      }
+      return new Scope( parent, classFlag, inheritScope, ifScopeList );
+   }
 }
 
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
+
+pro static fn TypeInfo.isInherit(
+   typeInfo:&TypeInfo, other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
+{
+   let baseTypeInfo = typeInfo.$baseTypeInfo;
+   let interfaceList = typeInfo.$interfaceList;
+   let otherTypeId = other.$typeId;
+   if typeInfo.$typeId == otherTypeId {
+      return true;
+   }
+   if baseTypeInfo ~= headTypeInfo {
+      if baseTypeInfo.isInheritFrom( other, alt2type ) {
+         return true;
+      }
+   };
+   foreach ifType in typeInfo.$interfaceList {
+      if ifType.isInheritFrom( other, alt2type ) {
+         return true;
+      }
+   }
+   return false;
+}
+
 
 
 pub class AutoBoxingInfo extend TypeInfo {
@@ -1487,11 +1542,16 @@ pub class AlternateTypeInfo extend TypeInfo {
    pri let moduleTypeInfo:&TypeInfo;
    pri let nilableTypeInfo: NilableTypeInfo {pub};
    pri let accessMode: AccessMode {pub};
+   // 基底クラス。 無効な場合は headTypeInfo。
+   pri let baseTypeInfo: &TypeInfo { pub };
+   // インタフェースのリスト。
+   pri let interfaceList: &List<&TypeInfo> { pub };
    
-   pub fn __init( txt:str, accessMode:AccessMode,
-                  moduleTypeInfo:&TypeInfo )
+
+   pub fn __init( txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
+                  baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! )
    {
-      super( nil );
+      super( TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ) );
 
       idProv.increment();
       self.typeId = idProv.$id;
@@ -1499,6 +1559,8 @@ pub class AlternateTypeInfo extend TypeInfo {
       self.txt = txt;
       self.accessMode = accessMode;
       self.moduleTypeInfo = moduleTypeInfo;
+      self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
+      self.interfaceList = unwrap interfaceList default [];
 
       idProv.increment();      
       self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
@@ -1512,6 +1574,10 @@ pub class AlternateTypeInfo extend TypeInfo {
    /** 親の typeId  */
    pub override fn getParentId(): int {
       return self.moduleTypeInfo.$typeId;
+   }
+
+   pub override fn get_baseId(): int {
+      return self.baseTypeInfo.$typeId;
    }
 
    pub override fn get_parentInfo(): &TypeInfo {
@@ -1532,7 +1598,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 
    pub static fn getAssign(
-      typeInfo:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo> ) : &TypeInfo
+      typeInfo:&TypeInfo, alt2type:&Map<&TypeInfo,&TypeInfo> ) : &TypeInfo
    {
       if typeInfo.$kind ~= .Alternate {
          return typeInfo;
@@ -1547,6 +1613,80 @@ pub class AlternateTypeInfo extend TypeInfo {
          }
       }
    }
+
+   pri fn canSetFrom(
+      other:&TypeInfo, opTxt:str!, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   {
+      let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
+      if! let genType = alt2type[ self ] {
+         when! opTxt {
+            return genType.canEvalWith( otherWork, opTxt, alt2type );
+         }
+         return genType.equals( otherWork, alt2type );
+      }
+      if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
+         return false;
+      }
+
+      if self.baseTypeInfo ~= headTypeInfo {
+         if not other.isInheritFrom( self.baseTypeInfo, alt2type ) {
+            return false;
+         }  
+      };
+      foreach ifType in self.interfaceList {
+         if not other.isInheritFrom( ifType, alt2type ) {
+            return false;
+         }
+      }
+      
+      alt2type[ self ] = otherWork;
+      return true;
+   }
+
+   /** この型が other を継承しているかどうか */
+   pub override fn isInheritFrom(
+      other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
+   {
+      when! alt2type {
+         let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
+         if self == otherWork.$srcTypeInfo {
+            return true;
+         }  
+         
+         if! let genType = alt2type[ self ] {
+            return genType.isInheritFrom( otherWork, alt2type );
+         }
+         if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
+            return false;
+         }
+      }
+      if self == other.$srcTypeInfo {
+         return true;
+      }
+      
+      fn check(): bool {
+         if self.baseTypeInfo ~= headTypeInfo {
+            if self.baseTypeInfo.isInheritFrom( other, alt2type ) {
+               return true;
+            }  
+         }; 
+         foreach ifType in self.interfaceList {
+            if ifType.isInheritFrom( other, alt2type ) {
+               return true;
+            }  
+         }
+         return false;
+      }
+
+      if check() {
+         when! alt2type {
+            alt2type[ self ] = other;
+         }
+         return true;
+      }
+      return false;
+   }
+   
    
    /** other 型からこの型への opTxt の評価が可能かどうか */
    pub override fn canEvalWith(
@@ -1559,15 +1699,16 @@ pub class AlternateTypeInfo extend TypeInfo {
          return false;
       }
       //let mut otherWork = unwrap other.applyGeneric( alt2type ) default other;
-      let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
-      if! let genType = alt2type[ self ] {
-         return genType.canEvalWith( otherWork, opTxt, alt2type );
-      }
-      if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
-         return false;
-      }
-      alt2type[ self ] = otherWork;
-      return true;
+      return self.canSetFrom( other, opTxt, alt2type );
+      // let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
+      // if! let genType = alt2type[ self ] {
+      //    return genType.canEvalWith( otherWork, opTxt, alt2type );
+      // }
+      // if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
+      //    return false;
+      // }
+      // alt2type[ self ] = otherWork;
+      // return true;
    }
 
    /** 表示用文字列取得 */
@@ -1587,15 +1728,17 @@ pub class AlternateTypeInfo extend TypeInfo {
          return true;
       }
       when! alt2type {
-         let mut otherWork = AlternateTypeInfo.getAssign( typeInfo, alt2type );
-         if! let genType = alt2type[ self ] {
-            return genType.equals( otherWork, alt2type );
-         }  
-         if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
-            return false;
-         }
-         alt2type[ self ] = otherWork;
-         return true;
+         return self.canSetFrom( typeInfo, nil, alt2type );
+         
+         // let mut otherWork = AlternateTypeInfo.getAssign( typeInfo, alt2type );
+         // if! let genType = alt2type[ self ] {
+         //    return genType.equals( otherWork, alt2type );
+         // }  
+         // if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
+         //    return false;
+         // }
+         // alt2type[ self ] = otherWork;
+         // return true;
       }
       return false;
    }
@@ -1616,10 +1759,6 @@ pub class AlternateTypeInfo extend TypeInfo {
    pub override fn get_kind(): TypeInfoKind {
       return .Alternate;
    }
-   /** super クラス。 継承していない場合は headTypeInfo。 */
-   pub override fn get_baseTypeInfo(): &TypeInfo {
-      return headTypeInfo;
-   }
    /** nilable かどうか */
    pub override fn get_nilable(): bool {
       return false;
@@ -1639,9 +1778,12 @@ pub class AlternateTypeInfo extend TypeInfo {
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
       let parentId = self.getParentId();
       stream.write(
-         '{ skind = %d, parentId = %d, typeId = %d, txt = %q,accessMode = %d }'
-         ( SerializeKind.Alternate, parentId, self.typeId,
-           self.txt, self.accessMode ) );
+         '{ skind = %d, parentId = %d, typeId = %d, txt = %q, '
+         ( SerializeKind.Alternate, parentId, self.typeId, self.txt ) .. 
+         'accessMode = %d, baseId = %d, ' ( self.accessMode, self.$baseId ) );
+
+      stream.write( self.serializeTypeInfoList( "ifList = {", self.interfaceList## ) );
+      stream.write( "}\n" );
    }
 
    pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
@@ -1649,7 +1791,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 }
 
-let boxRootAltType = new AlternateTypeInfo( "_T", .Pub, headTypeInfo );
+let boxRootAltType = new AlternateTypeInfo( "_T", .Pub, headTypeInfo ## );
 let mut boxRootScope = new Scope( rootScope, true, nil## );
 
 pub class BoxTypeInfo extend TypeInfo {
@@ -2566,19 +2708,6 @@ pub class NormalTypeInfo extend TypeInfo {
 
       let parentId = self.getParentId();
 
-      fn serializeTypeInfoList( name: str, list: &List<&TypeInfo>, onlyPub: bool! ): str {
-         let mut work = name;
-         foreach typeInfo in list {
-            if not onlyPub or typeInfo.$accessMode == .Pub  {
-               if #work ~=  #name {
-                  work = work .. ", ";
-               }    
-               work = "%s%d" (work, typeInfo.$typeId );
-            }   
-         }  
-         return work .. "}, ";
-      } 
-
       let txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
         abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ```
           ( SerializeKind.Normal, parentId, self.typeId, self.get_baseId(), self.rawTxt,
@@ -2595,12 +2724,12 @@ pub class NormalTypeInfo extend TypeInfo {
       }
  
       stream.write(
-         txt .. serializeTypeInfoList( "itemTypeId = {",
-                                       self.itemTypeInfoList## ) ..
-         serializeTypeInfoList( "ifList = {", self.interfaceList## ) ..
-         serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList## ) ..
-         serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList## ) ..
-         serializeTypeInfoList( "children = {", children, true ) .. "}\n" );
+         txt .. self.serializeTypeInfoList( "itemTypeId = {",
+                                            self.itemTypeInfoList## ) ..
+         self.serializeTypeInfoList( "ifList = {", self.interfaceList## ) ..
+         self.serializeTypeInfoList( "argTypeId = {", self.argTypeInfoList## ) ..
+         self.serializeTypeInfoList( "retTypeId = {", self.retTypeInfoList## ) ..
+         self.serializeTypeInfoList( "children = {", children, true ) .. "}\n" );
    }
 
    pub fn equalsSub( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
@@ -2719,9 +2848,11 @@ pub class NormalTypeInfo extend TypeInfo {
 
 
 pub static fn NormalTypeInfo.createAlternate(
-   txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo ) : &AlternateTypeInfo
+   txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
+   baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : &AlternateTypeInfo
 {
-   return new AlternateTypeInfo( txt, accessMode, moduleTypeInfo );
+   return new AlternateTypeInfo( txt, accessMode, moduleTypeInfo,
+                                 baseTypeInfo, interfaceList );
 }
 
 //pub let typeInfoRoot = rootTypeInfo;
@@ -2786,13 +2917,14 @@ pub static fn NormalTypeInfo.createBuiltin(
    let mut genTypeList:List<&TypeInfo> = [];
    switch kind {
       case .Array, .List, .Set {
-         genTypeList.insert( NormalTypeInfo.createAlternate( "T", .Pri, headTypeInfo ) );
+         genTypeList.insert(
+            NormalTypeInfo.createAlternate( "T", .Pri, headTypeInfo ## ) );
       }
       case .Map {
          genTypeList.insert(
-            NormalTypeInfo.createAlternate( "K", .Pri, headTypeInfo ) );
+            NormalTypeInfo.createAlternate( "K", .Pri, headTypeInfo ## ) );
          genTypeList.insert(
-            NormalTypeInfo.createAlternate( "V", .Pri, headTypeInfo ) );
+            NormalTypeInfo.createAlternate( "V", .Pri, headTypeInfo ## ) );
       }
    }
    let mut info = new NormalTypeInfo(
@@ -3480,27 +3612,15 @@ macro _checkEqualsItemType( type1:sym, type2:sym, index:int, alt2type:sym ) {
 pub override fn NormalTypeInfo.isInheritFrom(
    other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
 {
-   let otherTypeId = other.$typeId;
-   if self.$typeId == otherTypeId {
+   if self.$typeId == other.$typeId {
       return true;
-   }
+   }  
    if ( self.$kind ~= .Class and self.$kind ~= .IF ) or
-      ( other.$kind ~= .Class and other.$kind ~= .IF )
+       ( other.$kind ~= .Class and other.$kind ~= .IF )
    {  
       return false;
    }
-   let mut baseTypeInfo = self.$baseTypeInfo;
-   if baseTypeInfo ~= headTypeInfo {
-      if baseTypeInfo.isInheritFrom( other, alt2type ) {
-         return true;
-      }
-   };
-   foreach ifType in self.$interfaceList {
-      if ifType.isInheritFrom( other, alt2type ) {
-         return true;
-      }
-   }
-   return false;
+   return TypeInfo.isInherit( self, other, alt2type );
 }
 
 pub enum MatchType {

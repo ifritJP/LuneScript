@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.32'
-_moduleObj.__buildId = "1552397308.000000:1"
+_moduleObj.__formatVersion = '1.0.33'
+_moduleObj.__buildId = "1552492444.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -42,7 +42,8 @@ __typeInfoList[5] = { skind = 0, parentId = 1, typeId = 44, nilable = true, orgT
 __typeInfoList[6] = { skind = 0, parentId = 1, typeId = 57, nilable = true, orgTypeId = 56 }
 __typeInfoList[7] = { skind = 0, parentId = 1, typeId = 63, nilable = true, orgTypeId = 62 }
 __typeInfoList[8] = { skind = 1, parentId = 1, typeId = 70, srcTypeId = 55, mutable = false }
-__typeInfoList[9] = { skind = 8, parentId = 1, typeId = 253, txt = "T",accessMode = 3 }__typeInfoList[10] = { skind = 0, parentId = 1, typeId = 254, nilable = true, orgTypeId = 253 }
+__typeInfoList[9] = { skind = 8, parentId = 1, typeId = 253, txt = "T", accessMode = 3, baseId = 1, ifList = {}, }
+__typeInfoList[10] = { skind = 0, parentId = 1, typeId = 254, nilable = true, orgTypeId = 253 }
 __typeInfoList[11] = { skind = 1, parentId = 1, typeId = 255, srcTypeId = 253, mutable = false }
 __typeInfoList[12] = { skind = 2, parentId = 1, typeId = 1001, txt = 'lune', kind = 12, 
 children = {1003, } }
