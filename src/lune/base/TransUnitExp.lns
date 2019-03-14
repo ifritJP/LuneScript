@@ -856,14 +856,16 @@ fn TransUnit.analyzeExpCall(
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
    let mut refFieldNode:&Ast.RefFieldNode! = nil;
-   let mut genericsClass:&Ast.TypeInfo! = Ast.headTypeInfo;
-   if funcTypeInfo.$kind == .Method and exp.$kind == Ast.NodeKind.$RefField
-   {
+   let mut genericsClass = Ast.headTypeInfo;
+   if exp.$kind == Ast.NodeKind.$RefField {
       let refField = exp@@Ast.RefFieldNode;
       refFieldNode = refField;
       let classType = refField.$prefix.$expType;
-      genericTypeList = classType.$itemTypeInfoList;
       genericsClass = classType;
+
+      if funcTypeInfo.$kind == .Method {
+         genericTypeList = classType.$itemTypeInfoList;
+      }
    }
 
    let alt2typeMap, workArgList = self.checkMatchValType(
@@ -916,6 +918,13 @@ fn TransUnit.analyzeExpCall(
             if funcTypeInfo == builtinFunc.listRemove {
                // pending: List.remove の戻り値設定を暫定対応
                retTypeInfoList[ index ] = genericTypeList[ 1 ].$nilableTypeInfo;
+            }
+            elseif funcTypeInfo.$kind == .Func and
+                ( funcTypeInfo.$rawTxt == "_fromMap" or
+                  funcTypeInfo.$rawTxt == "_fromStem" ) and
+               genericsClass.isInheritFrom( Ast.builtinTypeMapping, alt2typeMap )
+            {
+               retTypeInfoList[ index ] = genericsClass.$nilableTypeInfo;
             }
             else {
                self.addErrMess(
@@ -2485,6 +2494,21 @@ fn TransUnit.analyzeExp(
    elseif token.kind == Parser.TokenKind.Symb {
       exp = self.analyzeExpSymbol(
          firstToken, token, .Symbol, nil, false );
+      let symbolInfoList = exp.getSymbolInfo();
+      if #symbolInfoList == 1 {
+         let symbolInfo = symbolInfoList[ 1 ];
+         if symbolInfo.$kind == .Typ {
+            exp = self.analyzeRefTypeWithSymbol( .Local, false, false, false, exp );
+            let workToken = self.getToken(##);
+            if workToken.txt == "." {
+               exp = self.analyzeExpSymbol(
+                  firstToken, self.getToken(##), .Field, exp, false );
+            }
+            else {
+               self.pushback();
+            }
+         }
+      }
    }  
    elseif token.kind == Parser.TokenKind.Type {
       let! symbolTypeInfo = Ast.sym2builtInTypeMap[ token.txt ] {

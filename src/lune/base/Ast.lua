@@ -2660,14 +2660,7 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
    end
    
    if otherSrc == other then
-      if alt2type ~= nil then
-         if self.genSrcTypeInfo == other then
-            return true
-         end
-         
-      end
-      
-      return false
+      return true
    end
    
    local genOther = other
@@ -3933,6 +3926,9 @@ _moduleObj.builtinTypeString = builtinTypeString
 local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
 _moduleObj.builtinTypeMap = builtinTypeMap
 
+local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
+_moduleObj.builtinTypeMapping = builtinTypeMapping
+
 local builtinTypeSet = NormalTypeInfo.createBuiltin( "Set", "Set", TypeInfoKind.Set )
 _moduleObj.builtinTypeSet = builtinTypeSet
 
@@ -4520,6 +4516,73 @@ end
 
 
 
+function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
+
+   local function isAvailableMappingSub(  )
+   
+      do
+         local _switchExp = typeInfo:get_kind()
+         if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.Enum then
+            return true
+         elseif _switchExp == TypeInfoKind.Alge then
+            local algeTypeInfo = typeInfo
+            for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
+               for __index, paramType in pairs( valInfo:get_typeList() ) do
+                  if not NormalTypeInfo.isAvailableMapping( paramType, checkedTypeMap ) then
+                     return false
+                  end
+                  
+               end
+               
+            end
+            
+            return true
+         elseif _switchExp == TypeInfoKind.Stem then
+            return true
+         elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
+            if typeInfo:equals( _moduleObj.builtinTypeString ) then
+               return true
+            end
+            
+            return typeInfo:isInheritFrom( _moduleObj.builtinTypeMapping, nil )
+         elseif _switchExp == TypeInfoKind.Alternate then
+            return typeInfo:isInheritFrom( _moduleObj.builtinTypeMapping, nil )
+         elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
+            return NormalTypeInfo.isAvailableMapping( typeInfo:get_itemTypeInfoList()[1], checkedTypeMap )
+         elseif _switchExp == TypeInfoKind.Map then
+            if NormalTypeInfo.isAvailableMapping( typeInfo:get_itemTypeInfoList()[2], checkedTypeMap ) then
+               local keyType = typeInfo:get_itemTypeInfoList()[1]
+               if keyType:equals( _moduleObj.builtinTypeString ) or keyType:get_kind() == TypeInfoKind.Prim or keyType:get_kind() == TypeInfoKind.Enum then
+                  return true
+               end
+               
+            end
+            
+            return false
+         elseif _switchExp == TypeInfoKind.Nilable then
+            return NormalTypeInfo.isAvailableMapping( typeInfo:get_nonnilableType(), checkedTypeMap )
+         else 
+            
+               return false
+         end
+      end
+      
+   end
+   
+   typeInfo = typeInfo:get_srcTypeInfo()
+   do
+      local _exp = checkedTypeMap[typeInfo]
+      if _exp ~= nil then
+         return _exp
+      end
+   end
+   
+   checkedTypeMap[typeInfo] = true
+   local result = isAvailableMappingSub(  )
+   checkedTypeMap[typeInfo] = result
+   return result
+end
+
 function NormalTypeInfo:isInheritFrom( other, alt2type )
 
    if self:get_typeId() == other:get_typeId() then
@@ -4527,6 +4590,10 @@ function NormalTypeInfo:isInheritFrom( other, alt2type )
    end
    
    if (self:get_kind() ~= TypeInfoKind.Class and self:get_kind() ~= TypeInfoKind.IF ) or (other:get_kind() ~= TypeInfoKind.Class and other:get_kind() ~= TypeInfoKind.IF ) then
+      if other == _moduleObj.builtinTypeMapping then
+         return NormalTypeInfo.isAvailableMapping( self, {} )
+      end
+      
       return false
    end
    
@@ -4950,7 +5017,7 @@ function NormalTypeInfo:applyGeneric( alt2typeMap )
          return NormalTypeInfo.createSet( self.accessMode, self.parentInfo, itemTypeInfoList )
       elseif _switchExp == TypeInfoKind.List then
          return NormalTypeInfo.createList( self.accessMode, self.parentInfo, itemTypeInfoList )
-      elseif _switchExp == TypeInfoKind.List then
+      elseif _switchExp == TypeInfoKind.Array then
          return NormalTypeInfo.createArray( self.accessMode, self.parentInfo, itemTypeInfoList )
       elseif _switchExp == TypeInfoKind.Map then
          return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2] )
@@ -11288,6 +11355,9 @@ function Node:getSymbolInfo(  )
             end
             
             return list
+         elseif _switchExp == NodeKind.get_RefType() then
+            local refTypeNode = node
+            return refTypeNode:get_name():getSymbolInfo(  )
          end
       end
       

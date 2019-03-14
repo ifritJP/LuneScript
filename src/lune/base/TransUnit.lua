@@ -1799,7 +1799,6 @@ function BuiltinFuncType:__init()
    self.listSort = Ast.headTypeInfo
    self.arrayUnpack = Ast.headTypeInfo
    self.arraySort = Ast.headTypeInfo
-   self.mappingIF = Ast.headTypeInfo
    self.mappingToMap = Ast.headTypeInfo
    self.strGMatch = Ast.headTypeInfo
    self.stringGMatch = Ast.headTypeInfo
@@ -2057,10 +2056,6 @@ function TransUnit:registBuiltInScope(  )
             parentInfo = self:pushClass( classFlag, false, nil, interfaceList, genTypeList, true, name, Ast.AccessMode.Pub )
             Ast.builtInTypeIdSet[parentInfo:get_typeId(  )] = parentInfo
             Ast.builtInTypeIdSet[parentInfo:get_nilableTypeInfo():get_typeId()] = parentInfo:get_nilableTypeInfo()
-            if name == "Mapping" then
-               builtinFunc.mappingIF = parentInfo
-            end
-            
          end
          
          if not builtinModuleName2Scope[name] then
@@ -3507,12 +3502,16 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
       token = self:getToken(  )
    end
    
-   local typeInfo = Ast.builtinTypeStem_
    self:checkSymbol( token, SymbolMode.MustNot_ )
    local name = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, true )
-   typeInfo = name:get_expType()
+   return self:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutFlag, name )
+end
+
+function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutFlag, symbolNode )
+
+   local typeInfo = symbolNode:get_expType()
    local continueToken, continueFlag = self:getContinueToken(  )
-   token = continueToken
+   local token = continueToken
    if continueFlag and token.txt == "!" then
       typeInfo = _lune.unwrap( typeInfo:get_nilableTypeInfo(  ))
       token = self:getToken(  )
@@ -3548,7 +3547,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
          local function checkAlternateTypeCount( count )
          
             if #genericList ~= count then
-               self:addErrMess( firstToken.pos, string.format( "generic type count is unmatch. -- %d", #genericList) )
+               self:addErrMess( symbolNode:get_pos(), string.format( "generic type count is unmatch. -- %d", #genericList) )
                return false
             end
             
@@ -3563,7 +3562,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
                   local _keyType = keyType
                
                   keyType = Ast.builtinTypeStem
-                  self:addErrMess( firstToken.pos, "Key type is unknown" )
+                  self:addErrMess( symbolNode:get_pos(), "Key type is unknown" )
                end
                
                local valType = genericList[2]
@@ -3571,7 +3570,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
                   local _valType = valType
                
                   valType = Ast.builtinTypeStem
-                  self:addErrMess( firstToken.pos, "Value type is unknown" )
+                  self:addErrMess( symbolNode:get_pos(), "Value type is unknown" )
                end
                
                typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), keyType, valType )
@@ -3600,7 +3599,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
                   for index, itemType in pairs( genericList ) do
                      local altType = typeInfo:get_itemTypeInfoList()[index]
                      if itemType:get_nilable() then
-                        self:addErrMess( firstToken.pos, string.format( "can't use nilable type -- %s", itemType:getTxt(  )) )
+                        self:addErrMess( symbolNode:get_pos(), string.format( "can't use nilable type -- %s", itemType:getTxt(  )) )
                      end
                      
                   end
@@ -3635,7 +3634,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
    
    if not allowDDD then
       if typeInfo:get_kind() == Ast.TypeInfoKind.DDD then
-         self:addErrMess( firstToken.pos, string.format( "invalid type. -- '%s'", typeInfo:getTxt(  )) )
+         self:addErrMess( symbolNode:get_pos(), string.format( "invalid type. -- '%s'", typeInfo:getTxt(  )) )
       end
       
    end
@@ -3644,7 +3643,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
       typeInfo = self:createModifier( typeInfo, false )
    end
    
-   return Ast.RefTypeNode.create( self.nodeManager, firstToken.pos, {typeInfo}, name, refFlag, mutFlag, arrayMode )
+   return Ast.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), {typeInfo}, symbolNode, refFlag, mutFlag, arrayMode )
 end
 
 function TransUnit:analyzeDeclArgList( accessMode, argList )
@@ -4848,9 +4847,9 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    local classScope = self.scope
    self:checkToken( nextToken, "{" )
    local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, false ) ), false )
-   if classTypeInfo:isInheritFrom( builtinFunc.mappingIF, nil ) then
+   if classTypeInfo:isInheritFrom( Ast.builtinTypeMapping, nil ) then
       self.helperInfo.hasMappingClassDef = true
-      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( builtinFunc.mappingIF, nil ) then
+      if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( Ast.builtinTypeMapping, nil ) then
          self:addErrMess( firstToken.pos, string.format( "must extend Mapping at %s", classTypeInfo:get_baseTypeInfo():getTxt(  )) )
       end
       
@@ -4924,78 +4923,11 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
    end
    
-   if classTypeInfo:isInheritFrom( builtinFunc.mappingIF, nil ) then
-      local function isAvailableMapping( typeInfo, checkedTypeMap )
-      
-         local function isAvailableMappingSub(  )
-         
-            do
-               local _switchExp = typeInfo:get_kind()
-               if _switchExp == Ast.TypeInfoKind.Prim or _switchExp == Ast.TypeInfoKind.Enum then
-                  return true
-               elseif _switchExp == Ast.TypeInfoKind.Alge then
-                  local algeTypeInfo = typeInfo
-                  for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
-                     for __index, paramType in pairs( valInfo:get_typeList() ) do
-                        if not isAvailableMapping( paramType, checkedTypeMap ) then
-                           return false
-                        end
-                        
-                     end
-                     
-                  end
-                  
-                  return true
-               elseif _switchExp == Ast.TypeInfoKind.Stem then
-                  return true
-               elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-                  if typeInfo:equals( Ast.builtinTypeString ) then
-                     return true
-                  end
-                  
-                  return typeInfo:isInheritFrom( builtinFunc.mappingIF, nil )
-               elseif _switchExp == Ast.TypeInfoKind.Alternate then
-                  return typeInfo:isInheritFrom( builtinFunc.mappingIF, nil )
-               elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set then
-                  return isAvailableMapping( typeInfo:get_itemTypeInfoList()[1], checkedTypeMap )
-               elseif _switchExp == Ast.TypeInfoKind.Map then
-                  if isAvailableMapping( typeInfo:get_itemTypeInfoList()[2], checkedTypeMap ) then
-                     local keyType = typeInfo:get_itemTypeInfoList()[1]
-                     if keyType:equals( Ast.builtinTypeString ) or keyType:get_kind() == Ast.TypeInfoKind.Prim or keyType:get_kind() == Ast.TypeInfoKind.Enum then
-                        return true
-                     end
-                     
-                  end
-                  
-                  return false
-               elseif _switchExp == Ast.TypeInfoKind.Nilable then
-                  return isAvailableMapping( typeInfo:get_nonnilableType(), checkedTypeMap )
-               else 
-                  
-                     return false
-               end
-            end
-            
-         end
-         
-         typeInfo = typeInfo:get_srcTypeInfo()
-         do
-            local _exp = checkedTypeMap[typeInfo]
-            if _exp ~= nil then
-               return _exp
-            end
-         end
-         
-         checkedTypeMap[typeInfo] = true
-         local result = isAvailableMappingSub(  )
-         checkedTypeMap[typeInfo] = result
-         return result
-      end
-      
+   if classTypeInfo:isInheritFrom( Ast.builtinTypeMapping, nil ) then
       local checkedTypeMap = {}
       for __index, memberNode in pairs( node:get_memberList() ) do
          local memberType = memberNode:get_expType()
-         if not isAvailableMapping( memberType, checkedTypeMap ) then
+         if not Ast.NormalTypeInfo.isAvailableMapping( memberType, checkedTypeMap ) then
             self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s", memberType:getTxt(  )) )
          end
          
@@ -6646,12 +6578,15 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
    local genericTypeList = funcTypeInfo:get_itemTypeInfoList()
    local refFieldNode = nil
    local genericsClass = Ast.headTypeInfo
-   if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Method and exp:get_kind() == Ast.NodeKind.get_RefField() then
+   if exp:get_kind() == Ast.NodeKind.get_RefField() then
       local refField = exp
       refFieldNode = refField
       local classType = refField:get_prefix():get_expType()
-      genericTypeList = classType:get_itemTypeInfoList()
       genericsClass = classType
+      if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Method then
+         genericTypeList = classType:get_itemTypeInfoList()
+      end
+      
    end
    
    local alt2typeMap, workArgList = self:checkMatchValType( exp:get_pos(), funcTypeInfo, argList, genericTypeList, genericsClass )
@@ -6709,6 +6644,8 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
             else
                if funcTypeInfo == builtinFunc.listRemove then
                   retTypeInfoList[index] = genericTypeList[1]:get_nilableTypeInfo()
+               elseif funcTypeInfo:get_kind() == Ast.TypeInfoKind.Func and (funcTypeInfo:get_rawTxt() == "_fromMap" or funcTypeInfo:get_rawTxt() == "_fromStem" ) and genericsClass:isInheritFrom( Ast.builtinTypeMapping, alt2typeMap ) then
+                  retTypeInfoList[index] = genericsClass:get_nilableTypeInfo()
                else
                 
                   self:addErrMess( firstToken.pos, string.format( "not support generics yet. -- %s", retType:getTxt(  )) )
@@ -8121,6 +8058,23 @@ function TransUnit:analyzeExp( skipOp2Flag, prevOpLevel, expectType )
       exp = self:analyzeExpUnwrap( token )
    elseif token.kind == Parser.TokenKind.Symb then
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, false )
+      local symbolInfoList = exp:getSymbolInfo(  )
+      if #symbolInfoList == 1 then
+         local symbolInfo = symbolInfoList[1]
+         if symbolInfo:get_kind() == Ast.SymbolKind.Typ then
+            exp = self:analyzeRefTypeWithSymbol( Ast.AccessMode.Local, false, false, false, exp )
+            local workToken = self:getToken(  )
+            if workToken.txt == "." then
+               exp = self:analyzeExpSymbol( firstToken, self:getToken(  ), ExpSymbolMode.Field, exp, false )
+            else
+             
+               self:pushback(  )
+            end
+            
+         end
+         
+      end
+      
    elseif token.kind == Parser.TokenKind.Type then
       local symbolTypeInfo = Ast.sym2builtInTypeMap[token.txt]
       if  nil == symbolTypeInfo then

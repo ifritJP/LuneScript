@@ -1946,12 +1946,7 @@ pub class GenericTypeInfo extend TypeInfo {
       // Generic 元が継承している
       if otherSrc == other {
          // otherSrc == other なら、 other は Generic でないので、この時点で確定
-         when! alt2type {
-            if self.genSrcTypeInfo == other {
-               return true;
-            }
-         }
-         return false;
+         return true;
       }
       // other は Generic
       let genOther = other@@GenericTypeInfo;
@@ -2956,6 +2951,8 @@ pub let builtinTypeString:TypeInfo =
    NormalTypeInfo.createBuiltin( "String", "str" , .Class## );
 pub let builtinTypeMap:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
+pub let builtinTypeMapping:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Mapping", "Mapping" , .IF## );
 pub let builtinTypeSet:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Set", "Set" , .Set## );
 pub let builtinTypeList:TypeInfo = 
@@ -3608,6 +3605,77 @@ macro _checkEqualsItemType( type1:sym, type2:sym, index:int, alt2type:sym ) {
    }
 };
 
+pub static fn NormalTypeInfo.isAvailableMapping(
+   mut typeInfo:&TypeInfo, checkedTypeMap:Map<&TypeInfo,bool> ): bool
+{
+   fn isAvailableMappingSub(): bool {
+      switch typeInfo.$kind {
+         case .Prim, .Enum {
+            return true;
+         }  
+         case .Alge {
+            let algeTypeInfo = typeInfo@@AlgeTypeInfo;
+            foreach valInfo in algeTypeInfo.$valInfoMap {
+               foreach paramType in valInfo.$typeList {
+                  if not NormalTypeInfo.isAvailableMapping( paramType, checkedTypeMap ) {
+                     return false;
+                  }  
+               }  
+            }  
+            return true;
+         }  
+         case .Stem {
+            // stem は mapping 不能なデータもあるが、
+            // それは実行時エラーとする。
+            return true;
+         }  
+         case .Class, .IF {
+            if typeInfo.equals( builtinTypeString ##) {
+               return true;
+            }  
+            return typeInfo.isInheritFrom( builtinTypeMapping, nil );
+         }
+         case .Alternate {
+            return typeInfo.isInheritFrom( builtinTypeMapping, nil );
+         }
+         case .List, .Array, .Set {
+            return NormalTypeInfo.isAvailableMapping(
+               typeInfo.$itemTypeInfoList[1], checkedTypeMap );
+         }  
+         case .Map {
+            if NormalTypeInfo.isAvailableMapping(
+               typeInfo.$itemTypeInfoList[2], checkedTypeMap )
+            {           
+               let keyType = typeInfo.$itemTypeInfoList[1];
+               if keyType.equals( builtinTypeString ## ) or
+                  keyType.$kind == .Prim or keyType.$kind == .Enum
+               {  
+                  return true;
+               }  
+            }  
+            return false;
+         }  
+         case .Nilable {
+            return NormalTypeInfo.isAvailableMapping(
+               typeInfo.$nonnilableType, checkedTypeMap );
+         }
+         default {
+            return false;
+         }  
+      }  
+   }
+
+   typeInfo = typeInfo.$srcTypeInfo;
+   if! checkedTypeMap[ typeInfo ] {
+      return _exp;            
+   }
+   // チェック前は暫定的に true にする
+   checkedTypeMap[ typeInfo ] = true;
+   let result = isAvailableMappingSub();
+   checkedTypeMap[ typeInfo ] = result;
+   return result;
+}
+
 // other のクラスが、この型のクラスの継承関係にあるか調べる
 pub override fn NormalTypeInfo.isInheritFrom(
    other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ) : bool
@@ -3617,7 +3685,10 @@ pub override fn NormalTypeInfo.isInheritFrom(
    }  
    if ( self.$kind ~= .Class and self.$kind ~= .IF ) or
        ( other.$kind ~= .Class and other.$kind ~= .IF )
-   {  
+   {
+      if other == builtinTypeMapping {
+         return NormalTypeInfo.isAvailableMapping( self, {} );
+      }
       return false;
    }
    return TypeInfo.isInherit( self, other, alt2type );
@@ -4054,7 +4125,7 @@ pub override fn NormalTypeInfo.applyGeneric(
          return NormalTypeInfo.createList(
             self.accessMode, self.parentInfo, itemTypeInfoList );
       }
-      case .List {
+      case .Array {
          return NormalTypeInfo.createArray(
             self.accessMode, self.parentInfo, itemTypeInfoList );
       }
@@ -5228,6 +5299,10 @@ pub fn Node.getSymbolInfo(): List<&AccessSymbolInfo> {
                }
             }
             return list;
+         }
+         case NodeKind.$RefType {
+            let refTypeNode = node@@RefTypeNode;
+            return refTypeNode.$name.getSymbolInfo();
          }
       }
       return [];

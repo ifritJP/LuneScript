@@ -417,6 +417,10 @@ pub class TransUnit {
                           expectTypeList: List<&Ast.TypeInfo>!, contExpect: bool! ): Ast.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Ast.Node;
    pri fn getTokenNoErr() mut : &Parser.Token;
+   pri fn analyzeRefTypeWithSymbol(
+      accessMode: Ast.AccessMode, allowDDD:bool,
+      refFlag: bool, mutFlag: bool, symbolNode:&Ast.Node ) mut: Ast.RefTypeNode;
+
 
    pri fn addLocalVar(
       pos:&Parser.Position, argFlag:bool, canBeLeft:bool,
@@ -981,7 +985,7 @@ pub class BuiltinFuncType {
    pub let mut listSort:&Ast.TypeInfo;
    pub let mut arrayUnpack:&Ast.TypeInfo;
    pub let mut arraySort:&Ast.TypeInfo;
-   pub let mut mappingIF:&Ast.TypeInfo;
+   //pub let mut mappingIF:&Ast.TypeInfo;
    pub let mut mappingToMap:&Ast.TypeInfo;
    pub let mut strGMatch:&Ast.TypeInfo;
    pub let mut stringGMatch:&Ast.TypeInfo;
@@ -1001,7 +1005,7 @@ pub class BuiltinFuncType {
       self.listSort = Ast.headTypeInfo;
       self.arrayUnpack = Ast.headTypeInfo;
       self.arraySort = Ast.headTypeInfo;
-      self.mappingIF = Ast.headTypeInfo;
+//      self.mappingIF = Ast.builtinTypeMapping;
       self.mappingToMap = Ast.headTypeInfo;
       self.strGMatch = Ast.headTypeInfo;
       self.stringGMatch = Ast.headTypeInfo;
@@ -1386,9 +1390,6 @@ fn TransUnit.registBuiltInScope() mut {
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
-            if name == "Mapping" {
-               builtinFunc.mappingIF = parentInfo;
-            }
          }
          if not builtinModuleName2Scope[ name ]
          {  

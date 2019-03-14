@@ -25,4 +25,4 @@ SOFTWARE.
 /** lns バージョン */
 pub let version = "1.0.3";
 /** meta フォーマットバージョン */
-pub let metaVersion = "1.0.33";
+pub let metaVersion = "1.0.34";

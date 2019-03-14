@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.33'
-_moduleObj.__buildId = "1552492444.000000:1"
+_moduleObj.__formatVersion = '1.0.34'
+_moduleObj.__buildId = "1552579883.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -97,9 +97,9 @@ __typeInfoList[1] = { skind = 0, parentId = 1, typeId = 7, nilable = true, orgTy
 __typeInfoList[2] = { skind = 0, parentId = 1, typeId = 13, nilable = true, orgTypeId = 12 }
 __typeInfoList[3] = { skind = 0, parentId = 1, typeId = 16, nilable = true, orgTypeId = 15 }
 __typeInfoList[4] = { skind = 0, parentId = 1, typeId = 19, nilable = true, orgTypeId = 18 }
-__typeInfoList[5] = { skind = 0, parentId = 1, typeId = 44, nilable = true, orgTypeId = 43 }
-__typeInfoList[6] = { skind = 0, parentId = 1, typeId = 57, nilable = true, orgTypeId = 56 }
-__typeInfoList[7] = { skind = 1, parentId = 1, typeId = 70, srcTypeId = 55, mutable = false }
+__typeInfoList[5] = { skind = 0, parentId = 1, typeId = 47, nilable = true, orgTypeId = 46 }
+__typeInfoList[6] = { skind = 0, parentId = 1, typeId = 60, nilable = true, orgTypeId = 59 }
+__typeInfoList[7] = { skind = 1, parentId = 1, typeId = 73, srcTypeId = 58, mutable = false }
 __typeInfoList[8] = { skind = 8, parentId = 1, typeId = 256, txt = "T", accessMode = 3, baseId = 1, ifList = {}, }
 __typeInfoList[9] = { skind = 0, parentId = 1, typeId = 257, nilable = true, orgTypeId = 256 }
 __typeInfoList[10] = { skind = 1, parentId = 1, typeId = 258, srcTypeId = 256, mutable = false }
@@ -113,7 +113,7 @@ __typeInfoList[14] = { skind=3, parentId = 1005, typeId = 1013, baseId = 1, txt 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {15}, children = {}, }
 __typeInfoList[15] = { skind = 0, parentId = 1005, typeId = 1014, nilable = true, orgTypeId = 1013 }
 __typeInfoList[16] = { skind=3, parentId = 1005, typeId = 1127, baseId = 1, txt = 'TxtStream',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {106}, argTypeId = {}, retTypeId = {}, children = {1136, 1140, 1144, 1148, 1151, 1154, 1157}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {109}, argTypeId = {}, retTypeId = {}, children = {1136, 1140, 1144, 1148, 1151, 1154, 1157}, }
 __typeInfoList[17] = { skind = 0, parentId = 1005, typeId = 1128, nilable = true, orgTypeId = 1127 }
 __typeInfoList[18] = { skind = 1, parentId = 1, typeId = 1135, srcTypeId = 27, mutable = false }
 __typeInfoList[19] = { skind=3, parentId = 1127, typeId = 1136, baseId = 1, txt = '__init',
@@ -153,7 +153,7 @@ __typeInfoList[41] = { skind = 0, parentId = 1170, typeId = 1173, nilable = true
 __typeInfoList[42] = { skind=3, parentId = 1170, typeId = 1175, baseId = 1, txt = '_from',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1143}, retTypeId = {1171}, children = {}, }
 __typeInfoList[43] = { skind = 0, parentId = 1170, typeId = 1176, nilable = true, orgTypeId = 1175 }
-__typeInfoList[44] = { skind=3, parentId = 1, typeId = 1178, baseId = 42, txt = 'List',
+__typeInfoList[44] = { skind=3, parentId = 1, typeId = 1178, baseId = 45, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1170}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[45] = { skind = 0, parentId = 1, typeId = 1179, nilable = true, orgTypeId = 1178 }
 __typeInfoList[46] = { skind = 1, parentId = 1, typeId = 1181, srcTypeId = 1178, mutable = false }
@@ -166,10 +166,10 @@ __typeInfoList[50] = { skind = 0, parentId = 1005, typeId = 1186, nilable = true
 __typeInfoList[51] = { skind = 1, parentId = 1005, typeId = 1192, srcTypeId = 1170, mutable = false }
 __typeInfoList[52] = { skind = 1, parentId = 1005, typeId = 1193, srcTypeId = 1160, mutable = false }
 __typeInfoList[53] = { skind = 1, parentId = 1, typeId = 1194, srcTypeId = 15, mutable = false }
-__typeInfoList[54] = { skind=3, parentId = 1, typeId = 1195, baseId = 42, txt = 'List',
+__typeInfoList[54] = { skind=3, parentId = 1, typeId = 1195, baseId = 45, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 3, kind = 3, mutable = true, itemTypeId = {1185}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[55] = { skind = 0, parentId = 1, typeId = 1196, nilable = true, orgTypeId = 1195 }
-__typeInfoList[56] = { skind=3, parentId = 1, typeId = 1198, baseId = 42, txt = 'List',
+__typeInfoList[56] = { skind=3, parentId = 1, typeId = 1198, baseId = 45, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1185}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[57] = { skind = 0, parentId = 1, typeId = 1199, nilable = true, orgTypeId = 1198 }
 __typeInfoList[58] = { skind=3, parentId = 1185, typeId = 1201, baseId = 1, txt = '__init',
@@ -179,7 +179,7 @@ __typeInfoList[60] = { skind = 1, parentId = 1005, typeId = 1207, srcTypeId = 11
 __typeInfoList[61] = { skind=3, parentId = 1185, typeId = 1208, baseId = 1, txt = 'getExcludedDelimitTxt',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
 __typeInfoList[62] = { skind = 0, parentId = 1185, typeId = 1209, nilable = true, orgTypeId = 1208 }
-__typeInfoList[63] = { skind=3, parentId = 1, typeId = 1211, baseId = 42, txt = 'List',
+__typeInfoList[63] = { skind=3, parentId = 1, typeId = 1211, baseId = 45, txt = 'List',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {1185}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[64] = { skind = 0, parentId = 1, typeId = 1212, nilable = true, orgTypeId = 1211 }
 __typeInfoList[65] = { skind=3, parentId = 1185, typeId = 1214, baseId = 1, txt = 'set_commentList',
@@ -220,7 +220,7 @@ __typeInfoList[88] = { skind=3, parentId = 1258, typeId = 1266, baseId = 1, txt 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
 __typeInfoList[89] = { skind = 0, parentId = 1258, typeId = 1267, nilable = true, orgTypeId = 1266 }
 __typeInfoList[90] = { skind=3, parentId = 1258, typeId = 1291, baseId = 1, txt = '__init',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {106, 27, 16}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {109, 27, 16}, retTypeId = {}, children = {}, }
 __typeInfoList[91] = { skind = 0, parentId = 1258, typeId = 1292, nilable = true, orgTypeId = 1291 }
 __typeInfoList[92] = { skind=3, parentId = 1258, typeId = 1301, baseId = 1, txt = 'getStreamName',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
@@ -255,10 +255,10 @@ __typeInfoList[111] = { skind = 0, parentId = 1380, typeId = 1392, nilable = tru
 __typeInfoList[112] = { skind=3, parentId = 1380, typeId = 1394, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[113] = { skind = 0, parentId = 1380, typeId = 1395, nilable = true, orgTypeId = 1394 }
-__typeInfoList[114] = { skind = 1, parentId = 1, typeId = 100003, srcTypeId = 55, mutable = false }
+__typeInfoList[114] = { skind = 1, parentId = 1, typeId = 100003, srcTypeId = 58, mutable = false }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.Util' ] = { typeId = 1, use = false, buildId = "1552492444.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 1, use = false, buildId = "1552579883.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

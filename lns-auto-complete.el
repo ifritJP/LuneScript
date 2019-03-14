@@ -148,7 +148,8 @@
       (set let-prev-ac-point nil)
       (symbol-value let-list))
      ((eq (symbol-value process-state) :processing)
-      (set let-req-more ac-point)
+      (when (not (equal (eval let-prev-ac-point) ac-point))
+	(set let-req-more ac-point))
       nil)
      ((eq (symbol-value process-state) :idle)
       (set let-prev-ac-point ac-point)
@@ -163,7 +164,8 @@
 		    (let ((ac-point (eval let-req-more)))
 		      (set let-req-more nil)
 		      (set process-state :idle)
-		      (lns-ac-candidate let-ac-mode))
+		      (run-at-time 0 nil (lambda ()
+					   (lns-ac-candidates (eval let-ac-mode)))))
 		  (set let-list
 		       (mapcar (lambda (candidate)
 				 (let* ((info (lns-json-val candidate :candidate))
@@ -180,12 +182,13 @@
 		  (ac-update))
 		)
 	       (t
-		(set process-state :idle)))
+		(when (equal (eval process-state) :processing)
+		  (set process-state :idle))))
 	      )
 	    t (format "*%s-lns-process*" mode)))
       nil)
      ))
-    )
+  )
 
 (ac-define-source lns-field
   '((candidates . lns-ac-candidates-field)
