@@ -2877,7 +2877,7 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
 
 pub static fn NormalTypeInfo.createBuiltin(
    idName: str, typeTxt: str,
-   kind: TypeInfoKind, typeDDD: TypeInfo! ): &TypeInfo
+   kind: TypeInfoKind, typeDDD: TypeInfo!, ifList:&List<&TypeInfo>! ): &TypeInfo
 {
    //let mut typeId = typeIdSeed + 1;
    let mut typeId = idProv.$id + 1;
@@ -2923,7 +2923,7 @@ pub static fn NormalTypeInfo.createBuiltin(
       }
    }
    let mut info = new NormalTypeInfo(
-      false, scope, nil, nil, false, false, false, AccessMode.Pub,
+      false, scope, nil, ifList, false, false, false, AccessMode.Pub,
       typeTxt, headTypeInfo, typeId,
       kind, genTypeList, argTypeList, retTypeList, true );
 
@@ -2947,12 +2947,12 @@ pub let builtinTypeReal:TypeInfo =
    NormalTypeInfo.createBuiltin( "Real", "real" , .Prim## );
 pub let builtinTypeChar:TypeInfo = 
    NormalTypeInfo.createBuiltin( "char", "char" , .Prim## );
-pub let builtinTypeString:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "String", "str" , .Class## );
-pub let builtinTypeMap:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
 pub let builtinTypeMapping:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Mapping", "Mapping" , .IF## );
+pub let builtinTypeString:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "String", "str" , .Class, nil, [ builtinTypeMapping ] );
+pub let builtinTypeMap:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
 pub let builtinTypeSet:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Set", "Set" , .Set## );
 pub let builtinTypeList:TypeInfo = 
@@ -3315,7 +3315,7 @@ registBuiltin( "DDD", "...", .DDD, builtinTypeDDD, headTypeInfo, false );
 
 
 pub let builtinTypeForm:TypeInfo =
-   NormalTypeInfo.createBuiltin( "Form", "form" , .Func, builtinTypeDDD );
+   NormalTypeInfo.createBuiltin( "Form", "form" , .Func, builtinTypeDDD ## );
 pub let builtinTypeSymbol:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
 pub let builtinTypeStat:TypeInfo = 
@@ -5198,7 +5198,7 @@ pub abstract class MacroEval {
    pub abstract fn eval( macroNode: DeclMacroNode ): form;
 }
 
-_declNodeClass( "Abbr", Node, false, false, false,
+_declNodeClass( "Abbr", Node, false, true, false,
                 [ {} ]
 );
 

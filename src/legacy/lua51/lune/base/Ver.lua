@@ -7,7 +7,7 @@ end
 local version = "1.0.3"
 _moduleObj.version = version
 
-local metaVersion = "1.0.33"
+local metaVersion = "1.0.35"
 _moduleObj.metaVersion = metaVersion
 
 return _moduleObj

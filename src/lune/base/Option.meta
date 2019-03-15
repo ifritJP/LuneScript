@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.34'
-_moduleObj.__buildId = "1552579883.000000:1"
+_moduleObj.__formatVersion = '1.0.35'
+_moduleObj.__buildId = "1552691120.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -27,13 +27,13 @@ do
    __classInfo1060.outputDir = {
      name='outputDir', staticFlag = false, mutable = false,accessMode = '1', typeId = 1067 }
    __classInfo1060.scriptPath = {
-     name='scriptPath', staticFlag = false, mutable = true,accessMode = '1', typeId = 27 }
+     name='scriptPath', staticFlag = false, mutable = true,accessMode = '1', typeId = 30 }
    __classInfo1060.validProf = {
      name='validProf', staticFlag = false, mutable = true,accessMode = '1', typeId = 15 }
    __classInfo1060.useLuneModule = {
      name='useLuneModule', staticFlag = false, mutable = true,accessMode = '1', typeId = 15 }
    __classInfo1060.dependsPath = {
-     name='dependsPath', staticFlag = false, mutable = true,accessMode = '1', typeId = 28 }
+     name='dependsPath', staticFlag = false, mutable = true,accessMode = '1', typeId = 31 }
    __classInfo1060.updateOnLoad = {
      name='updateOnLoad', staticFlag = false, mutable = true,accessMode = '1', typeId = 15 }
    __classInfo1060.byteCompile = {
@@ -114,10 +114,10 @@ children = {1005, } }
 __typeInfoList[17] = { skind = 2, parentId = 1003, typeId = 1005, txt = 'Option', kind = 12, 
 children = {1015, 1030, 1045, 1060, 1076, 1082, } }
 __typeInfoList[18] = { skind = 4, parentId = 1005, typeId = 1015, txt = 'ModeKind',
-accessMode = 1, kind = 11, valTypeId = 27, enumValList = {Ast = 'ast',Complete = 'comp',Diag = 'diag',Exec = 'exe',Glue = 'glue',Lua = 'lua',LuaMeta = 'LUA',Save = 'save',SaveMeta = 'SAVE',Token = 'token',Unknown = '',} }
+accessMode = 1, kind = 11, valTypeId = 30, enumValList = {Ast = 'ast',Complete = 'comp',Diag = 'diag',Exec = 'exe',Glue = 'glue',Lua = 'lua',LuaMeta = 'LUA',Save = 'save',SaveMeta = 'SAVE',Token = 'token',Unknown = '',} }
 __typeInfoList[19] = { skind = 0, parentId = 1005, typeId = 1016, nilable = true, orgTypeId = 1015 }
 __typeInfoList[20] = { skind=3, parentId = 1015, typeId = 1017, baseId = 1, txt = 'get__txt',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
 __typeInfoList[21] = { skind = 0, parentId = 1015, typeId = 1018, nilable = true, orgTypeId = 1017 }
 __typeInfoList[22] = { skind=3, parentId = 1015, typeId = 1020, baseId = 1, txt = '_from',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {100013}, retTypeId = {1016}, children = {}, }
@@ -130,10 +130,10 @@ __typeInfoList[27] = { skind=3, parentId = 1015, typeId = 1027, baseId = 1, txt 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1026}, children = {}, }
 __typeInfoList[28] = { skind = 0, parentId = 1015, typeId = 1028, nilable = true, orgTypeId = 1027 }
 __typeInfoList[29] = { skind = 4, parentId = 1005, typeId = 1030, txt = 'CheckingUptodateMode',
-accessMode = 1, kind = 11, valTypeId = 27, enumValList = {Force = 'force',Normal = 'none',Touch = 'touch',} }
+accessMode = 1, kind = 11, valTypeId = 30, enumValList = {Force = 'force',Normal = 'none',Touch = 'touch',} }
 __typeInfoList[30] = { skind = 0, parentId = 1005, typeId = 1031, nilable = true, orgTypeId = 1030 }
 __typeInfoList[31] = { skind=3, parentId = 1030, typeId = 1032, baseId = 1, txt = 'get__txt',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
 __typeInfoList[32] = { skind = 0, parentId = 1030, typeId = 1033, nilable = true, orgTypeId = 1032 }
 __typeInfoList[33] = { skind=3, parentId = 1030, typeId = 1035, baseId = 1, txt = '_from',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {100013}, retTypeId = {1031}, children = {}, }
@@ -157,7 +157,7 @@ __typeInfoList[45] = { skind = 0, parentId = 1045, typeId = 1058, nilable = true
 __typeInfoList[46] = { skind=3, parentId = 1005, typeId = 1060, baseId = 1, txt = 'Option',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1069, 1073}, }
 __typeInfoList[47] = { skind = 0, parentId = 1005, typeId = 1061, nilable = true, orgTypeId = 1060 }
-__typeInfoList[48] = { skind = 1, parentId = 1, typeId = 1067, srcTypeId = 28, mutable = false }
+__typeInfoList[48] = { skind = 1, parentId = 1, typeId = 1067, srcTypeId = 31, mutable = false }
 __typeInfoList[49] = { skind = 1, parentId = 100001, typeId = 1068, srcTypeId = 100037, mutable = false }
 __typeInfoList[50] = { skind=3, parentId = 1060, typeId = 1069, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
@@ -166,10 +166,10 @@ __typeInfoList[52] = { skind=3, parentId = 1060, typeId = 1073, baseId = 1, txt 
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {119}, children = {}, }
 __typeInfoList[53] = { skind = 0, parentId = 1060, typeId = 1074, nilable = true, orgTypeId = 1073 }
 __typeInfoList[54] = { skind=3, parentId = 1005, typeId = 1076, baseId = 1, txt = 'outputLuneMod',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {28}, retTypeId = {28}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {31}, retTypeId = {31}, children = {}, }
 __typeInfoList[55] = { skind = 0, parentId = 1005, typeId = 1077, nilable = true, orgTypeId = 1076 }
 __typeInfoList[56] = { skind=3, parentId = 1, typeId = 1079, baseId = 45, txt = 'List',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {27}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 3, mutable = true, itemTypeId = {30}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[57] = { skind = 0, parentId = 1, typeId = 1080, nilable = true, orgTypeId = 1079 }
 __typeInfoList[58] = { skind=3, parentId = 1005, typeId = 1082, baseId = 1, txt = 'analyze',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1079}, retTypeId = {1060}, children = {}, }
@@ -180,7 +180,7 @@ __dependIdMap[ 100007 ] = { 4, 1013 } -- isLuaKeyword
 __dependIdMap[ 100008 ] = { 4, 1014 } -- isLuaKeyword!
 __dependIdMap[ 100010 ] = { 4, 1127 } -- TxtStream
 __dependIdMap[ 100011 ] = { 4, 1128 } -- TxtStream!
-__typeInfoList[61] = { skind = 1, parentId = 1, typeId = 100013, srcTypeId = 27, mutable = false }
+__typeInfoList[61] = { skind = 1, parentId = 1, typeId = 100013, srcTypeId = 30, mutable = false }
 __typeInfoList[62] = { skind = 1, parentId = 1, typeId = 100020, srcTypeId = 18, mutable = false }
 __dependIdMap[ 100036 ] = { 4, 1160 } -- Position
 __dependIdMap[ 100037 ] = { 4, 1161 } -- Position!
@@ -274,19 +274,19 @@ __typeInfoList[92] = { skind = 1, parentId = 100250, typeId = 100289, srcTypeId 
 __dependIdMap[ 100289 ] = { 3, 1030 } -- &BitOp
 __typeInfoList[93] = { skind = 1, parentId = 100212, typeId = 100290, srcTypeId = 100217, mutable = false }
 __typeInfoList[94] = { skind=3, parentId = 1, typeId = 100291, baseId = 40, txt = 'Set',
-        abstractFlag = false, staticFlag = false, accessMode = 3, kind = 17, mutable = true, itemTypeId = {27}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 3, kind = 17, mutable = true, itemTypeId = {30}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[95] = { skind = 0, parentId = 1, typeId = 100292, nilable = true, orgTypeId = 100291 }
 __typeInfoList[96] = { skind = 1, parentId = 1, typeId = 100294, srcTypeId = 100291, mutable = false }
 __typeInfoList[97] = { skind = 1, parentId = 100250, typeId = 100295, srcTypeId = 100286, mutable = false }
 __dependIdMap[ 100295 ] = { 3, 1038 } -- &LuaVerInfo
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.Log' ] = { typeId = 1, use = false, buildId = "1552579883.000000:1" }
-__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 2, use = true, buildId = "1552579883.000000:1" }
-__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 3, use = true, buildId = "1552579883.000000:1" }
-__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 4, use = true, buildId = "1552579883.000000:1" }
-__dependModuleMap[ 'lune.base.Util' ] = { typeId = 5, use = false, buildId = "1552579883.000000:1" }
-__dependModuleMap[ 'lune.base.Ver' ] = { typeId = 6, use = false, buildId = "1552579883.000000:1" }
+__dependModuleMap[ 'lune.base.Log' ] = { typeId = 1, use = false, buildId = "1552691120.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 2, use = true, buildId = "1552691120.000000:1" }
+__dependModuleMap[ 'lune.base.LuaVer' ] = { typeId = 3, use = true, buildId = "1552691120.000000:1" }
+__dependModuleMap[ 'lune.base.Parser' ] = { typeId = 4, use = true, buildId = "1552691120.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 5, use = false, buildId = "1552691120.000000:1" }
+__dependModuleMap[ 'lune.base.Ver' ] = { typeId = 6, use = false, buildId = "1552691120.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

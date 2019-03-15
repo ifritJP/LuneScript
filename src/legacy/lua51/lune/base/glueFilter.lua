@@ -456,8 +456,7 @@ function glueFilter.new( outputDir )
 end         
 function glueFilter:__init( outputDir ) 
 
-   Ast.Filter.__init( self, {} )
-   self.outputDir = outputDir
+   Ast.Filter.__init( self )self.outputDir = outputDir
 end
 
 local function createFilter( outputDir )

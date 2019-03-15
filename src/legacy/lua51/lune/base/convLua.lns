@@ -178,6 +178,8 @@ class convFilter extend Ast.Filter<Opt> (oStream) {
       }
       return self, nil;
    }
+
+   fn outputAlter2MapFunc( stream:oStream, alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>);
 }
 
 fn filter( node: &Ast.Node, filter: convFilter,
@@ -980,6 +982,21 @@ end
    }
 }
 
+fn isGenericType( typeInfo:&Ast.TypeInfo ): bool {
+   if Ast.isGenericType( typeInfo ) {
+      return true;
+   }
+   switch typeInfo.$kind {
+      case .Class, .IF {
+         if #typeInfo.$itemTypeInfoList > 0 {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+
 
 fn convFilter.getMapInfo(
    typeInfo:&Ast.TypeInfo ): str, bool, str
@@ -998,6 +1015,12 @@ fn convFilter.getMapInfo(
       case .Class, .IF {
          if not nonnilableType.equals( Ast.builtinTypeString ##) {
             funcTxt = '%s._fromMap' (self.getFullName(nonnilableType));
+            if isGenericType( nonnilableType ) {
+               let mut memStream = new Util.memStream();
+               self.outputAlter2MapFunc(
+                  memStream, nonnilableType.createAlt2typeMap(false) );
+               child = memStream.$txt;
+            }
          }
          else {
             funcTxt = '_lune._toStr';
@@ -1048,6 +1071,11 @@ fn convFilter.getMapInfo(
 
          child = "{ { func = %s, nilable = %s, child = %s } }"
              (valFuncTxt, valNilable, valChild);
+      }
+      case .Alternate {
+         let prefix = "obj.__alt2mapFunc.%s" ( nonnilableType.$rawTxt );
+         funcTxt = "%s.func" ( prefix );
+         child = "%s.child" ( prefix );
       }
    }
    return funcTxt, typeInfo.$nilable, child;
@@ -1149,18 +1177,28 @@ fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : Ast.TypeInfo!
    return nil;
 }
 
-fn isGenericType( typeInfo:&Ast.TypeInfo ): bool {
-   if Ast.isGenericType( typeInfo ) {
-      return true;
-   }
-   switch typeInfo.$kind {
-      case .Class, .IF {
-         if #typeInfo.$itemTypeInfoList > 0 {
-            return true;
+fn convFilter.outputAlter2MapFunc(
+   stream:oStream, alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>)
+{
+   stream.write( "{" );
+
+   foreach assinType, altType in alt2Map {
+      if altType.$kind == .Alternate {
+         if assinType.$kind == .Alternate {
+            stream.write(
+               "%s = self.__alt2mapFunc[ %q ],"
+               (assinType.$rawTxt, assinType.$rawTxt ) );
+         }
+         else {
+            let funcTxt, nilable, child = self.getMapInfo( assinType );
+            stream.write(
+               "%s = { func=%s, nilable=%s, child=%s },"
+               (altType.$rawTxt, funcTxt, nilable, child) );
          }
       }
    }
-   return false;
+
+   stream.write( "}" );
 }
 
 
@@ -1265,9 +1303,6 @@ end```
       // デフォルトコンストラクタ生成
       methodNameSet.add( "__init" );
       let mut argTxt = "";
-      if isGenericClass {
-         argTxt = "__alt2mapFunc";
-      }
       
       foreach member, index in memberList {
          if #argTxt > 0 {
@@ -1292,28 +1327,10 @@ function %s:__init( %s )
               argTxt, className, argTxt ) );
       self.pushIndent(##);
 
-      if isGenericClass {
-         self.writeln( ```
-if not self.__alt2mapFunc then
-   self.__alt2mapFunc = __alt2mapFunc
-else
-   for key, val in pairs( __alt2mapFunc ) do
-      self.__alt2mapFunc[ key ] = val
-   end
-end``` );
-      }
-
       if baseInfo ~= Ast.headTypeInfo {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
          if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
-            // pending: super の alterType に対応する map を設定する
-            self.write( "%s.__init( self" ( self.getFullName( baseInfo ) ) );
-            if isGenericType( baseInfo ) {
-               self.writeln( ", {} )" );
-            }
-            else {
-               self.writeln( " )" );
-            }
+            self.write( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
          }
       }
       
@@ -1391,22 +1408,31 @@ end
    }
 
    // Mapping
-   if classTypeInfo.isInheritFrom( TransUnit.getBuiltinFunc().mappingIF, nil ) {
+   if classTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
+      let mut declArgTxt = "val";
+      let mut argTxt = "{}, val";
+      if isGenericType( classTypeInfo ) {
+         declArgTxt = "val, __alt2mapFunc";
+         argTxt = "{ __alt2mapFunc = __alt2mapFunc }, val";
+      }
+      
       self.writeln( ```
 function %s:_toMap()
   return self
 end
-function %s._fromMap( val )
-  local obj, mes = %s._fromMapSub( {}, val )
+function %s._fromMap( %s )
+  local obj, mes = %s._fromMapSub( %s )
   if obj then
      %s.setmeta( obj )
   end
   return obj, mes
 end
-function %s._fromStem( val )
-  return %s._fromMap( val )
+function %s._fromStem( %s )
+  return %s._fromMap( %s )
 end
-``` (className, className, className, className, className, className ));
+``` (className, className, declArgTxt,
+      className, argTxt, className,
+      className, declArgTxt, className, declArgTxt ));
       
       self.writeln( 'function %s._fromMapSub( obj, val )' (className ));
       
@@ -1543,16 +1569,6 @@ pub override fn convFilter.processExpNew(
 {
    filter( node.get_symbol(), self, node );
    self.write( ".new(" );
-   if isGenericType( node.$expType ) {
-      // pending: super の alterType に対応する map を設定する
-      self.write( "{}" );
-      if! node.get_argList() {
-         self.write( "," );
-      }
-   }
-   else {
-      self.write( "" );
-   }
    if! node.get_argList() {
       filter( _exp,  self, node );
    } 
@@ -1587,9 +1603,6 @@ pub override fn convFilter.processDeclConstr(
    let isGenericClass = isGenericType( classTypeInfo );
 
    let mut argTxt = "";
-   if isGenericClass {
-      argTxt = "__alt2mapFunc";
-   }
    
    self.write( argTxt );
    let argList = declInfo.get_argList();
@@ -1625,20 +1638,6 @@ pub override fn convFilter.processDeclConstr(
    //filter( //    refType,  self, node, baseIndent )
    // }
    self.write( string.format( "function %s:__init(%s) ", className, argTxt ) );
-   if isGenericClass {
-      self.pushIndent(##);
-      
-      self.writeln( ```
-if not self.__alt2mapFunc then
-   self.__alt2mapFunc = __alt2mapFunc
-else
-   for key, val in pairs( __alt2mapFunc ) do
-      self.__alt2mapFunc[ key ] = val
-   end
-end``` );
-      
-      self.popIndent();
-   }
    if! declInfo.$body {
       self.process__func__symbol(
          declInfo.$has__func__Symbol, node.$expType.$parentInfo, "__init" );
@@ -1675,10 +1674,6 @@ pub override fn convFilter.processExpCallSuper(
    if node.$methodType.$rawTxt == "__init" {
       self.write( "%s.%s( self"
                   ( self.getFullName( typeInfo ), node.$methodType.$rawTxt ) );
-      if isGenericType( typeInfo ) {
-         // pending: super の alterType に対応する map を設定する
-         self.write( ", {}" );
-      }
    }
    else {
       self.write( "%s.%s( self"
@@ -2342,6 +2337,25 @@ pub override fn convFilter.processExpCall(
                filter( prefixNode, self, fieldNode );
                self.write( "[1]" );
                return false;
+            }
+            case .Class {
+               if prefixType.isInheritFrom( Ast.builtinTypeMapping, nil ) and
+                  isGenericType( prefixType ) and
+                  ( fieldNode.$field.txt == "_fromMap" or
+                    fieldNode.$field.txt == "_fromStem" )
+               {
+                  wroteFuncFlag = true;
+                  setArgFlag = true;
+                  filter( node.$func, self, node );
+                  self.write( "( " );
+                  if! let argList = node.$argList {
+                     filter( argList,  self, node );
+                     self.write( ", " );
+                  }
+                  self.outputAlter2MapFunc( self, prefixType.createAlt2typeMap(false) );
+                  self.write( ")" );
+                  return false;
+               }
             }
          }  
       }

@@ -56,6 +56,11 @@ fn TransUnit.analyzeExpList(
          }
       }
       let exp = self.analyzeExp( skipOp2Flag, 0, expectType );
+      if not exp.canBeRight() {
+         self.addErrMess(
+            exp.$pos,
+            "This arg can't be r-value. -- %s" ( Ast.getNodeKindName( exp.$kind) ) );
+      }
       if not pos {
          pos = exp.$pos;
       }

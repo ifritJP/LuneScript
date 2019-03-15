@@ -1098,8 +1098,7 @@ function CanEvalCtrlTypeInfo.new(  )
 end         
 function CanEvalCtrlTypeInfo:__init(  ) 
 
-   TypeInfo.__init( self )
-end
+   TypeInfo.__init( self )end
 do
    CanEvalCtrlTypeInfo.detectAlt = CanEvalCtrlTypeInfo.new()
    CanEvalCtrlTypeInfo.needAutoBoxing = CanEvalCtrlTypeInfo.new()
@@ -1153,8 +1152,7 @@ function AliasTypeInfo.new( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, ex
 end         
 function AliasTypeInfo:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId ) 
 
-   TypeInfo.__init( self )
-   self.rawTxt = rawTxt
+   TypeInfo.__init( self )self.rawTxt = rawTxt
    self.accessMode = accessMode
    self.parentInfo = parentInfo
    self.aliasSrcTypeInfo = aliasSrcTypeInfo
@@ -1918,8 +1916,7 @@ function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
 end         
 function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft ) 
 
-   SymbolInfo.__init( self )
-   self.symbolInfo = symbolInfo
+   SymbolInfo.__init( self )self.symbolInfo = symbolInfo
    self.prefixTypeInfo = prefixTypeInfo
    self.overrideCanBeLeft = overrideCanBeLeft
 end
@@ -2046,8 +2043,7 @@ function NilableTypeInfo.new( nonnilableType, typeId )
 end         
 function NilableTypeInfo:__init( nonnilableType, typeId ) 
 
-   TypeInfo.__init( self )
-   self.nonnilableType = nonnilableType
+   TypeInfo.__init( self )self.nonnilableType = nonnilableType
    self.typeId = typeId
 end
 function NilableTypeInfo:get_nonnilableType()       
@@ -2664,14 +2660,7 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
    end
    
    if otherSrc == other then
-      if alt2type ~= nil then
-         if self.genSrcTypeInfo == other then
-            return true
-         end
-         
-      end
-      
-      return false
+      return true
    end
    
    local genOther = other
@@ -3002,8 +2991,7 @@ function ModifierTypeInfo.new( srcTypeInfo, typeId, mutable )
 end         
 function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutable ) 
 
-   TypeInfo.__init( self )
-   self.srcTypeInfo = srcTypeInfo
+   TypeInfo.__init( self )self.srcTypeInfo = srcTypeInfo
    self.typeId = typeId
    self.mutable = mutable
 end
@@ -3860,7 +3848,7 @@ local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, 
    
 end
 
-function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
+function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
 
    local typeId = idProv:get_id() + 1
    if kind == TypeInfoKind.Root then
@@ -3902,7 +3890,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
       end
    end
    
-   local info = NormalTypeInfo.new(false, scope, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, true)
+   local info = NormalTypeInfo.new(false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, true)
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
 end
@@ -3931,7 +3919,10 @@ _moduleObj.builtinTypeReal = builtinTypeReal
 local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
 _moduleObj.builtinTypeChar = builtinTypeChar
 
-local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class )
+local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
+_moduleObj.builtinTypeMapping = builtinTypeMapping
+
+local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class, nil, {_moduleObj.builtinTypeMapping} )
 _moduleObj.builtinTypeString = builtinTypeString
 
 local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
@@ -4524,6 +4515,73 @@ end
 
 
 
+function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
+
+   local function isAvailableMappingSub(  )
+   
+      do
+         local _switchExp = typeInfo:get_kind()
+         if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.Enum then
+            return true
+         elseif _switchExp == TypeInfoKind.Alge then
+            local algeTypeInfo = typeInfo
+            for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
+               for __index, paramType in pairs( valInfo:get_typeList() ) do
+                  if not NormalTypeInfo.isAvailableMapping( paramType, checkedTypeMap ) then
+                     return false
+                  end
+                  
+               end
+               
+            end
+            
+            return true
+         elseif _switchExp == TypeInfoKind.Stem then
+            return true
+         elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
+            if typeInfo:equals( _moduleObj.builtinTypeString ) then
+               return true
+            end
+            
+            return typeInfo:isInheritFrom( _moduleObj.builtinTypeMapping, nil )
+         elseif _switchExp == TypeInfoKind.Alternate then
+            return typeInfo:isInheritFrom( _moduleObj.builtinTypeMapping, nil )
+         elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
+            return NormalTypeInfo.isAvailableMapping( typeInfo:get_itemTypeInfoList()[1], checkedTypeMap )
+         elseif _switchExp == TypeInfoKind.Map then
+            if NormalTypeInfo.isAvailableMapping( typeInfo:get_itemTypeInfoList()[2], checkedTypeMap ) then
+               local keyType = typeInfo:get_itemTypeInfoList()[1]
+               if keyType:equals( _moduleObj.builtinTypeString ) or keyType:get_kind() == TypeInfoKind.Prim or keyType:get_kind() == TypeInfoKind.Enum then
+                  return true
+               end
+               
+            end
+            
+            return false
+         elseif _switchExp == TypeInfoKind.Nilable then
+            return NormalTypeInfo.isAvailableMapping( typeInfo:get_nonnilableType(), checkedTypeMap )
+         else 
+            
+               return false
+         end
+      end
+      
+   end
+   
+   typeInfo = typeInfo:get_srcTypeInfo()
+   do
+      local _exp = checkedTypeMap[typeInfo]
+      if _exp ~= nil then
+         return _exp
+      end
+   end
+   
+   checkedTypeMap[typeInfo] = true
+   local result = isAvailableMappingSub(  )
+   checkedTypeMap[typeInfo] = result
+   return result
+end
+
 function NormalTypeInfo:isInheritFrom( other, alt2type )
 
    if self:get_typeId() == other:get_typeId() then
@@ -4531,6 +4589,10 @@ function NormalTypeInfo:isInheritFrom( other, alt2type )
    end
    
    if (self:get_kind() ~= TypeInfoKind.Class and self:get_kind() ~= TypeInfoKind.IF ) or (other:get_kind() ~= TypeInfoKind.Class and other:get_kind() ~= TypeInfoKind.IF ) then
+      if other == _moduleObj.builtinTypeMapping then
+         return NormalTypeInfo.isAvailableMapping( self, {} )
+      end
+      
       return false
    end
    
@@ -4954,7 +5016,7 @@ function NormalTypeInfo:applyGeneric( alt2typeMap )
          return NormalTypeInfo.createSet( self.accessMode, self.parentInfo, itemTypeInfoList )
       elseif _switchExp == TypeInfoKind.List then
          return NormalTypeInfo.createList( self.accessMode, self.parentInfo, itemTypeInfoList )
-      elseif _switchExp == TypeInfoKind.List then
+      elseif _switchExp == TypeInfoKind.Array then
          return NormalTypeInfo.createArray( self.accessMode, self.parentInfo, itemTypeInfoList )
       elseif _switchExp == TypeInfoKind.Map then
          return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2] )
@@ -4973,23 +5035,16 @@ _moduleObj.Filter = Filter
 function Filter.setmeta( obj )
   setmetatable( obj, { __index = Filter  } )
 end
-function Filter.new( __alt2mapFunc )
+function Filter.new(  )
    local obj = {}
    Filter.setmeta( obj )
    if obj.__init then
-      obj:__init( __alt2mapFunc )
+      obj:__init(  )
    end        
    return obj 
 end         
-function Filter:__init( __alt2mapFunc ) 
+function Filter:__init(  ) 
 
-   if not self.__alt2mapFunc then
-   self.__alt2mapFunc = __alt2mapFunc
-else
-   for key, val in pairs( __alt2mapFunc ) do
-      self.__alt2mapFunc[ key ] = val
-   end
-end
 end
 
 local BreakKind = {}
@@ -10337,7 +10392,7 @@ function AbbrNode:processFilter( filter, opt )
 end
 function AbbrNode:canBeRight(  )
 
-   return false
+   return true
 end
 function AbbrNode:canBeLeft(  )
 
@@ -11292,6 +11347,9 @@ function Node:getSymbolInfo(  )
             end
             
             return list
+         elseif _switchExp == NodeKind.get_RefType() then
+            local refTypeNode = node
+            return refTypeNode:get_name():getSymbolInfo(  )
          end
       end
       

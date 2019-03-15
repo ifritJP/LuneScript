@@ -39,15 +39,21 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
       mutFlag = true;
       token = self.getToken(##);
    }
-   let mut typeInfo = Ast.builtinTypeStem_;
    self.checkSymbol( token, .MustNot_ );
 
-
    let name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true );
-   typeInfo = name.$expType;
+   return self.analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutFlag, name );
+}
+
+fn TransUnit.analyzeRefTypeWithSymbol(
+   accessMode: Ast.AccessMode, allowDDD:bool,
+   refFlag: bool, mutFlag: bool, symbolNode:&Ast.Node ) mut:
+   Ast.RefTypeNode
+{
+   let mut typeInfo = symbolNode.$expType;
 
    let continueToken, continueFlag = self.getContinueToken();
-   token = continueToken;
+   let mut token = continueToken;
    if continueFlag and token.txt == "!" {
       typeInfo = unwrap typeInfo.get_nilableTypeInfo();
       token = self.getToken(##);
@@ -86,7 +92,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
          fn checkAlternateTypeCount( count:int ): bool {
             if #genericList ~= count {
                self.addErrMess(
-                  firstToken.pos,     
+                  symbolNode.$pos,     
                   "generic type count is unmatch. -- %d" (#genericList) );
                return false;
             }
@@ -97,11 +103,11 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
             case .Map {
                let! keyType = genericList[1] {
                   keyType = Ast.builtinTypeStem;
-                  self.addErrMess( firstToken.pos, "Key type is unknown" );
+                  self.addErrMess( symbolNode.$pos, "Key type is unknown" );
                }; 
                let! valType = genericList[ 2 ] {
                   valType = Ast.builtinTypeStem;
-                  self.addErrMess( firstToken.pos, "Value type is unknown" );
+                  self.addErrMess( symbolNode.$pos, "Value type is unknown" );
                }; 
                typeInfo = Ast.NormalTypeInfo.createMap(
                   accessMode, self.getCurrentClass(), keyType, valType );
@@ -138,7 +144,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
                      let altType = typeInfo.$itemTypeInfoList[ index ]@@Ast.AlternateTypeInfo;
                      if itemType.$nilable {
                         self.addErrMess(
-                           firstToken.pos,
+                           symbolNode.$pos,
                            "can't use nilable type -- %s" (itemType.getTxt(##)) );
                      }
                   }
@@ -170,7 +176,7 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
 
    if not allowDDD {
       if typeInfo.$kind == .DDD {
-         self.addErrMess( firstToken.pos,
+         self.addErrMess( symbolNode.$pos,
                           "invalid type. -- '%s'" (typeInfo.getTxt(##) ) );
       }
    }
@@ -180,8 +186,8 @@ fn TransUnit.analyzeRefType( accessMode: Ast.AccessMode, allowDDD:bool ) mut:
    }
 
    return Ast.RefTypeNode.create(
-      self.nodeManager, firstToken.pos, [ typeInfo ],
-      name, refFlag, mutFlag, arrayMode );
+      self.nodeManager, symbolNode.$pos, [ typeInfo ],
+      symbolNode, refFlag, mutFlag, arrayMode );
 }
 
 fn TransUnit.analyzeDeclArgList(
@@ -1537,11 +1543,11 @@ fn TransUnit.analyzeDeclClass(
       Ast.NormalTypeInfo.createMap(
          .Pub, classTypeInfo, Ast.builtinTypeString,
          self.createModifier( Ast.builtinTypeStem, false ) ), false );
-   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF, nil ) {
+   if classTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
       self.helperInfo.hasMappingClassDef = true;
       
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
-         not classTypeInfo.$baseTypeInfo.isInheritFrom( builtinFunc.mappingIF, nil ) {
+         not classTypeInfo.$baseTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
          self.addErrMess(
             firstToken.pos,
             "must extend Mapping at %s" (classTypeInfo.$baseTypeInfo.getTxt(##) ) );
@@ -1646,79 +1652,13 @@ fn TransUnit.analyzeDeclClass(
    }
 
 
-   if classTypeInfo.isInheritFrom( builtinFunc.mappingIF, nil ) {
+   if classTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
       // Mapping の制限チェック
-      fn isAvailableMapping(
-         mut typeInfo:&Ast.TypeInfo, checkedTypeMap:Map<&Ast.TypeInfo,bool> ): bool
-      {
-         fn isAvailableMappingSub(): bool {
-            switch typeInfo.$kind {
-               case .Prim, .Enum {
-                  return true;
-               }  
-               case .Alge {
-                  let algeTypeInfo = typeInfo@@Ast.AlgeTypeInfo;
-                  foreach valInfo in algeTypeInfo.$valInfoMap {
-                     foreach paramType in valInfo.$typeList {
-                        if not isAvailableMapping( paramType, checkedTypeMap ) {
-                           return false;
-                        }  
-                     }  
-                  }  
-                  return true;
-               }  
-               case .Stem {
-                  // stem は mapping 不能なデータもあるが、
-                  // それは実行時エラーとする。
-                  return true;
-               }  
-               case .Class, .IF {
-                  if typeInfo.equals( Ast.builtinTypeString ##) {
-                     return true;
-                  }  
-                  return typeInfo.isInheritFrom( builtinFunc.mappingIF, nil );
-               }
-               case .Alternate {
-                  return typeInfo.isInheritFrom( builtinFunc.mappingIF, nil );
-               }
-               case .List, .Array, .Set {
-                  return isAvailableMapping( typeInfo.$itemTypeInfoList[1], checkedTypeMap );
-               }  
-               case .Map {
-                  if isAvailableMapping( typeInfo.$itemTypeInfoList[2], checkedTypeMap ) {
-                     let keyType = typeInfo.$itemTypeInfoList[1];
-                     if keyType.equals( Ast.builtinTypeString ## ) or
-                        keyType.$kind == .Prim or keyType.$kind == .Enum
-                     {  
-                        return true;
-                     }  
-                  }  
-                  return false;
-               }  
-               case .Nilable {
-                  return isAvailableMapping( typeInfo.$nonnilableType, checkedTypeMap );
-               }
-               default {
-                  return false;
-               }  
-            }  
-         }
-
-         typeInfo = typeInfo.$srcTypeInfo;
-         if! checkedTypeMap[ typeInfo ] {
-            return _exp;            
-         }
-         // チェック前は暫定的に true にする
-         checkedTypeMap[ typeInfo ] = true;
-         let result = isAvailableMappingSub();
-         checkedTypeMap[ typeInfo ] = result;
-         return result;
-      }
-
       let mut checkedTypeMap:Map<&Ast.TypeInfo,bool> = {};
       foreach memberNode in node.$memberList {
          let memberType = memberNode.$expType;
-         if not isAvailableMapping( memberType, checkedTypeMap ) {
+         //if not isAvailableMapping( memberType, checkedTypeMap ) {
+         if not Ast.NormalTypeInfo.isAvailableMapping( memberType, checkedTypeMap ) {
             self.addErrMess(
                memberNode.$pos,
                "member type is not Mapping -- %s" ( memberType.getTxt(##)) );

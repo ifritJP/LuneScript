@@ -132,7 +132,7 @@ function convFilter.new( stream )
    return obj
 end
 function convFilter:__init(stream) 
-   Ast.Filter.__init( self, {T = { func=_lune._toInt, nilable=false, child={} },})
+   Ast.Filter.__init( self)
    
    self.stream = stream
 end

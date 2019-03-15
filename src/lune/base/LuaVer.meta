@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.34'
-_moduleObj.__buildId = "1552579883.000000:1"
+_moduleObj.__formatVersion = '1.0.35'
+_moduleObj.__buildId = "1552691120.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -77,7 +77,7 @@ __typeInfoList[18] = { skind = 4, parentId = 1005, typeId = 1007, txt = 'BitOp',
 accessMode = 1, kind = 11, valTypeId = 18, enumValList = {Cant = 2,HasMod = 1,HasOp = 0,} }
 __typeInfoList[19] = { skind = 0, parentId = 1005, typeId = 1008, nilable = true, orgTypeId = 1007 }
 __typeInfoList[20] = { skind=3, parentId = 1007, typeId = 1009, baseId = 1, txt = 'get__txt',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
 __typeInfoList[21] = { skind = 0, parentId = 1007, typeId = 1010, nilable = true, orgTypeId = 1009 }
 __typeInfoList[22] = { skind=3, parentId = 1007, typeId = 1012, baseId = 1, txt = '_from',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {100012}, retTypeId = {1008}, children = {}, }
@@ -94,18 +94,18 @@ __typeInfoList[29] = { skind=3, parentId = 1005, typeId = 1022, baseId = 1, txt 
 __typeInfoList[30] = { skind = 0, parentId = 1005, typeId = 1023, nilable = true, orgTypeId = 1022 }
 __typeInfoList[31] = { skind = 1, parentId = 1005, typeId = 1030, srcTypeId = 1007, mutable = false }
 __typeInfoList[32] = { skind = 1, parentId = 1, typeId = 1031, srcTypeId = 15, mutable = false }
-__typeInfoList[33] = { skind = 1, parentId = 1, typeId = 1032, srcTypeId = 27, mutable = false }
+__typeInfoList[33] = { skind = 1, parentId = 1, typeId = 1032, srcTypeId = 30, mutable = false }
 __typeInfoList[34] = { skind = 1, parentId = 100001, typeId = 1033, srcTypeId = 100007, mutable = false }
 __typeInfoList[35] = { skind=3, parentId = 1, typeId = 1034, baseId = 40, txt = 'Set',
-        abstractFlag = false, staticFlag = false, accessMode = 3, kind = 17, mutable = true, itemTypeId = {27}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 3, kind = 17, mutable = true, itemTypeId = {30}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[36] = { skind = 0, parentId = 1, typeId = 1035, nilable = true, orgTypeId = 1034 }
 __typeInfoList[37] = { skind = 1, parentId = 1, typeId = 1037, srcTypeId = 1034, mutable = false }
 __typeInfoList[38] = { skind = 1, parentId = 1005, typeId = 1038, srcTypeId = 1022, mutable = false }
 __typeInfoList[39] = { skind=3, parentId = 1022, typeId = 1039, baseId = 1, txt = 'isSupport',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {15}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {15}, children = {}, }
 __typeInfoList[40] = { skind = 0, parentId = 1022, typeId = 1040, nilable = true, orgTypeId = 1039 }
 __typeInfoList[41] = { skind=3, parentId = 1022, typeId = 1042, baseId = 1, txt = 'getLoadCode',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
 __typeInfoList[42] = { skind = 0, parentId = 1022, typeId = 1043, nilable = true, orgTypeId = 1042 }
 __typeInfoList[43] = { skind=3, parentId = 1022, typeId = 1045, baseId = 1, txt = 'get_hasBitOp',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1030}, children = {}, }
@@ -149,7 +149,7 @@ __dependIdMap[ 100036 ] = { 1, 1029 } -- getCode
 __dependIdMap[ 100037 ] = { 1, 1030 } -- getCode!
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = true, buildId = "1552579883.000000:1" }
+__dependModuleMap[ 'lune.base.LuaMod' ] = { typeId = 1, use = true, buildId = "1552691120.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

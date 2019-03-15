@@ -193,3 +193,8 @@ pub fn Boxfunc3( val:Nilable<int>! ): Nilable<int>! {
    }
    return nil;
 }
+
+
+pub class Val<T:(Mapping)> extend (Mapping) {
+   let valval:T {pub};
+}

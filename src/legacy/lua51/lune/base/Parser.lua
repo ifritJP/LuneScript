@@ -405,8 +405,7 @@ function WrapParser.new( parser, name )
 end         
 function WrapParser:__init( parser, name ) 
 
-   Parser.__init( self )
-   self.parser = parser
+   Parser.__init( self )self.parser = parser
    self.name = name
 end
 
@@ -913,7 +912,6 @@ function DummyParser.new(  )
 end         
 function DummyParser:__init(  ) 
 
-   Parser.__init( self )
-end
+   Parser.__init( self )end
 
 return _moduleObj

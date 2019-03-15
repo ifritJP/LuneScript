@@ -273,7 +273,7 @@ function convFilter.new( streamName, stream, metaStream, convMode, inMacro, modu
    return obj
 end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer) 
-   Ast.Filter.__init( self, {T = { func=Opt._fromMap, nilable=false, child={} },})
+   Ast.Filter.__init( self)
    
    self.macroVarSymSet = {}
    self.needModuleObj = true
@@ -1172,6 +1172,25 @@ end
    
 end
 
+local function isGenericType( typeInfo )
+
+   if Ast.isGenericType( typeInfo ) then
+      return true
+   end
+   
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+         if #typeInfo:get_itemTypeInfoList() > 0 then
+            return true
+         end
+         
+      end
+   end
+   
+   return false
+end
+
 function convFilter:getMapInfo( typeInfo )
 
    local nonnilableType = typeInfo:get_srcTypeInfo()
@@ -1188,6 +1207,12 @@ function convFilter:getMapInfo( typeInfo )
       elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
          if not nonnilableType:equals( Ast.builtinTypeString ) then
             funcTxt = string.format( '%s._fromMap', self:getFullName( nonnilableType ))
+            if isGenericType( nonnilableType ) then
+               local memStream = Util.memStream.new()
+               self:outputAlter2MapFunc( memStream, nonnilableType:createAlt2typeMap( false ) )
+               child = memStream:get_txt()
+            end
+            
          else
           
             funcTxt = '_lune._toStr'
@@ -1347,43 +1372,24 @@ function convFilter:getDestrClass( classTypeInfo )
    return nil
 end
 
-local function isGenericType( typeInfo )
+function convFilter:outputAlter2MapFunc( stream, alt2Map )
 
-   if Ast.isGenericType( typeInfo ) then
-      return true
-   end
-   
-   do
-      local _switchExp = typeInfo:get_kind()
-      if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-         if #typeInfo:get_itemTypeInfoList() > 0 then
-            return true
-         end
-         
-      end
-   end
-   
-   return false
-end
-
-function convFilter:outputAlter2MapFunc( alt2Map )
-
-   self:write( "{" )
+   stream:write( "{" )
    for altType, assinType in pairs( alt2Map ) do
       if altType:get_kind() == Ast.TypeInfoKind.Alternate then
          if assinType:get_kind() == Ast.TypeInfoKind.Alternate then
-            self:write( string.format( "%s = self.__alt2mapFunc[ %q ],", assinType:get_rawTxt(), assinType:get_rawTxt()) )
+            stream:write( string.format( "%s = self.__alt2mapFunc[ %q ],", assinType:get_rawTxt(), assinType:get_rawTxt()) )
          else
           
             local funcTxt, nilable, child = self:getMapInfo( assinType )
-            self:write( string.format( "%s = { func=%s, nilable=%s, child=%s },", altType:get_rawTxt(), funcTxt, nilable, child) )
+            stream:write( string.format( "%s = { func=%s, nilable=%s, child=%s },", altType:get_rawTxt(), funcTxt, nilable, child) )
          end
          
       end
       
    end
    
-   self:write( "}" )
+   stream:write( "}" )
 end
 
 function convFilter:processDeclClass( node, opt )
@@ -1493,10 +1499,6 @@ end]==], className, className, destTxt) )
    if not hasConstrFlag then
       methodNameSet["__init"]= true
       local argTxt = ""
-      if isGenericClass then
-         argTxt = "__alt2mapFunc"
-      end
-      
       for index, member in pairs( memberList ) do
          if #argTxt > 0 then
             argTxt = argTxt .. ", "
@@ -1517,31 +1519,11 @@ end
 function %s:__init( %s ) 
 ]==], className, argTxt, className, argTxt, className, argTxt) )
       self:pushIndent(  )
-      if isGenericClass then
-         self:writeln( [==[
-if not self.__alt2mapFunc then
-   self.__alt2mapFunc = __alt2mapFunc
-else
-   for key, val in pairs( __alt2mapFunc ) do
-      self.__alt2mapFunc[ key ] = val
-   end
-end]==] )
-      end
-      
       if baseInfo ~= Ast.headTypeInfo then
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
-               if isGenericType( baseInfo ) then
-                  self:write( ", " )
-                  self:outputAlter2MapFunc( baseInfo:createAlt2typeMap( false ) )
-                  self:write( " )" )
-               else
-                
-                  self:writeln( " )" )
-               end
-               
+               self:write( string.format( "%s.__init( self )", self:getFullName( baseInfo )) )
             end
          end
          
@@ -1619,7 +1601,7 @@ end
       local declArgTxt = "val"
       local argTxt = "{}, val"
       if isGenericType( classTypeInfo ) then
-         declArgTxt = "__alt2mapFunc, val"
+         declArgTxt = "val, __alt2mapFunc"
          argTxt = "{ __alt2mapFunc = __alt2mapFunc }, val"
       end
       
@@ -1751,20 +1733,6 @@ function convFilter:processExpNew( node, opt )
 
    filter( node:get_symbol(  ), self, node )
    self:write( ".new(" )
-   if isGenericType( node:get_expType() ) then
-      self:outputAlter2MapFunc( node:get_expType():createAlt2typeMap( false ) )
-      do
-         local _exp = node:get_argList(  )
-         if _exp ~= nil then
-            self:write( "," )
-         end
-      end
-      
-   else
-    
-      self:write( "" )
-   end
-   
    do
       local _exp = node:get_argList(  )
       if _exp ~= nil then
@@ -1803,10 +1771,6 @@ function convFilter:processDeclConstr( node, opt )
    self:write( string.format( "function %s.new( ", className ) )
    local isGenericClass = isGenericType( classTypeInfo )
    local argTxt = ""
-   if isGenericClass then
-      argTxt = "__alt2mapFunc"
-   end
-   
    self:write( argTxt )
    local argList = declInfo:get_argList(  )
    for index, arg in pairs( argList ) do
@@ -1835,19 +1799,6 @@ function convFilter:processDeclConstr( node, opt )
    self:popIndent(  )
    self:writeln( "end" )
    self:write( string.format( "function %s:__init(%s) ", className, argTxt ) )
-   if isGenericClass then
-      self:pushIndent(  )
-      self:writeln( [==[
-if not self.__alt2mapFunc then
-   self.__alt2mapFunc = __alt2mapFunc
-else
-   for key, val in pairs( __alt2mapFunc ) do
-      self.__alt2mapFunc[ key ] = val
-   end
-end]==] )
-      self:popIndent(  )
-   end
-   
    do
       local _exp = declInfo:get_body()
       if _exp ~= nil then
@@ -1881,11 +1832,6 @@ function convFilter:processExpCallSuper( node, opt )
    local typeInfo = node:get_superType()
    if node:get_methodType():get_rawTxt() == "__init" then
       self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
-      if isGenericType( typeInfo ) then
-         self:write( ", " )
-         self:outputAlter2MapFunc( typeInfo:createAlt2typeMap( false ) )
-      end
-      
    else
     
       self:write( string.format( "%s.%s( self", self:getFullName( typeInfo ), node:get_methodType():get_rawTxt()) )
@@ -2604,7 +2550,17 @@ function convFilter:processExpCall( node, opt )
                   setArgFlag = true
                   filter( node:get_func(), self, node )
                   self:write( "( " )
-                  self:outputAlter2MapFunc( prefixType:createAlt2typeMap( false ) )
+                  do
+                     local argList = node:get_argList()
+                     if argList ~= nil then
+                        filter( argList, self, node )
+                        self:write( ", " )
+                     end
+                  end
+                  
+                  self:outputAlter2MapFunc( self, prefixType:createAlt2typeMap( false ) )
+                  self:write( ")" )
+                  return false
                end
                
             end
@@ -3283,8 +3239,7 @@ function MacroEvalImp.new( mode )
 end         
 function MacroEvalImp:__init( mode ) 
 
-   Ast.MacroEval.__init( self )
-   self.mode = mode
+   Ast.MacroEval.__init( self )self.mode = mode
 end
 
 return _moduleObj

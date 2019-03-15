@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.34'
-_moduleObj.__buildId = "1552579883.000000:1"
+_moduleObj.__formatVersion = '1.0.35'
+_moduleObj.__buildId = "1552691120.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -55,7 +55,7 @@ __typeInfoList[15] = { skind = 4, parentId = 1005, typeId = 1007, txt = 'Level',
 accessMode = 1, kind = 11, valTypeId = 18, enumValList = {Debug = 4,Err = 1,Fatal = 0,Info = 3,Trace = 5,Warn = 2,} }
 __typeInfoList[16] = { skind = 0, parentId = 1005, typeId = 1008, nilable = true, orgTypeId = 1007 }
 __typeInfoList[17] = { skind=3, parentId = 1007, typeId = 1009, baseId = 1, txt = 'get__txt',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
 __typeInfoList[18] = { skind = 0, parentId = 1007, typeId = 1010, nilable = true, orgTypeId = 1009 }
 __typeInfoList[19] = { skind = 1, parentId = 1, typeId = 1012, srcTypeId = 18, mutable = false }
 __typeInfoList[20] = { skind=3, parentId = 1007, typeId = 1013, baseId = 1, txt = '_from',
@@ -69,16 +69,16 @@ __typeInfoList[25] = { skind=3, parentId = 1007, typeId = 1020, baseId = 1, txt 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {1019}, children = {}, }
 __typeInfoList[26] = { skind = 0, parentId = 1007, typeId = 1021, nilable = true, orgTypeId = 1020 }
 __typeInfoList[27] = { skind=3, parentId = 1005, typeId = 1029, baseId = 1, txt = 'str2level',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {1008}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {1008}, children = {}, }
 __typeInfoList[28] = { skind = 0, parentId = 1005, typeId = 1030, nilable = true, orgTypeId = 1029 }
 __typeInfoList[29] = { skind=3, parentId = 1005, typeId = 1032, baseId = 1, txt = 'setLevel',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1007}, retTypeId = {}, children = {}, }
 __typeInfoList[30] = { skind = 0, parentId = 1005, typeId = 1033, nilable = true, orgTypeId = 1032 }
 __typeInfoList[31] = { skind=3, parentId = 1005, typeId = 1035, baseId = 1, txt = 'CreateMessage',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
 __typeInfoList[32] = { skind = 0, parentId = 1005, typeId = 1036, nilable = true, orgTypeId = 1035 }
 __typeInfoList[33] = { skind=3, parentId = 1005, typeId = 1038, baseId = 1, txt = 'log',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1007, 27, 18, 1035}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1007, 30, 18, 1035}, retTypeId = {}, children = {}, }
 __typeInfoList[34] = { skind = 0, parentId = 1005, typeId = 1039, nilable = true, orgTypeId = 1038 }
 __typeInfoList[35] = { skind=3, parentId = 1005, typeId = 1041, baseId = 1, txt = '_log',
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 1, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1007, 65}, retTypeId = {}, children = {}, }

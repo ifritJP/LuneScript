@@ -145,8 +145,7 @@ function dumpFilter.new(  )
 end         
 function dumpFilter:__init(  ) 
 
-   Ast.Filter.__init( self, {} )
-end
+   Ast.Filter.__init( self )end
 
 local function createFilter(  )
 

@@ -145,7 +145,7 @@ function dumpFilter.new(  )
 end         
 function dumpFilter:__init(  ) 
 
-   Ast.Filter.__init( self, {T = { func=Opt._fromMap, nilable=false, child={} },} )end
+   Ast.Filter.__init( self )end
 
 local function createFilter(  )
 

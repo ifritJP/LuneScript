@@ -1094,8 +1094,7 @@ function CanEvalCtrlTypeInfo.new(  )
 end         
 function CanEvalCtrlTypeInfo:__init(  ) 
 
-   TypeInfo.__init( self )
-end
+   TypeInfo.__init( self )end
 do
    CanEvalCtrlTypeInfo.detectAlt = CanEvalCtrlTypeInfo.new()
    CanEvalCtrlTypeInfo.needAutoBoxing = CanEvalCtrlTypeInfo.new()
@@ -1149,8 +1148,7 @@ function AliasTypeInfo.new( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, ex
 end         
 function AliasTypeInfo:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId ) 
 
-   TypeInfo.__init( self )
-   self.rawTxt = rawTxt
+   TypeInfo.__init( self )self.rawTxt = rawTxt
    self.accessMode = accessMode
    self.parentInfo = parentInfo
    self.aliasSrcTypeInfo = aliasSrcTypeInfo
@@ -1914,8 +1912,7 @@ function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
 end         
 function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft ) 
 
-   SymbolInfo.__init( self )
-   self.symbolInfo = symbolInfo
+   SymbolInfo.__init( self )self.symbolInfo = symbolInfo
    self.prefixTypeInfo = prefixTypeInfo
    self.overrideCanBeLeft = overrideCanBeLeft
 end
@@ -2042,8 +2039,7 @@ function NilableTypeInfo.new( nonnilableType, typeId )
 end         
 function NilableTypeInfo:__init( nonnilableType, typeId ) 
 
-   TypeInfo.__init( self )
-   self.nonnilableType = nonnilableType
+   TypeInfo.__init( self )self.nonnilableType = nonnilableType
    self.typeId = typeId
 end
 function NilableTypeInfo:get_nonnilableType()       
@@ -2991,8 +2987,7 @@ function ModifierTypeInfo.new( srcTypeInfo, typeId, mutable )
 end         
 function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutable ) 
 
-   TypeInfo.__init( self )
-   self.srcTypeInfo = srcTypeInfo
+   TypeInfo.__init( self )self.srcTypeInfo = srcTypeInfo
    self.typeId = typeId
    self.mutable = mutable
 end
@@ -3849,7 +3844,7 @@ local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, 
    
 end
 
-function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
+function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
 
    local typeId = idProv:get_id() + 1
    if kind == TypeInfoKind.Root then
@@ -3891,7 +3886,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD )
       end
    end
    
-   local info = NormalTypeInfo.new(false, scope, nil, nil, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, true)
+   local info = NormalTypeInfo.new(false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, true)
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
 end
@@ -3920,14 +3915,14 @@ _moduleObj.builtinTypeReal = builtinTypeReal
 local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "char", TypeInfoKind.Prim )
 _moduleObj.builtinTypeChar = builtinTypeChar
 
-local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class )
+local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
+_moduleObj.builtinTypeMapping = builtinTypeMapping
+
+local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class, nil, {_moduleObj.builtinTypeMapping} )
 _moduleObj.builtinTypeString = builtinTypeString
 
 local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
 _moduleObj.builtinTypeMap = builtinTypeMap
-
-local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
-_moduleObj.builtinTypeMapping = builtinTypeMapping
 
 local builtinTypeSet = NormalTypeInfo.createBuiltin( "Set", "Set", TypeInfoKind.Set )
 _moduleObj.builtinTypeSet = builtinTypeSet
@@ -5036,23 +5031,16 @@ _moduleObj.Filter = Filter
 function Filter.setmeta( obj )
   setmetatable( obj, { __index = Filter  } )
 end
-function Filter.new( __alt2mapFunc )
+function Filter.new(  )
    local obj = {}
    Filter.setmeta( obj )
    if obj.__init then
-      obj:__init( __alt2mapFunc )
+      obj:__init(  )
    end        
    return obj 
 end         
-function Filter:__init( __alt2mapFunc ) 
+function Filter:__init(  ) 
 
-   if not self.__alt2mapFunc then
-   self.__alt2mapFunc = __alt2mapFunc
-else
-   for key, val in pairs( __alt2mapFunc ) do
-      self.__alt2mapFunc[ key ] = val
-   end
-end
 end
 
 local BreakKind = {}
@@ -10400,7 +10388,7 @@ function AbbrNode:processFilter( filter, opt )
 end
 function AbbrNode:canBeRight(  )
 
-   return false
+   return true
 end
 function AbbrNode:canBeLeft(  )
 

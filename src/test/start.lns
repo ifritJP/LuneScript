@@ -1001,3 +1001,68 @@ class TestGenSub2<T> extend Super<T> {
    print( func( 1.0 ).val() );
    print( func( "str" ).val() );
 }
+
+macro _dump( symbol:stat ) {
+   print( "%s:%d> %s" (__mod__, __line__, ,,symbol ) );
+}
+
+class MapTest<T:(Mapping)> extend (Mapping) {
+   let testval:T {pub};
+}
+
+{
+   let test = new MapTest( 10 );
+   let map = test._toMap();
+   if! let test2 = MapTest<int>._fromMap( map ) {
+      _dump( `{ test2.$testval } );
+   }  
+   else {
+      print( "NG" );
+   }  
+}
+
+{
+   let test = new MapTest( [ 1, 2, 3 ] );
+   let map = test._toMap();
+   if! let test2 = MapTest<List<int>>._fromMap( map ) {
+      foreach val in test2.$testval {
+         _dump( `{ val } );
+      }
+   }  
+   else {
+      print( "NG" );
+   }  
+}
+
+{
+   let test = new MapTest( new SUB2.Val( 1 ) );
+   let map = test._toMap();
+   if! let test2 = MapTest<SUB2.Val<int>>._fromMap( map ) {
+      _dump( `{ test2.$testval.$valval } );
+   }  
+   else {
+      print( "NG" );
+   }
+}
+
+{
+   let test = new MapTest( new SUB2.Val( "abc" ) );
+   let map = test._toMap();
+   if! let test2 = MapTest<SUB2.Val<str>>._fromMap( map ) {
+      _dump( `{ test2.$testval.$valval } );
+   }  
+   else {
+      print( "NG" );
+   }  
+}
+
+{
+   let test = new MapTest( new SUB2.Val( new SUB2.Val( "abc" ) ) );
+   let map = test._toMap();
+   if! let test2 = MapTest<SUB2.Val<SUB2.Val<str>>>._fromMap( map ) {
+      _dump( `{ test2.$testval.$valval.$valval } );
+   }  
+   else {
+      print( "NG" );
+   }  
+}

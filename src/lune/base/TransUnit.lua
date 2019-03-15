@@ -888,8 +888,7 @@ function _TypeInfoNilable.new( nilable, orgTypeId )
 end         
 function _TypeInfoNilable:__init( nilable, orgTypeId ) 
 
-   _TypeInfo.__init( self )
-   self.nilable = nilable
+   _TypeInfo.__init( self )self.nilable = nilable
    self.orgTypeId = orgTypeId
 end
 function _TypeInfoNilable:_toMap()
@@ -952,8 +951,7 @@ function _TypeInfoAlias.new( rawTxt, srcTypeId )
 end         
 function _TypeInfoAlias:__init( rawTxt, srcTypeId ) 
 
-   _TypeInfo.__init( self )
-   self.rawTxt = rawTxt
+   _TypeInfo.__init( self )self.rawTxt = rawTxt
    self.srcTypeId = srcTypeId
 end
 function _TypeInfoAlias:_toMap()
@@ -1008,8 +1006,7 @@ function _TypeInfoDDD.new( itemTypeId )
 end         
 function _TypeInfoDDD:__init( itemTypeId ) 
 
-   _TypeInfo.__init( self )
-   self.itemTypeId = itemTypeId
+   _TypeInfo.__init( self )self.itemTypeId = itemTypeId
 end
 function _TypeInfoDDD:_toMap()
   return self
@@ -1067,8 +1064,7 @@ function _TypeInfoAlternate.new( txt, accessMode, baseId, ifList )
 end         
 function _TypeInfoAlternate:__init( txt, accessMode, baseId, ifList ) 
 
-   _TypeInfo.__init( self )
-   self.txt = txt
+   _TypeInfo.__init( self )self.txt = txt
    self.accessMode = accessMode
    self.baseId = baseId
    self.ifList = ifList
@@ -1132,8 +1128,7 @@ function _TypeInfoGeneric.new( genSrcTypeId, genTypeList )
 end         
 function _TypeInfoGeneric:__init( genSrcTypeId, genTypeList ) 
 
-   _TypeInfo.__init( self )
-   self.genSrcTypeId = genSrcTypeId
+   _TypeInfo.__init( self )self.genSrcTypeId = genSrcTypeId
    self.genTypeList = genTypeList
 end
 function _TypeInfoGeneric:_toMap()
@@ -1188,8 +1183,7 @@ function _TypeInfoBox.new( accessMode, boxingType )
 end         
 function _TypeInfoBox:__init( accessMode, boxingType ) 
 
-   _TypeInfo.__init( self )
-   self.accessMode = accessMode
+   _TypeInfo.__init( self )self.accessMode = accessMode
    self.boxingType = boxingType
 end
 function _TypeInfoBox:_toMap()
@@ -1250,8 +1244,7 @@ function _TypeInfoModifier.new( srcTypeId, mutable )
 end         
 function _TypeInfoModifier:__init( srcTypeId, mutable ) 
 
-   _TypeInfo.__init( self )
-   self.srcTypeId = srcTypeId
+   _TypeInfo.__init( self )self.srcTypeId = srcTypeId
    self.mutable = mutable
 end
 function _TypeInfoModifier:_toMap()
@@ -1347,8 +1340,7 @@ function _TypeInfoModule.new( txt )
 end         
 function _TypeInfoModule:__init( txt ) 
 
-   _TypeInfo.__init( self )
-   self.txt = txt
+   _TypeInfo.__init( self )self.txt = txt
 end
 function _TypeInfoModule:_toMap()
   return self
@@ -1538,8 +1530,7 @@ function _TypeInfoNormal.new( abstractFlag, baseId, txt, staticFlag, accessMode,
 end         
 function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children ) 
 
-   _TypeInfo.__init( self )
-   self.abstractFlag = abstractFlag
+   _TypeInfo.__init( self )self.abstractFlag = abstractFlag
    self.baseId = baseId
    self.txt = txt
    self.staticFlag = staticFlag
@@ -1626,8 +1617,7 @@ function _TypeInfoEnum.new( txt, accessMode, valTypeId, enumValList )
 end         
 function _TypeInfoEnum:__init( txt, accessMode, valTypeId, enumValList ) 
 
-   _TypeInfo.__init( self )
-   self.txt = txt
+   _TypeInfo.__init( self )self.txt = txt
    self.accessMode = accessMode
    self.valTypeId = valTypeId
    self.enumValList = enumValList
@@ -1747,8 +1737,7 @@ function _TypeInfoAlge.new( txt, accessMode, algeValList )
 end         
 function _TypeInfoAlge:__init( txt, accessMode, algeValList ) 
 
-   _TypeInfo.__init( self )
-   self.txt = txt
+   _TypeInfo.__init( self )self.txt = txt
    self.accessMode = accessMode
    self.algeValList = algeValList
 end
@@ -5846,6 +5835,10 @@ function TransUnit:analyzeExpList( skipOp2Flag, expNode, expectTypeList, contExp
       end
       
       local exp = self:analyzeExp( skipOp2Flag, 0, expectType )
+      if not exp:canBeRight(  ) then
+         self:addErrMess( exp:get_pos(), string.format( "This arg can't be r-value. -- %s", Ast.getNodeKindName( exp:get_kind() )) )
+      end
+      
       if not pos then
          pos = exp:get_pos()
       end

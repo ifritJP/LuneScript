@@ -1,8 +1,8 @@
 local _moduleObj = {}
 ----- meta -----
 _moduleObj.__version = '1.0.3'
-_moduleObj.__formatVersion = '1.0.34'
-_moduleObj.__buildId = "1552579883.000000:1"
+_moduleObj.__formatVersion = '1.0.35'
+_moduleObj.__buildId = "1552691120.000000:1"
 local __typeId2ClassInfoMap = {}
 _moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap
 do
@@ -67,7 +67,7 @@ __typeInfoList[11] = { skind = 0, parentId = 1005, typeId = 1008, nilable = true
 __typeInfoList[12] = { skind = 1, parentId = 1, typeId = 1010, srcTypeId = 12, mutable = false }
 __typeInfoList[13] = { skind = 1, parentId = 1, typeId = 1015, srcTypeId = 21, mutable = false }
 __typeInfoList[14] = { skind = 1, parentId = 1, typeId = 1016, srcTypeId = 18, mutable = false }
-__typeInfoList[15] = { skind = 1, parentId = 1, typeId = 1017, srcTypeId = 27, mutable = false }
+__typeInfoList[15] = { skind = 1, parentId = 1, typeId = 1017, srcTypeId = 30, mutable = false }
 __typeInfoList[16] = { skind = 1, parentId = 1005, typeId = 1018, srcTypeId = 1007, mutable = false }
 __typeInfoList[17] = { skind=3, parentId = 1007, typeId = 1019, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {21, 18}, retTypeId = {}, children = {}, }
@@ -88,7 +88,7 @@ __typeInfoList[27] = { skind=3, parentId = 1007, typeId = 1034, baseId = 1, txt 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {21, 18}, retTypeId = {1007}, children = {}, }
 __typeInfoList[28] = { skind = 0, parentId = 1007, typeId = 1035, nilable = true, orgTypeId = 1034 }
 __typeInfoList[29] = { skind=3, parentId = 1007, typeId = 1037, baseId = 1, txt = 'createIdFromTxt',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {1007}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {1007}, children = {}, }
 __typeInfoList[30] = { skind = 0, parentId = 1007, typeId = 1038, nilable = true, orgTypeId = 1037 }
 __typeInfoList[31] = { skind=3, parentId = 1005, typeId = 1040, baseId = 1, txt = 'ImportModuleInfo',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 6, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1053, 1062, 1065, 1069}, }
@@ -97,32 +97,32 @@ __typeInfoList[33] = { skind=3, parentId = 1040, typeId = 1053, baseId = 1, txt 
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[34] = { skind = 0, parentId = 1040, typeId = 1054, nilable = true, orgTypeId = 1053 }
 __typeInfoList[35] = { skind=3, parentId = 1040, typeId = 1062, baseId = 1, txt = 'add',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {15}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {15}, children = {}, }
 __typeInfoList[36] = { skind = 0, parentId = 1040, typeId = 1063, nilable = true, orgTypeId = 1062 }
 __typeInfoList[37] = { skind=3, parentId = 1040, typeId = 1065, baseId = 1, txt = 'remove',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
 __typeInfoList[38] = { skind = 0, parentId = 1040, typeId = 1066, nilable = true, orgTypeId = 1065 }
 __typeInfoList[39] = { skind=3, parentId = 1040, typeId = 1069, baseId = 1, txt = 'getFull',
-        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {27}, children = {}, }
+        abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {30}, children = {}, }
 __typeInfoList[40] = { skind = 0, parentId = 1040, typeId = 1070, nilable = true, orgTypeId = 1069 }
 __typeInfoList[41] = { skind=3, parentId = 1005, typeId = 1073, baseId = 1, txt = 'frontInterface',
         abstractFlag = true, staticFlag = false, accessMode = 1, kind = 7, mutable = true, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {1081, 1085, 1088, 1091, 1094, 1097}, }
 __typeInfoList[42] = { skind = 0, parentId = 1005, typeId = 1074, nilable = true, orgTypeId = 1073 }
 __typeInfoList[43] = { skind=3, parentId = 1073, typeId = 1081, baseId = 1, txt = 'loadModule',
-        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {13, 1010}, children = {}, }
+        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {13, 1010}, children = {}, }
 __typeInfoList[44] = { skind = 0, parentId = 1073, typeId = 1082, nilable = true, orgTypeId = 1081 }
 __typeInfoList[45] = { skind = 1, parentId = 1, typeId = 1084, srcTypeId = 13, mutable = false }
 __typeInfoList[46] = { skind=3, parentId = 1073, typeId = 1085, baseId = 1, txt = 'loadMeta',
-        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 27}, retTypeId = {1084}, children = {}, }
+        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 30}, retTypeId = {1084}, children = {}, }
 __typeInfoList[47] = { skind = 0, parentId = 1073, typeId = 1086, nilable = true, orgTypeId = 1085 }
 __typeInfoList[48] = { skind=3, parentId = 1073, typeId = 1088, baseId = 1, txt = 'loadFromLnsTxt',
-        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 27, 27}, retTypeId = {12}, children = {}, }
+        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 30, 30}, retTypeId = {12}, children = {}, }
 __typeInfoList[49] = { skind = 0, parentId = 1073, typeId = 1089, nilable = true, orgTypeId = 1088 }
 __typeInfoList[50] = { skind=3, parentId = 1073, typeId = 1091, baseId = 1, txt = 'searchModule',
-        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {28}, children = {}, }
+        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {31}, children = {}, }
 __typeInfoList[51] = { skind = 0, parentId = 1073, typeId = 1092, nilable = true, orgTypeId = 1091 }
 __typeInfoList[52] = { skind=3, parentId = 1073, typeId = 1094, baseId = 1, txt = 'error',
-        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
+        abstractFlag = true, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {}, children = {}, }
 __typeInfoList[53] = { skind = 0, parentId = 1073, typeId = 1095, nilable = true, orgTypeId = 1094 }
 __typeInfoList[54] = { skind=3, parentId = 1073, typeId = 1097, baseId = 1, txt = '__init',
         abstractFlag = false, staticFlag = false, accessMode = 1, kind = 9, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {}, retTypeId = {}, children = {}, }
@@ -131,24 +131,24 @@ __typeInfoList[56] = { skind=3, parentId = 1005, typeId = 1129, baseId = 1, txt 
         abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1073}, retTypeId = {}, children = {}, }
 __typeInfoList[57] = { skind = 0, parentId = 1005, typeId = 1130, nilable = true, orgTypeId = 1129 }
 __typeInfoList[58] = { skind=3, parentId = 1005, typeId = 1132, baseId = 1, txt = 'loadModule',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {13, 1010}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {13, 1010}, children = {}, }
 __typeInfoList[59] = { skind = 0, parentId = 1005, typeId = 1133, nilable = true, orgTypeId = 1132 }
 __typeInfoList[60] = { skind=3, parentId = 1005, typeId = 1135, baseId = 1, txt = 'loadFromLnsTxt',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 27, 27}, retTypeId = {12}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 30, 30}, retTypeId = {12}, children = {}, }
 __typeInfoList[61] = { skind = 0, parentId = 1005, typeId = 1136, nilable = true, orgTypeId = 1135 }
 __typeInfoList[62] = { skind=3, parentId = 1005, typeId = 1138, baseId = 1, txt = 'loadMeta',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 27}, retTypeId = {1084}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {1040, 30}, retTypeId = {1084}, children = {}, }
 __typeInfoList[63] = { skind = 0, parentId = 1005, typeId = 1139, nilable = true, orgTypeId = 1138 }
 __typeInfoList[64] = { skind=3, parentId = 1005, typeId = 1141, baseId = 1, txt = 'searchModule',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {28}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {31}, children = {}, }
 __typeInfoList[65] = { skind = 0, parentId = 1005, typeId = 1142, nilable = true, orgTypeId = 1141 }
 __typeInfoList[66] = { skind=3, parentId = 1005, typeId = 1144, baseId = 1, txt = 'error',
-        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {27}, retTypeId = {}, children = {}, }
+        abstractFlag = false, staticFlag = true, accessMode = 1, kind = 8, mutable = false, itemTypeId = {}, ifList = {}, argTypeId = {30}, retTypeId = {}, children = {}, }
 __typeInfoList[67] = { skind = 0, parentId = 1005, typeId = 1145, nilable = true, orgTypeId = 1144 }
 __typeInfoList[68] = { skind = 1, parentId = 1, typeId = 100003, srcTypeId = 58, mutable = false }
 local __dependModuleMap = {}
 _moduleObj.__dependModuleMap = __dependModuleMap
-__dependModuleMap[ 'lune.base.Util' ] = { typeId = 1, use = false, buildId = "1552579883.000000:1" }
+__dependModuleMap[ 'lune.base.Util' ] = { typeId = 1, use = false, buildId = "1552691120.000000:1" }
 _moduleObj.__subModuleMap = {}
 _moduleObj.__moduleTypeId = 1005
 _moduleObj.__moduleSymbolKind = 0

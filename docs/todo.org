@@ -12,6 +12,8 @@
      - alternateType -> fromMap のマップを new, __init の引数に渡す。
        その紐付け情報を利用して、getMapInfo() の時に該当の関数を返す。
        
+- [ ] Sub クラスが Super クラスのメンバを shadowing したときエラー検知できていない。
+       
        
 - [ ] "%d" に対する引数がオーバ時にエラーしない。
 - [ ] unwrap default の型チェックが出来ていない。
