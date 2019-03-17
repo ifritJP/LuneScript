@@ -13,6 +13,7 @@ end
 
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local memStream = {}
+setmetatable( memStream, { ifList = {oStream,} } )
 _moduleObj.memStream = memStream
 function memStream.new(  )
    local obj = {}

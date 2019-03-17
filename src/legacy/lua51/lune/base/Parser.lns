@@ -113,7 +113,7 @@ fn createReserveInfo( luaMode: bool! ) :
          multiCharDelimitMap[ ",," ] = [@ ",,," ];
          multiCharDelimitMap[ ",,," ] = [@ ",,,," ];
          multiCharDelimitMap[ "@" ] = [@ "@@" ];
-         multiCharDelimitMap[ "@@" ] = [@ "@@?" ];
+         multiCharDelimitMap[ "@@" ] = [@ "@@@", "@@=" ];
          multiCharDelimitMap[ "#" ] = [@ "##" ];
          multiCharDelimitMap[ "*" ] = [@ "**" ];
       } 
@@ -343,6 +343,8 @@ op2Set.add( '~=' );
 op2Set.add( 'and' );
 op2Set.add( 'or' );
 op2Set.add( '@' );
+op2Set.add( '@@' );
+op2Set.add( '@@@' );
 op2Set.add( '=' );
 
 let mut op1Set:Set<str> = (@);

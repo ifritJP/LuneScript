@@ -53,3 +53,5 @@ print( "%s" );
 
 let formatTxt = "%d";
 string.format( formatTxt, "str" );
+
+print( "%d" ( 1, 2 ) ); // error

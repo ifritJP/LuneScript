@@ -98,6 +98,32 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, class )
+   return _lune.__isInstanceOf( obj, class ) and obj or nil
+end
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
@@ -1050,8 +1076,13 @@ function CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
    do
       local _exp = alt2type[CanEvalCtrlTypeInfo.needAutoBoxing]
       if _exp ~= nil then
-         local autoBoxingInfo = _exp
-         autoBoxingInfo:inc(  )
+         do
+            local autoBoxingInfo = _lune.__Cast( _exp, AutoBoxingInfo )
+            if autoBoxingInfo ~= nil then
+               autoBoxingInfo:inc(  )
+            end
+         end
+         
       else
          Util.err( "no exist needAutoBoxing" )
       end
@@ -1063,9 +1094,14 @@ function CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2type, count )
    do
       local _exp = alt2type[CanEvalCtrlTypeInfo.needAutoBoxing]
       if _exp ~= nil then
-         local autoBoxingInfo = _exp
-         autoBoxingInfo:unregist(  )
-         return autoBoxingInfo:get_count() == count
+         do
+            local autoBoxingInfo = _lune.__Cast( _exp, AutoBoxingInfo )
+            if autoBoxingInfo ~= nil then
+               autoBoxingInfo:unregist(  )
+               return autoBoxingInfo:get_count() == count
+            end
+         end
+         
       end
    end
    
@@ -1105,11 +1141,6 @@ do
    CanEvalCtrlTypeInfo.checkTypeTarget = CanEvalCtrlTypeInfo.new()
 end
 
-local function isGenericType( typeInfo )
-
-   return typeInfo ~= typeInfo:get_genSrcTypeInfo()
-end
-_moduleObj.isGenericType = isGenericType
 local AliasTypeInfo = {}
 setmetatable( AliasTypeInfo, { __index = TypeInfo } )
 _moduleObj.AliasTypeInfo = AliasTypeInfo
@@ -2479,12 +2510,14 @@ function BoxTypeInfo:serialize( stream, validChildrenSet )
 end
 function BoxTypeInfo:equals( typeInfo, alt2type )
 
-   if typeInfo:get_kind() ~= TypeInfoKind.Box then
-      return false
+   do
+      local boxType = _lune.__Cast( typeInfo, BoxTypeInfo )
+      if boxType ~= nil then
+         return self.boxingType:equals( boxType.boxingType, alt2type )
+      end
    end
    
-   local boxType = typeInfo
-   return self.boxingType:equals( boxType.boxingType, alt2type )
+   return false
 end
 function BoxTypeInfo:createAlt2typeMap( detectFlag )
 
@@ -2659,11 +2692,13 @@ function GenericTypeInfo:isInheritFrom( other, alt2type )
       return false
    end
    
-   if otherSrc == other then
+   local genOther = _lune.__Cast( other, GenericTypeInfo )
+   if  nil == genOther then
+      local _genOther = genOther
+   
       return true
    end
    
-   local genOther = other
    local workAlt2type = alt2type
    if  nil == workAlt2type then
       local _workAlt2type = workAlt2type
@@ -2727,13 +2762,18 @@ function GenericTypeInfo:canEvalWith( other, opTxt, alt2type )
       work = work:get_baseTypeInfo()
    end
    
-   local otherGen = work
-   for key, val in pairs( self.alt2typeMap ) do
-      local otherType = AlternateTypeInfo.getAssign( _lune.unwrap( otherGen.alt2typeMap[key]), alt2type )
-      if not val:canEvalWith( otherType, opTxt, alt2type ) then
-         return false
+   do
+      local otherGen = _lune.__Cast( work, GenericTypeInfo )
+      if otherGen ~= nil then
+         for key, val in pairs( self.alt2typeMap ) do
+            local otherType = AlternateTypeInfo.getAssign( _lune.unwrap( otherGen.alt2typeMap[key]), alt2type )
+            if not val:canEvalWith( otherType, opTxt, alt2type ) then
+               return false
+            end
+            
+         end
+         
       end
-      
    end
    
    return true
@@ -2748,7 +2788,7 @@ function GenericTypeInfo:equals( other, alt2type )
       return false
    end
    
-   if not isGenericType( other ) then
+   if not (_lune.__Cast( other, GenericTypeInfo ) ) then
       return false
    end
    
@@ -2940,6 +2980,15 @@ function GenericTypeInfo:getFullName( ... )
 end       
 
 
+local function isGenericType( typeInfo )
+
+   if _lune.__Cast( typeInfo, GenericTypeInfo ) then
+      return true
+   end
+   
+   return false
+end
+_moduleObj.isGenericType = isGenericType
 local ModifierTypeInfo = {}
 setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModifierTypeInfo = ModifierTypeInfo
@@ -3547,21 +3596,25 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
             end
             
          elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
-            if isGenericType( self.baseTypeInfo ) then
-               local genericType = self.baseTypeInfo
-               for altType, genType in pairs( genericType:createAlt2typeMap( false ) ) do
-                  alt2typeMap[altType] = genType
-               end
-               
-            end
-            
-            for __index, ifType in pairs( self.interfaceList ) do
-               if isGenericType( ifType ) then
-                  local genericType = ifType
+            do
+               local genericType = _lune.__Cast( self.baseTypeInfo, GenericTypeInfo )
+               if genericType ~= nil then
                   for altType, genType in pairs( genericType:createAlt2typeMap( false ) ) do
                      alt2typeMap[altType] = genType
                   end
                   
+               end
+            end
+            
+            for __index, ifType in pairs( self.interfaceList ) do
+               do
+                  local genericType = _lune.__Cast( ifType, GenericTypeInfo )
+                  if genericType ~= nil then
+                     for altType, genType in pairs( genericType:createAlt2typeMap( false ) ) do
+                        alt2typeMap[altType] = genType
+                     end
+                     
+                  end
                end
                
             end
@@ -3904,7 +3957,7 @@ _moduleObj.builtinTypeNeverRet = builtinTypeNeverRet
 local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
 _moduleObj.builtinTypeStem = builtinTypeStem
 
-local builtinTypeStem_ = _lune.unwrap( _moduleObj.builtinTypeStem:get_nilableTypeInfo())
+local builtinTypeStem_ = _moduleObj.builtinTypeStem:get_nilableTypeInfo()
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
 
 local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
@@ -3937,6 +3990,26 @@ _moduleObj.builtinTypeList = builtinTypeList
 local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 _moduleObj.builtinTypeArray = builtinTypeArray
 
+local function isStruct( typeInfo )
+
+   do
+      local _switchExp = typeInfo:get_kind()
+      if _switchExp == TypeInfoKind.Class then
+         if typeInfo == _moduleObj.builtinTypeString then
+            return false
+         end
+         
+         if typeInfo:get_baseTypeInfo() ~= _moduleObj.headTypeInfo or #typeInfo:get_interfaceList() ~= 0 or #typeInfo:get_children() ~= 1 then
+            return false
+         end
+         
+         return true
+      end
+   end
+   
+   return false
+end
+_moduleObj.isStruct = isStruct
 idProv:increment(  )
 local builtinTypeBox = BoxTypeInfo.new(idProv:get_id(), AccessMode.Pub, boxRootAltType)
 _moduleObj.builtinTypeBox = builtinTypeBox
@@ -4524,7 +4597,7 @@ function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
          if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.Enum then
             return true
          elseif _switchExp == TypeInfoKind.Alge then
-            local algeTypeInfo = typeInfo
+            local algeTypeInfo = _lune.unwrap( (_lune.__Cast( typeInfo, AlgeTypeInfo ) ))
             for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
                for __index, paramType in pairs( valInfo:get_typeList() ) do
                   if not NormalTypeInfo.isAvailableMapping( paramType, checkedTypeMap ) then
@@ -4857,7 +4930,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
          return otherSrc:isInheritFrom( dest, alt2type )
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
-         local enumTypeInfo = otherSrc
+         local enumTypeInfo = _lune.unwrap( (_lune.__Cast( otherSrc, EnumTypeInfo ) ))
          return dest:canEvalWith( enumTypeInfo:get_valTypeInfo(), opTxt, alt2type )
       elseif dest:get_kind() == TypeInfoKind.Alternate then
          return dest:canEvalWith( otherSrc, opTxt, alt2type )
@@ -4881,7 +4954,13 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
             return true
          end
          
-         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=", alt2type ) then
+         if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
+            if not (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], "=", alt2type ) then
+               return false
+            end
+            
+         else
+          
             return false
          end
          
@@ -4892,12 +4971,24 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
             return true
          end
          
-         if not (_lune.unwrap( dest:get_itemTypeInfoList()[1]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[1]), "=", alt2type ) then
+         if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
+            if not (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], "=", alt2type ) then
+               return false
+            end
+            
+         else
+          
             return false
          end
          
          
-         if not (_lune.unwrap( dest:get_itemTypeInfoList()[2]) ):canEvalWith( _lune.unwrap( otherSrc:get_itemTypeInfoList()[2]), "=", alt2type ) then
+         if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
+            if not (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], "=", alt2type ) then
+               return false
+            end
+            
+         else
+          
             return false
          end
          
@@ -5528,6 +5619,7 @@ function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, 
 end
 
 local ModuleInfo = {}
+setmetatable( ModuleInfo, { ifList = {ModuleInfoIF,} } )
 _moduleObj.ModuleInfo = ModuleInfo
 function ModuleInfo.new( fullName, assignName, idMap, moduleId )
    local obj = {}
@@ -7881,22 +7973,23 @@ function ExpCastNode:canBeStatement(  )
 
    return false
 end
-function ExpCastNode.new( pos, typeList, exp )
+function ExpCastNode.new( pos, typeList, exp, force )
    local obj = {}
    ExpCastNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp ); end
+   if obj.__init then obj:__init( pos, typeList, exp, force ); end
    return obj
 end
-function ExpCastNode:__init(pos, typeList, exp) 
+function ExpCastNode:__init(pos, typeList, exp, force) 
    Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpCast']), pos, typeList)
    
    
    self.exp = exp
+   self.force = force
    
 end
-function ExpCastNode.create( nodeMan, pos, typeList, exp )
+function ExpCastNode.create( nodeMan, pos, typeList, exp, force )
 
-   local node = ExpCastNode.new(pos, typeList, exp)
+   local node = ExpCastNode.new(pos, typeList, exp, force)
    nodeMan:addNode( node )
    return node
 end
@@ -7905,6 +7998,9 @@ function ExpCastNode.setmeta( obj )
 end
 function ExpCastNode:get_exp()       
    return self.exp         
+end
+function ExpCastNode:get_force()       
+   return self.force         
 end
 
 
@@ -11305,51 +11401,69 @@ function Node:getSymbolInfo(  )
       do
          local _switchExp = (node:get_kind() )
          if _switchExp == NodeKind.get_ExpRef() then
-            return {(node ):get_symbolInfo()}
+            return {(_lune.unwrap( (_lune.__Cast( node, ExpRefNode ) )) ):get_symbolInfo()}
          elseif _switchExp == NodeKind.get_RefField() then
-            local refFieldNode = node
             do
-               local _exp = refFieldNode:get_symbolInfo()
-               if _exp ~= nil then
-                  return {_exp}
+               local refFieldNode = _lune.__Cast( node, RefFieldNode )
+               if refFieldNode ~= nil then
+                  do
+                     local _exp = refFieldNode:get_symbolInfo()
+                     if _exp ~= nil then
+                        return {_exp}
+                     end
+                  end
+                  
                end
             end
             
-            return {}
          elseif _switchExp == NodeKind.get_GetField() then
-            local getFieldNode = node
             do
-               local _exp = getFieldNode:get_symbolInfo()
-               if _exp ~= nil then
-                  return {_exp}
+               local getFieldNode = _lune.__Cast( node, GetFieldNode )
+               if getFieldNode ~= nil then
+                  do
+                     local _exp = getFieldNode:get_symbolInfo()
+                     if _exp ~= nil then
+                        return {_exp}
+                     end
+                  end
+                  
                end
             end
             
-            return {}
          elseif _switchExp == NodeKind.get_ExpList() then
-            local expListNode = node
-            local list = {}
-            for index, expNode in pairs( expListNode:get_expList() ) do
-               if index == #expListNode:get_expList() then
-                  for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
-                     table.insert( list, symbolInfo )
+            do
+               local expListNode = _lune.__Cast( node, ExpListNode )
+               if expListNode ~= nil then
+                  local list = {}
+                  for index, expNode in pairs( expListNode:get_expList() ) do
+                     if index == #expListNode:get_expList() then
+                        for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
+                           table.insert( list, symbolInfo )
+                        end
+                        
+                     else
+                      
+                        for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
+                           table.insert( list, symbolInfo )
+                           break
+                        end
+                        
+                     end
+                     
                   end
                   
-               else
-                
-                  for __index, symbolInfo in pairs( processExpNode( expNode ) ) do
-                     table.insert( list, symbolInfo )
-                     break
-                  end
-                  
+                  return list
                end
-               
             end
             
-            return list
          elseif _switchExp == NodeKind.get_RefType() then
-            local refTypeNode = node
-            return refTypeNode:get_name():getSymbolInfo(  )
+            do
+               local refTypeNode = _lune.__Cast( node, RefTypeNode )
+               if refTypeNode ~= nil then
+                  return refTypeNode:get_name():getSymbolInfo(  )
+               end
+            end
+            
          end
       end
       
@@ -11409,15 +11523,16 @@ function WhileNode:getBreakKind( checkMode )
       end
       
       if self.exp:get_expType():equals( _moduleObj.builtinTypeBool ) then
-         if self.exp:get_kind() == NodeKind.get_LiteralBool() then
-            local boolNode = self.exp
-            if boolNode:get_token().txt == "false" then
+         do
+            local boolNode = _lune.__Cast( self.exp, LiteralBoolNode )
+            if boolNode ~= nil then
+               if boolNode:get_token().txt == "false" then
+                  return BreakKind.None
+               end
+               
+            else
                return BreakKind.None
             end
-            
-         else
-          
-            return BreakKind.None
          end
          
       end
@@ -11641,13 +11756,15 @@ end
 function ExpRefNode:getLiteral(  )
 
    local typeInfo = self.symbolInfo:get_typeInfo()
-   if typeInfo:get_kind() ~= TypeInfoKind.Enum then
-      return {}, {}
+   do
+      local enumTypeInfo = _lune.__Cast( typeInfo, EnumTypeInfo )
+      if enumTypeInfo ~= nil then
+         local val = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
+         return {val:get_name()}, {enumTypeInfo}
+      end
    end
    
-   local enumTypeInfo = typeInfo
-   local val = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
-   return {val:get_name()}, {enumTypeInfo}
+   return {}, {}
 end
 
 function ExpOmitEnumNode:getLiteral(  )
@@ -11663,13 +11780,15 @@ function ExpOp2Node:getLiteral(  )
    
       local typeInfo = typeList[1]:get_srcTypeInfo()
       local val = _lune.unwrap( valList[1])
-      if typeInfo:get_kind() ~= TypeInfoKind.Enum then
-         return val, typeInfo
+      do
+         local enumTypeInfo = _lune.__Cast( typeInfo, EnumTypeInfo )
+         if enumTypeInfo ~= nil then
+            local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( val ))
+            return valInfo:get_val(), enumTypeInfo:get_valTypeInfo()
+         end
       end
       
-      local enumTypeInfo = typeInfo
-      local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( val ))
-      return valInfo:get_val(), enumTypeInfo:get_valTypeInfo()
+      return val, typeInfo
    end
    
    local val1List, type1List = self:get_exp1():getLiteral(  )

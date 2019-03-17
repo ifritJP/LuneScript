@@ -73,5 +73,10 @@
 }
 
 {
-   let val = unwrap 1;
+   let val = unwrap 1; // error
+}
+{
+   let val:str! = "abc";
+   let val2:str = unwrap val default 1; // error
+   let val3:int = unwrap val default 1; // error
 }

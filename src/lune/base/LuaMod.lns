@@ -35,6 +35,11 @@ pub enum CodeKind {
    AlgeMapping,
    SetMapping,
    SetOp,
+   InstanceOf,
+   Cast,
+   
+
+   // 最後
    Finalize,
 }
 
@@ -338,6 +343,36 @@ function _lune.newAlge( kind, vals )
 end
 ```;
 
+codeMap[ .InstanceOf ] = ```
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+```;
+
+codeMap[ .Cast ] = ```
+function _lune.__Cast( obj, class )
+   return _lune.__isInstanceOf( obj, class ) and obj or nil
+end
+```;
+            
       
 codeMap[ .Finalize ] = ```
 return _lune

@@ -94,6 +94,32 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, class )
+   return _lune.__isInstanceOf( obj, class ) and obj or nil
+end
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Opt = {}
@@ -228,7 +254,7 @@ function dumpFilter:processDeclEnum( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_name().txt )
-   local enumTypeInfo = node:get_expType()
+   local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), Ast.EnumTypeInfo ) ))
    for __index, name in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
       print( string.format( "%s  %s: %s", prefix, name.txt, valInfo:get_val()) )

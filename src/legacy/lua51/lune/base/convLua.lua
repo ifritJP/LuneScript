@@ -144,6 +144,32 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, class )
+   return _lune.__isInstanceOf( obj, class ) and obj or nil
+end
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -224,6 +250,7 @@ ConvMode._val2NameMap[2] = 'ConvMeta'
 ConvMode.__allList[3] = ConvMode.ConvMeta
 
 local ModuleInfo = {}
+setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
 end
@@ -266,7 +293,7 @@ function Opt:__init( node )
 end
 
 local convFilter = {}
-setmetatable( convFilter, { __index = Ast.Filter } )
+setmetatable( convFilter, { __index = Ast.Filter,ifList = {oStream,} } )
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer )
    local obj = {}
    convFilter.setmeta( obj )
@@ -311,7 +338,7 @@ end
 function convFilter:getFullName( typeInfo )
 
    local enumName = typeInfo:getFullName( self.typeInfo2ModuleName, true )
-   return string.format( "%s", enumName:gsub( "&", "" ))
+   return string.format( "%s", (enumName:gsub( "&", "" ) ))
 end
 function convFilter:getCanonicalName( typeInfo )
 
@@ -1027,6 +1054,11 @@ end]==] )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
       end
       
+      if node:get_nodeManager():getExpCastNodeList(  ) then
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.InstanceOf ) )
+         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Cast ) )
+      end
+      
    end
    
    local children = node:get_children(  )
@@ -1426,9 +1458,30 @@ function convFilter:processDeclClass( node, opt )
    end
    
    self:writeln( string.format( "local %s = {}", className ) )
-   local baseInfo = node:get_expType(  ):get_baseTypeInfo(  )
+   local ifTxt = ""
+   if #classTypeInfo:get_interfaceList() > 0 then
+      for __index, ifType in pairs( classTypeInfo:get_interfaceList() ) do
+         ifTxt = ifTxt .. self:getFullName( ifType ) .. ","
+      end
+      
+      ifTxt = string.format( "ifList = {%s}", ifTxt)
+   end
+   
+   local baseInfo = classTypeInfo:get_baseTypeInfo(  )
+   local baseTxt = ""
    if baseInfo:get_typeId(  ) ~= Ast.rootTypeId then
-      self:writeln( string.format( "setmetatable( %s, { __index = %s } )", className, self:getFullName( _lune.unwrap( baseInfo) )) )
+      baseTxt = string.format( "__index = %s", self:getFullName( baseInfo ))
+   end
+   
+   if #ifTxt > 0 or #baseTxt > 0 then
+      local metaTxt = baseTxt
+      if #baseTxt > 0 and #ifTxt > 0 then
+         metaTxt = string.format( "%s,%s", baseTxt, ifTxt)
+      elseif #ifTxt > 0 then
+         metaTxt = ifTxt
+      end
+      
+      self:writeln( string.format( "setmetatable( %s, { %s } )", className, metaTxt) )
    end
    
    if nodeInfo:get_accessMode(  ) == Ast.AccessMode.Pub then
@@ -2742,13 +2795,21 @@ end
 
 function convFilter:processExpCast( node, opt )
 
-   if node:get_expType():equals( Ast.builtinTypeInt ) then
-      self:write( "math.floor(" )
-      filter( node:get_exp(), self, node )
-      self:write( ")" )
+   if node:get_force() then
+      if node:get_expType():equals( Ast.builtinTypeInt ) then
+         self:write( "math.floor(" )
+         filter( node:get_exp(), self, node )
+         self:write( ")" )
+      else
+       
+         filter( node:get_exp(), self, node )
+      end
+      
    else
     
+      self:write( "_lune.__Cast( " )
       filter( node:get_exp(), self, node )
+      self:write( string.format( ", %s )", self:getFullName( node:get_expType() )) )
    end
    
 end

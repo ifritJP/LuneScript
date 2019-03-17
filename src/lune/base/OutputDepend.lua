@@ -108,14 +108,14 @@ function DependInfo:addSubMod( path )
 end
 function DependInfo:output( stream )
 
-   stream:write( string.format( "%s.meta: \\\n", self.targetModule:gsub( "%.", "/" )) )
-   stream:write( string.format( "  %s.lns \\\n", self.targetModule:gsub( "%.", "/" )) )
+   stream:write( string.format( "%s.meta: \\\n", (self.targetModule:gsub( "%.", "/" ) )) )
+   stream:write( string.format( "  %s.lns \\\n", (self.targetModule:gsub( "%.", "/" ) )) )
    for __index, mod in pairs( self.importModuleList ) do
-      stream:write( string.format( "  %s.meta \\\n", mod:gsub( "%.", "/" )) )
+      stream:write( string.format( "  %s.meta \\\n", (mod:gsub( "%.", "/" ) )) )
    end
    
    for __index, path in pairs( self.subModList ) do
-      stream:write( string.format( "  %s.lns \\\n", path:gsub( "%.", "/" )) )
+      stream:write( string.format( "  %s.lns \\\n", (path:gsub( "%.", "/" ) )) )
    end
    
 end

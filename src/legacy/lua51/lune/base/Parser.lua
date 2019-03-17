@@ -179,7 +179,7 @@ local function createReserveInfo( luaMode )
       multiCharDelimitMap[",,"] = {",,,"}
       multiCharDelimitMap[",,,"] = {",,,,"}
       multiCharDelimitMap["@"] = {"@@"}
-      multiCharDelimitMap["@@"] = {"@@?"}
+      multiCharDelimitMap["@@"] = {"@@@", "@@="}
       multiCharDelimitMap["#"] = {"##"}
       multiCharDelimitMap["*"] = {"**"}
    else
@@ -192,6 +192,7 @@ local function createReserveInfo( luaMode )
 end
 
 local TxtStream = {}
+setmetatable( TxtStream, { ifList = {iStream,} } )
 _moduleObj.TxtStream = TxtStream
 function TxtStream.new( txt )
    local obj = {}
@@ -502,6 +503,8 @@ op2Set['~=']= true
 op2Set['and']= true
 op2Set['or']= true
 op2Set['@']= true
+op2Set['@@']= true
+op2Set['@@@']= true
 op2Set['=']= true
 local op1Set = {}
 op1Set['-']= true

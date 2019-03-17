@@ -94,6 +94,32 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, class )
+   return _lune.__isInstanceOf( obj, class ) and obj or nil
+end
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local glueGenerator = {}
@@ -142,8 +168,11 @@ function glueGenerator:getArgInfo( argNode )
    end
    
    local argName = ""
-   if argNode:get_kind() == Ast.NodeKind.get_DeclArg() then
-      argName = (argNode ):get_name().txt
+   do
+      local _exp = _lune.__Cast( argNode, Ast.DeclArgNode )
+      if _exp ~= nil then
+         argName = _exp:get_name().txt
+      end
    end
    
    return typeTxt, argType:get_nilable() and nilableTypeTxt or typeTxt, orgType, argName
@@ -407,15 +436,17 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    local staticMethodNodeList = {}
    local methodNodeList = {}
    for __index, fieldNode in pairs( node:get_fieldList() ) do
-      if fieldNode:get_kind() == Ast.NodeKind.get_DeclMethod() then
-         local methodNode = fieldNode
-         if methodNode:get_declInfo():get_staticFlag() then
-            table.insert( staticMethodNodeList, methodNode )
-         else
-          
-            table.insert( methodNodeList, methodNode )
+      do
+         local methodNode = _lune.__Cast( fieldNode, Ast.DeclMethodNode )
+         if methodNode ~= nil then
+            if methodNode:get_declInfo():get_staticFlag() then
+               table.insert( staticMethodNodeList, methodNode )
+            else
+             
+               table.insert( methodNodeList, methodNode )
+            end
+            
          end
-         
       end
       
    end

@@ -126,7 +126,7 @@ pub override fn dumpFilter.processDeclEnum(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.$name.txt );
-   let enumTypeInfo = node.$expType@@Ast.EnumTypeInfo;
+   let enumTypeInfo = unwrap (node.$expType@@@Ast.EnumTypeInfo);
    foreach name in node.$valueNameList {
       let valInfo = unwrap enumTypeInfo.getEnumValInfo( name.txt );
       print( "%s  %s: %s" ( prefix, name.txt, valInfo.$val ) );

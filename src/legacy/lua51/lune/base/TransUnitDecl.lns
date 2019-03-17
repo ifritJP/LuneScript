@@ -55,7 +55,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    let continueToken, continueFlag = self.getContinueToken();
    let mut token = continueToken;
    if continueFlag and token.txt == "!" {
-      typeInfo = unwrap typeInfo.get_nilableTypeInfo();
+      typeInfo = typeInfo.get_nilableTypeInfo();
       token = self.getToken(##);
    }
 
@@ -170,7 +170,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
       token = self.getToken(##);
    }
    if token.txt == "!" {
-      typeInfo = unwrap typeInfo.get_nilableTypeInfo();
+      typeInfo = typeInfo.get_nilableTypeInfo();
       token = self.getToken(##);
    }
 
@@ -2288,8 +2288,12 @@ fn TransUnit.analyzeLetAndInitExp(
                }
             }
             orgExpTypeList.insert( expTypeInfo );
+            if expTypeInfo == Ast.builtinTypeNil and index <= #typeInfoList {
+               // 初期値が nil の場合、 orgExpTypeList は代入先の nilable 型とする
+               orgExpTypeList[ index ] = typeInfoList[ index ].$nilableTypeInfo;
+            }
             if unwrapFlag and expTypeInfo.$nilable {
-               expTypeInfo = unwrap expTypeInfo.$nonnilableType;
+               expTypeInfo = expTypeInfo.$nonnilableType;
             }
 
             if index <= #typeInfoList {

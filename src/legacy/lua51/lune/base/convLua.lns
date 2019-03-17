@@ -135,7 +135,7 @@ class convFilter extend Ast.Filter<Opt> (oStream) {
 
    fn getFullName( typeInfo:&Ast.TypeInfo ): str {
       let mut enumName = typeInfo.getFullName( self.typeInfo2ModuleName, true );
-      return "%s" (enumName.gsub( "&", "" ) );
+      return "%s" ( (enumName.gsub( "&", "" )) );
    }
 
    fn getCanonicalName( typeInfo:&Ast.TypeInfo ): str {
@@ -817,6 +817,10 @@ end``` );
       if node.$nodeManager.getImportNodeList() {
          self.writeln( LuaMod.getCode( .LoadModule ) );
       }
+      if node.$nodeManager.getExpCastNodeList() {
+         self.writeln( LuaMod.getCode( .InstanceOf ) );
+         self.writeln( LuaMod.getCode( .Cast ) );
+      }
    }
 
    let children:List<&Ast.Node> = node.get_children();
@@ -1232,12 +1236,30 @@ pub override fn convFilter.processDeclClass(
       return;
    }
    self.writeln( string.format( "local %s = {}", className ) );
+
+   let mut ifTxt = "";
+   if #classTypeInfo.$interfaceList > 0 {
+      foreach ifType in classTypeInfo.$interfaceList {
+         ifTxt = ifTxt .. self.getFullName( ifType ) .. ",";
+      }
+      ifTxt = "ifList = {%s}" (ifTxt);
+   }
    
-   let baseInfo = node.get_expType().get_baseTypeInfo();
+   let baseInfo = classTypeInfo.get_baseTypeInfo();
+   let mut baseTxt = "";
    if baseInfo.get_typeId() ~= Ast.rootTypeId {
-      self.writeln(
-         "setmetatable( %s, { __index = %s } )"
-         ( className, self.getFullName( unwrap baseInfo ) ) );
+      baseTxt = "__index = %s" ( self.getFullName( baseInfo ) );
+   }
+
+   if #ifTxt > 0 or #baseTxt > 0 {
+      let mut metaTxt = baseTxt;
+      if #baseTxt > 0 and #ifTxt > 0 {
+         metaTxt = "%s,%s" (baseTxt,ifTxt);
+      }
+      elseif #ifTxt > 0 {
+         metaTxt = ifTxt;
+      }
+      self.writeln( "setmetatable( %s, { %s } )" ( className, metaTxt ) );
    }
    
    if nodeInfo.get_accessMode() == .Pub {
@@ -2520,13 +2542,20 @@ pub override fn convFilter.processExpOp1(
 pub override fn convFilter.processExpCast( 
    node: Ast.ExpCastNode, opt: Opt ) mut
 {
-   if node.$expType.equals( Ast.builtinTypeInt ##) {
-      self.write( "math.floor(" );
-      filter( node.$exp,  self, node );
-      self.write( ")" );
+   if node.$force {
+      if node.$expType.equals( Ast.builtinTypeInt ##) {
+         self.write( "math.floor(" );
+         filter( node.$exp,  self, node );
+         self.write( ")" );
+      }  
+      else {
+         filter( node.$exp,  self, node );
+      }
    }
    else {
+      self.write( "_lune.__Cast( " );
       filter( node.$exp,  self, node );
+      self.write( ", %s )" (self.getFullName( node.$expType )) );
    }
 };
 

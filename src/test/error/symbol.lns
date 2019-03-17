@@ -1,11 +1,12 @@
-let _val = 1;
-fn _func1() {
+let _val = 1; // error
+fn _func1() { // error
 }
-fn func2( _val:int ) {
+fn func2( _val:int ) { // error
 }
-class _Test {
-   fn _func() {
+class _Test { // error
+   fn _func() {  // error
    }
 }
-macro Hoge() {
+macro Hoge() {  // error
 }
+print( __func__ );  // error

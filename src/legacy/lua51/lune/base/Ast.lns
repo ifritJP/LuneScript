@@ -783,8 +783,9 @@ pub class CanEvalCtrlTypeInfo extend TypeInfo {
 
    pub static fn updateNeedAutoBoxing( alt2type:Map<&TypeInfo,&TypeInfo> ) {
       if! alt2type[ CanEvalCtrlTypeInfo.needAutoBoxing ] {
-         let mut autoBoxingInfo = _exp@@AutoBoxingInfo;
-         autoBoxingInfo.inc();
+         if! let mut autoBoxingInfo = _exp@@@AutoBoxingInfo {
+            autoBoxingInfo.inc();
+         }
       }
       else {
          Util.err( "no exist needAutoBoxing" );
@@ -795,9 +796,10 @@ pub class CanEvalCtrlTypeInfo extend TypeInfo {
       alt2type:Map<&TypeInfo,&TypeInfo>, count:int ): bool
    { 
       if! alt2type[ CanEvalCtrlTypeInfo.needAutoBoxing ] {
-         let mut autoBoxingInfo = _exp@@AutoBoxingInfo;
-         autoBoxingInfo.unregist();
-         return autoBoxingInfo.$count == count;
+         if! let mut autoBoxingInfo = _exp@@@AutoBoxingInfo {
+            autoBoxingInfo.unregist();
+            return autoBoxingInfo.$count == count;
+         }
       }
       return false;
    }
@@ -820,11 +822,6 @@ dst に対して autoBoxing 可能かどうか調べる。
       return true;
    }
 }
-
-pub fn isGenericType( typeInfo: &TypeInfo ) : bool {
-   return typeInfo ~= typeInfo.$genSrcTypeInfo;
-}
-
 
 pub class AliasTypeInfo extend TypeInfo {
    pri let rawTxt: str { pub };
@@ -1862,11 +1859,10 @@ pub class BoxTypeInfo extend TypeInfo {
    pub override fn equals(
       typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
    {
-      if typeInfo.$kind ~= .Box {
-         return false;
+      if! let boxType = typeInfo@@@BoxTypeInfo {
+         return self.boxingType.equals( boxType.boxingType, alt2type );
       }
-      let boxType = typeInfo@@BoxTypeInfo;
-      return self.boxingType.equals( boxType.boxingType, alt2type );
+      return false;
    }
 
    pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
@@ -1944,12 +1940,12 @@ pub class GenericTypeInfo extend TypeInfo {
          return false;
       }
       // Generic 元が継承している
-      if otherSrc == other {
-         // otherSrc == other なら、 other は Generic でないので、この時点で確定
-         return true;
-      }
+
       // other は Generic
-      let genOther = other@@GenericTypeInfo;
+      let! genOther = other@@@GenericTypeInfo {
+         // other は Generic でないので、この時点で確定
+         return true;
+      };
       let! mut workAlt2type = alt2type {
          workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
       };
@@ -2009,12 +2005,13 @@ pub class GenericTypeInfo extend TypeInfo {
       }
 
       // 一致する場合、汎化の型も同じか調べる
-      let otherGen = work@@GenericTypeInfo;
-      foreach val, key in self.alt2typeMap {
-         let otherType = AlternateTypeInfo.getAssign(
-            unwrap otherGen.alt2typeMap[ key ], alt2type );
-         if not val.canEvalWith( otherType, opTxt, alt2type ) {
-            return false;
+      if! let otherGen = work@@@GenericTypeInfo {
+         foreach val, key in self.alt2typeMap {
+            let otherType = AlternateTypeInfo.getAssign(
+               unwrap otherGen.alt2typeMap[ key ], alt2type );
+            if not val.canEvalWith( otherType, opTxt, alt2type ) {
+               return false;
+            }  
          }
       }
       return true;
@@ -2030,9 +2027,12 @@ pub class GenericTypeInfo extend TypeInfo {
       {
          return false;
       }
-      if not isGenericType( other ) {
+      if not (other@@@GenericTypeInfo) {
          return false;
       }
+      // if not isGenericType( other ) {
+      //    return false;
+      // }
       
       if not self.genSrcTypeInfo.equals( other.$genSrcTypeInfo, alt2type ) {
          return false;
@@ -2087,7 +2087,12 @@ pub class GenericTypeInfo extend TypeInfo {
 }
 
 
-
+pub fn isGenericType( typeInfo: &TypeInfo ) : bool {
+   if typeInfo@@@GenericTypeInfo {
+      return true;
+   }
+   return false;
+}
 
 pub class ModifierTypeInfo extend TypeInfo {
    pri let srcTypeInfo: &TypeInfo { pub };
@@ -2450,8 +2455,6 @@ pub class AlgeTypeInfo extend TypeInfo {
 
 
 
-
-
 pub class NormalTypeInfo extend TypeInfo {
    // 外部モジュールで定義した TypeInfo かどうか
    pri let externalFlag: bool { pub };
@@ -2490,7 +2493,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
 
-   fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: TypeInfo!,
+   fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: &TypeInfo!,
               interfaceList: List<&TypeInfo>!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
               accessMode: AccessMode,
@@ -2539,15 +2542,13 @@ pub class NormalTypeInfo extend TypeInfo {
                }
             }
             case .Class, .IF {
-               if isGenericType( self.baseTypeInfo ) {
-                  let genericType = self.baseTypeInfo@@GenericTypeInfo;
+               if! let genericType = self.baseTypeInfo@@@GenericTypeInfo {
                   foreach genType, altType in genericType.createAlt2typeMap( false ) {
                      alt2typeMap[ altType ] = genType;
                   }
                }
                foreach ifType in self.interfaceList {
-                  if isGenericType( ifType ) {
-                     let genericType = ifType@@GenericTypeInfo;
+                  if! let genericType = ifType@@@GenericTypeInfo {
                      foreach genType, altType in genericType.createAlt2typeMap( false ) {
                         alt2typeMap[ altType ] = genType;
                      }
@@ -2937,7 +2938,7 @@ pub let builtinTypeNeverRet:TypeInfo =
    NormalTypeInfo.createBuiltin( "Error", "__", .Prim## );
 pub let builtinTypeStem:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem## );
-pub let builtinTypeStem_ = unwrap builtinTypeStem.$nilableTypeInfo;
+pub let builtinTypeStem_ = builtinTypeStem.$nilableTypeInfo;
 
 pub let builtinTypeBool:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Bool", "bool" , .Prim## );
@@ -2959,6 +2960,24 @@ pub let builtinTypeList:TypeInfo =
    NormalTypeInfo.createBuiltin( "List", "List" , .List## );
 pub let builtinTypeArray:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
+
+pub fn isStruct( typeInfo:&TypeInfo ): bool {
+   switch typeInfo.$kind {
+      case .Class {
+         if typeInfo == builtinTypeString {
+            return false;
+         }
+         if typeInfo.$baseTypeInfo ~= headTypeInfo or
+            #typeInfo.$interfaceList ~= 0 or
+            #typeInfo.$children ~= 1 // children は __init の分
+         {
+            return false;
+         }
+         return true;
+      }
+   }
+   return false;
+}
 
 
 idProv.increment();
@@ -3598,9 +3617,16 @@ pub override fn NilableTypeInfo.canEvalWith(
 }
    
 macro _checkEqualsItemType( type1:sym, type2:sym, index:int, alt2type:sym ) {
-   if not (unwrap ,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
-      unwrap ,,type2.$itemTypeInfoList[ ,,index ], "=", ,,alt2type )
+   if #,,type1.$itemTypeInfoList >= ,,index and
+      #,,type2.$itemTypeInfoList >= ,,index
    {
+      if not (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
+         ,,type2.$itemTypeInfoList[ ,,index ], "=", ,,alt2type )
+      {  
+         return false;
+      }  
+   }
+   else {
       return false;
    }
 };
@@ -3614,7 +3640,7 @@ pub static fn NormalTypeInfo.isAvailableMapping(
             return true;
          }  
          case .Alge {
-            let algeTypeInfo = typeInfo@@AlgeTypeInfo;
+            let algeTypeInfo = unwrap (typeInfo@@@AlgeTypeInfo);
             foreach valInfo in algeTypeInfo.$valInfoMap {
                foreach paramType in valInfo.$typeList {
                   if not NormalTypeInfo.isAvailableMapping( paramType, checkedTypeMap ) {
@@ -3947,7 +3973,7 @@ pub static fn TypeInfo.canEvalWithBase(
          return otherSrc.isInheritFrom( dest, alt2type );
       }
       elseif otherSrc.$kind == .Enum {
-         let enumTypeInfo = otherSrc@@EnumTypeInfo;
+         let enumTypeInfo = unwrap (otherSrc@@@EnumTypeInfo);
          return dest.canEvalWith( enumTypeInfo.$valTypeInfo, opTxt, alt2type );
       }
       elseif dest.$kind == .Alternate {
@@ -4849,7 +4875,8 @@ pub override fn WhenNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
 
 
 _declNodeClass( "ExpCast", Node, false, true, false,
-                [ { "exp": "&Node" } ]
+                [ { "exp": "&Node" },
+                  { "force": "bool" } ]
 );
 
 pub enum MacroMode {
@@ -5266,43 +5293,45 @@ pub fn Node.getSymbolInfo(): List<&AccessSymbolInfo> {
    fn processExpNode( node: &Node ): List<&AccessSymbolInfo> {
       switch ( node.$kind ) {
          case NodeKind.$ExpRef {
-            return [(node@@ExpRefNode).$symbolInfo];
+            return [(unwrap (node@@@ExpRefNode)).$symbolInfo];
          }
          case NodeKind.$RefField {
-            let refFieldNode = node@@RefFieldNode;
-            if! refFieldNode.$symbolInfo {
-               return [_exp];
+            if! let refFieldNode = node@@@RefFieldNode {
+               if! refFieldNode.$symbolInfo {
+                  return [_exp];
+               }
             }
-            return [];
          }
          case NodeKind.$GetField {
-            let getFieldNode = node@@GetFieldNode;
-            if! getFieldNode.$symbolInfo {
-               return [_exp];
+            if! let getFieldNode = node@@@GetFieldNode {
+               if! getFieldNode.$symbolInfo {
+                  return [_exp];
+               }
             }
-            return [];
          }
          case NodeKind.$ExpList {
-            let expListNode = node@@ExpListNode;
-            let mut list: List<&AccessSymbolInfo> = [];
-            foreach expNode, index in expListNode.$expList {
-               if index == #expListNode.$expList {
-                  foreach symbolInfo in processExpNode( expNode ) {
-                     list.insert( symbolInfo );
-                  }
+            if! let expListNode = node@@@ExpListNode {
+               let mut list: List<&AccessSymbolInfo> = [];
+               foreach expNode, index in expListNode.$expList {
+                  if index == #expListNode.$expList {
+                     foreach symbolInfo in processExpNode( expNode ) {
+                        list.insert( symbolInfo );
+                     }  
+                  }  
+                  else {
+                     foreach symbolInfo in processExpNode( expNode ) {
+                        list.insert( symbolInfo );
+                        break;
+                     }  
+                  }  
                }
-               else {
-                  foreach symbolInfo in processExpNode( expNode ) {
-                     list.insert( symbolInfo );
-                     break;
-                  }
-               }
+               return list;
             }
-            return list;
          }
          case NodeKind.$RefType {
-            let refTypeNode = node@@RefTypeNode;
-            return refTypeNode.$name.getSymbolInfo();
+            if! let refTypeNode = node@@@RefTypeNode {
+               return refTypeNode.$name.getSymbolInfo();
+            }
          }
       }
       return [];
@@ -5329,8 +5358,7 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
          return .None;
       }
       if self.exp.$expType.equals( builtinTypeBool ## ) {
-         if self.exp.$kind == NodeKind.$LiteralBool {
-            let boolNode = self.exp@@LiteralBoolNode;
+         if! let boolNode = self.exp@@@LiteralBoolNode {
             if boolNode.$token.txt == "false" {
                return .None;
             }  
@@ -5490,13 +5518,12 @@ pub override fn ExpMacroStatNode.getLiteral(): stem![], List<&TypeInfo> {
 
 pub override fn ExpRefNode.getLiteral(): stem![], List<&TypeInfo> {
    let typeInfo = self.symbolInfo.$typeInfo;
-   if typeInfo.$kind ~= .Enum {
-      return [], [];
+   if! let enumTypeInfo = typeInfo@@@EnumTypeInfo {
+      let val = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
+      return [ val.$name ], [ enumTypeInfo ];
    }
-   let enumTypeInfo = typeInfo@@EnumTypeInfo;
 
-   let val = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
-   return [ val.$name ], [ enumTypeInfo ];
+   return [], [];
 }
 
 pub override fn ExpOmitEnumNode.getLiteral(): stem![], List<&TypeInfo> {
@@ -5511,12 +5538,11 @@ pub override fn ExpOp2Node.getLiteral(): stem![], List<&TypeInfo> {
    fn getValType( valList:&List<stem!>, typeList:&List<&TypeInfo> ): &stem, &TypeInfo {
       let typeInfo = typeList[ 1 ].$srcTypeInfo;
       let val = unwrap valList[ 1 ];
-      if typeInfo.$kind ~= .Enum {
-         return val, typeInfo;
+      if! let enumTypeInfo = typeInfo@@@EnumTypeInfo {
+         let valInfo = unwrap enumTypeInfo.getEnumValInfo( val@@str );
+         return valInfo.$val, enumTypeInfo.$valTypeInfo;
       }
-      let enumTypeInfo = typeInfo@@EnumTypeInfo;
-      let valInfo = unwrap enumTypeInfo.getEnumValInfo( val@@str );
-      return valInfo.$val, enumTypeInfo.$valTypeInfo;
+      return val, typeInfo;
    }
    
    let val1List, mut type1List = self.$exp1.getLiteral();

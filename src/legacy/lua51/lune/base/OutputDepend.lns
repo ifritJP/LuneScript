@@ -47,13 +47,13 @@ pub class DependInfo {
 
    
    pub fn output( stream:oStream ) {
-      stream.write( "%s.meta: \\\n" ( self.targetModule.gsub( "%.", "/" ) ) );
-      stream.write( "  %s.lns \\\n" ( self.targetModule.gsub( "%.", "/" ) ) );
+      stream.write( "%s.meta: \\\n" ( (self.targetModule.gsub( "%.", "/" ) )) );
+      stream.write( "  %s.lns \\\n" ( (self.targetModule.gsub( "%.", "/" ) )) );
       foreach mod in self.importModuleList {
-         stream.write( "  %s.meta \\\n" (mod.gsub("%.", "/")) );
+         stream.write( "  %s.meta \\\n" ((mod.gsub("%.", "/"))) );
       }  
       foreach path in self.subModList {
-         stream.write( "  %s.lns \\\n" (path.gsub("%.", "/")) );
+         stream.write( "  %s.lns \\\n" ((path.gsub("%.", "/"))) );
       }
    }  
    

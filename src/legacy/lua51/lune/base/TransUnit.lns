@@ -436,36 +436,44 @@ pub class TransUnit {
 }
 
 
-let mut opLevelBase = 0;
 let mut op2levelMap:Map<str,int> = {};
 let mut op1levelMap:Map<str,int> = {};
-fn regOpLevel( opnum: int, opList: str[@] ) {
-   opLevelBase = opLevelBase + 1;
-   if opnum == 1 {
-      foreach op in opList {
-         op1levelMap[ op ] = opLevelBase;
-      } 
-   }
-   else {
-      foreach op in opList {
-         op2levelMap[ op ] = opLevelBase;
-      } 
-   }
+
+/** 最高優先度 */
+let mut opTopLevel = 0;
+
+{
+   let mut opLevelBase = 0;
+   fn regOpLevel( opnum: int, opList: str[@] ) {
+      opLevelBase = opLevelBase + 1;
+      if opnum == 1 {
+         foreach op in opList {
+            op1levelMap[ op ] = opLevelBase;
+         }  
+      }  
+      else {
+         foreach op in opList {
+            op2levelMap[ op ] = opLevelBase;
+         }  
+      }  
+   }  
+   regOpLevel( 2, [@ "=" ] );
+   regOpLevel( 2, [@ "or" ] );
+   regOpLevel( 2, [@ "and" ] );
+   regOpLevel( 2, [@ "<", ">", "<=", ">=", "~=", "==" ] );
+   regOpLevel( 2, [@ "|" ] );
+   regOpLevel( 2, [@ "~" ] );
+   regOpLevel( 2, [@ "&" ] );
+   regOpLevel( 2, [@ "|<<", "|>>" ] );
+   regOpLevel( 2, [@ ".." ] );
+   regOpLevel( 2, [@ "+", "-" ] );
+   regOpLevel( 2, [@ "*", "/", "//", "%" ] );
+   regOpLevel( 1, [@ "`", ",,", ",,,", ",,,," ] );
+   regOpLevel( 1, [@ "not", "#", "-", "~" ] );
+   regOpLevel( 1, [@ "^" ] );
+
+   opTopLevel = opLevelBase + 1;
 }
-regOpLevel( 2, [@ "=" ] );
-regOpLevel( 2, [@ "or" ] );
-regOpLevel( 2, [@ "and" ] );
-regOpLevel( 2, [@ "<", ">", "<=", ">=", "~=", "==" ] );
-regOpLevel( 2, [@ "|" ] );
-regOpLevel( 2, [@ "~" ] );
-regOpLevel( 2, [@ "&" ] );
-regOpLevel( 2, [@ "|<<", "|>>" ] );
-regOpLevel( 2, [@ ".." ] );
-regOpLevel( 2, [@ "+", "-" ] );
-regOpLevel( 2, [@ "*", "/", "//", "%" ] );
-regOpLevel( 1, [@ "`", ",,", ",,,", ",,,," ] );
-regOpLevel( 1, [@ "not", "#", "-", "~" ] );
-regOpLevel( 1, [@ "^" ] );
 
 
 let mut quotedChar2Code:Map<str,int> = {};
@@ -569,7 +577,7 @@ class _TypeInfoNilable extend _TypeInfo {
       //let orgTypeInfo = unwrap param.typeId2TypeInfo[ self.orgTypeId ];
       let orgTypeInfo = unwrap param.getTypeInfo( self.orgTypeId );
       let newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
-      param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+      param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo,nil;
    }
 }
@@ -584,7 +592,7 @@ class _TypeInfoAlias extend _TypeInfo {
       let srcTypeInfo = unwrap param.getTypeInfo( self.srcTypeId );
       let newTypeInfo = Ast.NormalTypeInfo.createAlias(
          self.rawTxt, true, .Pub, param.moduleTypeInfo, srcTypeInfo );
-      param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+      param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
 
       let! mut parentScope = param.typeId2Scope[ self.parentId ] {
          return nil, "not found parentScope %s %s" ( self.parentId, self.rawTxt );
@@ -605,7 +613,7 @@ class _TypeInfoDDD extend _TypeInfo {
       //let itemTypeInfo = unwrap param.typeId2TypeInfo[ self.itemTypeId ];
       let itemTypeInfo = unwrap param.getTypeInfo( self.itemTypeId );
       let newTypeInfo = Ast.NormalTypeInfo.createDDD( itemTypeInfo, true );
-      param.typeId2TypeInfo[ self.typeId ] = unwrap newTypeInfo;
+      param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo,nil;
    }
 }
@@ -678,8 +686,7 @@ class _TypeInfoModifier extend _TypeInfo {
       let! srcTypeInfo = param.getTypeInfo( self.srcTypeId ) {
          return nil, "not found srcType -- %d, %d" ( self.parentId, self.srcTypeId );
       };
-      let newTypeInfo = param.transUnit.createModifier(
-         srcTypeInfo, unwrap self.mutable default false);
+      let newTypeInfo = param.transUnit.createModifier( srcTypeInfo, self.mutable );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
    }
@@ -828,7 +835,7 @@ class _TypeInfoNormal extend _TypeInfo {
 
                let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
                foreach itemType in itemTypeInfo {
-                  altTypeList.insert( itemType@@Ast.AlternateTypeInfo );
+                  altTypeList.insert( unwrap (itemType@@@Ast.AlternateTypeInfo) );
                }
                
                let workTypeInfo = Ast.NormalTypeInfo.createClass(
@@ -922,7 +929,7 @@ class _TypeInfoEnum extend _TypeInfo {
       
       param.typeId2Scope[ self.typeId ] = scope;
       let enumTypeInfo = Ast.NormalTypeInfo.createEnum(
-         scope, unwrap parentInfo, true, accessMode, self.txt,
+         scope, parentInfo, true, accessMode, self.txt,
          //unwrap param.typeId2TypeInfo[ self.valTypeId ],
          unwrap param.getTypeInfo( self.valTypeId ),
          name2EnumValInfo );
@@ -958,7 +965,7 @@ class _TypeInfoAlge extend _TypeInfo {
       
       param.typeId2Scope[ self.typeId ] = scope;
       let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
-         scope, unwrap parentInfo, true, accessMode, self.txt );
+         scope, parentInfo, true, accessMode, self.txt );
       let newTypeInfo = algeTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = algeTypeInfo;
       foreach valInfo in self.algeValList {
@@ -1353,7 +1360,7 @@ fn TransUnit.registBuiltInScope() mut {
    self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, false, true );
    self.scope.addVar( .Global, "__mod__", Ast.builtinTypeString, false, true );
    self.scope.addVar( .Global, "__line__", Ast.builtinTypeInt, false, true );
-   self.scope.addVar( .Global, "__func__", Ast.builtinTypeString, false, true );
+   //self.scope.addVar( .Global, "__func__", Ast.builtinTypeString, false, true );
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, className in builtinClassInfo {
@@ -1951,7 +1958,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    if! let moduleInfo = self.importModuleName2ModuleInfo[ modulePath ] {
       if! let metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
       {
-         let metaInfo = metaInfoStem@@_MetaInfo;
+         let metaInfo = metaInfoStem@@=_MetaInfo;
          let typeId2TypeInfo = moduleInfo.$importId2localTypeInfoMap;
          let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
          self.importModuleInfo.remove();
@@ -1968,7 +1975,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
    let! metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath ) {
       self.error( "failed to load meta -- " .. modulePath );
    };
-   let metaInfo = metaInfoStem@@_MetaInfo;
+   let metaInfo = metaInfoStem@@=_MetaInfo;
 
    // 依存するモジュールのメタ情報を読み込み
    let mut dependLibId2DependInfo:Map<int,DependModuleInfo> = {};
@@ -2195,8 +2202,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
                      self.scope.addMember(
                         fieldName, fieldTypeInfo,
                         unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
-                        unwrap fieldInfo.staticFlag default false,
-                        unwrap fieldInfo.mutable default false );
+                        fieldInfo.staticFlag and true or false,
+                        fieldInfo.mutable and true or false );
                   }
                   else {
                      self.error( "not found fieldInfo.typeId" );
@@ -2255,7 +2262,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       if! let typeId = varInfo.typeId {
          self.scope.addStaticVar(
             false, true, varName, unwrap typeId2TypeInfo[ typeId@@int ],
-            unwrap varInfo.mutable default false );
+            varInfo.mutable and true or false );
       }
       else {
          self.error( "illegal varInfo.typeId" );

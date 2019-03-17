@@ -243,7 +243,7 @@ pub static fn MetaForBuildId.LoadFromMeta( metaPath:str ): MetaForBuildId!, str!
 fn getMetaInfo( lnsPath:str, mod:str, outdir:str! ): &MetaForBuildId!, str, str {
    let mut moduleMetaPath = lnsPath;
    when! outdir {
-      moduleMetaPath = "%s/%s" ( outdir , mod.gsub( "%.", "/" ) );
+      moduleMetaPath = "%s/%s" ( outdir , (mod.gsub( "%.", "/" )) );
    }
    moduleMetaPath = moduleMetaPath.gsub( "%.lns$", ".meta" );
    if! let meta, metaCode = MetaForBuildId.LoadFromMeta( moduleMetaPath ) {
@@ -486,7 +486,7 @@ fn Front.checkUptodateMeta( metaPath:str, addSearchPath:str! ): stem! {
    let! metaObj = self.loadLua( metaPath ) {
       return nil;
    };
-   let meta = metaObj@@TransUnit._MetaInfo;
+   let meta = metaObj@@=TransUnit._MetaInfo;
    if meta.$__formatVersion ~= Ver.metaVersion {
       return nil;
    }
@@ -556,7 +556,7 @@ fn Front.loadModule( mod:str ) mut : stem!, &stem {
       }
    }
    if! self.loadedMap[ mod ] {
-      return unwrap _exp.mod, unwrap _exp.meta;
+      return _exp.mod, _exp.meta;
    }
    error( "load error, %s" ( mod ) );
 }

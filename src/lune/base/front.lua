@@ -221,6 +221,32 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, class )
+   return _lune.__isInstanceOf( obj, class ) and obj or nil
+end
+
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )
@@ -294,6 +320,7 @@ function LoadInfo:__init( mod, meta )
 end
 
 local Front = {}
+setmetatable( Front, { ifList = {frontInterface.frontInterface,} } )
 function Front.new( option )
    local obj = {}
    Front.setmeta( obj )
@@ -413,6 +440,7 @@ function Front:loadFromLnsTxt( importModuleInfo, name, txt )
 end
 
 local DependMetaInfo = {}
+setmetatable( DependMetaInfo, { ifList = {Mapping,} } )
 function DependMetaInfo.setmeta( obj )
   setmetatable( obj, { __index = DependMetaInfo  } )
 end
@@ -455,6 +483,7 @@ function DependMetaInfo._fromMapSub( obj, val )
 end
 
 local MetaForBuildId = {}
+setmetatable( MetaForBuildId, { ifList = {Mapping,} } )
 function MetaForBuildId:createModuleId(  )
 
    return frontInterface.ModuleId.createIdFromTxt( self.__buildId )
@@ -525,7 +554,7 @@ local function getMetaInfo( lnsPath, mod, outdir )
 
    local moduleMetaPath = lnsPath
    if outdir ~= nil then
-      moduleMetaPath = string.format( "%s/%s", outdir, mod:gsub( "%.", "/" ))
+      moduleMetaPath = string.format( "%s/%s", outdir, (mod:gsub( "%.", "/" ) ))
    end
    
    moduleMetaPath = moduleMetaPath:gsub( "%.lns$", ".meta" )
@@ -897,7 +926,7 @@ function Front:loadModule( mod )
    do
       local _exp = self.loadedMap[mod]
       if _exp ~= nil then
-         return _lune.unwrap( _exp.mod), _lune.unwrap( _exp.meta)
+         return _exp.mod, _exp.meta
       end
    end
    

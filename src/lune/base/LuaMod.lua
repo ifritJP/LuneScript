@@ -75,9 +75,15 @@ CodeKind.__allList[11] = CodeKind.SetMapping
 CodeKind.SetOp = 11
 CodeKind._val2NameMap[11] = 'SetOp'
 CodeKind.__allList[12] = CodeKind.SetOp
-CodeKind.Finalize = 12
-CodeKind._val2NameMap[12] = 'Finalize'
-CodeKind.__allList[13] = CodeKind.Finalize
+CodeKind.InstanceOf = 12
+CodeKind._val2NameMap[12] = 'InstanceOf'
+CodeKind.__allList[13] = CodeKind.InstanceOf
+CodeKind.Cast = 13
+CodeKind._val2NameMap[13] = 'Cast'
+CodeKind.__allList[14] = CodeKind.Cast
+CodeKind.Finalize = 14
+CodeKind._val2NameMap[14] = 'Finalize'
+CodeKind.__allList[15] = CodeKind.Finalize
 
 local codeMap = {}
 codeMap[CodeKind.Init] = [==[
@@ -362,6 +368,34 @@ function _lune.newAlge( kind, vals )
       return kind
    end
    return { kind[ 1 ], vals }
+end
+]==]
+codeMap[CodeKind.InstanceOf] = [==[
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+]==]
+codeMap[CodeKind.Cast] = [==[
+function _lune.__Cast( obj, class )
+   return _lune.__isInstanceOf( obj, class ) and obj or nil
 end
 ]==]
 codeMap[CodeKind.Finalize] = [==[

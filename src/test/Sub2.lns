@@ -168,7 +168,7 @@ pub class TestGen<T> {
    }
 }
 pub fn TestGen.func2( val:T ) {
-   dump( self.val, unwrap val default 0 );
+   dump( self.val, val );
 }
 
 pub fn func( testgen:&TestGen<int> ) {

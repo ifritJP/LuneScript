@@ -11,7 +11,7 @@ class Test<T> {
    }
 }
 pub fn Test.func2( val:T ) {
-   dump( self.val, unwrap val default 0 );
+   dump( self.val, unwrap val default 0 ); // error
 }
 
 fn func( test1:&Test<int> ) {
