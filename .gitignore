@@ -4,3 +4,4 @@ src/test/proj/*.lua
 src/test/proj/depends/*.d
 src/test/start.lua
 src/test/glueTest*.so
+src.bak
