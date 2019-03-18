@@ -173,3 +173,73 @@ class Test9<T:Sub2> {
 
    func( new Test9( new Sub2() ) );
 }
+
+
+abstract class Test10 {
+   pub abstract fn func( txt:str );
+}
+
+class Sub3 extend Test10 {
+   pub override fn func( txt:str ) {
+      print( txt, __func__ );
+   }
+}
+
+class Sub32 extend Test10 {
+   pub override fn func( txt:str ) {
+      print( txt, __func__ );
+   }
+}
+
+class Sub3Sub3 extend Sub3 {
+}
+
+interface IF4 {
+}
+
+class Sub33 extend (IF4) {
+}
+
+{
+   fn func( txt:str, obj:stem ) {
+      if! let val = obj@@@Sub3 {
+         val.func( txt );
+      }  
+      else {
+         if! let val = obj@@@Sub32 {
+            val.func( txt );
+         }  
+         else {
+            print( txt, type( obj ) );
+         }  
+      }  
+      
+   }  
+
+   func( "Sub3Sub3", new Sub3Sub3() );
+   func( "Sub32", new Sub32() );
+   func( "int", 1 );
+   func( "str", "abc" );
+}
+
+class SuperSuper<T> {
+   let val:T {pub};
+}
+
+class Super2<T2> extend SuperSuper<T2> {
+   pro fn __init( val:T2 ) {
+      super( val );
+   }
+}
+
+class Test11<T3,T4> extend Super2<T4> {
+   let val2:T3 {pub};
+   pub fn __init( val:T4, val2:T3 ) {
+      super( val );
+      self.val2 = val2;
+   }
+}
+{
+   let test2 = new Test11( 1, "abc" );
+   print( __line__, test2.$val + 10, test2.$val2 .. "xyz" );
+}

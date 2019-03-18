@@ -1189,7 +1189,7 @@ pub fn Scope.addMember( name:str, typeInfo: &TypeInfo, accessMode:AccessMode,
 pub fn Scope.addMethod(
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut
 {
-   self.add( SymbolKind.Mtd, true, true, typeInfo.$rawTxt,
+   self.add( SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt,
              typeInfo, accessMode, staticFlag, mutable, true );
 }
 
@@ -1784,7 +1784,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 
    pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      return alt2typeMap[ self ];
+      return AlternateTypeInfo.getAssign( self, alt2typeMap );
    }
 }
 
@@ -2063,8 +2063,7 @@ pub class GenericTypeInfo extend TypeInfo {
    }
 
    pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
-      let mut map:Map<&TypeInfo,&TypeInfo> =
-         CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag );
+      let mut map = self.genSrcTypeInfo.createAlt2typeMap( detectFlag );
       foreach typeInfo, genType in self.alt2typeMap {
          map[ genType ] = typeInfo;
       }
@@ -2542,11 +2541,11 @@ pub class NormalTypeInfo extend TypeInfo {
                }
             }
             case .Class, .IF {
-               if! let genericType = self.baseTypeInfo@@@GenericTypeInfo {
-                  foreach genType, altType in genericType.createAlt2typeMap( false ) {
-                     alt2typeMap[ altType ] = genType;
-                  }
-               }
+               // if! let genericType = self.baseTypeInfo@@@GenericTypeInfo {
+               //    foreach genType, altType in genericType.createAlt2typeMap( false ) {
+               //       alt2typeMap[ altType ] = genType;
+               //    }
+               // }
                foreach ifType in self.interfaceList {
                   if! let genericType = ifType@@@GenericTypeInfo {
                      foreach genType, altType in genericType.createAlt2typeMap( false ) {
@@ -2602,7 +2601,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
       let mut map:Map<&TypeInfo,&TypeInfo> =
-         CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag );
+         self.baseTypeInfo.createAlt2typeMap( detectFlag );
       foreach typeInfo, genType in self.alt2typeMap {
          map[ genType ] = typeInfo;
       }

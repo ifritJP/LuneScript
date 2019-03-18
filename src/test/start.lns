@@ -744,13 +744,16 @@ pub let val = 100;
             sub( x );
          }
       }
+      if algeTest == .Val1 {
+         print( __line__, "Val1" );
+      }
    }
 
-   sub( SUB2.AlgeTest.Val1 );
-   sub( SUB2.AlgeTest.Val2 );
-   sub( SUB2.AlgeTest.Val3( 3 ) );
-   sub( SUB2.AlgeTest.Val4( 4, "abc", new SUB2.Hoge2( 1 ) ) );
-   sub( SUB2.AlgeTest.Val5( SUB2.AlgeTest.Val5( SUB2.AlgeTest.Val3( 5 ) ) ) );
+   sub( .Val1 );
+   sub( .Val2 );
+   sub( .Val3( 3 ) );
+   sub( .Val4( 4, "abc", new SUB2.Hoge2( 1 ) ) );
+   sub( .Val5( .Val5( .Val3( 5 ) ) ) );
 }
 
 

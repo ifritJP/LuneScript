@@ -367,11 +367,43 @@ function _lune.__isInstanceOf( obj, class )
 end
 ```;
 
+
+pub enum CastKind {
+   Int,
+   Real,
+   Str,
+   Class,
+}
+            
 codeMap[ .Cast ] = ```
-function _lune.__Cast( obj, class )
-   return _lune.__isInstanceOf( obj, class ) and obj or nil
+function _lune.__Cast( obj, kind, class )
+   if kind == %d then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == %d then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) == obj then
+         return nil
+      end
+      return obj
+   elseif kind == %d then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == %d then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
 end
-```;
+``` ( CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class );
             
       
 codeMap[ .Finalize ] = ```

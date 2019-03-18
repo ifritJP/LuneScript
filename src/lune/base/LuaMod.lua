@@ -393,11 +393,70 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 ]==]
-codeMap[CodeKind.Cast] = [==[
-function _lune.__Cast( obj, class )
-   return _lune.__isInstanceOf( obj, class ) and obj or nil
+local CastKind = {}
+_moduleObj.CastKind = CastKind
+CastKind._val2NameMap = {}
+function CastKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "CastKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function CastKind._from( val )
+   if CastKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+CastKind.__allList = {}
+function CastKind.get__allList()
+   return CastKind.__allList
 end
-]==]
+
+CastKind.Int = 0
+CastKind._val2NameMap[0] = 'Int'
+CastKind.__allList[1] = CastKind.Int
+CastKind.Real = 1
+CastKind._val2NameMap[1] = 'Real'
+CastKind.__allList[2] = CastKind.Real
+CastKind.Str = 2
+CastKind._val2NameMap[2] = 'Str'
+CastKind.__allList[3] = CastKind.Str
+CastKind.Class = 3
+CastKind._val2NameMap[3] = 'Class'
+CastKind.__allList[4] = CastKind.Class
+
+codeMap[CodeKind.Cast] = string.format( [==[
+function _lune.__Cast( obj, kind, class )
+   if kind == %d then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == %d then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) == obj then
+         return nil
+      end
+      return obj
+   elseif kind == %d then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == %d then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
+end
+]==], CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class)
 codeMap[CodeKind.Finalize] = [==[
 return _lune
 ]==]

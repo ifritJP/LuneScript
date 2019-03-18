@@ -421,6 +421,9 @@ pub class TransUnit {
       accessMode: Ast.AccessMode, allowDDD:bool,
       refFlag: bool, mutFlag: bool, symbolNode:&Ast.Node ) mut: Ast.RefTypeNode;
 
+   pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
+
+
 
    pri fn addLocalVar(
       pos:&Parser.Position, argFlag:bool, canBeLeft:bool,
@@ -2563,6 +2566,9 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Ast.MatchNode {
    while ( nextToken.txt == "case" ) {
       self.checkNextToken( "." );
       let valNameToken = self.getToken(##);
+
+      self.checkAlgeComp( valNameToken, algeTypeInfo );
+      
       let! valInfo = algeTypeInfo.getValInfo( valNameToken.txt ) {
          self.error( "not found val -- %s" (valNameToken.txt) );
       };

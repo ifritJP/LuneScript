@@ -4,6 +4,11 @@ pub alge AlgeTest {
    Val3( int ),
 }  
 
+fn func( test1:AlgeTest ) {
+   if test1 == .Val3(1) { // error
+   }
+}
+
 {
    let test1 = AlgeTest.Val1;
    let test2 = AlgeTest.Val2;

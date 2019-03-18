@@ -1,6 +1,8 @@
 class Test {
    pub fn func() {
    }
+   pub static fn func2() {
+   }
 }
 
 class Sub extend Test {
@@ -10,10 +12,15 @@ class Sub extend Test {
 {
    let test = new Sub();
    let val:form = test.func@@form; // error
-   let val2:stem = test.func;
+   let val2:stem = test.func; // error
    let val3:form = val2@@form;
+   let val4:stem = Test.func2;
 
    let test2 = test@@Test; // error
+
+   let obj:stem = test;
+   let test3 = obj@@=Test; // error
+   let test4 = obj@@=Sub; // error
 }
 
 {

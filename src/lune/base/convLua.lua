@@ -165,8 +165,32 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 
-function _lune.__Cast( obj, class )
-   return _lune.__isInstanceOf( obj, class ) and obj or nil
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) == obj then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
 end
 
 local Ver = _lune.loadModule( 'lune.base.Ver' )
@@ -1148,7 +1172,7 @@ function convFilter:processDeclEnum( node, opt )
 
    local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
    local enumFullName = node:get_name().txt
-   local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType(), Ast.EnumTypeInfo ))
+   local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ))
    local parentInfo = typeInfo:get_parentInfo()
    local isTopNS = true
    if parentInfo ~= Ast.headTypeInfo and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
@@ -1297,7 +1321,7 @@ function convFilter:processDeclAlge( node, opt )
 
    local access = node:get_accessMode() == Ast.AccessMode.Global and "" or "local "
    local algeFullName = node:get_algeType():get_rawTxt()
-   local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType(), Ast.AlgeTypeInfo ))
+   local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.AlgeTypeInfo ))
    local parentInfo = typeInfo:get_parentInfo()
    local isTopNS = true
    if parentInfo ~= Ast.headTypeInfo and parentInfo:get_kind() == Ast.TypeInfoKind.Class then
@@ -1513,7 +1537,7 @@ function convFilter:processDeclClass( node, opt )
       end
       
       do
-         local declMemberNode = _lune.__Cast( field, Ast.DeclMemberNode )
+         local declMemberNode = _lune.__Cast( field, 3, Ast.DeclMemberNode )
          if declMemberNode ~= nil then
             if not declMemberNode:get_staticFlag() then
                table.insert( memberList, declMemberNode )
@@ -1523,7 +1547,7 @@ function convFilter:processDeclClass( node, opt )
       end
       
       do
-         local methodNode = _lune.__Cast( field, Ast.DeclMethodNode )
+         local methodNode = _lune.__Cast( field, 3, Ast.DeclMethodNode )
          if methodNode ~= nil then
             local declInfo = methodNode:get_declInfo(  )
             local methodNameToken = _lune.unwrap( declInfo:get_name(  ))
@@ -1580,7 +1604,7 @@ function %s:__init( %s )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               self:write( string.format( "%s.__init( self )", self:getFullName( baseInfo )) )
+               self:writeln( string.format( "%s.__init( self )", self:getFullName( baseInfo )) )
             end
          end
          
@@ -1838,7 +1862,7 @@ function convFilter:processDeclConstr( node, opt )
       
       filter( arg, self, node )
       do
-         local _exp = _lune.__Cast( arg, Ast.DeclArgNode )
+         local _exp = _lune.__Cast( arg, 3, Ast.DeclArgNode )
          if _exp ~= nil then
             argTxt = argTxt .. _exp:get_name().txt
          else
@@ -2503,7 +2527,7 @@ function convFilter:processExpCall( node, opt )
    local setArgFlag = false
    local function fieldCall(  )
    
-      local fieldNode = _lune.__Cast( node:get_func(), Ast.RefFieldNode )
+      local fieldNode = _lune.__Cast( node:get_func(), 3, Ast.RefFieldNode )
       if  nil == fieldNode then
          local _fieldNode = fieldNode
       
@@ -2641,7 +2665,7 @@ function convFilter:processExpCall( node, opt )
    end
    
    do
-      local refNode = _lune.__Cast( node:get_func(), Ast.ExpRefNode )
+      local refNode = _lune.__Cast( node:get_func(), 3, Ast.ExpRefNode )
       if refNode ~= nil then
          if refNode:get_token().txt == "super" then
             wroteFuncFlag = true
@@ -2821,7 +2845,7 @@ function convFilter:processExpCast( node, opt )
     
       self:write( "_lune.__Cast( " )
       filter( node:get_exp(), self, node )
-      self:write( string.format( ", %s )", self:getFullName( node:get_expType() )) )
+      self:write( string.format( ", %d, %s )", LuaMod.CastKind.Class, self:getFullName( node:get_expType() )) )
    end
    
 end
@@ -3313,7 +3337,8 @@ function MacroEvalImp.new( mode )
 end         
 function MacroEvalImp:__init( mode ) 
 
-   Ast.MacroEval.__init( self )self.mode = mode
+   Ast.MacroEval.__init( self )
+   self.mode = mode
 end
 
 return _moduleObj

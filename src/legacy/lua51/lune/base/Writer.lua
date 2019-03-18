@@ -158,8 +158,32 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 
-function _lune.__Cast( obj, class )
-   return _lune.__isInstanceOf( obj, class ) and obj or nil
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) == obj then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
 end
 
 local Util = _lune.loadModule( 'lune.base.Util' )

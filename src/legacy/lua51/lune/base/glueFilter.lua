@@ -116,8 +116,32 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 
-function _lune.__Cast( obj, class )
-   return _lune.__isInstanceOf( obj, class ) and obj or nil
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) == obj then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
 end
 
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -168,8 +192,11 @@ function glueGenerator:getArgInfo( argNode )
    end
    
    local argName = ""
-   if argNode:get_kind() == Ast.NodeKind.get_DeclArg() then
-      argName = (argNode ):get_name().txt
+   do
+      local _exp = _lune.__Cast( argNode, 3, Ast.DeclArgNode )
+      if _exp ~= nil then
+         argName = _exp:get_name().txt
+      end
    end
    
    return typeTxt, argType:get_nilable() and nilableTypeTxt or typeTxt, orgType, argName
@@ -433,15 +460,17 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    local staticMethodNodeList = {}
    local methodNodeList = {}
    for __index, fieldNode in pairs( node:get_fieldList() ) do
-      if fieldNode:get_kind() == Ast.NodeKind.get_DeclMethod() then
-         local methodNode = fieldNode
-         if methodNode:get_declInfo():get_staticFlag() then
-            table.insert( staticMethodNodeList, methodNode )
-         else
-          
-            table.insert( methodNodeList, methodNode )
+      do
+         local methodNode = _lune.__Cast( fieldNode, 3, Ast.DeclMethodNode )
+         if methodNode ~= nil then
+            if methodNode:get_declInfo():get_staticFlag() then
+               table.insert( staticMethodNodeList, methodNode )
+            else
+             
+               table.insert( methodNodeList, methodNode )
+            end
+            
          end
-         
       end
       
    end
@@ -482,7 +511,8 @@ function glueFilter.new( outputDir )
 end         
 function glueFilter:__init( outputDir ) 
 
-   Ast.Filter.__init( self )self.outputDir = outputDir
+   Ast.Filter.__init( self )
+   self.outputDir = outputDir
 end
 
 local function createFilter( outputDir )

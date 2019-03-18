@@ -1350,7 +1350,7 @@ function %s:__init( %s )
       if baseInfo ~= Ast.headTypeInfo {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
          if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
-            self.write( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
+            self.writeln( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
          }
       }
       
@@ -2552,7 +2552,8 @@ pub override fn convFilter.processExpCast(
    else {
       self.write( "_lune.__Cast( " );
       filter( node.$exp,  self, node );
-      self.write( ", %s )" (self.getFullName( node.$expType )) );
+      self.write( ", %d, %s )" ( LuaMod.CastKind.Class,
+                                 self.getFullName( node.$expType )) );
    }
 };
 
@@ -3027,5 +3028,5 @@ pub class MacroEvalImp extend Ast.MacroEval {
       conv.processDeclMacro( node, new Opt( node ) );
 
       return self.evalFromMacroCode( oStream.$txt );
-   }  
-}     
+   }
+}

@@ -925,7 +925,7 @@ pub override fn convFilter.processDeclEnum(
 {
    let mut access = node.$accessMode == .Global and "" or "local ";
    let mut enumFullName = node.$name.txt;
-   let typeInfo = node.$expType@@Ast.EnumTypeInfo;
+   let typeInfo = unwrap node.$expType@@@Ast.EnumTypeInfo;
    let parentInfo = typeInfo.$parentInfo;
    let mut isTopNS = true;
    if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
@@ -1091,7 +1091,7 @@ pub override fn convFilter.processDeclAlge(
 {
    let mut access = node.$accessMode == .Global and "" or "local ";
    let mut algeFullName = node.$algeType.$rawTxt;
-   let typeInfo = node.$expType@@Ast.AlgeTypeInfo;
+   let typeInfo = unwrap node.$expType@@@Ast.AlgeTypeInfo;
    let parentInfo = typeInfo.$parentInfo;
    let mut isTopNS = true;
    if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
@@ -1289,14 +1289,12 @@ pub override fn convFilter.processDeclClass(
          hasDestrFlag = true;
          methodNameSet.add( "__free" );
       }
-      if field.$kind == Ast.NodeKind.$DeclMember {
-         let declMemberNode = field@@Ast.DeclMemberNode;
+      if! let declMemberNode = field@@@Ast.DeclMemberNode {
          if not declMemberNode.$staticFlag {
             memberList.insert( declMemberNode );
          }
       }
-      if field.$kind == Ast.NodeKind.$DeclMethod {
-         let methodNode = field@@Ast.DeclMethodNode;
+      if! let methodNode = field@@@Ast.DeclMethodNode {
          let declInfo = methodNode.get_declInfo();
          let methodNameToken = unwrap declInfo.get_name();
          if outerMethodSet.has( methodNameToken.txt ) {
@@ -1352,7 +1350,7 @@ function %s:__init( %s )
       if baseInfo ~= Ast.headTypeInfo {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
          if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
-            self.write( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
+            self.writeln( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
          }
       }
       
@@ -1635,8 +1633,8 @@ pub override fn convFilter.processDeclConstr(
       } 
       filter( arg, self, node );
 
-      if arg.get_kind() == Ast.NodeKind.$DeclArg {
-         argTxt = argTxt .. (arg@@Ast.DeclArgNode).$name.txt;
+      if! arg@@@Ast.DeclArgNode {
+         argTxt = argTxt .. _exp.$name.txt;
       }
       else {
          let name = unwrap node.get_declInfo().$name;
@@ -2267,7 +2265,9 @@ pub override fn convFilter.processExpCall(
 
    fn fieldCall():bool {
 
-      let fieldNode = node.$func@@Ast.RefFieldNode;
+      let! fieldNode = node.$func@@@Ast.RefFieldNode {
+         return true;
+      };
       let prefixNode = fieldNode.$prefix;
 
       fn processSet(): bool {
@@ -2384,14 +2384,11 @@ pub override fn convFilter.processExpCall(
       return true;
    }
    
-   if node.$func.$kind == Ast.NodeKind.$RefField {
-      //fieldCall( RefFieldNode );
-      if not fieldCall() {
-         return;
-      }
+   if not fieldCall() {
+      return;
    }
-   elseif node.$func.$kind == Ast.NodeKind.$ExpRef {
-      let refNode = node.$func@@Ast.ExpRefNode;
+
+   if! let refNode = node.$func@@@Ast.ExpRefNode {
       if refNode.$token.txt == "super" {
          wroteFuncFlag = true;
          setArgFlag = true;
@@ -2555,7 +2552,8 @@ pub override fn convFilter.processExpCast(
    else {
       self.write( "_lune.__Cast( " );
       filter( node.$exp,  self, node );
-      self.write( ", %s )" (self.getFullName( node.$expType )) );
+      self.write( ", %d, %s )" ( LuaMod.CastKind.Class,
+                                 self.getFullName( node.$expType )) );
    }
 };
 
@@ -3030,5 +3028,5 @@ pub class MacroEvalImp extend Ast.MacroEval {
       conv.processDeclMacro( node, new Opt( node ) );
 
       return self.evalFromMacroCode( oStream.$txt );
-   }  
-}     
+   }
+}

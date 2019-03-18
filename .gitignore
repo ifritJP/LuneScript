@@ -5,3 +5,7 @@ src/test/proj/depends/*.d
 src/test/start.lua
 src/test/glueTest*.so
 src.bak
+src/lune/*.meta
+src/lune/base/*.meta
+src/legacy/lua51/lune/*.meta
+src/legacy/lua51/lune/base/*.meta

@@ -116,8 +116,32 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 
-function _lune.__Cast( obj, class )
-   return _lune.__isInstanceOf( obj, class ) and obj or nil
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) == obj then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
 end
 
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -171,7 +195,8 @@ function dumpFilter.new(  )
 end         
 function dumpFilter:__init(  ) 
 
-   Ast.Filter.__init( self )end
+   Ast.Filter.__init( self )
+end
 
 local function createFilter(  )
 
@@ -254,7 +279,7 @@ function dumpFilter:processDeclEnum( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_name().txt )
-   local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), Ast.EnumTypeInfo ) ))
+   local enumTypeInfo = _lune.unwrap( (_lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ) ))
    for __index, name in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( enumTypeInfo:getEnumValInfo( name.txt ))
       print( string.format( "%s  %s: %s", prefix, name.txt, valInfo:get_val()) )

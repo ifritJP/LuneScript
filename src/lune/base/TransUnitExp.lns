@@ -1021,6 +1021,11 @@ fn TransUnit.analyzeExpCast(
                           "'@@@' cast must be class or interface. -- %s"
                           (castType.getTxt(##)) );
       }
+      if #castType.$itemTypeInfoList > 0 {
+         self.addErrMess( castTypeNode.$pos,
+                          "not support cast for generics class yet -- %s"
+                          (castType.getTxt(##)));
+      }
 
       if opTxt == "@@=" {
          if not Ast.isStruct( castType ) {
@@ -1228,8 +1233,23 @@ fn TransUnit.dumpComp(
                writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
             }  
             case .Mbr, .Var {
+               let mut name = symbolInfo.$name;
+               if! let algeTypeInfo = typeInfo@@@Ast.AlgeTypeInfo {
+                  if! let valInfo = algeTypeInfo.getValInfo( name ) {
+                     if #valInfo.$typeList > 0 {
+                        name = "%s(" (name);
+                        foreach itemType, index in valInfo.$typeList {
+                           if index > 1 {
+                              name = name .. ",";
+                           }
+                           name = name .. itemType.$display_stirng;
+                        }
+                        name = name .. ")";
+                     }
+                  }
+               }
                writer.write( "displayTxt", "%s: %s"
-                             ( symbolInfo.$name, typeInfo.$display_stirng ) );
+                             ( name, typeInfo.$display_stirng ) );
             }  
             case .Typ {
                writer.write( "displayTxt", "%s"
@@ -1366,6 +1386,22 @@ fn TransUnit.checkEnumComp(
       fn ( jsonWriter: Writer.JSON, prefix:str ) {
          self.dumpFieldComp(
             jsonWriter, true, enumTypeInfo,
+            prefix == "" and "" or "^" .. prefix, nil );
+      }
+   );
+}
+
+fn TransUnit.checkAlgeComp(
+   token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo ) 
+{
+   if self.analyzeMode ~= .Complete {
+      return;
+   }
+   self.checkComp(
+      token,
+      fn ( jsonWriter: Writer.JSON, prefix:str ) {
+         self.dumpFieldComp(
+            jsonWriter, true, algeTypeInfo,
             prefix == "" and "" or "^" .. prefix, nil );
       }
    );
@@ -1618,12 +1654,14 @@ fn TransUnit.analyzeNewAlge(
 {
    let symbolToken = self.getSymbolToken( .MustNot_ );
 
+   self.checkAlgeComp( symbolToken, algeTypeInfo );   
+
    if! let valInfo = algeTypeInfo.getValInfo( symbolToken.txt ) {
       let mut argList:List<&Ast.Node> = [];
       if #valInfo.$typeList > 0 {
          self.checkNextToken( "(" );
          foreach typeInfo, index in valInfo.$typeList {
-            let argExp = self.analyzeExp( false ## );
+            let argExp = self.analyzeExp( false, nil, typeInfo );
             argList.insert( argExp );
             if index ~= #valInfo.$typeList {
                self.checkNextToken( "," );
@@ -1636,6 +1674,15 @@ fn TransUnit.analyzeNewAlge(
          "call", symbolToken.pos, valInfo.$typeList, argList, false, true, nil )
       {
          argList = newExpNodeList;
+      }
+
+      if algeTypeInfo.$externalFlag and
+         not self.importModule2ModuleInfoCurrent[ algeTypeInfo.getModule().$srcTypeInfo ]
+      {  
+         let fullname = algeTypeInfo.getFullName(
+            self.importModule2ModuleInfo, true );
+         self.addErrMess( firstToken.pos, "This module not import -- %s"
+                          ( fullname ) );
       }
 
       
@@ -1804,7 +1851,7 @@ fn TransUnit.analyzeExpOp2(
                }
             }
 
-            let mut enumTypeInfo:&Ast.EnumTypeInfo! = nil;
+            let mut expectTypeInfo:&Ast.TypeInfo! = nil;
             {
                let mut prefixExpType = exp.$expType;
                if prefixExpType.$nilable {
@@ -1812,11 +1859,14 @@ fn TransUnit.analyzeExpOp2(
                }
                
                if! prefixExpType.$srcTypeInfo@@@Ast.EnumTypeInfo {
-                  enumTypeInfo = _exp;
+                  expectTypeInfo = _exp;
+               }
+               if! prefixExpType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
+                  expectTypeInfo = _exp;
                }
             }
             
-            let mut exp2:&Ast.Node = self.analyzeExp( false, opLevel, enumTypeInfo );
+            let mut exp2:&Ast.Node = self.analyzeExp( false, opLevel, expectTypeInfo );
             let mut exp2NodeList:&List<&Ast.Node> = [ exp2 ];
 
             if not exp2.canBeRight() {
@@ -1967,6 +2017,16 @@ fn TransUnit.analyzeExpOp2(
                         "not compatible type %s or %s"
                         ( exp1Type.getTxt(true## ),
                           exp2Type.getTxt(true## ) ) );
+                  }
+                  if! exp@@@Ast.NewAlgeValNode {
+                     if #_exp.$paramList > 0 {
+                        self.addErrMess( exp.$pos, "can't compare alge." );
+                     }
+                  }
+                  if! exp2@@@Ast.NewAlgeValNode {
+                     if #_exp.$paramList > 0 {
+                        self.addErrMess( exp2.$pos, "can't compare alge." );
+                     }
                   }
                   if exp1Type.equals( Ast.builtinTypeBool ##) and
                      exp2Type.equals( Ast.builtinTypeBool ##) and
@@ -2159,7 +2219,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
                self.error( "not found super '__init'" );
             }; 
             self.checkMatchValType(
-               firstToken.$pos, superCtorType, expList, [], nil );
+               firstToken.$pos, superCtorType, expList, [], classType );
             return Ast.ExpCallSuperNode.create(
                self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
                superType, superCtorType, expList );
@@ -2172,7 +2232,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Ast.Node {
                   self.addErrMess( firstToken.pos, "super is abstract." );
                }
                self.checkMatchValType(
-                  firstToken.$pos, superFunc, expList, [], nil );
+                  firstToken.$pos, superFunc, expList, [], classType );
                return Ast.ExpCallSuperNode.create(
                   self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
                   superType, superFunc, expList );
@@ -2274,6 +2334,39 @@ fn TransUnit.analyzeExp(
    skipOp2Flag: bool, prevOpLevel: int!, expectType:&Ast.TypeInfo! ) mut : Ast.Node
 {
    let firstToken = self.getToken(##);
+   
+   fn processsExpectExp( token:&Parser.Token, orgExpectType:&Ast.TypeInfo ): Ast.Node {
+      if! let enumTyepInfo = orgExpectType.$srcTypeInfo@@@Ast.EnumTypeInfo {
+         let nextToken = self.getToken(##);
+         self.checkEnumComp( nextToken, enumTyepInfo );
+         
+         if! let valInfo = enumTyepInfo.getEnumValInfo( nextToken.txt ) {
+            if orgExpectType.$externalFlag and
+               not self.importModule2ModuleInfoCurrent[
+                  orgExpectType.getModule().$srcTypeInfo ]
+            {  
+               let fullname = orgExpectType.getFullName(
+                  self.importModule2ModuleInfo, true );
+               self.addErrMess( token.pos, "This module not import -- %s"
+                                ( fullname ) );
+            }  
+            let mut exp:Ast.Node = Ast.ExpOmitEnumNode.create(
+               self.nodeManager, token.pos, [ enumTyepInfo ],
+               nextToken, valInfo, enumTyepInfo );
+            return self.analyzeExpCont( firstToken, exp, false );
+         }
+
+         self.error( "illegal enum val -- %s.%s"
+                     (orgExpectType.getTxt(##), nextToken.txt) );
+      }
+      if! let algeTyepInfo = orgExpectType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
+         return self.analyzeNewAlge( firstToken, algeTyepInfo, nil );
+      }
+
+      self.error( "illegal type for '.' -- %s" (orgExpectType.getTxt(##) ) );
+   }
+
+   
    let mut token = firstToken;
    let mut exp:Ast.Node = self.createNoneNode( firstToken.pos );
 
@@ -2284,38 +2377,12 @@ fn TransUnit.analyzeExp(
    
    if token.kind == Parser.TokenKind.Dlmt {
       if token.txt == "." {
-         if! expectType {
-            let mut orgExpectType = _exp;
+         when! expectType {
+            let mut orgExpectType = expectType;
             if orgExpectType.$nilable {
                orgExpectType = orgExpectType.$nonnilableType;
-            }  
-            if! let enumTyepInfo = orgExpectType.$srcTypeInfo@@@Ast.EnumTypeInfo {
-               let nextToken = self.getToken(##);
-               self.checkEnumComp( nextToken, enumTyepInfo );
-               
-               if! let valInfo = enumTyepInfo.getEnumValInfo( nextToken.txt ) {
-                  if orgExpectType.$externalFlag and
-                     not self.importModule2ModuleInfoCurrent[
-                        orgExpectType.getModule().$srcTypeInfo ]
-                  {  
-                     let fullname = orgExpectType.getFullName(
-                        self.importModule2ModuleInfo, true );
-                     self.addErrMess( token.pos, "This module not import -- %s"
-                                      ( fullname ) );
-                  }  
-                  exp = Ast.ExpOmitEnumNode.create(
-                     self.nodeManager, token.pos, [ enumTyepInfo ],
-                     nextToken, valInfo, enumTyepInfo );
-                  exp = self.analyzeExpCont( firstToken, exp, false );
-               }  
-               else {
-                  self.error( "illegal enum val -- %s.%s"
-                              (orgExpectType.getTxt(##), nextToken.txt) );
-               }
             }
-            else {
-               self.error( "illegal type for '.' -- %s" (orgExpectType.getTxt(##) ) );
-            }
+            exp = processsExpectExp( token, orgExpectType );
          }
          else {
             self.error( "illegal '.'" );

@@ -141,7 +141,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             case .Class, .IF {
                if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
                   foreach itemType, index in genericList {
-                     let altType = typeInfo.$itemTypeInfoList[ index ]@@Ast.AlternateTypeInfo;
+                     let altType = unwrap typeInfo.$itemTypeInfoList[ index ]@@@Ast.AlternateTypeInfo;
                      if itemType.$nilable {
                         self.addErrMess(
                            symbolNode.$pos,
@@ -408,8 +408,8 @@ fn TransUnit.analyzeDeclMacro(
    let mut nextToken = self.analyzeDeclArgList( accessMode, workArgList );
    let mut argTypeList: List<&Ast.TypeInfo> = [];
    foreach argNode, index in workArgList {
-      if argNode.$kind == Ast.NodeKind.$DeclArg {
-         argList.insert( argNode@@Ast.DeclArgNode );
+      if! argNode@@@Ast.DeclArgNode {
+         argList.insert( _exp );
       }
       else {
          self.error( "macro argument can not use '...'." );
@@ -2617,13 +2617,8 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
    
    foreach expNode in symListNode.$expList {
       expNodeList.insert( expNode );
-      if expNode.$kind ~= Ast.NodeKind.$ExpRef {
-         self.addErrMess( expNode.$pos,
-                          "'when' support only local variables or arguments." );
-      }
-      else {
+      if! let refNode = expNode@@@Ast.ExpRefNode {
          if expNode.$expType.$nilable {
-            let refNode = expNode@@Ast.ExpRefNode;
             let symbolInfo = refNode.$symbolInfo;
             varNameList.insert( refNode.$token.txt );
             self.addLocalVar(
@@ -2635,6 +2630,10 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Ast.Node
                              "This type isn't nilable. -- %s"
                              ( expNode.$expType.getTxt(##) ) );
          }
+      }
+      else {
+         self.addErrMess( expNode.$pos,
+                          "'when' support only local variables or arguments." );
       }
    }
 
