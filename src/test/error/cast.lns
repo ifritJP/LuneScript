@@ -26,3 +26,10 @@ class Sub extend Test {
 {
    let val:real = 1@@real;
 }
+
+{
+   fn func<T>(val:T) {
+      let obj:stem = val;
+      print( obj@@@T );
+   }  
+}

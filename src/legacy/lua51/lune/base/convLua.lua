@@ -4,6 +4,43 @@ local __mod__ = 'lune.base.convLua'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -196,6 +233,7 @@ end
 
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
@@ -317,7 +355,7 @@ function Opt:__init( node )
 end
 
 local convFilter = {}
-setmetatable( convFilter, { __index = Ast.Filter,ifList = {oStream,} } )
+setmetatable( convFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
 function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer )
    local obj = {}
    convFilter.setmeta( obj )
@@ -325,7 +363,7 @@ function convFilter.new( streamName, stream, metaStream, convMode, inMacro, modu
    return obj
 end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer) 
-   Ast.Filter.__init( self)
+   Nodes.Filter.__init( self)
    
    self.macroVarSymSet = {}
    self.needModuleObj = true
@@ -900,6 +938,13 @@ function convFilter:outputMeta( node )
    
    for typeId, typeInfo in pairs( self.pubAlgeId2AlgeTypeInfo ) do
       typeId2TypeInfo[typeId] = typeInfo
+      for __index, valInfo in pairs( typeInfo:get_valInfoMap() ) do
+         for __index, valType in pairs( valInfo:get_typeList() ) do
+            pickupTypeId( valType, true )
+         end
+         
+      end
+      
    end
    
    self:writeln( "local __dependIdMap = {}" )
@@ -1116,33 +1161,33 @@ function convFilter:processBlock( node, opt )
    local word = ""
    do
       local _switchExp = node:get_blockKind(  )
-      if _switchExp == Ast.BlockKind.If or _switchExp == Ast.BlockKind.Elseif then
+      if _switchExp == Nodes.BlockKind.If or _switchExp == Nodes.BlockKind.Elseif then
          word = "then"
-      elseif _switchExp == Ast.BlockKind.Else then
+      elseif _switchExp == Nodes.BlockKind.Else then
          word = ""
-      elseif _switchExp == Ast.BlockKind.While then
+      elseif _switchExp == Nodes.BlockKind.While then
          word = "do"
-      elseif _switchExp == Ast.BlockKind.Repeat then
+      elseif _switchExp == Nodes.BlockKind.Repeat then
          word = ""
-      elseif _switchExp == Ast.BlockKind.For then
+      elseif _switchExp == Nodes.BlockKind.For then
          word = "do"
-      elseif _switchExp == Ast.BlockKind.Apply then
+      elseif _switchExp == Nodes.BlockKind.Apply then
          word = "do"
-      elseif _switchExp == Ast.BlockKind.Foreach then
+      elseif _switchExp == Nodes.BlockKind.Foreach then
          word = "do"
-      elseif _switchExp == Ast.BlockKind.Macro then
+      elseif _switchExp == Nodes.BlockKind.Macro then
          word = ""
-      elseif _switchExp == Ast.BlockKind.Func then
+      elseif _switchExp == Nodes.BlockKind.Func then
          word = ""
-      elseif _switchExp == Ast.BlockKind.Default then
+      elseif _switchExp == Nodes.BlockKind.Default then
          word = ""
-      elseif _switchExp == Ast.BlockKind.Block then
+      elseif _switchExp == Nodes.BlockKind.Block then
          word = "do"
-      elseif _switchExp == Ast.BlockKind.Macro then
+      elseif _switchExp == Nodes.BlockKind.Macro then
          word = ""
-      elseif _switchExp == Ast.BlockKind.LetUnwrap then
+      elseif _switchExp == Nodes.BlockKind.LetUnwrap then
          word = ""
-      elseif _switchExp == Ast.BlockKind.IfUnwrap then
+      elseif _switchExp == Nodes.BlockKind.IfUnwrap then
          word = ""
       end
    end
@@ -1156,7 +1201,7 @@ function convFilter:processBlock( node, opt )
    end
    
    self:popIndent(  )
-   if node:get_blockKind(  ) == Ast.BlockKind.Block then
+   if node:get_blockKind(  ) == Nodes.BlockKind.Block then
       self:writeln( "end" )
    end
    
@@ -1217,9 +1262,9 @@ end
 ]==], enumFullName, enumFullName, enumFullName) )
    for index, valName in pairs( node:get_valueNameList() ) do
       local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
-      local valTxt = string.format( "%s", tostring( valInfo:get_val()))
+      local valTxt = string.format( "%s", tostring( Ast.getEnumLiteralVal( valInfo:get_val() )))
       if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
-         valTxt = string.format( "'%s'", tostring( valInfo:get_val()))
+         valTxt = string.format( "'%s'", tostring( Ast.getEnumLiteralVal( valInfo:get_val() )))
       end
       
       self:writeln( string.format( "%s.%s = %s", enumFullName, valName.txt, valTxt) )
@@ -1527,18 +1572,18 @@ function convFilter:processDeclClass( node, opt )
    local methodNameSet = {}
    for __index, field in pairs( fieldList ) do
       local ignoreFlag = false
-      if field:get_kind() == Ast.NodeKind.get_DeclConstr() then
+      if field:get_kind() == Nodes.NodeKind.get_DeclConstr() then
          hasConstrFlag = true
          methodNameSet["__init"]= true
       end
       
-      if field:get_kind() == Ast.NodeKind.get_DeclDestr() then
+      if field:get_kind() == Nodes.NodeKind.get_DeclDestr() then
          hasDestrFlag = true
          methodNameSet["__free"]= true
       end
       
       do
-         local declMemberNode = _lune.__Cast( field, 3, Ast.DeclMemberNode )
+         local declMemberNode = _lune.__Cast( field, 3, Nodes.DeclMemberNode )
          if declMemberNode ~= nil then
             if not declMemberNode:get_staticFlag() then
                table.insert( memberList, declMemberNode )
@@ -1548,7 +1593,7 @@ function convFilter:processDeclClass( node, opt )
       end
       
       do
-         local methodNode = _lune.__Cast( field, 3, Ast.DeclMethodNode )
+         local methodNode = _lune.__Cast( field, 3, Nodes.DeclMethodNode )
          if methodNode ~= nil then
             local declInfo = methodNode:get_declInfo(  )
             local methodNameToken = _lune.unwrap( declInfo:get_name(  ))
@@ -1756,7 +1801,7 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    end
    
    self:writeln( "local macroVar = {}" )
-   self:writeln( "macroVar._names = {}" )
+   self:writeln( "macroVar.__names = {}" )
    self.macroDepth = self.macroDepth + 1
    callback(  )
    self.macroDepth = self.macroDepth - 1
@@ -1863,7 +1908,7 @@ function convFilter:processDeclConstr( node, opt )
       
       filter( arg, self, node )
       do
-         local _exp = _lune.__Cast( arg, 3, Ast.DeclArgNode )
+         local _exp = _lune.__Cast( arg, 3, Nodes.DeclArgNode )
          if _exp ~= nil then
             argTxt = argTxt .. _exp:get_name().txt
          else
@@ -2084,7 +2129,7 @@ function convFilter:processDeclVar( node, opt )
       self:pushIndent(  )
    end
    
-   if node:get_mode() ~= Ast.DeclVarMode.Unwrap and node:get_accessMode(  ) ~= Ast.AccessMode.Global then
+   if node:get_mode() ~= Nodes.DeclVarMode.Unwrap and node:get_accessMode(  ) ~= Ast.AccessMode.Global then
       self:write( "local " )
    end
    
@@ -2179,7 +2224,7 @@ function convFilter:processDeclVar( node, opt )
       self:writeln( "" )
       for index, symbolInfo in pairs( node:get_symbolInfoList() ) do
          local varName = symbolInfo:get_name()
-         self:writeln( string.format( "table.insert( macroVar._names, '%s' )", varName) )
+         self:writeln( string.format( "table.insert( macroVar.__names, '%s' )", varName) )
          self:writeln( string.format( "macroVar.%s = %s", varName, varName) )
          self.macroVarSymSet[symbolInfo]= true
       end
@@ -2276,7 +2321,7 @@ function convFilter:processIf( node, opt )
       if index == 1 then
          self:write( "if " )
          filter( val:get_exp(), self, node )
-      elseif val:get_kind() == Ast.IfKind.ElseIf then
+      elseif val:get_kind() == Nodes.IfKind.ElseIf then
          self:write( "elseif " )
          filter( val:get_exp(), self, node )
       else
@@ -2528,7 +2573,7 @@ function convFilter:processExpCall( node, opt )
    local setArgFlag = false
    local function fieldCall(  )
    
-      local fieldNode = _lune.__Cast( node:get_func(), 3, Ast.RefFieldNode )
+      local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
       if  nil == fieldNode then
          local _fieldNode = fieldNode
       
@@ -2666,7 +2711,7 @@ function convFilter:processExpCall( node, opt )
    end
    
    do
-      local refNode = _lune.__Cast( node:get_func(), 3, Ast.ExpRefNode )
+      local refNode = _lune.__Cast( node:get_func(), 3, Nodes.ExpRefNode )
       if refNode ~= nil then
          if refNode:get_token().txt == "super" then
             wroteFuncFlag = true
@@ -2718,15 +2763,14 @@ function convFilter:processExpCall( node, opt )
          if convStrFlag then
             local opList = {}
             if #expList > 0 then
-               local argTxtList = expList[1]:getLiteral(  )
-               if #argTxtList > 0 then
+               local literal = expList[1]:getLiteral(  )
+               if literal ~= nil then
                   do
-                     local argTxt = argTxtList[1]
-                     if argTxt ~= nil then
-                        if type( argTxt ) == "string" then
-                           opList = TransUnit.findForm( argTxt )
-                        end
-                        
+                     local _matchExp = literal
+                     if _matchExp[1] == Nodes.Literal.Str[1] then
+                        local txt = _matchExp[2][1]
+                     
+                        opList = TransUnit.findForm( txt )
                      end
                   end
                   
@@ -2793,7 +2837,7 @@ function convFilter:processExpOp1( node, opt )
    if op == ",,," then
       filter( node:get_exp(), self, node )
    elseif op == ",,,," then
-      if node:get_macroMode() == Ast.MacroMode.Expand then
+      if node:get_macroMode() == Nodes.MacroMode.Expand then
          filter( node:get_exp(), self, node )
       else
        
@@ -3023,7 +3067,7 @@ function convFilter:processRefField( node, opt )
     
       filter( prefix, self, node )
       local delimit = "."
-      if parent:get_kind() == Ast.NodeKind.get_ExpCall() then
+      if parent:get_kind() == Nodes.NodeKind.get_ExpCall() then
          if node:get_expType(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
             delimit = ":"
          else
@@ -3272,7 +3316,7 @@ local function createFilter( streamName, stream, metaStream, convMode, inMacro, 
 end
 _moduleObj.createFilter = createFilter
 local MacroEvalImp = {}
-setmetatable( MacroEvalImp, { __index = Ast.MacroEval } )
+setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromMacroCode( code )
 
@@ -3338,7 +3382,7 @@ function MacroEvalImp.new( mode )
 end         
 function MacroEvalImp:__init( mode ) 
 
-   Ast.MacroEval.__init( self )
+   Nodes.MacroEval.__init( self )
    self.mode = mode
 end
 

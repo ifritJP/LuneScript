@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import lune.base.Ast;
+import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.TransUnit;
 import lune.base.frontInterface;
@@ -59,7 +59,7 @@ pub class DependInfo {
    
 }
 
-class convFilter extend Ast.Filter<int> {
+class convFilter extend Nodes.Filter<int> {
 
    let mut stream:oStream;
    
@@ -71,7 +71,7 @@ class convFilter extend Ast.Filter<int> {
 }
 
 pub override fn convFilter.processRoot(
-   node: Ast.RootNode, dummy: int ) mut
+   node: Nodes.RootNode, dummy: int ) mut
 {
    let moduleFull = node.$moduleTypeInfo.getFullName( {} ## );
    let mut dependInfo = new DependInfo( moduleFull );
@@ -92,7 +92,7 @@ pub override fn convFilter.processRoot(
    dependInfo.output( self.stream );
 };
 
-pub fn createFilter( stream: oStream ) : Ast.Filter<int>
+pub fn createFilter( stream: oStream ) : Nodes.Filter<int>
 {
    return new convFilter( stream );
 }

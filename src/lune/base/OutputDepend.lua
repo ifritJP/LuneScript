@@ -4,6 +4,43 @@ local __mod__ = 'lune.base.OutputDepend'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -81,7 +118,7 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
-local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
@@ -124,7 +161,7 @@ function DependInfo.setmeta( obj )
 end
 
 local convFilter = {}
-setmetatable( convFilter, { __index = Ast.Filter } )
+setmetatable( convFilter, { __index = Nodes.Filter } )
 function convFilter.new( stream )
    local obj = {}
    convFilter.setmeta( obj )
@@ -132,7 +169,7 @@ function convFilter.new( stream )
    return obj
 end
 function convFilter:__init(stream) 
-   Ast.Filter.__init( self)
+   Nodes.Filter.__init( self)
    
    self.stream = stream
 end

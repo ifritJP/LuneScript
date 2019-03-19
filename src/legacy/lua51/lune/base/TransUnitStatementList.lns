@@ -24,8 +24,8 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
-fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
-   let mut expList: Ast.ExpListNode! = nil;
+fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
+   let mut expList: Nodes.ExpListNode! = nil;
    let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
    if funcTypeInfo == Ast.headTypeInfo or
       ( funcTypeInfo.$kind ~= .Func and funcTypeInfo.$kind ~= .Method )
@@ -50,7 +50,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
    }
 
    when! expList {
-      let mut expNodeList:List<&Ast.Node> = [];
+      let mut expNodeList:List<&Nodes.Node> = [];
       foreach exp in expList.$expList {
          expNodeList.insert( exp );
       }
@@ -67,11 +67,11 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Ast.ReturnNode {
       }
    }
 
-   return Ast.ReturnNode.create(
+   return Nodes.ReturnNode.create(
       self.nodeManager, token.pos, [ Ast.builtinTypeNone ], expList );
 }
 
-fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
+fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
    let token = self.getTokenNoErr();
    if token == Parser.getEofToken() {
       return nil;
@@ -145,7 +145,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
          self.checkNextToken( ";" );
          // statement = self.createNode(
          //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
-         statement = Ast.BreakNode.create(
+         statement = Nodes.BreakNode.create(
             self.nodeManager, token.pos, [ Ast.builtinTypeNone ] );
          if #self.loopScopeQueue == 0 {
             self.addErrMess( token.pos, "no loop syntax." );
@@ -188,7 +188,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
          self.checkToken( nextToken, ";" );
          // statement = self.createNode(
          //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
-         statement = Ast.StmtExpNode.create(
+         statement = Nodes.StmtExpNode.create(
             self.nodeManager, exp.$pos, [ Ast.builtinTypeNone ], exp );
       }
    }
@@ -196,7 +196,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Ast.Node! {
    when! statement {
       if not statement.canBeStatement() {
          self.addErrMess( statement.$pos, "This node can't be statement. -- %s"
-                          (Ast.getNodeKindName( statement.$kind ) ) );
+                          (Nodes.getNodeKindName( statement.$kind ) ) );
       }
    }
 

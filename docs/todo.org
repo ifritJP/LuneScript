@@ -8,6 +8,9 @@
 
 * 機能
 
+- [ ] Nodes.MacroValInfo の値の alge 化。
+  
+  
 - [ ] Sub クラスが Super クラスのメンバを shadowing したときエラー検知できていない。
 - [ ] インスタンスから、クラス名などのメタ情報を取得できるようにする。
 - [ ] Generics の @@@ 対応。

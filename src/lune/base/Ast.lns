@@ -1214,33 +1214,35 @@ pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
              typeInfo.$accessMode, true, true, true );
 }
 
-/**
-デバッグ用。 scope 内のシンボル情報を出力する。
-*/
-fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Set<Scope> ) {
-   if! scope {
-      if readyIdSet.has( _exp ) {
-         return;
-      } 
-      readyIdSet.add( _exp );
-      if #prefix > 20 {
-         Util.err("illegal");
-      }   
-      
-      forsort symbolInfo, symbol in _exp.$symbol2SymbolInfoMap {
-         Util.log( "scope: %s, %s, %s" ( prefix, _exp, symbol ) );
-         if! let subScope = symbolInfo.$typeInfo.$scope {
-            dumpScopeSub( subScope, prefix .. "  ", readyIdSet );
-         }
-      } 
-   };
-}
 
 /**
 デバッグ用。 scope 内のシンボル情報を出力する。
 */
-fn dumpScope( scope: Scope!, prefix:str ) {
-   dumpScopeSub( scope, prefix, (@) );
+fn dumpScope( workscope: Scope!, workprefix:str ) {
+
+   /**
+デバッグ用。 scope 内のシンボル情報を出力する。
+*/
+   fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Set<Scope> ) {
+      if! scope {
+         if readyIdSet.has( _exp ) {
+            return;
+         }  
+         readyIdSet.add( _exp );
+         if #prefix > 20 {
+            Util.err("illegal");
+         }   
+         
+         forsort symbolInfo, symbol in _exp.$symbol2SymbolInfoMap {
+            Util.log( "scope: %s, %s, %s" ( prefix, _exp, symbol ) );
+            if! let subScope = symbolInfo.$typeInfo.$scope {
+               dumpScopeSub( subScope, prefix .. "  ", readyIdSet );
+            }  
+         }  
+      }; 
+   }  
+   
+   dumpScopeSub( workscope, workprefix, (@) );
 }
 
 
@@ -1458,9 +1460,6 @@ pub class AccessSymbolInfo extend SymbolInfo {
    advertise symbolInfo;
 }
 
-
-pub proto class Node;
-pub proto class DeclClassNode extend Node;
 
 pub class NilableTypeInfo extend TypeInfo {
    pri let nonnilableType: &TypeInfo { pub };
@@ -2248,9 +2247,30 @@ pub class ModuleTypeInfo extend TypeInfo {
    }
 }
 
+pub alge EnumLiteral {
+   Int( int ),
+   Real( real ),
+   Str( str ),
+}
+pub fn getEnumLiteralVal( obj:EnumLiteral ) : stem {
+   match obj {
+      case .Int( val ) {
+         return val;
+      }
+      case .Real( val ) {
+         return val;
+      }
+      case .Str( val ) {
+         return val;
+      }
+   }
+   Util.err( "illegal enum " .. obj.$_txt );
+}
+
+
 pub class EnumValInfo {
    pri let name: str {pub};
-   pri let val:stem {pub};
+   pri let val:EnumLiteral {pub};
 }
 
 pub class EnumTypeInfo extend TypeInfo {
@@ -2271,11 +2291,11 @@ pub class EnumTypeInfo extend TypeInfo {
    
 
    // enum 値名 -> EnumValInfo
-   pri let name2EnumValInfo: Map<str,EnumValInfo> { pub };
+   pri let mut name2EnumValInfo: Map<str,&EnumValInfo> { pub& };
+   pri let mut val2EnumValInfo: Map<&stem,&EnumValInfo> { pub& };
    
    pub fn __init( scope: Scope, externalFlag: bool, accessMode: AccessMode,
-                  txt: str, parentInfo: &TypeInfo!, typeId: int, valTypeInfo:&TypeInfo,
-                  name2EnumValInfo: Map<str,EnumValInfo> )
+                  txt: str, parentInfo: &TypeInfo!, typeId: int, valTypeInfo:&TypeInfo )
    {
       super( scope );
 
@@ -2284,8 +2304,11 @@ pub class EnumTypeInfo extend TypeInfo {
       self.rawTxt = txt;
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.typeId = typeId;
-      self.name2EnumValInfo = name2EnumValInfo;
+      self.name2EnumValInfo = {};
       self.valTypeInfo = valTypeInfo;
+
+      self.val2EnumValInfo = {};
+      
 
       if! parentInfo {
          _exp.addChildren( self );
@@ -2331,11 +2354,17 @@ pub class EnumTypeInfo extend TypeInfo {
    }
    
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   {  
       return self == other.$srcTypeInfo;
    }
 
-   pub fn getEnumValInfo( name:str ): EnumValInfo! {
+   pub fn addEnumValInfo( valInfo:&EnumValInfo ) mut {
+      self.name2EnumValInfo[ valInfo.$name ] = valInfo;
+      self.val2EnumValInfo[ getEnumLiteralVal( valInfo.$val ) ] = valInfo;
+   }
+
+   pub fn getEnumValInfo( name:str ): &EnumValInfo! {
       return self.name2EnumValInfo[ name ];
    }
 
@@ -3459,8 +3488,7 @@ pub fn isNumberType( typeInfo:&TypeInfo ): bool {
 
 pub static fn NormalTypeInfo.createEnum(
    scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
-   accessMode: AccessMode, enumName: str, valTypeInfo:&TypeInfo, 
-   name2EnumValInfo:Map<str,EnumValInfo> ): &TypeInfo
+   accessMode: AccessMode, enumName: str, valTypeInfo:&TypeInfo ): EnumTypeInfo
 {
    if Parser.isLuaKeyword( enumName ) {
       Util.err( "This symbol can not use for a enum. -- %s"
@@ -3471,7 +3499,7 @@ pub static fn NormalTypeInfo.createEnum(
    idProv.increment();
    let mut info = new EnumTypeInfo(
       scope, externalFlag, accessMode, enumName,
-      parentInfo, idProv.$id, valTypeInfo, name2EnumValInfo );
+      parentInfo, idProv.$id, valTypeInfo );
 
    let mut getEnumName = NormalTypeInfo.createFunc(
       false, true, nil, .Method, info,
@@ -3508,12 +3536,24 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
 
    stream.write( "enumValList = {" );
    forsort enumValInfo in self.name2EnumValInfo {
-      if self.valTypeInfo.equals( builtinTypeString## ) {
-         stream.write( "%s = '%s'," (enumValInfo.$name, enumValInfo.$val) );
+      stream.write( "%s = " (enumValInfo.$name));
+      match enumValInfo.$val {
+         case .Int( val ) {
+            stream.write( "%d," (val) );
+         }
+         case .Real( val ) {
+            stream.write( "%g," (val) );
+         }
+         case .Str( val ) {
+            stream.write( "%q," (val) );
+         }
       }
-      else {
-         stream.write( "%s = %s," (enumValInfo.$name, enumValInfo.$val) );
-      }
+      // if self.valTypeInfo.equals( builtinTypeString## ) {
+      //    stream.write( "%s = '%s'," (enumValInfo.$name, enumValInfo.$val) );
+      // }
+      // else {
+      //    stream.write( "%s = %s," (enumValInfo.$name, enumValInfo.$val) );
+      // }
    }
    stream.write( "} }\n" );
 }
@@ -4173,327 +4213,6 @@ pub override fn NormalTypeInfo.applyGeneric(
 }
 
 
-
-pub class Filter<T> {
-}
-
-
-/**
-制御中断要因。
-
-優先度の高い順に宣言する。
-*/
-pub enum BreakKind {
-   None,
-   Break,
-   Return,
-   NeverRet,
-}
-
-pub enum CheckBreakMode {
-   /** フローを解析する */
-   Normal,
-   /** フローを解析する (return 有無の解析)  */
-   Return,
-   /** フローを解析しない */
-   IgnoreFlow,
-   /** フローを解析しない (return 有無の解析) */
-   IgnoreFlowReturn,
-}
-
-pub class Node {
-   pri let kind: int { pub };
-   pri let pos: &Parser.Position { pub };
-   pri let expTypeList: &List<&TypeInfo> { pub };
-
-   pub fn get_expType(): &TypeInfo {
-      if #self.expTypeList == 0 {
-         return builtinTypeNone;
-      }
-      return self.expTypeList[ 1 ];
-   }; 
-   
-   pub fn getLiteral(): stem![], List<&TypeInfo> {
-      return [nil], [builtinTypeNil];
-   }
-   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
-   }
-   /** 代入式の左辺になれるかどうか */
-   pub fn canBeLeft(): bool {
-      return false;
-   };     
-   /** 代入式の右辺になれるかどうか */
-   pub fn canBeRight(): bool {
-      return false;
-   }
-   /** 単体で文になれるかどうか */
-   pub fn canBeStatement(): bool {
-      return false;
-   }
-   /**
-制御の中断種別を得る。
-
-全てのケースで return で終っている場合や、 error() などをコールしている場合など。
-
-@param checkMode モード
-*/
-   pub fn getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-      return .None;
-   }
-}
-
-
-
-pub class NamespaceInfo {
-   pub let name: str;
-   pub let scope: Scope;
-   pub let typeInfo: &TypeInfo;
-}
-
-
-pub proto abstract class MacroEval;
-pub proto class ExpListNode extend Node;
-pub proto class DeclArgNode extend Node;
-pub proto class BlockNode extend Node;
-
-pub class DeclMacroInfo {
-   pri let pubFlag: bool {pub};
-   pri let name: &Parser.Token { pub };
-   pri let argList: List<&DeclArgNode> { pub };
-   /** macro-statment の BlockNode */
-   pri let stmtBlock: &BlockNode! { pub };
-   /** expand-statemnt の token リスト */
-   pri let tokenList: List<&Parser.Token> { pub };
-}
-
-let mut nodeKind2NameMap: Map<int,str> = {};
-let mut nodeKindSeed = 1;
-pub let mut nodeKind: Map<str,int> = {};
-
-fn regKind( name:str ): int {
-   let kind = nodeKindSeed;
-   nodeKindSeed = nodeKindSeed + 1;
-   nodeKind2NameMap[ kind ] = name;
-   nodeKind[ name ] = kind;
-   return kind;
-}
-
-pub fn getNodeKindName( kind: int ): str {
-   return unwrap nodeKind2NameMap[ kind ];
-}
-
-// let nodeKindNone = regKind( 'None' );
-// let nodeKindImport = regKind( 'Import' );
-// let nodeKindRoot = regKind( 'Root' );
-// let nodeKindRefType = regKind( 'RefType' );
-// let nodeKindIf = regKind( 'If' );
-// let nodeKindSwitch = regKind( 'Switch' );
-// let nodeKindWhile = regKind( 'While' );
-// let nodeKindRepeat = regKind( 'Repeat' );
-// let nodeKindFor = regKind( 'For' );
-// let nodeKindApply = regKind( 'Apply' );
-// let nodeKindForeach = regKind( 'Foreach' );
-// let nodeKindForsort = regKind( 'Forsort' );
-// let nodeKindReturn = regKind( 'Return' );
-// let nodeKindBreak = regKind( 'Break' );
-// let nodeKindExpNew = regKind( 'ExpNew' );
-// let nodeKindExpList = regKind( 'ExpList' );
-// let nodeKindExpRef = regKind( 'ExpRef' );
-// let nodeKindExpOp2 = regKind( 'ExpOp2' );
-// let nodeKindExpCast = regKind( 'ExpCast' );
-// let nodeKindExpOp1 = regKind( 'ExpOp1' );
-// let nodeKindExpRefItem = regKind( 'ExpRefItem' );
-// let nodeKindExpCall = regKind( 'ExpCall' );
-// let nodeKindExpCallSuper = regKind( 'ExpCallSuper' );
-// let nodeKindExpDDD = regKind( 'ExpDDD' );
-// let nodeKindExpParen = regKind( 'ExpParen' );
-// let nodeKindExpMacroExp = regKind( 'ExpMacroExp' ); // macro expand
-// let nodeKindExpMacroStat = regKind( 'ExpMacroStat' ); // `{}
-// let nodeKindBlock = regKind( 'Block' );
-// let nodeKindStmtExp = regKind( 'StmtExp' );
-// let nodeKindRefField = regKind( 'RefField' );
-// let nodeKindDeclVar = regKind( 'DeclVar' );
-// let nodeKindDeclFunc = regKind( 'DeclFunc' );
-// let nodeKindDeclMethod = regKind( 'DeclMethod' );
-// let nodeKindDeclConstr = regKind( 'DeclConstr' );
-// let nodeKindDeclMember = regKind( 'DeclMember' );
-// let nodeKindDeclArg = regKind( 'DeclArg' );
-// let nodeKindDeclArgDDD = regKind( 'DeclArgDDD' );
-// let nodeKindDeclClass = regKind( 'DeclClass' );
-// let nodeKindDeclMacro = regKind( 'DeclMacro' );
-// let nodeKindLiteralNil = regKind( 'LiteralNil' );
-// let nodeKindLiteralChar = regKind( 'LiteralChar' );
-// let nodeKindLiteralInt = regKind( 'LiteralInt' );
-// let nodeKindLiteralReal = regKind( 'LiteralReal' );
-// let nodeKindLiteralArray = regKind( 'LiteralArray' );
-// let nodeKindLiteralList = regKind( 'LiteralList' );
-// let nodeKindLiteralMap = regKind( 'LiteralMap' );
-// let nodeKindLiteralString = regKind( 'LiteralString' );
-// let nodeKindLiteralBool = regKind( 'LiteralBool' );
-// let nodeKindLiteralSymbol = regKind( 'LiteralSymbol' );
-
-pub class NodeManager {
-   let mut nodeKind2NodeList:Map<int,List<&Node>>;
-
-   pub fn __init() {
-      self.nodeKind2NodeList = {};
-   }
-
-   pub fn getList(kind:int) : &List<&Node>! {
-      return self.nodeKind2NodeList[ kind ];
-   }
-   pub fn addNode(node:&Node) mut {
-      let! mut list = self.nodeKind2NodeList[ node.$kind ] {
-         list = [];
-         self.nodeKind2NodeList[ node.$kind ] = list;
-      };
-      list.insert( node );
-   }
-}
-
-pub class NodeKind {
-}
-
-
-macro _declNodeClass(
-   baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
-   canBeStatementFlag:bool!, fieldInfoList:Map<str,str>[] )
-{
-   {
-      let className = ,,,"%sNode" (baseName);
-      let nodeKindSym = ,,,"%s" (baseName);
-      let nodeKindGetter = ,,,"get_%s" (baseName);
-
-      let mut fieldStatList:stat[] = [];
-      let mut argList:stat[] = [];
-      let mut argSymList:stat[] = [];
-      let mut initStatList:stat[] = [];
-      let mut relateStat:stat[] = [];
-      
-      foreach fieldInfo in fieldInfoList {
-         foreach typeName, varName in fieldInfo {
-            fieldStatList.insert( `{
-               pri let mut ,,,varName : ,,,typeName { pub };
-            });  
-            argList.insert( `{ ,,,varName: ,,,typeName, } );
-            argSymList.insert( `{, ,,,varName } );
-            initStatList.insert( `{ self.,,,varName = ,,,varName; } );
-         }   
-      }  
-
-      fieldStatList.insert( `{
-         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
-            filter.,,,"process%s" (baseName) (self, opt );
-         } } );
-
-      if! canBeRightFlag {
-         fieldStatList.insert( `{
-            pub override fn canBeRight():bool {
-               return ,,, canBeRightFlag;
-            } } );
-      }
-      if! canBeLeftFlag {
-         fieldStatList.insert( `{
-            pub override fn canBeLeft():bool {
-               return ,,, canBeLeftFlag;
-            } } );
-      }
-      if! canBeStatementFlag {
-         fieldStatList.insert( `{
-            pub override fn canBeStatement():bool {
-               return ,,, canBeStatementFlag;
-            } } );
-      }
-      
-      let superStat = `{
-         super( unwrap nodeKind. ,,nodeKindSym, pos, typeList );
-      };
-
-      relateStat.insert( `{
-         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
-         };
-         pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className>! {
-            return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className> !;
-         }
-      } );
-      
-   }
-
-   pub static fn NodeKind.,,nodeKindGetter (): int {
-      return unwrap nodeKind. ,,nodeKindSym;
-   }
-   
-   pub proto class ,,className extend ,,super;
-   regKind( ,,baseName );
-   ,,relateStat;
-   pub class ,,className extend ,,super {
-      ,,fieldStatList;
-      pro fn __init( pos: &Parser.Position, typeList: &List<&TypeInfo>, ,,argList ) {
-         ,,superStat;
-         ,,initStatList;
-      }
-      pub static fn create( nodeMan:NodeManager, pos: &Parser.Position,
-                            typeList: &List<&TypeInfo>, ,,argList ) : ,,className
-      {
-         let mut node = new ,,className( pos, typeList ,,argSymList );
-         nodeMan.addNode( node );
-         return node;
-      }
-   }
-}
-
-_declNodeClass( "None", Node, false, false, true, []);
-_declNodeClass( "Subfile", Node, false, false, true,
-                [ { "usePath": "str!" } ]);
-_declNodeClass( "Import", Node, false, false, true,
-                [ { "modulePath": "str" },
-                  { "assignName": "str" },
-                  { "moduleTypeInfo": "&TypeInfo" } ]
-);
-
-
-pub proto class ProvideNode extend Node;
-
-pub class LuneHelperInfo {
-   pub let mut useNilAccess:bool;
-   pub let mut useUnwrapExp:bool;
-   pub let mut hasMappingClassDef:bool;
-   pub let mut useLoad:bool;
-   pub let mut useUnpack:bool;
-   pub let mut useAlge:bool;
-   pub let mut useSet:bool;
-}
-
-pub class ModuleInfo extend (ModuleInfoIF) {
-   pri let fullName:str{ pub };
-   pri let localTypeInfo2importIdMap:Map<&TypeInfo,int> { pub };
-   pri let mut importId2localTypeInfoMap:Map<int,&TypeInfo> { pub& };
-   pri let assignName:str{ pub };
-   pri let moduleId:&frontInterface.ModuleId {pub};
-
-   pub fn __init( fullName:str, assignName:str, idMap:&Map<&TypeInfo,int>,
-                  moduleId:&frontInterface.ModuleId )
-   {
-      self.moduleId = moduleId;
-      self.fullName = fullName;
-      self.assignName = assignName;
-      self.localTypeInfo2importIdMap = idMap;
-      self.importId2localTypeInfoMap = {};
-      foreach importId, typeInfo in idMap {
-         self.importId2localTypeInfoMap[ importId ] = typeInfo;
-      }
-   }
-
-   pub fn get_modulePath(): str {
-      return self.fullName;
-   }
-
-   pub fn assign( assignName: str ): ModuleInfo {
-      return new ModuleInfo(
-         self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId );
-   }
-}
-
 pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,&ModuleInfoIF>, localFlag:bool! ) : str {
    return self.getParentFullName( importInfo, localFlag ) .. self.$rawTxt;
 }
@@ -4506,1146 +4225,6 @@ pub class ProcessInfo {
    let mut typeInfo2BoxMap:Map<&TypeInfo,&TypeInfo> {pub};
    let mut typeInfo2DDDMap:Map<&TypeInfo,&DDDTypeInfo> {pub};
 }
-
-pub class MacroValInfo {
-   pub let val: stem!;
-   pub let typeInfo: TypeInfo;
-}
-
-pub class MacroArgInfo {
-   pri let name:str {pub};
-   pri let typeInfo: &TypeInfo {pub};
-}
-
-pub abstract class MacroInfo {
-   pub let func: form;
-   pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
-   pub abstract fn getArgList():&List<&MacroArgInfo>;
-   pub abstract fn getTokenList():&List<&Parser.Token>;
-   pub abstract fn get_name():str;
-}
-
-_declNodeClass( "Root", Node, false, false, false,
-                [ { "children": "List<&Node>" },
-                  { "useModuleMacroSet": "&Set<&TypeInfo>" },
-                  { "moduleId": "&frontInterface.ModuleId" },
-                  { "processInfo": "ProcessInfo" },
-                  { "moduleTypeInfo": "&TypeInfo" },
-                  { "provideNode": "&ProvideNode!" },
-                  { "luneHelperInfo": "LuneHelperInfo" },
-                  { "nodeManager": "NodeManager" },
-                  { "importModule2moduleInfo": "Map<&TypeInfo,ModuleInfo>" },
-                  { "typeId2MacroInfo": "Map<int,&MacroInfo>" },
-                  { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]
-);
-
-pub fn RootNode.set_provide( node: ProvideNode ) mut {
-   self.provideNode = node;
-}
-
-_declNodeClass( "RefType", Node, false, false, false,
-                [ { "name": "&Node" },
-                  { "refFlag": "bool" },
-                  { "mutFlag": "bool" },
-                  { "array": "str" } ]
-);
-
-pub enum BlockKind {
-   If,
-   Elseif,
-   Else,
-   While,
-   Switch,
-   Match,
-   Repeat,
-   For,
-   Apply,
-   Foreach,
-   Macro,
-   Func,
-   Default,
-   Block,
-   Macro,
-   LetUnwrap,
-   IfUnwrap,
-   When,
-}
-
-_declNodeClass( "Block", Node, false, false, true,
-                [ { "blockKind": "BlockKind" },
-                  { "stmtList": "List<&Node>" } ]
-);
-
-
-macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
-   {
-      let mut noneStat:stat[] = [];
-      if returnNoneStat {
-         noneStat.insert( `{ return .None } );
-      }
-   }
-
-   if ,,checkMode == .IgnoreFlowReturn {
-      if ,, work == .Return {
-         return .Return;
-      }
-      if ,, work == .NeverRet {
-         return .NeverRet;
-      }
-   }
-   else {
-      switch ,,work {
-         case .None {
-            if ,,checkMode == .Normal or ,,checkMode == .Return {
-               ,,noneStat;
-            }
-         }
-         default {
-            if ,,kind == .None or ,,kind > work {
-               kind = work;               
-            }
-         }
-      }
-   }
-}
-
-
-pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   if checkMode ~= .Normal and checkMode ~= .Return {
-      let mut kind = BreakKind.None;
-      foreach stmt in self.stmtList {
-         let work = stmt.getBreakKind( checkMode );
-         _setBreakKind(work, kind, false, checkMode );
-      }
-      return kind;
-   }
-   else {
-      if #self.stmtList > 0 {
-         let node = self.stmtList[ #self.stmtList ];
-         return node.getBreakKind( checkMode );
-      }
-   }
-   return .None;
-}
-
-pub enum IfKind {
-   If,
-   ElseIf,
-   Else,
-}
-
-pub class IfStmtInfo {
-   pri let kind: IfKind { pub };
-   pri let exp: Node { pub };
-   pri let block: BlockNode { pub };
-}
-_declNodeClass( "If", Node, false, false, true,
-                [{ "stmtList": "IfStmtInfo[]" } ]
-);
-
-
-pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   let mut hasElseFlag = false;
-   let mut kind = BreakKind.None;
-   foreach stmtInfo in self.stmtList {
-      let work = stmtInfo.$block.getBreakKind( checkMode );
-      _setBreakKind( work, kind, true, checkMode );
-      if stmtInfo.$kind == .Else {
-         hasElseFlag = true;
-      }
-   }
-   if hasElseFlag or ( checkMode ~= .Normal and checkMode ~= .Return ) {
-      return kind;
-   }
-   
-   return .None;
-}
-
-
-_declNodeClass( "ExpList", Node, nil, nil, false,
-                [ { "expList": "&List<&Node>" },
-                  { "followOn": "bool" } ]
-);
-pub override fn ExpListNode.canBeLeft():bool {
-   foreach expNode in self.$expList {
-      if not expNode.canBeLeft() {
-         return false;
-      }
-   }
-   return true;
-}
-pub override fn ExpListNode.canBeRight():bool {
-   foreach expNode in self.$expList {
-      if not expNode.canBeRight() {
-         return false;
-      }
-   }
-   return true;
-}
-
-
-pub class CaseInfo {
-   pri let expList: ExpListNode { pub };
-   pri let block: BlockNode { pub };
-}
-_declNodeClass( "Switch", Node, false, false, true,
-                [ { "exp": "&Node" },
-                  { "caseList": "CaseInfo[]" },
-                  { "default": "&BlockNode!" } ]
-);
-
-pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
-{
-   let mut kind = BreakKind.None;
-   foreach caseInfo in self.caseList {
-      let work = caseInfo.$block.getBreakKind( checkMode );
-      _setBreakKind( work, kind, true, checkMode );
-   }
-   if! let block = self.default {
-      let work = block.getBreakKind( checkMode );
-      _setBreakKind( work, kind, true, checkMode );
-      return kind;
-   }
-
-   return .None;
-}
-
-
-macro _declLoopGetBreakKind( node:sym, blockMem:sym ) {
-
-   pub override fn ,,node.getBreakKind( checkMode:CheckBreakMode ): BreakKind
-   {  
-      let mut kind = BreakKind.None;
-      if checkMode ~= .Normal and checkMode ~= .Return {
-         return self. ,,blockMem .getBreakKind( checkMode );
-      }
-      return .None;
-   }  
-}
-
-_declNodeClass( "While", Node, false, false, true,
-                [ { "exp": "&Node" },
-                  { "block": "&BlockNode" } ]
-);
-
-_declNodeClass( "Repeat", Node, false, false, true,
-                [ { "block": "&BlockNode" },
-                  { "exp": "&Node" } ]
-);
-
-_declLoopGetBreakKind( RepeatNode, block );
-
-_declNodeClass( "For", Node, false, false, true,
-                [ { "block": "&BlockNode" },
-                  { "val": "&Parser.Token" },
-                  { "init": "&Node" },
-                  { "to": "&Node" },
-                  { "delta": "&Node!" }] 
-);
-
-_declLoopGetBreakKind( ForNode, block );
-
-
-_declNodeClass( "Apply", Node, false, false, true,
-                [ { "varList": "List<&Parser.Token>" },
-                  { "exp": "&Node" },
-                  { "block": "&BlockNode" } ]
-);
-
-_declLoopGetBreakKind( ApplyNode, block );
-
-
-_declNodeClass( "Foreach", Node, false, false, true,
-                [ { "val": "&Parser.Token!" },
-                  { "key": "&Parser.Token!" },
-                  { "exp": "&Node" },
-                  { "block": "&BlockNode" } ]
-);
-
-_declLoopGetBreakKind( ForeachNode, block );
-
-
-_declNodeClass( "Forsort", Node, false, false, true,
-                [ { "val": "&Parser.Token" },
-                  { "key": "&Parser.Token!" },
-                  { "exp": "&Node" },
-                  { "block": "&BlockNode" },
-                  { "sort": "bool" } ]
-);
-
-_declLoopGetBreakKind( ForsortNode, block );
-
-
-_declNodeClass( "Return", Node, false, false, true,
-                [ { "expList": "&ExpListNode!" } ]
-);
-pub override fn ReturnNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   return .Return;
-}
-
-_declNodeClass( "Break", Node, false, false, true, [] );
-
-pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   return .Break;
-}
-
-_declNodeClass( "Provide", Node, false, false, true,
-                [ { "symbol": "&SymbolInfo" } ]
-);
-
-_declNodeClass( "ExpNew", Node, false, true, true,
-                [ { "symbol": "&Node" },
-                  { "argList": "&ExpListNode!" } ]
-);
-
-_declNodeClass( "ExpUnwrap", Node, false, true, false,
-                [ { "exp": "&Node" },
-                  { "default": "&Node!" } ]
-);
-
-_declNodeClass( "ExpRef", Node, nil, nil, false,
-                [ { "token": "&Parser.Token" },
-                  { "symbolInfo": "&AccessSymbolInfo" } ]
-);
-
-pub override fn ExpRefNode.canBeLeft():bool {
-   return self.$symbolInfo.$canBeLeft;
-}
-
-pub override fn ExpRefNode.canBeRight():bool {
-   return self.$symbolInfo.$canBeRight;
-}
-
-_declNodeClass( "ExpOp2", Node, false, true, nil,
-                [ { "op": "&Parser.Token" },
-                  { "exp1": "&Node" },
-                  { "exp2": "&Node" } ]
-);
-
-pub override fn ExpOp2Node.canBeStatement():bool {
-   return self.$op.txt == '=';
-}
-
-
-_declNodeClass( "UnwrapSet", Node, false, false, true,
-                [ { "dstExpList": "&ExpListNode" },
-                  { "srcExpList": "&ExpListNode" },
-                  { "unwrapBlock": "&BlockNode!" } ]              
-);
-
-_declNodeClass( "IfUnwrap", Node, false, false, true,
-                [ { "varNameList": "List<str>" },
-                  { "expNodeList": "List<&Node>" },
-                  { "block": "&BlockNode" },
-                  { "nilBlock": "&BlockNode!" } ]
-);
-
-pub override fn IfUnwrapNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   let mut kind = self.block.getBreakKind( checkMode );
-   let mut work = kind;
-   _setBreakKind( work, kind, true, checkMode );
-   if! let block = self.nilBlock {
-      work = block.getBreakKind( checkMode );
-      _setBreakKind( work, kind, true, checkMode );
-      return kind;
-   }
-   return .None;
-}
-
-
-_declNodeClass( "When", Node, false, false, true,
-                [ { "varNameList": "List<&str>" },
-                  { "expNodeList": "List<&Node>" },
-                  { "block": "&BlockNode" },
-                  { "elseBlock": "&BlockNode!" } ]
-);
-
-pub override fn WhenNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   let mut kind = self.block.getBreakKind( checkMode );
-   let mut work = kind;
-   _setBreakKind( work, kind, true, checkMode );
-   if! let block = self.elseBlock {
-      work = block.getBreakKind( checkMode );
-      _setBreakKind( work, kind, true, checkMode );
-      return kind;
-   }
-   return .None;
-}
-
-
-_declNodeClass( "ExpCast", Node, false, true, false,
-                [ { "exp": "&Node" },
-                  { "force": "bool" } ]
-);
-
-pub enum MacroMode {
-   None,
-   Expand,
-   Analyze,
-}
-
-_declNodeClass( "ExpOp1", Node, false, true, false,
-                [ { "op": "&Parser.Token" },
-                  { "macroMode": "MacroMode" },
-                  { "exp": "&Node" } ]
-);
-
-_declNodeClass( "ExpRefItem", Node, nil, true, false,
-                [ { "val": "&Node" },
-                  { "nilAccess": "bool" },
-                  { "symbol": "str!" },
-                  { "index": "&Node!" } ]
-);
-pub override fn ExpRefItemNode.canBeLeft(): bool {
-   if self.val.$expType == builtinTypeStem {
-      return false;
-   }
-   //return self.$expType.$mutable;
-   return self.$val.$expType.$mutable and not self.nilAccess;
-}
-
-_declNodeClass( "ExpCall", Node, false, nil, true,
-                [ { "func": "&Node" },
-                  { "errorFunc": "bool" },
-                  { "nilAccess": "bool" },
-                  { "argList": "&ExpListNode!" } ]
-);
-pub override fn ExpCallNode.canBeRight():bool {
-   let expType = self.$expType;
-   if expType.equals( builtinTypeNone## ) or
-      expType.equals( builtinTypeNeverRet## )
-   {
-      return false;
-   }
-   return true;
-}
-
-
-pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   if self.errorFunc {
-      return .NeverRet;
-   }
-   return .None;
-}
-
-
-_declNodeClass( "ExpDDD", Node, false, true, false,
-                [ { "token": "&Parser.Token" } ]
-);
-
-_declNodeClass( "ExpParen", Node, false, true, false,
-                [ { "exp": "&Node" } ]
-);
-
-_declNodeClass( "ExpMacroExp", Node, false, false, true,
-                [ { "stmtList": "List<&Node>" } ]
-);
-
-pub override fn ExpMacroExpNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
-   if checkMode ~= .Normal and checkMode ~= .Return {
-      let mut kind = BreakKind.None;
-      foreach stmt in self.stmtList {
-         let work = stmt.getBreakKind( checkMode );
-         _setBreakKind(work, kind, false, checkMode );
-      }
-      return kind;
-   }
-   else {
-      if #self.stmtList > 0 {
-         return self.stmtList[ #self.stmtList ].getBreakKind( checkMode );
-      }
-   }
-   return .None;
-}
-
-
-_declNodeClass( "ExpMacroStat", Node, false, true, false,
-                [ { "expStrList": "List<&Node>" } ]
-);
-
-_declNodeClass( "StmtExp", Node, false, true, nil,
-                [ { "exp": "&Node" } ]
-);
-pub override fn StmtExpNode.canBeStatement():bool {
-   return self.$exp.canBeStatement();
-}
-
-pub override fn StmtExpNode.getBreakKind( checkMode:CheckBreakMode ):BreakKind {
-   return self.$exp.getBreakKind( checkMode );
-}
-
-_declNodeClass( "ExpOmitEnum", Node, true, true, false,
-                [ { "valToken": "&Parser.Token" },
-                  { "valInfo": "&EnumValInfo" },
-                  { "enumTypeInfo": "&EnumTypeInfo" }]
-);
-
-_declNodeClass( "RefField", Node, nil, nil, false,
-                [ { "field": "&Parser.Token" },
-                  //{ "overrideCanBeLeft": "bool!" },
-                  { "symbolInfo": "&AccessSymbolInfo!" },
-                  { "nilAccess": "bool" },
-                  { "prefix": "&Node" }] 
-);
-pub override fn RefFieldNode.canBeLeft():bool {
-   if! self.$symbolInfo {
-      return _exp.$canBeLeft;
-   }
-   // if! self.overrideCanBeLeft {
-   //    return _exp;
-   // }
-   return false;
-}
-pub override fn RefFieldNode.canBeRight():bool {
-   if! self.$symbolInfo {
-      return _exp.$canBeRight;
-   }
-   // if! self.overrideCanBeLeft {
-   //    return _exp;
-   // }
-   return true;
-}
-
-_declNodeClass( "GetField", Node, nil, true, false,
-                [ { "field": "&Parser.Token" },
-                  //{ "overrideCanBeLeft": "bool!" },
-                  { "symbolInfo": "&AccessSymbolInfo!" },
-                  { "nilAccess": "bool" },
-                  { "prefix": "&Node" },
-                  { "getterTypeInfo": "&TypeInfo" } ]               
-);
-pub override fn GetFieldNode.canBeLeft():bool {
-   if! self.$symbolInfo {
-      return _exp.$canBeLeft;
-   }
-   // if! self.overrideCanBeLeft {
-   //    return _exp;
-   // }
-   return false;
-}
-
-
-_declNodeClass( "Alias", Node, false, false, true,
-                [ {"newName": "str" },
-                  {"srcNode": "&Node" },
-                  {"typeInfo": "&TypeInfo" } ] );
-
-pub class VarInfo {
-   pri let name: &Parser.Token { pub };
-   // 宣言している型。 宣言していない場合は nil
-   pri let refType: RefTypeNode! { pub };
-   // 実際の型。
-   pri let actualType: TypeInfo { pub };
-}
-
-pub enum DeclVarMode {
-   Let,
-   Sync,
-   Unwrap,
-}
-
-_declNodeClass( "DeclVar", Node, false, false, true,
-                [ { "mode": "DeclVarMode" },
-                  { "accessMode": "AccessMode" },
-                  { "staticFlag": "bool" },
-                  { "varList": "List<&VarInfo>" },
-                  { "expList": "&ExpListNode!" },
-                  { "symbolInfoList": "List<&SymbolInfo>"},
-                  { "typeInfoList": "List<&TypeInfo>" },
-                  { "unwrapFlag": "bool" },
-                  { "unwrapBlock": "&BlockNode!" },
-                  { "thenBlock": "&BlockNode!" },
-                  { "syncVarList": "List<&VarInfo>" },
-                  { "syncBlock": "&BlockNode!" } ]
-);
-
-pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
-{
-   if checkMode ~= .Normal and checkMode ~= .Return {
-      if! let block = self.unwrapBlock {
-         let kind = block.getBreakKind( checkMode );
-         switch kind {
-            case .Return, .NeverRet {
-               return kind;
-            }
-         }
-      }
-      if! let block = self.thenBlock {
-         let kind = block.getBreakKind( checkMode );
-         switch kind {
-            case .Return, .NeverRet {
-               return kind;
-            }
-         }
-      }
-      if! let block = self.syncBlock {
-         let kind = block.getBreakKind( checkMode );
-         switch kind {
-            case .Return, .NeverRet {
-               return kind;
-            }
-         }
-      }
-      return .None;
-   }
-   else {
-      let mut kind = BreakKind.None;
-      let mut work = BreakKind.None;
-      if! let block = self.unwrapBlock {
-         work = block.getBreakKind( checkMode );
-         _setBreakKind( work, kind, true, checkMode );
-         if! let thenBlock = self.thenBlock {
-            work = thenBlock.getBreakKind( checkMode );
-            _setBreakKind( work, kind, true, checkMode );
-            if! let syncBlock = self.syncBlock {
-               work = syncBlock.getBreakKind( checkMode );
-               _setBreakKind( work, kind, true, checkMode );
-               return kind;
-            }     
-         }  
-      }
-      return .None;
-   }
-}
-
-
-
-pub class DeclFuncInfo {
-   pri let classTypeInfo: &TypeInfo! { pub };
-   pri let name: &Parser.Token! { pub };
-   pri let argList: List<&Node> { pub };
-   pri let staticFlag: bool { pub };
-   pri let accessMode: AccessMode { pub };
-   pri let body: &BlockNode! { pub };
-   pri let retTypeInfoList: List<&TypeInfo> { pub };
-   pri let has__func__Symbol:bool { pub };
-}
-_declNodeClass( "DeclFunc", Node, false, true, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
-);
-
-_declNodeClass( "DeclMethod", Node, false, false, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
-);
-
-_declNodeClass( "DeclConstr", Node, false, false, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
-);
-
-_declNodeClass( "DeclDestr", Node, false, false, true,
-                [ { "declInfo": "DeclFuncInfo" } ]
-);
-
-_declNodeClass( "ExpCallSuper", Node, false, false, true,
-                [ { "superType": "&TypeInfo" },
-                  { "methodType": "&TypeInfo" },
-                  { "expList": "&ExpListNode!" } ]
-);
-
-_declNodeClass( "DeclMember", Node, false, false, true,
-                [ { "name": "&Parser.Token" },
-                  { "refType": "&RefTypeNode" },
-                  { "symbolInfo": "&SymbolInfo" },
-                  { "staticFlag": "bool" },
-                  { "accessMode": "AccessMode" },
-                  { "getterMutable": "bool" },
-                  { "getterMode": "AccessMode" },
-                  { "setterMode": "AccessMode" } ]
-);
-
-_declNodeClass( "DeclArg", Node, false, false, false,
-                [ { "name": "&Parser.Token" },
-                  { "argType": "&RefTypeNode" } ]
-);
-
-_declNodeClass( "DeclArgDDD", Node, false, false, false, [] );
-
-pub class AdvertiseInfo {
-   pri let mut member: &DeclMemberNode { pub };
-   pri let prefix: str {pub};
-};
-_declNodeClass( "DeclClass", Node, false, false, true,
-                [ { "accessMode": "AccessMode" },
-                  { "name": "&Parser.Token" },
-                  { "gluePrefix": "str!" },
-                  { "declStmtList": "List<&Node>" },
-                  { "fieldList": "List<&Node>" },
-                  { "moduleName": "&Parser.Token!" },
-                  { "memberList": "List<&DeclMemberNode>" },
-                  { "scope": "&Scope" },
-                  { "initStmtList": "List<&Node>" },
-                  { "advertiseList": "AdvertiseInfo[]" },
-                  { "trustList": "List<&TypeInfo>" },
-                  { "outerMethodSet": "Set<str>" } ]
-);
-
-_declNodeClass( "DeclEnum", Node, false, false, true,
-                [ { "accessMode": "AccessMode" },
-                  { "name": "&Parser.Token" },
-                  { "valueNameList": "List<&Parser.Token>" },
-                  { "scope": "&Scope" } ]
-);
-
-_declNodeClass( "DeclAlge", Node, false, false, true,
-                [ { "accessMode": "AccessMode" },
-                  { "algeType": "&AlgeTypeInfo"},
-                  { "scope": "&Scope" } ]
-);
-
-
-_declNodeClass( "NewAlgeVal", Node, false, true, false,
-                [ { "name": "&Parser.Token" },
-                  { "prefix": "&Node!" },
-                  { "algeTypeInfo": "&AlgeTypeInfo" },
-                  { "valInfo": "&AlgeValInfo" },
-                  { "paramList": "&List<&Node>" } ]
-);
-
-pub class MatchCase {
-   pri let valInfo: &AlgeValInfo {pub};
-   pri let valParamNameList: &List<str> {pub};
-   pri let block: &BlockNode {pub};
-}
-
-_declNodeClass( "Match", Node, false, false, true,
-                [ { "val": "&Node" },
-                  { "algeTypeInfo": "&AlgeTypeInfo" },
-                  { "caseList": "&List<&MatchCase>" },
-                  { "defaultBlock": "&Node!" }
-                ]              
-);
-
-_declNodeClass( "DeclMacro", Node, false, false, true,
-                [ { "declInfo": "DeclMacroInfo" } ]
-);
-
-pub abstract class MacroEval {
-   pub abstract fn evalFromCode( name:str, argNameList:&List<str>, code:str! ): form;
-   pub abstract fn eval( macroNode: DeclMacroNode ): form;
-}
-
-_declNodeClass( "Abbr", Node, false, true, false,
-                [ {} ]
-);
-
-
-_declNodeClass( "Boxing", Node, false, true, false,
-                [ { "src": "&Node" } ]
-);
-
-_declNodeClass( "Unboxing", Node, false, true, false,
-                [ { "src": "&Node" } ]
-);
-
-_declNodeClass( "LiteralNil", Node, false, true, false, [] );
-
-_declNodeClass( "LiteralChar", Node, false, true, false,
-                [ { "token": "&Parser.Token" },
-                  { "num": "int" } ]
-);
-
-_declNodeClass( "LiteralInt", Node, false, true, false,
-                [ { "token": "&Parser.Token" },
-                  { "num": "int" } ]
-);
-
-_declNodeClass( "LiteralReal", Node, false, true, false,
-                [ { "token": "&Parser.Token" },
-                  { "num": "real" } ]
-);
-
-_declNodeClass( "LiteralArray", Node, false, true, false,
-                [ { "expList": "&ExpListNode!" } ]
-);
-
-_declNodeClass( "LiteralList", Node, false, true, false,
-                [ { "expList": "&ExpListNode!" } ]
-);
-
-_declNodeClass( "LiteralSet", Node, false, true, false,
-                [ { "expList": "&ExpListNode!" } ]
-);
-
-pub class PairItem {
-   pri let key: Node { pub };
-   pri let val: Node { pub };
-}
-_declNodeClass( "LiteralMap", Node, false, true, false,
-                [ { "map": "Map<&Node,&Node>" },
-                  { "pairList": "PairItem[]" } ]
-);
-
-_declNodeClass( "LiteralString", Node, false, true, false,
-                [ { "token": "&Parser.Token" },
-                  { "argList": "&List<&Node>" } ]
-);
-
-_declNodeClass( "LiteralBool", Node, false, true, false,
-                [ { "token": "&Parser.Token" } ]
-);
-
-_declNodeClass( "LiteralSymbol", Node, false, true, false,
-                [ { "token": "&Parser.Token" } ]
-);
-
-pub fn Node.getSymbolInfo(): List<&AccessSymbolInfo> {
-   fn processExpNode( node: &Node ): List<&AccessSymbolInfo> {
-      switch ( node.$kind ) {
-         case NodeKind.$ExpRef {
-            return [(unwrap (node@@@ExpRefNode)).$symbolInfo];
-         }
-         case NodeKind.$RefField {
-            if! let refFieldNode = node@@@RefFieldNode {
-               if! refFieldNode.$symbolInfo {
-                  return [_exp];
-               }
-            }
-         }
-         case NodeKind.$GetField {
-            if! let getFieldNode = node@@@GetFieldNode {
-               if! getFieldNode.$symbolInfo {
-                  return [_exp];
-               }
-            }
-         }
-         case NodeKind.$ExpList {
-            if! let expListNode = node@@@ExpListNode {
-               let mut list: List<&AccessSymbolInfo> = [];
-               foreach expNode, index in expListNode.$expList {
-                  if index == #expListNode.$expList {
-                     foreach symbolInfo in processExpNode( expNode ) {
-                        list.insert( symbolInfo );
-                     }  
-                  }  
-                  else {
-                     foreach symbolInfo in processExpNode( expNode ) {
-                        list.insert( symbolInfo );
-                        break;
-                     }  
-                  }  
-               }
-               return list;
-            }
-         }
-         case NodeKind.$RefType {
-            if! let refTypeNode = node@@@RefTypeNode {
-               return refTypeNode.$name.getSymbolInfo();
-            }
-         }
-      }
-      return [];
-   }
-   return processExpNode( self );
-}
-
-
-pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
-{
-   if checkMode ~= .Normal and checkMode ~= .Return {
-      let mut kind = BreakKind.None;
-      foreach stmt in self.block.$stmtList {
-         let work = stmt.getBreakKind( checkMode );
-         _setBreakKind(work, kind, false, checkMode );
-      }
-      if kind == .Break {
-         return .None;
-      }
-      return kind;
-   }
-   else {
-      if self.exp.$expType.$nilable {
-         return .None;
-      }
-      if self.exp.$expType.equals( builtinTypeBool ## ) {
-         if! let boolNode = self.exp@@@LiteralBoolNode {
-            if boolNode.$token.txt == "false" {
-               return .None;
-            }  
-         }
-         else {
-            return .None;
-         }        
-      }
-      // 条件式が次のもの以外は無条件ループ。
-      //  - nilable でない
-      //  - bool 型の式でない
-      //  - false でもない
-      
-
-      // 無条件ループ用のフロー解析に変更する。
-      let mut mode = CheckBreakMode.IgnoreFlow;
-      // if checkMode == .Return {
-      //    mode = .IgnoreFlowReturn;
-      // }
-      let mut kind = BreakKind.None;
-      foreach stmt in self.block.$stmtList {
-         let work = stmt.getBreakKind( mode );
-         
-         _setBreakKind(work, kind, false, mode );
-      }
-      if kind == .Break {
-         return .None;
-      }
-      if kind == .Return {
-         return .Return;
-      }
-      return .NeverRet;
-   }
-}
-
-
-pub override fn LiteralNilNode.getLiteral(): stem![], List<&TypeInfo> {
-   return [nil], [builtinTypeNil];
-}
-
-pub override fn LiteralCharNode.getLiteral(): stem![], List<&TypeInfo> {
-   return [self.num], [builtinTypeChar];
-}
-
-pub override fn LiteralIntNode.getLiteral(): stem![], List<&TypeInfo> {
-   return [self.num], [builtinTypeInt];
-}
-
-pub override fn LiteralRealNode.getLiteral(): stem![], List<&TypeInfo> {
-   return [self.num], [builtinTypeReal];
-}
-
-pub override fn LiteralArrayNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut array:stem![] = [];
-   if! self.expList {
-      foreach val in _exp.get_expList() {
-         let! txt = val.getLiteral()[1] {
-            // nil は処理できない。。。
-            return [], [];
-         };
-         array.insert( txt );
-      } 
-   }
-   return [array], [self.get_expType()];
-}
-
-pub override fn LiteralListNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut list:stem![] = [];
-   if! self.expList {
-      foreach val in _exp.get_expList() {
-         let! item = val.getLiteral()[1] {
-            // nil は処理できない。。。
-            return [], [];
-         };
-         list.insert( item );
-      } 
-   }
-   return [list], [self.get_expType()];
-}
-
-pub override fn LiteralSetNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut list:stem![] = [];
-   if! self.expList {
-      foreach val in _exp.get_expList() {
-         let! item = val.getLiteral()[1] {
-            // nil は処理できない。。。
-            return [], [];
-         };
-         list.insert( item );
-      } 
-   }
-   return [list], [self.get_expType()];
-}
-
-pub override fn LiteralMapNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut map:Map<stem,stem!> = {};
-   foreach val, key in self.map {
-      map[ unwrap key.getLiteral()[1] ] = val.getLiteral()[1];
-   }
-   return [map], [self.get_expType()];
-}
-
-pub override fn LiteralStringNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut txt = self.token.txt;
-   if string.find( txt, '^```' ##) {
-      txt = txt.sub( 4, -4 );
-   }
-   else {
-      txt = txt.sub( 2, -2 );
-   }
-   let argList = self.$argList;
-
-   if #argList > 0 {
-      let mut argTbl:stem![] = [];
-      foreach argNode in argList {
-         let arg = argNode.getLiteral();
-         if #arg > 1 {
-            let! argTxt = arg[1] {
-               // nil は処理できない。。。
-               return [], [];
-            };
-            argTbl.insert( argTxt );
-         }
-      }   
-      return [ string.format( txt, argTbl.unpack() )], [builtinTypeString];
-   }
-   return [txt], [builtinTypeString];
-}
-
-pub override fn LiteralBoolNode.getLiteral(): stem![], List<&TypeInfo> {
-   return [ self.token.txt == "true"], [builtinTypeBool];
-}
-
-pub override fn LiteralSymbolNode.getLiteral(): stem![], List<&TypeInfo> {
-   return [[ self.token.txt ]], [ builtinTypeSymbol ];
-}
-
-pub override fn RefFieldNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut prefix = (unwrap self.prefix.getLiteral()[1])@@str[];
-   if self.nilAccess {
-      prefix.insert( "$." );
-   }
-   else {
-      prefix.insert( "." );
-   }
-   prefix.insert( self.field.txt );
-   return [ prefix ], [ builtinTypeSymbol ];
-}
-
-pub override fn ExpMacroStatNode.getLiteral(): stem![], List<&TypeInfo> {
-   let mut txt = "";
-   foreach token in self.expStrList {
-      txt = "%s%s" (txt, token.getLiteral()[1]);
-   }
-   return [txt ], [ self.get_expType() ];
-}
-
-pub override fn ExpRefNode.getLiteral(): stem![], List<&TypeInfo> {
-   let typeInfo = self.symbolInfo.$typeInfo;
-   if! let enumTypeInfo = typeInfo@@@EnumTypeInfo {
-      let val = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
-      return [ val.$name ], [ enumTypeInfo ];
-   }
-
-   return [], [];
-}
-
-pub override fn ExpOmitEnumNode.getLiteral(): stem![], List<&TypeInfo> {
-   let enumTypeInfo = self.enumTypeInfo;
-
-   let val = self.valInfo;
-   return [ val.$name ], [ enumTypeInfo ];
-}
-
-pub override fn ExpOp2Node.getLiteral(): stem![], List<&TypeInfo> {
-
-   fn getValType( valList:&List<stem!>, typeList:&List<&TypeInfo> ): &stem, &TypeInfo {
-      let typeInfo = typeList[ 1 ].$srcTypeInfo;
-      let val = unwrap valList[ 1 ];
-      if! let enumTypeInfo = typeInfo@@@EnumTypeInfo {
-         let valInfo = unwrap enumTypeInfo.getEnumValInfo( val@@str );
-         return valInfo.$val, enumTypeInfo.$valTypeInfo;
-      }
-      return val, typeInfo;
-   }
-   
-   let val1List, mut type1List = self.$exp1.getLiteral();
-   let val2List, mut type2List = self.$exp2.getLiteral();
-
-   if #val1List ~= 1 or #type1List ~= 1 or #val2List ~= 1 or #type2List ~= 1 {
-      return [], [];
-   }
-
-   let val1, type1 = getValType( val1List, type1List );
-   let val2, type2 = getValType( val2List, type2List );
-   
-
-   if ( type1 == builtinTypeInt or type1 == builtinTypeReal ) and
-      ( type2 == builtinTypeInt or type2 == builtinTypeReal )
-   {
-      let mut retType = builtinTypeInt;
-      if type1 == builtinTypeReal or type2 == builtinTypeReal {
-         retType = builtinTypeReal;
-      }
-      let mut int1, mut int2 = 0, 0;
-      let mut real1, mut real2 = 0.0, 0.0;
-      if type1 == builtinTypeInt {
-         int1 = val1@@int;
-         real1 = int1@@real;
-      }
-      else {
-         real1 = val1@@real;
-      }
-      if type2 == builtinTypeInt {
-         int2 = val2@@int;
-         real2 = int2@@real;
-      }
-      else {
-         real2 = val2@@real;
-      }
-
-      switch ( self.op.txt ) {
-         case "+" {
-            if retType == builtinTypeInt {
-               return [ int1 + int2 ], [ retType ];
-            }
-            return [ real1 + real2 ], [ retType ];
-         }
-         case "-" {
-            if retType == builtinTypeInt {
-               return [ int1 - int2 ], [ retType ];
-            }
-            return [ real1 - real2 ], [ retType ];
-         }
-         case "*" {
-            if retType == builtinTypeInt {
-               return [ int1 * int2 ], [ retType ];
-            }
-            return [ real1 * real2 ], [ retType ];
-         }
-         case "/" {
-            if retType == builtinTypeInt {
-               return [ int1 / int2 ], [ retType ];
-            }
-            return [ real1 / real2 ], [ retType ];
-         }
-      }
-   }
-   elseif type1 == builtinTypeString and type2 == builtinTypeString {
-      if self.op.txt == ".." {
-         return [ val1@@str .. val2@@str ], [ builtinTypeString ];
-      }
-   }
-
-   return [],[];
-}
-
-pub class DefMacroInfo extend MacroInfo {
-   pub let declInfo: DeclMacroInfo;
-   pri let mut argList:List<&MacroArgInfo>;
-
-   pub override fn get_name():str {
-      return self.declInfo.$name.txt;
-   }
-   
-   pub override fn getArgList():&List<&MacroArgInfo> {
-      return self.argList;
-   }
-   pub override fn getTokenList():&List<&Parser.Token>{
-      return self.declInfo.$tokenList;
-   }
-   
-   pub fn __init( func: form, declInfo: DeclMacroInfo, 
-                  symbol2MacroValInfoMap: Map<str,MacroValInfo> )
-   {
-      super( func, symbol2MacroValInfoMap );
-      self.declInfo = declInfo;
-      self.argList = [];
-      foreach argNode in declInfo.$argList {
-         if argNode.get_kind() == NodeKind.$DeclArg {
-            let argType = argNode.$argType.$expType;
-            let argName = argNode.$name.txt;
-            self.argList.insert( new MacroArgInfo( argName, argType ) );
-         }
-      }
-   }
-}
-
 
 let mut processInfoQueue:List<ProcessInfo> = [];
 

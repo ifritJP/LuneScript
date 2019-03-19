@@ -4,6 +4,43 @@ local __mod__ = 'lune.base.glueFilter'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -145,6 +182,7 @@ function _lune.__Cast( obj, kind, class )
 end
 
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local glueGenerator = {}
 function glueGenerator.setmeta( obj )
@@ -193,7 +231,7 @@ function glueGenerator:getArgInfo( argNode )
    
    local argName = ""
    do
-      local _exp = _lune.__Cast( argNode, 3, Ast.DeclArgNode )
+      local _exp = _lune.__Cast( argNode, 3, Nodes.DeclArgNode )
       if _exp ~= nil then
          argName = _exp:get_name().txt
       end
@@ -461,7 +499,7 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
    local methodNodeList = {}
    for __index, fieldNode in pairs( node:get_fieldList() ) do
       do
-         local methodNode = _lune.__Cast( fieldNode, 3, Ast.DeclMethodNode )
+         local methodNode = _lune.__Cast( fieldNode, 3, Nodes.DeclMethodNode )
          if methodNode ~= nil then
             if methodNode:get_declInfo():get_staticFlag() then
                table.insert( staticMethodNodeList, methodNode )
@@ -497,7 +535,7 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
 end
 
 local glueFilter = {}
-setmetatable( glueFilter, { __index = Ast.Filter } )
+setmetatable( glueFilter, { __index = Nodes.Filter } )
 function glueFilter.setmeta( obj )
   setmetatable( obj, { __index = glueFilter  } )
 end
@@ -511,7 +549,7 @@ function glueFilter.new( outputDir )
 end         
 function glueFilter:__init( outputDir ) 
 
-   Ast.Filter.__init( self )
+   Nodes.Filter.__init( self )
    self.outputDir = outputDir
 end
 

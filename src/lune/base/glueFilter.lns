@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 import lune.base.Ast;
+import lune.base.Nodes;
 import lune.base.Parser;
 
 class glueGenerator {
@@ -38,7 +39,7 @@ fn glueGenerator.writeHeader( txt:str ) mut {
    self.headerStream.write( txt );
 }
 
-fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, str, &Ast.TypeInfo, str {
+fn glueGenerator.getArgInfo( argNode:&Nodes.Node ): str, str, &Ast.TypeInfo, str {
    let argType = argNode.$expType;
    let mut orgType = (argType.$nilable and argType.$nonnilableType or argType).$srcTypeInfo;
    let mut typeTxt = "";
@@ -56,20 +57,20 @@ fn glueGenerator.getArgInfo( argNode:&Ast.Node ): str, str, &Ast.TypeInfo, str {
       nilableTypeTxt = typeTxt;
    }
    let mut argName = "";
-   if! argNode@@@Ast.DeclArgNode {
+   if! argNode@@@Nodes.DeclArgNode {
       argName = _exp.$name.txt;
    }
    return typeTxt, argType.$nilable and nilableTypeTxt or typeTxt, orgType, argName;
 }
 
-fn glueGenerator.outputPrototype( node:&Ast.DeclMethodNode ) mut
+fn glueGenerator.outputPrototype( node:&Nodes.DeclMethodNode ) mut
 {
    self.write(
       "static int lns_glue_%s( lua_State * pLua )" (node.$expType.getTxt(##) ) );
 }
 
 fn glueGenerator.outputUserPrototype(
-   node:&Ast.DeclMethodNode, gluePrefix:str ) mut
+   node:&Nodes.DeclMethodNode, gluePrefix:str ) mut
 {
    let expType = node.$expType;
 
@@ -91,7 +92,7 @@ fn glueGenerator.outputUserPrototype(
 }
 
 
-fn glueGenerator.outputPrototypeList( methodNodeList:List<&Ast.DeclMethodNode> ) mut
+fn glueGenerator.outputPrototypeList( methodNodeList:List<&Nodes.DeclMethodNode> ) mut
 {
    foreach node in methodNodeList {
       self.outputPrototype( node );
@@ -100,7 +101,7 @@ fn glueGenerator.outputPrototypeList( methodNodeList:List<&Ast.DeclMethodNode> )
 }
 
 fn glueGenerator.outputUserPrototypeList(
-   methodNodeList:List<&Ast.DeclMethodNode>, gluePrefix:str ) mut
+   methodNodeList:List<&Nodes.DeclMethodNode>, gluePrefix:str ) mut
 {
    foreach node in methodNodeList {
       self.outputUserPrototype( node, gluePrefix );
@@ -111,7 +112,7 @@ fn glueGenerator.outputUserPrototypeList(
 
 
 fn glueGenerator.outputFuncReg(
-   symbolName:str, methodNodeList:List<&Ast.DeclMethodNode> ) mut
+   symbolName:str, methodNodeList:List<&Nodes.DeclMethodNode> ) mut
 {
    self.write( "static const luaL_Reg %s[] = {\n" (symbolName) );
    foreach node in methodNodeList {
@@ -196,7 +197,7 @@ class GlueArgInfo {
    let typeInfo&Ast.TypeInfo {pub};
 }
 
-fn glueGenerator.outputMethod( node:&Ast.DeclMethodNode, gluePrefix:str ) mut {
+fn glueGenerator.outputMethod( node:&Nodes.DeclMethodNode, gluePrefix:str ) mut {
    let declInfo = node.$declInfo;
    let mut name = "";
    if! declInfo.$name {
@@ -296,14 +297,14 @@ fn glueGenerator.outputMethod( node:&Ast.DeclMethodNode, gluePrefix:str ) mut {
 }
 
 pub fn glueGenerator.outputClass(
-   moduleFullName:str, node:&Ast.DeclClassNode, gluePrefix:str ) mut
+   moduleFullName:str, node:&Nodes.DeclClassNode, gluePrefix:str ) mut
 {
    let moduleSymbolFull = moduleFullName.gsub( "%.", "_" );
 
-   let mut staticMethodNodeList:List<&Ast.DeclMethodNode> = [];
-   let mut methodNodeList:List<&Ast.DeclMethodNode> = [];
+   let mut staticMethodNodeList:List<&Nodes.DeclMethodNode> = [];
+   let mut methodNodeList:List<&Nodes.DeclMethodNode> = [];
    foreach fieldNode in node.$fieldList {
-      if! let methodNode = fieldNode@@@Ast.DeclMethodNode {
+      if! let methodNode = fieldNode@@@Nodes.DeclMethodNode {
          if methodNode.$declInfo.$staticFlag {
             staticMethodNodeList.insert( methodNode );
          }
@@ -343,15 +344,15 @@ pub fn glueGenerator.outputClass(
    }
 }
 
-class glueFilter extend Ast.Filter<int> {
+class glueFilter extend Nodes.Filter<int> {
    let outputDir:str!;
 }
 
-pub fn createFilter( outputDir:str! ): Ast.Filter<int> {
+pub fn createFilter( outputDir:str! ): Nodes.Filter<int> {
    return new glueFilter( outputDir );
 }
 
-pub override fn glueFilter.processRoot( node: &Ast.RootNode, dummy:int ) mut
+pub override fn glueFilter.processRoot( node: &Nodes.RootNode, dummy:int ) mut
 {
    fn createFile( filename:str ):oStream {
       let filePath = "%s/%s" (unwrap self.outputDir default ".", filename);               

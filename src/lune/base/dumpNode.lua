@@ -4,6 +4,43 @@ local __mod__ = 'lune.base.dumpNode'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -145,6 +182,7 @@ function _lune.__Cast( obj, kind, class )
 end
 
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Opt = {}
 _moduleObj.Opt = Opt
@@ -181,7 +219,7 @@ function Opt.setmeta( obj )
 end
 
 local dumpFilter = {}
-setmetatable( dumpFilter, { __index = Ast.Filter } )
+setmetatable( dumpFilter, { __index = Nodes.Filter } )
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
 end
@@ -195,7 +233,7 @@ function dumpFilter.new(  )
 end         
 function dumpFilter:__init(  ) 
 
-   Ast.Filter.__init( self )
+   Nodes.Filter.__init( self )
 end
 
 local function createFilter(  )
@@ -212,7 +250,7 @@ local function dump( prefix, depth, node, txt )
       typeStr = string.format( "(%d:%s:%s)", expType:get_typeId(  ), expType:getTxt(  ), expType:get_kind(  ))
    end
    
-   print( string.format( "%s: %s %s %s", prefix, Ast.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
+   print( string.format( "%s: %s %s %s", prefix, Nodes.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
 end
 
 local function filter( node, filter, opt )
@@ -581,7 +619,7 @@ function dumpFilter:processIf( node, opt )
    dump( prefix, depth, node, "" )
    local stmtList = node:get_stmtList(  )
    for index, stmt in pairs( stmtList ) do
-      if stmt:get_exp():get_kind() ~= Ast.nodeKind['None'] then
+      if stmt:get_exp():get_kind() ~= Nodes.nodeKind['None'] then
          filter( stmt:get_exp(), self, opt:nextOpt(  ) )
       end
       

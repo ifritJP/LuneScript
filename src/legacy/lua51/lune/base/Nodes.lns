@@ -1,0 +1,1595 @@
+import lune.base.Parser;
+import lune.base.Util;
+import lune.base.frontInterface;
+import lune.base.Ast;
+
+pub class Filter<T> {
+}
+
+/**
+制御中断要因。
+
+優先度の高い順に宣言する。
+*/
+pub enum BreakKind {
+   None,
+   Break,
+   Return,
+   NeverRet,
+}
+
+pub enum CheckBreakMode {
+   /** フローを解析する */
+   Normal,
+   /** フローを解析する (return 有無の解析)  */
+   Return,
+   /** フローを解析しない */
+   IgnoreFlow,
+   /** フローを解析しない (return 有無の解析) */
+   IgnoreFlowReturn,
+}
+
+
+pub alge Literal {
+   Nil,
+   Int( int ),
+   Real( real ),
+   Str( str ),
+   Bool( bool ),
+   Symbol( str ),
+   Field( &List<str> ),
+   LIST( &List<&Literal> ),
+   ARRAY( &List<&Literal> ),
+   SET( &List<&Literal> ),
+   MAP( &Map<&Literal,&Literal> ),
+}
+
+pub fn getLiteralObj( obj:&Literal ):stem! {
+   match obj {
+      case .Nil {
+         return nil;
+      }     
+      case .Int( val ) {
+         return val;
+      }     
+      case .Real( val ) {
+         return val;
+      }     
+      case .Str( val ) {
+         return val;
+      }     
+      case .Bool( val ) {
+         return val;
+      }     
+      case .Symbol( val ) {
+         return val;
+      }
+      case .Field( val ) {
+         return val;
+      }
+      case .LIST( val ) {
+         return val;
+      }     
+      case .ARRAY( val ) {
+         return val;
+      }     
+      case .SET( val ) {
+         return val;
+      }     
+      case .MAP( val ) {
+         return val;
+      }
+   }
+   Util.errorLog( "unknown literal obj -- " .. obj.$_txt );
+   return nil;
+}
+
+pub class Node {
+   pri let kind: int { pub };
+   pri let pos: &Parser.Position { pub };
+   pri let expTypeList: &List<&Ast.TypeInfo> { pub };
+
+   pub fn get_expType(): &Ast.TypeInfo {
+      if #self.expTypeList == 0 {
+         return Ast.builtinTypeNone;
+      }
+      return self.expTypeList[ 1 ];
+   }; 
+   
+   pub fn getLiteral(): Literal! {
+      return nil;
+   }
+   pub fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
+   }
+   /** 代入式の左辺になれるかどうか */
+   pub fn canBeLeft(): bool {
+      return false;
+   };     
+   /** 代入式の右辺になれるかどうか */
+   pub fn canBeRight(): bool {
+      return false;
+   }
+   /** 単体で文になれるかどうか */
+   pub fn canBeStatement(): bool {
+      return false;
+   }
+   /**
+制御の中断種別を得る。
+
+全てのケースで return で終っている場合や、 error() などをコールしている場合など。
+
+@param checkMode モード
+*/
+   pub fn getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+      return .None;
+   }
+}
+
+
+
+pub class NamespaceInfo {
+   pub let name: str;
+   pub let scope: Ast.Scope;
+   pub let typeInfo: &Ast.TypeInfo;
+}
+
+
+pub proto abstract class MacroEval;
+pub proto class ExpListNode extend Node;
+pub proto class DeclArgNode extend Node;
+pub proto class BlockNode extend Node;
+
+pub class DeclMacroInfo {
+   pri let pubFlag: bool {pub};
+   pri let name: &Parser.Token { pub };
+   pri let argList: List<&DeclArgNode> { pub };
+   /** macro-statment の BlockNode */
+   pri let stmtBlock: &BlockNode! { pub };
+   /** expand-statemnt の token リスト */
+   pri let tokenList: List<&Parser.Token> { pub };
+}
+
+let mut nodeKind2NameMap: Map<int,str> = {};
+let mut nodeKindSeed = 1;
+pub let mut nodeKind: Map<str,int> = {};
+
+fn regKind( name:str ): int {
+   let kind = nodeKindSeed;
+   nodeKindSeed = nodeKindSeed + 1;
+   nodeKind2NameMap[ kind ] = name;
+   nodeKind[ name ] = kind;
+   return kind;
+}
+
+pub fn getNodeKindName( kind: int ): str {
+   return unwrap nodeKind2NameMap[ kind ];
+}
+
+// let nodeKindNone = regKind( 'None' );
+// let nodeKindImport = regKind( 'Import' );
+// let nodeKindRoot = regKind( 'Root' );
+// let nodeKindRefType = regKind( 'RefType' );
+// let nodeKindIf = regKind( 'If' );
+// let nodeKindSwitch = regKind( 'Switch' );
+// let nodeKindWhile = regKind( 'While' );
+// let nodeKindRepeat = regKind( 'Repeat' );
+// let nodeKindFor = regKind( 'For' );
+// let nodeKindApply = regKind( 'Apply' );
+// let nodeKindForeach = regKind( 'Foreach' );
+// let nodeKindForsort = regKind( 'Forsort' );
+// let nodeKindReturn = regKind( 'Return' );
+// let nodeKindBreak = regKind( 'Break' );
+// let nodeKindExpNew = regKind( 'ExpNew' );
+// let nodeKindExpList = regKind( 'ExpList' );
+// let nodeKindExpRef = regKind( 'ExpRef' );
+// let nodeKindExpOp2 = regKind( 'ExpOp2' );
+// let nodeKindExpCast = regKind( 'ExpCast' );
+// let nodeKindExpOp1 = regKind( 'ExpOp1' );
+// let nodeKindExpRefItem = regKind( 'ExpRefItem' );
+// let nodeKindExpCall = regKind( 'ExpCall' );
+// let nodeKindExpCallSuper = regKind( 'ExpCallSuper' );
+// let nodeKindExpDDD = regKind( 'ExpDDD' );
+// let nodeKindExpParen = regKind( 'ExpParen' );
+// let nodeKindExpMacroExp = regKind( 'ExpMacroExp' ); // macro expand
+// let nodeKindExpMacroStat = regKind( 'ExpMacroStat' ); // `{}
+// let nodeKindBlock = regKind( 'Block' );
+// let nodeKindStmtExp = regKind( 'StmtExp' );
+// let nodeKindRefField = regKind( 'RefField' );
+// let nodeKindDeclVar = regKind( 'DeclVar' );
+// let nodeKindDeclFunc = regKind( 'DeclFunc' );
+// let nodeKindDeclMethod = regKind( 'DeclMethod' );
+// let nodeKindDeclConstr = regKind( 'DeclConstr' );
+// let nodeKindDeclMember = regKind( 'DeclMember' );
+// let nodeKindDeclArg = regKind( 'DeclArg' );
+// let nodeKindDeclArgDDD = regKind( 'DeclArgDDD' );
+// let nodeKindDeclClass = regKind( 'DeclClass' );
+// let nodeKindDeclMacro = regKind( 'DeclMacro' );
+// let nodeKindLiteralNil = regKind( 'LiteralNil' );
+// let nodeKindLiteralChar = regKind( 'LiteralChar' );
+// let nodeKindLiteralInt = regKind( 'LiteralInt' );
+// let nodeKindLiteralReal = regKind( 'LiteralReal' );
+// let nodeKindLiteralArray = regKind( 'LiteralArray' );
+// let nodeKindLiteralList = regKind( 'LiteralList' );
+// let nodeKindLiteralMap = regKind( 'LiteralMap' );
+// let nodeKindLiteralString = regKind( 'LiteralString' );
+// let nodeKindLiteralBool = regKind( 'LiteralBool' );
+// let nodeKindLiteralSymbol = regKind( 'LiteralSymbol' );
+
+pub class NodeManager {
+   let mut nodeKind2NodeList:Map<int,List<&Node>>;
+
+   pub fn __init() {
+      self.nodeKind2NodeList = {};
+   }
+
+   pub fn getList(kind:int) : &List<&Node>! {
+      return self.nodeKind2NodeList[ kind ];
+   }
+   pub fn addNode(node:&Node) mut {
+      let! mut list = self.nodeKind2NodeList[ node.$kind ] {
+         list = [];
+         self.nodeKind2NodeList[ node.$kind ] = list;
+      };
+      list.insert( node );
+   }
+}
+
+pub class NodeKind {
+}
+
+
+macro _declNodeClass(
+   baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
+   canBeStatementFlag:bool!, fieldInfoList:Map<str,str>[] )
+{
+   {
+      let className = ,,,"%sNode" (baseName);
+      let nodeKindSym = ,,,"%s" (baseName);
+      let nodeKindGetter = ,,,"get_%s" (baseName);
+
+      let mut fieldStatList:stat[] = [];
+      let mut argList:stat[] = [];
+      let mut argSymList:stat[] = [];
+      let mut initStatList:stat[] = [];
+      let mut relateStat:stat[] = [];
+      
+      foreach fieldInfo in fieldInfoList {
+         foreach typeName, varName in fieldInfo {
+            fieldStatList.insert( `{
+               pri let mut ,,,varName : ,,,typeName { pub };
+            });  
+            argList.insert( `{ ,,,varName: ,,,typeName, } );
+            argSymList.insert( `{, ,,,varName } );
+            initStatList.insert( `{ self.,,,varName = ,,,varName; } );
+         }   
+      }  
+
+      fieldStatList.insert( `{
+         pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
+            filter.,,,"process%s" (baseName) (self, opt );
+         } } );
+
+      if! canBeRightFlag {
+         fieldStatList.insert( `{
+            pub override fn canBeRight():bool {
+               return ,,, canBeRightFlag;
+            } } );
+      }
+      if! canBeLeftFlag {
+         fieldStatList.insert( `{
+            pub override fn canBeLeft():bool {
+               return ,,, canBeLeftFlag;
+            } } );
+      }
+      if! canBeStatementFlag {
+         fieldStatList.insert( `{
+            pub override fn canBeStatement():bool {
+               return ,,, canBeStatementFlag;
+            } } );
+      }
+      
+      let superStat = `{
+         super( unwrap nodeKind. ,,nodeKindSym, pos, typeList );
+      };
+
+      relateStat.insert( `{
+         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
+         };
+         pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className>! {
+            return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className> !;
+         }
+      } );
+      
+   }
+
+   pub static fn NodeKind.,,nodeKindGetter (): int {
+      return unwrap nodeKind. ,,nodeKindSym;
+   }
+   
+   pub proto class ,,className extend ,,super;
+   regKind( ,,baseName );
+   ,,relateStat;
+   pub class ,,className extend ,,super {
+      ,,fieldStatList;
+      pro fn __init( pos: &Parser.Position, typeList: &List<&Ast.TypeInfo>, ,,argList ) {
+         ,,superStat;
+         ,,initStatList;
+      }
+      pub static fn create( nodeMan:NodeManager, pos: &Parser.Position,
+                            typeList: &List<&Ast.TypeInfo>, ,,argList ) : ,,className
+      {
+         let mut node = new ,,className( pos, typeList ,,argSymList );
+         nodeMan.addNode( node );
+         return node;
+      }
+   }
+}
+
+_declNodeClass( "None", Node, false, false, true, []);
+_declNodeClass( "Subfile", Node, false, false, true,
+                [ { "usePath": "str!" } ]);
+_declNodeClass( "Import", Node, false, false, true,
+                [ { "modulePath": "str" },
+                  { "assignName": "str" },
+                  { "moduleTypeInfo": "&Ast.TypeInfo" } ]
+);
+
+
+pub proto class ProvideNode extend Node;
+
+pub class LuneHelperInfo {
+   pub let mut useNilAccess:bool;
+   pub let mut useUnwrapExp:bool;
+   pub let mut hasMappingClassDef:bool;
+   pub let mut useLoad:bool;
+   pub let mut useUnpack:bool;
+   pub let mut useAlge:bool;
+   pub let mut useSet:bool;
+}
+
+pub class ModuleInfo extend (Ast.ModuleInfoIF) {
+   pri let fullName:str{ pub };
+   pri let localTypeInfo2importIdMap:Map<&Ast.TypeInfo,int> { pub };
+   pri let mut importId2localTypeInfoMap:Map<int,&Ast.TypeInfo> { pub& };
+   pri let assignName:str{ pub };
+   pri let moduleId:&frontInterface.ModuleId {pub};
+
+   pub fn __init( fullName:str, assignName:str, idMap:&Map<&Ast.TypeInfo,int>,
+                  moduleId:&frontInterface.ModuleId )
+   {
+      self.moduleId = moduleId;
+      self.fullName = fullName;
+      self.assignName = assignName;
+      self.localTypeInfo2importIdMap = idMap;
+      self.importId2localTypeInfoMap = {};
+      foreach importId, typeInfo in idMap {
+         self.importId2localTypeInfoMap[ importId ] = typeInfo;
+      }
+   }
+
+   pub fn get_modulePath(): str {
+      return self.fullName;
+   }
+
+   pub fn assign( assignName: str ): ModuleInfo {
+      return new ModuleInfo(
+         self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId );
+   }
+}
+
+// pub fn TypeInfo.getFullName( importInfo:&Map<&Ast.TypeInfo,&Ast.ModuleInfoIF>, localFlag:bool! ) : str {
+//    return self.getParentFullName( importInfo, localFlag ) .. self.$rawTxt;
+// }
+
+
+// pub class ProcessInfo {
+//    let mut idProvier:Ast.IdProvider {pub};
+//    let mut idProvierExt:Ast.IdProvider {pub};
+//    let mut typeInfo2ModifierMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> {pub};
+//    let mut typeInfo2BoxMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> {pub};
+//    let mut typeInfo2DDDMap:Map<&Ast.TypeInfo,&Ast.DDDTypeInfo> {pub};
+// }
+
+pub class MacroValInfo {
+   pub let val: stem!;
+   pub let typeInfo: Ast.TypeInfo;
+}
+
+pub class MacroArgInfo {
+   pri let name:str {pub};
+   pri let typeInfo: &Ast.TypeInfo {pub};
+}
+
+pub abstract class MacroInfo {
+   pub let func: form;
+   pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
+   pub abstract fn getArgList():&List<&MacroArgInfo>;
+   pub abstract fn getTokenList():&List<&Parser.Token>;
+   pub abstract fn get_name():str;
+}
+
+_declNodeClass( "Root", Node, false, false, false,
+                [ { "children": "List<&Node>" },
+                  { "useModuleMacroSet": "&Set<&Ast.TypeInfo>" },
+                  { "moduleId": "&frontInterface.ModuleId" },
+                  { "processInfo": "Ast.ProcessInfo" },
+                  { "moduleTypeInfo": "&Ast.TypeInfo" },
+                  { "provideNode": "&ProvideNode!" },
+                  { "luneHelperInfo": "LuneHelperInfo" },
+                  { "nodeManager": "NodeManager" },
+                  { "importModule2moduleInfo": "Map<&Ast.TypeInfo,ModuleInfo>" },
+                  { "typeId2MacroInfo": "Map<int,&MacroInfo>" },
+                  { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]
+);
+
+pub fn RootNode.set_provide( node: ProvideNode ) mut {
+   self.provideNode = node;
+}
+
+_declNodeClass( "RefType", Node, false, false, false,
+                [ { "name": "&Node" },
+                  { "refFlag": "bool" },
+                  { "mutFlag": "bool" },
+                  { "array": "str" } ]
+);
+
+pub enum BlockKind {
+   If,
+   Elseif,
+   Else,
+   While,
+   Switch,
+   Match,
+   Repeat,
+   For,
+   Apply,
+   Foreach,
+   Macro,
+   Func,
+   Default,
+   Block,
+   Macro,
+   LetUnwrap,
+   IfUnwrap,
+   When,
+}
+
+_declNodeClass( "Block", Node, false, false, true,
+                [ { "blockKind": "BlockKind" },
+                  { "stmtList": "List<&Node>" } ]
+);
+
+
+macro _setBreakKind(work:sym, kind:sym, returnNoneStat:bool, checkMode:sym ) {
+   {
+      let mut noneStat:stat[] = [];
+      if returnNoneStat {
+         noneStat.insert( `{ return .None } );
+      }
+   }
+
+   if ,,checkMode == .IgnoreFlowReturn {
+      if ,, work == .Return {
+         return .Return;
+      }
+      if ,, work == .NeverRet {
+         return .NeverRet;
+      }
+   }
+   else {
+      switch ,,work {
+         case .None {
+            if ,,checkMode == .Normal or ,,checkMode == .Return {
+               ,,noneStat;
+            }
+         }
+         default {
+            if ,,kind == .None or ,,kind > work {
+               kind = work;               
+            }
+         }
+      }
+   }
+}
+
+
+pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   if checkMode ~= .Normal and checkMode ~= .Return {
+      let mut kind = BreakKind.None;
+      foreach stmt in self.stmtList {
+         let work = stmt.getBreakKind( checkMode );
+         _setBreakKind(work, kind, false, checkMode );
+      }
+      return kind;
+   }
+   else {
+      if #self.stmtList > 0 {
+         let node = self.stmtList[ #self.stmtList ];
+         return node.getBreakKind( checkMode );
+      }
+   }
+   return .None;
+}
+
+pub enum IfKind {
+   If,
+   ElseIf,
+   Else,
+}
+
+pub class IfStmtInfo {
+   pri let kind: IfKind { pub };
+   pri let exp: Node { pub };
+   pri let block: BlockNode { pub };
+}
+_declNodeClass( "If", Node, false, false, true,
+                [{ "stmtList": "IfStmtInfo[]" } ]
+);
+
+
+pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   let mut hasElseFlag = false;
+   let mut kind = BreakKind.None;
+   foreach stmtInfo in self.stmtList {
+      let work = stmtInfo.$block.getBreakKind( checkMode );
+      _setBreakKind( work, kind, true, checkMode );
+      if stmtInfo.$kind == .Else {
+         hasElseFlag = true;
+      }
+   }
+   if hasElseFlag or ( checkMode ~= .Normal and checkMode ~= .Return ) {
+      return kind;
+   }
+   
+   return .None;
+}
+
+
+_declNodeClass( "ExpList", Node, nil, nil, false,
+                [ { "expList": "&List<&Node>" },
+                  { "followOn": "bool" } ]
+);
+pub override fn ExpListNode.canBeLeft():bool {
+   foreach expNode in self.$expList {
+      if not expNode.canBeLeft() {
+         return false;
+      }
+   }
+   return true;
+}
+pub override fn ExpListNode.canBeRight():bool {
+   foreach expNode in self.$expList {
+      if not expNode.canBeRight() {
+         return false;
+      }
+   }
+   return true;
+}
+
+
+pub class CaseInfo {
+   pri let expList: ExpListNode { pub };
+   pri let block: BlockNode { pub };
+}
+_declNodeClass( "Switch", Node, false, false, true,
+                [ { "exp": "&Node" },
+                  { "caseList": "CaseInfo[]" },
+                  { "default": "&BlockNode!" } ]
+);
+
+pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
+{
+   let mut kind = BreakKind.None;
+   foreach caseInfo in self.caseList {
+      let work = caseInfo.$block.getBreakKind( checkMode );
+      _setBreakKind( work, kind, true, checkMode );
+   }
+   if! let block = self.default {
+      let work = block.getBreakKind( checkMode );
+      _setBreakKind( work, kind, true, checkMode );
+      return kind;
+   }
+
+   return .None;
+}
+
+
+macro _declLoopGetBreakKind( node:sym, blockMem:sym ) {
+
+   pub override fn ,,node.getBreakKind( checkMode:CheckBreakMode ): BreakKind
+   {  
+      let mut kind = BreakKind.None;
+      if checkMode ~= .Normal and checkMode ~= .Return {
+         return self. ,,blockMem .getBreakKind( checkMode );
+      }
+      return .None;
+   }  
+}
+
+_declNodeClass( "While", Node, false, false, true,
+                [ { "exp": "&Node" },
+                  { "block": "&BlockNode" } ]
+);
+
+_declNodeClass( "Repeat", Node, false, false, true,
+                [ { "block": "&BlockNode" },
+                  { "exp": "&Node" } ]
+);
+
+_declLoopGetBreakKind( RepeatNode, block );
+
+_declNodeClass( "For", Node, false, false, true,
+                [ { "block": "&BlockNode" },
+                  { "val": "&Parser.Token" },
+                  { "init": "&Node" },
+                  { "to": "&Node" },
+                  { "delta": "&Node!" }] 
+);
+
+_declLoopGetBreakKind( ForNode, block );
+
+
+_declNodeClass( "Apply", Node, false, false, true,
+                [ { "varList": "List<&Parser.Token>" },
+                  { "exp": "&Node" },
+                  { "block": "&BlockNode" } ]
+);
+
+_declLoopGetBreakKind( ApplyNode, block );
+
+
+_declNodeClass( "Foreach", Node, false, false, true,
+                [ { "val": "&Parser.Token!" },
+                  { "key": "&Parser.Token!" },
+                  { "exp": "&Node" },
+                  { "block": "&BlockNode" } ]
+);
+
+_declLoopGetBreakKind( ForeachNode, block );
+
+
+_declNodeClass( "Forsort", Node, false, false, true,
+                [ { "val": "&Parser.Token" },
+                  { "key": "&Parser.Token!" },
+                  { "exp": "&Node" },
+                  { "block": "&BlockNode" },
+                  { "sort": "bool" } ]
+);
+
+_declLoopGetBreakKind( ForsortNode, block );
+
+
+_declNodeClass( "Return", Node, false, false, true,
+                [ { "expList": "&ExpListNode!" } ]
+);
+pub override fn ReturnNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   return .Return;
+}
+
+_declNodeClass( "Break", Node, false, false, true, [] );
+
+pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   return .Break;
+}
+
+_declNodeClass( "Provide", Node, false, false, true,
+                [ { "symbol": "&Ast.SymbolInfo" } ]
+);
+
+_declNodeClass( "ExpNew", Node, false, true, true,
+                [ { "symbol": "&Node" },
+                  { "argList": "&ExpListNode!" } ]
+);
+
+_declNodeClass( "ExpUnwrap", Node, false, true, false,
+                [ { "exp": "&Node" },
+                  { "default": "&Node!" } ]
+);
+
+_declNodeClass( "ExpRef", Node, nil, nil, false,
+                [ { "token": "&Parser.Token" },
+                  { "symbolInfo": "&Ast.AccessSymbolInfo" } ]
+);
+
+pub override fn ExpRefNode.canBeLeft():bool {
+   return self.$symbolInfo.$canBeLeft;
+}
+
+pub override fn ExpRefNode.canBeRight():bool {
+   return self.$symbolInfo.$canBeRight;
+}
+
+_declNodeClass( "ExpOp2", Node, false, true, nil,
+                [ { "op": "&Parser.Token" },
+                  { "exp1": "&Node" },
+                  { "exp2": "&Node" } ]
+);
+
+pub override fn ExpOp2Node.canBeStatement():bool {
+   return self.$op.txt == '=';
+}
+
+
+_declNodeClass( "UnwrapSet", Node, false, false, true,
+                [ { "dstExpList": "&ExpListNode" },
+                  { "srcExpList": "&ExpListNode" },
+                  { "unwrapBlock": "&BlockNode!" } ]              
+);
+
+_declNodeClass( "IfUnwrap", Node, false, false, true,
+                [ { "varNameList": "List<str>" },
+                  { "expNodeList": "List<&Node>" },
+                  { "block": "&BlockNode" },
+                  { "nilBlock": "&BlockNode!" } ]
+);
+
+pub override fn IfUnwrapNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   let mut kind = self.block.getBreakKind( checkMode );
+   let mut work = kind;
+   _setBreakKind( work, kind, true, checkMode );
+   if! let block = self.nilBlock {
+      work = block.getBreakKind( checkMode );
+      _setBreakKind( work, kind, true, checkMode );
+      return kind;
+   }
+   return .None;
+}
+
+
+_declNodeClass( "When", Node, false, false, true,
+                [ { "varNameList": "List<&str>" },
+                  { "expNodeList": "List<&Node>" },
+                  { "block": "&BlockNode" },
+                  { "elseBlock": "&BlockNode!" } ]
+);
+
+pub override fn WhenNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   let mut kind = self.block.getBreakKind( checkMode );
+   let mut work = kind;
+   _setBreakKind( work, kind, true, checkMode );
+   if! let block = self.elseBlock {
+      work = block.getBreakKind( checkMode );
+      _setBreakKind( work, kind, true, checkMode );
+      return kind;
+   }
+   return .None;
+}
+
+
+_declNodeClass( "ExpCast", Node, false, true, false,
+                [ { "exp": "&Node" },
+                  { "force": "bool" } ]
+);
+
+pub enum MacroMode {
+   None,
+   Expand,
+   Analyze,
+}
+
+_declNodeClass( "ExpOp1", Node, false, true, false,
+                [ { "op": "&Parser.Token" },
+                  { "macroMode": "MacroMode" },
+                  { "exp": "&Node" } ]
+);
+
+_declNodeClass( "ExpRefItem", Node, nil, true, false,
+                [ { "val": "&Node" },
+                  { "nilAccess": "bool" },
+                  { "symbol": "str!" },
+                  { "index": "&Node!" } ]
+);
+pub override fn ExpRefItemNode.canBeLeft(): bool {
+   if self.val.$expType == Ast.builtinTypeStem {
+      return false;
+   }
+   //return self.$expType.$mutable;
+   return self.$val.$expType.$mutable and not self.nilAccess;
+}
+
+_declNodeClass( "ExpCall", Node, false, nil, true,
+                [ { "func": "&Node" },
+                  { "errorFunc": "bool" },
+                  { "nilAccess": "bool" },
+                  { "argList": "&ExpListNode!" } ]
+);
+pub override fn ExpCallNode.canBeRight():bool {
+   let expType = self.$expType;
+   if expType.equals( Ast.builtinTypeNone## ) or
+      expType.equals( Ast.builtinTypeNeverRet## )
+   {
+      return false;
+   }
+   return true;
+}
+
+
+pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   if self.errorFunc {
+      return .NeverRet;
+   }
+   return .None;
+}
+
+
+_declNodeClass( "ExpDDD", Node, false, true, false,
+                [ { "token": "&Parser.Token" } ]
+);
+
+_declNodeClass( "ExpParen", Node, false, true, false,
+                [ { "exp": "&Node" } ]
+);
+
+_declNodeClass( "ExpMacroExp", Node, false, false, true,
+                [ { "stmtList": "List<&Node>" } ]
+);
+
+pub override fn ExpMacroExpNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   if checkMode ~= .Normal and checkMode ~= .Return {
+      let mut kind = BreakKind.None;
+      foreach stmt in self.stmtList {
+         let work = stmt.getBreakKind( checkMode );
+         _setBreakKind(work, kind, false, checkMode );
+      }
+      return kind;
+   }
+   else {
+      if #self.stmtList > 0 {
+         return self.stmtList[ #self.stmtList ].getBreakKind( checkMode );
+      }
+   }
+   return .None;
+}
+
+
+_declNodeClass( "ExpMacroStat", Node, false, true, false,
+                [ { "expStrList": "List<&Node>" } ]
+);
+
+_declNodeClass( "StmtExp", Node, false, true, nil,
+                [ { "exp": "&Node" } ]
+);
+pub override fn StmtExpNode.canBeStatement():bool {
+   return self.$exp.canBeStatement();
+}
+
+pub override fn StmtExpNode.getBreakKind( checkMode:CheckBreakMode ):BreakKind {
+   return self.$exp.getBreakKind( checkMode );
+}
+
+_declNodeClass( "ExpOmitEnum", Node, true, true, false,
+                [ { "valToken": "&Parser.Token" },
+                  { "valInfo": "&Ast.EnumValInfo" },
+                  { "enumTypeInfo": "&Ast.EnumTypeInfo" }]
+);
+
+_declNodeClass( "RefField", Node, nil, nil, false,
+                [ { "field": "&Parser.Token" },
+                  //{ "overrideCanBeLeft": "bool!" },
+                  { "symbolInfo": "&Ast.AccessSymbolInfo!" },
+                  { "nilAccess": "bool" },
+                  { "prefix": "&Node" }] 
+);
+pub override fn RefFieldNode.canBeLeft():bool {
+   if! self.$symbolInfo {
+      return _exp.$canBeLeft;
+   }
+   // if! self.overrideCanBeLeft {
+   //    return _exp;
+   // }
+   return false;
+}
+pub override fn RefFieldNode.canBeRight():bool {
+   if! self.$symbolInfo {
+      return _exp.$canBeRight;
+   }
+   // if! self.overrideCanBeLeft {
+   //    return _exp;
+   // }
+   return true;
+}
+
+_declNodeClass( "GetField", Node, nil, true, false,
+                [ { "field": "&Parser.Token" },
+                  //{ "overrideCanBeLeft": "bool!" },
+                  { "symbolInfo": "&Ast.AccessSymbolInfo!" },
+                  { "nilAccess": "bool" },
+                  { "prefix": "&Node" },
+                  { "getterTypeInfo": "&Ast.TypeInfo" } ]               
+);
+pub override fn GetFieldNode.canBeLeft():bool {
+   if! self.$symbolInfo {
+      return _exp.$canBeLeft;
+   }
+   // if! self.overrideCanBeLeft {
+   //    return _exp;
+   // }
+   return false;
+}
+
+
+_declNodeClass( "Alias", Node, false, false, true,
+                [ {"newName": "str" },
+                  {"srcNode": "&Node" },
+                  {"typeInfo": "&Ast.TypeInfo" } ] );
+
+pub class VarInfo {
+   pri let name: &Parser.Token { pub };
+   // 宣言している型。 宣言していない場合は nil
+   pri let refType: RefTypeNode! { pub };
+   // 実際の型。
+   pri let actualType: Ast.TypeInfo { pub };
+}
+
+pub enum DeclVarMode {
+   Let,
+   Sync,
+   Unwrap,
+}
+
+_declNodeClass( "DeclVar", Node, false, false, true,
+                [ { "mode": "DeclVarMode" },
+                  { "accessMode": "Ast.AccessMode" },
+                  { "staticFlag": "bool" },
+                  { "varList": "List<&VarInfo>" },
+                  { "expList": "&ExpListNode!" },
+                  { "symbolInfoList": "List<&Ast.SymbolInfo>"},
+                  { "typeInfoList": "List<&Ast.TypeInfo>" },
+                  { "unwrapFlag": "bool" },
+                  { "unwrapBlock": "&BlockNode!" },
+                  { "thenBlock": "&BlockNode!" },
+                  { "syncVarList": "List<&VarInfo>" },
+                  { "syncBlock": "&BlockNode!" } ]
+);
+
+pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
+{
+   if checkMode ~= .Normal and checkMode ~= .Return {
+      if! let block = self.unwrapBlock {
+         let kind = block.getBreakKind( checkMode );
+         switch kind {
+            case .Return, .NeverRet {
+               return kind;
+            }
+         }
+      }
+      if! let block = self.thenBlock {
+         let kind = block.getBreakKind( checkMode );
+         switch kind {
+            case .Return, .NeverRet {
+               return kind;
+            }
+         }
+      }
+      if! let block = self.syncBlock {
+         let kind = block.getBreakKind( checkMode );
+         switch kind {
+            case .Return, .NeverRet {
+               return kind;
+            }
+         }
+      }
+      return .None;
+   }
+   else {
+      let mut kind = BreakKind.None;
+      let mut work = BreakKind.None;
+      if! let block = self.unwrapBlock {
+         work = block.getBreakKind( checkMode );
+         _setBreakKind( work, kind, true, checkMode );
+         if! let thenBlock = self.thenBlock {
+            work = thenBlock.getBreakKind( checkMode );
+            _setBreakKind( work, kind, true, checkMode );
+            if! let syncBlock = self.syncBlock {
+               work = syncBlock.getBreakKind( checkMode );
+               _setBreakKind( work, kind, true, checkMode );
+               return kind;
+            }     
+         }  
+      }
+      return .None;
+   }
+}
+
+
+
+pub class DeclFuncInfo {
+   pri let classTypeInfo: &Ast.TypeInfo! { pub };
+   pri let name: &Parser.Token! { pub };
+   pri let argList: List<&Node> { pub };
+   pri let staticFlag: bool { pub };
+   pri let accessMode: Ast.AccessMode { pub };
+   pri let body: &BlockNode! { pub };
+   pri let retTypeInfoList: List<&Ast.TypeInfo> { pub };
+   pri let has__func__Symbol:bool { pub };
+}
+_declNodeClass( "DeclFunc", Node, false, true, true,
+                [ { "declInfo": "DeclFuncInfo" } ]
+);
+
+_declNodeClass( "DeclMethod", Node, false, false, true,
+                [ { "declInfo": "DeclFuncInfo" } ]
+);
+
+_declNodeClass( "DeclConstr", Node, false, false, true,
+                [ { "declInfo": "DeclFuncInfo" } ]
+);
+
+_declNodeClass( "DeclDestr", Node, false, false, true,
+                [ { "declInfo": "DeclFuncInfo" } ]
+);
+
+_declNodeClass( "ExpCallSuper", Node, false, false, true,
+                [ { "superType": "&Ast.TypeInfo" },
+                  { "methodType": "&Ast.TypeInfo" },
+                  { "expList": "&ExpListNode!" } ]
+);
+
+_declNodeClass( "DeclMember", Node, false, false, true,
+                [ { "name": "&Parser.Token" },
+                  { "refType": "&RefTypeNode" },
+                  { "symbolInfo": "&Ast.SymbolInfo" },
+                  { "staticFlag": "bool" },
+                  { "accessMode": "Ast.AccessMode" },
+                  { "getterMutable": "bool" },
+                  { "getterMode": "Ast.AccessMode" },
+                  { "setterMode": "Ast.AccessMode" } ]
+);
+
+_declNodeClass( "DeclArg", Node, false, false, false,
+                [ { "name": "&Parser.Token" },
+                  { "argType": "&RefTypeNode" } ]
+);
+
+_declNodeClass( "DeclArgDDD", Node, false, false, false, [] );
+
+pub class AdvertiseInfo {
+   pri let mut member: &DeclMemberNode { pub };
+   pri let prefix: str {pub};
+};
+_declNodeClass( "DeclClass", Node, false, false, true,
+                [ { "accessMode": "Ast.AccessMode" },
+                  { "name": "&Parser.Token" },
+                  { "gluePrefix": "str!" },
+                  { "declStmtList": "List<&Node>" },
+                  { "fieldList": "List<&Node>" },
+                  { "moduleName": "&Parser.Token!" },
+                  { "memberList": "List<&DeclMemberNode>" },
+                  { "scope": "&Ast.Scope" },
+                  { "initStmtList": "List<&Node>" },
+                  { "advertiseList": "AdvertiseInfo[]" },
+                  { "trustList": "List<&Ast.TypeInfo>" },
+                  { "outerMethodSet": "Set<str>" } ]
+);
+
+_declNodeClass( "DeclEnum", Node, false, false, true,
+                [ { "accessMode": "Ast.AccessMode" },
+                  { "name": "&Parser.Token" },
+                  { "valueNameList": "List<&Parser.Token>" },
+                  { "scope": "&Ast.Scope" } ]
+);
+
+_declNodeClass( "DeclAlge", Node, false, false, true,
+                [ { "accessMode": "Ast.AccessMode" },
+                  { "algeType": "&Ast.AlgeTypeInfo"},
+                  { "scope": "&Ast.Scope" } ]
+);
+
+
+_declNodeClass( "NewAlgeVal", Node, false, true, false,
+                [ { "name": "&Parser.Token" },
+                  { "prefix": "&Node!" },
+                  { "algeTypeInfo": "&Ast.AlgeTypeInfo" },
+                  { "valInfo": "&Ast.AlgeValInfo" },
+                  { "paramList": "&List<&Node>" } ]
+);
+
+pub class MatchCase {
+   pri let valInfo: &Ast.AlgeValInfo {pub};
+   pri let valParamNameList: &List<str> {pub};
+   pri let block: &BlockNode {pub};
+}
+
+_declNodeClass( "Match", Node, false, false, true,
+                [ { "val": "&Node" },
+                  { "algeTypeInfo": "&Ast.AlgeTypeInfo" },
+                  { "caseList": "&List<&MatchCase>" },
+                  { "defaultBlock": "&Node!" }
+                ]              
+);
+
+_declNodeClass( "DeclMacro", Node, false, false, true,
+                [ { "declInfo": "DeclMacroInfo" } ]
+);
+
+pub abstract class MacroEval {
+   pub abstract fn evalFromCode( name:str, argNameList:&List<str>, code:str! ): form;
+   pub abstract fn eval( macroNode: DeclMacroNode ): form;
+}
+
+_declNodeClass( "Abbr", Node, false, true, false,
+                [ {} ]
+);
+
+
+_declNodeClass( "Boxing", Node, false, true, false,
+                [ { "src": "&Node" } ]
+);
+
+_declNodeClass( "Unboxing", Node, false, true, false,
+                [ { "src": "&Node" } ]
+);
+
+_declNodeClass( "LiteralNil", Node, false, true, false, [] );
+
+_declNodeClass( "LiteralChar", Node, false, true, false,
+                [ { "token": "&Parser.Token" },
+                  { "num": "int" } ]
+);
+
+_declNodeClass( "LiteralInt", Node, false, true, false,
+                [ { "token": "&Parser.Token" },
+                  { "num": "int" } ]
+);
+
+_declNodeClass( "LiteralReal", Node, false, true, false,
+                [ { "token": "&Parser.Token" },
+                  { "num": "real" } ]
+);
+
+_declNodeClass( "LiteralArray", Node, false, true, false,
+                [ { "expList": "&ExpListNode!" } ]
+);
+
+_declNodeClass( "LiteralList", Node, false, true, false,
+                [ { "expList": "&ExpListNode!" } ]
+);
+
+_declNodeClass( "LiteralSet", Node, false, true, false,
+                [ { "expList": "&ExpListNode!" } ]
+);
+
+pub class PairItem {
+   pri let key: Node { pub };
+   pri let val: Node { pub };
+}
+_declNodeClass( "LiteralMap", Node, false, true, false,
+                [ { "map": "Map<&Node,&Node>" },
+                  { "pairList": "PairItem[]" } ]
+);
+
+_declNodeClass( "LiteralString", Node, false, true, false,
+                [ { "token": "&Parser.Token" },
+                  { "argList": "&List<&Node>" } ]
+);
+
+_declNodeClass( "LiteralBool", Node, false, true, false,
+                [ { "token": "&Parser.Token" } ]
+);
+
+_declNodeClass( "LiteralSymbol", Node, false, true, false,
+                [ { "token": "&Parser.Token" } ]
+);
+
+pub fn Node.getSymbolInfo(): List<&Ast.AccessSymbolInfo> {
+   fn processExpNode( node: &Node ): List<&Ast.AccessSymbolInfo> {
+      switch ( node.$kind ) {
+         case NodeKind.$ExpRef {
+            return [(unwrap (node@@@ExpRefNode)).$symbolInfo];
+         }
+         case NodeKind.$RefField {
+            if! let refFieldNode = node@@@RefFieldNode {
+               if! refFieldNode.$symbolInfo {
+                  return [_exp];
+               }
+            }
+         }
+         case NodeKind.$GetField {
+            if! let getFieldNode = node@@@GetFieldNode {
+               if! getFieldNode.$symbolInfo {
+                  return [_exp];
+               }
+            }
+         }
+         case NodeKind.$ExpList {
+            if! let expListNode = node@@@ExpListNode {
+               let mut list: List<&Ast.AccessSymbolInfo> = [];
+               foreach expNode, index in expListNode.$expList {
+                  if index == #expListNode.$expList {
+                     foreach symbolInfo in processExpNode( expNode ) {
+                        list.insert( symbolInfo );
+                     }  
+                  }  
+                  else {
+                     foreach symbolInfo in processExpNode( expNode ) {
+                        list.insert( symbolInfo );
+                        break;
+                     }  
+                  }  
+               }
+               return list;
+            }
+         }
+         case NodeKind.$RefType {
+            if! let refTypeNode = node@@@RefTypeNode {
+               return refTypeNode.$name.getSymbolInfo();
+            }
+         }
+      }
+      return [];
+   }
+   return processExpNode( self );
+}
+
+
+pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
+{
+   if checkMode ~= .Normal and checkMode ~= .Return {
+      let mut kind = BreakKind.None;
+      foreach stmt in self.block.$stmtList {
+         let work = stmt.getBreakKind( checkMode );
+         _setBreakKind(work, kind, false, checkMode );
+      }
+      if kind == .Break {
+         return .None;
+      }
+      return kind;
+   }
+   else {
+      if self.exp.$expType.$nilable {
+         return .None;
+      }
+      if self.exp.$expType.equals( Ast.builtinTypeBool ## ) {
+         if! let boolNode = self.exp@@@LiteralBoolNode {
+            if boolNode.$token.txt == "false" {
+               return .None;
+            }  
+         }
+         else {
+            return .None;
+         }        
+      }
+      // 条件式が次のもの以外は無条件ループ。
+      //  - nilable でない
+      //  - bool 型の式でない
+      //  - false でもない
+      
+
+      // 無条件ループ用のフロー解析に変更する。
+      let mut mode = CheckBreakMode.IgnoreFlow;
+      // if checkMode == .Return {
+      //    mode = .IgnoreFlowReturn;
+      // }
+      let mut kind = BreakKind.None;
+      foreach stmt in self.block.$stmtList {
+         let work = stmt.getBreakKind( mode );
+         
+         _setBreakKind(work, kind, false, mode );
+      }
+      if kind == .Break {
+         return .None;
+      }
+      if kind == .Return {
+         return .Return;
+      }
+      return .NeverRet;
+   }
+}
+
+
+pub override fn LiteralNilNode.getLiteral(): Literal! {
+   return .Nil;
+}
+
+pub override fn LiteralCharNode.getLiteral(): Literal! {
+   return .Int( self.num );
+}
+
+pub override fn LiteralIntNode.getLiteral(): Literal! {
+   return .Int( self.num );
+}
+
+pub override fn LiteralRealNode.getLiteral(): Literal! {
+   return .Real( self.num );
+}
+
+pub override fn LiteralArrayNode.getLiteral(): Literal! {
+   let mut literalList:List<Literal> = [];
+   if! self.expList {
+      foreach node in _exp.get_expList() {
+         let mut literal = node.getLiteral();
+         when! literal {
+            literalList.insert( literal );
+         }
+         else {
+            return nil;
+         }
+      } 
+   }
+   return .ARRAY( literalList );
+}
+
+pub override fn LiteralListNode.getLiteral(): Literal! {
+   let mut literalList:List<Literal> = [];
+   if! self.expList {
+      foreach node in _exp.get_expList() {
+         let mut literal = node.getLiteral();
+         when! literal {
+            literalList.insert( literal );
+         }
+         else {
+            return nil;
+         }
+      } 
+   }
+   return .LIST( literalList );
+}
+
+pub override fn LiteralSetNode.getLiteral(): Literal! {
+   let mut literalList:List<Literal> = [];
+   if! self.expList {
+      foreach node in _exp.get_expList() {
+         let mut literal = node.getLiteral();
+         when! literal {
+            literalList.insert( literal );
+         }
+         else {
+            return nil;
+         }
+      } 
+   }
+   return .SET( literalList );
+}
+
+pub override fn LiteralMapNode.getLiteral(): Literal! {
+   let mut litMap:Map<&Literal,&Literal> = {};
+   foreach val, key in self.map {
+      let keyLiteral = key.getLiteral();
+      let valLiteral = val.getLiteral();
+      when! keyLiteral, valLiteral {
+         litMap[ keyLiteral ] = valLiteral;
+      }
+   }
+   return .MAP( litMap );
+}
+
+pub override fn LiteralStringNode.getLiteral(): Literal! {
+   let mut txt = self.token.txt;
+   if string.find( txt, '^```' ##) {
+      txt = txt.sub( 4, -4 );
+   }
+   else {
+      txt = txt.sub( 2, -2 );
+   }
+   let argList = self.$argList;
+
+   if #argList > 0 {
+      let mut paramList:List<stem!> = [];
+      foreach argNode in argList {
+         let! arg = argNode.getLiteral() {
+            return nil;
+         };
+         paramList[ #paramList ] = getLiteralObj( arg );
+      }
+      txt = string.format( txt, paramList.unpack() );
+   }
+   return .Str(txt);
+}
+
+pub override fn LiteralBoolNode.getLiteral(): Literal! {
+   return .Bool( self.token.txt == "true" );
+}
+
+pub override fn LiteralSymbolNode.getLiteral(): Literal! {
+   return .Symbol(self.token.txt);
+}
+
+pub override fn RefFieldNode.getLiteral(): Literal! {
+   let mut tokenList:List<str> = [];
+   match unwrap self.prefix.getLiteral() {
+      case .Symbol( symbol ) {
+         tokenList.insert( symbol );
+      }
+      case .Field( symList ) {
+         foreach symbol in symList {
+            tokenList.insert( symbol );
+         }
+      }
+      default {
+         Util.errorLog( "not support" );
+      }
+   }
+   if self.nilAccess {
+      tokenList.insert( "$." );
+   }
+   else {
+      tokenList.insert( "." );
+   }
+   tokenList.insert( self.field.txt );
+   return .Field( tokenList );
+}
+
+pub override fn ExpMacroStatNode.getLiteral(): Literal! {
+   let mut txt = "";
+   foreach token in self.expStrList {
+      let! literal = token.getLiteral() {
+         Util.err( "illegal literal" );
+      };
+      match literal {
+         case .Str( work ) {
+            txt = "%s%s" (txt, work );
+         }
+      }
+   }
+   return .Str( txt );
+}
+
+fn enumLiiteral2Literal( obj:&Ast.EnumLiteral ) : Literal {
+   match obj {
+      case .Int( val ) {
+         return Literal.Int( val );
+      }
+      case .Real( val ) {
+         return Literal.Real( val );
+      }
+      case .Str( val ) {
+         return Literal.Str( val );
+      }
+   }
+   Util.err( "illegal enum" .. obj.$_txt );
+}
+
+pub override fn ExpRefNode.getLiteral(): Literal! {
+   let typeInfo = self.symbolInfo.$typeInfo;
+   if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
+      let enumval = unwrap enumTypeInfo.getEnumValInfo( self.symbolInfo.$name );
+      let val = enumLiiteral2Literal( enumval.$val );
+      return val;
+   }
+
+   return nil;
+}
+
+pub override fn ExpOmitEnumNode.getLiteral(): Literal! {
+   let enumTypeInfo = self.enumTypeInfo;
+
+   let enumval = self.valInfo;
+   let val = enumLiiteral2Literal( enumval.$val );
+   return val;
+   
+}
+
+pub override fn ExpOp2Node.getLiteral(): Literal! {
+
+   fn getValType( node:&Node ): bool, int, real, str, &Ast.TypeInfo {
+      let! literal = node.getLiteral() {
+         return false, 0, 0.0, "", Ast.headTypeInfo;
+      };
+
+      let mut intVal, mut realVal, mut strVal = 0, 0.0, "";
+      let mut retTypeInfo = Ast.builtinTypeNone;
+
+      fn getEnum( txt:str, typeInfo:&Ast.TypeInfo ) {
+         if! let enumTypeInfo = typeInfo@@@Ast.EnumTypeInfo {
+            let valInfo = unwrap enumTypeInfo.getEnumValInfo( txt );
+            match valInfo.$val {
+               case .Int( val ) {
+                  intVal = val;
+                  realVal = val@@real;
+               }
+               case .Real( val ) {
+                  realVal = val;
+               }
+               case .Str( val ) {
+                  strVal = val;
+               }
+            }
+            retTypeInfo = enumTypeInfo.$valTypeInfo;
+         }
+      }
+      
+      match literal {
+         case .Int( val ) {
+            intVal = val;
+            realVal = val@@real;
+            retTypeInfo = Ast.builtinTypeInt;
+         }
+         case .Real( val ) {
+            realVal = val;
+            intVal = val@@int;
+            retTypeInfo = Ast.builtinTypeReal;
+         }
+         case .Str( val ) {
+            strVal = val;
+            retTypeInfo = Ast.builtinTypeString;
+         }
+         default {
+            return false, 0, 0.0, "", Ast.headTypeInfo;
+         }
+      }
+      return true, intVal, realVal, strVal, retTypeInfo;
+   }
+   
+   let ret1, int1, real1, str1, type1 = getValType( self.$exp1 );
+   let ret2, int2, real2, str2, type2 = getValType( self.$exp2 );
+
+   if not ret1 or not ret2 {
+      return nil;
+   }
+
+
+   if ( type1 == Ast.builtinTypeInt or type1 == Ast.builtinTypeReal ) and
+      ( type2 == Ast.builtinTypeInt or type2 == Ast.builtinTypeReal )
+   {
+      let mut retType = Ast.builtinTypeInt;
+      if type1 == Ast.builtinTypeReal or type2 == Ast.builtinTypeReal {
+         retType = Ast.builtinTypeReal;
+      }
+
+      switch ( self.op.txt ) {
+         case "+" {
+            if retType == Ast.builtinTypeInt {
+               return .Int( int1 + int2 );
+            }
+            return .Real( real1 + real2 );
+         }
+         case "-" {
+            if retType == Ast.builtinTypeInt {
+               return .Int( int1 - int2 );
+            }
+            return .Real( real1 - real2);
+         }
+         case "*" {
+            if retType == Ast.builtinTypeInt {
+               return .Int( int1 * int2 );
+            }
+            return .Real( real1 * real2);
+         }
+         case "/" {
+            if retType == Ast.builtinTypeInt {
+               return .Int( int1 / int2 );
+            }
+            return .Real( real1 / real2);
+         }
+      }
+   }
+   elseif type1 == Ast.builtinTypeString and type2 == Ast.builtinTypeString {
+      if self.op.txt == ".." {
+         return .Str( str1 .. str2 );
+      }
+   }
+
+   return nil;
+}
+
+pub class DefMacroInfo extend MacroInfo {
+   pub let declInfo: DeclMacroInfo;
+   pri let mut argList:List<&MacroArgInfo>;
+
+   pub override fn get_name():str {
+      return self.declInfo.$name.txt;
+   }
+   
+   pub override fn getArgList():&List<&MacroArgInfo> {
+      return self.argList;
+   }
+   pub override fn getTokenList():&List<&Parser.Token>{
+      return self.declInfo.$tokenList;
+   }
+   
+   pub fn __init( func: form, declInfo: DeclMacroInfo, 
+                  symbol2MacroValInfoMap: Map<str,MacroValInfo> )
+   {
+      super( func, symbol2MacroValInfoMap );
+      self.declInfo = declInfo;
+      self.argList = [];
+      foreach argNode in declInfo.$argList {
+         if argNode.get_kind() == NodeKind.$DeclArg {
+            let argType = argNode.$argType.$expType;
+            let argName = argNode.$name.txt;
+            self.argList.insert( new MacroArgInfo( argName, argType ) );
+         }
+      }
+   }
+}
+

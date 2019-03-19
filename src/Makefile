@@ -81,6 +81,7 @@ define buildLns
 	$(call transwork,$1,$2,base/Parser)
 	$(call transwork,$1,$2,base/Option)
 	$(call transwork,$1,$2,base/Ast)
+	$(call transwork,$1,$2,base/Nodes)
 	$(call transwork,$1,$2,base/dumpNode)
 	$(call transwork,$1,$2,base/TransUnit)
 	$(call transwork,$1,$2,base/convLua)
