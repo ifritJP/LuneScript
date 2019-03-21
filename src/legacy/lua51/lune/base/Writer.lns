@@ -106,7 +106,7 @@ class JsonLayer {
 pub class JSON extend (Writer) {
 
    pri let mut stream:oStream;
-   pri let mut layerQueue:JsonLayer[];
+   pri let mut layerQueue:List<JsonLayer>;
    pri let mut prevName:str;
 
    pri fn startLayer( arrayFlag: bool, madeByArrayFlag: bool ) mut {
@@ -130,7 +130,7 @@ pub class JSON extend (Writer) {
       self.startLayer( false, false );
    }
 
-   pri fn getLayerInfo(): JsonLayer! {
+   pri fn getLayerInfo() mut : JsonLayer! {
       if #self.layerQueue == 0 {
          return nil;
       }     
@@ -177,7 +177,7 @@ pub class JSON extend (Writer) {
       return self.layerQueue[ #self.layerQueue ].name;
    }
 
-   pub fn addElementName( name:str ) {
+   pub fn addElementName( name:str ) mut {
       let mut info = unwrap self.getLayerInfo();
       let mut nameSet = info.elementNameSet;
       if not info.arrayFlag and nameSet.has( name ) {

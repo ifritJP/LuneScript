@@ -415,9 +415,9 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "processInfo": "Ast.ProcessInfo" },
                   { "moduleTypeInfo": "&Ast.TypeInfo" },
                   { "provideNode": "&ProvideNode!" },
-                  { "luneHelperInfo": "LuneHelperInfo" },
-                  { "nodeManager": "NodeManager" },
-                  { "importModule2moduleInfo": "Map<&Ast.TypeInfo,ModuleInfo>" },
+                  { "luneHelperInfo": "&LuneHelperInfo" },
+                  { "nodeManager": "&NodeManager" },
+                  { "importModule2moduleInfo": "Map<&Ast.TypeInfo,&ModuleInfo>" },
                   { "typeId2MacroInfo": "Map<int,&MacroInfo>" },
                   { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]
 );

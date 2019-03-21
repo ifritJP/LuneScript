@@ -53,7 +53,10 @@ pub form CreateMessage(): str;
 
 pub fn log( level:Level, funcName:str, lineNo:int, callback: CreateMessage ) {
    if level <= outputLevel {
-      io.stderr.write( "%s:%s:%d:" (level.$_txt, funcName, lineNo)  );
+      let nowClock = os.clock();
+      io.stderr.write(
+         "%6d:%s:%s:%d:" (( nowClock * 1000 )@@int,
+                           level.$_txt, funcName, lineNo) );
       io.stderr.write( callback() );
       io.stderr.write( "\n" );
    }

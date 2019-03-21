@@ -302,9 +302,9 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       }
    }
 
-   let mut typeId2TypeInfo: Map<int,Ast.TypeInfo> = {};
+   let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
 
-   let mut pickupClassMap: Map<int,Ast.TypeInfo> = {};
+   let mut pickupClassMap: Map<int,&Ast.TypeInfo> = {};
 
    fn checkExportTypeInfo( typeInfo:&Ast.TypeInfo ): bool! {
       let moduleTypeInfo = typeInfo.getModule();
@@ -344,6 +344,9 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       }
 
       typeId2TypeInfo[ typeInfo.get_typeId() ] = typeInfo;
+      if typeInfo.isModule() {
+         return;
+      }
       
       if typeInfo.$nilable {
 	 pickupTypeId( typeInfo.$nonnilableType, true, false );
@@ -355,28 +358,25 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
             pickupClassMap[ typeInfo.$typeId ] = typeInfo;
          }
 
-         let parentInfo = typeInfo.get_parentInfo();
+         let parentInfo = typeInfo.$parentInfo;
          pickupTypeId( parentInfo, true, false );
          
-         let baseInfo = typeInfo.get_baseTypeInfo();
+         let baseInfo = typeInfo.$baseTypeInfo;
          if baseInfo.$typeId ~= Ast.rootTypeId {
             pickupTypeId( baseInfo, true, true );
          }
          
-	 let mut typeInfoList: &List<&Ast.TypeInfo> = typeInfo.get_itemTypeInfoList();
-	 foreach itemTypeInfo in typeInfoList {
+	 foreach itemTypeInfo in typeInfo.$itemTypeInfoList {
             pickupTypeId( itemTypeInfo, true, false );
 	 }
-	 typeInfoList = typeInfo.get_argTypeInfoList();
-	 foreach itemTypeInfo in typeInfoList {
+	 foreach itemTypeInfo in typeInfo.$argTypeInfoList {
             pickupTypeId( itemTypeInfo, true, false );
 	 }
-	 typeInfoList = typeInfo.get_retTypeInfoList();
-	 foreach itemTypeInfo in typeInfoList {
+	 foreach itemTypeInfo in typeInfo.$retTypeInfoList {
             pickupTypeId( itemTypeInfo, true, true );
 	 }
          if pickupChildFlag {
-	    foreach itemTypeInfo in typeInfo.get_children() {
+	    foreach itemTypeInfo in typeInfo.$children {
                if itemTypeInfo.$accessMode == .Pub and
                    ( itemTypeInfo.get_kind() == Ast.TypeInfoKind.Class or
                      itemTypeInfo.get_kind() == Ast.TypeInfoKind.IF or
@@ -389,6 +389,10 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          }
 
          pickupTypeId( typeInfo.get_nilableTypeInfo(), true, false );
+
+         if typeInfo ~= typeInfo.$srcTypeInfo {
+            pickupTypeId( typeInfo.$srcTypeInfo, true, false );
+         }
       }
    }
 
@@ -456,9 +460,9 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
 
    // 公開クラスから、各メンバ、メソッドの公開情報登録
-   let mut pickupedClassMap: Map<int,Ast.TypeInfo> = {};
+   let mut pickupedClassMap: Map<int,&Ast.TypeInfo> = {};
    while true {
-      let mut workClassMap: Map<int,Ast.TypeInfo> = {};
+      let mut workClassMap: Map<int,&Ast.TypeInfo> = {};
       let mut hasWorkClassFlag = false;
       foreach classTypeInfo, classTypeId in pickupClassMap {
          if not pickupedClassMap[ classTypeId ] {
@@ -625,7 +629,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    let mut listIndex = 1;
 
    let mut wroteTypeIdSet:Set<int> = (@);
-   fn outputTypeInfo( typeInfo: Ast.TypeInfo ) {
+   fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
       switch typeInfo.$kind {
          case .Class, .IF {
             switch typeInfo.$accessMode {
@@ -665,9 +669,9 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {
       typeId2TypeInfo[ typeId ] = typeInfo;
    }
-   foreach typeInfo, typeId in self.pubAlgeId2AlgeTypeInfo {
+   forsort typeInfo, typeId in self.pubAlgeId2AlgeTypeInfo {
       typeId2TypeInfo[ typeId ] = typeInfo;
-      foreach valInfo in typeInfo.$valInfoMap {
+      forsort valInfo in typeInfo.$valInfoMap {
          foreach valType in valInfo.$typeList {
             pickupTypeId( valType, true ## );
          }
@@ -1174,7 +1178,7 @@ pub override fn convFilter.processNewAlgeVal(
 
 
 
-fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : Ast.TypeInfo!
+fn convFilter.getDestrClass( classTypeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo!
 {
    let mut typeInfo = classTypeInfo;
    while not typeInfo.equals( Ast.headTypeInfo ##) {

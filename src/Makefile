@@ -13,6 +13,10 @@ endif
 
 LNSC=~/.luarocks/bin/lnsc
 
+ifdef LOG
+LOG_OPT=--log info
+endif
+
 ifdef LNSC_ENABLE
 ifneq ($(LUA51),)
 ENABLE_LUA51:=$(shell which $(LUA51))
@@ -50,7 +54,7 @@ define cutMeta
 endef
 
 define transwork
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$3.lns SAVE $2 $(BYTECOMP) -Werror)
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$3.lns SAVE $2 $(BYTECOMP) -Werror $(LOG_OPT) )
 endef
 
 ifndef LNSC_ENABLE
@@ -79,8 +83,8 @@ define buildLns
 	$(call transwork,$1,$2,base/frontInterface)
 	$(call transwork,$1,$2,base/Writer)
 	$(call transwork,$1,$2,base/Parser)
-	$(call transwork,$1,$2,base/Option)
 	$(call transwork,$1,$2,base/Ast)
+	$(call transwork,$1,$2,base/Option)
 	$(call transwork,$1,$2,base/Nodes)
 	$(call transwork,$1,$2,base/dumpNode)
 	$(call transwork,$1,$2,base/TransUnit)
@@ -201,6 +205,9 @@ endef
 #
 # - 上記の比較が全て同じなら、 candidate を orginal とする。
 test-comp:
+	@echo start to build 
+	@LANG= date
+
 	$(MAKE) build-countup
 	rm -rf work
 	mkdir -p work/glue
@@ -220,6 +227,9 @@ test-comp:
 	@cp lune/*.lns work/5/lune
 	$(call buildLns,.,work/1)
 	$(MAKE) test-comp2
+
+	@echo finish to build 
+	@LANG= date
 
 test-etc:
 # 存在しないファイルを指定した時に、不正なファイルが作成されないことを確認する

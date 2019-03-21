@@ -236,9 +236,6 @@ _moduleObj.rootTypeId = rootTypeId
 
 
 
-local typeInfoKind = {}
-_moduleObj.typeInfoKind = typeInfoKind
-
 local sym2builtInTypeMap = {}
 _moduleObj.sym2builtInTypeMap = sym2builtInTypeMap
 
@@ -1016,7 +1013,7 @@ function TypeInfo.createScope( parent, classFlag, baseInfo, interfaceList )
 
    local inheritScope = nil
    if baseInfo ~= nil then
-      inheritScope = _lune.unwrap( baseInfo:get_scope())
+      inheritScope = _lune.unwrap( getScope( baseInfo ))
    end
    
    local ifScopeList = {}
@@ -1781,7 +1778,7 @@ local function dumpScope( workscope, workprefix )
    
    dumpScopeSub( workscope, workprefix, {} )
 end
-
+_moduleObj.dumpScope = dumpScope
 function TypeInfo:createAlt2typeMap( detectFlag )
 
    if not detectFlag then
@@ -2712,7 +2709,7 @@ function GenericTypeInfo.new( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
    return obj
 end
 function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
-   TypeInfo.__init( self,nil)
+   TypeInfo.__init( self,TypeInfo.createScope( (_lune.unwrap( getScope( genSrcTypeInfo )) ):get_parent(), true, genSrcTypeInfo, nil ))
    
    idProv:increment(  )
    self.typeId = idProv:get_id()
@@ -3084,7 +3081,7 @@ function ModifierTypeInfo:serialize( stream, validChildrenSet )
 end
 function ModifierTypeInfo:canEvalWith( other, opTxt, alt2type )
 
-   return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other, opTxt, alt2type )
+   return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other:get_srcTypeInfo(), opTxt, alt2type )
 end
 function ModifierTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = ModifierTypeInfo  } )
@@ -3199,10 +3196,6 @@ end
 
 function ModifierTypeInfo:get_nilable( ... )
    return self.srcTypeInfo:get_nilable( ... )
-end       
-
-function ModifierTypeInfo:get_nilableTypeInfo( ... )
-   return self.srcTypeInfo:get_nilableTypeInfo( ... )
 end       
 
 function ModifierTypeInfo:get_typeData( ... )
@@ -3988,17 +3981,96 @@ function NormalTypeInfo.createAlternate( txt, accessMode, moduleTypeInfo, baseTy
    return AlternateTypeInfo.new(txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList)
 end
 
+
+local TypeInfo2Map = {}
+_moduleObj.TypeInfo2Map = TypeInfo2Map
+function TypeInfo2Map.new(  )
+   local obj = {}
+   TypeInfo2Map.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function TypeInfo2Map:__init() 
+   self.ModifierMap = {}
+   self.BoxMap = {}
+   self.DDDMap = {}
+end
+function TypeInfo2Map:clone(  )
+
+   local obj = TypeInfo2Map.new()
+   for key, val in pairs( self.ModifierMap ) do
+      obj.ModifierMap[key] = val
+   end
+   
+   for key, val in pairs( self.BoxMap ) do
+      obj.BoxMap[key] = val
+   end
+   
+   for key, val in pairs( self.DDDMap ) do
+      obj.DDDMap[key] = val
+   end
+   
+   return obj
+end
+function TypeInfo2Map.setmeta( obj )
+  setmetatable( obj, { __index = TypeInfo2Map  } )
+end
+function TypeInfo2Map:get_ModifierMap()       
+   return self.ModifierMap         
+end
+function TypeInfo2Map:get_BoxMap()       
+   return self.BoxMap         
+end
+function TypeInfo2Map:get_DDDMap()       
+   return self.DDDMap         
+end
+
+local typeInfo2Map = TypeInfo2Map.new()
+function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
+
+   srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
+   do
+      local _exp = typeInfo2Map.ModifierMap[srcTypeInfo]
+      if _exp ~= nil then
+         if _exp:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
+            Util.err( "on cache" )
+         end
+         
+         return _exp
+      end
+   end
+   
+   idProv:increment(  )
+   local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutable)
+   typeInfo2Map.ModifierMap[srcTypeInfo] = modifier
+   if modifier:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
+      Util.printStackTrace(  )
+      Util.err( string.format( "off cache: %s %s %s", srcTypeInfo:getTxt(  ), tostring( modifier:get_typeId()), tostring( srcTypeInfo:get_typeId())) )
+   end
+   
+   return modifier
+end
+
 idProv:increment(  )
+local function addBuiltin( typeInfo )
+
+   _moduleObj.builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
+end
+
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   _moduleObj.typeInfoKind[idName] = typeInfo
    _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, typeInfo, false, true)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
       _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nilableTypeInfo, false, true)
-      _moduleObj.builtInTypeIdSet[nilableTypeInfo:get_typeId()] = nilableTypeInfo
    end
    
-   _moduleObj.builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
+   addBuiltin( typeInfo )
+   addBuiltin( NormalTypeInfo.createModifier( typeInfo, false ) )
+   if typeInfo:get_nilableTypeInfo() ~= _moduleObj.headTypeInfo then
+      addBuiltin( typeInfo:get_nilableTypeInfo() )
+      addBuiltin( NormalTypeInfo.createModifier( typeInfo:get_nilableTypeInfo(), false ) )
+   end
+   
    if registScope then
       _moduleObj.rootScope:addClass( typeTxt, typeInfo )
    end
@@ -4128,11 +4200,10 @@ local function isConditionalbe( typeInfo )
    return false
 end
 _moduleObj.isConditionalbe = isConditionalbe
-local typeInfo2BoxMap = {}
 function NormalTypeInfo.createBox( accessMode, nonnilableType )
 
    do
-      local boxType = typeInfo2BoxMap[nonnilableType]
+      local boxType = typeInfo2Map.BoxMap[nonnilableType]
       if boxType ~= nil then
          return boxType
       end
@@ -4140,7 +4211,7 @@ function NormalTypeInfo.createBox( accessMode, nonnilableType )
    
    idProv:increment(  )
    local boxType = BoxTypeInfo.new(idProv:get_id(), accessMode, nonnilableType)
-   typeInfo2BoxMap[nonnilableType] = boxType
+   typeInfo2Map.BoxMap[nonnilableType] = boxType
    return boxType
 end
 
@@ -4239,39 +4310,23 @@ end
 
 function NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, typeInfo )
 
-   return NormalTypeInfo.createFunc( false, false, typeInfo:get_scope(), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), typeInfo:get_mutable() )
-end
-
-local typeInfo2ModifierMap = {}
-function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
-
-   srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
-   do
-      local _exp = typeInfo2ModifierMap[srcTypeInfo]
-      if _exp ~= nil then
-         if _exp:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
-            Util.err( "on cache" )
-         end
-         
-         return _exp
-      end
-   end
-   
-   idProv:increment(  )
-   local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutable)
-   typeInfo2ModifierMap[srcTypeInfo] = modifier
-   if modifier:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
-      Util.printStackTrace(  )
-      Util.err( string.format( "off cache: %s %s %s", srcTypeInfo:getTxt(  ), tostring( modifier:get_typeId()), tostring( srcTypeInfo:get_typeId())) )
-   end
-   
-   return modifier
+   return NormalTypeInfo.createFunc( false, false, getScope( typeInfo ), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), typeInfo:get_mutable() )
 end
 
 function ModifierTypeInfo:get_nonnilableType(  )
 
    local orgType = self.srcTypeInfo:get_nonnilableType()
    if self.mutable or not orgType:get_mutable() then
+      return orgType
+   end
+   
+   return NormalTypeInfo.createModifier( orgType, false )
+end
+
+function ModifierTypeInfo:get_nilableTypeInfo(  )
+
+   local orgType = self.srcTypeInfo:get_nilableTypeInfo()
+   if not orgType:get_mutable() then
       return orgType
    end
    
@@ -4307,8 +4362,6 @@ function Scope:addAliasForType( name, typeInfo )
    return self:add( skind, false, canBeRight, name, typeInfo, typeInfo:get_accessMode(), true, false, true )
 end
 
-
-local typeInfo2DDDMap = {}
 local DDDTypeInfo = {}
 setmetatable( DDDTypeInfo, { __index = TypeInfo } )
 _moduleObj.DDDTypeInfo = DDDTypeInfo
@@ -4329,7 +4382,7 @@ function DDDTypeInfo:__init(typeId, typeInfo, externalFlag)
    self.typeInfo = typeInfo
    self.externalFlag = externalFlag
    self.itemTypeInfoList = {self.typeInfo}
-   typeInfo2DDDMap[typeInfo] = self
+   typeInfo2Map.DDDMap[typeInfo] = self
 end
 function DDDTypeInfo:isModule(  )
 
@@ -4398,7 +4451,7 @@ end
 function NormalTypeInfo.createDDD( typeInfo, externalFlag )
 
    do
-      local _exp = typeInfo2DDDMap[typeInfo]
+      local _exp = typeInfo2Map.DDDMap[typeInfo]
       if _exp ~= nil then
          if _exp:get_typeId() < userStartId and typeInfo:get_typeId() >= userStartId then
             Util.err( "on cache" )
@@ -4556,12 +4609,12 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
    
    idProv:increment(  )
    local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, idProv:get_id(), valTypeInfo)
-   local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
+   local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( getEnumName, AccessMode.Pub, false, false )
-   local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "_from", nil, {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
+   local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", nil, {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
    scope:addFunc( fromVal, AccessMode.Pub, true, false )
    local allListType = NormalTypeInfo.createList( AccessMode.Pub, info, {info} )
-   local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, true, true, AccessMode.Pub, "get__allList", nil, nil, {NormalTypeInfo.createModifier( allListType, false )}, false )
+   local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", nil, nil, {NormalTypeInfo.createModifier( allListType, false )}, false )
    scope:addFunc( allList, AccessMode.Pub, true, false )
    return info
 end
@@ -4615,7 +4668,7 @@ function NormalTypeInfo.createAlge( scope, parentInfo, externalFlag, accessMode,
    
    idProv:increment(  )
    local info = AlgeTypeInfo.new(scope, externalFlag, accessMode, algeName, parentInfo, idProv:get_id())
-   local getAlgeName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, true, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
+   local getAlgeName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( getAlgeName, AccessMode.Pub, false, false )
    return info
 end
@@ -4677,7 +4730,7 @@ end
 
 function NilableTypeInfo:canEvalWith( other, opTxt, alt2type )
 
-   local otherSrc = other:get_srcTypeInfo()
+   local otherSrc = other
    if self == _moduleObj.builtinTypeStem_ then
       return true
    end
@@ -5129,7 +5182,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          for index, argType in pairs( dest:get_argTypeInfoList() ) do
             local otherArgType = otherSrc:get_argTypeInfoList()[index]
             if not argType:equals( otherArgType, alt2type ) then
-               Util.errorLog( string.format( "unmatch arg(%d) type -- %s(%d), %s(%d)", index, argType:getTxt(  ), argType:get_typeId(), otherArgType:getTxt(  ), otherArgType:get_typeId()) )
+               Util.errorLog( string.format( "unmatch arg(%d) type -- %s, %s", index, argType:getTxt(  ), otherArgType:getTxt(  )) )
                return false
             end
             
@@ -5138,7 +5191,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          for index, retType in pairs( dest:get_retTypeInfoList() ) do
             local otherRetType = otherSrc:get_retTypeInfoList()[index]
             if not retType:equals( otherRetType, alt2type ) then
-               Util.errorLog( string.format( "unmatch ret(%d) type -- %s(%d), %s(%d)", index, retType:getTxt(  ), retType:get_typeId(), otherRetType:getTxt(  ), otherRetType:get_typeId()) )
+               Util.errorLog( string.format( "unmatch ret(%d) type -- %s, %s", index, retType:getTxt(  ), otherRetType:getTxt(  )) )
                return false
             end
             
@@ -5227,7 +5280,7 @@ function NormalTypeInfo:applyGeneric( alt2typeMap )
       elseif _switchExp == TypeInfoKind.Map then
          return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2] )
       elseif _switchExp == TypeInfoKind.Func then
-         return NormalTypeInfo.createFunc( self.abstractFlag, false, self:get_scope(), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, self.mutable )
+         return NormalTypeInfo.createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, self.mutable )
       else 
          
             return nil
@@ -5246,21 +5299,19 @@ _moduleObj.ProcessInfo = ProcessInfo
 function ProcessInfo.setmeta( obj )
   setmetatable( obj, { __index = ProcessInfo  } )
 end
-function ProcessInfo.new( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap )
+function ProcessInfo.new( idProvier, idProvierExt, typeInfo2Map )
    local obj = {}
    ProcessInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap )
+      obj:__init( idProvier, idProvierExt, typeInfo2Map )
    end        
    return obj 
 end         
-function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap ) 
+function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2Map ) 
 
    self.idProvier = idProvier
    self.idProvierExt = idProvierExt
-   self.typeInfo2ModifierMap = typeInfo2ModifierMap
-   self.typeInfo2BoxMap = typeInfo2BoxMap
-   self.typeInfo2DDDMap = typeInfo2DDDMap
+   self.typeInfo2Map = typeInfo2Map
 end
 function ProcessInfo:get_idProvier()       
    return self.idProvier         
@@ -5268,14 +5319,8 @@ end
 function ProcessInfo:get_idProvierExt()       
    return self.idProvierExt         
 end
-function ProcessInfo:get_typeInfo2ModifierMap()       
-   return self.typeInfo2ModifierMap         
-end
-function ProcessInfo:get_typeInfo2BoxMap()       
-   return self.typeInfo2BoxMap         
-end
-function ProcessInfo:get_typeInfo2DDDMap()       
-   return self.typeInfo2DDDMap         
+function ProcessInfo:get_typeInfo2Map()       
+   return self.typeInfo2Map         
 end
 
 local processInfoQueue = {}
@@ -5319,6 +5364,7 @@ local function switchIdProvier( idType )
    
 end
 _moduleObj.switchIdProvier = switchIdProvier
+local builtinTypeInfo2Map = typeInfo2Map:clone(  )
 local function pushProcessInfo( processInfo )
 
    if #processInfoQueue == 0 then
@@ -5328,23 +5374,19 @@ local function pushProcessInfo( processInfo )
       
    end
    
-   table.insert( processInfoQueue, ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap) )
+   table.insert( processInfoQueue, ProcessInfo.new(idProvBase, idProvExt, typeInfo2Map) )
    if processInfo ~= nil then
       idProvBase = processInfo:get_idProvier()
       idProvExt = processInfo:get_idProvierExt()
-      typeInfo2ModifierMap = processInfo:get_typeInfo2ModifierMap()
-      typeInfo2BoxMap = processInfo:get_typeInfo2BoxMap()
-      typeInfo2DDDMap = processInfo:get_typeInfo2DDDMap()
+      typeInfo2Map = processInfo:get_typeInfo2Map()
    else
       idProvBase = IdProvider.new(userStartId, extStartId)
       idProvExt = IdProvider.new(extStartId, extMaxId)
-      typeInfo2ModifierMap = {}
-      typeInfo2BoxMap = {}
-      typeInfo2DDDMap = {}
+      typeInfo2Map = builtinTypeInfo2Map:clone(  )
    end
    
    idProv = idProvBase
-   return ProcessInfo.new(idProvBase, idProvExt, typeInfo2ModifierMap, typeInfo2BoxMap, typeInfo2DDDMap)
+   return ProcessInfo.new(idProvBase, idProvExt, typeInfo2Map)
 end
 _moduleObj.pushProcessInfo = pushProcessInfo
 local function popProcessInfo(  )
@@ -5353,9 +5395,7 @@ local function popProcessInfo(  )
    idProvBase = info:get_idProvier()
    idProvExt = info:get_idProvierExt()
    idProv = idProvBase
-   typeInfo2ModifierMap = info:get_typeInfo2ModifierMap()
-   typeInfo2BoxMap = info:get_typeInfo2BoxMap()
-   table.remove( processInfoQueue )
+   typeInfo2Map = info:get_typeInfo2Map()
 end
 _moduleObj.popProcessInfo = popProcessInfo
 local BitOpKind = {}

@@ -116,3 +116,8 @@ test2.$list3.insert( 1 );
    val[1].insert( 1 ); // error
 }
 
+class Test2 {
+}
+fn func( map:&Map<int,&Test2>): Test2! {
+   return map[ 1 ]; // error
+}

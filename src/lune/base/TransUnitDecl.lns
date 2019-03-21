@@ -253,6 +253,55 @@ fn TransUnit.analyzeDeclArgList(
    return nextToken;
 }
 
+fn TransUnit.checkOverriededMethod() mut
+{
+   fn checkOverrideMethodSub(
+      pos:&Parser.Position, classScope:&Ast.Scope, scope:&Ast.Scope )
+   {  
+      scope.filterTypeInfoField(
+         true, classScope,
+         fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+            if symbolInfo.$kind == .Mtd {
+               let mut noImp = false;
+               if! let impMethodType = classScope.getTypeInfoField(
+                  symbolInfo.$name, true, classScope )
+               {              
+                  if impMethodType.$abstractFlag {
+                     noImp = true;
+                  }
+               }
+               else {
+                  noImp = true;
+               }
+               if noImp {
+                  self.addErrMess( pos, "not implements method -- " .. symbolInfo.$name );
+               }
+            }
+            return true;
+         } );
+   }
+
+   foreach classNode, classTypeInfo in self.typeInfo2ClassNode {
+      if not classTypeInfo.$abstractFlag {
+         // extend のメソッドがオーバーライドされているか確認
+         let mut workTypeInfo = classTypeInfo;
+         repeat {
+            if workTypeInfo ~= Ast.headTypeInfo {
+               checkOverrideMethodSub(
+                  classNode.$pos,
+                  unwrap classTypeInfo.$scope, unwrap workTypeInfo.$scope );
+            }  
+            foreach ifType in workTypeInfo.$interfaceList {
+               checkOverrideMethodSub(
+                  classNode.$pos,
+                  unwrap classTypeInfo.$scope, unwrap ifType.$scope );
+            }  
+            workTypeInfo = workTypeInfo.$baseTypeInfo;
+         } workTypeInfo == Ast.headTypeInfo;
+      }
+   }
+}
+
 pub class ASTInfo {
    pri let node: Nodes.Node { pub };
    pri let moduleTypeInfo: Ast.TypeInfo { pub };
@@ -287,7 +336,7 @@ pub fn TransUnit.createAST(
 
    let mut ast:Nodes.Node! = nil;
 
-   let mut lastStatement:Nodes.Node! = nil;
+   let mut lastStatement:&Nodes.Node! = nil;
    if macroFlag {
       ast = self.analyzeBlock( .Macro ##);
    }
@@ -327,6 +376,9 @@ pub fn TransUnit.createAST(
                         token.kind.$_txt, token.txt ) );
          }  
       }
+
+      self.checkOverriededMethod();
+
 
       let mut rootNode = Nodes.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
@@ -1262,7 +1314,7 @@ fn TransUnit.analyzeClassBody(
    name:&Parser.Token, moduleName: &Parser.Token!, mut nextToken:&Parser.Token ) mut :
    Nodes.DeclClassNode, &Parser.Token, Set<str>
 {
-   let mut memberName2Node: Map<str,Nodes.DeclMemberNode> = {};
+   let mut memberName2Node: Map<str,&Nodes.DeclMemberNode> = {};
    let mut declStmtList: List<&Nodes.Node> = [];
    let mut fieldList:List<&Nodes.Node> = [];
    let mut memberList:List<&Nodes.DeclMemberNode> = [];
@@ -1276,7 +1328,7 @@ fn TransUnit.analyzeClassBody(
       classAccessMode, name, gluePrefix, declStmtList, fieldList, moduleName,
       memberList, self.scope, initStmtList, advertiseList, trustList, (@) );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
-   let mut declCtorNode:Nodes.Node! = nil;
+   let mut declCtorNode:&Nodes.Node! = nil;
    let mut hasInitBlock = false;
    let mut hasStaticMember = false;
 
@@ -1685,49 +1737,51 @@ fn TransUnit.analyzeDeclClass(
       classScope.addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false );
    }
    
-   fn checkOverrideMethod( scope:&Ast.Scope ) {
-      scope.filterTypeInfoField(
-         true, classScope,
-         fn ( symbolInfo:&Ast.SymbolInfo ): bool {
-            if symbolInfo.$kind == .Mtd {
-               let mut noImp = false;
-               if! let impMethodType = classScope.getTypeInfoField(
-                  symbolInfo.$name, true, classScope )
-               {              
-                  if impMethodType.$abstractFlag {
-                     noImp = true;
-                  }
-               }
-               else {
-                  noImp = true;
-               }
-               if noImp {
-                  self.addErrMess( firstToken.pos,
-                                   "not implements method -- " .. symbolInfo.$name );
-               }
-            }
-            return true;
-         } );
-   }
+   // fn checkOverrideMethodSub( scope:&Ast.Scope ) {
+   //    scope.filterTypeInfoField(
+   //       true, classScope,
+   //       fn ( symbolInfo:&Ast.SymbolInfo ): bool {
+   //          if symbolInfo.$kind == .Mtd {
+   //             let mut noImp = false;
+   //             if! let impMethodType = classScope.getTypeInfoField(
+   //                symbolInfo.$name, true, classScope )
+   //             {              
+   //                if impMethodType.$abstractFlag {
+   //                   noImp = true;
+   //                }
+   //             }
+   //             else {
+   //                noImp = true;
+   //             }
+   //             if noImp {
+   //                self.addErrMess( firstToken.pos,
+   //                                 "not implements method -- " .. symbolInfo.$name );
+   //             }
+   //          }
+   //          return true;
+   //       } );
+   // }
 
-   if not classAbstructFlag {
-      // extend のメソッドがオーバーライドされているか確認
-      let mut workTypeInfo = classTypeInfo;
-      repeat {
-         if workTypeInfo ~= Ast.headTypeInfo {
-            checkOverrideMethod( unwrap workTypeInfo.$scope );
-         }  
-         foreach ifType in workTypeInfo.$interfaceList {
-            checkOverrideMethod( unwrap ifType.$scope );
-         }
-         workTypeInfo = workTypeInfo.$baseTypeInfo;
-      } workTypeInfo == Ast.headTypeInfo;
-   }
+   // if not classAbstructFlag {
+   //    // extend のメソッドがオーバーライドされているか確認
+   //    let mut workTypeInfo = classTypeInfo;
+   //    repeat {
+   //       if workTypeInfo ~= Ast.headTypeInfo {
+   //          checkOverrideMethodSub( unwrap workTypeInfo.$scope );
+   //       }  
+   //       foreach ifType in workTypeInfo.$interfaceList {
+   //          checkOverrideMethodSub( unwrap ifType.$scope );
+   //       }
+   //       workTypeInfo = workTypeInfo.$baseTypeInfo;
+   //    } workTypeInfo == Ast.headTypeInfo;
+   // }
 
    self.popClass();
 
    return node;
-}   
+}
+
+
 
 pri fn TransUnit.addMethod(
    classTypeInfo: &Ast.TypeInfo, methodNode: Nodes.Node, name: str ) mut
@@ -1966,6 +2020,7 @@ fn TransUnit.analyzeDeclFunc(
       let! overrideType =
          self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
       {
+         //Ast.dumpScope( self.scope.$parent, "" );
          self.addErrMess( firstToken.pos, "not found override -- " .. funcName );
       }
       then {
@@ -2268,9 +2323,8 @@ fn TransUnit.analyzeLetAndInitExp(
                {
                   self.addErrMess(
                      firstPos,
-                     "unmatch value type (index = %d) %s(%d) <- %s(%d)"
-                     ( subIndex, argType.getTxt( true ## ), argType.$typeId,
-                       dddItemType.getTxt(##), dddItemType.$typeId ));
+                     "unmatch value type (index = %d) %s) <- %s"
+                     ( subIndex, argType.getTxt( true ## ), dddItemType.getTxt(##) ));
                }
                expTypeList.insert( checkType );
                orgExpTypeList.insert( dddItemType );
@@ -2466,7 +2520,7 @@ fn TransUnit.analyzeDeclVar(
    let mut unwrapBlock: Nodes.BlockNode! = nil;
    let mut thenBlock: Nodes.BlockNode! = nil;
    if unwrapFlag {
-      let scope = self.pushScope( false ## );
+      let mut scope = self.pushScope( false ## );
 
       // unwrap ブロックに変数を登録
       foreach letVarInfo, index in letVarList {

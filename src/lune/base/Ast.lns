@@ -72,7 +72,7 @@ pub let rootTypeId = idProv.getNewId();
 pub proto class TypeInfo;
 pub proto abstract class SymbolInfo;
 
-pub let mut typeInfoKind:Map<str,TypeInfo> = {};
+//pub let mut typeInfoKind:Map<str,TypeInfo> = {};
 pub let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
 pub let mut builtInTypeIdSet:Map<int,&TypeInfo> = {};
 
@@ -675,7 +675,7 @@ static な型か。
    {
       let mut inheritScope:Scope! = nil;
       when! baseInfo {
-         inheritScope = unwrap baseInfo.$scope;
+         inheritScope = unwrap getScope( baseInfo );
       }
       let mut ifScopeList:List<&Scope> = [];
       when! interfaceList {
@@ -715,7 +715,7 @@ pro static fn TypeInfo.isInherit(
 
 
 pub class AutoBoxingInfo extend TypeInfo {
-   static let mut allObj:Map<&TypeInfo,&AutoBoxingInfo>;
+   static let mut allObj:Map<&TypeInfo,AutoBoxingInfo>;
    
    let mut count:int{pub};
 
@@ -735,7 +735,7 @@ pub class AutoBoxingInfo extend TypeInfo {
       return .Etc;
    }
 
-   pub fn inc() mut {
+   pub fn inc() {
       let mut obj = unwrap AutoBoxingInfo.allObj[ self ];
       obj.count = obj.count + 1;
    }
@@ -983,7 +983,7 @@ pub fn Scope.filterSymbolInfoIfField( fromScope:&Scope, callback:filterForm ) : 
 
 
 pub fn Scope.getTypeInfoField(
-   name: str, includeSelfFlag: bool!, fromScope:&Scope ) : TypeInfo!
+   name: str, includeSelfFlag: bool!, fromScope:&Scope ) : &TypeInfo!
 {
    let symbolInfo = self.getSymbolInfoField( name, includeSelfFlag, fromScope );
    if! symbolInfo {
@@ -1032,7 +1032,7 @@ pub fn Scope.getSymbolInfo(
 }
 
 pub fn Scope.getTypeInfo(
-   name: str, fromScope:&Scope, onlySameNsFlag:bool ) : TypeInfo!
+   name: str, fromScope:&Scope, onlySameNsFlag:bool ) : &TypeInfo!
 {
    let! symbolInfo = self.getSymbolInfo(name, fromScope, onlySameNsFlag ) {
       return nil;
@@ -1218,12 +1218,12 @@ pub fn Scope.addClass( name:str, typeInfo: &TypeInfo ) mut
 /**
 デバッグ用。 scope 内のシンボル情報を出力する。
 */
-fn dumpScope( workscope: Scope!, workprefix:str ) {
+pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
 
    /**
 デバッグ用。 scope 内のシンボル情報を出力する。
 */
-   fn dumpScopeSub( scope: Scope!, prefix:str, readyIdSet:Set<Scope> ) {
+   fn dumpScopeSub( scope: &Scope!, prefix:str, readyIdSet:Set<&Scope> ) {
       if! scope {
          if readyIdSet.has( _exp ) {
             return;
@@ -1891,10 +1891,13 @@ pub class GenericTypeInfo extend TypeInfo {
    pri let alt2typeMap:&Map<&TypeInfo,&TypeInfo>;
    pri let hasAlter:bool;
 
+   
+   
    pub fn __init( genSrcTypeInfo:&TypeInfo,
                   itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo )
    {  
-      super( nil );
+      super( TypeInfo.createScope( (unwrap getScope( genSrcTypeInfo )).$parent,
+                                   true, genSrcTypeInfo, nil ) );
 
       idProv.increment();
       self.typeId = idProv.$id;
@@ -2135,13 +2138,14 @@ pub class ModifierTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
-         // if isGenericType( self.srcTypeInfo ) {
-         //    return self.srcTypeInfo.canEvalWith( other, opTxt, alt2type );
-         // }
-         return TypeInfo.canEvalWithBase(
-            self.srcTypeInfo, self.mutable, other, opTxt, alt2type );
-   }
+      other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   {
+      // if isGenericType( self.srcTypeInfo ) {
+      //    return self.srcTypeInfo.canEvalWith( other, opTxt, alt2type );
+      // }
+      return TypeInfo.canEvalWithBase(
+         self.srcTypeInfo, self.mutable, other.$srcTypeInfo, opTxt, alt2type );
+   }  
 
    advertise srcTypeInfo;
 }
@@ -2522,12 +2526,12 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let alt2typeMap:Map<&TypeInfo,&TypeInfo>;
 
    fn __init( abstractFlag:bool, scope: Scope!, baseTypeInfo: &TypeInfo!,
-              interfaceList: List<&TypeInfo>!,
+              interfaceList: &List<&TypeInfo>!,
               autoFlag: bool, externalFlag: bool, staticFlag: bool,
               accessMode: AccessMode,
               txt: str, parentInfo: &TypeInfo!, typeId: int, kind: TypeInfoKind,
-              itemTypeInfoList: List<&TypeInfo>!, argTypeInfoList:List<&TypeInfo>!,
-              retTypeInfoList: List<&TypeInfo>!, mutable: bool! )
+              itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
+              retTypeInfoList: &List<&TypeInfo>!, mutable: bool! )
    {
       super( scope );
 
@@ -2879,15 +2883,74 @@ pub static fn NormalTypeInfo.createAlternate(
                                  baseTypeInfo, interfaceList );
 }
 
+pub proto class DDDTypeInfo extend TypeInfo;
+
+pub class TypeInfo2Map {
+   pub let mut ModifierMap:Map<&TypeInfo,&TypeInfo> {pub};
+   pub let mut BoxMap:Map<&TypeInfo,&TypeInfo> {pub};
+   pub let mut DDDMap:Map<&TypeInfo,&DDDTypeInfo> {pub};
+
+   pub fn __init() {
+      self.ModifierMap = {};
+      self.BoxMap = {};
+      self.DDDMap = {};
+   }
+
+   pub fn clone(): TypeInfo2Map {
+      let mut obj = new TypeInfo2Map();
+      foreach val, key in self.ModifierMap {
+         obj.ModifierMap[ key ] = val;
+      }
+      foreach val, key in self.BoxMap {
+         obj.BoxMap[ key ] = val;
+      }
+      foreach val, key in self.DDDMap {
+         obj.DDDMap[ key ] = val;
+      }
+      return obj;
+   }
+}
+
+let mut typeInfo2Map = new TypeInfo2Map();
+
+
+pub static fn NormalTypeInfo.createModifier(
+   mut srcTypeInfo: &TypeInfo, mutable: bool ): &TypeInfo
+{
+   srcTypeInfo = srcTypeInfo.$srcTypeInfo;
+   if! typeInfo2Map.ModifierMap[ srcTypeInfo ] {
+      if _exp.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
+         Util.err( "on cache" );
+      }  
+      return _exp;
+   }
+   
+   //typeIdSeed = typeIdSeed + 1;
+   idProv.increment();
+   let modifier = new ModifierTypeInfo( srcTypeInfo, idProv.$id, mutable ); 
+   typeInfo2Map.ModifierMap[ srcTypeInfo ] = modifier;
+   if modifier.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
+      Util.printStackTrace();
+      Util.err( "off cache: %s %s %s"
+                (srcTypeInfo.getTxt(##), modifier.$typeId, srcTypeInfo.$typeId));
+   }
+   return modifier;
+}
+
+
 //pub let typeInfoRoot = rootTypeInfo;
 
 idProv.increment();
 //typeIdSeed = typeIdSeed + 1;
 
+fn addBuiltin( typeInfo:&TypeInfo ) {
+   builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
+}
+
 fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
                   typeInfo:&TypeInfo, nilableTypeInfo:&TypeInfo, registScope:bool )
 {
-   typeInfoKind[ idName ] = typeInfo;
+   //typeInfoKind[ idName ] = typeInfo;
    sym2builtInTypeMap[ typeTxt ] = new NormalSymbolInfo(
       SymbolKind.Typ, false, false,
       rootScope, AccessMode.Pub, false, typeTxt, typeInfo, false, true );
@@ -2895,9 +2958,17 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
       sym2builtInTypeMap[ typeTxt .. "!" ] = new NormalSymbolInfo(
          SymbolKind.Typ, false, kind == .Func, rootScope,
          AccessMode.Pub, false, typeTxt, nilableTypeInfo, false, true );
-      builtInTypeIdSet[ nilableTypeInfo.$typeId ] = nilableTypeInfo;
-   } 
-   builtInTypeIdSet[ typeInfo.$typeId ] = typeInfo;
+   }
+   addBuiltin( typeInfo );
+   // builtIn は modifier も作成しておく
+   addBuiltin( NormalTypeInfo.createModifier( typeInfo, false ) );
+
+   if typeInfo.$nilableTypeInfo ~= headTypeInfo {
+      addBuiltin( typeInfo.$nilableTypeInfo );
+      // builtIn は modifier も作成しておく
+      addBuiltin( NormalTypeInfo.createModifier( typeInfo.$nilableTypeInfo, false ) );
+   }
+   
 
    if registScope {
       rootScope.addClass( typeTxt, typeInfo );
@@ -2906,7 +2977,7 @@ fn registBuiltin( idName: str, typeTxt: str, kind: TypeInfoKind,
 
 pub static fn NormalTypeInfo.createBuiltin(
    idName: str, typeTxt: str,
-   kind: TypeInfoKind, typeDDD: TypeInfo!, ifList:&List<&TypeInfo>! ): &TypeInfo
+   kind: TypeInfoKind, typeDDD: &TypeInfo!, ifList:&List<&TypeInfo>! ): &TypeInfo
 {
    //let mut typeId = typeIdSeed + 1;
    let mut typeId = idProv.$id + 1;
@@ -3021,17 +3092,16 @@ pub fn isConditionalbe( typeInfo:&TypeInfo ) : bool {
 }
 
 
-let mut typeInfo2BoxMap:Map<&TypeInfo,&TypeInfo> = {};
 pub static fn NormalTypeInfo.createBox(
    accessMode:AccessMode, nonnilableType: &TypeInfo ): &TypeInfo
 {
-   if! let boxType = typeInfo2BoxMap[ nonnilableType ] {
+   if! let boxType = typeInfo2Map.BoxMap[ nonnilableType ] {
       return boxType;
    }
    
    idProv.increment();
    let boxType = new BoxTypeInfo( idProv.$id, accessMode, nonnilableType );
-   typeInfo2BoxMap[ nonnilableType ] = boxType;
+   typeInfo2Map.BoxMap[ nonnilableType ] = boxType;
    return boxType;
 }
 
@@ -3129,7 +3199,7 @@ pub static fn NormalTypeInfo.createModule(
 
 pub static fn NormalTypeInfo.createClass(
    classFlag: bool, abstractFlag: bool, scope: Scope!,
-   baseInfo: TypeInfo!, interfaceList: List<&TypeInfo>!,
+   baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>!,
    genTypeList: &List<&AlternateTypeInfo>, parentInfo: &TypeInfo, externalFlag: bool,
    accessMode: AccessMode, className: str ): &TypeInfo
 {
@@ -3182,37 +3252,13 @@ pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
    classTypeInfo:&TypeInfo, typeInfo:&TypeInfo ): &TypeInfo
 {
    return NormalTypeInfo.createFunc(
-      false, false, typeInfo.$scope, typeInfo.$kind,
+      false, false, getScope( typeInfo ), typeInfo.$kind,
       classTypeInfo, true, false, false, typeInfo.$accessMode, typeInfo.$rawTxt,
       typeInfo.$itemTypeInfoList,
       typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList, typeInfo.$mutable );
 }
 
 
-let mut typeInfo2ModifierMap:Map<&TypeInfo,&TypeInfo> = {};
-
-pub static fn NormalTypeInfo.createModifier(
-   mut srcTypeInfo: &TypeInfo, mutable: bool ): &TypeInfo
-{
-   srcTypeInfo = srcTypeInfo.$srcTypeInfo;
-   if! typeInfo2ModifierMap[ srcTypeInfo ] {
-      if _exp.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
-         Util.err( "on cache" );
-      }  
-      return _exp;
-   }
-   
-   //typeIdSeed = typeIdSeed + 1;
-   idProv.increment();
-   let modifier = new ModifierTypeInfo( srcTypeInfo, idProv.$id, mutable ); 
-   typeInfo2ModifierMap[ srcTypeInfo ] = modifier;
-   if modifier.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
-      Util.printStackTrace();
-      Util.err( "off cache: %s %s %s"
-                (srcTypeInfo.getTxt(##), modifier.$typeId, srcTypeInfo.$typeId));
-   }
-   return modifier;
-}
 
 pub override fn ModifierTypeInfo.get_nonnilableType(): &TypeInfo {
    let orgType = self.srcTypeInfo.$nonnilableType;
@@ -3221,6 +3267,15 @@ pub override fn ModifierTypeInfo.get_nonnilableType(): &TypeInfo {
    }
    return NormalTypeInfo.createModifier( orgType, false );
 }
+
+pub override fn ModifierTypeInfo.get_nilableTypeInfo(): &TypeInfo {
+   let orgType = self.srcTypeInfo.$nilableTypeInfo;
+   if not orgType.$mutable {
+      return orgType;
+   }
+   return NormalTypeInfo.createModifier( orgType, false );
+}
+
 
 pub static fn NormalTypeInfo.createAlias(
    name:str, externalFlag:bool, accessMode:AccessMode,
@@ -3260,9 +3315,6 @@ pub fn Scope.addAliasForType( name:str, typeInfo:&TypeInfo ) mut : &SymbolInfo
 }
 
 
-pub proto class DDDTypeInfo extend TypeInfo;
-
-let mut typeInfo2DDDMap:Map<&TypeInfo,&DDDTypeInfo> = {};
 
 pub class DDDTypeInfo extend TypeInfo {
    pri let typeInfo: &TypeInfo { pub };
@@ -3283,7 +3335,7 @@ pub class DDDTypeInfo extend TypeInfo {
       self.externalFlag = externalFlag;
       self.itemTypeInfoList = [ self.typeInfo ];
 
-      typeInfo2DDDMap[ typeInfo ] = self;
+      typeInfo2Map.DDDMap[ typeInfo ] = self;
    }
 
    pub override fn isModule(): bool {
@@ -3337,12 +3389,12 @@ pub class DDDTypeInfo extend TypeInfo {
 
 
 pub static fn NormalTypeInfo.createDDD(
-   typeInfo:&TypeInfo, externalFlag:bool ): DDDTypeInfo
+   typeInfo:&TypeInfo, externalFlag:bool ): &DDDTypeInfo
 {
-   if! typeInfo2DDDMap[ typeInfo ] {
+   if! typeInfo2Map.DDDMap[ typeInfo ] {
       if _exp.$typeId < userStartId and typeInfo.$typeId >= userStartId {
          Util.err( "on cache" );
-      }  
+      }
       return _exp;
    }
    
@@ -3503,13 +3555,13 @@ pub static fn NormalTypeInfo.createEnum(
 
    let mut getEnumName = NormalTypeInfo.createFunc(
       false, true, nil, .Method, info,
-      true, true, false, AccessMode.Pub,
+      true, externalFlag, false, AccessMode.Pub,
       "get__txt", nil, nil, [ builtinTypeString ], false );
    scope.addMethod( getEnumName, AccessMode.Pub, false, false );
 
    let mut fromVal = NormalTypeInfo.createFunc(
       false, true, nil, .Func, info,
-      true, true, true, AccessMode.Pub,
+      true, externalFlag, true, AccessMode.Pub,
       "_from", nil, [ NormalTypeInfo.createModifier( valTypeInfo,false ) ],
       [ info.$nilableTypeInfo ], false );
    scope.addFunc( fromVal, AccessMode.Pub, true, false );
@@ -3517,7 +3569,7 @@ pub static fn NormalTypeInfo.createEnum(
    let allListType = NormalTypeInfo.createList( .Pub, info, [ info ] );
    let mut allList = NormalTypeInfo.createFunc(
       false, true, nil, .Func, info,
-      true, true, true, AccessMode.Pub,
+      true, externalFlag, true, AccessMode.Pub,
       "get__allList", nil, nil,
       [ NormalTypeInfo.createModifier( allListType, false ) ], false );
    scope.addFunc( allList, AccessMode.Pub, true, false );
@@ -3576,7 +3628,7 @@ pub static fn NormalTypeInfo.createAlge(
 
    let mut getAlgeName = NormalTypeInfo.createFunc(
       false, true, nil, .Method, info,
-      true, true, false, AccessMode.Pub,
+      true, externalFlag, false, AccessMode.Pub,
       "get__txt", nil, nil, [ builtinTypeString ], false );
    scope.addMethod( getAlgeName, AccessMode.Pub, false, false );
 
@@ -3633,8 +3685,10 @@ pub override fn BoxTypeInfo.canEvalWith(
 
 // other 型の値を、この型の変数に設定できるか判定する。
 pub override fn NilableTypeInfo.canEvalWith(
-   other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
-   let otherSrc = other.$srcTypeInfo;
+   other:&TypeInfo, opTxt:str, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+{
+   //let otherSrc = other.$srcTypeInfo;
+   let otherSrc = other;
 
    if self == builtinTypeStem_ {
       return true;
@@ -4094,18 +4148,16 @@ pub static fn TypeInfo.canEvalWithBase(
          foreach argType, index in dest.$argTypeInfoList {
             let otherArgType = otherSrc.$argTypeInfoList[ index ];
             if not argType.equals( otherArgType, alt2type ) {
-               Util.errorLog( "unmatch arg(%d) type -- %s(%d), %s(%d)"
-                              ( index, argType.getTxt(##), argType.$typeId, 
-                                otherArgType.getTxt(##), otherArgType.$typeId ));
+               Util.errorLog( "unmatch arg(%d) type -- %s, %s"
+                              ( index, argType.getTxt(##), otherArgType.getTxt(##) ));
                return false;
             }
          }
          foreach retType, index in dest.$retTypeInfoList {
             let otherRetType = otherSrc.$retTypeInfoList[ index ];
             if not retType.equals( otherRetType, alt2type ) {
-               Util.errorLog( "unmatch ret(%d) type -- %s(%d), %s(%d)"
-                              (index, retType.getTxt(##), retType.$typeId,
-                                otherRetType.getTxt(##), otherRetType.$typeId ));
+               Util.errorLog( "unmatch ret(%d) type -- %s, %s"
+                              (index, retType.getTxt(##), otherRetType.getTxt(##) ));
                return false;
             }
          }
@@ -4201,7 +4253,7 @@ pub override fn NormalTypeInfo.applyGeneric(
       }
       case .Func {
          return NormalTypeInfo.createFunc(
-            self.abstractFlag, false, self.$scope, self.kind,
+            self.abstractFlag, false, getScope( self ), self.kind,
             self.parentInfo, self.autoFlag, self.externalFlag,
             self.staticFlag, self.accessMode, self.rawTxt,
             itemTypeInfoList, argTypeInfoList, retTypeInfoList, self.mutable );
@@ -4221,9 +4273,7 @@ pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,&ModuleInfoIF>, localFlag
 pub class ProcessInfo {
    let mut idProvier:IdProvider {pub};
    let mut idProvierExt:IdProvider {pub};
-   let mut typeInfo2ModifierMap:Map<&TypeInfo,&TypeInfo> {pub};
-   let mut typeInfo2BoxMap:Map<&TypeInfo,&TypeInfo> {pub};
-   let mut typeInfo2DDDMap:Map<&TypeInfo,&DDDTypeInfo> {pub};
+   let mut typeInfo2Map:TypeInfo2Map {pub};
 }
 
 let mut processInfoQueue:List<ProcessInfo> = [];
@@ -4241,6 +4291,8 @@ pub fn switchIdProvier( idType:IdType ) {
    }  
 }
 
+let builtinTypeInfo2Map = typeInfo2Map.clone();
+
 pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 
    if #processInfoQueue == 0 {
@@ -4251,25 +4303,19 @@ pub fn pushProcessInfo( processInfo:ProcessInfo! ): ProcessInfo {
 
    
    processInfoQueue.insert(
-      new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap,
-                       typeInfo2BoxMap, typeInfo2DDDMap ) );   
+      new ProcessInfo( idProvBase, idProvExt, typeInfo2Map ) );   
    when! processInfo {
       idProvBase = processInfo.$idProvier;
       idProvExt = processInfo.$idProvierExt;
-      typeInfo2ModifierMap = processInfo.$typeInfo2ModifierMap;
-      typeInfo2BoxMap = processInfo.$typeInfo2BoxMap;
-      typeInfo2DDDMap = processInfo.$typeInfo2DDDMap;
+      typeInfo2Map = processInfo.$typeInfo2Map;
    }
    else {
       idProvBase = new IdProvider( userStartId, extStartId );
       idProvExt = new IdProvider( extStartId, extMaxId );
-      typeInfo2ModifierMap = {};
-      typeInfo2BoxMap = {};
-      typeInfo2DDDMap = {};
+      typeInfo2Map = builtinTypeInfo2Map.clone();
    }
    idProv = idProvBase;
-   return new ProcessInfo( idProvBase, idProvExt, typeInfo2ModifierMap,
-                           typeInfo2BoxMap, typeInfo2DDDMap );         
+   return new ProcessInfo( idProvBase, idProvExt, typeInfo2Map );         
 }
 
 pub fn popProcessInfo() {
@@ -4277,9 +4323,7 @@ pub fn popProcessInfo() {
    idProvBase = info.$idProvier;
    idProvExt = info.$idProvierExt;
    idProv = idProvBase;
-   typeInfo2ModifierMap = info.$typeInfo2ModifierMap;
-   typeInfo2BoxMap = info.$typeInfo2BoxMap;
-   processInfoQueue.remove(##);
+   typeInfo2Map = info.$typeInfo2Map;
 }
 
 pub enum BitOpKind {

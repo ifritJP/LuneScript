@@ -572,6 +572,10 @@ function convFilter:outputMeta( node )
       end
       
       typeId2TypeInfo[typeInfo:get_typeId(  )] = typeInfo
+      if typeInfo:isModule(  ) then
+         return 
+      end
+      
       if typeInfo:get_nilable() then
          pickupTypeId( typeInfo:get_nonnilableType(), true, false )
       else
@@ -580,30 +584,27 @@ function convFilter:outputMeta( node )
             pickupClassMap[typeInfo:get_typeId()] = typeInfo
          end
          
-         local parentInfo = typeInfo:get_parentInfo(  )
+         local parentInfo = typeInfo:get_parentInfo()
          pickupTypeId( parentInfo, true, false )
-         local baseInfo = typeInfo:get_baseTypeInfo(  )
+         local baseInfo = typeInfo:get_baseTypeInfo()
          if baseInfo:get_typeId() ~= Ast.rootTypeId then
             pickupTypeId( baseInfo, true, true )
          end
          
-         local typeInfoList = typeInfo:get_itemTypeInfoList(  )
-         for __index, itemTypeInfo in pairs( typeInfoList ) do
+         for __index, itemTypeInfo in pairs( typeInfo:get_itemTypeInfoList() ) do
             pickupTypeId( itemTypeInfo, true, false )
          end
          
-         typeInfoList = typeInfo:get_argTypeInfoList(  )
-         for __index, itemTypeInfo in pairs( typeInfoList ) do
+         for __index, itemTypeInfo in pairs( typeInfo:get_argTypeInfoList() ) do
             pickupTypeId( itemTypeInfo, true, false )
          end
          
-         typeInfoList = typeInfo:get_retTypeInfoList(  )
-         for __index, itemTypeInfo in pairs( typeInfoList ) do
+         for __index, itemTypeInfo in pairs( typeInfo:get_retTypeInfoList() ) do
             pickupTypeId( itemTypeInfo, true, true )
          end
          
          if pickupChildFlag then
-            for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
+            for __index, itemTypeInfo in pairs( typeInfo:get_children() ) do
                if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
                   pickupTypeId( itemTypeInfo, true, true )
                end
@@ -613,6 +614,10 @@ function convFilter:outputMeta( node )
          end
          
          pickupTypeId( typeInfo:get_nilableTypeInfo(  ), true, false )
+         if typeInfo ~= typeInfo:get_srcTypeInfo() then
+            pickupTypeId( typeInfo:get_srcTypeInfo(), true, false )
+         end
+         
       end
       
    end
@@ -935,15 +940,37 @@ function convFilter:outputMeta( node )
       typeId2TypeInfo[typeId] = typeInfo
    end
    
-   for typeId, typeInfo in pairs( self.pubAlgeId2AlgeTypeInfo ) do
-      typeId2TypeInfo[typeId] = typeInfo
-      for __index, valInfo in pairs( typeInfo:get_valInfoMap() ) do
-         for __index, valType in pairs( valInfo:get_typeList() ) do
-            pickupTypeId( valType, true )
-         end
-         
+   do
+      local __sorted = {}
+      local __map = self.pubAlgeId2AlgeTypeInfo
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
       end
-      
+      table.sort( __sorted )
+      for __index, typeId in ipairs( __sorted ) do
+         local typeInfo = __map[ typeId ]
+         do
+            typeId2TypeInfo[typeId] = typeInfo
+            do
+               local __sorted = {}
+               local __map = typeInfo:get_valInfoMap()
+               for __key in pairs( __map ) do
+                  table.insert( __sorted, __key )
+               end
+               table.sort( __sorted )
+               for __index, __key in ipairs( __sorted ) do
+                  local valInfo = __map[ __key ]
+                  do
+                     for __index, valType in pairs( valInfo:get_typeList() ) do
+                        pickupTypeId( valType, true )
+                     end
+                     
+                  end
+               end
+            end
+            
+         end
+      end
    end
    
    self:writeln( "local __dependIdMap = {}" )

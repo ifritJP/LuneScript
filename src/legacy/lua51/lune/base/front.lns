@@ -227,7 +227,7 @@ class MetaForBuildId extend (Mapping) {
    }
 }
 
-pub static fn MetaForBuildId.LoadFromMeta( metaPath:str ): MetaForBuildId!, str! {
+pub static fn MetaForBuildId.LoadFromMeta( metaPath:str ): &MetaForBuildId!, str! {
    if! let mut fileObj = io.open( metaPath## ) {
       let luaCode = fileObj.read( "*a" );
       fileObj.close();
@@ -570,6 +570,7 @@ fn Front.loadMeta(
          self.loadedMetaMap[ mod ] = _exp.meta;
       }
       else {
+         Log._log( .Info, `{ return "%s checking" ( mod ); } );
          if! let lnsPath = self.searchModule( mod ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 

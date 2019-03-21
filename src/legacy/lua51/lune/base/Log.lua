@@ -4,6 +4,56 @@ local __mod__ = 'lune.base.Log'
 if not _lune then
    _lune = {}
 end
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) == obj then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
+end
+
 local Level = {}
 _moduleObj.Level = Level
 Level._val2NameMap = {}
@@ -67,7 +117,8 @@ _moduleObj.setLevel = setLevel
 local function log( level, funcName, lineNo, callback )
 
    if level <= outputLevel then
-      io.stderr:write( string.format( "%s:%s:%d:", Level:_getTxt( level)
+      local nowClock = os.clock(  )
+      io.stderr:write( string.format( "%6d:%s:%s:%d:", math.floor((nowClock * 1000 )), Level:_getTxt( level)
       , funcName, lineNo) )
       io.stderr:write( callback(  ) )
       io.stderr:write( "\n" )

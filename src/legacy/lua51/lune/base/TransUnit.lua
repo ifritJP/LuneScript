@@ -318,6 +318,7 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Option = _lune.loadModule( 'lune.base.Option' )
 local Code = _lune.loadModule( 'lune.base.Code' )
+local Log = _lune.loadModule( 'lune.base.Log' )
 
 local DeclClassMode = {}
 DeclClassMode._val2NameMap = {}
@@ -1407,7 +1408,7 @@ function _TypeInfoModule:createTypeInfo( param )
    do
       local _exp = newTypeInfo
       if _exp ~= nil then
-         param.typeId2Scope[self.typeId] = _exp:get_scope()
+         param.typeId2Scope[self.typeId] = Ast.getScope( _exp )
          if not _exp:get_scope() then
             return nil, string.format( "not found scope %s %s %s %s %s", tostring( parentScope), tostring( self.parentId), tostring( self.typeId), self.txt, _exp:getTxt(  ))
          end
@@ -1538,7 +1539,7 @@ function _TypeInfoNormal:createTypeInfo( param )
          do
             local _exp = newTypeInfo
             if _exp ~= nil then
-               param.typeId2Scope[self.typeId] = _exp:get_scope()
+               param.typeId2Scope[self.typeId] = Ast.getScope( _exp )
                if not _exp:get_scope() then
                   Util.err( string.format( "not found scope %s %s %s %s %s", tostring( parentScope), tostring( self.parentId), tostring( self.typeId), self.txt, _exp:getTxt(  )) )
                end
@@ -2049,7 +2050,7 @@ function TransUnit:registBuiltInScope(  )
    end
    
    readyBuiltin = true
-   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}, ["lower"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["upper"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["reverse"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}}}, {["List<T>"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&T"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"T!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array<T>"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Set<T>"] = {["add"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["del"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["has"] = {["type"] = {"method"}, ["arg"] = {"T"}, ["ret"] = {"bool"}}, ["and"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["or"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["sub"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["clone"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"Set<T>"}}, ["len"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"int"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable"] = {["val"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"_T!"}}}}}
+   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}, ["lower"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["upper"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["reverse"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}}}, {["List<T>"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&T"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"T!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array<T>"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Set<T>"] = {["add"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["del"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["has"] = {["type"] = {"method"}, ["arg"] = {"T"}, ["ret"] = {"bool"}}, ["and"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["or"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["sub"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["clone"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"Set<T>"}}, ["len"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"int"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable"] = {["val"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"_T!"}}}}}
    local function getTypeInfo( typeName )
    
       do
@@ -2746,6 +2747,12 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
+   Log.log( Log.Level.Info, __func__, 1975, function (  )
+   
+      return string.format( "%s start", modulePath)
+   end
+    )
+   
    if not self.importModuleInfo:add( modulePath ) then
       self:error( string.format( "recursive import: %s -> %s", self.importModuleInfo:getFull(  ), modulePath) )
    end
@@ -2756,6 +2763,12 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
+               Log.log( Log.Level.Info, __func__, 1986, function (  )
+               
+                  return string.format( "%s already", modulePath)
+               end
+                )
+               
                local metaInfo = metaInfoStem
                local typeId2TypeInfo = moduleInfo:get_importId2localTypeInfoMap()
                local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
@@ -2781,6 +2794,12 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
+   Log.log( Log.Level.Info, __func__, 2006, function (  )
+   
+      return string.format( "%s processing", modulePath)
+   end
+    )
+   
    local dependLibId2DependInfo = {}
    do
       local __sorted = {}
@@ -2811,7 +2830,7 @@ function TransUnit:processImport( modulePath )
       local typeInfo = dependInfo:getTypeInfo( dependIdInfo[2] )
       typeId2TypeInfo[typeId] = typeInfo
       do
-         local _exp = typeInfo:get_scope()
+         local _exp = Ast.getScope( typeInfo )
          if _exp ~= nil then
             typeId2Scope[typeId] = _exp
          end
@@ -3129,6 +3148,12 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
+   Log.log( Log.Level.Info, __func__, 2371, function (  )
+   
+      return string.format( "%s complete", modulePath)
+   end
+    )
+   
    return metaInfo, typeId2TypeInfo, moduleInfo
 end
 
@@ -3827,6 +3852,57 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
    return nextToken
 end
 
+function TransUnit:checkOverriededMethod(  )
+
+   local function checkOverrideMethodSub( pos, classScope, scope )
+   
+      scope:filterTypeInfoField( true, classScope, function ( symbolInfo )
+      
+         if symbolInfo:get_kind() == Ast.SymbolKind.Mtd then
+            local noImp = false
+            do
+               local impMethodType = classScope:getTypeInfoField( symbolInfo:get_name(), true, classScope )
+               if impMethodType ~= nil then
+                  if impMethodType:get_abstractFlag() then
+                     noImp = true
+                  end
+                  
+               else
+                  noImp = true
+               end
+            end
+            
+            if noImp then
+               self:addErrMess( pos, "not implements method -- " .. symbolInfo:get_name() )
+            end
+            
+         end
+         
+         return true
+      end
+       )
+   end
+   
+   for classTypeInfo, classNode in pairs( self.typeInfo2ClassNode ) do
+      if not classTypeInfo:get_abstractFlag() then
+         local workTypeInfo = classTypeInfo
+         repeat 
+            if workTypeInfo ~= Ast.headTypeInfo then
+               checkOverrideMethodSub( classNode:get_pos(), _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( workTypeInfo:get_scope()) )
+            end
+            
+            for __index, ifType in pairs( workTypeInfo:get_interfaceList() ) do
+               checkOverrideMethodSub( classNode:get_pos(), _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( ifType:get_scope()) )
+            end
+            
+            workTypeInfo = workTypeInfo:get_baseTypeInfo()
+         until workTypeInfo == Ast.headTypeInfo
+      end
+      
+   end
+   
+end
+
 local ASTInfo = {}
 _moduleObj.ASTInfo = ASTInfo
 function ASTInfo.setmeta( obj )
@@ -3916,6 +3992,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
          
       end
       
+      self:checkOverriededMethod(  )
       local rootNode = Nodes.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, self.useModuleMacroSet, self.moduleId, processInfo, moduleTypeInfo, nil, self.helperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap )
       ast = rootNode
       do
@@ -5082,50 +5159,6 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       classScope:addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false )
    end
    
-   local function checkOverrideMethod( scope )
-   
-      scope:filterTypeInfoField( true, classScope, function ( symbolInfo )
-      
-         if symbolInfo:get_kind() == Ast.SymbolKind.Mtd then
-            local noImp = false
-            do
-               local impMethodType = classScope:getTypeInfoField( symbolInfo:get_name(), true, classScope )
-               if impMethodType ~= nil then
-                  if impMethodType:get_abstractFlag() then
-                     noImp = true
-                  end
-                  
-               else
-                  noImp = true
-               end
-            end
-            
-            if noImp then
-               self:addErrMess( firstToken.pos, "not implements method -- " .. symbolInfo:get_name() )
-            end
-            
-         end
-         
-         return true
-      end
-       )
-   end
-   
-   if not classAbstructFlag then
-      local workTypeInfo = classTypeInfo
-      repeat 
-         if workTypeInfo ~= Ast.headTypeInfo then
-            checkOverrideMethod( _lune.unwrap( workTypeInfo:get_scope()) )
-         end
-         
-         for __index, ifType in pairs( workTypeInfo:get_interfaceList() ) do
-            checkOverrideMethod( _lune.unwrap( ifType:get_scope()) )
-         end
-         
-         workTypeInfo = workTypeInfo:get_baseTypeInfo()
-      until workTypeInfo == Ast.headTypeInfo
-   end
-   
    self:popClass(  )
    return node
 end
@@ -5619,7 +5652,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                end
                
                if not argType:equals( Ast.builtinTypeNone ) and not argType:canEvalWith( checkType, "=", {} ) then
-                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s(%d) <- %s(%d)", subIndex, argType:getTxt( true ), argType:get_typeId(), dddItemType:getTxt(  ), dddItemType:get_typeId()) )
+                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s) <- %s", subIndex, argType:getTxt( true ), dddItemType:getTxt(  )) )
                end
                
                table.insert( expTypeList, checkType )

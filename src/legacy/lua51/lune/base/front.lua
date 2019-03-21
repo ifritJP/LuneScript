@@ -959,6 +959,7 @@ function Front:loadModule( mod )
 end
 
 function Front:loadMeta( importModuleInfo, mod )
+   local __func__ = 'Front.loadMeta'
 
    if self.loadedMetaMap[mod] == nil then
       do
@@ -966,6 +967,12 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
+            Log.log( Log.Level.Info, __func__, 573, function (  )
+            
+               return string.format( "%s checking", mod)
+            end
+             )
+            
             do
                local lnsPath = self:searchModule( mod )
                if lnsPath ~= nil then
@@ -1232,7 +1239,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 859, function (  )
+               Log.log( Log.Level.Debug, __func__, 860, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end
@@ -1411,7 +1418,7 @@ end
 function Front:exec(  )
    local __func__ = 'Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1019, function (  )
+   Log.log( Log.Level.Trace, __func__, 1020, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

@@ -25,11 +25,11 @@ SOFTWARE.
 subfile owner lune.base.TransUnit;
 
 fn TransUnit.analyzeExpList(
-   skipOp2Flag: bool, expNode: Nodes.Node!,
-   expectTypeList: List<&Ast.TypeInfo>!, contExpect:bool! ) mut: Nodes.ExpListNode
+   skipOp2Flag: bool, expNode: &Nodes.Node!,
+   expectTypeList: &List<&Ast.TypeInfo>!, contExpect:bool! ) mut: Nodes.ExpListNode
 {
    let mut expList:List<&Nodes.Node> = [];
-   let mut pos:Parser.Position! = nil;
+   let mut pos:&Parser.Position! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
    when! expNode {
       pos = expNode.$pos;
@@ -366,7 +366,7 @@ fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expNodeList: &List<&Nodes.Node>, allowDstShort:bool, warnForFollow:bool,
    genericsClassType:&Ast.TypeInfo! ) mut :
-   &Map<&Ast.TypeInfo,&Ast.TypeInfo>, List<&Nodes.Node>!
+   Map<&Ast.TypeInfo,&Ast.TypeInfo>, List<&Nodes.Node>!
 {
    let mut warnForFollowSrcIndex:int! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
@@ -471,7 +471,7 @@ fn TransUnit.checkMatchType(
 fn TransUnit.checkMatchValType(
    pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Nodes.ExpListNode!,
    genericTypeList: &List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo! ) mut :
-   &Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
+   Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
@@ -494,7 +494,7 @@ fn TransUnit.checkMatchValType(
       }
    }
 
-   let alt2typeMap, newExpNodeList = self.checkMatchType(
+   let mut alt2typeMap, newExpNodeList = self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
       argTypeList, expNodeList, false, warnForFollow, genericsClass );
    
@@ -813,7 +813,7 @@ fn TransUnit.analyzeExpCall(
    Nodes.Node, &Parser.Token
 {
    // string.format() の引数チェック
-   fn checkArgForStringForm( argList:Nodes.ExpListNode ) {
+   fn checkArgForStringForm( argList:&Nodes.ExpListNode ) {
       let mut formArgTypeList:List<&Ast.TypeInfo> = [];
       let mut formatTxt = "";
       if #argList.$expList > 0 {
@@ -839,7 +839,9 @@ fn TransUnit.analyzeExpCall(
    }
 
    // List.sort() の引数チェック 
-   fn checkArgForSort( genericTypeList:&List<&Ast.TypeInfo>, argList:Nodes.ExpListNode ) {
+   fn checkArgForSort(
+      genericTypeList:&List<&Ast.TypeInfo>, argList:&Nodes.ExpListNode )
+   {  
       if #argList.$expTypeList > 0 {
          let callback = argList.$expTypeList[ 1 ];
          if callback == Ast.builtinTypeAbbr {
@@ -896,7 +898,7 @@ fn TransUnit.analyzeExpCall(
    }
 
    let work = self.getToken(##);
-   let mut argList: Nodes.ExpListNode! = nil;
+   let mut argList: &Nodes.ExpListNode! = nil;
    if work.txt ~= ")" {
       self.pushback();
       argList = self.analyzeExpList(
@@ -927,7 +929,7 @@ fn TransUnit.analyzeExpCall(
       }
    }
 
-   let alt2typeMap, workArgList = self.checkMatchValType(
+   let mut alt2typeMap, workArgList = self.checkMatchValType(
       exp.$pos, funcTypeInfo, argList, genericTypeList, genericsClass );
    argList = workArgList;
 
@@ -1202,7 +1204,7 @@ fn TransUnit.analyzeAccessClassField(
                   ( classScope, className, classTypeInfo ) );
    };
    
-   let mut symbolInfo:Ast.SymbolInfo! = nil;
+   let mut symbolInfo:&Ast.SymbolInfo! = nil;
    let mut fieldTypeInfo:&Ast.TypeInfo! = nil;
    let mut getterFlag = false;
    if mode == .Get or mode == .GetNil {
@@ -1400,7 +1402,7 @@ fn TransUnit.checkFieldComp(
       return;
    }
    let prefixSymbolInfoList = prefixExp.getSymbolInfo();
-   let mut prefixSymbolInfo:Ast.SymbolInfo! = nil;
+   let mut prefixSymbolInfo:&Ast.SymbolInfo! = nil;
    if #prefixSymbolInfoList == 1 {
       prefixSymbolInfo = prefixSymbolInfoList[ 1 ];
    }
@@ -1515,8 +1517,8 @@ fn TransUnit.analyzeExpField(
       }
    }
 
-   let mut getterTypeInfo:Ast.TypeInfo! = nil;
-   let mut symbolInfo:Ast.SymbolInfo! = nil;
+   let mut getterTypeInfo:&Ast.TypeInfo! = nil;
+   let mut symbolInfo:&Ast.SymbolInfo! = nil;
    if prefixExpType.get_kind() == .Class or
       prefixExpType.get_kind() == .Module or
       prefixExpType.get_kind() == .IF or

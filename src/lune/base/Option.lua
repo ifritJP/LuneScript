@@ -4,6 +4,43 @@ local __mod__ = 'lune.base.Option'
 if not _lune then
    _lune = {}
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -150,10 +187,11 @@ local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 842
+   return 923
 end
 
 
@@ -391,6 +429,23 @@ usage:
                Util.setDebugFlag( false )
             elseif _switchExp == "--version" then
                print( string.format( "LuneScript: version %s.%d (%s)", Ver.version, getBuildCount(  ), _VERSION) )
+               os.exit( 0 )
+            elseif _switchExp == "--builtin" then
+               do
+                  local __sorted = {}
+                  local __map = Ast.builtInTypeIdSet
+                  for __key in pairs( __map ) do
+                     table.insert( __sorted, __key )
+                  end
+                  table.sort( __sorted )
+                  for __index, typeId in ipairs( __sorted ) do
+                     local typeInfo = __map[ typeId ]
+                     do
+                        print( typeId, typeInfo:getTxt(  ) )
+                     end
+                  end
+               end
+               
                os.exit( 0 )
             elseif _switchExp == "-mklunemod" then
                local path = (#argList > index ) and argList[index + 1] or nil
