@@ -687,6 +687,14 @@ static な型か。
    }
 }
 
+pub fn isExtId(typeInfo:&TypeInfo): bool {
+   if typeInfo.$typeId >= extStartId {
+      return true;
+   }
+   return false;
+}
+
+
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
 

@@ -558,6 +558,10 @@ function convFilter:outputMeta( node )
       end
       
       if typeId2TypeInfo[typeInfo:get_typeId(  )] then
+         if Ast.isExtId( typeInfo ) and typeInfo:get_externalFlag() then
+            return 
+         end
+         
          if pickupChildFlag and not typeInfo:get_nilable() then
             for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
                if Ast.isPubToExternal( itemTypeInfo:get_accessMode() ) and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
@@ -576,8 +580,16 @@ function convFilter:outputMeta( node )
          return 
       end
       
+      if Ast.isExtId( typeInfo ) and typeInfo:get_externalFlag() then
+         return 
+      end
+      
       if typeInfo:get_nilable() then
          pickupTypeId( typeInfo:get_nonnilableType(), true, false )
+         if typeInfo ~= typeInfo:get_srcTypeInfo() then
+            pickupTypeId( typeInfo:get_srcTypeInfo(), true, false )
+         end
+         
       else
        
          if typeInfo:get_kind() == Ast.TypeInfoKind.Class or typeInfo:get_kind() == Ast.TypeInfoKind.IF then
@@ -586,9 +598,14 @@ function convFilter:outputMeta( node )
          
          local parentInfo = typeInfo:get_parentInfo()
          pickupTypeId( parentInfo, true, false )
+         pickupTypeId( typeInfo:get_genSrcTypeInfo(), true, false )
          local baseInfo = typeInfo:get_baseTypeInfo()
          if baseInfo:get_typeId() ~= Ast.rootTypeId then
             pickupTypeId( baseInfo, true, true )
+         end
+         
+         for __index, itemTypeInfo in pairs( typeInfo:get_interfaceList() ) do
+            pickupTypeId( itemTypeInfo, true, true )
          end
          
          for __index, itemTypeInfo in pairs( typeInfo:get_itemTypeInfoList() ) do
@@ -899,6 +916,22 @@ function convFilter:outputMeta( node )
    local wroteTypeIdSet = {}
    local function outputTypeInfo( typeInfo )
    
+      local force = false
+      if Ast.isExtId( typeInfo ) then
+         local moduleTypeInfo = typeInfo:getModule(  )
+         do
+            local moduleInfo = node:get_importModule2moduleInfo()[moduleTypeInfo]
+            if moduleInfo ~= nil then
+               if moduleInfo:get_localTypeInfo2importIdMap()[typeInfo] then
+                  return 
+               end
+               
+            end
+         end
+         
+         force = true
+      end
+      
       do
          local _switchExp = typeInfo:get_kind()
          if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
@@ -921,7 +954,7 @@ function convFilter:outputMeta( node )
       end
       
       wroteTypeIdSet[typeId]= true
-      if checkExportTypeInfo( typeInfo ) then
+      if force or checkExportTypeInfo( typeInfo ) then
          self:write( string.format( "__typeInfoList[%d] = ", listIndex) )
          listIndex = listIndex + 1
          local validChildren = validChildrenSet[typeInfo]
@@ -996,7 +1029,7 @@ function convFilter:outputMeta( node )
                   do
                      local extId = moduleInfo:get_localTypeInfo2importIdMap()[typeInfo]
                      if extId ~= nil then
-                        local valid = false
+                        local valid = true
                         if typeInfo:get_srcTypeInfo() ~= typeInfo then
                            valid = true
                         else

@@ -328,6 +328,11 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       }
 
       if typeId2TypeInfo[ typeInfo.get_typeId() ] {
+         if Ast.isExtId( typeInfo ) and typeInfo.$externalFlag {
+            // 外部シンボルは __dependIdMap で処理して参照にするため、再帰処理はしない
+            return;
+         }  
+         
          if pickupChildFlag and not typeInfo.$nilable {
 	    foreach itemTypeInfo in typeInfo.get_children() {
                if Ast.isPubToExternal( itemTypeInfo.$accessMode ) and
@@ -347,9 +352,17 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       if typeInfo.isModule() {
          return;
       }
-      
+
+      if Ast.isExtId( typeInfo ) and typeInfo.$externalFlag {
+         // 外部シンボルは __dependIdMap で処理して参照にするため、再帰処理はしない
+         return;
+      }
+
       if typeInfo.$nilable {
 	 pickupTypeId( typeInfo.$nonnilableType, true, false );
+         if typeInfo ~= typeInfo.$srcTypeInfo {
+            pickupTypeId( typeInfo.$srcTypeInfo, true, false );
+         }
       }
       else {
          if typeInfo.$kind == Ast.TypeInfoKind.Class or
@@ -360,11 +373,16 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
          let parentInfo = typeInfo.$parentInfo;
          pickupTypeId( parentInfo, true, false );
+
+         pickupTypeId( typeInfo.$genSrcTypeInfo, true, false );
          
          let baseInfo = typeInfo.$baseTypeInfo;
          if baseInfo.$typeId ~= Ast.rootTypeId {
             pickupTypeId( baseInfo, true, true );
          }
+	 foreach itemTypeInfo in typeInfo.$interfaceList {
+            pickupTypeId( itemTypeInfo, true, true );
+	 }
          
 	 foreach itemTypeInfo in typeInfo.$itemTypeInfoList {
             pickupTypeId( itemTypeInfo, true, false );
@@ -630,6 +648,19 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
    let mut wroteTypeIdSet:Set<int> = (@);
    fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
+      let mut force = false;
+      if Ast.isExtId( typeInfo ) {
+
+         let moduleTypeInfo = typeInfo.getModule();
+         if! let moduleInfo = node.$importModule2moduleInfo[ moduleTypeInfo ] {
+            if moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+               return;
+            }
+         }
+         force = true;
+      }
+               
+      
       switch typeInfo.$kind {
          case .Class, .IF {
             switch typeInfo.$accessMode {
@@ -648,7 +679,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          return;
       }
       wroteTypeIdSet.add( typeId );
-      if checkExportTypeInfo( typeInfo ) {
+      if force or checkExportTypeInfo( typeInfo ) {
          self.write( "__typeInfoList[%d] = " (listIndex) );
          listIndex = listIndex + 1;
 
@@ -692,7 +723,8 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
          let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
          if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
-            let mut valid = false;
+            //let mut valid = false;
+            let mut valid = true;
             if typeInfo.$srcTypeInfo ~= typeInfo {
                valid = true;
             }

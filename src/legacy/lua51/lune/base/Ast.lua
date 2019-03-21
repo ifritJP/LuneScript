@@ -1030,6 +1030,15 @@ function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
 
+local function isExtId( typeInfo )
+
+   if typeInfo:get_typeId() >= extStartId then
+      return true
+   end
+   
+   return false
+end
+_moduleObj.isExtId = isExtId
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.headTypeInfo = headTypeInfo
 
