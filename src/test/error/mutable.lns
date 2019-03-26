@@ -130,15 +130,25 @@ class Test3 {
    let allmut val2:List<int> {pub&};
    let mut val3:List<int> {pub};
    let mut val4:List<int> {pub&};
+   let allmut val5:&List<int> {pub};
+   let allmut val6:&List<int> {pub&};
+   let mut val7:&List<int> {pub};
+   let mut val8:&List<int> {pub&};
    pub fn __init() {
       self.val1 = [];
       self.val2 = [];
       self.val3 = [];
       self.val4 = [];
+      self.val5 = [];
+      self.val6 = [];
+      self.val7 = [];
+      self.val8 = [];
    }
    pub fn func() {
       self.val1.insert( 1 );
       self.val3.insert( 1 ); // error
+      self.val5.insert( 1 ); // error
+      self.val7.insert( 1 ); // error
    }
 }
 
@@ -148,6 +158,10 @@ class Test3 {
    test2.$val2.insert( 1 ); // error
    test2.$val3.insert( 1 ); // error
    test2.$val4.insert( 1 ); // error
+   test2.$val5.insert( 1 ); // error
+   test2.$val6.insert( 1 ); // error
+   test2.$val7.insert( 1 ); // error
+   test2.$val8.insert( 1 ); // error
 }
 
 {
@@ -156,4 +170,8 @@ class Test3 {
    test2.$val2.insert( 1 ); // error
    test2.$val3.insert( 1 );
    test2.$val4.insert( 1 ); // error
+   test2.$val5.insert( 1 ); // error
+   test2.$val6.insert( 1 ); // error
+   test2.$val7.insert( 1 ); // error
+   test2.$val8.insert( 1 ); // error
 }

@@ -1232,7 +1232,7 @@ fn TransUnit.analyzeDeclMember(
       // if Ast.TypeInfo.isMut( typeInfo ) and mutMode == .IMut {
       //    typeInfo = self.createModifier( typeInfo, .IMut );
       // }
-      if typeInfo.$mutMode ~= mutMode {
+      if Ast.TypeInfo.isMut( typeInfo ) and typeInfo.$mutMode ~= mutMode {
          typeInfo = self.createModifier( typeInfo, mutMode );
       }
 

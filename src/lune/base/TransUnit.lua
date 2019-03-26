@@ -4725,7 +4725,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
    
    self:checkToken( token, ";" )
    local typeInfo = refType:get_expType()
-   if typeInfo:get_mutMode() ~= mutMode then
+   if Ast.TypeInfo.isMut( typeInfo ) and typeInfo:get_mutMode() ~= mutMode then
       typeInfo = self:createModifier( typeInfo, mutMode )
    end
    
