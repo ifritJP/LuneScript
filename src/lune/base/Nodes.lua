@@ -3232,7 +3232,7 @@ function ExpRefItemNode:canBeLeft(  )
       return false
    end
    
-   return self:get_val():get_expType():get_mutable() and not self.nilAccess
+   return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
 
 function NodeKind.get_ExpCall(  )

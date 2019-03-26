@@ -461,9 +461,9 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                let memberTypeInfo:Ast.TypeInfo = memberNode.get_expType();
                self.writeln( "__classInfo%d.%s = {" ( classTypeId, memberName ) );
                self.writeln(
-                  "  name='%s', staticFlag = %s, mutable = %s,"
+                  "  name='%s', staticFlag = %s, mutMode = %d,"
                   ( memberName, memberNode.$staticFlag,
-                    memberNode.$symbolInfo.$mutable ) ..
+                    memberNode.$symbolInfo.$mutMode ) ..
                   "accessMode = '%s', typeId = %d }"
                   ( memberNode.$accessMode, memberTypeInfo.get_typeId() ) );
 
@@ -797,7 +797,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    }
    self.writeln( "_moduleObj.__moduleTypeId = %d" (moduleTypeInfo.$typeId ) );
    self.writeln( "_moduleObj.__moduleSymbolKind = %d" (moduleSymbolKind) );
-   self.writeln( "_moduleObj.__moduleMutable = %s" (moduleTypeInfo.$mutable ) );
+   self.writeln( "_moduleObj.__moduleMutable = %s" (Ast.TypeInfo.isMut( moduleTypeInfo ) ) );
 
    self.writeln( "----- meta -----" );
 

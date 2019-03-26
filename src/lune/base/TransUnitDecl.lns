@@ -65,12 +65,12 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          if token.txt == '[' {
             arrayMode = "list";
             typeInfo = Ast.NormalTypeInfo.createList(
-               accessMode, self.getCurrentClass(), [ typeInfo ] );
+               accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
          }   
          else {
             arrayMode = "array";
             typeInfo = Ast.NormalTypeInfo.createArray(
-               accessMode, self.getCurrentClass(), [ typeInfo ] );
+               accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
          }   
          token = self.getToken(##);
          if token.txt ~= ']' {
@@ -110,27 +110,27 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                   self.addErrMess( symbolNode.$pos, "Value type is unknown" );
                }; 
                typeInfo = Ast.NormalTypeInfo.createMap(
-                  accessMode, self.getCurrentClass(), keyType, valType );
+                  accessMode, self.getCurrentClass(), keyType, valType, .Mut );
             }
             case .List {
                if checkAlternateTypeCount( 1 ) {
                   typeInfo = Ast.NormalTypeInfo.createList(
                      accessMode, self.getCurrentClass(),
-                     [ genericList[1] or Ast.builtinTypeStem ] );
+                     [ genericList[1] or Ast.builtinTypeStem ], .Mut );
                }
             }
             case .Array {
                if checkAlternateTypeCount( 1 ) {
                   typeInfo = Ast.NormalTypeInfo.createArray(
                      accessMode, self.getCurrentClass(),
-                     [ genericList[1] or Ast.builtinTypeStem ] );
+                     [ genericList[1] or Ast.builtinTypeStem ], .Mut );
                }
             }
             case .Set {
                if checkAlternateTypeCount( 1 ) {
                   typeInfo = Ast.NormalTypeInfo.createSet(
                      accessMode, self.getCurrentClass(),
-                     [ genericList[1] or Ast.builtinTypeStem ] );
+                     [ genericList[1] or Ast.builtinTypeStem ], .Mut );
                }
             }
             case .DDD {
@@ -182,7 +182,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    }
 
    if refFlag {
-      typeInfo = self.createModifier( typeInfo, false );
+      typeInfo = self.createModifier( typeInfo, .IMut );
    }
 
    return Nodes.RefTypeNode.create(
@@ -1079,7 +1079,7 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
       true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false );
 
    self.scope.add(
-      .Fun, false, false, name.txt, formType, accessMode, true, false, false );
+      .Fun, false, false, name.txt, formType, accessMode, true, .IMut, false );
 }
 
 fn TransUnit.analyzeDecl(
@@ -1172,10 +1172,16 @@ fn TransUnit.analyzeDeclMember(
    staticFlag: bool, firstToken: &Parser.Token ) mut: Nodes.DeclMemberNode
 {
       let mut nextToken = self.getToken(##);
-      let mut mutable = false;
-      if nextToken.txt == "mut" {
-         mutable = true;
-         nextToken = self.getToken(##);
+      let mut mutMode = Ast.MutMode.IMut;
+      switch nextToken.txt {
+         case "mut" {
+            mutMode = .Mut;
+            nextToken = self.getToken(##);
+         }
+         case "allmut" {
+            mutMode = .AllMut;
+            nextToken = self.getToken(##);
+         }
       }
       let varName = self.checkSymbol( nextToken, .MustNot_ );
       let mut token = self.getToken(##);
@@ -1223,8 +1229,11 @@ fn TransUnit.analyzeDeclMember(
       self.checkToken( token, ";" );
 
       let mut typeInfo = refType.$expType;
-      if typeInfo.$mutable and not mutable {
-         typeInfo = self.createModifier( typeInfo, false );
+      // if Ast.TypeInfo.isMut( typeInfo ) and mutMode == .IMut {
+      //    typeInfo = self.createModifier( typeInfo, .IMut );
+      // }
+      if typeInfo.$mutMode ~= mutMode {
+         typeInfo = self.createModifier( typeInfo, mutMode );
       }
 
       if Ast.isPubToExternal( classTypeInfo.$accessMode ) {
@@ -1237,7 +1246,7 @@ fn TransUnit.analyzeDeclMember(
       }
          
       let symbolInfo = self.scope.addMember(
-         varName.txt, typeInfo, accessMode, staticFlag, mutable );
+         varName.txt, typeInfo, accessMode, staticFlag, mutMode );
 
       return Nodes.DeclMemberNode.create(
          self.nodeManager, firstToken.pos, [ typeInfo ], varName, refType, symbolInfo,
@@ -1592,10 +1601,9 @@ fn TransUnit.analyzeDeclClass(
    self.checkToken( nextToken, "{" );
 
 
-   let mapType = self.createModifier( 
-      Ast.NormalTypeInfo.createMap(
-         .Pub, classTypeInfo, Ast.builtinTypeString,
-         self.createModifier( Ast.builtinTypeStem, false ) ), false );
+   let mapType = Ast.NormalTypeInfo.createMap(
+      .Pub, classTypeInfo, Ast.builtinTypeString,
+      self.createModifier( Ast.builtinTypeStem, .IMut ), .IMut );
    if classTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
       self.helperInfo.hasMappingClassDef = true;
       
@@ -1634,8 +1642,8 @@ fn TransUnit.analyzeDeclClass(
       {
          let mutable = memberNode.$getterMutable;
          let mut getterMemberType = memberType;
-         if memberType.$mutable and not mutable {
-            getterMemberType = self.createModifier( memberType, false );
+         if Ast.TypeInfo.isMut( memberType ) and not mutable {
+            getterMemberType = self.createModifier( memberType, .IMut );
          }
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
             false, false, self.pushScope( false ## ),
@@ -1951,13 +1959,14 @@ fn TransUnit.analyzeDeclFunc(
          }
 
          
-         if workClass.$mutable and not mutable {
-            workClass = self.createModifier( workClass, false );
+         if Ast.TypeInfo.isMut( workClass ) and not mutable {
+            workClass = self.createModifier( workClass, .IMut );
          }
          if not staticFlag {
             self.scope.add(
                .Var, false, true, "self",
-               workClass, .Pri, false, mutable, true );
+               workClass, .Pri, false,
+               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
          }
 
          if not workClass.$abstractFlag and abstractFlag {
@@ -2037,7 +2046,7 @@ fn TransUnit.analyzeDeclFunc(
             self.addErrMess( firstToken.pos, "mismatch override kind -- %s, %d"
                              ( funcName, overrideType.get_kind() ) );
          }
-         if overrideType.$mutable ~= typeInfo.$mutable {
+         if overrideType.$mutMode ~= typeInfo.$mutMode {
             self.addErrMess( firstToken.pos, "mismatch mutable -- %s" ( funcName ) );
          }
 
@@ -2269,9 +2278,9 @@ fn TransUnit.analyzeLetAndInitExp(
          letVarList.insert( new LetVarInfo( mutable, varName, nil ) );
       }
       if not typeInfo.equals( Ast.builtinTypeNone ## ) and
-         typeInfo.$mutable and not mutable
+         Ast.TypeInfo.isMut( typeInfo ) and not mutable
       {     
-         typeInfo = self.createModifier( typeInfo, false );
+         typeInfo = self.createModifier( typeInfo, .IMut );
       }
       typeInfoList.insert( typeInfo );
    } nextToken.txt ~= ",";
@@ -2421,10 +2430,10 @@ fn TransUnit.analyzeLetAndInitExp(
          if #typeInfoList < index or
             typeInfoList[ index ].equals( Ast.builtinTypeNone ## )
          {
-            if typeInfo.$mutable and
+            if Ast.TypeInfo.isMut( typeInfo ) and
                index <= #letVarList and not letVarList[ index ].mutable
             {
-               typeInfoList[ index ] = self.createModifier( typeInfo, false );
+               typeInfoList[ index ] = self.createModifier( typeInfo, .IMut );
             }
             else {
                typeInfoList[ index ] = typeInfo;

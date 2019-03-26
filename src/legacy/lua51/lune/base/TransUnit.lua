@@ -741,13 +741,13 @@ quotedChar2Code['r'] = 13
 quotedChar2Code['\\'] = 92
 quotedChar2Code['"'] = 34
 quotedChar2Code["'"] = 39
-function TransUnit:createModifier( typeInfo, mutable )
+function TransUnit:createModifier( typeInfo, mutMode )
 
    if not self.validMutControl then
       return typeInfo
    end
    
-   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable )
+   return Ast.NormalTypeInfo.createModifier( typeInfo, mutMode )
 end
 
 local _MetaInfo = {}
@@ -1330,26 +1330,26 @@ function _TypeInfoModifier:createTypeInfo( param )
       return nil, string.format( "not found srcType -- %d, %d", self.parentId, self.srcTypeId)
    end
    
-   local newTypeInfo = param.transUnit:createModifier( srcTypeInfo, self.mutable )
+   local newTypeInfo = param.transUnit:createModifier( srcTypeInfo, self.mutMode )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
    return newTypeInfo, nil
 end
 function _TypeInfoModifier.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoModifier  } )
 end
-function _TypeInfoModifier.new( srcTypeId, mutable )
+function _TypeInfoModifier.new( srcTypeId, mutMode )
    local obj = {}
    _TypeInfoModifier.setmeta( obj )
    if obj.__init then
-      obj:__init( srcTypeId, mutable )
+      obj:__init( srcTypeId, mutMode )
    end        
    return obj 
 end         
-function _TypeInfoModifier:__init( srcTypeId, mutable ) 
+function _TypeInfoModifier:__init( srcTypeId, mutMode ) 
 
    _TypeInfo.__init( self )
    self.srcTypeId = srcTypeId
-   self.mutable = mutable
+   self.mutMode = mutMode
 end
 function _TypeInfoModifier:_toMap()
   return self
@@ -1373,7 +1373,7 @@ function _TypeInfoModifier._fromMapSub( obj, val )
 
    local memInfo = {}
    table.insert( memInfo, { name = "srcTypeId", func = _lune._toInt, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "mutable", func = _lune._toBool, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "mutMode", func = Ast.MutMode._from, nilable = false, child = {} } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
@@ -1571,20 +1571,9 @@ function _TypeInfoNormal:createTypeInfo( param )
                scope = Ast.Scope.new(parentScope, false, nil)
             end
             
-            local typeInfoKind = _lune.unwrap( Ast.TypeInfoKind._from( self.kind ))
-            local mutable = true
-            do
-               local _exp = self.mutable
-               if _exp ~= nil then
-                  if not _exp then
-                     mutable = false
-                  end
-                  
-               end
-            end
-            
-            local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
-            local workTypeInfo = Ast.NormalTypeInfo.create( accessMode, self.abstractFlag, scope, baseInfo, interfaceList, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable )
+            local typeInfoKind = self.kind
+            local accessMode = self.accessMode
+            local workTypeInfo = Ast.NormalTypeInfo.create( accessMode, self.abstractFlag, scope, baseInfo, interfaceList, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode )
             newTypeInfo = workTypeInfo
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
             if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method or self.kind == Ast.TypeInfoKind.Macro then
@@ -1599,7 +1588,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                end
                
                local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-               workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, workTypeInfo, accessMode, self.staticFlag, false, true )
+               workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, workTypeInfo, accessMode, self.staticFlag, Ast.MutMode.IMut, true )
                param.typeId2Scope[self.typeId] = scope
             end
             
@@ -1625,15 +1614,15 @@ end
 function _TypeInfoNormal.setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoNormal  } )
 end
-function _TypeInfoNormal.new( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children )
+function _TypeInfoNormal.new( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
    local obj = {}
    _TypeInfoNormal.setmeta( obj )
    if obj.__init then
-      obj:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children )
+      obj:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
    end        
    return obj 
 end         
-function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutable, ifList, itemTypeId, argTypeId, retTypeId, children ) 
+function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children ) 
 
    _TypeInfo.__init( self )
    self.abstractFlag = abstractFlag
@@ -1642,7 +1631,7 @@ function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMo
    self.staticFlag = staticFlag
    self.accessMode = accessMode
    self.kind = kind
-   self.mutable = mutable
+   self.mutMode = mutMode
    self.ifList = ifList
    self.itemTypeId = itemTypeId
    self.argTypeId = argTypeId
@@ -1676,7 +1665,7 @@ function _TypeInfoNormal._fromMapSub( obj, val )
    table.insert( memInfo, { name = "staticFlag", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "kind", func = Ast.TypeInfoKind._from, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "mutable", func = _lune._toBool, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "mutMode", func = Ast.MutMode._from, nilable = false, child = {} } )
    table.insert( memInfo, { name = "ifList", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "itemTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
    table.insert( memInfo, { name = "argTypeId", func = _lune._toList, nilable = false, child = { { func = _lune._toInt, nilable = false, child = {} } } } )
@@ -2125,13 +2114,13 @@ function TransUnit:registBuiltInScope(  )
          return typeInfo
       end
       
-      typeInfo = self:createModifier( typeInfo, false )
+      typeInfo = self:createModifier( typeInfo, Ast.MutMode.IMut )
       return typeInfo
    end
    
    self.scope = Ast.rootScope
    local builtinModuleName2Scope = {}
-   local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem )
+   local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
    self.scope:addVar( Ast.AccessMode.Global, "_ENV", mapType, false, true )
    self.scope:addVar( Ast.AccessMode.Global, "_G", mapType, false, true )
    self.scope:addVar( Ast.AccessMode.Global, "_VERSION", Ast.builtinTypeString, false, true )
@@ -2197,7 +2186,7 @@ function TransUnit:registBuiltInScope(  )
                      if fieldName ~= "__attrib" then
                         if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
                            if _lune.nilacc( info['type'], nil, 'item', 1) == "member" then
-                              self.scope:addMember( fieldName, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, true )
+                              self.scope:addMember( fieldName, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut )
                            else
                             
                               local argTypeList = {}
@@ -2222,7 +2211,7 @@ function TransUnit:registBuiltInScope(  )
                                  Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
                               end
                               
-                              self.scope:add( methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun, not methodFlag, not methodFlag, fieldName, typeInfo, Ast.AccessMode.Pub, not methodFlag, mutable, true )
+                              self.scope:add( methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun, not methodFlag, not methodFlag, fieldName, typeInfo, Ast.AccessMode.Pub, not methodFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
                               setupBuiltinTypeInfo( name, fieldName, typeInfo )
                            end
                            
@@ -2747,7 +2736,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 1975, function (  )
+   Log.log( Log.Level.Info, __func__, 1972, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -2763,7 +2752,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 1986, function (  )
+               Log.log( Log.Level.Info, __func__, 1983, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -2794,7 +2783,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2006, function (  )
+   Log.log( Log.Level.Info, __func__, 2003, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -2956,7 +2945,7 @@ function TransUnit:processImport( modulePath )
                if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class then
                   self.globalScope:addClass( newTypeInfo:get_rawTxt(), newTypeInfo )
                elseif _switchExp == Ast.TypeInfoKind.Func then
-                  self.globalScope:addFunc( newTypeInfo, Ast.AccessMode.Global, newTypeInfo:get_staticFlag(), newTypeInfo:get_mutable() )
+                  self.globalScope:addFunc( newTypeInfo, Ast.AccessMode.Global, newTypeInfo:get_staticFlag(), Ast.TypeInfo.isMut( newTypeInfo ) )
                elseif _switchExp == Ast.TypeInfoKind.Enum then
                   self.globalScope:addEnum( Ast.AccessMode.Global, newTypeInfo:get_rawTxt(), newTypeInfo )
                elseif _switchExp == Ast.TypeInfoKind.Nilable then
@@ -3001,7 +2990,7 @@ function TransUnit:processImport( modulePath )
             end
             
             if addFlag then
-               scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutable(), true )
+               scope:add( symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutMode(), true )
             end
             
          end
@@ -3034,7 +3023,7 @@ function TransUnit:processImport( modulePath )
                         local typeId = fieldInfo['typeId']
                         if typeId ~= nil then
                            local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[math.floor(typeId)])
-                           self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, fieldInfo['mutable'] and true or false )
+                           self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
                         else
                            self:error( "not found fieldInfo.typeId" )
                         end
@@ -3048,7 +3037,7 @@ function TransUnit:processImport( modulePath )
             end
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
-            self:pushModule( true, classTypeInfo:getTxt(  ), classTypeInfo:get_mutable() )
+            self:pushModule( true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
          end
       end
       
@@ -3193,7 +3182,7 @@ function TransUnit:analyzeImport( token )
    local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
    self.importModule2ModuleInfoCurrent[moduleTypeInfo] = moduleInfo:assign( assignName.txt )
    local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ))
-   self.scope:add( moduleSymbolKind, false, false, assignName.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable, true )
+   self.scope:add( moduleSymbolKind, false, false, assignName.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
    self:checkToken( nextToken, ";" )
    if self.moduleScope ~= self.scope then
       self:error( "illegal top scope." )
@@ -3367,8 +3356,8 @@ function TransUnit:analyzeMatch( firstToken )
             end
             
             local workType = paramType
-            if paramType:get_mutable() and not exp:get_expType():get_mutable() then
-               workType = self:createModifier( workType, false )
+            if Ast.TypeInfo.isMut( paramType ) and not Ast.TypeInfo.isMut( exp:get_expType() ) then
+               workType = self:createModifier( workType, Ast.MutMode.IMut )
             end
             
             blockScope:addLocalVar( false, false, paramName.txt, workType, false )
@@ -3674,11 +3663,11 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
       if token.txt == '[' or token.txt == '[@' then
          if token.txt == '[' then
             arrayMode = "list"
-            typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {typeInfo} )
+            typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {typeInfo}, Ast.MutMode.Mut )
          else
           
             arrayMode = "array"
-            typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {typeInfo} )
+            typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {typeInfo}, Ast.MutMode.Mut )
          end
          
          token = self:getToken(  )
@@ -3725,20 +3714,20 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
                   self:addErrMess( symbolNode:get_pos(), "Value type is unknown" )
                end
                
-               typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), keyType, valType )
+               typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), keyType, valType, Ast.MutMode.Mut )
             elseif _switchExp == Ast.TypeInfoKind.List then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+                  typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem}, Ast.MutMode.Mut )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Array then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+                  typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem}, Ast.MutMode.Mut )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Set then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = Ast.NormalTypeInfo.createSet( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem} )
+                  typeInfo = Ast.NormalTypeInfo.createSet( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem}, Ast.MutMode.Mut )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.DDD then
@@ -3792,7 +3781,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
    end
    
    if refFlag then
-      typeInfo = self:createModifier( typeInfo, false )
+      typeInfo = self:createModifier( typeInfo, Ast.MutMode.IMut )
    end
    
    return Nodes.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), {typeInfo}, symbolNode, refFlag, mutFlag, arrayMode )
@@ -4599,7 +4588,7 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
    end
    
    local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false )
-   self.scope:add( Ast.SymbolKind.Fun, false, false, name.txt, formType, accessMode, true, false, false )
+   self.scope:add( Ast.SymbolKind.Fun, false, false, name.txt, formType, accessMode, true, Ast.MutMode.IMut, false )
 end
 
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
@@ -4680,10 +4669,16 @@ end
 function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, firstToken )
 
    local nextToken = self:getToken(  )
-   local mutable = false
-   if nextToken.txt == "mut" then
-      mutable = true
-      nextToken = self:getToken(  )
+   local mutMode = Ast.MutMode.IMut
+   do
+      local _switchExp = nextToken.txt
+      if _switchExp == "mut" then
+         mutMode = Ast.MutMode.Mut
+         nextToken = self:getToken(  )
+      elseif _switchExp == "allmut" then
+         mutMode = Ast.MutMode.AllMut
+         nextToken = self:getToken(  )
+      end
    end
    
    local varName = self:checkSymbol( nextToken, SymbolMode.MustNot_ )
@@ -4730,8 +4725,8 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
    
    self:checkToken( token, ";" )
    local typeInfo = refType:get_expType()
-   if typeInfo:get_mutable() and not mutable then
-      typeInfo = self:createModifier( typeInfo, false )
+   if typeInfo:get_mutMode() ~= mutMode then
+      typeInfo = self:createModifier( typeInfo, mutMode )
    end
    
    if Ast.isPubToExternal( classTypeInfo:get_accessMode() ) then
@@ -4741,7 +4736,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
       
    end
    
-   local symbolInfo = self.scope:addMember( varName.txt, typeInfo, accessMode, staticFlag, mutable )
+   local symbolInfo = self.scope:addMember( varName.txt, typeInfo, accessMode, staticFlag, mutMode )
    return Nodes.DeclMemberNode.create( self.nodeManager, firstToken.pos, {typeInfo}, varName, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
 end
 
@@ -5066,7 +5061,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode, altTypeList )
    local classScope = self.scope
    self:checkToken( nextToken, "{" )
-   local mapType = self:createModifier( Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, false ) ), false )
+   local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, Ast.MutMode.IMut ), Ast.MutMode.IMut )
    if classTypeInfo:isInheritFrom( Ast.builtinTypeMapping, nil ) then
       self.helperInfo.hasMappingClassDef = true
       if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo and not classTypeInfo:get_baseTypeInfo():isInheritFrom( Ast.builtinTypeMapping, nil ) then
@@ -5088,8 +5083,8 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       if accessMode ~= Ast.AccessMode.None and not classScope:getTypeInfoChild( getterName ) then
          local mutable = memberNode:get_getterMutable()
          local getterMemberType = memberType
-         if memberType:get_mutable() and not mutable then
-            getterMemberType = self:createModifier( memberType, false )
+         if Ast.TypeInfo.isMut( memberType ) and not mutable then
+            getterMemberType = self:createModifier( memberType, Ast.MutMode.IMut )
          end
          
          local retTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, self:pushScope( false ), Ast.TypeInfoKind.Method, parentInfo, true, false, memberNode:get_staticFlag(), accessMode, getterName, nil, {}, {getterMemberType} )
@@ -5309,12 +5304,12 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
             pubToExtFlag = false
          end
          
-         if workClass:get_mutable() and not mutable then
-            workClass = self:createModifier( workClass, false )
+         if Ast.TypeInfo.isMut( workClass ) and not mutable then
+            workClass = self:createModifier( workClass, Ast.MutMode.IMut )
          end
          
          if not staticFlag then
-            self.scope:add( Ast.SymbolKind.Var, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable, true )
+            self.scope:add( Ast.SymbolKind.Var, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
          end
          
          if not workClass:get_abstractFlag() and abstractFlag then
@@ -5392,7 +5387,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
                self:addErrMess( firstToken.pos, string.format( "mismatch override kind -- %s, %d", funcName, overrideType:get_kind(  )) )
             end
             
-            if overrideType:get_mutable() ~= typeInfo:get_mutable() then
+            if overrideType:get_mutMode() ~= typeInfo:get_mutMode() then
                self:addErrMess( firstToken.pos, string.format( "mismatch mutable -- %s", funcName) )
             end
             
@@ -5608,8 +5603,8 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
          table.insert( letVarList, LetVarInfo.new(mutable, varName, nil) )
       end
       
-      if not typeInfo:equals( Ast.builtinTypeNone ) and typeInfo:get_mutable() and not mutable then
-         typeInfo = self:createModifier( typeInfo, false )
+      if not typeInfo:equals( Ast.builtinTypeNone ) and Ast.TypeInfo.isMut( typeInfo ) and not mutable then
+         typeInfo = self:createModifier( typeInfo, Ast.MutMode.IMut )
       end
       
       table.insert( typeInfoList, typeInfo )
@@ -5737,8 +5732,8 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       
       for index, typeInfo in pairs( expTypeList ) do
          if #typeInfoList < index or typeInfoList[index]:equals( Ast.builtinTypeNone ) then
-            if typeInfo:get_mutable() and index <= #letVarList and not letVarList[index].mutable then
-               typeInfoList[index] = self:createModifier( typeInfo, false )
+            if Ast.TypeInfo.isMut( typeInfo ) and index <= #letVarList and not letVarList[index].mutable then
+               typeInfoList[index] = self:createModifier( typeInfo, Ast.MutMode.IMut )
             else
              
                typeInfoList[index] = typeInfo
@@ -6116,11 +6111,11 @@ function TransUnit:analyzeListConst( token )
    
    local typeInfoList = {Ast.builtinTypeNone}
    if token.txt == '[' then
-      typeInfoList = {Ast.NormalTypeInfo.createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo} )}
+      typeInfoList = {Ast.NormalTypeInfo.createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
       return Nodes.LiteralListNode.create( self.nodeManager, token.pos, typeInfoList, expList )
    else
     
-      typeInfoList = {Ast.NormalTypeInfo.createArray( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo} )}
+      typeInfoList = {Ast.NormalTypeInfo.createArray( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
       return Nodes.LiteralArrayNode.create( self.nodeManager, token.pos, typeInfoList, expList )
    end
    
@@ -6162,7 +6157,7 @@ function TransUnit:analyzeSetConst( token )
    end
    
    local typeInfoList = {Ast.builtinTypeNone}
-   typeInfoList = {Ast.NormalTypeInfo.createSet( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo} )}
+   typeInfoList = {Ast.NormalTypeInfo.createSet( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
    return Nodes.LiteralSetNode.create( self.nodeManager, token.pos, typeInfoList, expList )
 end
 
@@ -6221,7 +6216,7 @@ function TransUnit:analyzeMapConst( token )
       nextToken = self:getToken(  )
    end
    
-   local typeInfo = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo )
+   local typeInfo = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo, Ast.MutMode.Mut )
    self:checkToken( nextToken, "}" )
    return Nodes.LiteralMapNode.create( self.nodeManager, token.pos, {typeInfo}, map, pairList )
 end
@@ -6249,7 +6244,7 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
          indexTypeInfo = itemTypeList[1]
       else
        
-         typeInfo = self:createModifier( Ast.builtinTypeBool:get_nilableTypeInfo(), false )
+         typeInfo = self:createModifier( Ast.builtinTypeBool:get_nilableTypeInfo(), Ast.MutMode.IMut )
          indexTypeInfo = itemTypeList[1]
       end
       
@@ -6278,8 +6273,8 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
       
    end
    
-   if typeInfo:get_mutable() and not expType:get_mutable() then
-      typeInfo = self:createModifier( typeInfo, false )
+   if Ast.TypeInfo.isMut( typeInfo ) and not Ast.TypeInfo.isMut( expType ) then
+      typeInfo = self:createModifier( typeInfo, Ast.MutMode.IMut )
    end
    
    local indexExp = self:analyzeExp( false, nil, expectItemType )
@@ -7036,8 +7031,8 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
    
    if expType:get_nilable() and not castType:get_nilable() then
       self:addErrMess( firstToken.pos, string.format( "can't cast from nilable to not nilable  -- %s->%s", expType:getTxt(  ), castType:getTxt(  )) )
-   elseif not expType:get_mutable() and castType:get_mutable() then
-      castType = self:createModifier( castType, false )
+   elseif not Ast.TypeInfo.isMut( expType ) and Ast.TypeInfo.isMut( castType ) then
+      castType = self:createModifier( castType, Ast.MutMode.IMut )
    end
    
    if castType:canEvalWith( expType, "=", {} ) then
@@ -7537,28 +7532,25 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    end
    
    local prefixSymbolInfoList = prefixExp:getSymbolInfo(  )
-   do
-      local _exp = symbolInfo
-      if _exp ~= nil then
-         if #prefixSymbolInfoList == 1 then
-            local prefixSymbolInfo = prefixSymbolInfoList[1]
-            if prefixSymbolInfo:get_kind() == Ast.SymbolKind.Typ then
-               if not _exp:get_staticFlag() and _exp:get_kind() ~= Ast.SymbolKind.Typ then
-                  self:addErrMess( token.pos, string.format( "Type can't access this symbol. -- %s", _exp:get_name()) )
-               end
-               
-            elseif _exp:get_staticFlag() and _exp:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.Method then
-               self:addErrMess( token.pos, string.format( "can't access this symbol. -- %s", token.txt) )
+   if symbolInfo ~= nil then
+      if #prefixSymbolInfoList == 1 then
+         local prefixSymbolInfo = prefixSymbolInfoList[1]
+         if prefixSymbolInfo:get_kind() == Ast.SymbolKind.Typ then
+            if not symbolInfo:get_staticFlag() and symbolInfo:get_kind() ~= Ast.SymbolKind.Typ then
+               self:addErrMess( token.pos, string.format( "Type can't access this symbol. -- %s", symbolInfo:get_name()) )
             end
             
-         end
-         
-         
-         if not prefixExpType:get_mutable() and not _exp:get_staticFlag() and _exp:get_kind() == Ast.SymbolKind.Mtd and _exp:get_mutable() then
-            self:addErrMess( token.pos, string.format( "can't access mutable method. -- %s", token.txt) )
+         elseif symbolInfo:get_staticFlag() and symbolInfo:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.Method then
+            self:addErrMess( token.pos, string.format( "can't access this symbol. -- %s", token.txt) )
          end
          
       end
+      
+      
+      if not Ast.TypeInfo.isMut( prefixExpType ) and not symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mtd and symbolInfo:get_mutable() then
+         self:addErrMess( token.pos, string.format( "can't access mutable method. -- %s", token.txt) )
+      end
+      
    end
    
    if accessNil then
@@ -7570,16 +7562,20 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    end
    
    local accessSymbolInfo = nil
-   do
-      local _exp = symbolInfo
-      if _exp ~= nil then
-         accessSymbolInfo = Ast.AccessSymbolInfo.new(_exp, prefixExpType, not accessNil)
+   local symbolMutMode = typeInfo:get_mutMode()
+   if symbolInfo ~= nil then
+      accessSymbolInfo = Ast.AccessSymbolInfo.new(symbolInfo, prefixExpType, not accessNil)
+      do
+         local _switchExp = mode
+         if _switchExp == ExpSymbolMode.Field or _switchExp == ExpSymbolMode.FieldNil then
+            symbolMutMode = symbolInfo:get_mutMode()
+         end
       end
+      
    end
    
-   
-   if not prefixExpType:get_mutable() and typeInfo:get_mutable() then
-      typeInfo = self:createModifier( typeInfo, false )
+   if not Ast.TypeInfo.isMut( prefixExpType ) and symbolMutMode == Ast.MutMode.Mut then
+      typeInfo = self:createModifier( typeInfo, Ast.MutMode.IMut )
    end
    
    if typeInfo:equals( builtinFunc.listUnpack ) or typeInfo:equals( builtinFunc.arrayUnpack ) then

@@ -502,6 +502,38 @@ local function txt2AccessMode( accessMode )
    return txt2AccessModeMap[accessMode]
 end
 _moduleObj.txt2AccessMode = txt2AccessMode
+local MutMode = {}
+_moduleObj.MutMode = MutMode
+MutMode._val2NameMap = {}
+function MutMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "MutMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function MutMode._from( val )
+   if MutMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+MutMode.__allList = {}
+function MutMode.get__allList()
+   return MutMode.__allList
+end
+
+MutMode.IMut = 0
+MutMode._val2NameMap[0] = 'IMut'
+MutMode.__allList[1] = MutMode.IMut
+MutMode.Mut = 1
+MutMode._val2NameMap[1] = 'Mut'
+MutMode.__allList[2] = MutMode.Mut
+MutMode.AllMut = 2
+MutMode._val2NameMap[2] = 'AllMut'
+MutMode.__allList[3] = MutMode.AllMut
+
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
 function SymbolInfo.setmeta( obj )
@@ -522,17 +554,21 @@ end
 local NormalSymbolInfo = {}
 setmetatable( NormalSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.NormalSymbolInfo = NormalSymbolInfo
+function NormalSymbolInfo:get_mutable(  )
+
+   return self.mutMode ~= MutMode.IMut
+end
 function NormalSymbolInfo:getOrg(  )
 
    return self
 end
-function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag )
+function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag )
    local obj = {}
    NormalSymbolInfo.setmeta( obj )
-   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag ); end
+   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag ); end
    return obj
 end
-function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag) 
+function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag) 
    SymbolInfo.__init( self)
    
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
@@ -545,7 +581,7 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    self.staticFlag = staticFlag
    self.name = name
    self.typeInfo = typeInfo
-   self.mutable = mutable and true or false
+   self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
    self.hasValueFlag = hasValueFlag
 end
 function NormalSymbolInfo.setmeta( obj )
@@ -575,9 +611,6 @@ end
 function NormalSymbolInfo:get_typeInfo()       
    return self.typeInfo         
 end
-function NormalSymbolInfo:get_mutable()       
-   return self.mutable         
-end
 function NormalSymbolInfo:get_kind()       
    return self.kind         
 end
@@ -586,6 +619,9 @@ function NormalSymbolInfo:get_hasValueFlag()
 end
 function NormalSymbolInfo:set_hasValueFlag( hasValueFlag )   
    self.hasValueFlag = hasValueFlag              
+end
+function NormalSymbolInfo:get_mutMode()       
+   return self.mutMode         
 end
 do
    NormalSymbolInfo.symbolIdSeed = 0
@@ -718,39 +754,6 @@ function TypeData:get_children()
    return self.children         
 end
 
-local TypeManager = {}
-function TypeManager.add( typeInfo )
-
-   TypeManager.info2Data[typeInfo] = TypeData.new({})
-end
-function TypeManager.getData( typeInfo )
-
-   return TypeManager.info2Data[typeInfo]
-end
-function TypeManager.setmeta( obj )
-  setmetatable( obj, { __index = TypeManager  } )
-end
-function TypeManager.new(  )
-   local obj = {}
-   TypeManager.setmeta( obj )
-   if obj.__init then
-      obj:__init(  )
-   end        
-   return obj 
-end         
-function TypeManager:__init(  ) 
-
-end
-do
-   TypeManager.info2Data = {}
-end
-
-local typeInfo2ScopeMap = {}
-local function getScope( typeInfo )
-
-   return typeInfo2ScopeMap[typeInfo]
-end
-_moduleObj.getScope = getScope
 local ModuleInfoIF = {}
 _moduleObj.ModuleInfoIF = ModuleInfoIF
 function ModuleInfoIF.setmeta( obj )
@@ -770,10 +773,6 @@ end
 
 local TypeInfo = {}
 _moduleObj.TypeInfo = TypeInfo
-function TypeInfo:get_scope(  )
-
-   return typeInfo2ScopeMap[self]
-end
 function TypeInfo.new( scope )
    local obj = {}
    TypeInfo.setmeta( obj )
@@ -781,7 +780,7 @@ function TypeInfo.new( scope )
    return obj
 end
 function TypeInfo:__init(scope) 
-   typeInfo2ScopeMap[self] = scope
+   self.scope = scope
    do
       local _exp = scope
       if _exp ~= nil then
@@ -789,7 +788,7 @@ function TypeInfo:__init(scope)
       end
    end
    
-   TypeManager.add( self )
+   self.typeData = TypeData.new({})
 end
 function TypeInfo:isModule(  )
 
@@ -931,21 +930,21 @@ function TypeInfo:get_nilableTypeInfo(  )
 
    return self
 end
-function TypeInfo:get_typeData(  )
-
-   return _lune.unwrap( TypeManager.getData( self ))
-end
 function TypeInfo:get_children(  )
 
-   return self:get_typeData():get_children()
+   return self.typeData:get_children()
 end
 function TypeInfo:addChildren( child )
 
-   (_lune.unwrap( TypeManager.getData( self )) ):addChildren( child )
+   self.typeData:addChildren( child )
 end
-function TypeInfo:get_mutable(  )
+function TypeInfo:get_mutMode(  )
 
-   return true
+   return MutMode.Mut
+end
+function TypeInfo.isMut( typeInfo )
+
+   return typeInfo:get_mutMode() ~= MutMode.IMut
 end
 function TypeInfo:getParentFullName( importInfo, localFlag )
 
@@ -1013,13 +1012,13 @@ function TypeInfo.createScope( parent, classFlag, baseInfo, interfaceList )
 
    local inheritScope = nil
    if baseInfo ~= nil then
-      inheritScope = _lune.unwrap( getScope( baseInfo ))
+      inheritScope = _lune.unwrap( baseInfo.scope)
    end
    
    local ifScopeList = {}
    if interfaceList ~= nil then
       for __index, ifType in pairs( interfaceList ) do
-         table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
+         table.insert( ifScopeList, _lune.unwrap( ifType.scope) )
       end
       
    end
@@ -1029,7 +1028,18 @@ end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
+function TypeInfo:get_scope()       
+   return self.scope         
+end
+function TypeInfo:get_typeData()       
+   return self.typeData         
+end
 
+local function getScope( typeInfo )
+
+   return typeInfo:get_scope()
+end
+_moduleObj.getScope = getScope
 local function isExtId( typeInfo )
 
    if typeInfo:get_typeId() >= extStartId then
@@ -1273,10 +1283,6 @@ end
 function AliasTypeInfo:get_typeId()       
    return self.typeId         
 end
-function AliasTypeInfo:get_scope( ... )
-   return self.aliasSrcTypeInfo:get_scope( ... )
-end       
-
 function AliasTypeInfo:isModule( ... )
    return self.aliasSrcTypeInfo:isModule( ... )
 end       
@@ -1365,10 +1371,6 @@ function AliasTypeInfo:get_nilableTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_nilableTypeInfo( ... )
 end       
 
-function AliasTypeInfo:get_typeData( ... )
-   return self.aliasSrcTypeInfo:get_typeData( ... )
-end       
-
 function AliasTypeInfo:get_children( ... )
    return self.aliasSrcTypeInfo:get_children( ... )
 end       
@@ -1377,8 +1379,8 @@ function AliasTypeInfo:addChildren( ... )
    return self.aliasSrcTypeInfo:addChildren( ... )
 end       
 
-function AliasTypeInfo:get_mutable( ... )
-   return self.aliasSrcTypeInfo:get_mutable( ... )
+function AliasTypeInfo:get_mutMode( ... )
+   return self.aliasSrcTypeInfo:get_mutMode( ... )
 end       
 
 function AliasTypeInfo:getParentFullName( ... )
@@ -1391,6 +1393,14 @@ end
 
 function AliasTypeInfo:serializeTypeInfoList( ... )
    return self.aliasSrcTypeInfo:serializeTypeInfoList( ... )
+end       
+
+function AliasTypeInfo:get_scope( ... )
+   return self.aliasSrcTypeInfo:get_scope( ... )
+end       
+
+function AliasTypeInfo:get_typeData( ... )
+   return self.aliasSrcTypeInfo:get_typeData( ... )
 end       
 
 function AliasTypeInfo:createAlt2typeMap( ... )
@@ -1669,76 +1679,76 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
    
 end
 
-function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutable, hasValueFlag )
+function Scope:add( kind, canBeLeft, canBeRight, name, typeInfo, accessMode, staticFlag, mutMode, hasValueFlag )
 
-   local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutable, hasValueFlag)
+   local symbolInfo = NormalSymbolInfo.new(kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag)
    self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo
 end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
-   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable, true )
+   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
-   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, true, mutable, true )
+   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, true, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 function Scope:addVar( accessMode, name, typeInfo, mutable, hasValueFlag )
 
-   self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable, hasValueFlag )
+   self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable and MutMode.Mut or MutMode.IMut, hasValueFlag )
 end
 
 function Scope:addEnumVal( name, typeInfo )
 
-   self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, true, true )
+   self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 function Scope:addEnum( accessMode, name, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
+   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 function Scope:addAlgeVal( name, typeInfo )
 
-   self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, true, true )
+   self:add( SymbolKind.Mbr, false, true, name, typeInfo, AccessMode.Pub, true, MutMode.Mut, true )
 end
 
 function Scope:addAlge( accessMode, name, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
+   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
 function Scope:addAlternate( accessMode, name, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, true, true )
+   self:add( SymbolKind.Typ, false, false, name, typeInfo, accessMode, true, MutMode.Mut, true )
 end
 
-function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutable )
+function Scope:addMember( name, typeInfo, accessMode, staticFlag, mutMode )
 
-   return self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutable, true )
+   return self:add( SymbolKind.Mbr, true, true, name, typeInfo, accessMode, staticFlag, mutMode, true )
 end
 
 function Scope:addMethod( typeInfo, accessMode, staticFlag, mutable )
 
-   self:add( SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), typeInfo, accessMode, staticFlag, mutable, true )
+   self:add( SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 function Scope:addFunc( typeInfo, accessMode, staticFlag, mutable )
 
-   self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), typeInfo, accessMode, staticFlag, mutable, true )
+   self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 function Scope:addMacro( typeInfo, accessMode )
 
-   self:add( SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), typeInfo, accessMode, true, false, true )
+   self:add( SymbolKind.Mac, false, false, typeInfo:get_rawTxt(), typeInfo, accessMode, true, MutMode.IMut, true )
 end
 
 function Scope:addClass( name, typeInfo )
 
-   self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, true, true )
+   self:add( SymbolKind.Typ, false, false, name, typeInfo, typeInfo:get_accessMode(), true, MutMode.Mut, true )
 end
 
 local function dumpScope( workscope, workprefix )
@@ -1864,9 +1874,9 @@ function NilTypeInfo:get_nilable(  )
 
    return true
 end
-function NilTypeInfo:get_mutable(  )
+function NilTypeInfo:get_mutMode(  )
 
-   return false
+   return MutMode.IMut
 end
 function NilTypeInfo:getParentFullName( importInfo, localFlag )
 
@@ -1975,7 +1985,16 @@ function AccessSymbolInfo:get_mutable(  )
    do
       local _exp = self.prefixTypeInfo
       if _exp ~= nil then
-         return _exp:get_mutable() and self.symbolInfo:get_mutable()
+         do
+            local _switchExp = self.symbolInfo:get_mutMode()
+            if _switchExp == MutMode.AllMut then
+               return true
+            elseif _switchExp == MutMode.IMut then
+               return false
+            end
+         end
+         
+         return _exp:get_mutMode() ~= MutMode.IMut
       end
    end
    
@@ -1985,16 +2004,6 @@ function AccessSymbolInfo:get_canBeLeft(  )
 
    if not self.overrideCanBeLeft then
       return false
-   end
-   
-   do
-      local _exp = self.prefixTypeInfo
-      if _exp ~= nil then
-         if not _exp:get_mutable() then
-            return false
-         end
-         
-      end
    end
    
    return self.symbolInfo:get_canBeLeft()
@@ -2049,6 +2058,10 @@ end
 
 function AccessSymbolInfo:get_typeInfo( ... )
    return self.symbolInfo:get_typeInfo( ... )
+end       
+
+function AccessSymbolInfo:get_mutMode( ... )
+   return self.symbolInfo:get_mutMode( ... )
 end       
 
 function AccessSymbolInfo:get_kind( ... )
@@ -2148,10 +2161,6 @@ end
 function NilableTypeInfo:get_typeId()       
    return self.typeId         
 end
-function NilableTypeInfo:get_scope( ... )
-   return self.nonnilableType:get_scope( ... )
-end       
-
 function NilableTypeInfo:isModule( ... )
    return self.nonnilableType:isModule( ... )
 end       
@@ -2228,10 +2237,6 @@ function NilableTypeInfo:get_nilableTypeInfo( ... )
    return self.nonnilableType:get_nilableTypeInfo( ... )
 end       
 
-function NilableTypeInfo:get_typeData( ... )
-   return self.nonnilableType:get_typeData( ... )
-end       
-
 function NilableTypeInfo:get_children( ... )
    return self.nonnilableType:get_children( ... )
 end       
@@ -2240,8 +2245,8 @@ function NilableTypeInfo:addChildren( ... )
    return self.nonnilableType:addChildren( ... )
 end       
 
-function NilableTypeInfo:get_mutable( ... )
-   return self.nonnilableType:get_mutable( ... )
+function NilableTypeInfo:get_mutMode( ... )
+   return self.nonnilableType:get_mutMode( ... )
 end       
 
 function NilableTypeInfo:getParentFullName( ... )
@@ -2254,6 +2259,14 @@ end
 
 function NilableTypeInfo:serializeTypeInfoList( ... )
    return self.nonnilableType:serializeTypeInfoList( ... )
+end       
+
+function NilableTypeInfo:get_scope( ... )
+   return self.nonnilableType:get_scope( ... )
+end       
+
+function NilableTypeInfo:get_typeData( ... )
+   return self.nonnilableType:get_typeData( ... )
 end       
 
 function NilableTypeInfo:createAlt2typeMap( ... )
@@ -2470,9 +2483,9 @@ function AlternateTypeInfo:get_nilable(  )
 
    return false
 end
-function AlternateTypeInfo:get_mutable(  )
+function AlternateTypeInfo:get_mutMode(  )
 
-   return false
+   return MutMode.IMut
 end
 function AlternateTypeInfo:getParentFullName( importInfo, localFlag )
 
@@ -2675,10 +2688,6 @@ function BoxTypeInfo:get_baseTypeInfo( ... )
    return self.boxingType:get_baseTypeInfo( ... )
 end       
 
-function BoxTypeInfo:get_typeData( ... )
-   return self.boxingType:get_typeData( ... )
-end       
-
 function BoxTypeInfo:get_children( ... )
    return self.boxingType:get_children( ... )
 end       
@@ -2687,8 +2696,8 @@ function BoxTypeInfo:addChildren( ... )
    return self.boxingType:addChildren( ... )
 end       
 
-function BoxTypeInfo:get_mutable( ... )
-   return self.boxingType:get_mutable( ... )
+function BoxTypeInfo:get_mutMode( ... )
+   return self.boxingType:get_mutMode( ... )
 end       
 
 function BoxTypeInfo:getParentFullName( ... )
@@ -2701,6 +2710,10 @@ end
 
 function BoxTypeInfo:serializeTypeInfoList( ... )
    return self.boxingType:serializeTypeInfoList( ... )
+end       
+
+function BoxTypeInfo:get_typeData( ... )
+   return self.boxingType:get_typeData( ... )
 end       
 
 function BoxTypeInfo:getFullName( ... )
@@ -2794,7 +2807,7 @@ function GenericTypeInfo:get_srcTypeInfo(  )
 end
 function GenericTypeInfo:canEvalWith( other, opTxt, alt2type )
 
-   if self:get_mutable() and not other:get_mutable() then
+   if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) then
       return false
    end
    
@@ -2924,10 +2937,6 @@ end
 function GenericTypeInfo:get_genSrcTypeInfo()       
    return self.genSrcTypeInfo         
 end
-function GenericTypeInfo:get_scope( ... )
-   return self.genSrcTypeInfo:get_scope( ... )
-end       
-
 function GenericTypeInfo:isModule( ... )
    return self.genSrcTypeInfo:isModule( ... )
 end       
@@ -3016,10 +3025,6 @@ function GenericTypeInfo:get_nilable( ... )
    return self.genSrcTypeInfo:get_nilable( ... )
 end       
 
-function GenericTypeInfo:get_typeData( ... )
-   return self.genSrcTypeInfo:get_typeData( ... )
-end       
-
 function GenericTypeInfo:get_children( ... )
    return self.genSrcTypeInfo:get_children( ... )
 end       
@@ -3028,8 +3033,8 @@ function GenericTypeInfo:addChildren( ... )
    return self.genSrcTypeInfo:addChildren( ... )
 end       
 
-function GenericTypeInfo:get_mutable( ... )
-   return self.genSrcTypeInfo:get_mutable( ... )
+function GenericTypeInfo:get_mutMode( ... )
+   return self.genSrcTypeInfo:get_mutMode( ... )
 end       
 
 function GenericTypeInfo:getParentFullName( ... )
@@ -3038,6 +3043,14 @@ end
 
 function GenericTypeInfo:serializeTypeInfoList( ... )
    return self.genSrcTypeInfo:serializeTypeInfoList( ... )
+end       
+
+function GenericTypeInfo:get_scope( ... )
+   return self.genSrcTypeInfo:get_scope( ... )
+end       
+
+function GenericTypeInfo:get_typeData( ... )
+   return self.genSrcTypeInfo:get_typeData( ... )
 end       
 
 function GenericTypeInfo:getFullName( ... )
@@ -3064,7 +3077,7 @@ end
 function ModifierTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
 
    local txt = self.srcTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
-   if not self.mutable then
+   if self.mutMode == MutMode.IMut then
       txt = "&" .. txt
    end
    
@@ -3073,7 +3086,7 @@ end
 function ModifierTypeInfo:get_display_stirng_with( raw )
 
    local txt = self.srcTypeInfo:get_display_stirng_with( raw )
-   if self.mutable then
+   if self.mutMode ~= MutMode.IMut then
       txt = "mut " .. txt
    end
    
@@ -3086,29 +3099,29 @@ end
 function ModifierTypeInfo:serialize( stream, validChildrenSet )
 
    local parentId = self:getParentId(  )
-   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutable = %s }\n', SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo:get_typeId(), self.mutable and true or false) )
+   stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, srcTypeId = %d, mutMode = %d }\n', SerializeKind.Modifier, parentId, self.typeId, self.srcTypeInfo:get_typeId(), self.mutMode) )
 end
 function ModifierTypeInfo:canEvalWith( other, opTxt, alt2type )
 
-   return TypeInfo.canEvalWithBase( self.srcTypeInfo, self.mutable, other:get_srcTypeInfo(), opTxt, alt2type )
+   return TypeInfo.canEvalWithBase( self.srcTypeInfo, TypeInfo.isMut( self ), other:get_srcTypeInfo(), opTxt, alt2type )
 end
 function ModifierTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = ModifierTypeInfo  } )
 end
-function ModifierTypeInfo.new( srcTypeInfo, typeId, mutable )
+function ModifierTypeInfo.new( srcTypeInfo, typeId, mutMode )
    local obj = {}
    ModifierTypeInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( srcTypeInfo, typeId, mutable )
+      obj:__init( srcTypeInfo, typeId, mutMode )
    end        
    return obj 
 end         
-function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutable ) 
+function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutMode ) 
 
    TypeInfo.__init( self )
    self.srcTypeInfo = srcTypeInfo
    self.typeId = typeId
-   self.mutable = mutable
+   self.mutMode = mutMode
 end
 function ModifierTypeInfo:get_srcTypeInfo()       
    return self.srcTypeInfo         
@@ -3116,13 +3129,9 @@ end
 function ModifierTypeInfo:get_typeId()       
    return self.typeId         
 end
-function ModifierTypeInfo:get_mutable()       
-   return self.mutable         
+function ModifierTypeInfo:get_mutMode()       
+   return self.mutMode         
 end
-function ModifierTypeInfo:get_scope( ... )
-   return self.srcTypeInfo:get_scope( ... )
-end       
-
 function ModifierTypeInfo:isModule( ... )
    return self.srcTypeInfo:isModule( ... )
 end       
@@ -3207,10 +3216,6 @@ function ModifierTypeInfo:get_nilable( ... )
    return self.srcTypeInfo:get_nilable( ... )
 end       
 
-function ModifierTypeInfo:get_typeData( ... )
-   return self.srcTypeInfo:get_typeData( ... )
-end       
-
 function ModifierTypeInfo:get_children( ... )
    return self.srcTypeInfo:get_children( ... )
 end       
@@ -3229,6 +3234,14 @@ end
 
 function ModifierTypeInfo:serializeTypeInfoList( ... )
    return self.srcTypeInfo:serializeTypeInfoList( ... )
+end       
+
+function ModifierTypeInfo:get_scope( ... )
+   return self.srcTypeInfo:get_scope( ... )
+end       
+
+function ModifierTypeInfo:get_typeData( ... )
+   return self.srcTypeInfo:get_typeData( ... )
 end       
 
 function ModifierTypeInfo:createAlt2typeMap( ... )
@@ -3491,9 +3504,9 @@ function EnumTypeInfo:getEnumValInfo( name )
 
    return self.name2EnumValInfo[name]
 end
-function EnumTypeInfo:get_mutable(  )
+function EnumTypeInfo:get_mutMode(  )
 
-   return true
+   return MutMode.Mut
 end
 function EnumTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = EnumTypeInfo  } )
@@ -3633,9 +3646,9 @@ function AlgeTypeInfo:canEvalWith( other, opTxt, alt2type )
 
    return self == other:get_srcTypeInfo()
 end
-function AlgeTypeInfo:get_mutable(  )
+function AlgeTypeInfo:get_mutMode(  )
 
-   return true
+   return MutMode.Mut
 end
 function AlgeTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = AlgeTypeInfo  } )
@@ -3665,13 +3678,13 @@ end
 local NormalTypeInfo = {}
 setmetatable( NormalTypeInfo, { __index = TypeInfo } )
 _moduleObj.NormalTypeInfo = NormalTypeInfo
-function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable )
+function NormalTypeInfo.new( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode )
    local obj = {}
    NormalTypeInfo.setmeta( obj )
-   if obj.__init then obj:__init( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable ); end
+   if obj.__init then obj:__init( abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode ); end
    return obj
 end
-function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutable) 
+function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeId, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode) 
    TypeInfo.__init( self,scope)
    
    if type( kind ) ~= "number" then
@@ -3691,7 +3704,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
    self.argTypeInfoList = _lune.unwrapDefault( argTypeInfoList, {})
    self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
-   self.mutable = mutable and true or false
+   self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
    local function setupAlt2typeMap(  )
    
       if self.baseTypeInfo == _moduleObj.headTypeInfo and #self.interfaceList == 0 then
@@ -3854,7 +3867,7 @@ function NormalTypeInfo:serialize( stream, validChildrenSet )
    
    local parentId = self:getParentId(  )
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %d, txt = '%s',
-        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutable = %s, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutable)
+        abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d, ]==], SerializeKind.Normal, parentId, self.typeId, self:get_baseId(  ), self.rawTxt, self.abstractFlag, self.staticFlag, self.accessMode, self.kind, self.mutMode)
    local children = {}
    local set = validChildrenSet
    if  nil == set then
@@ -3916,7 +3929,7 @@ function NormalTypeInfo:equals( typeInfo, alt2type )
 
    return self:equalsSub( typeInfo, alt2type )
 end
-function NormalTypeInfo.create( accessMode, abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable )
+function NormalTypeInfo.create( accessMode, abstractFlag, scope, baseInfo, interfaceList, parentInfo, staticFlag, kind, txt, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode )
 
    if kind == TypeInfoKind.Prim then
       do
@@ -3930,7 +3943,7 @@ function NormalTypeInfo.create( accessMode, abstractFlag, scope, baseInfo, inter
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, true, staticFlag, accessMode, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutable)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, true, staticFlag, accessMode, txt, parentInfo, idProv:get_id(), kind, itemTypeInfo, argTypeInfoList, retTypeInfoList, mutMode)
    return info
 end
 function NormalTypeInfo.setmeta( obj )
@@ -3981,8 +3994,8 @@ end
 function NormalTypeInfo:get_nilableTypeInfo()       
    return self.nilableTypeInfo         
 end
-function NormalTypeInfo:get_mutable()       
-   return self.mutable         
+function NormalTypeInfo:get_mutMode()       
+   return self.mutMode         
 end
 
 function NormalTypeInfo.createAlternate( txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList )
@@ -4000,15 +4013,20 @@ function TypeInfo2Map.new(  )
    return obj
 end
 function TypeInfo2Map:__init() 
-   self.ModifierMap = {}
+   self.ImutModifierMap = {}
+   self.MutModifierMap = {}
    self.BoxMap = {}
    self.DDDMap = {}
 end
 function TypeInfo2Map:clone(  )
 
    local obj = TypeInfo2Map.new()
-   for key, val in pairs( self.ModifierMap ) do
-      obj.ModifierMap[key] = val
+   for key, val in pairs( self.ImutModifierMap ) do
+      obj.ImutModifierMap[key] = val
+   end
+   
+   for key, val in pairs( self.MutModifierMap ) do
+      obj.MutModifierMap[key] = val
    end
    
    for key, val in pairs( self.BoxMap ) do
@@ -4024,8 +4042,11 @@ end
 function TypeInfo2Map.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo2Map  } )
 end
-function TypeInfo2Map:get_ModifierMap()       
-   return self.ModifierMap         
+function TypeInfo2Map:get_ImutModifierMap()       
+   return self.ImutModifierMap         
+end
+function TypeInfo2Map:get_MutModifierMap()       
+   return self.MutModifierMap         
 end
 function TypeInfo2Map:get_BoxMap()       
    return self.BoxMap         
@@ -4035,23 +4056,49 @@ function TypeInfo2Map:get_DDDMap()
 end
 
 local typeInfo2Map = TypeInfo2Map.new()
-function NormalTypeInfo.createModifier( srcTypeInfo, mutable )
+function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
 
    srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
    do
-      local _exp = typeInfo2Map.ModifierMap[srcTypeInfo]
-      if _exp ~= nil then
-         if _exp:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
-            Util.err( "on cache" )
+      local _switchExp = mutMode
+      if _switchExp == MutMode.IMut then
+         do
+            local _exp = typeInfo2Map.ImutModifierMap[srcTypeInfo]
+            if _exp ~= nil then
+               if _exp:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
+                  Util.err( "on cache" )
+               end
+               
+               return _exp
+            end
          end
          
-         return _exp
+      elseif _switchExp == MutMode.AllMut then
+         do
+            local _exp = typeInfo2Map.MutModifierMap[srcTypeInfo]
+            if _exp ~= nil then
+               if _exp:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
+                  Util.err( "on cache" )
+               end
+               
+               return _exp
+            end
+         end
+         
       end
    end
    
    idProv:increment(  )
-   local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutable)
-   typeInfo2Map.ModifierMap[srcTypeInfo] = modifier
+   local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutMode)
+   do
+      local _switchExp = mutMode
+      if _switchExp == MutMode.IMut then
+         typeInfo2Map.ImutModifierMap[srcTypeInfo] = modifier
+      elseif _switchExp == MutMode.AllMut then
+         typeInfo2Map.MutModifierMap[srcTypeInfo] = modifier
+      end
+   end
+   
    if modifier:get_typeId() < userStartId and srcTypeInfo:get_typeId() >= userStartId then
       Util.printStackTrace(  )
       Util.err( string.format( "off cache: %s %s %s", srcTypeInfo:getTxt(  ), modifier:get_typeId(), srcTypeInfo:get_typeId()) )
@@ -4068,16 +4115,16 @@ end
 
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
-   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, typeInfo, false, true)
+   _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, typeInfo, MutMode.IMut, true)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
-      _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nilableTypeInfo, false, true)
+      _moduleObj.sym2builtInTypeMap[typeTxt .. "!"] = NormalSymbolInfo.new(SymbolKind.Typ, false, kind == TypeInfoKind.Func, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, nilableTypeInfo, MutMode.IMut, true)
    end
    
    addBuiltin( typeInfo )
-   addBuiltin( NormalTypeInfo.createModifier( typeInfo, false ) )
+   addBuiltin( NormalTypeInfo.createModifier( typeInfo, MutMode.IMut ) )
    if typeInfo:get_nilableTypeInfo() ~= _moduleObj.headTypeInfo then
       addBuiltin( typeInfo:get_nilableTypeInfo() )
-      addBuiltin( NormalTypeInfo.createModifier( typeInfo:get_nilableTypeInfo(), false ) )
+      addBuiltin( NormalTypeInfo.createModifier( typeInfo:get_nilableTypeInfo(), MutMode.IMut ) )
    end
    
    if registScope then
@@ -4128,7 +4175,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, true)
+   local info = NormalTypeInfo.new(false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, _moduleObj.headTypeInfo, typeId, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut)
    registBuiltin( idName, typeTxt, kind, info, _moduleObj.headTypeInfo, scope ~= nil )
    return info
 end
@@ -4238,36 +4285,36 @@ function BoxTypeInfo:applyGeneric( alt2typeMap )
    return nil
 end
 
-function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo )
+function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
 
    if #itemTypeInfo == 0 then
       Util.err( string.format( "illegal set type: %s", itemTypeInfo) )
    end
    
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, accessMode, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, accessMode, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, mutMode)
 end
 
-function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo )
+function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo, mutMode )
 
    if #itemTypeInfo == 0 then
       Util.err( string.format( "illegal list type: %s", itemTypeInfo) )
    end
    
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, mutMode)
 end
 
-function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo )
+function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, mutMode)
 end
 
-function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo )
+function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, true)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, mutMode)
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )
@@ -4302,7 +4349,7 @@ function NormalTypeInfo.createClass( classFlag, abstractFlag, scope, baseInfo, i
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, true)
+   local info = NormalTypeInfo.new(abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, idProv:get_id(), classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut)
    return info
 end
 
@@ -4313,33 +4360,33 @@ function NormalTypeInfo.createFunc( abstractFlag, builtinFlag, scope, kind, pare
    end
    
    idProv:increment(  )
-   local info = NormalTypeInfo.new(abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable)
+   local info = NormalTypeInfo.new(abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, idProv:get_id(), kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut)
    return info
 end
 
 function NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, typeInfo )
 
-   return NormalTypeInfo.createFunc( false, false, getScope( typeInfo ), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), typeInfo:get_mutable() )
+   return NormalTypeInfo.createFunc( false, false, getScope( typeInfo ), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), TypeInfo.isMut( typeInfo ) )
 end
 
 function ModifierTypeInfo:get_nonnilableType(  )
 
    local orgType = self.srcTypeInfo:get_nonnilableType()
-   if self.mutable or not orgType:get_mutable() then
+   if TypeInfo.isMut( self ) or not TypeInfo.isMut( orgType ) then
       return orgType
    end
    
-   return NormalTypeInfo.createModifier( orgType, false )
+   return NormalTypeInfo.createModifier( orgType, MutMode.IMut )
 end
 
 function ModifierTypeInfo:get_nilableTypeInfo(  )
 
    local orgType = self.srcTypeInfo:get_nilableTypeInfo()
-   if not orgType:get_mutable() then
+   if not TypeInfo.isMut( orgType ) then
       return orgType
    end
    
-   return NormalTypeInfo.createModifier( orgType, false )
+   return NormalTypeInfo.createModifier( orgType, MutMode.IMut )
 end
 
 function NormalTypeInfo.createAlias( name, externalFlag, accessMode, parentInfo, typeInfo )
@@ -4351,7 +4398,7 @@ end
 function Scope:addAlias( name, externalFlag, accessMode, parentInfo, symbolInfo )
 
    local aliasType = NormalTypeInfo.createAlias( name, externalFlag, accessMode, parentInfo, symbolInfo:get_typeInfo():get_srcTypeInfo() )
-   return self:add( symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, aliasType, accessMode, true, false, true )
+   return self:add( symbolInfo:get_kind(), false, symbolInfo:get_canBeRight(), name, aliasType, accessMode, true, MutMode.IMut, true )
 end
 
 function Scope:addAliasForType( name, typeInfo )
@@ -4368,7 +4415,7 @@ function Scope:addAliasForType( name, typeInfo )
       end
    end
    
-   return self:add( skind, false, canBeRight, name, typeInfo, typeInfo:get_accessMode(), true, false, true )
+   return self:add( skind, false, canBeRight, name, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true )
 end
 
 local DDDTypeInfo = {}
@@ -4433,9 +4480,9 @@ function DDDTypeInfo:get_nilableTypeInfo(  )
 
    return self
 end
-function DDDTypeInfo:get_mutable(  )
+function DDDTypeInfo:get_mutMode(  )
 
-   return self.typeInfo:get_mutable()
+   return self.typeInfo:get_mutMode()
 end
 function DDDTypeInfo:get_accessMode(  )
 
@@ -4577,9 +4624,9 @@ function AbbrTypeInfo:get_nilableTypeInfo(  )
 
    return self
 end
-function AbbrTypeInfo:get_mutable(  )
+function AbbrTypeInfo:get_mutMode(  )
 
-   return false
+   return MutMode.IMut
 end
 function AbbrTypeInfo:get_accessMode(  )
 
@@ -4620,10 +4667,10 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
    local info = EnumTypeInfo.new(scope, externalFlag, accessMode, enumName, parentInfo, idProv:get_id(), valTypeInfo)
    local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( getEnumName, AccessMode.Pub, false, false )
-   local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", nil, {NormalTypeInfo.createModifier( valTypeInfo, false )}, {info:get_nilableTypeInfo()}, false )
+   local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", nil, {NormalTypeInfo.createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
    scope:addFunc( fromVal, AccessMode.Pub, true, false )
-   local allListType = NormalTypeInfo.createList( AccessMode.Pub, info, {info} )
-   local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", nil, nil, {NormalTypeInfo.createModifier( allListType, false )}, false )
+   local allListType = NormalTypeInfo.createList( AccessMode.Pub, info, {info}, MutMode.IMut )
+   local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", nil, nil, {NormalTypeInfo.createModifier( allListType, MutMode.IMut )}, false )
    scope:addFunc( allList, AccessMode.Pub, true, false )
    return info
 end
@@ -5042,7 +5089,7 @@ end
 
 function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
 
-   local otherMut = other:get_mutable()
+   local otherMut = TypeInfo.isMut( other )
    local otherSrc = other:get_srcTypeInfo()
    if otherSrc:get_kind() == TypeInfoKind.DDD then
       if #otherSrc:get_itemTypeInfoList() > 0 then
@@ -5223,7 +5270,7 @@ end
 
 function NormalTypeInfo:canEvalWith( other, opTxt, alt2type )
 
-   return TypeInfo.canEvalWithBase( self, self:get_mutable(), other, opTxt, alt2type )
+   return TypeInfo.canEvalWithBase( self, TypeInfo.isMut( self ), other, opTxt, alt2type )
 end
 
 function ModifierTypeInfo:applyGeneric( alt2typeMap )
@@ -5234,7 +5281,7 @@ function ModifierTypeInfo:applyGeneric( alt2typeMap )
    end
    
    if typeInfo ~= nil then
-      return NormalTypeInfo.createModifier( typeInfo, false )
+      return NormalTypeInfo.createModifier( typeInfo, MutMode.IMut )
    end
    
    return nil
@@ -5281,15 +5328,15 @@ function NormalTypeInfo:applyGeneric( alt2typeMap )
    do
       local _switchExp = self:get_kind()
       if _switchExp == TypeInfoKind.Set then
-         return NormalTypeInfo.createSet( self.accessMode, self.parentInfo, itemTypeInfoList )
+         return NormalTypeInfo.createSet( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.List then
-         return NormalTypeInfo.createList( self.accessMode, self.parentInfo, itemTypeInfoList )
+         return NormalTypeInfo.createList( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Array then
-         return NormalTypeInfo.createArray( self.accessMode, self.parentInfo, itemTypeInfoList )
+         return NormalTypeInfo.createArray( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Map then
-         return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2] )
+         return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2], self.mutMode )
       elseif _switchExp == TypeInfoKind.Func then
-         return NormalTypeInfo.createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, self.mutable )
+         return NormalTypeInfo.createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) )
       else 
          
             return nil

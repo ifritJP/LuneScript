@@ -684,7 +684,7 @@ function convFilter:outputMeta( node )
                      local memberName = memberNode:get_name().txt
                      local memberTypeInfo = memberNode:get_expType(  )
                      self:writeln( string.format( "__classInfo%d.%s = {", classTypeId, memberName) )
-                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutable = %s,", memberName, memberNode:get_staticFlag(), memberNode:get_symbolInfo():get_mutable()) .. string.format( "accessMode = '%s', typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId(  )) )
+                     self:writeln( string.format( "  name='%s', staticFlag = %s, mutMode = %d,", memberName, memberNode:get_staticFlag(), memberNode:get_symbolInfo():get_mutMode()) .. string.format( "accessMode = '%s', typeId = %d }", memberNode:get_accessMode(), memberTypeInfo:get_typeId(  )) )
                      pickupTypeId( memberTypeInfo, true )
                   end
                   
@@ -1121,7 +1121,7 @@ function convFilter:outputMeta( node )
    
    self:writeln( string.format( "_moduleObj.__moduleTypeId = %d", moduleTypeInfo:get_typeId()) )
    self:writeln( string.format( "_moduleObj.__moduleSymbolKind = %d", moduleSymbolKind) )
-   self:writeln( string.format( "_moduleObj.__moduleMutable = %s", moduleTypeInfo:get_mutable()) )
+   self:writeln( string.format( "_moduleObj.__moduleMutable = %s", Ast.TypeInfo.isMut( moduleTypeInfo )) )
    self:writeln( "----- meta -----" )
    if self.stream ~= self.metaStream then
       self:writeln( "return _moduleObj" )

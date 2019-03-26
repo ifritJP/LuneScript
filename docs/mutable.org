@@ -170,7 +170,10 @@ class Test {
 これは、 immutable なメソッド内で、
 メンバに値を設定したためエラーとなります。
 
-また、次のように immutable なメソッド func2() から、
+immutable なメソッド内で self にアクセスすると、
+そのインスタンスは immutable となるためです。
+
+なお、次のように immutable なメソッド func2() 内から、
 mutable なメソッド func1() を呼び出した場合もエラーとなります。
 
 #+BEGIN_SRC lns
@@ -184,6 +187,71 @@ class Test {
    }
 }
 #+END_SRC
+
+
+** allmut メンバ
+
+前述の通り、 あるクラスのメンバが mutable であっても、
+そのクラスのインスタンスが immutable である場合、
+そのメンバは immutable となります。
+
+次の例では、 func() メソッド内から mutable なメンバ val にアクセスしていますが、
+func() メソッドは immutable であるため val もまた immutable となり、エラーします。
+
+#+BEGIN_SRC lns
+class Test {
+   pri let mut val:int;
+   pub fn func() {
+      self.val = self.val + 1;  // error
+   }
+}
+#+END_SRC
+
+mutablity は、意図しないタイミングでの値の変化を防止するために必要な概念です。
+一方で、 immutable なメソッドからはいかなるメンバも変更できない、
+というのは非常に厳しいルールです。
+
+このルールが適応されてしまうと、
+例えば次のような場合、設計が難しくなってしまいます。
+
+- キーに紐付けて、読み取り専用データを管理するクラス Data を考える
+- Data クラスには、引数にキーを与えると、紐付けられたデータを返すメソッド get() を定義する
+- 管理する全てのデータを登録した Data インスタンスは、不要な変更を防ぐため immutable とする
+
+これは一般的な考え型だと思います。
+
+そして、開発が進んでから次の仕様を追加するとします。
+
+- 上記 get() メソッドの処理を高速化するため、
+  直前の引数キーと、そのキーに紐付けされたデータをキャッシュする
+  
+この「直前の引数キーと、そのキーに紐付けされたデータをキャッシュする」という処理は、
+データを書き換えることになります。
+つまり、 immutable ではなく mutable である必要があります。
+
+一方で、既に Data インスタンスは多くの箇所で immutable として宣言されています。
+つまり、キャッシュすることが出来ません。
+
+このような場合に利用するのが allmut です。
+allmut は、メンバの mutablity を宣言し、
+インスタンスの mutablity とは独立して常に mutable となります。
+
+次に allmut のサンプルを示します。
+
+#+BEGIN_SRC lns
+class Test {
+   pri let allmut val:int;
+   pub fn func() {
+      self.val = self.val + 1;  // ok
+   }
+}
+#+END_SRC
+
+このように ~pri let allmut val:int;~  と宣言することで、
+val は常に mutable となります。
+これにより、 immutable なメソッド func() から、
+val を書き換えることが可能となります。
+
 
 ** immutable な型
 
@@ -230,6 +298,7 @@ immutable な型を表現する場合は ~&List<int>~ を使うことを推奨�
 理由は、 ~&List<&List<int>>~ のような表現が ~int[]~ では出来ないためです。
 
 あくまで ~int[]~ は、 ~List<int>~ のシンタックシュガーだと思ってください。
+
 
 ** immutable と mutable 間のデータの代入
 

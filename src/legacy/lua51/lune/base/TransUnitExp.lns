@@ -151,13 +151,13 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    if token.txt == '[' {
       typeInfoList = [ Ast.NormalTypeInfo.createList( .Local, self.getCurrentClass(),
-                                                      [ itemTypeInfo ] ) ];
+                                                      [ itemTypeInfo ], .Mut ) ];
       return Nodes.LiteralListNode.create(
          self.nodeManager, token.pos, typeInfoList, expList );
    }
    else {
       typeInfoList = [ Ast.NormalTypeInfo.createArray( .Local, self.getCurrentClass(),
-                                                       [ itemTypeInfo ] ) ];
+                                                       [ itemTypeInfo ], .Mut ) ];
       return Nodes.LiteralArrayNode.create(
          self.nodeManager, token.pos, typeInfoList, expList );
    }
@@ -200,7 +200,7 @@ fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Nodes.Node {
    }
    let mut typeInfoList = [ Ast.builtinTypeNone ];
    typeInfoList = [ Ast.NormalTypeInfo.createSet( .Local, self.getCurrentClass(),
-                                                  [ itemTypeInfo ] ) ];
+                                                  [ itemTypeInfo ], .Mut ) ];
    return Nodes.LiteralSetNode.create(
       self.nodeManager, token.pos, typeInfoList, expList );
 }
@@ -263,7 +263,7 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Nodes.LiteralMapNode 
    }
 
    let typeInfo = Ast.NormalTypeInfo.createMap(
-      .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo );
+      .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
 
    self.checkToken( nextToken, "}" );
    // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
@@ -298,7 +298,7 @@ fn TransUnit.analyzeExpRefItem(
       }
       else {
          typeInfo = self.createModifier(
-            Ast.builtinTypeBool.$nilableTypeInfo, false );
+            Ast.builtinTypeBool.$nilableTypeInfo, .IMut );
          indexTypeInfo = itemTypeList[1];
       }
       expectItemType = itemTypeList[1];
@@ -329,8 +329,8 @@ fn TransUnit.analyzeExpRefItem(
       }
    }
 
-   if typeInfo.$mutable and not expType.$mutable {
-      typeInfo = self.createModifier( typeInfo, false );
+   if Ast.TypeInfo.isMut( typeInfo ) and not Ast.TypeInfo.isMut( expType ) {
+      typeInfo = self.createModifier( typeInfo, .IMut );
    }
 
    let indexExp = self.analyzeExp( false, nil, expectItemType );
@@ -1101,8 +1101,8 @@ fn TransUnit.analyzeExpCast(
                        "can't cast from nilable to not nilable  -- %s->%s"
                        (expType.getTxt(##), castType.getTxt(##)) );
    }
-   elseif not expType.$mutable and castType.$mutable {
-      castType = self.createModifier( castType, false );
+   elseif not Ast.TypeInfo.isMut( expType ) and Ast.TypeInfo.isMut( castType ) {
+      castType = self.createModifier( castType, .IMut );
    }
 
    if castType.canEvalWith( expType, "=", {} ) {
@@ -1631,26 +1631,26 @@ fn TransUnit.analyzeExpField(
    }
    let prefixSymbolInfoList = prefixExp.getSymbolInfo();
    
-   if! symbolInfo {
+   when! symbolInfo {
       if #prefixSymbolInfoList == 1 {
          let prefixSymbolInfo = prefixSymbolInfoList[1];
          if prefixSymbolInfo.$kind == .Typ {
-            if not _exp.$staticFlag and _exp.$kind ~= .Typ
+            if not symbolInfo.$staticFlag and symbolInfo.$kind ~= .Typ
             {
                // クラスシンボルから、 static でないメンバにアクセスした場合エラー
                self.addErrMess(
-                  token.pos, "Type can't access this symbol. -- %s" (_exp.$name) );
+                  token.pos, "Type can't access this symbol. -- %s" (symbolInfo.$name) );
             }
          }
-         elseif _exp.$staticFlag and _exp.$typeInfo.$kind ~= .Method {
+         elseif symbolInfo.$staticFlag and symbolInfo.$typeInfo.$kind ~= .Method {
             // インスタンスから、 static メンバにアクセスした場合エラー
             self.addErrMess(
                token.pos, "can't access this symbol. -- %s" (token.txt) );
          }
       };
 
-      if not prefixExpType.$mutable and not _exp.$staticFlag and
-         _exp.$kind == .Mtd and _exp.$mutable 
+      if not Ast.TypeInfo.isMut( prefixExpType ) and not symbolInfo.$staticFlag and
+         symbolInfo.$kind == .Mtd and symbolInfo.$mutable
       {  
          // オブジェクトが immutable で、
          // mutable な method へのアクセスはエラー
@@ -1668,13 +1668,20 @@ fn TransUnit.analyzeExpField(
 
    let mut accessSymbolInfo:Ast.AccessSymbolInfo! = nil;
    //let mut canBeLeft:bool! = nil;
-   if! symbolInfo {
+   let mut symbolMutMode = typeInfo.$mutMode;
+   when! symbolInfo {
       //canBeLeft = _exp.canBeLeft();
-      accessSymbolInfo = new Ast.AccessSymbolInfo( _exp, prefixExpType, not accessNil );
-   };
-   if not prefixExpType.$mutable and typeInfo.$mutable
-   {           
-      typeInfo = self.createModifier( typeInfo, false );
+      accessSymbolInfo = new Ast.AccessSymbolInfo(
+         symbolInfo, prefixExpType, not accessNil );
+      switch mode {
+         case .Field, .FieldNil {
+            symbolMutMode = symbolInfo.$mutMode;
+         }
+      }
+   }
+
+   if not Ast.TypeInfo.isMut( prefixExpType ) and symbolMutMode == .Mut {           
+      typeInfo = self.createModifier( typeInfo, .IMut );
    }
 
    if typeInfo.equals( builtinFunc.listUnpack ##) or

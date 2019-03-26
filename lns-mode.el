@@ -65,8 +65,8 @@
 		 '("self" "fn" "elseif" "else" "while" "repeat" "for"
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
 		   "nil" "null" "true" "switch" "match" "case" "default" "extend" "proto"
-		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "mut"
-		   "__init", "mut" "pub" "pro" "pri" "form" "advertise" "provide"
+		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "allmut"
+		   "mut" "__init" "pub" "pro" "pri" "form" "advertise" "provide"
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
 		   "glue" "when" "alge" "non" "alias"
 		   "abstract" "trust" "import" "as" "not" "and" "or" "break" "new" )))

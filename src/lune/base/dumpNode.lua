@@ -553,7 +553,7 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
       end
    end
    
-   if node:get_expType():get_mutable() then
+   if Ast.TypeInfo.isMut( node:get_expType() ) then
       name = name .. " mut"
    end
    

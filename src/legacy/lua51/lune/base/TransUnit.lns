@@ -493,11 +493,13 @@ quotedChar2Code[ '\\' ] = ?\\; // \\
 quotedChar2Code[ '"' ] = ?\";  // "
 quotedChar2Code[ "'" ] = ?\';  // '
 
-pub fn TransUnit.createModifier( typeInfo:&Ast.TypeInfo, mutable: bool ) : &Ast.TypeInfo {
+pub fn TransUnit.createModifier(
+   typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) : &Ast.TypeInfo
+{
    if not self.validMutControl {
       return typeInfo;
    }
-   return Ast.NormalTypeInfo.createModifier( typeInfo, mutable );
+   return Ast.NormalTypeInfo.createModifier( typeInfo, mutMode );
 }
 
 pub class _MetaInfo {
@@ -682,7 +684,7 @@ class _TypeInfoBox extend _TypeInfo {
 
 class _TypeInfoModifier extend _TypeInfo {
    pub let srcTypeId:int;
-   pub let mutable:bool;
+   pub let mutMode:Ast.MutMode;
 
    pub override fn createTypeInfo( param:ImportParam ):
       &Ast.TypeInfo!, str!
@@ -691,7 +693,7 @@ class _TypeInfoModifier extend _TypeInfo {
       let! srcTypeInfo = param.getTypeInfo( self.srcTypeId ) {
          return nil, "not found srcType -- %d, %d" ( self.parentId, self.srcTypeId );
       };
-      let newTypeInfo = param.transUnit.createModifier( srcTypeInfo, self.mutable );
+      let newTypeInfo = param.transUnit.createModifier( srcTypeInfo, self.mutMode );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
    }
@@ -751,7 +753,7 @@ class _TypeInfoNormal extend _TypeInfo {
    pub let staticFlag:bool;
    pub let accessMode:Ast.AccessMode;
    pub let kind:Ast.TypeInfoKind;
-   pub let mutable:bool;
+   pub let mutMode: Ast.MutMode;
    pub let ifList: int[];
    pub let itemTypeId: int[];
    pub let argTypeId: int[];
@@ -865,19 +867,13 @@ class _TypeInfoNormal extend _TypeInfo {
                }
 
 
-               let typeInfoKind = unwrap Ast.TypeInfoKind._from( self.kind );
-               let mut mutable = true;
-               if! self.mutable {
-                  if not _exp {
-                     mutable = false;
-                  }
-               }
-               let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
+               let typeInfoKind = self.kind;
+               let accessMode = self.accessMode;
                let workTypeInfo = Ast.NormalTypeInfo.create(
                   accessMode,
                   self.abstractFlag, scope, baseInfo,
                   interfaceList, parentInfo, self.staticFlag, typeInfoKind,
-                  self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, mutable );
+                  self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode );
                newTypeInfo = workTypeInfo;
 
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
@@ -898,7 +894,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   workParentScope.add(
                      symbolKind, false, self.kind == .Func,
                      self.txt, workTypeInfo, accessMode,
-                     self.staticFlag, false, true );
+                     self.staticFlag, .IMut, true );
                   param.typeId2Scope[ self.typeId ] = scope;
                }
             }
@@ -1366,7 +1362,7 @@ fn TransUnit.registBuiltInScope() mut {
       if mutable {
          return typeInfo;
       }
-      typeInfo = self.createModifier( typeInfo, false );
+      typeInfo = self.createModifier( typeInfo, .IMut );
       return typeInfo;
    }
 
@@ -1375,7 +1371,7 @@ fn TransUnit.registBuiltInScope() mut {
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
 
    let mapType = Ast.NormalTypeInfo.createMap(
-      .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem );
+      .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
    self.scope.addVar( .Global, "_ENV", mapType, false, true );
    self.scope.addVar( .Global, "_G", mapType, false, true );
    self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, false, true );
@@ -1432,7 +1428,7 @@ fn TransUnit.registBuiltInScope() mut {
                      if info.type$[1] == "member" {
                         self.scope.addMember(
                            fieldName,
-                           getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, true );
+                           getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, .Mut );
                      }  
                      else {
                         let mut argTypeList: List<&Ast.TypeInfo> = [];
@@ -1467,7 +1463,8 @@ fn TransUnit.registBuiltInScope() mut {
                         self.scope.add(
                            methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
                            not methodFlag, not methodFlag,
-                           fieldName, typeInfo, .Pub, not methodFlag, mutable, true );
+                           fieldName, typeInfo, .Pub, not methodFlag,
+                           mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
 
                         setupBuiltinTypeInfo( name, fieldName, typeInfo );
                      }
@@ -2153,7 +2150,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
                }
                case .Func {
                   self.globalScope.addFunc(
-                     newTypeInfo, .Global, newTypeInfo.$staticFlag, newTypeInfo.$mutable);
+                     newTypeInfo, .Global, newTypeInfo.$staticFlag,
+                     Ast.TypeInfo.isMut( newTypeInfo) );
                }
                case .Enum {
                   self.globalScope.addEnum( .Global, newTypeInfo.$rawTxt, newTypeInfo );
@@ -2198,10 +2196,11 @@ fn TransUnit.processImport( modulePath:str ) mut :
             }  
 
             if addFlag {
-               scope.add( symbolKind, false,
-                          typeInfo.$kind == .Func,
-                          typeInfo.getTxt(##), typeInfo, typeInfo.$accessMode,
-                          typeInfo.$staticFlag, typeInfo.$mutable, true );
+               scope.add(
+                  symbolKind, false,
+                  typeInfo.$kind == .Func,
+                  typeInfo.getTxt(##), typeInfo, typeInfo.$accessMode,
+                  typeInfo.$staticFlag, typeInfo.$mutMode, true );
             }
          }  
       }
@@ -2232,7 +2231,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
                         fieldName, fieldTypeInfo,
                         unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
                         fieldInfo.staticFlag and true or false,
-                        fieldInfo.mutable and true or false );
+                        unwrap Ast.MutMode._from( (unwrap fieldInfo.mutMode)@@int ) );
                   }
                   else {
                      self.error( "not found fieldInfo.typeId" );
@@ -2245,7 +2244,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
             }
          }
          case .Module {
-            self.pushModule( true, classTypeInfo.getTxt(##), classTypeInfo.$mutable );
+            self.pushModule( true, classTypeInfo.getTxt(##),
+                             Ast.TypeInfo.isMut( classTypeInfo ) );
          }
       }
 
@@ -2423,7 +2423,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
    let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
    self.scope.add(
       moduleSymbolKind, false, false, assignName.txt,
-      moduleTypeInfo, .Local, true, metaInfo.__moduleMutable, true );
+      moduleTypeInfo, .Local, true,
+      metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
 
    self.checkToken( nextToken, ";" );
 
@@ -2612,8 +2613,10 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             }
             
             let mut workType = paramType;
-            if paramType.$mutable and not exp.$expType.$mutable {
-               workType = self.createModifier( workType, false );
+            if Ast.TypeInfo.isMut( paramType ) and
+               not Ast.TypeInfo.isMut( exp.$expType )
+            {
+               workType = self.createModifier( workType, .IMut );
             }
             blockScope.addLocalVar( false, false, paramName.txt, workType, false );
             valParamNameList.insert( paramName.txt );

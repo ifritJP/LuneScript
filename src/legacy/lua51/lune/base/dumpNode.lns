@@ -309,7 +309,7 @@ fn dumpFilter.processDeclFuncInfo(
    if! declInfo.get_name() {
       name = _exp.txt;
    }
-   if node.$expType.$mutable {
+   if Ast.TypeInfo.isMut( node.$expType ) {
       name = name .. " mut";
    }
    dump( prefix, depth, node, name );

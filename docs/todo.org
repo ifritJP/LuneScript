@@ -9,7 +9,7 @@
 * 機能
 
 - [ ] Nodes.MacroValInfo の値の alge 化。
-  
+- [ ] accessor の override 指定
   
 - [ ] Sub クラスが Super クラスのメンバを shadowing したときエラー検知できていない。
 - [ ] インスタンスから、クラス名などのメタ情報を取得できるようにする。

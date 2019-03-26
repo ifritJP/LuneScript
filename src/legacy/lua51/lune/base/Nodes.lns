@@ -784,7 +784,7 @@ pub override fn ExpRefItemNode.canBeLeft(): bool {
       return false;
    }
    //return self.$expType.$mutable;
-   return self.$val.$expType.$mutable and not self.nilAccess;
+   return Ast.TypeInfo.isMut( self.$val.$expType ) and not self.nilAccess;
 }
 
 _declNodeClass( "ExpCall", Node, false, nil, true,
