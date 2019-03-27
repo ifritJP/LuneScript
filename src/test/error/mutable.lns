@@ -8,12 +8,23 @@
 
 {
    let! val1, val2 = 1, 2 {
-      val1 = 1;
-      val2 = 2;
+      val1 = 1; // error
+      val2 = 2; // error
    }
    then {
       val1 = 1; // error
       val2 = 2; // error
+   };
+}
+
+{
+   let! mut val1, mut val2 = 1, 2 {
+      val1 = 1;
+      val2 = 2;
+   }
+   then {
+      val1 = 1;
+      val2 = 2;
    };
 }
 

@@ -265,7 +265,7 @@ pub class StreamParser extend Parser {
    let mut lineNo : int;
    let mut prevToken: &Token;
    let mut pos : int;
-   let mut lineTokenList : Token[];
+   let mut lineTokenList : List<&Token>;
    let keywordSet : Set<str>;
    let typeSet : Set<str>;
    let builtInSet :Set<str>;
@@ -723,7 +723,7 @@ pub override fn StreamParser.getToken() mut : &Token! {
       while #self.lineTokenList == 0 {
          let! mut workList = self.parse() {
             return nil;
-         };               
+         };
          self.lineTokenList = workList;
       }
    }

@@ -234,7 +234,8 @@ class GetTest2 {
 {
    let nilableInt1: int! = 567;
    let! unwrapInt1, unwrapInt2: int = nilableInt1, 890 {
-      unwrapInt1 = 123; unwrapInt2 = 456; };
+      unwrapInt1 = 123;
+   }; 
    print( "567 = %d, 890 = %d" (unwrapInt1, unwrapInt2 ) );
 }
 
@@ -254,7 +255,7 @@ class GetTest2 {
    let mut hoge1: int = 1;
    let mut hoge2: int = 2;
    sync! hoge1, hoge2 = 3, 4 {
-      print( "NG" );
+      error( "NG" );
    }
    then {
       print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );

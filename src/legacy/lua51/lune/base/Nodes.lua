@@ -2536,7 +2536,7 @@ end
 
 function ExpRefNode:canBeRight(  )
 
-   return self:get_symbolInfo():get_canBeRight()
+   return self:get_symbolInfo():get_canBeRight() and self:get_symbolInfo():get_hasValueFlag()
 end
 
 function NodeKind.get_ExpOp2(  )

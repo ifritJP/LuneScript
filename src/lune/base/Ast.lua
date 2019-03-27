@@ -611,6 +611,9 @@ end
 function NormalSymbolInfo:get_typeInfo()       
    return self.typeInfo         
 end
+function NormalSymbolInfo:set_typeInfo( typeInfo )   
+   self.typeInfo = typeInfo              
+end
 function NormalSymbolInfo:get_kind()       
    return self.kind         
 end
@@ -2060,6 +2063,10 @@ function AccessSymbolInfo:get_typeInfo( ... )
    return self.symbolInfo:get_typeInfo( ... )
 end       
 
+function AccessSymbolInfo:set_typeInfo( ... )
+   return self.symbolInfo:set_typeInfo( ... )
+end       
+
 function AccessSymbolInfo:get_mutMode( ... )
    return self.symbolInfo:get_mutMode( ... )
 end       
@@ -2731,7 +2738,7 @@ function GenericTypeInfo.new( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
    return obj
 end
 function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
-   TypeInfo.__init( self,TypeInfo.createScope( (_lune.unwrap( getScope( genSrcTypeInfo )) ):get_parent(), true, genSrcTypeInfo, nil ))
+   TypeInfo.__init( self,TypeInfo.createScope( (_lune.unwrap( genSrcTypeInfo:get_scope()) ):get_parent(), true, genSrcTypeInfo, nil ))
    
    idProv:increment(  )
    self.typeId = idProv:get_id()
@@ -4180,10 +4187,13 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    return info
 end
 
-local builtinTypeNone = NormalTypeInfo.createBuiltin( "None", "", TypeInfoKind.Prim )
+local builtinTypeNone = NormalTypeInfo.createBuiltin( "__None", "", TypeInfoKind.Prim )
 _moduleObj.builtinTypeNone = builtinTypeNone
 
-local builtinTypeNeverRet = NormalTypeInfo.createBuiltin( "Error", "__", TypeInfoKind.Prim )
+local builtinTypeEmpty = NormalTypeInfo.createBuiltin( "__Empty", "::", TypeInfoKind.Prim )
+_moduleObj.builtinTypeEmpty = builtinTypeEmpty
+
+local builtinTypeNeverRet = NormalTypeInfo.createBuiltin( "__NRet", "__", TypeInfoKind.Prim )
 _moduleObj.builtinTypeNeverRet = builtinTypeNeverRet
 
 local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
@@ -5103,6 +5113,17 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
    end
    
    if dest == _moduleObj.builtinTypeStem_ then
+      return true
+   end
+   
+   if dest == _moduleObj.builtinTypeEmpty then
+      do
+         local _switchExp = otherSrc
+         if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
+            return false
+         end
+      end
+      
       return true
    end
    

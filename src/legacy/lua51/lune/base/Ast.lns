@@ -193,7 +193,9 @@ pub abstract class SymbolInfo {
    /** シンボルの名前 */
    pub abstract fn get_name(): str;
    /** シンボルの型 */
-   pub abstract fn get_typeInfo(): TypeInfo;
+   pub abstract fn get_typeInfo(): &TypeInfo;
+   /** シンボルの型 */
+   pub abstract fn set_typeInfo(typeInfo:&TypeInfo);
    /** このシンボルが mut かどうか */
    pub abstract fn get_mutable(): bool;
    pub abstract fn get_mutMode(): MutMode;
@@ -208,7 +210,7 @@ pub abstract class SymbolInfo {
 
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub abstract fn canAccess( fromScope:&Scope ): &SymbolInfo!;
+   pub abstract fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
 
    pub abstract fn getOrg(): &SymbolInfo;
 }
@@ -237,11 +239,11 @@ pub class NormalSymbolInfo extend SymbolInfo {
    /** シンボルの名前 */
    pri let name: str { pub };
    /** シンボルの型 */
-   pri let typeInfo: &TypeInfo { pub };
+   pri let allmut typeInfo: &TypeInfo { pub, pub };
    /** このシンボルの種類 SymbolKind */
    pri let kind: SymbolKind { pub };
    /** このシンボルがデータを保持しているかどうか */
-   pri let hasValueFlag: bool { pub, pub };
+   pri let allmut hasValueFlag: bool { pub, pub };
    pri let mutMode: MutMode {pub};
 
    pub override fn get_mutable(): bool {
@@ -251,7 +253,6 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pub override fn getOrg(): &SymbolInfo {
       return self;
    }
-
 
    pub fn __init(
       kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
@@ -278,7 +279,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
 
 @param fromScope このシンボルにアクセスしようとしているスコープ。
 */
-   pub override fn canAccess( fromScope:&Scope ): &SymbolInfo!;
+   pub override fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
 }
 
 
@@ -295,11 +296,11 @@ pub class Scope {
    pri let mut parent: Scope { pub };
    // このスコープに登録されているシンボル情報。
    // シンボル名 → SymbolInfo のマップ。
-   pri let mut symbol2SymbolInfoMap: Map<str,&SymbolInfo> { pub };
+   pri let mut symbol2SymbolInfoMap: Map<str,&SymbolInfo> { pub& };
    // このスコープがクラスのスコープかどうか。
    pri let classFlag: bool;
    // 継承しているスコープ。
-   pri let inherit: &Scope!;
+   pri let mut inherit: &Scope!;
    // 継承しているスコープ。
    pri let ifScopeList: List<&Scope>;
    /** 所有権情報 */
@@ -953,7 +954,7 @@ pub fn Scope.getSymbolInfoField(
             return symbolInfo;
          }  
       } 
-      if! let scope = self.inherit {
+      if! let mut scope = self.inherit {
          let symbolInfo = scope.getSymbolInfoField( name, true, fromScope );
          if symbolInfo {
             return symbolInfo;
@@ -1420,7 +1421,7 @@ pub fn Scope.getClassTypeInfo(): &TypeInfo {
 /**
 このシンボルが、fromScope のスコープからアクセスできるか調べる。
  */
-pub override fn NormalSymbolInfo.canAccess( fromScope:&Scope ): &SymbolInfo!
+pub override fn NormalSymbolInfo.canAccess( fromScope:&Scope ) : &SymbolInfo!
 {
    let typeInfo = self.$typeInfo;
    if self.scope == fromScope {
@@ -1950,7 +1951,7 @@ pub class GenericTypeInfo extend TypeInfo {
    pub fn __init( genSrcTypeInfo:&TypeInfo,
                   itemTypeInfoList:&List<&TypeInfo>, moduleTypeInfo:&TypeInfo )
    {  
-      super( TypeInfo.createScope( (unwrap getScope( genSrcTypeInfo )).$parent,
+      super( TypeInfo.createScope( (unwrap genSrcTypeInfo.$scope).$parent,
                                    true, genSrcTypeInfo, nil ) );
 
       idProv.increment();
@@ -3111,9 +3112,11 @@ pub static fn NormalTypeInfo.createBuiltin(
 }
 
 pub let builtinTypeNone:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "None", "", .Prim## );
+   NormalTypeInfo.createBuiltin( "__None", "", .Prim## );
+pub let builtinTypeEmpty:TypeInfo = 
+   NormalTypeInfo.createBuiltin( "__Empty", "::", .Prim## );
 pub let builtinTypeNeverRet:TypeInfo = 
-   NormalTypeInfo.createBuiltin( "Error", "__", .Prim## );
+   NormalTypeInfo.createBuiltin( "__NRet", "__", .Prim## );
 pub let builtinTypeStem:TypeInfo = 
    NormalTypeInfo.createBuiltin( "Stem", "stem" , .Stem## );
 pub let builtinTypeStem_ = builtinTypeStem.$nilableTypeInfo;
@@ -3156,7 +3159,6 @@ pub fn isStruct( typeInfo:&TypeInfo ): bool {
    }
    return false;
 }
-
 
 idProv.increment();
 pub let builtinTypeBox = new BoxTypeInfo( idProv.$id, .Pub, boxRootAltType );
@@ -4102,6 +4104,16 @@ pub static fn TypeInfo.canEvalWithBase(
    if dest == builtinTypeStem_ {
       return true;
    }
+
+   if dest == builtinTypeEmpty {
+      switch otherSrc {
+         case builtinTypeAbbr, builtinTypeAbbrNone {
+            return false;
+         }
+      }
+      return true;
+   }
+   
    if dest.$srcTypeInfo.$kind == .DDD {
       if #dest.$itemTypeInfoList > 0 {
          return dest.$itemTypeInfoList[ 1 ].canEvalWith( other, opTxt, alt2type );

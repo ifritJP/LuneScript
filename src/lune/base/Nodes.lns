@@ -696,7 +696,8 @@ pub override fn ExpRefNode.canBeLeft():bool {
 }
 
 pub override fn ExpRefNode.canBeRight():bool {
-   return self.$symbolInfo.$canBeRight;
+   return self.$symbolInfo.$canBeRight and self.$symbolInfo.$hasValueFlag;
+   //return self.$symbolInfo.$canBeRight;
 }
 
 _declNodeClass( "ExpOp2", Node, false, true, nil,
@@ -931,14 +932,14 @@ _declNodeClass( "DeclVar", Node, false, false, true,
                 [ { "mode": "DeclVarMode" },
                   { "accessMode": "Ast.AccessMode" },
                   { "staticFlag": "bool" },
-                  { "varList": "List<&VarInfo>" },
+                  { "varList": "&List<&VarInfo>" },
                   { "expList": "&ExpListNode!" },
-                  { "symbolInfoList": "List<&Ast.SymbolInfo>"},
-                  { "typeInfoList": "List<&Ast.TypeInfo>" },
+                  { "symbolInfoList": "&List<&Ast.SymbolInfo>"},
+                  { "typeInfoList": "&List<&Ast.TypeInfo>" },
                   { "unwrapFlag": "bool" },
                   { "unwrapBlock": "&BlockNode!" },
                   { "thenBlock": "&BlockNode!" },
-                  { "syncVarList": "List<&VarInfo>" },
+                  { "syncVarList": "&List<&VarInfo>" },
                   { "syncBlock": "&BlockNode!" } ]
 );
 
@@ -1171,8 +1172,8 @@ _declNodeClass( "LiteralSymbol", Node, false, true, false,
                 [ { "token": "&Parser.Token" } ]
 );
 
-pub fn Node.getSymbolInfo(): List<&Ast.AccessSymbolInfo> {
-   fn processExpNode( node: &Node ): List<&Ast.AccessSymbolInfo> {
+pub fn Node.getSymbolInfo(): &List<&Ast.AccessSymbolInfo> {
+   fn processExpNode( node: &Node ): &List<&Ast.AccessSymbolInfo> {
       switch ( node.$kind ) {
          case NodeKind.$ExpRef {
             return [(unwrap (node@@@ExpRefNode)).$symbolInfo];

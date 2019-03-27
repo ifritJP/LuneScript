@@ -84,7 +84,7 @@ func( .val1, .val1 );
    }
    if valtest == testEnum4._from(1) {
    }
-   let! valtest2 = valtest {}
+   let! valtest2 = valtest { error( "NG" ); }
    then {
       if valtest2 == 1 {
       }

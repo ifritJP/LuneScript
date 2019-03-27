@@ -101,16 +101,17 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          
          switch typeInfo.$kind {
             case .Map {
-               let! keyType = genericList[1] {
-                  keyType = Ast.builtinTypeStem;
-                  self.addErrMess( symbolNode.$pos, "Key type is unknown" );
-               }; 
-               let! valType = genericList[ 2 ] {
-                  valType = Ast.builtinTypeStem;
-                  self.addErrMess( symbolNode.$pos, "Value type is unknown" );
-               }; 
-               typeInfo = Ast.NormalTypeInfo.createMap(
-                  accessMode, self.getCurrentClass(), keyType, valType, .Mut );
+               if #genericList < 2 {
+                  self.addErrMess( symbolNode.$pos, "Key or value type is unknown" );
+                  typeInfo = Ast.NormalTypeInfo.createMap(
+                     accessMode, self.getCurrentClass(),
+                     Ast.builtinTypeStem, Ast.builtinTypeStem, .Mut );
+               }
+               else {
+                  typeInfo = Ast.NormalTypeInfo.createMap(
+                     accessMode, self.getCurrentClass(),
+                     genericList[ 1 ], genericList[ 2 ], .Mut );
+               }
             }
             case .List {
                if checkAlternateTypeCount( 1 ) {
@@ -338,7 +339,7 @@ pub fn TransUnit.createAST(
 
    let mut lastStatement:&Nodes.Node! = nil;
    if macroFlag {
-      ast = self.analyzeBlock( .Macro ##);
+      ast = self.analyzeBlock( .Macro, .Ignore ##);
    }
    else {
       let mut children:List<&Nodes.Node> = [];
@@ -498,8 +499,10 @@ fn TransUnit.analyzeDeclMacro(
       self.parser = parser;
       
       let mut stmtList:List<&Nodes.Node> = [];
+      self.prepareTentativeSymbol( self.scope, false );
       self.analyzeStatementList( stmtList, "}" );
       self.checkNextToken( "}" );
+      self.finishTentativeSymbol( false );
 
 
       self.parser = bakParser;
@@ -557,27 +560,27 @@ fn TransUnit.analyzeDeclMacro(
 fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Position ) mut :
    &Parser.Token, &Ast.TypeInfo!, &List<&Ast.TypeInfo>, Map<&Ast.TypeInfo,&Ast.TypeInfo>
 {
-   let mut baseRef:Nodes.Node! = nil;
+   let mut baseRef:&Nodes.Node! = nil;
    let mut interfaceList:List<&Ast.TypeInfo> = [];
    let mut ifAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> = {};
    
    let mut nextToken = self.getToken(##);
    if nextToken.txt ~= "(" {
       self.pushback();
-      sync! baseRef = self.analyzeRefType( accessMode, false ) {}
-      do {
-         let baseType = baseRef.$expType;
-         if baseType.$kind ~= .Class {
-            self.addErrMess( baseRef.$pos,
-                             "%s is not class." ( baseType.getTxt(##) ) );
-         }
-         if Ast.isPubToExternal( accessMode ) and 
-            not Ast.isPubToExternal( baseType.$accessMode )
-         {
-            self.addErrMess(
-               baseRef.$pos, "%s can't be external symbol." ( baseType.getTxt(##) ) );
-         }
-      };
+      let workBaseRefType = self.analyzeRefType( accessMode, false );
+      baseRef = workBaseRefType;
+      let baseType = workBaseRefType.$expType;
+      if baseType.$kind ~= .Class {
+         self.addErrMess( workBaseRefType.$pos,
+                          "%s is not class." ( baseType.getTxt(##) ) );
+      }
+      if Ast.isPubToExternal( accessMode ) and 
+         not Ast.isPubToExternal( baseType.$accessMode )
+      {
+         self.addErrMess(
+            workBaseRefType.$pos,
+            "%s can't be external symbol." ( baseType.getTxt(##) ) );
+      }
       nextToken = self.getToken(##);
    }
    if nextToken.txt == "(" {
@@ -671,10 +674,7 @@ fn TransUnit.analyzePushClass(
          accessMode, firstToken.pos );
 
       when! baseTypeInfo {
-         let! initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
-            // プロトタイプ宣言時は __init がないこともある。
-         }     
-         then {
+         if! let initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
             if initTypeInfo.$accessMode == .Pri {
                self.addErrMess(
                   firstToken.pos, "The access mode of '__init' is 'pri'." );
@@ -816,7 +816,7 @@ fn TransUnit.analyzeDeclEnum(
       }
       
       if nextToken.txt == "=" {
-         let exp = self.analyzeExp( false ## );
+         let exp = self.analyzeExp( false, false ## );
          let! literal = exp.getLiteral() {
             self.error( "illegal enum val" );
          };
@@ -1403,10 +1403,16 @@ fn TransUnit.analyzeClassBody(
             symbolInfo.set_hasValueFlag( false );
          }
       }
+
+      self.pushScope( false## );
+      self.prepareTentativeSymbol( self.scope, false );
       
       self.checkNextToken( "{" );
       self.analyzeStatementList( initStmtList, "}" );
       self.checkNextToken( "}" );
+
+      self.popScope();
+      self.finishTentativeSymbol( false );
    }
 
    fn processAdvertise() {
@@ -2026,13 +2032,9 @@ fn TransUnit.analyzeDeclFunc(
       if not name {
          self.addErrMess( firstToken.pos, "can't override anonymous func" );
       };
-      let! overrideType =
+      if! let overrideType =
          self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
       {
-         //Ast.dumpScope( self.scope.$parent, "" );
-         self.addErrMess( firstToken.pos, "not found override -- " .. funcName );
-      }
-      then {
          if overrideType.get_accessMode() ~= accessMode {
             self.addErrMess( firstToken.pos, "mismatch override accessMode -- %s,%s,%s"
                              ( funcName, overrideType.get_accessMode().$_txt,
@@ -2064,7 +2066,11 @@ fn TransUnit.analyzeDeclFunc(
          if not overrideType.canEvalWith( typeInfo, "=", alt2typeMap ) {
             self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
          }
-      };
+      }
+      else {
+         //Ast.dumpScope( self.scope.$parent, "" );
+         self.addErrMess( firstToken.pos, "not found override -- " .. funcName );
+      }
    }
    else {
       when! name {
@@ -2126,7 +2132,7 @@ fn TransUnit.analyzeDeclFunc(
       
       
       self.pushback();
-      body = self.analyzeBlock( .Func, funcBodyScope );
+      body = self.analyzeBlock( .Func, .Ignore, funcBodyScope );
       when! body {
          if #retTypeInfoList ~= 0
          {
@@ -2249,11 +2255,11 @@ let で宣言している変数シンボル、型、初期値の型情報を解�
 fn TransUnit.analyzeLetAndInitExp(
    firstPos:&Parser.Position, initMutable:bool,
    accessMode:Ast.AccessMode, unwrapFlag:bool ) mut :
-   List<&Ast.TypeInfo>, LetVarInfo[], List<&Ast.TypeInfo>, Nodes.ExpListNode!
+   List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
 {
    /** 宣言している変数の型リスト */
    let mut typeInfoList : List<&Ast.TypeInfo> = [];
-   let mut letVarList:LetVarInfo[] = [];
+   let mut letVarList:List<&LetVarInfo> = [];
 
    let mut nextToken = Parser.getEofToken();
    
@@ -2267,7 +2273,7 @@ fn TransUnit.analyzeLetAndInitExp(
       }
       let varName = self.checkSymbol( nextToken, .MustNot_ );
       nextToken = self.getToken(##);
-      let mut typeInfo = Ast.builtinTypeNone;
+      let mut typeInfo = Ast.builtinTypeEmpty;
       if nextToken.txt == ":" {
          let refType = self.analyzeRefType( accessMode, false );
          letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
@@ -2277,7 +2283,7 @@ fn TransUnit.analyzeLetAndInitExp(
       else {
          letVarList.insert( new LetVarInfo( mutable, varName, nil ) );
       }
-      if not typeInfo.equals( Ast.builtinTypeNone ## ) and
+      if not typeInfo.equals( Ast.builtinTypeEmpty ## ) and
          Ast.TypeInfo.isMut( typeInfo ) and not mutable
       {     
          typeInfo = self.createModifier( typeInfo, .IMut );
@@ -2288,10 +2294,13 @@ fn TransUnit.analyzeLetAndInitExp(
    // 初期値の式を取得
    let mut expList:Nodes.ExpListNode! = nil;
    if nextToken.txt == "=" {
-      expList = self.analyzeExpList( false ## );
+      expList = self.analyzeExpList( false, false ## );
       if not expList {
          self.error( "expList is nil" );
       }
+   }
+   else {
+      self.pushback();
    }
 
    // unwrap 前の型
@@ -2327,7 +2336,7 @@ fn TransUnit.analyzeLetAndInitExp(
                if unwrapFlag {
                   checkType = dddItemType.$nonnilableType;
                }
-               if not argType.equals( Ast.builtinTypeNone ## ) and
+               if not argType.equals( Ast.builtinTypeEmpty ## ) and
                   not argType.canEvalWith( checkType, "=", {} )
                {
                   self.addErrMess(
@@ -2369,7 +2378,7 @@ fn TransUnit.analyzeLetAndInitExp(
                }
                Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
 
-               if not varType.equals( Ast.builtinTypeNone ## ) and
+               if not varType.equals( Ast.builtinTypeEmpty ## ) and
                   not varType.canEvalWith( expTypeInfo, "=", alt2typeMap ) and
                   not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
                {               
@@ -2428,7 +2437,7 @@ fn TransUnit.analyzeLetAndInitExp(
       // 変数の型を、型推論で初期値から設定
       foreach typeInfo, index in expTypeList {
          if #typeInfoList < index or
-            typeInfoList[ index ].equals( Ast.builtinTypeNone ## )
+            typeInfoList[ index ].equals( Ast.builtinTypeEmpty ## )
          {
             if Ast.TypeInfo.isMut( typeInfo ) and
                index <= #letVarList and not letVarList[ index ].mutable
@@ -2519,8 +2528,22 @@ fn TransUnit.analyzeDeclVar(
                                 "shadowing variable -- %s" (varName.txt) );
             }
          }
+         let mut orgExpType = Ast.builtinTypeStem_;
+         if not unwrapFlag {
+            orgExpType = Ast.builtinTypeEmpty;
+         }
+         if index <= #orgExpTypeList {
+            orgExpType = orgExpTypeList[ index ];
+         }
+         
+         let mut hasValue = false;
+         if not unwrapFlag and orgExpType ~= Ast.builtinTypeEmpty or
+            unwrapFlag and not orgExpType.$nilable
+         {        
+            hasValue = true;
+         }
          self.scope.addVar( accessMode, varName.txt, typeInfo,
-                            letVarInfo.mutable, not unwrapFlag );
+                            letVarInfo.mutable, hasValue );
       }
       symbolInfoList.insert(
          unwrap self.scope.getSymbolInfo( varName.txt, self.scope, true ) );
@@ -2538,31 +2561,47 @@ fn TransUnit.analyzeDeclVar(
             orgExpTypeList[ index ], false ## );
       }
       
-      unwrapBlock = self.analyzeBlock( .LetUnwrap, scope );
+      unwrapBlock = self.analyzeBlock( .LetUnwrap, .Start, scope );
       self.popScope();
 
       // unwrap ブロック後には変数にデータがセットされているものとする。
       if mode == .Let or mode == .Sync {
-         foreach letVarInfo, index in letVarList {
-            let symbolInfo =
-               unwrap self.scope.getSymbolInfoChild( letVarInfo.varName.txt );
-            symbolInfo.set_hasValueFlag( true );
+         when! unwrapBlock {
+            let breakKind = unwrapBlock.getBreakKind( .Normal );
+            foreach letVarInfo in letVarList {
+               let symbolInfo =
+                  unwrap self.scope.getSymbolInfoChild( letVarInfo.varName.txt );
+               if breakKind ~= .None {
+                  self.tentativeSymbol.checkAndExclude( symbolInfo );
+                  symbolInfo.set_hasValueFlag( true );
+               }
+               else {
+                  if not self.tentativeSymbol.checkAndExclude( symbolInfo ) {
+                     if not symbolInfo.$hasValueFlag {
+                        self.addErrMess(
+                           unwrapBlock.$pos,       
+                           "This variable isn't set -- " .. (symbolInfo.$name) );
+                     }
+                  }
+               }
+            }
          }
       }
 
       token = self.getToken( true );
       if token.txt == "then" {
-         thenBlock = self.analyzeBlock( .LetUnwrap, scope );
+         thenBlock = self.analyzeBlock( .LetUnwrap, .Finish, scope );
       }
       else {
          self.pushback();
+         self.finishTentativeSymbol( true );
       }
    }
 
    let mut syncBlock: Nodes.BlockNode! = nil;
    if mode == .Sync {
       self.checkNextToken( "do" );
-      syncBlock = self.analyzeBlock( .LetUnwrap, syncScope );
+      syncBlock = self.analyzeBlock( .LetUnwrap, .Simple, syncScope );
       self.popScope();
    }
 
@@ -2603,7 +2642,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    }
    else {
       self.pushback();
-      let exp = self.analyzeExp( false ## );
+      let exp = self.analyzeExp( false, false ## );
       expNodeList.insert( exp );
       if exp.$expType.$nilable {
          typeInfoList.insert( exp.$expType.$nonnilableType );
@@ -2624,16 +2663,17 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       self.addLocalVar( firstToken.pos, false, true, varName, expType, false ## );
    }
    
-   let block = self.analyzeBlock( .IfUnwrap, scope );
+   let block = self.analyzeBlock( .IfUnwrap, .Start, scope );
 
    self.popScope();
 
    let mut elseBlock:Nodes.BlockNode! = nil;
    nextToken = self.getToken( true );
    if nextToken.txt == "else" {
-      elseBlock = self.analyzeBlock( .IfUnwrap ## );
+      elseBlock = self.analyzeBlock( .IfUnwrap, .Finish ## );
    }
    else {
+      self.finishTentativeSymbol( false );
       self.pushback();
    }
 
@@ -2673,7 +2713,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       self.addErrMess( nextToken.pos, "'when' need '!'" );
    }
 
-   let symListNode = self.analyzeExpList( false ## );
+   let symListNode = self.analyzeExpList( false, false ## );
 
    let mut scope = self.pushScope( false ## );
 
@@ -2701,16 +2741,17 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       }
    }
 
-   let block = self.analyzeBlock( .IfUnwrap, scope );
+   let block = self.analyzeBlock( .IfUnwrap, .Start, scope );
 
    self.popScope();
 
    let mut elseBlock:Nodes.BlockNode! = nil;
    nextToken = self.getToken( true );
    if nextToken.txt == "else" {
-      elseBlock = self.analyzeBlock( .When ## );
+      elseBlock = self.analyzeBlock( .When, .Finish ## );
    }
    else {
+      self.finishTentativeSymbol( false );
       self.pushback();
    }
 

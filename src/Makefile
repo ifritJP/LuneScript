@@ -279,6 +279,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/Alge4.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/exp.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/symbol.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/symbolEmpty.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/noexist.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/static.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/generics.lns,exe,2>&1)

@@ -1,0 +1,414 @@
+class Test {
+   let val:int {pub};
+}
+{
+   let test2:Test;
+   print( test2.$val + 1 ); // error
+}
+{
+   let test2:Test!;
+   when! test2 { // error
+   }
+}
+{
+   let val:List<int>;
+   print( val[ 1 ] ); // error
+}
+{
+   let val:Set<int>;
+   print( val.has( 1 ) ); // error
+}
+{
+   let val:Map<str,str>;
+   print( val.val ); // error
+   print( val[ "val" ] ); // error
+}
+{
+   let val:form;
+   val(##);  // error
+}
+{
+   let val;
+   let val2 = val; // error
+}
+{
+   let val;
+   fn func() {
+      val = 1; // error
+   }
+   func();
+   print( val + 1 ); // error
+}
+{
+   fn func(op:int) {
+      let val1, val2 = 1; // error
+      print( val1 + 1, val2 + 1 ); // error
+   }
+}
+{
+   fn func(op:int) {
+      let val:int;
+      if op == 0 {
+         val = 1;
+      }
+      else {
+         val = 2;
+      }
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:int) {
+      let val:int;
+      if op == 0 {
+         val = 1;
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:int) {
+      let val:int;
+      print( val + 1 ); // error
+   }
+}
+
+{
+   fn func(op:int) {
+      let mut val;
+      switch op {
+         case 0 {
+            val = 1;
+         }
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:int) {
+      let mut val;
+      switch op {
+         case 0 {
+            val = 1;
+         }
+         default {
+            val = 2;
+         }
+      }
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:int) {
+      let mut val;
+      switch op {
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool!) {
+      let mut val;
+      for count = 1, 10 {
+         val = 1;
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool!) {
+      let mut val;
+      while op {
+         val = 1;
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool!) {
+      let mut val;
+      repeat {
+         val = 1;
+      } op;
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool!) {
+      let! val = op {
+         val = true;
+      };
+      let val2:bool = val;
+   }
+}
+{
+   fn func(op:bool!) {
+      let! val = op {
+         return;
+      };
+      let val2:bool = val;
+   }
+}
+{
+   fn func(op:bool!) {
+      let! val = op { // error
+         
+      };
+      let val2:bool = val;  // error
+   }
+}
+{
+   fn func(op:bool!) {
+      let val;
+      if! op {
+         val = 1;
+      }
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool!) {
+      let val;
+      if! op {
+         val = 1;
+      }
+      else {
+         val = 1;
+      }
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool!) {
+      let val;
+      when! op {
+         val = 1;
+      }
+      else {
+         val = 1;
+      }
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool!) {
+      let val;
+      when! op {
+         val = 1;
+      }
+      else {
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool!) {
+      let val;
+      when! op {
+         val = 1;
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      {
+         val = 1;
+      }  
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      {
+         if op {
+            val = 1;
+         }
+         else {
+            val = 1;
+         }
+      }  
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      {
+         if op {
+            val = 1;
+         }
+         else {
+            val = "abc"; // error
+         }
+      }  
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool,op2:bool) {
+      let val;
+      if op2 {
+         if op {
+            val = 1;
+         }
+         else {
+            val = 1;
+         }
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool,op2:bool) {
+      let val;
+      if op2 {
+         if op {
+            val = 1;
+         }
+         else {
+            val = 1;
+         }
+      }
+      else {
+         val = 1;
+      }
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool,op2:bool) {
+      let val;
+      if op2 {
+         if op {
+            val = 1;
+         }
+      }
+      else {
+         val = 1;
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      if op {
+         val = 1;
+      }
+      elseif false {
+         return;
+      }
+      else {
+         val = 2;
+      }  
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      if op {
+         val = 1;
+      }
+      else {
+         return;
+      }  
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      if op {
+         val = 1;
+      }
+      elseif false {
+      }
+      else {
+         val = 2;
+      }  
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      if op {
+         val = 1;
+      }
+      elseif false {
+         val = 3;
+      }
+      else {
+         val = 2;
+      }  
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      if op {
+         val = 1;
+      }
+      elseif false {
+         val = 3;
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      if op {
+         val = 1;
+      }
+      print( val + 1 ); // error
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      if op {
+         val = 1;
+      }  
+      else {
+         val = 2;
+      }  
+      print( val + 1 );
+   }
+}
+{
+   fn func(op:bool) {
+      let val;
+      let mut val2;
+      while true {
+         val2 = 1;
+         if op {
+            val = 1; // error
+         }  
+         else {
+            break;
+         }  
+         print( val + 1 );
+         break;
+      }
+      print( val + 1 );  // error
+   }
+   func( true );
+}
+{
+   fn func(): int {
+      return func();
+   }  
+   {  
+      let val, val2:int! = func();
+      print( val );
+   }  
+   {  
+      let val, val2 = func();
+   }
+}
