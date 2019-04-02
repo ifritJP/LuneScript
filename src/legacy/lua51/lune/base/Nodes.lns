@@ -945,51 +945,71 @@ _declNodeClass( "DeclVar", Node, false, false, true,
 
 pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
-   if checkMode ~= .Normal and checkMode ~= .Return {
-      if! let block = self.unwrapBlock {
-         let kind = block.getBreakKind( checkMode );
-         switch kind {
-            case .Return, .NeverRet {
-               return kind;
-            }
-         }
-      }
-      if! let block = self.thenBlock {
-         let kind = block.getBreakKind( checkMode );
-         switch kind {
-            case .Return, .NeverRet {
-               return kind;
-            }
-         }
-      }
-      if! let block = self.syncBlock {
-         let kind = block.getBreakKind( checkMode );
-         switch kind {
-            case .Return, .NeverRet {
-               return kind;
-            }
-         }
-      }
-      return .None;
-   }
-   else {
-      let mut kind = BreakKind.None;
-      let mut work = BreakKind.None;
-      if! let block = self.unwrapBlock {
-         work = block.getBreakKind( checkMode );
+   // if checkMode ~= .Normal and checkMode ~= .Return {
+   //    if! let block = self.unwrapBlock {
+   //       let kind = block.getBreakKind( checkMode );
+   //       switch kind {
+   //          case .Return, .NeverRet, .Break {
+   //             return kind;
+   //          }
+   //       }
+   //    }
+   //    if! let block = self.thenBlock {
+   //       let kind = block.getBreakKind( checkMode );
+   //       switch kind {
+   //          case .Return, .NeverRet, .Break {
+   //             return kind;
+   //          }
+   //       }
+   //    }
+   //    if! let block = self.syncBlock {
+   //       let kind = block.getBreakKind( checkMode );
+   //       switch kind {
+   //          case .Return, .NeverRet, .Break {
+   //             return kind;
+   //          }
+   //       }
+   //    }
+   //    return .None;
+   // }
+   // else {
+   //    let mut kind = BreakKind.None;
+   //    let mut work = BreakKind.None;
+   //    if! let block = self.unwrapBlock {
+   //       work = block.getBreakKind( checkMode );
+   //       _setBreakKind( work, kind, true, checkMode );
+   //       if! let thenBlock = self.thenBlock {
+   //          work = thenBlock.getBreakKind( checkMode );
+   //          _setBreakKind( work, kind, true, checkMode );
+   //          if! let syncBlock = self.syncBlock {
+   //             work = syncBlock.getBreakKind( checkMode );
+   //             _setBreakKind( work, kind, true, checkMode );
+   //             return kind;
+   //          }     
+   //       }  
+   //    }
+   //    return .None;
+   // }
+   
+   let mut kind = BreakKind.None;
+   let mut work = BreakKind.None;
+   if! let block = self.unwrapBlock {
+      work = block.getBreakKind( checkMode );
+      _setBreakKind( work, kind, true, checkMode );
+      if! let thenBlock = self.thenBlock {
+         work = thenBlock.getBreakKind( checkMode );
          _setBreakKind( work, kind, true, checkMode );
-         if! let thenBlock = self.thenBlock {
-            work = thenBlock.getBreakKind( checkMode );
+         if! let syncBlock = self.syncBlock {
+            work = syncBlock.getBreakKind( checkMode );
             _setBreakKind( work, kind, true, checkMode );
-            if! let syncBlock = self.syncBlock {
-               work = syncBlock.getBreakKind( checkMode );
-               _setBreakKind( work, kind, true, checkMode );
-               return kind;
-            }     
-         }  
+         }
+         return kind;
       }
-      return .None;
+      if checkMode ~= .Normal and checkMode ~= .Return {
+         return kind;
+      }
    }
+   return .None;
 }
 
 

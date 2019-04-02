@@ -114,6 +114,16 @@
    }  
 }
 
+{
+   form TestFunc( list:List<int> );
+
+   fn func( test2:TestFunc ) {
+   }  
+
+   func( fn ( list:&List<int> ) { } ); // error
+}
+
+
 abstract class Super {
    pub abstract fn func2();
    pub abstract fn func() : int;
@@ -127,4 +137,3 @@ abstract class Sub extend Super {
       return super(); // error
    }
 }
-

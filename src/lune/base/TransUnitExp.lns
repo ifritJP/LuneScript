@@ -1086,25 +1086,33 @@ fn TransUnit.analyzeExpCast(
    let expType = exp.$expType;
 
    if opTxt == "@@@" or opTxt == "@@=" {
-      if castType.$kind ~= .IF and castType.$kind ~= .Class {
-         self.addErrMess( castTypeNode.$pos,
-                          "'@@@' cast must be class or interface. -- %s"
-                          (castType.getTxt(##)) );
-      }
-      if expType.$srcTypeInfo ~= Ast.builtinTypeStem and
-         expType.$kind ~= .IF and expType.$kind ~= .Class
-      {           
-         self.addErrMess( castTypeNode.$pos,
-                          "'@@@' cast must be class or interface. -- %s"
-                          (castType.getTxt(##)) );
-      }
       if #castType.$itemTypeInfoList > 0 {
          self.addErrMess( castTypeNode.$pos,
                           "not support cast for generics class yet -- %s"
                           (castType.getTxt(##)));
       }
+      switch castType.$kind {
+         case .IF, .Class, .Prim {
+         }
+         default {
+            self.addErrMess( castTypeNode.$pos,
+                             "not support cast -- %s" (castType.getTxt(##)));
+         }
+      }
 
       if opTxt == "@@=" {
+         if castType.$kind ~= .IF and castType.$kind ~= .Class {
+            self.addErrMess( castTypeNode.$pos,
+                             "'@@=' cast must be class or interface. -- %s"
+                             (castType.getTxt(##)) );
+         }
+         if expType.$srcTypeInfo ~= Ast.builtinTypeStem and
+            expType.$kind ~= .IF and expType.$kind ~= .Class
+         {           
+            self.addErrMess( castTypeNode.$pos,
+                             "'@@=' cast must be class or interface. -- %s"
+                             (castType.getTxt(##)) );
+         }  
          if not Ast.isStruct( castType ) {
             self.addErrMess( castTypeNode.$pos,
                              "'@@=' cast type can't use class has method -- %s"
@@ -1788,7 +1796,7 @@ fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, token: &Parser.Token,
    mode: ExpSymbolMode, prefixExp: &Nodes.Node!, mut skipFlag: bool ) mut : Nodes.Node
 {
-   let mut exp:Nodes.Node! = nil;
+   let mut exp:Nodes.Node;
    
    if mode == .Field or mode == .Get or
       mode == .FieldNil or mode == .GetNil
@@ -1796,17 +1804,19 @@ fn TransUnit.analyzeExpSymbol(
       when! prefixExp {
          exp = self.analyzeExpField( firstToken, token, mode, prefixExp );
 
-         if! let expType = exp$.$expType {
-            if prefixExp.$expType.isModule() {
-               if! let algeType = expType@@@Ast.AlgeTypeInfo {
-                  let nextToken = self.getToken(##);
-                  if nextToken.txt == "." {
-                     return self.analyzeNewAlge( firstToken, algeType, exp );
-                  }  
-                  self.pushback();
-               }
+         let expType = exp.$expType;
+         if prefixExp.$expType.isModule() {
+            if! let algeType = expType@@@Ast.AlgeTypeInfo {
+               let nextToken = self.getToken(##);
+               if nextToken.txt == "." {
+                  return self.analyzeNewAlge( firstToken, algeType, exp );
+               }  
+               self.pushback();
             }
          }
+      }
+      else {
+         Util.err( "prefixExp is nil" );
       }
    }
    elseif mode == .Symbol {
@@ -1888,7 +1898,7 @@ fn TransUnit.analyzeExpSymbol(
       self.error( "illegal mode -- %s" ( mode ) );
    }
 
-   return self.analyzeExpCont( firstToken, unwrap exp, skipFlag );
+   return self.analyzeExpCont( firstToken, exp, skipFlag );
 }
 
 fn TransUnit.analyzeExpOpSet(

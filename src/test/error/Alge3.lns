@@ -1,5 +1,5 @@
 pub class Hoge {
-   pri let val:int {pub,pub};
+   pri let mut val:int {pub,pub};
 }
 
 pub alge AlgeTest {

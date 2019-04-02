@@ -94,3 +94,68 @@
    if val {
    }
 }
+{
+   fn func( obj:int! ):int {
+      while true {
+         let! val = obj {
+            break;
+         }; 
+         return 1;
+      }  
+      return 0;
+   }  
+   fn func2( obj:int! ):int {
+      while true {
+         let! val = obj {
+            return 0;
+         }
+         then {
+            break;
+         };
+         return 1; // error
+      }
+      return 0;
+   }  
+   fn func3( obj:int! ):int {
+      while true {
+         if obj {
+            return 0;
+         }
+         return 1;
+      }  
+      return 0; // error
+   }  
+   fn func4( obj:int! ):int {
+      while true {
+         if obj {
+            break;
+         }  
+         return 1;
+      }  
+      return 0;
+   }  
+   fn func5( obj:int! ):int {
+      while true {
+         if obj {
+            break;
+         }
+         else {
+            return 0;
+         }
+         return 1; // error
+      }  
+      return 0;
+   }  
+   fn func6( obj:int! ):int {
+      while true {
+         if obj {
+            return 0;
+         }
+         else {
+            return 0;
+         }
+         return 1; // error
+      }  
+      return 0; // error
+   }  
+}

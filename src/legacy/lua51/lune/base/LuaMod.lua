@@ -442,9 +442,6 @@ function _lune.__Cast( obj, kind, class )
       if type( obj ) ~= "number" then
          return nil
       end
-      if math.floor( obj ) == obj then
-         return nil
-      end
       return obj
    elseif kind == %d then -- str
       if type( obj ) ~= "string" then

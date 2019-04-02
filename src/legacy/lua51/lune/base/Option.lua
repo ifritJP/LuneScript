@@ -166,9 +166,6 @@ function _lune.__Cast( obj, kind, class )
       if type( obj ) ~= "number" then
          return nil
       end
-      if math.floor( obj ) == obj then
-         return nil
-      end
       return obj
    elseif kind == 2 then -- str
       if type( obj ) ~= "string" then
@@ -191,7 +188,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1148
+   return 1173
 end
 
 

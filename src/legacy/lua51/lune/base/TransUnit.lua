@@ -291,9 +291,6 @@ function _lune.__Cast( obj, kind, class )
       if type( obj ) ~= "number" then
          return nil
       end
-      if math.floor( obj ) == obj then
-         return nil
-      end
       return obj
    elseif kind == 2 then -- str
       if type( obj ) ~= "string" then
@@ -4173,7 +4170,8 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    self.moduleScope = self.scope
    self.moduleType = moduleTypeInfo
    self.parser = parser
-   local ast = nil
+   local ast
+   
    local lastStatement = nil
    if macroFlag then
       ast = self:analyzeBlock( Nodes.BlockKind.Macro, TentativeMode.Ignore )
@@ -4265,7 +4263,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
       os.exit( 0 )
    end
    
-   return ASTInfo.new(_lune.unwrap( ast), moduleTypeInfo, moduleSymbolKind)
+   return ASTInfo.new(ast, moduleTypeInfo, moduleSymbolKind)
 end
 
 function TransUnit:analyzeDeclMacro( accessMode, firstToken )
@@ -4941,6 +4939,10 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
       getterMode, nextToken = analyzeAccessorMode(  )
       if nextToken.txt == "," then
          setterMode, nextToken = analyzeAccessorMode(  )
+         if setterMode ~= Ast.AccessMode.None and mutMode == Ast.MutMode.IMut then
+            self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
+         end
+         
       end
       
       self:checkToken( nextToken, "}" )
@@ -7292,19 +7294,28 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
    local castType = castTypeNode:get_expType()
    local expType = exp:get_expType()
    if opTxt == "@@@" or opTxt == "@@=" then
-      if castType:get_kind() ~= Ast.TypeInfoKind.IF and castType:get_kind() ~= Ast.TypeInfoKind.Class then
-         self:addErrMess( castTypeNode:get_pos(), string.format( "'@@@' cast must be class or interface. -- %s", castType:getTxt(  )) )
-      end
-      
-      if expType:get_srcTypeInfo() ~= Ast.builtinTypeStem and expType:get_kind() ~= Ast.TypeInfoKind.IF and expType:get_kind() ~= Ast.TypeInfoKind.Class then
-         self:addErrMess( castTypeNode:get_pos(), string.format( "'@@@' cast must be class or interface. -- %s", castType:getTxt(  )) )
-      end
-      
       if #castType:get_itemTypeInfoList() > 0 then
          self:addErrMess( castTypeNode:get_pos(), string.format( "not support cast for generics class yet -- %s", castType:getTxt(  )) )
       end
       
+      do
+         local _switchExp = castType:get_kind()
+         if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Prim then
+         else 
+            
+               self:addErrMess( castTypeNode:get_pos(), string.format( "not support cast -- %s", castType:getTxt(  )) )
+         end
+      end
+      
       if opTxt == "@@=" then
+         if castType:get_kind() ~= Ast.TypeInfoKind.IF and castType:get_kind() ~= Ast.TypeInfoKind.Class then
+            self:addErrMess( castTypeNode:get_pos(), string.format( "'@@=' cast must be class or interface. -- %s", castType:getTxt(  )) )
+         end
+         
+         if expType:get_srcTypeInfo() ~= Ast.builtinTypeStem and expType:get_kind() ~= Ast.TypeInfoKind.IF and expType:get_kind() ~= Ast.TypeInfoKind.Class then
+            self:addErrMess( castTypeNode:get_pos(), string.format( "'@@=' cast must be class or interface. -- %s", castType:getTxt(  )) )
+         end
+         
          if not Ast.isStruct( castType ) then
             self:addErrMess( castTypeNode:get_pos(), string.format( "'@@=' cast type can't use class has method -- %s", castType:getTxt(  )) )
          end
@@ -7929,31 +7940,29 @@ end
 
 function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFlag )
 
-   local exp = nil
+   local exp
+   
    if mode == ExpSymbolMode.Field or mode == ExpSymbolMode.Get or mode == ExpSymbolMode.FieldNil or mode == ExpSymbolMode.GetNil then
       if prefixExp ~= nil then
          exp = self:analyzeExpField( firstToken, token, mode, prefixExp )
-         do
-            local expType = exp:get_expType()
-            if expType ~= nil then
-               if prefixExp:get_expType():isModule(  ) then
-                  do
-                     local algeType = _lune.__Cast( expType, 3, Ast.AlgeTypeInfo )
-                     if algeType ~= nil then
-                        local nextToken = self:getToken(  )
-                        if nextToken.txt == "." then
-                           return self:analyzeNewAlge( firstToken, algeType, exp )
-                        end
-                        
-                        self:pushback(  )
-                     end
+         local expType = exp:get_expType()
+         if prefixExp:get_expType():isModule(  ) then
+            do
+               local algeType = _lune.__Cast( expType, 3, Ast.AlgeTypeInfo )
+               if algeType ~= nil then
+                  local nextToken = self:getToken(  )
+                  if nextToken.txt == "." then
+                     return self:analyzeNewAlge( firstToken, algeType, exp )
                   end
                   
+                  self:pushback(  )
                end
-               
             end
+            
          end
          
+      else
+         Util.err( "prefixExp is nil" )
       end
       
    elseif mode == ExpSymbolMode.Symbol then
@@ -8036,7 +8045,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       self:error( string.format( "illegal mode -- %s", tostring( mode)) )
    end
    
-   return self:analyzeExpCont( firstToken, _lune.unwrap( exp), skipFlag )
+   return self:analyzeExpCont( firstToken, exp, skipFlag )
 end
 
 function TransUnit:analyzeExpOpSet( exp, opeToken, exp2NodeList )

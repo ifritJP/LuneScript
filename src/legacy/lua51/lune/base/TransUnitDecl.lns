@@ -335,7 +335,7 @@ pub fn TransUnit.createAST(
    
    self.parser = parser;
 
-   let mut ast:Nodes.Node! = nil;
+   let ast:Nodes.Node;
 
    let mut lastStatement:&Nodes.Node! = nil;
    if macroFlag {
@@ -430,7 +430,7 @@ pub fn TransUnit.createAST(
       os.exit( 0 );
    }
 
-   return new ASTInfo( unwrap ast, moduleTypeInfo, moduleSymbolKind );
+   return new ASTInfo( ast, moduleTypeInfo, moduleSymbolKind );
 }
 
 
@@ -1221,6 +1221,13 @@ fn TransUnit.analyzeDeclMember(
          getterMode, nextToken = analyzeAccessorMode();
          if nextToken.txt == "," {
             setterMode, nextToken = analyzeAccessorMode();
+            if setterMode ~= .None and mutMode == .IMut {
+               // immutable なメンバに setter 宣言は出来ない
+               self.addErrMess(
+                  varName.pos,      
+                  "This member can't have setter, this member is immutable. -- %s"
+                  (varName.txt) );
+            }
          }
          self.checkToken( nextToken, "}" );
          token = self.getToken(##);

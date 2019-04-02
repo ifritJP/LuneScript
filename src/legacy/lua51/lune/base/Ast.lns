@@ -1082,7 +1082,6 @@ pub fn Scope.getTypeInfo(
 pub fn Scope.getSymbolTypeInfo(
    name: str, fromScope:&Scope, moduleScope:&Scope ) : &SymbolInfo!
 {
-   let mut typeInfo:TypeInfo! = nil;
    let mut validThisScope = false;
    let mut limitSymbol = false;
 

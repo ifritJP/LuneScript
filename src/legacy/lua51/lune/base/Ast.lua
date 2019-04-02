@@ -166,9 +166,6 @@ function _lune.__Cast( obj, kind, class )
       if type( obj ) ~= "number" then
          return nil
       end
-      if math.floor( obj ) == obj then
-         return nil
-      end
       return obj
    elseif kind == 2 then -- str
       if type( obj ) ~= "string" then
@@ -1614,7 +1611,6 @@ end
 
 function Scope:getSymbolTypeInfo( name, fromScope, moduleScope )
 
-   local typeInfo = nil
    local validThisScope = false
    local limitSymbol = false
    do

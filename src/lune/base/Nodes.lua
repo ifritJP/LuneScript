@@ -96,9 +96,6 @@ function _lune.__Cast( obj, kind, class )
       if type( obj ) ~= "number" then
          return nil
       end
-      if math.floor( obj ) == obj then
-         return nil
-      end
       return obj
    elseif kind == 2 then -- str
       if type( obj ) ~= "string" then
@@ -4197,169 +4194,125 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
-   if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
-      do
-         local block = self.unwrapBlock
-         if block ~= nil then
-            local kind = block:getBreakKind( checkMode )
-            do
-               local _switchExp = kind
-               if _switchExp == BreakKind.Return or _switchExp == BreakKind.NeverRet then
-                  return kind
-               end
+   local kind = BreakKind.None
+   local work = BreakKind.None
+   do
+      local block = self.unwrapBlock
+      if block ~= nil then
+         work = block:getBreakKind( checkMode )
+         if checkMode == CheckBreakMode.IgnoreFlowReturn then
+            if work == BreakKind.Return then
+               return BreakKind.Return
             end
             
-         end
-      end
-      
-      do
-         local block = self.thenBlock
-         if block ~= nil then
-            local kind = block:getBreakKind( checkMode )
-            do
-               local _switchExp = kind
-               if _switchExp == BreakKind.Return or _switchExp == BreakKind.NeverRet then
-                  return kind
-               end
+            if work == BreakKind.NeverRet then
+               return BreakKind.NeverRet
             end
             
-         end
-      end
-      
-      do
-         local block = self.syncBlock
-         if block ~= nil then
-            local kind = block:getBreakKind( checkMode )
+         else
+          
             do
-               local _switchExp = kind
-               if _switchExp == BreakKind.Return or _switchExp == BreakKind.NeverRet then
-                  return kind
-               end
-            end
-            
-         end
-      end
-      
-      return BreakKind.None
-   else
-    
-      local kind = BreakKind.None
-      local work = BreakKind.None
-      do
-         local block = self.unwrapBlock
-         if block ~= nil then
-            work = block:getBreakKind( checkMode )
-            if checkMode == CheckBreakMode.IgnoreFlowReturn then
-               if work == BreakKind.Return then
-                  return BreakKind.Return
-               end
-               
-               if work == BreakKind.NeverRet then
-                  return BreakKind.NeverRet
-               end
-               
-            else
-             
-               do
-                  local _switchExp = work
-                  if _switchExp == BreakKind.None then
-                     if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                        return BreakKind.None
+               local _switchExp = work
+               if _switchExp == BreakKind.None then
+                  if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                     return BreakKind.None
+                  end
+                  
+               else 
+                  
+                     if kind == BreakKind.None or kind > work then
+                        kind = work
                      end
                      
-                  else 
-                     
-                        if kind == BreakKind.None or kind > work then
-                           kind = work
+               end
+            end
+            
+         end
+         
+         
+         do
+            local thenBlock = self.thenBlock
+            if thenBlock ~= nil then
+               work = thenBlock:getBreakKind( checkMode )
+               if checkMode == CheckBreakMode.IgnoreFlowReturn then
+                  if work == BreakKind.Return then
+                     return BreakKind.Return
+                  end
+                  
+                  if work == BreakKind.NeverRet then
+                     return BreakKind.NeverRet
+                  end
+                  
+               else
+                
+                  do
+                     local _switchExp = work
+                     if _switchExp == BreakKind.None then
+                        if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                           return BreakKind.None
                         end
                         
-                  end
-               end
-               
-            end
-            
-            
-            do
-               local thenBlock = self.thenBlock
-               if thenBlock ~= nil then
-                  work = thenBlock:getBreakKind( checkMode )
-                  if checkMode == CheckBreakMode.IgnoreFlowReturn then
-                     if work == BreakKind.Return then
-                        return BreakKind.Return
-                     end
-                     
-                     if work == BreakKind.NeverRet then
-                        return BreakKind.NeverRet
-                     end
-                     
-                  else
-                   
-                     do
-                        local _switchExp = work
-                        if _switchExp == BreakKind.None then
-                           if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                              return BreakKind.None
+                     else 
+                        
+                           if kind == BreakKind.None or kind > work then
+                              kind = work
                            end
                            
-                        else 
-                           
-                              if kind == BreakKind.None or kind > work then
-                                 kind = work
+                     end
+                  end
+                  
+               end
+               
+               
+               do
+                  local syncBlock = self.syncBlock
+                  if syncBlock ~= nil then
+                     work = syncBlock:getBreakKind( checkMode )
+                     if checkMode == CheckBreakMode.IgnoreFlowReturn then
+                        if work == BreakKind.Return then
+                           return BreakKind.Return
+                        end
+                        
+                        if work == BreakKind.NeverRet then
+                           return BreakKind.NeverRet
+                        end
+                        
+                     else
+                      
+                        do
+                           local _switchExp = work
+                           if _switchExp == BreakKind.None then
+                              if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
+                                 return BreakKind.None
                               end
                               
-                        end
-                     end
-                     
-                  end
-                  
-                  
-                  do
-                     local syncBlock = self.syncBlock
-                     if syncBlock ~= nil then
-                        work = syncBlock:getBreakKind( checkMode )
-                        if checkMode == CheckBreakMode.IgnoreFlowReturn then
-                           if work == BreakKind.Return then
-                              return BreakKind.Return
-                           end
-                           
-                           if work == BreakKind.NeverRet then
-                              return BreakKind.NeverRet
-                           end
-                           
-                        else
-                         
-                           do
-                              local _switchExp = work
-                              if _switchExp == BreakKind.None then
-                                 if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                                    return BreakKind.None
+                           else 
+                              
+                                 if kind == BreakKind.None or kind > work then
+                                    kind = work
                                  end
                                  
-                              else 
-                                 
-                                    if kind == BreakKind.None or kind > work then
-                                       kind = work
-                                    end
-                                    
-                              end
                            end
-                           
                         end
                         
-                        
-                        return kind
                      end
+                     
+                     
                   end
-                  
                end
+               
+               return kind
             end
-            
          end
+         
+         if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
+            return kind
+         end
+         
       end
-      
-      return BreakKind.None
    end
    
+   return BreakKind.None
 end
 
 local DeclFuncInfo = {}

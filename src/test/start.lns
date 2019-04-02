@@ -194,7 +194,7 @@ print( (new GetTest()).$val );
 
 class GetTest2 {
    let val: int { pub };
-   let val2: int { non, pub };
+   let mut val2: int { non, pub };
    pub fn __init() {
       self.val = 200;
       self.val2 = 1;
@@ -1070,3 +1070,20 @@ class MapTest<T:(Mapping)> extend (Mapping) {
       print( "NG" );
    }  
 }
+
+{
+   fn func( val:stem ) {
+      if! val@@@int {
+         print( "int:%d" ( _exp ) );
+      }  
+      if! val@@@real {
+         print( "real:%g" ( _exp ) );
+      }  
+      if! val@@@str {
+         print( "str:%s" ( _exp ) );
+      }  
+   }  
+   func( 1 );
+   func( 2.5 );
+   func( "abc" );
+ }

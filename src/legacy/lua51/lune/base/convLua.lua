@@ -216,9 +216,6 @@ function _lune.__Cast( obj, kind, class )
       if type( obj ) ~= "number" then
          return nil
       end
-      if math.floor( obj ) == obj then
-         return nil
-      end
       return obj
    elseif kind == 2 then -- str
       if type( obj ) ~= "string" then
@@ -2950,7 +2947,25 @@ function convFilter:processExpCast( node, opt )
     
       self:write( "_lune.__Cast( " )
       filter( node:get_exp(), self, node )
-      self:write( string.format( ", %d, %s )", LuaMod.CastKind.Class, self:getFullName( node:get_expType() )) )
+      local castKind
+      
+      local classObj = "nil"
+      do
+         local _switchExp = node:get_expType():get_nonnilableType()
+         if _switchExp == Ast.builtinTypeInt then
+            castKind = LuaMod.CastKind.Int
+         elseif _switchExp == Ast.builtinTypeReal then
+            castKind = LuaMod.CastKind.Real
+         elseif _switchExp == Ast.builtinTypeString then
+            castKind = LuaMod.CastKind.Str
+         else 
+            
+               castKind = LuaMod.CastKind.Class
+               classObj = self:getFullName( node:get_expType():get_nonnilableType() )
+         end
+      end
+      
+      self:write( string.format( ", %d, %s )", castKind, classObj) )
    end
    
 end

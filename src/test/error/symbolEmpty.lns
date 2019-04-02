@@ -142,11 +142,15 @@ class Test {
    }
 }
 {
-   fn func(op:bool!) {
+   fn func(op:bool!):int {
       let! val = op {
-         return;
+         if op == false { 
+            return "1"; // error
+         }
+         return 1;
       };
       let val2:bool = val;
+      return 0;
    }
 }
 {

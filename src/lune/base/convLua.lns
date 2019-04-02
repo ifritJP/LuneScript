@@ -2594,8 +2594,24 @@ pub override fn convFilter.processExpCast(
    else {
       self.write( "_lune.__Cast( " );
       filter( node.$exp,  self, node );
-      self.write( ", %d, %s )" ( LuaMod.CastKind.Class,
-                                 self.getFullName( node.$expType )) );
+      let castKind;
+      let mut classObj = "nil";
+      switch node.$expType.$nonnilableType {
+         case Ast.builtinTypeInt {
+            castKind = LuaMod.CastKind.Int;
+         }
+         case Ast.builtinTypeReal {
+            castKind = LuaMod.CastKind.Real;
+         }
+         case Ast.builtinTypeString {
+            castKind = LuaMod.CastKind.Str;
+         }
+         default {
+            castKind = LuaMod.CastKind.Class;
+            classObj = self.getFullName( node.$expType.$nonnilableType );
+         }
+      }
+      self.write( ", %d, %s )" ( castKind, classObj) );
    }
 };
 

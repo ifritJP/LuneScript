@@ -89,7 +89,7 @@ pub fn profile( validTest:bool, func: form, path: str ): stem! {
 
    ProFi.start();
    
-   let result:stem! = func(##);
+   let result = func(##);
    
    ProFi.stop();
    ProFi.writeReport( path );

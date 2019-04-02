@@ -1,7 +1,9 @@
 class TestAcc {
-   let val:int { non, pub };
+   let val:int { non, pub }; // error
+   let mut val2:int { non, pub };
 }
 {
    let test = new TestAcc( 1 );
+   test.set_val( 1 ); // error
    print( test.$val );  // error
 }
