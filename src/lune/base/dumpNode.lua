@@ -230,7 +230,7 @@ function dumpFilter.new(  )
 end         
 function dumpFilter:__init(  ) 
 
-   Nodes.Filter.__init( self )
+   Nodes.Filter.__init( self)
 end
 
 local function createFilter(  )

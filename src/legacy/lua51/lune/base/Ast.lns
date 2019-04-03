@@ -781,7 +781,12 @@ pub class CanEvalCtrlTypeInfo extend TypeInfo {
    pub static let needAutoBoxing:CanEvalCtrlTypeInfo;
    pub static let checkTypeTarget:CanEvalCtrlTypeInfo;
 
-   _lune_control default__init;
+   
+   // pub fn __init() {
+   //    super( nil );
+   // }
+   _lune_control default__init_old;
+   //_lune_control default__init;
 
    __init {
       CanEvalCtrlTypeInfo.detectAlt = new CanEvalCtrlTypeInfo();
@@ -861,6 +866,20 @@ pub class AliasTypeInfo extend TypeInfo {
    pri let aliasSrcTypeInfo: &TypeInfo { pub };
    pri let externalFlag:bool { pub };
    pri let typeId: int { pub };
+
+   // pub fn __init( rawTxt: str, accessMode: AccessMode, parentInfo: &TypeInfo,
+   //                aliasSrcTypeInfo: &TypeInfo, externalFlag:bool, typeId: int )
+   // {
+   //    super( nil );
+   //    self.rawTxt = rawTxt;
+   //    self.accessMode = accessMode;
+   //    self.parentInfo = parentInfo;
+   //    self.aliasSrcTypeInfo = aliasSrcTypeInfo;
+   //    self.externalFlag = externalFlag;
+   //    self.typeId = typeId;
+   // }
+
+   _lune_control default__init_old;   
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(
@@ -1519,6 +1538,13 @@ pub class NilableTypeInfo extend TypeInfo {
    pri let nonnilableType: &TypeInfo { pub };
    pri let typeId: int { pub };
 
+   // pub fn __init( nonnilableType: &TypeInfo, typeId: int ) {
+   //    super( nil );
+   //    self.nonnilableType = nonnilableType;
+   //    self.typeId = typeId;
+   // }
+   _lune_control default__init_old;   
+
    pub override fn get_kind(): TypeInfoKind {
       return .Nilable;
    }
@@ -2153,6 +2179,14 @@ pub class ModifierTypeInfo extend TypeInfo {
    pri let srcTypeInfo: &TypeInfo { pub };
    pri let typeId: int { pub };
    pri let mutMode: MutMode { pub };
+
+   // pub fn __init( srcTypeInfo: &TypeInfo, typeId: int, mutMode: MutMode ) {
+   //    super( nil );
+   //    self.srcTypeInfo = srcTypeInfo;
+   //    self.typeId = typeId;
+   //    self.mutMode = mutMode;
+   // }
+   _lune_control default__init_old;   
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(

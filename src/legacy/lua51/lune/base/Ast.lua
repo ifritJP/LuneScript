@@ -1207,7 +1207,7 @@ function CanEvalCtrlTypeInfo.new(  )
 end         
 function CanEvalCtrlTypeInfo:__init(  ) 
 
-   TypeInfo.__init( self )
+   TypeInfo.__init( self)
 end
 do
    CanEvalCtrlTypeInfo.detectAlt = CanEvalCtrlTypeInfo.new()
@@ -1257,7 +1257,7 @@ function AliasTypeInfo.new( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, ex
 end         
 function AliasTypeInfo:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId ) 
 
-   TypeInfo.__init( self )
+   TypeInfo.__init( self)
    self.rawTxt = rawTxt
    self.accessMode = accessMode
    self.parentInfo = parentInfo
@@ -2020,7 +2020,7 @@ function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
 end         
 function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft ) 
 
-   SymbolInfo.__init( self )
+   SymbolInfo.__init( self)
    self.symbolInfo = symbolInfo
    self.prefixTypeInfo = prefixTypeInfo
    self.overrideCanBeLeft = overrideCanBeLeft
@@ -2154,7 +2154,7 @@ function NilableTypeInfo.new( nonnilableType, typeId )
 end         
 function NilableTypeInfo:__init( nonnilableType, typeId ) 
 
-   TypeInfo.__init( self )
+   TypeInfo.__init( self)
    self.nonnilableType = nonnilableType
    self.typeId = typeId
 end
@@ -3121,7 +3121,7 @@ function ModifierTypeInfo.new( srcTypeInfo, typeId, mutMode )
 end         
 function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutMode ) 
 
-   TypeInfo.__init( self )
+   TypeInfo.__init( self)
    self.srcTypeInfo = srcTypeInfo
    self.typeId = typeId
    self.mutMode = mutMode

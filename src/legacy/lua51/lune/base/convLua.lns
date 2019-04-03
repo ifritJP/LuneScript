@@ -1364,15 +1364,40 @@ end```
    if not hasConstrFlag {
       // デフォルトコンストラクタ生成
       methodNameSet.add( "__init" );
-      let mut argTxt = "";
+
+      let oldFlag;
+      {
+         let initSymbol =
+            unwrap (unwrap classTypeInfo.$scope).getSymbolInfoChild( "__init" );
+         oldFlag = (unwrap initSymbol.$typeInfo.$scope).getSymbolInfoChild( "" ) ~= nil;
+      }
       
-      foreach member, index in memberList {
-         if #argTxt > 0 {
-            argTxt = argTxt .. ", ";
+      let mut superArgTxt = "";
+      let mut thisArgTxt = "";
+
+      if not oldFlag and baseInfo ~= Ast.headTypeInfo {
+         if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
+            foreach argType, index in superInit.$typeInfo.$argTypeInfoList {
+               if #superArgTxt > 0 {
+                  superArgTxt = superArgTxt .. ", ";
+               }
+               superArgTxt = "%s__superarg%d" (superArgTxt, index);
+            }
          }
-         argTxt = argTxt .. member.$name.txt;
+      }
+      
+      foreach member in memberList {
+         if #thisArgTxt > 0 {
+            thisArgTxt = thisArgTxt .. ", ";
+         }
+         thisArgTxt = thisArgTxt .. member.$name.txt;
       }
 
+      let mut argTxt = superArgTxt;
+      if #argTxt > 0 {
+         argTxt = argTxt .. ",";
+      }
+      argTxt = argTxt .. thisArgTxt;
 
       self.writeln( ```
 function %s.new( %s )
@@ -1392,7 +1417,13 @@ function %s:__init( %s )
       if baseInfo ~= Ast.headTypeInfo {
          // Super クラスを持つ場合、その Super クラスの __init をコールする。
          if! let superInit = (unwrap baseInfo.$scope).getSymbolInfoChild( "__init" ) {
-            self.writeln( "%s.__init( self )" ( self.getFullName( baseInfo ) ) );
+            self.write( "%s.__init( self" ( self.getFullName( baseInfo ) ) );
+            if #superArgTxt > 0 {
+               self.writeln( ", %s )" ( superArgTxt ) );
+            }
+            else {
+               self.writeln( ")" );
+            }
          }
       }
       

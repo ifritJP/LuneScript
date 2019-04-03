@@ -1283,34 +1283,46 @@ fn TransUnit.analyzeDeclMethod(
 */
 fn TransUnit.addDefaultConstructor(
    pos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, classScope:Ast.Scope,
-   memberNodeList:&List<&Nodes.DeclMemberNode>, methodNameSet:Set<str> ) mut
+   memberNodeList:&List<&Nodes.DeclMemberNode>, methodNameSet:Set<str>, oldFlag:bool ) mut
 {
    if classScope.getTypeInfoChild( "__init" ) {
       self.addErrMess( pos, "already declare __init()." );
    }
+
+   // デフォルトコンストラクタの引数の型リストを決定する
+   let mut argTypeList:List<&Ast.TypeInfo> = [];
    
    if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
+      // 継承している場合
       let superScope = unwrap classTypeInfo.$baseTypeInfo.$scope;
       let superTypeInfo = unwrap superScope.getTypeInfoChild( "__init" );
       foreach argType in superTypeInfo.$argTypeInfoList {
-         if not argType.$nilable {
-            self.addErrMess( pos, "not found '__init' decl." );
+         if oldFlag {
+            if not argType.$nilable {
+               self.addErrMess( pos, "not found '__init' decl." );
+            }
+         }
+         else {
+            argTypeList.insert( argType );
          }
       }
    }
 
-   let mut memberTypeList:List<&Ast.TypeInfo> = [];
    foreach memberNode in memberNodeList {
       if not memberNode.$staticFlag {
-         memberTypeList.insert( memberNode.$expType );
+         argTypeList.insert( memberNode.$expType );
       }
    }
    
    // デフォルトコンストラクタの登録
+   let mut ctorScope = self.pushScope( false ## );
    let initTypeInfo = Ast.NormalTypeInfo.createFunc(
-      false, false, self.pushScope( false ## ),
-      .Method, classTypeInfo, true, false, false, .Pub,
-      "__init", nil, memberTypeList, [] ## );
+      false, false, ctorScope, .Method, classTypeInfo,
+      true, false, false, .Pub, "__init", nil, argTypeList, [] ## );
+   if oldFlag {
+      // oldFlag の場合は スコープに "" のシンボルを追加する
+      ctorScope.addVar( .Pri, "", Ast.headTypeInfo, false, true);
+   }
    self.popScope();
    classScope.addMethod( initTypeInfo, .Pub, false, false );
    methodNameSet.add( "__init" );
@@ -1324,6 +1336,21 @@ fn TransUnit.addDefaultConstructor(
 }
 
 
+/**
+クラスの本体部の解析。
+
+@param classAccessMode クラスのアクセス制御
+@param firstToken クラス定義の先頭トークン
+@param mode クラス宣言モード
+@param gluePrefix glue の prefix
+@param classTypeInfo 宣言するクラスのタイプ
+@param name クラス名のトークン
+@param moduleName モジュール名
+@param nextToken '{' の次のトークン。
+@return Nodes.DeclClassNode クラス宣言のノード
+@return &Parser.Token 解析終了後のトークン
+@return Set<str> 定義されているメソッド名の Set
+*/
 fn TransUnit.analyzeClassBody(
    classAccessMode: Ast.AccessMode, firstToken: &Parser.Token,
    mode:DeclClassMode, gluePrefix:str!, classTypeInfo: &Ast.TypeInfo,
@@ -1450,89 +1477,127 @@ fn TransUnit.analyzeClassBody(
 
    fn processLuneControl() {
       nextToken = self.getToken(##);
-      if nextToken.txt == "default__init" {
-         declCtorNode = self.createNoneNode( nextToken.pos );
-         self.addDefaultConstructor(
-            nextToken.pos, classTypeInfo, self.scope, memberList, methodNameSet );
-      }
-      else {
-         self.error( "unknown option -- %s" (nextToken.txt) );
+      switch nextToken.txt {
+         case "default__init" {
+            declCtorNode = self.createNoneNode( nextToken.pos );
+            self.addDefaultConstructor(
+               nextToken.pos, classTypeInfo,
+               self.scope, memberList, methodNameSet, false );
+         }
+         case "default__init_old" {
+            declCtorNode = self.createNoneNode( nextToken.pos );
+            self.addDefaultConstructor(
+               nextToken.pos, classTypeInfo,
+               self.scope, memberList, methodNameSet, true );
+         }
+         default {
+            self.error( "unknown option -- %s" (nextToken.txt) );
+         }
       }
       self.checkNextToken( ";" );
    }
-   
-   while true {
-      let mut token = self.getToken(##);
-      if token.txt == "}" {
-         break;
-      }   
-      let! mut accessMode = Ast.txt2AccessMode( token.txt ) {
-         accessMode = .Pri;
-      }
-      then {
-         token = self.getToken(##);
-      };
-      if mode == .Interface and accessMode ~= .Pub {
-         self.addErrMess( token.pos, "interface's fields must be 'pub'." );
-      }
-      
-      let mut staticFlag = false;
-      if token.txt == "static" {
-         staticFlag = true;
-         token = self.getToken(##);
-      }   
-      let mut overrideFlag = false;
-      if token.txt == "override" {
-         overrideFlag = true;
-         token = self.getToken(##);
-      }   
-      let mut abstractFlag = false;
-      if token.txt == "abstract" {
-         abstractFlag = true;
-         token = self.getToken(##);
-      }
-      elseif mode == .Interface {
-         // 現状 interface にデフォルト処理を書けない。
-         abstractFlag = true;
-      }
-          
 
-      if token.txt == "let" {
-         processLet( token, staticFlag, accessMode );
-      }
-      elseif token.txt == "fn" {
-         processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
-      }
-      elseif token.txt == "__init" {
-         // __init ブロックからプロトタイプ宣言しかない static メソッドを
-         // コールできないので、スコープから外す。
-         foreach funcType in ptoroStaticMethodFuncTypeList {
-            self.scope.remove( funcType.$rawTxt );
+   fn processClassFields(inMacro:bool) {
+      while true {
+         let mut token = self.getToken( inMacro );
+         if token.kind == .Eof or token.txt == "}" {
+            break;
          }
+         let! mut accessMode = Ast.txt2AccessMode( token.txt ) {
+            accessMode = .Pri;
+         }  
+         then {
+            token = self.getToken(##);
+         }; 
+         if mode == .Interface and accessMode ~= .Pub {
+            self.addErrMess( token.pos, "interface's fields must be 'pub'." );
+         }  
          
-         processInitBlock();
+         let mut staticFlag = false;
+         if token.txt == "static" {
+            staticFlag = true;
+            token = self.getToken(##);
+         }   
+         let mut overrideFlag = false;
+         if token.txt == "override" {
+            overrideFlag = true;
+            token = self.getToken(##);
+         }   
+         let mut abstractFlag = false;
+         if token.txt == "abstract" {
+            abstractFlag = true;
+            token = self.getToken(##);
+         }  
+         elseif mode == .Interface {
+            // 現状 interface にデフォルト処理を書けない。
+            abstractFlag = true;
+         }  
+         
 
-         //スコープから外したメソッド情報を戻す。
-         foreach funcType in ptoroStaticMethodFuncTypeList {
-            self.scope.addFunc(
-               funcType, funcType.$accessMode, funcType.$staticFlag, false );
-         }
-      }
-      elseif token.txt == "advertise" {
-         processAdvertise();
-      }
-      elseif token.txt == ";" {
-      }
-      elseif token.txt == "enum" {
-         processEnum( token, accessMode );
-      }
-      elseif token.txt == "_lune_control" {
-         processLuneControl();
-      }  
-      else {
-         self.error( "illegal field" );
+         if token.txt == "let" {
+            processLet( token, staticFlag, accessMode );
+         }  
+         elseif token.txt == "fn" {
+            processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
+         }  
+         elseif token.txt == "__init" {
+            // __init ブロックからプロトタイプ宣言しかない static メソッドを
+            // コールできないので、スコープから外す。
+            foreach funcType in ptoroStaticMethodFuncTypeList {
+               self.scope.remove( funcType.$rawTxt );
+            }  
+            
+            processInitBlock();
+
+            //スコープから外したメソッド情報を戻す。
+            foreach funcType in ptoroStaticMethodFuncTypeList {
+               self.scope.addFunc(
+                  funcType, funcType.$accessMode, funcType.$staticFlag, false );
+            }  
+         }  
+         elseif token.txt == "advertise" {
+            processAdvertise();
+         }  
+         elseif token.txt == ";" {
+         }  
+         elseif token.txt == "enum" {
+            processEnum( token, accessMode );
+         }  
+         elseif token.txt == "_lune_control" {
+            processLuneControl();
+         }  
+         else {
+            if! let symbolInfo = self.scope.getSymbolInfo(
+               token.txt, self.scope, false )
+            {           
+               if symbolInfo.$kind == .Mac {
+
+                  self.checkNextToken( "(" );
+                  
+                  let mut alt2typeMap, argList = self.prepareExpCall(
+                     token.pos, symbolInfo.$typeInfo, [], Ast.headTypeInfo );  
+                  
+                  
+                  self.evalMacroOp(
+                     token, symbolInfo.$typeInfo, argList,
+                     fn () {
+                        processClassFields( true );
+                     });
+
+                  self.checkNextToken( ";" );
+               }  
+               else {
+                  self.error( "illegal field" );
+               }  
+            }  
+            else {
+               self.error( "illegal field" );
+            }  
+         }  
       }
    }
+
+   processClassFields( false );
 
    if mode ~= .Module {
       when! declCtorNode {
@@ -1694,7 +1759,8 @@ fn TransUnit.analyzeDeclClass(
    }
    else {
       self.addDefaultConstructor(
-         firstToken.pos, classTypeInfo, classScope, node.$memberList, methodNameSet );
+         firstToken.pos, classTypeInfo,
+         classScope, node.$memberList, methodNameSet, false );
    }
 
 

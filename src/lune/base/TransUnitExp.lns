@@ -558,10 +558,9 @@ class MacroPaser extend Parser.Parser {
    }
 }
 
-
-fn TransUnit.evalMacro(
-   firstToken: &Parser.Token,
-   macroTypeInfo: &Ast.TypeInfo, expList: &Nodes.ExpListNode! ) mut : Nodes.ExpMacroExpNode
+fn TransUnit.evalMacroOp(
+   firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
+   expList: &Nodes.ExpListNode!, evalMacroCallback:EvalMacroCallback ) mut
 {
    fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
       match obj {
@@ -720,15 +719,26 @@ fn TransUnit.evalMacro(
    self.macroMode = .Expand;
    self.macroCallLineNo = firstToken.pos.lineNo;
 
-   let mut stmtList:List<&Nodes.Node> = [];
-   self.analyzeStatementList( stmtList, "}" );
+   evalMacroCallback();
 
 
    //    self.popScope();
 
    self.macroMode = .None;
    self.parser = bakParser;
+}
 
+
+fn TransUnit.evalMacro(
+   firstToken: &Parser.Token,
+   macroTypeInfo: &Ast.TypeInfo, expList: &Nodes.ExpListNode! ) mut : Nodes.ExpMacroExpNode
+{
+   let mut stmtList:List<&Nodes.Node> = [];
+   
+   self.evalMacroOp( firstToken, macroTypeInfo, expList,
+                     fn () {
+                        self.analyzeStatementList( stmtList, "}" );
+                     } );
 
    // return self.createNode(
    //     nodeKindExpMacroExp, firstToken.pos, builtinTypeNone, stmtList );
@@ -833,6 +843,56 @@ fn TransUnit.checkStringFormat(
    }
 }
 
+/**
+関数呼び出し Node の前処理。
+
+"(" を読み済みの状態。次のトークンは引数のトークンになっている状態にする。
+この関数を抜けると、 ")" を読み込み済みの状態。
+
+@param position 関数の定義位置
+@param funcTypeInfo 関数の型情報
+@param genericTypeList Genericsの実型パラメータ
+@param genericsClass funcTypeInfo が属するクラス Generics クラス。
+         funcTypeInfo がメソッドでなければ headTypeInfo.
+*/
+fn TransUnit.prepareExpCall(
+   position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
+   genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut :
+   Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
+{
+   let mut macroFlag = false;
+
+   if funcTypeInfo.get_kind() == .Macro {
+      macroFlag = true;
+      self.symbol2ValueMapForMacro = {};
+      self.macroMode = .Analyze;
+   }
+
+   let work = self.getToken(##);
+   let mut argList: &Nodes.ExpListNode! = nil;
+   if work.txt ~= ")" {
+      self.pushback();
+      argList = self.analyzeExpList(
+         false, false, nil, funcTypeInfo.$argTypeInfoList ## );
+      self.checkNextToken( ")" );
+
+      when! argList {
+         foreach argNode in argList.$expList {
+            if not argNode.canBeRight() and argNode.$kind ~= Nodes.NodeKind.$Abbr {
+               self.addErrMess( argNode.$pos, "this node can't be r-value. -- %s"
+                                (Nodes.getNodeKindName( argNode.$kind )));
+            }
+         }
+      }
+   }
+
+   // 引数の型チェック
+   let mut alt2typeMap, workArgList = self.checkMatchValType(
+      position, funcTypeInfo, argList, genericTypeList, genericsClass );
+
+   return alt2typeMap, workArgList;
+}
+
 fn TransUnit.analyzeExpCall(
    firstToken:&Parser.Token, mut exp: Nodes.Node, nextToken:&Parser.Token ) mut :
    Nodes.Node, &Parser.Token
@@ -905,42 +965,41 @@ fn TransUnit.analyzeExpCall(
       }
    }
    
-   let mut macroFlag = false;
+   // let mut macroFlag = false;
    let mut funcTypeInfo = exp.$expType;
-   let mut nilAccess = nextToken.txt == "$(";
+   let nilAccess;
 
-   if nilAccess {
-      if funcTypeInfo.$nilable {
-         funcTypeInfo = funcTypeInfo.$nonnilableType;
-      }
-      else {
-         nilAccess = false;
-      }
+   if nextToken.txt == "$(" and funcTypeInfo.$nilable {
+      funcTypeInfo = funcTypeInfo.$nonnilableType;
+      nilAccess = true;
+   }
+   else {
+      nilAccess = false;
    }
 
-   if funcTypeInfo.get_kind() == .Macro {
-      macroFlag = true;
-      self.symbol2ValueMapForMacro = {};
-      self.macroMode = .Analyze;
-   }
+   // if funcTypeInfo.get_kind() == .Macro {
+   //    macroFlag = true;
+   //    self.symbol2ValueMapForMacro = {};
+   //    self.macroMode = .Analyze;
+   // }
 
-   let work = self.getToken(##);
-   let mut argList: &Nodes.ExpListNode! = nil;
-   if work.txt ~= ")" {
-      self.pushback();
-      argList = self.analyzeExpList(
-         false, false, nil, funcTypeInfo.$argTypeInfoList ## );
-      self.checkNextToken( ")" );
+   // let work = self.getToken(##);
+   // let mut argList: &Nodes.ExpListNode! = nil;
+   // if work.txt ~= ")" {
+   //    self.pushback();
+   //    argList = self.analyzeExpList(
+   //       false, false, nil, funcTypeInfo.$argTypeInfoList ## );
+   //    self.checkNextToken( ")" );
 
-      when! argList {
-         foreach argNode in argList.$expList {
-            if not argNode.canBeRight() and argNode.$kind ~= Nodes.NodeKind.$Abbr {
-               self.addErrMess( argNode.$pos, "this node can't be r-value. -- %s"
-                                (Nodes.getNodeKindName( argNode.$kind )));
-            }
-         }
-      }
-   }
+   //    when! argList {
+   //       foreach argNode in argList.$expList {
+   //          if not argNode.canBeRight() and argNode.$kind ~= Nodes.NodeKind.$Abbr {
+   //             self.addErrMess( argNode.$pos, "this node can't be r-value. -- %s"
+   //                              (Nodes.getNodeKindName( argNode.$kind )));
+   //          }
+   //       }
+   //    }
+   // }
 
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
@@ -956,9 +1015,13 @@ fn TransUnit.analyzeExpCall(
       }
    }
 
-   let mut alt2typeMap, workArgList = self.checkMatchValType(
-      exp.$pos, funcTypeInfo, argList, genericTypeList, genericsClass );
-   argList = workArgList;
+   // let mut alt2typeMap, workArgList = self.checkMatchValType(
+   //    exp.$pos, funcTypeInfo, argList, genericTypeList, genericsClass );
+   // argList = workArgList;
+
+
+   let mut alt2typeMap, argList = self.prepareExpCall(
+      exp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
    if funcTypeInfo.equals( builtinFunc.listInsert ##) {
       when! argList {
@@ -982,7 +1045,7 @@ fn TransUnit.analyzeExpCall(
       }
    }
 
-   if macroFlag {
+   if funcTypeInfo.get_kind() == .Macro {
       self.macroMode = .None;
       exp = self.evalMacro( firstToken, funcTypeInfo, argList );
    }

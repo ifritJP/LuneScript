@@ -1087,3 +1087,38 @@ class MapTest<T:(Mapping)> extend (Mapping) {
    func( 2.5 );
    func( "abc" );
  }
+
+macro _Test( name:sym ) {
+   pub fn ,,name () {
+      print( __line__, __func__ );
+   }
+}
+
+class Test {
+   _Test( func1 );
+   _Test( func2 );
+}  
+{
+   let test = new Test();
+   test.func1();
+   test.func2();
+}
+
+class Test2 {
+   pro let val:int!;
+}
+class Sub2 extend Test2 {
+   let val2:int;
+
+   _lune_control default__init_old;
+   
+   pub fn func() {
+      print( __line__, self.val, self.val2 );
+   }
+}
+
+{
+   let sub2 = new Sub2( 2 );
+   sub2.func();
+}
+

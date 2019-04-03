@@ -546,7 +546,7 @@ function glueFilter.new( outputDir )
 end         
 function glueFilter:__init( outputDir ) 
 
-   Nodes.Filter.__init( self )
+   Nodes.Filter.__init( self)
    self.outputDir = outputDir
 end
 

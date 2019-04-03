@@ -1682,15 +1682,46 @@ function %s.setmeta( obj )
 end]==], className, className, destTxt) )
    if not hasConstrFlag then
       methodNameSet["__init"]= true
-      local argTxt = ""
-      for index, member in pairs( memberList ) do
-         if #argTxt > 0 then
-            argTxt = argTxt .. ", "
-         end
-         
-         argTxt = argTxt .. member:get_name().txt
+      local oldFlag
+      
+      do
+         local initSymbol = _lune.unwrap( (_lune.unwrap( classTypeInfo:get_scope()) ):getSymbolInfoChild( "__init" ))
+         oldFlag = (_lune.unwrap( initSymbol:get_typeInfo():get_scope()) ):getSymbolInfoChild( "" ) ~= nil
       end
       
+      local superArgTxt = ""
+      local thisArgTxt = ""
+      if not oldFlag and baseInfo ~= Ast.headTypeInfo then
+         do
+            local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
+            if superInit ~= nil then
+               for index, argType in pairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+                  if #superArgTxt > 0 then
+                     superArgTxt = superArgTxt .. ", "
+                  end
+                  
+                  superArgTxt = string.format( "%s__superarg%d", superArgTxt, index)
+               end
+               
+            end
+         end
+         
+      end
+      
+      for __index, member in pairs( memberList ) do
+         if #thisArgTxt > 0 then
+            thisArgTxt = thisArgTxt .. ", "
+         end
+         
+         thisArgTxt = thisArgTxt .. member:get_name().txt
+      end
+      
+      local argTxt = superArgTxt
+      if #argTxt > 0 then
+         argTxt = argTxt .. ","
+      end
+      
+      argTxt = argTxt .. thisArgTxt
       self:writeln( string.format( [==[
 function %s.new( %s )
    local obj = {}
@@ -1707,7 +1738,14 @@ function %s:__init( %s )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               self:writeln( string.format( "%s.__init( self )", self:getFullName( baseInfo )) )
+               self:write( string.format( "%s.__init( self", self:getFullName( baseInfo )) )
+               if #superArgTxt > 0 then
+                  self:writeln( string.format( ", %s )", superArgTxt) )
+               else
+                
+                  self:writeln( ")" )
+               end
+               
             end
          end
          
@@ -3457,7 +3495,7 @@ function MacroEvalImp.new( mode )
 end         
 function MacroEvalImp:__init( mode ) 
 
-   Nodes.MacroEval.__init( self )
+   Nodes.MacroEval.__init( self)
    self.mode = mode
 end
 
