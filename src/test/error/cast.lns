@@ -30,6 +30,10 @@ class Sub extend Test {
 {
    fn func<T>(val:T) {
       let obj:stem = val;
-      print( obj@@@T );
+      print( obj@@@T ); // error
    }  
+}
+{
+   let val = "abc"@@int;  // error
+   let val2 = 1@@str;  // error
 }

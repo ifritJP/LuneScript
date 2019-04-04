@@ -18,7 +18,6 @@ class Test {
    }
    pub fn func3() {
       print( self.val1 );
-      print( val1 ); // error
    }
 }
 
@@ -256,18 +255,24 @@ class ClassB extend Super5 {
 
 class Super6 {
 }
-pub class ClassC extend Super6 {
+pub class ClassC extend Super6 { // error
 }
 interface IFSuper {
 }
-pub class ClassD extend (IFSuper) {
+pub class ClassD extend (IFSuper) { // error
 }
 
-
-class StaticClass {
-   let val:int;
-   static fn func() {
-      self.val; // error
+{
+   pub class Hoge1 { // error
    }
 }
 
+class Test9 {
+   let val:int;
+   fn func() {
+   }
+   fn __init() {
+      self.func();
+      self.val = 1;
+   }
+}

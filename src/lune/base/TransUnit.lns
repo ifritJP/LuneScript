@@ -197,8 +197,20 @@ class TentativeSymbol {
 
 form EvalMacroCallback();
 
+enum AnalyzingState {
+   Other,
+   /** コンストラクタ */
+   Constructor,
+   /** class の __init ブロック */
+   InitBlock,
+   /** class の static method */
+   ClassMethod,
+}
+
 pub class TransUnit {
 
+   pri let mut analyzingStateQueue:List<AnalyzingState>;
+   
    pri let mut importModuleInfo: frontInterface.ImportModuleInfo;
    
    /** true の場合は mut 制御が有効 */
@@ -278,8 +290,15 @@ pub class TransUnit {
    /**
 プロトタイプだけの関数のタイプ Map。
 解析終了時に、この  Map に残っているとエラー。
+
+関数の TypeInfo → Position.
    */
    pri let mut protoFuncMap:Map<&Ast.TypeInfo,&Parser.Position>;
+   /**
+   プロトタイプ宣言しているクラス。
+   解析終了時に、この  Map に残っているとエラー。
+   */ 
+   pri let mut protoClassMap:Map<&Ast.TypeInfo,&Parser.Position>;
 
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
 
@@ -298,6 +317,8 @@ pub class TransUnit {
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.protoClassMap = {};
+      self.analyzingStateQueue = [];
       self.macroCallLineNo = 0;
       self.useModuleMacroSet = (@);
       self.ctrl_info = ctrl_info;
@@ -347,6 +368,28 @@ pub class TransUnit {
       self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
       self.provideNode = nil;
+   }
+
+   fn error( mess: str ) mut : __;
+   
+   pri fn pushAnalyzingState( state:AnalyzingState ) mut {
+      self.analyzingStateQueue.insert( state );
+   }
+
+   pri fn popAnalyzingState() mut {
+      if #self.analyzingStateQueue == 0 {
+         self.error( "underflow analyzingStateQueue" );
+      }
+      self.analyzingStateQueue.remove(##);
+   }
+
+   pri fn inAnalyzingState( state:AnalyzingState ): bool {
+      foreach workstate in self.analyzingStateQueue {
+         if workstate == state {
+            return true;
+         }
+      }
+      return false;
    }
 
    pri fn addErrMess( pos: &Parser.Position, mess: str ) mut {
@@ -713,17 +756,18 @@ abstract class _TypeInfo extend (Mapping) {
    pub abstract fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!;
 }
 
-pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo! {
+pub fn ImportParam.getTypeInfo(typeId:int) mut :&Ast.TypeInfo!, str! {
    if! let typeInfo = self.typeId2TypeInfo[ typeId ] {
-      return typeInfo;
+      return typeInfo, nil;
    }
    if! let atom = self.typeId2AtomMap[ typeId ] {
-      if! let typeInfo = atom.createTypeInfo( self ) {
+      let typeInfo, mess = atom.createTypeInfo( self );
+      when! typeInfo {
          self.typeId2TypeInfo[ typeId ] = typeInfo;
-         return typeInfo;
       }
+      return typeInfo, mess;
    }
-   return nil;
+   return nil, nil;
 }
 
 class _TypeInfoNilable extend _TypeInfo {
@@ -938,13 +982,15 @@ class _TypeInfoNormal extend _TypeInfo {
          let mut argTypeInfo:List<&Ast.TypeInfo> = [];
          foreach typeId, index in self.argTypeId {
             //if! let argType = param.typeId2TypeInfo[ typeId ] {
-            if! let argType = param.getTypeInfo( typeId ) {
+            let argType, mess = param.getTypeInfo( typeId );
+            when! argType {
                argTypeInfo.insert( argType );
             }
             else {
-               let mess = "not found arg (index:%d) -- %s.%s, %d, %d"
-                   ( index, parentInfo.getTxt(##), self.txt, typeId, #self.argTypeId );
-               return nil, mess;
+               let errmess = "not found arg (index:%d) -- %s.%s, %d, %d. %s"
+                   ( index, parentInfo.getTxt(##), self.txt, typeId,
+                     #self.argTypeId, mess );
+               return nil, errmess;
             }
          }   
          let mut retTypeInfo:List<&Ast.TypeInfo> = [];
@@ -1029,7 +1075,8 @@ class _TypeInfoNormal extend _TypeInfo {
 
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
 
-               if self.kind == .Func or self.kind == .Method or self.kind == .Macro
+               if self.kind == .Func or self.kind == .Method or
+                  self.kind == .Macro or self.kind == .Form
                {
                   let mut symbolKind = Ast.SymbolKind.Fun;
                   switch self.kind {
@@ -1038,6 +1085,9 @@ class _TypeInfoNormal extend _TypeInfo {
                      }
                      case .Macro {
                         symbolKind = Ast.SymbolKind.Mac;
+                     }
+                     case .Form {
+                        symbolKind = Ast.SymbolKind.Typ;
                      }
                   }
                   let mut workParentScope =
@@ -2364,14 +2414,17 @@ fn TransUnit.processImport( modulePath:str ) mut :
             let mut addFlag = true;
             switch typeInfo.$kind {
                case .Func {
-                  symbolKind = Ast.SymbolKind.Fun;
+                  symbolKind = .Fun;
+               }  
+               case .Form {
+                  symbolKind = .Typ;
                }  
                case .Method {
-                  symbolKind = Ast.SymbolKind.Mtd;
+                  symbolKind = .Mtd;
                }  
                case .Class, .Module
                {              
-                  symbolKind = Ast.SymbolKind.Typ;
+                  symbolKind = .Typ;
                }  
                case .Enum {
                   addFlag = false;

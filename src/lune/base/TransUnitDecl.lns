@@ -282,7 +282,13 @@ fn TransUnit.checkOverriededMethod() mut
          } );
    }
 
+   let mut typeId2DeclClassNode:Map<int,&Nodes.DeclClassNode> = {};
    foreach classNode, classTypeInfo in self.typeInfo2ClassNode {
+      typeId2DeclClassNode[ classTypeInfo.$typeId ] = classNode;
+   }
+   
+   forsort classNode in typeId2DeclClassNode {
+      let classTypeInfo = classNode.$expType;
       if not classTypeInfo.$abstractFlag {
          // extend のメソッドがオーバーライドされているか確認
          let mut workTypeInfo = classTypeInfo;
@@ -410,6 +416,10 @@ pub fn TransUnit.createAST(
    foreach pos, protoType in self.protoFuncMap {
       self.addErrMess(
          pos, "This function doesn't have body. -- %s" ( protoType.getTxt(##) ) );
+   }
+   foreach pos, protoType in self.protoClassMap {
+      self.addErrMess(
+         pos, "This class doesn't have body. -- %s" ( protoType.getTxt(##) ) );
    }
    
 
@@ -659,6 +669,13 @@ fn TransUnit.analyzePushClass(
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, &Ast.TypeInfo
 {
+   if classFlag and Ast.isPubToExternal( accessMode ) and
+      self.moduleScope ~= self.scope
+   {
+      self.addErrMess( firstToken.pos, "The public class must declare at top scope." );
+   }
+
+   
    // altTypeList のシンボルにアクセスできるように、一時的にスコープを掘る
    let mut tempScope = self.pushScope( false## );
    foreach altType in altTypeList {
@@ -770,9 +787,14 @@ fn TransUnit.analyzeDeclProto(
       if accessMode == .Local {
          accessMode = .Pri;
       }
+
+      let classTypeInfo:&Ast.TypeInfo;
+      nextToken, classTypeInfo = self.analyzePushClass(
+         nextToken.txt ~= "interface", abstractFlag,
+         firstToken, name, accessMode, altTypeList );
+
+      self.protoClassMap[ classTypeInfo ] = firstToken.pos;
       
-      nextToken = self.analyzePushClass( nextToken.txt ~= "interface", abstractFlag,
-                                         firstToken, name, accessMode, altTypeList );
       self.popClass();
       self.checkToken( nextToken, ";" );
    }
@@ -1074,12 +1096,13 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
    }
 
    let formType = Ast.NormalTypeInfo.createFunc(
-      false, false, nil, .Func,
+      false, false, nil, .Form,
       self.getCurrentNamespaceTypeInfo(), false, false,
       true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false );
 
-   self.scope.add(
-      .Fun, false, false, name.txt, formType, accessMode, true, .IMut, false );
+   self.scope.addForm( formType, accessMode );
+   // self.scope.add(
+   //    .Typ, false, false, name.txt, formType, accessMode, true, .IMut, false );
 }
 
 fn TransUnit.analyzeDecl(
@@ -1362,7 +1385,6 @@ fn TransUnit.analyzeClassBody(
    let mut fieldList:List<&Nodes.Node> = [];
    let mut memberList:List<&Nodes.DeclMemberNode> = [];
    let mut methodNameSet: Set<str> = (@);
-   let mut ptoroStaticMethodFuncTypeList:List<&Ast.TypeInfo> = [];
    let mut initStmtList:List<&Nodes.Node> = [];
    let mut advertiseList:Nodes.AdvertiseInfo[] = [];
    let mut trustList:List<&Ast.TypeInfo> = [];
@@ -1418,15 +1440,12 @@ fn TransUnit.analyzeClassBody(
       if nameToken.txt == "__init" {
          declCtorNode = methodNode;
       }
-      if staticFlag and methodNode.$kind == Nodes.NodeKind.$None {
-         // メソッドのプロトタイプ宣言の場合 none になる。
-         if! let funcType = self.scope.getTypeInfoChild( nameToken.txt ) {
-            ptoroStaticMethodFuncTypeList.insert( funcType );
-         }
-      }
    }
 
    fn processInitBlock() {
+
+      self.pushAnalyzingState( .InitBlock );
+      
       if mode ~= .Class {
          self.error( "%s can not have __init block." (mode) );
       }
@@ -1447,7 +1466,9 @@ fn TransUnit.analyzeClassBody(
 
       self.popScope();
       self.finishTentativeSymbol( false );
-   }
+
+      self.popAnalyzingState();
+   }  
 
    fn processAdvertise() {
       let memberToken = self.getSymbolToken( .MustNot_ );
@@ -1541,19 +1562,7 @@ fn TransUnit.analyzeClassBody(
             processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
          }  
          elseif token.txt == "__init" {
-            // __init ブロックからプロトタイプ宣言しかない static メソッドを
-            // コールできないので、スコープから外す。
-            foreach funcType in ptoroStaticMethodFuncTypeList {
-               self.scope.remove( funcType.$rawTxt );
-            }  
-            
             processInitBlock();
-
-            //スコープから外したメソッド情報を戻す。
-            foreach funcType in ptoroStaticMethodFuncTypeList {
-               self.scope.addFunc(
-                  funcType, funcType.$accessMode, funcType.$staticFlag, false );
-            }  
          }  
          elseif token.txt == "advertise" {
             processAdvertise();
@@ -1607,11 +1616,11 @@ fn TransUnit.analyzeClassBody(
                let typeInfo = symbolInfo.$typeInfo;
                if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
                   self.addErrMess( declCtorNode.$pos,
-                                   "does not set member -- %s.%s"
+                                   "Set member -- %s.%s"
                                    ( name.txt, memberName ) );
-               }  
-            }  
-         }  
+               }
+            }
+         }
       }
 
       if hasStaticMember and not hasInitBlock {
@@ -1626,7 +1635,7 @@ fn TransUnit.analyzeClassBody(
             let typeInfo = symbolInfo.$typeInfo;
             if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
                self.addErrMess( memberNode.$pos,
-                                "does not set member -- %s" ( memberName ) );
+                                "Set member -- %s" ( memberName ) );
             }  
          }  
       }
@@ -1639,6 +1648,16 @@ fn TransUnit.analyzeDeclClass(
    classAbstructFlag: bool,  mut classAccessMode: Ast.AccessMode,
    firstToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode
 {
+   if mode ~= .Module {
+      switch self.getCurrentNamespaceTypeInfo().$kind {
+         case .IF, .Class, .Module {
+         }  
+         default {
+            self.addErrMess( firstToken.pos, "Class can't declare on here." );
+         }  
+      }
+   }
+   
    let name = self.getSymbolToken( .MustNot_ );
 
    // generic の型宣言解析
@@ -1670,9 +1689,21 @@ fn TransUnit.analyzeDeclClass(
       }
    }
 
+   let existSymbolInfo = self.scope.getSymbolTypeInfo( name.txt, self.scope, self.scope );
+   
    let mut nextToken, classTypeInfo = self.analyzePushClass(
       mode ~= .Interface, classAbstructFlag,
       firstToken, name, classAccessMode, altTypeList );
+
+   if self.protoClassMap[ classTypeInfo ] {
+      self.protoClassMap[ classTypeInfo ] = nil;
+   }
+   else {
+      if existSymbolInfo {
+         self.addErrMess( name.pos, "already declare symbol -- %s" (name.txt) );
+      }
+   }
+
 
    let mut classScope = self.scope;
 
@@ -2203,9 +2234,25 @@ fn TransUnit.analyzeDeclFunc(
          }
       }
       
-      
       self.pushback();
+
+      let mut pushedFlag = true;
+      if isCtorFlag {
+         self.pushAnalyzingState( .Constructor );
+      }
+      elseif staticFlag and classTypeInfo {
+         self.pushAnalyzingState( .ClassMethod );
+      }
+      else {
+         pushedFlag = false;
+      }
+      
       body = self.analyzeBlock( .Func, .Ignore, funcBodyScope );
+
+      if pushedFlag {
+         self.popAnalyzingState();
+      }
+      
       when! body {
          if #retTypeInfoList ~= 0
          {

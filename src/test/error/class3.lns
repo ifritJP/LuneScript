@@ -1,0 +1,6 @@
+class StaticClass {
+   let val:int;
+   static fn func() {
+      self.val; // error
+   }
+}

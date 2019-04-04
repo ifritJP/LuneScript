@@ -1,0 +1,10 @@
+class Test {
+   pub fn func();
+
+   _lune_control default__init;
+   
+   __init {
+      let test = new Test();
+      test.func();
+   }
+}

@@ -561,7 +561,7 @@ function convFilter:outputMeta( node )
          
          if pickupChildFlag and not typeInfo:get_nilable() then
             for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
-               if Ast.isPubToExternal( itemTypeInfo:get_accessMode() ) and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
+               if Ast.isPubToExternal( itemTypeInfo:get_accessMode() ) and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Form or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
                   pickupTypeId( itemTypeInfo, true, true )
                end
                
@@ -593,6 +593,18 @@ function convFilter:outputMeta( node )
             pickupClassMap[typeInfo:get_typeId()] = typeInfo
          end
          
+         if not typeInfo:get_externalFlag() then
+            do
+               local _switchExp = typeInfo:get_kind()
+               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
+                  pickupTypeId( typeInfo:get_nilableTypeInfo(), true, false )
+                  local imutType = Ast.NormalTypeInfo.createModifier( typeInfo, Ast.MutMode.IMut )
+                  pickupTypeId( imutType, true, false )
+               end
+            end
+            
+         end
+         
          local parentInfo = typeInfo:get_parentInfo()
          pickupTypeId( parentInfo, true, false )
          pickupTypeId( typeInfo:get_genSrcTypeInfo(), true, false )
@@ -619,7 +631,7 @@ function convFilter:outputMeta( node )
          
          if pickupChildFlag then
             for __index, itemTypeInfo in pairs( typeInfo:get_children() ) do
-               if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
+               if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Form or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
                   pickupTypeId( itemTypeInfo, true, true )
                end
                
@@ -627,7 +639,6 @@ function convFilter:outputMeta( node )
             
          end
          
-         pickupTypeId( typeInfo:get_nilableTypeInfo(  ), true, false )
          if typeInfo ~= typeInfo:get_srcTypeInfo() then
             pickupTypeId( typeInfo:get_srcTypeInfo(), true, false )
          end
@@ -1016,7 +1027,7 @@ function convFilter:outputMeta( node )
       for __index, typeId in ipairs( __sorted ) do
          local typeInfo = __map[ typeId ]
          do
-            outputTypeInfo( typeInfo )
+            local valid = false
             local moduleTypeInfo = typeInfo:getModule(  )
             exportNeedModuleTypeInfo[moduleTypeInfo]= true
             do
@@ -1026,33 +1037,16 @@ function convFilter:outputMeta( node )
                   do
                      local extId = moduleInfo:get_localTypeInfo2importIdMap()[typeInfo]
                      if extId ~= nil then
-                        local valid = true
-                        if typeInfo:get_srcTypeInfo() ~= typeInfo then
-                           valid = true
-                        else
-                         
-                           local nonnilableType = typeInfo
-                           if typeInfo:get_nilable() then
-                              nonnilableType = typeInfo:get_nonnilableType()
-                           end
-                           
-                           do
-                              local _switchExp = nonnilableType:get_kind()
-                              if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.Func then
-                                 valid = true
-                              end
-                           end
-                           
-                        end
-                        
-                        if valid then
-                           self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId(), moduleIndex, extId, typeInfo:getTxt(  )) )
-                        end
-                        
+                        valid = true
+                        self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId(), moduleIndex, extId, typeInfo:getTxt(  )) )
                      end
                   end
                   
                end
+            end
+            
+            if not valid then
+               outputTypeInfo( typeInfo )
             end
             
          end

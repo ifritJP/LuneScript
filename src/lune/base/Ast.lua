@@ -383,6 +383,9 @@ TypeInfoKind.__allList[21] = TypeInfoKind.CanEvalCtrl
 TypeInfoKind.Etc = 21
 TypeInfoKind._val2NameMap[21] = 'Etc'
 TypeInfoKind.__allList[22] = TypeInfoKind.Etc
+TypeInfoKind.Form = 22
+TypeInfoKind._val2NameMap[22] = 'Form'
+TypeInfoKind.__allList[23] = TypeInfoKind.Form
 
 local function isBuiltin( typeId )
 
@@ -1738,6 +1741,11 @@ end
 function Scope:addFunc( typeInfo, accessMode, staticFlag, mutable )
 
    self:add( SymbolKind.Fun, true, true, typeInfo:get_rawTxt(), typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true )
+end
+
+function Scope:addForm( typeInfo, accessMode )
+
+   self:add( SymbolKind.Typ, false, false, typeInfo:get_rawTxt(), typeInfo, accessMode, true, MutMode.IMut, false )
 end
 
 function Scope:addMacro( typeInfo, accessMode )
@@ -3761,7 +3769,7 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
          local _switchExp = (kind )
          if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF then
             hasNilable = true
-         elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method then
+         elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Form then
             hasNilable = true
          end
       end
@@ -3831,7 +3839,7 @@ function NormalTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
 end
 function NormalTypeInfo:get_display_stirng_with( raw )
 
-   if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Method then
+   if self.kind == TypeInfoKind.Func or self.kind == TypeInfoKind.Form or self.kind == TypeInfoKind.Method then
       local txt = raw .. "("
       for index, argType in pairs( self.argTypeInfoList ) do
          if index ~= 1 then
@@ -4162,7 +4170,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    local scope = nil
    do
       local _switchExp = kind
-      if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
+      if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
          scope = Scope.new(_moduleObj.rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List or kind == TypeInfoKind.Array or kind == TypeInfoKind.Set, nil)
       end
    end
@@ -4416,6 +4424,8 @@ function Scope:addAliasForType( name, typeInfo )
       if _switchExp == TypeInfoKind.Func then
          skind = SymbolKind.Fun
          canBeRight = true
+      elseif _switchExp == TypeInfoKind.Form then
+         canBeRight = true
       elseif _switchExp == TypeInfoKind.Macro then
          skind = SymbolKind.Mac
       end
@@ -4535,7 +4545,7 @@ local builtinTypeDDD = NormalTypeInfo.createDDD( _moduleObj.builtinTypeStem_, tr
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
 registBuiltin( "DDD", "...", TypeInfoKind.DDD, _moduleObj.builtinTypeDDD, _moduleObj.headTypeInfo, false )
-local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Func, _moduleObj.builtinTypeDDD )
+local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Form, _moduleObj.builtinTypeDDD )
 _moduleObj.builtinTypeForm = builtinTypeForm
 
 local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKind.Prim )
@@ -5104,14 +5114,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
       
    end
    
-   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
-      return false
-   end
-   
-   if dest == _moduleObj.builtinTypeStem_ then
-      return true
-   end
-   
    if dest == _moduleObj.builtinTypeEmpty then
       do
          local _switchExp = otherSrc
@@ -5120,6 +5122,14 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          end
       end
       
+      return true
+   end
+   
+   if opTxt == "=" and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
+      return false
+   end
+   
+   if dest == _moduleObj.builtinTypeStem_ then
       return true
    end
    
@@ -5143,7 +5153,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
       return true
    end
    
-   if dest == _moduleObj.builtinTypeForm and otherSrc:get_kind() == TypeInfoKind.Func then
+   if dest == _moduleObj.builtinTypeForm and (otherSrc:get_kind() == TypeInfoKind.Func or otherSrc:get_kind() == TypeInfoKind.Form ) then
       return true
    end
    
@@ -5177,6 +5187,22 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          return dest:canEvalWith( otherSrc, opTxt, alt2type )
       elseif dest:get_kind() == TypeInfoKind.Box then
          return dest:canEvalWith( otherSrc, opTxt, alt2type )
+      elseif dest:get_kind() == TypeInfoKind.Form then
+         do
+            local _switchExp = otherSrc:get_kind()
+            if _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.Func then
+               if dest == _moduleObj.builtinTypeForm then
+                  return true
+               end
+               
+               if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+                  return false
+               end
+               
+               return true
+            end
+         end
+         
       end
       
       return false
@@ -5237,7 +5263,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          return true
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
          return otherSrc:isInheritFrom( dest, alt2type )
-      elseif _switchExp == TypeInfoKind.Func then
+      elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form then
          if dest == _moduleObj.builtinTypeForm then
             return true
          end
@@ -5352,7 +5378,7 @@ function NormalTypeInfo:applyGeneric( alt2typeMap )
          return NormalTypeInfo.createArray( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Map then
          return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2], self.mutMode )
-      elseif _switchExp == TypeInfoKind.Func then
+      elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form then
          return NormalTypeInfo.createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) )
       else 
          

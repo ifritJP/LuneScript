@@ -254,6 +254,8 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/func.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/class.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/class2.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/class3.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/class4.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/provide1.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/provide2.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/provide3.lns,exe,2>&1)

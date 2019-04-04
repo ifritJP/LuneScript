@@ -1051,7 +1051,7 @@ fn TransUnit.analyzeExpCall(
    }
    else {
       switch( funcTypeInfo.$kind ) {
-         case .Method, .Func {
+         case .Method, .Func, .Form {
          }
          default {
             self.error( "can't call the type -- %s, %s"
@@ -1211,7 +1211,7 @@ fn TransUnit.analyzeExpCast(
                           expType.getTxt( true ## ) ) );          
    }
    elseif not expType.canEvalWith( castType, "=", {} ) {
-      if not Ast.isNumberType( expType ) and not Ast.isNumberType( castType ) {
+      if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) {
          // キャスト先の型からキャスト元の型へ互換性がない場合はエラー
          self.addErrMess( castTypeNode.$pos,
                           "This type can't cast. (%s <- %s)"
@@ -1348,6 +1348,46 @@ fn TransUnit.analyzeAccessClassField(
                   ( className, token.txt ) );
    }
    let typeInfo = unwrap fieldTypeInfo default Ast.builtinTypeNone;
+
+   when! symbolInfo {
+      if self.inAnalyzingState( .InitBlock ) or
+         self.inAnalyzingState( .ClassMethod ) 
+      {     
+         let mut errorMess:str! = nil;
+         if self.protoFuncMap[ symbolInfo.$typeInfo ] {
+            errorMess = "It can't call prototype function from static -- %s" (symbolInfo.$name);
+         }
+         // elseif symbolInfo.$scope == classTypeInfo.$scope and symbolInfo.$kind == .Mtd {
+         //    errorMess = "It can't call the method from __init.-- %s" (symbolInfo.$name);
+         // }
+         when! errorMess {
+            self.addErrMess( token.pos, errorMess );
+         }
+      }
+      elseif self.inAnalyzingState( .Constructor ) {
+         let mut errorMess:str! = nil;
+         if self.protoFuncMap[ symbolInfo.$typeInfo ] {
+            errorMess = "It can't call prototype function from '__init'";
+         }
+         else {
+            if symbolInfo.$kind == .Mtd {
+               foreach val, name in classScope.$symbol2SymbolInfoMap {
+                  if val.$kind == .Mbr and not val.$staticFlag {
+                     if not val.$hasValueFlag and not val.$typeInfo.$nilable {
+                        errorMess = "Set member(%s) before to access the method-- %s"
+                        ( val.$name, symbolInfo.$name );
+                        break;
+                     }  
+                  }  
+               }
+            }
+         }
+         when! errorMess {
+            self.addErrMess( token.pos, errorMess );
+         }
+      }
+   }
+   
    return typeInfo, symbolInfo, getterFlag;
 }
 

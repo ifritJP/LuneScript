@@ -416,3 +416,11 @@ class Test {
       let val, val2 = func();
    }
 }
+{
+   let val, val2;
+   fn func() : int, &List<int> {
+      return 1, [2];
+   }  
+
+   val, val2 = func();
+}

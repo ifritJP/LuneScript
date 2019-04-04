@@ -606,6 +606,40 @@ function TentativeSymbol.setmeta( obj )
 end
 
 
+local AnalyzingState = {}
+AnalyzingState._val2NameMap = {}
+function AnalyzingState:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "AnalyzingState.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end 
+function AnalyzingState._from( val )
+   if AnalyzingState._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end 
+    
+AnalyzingState.__allList = {}
+function AnalyzingState.get__allList()
+   return AnalyzingState.__allList
+end
+
+AnalyzingState.Other = 0
+AnalyzingState._val2NameMap[0] = 'Other'
+AnalyzingState.__allList[1] = AnalyzingState.Other
+AnalyzingState.Constructor = 1
+AnalyzingState._val2NameMap[1] = 'Constructor'
+AnalyzingState.__allList[2] = AnalyzingState.Constructor
+AnalyzingState.InitBlock = 2
+AnalyzingState._val2NameMap[2] = 'InitBlock'
+AnalyzingState.__allList[3] = AnalyzingState.InitBlock
+AnalyzingState.ClassMethod = 3
+AnalyzingState._val2NameMap[3] = 'ClassMethod'
+AnalyzingState.__allList[4] = AnalyzingState.ClassMethod
+
 local TransUnit = {}
 _moduleObj.TransUnit = TransUnit
 function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info )
@@ -615,6 +649,8 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
+   self.protoClassMap = {}
+   self.analyzingStateQueue = {}
    self.macroCallLineNo = 0
    self.useModuleMacroSet = {}
    self.ctrl_info = ctrl_info
@@ -656,6 +692,29 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.analyzePos = _lune.unwrapDefault( pos, Parser.Position.new(0, 0))
    self.analyzeModule = _lune.unwrapDefault( analyzeModule, "")
    self.provideNode = nil
+end
+function TransUnit:pushAnalyzingState( state )
+
+   table.insert( self.analyzingStateQueue, state )
+end
+function TransUnit:popAnalyzingState(  )
+
+   if #self.analyzingStateQueue == 0 then
+      self:error( "underflow analyzingStateQueue" )
+   end
+   
+   table.remove( self.analyzingStateQueue )
+end
+function TransUnit:inAnalyzingState( state )
+
+   for __index, workstate in pairs( self.analyzingStateQueue ) do
+      if workstate == state then
+         return true
+      end
+      
+   end
+   
+   return false
 end
 function TransUnit:addErrMess( pos, mess )
 
@@ -1104,25 +1163,23 @@ function ImportParam:getTypeInfo( typeId )
    do
       local typeInfo = self.typeId2TypeInfo[typeId]
       if typeInfo ~= nil then
-         return typeInfo
+         return typeInfo, nil
       end
    end
    
    do
       local atom = self.typeId2AtomMap[typeId]
       if atom ~= nil then
-         do
-            local typeInfo = atom:createTypeInfo( self )
-            if typeInfo ~= nil then
-               self.typeId2TypeInfo[typeId] = typeInfo
-               return typeInfo
-            end
+         local typeInfo, mess = atom:createTypeInfo( self )
+         if typeInfo ~= nil then
+            self.typeId2TypeInfo[typeId] = typeInfo
          end
          
+         return typeInfo, mess
       end
    end
    
-   return nil
+   return nil, nil
 end
 
 local _TypeInfoNilable = {}
@@ -1663,14 +1720,12 @@ function _TypeInfoNormal:createTypeInfo( param )
       
       local argTypeInfo = {}
       for index, typeId in pairs( self.argTypeId ) do
-         do
-            local argType = param:getTypeInfo( typeId )
-            if argType ~= nil then
-               table.insert( argTypeInfo, argType )
-            else
-               local mess = string.format( "not found arg (index:%d) -- %s.%s, %d, %d", index, parentInfo:getTxt(  ), self.txt, typeId, #self.argTypeId)
-               return nil, mess
-            end
+         local argType, mess = param:getTypeInfo( typeId )
+         if argType ~= nil then
+            table.insert( argTypeInfo, argType )
+         else
+            local errmess = string.format( "not found arg (index:%d) -- %s.%s, %d, %d. %s", index, parentInfo:getTxt(  ), self.txt, typeId, #self.argTypeId, mess)
+            return nil, errmess
          end
          
       end
@@ -1738,7 +1793,7 @@ function _TypeInfoNormal:createTypeInfo( param )
             local workTypeInfo = Ast.NormalTypeInfo.create( accessMode, self.abstractFlag, scope, baseInfo, interfaceList, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode )
             newTypeInfo = workTypeInfo
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
-            if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method or self.kind == Ast.TypeInfoKind.Macro then
+            if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method or self.kind == Ast.TypeInfoKind.Macro or self.kind == Ast.TypeInfoKind.Form then
                local symbolKind = Ast.SymbolKind.Fun
                do
                   local _switchExp = self.kind
@@ -1746,6 +1801,8 @@ function _TypeInfoNormal:createTypeInfo( param )
                      symbolKind = Ast.SymbolKind.Mtd
                   elseif _switchExp == Ast.TypeInfoKind.Macro then
                      symbolKind = Ast.SymbolKind.Mac
+                  elseif _switchExp == Ast.TypeInfoKind.Form then
+                     symbolKind = Ast.SymbolKind.Typ
                   end
                end
                
@@ -2960,7 +3017,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2155, function (  )
+   Log.log( Log.Level.Info, __func__, 2205, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -2976,7 +3033,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2166, function (  )
+               Log.log( Log.Level.Info, __func__, 2216, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3007,7 +3064,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2186, function (  )
+   Log.log( Log.Level.Info, __func__, 2236, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3204,6 +3261,8 @@ function TransUnit:processImport( modulePath )
                local _switchExp = typeInfo:get_kind()
                if _switchExp == Ast.TypeInfoKind.Func then
                   symbolKind = Ast.SymbolKind.Fun
+               elseif _switchExp == Ast.TypeInfoKind.Form then
+                  symbolKind = Ast.SymbolKind.Typ
                elseif _switchExp == Ast.TypeInfoKind.Method then
                   symbolKind = Ast.SymbolKind.Mtd
                elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
@@ -3361,7 +3420,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2554, function (  )
+   Log.log( Log.Level.Info, __func__, 2607, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -4105,22 +4164,39 @@ function TransUnit:checkOverriededMethod(  )
        )
    end
    
+   local typeId2DeclClassNode = {}
    for classTypeInfo, classNode in pairs( self.typeInfo2ClassNode ) do
-      if not classTypeInfo:get_abstractFlag() then
-         local workTypeInfo = classTypeInfo
-         repeat 
-            if workTypeInfo ~= Ast.headTypeInfo then
-               checkOverrideMethodSub( classNode:get_pos(), _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( workTypeInfo:get_scope()) )
-            end
-            
-            for __index, ifType in pairs( workTypeInfo:get_interfaceList() ) do
-               checkOverrideMethodSub( classNode:get_pos(), _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( ifType:get_scope()) )
-            end
-            
-            workTypeInfo = workTypeInfo:get_baseTypeInfo()
-         until workTypeInfo == Ast.headTypeInfo
+      typeId2DeclClassNode[classTypeInfo:get_typeId()] = classNode
+   end
+   
+   do
+      local __sorted = {}
+      local __map = typeId2DeclClassNode
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
       end
-      
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local classNode = __map[ __key ]
+         do
+            local classTypeInfo = classNode:get_expType()
+            if not classTypeInfo:get_abstractFlag() then
+               local workTypeInfo = classTypeInfo
+               repeat 
+                  if workTypeInfo ~= Ast.headTypeInfo then
+                     checkOverrideMethodSub( classNode:get_pos(), _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( workTypeInfo:get_scope()) )
+                  end
+                  
+                  for __index, ifType in pairs( workTypeInfo:get_interfaceList() ) do
+                     checkOverrideMethodSub( classNode:get_pos(), _lune.unwrap( classTypeInfo:get_scope()), _lune.unwrap( ifType:get_scope()) )
+                  end
+                  
+                  workTypeInfo = workTypeInfo:get_baseTypeInfo()
+               until workTypeInfo == Ast.headTypeInfo
+            end
+            
+         end
+      end
    end
    
 end
@@ -4242,6 +4318,10 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    Ast.popProcessInfo(  )
    for protoType, pos in pairs( self.protoFuncMap ) do
       self:addErrMess( pos, string.format( "This function doesn't have body. -- %s", protoType:getTxt(  )) )
+   end
+   
+   for protoType, pos in pairs( self.protoClassMap ) do
+      self:addErrMess( pos, string.format( "This class doesn't have body. -- %s", protoType:getTxt(  )) )
    end
    
    for __index, mess in pairs( self.warnMessList ) do
@@ -4447,6 +4527,10 @@ end
 
 function TransUnit:analyzePushClass( classFlag, abstractFlag, firstToken, name, accessMode, altTypeList )
 
+   if classFlag and Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self.scope then
+      self:addErrMess( firstToken.pos, "The public class must declare at top scope." )
+   end
+   
    local tempScope = self:pushScope( false )
    for __index, altType in pairs( altTypeList ) do
       tempScope:addAlternate( accessMode, altType:get_rawTxt(), altType )
@@ -4548,7 +4632,10 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
          accessMode = Ast.AccessMode.Pri
       end
       
-      nextToken = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode, altTypeList )
+      local classTypeInfo
+      
+      nextToken, classTypeInfo = self:analyzePushClass( nextToken.txt ~= "interface", abstractFlag, firstToken, name, accessMode, altTypeList )
+      self.protoClassMap[classTypeInfo] = firstToken.pos
       self:popClass(  )
       self:checkToken( nextToken, ";" )
    else
@@ -4810,8 +4897,8 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
       table.insert( argTypeInfoList, argNode:get_expType() )
    end
    
-   local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false )
-   self.scope:add( Ast.SymbolKind.Fun, false, false, name.txt, formType, accessMode, true, Ast.MutMode.IMut, false )
+   local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Form, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false )
+   self.scope:addForm( formType, accessMode )
 end
 
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
@@ -5030,7 +5117,6 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    local fieldList = {}
    local memberList = {}
    local methodNameSet = {}
-   local ptoroStaticMethodFuncTypeList = {}
    local initStmtList = {}
    local advertiseList = {}
    local trustList = {}
@@ -5082,20 +5168,11 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          declCtorNode = methodNode
       end
       
-      if staticFlag and methodNode:get_kind() == Nodes.NodeKind.get_None() then
-         do
-            local funcType = self.scope:getTypeInfoChild( nameToken.txt )
-            if funcType ~= nil then
-               table.insert( ptoroStaticMethodFuncTypeList, funcType )
-            end
-         end
-         
-      end
-      
    end
    
    local function processInitBlock(  )
    
+      self:pushAnalyzingState( AnalyzingState.InitBlock )
       if mode ~= DeclClassMode.Class then
          self:error( string.format( "%s can not have __init block.", mode) )
       end
@@ -5115,6 +5192,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       self:checkNextToken( "}" )
       self:popScope(  )
       self:finishTentativeSymbol( false )
+      self:popAnalyzingState(  )
    end
    
    local function processAdvertise(  )
@@ -5216,15 +5294,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          elseif token.txt == "fn" then
             processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag )
          elseif token.txt == "__init" then
-            for __index, funcType in pairs( ptoroStaticMethodFuncTypeList ) do
-               self.scope:remove( funcType:get_rawTxt() )
-            end
-            
             processInitBlock(  )
-            for __index, funcType in pairs( ptoroStaticMethodFuncTypeList ) do
-               self.scope:addFunc( funcType, funcType:get_accessMode(), funcType:get_staticFlag(), false )
-            end
-            
          elseif token.txt == "advertise" then
             processAdvertise(  )
          elseif token.txt == ";" then
@@ -5270,7 +5340,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
                local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
                local typeInfo = symbolInfo:get_typeInfo()
                if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
-                  self:addErrMess( declCtorNode:get_pos(), string.format( "does not set member -- %s.%s", name.txt, memberName) )
+                  self:addErrMess( declCtorNode:get_pos(), string.format( "Set member -- %s.%s", name.txt, memberName) )
                end
                
             end
@@ -5288,7 +5358,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
             local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
             local typeInfo = symbolInfo:get_typeInfo()
             if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
-               self:addErrMess( memberNode:get_pos(), string.format( "does not set member -- %s", memberName) )
+               self:addErrMess( memberNode:get_pos(), string.format( "Set member -- %s", memberName) )
             end
             
          end
@@ -5302,6 +5372,18 @@ end
 
 function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
 
+   if mode ~= DeclClassMode.Module then
+      do
+         local _switchExp = self:getCurrentNamespaceTypeInfo(  ):get_kind()
+         if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
+         else 
+            
+               self:addErrMess( firstToken.pos, "Class can't declare on here." )
+         end
+      end
+      
+   end
+   
    local name = self:getSymbolToken( SymbolMode.MustNot_ )
    local altTypeList = {}
    do
@@ -5332,7 +5414,18 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       
    end
    
+   local existSymbolInfo = self.scope:getSymbolTypeInfo( name.txt, self.scope, self.scope )
    local nextToken, classTypeInfo = self:analyzePushClass( mode ~= DeclClassMode.Interface, classAbstructFlag, firstToken, name, classAccessMode, altTypeList )
+   if self.protoClassMap[classTypeInfo] then
+      self.protoClassMap[classTypeInfo] = nil
+   else
+    
+      if existSymbolInfo then
+         self:addErrMess( name.pos, string.format( "already declare symbol -- %s", name.txt) )
+      end
+      
+   end
+   
    local classScope = self.scope
    self:checkToken( nextToken, "{" )
    local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, Ast.MutMode.IMut ), Ast.MutMode.IMut )
@@ -5742,7 +5835,21 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
       end
       
       self:pushback(  )
+      local pushedFlag = true
+      if isCtorFlag then
+         self:pushAnalyzingState( AnalyzingState.Constructor )
+      elseif staticFlag and classTypeInfo then
+         self:pushAnalyzingState( AnalyzingState.ClassMethod )
+      else
+       
+         pushedFlag = false
+      end
+      
       body = self:analyzeBlock( Nodes.BlockKind.Func, TentativeMode.Ignore, funcBodyScope )
+      if pushedFlag then
+         self:popAnalyzingState(  )
+      end
+      
       if body ~= nil then
          if #retTypeInfoList ~= 0 then
             local breakKind = body:getBreakKind( Nodes.CheckBreakMode.Return )
@@ -7260,7 +7367,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
     
       do
          local _switchExp = (funcTypeInfo:get_kind() )
-         if _switchExp == Ast.TypeInfoKind.Method or _switchExp == Ast.TypeInfoKind.Func then
+         if _switchExp == Ast.TypeInfoKind.Method or _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Form then
          else 
             
                self:error( string.format( "can't call the type -- %s, %s", funcTypeInfo:getTxt(  ), Ast.TypeInfoKind:_getTxt( funcTypeInfo:get_kind())
@@ -7396,7 +7503,7 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
    if castType:canEvalWith( expType, "=", {} ) then
       self:addWarnMess( castTypeNode:get_pos(), string.format( "This cast doesn't need. (%s <- %s)", castType:getTxt( true ), expType:getTxt( true )) )
    elseif not expType:canEvalWith( castType, "=", {} ) then
-      if not Ast.isNumberType( expType ) and not Ast.isNumberType( castType ) then
+      if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) then
          self:addErrMess( castTypeNode:get_pos(), string.format( "This type can't cast. (%s <- %s)", castType:getTxt( true ), expType:getTxt( true )) )
       end
       
@@ -7526,6 +7633,47 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    end
    
    local typeInfo = _lune.unwrapDefault( fieldTypeInfo, Ast.builtinTypeNone)
+   if symbolInfo ~= nil then
+      if self:inAnalyzingState( AnalyzingState.InitBlock ) or self:inAnalyzingState( AnalyzingState.ClassMethod ) then
+         local errorMess = nil
+         if self.protoFuncMap[symbolInfo:get_typeInfo()] then
+            errorMess = string.format( "It can't call prototype function from static -- %s", symbolInfo:get_name())
+         end
+         
+         if errorMess ~= nil then
+            self:addErrMess( token.pos, errorMess )
+         end
+         
+      elseif self:inAnalyzingState( AnalyzingState.Constructor ) then
+         local errorMess = nil
+         if self.protoFuncMap[symbolInfo:get_typeInfo()] then
+            errorMess = "It can't call prototype function from '__init'"
+         else
+          
+            if symbolInfo:get_kind() == Ast.SymbolKind.Mtd then
+               for name, val in pairs( classScope:get_symbol2SymbolInfoMap() ) do
+                  if val:get_kind() == Ast.SymbolKind.Mbr and not val:get_staticFlag() then
+                     if not val:get_hasValueFlag() and not val:get_typeInfo():get_nilable() then
+                        errorMess = string.format( "Set member(%s) before to access the method-- %s", val:get_name(), symbolInfo:get_name())
+                        break
+                     end
+                     
+                  end
+                  
+               end
+               
+            end
+            
+         end
+         
+         if errorMess ~= nil then
+            self:addErrMess( token.pos, errorMess )
+         end
+         
+      end
+      
+   end
+   
    return typeInfo, symbolInfo, getterFlag
 end
 
