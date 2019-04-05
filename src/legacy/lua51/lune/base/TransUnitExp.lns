@@ -1206,7 +1206,7 @@ fn TransUnit.analyzeExpCast(
    if castType.canEvalWith( expType, "=", {} ) {
       // "str"@@str のように、意味のないキャストはエラー
       self.addWarnMess( castTypeNode.$pos,
-                        "This cast doesn't need. (%s <- %s)"
+                        "This cast isn't need. (%s <- %s)"
                         ( castType.getTxt( true ## ),
                           expType.getTxt( true ## ) ) );          
    }
@@ -1370,15 +1370,16 @@ fn TransUnit.analyzeAccessClassField(
             errorMess = "It can't call prototype function from '__init'";
          }
          else {
-            if symbolInfo.$kind == .Mtd {
+            if symbolInfo.$typeInfo.$kind == .Method and symbolInfo.$scope == classScope
+            {           
                foreach val, name in classScope.$symbol2SymbolInfoMap {
                   if val.$kind == .Mbr and not val.$staticFlag {
                      if not val.$hasValueFlag and not val.$typeInfo.$nilable {
                         errorMess = "Set member(%s) before to access the method-- %s"
                         ( val.$name, symbolInfo.$name );
                         break;
-                     }  
-                  }  
+                     }
+                  }
                }
             }
          }

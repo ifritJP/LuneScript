@@ -1,0 +1,15 @@
+class Super {
+}
+
+class Sub extend Super {
+}
+
+abstract class Super2 {
+   abstract fn get_val(): Sub;
+}
+
+class Test extend Super2 {
+   let mut val:Sub {pub:Super};
+   let mut val2:Sub {pub:int};
+   let mut val3:&Sub {pub:Super};
+}

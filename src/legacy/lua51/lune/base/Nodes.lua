@@ -4733,13 +4733,13 @@ function DeclMemberNode:canBeStatement(  )
 
    return true
 end
-function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
+function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
    local obj = {}
    DeclMemberNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode ); end
+   if obj.__init then obj:__init( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode ); end
    return obj
 end
-function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode) 
+function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode) 
    Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclMember']), pos, typeList)
    
    
@@ -4750,12 +4750,13 @@ function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticF
    self.accessMode = accessMode
    self.getterMutable = getterMutable
    self.getterMode = getterMode
+   self.getterRetType = getterRetType
    self.setterMode = setterMode
    
 end
-function DeclMemberNode.create( nodeMan, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode )
+function DeclMemberNode.create( nodeMan, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
 
-   local node = DeclMemberNode.new(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, setterMode)
+   local node = DeclMemberNode.new(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
    nodeMan:addNode( node )
    return node
 end
@@ -4782,6 +4783,9 @@ function DeclMemberNode:get_getterMutable()
 end
 function DeclMemberNode:get_getterMode()       
    return self.getterMode         
+end
+function DeclMemberNode:get_getterRetType()       
+   return self.getterRetType         
 end
 function DeclMemberNode:get_setterMode()       
    return self.setterMode         

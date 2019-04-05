@@ -41,6 +41,9 @@ class Test2 {
    pri let val:int;
    pub fn __init() { // error: does not set 'val';
    }
+   pub fn func():str;
+}
+pub fn Test2.func():int { // error
 }
 
 class Test3 {
@@ -126,7 +129,7 @@ class Sub2 extend Super2 { // error
    }
 }
 
-class Super3 {
+class Super3 { // error
    pub abstract fn func4();  // error
 }
 
@@ -176,7 +179,7 @@ interface IFTest {
    pub fn func( val:int );
 }
 
-class IFTest2 extend (IFTest) {
+class IFTest2 extend (IFTest) { // error
    pub fn func( val:str ); // error
 }
 
@@ -226,7 +229,7 @@ interface TestIF2 {
 abstract class SuperTest extend (TestIF,TestIF2) { // error
 }
 
-class SubTest extend SuperTest {
+class SubTest extend SuperTest { // error
    fn func(val:int):int {
       return 1;
    }
@@ -267,12 +270,27 @@ pub class ClassD extend (IFSuper) { // error
    }
 }
 
-class Test9 {
+class Super7 {
+   pro fn sub() {
+   }
+}
+
+class Test9 extend Super7 {
    let val:int;
+   static fn sfunc() {
+   }
    fn func() {
    }
    fn __init() {
-      self.func();
+      super();
+      Test9.sfunc();
+
+      let func = fn () {
+         self.func();
+      };
+      
+      self.sub();
+      self.func(); // error
       self.val = 1;
    }
 }

@@ -351,7 +351,7 @@ pub class Scope {
       self.symbol2SymbolInfoMap[ symbolInfo.$name ] = symbolInfo;
    }
    
-   pub fn getNSTypeInfo(): TypeInfo;
+   pub fn getNSTypeInfo(): &TypeInfo;
 }
 
 // 最上位のスコープ
@@ -518,7 +518,8 @@ pub class TypeInfo {
    }
 
    /** この型と typeInfo が等しいかどうか */
-   pub fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+   pub fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                  checkModifer:bool! ): bool {
       return self == typeInfo;
    }
 
@@ -939,7 +940,7 @@ pub fn Scope.filterTypeInfoField(
 {
    if self.classFlag {
       if includeSelfFlag {
-         foreach symbolInfo in self.symbol2SymbolInfoMap {
+         forsort symbolInfo in self.symbol2SymbolInfoMap {
             if symbolInfo.canAccess( fromScope ) {
                if not callback( symbolInfo ) {
                   return false;
@@ -1361,7 +1362,9 @@ pub class NilTypeInfo extend TypeInfo {
    
 
    /** この型と typeInfo が等しいかどうか */
-   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
+   {  
       return self == typeInfo;
    }
 
@@ -1591,11 +1594,14 @@ pub class NilableTypeInfo extend TypeInfo {
             SerializeKind.Nilable, parentId, self.typeId, self.nonnilableType.$typeId ) );
    }
 
-   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
+   {  
       if not typeInfo.$nilable {
          return false;
       }
-      return self.nonnilableType.equals( typeInfo.$nonnilableType, alt2type );
+      return self.nonnilableType.equals(
+         typeInfo.$nonnilableType, alt2type, checkModifer );
    }
 
    pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
@@ -1623,16 +1629,22 @@ pub class AlternateTypeInfo extend TypeInfo {
    pri let typeId:int {pub};
    pri let txt:str {pub};
    pri let moduleTypeInfo:&TypeInfo;
-   pri let nilableTypeInfo: NilableTypeInfo {pub};
+   pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
    pri let accessMode: AccessMode {pub};
    // 基底クラス。 無効な場合は headTypeInfo。
    pri let baseTypeInfo: &TypeInfo { pub };
    // インタフェースのリスト。
    pri let interfaceList: &List<&TypeInfo> { pub };
+
+   /** クラスの型パラメータとして使う場合 true */
+   pri let belongClassFlag: bool;
+   /** 何番目の型パラメータか */
+   pri let altIndex:int;
    
 
-   pub fn __init( txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
-                  baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! )
+   pub fn __init( belongClassFlag:bool, altIndex:int,
+                  txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
+                  baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) 
    {
       super( TypeInfo.createScope( nil, true, baseTypeInfo, interfaceList ) );
 
@@ -1644,6 +1656,8 @@ pub class AlternateTypeInfo extend TypeInfo {
       self.moduleTypeInfo = moduleTypeInfo;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
+      self.belongClassFlag = belongClassFlag;
+      self.altIndex = altIndex;
 
       idProv.increment();      
       self.nilableTypeInfo = new NilableTypeInfo( self, idProv.$id );
@@ -1701,11 +1715,15 @@ pub class AlternateTypeInfo extend TypeInfo {
       other:&TypeInfo, opTxt:str!, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
    {
       let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
+      if self == otherWork {
+         return true;
+      }
+      
       if! let genType = alt2type[ self ] {
          when! opTxt {
             return genType.canEvalWith( otherWork, opTxt, alt2type );
          }
-         return genType.equals( otherWork, alt2type );
+         return genType.equals( otherWork, alt2type ## );
       }
       if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) {
          return false;
@@ -1781,6 +1799,17 @@ pub class AlternateTypeInfo extend TypeInfo {
       if other.$nilable {
          return false;
       }
+      if not self.belongClassFlag {
+         if! let altType = other@@@AlternateTypeInfo {
+            if not altType.belongClassFlag and
+               altType.altIndex == self.altIndex
+            {
+               // 関数の型パラメータは、インデックスが同じならば同じものとする
+               return true;
+            }      
+         }
+      }
+      
       //let mut otherWork = unwrap other.applyGeneric( alt2type ) default other;
       return self.canSetFrom( other, opTxt, alt2type );
       // let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
@@ -1804,12 +1833,23 @@ pub class AlternateTypeInfo extend TypeInfo {
    
 
    /** この型と typeInfo が等しいかどうか */
-   pub override fn equals(
-      typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
+   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
    {  
       if self == typeInfo {
          return true;
       }
+      if not self.belongClassFlag {
+         if! let altType = typeInfo@@@AlternateTypeInfo {
+            if not altType.belongClassFlag and
+               altType.altIndex == self.altIndex
+            {
+               // 関数の型パラメータは、インデックスが同じならば同じものとする
+               return true;
+            }      
+         }
+      }
+      
       when! alt2type {
          return self.canSetFrom( typeInfo, nil, alt2type );
          
@@ -1863,7 +1903,8 @@ pub class AlternateTypeInfo extend TypeInfo {
       stream.write(
          '{ skind = %d, parentId = %d, typeId = %d, txt = %q, '
          ( SerializeKind.Alternate, parentId, self.typeId, self.txt ) .. 
-         'accessMode = %d, baseId = %d, ' ( self.accessMode, self.$baseId ) );
+         'accessMode = %d, baseId = %d, ' ( self.accessMode, self.$baseId ) ..
+         'belongClassFlag = %s, altIndex = %d, ' (self.belongClassFlag, self.altIndex ));
 
       stream.write( self.serializeTypeInfoList( "ifList = {", self.interfaceList## ) );
       stream.write( "}\n" );
@@ -1874,7 +1915,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 }
 
-let boxRootAltType = new AlternateTypeInfo( "_T", .Pub, headTypeInfo ## );
+let boxRootAltType = new AlternateTypeInfo( true, 1, "_T", .Pub, headTypeInfo ## );
 let mut boxRootScope = new Scope( rootScope, true, nil## );
 
 pub class BoxTypeInfo extend TypeInfo {
@@ -1882,7 +1923,7 @@ pub class BoxTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
    pri let itemTypeInfoList: &List<&TypeInfo> {pub};
    pri let accessMode: AccessMode {pub};
-   pri let nilableTypeInfo: NilableTypeInfo {pub};
+   pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
 
    pub fn __init( typeId: int, accessMode:AccessMode, boxingType: &TypeInfo ) {
       super( boxRootScope );
@@ -1942,11 +1983,11 @@ pub class BoxTypeInfo extend TypeInfo {
             self.accessMode, self.boxingType.$typeId ) );
    }
 
-   pub override fn equals(
-      typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
+   pub override fn equals( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
    {
       if! let boxType = typeInfo@@@BoxTypeInfo {
-         return self.boxingType.equals( boxType.boxingType, alt2type );
+         return self.boxingType.equals( boxType.boxingType, alt2type , checkModifer );
       }
       return false;
    }
@@ -1972,7 +2013,7 @@ Set<T> の Set<int> を表わす型情報。
 pub class GenericTypeInfo extend TypeInfo {
    pri let typeId:int {pub};
    pri let itemTypeInfoList:&List<&TypeInfo> {pub};
-   pri let nilableTypeInfo: NilableTypeInfo {pub};
+   pri let nilableTypeInfo: NilableTypeInfo {pub:&TypeInfo};
    pri let genSrcTypeInfo:&TypeInfo {pub};
    pri let moduleTypeInfo:&TypeInfo;
    pri let alt2typeMap:&Map<&TypeInfo,&TypeInfo>;
@@ -2082,7 +2123,7 @@ pub class GenericTypeInfo extend TypeInfo {
          foreach genType, altType in work.createAlt2typeMap( false ) {
             alt2type[ altType ] = genType;
          }  
-         if self.genSrcTypeInfo.equals( work.$genSrcTypeInfo, alt2type ) {
+         if self.genSrcTypeInfo.equals( work.$genSrcTypeInfo, alt2type ## ) {
             break;
          }
          foreach ifType in work.$interfaceList {
@@ -2107,7 +2148,9 @@ pub class GenericTypeInfo extend TypeInfo {
    }
 
    /** この型と typeInfo が等しいかどうか */
-   pub override fn equals( other: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+   pub override fn equals( other: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
+   {  
       if self == other {
          return true;
       }
@@ -2123,13 +2166,13 @@ pub class GenericTypeInfo extend TypeInfo {
       //    return false;
       // }
       
-      if not self.genSrcTypeInfo.equals( other.$genSrcTypeInfo, alt2type ) {
+      if not self.genSrcTypeInfo.equals( other.$genSrcTypeInfo, alt2type, checkModifer ) {
          return false;
       }
       
       foreach otherItem, index in other.$itemTypeInfoList {
          let typeInfo = self.itemTypeInfoList[ index ];
-         if not typeInfo.equals( otherItem, alt2type ) {
+         if not typeInfo.equals( otherItem, alt2type, checkModifer ) {
             return false;
          }
       }
@@ -2240,7 +2283,18 @@ pub class ModifierTypeInfo extend TypeInfo {
       // }
       return TypeInfo.canEvalWithBase(
          self.srcTypeInfo, TypeInfo.isMut( self ), other.$srcTypeInfo, opTxt, alt2type );
-   }  
+   }
+
+   pub override fn equals(
+      typeInfo: TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!, checkModifer:bool! ): bool
+   {
+      if checkModifer {
+         if TypeInfo.isMut( self ) ~= TypeInfo.isMut( typeInfo ) {
+            return false;
+         }
+      }
+      return self.srcTypeInfo.equals( typeInfo.$srcTypeInfo, alt2type, checkModifer );
+   }
 
    advertise srcTypeInfo;
 }
@@ -2855,15 +2909,20 @@ pub class NormalTypeInfo extend TypeInfo {
          self.serializeTypeInfoList( "children = {", children, true ) .. "}\n" );
    }
 
-   pub fn equalsSub( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
+   pub fn equalsSub( typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                     checkModifer:bool! ): bool
+   {  
       if self.typeId == typeInfo.$typeId {
          return true;
+      }
+
+      if typeInfo.$kind == .Alternate {
+         return typeInfo.equals( self, alt2type, checkModifer );
       }
 
       // プリミティブな設定のチェック
       if self.kind ~= typeInfo.$kind or
          self.staticFlag ~= typeInfo.$staticFlag or
-         self.accessMode ~= typeInfo.$accessMode or
          self.autoFlag ~= typeInfo.$autoFlag or
          self.$nilable ~= typeInfo.$nilable or
          self.rawTxt ~= typeInfo.$rawTxt or
@@ -2881,6 +2940,18 @@ pub class NormalTypeInfo extend TypeInfo {
          return false;
       }
 
+      if self.accessMode ~= typeInfo.$accessMode {
+         switch self.kind {
+            case .List, .Map, .Array, .Set {
+               // これらの型情報は、 accessMode に意味はあまりないので無視
+            }
+            default {
+               return false;
+            }
+         }
+      }
+      
+
       // if ( self ~= typeInfo.$nonnilableType )
       // { 
       //    Util.log( "%s, %s" ( self, typeInfo.$nonnilableType ) );
@@ -2894,7 +2965,9 @@ pub class NormalTypeInfo extend TypeInfo {
             return false;
          }  
          foreach item, index in self.itemTypeInfoList {
-            if not item.equals( typeInfo.$itemTypeInfoList[ index ], alt2type ) {
+            if not item.equals(
+               typeInfo.$itemTypeInfoList[ index ], alt2type, checkModifer )
+            {          
                // error( "illegal %s:%d %s:%d"
                //    ( self.getTxt(), self.typeId,
                //      typeInfo.getTxt(), typeInfo.$typeId ) );
@@ -2911,7 +2984,9 @@ pub class NormalTypeInfo extend TypeInfo {
             return false;
          }  
          foreach item, index in self.retTypeInfoList {
-            if not item.equals( typeInfo.$retTypeInfoList[ index ], alt2type ) {
+            if not item.equals(
+               typeInfo.$retTypeInfoList[ index ], alt2type, checkModifer )
+            {           
                // error( "illegal %s:%d %s:%d"
                //    ( self.getTxt(), self.typeId,
                //      typeInfo.getTxt(), typeInfo.$typeId ) );
@@ -2928,8 +3003,10 @@ pub class NormalTypeInfo extend TypeInfo {
       return true;
    }
 
-   pub override fn equals( typeInfo: TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool {
-      return self.equalsSub( typeInfo, alt2type );
+   pub override fn equals( typeInfo: TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
+   {  
+      return self.equalsSub( typeInfo, alt2type, checkModifer );
    }
 
 
@@ -2971,11 +3048,13 @@ pub class NormalTypeInfo extend TypeInfo {
 
 
 pub static fn NormalTypeInfo.createAlternate(
+   belongClassFlag:bool, altIndex:int,
    txt:str, accessMode:AccessMode, moduleTypeInfo:&TypeInfo,
    baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : &AlternateTypeInfo
 {
-   return new AlternateTypeInfo( txt, accessMode, moduleTypeInfo,
-                                 baseTypeInfo, interfaceList );
+   return new AlternateTypeInfo(
+      belongClassFlag, altIndex, txt,
+      accessMode, moduleTypeInfo, baseTypeInfo, interfaceList );
 }
 
 pub proto class DDDTypeInfo extend TypeInfo;
@@ -3133,13 +3212,13 @@ pub static fn NormalTypeInfo.createBuiltin(
    switch kind {
       case .Array, .List, .Set {
          genTypeList.insert(
-            NormalTypeInfo.createAlternate( "T", .Pri, headTypeInfo ## ) );
+            NormalTypeInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## ) );
       }
       case .Map {
          genTypeList.insert(
-            NormalTypeInfo.createAlternate( "K", .Pri, headTypeInfo ## ) );
+            NormalTypeInfo.createAlternate( true, 1, "K", .Pri, headTypeInfo ## ) );
          genTypeList.insert(
-            NormalTypeInfo.createAlternate( "V", .Pri, headTypeInfo ## ) );
+            NormalTypeInfo.createAlternate( true, 2, "V", .Pri, headTypeInfo ## ) );
       }
    }
    let mut info = new NormalTypeInfo(
@@ -3206,7 +3285,7 @@ registBuiltin( "Nilable", "Nilable", .Box, builtinTypeBox, headTypeInfo, true );
 
 
 pub fn isConditionalbe( typeInfo:&TypeInfo ) : bool {
-   if typeInfo.$nilable or typeInfo.equals( builtinTypeBool, nil ) {
+   if typeInfo.$nilable or typeInfo.equals( builtinTypeBool, nil ## ) {
       return true;
    }
    return false;
@@ -4143,6 +4222,7 @@ pub static fn TypeInfo.canEvalWithBase(
       otherSrc ~= builtinTypeString and
       otherSrc.$kind ~= .Prim and
       otherSrc.$kind ~= .Func and
+      otherSrc.$kind ~= .Method and
       otherSrc.$kind ~= .Form and
       otherSrc.$kind ~= .Enum and
       otherSrc.$kind ~= .Abbr and
@@ -4305,7 +4385,7 @@ pub static fn TypeInfo.canEvalWithBase(
          }
          foreach argType, index in dest.$argTypeInfoList {
             let otherArgType = otherSrc.$argTypeInfoList[ index ];
-            if not argType.equals( otherArgType, alt2type ) {
+            if not argType.equals( otherArgType, alt2type ## ) {
                Util.errorLog( "unmatch arg(%d) type -- %s, %s"
                               ( index, argType.getTxt(##), otherArgType.getTxt(##) ));
                return false;
@@ -4313,9 +4393,10 @@ pub static fn TypeInfo.canEvalWithBase(
          }
          foreach retType, index in dest.$retTypeInfoList {
             let otherRetType = otherSrc.$retTypeInfoList[ index ];
-            if not retType.equals( otherRetType, alt2type ) {
-               Util.errorLog( "unmatch ret(%d) type -- %s, %s"
-                              (index, retType.getTxt(##), otherRetType.getTxt(##) ));
+            if not retType.equals( otherRetType, alt2type ## ) {
+               Util.errorLog( "unmatch ret(%d) type -- %s, %s, %s"
+                              (index, retType.getTxt(##), otherRetType.getTxt(##),
+                                dest.getTxt(##) ));
                return false;
             }
          }

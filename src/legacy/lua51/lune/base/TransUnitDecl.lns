@@ -257,16 +257,27 @@ fn TransUnit.analyzeDeclArgList(
 fn TransUnit.checkOverriededMethod() mut
 {
    fn checkOverrideMethodSub(
-      pos:&Parser.Position, classScope:&Ast.Scope, scope:&Ast.Scope )
-   {  
+      pos:&Parser.Position, alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
+      classScope:&Ast.Scope, scope:&Ast.Scope )
+   {
       scope.filterTypeInfoField(
          true, classScope,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
-            if symbolInfo.$kind == .Mtd {
+            if symbolInfo.$name == "__init" {
+               return true;
+            }
+            if symbolInfo.$typeInfo.$kind == .Method {
                let mut noImp = false;
                if! let impMethodType = classScope.getTypeInfoField(
                   symbolInfo.$name, true, classScope )
-               {              
+               {
+                  if not impMethodType.canEvalWith(
+                     symbolInfo.$typeInfo, "=", alt2typeMap )
+                  {                 
+                     self.addErrMess(
+                        pos, "mismatch method -- %s %s" (symbolInfo.$typeInfo.$display_stirng,
+                                                          impMethodType.$display_stirng ) );
+                  }
                   if impMethodType.$abstractFlag {
                      noImp = true;
                   }
@@ -292,16 +303,20 @@ fn TransUnit.checkOverriededMethod() mut
       if not classTypeInfo.$abstractFlag {
          // extend のメソッドがオーバーライドされているか確認
          let mut workTypeInfo = classTypeInfo;
+         let mut alt2typeMap = classTypeInfo.createAlt2typeMap(false);
          repeat {
             if workTypeInfo ~= Ast.headTypeInfo {
                checkOverrideMethodSub(
-                  classNode.$pos,
-                  unwrap classTypeInfo.$scope, unwrap workTypeInfo.$scope );
+                  classNode.$pos, alt2typeMap,
+                  unwrap classTypeInfo.$scope,
+                  unwrap workTypeInfo.$scope );
             }  
             foreach ifType in workTypeInfo.$interfaceList {
-               checkOverrideMethodSub(
-                  classNode.$pos,
-                  unwrap classTypeInfo.$scope, unwrap ifType.$scope );
+               if ifType ~= Ast.builtinTypeMapping {
+                  checkOverrideMethodSub(
+                     classNode.$pos, alt2typeMap,
+                     unwrap classTypeInfo.$scope, unwrap ifType.$scope );
+               }
             }  
             workTypeInfo = workTypeInfo.$baseTypeInfo;
          } workTypeInfo == Ast.headTypeInfo;
@@ -713,13 +728,15 @@ fn TransUnit.analyzePushClass(
 }
 
 fn TransUnit.analyzeDeclAlternateType(
-   token:&Parser.Token, accessMode: Ast.AccessMode ) mut :
+   belongClassFlag:bool, token:&Parser.Token, accessMode: Ast.AccessMode ) mut :
    &Parser.Token, List<&Ast.AlternateTypeInfo>
 {
    let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
    let mut nextToken = token;
    let mut altNameSet:Set<str> = (@);
+   let mut altIndex = 0;
    while true {
+      altIndex = altIndex + 1;
       let genericSymToken = self.getSymbolToken( .MustNot_ );
       if self.scope.getTypeInfo( genericSymToken.txt, self.scope, true) {
          self.addErrMess( genericSymToken.pos,
@@ -747,7 +764,8 @@ fn TransUnit.analyzeDeclAlternateType(
       }
       
       let altType = Ast.NormalTypeInfo.createAlternate(
-         genericSymToken.txt, accessMode, self.moduleType, baseTypeInfo, interfaceList );
+         belongClassFlag, altIndex, genericSymToken.txt,
+         accessMode, self.moduleType, baseTypeInfo, interfaceList );
       altTypeList.insert( altType );
 
       if workToken.txt == ">" {
@@ -779,7 +797,7 @@ fn TransUnit.analyzeDeclProto(
          let mut workToken = self.getToken(##);
          if workToken.txt == "<" {
             workToken, altTypeList = self.analyzeDeclAlternateType(
-               workToken, accessMode );
+               true, workToken, accessMode );
          }  
          self.pushbackToken( workToken );
       }  
@@ -1213,12 +1231,14 @@ fn TransUnit.analyzeDeclMember(
 
       // accessor
       let mut getterMode = Ast.AccessMode.None;
+      let mut getterRetType = refType.$expType;
       let mut getterMutable = true;
       let mut setterMode = Ast.AccessMode.None;
       if token.txt == "{" {
 
-         fn analyzeAccessorMode(): Ast.AccessMode, &Parser.Token
-         {        
+         fn analyzeAccessorMode(): Ast.AccessMode, &Ast.TypeInfo, &Parser.Token
+         {
+            let mut retType = Ast.headTypeInfo;
             let mut mode = Ast.AccessMode.None;
             let mut workToken = self.getToken(##);
             switch workToken.txt {
@@ -1227,6 +1247,11 @@ fn TransUnit.analyzeDeclMember(
                   workToken = self.getToken(##);
                   if workToken.txt == "&" {
                      getterMutable = false;
+                     workToken = self.getToken(##);
+                  }
+                  if workToken.txt == ":" {
+                     let typeNode = self.analyzeRefType( mode, false );
+                     retType = typeNode.$expType;
                      workToken = self.getToken(##);
                   }
                }
@@ -1238,12 +1263,26 @@ fn TransUnit.analyzeDeclMember(
                                    "access mode is invalid -- %s" (workToken.txt) );
                }
             }
-            return mode, workToken;
+            return mode, retType, workToken;
          }
 
-         getterMode, nextToken = analyzeAccessorMode();
+         {
+            let workRetType;
+            getterMode, workRetType, nextToken = analyzeAccessorMode();
+            if workRetType ~= Ast.headTypeInfo {
+               if not workRetType.canEvalWith( getterRetType, "=",
+                                               classTypeInfo.createAlt2typeMap( false ) )
+               {
+                  self.addErrMess( firstToken.pos,
+                                   "getter type mismatch -- %s <- %s"
+                                   (workRetType.getTxt(##), getterRetType.getTxt(##)));
+               }
+               getterRetType = workRetType;
+            }
+         }
          if nextToken.txt == "," {
-            setterMode, nextToken = analyzeAccessorMode();
+            let dummyRetType;
+            setterMode, dummyRetType, nextToken = analyzeAccessorMode();
             if setterMode ~= .None and mutMode == .IMut {
                // immutable なメンバに setter 宣言は出来ない
                self.addErrMess(
@@ -1265,6 +1304,9 @@ fn TransUnit.analyzeDeclMember(
       if Ast.TypeInfo.isMut( typeInfo ) and typeInfo.$mutMode ~= mutMode {
          typeInfo = self.createModifier( typeInfo, mutMode );
       }
+      if Ast.TypeInfo.isMut( getterRetType ) and getterRetType.$mutMode ~= mutMode {
+         getterRetType = self.createModifier( getterRetType, mutMode );
+      }
 
       if Ast.isPubToExternal( classTypeInfo.$accessMode ) {
          if Ast.isPubToExternal( accessMode ) or
@@ -1280,7 +1322,7 @@ fn TransUnit.analyzeDeclMember(
 
       return Nodes.DeclMemberNode.create(
          self.nodeManager, firstToken.pos, [ typeInfo ], varName, refType, symbolInfo,
-         staticFlag, accessMode, getterMutable, getterMode, setterMode );
+         staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode );
    }
 
 fn TransUnit.analyzeDeclMethod(
@@ -1666,7 +1708,7 @@ fn TransUnit.analyzeDeclClass(
       let mut nextToken = self.getToken(##);
       if nextToken.txt == "<" {
          nextToken, altTypeList = self.analyzeDeclAlternateType(
-            nextToken, classAccessMode );
+            true, nextToken, classAccessMode );
       }
       self.pushbackToken( nextToken );
    }
@@ -1750,9 +1792,9 @@ fn TransUnit.analyzeDeclClass(
       if accessMode ~= .None and not classScope.getTypeInfoChild( getterName )
       {
          let mutable = memberNode.$getterMutable;
-         let mut getterMemberType = memberType;
-         if Ast.TypeInfo.isMut( memberType ) and not mutable {
-            getterMemberType = self.createModifier( memberType, .IMut );
+         let mut getterMemberType = memberNode.$getterRetType;
+         if Ast.TypeInfo.isMut( getterMemberType ) and not mutable {
+            getterMemberType = self.createModifier( getterMemberType, .IMut );
          }
          let retTypeInfo = Ast.NormalTypeInfo.createFunc(
             false, false, self.pushScope( false ## ),
@@ -2022,7 +2064,7 @@ fn TransUnit.analyzeDeclFunc(
    let mut altTypeList:List<&Ast.TypeInfo> = [];
    // generic 宣言
    if token.txt == "<" {
-      token, altTypeList = self.analyzeDeclAlternateType( token, accessMode );
+      token, altTypeList = self.analyzeDeclAlternateType( false, token, accessMode );
       foreach altType in altTypeList {
          funcBodyScope.addAlternate( accessMode, altType.$rawTxt, altType );
       }
@@ -2106,10 +2148,24 @@ fn TransUnit.analyzeDeclFunc(
       }
 
       if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
-         let matchFlag, err = Ast.TypeInfo.checkMatchType(
-            prottype.$argTypeInfoList, argTypeList, false, nil, alt2typeMap );
-         if matchFlag ~= .Match {
-            self.addErrMess( name.pos, "mismatch functype: " .. err );
+         {
+            let matchFlag, err = Ast.TypeInfo.checkMatchType(
+               prottype.$argTypeInfoList, argTypeList, false, nil, alt2typeMap );
+            if matchFlag ~= .Match {
+               self.addErrMess( name.pos, "mismatch functype param: " .. err );
+            }
+         }
+         {
+            let matchFlag, err = Ast.TypeInfo.checkMatchType(
+               prottype.$retTypeInfoList, retTypeInfoList, false, nil, alt2typeMap );
+            if matchFlag ~= .Match {
+               self.addErrMess( name.pos, "mismatch functype ret: " .. err );
+            }
+         }
+         if not typeInfo.canEvalWith( prottype, "=", alt2typeMap ) {
+            self.addErrMess( name.pos,
+                             "mismatch functype -- %s / %s"
+                             (typeInfo.$display_stirng, prottype.$display_stirng ) );
          }
 
          if self.protoFuncMap[ prottype ] {
@@ -2236,7 +2292,6 @@ fn TransUnit.analyzeDeclFunc(
       
       self.pushback();
 
-      let mut pushedFlag = true;
       if isCtorFlag {
          self.pushAnalyzingState( .Constructor );
       }
@@ -2244,14 +2299,12 @@ fn TransUnit.analyzeDeclFunc(
          self.pushAnalyzingState( .ClassMethod );
       }
       else {
-         pushedFlag = false;
+         self.pushAnalyzingState( .Func );
       }
       
       body = self.analyzeBlock( .Func, .Ignore, funcBodyScope );
 
-      if pushedFlag {
-         self.popAnalyzingState();
-      }
+      self.popAnalyzingState();
       
       when! body {
          if #retTypeInfoList ~= 0

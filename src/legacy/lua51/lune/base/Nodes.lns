@@ -1054,6 +1054,7 @@ _declNodeClass( "DeclMember", Node, false, false, true,
                   { "accessMode": "Ast.AccessMode" },
                   { "getterMutable": "bool" },
                   { "getterMode": "Ast.AccessMode" },
+                  { "getterRetType": "&Ast.TypeInfo" },
                   { "setterMode": "Ast.AccessMode" } ]
 );
 

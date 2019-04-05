@@ -205,6 +205,8 @@ enum AnalyzingState {
    InitBlock,
    /** class の static method */
    ClassMethod,
+   /** その他の 関数, メソッド */
+   Func,
 }
 
 pub class TransUnit {
@@ -384,10 +386,13 @@ pub class TransUnit {
    }
 
    pri fn inAnalyzingState( state:AnalyzingState ): bool {
-      foreach workstate in self.analyzingStateQueue {
-         if workstate == state {
-            return true;
-         }
+      // foreach workstate in self.analyzingStateQueue {
+      //    if workstate == state {
+      //       return true;
+      //    }
+      // }
+      if #self.analyzingStateQueue > 0 {
+         return self.analyzingStateQueue[ #self.analyzingStateQueue ] == state;
       }
       return false;
    }
@@ -595,7 +600,7 @@ pub class TransUnit {
       firstToken: &Parser.Token, name: &Parser.Token! ) : Nodes.Node;
    pri fn analyzeDeclClass(
       abstractFlag:bool, classAccessMode: Ast.AccessMode,
-      classToken: &Parser.Token, mode:DeclClassMode ): Nodes.Node;
+      classToken: &Parser.Token, mode:DeclClassMode ): Nodes.DeclClassNode;
    pri fn analyzeExp( allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,
                       expectType:&Ast.TypeInfo! ): Nodes.Node;
    pri fn analyzeStatement( termTxt: str! ): Nodes.Node!;
@@ -604,7 +609,7 @@ pub class TransUnit {
       mode: ExpSymbolMode, prefixExp: &Nodes.Node!, skipFlag: bool ): Nodes.Node;
    pri fn analyzeExpList( allowNoneType:bool, skipOp2Flag: bool, expNode: &Nodes.Node!,
                           expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ): Nodes.ExpListNode;
-   pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node;
+   pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pri fn getTokenNoErr() mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
       accessMode: Ast.AccessMode, allowDDD:bool,
@@ -826,6 +831,8 @@ class _TypeInfoAlternate extend _TypeInfo {
    pub let accessMode:Ast.AccessMode;
    pub let baseId:int;
    pub let ifList:&List<int>;
+   pub let belongClassFlag:bool;
+   pub let altIndex:int;
 
    pub override fn createTypeInfo( param:ImportParam ):
       &Ast.TypeInfo!, str!
@@ -837,6 +844,7 @@ class _TypeInfoAlternate extend _TypeInfo {
          interfaceList.insert( unwrap param.getTypeInfo( ifTypeId ) );
       }  
       let newTypeInfo = Ast.NormalTypeInfo.createAlternate(
+         self.belongClassFlag, self.altIndex,
          self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       return newTypeInfo, nil;
@@ -1593,6 +1601,7 @@ fn TransUnit.registBuiltInScope() mut {
                else {
                   genTypeList.insert(
                      Ast.NormalTypeInfo.createAlternate(
+                        true, #genTypeList + 1,
                         token, .Pri, self.moduleType ## ) );
                }
             }

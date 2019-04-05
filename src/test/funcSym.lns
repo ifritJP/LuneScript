@@ -65,8 +65,8 @@ class Test2 extend (IF<int>) {
    func( new Test2(), 1 );
 }
 
-interface IF2<T> {
-   pub fn func(val:T):T;
+interface IF2<T2> {
+   pub fn func(val:T2):T2;
 }
 
 class Test3 extend (IF<int>, IF2<int>) {
@@ -75,8 +75,8 @@ class Test3 extend (IF<int>, IF2<int>) {
    }
 }
 
-class Test4<T> extend (IF<T>, IF2<T>) {
-   pub fn func(val:T): T {
+class Test4<T4> extend (IF<T4>, IF2<T4>) {
+   pub fn func(val:T4): T4 {
       return val;
    }
 }
