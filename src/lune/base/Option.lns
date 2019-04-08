@@ -170,8 +170,8 @@ usage:
   -r: use 'require( "lune.base._lune" )'
   -ol: output lua version. ver = 51 or 52 or 53.
   -ob: output bytecompiled-code.
-      -ob0 is without debug information. 
-      -ob1 is with debug information. 
+      -ob0 is without debug information.
+      -ob1 is with debug information.
   --depends: output dependfile
 
   common_op:
@@ -190,7 +190,7 @@ usage:
 ``` );
       os.exit( code );
    }
-   
+
    let mut option = new Option();
    let mut useStdInFlag = false;
    let mut lineNo:int! = nil;
@@ -202,7 +202,7 @@ usage:
 
       if arg.find( "^-" ## ) {
          switch ( arg ) {
-            case "-i" {     
+            case "-i" {
                useStdInFlag = true;
             }
             case "-prof" {
@@ -227,7 +227,7 @@ usage:
                if! let mess = outputLuneMod( path ) {
                   Util.errorLog( mess );
                   os.exit( 1 );
-               }              
+               }
                os.exit( 0 );
             }
             case "-r" {
@@ -245,7 +245,7 @@ usage:
             case "--log" {
                if #argList > index {
                   let txt = argList[ index + 1 ];
-                  if! let level = Log.str2level( txt ) { 
+                  if! let level = Log.str2level( txt ) {
                      Log.setLevel( level );
                   }
                   else {

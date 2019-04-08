@@ -150,14 +150,14 @@ end
 function ModuleId.setmeta( obj )
   setmetatable( obj, { __index = ModuleId  } )
 end
-function ModuleId:get_modTime()       
-   return self.modTime         
+function ModuleId:get_modTime()
+   return self.modTime
 end
-function ModuleId:get_buildCount()       
-   return self.buildCount         
+function ModuleId:get_buildCount()
+   return self.buildCount
 end
-function ModuleId:get_idStr()       
-   return self.idStr         
+function ModuleId:get_idStr()
+   return self.idStr
 end
 do
    ModuleId.tempId = ModuleId.new(0.0, 0)
@@ -229,10 +229,10 @@ function frontInterface.new(  )
    frontInterface.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function frontInterface:__init(  ) 
+   end
+   return obj
+end
+function frontInterface:__init(  )
 
 end
 
@@ -266,10 +266,10 @@ function dummyFront.new(  )
    dummyFront.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function dummyFront:__init(  ) 
+   end
+   return obj
+end
+function dummyFront:__init(  )
 
 end
 

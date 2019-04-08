@@ -45,25 +45,25 @@ pub class DependInfo {
       self.subModList.insert( path );
    }
 
-   
+
    pub fn output( stream:oStream ) {
       stream.write( "%s.meta: \\\n" ( (self.targetModule.gsub( "%.", "/" ) )) );
       stream.write( "  %s.lns \\\n" ( (self.targetModule.gsub( "%.", "/" ) )) );
       foreach mod in self.importModuleList {
          stream.write( "  %s.meta \\\n" ((mod.gsub("%.", "/"))) );
-      }  
+      }
       foreach path in self.subModList {
          stream.write( "  %s.lns \\\n" ((path.gsub("%.", "/"))) );
       }
-   }  
-   
+   }
+
 }
 
 class convFilter extend Nodes.Filter<int> {
 
    let mut stream:oStream;
-   
-   pub fn __init( stream:oStream ) 
+
+   pub fn __init( stream:oStream )
    {
       super();
       self.stream = stream;
@@ -75,7 +75,7 @@ pub override fn convFilter.processRoot(
 {
    let moduleFull = node.$moduleTypeInfo.getFullName( {} ## );
    let mut dependInfo = new DependInfo( moduleFull );
-   
+
    if! let importList = node.$nodeManager.getImportNodeList() {
       foreach impNode in importList {
          dependInfo.addImpotModule( impNode.$modulePath );

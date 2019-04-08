@@ -13,13 +13,13 @@ function ID:_getTxt( val )
       return string.format( "ID.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function ID._from( val )
    if ID._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 ID.__allList = {}
 function ID.get__allList()

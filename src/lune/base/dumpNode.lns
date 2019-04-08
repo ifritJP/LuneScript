@@ -78,19 +78,19 @@ fn getTxt( token: Parser.Token ): str {
    return token.txt;
 }
 
-pub override fn dumpFilter.processNone( 
+pub override fn dumpFilter.processNone(
    node: &Nodes.NoneNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
 };
-pub override fn dumpFilter.processImport( 
+pub override fn dumpFilter.processImport(
    node: &Nodes.ImportNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_modulePath() );
 };
-pub override fn dumpFilter.processRoot( 
+pub override fn dumpFilter.processRoot(
    node: &Nodes.RootNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -99,13 +99,13 @@ pub override fn dumpFilter.processRoot(
       filter( child, self, opt.nextOpt() );
    }	
 };
-pub override fn dumpFilter.processSubfile( 
+pub override fn dumpFilter.processSubfile(
    node: &Nodes.SubfileNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
 }
-pub override fn dumpFilter.processBlock( 
+pub override fn dumpFilter.processBlock(
    node: &Nodes.BlockNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -113,8 +113,8 @@ pub override fn dumpFilter.processBlock(
    foreach statement, index in node.get_stmtList() {
       filter( statement, self, opt.nextOpt() );
    }	
-};  
-pub override fn dumpFilter.processStmtExp( 
+};
+pub override fn dumpFilter.processStmtExp(
    node: &Nodes.StmtExpNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -156,7 +156,7 @@ pub override fn dumpFilter.processNewAlgeVal(
 }
 
 
-pub override fn dumpFilter.processDeclClass( 
+pub override fn dumpFilter.processDeclClass(
    node: &Nodes.DeclClassNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -164,15 +164,15 @@ pub override fn dumpFilter.processDeclClass(
    foreach field, index in node.get_fieldList() {
       filter( field, self, opt.nextOpt() );
    }	
-};  
-pub override fn dumpFilter.processDeclMember( 
+};
+pub override fn dumpFilter.processDeclMember(
    node: &Nodes.DeclMemberNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_name().txt );
    filter( node.get_refType(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processExpMacroExp( 
+};
+pub override fn dumpFilter.processExpMacroExp(
    node: &Nodes.ExpMacroExpNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -182,13 +182,13 @@ pub override fn dumpFilter.processExpMacroExp(
       filter( stmt, self,  opt.nextOpt() );
    }
 };
-pub override fn dumpFilter.processDeclMacro( 
+pub override fn dumpFilter.processDeclMacro(
    node: &Nodes.DeclMacroNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_expType().getTxt(##) );
 };
-pub override fn dumpFilter.processExpMacroStat( 
+pub override fn dumpFilter.processExpMacroStat(
    node: &Nodes.ExpMacroStatNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -199,7 +199,7 @@ pub override fn dumpFilter.processExpMacroStat(
 };
 
 
-pub override fn dumpFilter.processUnwrapSet( 
+pub override fn dumpFilter.processUnwrapSet(
    node: &Nodes.UnwrapSetNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -212,7 +212,7 @@ pub override fn dumpFilter.processUnwrapSet(
    }
 }
 
-pub override fn dumpFilter.processIfUnwrap( 
+pub override fn dumpFilter.processIfUnwrap(
    node: &Nodes.IfUnwrapNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -226,7 +226,7 @@ pub override fn dumpFilter.processIfUnwrap(
    }
 }
 
-pub override fn dumpFilter.processWhen( 
+pub override fn dumpFilter.processWhen(
    node: &Nodes.WhenNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -241,7 +241,7 @@ pub override fn dumpFilter.processWhen(
 }
 
 
-pub override fn dumpFilter.processDeclVar( 
+pub override fn dumpFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -256,7 +256,7 @@ pub override fn dumpFilter.processDeclVar(
       varName = "!" .. varName;
    }
    varName = "%s %s" ( node.$mode, varName );
-   
+
    dump( prefix, depth, node, varName );
    foreach var, index in node.get_varList() {
       if! var.$refType {
@@ -280,21 +280,21 @@ pub override fn dumpFilter.processDeclVar(
    if! node.$syncBlock {
       filter( _exp, self, opt.nextOpt() );
    }
-};  
-pub override fn dumpFilter.processDeclArg( 
+};
+pub override fn dumpFilter.processDeclArg(
    node: &Nodes.DeclArgNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_name().txt );
    filter( node.get_argType(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processDeclArgDDD( 
+};
+pub override fn dumpFilter.processDeclArgDDD(
    node: &Nodes.DeclArgDDDNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "..." );
-};  
-pub override fn dumpFilter.processExpDDD( 
+};
+pub override fn dumpFilter.processExpDDD(
    node: &Nodes.ExpDDDNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -321,37 +321,37 @@ fn dumpFilter.processDeclFuncInfo(
       filter( _exp, self, opt.nextOpt() );
    }
 }
-pub override fn dumpFilter.processDeclFunc( 
+pub override fn dumpFilter.processDeclFunc(
    node: &Nodes.DeclFuncNode, opt:Opt ) mut
 {
    self.processDeclFuncInfo( node, node.get_declInfo(), opt );
 };	
-pub override fn dumpFilter.processDeclMethod( 
+pub override fn dumpFilter.processDeclMethod(
    node: &Nodes.DeclMethodNode, opt:Opt ) mut
 {
    self.processDeclFuncInfo( node, node.get_declInfo(), opt );
 };	
-pub override fn dumpFilter.processDeclConstr( 
+pub override fn dumpFilter.processDeclConstr(
    node: &Nodes.DeclConstrNode, opt:Opt ) mut
 {
    self.processDeclFuncInfo( node, node.get_declInfo(), opt );
 };
 
-pub override fn dumpFilter.processDeclDestr( 
+pub override fn dumpFilter.processDeclDestr(
    node: &Nodes.DeclDestrNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
 };
 
-pub override fn dumpFilter.processExpCallSuper( 
+pub override fn dumpFilter.processExpCallSuper(
    node: &Nodes.ExpCallSuperNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    let typeInfo:Ast.TypeInfo = node.get_superType();
    dump( prefix, depth, node, typeInfo.getTxt(##) );
 };
-pub override fn dumpFilter.processRefType( 
+pub override fn dumpFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -359,8 +359,8 @@ pub override fn dumpFilter.processRefType(
 	 (node.get_refFlag() and "&" or "") ..
 	 (node.get_mutFlag() and "mut " or "") );
    filter( node.get_name(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processIf( 
+};
+pub override fn dumpFilter.processIf(
    node: &Nodes.IfNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -372,8 +372,8 @@ pub override fn dumpFilter.processIf(
       }   	
       filter( stmt.$block, self, opt.nextOpt() );
    }	
-};  
-pub override fn dumpFilter.processSwitch( 
+};
+pub override fn dumpFilter.processSwitch(
    node: &Nodes.SwitchNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -388,7 +388,7 @@ pub override fn dumpFilter.processSwitch(
       filter( _exp, self, opt.nextOpt() );
    }
 };
-pub override fn dumpFilter.processMatch( 
+pub override fn dumpFilter.processMatch(
    node: &Nodes.MatchNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -403,23 +403,23 @@ pub override fn dumpFilter.processMatch(
       filter( _exp, self, opt.nextOpt() );
    }
 };
-pub override fn dumpFilter.processWhile( 
+pub override fn dumpFilter.processWhile(
    node: &Nodes.WhileNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "");
    filter( node.get_exp(), self, opt.nextOpt() );
    filter( node.get_block(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processRepeat( 
+};
+pub override fn dumpFilter.processRepeat(
    node: &Nodes.RepeatNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "");
    filter( node.get_block(), self, opt.nextOpt() );
    filter( node.get_exp(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processFor( 
+};
+pub override fn dumpFilter.processFor(
    node: &Nodes.ForNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -430,8 +430,8 @@ pub override fn dumpFilter.processFor(
       filter( _exp, self, opt.nextOpt() );
    }	
    filter( node.get_block(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processApply( 
+};
+pub override fn dumpFilter.processApply(
    node: &Nodes.ApplyNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -443,8 +443,8 @@ pub override fn dumpFilter.processApply(
    dump( prefix, depth, node, varNames );
    filter( node.get_exp(), self, opt.nextOpt() );
    filter( node.get_block(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processForeach( 
+};
+pub override fn dumpFilter.processForeach(
    node: &Nodes.ForeachNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -457,8 +457,8 @@ pub override fn dumpFilter.processForeach(
    }
    filter( node.get_exp(), self, opt.nextOpt() );
    filter( node.get_block(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processForsort( 
+};
+pub override fn dumpFilter.processForsort(
    node: &Nodes.ForsortNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -482,7 +482,7 @@ pub override fn dumpFilter.processExpUnwrap(
    }
 }
 
-pub override fn dumpFilter.processExpCall( 
+pub override fn dumpFilter.processExpCall(
    node: &Nodes.ExpCallNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -491,8 +491,8 @@ pub override fn dumpFilter.processExpCall(
    if! node.get_argList() {
       filter( _exp, self, opt.nextOpt() );
    }	
-};  
-pub override fn dumpFilter.processExpList( 
+};
+pub override fn dumpFilter.processExpList(
    node: &Nodes.ExpListNode, opt:Opt ) mut
 
 {
@@ -502,37 +502,37 @@ pub override fn dumpFilter.processExpList(
    foreach exp, index in expList {
       filter( exp, self, opt.nextOpt() );
    }	
-};  
-pub override fn dumpFilter.processExpOp1( 
+};
+pub override fn dumpFilter.processExpOp1(
    node: &Nodes.ExpOp1Node, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_op().txt );
    filter( node.get_exp(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processExpCast( 
+};
+pub override fn dumpFilter.processExpCast(
    node: &Nodes.ExpCastNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
    filter( node.get_exp(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processExpParen( 
+};
+pub override fn dumpFilter.processExpParen(
    node: &Nodes.ExpParenNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "()" );
    filter( node.get_exp(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processExpOp2( 
+};
+pub override fn dumpFilter.processExpOp2(
    node: &Nodes.ExpOp2Node, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_op().txt );
    filter( node.get_exp1(), self, opt.nextOpt() );
    filter( node.get_exp2(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processExpNew( 
+};
+pub override fn dumpFilter.processExpNew(
    node: &Nodes.ExpNewNode, opt:Opt ) mut
 
 {
@@ -543,13 +543,13 @@ pub override fn dumpFilter.processExpNew(
       filter( _exp, self, opt.nextOpt() );
    }
 };
-pub override fn dumpFilter.processExpRef( 
+pub override fn dumpFilter.processExpRef(
    node: &Nodes.ExpRefNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_token().txt );
 };
-pub override fn dumpFilter.processExpRefItem( 
+pub override fn dumpFilter.processExpRefItem(
    node: &Nodes.ExpRefItemNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -558,15 +558,15 @@ pub override fn dumpFilter.processExpRefItem(
    if! node.$index {
       filter( _exp, self, opt.nextOpt() );
    }
-};  
-pub override fn dumpFilter.processRefField( 
+};
+pub override fn dumpFilter.processRefField(
    node: &Nodes.RefFieldNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_field().txt );
    filter( node.get_prefix(), self, opt.nextOpt() );
-};  
-pub override fn dumpFilter.processExpOmitEnum( 
+};
+pub override fn dumpFilter.processExpOmitEnum(
    node: &Nodes.ExpOmitEnumNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -574,7 +574,7 @@ pub override fn dumpFilter.processExpOmitEnum(
          "%s.%s" (node.$expType.getTxt(##), node.$valToken.txt ) );
 };
 
-pub override fn dumpFilter.processGetField( 
+pub override fn dumpFilter.processGetField(
    node: &Nodes.GetFieldNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -582,7 +582,7 @@ pub override fn dumpFilter.processGetField(
    filter( node.get_prefix(), self, opt.nextOpt() );
 };
 
-pub override fn dumpFilter.processReturn( 
+pub override fn dumpFilter.processReturn(
    node: &Nodes.ReturnNode, opt:Opt ) mut
 
 {
@@ -623,7 +623,7 @@ pub override fn dumpFilter.processUnboxing(
    filter( node.$src, self, opt.nextOpt() );
 }
 
-pub override fn dumpFilter.processLiteralList( 
+pub override fn dumpFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -631,8 +631,8 @@ pub override fn dumpFilter.processLiteralList(
    if! node.get_expList() {
       filter( _exp, self, opt.nextOpt() );
    }
-};  
-pub override fn dumpFilter.processLiteralSet( 
+};
+pub override fn dumpFilter.processLiteralSet(
    node: &Nodes.LiteralSetNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -640,8 +640,8 @@ pub override fn dumpFilter.processLiteralSet(
    if! node.get_expList() {
       filter( _exp, self, opt.nextOpt() );
    }
-};  
-pub override fn dumpFilter.processLiteralMap( 
+};
+pub override fn dumpFilter.processLiteralMap(
    node: &Nodes.LiteralMapNode, opt:Opt ) mut
 
 {
@@ -652,8 +652,8 @@ pub override fn dumpFilter.processLiteralMap(
       filter( pair.get_key(), self, opt.nextOpt() );
       filter( pair.get_val(), self, opt.nextOpt() );
    }
-};  
-pub override fn dumpFilter.processLiteralArray( 
+};
+pub override fn dumpFilter.processLiteralArray(
    node: &Nodes.LiteralArrayNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -661,29 +661,29 @@ pub override fn dumpFilter.processLiteralArray(
    if! node.get_expList() {
       filter( _exp, self, opt.nextOpt() );
    }
-};  
-pub override fn dumpFilter.processLiteralChar( 
+};
+pub override fn dumpFilter.processLiteralChar(
    node: &Nodes.LiteralCharNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node,
 	 string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
-};  
-pub override fn dumpFilter.processLiteralInt( 
+};
+pub override fn dumpFilter.processLiteralInt(
    node: &Nodes.LiteralIntNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node,
 	 string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
-};  
-pub override fn dumpFilter.processLiteralReal( 
+};
+pub override fn dumpFilter.processLiteralReal(
    node: &Nodes.LiteralRealNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node,
 	 string.format( "%s(%s)", node.get_num(), node.get_token().txt ) );
-};  
-pub override fn dumpFilter.processLiteralString( 
+};
+pub override fn dumpFilter.processLiteralString(
    node: &Nodes.LiteralStringNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
@@ -691,29 +691,29 @@ pub override fn dumpFilter.processLiteralString(
    foreach param in node.$argList {
       filter( param, self, opt.nextOpt() );
    }
-};  
-pub override fn dumpFilter.processLiteralBool( 
+};
+pub override fn dumpFilter.processLiteralBool(
    node: &Nodes.LiteralBoolNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node,
          node.get_token().txt == "true" and "true" or "false" );
-};  
-pub override fn dumpFilter.processLiteralNil( 
+};
+pub override fn dumpFilter.processLiteralNil(
    node: &Nodes.LiteralNilNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
-};  
-pub override fn dumpFilter.processBreak( 
+};
+pub override fn dumpFilter.processBreak(
    node: &Nodes.BreakNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "" );
-};  
-pub override fn dumpFilter.processLiteralSymbol( 
+};
+pub override fn dumpFilter.processLiteralSymbol(
    node: &Nodes.LiteralSymbolNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_token().txt );
-};  
+};

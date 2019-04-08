@@ -91,13 +91,13 @@ function BitOp:_getTxt( val )
       return string.format( "BitOp.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function BitOp._from( val )
    if BitOp._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 BitOp.__allList = {}
 function BitOp.get__allList()
@@ -132,10 +132,10 @@ function LuaVerInfo.new( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPat
    LuaVerInfo.setmeta( obj )
    if obj.__init then
       obj:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
-   end        
-   return obj 
-end         
-function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap ) 
+   end
+   return obj
+end
+function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
 
    self.hasBitOp = hasBitOp
    self.hasTableUnpack = hasTableUnpack
@@ -146,23 +146,23 @@ function LuaVerInfo:__init( hasBitOp, hasTableUnpack, canFormStem2Str, hasSearch
    self.loadKind = loadKind
    self.noSupportSymMap = noSupportSymMap
 end
-function LuaVerInfo:get_hasBitOp()       
-   return self.hasBitOp         
+function LuaVerInfo:get_hasBitOp()
+   return self.hasBitOp
 end
-function LuaVerInfo:get_hasTableUnpack()       
-   return self.hasTableUnpack         
+function LuaVerInfo:get_hasTableUnpack()
+   return self.hasTableUnpack
 end
-function LuaVerInfo:get_canFormStem2Str()       
-   return self.canFormStem2Str         
+function LuaVerInfo:get_canFormStem2Str()
+   return self.canFormStem2Str
 end
-function LuaVerInfo:get_hasSearchPath()       
-   return self.hasSearchPath         
+function LuaVerInfo:get_hasSearchPath()
+   return self.hasSearchPath
 end
-function LuaVerInfo:get_loadStrFuncName()       
-   return self.loadStrFuncName         
+function LuaVerInfo:get_loadStrFuncName()
+   return self.loadStrFuncName
 end
-function LuaVerInfo:get_canUseMetaGc()       
-   return self.canUseMetaGc         
+function LuaVerInfo:get_canUseMetaGc()
+   return self.canUseMetaGc
 end
 
 local ver51 = LuaVerInfo.new(BitOp.Cant, false, false, false, "loadstring51", false, LuaMod.CodeKind.LoadStr51, {["package.searchpath"] = true})

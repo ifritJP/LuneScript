@@ -48,7 +48,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -74,7 +74,6 @@ function _lune.loadstring52( txt, env )
    end
    return load( txt, "", "bt", env )
 end
-      
 function _lune._toStem( val )
    return val
 end

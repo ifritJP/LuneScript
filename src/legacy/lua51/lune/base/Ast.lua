@@ -116,7 +116,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -210,16 +210,16 @@ function IdProvider.new( id, maxId )
    IdProvider.setmeta( obj )
    if obj.__init then
       obj:__init( id, maxId )
-   end        
-   return obj 
-end         
-function IdProvider:__init( id, maxId ) 
+   end
+   return obj
+end
+function IdProvider:__init( id, maxId )
 
    self.id = id
    self.maxId = maxId
 end
-function IdProvider:get_id()       
-   return self.id         
+function IdProvider:get_id()
+   return self.id
 end
 
 local extStartId = 100000
@@ -248,13 +248,13 @@ function SerializeKind:_getTxt( val )
       return string.format( "SerializeKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function SerializeKind._from( val )
    if SerializeKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 SerializeKind.__allList = {}
 function SerializeKind.get__allList()
@@ -304,13 +304,13 @@ function TypeInfoKind:_getTxt( val )
       return string.format( "TypeInfoKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function TypeInfoKind._from( val )
    if TypeInfoKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 TypeInfoKind.__allList = {}
 function TypeInfoKind.get__allList()
@@ -402,13 +402,13 @@ function SymbolKind:_getTxt( val )
       return string.format( "SymbolKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function SymbolKind._from( val )
    if SymbolKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 SymbolKind.__allList = {}
 function SymbolKind.get__allList()
@@ -446,13 +446,13 @@ function AccessMode:_getTxt( val )
       return string.format( "AccessMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function AccessMode._from( val )
    if AccessMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 AccessMode.__allList = {}
 function AccessMode.get__allList()
@@ -511,13 +511,13 @@ function MutMode:_getTxt( val )
       return string.format( "MutMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function MutMode._from( val )
    if MutMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 MutMode.__allList = {}
 function MutMode.get__allList()
@@ -544,10 +544,10 @@ function SymbolInfo.new(  )
    SymbolInfo.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function SymbolInfo:__init(  ) 
+   end
+   return obj
+end
+function SymbolInfo:__init(  )
 
 end
 
@@ -587,44 +587,44 @@ end
 function NormalSymbolInfo.setmeta( obj )
   setmetatable( obj, { __index = NormalSymbolInfo  } )
 end
-function NormalSymbolInfo:get_canBeLeft()       
-   return self.canBeLeft         
+function NormalSymbolInfo:get_canBeLeft()
+   return self.canBeLeft
 end
-function NormalSymbolInfo:get_canBeRight()       
-   return self.canBeRight         
+function NormalSymbolInfo:get_canBeRight()
+   return self.canBeRight
 end
-function NormalSymbolInfo:get_symbolId()       
-   return self.symbolId         
+function NormalSymbolInfo:get_symbolId()
+   return self.symbolId
 end
-function NormalSymbolInfo:get_scope()       
-   return self.scope         
+function NormalSymbolInfo:get_scope()
+   return self.scope
 end
-function NormalSymbolInfo:get_accessMode()       
-   return self.accessMode         
+function NormalSymbolInfo:get_accessMode()
+   return self.accessMode
 end
-function NormalSymbolInfo:get_staticFlag()       
-   return self.staticFlag         
+function NormalSymbolInfo:get_staticFlag()
+   return self.staticFlag
 end
-function NormalSymbolInfo:get_name()       
-   return self.name         
+function NormalSymbolInfo:get_name()
+   return self.name
 end
-function NormalSymbolInfo:get_typeInfo()       
-   return self.typeInfo         
+function NormalSymbolInfo:get_typeInfo()
+   return self.typeInfo
 end
-function NormalSymbolInfo:set_typeInfo( typeInfo )   
-   self.typeInfo = typeInfo              
+function NormalSymbolInfo:set_typeInfo( typeInfo )
+   self.typeInfo = typeInfo
 end
-function NormalSymbolInfo:get_kind()       
-   return self.kind         
+function NormalSymbolInfo:get_kind()
+   return self.kind
 end
-function NormalSymbolInfo:get_hasValueFlag()       
-   return self.hasValueFlag         
+function NormalSymbolInfo:get_hasValueFlag()
+   return self.hasValueFlag
 end
-function NormalSymbolInfo:set_hasValueFlag( hasValueFlag )   
-   self.hasValueFlag = hasValueFlag              
+function NormalSymbolInfo:set_hasValueFlag( hasValueFlag )
+   self.hasValueFlag = hasValueFlag
 end
-function NormalSymbolInfo:get_mutMode()       
-   return self.mutMode         
+function NormalSymbolInfo:get_mutMode()
+   return self.mutMode
 end
 do
    NormalSymbolInfo.symbolIdSeed = 0
@@ -640,10 +640,10 @@ function DataOwnerInfo.new( hasData, symbolInfo )
    DataOwnerInfo.setmeta( obj )
    if obj.__init then
       obj:__init( hasData, symbolInfo )
-   end        
-   return obj 
-end         
-function DataOwnerInfo:__init( hasData, symbolInfo ) 
+   end
+   return obj
+end
+function DataOwnerInfo:__init( hasData, symbolInfo )
 
    self.hasData = hasData
    self.symbolInfo = symbolInfo
@@ -703,14 +703,14 @@ end
 function Scope.setmeta( obj )
   setmetatable( obj, { __index = Scope  } )
 end
-function Scope:get_ownerTypeInfo()       
-   return self.ownerTypeInfo         
+function Scope:get_ownerTypeInfo()
+   return self.ownerTypeInfo
 end
-function Scope:get_parent()       
-   return self.parent         
+function Scope:get_parent()
+   return self.parent
 end
-function Scope:get_symbol2SymbolInfoMap()       
-   return self.symbol2SymbolInfoMap         
+function Scope:get_symbol2SymbolInfoMap()
+   return self.symbol2SymbolInfoMap
 end
 
 local rootScope = Scope.new(nil, false, nil)
@@ -746,15 +746,15 @@ function TypeData.new( children )
    TypeData.setmeta( obj )
    if obj.__init then
       obj:__init( children )
-   end        
-   return obj 
-end         
-function TypeData:__init( children ) 
+   end
+   return obj
+end
+function TypeData:__init( children )
 
    self.children = children
 end
-function TypeData:get_children()       
-   return self.children         
+function TypeData:get_children()
+   return self.children
 end
 
 local ModuleInfoIF = {}
@@ -767,10 +767,10 @@ function ModuleInfoIF.new(  )
    ModuleInfoIF.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function ModuleInfoIF:__init(  ) 
+   end
+   return obj
+end
+function ModuleInfoIF:__init(  )
 
 end
 
@@ -1031,11 +1031,11 @@ end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
-function TypeInfo:get_scope()       
-   return self.scope         
+function TypeInfo:get_scope()
+   return self.scope
 end
-function TypeInfo:get_typeData()       
-   return self.typeData         
+function TypeInfo:get_typeData()
+   return self.typeData
 end
 
 local function getScope( typeInfo )
@@ -1113,8 +1113,8 @@ end
 function AutoBoxingInfo.setmeta( obj )
   setmetatable( obj, { __index = AutoBoxingInfo  } )
 end
-function AutoBoxingInfo:get_count()       
-   return self.count         
+function AutoBoxingInfo:get_count()
+   return self.count
 end
 do
    AutoBoxingInfo.allObj = {}
@@ -1205,10 +1205,10 @@ function CanEvalCtrlTypeInfo.new(  )
    CanEvalCtrlTypeInfo.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function CanEvalCtrlTypeInfo:__init(  ) 
+   end
+   return obj
+end
+function CanEvalCtrlTypeInfo:__init(  )
 
    TypeInfo.__init( self)
 end
@@ -1255,10 +1255,10 @@ function AliasTypeInfo.new( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, ex
    AliasTypeInfo.setmeta( obj )
    if obj.__init then
       obj:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId )
-   end        
-   return obj 
-end         
-function AliasTypeInfo:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId ) 
+   end
+   return obj
+end
+function AliasTypeInfo:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag, typeId )
 
    TypeInfo.__init( self)
    self.rawTxt = rawTxt
@@ -1268,151 +1268,151 @@ function AliasTypeInfo:__init( rawTxt, accessMode, parentInfo, aliasSrcTypeInfo,
    self.externalFlag = externalFlag
    self.typeId = typeId
 end
-function AliasTypeInfo:get_rawTxt()       
-   return self.rawTxt         
+function AliasTypeInfo:get_rawTxt()
+   return self.rawTxt
 end
-function AliasTypeInfo:get_accessMode()       
-   return self.accessMode         
+function AliasTypeInfo:get_accessMode()
+   return self.accessMode
 end
-function AliasTypeInfo:get_parentInfo()       
-   return self.parentInfo         
+function AliasTypeInfo:get_parentInfo()
+   return self.parentInfo
 end
-function AliasTypeInfo:get_aliasSrcTypeInfo()       
-   return self.aliasSrcTypeInfo         
+function AliasTypeInfo:get_aliasSrcTypeInfo()
+   return self.aliasSrcTypeInfo
 end
-function AliasTypeInfo:get_externalFlag()       
-   return self.externalFlag         
+function AliasTypeInfo:get_externalFlag()
+   return self.externalFlag
 end
-function AliasTypeInfo:get_typeId()       
-   return self.typeId         
+function AliasTypeInfo:get_typeId()
+   return self.typeId
 end
 function AliasTypeInfo:isModule( ... )
    return self.aliasSrcTypeInfo:isModule( ... )
-end       
+end
 
 function AliasTypeInfo:get_baseId( ... )
    return self.aliasSrcTypeInfo:get_baseId( ... )
-end       
+end
 
 function AliasTypeInfo:isInheritFrom( ... )
    return self.aliasSrcTypeInfo:isInheritFrom( ... )
-end       
+end
 
 function AliasTypeInfo:getTxtWithRaw( ... )
    return self.aliasSrcTypeInfo:getTxtWithRaw( ... )
-end       
+end
 
 function AliasTypeInfo:canEvalWith( ... )
    return self.aliasSrcTypeInfo:canEvalWith( ... )
-end       
+end
 
 function AliasTypeInfo:get_abstractFlag( ... )
    return self.aliasSrcTypeInfo:get_abstractFlag( ... )
-end       
+end
 
 function AliasTypeInfo:get_display_stirng_with( ... )
    return self.aliasSrcTypeInfo:get_display_stirng_with( ... )
-end       
+end
 
 function AliasTypeInfo:get_srcTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_srcTypeInfo( ... )
-end       
+end
 
 function AliasTypeInfo:equals( ... )
    return self.aliasSrcTypeInfo:equals( ... )
-end       
+end
 
 function AliasTypeInfo:get_interfaceList( ... )
    return self.aliasSrcTypeInfo:get_interfaceList( ... )
-end       
+end
 
 function AliasTypeInfo:get_itemTypeInfoList( ... )
    return self.aliasSrcTypeInfo:get_itemTypeInfoList( ... )
-end       
+end
 
 function AliasTypeInfo:get_argTypeInfoList( ... )
    return self.aliasSrcTypeInfo:get_argTypeInfoList( ... )
-end       
+end
 
 function AliasTypeInfo:get_retTypeInfoList( ... )
    return self.aliasSrcTypeInfo:get_retTypeInfoList( ... )
-end       
+end
 
 function AliasTypeInfo:hasRouteNamespaceFrom( ... )
    return self.aliasSrcTypeInfo:hasRouteNamespaceFrom( ... )
-end       
+end
 
 function AliasTypeInfo:getModule( ... )
    return self.aliasSrcTypeInfo:getModule( ... )
-end       
+end
 
 function AliasTypeInfo:get_kind( ... )
    return self.aliasSrcTypeInfo:get_kind( ... )
-end       
+end
 
 function AliasTypeInfo:get_staticFlag( ... )
    return self.aliasSrcTypeInfo:get_staticFlag( ... )
-end       
+end
 
 function AliasTypeInfo:get_autoFlag( ... )
    return self.aliasSrcTypeInfo:get_autoFlag( ... )
-end       
+end
 
 function AliasTypeInfo:get_nonnilableType( ... )
    return self.aliasSrcTypeInfo:get_nonnilableType( ... )
-end       
+end
 
 function AliasTypeInfo:get_baseTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_baseTypeInfo( ... )
-end       
+end
 
 function AliasTypeInfo:get_nilable( ... )
    return self.aliasSrcTypeInfo:get_nilable( ... )
-end       
+end
 
 function AliasTypeInfo:get_nilableTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_nilableTypeInfo( ... )
-end       
+end
 
 function AliasTypeInfo:get_children( ... )
    return self.aliasSrcTypeInfo:get_children( ... )
-end       
+end
 
 function AliasTypeInfo:addChildren( ... )
    return self.aliasSrcTypeInfo:addChildren( ... )
-end       
+end
 
 function AliasTypeInfo:get_mutMode( ... )
    return self.aliasSrcTypeInfo:get_mutMode( ... )
-end       
+end
 
 function AliasTypeInfo:getParentFullName( ... )
    return self.aliasSrcTypeInfo:getParentFullName( ... )
-end       
+end
 
 function AliasTypeInfo:get_genSrcTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_genSrcTypeInfo( ... )
-end       
+end
 
 function AliasTypeInfo:serializeTypeInfoList( ... )
    return self.aliasSrcTypeInfo:serializeTypeInfoList( ... )
-end       
+end
 
 function AliasTypeInfo:get_scope( ... )
    return self.aliasSrcTypeInfo:get_scope( ... )
-end       
+end
 
 function AliasTypeInfo:get_typeData( ... )
    return self.aliasSrcTypeInfo:get_typeData( ... )
-end       
+end
 
 function AliasTypeInfo:createAlt2typeMap( ... )
    return self.aliasSrcTypeInfo:createAlt2typeMap( ... )
-end       
+end
 
 function AliasTypeInfo:getFullName( ... )
    return self.aliasSrcTypeInfo:getFullName( ... )
-end       
+end
 
 
 
@@ -1903,8 +1903,8 @@ end
 function NilTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = NilTypeInfo  } )
 end
-function NilTypeInfo:get_typeId()       
-   return self.typeId         
+function NilTypeInfo:get_typeId()
+   return self.typeId
 end
 
 function Scope:getNSTypeInfo(  )
@@ -2034,73 +2034,73 @@ function AccessSymbolInfo.new( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
    AccessSymbolInfo.setmeta( obj )
    if obj.__init then
       obj:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
-   end        
-   return obj 
-end         
-function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft ) 
+   end
+   return obj
+end
+function AccessSymbolInfo:__init( symbolInfo, prefixTypeInfo, overrideCanBeLeft )
 
    SymbolInfo.__init( self)
    self.symbolInfo = symbolInfo
    self.prefixTypeInfo = prefixTypeInfo
    self.overrideCanBeLeft = overrideCanBeLeft
 end
-function AccessSymbolInfo:get_symbolInfo()       
-   return self.symbolInfo         
+function AccessSymbolInfo:get_symbolInfo()
+   return self.symbolInfo
 end
-function AccessSymbolInfo:get_prefixTypeInfo()       
-   return self.prefixTypeInfo         
+function AccessSymbolInfo:get_prefixTypeInfo()
+   return self.prefixTypeInfo
 end
 function AccessSymbolInfo:get_canBeRight( ... )
    return self.symbolInfo:get_canBeRight( ... )
-end       
+end
 
 function AccessSymbolInfo:get_symbolId( ... )
    return self.symbolInfo:get_symbolId( ... )
-end       
+end
 
 function AccessSymbolInfo:get_scope( ... )
    return self.symbolInfo:get_scope( ... )
-end       
+end
 
 function AccessSymbolInfo:get_accessMode( ... )
    return self.symbolInfo:get_accessMode( ... )
-end       
+end
 
 function AccessSymbolInfo:get_staticFlag( ... )
    return self.symbolInfo:get_staticFlag( ... )
-end       
+end
 
 function AccessSymbolInfo:get_name( ... )
    return self.symbolInfo:get_name( ... )
-end       
+end
 
 function AccessSymbolInfo:get_typeInfo( ... )
    return self.symbolInfo:get_typeInfo( ... )
-end       
+end
 
 function AccessSymbolInfo:set_typeInfo( ... )
    return self.symbolInfo:set_typeInfo( ... )
-end       
+end
 
 function AccessSymbolInfo:get_mutMode( ... )
    return self.symbolInfo:get_mutMode( ... )
-end       
+end
 
 function AccessSymbolInfo:get_kind( ... )
    return self.symbolInfo:get_kind( ... )
-end       
+end
 
 function AccessSymbolInfo:get_hasValueFlag( ... )
    return self.symbolInfo:get_hasValueFlag( ... )
-end       
+end
 
 function AccessSymbolInfo:set_hasValueFlag( ... )
    return self.symbolInfo:set_hasValueFlag( ... )
-end       
+end
 
 function AccessSymbolInfo:canAccess( ... )
    return self.symbolInfo:canAccess( ... )
-end       
+end
 
 
 local NilableTypeInfo = {}
@@ -2168,136 +2168,136 @@ function NilableTypeInfo.new( nonnilableType, typeId )
    NilableTypeInfo.setmeta( obj )
    if obj.__init then
       obj:__init( nonnilableType, typeId )
-   end        
-   return obj 
-end         
-function NilableTypeInfo:__init( nonnilableType, typeId ) 
+   end
+   return obj
+end
+function NilableTypeInfo:__init( nonnilableType, typeId )
 
    TypeInfo.__init( self)
    self.nonnilableType = nonnilableType
    self.typeId = typeId
 end
-function NilableTypeInfo:get_nonnilableType()       
-   return self.nonnilableType         
+function NilableTypeInfo:get_nonnilableType()
+   return self.nonnilableType
 end
-function NilableTypeInfo:get_typeId()       
-   return self.typeId         
+function NilableTypeInfo:get_typeId()
+   return self.typeId
 end
 function NilableTypeInfo:isModule( ... )
    return self.nonnilableType:isModule( ... )
-end       
+end
 
 function NilableTypeInfo:getParentId( ... )
    return self.nonnilableType:getParentId( ... )
-end       
+end
 
 function NilableTypeInfo:get_baseId( ... )
    return self.nonnilableType:get_baseId( ... )
-end       
+end
 
 function NilableTypeInfo:isInheritFrom( ... )
    return self.nonnilableType:isInheritFrom( ... )
-end       
+end
 
 function NilableTypeInfo:get_rawTxt( ... )
    return self.nonnilableType:get_rawTxt( ... )
-end       
+end
 
 function NilableTypeInfo:get_abstractFlag( ... )
    return self.nonnilableType:get_abstractFlag( ... )
-end       
+end
 
 function NilableTypeInfo:get_externalFlag( ... )
    return self.nonnilableType:get_externalFlag( ... )
-end       
+end
 
 function NilableTypeInfo:get_interfaceList( ... )
    return self.nonnilableType:get_interfaceList( ... )
-end       
+end
 
 function NilableTypeInfo:get_itemTypeInfoList( ... )
    return self.nonnilableType:get_itemTypeInfoList( ... )
-end       
+end
 
 function NilableTypeInfo:get_argTypeInfoList( ... )
    return self.nonnilableType:get_argTypeInfoList( ... )
-end       
+end
 
 function NilableTypeInfo:get_retTypeInfoList( ... )
    return self.nonnilableType:get_retTypeInfoList( ... )
-end       
+end
 
 function NilableTypeInfo:get_parentInfo( ... )
    return self.nonnilableType:get_parentInfo( ... )
-end       
+end
 
 function NilableTypeInfo:hasRouteNamespaceFrom( ... )
    return self.nonnilableType:hasRouteNamespaceFrom( ... )
-end       
+end
 
 function NilableTypeInfo:getModule( ... )
    return self.nonnilableType:getModule( ... )
-end       
+end
 
 function NilableTypeInfo:get_staticFlag( ... )
    return self.nonnilableType:get_staticFlag( ... )
-end       
+end
 
 function NilableTypeInfo:get_accessMode( ... )
    return self.nonnilableType:get_accessMode( ... )
-end       
+end
 
 function NilableTypeInfo:get_autoFlag( ... )
    return self.nonnilableType:get_autoFlag( ... )
-end       
+end
 
 function NilableTypeInfo:get_baseTypeInfo( ... )
    return self.nonnilableType:get_baseTypeInfo( ... )
-end       
+end
 
 function NilableTypeInfo:get_nilableTypeInfo( ... )
    return self.nonnilableType:get_nilableTypeInfo( ... )
-end       
+end
 
 function NilableTypeInfo:get_children( ... )
    return self.nonnilableType:get_children( ... )
-end       
+end
 
 function NilableTypeInfo:addChildren( ... )
    return self.nonnilableType:addChildren( ... )
-end       
+end
 
 function NilableTypeInfo:get_mutMode( ... )
    return self.nonnilableType:get_mutMode( ... )
-end       
+end
 
 function NilableTypeInfo:getParentFullName( ... )
    return self.nonnilableType:getParentFullName( ... )
-end       
+end
 
 function NilableTypeInfo:get_genSrcTypeInfo( ... )
    return self.nonnilableType:get_genSrcTypeInfo( ... )
-end       
+end
 
 function NilableTypeInfo:serializeTypeInfoList( ... )
    return self.nonnilableType:serializeTypeInfoList( ... )
-end       
+end
 
 function NilableTypeInfo:get_scope( ... )
    return self.nonnilableType:get_scope( ... )
-end       
+end
 
 function NilableTypeInfo:get_typeData( ... )
    return self.nonnilableType:get_typeData( ... )
-end       
+end
 
 function NilableTypeInfo:createAlt2typeMap( ... )
    return self.nonnilableType:createAlt2typeMap( ... )
-end       
+end
 
 function NilableTypeInfo:getFullName( ... )
    return self.nonnilableType:getFullName( ... )
-end       
+end
 
 
 local AlternateTypeInfo = {}
@@ -2559,23 +2559,23 @@ end
 function AlternateTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = AlternateTypeInfo  } )
 end
-function AlternateTypeInfo:get_typeId()       
-   return self.typeId         
+function AlternateTypeInfo:get_typeId()
+   return self.typeId
 end
-function AlternateTypeInfo:get_txt()       
-   return self.txt         
+function AlternateTypeInfo:get_txt()
+   return self.txt
 end
-function AlternateTypeInfo:get_nilableTypeInfo()       
-   return self.nilableTypeInfo         
+function AlternateTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
 end
-function AlternateTypeInfo:get_accessMode()       
-   return self.accessMode         
+function AlternateTypeInfo:get_accessMode()
+   return self.accessMode
 end
-function AlternateTypeInfo:get_baseTypeInfo()       
-   return self.baseTypeInfo         
+function AlternateTypeInfo:get_baseTypeInfo()
+   return self.baseTypeInfo
 end
-function AlternateTypeInfo:get_interfaceList()       
-   return self.interfaceList         
+function AlternateTypeInfo:get_interfaceList()
+   return self.interfaceList
 end
 
 local boxRootAltType = AlternateTypeInfo.new(true, 1, "_T", AccessMode.Pub, _moduleObj.headTypeInfo)
@@ -2663,116 +2663,116 @@ end
 function BoxTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = BoxTypeInfo  } )
 end
-function BoxTypeInfo:get_boxingType()       
-   return self.boxingType         
+function BoxTypeInfo:get_boxingType()
+   return self.boxingType
 end
-function BoxTypeInfo:get_typeId()       
-   return self.typeId         
+function BoxTypeInfo:get_typeId()
+   return self.typeId
 end
-function BoxTypeInfo:get_itemTypeInfoList()       
-   return self.itemTypeInfoList         
+function BoxTypeInfo:get_itemTypeInfoList()
+   return self.itemTypeInfoList
 end
-function BoxTypeInfo:get_accessMode()       
-   return self.accessMode         
+function BoxTypeInfo:get_accessMode()
+   return self.accessMode
 end
-function BoxTypeInfo:get_nilableTypeInfo()       
-   return self.nilableTypeInfo         
+function BoxTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
 end
 function BoxTypeInfo:isModule( ... )
    return self.boxingType:isModule( ... )
-end       
+end
 
 function BoxTypeInfo:getParentId( ... )
    return self.boxingType:getParentId( ... )
-end       
+end
 
 function BoxTypeInfo:get_baseId( ... )
    return self.boxingType:get_baseId( ... )
-end       
+end
 
 function BoxTypeInfo:isInheritFrom( ... )
    return self.boxingType:isInheritFrom( ... )
-end       
+end
 
 function BoxTypeInfo:get_rawTxt( ... )
    return self.boxingType:get_rawTxt( ... )
-end       
+end
 
 function BoxTypeInfo:get_abstractFlag( ... )
    return self.boxingType:get_abstractFlag( ... )
-end       
+end
 
 function BoxTypeInfo:get_externalFlag( ... )
    return self.boxingType:get_externalFlag( ... )
-end       
+end
 
 function BoxTypeInfo:get_interfaceList( ... )
    return self.boxingType:get_interfaceList( ... )
-end       
+end
 
 function BoxTypeInfo:get_argTypeInfoList( ... )
    return self.boxingType:get_argTypeInfoList( ... )
-end       
+end
 
 function BoxTypeInfo:get_retTypeInfoList( ... )
    return self.boxingType:get_retTypeInfoList( ... )
-end       
+end
 
 function BoxTypeInfo:get_parentInfo( ... )
    return self.boxingType:get_parentInfo( ... )
-end       
+end
 
 function BoxTypeInfo:hasRouteNamespaceFrom( ... )
    return self.boxingType:hasRouteNamespaceFrom( ... )
-end       
+end
 
 function BoxTypeInfo:getModule( ... )
    return self.boxingType:getModule( ... )
-end       
+end
 
 function BoxTypeInfo:get_staticFlag( ... )
    return self.boxingType:get_staticFlag( ... )
-end       
+end
 
 function BoxTypeInfo:get_autoFlag( ... )
    return self.boxingType:get_autoFlag( ... )
-end       
+end
 
 function BoxTypeInfo:get_baseTypeInfo( ... )
    return self.boxingType:get_baseTypeInfo( ... )
-end       
+end
 
 function BoxTypeInfo:get_children( ... )
    return self.boxingType:get_children( ... )
-end       
+end
 
 function BoxTypeInfo:addChildren( ... )
    return self.boxingType:addChildren( ... )
-end       
+end
 
 function BoxTypeInfo:get_mutMode( ... )
    return self.boxingType:get_mutMode( ... )
-end       
+end
 
 function BoxTypeInfo:getParentFullName( ... )
    return self.boxingType:getParentFullName( ... )
-end       
+end
 
 function BoxTypeInfo:get_genSrcTypeInfo( ... )
    return self.boxingType:get_genSrcTypeInfo( ... )
-end       
+end
 
 function BoxTypeInfo:serializeTypeInfoList( ... )
    return self.boxingType:serializeTypeInfoList( ... )
-end       
+end
 
 function BoxTypeInfo:get_typeData( ... )
    return self.boxingType:get_typeData( ... )
-end       
+end
 
 function BoxTypeInfo:getFullName( ... )
    return self.boxingType:getFullName( ... )
-end       
+end
 
 
 local GenericTypeInfo = {}
@@ -2979,137 +2979,137 @@ end
 function GenericTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = GenericTypeInfo  } )
 end
-function GenericTypeInfo:get_typeId()       
-   return self.typeId         
+function GenericTypeInfo:get_typeId()
+   return self.typeId
 end
-function GenericTypeInfo:get_itemTypeInfoList()       
-   return self.itemTypeInfoList         
+function GenericTypeInfo:get_itemTypeInfoList()
+   return self.itemTypeInfoList
 end
-function GenericTypeInfo:get_nilableTypeInfo()       
-   return self.nilableTypeInfo         
+function GenericTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
 end
-function GenericTypeInfo:get_genSrcTypeInfo()       
-   return self.genSrcTypeInfo         
+function GenericTypeInfo:get_genSrcTypeInfo()
+   return self.genSrcTypeInfo
 end
 function GenericTypeInfo:isModule( ... )
    return self.genSrcTypeInfo:isModule( ... )
-end       
+end
 
 function GenericTypeInfo:getParentId( ... )
    return self.genSrcTypeInfo:getParentId( ... )
-end       
+end
 
 function GenericTypeInfo:get_baseId( ... )
    return self.genSrcTypeInfo:get_baseId( ... )
-end       
+end
 
 function GenericTypeInfo:get_rawTxt( ... )
    return self.genSrcTypeInfo:get_rawTxt( ... )
-end       
+end
 
 function GenericTypeInfo:getTxtWithRaw( ... )
    return self.genSrcTypeInfo:getTxtWithRaw( ... )
-end       
+end
 
 function GenericTypeInfo:getTxt( ... )
    return self.genSrcTypeInfo:getTxt( ... )
-end       
+end
 
 function GenericTypeInfo:get_abstractFlag( ... )
    return self.genSrcTypeInfo:get_abstractFlag( ... )
-end       
+end
 
 function GenericTypeInfo:get_display_stirng_with( ... )
    return self.genSrcTypeInfo:get_display_stirng_with( ... )
-end       
+end
 
 function GenericTypeInfo:get_display_stirng( ... )
    return self.genSrcTypeInfo:get_display_stirng( ... )
-end       
+end
 
 function GenericTypeInfo:get_externalFlag( ... )
    return self.genSrcTypeInfo:get_externalFlag( ... )
-end       
+end
 
 function GenericTypeInfo:get_interfaceList( ... )
    return self.genSrcTypeInfo:get_interfaceList( ... )
-end       
+end
 
 function GenericTypeInfo:get_argTypeInfoList( ... )
    return self.genSrcTypeInfo:get_argTypeInfoList( ... )
-end       
+end
 
 function GenericTypeInfo:get_retTypeInfoList( ... )
    return self.genSrcTypeInfo:get_retTypeInfoList( ... )
-end       
+end
 
 function GenericTypeInfo:get_parentInfo( ... )
    return self.genSrcTypeInfo:get_parentInfo( ... )
-end       
+end
 
 function GenericTypeInfo:hasRouteNamespaceFrom( ... )
    return self.genSrcTypeInfo:hasRouteNamespaceFrom( ... )
-end       
+end
 
 function GenericTypeInfo:get_kind( ... )
    return self.genSrcTypeInfo:get_kind( ... )
-end       
+end
 
 function GenericTypeInfo:get_staticFlag( ... )
    return self.genSrcTypeInfo:get_staticFlag( ... )
-end       
+end
 
 function GenericTypeInfo:get_accessMode( ... )
    return self.genSrcTypeInfo:get_accessMode( ... )
-end       
+end
 
 function GenericTypeInfo:get_autoFlag( ... )
    return self.genSrcTypeInfo:get_autoFlag( ... )
-end       
+end
 
 function GenericTypeInfo:get_nonnilableType( ... )
    return self.genSrcTypeInfo:get_nonnilableType( ... )
-end       
+end
 
 function GenericTypeInfo:get_baseTypeInfo( ... )
    return self.genSrcTypeInfo:get_baseTypeInfo( ... )
-end       
+end
 
 function GenericTypeInfo:get_nilable( ... )
    return self.genSrcTypeInfo:get_nilable( ... )
-end       
+end
 
 function GenericTypeInfo:get_children( ... )
    return self.genSrcTypeInfo:get_children( ... )
-end       
+end
 
 function GenericTypeInfo:addChildren( ... )
    return self.genSrcTypeInfo:addChildren( ... )
-end       
+end
 
 function GenericTypeInfo:get_mutMode( ... )
    return self.genSrcTypeInfo:get_mutMode( ... )
-end       
+end
 
 function GenericTypeInfo:getParentFullName( ... )
    return self.genSrcTypeInfo:getParentFullName( ... )
-end       
+end
 
 function GenericTypeInfo:serializeTypeInfoList( ... )
    return self.genSrcTypeInfo:serializeTypeInfoList( ... )
-end       
+end
 
 function GenericTypeInfo:get_scope( ... )
    return self.genSrcTypeInfo:get_scope( ... )
-end       
+end
 
 function GenericTypeInfo:get_typeData( ... )
    return self.genSrcTypeInfo:get_typeData( ... )
-end       
+end
 
 function GenericTypeInfo:getFullName( ... )
    return self.genSrcTypeInfo:getFullName( ... )
-end       
+end
 
 
 local function isGenericType( typeInfo )
@@ -3178,140 +3178,140 @@ function ModifierTypeInfo.new( srcTypeInfo, typeId, mutMode )
    ModifierTypeInfo.setmeta( obj )
    if obj.__init then
       obj:__init( srcTypeInfo, typeId, mutMode )
-   end        
-   return obj 
-end         
-function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutMode ) 
+   end
+   return obj
+end
+function ModifierTypeInfo:__init( srcTypeInfo, typeId, mutMode )
 
    TypeInfo.__init( self)
    self.srcTypeInfo = srcTypeInfo
    self.typeId = typeId
    self.mutMode = mutMode
 end
-function ModifierTypeInfo:get_srcTypeInfo()       
-   return self.srcTypeInfo         
+function ModifierTypeInfo:get_srcTypeInfo()
+   return self.srcTypeInfo
 end
-function ModifierTypeInfo:get_typeId()       
-   return self.typeId         
+function ModifierTypeInfo:get_typeId()
+   return self.typeId
 end
-function ModifierTypeInfo:get_mutMode()       
-   return self.mutMode         
+function ModifierTypeInfo:get_mutMode()
+   return self.mutMode
 end
 function ModifierTypeInfo:isModule( ... )
    return self.srcTypeInfo:isModule( ... )
-end       
+end
 
 function ModifierTypeInfo:getParentId( ... )
    return self.srcTypeInfo:getParentId( ... )
-end       
+end
 
 function ModifierTypeInfo:get_baseId( ... )
    return self.srcTypeInfo:get_baseId( ... )
-end       
+end
 
 function ModifierTypeInfo:isInheritFrom( ... )
    return self.srcTypeInfo:isInheritFrom( ... )
-end       
+end
 
 function ModifierTypeInfo:get_rawTxt( ... )
    return self.srcTypeInfo:get_rawTxt( ... )
-end       
+end
 
 function ModifierTypeInfo:get_abstractFlag( ... )
    return self.srcTypeInfo:get_abstractFlag( ... )
-end       
+end
 
 function ModifierTypeInfo:get_externalFlag( ... )
    return self.srcTypeInfo:get_externalFlag( ... )
-end       
+end
 
 function ModifierTypeInfo:get_interfaceList( ... )
    return self.srcTypeInfo:get_interfaceList( ... )
-end       
+end
 
 function ModifierTypeInfo:get_itemTypeInfoList( ... )
    return self.srcTypeInfo:get_itemTypeInfoList( ... )
-end       
+end
 
 function ModifierTypeInfo:get_argTypeInfoList( ... )
    return self.srcTypeInfo:get_argTypeInfoList( ... )
-end       
+end
 
 function ModifierTypeInfo:get_retTypeInfoList( ... )
    return self.srcTypeInfo:get_retTypeInfoList( ... )
-end       
+end
 
 function ModifierTypeInfo:get_parentInfo( ... )
    return self.srcTypeInfo:get_parentInfo( ... )
-end       
+end
 
 function ModifierTypeInfo:hasRouteNamespaceFrom( ... )
    return self.srcTypeInfo:hasRouteNamespaceFrom( ... )
-end       
+end
 
 function ModifierTypeInfo:getModule( ... )
    return self.srcTypeInfo:getModule( ... )
-end       
+end
 
 function ModifierTypeInfo:get_kind( ... )
    return self.srcTypeInfo:get_kind( ... )
-end       
+end
 
 function ModifierTypeInfo:get_staticFlag( ... )
    return self.srcTypeInfo:get_staticFlag( ... )
-end       
+end
 
 function ModifierTypeInfo:get_accessMode( ... )
    return self.srcTypeInfo:get_accessMode( ... )
-end       
+end
 
 function ModifierTypeInfo:get_autoFlag( ... )
    return self.srcTypeInfo:get_autoFlag( ... )
-end       
+end
 
 function ModifierTypeInfo:get_baseTypeInfo( ... )
    return self.srcTypeInfo:get_baseTypeInfo( ... )
-end       
+end
 
 function ModifierTypeInfo:get_nilable( ... )
    return self.srcTypeInfo:get_nilable( ... )
-end       
+end
 
 function ModifierTypeInfo:get_children( ... )
    return self.srcTypeInfo:get_children( ... )
-end       
+end
 
 function ModifierTypeInfo:addChildren( ... )
    return self.srcTypeInfo:addChildren( ... )
-end       
+end
 
 function ModifierTypeInfo:getParentFullName( ... )
    return self.srcTypeInfo:getParentFullName( ... )
-end       
+end
 
 function ModifierTypeInfo:get_genSrcTypeInfo( ... )
    return self.srcTypeInfo:get_genSrcTypeInfo( ... )
-end       
+end
 
 function ModifierTypeInfo:serializeTypeInfoList( ... )
    return self.srcTypeInfo:serializeTypeInfoList( ... )
-end       
+end
 
 function ModifierTypeInfo:get_scope( ... )
    return self.srcTypeInfo:get_scope( ... )
-end       
+end
 
 function ModifierTypeInfo:get_typeData( ... )
    return self.srcTypeInfo:get_typeData( ... )
-end       
+end
 
 function ModifierTypeInfo:createAlt2typeMap( ... )
    return self.srcTypeInfo:createAlt2typeMap( ... )
-end       
+end
 
 function ModifierTypeInfo:getFullName( ... )
    return self.srcTypeInfo:getFullName( ... )
-end       
+end
 
 
 local ModuleTypeInfo = {}
@@ -3407,20 +3407,20 @@ end
 function ModuleTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleTypeInfo  } )
 end
-function ModuleTypeInfo:get_externalFlag()       
-   return self.externalFlag         
+function ModuleTypeInfo:get_externalFlag()
+   return self.externalFlag
 end
-function ModuleTypeInfo:get_parentInfo()       
-   return self.parentInfo         
+function ModuleTypeInfo:get_parentInfo()
+   return self.parentInfo
 end
-function ModuleTypeInfo:get_typeId()       
-   return self.typeId         
+function ModuleTypeInfo:get_typeId()
+   return self.typeId
 end
-function ModuleTypeInfo:get_rawTxt()       
-   return self.rawTxt         
+function ModuleTypeInfo:get_rawTxt()
+   return self.rawTxt
 end
-function ModuleTypeInfo:get_mutable()       
-   return self.mutable         
+function ModuleTypeInfo:get_mutable()
+   return self.mutable
 end
 
 local EnumLiteral = {}
@@ -3432,7 +3432,7 @@ function EnumLiteral:_getTxt( val )
       return string.format( "EnumLiteral.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 
 function EnumLiteral._from( val )
    return _lune._AlgeFrom( EnumLiteral, val )
@@ -3478,19 +3478,19 @@ function EnumValInfo.new( name, val )
    EnumValInfo.setmeta( obj )
    if obj.__init then
       obj:__init( name, val )
-   end        
-   return obj 
-end         
-function EnumValInfo:__init( name, val ) 
+   end
+   return obj
+end
+function EnumValInfo:__init( name, val )
 
    self.name = name
    self.val = val
 end
-function EnumValInfo:get_name()       
-   return self.name         
+function EnumValInfo:get_name()
+   return self.name
 end
-function EnumValInfo:get_val()       
-   return self.val         
+function EnumValInfo:get_val()
+   return self.val
 end
 
 local EnumTypeInfo = {}
@@ -3572,32 +3572,32 @@ end
 function EnumTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = EnumTypeInfo  } )
 end
-function EnumTypeInfo:get_externalFlag()       
-   return self.externalFlag         
+function EnumTypeInfo:get_externalFlag()
+   return self.externalFlag
 end
-function EnumTypeInfo:get_parentInfo()       
-   return self.parentInfo         
+function EnumTypeInfo:get_parentInfo()
+   return self.parentInfo
 end
-function EnumTypeInfo:get_typeId()       
-   return self.typeId         
+function EnumTypeInfo:get_typeId()
+   return self.typeId
 end
-function EnumTypeInfo:get_rawTxt()       
-   return self.rawTxt         
+function EnumTypeInfo:get_rawTxt()
+   return self.rawTxt
 end
-function EnumTypeInfo:get_accessMode()       
-   return self.accessMode         
+function EnumTypeInfo:get_accessMode()
+   return self.accessMode
 end
-function EnumTypeInfo:get_nilableTypeInfo()       
-   return self.nilableTypeInfo         
+function EnumTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
 end
-function EnumTypeInfo:get_valTypeInfo()       
-   return self.valTypeInfo         
+function EnumTypeInfo:get_valTypeInfo()
+   return self.valTypeInfo
 end
-function EnumTypeInfo:get_name2EnumValInfo()       
-   return self.name2EnumValInfo         
+function EnumTypeInfo:get_name2EnumValInfo()
+   return self.name2EnumValInfo
 end
-function EnumTypeInfo:get_val2EnumValInfo()       
-   return self.val2EnumValInfo         
+function EnumTypeInfo:get_val2EnumValInfo()
+   return self.val2EnumValInfo
 end
 
 local AlgeValInfo = {}
@@ -3623,19 +3623,19 @@ function AlgeValInfo.new( name, typeList )
    AlgeValInfo.setmeta( obj )
    if obj.__init then
       obj:__init( name, typeList )
-   end        
-   return obj 
-end         
-function AlgeValInfo:__init( name, typeList ) 
+   end
+   return obj
+end
+function AlgeValInfo:__init( name, typeList )
 
    self.name = name
    self.typeList = typeList
 end
-function AlgeValInfo:get_name()       
-   return self.name         
+function AlgeValInfo:get_name()
+   return self.name
 end
-function AlgeValInfo:get_typeList()       
-   return self.typeList         
+function AlgeValInfo:get_typeList()
+   return self.typeList
 end
 
 local AlgeTypeInfo = {}
@@ -3714,26 +3714,26 @@ end
 function AlgeTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = AlgeTypeInfo  } )
 end
-function AlgeTypeInfo:get_externalFlag()       
-   return self.externalFlag         
+function AlgeTypeInfo:get_externalFlag()
+   return self.externalFlag
 end
-function AlgeTypeInfo:get_parentInfo()       
-   return self.parentInfo         
+function AlgeTypeInfo:get_parentInfo()
+   return self.parentInfo
 end
-function AlgeTypeInfo:get_typeId()       
-   return self.typeId         
+function AlgeTypeInfo:get_typeId()
+   return self.typeId
 end
-function AlgeTypeInfo:get_rawTxt()       
-   return self.rawTxt         
+function AlgeTypeInfo:get_rawTxt()
+   return self.rawTxt
 end
-function AlgeTypeInfo:get_accessMode()       
-   return self.accessMode         
+function AlgeTypeInfo:get_accessMode()
+   return self.accessMode
 end
-function AlgeTypeInfo:get_nilableTypeInfo()       
-   return self.nilableTypeInfo         
+function AlgeTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
 end
-function AlgeTypeInfo:get_valInfoMap()       
-   return self.valInfoMap         
+function AlgeTypeInfo:get_valInfoMap()
+   return self.valInfoMap
 end
 
 local NormalTypeInfo = {}
@@ -4026,53 +4026,53 @@ end
 function NormalTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = NormalTypeInfo  } )
 end
-function NormalTypeInfo:get_externalFlag()       
-   return self.externalFlag         
+function NormalTypeInfo:get_externalFlag()
+   return self.externalFlag
 end
-function NormalTypeInfo:get_itemTypeInfoList()       
-   return self.itemTypeInfoList         
+function NormalTypeInfo:get_itemTypeInfoList()
+   return self.itemTypeInfoList
 end
-function NormalTypeInfo:get_argTypeInfoList()       
-   return self.argTypeInfoList         
+function NormalTypeInfo:get_argTypeInfoList()
+   return self.argTypeInfoList
 end
-function NormalTypeInfo:get_retTypeInfoList()       
-   return self.retTypeInfoList         
+function NormalTypeInfo:get_retTypeInfoList()
+   return self.retTypeInfoList
 end
-function NormalTypeInfo:get_parentInfo()       
-   return self.parentInfo         
+function NormalTypeInfo:get_parentInfo()
+   return self.parentInfo
 end
-function NormalTypeInfo:get_typeId()       
-   return self.typeId         
+function NormalTypeInfo:get_typeId()
+   return self.typeId
 end
-function NormalTypeInfo:get_rawTxt()       
-   return self.rawTxt         
+function NormalTypeInfo:get_rawTxt()
+   return self.rawTxt
 end
-function NormalTypeInfo:get_kind()       
-   return self.kind         
+function NormalTypeInfo:get_kind()
+   return self.kind
 end
-function NormalTypeInfo:get_staticFlag()       
-   return self.staticFlag         
+function NormalTypeInfo:get_staticFlag()
+   return self.staticFlag
 end
-function NormalTypeInfo:get_accessMode()       
-   return self.accessMode         
+function NormalTypeInfo:get_accessMode()
+   return self.accessMode
 end
-function NormalTypeInfo:get_autoFlag()       
-   return self.autoFlag         
+function NormalTypeInfo:get_autoFlag()
+   return self.autoFlag
 end
-function NormalTypeInfo:get_abstractFlag()       
-   return self.abstractFlag         
+function NormalTypeInfo:get_abstractFlag()
+   return self.abstractFlag
 end
-function NormalTypeInfo:get_baseTypeInfo()       
-   return self.baseTypeInfo         
+function NormalTypeInfo:get_baseTypeInfo()
+   return self.baseTypeInfo
 end
-function NormalTypeInfo:get_interfaceList()       
-   return self.interfaceList         
+function NormalTypeInfo:get_interfaceList()
+   return self.interfaceList
 end
-function NormalTypeInfo:get_nilableTypeInfo()       
-   return self.nilableTypeInfo         
+function NormalTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
 end
-function NormalTypeInfo:get_mutMode()       
-   return self.mutMode         
+function NormalTypeInfo:get_mutMode()
+   return self.mutMode
 end
 
 function NormalTypeInfo.createAlternate( belongClassFlag, altIndex, txt, accessMode, moduleTypeInfo, baseTypeInfo, interfaceList )
@@ -4119,17 +4119,17 @@ end
 function TypeInfo2Map.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo2Map  } )
 end
-function TypeInfo2Map:get_ImutModifierMap()       
-   return self.ImutModifierMap         
+function TypeInfo2Map:get_ImutModifierMap()
+   return self.ImutModifierMap
 end
-function TypeInfo2Map:get_MutModifierMap()       
-   return self.MutModifierMap         
+function TypeInfo2Map:get_MutModifierMap()
+   return self.MutModifierMap
 end
-function TypeInfo2Map:get_BoxMap()       
-   return self.BoxMap         
+function TypeInfo2Map:get_BoxMap()
+   return self.BoxMap
 end
-function TypeInfo2Map:get_DDDMap()       
-   return self.DDDMap         
+function TypeInfo2Map:get_DDDMap()
+   return self.DDDMap
 end
 
 local typeInfo2Map = TypeInfo2Map.new()
@@ -4573,17 +4573,17 @@ end
 function DDDTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = DDDTypeInfo  } )
 end
-function DDDTypeInfo:get_typeInfo()       
-   return self.typeInfo         
+function DDDTypeInfo:get_typeInfo()
+   return self.typeInfo
 end
-function DDDTypeInfo:get_typeId()       
-   return self.typeId         
+function DDDTypeInfo:get_typeId()
+   return self.typeId
 end
-function DDDTypeInfo:get_externalFlag()       
-   return self.externalFlag         
+function DDDTypeInfo:get_externalFlag()
+   return self.externalFlag
 end
-function DDDTypeInfo:get_itemTypeInfoList()       
-   return self.itemTypeInfoList         
+function DDDTypeInfo:get_itemTypeInfoList()
+   return self.itemTypeInfoList
 end
 
 function NormalTypeInfo.createDDD( typeInfo, externalFlag )
@@ -4717,11 +4717,11 @@ end
 function AbbrTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = AbbrTypeInfo  } )
 end
-function AbbrTypeInfo:get_typeId()       
-   return self.typeId         
+function AbbrTypeInfo:get_typeId()
+   return self.typeId
 end
-function AbbrTypeInfo:get_rawTxt()       
-   return self.rawTxt         
+function AbbrTypeInfo:get_rawTxt()
+   return self.rawTxt
 end
 
 local builtinTypeAbbr = AbbrTypeInfo.new(idProv, "##")
@@ -4987,13 +4987,13 @@ function MatchType:_getTxt( val )
       return string.format( "MatchType.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function MatchType._from( val )
    if MatchType._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 MatchType.__allList = {}
 function MatchType.get__allList()
@@ -5469,23 +5469,23 @@ function ProcessInfo.new( idProvier, idProvierExt, typeInfo2Map )
    ProcessInfo.setmeta( obj )
    if obj.__init then
       obj:__init( idProvier, idProvierExt, typeInfo2Map )
-   end        
-   return obj 
-end         
-function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2Map ) 
+   end
+   return obj
+end
+function ProcessInfo:__init( idProvier, idProvierExt, typeInfo2Map )
 
    self.idProvier = idProvier
    self.idProvierExt = idProvierExt
    self.typeInfo2Map = typeInfo2Map
 end
-function ProcessInfo:get_idProvier()       
-   return self.idProvier         
+function ProcessInfo:get_idProvier()
+   return self.idProvier
 end
-function ProcessInfo:get_idProvierExt()       
-   return self.idProvierExt         
+function ProcessInfo:get_idProvierExt()
+   return self.idProvierExt
 end
-function ProcessInfo:get_typeInfo2Map()       
-   return self.typeInfo2Map         
+function ProcessInfo:get_typeInfo2Map()
+   return self.typeInfo2Map
 end
 
 local processInfoQueue = {}
@@ -5498,13 +5498,13 @@ function IdType:_getTxt( val )
       return string.format( "IdType.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function IdType._from( val )
    if IdType._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 IdType.__allList = {}
 function IdType.get__allList()
@@ -5572,13 +5572,13 @@ function BitOpKind:_getTxt( val )
       return string.format( "BitOpKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function BitOpKind._from( val )
    if BitOpKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 BitOpKind.__allList = {}
 function BitOpKind.get__allList()

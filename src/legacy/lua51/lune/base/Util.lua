@@ -38,8 +38,8 @@ end
 function memStream.setmeta( obj )
   setmetatable( obj, { __index = memStream  } )
 end
-function memStream:get_txt()       
-   return self.txt         
+function memStream:get_txt()
+   return self.txt
 end
 
 local debugFlag = true

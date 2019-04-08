@@ -51,79 +51,80 @@ pub fn isLuaKeyword( txt:str ) : bool {
 
 
 fn createReserveInfo( luaMode: bool! ) :
-   Set<str>, Set<str>, Set<str>, Map<str,str[@]> {
-      let mut keywordSet:Set<str> = (@);
-      let mut typeSet:Set<str> = (@);
-      let mut builtInSet:Set<str> = (@);
+   Set<str>, Set<str>, Set<str>, Map<str,str[@]>
+{
+   let mut keywordSet:Set<str> = (@);
+   let mut typeSet:Set<str> = (@);
+   let mut builtInSet:Set<str> = (@);
 
-      builtInSet.add( "require" );
-      foreach key in luaKeywordSet {
-         if not builtInSet.has( key ) {
-            keywordSet.add( key );
-         }
-      } 
+   builtInSet.add( "require" );
+   foreach key in luaKeywordSet {
+      if not builtInSet.has( key ) {
+         keywordSet.add( key );
+      }
+   }
 
 
-      if not luaMode {
-         keywordSet.add( "null" );
-         keywordSet.add( "let" );
-         keywordSet.add( "mut" );
-         keywordSet.add( "pub" );
-         keywordSet.add( "pro" );
-         keywordSet.add( "pri" );
-         keywordSet.add( "fn" );
-         keywordSet.add( "each" );
-         keywordSet.add( "form" );
-         keywordSet.add( "class" );
-         builtInSet.add( "super" );
-         keywordSet.add( "static" );
-         keywordSet.add( "advertise" );
-         keywordSet.add( "import" );
-         keywordSet.add( "new" );
-         keywordSet.add( "!" );
-         keywordSet.add( "unwrap" );
-         keywordSet.add( "sync" );
+   if not luaMode {
+      keywordSet.add( "null" );
+      keywordSet.add( "let" );
+      keywordSet.add( "mut" );
+      keywordSet.add( "pub" );
+      keywordSet.add( "pro" );
+      keywordSet.add( "pri" );
+      keywordSet.add( "fn" );
+      keywordSet.add( "each" );
+      keywordSet.add( "form" );
+      keywordSet.add( "class" );
+      builtInSet.add( "super" );
+      keywordSet.add( "static" );
+      keywordSet.add( "advertise" );
+      keywordSet.add( "import" );
+      keywordSet.add( "new" );
+      keywordSet.add( "!" );
+      keywordSet.add( "unwrap" );
+      keywordSet.add( "sync" );
 
-         typeSet.add( "int" );
-         typeSet.add( "real" );
-         typeSet.add( "stem" );
-         typeSet.add( "str" );
-         typeSet.add( "Map" );
-         typeSet.add( "bool" );
-      } 
+      typeSet.add( "int" );
+      typeSet.add( "real" );
+      typeSet.add( "stem" );
+      typeSet.add( "str" );
+      typeSet.add( "Map" );
+      typeSet.add( "bool" );
+   }
 
-      // 2文字以上の演算子
-      let mut multiCharDelimitMap: Map<str,str[@]> = {};
-      multiCharDelimitMap[ "=" ] = [@ "==" ];
-      multiCharDelimitMap[ "<" ] = [@ "<=" ];
-      multiCharDelimitMap[ ">" ] = [@ ">=" ];
+   // 2文字以上の演算子
+   let mut multiCharDelimitMap: Map<str,str[@]> = {};
+   multiCharDelimitMap[ "=" ] = [@ "==" ];
+   multiCharDelimitMap[ "<" ] = [@ "<=" ];
+   multiCharDelimitMap[ ">" ] = [@ ">=" ];
 
-      if not luaMode {
-         multiCharDelimitMap[ "|" ] = [@ "|<", "|>"];
-         multiCharDelimitMap[ "|<" ] = [@ "|<<"];
-         multiCharDelimitMap[ "|>" ] = [@ "|>>"];
-         multiCharDelimitMap[ "[" ] = [@ "[@" ];
-         multiCharDelimitMap[ "(" ] = [@ "(@" ];
-         multiCharDelimitMap[ "~" ] = [@ "~=", "~~" ];
-         multiCharDelimitMap[ "$" ] = [@ "$[", "$.", "$(" ];
-         multiCharDelimitMap[ "$." ] = [@ "$.$" ];
-         multiCharDelimitMap[ "." ] = [@ "..", ".$" ];
-         multiCharDelimitMap[ ".." ] = [@ "..." ];
-         multiCharDelimitMap[ "," ] = [@ ",," ];
-         multiCharDelimitMap[ ",," ] = [@ ",,," ];
-         multiCharDelimitMap[ ",,," ] = [@ ",,,," ];
-         multiCharDelimitMap[ "@" ] = [@ "@@" ];
-         multiCharDelimitMap[ "@@" ] = [@ "@@@", "@@=" ];
-         multiCharDelimitMap[ "#" ] = [@ "##" ];
-         multiCharDelimitMap[ "*" ] = [@ "**" ];
-      } 
-      else {
-         multiCharDelimitMap[ "." ] = [@ ".." ];
-         multiCharDelimitMap[ "~" ] = [@ "~=" ];
-      } 
+   if not luaMode {
+      multiCharDelimitMap[ "|" ] = [@ "|<", "|>"];
+      multiCharDelimitMap[ "|<" ] = [@ "|<<"];
+      multiCharDelimitMap[ "|>" ] = [@ "|>>"];
+      multiCharDelimitMap[ "[" ] = [@ "[@" ];
+      multiCharDelimitMap[ "(" ] = [@ "(@" ];
+      multiCharDelimitMap[ "~" ] = [@ "~=", "~~" ];
+      multiCharDelimitMap[ "$" ] = [@ "$[", "$.", "$(" ];
+      multiCharDelimitMap[ "$." ] = [@ "$.$" ];
+      multiCharDelimitMap[ "." ] = [@ "..", ".$" ];
+      multiCharDelimitMap[ ".." ] = [@ "..." ];
+      multiCharDelimitMap[ "," ] = [@ ",," ];
+      multiCharDelimitMap[ ",," ] = [@ ",,," ];
+      multiCharDelimitMap[ ",,," ] = [@ ",,,," ];
+      multiCharDelimitMap[ "@" ] = [@ "@@" ];
+      multiCharDelimitMap[ "@@" ] = [@ "@@@", "@@=" ];
+      multiCharDelimitMap[ "#" ] = [@ "##" ];
+      multiCharDelimitMap[ "*" ] = [@ "**" ];
+   }
+   else {
+      multiCharDelimitMap[ "." ] = [@ ".." ];
+      multiCharDelimitMap[ "~" ] = [@ "~=" ];
+   }
 
-      return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
-   }  
+   return keywordSet, typeSet, builtInSet, multiCharDelimitMap;
+}
 
 // pub class Stream {
 //    pub fn read( mode:str ): str!;
@@ -151,7 +152,7 @@ pub class TxtStream extend (iStream) {
       let index = self.txt.find( "\n", self.start, true );
       if! index {
          let txt = self.txt.sub( self.start, _exp - 1 );
-         self.start = _exp + 1;                
+         self.start = _exp + 1;
          return txt;
       }
       self.eof = true;
@@ -179,7 +180,7 @@ pub enum TokenKind {
    Str,
    Int,
    Real,
-   Char, 
+   Char,
    Symb,
    Dlmt,
    Kywd,
@@ -193,12 +194,12 @@ pub class Token {
    pub let txt: str;
    pub let pos: &Position;
    /** 直前のトークンと連続しているトークンかどうか。 true の場合連続。 */
-   pub let consecutive: bool; 
+   pub let consecutive: bool;
    pri let mut commentList: Token[] { pub };
 
    pub fn __init( kind: TokenKind, txt: str, pos: &Position,
                   consecutive:bool, commentList: Token[]! )
-   {  
+   {
       self.kind = kind;
       self.txt = txt;
       self.pos = pos;
@@ -220,7 +221,7 @@ pub class Token {
       }
       error( "illegal delimit -- %s" (self.txt) );
    }
-   
+
    pub fn set_commentList( commentList: Token[] ) mut {
       self.commentList = commentList;
    }
@@ -400,7 +401,7 @@ fn StreamParser.parse() mut : Token[]! {
       while true {
          if! let termIndex, termEndIndex = string.find(
             rawLine, termStr, searchIndex, true )
-         {        
+         {
             comment = comment .. rawLine.sub( searchIndex, termEndIndex );
             return comment, termEndIndex + 1;
          }
@@ -505,7 +506,7 @@ fn StreamParser.parse() mut : Token[]! {
             while true {
                if token.find( '^[%d]', startIndex ## ) or
                   token.find( '^-[%d]', startIndex ## )
-               {              
+               {
                   // 数値の場合
                   let mut checkIndex = startIndex;
                   if token[1] == ?- {
@@ -569,7 +570,7 @@ fn StreamParser.parse() mut : Token[]! {
                   else {
                      if startIndex <= #token {
                         list.insert(
-                           createInfo(                
+                           createInfo(
                               .Symb, token.sub( startIndex ##),
                               columnIndex + startIndex ) );
                      }
@@ -665,13 +666,13 @@ fn StreamParser.parse() mut : Token[]! {
                   addVal( .Str, rawLine.sub( index, endIndex ), index );
                   searchIndex = endIndex + 1;
                   break;
-               }        
+               }
                elseif workChar == ?\\ {
                   workIndex = workIndex + 2;
-               }        
+               }
                else {
                   workIndex = workIndex + 1;
-               }        
+               }
             }
          }
          elseif findChar == ?` {

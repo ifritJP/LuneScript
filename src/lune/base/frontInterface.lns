@@ -38,7 +38,7 @@ meta ファイルの内容が何回変ったか。
 meta ファイルの内容が変った場合はこのカウンタをインクリメントする。
 逆に lns ファイル自体に修正があっても、
 meta ファイルの内容が変らない場合はこのカウンタをインクリメントしない。
-   */ 
+   */
    let buildCount:int {pub};
    let idStr:str {pub};
    pub static let tempId:ModuleId;

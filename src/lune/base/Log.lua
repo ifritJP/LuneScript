@@ -60,13 +60,13 @@ function Level:_getTxt( val )
       return string.format( "Level.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function Level._from( val )
    if Level._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 Level.__allList = {}
 function Level.get__allList()

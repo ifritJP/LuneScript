@@ -66,12 +66,12 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             arrayMode = "list";
             typeInfo = Ast.NormalTypeInfo.createList(
                accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
-         }   
+         }
          else {
             arrayMode = "array";
             typeInfo = Ast.NormalTypeInfo.createArray(
                accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
-         }   
+         }
          token = self.getToken(##);
          if token.txt ~= ']' {
             self.pushback();
@@ -92,13 +92,13 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          fn checkAlternateTypeCount( count:int ): bool {
             if #genericList ~= count {
                self.addErrMess(
-                  symbolNode.$pos,     
+                  symbolNode.$pos,
                   "generic type count is unmatch. -- %d" (#genericList) );
                return false;
             }
             return true;
          }
-         
+
          switch typeInfo.$kind {
             case .Map {
                if #genericList < 2 {
@@ -163,7 +163,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                                           typeInfo.getTxt(##) ) );
             }
          }
-      }   
+      }
       else {
          self.pushback();
          break;
@@ -205,7 +205,7 @@ fn TransUnit.analyzeDeclArgList(
       if hasDDDFlag {
          self.addErrMess( nextToken.pos, "Argument exists after '...'." );
       }
-      
+
       let mut mutable = false;
       if nextToken.txt == "mut" {
          mutable = true;
@@ -223,8 +223,8 @@ fn TransUnit.analyzeDeclArgList(
             let refTypeNode = self.analyzeRefType( accessMode, true );
             dddTypeInfo = refTypeNode.$expType;
          }
-         
-         argList.insert( 
+
+         argList.insert(
             Nodes.DeclArgDDDNode.create(
                self.nodeManager, argName.pos, [ dddTypeInfo ] ) );
          self.scope.addLocalVar( false, true, argName.txt, dddTypeInfo, false );
@@ -241,8 +241,8 @@ fn TransUnit.analyzeDeclArgList(
          let refType = self.analyzeRefType( accessMode, false );
          let arg = Nodes.DeclArgNode.create(
             self.nodeManager, argName.pos, refType.$expTypeList,
-            argName, refType );    
-         
+            argName, refType );
+
          self.scope.addLocalVar( false, true, argName.txt, refType.$expType, mutable );
          argList.insert( arg );
       }
@@ -273,7 +273,7 @@ fn TransUnit.checkOverriededMethod() mut
                {
                   if not impMethodType.canEvalWith(
                      symbolInfo.$typeInfo, "=", alt2typeMap )
-                  {                 
+                  {
                      self.addErrMess(
                         pos, "mismatch method -- %s %s" (symbolInfo.$typeInfo.$display_stirng,
                                                           impMethodType.$display_stirng ) );
@@ -297,7 +297,7 @@ fn TransUnit.checkOverriededMethod() mut
    foreach classNode, classTypeInfo in self.typeInfo2ClassNode {
       typeId2DeclClassNode[ classTypeInfo.$typeId ] = classNode;
    }
-   
+
    forsort classNode in typeId2DeclClassNode {
       let classTypeInfo = classNode.$expType;
       if not classTypeInfo.$abstractFlag {
@@ -310,14 +310,14 @@ fn TransUnit.checkOverriededMethod() mut
                   classNode.$pos, alt2typeMap,
                   unwrap classTypeInfo.$scope,
                   unwrap workTypeInfo.$scope );
-            }  
+            }
             foreach ifType in workTypeInfo.$interfaceList {
                if ifType ~= Ast.builtinTypeMapping {
                   checkOverrideMethodSub(
                      classNode.$pos, alt2typeMap,
                      unwrap classTypeInfo.$scope, unwrap ifType.$scope );
                }
-            }  
+            }
             workTypeInfo = workTypeInfo.$baseTypeInfo;
          } workTypeInfo == Ast.headTypeInfo;
       }
@@ -353,7 +353,7 @@ pub fn TransUnit.createAST(
    self.moduleScope = self.scope;
    self.moduleType = moduleTypeInfo;
 
-   
+
    self.parser = parser;
 
    let ast:Nodes.Node;
@@ -396,7 +396,7 @@ pub fn TransUnit.createAST(
             Util.err( "unknown:%d:%d:(%s) %s"
                       ( token.pos.lineNo, token.pos.column,
                         token.kind.$_txt, token.txt ) );
-         }  
+         }
       }
 
       self.checkOverriededMethod();
@@ -426,7 +426,7 @@ pub fn TransUnit.createAST(
    }
 
    Ast.popProcessInfo();
-   
+
 
    foreach pos, protoType in self.protoFuncMap {
       self.addErrMess(
@@ -436,7 +436,7 @@ pub fn TransUnit.createAST(
       self.addErrMess(
          pos, "This class doesn't have body. -- %s" ( protoType.getTxt(##) ) );
    }
-   
+
 
    foreach mess in self.warnMessList {
       Util.errorLog( mess );
@@ -450,7 +450,7 @@ pub fn TransUnit.createAST(
    if self.ctrl_info.stopByWarning and #self.warnMessList > 0 {
       Util.err( "has error" );
    }
-   
+
    if self.analyzeMode == .Diag or self.analyzeMode == .Complete {
       os.exit( 0 );
    }
@@ -475,7 +475,7 @@ fn TransUnit.analyzeDeclMacro(
                           ( accessMode.$_txt ) );
       }
    }
-   
+
    let nameToken = self.getSymbolToken( .Must_ );
    self.checkNextToken( "(" );
 
@@ -518,11 +518,11 @@ fn TransUnit.analyzeDeclMacro(
          nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
       scope.addLocalVar( false, false, "_lnsLoad", funcType, false );
-      
-      
+
+
       let mut bakParser = self.parser;
       self.parser = parser;
-      
+
       let mut stmtList:List<&Nodes.Node> = [];
       self.prepareTentativeSymbol( self.scope, false );
       self.analyzeStatementList( stmtList, "}" );
@@ -543,7 +543,7 @@ fn TransUnit.analyzeDeclMacro(
 
    self.popScope();
 
-   
+
    let mut tokenList: List<&Parser.Token> = [];
    let mut braceCount = 0;
 
@@ -588,7 +588,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
    let mut baseRef:&Nodes.Node! = nil;
    let mut interfaceList:List<&Ast.TypeInfo> = [];
    let mut ifAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> = {};
-   
+
    let mut nextToken = self.getToken(##);
    if nextToken.txt ~= "(" {
       self.pushback();
@@ -599,7 +599,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
          self.addErrMess( workBaseRefType.$pos,
                           "%s is not class." ( baseType.getTxt(##) ) );
       }
-      if Ast.isPubToExternal( accessMode ) and 
+      if Ast.isPubToExternal( accessMode ) and
          not Ast.isPubToExternal( baseType.$accessMode )
       {
          self.addErrMess(
@@ -627,16 +627,16 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
                ifAlt2typeMap[ altType ] = genType;
             }
          }
-         
-         
+
+
          interfaceList.insert( ifType );
-         if Ast.isPubToExternal( accessMode ) and 
+         if Ast.isPubToExternal( accessMode ) and
             not Ast.isPubToExternal( ifType.$accessMode )
          {
             self.addErrMess( ifTypeNode.$pos,
                              "%s can't be external symbol." ( ifType.getTxt(##) ) );
          }
-         
+
          nextToken = self.getToken(##);
          if nextToken.txt ~= "," {
             if nextToken.txt == ")" {
@@ -669,7 +669,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
             return true;
          } );
    }
-   
+
 
 
    let mut baseTypeInfo:&Ast.TypeInfo! = nil;
@@ -690,14 +690,14 @@ fn TransUnit.analyzePushClass(
       self.addErrMess( firstToken.pos, "The public class must declare at top scope." );
    }
 
-   
+
    // altTypeList のシンボルにアクセスできるように、一時的にスコープを掘る
    let mut tempScope = self.pushScope( false## );
    foreach altType in altTypeList {
       tempScope.addAlternate( accessMode, altType.$rawTxt, altType );
    }
 
-   
+
    let mut nextToken = self.getToken(##);
    let mut baseTypeInfo:&Ast.TypeInfo! = nil;
    let mut interfaceList:&List<&Ast.TypeInfo> = [];
@@ -710,20 +710,20 @@ fn TransUnit.analyzePushClass(
             if initTypeInfo.$accessMode == .Pri {
                self.addErrMess(
                   firstToken.pos, "The access mode of '__init' is 'pri'." );
-            }  
-         }; 
-      }  
+            }
+         };
+      }
    }
 
 
    // 一時的に掘ったスコープを戻す
    self.popScope();
-   
-   
+
+
    let classTypeInfo = self.pushClass(
       classFlag, abstractFlag, baseTypeInfo, interfaceList,
       altTypeList, false, name.txt, accessMode ## );
-   
+
    return nextToken, classTypeInfo;
 }
 
@@ -762,7 +762,7 @@ fn TransUnit.analyzeDeclAlternateType(
          workToken, baseTypeInfo, interfaceList = self.analyzeExtend(
             accessMode, token.pos );
       }
-      
+
       let altType = Ast.NormalTypeInfo.createAlternate(
          belongClassFlag, altIndex, genericSymToken.txt,
          accessMode, self.moduleType, baseTypeInfo, interfaceList );
@@ -787,20 +787,20 @@ fn TransUnit.analyzeDeclProto(
       nextToken = self.getToken(##);
    }
 
-   
+
    if nextToken.txt == "class" or nextToken.txt == "interface" {
       let name = self.getSymbolToken( .MustNot_ );
 
       // generic の型宣言解析
       let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
-      {  
+      {
          let mut workToken = self.getToken(##);
          if workToken.txt == "<" {
             workToken, altTypeList = self.analyzeDeclAlternateType(
                true, workToken, accessMode );
-         }  
+         }
          self.pushbackToken( workToken );
-      }  
+      }
 
       if accessMode == .Local {
          accessMode = .Pri;
@@ -812,7 +812,7 @@ fn TransUnit.analyzeDeclProto(
          firstToken, name, accessMode, altTypeList );
 
       self.protoClassMap[ classTypeInfo ] = firstToken.pos;
-      
+
       self.popClass();
       self.checkToken( nextToken, ";" );
    }
@@ -836,14 +836,14 @@ fn TransUnit.analyzeDeclEnum(
    let mut scope = self.pushScope( true ## );
 
    let mut enumTypeInfo:Ast.EnumTypeInfo! = nil;
-   
+
    let mut nextToken = self.getToken(##);
    let mut number = 0.0;
    let mut prevValTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    let mut valTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
    while nextToken.txt ~= "}" {
       let valName = self.checkSymbol(nextToken, .MustNot_ );
-      
+
       nextToken = self.getToken(##);
 
       let mut enumVal = Ast.EnumLiteral.Real( number );
@@ -854,7 +854,7 @@ fn TransUnit.analyzeDeclEnum(
             enumVal = .Int( number@@int );
          }
       }
-      
+
       if nextToken.txt == "=" {
          let exp = self.analyzeExp( false, false ## );
          let! literal = exp.getLiteral() {
@@ -879,7 +879,7 @@ fn TransUnit.analyzeDeclEnum(
                self.error( "illegal enum val -- %s" ( literal.$_txt ) );
             }
          }
-         
+
          nextToken = self.getToken(##);
       }
       else {
@@ -897,7 +897,7 @@ fn TransUnit.analyzeDeclEnum(
          }
       }
       if prevValTypeInfo ~= Ast.headTypeInfo and prevValTypeInfo ~= valTypeInfo
-      {        
+      {
          self.addErrMess( valName.$pos,
                           "multiple enum val type. %s, %s"
                           (valTypeInfo.getTxt(##), prevValTypeInfo.getTxt(##)) );
@@ -936,7 +936,7 @@ fn TransUnit.analyzeDeclEnum(
 
    self.scope.addEnum( accessMode, name.txt, unwrap enumTypeInfo );
 
-   
+
    return Nodes.DeclEnumNode.create(
       self.nodeManager, firstToken.pos,
       [ unwrap enumTypeInfo ], accessMode, name, valueList, scope );
@@ -948,7 +948,7 @@ fn TransUnit.analyzeDeclAlge(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Nodes.DeclAlgeNode
 {
    self.helperInfo.useAlge = true;
-   
+
    let name = self.getSymbolToken( .MustNot_ );
 
    self.checkNextToken( "{" );
@@ -959,14 +959,14 @@ fn TransUnit.analyzeDeclAlge(
    let mut algeTypeInfo = Ast.NormalTypeInfo.createAlge(
       algeScope, self.getCurrentNamespaceTypeInfo(), false, accessMode, name.txt );
    scope.addAlge( accessMode, name.txt, algeTypeInfo );
-   
+
    let mut nextToken = self.getToken(##);
    while nextToken.txt ~= "}" {
       let valName = self.checkSymbol( nextToken, .MustNot_ );
       if algeTypeInfo.getValInfo( valName.txt ) {
          self.addErrMess( valName.pos, "multiple symbole -- %s" (valName.txt) );
       }
-      
+
       nextToken = self.getToken(##);
 
       let mut typeInfoList:List<&Ast.TypeInfo> = [];
@@ -982,7 +982,7 @@ fn TransUnit.analyzeDeclAlge(
             }
          }
       }
-      
+
       algeScope.addAlgeVal( valName.txt, algeTypeInfo );
       let algeValInfo = new Ast.AlgeValInfo( valName.txt, typeInfoList );
       algeTypeInfo.addValInfo( algeValInfo );
@@ -996,7 +996,7 @@ fn TransUnit.analyzeDeclAlge(
 
    self.popScope();
 
-   
+
    return Nodes.DeclAlgeNode.create(
       self.nodeManager, firstToken.pos,
       [ algeTypeInfo ], accessMode, algeTypeInfo, algeScope );
@@ -1013,14 +1013,14 @@ fn TransUnit.analyzeAlias(
    self.checkNextToken( "=" );
 
    let srcToken = self.getToken(##);
-   
+
    let symbolNode = self.analyzeExpSymbol(
       firstToken, srcToken, .Symbol, nil, true );
-      
-   
+
+
    let mut newTypeInfo = Ast.builtinTypeNone;
    let symbolInfoList = symbolNode.getSymbolInfo();
-   
+
    if #symbolInfoList >= 1 {
       let symbolInfo = symbolInfoList[ 1 ];
       if newToken.txt.find( "^_" ##) and not srcToken.txt.find( "^_" ##) or
@@ -1049,7 +1049,7 @@ fn TransUnit.analyzeAlias(
       self.addErrMess( firstToken.pos, "not found symbold -- %s" (srcToken.txt ) );
    }
    self.checkNextToken( ";" );
-   
+
    return Nodes.AliasNode.create(
       self.nodeManager, firstToken.pos,
       [ newTypeInfo ], newToken.txt, symbolNode, newTypeInfo );
@@ -1073,15 +1073,15 @@ fn TransUnit.analyzeRetTypeList(
             hasDDDFlag = true;
          }
          if pubToExtFlag and not Ast.isPubToExternal( retType.$accessMode )
-         {  
+         {
             self.addErrMess( refTypeNode.$pos,
                              "this is not public type -- %s" (retType.getTxt(##)) );
-         }  
+         }
          retTypeInfoList.insert( retType );
          token = self.getToken(##);
          if token.txt ~= "," {
             break;
-         }  
+         }
       }
    }
    return retTypeInfoList, token;
@@ -1094,7 +1094,7 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
    let mut argList:List<&Nodes.Node> = [];
 
    let mut funcBodyScope = self.pushScope( false ## );
-   
+
    let mut nextToken = self.analyzeDeclArgList( accessMode, argList );
 
    self.checkToken( nextToken, ")" );
@@ -1196,7 +1196,7 @@ fn TransUnit.checkPublic( pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut {
       if workType.$kind ~= .Array and workType.$kind ~= .List
          and workType.$kind ~= .Set
          and workType.$kind ~= .Map and not Ast.isPubToExternal( workType.$accessMode )
-      {     
+      {
          self.addErrMess( pos, "not public this type -- %s" ( workType.getTxt(##)) );
       }
       else {
@@ -1286,7 +1286,7 @@ fn TransUnit.analyzeDeclMember(
             if setterMode ~= .None and mutMode == .IMut {
                // immutable なメンバに setter 宣言は出来ない
                self.addErrMess(
-                  varName.pos,      
+                  varName.pos,
                   "This member can't have setter, this member is immutable. -- %s"
                   (varName.txt) );
             }
@@ -1312,11 +1312,11 @@ fn TransUnit.analyzeDeclMember(
          if Ast.isPubToExternal( accessMode ) or
             Ast.isPubToExternal( getterMode ) or
             Ast.isPubToExternal( setterMode )
-         {  
+         {
             self.checkPublic( refType.$pos, typeInfo );
          }
       }
-         
+
       let symbolInfo = self.scope.addMember(
          varName.txt, typeInfo, accessMode, staticFlag, mutMode );
 
@@ -1356,7 +1356,7 @@ fn TransUnit.addDefaultConstructor(
 
    // デフォルトコンストラクタの引数の型リストを決定する
    let mut argTypeList:List<&Ast.TypeInfo> = [];
-   
+
    if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
       // 継承している場合
       let superScope = unwrap classTypeInfo.$baseTypeInfo.$scope;
@@ -1378,7 +1378,7 @@ fn TransUnit.addDefaultConstructor(
          argTypeList.insert( memberNode.$expType );
       }
    }
-   
+
    // デフォルトコンストラクタの登録
    let mut ctorScope = self.pushScope( false ## );
    let initTypeInfo = Ast.NormalTypeInfo.createFunc(
@@ -1487,7 +1487,7 @@ fn TransUnit.analyzeClassBody(
    fn processInitBlock() {
 
       self.pushAnalyzingState( .InitBlock );
-      
+
       if mode ~= .Class {
          self.error( "%s can not have __init block." (mode) );
       }
@@ -1501,7 +1501,7 @@ fn TransUnit.analyzeClassBody(
 
       self.pushScope( false## );
       self.prepareTentativeSymbol( self.scope, false );
-      
+
       self.checkNextToken( "{" );
       self.analyzeStatementList( initStmtList, "}" );
       self.checkNextToken( "}" );
@@ -1510,7 +1510,7 @@ fn TransUnit.analyzeClassBody(
       self.finishTentativeSymbol( false );
 
       self.popAnalyzingState();
-   }  
+   }
 
    fn processAdvertise() {
       let memberToken = self.getSymbolToken( .MustNot_ );
@@ -1568,67 +1568,67 @@ fn TransUnit.analyzeClassBody(
          }
          let! mut accessMode = Ast.txt2AccessMode( token.txt ) {
             accessMode = .Pri;
-         }  
+         }
          then {
             token = self.getToken(##);
-         }; 
+         };
          if mode == .Interface and accessMode ~= .Pub {
             self.addErrMess( token.pos, "interface's fields must be 'pub'." );
-         }  
-         
+         }
+
          let mut staticFlag = false;
          if token.txt == "static" {
             staticFlag = true;
             token = self.getToken(##);
-         }   
+         }
          let mut overrideFlag = false;
          if token.txt == "override" {
             overrideFlag = true;
             token = self.getToken(##);
-         }   
+         }
          let mut abstractFlag = false;
          if token.txt == "abstract" {
             abstractFlag = true;
             token = self.getToken(##);
-         }  
+         }
          elseif mode == .Interface {
             // 現状 interface にデフォルト処理を書けない。
             abstractFlag = true;
-         }  
-         
+         }
+
 
          if token.txt == "let" {
             processLet( token, staticFlag, accessMode );
-         }  
+         }
          elseif token.txt == "fn" {
             processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
-         }  
+         }
          elseif token.txt == "__init" {
             processInitBlock();
-         }  
+         }
          elseif token.txt == "advertise" {
             processAdvertise();
-         }  
+         }
          elseif token.txt == ";" {
-         }  
+         }
          elseif token.txt == "enum" {
             processEnum( token, accessMode );
-         }  
+         }
          elseif token.txt == "_lune_control" {
             processLuneControl();
-         }  
+         }
          else {
             if! let symbolInfo = self.scope.getSymbolInfo(
                token.txt, self.scope, false )
-            {           
+            {
                if symbolInfo.$kind == .Mac {
 
                   self.checkNextToken( "(" );
-                  
+
                   let mut alt2typeMap, argList = self.prepareExpCall(
-                     token.pos, symbolInfo.$typeInfo, [], Ast.headTypeInfo );  
-                  
-                  
+                     token.pos, symbolInfo.$typeInfo, [], Ast.headTypeInfo );
+
+
                   self.evalMacroOp(
                      token, symbolInfo.$typeInfo, argList,
                      fn () {
@@ -1636,15 +1636,15 @@ fn TransUnit.analyzeClassBody(
                      });
 
                   self.checkNextToken( ";" );
-               }  
+               }
                else {
                   self.error( "illegal field" );
-               }  
-            }  
+               }
+            }
             else {
                self.error( "illegal field" );
-            }  
-         }  
+            }
+         }
       }
    }
 
@@ -1668,8 +1668,8 @@ fn TransUnit.analyzeClassBody(
       if hasStaticMember and not hasInitBlock {
          self.addErrMess(
             node.$pos,
-            "This class (%s) need __init block for initialize static members." ( name.txt ) );   
-      }  
+            "This class (%s) need __init block for initialize static members." ( name.txt ) );
+      }
 
       foreach memberNode, memberName in memberName2Node {
          if memberNode.$staticFlag {
@@ -1678,8 +1678,8 @@ fn TransUnit.analyzeClassBody(
             if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
                self.addErrMess( memberNode.$pos,
                                 "Set member -- %s" ( memberName ) );
-            }  
-         }  
+            }
+         }
       }
    }
 
@@ -1693,13 +1693,13 @@ fn TransUnit.analyzeDeclClass(
    if mode ~= .Module {
       switch self.getCurrentNamespaceTypeInfo().$kind {
          case .IF, .Class, .Module {
-         }  
+         }
          default {
             self.addErrMess( firstToken.pos, "Class can't declare on here." );
-         }  
+         }
       }
    }
-   
+
    let name = self.getSymbolToken( .MustNot_ );
 
    // generic の型宣言解析
@@ -1732,7 +1732,7 @@ fn TransUnit.analyzeDeclClass(
    }
 
    let existSymbolInfo = self.scope.getSymbolTypeInfo( name.txt, self.scope, self.scope );
-   
+
    let mut nextToken, classTypeInfo = self.analyzePushClass(
       mode ~= .Interface, classAbstructFlag,
       firstToken, name, classAccessMode, altTypeList );
@@ -1757,7 +1757,7 @@ fn TransUnit.analyzeDeclClass(
       self.createModifier( Ast.builtinTypeStem, .IMut ), .IMut );
    if classTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
       self.helperInfo.hasMappingClassDef = true;
-      
+
       if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo and
          not classTypeInfo.$baseTypeInfo.isInheritFrom( Ast.builtinTypeMapping, nil ) {
          self.addErrMess(
@@ -1771,14 +1771,14 @@ fn TransUnit.analyzeDeclClass(
       classScope.addMethod( toMapFuncTypeInfo, .Pub, false, false );
    }
 
-   
-   
+
+
 
    let mut node, workNextToken, mut methodNameSet = self.analyzeClassBody(
       classAccessMode, firstToken, mode, gluePrefix,
       classTypeInfo, name, moduleName, nextToken );
    nextToken = workNextToken;
-   
+
 
    let parentInfo = classTypeInfo;
 
@@ -1802,7 +1802,7 @@ fn TransUnit.analyzeDeclClass(
             memberNode.$staticFlag, accessMode,
             getterName, nil, [], [ getterMemberType ] ## );
          self.popScope();
-         
+
          classScope.addMethod(
             retTypeInfo, accessMode, memberNode.$staticFlag, false );
          methodNameSet.add( getterName );
@@ -1812,17 +1812,17 @@ fn TransUnit.analyzeDeclClass(
       accessMode = memberNode.$setterMode;
       if memberNode.$setterMode ~= .None and
          not classScope.getTypeInfoChild( setterName )
-      {   
+      {
          classScope.addMethod(
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ## ),
                .Method, parentInfo, true, false,
                memberNode.$staticFlag, accessMode,
-               setterName, nil, [ memberType ], nil, true 
+               setterName, nil, [ memberType ], nil, true
             ), accessMode, memberNode.$staticFlag, true );
          self.popScope();
          methodNameSet.add( setterName );
-      }   
+      }
    }
 
    // デフォルトコンストタクタ設定
@@ -1893,10 +1893,10 @@ fn TransUnit.analyzeDeclClass(
          true, false, true, .Pub, "_fromStem",
          nil, [ Ast.builtinTypeStem_ ],
          [ classTypeInfo.$nilableTypeInfo, Ast.builtinTypeString.$nilableTypeInfo ],
-         true );  
+         true );
       classScope.addMethod( fromStemFuncTypeInfo, ctorAccessMode, true, false );
    }
-   
+
    // fn checkOverrideMethodSub( scope:&Ast.Scope ) {
    //    scope.filterTypeInfoField(
    //       true, classScope,
@@ -1905,7 +1905,7 @@ fn TransUnit.analyzeDeclClass(
    //             let mut noImp = false;
    //             if! let impMethodType = classScope.getTypeInfoField(
    //                symbolInfo.$name, true, classScope )
-   //             {              
+   //             {
    //                if impMethodType.$abstractFlag {
    //                   noImp = true;
    //                }
@@ -1928,7 +1928,7 @@ fn TransUnit.analyzeDeclClass(
    //    repeat {
    //       if workTypeInfo ~= Ast.headTypeInfo {
    //          checkOverrideMethodSub( unwrap workTypeInfo.$scope );
-   //       }  
+   //       }
    //       foreach ifType in workTypeInfo.$interfaceList {
    //          checkOverrideMethodSub( unwrap ifType.$scope );
    //       }
@@ -1975,7 +1975,7 @@ fn TransUnit.analyzeDeclFunc(
       needPopFlag = true;
 
       let className = (unwrap name).txt;
-      
+
       classTypeInfo = self.scope.getTypeInfoChild( className );
 
       when! classTypeInfo {
@@ -2012,7 +2012,7 @@ fn TransUnit.analyzeDeclFunc(
                if not symbolInfo.$staticFlag {
                   // 一旦全てのメンバを値なし状態にセットする
                   symbolInfo.set_hasValueFlag( false );
-               }  
+               }
             }
          }
          case "__free" {
@@ -2051,15 +2051,15 @@ fn TransUnit.analyzeDeclFunc(
             case .Pub, .Global {
                if self.scope ~= self.moduleScope {
                   self.addErrMess(
-                     firstToken.pos,      
+                     firstToken.pos,
                      "'global' or 'pub' function must exist top scope." );
                }
             }
          }
       }
    }
-   
-  
+
+
    let mut funcBodyScope = self.pushScope( false ## );
    let mut altTypeList:List<&Ast.TypeInfo> = [];
    // generic 宣言
@@ -2073,7 +2073,7 @@ fn TransUnit.analyzeDeclFunc(
 
    self.checkToken( token, "(" );
 
-   
+
    let mut argList:List<&Nodes.Node> = [];
    token = self.analyzeDeclArgList( accessMode, argList );
    let mut argTypeList:List<&Ast.TypeInfo> = [];
@@ -2095,7 +2095,7 @@ fn TransUnit.analyzeDeclFunc(
    let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
    when! classTypeInfo {
       alt2typeMap = classTypeInfo.createAlt2typeMap( false );
-      
+
       if kind == Nodes.NodeKind.$DeclMethod or
          kind == Nodes.NodeKind.$DeclConstr or
          kind == Nodes.NodeKind.$DeclDestr
@@ -2103,14 +2103,14 @@ fn TransUnit.analyzeDeclFunc(
          let mut workClass = classTypeInfo;
          if kind == Nodes.NodeKind.$DeclConstr or kind == Nodes.NodeKind.$DeclDestr {
             mutable = true;
-         }  
+         }
          // self シンボルを登録
 
          if not Ast.isPubToExternal( workClass.$accessMode ) {
             pubToExtFlag = false;
          }
 
-         
+
          if Ast.TypeInfo.isMut( workClass ) and not mutable {
             workClass = self.createModifier( workClass, .IMut );
          }
@@ -2133,7 +2133,7 @@ fn TransUnit.analyzeDeclFunc(
    retTypeInfoList, token = self.analyzeRetTypeList( pubToExtFlag, accessMode, token );
 
    let namespaceInfo = self.getCurrentNamespaceTypeInfo();
-   
+
    let typeInfo = Ast.NormalTypeInfo.createFunc(
       abstractFlag, false, funcBodyScope,
       typeKind, namespaceInfo,
@@ -2169,7 +2169,7 @@ fn TransUnit.analyzeDeclFunc(
          }
 
          if self.protoFuncMap[ prottype ] {
-            self.protoFuncMap[ prottype ] = nil;     
+            self.protoFuncMap[ prottype ] = nil;
          }
          else {
             if not prottype.$autoFlag {
@@ -2177,7 +2177,7 @@ fn TransUnit.analyzeDeclFunc(
             }
          }
       }
-      
+
 
       if kind == Nodes.NodeKind.$DeclFunc {
          parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
@@ -2199,11 +2199,11 @@ fn TransUnit.analyzeDeclFunc(
             self.addErrMess( firstToken.pos, "mismatch override accessMode -- %s,%s,%s"
                              ( funcName, overrideType.get_accessMode().$_txt,
                                accessMode.$_txt ) );
-         }  
+         }
          if overrideType.get_staticFlag() ~= staticFlag {
             self.addErrMess( firstToken.pos,
                              "mismatch override staticFlag -- " .. funcName );
-         }  
+         }
          if overrideType.get_kind() ~= .Method {
             self.addErrMess( firstToken.pos, "mismatch override kind -- %s, %d"
                              ( funcName, overrideType.get_kind() ) );
@@ -2222,7 +2222,7 @@ fn TransUnit.analyzeDeclFunc(
                alt2typeMap[ alterType ] = altTypeList[ index ];
             }
          }
-         
+
          if not overrideType.canEvalWith( typeInfo, "=", alt2typeMap ) {
             self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
          }
@@ -2238,17 +2238,17 @@ fn TransUnit.analyzeDeclFunc(
             if self.scope.$parent.getTypeInfoField( name.txt, false, funcBodyScope ) {
                // override 宣言していないのに、オーバーライドしている場合エラー
                self.addErrMess( firstToken.pos, "mismatch override --" .. funcName );
-            }  
+            }
             else {
                if! let ifFunc =
                   self.scope.$parent.getSymbolInfoIfField( name.txt, funcBodyScope )
-               {  
+               {
                   if not ifFunc.$typeInfo.canEvalWith( typeInfo, "=", alt2typeMap ) {
                      self.addErrMess( firstToken.pos,
                                       "mismatch method type -- %s" (funcName));
                   }
-               }  
-            }  
+               }
+            }
          }
       }
    }
@@ -2289,7 +2289,7 @@ fn TransUnit.analyzeDeclFunc(
             }
          }
       }
-      
+
       self.pushback();
 
       if isCtorFlag {
@@ -2301,31 +2301,31 @@ fn TransUnit.analyzeDeclFunc(
       else {
          self.pushAnalyzingState( .Func );
       }
-      
+
       body = self.analyzeBlock( .Func, .Ignore, funcBodyScope );
 
       self.popAnalyzingState();
-      
+
       when! body {
          if #retTypeInfoList ~= 0
          {
             let breakKind = body.getBreakKind( .Return );
-            if retTypeInfoList[ 1 ] ~= Ast.builtinTypeNeverRet {        
+            if retTypeInfoList[ 1 ] ~= Ast.builtinTypeNeverRet {
                switch breakKind {
                   case .Return, .NeverRet {
-                  }  
+                  }
                   default {
                      self.addErrMess( firstToken.pos,
                                       "This funcion doesn't have return." );
-                  }  
-               }  
+                  }
+               }
             }
             else {
                if breakKind ~= .NeverRet {
                   self.addErrMess( firstToken.pos,
                                    "This funcion must be never return. -- %s"
                                    (breakKind.$_txt ));
-               }              
+               }
             }
          }
          if isCtorFlag {
@@ -2334,7 +2334,7 @@ fn TransUnit.analyzeDeclFunc(
                   // Super クラスを持っている場合
                   if #body.$stmtList == 0 or
                      body.$stmtList[ 1 ].$kind ~= Nodes.nodeKind.ExpCallSuper
-                  {                 
+                  {
                      self.addErrMess( body.$pos, "__init must call super() with first." );
                   }
                }
@@ -2391,12 +2391,12 @@ fn TransUnit.createExpListNode(
    let mut newExpTypeList:List<&Ast.TypeInfo> = [];
    foreach expNode, listIndex in newExpList {
       newExpTypeList.insert( expNode.$expType );
-   }     
+   }
    // 最終ノードが複数の値を持つ場合は、その型を追加する
    foreach expType, listIndex in newExpList[ #newExpList ].$expTypeList {
       if listIndex ~= 1 {
          newExpTypeList.insert( expType );
-      }     
+      }
    }
    return Nodes.ExpListNode.create(
       self.nodeManager, pos, newExpTypeList, newExpList, followOn );
@@ -2435,7 +2435,7 @@ fn TransUnit.analyzeLetAndInitExp(
    let mut letVarList:List<&LetVarInfo> = [];
 
    let mut nextToken = Parser.getEofToken();
-   
+
    repeat {
       // 変数名と : で明示している型情報を取得。
       let mut mutable = initMutable;
@@ -2458,7 +2458,7 @@ fn TransUnit.analyzeLetAndInitExp(
       }
       if not typeInfo.equals( Ast.builtinTypeEmpty ## ) and
          Ast.TypeInfo.isMut( typeInfo ) and not mutable
-      {     
+      {
          typeInfo = self.createModifier( typeInfo, .IMut );
       }
       typeInfoList.insert( typeInfo );
@@ -2478,7 +2478,7 @@ fn TransUnit.analyzeLetAndInitExp(
 
    // unwrap 前の型
    let mut orgExpTypeList: List<&Ast.TypeInfo> = [];
-   
+
    // 型推論の解決と、宣言されている型と初期値との整合性を確認
    when! expList {
       let mut updateExpList = false;
@@ -2554,7 +2554,7 @@ fn TransUnit.analyzeLetAndInitExp(
                if not varType.equals( Ast.builtinTypeEmpty ## ) and
                   not varType.canEvalWith( expTypeInfo, "=", alt2typeMap ) and
                   not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
-               {               
+               {
                   self.addErrMess(
                      firstPos,
                      "unmatch value type (index:%d) %s <- %s"
@@ -2576,7 +2576,7 @@ fn TransUnit.analyzeLetAndInitExp(
                   if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 1 ) {
                      self.addErrMess( exp.$pos,
                                       "auto boxing error %s <- %s"
-                                      ( varType.getTxt(##), expTypeInfo.getTxt(##)) );  
+                                      ( varType.getTxt(##), expTypeInfo.getTxt(##)) );
                   }
                }
                else {
@@ -2584,7 +2584,7 @@ fn TransUnit.analyzeLetAndInitExp(
                      self.addErrMess(
                         newExpList[ index ].$pos,
                         "illegal auto boxing error %s <- %s"
-                        ( varType.getTxt(##), expTypeInfo.getTxt(##)) );  
+                        ( varType.getTxt(##), expTypeInfo.getTxt(##)) );
                   }
                }
             }
@@ -2651,12 +2651,12 @@ fn TransUnit.analyzeDeclVar(
 
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp( firstToken.pos, mode == .Sync, accessMode, unwrapFlag );
-   
+
 
    if mode ~= .Sync and self.macroScope {
       foreach letVarInfo, index in letVarList {
          let typeInfo = typeInfoList[ index ];
-         
+
          self.symbol2ValueMapForMacro[ letVarInfo.varName.txt ] =
             new Nodes.MacroValInfo( nil, typeInfo);
       }
@@ -2669,7 +2669,7 @@ fn TransUnit.analyzeDeclVar(
 
 
    let mut symbolInfoList: List<&Ast.SymbolInfo> = [];
-   
+
    let mut varList:List<&Nodes.VarInfo> = [];
    let mut syncSymbolList:List<&Nodes.VarInfo> = [];
    foreach letVarInfo, index in letVarList {
@@ -2682,10 +2682,10 @@ fn TransUnit.analyzeDeclVar(
       if Ast.isPubToExternal( accessMode ) {
          self.checkPublic( varName.pos, typeInfo );
       }
-      
+
       if not letVarInfo.varType and typeInfo.equals( Ast.builtinTypeNil ## ) {
          self.addErrMess(
-            varName.pos, 'need type -- %s' ( varName.txt ) ); 
+            varName.pos, 'need type -- %s' ( varName.txt ) );
       }
       if mode == .Sync {
          // スコープに登録する前に、シンボルを検索
@@ -2708,11 +2708,11 @@ fn TransUnit.analyzeDeclVar(
          if index <= #orgExpTypeList {
             orgExpType = orgExpTypeList[ index ];
          }
-         
+
          let mut hasValue = false;
          if not unwrapFlag and orgExpType ~= Ast.builtinTypeEmpty or
             unwrapFlag and not orgExpType.$nilable
-         {        
+         {
             hasValue = true;
          }
          self.scope.addVar( accessMode, varName.txt, typeInfo,
@@ -2733,7 +2733,7 @@ fn TransUnit.analyzeDeclVar(
             letVarInfo.varName.pos, false, true, "_" .. letVarInfo.varName.txt,
             orgExpTypeList[ index ], false ## );
       }
-      
+
       unwrapBlock = self.analyzeBlock( .LetUnwrap, .Start, scope );
       self.popScope();
 
@@ -2752,7 +2752,7 @@ fn TransUnit.analyzeDeclVar(
                   if not self.tentativeSymbol.checkAndExclude( symbolInfo ) {
                      if not symbolInfo.$hasValueFlag {
                         self.addErrMess(
-                           unwrapBlock.$pos,       
+                           unwrapBlock.$pos,
                            "This variable isn't set -- " .. (symbolInfo.$name) );
                      }
                   }
@@ -2801,8 +2801,8 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    let mut varNameList:str[] = [];
 
    let mut expNodeList:List<&Nodes.Node> = [];
-   
-   if nextToken.txt == "let" {  
+
+   if nextToken.txt == "let" {
       let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, expList =
          self.analyzeLetAndInitExp( firstToken.pos, false, .Local, true );
       typeInfoList = workTypeInfoList;
@@ -2835,7 +2835,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       let varName = varNameList[ index ];
       self.addLocalVar( firstToken.pos, false, true, varName, expType, false ## );
    }
-   
+
    let block = self.analyzeBlock( .IfUnwrap, .Start, scope );
 
    self.popScope();
@@ -2870,7 +2870,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    if not hasCond {
       self.addErrMess( firstToken.pos, "This condition never be false" );
    }
-   
+
    return Nodes.IfUnwrapNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
       varNameList, expNodeList, block, elseBlock );
@@ -2891,7 +2891,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
    let mut scope = self.pushScope( false ## );
 
    let mut expNodeList:List<&Nodes.Node> = [];
-   
+
    foreach expNode in symListNode.$expList {
       expNodeList.insert( expNode );
       if! let refNode = expNode@@@Nodes.ExpRefNode {

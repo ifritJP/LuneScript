@@ -29,7 +29,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
    if funcTypeInfo == Ast.headTypeInfo or
       ( funcTypeInfo.$kind ~= .Func and funcTypeInfo.$kind ~= .Method )
-   {  
+   {
       self.addErrMess(
          token.pos,
          "'return' could not use here" );

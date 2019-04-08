@@ -37,7 +37,7 @@ pub enum CodeKind {
    SetOp,
    InstanceOf,
    Cast,
-   
+
 
    // 最後
    Finalize,
@@ -105,7 +105,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -142,8 +142,8 @@ function _lune.loadstring52( txt, env )
    return load( txt, "", "bt", env )
 end
 ```;
-   
-codeMap[ .Mapping ] = ```      
+
+codeMap[ .Mapping ] = ```
 function _lune._toStem( val )
    return val
 end
@@ -276,7 +276,7 @@ function _lune._Set_clone( setObj )
    return obj
 end
 ```;
-      
+
 codeMap[ .SetMapping ] = ```
 function _lune._toSet( val, toKeyInfo )
    if type( val ) == "table" then
@@ -300,7 +300,7 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 ```;
-      
+
 
 codeMap[ .AlgeMapping ] = ```
 function _lune._fromList( obj, list, memInfoList )
@@ -374,7 +374,7 @@ pub enum CastKind {
    Str,
    Class,
 }
-            
+
 codeMap[ .Cast ] = ```
 function _lune.__Cast( obj, kind, class )
    if kind == %d then -- int
@@ -401,8 +401,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 ``` ( CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class );
-            
-      
+
+
 codeMap[ .Finalize ] = ```
 return _lune
 ```;

@@ -116,7 +116,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -190,10 +190,10 @@ function glueGenerator.new( srcStream, headerStream )
    glueGenerator.setmeta( obj )
    if obj.__init then
       obj:__init( srcStream, headerStream )
-   end        
-   return obj 
-end         
-function glueGenerator:__init( srcStream, headerStream ) 
+   end
+   return obj
+end
+function glueGenerator:__init( srcStream, headerStream )
 
    self.srcStream = srcStream
    self.headerStream = headerStream
@@ -368,10 +368,10 @@ function GlueArgInfo.new( index, argName, callArgName, callTxt, setTxt, typeInfo
    GlueArgInfo.setmeta( obj )
    if obj.__init then
       obj:__init( index, argName, callArgName, callTxt, setTxt, typeInfo )
-   end        
-   return obj 
-end         
-function GlueArgInfo:__init( index, argName, callArgName, callTxt, setTxt, typeInfo ) 
+   end
+   return obj
+end
+function GlueArgInfo:__init( index, argName, callArgName, callTxt, setTxt, typeInfo )
 
    self.index = index
    self.argName = argName
@@ -380,23 +380,23 @@ function GlueArgInfo:__init( index, argName, callArgName, callTxt, setTxt, typeI
    self.setTxt = setTxt
    self.typeInfo = typeInfo
 end
-function GlueArgInfo:get_index()       
-   return self.index         
+function GlueArgInfo:get_index()
+   return self.index
 end
-function GlueArgInfo:get_argName()       
-   return self.argName         
+function GlueArgInfo:get_argName()
+   return self.argName
 end
-function GlueArgInfo:get_callArgName()       
-   return self.callArgName         
+function GlueArgInfo:get_callArgName()
+   return self.callArgName
 end
-function GlueArgInfo:get_callTxt()       
-   return self.callTxt         
+function GlueArgInfo:get_callTxt()
+   return self.callTxt
 end
-function GlueArgInfo:get_setTxt()       
-   return self.setTxt         
+function GlueArgInfo:get_setTxt()
+   return self.setTxt
 end
-function GlueArgInfo:get_typeInfo()       
-   return self.typeInfo         
+function GlueArgInfo:get_typeInfo()
+   return self.typeInfo
 end
 
 function glueGenerator:outputMethod( node, gluePrefix )
@@ -541,10 +541,10 @@ function glueFilter.new( outputDir )
    glueFilter.setmeta( obj )
    if obj.__init then
       obj:__init( outputDir )
-   end        
-   return obj 
-end         
-function glueFilter:__init( outputDir ) 
+   end
+   return obj
+end
+function glueFilter:__init( outputDir )
 
    Nodes.Filter.__init( self)
    self.outputDir = outputDir

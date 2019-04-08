@@ -158,7 +158,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -166,7 +166,6 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-      
 function _lune._toStem( val )
    return val
 end
@@ -325,13 +324,13 @@ function DeclClassMode:_getTxt( val )
       return string.format( "DeclClassMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function DeclClassMode._from( val )
    if DeclClassMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 DeclClassMode.__allList = {}
 function DeclClassMode.get__allList()
@@ -356,13 +355,13 @@ function DeclFuncMode:_getTxt( val )
       return string.format( "DeclFuncMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function DeclFuncMode._from( val )
    if DeclFuncMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 DeclFuncMode.__allList = {}
 function DeclFuncMode.get__allList()
@@ -390,13 +389,13 @@ function ExpSymbolMode:_getTxt( val )
       return string.format( "ExpSymbolMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function ExpSymbolMode._from( val )
    if ExpSymbolMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 ExpSymbolMode.__allList = {}
 function ExpSymbolMode.get__allList()
@@ -431,13 +430,13 @@ function AnalyzeMode:_getTxt( val )
       return string.format( "AnalyzeMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function AnalyzeMode._from( val )
    if AnalyzeMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 AnalyzeMode.__allList = {}
 function AnalyzeMode.get__allList()
@@ -614,13 +613,13 @@ function AnalyzingState:_getTxt( val )
       return string.format( "AnalyzingState.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function AnalyzingState._from( val )
    if AnalyzingState._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 AnalyzingState.__allList = {}
 function AnalyzingState.get__allList()
@@ -904,11 +903,11 @@ end
 function TransUnit.setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
 end
-function TransUnit:get_errMessList()       
-   return self.errMessList         
+function TransUnit:get_errMessList()
+   return self.errMessList
 end
-function TransUnit:get_warnMessList()       
-   return self.warnMessList         
+function TransUnit:get_warnMessList()
+   return self.warnMessList
 end
 
 local op2levelMap = {}
@@ -981,10 +980,10 @@ function _MetaInfo.new( __formatVersion, __buildId, __typeId2ClassInfoMap, __typ
    _MetaInfo.setmeta( obj )
    if obj.__init then
       obj:__init( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
-   end        
-   return obj 
-end         
-function _MetaInfo:__init( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap ) 
+   end
+   return obj
+end
+function _MetaInfo:__init( __formatVersion, __buildId, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __funcName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap )
 
    self.__formatVersion = __formatVersion
    self.__buildId = __buildId
@@ -1010,10 +1009,10 @@ function MacroMetaArgInfo.new( name, typeId )
    MacroMetaArgInfo.setmeta( obj )
    if obj.__init then
       obj:__init( name, typeId )
-   end        
-   return obj 
-end         
-function MacroMetaArgInfo:__init( name, typeId ) 
+   end
+   return obj
+end
+function MacroMetaArgInfo:__init( name, typeId )
 
    self.name = name
    self.typeId = typeId
@@ -1053,10 +1052,10 @@ function MacroMetaInfo.new( name, argList, symList, stmtBlock, tokenList )
    MacroMetaInfo.setmeta( obj )
    if obj.__init then
       obj:__init( name, argList, symList, stmtBlock, tokenList )
-   end        
-   return obj 
-end         
-function MacroMetaInfo:__init( name, argList, symList, stmtBlock, tokenList ) 
+   end
+   return obj
+end
+function MacroMetaInfo:__init( name, argList, symList, stmtBlock, tokenList )
 
    self.name = name
    self.argList = argList
@@ -1102,10 +1101,10 @@ function ImportParam.new( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, sc
    ImportParam.setmeta( obj )
    if obj.__init then
       obj:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap )
-   end        
-   return obj 
-end         
-function ImportParam:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap ) 
+   end
+   return obj
+end
+function ImportParam:__init( transUnit, typeId2Scope, typeId2TypeInfo, metaInfo, scope, moduleTypeInfo, typeId2AtomMap )
 
    self.transUnit = transUnit
    self.typeId2Scope = typeId2Scope
@@ -1199,10 +1198,10 @@ function _TypeInfoNilable.new( nilable, orgTypeId )
    _TypeInfoNilable.setmeta( obj )
    if obj.__init then
       obj:__init( nilable, orgTypeId )
-   end        
-   return obj 
-end         
-function _TypeInfoNilable:__init( nilable, orgTypeId ) 
+   end
+   return obj
+end
+function _TypeInfoNilable:__init( nilable, orgTypeId )
 
    _TypeInfo.__init( self)
    self.nilable = nilable
@@ -1263,10 +1262,10 @@ function _TypeInfoAlias.new( rawTxt, srcTypeId )
    _TypeInfoAlias.setmeta( obj )
    if obj.__init then
       obj:__init( rawTxt, srcTypeId )
-   end        
-   return obj 
-end         
-function _TypeInfoAlias:__init( rawTxt, srcTypeId ) 
+   end
+   return obj
+end
+function _TypeInfoAlias:__init( rawTxt, srcTypeId )
 
    _TypeInfo.__init( self)
    self.rawTxt = rawTxt
@@ -1319,10 +1318,10 @@ function _TypeInfoDDD.new( itemTypeId )
    _TypeInfoDDD.setmeta( obj )
    if obj.__init then
       obj:__init( itemTypeId )
-   end        
-   return obj 
-end         
-function _TypeInfoDDD:__init( itemTypeId ) 
+   end
+   return obj
+end
+function _TypeInfoDDD:__init( itemTypeId )
 
    _TypeInfo.__init( self)
    self.itemTypeId = itemTypeId
@@ -1378,10 +1377,10 @@ function _TypeInfoAlternate.new( txt, accessMode, baseId, ifList, belongClassFla
    _TypeInfoAlternate.setmeta( obj )
    if obj.__init then
       obj:__init( txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
-   end        
-   return obj 
-end         
-function _TypeInfoAlternate:__init( txt, accessMode, baseId, ifList, belongClassFlag, altIndex ) 
+   end
+   return obj
+end
+function _TypeInfoAlternate:__init( txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
 
    _TypeInfo.__init( self)
    self.txt = txt
@@ -1447,10 +1446,10 @@ function _TypeInfoGeneric.new( genSrcTypeId, genTypeList )
    _TypeInfoGeneric.setmeta( obj )
    if obj.__init then
       obj:__init( genSrcTypeId, genTypeList )
-   end        
-   return obj 
-end         
-function _TypeInfoGeneric:__init( genSrcTypeId, genTypeList ) 
+   end
+   return obj
+end
+function _TypeInfoGeneric:__init( genSrcTypeId, genTypeList )
 
    _TypeInfo.__init( self)
    self.genSrcTypeId = genSrcTypeId
@@ -1503,10 +1502,10 @@ function _TypeInfoBox.new( accessMode, boxingType )
    _TypeInfoBox.setmeta( obj )
    if obj.__init then
       obj:__init( accessMode, boxingType )
-   end        
-   return obj 
-end         
-function _TypeInfoBox:__init( accessMode, boxingType ) 
+   end
+   return obj
+end
+function _TypeInfoBox:__init( accessMode, boxingType )
 
    _TypeInfo.__init( self)
    self.accessMode = accessMode
@@ -1565,10 +1564,10 @@ function _TypeInfoModifier.new( srcTypeId, mutMode )
    _TypeInfoModifier.setmeta( obj )
    if obj.__init then
       obj:__init( srcTypeId, mutMode )
-   end        
-   return obj 
-end         
-function _TypeInfoModifier:__init( srcTypeId, mutMode ) 
+   end
+   return obj
+end
+function _TypeInfoModifier:__init( srcTypeId, mutMode )
 
    _TypeInfo.__init( self)
    self.srcTypeId = srcTypeId
@@ -1662,10 +1661,10 @@ function _TypeInfoModule.new( txt )
    _TypeInfoModule.setmeta( obj )
    if obj.__init then
       obj:__init( txt )
-   end        
-   return obj 
-end         
-function _TypeInfoModule:__init( txt ) 
+   end
+   return obj
+end
+function _TypeInfoModule:__init( txt )
 
    _TypeInfo.__init( self)
    self.txt = txt
@@ -1842,10 +1841,10 @@ function _TypeInfoNormal.new( abstractFlag, baseId, txt, staticFlag, accessMode,
    _TypeInfoNormal.setmeta( obj )
    if obj.__init then
       obj:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
-   end        
-   return obj 
-end         
-function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children ) 
+   end
+   return obj
+end
+function _TypeInfoNormal:__init( abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, ifList, itemTypeId, argTypeId, retTypeId, children )
 
    _TypeInfo.__init( self)
    self.abstractFlag = abstractFlag
@@ -1954,10 +1953,10 @@ function _TypeInfoEnum.new( txt, accessMode, valTypeId, enumValList )
    _TypeInfoEnum.setmeta( obj )
    if obj.__init then
       obj:__init( txt, accessMode, valTypeId, enumValList )
-   end        
-   return obj 
-end         
-function _TypeInfoEnum:__init( txt, accessMode, valTypeId, enumValList ) 
+   end
+   return obj
+end
+function _TypeInfoEnum:__init( txt, accessMode, valTypeId, enumValList )
 
    _TypeInfo.__init( self)
    self.txt = txt
@@ -2008,10 +2007,10 @@ function _TypeInfoAlgeVal.new( name, typeList )
    _TypeInfoAlgeVal.setmeta( obj )
    if obj.__init then
       obj:__init( name, typeList )
-   end        
-   return obj 
-end         
-function _TypeInfoAlgeVal:__init( name, typeList ) 
+   end
+   return obj
+end
+function _TypeInfoAlgeVal:__init( name, typeList )
 
    self.name = name
    self.typeList = typeList
@@ -2076,10 +2075,10 @@ function _TypeInfoAlge.new( txt, accessMode, algeValList )
    _TypeInfoAlge.setmeta( obj )
    if obj.__init then
       obj:__init( txt, accessMode, algeValList )
-   end        
-   return obj 
-end         
-function _TypeInfoAlge:__init( txt, accessMode, algeValList ) 
+   end
+   return obj
+end
+function _TypeInfoAlge:__init( txt, accessMode, algeValList )
 
    _TypeInfo.__init( self)
    self.txt = txt
@@ -2737,13 +2736,13 @@ function SymbolMode:_getTxt( val )
       return string.format( "SymbolMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function SymbolMode._from( val )
    if SymbolMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 SymbolMode.__allList = {}
 function SymbolMode.get__allList()
@@ -2880,13 +2879,13 @@ function TentativeMode:_getTxt( val )
       return string.format( "TentativeMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function TentativeMode._from( val )
    if TentativeMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 TentativeMode.__allList = {}
 function TentativeMode.get__allList()
@@ -2992,8 +2991,8 @@ end
 function ExtMacroInfo.setmeta( obj )
   setmetatable( obj, { __index = ExtMacroInfo  } )
 end
-function ExtMacroInfo:get_name()       
-   return self.name         
+function ExtMacroInfo:get_name()
+   return self.name
 end
 
 local DependModuleInfo = {}
@@ -3009,10 +3008,10 @@ function DependModuleInfo.new( id, metaTypeId2TypeInfoMap )
    DependModuleInfo.setmeta( obj )
    if obj.__init then
       obj:__init( id, metaTypeId2TypeInfoMap )
-   end        
-   return obj 
-end         
-function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap ) 
+   end
+   return obj
+end
+function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
 
    self.id = id
    self.metaTypeId2TypeInfoMap = metaTypeId2TypeInfoMap
@@ -3021,7 +3020,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2214, function (  )
+   Log.log( Log.Level.Info, __func__, 2218, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3037,7 +3036,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2225, function (  )
+               Log.log( Log.Level.Info, __func__, 2229, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3068,7 +3067,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2245, function (  )
+   Log.log( Log.Level.Info, __func__, 2249, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3424,7 +3423,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2616, function (  )
+   Log.log( Log.Level.Info, __func__, 2620, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -4227,23 +4226,23 @@ function ASTInfo.new( node, moduleTypeInfo, moduleSymbolKind )
    ASTInfo.setmeta( obj )
    if obj.__init then
       obj:__init( node, moduleTypeInfo, moduleSymbolKind )
-   end        
-   return obj 
-end         
-function ASTInfo:__init( node, moduleTypeInfo, moduleSymbolKind ) 
+   end
+   return obj
+end
+function ASTInfo:__init( node, moduleTypeInfo, moduleSymbolKind )
 
    self.node = node
    self.moduleTypeInfo = moduleTypeInfo
    self.moduleSymbolKind = moduleSymbolKind
 end
-function ASTInfo:get_node()       
-   return self.node         
+function ASTInfo:get_node()
+   return self.node
 end
-function ASTInfo:get_moduleTypeInfo()       
-   return self.moduleTypeInfo         
+function ASTInfo:get_moduleTypeInfo()
+   return self.moduleTypeInfo
 end
-function ASTInfo:get_moduleSymbolKind()       
-   return self.moduleSymbolKind         
+function ASTInfo:get_moduleSymbolKind()
+   return self.moduleSymbolKind
 end
 
 function TransUnit:createAST( parser, macroFlag, moduleName )
@@ -6003,10 +6002,10 @@ function LetVarInfo.new( mutable, varName, varType )
    LetVarInfo.setmeta( obj )
    if obj.__init then
       obj:__init( mutable, varName, varType )
-   end        
-   return obj 
-end         
-function LetVarInfo:__init( mutable, varName, varType ) 
+   end
+   return obj
+end
+function LetVarInfo:__init( mutable, varName, varType )
 
    self.mutable = mutable
    self.varName = varName
@@ -7171,13 +7170,13 @@ function FormType:_getTxt( val )
       return string.format( "FormType.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function FormType._from( val )
    if FormType._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 FormType.__allList = {}
 function FormType.get__allList()

@@ -123,7 +123,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -131,7 +131,6 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-      
 function _lune._toStem( val )
    return val
 end
@@ -331,10 +330,10 @@ function LoadInfo.new( mod, meta )
    LoadInfo.setmeta( obj )
    if obj.__init then
       obj:__init( mod, meta )
-   end        
-   return obj 
-end         
-function LoadInfo:__init( mod, meta ) 
+   end
+   return obj
+end
+function LoadInfo:__init( mod, meta )
 
    self.mod = mod
    self.meta = meta
@@ -470,10 +469,10 @@ function DependMetaInfo.new( use, buildId )
    DependMetaInfo.setmeta( obj )
    if obj.__init then
       obj:__init( use, buildId )
-   end        
-   return obj 
-end         
-function DependMetaInfo:__init( use, buildId ) 
+   end
+   return obj
+end
+function DependMetaInfo:__init( use, buildId )
 
    self.use = use
    self.buildId = buildId
@@ -517,10 +516,10 @@ function MetaForBuildId.new( __buildId, __dependModuleMap, __subModuleMap )
    MetaForBuildId.setmeta( obj )
    if obj.__init then
       obj:__init( __buildId, __dependModuleMap, __subModuleMap )
-   end        
-   return obj 
-end         
-function MetaForBuildId:__init( __buildId, __dependModuleMap, __subModuleMap ) 
+   end
+   return obj
+end
+function MetaForBuildId:__init( __buildId, __dependModuleMap, __subModuleMap )
 
    self.__buildId = __buildId
    self.__dependModuleMap = __dependModuleMap
@@ -638,7 +637,7 @@ function ModuleUptodate:_getTxt( val )
       return string.format( "ModuleUptodate.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 
 function ModuleUptodate._from( val )
    return _lune._AlgeFrom( ModuleUptodate, val )

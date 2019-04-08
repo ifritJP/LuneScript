@@ -166,7 +166,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -246,10 +246,10 @@ function PubVerInfo.new( staticFlag, accessMode, mutable, typeInfo )
    PubVerInfo.setmeta( obj )
    if obj.__init then
       obj:__init( staticFlag, accessMode, mutable, typeInfo )
-   end        
-   return obj 
-end         
-function PubVerInfo:__init( staticFlag, accessMode, mutable, typeInfo ) 
+   end
+   return obj
+end
+function PubVerInfo:__init( staticFlag, accessMode, mutable, typeInfo )
 
    self.staticFlag = staticFlag
    self.accessMode = accessMode
@@ -267,10 +267,10 @@ function PubFuncInfo.new( accessMode, typeInfo )
    PubFuncInfo.setmeta( obj )
    if obj.__init then
       obj:__init( accessMode, typeInfo )
-   end        
-   return obj 
-end         
-function PubFuncInfo:__init( accessMode, typeInfo ) 
+   end
+   return obj
+end
+function PubFuncInfo:__init( accessMode, typeInfo )
 
    self.accessMode = accessMode
    self.typeInfo = typeInfo
@@ -285,13 +285,13 @@ function ConvMode:_getTxt( val )
       return string.format( "ConvMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function ConvMode._from( val )
    if ConvMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 ConvMode.__allList = {}
 function ConvMode.get__allList()
@@ -318,19 +318,19 @@ function ModuleInfo.new( assignName, modulePath )
    ModuleInfo.setmeta( obj )
    if obj.__init then
       obj:__init( assignName, modulePath )
-   end        
-   return obj 
-end         
-function ModuleInfo:__init( assignName, modulePath ) 
+   end
+   return obj
+end
+function ModuleInfo:__init( assignName, modulePath )
 
    self.assignName = assignName
    self.modulePath = modulePath
 end
-function ModuleInfo:get_assignName()       
-   return self.assignName         
+function ModuleInfo:get_assignName()
+   return self.assignName
 end
-function ModuleInfo:get_modulePath()       
-   return self.modulePath         
+function ModuleInfo:get_modulePath()
+   return self.modulePath
 end
 
 local Opt = {}
@@ -343,10 +343,10 @@ function Opt.new( node )
    Opt.setmeta( obj )
    if obj.__init then
       obj:__init( node )
-   end        
-   return obj 
-end         
-function Opt:__init( node ) 
+   end
+   return obj
+end
+function Opt:__init( node )
 
    self.node = node
 end
@@ -1297,13 +1297,13 @@ function convFilter:processDeclEnum( node, opt )
       return string.format( "%s.%%s", name )
    end
    return string.format( "illegal val -- %%s", val )
-end 
+end
 function %s._from( val )
    if %s._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     ]==], enumFullName, enumFullName, enumFullName, enumFullName) )
    self:writeln( string.format( [==[
 %s.__allList = {}
@@ -1446,7 +1446,7 @@ function convFilter:processDeclAlge( node, opt )
       return string.format( "%s.%%s", name )
    end
    return string.format( "illegal val -- %%s", val )
-end 
+end
 ]==], algeFullName, algeFullName) )
    self:writeln( string.format( [==[
 function %s._from( val )
@@ -1722,10 +1722,10 @@ function %s.new( %s )
    %s.setmeta( obj )
    if obj.__init then
       obj:__init( %s )
-   end        
-   return obj 
-end         
-function %s:__init( %s ) 
+   end
+   return obj
+end
+function %s:__init( %s )
 ]==], className, argTxt, className, argTxt, className, argTxt) )
       self:pushIndent(  )
       if baseInfo ~= Ast.headTypeInfo then
@@ -1763,8 +1763,8 @@ function %s:__init( %s )
       local prefix = memberNode:get_staticFlag() and className or "self"
       if memberNode:get_getterMode(  ) ~= Ast.AccessMode.None and autoFlag then
          self:writeln( string.format( [==[
-function %s:%s()       
-   return %s.%s         
+function %s:%s()
+   return %s.%s
 end]==], className, getterName, prefix, memberName) )
          methodNameSet[getterName]= true
       end
@@ -1773,8 +1773,8 @@ end]==], className, getterName, prefix, memberName) )
       autoFlag = not _lune._Set_has(methodNameSet, setterName )
       if memberNode:get_setterMode(  ) ~= Ast.AccessMode.None and autoFlag then
          self:writeln( string.format( [==[
-function %s:%s( %s )   
-   %s.%s = %s              
+function %s:%s( %s )
+   %s.%s = %s
 end]==], className, setterName, memberName, prefix, memberName, memberName) )
          methodNameSet[setterName]= true
       end
@@ -1791,7 +1791,7 @@ end]==], className, setterName, memberName, prefix, memberName, memberName) )
                self:writeln( string.format( [==[
 function %s:%s( ... )
    return self.%s:%s( ... )
-end       
+end
 ]==], className, childName, memberName, childName) )
             end
             
@@ -3484,10 +3484,10 @@ function MacroEvalImp.new( mode )
    MacroEvalImp.setmeta( obj )
    if obj.__init then
       obj:__init( mode )
-   end        
-   return obj 
-end         
-function MacroEvalImp:__init( mode ) 
+   end
+   return obj
+end
+function MacroEvalImp:__init( mode )
 
    Nodes.MacroEval.__init( self)
    self.mode = mode

@@ -116,7 +116,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -188,7 +188,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1218
+   return 1219
 end
 
 
@@ -201,13 +201,13 @@ function ModeKind:_getTxt( val )
       return string.format( "ModeKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function ModeKind._from( val )
    if ModeKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 ModeKind.__allList = {}
 function ModeKind.get__allList()
@@ -257,13 +257,13 @@ function CheckingUptodateMode:_getTxt( val )
       return string.format( "CheckingUptodateMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function CheckingUptodateMode._from( val )
    if CheckingUptodateMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 CheckingUptodateMode.__allList = {}
 function CheckingUptodateMode.get__allList()
@@ -290,10 +290,10 @@ function TransCtrlInfo.new( checkingDefineAbbr, stopByWarning, uptodateMode )
    TransCtrlInfo.setmeta( obj )
    if obj.__init then
       obj:__init( checkingDefineAbbr, stopByWarning, uptodateMode )
-   end        
-   return obj 
-end         
-function TransCtrlInfo:__init( checkingDefineAbbr, stopByWarning, uptodateMode ) 
+   end
+   return obj
+end
+function TransCtrlInfo:__init( checkingDefineAbbr, stopByWarning, uptodateMode )
 
    self.checkingDefineAbbr = checkingDefineAbbr
    self.stopByWarning = stopByWarning
@@ -387,8 +387,8 @@ usage:
   -r: use 'require( "lune.base._lune" )'
   -ol: output lua version. ver = 51 or 52 or 53.
   -ob: output bytecompiled-code.
-      -ob0 is without debug information. 
-      -ob1 is with debug information. 
+      -ob0 is without debug information.
+      -ob1 is with debug information.
   --depends: output dependfile
 
   common_op:

@@ -9,7 +9,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -26,13 +26,13 @@ function CodeKind:_getTxt( val )
       return string.format( "CodeKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function CodeKind._from( val )
    if CodeKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 CodeKind.__allList = {}
 function CodeKind.get__allList()
@@ -143,7 +143,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -176,7 +176,7 @@ function _lune.loadstring52( txt, env )
    return load( txt, "", "bt", env )
 end
 ]==]
-codeMap[CodeKind.Mapping] = [==[      
+codeMap[CodeKind.Mapping] = [==[
 function _lune._toStem( val )
    return val
 end
@@ -402,13 +402,13 @@ function CastKind:_getTxt( val )
       return string.format( "CastKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function CastKind._from( val )
    if CastKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 CastKind.__allList = {}
 function CastKind.get__allList()

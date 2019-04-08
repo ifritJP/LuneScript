@@ -46,7 +46,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -122,10 +122,10 @@ function Filter.new(  )
    Filter.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function Filter:__init(  ) 
+   end
+   return obj
+end
+function Filter:__init(  )
 
 end
 
@@ -138,13 +138,13 @@ function BreakKind:_getTxt( val )
       return string.format( "BreakKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function BreakKind._from( val )
    if BreakKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 BreakKind.__allList = {}
 function BreakKind.get__allList()
@@ -173,13 +173,13 @@ function CheckBreakMode:_getTxt( val )
       return string.format( "CheckBreakMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function CheckBreakMode._from( val )
    if CheckBreakMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 CheckBreakMode.__allList = {}
 function CheckBreakMode.get__allList()
@@ -208,7 +208,7 @@ function Literal:_getTxt( val )
       return string.format( "Literal.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 
 function Literal._from( val )
    return _lune._AlgeFrom( Literal, val )
@@ -334,23 +334,23 @@ function Node.new( kind, pos, expTypeList )
    Node.setmeta( obj )
    if obj.__init then
       obj:__init( kind, pos, expTypeList )
-   end        
-   return obj 
-end         
-function Node:__init( kind, pos, expTypeList ) 
+   end
+   return obj
+end
+function Node:__init( kind, pos, expTypeList )
 
    self.kind = kind
    self.pos = pos
    self.expTypeList = expTypeList
 end
-function Node:get_kind()       
-   return self.kind         
+function Node:get_kind()
+   return self.kind
 end
-function Node:get_pos()       
-   return self.pos         
+function Node:get_pos()
+   return self.pos
 end
-function Node:get_expTypeList()       
-   return self.expTypeList         
+function Node:get_expTypeList()
+   return self.expTypeList
 end
 
 local NamespaceInfo = {}
@@ -363,10 +363,10 @@ function NamespaceInfo.new( name, scope, typeInfo )
    NamespaceInfo.setmeta( obj )
    if obj.__init then
       obj:__init( name, scope, typeInfo )
-   end        
-   return obj 
-end         
-function NamespaceInfo:__init( name, scope, typeInfo ) 
+   end
+   return obj
+end
+function NamespaceInfo:__init( name, scope, typeInfo )
 
    self.name = name
    self.scope = scope
@@ -387,10 +387,10 @@ function DeclMacroInfo.new( pubFlag, name, argList, stmtBlock, tokenList )
    DeclMacroInfo.setmeta( obj )
    if obj.__init then
       obj:__init( pubFlag, name, argList, stmtBlock, tokenList )
-   end        
-   return obj 
-end         
-function DeclMacroInfo:__init( pubFlag, name, argList, stmtBlock, tokenList ) 
+   end
+   return obj
+end
+function DeclMacroInfo:__init( pubFlag, name, argList, stmtBlock, tokenList )
 
    self.pubFlag = pubFlag
    self.name = name
@@ -398,20 +398,20 @@ function DeclMacroInfo:__init( pubFlag, name, argList, stmtBlock, tokenList )
    self.stmtBlock = stmtBlock
    self.tokenList = tokenList
 end
-function DeclMacroInfo:get_pubFlag()       
-   return self.pubFlag         
+function DeclMacroInfo:get_pubFlag()
+   return self.pubFlag
 end
-function DeclMacroInfo:get_name()       
-   return self.name         
+function DeclMacroInfo:get_name()
+   return self.name
 end
-function DeclMacroInfo:get_argList()       
-   return self.argList         
+function DeclMacroInfo:get_argList()
+   return self.argList
 end
-function DeclMacroInfo:get_stmtBlock()       
-   return self.stmtBlock         
+function DeclMacroInfo:get_stmtBlock()
+   return self.stmtBlock
 end
-function DeclMacroInfo:get_tokenList()       
-   return self.tokenList         
+function DeclMacroInfo:get_tokenList()
+   return self.tokenList
 end
 
 local nodeKind2NameMap = {}
@@ -474,10 +474,10 @@ function NodeKind.new(  )
    NodeKind.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function NodeKind:__init(  ) 
+   end
+   return obj
+end
+function NodeKind:__init(  )
 
 end
 
@@ -601,8 +601,8 @@ end
 function SubfileNode.setmeta( obj )
   setmetatable( obj, { __index = SubfileNode  } )
 end
-function SubfileNode:get_usePath()       
-   return self.usePath         
+function SubfileNode:get_usePath()
+   return self.usePath
 end
 
 
@@ -667,14 +667,14 @@ end
 function ImportNode.setmeta( obj )
   setmetatable( obj, { __index = ImportNode  } )
 end
-function ImportNode:get_modulePath()       
-   return self.modulePath         
+function ImportNode:get_modulePath()
+   return self.modulePath
 end
-function ImportNode:get_assignName()       
-   return self.assignName         
+function ImportNode:get_assignName()
+   return self.assignName
 end
-function ImportNode:get_moduleTypeInfo()       
-   return self.moduleTypeInfo         
+function ImportNode:get_moduleTypeInfo()
+   return self.moduleTypeInfo
 end
 
 
@@ -689,10 +689,10 @@ function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, use
    LuneHelperInfo.setmeta( obj )
    if obj.__init then
       obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet )
-   end        
-   return obj 
-end         
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet ) 
+   end
+   return obj
+end
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet )
 
    self.useNilAccess = useNilAccess
    self.useUnwrapExp = useUnwrapExp
@@ -734,20 +734,20 @@ end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
 end
-function ModuleInfo:get_fullName()       
-   return self.fullName         
+function ModuleInfo:get_fullName()
+   return self.fullName
 end
-function ModuleInfo:get_localTypeInfo2importIdMap()       
-   return self.localTypeInfo2importIdMap         
+function ModuleInfo:get_localTypeInfo2importIdMap()
+   return self.localTypeInfo2importIdMap
 end
-function ModuleInfo:get_importId2localTypeInfoMap()       
-   return self.importId2localTypeInfoMap         
+function ModuleInfo:get_importId2localTypeInfoMap()
+   return self.importId2localTypeInfoMap
 end
-function ModuleInfo:get_assignName()       
-   return self.assignName         
+function ModuleInfo:get_assignName()
+   return self.assignName
 end
-function ModuleInfo:get_moduleId()       
-   return self.moduleId         
+function ModuleInfo:get_moduleId()
+   return self.moduleId
 end
 
 local MacroValInfo = {}
@@ -760,10 +760,10 @@ function MacroValInfo.new( val, typeInfo )
    MacroValInfo.setmeta( obj )
    if obj.__init then
       obj:__init( val, typeInfo )
-   end        
-   return obj 
-end         
-function MacroValInfo:__init( val, typeInfo ) 
+   end
+   return obj
+end
+function MacroValInfo:__init( val, typeInfo )
 
    self.val = val
    self.typeInfo = typeInfo
@@ -779,19 +779,19 @@ function MacroArgInfo.new( name, typeInfo )
    MacroArgInfo.setmeta( obj )
    if obj.__init then
       obj:__init( name, typeInfo )
-   end        
-   return obj 
-end         
-function MacroArgInfo:__init( name, typeInfo ) 
+   end
+   return obj
+end
+function MacroArgInfo:__init( name, typeInfo )
 
    self.name = name
    self.typeInfo = typeInfo
 end
-function MacroArgInfo:get_name()       
-   return self.name         
+function MacroArgInfo:get_name()
+   return self.name
 end
-function MacroArgInfo:get_typeInfo()       
-   return self.typeInfo         
+function MacroArgInfo:get_typeInfo()
+   return self.typeInfo
 end
 
 local MacroInfo = {}
@@ -804,10 +804,10 @@ function MacroInfo.new( func, symbol2MacroValInfoMap )
    MacroInfo.setmeta( obj )
    if obj.__init then
       obj:__init( func, symbol2MacroValInfoMap )
-   end        
-   return obj 
-end         
-function MacroInfo:__init( func, symbol2MacroValInfoMap ) 
+   end
+   return obj
+end
+function MacroInfo:__init( func, symbol2MacroValInfoMap )
 
    self.func = func
    self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
@@ -882,38 +882,38 @@ end
 function RootNode.setmeta( obj )
   setmetatable( obj, { __index = RootNode  } )
 end
-function RootNode:get_children()       
-   return self.children         
+function RootNode:get_children()
+   return self.children
 end
-function RootNode:get_useModuleMacroSet()       
-   return self.useModuleMacroSet         
+function RootNode:get_useModuleMacroSet()
+   return self.useModuleMacroSet
 end
-function RootNode:get_moduleId()       
-   return self.moduleId         
+function RootNode:get_moduleId()
+   return self.moduleId
 end
-function RootNode:get_processInfo()       
-   return self.processInfo         
+function RootNode:get_processInfo()
+   return self.processInfo
 end
-function RootNode:get_moduleTypeInfo()       
-   return self.moduleTypeInfo         
+function RootNode:get_moduleTypeInfo()
+   return self.moduleTypeInfo
 end
-function RootNode:get_provideNode()       
-   return self.provideNode         
+function RootNode:get_provideNode()
+   return self.provideNode
 end
-function RootNode:get_luneHelperInfo()       
-   return self.luneHelperInfo         
+function RootNode:get_luneHelperInfo()
+   return self.luneHelperInfo
 end
-function RootNode:get_nodeManager()       
-   return self.nodeManager         
+function RootNode:get_nodeManager()
+   return self.nodeManager
 end
-function RootNode:get_importModule2moduleInfo()       
-   return self.importModule2moduleInfo         
+function RootNode:get_importModule2moduleInfo()
+   return self.importModule2moduleInfo
 end
-function RootNode:get_typeId2MacroInfo()       
-   return self.typeId2MacroInfo         
+function RootNode:get_typeId2MacroInfo()
+   return self.typeId2MacroInfo
 end
-function RootNode:get_typeId2ClassMap()       
-   return self.typeId2ClassMap         
+function RootNode:get_typeId2ClassMap()
+   return self.typeId2ClassMap
 end
 
 
@@ -984,17 +984,17 @@ end
 function RefTypeNode.setmeta( obj )
   setmetatable( obj, { __index = RefTypeNode  } )
 end
-function RefTypeNode:get_name()       
-   return self.name         
+function RefTypeNode:get_name()
+   return self.name
 end
-function RefTypeNode:get_refFlag()       
-   return self.refFlag         
+function RefTypeNode:get_refFlag()
+   return self.refFlag
 end
-function RefTypeNode:get_mutFlag()       
-   return self.mutFlag         
+function RefTypeNode:get_mutFlag()
+   return self.mutFlag
 end
-function RefTypeNode:get_array()       
-   return self.array         
+function RefTypeNode:get_array()
+   return self.array
 end
 
 
@@ -1007,13 +1007,13 @@ function BlockKind:_getTxt( val )
       return string.format( "BlockKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function BlockKind._from( val )
    if BlockKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 BlockKind.__allList = {}
 function BlockKind.get__allList()
@@ -1135,11 +1135,11 @@ end
 function BlockNode.setmeta( obj )
   setmetatable( obj, { __index = BlockNode  } )
 end
-function BlockNode:get_blockKind()       
-   return self.blockKind         
+function BlockNode:get_blockKind()
+   return self.blockKind
 end
-function BlockNode:get_stmtList()       
-   return self.stmtList         
+function BlockNode:get_stmtList()
+   return self.stmtList
 end
 
 
@@ -1204,13 +1204,13 @@ function IfKind:_getTxt( val )
       return string.format( "IfKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function IfKind._from( val )
    if IfKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 IfKind.__allList = {}
 function IfKind.get__allList()
@@ -1237,23 +1237,23 @@ function IfStmtInfo.new( kind, exp, block )
    IfStmtInfo.setmeta( obj )
    if obj.__init then
       obj:__init( kind, exp, block )
-   end        
-   return obj 
-end         
-function IfStmtInfo:__init( kind, exp, block ) 
+   end
+   return obj
+end
+function IfStmtInfo:__init( kind, exp, block )
 
    self.kind = kind
    self.exp = exp
    self.block = block
 end
-function IfStmtInfo:get_kind()       
-   return self.kind         
+function IfStmtInfo:get_kind()
+   return self.kind
 end
-function IfStmtInfo:get_exp()       
-   return self.exp         
+function IfStmtInfo:get_exp()
+   return self.exp
 end
-function IfStmtInfo:get_block()       
-   return self.block         
+function IfStmtInfo:get_block()
+   return self.block
 end
 
 function NodeKind.get_If(  )
@@ -1315,8 +1315,8 @@ end
 function IfNode.setmeta( obj )
   setmetatable( obj, { __index = IfNode  } )
 end
-function IfNode:get_stmtList()       
-   return self.stmtList         
+function IfNode:get_stmtList()
+   return self.stmtList
 end
 
 
@@ -1421,11 +1421,11 @@ end
 function ExpListNode.setmeta( obj )
   setmetatable( obj, { __index = ExpListNode  } )
 end
-function ExpListNode:get_expList()       
-   return self.expList         
+function ExpListNode:get_expList()
+   return self.expList
 end
-function ExpListNode:get_followOn()       
-   return self.followOn         
+function ExpListNode:get_followOn()
+   return self.followOn
 end
 
 
@@ -1463,19 +1463,19 @@ function CaseInfo.new( expList, block )
    CaseInfo.setmeta( obj )
    if obj.__init then
       obj:__init( expList, block )
-   end        
-   return obj 
-end         
-function CaseInfo:__init( expList, block ) 
+   end
+   return obj
+end
+function CaseInfo:__init( expList, block )
 
    self.expList = expList
    self.block = block
 end
-function CaseInfo:get_expList()       
-   return self.expList         
+function CaseInfo:get_expList()
+   return self.expList
 end
-function CaseInfo:get_block()       
-   return self.block         
+function CaseInfo:get_block()
+   return self.block
 end
 
 function NodeKind.get_Switch(  )
@@ -1539,14 +1539,14 @@ end
 function SwitchNode.setmeta( obj )
   setmetatable( obj, { __index = SwitchNode  } )
 end
-function SwitchNode:get_exp()       
-   return self.exp         
+function SwitchNode:get_exp()
+   return self.exp
 end
-function SwitchNode:get_caseList()       
-   return self.caseList         
+function SwitchNode:get_caseList()
+   return self.caseList
 end
-function SwitchNode:get_default()       
-   return self.default         
+function SwitchNode:get_default()
+   return self.default
 end
 
 
@@ -1689,11 +1689,11 @@ end
 function WhileNode.setmeta( obj )
   setmetatable( obj, { __index = WhileNode  } )
 end
-function WhileNode:get_exp()       
-   return self.exp         
+function WhileNode:get_exp()
+   return self.exp
 end
-function WhileNode:get_block()       
-   return self.block         
+function WhileNode:get_block()
+   return self.block
 end
 
 
@@ -1757,11 +1757,11 @@ end
 function RepeatNode.setmeta( obj )
   setmetatable( obj, { __index = RepeatNode  } )
 end
-function RepeatNode:get_block()       
-   return self.block         
+function RepeatNode:get_block()
+   return self.block
 end
-function RepeatNode:get_exp()       
-   return self.exp         
+function RepeatNode:get_exp()
+   return self.exp
 end
 
 
@@ -1839,20 +1839,20 @@ end
 function ForNode.setmeta( obj )
   setmetatable( obj, { __index = ForNode  } )
 end
-function ForNode:get_block()       
-   return self.block         
+function ForNode:get_block()
+   return self.block
 end
-function ForNode:get_val()       
-   return self.val         
+function ForNode:get_val()
+   return self.val
 end
-function ForNode:get_init()       
-   return self.init         
+function ForNode:get_init()
+   return self.init
 end
-function ForNode:get_to()       
-   return self.to         
+function ForNode:get_to()
+   return self.to
 end
-function ForNode:get_delta()       
-   return self.delta         
+function ForNode:get_delta()
+   return self.delta
 end
 
 
@@ -1928,14 +1928,14 @@ end
 function ApplyNode.setmeta( obj )
   setmetatable( obj, { __index = ApplyNode  } )
 end
-function ApplyNode:get_varList()       
-   return self.varList         
+function ApplyNode:get_varList()
+   return self.varList
 end
-function ApplyNode:get_exp()       
-   return self.exp         
+function ApplyNode:get_exp()
+   return self.exp
 end
-function ApplyNode:get_block()       
-   return self.block         
+function ApplyNode:get_block()
+   return self.block
 end
 
 
@@ -2012,17 +2012,17 @@ end
 function ForeachNode.setmeta( obj )
   setmetatable( obj, { __index = ForeachNode  } )
 end
-function ForeachNode:get_val()       
-   return self.val         
+function ForeachNode:get_val()
+   return self.val
 end
-function ForeachNode:get_key()       
-   return self.key         
+function ForeachNode:get_key()
+   return self.key
 end
-function ForeachNode:get_exp()       
-   return self.exp         
+function ForeachNode:get_exp()
+   return self.exp
 end
-function ForeachNode:get_block()       
-   return self.block         
+function ForeachNode:get_block()
+   return self.block
 end
 
 
@@ -2100,20 +2100,20 @@ end
 function ForsortNode.setmeta( obj )
   setmetatable( obj, { __index = ForsortNode  } )
 end
-function ForsortNode:get_val()       
-   return self.val         
+function ForsortNode:get_val()
+   return self.val
 end
-function ForsortNode:get_key()       
-   return self.key         
+function ForsortNode:get_key()
+   return self.key
 end
-function ForsortNode:get_exp()       
-   return self.exp         
+function ForsortNode:get_exp()
+   return self.exp
 end
-function ForsortNode:get_block()       
-   return self.block         
+function ForsortNode:get_block()
+   return self.block
 end
-function ForsortNode:get_sort()       
-   return self.sort         
+function ForsortNode:get_sort()
+   return self.sort
 end
 
 
@@ -2187,8 +2187,8 @@ end
 function ReturnNode.setmeta( obj )
   setmetatable( obj, { __index = ReturnNode  } )
 end
-function ReturnNode:get_expList()       
-   return self.expList         
+function ReturnNode:get_expList()
+   return self.expList
 end
 
 
@@ -2321,8 +2321,8 @@ end
 function ProvideNode.setmeta( obj )
   setmetatable( obj, { __index = ProvideNode  } )
 end
-function ProvideNode:get_symbol()       
-   return self.symbol         
+function ProvideNode:get_symbol()
+   return self.symbol
 end
 
 
@@ -2386,11 +2386,11 @@ end
 function ExpNewNode.setmeta( obj )
   setmetatable( obj, { __index = ExpNewNode  } )
 end
-function ExpNewNode:get_symbol()       
-   return self.symbol         
+function ExpNewNode:get_symbol()
+   return self.symbol
 end
-function ExpNewNode:get_argList()       
-   return self.argList         
+function ExpNewNode:get_argList()
+   return self.argList
 end
 
 
@@ -2454,11 +2454,11 @@ end
 function ExpUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = ExpUnwrapNode  } )
 end
-function ExpUnwrapNode:get_exp()       
-   return self.exp         
+function ExpUnwrapNode:get_exp()
+   return self.exp
 end
-function ExpUnwrapNode:get_default()       
-   return self.default         
+function ExpUnwrapNode:get_default()
+   return self.default
 end
 
 
@@ -2514,11 +2514,11 @@ end
 function ExpRefNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefNode  } )
 end
-function ExpRefNode:get_token()       
-   return self.token         
+function ExpRefNode:get_token()
+   return self.token
 end
-function ExpRefNode:get_symbolInfo()       
-   return self.symbolInfo         
+function ExpRefNode:get_symbolInfo()
+   return self.symbolInfo
 end
 
 
@@ -2589,14 +2589,14 @@ end
 function ExpOp2Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp2Node  } )
 end
-function ExpOp2Node:get_op()       
-   return self.op         
+function ExpOp2Node:get_op()
+   return self.op
 end
-function ExpOp2Node:get_exp1()       
-   return self.exp1         
+function ExpOp2Node:get_exp1()
+   return self.exp1
 end
-function ExpOp2Node:get_exp2()       
-   return self.exp2         
+function ExpOp2Node:get_exp2()
+   return self.exp2
 end
 
 
@@ -2666,14 +2666,14 @@ end
 function UnwrapSetNode.setmeta( obj )
   setmetatable( obj, { __index = UnwrapSetNode  } )
 end
-function UnwrapSetNode:get_dstExpList()       
-   return self.dstExpList         
+function UnwrapSetNode:get_dstExpList()
+   return self.dstExpList
 end
-function UnwrapSetNode:get_srcExpList()       
-   return self.srcExpList         
+function UnwrapSetNode:get_srcExpList()
+   return self.srcExpList
 end
-function UnwrapSetNode:get_unwrapBlock()       
-   return self.unwrapBlock         
+function UnwrapSetNode:get_unwrapBlock()
+   return self.unwrapBlock
 end
 
 
@@ -2739,17 +2739,17 @@ end
 function IfUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = IfUnwrapNode  } )
 end
-function IfUnwrapNode:get_varNameList()       
-   return self.varNameList         
+function IfUnwrapNode:get_varNameList()
+   return self.varNameList
 end
-function IfUnwrapNode:get_expNodeList()       
-   return self.expNodeList         
+function IfUnwrapNode:get_expNodeList()
+   return self.expNodeList
 end
-function IfUnwrapNode:get_block()       
-   return self.block         
+function IfUnwrapNode:get_block()
+   return self.block
 end
-function IfUnwrapNode:get_nilBlock()       
-   return self.nilBlock         
+function IfUnwrapNode:get_nilBlock()
+   return self.nilBlock
 end
 
 
@@ -2890,17 +2890,17 @@ end
 function WhenNode.setmeta( obj )
   setmetatable( obj, { __index = WhenNode  } )
 end
-function WhenNode:get_varNameList()       
-   return self.varNameList         
+function WhenNode:get_varNameList()
+   return self.varNameList
 end
-function WhenNode:get_expNodeList()       
-   return self.expNodeList         
+function WhenNode:get_expNodeList()
+   return self.expNodeList
 end
-function WhenNode:get_block()       
-   return self.block         
+function WhenNode:get_block()
+   return self.block
 end
-function WhenNode:get_elseBlock()       
-   return self.elseBlock         
+function WhenNode:get_elseBlock()
+   return self.elseBlock
 end
 
 
@@ -3039,11 +3039,11 @@ end
 function ExpCastNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCastNode  } )
 end
-function ExpCastNode:get_exp()       
-   return self.exp         
+function ExpCastNode:get_exp()
+   return self.exp
 end
-function ExpCastNode:get_force()       
-   return self.force         
+function ExpCastNode:get_force()
+   return self.force
 end
 
 
@@ -3056,13 +3056,13 @@ function MacroMode:_getTxt( val )
       return string.format( "MacroMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function MacroMode._from( val )
    if MacroMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 MacroMode.__allList = {}
 function MacroMode.get__allList()
@@ -3140,14 +3140,14 @@ end
 function ExpOp1Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp1Node  } )
 end
-function ExpOp1Node:get_op()       
-   return self.op         
+function ExpOp1Node:get_op()
+   return self.op
 end
-function ExpOp1Node:get_macroMode()       
-   return self.macroMode         
+function ExpOp1Node:get_macroMode()
+   return self.macroMode
 end
-function ExpOp1Node:get_exp()       
-   return self.exp         
+function ExpOp1Node:get_exp()
+   return self.exp
 end
 
 
@@ -3209,17 +3209,17 @@ end
 function ExpRefItemNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefItemNode  } )
 end
-function ExpRefItemNode:get_val()       
-   return self.val         
+function ExpRefItemNode:get_val()
+   return self.val
 end
-function ExpRefItemNode:get_nilAccess()       
-   return self.nilAccess         
+function ExpRefItemNode:get_nilAccess()
+   return self.nilAccess
 end
-function ExpRefItemNode:get_symbol()       
-   return self.symbol         
+function ExpRefItemNode:get_symbol()
+   return self.symbol
 end
-function ExpRefItemNode:get_index()       
-   return self.index         
+function ExpRefItemNode:get_index()
+   return self.index
 end
 
 
@@ -3290,17 +3290,17 @@ end
 function ExpCallNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallNode  } )
 end
-function ExpCallNode:get_func()       
-   return self.func         
+function ExpCallNode:get_func()
+   return self.func
 end
-function ExpCallNode:get_errorFunc()       
-   return self.errorFunc         
+function ExpCallNode:get_errorFunc()
+   return self.errorFunc
 end
-function ExpCallNode:get_nilAccess()       
-   return self.nilAccess         
+function ExpCallNode:get_nilAccess()
+   return self.nilAccess
 end
-function ExpCallNode:get_argList()       
-   return self.argList         
+function ExpCallNode:get_argList()
+   return self.argList
 end
 
 
@@ -3382,8 +3382,8 @@ end
 function ExpDDDNode.setmeta( obj )
   setmetatable( obj, { __index = ExpDDDNode  } )
 end
-function ExpDDDNode:get_token()       
-   return self.token         
+function ExpDDDNode:get_token()
+   return self.token
 end
 
 
@@ -3446,8 +3446,8 @@ end
 function ExpParenNode.setmeta( obj )
   setmetatable( obj, { __index = ExpParenNode  } )
 end
-function ExpParenNode:get_exp()       
-   return self.exp         
+function ExpParenNode:get_exp()
+   return self.exp
 end
 
 
@@ -3510,8 +3510,8 @@ end
 function ExpMacroExpNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroExpNode  } )
 end
-function ExpMacroExpNode:get_stmtList()       
-   return self.stmtList         
+function ExpMacroExpNode:get_stmtList()
+   return self.stmtList
 end
 
 
@@ -3624,8 +3624,8 @@ end
 function ExpMacroStatNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatNode  } )
 end
-function ExpMacroStatNode:get_expStrList()       
-   return self.expStrList         
+function ExpMacroStatNode:get_expStrList()
+   return self.expStrList
 end
 
 
@@ -3684,8 +3684,8 @@ end
 function StmtExpNode.setmeta( obj )
   setmetatable( obj, { __index = StmtExpNode  } )
 end
-function StmtExpNode:get_exp()       
-   return self.exp         
+function StmtExpNode:get_exp()
+   return self.exp
 end
 
 
@@ -3760,14 +3760,14 @@ end
 function ExpOmitEnumNode.setmeta( obj )
   setmetatable( obj, { __index = ExpOmitEnumNode  } )
 end
-function ExpOmitEnumNode:get_valToken()       
-   return self.valToken         
+function ExpOmitEnumNode:get_valToken()
+   return self.valToken
 end
-function ExpOmitEnumNode:get_valInfo()       
-   return self.valInfo         
+function ExpOmitEnumNode:get_valInfo()
+   return self.valInfo
 end
-function ExpOmitEnumNode:get_enumTypeInfo()       
-   return self.enumTypeInfo         
+function ExpOmitEnumNode:get_enumTypeInfo()
+   return self.enumTypeInfo
 end
 
 
@@ -3825,17 +3825,17 @@ end
 function RefFieldNode.setmeta( obj )
   setmetatable( obj, { __index = RefFieldNode  } )
 end
-function RefFieldNode:get_field()       
-   return self.field         
+function RefFieldNode:get_field()
+   return self.field
 end
-function RefFieldNode:get_symbolInfo()       
-   return self.symbolInfo         
+function RefFieldNode:get_symbolInfo()
+   return self.symbolInfo
 end
-function RefFieldNode:get_nilAccess()       
-   return self.nilAccess         
+function RefFieldNode:get_nilAccess()
+   return self.nilAccess
 end
-function RefFieldNode:get_prefix()       
-   return self.prefix         
+function RefFieldNode:get_prefix()
+   return self.prefix
 end
 
 
@@ -3922,20 +3922,20 @@ end
 function GetFieldNode.setmeta( obj )
   setmetatable( obj, { __index = GetFieldNode  } )
 end
-function GetFieldNode:get_field()       
-   return self.field         
+function GetFieldNode:get_field()
+   return self.field
 end
-function GetFieldNode:get_symbolInfo()       
-   return self.symbolInfo         
+function GetFieldNode:get_symbolInfo()
+   return self.symbolInfo
 end
-function GetFieldNode:get_nilAccess()       
-   return self.nilAccess         
+function GetFieldNode:get_nilAccess()
+   return self.nilAccess
 end
-function GetFieldNode:get_prefix()       
-   return self.prefix         
+function GetFieldNode:get_prefix()
+   return self.prefix
 end
-function GetFieldNode:get_getterTypeInfo()       
-   return self.getterTypeInfo         
+function GetFieldNode:get_getterTypeInfo()
+   return self.getterTypeInfo
 end
 
 
@@ -4012,14 +4012,14 @@ end
 function AliasNode.setmeta( obj )
   setmetatable( obj, { __index = AliasNode  } )
 end
-function AliasNode:get_newName()       
-   return self.newName         
+function AliasNode:get_newName()
+   return self.newName
 end
-function AliasNode:get_srcNode()       
-   return self.srcNode         
+function AliasNode:get_srcNode()
+   return self.srcNode
 end
-function AliasNode:get_typeInfo()       
-   return self.typeInfo         
+function AliasNode:get_typeInfo()
+   return self.typeInfo
 end
 
 
@@ -4033,23 +4033,23 @@ function VarInfo.new( name, refType, actualType )
    VarInfo.setmeta( obj )
    if obj.__init then
       obj:__init( name, refType, actualType )
-   end        
-   return obj 
-end         
-function VarInfo:__init( name, refType, actualType ) 
+   end
+   return obj
+end
+function VarInfo:__init( name, refType, actualType )
 
    self.name = name
    self.refType = refType
    self.actualType = actualType
 end
-function VarInfo:get_name()       
-   return self.name         
+function VarInfo:get_name()
+   return self.name
 end
-function VarInfo:get_refType()       
-   return self.refType         
+function VarInfo:get_refType()
+   return self.refType
 end
-function VarInfo:get_actualType()       
-   return self.actualType         
+function VarInfo:get_actualType()
+   return self.actualType
 end
 
 local DeclVarMode = {}
@@ -4061,13 +4061,13 @@ function DeclVarMode:_getTxt( val )
       return string.format( "DeclVarMode.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function DeclVarMode._from( val )
    if DeclVarMode._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 DeclVarMode.__allList = {}
 function DeclVarMode.get__allList()
@@ -4154,41 +4154,41 @@ end
 function DeclVarNode.setmeta( obj )
   setmetatable( obj, { __index = DeclVarNode  } )
 end
-function DeclVarNode:get_mode()       
-   return self.mode         
+function DeclVarNode:get_mode()
+   return self.mode
 end
-function DeclVarNode:get_accessMode()       
-   return self.accessMode         
+function DeclVarNode:get_accessMode()
+   return self.accessMode
 end
-function DeclVarNode:get_staticFlag()       
-   return self.staticFlag         
+function DeclVarNode:get_staticFlag()
+   return self.staticFlag
 end
-function DeclVarNode:get_varList()       
-   return self.varList         
+function DeclVarNode:get_varList()
+   return self.varList
 end
-function DeclVarNode:get_expList()       
-   return self.expList         
+function DeclVarNode:get_expList()
+   return self.expList
 end
-function DeclVarNode:get_symbolInfoList()       
-   return self.symbolInfoList         
+function DeclVarNode:get_symbolInfoList()
+   return self.symbolInfoList
 end
-function DeclVarNode:get_typeInfoList()       
-   return self.typeInfoList         
+function DeclVarNode:get_typeInfoList()
+   return self.typeInfoList
 end
-function DeclVarNode:get_unwrapFlag()       
-   return self.unwrapFlag         
+function DeclVarNode:get_unwrapFlag()
+   return self.unwrapFlag
 end
-function DeclVarNode:get_unwrapBlock()       
-   return self.unwrapBlock         
+function DeclVarNode:get_unwrapBlock()
+   return self.unwrapBlock
 end
-function DeclVarNode:get_thenBlock()       
-   return self.thenBlock         
+function DeclVarNode:get_thenBlock()
+   return self.thenBlock
 end
-function DeclVarNode:get_syncVarList()       
-   return self.syncVarList         
+function DeclVarNode:get_syncVarList()
+   return self.syncVarList
 end
-function DeclVarNode:get_syncBlock()       
-   return self.syncBlock         
+function DeclVarNode:get_syncBlock()
+   return self.syncBlock
 end
 
 
@@ -4325,10 +4325,10 @@ function DeclFuncInfo.new( classTypeInfo, name, argList, staticFlag, accessMode,
    DeclFuncInfo.setmeta( obj )
    if obj.__init then
       obj:__init( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
-   end        
-   return obj 
-end         
-function DeclFuncInfo:__init( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol ) 
+   end
+   return obj
+end
+function DeclFuncInfo:__init( classTypeInfo, name, argList, staticFlag, accessMode, body, retTypeInfoList, has__func__Symbol )
 
    self.classTypeInfo = classTypeInfo
    self.name = name
@@ -4339,29 +4339,29 @@ function DeclFuncInfo:__init( classTypeInfo, name, argList, staticFlag, accessMo
    self.retTypeInfoList = retTypeInfoList
    self.has__func__Symbol = has__func__Symbol
 end
-function DeclFuncInfo:get_classTypeInfo()       
-   return self.classTypeInfo         
+function DeclFuncInfo:get_classTypeInfo()
+   return self.classTypeInfo
 end
-function DeclFuncInfo:get_name()       
-   return self.name         
+function DeclFuncInfo:get_name()
+   return self.name
 end
-function DeclFuncInfo:get_argList()       
-   return self.argList         
+function DeclFuncInfo:get_argList()
+   return self.argList
 end
-function DeclFuncInfo:get_staticFlag()       
-   return self.staticFlag         
+function DeclFuncInfo:get_staticFlag()
+   return self.staticFlag
 end
-function DeclFuncInfo:get_accessMode()       
-   return self.accessMode         
+function DeclFuncInfo:get_accessMode()
+   return self.accessMode
 end
-function DeclFuncInfo:get_body()       
-   return self.body         
+function DeclFuncInfo:get_body()
+   return self.body
 end
-function DeclFuncInfo:get_retTypeInfoList()       
-   return self.retTypeInfoList         
+function DeclFuncInfo:get_retTypeInfoList()
+   return self.retTypeInfoList
 end
-function DeclFuncInfo:get_has__func__Symbol()       
-   return self.has__func__Symbol         
+function DeclFuncInfo:get_has__func__Symbol()
+   return self.has__func__Symbol
 end
 
 function NodeKind.get_DeclFunc(  )
@@ -4423,8 +4423,8 @@ end
 function DeclFuncNode.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncNode  } )
 end
-function DeclFuncNode:get_declInfo()       
-   return self.declInfo         
+function DeclFuncNode:get_declInfo()
+   return self.declInfo
 end
 
 
@@ -4487,8 +4487,8 @@ end
 function DeclMethodNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMethodNode  } )
 end
-function DeclMethodNode:get_declInfo()       
-   return self.declInfo         
+function DeclMethodNode:get_declInfo()
+   return self.declInfo
 end
 
 
@@ -4551,8 +4551,8 @@ end
 function DeclConstrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclConstrNode  } )
 end
-function DeclConstrNode:get_declInfo()       
-   return self.declInfo         
+function DeclConstrNode:get_declInfo()
+   return self.declInfo
 end
 
 
@@ -4615,8 +4615,8 @@ end
 function DeclDestrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclDestrNode  } )
 end
-function DeclDestrNode:get_declInfo()       
-   return self.declInfo         
+function DeclDestrNode:get_declInfo()
+   return self.declInfo
 end
 
 
@@ -4681,14 +4681,14 @@ end
 function ExpCallSuperNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallSuperNode  } )
 end
-function ExpCallSuperNode:get_superType()       
-   return self.superType         
+function ExpCallSuperNode:get_superType()
+   return self.superType
 end
-function ExpCallSuperNode:get_methodType()       
-   return self.methodType         
+function ExpCallSuperNode:get_methodType()
+   return self.methodType
 end
-function ExpCallSuperNode:get_expList()       
-   return self.expList         
+function ExpCallSuperNode:get_expList()
+   return self.expList
 end
 
 
@@ -4759,32 +4759,32 @@ end
 function DeclMemberNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMemberNode  } )
 end
-function DeclMemberNode:get_name()       
-   return self.name         
+function DeclMemberNode:get_name()
+   return self.name
 end
-function DeclMemberNode:get_refType()       
-   return self.refType         
+function DeclMemberNode:get_refType()
+   return self.refType
 end
-function DeclMemberNode:get_symbolInfo()       
-   return self.symbolInfo         
+function DeclMemberNode:get_symbolInfo()
+   return self.symbolInfo
 end
-function DeclMemberNode:get_staticFlag()       
-   return self.staticFlag         
+function DeclMemberNode:get_staticFlag()
+   return self.staticFlag
 end
-function DeclMemberNode:get_accessMode()       
-   return self.accessMode         
+function DeclMemberNode:get_accessMode()
+   return self.accessMode
 end
-function DeclMemberNode:get_getterMutable()       
-   return self.getterMutable         
+function DeclMemberNode:get_getterMutable()
+   return self.getterMutable
 end
-function DeclMemberNode:get_getterMode()       
-   return self.getterMode         
+function DeclMemberNode:get_getterMode()
+   return self.getterMode
 end
-function DeclMemberNode:get_getterRetType()       
-   return self.getterRetType         
+function DeclMemberNode:get_getterRetType()
+   return self.getterRetType
 end
-function DeclMemberNode:get_setterMode()       
-   return self.setterMode         
+function DeclMemberNode:get_setterMode()
+   return self.setterMode
 end
 
 
@@ -4848,11 +4848,11 @@ end
 function DeclArgNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgNode  } )
 end
-function DeclArgNode:get_name()       
-   return self.name         
+function DeclArgNode:get_name()
+   return self.name
 end
-function DeclArgNode:get_argType()       
-   return self.argType         
+function DeclArgNode:get_argType()
+   return self.argType
 end
 
 
@@ -4926,19 +4926,19 @@ function AdvertiseInfo.new( member, prefix )
    AdvertiseInfo.setmeta( obj )
    if obj.__init then
       obj:__init( member, prefix )
-   end        
-   return obj 
-end         
-function AdvertiseInfo:__init( member, prefix ) 
+   end
+   return obj
+end
+function AdvertiseInfo:__init( member, prefix )
 
    self.member = member
    self.prefix = prefix
 end
-function AdvertiseInfo:get_member()       
-   return self.member         
+function AdvertiseInfo:get_member()
+   return self.member
 end
-function AdvertiseInfo:get_prefix()       
-   return self.prefix         
+function AdvertiseInfo:get_prefix()
+   return self.prefix
 end
 
 
@@ -5012,41 +5012,41 @@ end
 function DeclClassNode.setmeta( obj )
   setmetatable( obj, { __index = DeclClassNode  } )
 end
-function DeclClassNode:get_accessMode()       
-   return self.accessMode         
+function DeclClassNode:get_accessMode()
+   return self.accessMode
 end
-function DeclClassNode:get_name()       
-   return self.name         
+function DeclClassNode:get_name()
+   return self.name
 end
-function DeclClassNode:get_gluePrefix()       
-   return self.gluePrefix         
+function DeclClassNode:get_gluePrefix()
+   return self.gluePrefix
 end
-function DeclClassNode:get_declStmtList()       
-   return self.declStmtList         
+function DeclClassNode:get_declStmtList()
+   return self.declStmtList
 end
-function DeclClassNode:get_fieldList()       
-   return self.fieldList         
+function DeclClassNode:get_fieldList()
+   return self.fieldList
 end
-function DeclClassNode:get_moduleName()       
-   return self.moduleName         
+function DeclClassNode:get_moduleName()
+   return self.moduleName
 end
-function DeclClassNode:get_memberList()       
-   return self.memberList         
+function DeclClassNode:get_memberList()
+   return self.memberList
 end
-function DeclClassNode:get_scope()       
-   return self.scope         
+function DeclClassNode:get_scope()
+   return self.scope
 end
-function DeclClassNode:get_initStmtList()       
-   return self.initStmtList         
+function DeclClassNode:get_initStmtList()
+   return self.initStmtList
 end
-function DeclClassNode:get_advertiseList()       
-   return self.advertiseList         
+function DeclClassNode:get_advertiseList()
+   return self.advertiseList
 end
-function DeclClassNode:get_trustList()       
-   return self.trustList         
+function DeclClassNode:get_trustList()
+   return self.trustList
 end
-function DeclClassNode:get_outerMethodSet()       
-   return self.outerMethodSet         
+function DeclClassNode:get_outerMethodSet()
+   return self.outerMethodSet
 end
 
 
@@ -5112,17 +5112,17 @@ end
 function DeclEnumNode.setmeta( obj )
   setmetatable( obj, { __index = DeclEnumNode  } )
 end
-function DeclEnumNode:get_accessMode()       
-   return self.accessMode         
+function DeclEnumNode:get_accessMode()
+   return self.accessMode
 end
-function DeclEnumNode:get_name()       
-   return self.name         
+function DeclEnumNode:get_name()
+   return self.name
 end
-function DeclEnumNode:get_valueNameList()       
-   return self.valueNameList         
+function DeclEnumNode:get_valueNameList()
+   return self.valueNameList
 end
-function DeclEnumNode:get_scope()       
-   return self.scope         
+function DeclEnumNode:get_scope()
+   return self.scope
 end
 
 
@@ -5187,14 +5187,14 @@ end
 function DeclAlgeNode.setmeta( obj )
   setmetatable( obj, { __index = DeclAlgeNode  } )
 end
-function DeclAlgeNode:get_accessMode()       
-   return self.accessMode         
+function DeclAlgeNode:get_accessMode()
+   return self.accessMode
 end
-function DeclAlgeNode:get_algeType()       
-   return self.algeType         
+function DeclAlgeNode:get_algeType()
+   return self.algeType
 end
-function DeclAlgeNode:get_scope()       
-   return self.scope         
+function DeclAlgeNode:get_scope()
+   return self.scope
 end
 
 
@@ -5261,20 +5261,20 @@ end
 function NewAlgeValNode.setmeta( obj )
   setmetatable( obj, { __index = NewAlgeValNode  } )
 end
-function NewAlgeValNode:get_name()       
-   return self.name         
+function NewAlgeValNode:get_name()
+   return self.name
 end
-function NewAlgeValNode:get_prefix()       
-   return self.prefix         
+function NewAlgeValNode:get_prefix()
+   return self.prefix
 end
-function NewAlgeValNode:get_algeTypeInfo()       
-   return self.algeTypeInfo         
+function NewAlgeValNode:get_algeTypeInfo()
+   return self.algeTypeInfo
 end
-function NewAlgeValNode:get_valInfo()       
-   return self.valInfo         
+function NewAlgeValNode:get_valInfo()
+   return self.valInfo
 end
-function NewAlgeValNode:get_paramList()       
-   return self.paramList         
+function NewAlgeValNode:get_paramList()
+   return self.paramList
 end
 
 
@@ -5288,23 +5288,23 @@ function MatchCase.new( valInfo, valParamNameList, block )
    MatchCase.setmeta( obj )
    if obj.__init then
       obj:__init( valInfo, valParamNameList, block )
-   end        
-   return obj 
-end         
-function MatchCase:__init( valInfo, valParamNameList, block ) 
+   end
+   return obj
+end
+function MatchCase:__init( valInfo, valParamNameList, block )
 
    self.valInfo = valInfo
    self.valParamNameList = valParamNameList
    self.block = block
 end
-function MatchCase:get_valInfo()       
-   return self.valInfo         
+function MatchCase:get_valInfo()
+   return self.valInfo
 end
-function MatchCase:get_valParamNameList()       
-   return self.valParamNameList         
+function MatchCase:get_valParamNameList()
+   return self.valParamNameList
 end
-function MatchCase:get_block()       
-   return self.block         
+function MatchCase:get_block()
+   return self.block
 end
 
 function NodeKind.get_Match(  )
@@ -5369,17 +5369,17 @@ end
 function MatchNode.setmeta( obj )
   setmetatable( obj, { __index = MatchNode  } )
 end
-function MatchNode:get_val()       
-   return self.val         
+function MatchNode:get_val()
+   return self.val
 end
-function MatchNode:get_algeTypeInfo()       
-   return self.algeTypeInfo         
+function MatchNode:get_algeTypeInfo()
+   return self.algeTypeInfo
 end
-function MatchNode:get_caseList()       
-   return self.caseList         
+function MatchNode:get_caseList()
+   return self.caseList
 end
-function MatchNode:get_defaultBlock()       
-   return self.defaultBlock         
+function MatchNode:get_defaultBlock()
+   return self.defaultBlock
 end
 
 
@@ -5442,8 +5442,8 @@ end
 function DeclMacroNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMacroNode  } )
 end
-function DeclMacroNode:get_declInfo()       
-   return self.declInfo         
+function DeclMacroNode:get_declInfo()
+   return self.declInfo
 end
 
 
@@ -5457,10 +5457,10 @@ function MacroEval.new(  )
    MacroEval.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function MacroEval:__init(  ) 
+   end
+   return obj
+end
+function MacroEval:__init(  )
 
 end
 
@@ -5583,8 +5583,8 @@ end
 function BoxingNode.setmeta( obj )
   setmetatable( obj, { __index = BoxingNode  } )
 end
-function BoxingNode:get_src()       
-   return self.src         
+function BoxingNode:get_src()
+   return self.src
 end
 
 
@@ -5647,8 +5647,8 @@ end
 function UnboxingNode.setmeta( obj )
   setmetatable( obj, { __index = UnboxingNode  } )
 end
-function UnboxingNode:get_src()       
-   return self.src         
+function UnboxingNode:get_src()
+   return self.src
 end
 
 
@@ -5772,11 +5772,11 @@ end
 function LiteralCharNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralCharNode  } )
 end
-function LiteralCharNode:get_token()       
-   return self.token         
+function LiteralCharNode:get_token()
+   return self.token
 end
-function LiteralCharNode:get_num()       
-   return self.num         
+function LiteralCharNode:get_num()
+   return self.num
 end
 
 
@@ -5840,11 +5840,11 @@ end
 function LiteralIntNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralIntNode  } )
 end
-function LiteralIntNode:get_token()       
-   return self.token         
+function LiteralIntNode:get_token()
+   return self.token
 end
-function LiteralIntNode:get_num()       
-   return self.num         
+function LiteralIntNode:get_num()
+   return self.num
 end
 
 
@@ -5908,11 +5908,11 @@ end
 function LiteralRealNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralRealNode  } )
 end
-function LiteralRealNode:get_token()       
-   return self.token         
+function LiteralRealNode:get_token()
+   return self.token
 end
-function LiteralRealNode:get_num()       
-   return self.num         
+function LiteralRealNode:get_num()
+   return self.num
 end
 
 
@@ -5975,8 +5975,8 @@ end
 function LiteralArrayNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralArrayNode  } )
 end
-function LiteralArrayNode:get_expList()       
-   return self.expList         
+function LiteralArrayNode:get_expList()
+   return self.expList
 end
 
 
@@ -6039,8 +6039,8 @@ end
 function LiteralListNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralListNode  } )
 end
-function LiteralListNode:get_expList()       
-   return self.expList         
+function LiteralListNode:get_expList()
+   return self.expList
 end
 
 
@@ -6103,8 +6103,8 @@ end
 function LiteralSetNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSetNode  } )
 end
-function LiteralSetNode:get_expList()       
-   return self.expList         
+function LiteralSetNode:get_expList()
+   return self.expList
 end
 
 
@@ -6118,19 +6118,19 @@ function PairItem.new( key, val )
    PairItem.setmeta( obj )
    if obj.__init then
       obj:__init( key, val )
-   end        
-   return obj 
-end         
-function PairItem:__init( key, val ) 
+   end
+   return obj
+end
+function PairItem:__init( key, val )
 
    self.key = key
    self.val = val
 end
-function PairItem:get_key()       
-   return self.key         
+function PairItem:get_key()
+   return self.key
 end
-function PairItem:get_val()       
-   return self.val         
+function PairItem:get_val()
+   return self.val
 end
 
 function NodeKind.get_LiteralMap(  )
@@ -6193,11 +6193,11 @@ end
 function LiteralMapNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralMapNode  } )
 end
-function LiteralMapNode:get_map()       
-   return self.map         
+function LiteralMapNode:get_map()
+   return self.map
 end
-function LiteralMapNode:get_pairList()       
-   return self.pairList         
+function LiteralMapNode:get_pairList()
+   return self.pairList
 end
 
 
@@ -6261,11 +6261,11 @@ end
 function LiteralStringNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralStringNode  } )
 end
-function LiteralStringNode:get_token()       
-   return self.token         
+function LiteralStringNode:get_token()
+   return self.token
 end
-function LiteralStringNode:get_argList()       
-   return self.argList         
+function LiteralStringNode:get_argList()
+   return self.argList
 end
 
 
@@ -6328,8 +6328,8 @@ end
 function LiteralBoolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralBoolNode  } )
 end
-function LiteralBoolNode:get_token()       
-   return self.token         
+function LiteralBoolNode:get_token()
+   return self.token
 end
 
 
@@ -6392,8 +6392,8 @@ end
 function LiteralSymbolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSymbolNode  } )
 end
-function LiteralSymbolNode:get_token()       
-   return self.token         
+function LiteralSymbolNode:get_token()
+   return self.token
 end
 
 

@@ -79,7 +79,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -242,8 +242,8 @@ end
 function TxtStream.setmeta( obj )
   setmetatable( obj, { __index = TxtStream  } )
 end
-function TxtStream:get_txt()       
-   return self.txt         
+function TxtStream:get_txt()
+   return self.txt
 end
 
 local Position = {}
@@ -256,10 +256,10 @@ function Position.new( lineNo, column )
    Position.setmeta( obj )
    if obj.__init then
       obj:__init( lineNo, column )
-   end        
-   return obj 
-end         
-function Position:__init( lineNo, column ) 
+   end
+   return obj
+end
+function Position:__init( lineNo, column )
 
    self.lineNo = lineNo
    self.column = column
@@ -274,13 +274,13 @@ function TokenKind:_getTxt( val )
       return string.format( "TokenKind.%s", name )
    end
    return string.format( "illegal val -- %s", val )
-end 
+end
 function TokenKind._from( val )
    if TokenKind._val2NameMap[ val ] then
       return val
    end
    return nil
-end 
+end
     
 TokenKind.__allList = {}
 function TokenKind.get__allList()
@@ -360,8 +360,8 @@ end
 function Token.setmeta( obj )
   setmetatable( obj, { __index = Token  } )
 end
-function Token:get_commentList()       
-   return self.commentList         
+function Token:get_commentList()
+   return self.commentList
 end
 
 local Parser = {}
@@ -374,10 +374,10 @@ function Parser.new(  )
    Parser.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function Parser:__init(  ) 
+   end
+   return obj
+end
+function Parser:__init(  )
 
 end
 
@@ -401,10 +401,10 @@ function WrapParser.new( parser, name )
    WrapParser.setmeta( obj )
    if obj.__init then
       obj:__init( parser, name )
-   end        
-   return obj 
-end         
-function WrapParser:__init( parser, name ) 
+   end
+   return obj
+end
+function WrapParser:__init( parser, name )
 
    Parser.__init( self)
    self.parser = parser
@@ -911,10 +911,10 @@ function DummyParser.new(  )
    DummyParser.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function DummyParser:__init(  ) 
+   end
+   return obj
+end
+function DummyParser:__init(  )
 
    Parser.__init( self)
 end

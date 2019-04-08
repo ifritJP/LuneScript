@@ -121,7 +121,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -194,10 +194,10 @@ function Writer.new(  )
    Writer.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function Writer:__init(  ) 
+   end
+   return obj
+end
+function Writer:__init(  )
 
 end
 
@@ -281,10 +281,10 @@ function JsonLayer.new( state, arrayFlag, name, madeByArrayFlag, elementNameSet,
    JsonLayer.setmeta( obj )
    if obj.__init then
       obj:__init( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
-   end        
-   return obj 
-end         
-function JsonLayer:__init( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement ) 
+   end
+   return obj
+end
+function JsonLayer:__init( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
 
    self.state = state
    self.arrayFlag = arrayFlag

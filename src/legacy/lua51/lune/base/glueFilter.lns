@@ -84,10 +84,10 @@ fn glueGenerator.outputUserPrototype(
          self.writeHeader( ", %s %s" ( argTypeTxt, argName ) );
          if argType == Ast.builtinTypeString {
             self.writeHeader( ", int size_%s" ( argName ) );
-         }  
-      }  
+         }
+      }
    }
-   
+
    self.writeHeader( " )" );
 }
 
@@ -131,8 +131,8 @@ extern int luaopen_%s( lua_State * pLua );
 extern void * lns_glue_get_%s( lua_State * pLua, int index );
 extern void * lns_glue_new_%s( lua_State * pLua, size_t size );
 ``` (moduleSymbolFull,moduleSymbolFull, moduleSymbolFull) );
-   
-   self.write( 
+
+   self.write(
    ```
 void * lns_glue_get_%s( lua_State * pLua, int index )
 {
@@ -206,7 +206,7 @@ fn glueGenerator.outputMethod( node:&Nodes.DeclMethodNode, gluePrefix:str ) mut 
    else {
       return;
    }
-   
+
    self.outputPrototype( node );
    self.write( "{\n" );
 
@@ -230,8 +230,8 @@ fn glueGenerator.outputMethod( node:&Nodes.DeclMethodNode, gluePrefix:str ) mut 
                self.write( "NULL;\n" );
             }
          }
-         
-         
+
+
          if argNode.$expType.$nilable {
             if argType ~= Ast.builtinTypeString {
                callArgName = "_p%s" (argName);
@@ -239,12 +239,12 @@ fn glueGenerator.outputMethod( node:&Nodes.DeclMethodNode, gluePrefix:str ) mut 
             }
          }
 
-  // 
+  //
          // }
 
          let mut setTxt = "";
          let mut callTxt = "";
-         
+
          switch argType {
             case Ast.builtinTypeInt {
                setTxt = "  %s = luaL_checkinteger( pLua, %d );\n"
@@ -285,7 +285,7 @@ fn glueGenerator.outputMethod( node:&Nodes.DeclMethodNode, gluePrefix:str ) mut 
          self.write( '  }\n' );
       }
    }
-   
+
    self.write( "  return %s( pLua" (name) );
    foreach glueArgInfo in glueArgInfoList {
       self.write( ", " );
@@ -323,12 +323,12 @@ pub fn glueGenerator.outputClass(
 
    // ソースの生成
    self.write( '#include "%s_glue.h"\n' (moduleSymbolFull) );
-   
+
    self.outputPrototypeList( staticMethodNodeList );
    self.outputPrototypeList( methodNodeList );
 
    self.write( 'static const char * s_full_class_name = "%s";\n' (moduleFullName ) );
-   
+
    self.outputFuncReg( "s_lua_func_info", staticMethodNodeList );
    self.outputFuncReg( "s_lua_method_info", methodNodeList );
 
@@ -355,13 +355,13 @@ pub fn createFilter( outputDir:str! ): Nodes.Filter<int> {
 pub override fn glueFilter.processRoot( node: &Nodes.RootNode, dummy:int ) mut
 {
    fn createFile( filename:str ):oStream {
-      let filePath = "%s/%s" (unwrap self.outputDir default ".", filename);               
+      let filePath = "%s/%s" (unwrap self.outputDir default ".", filename);
       if! io.open( filePath, "w") {
          return _exp;
       }
       error( "open error -- %s " (filePath) );
    }
-   
+
    if! let nodeList = node.$nodeManager.getDeclClassNodeList() {
       foreach node in nodeList {
          if! let moduleName = node.$moduleName {
@@ -370,9 +370,9 @@ pub override fn glueFilter.processRoot( node: &Nodes.RootNode, dummy:int ) mut
                let mut glue = new glueGenerator(
                   createFile( moduleSymbolName .. "_glue.c" ),
                   createFile( moduleSymbolName .. "_glue.h" ) );
-               
+
                glue.outputClass( moduleSymbolName, node, _exp );
-            }  
+            }
          }
       }
    }

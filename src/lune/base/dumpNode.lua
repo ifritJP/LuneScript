@@ -116,7 +116,7 @@ function _lune.unwrap( val )
       __luneScript:error( 'unwrap val is nil' )
    end
    return val
-end 
+end
 function _lune.unwrapDefault( val, defval )
    if val == nil then
       return defval
@@ -225,10 +225,10 @@ function dumpFilter.new(  )
    dumpFilter.setmeta( obj )
    if obj.__init then
       obj:__init(  )
-   end        
-   return obj 
-end         
-function dumpFilter:__init(  ) 
+   end
+   return obj
+end
+function dumpFilter:__init(  )
 
    Nodes.Filter.__init( self)
 end

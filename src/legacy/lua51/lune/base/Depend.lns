@@ -38,7 +38,7 @@ pub fn getFileLastModifiedTime( path: str ): real! {
    else {
       return nil;
    }
-   
+
    let mut stream = io.popen( "stat -c '%%Y' %s" (path) );
    if! stream$.read$('*a') {
       return tonumber( _exp## );
