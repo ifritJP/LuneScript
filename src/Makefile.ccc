@@ -1,0 +1,8 @@
+# -*- mode: makefile; -*-
+
+
+
+build:
+	gcc -c lune/base/cbase.c -o lune/base/cbase.o
+	gcc -o test.exe lune/base/cbase.o
+	./test.exe

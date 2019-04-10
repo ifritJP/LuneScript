@@ -89,6 +89,7 @@ define buildLns
 	$(call transwork,$1,$2,base/dumpNode)
 	$(call transwork,$1,$2,base/TransUnit)
 	$(call transwork,$1,$2,base/convLua)
+	$(call transwork,$1,$2,base/convCC)
 	$(call transwork,$1,$2,base/OutputDepend)
 	$(call transwork,$1,$2,base/front)
 	$(call transwork,$1,$2,base/glueFilter)
