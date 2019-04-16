@@ -532,3 +532,6 @@ install: check_lua_mod_dir
 uninstall: check_lua_mod_dir
 	rm /usr/bin/lnsc
 	rm -rf $(LUA_MOD_DIR)/lune
+
+test-ccc:
+	LANG= $(MAKE) -f Makefile.ccc

@@ -3,6 +3,8 @@
 
 
 build:
-	gcc -g3 -c lune/base/cbase.c -o lune/base/cbase.o
-	gcc -o test.exe lune/base/cbase.o
+	mkdir -p work/c
+	gcc -g3 -Wall -c lune/base/lns_base.c -I lune/base -o work/c/lns_base.o
+	gcc -g3 -Wall -c lune/base/test.c -I lune/base -o work/c/test.o
+	gcc -o test.exe work/c/lns_base.o work/c/test.o
 	./test.exe
