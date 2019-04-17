@@ -34,7 +34,7 @@ INSTALL=/usr/bin/install -c
 
 NDIR=$(shell pwd)
 
-.PHONY: help exec build build-glue accept-package check_lua_mod_dir install uninstall
+.PHONY: help exec build build-glue accept-package check_lua_mod_dir install uninstall test-ccc
 
 help:
 	@echo usage:

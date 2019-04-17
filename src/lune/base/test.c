@@ -37,7 +37,7 @@ __mtd_Test_t __mtd_Test = {
 
 void __class_Test_init( __lune_env_t * _pEnv, Test * pObj, int val ) {
     pObj->val = val;
-    __lune_setq( pObj->val2, __lune_int2stem( _pEnv, 123 + val ) );
+    __lune_setQ( pObj->val2, __lune_int2stem( _pEnv, 123 + val ) );
 }
 
 
@@ -111,7 +111,7 @@ __mtd_Sub_t __mtd_Sub = {
 };
 
 void __class_Sub_init( __lune_env_t * _pEnv, Sub * pObj, __lune_stem_t * val ) {
-    __lune_setq( pObj->val3, val );
+    __lune_setQ( pObj->val3, val );
 }
 
 __lune_stem_t * __class_Sub_new(
@@ -155,14 +155,18 @@ static __lune_stem_t * __form_test( __lune_env_t * _pEnv, __lune_stem_t * pForm 
 {
     __lune_block_t * pBlock = __lune_enter_func( _pEnv, 2, 0 );
 
-    __lune_stem_t * test = __class_Test_new( _pEnv, 10 );
-    __lune_set_block_stem( pBlock, 0, test );
+    __lune_stem_t * test;
+    __lune_initVal( test, pBlock, 0, __class_Test_new( _pEnv, 10 ) );
     __lune_mtd_Test( test )->func( _pEnv, test );
+    
 
-    __lune_stem_t * sub = __class_Sub_new(
-        _pEnv, 20, __lune_str2stem( _pEnv, __lune_createLiteralStr( "xyz" ) ));
-    __lune_set_block_stem( pBlock, 1, sub );
+    __lune_stem_t * sub;
+    __lune_initVal(
+        sub, pBlock, 1,
+        __class_Sub_new(
+            _pEnv, 20, __lune_str2stem( _pEnv, __lune_createLiteralStr( "xyz" ) )) );
     __lune_mtd_Sub( sub )->func( _pEnv, sub );
+    
     
     __lune_print(
         _pEnv,
@@ -171,20 +175,27 @@ static __lune_stem_t * __form_test( __lune_env_t * _pEnv, __lune_stem_t * pForm 
             __lune_int2stem( _pEnv, 1 ),
             __lune_int2stem( _pEnv, 2 ),
             __lune_str2stem( _pEnv, __lune_createLiteralStr( "abc" ) )));
+
+    __lune_stem_t * _ret = __lune_setRet( _pEnv, __lune_int2stem( _pEnv, 100 ) );
     
     __lune_leave_block( _pEnv );
 
-    return _pEnv->pNoneStem;
+    return _ret;
 }
 
 static __lune_stem_t * __form_test2(
     __lune_env_t * _pEnv, __lune_stem_t * _pForm, __lune_stem_t * pVal )
 {
-    __lune_block_t * pBlock = __lune_enter_func( _pEnv, 1, 1, pVal );
+    __lune_block_t * pBlock = __lune_enter_func( _pEnv, 2, 1, pVal );
 
 
     pVal->val.form.pFunc( _pEnv, pVal );
-    
+
+
+    __lune_stem_t * pList;
+    __lune_initVal( pList, pBlock, 1, __class_List_new( _pEnv ) );
+
+    __lune_mtd_List( pList )->insert( _pEnv, pList, pVal );
     
     __lune_leave_block( _pEnv );
 
@@ -192,8 +203,17 @@ static __lune_stem_t * __form_test2(
 }
 
 
-void __lune_init_test( __lune_env_t * _pEnv ) {
-    __form_test( _pEnv, NULL );
+void __lune_init_test( __lune_env_t * _pEnv )
+{
+    __lune_block_t * pBlock = __lune_enter_func( _pEnv, 1, 0 );
 
-    __form_test2( _pEnv, NULL, __lune_func2stem( _pEnv, __form_test, 0 ) );
+    
+    __lune_stem_t * pVal;
+    __lune_initVal( pVal, pBlock, 0, __form_test( _pEnv, NULL ) );
+
+    __lune_print( _pEnv, __lune_createDDD( _pEnv, 1, pVal ) );
+
+    __form_test2( _pEnv, NULL, __lune_func2stem( _pEnv, (__lune_func_t *)__form_test, 0 ) );
+
+    __lune_leave_block( _pEnv );
 }

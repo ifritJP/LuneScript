@@ -5,6 +5,7 @@
 build:
 	mkdir -p work/c
 	gcc -g3 -Wall -c lune/base/lns_base.c -I lune/base -o work/c/lns_base.o
+	g++ -g3 -Wall -c lune/base/lns_collection.cxx -I lune/base -o work/c/lns_collection.o
 	gcc -g3 -Wall -c lune/base/test.c -I lune/base -o work/c/test.o
-	gcc -o test.exe work/c/lns_base.o work/c/test.o
+	g++ -o test.exe work/c/lns_base.o work/c/lns_collection.o work/c/test.o
 	./test.exe

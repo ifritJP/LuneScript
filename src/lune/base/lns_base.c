@@ -6,21 +6,21 @@
  *
  * 実際の type の値は別途セットする必要がある。
  *
- * この関数で確保した値は、 pEnv で管理するブロックに紐付けられる。
+ * この関数で確保した値は、 _pEnv で管理するブロックに紐付けられる。
  * この時点では、参照カウントは 0。
  * __lune_setq() で、何らかの変数に格納しない限り、ブロック終了時に開放される。
  *
  * @return 生成した stem 値
  */
-static __lune_stem_t * __lune_alloc_stem( __lune_env_t * pEnv, __lune_value_type_t type )
+static __lune_stem_t * __lune_alloc_stem( __lune_env_t * _pEnv, __lune_value_type_t type )
 {
-    pEnv->allocNum++;
+    _pEnv->allocNum++;
     
     __lune_stem_t * pStem = (__lune_stem_t *)malloc( sizeof( __lune_stem_t ) );
     pStem->type = type;
     pStem->refCount = 0;
 
-    __lune_block_t * pBlock = &pEnv->blockQueue[ pEnv->blockDepth - 1 ];
+    __lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
     __lune_add2list( &pBlock->unassignStemTop, pStem );
 
     return pStem;
@@ -32,9 +32,35 @@ static __lune_stem_t * __lune_alloc_stem( __lune_env_t * pEnv, __lune_value_type
  *
  * 参照カウントが 0 になっていることが前提条件。
  */
-static void __lune_release_stem( __lune_env_t * pEnv, __lune_stem_t * pStem ) {
+static void __lune_release_stem( __lune_env_t * _pEnv, __lune_stem_t * pStem ) {
     free( pStem );
-    pEnv->allocNum--;
+    _pEnv->allocNum--;
+}
+
+static void __lune_gc_stem( __lune_env_t * _pEnv, __lune_stem_t * pStem ) {
+    switch ( pStem->type ) {
+    case __lune_value_type_str:
+        if ( !pStem->val.str.staticFlag ) {
+            free( (char *)pStem->val.str.pStr );
+        }
+        break;
+    case __lune_value_type_class:
+        if ( ((__lune_Class_t*)pStem->val.classVal)->pMtd->_gc != NULL ) {
+            ((__lune_Class_t*)pStem->val.classVal)->pMtd->_gc( _pEnv, pStem, true );
+        }
+        break;
+    case __lune_value_type_ddd:
+        free( pStem->val.ddd.pStemList );
+        _pEnv->allocNum--;
+        break;
+    case __lune_value_type_form:
+        free( pStem->val.form.pStemList );
+        _pEnv->allocNum--;
+        break;
+    default:
+        break;
+    }
+    __lune_release_stem( _pEnv, pStem );
 }
 
 /**
@@ -42,34 +68,33 @@ static void __lune_release_stem( __lune_env_t * pEnv, __lune_stem_t * pStem ) {
  *
  * 参照カウントが 0 になった場合は、開放処理を行なう。
  */
-void __lune_decre_ref( __lune_env_t * pEnv, __lune_stem_t * pStem ) {
+void __lune_decre_ref( __lune_env_t * _pEnv, __lune_stem_t * pStem ) {
     pStem->refCount--;
-    if ( pStem->refCount == 0 ) {
-        switch ( pStem->type ) {
-        case __lune_value_type_str:
-            if ( !pStem->val.str.staticFlag ) {
-                free( (char *)pStem->val.str.pStr );
-            }
-            break;
-        case __lune_value_type_class:
-            if ( ((__lune_Class_t*)pStem->val.classVal)->pMtd->_gc != NULL ) {
-                ((__lune_Class_t*)pStem->val.classVal)->pMtd->_gc( pEnv, pStem, true );
-            }
-            break;
-        case __lune_value_type_ddd:
-            free( pStem->val.ddd.pStemList );
-            pEnv->allocNum--;
-            break;
-        case __lune_value_type_form:
-            free( pStem->val.form.pStemList );
-            pEnv->allocNum--;
-            break;
-        default:
-            break;
-        }
-        __lune_release_stem( pEnv, pStem );
+    if ( pStem->refCount == 0 && !pStem->retValFlag ) {
+        __lune_gc_stem( _pEnv, pStem );
     }
 }
+
+void __lune_setQ_( __lune_stem_t * pStem )
+{
+    pStem->refCount++;
+    if ( pStem->retValFlag ) {
+        pStem->retValFlag = false;
+    }
+    __lune_rmFromList( pStem );
+}
+
+__lune_stem_t * __lune_setRet( __lune_env_t * _pEnv, __lune_stem_t * pStem )
+{
+    __lune_rmFromList( pStem );
+
+    __lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ];
+    __lune_add2list( &pBlock->retValUnassignStemTop, pStem );
+    pStem->retValFlag = true;
+
+    return pStem;
+}
+
 
 /**
  * 新しくブロックを開始する。
@@ -77,21 +102,25 @@ void __lune_decre_ref( __lune_env_t * pEnv, __lune_stem_t * pStem ) {
  * @param stemVerNum ブロックで管理する stem 型の値の数
  * @return ブロック情報
  */
-__lune_block_t * __lune_enter_block( __lune_env_t * pEnv, int stemVerNum )
+__lune_block_t * __lune_enter_block( __lune_env_t * _pEnv, int stemVerNum )
 {
     int dummy;
-    __lune_block_t * pBlock = &pEnv->blockQueue[ pEnv->blockDepth ];
-    pEnv->blockDepth++;
+    _pEnv->blockDepth++;
+    __lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
 
     pBlock->unassignStemTop.pPrev = &pBlock->unassignStemTop;
     pBlock->unassignStemTop.pNext = &pBlock->unassignStemTop;
-    
-    pBlock->pStemBuf = pEnv->stemPPool + pEnv->useStemPoolNum;
+
+    pBlock->retValUnassignStemTop.pPrev = &pBlock->retValUnassignStemTop;
+    pBlock->retValUnassignStemTop.pNext = &pBlock->retValUnassignStemTop;
+
+    pBlock->pStemBuf = _pEnv->stemPPool + _pEnv->useStemPoolNum;
+    memset( pBlock->pStemBuf, 0, sizeof( *pBlock->pStemBuf ) * stemVerNum );
     pBlock->len = stemVerNum;
-    pBlock->blockDepth = pEnv->blockDepth;
+    pBlock->blockDepth = _pEnv->blockDepth;
     pBlock->pStackAddr = &dummy;
     
-    pEnv->useStemPoolNum += stemVerNum;
+    _pEnv->useStemPoolNum += stemVerNum;
 
     return pBlock;
 }
@@ -103,27 +132,42 @@ __lune_block_t * __lune_enter_block( __lune_env_t * pEnv, int stemVerNum )
  * - ブロックで管理している stem 型の値の参照カウンタをデクリメント
  * - 変数にアサインされていない stem 型の値を開放
  */
-void __lune_leave_block( __lune_env_t * pEnv )
+void __lune_leave_block( __lune_env_t * _pEnv )
 {
-    pEnv->blockDepth--;
+    __lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
+    _pEnv->blockDepth--;
     
-    __lune_block_t * pBlock = &pEnv->blockQueue[ pEnv->blockDepth ];
 
     int index;
     for ( index = 0; index < pBlock->len; index++ ) {
-        __lune_decre_ref( pEnv, pBlock->pStemBuf[ index ] );
+        __lune_decre_ref( _pEnv, pBlock->pStemBuf[ index ] );
     }
 
-    __lune_stem_t * pWork = pBlock->unassignStemTop.pPrev;
-    while ( pWork != &pBlock->unassignStemTop ) {
-        pWork->refCount = 1;
-        __lune_stem_t * pPrev = pWork->pPrev;
+    {
+        __lune_stem_t * pWork = pBlock->unassignStemTop.pPrev;
+        while ( pWork != &pBlock->unassignStemTop ) {
+            __lune_stem_t * pPrev = pWork->pPrev;
 
-        __lune_decre_ref( pEnv, pWork );
-        pWork = pPrev;
+            __lune_gc_stem( _pEnv, pWork );
+            pWork = pPrev;
+        }
     }
 
-    pEnv->useStemPoolNum -= pBlock->len;
+    {
+        __lune_stem_t * pWork = pBlock->retValUnassignStemTop.pPrev;
+        while ( pWork != &pBlock->retValUnassignStemTop ) {
+            __lune_stem_t * pPrev = pWork->pPrev;
+
+            pWork->retValFlag = false;
+            if ( pWork->refCount == 0 ) {
+                __lune_gc_stem( _pEnv, pWork );
+            }
+            pWork = pPrev;
+        }
+    }
+    
+
+    _pEnv->useStemPoolNum -= pBlock->len;
 }
 
 /**
@@ -133,10 +177,10 @@ void __lune_leave_block( __lune_env_t * pEnv )
  *
  * @param num ブロックの数
  */
-void __lune_leave_blockMulti( __lune_env_t * pEnv, int num )
+void __lune_leave_blockMulti( __lune_env_t * _pEnv, int num )
 {
     while ( num > 0 ) {
-        __lune_leave_block( pEnv );
+        __lune_leave_block( _pEnv );
         num--;
     }
 }
@@ -153,10 +197,10 @@ void __lune_leave_blockMulti( __lune_env_t * pEnv, int num )
  * @param argNum 引数の stem 型の値の数
  * @param ... 引数の stem 型の値。
  */
-__lune_block_t * __lune_enter_func( __lune_env_t * pEnv, int num, int argNum, ... )
+__lune_block_t * __lune_enter_func( __lune_env_t * _pEnv, int num, int argNum, ... )
 {
-    __lune_enter_block( pEnv, num );
-    __lune_block_t * pBlock = &pEnv->blockQueue[ pEnv->blockDepth - 1 ];
+    __lune_enter_block( _pEnv, num );
+    __lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
 
 
     va_list ap;
@@ -165,7 +209,7 @@ __lune_block_t * __lune_enter_func( __lune_env_t * pEnv, int num, int argNum, ..
     int index;
     for ( index = 0; index < argNum; index++ ) {
         __lune_stem_t * pStem = va_arg( ap, __lune_stem_t * );
-        __lune_setq( pBlock->pStemBuf[ index ], pStem );
+        __lune_setq( _pEnv, pBlock->pStemBuf[ index ], pStem );
     }
     va_end(ap);
 
@@ -181,12 +225,12 @@ __lune_block_t * __lune_enter_func( __lune_env_t * pEnv, int num, int argNum, ..
  * @param ... 含める値
  * @return ... の値
  */
-__lune_stem_t * __lune_createDDD( __lune_env_t * pEnv, int num, ... ) {
-    __lune_stem_t * pDDDStem = __lune_alloc_stem( pEnv, __lune_value_type_ddd );
+__lune_stem_t * __lune_createDDD( __lune_env_t * _pEnv, int num, ... ) {
+    __lune_stem_t * pDDDStem = __lune_alloc_stem( _pEnv, __lune_value_type_ddd );
     __lune_ddd_t * pDDD = &pDDDStem->val.ddd;
     pDDD->len = num;
     pDDD->pStemList = (__lune_stem_t **)malloc( sizeof( __lune_stem_t * ) * num );
-    pEnv->allocNum++;
+    _pEnv->allocNum++;
 
     va_list ap;
     va_start( ap, num );
@@ -207,11 +251,11 @@ __lune_stem_t * __lune_createDDD( __lune_env_t * pEnv, int num, ... ) {
  * @param size クラスインスタンスのサイズ
  * @return stem
  */
-__lune_stem_t * __lune_class_new( __lune_env_t * pEnv, int size )
+__lune_stem_t * __lune_class_new( __lune_env_t * _pEnv, int size )
 {
-    __lune_stem_t * pStem = __lune_alloc_stem( pEnv, __lune_value_type_class );
+    __lune_stem_t * pStem = __lune_alloc_stem( _pEnv, __lune_value_type_class );
     void * pObj = malloc( size );
-    pEnv->allocNum++;
+    _pEnv->allocNum++;
     pStem->val.classVal = pObj;
     return pStem;
 }
@@ -221,9 +265,9 @@ __lune_stem_t * __lune_class_new( __lune_env_t * pEnv, int size )
  *
  * @param pObj クラスのインスタンス
  */
-void __lune_class_del( __lune_env_t * pEnv, void * pObj )
+void __lune_class_del( __lune_env_t * _pEnv, void * pObj )
 {
-    pEnv->allocNum--;
+    _pEnv->allocNum--;
     free( pObj );
 }
 
@@ -236,13 +280,13 @@ void __lune_class_del( __lune_env_t * pEnv, void * pObj )
  * @return stem
  */
 __lune_stem_t * __lune_func2stem(
-    __lune_env_t * pEnv, __lune_func_t * pFunc, int num, ... )
+    __lune_env_t * _pEnv, __lune_func_t * pFunc, int num, ... )
 {
-    __lune_stem_t * pFormStem = __lune_alloc_stem( pEnv, __lune_value_type_form );
+    __lune_stem_t * pFormStem = __lune_alloc_stem( _pEnv, __lune_value_type_form );
     __lune_form_t * pForm = &pFormStem->val.form;
     pForm->len = num;
     pForm->pStemList = (__lune_stem_t **)malloc( sizeof( __lune_stem_t * ) * num );
-    pEnv->allocNum++;
+    _pEnv->allocNum++;
 
     pForm->pFunc = pFunc;
     
@@ -266,8 +310,8 @@ __lune_stem_t * __lune_func2stem(
  * @param val int 値
  * @return stem
  */
-__lune_stem_t * __lune_int2stem( __lune_env_t * pEnv, __lune_int_t val ) {
-    __lune_stem_t * pStem = __lune_alloc_stem( pEnv, __lune_value_type_int );
+__lune_stem_t * __lune_int2stem( __lune_env_t * _pEnv, __lune_int_t val ) {
+    __lune_stem_t * pStem = __lune_alloc_stem( _pEnv, __lune_value_type_int );
     pStem->val.intVal = val;
     return pStem;
 }
@@ -292,8 +336,8 @@ __lune_str_t __lune_createLiteralStr( const char * pStr ) {
  * @param val 文字列型データ
  * @return stem
  */
-__lune_stem_t * __lune_str2stem( __lune_env_t * pEnv, __lune_str_t val ) {
-    __lune_stem_t * pStem = __lune_alloc_stem( pEnv, __lune_value_type_str );
+__lune_stem_t * __lune_str2stem( __lune_env_t * _pEnv, __lune_str_t val ) {
+    __lune_stem_t * pStem = __lune_alloc_stem( _pEnv, __lune_value_type_str );
     pStem->val.str = val;
     return pStem;
 }
@@ -306,29 +350,33 @@ __lune_stem_t * __lune_str2stem( __lune_env_t * pEnv, __lune_str_t val ) {
  * @return 環境。
  */
 static __lune_env_t * __lune_createEnv() {
-    __lune_env_t * pEnv = (__lune_env_t *)malloc( sizeof( __lune_env_t ) );
-    pEnv->useStemPoolNum = 0;
-    pEnv->allocNum = 0;
-    pEnv->blockDepth = 0;
+    __lune_env_t * _pEnv = (__lune_env_t *)malloc( sizeof( __lune_env_t ) );
+    _pEnv->useStemPoolNum = 0;
+    _pEnv->allocNum = 0;
+    _pEnv->blockDepth = 0;
 
-    __lune_enter_block( pEnv, 0 );
-    pEnv->pNoneStem = __lune_alloc_stem( pEnv, __lune_value_type_none );
-    return pEnv;
+    __lune_enter_block( _pEnv, 0 );
+    _pEnv->pNoneStem = __lune_alloc_stem( _pEnv, __lune_value_type_none );
+
+    __lune_enter_block( _pEnv, 0 );
+    return _pEnv;
 }
 
 /**
  * 環境を開放する。
  *
- * @param pEnv 環境
+ * @param _pEnv 環境
  */
-static void __lune_deleteEnv( __lune_env_t * pEnv ) {
-    __lune_leave_block( pEnv );
+static void __lune_deleteEnv( __lune_env_t * _pEnv ) {
+    __lune_leave_block( _pEnv );
+    __lune_leave_block( _pEnv );
 
-    printf( "allocNum = %d\n", pEnv->allocNum );
-    printf( "useStemPoolNum = %d\n", pEnv->useStemPoolNum );
-    printf( "blockDepth = %d\n", pEnv->blockDepth );
+    printf( "-------------\n" );
+    printf( "allocNum = %d\n", _pEnv->allocNum );
+    printf( "useStemPoolNum = %d\n", _pEnv->useStemPoolNum );
+    printf( "blockDepth = %d\n", _pEnv->blockDepth );
 
-    free( pEnv );
+    free( _pEnv );
 }
 
 
@@ -337,9 +385,9 @@ static void __lune_deleteEnv( __lune_env_t * pEnv ) {
  *
  * @param pArg は ddd 型。
  */
-void __lune_print( __lune_env_t * pEnv, __lune_stem_t * pArg ) {
+void __lune_print( __lune_env_t * _pEnv, __lune_stem_t * pArg ) {
 
-    __lune_enter_func( pEnv, 1, 1, pArg );
+    __lune_enter_func( _pEnv, 1, 1, pArg );
 
     __lune_ddd_t * pDDD = &pArg->val.ddd;
     int index;
@@ -365,17 +413,17 @@ void __lune_print( __lune_env_t * pEnv, __lune_stem_t * pArg ) {
     }
     printf( "\n" );
 
-    __lune_leave_block( pEnv );
+    __lune_leave_block( _pEnv );
 }
 
 
 
 int main() {
-    __lune_env_t * pEnv = __lune_createEnv();
+    __lune_env_t * _pEnv = __lune_createEnv();
     
-    __lune_init_test( pEnv );
+    __lune_init_test( _pEnv );
 
-    __lune_deleteEnv( pEnv );
+    __lune_deleteEnv( _pEnv );
 
     return 0;
 }
