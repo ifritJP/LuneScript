@@ -1,6 +1,26 @@
 #include <lunescript.h>
 
 
+    /**
+     * リストの末尾に STEM を追加。
+     */
+#define __lune_add2list( TOP, STEM )            \
+    STEM->pNext = TOP;                          \
+    STEM->pPrev = (TOP)->pPrev;                 \
+    (TOP)->pPrev->pNext = STEM;                 \
+    (TOP)->pPrev = STEM;
+
+    /**
+     * リストから STEM を除外。
+     */
+#define __lune_rmFromList( STEM )               \
+    if ( (STEM)->pNext != NULL ) {              \
+        (STEM)->pPrev->pNext = (STEM)->pNext;   \
+        (STEM)->pNext->pPrev = (STEM)->pPrev;   \
+        (STEM)->pNext = NULL;                   \
+    }
+
+
 /**
  * type の値を保持する stem 型を生成する。
  *
@@ -245,6 +265,26 @@ __lune_stem_t * __lune_createDDD( __lune_env_t * _pEnv, int num, ... ) {
     return pDDDStem;
 }
 
+
+/**
+ * ... の値を生成する
+ *
+ * ... に含める値は全て stem に変換する必要がある。
+ *
+ * @param num 値の数
+ * @param ... 含める値
+ * @return ... の値
+ */
+__lune_stem_t * __lune_createDDDOnly( __lune_env_t * _pEnv, int num ) {
+    __lune_stem_t * pDDDStem = __lune_alloc_stem( _pEnv, __lune_value_type_ddd );
+    __lune_ddd_t * pDDD = &pDDDStem->val.ddd;
+    pDDD->len = num;
+    pDDD->pStemList = (__lune_stem_t **)malloc( sizeof( __lune_stem_t * ) * num );
+    _pEnv->allocNum++;
+
+    return pDDDStem;
+}
+
 /**
  * クラスのインスタンスを保持する stem を生成する
  *
@@ -405,6 +445,9 @@ void __lune_print( __lune_env_t * _pEnv, __lune_stem_t * pArg ) {
             break;
         case __lune_value_type_str:
             printf( "%s", pStem->val.str.pStr );
+            break;
+        case __lune_value_type_form:
+            printf( "form: %p", pStem );
             break;
         default:
             printf( "unknown type -- %d", pStem->type );

@@ -197,6 +197,8 @@ static __lune_stem_t * __form_test2(
 
     __lune_mtd_List( pList )->insert( _pEnv, pList, pVal );
     
+    __lune_print( _pEnv, __lune_mtd_List( pList )->unpack( _pEnv, pList ) );
+    
     __lune_leave_block( _pEnv );
 
     return _pEnv->pNoneStem;

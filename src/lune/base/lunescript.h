@@ -68,13 +68,6 @@ extern "C" {
     SYM = VAL;                                  \
     __lune_setQ_( SYM );
     
-#if 0
-    SYM->refCount++;                            \
-    if ( SYM->retValFlag ) {                    \
-        SYM->retValFlag = FALSE;                \
-    }                                           \
-    __lune_rmFromList( SYM );
-#endif
     
 
     /**
@@ -270,30 +263,18 @@ extern "C" {
         int allocNum;
     };
 
-    /**
-     * リストの末尾に STEM を追加。
-     */
-#define __lune_add2list( TOP, STEM )            \
-    STEM->pNext = TOP;                          \
-    STEM->pPrev = (TOP)->pPrev;                 \
-    (TOP)->pPrev->pNext = STEM;                 \
-    (TOP)->pPrev = STEM;
 
-    /**
-     * リストから STEM を除外。
-     */
-#define __lune_rmFromList( STEM )               \
-    if ( (STEM)->pNext != NULL ) {              \
-        (STEM)->pPrev->pNext = (STEM)->pNext;   \
-        (STEM)->pNext->pPrev = (STEM)->pPrev;   \
-        (STEM)->pNext = NULL;                   \
-    }
-  
+#define __lune_set2DDDArg( STEM, INDEX, VAL )  \
+    STEM->val.ddd.pStemList[ INDEX ] = VAL;
+    
+   
     extern __lune_stem_t * __lune_int2stem( __lune_env_t * _pEnv, __lune_int_t val );
     extern __lune_str_t __lune_createLiteralStr( const char * pStr );
     extern __lune_stem_t * __lune_str2stem( __lune_env_t * _pEnv, __lune_str_t val );
     extern __lune_stem_t * __lune_func2stem( __lune_env_t * _pEnv, __lune_func_t * pFunc, int num, ... );
     extern __lune_stem_t * __lune_createDDD( __lune_env_t * _pEnv, int num, ... );
+    extern __lune_stem_t * __lune_createDDDOnly( __lune_env_t * _pEnv, int num );
+
 
 
     extern __lune_stem_t * __lune_setRet( __lune_env_t * __pEnv, __lune_stem_t * pStem );
