@@ -934,13 +934,18 @@ fn TransUnit.analyzeExpCall(
          if callback == Ast.builtinTypeAbbr {
             return;
          }
-         if #callback.$retTypeInfoList ~= 1 or
-            not Ast.builtinTypeBool.equals( callback.$retTypeInfoList[ 1 ] ##)
-         {
+         if #callback.$retTypeInfoList ~= 1 {
+            self.addErrMess(
+               firstToken.$pos,
+               "The callback's to return value of sort() must have a value. -- %d"
+               (#callback.$retTypeInfoList) );
+            return;
+         }
+         if not Ast.builtinTypeBool.equals( callback.$retTypeInfoList[ 1 ] ##) {
             self.addErrMess(
                firstToken.$pos,
                "The callback's return type of sort() must be bool. -- '%s'"
-               (callback.$retTypeInfoList[ 1 ].getTxt(##)) );
+               ( callback.$retTypeInfoList[ 1 ].getTxt(##) ) );
          }
          if #callback.$argTypeInfoList ~= 2 {
             self.addErrMess(
@@ -2602,6 +2607,17 @@ fn TransUnit.analyzeExp(
       let mut exp:Nodes.Node = self.analyzeRefType( .Local, false );
 
       let mut classTypeInfo = exp.$expType;
+      switch classTypeInfo.$kind {
+         case .Class, .IF {
+            if classTypeInfo.equals( Ast.builtinTypeString## ) {
+               self.error( "'new' can't use this type -- %s" (classTypeInfo.getTxt(##)));
+            }
+         }
+         default {
+            self.error( "'new' can't use this type -- %s" (classTypeInfo.getTxt(##)));
+         }
+      }
+      
       if classTypeInfo.$externalFlag {
          switch classTypeInfo.$accessMode {
             case .Pri, .Local {

@@ -12,38 +12,38 @@ extern "C" {
 #endif
 
 
-    typedef int __lune_int_t;
-    typedef double __lune_real_t;
-    typedef void * __lune_class_t;
+    typedef int lune_bool_t;
+    typedef int lune_int_t;
+    typedef double lune_real_t;
+    typedef void * lune_class_t;
 
 
-    typedef struct __lune_stem_t __lune_stem_t;
-    typedef struct __lune_block_t __lune_block_t;
-    typedef struct __lune_env_t __lune_env_t;
-    typedef struct __lune_form_t __lune_form_t;
-    typedef struct __lune_List_t __lune_List_t;
+    typedef struct lune_stem_t lune_stem_t;
+    typedef struct lune_block_t lune_block_t;
+    typedef struct lune_env_t lune_env_t;
+    typedef struct lune_form_t lune_form_t;
 
     /**
      * ブロックの最大深度。
      * 深い関数の再帰呼び出しをすると消費するが、 1000 もあれば十分。
      */
-#define __LUNE_BLOCK_MAX_DEPTH 1000
+#define LUNE_BLOCK_MAX_DEPTH 1000
 
     /**
      * 全ブロックで保持する stem 型の値の最大数。
      *
      * 要は、main から関数コールしていった時に、ローカル変数を何個使用できるか。
      */
-#define __LUNE_STEM_POOL_MAX_NUM 100000
+#define LUNE_STEM_POOL_MAX_NUM 100000
 
-#define __lune_set_block_stem( BLOCK, INDEX, STEM )     \
+#define lune_set_block_stem( BLOCK, INDEX, STEM )     \
     (BLOCK)->pStemBuf[ INDEX ] = STEM
 
 
 
-#define __lune_initVal( SYMBOL, BLOCK, INDEX, VAL )     \
-    __lune_setQ( SYMBOL, VAL );                         \
-    __lune_set_block_stem( BLOCK, INDEX, SYMBOL );
+#define lune_initVal( SYMBOL, BLOCK, INDEX, VAL )     \
+    lune_setQ( SYMBOL, VAL );                         \
+    lune_set_block_stem( BLOCK, INDEX, SYMBOL );
     
     
     /**
@@ -52,11 +52,11 @@ extern "C" {
        変数 SYM に VAL をセットする前に、
        変数 SYM が保持する値の参照カウントをデクリメント。
     */
-#define __lune_setq( ENV, SYM, VAL )            \
+#define lune_setq( ENV, SYM, VAL )            \
     if ( SYM != NULL ) {                        \
-        __lune_decre_ref( ENV, SYM );           \
+        lune_decre_ref( ENV, SYM );           \
     }                                           \
-    __lune_setQ( SYM, VAL );
+    lune_setQ( SYM, VAL );
 
     /**
        STEM 型の値 VAL を、 変数 SYM に代入する。
@@ -64,9 +64,9 @@ extern "C" {
        - VAL の参照カウントインクリメント
        - VAL を unassignStem から除外
     */
-#define __lune_setQ( SYM, VAL )                 \
+#define lune_setQ( SYM, VAL )                 \
     SYM = VAL;                                  \
-    __lune_setQ_( SYM );
+    lune_setQ_( SYM );
     
     
 
@@ -77,31 +77,42 @@ extern "C" {
        @param STEMVAL 生成した stem 値を格納する変数シンボル
        @param CLASSVAL 生成したクラスインスタンスを格納する変数シンボル
     */
-#define __lune_class_new_( ENV, CLASS, STEMVAL, CLASSVAL )              \
-    __lune_class_new2_( ENV, CLASS, CLASS, STEMVAL, CLASSVAL )
-    // __lune_stem_t * STEMVAL = __lune_class_new( ENV, sizeof( CLASS ) );
-    // CLASS * CLASSVAL = __lune_obj_##CLASS( pStem );                   
-    // CLASSVAL->pMtd = &__mtd_##CLASS;
+#define lune_class_new_( ENV, CLASS, STEMVAL, CLASSVAL )              \
+    lune_class_new2_( ENV, CLASS, CLASS, STEMVAL, CLASSVAL )
+    // lune_stem_t * STEMVAL = lune_class_new( ENV, sizeof( CLASS ) );
+    // CLASS * CLASSVAL = lune_obj_##CLASS( pStem );                   
+    // CLASSVAL->pMtd = &lune_mtd_##CLASS;
 
 
-#define __lune_class_new2_( ENV, CLASS, SCLASS, STEMVAL, CLASSVAL )     \
-    __lune_stem_t * STEMVAL = __lune_class_new( ENV, sizeof( CLASS ) ); \
-    CLASS * CLASSVAL = __lune_obj_##SCLASS( pStem );                    \
-    CLASSVAL->pMtd = &__mtd_##SCLASS
+#define lune_class_new2_( ENV, CLASS, SCLASS, STEMVAL, CLASSVAL )     \
+    lune_stem_t * STEMVAL = lune_class_new( ENV, sizeof( CLASS ) ); \
+    CLASS * CLASSVAL = lune_obj_##SCLASS( pStem );                    \
+    CLASSVAL->pMtd = &lune_mtd_##SCLASS
     
 
-
-
     typedef enum {
-        __lune_value_type_none,
-        __lune_value_type_int,
-        __lune_value_type_real,
-        __lune_value_type_str,
-        __lune_value_type_class,
-        __lune_value_type_ddd,
-        __lune_value_type_form,
-    } __lune_value_type_t;
+        lune_value_type_none,
+        lune_value_type_nil,
+        lune_value_type_bool,
+        lune_value_type_int,
+        lune_value_type_real,
+        lune_value_type_str,
+        lune_value_type_class,
+        lune_value_type_ddd,
+        lune_value_type_form,
+        lune_value_type_List,
+        lune_value_type_Array,
+        lune_value_type_Set,
+        lune_value_type_Map,
+        lune_value_type_itSet,
+        lune_value_type_itMap,
+    } lune_value_type_t;
 
+    typedef struct lune_itSet_t lune_itSet_t;
+    typedef struct lune_itMap_t lune_itMap_t;
+    
+
+    typedef lune_stem_t * lune_newfunc_t( lune_env_t * _pEnv, ... );
 
 
     /**
@@ -111,7 +122,7 @@ extern "C" {
      * @param ... 関数の引数
      * @return 関数の戻り値
      */
-    typedef __lune_stem_t * __lune_func_t( __lune_env_t * _pEnv, __lune_stem_t * pInfo, ... );
+    typedef lune_stem_t * lune_func_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
 
     /**
      * メソッドの型
@@ -120,7 +131,7 @@ extern "C" {
      * @param ... メソッドの引数
      * @return メソッドの戻り値
      */
-    typedef __lune_stem_t * __lune_method_t( __lune_env_t * _pEnv, __lune_stem_t * pObj, ... );
+    typedef lune_stem_t * lune_method_t( lune_env_t * _pEnv, lune_stem_t * pObj, ... );
 
 
 
@@ -130,7 +141,7 @@ extern "C" {
      * @param pObj クラスのインスタンスを保持する stem
      * @param freeFlag インスタンスを開放する場合 true
      */
-    typedef void __lune_gc_t( __lune_env_t * _pEnv, __lune_stem_t * pObj, bool freeFlag );
+    typedef void lune_gc_t( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
 
     /**
      * クラスのメソッドの最小構造。
@@ -138,9 +149,9 @@ extern "C" {
      * 各クラスのインスタンスは、メソッドのポインタを保持する構造体を持つ。
      * メソッドのポインタを保持する構造体の先頭は、必ず gc のメソッドでなければならない。
      */
-    typedef struct __mtd__Class_t {
-        __lune_gc_t * _gc;
-    } __mtd__Class_t;
+    typedef struct lune_mtd__Class_t {
+        lune_gc_t * _gc;
+    } lune_mtd__Class_t;
 
     /**
      * クラスのインスタンスの最小構造。
@@ -149,9 +160,9 @@ extern "C" {
      * メソッドのポインタを保持する構造体のポインタ pMtd を先頭に持つ。
      * クラスのメンバは、 pMtd の次に宣言する。
      */
-    typedef struct __lune_Class_t {
-        __mtd__Class_t * pMtd;
-    } __lune_Class_t;
+    typedef struct lune_Class_t {
+        lune_mtd__Class_t * pMtd;
+    } lune_Class_t;
 
 
     /**
@@ -166,69 +177,93 @@ extern "C" {
         int len;
         /** pStr のデータが static かどうか。 */
         bool staticFlag;
-    } __lune_str_t;
+    } lune_str_t;
 
     /**
      * ... を保持する型
      */
     typedef struct {
         /** ... に含む stem を管理するバッファ */
-        __lune_stem_t ** pStemList;
+        lune_stem_t ** pStemList;
         /** pStemList で管理している stem の数 */
         int len;
-    } __lune_ddd_t;
+    } lune_ddd_t;
 
+#define lune_form_closure( FORM, INDEX )        \
+    (FORM)->val.form.pStemList[ INDEX ]
+
+#define lune_call_form( ENV, FORM, ... ) \
+    (FORM)->val.form.pFunc( ENV, FORM, ##__VA_ARGS__ )
+    
     /**
      * form の情報。
      */
-    struct __lune_form_t {
+    struct lune_form_t {
         /** 関数 */
-        __lune_func_t * pFunc;
+        lune_func_t * pFunc;
         /** form 内でアクセスする外部変数を管理するバッファ */
-        __lune_stem_t ** pStemList;
+        lune_stem_t ** pStemList;
         /** pStemList で管理している stem の数 */
         int len;
     };
 
-    typedef void __lune_listObj_t;
+    typedef void lune_listObj_t;
+    typedef struct lune_mtd_List_t lune_mtd_List_t;
+    typedef struct lune_List_t {
+        lune_mtd_List_t * pMtd;
+        lune_listObj_t * pObj;
+    } lune_List_t;
 
-    typedef struct __mtd_List_t __mtd_List_t;
-    struct __lune_List_t {
-        __mtd_List_t * pMtd;
-        __lune_listObj_t * pObj;
-    };
 
+    typedef void lune_setObj_t;
+    typedef struct lune_mtd_Set_t lune_mtd_Set_t;
+    typedef struct lune_Set_t {
+        lune_mtd_Set_t * pMtd;
+        lune_setObj_t * pObj;
+    } lune_Set_t;
+
+    typedef void lune_mapObj_t;
+    typedef struct lune_mtd_Map_t lune_mtd_Map_t;
+    typedef struct lune_Map_t {
+        lune_mtd_Map_t * pMtd;
+        lune_mapObj_t * pObj;
+    } lune_Map_t;
+    
     /** stem 型データ */
-    struct __lune_stem_t {
+    struct lune_stem_t {
         /** 保持しているデータの型 */
-        __lune_value_type_t type;
+        lune_value_type_t type;
         /** このデータを参照している数 */
         int refCount;
         /** 戻り値として処理中か */
         bool retValFlag;
+        /** ENV */
+        lune_env_t * pEnv;
         /** 実データ */
         union {
-            __lune_int_t intVal;
-            __lune_real_t realVal;
-            __lune_str_t str;
-            __lune_ddd_t ddd;
-            __lune_form_t form;
-            __lune_class_t classVal;
-            __lune_List_t list;
+            lune_bool_t boolVal;
+            lune_int_t intVal;
+            lune_real_t realVal;
+            lune_str_t str;
+            lune_ddd_t ddd;
+            lune_form_t form;
+            lune_class_t classVal;
+            lune_itSet_t * itSet;
+            lune_itMap_t * itMap;
         } val;
         /** 変数にアサインされる前の値を管理する双方向リスト構造。アサイン済みの場合 NULL。 */
-        struct __lune_stem_t * pNext;
+        struct lune_stem_t * pNext;
         /** 変数にアサインされる前の値を管理する双方向リスト構造。  */
-        struct __lune_stem_t * pPrev;
+        struct lune_stem_t * pPrev;
     };
 
-    struct __lune_block_t {
+    struct lune_block_t {
         /** このブロックの深度を判定するための目安 */
         void * pStackAddr;
         /** ブロック深度 */
         int blockDepth;
         /** このブロックで管理する stem 型を保持するバッファ */
-        __lune_stem_t ** pStemBuf;
+        lune_stem_t ** pStemBuf;
         /** pStemBuf で管理する値の数 */
         int len;
         /**
@@ -236,59 +271,72 @@ extern "C" {
          * 変数にアサインされていない stem 型データの双方向リスト。
          * 実際の先頭要素は unassignStemTop.pNext。
          */
-        __lune_stem_t unassignStemTop;
+        lune_stem_t unassignStemTop;
         /**
          * このブロックでコールしている関数の戻り値で、
          * 変数にアサインされていない stem 型データの双方向リスト。
          * 実際の先頭要素は retValUnassignStemTop.pNext。
          */
-        __lune_stem_t retValUnassignStemTop;
+        lune_stem_t retValUnassignStemTop;
     };
 
-    struct __lune_env_t {
+    struct lune_env_t {
         /** 値を返さない関数の戻り値 */
-        __lune_stem_t * pNoneStem;
+        lune_stem_t * pNoneStem;
+        /** nil */
+        lune_stem_t * pNilStem;
         /**
          * ブロック情報で利用する pStemBuf のバッファ。
          * ブロック開始時に、ここから割り当てる。
          */
-        __lune_stem_t * stemPPool[ __LUNE_STEM_POOL_MAX_NUM ];
+        lune_stem_t * stemPPool[ LUNE_STEM_POOL_MAX_NUM ];
         /** stemPPool をどこまで使用しているか個数を示す */
         int useStemPoolNum;
         /** ブロック情報の Queue。*/
-        __lune_block_t blockQueue[ __LUNE_BLOCK_MAX_DEPTH ];
+        lune_block_t blockQueue[ LUNE_BLOCK_MAX_DEPTH ];
         /** 現在のブロックの深度 */
         int blockDepth;
         /** 現在確保している stem の数 */
         int allocNum;
+
+        /** sort callback */
+        lune_stem_t * pSortCallback;
     };
 
 
-#define __lune_set2DDDArg( STEM, INDEX, VAL )  \
+#define lune_set2DDDArg( STEM, INDEX, VAL )  \
     STEM->val.ddd.pStemList[ INDEX ] = VAL;
+
+#define lune_fromDDD( STEM, INDEX )  \
+    STEM->val.ddd.pStemList[ INDEX ]
     
    
-    extern __lune_stem_t * __lune_int2stem( __lune_env_t * _pEnv, __lune_int_t val );
-    extern __lune_str_t __lune_createLiteralStr( const char * pStr );
-    extern __lune_stem_t * __lune_str2stem( __lune_env_t * _pEnv, __lune_str_t val );
-    extern __lune_stem_t * __lune_func2stem( __lune_env_t * _pEnv, __lune_func_t * pFunc, int num, ... );
-    extern __lune_stem_t * __lune_createDDD( __lune_env_t * _pEnv, int num, ... );
-    extern __lune_stem_t * __lune_createDDDOnly( __lune_env_t * _pEnv, int num );
+    extern lune_stem_t * lune_bool2stem( lune_env_t * _pEnv, lune_bool_t val );
+    extern lune_stem_t * lune_int2stem( lune_env_t * _pEnv, lune_int_t val );
+    extern lune_str_t lune_createLiteralStr( const char * pStr );
+    extern lune_stem_t * lune_str2stem( lune_env_t * _pEnv, lune_str_t val );
+    extern lune_stem_t * lune_litStr2stem( lune_env_t * _pEnv, const char * pStr );
+    extern lune_stem_t * lune_func2stem( lune_env_t * _pEnv, lune_func_t * pFunc, int num, ... );
+    extern lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... );
+    extern lune_stem_t * lune_createDDDOnly( lune_env_t * _pEnv, int num );
 
 
 
-    extern __lune_stem_t * __lune_setRet( __lune_env_t * __pEnv, __lune_stem_t * pStem );
-    extern void __lune_setQ_( __lune_stem_t * pStem );
-    extern __lune_block_t * __lune_enter_func( __lune_env_t * _pEnv, int num, int argNum, ... );
-    extern void __lune_leave_block( __lune_env_t * _pEnv );
-    extern __lune_block_t * __lune_enter_block( __lune_env_t * _pEnv, int stemVerNum );
-    extern void __lune_decre_ref( __lune_env_t * _pEnv, __lune_stem_t * pStem );
-    extern __lune_stem_t * __lune_class_new( __lune_env_t * _pEnv, int size );
-    extern void __lune_class_del( __lune_env_t * _pEnv, void * pObj );
+    extern lune_stem_t * lune_setRet( lune_env_t * __pEnv, lune_stem_t * pStem );
+    extern void lune_setQ_( lune_stem_t * pStem );
+    extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int num, int argNum, ... );
+    extern void lune_leave_block( lune_env_t * _pEnv );
+    extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemVerNum );
+    extern void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem );
+    extern lune_stem_t * lune_class_new( lune_env_t * _pEnv, int size );
+    extern void lune_class_del( lune_env_t * _pEnv, void * pObj );
+    extern lune_stem_t * lune_it_new(
+        lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
+    extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
 
 
 
-    extern void __lune_print( __lune_env_t * _pEnv, __lune_stem_t * pArg );
+    extern void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg );
 
 
 #ifdef __cplusplus

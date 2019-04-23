@@ -7334,7 +7334,12 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
             return 
          end
          
-         if #callback:get_retTypeInfoList() ~= 1 or not Ast.builtinTypeBool:equals( callback:get_retTypeInfoList()[1] ) then
+         if #callback:get_retTypeInfoList() ~= 1 then
+            self:addErrMess( firstToken.pos, string.format( "The callback's to return value of sort() must have a value. -- %d", #callback:get_retTypeInfoList()) )
+            return 
+         end
+         
+         if not Ast.builtinTypeBool:equals( callback:get_retTypeInfoList()[1] ) then
             self:addErrMess( firstToken.pos, string.format( "The callback's return type of sort() must be bool. -- '%s'", callback:get_retTypeInfoList()[1]:getTxt(  )) )
          end
          
@@ -8856,6 +8861,19 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
    
       local exp = self:analyzeRefType( Ast.AccessMode.Local, false )
       local classTypeInfo = exp:get_expType()
+      do
+         local _switchExp = classTypeInfo:get_kind()
+         if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+            if classTypeInfo:equals( Ast.builtinTypeString ) then
+               self:error( string.format( "'new' can't use this type -- %s", classTypeInfo:getTxt(  )) )
+            end
+            
+         else 
+            
+               self:error( string.format( "'new' can't use this type -- %s", classTypeInfo:getTxt(  )) )
+         end
+      end
+      
       if classTypeInfo:get_externalFlag() then
          do
             local _switchExp = classTypeInfo:get_accessMode()
