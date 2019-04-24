@@ -62,7 +62,7 @@ extern "C" {
        STEM 型の値 VAL を、 変数 SYM に代入する。
 
        - VAL の参照カウントインクリメント
-       - VAL を unassignStem から除外
+       - VAL を managedStemTop から除外
     */
 #define lune_setQ( SYM, VAL )                 \
     SYM = VAL;                                  \
@@ -235,8 +235,6 @@ extern "C" {
         lune_value_type_t type;
         /** このデータを参照している数 */
         int refCount;
-        /** 戻り値として処理中か */
-        bool retValFlag;
         /** ENV */
         lune_env_t * pEnv;
         /** 実データ */
@@ -267,17 +265,10 @@ extern "C" {
         /** pStemBuf で管理する値の数 */
         int len;
         /**
-         * このブロック内で生成され、
-         * 変数にアサインされていない stem 型データの双方向リスト。
-         * 実際の先頭要素は unassignStemTop.pNext。
+         * このブロック内で生成された stem 型データの双方向リスト。
+         * 実際の先頭要素は managedStemTop.pNext。
          */
-        lune_stem_t unassignStemTop;
-        /**
-         * このブロックでコールしている関数の戻り値で、
-         * 変数にアサインされていない stem 型データの双方向リスト。
-         * 実際の先頭要素は retValUnassignStemTop.pNext。
-         */
-        lune_stem_t retValUnassignStemTop;
+        lune_stem_t managedStemTop;
     };
 
     struct lune_env_t {

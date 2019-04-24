@@ -1213,48 +1213,48 @@ class _TypeInfoAlge extend _TypeInfo {
    }
 }
 
+macro _DefBuiltinFuncType( symList:List<str> )
+{
+   {
+      let mut defMemberList:List<stat> = [];
+      let mut initMemberList:List<stat> = [];
+      foreach symbol in symList {
+         defMemberList.insert( `{
+            pub let mut ,,,symbol:&Ast.TypeInfo;
+         } );
+         initMemberList.insert( `{
+            self.,,,symbol = Ast.headTypeInfo;
+         });
+      }
+   }
+   pub class BuiltinFuncType {
+      ,,defMemberList;
 
-pub class BuiltinFuncType {
-   pub let mut luneLoad:&Ast.TypeInfo;
-   pub let mut listInsert:&Ast.TypeInfo;
-   pub let mut listRemove:&Ast.TypeInfo;
-   pub let mut listUnpack:&Ast.TypeInfo;
-   pub let mut listSort:&Ast.TypeInfo;
-   pub let mut arrayUnpack:&Ast.TypeInfo;
-   pub let mut arraySort:&Ast.TypeInfo;
-   //pub let mut mappingIF:&Ast.TypeInfo;
-   pub let mut mappingToMap:&Ast.TypeInfo;
-   pub let mut strGMatch:&Ast.TypeInfo;
-   pub let mut stringGMatch:&Ast.TypeInfo;
-   pub let mut stringForm:&Ast.TypeInfo;
-   pub let mut setAdd:&Ast.TypeInfo;
-   pub let mut setDel:&Ast.TypeInfo;
-   pub let mut setOr:&Ast.TypeInfo;
-   pub let mut setAnd:&Ast.TypeInfo;
-   pub let mut setSub:&Ast.TypeInfo;
-   pub let mut nilableVal:&Ast.TypeInfo;
-
-   pub fn __init() {
-      self.luneLoad = Ast.headTypeInfo;
-      self.listInsert = Ast.headTypeInfo;
-      self.listRemove = Ast.headTypeInfo;
-      self.listUnpack = Ast.headTypeInfo;
-      self.listSort = Ast.headTypeInfo;
-      self.arrayUnpack = Ast.headTypeInfo;
-      self.arraySort = Ast.headTypeInfo;
-//      self.mappingIF = Ast.builtinTypeMapping;
-      self.mappingToMap = Ast.headTypeInfo;
-      self.strGMatch = Ast.headTypeInfo;
-      self.stringGMatch = Ast.headTypeInfo;
-      self.stringForm = Ast.headTypeInfo;
-      self.setAdd = Ast.headTypeInfo;
-      self.setDel = Ast.headTypeInfo;
-      self.setOr = Ast.headTypeInfo;
-      self.setAnd = Ast.headTypeInfo;
-      self.setSub = Ast.headTypeInfo;
-      self.nilableVal = Ast.headTypeInfo;
+      pub fn __init() {
+         ,,initMemberList;
+      }
    }
 }
+
+_DefBuiltinFuncType( [
+   "luneLoad",
+   "listInsert",
+   "listRemove",
+   "listUnpack",
+   "listSort",
+   "arrayUnpack",
+   "arraySort",
+   "mappingToMap",
+   "strGMatch",
+   "stringGMatch",
+   "stringForm",
+   "setAdd",
+   "setDel",
+   "setOr",
+   "setAnd",
+   "setSub",
+   "nilableVal"
+] );
 
 let mut builtinFunc = new BuiltinFuncType();
 

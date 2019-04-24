@@ -34,7 +34,8 @@ INSTALL=/usr/bin/install -c
 
 NDIR=$(shell pwd)
 
-.PHONY: help exec build build-glue accept-package check_lua_mod_dir install uninstall test-ccc test-comp
+.PHONY: help exec build build-glue accept-package
+.PHONY: check_lua_mod_dir install uninstall test-ccc test-comp build-cc
 
 help:
 	@echo usage:
@@ -536,3 +537,9 @@ uninstall: check_lua_mod_dir
 
 test-ccc:
 	LANG= $(MAKE) -f Makefile.ccc
+
+build-cc:
+	$(call transwork,.,.,base/convCC)
+	lua5.3 lune/base/base.lua mini.lns save -langC
+	cat mini.c
+	LANG= $(MAKE) -f Makefile.ccc SRCS=mini.c

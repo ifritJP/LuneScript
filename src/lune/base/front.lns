@@ -25,6 +25,7 @@ SOFTWARE.
 import lune.base.frontInterface;
 import lune.base.Parser;
 import lune.base.convLua;
+import lune.base.convCC;
 import lune.base.TransUnit;
 import lune.base.Util;
 import lune.base.Option;
@@ -683,8 +684,9 @@ form CloseOStreamForConvert( stream:oStream!, metaStream:oStream!, dependStream:
 @return
 */
 pub fn Front.convertLuaToStreamFromScript(
-   convMode:convLua.ConvMode, path:str, mod:str, byteCompile:bool, stripDebugInfo:bool,
-   openOStream:OpenOStreamForConvert, closeOStream:CloseOStreamForConvert! ) mut
+   convMode:convLua.ConvMode, path:str, mod:str,
+   byteCompile:bool, stripDebugInfo:bool, openOStream:OpenOStreamForConvert,
+   closeOStream:CloseOStreamForConvert! ) mut : &TransUnit.ASTInfo!
 {
    fn outputDependInfo( stream:oStream!, metaInfo:&MetaForBuildId! ) {
       when! stream {
@@ -704,6 +706,8 @@ pub fn Front.convertLuaToStreamFromScript(
       }
    }
 
+   let mut retAst:&TransUnit.ASTInfo! = nil;
+   
    let moduleId, uptodate = self.getModuleIdAndCheckUptodate( path, mod );
 
    let mut stream, mut metaStream, mut dependsStream = openOStream( uptodate );
@@ -720,6 +724,7 @@ pub fn Front.convertLuaToStreamFromScript(
             let ast = self.createAst(
                new frontInterface.ImportModuleInfo(),
                createPaser( path, mod ), mod, moduleId, nil, .Compile, ## );
+            retAst = ast;
 
             when! dependsStream {
                ast.$node.processFilter( OutputDepend.createFilter( dependsStream ), 1 );
@@ -770,6 +775,8 @@ pub fn Front.convertLuaToStreamFromScript(
    when! closeOStream {
       closeOStream( stream, metaStream, dependsStream );
    }
+
+   return retAst;
 }
 
 pub fn Front.convertToLua() mut {
@@ -796,7 +803,28 @@ pub fn Front.convertToLua() mut {
    );
 }
 
-pub fn Front.saveToLua() mut {
+
+/**
+C に変換しファイルに書き込む
+*/
+pub fn Front.saveToC( ast:&TransUnit.ASTInfo ) mut {
+   let mut cPath = self.option.scriptPath.gsub( "%.lns$", ".c" );
+
+   let! mut file = io.open( cPath, "w" ) {
+      return;
+   };
+
+   let mut conv = convCC.createFilter( cPath, file, ast );
+   ast.$node.processFilter( conv, new convCC.Opt( ast.$node ) );
+
+   file.close();
+}
+
+
+/**
+Lua に変換しファイルに書き込む
+*/
+pub fn Front.saveToLua() mut : bool {
    frontInterface.setFront( self );
 
    fn txt2ModuleId( txt:str ) : frontInterface.ModuleId {
@@ -887,6 +915,9 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
    }
 
 
+   let mut updateFlag = true;
+   let mut ast:&TransUnit.ASTInfo! = nil;
+   
    let mod = scriptPath2Module( self.option.scriptPath );
    Util.profile(
       self.option.validProf,
@@ -921,7 +952,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
             let tempMetaPath = metaPath .. ".tmp";
 
 
-            self.convertLuaToStreamFromScript(
+            ast = self.convertLuaToStreamFromScript(
                convMode, self.option.scriptPath, mod,
                self.option.byteCompile, self.option.stripDebugInfo,
                fn ( mode:ModuleUptodate ): oStream!, oStream!, oStream!
@@ -1007,11 +1038,26 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
                                  fileObj.close();
                               }
                            }
+                           else {
+                              updateFlag = false;
+                           }
                         }
 	             }
                   });
          }
       }, self.option.scriptPath .. ".profi" );
+
+   if updateFlag {
+      self.option.scriptPath.gsub( "%.lns$", ".lua" );
+   }
+
+   when! ast {
+      if self.option.convertC {
+         self.saveToC( ast );
+      }
+   }
+
+   return updateFlag;
 }
 
 

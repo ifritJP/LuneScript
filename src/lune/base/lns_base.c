@@ -1,6 +1,5 @@
 #include <lunescript.h>
 
-
     /**
      * リストの末尾に STEM を追加。
      */
@@ -38,11 +37,12 @@ static lune_stem_t * lune_alloc_stem( lune_env_t * _pEnv, lune_value_type_t type
     
     lune_stem_t * pStem = (lune_stem_t *)malloc( sizeof( lune_stem_t ) );
     pStem->type = type;
-    pStem->refCount = 0;
+    pStem->refCount = 1;
     pStem->pEnv = _pEnv;
 
+    // 現在のブロックに登録
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
-    lune_add2list( &pBlock->unassignStemTop, pStem );
+    lune_add2list( &pBlock->managedStemTop, pStem );
 
     return pStem;
 }
@@ -100,7 +100,7 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
  */
 void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
     pStem->refCount--;
-    if ( pStem->refCount == 0 && !pStem->retValFlag ) {
+    if ( pStem->refCount == 0 ) {
         lune_gc_stem( _pEnv, pStem );
     }
 }
@@ -108,10 +108,6 @@ void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
 void lune_setQ_( lune_stem_t * pStem )
 {
     pStem->refCount++;
-    if ( pStem->retValFlag ) {
-        pStem->retValFlag = false;
-    }
-    lune_rmFromList( pStem );
 }
 
 lune_stem_t * lune_setRet( lune_env_t * _pEnv, lune_stem_t * pStem )
@@ -119,8 +115,7 @@ lune_stem_t * lune_setRet( lune_env_t * _pEnv, lune_stem_t * pStem )
     lune_rmFromList( pStem );
 
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ];
-    lune_add2list( &pBlock->retValUnassignStemTop, pStem );
-    pStem->retValFlag = true;
+    lune_add2list( &pBlock->managedStemTop, pStem );
 
     return pStem;
 }
@@ -138,11 +133,8 @@ lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemVerNum )
     _pEnv->blockDepth++;
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
 
-    pBlock->unassignStemTop.pPrev = &pBlock->unassignStemTop;
-    pBlock->unassignStemTop.pNext = &pBlock->unassignStemTop;
-
-    pBlock->retValUnassignStemTop.pPrev = &pBlock->retValUnassignStemTop;
-    pBlock->retValUnassignStemTop.pNext = &pBlock->retValUnassignStemTop;
+    pBlock->managedStemTop.pPrev = &pBlock->managedStemTop;
+    pBlock->managedStemTop.pNext = &pBlock->managedStemTop;
 
     pBlock->pStemBuf = _pEnv->stemPPool + _pEnv->useStemPoolNum;
     memset( pBlock->pStemBuf, 0, sizeof( *pBlock->pStemBuf ) * stemVerNum );
@@ -170,32 +162,26 @@ void lune_leave_block( lune_env_t * _pEnv )
 
     int index;
     for ( index = 0; index < pBlock->len; index++ ) {
-        lune_decre_ref( _pEnv, pBlock->pStemBuf[ index ] );
-    }
-
-    {
-        lune_stem_t * pWork = pBlock->unassignStemTop.pPrev;
-        while ( pWork != &pBlock->unassignStemTop ) {
-            lune_stem_t * pPrev = pWork->pPrev;
-
-            lune_gc_stem( _pEnv, pWork );
-            pWork = pPrev;
+        lune_stem_t * pStem = pBlock->pStemBuf[ index ];
+        if ( pStem != NULL ) {
+            lune_decre_ref( _pEnv, pStem );
         }
     }
 
     {
-        lune_stem_t * pWork = pBlock->retValUnassignStemTop.pPrev;
-        while ( pWork != &pBlock->retValUnassignStemTop ) {
+        lune_stem_t * pWork = pBlock->managedStemTop.pPrev;
+        while ( pWork != &pBlock->managedStemTop ) {
             lune_stem_t * pPrev = pWork->pPrev;
 
-            pWork->retValFlag = false;
-            if ( pWork->refCount == 0 ) {
+            if ( pWork->refCount == 1 ) {
                 lune_gc_stem( _pEnv, pWork );
+            }
+            else {
+                pWork->refCount--;
             }
             pWork = pPrev;
         }
     }
-    
 
     _pEnv->useStemPoolNum -= pBlock->len;
 }
@@ -246,6 +232,15 @@ lune_block_t * lune_enter_func( lune_env_t * _pEnv, int num, int argNum, ... )
     return pBlock;
 }
 
+lune_stem_t * lune_getValFromDDD( lune_env_t * _pEnv, lune_stem_t * pStem, int index )
+{
+    if ( pStem->val.ddd.len <= index ) {
+        return _pEnv->pNilStem;
+    }
+    return pStem->val.ddd.pStemList[ index ];
+}
+
+
 /**
  * ... の値を生成する
  *
@@ -286,14 +281,19 @@ lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... ) {
     int index;
     for ( index = 0; index < num - 1; index++ ) {
         lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        pDDD->pStemList[ index ] = pStem;
+        if ( pStem->type == lune_value_type_ddd ) {
+            pDDD->pStemList[ index ] = lune_getValFromDDD( _pEnv, pStem, 0 );
+        }
+        else {
+            pDDD->pStemList[ index ] = pStem;
+        }
     }
 
     if ( hasDDD ) {
         lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
         lune_stem_t ** ppStem = &pDDD->pStemList[ num - 1 ];
         for ( index = 0; index < pStem->val.ddd.len; index++ ) {
-            *ppStem = pStem;
+            *ppStem = pStem->val.ddd.pStemList[ index ];
             ppStem++;
         }
     }
@@ -510,7 +510,6 @@ static void lune_deleteEnv( lune_env_t * _pEnv ) {
 
     free( _pEnv );
 }
-
 
 /**
  * lua の print() に相当する処理。

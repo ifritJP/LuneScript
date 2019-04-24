@@ -66,10 +66,7 @@ pub class Opt {
 class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let streamName: str;
    pri let mut stream: oStream;
-   pri let mut metaStream: oStream;
-   pri let mut outMetaFlag: bool;
    pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,ModuleInfo>;
-   pri let convMode: ConvMode;
    pri let mut indentQueue: List<int>;
    pri let mut curLineNo: int;
    // クラス TypeId → TypeInfo
@@ -86,29 +83,27 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut pubFuncName2InfoMap: Map<str,PubFuncInfo>;
    pri let mut needIndent: bool;
    pri let mut macroDepth: int;
-   pri let mut macroVarSymSet: Set<&Ast.SymbolInfo>;
    pri let moduleTypeInfo: &Ast.TypeInfo;
    pri let moduleSymbolKind: Ast.SymbolKind;
    pri let mut needModuleObj: bool;
+   pri let ast:Nodes.RootNode;
 
 
-   pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
-                  convMode: ConvMode, moduleTypeInfo: &Ast.TypeInfo,
-                  moduleSymbolKind: Ast.SymbolKind )
+   pub fn __init( streamName: str, stream: oStream, ast:&TransUnit.ASTInfo )
    {
       super();
+
+      self.moduleTypeInfo = ast.$moduleTypeInfo;
+      self.moduleSymbolKind = ast.$moduleSymbolKind;
+      
       //Util.errorLog( "__init: %s" (mode) );
-      self.macroVarSymSet = (@);
+      self.ast = unwrap ast.$node@@@Nodes.RootNode;
       self.needModuleObj = true;
       self.indentQueue = [ 0 ];
-      self.moduleSymbolKind = moduleSymbolKind;
       self.macroDepth = 0;
       self.streamName = streamName;
       self.stream = stream;
-      self.metaStream = metaStream;
-      self.outMetaFlag = false;
       self.typeInfo2ModuleName = {};
-      self.convMode = convMode;
       self.curLineNo = 1;
       self.classId2TypeInfo = {};
       self.classId2MemberList = {};
@@ -117,7 +112,6 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       self.pubEnumId2EnumTypeInfo = {};
       self.pubAlgeId2AlgeTypeInfo = {};
       self.needIndent = false;
-      self.moduleTypeInfo = moduleTypeInfo;
    }
 
    fn get_indent(): int {
@@ -144,9 +138,6 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    
    pub fn writeRaw( txt: str ) mut {
       let mut stream = self.stream;
-      if self.outMetaFlag {
-         stream = self.metaStream;
-      }
 
       if self.needIndent {
          stream.write( string.rep( " ", self.$indent ) );
@@ -244,6 +235,23 @@ pub override fn convFilter.processRoot(
 {
    Ast.pushProcessInfo( node.$processInfo );
 
+   self.writeln( "// %s" ( self.streamName ) );
+
+   self.writeln( ```
+#include <lunescript.h>
+void lune_init_test( lune_env_t * _pEnv )
+{
+``` );
+
+   let children = node.get_children();
+
+   foreach child in children {
+      filter( child, self, node );
+      self.writeln( "" );
+   }
+
+
+   self.writeln( "}" );
 
    Ast.popProcessInfo();
 };
@@ -319,7 +327,7 @@ pub override fn convFilter.processBlock(
 pub override fn convFilter.processStmtExp(
    node: Nodes.StmtExpNode, opt: Opt ) mut
 {
-   // filter( node.get_exp(),  self, node );
+   filter( node.get_exp(),  self, node );
 };
 
 pub override fn convFilter.processDeclEnum(
@@ -1692,9 +1700,11 @@ pub override fn convFilter.processExpUnwrap(
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
 {
-   // let mut wroteFuncFlag = false;
-   // let mut setArgFlag = false;
+   let mut wroteFuncFlag = false;
+   let mut setArgFlag = false;
 
+   self.write( "//" );
+   
    // fn fieldCall():bool {
 
    //    let! fieldNode = node.$func@@@Nodes.RefFieldNode {
@@ -1831,95 +1841,52 @@ pub override fn convFilter.processExpCall(
    // }
 
 
-   // if not wroteFuncFlag {
-   //    if node.$nilAccess {
-   //       self.write( "_lune.nilacc( " );
-   //       filter( node.$func, self, node );
-   //       self.write( ", nil, 'call'" );
-   //       wroteFuncFlag = true;
-   //    }
-   //    else {
-   //       filter( node.$func, self, node );
-   //       self.write( "( " );
-   //    }
-   // }
+   if not wroteFuncFlag {
+      if node.$nilAccess {
+         self.write( "_lune.nilacc( " );
+         filter( node.$func, self, node );
+         self.write( ", nil, 'call'" );
+         wroteFuncFlag = true;
+      }
+      else {
+         filter( node.$func, self, node );
+         self.write( "( " );
+      }
+   }
 
-   // let mut convStrFlag = false;
+   if! let argList = node.$argList {
+      let mut expList:List<&Nodes.Node> = [];
+      foreach expNode in argList.$expList {
+         if expNode.$expType.$kind ~= .Abbr {
+            expList.insert( expNode );
+         }
+      }
 
-   // if not self.targetLuaVer.$canFormStem2Str and
-   //    TransUnit.isStrFormFunc( node.$func.$expType )
-   // {
-   //    convStrFlag = true;
-   // }
-
-   // if! let argList = node.$argList {
-   //    let mut expList:List<&Nodes.Node> = [];
-   //    foreach expNode in argList.$expList {
-   //       if expNode.$expType.$kind ~= .Abbr {
-   //          expList.insert( expNode );
-   //       }
-   //    }
-
-   //    if wroteFuncFlag and setArgFlag {
-   //       if #expList > 0 {
-   //          self.write( ", " );
-   //       }
-   //    }
-   //    if convStrFlag {
-   //       let mut opList:List<str> = [];
-   //       if #expList > 0 {
-   //          let literal = expList[ 1 ].getLiteral();
-   //          when! literal {
-   //             match literal {
-   //                case .Str( txt) {
-   //                   opList = TransUnit.findForm( txt );
-   //                }
-   //             }
-   //          }
-   //       }
-   //       foreach argNode, index in expList {
-   //          let mut filtered = false;
-   //          if index > 1 {
-   //             self.write( ", " );
-
-   //             if index - 1 <= #opList {
-   //                let formType = TransUnit.isMatchStringFormatType(
-   //                   opList[ index - 1 ], argNode.$expType, self.targetLuaVer );
-   //                if formType == .NeedConv {
-   //                   self.write( "tostring( " );
-   //                   filter( argNode, self, node );
-   //                   self.write( ")" );
-   //                   filtered = true;
-   //                }
-   //             }
-   //          }
-   //          if not filtered {
-   //             filter( argNode, self, node );
-   //          }
-   //       }
-   //    }
-   //    else {
-   //       filter( argList,  self, node );
-   //    }
-   // }
-   // self.write( " )" );
+      if wroteFuncFlag and setArgFlag {
+         if #expList > 0 {
+            self.write( ", " );
+         }
+      }
+      filter( argList,  self, node );
+   }
+   self.write( " )" );
 };
 
 
 pub override fn convFilter.processExpList(
    node: Nodes.ExpListNode, opt: Opt ) mut
 {
-   // let expList = node.get_expList();
-   // //let expList = node.$expList;
-   // foreach exp, index in expList {
-   //    if exp.$expType.$kind == .Abbr {
-   //       break;
-   //    }
-   //    if index > 1 {
-   //       self.write( ", " );
-   //    }
-   //    filter( exp, self, node );
-   // }
+   let expList = node.get_expList();
+   //let expList = node.$expList;
+   foreach exp, index in expList {
+      if exp.$expType.$kind == .Abbr {
+         break;
+      }
+      if index > 1 {
+         self.write( ", " );
+      }
+      filter( exp, self, node );
+   }
 };
 
 
@@ -2088,29 +2055,24 @@ pub override fn convFilter.processExpOp2(
 pub override fn convFilter.processExpRef(
    node: Nodes.ExpRefNode, opt: Opt ) mut
 {
-   // if node.$token.txt == "super" {
-   //    let funcType = node.$expType;
-   //    self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
-   //                          funcType.$rawTxt ) );
-   // }
-   // elseif node.$expType.equals( TransUnit.getBuiltinFunc().luneLoad ##) {
-   //    self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
-   // }
-   // else {
-   //    if self.macroVarSymSet.has( node.$symbolInfo.getOrg() ) {
-   //       self.write( "macroVar." );
-   //    }
-   //    else {
-   //       if node.$symbolInfo.$accessMode == .Pub and
-   //          node.$symbolInfo.$kind == Ast.SymbolKind.Var
-   //       {
-   //          if self.needModuleObj {
-   //             self.write( "_moduleObj." );
-   //          }
-   //       }
-   //    }
-   //    self.write( node.$token.txt );
-   // }
+   if node.$token.txt == "super" {
+      let funcType = node.$expType;
+      self.write( "%s.%s" ( self.getFullName( funcType.$parentInfo ),
+                            funcType.$rawTxt ) );
+   }
+   elseif node.$expType.equals( TransUnit.getBuiltinFunc().luneLoad ##) {
+      //self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
+   }
+   else {
+      if node.$symbolInfo.$accessMode == .Pub and
+         node.$symbolInfo.$kind == Ast.SymbolKind.Var
+      {
+         if self.needModuleObj {
+            self.write( "_moduleObj." );
+         }
+      }
+      self.write( node.$token.txt );
+   }
 };
 
 pub override fn convFilter.processExpRefItem(
@@ -2346,39 +2308,27 @@ pub override fn convFilter.processLiteralReal(
 pub override fn convFilter.processLiteralString(
    node: Nodes.LiteralStringNode, opt: Opt ) mut
 {
-   // let mut txt = node.get_token().txt;
-   // if string.find( txt, '^```' ## ) {
-   //    txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
-   // }
-   // let opList = TransUnit.findForm( txt );
+   let mut txt = node.get_token().txt;
+   if string.find( txt, '^```' ## ) {
+      txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
+   }
+   let opList = TransUnit.findForm( txt );
 
-   // let argList = node.get_argList();
-   // if #argList > 0 {
-   //    self.write( string.format( 'string.format( %s, ', txt ) );
-   //    foreach val, index in argList {
-   //       if index > 1 {
-   //          self.write( ", " );
-   //       }
+   let argList = node.get_argList();
+   if #argList > 0 {
+      self.write( string.format( 'string.format( %s, ', txt ) );
+      foreach val, index in argList {
+         if index > 1 {
+            self.write( ", " );
+         }
 
-   //       let mut matchFlag = TransUnit.FormType.Match;
-   //       if index <= #opList {
-   //          matchFlag = TransUnit.isMatchStringFormatType(
-   //             opList[ index ], val.$expType, self.targetLuaVer );
-   //       }
-   //       if matchFlag == .NeedConv {
-   //          self.write( "tostring( " );
-   //          filter( val, self, node );
-   //          self.write( ")" );
-   //       }
-   //       else {
-   //          filter( val, self, node );
-   //       }
-   //    }
-   //    self.write( ")" );
-   // }
-   // else {
-   //    self.write( txt );
-   // }
+         filter( val, self, node );
+      }
+      self.write( ")" );
+   }
+   else {
+      self.write( txt );
+   }
 };
 
 pub override fn convFilter.processLiteralBool(
@@ -2407,11 +2357,7 @@ pub override fn convFilter.processLiteralSymbol(
 
 
 pub fn createFilter(
-   streamName: str, stream: oStream, metaStream: oStream,
-   convMode: ConvMode, moduleTypeInfo: &Ast.TypeInfo,
-   moduleSymbolKind: &Ast.SymbolKind ) : Nodes.Filter<Opt>
+   streamName: str, stream: oStream, ast:&TransUnit.ASTInfo ) : Nodes.Filter<Opt>
 {
-   return new convFilter(
-      streamName, stream, metaStream,
-      convMode, moduleTypeInfo, moduleSymbolKind );
+   return new convFilter( streamName, stream, ast );
 }

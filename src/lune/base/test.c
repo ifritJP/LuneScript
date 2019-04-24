@@ -153,7 +153,7 @@ static lune_stem_t * u_mtd_Sub_func( lune_env_t * _pEnv, lune_stem_t * pObj )
 
 static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
 {
-    lune_block_t * pBlock = lune_enter_func( _pEnv, 2, 0 );
+    lune_block_t * pBlock = lune_enter_block( _pEnv, 2 );
 
     lune_stem_t * test;
     lune_initVal( test, pBlock, 0, u_class_Test_new( _pEnv, 10 ) );
@@ -186,7 +186,7 @@ static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
 static lune_stem_t * u_lune_form_test2(
     lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pVal )
 {
-    lune_block_t * pBlock = lune_enter_func( _pEnv, 2, 1, pVal );
+    lune_block_t * pBlock = lune_enter_block( _pEnv, 2 );
 
     pVal->val.form.pFunc( _pEnv, pVal );
 
@@ -205,7 +205,7 @@ static lune_stem_t * u_lune_form_test2(
 
 static lune_stem_t * u_lune_form_test3( lune_env_t * _pEnv, lune_stem_t * _pForm )
 {
-    lune_enter_func( _pEnv, 0, 0 );
+    lune_enter_block( _pEnv, 0 );
 
     lune_form_closure( _pForm, 0 )->val.intVal += 1000;
     
@@ -214,6 +214,45 @@ static lune_stem_t * u_lune_form_test3( lune_env_t * _pEnv, lune_stem_t * _pForm
 
     return _pEnv->pNoneStem;
 }
+
+// fn test4( val1:int, val2:int ): int { return val1 + val2; }
+static lune_stem_t * u_lune_form_test4(
+    lune_env_t * _pEnv, lune_stem_t * _pForm, int val1, int val2 )
+{
+    lune_enter_block( _pEnv, 0 );
+
+    lune_stem_t * pRet = lune_setRet( _pEnv, lune_int2stem( _pEnv, val1 + val2 ) );
+    
+    lune_leave_block( _pEnv );
+
+    return pRet;
+}
+
+static lune_stem_t * u_lune_form__test4(
+    lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pDDD )
+{
+    return u_lune_form_test4( _pEnv, _pForm,
+                              pDDD->val.ddd.pStemList[ 0 ]->val.intVal,
+                              pDDD->val.ddd.pStemList[ 1 ]->val.intVal );
+}
+
+// fn test5(): int, int { return 1, 2; }
+static lune_stem_t * u_lune_form_test5(
+    lune_env_t * _pEnv, lune_stem_t * _pForm )
+{
+    lune_enter_block( _pEnv, 0 );
+
+    lune_stem_t * pRet = lune_setRet(
+        _pEnv,
+        lune_createDDD( _pEnv, false, 2,
+                        lune_int2stem( _pEnv, 1 ),
+                        lune_int2stem( _pEnv, 2 ) ) );
+    
+    lune_leave_block( _pEnv );
+
+    return pRet;
+}
+
 
 
 static lune_stem_t * u_lune_form_comp(
@@ -226,7 +265,7 @@ static lune_stem_t * u_lune_form_comp(
 
 void lune_init_test( lune_env_t * _pEnv )
 {
-    lune_block_t * pBlock = lune_enter_func( _pEnv, 4, 0 );
+    lune_block_t * pBlock = lune_enter_block( _pEnv, 4 );
 
     // let val = test();
     lune_stem_t * pVal;
@@ -336,7 +375,16 @@ void lune_init_test( lune_env_t * _pEnv )
         }
         lune_it_delete( _pEnv, itStem );
     }
-    
+
+
+    // print( "multi-val", test4( 1, 2 ), test4( test5() ) )
+    lune_print( _pEnv,
+                lune_createDDD(
+                    _pEnv, false, 3,
+                    lune_litStr2stem( _pEnv, "multi-val" ),
+                    u_lune_form_test4( _pEnv, NULL, 1, 2 ),
+                    u_lune_form__test4(
+                       _pEnv, NULL, u_lune_form_test5( _pEnv, NULL ) ) ) );
     
     
     lune_leave_block( _pEnv );

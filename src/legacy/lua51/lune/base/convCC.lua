@@ -131,6 +131,53 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
+end
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -256,26 +303,24 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
-function convFilter.new( streamName, stream, metaStream, convMode, moduleTypeInfo, moduleSymbolKind )
+function convFilter.new( streamName, stream, ast )
    local obj = {}
    convFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, moduleTypeInfo, moduleSymbolKind ); end
+   if obj.__init then obj:__init( streamName, stream, ast ); end
    return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, moduleTypeInfo, moduleSymbolKind) 
+function convFilter:__init(streamName, stream, ast) 
    Nodes.Filter.__init( self)
    
-   self.macroVarSymSet = {}
+   self.moduleTypeInfo = ast:get_moduleTypeInfo()
+   self.moduleSymbolKind = ast:get_moduleSymbolKind()
+   self.ast = _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode ))
    self.needModuleObj = true
    self.indentQueue = {0}
-   self.moduleSymbolKind = moduleSymbolKind
    self.macroDepth = 0
    self.streamName = streamName
    self.stream = stream
-   self.metaStream = metaStream
-   self.outMetaFlag = false
    self.typeInfo2ModuleName = {}
-   self.convMode = convMode
    self.curLineNo = 1
    self.classId2TypeInfo = {}
    self.classId2MemberList = {}
@@ -284,7 +329,6 @@ function convFilter:__init(streamName, stream, metaStream, convMode, moduleTypeI
    self.pubEnumId2EnumTypeInfo = {}
    self.pubAlgeId2AlgeTypeInfo = {}
    self.needIndent = false
-   self.moduleTypeInfo = moduleTypeInfo
 end
 function convFilter:get_indent(  )
 
@@ -312,10 +356,6 @@ end
 function convFilter:writeRaw( txt )
 
    local stream = self.stream
-   if self.outMetaFlag then
-      stream = self.metaStream
-   end
-   
    if self.needIndent then
       stream:write( string.rep( " ", self:get_indent() ) )
       self.needIndent = false
@@ -398,6 +438,19 @@ end
 function convFilter:processRoot( node, opt )
 
    Ast.pushProcessInfo( node:get_processInfo() )
+   self:writeln( string.format( "// %s", self.streamName) )
+   self:writeln( [==[
+#include <lunescript.h>
+void lune_init_test( lune_env_t * _pEnv )
+{
+]==] )
+   local children = node:get_children(  )
+   for __index, child in pairs( children ) do
+      filter( child, self, node )
+      self:writeln( "" )
+   end
+   
+   self:writeln( "}" )
    Ast.popProcessInfo(  )
 end
 
@@ -413,6 +466,7 @@ end
 
 function convFilter:processStmtExp( node, opt )
 
+   filter( node:get_exp(  ), self, node )
 end
 
 
@@ -602,11 +656,64 @@ end
 
 function convFilter:processExpCall( node, opt )
 
+   local wroteFuncFlag = false
+   local setArgFlag = false
+   self:write( "//" )
+   if not wroteFuncFlag then
+      if node:get_nilAccess() then
+         self:write( "_lune.nilacc( " )
+         filter( node:get_func(), self, node )
+         self:write( ", nil, 'call'" )
+         wroteFuncFlag = true
+      else
+       
+         filter( node:get_func(), self, node )
+         self:write( "( " )
+      end
+      
+   end
+   
+   do
+      local argList = node:get_argList()
+      if argList ~= nil then
+         local expList = {}
+         for __index, expNode in pairs( argList:get_expList() ) do
+            if expNode:get_expType():get_kind() ~= Ast.TypeInfoKind.Abbr then
+               table.insert( expList, expNode )
+            end
+            
+         end
+         
+         if wroteFuncFlag and setArgFlag then
+            if #expList > 0 then
+               self:write( ", " )
+            end
+            
+         end
+         
+         filter( argList, self, node )
+      end
+   end
+   
+   self:write( " )" )
 end
 
 
 function convFilter:processExpList( node, opt )
 
+   local expList = node:get_expList(  )
+   for index, exp in pairs( expList ) do
+      if exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+         break
+      end
+      
+      if index > 1 then
+         self:write( ", " )
+      end
+      
+      filter( exp, self, node )
+   end
+   
 end
 
 
@@ -632,6 +739,22 @@ end
 
 function convFilter:processExpRef( node, opt )
 
+   if node:get_token().txt == "super" then
+      local funcType = node:get_expType()
+      self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
+   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).luneLoad ) then
+   else
+    
+      if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then
+         if self.needModuleObj then
+            self:write( "_moduleObj." )
+         end
+         
+      end
+      
+      self:write( node:get_token().txt )
+   end
+   
 end
 
 
@@ -713,6 +836,29 @@ end
 
 function convFilter:processLiteralString( node, opt )
 
+   local txt = node:get_token(  ).txt
+   if string.find( txt, '^```' ) then
+      txt = '[==[' .. txt:sub( 4, -4 ) .. ']==]'
+   end
+   
+   local opList = TransUnit.findForm( txt )
+   local argList = node:get_argList(  )
+   if #argList > 0 then
+      self:write( string.format( 'string.format( %s, ', txt ) )
+      for index, val in pairs( argList ) do
+         if index > 1 then
+            self:write( ", " )
+         end
+         
+         filter( val, self, node )
+      end
+      
+      self:write( ")" )
+   else
+    
+      self:write( txt )
+   end
+   
 end
 
 
@@ -736,9 +882,9 @@ function convFilter:processLiteralSymbol( node, opt )
 end
 
 
-local function createFilter( streamName, stream, metaStream, convMode, moduleTypeInfo, moduleSymbolKind )
+local function createFilter( streamName, stream, ast )
 
-   return convFilter.new(streamName, stream, metaStream, convMode, moduleTypeInfo, moduleSymbolKind)
+   return convFilter.new(streamName, stream, ast)
 end
 _moduleObj.createFilter = createFilter
 return _moduleObj

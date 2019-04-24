@@ -2116,6 +2116,7 @@ function _TypeInfoAlge._fromMapSub( obj, val )
    return obj
 end
 
+
 local BuiltinFuncType = {}
 _moduleObj.BuiltinFuncType = BuiltinFuncType
 function BuiltinFuncType.new(  )
@@ -2142,10 +2143,12 @@ function BuiltinFuncType:__init()
    self.setAnd = Ast.headTypeInfo
    self.setSub = Ast.headTypeInfo
    self.nilableVal = Ast.headTypeInfo
+   
 end
 function BuiltinFuncType.setmeta( obj )
   setmetatable( obj, { __index = BuiltinFuncType  } )
 end
+
 
 local builtinFunc = BuiltinFuncType.new()
 local function getBuiltinFunc(  )

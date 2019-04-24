@@ -188,7 +188,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1223
+   return 1224
 end
 
 
@@ -314,6 +314,7 @@ function Option.new(  )
    return obj
 end
 function Option:__init() 
+   self.convertC = false
    self.validProf = false
    self.mode = ModeKind.Unknown
    self.scriptPath = ""
@@ -498,6 +499,8 @@ usage:
                end
                
                index = index + 1
+            elseif _switchExp == "-langC" then
+               option.convertC = true
             elseif _switchExp == "-ol" then
                if #argList > index then
                   do
