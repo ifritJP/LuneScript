@@ -1213,20 +1213,48 @@ class _TypeInfoAlge extend _TypeInfo {
    }
 }
 
-macro _DefBuiltinFuncType( symList:List<str> )
+
+macro _DefBuiltinFuncType( class2symMap:Map<str,Map<str,Map<str,List<str>>>> )
 {
    {
       let mut defMemberList:List<stat> = [];
       let mut initMemberList:List<stat> = [];
-      foreach symbol in symList {
-         defMemberList.insert( `{
-            pub let mut ,,,symbol:&Ast.TypeInfo;
-         } );
-         initMemberList.insert( `{
-            self.,,,symbol = Ast.headTypeInfo;
+      let mut declProcessList:List<stat> = [];
+      let mut caseList:List<stat> = [];
+      forsort symbolMap, className in class2symMap {
+         let mut subcaseList:List<stat> = [];
+         
+         forsort symbolInfo, funcName in symbolMap {
+            let symbolName = (unwrap symbolInfo.field)[1];
+            defMemberList.insert( `{
+               pub let mut ,,,symbolName:&Ast.TypeInfo;
+            } );
+            initMemberList.insert( `{
+               self.,,,symbolName = Ast.headTypeInfo;
+            });
+            subcaseList.insert( `{
+               case ,,funcName ~~{
+                  builtinFunc. ,,,symbolName = typeInfo;
+               }
+            });
+         }
+         declProcessList.insert( `{
+            fn ,,,"process_%s" (className) ~~ () {
+               switch fieldName {
+                  ,,subcaseList
+               }
+            }
+         });
+         caseList.insert( `{
+            case ,,className {
+               ,,,"process_%s" (className) ~~ ();
+            }
          });
       }
    }
+   /**
+builtin 関数の TypeInfo を保持するクラス。
+   */
    pub class BuiltinFuncType {
       ,,defMemberList;
 
@@ -1234,127 +1262,65 @@ macro _DefBuiltinFuncType( symList:List<str> )
          ,,initMemberList;
       }
    }
+
+   let mut builtinFunc = new BuiltinFuncType();
+
+   pub fn getBuiltinFunc() : &BuiltinFuncType {
+      return builtinFunc;
+   }
+   
+   fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
+      ,,declProcessList;
+
+      switch name {
+         ,,caseList
+      }
+   }
 }
 
-_DefBuiltinFuncType( [
-   "luneLoad",
-   "listInsert",
-   "listRemove",
-   "listUnpack",
-   "listSort",
-   "arrayUnpack",
-   "arraySort",
-   "mappingToMap",
-   "strGMatch",
-   "stringGMatch",
-   "stringForm",
-   "setAdd",
-   "setDel",
-   "setOr",
-   "setAnd",
-   "setSub",
-   "nilableVal"
-] );
 
-let mut builtinFunc = new BuiltinFuncType();
-
-pub fn getBuiltinFunc() : &BuiltinFuncType {
-   return builtinFunc;
-}
-
+_DefBuiltinFuncType( {
+   // "クラス名": [ [ "関数名", "builtinFuncのメンバ名" ] ]
+   "": {
+      "_load": { "field": ["luneLoad"] }
+   },
+   "List": {
+       "insert": { "field": ["listInsert" ] },
+       "remove": { "field": ["listRemove" ] },
+       "unpack": { "field": ["listUnpack" ] },
+       "sort": { "field": ["listSort" ] }
+   },
+   "Array": {
+      "unpack": { "field": ["arrayUnpack" ] },
+      "sort": { "field": ["arraySort" ] }
+   },
+   "Set": {
+      "add": { "field": ["setAdd" ] },
+      "del": { "field": ["setDel" ] },
+      "or": { "field": ["setOr" ] },
+      "and": { "field": ["setAnd" ] },
+      "sub": { "field": ["setSub" ] }
+   },
+   "Mapping": {
+      "_toMap": { "field": ["mappingToMap" ] }
+   },
+   "str": {
+      "gmatch": { "field": ["strGMatch" ] }
+   },
+   "string": {
+      "gmatch": { "field": ["stringGMatch" ] },
+      "format": { "field": ["stringForm" ] }
+   },
+   "Nilable": {
+      "val": { "field": ["nilableVal" ] }
+   }
+});
+   
 pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
    if typeInfo.equals( builtinFunc.stringForm ## ) {
       return true;
    }
    return false;
-}
-
-fn setupBuiltinTypeInfo( name:str, fieldName:str, typeInfo:&Ast.TypeInfo ) {
-   switch name {
-      case "" {
-         switch fieldName {
-            case "_load" {
-               builtinFunc.luneLoad = typeInfo;
-            }
-         }
-      }
-      case "List" {
-         switch fieldName {
-            case "insert" {
-               builtinFunc.listInsert = typeInfo;
-            }
-            case "remove" {
-               builtinFunc.listRemove = typeInfo;
-            }
-            case "unpack" {
-               builtinFunc.listUnpack = typeInfo;
-            }
-            case "sort" {
-               builtinFunc.listSort = typeInfo;
-            }
-         }
-      }
-      case "Array" {
-         switch fieldName {
-            case "unpack" {
-               builtinFunc.arrayUnpack = typeInfo;
-            }
-            case "sort" {
-               builtinFunc.arraySort = typeInfo;
-            }
-         }
-      }
-      case "Set" {
-         switch fieldName {
-            case "add" {
-               builtinFunc.setAdd = typeInfo;
-            }
-            case "del" {
-               builtinFunc.setDel = typeInfo;
-            }
-            case "or" {
-               builtinFunc.setOr = typeInfo;
-            }
-            case "and" {
-               builtinFunc.setAnd = typeInfo;
-            }
-            case "sub" {
-               builtinFunc.setSub = typeInfo;
-            }
-         }
-      }
-      case "Mapping" {
-         switch fieldName {
-            case "_toMap" {
-               builtinFunc.mappingToMap = typeInfo;
-            }
-         }
-      }
-      case "str" {
-         switch fieldName {
-            case "gmatch" {
-               builtinFunc.strGMatch = typeInfo;
-            }
-         }
-      }
-      case "string" {
-         switch fieldName {
-            case "gmatch" {
-               builtinFunc.stringGMatch = typeInfo;
-            }
-            case "format" {
-               builtinFunc.stringForm = typeInfo;
-            }
-         }
-      }
-      case "Nilable" {
-         switch fieldName {
-            case "val" {
-               builtinFunc.nilableVal = typeInfo;
-            }
-         }
-      }
-   }
 }
 
 

@@ -882,6 +882,11 @@ pub override fn StmtExpNode.getBreakKind( checkMode:CheckBreakMode ):BreakKind {
    return self.$exp.getBreakKind( checkMode );
 }
 
+_declNodeClass( "ExpMacroStatList", Node, false, true, false,
+                [ { "exp": "&Node" } ]
+);
+
+
 _declNodeClass( "ExpOmitEnum", Node, true, true, false,
                 [ { "valToken": "&Parser.Token" },
                   { "valInfo": "&Ast.EnumValInfo" },

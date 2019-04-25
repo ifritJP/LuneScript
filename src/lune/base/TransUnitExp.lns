@@ -1765,9 +1765,9 @@ fn TransUnit.analyzeExpField(
          [ Ast.builtinTypeStem_ ], prefixExp, accessNil, token.txt, nil );
    }
    else {
-      self.error( "illegal type -- %s, %d"
+      self.error( "illegal type -- %s, %s"
                   ( prefixExpType.getTxt(##),
-                    prefixExpType.get_kind() ) );
+                    prefixExpType.get_kind().$_txt ) );
    }
 
    if not symbolInfo {
@@ -2357,7 +2357,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
       let token = self.getToken(##);
 
       if token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
-         let exp = self.analyzeExp( false, true, unwrap op1levelMap[ token.txt ] ## );
+         let mut exp = self.analyzeExp( false, true, unwrap op1levelMap[ token.txt ] ## );
 
          let nextToken = self.getToken(##);
          if nextToken.txt ~= "~~" {
@@ -2371,17 +2371,35 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
             if! let refNode = exp@@@Nodes.ExpRefNode {
                let refToken = refNode.get_token();
                let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
-               if macroInfo {
-                  if (unwrap macroInfo).typeInfo.equals( Ast.builtinTypeSymbol ##) {
+               when! macroInfo {
+                  let valType = macroInfo.typeInfo;
+                  if valType.equals( Ast.builtinTypeSymbol ##) or
+                     valType.equals( Ast.builtinTypeStat ##)
+                  {
                      format = "' %s '";
-                  }  
+                  }
+                  elseif valType.$kind == .List and
+                     valType.$itemTypeInfoList[1].equals( Ast.builtinTypeStat ##)
+                  {
+                     format = "' %s '";
+                     exp = Nodes.ExpMacroStatListNode.create(
+                        self.nodeManager, token.pos, [ Ast.builtinTypeString ], exp );
+                  }
+                  elseif Ast.builtinTypeString.equals( valType ##) {
+                     //
+                  }
+                  else {
+                     self.addErrMess(
+                        refToken.pos,           
+                        "not support ,, -- %s" (valType.getTxt(##)) );
+                  }
                }  
                else {
                   if exp.$expType.equals( Ast.builtinTypeInt ##) or
                      exp.$expType.equals( Ast.builtinTypeReal ##)
-                  {  
+                  {
                      format = "'%s' ";
-                  }  
+                  }
                }
             }
          }

@@ -237,6 +237,7 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Log = _lune.loadModule( 'lune.base.Log' )
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
@@ -1891,6 +1892,15 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    
    self:writeln( "local macroVar = {}" )
    self:writeln( "macroVar.__names = {}" )
+   self:writeln( [==[
+local function __expStatList( list )
+  local ret = ""
+  for index, txt in ipairs( list ) do
+    ret = string.format( "%s %s ", ret, txt )
+  end
+  return ret
+end
+]==] )
    self.macroDepth = self.macroDepth + 1
    callback(  )
    self.macroDepth = self.macroDepth - 1
@@ -1899,6 +1909,13 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    self:popIndent(  )
    self:writeln( "end" )
    self:writeln( string.format( "return %s", name) )
+end
+
+function convFilter:processExpMacroStatList( node, opt )
+
+   self:write( "__expStatList(" )
+   filter( node:get_exp(), self, node )
+   self:write( ")" )
 end
 
 function convFilter:processDeclMacro( node, opt )
@@ -3426,6 +3443,7 @@ local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromMacroCode( code )
+   local __func__ = 'MacroEvalImp.evalFromMacroCode'
 
    local newEnv = {}
    for key, val in pairs( _G ) do
@@ -3438,6 +3456,12 @@ function MacroEvalImp:evalFromMacroCode( code )
       local val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
       return val
    end
+   
+   Log.log( Log.Level.Info, __func__, 3113, function (  )
+   
+      return string.format( "code: %s", code)
+   end
+    )
    
    local chunk, err = _lune.loadstring51( code, newEnv )
    if err ~= nil then

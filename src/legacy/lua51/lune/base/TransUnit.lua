@@ -2127,28 +2127,27 @@ function BuiltinFuncType.new(  )
 end
 function BuiltinFuncType:__init() 
    self.luneLoad = Ast.headTypeInfo
+   self.arraySort = Ast.headTypeInfo
+   self.arrayUnpack = Ast.headTypeInfo
    self.listInsert = Ast.headTypeInfo
    self.listRemove = Ast.headTypeInfo
-   self.listUnpack = Ast.headTypeInfo
    self.listSort = Ast.headTypeInfo
-   self.arrayUnpack = Ast.headTypeInfo
-   self.arraySort = Ast.headTypeInfo
+   self.listUnpack = Ast.headTypeInfo
    self.mappingToMap = Ast.headTypeInfo
-   self.strGMatch = Ast.headTypeInfo
-   self.stringGMatch = Ast.headTypeInfo
-   self.stringForm = Ast.headTypeInfo
+   self.nilableVal = Ast.headTypeInfo
    self.setAdd = Ast.headTypeInfo
+   self.setAnd = Ast.headTypeInfo
    self.setDel = Ast.headTypeInfo
    self.setOr = Ast.headTypeInfo
-   self.setAnd = Ast.headTypeInfo
    self.setSub = Ast.headTypeInfo
-   self.nilableVal = Ast.headTypeInfo
+   self.strGMatch = Ast.headTypeInfo
+   self.stringForm = Ast.headTypeInfo
+   self.stringGMatch = Ast.headTypeInfo
    
 end
 function BuiltinFuncType.setmeta( obj )
   setmetatable( obj, { __index = BuiltinFuncType  } )
 end
-
 
 local builtinFunc = BuiltinFuncType.new()
 local function getBuiltinFunc(  )
@@ -2156,6 +2155,139 @@ local function getBuiltinFunc(  )
    return builtinFunc
 end
 _moduleObj.getBuiltinFunc = getBuiltinFunc
+local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
+
+   local function process_(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == '_load' then
+            builtinFunc.luneLoad = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_Array(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'sort' then
+            builtinFunc.arraySort = typeInfo
+         elseif _switchExp == 'unpack' then
+            builtinFunc.arrayUnpack = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_List(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'insert' then
+            builtinFunc.listInsert = typeInfo
+         elseif _switchExp == 'remove' then
+            builtinFunc.listRemove = typeInfo
+         elseif _switchExp == 'sort' then
+            builtinFunc.listSort = typeInfo
+         elseif _switchExp == 'unpack' then
+            builtinFunc.listUnpack = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_Mapping(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == '_toMap' then
+            builtinFunc.mappingToMap = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_Nilable(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'val' then
+            builtinFunc.nilableVal = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_Set(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'add' then
+            builtinFunc.setAdd = typeInfo
+         elseif _switchExp == 'and' then
+            builtinFunc.setAnd = typeInfo
+         elseif _switchExp == 'del' then
+            builtinFunc.setDel = typeInfo
+         elseif _switchExp == 'or' then
+            builtinFunc.setOr = typeInfo
+         elseif _switchExp == 'sub' then
+            builtinFunc.setSub = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_str(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'gmatch' then
+            builtinFunc.strGMatch = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_string(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'format' then
+            builtinFunc.stringForm = typeInfo
+         elseif _switchExp == 'gmatch' then
+            builtinFunc.stringGMatch = typeInfo
+         end
+      end
+      
+   end
+   
+   
+   do
+      local _switchExp = name
+      if _switchExp == '' then
+         process_(  )
+      elseif _switchExp == 'Array' then
+         process_Array(  )
+      elseif _switchExp == 'List' then
+         process_List(  )
+      elseif _switchExp == 'Mapping' then
+         process_Mapping(  )
+      elseif _switchExp == 'Nilable' then
+         process_Nilable(  )
+      elseif _switchExp == 'Set' then
+         process_Set(  )
+      elseif _switchExp == 'str' then
+         process_str(  )
+      elseif _switchExp == 'string' then
+         process_string(  )
+      end
+   end
+   
+end
+
+
 local function isStrFormFunc( typeInfo )
 
    if typeInfo:equals( builtinFunc.stringForm ) then
@@ -2165,97 +2297,6 @@ local function isStrFormFunc( typeInfo )
    return false
 end
 _moduleObj.isStrFormFunc = isStrFormFunc
-local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
-
-   do
-      local _switchExp = name
-      if _switchExp == "" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "_load" then
-               builtinFunc.luneLoad = typeInfo
-            end
-         end
-         
-      elseif _switchExp == "List" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "insert" then
-               builtinFunc.listInsert = typeInfo
-            elseif _switchExp == "remove" then
-               builtinFunc.listRemove = typeInfo
-            elseif _switchExp == "unpack" then
-               builtinFunc.listUnpack = typeInfo
-            elseif _switchExp == "sort" then
-               builtinFunc.listSort = typeInfo
-            end
-         end
-         
-      elseif _switchExp == "Array" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "unpack" then
-               builtinFunc.arrayUnpack = typeInfo
-            elseif _switchExp == "sort" then
-               builtinFunc.arraySort = typeInfo
-            end
-         end
-         
-      elseif _switchExp == "Set" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "add" then
-               builtinFunc.setAdd = typeInfo
-            elseif _switchExp == "del" then
-               builtinFunc.setDel = typeInfo
-            elseif _switchExp == "or" then
-               builtinFunc.setOr = typeInfo
-            elseif _switchExp == "and" then
-               builtinFunc.setAnd = typeInfo
-            elseif _switchExp == "sub" then
-               builtinFunc.setSub = typeInfo
-            end
-         end
-         
-      elseif _switchExp == "Mapping" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "_toMap" then
-               builtinFunc.mappingToMap = typeInfo
-            end
-         end
-         
-      elseif _switchExp == "str" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "gmatch" then
-               builtinFunc.strGMatch = typeInfo
-            end
-         end
-         
-      elseif _switchExp == "string" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "gmatch" then
-               builtinFunc.stringGMatch = typeInfo
-            elseif _switchExp == "format" then
-               builtinFunc.stringForm = typeInfo
-            end
-         end
-         
-      elseif _switchExp == "Nilable" then
-         do
-            local _switchExp = fieldName
-            if _switchExp == "val" then
-               builtinFunc.nilableVal = typeInfo
-            end
-         end
-         
-      end
-   end
-   
-end
-
 local readyBuiltin = false
 function TransUnit:registBuiltInScope(  )
 
@@ -3023,7 +3064,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2218, function (  )
+   Log.log( Log.Level.Info, __func__, 2184, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3039,7 +3080,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2229, function (  )
+               Log.log( Log.Level.Info, __func__, 2195, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3070,7 +3111,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2249, function (  )
+   Log.log( Log.Level.Info, __func__, 2215, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3426,7 +3467,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2620, function (  )
+   Log.log( Log.Level.Info, __func__, 2586, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -8088,7 +8129,8 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       return Nodes.ExpRefItemNode.create( self.nodeManager, token.pos, {Ast.builtinTypeStem_}, prefixExp, accessNil, token.txt, nil )
    else
     
-      self:error( string.format( "illegal type -- %s, %d", prefixExpType:getTxt(  ), prefixExpType:get_kind(  )) )
+      self:error( string.format( "illegal type -- %s, %s", prefixExpType:getTxt(  ), Ast.TypeInfoKind:_getTxt( prefixExpType:get_kind(  ))
+      ) )
    end
    
    if not symbolInfo then
@@ -8639,13 +8681,20 @@ function TransUnit:analyzeExpMacroStat( firstToken )
                if refNode ~= nil then
                   local refToken = refNode:get_token(  )
                   local macroInfo = self.symbol2ValueMapForMacro[refToken.txt]
-                  if macroInfo then
-                     if (_lune.unwrap( macroInfo) ).typeInfo:equals( Ast.builtinTypeSymbol ) then
+                  if macroInfo ~= nil then
+                     local valType = macroInfo.typeInfo
+                     if valType:equals( Ast.builtinTypeSymbol ) or valType:equals( Ast.builtinTypeStat ) then
                         format = "' %s '"
+                     elseif valType:get_kind() == Ast.TypeInfoKind.List and valType:get_itemTypeInfoList()[1]:equals( Ast.builtinTypeStat ) then
+                        format = "' %s '"
+                        exp = Nodes.ExpMacroStatListNode.create( self.nodeManager, token.pos, {Ast.builtinTypeString}, exp )
+                     elseif Ast.builtinTypeString:equals( valType ) then
+                     else
+                      
+                        self:addErrMess( refToken.pos, string.format( "not support ,, -- %s", valType:getTxt(  )) )
                      end
                      
                   else
-                   
                      if exp:get_expType():equals( Ast.builtinTypeInt ) or exp:get_expType():equals( Ast.builtinTypeReal ) then
                         format = "'%s' "
                      end

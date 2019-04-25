@@ -31,6 +31,7 @@ import lune.base.frontInterface;
 import lune.base.LuaMod;
 import lune.base.LuaVer;
 import lune.base.Parser;
+import lune.base.Log;
 
 class PubVerInfo {
    pub let staticFlag: bool;
@@ -1623,6 +1624,16 @@ pub fn convFilter.outputDeclMacro(
    self.writeln( "local macroVar = {}" );
    self.writeln( "macroVar.__names = {}" );
 
+   self.writeln( ```
+local function __expStatList( list )
+  local ret = ""
+  for index, txt in ipairs( list ) do
+    ret = string.format( "%s %s ", ret, txt )
+  end
+  return ret
+end
+```);
+
    self.macroDepth = self.macroDepth + 1;
 
    callback();
@@ -1634,6 +1645,14 @@ pub fn convFilter.outputDeclMacro(
    self.popIndent();
    self.writeln( "end" );
    self.writeln( "return %s" ( name ) );
+}
+
+pub override fn convFilter.processExpMacroStatList(
+   node: Nodes.ExpMacroStatListNode, opt: Opt ) mut
+{
+   self.write( "__expStatList(" );
+   filter( node.$exp, self, node );
+   self.write( ")" );
 }
 
 pub override fn convFilter.processDeclMacro(
@@ -3091,6 +3110,8 @@ pub class MacroEvalImp extend Nodes.MacroEval {
          return val;
       };
 
+      Log._log( .Info, `{ return "code: %s" (code); } );
+      
       let chunk, err = _load( code, newEnv );
       when! err {
          Util.err( err );

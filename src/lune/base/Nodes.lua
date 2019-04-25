@@ -3699,6 +3699,70 @@ function StmtExpNode:getBreakKind( checkMode )
    return self:get_exp():getBreakKind( checkMode )
 end
 
+function NodeKind.get_ExpMacroStatList(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList'])
+end
+
+
+regKind( [[ExpMacroStatList]] )
+function Filter:processExpMacroStatList( node, opt )
+
+end
+
+
+function NodeManager:getExpMacroStatListNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList']) )
+end
+
+
+local ExpMacroStatListNode = {}
+setmetatable( ExpMacroStatListNode, { __index = Node } )
+_moduleObj.ExpMacroStatListNode = ExpMacroStatListNode
+function ExpMacroStatListNode:processFilter( filter, opt )
+
+   filter:processExpMacroStatList( self, opt )
+end
+function ExpMacroStatListNode:canBeRight(  )
+
+   return true
+end
+function ExpMacroStatListNode:canBeLeft(  )
+
+   return false
+end
+function ExpMacroStatListNode:canBeStatement(  )
+
+   return false
+end
+function ExpMacroStatListNode.new( pos, typeList, exp )
+   local obj = {}
+   ExpMacroStatListNode.setmeta( obj )
+   if obj.__init then obj:__init( pos, typeList, exp ); end
+   return obj
+end
+function ExpMacroStatListNode:__init(pos, typeList, exp) 
+   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList']), pos, typeList)
+   
+   
+   self.exp = exp
+   
+end
+function ExpMacroStatListNode.create( nodeMan, pos, typeList, exp )
+
+   local node = ExpMacroStatListNode.new(pos, typeList, exp)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpMacroStatListNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpMacroStatListNode  } )
+end
+function ExpMacroStatListNode:get_exp()
+   return self.exp
+end
+
+
 function NodeKind.get_ExpOmitEnum(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum'])

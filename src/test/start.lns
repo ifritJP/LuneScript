@@ -1122,3 +1122,27 @@ class Sub2 extend Test2 {
    sub2.func();
 }
 
+
+macro _Hoge( val:str )
+{
+   {
+      let mut stat0:List<stat> = [];
+      stat0.insert( `{ case 0 { return "a"; } } );
+      stat0.insert( `{ default { return "b"; } } );
+      let name = "%sfunc" (val);
+      let stat1 = `{
+         fn ,,,name ~~(val:int):str {
+            switch val {
+               ,,stat0
+            }
+         }
+      };
+   }
+   ,,stat1;
+}
+
+{
+   _Hoge( "Test" );
+
+   print( Testfunc( 0 ), Testfunc( 1 ) );
+}
