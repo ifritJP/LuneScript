@@ -2614,9 +2614,15 @@ function TransUnit:expandMacroVal( token )
          elseif macroVal.typeInfo:equals( Ast.builtinTypeStat ) then
             self:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ) )
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
-            local strList = (_lune.unwrap( macroVal.val) )
-            for index = #strList, 1, -1 do
-               self:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index] )
+            if macroVal.typeInfo:get_itemTypeInfoList()[1]:equals( Ast.builtinTypeStat ) then
+               local strList = (_lune.unwrap( macroVal.val) )
+               for index = #strList, 1, -1 do
+                  self:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index] )
+               end
+               
+            else
+             
+               self:addErrMess( nextToken.pos, string.format( "not support ,, List -- %s", macroVal.typeInfo:getTxt(  )) )
             end
             
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
@@ -3064,7 +3070,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2184, function (  )
+   Log.log( Log.Level.Info, __func__, 2191, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3080,7 +3086,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2195, function (  )
+               Log.log( Log.Level.Info, __func__, 2202, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3111,7 +3117,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2215, function (  )
+   Log.log( Log.Level.Info, __func__, 2222, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3467,7 +3473,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2586, function (  )
+   Log.log( Log.Level.Info, __func__, 2593, function (  )
    
       return string.format( "%s complete", modulePath)
    end

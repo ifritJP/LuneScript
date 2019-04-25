@@ -8,6 +8,7 @@
 
 * 機能
 
+- [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。
  
 - [ ] forsort の compare をカスタマイズ可能にする。
 - [ ] builtinクラスを LuneScript のクラスで定義できるようにする。

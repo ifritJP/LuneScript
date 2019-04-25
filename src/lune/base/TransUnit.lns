@@ -1773,11 +1773,18 @@ fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
          elseif macroVal.typeInfo.get_kind() == .Array or
             macroVal.typeInfo.get_kind() == .List
          {
-            let strList = (unwrap macroVal.val)@@str[];
-            for index = #strList, 1, -1 {
-               self.pushbackStr(
-                  "macroVal %s[%d]" (nextToken.txt, index),
-                  strList[ index ] );
+            if macroVal.typeInfo.$itemTypeInfoList[ 1 ].equals( Ast.builtinTypeStat ##) {
+               let strList = (unwrap macroVal.val)@@str[];
+               for index = #strList, 1, -1 {
+                  self.pushbackStr(
+                     "macroVal %s[%d]" (nextToken.txt, index),
+                     strList[ index ] );
+               }
+            }
+            else {
+               self.addErrMess( nextToken.pos,
+                                "not support ,, List -- %s"
+                                ( macroVal.typeInfo.getTxt(##)));
             }
          }
          elseif macroVal.typeInfo.get_kind() == .Enum {
