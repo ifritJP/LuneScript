@@ -45,6 +45,48 @@ if not table.unpack then
    table.unpack = unpack
 end
 
+function _lune.nilacc( val, fieldName, access, ... )
+   if not val then
+      return nil
+   end
+   if fieldName then
+      local field = val[ fieldName ]
+      if not field then
+         return nil
+      end
+      if access == "item" then
+         local typeId = type( field )
+         if typeId == "table" then
+            return field[ ... ]
+         elseif typeId == "string" then
+            return string.byte( field, ... )
+         end
+      elseif access == "call" then
+         return field( ... )
+      elseif access == "callmtd" then
+         return field( val, ... )
+      end
+      return field
+   end
+   if access == "item" then
+      local typeId = type( val )
+      if typeId == "table" then
+         return val[ ... ]
+      elseif typeId == "string" then
+         return string.byte( val, ... )
+      end
+   elseif access == "call" then
+      return val( ... )
+   elseif access == "list" then
+      local list, arg = ...
+      if not list then
+         return nil
+      end
+      return val( list, arg )
+   end
+   error( string.format( "illegal access -- %s", access ) )
+end
+
 function _lune.unwrap( val )
    if val == nil then
       __luneScript:error( 'unwrap val is nil' )
@@ -307,6 +349,14 @@ function Node:get_expType(  )
    
    return self.expTypeList[1]
 end
+function Node:addTokenList( list, kind, txt )
+
+   table.insert( list, Parser.Token.new(kind, txt, self.pos, false) )
+end
+function Node:setupLiteralTokenList( list )
+
+   return false
+end
 function Node:getLiteral(  )
 
    return nil
@@ -492,7 +542,7 @@ function NodeKind.get_None(  )
 end
 
 
-regKind( [[None]] )
+regKind( "None" )
 function Filter:processNone( node, opt )
 
 end
@@ -552,7 +602,7 @@ function NodeKind.get_Subfile(  )
 end
 
 
-regKind( [[Subfile]] )
+regKind( "Subfile" )
 function Filter:processSubfile( node, opt )
 
 end
@@ -616,7 +666,7 @@ function NodeKind.get_Import(  )
 end
 
 
-regKind( [[Import]] )
+regKind( "Import" )
 function Filter:processImport( node, opt )
 
 end
@@ -759,18 +809,19 @@ _moduleObj.MacroValInfo = MacroValInfo
 function MacroValInfo.setmeta( obj )
   setmetatable( obj, { __index = MacroValInfo  } )
 end
-function MacroValInfo.new( val, typeInfo )
+function MacroValInfo.new( val, typeInfo, argNode )
    local obj = {}
    MacroValInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( val, typeInfo )
+      obj:__init( val, typeInfo, argNode )
    end
    return obj
 end
-function MacroValInfo:__init( val, typeInfo )
+function MacroValInfo:__init( val, typeInfo, argNode )
 
    self.val = val
    self.typeInfo = typeInfo
+   self.argNode = argNode
 end
 
 local MacroArgInfo = {}
@@ -823,7 +874,7 @@ function NodeKind.get_Root(  )
 end
 
 
-regKind( [[Root]] )
+regKind( "Root" )
 function Filter:processRoot( node, opt )
 
 end
@@ -932,7 +983,7 @@ function NodeKind.get_RefType(  )
 end
 
 
-regKind( [[RefType]] )
+regKind( "RefType" )
 function Filter:processRefType( node, opt )
 
 end
@@ -1085,7 +1136,7 @@ function NodeKind.get_Block(  )
 end
 
 
-regKind( [[Block]] )
+regKind( "Block" )
 function Filter:processBlock( node, opt )
 
 end
@@ -1266,7 +1317,7 @@ function NodeKind.get_If(  )
 end
 
 
-regKind( [[If]] )
+regKind( "If" )
 function Filter:processIf( node, opt )
 
 end
@@ -1379,7 +1430,7 @@ function NodeKind.get_ExpList(  )
 end
 
 
-regKind( [[ExpList]] )
+regKind( "ExpList" )
 function Filter:processExpList( node, opt )
 
 end
@@ -1488,7 +1539,7 @@ function NodeKind.get_Switch(  )
 end
 
 
-regKind( [[Switch]] )
+regKind( "Switch" )
 function Filter:processSwitch( node, opt )
 
 end
@@ -1639,7 +1690,7 @@ function NodeKind.get_While(  )
 end
 
 
-regKind( [[While]] )
+regKind( "While" )
 function Filter:processWhile( node, opt )
 
 end
@@ -1707,7 +1758,7 @@ function NodeKind.get_Repeat(  )
 end
 
 
-regKind( [[Repeat]] )
+regKind( "Repeat" )
 function Filter:processRepeat( node, opt )
 
 end
@@ -1786,7 +1837,7 @@ function NodeKind.get_For(  )
 end
 
 
-regKind( [[For]] )
+regKind( "For" )
 function Filter:processFor( node, opt )
 
 end
@@ -1877,7 +1928,7 @@ function NodeKind.get_Apply(  )
 end
 
 
-regKind( [[Apply]] )
+regKind( "Apply" )
 function Filter:processApply( node, opt )
 
 end
@@ -1960,7 +2011,7 @@ function NodeKind.get_Foreach(  )
 end
 
 
-regKind( [[Foreach]] )
+regKind( "Foreach" )
 function Filter:processForeach( node, opt )
 
 end
@@ -2047,7 +2098,7 @@ function NodeKind.get_Forsort(  )
 end
 
 
-regKind( [[Forsort]] )
+regKind( "Forsort" )
 function Filter:processForsort( node, opt )
 
 end
@@ -2138,7 +2189,7 @@ function NodeKind.get_Return(  )
 end
 
 
-regKind( [[Return]] )
+regKind( "Return" )
 function Filter:processReturn( node, opt )
 
 end
@@ -2207,7 +2258,7 @@ function NodeKind.get_Break(  )
 end
 
 
-regKind( [[Break]] )
+regKind( "Break" )
 function Filter:processBreak( node, opt )
 
 end
@@ -2272,7 +2323,7 @@ function NodeKind.get_Provide(  )
 end
 
 
-regKind( [[Provide]] )
+regKind( "Provide" )
 function Filter:processProvide( node, opt )
 
 end
@@ -2336,7 +2387,7 @@ function NodeKind.get_ExpNew(  )
 end
 
 
-regKind( [[ExpNew]] )
+regKind( "ExpNew" )
 function Filter:processExpNew( node, opt )
 
 end
@@ -2404,7 +2455,7 @@ function NodeKind.get_ExpUnwrap(  )
 end
 
 
-regKind( [[ExpUnwrap]] )
+regKind( "ExpUnwrap" )
 function Filter:processExpUnwrap( node, opt )
 
 end
@@ -2472,7 +2523,7 @@ function NodeKind.get_ExpRef(  )
 end
 
 
-regKind( [[ExpRef]] )
+regKind( "ExpRef" )
 function Filter:processExpRef( node, opt )
 
 end
@@ -2542,7 +2593,7 @@ function NodeKind.get_ExpOp2(  )
 end
 
 
-regKind( [[ExpOp2]] )
+regKind( "ExpOp2" )
 function Filter:processExpOp2( node, opt )
 
 end
@@ -2615,7 +2666,7 @@ function NodeKind.get_UnwrapSet(  )
 end
 
 
-regKind( [[UnwrapSet]] )
+regKind( "UnwrapSet" )
 function Filter:processUnwrapSet( node, opt )
 
 end
@@ -2687,7 +2738,7 @@ function NodeKind.get_IfUnwrap(  )
 end
 
 
-regKind( [[IfUnwrap]] )
+regKind( "IfUnwrap" )
 function Filter:processIfUnwrap( node, opt )
 
 end
@@ -2838,7 +2889,7 @@ function NodeKind.get_When(  )
 end
 
 
-regKind( [[When]] )
+regKind( "When" )
 function Filter:processWhen( node, opt )
 
 end
@@ -2989,7 +3040,7 @@ function NodeKind.get_ExpCast(  )
 end
 
 
-regKind( [[ExpCast]] )
+regKind( "ExpCast" )
 function Filter:processExpCast( node, opt )
 
 end
@@ -3089,7 +3140,7 @@ function NodeKind.get_ExpOp1(  )
 end
 
 
-regKind( [[ExpOp1]] )
+regKind( "ExpOp1" )
 function Filter:processExpOp1( node, opt )
 
 end
@@ -3161,7 +3212,7 @@ function NodeKind.get_ExpRefItem(  )
 end
 
 
-regKind( [[ExpRefItem]] )
+regKind( "ExpRefItem" )
 function Filter:processExpRefItem( node, opt )
 
 end
@@ -3242,7 +3293,7 @@ function NodeKind.get_ExpCall(  )
 end
 
 
-regKind( [[ExpCall]] )
+regKind( "ExpCall" )
 function Filter:processExpCall( node, opt )
 
 end
@@ -3333,7 +3384,7 @@ function NodeKind.get_ExpDDD(  )
 end
 
 
-regKind( [[ExpDDD]] )
+regKind( "ExpDDD" )
 function Filter:processExpDDD( node, opt )
 
 end
@@ -3397,7 +3448,7 @@ function NodeKind.get_ExpParen(  )
 end
 
 
-regKind( [[ExpParen]] )
+regKind( "ExpParen" )
 function Filter:processExpParen( node, opt )
 
 end
@@ -3461,7 +3512,7 @@ function NodeKind.get_ExpMacroExp(  )
 end
 
 
-regKind( [[ExpMacroExp]] )
+regKind( "ExpMacroExp" )
 function Filter:processExpMacroExp( node, opt )
 
 end
@@ -3575,7 +3626,7 @@ function NodeKind.get_ExpMacroStat(  )
 end
 
 
-regKind( [[ExpMacroStat]] )
+regKind( "ExpMacroStat" )
 function Filter:processExpMacroStat( node, opt )
 
 end
@@ -3639,7 +3690,7 @@ function NodeKind.get_StmtExp(  )
 end
 
 
-regKind( [[StmtExp]] )
+regKind( "StmtExp" )
 function Filter:processStmtExp( node, opt )
 
 end
@@ -3709,7 +3760,7 @@ function NodeKind.get_ExpMacroStatList(  )
 end
 
 
-regKind( [[ExpMacroStatList]] )
+regKind( "ExpMacroStatList" )
 function Filter:processExpMacroStatList( node, opt )
 
 end
@@ -3773,7 +3824,7 @@ function NodeKind.get_ExpOmitEnum(  )
 end
 
 
-regKind( [[ExpOmitEnum]] )
+regKind( "ExpOmitEnum" )
 function Filter:processExpOmitEnum( node, opt )
 
 end
@@ -3845,7 +3896,7 @@ function NodeKind.get_RefField(  )
 end
 
 
-regKind( [[RefField]] )
+regKind( "RefField" )
 function Filter:processRefField( node, opt )
 
 end
@@ -3937,7 +3988,7 @@ function NodeKind.get_GetField(  )
 end
 
 
-regKind( [[GetField]] )
+regKind( "GetField" )
 function Filter:processGetField( node, opt )
 
 end
@@ -4025,7 +4076,7 @@ function NodeKind.get_Alias(  )
 end
 
 
-regKind( [[Alias]] )
+regKind( "Alias" )
 function Filter:processAlias( node, opt )
 
 end
@@ -4158,7 +4209,7 @@ function NodeKind.get_DeclVar(  )
 end
 
 
-regKind( [[DeclVar]] )
+regKind( "DeclVar" )
 function Filter:processDeclVar( node, opt )
 
 end
@@ -4438,7 +4489,7 @@ function NodeKind.get_DeclFunc(  )
 end
 
 
-regKind( [[DeclFunc]] )
+regKind( "DeclFunc" )
 function Filter:processDeclFunc( node, opt )
 
 end
@@ -4502,7 +4553,7 @@ function NodeKind.get_DeclMethod(  )
 end
 
 
-regKind( [[DeclMethod]] )
+regKind( "DeclMethod" )
 function Filter:processDeclMethod( node, opt )
 
 end
@@ -4566,7 +4617,7 @@ function NodeKind.get_DeclConstr(  )
 end
 
 
-regKind( [[DeclConstr]] )
+regKind( "DeclConstr" )
 function Filter:processDeclConstr( node, opt )
 
 end
@@ -4630,7 +4681,7 @@ function NodeKind.get_DeclDestr(  )
 end
 
 
-regKind( [[DeclDestr]] )
+regKind( "DeclDestr" )
 function Filter:processDeclDestr( node, opt )
 
 end
@@ -4694,7 +4745,7 @@ function NodeKind.get_ExpCallSuper(  )
 end
 
 
-regKind( [[ExpCallSuper]] )
+regKind( "ExpCallSuper" )
 function Filter:processExpCallSuper( node, opt )
 
 end
@@ -4766,7 +4817,7 @@ function NodeKind.get_DeclMember(  )
 end
 
 
-regKind( [[DeclMember]] )
+regKind( "DeclMember" )
 function Filter:processDeclMember( node, opt )
 
 end
@@ -4862,7 +4913,7 @@ function NodeKind.get_DeclArg(  )
 end
 
 
-regKind( [[DeclArg]] )
+regKind( "DeclArg" )
 function Filter:processDeclArg( node, opt )
 
 end
@@ -4930,7 +4981,7 @@ function NodeKind.get_DeclArgDDD(  )
 end
 
 
-regKind( [[DeclArgDDD]] )
+regKind( "DeclArgDDD" )
 function Filter:processDeclArgDDD( node, opt )
 
 end
@@ -5016,7 +5067,7 @@ function NodeKind.get_DeclClass(  )
 end
 
 
-regKind( [[DeclClass]] )
+regKind( "DeclClass" )
 function Filter:processDeclClass( node, opt )
 
 end
@@ -5124,7 +5175,7 @@ function NodeKind.get_DeclEnum(  )
 end
 
 
-regKind( [[DeclEnum]] )
+regKind( "DeclEnum" )
 function Filter:processDeclEnum( node, opt )
 
 end
@@ -5200,7 +5251,7 @@ function NodeKind.get_DeclAlge(  )
 end
 
 
-regKind( [[DeclAlge]] )
+regKind( "DeclAlge" )
 function Filter:processDeclAlge( node, opt )
 
 end
@@ -5272,7 +5323,7 @@ function NodeKind.get_NewAlgeVal(  )
 end
 
 
-regKind( [[NewAlgeVal]] )
+regKind( "NewAlgeVal" )
 function Filter:processNewAlgeVal( node, opt )
 
 end
@@ -5381,7 +5432,7 @@ function NodeKind.get_Match(  )
 end
 
 
-regKind( [[Match]] )
+regKind( "Match" )
 function Filter:processMatch( node, opt )
 
 end
@@ -5457,7 +5508,7 @@ function NodeKind.get_DeclMacro(  )
 end
 
 
-regKind( [[DeclMacro]] )
+regKind( "DeclMacro" )
 function Filter:processDeclMacro( node, opt )
 
 end
@@ -5538,7 +5589,7 @@ function NodeKind.get_Abbr(  )
 end
 
 
-regKind( [[Abbr]] )
+regKind( "Abbr" )
 function Filter:processAbbr( node, opt )
 
 end
@@ -5598,7 +5649,7 @@ function NodeKind.get_Boxing(  )
 end
 
 
-regKind( [[Boxing]] )
+regKind( "Boxing" )
 function Filter:processBoxing( node, opt )
 
 end
@@ -5662,7 +5713,7 @@ function NodeKind.get_Unboxing(  )
 end
 
 
-regKind( [[Unboxing]] )
+regKind( "Unboxing" )
 function Filter:processUnboxing( node, opt )
 
 end
@@ -5726,7 +5777,7 @@ function NodeKind.get_LiteralNil(  )
 end
 
 
-regKind( [[LiteralNil]] )
+regKind( "LiteralNil" )
 function Filter:processLiteralNil( node, opt )
 
 end
@@ -5786,7 +5837,7 @@ function NodeKind.get_LiteralChar(  )
 end
 
 
-regKind( [[LiteralChar]] )
+regKind( "LiteralChar" )
 function Filter:processLiteralChar( node, opt )
 
 end
@@ -5854,7 +5905,7 @@ function NodeKind.get_LiteralInt(  )
 end
 
 
-regKind( [[LiteralInt]] )
+regKind( "LiteralInt" )
 function Filter:processLiteralInt( node, opt )
 
 end
@@ -5922,7 +5973,7 @@ function NodeKind.get_LiteralReal(  )
 end
 
 
-regKind( [[LiteralReal]] )
+regKind( "LiteralReal" )
 function Filter:processLiteralReal( node, opt )
 
 end
@@ -5990,7 +6041,7 @@ function NodeKind.get_LiteralArray(  )
 end
 
 
-regKind( [[LiteralArray]] )
+regKind( "LiteralArray" )
 function Filter:processLiteralArray( node, opt )
 
 end
@@ -6054,7 +6105,7 @@ function NodeKind.get_LiteralList(  )
 end
 
 
-regKind( [[LiteralList]] )
+regKind( "LiteralList" )
 function Filter:processLiteralList( node, opt )
 
 end
@@ -6118,7 +6169,7 @@ function NodeKind.get_LiteralSet(  )
 end
 
 
-regKind( [[LiteralSet]] )
+regKind( "LiteralSet" )
 function Filter:processLiteralSet( node, opt )
 
 end
@@ -6207,7 +6258,7 @@ function NodeKind.get_LiteralMap(  )
 end
 
 
-regKind( [[LiteralMap]] )
+regKind( "LiteralMap" )
 function Filter:processLiteralMap( node, opt )
 
 end
@@ -6275,7 +6326,7 @@ function NodeKind.get_LiteralString(  )
 end
 
 
-regKind( [[LiteralString]] )
+regKind( "LiteralString" )
 function Filter:processLiteralString( node, opt )
 
 end
@@ -6343,7 +6394,7 @@ function NodeKind.get_LiteralBool(  )
 end
 
 
-regKind( [[LiteralBool]] )
+regKind( "LiteralBool" )
 function Filter:processLiteralBool( node, opt )
 
 end
@@ -6407,7 +6458,7 @@ function NodeKind.get_LiteralSymbol(  )
 end
 
 
-regKind( [[LiteralSymbol]] )
+regKind( "LiteralSymbol" )
 function Filter:processLiteralSymbol( node, opt )
 
 end
@@ -6662,9 +6713,21 @@ function LiteralNilNode:getLiteral(  )
    return _lune.newAlge( Literal.Nil)
 end
 
+function LiteralNilNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Symb, "nil" )
+   return true
+end
+
 function LiteralCharNode:getLiteral(  )
 
    return _lune.newAlge( Literal.Int, {self.num})
+end
+
+function LiteralCharNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Char, string.format( "%d", self.num) )
+   return true
 end
 
 function LiteralIntNode:getLiteral(  )
@@ -6672,9 +6735,21 @@ function LiteralIntNode:getLiteral(  )
    return _lune.newAlge( Literal.Int, {self.num})
 end
 
+function LiteralIntNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Int, string.format( "%d", self.num) )
+   return true
+end
+
 function LiteralRealNode:getLiteral(  )
 
    return _lune.newAlge( Literal.Real, {self.num})
+end
+
+function LiteralRealNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Real, string.format( "%g", self.num) )
+   return true
 end
 
 function LiteralArrayNode:getLiteral(  )
@@ -6699,6 +6774,30 @@ function LiteralArrayNode:getLiteral(  )
    return _lune.newAlge( Literal.ARRAY, {literalList})
 end
 
+function LiteralArrayNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "[@" )
+   do
+      local _exp = self.expList
+      if _exp ~= nil then
+         for index, node in pairs( _exp:get_expList(  ) ) do
+            if index > 1 then
+               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+            end
+            
+            if not node:setupLiteralTokenList( list ) then
+               return false
+            end
+            
+         end
+         
+      end
+   end
+   
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "]" )
+   return true
+end
+
 function LiteralListNode:getLiteral(  )
 
    local literalList = {}
@@ -6719,6 +6818,30 @@ function LiteralListNode:getLiteral(  )
    end
    
    return _lune.newAlge( Literal.LIST, {literalList})
+end
+
+function LiteralListNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "[" )
+   do
+      local _exp = self.expList
+      if _exp ~= nil then
+         for index, node in pairs( _exp:get_expList(  ) ) do
+            if index > 1 then
+               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+            end
+            
+            if not node:setupLiteralTokenList( list ) then
+               return false
+            end
+            
+         end
+         
+      end
+   end
+   
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "]" )
+   return true
 end
 
 function LiteralSetNode:getLiteral(  )
@@ -6743,6 +6866,30 @@ function LiteralSetNode:getLiteral(  )
    return _lune.newAlge( Literal.SET, {literalList})
 end
 
+function LiteralSetNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "(@" )
+   do
+      local _exp = self.expList
+      if _exp ~= nil then
+         for index, node in pairs( _exp:get_expList(  ) ) do
+            if index > 1 then
+               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+            end
+            
+            if not node:setupLiteralTokenList( list ) then
+               return false
+            end
+            
+         end
+         
+      end
+   end
+   
+   self:addTokenList( list, Parser.TokenKind.Dlmt, ")" )
+   return true
+end
+
 function LiteralMapNode:getLiteral(  )
 
    local litMap = {}
@@ -6756,6 +6903,66 @@ function LiteralMapNode:getLiteral(  )
    end
    
    return _lune.newAlge( Literal.MAP, {litMap})
+end
+
+function LiteralMapNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
+   local lit2valNode = {}
+   for key, val in pairs( self.map ) do
+      local literal = key:getLiteral(  )
+      if literal ~= nil then
+         do
+            local _matchExp = literal
+            if _matchExp[1] == Literal.Int[1] then
+               local param = _matchExp[2][1]
+            
+               lit2valNode[param] = key
+            elseif _matchExp[1] == Literal.Str[1] then
+               local param = _matchExp[2][1]
+            
+               lit2valNode[param] = key
+            elseif _matchExp[1] == Literal.Real[1] then
+               local param = _matchExp[2][1]
+            
+               lit2valNode[param] = key
+            else 
+            do
+               return false
+            end
+            end
+         end
+         
+      end
+      
+   end
+   
+   do
+      local __sorted = {}
+      local __map = lit2valNode
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, literal in ipairs( __sorted ) do
+         local key = __map[ literal ]
+         do
+            if not key:setupLiteralTokenList( list ) then
+               return false
+            end
+            
+            self:addTokenList( list, Parser.TokenKind.Dlmt, ":" )
+            if not _lune.nilacc( self.map[key], 'setupLiteralTokenList', 'callmtd' , list ) then
+               return false
+            end
+            
+            self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+         end
+      end
+   end
+   
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "}" )
+   return true
 end
 
 function LiteralStringNode:getLiteral(  )
@@ -6788,14 +6995,47 @@ function LiteralStringNode:getLiteral(  )
    return _lune.newAlge( Literal.Str, {txt})
 end
 
+function LiteralStringNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Str, self.token.txt )
+   if #self:get_argList() > 0 then
+      self:addTokenList( list, Parser.TokenKind.Dlmt, self.token.txt )
+      for index, argNode in pairs( self:get_argList() ) do
+         if index > 1 then
+            self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+         end
+         
+         if not argNode:setupLiteralTokenList( list ) then
+            return false
+         end
+         
+      end
+      
+   end
+   
+   return true
+end
+
 function LiteralBoolNode:getLiteral(  )
 
    return _lune.newAlge( Literal.Bool, {self.token.txt == "true"})
 end
 
+function LiteralBoolNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Symb, self.token.txt )
+   return true
+end
+
 function LiteralSymbolNode:getLiteral(  )
 
    return _lune.newAlge( Literal.Symbol, {self.token.txt})
+end
+
+function LiteralSymbolNode:setupLiteralTokenList( list )
+
+   self:addTokenList( list, Parser.TokenKind.Symb, self.token.txt )
+   return true
 end
 
 function RefFieldNode:getLiteral(  )
@@ -6901,6 +7141,16 @@ function ExpOmitEnumNode:getLiteral(  )
    local enumval = self.valInfo
    local val = enumLiiteral2Literal( enumval:get_val() )
    return val
+end
+
+function ExpOmitEnumNode:setupLiteralTokenList( list )
+
+   local enumTypeInfo = self.enumTypeInfo
+   local enumval = self.valInfo
+   self:addTokenList( list, Parser.TokenKind.Dlmt, "." )
+   self:addTokenList( list, Parser.TokenKind.Symb, (Ast.EnumLiteral:_getTxt( enumval:get_val())
+   :gsub( ".*%.", "" ) ) )
+   return true
 end
 
 function ExpOp2Node:getLiteral(  )

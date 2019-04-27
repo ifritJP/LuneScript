@@ -136,7 +136,9 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
          if itemTypeInfo.equals( Ast.builtinTypeNone ## ) {
             itemTypeInfo = expType;
          }
-         elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
+         elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) and
+            not expType.canEvalWith( itemTypeInfo, "=", {} )
+         {
             if expType.equals( Ast.builtinTypeNil ## ) {
                itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
             }
@@ -500,10 +502,10 @@ fn TransUnit.checkMatchValType(
 {
    let mut argTypeList = funcTypeInfo.$argTypeInfoList;
    switch funcTypeInfo {
-      case builtinFunc.listInsert, builtinFunc.setAdd, builtinFunc.setDel {
+      case builtinFunc.list_insert, builtinFunc.set_add, builtinFunc.set_del {
          argTypeList = genericTypeList;
       }
-      case builtinFunc.listRemove {
+      case builtinFunc.list_remove {
       }
    }
 
@@ -657,6 +659,7 @@ fn TransUnit.evalMacroOp(
    let mut argValMap:Map<int,stem> = {};
    let mut macroArgValMap:Map<str,stem> = {};
    let macroArgNodeList = macroInfo.getArgList();
+   let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
    when! expList {
       foreach argNode, index in expList.get_expList() {
          let literal = argNode.getLiteral();
@@ -666,6 +669,7 @@ fn TransUnit.evalMacroOp(
                let declArgNode = macroArgNodeList[ index ];
             
                macroArgValMap[ declArgNode.$name ] = val;
+               macroArgName2ArgNode[ declArgNode.$name ] = argNode;
             }
          }
       }
@@ -684,7 +688,8 @@ fn TransUnit.evalMacroOp(
       if typeInfo.equals( Ast.builtinTypeSymbol ##) {
          val = [ val ];
       }
-      self.symbol2ValueMapForMacro[ name ] = new Nodes.MacroValInfo( val, typeInfo );
+      self.symbol2ValueMapForMacro[ name ] =
+         new Nodes.MacroValInfo( val, typeInfo, macroArgName2ArgNode[ name ] );
    }
 
    //let scope = self.pushScope();
@@ -696,7 +701,8 @@ fn TransUnit.evalMacroOp(
          let argName = arg.$name;
          //scope.add( argName, argType.expType );
          self.symbol2ValueMapForMacro[ argName ] =
-            new Nodes.MacroValInfo( argValMap[ index ], argType );
+            new Nodes.MacroValInfo( argValMap[ index ], argType,
+                                    macroArgName2ArgNode[ argName ] );
       }
       else {
          self.error( "not support ... in macro" );
@@ -1028,21 +1034,21 @@ fn TransUnit.analyzeExpCall(
    let mut alt2typeMap, argList = self.prepareExpCall(
       exp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
-   if funcTypeInfo.equals( builtinFunc.listInsert ##) {
+   if funcTypeInfo.equals( builtinFunc.list_insert ##) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "list can't insert nilable" );
          }
       }
    }
-   if funcTypeInfo.equals( builtinFunc.setAdd ##) {
+   if funcTypeInfo.equals( builtinFunc.set_add ##) {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "set can't add nilable" );
          }
       }
    }
-   elseif funcTypeInfo.equals( builtinFunc.listRemove ##) {
+   elseif funcTypeInfo.equals( builtinFunc.list_remove ##) {
       if #genericTypeList > 0 {
          if genericTypeList[ 1 ].$nilable {
             self.addWarnMess( exp.$pos, "remove() is dangerous for nilable's list." );
@@ -1071,7 +1077,7 @@ fn TransUnit.analyzeExpCall(
             retTypeInfoList[ index ] = applyType;
          }
          else {
-            if funcTypeInfo == builtinFunc.listRemove {
+            if funcTypeInfo == builtinFunc.list_remove {
                // pending: List.remove の戻り値設定を暫定対応
                retTypeInfoList[ index ] = genericTypeList[ 1 ].$nilableTypeInfo;
             }
@@ -1091,8 +1097,8 @@ fn TransUnit.analyzeExpCall(
       }
       
       when! refFieldNode {
-         if funcTypeInfo.equals( builtinFunc.listUnpack ##) or
-            funcTypeInfo.equals( builtinFunc.arrayUnpack ##)
+         if funcTypeInfo.equals( builtinFunc.list_unpack ##) or
+            funcTypeInfo.equals( builtinFunc.array_unpack ##)
          {
             // unpack の型を list の要素の DDD 型にする
             let prefixType = refFieldNode.$prefix.$expType;
@@ -1129,10 +1135,10 @@ fn TransUnit.analyzeExpCall(
 
       when! argList {
          switch funcTypeInfo {
-            case builtinFunc.stringForm {
+            case builtinFunc.string_format {
                checkArgForStringForm( argList );
             }
-            case builtinFunc.listSort, builtinFunc.arraySort {
+            case builtinFunc.list_sort, builtinFunc.array_sort {
                checkArgForSort( genericTypeList, argList );
             }
          }
@@ -1830,8 +1836,8 @@ fn TransUnit.analyzeExpField(
       typeInfo = self.createModifier( typeInfo, .IMut );
    }
 
-   if typeInfo.equals( builtinFunc.listUnpack ##) or
-      typeInfo.equals( builtinFunc.arrayUnpack ##)
+   if typeInfo.equals( builtinFunc.list_unpack ##) or
+      typeInfo.equals( builtinFunc.array_unpack ##)
    {
       self.helperInfo.useUnpack = true;
    }
@@ -1985,7 +1991,7 @@ fn TransUnit.analyzeExpSymbol(
          if typeInfo.equals( Ast.builtinTypeSymbol ##) {
             skipFlag = true;
          }
-         if typeInfo.equals( builtinFunc.luneLoad ##) {
+         if typeInfo.equals( builtinFunc.lune__load ##) {
             self.helperInfo.useLoad = true;
          }
          

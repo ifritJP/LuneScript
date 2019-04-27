@@ -69,3 +69,12 @@ pub class ClassB extend Super {
 
 let classB = new ClassB( 1 );
 print( "classB.sub", classB.sub() );
+
+macro _test( val:Map<str,int> ) {
+   let test = ,,val;
+}
+
+{
+   _test( { "a":1, "b":1 } );
+   print( test.a, test.b );
+}

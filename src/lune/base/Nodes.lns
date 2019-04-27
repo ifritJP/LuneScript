@@ -119,6 +119,14 @@ pub class Node {
       }
       return self.expTypeList[ 1 ];
    }; 
+
+   pro fn addTokenList( list:List<&Parser.Token>, kind:Parser.TokenKind, txt:str ) {
+      list.insert( new Parser.Token( kind, txt, self.pos, false ## ) );
+   }
+   
+   pub fn setupLiteralTokenList( list: List<&Parser.Token> ): bool {
+      return false;
+   }
    
    pub fn getLiteral(): Literal! {
       return nil;
@@ -414,9 +422,19 @@ pub class ModuleInfo extend (Ast.ModuleInfoIF) {
 //    let mut typeInfo2DDDMap:Map<&Ast.TypeInfo,&Ast.DDDTypeInfo> {pub};
 // }
 
+
+/**
+マクロの expand-statement で使用する変数情報。
+
+マクロの引数か、 macro-statment で宣言した変数情報。
+*/
 pub class MacroValInfo {
+   /** 値 */
    pub let val: stem!;
+   /** 型 */
    pub let typeInfo: Ast.TypeInfo;
+   /** 実引数のノード。 この変数がマクロの引数の場合に有効。 */
+   pub let argNode: &Node!;
 }
 
 pub class MacroArgInfo {
@@ -1331,17 +1349,34 @@ pub override fn WhileNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 pub override fn LiteralNilNode.getLiteral(): Literal! {
    return .Nil;
 }
+pub override fn LiteralNilNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
+   self.addTokenList( list, .Symb, "nil" );
+   return true;
+}
+
 
 pub override fn LiteralCharNode.getLiteral(): Literal! {
    return .Int( self.num );
+}
+pub override fn LiteralCharNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
+   self.addTokenList( list, .Char, "%d" (self.num) );
+   return true;
 }
 
 pub override fn LiteralIntNode.getLiteral(): Literal! {
    return .Int( self.num );
 }
+pub override fn LiteralIntNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
+   self.addTokenList( list, .Int, "%d" (self.num) );
+   return true;
+}
 
 pub override fn LiteralRealNode.getLiteral(): Literal! {
    return .Real( self.num );
+}
+pub override fn LiteralRealNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
+   self.addTokenList( list, .Real, "%g" (self.num) );
+   return true;
 }
 
 pub override fn LiteralArrayNode.getLiteral(): Literal! {
@@ -1360,6 +1395,23 @@ pub override fn LiteralArrayNode.getLiteral(): Literal! {
    return .ARRAY( literalList );
 }
 
+pub override fn LiteralArrayNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   self.addTokenList( list, .Dlmt, "[@" );
+   if! self.expList {
+      foreach node, index in _exp.get_expList() {
+         if index > 1 {
+            self.addTokenList( list, .Dlmt, "," );
+         }
+         if not node.setupLiteralTokenList( list ) {
+            return false;
+         }
+      } 
+   }
+   self.addTokenList( list, .Dlmt, "]" );
+   return true;
+}
+
 pub override fn LiteralListNode.getLiteral(): Literal! {
    let mut literalList:List<Literal> = [];
    if! self.expList {
@@ -1375,6 +1427,24 @@ pub override fn LiteralListNode.getLiteral(): Literal! {
    }
    return .LIST( literalList );
 }
+
+pub override fn LiteralListNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   self.addTokenList( list, .Dlmt, "[" );
+   if! self.expList {
+      foreach node, index in _exp.get_expList() {
+         if index > 1 {
+            self.addTokenList( list, .Dlmt, "," );
+         }
+         if not node.setupLiteralTokenList( list ) {
+            return false;
+         }
+      } 
+   }
+   self.addTokenList( list, .Dlmt, "]" );
+   return true;
+}
+
 
 pub override fn LiteralSetNode.getLiteral(): Literal! {
    let mut literalList:List<Literal> = [];
@@ -1392,6 +1462,23 @@ pub override fn LiteralSetNode.getLiteral(): Literal! {
    return .SET( literalList );
 }
 
+pub override fn LiteralSetNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   self.addTokenList( list, .Dlmt, "(@" );
+   if! self.expList {
+      foreach node, index in _exp.get_expList() {
+         if index > 1 {
+            self.addTokenList( list, .Dlmt, "," );
+         }
+         if not node.setupLiteralTokenList( list ) {
+            return false;
+         }
+      } 
+   }
+   self.addTokenList( list, .Dlmt, ")" );
+   return true;
+}
+
 pub override fn LiteralMapNode.getLiteral(): Literal! {
    let mut litMap:Map<&Literal,&Literal> = {};
    foreach val, key in self.map {
@@ -1403,6 +1490,46 @@ pub override fn LiteralMapNode.getLiteral(): Literal! {
    }
    return .MAP( litMap );
 }
+
+pub override fn LiteralMapNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   self.addTokenList( list, .Dlmt, "{" );
+
+   let mut lit2valNode:Map<stem,&Node> = {};
+   foreach val, key in self.map {
+      let literal = key.getLiteral();
+      when! literal {
+         match literal {
+            case .Int( param ) {
+               lit2valNode[ param ] = key;
+            }
+            case .Str( param ) {
+               lit2valNode[ param ] = key;
+            }
+            case .Real( param ) {
+               lit2valNode[ param ] = key;
+            }
+            default {
+               return false;
+            }
+         }
+      }
+   }
+   
+   forsort key, literal in lit2valNode {
+      if not key.setupLiteralTokenList( list ) {
+         return false;
+      }
+      self.addTokenList( list, .Dlmt, ":" );
+      if not self.map[ key ]$.setupLiteralTokenList$( list ) {
+         return false;
+      }
+      self.addTokenList( list, .Dlmt, "," );
+   }
+   self.addTokenList( list, .Dlmt, "}" );
+   return true;
+}
+
 
 pub override fn LiteralStringNode.getLiteral(): Literal! {
    let mut txt = self.token.txt;
@@ -1427,13 +1554,44 @@ pub override fn LiteralStringNode.getLiteral(): Literal! {
    return .Str(txt);
 }
 
+pub override fn LiteralStringNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   self.addTokenList( list, .Str, self.token.txt );
+   if #self.$argList > 0 {
+      self.addTokenList( list, .Dlmt, self.token.txt );
+      foreach argNode, index in self.$argList {
+         if index > 1 {
+            self.addTokenList( list, .Dlmt, "," );
+         }
+         if not argNode.setupLiteralTokenList( list ) {
+            return false;
+         }
+      }
+   }
+   return true;
+}
+
 pub override fn LiteralBoolNode.getLiteral(): Literal! {
    return .Bool( self.token.txt == "true" );
 }
 
+pub override fn LiteralBoolNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   self.addTokenList( list, .Symb, self.token.txt );
+   return true;
+}
+
+
 pub override fn LiteralSymbolNode.getLiteral(): Literal! {
    return .Symbol(self.token.txt);
 }
+
+pub override fn LiteralSymbolNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   self.addTokenList( list, .Symb, self.token.txt );
+   return true;
+}
+
 
 pub override fn RefFieldNode.getLiteral(): Literal! {
    let mut tokenList:List<str> = [];
@@ -1508,6 +1666,17 @@ pub override fn ExpOmitEnumNode.getLiteral(): Literal! {
    let val = enumLiiteral2Literal( enumval.$val );
    return val;
    
+}
+
+pub override fn ExpOmitEnumNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool
+{
+   let enumTypeInfo = self.enumTypeInfo;
+
+   let enumval = self.valInfo;
+   self.addTokenList( list, .Dlmt, "." );
+
+   self.addTokenList( list, .Symb, (enumval.$val.$_txt.gsub( ".*%.", "")) );
+   return true;
 }
 
 pub override fn ExpOp2Node.getLiteral(): Literal! {

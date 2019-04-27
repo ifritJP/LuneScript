@@ -742,7 +742,7 @@ function convFilter:processExpRef( node, opt )
    if node:get_token().txt == "super" then
       local funcType = node:get_expType()
       self:write( string.format( "%s.%s", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
-   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).luneLoad ) then
+   elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).lune__load ) then
    else
     
       if node:get_symbolInfo():get_accessMode() == Ast.AccessMode.Pub and node:get_symbolInfo():get_kind() == Ast.SymbolKind.Var then

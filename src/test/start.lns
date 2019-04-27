@@ -177,7 +177,7 @@ _stattest(
    } );
 
 macro _symboltest( symbol: sym, val:stem ) {
-   print( ,,symbol( ,,val ) );
+   print( __line__, ,,symbol( ,,val ) );
 }
 
 _symboltest( string.format, "test\n" );

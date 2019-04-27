@@ -2126,23 +2126,86 @@ function BuiltinFuncType.new(  )
    return obj
 end
 function BuiltinFuncType:__init() 
-   self.luneLoad = Ast.headTypeInfo
-   self.arraySort = Ast.headTypeInfo
-   self.arrayUnpack = Ast.headTypeInfo
-   self.listInsert = Ast.headTypeInfo
-   self.listRemove = Ast.headTypeInfo
-   self.listSort = Ast.headTypeInfo
-   self.listUnpack = Ast.headTypeInfo
-   self.mappingToMap = Ast.headTypeInfo
-   self.nilableVal = Ast.headTypeInfo
-   self.setAdd = Ast.headTypeInfo
-   self.setAnd = Ast.headTypeInfo
-   self.setDel = Ast.headTypeInfo
-   self.setOr = Ast.headTypeInfo
-   self.setSub = Ast.headTypeInfo
-   self.strGMatch = Ast.headTypeInfo
-   self.stringForm = Ast.headTypeInfo
-   self.stringGMatch = Ast.headTypeInfo
+   self.lune__fcall = Ast.headTypeInfo
+   self.lune__load = Ast.headTypeInfo
+   self.lune_collectgarbage = Ast.headTypeInfo
+   self.lune_error = Ast.headTypeInfo
+   self.lune_load = Ast.headTypeInfo
+   self.lune_loadfile = Ast.headTypeInfo
+   self.lune_print = Ast.headTypeInfo
+   self.lune_require = Ast.headTypeInfo
+   self.lune_tonumber = Ast.headTypeInfo
+   self.lune_tostring = Ast.headTypeInfo
+   self.lune_type = Ast.headTypeInfo
+   self.istream___attrib = Ast.headTypeInfo
+   self.istream_close = Ast.headTypeInfo
+   self.istream_read = Ast.headTypeInfo
+   self.ostream___attrib = Ast.headTypeInfo
+   self.ostream_close = Ast.headTypeInfo
+   self.ostream_flush = Ast.headTypeInfo
+   self.ostream_write = Ast.headTypeInfo
+   self.luastream___attrib = Ast.headTypeInfo
+   self.luastream_close = Ast.headTypeInfo
+   self.luastream_flush = Ast.headTypeInfo
+   self.luastream_read = Ast.headTypeInfo
+   self.luastream_seek = Ast.headTypeInfo
+   self.luastream_write = Ast.headTypeInfo
+   self.mapping___attrib = Ast.headTypeInfo
+   self.mapping__toMap = Ast.headTypeInfo
+   self.io_open = Ast.headTypeInfo
+   self.io_popen = Ast.headTypeInfo
+   self.io_stderr = Ast.headTypeInfo
+   self.io_stdin = Ast.headTypeInfo
+   self.io_stdout = Ast.headTypeInfo
+   self.package_path = Ast.headTypeInfo
+   self.package_searchpath = Ast.headTypeInfo
+   self.os_clock = Ast.headTypeInfo
+   self.os_date = Ast.headTypeInfo
+   self.os_difftime = Ast.headTypeInfo
+   self.os_exit = Ast.headTypeInfo
+   self.os_remove = Ast.headTypeInfo
+   self.os_rename = Ast.headTypeInfo
+   self.os_time = Ast.headTypeInfo
+   self.string_byte = Ast.headTypeInfo
+   self.string_dump = Ast.headTypeInfo
+   self.string_find = Ast.headTypeInfo
+   self.string_format = Ast.headTypeInfo
+   self.string_gmatch = Ast.headTypeInfo
+   self.string_gsub = Ast.headTypeInfo
+   self.string_lower = Ast.headTypeInfo
+   self.string_rep = Ast.headTypeInfo
+   self.string_reverse = Ast.headTypeInfo
+   self.string_sub = Ast.headTypeInfo
+   self.string_upper = Ast.headTypeInfo
+   self.str_byte = Ast.headTypeInfo
+   self.str_find = Ast.headTypeInfo
+   self.str_format = Ast.headTypeInfo
+   self.str_gmatch = Ast.headTypeInfo
+   self.str_gsub = Ast.headTypeInfo
+   self.str_lower = Ast.headTypeInfo
+   self.str_rep = Ast.headTypeInfo
+   self.str_reverse = Ast.headTypeInfo
+   self.str_sub = Ast.headTypeInfo
+   self.str_upper = Ast.headTypeInfo
+   self.list_insert = Ast.headTypeInfo
+   self.list_remove = Ast.headTypeInfo
+   self.list_sort = Ast.headTypeInfo
+   self.list_unpack = Ast.headTypeInfo
+   self.array_sort = Ast.headTypeInfo
+   self.array_unpack = Ast.headTypeInfo
+   self.set_add = Ast.headTypeInfo
+   self.set_and = Ast.headTypeInfo
+   self.set_clone = Ast.headTypeInfo
+   self.set_del = Ast.headTypeInfo
+   self.set_has = Ast.headTypeInfo
+   self.set_len = Ast.headTypeInfo
+   self.set_or = Ast.headTypeInfo
+   self.set_sub = Ast.headTypeInfo
+   self.math_random = Ast.headTypeInfo
+   self.math_randomseed = Ast.headTypeInfo
+   self.debug_getinfo = Ast.headTypeInfo
+   self.debug_getlocal = Ast.headTypeInfo
+   self.nilable_val = Ast.headTypeInfo
    
 end
 function BuiltinFuncType.setmeta( obj )
@@ -2161,21 +2224,209 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
    
       do
          local _switchExp = fieldName
-         if _switchExp == '_load' then
-            builtinFunc.luneLoad = typeInfo
+         if _switchExp == '_fcall' then
+            builtinFunc.lune__fcall = typeInfo
+         elseif _switchExp == '_load' then
+            builtinFunc.lune__load = typeInfo
+         elseif _switchExp == 'collectgarbage' then
+            builtinFunc.lune_collectgarbage = typeInfo
+         elseif _switchExp == 'error' then
+            builtinFunc.lune_error = typeInfo
+         elseif _switchExp == 'load' then
+            builtinFunc.lune_load = typeInfo
+         elseif _switchExp == 'loadfile' then
+            builtinFunc.lune_loadfile = typeInfo
+         elseif _switchExp == 'print' then
+            builtinFunc.lune_print = typeInfo
+         elseif _switchExp == 'require' then
+            builtinFunc.lune_require = typeInfo
+         elseif _switchExp == 'tonumber' then
+            builtinFunc.lune_tonumber = typeInfo
+         elseif _switchExp == 'tostring' then
+            builtinFunc.lune_tostring = typeInfo
+         elseif _switchExp == 'type' then
+            builtinFunc.lune_type = typeInfo
          end
       end
       
    end
    
-   local function process_Array(  )
+   local function process_iStream(  )
    
       do
          local _switchExp = fieldName
-         if _switchExp == 'sort' then
-            builtinFunc.arraySort = typeInfo
-         elseif _switchExp == 'unpack' then
-            builtinFunc.arrayUnpack = typeInfo
+         if _switchExp == '__attrib' then
+            builtinFunc.istream___attrib = typeInfo
+         elseif _switchExp == 'close' then
+            builtinFunc.istream_close = typeInfo
+         elseif _switchExp == 'read' then
+            builtinFunc.istream_read = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_oStream(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == '__attrib' then
+            builtinFunc.ostream___attrib = typeInfo
+         elseif _switchExp == 'close' then
+            builtinFunc.ostream_close = typeInfo
+         elseif _switchExp == 'flush' then
+            builtinFunc.ostream_flush = typeInfo
+         elseif _switchExp == 'write' then
+            builtinFunc.ostream_write = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_luaStream(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == '__attrib' then
+            builtinFunc.luastream___attrib = typeInfo
+         elseif _switchExp == 'close' then
+            builtinFunc.luastream_close = typeInfo
+         elseif _switchExp == 'flush' then
+            builtinFunc.luastream_flush = typeInfo
+         elseif _switchExp == 'read' then
+            builtinFunc.luastream_read = typeInfo
+         elseif _switchExp == 'seek' then
+            builtinFunc.luastream_seek = typeInfo
+         elseif _switchExp == 'write' then
+            builtinFunc.luastream_write = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_Mapping(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == '__attrib' then
+            builtinFunc.mapping___attrib = typeInfo
+         elseif _switchExp == '_toMap' then
+            builtinFunc.mapping__toMap = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_io(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'open' then
+            builtinFunc.io_open = typeInfo
+         elseif _switchExp == 'popen' then
+            builtinFunc.io_popen = typeInfo
+         elseif _switchExp == 'stderr' then
+            builtinFunc.io_stderr = typeInfo
+         elseif _switchExp == 'stdin' then
+            builtinFunc.io_stdin = typeInfo
+         elseif _switchExp == 'stdout' then
+            builtinFunc.io_stdout = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_package(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'path' then
+            builtinFunc.package_path = typeInfo
+         elseif _switchExp == 'searchpath' then
+            builtinFunc.package_searchpath = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_os(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'clock' then
+            builtinFunc.os_clock = typeInfo
+         elseif _switchExp == 'date' then
+            builtinFunc.os_date = typeInfo
+         elseif _switchExp == 'difftime' then
+            builtinFunc.os_difftime = typeInfo
+         elseif _switchExp == 'exit' then
+            builtinFunc.os_exit = typeInfo
+         elseif _switchExp == 'remove' then
+            builtinFunc.os_remove = typeInfo
+         elseif _switchExp == 'rename' then
+            builtinFunc.os_rename = typeInfo
+         elseif _switchExp == 'time' then
+            builtinFunc.os_time = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_string(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'byte' then
+            builtinFunc.string_byte = typeInfo
+         elseif _switchExp == 'dump' then
+            builtinFunc.string_dump = typeInfo
+         elseif _switchExp == 'find' then
+            builtinFunc.string_find = typeInfo
+         elseif _switchExp == 'format' then
+            builtinFunc.string_format = typeInfo
+         elseif _switchExp == 'gmatch' then
+            builtinFunc.string_gmatch = typeInfo
+         elseif _switchExp == 'gsub' then
+            builtinFunc.string_gsub = typeInfo
+         elseif _switchExp == 'lower' then
+            builtinFunc.string_lower = typeInfo
+         elseif _switchExp == 'rep' then
+            builtinFunc.string_rep = typeInfo
+         elseif _switchExp == 'reverse' then
+            builtinFunc.string_reverse = typeInfo
+         elseif _switchExp == 'sub' then
+            builtinFunc.string_sub = typeInfo
+         elseif _switchExp == 'upper' then
+            builtinFunc.string_upper = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_str(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'byte' then
+            builtinFunc.str_byte = typeInfo
+         elseif _switchExp == 'find' then
+            builtinFunc.str_find = typeInfo
+         elseif _switchExp == 'format' then
+            builtinFunc.str_format = typeInfo
+         elseif _switchExp == 'gmatch' then
+            builtinFunc.str_gmatch = typeInfo
+         elseif _switchExp == 'gsub' then
+            builtinFunc.str_gsub = typeInfo
+         elseif _switchExp == 'lower' then
+            builtinFunc.str_lower = typeInfo
+         elseif _switchExp == 'rep' then
+            builtinFunc.str_rep = typeInfo
+         elseif _switchExp == 'reverse' then
+            builtinFunc.str_reverse = typeInfo
+         elseif _switchExp == 'sub' then
+            builtinFunc.str_sub = typeInfo
+         elseif _switchExp == 'upper' then
+            builtinFunc.str_upper = typeInfo
          end
       end
       
@@ -2186,35 +2437,26 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
       do
          local _switchExp = fieldName
          if _switchExp == 'insert' then
-            builtinFunc.listInsert = typeInfo
+            builtinFunc.list_insert = typeInfo
          elseif _switchExp == 'remove' then
-            builtinFunc.listRemove = typeInfo
+            builtinFunc.list_remove = typeInfo
          elseif _switchExp == 'sort' then
-            builtinFunc.listSort = typeInfo
+            builtinFunc.list_sort = typeInfo
          elseif _switchExp == 'unpack' then
-            builtinFunc.listUnpack = typeInfo
+            builtinFunc.list_unpack = typeInfo
          end
       end
       
    end
    
-   local function process_Mapping(  )
+   local function process_Array(  )
    
       do
          local _switchExp = fieldName
-         if _switchExp == '_toMap' then
-            builtinFunc.mappingToMap = typeInfo
-         end
-      end
-      
-   end
-   
-   local function process_Nilable(  )
-   
-      do
-         local _switchExp = fieldName
-         if _switchExp == 'val' then
-            builtinFunc.nilableVal = typeInfo
+         if _switchExp == 'sort' then
+            builtinFunc.array_sort = typeInfo
+         elseif _switchExp == 'unpack' then
+            builtinFunc.array_unpack = typeInfo
          end
       end
       
@@ -2225,39 +2467,58 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
       do
          local _switchExp = fieldName
          if _switchExp == 'add' then
-            builtinFunc.setAdd = typeInfo
+            builtinFunc.set_add = typeInfo
          elseif _switchExp == 'and' then
-            builtinFunc.setAnd = typeInfo
+            builtinFunc.set_and = typeInfo
+         elseif _switchExp == 'clone' then
+            builtinFunc.set_clone = typeInfo
          elseif _switchExp == 'del' then
-            builtinFunc.setDel = typeInfo
+            builtinFunc.set_del = typeInfo
+         elseif _switchExp == 'has' then
+            builtinFunc.set_has = typeInfo
+         elseif _switchExp == 'len' then
+            builtinFunc.set_len = typeInfo
          elseif _switchExp == 'or' then
-            builtinFunc.setOr = typeInfo
+            builtinFunc.set_or = typeInfo
          elseif _switchExp == 'sub' then
-            builtinFunc.setSub = typeInfo
+            builtinFunc.set_sub = typeInfo
          end
       end
       
    end
    
-   local function process_str(  )
+   local function process_math(  )
    
       do
          local _switchExp = fieldName
-         if _switchExp == 'gmatch' then
-            builtinFunc.strGMatch = typeInfo
+         if _switchExp == 'random' then
+            builtinFunc.math_random = typeInfo
+         elseif _switchExp == 'randomseed' then
+            builtinFunc.math_randomseed = typeInfo
          end
       end
       
    end
    
-   local function process_string(  )
+   local function process_debug(  )
    
       do
          local _switchExp = fieldName
-         if _switchExp == 'format' then
-            builtinFunc.stringForm = typeInfo
-         elseif _switchExp == 'gmatch' then
-            builtinFunc.stringGMatch = typeInfo
+         if _switchExp == 'getinfo' then
+            builtinFunc.debug_getinfo = typeInfo
+         elseif _switchExp == 'getlocal' then
+            builtinFunc.debug_getlocal = typeInfo
+         end
+      end
+      
+   end
+   
+   local function process_Nilable(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'val' then
+            builtinFunc.nilable_val = typeInfo
          end
       end
       
@@ -2268,29 +2529,50 @@ local function setupBuiltinTypeInfo( name, fieldName, typeInfo )
       local _switchExp = name
       if _switchExp == '' then
          process_(  )
-      elseif _switchExp == 'Array' then
-         process_Array(  )
-      elseif _switchExp == 'List' then
-         process_List(  )
+      elseif _switchExp == 'iStream' then
+         process_iStream(  )
+      elseif _switchExp == 'oStream' then
+         process_oStream(  )
+      elseif _switchExp == 'luaStream' then
+         process_luaStream(  )
       elseif _switchExp == 'Mapping' then
          process_Mapping(  )
-      elseif _switchExp == 'Nilable' then
-         process_Nilable(  )
-      elseif _switchExp == 'Set' then
-         process_Set(  )
-      elseif _switchExp == 'str' then
-         process_str(  )
+      elseif _switchExp == 'io' then
+         process_io(  )
+      elseif _switchExp == 'package' then
+         process_package(  )
+      elseif _switchExp == 'os' then
+         process_os(  )
       elseif _switchExp == 'string' then
          process_string(  )
+      elseif _switchExp == 'str' then
+         process_str(  )
+      elseif _switchExp == 'List' then
+         process_List(  )
+      elseif _switchExp == 'Array' then
+         process_Array(  )
+      elseif _switchExp == 'Set' then
+         process_Set(  )
+      elseif _switchExp == 'math' then
+         process_math(  )
+      elseif _switchExp == 'debug' then
+         process_debug(  )
+      elseif _switchExp == 'Nilable' then
+         process_Nilable(  )
       end
    end
    
 end
 
+local function getBuiltInInfo(  )
+
+   return {{[""] = {["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["insert"] = {["arg"] = {"&T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["sort"] = {["arg"] = {"form!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
+end
+
 
 local function isStrFormFunc( typeInfo )
 
-   if typeInfo:equals( builtinFunc.stringForm ) then
+   if typeInfo:equals( builtinFunc.string_format ) then
       return true
    end
    
@@ -2305,7 +2587,7 @@ function TransUnit:registBuiltInScope(  )
    end
    
    readyBuiltin = true
-   local builtInInfo = {{[""] = {["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["load"] = {["arg"] = {"str", "str!", "str!", "stem!"}, ["ret"] = {"form!", "str!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"form!", "str!"}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"stem!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"form!", "str!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}}, ["read"] = {["type"] = {"mut"}, ["arg"] = {"stem!"}, ["ret"] = {"str!"}}, ["write"] = {["type"] = {"mut"}, ["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}}, ["close"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["flush"] = {["type"] = {"mut"}, ["arg"] = {}, ["ret"] = {}}, ["seek"] = {["type"] = {"mut"}, ["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {}}}}, {["io"] = {["stdin"] = {["type"] = {"member"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["stderr"] = {["type"] = {"member"}, ["typeInfo"] = {"oStream"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"luaStream!"}}}}, {["package"] = {["path"] = {["type"] = {"member"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"stem!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}, ["difftime"] = {["arg"] = {"stem", "stem"}, ["ret"] = {"int"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}}}, {["string"] = {["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["dump"] = {["arg"] = {"form", "bool!"}, ["ret"] = {"str"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["find"] = {["type"] = {"method"}, ["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"int!", "int!"}}, ["byte"] = {["type"] = {"method"}, ["arg"] = {"int!", "int!"}, ["ret"] = {"int"}}, ["format"] = {["type"] = {"method"}, ["arg"] = {"&..."}, ["ret"] = {"str"}}, ["rep"] = {["type"] = {"method"}, ["arg"] = {"int"}, ["ret"] = {"str"}}, ["gmatch"] = {["type"] = {"method"}, ["arg"] = {"str"}, ["ret"] = {"form", "stem!", "stem!"}}, ["gsub"] = {["type"] = {"method"}, ["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}}, ["sub"] = {["type"] = {"method"}, ["arg"] = {"int", "int!"}, ["ret"] = {"str"}}, ["lower"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["upper"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}, ["reverse"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"str"}}}}, {["List<T>"] = {["insert"] = {["type"] = {"mut"}, ["arg"] = {"&T"}, ["ret"] = {""}}, ["remove"] = {["type"] = {"mut"}, ["arg"] = {"int!"}, ["ret"] = {"T!"}}, ["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Array<T>"] = {["unpack"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"..."}}, ["sort"] = {["type"] = {"mut"}, ["arg"] = {"form!"}, ["ret"] = {}}}}, {["Set<T>"] = {["add"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["del"] = {["type"] = {"mut"}, ["arg"] = {"T"}, ["ret"] = {}}, ["has"] = {["type"] = {"method"}, ["arg"] = {"T"}, ["ret"] = {"bool"}}, ["and"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["or"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["sub"] = {["type"] = {"mut"}, ["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}}, ["clone"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"Set<T>"}}, ["len"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"int"}}}}, {["math"] = {["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int!"}, ["ret"] = {}}}}, {["debug"] = {["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"stem!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable"] = {["val"] = {["type"] = {"method"}, ["arg"] = {}, ["ret"] = {"_T!"}}}}}
+   local builtInInfo = getBuiltInInfo(  )
    local function getTypeInfo( typeName )
    
       do
@@ -2547,39 +2829,32 @@ end
 
 local function expandVal( tokenList, val, pos )
 
-   do
-      local _exp = val
-      if _exp ~= nil then
-         do
-            local _switchExp = type( _exp )
-            if _switchExp == "boolean" then
-               local token = string.format( "%s", tostring( _exp))
-               local kind = Parser.TokenKind.Kywd
-               table.insert( tokenList, Parser.Token.new(kind, token, pos, false) )
-            elseif _switchExp == "number" then
-               local num = string.format( "%g", _exp)
-               local kind = Parser.TokenKind.Int
-               if string.find( num, ".", 1, true ) then
-                  kind = Parser.TokenKind.Real
-               end
-               
-               table.insert( tokenList, Parser.Token.new(kind, num, pos, false) )
-            elseif _switchExp == "string" then
-               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '[[%s]]', tostring( _exp)), pos, false) )
-            elseif _switchExp == "table" then
-               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, "{", pos, false) )
-               for key, item in pairs( _exp ) do
-                  expandVal( tokenList, item, pos )
-                  table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, ",", pos, false) )
-               end
-               
-               table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Dlmt, "}", pos, false) )
+   if val ~= nil then
+      do
+         local _switchExp = type( val )
+         if _switchExp == "boolean" then
+            local token = string.format( "%s", tostring( val))
+            local kind = Parser.TokenKind.Kywd
+            table.insert( tokenList, Parser.Token.new(kind, token, pos, false) )
+         elseif _switchExp == "number" then
+            local num = string.format( "%g", val)
+            local kind = Parser.TokenKind.Int
+            if string.find( num, ".", 1, true ) then
+               kind = Parser.TokenKind.Real
             end
+            
+            table.insert( tokenList, Parser.Token.new(kind, num, pos, false) )
+         elseif _switchExp == "string" then
+            table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, string.format( '[[%s]]', tostring( val)), pos, false) )
+         else 
+            
+               return string.format( "not support ,, List -- %s", type( val ))
          end
-         
       end
+      
    end
    
+   return nil
 end
 
 function TransUnit:newPushback( tokenList )
@@ -2622,7 +2897,20 @@ function TransUnit:expandMacroVal( token )
                
             else
              
-               self:addErrMess( nextToken.pos, string.format( "not support ,, List -- %s", macroVal.typeInfo:getTxt(  )) )
+               local tokenList = {}
+               do
+                  local argNode = macroVal.argNode
+                  if argNode ~= nil then
+                     if not argNode:setupLiteralTokenList( tokenList ) then
+                        self:error( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
+                     end
+                     
+                  else
+                     self:error( string.format( "not support ,, -- %s", nextToken.txt) )
+                  end
+               end
+               
+               self:newPushback( tokenList )
             end
             
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
@@ -2646,7 +2934,18 @@ function TransUnit:expandMacroVal( token )
          else
           
             local tokenList = {}
-            expandVal( tokenList, macroVal.val, nextToken.pos )
+            do
+               local argNode = macroVal.argNode
+               if argNode ~= nil then
+                  if not argNode:setupLiteralTokenList( tokenList ) then
+                     self:error( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
+                  end
+                  
+               else
+                  expandVal( tokenList, macroVal.val, nextToken.pos )
+               end
+            end
+            
             self:newPushback( tokenList )
          end
          
@@ -3070,7 +3369,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2191, function (  )
+   Log.log( Log.Level.Info, __func__, 2200, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3086,7 +3385,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2202, function (  )
+               Log.log( Log.Level.Info, __func__, 2211, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3117,7 +3416,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2222, function (  )
+   Log.log( Log.Level.Info, __func__, 2231, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3439,7 +3738,7 @@ function TransUnit:processImport( modulePath )
          
          for __index, symInfo in pairs( macroInfo.symList ) do
             local symTypeInfo = _lune.unwrap( typeId2TypeInfo[symInfo.typeId])
-            symbol2MacroValInfoMap[symInfo.name] = Nodes.MacroValInfo.new(nil, symTypeInfo)
+            symbol2MacroValInfoMap[symInfo.name] = Nodes.MacroValInfo.new(nil, symTypeInfo, nil)
          end
          
          local tokenList = {}
@@ -3473,7 +3772,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2593, function (  )
+   Log.log( Log.Level.Info, __func__, 2602, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -3836,7 +4135,7 @@ function TransUnit:analyzeApply( token )
       local callNode = _lune.__Cast( exp, 3, Nodes.ExpCallNode )
       if callNode ~= nil then
          local callFuncType = callNode:get_func():get_expType()
-         if callFuncType:equals( builtinFunc.strGMatch ) or callFuncType:equals( builtinFunc.stringGMatch ) then
+         if callFuncType:equals( builtinFunc.str_gmatch ) or callFuncType:equals( builtinFunc.string_gmatch ) then
             table.insert( itemTypeList, Ast.builtinTypeString )
             defaultItemType = Ast.builtinTypeString:get_nilableTypeInfo()
          else
@@ -6262,7 +6561,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    if mode ~= Nodes.DeclVarMode.Sync and self.macroScope then
       for index, letVarInfo in pairs( letVarList ) do
          local typeInfo = typeInfoList[index]
-         self.symbol2ValueMapForMacro[letVarInfo.varName.txt] = Nodes.MacroValInfo.new(nil, typeInfo)
+         self.symbol2ValueMapForMacro[letVarInfo.varName.txt] = Nodes.MacroValInfo.new(nil, typeInfo, nil)
       end
       
    end
@@ -6390,8 +6689,14 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    if nextToken.txt == "let" then
       local workTypeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, false, Ast.AccessMode.Local, true )
       typeInfoList = workTypeInfoList
-      for __index, exp in pairs( (_lune.unwrap( expList) ):get_expList() ) do
-         table.insert( expNodeList, exp )
+      if expList ~= nil then
+         for __index, exp in pairs( expList:get_expList() ) do
+            table.insert( expNodeList, exp )
+         end
+         
+      else
+         self:addErrMess( nextToken.pos, "if! let has illegal init val." )
+         self:error( "system error" )
       end
       
       for __index, varInfo in pairs( letVarList ) do
@@ -6615,7 +6920,7 @@ function TransUnit:analyzeListConst( token )
          local expType = exp:get_expType()
          if itemTypeInfo:equals( Ast.builtinTypeNone ) then
             itemTypeInfo = expType
-         elseif not itemTypeInfo:canEvalWith( expType, "=", {} ) then
+         elseif not itemTypeInfo:canEvalWith( expType, "=", {} ) and not expType:canEvalWith( itemTypeInfo, "=", {} ) then
             if expType:equals( Ast.builtinTypeNil ) then
                itemTypeInfo = itemTypeInfo:get_nilableTypeInfo()
             elseif expType:get_nilable() then
@@ -6937,9 +7242,9 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    local argTypeList = funcTypeInfo:get_argTypeInfoList()
    do
       local _switchExp = funcTypeInfo
-      if _switchExp == builtinFunc.listInsert or _switchExp == builtinFunc.setAdd or _switchExp == builtinFunc.setDel then
+      if _switchExp == builtinFunc.list_insert or _switchExp == builtinFunc.set_add or _switchExp == builtinFunc.set_del then
          argTypeList = genericTypeList
-      elseif _switchExp == builtinFunc.listRemove then
+      elseif _switchExp == builtinFunc.list_remove then
       end
    end
    
@@ -7105,6 +7410,7 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    local argValMap = {}
    local macroArgValMap = {}
    local macroArgNodeList = macroInfo:getArgList(  )
+   local macroArgName2ArgNode = {}
    if expList ~= nil then
       for index, argNode in pairs( expList:get_expList(  ) ) do
          local literal = argNode:getLiteral(  )
@@ -7115,6 +7421,7 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
                   argValMap[index] = val
                   local declArgNode = macroArgNodeList[index]
                   macroArgValMap[declArgNode:get_name()] = val
+                  macroArgName2ArgNode[declArgNode:get_name()] = argNode
                end
             end
             
@@ -7141,14 +7448,14 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
          val = {val}
       end
       
-      self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(val, typeInfo)
+      self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(val, typeInfo, macroArgName2ArgNode[name])
    end
    
    for index, arg in pairs( macroInfo:getArgList(  ) ) do
       if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
          local argType = arg:get_typeInfo()
          local argName = arg:get_name()
-         self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType)
+         self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
       else
        
          self:error( "not support ... in macro" )
@@ -7442,7 +7749,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
    end
    
    local alt2typeMap, argList = self:prepareExpCall( exp:get_pos(), funcTypeInfo, genericTypeList, genericsClass )
-   if funcTypeInfo:equals( builtinFunc.listInsert ) then
+   if funcTypeInfo:equals( builtinFunc.list_insert ) then
       if argList ~= nil then
          if argList:get_expType():get_nilable() then
             self:addErrMess( argList:get_pos(), "list can't insert nilable" )
@@ -7452,7 +7759,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       
    end
    
-   if funcTypeInfo:equals( builtinFunc.setAdd ) then
+   if funcTypeInfo:equals( builtinFunc.set_add ) then
       if argList ~= nil then
          if argList:get_expType():get_nilable() then
             self:addErrMess( argList:get_pos(), "set can't add nilable" )
@@ -7460,7 +7767,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
          
       end
       
-   elseif funcTypeInfo:equals( builtinFunc.listRemove ) then
+   elseif funcTypeInfo:equals( builtinFunc.list_remove ) then
       if #genericTypeList > 0 then
          if genericTypeList[1]:get_nilable() then
             self:addWarnMess( exp:get_pos(), "remove() is dangerous for nilable's list." )
@@ -7493,7 +7800,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
             if applyType ~= nil then
                retTypeInfoList[index] = applyType
             else
-               if funcTypeInfo == builtinFunc.listRemove then
+               if funcTypeInfo == builtinFunc.list_remove then
                   retTypeInfoList[index] = genericTypeList[1]:get_nilableTypeInfo()
                elseif funcTypeInfo:get_kind() == Ast.TypeInfoKind.Func and (funcTypeInfo:get_rawTxt() == "_fromMap" or funcTypeInfo:get_rawTxt() == "_fromStem" ) and genericsClass:isInheritFrom( Ast.builtinTypeMapping, alt2typeMap ) then
                   retTypeInfoList[index] = genericsClass:get_nilableTypeInfo()
@@ -7508,7 +7815,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       end
       
       if refFieldNode ~= nil then
-         if funcTypeInfo:equals( builtinFunc.listUnpack ) or funcTypeInfo:equals( builtinFunc.arrayUnpack ) then
+         if funcTypeInfo:equals( builtinFunc.list_unpack ) or funcTypeInfo:equals( builtinFunc.array_unpack ) then
             local prefixType = refFieldNode:get_prefix():get_expType()
             if #prefixType:get_itemTypeInfoList() > 0 then
                local dddType = Ast.NormalTypeInfo.createDDD( prefixType:get_itemTypeInfoList()[1], false )
@@ -7547,9 +7854,9 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       if argList ~= nil then
          do
             local _switchExp = funcTypeInfo
-            if _switchExp == builtinFunc.stringForm then
+            if _switchExp == builtinFunc.string_format then
                checkArgForStringForm( argList )
-            elseif _switchExp == builtinFunc.listSort or _switchExp == builtinFunc.arraySort then
+            elseif _switchExp == builtinFunc.list_sort or _switchExp == builtinFunc.array_sort then
                checkArgForSort( genericTypeList, argList )
             end
          end
@@ -8196,7 +8503,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       typeInfo = self:createModifier( typeInfo, Ast.MutMode.IMut )
    end
    
-   if typeInfo:equals( builtinFunc.listUnpack ) or typeInfo:equals( builtinFunc.arrayUnpack ) then
+   if typeInfo:equals( builtinFunc.list_unpack ) or typeInfo:equals( builtinFunc.array_unpack ) then
       self.helperInfo.useUnpack = true
    end
    
@@ -8342,7 +8649,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
             skipFlag = true
          end
          
-         if typeInfo:equals( builtinFunc.luneLoad ) then
+         if typeInfo:equals( builtinFunc.lune__load ) then
             self.helperInfo.useLoad = true
          end
          

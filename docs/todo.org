@@ -8,6 +8,8 @@
 
 * 機能
 
+- [ ] forsort で、 map をソートした場合、キーが int/real/str 以外だと実行時エラーする。
+      コンパイルエラーにする。
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。
  
 - [ ] forsort の compare をカスタマイズ可能にする。

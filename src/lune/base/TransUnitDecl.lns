@@ -2658,7 +2658,7 @@ fn TransUnit.analyzeDeclVar(
          let typeInfo = typeInfoList[ index ];
 
          self.symbol2ValueMapForMacro[ letVarInfo.varName.txt ] =
-            new Nodes.MacroValInfo( nil, typeInfo);
+            new Nodes.MacroValInfo( nil, typeInfo, nil);
       }
    }
 
@@ -2806,8 +2806,14 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, expList =
          self.analyzeLetAndInitExp( firstToken.pos, false, .Local, true );
       typeInfoList = workTypeInfoList;
-      foreach exp in (unwrap expList).$expList {
-         expNodeList.insert( exp );
+      when! expList {
+         foreach exp in expList.$expList {
+            expNodeList.insert( exp );
+         }
+      }
+      else {
+         self.addErrMess( nextToken.pos, "if! let has illegal init val." );
+         self.error( "system error" );
       }
       foreach varInfo in letVarList {
          varNameList.insert( varInfo.varName.txt );
