@@ -392,6 +392,10 @@ end
 
 local function scriptPath2Module( path )
 
+   if path:find( "^/" ) then
+      Util.err( "script must be relative-path -- " .. path )
+   end
+   
    local mod = string.gsub( path, "/", "." )
    return (string.gsub( mod, "%.lns$", "" ) )
 end
@@ -667,7 +671,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          if  nil == modMetaPath then
             local _modMetaPath = modMetaPath
          
-            Log.log( Log.Level.Debug, __func__, 349, function (  )
+            Log.log( Log.Level.Debug, __func__, 352, function (  )
             
                return "NeedUpdate"
             end
@@ -680,7 +684,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
          if  nil == time then
             local _time = time
          
-            Log.log( Log.Level.Debug, __func__, 354, function (  )
+            Log.log( Log.Level.Debug, __func__, 357, function (  )
             
                return "NeedUpdate"
             end
@@ -694,7 +698,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             if  nil == dependMeta then
                local _dependMeta = dependMeta
             
-               Log.log( Log.Level.Debug, __func__, 362, function (  )
+               Log.log( Log.Level.Debug, __func__, 365, function (  )
                
                   return "NeedUpdate"
                end
@@ -706,7 +710,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
             local orgMetaModuleId = frontInterface.ModuleId.createIdFromTxt( dependItem.buildId )
             local metaModuleId = dependMeta:createModuleId(  )
             if metaModuleId:get_buildCount() ~= 0 and metaModuleId:get_buildCount() ~= orgMetaModuleId:get_buildCount() then
-               Log.log( Log.Level.Debug, __func__, 372, function (  )
+               Log.log( Log.Level.Debug, __func__, 375, function (  )
                
                   return string.format( "NeedUpdate: %s, %d, %d", modMetaPath, metaModuleId:get_buildCount(), orgMetaModuleId:get_buildCount())
                end
@@ -742,7 +746,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
       end
       
    else
-      Log.log( Log.Level.Debug, __func__, 405, function (  )
+      Log.log( Log.Level.Debug, __func__, 408, function (  )
       
          return "not found meta"
       end
@@ -963,7 +967,7 @@ function Front:loadMeta( importModuleInfo, mod )
          if _exp ~= nil then
             self.loadedMetaMap[mod] = _exp.meta
          else
-            Log.log( Log.Level.Info, __func__, 574, function (  )
+            Log.log( Log.Level.Info, __func__, 577, function (  )
             
                return string.format( "%s checking", mod)
             end
@@ -1253,7 +1257,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 888, function (  )
+               Log.log( Log.Level.Debug, __func__, 891, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end
@@ -1449,7 +1453,7 @@ end
 function Front:exec(  )
    local __func__ = 'Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1066, function (  )
+   Log.log( Log.Level.Trace, __func__, 1069, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

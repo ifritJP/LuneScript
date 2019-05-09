@@ -660,6 +660,19 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
    let mut listIndex = 1;
 
+   fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): bool {
+      if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
+         let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
+         if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+            self.writeln(
+               "__dependIdMap[ %d ] = { %d, %d } -- %s"
+               ( typeInfo.$typeId, moduleIndex, extId, typeInfo.getTxt(##) ) );
+            return true;
+         }
+      }
+      return false;
+   }
+   
    let mut wroteTypeIdSet:Set<int> = (@);
    fn outputTypeInfo( typeInfo: &Ast.TypeInfo ) {
       let mut force = false;
@@ -671,7 +684,9 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
                return;
             }
          }
-         force = true;
+         if moduleTypeInfo == self.moduleTypeInfo {
+            force = true;
+         }
       }
 
 
@@ -702,12 +717,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
             validChildren = typeId2TypeInfo;
          }
          typeInfo.serialize( self, validChildren );
-      }
-      else {
-         // self.writeln( "--[[ %s, %s" ( moduleTypeInfo.getTxt(),
-         //                               node.$moduleTypeInfo.getTxt() ), baseIndent );
-         // typeInfo.serialize( self, nil );
-         // self.writeln( "]]", baseIndent );
+         //self.writeln( "-- %s" (typeInfo.getTxt(##) ) );
       }
    }
 
@@ -734,40 +744,43 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
       let mut valid = false;
       let moduleTypeInfo = typeInfo.getModule();
       exportNeedModuleTypeInfo.add( moduleTypeInfo );
-      if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
-         let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
-         if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
-            valid = true;
-            //let mut valid = false;
-            // if typeInfo.$srcTypeInfo ~= typeInfo {
-            //    valid = true;
-            // }
-            // else {
-            //    let mut nonnilableType:&Ast.TypeInfo = typeInfo;
-            //    if typeInfo.$nilable {
-            //       nonnilableType = typeInfo.$nonnilableType;
-            //    }
-            //    switch nonnilableType.$kind {
-            //       case .IF, .Map, .Enum, .Alge, .List, .Array, .Set, .Class,
-            //            .Module, .Func
-            //       {
-            //          valid = true;
-            //       }
-            //       // default {
-            //       //    Util.errorLog( "hoge: %s:%d(%s)"
-            //       //       ( typeInfo.getTxt(), typeInfo.$typeId, typeInfo.$kind.$_txt ) );
-            //       // }
-            //    }
-            // }
-            // if valid {
-               self.writeln(
-                  // "_dependIdMap[ %d ] = { %d, %d }"
-                  // ( typeInfo.$typeId, moduleIndex, extId ),
-                  "__dependIdMap[ %d ] = { %d, %d } -- %s"
-                  ( typeInfo.$typeId, moduleIndex, extId, typeInfo.getTxt(##) ) );
-            // }
-         }
+      if outputDepend( typeInfo, moduleTypeInfo ) {
+         valid = true;
       }
+      // if! let moduleIndex = importModuleType2Index[ moduleTypeInfo ] {
+      //    let moduleInfo = unwrap node.$importModule2moduleInfo[ moduleTypeInfo ];
+      //    if! let extId = moduleInfo.$localTypeInfo2importIdMap[ typeInfo ] {
+      //       valid = true;
+      //       //let mut valid = false;
+      //       // if typeInfo.$srcTypeInfo ~= typeInfo {
+      //       //    valid = true;
+      //       // }
+      //       // else {
+      //       //    let mut nonnilableType:&Ast.TypeInfo = typeInfo;
+      //       //    if typeInfo.$nilable {
+      //       //       nonnilableType = typeInfo.$nonnilableType;
+      //       //    }
+      //       //    switch nonnilableType.$kind {
+      //       //       case .IF, .Map, .Enum, .Alge, .List, .Array, .Set, .Class,
+      //       //            .Module, .Func
+      //       //       {
+      //       //          valid = true;
+      //       //       }
+      //       //       // default {
+      //       //       //    Util.errorLog( "hoge: %s:%d(%s)"
+      //       //       //       ( typeInfo.getTxt(), typeInfo.$typeId, typeInfo.$kind.$_txt ) );
+      //       //       // }
+      //       //    }
+      //       // }
+      //       // if valid {
+      //          self.writeln(
+      //             // "_dependIdMap[ %d ] = { %d, %d }"
+      //             // ( typeInfo.$typeId, moduleIndex, extId ),
+      //             "__dependIdMap[ %d ] = { %d, %d } -- %s"
+      //             ( typeInfo.$typeId, moduleIndex, extId, typeInfo.getTxt(##) ) );
+      //       // }
+      //    }
+      // }
       if not valid {
          outputTypeInfo( typeInfo );
       }

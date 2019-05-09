@@ -386,7 +386,9 @@ endif
 endif
 endif
 
+ifndef NO_LUAROCKS
 	$(MAKE) luarocks-check
+endif
 
 
 	$(call test-meta-update,work/3)

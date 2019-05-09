@@ -923,6 +923,26 @@ function convFilter:outputMeta( node )
    self:writeln( "local __typeInfoList = {}" )
    self:writeln( "_moduleObj.__typeInfoList = __typeInfoList" )
    local listIndex = 1
+   local function outputDepend( typeInfo, moduleTypeInfo )
+   
+      do
+         local moduleIndex = importModuleType2Index[moduleTypeInfo]
+         if moduleIndex ~= nil then
+            local moduleInfo = _lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo])
+            do
+               local extId = moduleInfo:get_localTypeInfo2importIdMap()[typeInfo]
+               if extId ~= nil then
+                  self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId(), moduleIndex, extId, typeInfo:getTxt(  )) )
+                  return true
+               end
+            end
+            
+         end
+      end
+      
+      return false
+   end
+   
    local wroteTypeIdSet = {}
    local function outputTypeInfo( typeInfo )
    
@@ -939,7 +959,10 @@ function convFilter:outputMeta( node )
             end
          end
          
-         force = true
+         if moduleTypeInfo == self.moduleTypeInfo then
+            force = true
+         end
+         
       end
       
       do
@@ -973,8 +996,6 @@ function convFilter:outputMeta( node )
          end
          
          typeInfo:serialize( self, validChildren )
-      else
-       
       end
       
    end
@@ -1032,19 +1053,8 @@ function convFilter:outputMeta( node )
             local valid = false
             local moduleTypeInfo = typeInfo:getModule(  )
             exportNeedModuleTypeInfo[moduleTypeInfo]= true
-            do
-               local moduleIndex = importModuleType2Index[moduleTypeInfo]
-               if moduleIndex ~= nil then
-                  local moduleInfo = _lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo])
-                  do
-                     local extId = moduleInfo:get_localTypeInfo2importIdMap()[typeInfo]
-                     if extId ~= nil then
-                        valid = true
-                        self:writeln( string.format( "__dependIdMap[ %d ] = { %d, %d } -- %s", typeInfo:get_typeId(), moduleIndex, extId, typeInfo:getTxt(  )) )
-                     end
-                  end
-                  
-               end
+            if outputDepend( typeInfo, moduleTypeInfo ) then
+               valid = true
             end
             
             if not valid then
@@ -3457,7 +3467,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3113, function (  )
+   Log.log( Log.Level.Info, __func__, 3126, function (  )
    
       return string.format( "code: %s", code)
    end

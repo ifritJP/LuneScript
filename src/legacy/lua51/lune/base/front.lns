@@ -125,6 +125,9 @@ fn createPaser( path:str, mod:str ): Parser.Parser
 }
 
 pub fn scriptPath2Module( path:str ):str {
+   if path.find( "^/" ## ) {
+      Util.err( "script must be relative-path -- " .. path );
+   }
    let mod = string.gsub( path, "/", "." );
    return ( string.gsub( mod, "%.lns$", "" ) );
 }
