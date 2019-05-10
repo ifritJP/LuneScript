@@ -542,6 +542,11 @@ test-ccc:
 
 build-cc:
 	$(call transwork,.,.,base/convCC)
-	lua5.3 lune/base/base.lua mini.lns save -langC
-	cat mini.c
-	LANG= $(MAKE) -f Makefile.ccc SRCS=mini.c
+	lua5.3 lune/base/base.lua ccc.lns save -langC
+	cat ccc.c
+	LANG= $(MAKE) -f Makefile.ccc SRCS=ccc.c TEST_OUT=test.exe
+# C へのトランスコンパイラ結果と、
+# Lua へのトランスコンパイラ結果で出力が同じになることを確認
+	@./test.exe | grep -v -e '^:debug:' > work/ccc.c.log
+	@lua5.3 lune/base/base.lua ccc.lns exe > work/ccc.lua.log
+	diff work/ccc.c.log work/ccc.lua.log

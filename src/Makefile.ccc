@@ -1,5 +1,6 @@
 # -*- mode: makefile; -*-
 
+TEST_OUT=test.exe
 
 SRCS += lune/base/test.c
 
@@ -14,14 +15,13 @@ work/c/%.o: %.c
 
 all: build
 
-
 build: 
 	mkdir -p work/c
 	$(MAKE) -f Makefile.ccc build-objs
 	gcc -g3 -Wall -c lune/base/lns_base.c -I lune/base -o work/c/lns_base.o
 	g++ -g3 -Wall -c lune/base/lns_collection.cxx -I lune/base -o work/c/lns_collection.o
-	g++ -o test.exe work/c/lns_base.o work/c/lns_collection.o $(OBJS)
-	./test.exe
+	g++ -o $(TEST_OUT) work/c/lns_base.o work/c/lns_collection.o $(OBJS)
+	./$(TEST_OUT)
 
 build-objs: $(OBJS)
 

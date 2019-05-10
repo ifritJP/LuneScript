@@ -70,7 +70,8 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
             ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc( _pEnv, pStem, true );
         }
         break;
-    case lune_value_type_ddd:
+    case lune_value_type_ddd: // fall-through
+    case lune_value_type_mRet:
         free( pStem->val.ddd.pStemList );
         _pEnv->allocNum--;
         break;
@@ -117,6 +118,14 @@ lune_stem_t * lune_setRet( lune_env_t * _pEnv, lune_stem_t * pStem )
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ];
     lune_add2list( &pBlock->managedStemTop, pStem );
 
+    if ( pStem->type == lune_value_type_ddd ||
+         pStem->type == lune_value_type_mRet )
+    {
+        int index;
+        for ( index = 0; index < pStem->val.ddd.len; index++ ) {
+            lune_setRet( _pEnv, lune_fromDDD( pStem, index ) );
+        }
+    }
     return pStem;
 }
 
@@ -241,18 +250,8 @@ lune_stem_t * lune_getValFromDDD( lune_env_t * _pEnv, lune_stem_t * pStem, int i
 }
 
 
-/**
- * ... の値を生成する
- *
- * ... に含める値は全て stem に変換する必要がある。
- *
- * @param hasDDD ... の最後が ... 要素の場合 true。
- * @param num 値の数
- * @param ... 含める値
- * @return ... の値
- */
-lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... ) {
-    lune_stem_t * pDDDStem = lune_alloc_stem( _pEnv, lune_value_type_ddd );
+static lune_stem_t * lune_createDDDSub(
+    lune_env_t * _pEnv, bool hasDDD, int num, va_list apSrc, lune_stem_t * pDDDStem ) {
     lune_ddd_t * pDDD = &pDDDStem->val.ddd;
     int argNum = num;
 
@@ -260,7 +259,7 @@ lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... ) {
         argNum = num;
 
         va_list ap;
-        va_start( ap, num );
+        va_copy( ap, apSrc );
 
         int index;
         for ( index = 0; index < num - 1; index++ ) {
@@ -276,12 +275,13 @@ lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... ) {
     _pEnv->allocNum++;
 
     va_list ap;
-    va_start( ap, num );
+    va_copy( ap, apSrc );
 
     int index;
     for ( index = 0; index < num - 1; index++ ) {
         lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        if ( pStem->type == lune_value_type_ddd ) {
+        if ( pStem->type == lune_value_type_ddd ||
+             pStem->type == lune_value_type_mRet ) {
             pDDD->pStemList[ index ] = lune_getValFromDDD( _pEnv, pStem, 0 );
         }
         else {
@@ -303,6 +303,53 @@ lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... ) {
     }
 
     
+    va_end(ap);
+
+    return pDDDStem;
+}
+
+/**
+ * ... の値を生成する
+ *
+ * ... に含める値は全て stem に変換する必要がある。
+ *
+ * @param hasDDD ... の最後が ... 要素の場合 true。
+ * @param num 値の数
+ * @param ... 含める値
+ * @return ... の値
+ */
+lune_stem_t * lune_createMRet( lune_env_t * _pEnv, bool hasDDD, int num, ... ) {
+    lune_stem_t * pDDDStem = lune_alloc_stem( _pEnv, lune_value_type_mRet );
+
+    va_list ap;
+    va_start( ap, num );
+
+    lune_createDDDSub( _pEnv, hasDDD, num, ap, pDDDStem );
+
+    va_end(ap);
+
+    return pDDDStem;
+}
+
+
+/**
+ * ... の値を生成する
+ *
+ * ... に含める値は全て stem に変換する必要がある。
+ *
+ * @param hasDDD ... の最後が ... 要素の場合 true。
+ * @param num 値の数
+ * @param ... 含める値
+ * @return ... の値
+ */
+lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... ) {
+    lune_stem_t * pDDDStem = lune_alloc_stem( _pEnv, lune_value_type_ddd );
+
+    va_list ap;
+    va_start( ap, num );
+
+    lune_createDDDSub( _pEnv, hasDDD, num, ap, pDDDStem );
+
     va_end(ap);
 
     return pDDDStem;
@@ -437,6 +484,18 @@ lune_stem_t * lune_int2stem( lune_env_t * _pEnv, lune_int_t val ) {
 }
 
 /**
+ * real 値 val を保持する stem を生成する
+ *
+ * @param val real 値
+ * @return stem
+ */
+lune_stem_t * lune_real2stem( lune_env_t * _pEnv, lune_real_t val ) {
+    lune_stem_t * pStem = lune_alloc_stem( _pEnv, lune_value_type_real );
+    pStem->val.realVal = val;
+    return pStem;
+}
+
+/**
  * リテラルな文字列型を生成する
  *
  * @param pStr 文字列
@@ -503,10 +562,9 @@ static void lune_deleteEnv( lune_env_t * _pEnv ) {
     lune_leave_block( _pEnv );
     lune_leave_block( _pEnv );
 
-    printf( "-------------\n" );
-    printf( "allocNum = %d\n", _pEnv->allocNum );
-    printf( "useStemPoolNum = %d\n", _pEnv->useStemPoolNum );
-    printf( "blockDepth = %d\n", _pEnv->blockDepth );
+    printf( ":debug:allocNum = %d\n", _pEnv->allocNum );
+    printf( ":debug:useStemPoolNum = %d\n", _pEnv->useStemPoolNum );
+    printf( ":debug:blockDepth = %d\n", _pEnv->blockDepth );
 
     free( _pEnv );
 }
@@ -516,7 +574,7 @@ static void lune_deleteEnv( lune_env_t * _pEnv ) {
  *
  * @param pArg は ddd 型。
  */
-void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg ) {
+void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg ) {
 
     lune_enter_func( _pEnv, 1, 1, pArg );
 
@@ -528,6 +586,12 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg ) {
         }
         lune_stem_t * pStem = pDDD->pStemList[ index ];
         switch ( pStem->type ) {
+        case lune_value_type_nil:
+            printf( "nil" );
+            break;
+        case lune_value_type_bool:
+            printf( pStem->val.boolVal ? "true" : "false" );
+            break;
         case lune_value_type_int:
             printf( "%d", pStem->val.intVal );
             break;

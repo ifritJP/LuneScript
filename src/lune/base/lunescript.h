@@ -99,6 +99,7 @@ extern "C" {
         lune_value_type_str,
         lune_value_type_class,
         lune_value_type_ddd,
+        lune_value_type_mRet,
         lune_value_type_form,
         lune_value_type_List,
         lune_value_type_Array,
@@ -180,7 +181,9 @@ extern "C" {
     } lune_str_t;
 
     /**
-     * ... を保持する型
+     * ... を保持する型。
+     *
+     * 関数の戻り値の多値にも使用する。
      */
     typedef struct {
         /** ... に含む stem を管理するバッファ */
@@ -300,16 +303,17 @@ extern "C" {
 
 #define lune_fromDDD( STEM, INDEX )  \
     STEM->val.ddd.pStemList[ INDEX ]
-    
-   
+
     extern lune_stem_t * lune_bool2stem( lune_env_t * _pEnv, lune_bool_t val );
     extern lune_stem_t * lune_int2stem( lune_env_t * _pEnv, lune_int_t val );
+    extern lune_stem_t * lune_real2stem( lune_env_t * _pEnv, lune_real_t val );
     extern lune_str_t lune_createLiteralStr( const char * pStr );
     extern lune_stem_t * lune_str2stem( lune_env_t * _pEnv, lune_str_t val );
     extern lune_stem_t * lune_litStr2stem( lune_env_t * _pEnv, const char * pStr );
     extern lune_stem_t * lune_func2stem( lune_env_t * _pEnv, lune_func_t * pFunc, int num, ... );
     extern lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t * lune_createDDDOnly( lune_env_t * _pEnv, int num );
+    extern lune_stem_t * lune_createMRet( lune_env_t * _pEnv, bool hasDDD, int num, ... );
 
 
 
@@ -327,7 +331,7 @@ extern "C" {
 
 
 
-    extern void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg );
+    extern void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg );
 
 
 #ifdef __cplusplus

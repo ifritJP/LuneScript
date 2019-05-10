@@ -63,7 +63,7 @@ static void u_mtd_Test_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag
 static lune_stem_t * u_mtd_Test_func( lune_env_t * _pEnv, lune_stem_t * pObj )
 {
     lune_print(
-        _pEnv,
+        _pEnv, NULL,
         lune_createDDD(
             _pEnv, false, 3,
             lune_litStr2stem( _pEnv, __func__ ),
@@ -144,7 +144,7 @@ static lune_stem_t * u_mtd_Sub_func( lune_env_t * _pEnv, lune_stem_t * pObj )
     u_mtd_Test_func( _pEnv, pObj );
     
     lune_print(
-        _pEnv,
+        _pEnv, NULL,
         lune_createDDD(
             _pEnv, false, 1,
             lune_obj_Sub( pObj )->val3 ) );
@@ -169,7 +169,7 @@ static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
     
     
     lune_print(
-        _pEnv,
+        _pEnv, NULL,
         lune_createDDD(
             _pEnv, false, 3,
             lune_int2stem( _pEnv, 1 ),
@@ -196,7 +196,7 @@ static lune_stem_t * u_lune_form_test2(
 
     lune_mtd_List( pList )->insert( _pEnv, pList, pVal );
     
-    lune_print( _pEnv, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
+    lune_print( _pEnv, NULL, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
     
     lune_leave_block( _pEnv );
 
@@ -272,7 +272,7 @@ void lune_init_test( lune_env_t * _pEnv )
     lune_initVal( pVal, pBlock, 0, u_lune_form_test( _pEnv, NULL ) );
 
     // print( val );
-    lune_print( _pEnv, lune_createDDD( _pEnv, false, 1, pVal ) );
+    lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal ) );
 
     // test2( test );
     u_lune_form_test2( _pEnv, NULL, lune_func2stem( _pEnv, (lune_func_t *)u_lune_form_test, 0 ) );
@@ -286,7 +286,7 @@ void lune_init_test( lune_env_t * _pEnv )
         _pEnv, (lune_func_t *)u_lune_form_test3, 1, pVal2 );
     lune_call_form( _pEnv, pClosure );
     // print( val2 );
-    lune_print( _pEnv, lune_createDDD( _pEnv, false, 1, pVal2 ) );
+    lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal2 ) );
     
     
     
@@ -317,13 +317,13 @@ void lune_init_test( lune_env_t * _pEnv )
     // list.sort();
     // print( list.unpack() );
     lune_mtd_List( pList )->sort( _pEnv, pList, _pEnv->pNilStem );
-    lune_print( _pEnv, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
+    lune_print( _pEnv, NULL, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
 
     // list.sort( fn (val1:int,val2:int):bool { return val1 > val2; } );
     lune_mtd_List( pList )->sort(
         _pEnv, pList, lune_func2stem( _pEnv, (lune_func_t *)u_lune_form_comp, 0 ) );
     // print( list.unpack() );
-    lune_print( _pEnv, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
+    lune_print( _pEnv, NULL, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
 
     
     // let set = (@ 100, 200, 300 )
@@ -347,7 +347,7 @@ void lune_init_test( lune_env_t * _pEnv )
         for ( itStem = lune_itSet_new( _pEnv, pSet );
               lune_itSet_hasNext( _pEnv, itStem, &pVal ); lune_itSet_inc( _pEnv, itStem ) )
         {
-            lune_print( _pEnv, lune_createDDD( _pEnv, false, 1, pVal ) );
+            lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal ) );
         }
         lune_it_delete( _pEnv, itStem );
     }
@@ -371,14 +371,14 @@ void lune_init_test( lune_env_t * _pEnv )
               lune_itMap_hasNext( _pEnv, itStem, &entry ); lune_itMap_inc( _pEnv, itStem ) )
         {
             lune_print(
-                _pEnv, lune_createDDD( _pEnv, false, 2, entry.pKey, entry.pVal ) );
+                _pEnv, NULL, lune_createDDD( _pEnv, false, 2, entry.pKey, entry.pVal ) );
         }
         lune_it_delete( _pEnv, itStem );
     }
 
 
     // print( "multi-val", test4( 1, 2 ), test4( test5() ) )
-    lune_print( _pEnv,
+    lune_print( _pEnv, NULL,
                 lune_createDDD(
                     _pEnv, false, 3,
                     lune_litStr2stem( _pEnv, "multi-val" ),

@@ -301,8 +301,47 @@ function Opt:__init( node )
    self.node = node
 end
 
+local RoutineInfo = {}
+function RoutineInfo.new( funcInfo )
+   local obj = {}
+   RoutineInfo.setmeta( obj )
+   if obj.__init then obj:__init( funcInfo ); end
+   return obj
+end
+function RoutineInfo:__init(funcInfo) 
+   self.funcInfo = funcInfo
+   self.blockDepth = 1
+end
+function RoutineInfo:pushDepth(  )
+
+   self.blockDepth = self.blockDepth + 1
+end
+function RoutineInfo:popDepth(  )
+
+   self.blockDepth = self.blockDepth - 1
+end
+function RoutineInfo.setmeta( obj )
+  setmetatable( obj, { __index = RoutineInfo  } )
+end
+function RoutineInfo:get_funcInfo()
+   return self.funcInfo
+end
+function RoutineInfo:get_blockDepth()
+   return self.blockDepth
+end
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
+function convFilter:pushRoutine( funcType )
+
+   self.currentRoutineInfo = RoutineInfo.new(funcType)
+   table.insert( self.routineInfoQueue, self.currentRoutineInfo )
+end
+function convFilter:popRoutine(  )
+
+   self.currentRoutineInfo = self.routineInfoQueue[#self.routineInfoQueue]
+   table.remove( self.routineInfoQueue )
+end
 function convFilter.new( streamName, stream, ast )
    local obj = {}
    convFilter.setmeta( obj )
@@ -312,6 +351,8 @@ end
 function convFilter:__init(streamName, stream, ast) 
    Nodes.Filter.__init( self)
    
+   self.routineInfoQueue = {}
+   self.currentRoutineInfo = RoutineInfo.new(Ast.builtinTypeNone)
    self.moduleTypeInfo = ast:get_moduleTypeInfo()
    self.moduleSymbolKind = ast:get_moduleSymbolKind()
    self.ast = _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode ))
@@ -439,13 +480,27 @@ function convFilter:processRoot( node, opt )
 
    Ast.pushProcessInfo( node:get_processInfo() )
    self:writeln( string.format( "// %s", self.streamName) )
-   self:writeln( [==[
-#include <lunescript.h>
-void lune_init_test( lune_env_t * _pEnv )
+   self:writeln( "#include <lunescript.h>" )
+   local children = node:get_children(  )
+   local initStatementList = {}
+   for __index, child in pairs( children ) do
+      do
+         local _switchExp = child:get_kind()
+         if _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_DeclClass() or _switchExp == Nodes.NodeKind.get_DeclFunc() or _switchExp == Nodes.NodeKind.get_DeclEnum() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_DeclVar() then
+            filter( child, self, node )
+            self:writeln( "" )
+         else 
+            
+               table.insert( initStatementList, child )
+         end
+      end
+      
+   end
+   
+   self:writeln( [==[void lune_init_test( lune_env_t * _pEnv )
 {
 ]==] )
-   local children = node:get_children(  )
-   for __index, child in pairs( children ) do
+   for __index, child in pairs( initStatementList ) do
       filter( child, self, node )
       self:writeln( "" )
    end
@@ -461,12 +516,60 @@ end
 
 function convFilter:processBlock( node, opt )
 
+   local word = ""
+   do
+      local _switchExp = node:get_blockKind(  )
+      if _switchExp == Nodes.BlockKind.If or _switchExp == Nodes.BlockKind.Elseif then
+         word = "{"
+      elseif _switchExp == Nodes.BlockKind.Else then
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.While then
+         word = "{"
+      elseif _switchExp == Nodes.BlockKind.Repeat then
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.For then
+         word = "{"
+      elseif _switchExp == Nodes.BlockKind.Apply then
+         word = "{"
+      elseif _switchExp == Nodes.BlockKind.Foreach then
+         word = "{"
+      elseif _switchExp == Nodes.BlockKind.Macro then
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.Func then
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.Default then
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.Block then
+         word = "{"
+      elseif _switchExp == Nodes.BlockKind.Macro then
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.LetUnwrap then
+         word = ""
+      elseif _switchExp == Nodes.BlockKind.IfUnwrap then
+         word = ""
+      end
+   end
+   
+   self:writeln( word )
+   self:pushIndent(  )
+   local stmtList = node:get_stmtList(  )
+   for __index, statement in pairs( stmtList ) do
+      filter( statement, self, node )
+      self:writeln( "" )
+   end
+   
+   self:popIndent(  )
+   if node:get_blockKind(  ) == Nodes.BlockKind.Block then
+      self:writeln( "}" )
+   end
+   
 end
 
 
 function convFilter:processStmtExp( node, opt )
 
    filter( node:get_exp(  ), self, node )
+   self:write( ";" )
 end
 
 
@@ -582,11 +685,13 @@ end
 
 function convFilter:processDeclArg( node, opt )
 
+   self:write( string.format( "lune_stem_t * %s", node:get_name(  ).txt ) )
 end
 
 
 function convFilter:processDeclArgDDD( node, opt )
 
+   self:write( "lune_stem_t * _pDDD" )
 end
 
 
@@ -597,6 +702,64 @@ end
 
 function convFilter:processDeclFunc( node, opt )
 
+   local declInfo = node:get_declInfo(  )
+   local nameToken = declInfo:get_name(  )
+   local name = ""
+   do
+      local _exp = nameToken
+      if _exp ~= nil then
+         name = _exp.txt
+      end
+   end
+   
+   local letTxt = ""
+   if declInfo:get_accessMode(  ) ~= Ast.AccessMode.Global and #name ~= 0 then
+      letTxt = "static "
+   end
+   
+   self:write( string.format( "%slune_stem_t * %s( lune_env_t * _pEnv, lune_stem_t * _pForm", letTxt, name ) )
+   local argList = declInfo:get_argList(  )
+   for index, arg in pairs( argList ) do
+      self:write( ", " )
+      filter( arg, self, node )
+   end
+   
+   self:writeln( " )" )
+   self:writeln( "{" )
+   local localVerNum = 0
+   self:writeln( string.format( "lune_enter_block( _pEnv, %d );", localVerNum) )
+   local breakKind = Nodes.BreakKind.None
+   do
+      local body = declInfo:get_body()
+      if body ~= nil then
+         self:process__func__symbol( declInfo:get_has__func__Symbol(), node:get_expType():get_parentInfo(), name )
+         self:pushRoutine( node:get_expType() )
+         filter( body, self, node )
+         self:popRoutine(  )
+         breakKind = body:getBreakKind( Nodes.CheckBreakMode.Normal )
+      end
+   end
+   
+   do
+      local _switchExp = breakKind
+      if _switchExp == Nodes.BreakKind.Return or _switchExp == Nodes.BreakKind.NeverRet then
+      else 
+         
+            self:writeln( "lune_leave_block( _pEnv );" )
+            self:writeln( "return _pEnv->pNoneStem;" )
+      end
+   end
+   
+   self:writeln( "}" )
+   local expType = node:get_expType(  )
+   if expType:get_accessMode(  ) == Ast.AccessMode.Pub then
+      if self.needModuleObj then
+         self:write( string.format( "_moduleObj.%s = %s", name, name) )
+      end
+      
+      self.pubFuncName2InfoMap[name] = PubFuncInfo.new(declInfo:get_accessMode(  ), node:get_expType(  ))
+   end
+   
 end
 
 
@@ -654,11 +817,214 @@ function convFilter:processExpUnwrap( node, opt )
 
 end
 
+function convFilter:processVal2Stem( node, parent )
+
+   filter( node, self, parent )
+end
+
+function convFilter:processCallArgList( funcType, expListNode, parent )
+
+   if expListNode ~= nil then
+      local expList = expListNode:get_expList()
+      for index, funcArgType in pairs( funcType:get_argTypeInfoList() ) do
+         if index ~= 1 then
+            self:write( ", " )
+         end
+         
+         if #expList >= index then
+            if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
+               self:write( string.format( "lune_createDDD( _pEnv, %s, %d, ", tostring( expList[#expList]:get_expType():get_kind() == Ast.TypeInfoKind.DDD), #expList - index + 1) )
+               for expIndex = index, #expList do
+                  if expIndex ~= index then
+                     self:write( ", " )
+                  end
+                  
+                  self:processVal2Stem( expList[expIndex], parent )
+               end
+               
+               self:write( ")" )
+               return 
+            else
+             
+               self:processVal2Stem( expList[index], parent )
+            end
+            
+         else
+          
+            self:write( "_pEnv->pNilStem" )
+         end
+         
+      end
+      
+   end
+   
+end
+
 function convFilter:processExpCall( node, opt )
 
    local wroteFuncFlag = false
    local setArgFlag = false
-   self:write( "//" )
+   local function setArg(  )
+   
+      self:write( "_pEnv" )
+   end
+   
+   local function fieldCall(  )
+   
+      local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
+      if  nil == fieldNode then
+         local _fieldNode = fieldNode
+      
+         return true
+      end
+      
+      local prefixNode = fieldNode:get_prefix()
+      local function processSet(  )
+      
+         setArgFlag = true
+         wroteFuncFlag = true
+         do
+            local _switchExp = fieldNode:get_field().txt
+            if _switchExp == "add" or _switchExp == "del" then
+               filter( prefixNode, self, fieldNode )
+               self:write( "[" )
+               do
+                  local argList = node:get_argList()
+                  if argList ~= nil then
+                     filter( argList, self, fieldNode )
+                  end
+               end
+               
+               self:write( "]" )
+               do
+                  local _switchExp = fieldNode:get_field().txt
+                  if _switchExp == "add" then
+                     self:write( "= true" )
+                  elseif _switchExp == "del" then
+                     self:write( "= nil" )
+                  end
+               end
+               
+               return false
+            end
+         end
+         
+         self:write( string.format( "_lune._Set_%s(", fieldNode:get_field().txt) )
+         filter( prefixNode, self, fieldNode )
+         return true
+      end
+      
+      local prefixType = prefixNode:get_expType()
+      local function processEnumAlge(  )
+      
+         wroteFuncFlag = true
+         local fieldExpType = fieldNode:get_expType()
+         local canonicalName = self:getCanonicalName( prefixType )
+         local methodName = fieldNode:get_field().txt
+         local delimit = ":"
+         if methodName == "get__txt" then
+            methodName = "_getTxt"
+         end
+         
+         if fieldExpType:get_kind() == Ast.TypeInfoKind.Func then
+            delimit = "."
+         end
+         
+         self:write( string.format( "%s%s%s( ", canonicalName, delimit, methodName) )
+         if fieldExpType:get_staticFlag() then
+            setArgFlag = false
+         else
+          
+            filter( prefixNode, self, fieldNode )
+            setArgFlag = true
+         end
+         
+      end
+      
+      if node:get_nilAccess() then
+         wroteFuncFlag = true
+         setArgFlag = true
+         do
+            local _switchExp = prefixType:get_kind()
+            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+               self:write( string.format( "_lune.nilacc( table.%s, nil, 'list', ", fieldNode:get_field().txt) )
+               filter( prefixNode, self, fieldNode )
+            else 
+               
+                  self:write( "_lune.nilacc( " )
+                  filter( prefixNode, self, fieldNode )
+                  self:write( string.format( ", '%s', 'callmtd' ", fieldNode:get_field().txt) )
+            end
+         end
+         
+      else
+       
+         do
+            local _switchExp = prefixType:get_kind()
+            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+               setArgFlag = true
+               wroteFuncFlag = true
+               self:write( string.format( "table.%s( ", fieldNode:get_field().txt) )
+               filter( prefixNode, self, fieldNode )
+            elseif _switchExp == Ast.TypeInfoKind.Set then
+               if not processSet(  ) then
+                  return false
+               end
+               
+            elseif _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
+               processEnumAlge(  )
+            elseif _switchExp == Ast.TypeInfoKind.Box then
+               filter( prefixNode, self, fieldNode )
+               self:write( "[1]" )
+               return false
+            elseif _switchExp == Ast.TypeInfoKind.Class then
+               if prefixType:isInheritFrom( Ast.builtinTypeMapping, nil ) and isGenericType( prefixType ) and (fieldNode:get_field().txt == "_fromMap" or fieldNode:get_field().txt == "_fromStem" ) then
+                  wroteFuncFlag = true
+                  setArgFlag = true
+                  filter( node:get_func(), self, node )
+                  self:write( "( " )
+                  do
+                     local argList = node:get_argList()
+                     if argList ~= nil then
+                        filter( argList, self, node )
+                        self:write( ", " )
+                     end
+                  end
+                  
+                  self:outputAlter2MapFunc( self, prefixType:createAlt2typeMap( false ) )
+                  self:write( ")" )
+                  return false
+               end
+               
+            end
+         end
+         
+      end
+      
+      return true
+   end
+   
+   if not fieldCall(  ) then
+      return 
+   end
+   
+   do
+      local refNode = _lune.__Cast( node:get_func(), 3, Nodes.ExpRefNode )
+      if refNode ~= nil then
+         local builtinFunc = TransUnit.getBuiltinFunc(  )
+         if refNode:get_token().txt == "super" then
+            wroteFuncFlag = true
+            setArgFlag = true
+            local funcType = refNode:get_expType()
+            self:write( string.format( "%s.%s( self ", self:getFullName( funcType:get_parentInfo() ), funcType:get_rawTxt()) )
+         elseif refNode:get_expType() == builtinFunc.lune_print then
+            wroteFuncFlag = true
+            self:write( "lune_print(" )
+         end
+         
+      end
+   end
+   
    if not wroteFuncFlag then
       if node:get_nilAccess() then
          self:write( "_lune.nilacc( " )
@@ -684,14 +1050,15 @@ function convFilter:processExpCall( node, opt )
             
          end
          
-         if wroteFuncFlag and setArgFlag then
-            if #expList > 0 then
-               self:write( ", " )
-            end
-            
+         if not setArgFlag then
+            self:write( "_pEnv" )
          end
          
-         filter( argList, self, node )
+         if #expList > 0 then
+            self:write( ", " )
+            self:processCallArgList( node:get_func():get_expType(), node:get_argList(), node )
+         end
+         
       end
    end
    
@@ -732,8 +1099,57 @@ function convFilter:processExpParen( node, opt )
 end
 
 
+function convFilter:accessNumVal( exp, parent )
+
+   local expType = exp:get_expType():get_srcTypeInfo()
+   do
+      local _switchExp = expType
+      if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+         filter( exp, self, parent )
+         self:write( "->val.intVal" )
+      elseif _switchExp == Ast.builtinTypeReal then
+         filter( exp, self, parent )
+         self:write( "->val.realVal" )
+      end
+   end
+   
+end
+
 function convFilter:processExpOp2( node, opt )
 
+   local intCast = false
+   if node:get_expType():equals( Ast.builtinTypeInt ) and node:get_op().txt == "/" then
+      intCast = true
+      self:write( "math.floor(" )
+   end
+   
+   local opTxt = node:get_op().txt
+   do
+      local _exp = Ast.bitBinOpMap[opTxt]
+      if _exp ~= nil then
+         do
+            local _switchExp = _exp
+            if _switchExp == Ast.BitOpKind.LShift then
+               opTxt = "<<"
+            elseif _switchExp == Ast.BitOpKind.RShift then
+               opTxt = ">>"
+            end
+         end
+         
+         self:accessNumVal( node:get_exp1(), node )
+         self:write( " " .. opTxt .. " " )
+         self:accessNumVal( node:get_exp2(), node )
+      else
+         self:accessNumVal( node:get_exp1(), node )
+         self:write( " " .. opTxt .. " " )
+         self:accessNumVal( node:get_exp2(), node )
+      end
+   end
+   
+   if intCast then
+      self:write( ")" )
+   end
+   
 end
 
 
@@ -780,6 +1196,40 @@ end
 
 function convFilter:processReturn( node, opt )
 
+   do
+      local expList = node:get_expList()
+      if expList ~= nil then
+         self:writeln( "{" )
+         self:write( "lune_stem_t * _pRet = " )
+         if #self.currentRoutineInfo:get_funcInfo():get_retTypeInfoList() >= 2 then
+            self:write( "lune_createMRet( _pEnv, %s, %d" )
+            for __index, expNode in pairs( expList:get_expList() ) do
+               self:write( ", " )
+               self:processVal2Stem( expNode, node )
+            end
+            
+            self:write( ")" )
+         elseif #self.currentRoutineInfo:get_funcInfo():get_retTypeInfoList() == 1 then
+            self:processVal2Stem( expList:get_expList()[1], node )
+         else
+          
+            self:write( "_pEnv->pNilStem" )
+         end
+         
+         self:writeln( ";" )
+         self:writeln( "lune_setRet( _pEnv, _pRet );" )
+      end
+   end
+   
+   if self.currentRoutineInfo:get_blockDepth() == 1 then
+      self:writeln( "lune_leave_block( _pEnv );" )
+   else
+    
+      self:writeln( string.format( "lune_leave_blockMulti( _pEnv, %d );", self.currentRoutineInfo:get_blockDepth()) )
+   end
+   
+   self:writeln( "return _pRet;" )
+   self:writeln( "}" )
 end
 
 
@@ -821,16 +1271,25 @@ end
 
 function convFilter:processLiteralChar( node, opt )
 
+   self:write( "lune_int2stem( _pEnv, " )
+   self:write( string.format( "%d", node:get_num() ) )
+   self:write( ")" )
 end
 
 
 function convFilter:processLiteralInt( node, opt )
 
+   self:write( "lune_int2stem( _pEnv, " )
+   self:write( node:get_token().txt )
+   self:write( ")" )
 end
 
 
 function convFilter:processLiteralReal( node, opt )
 
+   self:write( "lune_real2stem( _pEnv, " )
+   self:write( node:get_token().txt )
+   self:write( ")" )
 end
 
 
@@ -842,6 +1301,7 @@ function convFilter:processLiteralString( node, opt )
    end
    
    local opList = TransUnit.findForm( txt )
+   self:write( "lune_litStr2stem( _pEnv, " )
    local argList = node:get_argList(  )
    if #argList > 0 then
       self:write( string.format( 'string.format( %s, ', txt ) )
@@ -859,21 +1319,27 @@ function convFilter:processLiteralString( node, opt )
       self:write( txt )
    end
    
+   self:write( ")" )
 end
 
 
 function convFilter:processLiteralBool( node, opt )
 
+   self:write( "lune_bool2stem( _pEnv, " )
+   self:write( node:get_token().txt )
+   self:write( ")" )
 end
 
 
 function convFilter:processLiteralNil( node, opt )
 
+   self:write( "_pEnv->pNilStem" )
 end
 
 
 function convFilter:processBreak( node, opt )
 
+   self:write( "break" )
 end
 
 
