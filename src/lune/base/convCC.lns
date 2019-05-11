@@ -1325,128 +1325,234 @@ pub override fn convFilter.processWhen(
    // self.writeln( "end" );
 }
 
+fn getCType( valType:&Ast.TypeInfo ) : str {
+   let expType = valType.$srcTypeInfo;
+   switch expType {
+      case Ast.builtinTypeInt, Ast.builtinTypeChar {
+         return "lune_int_t";
+      }
+      case Ast.builtinTypeReal {
+         return "lune_real_t";
+      }
+      case Ast.builtinTypeBool {
+         return "lune_bool_t";
+      }
+      default {
+         return "lune_stem_t *";
+      }
+   }
+}
+
+fn getCTypeForSym( valType:&Ast.SymbolInfo ) : str, bool {
+   let typeTxt = getCType( valType.$typeInfo );
+   return typeTxt, typeTxt == "lune_stem_t *";
+}
+
+
+pub fn convFilter.accessPrimValFromStem(
+   dddFlag:bool, typeInfo:&Ast.TypeInfo, index:int ) mut
+{
+   if dddFlag {
+      self.write( "->val.ddd.pStemList[ %d ]" (index) );
+   }
+
+   let expType = typeInfo.$srcTypeInfo;
+   switch expType {
+      case Ast.builtinTypeInt, Ast.builtinTypeChar {
+         self.write( "->val.intVal" );
+      }
+      case Ast.builtinTypeReal {
+         self.write( "->val.realVal" );
+      }
+      case Ast.builtinTypeBool {
+         self.write( "->val.boolVal" );
+      }
+   }
+}
+
+fn isStemVal( node:&Nodes.Node ): bool {
+   switch node.$kind {
+      case Nodes.NodeKind.$ExpCall
+      {
+         return true;
+      }
+      case Nodes.NodeKind.$ExpParen {
+         if! node@@@Nodes.ExpParenNode {
+            return isStemVal( _exp.$exp );
+         }
+      }
+   }
+   return false;
+}
+
+
+fn hasMultiVal( exp:&Nodes.Node ): bool {
+   return exp.$expType.$kind == .DDD or #exp.$expTypeList > 1;
+}
 
 pub override fn convFilter.processDeclVar(
    node: Nodes.DeclVarNode, opt: Opt ) mut
 {
-   // if node.$syncBlock {
-   //    self.writeln( "do" );
-   //    self.pushIndent(##);
-   //    foreach varInfo in node.$syncVarList {
-   //       self.writeln( "local _sync_%s" (varInfo.$name.txt) );
-   //    }
-   //    self.writeln( "do" );
-   //    self.pushIndent(##);
-   // }
+   if node.$syncBlock {
+      self.writeln( "{" );
+      self.pushIndent(##);
+      foreach varInfo in node.$syncVarList {
+         self.writeln( "_sync_%s" (varInfo.$name.txt) );
+      }
+      self.writeln( "{" );
+      self.pushIndent(##);
+   }
 
-   // if node.$mode ~= .Unwrap and node.get_accessMode() ~= .Global {
-   //    self.write( "local " );
-   // }
+   if node.$mode ~= .Unwrap and node.get_accessMode() ~= .Global {
+      //self.write( "local " );
+   }
 
-   // let varList = node.get_varList();
-   // foreach var, index in varList  {
-   //    if index > 1 {
-   //       self.write( ", " );
-   //    }
-   //    self.write( var.$name.txt );
-   // }
+   let varList = node.get_varList();
+   let varSymList = node.$symbolInfoList;
+   foreach var, index in varSymList  {
+      self.write( getCTypeForSym( var ) .. " ");
+      self.write( var.$name );
+      self.writeln( ";" );
+   }
 
-   // if! node.get_expList() {
-   //    self.write( " = " );
-   //    filter( _exp, self, node );
-   // }
-   // else {
-   //    self.writeln( "" );
-   // }
+   // 変数に初期値を代入する
+   fn initVar(): int {
 
-   // if! node.$unwrapBlock {
-   //    self.writeln( "" );
-   //    self.write( "if " );
-   //    foreach var, index in varList {
-   //       if index > 1 {
-   //          self.write( " or " );
-   //       }
-   //       self.write( " nil == " .. var.$name.txt );
-   //    }
-   //    self.writeln( " then" );
-   //    self.pushIndent(##);
+      fn setVal( var:&Ast.SymbolInfo, exp:&Nodes.Node, index:int ) {
+         self.write( "%s = " (var.$name) );
+         if hasMultiVal( exp ) {
+            self.write( "lune_fromDDD( _work, %d )" (index) );
+         }
+         else {
+            self.write( "_work" );
+         }
+         let work, isStem = getCTypeForSym( var );
+         if not isStem and isStemVal( exp ) {
+            self.accessPrimValFromStem( false, var.$typeInfo, 0 );
+         }
+         self.writeln( ";" );
+      }
+      
+      if! let expListNode = node.get_expList() {
+         let expList = expListNode.$expList;
 
-   //    foreach var, index in varList  {
-   //       self.writeln( "local _%s = %s" (var.$name.txt, var.$name.txt ) );
-   //    }
-   //    self.popIndent();
+         for index = 1, #expList {
+            if index > #varSymList {
+               return index;
+            }
+            // 一旦 _work に代入してから、変数にセットする。
+            self.writeln( "{" );
+            let exp = expList[ index ];
+            if hasMultiVal( exp ) {
+               self.write( "lune_stem_t *" );
+            }
+            else {
+               self.write( getCType( exp.$expType ) );
+            }
+            self.write( " _work = " );
+            filter( exp, self, node );
+            self.writeln( ";" );
 
-   //    filter( _exp, self, node );
+            if index == #expList {
+               for varIndex = index, #varSymList {
+                  if varIndex > #varSymList {
+                     self.writeln( "}" );
+                     return varIndex;
+                  }
+                  setVal( varSymList[ varIndex ], exp, varIndex - index );
+               }
+               self.writeln( "}" );
+               return #varSymList + 1;
+            }
+            else {
+               setVal( varSymList[ index ], exp, 0 );
+            }
+            self.writeln( "}" );
+         }
+         
+         return #expList + 1;
+         
+         // foreach var, index in varSymList  {
+         //    self.write( var.$name.txt );
+         //    self.write( "=" );
+         //    if #expList >= index {
+         //       filter( expList[index], self, node );
+         //    }
+         //    else {
+         //       self.write( "_pEnv->pNilStem" );
+         //    }
+         //    self.writeln( ";" );
+         // }
+      }
+      return 1;
+   }
+   for index = initVar(), #varList {
+      self.write( varList[ index ].$name.txt );
+      self.writeln( " = _pEnv->pNilStem;" );
+   }
 
-   //    if! let thenBlock = node.$thenBlock {
-   //       self.writeln( "else" );
-   //       self.pushIndent(##);
-   //       filter( thenBlock, self, node );
-   //       self.popIndent();
-   //    };
 
-   //    self.writeln( "end" );
-   // }
+   if! node.$unwrapBlock {
+      self.writeln( "" );
+      self.write( "if " );
+      foreach var, index in varList {
+         if index > 1 {
+            self.write( " || " );
+         }
+         self.write( " _pEnv->pNilStem == " .. var.$name.txt );
+      }
+      self.writeln( " {" );
+      self.pushIndent(##);
 
-   // if! node.$syncBlock {
-   //    filter( _exp, self, node);
+      foreach var, index in varList  {
+         self.writeln( "local _%s = %s" (var.$name.txt, var.$name.txt ) );
+      }
+      self.popIndent();
 
-   //    foreach varInfo in node.$syncVarList {
-   //       self.writeln( "_sync_%s = %s" (varInfo.$name.txt, varInfo.$name.txt) );
-   //    }
-   //    self.popIndent();
-   //    self.writeln( "end" );
+      filter( _exp, self, node );
 
-   //    foreach varInfo in node.$syncVarList {
-   //       self.writeln( "%s = _sync_%s" (varInfo.$name.txt, varInfo.$name.txt) );
-   //    }
-   //    self.popIndent();
-   //    self.writeln( "end" );
-   // }
+      if! let thenBlock = node.$thenBlock {
+         self.writeln( "else {" );
+         self.pushIndent(##);
+         filter( thenBlock, self, node );
+         self.popIndent();
+      };
+
+      self.writeln( "}" );
+   }
+
+   if! node.$syncBlock {
+      filter( _exp, self, node);
+
+      foreach varInfo in node.$syncVarList {
+         self.writeln( "_sync_%s = %s" (varInfo.$name.txt, varInfo.$name.txt) );
+      }
+      self.popIndent();
+      self.writeln( "}" );
+
+      foreach varInfo in node.$syncVarList {
+         self.writeln( "%s = _sync_%s" (varInfo.$name.txt, varInfo.$name.txt) );
+      }
+      self.popIndent();
+      self.writeln( "}" );
+   }
 
 
-   // if node.get_accessMode() == .Pub {
-   //    self.writeln( "" );
-   //    foreach var, index in varList {
-   //       let name: str = var.$name.txt;
-   //       if self.needModuleObj {
-   //          self.writeln( "_moduleObj.%s = %s" ( name, name ) );
-   //       }
-   //       self.pubVarName2InfoMap[ name ] = new PubVerInfo(
-   //          node.$staticFlag, node.$accessMode,
-   //          node.$symbolInfoList[ index ].$mutable, node.$typeInfoList[ index ] );
-   //    }
-   // }
-
-   // if self.macroDepth > 0 {
-   //    self.writeln( "" );
-   //    foreach symbolInfo, index in node.$symbolInfoList {
-   //       let varName = symbolInfo.$name;
-   //       self.writeln( "table.insert( macroVar.__names, '%s' )" ( varName ) );
-   //       self.writeln( "macroVar.%s = %s" ( varName, varName ) );
-   //       self.macroVarSymSet.add( symbolInfo );
-   //    }
-   // }
+   if node.get_accessMode() == .Pub {
+      self.writeln( "" );
+      foreach var, index in varList {
+         let name: str = var.$name.txt;
+         self.pubVarName2InfoMap[ name ] = new PubVerInfo(
+            node.$staticFlag, node.$accessMode,
+            node.$symbolInfoList[ index ].$mutable, node.$typeInfoList[ index ] );
+      }
+   }
 };
 
 pub override fn convFilter.processDeclArg(
    node: Nodes.DeclArgNode, opt: Opt ) mut
 {
-   let expType = node.$expType.$srcTypeInfo;
-   switch expType {
-      case Ast.builtinTypeInt, Ast.builtinTypeChar {
-         self.write( "lune_int_t " );
-      }
-      case Ast.builtinTypeReal {
-         self.write( "lune_real_t " );
-      }
-      case Ast.builtinTypeBool {
-         self.write( "lune_bool_t " );
-      }
-      default {
-         self.write( "lune_stem_t * " );
-      }
-   }
+   self.write( getCType( node.$expType ) .. " " );
    self.write( node.get_name().txt );
    
    //self.write( string.format( "lune_stem_t * %s", node.get_name().txt ) );
@@ -1785,21 +1891,6 @@ pub override fn convFilter.processExpUnwrap(
    // }
 }
 
-fn isStemVal( node:&Nodes.Node ): bool {
-   switch node.$kind {
-      case Nodes.NodeKind.$ExpCall
-      {
-         return true;
-      }
-      case Nodes.NodeKind.$ExpParen {
-         if! node@@@Nodes.ExpParenNode {
-            return isStemVal( _exp.$exp );
-         }
-      }
-   }
-   return false;
-}
-
 /**
 node が示す値を stem 型に変換する処理を出力する
 
@@ -1836,7 +1927,6 @@ pub fn convFilter.processVal2Stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
    // filter( node, self, parent );
 }
 
-
 fn convFilter.processCreateDDD( ddd:bool, expList:&List<&Nodes.Node>, num:int ) mut
 {
    if ddd {
@@ -1846,8 +1936,7 @@ fn convFilter.processCreateDDD( ddd:bool, expList:&List<&Nodes.Node>, num:int ) 
       self.write( "lune_createMRet" );
    }
    let lastExp = expList[ #expList ];
-   self.write( "( _pEnv, %s, %d"
-               ( lastExp.$expType.$kind == .DDD or #lastExp.$expTypeList > 1, num ) );
+   self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), num ) );
 }
 
 
@@ -2090,46 +2179,20 @@ pub override fn convFilter.processExpList(
 pub override fn convFilter.processExpOp1(
    node: Nodes.ExpOp1Node, opt: Opt ) mut
 {
-   // let mut op = node.$op.txt;
-   // // if op == ",,," or op == ",,,," {
-   // //     filter( node.$exp,  self, node );
-   // // }
-   // if op == ",,," {
-   //    filter( node.$exp,  self, node );
+   let mut op = node.$op.txt;
+   // if op == ",,," or op == ",,,," {
+   //     filter( node.$exp,  self, node );
    // }
-   // elseif op == ",,,," {
-   //    if node.$macroMode == .Expand {
-   //       filter( node.$exp,  self, node );
-   //    }
-   //    else {
-   //       self.write( "__luneSym2Str( " );
-   //       filter( node.$exp,  self, node );
-   //       self.write( " )" );
-   //    }
-   // }
-   // elseif op == ",," {
-   //    self.write( "__luneGetLocal( " );
-   //    filter( node.$exp,  self, node );
-   //    self.write( " )" );
-   // }
-   // elseif op == "~" {
-   //    if self.targetLuaVer.$hasBitOp == .HasOp {
-   //       self.write( op );
-   //       filter( node.$exp,  self, node );
-   //    }
-   //    else {
-   //       self.write( "bit32.bnot( " );
-   //       filter( node.$exp,  self, node );
-   //       self.write( " )" );
-   //    }
-   // }
-   // else {
-   //    if op == "not" {
-   //       op = op .. " ";
-   //    }
-   //    self.write( op );
-   //    filter( node.$exp,  self, node );
-   // }
+   if op == "~" {
+      self.write( op );
+   }
+   elseif op == "not" {
+      self.write( "!" );
+   }
+   else {
+      Util.err( "not support op -- %s" (op) );
+   }
+   filter( node.$exp,  self, node );
 };
 
 pub override fn convFilter.processExpCast(
@@ -2181,7 +2244,8 @@ pub override fn convFilter.processExpParen(
    self.write( " )" );
 };
 
-pub fn convFilter.accessNumVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
+
+pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
    // if exp@@@Nodes.LiteralIntNode or exp@@@Nodes.LiteralCharNode
    //    or exp@@@Nodes.LiteralRealNode
    if not isStemVal( exp ) {
@@ -2189,19 +2253,23 @@ pub fn convFilter.accessNumVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
    }
    else {
       filter( exp, self, parent );
-      if #exp.$expTypeList > 1 {
-         self.write( "->val.ddd.pStemList[ 0 ]" );
-      }
+      self.accessPrimValFromStem( #exp.$expTypeList > 1, exp.$expType, 0 );
+      // if #exp.$expTypeList > 1 {
+      //    self.write( "->val.ddd.pStemList[ 0 ]" );
+      // }
 
-      let expType = exp.$expType.$srcTypeInfo;
-      switch expType {
-         case Ast.builtinTypeInt, Ast.builtinTypeChar {
-            self.write( "->val.intVal" );
-         }
-         case Ast.builtinTypeReal {
-            self.write( "->val.realVal" );
-         }
-      }
+      // let expType = exp.$expType.$srcTypeInfo;
+      // switch expType {
+      //    case Ast.builtinTypeInt, Ast.builtinTypeChar {
+      //       self.write( "->val.intVal" );
+      //    }
+      //    case Ast.builtinTypeReal {
+      //       self.write( "->val.realVal" );
+      //    }
+      //    case Ast.builtinTypeBool {
+      //       self.write( "->val.boolVal" );
+      //    }
+      // }
    }
 }
 
@@ -2226,14 +2294,14 @@ pub override fn convFilter.processExpOp2(
             opTxt = ">>";
          }
       }
-      self.accessNumVal( node.$exp1, node );
+      self.accessPrimVal( node.$exp1, node );
       self.write( " " .. opTxt .. " " );
-      self.accessNumVal( node.$exp2, node );
+      self.accessPrimVal( node.$exp2, node );
    }
    else {
-      self.accessNumVal( node.$exp1, node );
+      self.accessPrimVal( node.$exp1, node );
       self.write( " " .. opTxt .. " " );
-      self.accessNumVal( node.$exp2, node );
+      self.accessPrimVal( node.$exp2, node );
    }
 
    if intCast {

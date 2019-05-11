@@ -678,28 +678,243 @@ function convFilter:processWhen( node, opt )
 
 end
 
+local function getCType( valType )
+
+   local expType = valType:get_srcTypeInfo()
+   do
+      local _switchExp = expType
+      if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+         return "lune_int_t"
+      elseif _switchExp == Ast.builtinTypeReal then
+         return "lune_real_t"
+      elseif _switchExp == Ast.builtinTypeBool then
+         return "lune_bool_t"
+      else 
+         
+            return "lune_stem_t *"
+      end
+   end
+   
+end
+
+local function getCTypeForSym( valType )
+
+   local typeTxt = getCType( valType:get_typeInfo() )
+   return typeTxt, typeTxt == "lune_stem_t *"
+end
+
+function convFilter:accessPrimValFromStem( dddFlag, typeInfo, index )
+
+   if dddFlag then
+      self:write( string.format( "->val.ddd.pStemList[ %d ]", index) )
+   end
+   
+   local expType = typeInfo:get_srcTypeInfo()
+   do
+      local _switchExp = expType
+      if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+         self:write( "->val.intVal" )
+      elseif _switchExp == Ast.builtinTypeReal then
+         self:write( "->val.realVal" )
+      elseif _switchExp == Ast.builtinTypeBool then
+         self:write( "->val.boolVal" )
+      end
+   end
+   
+end
+
+local function isStemVal( node )
+
+   do
+      local _switchExp = node:get_kind()
+      if _switchExp == Nodes.NodeKind.get_ExpCall() then
+         return true
+      elseif _switchExp == Nodes.NodeKind.get_ExpParen() then
+         do
+            local _exp = _lune.__Cast( node, 3, Nodes.ExpParenNode )
+            if _exp ~= nil then
+               return isStemVal( _exp:get_exp() )
+            end
+         end
+         
+      end
+   end
+   
+   return false
+end
+
+local function hasMultiVal( exp )
+
+   return exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD or #exp:get_expTypeList() > 1
+end
+
 function convFilter:processDeclVar( node, opt )
 
+   if node:get_syncBlock() then
+      self:writeln( "{" )
+      self:pushIndent(  )
+      for __index, varInfo in pairs( node:get_syncVarList() ) do
+         self:writeln( string.format( "_sync_%s", varInfo:get_name().txt) )
+      end
+      
+      self:writeln( "{" )
+      self:pushIndent(  )
+   end
+   
+   if node:get_mode() ~= Nodes.DeclVarMode.Unwrap and node:get_accessMode(  ) ~= Ast.AccessMode.Global then
+   end
+   
+   local varList = node:get_varList(  )
+   local varSymList = node:get_symbolInfoList()
+   for index, var in pairs( varSymList ) do
+      self:write( getCTypeForSym( var ) .. " " )
+      self:write( var:get_name() )
+      self:writeln( ";" )
+   end
+   
+   local function initVar(  )
+   
+      local function setVal( var, exp, index )
+      
+         self:write( string.format( "%s = ", var:get_name()) )
+         if hasMultiVal( exp ) then
+            self:write( string.format( "lune_fromDDD( _work, %d )", index) )
+         else
+          
+            self:write( "_work" )
+         end
+         
+         local work, isStem = getCTypeForSym( var )
+         if not isStem and isStemVal( exp ) then
+            self:accessPrimValFromStem( false, var:get_typeInfo(), 0 )
+         end
+         
+         self:writeln( ";" )
+      end
+      
+      do
+         local expListNode = node:get_expList(  )
+         if expListNode ~= nil then
+            local expList = expListNode:get_expList()
+            for index = 1, #expList do
+               if index > #varSymList then
+                  return index
+               end
+               
+               self:writeln( "{" )
+               local exp = expList[index]
+               if hasMultiVal( exp ) then
+                  self:write( "lune_stem_t *" )
+               else
+                
+                  self:write( getCType( exp:get_expType() ) )
+               end
+               
+               self:write( " _work = " )
+               filter( exp, self, node )
+               self:writeln( ";" )
+               if index == #expList then
+                  for varIndex = index, #varSymList do
+                     if varIndex > #varSymList then
+                        self:writeln( "}" )
+                        return varIndex
+                     end
+                     
+                     setVal( varSymList[varIndex], exp, varIndex - index )
+                  end
+                  
+                  self:writeln( "}" )
+                  return #varSymList + 1
+               else
+                
+                  setVal( varSymList[index], exp, 0 )
+               end
+               
+               self:writeln( "}" )
+            end
+            
+            return #expList + 1
+         end
+      end
+      
+      return 1
+   end
+   
+   for index = initVar(  ), #varList do
+      self:write( varList[index]:get_name().txt )
+      self:writeln( " = _pEnv->pNilStem;" )
+   end
+   
+   do
+      local _exp = node:get_unwrapBlock()
+      if _exp ~= nil then
+         self:writeln( "" )
+         self:write( "if " )
+         for index, var in pairs( varList ) do
+            if index > 1 then
+               self:write( " || " )
+            end
+            
+            self:write( " _pEnv->pNilStem == " .. var:get_name().txt )
+         end
+         
+         self:writeln( " {" )
+         self:pushIndent(  )
+         for index, var in pairs( varList ) do
+            self:writeln( string.format( "local _%s = %s", var:get_name().txt, var:get_name().txt) )
+         end
+         
+         self:popIndent(  )
+         filter( _exp, self, node )
+         do
+            local thenBlock = node:get_thenBlock()
+            if thenBlock ~= nil then
+               self:writeln( "else {" )
+               self:pushIndent(  )
+               filter( thenBlock, self, node )
+               self:popIndent(  )
+            end
+         end
+         
+         
+         self:writeln( "}" )
+      end
+   end
+   
+   do
+      local _exp = node:get_syncBlock()
+      if _exp ~= nil then
+         filter( _exp, self, node )
+         for __index, varInfo in pairs( node:get_syncVarList() ) do
+            self:writeln( string.format( "_sync_%s = %s", varInfo:get_name().txt, varInfo:get_name().txt) )
+         end
+         
+         self:popIndent(  )
+         self:writeln( "}" )
+         for __index, varInfo in pairs( node:get_syncVarList() ) do
+            self:writeln( string.format( "%s = _sync_%s", varInfo:get_name().txt, varInfo:get_name().txt) )
+         end
+         
+         self:popIndent(  )
+         self:writeln( "}" )
+      end
+   end
+   
+   if node:get_accessMode(  ) == Ast.AccessMode.Pub then
+      self:writeln( "" )
+      for index, var in pairs( varList ) do
+         local name = var:get_name().txt
+         self.pubVarName2InfoMap[name] = PubVerInfo.new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
+      end
+      
+   end
+   
 end
 
 
 function convFilter:processDeclArg( node, opt )
 
-   local expType = node:get_expType():get_srcTypeInfo()
-   do
-      local _switchExp = expType
-      if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-         self:write( "lune_int_t " )
-      elseif _switchExp == Ast.builtinTypeReal then
-         self:write( "lune_real_t " )
-      elseif _switchExp == Ast.builtinTypeBool then
-         self:write( "lune_bool_t " )
-      else 
-         
-            self:write( "lune_stem_t * " )
-      end
-   end
-   
+   self:write( getCType( node:get_expType() ) .. " " )
    self:write( node:get_name(  ).txt )
 end
 
@@ -832,26 +1047,6 @@ function convFilter:processExpUnwrap( node, opt )
 
 end
 
-local function isStemVal( node )
-
-   do
-      local _switchExp = node:get_kind()
-      if _switchExp == Nodes.NodeKind.get_ExpCall() then
-         return true
-      elseif _switchExp == Nodes.NodeKind.get_ExpParen() then
-         do
-            local _exp = _lune.__Cast( node, 3, Nodes.ExpParenNode )
-            if _exp ~= nil then
-               return isStemVal( _exp:get_exp() )
-            end
-         end
-         
-      end
-   end
-   
-   return false
-end
-
 function convFilter:processVal2Stem( node, parent )
 
    if isStemVal( node ) then
@@ -892,7 +1087,7 @@ function convFilter:processCreateDDD( ddd, expList, num )
    end
    
    local lastExp = expList[#expList]
-   self:write( string.format( "( _pEnv, %s, %d", lastExp:get_expType():get_kind() == Ast.TypeInfoKind.DDD or #lastExp:get_expTypeList() > 1, num) )
+   self:write( string.format( "( _pEnv, %s, %d", hasMultiVal( lastExp ), num) )
 end
 
 function convFilter:processCallArgList( funcType, expListNode, parent )
@@ -1157,6 +1352,17 @@ end
 
 function convFilter:processExpOp1( node, opt )
 
+   local op = node:get_op().txt
+   if op == "~" then
+      self:write( op )
+   elseif op == "not" then
+      self:write( "!" )
+   else
+    
+      Util.err( string.format( "not support op -- %s", op) )
+   end
+   
+   filter( node:get_exp(), self, node )
 end
 
 
@@ -1177,27 +1383,14 @@ function convFilter:processExpParen( node, opt )
 end
 
 
-function convFilter:accessNumVal( exp, parent )
+function convFilter:accessPrimVal( exp, parent )
 
    if not isStemVal( exp ) then
       filter( exp, self, parent )
    else
     
       filter( exp, self, parent )
-      if #exp:get_expTypeList() > 1 then
-         self:write( "->val.ddd.pStemList[ 0 ]" )
-      end
-      
-      local expType = exp:get_expType():get_srcTypeInfo()
-      do
-         local _switchExp = expType
-         if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-            self:write( "->val.intVal" )
-         elseif _switchExp == Ast.builtinTypeReal then
-            self:write( "->val.realVal" )
-         end
-      end
-      
+      self:accessPrimValFromStem( #exp:get_expTypeList() > 1, exp:get_expType(), 0 )
    end
    
 end
@@ -1223,13 +1416,13 @@ function convFilter:processExpOp2( node, opt )
             end
          end
          
-         self:accessNumVal( node:get_exp1(), node )
+         self:accessPrimVal( node:get_exp1(), node )
          self:write( " " .. opTxt .. " " )
-         self:accessNumVal( node:get_exp2(), node )
+         self:accessPrimVal( node:get_exp2(), node )
       else
-         self:accessNumVal( node:get_exp1(), node )
+         self:accessPrimVal( node:get_exp1(), node )
          self:write( " " .. opTxt .. " " )
-         self:accessNumVal( node:get_exp2(), node )
+         self:accessPrimVal( node:get_exp2(), node )
       end
    end
    

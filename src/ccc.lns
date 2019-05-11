@@ -1,0 +1,21 @@
+fn func1( val:int ):int {
+   return val + 1;
+}
+
+fn func2( val:int, val2:real ):int, real {
+   let test1, test2 = 1, 2;
+   return val + test1, val2 + test2;
+}
+
+fn func3( val:int, val2:real, val3:bool ):int, real, bool {
+   let test1, test2 = func2( 1, 2.0 );
+   return val + test1, val2 + test2, not val3;
+}
+
+print( func1( 1 ) );
+print( func2( 1, 10.5 )** );
+print( func2( 2, 10.5 ), "AB");
+print( ( func2( 2, 10.5 ) ), "ABC");
+print( func2( 2, 10.5 ) + 1 );
+print( func3( 3, 10.1, true ) ** );
+print( "Hello world.", 1, 1.2, false, nil);
