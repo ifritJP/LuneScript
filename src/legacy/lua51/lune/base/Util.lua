@@ -79,7 +79,7 @@ end
 _moduleObj.log = log
 local function printStackTrace(  )
 
-   for level = 2, 6 do
+   for level = 2, 8 do
       do
          local debugInfo = debug.getinfo( level )
          if debugInfo ~= nil then

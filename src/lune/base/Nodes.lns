@@ -252,10 +252,18 @@ pub class NodeManager {
 
    pub fn __init() {
       self.nodeKind2NodeList = {};
+      foreach kind in nodeKind {
+         if not self.nodeKind2NodeList[ kind ] {
+            self.nodeKind2NodeList[ kind ] = [];
+         }
+      }
    }
 
-   pub fn getList(kind:int) : &List<&Node>! {
-      return self.nodeKind2NodeList[ kind ];
+   pub fn getList(kind:int) : &List<&Node> {
+      let! list = self.nodeKind2NodeList[ kind ] {
+         return [];
+      };
+      return list;
    }
    pub fn addNode(node:&Node) mut {
       let! mut list = self.nodeKind2NodeList[ node.$kind ] {
@@ -327,8 +335,8 @@ macro _declNodeClass(
       relateStat.insert( `{
          pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
          };
-         pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className>! {
-            return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className> !;
+         pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className> {
+            return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className>;
          }
       } );
       
@@ -452,6 +460,7 @@ pub abstract class MacroInfo {
 
 _declNodeClass( "Root", Node, false, false, false,
                 [ { "children": "List<&Node>" },
+                  { "moduleScope": "&Ast.Scope" },
                   { "useModuleMacroSet": "&Set<&Ast.TypeInfo>" },
                   { "moduleId": "&frontInterface.ModuleId" },
                   { "processInfo": "Ast.ProcessInfo" },

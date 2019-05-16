@@ -6,7 +6,8 @@ LUA=lua5.3
 LUA51=lua5.1
 LUA51_INC=/usr/include/lua5.1
 
-LUA_INC_DIR=
+LUA_LIB=-llua5.3
+LUA_INC_DIR=/usr/include/lua5.3
 ifneq ($(LUA_INC_DIR),)
 LUA_CFLAGS=-I$(LUA_INC_DIR)
 endif
@@ -538,15 +539,16 @@ uninstall: check_lua_mod_dir
 	rm -rf $(LUA_MOD_DIR)/lune
 
 test-ccc:
-	LANG= $(MAKE) -f Makefile.ccc
+	LANG= $(MAKE) -f Makefile.ccc LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 
 build-cc:
 	$(call transwork,.,.,base/convCC)
-	lua5.3 lune/base/base.lua ccc.lns save -langC
+	$(LUA) lune/base/base.lua ccc.lns save -langC
 	cat ccc.c
-	LANG= $(MAKE) -f Makefile.ccc SRCS=ccc.c TEST_OUT=test.exe
+	LANG= $(MAKE) -f Makefile.ccc SRCS=ccc.c TEST_OUT=test.exe \
+		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 # C へのトランスコンパイラ結果と、
 # Lua へのトランスコンパイラ結果で出力が同じになることを確認
 	@./test.exe | grep -v -e '^:debug:' > work/ccc.c.log
-	@lua5.3 lune/base/base.lua ccc.lns exe > work/ccc.lua.log
+	@$(LUA) lune/base/base.lua ccc.lns exe > work/ccc.lua.log
 	diff work/ccc.c.log work/ccc.lua.log

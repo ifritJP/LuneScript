@@ -179,6 +179,12 @@ pub enum MutMode {
 
 /** シンボル情報 */
 pub abstract class SymbolInfo {
+   pri let allmut namespaceTypeInfo: &TypeInfo!;
+
+   pro fn __init() {
+      self.namespaceTypeInfo = nil;
+   }
+   
    /** 左辺値になれる場合 true */
    pub abstract fn get_canBeLeft(): bool;
    /** 右辺値になれる場合 true */
@@ -205,6 +211,11 @@ pub abstract class SymbolInfo {
    /** このシンボルがデータを保持しているかどうか */
    pub abstract fn get_hasValueFlag(): bool;
    pub abstract fn set_hasValueFlag( arg:bool );
+   /** このシンボルが、 closuer 内からセットされているかどうか */
+   pub abstract fn get_isSetFromClosuer(): bool;
+   pub abstract fn set_isSetFromClosuer( val:bool );
+   /** このシンボルを定義している名前空間の TypeInfo*/
+   pub fn get_namespaceTypeInfo(): &TypeInfo;
 
    /**
 このシンボルにアクセス可能かどうか調べる。
@@ -216,72 +227,6 @@ pub abstract class SymbolInfo {
    pub abstract fn getOrg(): &SymbolInfo;
 }
 
-
-pub class NormalSymbolInfo extend SymbolInfo {
-   pri static let mut symbolIdSeed:int;
-
-   __init {
-      NormalSymbolInfo.symbolIdSeed = 0;
-   }
-
-   /** 左辺値になれる場合 true */
-   pri let canBeLeft: bool { pub };
-   /** 右辺値になれる場合 true */
-   pri let canBeRight: bool { pub };
-
-   /** このシンボルの ID */
-   pri let symbolId: int { pub };
-   /** このシンボルが属するスコープ */
-   pri let scope: Scope { pub };
-   /** シンボルのアクセス */
-   pri let accessMode: AccessMode { pub };
-   /** */
-   pri let staticFlag: bool { pub };
-   /** シンボルの名前 */
-   pri let name: str { pub };
-   /** シンボルの型 */
-   pri let allmut typeInfo: &TypeInfo { pub, pub };
-   /** このシンボルの種類 SymbolKind */
-   pri let kind: SymbolKind { pub };
-   /** このシンボルがデータを保持しているかどうか */
-   pri let allmut hasValueFlag: bool { pub, pub };
-   pri let mutMode: MutMode {pub};
-
-   pub override fn get_mutable(): bool {
-      return self.mutMode ~= .IMut;
-   }
-
-   pub override fn getOrg(): &SymbolInfo {
-      return self;
-   }
-
-   pub fn __init(
-      kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
-      accessMode: AccessMode, staticFlag: bool, name: str,
-      typeInfo: &TypeInfo, mutMode: MutMode!, hasValueFlag: bool )
-   {
-      super();
-      NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
-      self.kind = kind;
-      self.canBeLeft = canBeLeft;
-      self.canBeRight = canBeRight;
-      self.symbolId = NormalSymbolInfo.symbolIdSeed;
-      self.scope = scope;
-      self.accessMode = accessMode;
-      self.staticFlag = staticFlag;
-      self.name = name;
-      self.typeInfo = typeInfo;
-      self.mutMode = unwrap mutMode default MutMode.IMut;
-      self.hasValueFlag = hasValueFlag;
-   }
-
-   /**
-このシンボルにアクセス可能かどうか調べる。
-
-@param fromScope このシンボルにアクセスしようとしているスコープ。
-*/
-   pub override fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
-}
 
 
 pub class DataOwnerInfo {
@@ -306,11 +251,18 @@ pub class Scope {
    pri let ifScopeList: List<&Scope>;
    /** 所有権情報 */
    pri let mut symbolId2DataOwnerInfo: Map<int,DataOwnerInfo>;
-
+   /** このスコープ内でアクセスしている clojure シンボル */
+   pri let mut clojureSymMap: Map<int,&SymbolInfo> {pub};
+   pri let mut clojureSymList: List<&SymbolInfo> {pub};
+   pri let mut clojureSym2NumMap: Map<&SymbolInfo,int> {pub};
+   
 
    pub fn __init( parent: Scope!, classFlag: bool,
                   inherit: &Scope!, ifScopeList:List<&Scope>! )
    {
+      self.clojureSymMap = {};
+      self.clojureSym2NumMap = {};
+      self.clojureSymList = [];
       self.parent = unwrap parent default self;
       self.symbol2SymbolInfoMap = {};
       self.inherit = inherit;
@@ -319,6 +271,9 @@ pub class Scope {
       self.ifScopeList = unwrap ifScopeList default [];
    }
 
+   pub fn getNamespaceTypeInfo() : &TypeInfo;
+
+   
    pub fn isRoot(): bool {
       return self.parent == self;
    }
@@ -350,8 +305,16 @@ pub class Scope {
    pub fn addSymbol( symbolInfo: SymbolInfo ) mut {
       self.symbol2SymbolInfoMap[ symbolInfo.$name ] = symbolInfo;
    }
+}
 
-   pub fn getNSTypeInfo(): &TypeInfo;
+
+pub fn SymbolInfo.get_namespaceTypeInfo(): &TypeInfo {
+   if! self.namespaceTypeInfo {
+      return _exp;
+   }
+   let work = self.$scope.getNamespaceTypeInfo();
+   self.namespaceTypeInfo = work;
+   return work;
 }
 
 // 最上位のスコープ
@@ -372,7 +335,6 @@ pub fn Scope.isInnerOf( scope:&Scope ): bool {
    }
    return false;
 }
-
 
 
 let dummyList:List<&TypeInfo> = [];
@@ -720,8 +682,90 @@ pub fn isExtId(typeInfo:&TypeInfo): bool {
 }
 
 
+/** TypeInfo の head。 */
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
+
+pub fn Scope.getNamespaceTypeInfo() : &TypeInfo {
+   let typeInfo = headTypeInfo;
+   let mut scope = self;
+   repeat {
+      if! scope.$ownerTypeInfo {
+         return _exp;
+      }
+      scope = scope.$parent;
+   } scope.isRoot();
+   return typeInfo;
+}
+
+pub class NormalSymbolInfo extend SymbolInfo {
+   pri static let mut symbolIdSeed:int;
+
+   __init {
+      NormalSymbolInfo.symbolIdSeed = 0;
+   }
+
+   /** 左辺値になれる場合 true */
+   pri let canBeLeft: bool { pub };
+   /** 右辺値になれる場合 true */
+   pri let canBeRight: bool { pub };
+
+   /** このシンボルの ID */
+   pri let symbolId: int { pub };
+   /** このシンボルが属するスコープ */
+   pri let scope: Scope { pub };
+   /** シンボルのアクセス */
+   pri let accessMode: AccessMode { pub };
+   /** */
+   pri let staticFlag: bool { pub };
+   /** シンボルの名前 */
+   pri let name: str { pub };
+   /** シンボルの型 */
+   pri let allmut typeInfo: &TypeInfo { pub, pub };
+   /** このシンボルの種類 SymbolKind */
+   pri let kind: SymbolKind { pub };
+   /** このシンボルがデータを保持しているかどうか */
+   pri let allmut hasValueFlag: bool { pub, pub };
+   pri let mutMode: MutMode {pub};
+   pri let allmut isSetFromClosuer: bool { pub, pub };
+
+   pub override fn get_mutable(): bool {
+      return self.mutMode ~= .IMut;
+   }
+
+   pub override fn getOrg(): &SymbolInfo {
+      return self;
+   }
+
+   pub fn __init(
+      kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
+      accessMode: AccessMode, staticFlag: bool, name: str, typeInfo: &TypeInfo,
+      mutMode: MutMode!, hasValueFlag: bool )
+   {
+      super();
+      self.isSetFromClosuer = false;
+      NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
+      self.kind = kind;
+      self.canBeLeft = canBeLeft;
+      self.canBeRight = canBeRight;
+      self.symbolId = NormalSymbolInfo.symbolIdSeed;
+      self.scope = scope;
+      self.accessMode = accessMode;
+      self.staticFlag = staticFlag;
+      self.name = name;
+      self.typeInfo = typeInfo;
+      self.mutMode = unwrap mutMode default MutMode.IMut;
+      self.hasValueFlag = hasValueFlag;
+   }
+
+   /**
+このシンボルにアクセス可能かどうか調べる。
+
+@param fromScope このシンボルにアクセスしようとしているスコープ。
+*/
+   pub override fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
+}
+
 
 pro static fn TypeInfo.isInherit(
    typeInfo:&TypeInfo, other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
@@ -1164,23 +1208,25 @@ pub fn Scope.filterSymbolTypeInfo(
 }
 
 
-pub fn Scope.add( kind: SymbolKind, canBeLeft:bool, canBeRight:bool,
-                  name:str, typeInfo: &TypeInfo, accessMode:AccessMode,
-                  staticFlag:bool, mutMode:MutMode, hasValueFlag:bool ) mut : &SymbolInfo
+pub fn Scope.add(
+   kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str,
+   typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
+   mutMode:MutMode, hasValueFlag:bool ) mut : &SymbolInfo
 {
    let mut symbolInfo = new NormalSymbolInfo(
-      kind, canBeLeft, canBeRight,
-      self, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag );
+      kind, canBeLeft, canBeRight, self, accessMode, staticFlag,
+      name, typeInfo, mutMode, hasValueFlag );
    self.symbol2SymbolInfoMap[ name ] = symbolInfo;
    return symbolInfo;
 }
 
 pub fn Scope.addLocalVar(
-   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:bool ) mut
+   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:bool ) mut :
+   &SymbolInfo
 {
-   self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-             canBeLeft, true, name, typeInfo,
-             .Local, false, mutable and MutMode.Mut or MutMode.IMut, true );
+   return self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
+                    canBeLeft, true, name, typeInfo,
+                    .Local, false, mutable and MutMode.Mut or MutMode.IMut, true );
 }
 
 pub fn Scope.addStaticVar(
@@ -1302,8 +1348,30 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
    dumpScopeSub( workscope, workprefix, (@) );
 }
 
+/**
+このスコープ内の処理から、 symbol シンボルに値をセットする際の処理。
 
-
+@param symbol シンボル
+*/
+pub fn Scope.setAccessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
+   if symbol.$scope == moduleScope {
+      // symbol が、最上位スコープで定義されているなら、大域変数なのでクロージャではない
+   }
+   else {
+      // このセット処理が、クロージャかどうかを確認する。
+      // symbol の定義位置が異なる名前空間の場合、クロージャとして判定する。
+      let typeInfo = self.getNamespaceTypeInfo();
+      if typeInfo ~= symbol.$namespaceTypeInfo {
+         // クロージャならシンボル情報を登録する。
+         let mut namespacescope = unwrap typeInfo.$scope;
+         if not namespacescope.clojureSymMap[ symbol.$symbolId ] {
+            namespacescope.clojureSymMap[ symbol.$symbolId ] = symbol;
+            namespacescope.clojureSym2NumMap[ symbol ] = #namespacescope.clojureSymList;
+            namespacescope.clojureSymList.insert( symbol );
+         }
+      }
+   }
+}
 
 /**
 
@@ -1410,22 +1478,6 @@ pub class NilTypeInfo extend TypeInfo {
    }
 }
 
-
-pub fn Scope.getNSTypeInfo(): &TypeInfo {
-   let mut scope = self;
-   while true {
-      if! let owner = scope.ownerTypeInfo {
-         if owner.$kind == .Root {
-            return owner;
-         }
-      }
-      if scope.parent == scope {
-         break;
-      }
-      scope = scope.parent;
-   }
-   return headTypeInfo;
-}
 
 pub fn Scope.getClassTypeInfo(): &TypeInfo {
    let mut scope = self;

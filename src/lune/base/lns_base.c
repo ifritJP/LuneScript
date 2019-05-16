@@ -1,3 +1,4 @@
+#include <lua.h>
 #include <lunescript.h>
 
     /**
@@ -58,7 +59,7 @@ static void lune_release_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
     _pEnv->allocNum--;
 }
 
-static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
+static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag ) {
     switch ( pStem->type ) {
     case lune_value_type_str:
         if ( !pStem->val.str.staticFlag ) {
@@ -79,11 +80,16 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
         {
             int index;
             for ( index = 0; index < pStem->val.form.len; index++ ) {
-                lune_decre_ref( _pEnv, pStem->val.form.pStemList[ index ] );
+                lune_stem_t * pClosureVal = lune_form_closure( pStem, index );
+                lune_decre_ref( _pEnv, pClosureVal );
+                lune_decre_ref( _pEnv, lune_closureVal( pClosureVal ) );
             }
-            free( pStem->val.form.pStemList );
+            free( pStem->val.form.pClosureValList );
             _pEnv->allocNum--;
         }
+        break;
+    case lune_value_type_closureVal:
+        lune_decre_ref( _pEnv, lune_closureVal( pStem ) );
         break;
     case lune_value_type_itSet:
         lune_itSet_gc( _pEnv, pStem );
@@ -91,7 +97,9 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
     default:
         break;
     }
-    lune_release_stem( _pEnv, pStem );
+    if ( freeFlag ) {
+        lune_release_stem( _pEnv, pStem );
+    }
 }
 
 /**
@@ -102,7 +110,7 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
 void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
     pStem->refCount--;
     if ( pStem->refCount == 0 ) {
-        lune_gc_stem( _pEnv, pStem );
+        lune_gc_stem( _pEnv, pStem, true );
     }
 }
 
@@ -183,7 +191,7 @@ void lune_leave_block( lune_env_t * _pEnv )
             lune_stem_t * pPrev = pWork->pPrev;
 
             if ( pWork->refCount == 1 ) {
-                lune_gc_stem( _pEnv, pWork );
+                lune_gc_stem( _pEnv, pWork, true );
             }
             else {
                 pWork->refCount--;
@@ -396,7 +404,7 @@ lune_stem_t * lune_it_new(
 void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem )
 {
     lune_rmFromList( pStem );
-    lune_gc_stem( _pEnv, pStem );
+    lune_gc_stem( _pEnv, pStem, true );
 }
 
 /**
@@ -425,6 +433,18 @@ void lune_class_del( lune_env_t * _pEnv, void * pObj )
     free( pObj );
 }
 
+lune_stem_t * lune_create_closureVal( lune_env_t * _pEnv, lune_stem_t * pVal )
+{
+    lune_stem_t * pStem = lune_alloc_stem( _pEnv, lune_value_type_closureVal );
+    lune_closureVal( pStem ) = pVal;
+    if ( pVal != NULL ) {
+        lune_rmFromList( pVal );
+        pVal->refCount++;
+    }
+    return pStem;
+}
+
+
 /**
  * 関数 pFunc を保持する stem を生成する
  *
@@ -439,7 +459,7 @@ lune_stem_t * lune_func2stem(
     lune_stem_t * pFormStem = lune_alloc_stem( _pEnv, lune_value_type_form );
     lune_form_t * pForm = &pFormStem->val.form;
     pForm->len = num;
-    pForm->pStemList = (lune_stem_t **)malloc( sizeof( lune_stem_t * ) * num );
+    pForm->pClosureValList = (lune_stem_t **)malloc( sizeof( lune_stem_t * ) * num );
     _pEnv->allocNum++;
 
     pForm->pFunc = pFunc;
@@ -450,7 +470,8 @@ lune_stem_t * lune_func2stem(
     int index;
     for ( index = 0; index < num; index++ ) {
         lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        pForm->pStemList[ index ] = pStem;
+        pForm->pClosureValList[ index ] = pStem;
+        pStem->refCount++;
     }
     va_end(ap);
 
@@ -616,12 +637,38 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg ) 
 
 
 
-int main() {
+static int lua_main( lua_State *L) {
+    int argc = lua_tointeger(L, 1);
+    char ** pArgv = (char **)lua_touserdata(L, 2);
+    int script;
+
     lune_env_t * _pEnv = lune_createEnv();
     
     lune_init_test( _pEnv );
 
     lune_deleteEnv( _pEnv );
+  
 
-    return 0;
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int main (int argc, char * pArgv[] )  {
+    lua_State * pLua = luaL_newstate();
+    if ( pLua == NULL ) {
+        printf( "failed to create a Lua VM.\n" );
+        return 1;
+    }
+    lua_pushcfunction( pLua, lua_main );
+    lua_pushinteger( pLua, argc );
+    lua_pushlightuserdata( pLua, pArgv );
+    int status = lua_pcall( pLua, 2, 1, 0 );
+    int result = lua_toboolean( pLua, -1 );
+    lua_close( pLua );
+    if ( !status ) {
+        if ( result ) {
+            return 0;
+        }
+    }
+    return 1;
 }

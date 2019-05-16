@@ -22,6 +22,7 @@ extern "C" {
     typedef struct lune_block_t lune_block_t;
     typedef struct lune_env_t lune_env_t;
     typedef struct lune_form_t lune_form_t;
+    typedef struct lune_closureVal_t lune_closureVal_t;
 
     /**
      * ブロックの最大深度。
@@ -101,6 +102,7 @@ extern "C" {
         lune_value_type_ddd,
         lune_value_type_mRet,
         lune_value_type_form,
+        lune_value_type_closureVal,
         lune_value_type_List,
         lune_value_type_Array,
         lune_value_type_Set,
@@ -192,8 +194,12 @@ extern "C" {
         int len;
     } lune_ddd_t;
 
+
+#define lune_closureVal( STEM )        \
+    (STEM)->val.clojureVal.pStem
+    
 #define lune_form_closure( FORM, INDEX )        \
-    (FORM)->val.form.pStemList[ INDEX ]
+    (FORM)->val.form.pClosureValList[ INDEX ]
 
 #define lune_call_form( ENV, FORM, ... ) \
     (FORM)->val.form.pFunc( ENV, FORM, ##__VA_ARGS__ )
@@ -205,9 +211,16 @@ extern "C" {
         /** 関数 */
         lune_func_t * pFunc;
         /** form 内でアクセスする外部変数を管理するバッファ */
-        lune_stem_t ** pStemList;
+        lune_stem_t ** pClosureValList;
         /** pStemList で管理している stem の数 */
         int len;
+    };
+
+    /**
+     * clojure で使用する値の型
+     */
+    struct lune_closureVal_t {
+        lune_stem_t * pStem;
     };
 
     typedef void lune_listObj_t;
@@ -248,6 +261,7 @@ extern "C" {
             lune_str_t str;
             lune_ddd_t ddd;
             lune_form_t form;
+            lune_closureVal_t clojureVal;
             lune_class_t classVal;
             lune_itSet_t * itSet;
             lune_itMap_t * itMap;
@@ -314,11 +328,12 @@ extern "C" {
     extern lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t * lune_createDDDOnly( lune_env_t * _pEnv, int num );
     extern lune_stem_t * lune_createMRet( lune_env_t * _pEnv, bool hasDDD, int num, ... );
-
+    extern lune_stem_t * lune_create_closureVal( lune_env_t * _pEnv, lune_stem_t * pStem );
 
 
     extern lune_stem_t * lune_setRet( lune_env_t * __pEnv, lune_stem_t * pStem );
     extern void lune_setQ_( lune_stem_t * pStem );
+    extern void lune_setOverwrite( lune_stem_t * pStem );
     extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int num, int argNum, ... );
     extern void lune_leave_block( lune_env_t * _pEnv );
     extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemVerNum );

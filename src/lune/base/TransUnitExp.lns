@@ -1999,7 +1999,7 @@ fn TransUnit.analyzeExpSymbol(
             let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
             self.has__func__Symbol.add( funcTypeInfo );
          }
-
+         
          exp = Nodes.ExpRefNode.create(
             self.nodeManager, firstToken.pos, [ typeInfo ], token,
             new Ast.AccessSymbolInfo( symbolInfo, nil, true ) );
@@ -2117,6 +2117,13 @@ fn TransUnit.analyzeExpOp2(
             
 
             if opTxt == "=" {
+               if! let expRefNode = exp@@@Nodes.ExpRefNode {
+                  let symbolInfo = expRefNode.$symbolInfo;
+                  if symbolInfo.$namespaceTypeInfo ~= self.scope.getNamespaceTypeInfo() {
+                     symbolInfo.set_isSetFromClosuer( true );
+                  }
+               }
+               
                let workToken = self.getToken(##);
                if workToken.txt == "," {
                   let mut expListNode = self.analyzeExpList( false, false, exp2 ## );
@@ -2946,6 +2953,9 @@ fn TransUnit.analyzeExp(
             else {
                self.pushback();
             }
+         }
+         else {
+            self.scope.setAccessSymbol( self.moduleScope, symbolInfo );
          }
       }
    }  

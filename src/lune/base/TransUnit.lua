@@ -765,19 +765,7 @@ function TransUnit:getCurrentClass(  )
 end
 function TransUnit:getCurrentNamespaceTypeInfo(  )
 
-   local typeInfo = Ast.headTypeInfo
-   local scope = self.scope
-   repeat 
-      do
-         local _exp = scope:get_ownerTypeInfo()
-         if _exp ~= nil then
-            return _exp
-         end
-      end
-      
-      scope = scope:get_parent()
-   until scope:isRoot(  )
-   return typeInfo
+   return self.scope:getNamespaceTypeInfo(  )
 end
 function TransUnit:pushModule( externalFlag, name, mutable )
 
@@ -3369,7 +3357,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2200, function (  )
+   Log.log( Log.Level.Info, __func__, 2201, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3385,7 +3373,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2211, function (  )
+               Log.log( Log.Level.Info, __func__, 2212, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3416,7 +3404,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2231, function (  )
+   Log.log( Log.Level.Info, __func__, 2232, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3772,7 +3760,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2602, function (  )
+   Log.log( Log.Level.Info, __func__, 2603, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -4656,7 +4644,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
       end
       
       self:checkOverriededMethod(  )
-      local rootNode = Nodes.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, self.useModuleMacroSet, self.moduleId, processInfo, moduleTypeInfo, nil, self.helperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap )
+      local rootNode = Nodes.RootNode.create( self.nodeManager, Parser.Position.new(0, 0), {Ast.builtinTypeNone}, children, self.moduleScope, self.useModuleMacroSet, self.moduleId, processInfo, moduleTypeInfo, nil, self.helperInfo, self.nodeManager, self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap )
       ast = rootNode
       do
          local _exp = self.provideNode
@@ -8769,6 +8757,17 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             end
             
             if opTxt == "=" then
+               do
+                  local expRefNode = _lune.__Cast( exp, 3, Nodes.ExpRefNode )
+                  if expRefNode ~= nil then
+                     local symbolInfo = expRefNode:get_symbolInfo()
+                     if symbolInfo:get_namespaceTypeInfo() ~= self.scope:getNamespaceTypeInfo(  ) then
+                        symbolInfo:set_isSetFromClosuer( true )
+                     end
+                     
+                  end
+               end
+               
                local workToken = self:getToken(  )
                if workToken.txt == "," then
                   local expListNode = self:analyzeExpList( false, false, exp2 )
@@ -9498,6 +9497,9 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
                self:pushback(  )
             end
             
+         else
+          
+            self.scope:setAccessSymbol( self.moduleScope, symbolInfo )
          end
          
       end

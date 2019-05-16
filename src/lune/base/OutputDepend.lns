@@ -76,16 +76,12 @@ pub override fn convFilter.processRoot(
    let moduleFull = node.$moduleTypeInfo.getFullName( {} ## );
    let mut dependInfo = new DependInfo( moduleFull );
 
-   if! let importList = node.$nodeManager.getImportNodeList() {
-      foreach impNode in importList {
-         dependInfo.addImpotModule( impNode.$modulePath );
-      }
+   foreach impNode in node.$nodeManager.getImportNodeList() {
+      dependInfo.addImpotModule( impNode.$modulePath );
    }
-   if! let subfileList = node.$nodeManager.getSubfileNodeList() {
-      foreach subfileNode in subfileList {
-         if! let usePath = subfileNode.$usePath {
-            dependInfo.addSubMod( usePath );
-         }
+   foreach subfileNode in node.$nodeManager.getSubfileNodeList() {
+      if! let usePath = subfileNode.$usePath {
+         dependInfo.addSubMod( usePath );
       }
    }
 

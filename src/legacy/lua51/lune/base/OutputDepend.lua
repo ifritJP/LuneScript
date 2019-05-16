@@ -181,30 +181,18 @@ function convFilter:processRoot( node, dummy )
 
    local moduleFull = node:get_moduleTypeInfo():getFullName( {} )
    local dependInfo = DependInfo.new(moduleFull)
-   do
-      local importList = node:get_nodeManager():getImportNodeList(  )
-      if importList ~= nil then
-         for __index, impNode in pairs( importList ) do
-            dependInfo:addImpotModule( impNode:get_modulePath() )
-         end
-         
-      end
+   for __index, impNode in pairs( node:get_nodeManager():getImportNodeList(  ) ) do
+      dependInfo:addImpotModule( impNode:get_modulePath() )
    end
    
-   do
-      local subfileList = node:get_nodeManager():getSubfileNodeList(  )
-      if subfileList ~= nil then
-         for __index, subfileNode in pairs( subfileList ) do
-            do
-               local usePath = subfileNode:get_usePath()
-               if usePath ~= nil then
-                  dependInfo:addSubMod( usePath )
-               end
-            end
-            
+   for __index, subfileNode in pairs( node:get_nodeManager():getSubfileNodeList(  ) ) do
+      do
+         local usePath = subfileNode:get_usePath()
+         if usePath ~= nil then
+            dependInfo:addSubMod( usePath )
          end
-         
       end
+      
    end
    
    dependInfo:output( self.stream )

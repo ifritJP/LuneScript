@@ -536,98 +536,17 @@ MutMode.__allList[3] = MutMode.AllMut
 
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
-function SymbolInfo.setmeta( obj )
-  setmetatable( obj, { __index = SymbolInfo  } )
-end
 function SymbolInfo.new(  )
    local obj = {}
    SymbolInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init(  )
-   end
+   if obj.__init then obj:__init(  ); end
    return obj
 end
-function SymbolInfo:__init(  )
-
+function SymbolInfo:__init() 
+   self.namespaceTypeInfo = nil
 end
-
-local NormalSymbolInfo = {}
-setmetatable( NormalSymbolInfo, { __index = SymbolInfo } )
-_moduleObj.NormalSymbolInfo = NormalSymbolInfo
-function NormalSymbolInfo:get_mutable(  )
-
-   return self.mutMode ~= MutMode.IMut
-end
-function NormalSymbolInfo:getOrg(  )
-
-   return self
-end
-function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag )
-   local obj = {}
-   NormalSymbolInfo.setmeta( obj )
-   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag ); end
-   return obj
-end
-function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag) 
-   SymbolInfo.__init( self)
-   
-   NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
-   self.kind = kind
-   self.canBeLeft = canBeLeft
-   self.canBeRight = canBeRight
-   self.symbolId = NormalSymbolInfo.symbolIdSeed
-   self.scope = scope
-   self.accessMode = accessMode
-   self.staticFlag = staticFlag
-   self.name = name
-   self.typeInfo = typeInfo
-   self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
-   self.hasValueFlag = hasValueFlag
-end
-function NormalSymbolInfo.setmeta( obj )
-  setmetatable( obj, { __index = NormalSymbolInfo  } )
-end
-function NormalSymbolInfo:get_canBeLeft()
-   return self.canBeLeft
-end
-function NormalSymbolInfo:get_canBeRight()
-   return self.canBeRight
-end
-function NormalSymbolInfo:get_symbolId()
-   return self.symbolId
-end
-function NormalSymbolInfo:get_scope()
-   return self.scope
-end
-function NormalSymbolInfo:get_accessMode()
-   return self.accessMode
-end
-function NormalSymbolInfo:get_staticFlag()
-   return self.staticFlag
-end
-function NormalSymbolInfo:get_name()
-   return self.name
-end
-function NormalSymbolInfo:get_typeInfo()
-   return self.typeInfo
-end
-function NormalSymbolInfo:set_typeInfo( typeInfo )
-   self.typeInfo = typeInfo
-end
-function NormalSymbolInfo:get_kind()
-   return self.kind
-end
-function NormalSymbolInfo:get_hasValueFlag()
-   return self.hasValueFlag
-end
-function NormalSymbolInfo:set_hasValueFlag( hasValueFlag )
-   self.hasValueFlag = hasValueFlag
-end
-function NormalSymbolInfo:get_mutMode()
-   return self.mutMode
-end
-do
-   NormalSymbolInfo.symbolIdSeed = 0
+function SymbolInfo.setmeta( obj )
+  setmetatable( obj, { __index = SymbolInfo  } )
 end
 
 local DataOwnerInfo = {}
@@ -658,6 +577,9 @@ function Scope.new( parent, classFlag, inherit, ifScopeList )
    return obj
 end
 function Scope:__init(parent, classFlag, inherit, ifScopeList) 
+   self.clojureSymMap = {}
+   self.clojureSym2NumMap = {}
+   self.clojureSymList = {}
    self.parent = _lune.unwrapDefault( parent, self)
    self.symbol2SymbolInfoMap = {}
    self.inherit = inherit
@@ -711,6 +633,29 @@ function Scope:get_parent()
 end
 function Scope:get_symbol2SymbolInfoMap()
    return self.symbol2SymbolInfoMap
+end
+function Scope:get_clojureSymMap()
+   return self.clojureSymMap
+end
+function Scope:get_clojureSymList()
+   return self.clojureSymList
+end
+function Scope:get_clojureSym2NumMap()
+   return self.clojureSym2NumMap
+end
+
+function SymbolInfo:get_namespaceTypeInfo(  )
+
+   do
+      local _exp = self.namespaceTypeInfo
+      if _exp ~= nil then
+         return _exp
+      end
+   end
+   
+   local work = self:get_scope():getNamespaceTypeInfo(  )
+   self.namespaceTypeInfo = work
+   return work
 end
 
 local rootScope = Scope.new(nil, false, nil)
@@ -1054,6 +999,109 @@ end
 _moduleObj.isExtId = isExtId
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.headTypeInfo = headTypeInfo
+
+function Scope:getNamespaceTypeInfo(  )
+
+   local typeInfo = _moduleObj.headTypeInfo
+   local scope = self
+   repeat 
+      do
+         local _exp = scope:get_ownerTypeInfo()
+         if _exp ~= nil then
+            return _exp
+         end
+      end
+      
+      scope = scope:get_parent()
+   until scope:isRoot(  )
+   return typeInfo
+end
+
+local NormalSymbolInfo = {}
+setmetatable( NormalSymbolInfo, { __index = SymbolInfo } )
+_moduleObj.NormalSymbolInfo = NormalSymbolInfo
+function NormalSymbolInfo:get_mutable(  )
+
+   return self.mutMode ~= MutMode.IMut
+end
+function NormalSymbolInfo:getOrg(  )
+
+   return self
+end
+function NormalSymbolInfo.new( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag )
+   local obj = {}
+   NormalSymbolInfo.setmeta( obj )
+   if obj.__init then obj:__init( kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag ); end
+   return obj
+end
+function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag) 
+   SymbolInfo.__init( self)
+   
+   self.isSetFromClosuer = false
+   NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
+   self.kind = kind
+   self.canBeLeft = canBeLeft
+   self.canBeRight = canBeRight
+   self.symbolId = NormalSymbolInfo.symbolIdSeed
+   self.scope = scope
+   self.accessMode = accessMode
+   self.staticFlag = staticFlag
+   self.name = name
+   self.typeInfo = typeInfo
+   self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
+   self.hasValueFlag = hasValueFlag
+end
+function NormalSymbolInfo.setmeta( obj )
+  setmetatable( obj, { __index = NormalSymbolInfo  } )
+end
+function NormalSymbolInfo:get_canBeLeft()
+   return self.canBeLeft
+end
+function NormalSymbolInfo:get_canBeRight()
+   return self.canBeRight
+end
+function NormalSymbolInfo:get_symbolId()
+   return self.symbolId
+end
+function NormalSymbolInfo:get_scope()
+   return self.scope
+end
+function NormalSymbolInfo:get_accessMode()
+   return self.accessMode
+end
+function NormalSymbolInfo:get_staticFlag()
+   return self.staticFlag
+end
+function NormalSymbolInfo:get_name()
+   return self.name
+end
+function NormalSymbolInfo:get_typeInfo()
+   return self.typeInfo
+end
+function NormalSymbolInfo:set_typeInfo( typeInfo )
+   self.typeInfo = typeInfo
+end
+function NormalSymbolInfo:get_kind()
+   return self.kind
+end
+function NormalSymbolInfo:get_hasValueFlag()
+   return self.hasValueFlag
+end
+function NormalSymbolInfo:set_hasValueFlag( hasValueFlag )
+   self.hasValueFlag = hasValueFlag
+end
+function NormalSymbolInfo:get_mutMode()
+   return self.mutMode
+end
+function NormalSymbolInfo:get_isSetFromClosuer()
+   return self.isSetFromClosuer
+end
+function NormalSymbolInfo:set_isSetFromClosuer( isSetFromClosuer )
+   self.isSetFromClosuer = isSetFromClosuer
+end
+do
+   NormalSymbolInfo.symbolIdSeed = 0
+end
 
 function TypeInfo.isInherit( typeInfo, other, alt2type )
 
@@ -1701,7 +1749,7 @@ end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
-   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable and MutMode.Mut or MutMode.IMut, true )
 end
 
 function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
@@ -1816,6 +1864,26 @@ local function dumpScope( workscope, workprefix )
    dumpScopeSub( workscope, workprefix, {} )
 end
 _moduleObj.dumpScope = dumpScope
+function Scope:setAccessSymbol( moduleScope, symbol )
+
+   if symbol:get_scope() == moduleScope then
+   else
+    
+      local typeInfo = self:getNamespaceTypeInfo(  )
+      if typeInfo ~= symbol:get_namespaceTypeInfo() then
+         local namespacescope = _lune.unwrap( typeInfo:get_scope())
+         if not namespacescope.clojureSymMap[symbol:get_symbolId()] then
+            namespacescope.clojureSymMap[symbol:get_symbolId()] = symbol
+            namespacescope.clojureSym2NumMap[symbol] = #namespacescope.clojureSymList
+            table.insert( namespacescope.clojureSymList, symbol )
+         end
+         
+      end
+      
+   end
+   
+end
+
 function TypeInfo:createAlt2typeMap( detectFlag )
 
    if not detectFlag then
@@ -1905,30 +1973,6 @@ function NilTypeInfo.setmeta( obj )
 end
 function NilTypeInfo:get_typeId()
    return self.typeId
-end
-
-function Scope:getNSTypeInfo(  )
-
-   local scope = self
-   while true do
-      do
-         local owner = scope.ownerTypeInfo
-         if owner ~= nil then
-            if owner:get_kind() == TypeInfoKind.Root then
-               return owner
-            end
-            
-         end
-      end
-      
-      if scope.parent == scope then
-         break
-      end
-      
-      scope = scope.parent
-   end
-   
-   return _moduleObj.headTypeInfo
 end
 
 function Scope:getClassTypeInfo(  )
@@ -2098,8 +2142,24 @@ function AccessSymbolInfo:set_hasValueFlag( ... )
    return self.symbolInfo:set_hasValueFlag( ... )
 end
 
+function AccessSymbolInfo:get_isSetFromClosuer( ... )
+   return self.symbolInfo:get_isSetFromClosuer( ... )
+end
+
+function AccessSymbolInfo:set_isSetFromClosuer( ... )
+   return self.symbolInfo:set_isSetFromClosuer( ... )
+end
+
+function AccessSymbolInfo:get_namespaceTypeInfo( ... )
+   return self.symbolInfo:get_namespaceTypeInfo( ... )
+end
+
 function AccessSymbolInfo:canAccess( ... )
    return self.symbolInfo:canAccess( ... )
+end
+
+function AccessSymbolInfo:get_namespaceTypeInfo( ... )
+   return self.symbolInfo:get_namespaceTypeInfo( ... )
 end
 
 

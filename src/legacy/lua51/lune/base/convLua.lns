@@ -554,77 +554,75 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    // 公開マクロ情報
    self.writeln( "local __macroName2InfoMap = {}" );
    self.writeln( "_moduleObj.__macroName2InfoMap = __macroName2InfoMap" );
-   if! let declMacroNodeList = node.$nodeManager.getDeclMacroNodeList() {
-      foreach macroDeclNode in declMacroNodeList {
-         let declInfo = macroDeclNode.$declInfo;
-         if declInfo.$pubFlag {
-            let macroInfo = unwrap node.$typeId2MacroInfo[ macroDeclNode.$expType.$typeId ];
+   foreach macroDeclNode in node.$nodeManager.getDeclMacroNodeList() {
+      let declInfo = macroDeclNode.$declInfo;
+      if declInfo.$pubFlag {
+         let macroInfo = unwrap node.$typeId2MacroInfo[ macroDeclNode.$expType.$typeId ];
 
-            let macroTypeInfo = macroDeclNode.$expType;
-            pickupTypeId( macroTypeInfo, true ## );
+         let macroTypeInfo = macroDeclNode.$expType;
+         pickupTypeId( macroTypeInfo, true ## );
 
-            self.writeln( "do" );
-            self.pushIndent(##);
-            self.writeln( "local info = {}" );
-            self.writeln( "__macroName2InfoMap[ %d ] = info" (macroTypeInfo.$typeId) );
-            self.writeln( "info.name = %q" (declInfo.$name.txt));
-            self.write( "info.argList = {" );
-            foreach argNode, index in declInfo.$argList {
-               if index ~= 1 {
-                  self.write( "," );
-               }
-               self.write( "{name=%q,typeId=%d}"
-                           (argNode.$name.txt, argNode.$expType.$typeId ) );
+         self.writeln( "do" );
+         self.pushIndent(##);
+         self.writeln( "local info = {}" );
+         self.writeln( "__macroName2InfoMap[ %d ] = info" (macroTypeInfo.$typeId) );
+         self.writeln( "info.name = %q" (declInfo.$name.txt));
+         self.write( "info.argList = {" );
+         foreach argNode, index in declInfo.$argList {
+            if index ~= 1 {
+               self.write( "," );
             }
-            self.writeln( "}" );
-            self.write( "info.symList = {" );
-            let mut firstFlag = true;
-            forsort symInfo, name in macroInfo.symbol2MacroValInfoMap {
-               if firstFlag {
-                  firstFlag = false;
-               }
-               else {
-                  self.write( "," );
-               }
-               self.write( "{name=%q,typeId=%d}"
-                           ( name, symInfo.typeInfo.$typeId ) );
-               pickupTypeId( symInfo.typeInfo, true ## );
-            }
-            self.writeln( "}" );
-
-            if! let stmtBlock = declInfo.$stmtBlock {
-               let mut memStream = new Util.memStream();
-
-               let mut filter = new convFilter(
-                  declInfo.$name.txt, memStream, memStream, .Convert, false,
-                  Ast.headTypeInfo, .Typ, self.separateLuneModule, self.targetLuaVer );
-
-               filter.macroDepth = filter.macroDepth + 1;
-               filter.processBlock( stmtBlock, new Opt( node ) );
-               filter.macroDepth = filter.macroDepth - 1;
-
-               memStream.close();
-               self.writeln( 'info.stmtBlock = %q' (memStream.$txt ) );
-            }
-
-            self.writeln( 'info.tokenList = {' );
-            let mut prevLineNo = -1;
-            foreach token, index in declInfo.$tokenList {
-               if index > 1 {
-                  self.write( "," );
-               }
-               if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo {
-                  self.write( "{%d,%q}," (Parser.TokenKind.Dlmt,"\n") );
-               }
-               prevLineNo = token.pos.lineNo;
-               self.write( "{%d,%q}" (token.kind, token.txt) );
-            }
-            self.writeln( '}' );
-
-
-            self.popIndent();
-            self.writeln( "end" );
+            self.write( "{name=%q,typeId=%d}"
+                        (argNode.$name.txt, argNode.$expType.$typeId ) );
          }
+         self.writeln( "}" );
+         self.write( "info.symList = {" );
+         let mut firstFlag = true;
+         forsort symInfo, name in macroInfo.symbol2MacroValInfoMap {
+            if firstFlag {
+               firstFlag = false;
+            }
+            else {
+               self.write( "," );
+            }
+            self.write( "{name=%q,typeId=%d}"
+                        ( name, symInfo.typeInfo.$typeId ) );
+            pickupTypeId( symInfo.typeInfo, true ## );
+         }
+         self.writeln( "}" );
+
+         if! let stmtBlock = declInfo.$stmtBlock {
+            let mut memStream = new Util.memStream();
+
+            let mut filter = new convFilter(
+               declInfo.$name.txt, memStream, memStream, .Convert, false,
+               Ast.headTypeInfo, .Typ, self.separateLuneModule, self.targetLuaVer );
+
+            filter.macroDepth = filter.macroDepth + 1;
+            filter.processBlock( stmtBlock, new Opt( node ) );
+            filter.macroDepth = filter.macroDepth - 1;
+
+            memStream.close();
+            self.writeln( 'info.stmtBlock = %q' (memStream.$txt ) );
+         }
+
+         self.writeln( 'info.tokenList = {' );
+         let mut prevLineNo = -1;
+         foreach token, index in declInfo.$tokenList {
+            if index > 1 {
+               self.write( "," );
+            }
+            if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo {
+               self.write( "{%d,%q}," (Parser.TokenKind.Dlmt,"\n") );
+            }
+            prevLineNo = token.pos.lineNo;
+            self.write( "{%d,%q}" (token.kind, token.txt) );
+         }
+         self.writeln( '}' );
+
+
+         self.popIndent();
+         self.writeln( "end" );
       }
    }
 
@@ -647,10 +645,8 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
    }
 
    // alias
-   if! let aliasNodeList = node.$nodeManager.getAliasNodeList() {
-      foreach aliasNode in aliasNodeList {
-         pickupTypeId( aliasNode.$expType, false ## );
-      }
+   foreach aliasNode in node.$nodeManager.getAliasNodeList() {
+      pickupTypeId( aliasNode.$expType, false ## );
    }
 
 
@@ -803,9 +799,9 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
    // サブモジュール情報処理
    self.write( "_moduleObj.__subModuleMap = {" );
-   if! let subfileList = node.$nodeManager.getSubfileNodeList() {
+   {
       let mut firstFlag = true;
-      foreach subfileNode in subfileList {
+      foreach subfileNode in node.$nodeManager.getSubfileNodeList() {
          if! let usePath = subfileNode.$usePath {
             if firstFlag {
                firstFlag = false;
@@ -886,10 +882,10 @@ end``` );
       if node.$luneHelperInfo.$hasMappingClassDef {
          self.writeln( LuaMod.getCode( .Mapping ));
       }
-      if node.$nodeManager.getImportNodeList() {
+      if #node.$nodeManager.getImportNodeList() ~= 0 {
          self.writeln( LuaMod.getCode( .LoadModule ) );
       }
-      if node.$nodeManager.getExpCastNodeList() {
+      if #node.$nodeManager.getExpCastNodeList() ~= 0 {
          self.writeln( LuaMod.getCode( .InstanceOf ) );
          self.writeln( LuaMod.getCode( .Cast ) );
       }

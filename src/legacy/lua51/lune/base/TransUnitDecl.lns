@@ -404,8 +404,8 @@ pub fn TransUnit.createAST(
 
       let mut rootNode = Nodes.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
-         [ Ast.builtinTypeNone ], children, self.useModuleMacroSet,
-         self.moduleId, processInfo,
+         [ Ast.builtinTypeNone ], children, self.moduleScope,
+         self.useModuleMacroSet, self.moduleId, processInfo,
          moduleTypeInfo, nil, self.helperInfo, self.nodeManager,
          self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap );
       ast = rootNode;

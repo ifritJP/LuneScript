@@ -570,28 +570,22 @@ function glueFilter:processRoot( node, dummy )
       error( string.format( "open error -- %s ", filePath) )
    end
    
-   do
-      local nodeList = node:get_nodeManager():getDeclClassNodeList(  )
-      if nodeList ~= nil then
-         for __index, node in pairs( nodeList ) do
+   for __index, node in pairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
+      do
+         local moduleName = node:get_moduleName()
+         if moduleName ~= nil then
+            local moduleSymbolName = moduleName:getExcludedDelimitTxt(  ):gsub( "%.", "_" )
             do
-               local moduleName = node:get_moduleName()
-               if moduleName ~= nil then
-                  local moduleSymbolName = moduleName:getExcludedDelimitTxt(  ):gsub( "%.", "_" )
-                  do
-                     local _exp = node:get_gluePrefix()
-                     if _exp ~= nil then
-                        local glue = glueGenerator.new(createFile( moduleSymbolName .. "_glue.c" ), createFile( moduleSymbolName .. "_glue.h" ))
-                        glue:outputClass( moduleSymbolName, node, _exp )
-                     end
-                  end
-                  
+               local _exp = node:get_gluePrefix()
+               if _exp ~= nil then
+                  local glue = glueGenerator.new(createFile( moduleSymbolName .. "_glue.c" ), createFile( moduleSymbolName .. "_glue.h" ))
+                  glue:outputClass( moduleSymbolName, node, _exp )
                end
             end
             
          end
-         
       end
+      
    end
    
 end

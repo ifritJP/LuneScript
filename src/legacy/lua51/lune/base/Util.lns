@@ -68,7 +68,7 @@ pub fn log( message:str ) {
 }
 
 pub fn printStackTrace() {
-   for level = 2, 6 {
+   for level = 2, 8 {
       if! let debugInfo = debug.getinfo( level ) {
          errorLog( "-- %s %s" ( debugInfo.short_src,
                                 debugInfo.currentline ) );

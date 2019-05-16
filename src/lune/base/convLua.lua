@@ -787,92 +787,86 @@ function convFilter:outputMeta( node )
    
    self:writeln( "local __macroName2InfoMap = {}" )
    self:writeln( "_moduleObj.__macroName2InfoMap = __macroName2InfoMap" )
-   do
-      local declMacroNodeList = node:get_nodeManager():getDeclMacroNodeList(  )
-      if declMacroNodeList ~= nil then
-         for __index, macroDeclNode in pairs( declMacroNodeList ) do
-            local declInfo = macroDeclNode:get_declInfo()
-            if declInfo:get_pubFlag() then
-               local macroInfo = _lune.unwrap( node:get_typeId2MacroInfo()[macroDeclNode:get_expType():get_typeId()])
-               local macroTypeInfo = macroDeclNode:get_expType()
-               pickupTypeId( macroTypeInfo, true )
-               self:writeln( "do" )
-               self:pushIndent(  )
-               self:writeln( "local info = {}" )
-               self:writeln( string.format( "__macroName2InfoMap[ %d ] = info", macroTypeInfo:get_typeId()) )
-               self:writeln( string.format( "info.name = %q", declInfo:get_name().txt) )
-               self:write( "info.argList = {" )
-               for index, argNode in pairs( declInfo:get_argList() ) do
-                  if index ~= 1 then
-                     self:write( "," )
-                  end
-                  
-                  self:write( string.format( "{name=%q,typeId=%d}", argNode:get_name().txt, argNode:get_expType():get_typeId()) )
-               end
-               
-               self:writeln( "}" )
-               self:write( "info.symList = {" )
-               local firstFlag = true
-               do
-                  local __sorted = {}
-                  local __map = macroInfo.symbol2MacroValInfoMap
-                  for __key in pairs( __map ) do
-                     table.insert( __sorted, __key )
-                  end
-                  table.sort( __sorted )
-                  for __index, name in ipairs( __sorted ) do
-                     local symInfo = __map[ name ]
-                     do
-                        if firstFlag then
-                           firstFlag = false
-                        else
-                         
-                           self:write( "," )
-                        end
-                        
-                        self:write( string.format( "{name=%q,typeId=%d}", name, symInfo.typeInfo:get_typeId()) )
-                        pickupTypeId( symInfo.typeInfo, true )
-                     end
-                  end
-               end
-               
-               self:writeln( "}" )
-               do
-                  local stmtBlock = declInfo:get_stmtBlock()
-                  if stmtBlock ~= nil then
-                     local memStream = Util.memStream.new()
-                     local filter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.separateLuneModule, self.targetLuaVer)
-                     filter.macroDepth = filter.macroDepth + 1
-                     filter:processBlock( stmtBlock, Opt.new(node) )
-                     filter.macroDepth = filter.macroDepth - 1
-                     memStream:close(  )
-                     self:writeln( string.format( 'info.stmtBlock = %q', memStream:get_txt()) )
-                  end
-               end
-               
-               self:writeln( 'info.tokenList = {' )
-               local prevLineNo = -1
-               for index, token in pairs( declInfo:get_tokenList() ) do
-                  if index > 1 then
-                     self:write( "," )
-                  end
-                  
-                  if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo then
-                     self:write( string.format( "{%d,%q},", Parser.TokenKind.Dlmt, "\n") )
-                  end
-                  
-                  prevLineNo = token.pos.lineNo
-                  self:write( string.format( "{%d,%q}", token.kind, token.txt) )
-               end
-               
-               self:writeln( '}' )
-               self:popIndent(  )
-               self:writeln( "end" )
+   for __index, macroDeclNode in pairs( node:get_nodeManager():getDeclMacroNodeList(  ) ) do
+      local declInfo = macroDeclNode:get_declInfo()
+      if declInfo:get_pubFlag() then
+         local macroInfo = _lune.unwrap( node:get_typeId2MacroInfo()[macroDeclNode:get_expType():get_typeId()])
+         local macroTypeInfo = macroDeclNode:get_expType()
+         pickupTypeId( macroTypeInfo, true )
+         self:writeln( "do" )
+         self:pushIndent(  )
+         self:writeln( "local info = {}" )
+         self:writeln( string.format( "__macroName2InfoMap[ %d ] = info", macroTypeInfo:get_typeId()) )
+         self:writeln( string.format( "info.name = %q", declInfo:get_name().txt) )
+         self:write( "info.argList = {" )
+         for index, argNode in pairs( declInfo:get_argList() ) do
+            if index ~= 1 then
+               self:write( "," )
             end
             
+            self:write( string.format( "{name=%q,typeId=%d}", argNode:get_name().txt, argNode:get_expType():get_typeId()) )
          end
          
+         self:writeln( "}" )
+         self:write( "info.symList = {" )
+         local firstFlag = true
+         do
+            local __sorted = {}
+            local __map = macroInfo.symbol2MacroValInfoMap
+            for __key in pairs( __map ) do
+               table.insert( __sorted, __key )
+            end
+            table.sort( __sorted )
+            for __index, name in ipairs( __sorted ) do
+               local symInfo = __map[ name ]
+               do
+                  if firstFlag then
+                     firstFlag = false
+                  else
+                   
+                     self:write( "," )
+                  end
+                  
+                  self:write( string.format( "{name=%q,typeId=%d}", name, symInfo.typeInfo:get_typeId()) )
+                  pickupTypeId( symInfo.typeInfo, true )
+               end
+            end
+         end
+         
+         self:writeln( "}" )
+         do
+            local stmtBlock = declInfo:get_stmtBlock()
+            if stmtBlock ~= nil then
+               local memStream = Util.memStream.new()
+               local filter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.separateLuneModule, self.targetLuaVer)
+               filter.macroDepth = filter.macroDepth + 1
+               filter:processBlock( stmtBlock, Opt.new(node) )
+               filter.macroDepth = filter.macroDepth - 1
+               memStream:close(  )
+               self:writeln( string.format( 'info.stmtBlock = %q', memStream:get_txt()) )
+            end
+         end
+         
+         self:writeln( 'info.tokenList = {' )
+         local prevLineNo = -1
+         for index, token in pairs( declInfo:get_tokenList() ) do
+            if index > 1 then
+               self:write( "," )
+            end
+            
+            if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo then
+               self:write( string.format( "{%d,%q},", Parser.TokenKind.Dlmt, "\n") )
+            end
+            
+            prevLineNo = token.pos.lineNo
+            self:write( string.format( "{%d,%q}", token.kind, token.txt) )
+         end
+         
+         self:writeln( '}' )
+         self:popIndent(  )
+         self:writeln( "end" )
       end
+      
    end
    
    self:writeln( "local __varName2InfoMap = {}" )
@@ -909,14 +903,8 @@ function convFilter:outputMeta( node )
       end
    end
    
-   do
-      local aliasNodeList = node:get_nodeManager():getAliasNodeList(  )
-      if aliasNodeList ~= nil then
-         for __index, aliasNode in pairs( aliasNodeList ) do
-            pickupTypeId( aliasNode:get_expType(), false )
-         end
-         
-      end
+   for __index, aliasNode in pairs( node:get_nodeManager():getAliasNodeList(  ) ) do
+      pickupTypeId( aliasNode:get_expType(), false )
    end
    
    self:writeln( "local __typeInfoList = {}" )
@@ -1087,27 +1075,24 @@ function convFilter:outputMeta( node )
    
    self:write( "_moduleObj.__subModuleMap = {" )
    do
-      local subfileList = node:get_nodeManager():getSubfileNodeList(  )
-      if subfileList ~= nil then
-         local firstFlag = true
-         for __index, subfileNode in pairs( subfileList ) do
-            do
-               local usePath = subfileNode:get_usePath()
-               if usePath ~= nil then
-                  if firstFlag then
-                     firstFlag = false
-                  else
-                   
-                     self:write( "," )
-                  end
-                  
-                  self:write( string.format( "%q", usePath) )
+      local firstFlag = true
+      for __index, subfileNode in pairs( node:get_nodeManager():getSubfileNodeList(  ) ) do
+         do
+            local usePath = subfileNode:get_usePath()
+            if usePath ~= nil then
+               if firstFlag then
+                  firstFlag = false
+               else
+                
+                  self:write( "," )
                end
+               
+               self:write( string.format( "%q", usePath) )
             end
-            
          end
          
       end
+      
    end
    
    self:writeln( "}" )
@@ -1180,11 +1165,11 @@ end]==] )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
       end
       
-      if node:get_nodeManager():getImportNodeList(  ) then
+      if #node:get_nodeManager():getImportNodeList(  ) ~= 0 then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
       end
       
-      if node:get_nodeManager():getExpCastNodeList(  ) then
+      if #node:get_nodeManager():getExpCastNodeList(  ) ~= 0 then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.InstanceOf ) )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Cast ) )
       end
@@ -3466,7 +3451,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3126, function (  )
+   Log.log( Log.Level.Info, __func__, 3122, function (  )
    
       return string.format( "code: %s", code)
    end

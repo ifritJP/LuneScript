@@ -497,10 +497,24 @@ function NodeManager.new(  )
 end
 function NodeManager:__init() 
    self.nodeKind2NodeList = {}
+   for __index, kind in pairs( _moduleObj.nodeKind ) do
+      if not self.nodeKind2NodeList[kind] then
+         self.nodeKind2NodeList[kind] = {}
+      end
+      
+   end
+   
 end
 function NodeManager:getList( kind )
 
-   return self.nodeKind2NodeList[kind]
+   local list = self.nodeKind2NodeList[kind]
+   if  nil == list then
+      local _list = list
+   
+      return {}
+   end
+   
+   return list
 end
 function NodeManager:addNode( node )
 
@@ -905,17 +919,18 @@ function RootNode:canBeStatement(  )
 
    return false
 end
-function RootNode.new( pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.new( pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
+   if obj.__init then obj:__init( pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
    return obj
 end
-function RootNode:__init(pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
+function RootNode:__init(pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
    Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
    
    
    self.children = children
+   self.moduleScope = moduleScope
    self.useModuleMacroSet = useModuleMacroSet
    self.moduleId = moduleId
    self.processInfo = processInfo
@@ -928,9 +943,9 @@ function RootNode:__init(pos, typeList, children, useModuleMacroSet, moduleId, p
    self.typeId2ClassMap = typeId2ClassMap
    
 end
-function RootNode.create( nodeMan, pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.create( nodeMan, pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
 
-   local node = RootNode.new(pos, typeList, children, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
+   local node = RootNode.new(pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
    nodeMan:addNode( node )
    return node
 end
@@ -939,6 +954,9 @@ function RootNode.setmeta( obj )
 end
 function RootNode:get_children()
    return self.children
+end
+function RootNode:get_moduleScope()
+   return self.moduleScope
 end
 function RootNode:get_useModuleMacroSet()
    return self.useModuleMacroSet

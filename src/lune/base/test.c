@@ -207,7 +207,7 @@ static lune_stem_t * u_lune_form_test3( lune_env_t * _pEnv, lune_stem_t * _pForm
 {
     lune_enter_block( _pEnv, 0 );
 
-    lune_form_closure( _pForm, 0 )->val.intVal += 1000;
+    lune_form_closure( _pForm, 0 )->val.clojureVal.pStem->val.intVal += 1000;
     
     
     lune_leave_block( _pEnv );
@@ -275,18 +275,20 @@ void lune_init_test( lune_env_t * _pEnv )
     lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal ) );
 
     // test2( test );
-    u_lune_form_test2( _pEnv, NULL, lune_func2stem( _pEnv, (lune_func_t *)u_lune_form_test, 0 ) );
+    u_lune_form_test2(
+        _pEnv, NULL, lune_func2stem( _pEnv, (lune_func_t *)u_lune_form_test, 0 ) );
 
 
     // let val2 = 99;
-    lune_stem_t * pVal2;
-    lune_setQ( pVal2, lune_int2stem( _pEnv, 99 ) );
+    lune_stem_t * pVal2 = lune_create_closureVal( _pEnv, lune_int2stem( _pEnv, 0 ) );
+    lune_closureVal( pVal2 )->val.intVal= 99;
     // fn () { val2 = val2 + 1000; } ();
     lune_stem_t * pClosure = lune_func2stem(
         _pEnv, (lune_func_t *)u_lune_form_test3, 1, pVal2 );
     lune_call_form( _pEnv, pClosure );
     // print( val2 );
-    lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal2 ) );
+    lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1,
+                                             pVal2->val.clojureVal.pStem ) );
     
     
     
