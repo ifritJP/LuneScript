@@ -577,6 +577,8 @@ function Scope.new( parent, classFlag, inherit, ifScopeList )
    return obj
 end
 function Scope:__init(parent, classFlag, inherit, ifScopeList) 
+   self.scopeId = Scope.seedId
+   Scope.seedId = Scope.seedId + 1
    self.clojureSymMap = {}
    self.clojureSym2NumMap = {}
    self.clojureSymList = {}
@@ -625,6 +627,9 @@ end
 function Scope.setmeta( obj )
   setmetatable( obj, { __index = Scope  } )
 end
+function Scope:get_scopeId()
+   return self.scopeId
+end
 function Scope:get_ownerTypeInfo()
    return self.ownerTypeInfo
 end
@@ -642,6 +647,9 @@ function Scope:get_clojureSymList()
 end
 function Scope:get_clojureSym2NumMap()
    return self.clojureSym2NumMap
+end
+do
+   Scope.seedId = 0
 end
 
 function SymbolInfo:get_namespaceTypeInfo(  )
@@ -1037,6 +1045,7 @@ end
 function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, typeInfo, mutMode, hasValueFlag) 
    SymbolInfo.__init( self)
    
+   self.convModuleParam = nil
    self.isSetFromClosuer = false
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
@@ -1098,6 +1107,12 @@ function NormalSymbolInfo:get_isSetFromClosuer()
 end
 function NormalSymbolInfo:set_isSetFromClosuer( isSetFromClosuer )
    self.isSetFromClosuer = isSetFromClosuer
+end
+function NormalSymbolInfo:get_convModuleParam()
+   return self.convModuleParam
+end
+function NormalSymbolInfo:set_convModuleParam( convModuleParam )
+   self.convModuleParam = convModuleParam
 end
 do
    NormalSymbolInfo.symbolIdSeed = 0
@@ -2150,12 +2165,20 @@ function AccessSymbolInfo:set_isSetFromClosuer( ... )
    return self.symbolInfo:set_isSetFromClosuer( ... )
 end
 
-function AccessSymbolInfo:get_namespaceTypeInfo( ... )
-   return self.symbolInfo:get_namespaceTypeInfo( ... )
+function AccessSymbolInfo:set_convModuleParam( ... )
+   return self.symbolInfo:set_convModuleParam( ... )
+end
+
+function AccessSymbolInfo:get_convModuleParam( ... )
+   return self.symbolInfo:get_convModuleParam( ... )
 end
 
 function AccessSymbolInfo:canAccess( ... )
    return self.symbolInfo:canAccess( ... )
+end
+
+function AccessSymbolInfo:get_namespaceTypeInfo( ... )
+   return self.symbolInfo:get_namespaceTypeInfo( ... )
 end
 
 function AccessSymbolInfo:get_namespaceTypeInfo( ... )

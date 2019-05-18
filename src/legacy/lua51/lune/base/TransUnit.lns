@@ -2099,6 +2099,7 @@ fn TransUnit.analyzeBlock(
    if not scope {
       self.pushScope( false ## );
    }
+   let blockScope = self.scope;
 
    switch tentativeMode {
       case .Simple, .Start, .Ignore, .Loop {
@@ -2133,7 +2134,8 @@ fn TransUnit.analyzeBlock(
    // let node = self.createNode( nodeKindBlock, token.pos, [ builtinTypeNone ],
    //                          { "kind": blockKind, "stmtList": stmtList } );
    let mut node = Nodes.BlockNode.create(
-      self.nodeManager, token.pos, [ Ast.builtinTypeNone ], blockKind, stmtList );
+      self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
+      blockKind, blockScope, stmtList );
 
    if node.getBreakKind( .Normal ) ~= .None {
       self.tentativeSymbol.skip();

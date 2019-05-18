@@ -507,6 +507,7 @@ pub enum BlockKind {
 
 _declNodeClass( "Block", Node, false, false, true,
                 [ { "blockKind": "BlockKind" },
+                  { "scope": "&Ast.Scope" },
                   { "stmtList": "List<&Node>" } ]
 );
 

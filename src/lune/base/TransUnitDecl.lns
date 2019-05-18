@@ -535,7 +535,8 @@ fn TransUnit.analyzeDeclMacro(
 
       self.macroScope = nil;
       stmtBlock = Nodes.BlockNode.create(
-         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ], .Macro, stmtList );
+         self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
+         .Macro, scope, stmtList );
    }
    else {
       self.pushback();

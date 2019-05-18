@@ -214,8 +214,9 @@ pub abstract class SymbolInfo {
    /** このシンボルが、 closuer 内からセットされているかどうか */
    pub abstract fn get_isSetFromClosuer(): bool;
    pub abstract fn set_isSetFromClosuer( val:bool );
-   /** このシンボルを定義している名前空間の TypeInfo*/
-   pub fn get_namespaceTypeInfo(): &TypeInfo;
+   /** 変換モジュール用パラメータ */
+   pub abstract fn set_convModuleParam( param:stem! );
+   pub abstract fn get_convModuleParam():stem!;
 
    /**
 このシンボルにアクセス可能かどうか調べる。
@@ -225,6 +226,10 @@ pub abstract class SymbolInfo {
    pub abstract fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
 
    pub abstract fn getOrg(): &SymbolInfo;
+
+
+   /** このシンボルを定義している名前空間の TypeInfo*/
+   pub fn get_namespaceTypeInfo(): &TypeInfo;
 }
 
 
@@ -235,6 +240,14 @@ pub class DataOwnerInfo {
 }
 
 pub class Scope {
+   pri static let mut seedId:int;
+   
+   __init {
+      Scope.seedId = 0;
+   }
+
+   pri let scopeId:int {pub};
+   
    // このスコープのオーナーの TypeInfo。
    // 名前空間に関連する class, function の TypeInfo。
    pri let mut ownerTypeInfo: &TypeInfo! { pub, pub };
@@ -260,6 +273,9 @@ pub class Scope {
    pub fn __init( parent: Scope!, classFlag: bool,
                   inherit: &Scope!, ifScopeList:List<&Scope>! )
    {
+      self.scopeId = Scope.seedId;
+      Scope.seedId = Scope.seedId + 1;
+      
       self.clojureSymMap = {};
       self.clojureSym2NumMap = {};
       self.clojureSymList = [];
@@ -728,7 +744,9 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let allmut hasValueFlag: bool { pub, pub };
    pri let mutMode: MutMode {pub};
    pri let allmut isSetFromClosuer: bool { pub, pub };
-
+   /** 変換モジュール用パラメータ */
+   pri let allmut convModuleParam:stem! {pub,pub}; 
+   
    pub override fn get_mutable(): bool {
       return self.mutMode ~= .IMut;
    }
@@ -743,6 +761,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
       mutMode: MutMode!, hasValueFlag: bool )
    {
       super();
+      self.convModuleParam = nil;
       self.isSetFromClosuer = false;
       NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;

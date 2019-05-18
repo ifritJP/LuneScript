@@ -3255,6 +3255,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope )
       self:pushScope( false )
    end
    
+   local blockScope = self.scope
    do
       local _switchExp = tentativeMode
       if _switchExp == TentativeMode.Simple or _switchExp == TentativeMode.Start or _switchExp == TentativeMode.Ignore or _switchExp == TentativeMode.Loop then
@@ -3284,7 +3285,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope )
       self:popScope(  )
    end
    
-   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, blockKind, stmtList )
+   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, blockKind, blockScope, stmtList )
    if node:getBreakKind( Nodes.CheckBreakMode.Normal ) ~= Nodes.BreakKind.None then
       self.tentativeSymbol:skip(  )
    end
@@ -3357,7 +3358,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2201, function (  )
+   Log.log( Log.Level.Info, __func__, 2203, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3373,7 +3374,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2212, function (  )
+               Log.log( Log.Level.Info, __func__, 2214, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3404,7 +3405,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2232, function (  )
+   Log.log( Log.Level.Info, __func__, 2234, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3760,7 +3761,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2603, function (  )
+   Log.log( Log.Level.Info, __func__, 2605, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -4752,7 +4753,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
       self:finishTentativeSymbol( false )
       self.parser = bakParser
       self.macroScope = nil
-      stmtBlock = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, stmtList )
+      stmtBlock = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, scope, stmtList )
    else
     
       self:pushback(  )

@@ -188,7 +188,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1306
+   return 1307
 end
 
 

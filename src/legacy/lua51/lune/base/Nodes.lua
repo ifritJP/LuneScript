@@ -1185,23 +1185,24 @@ function BlockNode:canBeStatement(  )
 
    return true
 end
-function BlockNode.new( pos, typeList, blockKind, stmtList )
+function BlockNode.new( pos, typeList, blockKind, scope, stmtList )
    local obj = {}
    BlockNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, blockKind, stmtList ); end
+   if obj.__init then obj:__init( pos, typeList, blockKind, scope, stmtList ); end
    return obj
 end
-function BlockNode:__init(pos, typeList, blockKind, stmtList) 
+function BlockNode:__init(pos, typeList, blockKind, scope, stmtList) 
    Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Block']), pos, typeList)
    
    
    self.blockKind = blockKind
+   self.scope = scope
    self.stmtList = stmtList
    
 end
-function BlockNode.create( nodeMan, pos, typeList, blockKind, stmtList )
+function BlockNode.create( nodeMan, pos, typeList, blockKind, scope, stmtList )
 
-   local node = BlockNode.new(pos, typeList, blockKind, stmtList)
+   local node = BlockNode.new(pos, typeList, blockKind, scope, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -1210,6 +1211,9 @@ function BlockNode.setmeta( obj )
 end
 function BlockNode:get_blockKind()
    return self.blockKind
+end
+function BlockNode:get_scope()
+   return self.scope
 end
 function BlockNode:get_stmtList()
    return self.stmtList

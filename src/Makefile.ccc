@@ -24,7 +24,9 @@ build:
 #	gcc -g3 -Wall -c lune/base/lns_base.c -I lune/base -o work/c/lns_base.o
 	gcc $(CFLAGS) -o work/c/lns_base.o lune/base/lns_base.c
 	g++ -g3 -Wall -c lune/base/lns_collection.cxx -I lune/base -o work/c/lns_collection.o
-	g++ -o $(TEST_OUT) work/c/lns_base.o work/c/lns_collection.o $(OBJS) $(LUA_LIB)
+	g++ -g3 -Wall -c lune/base/lns_alloc.cxx -I lune/base -o work/c/lns_alloc.o
+	g++ -o $(TEST_OUT) work/c/lns_base.o work/c/lns_collection.o work/c/lns_alloc.o \
+			$(OBJS) $(LUA_LIB)
 	./$(TEST_OUT)
 
 build-objs: $(OBJS)

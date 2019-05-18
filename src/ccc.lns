@@ -14,6 +14,7 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    return val + test1, val2 + test2, not val3;
 }
 
+let mut g_val2 = "ABC";
 {
    let mut val = "abc";
    let mut val2 = 1;
@@ -21,12 +22,13 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    fn test1() {
       val = "xyz";
       val2 = val2 + 10;
+      g_val2 = "XYZ";
    }
    val2 = val2 + 100;
    val3 = val3 + 20;
    test1();
    g_val = g_val + 100;
-   print( "clojure:", val, val2, val3, g_val );
+   print( "clojure:", val, val2, val3, g_val, g_val2 );
 }
 
 print( func1( 1 ) );

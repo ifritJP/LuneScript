@@ -6,12 +6,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <lns_alloc.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
+#define LUNE_DEBUG_POS __FILE__, __LINE__
+#define LUNE_DEBUG_DECL const char * pFile, int lineNo
+    
     typedef int lune_bool_t;
     typedef int lune_int_t;
     typedef double lune_real_t;
@@ -30,6 +34,12 @@ extern "C" {
      */
 #define LUNE_BLOCK_MAX_DEPTH 1000
 
+    /**
+     * モジュールの最大個数
+     */
+#define LUNE_MODULE_MAX_NUM 10000
+
+    
     /**
      * 全ブロックで保持する stem 型の値の最大数。
      *
@@ -286,9 +296,10 @@ extern "C" {
          * 実際の先頭要素は managedStemTop.pNext。
          */
         lune_stem_t managedStemTop;
-    };
+   };
 
     struct lune_env_t {
+        lune_allocator_t allocateor;
         /** 値を返さない関数の戻り値 */
         lune_stem_t * pNoneStem;
         /** nil */
@@ -318,18 +329,51 @@ extern "C" {
 #define lune_fromDDD( STEM, INDEX )  \
     STEM->val.ddd.pStemList[ INDEX ]
 
-    extern lune_stem_t * lune_bool2stem( lune_env_t * _pEnv, lune_bool_t val );
-    extern lune_stem_t * lune_int2stem( lune_env_t * _pEnv, lune_int_t val );
-    extern lune_stem_t * lune_real2stem( lune_env_t * _pEnv, lune_real_t val );
-    extern lune_str_t lune_createLiteralStr( const char * pStr );
-    extern lune_stem_t * lune_str2stem( lune_env_t * _pEnv, lune_str_t val );
-    extern lune_stem_t * lune_litStr2stem( lune_env_t * _pEnv, const char * pStr );
-    extern lune_stem_t * lune_func2stem( lune_env_t * _pEnv, lune_func_t * pFunc, int num, ... );
-    extern lune_stem_t * lune_createDDD( lune_env_t * _pEnv, bool hasDDD, int num, ... );
-    extern lune_stem_t * lune_createDDDOnly( lune_env_t * _pEnv, int num );
-    extern lune_stem_t * lune_createMRet( lune_env_t * _pEnv, bool hasDDD, int num, ... );
-    extern lune_stem_t * lune_create_closureVal( lune_env_t * _pEnv, lune_stem_t * pStem );
+#define lune_bool2stem( ENV, VAL )              \
+    _lune_bool2stem( LUNE_DEBUG_POS, ENV, VAL )
+#define lune_int2stem( ENV, VAL )               \
+    _lune_int2stem( LUNE_DEBUG_POS, ENV, VAL )
+#define lune_real2stem( ENV, VAL )              \
+    _lune_real2stem( LUNE_DEBUG_POS, ENV, VAL )
+#define lune_str2stem( ENV, VAL )               \
+    _lune_str2stem( LUNE_DEBUG_POS, ENV, VAL )
+#define lune_litStr2stem( ENV, STR )            \
+    _lune_litStr2stem( LUNE_DEBUG_POS, ENV, STR )
+#define lune_func2stem( ENV, FUNC, NUM, ... )           \
+    _lune_func2stem( LUNE_DEBUG_POS, ENV, FUNC, NUM, ##__VA_ARGS__ )
+#define lune_createDDD( ENV, HASDDD, NUM, ... )         \
+    _lune_createDDD( LUNE_DEBUG_POS, ENV, HASDDD, NUM, ##__VA_ARGS__)
+#define lune_createDDDOnly( ENV, NUM )          \
+    _lune_createDDDOnly( LUNE_DEBUG_POS, ENV, NUM )
+#define lune_createMRet( ENV, HASDDD, NUM, ... )        \
+    _lune_createMRet( LUNE_DEBUG_POS, ENV, HASDDD, NUM, ##__VA_ARGS__ )
+#define lune_create_closureVal( ENV, VAL )      \
+    _lune_create_closureVal( LUNE_DEBUG_POS, ENV, VAL )
+#define lune_class_new( ENV, SIZE )             \
+    _lune_class_new( LUNE_DEBUG_POS, ENV, SIZE )
+#define lune_it_new( ENV, TYPE, VAL )                  \
+    _lune_it_new( LUNE_DEBUG_POS, ENV, TYPE, VAL )
 
+    
+    extern lune_stem_t * _lune_bool2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_bool_t val );
+    extern lune_stem_t * _lune_int2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_int_t val );
+    extern lune_stem_t * _lune_real2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_real_t val );
+    extern lune_stem_t * _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
+    extern lune_stem_t * _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
+    extern lune_stem_t * _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_func_t * pFunc, int num, ... );
+    extern lune_stem_t * _lune_createDDD( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
+    extern lune_stem_t * _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
+    extern lune_stem_t * _lune_createMRet( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
+    extern lune_stem_t * _lune_create_closureVal( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_stem_t * pStem );
+    extern lune_stem_t * _lune_class_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int size );
+    extern lune_stem_t * _lune_it_new(
+        LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
+
+    
+
+    extern lune_str_t lune_createLiteralStr( const char * pStr );
+
+    extern lune_block_t * lune_enter_module( int stemVerNum );
 
     extern lune_stem_t * lune_setRet( lune_env_t * __pEnv, lune_stem_t * pStem );
     extern void lune_setQ_( lune_stem_t * pStem );
@@ -338,10 +382,7 @@ extern "C" {
     extern void lune_leave_block( lune_env_t * _pEnv );
     extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemVerNum );
     extern void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem );
-    extern lune_stem_t * lune_class_new( lune_env_t * _pEnv, int size );
     extern void lune_class_del( lune_env_t * _pEnv, void * pObj );
-    extern lune_stem_t * lune_it_new(
-        lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
 
 
