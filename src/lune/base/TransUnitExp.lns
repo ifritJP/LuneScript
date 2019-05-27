@@ -495,6 +495,19 @@ fn TransUnit.checkMatchType(
 }
 
 
+
+/**
+関数 funcTypeInfo の引数に expList を指定している時の、引数型チェックを行なう。
+
+@param pos この引数チェックを行なっているソース位置
+@param funcTypeInfo 関数型
+@param expList 引数情報
+@param genericTypeList generics に与えられている型
+@param genericsClass funcTypeInfo がメソッドだったときの、
+    そのメソッドが定義されているクラス
+@return AlternateTypeInfo → 実型パラメータのマップ
+@return 
+*/
 fn TransUnit.checkMatchValType(
    pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Nodes.ExpListNode!,
    genericTypeList: &List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo! ) mut :
@@ -504,6 +517,15 @@ fn TransUnit.checkMatchValType(
    switch funcTypeInfo {
       case builtinFunc.list_insert, builtinFunc.set_add, builtinFunc.set_del {
          argTypeList = genericTypeList;
+      }
+      case builtinFunc.list_sort {
+         let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
+         let callback = Ast.NormalTypeInfo.createFunc(
+            false, false, nil, Ast.TypeInfoKind.Func,
+            Ast.headTypeInfo, false, false, true, .Pri, "sort", nil,
+            [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
+            [ Ast.builtinTypeBool ], false );
+         argTypeList = [ callback.$nilableTypeInfo ];
       }
       case builtinFunc.list_remove {
       }
@@ -1661,9 +1683,12 @@ fn TransUnit.analyzeExpField(
    }
    if accessNil {
       self.helperInfo.useNilAccess = true;
-      if prefixExpType.get_kind() == .Set {
-         // 現状は set の accessNil はサポートしていない。
-         self.addErrMess( firstToken.pos, "Set does not support $." );
+      switch prefixExpType.get_kind() {
+         case .Set, .Enum, .Alge {
+         // 現状は set, enum, alge の accessNil はサポートしていない。
+            self.addErrMess( firstToken.pos,
+                             "%s does not support $." (prefixExpType.getTxt(false##) ) );
+         }
       }
    }
 
@@ -2049,7 +2074,13 @@ fn TransUnit.analyzeExpOpSet(
          not symbolInfo.$hasValueFlag and symbolInfo.$kind == .Var
       {
          if symbolInfo.$typeInfo == Ast.builtinTypeEmpty {
-            symbolInfo.set_typeInfo( expTypeList[ index ] );
+            let mut expType = expTypeList[ index ];
+            if expType.$kind == .DDD {
+               if #expType.$itemTypeInfoList > 0 {
+                  expType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
+               }
+            }
+            symbolInfo.set_typeInfo( expType );
          }
          if not self.tentativeSymbol.regist( symbolInfo ) {
             self.addErrMess( opeToken.$pos,

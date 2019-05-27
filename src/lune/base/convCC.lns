@@ -101,7 +101,7 @@ fn isStemType( valType:&Ast.TypeInfo ) : bool {
    }
 }
 
-fn getCType( valType:&Ast.TypeInfo ) : str {
+fn getCType( valType:&Ast.TypeInfo, varFlag:bool ) : str {
    let expType = valType.$srcTypeInfo;
    switch expType {
       case Ast.builtinTypeInt, Ast.builtinTypeChar {
@@ -114,6 +114,9 @@ fn getCType( valType:&Ast.TypeInfo ) : str {
          return "lune_bool_t";
       }
       default {
+         if varFlag {
+            return "lune_var_t *";
+         }
          return "lune_stem_t *";
       }
    }
@@ -122,12 +125,12 @@ fn getCType( valType:&Ast.TypeInfo ) : str {
 fn getCTypeForSym( symbol:&Ast.SymbolInfo ) : str, bool {
    let typeTxt;
    if symbol.$isSetFromClosuer {
-      typeTxt = "lune_stem_t *";
+      typeTxt = "lune_var_t *";
    }
    else {
-      typeTxt = getCType( symbol.$typeInfo );
+      typeTxt = getCType( symbol.$typeInfo, symbol.$kind == .Var );
    }
-   return typeTxt, typeTxt == "lune_stem_t *";
+   return typeTxt, typeTxt == "lune_var_t *";
 }
 
 
@@ -180,6 +183,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut routineInfoQueue:List<RoutineInfo>;
    pri let mut currentRoutineInfo:RoutineInfo;
    pri let mut processMode:ProcessMode;
+   pri let mut duringDeclFunc:bool;
 
    fn pushRoutine( funcType:&Ast.TypeInfo ) mut {
       self.currentRoutineInfo = new RoutineInfo( funcType );
@@ -194,6 +198,8 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pub fn __init( streamName: str, stream: oStream, ast:&TransUnit.ASTInfo )
    {
       super();
+
+      self.duringDeclFunc = false;
 
       self.processMode = .Prototype;
 
@@ -350,7 +356,12 @@ fn setupScopeParam( scope:&Ast.Scope ): int {
    }
    return stemNum;
 }
-
+fn getSymbolIndex( symbol:&Ast.SymbolInfo ) : int {
+   let! param = symbol.$convModuleParam {
+      return 0;
+   };
+   return (param@@=SymbolParam).index;
+}
 
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
@@ -378,6 +389,7 @@ pub override fn convFilter.processRoot(
 
    self.processMode = .Form;
    foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
+      self.duringDeclFunc = false;
       filter( declFuncNode, self, node );
    }
    
@@ -428,9 +440,9 @@ pub override fn convFilter.processBlock(
 
    // クロージャでアクセスする外部変数を宣言
    let scope = node.$scope;
-   forsort symbol in scope.$clojureSymMap {
-      self.writeln( "lune_stem_t * %s = lune_form_closure( _pForm, %d );"
-                    ( symbol.$name, unwrap scope.$clojureSym2NumMap[ symbol ]  ) );
+   forsort symbol in scope.$closureSymMap {
+      self.writeln( "lune_var_t * %s = lune_form_closure( _pForm, %d );"
+                    ( symbol.$name, unwrap scope.$closureSym2NumMap[ symbol ]  ) );
    }
    
    
@@ -482,7 +494,8 @@ pub override fn convFilter.processBlock(
    self.writeln( word );
    self.pushIndent(##);
 
-   self.writeln( "lune_enter_block( _pEnv, %d );" (stemNum) );
+   self.writeln( "lune_block_t * pBlock_%X = lune_enter_block( _pEnv, %d );"
+                 ( node.$scope.$scopeId, stemNum ) );
    
    let stmtList = node.get_stmtList();
    foreach statement in stmtList {
@@ -1451,25 +1464,32 @@ pub override fn convFilter.processWhen(
    // self.writeln( "end" );
 }
 
-pub fn convFilter.accessPrimValFromStem(
-   dddFlag:bool, typeInfo:&Ast.TypeInfo, index:int ) mut
+fn getAccessPrimValFromStem( dddFlag:bool, typeInfo:&Ast.TypeInfo, index:int ) :str
 {
+   let mut txt = "";
    if dddFlag {
-      self.write( "->val.ddd.pStemList[ %d ]" (index) );
+      txt = "->val.ddd.pStemList[ %d ]" (index);
    }
 
    let expType = typeInfo.$srcTypeInfo;
    switch expType {
       case Ast.builtinTypeInt, Ast.builtinTypeChar {
-         self.write( "->val.intVal" );
+         txt = txt .. "->val.intVal";
       }
       case Ast.builtinTypeReal {
-         self.write( "->val.realVal" );
+         txt = txt .. "->val.realVal";
       }
       case Ast.builtinTypeBool {
-         self.write( "->val.boolVal" );
+         txt = txt .. "->val.boolVal";
       }
    }
+   return txt;
+}
+
+fn convFilter.accessPrimValFromStem(
+   dddFlag:bool, typeInfo:&Ast.TypeInfo, index:int ) mut
+{
+   self.write( getAccessPrimValFromStem( dddFlag, typeInfo, index ) );
 }
 
 fn isStemVal( node:&Nodes.Node ): bool {
@@ -1505,45 +1525,41 @@ val1, val2, val3 = exp1, exp2, exp3
 
 */
 fn convFilter.processSetValToSym(
-   parent: Nodes.Node,
+   parent: Nodes.Node, 
    varSymList:&List<&Ast.SymbolInfo>, expList:&List<&Nodes.Node>! ) mut
 {
-   // 変数に初期値を代入する
+   // 変数に値を代入する
    fn initVar(): int {
       fn setVal( var:&Ast.SymbolInfo, exp:&Nodes.Node, index:int ) {
          let work, isStem = getCTypeForSym( var );
-         let mut termTxt = ";";
 
-         if var.$isSetFromClosuer and isStemType( var.$typeInfo ) {
-            termTxt = ");";
-            self.write( "lune_setq( _pEnv, lune_closureVal( %s ), " (var.$name) );
-         }
-         else {
-            if isStem {
-               if var.$isSetFromClosuer {
-                  self.write( "lune_closureVal( %s )" (var.$name) );
-               }
-               else {
-                  self.write( "%s" (var.$name) );
-               }
-               self.accessPrimValFromStem( false, var.$typeInfo, 0 );
-            }
-            else {
-               self.write( "%s" (var.$name) );
-            }
-            self.write( "=" );
-         }
-
+         let mut setValTxt = "";
          if hasMultiVal( exp ) {
-            self.write( "lune_fromDDD( _work, %d )" (index) );
+            setValTxt = "lune_fromDDD( _work, %d )" (index);
          }
          else {
-            self.write( "_work" );
+            setValTxt = "_work";
          }
          if not isStem and isStemVal( exp ) {
-            self.accessPrimValFromStem( false, var.$typeInfo, 0 );
+            // 値が stem でなく、変数が stem 型の場合
+            setValTxt = setValTxt .. getAccessPrimValFromStem( false, var.$typeInfo, 0 );
          }
-         self.writeln( termTxt );
+
+         
+         if isStem {
+            if isStemType( var.$typeInfo ) {
+               self.writeln( "lune_setq( _pEnv, &%s->pStem, %s );"
+                             ( var.$name, setValTxt ) );
+            }
+            else {
+               self.write( "%s->pStem" (var.$name) );
+               self.accessPrimValFromStem( false, var.$typeInfo, 0 );
+               self.writeln( " = %s;" (setValTxt) );
+            }
+         }
+         else {
+            self.writeln( "%s = %s;" (var.$name, setValTxt) );
+         }
       }
       
       when! expList {
@@ -1558,7 +1574,7 @@ fn convFilter.processSetValToSym(
                self.write( "lune_stem_t *" );
             }
             else {
-               self.write( getCType( exp.$expType ) );
+               self.write( getCType( exp.$expType, false ) );
             }
             self.write( " _work = " );
             filter( exp, self, parent );
@@ -1583,24 +1599,14 @@ fn convFilter.processSetValToSym(
          
          return #expList + 1;
          
-         // foreach var, index in varSymList  {
-         //    self.write( var.$name.txt );
-         //    self.write( "=" );
-         //    if #expList >= index {
-         //       filter( expList[index], self, node );
-         //    }
-         //    else {
-         //       self.write( "_pEnv->pNilStem" );
-         //    }
-         //    self.writeln( ";" );
-         // }
       }
       return 1;
    }
-   for index = initVar(), #varSymList {
-      self.write( varSymList[ index ].$name );
-      self.writeln( " = _pEnv->pNilStem;" );
-   }
+   initVar();
+   // for index = initVar(), #varSymList {
+   //    self.write( varSymList[ index ].$name );
+   //    self.writeln( " = _pEnv->pNilStem;" );
+   // }
 }
 
 pub override fn convFilter.processDeclVar(
@@ -1641,42 +1647,43 @@ pub override fn convFilter.processDeclVar(
    // 変数宣言
    foreach var, index in varSymList  {
       let typeTxt, isStem = getCTypeForSym( var );
-      let mut termTxt = ";";
       if isStem {
          if varSymList[ 1 ].$scope ~= self.ast.$moduleScope {
             // ローカル変数の場合、変数を宣言する
-            self.write( "%s %s" ( typeTxt, var.$name ) );
+            self.writeln( "%s %s; " ( typeTxt, var.$name ) );
+         }
+
+         fn getDefInitVal( typeInfo:&Ast.TypeInfo ): str {
+            switch var.$typeInfo {
+               case Ast.builtinTypeBool {
+                  return "lune_bool2stem( _pEnv, true )";
+               }
+               case Ast.builtinTypeInt, Ast.builtinTypeChar {
+                  return "lune_int2stem( _pEnv, 0 )";
+               }
+               case Ast.builtinTypeReal {
+                  return "lune_bool2stem( _pEnv, 0.0 )";
+               }
+               default {
+                  return "NULL";
+               }
+            }
+         }
+         let initVal = getDefInitVal( var.$typeInfo );
+
+         if initVal == "NULL" {
+            self.writeln( "lune_set_block_stem( pBlock_%X, %d, %s );"
+                          ( var.$scope.$scopeId, getSymbolIndex(var), var.$name ) );
          }
          else {
-            // 大域変数の場合、変数は宣言済みなので宣言せずに値だけセットする。
-            self.write( "%s" ( var.$name ) );
+            self.writeln( "lune_initVal( %s, pBlock_%X, %d, %s );"
+                          (var.$name, var.$scope.$scopeId,
+                            getSymbolIndex(var), initVal ) );
          }
-         
-         self.write( " = " );
-         if var.$isSetFromClosuer {
-            self.write( "lune_create_closureVal( _pEnv, " );
-            termTxt = ");";
-         }
-         switch var.$typeInfo {
-            case Ast.builtinTypeBool {
-               self.write( "lune_bool2stem( _pEnv, true )" );
-            }
-            case Ast.builtinTypeInt, Ast.builtinTypeChar {
-               self.write( "lune_int2stem( _pEnv, 0 )" );
-            }
-            case Ast.builtinTypeReal {
-               self.write( "lune_bool2stem( _pEnv, 0.0 )" );
-            }
-            default {
-               self.write( "NULL" );
-            }
-         }
-         self.writeln( termTxt );
       }
       else {
          if varSymList[ 1 ].$scope ~= self.ast.$moduleScope {
-            self.write( "%s %s" ( typeTxt, var.$name ) );
-            self.writeln( termTxt );
+            self.write( "%s %s;" ( typeTxt, var.$name ) );
          }
       }
    }
@@ -1745,7 +1752,7 @@ pub override fn convFilter.processDeclVar(
 pub override fn convFilter.processDeclArg(
    node: Nodes.DeclArgNode, opt: Opt ) mut
 {
-   self.write( getCType( node.$expType ) .. " " );
+   self.write( getCType( node.$expType, false ) .. " " );
    self.write( node.get_name().txt );
    
    //self.write( string.format( "lune_stem_t * %s", node.get_name().txt ) );
@@ -1765,19 +1772,51 @@ pub override fn convFilter.processExpDDD(
    // self.write( "..." );
 };
 
+
+fn getFuncName( typeInfo:&Ast.TypeInfo ): str {
+   if typeInfo.$rawTxt == "" {
+      return "_anonymous_%d" (typeInfo.$typeId);
+   }
+   return typeInfo.$rawTxt;
+}
+
 pub override fn convFilter.processDeclFunc(
    node: Nodes.DeclFuncNode, opt: Opt ) mut
 {
-   if self.processMode ~= .Form {
+   switch self.processMode {
+      case .Form {
+      }
+      case .Prototype {
+         return;
+      }
+      default {
+         if opt.node.$kind ~= Nodes.NodeKind.$Block {
+            let scope = unwrap node.$expType.$scope;
+            let argList = node.$expType.$argTypeInfoList;
+            let hasDDD = #argList > 0 and argList[ #argList ].$kind == .DDD or false;
+
+            self.write(
+               "lune_func2stem( _pEnv, (lune_func_t *)%s, %d, %s, %d"
+               ( getFuncName( node.$expType ),
+                 #node.$expType.$argTypeInfoList, hasDDD, #scope.$closureSymList ) );
+            foreach symbol in scope.$closureSymList {
+               self.write( ", %s" (symbol.$name ) );
+            }
+            self.write( ")" );
+         }
+         return;
+      }
+   }
+   if self.duringDeclFunc {
+      self.write( getFuncName( node.$expType ) );
       return;
    }
+
+   self.duringDeclFunc = true;
+   
    
    let declInfo = node.get_declInfo();
-   let nameToken = declInfo.get_name();
-   let mut name = "";
-   if! nameToken {
-      name = _exp.txt;
-   }
+   let mut name = getFuncName( node.$expType );
    let mut letTxt = "";
    if declInfo.get_accessMode() ~= .Global and #name ~= 0 {
       letTxt = "static ";
@@ -1798,9 +1837,9 @@ pub override fn convFilter.processDeclFunc(
 
    // // クロージャでアクセスする外部変数を宣言
    // let scope = unwrap node.$expType.$scope;
-   // forsort symbol in scope.$clojureSymMap {
+   // forsort symbol in scope.$closureSymMap {
    //    self.writeln( "lune_stem_t * %s = lune_form_closure( _pForm, %d );"
-   //                  ( symbol.$name, unwrap scope.$clojureSym2NumMap[ symbol ]  ) );
+   //                  ( symbol.$name, unwrap scope.$closureSym2NumMap[ symbol ]  ) );
    // }
    
 
@@ -2164,8 +2203,12 @@ pub fn convFilter.processCallArgList(
                return;
             }
             else {
-               filter( expList[ index ], self, parent );
-               // self.processVal2Stem( expList[ index ], parent );
+               if funcArgType.$kind == .Form {
+                  self.processVal2Stem( expList[ index ], parent );
+               }
+               else {
+                  filter( expList[ index ], self, parent );
+               }
             }
          }
          else {
@@ -2179,6 +2222,26 @@ pub fn convFilter.processCallArgList(
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
 {
+   if node.$func.$expType.$kind == .Form {
+      self.write( 'lune_call_form( _pEnv, ' );
+      filter( node.$func, self, node );
+      if! let argList = node.$argList {
+         self.write( ', %d' ( #argList.$expList ) );
+
+         if #argList.$expList > 0 {
+            self.write( ', ' );
+            self.processCallArgList(
+               node.$func.$expType, node.$argList, node );
+         }
+      }
+      else {
+         self.write( ', 0' );
+      }
+      self.write( ' )' );
+      return;
+   }
+
+   
    let mut wroteFuncFlag = false;
    let mut setArgFlag = false;
 
@@ -2337,6 +2400,12 @@ pub override fn convFilter.processExpCall(
       }
       else {
          filter( node.$func, self, node );
+
+         if node.$func.$expType.$kind == .Form {
+            self.write( "->val.form.pFunc" );
+         }
+
+         
          self.write( "( " );
       }
    }
@@ -2346,10 +2415,11 @@ pub override fn convFilter.processExpCall(
 
 
       if! let scope = node.$func.$expType.$scope {
-         if #scope$.$clojureSymList > 0 {
-            self.write( "lune_func2stem( _pEnv, (lune_func_t *)NULL, %d"
-                        (#scope$.$clojureSymList) );
-            foreach symbolInfo in scope.$clojureSymList {
+         if #scope$.$closureSymList > 0 {
+            // クロージャの場合
+            self.write( "lune_func2stem( _pEnv, (lune_func_t *)NULL, 0, false, %d"
+                        (#scope$.$closureSymList) );
+            foreach symbolInfo in scope.$closureSymList {
                self.write( ", %s" (symbolInfo.$name) );
             }
             self.write( ")" );
@@ -2494,6 +2564,26 @@ pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
    }
 }
 
+/**
+form から 関数をコールする wrapper を作成。
+*/
+fn convFilter.processWrapForm2Func( funcType:&Ast.TypeInfo ) mut
+{
+   self.write( "static lune_stem_t * _wrap_%s_%d( lune_env_t * _pEnv, lune_stem_t * _pForm, "
+               (funcType.$rawTxt, funcType.$typeId ) );
+   foreach argType, index in funcType.$argTypeInfoList {
+      self.write( ", %s arg%d" (getCType( argType, false ), index ) );
+   }
+   self.writeln( ")" );
+   self.writeln( "{" );
+   self.writeln( 'return %s( _pEnv, pForm' );
+   foreach argType, index in funcType.$argTypeInfoList {
+      
+   }
+   self.writeln( "}" );
+}
+
+
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
 {
@@ -2556,8 +2646,8 @@ pub override fn convFilter.processExpRef(
    }
    else {
       let symbolInfo = node.$symbolInfo;
-      if symbolInfo.$isSetFromClosuer {
-         self.write( "lune_closureVal( %s )" (symbolInfo.$name) );
+      if isStemSym( symbolInfo ) {
+         self.write( "%s->pStem" (symbolInfo.$name) );
       }
       else {
          if symbolInfo.$accessMode == .Pub and

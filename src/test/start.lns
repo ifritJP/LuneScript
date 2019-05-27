@@ -1146,3 +1146,23 @@ macro _Hoge( val:str )
 
    print( Testfunc( 0 ), Testfunc( 1 ) );
 }
+
+class Test4 {
+   pub let val:int {pub};
+}
+{
+   fn func4() : Test4! {
+      return nil;
+   }
+   let val:Test4! = nil;
+   _print( `{ val$.$val } );
+   _print( `{ func4()$.$val } );
+}
+{
+   fn func4() : Test4! {
+      return new Test4(2);
+   }
+   let val = new Test4( 1 );
+   _print( `{ val$.$val } );
+   _print( `{ func4()$.$val } );
+}

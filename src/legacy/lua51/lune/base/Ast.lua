@@ -579,9 +579,9 @@ end
 function Scope:__init(parent, classFlag, inherit, ifScopeList) 
    self.scopeId = Scope.seedId
    Scope.seedId = Scope.seedId + 1
-   self.clojureSymMap = {}
-   self.clojureSym2NumMap = {}
-   self.clojureSymList = {}
+   self.closureSymMap = {}
+   self.closureSym2NumMap = {}
+   self.closureSymList = {}
    self.parent = _lune.unwrapDefault( parent, self)
    self.symbol2SymbolInfoMap = {}
    self.inherit = inherit
@@ -639,14 +639,14 @@ end
 function Scope:get_symbol2SymbolInfoMap()
    return self.symbol2SymbolInfoMap
 end
-function Scope:get_clojureSymMap()
-   return self.clojureSymMap
+function Scope:get_closureSymMap()
+   return self.closureSymMap
 end
-function Scope:get_clojureSymList()
-   return self.clojureSymList
+function Scope:get_closureSymList()
+   return self.closureSymList
 end
-function Scope:get_clojureSym2NumMap()
-   return self.clojureSym2NumMap
+function Scope:get_closureSym2NumMap()
+   return self.closureSym2NumMap
 end
 do
    Scope.seedId = 0
@@ -1887,10 +1887,10 @@ function Scope:setAccessSymbol( moduleScope, symbol )
       local typeInfo = self:getNamespaceTypeInfo(  )
       if typeInfo ~= symbol:get_namespaceTypeInfo() then
          local namespacescope = _lune.unwrap( typeInfo:get_scope())
-         if not namespacescope.clojureSymMap[symbol:get_symbolId()] then
-            namespacescope.clojureSymMap[symbol:get_symbolId()] = symbol
-            namespacescope.clojureSym2NumMap[symbol] = #namespacescope.clojureSymList
-            table.insert( namespacescope.clojureSymList, symbol )
+         if not namespacescope.closureSymMap[symbol:get_symbolId()] then
+            namespacescope.closureSymMap[symbol:get_symbolId()] = symbol
+            namespacescope.closureSym2NumMap[symbol] = #namespacescope.closureSymList
+            table.insert( namespacescope.closureSymList, symbol )
          end
          
       end
@@ -4649,6 +4649,10 @@ function DDDTypeInfo:get_mutMode(  )
 
    return self.typeInfo:get_mutMode()
 end
+function DDDTypeInfo:get_srcTypeInfo(  )
+
+   return self
+end
 function DDDTypeInfo:get_accessMode(  )
 
    return AccessMode.Pub
@@ -4714,7 +4718,7 @@ function DDDTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
       return "..."
    end
    
-   local txt = self.typeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+   local txt = self.typeInfo:getTxt( fullName, importInfo, localFlag )
    return "...<" .. txt .. ">"
 end
 
@@ -5240,16 +5244,36 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       
    elseif not allowDstShort then
       for index, dstType in pairs( dstTypeList ) do
-         if not dstType:canEvalWith( _moduleObj.builtinTypeNil, "=", alt2type ) then
-            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
+         if dstType:get_kind() == TypeInfoKind.DDD then
+         else
+          
+            if not dstType:canEvalWith( _moduleObj.builtinTypeNil, "=", alt2type ) then
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
+            end
+            
+            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) )
          end
          
-         return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) )
       end
       
    end
    
    return MatchType.Match, ""
+end
+
+local function isSettableToForm( typeInfo )
+
+   if #typeInfo:get_argTypeInfoList() > 0 then
+      for __index, argType in pairs( typeInfo:get_argTypeInfoList() ) do
+         if not argType:get_nilable() then
+            return false
+         end
+         
+      end
+      
+   end
+   
+   return true
 end
 
 function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
@@ -5258,7 +5282,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
    local otherSrc = other:get_srcTypeInfo()
    if otherSrc:get_kind() == TypeInfoKind.DDD then
       if #otherSrc:get_itemTypeInfoList() > 0 then
-         otherSrc = otherSrc:get_itemTypeInfoList()[1]
+         otherSrc = otherSrc:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
+      else
+       
+         otherSrc = _moduleObj.builtinTypeStem_
       end
       
    end
@@ -5303,7 +5330,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
    end
    
    if dest == _moduleObj.builtinTypeForm and (otherSrc:get_kind() == TypeInfoKind.Func or otherSrc:get_kind() == TypeInfoKind.Form ) then
-      return true
+      return isSettableToForm( otherSrc )
    end
    
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
@@ -5341,10 +5368,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
             local _switchExp = otherSrc:get_kind()
             if _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.Func then
                if dest == _moduleObj.builtinTypeForm then
-                  return true
+                  return isSettableToForm( otherSrc )
                end
                
-               if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
+               if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( otherSrc:get_argTypeInfoList(), dest:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( otherSrc:get_retTypeInfoList(), dest:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
                   return false
                end
                
@@ -5414,7 +5441,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
          return otherSrc:isInheritFrom( dest, alt2type )
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form then
          if dest == _moduleObj.builtinTypeForm then
-            return true
+            return isSettableToForm( otherSrc )
          end
          
          if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then

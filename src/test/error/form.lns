@@ -1,0 +1,19 @@
+{
+   fn func( test1:form ) {
+      test1( nil );
+   }
+
+   func( fn (val:int) {
+      print( val + 1 );
+   } );
+   func( fn (val:int!) {
+      print( unwrap val + 1 );
+   } );
+   func( fn (val:int!, val2:int) {
+      print( unwrap val + 1 );
+   } );
+   func( fn (...) {
+      print( ... );
+   } );
+}
+

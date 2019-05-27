@@ -537,9 +537,9 @@ pattern は  {, }, {{, }} のいずれか。
 		  (eq (lns-get-line) 1))
 	      (setq column -1)
 	    (previous-line)
-	    (re-search-forward "[^\\s \t]")
+	    (re-search-forward "[^\\s \t]" nil t)
 	    (setq column (1- (current-column))))
-	(re-search-forward "[^\\s \t]")
+	(re-search-forward "[^\\s \t]" nil t)
 	(cond 
 	 ((eq (char-before) ?})
 	  (if (eq (char-after) ?})

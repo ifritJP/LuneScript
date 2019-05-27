@@ -80,3 +80,19 @@
    let val2:str = unwrap val default 1; // error
    let val3:int = unwrap val default 1; // error
 }
+{
+   enum TestEnum {
+      Val1,
+      Val2,
+   }
+   alge TestAlge {
+      Val1,
+      Val2,
+   }
+   let enumVal:TestEnum! = nil;
+   let algeVal:TestAlge! = nil;
+   let setVal:Set<int>! = nil;
+   print( enumVal$.$_txt ); // error
+   print( algeVal$.$_txt ); // error
+   print( setVal$.has( 0 ) ); // error
+}

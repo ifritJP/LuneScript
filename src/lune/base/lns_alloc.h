@@ -12,7 +12,7 @@ extern "C" {
                                 int size, const char * pName, int lineNo );
     extern void _lune_free( lune_allocator_t allocateor,
                             void * pAddr, const char * pName, int lineNo );
-    extern void lune_checkMem( lune_allocator_t allocateor );
+    extern void lune_checkMem( void );
 
 #ifdef __cplusplus
 }

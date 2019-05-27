@@ -3220,17 +3220,26 @@ function convFilter:processGetField( node, opt )
       self:writeln( ")" )
    else
     
-      filter( prefixNode, self, node )
-      local delimit = "."
-      if node:get_getterTypeInfo(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
-         delimit = ":"
+      if node:get_nilAccess() then
+         fieldTxt = string.format( "get_%s", fieldTxt)
+         self:write( "_lune.nilacc( " )
+         filter( prefixNode, self, node )
+         self:write( string.format( ", '%s', 'callmtd' )", fieldTxt) )
       else
        
-         delimit = "."
+         fieldTxt = string.format( "get_%s()", fieldTxt)
+         filter( prefixNode, self, node )
+         local delimit = "."
+         if node:get_getterTypeInfo(  ):get_kind(  ) == Ast.TypeInfoKind.Method then
+            delimit = ":"
+         else
+          
+            delimit = "."
+         end
+         
+         self:write( delimit .. fieldTxt )
       end
       
-      fieldTxt = string.format( "get_%s()", fieldTxt)
-      self:write( delimit .. fieldTxt )
    end
    
 end
@@ -3452,7 +3461,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3122, function (  )
+   Log.log( Log.Level.Info, __func__, 3133, function (  )
    
       return string.format( "code: %s", code)
    end

@@ -1,3 +1,44 @@
+{
+   form formfunc(val:int);
+   let form1:formfunc;
+   let form2:form;
+   {
+      let mut val1 = "abc";
+      form1 = fn(val:int) {
+         val1 = "xyz";
+         print( val1, val );
+      };
+      form2 = form1;
+      print( val1 );
+   }
+   form1( 10 );
+   form2( 10 );
+}
+
+{
+   let mut val1 = "abc";
+   fn func() {
+      val1 = "xyz";
+   }
+   func();
+   print( val1 );
+}
+
+let mut g_val2 = "ABC";
+{
+   let val1;
+   {
+      let val2;
+      {
+         let val3 = "abc";
+         val2 = val3;
+         g_val2 = "XYZ";
+      }
+      val1 = val2;
+   }
+   print( val1, g_val2 );
+}
+
 fn func1( val:int ):int {
    return val + 1;
 }
@@ -14,13 +55,12 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    return val + test1, val2 + test2, not val3;
 }
 
-let mut g_val2 = "ABC";
 {
-   let mut val = "abc";
+   let mut val1 = "abc";
    let mut val2 = 1;
    let mut val3 = 1;
    fn test1() {
-      val = "xyz";
+      val1 = "xyz";
       val2 = val2 + 10;
       g_val2 = "XYZ";
    }
@@ -28,13 +68,18 @@ let mut g_val2 = "ABC";
    val3 = val3 + 20;
    test1();
    g_val = g_val + 100;
-   print( "clojure:", val, val2, val3, g_val, g_val2 );
+   print( "closure:", val1, val2, val3, g_val, g_val2 );
 }
 
-print( func1( 1 ) );
-print( func2( 1, 10.5 )** );
-print( func2( 2, 10.5 ), "AB");
-print( ( func2( 2, 10.5 ) ), "ABC");
-print( func2( 2, 10.5 ) + 1 );
-print( func3( 3, 10.1, true ) ** );
-print( "Hello world.", 1, 1.2, false, nil);
+
+{
+   print( g_val, g_val2 );
+
+   print( func1( 1 ) );
+   print( func2( 1, 10.5 )** );
+   print( func2( 2, 10.5 ), "AB");
+   print( ( func2( 2, 10.5 ) ), "ABC");
+   print( func2( 2, 10.5 ) + 1 );
+   print( func3( 3, 10.1, true ) ** );
+   print( "Hello world.", 1, 1.2, false, nil);
+}

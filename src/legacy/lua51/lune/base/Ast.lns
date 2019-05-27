@@ -264,10 +264,10 @@ pub class Scope {
    pri let ifScopeList: List<&Scope>;
    /** 所有権情報 */
    pri let mut symbolId2DataOwnerInfo: Map<int,DataOwnerInfo>;
-   /** このスコープ内でアクセスしている clojure シンボル */
-   pri let mut clojureSymMap: Map<int,&SymbolInfo> {pub};
-   pri let mut clojureSymList: List<&SymbolInfo> {pub};
-   pri let mut clojureSym2NumMap: Map<&SymbolInfo,int> {pub};
+   /** このスコープ内でアクセスしている closure シンボル */
+   pri let mut closureSymMap: Map<int,&SymbolInfo> {pub};
+   pri let mut closureSymList: List<&SymbolInfo> {pub};
+   pri let mut closureSym2NumMap: Map<&SymbolInfo,int> {pub};
    
 
    pub fn __init( parent: Scope!, classFlag: bool,
@@ -276,9 +276,9 @@ pub class Scope {
       self.scopeId = Scope.seedId;
       Scope.seedId = Scope.seedId + 1;
       
-      self.clojureSymMap = {};
-      self.clojureSym2NumMap = {};
-      self.clojureSymList = [];
+      self.closureSymMap = {};
+      self.closureSym2NumMap = {};
+      self.closureSymList = [];
       self.parent = unwrap parent default self;
       self.symbol2SymbolInfoMap = {};
       self.inherit = inherit;
@@ -1383,10 +1383,10 @@ pub fn Scope.setAccessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
       if typeInfo ~= symbol.$namespaceTypeInfo {
          // クロージャならシンボル情報を登録する。
          let mut namespacescope = unwrap typeInfo.$scope;
-         if not namespacescope.clojureSymMap[ symbol.$symbolId ] {
-            namespacescope.clojureSymMap[ symbol.$symbolId ] = symbol;
-            namespacescope.clojureSym2NumMap[ symbol ] = #namespacescope.clojureSymList;
-            namespacescope.clojureSymList.insert( symbol );
+         if not namespacescope.closureSymMap[ symbol.$symbolId ] {
+            namespacescope.closureSymMap[ symbol.$symbolId ] = symbol;
+            namespacescope.closureSym2NumMap[ symbol ] = #namespacescope.closureSymList;
+            namespacescope.closureSymList.insert( symbol );
          }
       }
    }
@@ -3654,6 +3654,9 @@ pub class DDDTypeInfo extend TypeInfo {
    pub override fn get_mutMode(): MutMode {
       return self.$typeInfo.$mutMode;
    }
+   pub override fn get_srcTypeInfo(): &TypeInfo {
+      return self;
+   }
    pub override fn get_accessMode(): AccessMode {
       // export 出来るように pub 固定にする。
       // accessMode 毎にインスタンスを作ることも出来るが、
@@ -3708,7 +3711,7 @@ pro override fn DDDTypeInfo.getTxtWithRaw(
    if self.typeInfo == builtinTypeStem_ {
       return "...";
    }
-   let txt = self.typeInfo.getTxtWithRaw( raw, fullName, importInfo, localFlag );
+   let txt = self.typeInfo.getTxt( fullName, importInfo, localFlag );
    return "...<" .. txt .. ">";
 }
 
@@ -4163,6 +4166,11 @@ pub static fn TypeInfo.checkMatchType(
             return .Error, "exp(%d) type mismatch %s <- %s"
             ( srcIndex, dstType.getTxt( true## ), expType.getTxt( true## ) );
          }
+         // let genDstType = dstType.applyGeneric( alt2type );
+         // if not checkType.canEvalWith( dstType, "=", alt2type ) {
+         //    return .Error, "exp(%d) type mismatch %s <- %s"
+         //    ( srcIndex, dstType.getTxt( true## ), expType.getTxt( true## ) );
+         // }
 
          _checkWarnForFollow( srcIndex, dstType, expType );
       }
@@ -4255,16 +4263,31 @@ pub static fn TypeInfo.checkMatchType(
    }
    elseif not allowDstShort {
       foreach dstType, index in dstTypeList {
-         if not dstType.canEvalWith( builtinTypeNil, "=", alt2type ) {
-            return .Error, "exp(%d) type mismatch %s <- nil"
-            ( index, dstType.getTxt( true## ));
+         if dstType.$kind == .DDD {
          }
-         return .Warn, Code.format( .nothing_define_abbr,
-                                    "use '##', instate of %s."
-                                    (dstType.getTxt(true##) ) );
+         else {
+            if not dstType.canEvalWith( builtinTypeNil, "=", alt2type ) {
+               return .Error, "exp(%d) type mismatch %s <- nil"
+               ( index, dstType.getTxt( true## ));
+            }
+            return .Warn, Code.format( .nothing_define_abbr,
+                                       "use '##', instate of %s."
+                                       (dstType.getTxt(true##) ) );
+         }
       }
    }
    return .Match, "";
+}
+
+fn isSettableToForm( typeInfo:&TypeInfo): bool {
+   if #typeInfo.$argTypeInfoList > 0 {
+      foreach argType in typeInfo.$argTypeInfoList {
+         if not argType.$nilable {
+            return false;
+         }
+      }
+   }
+   return true;
 }
 
 pub static fn TypeInfo.canEvalWithBase(
@@ -4275,7 +4298,10 @@ pub static fn TypeInfo.canEvalWithBase(
    let mut otherSrc = other.$srcTypeInfo;
    if otherSrc.$kind == .DDD {
       if #otherSrc.$itemTypeInfoList > 0 {
-         otherSrc = otherSrc.$itemTypeInfoList[ 1 ];
+         otherSrc = otherSrc.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
+      }
+      else {
+         otherSrc = builtinTypeStem_;
       }
    }
 
@@ -4327,7 +4353,7 @@ pub static fn TypeInfo.canEvalWithBase(
    if dest == builtinTypeForm and
       ( otherSrc.$kind == .Func or otherSrc.$kind == .Form )
    {
-      return true;
+      return isSettableToForm( otherSrc );
    }
    if otherSrc == builtinTypeNil or otherSrc.$kind == .Abbr {
       if dest.$kind ~= .Nilable {
@@ -4368,13 +4394,19 @@ pub static fn TypeInfo.canEvalWithBase(
          switch otherSrc.$kind {
             case .Form, .Func {
                if dest == builtinTypeForm {
-                  return true;
+                  return isSettableToForm( otherSrc );
                }
                if TypeInfo.checkMatchType( dest.$argTypeInfoList,
                                            otherSrc.$argTypeInfoList,
                                            false, nil, alt2type ) == .Error or
+                  TypeInfo.checkMatchType( otherSrc.$argTypeInfoList,
+                                           dest.$argTypeInfoList,
+                                           false, nil, alt2type ) == .Error or
                   TypeInfo.checkMatchType( dest.$retTypeInfoList,
                                            otherSrc.$retTypeInfoList,
+                                           false, nil, alt2type ) == .Error or
+                  TypeInfo.checkMatchType( otherSrc.$retTypeInfoList,
+                                           dest.$retTypeInfoList,
                                            false, nil, alt2type ) == .Error or
                   #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
                {
@@ -4428,7 +4460,7 @@ pub static fn TypeInfo.canEvalWithBase(
       }
       case .Func, .Form {
          if dest == builtinTypeForm {
-            return true;
+            return isSettableToForm( otherSrc );
          }
          if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
                                      false, nil, alt2type ) == .Error or

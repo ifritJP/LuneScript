@@ -8,6 +8,32 @@
 
 * 機能
 
+- [ ] 次が出来てしまう。 test(nil) が出来てしまうのは NG。 
+  test に nilable でない引数を持つ関数は代入できてはダメ。
+
+   form Test( ... );
+   fn func( test1:Test ) {
+      test1( nil );
+   }
+
+   func( fn (val:int) {
+      print( val + 1 );
+   } );
+
+
+- [ ] 次が出来てしまう。 test(nil) が出来てしまうのは NG。 
+  test に nilable でない引数を持つ関数は代入できてはダメ。
+
+   fn func( ... ) {
+      print( ... );
+   }
+
+   func( fn (val:int) {
+      print( val + 1 );
+   } );
+
+  
+- [ ] set, enum, alge の nil 条件演算子対応。
 - [ ] for 内で let の初期化するとエラー。
       let 宣言時の初期化ではなく、宣言後の初期化。
   
@@ -252,6 +278,7 @@
 - [X] 定義済みの class を再度定義できてしまう。
 - [X] 初期化していない型宣言もしていない変数に、 Imut な値をセットするとエラー
 - [X] override メソッドの型一致チェックできていない。
+- [X] nil 条件演算子 $ から getter アクセス $ すると、本来の nil 条件演算子制御が出来ない。
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。
   
       

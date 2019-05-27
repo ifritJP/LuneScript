@@ -61,7 +61,7 @@ lune_stem_t * lune_List_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem )
     int index;
     for ( index = 0; index < pDDDStem->val.ddd.len; index++ ) {
         lune_stem_t * pWork;
-        lune_setQ( pWork, lune_fromDDD( pDDDStem, index ) );
+        lune_setQ( (&pWork), lune_fromDDD( pDDDStem, index ) );
     
         lune_obj_List_obj( pStem )->push_back( pWork );
     }
@@ -99,7 +99,7 @@ static lune_stem_t * lune_mtd_List_insert(
 {
     // pVal の参照カウントをインクリメントするため、 work に setq する
     lune_stem_t * pWork;
-    lune_setQ( pWork, pVal );
+    lune_setQ( (&pWork), pVal );
     
     lune_obj_List_obj( pObj )->push_back( pVal );
     
@@ -176,7 +176,7 @@ static bool lune_mtd__CmpLune( lune_stem_t * pVal1, lune_stem_t * pVal2 )
 
     lune_env_t * pEnv = pVal1->pEnv;
     lune_stem_t * pRet;
-    lune_setQ( pRet, pEnv->pSortCallback->val.form.pFunc( pEnv, pEnv->pSortCallback,
+    lune_setQ( (&pRet), pEnv->pSortCallback->val.form.pFunc( pEnv, pEnv->pSortCallback,
                                                             pVal1, pVal2 ) );
 
     int ret = pRet->val.intVal;
@@ -300,7 +300,7 @@ lune_stem_t * lune_Set_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem )
     int index;
     for ( index = 0; index < pDDDStem->val.ddd.len; index++ ) {
         lune_stem_t * pWork;
-        lune_setQ( pWork, lune_fromDDD( pDDDStem, index ) );
+        lune_setQ( (&pWork), lune_fromDDD( pDDDStem, index ) );
     
         lune_obj_Set_obj( pStem )->insert( pWork );
     }
@@ -370,7 +370,7 @@ static lune_stem_t * lune_mtd_Set_add( lune_env_t * _pEnv, lune_stem_t * pObj, l
         
         // pVal の参照カウントをインクリメントするため、 work に setq する
         lune_stem_t * pWork;
-        lune_setQ( pWork, pVal );
+        lune_setQ( (&pWork), pVal );
     
         lune_obj_Set_obj( pObj )->insert( pVal );
     }
@@ -478,7 +478,7 @@ static lune_stem_t * lune_mtd_Set_clone( lune_env_t * _pEnv, lune_stem_t * pObj 
     
     for ( ; it != end; it++ ) {
         lune_stem_t * pWork;
-        lune_setQ( pWork, *it );
+        lune_setQ( (&pWork), *it );
 
         lune_obj_Set_obj( pStem )->insert( pWork );
     }
@@ -550,9 +550,9 @@ lune_stem_t * lune_Map_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem )
     int index;
     for ( index = 0; index < pDDDStem->val.ddd.len; index += 2 ) {
         lune_stem_t * pKey;
-        lune_setQ( pKey, lune_fromDDD( pDDDStem, index ) );
+        lune_setQ( (&pKey), lune_fromDDD( pDDDStem, index ) );
         lune_stem_t * pVal;
-        lune_setQ( pVal, lune_fromDDD( pDDDStem, index + 1 ) );
+        lune_setQ( (&pVal), lune_fromDDD( pDDDStem, index + 1 ) );
 
         pMap->insert( lune_MapClass::value_type( pKey, pVal ) );
     }
@@ -637,9 +637,9 @@ static lune_stem_t * lune_mtd_Map_add( lune_env_t * _pEnv, lune_stem_t * pObj,
         
         // pVal の参照カウントをインクリメントするため、 work に setq する
         lune_stem_t * pWorkKey;
-        lune_setQ( pWorkKey, pKey );
+        lune_setQ( (&pWorkKey), pKey );
         lune_stem_t * pWorkVal;
-        lune_setQ( pWorkVal, pVal );
+        lune_setQ( (&pWorkVal), pVal );
     
         (*pMap)[ pKey ] = pVal;
     }

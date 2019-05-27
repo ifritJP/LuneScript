@@ -1,0 +1,41 @@
+{
+   fn func2( list:&List<int> ) {
+   }
+   fn func3( val:int ) {
+   }
+   fn func( ...<int> ) {
+      func2( [ ... ] );
+      {
+         let val = ...;
+         func3( val ); // error
+         let val2;
+         val2 = ...;
+         func3( val2 ); // error
+      }
+   }
+}
+
+{
+   fn func( ...<int> ) {
+   }
+   func();
+}
+
+{
+   form Test( ...<int> );
+   fn func( test1:Test ) {
+   }
+
+   func( fn (val:int) { // error
+      print( val + 1 );
+   } );
+   func( fn (val:int!) { // error
+      print( unwrap val + 1 );
+   } );
+   func( fn (val:int!, val2:int) { // error
+      print( unwrap val + 1 );
+   } );
+   func( fn (...<int>) {
+      print( ... );
+   } );
+}

@@ -12,8 +12,11 @@ public:
     }
 };
 
+static map<void*,AllocInfo *> s_map;
+
 lune_allocator_t lune_createAllocator( void ) {
-    return new map<void*,AllocInfo *>();
+    //return new map<void*,AllocInfo *>();
+    return &s_map;
 }
 
 void * _lune_malloc( lune_allocator_t allocateor,
@@ -22,6 +25,7 @@ void * _lune_malloc( lune_allocator_t allocateor,
     map<void*,AllocInfo *> * pMap = (map<void*,AllocInfo *> *)allocateor;
     void * pAddr = malloc( size );
     (*pMap)[ pAddr ] = new AllocInfo( pName, lineNo );
+    // printf( "alloc = %p, %p,%s,%d\n", pMap, pAddr, pName, lineNo );
     return pAddr;
 }
 
@@ -31,17 +35,19 @@ void _lune_free( lune_allocator_t allocateor,
     map<void*,AllocInfo *> * pMap = (map<void*,AllocInfo *> *)allocateor;
     map<void*,AllocInfo *>::iterator it = pMap->find( pAddr );
     if ( it != pMap->end() ) {
+        // printf( "free = %p, %p,%s,%d\n",
+        //         pMap, pAddr, it->second->pName, it->second->lineNo );
         delete it->second;
         pMap->erase( pAddr );
     }
     else {
-        printf( "error!!\n" );
+        printf( "error!! -- %p, %p\n", pMap, pAddr );
     }
 }
 
-void lune_checkMem( lune_allocator_t allocateor )
+void lune_checkMem( void )
 {
-    map<void*,AllocInfo *> * pMap = (map<void*,AllocInfo *> *)allocateor;
+    map<void*,AllocInfo *> * pMap = &s_map;
     map<void*,AllocInfo *>::iterator it = pMap->begin();
     map<void*,AllocInfo *>::iterator end = pMap->end();
 

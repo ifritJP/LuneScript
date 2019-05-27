@@ -2502,7 +2502,7 @@ fn TransUnit.analyzeLetAndInitExp(
             // 最終要素が ... の場合、残りの変数宣言の分 stem をセットする
             let mut dddItemType = Ast.builtinTypeStem_;
             if #expType.$itemTypeInfoList > 0 {
-               dddItemType = expType.$itemTypeInfoList[ 1 ];
+               dddItemType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
             }
             for subIndex = index, #letVarList {
                let argType = typeInfoList[ subIndex ];

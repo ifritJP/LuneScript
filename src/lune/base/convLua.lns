@@ -2880,6 +2880,8 @@ pub override fn convFilter.processGetField(
    let prefixNode = node.get_prefix();
    let prefixType = prefixNode.$expType;
    let mut fieldTxt = node.get_field().txt;
+
+
    if fieldTxt == "_txt" and
        ( prefixType.$kind == .Enum or prefixType.$kind == .Alge )
    {
@@ -2888,17 +2890,26 @@ pub override fn convFilter.processGetField(
       self.writeln( ")" );
    }
    else {
-      filter( prefixNode,  self, node );
-      let mut delimit = ".";
-      if node.get_getterTypeInfo().get_kind() == Ast.TypeInfoKind.Method {
-         delimit = ":";
+      
+      if node.$nilAccess {
+         fieldTxt = "get_%s" ( fieldTxt );
+         self.write( "_lune.nilacc( " );
+         filter( prefixNode, self, node );
+         self.write( ", '%s', 'callmtd' )" (fieldTxt) );
       }
       else {
-         delimit = ".";
-      }
+         fieldTxt = "get_%s()" ( fieldTxt );
+         filter( prefixNode,  self, node );
+         let mut delimit = ".";
+         if node.get_getterTypeInfo().get_kind() == Ast.TypeInfoKind.Method {
+            delimit = ":";
+         }
+         else {
+            delimit = ".";
+         }
 
-      fieldTxt = "get_%s()" ( fieldTxt );
-      self.write( delimit .. fieldTxt );
+         self.write( delimit .. fieldTxt );
+      }
    }
 };
 

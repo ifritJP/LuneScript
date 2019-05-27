@@ -29,6 +29,8 @@ typedef struct lune_globalEnv_t {
     lune_block_t moduleInitBlockBuf[ LUNE_MODULE_MAX_NUM ];
     /** 現在のモジュール数 */
     int moduleNum;
+    /** 現在確保している stem の数 */
+    int allocNum;
 } lune_globalEnv_t;
 
 static lune_globalEnv_t s_globalEnv;
@@ -53,7 +55,7 @@ static lune_globalEnv_t s_globalEnv;
 static lune_stem_t * _lune_alloc_stem(
     lune_env_t * _pEnv, lune_value_type_t type, const char * pFile, int lineNo )
 {
-    _pEnv->allocNum++;
+    s_globalEnv.allocNum++;
     
     lune_stem_t * pStem = (lune_stem_t *)_lune_malloc(
         _pEnv->allocateor, sizeof( lune_stem_t ), pFile, lineNo );
@@ -75,8 +77,13 @@ static lune_stem_t * _lune_alloc_stem(
  * 参照カウントが 0 になっていることが前提条件。
  */
 static void lune_release_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
+    if ( pStem->type == lune_value_type_str ) {
+        pStem->type = lune_value_type_str;
+    }
+    pStem->type = lune_value_type_none; // このセットは必須ではないが、
+                                        // セットしておいた方が不具合を見つけ易い。
     lune_free( _pEnv->allocateor, pStem );
-    _pEnv->allocNum--;
+    s_globalEnv.allocNum--;
 }
 
 static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag ) {
@@ -94,22 +101,21 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
     case lune_value_type_ddd: // fall-through
     case lune_value_type_mRet:
         lune_free( _pEnv->allocateor, pStem->val.ddd.pStemList );
-        _pEnv->allocNum--;
+        s_globalEnv.allocNum--;
         break;
     case lune_value_type_form:
         {
             int index;
             for ( index = 0; index < pStem->val.form.len; index++ ) {
-                lune_stem_t * pClosureVal = lune_form_closure( pStem, index );
-                lune_decre_ref( _pEnv, pClosureVal );
-                //lune_decre_ref( _pEnv, lune_closureVal( pClosureVal ) );
+                lune_var_t * pVar = lune_form_closure( pStem, index );
+                pVar->refCount--;
+                if ( pVar->refCount == 0 ) {
+                    lune_decre_ref( _pEnv, pVar->pStem );
+                }
             }
-            lune_free( _pEnv->allocateor, pStem->val.form.pClosureValList );
-            _pEnv->allocNum--;
+            lune_free( _pEnv->allocateor, pStem->val.form.ppClosureValList );
+            s_globalEnv.allocNum--;
         }
-        break;
-    case lune_value_type_closureVal:
-        lune_decre_ref( _pEnv, lune_closureVal( pStem ) );
         break;
     case lune_value_type_itSet:
         lune_itSet_gc( _pEnv, pStem );
@@ -164,8 +170,16 @@ void lune_setup_block( lune_env_t * _pEnv, lune_block_t * pBlock, int stemVerNum
     pBlock->managedStemTop.pPrev = &pBlock->managedStemTop;
     pBlock->managedStemTop.pNext = &pBlock->managedStemTop;
 
-    pBlock->pStemBuf = _pEnv->stemPPool + _pEnv->useStemPoolNum;
-    memset( pBlock->pStemBuf, 0, sizeof( *pBlock->pStemBuf ) * stemVerNum );
+    pBlock->pVarList = _pEnv->varPPool + _pEnv->useStemPoolNum;
+    int index;
+    for ( index = 0; index < stemVerNum; index++ ) {
+        lune_var_t * pVar = (lune_var_t *)lune_malloc(
+            _pEnv->allocateor, sizeof( lune_var_t ) );
+        s_globalEnv.allocNum++;
+        pVar->pStem = NULL;
+        pBlock->pVarList[ index ] = pVar;
+        pVar->refCount = 1;
+    }
     pBlock->len = stemVerNum;
     pBlock->blockDepth = _pEnv->blockDepth;
     pBlock->pStackAddr = &dummy;
@@ -219,10 +233,16 @@ static void lune_leave_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock )
 {
     int index;
     for ( index = pBlock->len - 1; index >= 0; index-- ) {
-        lune_stem_t * pStem = pBlock->pStemBuf[ index ];
-        if ( pStem != NULL ) {
-            lune_decre_ref( _pEnv, pStem );
+        lune_var_t * pVar = pBlock->pVarList[ index ];
+        pVar->refCount--;
+        if ( pVar->refCount == 0 ) {
+            lune_stem_t * pStem = pVar->pStem;
+            if ( pStem != NULL ) {
+                lune_decre_ref( _pEnv, pStem );
+            }
         }
+        lune_free( _pEnv->allocateor, pVar );
+        s_globalEnv.allocNum--;
     }
 
     {
@@ -298,7 +318,7 @@ lune_block_t * lune_enter_func( lune_env_t * _pEnv, int num, int argNum, ... )
     int index;
     for ( index = 0; index < argNum; index++ ) {
         lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        lune_setq( _pEnv, pBlock->pStemBuf[ index ], pStem );
+        lune_setq( _pEnv, &pBlock->pVarList[ index ]->pStem, pStem );
     }
     va_end(ap);
 
@@ -337,7 +357,7 @@ static lune_stem_t * lune_createDDDSub(
     pDDD->len = argNum;
     pDDD->pStemList = (lune_stem_t **)lune_malloc(
         _pEnv->allocateor, sizeof( lune_stem_t * ) * argNum );
-    _pEnv->allocNum++;
+    s_globalEnv.allocNum++;
 
     va_list ap;
     va_copy( ap, apSrc );
@@ -444,7 +464,7 @@ lune_stem_t * _lune_createDDDOnly(
     pDDD->len = num;
     pDDD->pStemList = (lune_stem_t **)lune_malloc(
         _pEnv->allocateor, sizeof( lune_stem_t * ) * num );
-    _pEnv->allocNum++;
+    s_globalEnv.allocNum++;
 
     return pDDDStem;
 }
@@ -487,7 +507,7 @@ lune_stem_t * _lune_class_new(
     lune_stem_t * pStem =
         lune_alloc_stem( _pEnv, lune_value_type_class, pFile, lineNo );
     void * pObj = lune_malloc( _pEnv->allocateor, size );
-    _pEnv->allocNum++;
+    s_globalEnv.allocNum++;
     pStem->val.classVal = pObj;
     return pStem;
 }
@@ -499,22 +519,9 @@ lune_stem_t * _lune_class_new(
  */
 void lune_class_del( lune_env_t * _pEnv, void * pObj )
 {
-    _pEnv->allocNum--;
+    s_globalEnv.allocNum--;
     lune_free( _pEnv->allocateor, pObj );
 }
-
-lune_stem_t * _lune_create_closureVal(
-    const char * pFile, int lineNo, lune_env_t * _pEnv, lune_stem_t * pVal )
-{
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_closureVal, pFile, lineNo );
-    lune_closureVal( pStem ) = pVal;
-    if ( pVal != NULL ) {
-        lune_rmFromList( pVal );
-    }
-    return pStem;
-}
-
 
 /**
  * 関数 pFunc を保持する stem を生成する
@@ -526,26 +533,33 @@ lune_stem_t * _lune_create_closureVal(
  */
 lune_stem_t * _lune_func2stem(
     const char * pFile, int lineNo, 
-    lune_env_t * _pEnv, lune_func_t * pFunc, int num, ... )
+    lune_env_t * _pEnv, lune_func_t * pFunc, int argNum, bool hasDDD, int num, ... )
 {
     lune_stem_t * pFormStem =
         lune_alloc_stem( _pEnv, lune_value_type_form, pFile, lineNo );
     lune_form_t * pForm = &pFormStem->val.form;
     pForm->len = num;
-    pForm->pClosureValList = (lune_stem_t **)lune_malloc(
-        _pEnv->allocateor, sizeof( lune_stem_t * ) * num );
-    _pEnv->allocNum++;
+    pForm->ppClosureValList = (lune_var_t **)lune_malloc(
+        _pEnv->allocateor, sizeof( lune_var_t * ) * num );
+    s_globalEnv.allocNum++;
+    /* pForm->pOrgClosureValList = (lune_stem_t **)lune_malloc( */
+    /*     _pEnv->allocateor, sizeof( lune_stem_t * ) * num ); */
+    /* s_globalEnv.allocNum++; */
 
     pForm->pFunc = pFunc;
+    pForm->argNum = argNum;
+    pForm->hasDDD = hasDDD;
     
     va_list ap;
     va_start( ap, num );
 
     int index;
     for ( index = 0; index < num; index++ ) {
-        lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        pForm->pClosureValList[ index ] = pStem;
-        pStem->refCount++;
+        lune_var_t * pVar = va_arg( ap, lune_var_t * );
+        pVar->refCount++;
+        pForm->ppClosureValList[ index ] = pVar;
+        // pVar->pStem->refCount++;
+        //pForm->pOrgClosureValList[ index ] = pVar->pStem;
     }
     va_end(ap);
 
@@ -650,9 +664,10 @@ static lune_env_t * lune_createEnv()
     lune_allocator_t allocateor = lune_createAllocator();
     
     lune_env_t * _pEnv = (lune_env_t *)lune_malloc( allocateor, sizeof( lune_env_t ) );
+    s_globalEnv.allocNum++;
+    
     _pEnv->allocateor = allocateor;
     _pEnv->useStemPoolNum = 0;
-    _pEnv->allocNum = 0;
     _pEnv->blockDepth = 0;
 
     lune_enter_block( _pEnv, 0 );
@@ -674,16 +689,16 @@ static void lune_deleteEnv( lune_env_t * _pEnv ) {
     lune_leave_block( _pEnv );
     lune_leave_block( _pEnv );
 
-    printf( ":debug:allocNum = %d\n", _pEnv->allocNum );
+    s_globalEnv.allocNum--;
+
     printf( ":debug:useStemPoolNum = %d\n", _pEnv->useStemPoolNum );
     printf( ":debug:blockDepth = %d\n", _pEnv->blockDepth );
-
+    
     lune_free( _pEnv->allocateor, _pEnv );
-
-    lune_checkMem( _pEnv->allocateor );
 }
 
 static void lune_createGlobalEnv(void) {
+    s_globalEnv.allocNum = 0;
     s_globalEnv.pEnv = lune_createEnv();
     s_globalEnv.moduleNum = 0;
 }
@@ -695,7 +710,50 @@ static void lune_releaseGlobalEnv(void) {
                              &s_globalEnv.moduleInitBlockBuf[ index ] );
     }
     lune_deleteEnv( s_globalEnv.pEnv );
+    printf( ":debug:allocNum = %d\n", s_globalEnv.allocNum );
+    lune_checkMem();
 }
+
+lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... )
+{
+    lune_stem_t * pRet;
+    lune_form_t * pFormInfo = &_pForm->val.form;
+    
+    if ( pFormInfo->hasDDD ) {
+        pRet = NULL;
+    }
+    else {
+        lune_stem_t * pStemArray[ 10 ];
+
+        va_list ap;
+        va_start( ap, _pForm );
+
+        int index;
+        for ( index = 0; index < num; index++ ) {
+            pStemArray[ index ] = va_arg( ap, lune_stem_t * );
+        }
+        va_end(ap);
+
+        switch ( pFormInfo->argNum ) {
+        case 0:
+            pRet = pFormInfo->pFunc( _pEnv, _pForm );
+            break;
+        case 1:
+            pRet = pFormInfo->pFunc(
+                _pEnv, _pForm, pStemArray[ 0 ] );
+            break;
+        case 2:
+            pRet = pFormInfo->pFunc(
+                _pEnv, _pForm, pStemArray[ 0 ], pStemArray[ 1 ] );
+            break;
+        }
+    }
+
+    return pRet;
+}
+            
+
+
 
 
 /**
@@ -784,3 +842,4 @@ int main (int argc, char * pArgv[] )  {
     }
     return 1;
 }
+

@@ -6412,7 +6412,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
          if index == #expList:get_expTypeList() and expType:get_kind() == Ast.TypeInfoKind.DDD then
             local dddItemType = Ast.builtinTypeStem_
             if #expType:get_itemTypeInfoList() > 0 then
-               dddItemType = expType:get_itemTypeInfoList()[1]
+               dddItemType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
             end
             
             for subIndex = index, #letVarList do
@@ -7233,6 +7233,10 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       local _switchExp = funcTypeInfo
       if _switchExp == builtinFunc.list_insert or _switchExp == builtinFunc.set_add or _switchExp == builtinFunc.set_del then
          argTypeList = genericTypeList
+      elseif _switchExp == builtinFunc.list_sort then
+         local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+         local callback = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Func, Ast.headTypeInfo, false, false, true, Ast.AccessMode.Pri, "sort", nil, {genericTypeList[1], genericTypeList[1]}, {Ast.builtinTypeBool}, false )
+         argTypeList = {callback:get_nilableTypeInfo()}
       elseif _switchExp == builtinFunc.list_remove then
       end
    end
@@ -8330,8 +8334,11 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
    
    if accessNil then
       self.helperInfo.useNilAccess = true
-      if prefixExpType:get_kind(  ) == Ast.TypeInfoKind.Set then
-         self:addErrMess( firstToken.pos, "Set does not support $." )
+      do
+         local _switchExp = prefixExpType:get_kind(  )
+         if _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
+            self:addErrMess( firstToken.pos, string.format( "%s does not support $.", prefixExpType:getTxt( false )) )
+         end
       end
       
    end
@@ -8682,7 +8689,15 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, exp2NodeList )
       
       if index <= #expTypeList and not symbolInfo:get_hasValueFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Var then
          if symbolInfo:get_typeInfo() == Ast.builtinTypeEmpty then
-            symbolInfo:set_typeInfo( expTypeList[index] )
+            local expType = expTypeList[index]
+            if expType:get_kind() == Ast.TypeInfoKind.DDD then
+               if #expType:get_itemTypeInfoList() > 0 then
+                  expType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
+               end
+               
+            end
+            
+            symbolInfo:set_typeInfo( expType )
          end
          
          if not self.tentativeSymbol:regist( symbolInfo ) then
