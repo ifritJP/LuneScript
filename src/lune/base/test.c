@@ -51,7 +51,7 @@ lune_stem_t * u_class_Test_new( lune_env_t * _pEnv, int val ) {
 
 static void u_mtd_Test_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
 {
-    printf( "%s\n", __func__ );
+    LUNE_DEBUG_CALL_LOG;
     lune_decre_ref( _pEnv, lune_obj_Test( pObj )->val2 );
 
     if ( freeFlag ) {
@@ -128,7 +128,7 @@ lune_stem_t * lune_class_Sub_new(
 static void u_mtd_Sub_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
 {
     
-    printf( "%s\n", __func__ );
+    LUNE_DEBUG_CALL_LOG;
     lune_decre_ref( _pEnv, lune_obj_Sub( pObj )->val3 );
 
     u_mtd_Test_gc( _pEnv, pObj, false );
@@ -289,7 +289,7 @@ void lune_init_test( lune_env_t * _pEnv )
     // fn () { val2 = val2 + 1000; } ();
     lune_stem_t * pClosure = lune_func2stem(
         _pEnv, (lune_func_t *)u_lune_form_test3, 1, pVal2, 0, false );
-    lune_call_form( _pEnv, pClosure );
+    lune_call_form( _pEnv, pClosure, 0 );
     // print( val2 );
     lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal2->pStem ) );
     

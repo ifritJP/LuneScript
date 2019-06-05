@@ -2986,7 +2986,7 @@ fn TransUnit.analyzeExp(
             }
          }
          else {
-            self.scope.setAccessSymbol( self.moduleScope, symbolInfo );
+            self.scope.accessSymbol( self.moduleScope, symbolInfo );
          }
       }
    }  

@@ -543,14 +543,25 @@ uninstall: check_lua_mod_dir
 test-ccc:
 	LANG= $(MAKE) -f Makefile.ccc LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 
+
+define test-convC
+	$(LUA) lune/base/base.lua $1.lns save -langC
+	cat $1.c
+	LANG= $(MAKE) -f Makefile.ccc SRCS=$1.c TEST_OUT=test.exe \
+		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
+	@# C へのトランスコンパイラ結果と、
+	@# Lua へのトランスコンパイラ結果で出力が同じになることを確認
+	@./test.exe | grep -v -e '^:debug:' > work/$1.c.log
+	@$(LUA) lune/base/base.lua $1.lns exe > work/$1.lua.log
+	diff work/$1.c.log work/$1.lua.log
+endef
+
+build-miniC:
+	LANG= $(MAKE) -f Makefile.ccc SRCS=miniC.c TEST_OUT=test.exe \
+		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
+
+
 build-cc:
 	$(call transwork,.,.,base/convCC)
-	$(LUA) lune/base/base.lua ccc.lns save -langC
-	cat ccc.c
-	LANG= $(MAKE) -f Makefile.ccc SRCS=ccc.c TEST_OUT=test.exe \
-		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
-# C へのトランスコンパイラ結果と、
-# Lua へのトランスコンパイラ結果で出力が同じになることを確認
-	@./test.exe | grep -v -e '^:debug:' > work/ccc.c.log
-	@$(LUA) lune/base/base.lua ccc.lns exe > work/ccc.lua.log
-	diff work/ccc.c.log work/ccc.lua.log
+	$(call test-convC,miniC)
+	$(call test-convC,ccc)

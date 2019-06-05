@@ -222,6 +222,21 @@ lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemVerNum )
 }
 
 
+static inline void lune_reset_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock ) {
+    lune_stem_t * pWork = pBlock->managedStemTop.pPrev;
+    while ( pWork != &pBlock->managedStemTop ) {
+        lune_stem_t * pPrev = pWork->pPrev;
+
+        if ( pWork->refCount == 1 ) {
+            lune_gc_stem( _pEnv, pWork, true );
+        }
+        else {
+            pWork->refCount--;
+        }
+        pWork = pPrev;
+    }
+}
+
 /**
  * 現在のブロックを終了する。
  *
@@ -245,21 +260,8 @@ static void lune_leave_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock )
         s_globalEnv.allocNum--;
     }
 
-    {
-        lune_stem_t * pWork = pBlock->managedStemTop.pPrev;
-        while ( pWork != &pBlock->managedStemTop ) {
-            lune_stem_t * pPrev = pWork->pPrev;
-
-            if ( pWork->refCount == 1 ) {
-                lune_gc_stem( _pEnv, pWork, true );
-            }
-            else {
-                pWork->refCount--;
-            }
-            pWork = pPrev;
-        }
-    }
-
+    lune_reset_blockSub( _pEnv, pBlock );
+    
     _pEnv->useStemPoolNum -= pBlock->len;
 }
 
@@ -278,6 +280,35 @@ void lune_leave_block( lune_env_t * _pEnv )
 
     lune_leave_blockSub( _pEnv, pBlock );
 }
+
+/**
+ * 現在のブロックをクリアする。
+ */
+void lune_reset_block( lune_env_t * _pEnv )
+{
+    lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
+
+    int index;
+    for ( index = pBlock->len - 1; index >= 0; index-- ) {
+        lune_var_t * pVar = pBlock->pVarList[ index ];
+        if ( pVar->refCount == 1 ) {
+            lune_stem_t * pStem = pVar->pStem;
+            if ( pStem != NULL ) {
+                lune_decre_ref( _pEnv, pStem );
+            }
+        }
+        else {
+            pVar->refCount--;
+        }
+    }
+
+    lune_reset_blockSub( _pEnv, pBlock );
+
+    pBlock->managedStemTop.pPrev = &pBlock->managedStemTop;
+    pBlock->managedStemTop.pNext = &pBlock->managedStemTop;
+}
+
+
 
 /**
  * 複数のブロックを抜ける。
@@ -807,7 +838,7 @@ static int lua_main( lua_State *L) {
     int argc = lua_tointeger(L, 1);
     char ** pArgv = (char **)lua_touserdata(L, 2);
     int script;
-
+    
     lune_createGlobalEnv();
     
     lune_env_t * _pEnv = lune_createEnv();

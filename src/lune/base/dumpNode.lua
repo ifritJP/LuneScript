@@ -688,7 +688,7 @@ end
 function dumpFilter:processFor( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_val(  ).txt )
+   dump( prefix, depth, node, node:get_val(  ):get_name() )
    filter( node:get_init(  ), self, opt:nextOpt(  ) )
    filter( node:get_to(  ), self, opt:nextOpt(  ) )
    do

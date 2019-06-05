@@ -1879,7 +1879,7 @@ local function dumpScope( workscope, workprefix )
    dumpScopeSub( workscope, workprefix, {} )
 end
 _moduleObj.dumpScope = dumpScope
-function Scope:setAccessSymbol( moduleScope, symbol )
+function Scope:accessSymbol( moduleScope, symbol )
 
    if symbol:get_scope() == moduleScope then
    else
@@ -1891,6 +1891,13 @@ function Scope:setAccessSymbol( moduleScope, symbol )
             namespacescope.closureSymMap[symbol:get_symbolId()] = symbol
             namespacescope.closureSym2NumMap[symbol] = #namespacescope.closureSymList
             table.insert( namespacescope.closureSymList, symbol )
+            do
+               local scope = typeInfo:get_scope()
+               if scope ~= nil then
+                  scope.parent:accessSymbol( moduleScope, symbol )
+               end
+            end
+            
          end
          
       end

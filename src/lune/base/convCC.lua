@@ -229,6 +229,7 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local cTypeInt = "lune_int_t"
 local SymbolParam = {}
 function SymbolParam.setmeta( obj )
   setmetatable( obj, { __index = SymbolParam  } )
@@ -414,7 +415,7 @@ local function getCType( valType, varFlag )
    do
       local _switchExp = expType
       if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-         return "lune_int_t"
+         return cTypeInt
       elseif _switchExp == Ast.builtinTypeReal then
          return "lune_real_t"
       elseif _switchExp == Ast.builtinTypeBool then
@@ -1117,7 +1118,7 @@ function convFilter:processDeclVar( node, opt )
       else
        
          if varSymList[1]:get_scope() ~= self.ast:get_moduleScope() then
-            self:write( string.format( "%s %s;", typeTxt, var:get_name()) )
+            self:writeln( string.format( "%s %s;", typeTxt, var:get_name()) )
          end
          
       end
@@ -1216,7 +1217,73 @@ local function getFuncName( typeInfo )
       return string.format( "_anonymous_%d", typeInfo:get_typeId())
    end
    
-   return typeInfo:get_rawTxt()
+   do
+      local _switchExp = typeInfo:get_accessMode()
+      if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
+         return typeInfo:get_rawTxt()
+      end
+   end
+   
+   return string.format( "lune_f_%d_%s", typeInfo:get_typeId(), typeInfo:get_rawTxt())
+end
+
+function convFilter:processVal2Stem( node, parent )
+
+   if isStemVal( node ) then
+      filter( node, self, parent )
+   else
+    
+      local expType = node:get_expType()
+      do
+         local _switchExp = expType:get_srcTypeInfo()
+         if _switchExp == Ast.builtinTypeBool then
+            self:write( "lune_bool2stem( _pEnv, " )
+            filter( node, self, parent )
+            self:write( ")" )
+         elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+            self:write( "lune_int2stem( _pEnv, " )
+            filter( node, self, parent )
+            self:write( ")" )
+         elseif _switchExp == Ast.builtinTypeReal then
+            self:write( "lune_real2stem( _pEnv, " )
+            filter( node, self, parent )
+            self:write( ")" )
+         else 
+            
+               do
+                  local _switchExp = expType:get_kind()
+                  if _switchExp == Ast.TypeInfoKind.DDD then
+                     self:write( "_pDDD" )
+                  elseif _switchExp == Ast.TypeInfoKind.Func then
+                     do
+                        local scope = expType:get_scope()
+                        if scope ~= nil then
+                           local argList = expType:get_argTypeInfoList()
+                           local hasDDD = #argList > 0 and argList[#argList]:get_kind() == Ast.TypeInfoKind.DDD or false
+                           self:write( "lune_func2stem( _pEnv, (lune_func_t *)" )
+                           self:write( getFuncName( expType ) )
+                           self:write( string.format( ", %d, %s, %d", #node:get_expType():get_argTypeInfoList(), hasDDD, #scope:get_closureSymList()) )
+                           for __index, symbolInfo in pairs( scope:get_closureSymList() ) do
+                              self:write( string.format( ", %s", symbolInfo:get_name()) )
+                           end
+                           
+                           self:write( ")" )
+                        else
+                           Util.err( "illegal func" )
+                        end
+                     end
+                     
+                  else 
+                     
+                        filter( node, self, parent )
+                  end
+               end
+               
+         end
+      end
+      
+   end
+   
 end
 
 function convFilter:processDeclFunc( node, opt )
@@ -1229,15 +1296,7 @@ function convFilter:processDeclFunc( node, opt )
       else 
          
             if opt.node:get_kind() ~= Nodes.NodeKind.get_Block() then
-               local scope = _lune.unwrap( node:get_expType():get_scope())
-               local argList = node:get_expType():get_argTypeInfoList()
-               local hasDDD = #argList > 0 and argList[#argList]:get_kind() == Ast.TypeInfoKind.DDD or false
-               self:write( string.format( "lune_func2stem( _pEnv, (lune_func_t *)%s, %d, %s, %d", getFuncName( node:get_expType() ), #node:get_expType():get_argTypeInfoList(), hasDDD, #scope:get_closureSymList()) )
-               for __index, symbol in pairs( scope:get_closureSymList() ) do
-                  self:write( string.format( ", %s", symbol:get_name()) )
-               end
-               
-               self:write( ")" )
+               self:processVal2Stem( node, opt.node )
             end
             
             return 
@@ -1332,6 +1391,29 @@ end
 
 function convFilter:processFor( node, opt )
 
+   self:writeln( "{" )
+   self:pushIndent(  )
+   self:writeln( string.format( "%s _to;", cTypeInt) )
+   self:writeln( string.format( "%s _inc;", cTypeInt) )
+   self:writeln( string.format( "%s %s;", cTypeInt, node:get_val():get_name()) )
+   self:processSetValToSym( node, {node:get_val()}, {node:get_to(  )} )
+   self:writeln( string.format( "_to = %s;", node:get_val():get_name()) )
+   do
+      local _exp = node:get_delta(  )
+      if _exp ~= nil then
+         self:processSetValToSym( node, {node:get_val()}, {_exp} )
+         self:writeln( string.format( "_inc = %s;", node:get_val():get_name()) )
+      else
+         self:writeln( "_inc = 1;" )
+      end
+   end
+   
+   self:processSetValToSym( node, {node:get_val()}, {node:get_init(  )} )
+   self:writeln( string.format( "for (; %s <= _to; %s += _inc )", node:get_val():get_name(), node:get_val():get_name()) )
+   filter( node:get_block(  ), self, node )
+   self:writeln( "}" )
+   self:popIndent(  )
+   self:writeln( "}" )
 end
 
 
@@ -1354,38 +1436,13 @@ function convFilter:processExpUnwrap( node, opt )
 
 end
 
-function convFilter:processVal2Stem( node, parent )
+function convFilter:processCreateDDD( ddd, expList, index, parent )
 
-   if isStemVal( node ) then
-      filter( node, self, parent )
-   else
-    
-      do
-         local _switchExp = node:get_expType():get_srcTypeInfo()
-         if _switchExp == Ast.builtinTypeBool then
-            self:write( "lune_bool2stem( _pEnv, " )
-            filter( node, self, parent )
-            self:write( ")" )
-         elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-            self:write( "lune_int2stem( _pEnv, " )
-            filter( node, self, parent )
-            self:write( ")" )
-         elseif _switchExp == Ast.builtinTypeReal then
-            self:write( "lune_real2stem( _pEnv, " )
-            filter( node, self, parent )
-            self:write( ")" )
-         else 
-            
-               filter( node, self, parent )
-         end
-      end
-      
+   if expList[index]:get_expType():get_kind() == Ast.TypeInfoKind.DDD and #expList == index then
+      self:write( "_pDDD" )
+      return 
    end
    
-end
-
-function convFilter:processCreateDDD( ddd, expList, num )
-
    if ddd then
       self:write( "lune_createDDD" )
    else
@@ -1394,7 +1451,13 @@ function convFilter:processCreateDDD( ddd, expList, num )
    end
    
    local lastExp = expList[#expList]
-   self:write( string.format( "( _pEnv, %s, %d", hasMultiVal( lastExp ), num) )
+   self:write( string.format( "( _pEnv, %s, %d", hasMultiVal( lastExp ), #expList - index + 1) )
+   for expIndex = index, #expList do
+      self:write( ", " )
+      self:processVal2Stem( expList[expIndex], parent )
+   end
+   
+   self:write( ")" )
 end
 
 function convFilter:processCallArgList( funcType, expListNode, parent )
@@ -1408,17 +1471,11 @@ function convFilter:processCallArgList( funcType, expListNode, parent )
          
          if #expList >= index then
             if funcArgType:get_kind() == Ast.TypeInfoKind.DDD then
-               self:processCreateDDD( true, expList, #expList - index + 1 )
-               for expIndex = index, #expList do
-                  self:write( ", " )
-                  self:processVal2Stem( expList[expIndex], parent )
-               end
-               
-               self:write( ")" )
+               self:processCreateDDD( true, expList, index, parent )
                return 
             else
              
-               if funcArgType:get_kind() == Ast.TypeInfoKind.Form then
+               if isStemType( funcArgType ) then
                   self:processVal2Stem( expList[index], parent )
                else
                 
@@ -1844,7 +1901,13 @@ function convFilter:processExpRef( node, opt )
             
          end
          
-         self:write( node:get_token().txt )
+         if symbolInfo:get_kind() == Ast.SymbolKind.Fun then
+            self:write( getFuncName( symbolInfo:get_typeInfo() ) )
+         else
+          
+            self:write( node:get_token().txt )
+         end
+         
       end
       
    end
@@ -1881,13 +1944,7 @@ function convFilter:processReturn( node, opt )
          self:writeln( "{" )
          self:write( "lune_stem_t * _pRet = " )
          if #self.currentRoutineInfo:get_funcInfo():get_retTypeInfoList() >= 2 then
-            self:processCreateDDD( false, expList, #expList )
-            for __index, expNode in pairs( expList ) do
-               self:write( ", " )
-               self:processVal2Stem( expNode, node )
-            end
-            
-            self:write( ")" )
+            self:processCreateDDD( false, expList, 1, node )
          elseif #self.currentRoutineInfo:get_funcInfo():get_retTypeInfoList() == 1 then
             self:processVal2Stem( expList[1], node )
          else

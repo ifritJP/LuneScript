@@ -886,7 +886,7 @@ function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable
       
    end
    
-   self.scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
+   return self.scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
 end
 function TransUnit.setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
@@ -3358,7 +3358,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2203, function (  )
+   Log.log( Log.Level.Info, __func__, 2204, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3374,7 +3374,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2214, function (  )
+               Log.log( Log.Level.Info, __func__, 2215, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3405,7 +3405,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2234, function (  )
+   Log.log( Log.Level.Info, __func__, 2235, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3761,7 +3761,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2605, function (  )
+   Log.log( Log.Level.Info, __func__, 2606, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -4066,7 +4066,7 @@ function TransUnit:analyzeFor( firstToken )
       self:addErrMess( exp1:get_pos(), string.format( "exp1 is not number -- %s", exp1:get_expType():getTxt(  )) )
    end
    
-   self:addLocalVar( exp1:get_pos(), false, true, val.txt, exp1:get_expType(), false )
+   local symbolInfo = self:addLocalVar( exp1:get_pos(), false, true, val.txt, exp1:get_expType(), false )
    self:checkNextToken( "," )
    local exp2 = self:analyzeExp( false, false )
    if not Ast.isNumberType( exp2:get_expType() ) then
@@ -4092,7 +4092,7 @@ function TransUnit:analyzeFor( firstToken )
       self:pushback(  )
    end
    
-   local node = Nodes.ForNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, self:analyzeBlock( Nodes.BlockKind.For, TentativeMode.Loop, scope ), val, exp1, exp2, exp3 )
+   local node = Nodes.ForNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, self:analyzeBlock( Nodes.BlockKind.For, TentativeMode.Loop, scope ), symbolInfo, exp1, exp2, exp3 )
    self:popScope(  )
    return node
 end
@@ -4453,7 +4453,7 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
          end
          
          table.insert( argList, Nodes.DeclArgDDDNode.create( self.nodeManager, argName.pos, {dddTypeInfo} ) )
-         self.scope:addLocalVar( false, true, argName.txt, dddTypeInfo, false )
+         self.scope:addLocalVar( true, true, argName.txt, dddTypeInfo, false )
       else
        
          argName = self:checkSymbol( argName, SymbolMode.MustNot_ )
@@ -4464,7 +4464,7 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
          self:checkNextToken( ":" )
          local refType = self:analyzeRefType( accessMode, false )
          local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, refType )
-         self.scope:addLocalVar( false, true, argName.txt, refType:get_expType(), mutable )
+         self.scope:addLocalVar( true, true, argName.txt, refType:get_expType(), mutable )
          table.insert( argList, arg )
       end
       
@@ -9515,7 +9515,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
             
          else
           
-            self.scope:setAccessSymbol( self.moduleScope, symbolInfo )
+            self.scope:accessSymbol( self.moduleScope, symbolInfo )
          end
          
       end

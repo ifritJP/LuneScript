@@ -15,6 +15,7 @@ extern "C" {
 
 #define LUNE_DEBUG_POS __FILE__, __LINE__
 #define LUNE_DEBUG_DECL const char * pFile, int lineNo
+#define LUNE_DEBUG_CALL_LOG printf( "%s -- %p\n", __func__, pObj )
     
     typedef int lune_bool_t;
     typedef int lune_int_t;

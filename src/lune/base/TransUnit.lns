@@ -633,14 +633,15 @@ pub class TransUnit {
 
    pri fn addLocalVar(
       pos:&Parser.Position, argFlag:bool, canBeLeft:bool,
-      name:str, typeInfo: &Ast.TypeInfo, mutable:bool, allowShadow:bool! ) mut
+      name:str, typeInfo: &Ast.TypeInfo, mutable:bool, allowShadow:bool! ) mut:
+      &Ast.SymbolInfo
    {
       if not allowShadow {
          if self.scope.getSymbolTypeInfo( name, self.scope, self.moduleScope ) {
             self.addErrMess( pos, "shadowing variable -- %s" (name) );
          }
       }
-      self.scope.addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable );
+      return self.scope.addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable );
    }
 }
 
@@ -2941,7 +2942,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       self.addErrMess( exp1.$pos,
                        "exp1 is not number -- %s" (exp1.$expType.getTxt(##)) );
    }
-   self.addLocalVar( exp1.$pos, false, true, val.txt, exp1.$expType, false## );
+   let symbolInfo = self.addLocalVar( exp1.$pos, false, true, val.txt, exp1.$expType, false## );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExp( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {
@@ -2966,7 +2967,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
 
    let mut node = Nodes.ForNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
-      self.analyzeBlock( .For, .Loop, scope ), val, exp1, exp2, exp3 );
+      self.analyzeBlock( .For, .Loop, scope ), symbolInfo, exp1, exp2, exp3 );
    self.popScope();
 
    return node;

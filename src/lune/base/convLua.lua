@@ -2541,7 +2541,7 @@ end
 
 function convFilter:processFor( node, opt )
 
-   self:write( string.format( "for %s = ", node:get_val(  ).txt ) )
+   self:write( string.format( "for %s = ", node:get_val(  ):get_name() ) )
    filter( node:get_init(  ), self, node )
    self:write( ", " )
    filter( node:get_to(  ), self, node )

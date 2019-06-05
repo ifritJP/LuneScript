@@ -672,7 +672,7 @@ _declLoopGetBreakKind( RepeatNode, block );
 
 _declNodeClass( "For", Node, false, false, true,
                 [ { "block": "&BlockNode" },
-                  { "val": "&Parser.Token" },
+                  { "val": "&Ast.SymbolInfo" },
                   { "init": "&Node" },
                   { "to": "&Node" },
                   { "delta": "&Node!" }] 

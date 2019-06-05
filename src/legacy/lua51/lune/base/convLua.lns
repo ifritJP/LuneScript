@@ -2261,7 +2261,7 @@ pub override fn convFilter.processRepeat(
 pub override fn convFilter.processFor(
    node: Nodes.ForNode, opt: Opt ) mut
 {
-   self.write( string.format( "for %s = ", node.get_val().txt ) );
+   self.write( string.format( "for %s = ", node.get_val().$name ) );
    filter( node.get_init(),  self, node );
    self.write( ", " );
    filter( node.get_to(),  self, node );

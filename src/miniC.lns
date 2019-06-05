@@ -1,0 +1,10 @@
+{
+   let mut val = 0;
+   fn inc( val2:int ):int {
+      return val2 + 1;
+   }
+   for count = 1, 1000000 {
+      val = inc( val );
+   }
+   print( val );
+}

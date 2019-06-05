@@ -3,13 +3,13 @@
       test1( nil );
    }
 
-   func( fn (val:int) {
+   func( fn (val:int) { // error
       print( val + 1 );
    } );
    func( fn (val:int!) {
       print( unwrap val + 1 );
    } );
-   func( fn (val:int!, val2:int) {
+   func( fn (val:int!, val2:int) { // error
       print( unwrap val + 1 );
    } );
    func( fn (...) {

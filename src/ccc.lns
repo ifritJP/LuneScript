@@ -1,18 +1,38 @@
 {
-   form formfunc(val:int);
+   fn func(...<int!>) {
+      print( ... );
+      print( 10, ... );
+      print( 10, ..., 100 );
+   }
+   func( 1, nil, 2 );
+}
+{
+   let form1;
+   {
+      let mut val = "abc";
+      fn func1(): form {
+         return fn () {
+            print( val );
+         };
+      }
+      form1 = func1();
+      print( val );
+      val = "xyz";
+   }
+   form1();
+}
+{
+   form formfunc(val:int, val2:real);
    let form1:formfunc;
-   let form2:form;
    {
       let mut val1 = "abc";
-      form1 = fn(val:int) {
+      form1 = fn(val:int, val2:real) {
          val1 = "xyz";
-         print( val1, val );
+         print( val1, val, val2 );
       };
-      form2 = form1;
       print( val1 );
    }
-   form1( 10 );
-   form2( 10 );
+   form1( 10, 20.1 );
 }
 
 {

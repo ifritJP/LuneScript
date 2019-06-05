@@ -1368,11 +1368,11 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
 }
 
 /**
-このスコープ内の処理から、 symbol シンボルに値をセットする際の処理。
+このスコープ内の処理から、 symbol シンボルにアクセスする際の処理。
 
 @param symbol シンボル
 */
-pub fn Scope.setAccessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
+pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
    if symbol.$scope == moduleScope {
       // symbol が、最上位スコープで定義されているなら、大域変数なのでクロージャではない
    }
@@ -1387,6 +1387,9 @@ pub fn Scope.setAccessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
             namespacescope.closureSymMap[ symbol.$symbolId ] = symbol;
             namespacescope.closureSym2NumMap[ symbol ] = #namespacescope.closureSymList;
             namespacescope.closureSymList.insert( symbol );
+            if! let mut scope = typeInfo.$scope {
+               scope.parent.accessSymbol( moduleScope, symbol );
+            }
          }
       }
    }

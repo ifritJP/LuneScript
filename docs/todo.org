@@ -8,8 +8,12 @@
 
 * 機能
 
-- [ ] 次が出来てしまう。 test(nil) が出来てしまうのは NG。 
-  test に nilable でない引数を持つ関数は代入できてはダメ。
+- [ ] form<T> を対応する。 これは fn (...<T>) : ...<T> のシンタックスシュガー
+- [ ] 次が出来てしまう。 
+  test1(nil), test1( "abc" ) が出来てしまうのは NG。 
+  
+  test1() に stem! と相互変換できない引数を持つ関数は代入できてはダメ。
+  fn (val:int) {} の引数は stem! との相互変換はできないので、本来は代入できてはダメ。
 
    form Test( ... );
    fn func( test1:Test ) {
@@ -19,20 +23,11 @@
    func( fn (val:int) {
       print( val + 1 );
    } );
-
-
-- [ ] 次が出来てしまう。 test(nil) が出来てしまうのは NG。 
-  test に nilable でない引数を持つ関数は代入できてはダメ。
-
-   fn func( ... ) {
-      print( ... );
-   }
-
-   func( fn (val:int) {
-      print( val + 1 );
-   } );
-
   
+- [ ] for 等の loop ブロックは、
+      lune_enter_block(), lune_leave_block() 処理をブロック内ではなく、
+      ブロック外にする。
+      ブロック内の先頭で lune_reset_block() を実行する。
 - [ ] set, enum, alge の nil 条件演算子対応。
 - [ ] for 内で let の初期化するとエラー。
       let 宣言時の初期化ではなく、宣言後の初期化。

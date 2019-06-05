@@ -74,7 +74,7 @@ List インスタンスの開放処理
  */
 static void lune_mtd_List_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
 {
-    printf( "%s\n", __func__ );
+    LUNE_DEBUG_CALL_LOG;
 
     lune_ListIterator it;
     lune_ListIterator end = lune_obj_List_obj( pObj )->end();
@@ -313,7 +313,7 @@ List インスタンスの開放処理
  */
 static void lune_mtd_Set_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
 {
-    printf( "%s\n", __func__ );
+    LUNE_DEBUG_CALL_LOG;
 
     lune_SetIterator it;
     lune_SetIterator end = lune_obj_Set_obj( pObj )->end();
@@ -565,7 +565,7 @@ List インスタンスの開放処理
  */
 static void lune_mtd_Map_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
 {
-    printf( "%s\n", __func__ );
+    LUNE_DEBUG_CALL_LOG;
 
     lune_MapClass * pMap = lune_obj_Map_obj( pObj );
     

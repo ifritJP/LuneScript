@@ -32,6 +32,8 @@ import lune.base.LuaMod;
 import lune.base.LuaVer;
 import lune.base.Parser;
 
+let cTypeInt = "lune_int_t";
+
 class SymbolParam {
    pub let index:int;
 }
@@ -105,7 +107,7 @@ fn getCType( valType:&Ast.TypeInfo, varFlag:bool ) : str {
    let expType = valType.$srcTypeInfo;
    switch expType {
       case Ast.builtinTypeInt, Ast.builtinTypeChar {
-         return "lune_int_t";
+         return cTypeInt;
       }
       case Ast.builtinTypeReal {
          return "lune_real_t";
@@ -1530,6 +1532,13 @@ fn convFilter.processSetValToSym(
 {
    // 変数に値を代入する
    fn initVar(): int {
+      /**
+変数 var に exp の式の結果を代入する。
+
+@param var 変数シンボル
+@param exp 代入する値の式
+@param index exp が ... の場合の index
+      */
       fn setVal( var:&Ast.SymbolInfo, exp:&Nodes.Node, index:int ) {
          let work, isStem = getCTypeForSym( var );
 
@@ -1683,7 +1692,7 @@ pub override fn convFilter.processDeclVar(
       }
       else {
          if varSymList[ 1 ].$scope ~= self.ast.$moduleScope {
-            self.write( "%s %s;" ( typeTxt, var.$name ) );
+            self.writeln( "%s %s;" ( typeTxt, var.$name ) );
          }
       }
    }
@@ -1777,7 +1786,78 @@ fn getFuncName( typeInfo:&Ast.TypeInfo ): str {
    if typeInfo.$rawTxt == "" {
       return "_anonymous_%d" (typeInfo.$typeId);
    }
-   return typeInfo.$rawTxt;
+   switch typeInfo.$accessMode {
+      case .Pub, .Global {
+         return typeInfo.$rawTxt;
+      }
+   }
+   return "lune_f_%d_%s" (typeInfo.$typeId, typeInfo.$rawTxt);
+}
+
+
+/**
+node が示す値を stem 型に変換する処理を出力する
+
+@param node Node
+@param parent このノードの親
+*/
+pub fn convFilter.processVal2Stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
+{
+   if isStemVal( node ) {
+      filter( node, self, parent );
+   }
+   else {
+      let expType = node.$expType;
+      switch expType.$srcTypeInfo {
+         case Ast.builtinTypeBool {
+            self.write( "lune_bool2stem( _pEnv, " );
+            filter( node, self, parent );
+            self.write( ")" );
+         }
+         case Ast.builtinTypeInt, Ast.builtinTypeChar {
+            self.write( "lune_int2stem( _pEnv, " );
+            filter( node, self, parent );
+            self.write( ")" );
+         }
+         case Ast.builtinTypeReal {
+            self.write( "lune_real2stem( _pEnv, " );
+            filter( node, self, parent );
+            self.write( ")" );
+         }
+         default {
+            switch expType.$kind {
+               case .DDD {
+                  self.write( "_pDDD" );
+               }
+               case .Func {    
+                  if! let scope = expType.$scope {
+                     let argList = expType.$argTypeInfoList;
+                     let hasDDD =
+                        #argList > 0 and argList[ #argList ].$kind == .DDD or false;
+                     
+                     self.write( "lune_func2stem( _pEnv, (lune_func_t *)" );
+                     self.write( getFuncName( expType ) );
+                     self.write( ", %d, %s, %d"
+                                 ( #node.$expType.$argTypeInfoList, hasDDD,
+                                   #scope$.$closureSymList) );     
+                     
+                     foreach symbolInfo in scope.$closureSymList {
+                        self.write( ", %s" (symbolInfo.$name) );
+                     }
+                     self.write( ")" );
+                  }
+                  else {   
+                     Util.err( "illegal func" );
+                  }
+               }
+               default {
+                  filter( node, self, parent );
+               }
+            }
+         }
+      }
+   }
+   // filter( node, self, parent );
 }
 
 pub override fn convFilter.processDeclFunc(
@@ -1791,19 +1871,9 @@ pub override fn convFilter.processDeclFunc(
       }
       default {
          if opt.node.$kind ~= Nodes.NodeKind.$Block {
-            let scope = unwrap node.$expType.$scope;
-            let argList = node.$expType.$argTypeInfoList;
-            let hasDDD = #argList > 0 and argList[ #argList ].$kind == .DDD or false;
-
-            self.write(
-               "lune_func2stem( _pEnv, (lune_func_t *)%s, %d, %s, %d"
-               ( getFuncName( node.$expType ),
-                 #node.$expType.$argTypeInfoList, hasDDD, #scope.$closureSymList ) );
-            foreach symbol in scope.$closureSymList {
-               self.write( ", %s" (symbol.$name ) );
-            }
-            self.write( ")" );
+            self.processVal2Stem( node, opt.node );
          }
+
          return;
       }
    }
@@ -2022,8 +2092,28 @@ pub override fn convFilter.processRepeat(
 pub override fn convFilter.processFor(
    node: Nodes.ForNode, opt: Opt ) mut
 {
-   // self.write( string.format( "for %s = ", node.get_val().txt ) );
-   // filter( node.get_init(),  self, node );
+   self.writeln( "{" );
+   self.pushIndent(##);
+   self.writeln( "%s _to;" (cTypeInt ) );
+   self.writeln( "%s _inc;" (cTypeInt ) );
+   self.writeln( "%s %s;" (cTypeInt, node.$val.$name ) );
+
+   // node.get_block().$scope.
+
+   self.processSetValToSym( node, [ node.$val ], [ node.get_to() ] );
+   self.writeln( "_to = %s;" (node.$val.$name) );
+   if! node.get_delta() {
+      self.processSetValToSym( node, [ node.$val ], [ _exp ] );
+      self.writeln( "_inc = %s;" (node.$val.$name) );
+   }
+   else {
+      self.writeln( "_inc = 1;" );
+   }
+   self.processSetValToSym( node, [ node.$val ], [ node.get_init() ] );
+
+   self.writeln( "for (; %s <= _to; %s += _inc )" (node.$val.$name, node.$val.$name) );
+
+   // filter( node.get_init(), self, node );
    // self.write( ", " );
    // filter( node.get_to(),  self, node );
    // if! node.get_delta() {
@@ -2031,8 +2121,12 @@ pub override fn convFilter.processFor(
    //    filter( _exp,  self, node );
    // }
    // self.write( " " );
-   // filter( node.get_block(),  self, node );
+   filter( node.get_block(),  self, node );
+   self.writeln( "}" );
    // self.writeln( "end" );
+
+   self.popIndent();
+   self.writeln( "}" );
 };
 
 pub override fn convFilter.processApply(
@@ -2134,44 +2228,15 @@ pub override fn convFilter.processExpUnwrap(
    // }
 }
 
-/**
-node が示す値を stem 型に変換する処理を出力する
 
-@param node Node
-@param parent このノードの親
-*/
-pub fn convFilter.processVal2Stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
+fn convFilter.processCreateDDD(
+   ddd:bool, expList:&List<&Nodes.Node>, index:int, parent:&Nodes.Node ) mut
 {
-   if isStemVal( node ) {
-      filter( node, self, parent );
+   if expList[ index ].$expType.$kind == .DDD and #expList == index {
+      self.write( "_pDDD" );
+      return;
    }
-   else {
-      switch node.$expType.$srcTypeInfo {
-         case Ast.builtinTypeBool {
-            self.write( "lune_bool2stem( _pEnv, " );
-            filter( node, self, parent );
-            self.write( ")" );
-         }
-         case Ast.builtinTypeInt, Ast.builtinTypeChar {
-            self.write( "lune_int2stem( _pEnv, " );
-            filter( node, self, parent );
-            self.write( ")" );
-         }
-         case Ast.builtinTypeReal {
-            self.write( "lune_real2stem( _pEnv, " );
-            filter( node, self, parent );
-            self.write( ")" );
-         }
-         default {
-            filter( node, self, parent );
-         }
-      }
-   }
-   // filter( node, self, parent );
-}
-
-fn convFilter.processCreateDDD( ddd:bool, expList:&List<&Nodes.Node>, num:int ) mut
-{
+   
    if ddd {
       self.write( "lune_createDDD" );
    }
@@ -2179,12 +2244,29 @@ fn convFilter.processCreateDDD( ddd:bool, expList:&List<&Nodes.Node>, num:int ) 
       self.write( "lune_createMRet" );
    }
    let lastExp = expList[ #expList ];
-   self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), num ) );
+   self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList - index + 1 ) );
+   
+   for expIndex = index, #expList {
+      self.write( ", " );
+      self.processVal2Stem( expList[ expIndex ], parent );
+   }
+   self.write( ")" );
 }
 
 
+/**
+関数呼び出しの引数処理。
+
+コールする関数の引数に合せて、引数を調整する。
+
+例えばコールする関数の引数が ... の場合、 lune_createDDD() する等。
+
+@param funcType コールする関数のタイプ
+@param expListNode 引数リストノード
+@param parent 関数コールノード
+*/
 pub fn convFilter.processCallArgList(
-   funcType:&Ast.TypeInfo, expListNode: &Nodes.ExpListNode!, parent: &Nodes.Node ) mut
+   funcType:&Ast.TypeInfo, expListNode: &Nodes.ExpListNode!, parent: &Nodes.ExpCallNode ) mut
 {
    when! expListNode {
       let expList = expListNode.$expList;
@@ -2194,16 +2276,17 @@ pub fn convFilter.processCallArgList(
          }
          if #expList >= index {
             if funcArgType.$kind == .DDD {
-               self.processCreateDDD( true, expList, #expList - index + 1 );
-               for expIndex = index, #expList {
-                  self.write( ", " );
-                  self.processVal2Stem( expList[ expIndex ], parent );
-               }
-               self.write( ")" );
+               self.processCreateDDD( true, expList, index, parent );
+               // for expIndex = index, #expList {
+               //    self.write( ", " );
+               //    self.processVal2Stem( expList[ expIndex ], parent );
+               // }
+               // self.write( ")" );
                return;
             }
             else {
-               if funcArgType.$kind == .Form {
+               // if funcArgType.$kind == .Form {
+               if isStemType( funcArgType ) {
                   self.processVal2Stem( expList[ index ], parent );
                }
                else {
@@ -2657,7 +2740,12 @@ pub override fn convFilter.processExpRef(
                self.write( "_moduleObj." );
             }
          }
-         self.write( node.$token.txt );
+         if symbolInfo.$kind == .Fun {
+            self.write( getFuncName( symbolInfo.$typeInfo ) );
+         }
+         else {
+            self.write( node.$token.txt );
+         }
       }
    }
 };
@@ -2775,12 +2863,7 @@ pub override fn convFilter.processReturn(
       self.writeln( "{" );
       self.write( "lune_stem_t * _pRet = " );
       if #self.currentRoutineInfo.$funcInfo.$retTypeInfoList >= 2 {
-         self.processCreateDDD( false, expList, #expList );
-         foreach expNode in expList {
-            self.write( ", " );
-            self.processVal2Stem( expNode, node );
-         }
-         self.write( ")" );
+         self.processCreateDDD( false, expList, 1, node );
       }
       elseif #self.currentRoutineInfo.$funcInfo.$retTypeInfoList == 1 {
          self.processVal2Stem( expList[ 1 ], node );

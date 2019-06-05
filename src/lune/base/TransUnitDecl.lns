@@ -227,7 +227,7 @@ fn TransUnit.analyzeDeclArgList(
          argList.insert(
             Nodes.DeclArgDDDNode.create(
                self.nodeManager, argName.pos, [ dddTypeInfo ] ) );
-         self.scope.addLocalVar( false, true, argName.txt, dddTypeInfo, false );
+         self.scope.addLocalVar( true, true, argName.txt, dddTypeInfo, false );
       }
       else {
          argName = self.checkSymbol( argName, .MustNot_ );
@@ -243,7 +243,7 @@ fn TransUnit.analyzeDeclArgList(
             self.nodeManager, argName.pos, refType.$expTypeList,
             argName, refType );
 
-         self.scope.addLocalVar( false, true, argName.txt, refType.$expType, mutable );
+         self.scope.addLocalVar( true, true, argName.txt, refType.$expType, mutable );
          argList.insert( arg );
       }
       nextToken = self.getToken(##);
