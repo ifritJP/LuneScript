@@ -6,7 +6,7 @@
    func( fn (val:int) { // error
       print( val + 1 );
    } );
-   func( fn (val:int!) {
+   func( fn (val:int!) { // error
       print( unwrap val + 1 );
    } );
    func( fn (val:int!, val2:int) { // error
@@ -16,4 +16,16 @@
       print( ... );
    } );
 }
-
+{
+   let mut func:form;
+   func = fn ( val:int! ) { // error
+   };
+   func = fn ( val:stem! ) {
+   };
+   func = fn ( val:stem!, ... ) {
+   };
+   func = fn ( ... ) {
+   };
+   func = fn ( val:stem!, val2:int ) { // error
+   };
+}

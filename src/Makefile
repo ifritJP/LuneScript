@@ -560,6 +560,10 @@ build-miniC:
 	LANG= $(MAKE) -f Makefile.ccc SRCS=miniC.c TEST_OUT=test.exe \
 		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 
+test-miniC:
+	$(call transwork,.,.,base/convCC)
+	$(call test-convC,miniC)
+
 
 build-cc:
 	$(call transwork,.,.,base/convCC)

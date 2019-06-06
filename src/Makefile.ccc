@@ -25,7 +25,6 @@ all: build
 build: 
 	mkdir -p work/c
 	$(MAKE) -f Makefile.ccc build-objs
-#	gcc -g3 -Wall -c lune/base/lns_base.c -I lune/base -o work/c/lns_base.o
 	gcc $(CFLAGS) -o work/c/lns_base.o lune/base/lns_base.c
 	g++ $(CFLAGS) -o work/c/lns_collection.o lune/base/lns_collection.cxx
 	g++ $(CFLAGS) -o work/c/lns_alloc.o lune/base/lns_alloc.cxx

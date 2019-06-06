@@ -5272,8 +5272,19 @@ local function isSettableToForm( typeInfo )
 
    if #typeInfo:get_argTypeInfoList() > 0 then
       for __index, argType in pairs( typeInfo:get_argTypeInfoList() ) do
-         if not argType:get_nilable() then
-            return false
+         do
+            local dddType = _lune.__Cast( argType, 3, DDDTypeInfo )
+            if dddType ~= nil then
+               if not dddType:get_typeInfo():get_nilableTypeInfo():equals( _moduleObj.builtinTypeStem_ ) then
+                  return false
+               end
+               
+            else
+               if not argType:get_srcTypeInfo():equals( _moduleObj.builtinTypeStem_ ) then
+                  return false
+               end
+               
+            end
          end
          
       end

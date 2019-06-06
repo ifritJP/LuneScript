@@ -4282,11 +4282,26 @@ pub static fn TypeInfo.checkMatchType(
    return .Match, "";
 }
 
-fn isSettableToForm( typeInfo:&TypeInfo): bool {
+/**
+typeInfo の関数が、 form と互換があるかどうかチェックする。
+
+form の引数は ... なので、なんでもありになる。
+typeInfo の引数がなんでもありでない場合は、互換がなくなるためチェックする。
+
+@param typeInfo チェックする型
+*/
+fn isSettableToForm( typeInfo:&TypeInfo ): bool {
    if #typeInfo.$argTypeInfoList > 0 {
       foreach argType in typeInfo.$argTypeInfoList {
-         if not argType.$nilable {
-            return false;
+         if! let dddType = argType@@@DDDTypeInfo {
+            if not dddType.$typeInfo.$nilableTypeInfo.equals( builtinTypeStem_## ) {
+               return false;
+            }
+         }
+         else {
+            if not argType.$srcTypeInfo.equals( builtinTypeStem_ ## ) {
+               return false;
+            }
          }
       }
    }
