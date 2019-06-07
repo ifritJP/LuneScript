@@ -1,0 +1,70 @@
+//------ map
+foreach val, key in { "ab": [], "cd": [ 1 ] } {
+   let val2:List<int> = val;
+   let key2:str = key;
+}
+
+foreach val, key in { "ab": [ 1 ], "cd": [] } {
+   let val2:List<int> = val;
+   let key2:str = key;
+}
+
+foreach val, key in { "ab": {}, "cd": { 1:1} } {
+   let val2:Map<int,int> = val;
+   let key2:str = key;
+}
+
+foreach val, key in { "ab": {1:1}, "cd": {} } {
+   let val2:Map<int,int> = val;
+   let key2:str = key;
+}
+
+foreach val, key in { "ab": (@), "cd": (@ 1 ) } {
+   let val2:Set<int> = val;
+   let key2:str = key;
+}
+
+foreach val, key in { "ab": (@ 1), "cd": (@) } {
+   let val2:Set<int> = val;
+   let key2:str = key;
+}
+
+//------ list
+foreach val in [ [], [1] ] {
+   let val2:List<int> = val;
+}
+foreach val in [ [1], [] ] {
+   let val2:List<int> = val;
+}
+foreach val in [ {}, {1:2} ] {
+   let val2:Map<int,int> = val;
+}
+foreach val in [ {1:2}, {} ] {
+   let val2:Map<int,int> = val;
+}
+foreach val in [ (@), (@1) ] {
+   let val2:Set<int> = val;
+}
+foreach val in [ (@1), (@) ] {
+   let val2:Set<int> = val;
+}
+
+//------ list
+foreach val in (@ [], [1] ) {
+   let val2:List<int> = val;
+}
+foreach val in (@ [1], [] ) {
+   let val2:List<int> = val;
+}
+foreach val in (@ {}, {1:2} ) {
+   let val2:Map<int,int> = val;
+}
+foreach val in (@ {1:2}, {} ) {
+   let val2:Map<int,int> = val;
+}
+foreach val in (@ (@), (@1) ) {
+   let val2:Set<int> = val;
+}
+foreach val in (@ (@1), (@) ) {
+   let val2:Set<int> = val;
+}

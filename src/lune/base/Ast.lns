@@ -1384,6 +1384,7 @@ pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
          // クロージャならシンボル情報を登録する。
          let mut namespacescope = unwrap typeInfo.$scope;
          if not namespacescope.closureSymMap[ symbol.$symbolId ] {
+            symbol.set_isSetFromClosuer( true );
             namespacescope.closureSymMap[ symbol.$symbolId ] = symbol;
             namespacescope.closureSym2NumMap[ symbol ] = #namespacescope.closureSymList;
             namespacescope.closureSymList.insert( symbol );
@@ -4469,9 +4470,25 @@ pub static fn TypeInfo.canEvalWithBase(
             // literalMap の {} は互換有りとする
             return true;
          }
-         _checkEqualsItemType( dest, otherSrc, 1, alt2type );
-         _checkEqualsItemType( dest, otherSrc, 2, alt2type );
-         return true;
+         fn check1(): bool {
+            _checkEqualsItemType( dest, otherSrc, 1, alt2type );
+            return true;
+         }
+         fn check2(): bool {
+            _checkEqualsItemType( dest, otherSrc, 2, alt2type );
+            return true;
+         }
+         let result1 = check1();
+         let result2 = check2();
+         if result1 and result2 {
+            return true;
+         }
+         if not result1 and otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone or
+            not result2 and otherSrc.$itemTypeInfoList[ 2 ] == builtinTypeNone
+         {
+            return true;
+         }
+         return false;
       }
       case .Class, .IF {
          return otherSrc.isInheritFrom( dest, alt2type );

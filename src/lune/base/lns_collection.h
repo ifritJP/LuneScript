@@ -19,6 +19,11 @@ extern "C" {
     extern lune_stem_t * lune_class_List_new( lune_env_t * _pEnv );
     extern lune_stem_t * lune_List_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem );
 
+    extern lune_stem_t * lune_itList_new( lune_env_t * _pEnv, lune_stem_t * pList );
+    extern void lune_itList_gc( lune_env_t * _pEnv, lune_stem_t * it );
+    extern void lune_itList_inc( lune_env_t * _pEnv, lune_stem_t * it );
+    extern bool lune_itList_hasNext( lune_env_t * _pEnv, lune_stem_t * it, lune_stem_t ** ppVal );
+    
 
     // ========== Set ==========
 #define lune_mtd_Set( OBJ ) \

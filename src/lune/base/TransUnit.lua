@@ -4197,11 +4197,11 @@ function TransUnit:analyzeForeach( token, sortFlag )
    local exp = self:analyzeExp( false, false )
    local itemTypeInfoList = exp:get_expType():get_itemTypeInfoList(  )
    if exp:get_expType():get_kind(  ) == Ast.TypeInfoKind.Map then
-      self:addLocalVar( exp:get_pos(), false, true, mainSymbol.txt, itemTypeInfoList[2], false )
+      self:addLocalVar( exp:get_pos(), true, true, mainSymbol.txt, itemTypeInfoList[2], false )
       do
          local _exp = subSymbol
          if _exp ~= nil then
-            self:addLocalVar( _exp.pos, false, true, _exp.txt, itemTypeInfoList[1], false )
+            self:addLocalVar( _exp.pos, true, true, _exp.txt, itemTypeInfoList[1], false )
          end
       end
       
@@ -4219,13 +4219,13 @@ function TransUnit:analyzeForeach( token, sortFlag )
          ) )
       end
       
-      self.scope:addLocalVar( false, true, mainSymbol.txt, itemTypeInfoList[1], false )
+      self.scope:addLocalVar( true, true, mainSymbol.txt, itemTypeInfoList[1], false )
       do
          local _exp = subSymbol
          if _exp ~= nil then
-            self:addLocalVar( _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, false )
+            self:addLocalVar( _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, false )
          else
-            self.scope:addLocalVar( false, false, "__index", Ast.builtinTypeInt, false )
+            self.scope:addLocalVar( true, false, "__index", Ast.builtinTypeInt, false )
          end
       end
       
@@ -6909,14 +6909,22 @@ function TransUnit:analyzeListConst( token )
          local expType = exp:get_expType()
          if itemTypeInfo:equals( Ast.builtinTypeNone ) then
             itemTypeInfo = expType
-         elseif not itemTypeInfo:canEvalWith( expType, "=", {} ) and not expType:canEvalWith( itemTypeInfo, "=", {} ) then
-            if expType:equals( Ast.builtinTypeNil ) then
-               itemTypeInfo = itemTypeInfo:get_nilableTypeInfo()
-            elseif expType:get_nilable() then
-               itemTypeInfo = Ast.builtinTypeStem_
-            else
-             
-               itemTypeInfo = Ast.builtinTypeStem
+         else
+          
+            local eval1 = itemTypeInfo:canEvalWith( expType, "=", {} )
+            local eval2 = expType:canEvalWith( itemTypeInfo, "=", {} )
+            if not eval1 and not eval2 then
+               if expType:equals( Ast.builtinTypeNil ) then
+                  itemTypeInfo = itemTypeInfo:get_nilableTypeInfo()
+               elseif expType:get_nilable() then
+                  itemTypeInfo = Ast.builtinTypeStem_
+               else
+                
+                  itemTypeInfo = Ast.builtinTypeStem
+               end
+               
+            elseif eval2 then
+               itemTypeInfo = expType
             end
             
          end
@@ -6967,8 +6975,8 @@ function TransUnit:analyzeSetConst( token )
             if itemTypeInfo:equals( Ast.builtinTypeNone ) then
                itemTypeInfo = expType
             elseif not itemTypeInfo:canEvalWith( expType, "=", {} ) then
-               if expType:equals( Ast.builtinTypeNil ) then
-                  itemTypeInfo = itemTypeInfo:get_nilableTypeInfo()
+               if expType:canEvalWith( itemTypeInfo, "=", {} ) then
+                  itemTypeInfo = expType
                else
                 
                   itemTypeInfo = Ast.builtinTypeStem
@@ -7008,12 +7016,16 @@ function TransUnit:analyzeMapConst( token )
          expType = expType:get_nonnilableType()
       end
       
+      if typeInfo == Ast.builtinTypeNone then
+         return expType
+      end
+      
       if not typeInfo:canEvalWith( expType, "=", {} ) then
-         if not typeInfo:equals( Ast.builtinTypeNone ) then
-            typeInfo = Ast.builtinTypeStem
+         if expType:canEvalWith( typeInfo, "=", {} ) then
+            typeInfo = expType
          else
           
-            typeInfo = expType
+            typeInfo = Ast.builtinTypeStem
          end
          
       end
@@ -8773,17 +8785,6 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             end
             
             if opTxt == "=" then
-               do
-                  local expRefNode = _lune.__Cast( exp, 3, Nodes.ExpRefNode )
-                  if expRefNode ~= nil then
-                     local symbolInfo = expRefNode:get_symbolInfo()
-                     if symbolInfo:get_namespaceTypeInfo() ~= self.scope:getNamespaceTypeInfo(  ) then
-                        symbolInfo:set_isSetFromClosuer( true )
-                     end
-                     
-                  end
-               end
-               
                local workToken = self:getToken(  )
                if workToken.txt == "," then
                   local expListNode = self:analyzeExpList( false, false, exp2 )

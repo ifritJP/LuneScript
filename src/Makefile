@@ -296,6 +296,7 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/box.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/form.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/ddd.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/immediate.lns,exe,2>&1)
 
 
 	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG

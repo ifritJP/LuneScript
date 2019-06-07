@@ -508,6 +508,9 @@ lune_stem_t * _lune_it_new(
     lune_stem_t * pStem =
         lune_alloc_stem( _pEnv, type, pFile, lineNo );
     switch ( type ) {
+    case lune_value_type_itList:
+        pStem->val.itList = pVal;
+        break;
     case lune_value_type_itSet:
         pStem->val.itSet = pVal;
         break;
@@ -782,9 +785,6 @@ lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num,
 
     return pRet;
 }
-            
-
-
 
 
 /**
@@ -821,6 +821,9 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg ) 
             break;
         case lune_value_type_form:
             printf( "form: %p", pStem );
+            break;
+        case lune_value_type_class:
+            printf( "class: %p", pStem );
             break;
         default:
             printf( "unknown type -- %d", pStem->type );

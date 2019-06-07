@@ -1,15 +1,12 @@
+let g_val = 100;
 {
-   let form1;
-   {
-      let mut val = "abc";
-      fn func1(): form {
-         return fn () {
-            print( val );
-         };
+   let val = 10;
+   fn func( val2:str ) {
+      foreach list in [ [ val, g_val ], [ 3.5, val2 ] ] {
+         foreach item in list {
+            print( item );
+         }
       }
-      form1 = func1();
-      print( val );
-      val = "xyz";
    }
-   form1();
+   func( "xyz" );
 }

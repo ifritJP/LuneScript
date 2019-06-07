@@ -383,19 +383,23 @@ end
 function Node.setmeta( obj )
   setmetatable( obj, { __index = Node  } )
 end
-function Node.new( kind, pos, expTypeList )
+function Node.new( id, kind, pos, expTypeList )
    local obj = {}
    Node.setmeta( obj )
    if obj.__init then
-      obj:__init( kind, pos, expTypeList )
+      obj:__init( id, kind, pos, expTypeList )
    end
    return obj
 end
-function Node:__init( kind, pos, expTypeList )
+function Node:__init( id, kind, pos, expTypeList )
 
+   self.id = id
    self.kind = kind
    self.pos = pos
    self.expTypeList = expTypeList
+end
+function Node:get_id()
+   return self.id
 end
 function Node:get_kind()
    return self.kind
@@ -496,6 +500,7 @@ function NodeManager.new(  )
    return obj
 end
 function NodeManager:__init() 
+   self.idSeed = 0
    self.nodeKind2NodeList = {}
    for __index, kind in pairs( _moduleObj.nodeKind ) do
       if not self.nodeKind2NodeList[kind] then
@@ -504,6 +509,11 @@ function NodeManager:__init()
       
    end
    
+end
+function NodeManager:nextId(  )
+
+   self.idSeed = self.idSeed + 1
+   return self.idSeed
 end
 function NodeManager:getList( kind )
 
@@ -587,21 +597,21 @@ function NoneNode:canBeStatement(  )
 
    return true
 end
-function NoneNode.new( pos, typeList )
+function NoneNode.new( id, pos, typeList )
    local obj = {}
    NoneNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList ); end
+   if obj.__init then obj:__init( id, pos, typeList ); end
    return obj
 end
-function NoneNode:__init(pos, typeList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['None']), pos, typeList)
+function NoneNode:__init(id, pos, typeList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['None']), pos, typeList)
    
    
    
 end
 function NoneNode.create( nodeMan, pos, typeList )
 
-   local node = NoneNode.new(pos, typeList)
+   local node = NoneNode.new(nodeMan:nextId(  ), pos, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -647,14 +657,14 @@ function SubfileNode:canBeStatement(  )
 
    return true
 end
-function SubfileNode.new( pos, typeList, usePath )
+function SubfileNode.new( id, pos, typeList, usePath )
    local obj = {}
    SubfileNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, usePath ); end
+   if obj.__init then obj:__init( id, pos, typeList, usePath ); end
    return obj
 end
-function SubfileNode:__init(pos, typeList, usePath) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Subfile']), pos, typeList)
+function SubfileNode:__init(id, pos, typeList, usePath) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Subfile']), pos, typeList)
    
    
    self.usePath = usePath
@@ -662,7 +672,7 @@ function SubfileNode:__init(pos, typeList, usePath)
 end
 function SubfileNode.create( nodeMan, pos, typeList, usePath )
 
-   local node = SubfileNode.new(pos, typeList, usePath)
+   local node = SubfileNode.new(nodeMan:nextId(  ), pos, typeList, usePath)
    nodeMan:addNode( node )
    return node
 end
@@ -711,14 +721,14 @@ function ImportNode:canBeStatement(  )
 
    return true
 end
-function ImportNode.new( pos, typeList, modulePath, assignName, moduleTypeInfo )
+function ImportNode.new( id, pos, typeList, modulePath, assignName, moduleTypeInfo )
    local obj = {}
    ImportNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, modulePath, assignName, moduleTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, modulePath, assignName, moduleTypeInfo ); end
    return obj
 end
-function ImportNode:__init(pos, typeList, modulePath, assignName, moduleTypeInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Import']), pos, typeList)
+function ImportNode:__init(id, pos, typeList, modulePath, assignName, moduleTypeInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Import']), pos, typeList)
    
    
    self.modulePath = modulePath
@@ -728,7 +738,7 @@ function ImportNode:__init(pos, typeList, modulePath, assignName, moduleTypeInfo
 end
 function ImportNode.create( nodeMan, pos, typeList, modulePath, assignName, moduleTypeInfo )
 
-   local node = ImportNode.new(pos, typeList, modulePath, assignName, moduleTypeInfo)
+   local node = ImportNode.new(nodeMan:nextId(  ), pos, typeList, modulePath, assignName, moduleTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -919,14 +929,14 @@ function RootNode:canBeStatement(  )
 
    return false
 end
-function RootNode.new( pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.new( id, pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
+   if obj.__init then obj:__init( id, pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
    return obj
 end
-function RootNode:__init(pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
+function RootNode:__init(id, pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Root']), pos, typeList)
    
    
    self.children = children
@@ -945,7 +955,7 @@ function RootNode:__init(pos, typeList, children, moduleScope, useModuleMacroSet
 end
 function RootNode.create( nodeMan, pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
 
-   local node = RootNode.new(pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
+   local node = RootNode.new(nodeMan:nextId(  ), pos, typeList, children, moduleScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
    nodeMan:addNode( node )
    return node
 end
@@ -1032,14 +1042,14 @@ function RefTypeNode:canBeStatement(  )
 
    return false
 end
-function RefTypeNode.new( pos, typeList, name, refFlag, mutFlag, array )
+function RefTypeNode.new( id, pos, typeList, name, refFlag, mutFlag, array )
    local obj = {}
    RefTypeNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, name, refFlag, mutFlag, array ); end
+   if obj.__init then obj:__init( id, pos, typeList, name, refFlag, mutFlag, array ); end
    return obj
 end
-function RefTypeNode:__init(pos, typeList, name, refFlag, mutFlag, array) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['RefType']), pos, typeList)
+function RefTypeNode:__init(id, pos, typeList, name, refFlag, mutFlag, array) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['RefType']), pos, typeList)
    
    
    self.name = name
@@ -1050,7 +1060,7 @@ function RefTypeNode:__init(pos, typeList, name, refFlag, mutFlag, array)
 end
 function RefTypeNode.create( nodeMan, pos, typeList, name, refFlag, mutFlag, array )
 
-   local node = RefTypeNode.new(pos, typeList, name, refFlag, mutFlag, array)
+   local node = RefTypeNode.new(nodeMan:nextId(  ), pos, typeList, name, refFlag, mutFlag, array)
    nodeMan:addNode( node )
    return node
 end
@@ -1185,14 +1195,14 @@ function BlockNode:canBeStatement(  )
 
    return true
 end
-function BlockNode.new( pos, typeList, blockKind, scope, stmtList )
+function BlockNode.new( id, pos, typeList, blockKind, scope, stmtList )
    local obj = {}
    BlockNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, blockKind, scope, stmtList ); end
+   if obj.__init then obj:__init( id, pos, typeList, blockKind, scope, stmtList ); end
    return obj
 end
-function BlockNode:__init(pos, typeList, blockKind, scope, stmtList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Block']), pos, typeList)
+function BlockNode:__init(id, pos, typeList, blockKind, scope, stmtList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Block']), pos, typeList)
    
    
    self.blockKind = blockKind
@@ -1202,7 +1212,7 @@ function BlockNode:__init(pos, typeList, blockKind, scope, stmtList)
 end
 function BlockNode.create( nodeMan, pos, typeList, blockKind, scope, stmtList )
 
-   local node = BlockNode.new(pos, typeList, blockKind, scope, stmtList)
+   local node = BlockNode.new(nodeMan:nextId(  ), pos, typeList, blockKind, scope, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -1370,14 +1380,14 @@ function IfNode:canBeStatement(  )
 
    return true
 end
-function IfNode.new( pos, typeList, stmtList )
+function IfNode.new( id, pos, typeList, stmtList )
    local obj = {}
    IfNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, stmtList ); end
+   if obj.__init then obj:__init( id, pos, typeList, stmtList ); end
    return obj
 end
-function IfNode:__init(pos, typeList, stmtList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['If']), pos, typeList)
+function IfNode:__init(id, pos, typeList, stmtList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['If']), pos, typeList)
    
    
    self.stmtList = stmtList
@@ -1385,7 +1395,7 @@ function IfNode:__init(pos, typeList, stmtList)
 end
 function IfNode.create( nodeMan, pos, typeList, stmtList )
 
-   local node = IfNode.new(pos, typeList, stmtList)
+   local node = IfNode.new(nodeMan:nextId(  ), pos, typeList, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -1475,14 +1485,14 @@ function ExpListNode:canBeStatement(  )
 
    return false
 end
-function ExpListNode.new( pos, typeList, expList, followOn )
+function ExpListNode.new( id, pos, typeList, expList, followOn )
    local obj = {}
    ExpListNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, expList, followOn ); end
+   if obj.__init then obj:__init( id, pos, typeList, expList, followOn ); end
    return obj
 end
-function ExpListNode:__init(pos, typeList, expList, followOn) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpList']), pos, typeList)
+function ExpListNode:__init(id, pos, typeList, expList, followOn) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpList']), pos, typeList)
    
    
    self.expList = expList
@@ -1491,7 +1501,7 @@ function ExpListNode:__init(pos, typeList, expList, followOn)
 end
 function ExpListNode.create( nodeMan, pos, typeList, expList, followOn )
 
-   local node = ExpListNode.new(pos, typeList, expList, followOn)
+   local node = ExpListNode.new(nodeMan:nextId(  ), pos, typeList, expList, followOn)
    nodeMan:addNode( node )
    return node
 end
@@ -1592,14 +1602,14 @@ function SwitchNode:canBeStatement(  )
 
    return true
 end
-function SwitchNode.new( pos, typeList, exp, caseList, default )
+function SwitchNode.new( id, pos, typeList, exp, caseList, default )
    local obj = {}
    SwitchNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp, caseList, default ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp, caseList, default ); end
    return obj
 end
-function SwitchNode:__init(pos, typeList, exp, caseList, default) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Switch']), pos, typeList)
+function SwitchNode:__init(id, pos, typeList, exp, caseList, default) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Switch']), pos, typeList)
    
    
    self.exp = exp
@@ -1609,7 +1619,7 @@ function SwitchNode:__init(pos, typeList, exp, caseList, default)
 end
 function SwitchNode.create( nodeMan, pos, typeList, exp, caseList, default )
 
-   local node = SwitchNode.new(pos, typeList, exp, caseList, default)
+   local node = SwitchNode.new(nodeMan:nextId(  ), pos, typeList, exp, caseList, default)
    nodeMan:addNode( node )
    return node
 end
@@ -1743,14 +1753,14 @@ function WhileNode:canBeStatement(  )
 
    return true
 end
-function WhileNode.new( pos, typeList, exp, block )
+function WhileNode.new( id, pos, typeList, exp, block )
    local obj = {}
    WhileNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp, block ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp, block ); end
    return obj
 end
-function WhileNode:__init(pos, typeList, exp, block) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['While']), pos, typeList)
+function WhileNode:__init(id, pos, typeList, exp, block) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['While']), pos, typeList)
    
    
    self.exp = exp
@@ -1759,7 +1769,7 @@ function WhileNode:__init(pos, typeList, exp, block)
 end
 function WhileNode.create( nodeMan, pos, typeList, exp, block )
 
-   local node = WhileNode.new(pos, typeList, exp, block)
+   local node = WhileNode.new(nodeMan:nextId(  ), pos, typeList, exp, block)
    nodeMan:addNode( node )
    return node
 end
@@ -1811,14 +1821,14 @@ function RepeatNode:canBeStatement(  )
 
    return true
 end
-function RepeatNode.new( pos, typeList, block, exp )
+function RepeatNode.new( id, pos, typeList, block, exp )
    local obj = {}
    RepeatNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, block, exp ); end
+   if obj.__init then obj:__init( id, pos, typeList, block, exp ); end
    return obj
 end
-function RepeatNode:__init(pos, typeList, block, exp) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Repeat']), pos, typeList)
+function RepeatNode:__init(id, pos, typeList, block, exp) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Repeat']), pos, typeList)
    
    
    self.block = block
@@ -1827,7 +1837,7 @@ function RepeatNode:__init(pos, typeList, block, exp)
 end
 function RepeatNode.create( nodeMan, pos, typeList, block, exp )
 
-   local node = RepeatNode.new(pos, typeList, block, exp)
+   local node = RepeatNode.new(nodeMan:nextId(  ), pos, typeList, block, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -1890,14 +1900,14 @@ function ForNode:canBeStatement(  )
 
    return true
 end
-function ForNode.new( pos, typeList, block, val, init, to, delta )
+function ForNode.new( id, pos, typeList, block, val, init, to, delta )
    local obj = {}
    ForNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, block, val, init, to, delta ); end
+   if obj.__init then obj:__init( id, pos, typeList, block, val, init, to, delta ); end
    return obj
 end
-function ForNode:__init(pos, typeList, block, val, init, to, delta) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['For']), pos, typeList)
+function ForNode:__init(id, pos, typeList, block, val, init, to, delta) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['For']), pos, typeList)
    
    
    self.block = block
@@ -1909,7 +1919,7 @@ function ForNode:__init(pos, typeList, block, val, init, to, delta)
 end
 function ForNode.create( nodeMan, pos, typeList, block, val, init, to, delta )
 
-   local node = ForNode.new(pos, typeList, block, val, init, to, delta)
+   local node = ForNode.new(nodeMan:nextId(  ), pos, typeList, block, val, init, to, delta)
    nodeMan:addNode( node )
    return node
 end
@@ -1981,14 +1991,14 @@ function ApplyNode:canBeStatement(  )
 
    return true
 end
-function ApplyNode.new( pos, typeList, varList, exp, block )
+function ApplyNode.new( id, pos, typeList, varList, exp, block )
    local obj = {}
    ApplyNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, varList, exp, block ); end
+   if obj.__init then obj:__init( id, pos, typeList, varList, exp, block ); end
    return obj
 end
-function ApplyNode:__init(pos, typeList, varList, exp, block) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Apply']), pos, typeList)
+function ApplyNode:__init(id, pos, typeList, varList, exp, block) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Apply']), pos, typeList)
    
    
    self.varList = varList
@@ -1998,7 +2008,7 @@ function ApplyNode:__init(pos, typeList, varList, exp, block)
 end
 function ApplyNode.create( nodeMan, pos, typeList, varList, exp, block )
 
-   local node = ApplyNode.new(pos, typeList, varList, exp, block)
+   local node = ApplyNode.new(nodeMan:nextId(  ), pos, typeList, varList, exp, block)
    nodeMan:addNode( node )
    return node
 end
@@ -2064,14 +2074,14 @@ function ForeachNode:canBeStatement(  )
 
    return true
 end
-function ForeachNode.new( pos, typeList, val, key, exp, block )
+function ForeachNode.new( id, pos, typeList, val, key, exp, block )
    local obj = {}
    ForeachNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, val, key, exp, block ); end
+   if obj.__init then obj:__init( id, pos, typeList, val, key, exp, block ); end
    return obj
 end
-function ForeachNode:__init(pos, typeList, val, key, exp, block) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Foreach']), pos, typeList)
+function ForeachNode:__init(id, pos, typeList, val, key, exp, block) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Foreach']), pos, typeList)
    
    
    self.val = val
@@ -2082,7 +2092,7 @@ function ForeachNode:__init(pos, typeList, val, key, exp, block)
 end
 function ForeachNode.create( nodeMan, pos, typeList, val, key, exp, block )
 
-   local node = ForeachNode.new(pos, typeList, val, key, exp, block)
+   local node = ForeachNode.new(nodeMan:nextId(  ), pos, typeList, val, key, exp, block)
    nodeMan:addNode( node )
    return node
 end
@@ -2151,14 +2161,14 @@ function ForsortNode:canBeStatement(  )
 
    return true
 end
-function ForsortNode.new( pos, typeList, val, key, exp, block, sort )
+function ForsortNode.new( id, pos, typeList, val, key, exp, block, sort )
    local obj = {}
    ForsortNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, val, key, exp, block, sort ); end
+   if obj.__init then obj:__init( id, pos, typeList, val, key, exp, block, sort ); end
    return obj
 end
-function ForsortNode:__init(pos, typeList, val, key, exp, block, sort) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Forsort']), pos, typeList)
+function ForsortNode:__init(id, pos, typeList, val, key, exp, block, sort) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Forsort']), pos, typeList)
    
    
    self.val = val
@@ -2170,7 +2180,7 @@ function ForsortNode:__init(pos, typeList, val, key, exp, block, sort)
 end
 function ForsortNode.create( nodeMan, pos, typeList, val, key, exp, block, sort )
 
-   local node = ForsortNode.new(pos, typeList, val, key, exp, block, sort)
+   local node = ForsortNode.new(nodeMan:nextId(  ), pos, typeList, val, key, exp, block, sort)
    nodeMan:addNode( node )
    return node
 end
@@ -2242,14 +2252,14 @@ function ReturnNode:canBeStatement(  )
 
    return true
 end
-function ReturnNode.new( pos, typeList, expList )
+function ReturnNode.new( id, pos, typeList, expList )
    local obj = {}
    ReturnNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, typeList, expList ); end
    return obj
 end
-function ReturnNode:__init(pos, typeList, expList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Return']), pos, typeList)
+function ReturnNode:__init(id, pos, typeList, expList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Return']), pos, typeList)
    
    
    self.expList = expList
@@ -2257,7 +2267,7 @@ function ReturnNode:__init(pos, typeList, expList)
 end
 function ReturnNode.create( nodeMan, pos, typeList, expList )
 
-   local node = ReturnNode.new(pos, typeList, expList)
+   local node = ReturnNode.new(nodeMan:nextId(  ), pos, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -2311,21 +2321,21 @@ function BreakNode:canBeStatement(  )
 
    return true
 end
-function BreakNode.new( pos, typeList )
+function BreakNode.new( id, pos, typeList )
    local obj = {}
    BreakNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList ); end
+   if obj.__init then obj:__init( id, pos, typeList ); end
    return obj
 end
-function BreakNode:__init(pos, typeList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Break']), pos, typeList)
+function BreakNode:__init(id, pos, typeList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Break']), pos, typeList)
    
    
    
 end
 function BreakNode.create( nodeMan, pos, typeList )
 
-   local node = BreakNode.new(pos, typeList)
+   local node = BreakNode.new(nodeMan:nextId(  ), pos, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -2376,14 +2386,14 @@ function ProvideNode:canBeStatement(  )
 
    return true
 end
-function ProvideNode.new( pos, typeList, symbol )
+function ProvideNode.new( id, pos, typeList, symbol )
    local obj = {}
    ProvideNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, symbol ); end
+   if obj.__init then obj:__init( id, pos, typeList, symbol ); end
    return obj
 end
-function ProvideNode:__init(pos, typeList, symbol) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Provide']), pos, typeList)
+function ProvideNode:__init(id, pos, typeList, symbol) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Provide']), pos, typeList)
    
    
    self.symbol = symbol
@@ -2391,7 +2401,7 @@ function ProvideNode:__init(pos, typeList, symbol)
 end
 function ProvideNode.create( nodeMan, pos, typeList, symbol )
 
-   local node = ProvideNode.new(pos, typeList, symbol)
+   local node = ProvideNode.new(nodeMan:nextId(  ), pos, typeList, symbol)
    nodeMan:addNode( node )
    return node
 end
@@ -2440,14 +2450,14 @@ function ExpNewNode:canBeStatement(  )
 
    return true
 end
-function ExpNewNode.new( pos, typeList, symbol, argList )
+function ExpNewNode.new( id, pos, typeList, symbol, argList )
    local obj = {}
    ExpNewNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, symbol, argList ); end
+   if obj.__init then obj:__init( id, pos, typeList, symbol, argList ); end
    return obj
 end
-function ExpNewNode:__init(pos, typeList, symbol, argList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpNew']), pos, typeList)
+function ExpNewNode:__init(id, pos, typeList, symbol, argList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpNew']), pos, typeList)
    
    
    self.symbol = symbol
@@ -2456,7 +2466,7 @@ function ExpNewNode:__init(pos, typeList, symbol, argList)
 end
 function ExpNewNode.create( nodeMan, pos, typeList, symbol, argList )
 
-   local node = ExpNewNode.new(pos, typeList, symbol, argList)
+   local node = ExpNewNode.new(nodeMan:nextId(  ), pos, typeList, symbol, argList)
    nodeMan:addNode( node )
    return node
 end
@@ -2508,14 +2518,14 @@ function ExpUnwrapNode:canBeStatement(  )
 
    return false
 end
-function ExpUnwrapNode.new( pos, typeList, exp, default )
+function ExpUnwrapNode.new( id, pos, typeList, exp, default )
    local obj = {}
    ExpUnwrapNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp, default ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp, default ); end
    return obj
 end
-function ExpUnwrapNode:__init(pos, typeList, exp, default) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpUnwrap']), pos, typeList)
+function ExpUnwrapNode:__init(id, pos, typeList, exp, default) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpUnwrap']), pos, typeList)
    
    
    self.exp = exp
@@ -2524,7 +2534,7 @@ function ExpUnwrapNode:__init(pos, typeList, exp, default)
 end
 function ExpUnwrapNode.create( nodeMan, pos, typeList, exp, default )
 
-   local node = ExpUnwrapNode.new(pos, typeList, exp, default)
+   local node = ExpUnwrapNode.new(nodeMan:nextId(  ), pos, typeList, exp, default)
    nodeMan:addNode( node )
    return node
 end
@@ -2568,14 +2578,14 @@ function ExpRefNode:canBeStatement(  )
 
    return false
 end
-function ExpRefNode.new( pos, typeList, token, symbolInfo )
+function ExpRefNode.new( id, pos, typeList, token, symbolInfo )
    local obj = {}
    ExpRefNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token, symbolInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, token, symbolInfo ); end
    return obj
 end
-function ExpRefNode:__init(pos, typeList, token, symbolInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpRef']), pos, typeList)
+function ExpRefNode:__init(id, pos, typeList, token, symbolInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpRef']), pos, typeList)
    
    
    self.token = token
@@ -2584,7 +2594,7 @@ function ExpRefNode:__init(pos, typeList, token, symbolInfo)
 end
 function ExpRefNode.create( nodeMan, pos, typeList, token, symbolInfo )
 
-   local node = ExpRefNode.new(pos, typeList, token, symbolInfo)
+   local node = ExpRefNode.new(nodeMan:nextId(  ), pos, typeList, token, symbolInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -2642,14 +2652,14 @@ function ExpOp2Node:canBeLeft(  )
 
    return false
 end
-function ExpOp2Node.new( pos, typeList, op, exp1, exp2 )
+function ExpOp2Node.new( id, pos, typeList, op, exp1, exp2 )
    local obj = {}
    ExpOp2Node.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, op, exp1, exp2 ); end
+   if obj.__init then obj:__init( id, pos, typeList, op, exp1, exp2 ); end
    return obj
 end
-function ExpOp2Node:__init(pos, typeList, op, exp1, exp2) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpOp2']), pos, typeList)
+function ExpOp2Node:__init(id, pos, typeList, op, exp1, exp2) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpOp2']), pos, typeList)
    
    
    self.op = op
@@ -2659,7 +2669,7 @@ function ExpOp2Node:__init(pos, typeList, op, exp1, exp2)
 end
 function ExpOp2Node.create( nodeMan, pos, typeList, op, exp1, exp2 )
 
-   local node = ExpOp2Node.new(pos, typeList, op, exp1, exp2)
+   local node = ExpOp2Node.new(nodeMan:nextId(  ), pos, typeList, op, exp1, exp2)
    nodeMan:addNode( node )
    return node
 end
@@ -2719,14 +2729,14 @@ function UnwrapSetNode:canBeStatement(  )
 
    return true
 end
-function UnwrapSetNode.new( pos, typeList, dstExpList, srcExpList, unwrapBlock )
+function UnwrapSetNode.new( id, pos, typeList, dstExpList, srcExpList, unwrapBlock )
    local obj = {}
    UnwrapSetNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, dstExpList, srcExpList, unwrapBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, dstExpList, srcExpList, unwrapBlock ); end
    return obj
 end
-function UnwrapSetNode:__init(pos, typeList, dstExpList, srcExpList, unwrapBlock) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['UnwrapSet']), pos, typeList)
+function UnwrapSetNode:__init(id, pos, typeList, dstExpList, srcExpList, unwrapBlock) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['UnwrapSet']), pos, typeList)
    
    
    self.dstExpList = dstExpList
@@ -2736,7 +2746,7 @@ function UnwrapSetNode:__init(pos, typeList, dstExpList, srcExpList, unwrapBlock
 end
 function UnwrapSetNode.create( nodeMan, pos, typeList, dstExpList, srcExpList, unwrapBlock )
 
-   local node = UnwrapSetNode.new(pos, typeList, dstExpList, srcExpList, unwrapBlock)
+   local node = UnwrapSetNode.new(nodeMan:nextId(  ), pos, typeList, dstExpList, srcExpList, unwrapBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -2791,14 +2801,14 @@ function IfUnwrapNode:canBeStatement(  )
 
    return true
 end
-function IfUnwrapNode.new( pos, typeList, varNameList, expNodeList, block, nilBlock )
+function IfUnwrapNode.new( id, pos, typeList, varNameList, expNodeList, block, nilBlock )
    local obj = {}
    IfUnwrapNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, varNameList, expNodeList, block, nilBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, varNameList, expNodeList, block, nilBlock ); end
    return obj
 end
-function IfUnwrapNode:__init(pos, typeList, varNameList, expNodeList, block, nilBlock) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['IfUnwrap']), pos, typeList)
+function IfUnwrapNode:__init(id, pos, typeList, varNameList, expNodeList, block, nilBlock) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['IfUnwrap']), pos, typeList)
    
    
    self.varNameList = varNameList
@@ -2809,7 +2819,7 @@ function IfUnwrapNode:__init(pos, typeList, varNameList, expNodeList, block, nil
 end
 function IfUnwrapNode.create( nodeMan, pos, typeList, varNameList, expNodeList, block, nilBlock )
 
-   local node = IfUnwrapNode.new(pos, typeList, varNameList, expNodeList, block, nilBlock)
+   local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, typeList, varNameList, expNodeList, block, nilBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -2942,14 +2952,14 @@ function WhenNode:canBeStatement(  )
 
    return true
 end
-function WhenNode.new( pos, typeList, varNameList, expNodeList, block, elseBlock )
+function WhenNode.new( id, pos, typeList, varNameList, expNodeList, block, elseBlock )
    local obj = {}
    WhenNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, varNameList, expNodeList, block, elseBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, varNameList, expNodeList, block, elseBlock ); end
    return obj
 end
-function WhenNode:__init(pos, typeList, varNameList, expNodeList, block, elseBlock) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['When']), pos, typeList)
+function WhenNode:__init(id, pos, typeList, varNameList, expNodeList, block, elseBlock) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['When']), pos, typeList)
    
    
    self.varNameList = varNameList
@@ -2960,7 +2970,7 @@ function WhenNode:__init(pos, typeList, varNameList, expNodeList, block, elseBlo
 end
 function WhenNode.create( nodeMan, pos, typeList, varNameList, expNodeList, block, elseBlock )
 
-   local node = WhenNode.new(pos, typeList, varNameList, expNodeList, block, elseBlock)
+   local node = WhenNode.new(nodeMan:nextId(  ), pos, typeList, varNameList, expNodeList, block, elseBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -3093,14 +3103,14 @@ function ExpCastNode:canBeStatement(  )
 
    return false
 end
-function ExpCastNode.new( pos, typeList, exp, force )
+function ExpCastNode.new( id, pos, typeList, exp, force )
    local obj = {}
    ExpCastNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp, force ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp, force ); end
    return obj
 end
-function ExpCastNode:__init(pos, typeList, exp, force) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpCast']), pos, typeList)
+function ExpCastNode:__init(id, pos, typeList, exp, force) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpCast']), pos, typeList)
    
    
    self.exp = exp
@@ -3109,7 +3119,7 @@ function ExpCastNode:__init(pos, typeList, exp, force)
 end
 function ExpCastNode.create( nodeMan, pos, typeList, exp, force )
 
-   local node = ExpCastNode.new(pos, typeList, exp, force)
+   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, typeList, exp, force)
    nodeMan:addNode( node )
    return node
 end
@@ -3193,14 +3203,14 @@ function ExpOp1Node:canBeStatement(  )
 
    return false
 end
-function ExpOp1Node.new( pos, typeList, op, macroMode, exp )
+function ExpOp1Node.new( id, pos, typeList, op, macroMode, exp )
    local obj = {}
    ExpOp1Node.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, op, macroMode, exp ); end
+   if obj.__init then obj:__init( id, pos, typeList, op, macroMode, exp ); end
    return obj
 end
-function ExpOp1Node:__init(pos, typeList, op, macroMode, exp) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpOp1']), pos, typeList)
+function ExpOp1Node:__init(id, pos, typeList, op, macroMode, exp) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpOp1']), pos, typeList)
    
    
    self.op = op
@@ -3210,7 +3220,7 @@ function ExpOp1Node:__init(pos, typeList, op, macroMode, exp)
 end
 function ExpOp1Node.create( nodeMan, pos, typeList, op, macroMode, exp )
 
-   local node = ExpOp1Node.new(pos, typeList, op, macroMode, exp)
+   local node = ExpOp1Node.new(nodeMan:nextId(  ), pos, typeList, op, macroMode, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -3261,14 +3271,14 @@ function ExpRefItemNode:canBeStatement(  )
 
    return false
 end
-function ExpRefItemNode.new( pos, typeList, val, nilAccess, symbol, index )
+function ExpRefItemNode.new( id, pos, typeList, val, nilAccess, symbol, index )
    local obj = {}
    ExpRefItemNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, val, nilAccess, symbol, index ); end
+   if obj.__init then obj:__init( id, pos, typeList, val, nilAccess, symbol, index ); end
    return obj
 end
-function ExpRefItemNode:__init(pos, typeList, val, nilAccess, symbol, index) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpRefItem']), pos, typeList)
+function ExpRefItemNode:__init(id, pos, typeList, val, nilAccess, symbol, index) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpRefItem']), pos, typeList)
    
    
    self.val = val
@@ -3279,7 +3289,7 @@ function ExpRefItemNode:__init(pos, typeList, val, nilAccess, symbol, index)
 end
 function ExpRefItemNode.create( nodeMan, pos, typeList, val, nilAccess, symbol, index )
 
-   local node = ExpRefItemNode.new(pos, typeList, val, nilAccess, symbol, index)
+   local node = ExpRefItemNode.new(nodeMan:nextId(  ), pos, typeList, val, nilAccess, symbol, index)
    nodeMan:addNode( node )
    return node
 end
@@ -3342,14 +3352,14 @@ function ExpCallNode:canBeStatement(  )
 
    return true
 end
-function ExpCallNode.new( pos, typeList, func, errorFunc, nilAccess, argList )
+function ExpCallNode.new( id, pos, typeList, func, errorFunc, nilAccess, argList )
    local obj = {}
    ExpCallNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, func, errorFunc, nilAccess, argList ); end
+   if obj.__init then obj:__init( id, pos, typeList, func, errorFunc, nilAccess, argList ); end
    return obj
 end
-function ExpCallNode:__init(pos, typeList, func, errorFunc, nilAccess, argList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpCall']), pos, typeList)
+function ExpCallNode:__init(id, pos, typeList, func, errorFunc, nilAccess, argList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpCall']), pos, typeList)
    
    
    self.func = func
@@ -3360,7 +3370,7 @@ function ExpCallNode:__init(pos, typeList, func, errorFunc, nilAccess, argList)
 end
 function ExpCallNode.create( nodeMan, pos, typeList, func, errorFunc, nilAccess, argList )
 
-   local node = ExpCallNode.new(pos, typeList, func, errorFunc, nilAccess, argList)
+   local node = ExpCallNode.new(nodeMan:nextId(  ), pos, typeList, func, errorFunc, nilAccess, argList)
    nodeMan:addNode( node )
    return node
 end
@@ -3437,14 +3447,14 @@ function ExpDDDNode:canBeStatement(  )
 
    return false
 end
-function ExpDDDNode.new( pos, typeList, token )
+function ExpDDDNode.new( id, pos, typeList, token )
    local obj = {}
    ExpDDDNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token ); end
+   if obj.__init then obj:__init( id, pos, typeList, token ); end
    return obj
 end
-function ExpDDDNode:__init(pos, typeList, token) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpDDD']), pos, typeList)
+function ExpDDDNode:__init(id, pos, typeList, token) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpDDD']), pos, typeList)
    
    
    self.token = token
@@ -3452,7 +3462,7 @@ function ExpDDDNode:__init(pos, typeList, token)
 end
 function ExpDDDNode.create( nodeMan, pos, typeList, token )
 
-   local node = ExpDDDNode.new(pos, typeList, token)
+   local node = ExpDDDNode.new(nodeMan:nextId(  ), pos, typeList, token)
    nodeMan:addNode( node )
    return node
 end
@@ -3501,14 +3511,14 @@ function ExpParenNode:canBeStatement(  )
 
    return false
 end
-function ExpParenNode.new( pos, typeList, exp )
+function ExpParenNode.new( id, pos, typeList, exp )
    local obj = {}
    ExpParenNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp ); end
    return obj
 end
-function ExpParenNode:__init(pos, typeList, exp) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpParen']), pos, typeList)
+function ExpParenNode:__init(id, pos, typeList, exp) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpParen']), pos, typeList)
    
    
    self.exp = exp
@@ -3516,7 +3526,7 @@ function ExpParenNode:__init(pos, typeList, exp)
 end
 function ExpParenNode.create( nodeMan, pos, typeList, exp )
 
-   local node = ExpParenNode.new(pos, typeList, exp)
+   local node = ExpParenNode.new(nodeMan:nextId(  ), pos, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -3565,14 +3575,14 @@ function ExpMacroExpNode:canBeStatement(  )
 
    return true
 end
-function ExpMacroExpNode.new( pos, typeList, stmtList )
+function ExpMacroExpNode.new( id, pos, typeList, stmtList )
    local obj = {}
    ExpMacroExpNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, stmtList ); end
+   if obj.__init then obj:__init( id, pos, typeList, stmtList ); end
    return obj
 end
-function ExpMacroExpNode:__init(pos, typeList, stmtList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpMacroExp']), pos, typeList)
+function ExpMacroExpNode:__init(id, pos, typeList, stmtList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroExp']), pos, typeList)
    
    
    self.stmtList = stmtList
@@ -3580,7 +3590,7 @@ function ExpMacroExpNode:__init(pos, typeList, stmtList)
 end
 function ExpMacroExpNode.create( nodeMan, pos, typeList, stmtList )
 
-   local node = ExpMacroExpNode.new(pos, typeList, stmtList)
+   local node = ExpMacroExpNode.new(nodeMan:nextId(  ), pos, typeList, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -3679,14 +3689,14 @@ function ExpMacroStatNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroStatNode.new( pos, typeList, expStrList )
+function ExpMacroStatNode.new( id, pos, typeList, expStrList )
    local obj = {}
    ExpMacroStatNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, expStrList ); end
+   if obj.__init then obj:__init( id, pos, typeList, expStrList ); end
    return obj
 end
-function ExpMacroStatNode:__init(pos, typeList, expStrList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpMacroStat']), pos, typeList)
+function ExpMacroStatNode:__init(id, pos, typeList, expStrList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroStat']), pos, typeList)
    
    
    self.expStrList = expStrList
@@ -3694,7 +3704,7 @@ function ExpMacroStatNode:__init(pos, typeList, expStrList)
 end
 function ExpMacroStatNode.create( nodeMan, pos, typeList, expStrList )
 
-   local node = ExpMacroStatNode.new(pos, typeList, expStrList)
+   local node = ExpMacroStatNode.new(nodeMan:nextId(  ), pos, typeList, expStrList)
    nodeMan:addNode( node )
    return node
 end
@@ -3739,14 +3749,14 @@ function StmtExpNode:canBeLeft(  )
 
    return false
 end
-function StmtExpNode.new( pos, typeList, exp )
+function StmtExpNode.new( id, pos, typeList, exp )
    local obj = {}
    StmtExpNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp ); end
    return obj
 end
-function StmtExpNode:__init(pos, typeList, exp) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['StmtExp']), pos, typeList)
+function StmtExpNode:__init(id, pos, typeList, exp) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['StmtExp']), pos, typeList)
    
    
    self.exp = exp
@@ -3754,7 +3764,7 @@ function StmtExpNode:__init(pos, typeList, exp)
 end
 function StmtExpNode.create( nodeMan, pos, typeList, exp )
 
-   local node = StmtExpNode.new(pos, typeList, exp)
+   local node = StmtExpNode.new(nodeMan:nextId(  ), pos, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -3813,14 +3823,14 @@ function ExpMacroStatListNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroStatListNode.new( pos, typeList, exp )
+function ExpMacroStatListNode.new( id, pos, typeList, exp )
    local obj = {}
    ExpMacroStatListNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp ); end
    return obj
 end
-function ExpMacroStatListNode:__init(pos, typeList, exp) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList']), pos, typeList)
+function ExpMacroStatListNode:__init(id, pos, typeList, exp) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMacroStatList']), pos, typeList)
    
    
    self.exp = exp
@@ -3828,7 +3838,7 @@ function ExpMacroStatListNode:__init(pos, typeList, exp)
 end
 function ExpMacroStatListNode.create( nodeMan, pos, typeList, exp )
 
-   local node = ExpMacroStatListNode.new(pos, typeList, exp)
+   local node = ExpMacroStatListNode.new(nodeMan:nextId(  ), pos, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -3877,14 +3887,14 @@ function ExpOmitEnumNode:canBeStatement(  )
 
    return false
 end
-function ExpOmitEnumNode.new( pos, typeList, valToken, valInfo, enumTypeInfo )
+function ExpOmitEnumNode.new( id, pos, typeList, valToken, valInfo, enumTypeInfo )
    local obj = {}
    ExpOmitEnumNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, valToken, valInfo, enumTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, valToken, valInfo, enumTypeInfo ); end
    return obj
 end
-function ExpOmitEnumNode:__init(pos, typeList, valToken, valInfo, enumTypeInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum']), pos, typeList)
+function ExpOmitEnumNode:__init(id, pos, typeList, valToken, valInfo, enumTypeInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpOmitEnum']), pos, typeList)
    
    
    self.valToken = valToken
@@ -3894,7 +3904,7 @@ function ExpOmitEnumNode:__init(pos, typeList, valToken, valInfo, enumTypeInfo)
 end
 function ExpOmitEnumNode.create( nodeMan, pos, typeList, valToken, valInfo, enumTypeInfo )
 
-   local node = ExpOmitEnumNode.new(pos, typeList, valToken, valInfo, enumTypeInfo)
+   local node = ExpOmitEnumNode.new(nodeMan:nextId(  ), pos, typeList, valToken, valInfo, enumTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -3941,14 +3951,14 @@ function RefFieldNode:canBeStatement(  )
 
    return false
 end
-function RefFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix )
+function RefFieldNode.new( id, pos, typeList, field, symbolInfo, nilAccess, prefix )
    local obj = {}
    RefFieldNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, field, symbolInfo, nilAccess, prefix ); end
+   if obj.__init then obj:__init( id, pos, typeList, field, symbolInfo, nilAccess, prefix ); end
    return obj
 end
-function RefFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['RefField']), pos, typeList)
+function RefFieldNode:__init(id, pos, typeList, field, symbolInfo, nilAccess, prefix) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['RefField']), pos, typeList)
    
    
    self.field = field
@@ -3959,7 +3969,7 @@ function RefFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
 end
 function RefFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAccess, prefix )
 
-   local node = RefFieldNode.new(pos, typeList, field, symbolInfo, nilAccess, prefix)
+   local node = RefFieldNode.new(nodeMan:nextId(  ), pos, typeList, field, symbolInfo, nilAccess, prefix)
    nodeMan:addNode( node )
    return node
 end
@@ -4037,14 +4047,14 @@ function GetFieldNode:canBeStatement(  )
 
    return false
 end
-function GetFieldNode.new( pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
+function GetFieldNode.new( id, pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
    local obj = {}
    GetFieldNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo ); end
    return obj
 end
-function GetFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['GetField']), pos, typeList)
+function GetFieldNode:__init(id, pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['GetField']), pos, typeList)
    
    
    self.field = field
@@ -4056,7 +4066,7 @@ function GetFieldNode:__init(pos, typeList, field, symbolInfo, nilAccess, prefix
 end
 function GetFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
 
-   local node = GetFieldNode.new(pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo)
+   local node = GetFieldNode.new(nodeMan:nextId(  ), pos, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -4129,14 +4139,14 @@ function AliasNode:canBeStatement(  )
 
    return true
 end
-function AliasNode.new( pos, typeList, newName, srcNode, typeInfo )
+function AliasNode.new( id, pos, typeList, newName, srcNode, typeInfo )
    local obj = {}
    AliasNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, newName, srcNode, typeInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, newName, srcNode, typeInfo ); end
    return obj
 end
-function AliasNode:__init(pos, typeList, newName, srcNode, typeInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Alias']), pos, typeList)
+function AliasNode:__init(id, pos, typeList, newName, srcNode, typeInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Alias']), pos, typeList)
    
    
    self.newName = newName
@@ -4146,7 +4156,7 @@ function AliasNode:__init(pos, typeList, newName, srcNode, typeInfo)
 end
 function AliasNode.create( nodeMan, pos, typeList, newName, srcNode, typeInfo )
 
-   local node = AliasNode.new(pos, typeList, newName, srcNode, typeInfo)
+   local node = AliasNode.new(nodeMan:nextId(  ), pos, typeList, newName, srcNode, typeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -4262,14 +4272,14 @@ function DeclVarNode:canBeStatement(  )
 
    return true
 end
-function DeclVarNode.new( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode.new( id, pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
    local obj = {}
    DeclVarNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
    return obj
 end
-function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclVar']), pos, typeList)
+function DeclVarNode:__init(id, pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclVar']), pos, typeList)
    
    
    self.mode = mode
@@ -4288,7 +4298,7 @@ function DeclVarNode:__init(pos, typeList, mode, accessMode, staticFlag, varList
 end
 function DeclVarNode.create( nodeMan, pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
 
-   local node = DeclVarNode.new(pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
+   local node = DeclVarNode.new(nodeMan:nextId(  ), pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -4542,14 +4552,14 @@ function DeclFuncNode:canBeStatement(  )
 
    return true
 end
-function DeclFuncNode.new( pos, typeList, declInfo )
+function DeclFuncNode.new( id, pos, typeList, declInfo )
    local obj = {}
    DeclFuncNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, declInfo ); end
    return obj
 end
-function DeclFuncNode:__init(pos, typeList, declInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclFunc']), pos, typeList)
+function DeclFuncNode:__init(id, pos, typeList, declInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclFunc']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -4557,7 +4567,7 @@ function DeclFuncNode:__init(pos, typeList, declInfo)
 end
 function DeclFuncNode.create( nodeMan, pos, typeList, declInfo )
 
-   local node = DeclFuncNode.new(pos, typeList, declInfo)
+   local node = DeclFuncNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -4606,14 +4616,14 @@ function DeclMethodNode:canBeStatement(  )
 
    return true
 end
-function DeclMethodNode.new( pos, typeList, declInfo )
+function DeclMethodNode.new( id, pos, typeList, declInfo )
    local obj = {}
    DeclMethodNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, declInfo ); end
    return obj
 end
-function DeclMethodNode:__init(pos, typeList, declInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclMethod']), pos, typeList)
+function DeclMethodNode:__init(id, pos, typeList, declInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclMethod']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -4621,7 +4631,7 @@ function DeclMethodNode:__init(pos, typeList, declInfo)
 end
 function DeclMethodNode.create( nodeMan, pos, typeList, declInfo )
 
-   local node = DeclMethodNode.new(pos, typeList, declInfo)
+   local node = DeclMethodNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -4670,14 +4680,14 @@ function DeclConstrNode:canBeStatement(  )
 
    return true
 end
-function DeclConstrNode.new( pos, typeList, declInfo )
+function DeclConstrNode.new( id, pos, typeList, declInfo )
    local obj = {}
    DeclConstrNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, declInfo ); end
    return obj
 end
-function DeclConstrNode:__init(pos, typeList, declInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclConstr']), pos, typeList)
+function DeclConstrNode:__init(id, pos, typeList, declInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclConstr']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -4685,7 +4695,7 @@ function DeclConstrNode:__init(pos, typeList, declInfo)
 end
 function DeclConstrNode.create( nodeMan, pos, typeList, declInfo )
 
-   local node = DeclConstrNode.new(pos, typeList, declInfo)
+   local node = DeclConstrNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -4734,14 +4744,14 @@ function DeclDestrNode:canBeStatement(  )
 
    return true
 end
-function DeclDestrNode.new( pos, typeList, declInfo )
+function DeclDestrNode.new( id, pos, typeList, declInfo )
    local obj = {}
    DeclDestrNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, declInfo ); end
    return obj
 end
-function DeclDestrNode:__init(pos, typeList, declInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclDestr']), pos, typeList)
+function DeclDestrNode:__init(id, pos, typeList, declInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclDestr']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -4749,7 +4759,7 @@ function DeclDestrNode:__init(pos, typeList, declInfo)
 end
 function DeclDestrNode.create( nodeMan, pos, typeList, declInfo )
 
-   local node = DeclDestrNode.new(pos, typeList, declInfo)
+   local node = DeclDestrNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -4798,14 +4808,14 @@ function ExpCallSuperNode:canBeStatement(  )
 
    return true
 end
-function ExpCallSuperNode.new( pos, typeList, superType, methodType, expList )
+function ExpCallSuperNode.new( id, pos, typeList, superType, methodType, expList )
    local obj = {}
    ExpCallSuperNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, superType, methodType, expList ); end
+   if obj.__init then obj:__init( id, pos, typeList, superType, methodType, expList ); end
    return obj
 end
-function ExpCallSuperNode:__init(pos, typeList, superType, methodType, expList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['ExpCallSuper']), pos, typeList)
+function ExpCallSuperNode:__init(id, pos, typeList, superType, methodType, expList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpCallSuper']), pos, typeList)
    
    
    self.superType = superType
@@ -4815,7 +4825,7 @@ function ExpCallSuperNode:__init(pos, typeList, superType, methodType, expList)
 end
 function ExpCallSuperNode.create( nodeMan, pos, typeList, superType, methodType, expList )
 
-   local node = ExpCallSuperNode.new(pos, typeList, superType, methodType, expList)
+   local node = ExpCallSuperNode.new(nodeMan:nextId(  ), pos, typeList, superType, methodType, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -4870,14 +4880,14 @@ function DeclMemberNode:canBeStatement(  )
 
    return true
 end
-function DeclMemberNode.new( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
+function DeclMemberNode.new( id, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
    local obj = {}
    DeclMemberNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode ); end
+   if obj.__init then obj:__init( id, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode ); end
    return obj
 end
-function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclMember']), pos, typeList)
+function DeclMemberNode:__init(id, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclMember']), pos, typeList)
    
    
    self.name = name
@@ -4893,7 +4903,7 @@ function DeclMemberNode:__init(pos, typeList, name, refType, symbolInfo, staticF
 end
 function DeclMemberNode.create( nodeMan, pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode )
 
-   local node = DeclMemberNode.new(pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
+   local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
    nodeMan:addNode( node )
    return node
 end
@@ -4966,14 +4976,14 @@ function DeclArgNode:canBeStatement(  )
 
    return false
 end
-function DeclArgNode.new( pos, typeList, name, argType )
+function DeclArgNode.new( id, pos, typeList, name, argType )
    local obj = {}
    DeclArgNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, name, argType ); end
+   if obj.__init then obj:__init( id, pos, typeList, name, argType ); end
    return obj
 end
-function DeclArgNode:__init(pos, typeList, name, argType) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclArg']), pos, typeList)
+function DeclArgNode:__init(id, pos, typeList, name, argType) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclArg']), pos, typeList)
    
    
    self.name = name
@@ -4982,7 +4992,7 @@ function DeclArgNode:__init(pos, typeList, name, argType)
 end
 function DeclArgNode.create( nodeMan, pos, typeList, name, argType )
 
-   local node = DeclArgNode.new(pos, typeList, name, argType)
+   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, typeList, name, argType)
    nodeMan:addNode( node )
    return node
 end
@@ -5034,21 +5044,21 @@ function DeclArgDDDNode:canBeStatement(  )
 
    return false
 end
-function DeclArgDDDNode.new( pos, typeList )
+function DeclArgDDDNode.new( id, pos, typeList )
    local obj = {}
    DeclArgDDDNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList ); end
+   if obj.__init then obj:__init( id, pos, typeList ); end
    return obj
 end
-function DeclArgDDDNode:__init(pos, typeList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclArgDDD']), pos, typeList)
+function DeclArgDDDNode:__init(id, pos, typeList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclArgDDD']), pos, typeList)
    
    
    
 end
 function DeclArgDDDNode.create( nodeMan, pos, typeList )
 
-   local node = DeclArgDDDNode.new(pos, typeList)
+   local node = DeclArgDDDNode.new(nodeMan:nextId(  ), pos, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -5120,14 +5130,14 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
+function DeclClassNode.new( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclClass']), pos, typeList)
+function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclClass']), pos, typeList)
    
    
    self.accessMode = accessMode
@@ -5146,7 +5156,7 @@ function DeclClassNode:__init(pos, typeList, accessMode, name, gluePrefix, declS
 end
 function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
 
-   local node = DeclClassNode.new(pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -5228,14 +5238,14 @@ function DeclEnumNode:canBeStatement(  )
 
    return true
 end
-function DeclEnumNode.new( pos, typeList, accessMode, name, valueNameList, scope )
+function DeclEnumNode.new( id, pos, typeList, accessMode, name, valueNameList, scope )
    local obj = {}
    DeclEnumNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, accessMode, name, valueNameList, scope ); end
+   if obj.__init then obj:__init( id, pos, typeList, accessMode, name, valueNameList, scope ); end
    return obj
 end
-function DeclEnumNode:__init(pos, typeList, accessMode, name, valueNameList, scope) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclEnum']), pos, typeList)
+function DeclEnumNode:__init(id, pos, typeList, accessMode, name, valueNameList, scope) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclEnum']), pos, typeList)
    
    
    self.accessMode = accessMode
@@ -5246,7 +5256,7 @@ function DeclEnumNode:__init(pos, typeList, accessMode, name, valueNameList, sco
 end
 function DeclEnumNode.create( nodeMan, pos, typeList, accessMode, name, valueNameList, scope )
 
-   local node = DeclEnumNode.new(pos, typeList, accessMode, name, valueNameList, scope)
+   local node = DeclEnumNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, name, valueNameList, scope)
    nodeMan:addNode( node )
    return node
 end
@@ -5304,14 +5314,14 @@ function DeclAlgeNode:canBeStatement(  )
 
    return true
 end
-function DeclAlgeNode.new( pos, typeList, accessMode, algeType, scope )
+function DeclAlgeNode.new( id, pos, typeList, accessMode, algeType, scope )
    local obj = {}
    DeclAlgeNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, accessMode, algeType, scope ); end
+   if obj.__init then obj:__init( id, pos, typeList, accessMode, algeType, scope ); end
    return obj
 end
-function DeclAlgeNode:__init(pos, typeList, accessMode, algeType, scope) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclAlge']), pos, typeList)
+function DeclAlgeNode:__init(id, pos, typeList, accessMode, algeType, scope) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclAlge']), pos, typeList)
    
    
    self.accessMode = accessMode
@@ -5321,7 +5331,7 @@ function DeclAlgeNode:__init(pos, typeList, accessMode, algeType, scope)
 end
 function DeclAlgeNode.create( nodeMan, pos, typeList, accessMode, algeType, scope )
 
-   local node = DeclAlgeNode.new(pos, typeList, accessMode, algeType, scope)
+   local node = DeclAlgeNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, algeType, scope)
    nodeMan:addNode( node )
    return node
 end
@@ -5376,14 +5386,14 @@ function NewAlgeValNode:canBeStatement(  )
 
    return false
 end
-function NewAlgeValNode.new( pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
+function NewAlgeValNode.new( id, pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
    local obj = {}
    NewAlgeValNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList ); end
+   if obj.__init then obj:__init( id, pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList ); end
    return obj
 end
-function NewAlgeValNode:__init(pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']), pos, typeList)
+function NewAlgeValNode:__init(id, pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['NewAlgeVal']), pos, typeList)
    
    
    self.name = name
@@ -5395,7 +5405,7 @@ function NewAlgeValNode:__init(pos, typeList, name, prefix, algeTypeInfo, valInf
 end
 function NewAlgeValNode.create( nodeMan, pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
 
-   local node = NewAlgeValNode.new(pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
+   local node = NewAlgeValNode.new(nodeMan:nextId(  ), pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
    nodeMan:addNode( node )
    return node
 end
@@ -5485,14 +5495,14 @@ function MatchNode:canBeStatement(  )
 
    return true
 end
-function MatchNode.new( pos, typeList, val, algeTypeInfo, caseList, defaultBlock )
+function MatchNode.new( id, pos, typeList, val, algeTypeInfo, caseList, defaultBlock )
    local obj = {}
    MatchNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, val, algeTypeInfo, caseList, defaultBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, val, algeTypeInfo, caseList, defaultBlock ); end
    return obj
 end
-function MatchNode:__init(pos, typeList, val, algeTypeInfo, caseList, defaultBlock) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Match']), pos, typeList)
+function MatchNode:__init(id, pos, typeList, val, algeTypeInfo, caseList, defaultBlock) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Match']), pos, typeList)
    
    
    self.val = val
@@ -5503,7 +5513,7 @@ function MatchNode:__init(pos, typeList, val, algeTypeInfo, caseList, defaultBlo
 end
 function MatchNode.create( nodeMan, pos, typeList, val, algeTypeInfo, caseList, defaultBlock )
 
-   local node = MatchNode.new(pos, typeList, val, algeTypeInfo, caseList, defaultBlock)
+   local node = MatchNode.new(nodeMan:nextId(  ), pos, typeList, val, algeTypeInfo, caseList, defaultBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -5561,14 +5571,14 @@ function DeclMacroNode:canBeStatement(  )
 
    return true
 end
-function DeclMacroNode.new( pos, typeList, declInfo )
+function DeclMacroNode.new( id, pos, typeList, declInfo )
    local obj = {}
    DeclMacroNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, declInfo ); end
    return obj
 end
-function DeclMacroNode:__init(pos, typeList, declInfo) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['DeclMacro']), pos, typeList)
+function DeclMacroNode:__init(id, pos, typeList, declInfo) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclMacro']), pos, typeList)
    
    
    self.declInfo = declInfo
@@ -5576,7 +5586,7 @@ function DeclMacroNode:__init(pos, typeList, declInfo)
 end
 function DeclMacroNode.create( nodeMan, pos, typeList, declInfo )
 
-   local node = DeclMacroNode.new(pos, typeList, declInfo)
+   local node = DeclMacroNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -5642,21 +5652,21 @@ function AbbrNode:canBeStatement(  )
 
    return false
 end
-function AbbrNode.new( pos, typeList )
+function AbbrNode.new( id, pos, typeList )
    local obj = {}
    AbbrNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList ); end
+   if obj.__init then obj:__init( id, pos, typeList ); end
    return obj
 end
-function AbbrNode:__init(pos, typeList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Abbr']), pos, typeList)
+function AbbrNode:__init(id, pos, typeList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Abbr']), pos, typeList)
    
    
    
 end
 function AbbrNode.create( nodeMan, pos, typeList )
 
-   local node = AbbrNode.new(pos, typeList)
+   local node = AbbrNode.new(nodeMan:nextId(  ), pos, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -5702,14 +5712,14 @@ function BoxingNode:canBeStatement(  )
 
    return false
 end
-function BoxingNode.new( pos, typeList, src )
+function BoxingNode.new( id, pos, typeList, src )
    local obj = {}
    BoxingNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, src ); end
+   if obj.__init then obj:__init( id, pos, typeList, src ); end
    return obj
 end
-function BoxingNode:__init(pos, typeList, src) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Boxing']), pos, typeList)
+function BoxingNode:__init(id, pos, typeList, src) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Boxing']), pos, typeList)
    
    
    self.src = src
@@ -5717,7 +5727,7 @@ function BoxingNode:__init(pos, typeList, src)
 end
 function BoxingNode.create( nodeMan, pos, typeList, src )
 
-   local node = BoxingNode.new(pos, typeList, src)
+   local node = BoxingNode.new(nodeMan:nextId(  ), pos, typeList, src)
    nodeMan:addNode( node )
    return node
 end
@@ -5766,14 +5776,14 @@ function UnboxingNode:canBeStatement(  )
 
    return false
 end
-function UnboxingNode.new( pos, typeList, src )
+function UnboxingNode.new( id, pos, typeList, src )
    local obj = {}
    UnboxingNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, src ); end
+   if obj.__init then obj:__init( id, pos, typeList, src ); end
    return obj
 end
-function UnboxingNode:__init(pos, typeList, src) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['Unboxing']), pos, typeList)
+function UnboxingNode:__init(id, pos, typeList, src) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Unboxing']), pos, typeList)
    
    
    self.src = src
@@ -5781,7 +5791,7 @@ function UnboxingNode:__init(pos, typeList, src)
 end
 function UnboxingNode.create( nodeMan, pos, typeList, src )
 
-   local node = UnboxingNode.new(pos, typeList, src)
+   local node = UnboxingNode.new(nodeMan:nextId(  ), pos, typeList, src)
    nodeMan:addNode( node )
    return node
 end
@@ -5830,21 +5840,21 @@ function LiteralNilNode:canBeStatement(  )
 
    return false
 end
-function LiteralNilNode.new( pos, typeList )
+function LiteralNilNode.new( id, pos, typeList )
    local obj = {}
    LiteralNilNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList ); end
+   if obj.__init then obj:__init( id, pos, typeList ); end
    return obj
 end
-function LiteralNilNode:__init(pos, typeList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralNil']), pos, typeList)
+function LiteralNilNode:__init(id, pos, typeList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralNil']), pos, typeList)
    
    
    
 end
 function LiteralNilNode.create( nodeMan, pos, typeList )
 
-   local node = LiteralNilNode.new(pos, typeList)
+   local node = LiteralNilNode.new(nodeMan:nextId(  ), pos, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -5890,14 +5900,14 @@ function LiteralCharNode:canBeStatement(  )
 
    return false
 end
-function LiteralCharNode.new( pos, typeList, token, num )
+function LiteralCharNode.new( id, pos, typeList, token, num )
    local obj = {}
    LiteralCharNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token, num ); end
+   if obj.__init then obj:__init( id, pos, typeList, token, num ); end
    return obj
 end
-function LiteralCharNode:__init(pos, typeList, token, num) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralChar']), pos, typeList)
+function LiteralCharNode:__init(id, pos, typeList, token, num) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralChar']), pos, typeList)
    
    
    self.token = token
@@ -5906,7 +5916,7 @@ function LiteralCharNode:__init(pos, typeList, token, num)
 end
 function LiteralCharNode.create( nodeMan, pos, typeList, token, num )
 
-   local node = LiteralCharNode.new(pos, typeList, token, num)
+   local node = LiteralCharNode.new(nodeMan:nextId(  ), pos, typeList, token, num)
    nodeMan:addNode( node )
    return node
 end
@@ -5958,14 +5968,14 @@ function LiteralIntNode:canBeStatement(  )
 
    return false
 end
-function LiteralIntNode.new( pos, typeList, token, num )
+function LiteralIntNode.new( id, pos, typeList, token, num )
    local obj = {}
    LiteralIntNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token, num ); end
+   if obj.__init then obj:__init( id, pos, typeList, token, num ); end
    return obj
 end
-function LiteralIntNode:__init(pos, typeList, token, num) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralInt']), pos, typeList)
+function LiteralIntNode:__init(id, pos, typeList, token, num) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralInt']), pos, typeList)
    
    
    self.token = token
@@ -5974,7 +5984,7 @@ function LiteralIntNode:__init(pos, typeList, token, num)
 end
 function LiteralIntNode.create( nodeMan, pos, typeList, token, num )
 
-   local node = LiteralIntNode.new(pos, typeList, token, num)
+   local node = LiteralIntNode.new(nodeMan:nextId(  ), pos, typeList, token, num)
    nodeMan:addNode( node )
    return node
 end
@@ -6026,14 +6036,14 @@ function LiteralRealNode:canBeStatement(  )
 
    return false
 end
-function LiteralRealNode.new( pos, typeList, token, num )
+function LiteralRealNode.new( id, pos, typeList, token, num )
    local obj = {}
    LiteralRealNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token, num ); end
+   if obj.__init then obj:__init( id, pos, typeList, token, num ); end
    return obj
 end
-function LiteralRealNode:__init(pos, typeList, token, num) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralReal']), pos, typeList)
+function LiteralRealNode:__init(id, pos, typeList, token, num) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralReal']), pos, typeList)
    
    
    self.token = token
@@ -6042,7 +6052,7 @@ function LiteralRealNode:__init(pos, typeList, token, num)
 end
 function LiteralRealNode.create( nodeMan, pos, typeList, token, num )
 
-   local node = LiteralRealNode.new(pos, typeList, token, num)
+   local node = LiteralRealNode.new(nodeMan:nextId(  ), pos, typeList, token, num)
    nodeMan:addNode( node )
    return node
 end
@@ -6094,14 +6104,14 @@ function LiteralArrayNode:canBeStatement(  )
 
    return false
 end
-function LiteralArrayNode.new( pos, typeList, expList )
+function LiteralArrayNode.new( id, pos, typeList, expList )
    local obj = {}
    LiteralArrayNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, typeList, expList ); end
    return obj
 end
-function LiteralArrayNode:__init(pos, typeList, expList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralArray']), pos, typeList)
+function LiteralArrayNode:__init(id, pos, typeList, expList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralArray']), pos, typeList)
    
    
    self.expList = expList
@@ -6109,7 +6119,7 @@ function LiteralArrayNode:__init(pos, typeList, expList)
 end
 function LiteralArrayNode.create( nodeMan, pos, typeList, expList )
 
-   local node = LiteralArrayNode.new(pos, typeList, expList)
+   local node = LiteralArrayNode.new(nodeMan:nextId(  ), pos, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -6158,14 +6168,14 @@ function LiteralListNode:canBeStatement(  )
 
    return false
 end
-function LiteralListNode.new( pos, typeList, expList )
+function LiteralListNode.new( id, pos, typeList, expList )
    local obj = {}
    LiteralListNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, typeList, expList ); end
    return obj
 end
-function LiteralListNode:__init(pos, typeList, expList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralList']), pos, typeList)
+function LiteralListNode:__init(id, pos, typeList, expList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralList']), pos, typeList)
    
    
    self.expList = expList
@@ -6173,7 +6183,7 @@ function LiteralListNode:__init(pos, typeList, expList)
 end
 function LiteralListNode.create( nodeMan, pos, typeList, expList )
 
-   local node = LiteralListNode.new(pos, typeList, expList)
+   local node = LiteralListNode.new(nodeMan:nextId(  ), pos, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -6222,14 +6232,14 @@ function LiteralSetNode:canBeStatement(  )
 
    return false
 end
-function LiteralSetNode.new( pos, typeList, expList )
+function LiteralSetNode.new( id, pos, typeList, expList )
    local obj = {}
    LiteralSetNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, typeList, expList ); end
    return obj
 end
-function LiteralSetNode:__init(pos, typeList, expList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralSet']), pos, typeList)
+function LiteralSetNode:__init(id, pos, typeList, expList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralSet']), pos, typeList)
    
    
    self.expList = expList
@@ -6237,7 +6247,7 @@ function LiteralSetNode:__init(pos, typeList, expList)
 end
 function LiteralSetNode.create( nodeMan, pos, typeList, expList )
 
-   local node = LiteralSetNode.new(pos, typeList, expList)
+   local node = LiteralSetNode.new(nodeMan:nextId(  ), pos, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -6311,14 +6321,14 @@ function LiteralMapNode:canBeStatement(  )
 
    return false
 end
-function LiteralMapNode.new( pos, typeList, map, pairList )
+function LiteralMapNode.new( id, pos, typeList, map, pairList )
    local obj = {}
    LiteralMapNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, map, pairList ); end
+   if obj.__init then obj:__init( id, pos, typeList, map, pairList ); end
    return obj
 end
-function LiteralMapNode:__init(pos, typeList, map, pairList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralMap']), pos, typeList)
+function LiteralMapNode:__init(id, pos, typeList, map, pairList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralMap']), pos, typeList)
    
    
    self.map = map
@@ -6327,7 +6337,7 @@ function LiteralMapNode:__init(pos, typeList, map, pairList)
 end
 function LiteralMapNode.create( nodeMan, pos, typeList, map, pairList )
 
-   local node = LiteralMapNode.new(pos, typeList, map, pairList)
+   local node = LiteralMapNode.new(nodeMan:nextId(  ), pos, typeList, map, pairList)
    nodeMan:addNode( node )
    return node
 end
@@ -6379,14 +6389,14 @@ function LiteralStringNode:canBeStatement(  )
 
    return false
 end
-function LiteralStringNode.new( pos, typeList, token, argList )
+function LiteralStringNode.new( id, pos, typeList, token, argList )
    local obj = {}
    LiteralStringNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token, argList ); end
+   if obj.__init then obj:__init( id, pos, typeList, token, argList ); end
    return obj
 end
-function LiteralStringNode:__init(pos, typeList, token, argList) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralString']), pos, typeList)
+function LiteralStringNode:__init(id, pos, typeList, token, argList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralString']), pos, typeList)
    
    
    self.token = token
@@ -6395,7 +6405,7 @@ function LiteralStringNode:__init(pos, typeList, token, argList)
 end
 function LiteralStringNode.create( nodeMan, pos, typeList, token, argList )
 
-   local node = LiteralStringNode.new(pos, typeList, token, argList)
+   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, typeList, token, argList)
    nodeMan:addNode( node )
    return node
 end
@@ -6447,14 +6457,14 @@ function LiteralBoolNode:canBeStatement(  )
 
    return false
 end
-function LiteralBoolNode.new( pos, typeList, token )
+function LiteralBoolNode.new( id, pos, typeList, token )
    local obj = {}
    LiteralBoolNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token ); end
+   if obj.__init then obj:__init( id, pos, typeList, token ); end
    return obj
 end
-function LiteralBoolNode:__init(pos, typeList, token) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralBool']), pos, typeList)
+function LiteralBoolNode:__init(id, pos, typeList, token) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralBool']), pos, typeList)
    
    
    self.token = token
@@ -6462,7 +6472,7 @@ function LiteralBoolNode:__init(pos, typeList, token)
 end
 function LiteralBoolNode.create( nodeMan, pos, typeList, token )
 
-   local node = LiteralBoolNode.new(pos, typeList, token)
+   local node = LiteralBoolNode.new(nodeMan:nextId(  ), pos, typeList, token)
    nodeMan:addNode( node )
    return node
 end
@@ -6511,14 +6521,14 @@ function LiteralSymbolNode:canBeStatement(  )
 
    return false
 end
-function LiteralSymbolNode.new( pos, typeList, token )
+function LiteralSymbolNode.new( id, pos, typeList, token )
    local obj = {}
    LiteralSymbolNode.setmeta( obj )
-   if obj.__init then obj:__init( pos, typeList, token ); end
+   if obj.__init then obj:__init( id, pos, typeList, token ); end
    return obj
 end
-function LiteralSymbolNode:__init(pos, typeList, token) 
-   Node.__init( self,_lune.unwrap( _moduleObj.nodeKind['LiteralSymbol']), pos, typeList)
+function LiteralSymbolNode:__init(id, pos, typeList, token) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LiteralSymbol']), pos, typeList)
    
    
    self.token = token
@@ -6526,7 +6536,7 @@ function LiteralSymbolNode:__init(pos, typeList, token)
 end
 function LiteralSymbolNode.create( nodeMan, pos, typeList, token )
 
-   local node = LiteralSymbolNode.new(pos, typeList, token)
+   local node = LiteralSymbolNode.new(nodeMan:nextId(  ), pos, typeList, token)
    nodeMan:addNode( node )
    return node
 end

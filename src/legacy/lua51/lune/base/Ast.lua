@@ -1888,6 +1888,7 @@ function Scope:accessSymbol( moduleScope, symbol )
       if typeInfo ~= symbol:get_namespaceTypeInfo() then
          local namespacescope = _lune.unwrap( typeInfo:get_scope())
          if not namespacescope.closureSymMap[symbol:get_symbolId()] then
+            symbol:set_isSetFromClosuer( true )
             namespacescope.closureSymMap[symbol:get_symbolId()] = symbol
             namespacescope.closureSym2NumMap[symbol] = #namespacescope.closureSymList
             table.insert( namespacescope.closureSymList, symbol )
@@ -5432,29 +5433,49 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, opTxt, alt2type )
             return true
          end
          
-         if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
-            if not (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], "=", alt2type ) then
+         local function check1(  )
+         
+            if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
+               if not (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], "=", alt2type ) then
+                  return false
+               end
+               
+            else
+             
                return false
             end
             
-         else
-          
-            return false
+            
+            return true
          end
          
+         local function check2(  )
          
-         if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
-            if not (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], "=", alt2type ) then
+            if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
+               if not (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], "=", alt2type ) then
+                  return false
+               end
+               
+            else
+             
                return false
             end
             
-         else
-          
-            return false
+            
+            return true
          end
          
+         local result1 = check1(  )
+         local result2 = check2(  )
+         if result1 and result2 then
+            return true
+         end
          
-         return true
+         if not result1 and otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone or not result2 and otherSrc:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
+            return true
+         end
+         
+         return false
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
          return otherSrc:isInheritFrom( dest, alt2type )
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form then

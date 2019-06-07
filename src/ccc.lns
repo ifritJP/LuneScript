@@ -1,3 +1,15 @@
+let mut g_val = 100;
+{
+   let val = 10;
+   fn func( val2:str ) {
+      foreach list in [ [ val, g_val ], [ 3.5, val2 ] ] {
+         foreach item in list {
+            print( item );
+         }
+      }
+   }
+   func( "xyz" );
+}
 {
    fn func(...<int!>) {
       print( ... );
@@ -63,7 +75,6 @@ fn func1( val:int ):int {
    return val + 1;
 }
 
-let mut g_val = 1;
 
 fn func2( val:int, val2:real ):int, real {
    let test1, test2 = 1, g_val;

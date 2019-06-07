@@ -109,6 +109,7 @@ pub fn getLiteralObj( obj:&Literal ):stem! {
 }
 
 pub class Node {
+   pri let id: int { pub };
    pri let kind: int { pub };
    pri let pos: &Parser.Position { pub };
    pri let expTypeList: &List<&Ast.TypeInfo> { pub };
@@ -249,14 +250,21 @@ pub fn getNodeKindName( kind: int ): str {
 
 pub class NodeManager {
    let mut nodeKind2NodeList:Map<int,List<&Node>>;
+   let mut idSeed:int;
 
    pub fn __init() {
+      self.idSeed = 0;
       self.nodeKind2NodeList = {};
       foreach kind in nodeKind {
          if not self.nodeKind2NodeList[ kind ] {
             self.nodeKind2NodeList[ kind ] = [];
          }
       }
+   }
+
+   pub fn nextId() mut : int {
+      self.idSeed = self.idSeed + 1;
+      return self.idSeed;
    }
 
    pub fn getList(kind:int) : &List<&Node> {
@@ -329,7 +337,7 @@ macro _declNodeClass(
       }
       
       let superStat = `{
-         super( unwrap nodeKind. ,,nodeKindSym, pos, typeList );
+         super( id, unwrap nodeKind. ,,nodeKindSym, pos, typeList );
       };
 
       relateStat.insert( `{
@@ -351,14 +359,14 @@ macro _declNodeClass(
    ,,relateStat;
    pub class ,,className extend ,,super {
       ,,fieldStatList;
-      pro fn __init( pos: &Parser.Position, typeList: &List<&Ast.TypeInfo>, ,,argList ) {
+      pro fn __init( id:int, pos: &Parser.Position, typeList: &List<&Ast.TypeInfo>, ,,argList ) {
          ,,superStat;
          ,,initStatList;
       }
       pub static fn create( nodeMan:NodeManager, pos: &Parser.Position,
                             typeList: &List<&Ast.TypeInfo>, ,,argList ) : ,,className
       {
-         let mut node = new ,,className( pos, typeList ,,argSymList );
+         let mut node = new ,,className( nodeMan.nextId(), pos, typeList ,,argSymList );
          nodeMan.addNode( node );
          return node;
       }

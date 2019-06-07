@@ -1436,7 +1436,7 @@ _DefBuiltinFuncType( [
          "val": { "type": [ "method" ], "arg": [ ], "ret": [ "_T!" ] },
       }
    }
-]);
+] );
    
 pub fn isStrFormFunc( typeInfo:&Ast.TypeInfo ):bool {
    if typeInfo.equals( builtinFunc.string_format ## ) {
@@ -3066,10 +3066,10 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
    if exp.$expType.get_kind() == .Map {
       self.addLocalVar(
-         exp.$pos, false, true, mainSymbol.txt, itemTypeInfoList[ 2 ], false## );
+         exp.$pos, true, true, mainSymbol.txt, itemTypeInfoList[ 2 ], false## );
       if! subSymbol {
          self.addLocalVar(
-            _exp.$pos, false, true, _exp.txt, itemTypeInfoList[ 1 ], false## );
+            _exp.$pos, true, true, _exp.txt, itemTypeInfoList[ 1 ], false## );
       }
    }
    elseif exp.$expType.get_kind() == .Set {
@@ -3089,13 +3089,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
                           (exp.$expType.get_kind().$_txt) );
       }
       self.scope.addLocalVar(
-         false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
+         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
       if! subSymbol {
          self.addLocalVar(
-            _exp.pos, false, false, _exp.txt, Ast.builtinTypeInt, false## );
+            _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, false## );
       }
       else {
-         self.scope.addLocalVar( false, false, "__index", Ast.builtinTypeInt, false );
+         self.scope.addLocalVar( true, false, "__index", Ast.builtinTypeInt, false );
       }
    }
    else {

@@ -15,7 +15,12 @@ extern "C" {
 
 #define LUNE_DEBUG_POS __FILE__, __LINE__
 #define LUNE_DEBUG_DECL const char * pFile, int lineNo
+
+#ifdef LUNE_DEBUG
 #define LUNE_DEBUG_CALL_LOG printf( "%s -- %p\n", __func__, pObj )
+#else
+#define LUNE_DEBUG_CALL_LOG
+#endif
     
     typedef int lune_bool_t;
     typedef int lune_int_t;
@@ -27,6 +32,54 @@ extern "C" {
     typedef struct lune_block_t lune_block_t;
     typedef struct lune_env_t lune_env_t;
     typedef struct lune_form_t lune_form_t;
+
+
+    typedef enum {
+        lune_imdType_sentinel,
+        lune_imdType_int,
+        lune_imdType_real,
+        lune_imdType_str,
+        lune_imdType_list,
+        lune_imdType_map,
+        lune_imdType_set,
+        lune_imdType_stem,
+    } lune_imdType_t;
+    typedef struct lune_imdEntry_t lune_imdEntry_t;
+
+#define lune_imdSet_t lune_imdList_t
+
+#define lune_imdSentinel { .type = lune_imdType_sentinel }
+#define lune_imdInt( VAL ) { .type = lune_imdType_int, .val.valInt = (VAL) }
+#define lune_imdReal( VAL ) { .type = lune_imdType_real, .val.valReal = (VAL) }
+#define lune_imdStr( VAL ) { .type = lune_imdType_str, .val.str = (VAL) }
+#define lune_imdStem( VAL ) { .type = lune_imdType_stem, .val.stem = (VAL) }
+#define lune_imdList( LIST, ... )                          \
+    lune_imdVal_t LIST[] = { __VA_ARGS__, lune_imdSentinel };
+#define lune_imdSet( SET, ... )                          \
+    lune_imdVal_t SET[] = { __VA_ARGS__, lune_imdSentinel };
+#define lune_imdMap( MAP, ... )                          \
+    lune_imdEntry_t MAP[] = { __VA_ARGS__, { lune_imdSentinel, lune_imdSentinel } };
+
+    
+
+
+    typedef struct lune_imdVal_t {
+        lune_imdType_t type;
+        union {
+            lune_int_t valInt;
+            lune_real_t valReal;
+            const char * str;
+            struct lune_imdVal_t * list;
+            struct lune_imdEntry_t * map;
+            struct lune_imdVal_t * set;
+            lune_stem_t * stem;
+        } val;
+    } lune_imdVal_t;
+
+    struct lune_imdEntry_t {
+        lune_imdVal_t key;
+        lune_imdVal_t val;
+    };
 
     /**
      * ブロックの最大深度。
@@ -75,10 +128,13 @@ extern "C" {
        - VAL を managedStemTop から除外
     */
 #define lune_setQ( SYM, VAL )           \
-    if ( (*SYM) != VAL ) {              \
-        (*SYM) = VAL;                   \
-        lune_setQ_( (*SYM) );           \
-    }
+        {                               \
+            lune_stem_t * __WORK = VAL; \
+            if ( (*SYM) != __WORK ) {   \
+                (*SYM) = __WORK;        \
+                lune_setQ_( (*SYM) );   \
+            }                           \
+        }
     
     
 
@@ -117,10 +173,12 @@ extern "C" {
         lune_value_type_Array,
         lune_value_type_Set,
         lune_value_type_Map,
+        lune_value_type_itList,
         lune_value_type_itSet,
         lune_value_type_itMap,
     } lune_value_type_t;
 
+    typedef struct lune_itList_t lune_itList_t;
     typedef struct lune_itSet_t lune_itSet_t;
     typedef struct lune_itMap_t lune_itMap_t;
     
@@ -269,6 +327,7 @@ extern "C" {
             lune_ddd_t ddd;
             lune_form_t form;
             lune_class_t classVal;
+            lune_itList_t * itList;
             lune_itSet_t * itSet;
             lune_itMap_t * itMap;
         } val;
@@ -345,6 +404,15 @@ extern "C" {
     _lune_class_new( LUNE_DEBUG_POS, ENV, SIZE )
 #define lune_it_new( ENV, TYPE, VAL )                  \
     _lune_it_new( LUNE_DEBUG_POS, ENV, TYPE, VAL )
+#define lune_createList( ENV, LIST )                  \
+    _lune_createList( LUNE_DEBUG_POS, ENV, LIST )
+#define lune_createSet( ENV, SET )                  \
+    _lune_createSet( LUNE_DEBUG_POS, ENV, SET )
+#define lune_createMap( ENV, ENTRY )                  \
+    _lune_createMap( LUNE_DEBUG_POS, ENV, ENTRY )
+#define lune_createImmediateVal( ENV, VAL )                     \
+    _lune_createImmediateVal( LUNE_DEBUG_POS, ENV, VAL )
+    
 
     
     extern lune_stem_t * _lune_bool2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_bool_t val );
@@ -360,6 +428,17 @@ extern "C" {
     extern lune_stem_t * _lune_it_new(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
 
+    
+    extern lune_stem_t * _lune_createList( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pList );
+    extern lune_stem_t * _lune_createSet(
+        LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pSet );
+    extern lune_stem_t * _lune_createMap(
+        LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdEntry_t * pEntry );
+
+    extern lune_stem_t * _lune_createImmediateVal(
+        LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pVal );
+
+    
     
 
     extern lune_str_t lune_createLiteralStr( const char * pStr );

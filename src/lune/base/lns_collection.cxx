@@ -7,6 +7,32 @@
 using namespace std;
 
 
+lune_stem_t * _lune_createImmediateVal(
+    LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pVal )
+{
+    switch ( pVal->type ) {
+    case lune_imdType_int:
+        return _lune_int2stem( LUNE_DEBUG_POS, _pEnv, pVal->val.valInt );
+    case lune_imdType_real:
+        return _lune_real2stem( LUNE_DEBUG_POS, _pEnv, pVal->val.valReal );
+    case lune_imdType_str:
+        return _lune_litStr2stem( LUNE_DEBUG_POS, _pEnv, pVal->val.str );
+    case lune_imdType_list:
+        return _lune_createList( LUNE_DEBUG_POS, _pEnv, pVal->val.list );
+    case lune_imdType_map:
+        return _lune_createMap( LUNE_DEBUG_POS, _pEnv, pVal->val.map );
+    case lune_imdType_set:
+        return _lune_createSet( LUNE_DEBUG_POS, _pEnv, pVal->val.set );
+    case lune_imdType_stem:
+        return pVal->val.stem;
+    default:
+        abort();
+    }
+    return NULL;
+}
+
+
+
 /// ================ List ======================
 
 #define lune_obj_List( OBJ ) \
@@ -18,6 +44,12 @@ using namespace std;
 
 #define lune_ListClass vector<lune_stem_t*>
 #define lune_ListIterator vector<lune_stem_t*>::iterator
+
+struct lune_itList_t {
+    lune_ListIterator it;
+    lune_ListIterator end;
+};
+
 
 
 static void lune_mtd_List_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
@@ -37,6 +69,35 @@ lune_mtd_List_t lune_mtd_List = {
     (lune_method_t*)lune_mtd_List_unpack,
     (lune_method_t*)lune_mtd_List_sort,
 };
+
+lune_stem_t * lune_itList_new( lune_env_t * _pEnv, lune_stem_t * pList )
+{
+    lune_stem_t * pStem = lune_it_new(
+        _pEnv, lune_value_type_itList, new lune_itList_t );
+    pStem->val.itList->it = lune_obj_List_obj( pList )->begin();
+    pStem->val.itList->end = lune_obj_List_obj( pList )->end();
+    return pStem;
+}
+
+void lune_itList_gc( lune_env_t * _pEnv, lune_stem_t * it )
+{
+    delete it->val.itList;
+}
+
+void lune_itList_inc( lune_env_t * _pEnv, lune_stem_t * it )
+{
+    it->val.itList->it++;
+}
+
+bool lune_itList_hasNext( lune_env_t * _pEnv, lune_stem_t * it, lune_stem_t ** ppVal )
+{
+    if ( it->val.itList->it != it->val.itList->end ) {
+        *ppVal = *it->val.itList->it;
+        return true;
+    }
+    *ppVal = NULL;
+    return false;
+}
 
 
 void lune_class_List_init( lune_env_t * _pEnv, lune_List_t * pObj )
@@ -204,6 +265,26 @@ static lune_stem_t * lune_mtd_List_sort(
     }
 
     return NULL;
+}
+
+
+/**
+ * List を生成する
+ *
+ * @param pList 生成するリストの要素
+ * @return 生成したリスト
+ */
+lune_stem_t * _lune_createList(
+    LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pList )
+{
+    lune_stem_t * pStem = lune_class_List_new( _pEnv );
+
+    for ( ; pList->type != lune_imdType_sentinel; pList++ ) {
+        lune_mtd_List_insert(
+            _pEnv, pStem,
+            _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, pList ) );
+    }
+    return pStem;
 }
 
 /// ================ Array ======================
@@ -492,6 +573,25 @@ static lune_stem_t * lune_mtd_Set_len( lune_env_t * _pEnv, lune_stem_t * pObj )
 }
 
 
+/**
+ * Set を生成する
+ *
+ * @param pSet 生成する Set の要素
+ * @return 生成した Set
+ */
+lune_stem_t * _lune_createSet(
+    LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pSet )
+{
+    lune_stem_t * pStem = lune_class_Set_new( _pEnv );
+
+    for ( ; pSet->type != lune_imdType_sentinel; pSet++ ) {
+        lune_mtd_Set_add(
+            _pEnv, pStem,
+            _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, pSet ) );
+    }
+    return pStem;
+}
+
 /// ================ Map ======================
 #define lune_MapClass map<lune_stem_t*,lune_stem_t*,lune_SetComp>
 #define lune_MapIterator lune_MapClass::iterator
@@ -658,5 +758,26 @@ static lune_stem_t * lune_mtd_Map_get(
     }
 
     return it->second;
+}
+
+
+/**
+ * Map を生成する
+ *
+ * @param pMap 生成する Map の要素
+ * @return 生成した Map
+ */
+lune_stem_t * _lune_createMap(
+    LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdEntry_t * pEntry )
+{
+    lune_stem_t * pStem = lune_class_Map_new( _pEnv );
+
+    for ( ; pEntry->key.type != lune_imdType_sentinel; pEntry++ ) {
+        lune_mtd_Map_add(
+            _pEnv, pStem,
+            _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, &pEntry->key ),
+            _lune_createImmediateVal( LUNE_DEBUG_POS, _pEnv, &pEntry->val ) );
+    }
+    return pStem;
 }
 

@@ -136,17 +136,22 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
          if itemTypeInfo.equals( Ast.builtinTypeNone ## ) {
             itemTypeInfo = expType;
          }
-         elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) and
-            not expType.canEvalWith( itemTypeInfo, "=", {} )
-         {
-            if expType.equals( Ast.builtinTypeNil ## ) {
-               itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
+         else {
+            let eval1 = itemTypeInfo.canEvalWith( expType, "=", {} );
+            let eval2 = expType.canEvalWith( itemTypeInfo, "=", {} );
+            if not eval1 and not eval2 {
+               if expType.equals( Ast.builtinTypeNil ## ) {
+                  itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
+               }
+               elseif expType.$nilable {
+                  itemTypeInfo = Ast.builtinTypeStem_;
+               }
+               else {
+                  itemTypeInfo = Ast.builtinTypeStem;
+               }
             }
-            elseif expType.$nilable {
-               itemTypeInfo = Ast.builtinTypeStem_;
-            }
-            else {
-               itemTypeInfo = Ast.builtinTypeStem;
+            elseif eval2 {
+               itemTypeInfo = expType;
             }
          }
       }
@@ -199,12 +204,19 @@ fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Nodes.Node {
                itemTypeInfo = expType;
             }  
             elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
-               if expType.equals( Ast.builtinTypeNil ## ) {
-                  itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
-               }  
+               // if expType.equals( Ast.builtinTypeNil ## ) {
+               //    itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
+               // }  
+               // else {
+               //    itemTypeInfo = Ast.builtinTypeStem;
+               // }  
+               if expType.canEvalWith( itemTypeInfo, "=", {} ) {
+                  itemTypeInfo = expType;
+               }
                else {
                   itemTypeInfo = Ast.builtinTypeStem;
-               }  
+               }
+               
             }
          }
       }
@@ -238,12 +250,15 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Nodes.LiteralMapNode 
          }
          expType = expType.$nonnilableType;
       }
+      if typeInfo == Ast.builtinTypeNone {
+         return expType;
+      }
       if not typeInfo.canEvalWith( expType, "=", {} ) {
-         if not typeInfo.equals( Ast.builtinTypeNone ## ) {
-            typeInfo = Ast.builtinTypeStem;
+         if expType.canEvalWith( typeInfo, "=", {} ) {
+            typeInfo = expType;
          }
          else {
-            typeInfo = expType;
+            typeInfo = Ast.builtinTypeStem;
          }
       }
       return typeInfo;
@@ -2148,12 +2163,12 @@ fn TransUnit.analyzeExpOp2(
             
 
             if opTxt == "=" {
-               if! let expRefNode = exp@@@Nodes.ExpRefNode {
-                  let symbolInfo = expRefNode.$symbolInfo;
-                  if symbolInfo.$namespaceTypeInfo ~= self.scope.getNamespaceTypeInfo() {
-                     symbolInfo.set_isSetFromClosuer( true );
-                  }
-               }
+               // if! let expRefNode = exp@@@Nodes.ExpRefNode {
+               //    let symbolInfo = expRefNode.$symbolInfo;
+               //    if symbolInfo.$namespaceTypeInfo ~= self.scope.getNamespaceTypeInfo() {
+               //       symbolInfo.set_isSetFromClosuer( true );
+               //    }
+               // }
                
                let workToken = self.getToken(##);
                if workToken.txt == "," {
