@@ -3079,7 +3079,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
       valSymbol = nil;
       subSymbol = mainSymbol;
       self.scope.addLocalVar(
-         false, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
+         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
    }
    elseif exp.$expType.get_kind() == .List or
       exp.$expType.get_kind() == .Array

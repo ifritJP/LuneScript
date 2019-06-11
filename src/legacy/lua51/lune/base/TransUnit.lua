@@ -4212,7 +4212,7 @@ function TransUnit:analyzeForeach( token, sortFlag )
       
       valSymbol = nil
       subSymbol = mainSymbol
-      self.scope:addLocalVar( false, true, mainSymbol.txt, itemTypeInfoList[1], false )
+      self.scope:addLocalVar( true, true, mainSymbol.txt, itemTypeInfoList[1], false )
    elseif exp:get_expType():get_kind(  ) == Ast.TypeInfoKind.List or exp:get_expType():get_kind(  ) == Ast.TypeInfoKind.Array then
       if sortFlag then
          self:addErrMess( exp:get_pos(), string.format( "'%s' doesn't support forsort.", Ast.TypeInfoKind:_getTxt( exp:get_expType():get_kind(  ))
@@ -6900,6 +6900,15 @@ function TransUnit:analyzeListConst( token )
    local nextToken = self:getToken(  )
    local expList = nil
    local itemTypeInfo = Ast.builtinTypeNone
+   local function getStemType( type1, type2 )
+   
+      if type1:get_nilable() or type2:get_nilable() then
+         return Ast.builtinTypeStem_
+      end
+      
+      return Ast.builtinTypeStem
+   end
+   
    if nextToken.txt ~= "]" then
       self:pushback(  )
       expList = self:analyzeExpList( false, false )
@@ -6916,11 +6925,35 @@ function TransUnit:analyzeListConst( token )
             if not eval1 and not eval2 then
                if expType:equals( Ast.builtinTypeNil ) then
                   itemTypeInfo = itemTypeInfo:get_nilableTypeInfo()
-               elseif expType:get_nilable() then
-                  itemTypeInfo = Ast.builtinTypeStem_
+               elseif itemTypeInfo:get_kind() == expType:get_kind() then
+                  local mutMode
+                  
+                  if Ast.TypeInfo.isMut( itemTypeInfo ) or Ast.TypeInfo.isMut( expType ) then
+                     mutMode = Ast.MutMode.Mut
+                  else
+                   
+                     mutMode = Ast.MutMode.IMut
+                  end
+                  
+                  do
+                     local _switchExp = itemTypeInfo:get_kind()
+                     if _switchExp == Ast.TypeInfoKind.List then
+                        itemTypeInfo = Ast.NormalTypeInfo.createList( Ast.AccessMode.Pri, self:getCurrentClass(  ), {getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] )}, mutMode )
+                     elseif _switchExp == Ast.TypeInfoKind.Array then
+                        itemTypeInfo = Ast.NormalTypeInfo.createArray( Ast.AccessMode.Pri, self:getCurrentClass(  ), {getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] )}, mutMode )
+                     elseif _switchExp == Ast.TypeInfoKind.Set then
+                        itemTypeInfo = Ast.NormalTypeInfo.createSet( Ast.AccessMode.Pri, self:getCurrentClass(  ), {getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] )}, mutMode )
+                     elseif _switchExp == Ast.TypeInfoKind.Map then
+                        itemTypeInfo = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pri, self:getCurrentClass(  ), getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] ), getStemType( itemTypeInfo:get_itemTypeInfoList()[2], expType:get_itemTypeInfoList()[2] ), mutMode )
+                     else 
+                        
+                           itemTypeInfo = getStemType( itemTypeInfo, expType )
+                     end
+                  end
+                  
                else
                 
-                  itemTypeInfo = Ast.builtinTypeStem
+                  itemTypeInfo = getStemType( itemTypeInfo, expType )
                end
                
             elseif eval2 then
@@ -7801,7 +7834,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
       for index, retType in pairs( funcTypeInfo:get_retTypeInfoList() ) do
          table.insert( retTypeInfoList, retType )
          do
-            local applyType = retType:applyGeneric( alt2typeMap )
+            local applyType = retType:applyGeneric( alt2typeMap, self.moduleType )
             if applyType ~= nil then
                retTypeInfoList[index] = applyType
             else
@@ -8017,7 +8050,7 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
                fieldTypeInfo = retTypeList[1]
                if fieldTypeInfo ~= nil then
                   do
-                     local _exp = fieldTypeInfo:applyGeneric( classTypeInfo:createAlt2typeMap( false ) )
+                     local _exp = fieldTypeInfo:applyGeneric( classTypeInfo:createAlt2typeMap( false ), self.moduleType )
                      if _exp ~= nil then
                         fieldTypeInfo = _exp
                      end

@@ -170,6 +170,7 @@ fn isStemSym( symbolInfo:&Ast.SymbolInfo ): bool {
       return true;
    }
    let typeTxt, isStem = getCTypeForSym( symbolInfo );
+   print( "hoge:", symbolInfo.$name, symbolInfo.$kind.$_txt, typeTxt, isStem );
    return isStem;
 }
 
@@ -223,8 +224,8 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    
    pri let mut processingNode: &Nodes.Node!;
    pri let mut processedNodeSet: Set<&Nodes.Node>;
-   pri let mut accessSymbolSet: Set<&Ast.SymbolInfo>;
-   pri let mut literalNode2AccessSymbolSet:Map<&Nodes.Node,&Set<&Ast.SymbolInfo>>;
+   pri let mut accessSymbolSet: Util.OrderedSet<&Ast.SymbolInfo>;
+   pri let mut literalNode2AccessSymbolSet:Map<&Nodes.Node,&Util.OrderedSet<&Ast.SymbolInfo>>;
 
    fn pushRoutine( funcType:&Ast.TypeInfo ) mut {
       self.currentRoutineInfo = new RoutineInfo( funcType );
@@ -241,7 +242,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       super();
       self.processingNode = nil;
       self.processedNodeSet = (@);
-      self.accessSymbolSet = (@);
+      self.accessSymbolSet = new Util.OrderedSet<&Ast.SymbolInfo>();
       self.literalNode2AccessSymbolSet = {};
 
       self.duringDeclFunc = false;
@@ -456,7 +457,7 @@ pub override fn convFilter.processRoot(
    foreach literalNode in node.$nodeManager.getLiteralListNodeList() {
       self.processingNode = literalNode;
       if not self.processedNodeSet.has( literalNode ) {
-         self.accessSymbolSet = (@);
+         self.accessSymbolSet = new Util.OrderedSet<&Ast.SymbolInfo>();
          filter( literalNode, self, node );
          self.processedNodeSet.add( node );
       }
@@ -2266,45 +2267,101 @@ pub override fn convFilter.processForeach(
    self.write( "%s _obj = " ( cTypeStemP ) );
    filter( node.$exp, self, node );
    self.writeln( ";" );
-   self.writeln( "%s _itStem;" ( cTypeStemP ) );
 
-   if! node.$key {
-      self.writeln( "int %s = 0;" (_exp.txt) );
+   let validIndexFlag;
+   let loopType = node.$exp.$expType;
+   switch loopType.$kind {
+      case .List, .Array {
+         self.writeln( "%s _itStem = lune_itList_new( _pEnv, _obj );" (cTypeStemP) );
+         if! node.$key {
+            self.writeln( "int %s = 0;" (_exp.txt) );
+            validIndexFlag = true;
+         }
+         self.writeln( "%s _val;" ( cTypeStemP ) );
+      }
+      case .Set {
+         self.writeln( "%s _itStem = lune_itSet_new( _pEnv, _obj );" (cTypeStemP) );
+         validIndexFlag = false;
+         self.writeln( "%s _val;" ( cTypeStemP ) );
+      }
+      case .Map {
+         self.writeln( "%s _itStem = lune_itMap_new( _pEnv, _obj );" (cTypeStemP) );
+         validIndexFlag = false;
+         self.writeln( "lune_Map_entry_t _entry;" );
+      }
+      default {
+         Util.err( "illegal kind -- %s" (loopType.$kind.$_txt ) );
+      }
    }
-
-   let valSymTxt;
-   if! node.$val {
-      valSymTxt = _exp.txt;
-   }
-   else {
-      valSymTxt = "__val";
-   }
-   self.writeln( "%s _val;" ( cTypeStemP ) );
 
    self.processLoopPreProcess( node.$block );
 
-   let loopType = node.$exp.$expType;
-   let valType;
    switch loopType.$kind {
-      case .List {
-         self.writeln( "for ( _itStem = lune_itList_new( _pEnv, _obj );" );
-         self.writeln( "      lune_itList_hasNext( _pEnv, _itStem, &_val );" );
+      case .List, .Array {
+         self.writeln( "for ( ; lune_itList_hasNext( _pEnv, _itStem, &_val );" );
          self.writeln( "      lune_itList_inc( _pEnv, _itStem ) )" );
-         valType = loopType.$itemTypeInfoList[ 1 ];
       }
-      default {
-         valType = Ast.builtinTypeStem_;
+      case .Set {
+         self.writeln( "for ( ; lune_itSet_hasNext( _pEnv, _itStem, &_val );" );
+         self.writeln( "      lune_itSet_inc( _pEnv, _itStem ) )" );
+      }
+      case .Map {
+         self.writeln( "for ( ; lune_itMap_hasNext( _pEnv, _itStem, &_entry );" );
+         self.writeln( "      lune_itMap_inc( _pEnv, _itStem ) )" );
       }
    }
    self.writeln( "{" );
-   if! node.$key {
-      self.writeln( "   %s++;" (_exp.txt) );
+   if validIndexFlag {
+      if! node.$key {
+         self.writeln( "   %s++;" (_exp.txt) );
+      }
    }
 
-   self.writeln(
-      "   %s %s = _val%s;"
-      ( getCType( valType, false), valSymTxt,
-        getAccessPrimValFromStem( false, valType, 0 ) ) );
+   switch loopType.$kind {
+      case .List, .Set, .Array {
+         let valType = loopType.$itemTypeInfoList[ 1 ];
+         let valSymTxt;
+         if loopType.$kind == .Set {
+            if! node.$key {
+               valSymTxt = _exp.txt;
+            }
+            else {   
+               valSymTxt = "__val";
+            }
+         }
+         else {
+            if! node.$val {
+               valSymTxt = _exp.txt;
+            }
+            else {   
+               valSymTxt = "__val";
+            }
+         }
+         
+         self.writeln(
+            "   %s %s = _val%s;"
+            ( getCType( valType, false), valSymTxt,
+              getAccessPrimValFromStem( false, valType, 0 ) ) );
+      }
+      case .Map {
+         if! node.$key {
+            let keyType = loopType.$itemTypeInfoList[ 1 ];
+            self.writeln(
+               "   %s %s = _entry.pKey%s;"
+               ( getCType( keyType, false), _exp.txt,
+                 getAccessPrimValFromStem( false, keyType, 0 ) ) );
+         }
+         if! node.$val {
+            let valType = loopType.$itemTypeInfoList[ 1 ];
+            self.writeln(
+               "   %s %s = _entry.pVal%s;"
+               ( getCType( valType, false), _exp.txt,
+                 getAccessPrimValFromStem( false, valType, 0 ) ) );
+         }
+      }
+      default {
+      }
+   }
    
    filter( node.$block, self, node );
    self.writeln( "}" );
@@ -3117,13 +3174,15 @@ fn convFilter.processLiteralVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
          self.write( ")" );
       }
       default {
-         if valType.$kind == .List {
-            self.write( "lune_imdStem( " );
-            filter( exp, self, parent );
-            self.write( ")" );
-         }
-         else {
-            Util.err( "illegal type -- %s" (valType.getTxt(##)) );
+         switch valType.$kind {
+            case .List, .Set, .Map, .Array {
+               self.write( "lune_imdStem( " );
+               filter( exp, self, parent );
+               self.write( ")" );
+            }
+            default {
+               Util.err( "illegal type -- %s" (valType.getTxt(##)) );
+            }
          }
       }
    }
@@ -3133,13 +3192,31 @@ fn getLiteralListFuncName( node: &Nodes.LiteralListNode ): str {
    return "lune_list_%X" (node.$id);
 }
 
+fn convFilter.processLiteralNode( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
+   switch exp.$kind {
+      case Nodes.NodeKind.$LiteralList,
+           Nodes.NodeKind.$LiteralMap,
+           Nodes.NodeKind.$LiteralArray,
+           Nodes.NodeKind.$LiteralSet
+      {
+         self.processingNode = exp;
+         filter( exp, self, parent );
+      }
+      default {
+         self.pushStream();
+         filter( exp, self, parent );
+         self.popStream();
+      }
+   }
+}
+
 fn convFilter.processLiteralListSub(
    collectionType:str, node:&Nodes.Node,
    expListNodeOrg:&Nodes.ExpListNode!, literalFuncName:str ) mut
 {
    if self.processedNodeSet.has( node ) {
       if! let set = self.literalNode2AccessSymbolSet[ node ] { 
-         foreach symbol in set {
+         foreach symbol in set.$list {
             self.accessSymbolSet.add( symbol );
          }
       }
@@ -3154,27 +3231,13 @@ fn convFilter.processLiteralListSub(
    }
 
    foreach exp in expListNode.$expList {
-      switch exp.$kind {
-         case Nodes.NodeKind.$LiteralList,
-              Nodes.NodeKind.$LiteralMap,
-              Nodes.NodeKind.$LiteralArray,
-              Nodes.NodeKind.$LiteralSet
-         {
-            self.processingNode = exp;
-            filter( exp, self, node );
-         }
-         default {
-            self.pushStream();
-            filter( exp, self, node );
-            self.popStream();
-         }
-      }
+      self.processLiteralNode( exp, node );
    }
    self.processingNode = node;
    
    self.write(
       "static %s %s( %s _pEnv" (cTypeStemP, literalFuncName, cTypeEnvP ) );
-   foreach symbol in self.accessSymbolSet {
+   foreach symbol in self.accessSymbolSet.$list {
       self.write( ", %s %s" (getCTypeForSym( symbol ), symbol.$name ) );
    }
    self.writeln( ")" );
@@ -3208,57 +3271,109 @@ pub override fn convFilter.processLiteralList(
       let! symbolSet = self.literalNode2AccessSymbolSet[ node ] {
          return;
       };
-      foreach symbol in symbolSet {
+      foreach symbol in symbolSet.$list {
          self.write( ", %s" ( symbol.$name ) );
       }
       self.write( ")" );
    }
-   
-
-   
-   // self.write( "{" );
-
-   // if! node.$expList {
-   //    filter( _exp, self, node );
-   // }
-
-   // self.write( "}" );
 };
+
+
+fn getLiteralSetFuncName( node: &Nodes.LiteralSetNode ): str {
+   return "lune_set_%X" (node.$id);
+}
 
 pub override fn convFilter.processLiteralSet(
    node: Nodes.LiteralSetNode, opt: Opt ) mut
 {
-   // self.write( "{" );
-   // if! let expListNode = node.$expList {
-   //    foreach expNode, index in expListNode.$expList {
-   //       if index > 1 {
-   //          self.write( ", " );
-   //       }
-   //       self.write( "[" );
-   //       filter( expNode, self, node );
-   //       self.write( "] = true" );
-   //    }
-   // }
-
-   // self.write( "}" );
+   if self.processMode == .Immediate and self.processingNode == node {
+      self.processLiteralListSub(
+         "Set", node, node.$expList, getLiteralSetFuncName( node ) );
+   }
+   else {
+      self.write( "%s( _pEnv" ( getLiteralSetFuncName( node ) ) );
+      let! symbolSet = self.literalNode2AccessSymbolSet[ node ] {
+         return;
+      };
+      foreach symbol in symbolSet.$list {
+         self.write( ", %s" ( symbol.$name ) );
+      }
+      self.write( ")" );
+   }
 };
+
+
+fn getLiteralMapFuncName( node: &Nodes.LiteralMapNode ): str {
+   return "lune_map_%X" (node.$id);
+}
+
+fn convFilter.processLiteralMapSub( node:&Nodes.LiteralMapNode ) mut
+{
+   if self.processedNodeSet.has( node ) {
+      if! let set = self.literalNode2AccessSymbolSet[ node ] { 
+         foreach symbol in set.$list {
+            self.accessSymbolSet.add( symbol );
+         }
+      }
+      return;
+   }
+   self.processedNodeSet.add( node );
+   let pairList = node.$pairList;
+   if #pairList == 0 {
+      return;
+   }
+
+   foreach pair in pairList {
+      self.processLiteralNode( pair.$key, node );
+      self.processLiteralNode( pair.$val, node );
+   }
+   self.processingNode = node;
+   
+   self.write(
+      "static %s %s( %s _pEnv" (cTypeStemP, getLiteralMapFuncName( node ), cTypeEnvP ) );
+   foreach symbol in self.accessSymbolSet.$list {
+      self.write( ", %s %s" (getCTypeForSym( symbol ), symbol.$name ) );
+   }
+   self.writeln( ")" );
+   self.writeln( "{" );
+   
+   self.pushIndent(##);
+   self.write( "lune_imdMap( list" );
+   self.pushIndent( ## );
+   foreach pair in pairList {
+      self.writeln( ", " );
+      self.write( "{ " );
+      self.processLiteralVal( pair.$key, node );
+      self.write( ", " );
+      self.processLiteralVal( pair.$val, node );
+      self.write( "} " );
+   }
+   self.popIndent();
+   self.writeln( ");" );
+   self.writeln( "return lune_createMap( _pEnv, &list );" );
+   self.popIndent();
+   self.writeln( "}" );
+
+   self.literalNode2AccessSymbolSet[ node ] = self.accessSymbolSet.clone();
+}
+
 
 pub override fn convFilter.processLiteralMap(
    node: Nodes.LiteralMapNode, opt: Opt ) mut
 {
-   // self.write( "{" );
-   // let pairList = node.$pairList;
-   // foreach pair, index in pairList {
-   //    if index > 1 {
-   //       self.write( ", " );
-   //    }
-   //    self.write( "[" );
-   //    filter( pair.$key, self, node );
-   //    self.write( "] = " );
-   //    filter( pair.$val, self, node );
-   // }
-
-   // self.write( "}" );
+   if self.processMode == .Immediate and self.processingNode == node {
+      self.processLiteralMapSub( node );
+   }
+   else {
+      self.write( "%s( _pEnv" ( getLiteralMapFuncName( node ) ) );
+      let! symbolSet = self.literalNode2AccessSymbolSet[ node ] {
+         return;
+      };
+      foreach symbol in symbolSet.$list {
+         self.write( ", %s" ( symbol.$name ) );
+      }
+      self.write( ")" );
+   }
 };
 
 pub override fn convFilter.processLiteralArray(

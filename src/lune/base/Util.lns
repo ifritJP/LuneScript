@@ -24,6 +24,32 @@ SOFTWARE.
 
 import lune.base.Depend;
 
+pub class OrderedSet<T> {
+   pri let mut set:Set<&T>;
+   pri let mut list:List<&T> {pub&};
+
+   pub fn __init() {
+      self.set = (@);
+      self.list = [];
+   }
+
+   pub fn add( val:&T ) mut {
+      if not self.set.has( val ) {
+         self.set.add( val );
+         self.list.insert( val );
+      }
+   }
+
+   pub fn clone(): OrderedSet<T> {
+      let mut obj = new OrderedSet<T>();
+         foreach val in self.list {
+            obj.set.add( val );
+            obj.list.insert( val );
+         }
+      return obj;
+   }
+}
+
 pub class memStream extend (oStream) {
    let mut txt: str { pub };
    pub fn __init() {

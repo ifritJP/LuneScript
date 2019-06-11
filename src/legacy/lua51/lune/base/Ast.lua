@@ -940,7 +940,7 @@ function TypeInfo:getParentFullName( importInfo, localFlag )
    
    return name
 end
-function TypeInfo:applyGeneric( alt2typeMap )
+function TypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
    return self
 end
@@ -1301,9 +1301,9 @@ function AliasTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
 end
-function AliasTypeInfo:applyGeneric( alt2typeMap )
+function AliasTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
-   local typeInfo = self.aliasSrcTypeInfo:applyGeneric( alt2typeMap )
+   local typeInfo = self.aliasSrcTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo == self.aliasSrcTypeInfo then
       return self
    end
@@ -2238,9 +2238,9 @@ function NilableTypeInfo:equals( typeInfo, alt2type, checkModifer )
    
    return self.nonnilableType:equals( typeInfo:get_nonnilableType(), alt2type, checkModifer )
 end
-function NilableTypeInfo:applyGeneric( alt2typeMap )
+function NilableTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
-   local typeInfo = self.nonnilableType:applyGeneric( alt2typeMap )
+   local typeInfo = self.nonnilableType:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo == self.nonnilableType then
       return self
    end
@@ -2439,26 +2439,6 @@ function AlternateTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
 
    return self.txt
 end
-function AlternateTypeInfo.getAssign( typeInfo, alt2type )
-
-   if typeInfo:get_kind() ~= TypeInfoKind.Alternate then
-      return typeInfo
-   end
-   
-   local otherWork = typeInfo
-   while true do
-      do
-         local _exp = alt2type[otherWork]
-         if _exp ~= nil then
-            otherWork = _exp
-         else
-            return otherWork
-         end
-      end
-      
-   end
-   
-end
 function AlternateTypeInfo:canSetFrom( other, opTxt, alt2type )
 
    local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
@@ -2643,7 +2623,7 @@ function AlternateTypeInfo:serialize( stream, validChildrenSet )
    stream:write( self:serializeTypeInfoList( "ifList = {", self.interfaceList ) )
    stream:write( "}\n" )
 end
-function AlternateTypeInfo:applyGeneric( alt2typeMap )
+function AlternateTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
    return AlternateTypeInfo.getAssign( self, alt2typeMap )
 end
@@ -2893,7 +2873,7 @@ function GenericTypeInfo:__init(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo
    for index, altTypeInfo in pairs( genSrcTypeInfo:get_itemTypeInfoList() ) do
       local itemType = itemTypeInfoList[index]
       alt2typeMap[altTypeInfo] = itemType
-      if itemType:applyGeneric( workAlt2typeMap ) ~= itemType then
+      if itemType:applyGeneric( workAlt2typeMap, moduleTypeInfo ) ~= itemType then
          hasAlter = true
       end
       
@@ -3052,20 +3032,6 @@ function GenericTypeInfo:createAlt2typeMap( detectFlag )
    end
    
    return map
-end
-function GenericTypeInfo:applyGeneric( alt2typeMap )
-
-   if not self.hasAlter then
-      return self
-   end
-   
-   local genSrcTypeInfo = self.genSrcTypeInfo:applyGeneric( alt2typeMap )
-   if genSrcTypeInfo == self.genSrcTypeInfo then
-      return self
-   end
-   
-   Util.errorLog( string.format( "no support nest generic -- %s", self:getTxt(  )) )
-   return nil
 end
 function GenericTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = GenericTypeInfo  } )
@@ -4393,6 +4359,33 @@ _moduleObj.builtinTypeList = builtinTypeList
 local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 _moduleObj.builtinTypeArray = builtinTypeArray
 
+function AlternateTypeInfo.getAssign( typeInfo, alt2type )
+
+   if typeInfo:get_kind() ~= TypeInfoKind.Alternate then
+      return typeInfo
+   end
+   
+   local otherWork = typeInfo
+   while true do
+      do
+         local _exp = alt2type[otherWork]
+         if _exp ~= nil then
+            if _exp ~= otherWork then
+               otherWork = _exp
+            else
+             
+               return otherWork
+            end
+            
+         else
+            return otherWork
+         end
+      end
+      
+   end
+   
+end
+
 local function isStruct( typeInfo )
 
    do
@@ -4442,9 +4435,9 @@ function NormalTypeInfo.createBox( accessMode, nonnilableType )
    return boxType
 end
 
-function BoxTypeInfo:applyGeneric( alt2typeMap )
+function BoxTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
-   local typeInfo = self.boxingType:applyGeneric( alt2typeMap )
+   local typeInfo = self.boxingType:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo == self.boxingType then
       return self
    end
@@ -4734,6 +4727,55 @@ function NormalTypeInfo.createGeneric( genSrcTypeInfo, itemTypeInfoList, moduleT
 
    idProv:increment(  )
    return GenericTypeInfo.new(genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo)
+end
+
+local function applyGenericList( typeList, alt2typeMap, moduleTypeInfo )
+
+   local typeInfoList = {}
+   local needNew = false
+   for __index, srcType in pairs( typeList ) do
+      do
+         local typeInfo = srcType:applyGeneric( alt2typeMap, moduleTypeInfo )
+         if typeInfo ~= nil then
+            table.insert( typeInfoList, typeInfo )
+            if srcType ~= typeInfo then
+               needNew = true
+            end
+            
+         else
+            return nil, false
+         end
+      end
+      
+   end
+   
+   return typeInfoList, needNew
+end
+
+function GenericTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
+
+   if self.genSrcTypeInfo:get_kind() == TypeInfoKind.Class then
+      local itemTypeInfoList, newFlag = applyGenericList( self:get_itemTypeInfoList(), alt2typeMap, moduleTypeInfo )
+      if itemTypeInfoList ~= nil then
+         if newFlag then
+            return NormalTypeInfo.createGeneric( self.genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
+         end
+         
+      end
+      
+   end
+   
+   local genSrcTypeInfo = self.genSrcTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
+   if genSrcTypeInfo == self.genSrcTypeInfo then
+      return self
+   end
+   
+   if not self.hasAlter then
+      return self
+   end
+   
+   Util.errorLog( string.format( "no support nest generic -- %s", self:getTxt(  )) )
+   return nil
 end
 
 local AbbrTypeInfo = {}
@@ -5531,9 +5573,9 @@ function NormalTypeInfo:canEvalWith( other, opTxt, alt2type )
    return TypeInfo.canEvalWithBase( self, TypeInfo.isMut( self ), other, opTxt, alt2type )
 end
 
-function ModifierTypeInfo:applyGeneric( alt2typeMap )
+function ModifierTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
-   local typeInfo = self.srcTypeInfo:applyGeneric( alt2typeMap )
+   local typeInfo = self.srcTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
    if typeInfo == self.srcTypeInfo then
       return self
    end
@@ -5545,58 +5587,70 @@ function ModifierTypeInfo:applyGeneric( alt2typeMap )
    return nil
 end
 
-function NormalTypeInfo:applyGeneric( alt2typeMap )
+function NormalTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
-   local needNew = false
-   local fail = false
-   local function createGen( typeList )
+   local itemTypeInfoList, needNew = applyGenericList( self.itemTypeInfoList, alt2typeMap, moduleTypeInfo )
+   if  nil == itemTypeInfoList or  nil == needNew then
+      local _itemTypeInfoList = itemTypeInfoList
+      local _needNew = needNew
    
-      local typeInfoList = {}
-      for __index, srcType in pairs( typeList ) do
-         do
-            local typeInfo = srcType:applyGeneric( alt2typeMap )
-            if typeInfo ~= nil then
-               table.insert( typeInfoList, typeInfo )
-               if srcType ~= typeInfo then
-                  needNew = true
-               end
-               
-            else
-               fail = true
-               break
-            end
-         end
-         
-      end
-      
-      return typeInfoList
-   end
-   
-   local itemTypeInfoList = createGen( self.itemTypeInfoList )
-   local argTypeInfoList = createGen( self.argTypeInfoList )
-   local retTypeInfoList = createGen( self.retTypeInfoList )
-   if fail then
       return nil
-   end
-   
-   if not needNew then
-      return self
    end
    
    do
       local _switchExp = self:get_kind()
       if _switchExp == TypeInfoKind.Set then
+         if not needNew then
+            return self
+         end
+         
          return NormalTypeInfo.createSet( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.List then
+         if not needNew then
+            return self
+         end
+         
          return NormalTypeInfo.createList( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Array then
+         if not needNew then
+            return self
+         end
+         
          return NormalTypeInfo.createArray( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Map then
+         if not needNew then
+            return self
+         end
+         
          return NormalTypeInfo.createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2], self.mutMode )
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form then
-         return NormalTypeInfo.createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) )
+         local argTypeInfoList, workArg = applyGenericList( self.argTypeInfoList, alt2typeMap, moduleTypeInfo )
+         if  nil == argTypeInfoList or  nil == workArg then
+            local _argTypeInfoList = argTypeInfoList
+            local _workArg = workArg
+         
+            return nil
+         end
+         
+         local retTypeInfoList, workRet = applyGenericList( self.retTypeInfoList, alt2typeMap, moduleTypeInfo )
+         if  nil == retTypeInfoList or  nil == workRet then
+            local _retTypeInfoList = retTypeInfoList
+            local _workRet = workRet
+         
+            return nil
+         end
+         
+         if needNew or workArg or workRet then
+            return NormalTypeInfo.createFunc( self.abstractFlag, false, getScope( self ), self.kind, self.parentInfo, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList, argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) )
+         end
+         
+         return self
       else 
          
+            if #self.itemTypeInfoList == 0 then
+               return self
+            end
+            
             return nil
       end
    end

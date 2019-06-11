@@ -484,6 +484,8 @@ local function isStemSym( symbolInfo )
    end
    
    local typeTxt, isStem = getCTypeForSym( symbolInfo )
+   print( "hoge:", symbolInfo:get_name(), Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
+   , typeTxt, isStem )
    return isStem
 end
 
@@ -550,7 +552,7 @@ function convFilter:__init(streamName, stream, ast)
    
    self.processingNode = nil
    self.processedNodeSet = {}
-   self.accessSymbolSet = {}
+   self.accessSymbolSet = Util.OrderedSet.new()
    self.literalNode2AccessSymbolSet = {}
    self.duringDeclFunc = false
    self.processMode = ProcessMode.Prototype
@@ -751,7 +753,7 @@ function convFilter:processRoot( node, opt )
    for __index, literalNode in pairs( node:get_nodeManager():getLiteralListNodeList(  ) ) do
       self.processingNode = literalNode
       if not _lune._Set_has(self.processedNodeSet, literalNode ) then
-         self.accessSymbolSet = {}
+         self.accessSymbolSet = Util.OrderedSet.new()
          filter( literalNode, self, node )
          self.processedNodeSet[node]= true
       end
@@ -1549,52 +1551,115 @@ function convFilter:processForeach( node, opt )
    self:write( string.format( "%s _obj = ", cTypeStemP) )
    filter( node:get_exp(), self, node )
    self:writeln( ";" )
-   self:writeln( string.format( "%s _itStem;", cTypeStemP) )
-   do
-      local _exp = node:get_key()
-      if _exp ~= nil then
-         self:writeln( string.format( "int %s = 0;", _exp.txt) )
-      end
-   end
+   local validIndexFlag
    
-   local valSymTxt
-   
-   do
-      local _exp = node:get_val()
-      if _exp ~= nil then
-         valSymTxt = _exp.txt
-      else
-         valSymTxt = "__val"
-      end
-   end
-   
-   self:writeln( string.format( "%s _val;", cTypeStemP) )
-   self:processLoopPreProcess( node:get_block() )
    local loopType = node:get_exp():get_expType()
-   local valType
-   
    do
       local _switchExp = loopType:get_kind()
-      if _switchExp == Ast.TypeInfoKind.List then
-         self:writeln( "for ( _itStem = lune_itList_new( _pEnv, _obj );" )
-         self:writeln( "      lune_itList_hasNext( _pEnv, _itStem, &_val );" )
-         self:writeln( "      lune_itList_inc( _pEnv, _itStem ) )" )
-         valType = loopType:get_itemTypeInfoList()[1]
+      if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+         self:writeln( string.format( "%s _itStem = lune_itList_new( _pEnv, _obj );", cTypeStemP) )
+         do
+            local _exp = node:get_key()
+            if _exp ~= nil then
+               self:writeln( string.format( "int %s = 0;", _exp.txt) )
+               validIndexFlag = true
+            end
+         end
+         
+         self:writeln( string.format( "%s _val;", cTypeStemP) )
+      elseif _switchExp == Ast.TypeInfoKind.Set then
+         self:writeln( string.format( "%s _itStem = lune_itSet_new( _pEnv, _obj );", cTypeStemP) )
+         validIndexFlag = false
+         self:writeln( string.format( "%s _val;", cTypeStemP) )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         self:writeln( string.format( "%s _itStem = lune_itMap_new( _pEnv, _obj );", cTypeStemP) )
+         validIndexFlag = false
+         self:writeln( "lune_Map_entry_t _entry;" )
       else 
          
-            valType = Ast.builtinTypeStem_
+            Util.err( string.format( "illegal kind -- %s", Ast.TypeInfoKind:_getTxt( loopType:get_kind())
+            ) )
+      end
+   end
+   
+   self:processLoopPreProcess( node:get_block() )
+   do
+      local _switchExp = loopType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+         self:writeln( "for ( ; lune_itList_hasNext( _pEnv, _itStem, &_val );" )
+         self:writeln( "      lune_itList_inc( _pEnv, _itStem ) )" )
+      elseif _switchExp == Ast.TypeInfoKind.Set then
+         self:writeln( "for ( ; lune_itSet_hasNext( _pEnv, _itStem, &_val );" )
+         self:writeln( "      lune_itSet_inc( _pEnv, _itStem ) )" )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         self:writeln( "for ( ; lune_itMap_hasNext( _pEnv, _itStem, &_entry );" )
+         self:writeln( "      lune_itMap_inc( _pEnv, _itStem ) )" )
       end
    end
    
    self:writeln( "{" )
+   if validIndexFlag then
+      do
+         local _exp = node:get_key()
+         if _exp ~= nil then
+            self:writeln( string.format( "   %s++;", _exp.txt) )
+         end
+      end
+      
+   end
+   
    do
-      local _exp = node:get_key()
-      if _exp ~= nil then
-         self:writeln( string.format( "   %s++;", _exp.txt) )
+      local _switchExp = loopType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Array then
+         local valType = loopType:get_itemTypeInfoList()[1]
+         local valSymTxt
+         
+         if loopType:get_kind() == Ast.TypeInfoKind.Set then
+            do
+               local _exp = node:get_key()
+               if _exp ~= nil then
+                  valSymTxt = _exp.txt
+               else
+                  valSymTxt = "__val"
+               end
+            end
+            
+         else
+          
+            do
+               local _exp = node:get_val()
+               if _exp ~= nil then
+                  valSymTxt = _exp.txt
+               else
+                  valSymTxt = "__val"
+               end
+            end
+            
+         end
+         
+         self:writeln( string.format( "   %s %s = _val%s;", getCType( valType, false ), valSymTxt, getAccessPrimValFromStem( false, valType, 0 )) )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         do
+            local _exp = node:get_key()
+            if _exp ~= nil then
+               local keyType = loopType:get_itemTypeInfoList()[1]
+               self:writeln( string.format( "   %s %s = _entry.pKey%s;", getCType( keyType, false ), _exp.txt, getAccessPrimValFromStem( false, keyType, 0 )) )
+            end
+         end
+         
+         do
+            local _exp = node:get_val()
+            if _exp ~= nil then
+               local valType = loopType:get_itemTypeInfoList()[1]
+               self:writeln( string.format( "   %s %s = _entry.pVal%s;", getCType( valType, false ), _exp.txt, getAccessPrimValFromStem( false, valType, 0 )) )
+            end
+         end
+         
+      else 
+         
       end
    end
    
-   self:writeln( string.format( "   %s %s = _val%s;", getCType( valType, false ), valSymTxt, getAccessPrimValFromStem( false, valType, 0 )) )
    filter( node:get_block(), self, node )
    self:writeln( "}" )
    self:processLoopPostProcess(  )
@@ -1902,7 +1967,7 @@ end
 function convFilter:processExpRef( node, opt )
 
    if self.processMode == ProcessMode.Immediate then
-      self.accessSymbolSet[node:get_symbolInfo()]= true
+      self.accessSymbolSet:add( node:get_symbolInfo() )
    end
    
    if node:get_token().txt == "super" then
@@ -2063,13 +2128,16 @@ function convFilter:processLiteralVal( exp, parent )
          self:write( ")" )
       else 
          
-            if valType:get_kind() == Ast.TypeInfoKind.List then
-               self:write( "lune_imdStem( " )
-               filter( exp, self, parent )
-               self:write( ")" )
-            else
-             
-               Util.err( string.format( "illegal type -- %s", valType:getTxt(  )) )
+            do
+               local _switchExp = valType:get_kind()
+               if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Array then
+                  self:write( "lune_imdStem( " )
+                  filter( exp, self, parent )
+                  self:write( ")" )
+               else 
+                  
+                     Util.err( string.format( "illegal type -- %s", valType:getTxt(  )) )
+               end
             end
             
       end
@@ -2082,14 +2150,31 @@ local function getLiteralListFuncName( node )
    return string.format( "lune_list_%X", node:get_id())
 end
 
+function convFilter:processLiteralNode( exp, parent )
+
+   do
+      local _switchExp = exp:get_kind()
+      if _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralSet() then
+         self.processingNode = exp
+         filter( exp, self, parent )
+      else 
+         
+            self:pushStream(  )
+            filter( exp, self, parent )
+            self:popStream(  )
+      end
+   end
+   
+end
+
 function convFilter:processLiteralListSub( collectionType, node, expListNodeOrg, literalFuncName )
 
    if _lune._Set_has(self.processedNodeSet, node ) then
       do
          local set = self.literalNode2AccessSymbolSet[node]
          if set ~= nil then
-            for symbol, __val in pairs( set ) do
-               self.accessSymbolSet[symbol]= true
+            for __index, symbol in pairs( set:get_list() ) do
+               self.accessSymbolSet:add( symbol )
             end
             
          end
@@ -2111,24 +2196,12 @@ function convFilter:processLiteralListSub( collectionType, node, expListNodeOrg,
    end
    
    for __index, exp in pairs( expListNode:get_expList() ) do
-      do
-         local _switchExp = exp:get_kind()
-         if _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralSet() then
-            self.processingNode = exp
-            filter( exp, self, node )
-         else 
-            
-               self:pushStream(  )
-               filter( exp, self, node )
-               self:popStream(  )
-         end
-      end
-      
+      self:processLiteralNode( exp, node )
    end
    
    self.processingNode = node
    self:write( string.format( "static %s %s( %s _pEnv", cTypeStemP, literalFuncName, cTypeEnvP) )
-   for symbol, __val in pairs( self.accessSymbolSet ) do
+   for __index, symbol in pairs( self.accessSymbolSet:get_list() ) do
       self:write( string.format( ", %s %s", getCTypeForSym( symbol ), symbol:get_name()) )
    end
    
@@ -2147,7 +2220,7 @@ function convFilter:processLiteralListSub( collectionType, node, expListNodeOrg,
    self:writeln( string.format( "return lune_create%s( _pEnv, &list );", collectionType) )
    self:popIndent(  )
    self:writeln( "}" )
-   self.literalNode2AccessSymbolSet[node] = _lune._Set_clone(self.accessSymbolSet )
+   self.literalNode2AccessSymbolSet[node] = self.accessSymbolSet:clone(  )
 end
 
 function convFilter:processLiteralList( node, opt )
@@ -2164,7 +2237,7 @@ function convFilter:processLiteralList( node, opt )
          return 
       end
       
-      for symbol, __val in pairs( symbolSet ) do
+      for __index, symbol in pairs( symbolSet:get_list() ) do
          self:write( string.format( ", %s", symbol:get_name()) )
       end
       
@@ -2174,13 +2247,116 @@ function convFilter:processLiteralList( node, opt )
 end
 
 
+local function getLiteralSetFuncName( node )
+
+   return string.format( "lune_set_%X", node:get_id())
+end
+
 function convFilter:processLiteralSet( node, opt )
 
+   if self.processMode == ProcessMode.Immediate and self.processingNode == node then
+      self:processLiteralListSub( "Set", node, node:get_expList(), getLiteralSetFuncName( node ) )
+   else
+    
+      self:write( string.format( "%s( _pEnv", getLiteralSetFuncName( node )) )
+      local symbolSet = self.literalNode2AccessSymbolSet[node]
+      if  nil == symbolSet then
+         local _symbolSet = symbolSet
+      
+         return 
+      end
+      
+      for __index, symbol in pairs( symbolSet:get_list() ) do
+         self:write( string.format( ", %s", symbol:get_name()) )
+      end
+      
+      self:write( ")" )
+   end
+   
 end
 
 
+local function getLiteralMapFuncName( node )
+
+   return string.format( "lune_map_%X", node:get_id())
+end
+
+function convFilter:processLiteralMapSub( node )
+
+   if _lune._Set_has(self.processedNodeSet, node ) then
+      do
+         local set = self.literalNode2AccessSymbolSet[node]
+         if set ~= nil then
+            for __index, symbol in pairs( set:get_list() ) do
+               self.accessSymbolSet:add( symbol )
+            end
+            
+         end
+      end
+      
+      return 
+   end
+   
+   self.processedNodeSet[node]= true
+   local pairList = node:get_pairList()
+   if #pairList == 0 then
+      return 
+   end
+   
+   for __index, pair in pairs( pairList ) do
+      self:processLiteralNode( pair:get_key(), node )
+      self:processLiteralNode( pair:get_val(), node )
+   end
+   
+   self.processingNode = node
+   self:write( string.format( "static %s %s( %s _pEnv", cTypeStemP, getLiteralMapFuncName( node ), cTypeEnvP) )
+   for __index, symbol in pairs( self.accessSymbolSet:get_list() ) do
+      self:write( string.format( ", %s %s", getCTypeForSym( symbol ), symbol:get_name()) )
+   end
+   
+   self:writeln( ")" )
+   self:writeln( "{" )
+   self:pushIndent(  )
+   self:write( "lune_imdMap( list" )
+   self:pushIndent(  )
+   for __index, pair in pairs( pairList ) do
+      self:writeln( ", " )
+      self:write( "{ " )
+      self:processLiteralVal( pair:get_key(), node )
+      self:write( ", " )
+      self:processLiteralVal( pair:get_val(), node )
+      self:write( "} " )
+   end
+   
+   self:popIndent(  )
+   self:writeln( ");" )
+   self:writeln( "return lune_createMap( _pEnv, &list );" )
+   self:popIndent(  )
+   self:writeln( "}" )
+   self.literalNode2AccessSymbolSet[node] = self.accessSymbolSet:clone(  )
+end
+
 function convFilter:processLiteralMap( node, opt )
 
+   if self.processMode == ProcessMode.Immediate and self.processingNode == node then
+      self:processLiteralMapSub( node )
+   else
+    
+      self:write( string.format( "%s( _pEnv", getLiteralMapFuncName( node )) )
+      local symbolSet = self.literalNode2AccessSymbolSet[node]
+      if  nil == symbolSet then
+         local _symbolSet = symbolSet
+      
+         return 
+      end
+      
+      for __index, symbol in pairs( symbolSet:get_list() ) do
+         self:write( string.format( ", %s", symbol:get_name()) )
+      end
+      
+      self:write( ")" )
+   end
+   
 end
 
 

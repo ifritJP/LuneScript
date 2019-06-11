@@ -7,6 +7,16 @@ let g_val = 100;
             print( item );
          }
       }
+      foreach list in [ (@ val, g_val ), (@ 3.5, val2 ) ] {
+         foreach item in list {
+            print( item );
+         }
+      }
+      foreach list in [ { val: g_val }, { 3.5: val2 } ] {
+         foreach item, key in list {
+            print( key, item );
+         }
+      }
    }
    func( "xyz" );
 }

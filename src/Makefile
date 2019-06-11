@@ -231,8 +231,16 @@ test-comp:
 	$(call buildLns,.,work/1)
 	$(MAKE) test-comp2
 
+
+	$(MAKE) test-registered-rockspec
+
 	@echo finish to build 
 	@LANG= date
+
+test-registered-rockspec:
+	curl https://luarocks.org/manifests/ifritjp/lunescript-main-1.rockspec -o work/rockspec
+	diff ../lunescript-main-1.rockspec work/rockspec || echo "====== need upload rockspec ======"
+
 
 test-etc:
 # 存在しないファイルを指定した時に、不正なファイルが作成されないことを確認する

@@ -642,7 +642,9 @@ static な型か。
       return name;
    }
 
-   pub fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+   pub fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo>,
+                        moduleTypeInfo:&TypeInfo ): &TypeInfo!
+   {
       return self;
    }
 
@@ -970,8 +972,10 @@ pub class AliasTypeInfo extend TypeInfo {
       return self.parentInfo.$typeId;
    }
 
-   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      let typeInfo = self.aliasSrcTypeInfo.applyGeneric( alt2typeMap );
+   pub override fn applyGeneric(
+      alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
+   {
+      let typeInfo = self.aliasSrcTypeInfo.applyGeneric( alt2typeMap, moduleTypeInfo );
       if typeInfo == self.aliasSrcTypeInfo {
          return self;
       }
@@ -1679,8 +1683,10 @@ pub class NilableTypeInfo extend TypeInfo {
          typeInfo.$nonnilableType, alt2type, checkModifer );
    }
 
-   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      let typeInfo = self.nonnilableType.applyGeneric( alt2typeMap );
+   pub override fn applyGeneric(
+      alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
+   {
+      let typeInfo = self.nonnilableType.applyGeneric( alt2typeMap, moduleTypeInfo );
       if typeInfo == self.nonnilableType {
          return self;
       }
@@ -1770,21 +1776,8 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 
    pub static fn getAssign(
-      typeInfo:&TypeInfo, alt2type:&Map<&TypeInfo,&TypeInfo> ) : &TypeInfo
-   {
-      if typeInfo.$kind ~= .Alternate {
-         return typeInfo;
-      }
-      let mut otherWork = typeInfo;
-      while true {
-         if! alt2type[ otherWork ] {
-            otherWork = _exp;
-         }
-         else {
-            return otherWork;
-         }
-      }
-   }
+      typeInfo:&TypeInfo, alt2type:&Map<&TypeInfo,&TypeInfo> ) : &TypeInfo;
+   
 
    pri fn canSetFrom(
       other:&TypeInfo, opTxt:str!, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
@@ -1985,7 +1978,9 @@ pub class AlternateTypeInfo extend TypeInfo {
       stream.write( "}\n" );
    }
 
-   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
+   pub override fn applyGeneric(
+      alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
+   {
       return AlternateTypeInfo.getAssign( self, alt2typeMap );
    }
 }
@@ -2119,7 +2114,8 @@ pub class GenericTypeInfo extend TypeInfo {
       foreach altTypeInfo, index in genSrcTypeInfo.$itemTypeInfoList {
          let itemType = itemTypeInfoList[ index ];
          alt2typeMap[ altTypeInfo ] = itemType;
-         if itemType.applyGeneric( workAlt2typeMap ) ~= itemType {
+         if itemType.applyGeneric( workAlt2typeMap, moduleTypeInfo ) ~= itemType
+         {
             hasAlter = true;
          }
       }
@@ -2275,18 +2271,6 @@ pub class GenericTypeInfo extend TypeInfo {
          map[ genType ] = typeInfo;
       }
       return map;
-   }
-
-   pub override fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo! {
-      if not self.hasAlter {
-         return self;
-      }
-      let genSrcTypeInfo = self.genSrcTypeInfo.applyGeneric( alt2typeMap );
-      if genSrcTypeInfo == self.genSrcTypeInfo {
-         return self;
-      }
-      Util.errorLog( "no support nest generic -- %s" (self.getTxt(##) ) );
-      return nil;
    }
 
    advertise genSrcTypeInfo;
@@ -3336,6 +3320,32 @@ pub let builtinTypeList:TypeInfo =
 pub let builtinTypeArray:TypeInfo =
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
 
+
+pub static fn AlternateTypeInfo.getAssign(
+   typeInfo:&TypeInfo, alt2type:&Map<&TypeInfo,&TypeInfo> ) : &TypeInfo
+{
+   if typeInfo.$kind ~= .Alternate {
+      return typeInfo;
+   }
+   let mut otherWork = typeInfo;
+   while true {
+      if! alt2type[ otherWork ] {
+         if _exp ~= otherWork {
+            otherWork = _exp;
+         }
+         else {
+            return otherWork;
+         }
+      }
+      else {
+         return otherWork;
+      }
+   }
+}
+
+
+
+
 pub fn isStruct( typeInfo:&TypeInfo ): bool {
    switch typeInfo.$kind {
       case .Class {
@@ -3381,9 +3391,9 @@ pub static fn NormalTypeInfo.createBox(
 }
 
 pub override fn BoxTypeInfo.applyGeneric(
-   alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+   alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
 {
-   let typeInfo = self.boxingType.applyGeneric( alt2typeMap );
+   let typeInfo = self.boxingType.applyGeneric( alt2typeMap, moduleTypeInfo );
    if typeInfo == self.boxingType {
       return self;
    }
@@ -3449,7 +3459,6 @@ pub static fn NormalTypeInfo.createMap(
       "Map", headTypeInfo, idProv.$id, .Map,
       [ keyTypeInfo, valTypeInfo ], nil, nil, mutMode );
 }
-
 
 pub static fn NormalTypeInfo.createModule(
    scope: Scope, parentInfo: &TypeInfo, externalFlag: bool,
@@ -3726,6 +3735,58 @@ pub static fn NormalTypeInfo.createGeneric(
    idProv.increment();
    return new GenericTypeInfo( genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo );
 }
+
+
+fn applyGenericList(
+   typeList:&List<&TypeInfo>, alt2typeMap:&Map<&TypeInfo,&TypeInfo>,
+   moduleTypeInfo:&TypeInfo ) : &List<&TypeInfo>!, bool
+{
+   let mut typeInfoList:List<&TypeInfo> = [];
+   let mut needNew = false;
+   foreach srcType in typeList {
+      if! let typeInfo = srcType.applyGeneric( alt2typeMap, moduleTypeInfo ) {
+         typeInfoList.insert( typeInfo );
+         if srcType ~= typeInfo {
+            needNew = true;
+         }
+      }
+      else {
+         return nil, false;
+      }
+   }
+   return typeInfoList, needNew;
+}
+
+
+pub override fn GenericTypeInfo.applyGeneric(
+   alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
+{
+   if self.genSrcTypeInfo.$kind == .Class  {
+      let itemTypeInfoList, newFlag = applyGenericList(
+         self.$itemTypeInfoList, alt2typeMap, moduleTypeInfo );
+      when! itemTypeInfoList {
+         if newFlag {
+            return NormalTypeInfo.createGeneric(
+               self.genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo );
+         }
+      }
+   }
+   
+   let genSrcTypeInfo = self.genSrcTypeInfo.applyGeneric( alt2typeMap, moduleTypeInfo );
+   if genSrcTypeInfo == self.genSrcTypeInfo {
+      return self;
+   }
+   if not self.hasAlter {
+      return self;
+   }
+   
+                                        
+   
+   Util.errorLog( "no support nest generic -- %s" (self.getTxt(##) ) );
+   return nil;
+}
+
+
 
 pub class AbbrTypeInfo extend TypeInfo {
    pri let typeId: int { pub };
@@ -4568,9 +4629,9 @@ pub override fn NormalTypeInfo.canEvalWith(
 
 
 pub override fn ModifierTypeInfo.applyGeneric(
-   alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+   alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
 {
-   let typeInfo = self.srcTypeInfo.applyGeneric( alt2typeMap );
+   let typeInfo = self.srcTypeInfo.applyGeneric( alt2typeMap, moduleTypeInfo );
    if typeInfo == self.srcTypeInfo {
       return self;
    }
@@ -4582,62 +4643,68 @@ pub override fn ModifierTypeInfo.applyGeneric(
 
 
 pub override fn NormalTypeInfo.applyGeneric(
-   alt2typeMap:&Map<&TypeInfo,&TypeInfo> ): &TypeInfo!
+   alt2typeMap:&Map<&TypeInfo,&TypeInfo>, moduleTypeInfo:&TypeInfo ): &TypeInfo!
 {
-   let mut needNew = false;
-   let mut fail = false;
-   fn createGen( typeList:&List<&TypeInfo> ): &List<&TypeInfo> {
-      let mut typeInfoList:List<&TypeInfo> = [];
-      foreach srcType in typeList {
-         if! let typeInfo = srcType.applyGeneric( alt2typeMap ) {
-            typeInfoList.insert( typeInfo );
-            if srcType ~= typeInfo {
-               needNew = true;
-            }
-         }
-         else {
-            fail = true;
-            break;
-         }
-      }
-      return typeInfoList;
-   }
-
-   let itemTypeInfoList = createGen( self.itemTypeInfoList );
-   let argTypeInfoList = createGen( self.argTypeInfoList );
-   let retTypeInfoList = createGen( self.retTypeInfoList );
-   if fail {
+   let! itemTypeInfoList, needNew = applyGenericList(
+      self.itemTypeInfoList, alt2typeMap, moduleTypeInfo )
+   {
       return nil;
-   }
-   if not needNew {
-      return self;
-   }
+   };
    switch self.$kind {
       case .Set {
+         if not needNew {
+            return self;
+         }
          return NormalTypeInfo.createSet(
             self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode );
       }
       case .List {
+         if not needNew {
+            return self;
+         }
          return NormalTypeInfo.createList(
             self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode );
       }
       case .Array {
+         if not needNew {
+            return self;
+         }
          return NormalTypeInfo.createArray(
             self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode );
       }
       case .Map {
+         if not needNew {
+            return self;
+         }
          return NormalTypeInfo.createMap(
             self.accessMode, self.parentInfo,
             itemTypeInfoList[ 1 ], itemTypeInfoList[ 2 ], self.mutMode );
       }
       case .Func, .Form {
-         return NormalTypeInfo.createFunc(
-            self.abstractFlag, false, getScope( self ), self.kind,
-            self.parentInfo, self.autoFlag, self.externalFlag,
-            self.staticFlag, self.accessMode, self.rawTxt, itemTypeInfoList,
-            argTypeInfoList, retTypeInfoList, TypeInfo.isMut( self ) );
+         let! argTypeInfoList, workArg = applyGenericList(
+            self.argTypeInfoList, alt2typeMap, moduleTypeInfo )
+         {
+            return nil;
+         };
+         let! retTypeInfoList, workRet = applyGenericList(
+            self.retTypeInfoList, alt2typeMap, moduleTypeInfo )
+         {
+            return nil;
+         };
+         if needNew or workArg or workRet {
+            return NormalTypeInfo.createFunc(
+               self.abstractFlag, false, getScope( self ), self.kind,
+               self.parentInfo, self.autoFlag, self.externalFlag,
+               self.staticFlag, self.accessMode, self.rawTxt,
+               itemTypeInfoList, argTypeInfoList, retTypeInfoList, 
+               TypeInfo.isMut( self ) );
+         }
+         return self;
       }
       default {
+         if #self.itemTypeInfoList == 0 {
+            return self;
+         }
          return nil;
       }
    }

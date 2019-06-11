@@ -126,6 +126,15 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
    let nextToken = self.getToken(##);
    let mut expList:Nodes.ExpListNode! = nil;
    let mut itemTypeInfo = Ast.builtinTypeNone;
+
+   fn getStemType( type1: &Ast.TypeInfo, type2: &Ast.TypeInfo) : &Ast.TypeInfo
+   {
+      if type1.$nilable or type2.$nilable {
+         return Ast.builtinTypeStem_;
+      }
+      return Ast.builtinTypeStem;
+   }
+   
    if nextToken.txt ~= "]" {
       self.pushback();
       expList = self.analyzeExpList( false, false ## );
@@ -139,15 +148,62 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
          else {
             let eval1 = itemTypeInfo.canEvalWith( expType, "=", {} );
             let eval2 = expType.canEvalWith( itemTypeInfo, "=", {} );
+
             if not eval1 and not eval2 {
                if expType.equals( Ast.builtinTypeNil ## ) {
                   itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
                }
-               elseif expType.$nilable {
-                  itemTypeInfo = Ast.builtinTypeStem_;
+               elseif itemTypeInfo.$kind == expType.$kind {
+                  let mut mutMode;
+                  if Ast.TypeInfo.isMut( itemTypeInfo ) or Ast.TypeInfo.isMut( expType ) {
+                     mutMode = Ast.MutMode.Mut;
+                  }
+                  else {
+                     mutMode = Ast.MutMode.IMut;
+                  }
+                  
+                  switch itemTypeInfo.$kind {
+                     case .List {
+                        itemTypeInfo = Ast.NormalTypeInfo.createList(
+                           .Pri, self.getCurrentClass(),
+                           [ getStemType( itemTypeInfo.$itemTypeInfoList[ 1 ],
+                                          expType.$itemTypeInfoList[ 1 ] ) ],
+                           mutMode );
+                     }
+                     case .Array {
+                        itemTypeInfo = Ast.NormalTypeInfo.createArray(
+                           .Pri, self.getCurrentClass(),
+                           [ getStemType( itemTypeInfo.$itemTypeInfoList[ 1 ],
+                                          expType.$itemTypeInfoList[ 1 ] ) ],
+                           mutMode );
+                     }
+                     case .Set {
+                        itemTypeInfo = Ast.NormalTypeInfo.createSet(
+                           .Pri, self.getCurrentClass(),
+                           [ getStemType( itemTypeInfo.$itemTypeInfoList[ 1 ],
+                                          expType.$itemTypeInfoList[ 1 ] ) ],
+                           mutMode );
+                     }
+                     case .Map {
+                        itemTypeInfo = Ast.NormalTypeInfo.createMap(
+                           .Pri, self.getCurrentClass(),
+                           getStemType( itemTypeInfo.$itemTypeInfoList[ 1 ],
+                                        expType.$itemTypeInfoList[ 1 ] ),
+                           getStemType( itemTypeInfo.$itemTypeInfoList[ 2 ],
+                                        expType.$itemTypeInfoList[ 2 ] ),
+                           mutMode );
+                     }
+                     default {
+                        itemTypeInfo = getStemType( itemTypeInfo, expType );
+                     }
+                  }
                }
+               // elseif expType.$nilable {
+               //    itemTypeInfo = Ast.builtinTypeStem_;
+               // }
                else {
-                  itemTypeInfo = Ast.builtinTypeStem;
+                  // itemTypeInfo = Ast.builtinTypeStem;
+                  itemTypeInfo = getStemType( itemTypeInfo, expType );
                }
             }
             elseif eval2 {
@@ -204,12 +260,6 @@ fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Nodes.Node {
                itemTypeInfo = expType;
             }  
             elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
-               // if expType.equals( Ast.builtinTypeNil ## ) {
-               //    itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
-               // }  
-               // else {
-               //    itemTypeInfo = Ast.builtinTypeStem;
-               // }  
                if expType.canEvalWith( itemTypeInfo, "=", {} ) {
                   itemTypeInfo = expType;
                }
@@ -1110,7 +1160,7 @@ fn TransUnit.analyzeExpCall(
       let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
       foreach retType, index in funcTypeInfo.$retTypeInfoList {
          retTypeInfoList.insert( retType );
-         if! let applyType = retType.applyGeneric( alt2typeMap ) {
+         if! let applyType = retType.applyGeneric( alt2typeMap, self.moduleType ) {
             retTypeInfoList[ index ] = applyType;
          }
          else {
@@ -1365,7 +1415,7 @@ fn TransUnit.analyzeAccessClassField(
                fieldTypeInfo = retTypeList[ 1 ];
                when! fieldTypeInfo {
                   if! fieldTypeInfo.applyGeneric(
-                     classTypeInfo.createAlt2typeMap(false) )
+                     classTypeInfo.createAlt2typeMap(false), self.moduleType )
                   {                 
                      fieldTypeInfo = _exp;
                   }

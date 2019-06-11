@@ -52,3 +52,19 @@ class Test2<T:Sub2> {
    func2( new Test2( new Sub2() ) );
    func2( new Test2( 1 ) );  // error
 }
+
+class Test3<T> {
+   pub fn __init() {
+   }
+   pub fn clone(): Test3<T> {
+      return new Test3<T>();
+   }
+}
+
+{
+   let mut map:Map<int,&Test3<int>> = {};
+   let test = new Test3<int>();
+   map[ 1 ] = test.clone();
+   let test2 = new Test3<real>();
+   map[ 2 ] = test2.clone(); // error
+}
