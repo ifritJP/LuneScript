@@ -703,10 +703,13 @@ static lune_env_t * lune_createEnv()
     _pEnv->allocateor = allocateor;
     _pEnv->useStemPoolNum = 0;
     _pEnv->blockDepth = 0;
+    _pEnv->stackPos = 0;
 
     lune_enter_block( _pEnv, 0 );
     _pEnv->pNoneStem = lune_alloc_stem_op( _pEnv, lune_value_type_none );
     _pEnv->pNilStem = lune_alloc_stem_op( _pEnv, lune_value_type_nil );
+    _pEnv->pTrueStem = lune_bool2stem( _pEnv, true );
+    _pEnv->pFalseStem = lune_bool2stem( _pEnv, false );
 
     _pEnv->pSortCallback = NULL;
 
@@ -784,6 +787,62 @@ lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num,
     }
 
     return pRet;
+}
+
+lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem ) {
+    if ( lune_isCondTrue( pStem ) ) {
+        return _pEnv->pFalseStem;
+    }
+    return _pEnv->pTrueStem;
+}
+
+/**
+ * pStem の条件判定を行なう
+ *
+ * false か nil の場合 false、それ以外は true
+ */
+bool lune_isCondTrue( const lune_stem_t * pStem ) {
+    if ( pStem->type == lune_value_type_bool ) {
+        return pStem->val.boolVal;
+    }
+    else if ( pStem->type == lune_value_type_nil ) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * スタックを一段上げる
+ */
+bool lune_incStack( lune_env_t * _pEnv ) {
+    _pEnv->stackPos++;
+    return false;
+}
+
+/**
+ * 値 pVal をスタックの top にセットし、値 pVal の条件判定結果を返す
+ *
+ * スタックに lune_ddd_t は詰めない。
+ * 呼び出し側で lune_ddd_t の先頭要素を指定すること。
+ *
+ * @param pVal スタックに詰む値
+ * @return pVal の条件判定結果。 lune_isCondTrue()。
+ */
+bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t * pVal )
+{
+    _pEnv->pValStack[ _pEnv->stackPos ] = pVal;
+    return lune_isCondTrue( pVal );
+}
+
+/**
+ * スタックから値を pop する。
+ *
+ * @return pop した値。
+ */
+lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy ) {
+    lune_stem_t * pVal = _pEnv->pValStack[ _pEnv->stackPos ];
+    _pEnv->stackPos--;
+    return pVal;
 }
 
 

@@ -1,10 +1,42 @@
 let mut g_val = 100;
 {
+   print( nil or false or 1 );
+   print( nil or 2 or 3 );
+   print( 4 or 5 );
+   print( nil or false );
+
+   print( 1 and 2 and 3 and nil );
+   print( 1 and 2 and 3 );
+   print( 1 and false and 2 );   
+}
+{
+   let val = "abc";
+   fn func( val2:str ) {
+      forsort item in (@ g_val, 3.5, 1, 2, 0 ) {
+         print( item );
+      }
+      forsort item, key in { val: g_val, val2: 3.5, "999": 1, "888": 2, "777": 3 } {
+         print( key, item );
+      }
+   }
+   func( "xyz" );
+}
+{
    let val = 10;
    fn func( val2:str ) {
       foreach list in [ [ val, g_val ], [ 3.5, val2 ] ] {
          foreach item in list {
             print( item );
+         }
+      }
+      foreach list in [ (@ val, g_val ), (@ 3.5, val2 ) ] {
+         foreach item in list {
+            print( item );
+         }
+      }
+      foreach list in [ { val: g_val }, { 3.5: val2 } ] {
+         foreach item, key in list {
+            print( key, item );
          }
       }
    }

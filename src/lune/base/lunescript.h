@@ -92,7 +92,13 @@ extern "C" {
      */
 #define LUNE_MODULE_MAX_NUM 10000
 
+    /**
+     * and or 演算子の評価中に利用するスタック数
+     */
+#define LUNE_VAL_STACK_MAX 10000
     
+    
+
     /**
      * 全ブロックで保持する stem 型の値の最大数。
      *
@@ -359,6 +365,10 @@ extern "C" {
         lune_stem_t * pNoneStem;
         /** nil */
         lune_stem_t * pNilStem;
+        /** true */
+        lune_stem_t * pTrueStem;
+        /** false */
+        lune_stem_t * pFalseStem;
         /**
          * ブロック情報で利用する pVarList のバッファ。
          * ブロック開始時に、ここから割り当てる。
@@ -373,6 +383,11 @@ extern "C" {
 
         /** sort callback */
         lune_stem_t * pSortCallback;
+
+        /** 値のスタック */
+        lune_stem_t * pValStack[ LUNE_VAL_STACK_MAX ];
+        /** pValStack の現在位置 */
+        int stackPos;
     };
 
 
@@ -457,6 +472,12 @@ extern "C" {
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... );
 
 
+
+    extern bool lune_isCondTrue( const lune_stem_t * pStem );
+    extern bool lune_incStack( lune_env_t * _pEnv );
+    extern bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t * pVal );
+    extern lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy );
+    extern lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem );
 
 
     extern void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg );

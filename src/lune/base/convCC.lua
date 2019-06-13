@@ -750,16 +750,24 @@ function convFilter:processRoot( node, opt )
    
    self.processMode = ProcessMode.Immediate
    self.processedNodeSet = {}
-   for __index, literalNode in pairs( node:get_nodeManager():getLiteralListNodeList(  ) ) do
-      self.processingNode = literalNode
-      if not _lune._Set_has(self.processedNodeSet, literalNode ) then
-         self.accessSymbolSet = Util.OrderedSet.new()
-         filter( literalNode, self, node )
-         self.processedNodeSet[node]= true
+   local function procssLiteralCtor( literalNodeList )
+   
+      for __index, literalNode in pairs( literalNodeList ) do
+         self.processingNode = literalNode
+         if not _lune._Set_has(self.processedNodeSet, literalNode ) then
+            self.accessSymbolSet = Util.OrderedSet.new()
+            filter( literalNode, self, node )
+            self.processedNodeSet[node]= true
+         end
+         
       end
       
    end
    
+   procssLiteralCtor( node:get_nodeManager():getLiteralListNodeList(  ) )
+   procssLiteralCtor( node:get_nodeManager():getLiteralArrayNodeList(  ) )
+   procssLiteralCtor( node:get_nodeManager():getLiteralSetNodeList(  ) )
+   procssLiteralCtor( node:get_nodeManager():getLiteralMapNodeList(  ) )
    self.processingNode = nil
    self.processMode = ProcessMode.Form
    for __index, declFuncNode in pairs( node:get_nodeManager():getDeclFuncNodeList(  ) ) do
@@ -1049,6 +1057,36 @@ local function isStemVal( node )
             end
          end
          
+      elseif _switchExp == Nodes.NodeKind.get_ExpOp2() then
+         do
+            local op2Node = _lune.__Cast( node, 3, Nodes.ExpOp2Node )
+            if op2Node ~= nil then
+               do
+                  local _switchExp = op2Node:get_op().txt
+                  if _switchExp == "and" or _switchExp == "or" then
+                     return true
+                  end
+               end
+               
+            end
+         end
+         
+         return isStemType( node:get_expType() )
+      elseif _switchExp == Nodes.NodeKind.get_ExpOp1() then
+         do
+            local op1Node = _lune.__Cast( node, 3, Nodes.ExpOp1Node )
+            if op1Node ~= nil then
+               do
+                  local _switchExp = op1Node:get_op().txt
+                  if _switchExp == "not" then
+                     return true
+                  end
+               end
+               
+            end
+         end
+         
+         return isStemType( node:get_expType() )
       end
    end
    
@@ -1475,6 +1513,24 @@ end
 
 function convFilter:processIf( node, opt )
 
+   local valList = node:get_stmtList(  )
+   for index, val in pairs( valList ) do
+      if index == 1 then
+         self:write( "if ( " )
+         filter( val:get_exp(), self, node )
+      elseif val:get_kind() == Nodes.IfKind.ElseIf then
+         self:write( "elseif " )
+         filter( val:get_exp(), self, node )
+      else
+       
+         self:writeln( "else" )
+      end
+      
+      self:write( " " )
+      filter( val:get_block(), self, node )
+   end
+   
+   self:writeln( "end" )
 end
 
 
@@ -1650,7 +1706,7 @@ function convFilter:processForeach( node, opt )
          do
             local _exp = node:get_val()
             if _exp ~= nil then
-               local valType = loopType:get_itemTypeInfoList()[1]
+               local valType = loopType:get_itemTypeInfoList()[2]
                self:writeln( string.format( "   %s %s = _entry.pVal%s;", getCType( valType, false ), _exp.txt, getAccessPrimValFromStem( false, valType, 0 )) )
             end
          end
@@ -1670,6 +1726,81 @@ end
 
 function convFilter:processForsort( node, opt )
 
+   self:writeln( "{" )
+   self:pushIndent(  )
+   self:write( string.format( "%s _obj = ", cTypeStemP) )
+   filter( node:get_exp(), self, node )
+   self:writeln( ";" )
+   local loopType = node:get_exp():get_expType()
+   do
+      local _switchExp = loopType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Set then
+         self:writeln( "lune_stem_t * _pList = lune_mtd_Map_createKeyList( _pEnv, _obj );" )
+         self:writeln( "lune_mtd_List( _pList )->sort( _pEnv, _pList, _pEnv->pNilStem );" )
+         self:writeln( string.format( "%s _itStem = lune_itList_new( _pEnv, _pList );", cTypeStemP) )
+         self:writeln( string.format( "%s _val;", cTypeStemP) )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         self:writeln( "lune_stem_t * _pKeyList = lune_mtd_Map_createKeyList( _pEnv, _obj );" )
+         self:writeln( "lune_mtd_List( _pKeyList )->sort( _pEnv, _pKeyList, _pEnv->pNilStem );" )
+         self:writeln( string.format( "%s _itStem = lune_itList_new( _pEnv, _pKeyList );", cTypeStemP) )
+         self:writeln( string.format( "%s _key;", cTypeStemP) )
+      else 
+         
+            Util.err( string.format( "illegal kind -- %s", Ast.TypeInfoKind:_getTxt( loopType:get_kind())
+            ) )
+      end
+   end
+   
+   self:processLoopPreProcess( node:get_block() )
+   do
+      local _switchExp = loopType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Set then
+         self:writeln( "for ( ; lune_itList_hasNext( _pEnv, _itStem, &_val );" )
+         self:writeln( "      lune_itList_inc( _pEnv, _itStem ) )" )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         self:writeln( "for ( ; lune_itList_hasNext( _pEnv, _itStem, &_key );" )
+         self:writeln( "      lune_itList_inc( _pEnv, _itStem ) )" )
+      end
+   end
+   
+   self:writeln( "{" )
+   do
+      local _switchExp = loopType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Set then
+         local valType = loopType:get_itemTypeInfoList()[1]
+         local valSymTxt
+         
+         do
+            local _exp = node:get_key()
+            if _exp ~= nil then
+               valSymTxt = _exp.txt
+            else
+               valSymTxt = "__val"
+            end
+         end
+         
+         self:writeln( string.format( "   %s %s = _val%s;", getCType( valType, false ), valSymTxt, getAccessPrimValFromStem( false, valType, 0 )) )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         do
+            local _exp = node:get_key()
+            if _exp ~= nil then
+               local keyType = loopType:get_itemTypeInfoList()[1]
+               self:writeln( string.format( "   %s %s = _key%s;", getCType( keyType, false ), _exp.txt, getAccessPrimValFromStem( false, keyType, 0 )) )
+            end
+         end
+         
+         local valType = loopType:get_itemTypeInfoList()[2]
+         self:writeln( string.format( "   %s %s = lune_mtd_Map( _obj )->get( _pEnv, _obj, _key )%s;", getCType( valType, false ), node:get_val().txt, getAccessPrimValFromStem( false, valType, 0 )) )
+      else 
+         
+      end
+   end
+   
+   filter( node:get_block(), self, node )
+   self:writeln( "}" )
+   self:processLoopPostProcess(  )
+   self:writeln( "}" )
+   self:popIndent(  )
 end
 
 
@@ -1847,19 +1978,33 @@ function convFilter:processExpList( node, opt )
 end
 
 
+function convFilter:accessPrimVal( exp, parent )
+
+   if not isStemVal( exp ) then
+      filter( exp, self, parent )
+   else
+    
+      filter( exp, self, parent )
+      self:accessPrimValFromStem( #exp:get_expTypeList() > 1, exp:get_expType(), 0 )
+   end
+   
+end
+
 function convFilter:processExpOp1( node, opt )
 
    local op = node:get_op().txt
    if op == "~" then
       self:write( op )
+      self:accessPrimVal( node:get_exp(), node )
    elseif op == "not" then
-      self:write( "!" )
+      self:write( "lune_op_not( _pEnv, " )
+      self:processVal2Stem( node:get_exp(), node )
+      self:write( ")" )
    else
     
       Util.err( string.format( "not support op -- %s", op) )
    end
    
-   filter( node:get_exp(), self, node )
 end
 
 
@@ -1880,18 +2025,6 @@ function convFilter:processExpParen( node, opt )
 end
 
 
-function convFilter:accessPrimVal( exp, parent )
-
-   if not isStemVal( exp ) then
-      filter( exp, self, parent )
-   else
-    
-      filter( exp, self, parent )
-      self:accessPrimValFromStem( #exp:get_expTypeList() > 1, exp:get_expType(), 0 )
-   end
-   
-end
-
 function convFilter:processWrapForm2Func( funcType )
 
    self:write( string.format( "static %s _wrap_%s_%d( %s _pEnv, %s _pForm, ", cTypeStemP, funcType:get_rawTxt(), funcType:get_typeId(), cTypeEnvP, cTypeStemP) )
@@ -1910,55 +2043,106 @@ end
 
 function convFilter:processExpOp2( node, opt )
 
-   local intCast = false
-   if node:get_expType():equals( Ast.builtinTypeInt ) and node:get_op().txt == "/" then
-      intCast = true
-      self:write( "math.floor(" )
-   end
-   
    local opTxt = node:get_op().txt
-   if opTxt == "=" then
-      local symbolList = node:get_exp1():getSymbolInfo(  )
-      local expList
-      
-      do
-         local expListNode = _lune.__Cast( node:get_exp2(), 3, Nodes.ExpListNode )
-         if expListNode ~= nil then
-            expList = expListNode:get_expList()
-         else
-            expList = {node:get_exp2()}
+   do
+      local _switchExp = opTxt
+      if _switchExp == "=" then
+         local symbolList = node:get_exp1():getSymbolInfo(  )
+         local expList
+         
+         do
+            local expListNode = _lune.__Cast( node:get_exp2(), 3, Nodes.ExpListNode )
+            if expListNode ~= nil then
+               expList = expListNode:get_expList()
+            else
+               expList = {node:get_exp2()}
+            end
          end
-      end
-      
-      self:processSetValToSym( node, symbolList, expList )
-   else
-    
-      do
-         local _exp = Ast.bitBinOpMap[opTxt]
-         if _exp ~= nil then
+         
+         self:processSetValToSym( node, symbolList, expList )
+      elseif _switchExp == "and" or _switchExp == "or" then
+         local function isAndOr( exp )
+         
             do
-               local _switchExp = _exp
-               if _switchExp == Ast.BitOpKind.LShift then
-                  opTxt = "<<"
-               elseif _switchExp == Ast.BitOpKind.RShift then
-                  opTxt = ">>"
+               local parentNode = _lune.__Cast( exp, 3, Nodes.ExpOp2Node )
+               if parentNode ~= nil then
+                  do
+                     local _switchExp = parentNode:get_op().txt
+                     if _switchExp == "and" or _switchExp == "or" then
+                        return true
+                     end
+                  end
+                  
                end
             end
             
-            self:accessPrimVal( node:get_exp1(), node )
-            self:write( " " .. opTxt .. " " )
-            self:accessPrimVal( node:get_exp2(), node )
-         else
-            self:accessPrimVal( node:get_exp1(), node )
-            self:write( " " .. opTxt .. " " )
-            self:accessPrimVal( node:get_exp2(), node )
+            return false
          end
+         
+         local firstFlag = not isAndOr( opt.node )
+         if firstFlag then
+            self:writeln( "lune_popVal( _pEnv, lune_incStack( _pEnv ) ||" )
+            self:pushIndent(  )
+         end
+         
+         local opCC
+         
+         if opTxt == "and" then
+            opCC = "&&"
+         else
+          
+            opCC = "||"
+         end
+         
+         if isAndOr( node:get_exp1() ) then
+            filter( node:get_exp1(), self, node )
+         else
+          
+            self:writeln( "lune_setStackVal( _pEnv, " )
+            self:processVal2Stem( node:get_exp1(), node )
+            self:write( ") " )
+         end
+         
+         if isAndOr( node:get_exp2() ) then
+            filter( node:get_exp2(), self, node )
+         else
+          
+            self:writeln( opCC )
+            self:writeln( "lune_setStackVal( _pEnv, " )
+            self:processVal2Stem( node:get_exp2(), node )
+            self:write( ") " )
+         end
+         
+         if firstFlag then
+            self:write( ")" )
+            self:popIndent(  )
+         end
+         
+      else 
+         
+            do
+               local _exp = Ast.bitBinOpMap[opTxt]
+               if _exp ~= nil then
+                  do
+                     local _switchExp = _exp
+                     if _switchExp == Ast.BitOpKind.LShift then
+                        opTxt = "<<"
+                     elseif _switchExp == Ast.BitOpKind.RShift then
+                        opTxt = ">>"
+                     end
+                  end
+                  
+                  self:accessPrimVal( node:get_exp1(), node )
+                  self:write( " " .. opTxt .. " " )
+                  self:accessPrimVal( node:get_exp2(), node )
+               else
+                  self:accessPrimVal( node:get_exp1(), node )
+                  self:write( " " .. opTxt .. " " )
+                  self:accessPrimVal( node:get_exp2(), node )
+               end
+            end
+            
       end
-      
-   end
-   
-   if intCast then
-      self:write( ")" )
    end
    
 end

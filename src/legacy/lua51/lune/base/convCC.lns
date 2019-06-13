@@ -454,14 +454,21 @@ pub override fn convFilter.processRoot(
 
    self.processMode = .Immediate;
    self.processedNodeSet = (@);
-   foreach literalNode in node.$nodeManager.getLiteralListNodeList() {
-      self.processingNode = literalNode;
-      if not self.processedNodeSet.has( literalNode ) {
-         self.accessSymbolSet = new Util.OrderedSet<&Ast.SymbolInfo>();
-         filter( literalNode, self, node );
-         self.processedNodeSet.add( node );
+
+   fn procssLiteralCtor( literalNodeList:&List<&Nodes.Node> ) {
+      foreach literalNode in literalNodeList {
+         self.processingNode = literalNode;
+         if not self.processedNodeSet.has( literalNode ) {
+            self.accessSymbolSet = new Util.OrderedSet<&Ast.SymbolInfo>();
+            filter( literalNode, self, node );
+            self.processedNodeSet.add( node );
+         }
       }
    }
+   procssLiteralCtor( node.$nodeManager.getLiteralListNodeList() );
+   procssLiteralCtor( node.$nodeManager.getLiteralArrayNodeList() );
+   procssLiteralCtor( node.$nodeManager.getLiteralSetNodeList() );
+   procssLiteralCtor( node.$nodeManager.getLiteralMapNodeList() );
    self.processingNode = nil;
    
 
@@ -1602,6 +1609,26 @@ fn isStemVal( node:&Nodes.Node ): bool {
             return isStemSym( expRefNode.$symbolInfo );
          }
       }
+      case Nodes.NodeKind.$ExpOp2 {
+         if! let op2Node = node@@@Nodes.ExpOp2Node {
+            switch op2Node.$op.txt {
+               case "and", "or" {
+                  return true;
+               }
+            }
+         }
+         return isStemType( node.$expType );
+      }
+      case Nodes.NodeKind.$ExpOp1 {
+         if! let op1Node = node@@@Nodes.ExpOp1Node {
+            switch op1Node.$op.txt {
+               case "not" {
+                  return true;
+               }
+            }
+         }
+         return isStemType( node.$expType );
+      }
    }
    return false;
 }
@@ -2081,23 +2108,23 @@ pub override fn convFilter.processRefType(
 pub override fn convFilter.processIf(
    node: Nodes.IfNode, opt: Opt ) mut
 {
-   // let valList = node.get_stmtList();
-   // foreach val, index in valList {
-   //    if index == 1 {
-   //       self.write( "if " );
-   //       filter( val.$exp,  self, node );
-   //    }
-   //    elseif val.$kind == .ElseIf {
-   //       self.write( "elseif " );
-   //       filter( val.$exp,  self, node );
-   //    }
-   //    else {
-   //       self.writeln( "else" );
-   //    }
-   //    self.write( " " );
-   //    filter( val.$block, self, node );
-   // }
-   // self.writeln( "end" );
+   let valList = node.get_stmtList();
+   foreach val, index in valList {
+      if index == 1 {
+         self.write( "if ( " );
+         filter( val.$exp,  self, node );
+      }
+      elseif val.$kind == .ElseIf {
+         self.write( "elseif " );
+         filter( val.$exp,  self, node );
+      }
+      else {
+         self.writeln( "else" );
+      }
+      self.write( " " );
+      filter( val.$block, self, node );
+   }
+   self.writeln( "end" );
 };
 
 pub override fn convFilter.processSwitch(
@@ -2352,7 +2379,7 @@ pub override fn convFilter.processForeach(
                  getAccessPrimValFromStem( false, keyType, 0 ) ) );
          }
          if! node.$val {
-            let valType = loopType.$itemTypeInfoList[ 1 ];
+            let valType = loopType.$itemTypeInfoList[ 2 ];
             self.writeln(
                "   %s %s = _entry.pVal%s;"
                ( getCType( valType, false), _exp.txt,
@@ -2374,39 +2401,89 @@ pub override fn convFilter.processForeach(
 pub override fn convFilter.processForsort(
    node: Nodes.ForsortNode, opt: Opt ) mut
 {
-   // self.writeln( "do" );
-   // self.pushIndent(##);
-   // self.writeln( "local __sorted = {}" );
-   // self.write( "local __map = " );
-   // filter( node.$exp,  self, node );
-   // self.writeln( "" );
-   // self.writeln( "for __key in pairs( __map ) do" );
-   // self.pushIndent(##);
-   // self.writeln( "table.insert( __sorted, __key )" );
-   // self.popIndent();
-   // self.writeln( "end" );
+   self.writeln( "{" );
+   self.pushIndent(##);
+   
+   self.write( "%s _obj = " ( cTypeStemP ) );
+   filter( node.$exp, self, node );
+   self.writeln( ";" );
 
-   // self.writeln( "table.sort( __sorted )" );
+   let loopType = node.$exp.$expType;
+   switch loopType.$kind {
+      case .Set {
+         self.writeln(
+            "lune_stem_t * _pList = lune_mtd_Map_createKeyList( _pEnv, _obj );" );
+         self.writeln(
+            "lune_mtd_List( _pList )->sort( _pEnv, _pList, _pEnv->pNilStem );" );
+         self.writeln( "%s _itStem = lune_itList_new( _pEnv, _pList );" (cTypeStemP) );
+         self.writeln( "%s _val;" ( cTypeStemP ) );
+      }
+      case .Map {
+         self.writeln(
+            "lune_stem_t * _pKeyList = lune_mtd_Map_createKeyList( _pEnv, _obj );" );
+         self.writeln(
+            "lune_mtd_List( _pKeyList )->sort( _pEnv, _pKeyList, _pEnv->pNilStem );" );
+         self.writeln( "%s _itStem = lune_itList_new( _pEnv, _pKeyList );" (cTypeStemP) );
+         self.writeln( "%s _key;" ( cTypeStemP ) );
+      }
+      default {
+         Util.err( "illegal kind -- %s" (loopType.$kind.$_txt ) );
+      }
+   }
 
+   self.processLoopPreProcess( node.$block );
 
-   // self.write( "for __index, " );
-   // let mut key = "__key";
-   // if! node.$key {
-   //    key = _exp.txt;
-   // }
-   // self.write( key );
-   // self.writeln( " in ipairs( __sorted ) do" );
-   // self.pushIndent(##);
-   // if node.$exp.$expType.$kind == .Map {
-   //    self.writeln( string.format( "local %s = __map[ %s ]", node.$val.txt, key ) );
-   // }
-   // filter( node.$block, self, node );
-   // //self.popIndent();
-   // self.writeln( "end" );
-   // self.popIndent();
-   // self.writeln( "end" );
-   // self.popIndent();
-   // self.writeln( "end" );
+   switch loopType.$kind {
+      case .Set {
+         self.writeln( "for ( ; lune_itList_hasNext( _pEnv, _itStem, &_val );" );
+         self.writeln( "      lune_itList_inc( _pEnv, _itStem ) )" );
+      }
+      case .Map {
+         self.writeln( "for ( ; lune_itList_hasNext( _pEnv, _itStem, &_key );" );
+         self.writeln( "      lune_itList_inc( _pEnv, _itStem ) )" );
+      }
+   }
+   self.writeln( "{" );
+
+   switch loopType.$kind {
+      case .Set {
+         let valType = loopType.$itemTypeInfoList[ 1 ];
+         let valSymTxt;
+         if! node.$key {
+            valSymTxt = _exp.txt;
+         }
+         else {   
+            valSymTxt = "__val";
+         }
+         self.writeln(
+            "   %s %s = _val%s;"
+            ( getCType( valType, false), valSymTxt,
+              getAccessPrimValFromStem( false, valType, 0 ) ) );
+      }
+      case .Map {
+         if! node.$key {
+            let keyType = loopType.$itemTypeInfoList[ 1 ];
+            self.writeln(
+               "   %s %s = _key%s;"
+               ( getCType( keyType, false), _exp.txt,
+                 getAccessPrimValFromStem( false, keyType, 0 ) ) );
+         }
+         let valType = loopType.$itemTypeInfoList[ 2 ];
+         self.writeln(
+            "   %s %s = lune_mtd_Map( _obj )->get( _pEnv, _obj, _key )%s;"
+            ( getCType( valType, false), node.$val.txt,
+              getAccessPrimValFromStem( false, valType, 0 ) ) );
+      }
+      default {
+      }
+   }
+   
+   filter( node.$block, self, node );
+   self.writeln( "}" );
+
+   self.processLoopPostProcess();
+   self.writeln( "}" );
+   self.popIndent();
 };
 
 
@@ -2748,6 +2825,33 @@ pub override fn convFilter.processExpList(
    }
 };
 
+pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
+   // if exp@@@Nodes.LiteralIntNode or exp@@@Nodes.LiteralCharNode
+   //    or exp@@@Nodes.LiteralRealNode
+   if not isStemVal( exp ) {
+      filter( exp, self, parent );
+   }
+   else {
+      filter( exp, self, parent );
+      self.accessPrimValFromStem( #exp.$expTypeList > 1, exp.$expType, 0 );
+      // if #exp.$expTypeList > 1 {
+      //    self.write( "->val.ddd.pStemList[ 0 ]" );
+      // }
+
+      // let expType = exp.$expType.$srcTypeInfo;
+      // switch expType {
+      //    case Ast.builtinTypeInt, Ast.builtinTypeChar {
+      //       self.write( "->val.intVal" );
+      //    }
+      //    case Ast.builtinTypeReal {
+      //       self.write( "->val.realVal" );
+      //    }
+      //    case Ast.builtinTypeBool {
+      //       self.write( "->val.boolVal" );
+      //    }
+      // }
+   }
+}
 
 pub override fn convFilter.processExpOp1(
    node: Nodes.ExpOp1Node, opt: Opt ) mut
@@ -2758,14 +2862,16 @@ pub override fn convFilter.processExpOp1(
    // }
    if op == "~" {
       self.write( op );
+      self.accessPrimVal( node.$exp, node );
    }
    elseif op == "not" {
-      self.write( "!" );
+      self.write( "lune_op_not( _pEnv, " );
+      self.processVal2Stem( node.$exp, node );
+      self.write( ")" );
    }
    else {
       Util.err( "not support op -- %s" (op) );
    }
-   filter( node.$exp,  self, node );
 };
 
 pub override fn convFilter.processExpCast(
@@ -2818,33 +2924,6 @@ pub override fn convFilter.processExpParen(
 };
 
 
-pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
-   // if exp@@@Nodes.LiteralIntNode or exp@@@Nodes.LiteralCharNode
-   //    or exp@@@Nodes.LiteralRealNode
-   if not isStemVal( exp ) {
-      filter( exp, self, parent );
-   }
-   else {
-      filter( exp, self, parent );
-      self.accessPrimValFromStem( #exp.$expTypeList > 1, exp.$expType, 0 );
-      // if #exp.$expTypeList > 1 {
-      //    self.write( "->val.ddd.pStemList[ 0 ]" );
-      // }
-
-      // let expType = exp.$expType.$srcTypeInfo;
-      // switch expType {
-      //    case Ast.builtinTypeInt, Ast.builtinTypeChar {
-      //       self.write( "->val.intVal" );
-      //    }
-      //    case Ast.builtinTypeReal {
-      //       self.write( "->val.realVal" );
-      //    }
-      //    case Ast.builtinTypeBool {
-      //       self.write( "->val.boolVal" );
-      //    }
-      // }
-   }
-}
 
 /**
 form から 関数をコールする wrapper を作成。
@@ -2870,49 +2949,91 @@ fn convFilter.processWrapForm2Func( funcType:&Ast.TypeInfo ) mut
 pub override fn convFilter.processExpOp2(
    node: Nodes.ExpOp2Node, opt: Opt ) mut
 {
-   let mut intCast = false;
-   if node.$expType.equals( Ast.builtinTypeInt ##) and node.$op.txt == "/" {
-      intCast = true;
-      self.write( "math.floor(" );
-   }
-
    let mut opTxt = node.$op.txt;
 
-   if opTxt == "=" {
-      let symbolList = node.$exp1.getSymbolInfo();
-      let expList;
-      if! let expListNode = node.$exp2@@@Nodes.ExpListNode {
-         expList = expListNode.$expList;
-      }
-      else {
-         expList = [ node.$exp2 ];
-      }
-      self.processSetValToSym( node, symbolList, expList );
-   }
-   else {
-      if! Ast.bitBinOpMap[ opTxt ] {
-         // ビット演算の処理
-         switch _exp {
-            case .LShift {
-               opTxt = "<<";
-            }
-            case .RShift {
-               opTxt = ">>";
-            }
+   switch opTxt {
+      case "=" {
+         let symbolList = node.$exp1.getSymbolInfo();
+         let expList;
+         if! let expListNode = node.$exp2@@@Nodes.ExpListNode {
+            expList = expListNode.$expList;
          }
-         self.accessPrimVal( node.$exp1, node );
-         self.write( " " .. opTxt .. " " );
-         self.accessPrimVal( node.$exp2, node );
+         else {
+            expList = [ node.$exp2 ];
+         }
+         self.processSetValToSym( node, symbolList, expList );
       }
-      else {
-         self.accessPrimVal( node.$exp1, node );
-         self.write( " " .. opTxt .. " " );
-         self.accessPrimVal( node.$exp2, node );
-      }
-   }
+      case "and", "or" {
+         fn isAndOr( exp:&Nodes.Node ) : bool {
+            if! let parentNode = exp@@@Nodes.ExpOp2Node {
+               switch parentNode.$op.txt {
+                  case "and", "or" {
+                     return true;
+                  }
+               }
+            }
+            return false;
+         }
+         
+         let mut firstFlag = not isAndOr( opt.node );
+         if firstFlag {
+            self.writeln( "lune_popVal( _pEnv, lune_incStack( _pEnv ) ||" );
+            self.pushIndent( ## );
+         }
 
-   if intCast {
-      self.write( ")" );
+         let opCC;
+         if opTxt == "and" {
+            opCC = "&&";
+         }
+         else {
+            opCC = "||";
+         }
+         
+         if isAndOr( node.$exp1 ) {
+            filter( node.$exp1, self, node );
+         }
+         else {
+            self.writeln( "lune_setStackVal( _pEnv, " );
+            self.processVal2Stem( node.$exp1, node );
+            self.write( ") " );
+            //self.writeln( opCC );
+         }
+         if isAndOr( node.$exp2 ) {
+            filter( node.$exp2, self, node );
+         }
+         else {
+            self.writeln( opCC );
+            self.writeln( "lune_setStackVal( _pEnv, " );
+            self.processVal2Stem( node.$exp2, node );
+            self.write( ") " );
+         }
+
+         if firstFlag {
+            self.write( ")" );
+            self.popIndent();
+         }
+      }
+      default {
+         if! Ast.bitBinOpMap[ opTxt ] {
+            // ビット演算の処理
+            switch _exp {
+               case .LShift {
+                  opTxt = "<<";
+               }
+               case .RShift {
+                  opTxt = ">>";
+               }
+            }
+            self.accessPrimVal( node.$exp1, node );
+            self.write( " " .. opTxt .. " " );
+            self.accessPrimVal( node.$exp2, node );
+         }
+         else {
+            self.accessPrimVal( node.$exp1, node );
+            self.write( " " .. opTxt .. " " );
+            self.accessPrimVal( node.$exp2, node );
+         }
+      }
    }
 };
 

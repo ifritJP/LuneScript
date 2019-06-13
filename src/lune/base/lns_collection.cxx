@@ -207,18 +207,36 @@ sort() 用のデフォルト比較関数 (昇順でソート)
 static bool lune_mtd__Cmp( lune_stem_t * pVal1, lune_stem_t * pVal2 )
 {
     if ( pVal1->type != pVal2->type ) {
-        return pVal1 < pVal2;
+        lune_real_t val1;
+        switch ( pVal1->type ) {
+        case lune_value_type_int:
+            val1 = pVal1->val.intVal;
+            break;
+        case lune_value_type_real:
+            val1 = pVal1->val.realVal;
+            break;
+        default:
+            return pVal1->type < pVal2->type;
+        }
+        switch ( pVal2->type ) {
+        case lune_value_type_int:
+            return val1 < pVal2->val.intVal;
+        case lune_value_type_real:
+            return val1 < pVal2->val.realVal;
+        default:
+            return pVal1->type < pVal2->type;
+        }
     }
 
     switch ( pVal1->type ) {
     case lune_value_type_int:
-        return !(pVal1->val.intVal >= pVal2->val.intVal);
+        return pVal1->val.intVal < pVal2->val.intVal;
     case lune_value_type_real:
-        return !(pVal1->val.realVal >= pVal2->val.realVal);
+        return pVal1->val.realVal < pVal2->val.realVal;
     case lune_value_type_str:
-        return !(strcmp( pVal1->val.str.pStr, pVal2->val.str.pStr ) >= 0);
+        return strcmp( pVal1->val.str.pStr, pVal2->val.str.pStr ) < 0;
     default:
-        return !(pVal1 >= pVal2);
+        return pVal1 < pVal2;
     }
 }
 
@@ -231,14 +249,10 @@ sort() のユーザフォーム実行用関数
  */
 static bool lune_mtd__CmpLune( lune_stem_t * pVal1, lune_stem_t * pVal2 )
 {
-    if ( pVal1->type != pVal2->type ) {
-        return pVal1 < pVal2;
-    }
-
     lune_env_t * pEnv = pVal1->pEnv;
     lune_stem_t * pRet;
     lune_setQ( (&pRet), pEnv->pSortCallback->val.form.pFunc( pEnv, pEnv->pSortCallback,
-                                                            pVal1, pVal2 ) );
+                                                             pVal1, pVal2 ) );
 
     int ret = pRet->val.intVal;
     lune_decre_ref( pEnv, pRet );
@@ -572,6 +586,21 @@ static lune_stem_t * lune_mtd_Set_len( lune_env_t * _pEnv, lune_stem_t * pObj )
     return lune_int2stem( _pEnv, (lune_int_t)lune_obj_Set_obj( pObj )->size() );
 }
 
+lune_stem_t * lune_mtd_Set_createList( lune_env_t * _pEnv, lune_stem_t * pObj )
+{
+    lune_stem_t * pList = lune_class_List_new( _pEnv );
+
+    lune_SetClass * pSet = lune_obj_Set_obj( pObj );
+    lune_SetIterator it;
+    lune_SetIterator end = pSet->end();
+    
+    for ( it = pSet->begin(); it != end; it++ ) {
+        lune_mtd_List_insert( _pEnv, pList, *it );
+    }
+
+    return pList;
+}
+
 
 /**
  * Set を生成する
@@ -759,6 +788,23 @@ static lune_stem_t * lune_mtd_Map_get(
 
     return it->second;
 }
+
+lune_stem_t * lune_mtd_Map_createKeyList(
+    lune_env_t * _pEnv, lune_stem_t * pObj )
+{
+    lune_stem_t * pList = lune_class_List_new( _pEnv );
+
+    lune_MapClass * pMap = lune_obj_Map_obj( pObj );
+    lune_MapIterator it;
+    lune_MapIterator end = pMap->end();
+    
+    for ( it = pMap->begin(); it != end; it++ ) {
+        lune_mtd_List_insert( _pEnv, pList, it->first );
+    }
+
+    return pList;
+}
+
 
 
 /**

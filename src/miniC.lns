@@ -1,22 +1,5 @@
-let g_val = 100;
 {
-   let val = 10;
-   fn func( val2:str ) {
-      foreach list in [ [ val, g_val ], [ 3.5, val2 ] ] {
-         foreach item in list {
-            print( item );
-         }
-      }
-      foreach list in [ (@ val, g_val ), (@ 3.5, val2 ) ] {
-         foreach item in list {
-            print( item );
-         }
-      }
-      foreach list in [ { val: g_val }, { 3.5: val2 } ] {
-         foreach item, key in list {
-            print( key, item );
-         }
-      }
-   }
-   func( "xyz" );
+   print( not false );
+   print( not nil );
+   print( not true );
 }

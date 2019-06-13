@@ -2,12 +2,12 @@
 
 
 /**
-class Test {
+   class Test {
    pri let val:int;
    pub fn func() {
-      print( self.val );
+   print( self.val );
    }
-}
+   }
 */
 typedef struct lune_mtd_Test_t {
     lune_gc_t * _gc;
@@ -20,9 +20,9 @@ typedef struct Test {
     lune_stem_t * val2;
 } Test;
 
-#define lune_mtd_Test( OBJ ) \
+#define lune_mtd_Test( OBJ )                    \
     ((Test*)OBJ->val.classVal)->pMtd
-#define lune_obj_Test( OBJ ) \
+#define lune_obj_Test( OBJ )                    \
     ((Test*)OBJ->val.classVal)
 
 
@@ -75,12 +75,12 @@ static lune_stem_t * u_mtd_Test_func( lune_env_t * _pEnv, lune_stem_t * pObj )
 
 
 /**
-class Sub extend Test {
+   class Sub extend Test {
    pri let val:int;
    pub fn func() {
-      print( self.val );
+   print( self.val );
    }
-}
+   }
 */
 typedef struct lune_mtd_Sub_t {
     lune_gc_t * _gc;
@@ -95,9 +95,9 @@ typedef struct Sub {
     lune_stem_t * val3;
 } Sub;
 
-#define lune_mtd_Sub( OBJ ) \
+#define lune_mtd_Sub( OBJ )                     \
     ((Sub*)OBJ->val.classVal)->pMtd
-#define lune_obj_Sub( OBJ ) \
+#define lune_obj_Sub( OBJ )                     \
     ((Sub*)OBJ->val.classVal)
 
 
@@ -196,7 +196,7 @@ static lune_stem_t * u_lune_form_test2(
         lune_imdList( list, lune_imdInt( 1000 ), lune_imdReal( 10.5 ) );
         lune_initVal( pList, pBlock, 1, lune_createList( _pEnv, &list ) );
     }
-        //lune_class_List_new( _pEnv ) );
+    //lune_class_List_new( _pEnv ) );
 
     lune_mtd_List( pList->pStem )->insert( _pEnv, pList->pStem, pVal );
     
@@ -358,12 +358,12 @@ void lune_init_test( lune_env_t * _pEnv )
     lune_initVal(
         pSet, pBlock, 3,
         lune_createSet( _pEnv, set ) );
-        /* lune_Set_ctor( */
-        /*     _pEnv, lune_createDDD( */
-        /*         _pEnv, false, 3, */
-        /*         lune_litStr2stem( _pEnv, "100" ), */
-        /*         lune_litStr2stem( _pEnv, "200" ), */
-        /*         lune_litStr2stem( _pEnv, "300" ) ) ) ); */
+    /* lune_Set_ctor( */
+    /*     _pEnv, lune_createDDD( */
+    /*         _pEnv, false, 3, */
+    /*         lune_litStr2stem( _pEnv, "100" ), */
+    /*         lune_litStr2stem( _pEnv, "200" ), */
+    /*         lune_litStr2stem( _pEnv, "300" ) ) ) ); */
 
     // set.add( 100 )
     lune_mtd_Set( pSet->pStem )->add(
@@ -379,6 +379,12 @@ void lune_init_test( lune_env_t * _pEnv )
             lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal ) );
         }
         lune_it_delete( _pEnv, itStem );
+    }
+
+    // print( set.createList() );
+    {
+        lune_stem_t * pList = lune_mtd_Set_createList( _pEnv, pSet->pStem );
+        lune_print( _pEnv, NULL, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
     }
 
 
@@ -413,6 +419,12 @@ void lune_init_test( lune_env_t * _pEnv )
         lune_it_delete( _pEnv, itStem );
     }
 
+    // print( map.create_keyList() )
+    {
+        lune_stem_t * pList = lune_mtd_Map_createKeyList( _pEnv, pMap->pStem );
+        lune_print( _pEnv, NULL, lune_mtd_List( pList )->unpack( _pEnv, pList ) );
+    }
+
 
     // print( "multi-val", test4( 1, 2 ), test4( test5() ) )
     lune_print( _pEnv, NULL,
@@ -421,7 +433,43 @@ void lune_init_test( lune_env_t * _pEnv )
                     lune_litStr2stem( _pEnv, "multi-val" ),
                     u_lune_form_test4( _pEnv, NULL, 1, 2 ),
                     u_lune_form__test4(
-                       _pEnv, NULL, u_lune_form_test5( _pEnv, NULL ) ) ) );
+                        _pEnv, NULL, u_lune_form_test5( _pEnv, NULL ) ) ) );
+    
+
+    // print( "and", 1 and 2 and 3 )
+    lune_print(
+        _pEnv, NULL,
+        lune_createDDD(
+            _pEnv, false, 1,
+            lune_popVal(
+                _pEnv,
+                lune_incStack( _pEnv ) ||
+                lune_setStackVal( _pEnv, lune_int2stem( _pEnv, 1 ) ) &&
+                lune_setStackVal( _pEnv, lune_int2stem( _pEnv, 2 ) ) &&
+                lune_setStackVal( _pEnv, lune_int2stem( _pEnv, 3 ) ) ) ) );
+    
+    // print( "or", false or nil or 3 )
+    lune_print(
+        _pEnv, NULL,
+        lune_createDDD(
+            _pEnv, false, 1,
+            lune_popVal(
+                _pEnv,
+                lune_incStack( _pEnv ) ||
+                lune_setStackVal( _pEnv, lune_bool2stem( _pEnv, false ) ) ||
+                lune_setStackVal( _pEnv, _pEnv->pNilStem ) ||
+                lune_setStackVal( _pEnv, lune_int2stem( _pEnv, 3 ) ) ) ) );
+
+    // print( "or", false or nil )
+    lune_print(
+        _pEnv, NULL,
+        lune_createDDD(
+            _pEnv, false, 1,
+            lune_popVal(
+                _pEnv,
+                lune_incStack( _pEnv ) ||
+                lune_setStackVal( _pEnv, lune_bool2stem( _pEnv, false ) ) ||
+                lune_setStackVal( _pEnv, _pEnv->pNilStem )  ) ) );
     
     
     lune_leave_block( _pEnv );
