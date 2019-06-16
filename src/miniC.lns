@@ -1,5 +1,4 @@
-{
-   print( not false );
-   print( not nil );
-   print( not true );
+fn func(): int! {
+   return 1;
 }
+print( func() );

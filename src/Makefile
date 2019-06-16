@@ -169,6 +169,8 @@ release-check:
 	$(MAKE) test-comp LUA_INC_DIR=../../lctags/external/lua/lua-5.3.4/src/
 	$(MAKE) test-comp LUA=lua5.2 LUA_INC_DIR=../../lctags/external/lua/lua-5.2.4/src/
 #	$(MAKE) test-comp LUA=lua5.1 LUA_INC_DIR=/usr/include/lua5.1/
+	$(MAKE) test-registered-rockspec
+
 
 build:
 	$(call buildLns,$(LNSDIR),.)
@@ -231,8 +233,6 @@ test-comp:
 	$(call buildLns,.,work/1)
 	$(MAKE) test-comp2
 
-
-	$(MAKE) test-registered-rockspec
 
 	@echo finish to build 
 	@LANG= date

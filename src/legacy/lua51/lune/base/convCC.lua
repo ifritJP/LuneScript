@@ -402,8 +402,6 @@ local function isStemType( valType )
          return false
       elseif _switchExp == Ast.builtinTypeReal then
          return false
-      elseif _switchExp == Ast.builtinTypeBool then
-         return false
       else 
          
             return true
@@ -435,8 +433,6 @@ local function getCType( valType, varFlag )
          return cTypeInt
       elseif _switchExp == Ast.builtinTypeReal then
          return "lune_real_t"
-      elseif _switchExp == Ast.builtinTypeBool then
-         return "lune_bool_t"
       else 
          
             if varFlag then
@@ -1241,12 +1237,10 @@ function convFilter:processDeclVar( node, opt )
          
             do
                local _switchExp = var:get_typeInfo():get_srcTypeInfo()
-               if _switchExp == Ast.builtinTypeBool then
-                  return "lune_bool2stem( _pEnv, true )"
-               elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+               if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
                   return "lune_int2stem( _pEnv, 0 )"
                elseif _switchExp == Ast.builtinTypeReal then
-                  return "lune_bool2stem( _pEnv, 0.0 )"
+                  return "lune_real2stem( _pEnv, 0.0 )"
                else 
                   
                      return "NULL"
@@ -1384,11 +1378,7 @@ function convFilter:processVal2Stem( node, parent )
       local expType = node:get_expType()
       do
          local _switchExp = expType:get_srcTypeInfo()
-         if _switchExp == Ast.builtinTypeBool then
-            self:write( "lune_bool2stem( _pEnv, " )
-            filter( node, self, parent )
-            self:write( ")" )
-         elseif _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+         if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
             self:write( "lune_int2stem( _pEnv, " )
             filter( node, self, parent )
             self:write( ")" )
@@ -1452,6 +1442,10 @@ function convFilter:processDeclFunc( node, opt )
    end
    
    if self.duringDeclFunc then
+      if opt.node:get_kind() == Nodes.NodeKind.get_Block() then
+         return 
+      end
+      
       self:write( getFuncName( node:get_expType() ) )
       return 
    end
@@ -1516,21 +1510,23 @@ function convFilter:processIf( node, opt )
    local valList = node:get_stmtList(  )
    for index, val in pairs( valList ) do
       if index == 1 then
-         self:write( "if ( " )
-         filter( val:get_exp(), self, node )
+         self:write( "if ( lune_isCondTrue( " )
+         self:processVal2Stem( val:get_exp(), node )
+         self:write( ") )" )
       elseif val:get_kind() == Nodes.IfKind.ElseIf then
-         self:write( "elseif " )
-         filter( val:get_exp(), self, node )
+         self:write( "else if ( lune_isCondTrue( " )
+         self:processVal2Stem( val:get_exp(), node )
+         self:write( ") )" )
       else
        
-         self:writeln( "else" )
+         self:writeln( "else {" )
       end
       
       self:write( " " )
       filter( val:get_block(), self, node )
+      self:write( "}" )
    end
    
-   self:writeln( "end" )
 end
 
 
@@ -2041,6 +2037,67 @@ function convFilter:processWrapForm2Func( funcType )
    self:writeln( "}" )
 end
 
+function convFilter:processAndOr( node, opTxt, parent )
+
+   local function isAndOr( exp )
+   
+      do
+         local parentNode = _lune.__Cast( exp, 3, Nodes.ExpOp2Node )
+         if parentNode ~= nil then
+            do
+               local _switchExp = parentNode:get_op().txt
+               if _switchExp == "and" or _switchExp == "or" then
+                  return true
+               end
+            end
+            
+         end
+      end
+      
+      return false
+   end
+   
+   local firstFlag = not isAndOr( parent )
+   if firstFlag then
+      self:writeln( "lune_popVal( _pEnv, lune_incStack( _pEnv ) ||" )
+      self:pushIndent(  )
+   end
+   
+   local opCC
+   
+   if opTxt == "and" then
+      opCC = "&&"
+   else
+    
+      opCC = "||"
+   end
+   
+   if isAndOr( node:get_exp1() ) then
+      filter( node:get_exp1(), self, node )
+   else
+    
+      self:writeln( "lune_setStackVal( _pEnv, " )
+      self:processVal2Stem( node:get_exp1(), node )
+      self:write( ") " )
+   end
+   
+   if isAndOr( node:get_exp2() ) then
+      filter( node:get_exp2(), self, node )
+   else
+    
+      self:writeln( opCC )
+      self:writeln( "lune_setStackVal( _pEnv, " )
+      self:processVal2Stem( node:get_exp2(), node )
+      self:write( ") " )
+   end
+   
+   if firstFlag then
+      self:write( ")" )
+      self:popIndent(  )
+   end
+   
+end
+
 function convFilter:processExpOp2( node, opt )
 
    local opTxt = node:get_op().txt
@@ -2061,63 +2118,7 @@ function convFilter:processExpOp2( node, opt )
          
          self:processSetValToSym( node, symbolList, expList )
       elseif _switchExp == "and" or _switchExp == "or" then
-         local function isAndOr( exp )
-         
-            do
-               local parentNode = _lune.__Cast( exp, 3, Nodes.ExpOp2Node )
-               if parentNode ~= nil then
-                  do
-                     local _switchExp = parentNode:get_op().txt
-                     if _switchExp == "and" or _switchExp == "or" then
-                        return true
-                     end
-                  end
-                  
-               end
-            end
-            
-            return false
-         end
-         
-         local firstFlag = not isAndOr( opt.node )
-         if firstFlag then
-            self:writeln( "lune_popVal( _pEnv, lune_incStack( _pEnv ) ||" )
-            self:pushIndent(  )
-         end
-         
-         local opCC
-         
-         if opTxt == "and" then
-            opCC = "&&"
-         else
-          
-            opCC = "||"
-         end
-         
-         if isAndOr( node:get_exp1() ) then
-            filter( node:get_exp1(), self, node )
-         else
-          
-            self:writeln( "lune_setStackVal( _pEnv, " )
-            self:processVal2Stem( node:get_exp1(), node )
-            self:write( ") " )
-         end
-         
-         if isAndOr( node:get_exp2() ) then
-            filter( node:get_exp2(), self, node )
-         else
-          
-            self:writeln( opCC )
-            self:writeln( "lune_setStackVal( _pEnv, " )
-            self:processVal2Stem( node:get_exp2(), node )
-            self:write( ") " )
-         end
-         
-         if firstFlag then
-            self:write( ")" )
-            self:popIndent(  )
-         end
-         
+         self:processAndOr( node, opTxt, opt.node )
       else 
          
             do
@@ -2136,9 +2137,19 @@ function convFilter:processExpOp2( node, opt )
                   self:write( " " .. opTxt .. " " )
                   self:accessPrimVal( node:get_exp2(), node )
                else
-                  self:accessPrimVal( node:get_exp1(), node )
-                  self:write( " " .. opTxt .. " " )
-                  self:accessPrimVal( node:get_exp2(), node )
+                  if _lune._Set_has(Ast.compOpSet, opTxt ) then
+                     self:write( "lune_bool2stem( _pEnv, " )
+                     self:accessPrimVal( node:get_exp1(), node )
+                     self:write( " " .. opTxt .. " " )
+                     self:accessPrimVal( node:get_exp2(), node )
+                     self:write( ")" )
+                  else
+                   
+                     self:accessPrimVal( node:get_exp1(), node )
+                     self:write( " " .. opTxt .. " " )
+                     self:accessPrimVal( node:get_exp2(), node )
+                  end
+                  
                end
             end
             
@@ -2214,6 +2225,7 @@ function convFilter:processReturn( node, opt )
          local expList = expListNode:get_expList()
          local retTypeInfoList = self.currentRoutineInfo:get_funcInfo():get_retTypeInfoList()
          local isStem = isStemRet( retTypeInfoList )
+         local needSetRet = true
          self:writeln( "{" )
          self:write( string.format( "%s _ret = ", getCRetType( retTypeInfoList )) )
          if #retTypeInfoList >= 2 then
@@ -2221,6 +2233,10 @@ function convFilter:processReturn( node, opt )
          elseif #retTypeInfoList == 1 then
             if isStem then
                self:processVal2Stem( expList[1], node )
+               if Ast.builtinTypeBool:equals( retTypeInfoList[1] ) then
+                  needSetRet = false
+               end
+               
             else
              
                filter( expList[1], self, node )
@@ -2231,7 +2247,7 @@ function convFilter:processReturn( node, opt )
          end
          
          self:writeln( ";" )
-         if isStem then
+         if isStem and needSetRet then
             self:writeln( "lune_setRet( _pEnv, _ret );" )
          end
          
@@ -2599,7 +2615,13 @@ end
 
 function convFilter:processLiteralBool( node, opt )
 
-   self:write( node:get_token().txt )
+   if node:get_token().txt == "true" then
+      self:write( "_pEnv->pTrueStem" )
+   else
+    
+      self:write( "_pEnv->pFalseStem" )
+   end
+   
 end
 
 

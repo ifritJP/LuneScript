@@ -4787,3 +4787,5 @@ pub let bitBinOpMap = {
    "|>>": BitOpKind.RShift,
    "|<<": BitOpKind.LShift,
 };
+
+pub let compOpSet = (@ "==", "~=", "<", "<=", ">", ">=" );

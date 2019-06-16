@@ -5807,4 +5807,7 @@ BitOpKind.__allList[5] = BitOpKind.RShift
 local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
 _moduleObj.bitBinOpMap = bitBinOpMap
 
+local compOpSet = {["=="] = true, ["~="] = true, ["<"] = true, ["<="] = true, [">"] = true, [">="] = true}
+_moduleObj.compOpSet = compOpSet
+
 return _moduleObj

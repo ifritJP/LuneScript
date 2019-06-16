@@ -610,11 +610,25 @@ lune_stem_t * _lune_func2stem(
 lune_stem_t * _lune_bool2stem(
     const char * pFile, int lineNo, lune_env_t * _pEnv, lune_bool_t val )
 {
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_bool, pFile, lineNo );
+    if ( val ) {
+        return _pEnv->pTrueStem;
+    }
+    return _pEnv->pFalseStem;
+}
+
+/**
+ * bool 値 val を保持する stem を生成する
+ *
+ * @param val bool 値
+ * @return stem
+ */
+static lune_stem_t * lune_createBoolStem( lune_env_t * _pEnv, lune_bool_t val )
+{
+    lune_stem_t * pStem = _lune_alloc_stem( _pEnv, lune_value_type_bool, LUNE_DEBUG_POS );
     pStem->val.boolVal = val;
     return pStem;
 }
+
 
 /**
  * int 値 val を保持する stem を生成する
@@ -708,8 +722,10 @@ static lune_env_t * lune_createEnv()
     lune_enter_block( _pEnv, 0 );
     _pEnv->pNoneStem = lune_alloc_stem_op( _pEnv, lune_value_type_none );
     _pEnv->pNilStem = lune_alloc_stem_op( _pEnv, lune_value_type_nil );
-    _pEnv->pTrueStem = lune_bool2stem( _pEnv, true );
-    _pEnv->pFalseStem = lune_bool2stem( _pEnv, false );
+    _pEnv->pTrueStem = lune_createBoolStem( _pEnv, true );
+    _pEnv->pTrueStem->refCount++;
+    _pEnv->pFalseStem = lune_createBoolStem( _pEnv, false );
+    _pEnv->pFalseStem->refCount++;
 
     _pEnv->pSortCallback = NULL;
 
@@ -723,6 +739,10 @@ static lune_env_t * lune_createEnv()
  * @param _pEnv 環境
  */
 static void lune_deleteEnv( lune_env_t * _pEnv ) {
+
+    _pEnv->pTrueStem->refCount--;
+    _pEnv->pFalseStem->refCount--;
+    
     lune_leave_block( _pEnv );
     lune_leave_block( _pEnv );
 

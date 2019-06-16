@@ -1,5 +1,25 @@
 let mut g_val = 100;
 {
+   fn func( val: int ) {
+      fn comp( val1:int, val2:int ): bool {
+         return val1 == val2;
+      }
+
+      if comp( val, 0 ) {
+         print( "case 0" );
+      }
+      elseif comp( val, 1 ) {
+         print( "case 1" );
+      }
+      else {
+         print( "default" );
+      }
+   }
+   func( 0 );
+   func( 1 );
+   func( 2 );
+}
+{
    print( nil or false or 1 );
    print( nil or 2 or 3 );
    print( 4 or 5 );
