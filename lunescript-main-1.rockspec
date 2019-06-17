@@ -35,6 +35,7 @@ build = {
       [ "lune.base._lune" ] = "src/lune/base/_lune.lua",
       [ "lune.base.base" ] = "src/lune/base/base.lua",
       [ "lune.base.Ver" ] = "src/lune/base/Ver.lua",
+      [ "lune.base.LuneControl" ] = "src/lune/base/LuneControl.lua",
       [ "lune.base.LuaMod" ] = "src/lune/base/LuaMod.lua",
       [ "lune.base.Code" ] = "src/lune/base/Code.lua",
       [ "lune.base.Log" ] = "src/lune/base/Log.lua",

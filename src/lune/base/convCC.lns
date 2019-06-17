@@ -1562,6 +1562,8 @@ pub override fn convFilter.processWhen(
    // self.writeln( "end" );
 }
 
+
+
 fn getAccessPrimValFromStem( dddFlag:bool, typeInfo:&Ast.TypeInfo, index:int ) :str
 {
    let mut txt = "";
@@ -1633,6 +1635,33 @@ fn isStemVal( node:&Nodes.Node ): bool {
    return false;
 }
 
+pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
+   // if exp@@@Nodes.LiteralIntNode or exp@@@Nodes.LiteralCharNode
+   //    or exp@@@Nodes.LiteralRealNode
+   if not isStemVal( exp ) {
+      filter( exp, self, parent );
+   }
+   else {
+      filter( exp, self, parent );
+      self.accessPrimValFromStem( #exp.$expTypeList > 1, exp.$expType, 0 );
+      // if #exp.$expTypeList > 1 {
+      //    self.write( "->val.ddd.pStemList[ 0 ]" );
+      // }
+
+      // let expType = exp.$expType.$srcTypeInfo;
+      // switch expType {
+      //    case Ast.builtinTypeInt, Ast.builtinTypeChar {
+      //       self.write( "->val.intVal" );
+      //    }
+      //    case Ast.builtinTypeReal {
+      //       self.write( "->val.realVal" );
+      //    }
+      //    case Ast.builtinTypeBool {
+      //       self.write( "->val.boolVal" );
+      //    }
+      // }
+   }
+}
 
 fn hasMultiVal( exp:&Nodes.Node ): bool {
    return exp.$expType.$kind == .DDD or #exp.$expTypeList > 1;
@@ -2495,6 +2524,42 @@ pub override fn convFilter.processForsort(
 pub override fn convFilter.processExpUnwrap(
    node: Nodes.ExpUnwrapNode, opt: Opt ) mut
 {
+   fn processUnwrap( typeTxt:str ) {
+      if! let defVal = node.$default {
+         self.write( "lune_unwrap_%sDefault( " (typeTxt) );
+         self.processVal2Stem( node.$exp, node );
+         self.write( "," );
+         self.accessPrimVal( defVal, node );
+         self.write( ")" );
+      }
+      else {
+         self.write( "lune_unwrap_%s( " (typeTxt) );
+         self.processVal2Stem( node.$exp, node );
+         self.write( ")" );
+      }
+   }
+   
+   switch node.$expType.$srcTypeInfo {
+      case Ast.builtinTypeInt, Ast.builtinTypeChar {
+         processUnwrap( "int" );
+      }
+      case Ast.builtinTypeReal {
+         processUnwrap( "real" );
+      }
+      default {
+         self.write( "lune_unwrap_stem( " );
+         self.processVal2Stem( node.$exp, node );
+         if! let defVal = node.$default {
+            self.write( "," );
+            self.processVal2Stem( defVal, node );
+            self.write( ")" );
+         }
+         else {
+            self.write( ", NULL )" );
+         }
+      }
+   }
+   
    // if! node.$default {
    //    self.write( '_lune.unwrapDefault( ' );
    //    filter( node.$exp, self, node );
@@ -2829,34 +2894,6 @@ pub override fn convFilter.processExpList(
       filter( exp, self, node );
    }
 };
-
-pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
-   // if exp@@@Nodes.LiteralIntNode or exp@@@Nodes.LiteralCharNode
-   //    or exp@@@Nodes.LiteralRealNode
-   if not isStemVal( exp ) {
-      filter( exp, self, parent );
-   }
-   else {
-      filter( exp, self, parent );
-      self.accessPrimValFromStem( #exp.$expTypeList > 1, exp.$expType, 0 );
-      // if #exp.$expTypeList > 1 {
-      //    self.write( "->val.ddd.pStemList[ 0 ]" );
-      // }
-
-      // let expType = exp.$expType.$srcTypeInfo;
-      // switch expType {
-      //    case Ast.builtinTypeInt, Ast.builtinTypeChar {
-      //       self.write( "->val.intVal" );
-      //    }
-      //    case Ast.builtinTypeReal {
-      //       self.write( "->val.realVal" );
-      //    }
-      //    case Ast.builtinTypeBool {
-      //       self.write( "->val.boolVal" );
-      //    }
-      // }
-   }
-}
 
 pub override fn convFilter.processExpOp1(
    node: Nodes.ExpOp1Node, opt: Opt ) mut

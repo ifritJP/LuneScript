@@ -472,6 +472,13 @@ extern "C" {
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... );
 
 
+    extern lune_int_t lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal );
+    extern lune_int_t lune_unwrap_int( lune_stem_t * pStem );
+    extern lune_int_t lune_unwrap_intDefault( lune_stem_t * pStem, lune_int_t val );
+    extern lune_real_t lune_unwrap_real( lune_stem_t * pStem );
+    extern lune_real_t lune_unwrap_realDefault( lune_stem_t * pStem, lune_real_t val );
+
+    
 
     extern bool lune_isCondTrue( const lune_stem_t * pStem );
     extern bool lune_incStack( lune_env_t * _pEnv );

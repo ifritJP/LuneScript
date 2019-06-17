@@ -849,16 +849,18 @@ pub override fn convFilter.processRoot(
    self.writeln(
       "local __mod__ = '%s'" (node.$moduleTypeInfo.getFullName({} ##)) );
 
+   let luneSymbol = "_lune%d" (Ver.luaModVersion);
+   
    if self.separateLuneModule {
-      self.writeln( '_lune = require( "lune.base._lune" )' );
+      self.writeln( 'local _lune = require( "lune.base._lune" )' );
    }
    else {
+      self.writeln( "local _lune = {}" );
       self.writeln( ```
-if not _lune then
-   _lune = {}
-end``` );
-
-
+if %s then
+   _lune = %s
+end``` (luneSymbol, luneSymbol) );
+      
       if node.$luneHelperInfo.$useAlge {
          self.writeln( LuaMod.getCode( .Alge ) );
          self.writeln( LuaMod.getCode( .AlgeMapping ) );
@@ -890,6 +892,11 @@ end``` );
          self.writeln( LuaMod.getCode( .Cast ) );
       }
    }
+   self.writeln( ```
+if not %s then
+   %s = _lune
+end``` (luneSymbol, luneSymbol) );
+
 
    let children:List<&Nodes.Node> = node.get_children();
 
@@ -1626,6 +1633,7 @@ pub fn convFilter.outputDeclMacro(
 
    self.writeln( "__macroArgs )" );
    self.pushIndent(##);
+   self.writeln( 'local _lune = require( "lune.base._lune" )' );
    foreach argName in argNameList {
       self.writeln( "local %s = __macroArgs.%s" (argName, argName ) );
    }
@@ -1836,7 +1844,8 @@ pub override fn convFilter.processDeclMethod(
    let methodName = methodNodeToken.txt;
    let classTypeInfo = unwrap declInfo.$classTypeInfo;
    self.write( "function %s%s%s( "
-               ( self.getFullName( classTypeInfo ), delimit, methodName ) );
+               ( classTypeInfo.$rawTxt, delimit, methodName ) );
+               //( self.getFullName( classTypeInfo ), delimit, methodName ) );
 
    let argList = declInfo.get_argList();
    foreach arg, index in argList {

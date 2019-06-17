@@ -1,8 +1,9 @@
 --lune/base/front.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.front'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -267,6 +268,9 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )

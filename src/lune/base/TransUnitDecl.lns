@@ -1542,13 +1542,13 @@ fn TransUnit.analyzeClassBody(
    fn processLuneControl() {
       nextToken = self.getToken(##);
       switch nextToken.txt {
-         case "default__init" {
+         case LuneControl.Pragma.default__init {
             declCtorNode = self.createNoneNode( nextToken.pos );
             self.addDefaultConstructor(
                nextToken.pos, classTypeInfo,
                self.scope, memberList, methodNameSet, false );
          }
-         case "default__init_old" {
+         case LuneControl.Pragma.default__init_old {
             declCtorNode = self.createNoneNode( nextToken.pos );
             self.addDefaultConstructor(
                nextToken.pos, classTypeInfo,
@@ -1694,6 +1694,13 @@ fn TransUnit.analyzeDeclClass(
    if mode ~= .Module {
       switch self.getCurrentNamespaceTypeInfo().$kind {
          case .IF, .Class, .Module {
+         }
+         case .Func, .Method {
+            switch classAccessMode {
+               case .Pub, .Global {
+                  self.addErrMess( firstToken.pos, "Class can't declare on here." );
+               }
+            }
          }
          default {
             self.addErrMess( firstToken.pos, "Class can't declare on here." );

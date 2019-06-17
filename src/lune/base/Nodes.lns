@@ -26,19 +26,25 @@ import lune.base.Parser;
 import lune.base.Util;
 import lune.base.frontInterface;
 import lune.base.Ast;
+import lune.base.LuneControl;
 
 pub class Filter<T> {
 }
 
 /**
 制御中断要因。
+Node を実行した際に、次の Node に処理が中断せずに遷移するかどうか。
 
 優先度の高い順に宣言する。
 */
 pub enum BreakKind {
+   /** 遷移する */
    None,
+   /** break で中断する */
    Break,
+   /** return で中断する */
    Return,
+   /** 処理は戻らない */
    NeverRet,
 }
 
@@ -286,6 +292,22 @@ pub class NodeKind {
 }
 
 
+/**
+Node を定義するマクロ。
+
+@param baseName Node の名称。 実際には "%sNode" (baseName) になる。
+@param super 親クラス
+@param canBeLeftFlag canBeLeft() の戻り値。
+   nil を指定すると、別途 canBeLeft() を定義する必要がある。
+@param canBeRightFlag canBeRight() の戻り値。   
+   nil を指定すると、別途 canBeRight() を定義する必要がある。
+@param canBeStatementFlag canBeStatement() の戻り値。
+   nil を指定すると、別途 canBeStatement() を定義する必要がある。
+@param fieldInfoList 定義する Node のフィールドのリスト。
+   key: フィールド名。 val: フィールドの型 の Map のリスト。
+   フィールドの順番を保証するために、 Map のリストとしている。
+   フィールドの順番が、コンストラクタの順番になるため。
+*/
 macro _declNodeClass(
    baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
    canBeStatementFlag:bool!, fieldInfoList:Map<str,str>[] )
@@ -1170,6 +1192,11 @@ _declNodeClass( "NewAlgeVal", Node, false, true, false,
                   { "valInfo": "&Ast.AlgeValInfo" },
                   { "paramList": "&List<&Node>" } ]
 );
+
+_declNodeClass( "LuneControl", Node, false, false, true,
+                [ {"pragma": "LuneControl.Pragma"} ]
+);
+
 
 pub class MatchCase {
    pri let valInfo: &Ast.AlgeValInfo {pub};

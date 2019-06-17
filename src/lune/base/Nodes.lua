@@ -1,8 +1,9 @@
 --lune/base/Nodes.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.Nodes'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -220,10 +221,14 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Filter = {}
 _moduleObj.Filter = Filter
 function Filter.setmeta( obj )
@@ -5492,6 +5497,70 @@ function NewAlgeValNode:get_valInfo()
 end
 function NewAlgeValNode:get_paramList()
    return self.paramList
+end
+
+
+function NodeKind.get_LuneControl(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['LuneControl'])
+end
+
+
+regKind( "LuneControl" )
+function Filter:processLuneControl( node, opt )
+
+end
+
+
+function NodeManager:getLuneControlNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['LuneControl']) )
+end
+
+
+local LuneControlNode = {}
+setmetatable( LuneControlNode, { __index = Node } )
+_moduleObj.LuneControlNode = LuneControlNode
+function LuneControlNode:processFilter( filter, opt )
+
+   filter:processLuneControl( self, opt )
+end
+function LuneControlNode:canBeRight(  )
+
+   return false
+end
+function LuneControlNode:canBeLeft(  )
+
+   return false
+end
+function LuneControlNode:canBeStatement(  )
+
+   return true
+end
+function LuneControlNode.new( id, pos, typeList, pragma )
+   local obj = {}
+   LuneControlNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, pragma ); end
+   return obj
+end
+function LuneControlNode:__init(id, pos, typeList, pragma) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LuneControl']), pos, typeList)
+   
+   
+   self.pragma = pragma
+   
+end
+function LuneControlNode.create( nodeMan, pos, typeList, pragma )
+
+   local node = LuneControlNode.new(nodeMan:nextId(  ), pos, typeList, pragma)
+   nodeMan:addNode( node )
+   return node
+end
+function LuneControlNode.setmeta( obj )
+  setmetatable( obj, { __index = LuneControlNode  } )
+end
+function LuneControlNode:get_pragma()
+   return self.pragma
 end
 
 

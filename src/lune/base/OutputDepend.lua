@@ -1,8 +1,9 @@
 --lune/base/OutputDepend.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.OutputDepend'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -118,6 +119,9 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )

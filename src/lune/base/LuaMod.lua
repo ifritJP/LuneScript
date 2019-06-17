@@ -1,8 +1,9 @@
 --lune/base/LuaMod.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.LuaMod'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -17,6 +18,9 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local CodeKind = {}
 _moduleObj.CodeKind = CodeKind
 CodeKind._val2NameMap = {}

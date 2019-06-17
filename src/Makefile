@@ -56,7 +56,7 @@ define cutMeta
 endef
 
 define transwork
-	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$3.lns SAVE $2 $(BYTECOMP) -Werror $(LOG_OPT) )
+	(cd $1; LUA_PATH=./?.lua $(LUA) lune/base/base.lua lune/$4.lns SAVE $2 $3 $(BYTECOMP) -Werror $(LOG_OPT) )
 endef
 
 ifndef LNSC_ENABLE
@@ -75,27 +75,30 @@ define exeComp
 endef
 
 define buildLns
-	$(call transwork,$1,$2,base/Ver)
-	$(call transwork,$1,$2,base/LuaMod)
-	$(call transwork,$1,$2,base/Code)
-	$(call transwork,$1,$2,base/Log)
-	$(call transwork,$1,$2,base/LuaVer)
-	$(call transwork,$1,$2,base/Depend)
-	$(call transwork,$1,$2,base/Util)
-	$(call transwork,$1,$2,base/frontInterface)
-	$(call transwork,$1,$2,base/Writer)
-	$(call transwork,$1,$2,base/Parser)
-	$(call transwork,$1,$2,base/Ast)
-	$(call transwork,$1,$2,base/Option)
-	$(call transwork,$1,$2,base/Nodes)
-	$(call transwork,$1,$2,base/dumpNode)
-	$(call transwork,$1,$2,base/TransUnit)
-	$(call transwork,$1,$2,base/convLua)
-	$(call transwork,$1,$2,base/convCC)
-	$(call transwork,$1,$2,base/OutputDepend)
-	$(call transwork,$1,$2,base/front)
-	$(call transwork,$1,$2,base/glueFilter)
-	$(call transwork,$1,$2,Util)
+	$(call transwork,$1,$2,$3,base/Ver)
+	$(call transwork,$1,$2,$3,base/LuaMod)
+	$(call transwork,$1,$2,$3,base/LuneControl)
+	$(call transwork,$1,$2,$3,base/Code)
+	$(call transwork,$1,$2,$3,base/Log)
+	$(call transwork,$1,$2,$3,base/LuaVer)
+	$(call transwork,$1,$2,$3,base/Depend)
+	$(call transwork,$1,$2,$3,base/Util)
+	$(call transwork,$1,$2,$3,base/frontInterface)
+	$(call transwork,$1,$2,$3,base/Writer)
+	$(call transwork,$1,$2,$3,base/Parser)
+	$(call transwork,$1,$2,$3,base/Ast)
+	$(call transwork,$1,$2,$3,base/Option)
+	$(call transwork,$1,$2,$3,base/Nodes)
+	$(call transwork,$1,$2,$3,base/dumpNode)
+	$(call transwork,$1,$2,$3,base/TransUnit)
+	$(call transwork,$1,$2,$3,base/convLua)
+	$(call transwork,$1,$2,$3,base/convCC)
+	$(call transwork,$1,$2,$3,base/OutputDepend)
+	$(call transwork,$1,$2,$3,base/front)
+	$(call transwork,$1,$2,$3,base/glueFilter)
+	$(call transwork,$1,$2,$3,Util)
+	$(call exeLune,$1/$2,-mklunemod,.) > /dev/null
+	mv $1/$2/_lune.lua $1/$2/lune/base
 endef
 
 
@@ -345,7 +348,7 @@ test-comp2:
 	diff -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' work/2 work/3
 
 	cp -a test work/3
-	$(call exeLune,work/3,-mklunemod,lune/base)
+#	$(call exeLune,work/3,-mklunemod,lune/base)
 
 
 	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
@@ -452,7 +455,7 @@ endef
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
-	$(call buildLns,work/3,../5 -ol 51)
+	$(call buildLns,work/3,../5,-ol 51)
 	$(call exeLune,work/5,-mklunemod,lune/base)
 	$(call setup-lua51-test,work/5)
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
@@ -570,11 +573,11 @@ build-miniC:
 		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 
 test-miniC:
-	$(call transwork,.,.,base/convCC)
+	$(call transwork,.,.,,base/convCC)
 	$(call test-convC,miniC)
 
 
 build-cc:
-	$(call transwork,.,.,base/convCC)
+	$(call transwork,.,.,,base/convCC)
 	$(call test-convC,miniC)
 	$(call test-convC,ccc)

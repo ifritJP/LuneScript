@@ -1,8 +1,9 @@
 --lune/base/convCC.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.convCC'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -220,6 +221,9 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -1089,6 +1093,18 @@ local function isStemVal( node )
    return false
 end
 
+function convFilter:accessPrimVal( exp, parent )
+
+   if not isStemVal( exp ) then
+      filter( exp, self, parent )
+   else
+    
+      filter( exp, self, parent )
+      self:accessPrimValFromStem( #exp:get_expTypeList() > 1, exp:get_expType(), 0 )
+   end
+   
+end
+
 local function hasMultiVal( exp )
 
    return exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD or #exp:get_expTypeList() > 1
@@ -1802,6 +1818,49 @@ end
 
 function convFilter:processExpUnwrap( node, opt )
 
+   local function processUnwrap( typeTxt )
+   
+      do
+         local defVal = node:get_default()
+         if defVal ~= nil then
+            self:write( string.format( "lune_unwrap_%sDefault( ", typeTxt) )
+            self:processVal2Stem( node:get_exp(), node )
+            self:write( "," )
+            self:accessPrimVal( defVal, node )
+            self:write( ")" )
+         else
+            self:write( string.format( "lune_unwrap_%s( ", typeTxt) )
+            self:processVal2Stem( node:get_exp(), node )
+            self:write( ")" )
+         end
+      end
+      
+   end
+   
+   do
+      local _switchExp = node:get_expType():get_srcTypeInfo()
+      if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+         processUnwrap( "int" )
+      elseif _switchExp == Ast.builtinTypeReal then
+         processUnwrap( "real" )
+      else 
+         
+            self:write( "lune_unwrap_stem( " )
+            self:processVal2Stem( node:get_exp(), node )
+            do
+               local defVal = node:get_default()
+               if defVal ~= nil then
+                  self:write( "," )
+                  self:processVal2Stem( defVal, node )
+                  self:write( ")" )
+               else
+                  self:write( ", NULL )" )
+               end
+            end
+            
+      end
+   end
+   
 end
 
 function convFilter:processCreateDDD( ddd, expList, index, parent )
@@ -1973,18 +2032,6 @@ function convFilter:processExpList( node, opt )
    
 end
 
-
-function convFilter:accessPrimVal( exp, parent )
-
-   if not isStemVal( exp ) then
-      filter( exp, self, parent )
-   else
-    
-      filter( exp, self, parent )
-      self:accessPrimValFromStem( #exp:get_expTypeList() > 1, exp:get_expType(), 0 )
-   end
-   
-end
 
 function convFilter:processExpOp1( node, opt )
 

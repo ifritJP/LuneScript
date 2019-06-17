@@ -36,6 +36,7 @@ import lune.base.LuaVer;
 import lune.base.Option;
 import lune.base.Code;
 import lune.base.Log;
+import lune.base.LuneControl;
 
 _lune_control ignore_symbol_;
 
@@ -2069,10 +2070,10 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Nodes.Node> ) mut : &N
 fn TransUnit.analyzeLuneControl( firstToken: &Parser.Token ) mut {
    let nextToken = self.getToken(##);
    switch ( nextToken.txt ) {
-      case "disable_mut_control" {
+      case LuneControl.Pragma.disable_mut_control {
          self.validMutControl = false;
       }
-      case "ignore_symbol_" {
+      case LuneControl.Pragma.ignore_symbol_ {
          self.ignoreToCheckSymbol_ = true;
       }
       default {

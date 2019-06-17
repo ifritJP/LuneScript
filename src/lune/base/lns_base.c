@@ -40,6 +40,14 @@ static lune_globalEnv_t s_globalEnv;
 #define lune_alloc_stem_op( ENV, TYPE ) \
     _lune_alloc_stem( ENV, TYPE, __FILE__, __LINE__ )
 
+#define lune_abort( MESS ) _lune_abort( MESS, LUNE_DEBUG_POS )
+
+static void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
+{
+    fprintf( stderr, "abort:%s:%d:%s\n", pFile, lineNo, pMessage );
+    abort();
+}
+
 
 /**
  * type の値を保持する stem 型を生成する。
@@ -865,6 +873,68 @@ lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy ) {
     return pVal;
 }
 
+/**
+ * int! の unwrap 処理
+ */
+lune_int_t lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal )
+{
+    if ( pStem->type != lune_value_type_nil ) {
+        return pStem;
+    }
+    if ( pDefVal != NULL ) {
+        return pDefVal;
+    }
+    lune_abort( __func__ );
+}
+
+
+
+/**
+ * int! の unwrap 処理
+ */
+lune_int_t lune_unwrap_int( lune_stem_t * pStem )
+{
+    if ( pStem->type == lune_value_type_int ) {
+        return pStem->val.intVal;
+    }
+    lune_abort( __func__ );
+}
+
+/**
+ * int! の unwrap 処理。 default 値付き。
+ */
+lune_int_t lune_unwrap_intDefault( lune_stem_t * pStem, lune_int_t val )
+{
+    if ( pStem->type == lune_value_type_int ) {
+        return pStem->val.intVal;
+    }
+    return val;
+}
+
+
+/**
+ * real! の unwrap 処理
+ */
+lune_real_t lune_unwrap_real( lune_stem_t * pStem )
+{
+    if ( pStem->type == lune_value_type_real ) {
+        return pStem->val.realVal;
+    }
+    lune_abort( __func__ );
+}
+
+/**
+ * real! の unwrap 処理。 default 値付き。
+ */
+lune_real_t lune_unwrap_realDefault( lune_stem_t * pStem, lune_real_t val )
+{
+    if ( pStem->type == lune_value_type_real ) {
+        return pStem->val.realVal;
+    }
+    return val;
+}
+
+
 
 /**
  * lua の print() に相当する処理。
@@ -893,7 +963,15 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg ) 
             printf( "%d", pStem->val.intVal );
             break;
         case lune_value_type_real:
-            printf( "%g", pStem->val.realVal );
+            {
+                double work;
+                if ( modf( pStem->val.realVal, &work ) == 0 ) {
+                    printf( "%g.0", pStem->val.realVal );
+                }
+                else {
+                    printf( "%.14g", pStem->val.realVal );
+                }
+            }
             break;
         case lune_value_type_str:
             printf( "%s", pStem->val.str.pStr );

@@ -1,5 +1,26 @@
 let mut g_val = 100;
 {
+   fn func( val:int! ): int {
+      return unwrap val default 10;
+   }
+   print( func( 1 ) + 1 );
+   print( func( nil ) + 1 );
+}
+{
+   fn func( val:real! ): real {
+      return unwrap val default 10.0;
+   }
+   print( func( 1.0 ) + 1 );
+   print( func( nil ) + 1 );
+}
+{
+   fn func( val:str! ): str {
+      return unwrap val default "abc";
+   }
+   print( func( "xyz" ) );
+   print( func( nil ) );
+}
+{
    fn func( val: int ) {
       fn comp( val1:int, val2:int ): bool {
          return val1 == val2;

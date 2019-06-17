@@ -1,8 +1,9 @@
 --lune/base/convLua.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.convLua'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -228,6 +229,9 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -1128,14 +1132,16 @@ function convFilter:processRoot( node, opt )
    end
    
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( {} )) )
+   local luneSymbol = string.format( "_lune%d", Ver.luaModVersion)
    if self.separateLuneModule then
-      self:writeln( '_lune = require( "lune.base._lune" )' )
+      self:writeln( 'local _lune = require( "lune.base._lune" )' )
    else
     
-      self:writeln( [==[
-if not _lune then
-   _lune = {}
-end]==] )
+      self:writeln( "local _lune = {}" )
+      self:writeln( string.format( [==[
+if %s then
+   _lune = %s
+end]==], luneSymbol, luneSymbol) )
       if node:get_luneHelperInfo().useAlge then
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
          self:writeln( LuaMod.getCode( LuaMod.CodeKind.AlgeMapping ) )
@@ -1177,6 +1183,10 @@ end]==] )
       
    end
    
+   self:writeln( string.format( [==[
+if not %s then
+   %s = _lune
+end]==], luneSymbol, luneSymbol) )
    local children = node:get_children(  )
    for __index, child in pairs( children ) do
       filter( child, self, node )
@@ -1881,6 +1891,7 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    self:write( string.format( "local function %s(", name) )
    self:writeln( "__macroArgs )" )
    self:pushIndent(  )
+   self:writeln( 'local _lune = require( "lune.base._lune" )' )
    for __index, argName in pairs( argNameList ) do
       self:writeln( string.format( "local %s = __macroArgs.%s", argName, argName) )
    end
@@ -2090,7 +2101,7 @@ function convFilter:processDeclMethod( node, opt )
    local methodNodeToken = _lune.unwrap( declInfo:get_name(  ))
    local methodName = methodNodeToken.txt
    local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
-   self:write( string.format( "function %s%s%s( ", self:getFullName( classTypeInfo ), delimit, methodName) )
+   self:write( string.format( "function %s%s%s( ", classTypeInfo:get_rawTxt(), delimit, methodName) )
    local argList = declInfo:get_argList(  )
    for index, arg in pairs( argList ) do
       if index > 1 then
@@ -3461,7 +3472,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3133, function (  )
+   Log.log( Log.Level.Info, __func__, 3142, function (  )
    
       return string.format( "code: %s", code)
    end

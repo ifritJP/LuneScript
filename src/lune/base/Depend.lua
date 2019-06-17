@@ -1,8 +1,9 @@
 --lune/base/Depend.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.Depend'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -183,6 +184,9 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local function getFileLastModifiedTime( path )
 

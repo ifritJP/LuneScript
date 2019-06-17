@@ -164,8 +164,12 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node! {
          statement = self.analyzeSubfile( token );
       }
       elseif token.txt == "_lune_control" {
-         self.analyzeLuneControl( token );
-         statement = self.createNoneNode( token.pos );
+         if! self.analyzeLuneControl( token ) {
+            statement = _exp;
+         }
+         else {
+            statement = self.createNoneNode( token.pos );
+         }
       }
       elseif token.txt == "provide" {
          statement = self.analyzeProvide( token );

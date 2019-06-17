@@ -1,8 +1,9 @@
 --lune/base/Log.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.Log'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.__isInstanceOf( obj, class )
    while obj do
@@ -51,6 +52,9 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local Level = {}
 _moduleObj.Level = Level
 Level._val2NameMap = {}

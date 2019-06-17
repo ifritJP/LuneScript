@@ -1,8 +1,9 @@
 --lune/base/Util.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.Util'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -81,6 +82,9 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local OrderedSet = {}
 _moduleObj.OrderedSet = OrderedSet

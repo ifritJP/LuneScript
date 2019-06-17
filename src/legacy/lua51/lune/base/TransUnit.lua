@@ -1,8 +1,9 @@
 --lune/base/TransUnit.lns
 local _moduleObj = {}
 local __mod__ = 'lune.base.TransUnit'
-if not _lune then
-   _lune = {}
+local _lune = {}
+if _lune0 then
+   _lune = _lune0
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -302,6 +303,9 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+if not _lune0 then
+   _lune0 = _lune
+end
 
 
 
@@ -315,6 +319,7 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Option = _lune.loadModule( 'lune.base.Option' )
 local Code = _lune.loadModule( 'lune.base.Code' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 
 local DeclClassMode = {}
 DeclClassMode._val2NameMap = {}
@@ -3195,9 +3200,9 @@ function TransUnit:analyzeLuneControl( firstToken )
    local nextToken = self:getToken(  )
    do
       local _switchExp = (nextToken.txt )
-      if _switchExp == "disable_mut_control" then
+      if _switchExp == LuneControl.Pragma.disable_mut_control then
          self.validMutControl = false
-      elseif _switchExp == "ignore_symbol_" then
+      elseif _switchExp == LuneControl.Pragma.ignore_symbol_ then
          self.ignoreToCheckSymbol_ = true
       else 
          
@@ -3358,7 +3363,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2204, function (  )
+   Log.log( Log.Level.Info, __func__, 2205, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3374,7 +3379,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2215, function (  )
+               Log.log( Log.Level.Info, __func__, 2216, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3405,7 +3410,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2235, function (  )
+   Log.log( Log.Level.Info, __func__, 2236, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3761,7 +3766,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2606, function (  )
+   Log.log( Log.Level.Info, __func__, 2607, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -5614,10 +5619,10 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       nextToken = self:getToken(  )
       do
          local _switchExp = nextToken.txt
-         if _switchExp == "default__init" then
+         if _switchExp == LuneControl.Pragma.default__init then
             declCtorNode = self:createNoneNode( nextToken.pos )
             self:addDefaultConstructor( nextToken.pos, classTypeInfo, self.scope, memberList, methodNameSet, false )
-         elseif _switchExp == "default__init_old" then
+         elseif _switchExp == LuneControl.Pragma.default__init_old then
             declCtorNode = self:createNoneNode( nextToken.pos )
             self:addDefaultConstructor( nextToken.pos, classTypeInfo, self.scope, memberList, methodNameSet, true )
          else 
@@ -5758,6 +5763,14 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       do
          local _switchExp = self:getCurrentNamespaceTypeInfo(  ):get_kind()
          if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
+         elseif _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Method then
+            do
+               local _switchExp = classAccessMode
+               if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
+                  self:addErrMess( firstToken.pos, "Class can't declare on here." )
+               end
+            end
+            
          else 
             
                self:addErrMess( firstToken.pos, "Class can't declare on here." )
