@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 ifritJP
+Copyright (c) 2019 ifritJP
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/** lns バージョン */
-pub let version = "1.0.3";
-/** meta フォーマットバージョン */
-pub let metaVersion = "1.0.46";
-/** _lune モジュールバージョン */
-pub let luaModVersion = 0;
+pub enum Pragma {
+   default__init = "default__init",
+   default__init_old = "default__init_old",
+   disable_mut_control = "disable_mut_control",
+   ignore_symbol_ = "ignore_symbol_",
+   load__lune_module = "load__lune_module",
+}

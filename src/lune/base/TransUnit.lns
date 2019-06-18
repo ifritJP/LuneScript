@@ -1297,7 +1297,7 @@ _DefBuiltinFuncType( [
          "type": { "arg": [ "&stem!" ], "ret": ["str"] },
          "error": { "arg": [ "str" ], "ret": [ "__" ] },
          "print": { "arg": [ "&..." ], "ret": [] },
-         "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
+         "tonumber": { "arg": [ "str", "int!" ], "ret": ["real!"] },
          "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
          "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
          "loadfile": { "arg": [ "str" ], "ret": ["form!", "str!"] },
@@ -1305,6 +1305,7 @@ _DefBuiltinFuncType( [
          "collectgarbage": { "arg": [ ], "ret": [] },
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          "_load": { "arg": [ "str", "stem!" ], "ret": ["form!", "str!"] },
+         "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
       },
    },
    {

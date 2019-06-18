@@ -292,6 +292,27 @@ pub class NodeKind {
 }
 
 
+pub enum NodeVisitMode {
+   /** 子ノードがある場合、子ノードに visit する */
+   Child,
+   /** 子ノードがあっても無視し、同じ階層のノードに visit する */
+   Next,
+   /** 以降、ノードへの visit は行なわない */
+   End,
+}
+
+pub class Relation {
+}
+
+/**
+ノードを辿る際のコールバック関数
+
+@param node 現在のノード
+@param parent 親ノード
+@param releation 親ノードとの関係
+*/
+pub form NodeVisitor( node:&Node, parent:&Node, relation:int ): NodeVisitMode;
+
 /**
 Node を定義するマクロ。
 
@@ -605,7 +626,7 @@ pub class IfStmtInfo {
    pri let block: BlockNode { pub };
 }
 _declNodeClass( "If", Node, false, false, true,
-                [{ "stmtList": "IfStmtInfo[]" } ]
+                [{ "stmtList": "List<&IfStmtInfo>" } ]
 );
 
 
@@ -655,7 +676,7 @@ pub class CaseInfo {
 }
 _declNodeClass( "Switch", Node, false, false, true,
                 [ { "exp": "&Node" },
-                  { "caseList": "CaseInfo[]" },
+                  { "caseList": "List<&CaseInfo>" },
                   { "default": "&BlockNode!" } ]
 );
 
@@ -1166,7 +1187,7 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "memberList": "List<&DeclMemberNode>" },
                   { "scope": "&Ast.Scope" },
                   { "initStmtList": "List<&Node>" },
-                  { "advertiseList": "AdvertiseInfo[]" },
+                  { "advertiseList": "List<&AdvertiseInfo>" },
                   { "trustList": "List<&Ast.TypeInfo>" },
                   { "outerMethodSet": "Set<str>" } ]
 );
@@ -1210,6 +1231,10 @@ _declNodeClass( "Match", Node, false, false, true,
                   { "caseList": "&List<&MatchCase>" },
                   { "defaultBlock": "&Node!" }
                 ]              
+);
+
+_declNodeClass( "LuneKind", Node, false, true, false,
+                [ { "exp": "&Node" } ]
 );
 
 _declNodeClass( "DeclMacro", Node, false, false, true,
@@ -1269,7 +1294,7 @@ pub class PairItem {
 }
 _declNodeClass( "LiteralMap", Node, false, true, false,
                 [ { "map": "Map<&Node,&Node>" },
-                  { "pairList": "PairItem[]" } ]
+                  { "pairList": "List<&PairItem>" } ]
 );
 
 _declNodeClass( "LiteralString", Node, false, true, false,

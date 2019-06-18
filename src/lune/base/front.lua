@@ -1493,7 +1493,7 @@ end
 
 local function exec( args )
 
-   local version = tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil )
+   local version = _lune.unwrapDefault( tonumber( _VERSION:gsub( "^[^%d]+", "" ), nil ), 0.0)
    if version < 5.1 then
       io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", version, "please use the version >= 5.1." ) )
       os.exit( 1 )

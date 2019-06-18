@@ -3269,6 +3269,13 @@ function convFilter:processReturn( node, opt )
 end
 
 
+function convFilter:processLuneKind( node, opt )
+
+   local name = Ast.TypeInfoKind:_getTxt( node:get_exp():get_expType():get_kind())
+   :gsub( ".*%.", "" )
+   self:write( string.format( '"%s"', name) )
+end
+
 function convFilter:processProvide( node, opt )
 
 end
@@ -3449,6 +3456,11 @@ function convFilter:processLiteralSymbol( node, opt )
 end
 
 
+function convFilter:processLuneControl( node, opt )
+
+   self:writeln( 'local _lune = require( "lune.base._lune" )' )
+end
+
 local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer )
 
    return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer)
@@ -3472,7 +3484,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3142, function (  )
+   Log.log( Log.Level.Info, __func__, 3154, function (  )
    
       return string.format( "code: %s", code)
    end

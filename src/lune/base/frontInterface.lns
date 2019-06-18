@@ -60,8 +60,8 @@ pub static fn ModuleId.createId( modTime:real, buildCount:int ):ModuleId {
    return new ModuleId( modTime, buildCount );
 }
 pub static fn ModuleId.createIdFromTxt( idStr:str ):ModuleId {
-   let modTime = tonumber( ( idStr.gsub( ":.*", "" ) ) ## );
-   let buildCount = tonumber( ( idStr.gsub( ".*:", "" ) ) ## );
+   let modTime = unwrap tonumber( ( idStr.gsub( ":.*", "" ) ) ## ) default 0.0;
+   let buildCount = unwrap tonumber( ( idStr.gsub( ".*:", "" ) ) ## ) default 0.0;
    return new ModuleId( modTime, buildCount@@int );
 }
 

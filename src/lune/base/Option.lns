@@ -35,7 +35,7 @@ macro _defGetBuildCount() {
       let mut count = 0;
       if! let mut fileObj = io.open( "build.counter" ## ) {
          if! let txt = fileObj.read( "*l" ) {
-            count = tonumber( txt ## )@@int;
+            count = (unwrap tonumber( txt ## ) default 0)@@int;
          }
       }
       if count == 0 {
@@ -331,10 +331,10 @@ usage:
                      option.analyzeModule = arg;
                   }
                   elseif not lineNo {
-                     lineNo = tonumber( arg ## )@@int;
+                     lineNo = (unwrap tonumber( arg ## ) default 0)@@int;
                   }
                   elseif not column {
-                     column = tonumber( arg ## )@@int;
+                     column = (unwrap tonumber( arg ## ) default 0)@@int;
                      option.analyzePos = new Parser.Position(
                         unwrap lineNo, unwrap column );
                   }

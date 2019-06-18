@@ -1230,9 +1230,21 @@ fn TransUnit.analyzeExpCall(
             }
          }
       }
-      exp = Nodes.ExpCallNode.create(
-         self.nodeManager, firstToken.pos,
-         retTypeInfoList, exp, errorFuncFlag, nilAccess, argList );
+
+      if funcTypeInfo.equals( builtinFunc.lune__kind ##) {
+         if! let expList = argList$.$expList {
+            if #expList > 0 {
+               exp = Nodes.LuneKindNode.create(
+                  self.nodeManager, firstToken.pos, [ Ast.builtinTypeString ],
+                  expList[ 1 ] );
+            }
+         }
+      }
+      else {
+         exp = Nodes.ExpCallNode.create(
+            self.nodeManager, firstToken.pos,
+            retTypeInfoList, exp, errorFuncFlag, nilAccess, argList );
+      }
    }
 
    return exp, self.getToken(##);
@@ -1292,12 +1304,12 @@ fn TransUnit.analyzeExpCast(
    }
    
    
-   if expType.$nilable and not castType.$nilable {
+   if opTxt ~= "@@@" and expType.$nilable and not castType.$nilable {
       self.addErrMess( firstToken.pos,
                        "can't cast from nilable to not nilable  -- %s->%s"
                        (expType.getTxt(##), castType.getTxt(##)) );
    }
-   elseif not Ast.TypeInfo.isMut( expType ) and Ast.TypeInfo.isMut( castType ) {
+   if not Ast.TypeInfo.isMut( expType ) and Ast.TypeInfo.isMut( castType ) {
       castType = self.createModifier( castType, .IMut );
    }
 
@@ -2975,12 +2987,12 @@ fn TransUnit.analyzeExp(
    if token.kind == Parser.TokenKind.Int {
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
-         token, tonumber( token.txt ## )@@int );
+         token, (unwrap tonumber( token.txt ## ) default 0)@@int );
    }  
    elseif token.kind == Parser.TokenKind.Real {
       exp = Nodes.LiteralRealNode.create(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeReal ],
-         token, tonumber( token.txt ## ) );
+         token, (unwrap tonumber( token.txt ## ) default 0.0));
    }  
    elseif token.kind == Parser.TokenKind.Char {
       let mut num = 0;

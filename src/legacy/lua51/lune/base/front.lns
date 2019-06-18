@@ -1101,7 +1101,7 @@ pub fn Front.exec() mut
 }
 
 pub fn exec( args: str[] ) {
-   let version = tonumber( _VERSION.gsub( "^[^%d]+", "" ), nil );
+   let version = unwrap tonumber( _VERSION.gsub( "^[^%d]+", "" ), nil ) default 0.0;
 
    if version < 5.1 {
       io.stderr.write(

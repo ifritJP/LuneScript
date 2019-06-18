@@ -1166,3 +1166,9 @@ class Test4 {
    _print( `{ val$.$val } );
    _print( `{ func4()$.$val } );
 }
+{
+   fn func(val:stem!): int! {
+      return val@@@int;
+   }
+   print( func( 1 ), func( nil ) );
+}

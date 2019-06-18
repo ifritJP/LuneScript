@@ -26,19 +26,25 @@ import lune.base.Parser;
 import lune.base.Util;
 import lune.base.frontInterface;
 import lune.base.Ast;
+import lune.base.LuneControl;
 
 pub class Filter<T> {
 }
 
 /**
 制御中断要因。
+Node を実行した際に、次の Node に処理が中断せずに遷移するかどうか。
 
 優先度の高い順に宣言する。
 */
 pub enum BreakKind {
+   /** 遷移する */
    None,
+   /** break で中断する */
    Break,
+   /** return で中断する */
    Return,
+   /** 処理は戻らない */
    NeverRet,
 }
 
@@ -286,6 +292,43 @@ pub class NodeKind {
 }
 
 
+pub enum NodeVisitMode {
+   /** 子ノードがある場合、子ノードに visit する */
+   Child,
+   /** 子ノードがあっても無視し、同じ階層のノードに visit する */
+   Next,
+   /** 以降、ノードへの visit は行なわない */
+   End,
+}
+
+pub class Relation {
+}
+
+/**
+ノードを辿る際のコールバック関数
+
+@param node 現在のノード
+@param parent 親ノード
+@param releation 親ノードとの関係
+*/
+pub form NodeVisitor( node:&Node, parent:&Node, relation:int ): NodeVisitMode;
+
+/**
+Node を定義するマクロ。
+
+@param baseName Node の名称。 実際には "%sNode" (baseName) になる。
+@param super 親クラス
+@param canBeLeftFlag canBeLeft() の戻り値。
+   nil を指定すると、別途 canBeLeft() を定義する必要がある。
+@param canBeRightFlag canBeRight() の戻り値。   
+   nil を指定すると、別途 canBeRight() を定義する必要がある。
+@param canBeStatementFlag canBeStatement() の戻り値。
+   nil を指定すると、別途 canBeStatement() を定義する必要がある。
+@param fieldInfoList 定義する Node のフィールドのリスト。
+   key: フィールド名。 val: フィールドの型 の Map のリスト。
+   フィールドの順番を保証するために、 Map のリストとしている。
+   フィールドの順番が、コンストラクタの順番になるため。
+*/
 macro _declNodeClass(
    baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
    canBeStatementFlag:bool!, fieldInfoList:Map<str,str>[] )
@@ -583,7 +626,7 @@ pub class IfStmtInfo {
    pri let block: BlockNode { pub };
 }
 _declNodeClass( "If", Node, false, false, true,
-                [{ "stmtList": "IfStmtInfo[]" } ]
+                [{ "stmtList": "List<&IfStmtInfo>" } ]
 );
 
 
@@ -633,7 +676,7 @@ pub class CaseInfo {
 }
 _declNodeClass( "Switch", Node, false, false, true,
                 [ { "exp": "&Node" },
-                  { "caseList": "CaseInfo[]" },
+                  { "caseList": "List<&CaseInfo>" },
                   { "default": "&BlockNode!" } ]
 );
 
@@ -1144,7 +1187,7 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "memberList": "List<&DeclMemberNode>" },
                   { "scope": "&Ast.Scope" },
                   { "initStmtList": "List<&Node>" },
-                  { "advertiseList": "AdvertiseInfo[]" },
+                  { "advertiseList": "List<&AdvertiseInfo>" },
                   { "trustList": "List<&Ast.TypeInfo>" },
                   { "outerMethodSet": "Set<str>" } ]
 );
@@ -1171,6 +1214,11 @@ _declNodeClass( "NewAlgeVal", Node, false, true, false,
                   { "paramList": "&List<&Node>" } ]
 );
 
+_declNodeClass( "LuneControl", Node, false, false, true,
+                [ {"pragma": "LuneControl.Pragma"} ]
+);
+
+
 pub class MatchCase {
    pri let valInfo: &Ast.AlgeValInfo {pub};
    pri let valParamNameList: &List<str> {pub};
@@ -1183,6 +1231,10 @@ _declNodeClass( "Match", Node, false, false, true,
                   { "caseList": "&List<&MatchCase>" },
                   { "defaultBlock": "&Node!" }
                 ]              
+);
+
+_declNodeClass( "LuneKind", Node, false, true, false,
+                [ { "exp": "&Node" } ]
 );
 
 _declNodeClass( "DeclMacro", Node, false, false, true,
@@ -1242,7 +1294,7 @@ pub class PairItem {
 }
 _declNodeClass( "LiteralMap", Node, false, true, false,
                 [ { "map": "Map<&Node,&Node>" },
-                  { "pairList": "PairItem[]" } ]
+                  { "pairList": "List<&PairItem>" } ]
 );
 
 _declNodeClass( "LiteralString", Node, false, true, false,

@@ -192,7 +192,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1364
+   return 1379
 end
 
 
@@ -556,9 +556,9 @@ usage:
                   if not option.analyzeModule then
                      option.analyzeModule = arg
                   elseif not lineNo then
-                     lineNo = math.floor(tonumber( arg ))
+                     lineNo = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
                   elseif not column then
-                     column = math.floor(tonumber( arg ))
+                     column = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
                      option.analyzePos = Parser.Position.new(_lune.unwrap( lineNo), _lune.unwrap( column))
                   end
                   

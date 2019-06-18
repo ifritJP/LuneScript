@@ -1297,7 +1297,7 @@ _DefBuiltinFuncType( [
          "type": { "arg": [ "&stem!" ], "ret": ["str"] },
          "error": { "arg": [ "str" ], "ret": [ "__" ] },
          "print": { "arg": [ "&..." ], "ret": [] },
-         "tonumber": { "arg": [ "str", "int!" ], "ret": ["real"] },
+         "tonumber": { "arg": [ "str", "int!" ], "ret": ["real!"] },
          "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
          "load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
          "loadfile": { "arg": [ "str" ], "ret": ["form!", "str!"] },
@@ -1305,6 +1305,7 @@ _DefBuiltinFuncType( [
          "collectgarbage": { "arg": [ ], "ret": [] },
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
          "_load": { "arg": [ "str", "stem!" ], "ret": ["form!", "str!"] },
+         "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
       },
    },
    {
@@ -2067,7 +2068,10 @@ fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Nodes.Node> ) mut : &N
    return self.analyzeStatementList( stmtList ## );
 }
 
-fn TransUnit.analyzeLuneControl( firstToken: &Parser.Token ) mut {
+fn TransUnit.analyzeLuneControl(
+   firstToken: &Parser.Token ) mut : Nodes.LuneControlNode!
+{
+   let mut node:Nodes.LuneControlNode! = nil;
    let nextToken = self.getToken(##);
    switch ( nextToken.txt ) {
       case LuneControl.Pragma.disable_mut_control {
@@ -2076,11 +2080,17 @@ fn TransUnit.analyzeLuneControl( firstToken: &Parser.Token ) mut {
       case LuneControl.Pragma.ignore_symbol_ {
          self.ignoreToCheckSymbol_ = true;
       }
+      case LuneControl.Pragma.load__lune_module {
+         node = Nodes.LuneControlNode.create(
+            self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
+            LuneControl.Pragma.load__lune_module );
+      }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );
       }
    }
    self.checkNextToken( ";" );
+   return node;
 }
 
 enum TentativeMode {

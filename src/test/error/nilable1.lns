@@ -81,6 +81,9 @@
    let val3:int = unwrap val default 1; // error
 }
 {
+   let val:real = tonumber( "1" );
+}
+{
    enum TestEnum {
       Val1,
       Val2,

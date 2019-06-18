@@ -232,6 +232,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Filter = {}
 _moduleObj.Filter = Filter
 function Filter.setmeta( obj )
@@ -632,6 +633,56 @@ end
 function NodeKind:__init(  )
 
 end
+
+local NodeVisitMode = {}
+_moduleObj.NodeVisitMode = NodeVisitMode
+NodeVisitMode._val2NameMap = {}
+function NodeVisitMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "NodeVisitMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function NodeVisitMode._from( val )
+   if NodeVisitMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+NodeVisitMode.__allList = {}
+function NodeVisitMode.get__allList()
+   return NodeVisitMode.__allList
+end
+
+NodeVisitMode.Child = 0
+NodeVisitMode._val2NameMap[0] = 'Child'
+NodeVisitMode.__allList[1] = NodeVisitMode.Child
+NodeVisitMode.Next = 1
+NodeVisitMode._val2NameMap[1] = 'Next'
+NodeVisitMode.__allList[2] = NodeVisitMode.Next
+NodeVisitMode.End = 2
+NodeVisitMode._val2NameMap[2] = 'End'
+NodeVisitMode.__allList[3] = NodeVisitMode.End
+
+local Relation = {}
+_moduleObj.Relation = Relation
+function Relation.setmeta( obj )
+  setmetatable( obj, { __index = Relation  } )
+end
+function Relation.new(  )
+   local obj = {}
+   Relation.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function Relation:__init(  )
+
+end
+
 
 
 function NodeKind.get_None(  )
@@ -5503,6 +5554,70 @@ function NewAlgeValNode:get_paramList()
 end
 
 
+function NodeKind.get_LuneControl(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['LuneControl'])
+end
+
+
+regKind( "LuneControl" )
+function Filter:processLuneControl( node, opt )
+
+end
+
+
+function NodeManager:getLuneControlNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['LuneControl']) )
+end
+
+
+local LuneControlNode = {}
+setmetatable( LuneControlNode, { __index = Node } )
+_moduleObj.LuneControlNode = LuneControlNode
+function LuneControlNode:processFilter( filter, opt )
+
+   filter:processLuneControl( self, opt )
+end
+function LuneControlNode:canBeRight(  )
+
+   return false
+end
+function LuneControlNode:canBeLeft(  )
+
+   return false
+end
+function LuneControlNode:canBeStatement(  )
+
+   return true
+end
+function LuneControlNode.new( id, pos, typeList, pragma )
+   local obj = {}
+   LuneControlNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, pragma ); end
+   return obj
+end
+function LuneControlNode:__init(id, pos, typeList, pragma) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LuneControl']), pos, typeList)
+   
+   
+   self.pragma = pragma
+   
+end
+function LuneControlNode.create( nodeMan, pos, typeList, pragma )
+
+   local node = LuneControlNode.new(nodeMan:nextId(  ), pos, typeList, pragma)
+   nodeMan:addNode( node )
+   return node
+end
+function LuneControlNode.setmeta( obj )
+  setmetatable( obj, { __index = LuneControlNode  } )
+end
+function LuneControlNode:get_pragma()
+   return self.pragma
+end
+
+
 local MatchCase = {}
 _moduleObj.MatchCase = MatchCase
 function MatchCase.setmeta( obj )
@@ -5605,6 +5720,70 @@ function MatchNode:get_caseList()
 end
 function MatchNode:get_defaultBlock()
    return self.defaultBlock
+end
+
+
+function NodeKind.get_LuneKind(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['LuneKind'])
+end
+
+
+regKind( "LuneKind" )
+function Filter:processLuneKind( node, opt )
+
+end
+
+
+function NodeManager:getLuneKindNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['LuneKind']) )
+end
+
+
+local LuneKindNode = {}
+setmetatable( LuneKindNode, { __index = Node } )
+_moduleObj.LuneKindNode = LuneKindNode
+function LuneKindNode:processFilter( filter, opt )
+
+   filter:processLuneKind( self, opt )
+end
+function LuneKindNode:canBeRight(  )
+
+   return true
+end
+function LuneKindNode:canBeLeft(  )
+
+   return false
+end
+function LuneKindNode:canBeStatement(  )
+
+   return false
+end
+function LuneKindNode.new( id, pos, typeList, exp )
+   local obj = {}
+   LuneKindNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, exp ); end
+   return obj
+end
+function LuneKindNode:__init(id, pos, typeList, exp) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['LuneKind']), pos, typeList)
+   
+   
+   self.exp = exp
+   
+end
+function LuneKindNode.create( nodeMan, pos, typeList, exp )
+
+   local node = LuneKindNode.new(nodeMan:nextId(  ), pos, typeList, exp)
+   nodeMan:addNode( node )
+   return node
+end
+function LuneKindNode.setmeta( obj )
+  setmetatable( obj, { __index = LuneKindNode  } )
+end
+function LuneKindNode:get_exp()
+   return self.exp
 end
 
 

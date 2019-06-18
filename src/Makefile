@@ -234,6 +234,7 @@ test-comp:
 	@cp lune/base/base*.lua lune/base/*.lns work/5/lune/base
 	@cp lune/*.lns work/5/lune
 	$(call buildLns,.,work/1)
+	$(MAKE) check-runtime-format
 	$(MAKE) test-comp2
 
 
@@ -502,6 +503,23 @@ ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.meta legacy/lua51/lune/base/
 	cp work/6/lune/*.* legacy/lua51/lune/
 endif
+
+ifneq ($(findstring $(MAKECMDGOALS),"check-runtime-format" ),)
+RUNTIME_VER_PICK=grep 'local luaModVersion' | awk '//{print $$4}'
+RUNTIME_ORG_VER=$(shell cat lune/base/Ver.lua | $(RUNTIME_VER_PICK))
+RUNTIME_NEW_VER=$(shell cat work/1/lune/base/Ver.lua | $(RUNTIME_VER_PICK))
+endif
+
+check-runtime-format:
+# ランタイムバージョンが同じ場合は、ランタイムが一致しているかどうか比較
+ifeq ($(RUNTIME_ORG_VER),$(RUNTIME_NEW_VER))
+	@diff lune/base/_lune.lua work/1/lune/base/_lune.lua > /dev/null || \
+	(echo need to change the runtime version.; exit 1;)
+else
+	@echo runtime version ok.
+endif
+
+
 
 ifneq ($(findstring $(MAKECMDGOALS),"check-meta-format" ),)
 VER_PICK=grep 'local metaVersion' | awk '//{print $$4}'

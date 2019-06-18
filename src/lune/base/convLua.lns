@@ -2933,6 +2933,13 @@ pub override fn convFilter.processReturn(
    }
 };
 
+pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt ) mut
+{
+   let name = node.$exp.$expType.$kind.$_txt.gsub( ".*%.", "" );
+   self.write( '"%s"' (name) );
+}
+   
+
 pub override fn convFilter.processProvide(
    node: Nodes.ProvideNode, opt: Opt ) mut
 {

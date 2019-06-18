@@ -2933,6 +2933,13 @@ pub override fn convFilter.processReturn(
    }
 };
 
+pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt ) mut
+{
+   let name = node.$exp.$expType.$kind.$_txt.gsub( ".*%.", "" );
+   self.write( '"%s"' (name) );
+}
+   
+
 pub override fn convFilter.processProvide(
    node: Nodes.ProvideNode, opt: Opt ) mut
 {
@@ -3110,6 +3117,11 @@ pub override fn convFilter.processLiteralSymbol(
    self.write( '%s' ( node.$token.txt ) );
 };
 
+pub override fn convFilter.processLuneControl(
+   node: Nodes.LuneControlNode, opt: Opt ) mut
+{
+   self.writeln( 'local _lune = require( "lune.base._lune" )' );
+}
 
 pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
