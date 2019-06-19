@@ -6920,7 +6920,7 @@ function TransUnit:analyzeListConst( token )
    local nextToken = self:getToken(  )
    local expList = nil
    local itemTypeInfo = Ast.builtinTypeNone
-   local function getStemType( type1, type2 )
+   local function getCommonType( type1, type2 )
    
       if type1:get_nilable() or type2:get_nilable() then
          return Ast.builtinTypeStem_
@@ -6945,35 +6945,9 @@ function TransUnit:analyzeListConst( token )
             if not eval1 and not eval2 then
                if expType:equals( Ast.builtinTypeNil ) then
                   itemTypeInfo = itemTypeInfo:get_nilableTypeInfo()
-               elseif itemTypeInfo:get_kind() == expType:get_kind() then
-                  local mutMode
-                  
-                  if Ast.TypeInfo.isMut( itemTypeInfo ) or Ast.TypeInfo.isMut( expType ) then
-                     mutMode = Ast.MutMode.Mut
-                  else
-                   
-                     mutMode = Ast.MutMode.IMut
-                  end
-                  
-                  do
-                     local _switchExp = itemTypeInfo:get_kind()
-                     if _switchExp == Ast.TypeInfoKind.List then
-                        itemTypeInfo = Ast.NormalTypeInfo.createList( Ast.AccessMode.Pri, self:getCurrentClass(  ), {getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] )}, mutMode )
-                     elseif _switchExp == Ast.TypeInfoKind.Array then
-                        itemTypeInfo = Ast.NormalTypeInfo.createArray( Ast.AccessMode.Pri, self:getCurrentClass(  ), {getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] )}, mutMode )
-                     elseif _switchExp == Ast.TypeInfoKind.Set then
-                        itemTypeInfo = Ast.NormalTypeInfo.createSet( Ast.AccessMode.Pri, self:getCurrentClass(  ), {getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] )}, mutMode )
-                     elseif _switchExp == Ast.TypeInfoKind.Map then
-                        itemTypeInfo = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pri, self:getCurrentClass(  ), getStemType( itemTypeInfo:get_itemTypeInfoList()[1], expType:get_itemTypeInfoList()[1] ), getStemType( itemTypeInfo:get_itemTypeInfoList()[2], expType:get_itemTypeInfoList()[2] ), mutMode )
-                     else 
-                        
-                           itemTypeInfo = getStemType( itemTypeInfo, expType )
-                     end
-                  end
-                  
                else
                 
-                  itemTypeInfo = getStemType( itemTypeInfo, expType )
+                  itemTypeInfo = Ast.TypeInfo.getCommonType( itemTypeInfo, expType, Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
                end
                
             elseif eval2 then

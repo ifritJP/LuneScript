@@ -358,13 +358,13 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
-function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer )
+function convFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer )
    local obj = {}
    convFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer ); end
+   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer ); end
    return obj
 end
-function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer) 
+function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer) 
    Nodes.Filter.__init( self)
    
    self.macroVarSymSet = {}
@@ -388,7 +388,7 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.pubAlgeId2AlgeTypeInfo = {}
    self.needIndent = false
    self.moduleTypeInfo = moduleTypeInfo
-   self.separateLuneModule = separateLuneModule
+   self.useLuneRuntime = useLuneRuntime
    self.targetLuaVer = targetLuaVer
 end
 function convFilter:get_indent(  )
@@ -843,7 +843,7 @@ function convFilter:outputMeta( node )
             local stmtBlock = declInfo:get_stmtBlock()
             if stmtBlock ~= nil then
                local memStream = Util.memStream.new()
-               local filter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.separateLuneModule, self.targetLuaVer)
+               local filter = convFilter.new(declInfo:get_name().txt, memStream, memStream, ConvMode.Convert, false, Ast.headTypeInfo, Ast.SymbolKind.Typ, self.useLuneRuntime, self.targetLuaVer)
                filter.macroDepth = filter.macroDepth + 1
                filter:processBlock( stmtBlock, Opt.new(node) )
                filter.macroDepth = filter.macroDepth - 1
@@ -1133,54 +1133,56 @@ function convFilter:processRoot( node, opt )
    
    self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( {} )) )
    local luneSymbol = string.format( "_lune%d", Ver.luaModVersion)
-   if self.separateLuneModule then
-      self:writeln( 'local _lune = require( "lune.base._lune" )' )
-   else
-    
-      self:writeln( "local _lune = {}" )
-      self:writeln( string.format( [==[
+   do
+      local runtime = self.useLuneRuntime
+      if runtime ~= nil then
+         self:writeln( string.format( 'local _lune = require( "%s" )', runtime) )
+      else
+         self:writeln( "local _lune = {}" )
+         self:writeln( string.format( [==[
 if %s then
    _lune = %s
 end]==], luneSymbol, luneSymbol) )
-      if node:get_luneHelperInfo().useAlge then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.AlgeMapping ) )
+         if node:get_luneHelperInfo().useAlge then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.AlgeMapping ) )
+         end
+         
+         if node:get_luneHelperInfo().useSet then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetOp ) )
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetMapping ) )
+         end
+         
+         if node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
+         end
+         
+         if node:get_luneHelperInfo().useLoad then
+            self:writeln( self.targetLuaVer:getLoadCode(  ) )
+         end
+         
+         if node:get_luneHelperInfo().useNilAccess then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.NilAcc ) )
+         end
+         
+         if node:get_luneHelperInfo().useUnwrapExp then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unwrap ) )
+         end
+         
+         if node:get_luneHelperInfo().hasMappingClassDef then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
+         end
+         
+         if #node:get_nodeManager():getImportNodeList(  ) ~= 0 then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
+         end
+         
+         if #node:get_nodeManager():getExpCastNodeList(  ) ~= 0 then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.InstanceOf ) )
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Cast ) )
+         end
+         
       end
-      
-      if node:get_luneHelperInfo().useSet then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetOp ) )
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetMapping ) )
-      end
-      
-      if node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
-      end
-      
-      if node:get_luneHelperInfo().useLoad then
-         self:writeln( self.targetLuaVer:getLoadCode(  ) )
-      end
-      
-      if node:get_luneHelperInfo().useNilAccess then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.NilAcc ) )
-      end
-      
-      if node:get_luneHelperInfo().useUnwrapExp then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unwrap ) )
-      end
-      
-      if node:get_luneHelperInfo().hasMappingClassDef then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Mapping ) )
-      end
-      
-      if #node:get_nodeManager():getImportNodeList(  ) ~= 0 then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.LoadModule ) )
-      end
-      
-      if #node:get_nodeManager():getExpCastNodeList(  ) ~= 0 then
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.InstanceOf ) )
-         self:writeln( LuaMod.getCode( LuaMod.CodeKind.Cast ) )
-      end
-      
    end
    
    self:writeln( string.format( [==[
@@ -1891,7 +1893,15 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
    self:write( string.format( "local function %s(", name) )
    self:writeln( "__macroArgs )" )
    self:pushIndent(  )
-   self:writeln( 'local _lune = require( "lune.base._lune" )' )
+   do
+      local _exp = self.useLuneRuntime
+      if _exp ~= nil then
+         self:writeln( string.format( 'local _lune = require( "%s" )', _exp) )
+      else
+         self:writeln( 'local _lune = require( "lune.base._lune" )' )
+      end
+   end
+   
    for __index, argName in pairs( argNameList ) do
       self:writeln( string.format( "local %s = __macroArgs.%s", argName, argName) )
    end
@@ -3461,9 +3471,9 @@ function convFilter:processLuneControl( node, opt )
    self:writeln( 'local _lune = require( "lune.base._lune" )' )
 end
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer )
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer )
 
-   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, separateLuneModule, targetLuaVer)
+   return convFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer)
 end
 _moduleObj.createFilter = createFilter
 local MacroEvalImp = {}
@@ -3484,7 +3494,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3154, function (  )
+   Log.log( Log.Level.Info, __func__, 3159, function (  )
    
       return string.format( "code: %s", code)
    end
@@ -3509,7 +3519,7 @@ end
 function MacroEvalImp:evalFromCode( name, argNameList, code )
 
    local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, false, LuaVer.curVer)
+   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer)
    conv:outputDeclMacro( name, argNameList, function (  )
    
       if code ~= nil then
@@ -3523,7 +3533,7 @@ end
 function MacroEvalImp:eval( node )
 
    local oStream = Util.memStream.new()
-   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, false, LuaVer.curVer)
+   local conv = convFilter.new("macro", oStream, oStream, ConvMode.Exec, true, Ast.headTypeInfo, Ast.SymbolKind.Typ, nil, LuaVer.curVer)
    conv:processDeclMacro( node, Opt.new(node) )
    return self:evalFromMacroCode( oStream:get_txt() )
 end

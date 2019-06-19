@@ -97,8 +97,7 @@ define buildLns
 	$(call transwork,$1,$2,$3,base/front)
 	$(call transwork,$1,$2,$3,base/glueFilter)
 	$(call transwork,$1,$2,$3,Util)
-	$(call exeLune,$1/$2,-mklunemod,.) > /dev/null
-	mv $1/$2/_lune.lua $1/$2/lune/base
+	$(call exeLune,$1/$2,-mklunemod,lune/base/_lune.lua) > /dev/null
 endef
 
 
@@ -385,6 +384,10 @@ test-comp2:
 	$(call build-testcode,work/3,-r)
 	(cd work/3; $(LUA) test/start.lua) > work/test4.result
 
+	$(call exeLune,work/3,-mklunemod,runtime.lua) > /dev/null
+	$(call build-testcode,work/3,--runtime runtime )
+	(cd work/3; $(LUA) test/start.lua) > work/test4-2.result
+
 	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
 
 # オプション -u 付きで save して実行テスト
@@ -442,6 +445,7 @@ diff-result:
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
+	diff work/test4.result work/test4-2.result
 	diff work/test4.result work/test5.result
 	diff work/1/start.dep work/3/start.dep
 	diff -r work/glue work/newglue
@@ -457,7 +461,7 @@ endef
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
 	$(call buildLns,work/3,../5,-ol 51)
-	$(call exeLune,work/5,-mklunemod,lune/base)
+	$(call exeLune,work/5,-mklunemod,lune/base/_lune.lua)
 	$(call setup-lua51-test,work/5)
 	(cd work/5; LUA_PATH=./?.lua $(LUA51) lune/base/base.lua test/start.lns -u exe ) > work/test6.result
 
@@ -483,7 +487,7 @@ test-lua51-sub:
 	@cp lune/*.lns work/6/lune
 	$(call buildLns,work/5,../6)
 	$(call setup-lua51-test,work/6)
-	$(call exeLune,work/6,-mklunemod,lune/base)
+	$(call exeLune,work/6,-mklunemod,lune/base/_lune.lua)
 	$(call exeLune,work/6,test/start.lns,exe,) | sed 's/\.0//g' > work/test7.result
 
 
@@ -503,6 +507,7 @@ ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.meta legacy/lua51/lune/base/
 	cp work/6/lune/*.* legacy/lua51/lune/
 endif
+
 
 ifneq ($(findstring $(MAKECMDGOALS),"check-runtime-format" ),)
 RUNTIME_VER_PICK=grep 'local luaModVersion' | awk '//{print $$4}'

@@ -787,7 +787,6 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pub override fn canAccess( fromScope:&Scope ) : &SymbolInfo!;
 }
 
-
 pro static fn TypeInfo.isInherit(
    typeInfo:&TypeInfo, other:&TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>! ): bool
 {
@@ -3543,6 +3542,108 @@ pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
       typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList, TypeInfo.isMut( typeInfo ) );
 }
 
+
+/**
+typeInfo と other 両方の型を受けられる共通の型を返す。
+
+typeInfo と other に互換性がない場合は stem! の型を返す。
+*/
+pub static fn TypeInfo.getCommonType(
+   typeInfo:&TypeInfo, other:&TypeInfo,
+   alt2type:Map<&TypeInfo,&TypeInfo> ): &TypeInfo
+{
+   fn getType( mut workType:&TypeInfo ): &TypeInfo {
+      if typeInfo.$nilable or other.$nilable {
+         workType = workType.$nilableTypeInfo;
+      }
+      if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) {
+         // どちらかが mutable なら mutable とする。
+         // いまのところ、 immutable を mutable とするキャストはサポートしていないので、
+         // immutable と mutable の共通の型を immutable としてしまうと、
+         // 扱い難いので。。
+         workType = workType.$srcTypeInfo;
+      }
+      return workType;
+   }
+
+   let type1 = typeInfo.$nonnilableType.$srcTypeInfo;
+   let type2 = other.$nonnilableType.$srcTypeInfo;
+   
+   if type1.canEvalWith( type2, "=", alt2type ) {
+      return getType( type1 );
+   }
+   if type2.canEvalWith( type1, "=", alt2type ) {
+      return getType( type2 );
+   }
+
+
+   let mut mutMode;
+   if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) {
+      mutMode = MutMode.Mut;
+   }
+   else {
+      mutMode = MutMode.IMut;
+   }
+   
+   if type1.$kind == type2.$kind {
+      
+      switch type1.$kind {
+         case .List {
+            return getType( NormalTypeInfo.createList(
+               .Local, headTypeInfo,
+               [ TypeInfo.getCommonType(
+                  type1.$itemTypeInfoList[ 1 ],
+                  type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
+         }
+         case .Array {
+            return getType( NormalTypeInfo.createArray(
+               .Local, headTypeInfo,
+               [ TypeInfo.getCommonType(
+                  type1.$itemTypeInfoList[ 1 ],
+                  type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
+         }
+         case .Set {
+            return getType( NormalTypeInfo.createSet(
+               .Local, headTypeInfo,
+               [ TypeInfo.getCommonType(
+                  type1.$itemTypeInfoList[ 1 ],
+                  type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
+         }
+         case .Map {
+            return getType( NormalTypeInfo.createMap(
+               .Local, headTypeInfo,
+               TypeInfo.getCommonType(
+                  type1.$itemTypeInfoList[ 1 ],
+                  type2.$itemTypeInfoList[ 1 ], alt2type ),
+               TypeInfo.getCommonType(
+                  type1.$itemTypeInfoList[ 2 ],
+                  type2.$itemTypeInfoList[ 2 ], alt2type ), mutMode ) );
+         }
+      }
+   }
+   
+   let mut work = type1.$baseTypeInfo;
+
+   while work ~= headTypeInfo {
+      if work.canEvalWith( type2, "=", alt2type ) {
+         return work;
+      }
+      work = work.$baseTypeInfo;
+   }
+
+   if typeInfo.$nilable or other.$nilable {
+      work = builtinTypeStem_;
+   }
+   else {
+      work = builtinTypeStem;
+   }
+
+   if mutMode == .IMut {
+      return NormalTypeInfo.createModifier( work, mutMode );
+   }
+   
+   return work;
+}
 
 
 pub override fn ModifierTypeInfo.get_nonnilableType(): &TypeInfo {

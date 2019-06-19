@@ -1172,3 +1172,6 @@ class Test4 {
    }
    print( func( 1 ), func( nil ) );
 }
+{
+   print( _kind( "hoge" ), _kind( 1 ), _kind( 1.0 ), _kind( [] ), _kind( {} ) );
+}

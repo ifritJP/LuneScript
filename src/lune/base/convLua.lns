@@ -92,13 +92,13 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let moduleTypeInfo: &Ast.TypeInfo;
    pri let moduleSymbolKind: Ast.SymbolKind;
    pri let mut needModuleObj: bool;
-   pri let separateLuneModule: bool;
+   pri let useLuneRuntime: str!;
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
                   convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-                  moduleSymbolKind: Ast.SymbolKind, separateLuneModule:bool,
+                  moduleSymbolKind: Ast.SymbolKind, useLuneRuntime: str!,
                   targetLuaVer:&LuaVer.LuaVerInfo )
    {
       super();
@@ -124,7 +124,7 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       self.pubAlgeId2AlgeTypeInfo = {};
       self.needIndent = false;
       self.moduleTypeInfo = moduleTypeInfo;
-      self.separateLuneModule = separateLuneModule;
+      self.useLuneRuntime = useLuneRuntime;
       self.targetLuaVer = targetLuaVer;
    }
 
@@ -596,7 +596,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
             let mut filter = new convFilter(
                declInfo.$name.txt, memStream, memStream, .Convert, false,
-               Ast.headTypeInfo, .Typ, self.separateLuneModule, self.targetLuaVer );
+               Ast.headTypeInfo, .Typ, self.useLuneRuntime, self.targetLuaVer );
 
             filter.macroDepth = filter.macroDepth + 1;
             filter.processBlock( stmtBlock, new Opt( node ) );
@@ -851,8 +851,8 @@ pub override fn convFilter.processRoot(
 
    let luneSymbol = "_lune%d" (Ver.luaModVersion);
    
-   if self.separateLuneModule {
-      self.writeln( 'local _lune = require( "lune.base._lune" )' );
+   if! let runtime = self.useLuneRuntime {
+      self.writeln( 'local _lune = require( "%s" )' (runtime) );
    }
    else {
       self.writeln( "local _lune = {}" );
@@ -1633,7 +1633,12 @@ pub fn convFilter.outputDeclMacro(
 
    self.writeln( "__macroArgs )" );
    self.pushIndent(##);
-   self.writeln( 'local _lune = require( "lune.base._lune" )' );
+   if! self.useLuneRuntime {
+      self.writeln( 'local _lune = require( "%s" )' (_exp) );
+   }
+   else {
+      self.writeln( 'local _lune = require( "lune.base._lune" )' );
+   }
    foreach argName in argNameList {
       self.writeln( "local %s = __macroArgs.%s" (argName, argName ) );
    }
@@ -3126,12 +3131,12 @@ pub override fn convFilter.processLuneControl(
 pub fn createFilter(
    streamName: str, stream: oStream, metaStream: oStream,
    convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
-   moduleSymbolKind: &Ast.SymbolKind, separateLuneModule:bool,
+   moduleSymbolKind: &Ast.SymbolKind, useLuneRuntime:str!,
    targetLuaVer:&LuaVer.LuaVerInfo ) : Nodes.Filter<Opt>
 {
    return new convFilter(
       streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo,
-      moduleSymbolKind, separateLuneModule, targetLuaVer );
+      moduleSymbolKind, useLuneRuntime, targetLuaVer );
 }
 
 
@@ -3171,7 +3176,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", oStream, oStream, .Exec, true,
-         Ast.headTypeInfo, .Typ, false, LuaVer.curVer );
+         Ast.headTypeInfo, .Typ, nil, LuaVer.curVer );
 
       conv.outputDeclMacro(
          name, argNameList,
@@ -3190,7 +3195,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", oStream, oStream, .Exec, true,
-         Ast.headTypeInfo, .Typ, false, LuaVer.curVer );
+         Ast.headTypeInfo, .Typ, nil, LuaVer.curVer );
 
       conv.processDeclMacro( node, new Opt( node ) );
 

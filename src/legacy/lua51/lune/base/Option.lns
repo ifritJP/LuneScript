@@ -96,7 +96,7 @@ pub class Option {
    /** プロファイルする場合 true */
    pub let mut validProf:bool;
    /** true の場合 require( 'lune.base._lune' ) する */
-   pub let mut useLuneModule:bool;
+   pub let mut useLuneModule:str!;
    /** 依存ファイル情報の出力先ストリーム */
    //pub let mut dependsStream:oStream!;
    /** 依存ファイル情報の出力先ファイルパス */
@@ -120,7 +120,7 @@ pub class Option {
       self.validProf = false;
       self.mode = .Unknown;
       self.scriptPath = "";
-      self.useLuneModule = false;
+      self.useLuneModule = nil;
       self.updateOnLoad = false;
       self.byteCompile = false;
       self.stripDebugInfo = false;
@@ -136,15 +136,15 @@ pub class Option {
    }
 }
 
-pub fn outputLuneMod( dir:str! ):str! {
-   let mut path = "_lune.lua";
-   if! dir {
-      if _exp ~= "" {
-         path = _exp.gsub( "/$", "" ) .. "/" .. path;
+pub fn outputLuneMod( path:str! ):str! {
+   let mut lune_path = "_lune.lua";
+   when! path {
+      if path ~= "" {
+         lune_path = path;
       }
    }
-   let! mut fileObj = io.open( path, "w" ) {
-      return "failed to open -- %s" ( path );
+   let! mut fileObj = io.open( lune_path, "w" ) {
+      return "failed to open -- %s" ( lune_path );
    };
 
    foreach kind in LuaMod.CodeKind.$_allList {
@@ -161,7 +161,7 @@ pub fn analyze( argList: str[] ) : Option {
       print( ```
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
-  <type2> -mklunemod dir
+  <type2> -mklunemod path
   <type3> --version
 
 * type1
@@ -216,7 +216,7 @@ usage:
                Util.setDebugFlag( false );
             }
             case "--version" {
-               print( "LuneScript: version %s.%d (%s)"
+               print( "LuneScript: version %s (%d:%s)"
                   (Ver.version, getBuildCount(), _VERSION) );
                os.exit( 0 );
             }
@@ -235,7 +235,11 @@ usage:
                os.exit( 0 );
             }
             case "-r" {
-               option.useLuneModule = true;
+               option.useLuneModule = "lune.base._lune";
+            }
+            case "--runtime" {
+               option.useLuneModule = (#argList > index) and argList[ index + 1 ] or nil;
+               index = index + 1;
             }
             case "-u" {
                option.updateOnLoad = true;

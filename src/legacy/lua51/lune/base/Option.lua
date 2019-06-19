@@ -192,7 +192,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1379
+   return 1381
 end
 
 
@@ -322,7 +322,7 @@ function Option:__init()
    self.validProf = false
    self.mode = ModeKind.Unknown
    self.scriptPath = ""
-   self.useLuneModule = false
+   self.useLuneModule = nil
    self.updateOnLoad = false
    self.byteCompile = false
    self.stripDebugInfo = false
@@ -344,24 +344,21 @@ function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
 
-local function outputLuneMod( dir )
+local function outputLuneMod( path )
 
-   local path = "_lune.lua"
-   do
-      local _exp = dir
-      if _exp ~= nil then
-         if _exp ~= "" then
-            path = _exp:gsub( "/$", "" ) .. "/" .. path
-         end
-         
+   local lune_path = "_lune.lua"
+   if path ~= nil then
+      if path ~= "" then
+         lune_path = path
       end
+      
    end
    
-   local fileObj = io.open( path, "w" )
+   local fileObj = io.open( lune_path, "w" )
    if  nil == fileObj then
       local _fileObj = fileObj
    
-      return string.format( "failed to open -- %s", path)
+      return string.format( "failed to open -- %s", lune_path)
    end
    
    for __index, kind in pairs( LuaMod.CodeKind.get__allList() ) do
@@ -379,7 +376,7 @@ local function analyze( argList )
       print( [==[
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
-  <type2> -mklunemod dir
+  <type2> -mklunemod path
   <type3> --version
 
 * type1
@@ -430,7 +427,7 @@ usage:
             elseif _switchExp == "--nodebug" then
                Util.setDebugFlag( false )
             elseif _switchExp == "--version" then
-               print( string.format( "LuneScript: version %s.%d (%s)", Ver.version, getBuildCount(  ), _VERSION) )
+               print( string.format( "LuneScript: version %s (%d:%s)", Ver.version, getBuildCount(  ), _VERSION) )
                os.exit( 0 )
             elseif _switchExp == "--builtin" then
                do
@@ -461,7 +458,10 @@ usage:
                
                os.exit( 0 )
             elseif _switchExp == "-r" then
-               option.useLuneModule = true
+               option.useLuneModule = "lune.base._lune"
+            elseif _switchExp == "--runtime" then
+               option.useLuneModule = (#argList > index ) and argList[index + 1] or nil
+               index = index + 1
             elseif _switchExp == "-u" then
                option.updateOnLoad = true
             elseif _switchExp == "-Werror" then
