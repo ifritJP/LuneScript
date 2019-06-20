@@ -3280,9 +3280,7 @@ end
 
 function convFilter:processLuneKind( node, opt )
 
-   local name = Ast.TypeInfoKind:_getTxt( node:get_exp():get_expType():get_kind())
-   :gsub( ".*%.", "" )
-   self:write( string.format( '"%s"', name) )
+   self:write( string.format( "%d", node:get_exp():get_expType():get_kind()) )
 end
 
 function convFilter:processProvide( node, opt )
@@ -3493,7 +3491,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3159, function (  )
+   Log.log( Log.Level.Info, __func__, 3160, function (  )
    
       return string.format( "code: %s", code)
    end

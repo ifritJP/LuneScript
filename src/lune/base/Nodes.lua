@@ -410,6 +410,40 @@ local function getLiteralObj( obj )
    return nil
 end
 _moduleObj.getLiteralObj = getLiteralObj
+
+local NodeVisitMode = {}
+_moduleObj.NodeVisitMode = NodeVisitMode
+NodeVisitMode._val2NameMap = {}
+function NodeVisitMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "NodeVisitMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function NodeVisitMode._from( val )
+   if NodeVisitMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+NodeVisitMode.__allList = {}
+function NodeVisitMode.get__allList()
+   return NodeVisitMode.__allList
+end
+
+NodeVisitMode.Child = 0
+NodeVisitMode._val2NameMap[0] = 'Child'
+NodeVisitMode.__allList[1] = NodeVisitMode.Child
+NodeVisitMode.Next = 1
+NodeVisitMode._val2NameMap[1] = 'Next'
+NodeVisitMode.__allList[2] = NodeVisitMode.Next
+NodeVisitMode.End = 2
+NodeVisitMode._val2NameMap[2] = 'End'
+NodeVisitMode.__allList[3] = NodeVisitMode.End
+
+
 local Node = {}
 _moduleObj.Node = Node
 function Node:get_expType(  )
@@ -630,56 +664,6 @@ function NodeKind:__init(  )
 
 end
 
-local NodeVisitMode = {}
-_moduleObj.NodeVisitMode = NodeVisitMode
-NodeVisitMode._val2NameMap = {}
-function NodeVisitMode:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "NodeVisitMode.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function NodeVisitMode._from( val )
-   if NodeVisitMode._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-NodeVisitMode.__allList = {}
-function NodeVisitMode.get__allList()
-   return NodeVisitMode.__allList
-end
-
-NodeVisitMode.Child = 0
-NodeVisitMode._val2NameMap[0] = 'Child'
-NodeVisitMode.__allList[1] = NodeVisitMode.Child
-NodeVisitMode.Next = 1
-NodeVisitMode._val2NameMap[1] = 'Next'
-NodeVisitMode.__allList[2] = NodeVisitMode.Next
-NodeVisitMode.End = 2
-NodeVisitMode._val2NameMap[2] = 'End'
-NodeVisitMode.__allList[3] = NodeVisitMode.End
-
-local Relation = {}
-_moduleObj.Relation = Relation
-function Relation.setmeta( obj )
-  setmetatable( obj, { __index = Relation  } )
-end
-function Relation.new(  )
-   local obj = {}
-   Relation.setmeta( obj )
-   if obj.__init then
-      obj:__init(  )
-   end
-   return obj
-end
-function Relation:__init(  )
-
-end
-
-
 
 function NodeKind.get_None(  )
 
@@ -735,6 +719,11 @@ function NoneNode.create( nodeMan, pos, typeList )
    local node = NoneNode.new(nodeMan:nextId(  ), pos, typeList)
    nodeMan:addNode( node )
    return node
+end
+function NoneNode:visit( visitor, depth )
+
+   
+   return true
 end
 function NoneNode.setmeta( obj )
   setmetatable( obj, { __index = NoneNode  } )
@@ -796,6 +785,11 @@ function SubfileNode.create( nodeMan, pos, typeList, usePath )
    local node = SubfileNode.new(nodeMan:nextId(  ), pos, typeList, usePath)
    nodeMan:addNode( node )
    return node
+end
+function SubfileNode:visit( visitor, depth )
+
+   
+   return true
 end
 function SubfileNode.setmeta( obj )
   setmetatable( obj, { __index = SubfileNode  } )
@@ -862,6 +856,11 @@ function ImportNode.create( nodeMan, pos, typeList, modulePath, assignName, modu
    local node = ImportNode.new(nodeMan:nextId(  ), pos, typeList, modulePath, assignName, moduleTypeInfo)
    nodeMan:addNode( node )
    return node
+end
+function ImportNode:visit( visitor, depth )
+
+   
+   return true
 end
 function ImportNode.setmeta( obj )
   setmetatable( obj, { __index = ImportNode  } )
@@ -1080,6 +1079,54 @@ function RootNode.create( nodeMan, pos, typeList, children, moduleScope, useModu
    nodeMan:addNode( node )
    return node
 end
+function RootNode:visit( visitor, depth )
+
+   do
+      local list = self.children
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'children', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.provideNode
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'provideNode', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function RootNode.setmeta( obj )
   setmetatable( obj, { __index = RootNode  } )
 end
@@ -1184,6 +1231,28 @@ function RefTypeNode.create( nodeMan, pos, typeList, name, refFlag, mutFlag, arr
    local node = RefTypeNode.new(nodeMan:nextId(  ), pos, typeList, name, refFlag, mutFlag, array)
    nodeMan:addNode( node )
    return node
+end
+function RefTypeNode:visit( visitor, depth )
+
+   do
+      local child = self.name
+      do
+         local _switchExp = visitor( child, self, 'name', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function RefTypeNode.setmeta( obj )
   setmetatable( obj, { __index = RefTypeNode  } )
@@ -1336,6 +1405,32 @@ function BlockNode.create( nodeMan, pos, typeList, blockKind, scope, stmtList )
    local node = BlockNode.new(nodeMan:nextId(  ), pos, typeList, blockKind, scope, stmtList)
    nodeMan:addNode( node )
    return node
+end
+function BlockNode:visit( visitor, depth )
+
+   do
+      local list = self.stmtList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'stmtList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function BlockNode.setmeta( obj )
   setmetatable( obj, { __index = BlockNode  } )
@@ -1520,6 +1615,11 @@ function IfNode.create( nodeMan, pos, typeList, stmtList )
    nodeMan:addNode( node )
    return node
 end
+function IfNode:visit( visitor, depth )
+
+   
+   return true
+end
 function IfNode.setmeta( obj )
   setmetatable( obj, { __index = IfNode  } )
 end
@@ -1625,6 +1725,32 @@ function ExpListNode.create( nodeMan, pos, typeList, expList, followOn )
    local node = ExpListNode.new(nodeMan:nextId(  ), pos, typeList, expList, followOn)
    nodeMan:addNode( node )
    return node
+end
+function ExpListNode:visit( visitor, depth )
+
+   do
+      local list = self.expList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'expList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function ExpListNode.setmeta( obj )
   setmetatable( obj, { __index = ExpListNode  } )
@@ -1743,6 +1869,50 @@ function SwitchNode.create( nodeMan, pos, typeList, exp, caseList, default )
    local node = SwitchNode.new(nodeMan:nextId(  ), pos, typeList, exp, caseList, default)
    nodeMan:addNode( node )
    return node
+end
+function SwitchNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.default
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'default', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function SwitchNode.setmeta( obj )
   setmetatable( obj, { __index = SwitchNode  } )
@@ -1894,6 +2064,45 @@ function WhileNode.create( nodeMan, pos, typeList, exp, block )
    nodeMan:addNode( node )
    return node
 end
+function WhileNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function WhileNode.setmeta( obj )
   setmetatable( obj, { __index = WhileNode  } )
 end
@@ -1961,6 +2170,45 @@ function RepeatNode.create( nodeMan, pos, typeList, block, exp )
    local node = RepeatNode.new(nodeMan:nextId(  ), pos, typeList, block, exp)
    nodeMan:addNode( node )
    return node
+end
+function RepeatNode:visit( visitor, depth )
+
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function RepeatNode.setmeta( obj )
   setmetatable( obj, { __index = RepeatNode  } )
@@ -2043,6 +2291,84 @@ function ForNode.create( nodeMan, pos, typeList, block, val, init, to, delta )
    local node = ForNode.new(nodeMan:nextId(  ), pos, typeList, block, val, init, to, delta)
    nodeMan:addNode( node )
    return node
+end
+function ForNode:visit( visitor, depth )
+
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.init
+      do
+         local _switchExp = visitor( child, self, 'init', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.to
+      do
+         local _switchExp = visitor( child, self, 'to', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.delta
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'delta', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function ForNode.setmeta( obj )
   setmetatable( obj, { __index = ForNode  } )
@@ -2133,6 +2459,45 @@ function ApplyNode.create( nodeMan, pos, typeList, varList, exp, block )
    nodeMan:addNode( node )
    return node
 end
+function ApplyNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function ApplyNode.setmeta( obj )
   setmetatable( obj, { __index = ApplyNode  } )
 end
@@ -2216,6 +2581,45 @@ function ForeachNode.create( nodeMan, pos, typeList, val, key, exp, block )
    local node = ForeachNode.new(nodeMan:nextId(  ), pos, typeList, val, key, exp, block)
    nodeMan:addNode( node )
    return node
+end
+function ForeachNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function ForeachNode.setmeta( obj )
   setmetatable( obj, { __index = ForeachNode  } )
@@ -2305,6 +2709,45 @@ function ForsortNode.create( nodeMan, pos, typeList, val, key, exp, block, sort 
    nodeMan:addNode( node )
    return node
 end
+function ForsortNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function ForsortNode.setmeta( obj )
   setmetatable( obj, { __index = ForsortNode  } )
 end
@@ -2392,6 +2835,33 @@ function ReturnNode.create( nodeMan, pos, typeList, expList )
    nodeMan:addNode( node )
    return node
 end
+function ReturnNode:visit( visitor, depth )
+
+   do
+      do
+         local child = self.expList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function ReturnNode.setmeta( obj )
   setmetatable( obj, { __index = ReturnNode  } )
 end
@@ -2460,6 +2930,11 @@ function BreakNode.create( nodeMan, pos, typeList )
    nodeMan:addNode( node )
    return node
 end
+function BreakNode:visit( visitor, depth )
+
+   
+   return true
+end
 function BreakNode.setmeta( obj )
   setmetatable( obj, { __index = BreakNode  } )
 end
@@ -2526,6 +3001,11 @@ function ProvideNode.create( nodeMan, pos, typeList, symbol )
    nodeMan:addNode( node )
    return node
 end
+function ProvideNode:visit( visitor, depth )
+
+   
+   return true
+end
 function ProvideNode.setmeta( obj )
   setmetatable( obj, { __index = ProvideNode  } )
 end
@@ -2590,6 +3070,50 @@ function ExpNewNode.create( nodeMan, pos, typeList, symbol, argList )
    local node = ExpNewNode.new(nodeMan:nextId(  ), pos, typeList, symbol, argList)
    nodeMan:addNode( node )
    return node
+end
+function ExpNewNode:visit( visitor, depth )
+
+   do
+      local child = self.symbol
+      do
+         local _switchExp = visitor( child, self, 'symbol', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.argList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'argList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function ExpNewNode.setmeta( obj )
   setmetatable( obj, { __index = ExpNewNode  } )
@@ -2659,6 +3183,50 @@ function ExpUnwrapNode.create( nodeMan, pos, typeList, exp, default )
    nodeMan:addNode( node )
    return node
 end
+function ExpUnwrapNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.default
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'default', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function ExpUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = ExpUnwrapNode  } )
 end
@@ -2718,6 +3286,11 @@ function ExpRefNode.create( nodeMan, pos, typeList, token, symbolInfo )
    local node = ExpRefNode.new(nodeMan:nextId(  ), pos, typeList, token, symbolInfo)
    nodeMan:addNode( node )
    return node
+end
+function ExpRefNode:visit( visitor, depth )
+
+   
+   return true
 end
 function ExpRefNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefNode  } )
@@ -2793,6 +3366,45 @@ function ExpOp2Node.create( nodeMan, pos, typeList, op, exp1, exp2 )
    local node = ExpOp2Node.new(nodeMan:nextId(  ), pos, typeList, op, exp1, exp2)
    nodeMan:addNode( node )
    return node
+end
+function ExpOp2Node:visit( visitor, depth )
+
+   do
+      local child = self.exp1
+      do
+         local _switchExp = visitor( child, self, 'exp1', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.exp2
+      do
+         local _switchExp = visitor( child, self, 'exp2', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function ExpOp2Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp2Node  } )
@@ -2871,6 +3483,67 @@ function UnwrapSetNode.create( nodeMan, pos, typeList, dstExpList, srcExpList, u
    nodeMan:addNode( node )
    return node
 end
+function UnwrapSetNode:visit( visitor, depth )
+
+   do
+      local child = self.dstExpList
+      do
+         local _switchExp = visitor( child, self, 'dstExpList', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      local child = self.srcExpList
+      do
+         local _switchExp = visitor( child, self, 'srcExpList', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.unwrapBlock
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'unwrapBlock', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function UnwrapSetNode.setmeta( obj )
   setmetatable( obj, { __index = UnwrapSetNode  } )
 end
@@ -2943,6 +3616,71 @@ function IfUnwrapNode.create( nodeMan, pos, typeList, varNameList, expNodeList, 
    local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, typeList, varNameList, expNodeList, block, nilBlock)
    nodeMan:addNode( node )
    return node
+end
+function IfUnwrapNode:visit( visitor, depth )
+
+   do
+      local list = self.expNodeList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'expNodeList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.nilBlock
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'nilBlock', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function IfUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = IfUnwrapNode  } )
@@ -3095,6 +3833,71 @@ function WhenNode.create( nodeMan, pos, typeList, varNameList, expNodeList, bloc
    nodeMan:addNode( node )
    return node
 end
+function WhenNode:visit( visitor, depth )
+
+   do
+      local list = self.expNodeList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'expNodeList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   do
+      local child = self.block
+      do
+         local _switchExp = visitor( child, self, 'block', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.elseBlock
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'elseBlock', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function WhenNode.setmeta( obj )
   setmetatable( obj, { __index = WhenNode  } )
 end
@@ -3244,6 +4047,28 @@ function ExpCastNode.create( nodeMan, pos, typeList, exp, force )
    nodeMan:addNode( node )
    return node
 end
+function ExpCastNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function ExpCastNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCastNode  } )
 end
@@ -3345,6 +4170,28 @@ function ExpOp1Node.create( nodeMan, pos, typeList, op, macroMode, exp )
    nodeMan:addNode( node )
    return node
 end
+function ExpOp1Node:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function ExpOp1Node.setmeta( obj )
   setmetatable( obj, { __index = ExpOp1Node  } )
 end
@@ -3413,6 +4260,50 @@ function ExpRefItemNode.create( nodeMan, pos, typeList, val, nilAccess, symbol, 
    local node = ExpRefItemNode.new(nodeMan:nextId(  ), pos, typeList, val, nilAccess, symbol, index)
    nodeMan:addNode( node )
    return node
+end
+function ExpRefItemNode:visit( visitor, depth )
+
+   do
+      local child = self.val
+      do
+         local _switchExp = visitor( child, self, 'val', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.index
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'index', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function ExpRefItemNode.setmeta( obj )
   setmetatable( obj, { __index = ExpRefItemNode  } )
@@ -3494,6 +4385,50 @@ function ExpCallNode.create( nodeMan, pos, typeList, func, errorFunc, nilAccess,
    local node = ExpCallNode.new(nodeMan:nextId(  ), pos, typeList, func, errorFunc, nilAccess, argList)
    nodeMan:addNode( node )
    return node
+end
+function ExpCallNode:visit( visitor, depth )
+
+   do
+      local child = self.func
+      do
+         local _switchExp = visitor( child, self, 'func', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.argList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'argList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function ExpCallNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallNode  } )
@@ -3587,6 +4522,11 @@ function ExpDDDNode.create( nodeMan, pos, typeList, token )
    nodeMan:addNode( node )
    return node
 end
+function ExpDDDNode:visit( visitor, depth )
+
+   
+   return true
+end
 function ExpDDDNode.setmeta( obj )
   setmetatable( obj, { __index = ExpDDDNode  } )
 end
@@ -3651,6 +4591,28 @@ function ExpParenNode.create( nodeMan, pos, typeList, exp )
    nodeMan:addNode( node )
    return node
 end
+function ExpParenNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function ExpParenNode.setmeta( obj )
   setmetatable( obj, { __index = ExpParenNode  } )
 end
@@ -3714,6 +4676,32 @@ function ExpMacroExpNode.create( nodeMan, pos, typeList, stmtList )
    local node = ExpMacroExpNode.new(nodeMan:nextId(  ), pos, typeList, stmtList)
    nodeMan:addNode( node )
    return node
+end
+function ExpMacroExpNode:visit( visitor, depth )
+
+   do
+      local list = self.stmtList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'stmtList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function ExpMacroExpNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroExpNode  } )
@@ -3829,6 +4817,32 @@ function ExpMacroStatNode.create( nodeMan, pos, typeList, expStrList )
    nodeMan:addNode( node )
    return node
 end
+function ExpMacroStatNode:visit( visitor, depth )
+
+   do
+      local list = self.expStrList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'expStrList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function ExpMacroStatNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatNode  } )
 end
@@ -3888,6 +4902,28 @@ function StmtExpNode.create( nodeMan, pos, typeList, exp )
    local node = StmtExpNode.new(nodeMan:nextId(  ), pos, typeList, exp)
    nodeMan:addNode( node )
    return node
+end
+function StmtExpNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function StmtExpNode.setmeta( obj )
   setmetatable( obj, { __index = StmtExpNode  } )
@@ -3963,6 +4999,28 @@ function ExpMacroStatListNode.create( nodeMan, pos, typeList, exp )
    nodeMan:addNode( node )
    return node
 end
+function ExpMacroStatListNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function ExpMacroStatListNode.setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatListNode  } )
 end
@@ -4029,6 +5087,11 @@ function ExpOmitEnumNode.create( nodeMan, pos, typeList, valToken, valInfo, enum
    nodeMan:addNode( node )
    return node
 end
+function ExpOmitEnumNode:visit( visitor, depth )
+
+   
+   return true
+end
 function ExpOmitEnumNode.setmeta( obj )
   setmetatable( obj, { __index = ExpOmitEnumNode  } )
 end
@@ -4093,6 +5156,28 @@ function RefFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAcce
    local node = RefFieldNode.new(nodeMan:nextId(  ), pos, typeList, field, symbolInfo, nilAccess, prefix)
    nodeMan:addNode( node )
    return node
+end
+function RefFieldNode:visit( visitor, depth )
+
+   do
+      local child = self.prefix
+      do
+         local _switchExp = visitor( child, self, 'prefix', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function RefFieldNode.setmeta( obj )
   setmetatable( obj, { __index = RefFieldNode  } )
@@ -4191,6 +5276,28 @@ function GetFieldNode.create( nodeMan, pos, typeList, field, symbolInfo, nilAcce
    nodeMan:addNode( node )
    return node
 end
+function GetFieldNode:visit( visitor, depth )
+
+   do
+      local child = self.prefix
+      do
+         local _switchExp = visitor( child, self, 'prefix', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function GetFieldNode.setmeta( obj )
   setmetatable( obj, { __index = GetFieldNode  } )
 end
@@ -4280,6 +5387,28 @@ function AliasNode.create( nodeMan, pos, typeList, newName, srcNode, typeInfo )
    local node = AliasNode.new(nodeMan:nextId(  ), pos, typeList, newName, srcNode, typeInfo)
    nodeMan:addNode( node )
    return node
+end
+function AliasNode:visit( visitor, depth )
+
+   do
+      local child = self.srcNode
+      do
+         local _switchExp = visitor( child, self, 'srcNode', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function AliasNode.setmeta( obj )
   setmetatable( obj, { __index = AliasNode  } )
@@ -4422,6 +5551,99 @@ function DeclVarNode.create( nodeMan, pos, typeList, mode, accessMode, staticFla
    local node = DeclVarNode.new(nodeMan:nextId(  ), pos, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
    nodeMan:addNode( node )
    return node
+end
+function DeclVarNode:visit( visitor, depth )
+
+   do
+      do
+         local child = self.expList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   do
+      do
+         local child = self.unwrapBlock
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'unwrapBlock', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   do
+      do
+         local child = self.thenBlock
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'thenBlock', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   do
+      do
+         local child = self.syncBlock
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'syncBlock', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function DeclVarNode.setmeta( obj )
   setmetatable( obj, { __index = DeclVarNode  } )
@@ -4692,6 +5914,11 @@ function DeclFuncNode.create( nodeMan, pos, typeList, declInfo )
    nodeMan:addNode( node )
    return node
 end
+function DeclFuncNode:visit( visitor, depth )
+
+   
+   return true
+end
 function DeclFuncNode.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncNode  } )
 end
@@ -4755,6 +5982,11 @@ function DeclMethodNode.create( nodeMan, pos, typeList, declInfo )
    local node = DeclMethodNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
+end
+function DeclMethodNode:visit( visitor, depth )
+
+   
+   return true
 end
 function DeclMethodNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMethodNode  } )
@@ -4820,6 +6052,11 @@ function DeclConstrNode.create( nodeMan, pos, typeList, declInfo )
    nodeMan:addNode( node )
    return node
 end
+function DeclConstrNode:visit( visitor, depth )
+
+   
+   return true
+end
 function DeclConstrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclConstrNode  } )
 end
@@ -4883,6 +6120,11 @@ function DeclDestrNode.create( nodeMan, pos, typeList, declInfo )
    local node = DeclDestrNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
+end
+function DeclDestrNode:visit( visitor, depth )
+
+   
+   return true
 end
 function DeclDestrNode.setmeta( obj )
   setmetatable( obj, { __index = DeclDestrNode  } )
@@ -4949,6 +6191,33 @@ function ExpCallSuperNode.create( nodeMan, pos, typeList, superType, methodType,
    local node = ExpCallSuperNode.new(nodeMan:nextId(  ), pos, typeList, superType, methodType, expList)
    nodeMan:addNode( node )
    return node
+end
+function ExpCallSuperNode:visit( visitor, depth )
+
+   do
+      do
+         local child = self.expList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function ExpCallSuperNode.setmeta( obj )
   setmetatable( obj, { __index = ExpCallSuperNode  } )
@@ -5027,6 +6296,28 @@ function DeclMemberNode.create( nodeMan, pos, typeList, name, refType, symbolInf
    local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, typeList, name, refType, symbolInfo, staticFlag, accessMode, getterMutable, getterMode, getterRetType, setterMode)
    nodeMan:addNode( node )
    return node
+end
+function DeclMemberNode:visit( visitor, depth )
+
+   do
+      local child = self.refType
+      do
+         local _switchExp = visitor( child, self, 'refType', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function DeclMemberNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMemberNode  } )
@@ -5117,6 +6408,28 @@ function DeclArgNode.create( nodeMan, pos, typeList, name, argType )
    nodeMan:addNode( node )
    return node
 end
+function DeclArgNode:visit( visitor, depth )
+
+   do
+      local child = self.argType
+      do
+         local _switchExp = visitor( child, self, 'argType', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function DeclArgNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgNode  } )
 end
@@ -5182,6 +6495,11 @@ function DeclArgDDDNode.create( nodeMan, pos, typeList )
    local node = DeclArgDDDNode.new(nodeMan:nextId(  ), pos, typeList)
    nodeMan:addNode( node )
    return node
+end
+function DeclArgDDDNode:visit( visitor, depth )
+
+   
+   return true
 end
 function DeclArgDDDNode.setmeta( obj )
   setmetatable( obj, { __index = DeclArgDDDNode  } )
@@ -5280,6 +6598,95 @@ function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePre
    local node = DeclClassNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet)
    nodeMan:addNode( node )
    return node
+end
+function DeclClassNode:visit( visitor, depth )
+
+   do
+      local list = self.declStmtList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'declStmtList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   do
+      local list = self.fieldList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'fieldList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   do
+      local list = self.memberList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'memberList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   do
+      local list = self.initStmtList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'initStmtList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function DeclClassNode.setmeta( obj )
   setmetatable( obj, { __index = DeclClassNode  } )
@@ -5381,6 +6788,11 @@ function DeclEnumNode.create( nodeMan, pos, typeList, accessMode, name, valueNam
    nodeMan:addNode( node )
    return node
 end
+function DeclEnumNode:visit( visitor, depth )
+
+   
+   return true
+end
 function DeclEnumNode.setmeta( obj )
   setmetatable( obj, { __index = DeclEnumNode  } )
 end
@@ -5456,6 +6868,11 @@ function DeclAlgeNode.create( nodeMan, pos, typeList, accessMode, algeType, scop
    nodeMan:addNode( node )
    return node
 end
+function DeclAlgeNode:visit( visitor, depth )
+
+   
+   return true
+end
 function DeclAlgeNode.setmeta( obj )
   setmetatable( obj, { __index = DeclAlgeNode  } )
 end
@@ -5529,6 +6946,54 @@ function NewAlgeValNode.create( nodeMan, pos, typeList, name, prefix, algeTypeIn
    local node = NewAlgeValNode.new(nodeMan:nextId(  ), pos, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
    nodeMan:addNode( node )
    return node
+end
+function NewAlgeValNode:visit( visitor, depth )
+
+   do
+      do
+         local child = self.prefix
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'prefix', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   do
+      local list = self.paramList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'paramList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function NewAlgeValNode.setmeta( obj )
   setmetatable( obj, { __index = NewAlgeValNode  } )
@@ -5605,6 +7070,11 @@ function LuneControlNode.create( nodeMan, pos, typeList, pragma )
    local node = LuneControlNode.new(nodeMan:nextId(  ), pos, typeList, pragma)
    nodeMan:addNode( node )
    return node
+end
+function LuneControlNode:visit( visitor, depth )
+
+   
+   return true
 end
 function LuneControlNode.setmeta( obj )
   setmetatable( obj, { __index = LuneControlNode  } )
@@ -5702,6 +7172,50 @@ function MatchNode.create( nodeMan, pos, typeList, val, algeTypeInfo, caseList, 
    nodeMan:addNode( node )
    return node
 end
+function MatchNode:visit( visitor, depth )
+
+   do
+      local child = self.val
+      do
+         local _switchExp = visitor( child, self, 'val', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   do
+      do
+         local child = self.defaultBlock
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'defaultBlock', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function MatchNode.setmeta( obj )
   setmetatable( obj, { __index = MatchNode  } )
 end
@@ -5775,6 +7289,28 @@ function LuneKindNode.create( nodeMan, pos, typeList, exp )
    nodeMan:addNode( node )
    return node
 end
+function LuneKindNode:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function LuneKindNode.setmeta( obj )
   setmetatable( obj, { __index = LuneKindNode  } )
 end
@@ -5838,6 +7374,11 @@ function DeclMacroNode.create( nodeMan, pos, typeList, declInfo )
    local node = DeclMacroNode.new(nodeMan:nextId(  ), pos, typeList, declInfo)
    nodeMan:addNode( node )
    return node
+end
+function DeclMacroNode:visit( visitor, depth )
+
+   
+   return true
 end
 function DeclMacroNode.setmeta( obj )
   setmetatable( obj, { __index = DeclMacroNode  } )
@@ -5919,6 +7460,11 @@ function AbbrNode.create( nodeMan, pos, typeList )
    nodeMan:addNode( node )
    return node
 end
+function AbbrNode:visit( visitor, depth )
+
+   
+   return true
+end
 function AbbrNode.setmeta( obj )
   setmetatable( obj, { __index = AbbrNode  } )
 end
@@ -5979,6 +7525,28 @@ function BoxingNode.create( nodeMan, pos, typeList, src )
    local node = BoxingNode.new(nodeMan:nextId(  ), pos, typeList, src)
    nodeMan:addNode( node )
    return node
+end
+function BoxingNode:visit( visitor, depth )
+
+   do
+      local child = self.src
+      do
+         local _switchExp = visitor( child, self, 'src', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
 end
 function BoxingNode.setmeta( obj )
   setmetatable( obj, { __index = BoxingNode  } )
@@ -6044,6 +7612,28 @@ function UnboxingNode.create( nodeMan, pos, typeList, src )
    nodeMan:addNode( node )
    return node
 end
+function UnboxingNode:visit( visitor, depth )
+
+   do
+      local child = self.src
+      do
+         local _switchExp = visitor( child, self, 'src', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function UnboxingNode.setmeta( obj )
   setmetatable( obj, { __index = UnboxingNode  } )
 end
@@ -6107,6 +7697,11 @@ function LiteralNilNode.create( nodeMan, pos, typeList )
    nodeMan:addNode( node )
    return node
 end
+function LiteralNilNode:visit( visitor, depth )
+
+   
+   return true
+end
 function LiteralNilNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
 end
@@ -6168,6 +7763,11 @@ function LiteralCharNode.create( nodeMan, pos, typeList, token, num )
    local node = LiteralCharNode.new(nodeMan:nextId(  ), pos, typeList, token, num)
    nodeMan:addNode( node )
    return node
+end
+function LiteralCharNode:visit( visitor, depth )
+
+   
+   return true
 end
 function LiteralCharNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralCharNode  } )
@@ -6237,6 +7837,11 @@ function LiteralIntNode.create( nodeMan, pos, typeList, token, num )
    nodeMan:addNode( node )
    return node
 end
+function LiteralIntNode:visit( visitor, depth )
+
+   
+   return true
+end
 function LiteralIntNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralIntNode  } )
 end
@@ -6305,6 +7910,11 @@ function LiteralRealNode.create( nodeMan, pos, typeList, token, num )
    nodeMan:addNode( node )
    return node
 end
+function LiteralRealNode:visit( visitor, depth )
+
+   
+   return true
+end
 function LiteralRealNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralRealNode  } )
 end
@@ -6372,6 +7982,33 @@ function LiteralArrayNode.create( nodeMan, pos, typeList, expList )
    nodeMan:addNode( node )
    return node
 end
+function LiteralArrayNode:visit( visitor, depth )
+
+   do
+      do
+         local child = self.expList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function LiteralArrayNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralArrayNode  } )
 end
@@ -6436,6 +8073,33 @@ function LiteralListNode.create( nodeMan, pos, typeList, expList )
    nodeMan:addNode( node )
    return node
 end
+function LiteralListNode:visit( visitor, depth )
+
+   do
+      do
+         local child = self.expList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
+end
 function LiteralListNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralListNode  } )
 end
@@ -6499,6 +8163,33 @@ function LiteralSetNode.create( nodeMan, pos, typeList, expList )
    local node = LiteralSetNode.new(nodeMan:nextId(  ), pos, typeList, expList)
    nodeMan:addNode( node )
    return node
+end
+function LiteralSetNode:visit( visitor, depth )
+
+   do
+      do
+         local child = self.expList
+         if child ~= nil then
+            do
+               local _switchExp = visitor( child, self, 'expList', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+      end
+      
+   end
+   
+   
+   return true
 end
 function LiteralSetNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSetNode  } )
@@ -6590,6 +8281,53 @@ function LiteralMapNode.create( nodeMan, pos, typeList, map, pairList )
    nodeMan:addNode( node )
    return node
 end
+function LiteralMapNode:visit( visitor, depth )
+
+   do
+      local map = self.map
+      for key, val in pairs( map ) do
+         do
+            local child = key
+            do
+               local _switchExp = visitor( child, self, 'map', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+         
+         do
+            local child = val
+            do
+               local _switchExp = visitor( child, self, 'map', depth )
+               if _switchExp == NodeVisitMode.Child then
+                  if not child:visit( visitor, depth + 1 ) then
+                     return false
+                  end
+                  
+               elseif _switchExp == NodeVisitMode.End then
+                  return false
+               end
+            end
+            
+            
+         end
+         
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function LiteralMapNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralMapNode  } )
 end
@@ -6658,6 +8396,32 @@ function LiteralStringNode.create( nodeMan, pos, typeList, token, argList )
    nodeMan:addNode( node )
    return node
 end
+function LiteralStringNode:visit( visitor, depth )
+
+   do
+      local list = self.argList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'argList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
+end
 function LiteralStringNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralStringNode  } )
 end
@@ -6725,6 +8489,11 @@ function LiteralBoolNode.create( nodeMan, pos, typeList, token )
    nodeMan:addNode( node )
    return node
 end
+function LiteralBoolNode:visit( visitor, depth )
+
+   
+   return true
+end
 function LiteralBoolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralBoolNode  } )
 end
@@ -6788,6 +8557,11 @@ function LiteralSymbolNode.create( nodeMan, pos, typeList, token )
    local node = LiteralSymbolNode.new(nodeMan:nextId(  ), pos, typeList, token)
    nodeMan:addNode( node )
    return node
+end
+function LiteralSymbolNode:visit( visitor, depth )
+
+   
+   return true
 end
 function LiteralSymbolNode.setmeta( obj )
   setmetatable( obj, { __index = LiteralSymbolNode  } )

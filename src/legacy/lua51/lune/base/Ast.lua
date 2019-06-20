@@ -4537,79 +4537,6 @@ function NormalTypeInfo.createAdvertiseMethodFrom( classTypeInfo, typeInfo )
    return NormalTypeInfo.createFunc( false, false, getScope( typeInfo ), typeInfo:get_kind(), classTypeInfo, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), TypeInfo.isMut( typeInfo ) )
 end
 
-function TypeInfo.getCommonType( typeInfo, other, alt2type )
-
-   local function getType( workType )
-   
-      if typeInfo:get_nilable() or other:get_nilable() then
-         workType = workType:get_nilableTypeInfo()
-      end
-      
-      if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) then
-         workType = workType:get_srcTypeInfo()
-      end
-      
-      return workType
-   end
-   
-   local type1 = typeInfo:get_nonnilableType():get_srcTypeInfo()
-   local type2 = other:get_nonnilableType():get_srcTypeInfo()
-   if type1:canEvalWith( type2, "=", alt2type ) then
-      return getType( type1 )
-   end
-   
-   if type2:canEvalWith( type1, "=", alt2type ) then
-      return getType( type2 )
-   end
-   
-   local mutMode
-   
-   if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) then
-      mutMode = MutMode.Mut
-   else
-    
-      mutMode = MutMode.IMut
-   end
-   
-   if type1:get_kind() == type2:get_kind() then
-      do
-         local _switchExp = type1:get_kind()
-         if _switchExp == TypeInfoKind.List then
-            return getType( NormalTypeInfo.createList( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
-         elseif _switchExp == TypeInfoKind.Array then
-            return getType( NormalTypeInfo.createArray( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
-         elseif _switchExp == TypeInfoKind.Set then
-            return getType( NormalTypeInfo.createSet( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
-         elseif _switchExp == TypeInfoKind.Map then
-            return getType( NormalTypeInfo.createMap( AccessMode.Local, _moduleObj.headTypeInfo, TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), TypeInfo.getCommonType( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
-         end
-      end
-      
-   end
-   
-   local work = type1:get_baseTypeInfo()
-   while work ~= _moduleObj.headTypeInfo do
-      if work:canEvalWith( type2, "=", alt2type ) then
-         return work
-      end
-      
-      work = work:get_baseTypeInfo()
-   end
-   
-   if typeInfo:get_nilable() or other:get_nilable() then
-      work = _moduleObj.builtinTypeStem_
-   else
-    
-      work = _moduleObj.builtinTypeStem
-   end
-   
-   if mutMode == MutMode.IMut then
-      return NormalTypeInfo.createModifier( work, mutMode )
-   end
-   
-   return work
-end
-
 function ModifierTypeInfo:get_nonnilableType(  )
 
    local orgType = self.srcTypeInfo:get_nonnilableType()
@@ -4784,6 +4711,95 @@ _moduleObj.builtinTypeSymbol = builtinTypeSymbol
 
 local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKind.Prim )
 _moduleObj.builtinTypeStat = builtinTypeStat
+
+function TypeInfo.getCommonType( typeInfo, other, alt2type )
+
+   local function getType( workType )
+   
+      if typeInfo:get_nilable() or other:get_nilable() then
+         workType = workType:get_nilableTypeInfo()
+      end
+      
+      if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) then
+         workType = workType:get_srcTypeInfo()
+      end
+      
+      return workType
+   end
+   
+   local type1 = typeInfo:get_nonnilableType():get_srcTypeInfo()
+   local type2 = other:get_nonnilableType():get_srcTypeInfo()
+   if type1 == _moduleObj.builtinTypeNone then
+      return other
+   end
+   
+   if type2 == _moduleObj.builtinTypeNone then
+      return typeInfo
+   end
+   
+   if type1 == _moduleObj.builtinTypeNil then
+      return other:get_nilableTypeInfo()
+   end
+   
+   if type2 == _moduleObj.builtinTypeNil then
+      return typeInfo:get_nilableTypeInfo()
+   end
+   
+   if type1:canEvalWith( type2, "=", alt2type ) then
+      return getType( type1 )
+   end
+   
+   if type2:canEvalWith( type1, "=", alt2type ) then
+      return getType( type2 )
+   end
+   
+   local mutMode
+   
+   if TypeInfo.isMut( typeInfo ) or TypeInfo.isMut( other ) then
+      mutMode = MutMode.Mut
+   else
+    
+      mutMode = MutMode.IMut
+   end
+   
+   if type1:get_kind() == type2:get_kind() then
+      do
+         local _switchExp = type1:get_kind()
+         if _switchExp == TypeInfoKind.List then
+            return getType( NormalTypeInfo.createList( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+         elseif _switchExp == TypeInfoKind.Array then
+            return getType( NormalTypeInfo.createArray( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+         elseif _switchExp == TypeInfoKind.Set then
+            return getType( NormalTypeInfo.createSet( AccessMode.Local, _moduleObj.headTypeInfo, {TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+         elseif _switchExp == TypeInfoKind.Map then
+            return getType( NormalTypeInfo.createMap( AccessMode.Local, _moduleObj.headTypeInfo, TypeInfo.getCommonType( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), TypeInfo.getCommonType( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
+         end
+      end
+      
+   end
+   
+   local work = type1:get_baseTypeInfo()
+   while work ~= _moduleObj.headTypeInfo do
+      if work:canEvalWith( type2, "=", alt2type ) then
+         return work
+      end
+      
+      work = work:get_baseTypeInfo()
+   end
+   
+   if typeInfo:get_nilable() or other:get_nilable() then
+      work = _moduleObj.builtinTypeStem_
+   else
+    
+      work = _moduleObj.builtinTypeStem
+   end
+   
+   if mutMode == MutMode.IMut then
+      return NormalTypeInfo.createModifier( work, mutMode )
+   end
+   
+   return work
+end
 
 function DDDTypeInfo:getTxt( fullName, importInfo, localFlag )
 

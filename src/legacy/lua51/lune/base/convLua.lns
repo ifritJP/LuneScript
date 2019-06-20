@@ -2940,8 +2940,9 @@ pub override fn convFilter.processReturn(
 
 pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt ) mut
 {
-   let name = node.$exp.$expType.$kind.$_txt.gsub( ".*%.", "" );
-   self.write( '"%s"' (name) );
+   // let name = node.$exp.$expType.$kind.$_txt.gsub( ".*%.", "" );
+   // self.write( '"%s"' (name) );
+   self.write( "%d" ( node.$exp.$expType.$kind ) );
 }
    
 

@@ -1522,6 +1522,56 @@ fn TransUnit.registBuiltInScope() mut {
       return typeInfo;
    }
 
+   fn processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
+                    parentInfo:&Ast.TypeInfo )
+   {
+      if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
+         if info.type$[1] == "member" {
+            self.scope.addMember(
+               fieldName,
+               getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, .Mut );
+         }
+         else {
+            let mut argTypeList: List<&Ast.TypeInfo> = [];
+            foreach argType in unwrap info[ "arg" ] {
+               argTypeList.insert( getTypeInfo( argType ) );
+            }
+
+            let mut retTypeList: List<&Ast.TypeInfo> = [];
+            foreach retType in unwrap info[ "ret" ] {
+               let retTypeInfo = getTypeInfo( retType );
+               retTypeList.insert( retTypeInfo );
+            }
+
+            let funcType = info.type$[1];
+            let methodFlag = funcType == "method" or funcType == "mut";
+            let mutable = funcType == "mut";
+
+            self.pushScope( false ## );
+
+            let typeInfo = Ast.NormalTypeInfo.createFunc(
+               false, true, self.scope,
+               methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
+               parentInfo, false, true, not methodFlag, .Pub,
+               fieldName, nil, argTypeList, retTypeList, mutable );
+
+            self.popScope();
+
+            Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
+            if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
+               Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
+            }
+            self.scope.add(
+               methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
+               not methodFlag, not methodFlag,
+               fieldName, typeInfo, .Pub, not methodFlag,
+               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+
+            setupBuiltinTypeInfo( name, fieldName, typeInfo );
+         }
+      }
+   }
+
    self.scope = Ast.rootScope;
 
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
@@ -1578,53 +1628,13 @@ fn TransUnit.registBuiltInScope() mut {
                builtinModuleName2Scope[ name ] = self.scope;
             }
 
+            // typeid が一定になるようにソートする
             forsort info, fieldName in name2FieldInfo {
-               if fieldName ~= "__attrib" {
-
-                  if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
-                     if info.type$[1] == "member" {
-                        self.scope.addMember(
-                           fieldName,
-                           getTypeInfo( unwrap info.typeInfo$[1] ), .Pub, true, .Mut );
-                     }
-                     else {
-                        let mut argTypeList: List<&Ast.TypeInfo> = [];
-                        foreach argType in unwrap info[ "arg" ] {
-                           argTypeList.insert( getTypeInfo( argType ) );
-                        }
-
-                        let mut retTypeList: List<&Ast.TypeInfo> = [];
-                        foreach retType in unwrap info[ "ret" ] {
-                           let retTypeInfo = getTypeInfo( retType );
-                           retTypeList.insert( retTypeInfo );
-                        }
-
-                        let funcType = info.type$[1];
-                        let methodFlag = funcType == "method" or funcType == "mut";
-                        let mutable = funcType == "mut";
-
-                        self.pushScope( false ## );
-
-                        let typeInfo = Ast.NormalTypeInfo.createFunc(
-                           false, true, self.scope,
-                           methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func,
-                           parentInfo, false, true, not methodFlag, .Pub,
-                           fieldName, nil, argTypeList, retTypeList, mutable );
-
-                        self.popScope();
-
-                        Ast.builtInTypeIdSet[ typeInfo.get_typeId() ] = typeInfo;
-                        if typeInfo.$nilableTypeInfo ~= Ast.headTypeInfo {
-                           Ast.builtInTypeIdSet[ typeInfo.$nilableTypeInfo.$typeId ] = typeInfo.$nilableTypeInfo;
-                        }
-                        self.scope.add(
-                           methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun,
-                           not methodFlag, not methodFlag,
-                           fieldName, typeInfo, .Pub, not methodFlag,
-                           mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
-
-                        setupBuiltinTypeInfo( name, fieldName, typeInfo );
-                     }
+               switch fieldName {
+                  case "__attrib" {
+                  }
+                  default {
+                     processField( name, fieldName, info, parentInfo );
                   }
                }
             }
@@ -1663,6 +1673,18 @@ fn TransUnit.error( mess: str ) mut : __ {
    foreach mess in self.warnMessList {
       Util.errorLog( mess );
    }
+   if self.macroMode ~= .None {
+      print( "------ near code -----" );
+      let mut code = "";
+      for index = #self.usedTokenList - 20, #self.usedTokenList {
+         if index > 1 {
+            code = "%s %s" ( code, self.usedTokenList[ index ].txt );
+         }
+      }
+      print( code .. self.currentToken.txt );
+      print( "------" );
+   }
+   
    Util.err( "has error" );
 }
 

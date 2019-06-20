@@ -2662,6 +2662,43 @@ function TransUnit:registBuiltInScope(  )
       return typeInfo
    end
    
+   local function processField( name, fieldName, info, parentInfo )
+   
+      if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
+         if _lune.nilacc( info['type'], nil, 'item', 1) == "member" then
+            self.scope:addMember( fieldName, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut )
+         else
+          
+            local argTypeList = {}
+            for __index, argType in pairs( _lune.unwrap( info["arg"]) ) do
+               table.insert( argTypeList, getTypeInfo( argType ) )
+            end
+            
+            local retTypeList = {}
+            for __index, retType in pairs( _lune.unwrap( info["ret"]) ) do
+               local retTypeInfo = getTypeInfo( retType )
+               table.insert( retTypeList, retTypeInfo )
+            end
+            
+            local funcType = _lune.nilacc( info['type'], nil, 'item', 1)
+            local methodFlag = funcType == "method" or funcType == "mut"
+            local mutable = funcType == "mut"
+            self:pushScope( false )
+            local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func, parentInfo, false, true, not methodFlag, Ast.AccessMode.Pub, fieldName, nil, argTypeList, retTypeList, mutable )
+            self:popScope(  )
+            Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = typeInfo
+            if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
+               Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
+            end
+            
+            self.scope:add( methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun, not methodFlag, not methodFlag, fieldName, typeInfo, Ast.AccessMode.Pub, not methodFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+            setupBuiltinTypeInfo( name, fieldName, typeInfo )
+         end
+         
+      end
+      
+   end
+   
    self.scope = Ast.rootScope
    local builtinModuleName2Scope = {}
    local mapType = Ast.NormalTypeInfo.createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
@@ -2727,40 +2764,13 @@ function TransUnit:registBuiltInScope(  )
                for __index, fieldName in ipairs( __sorted ) do
                   local info = __map[ fieldName ]
                   do
-                     if fieldName ~= "__attrib" then
-                        if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
-                           if _lune.nilacc( info['type'], nil, 'item', 1) == "member" then
-                              self.scope:addMember( fieldName, getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut )
-                           else
-                            
-                              local argTypeList = {}
-                              for __index, argType in pairs( _lune.unwrap( info["arg"]) ) do
-                                 table.insert( argTypeList, getTypeInfo( argType ) )
-                              end
-                              
-                              local retTypeList = {}
-                              for __index, retType in pairs( _lune.unwrap( info["ret"]) ) do
-                                 local retTypeInfo = getTypeInfo( retType )
-                                 table.insert( retTypeList, retTypeInfo )
-                              end
-                              
-                              local funcType = _lune.nilacc( info['type'], nil, 'item', 1)
-                              local methodFlag = funcType == "method" or funcType == "mut"
-                              local mutable = funcType == "mut"
-                              self:pushScope( false )
-                              local typeInfo = Ast.NormalTypeInfo.createFunc( false, true, self.scope, methodFlag and Ast.TypeInfoKind.Method or Ast.TypeInfoKind.Func, parentInfo, false, true, not methodFlag, Ast.AccessMode.Pub, fieldName, nil, argTypeList, retTypeList, mutable )
-                              self:popScope(  )
-                              Ast.builtInTypeIdSet[typeInfo:get_typeId(  )] = typeInfo
-                              if typeInfo:get_nilableTypeInfo() ~= Ast.headTypeInfo then
-                                 Ast.builtInTypeIdSet[typeInfo:get_nilableTypeInfo():get_typeId()] = typeInfo:get_nilableTypeInfo()
-                              end
-                              
-                              self.scope:add( methodFlag and Ast.SymbolKind.Mtd or Ast.SymbolKind.Fun, not methodFlag, not methodFlag, fieldName, typeInfo, Ast.AccessMode.Pub, not methodFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
-                              setupBuiltinTypeInfo( name, fieldName, typeInfo )
-                           end
+                     do
+                        local _switchExp = fieldName
+                        if _switchExp == "__attrib" then
+                        else 
                            
+                              processField( name, fieldName, info, parentInfo )
                         end
-                        
                      end
                      
                   end
@@ -2804,6 +2814,20 @@ function TransUnit:error( mess )
    
    for __index, mess in pairs( self.warnMessList ) do
       Util.errorLog( mess )
+   end
+   
+   if self.macroMode ~= Nodes.MacroMode.None then
+      print( "------ near code -----" )
+      local code = ""
+      for index = #self.usedTokenList - 20, #self.usedTokenList do
+         if index > 1 then
+            code = string.format( "%s %s", code, self.usedTokenList[index].txt)
+         end
+         
+      end
+      
+      print( code .. self.currentToken.txt )
+      print( "------" )
    end
    
    Util.err( "has error" )
@@ -3370,7 +3394,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2215, function (  )
+   Log.log( Log.Level.Info, __func__, 2237, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3386,7 +3410,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2226, function (  )
+               Log.log( Log.Level.Info, __func__, 2248, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3417,7 +3441,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2246, function (  )
+   Log.log( Log.Level.Info, __func__, 2268, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3773,7 +3797,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2617, function (  )
+   Log.log( Log.Level.Info, __func__, 2639, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -6920,42 +6944,13 @@ function TransUnit:analyzeListConst( token )
    local nextToken = self:getToken(  )
    local expList = nil
    local itemTypeInfo = Ast.builtinTypeNone
-   local function getCommonType( type1, type2 )
-   
-      if type1:get_nilable() or type2:get_nilable() then
-         return Ast.builtinTypeStem_
-      end
-      
-      return Ast.builtinTypeStem
-   end
-   
    if nextToken.txt ~= "]" then
       self:pushback(  )
       expList = self:analyzeExpList( false, false )
       self:checkNextToken( "]" )
       local nodeList = (_lune.unwrap( expList) ):get_expList()
       for __index, exp in pairs( nodeList ) do
-         local expType = exp:get_expType()
-         if itemTypeInfo:equals( Ast.builtinTypeNone ) then
-            itemTypeInfo = expType
-         else
-          
-            local eval1 = itemTypeInfo:canEvalWith( expType, "=", {} )
-            local eval2 = expType:canEvalWith( itemTypeInfo, "=", {} )
-            if not eval1 and not eval2 then
-               if expType:equals( Ast.builtinTypeNil ) then
-                  itemTypeInfo = itemTypeInfo:get_nilableTypeInfo()
-               else
-                
-                  itemTypeInfo = Ast.TypeInfo.getCommonType( itemTypeInfo, expType, Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
-               end
-               
-            elseif eval2 then
-               itemTypeInfo = expType
-            end
-            
-         end
-         
+         itemTypeInfo = Ast.TypeInfo.getCommonType( itemTypeInfo, exp:get_expType(), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
       end
       
    end
@@ -6999,18 +6994,7 @@ function TransUnit:analyzeSetConst( token )
             self:addErrMess( exp:get_pos(), string.format( "'Set' object can't store nilable. -- %s", expType:getTxt(  )) )
          else
           
-            if itemTypeInfo:equals( Ast.builtinTypeNone ) then
-               itemTypeInfo = expType
-            elseif not itemTypeInfo:canEvalWith( expType, "=", {} ) then
-               if expType:canEvalWith( itemTypeInfo, "=", {} ) then
-                  itemTypeInfo = expType
-               else
-                
-                  itemTypeInfo = Ast.builtinTypeStem
-               end
-               
-            end
-            
+            itemTypeInfo = Ast.TypeInfo.getCommonType( itemTypeInfo, exp:get_expType(), Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
          end
          
       end
@@ -7043,21 +7027,7 @@ function TransUnit:analyzeMapConst( token )
          expType = expType:get_nonnilableType()
       end
       
-      if typeInfo == Ast.builtinTypeNone then
-         return expType
-      end
-      
-      if not typeInfo:canEvalWith( expType, "=", {} ) then
-         if expType:canEvalWith( typeInfo, "=", {} ) then
-            typeInfo = expType
-         else
-          
-            typeInfo = Ast.builtinTypeStem
-         end
-         
-      end
-      
-      return typeInfo
+      return Ast.TypeInfo.getCommonType( typeInfo, expType, Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
    end
    
    while true do
@@ -7900,7 +7870,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
             local expList = _lune.nilacc( argList, 'get_expList', 'callmtd' )
             if expList ~= nil then
                if #expList > 0 then
-                  exp = Nodes.LuneKindNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeString}, expList[1] )
+                  exp = Nodes.LuneKindNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeInt}, expList[1] )
                end
                
             end
@@ -9070,6 +9040,8 @@ function TransUnit:analyzeExpMacroStat( firstToken )
                   else
                      if exp:get_expType():equals( Ast.builtinTypeInt ) or exp:get_expType():equals( Ast.builtinTypeReal ) then
                         format = "'%s' "
+                     elseif exp:get_expType():equals( Ast.builtinTypeStat ) then
+                        format = "' %s '"
                      end
                      
                   end
@@ -9079,7 +9051,7 @@ function TransUnit:analyzeExpMacroStat( firstToken )
             
          end
          
-         local newToken = Parser.Token.new(Parser.TokenKind.Str, format, token.pos, false)
+         local newToken = Parser.Token.new(Parser.TokenKind.Str, format, token.pos, token.consecutive)
          local literalStr = Nodes.LiteralStringNode.create( self.nodeManager, token.pos, {Ast.builtinTypeString}, newToken, {exp} )
          table.insert( expStrList, literalStr )
       else
@@ -9094,12 +9066,18 @@ function TransUnit:analyzeExpMacroStat( firstToken )
             braceCount = braceCount - 1
          end
          
-         local format = "' %s '"
-         if prevToken == firstToken or (prevToken.pos.lineNo == token.pos.lineNo and prevToken.pos.column + #prevToken.txt == token.pos.column ) then
+         local format = "' %s'"
+         local consecutive
+         
+         if prevToken == firstToken or token.consecutive then
             format = "'%s'"
+            consecutive = true
+         else
+          
+            consecutive = false
          end
          
-         local newToken = Parser.Token.new(token.kind, string.format( format, token.txt ), token.pos, false)
+         local newToken = Parser.Token.new(token.kind, string.format( format, token.txt ), token.pos, consecutive)
          local literalStr = Nodes.LiteralStringNode.create( self.nodeManager, token.pos, {Ast.builtinTypeString}, newToken, {} )
          table.insert( expStrList, literalStr )
       end

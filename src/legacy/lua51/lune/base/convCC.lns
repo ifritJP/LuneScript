@@ -170,7 +170,6 @@ fn isStemSym( symbolInfo:&Ast.SymbolInfo ): bool {
       return true;
    }
    let typeTxt, isStem = getCTypeForSym( symbolInfo );
-   print( "hoge:", symbolInfo.$name, symbolInfo.$kind.$_txt, typeTxt, isStem );
    return isStem;
 }
 
@@ -434,6 +433,15 @@ pub override fn convFilter.processRoot(
 {
    Ast.pushProcessInfo( node.$processInfo );
 
+   node.visit(
+      fn ( target:&Nodes.Node, parent:&Nodes.Node,
+           releation:str, depth:int ): Nodes.NodeVisitMode
+      {
+         print( string.rep( "  ", depth ) .. Nodes.getNodeKindName( target.$kind ),
+                releation );
+         return .Child;
+      }, 0 );
+   
    self.writeln( "// %s" ( self.streamName ) );
 
    self.writeln( "#include <lunescript.h>" );

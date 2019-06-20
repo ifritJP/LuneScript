@@ -127,93 +127,15 @@ fn TransUnit.analyzeListConst( token: &Parser.Token ) mut : Nodes.Node {
    let mut expList:Nodes.ExpListNode! = nil;
    let mut itemTypeInfo = Ast.builtinTypeNone;
 
-   fn getCommonType( type1: &Ast.TypeInfo, type2: &Ast.TypeInfo) : &Ast.TypeInfo
-   {
-      if type1.$nilable or type2.$nilable {
-         return Ast.builtinTypeStem_;
-      }
-      return Ast.builtinTypeStem;
-   }
-   
    if nextToken.txt ~= "]" {
       self.pushback();
       expList = self.analyzeExpList( false, false ## );
       self.checkNextToken( "]" );
       let nodeList: List<&Nodes.Node> = (unwrap expList).$expList;
       foreach exp in nodeList {
-         let expType = exp.$expType;
-         if itemTypeInfo.equals( Ast.builtinTypeNone ## ) {
-            itemTypeInfo = expType;
-         }
-         else {
-            let eval1 = itemTypeInfo.canEvalWith( expType, "=", {} );
-            let eval2 = expType.canEvalWith( itemTypeInfo, "=", {} );
-
-            if not eval1 and not eval2 {
-               if expType.equals( Ast.builtinTypeNil ## ) {
-                  itemTypeInfo = itemTypeInfo.$nilableTypeInfo;
-               }
-               // elseif itemTypeInfo.$kind == expType.$kind {
-                  
-                  // let mut mutMode;
-                  // if Ast.TypeInfo.isMut( itemTypeInfo ) or Ast.TypeInfo.isMut( expType ) {
-                  //    mutMode = Ast.MutMode.Mut;
-                  // }
-                  // else {
-                  //    mutMode = Ast.MutMode.IMut;
-                  // }
-                  
-                  // switch itemTypeInfo.$kind {
-                  //    case .List {
-                  //       itemTypeInfo = Ast.NormalTypeInfo.createList(
-                  //          .Pri, self.getCurrentClass(),
-                  //          [ getCommonType( itemTypeInfo.$itemTypeInfoList[ 1 ],
-                  //                         expType.$itemTypeInfoList[ 1 ] ) ],
-                  //          mutMode );
-                  //    }
-                  //    case .Array {
-                  //       itemTypeInfo = Ast.NormalTypeInfo.createArray(
-                  //          .Pri, self.getCurrentClass(),
-                  //          [ getCommonType( itemTypeInfo.$itemTypeInfoList[ 1 ],
-                  //                         expType.$itemTypeInfoList[ 1 ] ) ],
-                  //          mutMode );
-                  //    }
-                  //    case .Set {
-                  //       itemTypeInfo = Ast.NormalTypeInfo.createSet(
-                  //          .Pri, self.getCurrentClass(),
-                  //          [ getCommonType( itemTypeInfo.$itemTypeInfoList[ 1 ],
-                  //                         expType.$itemTypeInfoList[ 1 ] ) ],
-                  //          mutMode );
-                  //    }
-                  //    case .Map {
-                  //       itemTypeInfo = Ast.NormalTypeInfo.createMap(
-                  //          .Pri, self.getCurrentClass(),
-                  //          getCommonType( itemTypeInfo.$itemTypeInfoList[ 1 ],
-                  //                       expType.$itemTypeInfoList[ 1 ] ),
-                  //          getCommonType( itemTypeInfo.$itemTypeInfoList[ 2 ],
-                  //                       expType.$itemTypeInfoList[ 2 ] ),
-                  //          mutMode );
-                  //    }
-                  //    default {
-                  //       itemTypeInfo = getCommonType( itemTypeInfo, expType );
-                  //    }
-            // }
-               // }
-               // elseif expType.$nilable {
-               //    itemTypeInfo = Ast.builtinTypeStem_;
-               // }
-               else {
-                  // itemTypeInfo = Ast.builtinTypeStem;
-                  //itemTypeInfo = getCommonType( itemTypeInfo, expType );
-                  itemTypeInfo = Ast.TypeInfo.getCommonType(
-                     itemTypeInfo, expType,
-                     Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
-               }
-            }
-            elseif eval2 {
-               itemTypeInfo = expType;
-            }
-         }
+         itemTypeInfo = Ast.TypeInfo.getCommonType(
+            itemTypeInfo, exp.$expType,
+            Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
       }
    }
    if itemTypeInfo.$kind == .DDD {
@@ -260,18 +182,9 @@ fn TransUnit.analyzeSetConst( token: &Parser.Token ) mut : Nodes.Node {
                "'Set' object can't store nilable. -- %s" (expType.getTxt(##)));
          }
          else {
-            if itemTypeInfo.equals( Ast.builtinTypeNone ## ) {
-               itemTypeInfo = expType;
-            }  
-            elseif not itemTypeInfo.canEvalWith( expType, "=", {} ) {
-               if expType.canEvalWith( itemTypeInfo, "=", {} ) {
-                  itemTypeInfo = expType;
-               }
-               else {
-                  itemTypeInfo = Ast.builtinTypeStem;
-               }
-               
-            }
+            itemTypeInfo = Ast.TypeInfo.getCommonType(
+               itemTypeInfo, exp.$expType,
+               Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
          }
       }
    }
@@ -304,18 +217,9 @@ fn TransUnit.analyzeMapConst( token: &Parser.Token ) mut : Nodes.LiteralMapNode 
          }
          expType = expType.$nonnilableType;
       }
-      if typeInfo == Ast.builtinTypeNone {
-         return expType;
-      }
-      if not typeInfo.canEvalWith( expType, "=", {} ) {
-         if expType.canEvalWith( typeInfo, "=", {} ) {
-            typeInfo = expType;
-         }
-         else {
-            typeInfo = Ast.builtinTypeStem;
-         }
-      }
-      return typeInfo;
+      return Ast.TypeInfo.getCommonType(
+         typeInfo, expType,
+         Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
    }
 
    while true {
@@ -1239,7 +1143,7 @@ fn TransUnit.analyzeExpCall(
          if! let expList = argList$.$expList {
             if #expList > 0 {
                exp = Nodes.LuneKindNode.create(
-                  self.nodeManager, firstToken.pos, [ Ast.builtinTypeString ],
+                  self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
                   expList[ 1 ] );
             }
          }
@@ -2525,11 +2429,14 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
                   {
                      format = "'%s' ";
                   }
+                  elseif exp.$expType.equals( Ast.builtinTypeStat ##) {
+                     format = "' %s '";
+                  }
                }
             }
          }
          let newToken = new Parser.Token(
-            Parser.TokenKind.Str, format, token.pos, false ## );
+            Parser.TokenKind.Str, format, token.pos, token.consecutive ## );
          let literalStr = Nodes.LiteralStringNode.create(
             self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
          expStrList.insert( literalStr );
@@ -2545,15 +2452,17 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
             braceCount = braceCount - 1;
          }
 
-         let mut format = "' %s '";
-         if prevToken == firstToken or
-            (prevToken.pos.lineNo == token.pos.lineNo and
-              prevToken.pos.column + #prevToken.txt == token.pos.column)
-         {
+         let mut format = "' %s'";
+         let mut consecutive;
+         if prevToken == firstToken or token.consecutive {
             format = "'%s'";
+            consecutive = true;
+         }
+         else {
+            consecutive = false;
          }
          let newToken = new Parser.Token(
-            token.kind, string.format( format, token.txt ), token.pos, false ## );
+            token.kind, string.format( format, token.txt ), token.pos, consecutive ## );
          let literalStr = Nodes.LiteralStringNode.create(
             self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [] );
          expStrList.insert( literalStr );

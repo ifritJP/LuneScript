@@ -484,8 +484,6 @@ local function isStemSym( symbolInfo )
    end
    
    local typeTxt, isStem = getCTypeForSym( symbolInfo )
-   print( "hoge:", symbolInfo:get_name(), Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
-   , typeTxt, isStem )
    return isStem
 end
 
@@ -732,6 +730,12 @@ end
 function convFilter:processRoot( node, opt )
 
    Ast.pushProcessInfo( node:get_processInfo() )
+   node:visit( function ( target, parent, releation, depth )
+   
+      print( string.rep( "  ", depth ) .. Nodes.getNodeKindName( target:get_kind() ), releation )
+      return Nodes.NodeVisitMode.Child
+   end
+   , 0 )
    self:writeln( string.format( "// %s", self.streamName) )
    self:writeln( "#include <lunescript.h>" )
    local children = node:get_children(  )

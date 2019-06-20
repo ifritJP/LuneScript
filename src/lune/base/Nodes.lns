@@ -114,7 +114,27 @@ pub fn getLiteralObj( obj:&Literal ):stem! {
    return nil;
 }
 
-pub class Node {
+pub proto abstract class Node;
+
+pub enum NodeVisitMode {
+   /** 子ノードがある場合、子ノードに visit する */
+   Child,
+   /** 子ノードがあっても無視し、同じ階層のノードに visit する */
+   Next,
+   /** 以降、ノードへの visit は行なわない */
+   End,
+}
+
+/**
+ノードを辿る際のコールバック関数
+
+@param node 現在のノード
+@param parent 親ノード
+@param releation 親ノードのフィールド名
+*/
+pub form NodeVisitor( node:&Node, parent:&Node, relation:str, depth:int ): NodeVisitMode;
+
+pub abstract class Node {
    pri let id: int { pub };
    pri let kind: int { pub };
    pri let pos: &Parser.Position { pub };
@@ -162,6 +182,8 @@ pub class Node {
    pub fn getBreakKind( checkMode:CheckBreakMode ): BreakKind {
       return .None;
    }
+
+   pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
 }
 
 
@@ -292,27 +314,6 @@ pub class NodeKind {
 }
 
 
-pub enum NodeVisitMode {
-   /** 子ノードがある場合、子ノードに visit する */
-   Child,
-   /** 子ノードがあっても無視し、同じ階層のノードに visit する */
-   Next,
-   /** 以降、ノードへの visit は行なわない */
-   End,
-}
-
-pub class Relation {
-}
-
-/**
-ノードを辿る際のコールバック関数
-
-@param node 現在のノード
-@param parent 親ノード
-@param releation 親ノードとの関係
-*/
-pub form NodeVisitor( node:&Node, parent:&Node, relation:int ): NodeVisitMode;
-
 /**
 Node を定義するマクロ。
 
@@ -325,9 +326,12 @@ Node を定義するマクロ。
 @param canBeStatementFlag canBeStatement() の戻り値。
    nil を指定すると、別途 canBeStatement() を定義する必要がある。
 @param fieldInfoList 定義する Node のフィールドのリスト。
-   key: フィールド名。 val: フィールドの型 の Map のリスト。
+   key: フィールド名。 val: フィールドの型名  の Map のリスト。
    フィールドの順番を保証するために、 Map のリストとしている。
    フィールドの順番が、コンストラクタの順番になるため。
+   フィールドの型名に Node を含むものは、
+   子ノードのフィールドとして visit() で辿る対象とする。
+   ただし、フィールド名の先頭に @ があるものは、除外する。
 */
 macro _declNodeClass(
    baseName:str, super:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
@@ -343,17 +347,84 @@ macro _declNodeClass(
       let mut argSymList:stat[] = [];
       let mut initStatList:stat[] = [];
       let mut relateStat:stat[] = [];
+
+      let mut visitStatList:List<stat> = [];
       
       foreach fieldInfo in fieldInfoList {
-         foreach typeName, varName in fieldInfo {
+         foreach typeName, workName in fieldInfo {
+            let fieldName = workName.gsub( "^@", "" );
             fieldStatList.insert( `{
-               pri let mut ,,,varName : ,,,typeName { pub };
+               pri let mut ,,,fieldName : ,,,typeName { pub };
             });  
-            argList.insert( `{ ,,,varName: ,,,typeName, } );
-            argSymList.insert( `{, ,,,varName } );
-            initStatList.insert( `{ self.,,,varName = ,,,varName; } );
-         }   
-      }  
+            argList.insert( `{ ,,,fieldName: ,,,typeName, } );
+            argSymList.insert( `{, ,,,fieldName } );
+            initStatList.insert( `{ self.,,,fieldName = ,,,fieldName; } );
+
+            // 子 Node を列挙する処理
+            if typeName.find( "Node" ## ) and not workName.find( "^@"## ) {
+               let oneVisitStat = `{
+                  switch visitor( child, self, ,,fieldName, depth ) {
+                     case NodeVisitMode.Child {
+                        if not child.visit( visitor, depth + 1 ) {
+                           return false;
+                        }
+                     }
+                     case NodeVisitMode.End {
+                        return false;
+                     }
+                  }
+               };
+
+               fn processNilable( varName:str, statVar:stat ) {
+                  if typeName.find( "!$" ## ) {
+                     visitStatList.insert( `{
+                        {
+                           if! let ,,,varName = self.,,,fieldName {
+                              ,,statVar;
+                           }
+                        }
+                     });
+                  }
+                  else {
+                     visitStatList.insert( `{
+                        {
+                           let ,,,varName = self.,,,fieldName;
+                           ,,statVar;
+                        }
+                     } );
+                  }
+               }
+               
+               if typeName.find( "List<" ## ) {
+                  let workStat = `{
+                     foreach child in list {
+                        ,,oneVisitStat;
+                     }
+                  };
+                  processNilable( "list", workStat );
+               }
+               elseif typeName.find( "Map<" ## ) {
+                  let workStat = `{
+                     foreach val, key in map {
+                        {
+                           let child = key;
+                           ,,oneVisitStat;
+                        }
+                        {
+                           let child = val;
+                           ,,oneVisitStat;
+                        }
+                     }
+                  };
+                  processNilable( "map", workStat );
+                  
+               }
+               else {
+                  processNilable( "child", oneVisitStat );
+               }
+            }
+         }
+      }
 
       fieldStatList.insert( `{
          pub override fn processFilter<OPT>( filter: Filter<OPT>, opt:OPT ) {
@@ -412,6 +483,11 @@ macro _declNodeClass(
          let mut node = new ,,className( nodeMan.nextId(), pos, typeList ,,argSymList );
          nodeMan.addNode( node );
          return node;
+      }
+
+      pub override fn visit( visitor:NodeVisitor, depth:int ): bool {
+         ,,visitStatList;
+         return true;
       }
    }
 }
@@ -518,7 +594,7 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "moduleTypeInfo": "&Ast.TypeInfo" },
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "&LuneHelperInfo" },
-                  { "nodeManager": "&NodeManager" },
+                  { "@nodeManager": "&NodeManager" },
                   { "importModule2moduleInfo": "Map<&Ast.TypeInfo,&ModuleInfo>" },
                   { "typeId2MacroInfo": "Map<int,&MacroInfo>" },
                   { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]

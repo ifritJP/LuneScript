@@ -68,3 +68,82 @@ foreach val in (@ (@), (@1) ) {
 foreach val in (@ (@1), (@) ) {
    let val2:Set<int> = val;
 }
+//---- etc
+{
+   let mut val = {
+      "val": [
+         {
+            "test1": "txt"
+         },
+         {
+            "test2": [
+            ]
+         }
+      ]
+   };
+
+   print( val.val$[2]$.test2 );
+}
+{
+   let mut val = [
+      [ { "test1": 1 }, { "test2": "aa" } ]
+   ];
+
+   print( val[1][1].test1, val[1][2].test2 );
+   {
+      let val1:int = unwrap val[1][1].test1; // error
+      let val2:str = unwrap val[1][2].test2; // error
+   }
+}
+{
+   let mut val = [
+      [ { "test1": 1 }, { "test2": 2 } ]
+   ];
+
+   print( val[1][1].test1, val[1][2].test2 );
+   {
+      let val1:int = unwrap val[1][1].test1;
+      let val2:str = unwrap val[1][2].test2; // error
+   }
+}
+class Test {
+}
+class Sub extend Test {
+}
+class SubSub extend Test {
+}
+{
+   let mut val = [
+      [ { "test1": new Test() }, { "test2": new Sub() }, { "test3": new Test() } ]
+   ];
+
+   print( val[1][1].test1, val[1][2].test2 );
+   let val1:int = unwrap val[1][1].test1; // error
+   let val2:Test = unwrap val[1][1].test1;
+}
+{
+   let mut val = [
+      [ { "test1": new SubSub() }, { "test2": new Sub() } ]
+   ];
+
+   print( val[1][1].test1, val[1][2].test2 );
+   let val1:int = unwrap val[1][1].test1; // error
+   let val2:Test = unwrap val[1][1].test1;
+}
+{
+   let mut val = [ [ new SubSub(), new Sub() ] ];
+   let val1:int = val[1][1]; // error
+   let val2:Test = val[1][1];
+}
+{
+   let mut val = [@ new SubSub(), new Sub() ];
+   let val1:int = val[1]; // error
+   let val2:Test = val[1];
+}
+{
+   let mut val = (@ new SubSub(), new Sub() );
+   foreach item in val {
+      let val1:int = item; // error
+      let val2:Test = item;
+   }
+}
