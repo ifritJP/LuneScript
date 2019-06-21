@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = 'lune.base.Parser'
 local _lune = {}
-if _lune0 then
-   _lune = _lune0
+if _lune1 then
+   _lune = _lune1
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -95,8 +95,8 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
-if not _lune0 then
-   _lune0 = _lune
+if not _lune1 then
+   _lune1 = _lune
 end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local luaKeywordSet = {}

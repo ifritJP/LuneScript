@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = 'lune.base.Log'
 local _lune = {}
-if _lune0 then
-   _lune = _lune0
+if _lune1 then
+   _lune = _lune1
 end
 function _lune.__isInstanceOf( obj, class )
    while obj do
@@ -52,8 +52,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune0 then
-   _lune0 = _lune
+if not _lune1 then
+   _lune1 = _lune
 end
 local Level = {}
 _moduleObj.Level = Level

@@ -1637,7 +1637,7 @@ pub fn convFilter.outputDeclMacro(
       self.writeln( 'local _lune = require( "%s" )' (_exp) );
    }
    else {
-      self.writeln( 'local _lune = require( "lune.base._lune" )' );
+      self.writeln( 'local _lune = require( "lune.base._lune%d" )' (Ver.luaModVersion) );
    }
    foreach argName in argNameList {
       self.writeln( "local %s = __macroArgs.%s" (argName, argName ) );
@@ -3126,7 +3126,7 @@ pub override fn convFilter.processLiteralSymbol(
 pub override fn convFilter.processLuneControl(
    node: Nodes.LuneControlNode, opt: Opt ) mut
 {
-   self.writeln( 'local _lune = require( "lune.base._lune" )' );
+   self.writeln( 'local _lune = require( "lune.base._lune%d" )' (Ver.luaModVersion));
 }
 
 pub fn createFilter(

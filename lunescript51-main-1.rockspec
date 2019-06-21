@@ -33,6 +33,7 @@ build = {
    type = "builtin",
    modules = {
       [ "lune.base._lune" ] = "src/legacy/lua51/lune/base/_lune.lua",
+      [ "lune.base._lune1" ] = "src/legacy/lua51/lune/base/_lune1.lua",
       [ "lune.base.base" ] = "src/legacy/lua51/lune/base/base.lua",
       [ "lune.base.Ver" ] = "src/legacy/lua51/lune/base/Ver.lua",
       [ "lune.base.LuneControl" ] = "src/legacy/lua51/lune/base/LuneControl.lua",

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = 'lune.base.Option'
 local _lune = {}
-if _lune0 then
-   _lune = _lune0
+if _lune1 then
+   _lune = _lune1
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -179,8 +179,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune0 then
-   _lune0 = _lune
+if not _lune1 then
+   _lune1 = _lune
 end
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -192,7 +192,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1427
+   return 1446
 end
 
 
@@ -361,6 +361,31 @@ local function outputLuneMod( path )
       return string.format( "failed to open -- %s", lune_path)
    end
    
+   fileObj:write( [==[
+--[[
+MIT License
+
+Copyright (c) 2018,2019 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+]]
+]==] )
    for __index, kind in pairs( LuaMod.CodeKind.get__allList() ) do
       fileObj:write( LuaMod.getCode( kind ) )
    end
@@ -458,7 +483,7 @@ usage:
                
                os.exit( 0 )
             elseif _switchExp == "-r" then
-               option.useLuneModule = "lune.base._lune"
+               option.useLuneModule = string.format( "lune.base._lune%d", Ver.luaModVersion)
             elseif _switchExp == "--runtime" then
                option.useLuneModule = (#argList > index ) and argList[index + 1] or nil
                index = index + 1

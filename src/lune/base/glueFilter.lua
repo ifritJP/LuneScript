@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = 'lune.base.glueFilter'
 local _lune = {}
-if _lune0 then
-   _lune = _lune0
+if _lune1 then
+   _lune = _lune1
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -179,8 +179,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune0 then
-   _lune0 = _lune
+if not _lune1 then
+   _lune1 = _lune
 end
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )

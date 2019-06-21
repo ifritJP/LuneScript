@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = 'lune.base.convLua'
 local _lune = {}
-if _lune0 then
-   _lune = _lune0
+if _lune1 then
+   _lune = _lune1
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -228,8 +228,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune0 then
-   _lune0 = _lune
+if not _lune1 then
+   _lune1 = _lune
 end
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -1897,7 +1897,7 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
       if _exp ~= nil then
          self:writeln( string.format( 'local _lune = require( "%s" )', _exp) )
       else
-         self:writeln( 'local _lune = require( "lune.base._lune" )' )
+         self:writeln( string.format( 'local _lune = require( "lune.base._lune%d" )', Ver.luaModVersion) )
       end
    end
    
@@ -3465,7 +3465,7 @@ end
 
 function convFilter:processLuneControl( node, opt )
 
-   self:writeln( 'local _lune = require( "lune.base._lune" )' )
+   self:writeln( string.format( 'local _lune = require( "lune.base._lune%d" )', Ver.luaModVersion) )
 end
 
 local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer )

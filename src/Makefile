@@ -98,6 +98,9 @@ define buildLns
 	$(call transwork,$1,$2,$3,base/glueFilter)
 	$(call transwork,$1,$2,$3,Util)
 	$(call exeLune,$1/$2,-mklunemod,lune/base/_lune.lua) > /dev/null
+	cat $1/$2/$(VER_PATH) | $(RUNTIME_VER_PICK) | \
+		awk '//{printf( "$1/$2/lune/base/_lune%s.lua",$$0);}' | \
+		xargs cp $1/$2/lune/base/_lune.lua 
 endef
 
 
@@ -384,9 +387,16 @@ test-comp2:
 	$(call build-testcode,work/3,-r)
 	(cd work/3; $(LUA) test/start.lua) > work/test4.result
 
+# 使用するランタイム名指定してテスト
 	$(call exeLune,work/3,-mklunemod,runtime.lua) > /dev/null
 	$(call build-testcode,work/3,--runtime runtime )
+# ランタイムを使用していることを確認するため _lune.lua を移動しておく
+	mkdir backup
+	mv work/3/lune/base/_lune*.lua backup
 	(cd work/3; $(LUA) test/start.lua) > work/test4-2.result
+# _lune.lua を戻す
+	mv backup/* work/3/lune/base/
+	rmdir backup
 
 	$(call exeLune,work/3,test/start.lns,save,--depends start.dep)
 
@@ -498,6 +508,7 @@ ifndef ACCEPT
 	@read -p "accept? $1 (y/n): " ANS; \
 	if [ $${ANS}x != yx ]; then exit 1; fi;
 endif
+	rm lune/base/*.lua
 	cp work/3/lune/base/*.lua lune/base/
 	cp work/3/lune/base/*.meta lune/base/
 	cp work/3/lune/*.* lune/
@@ -509,10 +520,11 @@ ifneq ($(ENABLE_LUA51),)
 endif
 
 
+VER_PATH=lune/base/Ver.lua
+RUNTIME_VER_PICK=grep 'local luaModVersion' | sed 's/[^0-9]//g'
 ifneq ($(findstring $(MAKECMDGOALS),"check-runtime-format" ),)
-RUNTIME_VER_PICK=grep 'local luaModVersion' | awk '//{print $$4}'
-RUNTIME_ORG_VER=$(shell cat lune/base/Ver.lua | $(RUNTIME_VER_PICK))
-RUNTIME_NEW_VER=$(shell cat work/1/lune/base/Ver.lua | $(RUNTIME_VER_PICK))
+RUNTIME_ORG_VER=$(shell cat $(VER_PATH) | $(RUNTIME_VER_PICK))
+RUNTIME_NEW_VER=$(shell cat work/1/$(VER_PATH) | $(RUNTIME_VER_PICK))
 endif
 
 check-runtime-format:
@@ -528,8 +540,8 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),"check-meta-format" ),)
 VER_PICK=grep 'local metaVersion' | awk '//{print $$4}'
-ORG_VER=$(shell cat lune/base/Ver.lua | $(VER_PICK))
-NEW_VER=$(shell cat work/3/lune/base/Ver.lua | $(VER_PICK))
+ORG_VER=$(shell cat $(VER_PATH) | $(VER_PICK))
+NEW_VER=$(shell cat work/3/$(VER_PATH) | $(VER_PICK))
 endif
 
 check-meta-format:

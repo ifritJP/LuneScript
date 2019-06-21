@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = 'lune.base.LuaMod'
 local _lune = {}
-if _lune0 then
-   _lune = _lune0
+if _lune1 then
+   _lune = _lune1
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -18,8 +18,8 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-if not _lune0 then
-   _lune0 = _lune
+if not _lune1 then
+   _lune1 = _lune
 end
 local CodeKind = {}
 _moduleObj.CodeKind = CodeKind
