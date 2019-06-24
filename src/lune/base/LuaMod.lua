@@ -1,6 +1,6 @@
 --lune/base/LuaMod.lns
 local _moduleObj = {}
-local __mod__ = 'lune.base.LuaMod'
+local __mod__ = '@lune.@base.@LuaMod'
 local _lune = {}
 if _lune1 then
    _lune = _lune1

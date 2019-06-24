@@ -1,6 +1,6 @@
 --lune/base/TransUnit.lns
 local _moduleObj = {}
-local __mod__ = 'lune.base.TransUnit'
+local __mod__ = '@lune.@base.@TransUnit'
 local _lune = {}
 if _lune1 then
    _lune = _lune1
@@ -775,8 +775,17 @@ end
 function TransUnit:pushModule( externalFlag, name, mutable )
 
    local typeInfo = Ast.headTypeInfo
+   local modName
+   
+   if name:find( "^@" ) then
+      modName = name
+   else
+    
+      modName = string.format( "@%s", name)
+   end
+   
    do
-      local _exp = self.scope:getTypeInfoChild( name )
+      local _exp = self.scope:getTypeInfoChild( modName )
       if _exp ~= nil then
          typeInfo = _exp
          self.scope = _lune.unwrap( Ast.getScope( typeInfo ))
@@ -784,13 +793,13 @@ function TransUnit:pushModule( externalFlag, name, mutable )
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
          local parentScope = self.scope
          local scope = self:pushScope( true )
-         typeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, externalFlag, name, mutable )
-         parentScope:addClass( name, typeInfo )
+         typeInfo = Ast.NormalTypeInfo.createModule( scope, parentInfo, externalFlag, modName, mutable )
+         parentScope:addClass( modName, typeInfo )
       end
    end
    
    if not self.typeId2ClassMap[typeInfo:get_typeId(  )] then
-      local namespace = Nodes.NamespaceInfo.new(name, self.scope, typeInfo)
+      local namespace = Nodes.NamespaceInfo.new(modName, self.scope, typeInfo)
       self.typeId2ClassMap[typeInfo:get_typeId(  )] = namespace
    end
    
@@ -3394,7 +3403,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2237, function (  )
+   Log.log( Log.Level.Info, __func__, 2246, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3410,7 +3419,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2248, function (  )
+               Log.log( Log.Level.Info, __func__, 2257, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3441,7 +3450,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2268, function (  )
+   Log.log( Log.Level.Info, __func__, 2277, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3683,7 +3692,7 @@ function TransUnit:processImport( modulePath )
                         local typeId = fieldInfo['typeId']
                         if typeId ~= nil then
                            local fieldTypeInfo = _lune.unwrap( typeId2TypeInfo[math.floor(typeId)])
-                           self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
+                           local symbolInfo = self.scope:addMember( fieldName, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
                         else
                            self:error( "not found fieldInfo.typeId" )
                         end
@@ -3797,7 +3806,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2639, function (  )
+   Log.log( Log.Level.Info, __func__, 2648, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -3808,10 +3817,7 @@ end
 
 function TransUnit:analyzeImport( token )
 
-   if self.moduleScope ~= self.scope then
-      self:error( "'import' must call at top scope." )
-   end
-   
+   local backupScope = self.scope
    self.scope = self.topScope
    local moduleToken = self:getToken(  )
    local modulePath = moduleToken.txt
@@ -3832,7 +3838,7 @@ function TransUnit:analyzeImport( token )
    Ast.switchIdProvier( Ast.IdType.Ext )
    local metaInfo, typeId2TypeInfo, moduleInfo = self:processImport( modulePath )
    Ast.switchIdProvier( Ast.IdType.Base )
-   self.scope = self.moduleScope
+   self.scope = backupScope
    local assignName = moduleToken
    if nextToken.txt == "as" then
       assignName = self:getSymbolToken( SymbolMode.MustNot_ )
@@ -3844,10 +3850,6 @@ function TransUnit:analyzeImport( token )
    local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ))
    self.scope:add( moduleSymbolKind, false, false, assignName.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
    self:checkToken( nextToken, ";" )
-   if self.moduleScope ~= self.scope then
-      self:error( "illegal top scope." )
-   end
-   
    return Nodes.ImportNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, modulePath, assignName.txt, moduleTypeInfo )
 end
 

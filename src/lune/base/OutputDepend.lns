@@ -24,6 +24,7 @@ SOFTWARE.
 
 import lune.base.Nodes;
 import lune.base.Util;
+import lune.base.Ast;
 import lune.base.TransUnit;
 import lune.base.frontInterface;
 
@@ -33,7 +34,7 @@ pub class DependInfo {
    let mut subModList:List<str>;
 
    pub fn __init( targetModule:str ) {
-      self.targetModule = targetModule;
+      self.targetModule = Ast.TypeInfo.getModulePath( targetModule );
       self.importModuleList = [];
       self.subModList = [];
    }

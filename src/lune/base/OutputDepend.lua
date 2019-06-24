@@ -1,6 +1,6 @@
 --lune/base/OutputDepend.lns
 local _moduleObj = {}
-local __mod__ = 'lune.base.OutputDepend'
+local __mod__ = '@lune.@base.@OutputDepend'
 local _lune = {}
 if _lune1 then
    _lune = _lune1
@@ -124,6 +124,7 @@ if not _lune1 then
 end
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
+local Ast = _lune.loadModule( 'lune.base.Ast' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local DependInfo = {}
@@ -135,7 +136,7 @@ function DependInfo.new( targetModule )
    return obj
 end
 function DependInfo:__init(targetModule) 
-   self.targetModule = targetModule
+   self.targetModule = Ast.TypeInfo.getModulePath( targetModule )
    self.importModuleList = {}
    self.subModList = {}
 end

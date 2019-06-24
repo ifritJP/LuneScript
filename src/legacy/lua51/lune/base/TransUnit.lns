@@ -473,7 +473,16 @@ pub class TransUnit {
    pri fn pushModule( externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
-      if! self.scope.getTypeInfoChild( name ) {
+
+      let modName;
+      if name.find( "^@" ## ) {
+         modName = name;
+      }
+      else {
+         modName = "@%s" (name);
+      }
+      
+      if! self.scope.getTypeInfoChild( modName ) {
          typeInfo = _exp;
          self.scope = unwrap Ast.getScope( typeInfo );
       }
@@ -482,12 +491,12 @@ pub class TransUnit {
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
          typeInfo = Ast.NormalTypeInfo.createModule(
-            scope, parentInfo, externalFlag, name, mutable );
+            scope, parentInfo, externalFlag, modName, mutable );
 
-         parentScope.addClass( name, typeInfo );
+         parentScope.addClass( modName, typeInfo );
       }
       if not self.typeId2ClassMap[ typeInfo.get_typeId() ] {
-         let namespace = new Nodes.NamespaceInfo( name, self.scope, typeInfo );
+         let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
          self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
       }
       return typeInfo;
@@ -2495,7 +2504,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
                   if! let typeId = fieldInfo.typeId {
                      let fieldTypeInfo = unwrap typeId2TypeInfo[ typeId@@int ];
-                     self.scope.addMember(
+                     let symbolInfo = self.scope.addMember(
                         fieldName, fieldTypeInfo,
                         unwrap Ast.AccessMode._from( (unwrap fieldInfo.accessMode)@@int ),
                         fieldInfo.staticFlag and true or false,
@@ -2642,10 +2651,11 @@ fn TransUnit.processImport( modulePath:str ) mut :
 }
 
 fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
-   if self.moduleScope ~= self.scope {
-      self.error( "'import' must call at top scope." );
-   }
+   // if self.moduleScope ~= self.scope {
+   //    self.error( "'import' must call at top scope." );
+   // }
 
+   let mut backupScope = self.scope;
    // スコープをルートに変更
    self.scope = self.topScope;
 
@@ -2673,7 +2683,8 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
 
 
    // スコープを元に戻す
-   self.scope = self.moduleScope;
+   //self.scope = self.moduleScope;
+   self.scope = backupScope;
 
 
    let mut assignName = moduleToken;
@@ -2697,9 +2708,9 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
    self.checkToken( nextToken, ";" );
 
 
-   if self.moduleScope ~= self.scope {
-      self.error( "illegal top scope." );
-   }
+   // if self.moduleScope ~= self.scope {
+   //    self.error( "illegal top scope." );
+   // }
 
 
    return Nodes.ImportNode.create(

@@ -1,6 +1,6 @@
 --lune/base/convLua.lns
 local _moduleObj = {}
-local __mod__ = 'lune.base.convLua'
+local __mod__ = '@lune.@base.@convLua'
 local _lune = {}
 if _lune1 then
    _lune = _lune1

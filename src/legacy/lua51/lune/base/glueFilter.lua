@@ -1,6 +1,6 @@
 --lune/base/glueFilter.lns
 local _moduleObj = {}
-local __mod__ = 'lune.base.glueFilter'
+local __mod__ = '@lune.@base.@glueFilter'
 local _lune = {}
 if _lune1 then
    _lune = _lune1

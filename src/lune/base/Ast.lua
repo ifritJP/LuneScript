@@ -1,6 +1,6 @@
 --lune/base/Ast.lns
 local _moduleObj = {}
-local __mod__ = 'lune.base.Ast'
+local __mod__ = '@lune.@base.@Ast'
 local _lune = {}
 if _lune1 then
    _lune = _lune1
@@ -749,6 +749,10 @@ function TypeInfo:__init(scope)
    end
    
    self.typeData = TypeData.new({})
+end
+function TypeInfo.getModulePath( fullname )
+
+   return (fullname:gsub( "@", "" ) )
 end
 function TypeInfo:isModule(  )
 

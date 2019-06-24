@@ -1,6 +1,6 @@
 --lune/Util.lns
 local _moduleObj = {}
-local __mod__ = 'lune.Util'
+local __mod__ = '@lune.@Util'
 local _lune = {}
 if _lune1 then
    _lune = _lune1

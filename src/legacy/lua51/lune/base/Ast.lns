@@ -416,6 +416,10 @@ pub class TypeInfo {
       //TypeManager.add( self );
    }
 
+   pub static fn getModulePath( fullname:str ) : str {
+      return ( fullname.gsub( "@", "" ) );
+   }
+
    /** この型がモジュールを示す型の場合 true  */
    pub fn isModule(): bool {
       return true;
@@ -2872,7 +2876,7 @@ pub class NormalTypeInfo extend TypeInfo {
       return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      raw:str, fullName:bool!,
+      mut raw:str, fullName:bool!,
       importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
    {
       let mut parentTxt = "";

@@ -9,7 +9,6 @@ import test.Class2; // skip-lua51
 import test.Class3; // skip-lua51
 import test.Class4; // skip-lua51
 import test.mapping;
-import test.funcSym;
 
 macro _print( symbol2:stat, format:str! ) {
    {
@@ -592,7 +591,10 @@ _print( `{ __line__ } );
 
 mapping.test();
 
-funcSym.main();
+{
+   import test.funcSym;
+   funcSym.main();
+}
 
 class SubIF extend SUB2.IF {
    pub fn __init() {
@@ -1174,4 +1176,27 @@ class Test4 {
 }
 {
    print( _kind( "hoge" ), _kind( 1 ), _kind( 1.0 ), _kind( [] ), _kind( {} ) );
+}
+{
+   fn func() {
+      fn func2() {
+         class Test {
+            let val:int;
+            pub fn func2( val2:int ) {
+               print( __func__, val2 );
+            }
+         }
+         pub fn Test.func( val2:int ) {
+            print( self.val, val2 );
+         }
+         
+         let test = new Test( 1 );
+         test.func( 1 );
+         test.func2( 2 );
+      }
+
+      func2();
+   }
+
+   func();
 }
