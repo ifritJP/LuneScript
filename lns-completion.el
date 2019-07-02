@@ -87,21 +87,21 @@
 ;;       (buffer-string))))
 
 (defun lns-execute-command ( async-callback out-buffer input-txt &rest args )
-  (let ((proj-dir (lns-get-proj-dir))
+  (let ((proj-dir (or (lns-get-proj-dir) default-directory))
 	command-list process)
     (setq command-list (apply 'lns-command-get-command args ))
     (with-temp-buffer
       (setq default-directory proj-dir)
       (when input-txt
-	(insert input-txt))      
+	(insert input-txt))
       (if async-callback
 	  (progn
 	    (setq process (apply 'start-process "lns"
 				 out-buffer command-list))
 	    (set-process-sentinel process async-callback))
-	(apply 'call-process-region (point-min) (point-max)
-	       (car command-list) nil out-buffer nil
-	       (cdr command-list))
+	(setq process (apply 'call-process-region (point-min) (point-max)
+			     (car command-list) nil out-buffer nil
+			     (cdr command-list)))
 	(with-current-buffer out-buffer
 	  (buffer-string))))
     (when (and async-callback input-txt)
@@ -148,9 +148,11 @@
 
 (defun lns-get-complete-list ( callback async &optional file-path analyze-module buf-name)
   (let ((out-buf (lns-get-buffer (or buf-name "*lns-process*") t))
-	result process)
+	result process txt)
     (when (not file-path)
       (setq file-path buffer-file-name))
+    (setq txt (concat (buffer-substring-no-properties
+		       (point-min) (point)) "lune"))
     (setq process
 	  (lns-execute-command
 	   (if async
@@ -167,7 +169,7 @@
 		   ))
 	     nil)
 	   out-buf
-	   (concat (buffer-substring-no-properties (point-min) (point)) "lune")
+	   txt
 	   (lns-convert-path-2-proj-relative-path file-path) "comp" 
 	   (or analyze-module (lns-convert-path-2-module file-path))
 	   (number-to-string (lns-get-line))

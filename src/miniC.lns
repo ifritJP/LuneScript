@@ -1,21 +1,6 @@
-{
-   fn func( val:int! ): int {
-      return unwrap val default 10;
-   }
-   print( func( 1 ) + 1 );
-   print( func( nil ) + 1 );
+enum Test {
+   Val1,
+   Val2,
 }
-{
-   fn func( val:real! ): real {
-      return unwrap val default 10.0;
-   }
-   print( func( 1.0 ) + 1 );
-   print( func( nil ) + 1 );
-}
-{
-   fn func( val:str! ): str {
-      return unwrap val default "abc";
-   }
-   print( func( "xyz" ) );
-   print( func( nil ) );
-}
+
+let val = Test.Val1;

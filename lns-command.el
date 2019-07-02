@@ -66,6 +66,16 @@ function must return string.")
     (lns-command-add-command
      (list command "-e" "require( 'lune.base.base' )" " ") args)))
 
+(defun lns-command-sync (&rest arg-list)
+  (let (ver end-code)
+    (with-temp-buffer
+      (setq buffer-file-name "test")
+      (setq end-code (apply 'lns-execute-command nil (current-buffer) nil arg-list))
+      (setq ver (buffer-string))
+      (setq buffer-file-name nil))
+    end-code))
+;; (lns-command-sync "--version")
+
 (defun lns-command-exec (callback async owner-file input outbuf mode op-list)
   (let ((out-buf (lns-get-buffer (or outbuf "*lns-process*") t))
 	result process)
