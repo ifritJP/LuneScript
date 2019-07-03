@@ -74,7 +74,7 @@ test のフィールドの補完が次のように行なえます。
 
 ぶっちゃけ当たり前の機能ですが、
 この当たり前の機能をしっかりとコンパイラ自体が提供しているというのは、
-以外に少なかったりします。
+意外に少なかったりします。
 
 * Syntax エラーチェック機能
 
@@ -134,7 +134,8 @@ emacs の設定です。
 (require 'lns-conf)
 ;;(require 'lns-flymake)
 (require 'lns-flycheck)
-(require 'lns-auto-complete)
+(require 'lns-company-mode)
+;;(require 'lns-auto-complete)
 (require 'lns-helm)
 #+END_SRC
 
@@ -160,7 +161,7 @@ lune.js の内容は、 ~{}~ だけ書いておきます。
 * 最後に
 
 今回の機能は emacs 上で動作確認しています。
-ちなみに、コード補完は auto-complete,
+ちなみに、コード補完は company-mode, auto-complete,
 syntax エラーチェックは flymake, flycheck に対応しています。
 
 LuneScript でデフォルトで提供しているのは emacs 向けの設定ですが、

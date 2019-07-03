@@ -2438,8 +2438,9 @@ fn TransUnit.analyzeLetAndInitExp(
    accessMode:Ast.AccessMode, unwrapFlag:bool ) mut :
    List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
 {
-   /** 宣言している変数の型リスト */
+   // 宣言している変数の型リスト
    let mut typeInfoList : List<&Ast.TypeInfo> = [];
+   // let で宣言している変数名と型の情報リスト
    let mut letVarList:List<&LetVarInfo> = [];
 
    let mut nextToken = Parser.getEofToken();
@@ -2475,7 +2476,13 @@ fn TransUnit.analyzeLetAndInitExp(
    // 初期値の式を取得
    let mut expList:Nodes.ExpListNode! = nil;
    if nextToken.txt == "=" {
-      expList = self.analyzeExpList( false, false ## );
+      let mut expectTypeList:List<&Ast.TypeInfo> = [];
+      foreach varInfo in letVarList {
+         expectTypeList.insert(
+            unwrap varInfo.varType$.$expType default Ast.builtinTypeNone );
+      }
+      
+      expList = self.analyzeExpList( false, false, nil, expectTypeList ## );
       if not expList {
          self.error( "expList is nil" );
       }

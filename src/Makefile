@@ -339,6 +339,7 @@ test-comp2:
 	$(call exeComp,.,test/comp2.lns,test/compSub.lns,test.compSub 5 6) >> work/test1.result
 	$(call exeComp,.,test/comp4.lns,test/comp4.lns,test.comp4 9 8) >> work/test1.result
 	$(call exeComp,.,test/comp5.lns,test/comp5.lns,test.comp5 7 7) >> work/test1.result
+	$(call exeComp,.,test/comp6.lns,test/comp6.lns,test.comp6 3 3) >> work/test1.result
 	$(MAKE) -s TEST_DIR=. test-error | grep -e 'error:' -e 'warning:' >> work/test1.result
 	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
 	$(MAKE) -C test/proj/ test MKFILE=Makefile SRC_DIR= 2>&1 | \
@@ -370,6 +371,7 @@ test-comp2:
 	$(call exeComp,work/3,test/comp2.lns,test/compSub.lns,test.compSub 5 6) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp4.lns,test/comp4.lns,test.comp4 9 8) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp5.lns,test/comp5.lns,test.comp5 7 7) | tee -a work/test2.result
+	$(call exeComp,work/3,test/comp6.lns,test/comp6.lns,test.comp6 3 2) | tee -a work/test2.result
 	$(MAKE) -s TEST_DIR=work/3 test-error | grep -e 'error:' -e 'warning:' | \
 				tee -a work/test2.result
 	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result

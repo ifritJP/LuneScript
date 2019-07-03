@@ -24,6 +24,19 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
+
+/**
+式のリスト exp, exp, exp ... を解析する。
+
+@param allowNoneType true の場合、exp の評価結果が TypeInfoNone となるようなケースを許可する
+@param skipOp2Flag true の場合、2項演算の解析は行なわない。
+@param expNode 式のリストの先頭に加える式。 nil の場合は、リストに追加しない。
+@param expectTypeList。 各式に期待する型。
+  期待する型がない場合は、リストの要素に TypeInfoNone を指定する。
+@param contExpect true の場合、 解析する式が、 expectTypeList の要素数を越えた時に、
+    expectTypeList の最終要素の型を使用する。
+
+*/
 fn TransUnit.analyzeExpList(
    allowNoneType:bool, skipOp2Flag: bool, expNode: &Nodes.Node!,
    expectTypeList: &List<&Ast.TypeInfo>!, contExpect:bool! ) mut: Nodes.ExpListNode
@@ -1458,8 +1471,8 @@ fn TransUnit.dumpComp(
                              ( name, typeInfo.$display_stirng ) );
             }  
             case .Typ {
-               writer.write( "displayTxt", "%s"
-                             ( typeInfo.$display_stirng ) );
+               writer.write( "displayTxt",
+                             "%s" ( (typeInfo.$display_stirng.gsub( "@", "" ) )) );
             }  
          }
       }
@@ -1590,9 +1603,19 @@ fn TransUnit.checkEnumComp(
    self.checkComp(
       token,
       fn ( jsonWriter: Writer.JSON, prefix:str ) {
-         self.dumpFieldComp(
-            jsonWriter, true, enumTypeInfo,
-            prefix == "" and "" or "^" .. prefix, nil );
+         let! scope = enumTypeInfo.$scope {
+            return;
+         };
+
+         let pattern = prefix == "" and "" or "^" .. prefix;
+         scope.filterTypeInfoField(
+            true, self.scope,
+            fn ( symbolInfo: &Ast.SymbolInfo ) : bool {
+               if symbolInfo.$kind == .Mbr {
+                  return self.dumpComp( jsonWriter, pattern, symbolInfo, false );
+               }
+               return true;
+            } );
       }
    );
 }

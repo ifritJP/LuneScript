@@ -44,40 +44,34 @@
 (defun company-lns--candidates (prefix callback)
   ;; 補完候補のリストを生成。補完候補は文字列。
 
-  ;; lns-mode 以外は動作させない。
-  (if (not (eq major-mode 'lns-mode))
-      (funcall callback nil)
-
-    (message (format "prefix:%s" prefix) )
-    
-    ;; ピックアップした候補はバッファに出力するが、非同期に補完候補をピックアップするので、
-    ;; バッファがそれぞれで必要なため generate-new-buffer で生成し、
-    ;; ピックアップ終了時に kill する。
-    (let ((tmp-buf (generate-new-buffer company-lns-buf-name-work)))
-      (lns-completion-get-candidate-list
-       (lambda (candidate-list err)
-	 (cond
-	  (candidate-list
-	   ;; ピックアップした候補から company に表示する情報に変換し、callback に情報を渡す。
-	   (let (local-candidate-list)
-	     (setq local-candidate-list
-		   (mapcar (lambda (X)
-			     (lns-company-make-candidate (lns-json-val X :candidate)))
-			   candidate-list))
-	     (funcall callback (delq nil local-candidate-list))
-	     )
+  ;; ピックアップした候補はバッファに出力するが、非同期に補完候補をピックアップするので、
+  ;; バッファがそれぞれで必要なため generate-new-buffer で生成し、
+  ;; ピックアップ終了時に kill する。
+  (let ((tmp-buf (generate-new-buffer company-lns-buf-name-work)))
+    (lns-completion-get-candidate-list
+     (lambda (candidate-list err)
+       (cond
+	(candidate-list
+	 ;; ピックアップした候補から company に表示する情報に変換し、callback に情報を渡す。
+	 (let (local-candidate-list)
+	   (setq local-candidate-list
+		 (mapcar (lambda (X)
+			   (lns-company-make-candidate (lns-json-val X :candidate)))
+			 candidate-list))
+	   (funcall callback (delq nil local-candidate-list))
 	   )
-	  (t
-	   (funcall callback '())))
-	 (with-current-buffer (get-buffer-create company-lns-buf-name)
-	   (erase-buffer)
-	   (insert (with-current-buffer tmp-buf
-		     (buffer-string)))
-	   )
-	 (kill-buffer tmp-buf)
 	 )
-       t tmp-buf)
-      )))
+	(t
+	 (funcall callback '())))
+       (with-current-buffer (get-buffer-create company-lns-buf-name)
+	 (erase-buffer)
+	 (insert (with-current-buffer tmp-buf
+		   (buffer-string)))
+	 )
+       (kill-buffer tmp-buf)
+       )
+     t tmp-buf)
+    ))
 
 (defun company-lns--meta (candidate)
   ;; 補完候補リスト表示時の、補足説明文字列取得。 mini-buffer に表示される。
@@ -103,7 +97,8 @@
     (init (when (not (eq (lns-command-sync "--version") 0))
 	    (error "not found lns")))
     ;; 補完を開始する prefix の定義。 . で区切った場合に開始する。
-    (prefix (company-grab-symbol-cons "\\." 1))
+    (prefix (and (eq major-mode 'lns-mode)
+		 (company-grab-symbol-cons "\\." 1)))
     ;; 候補を生成する。 非同期。
     (candidates (cons :async
     		      (lambda (callback)
@@ -113,6 +108,8 @@
     (meta (company-lns--meta arg))))
 
 (add-to-list 'company-backends 'company-lns)
+
+(add-hook 'lns-mode-hook 'company-mode)
 
 ;;(add-to-list 'company-safe-backends '(company-lns . "LuneScript"))
 

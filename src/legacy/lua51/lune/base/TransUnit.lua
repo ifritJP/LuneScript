@@ -6430,7 +6430,12 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
    until nextToken.txt ~= ","
    local expList = nil
    if nextToken.txt == "=" then
-      expList = self:analyzeExpList( false, false )
+      local expectTypeList = {}
+      for __index, varInfo in pairs( letVarList ) do
+         table.insert( expectTypeList, _lune.unwrapDefault( _lune.nilacc( varInfo.varType, 'get_expType', 'callmtd' ), Ast.builtinTypeNone) )
+      end
+      
+      expList = self:analyzeExpList( false, false, nil, expectTypeList )
       if not expList then
          self:error( "expList is nil" )
       end
@@ -8172,7 +8177,7 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
                
                writer:write( "displayTxt", string.format( "%s: %s", name, typeInfo:get_display_stirng()) )
             elseif _switchExp == Ast.SymbolKind.Typ then
-               writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
+               writer:write( "displayTxt", string.format( "%s", (typeInfo:get_display_stirng():gsub( "@", "" ) )) )
             end
          end
          
@@ -8301,7 +8306,23 @@ function TransUnit:checkEnumComp( token, enumTypeInfo )
    
    self:checkComp( token, function ( jsonWriter, prefix )
    
-      self:dumpFieldComp( jsonWriter, true, enumTypeInfo, prefix == "" and "" or "^" .. prefix, nil )
+      local scope = enumTypeInfo:get_scope()
+      if  nil == scope then
+         local _scope = scope
+      
+         return 
+      end
+      
+      local pattern = prefix == "" and "" or "^" .. prefix
+      scope:filterTypeInfoField( true, self.scope, function ( symbolInfo )
+      
+         if symbolInfo:get_kind() == Ast.SymbolKind.Mbr then
+            return self:dumpComp( jsonWriter, pattern, symbolInfo, false )
+         end
+         
+         return true
+      end
+       )
    end
     )
 end

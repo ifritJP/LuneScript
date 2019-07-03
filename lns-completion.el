@@ -90,6 +90,7 @@
   (let ((proj-dir (or (lns-get-proj-dir) default-directory))
 	command-list process)
     (setq command-list (apply 'lns-command-get-command args ))
+
     (with-temp-buffer
       (setq default-directory proj-dir)
       (when input-txt

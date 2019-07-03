@@ -54,7 +54,7 @@ function must return string.")
   (dolist (arg args)
     (if (listp arg)
 	(setq command-list (lns-command-add-command command-list arg))
-      (add-to-list 'command-list arg t)))
+      (setq command-list (append command-list (list arg)))))
   command-list)
     
 

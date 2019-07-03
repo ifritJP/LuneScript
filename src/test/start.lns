@@ -1200,3 +1200,12 @@ class Test4 {
 
    func();
 }
+{
+   enum Test {
+      Foo,
+      Bar,
+      Baz,
+   }
+   let val:Test = .Bar;
+   print( val.$_txt );
+}
