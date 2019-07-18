@@ -1,6 +1,25 @@
-enum Test {
-   Val1,
-   Val2,
+{
+   enum Test {
+      Val1 = "abc",
+      Val2 = "xyz",
+   }
+
+   let val = Test.Val1;
+   print( val );
+   foreach item in Test.$_allList {
+      print( item );
+   }
+}
+{
+   enum Test {
+      Val1 = 1,
+      Val2,
+   }
+
+   let val = Test.Val1;
+   print( val + 10 );
+   foreach item in Test.$_allList {
+      print( item );
+   }
 }
 
-let val = Test.Val1;
