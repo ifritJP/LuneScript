@@ -953,14 +953,16 @@ end
 
 function convFilter:processDeclEnum( node, opt )
 
-   local typeInfo = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ))
-   local enumFullName = self:getEnumTypeName( typeInfo )
+   local enumType = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ))
+   local enumFullName = self:getEnumTypeName( enumType )
+   local fullName = self:getFullName( enumType )
+   local isStrEnum = enumType:get_valTypeInfo():equals( Ast.builtinTypeString )
    do
       local _switchExp = self.processMode
       if _switchExp == ProcessMode.Prototype then
          for index, valName in pairs( node:get_valueNameList() ) do
-            local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
-            if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
+            local valInfo = _lune.unwrap( enumType:getEnumValInfo( valName.txt ))
+            if isStrEnum then
                self:writeln( string.format( "%s %s__%s;", cTypeStemP, enumFullName, valName.txt) )
             else
              
@@ -975,17 +977,48 @@ function convFilter:processDeclEnum( node, opt )
       elseif _switchExp == ProcessMode.Form then
          self:writeln( string.format( "%s %s_get__allList( lune_env_t * _pEnv, lune_stem_t * _pForm )", cTypeStemP, enumFullName) )
          self:writeln( "{" )
-         self:writeln( string.format( "return %s_allList;", enumFullName) )
+         self:writeln( string.format( "    return %s_allList;", enumFullName) )
          self:writeln( "}" )
+         if isStrEnum then
+            self:writeln( string.format( "lune_decl_enum_get__text_stem( %s );", enumFullName) )
+         else
+          
+            local typeTxt
+            
+            if enumType:get_valTypeInfo():get_srcTypeInfo() == Ast.builtinTypeReal then
+               typeTxt = "real"
+            else
+             
+               typeTxt = "int"
+            end
+            
+            self:writeln( string.format( "lune_decl_enum_get__text( %s, %s );", enumFullName, typeTxt) )
+         end
+         
          self:writeln( string.format( "void init_%s( lune_env_t * _pEnv )", enumFullName) )
          self:writeln( "{" )
          self:pushIndent(  )
-         if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
+         local stemVarList = {}
+         if isStrEnum then
             for index, valName in pairs( node:get_valueNameList() ) do
-               local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
+               local valInfo = _lune.unwrap( enumType:getEnumValInfo( valName.txt ))
                local valTxt = string.format( '"%s"', Ast.getEnumLiteralVal( valInfo:get_val() ))
-               self:write( string.format( "%s__%s = ", enumFullName, valName.txt) )
-               self:writeln( string.format( "lune_litStr2stem( _pEnv, %s );", valTxt) )
+               local stemVar = string.format( "%s__%s", enumFullName, valName.txt)
+               table.insert( stemVarList, stemVar )
+               self:write( stemVar )
+               self:writeln( string.format( "= lune_litStr2stem( _pEnv, %s );", valTxt) )
+            end
+            
+         else
+          
+            for index, valName in pairs( node:get_valueNameList() ) do
+               local valInfo = _lune.unwrap( enumType:getEnumValInfo( valName.txt ))
+               local valTxt = string.format( '%s', Ast.getEnumLiteralVal( valInfo:get_val() ))
+               local stemVar = string.format( "_%s", valName.txt)
+               table.insert( stemVarList, stemVar )
+               self:write( string.format( "%s %s = ", cTypeStemP, stemVar) )
+               self:write( getLiteral2Stem( valTxt, enumType:get_valTypeInfo() ) )
+               self:writeln( ";" )
             end
             
          end
@@ -993,27 +1026,28 @@ function convFilter:processDeclEnum( node, opt )
          self:writeln( "lune_imdList(" )
          self:pushIndent(  )
          self:write( "list" )
-         if typeInfo:get_valTypeInfo():equals( Ast.builtinTypeString ) then
-            for __index, valName in pairs( node:get_valueNameList() ) do
-               self:writeln( "," )
-               self:write( string.format( "lune_imdStem( %s__%s )", enumFullName, valName.txt) )
-            end
-            
-         else
-          
-            for __index, valName in pairs( node:get_valueNameList() ) do
-               self:writeln( ", " )
-               local valInfo = _lune.unwrap( typeInfo:getEnumValInfo( valName.txt ))
-               local valTxt = string.format( "%s", Ast.getEnumLiteralVal( valInfo:get_val() ))
-               self:write( string.format( "lune_imdStem( %s )", getLiteral2Stem( valTxt, typeInfo:get_valTypeInfo() )) )
-            end
-            
+         for __index, stemVar in pairs( stemVarList ) do
+            self:writeln( "," )
+            self:write( string.format( "lune_imdStem( %s )", stemVar) )
          end
          
          self:popIndent(  )
          self:writeln( ");" )
          self:write( string.format( "%s_allList = ", enumFullName) )
-         self:writeln( "lune_createList( _pEnv, &list );" )
+         self:writeln( "lune_createList( _pEnv, list );" )
+         self:writeln( "lune_imdMap(" )
+         self:pushIndent(  )
+         self:write( "map" )
+         for index, stemVar in pairs( stemVarList ) do
+            self:writeln( "," )
+            self:writeln( string.format( "{ lune_imdStem( %s ),", stemVar) )
+            self:write( string.format( '  lune_imdStem( lune_litStr2stem( _pEnv, "%s.%s" ) ) }', fullName, node:get_valueNameList()[index].txt) )
+         end
+         
+         self:popIndent(  )
+         self:writeln( ");" )
+         self:write( string.format( "%s_val2NameMap = ", enumFullName) )
+         self:writeln( "lune_createMap( _pEnv, map );" )
          self:popIndent(  )
          self:writeln( "}" )
       elseif _switchExp == ProcessMode.InitModule then
@@ -2411,8 +2445,15 @@ function convFilter:processGetField( node, opt )
    local fieldTxt = node:get_field(  ).txt
    if prefixType:get_kind() == Ast.TypeInfoKind.Enum then
       local enumFullName = self:getEnumTypeName( prefixType )
-      if fieldTxt == "_allList" then
-         self:write( string.format( "%s_get__allList( _pEnv, NULL )", enumFullName) )
+      do
+         local _switchExp = fieldTxt
+         if _switchExp == "_allList" then
+            self:write( string.format( "%s_get__allList( _pEnv, NULL )", enumFullName) )
+         elseif _switchExp == "_txt" then
+            self:write( string.format( "%s_get__txt( _pEnv, NULL, ", enumFullName) )
+            filter( prefixNode, self, node )
+            self:write( ")" )
+         end
       end
       
    end
@@ -2627,7 +2668,7 @@ function convFilter:processLiteralListSub( collectionType, node, expListNodeOrg,
    
    self:popIndent(  )
    self:writeln( ");" )
-   self:writeln( string.format( "return lune_create%s( _pEnv, &list );", collectionType) )
+   self:writeln( string.format( "return lune_create%s( _pEnv, list );", collectionType) )
    self:popIndent(  )
    self:writeln( "}" )
    self.literalNode2AccessSymbolSet[node] = self.accessSymbolSet:clone(  )
@@ -2740,7 +2781,7 @@ function convFilter:processLiteralMapSub( node )
    
    self:popIndent(  )
    self:writeln( ");" )
-   self:writeln( "return lune_createMap( _pEnv, &list );" )
+   self:writeln( "return lune_createMap( _pEnv, list );" )
    self:popIndent(  )
    self:writeln( "}" )
    self.literalNode2AccessSymbolSet[node] = self.accessSymbolSet:clone(  )

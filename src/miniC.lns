@@ -7,7 +7,7 @@
    let val = Test.Val1;
    print( val );
    foreach item in Test.$_allList {
-      print( item );
+      print( item, item.$_txt );
    }
 }
 {
@@ -19,7 +19,7 @@
    let val = Test.Val1;
    print( val + 10 );
    foreach item in Test.$_allList {
-      print( item );
+      print( item, item.$_txt );
    }
 }
 

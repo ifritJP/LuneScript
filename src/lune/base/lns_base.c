@@ -1,5 +1,7 @@
 #include <lua.h>
+#include <lauxlib.h>
 #include <lunescript.h>
+#include <math.h>
 
     /**
      * リストの末尾に STEM を追加。
@@ -791,7 +793,7 @@ lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num,
         lune_stem_t * pStemArray[ 10 ];
 
         va_list ap;
-        va_start( ap, _pForm );
+        va_start( ap, num );
 
         int index;
         for ( index = 0; index < num; index++ ) {
@@ -876,7 +878,7 @@ lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy ) {
 /**
  * int! の unwrap 処理
  */
-lune_int_t lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal )
+lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal )
 {
     if ( pStem->type != lune_value_type_nil ) {
         return pStem;
@@ -885,6 +887,7 @@ lune_int_t lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal )
         return pDefVal;
     }
     lune_abort( __func__ );
+    return NULL; // dummy
 }
 
 
@@ -898,6 +901,7 @@ lune_int_t lune_unwrap_int( lune_stem_t * pStem )
         return pStem->val.intVal;
     }
     lune_abort( __func__ );
+    return 0; // dummy
 }
 
 /**

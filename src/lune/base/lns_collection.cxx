@@ -643,11 +643,6 @@ struct lune_itMap_t {
 static void lune_mtd_Map_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
 
 
-static lune_stem_t * lune_mtd_Map_add( lune_env_t * _pEnv, lune_stem_t * pObj,
-                                      lune_stem_t * pKey, lune_stem_t * pVal );
-static lune_stem_t * lune_mtd_Map_get( lune_env_t * _pEnv, lune_stem_t * pObj,
-                                      lune_stem_t * pKey );
-
 
 lune_mtd_Map_t lune_mtd_Map = {
     lune_mtd_Map_gc,
@@ -743,7 +738,7 @@ bool lune_itMap_hasNext( lune_env_t * _pEnv, lune_stem_t * it, lune_Map_entry_t 
     return false;
 }
 
-static lune_stem_t * lune_mtd_Map_add( lune_env_t * _pEnv, lune_stem_t * pObj,
+lune_stem_t * lune_mtd_Map_add( lune_env_t * _pEnv, lune_stem_t * pObj,
                                       lune_stem_t * pKey, lune_stem_t * pVal )
 {
     lune_MapClass * pMap = lune_obj_Map_obj( pObj );
@@ -776,7 +771,7 @@ static lune_stem_t * lune_mtd_Map_add( lune_env_t * _pEnv, lune_stem_t * pObj,
     return pObj;
 }
 
-static lune_stem_t * lune_mtd_Map_get(
+lune_stem_t * lune_mtd_Map_get(
     lune_env_t * _pEnv, lune_stem_t * pObj, lune_stem_t * pKey )
 {
     lune_MapClass * pMap = lune_obj_Map_obj( pObj );

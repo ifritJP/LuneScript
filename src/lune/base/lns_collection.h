@@ -74,6 +74,10 @@ extern "C" {
     extern lune_stem_t * lune_Map_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem );
     extern lune_stem_t * lune_mtd_Map_createKeyList(
         lune_env_t * _pEnv, lune_stem_t * pObj );
+    extern lune_stem_t * lune_mtd_Map_add( lune_env_t * _pEnv, lune_stem_t * pObj,
+                                           lune_stem_t * pKey, lune_stem_t * pVal );
+    extern lune_stem_t * lune_mtd_Map_get( lune_env_t * _pEnv, lune_stem_t * pObj,
+                                           lune_stem_t * pKey );
 
     
 
@@ -81,7 +85,7 @@ extern "C" {
     extern void lune_itMap_gc( lune_env_t * _pEnv, lune_stem_t * it );
     extern void lune_itMap_inc( lune_env_t * _pEnv, lune_stem_t * it );
     extern bool lune_itMap_hasNext( lune_env_t * _pEnv, lune_stem_t * it,
-                                 lune_Map_entry_t * pEntry );
+                                    lune_Map_entry_t * pEntry );
 
     
 

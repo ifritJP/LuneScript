@@ -47,9 +47,8 @@ $ luarocks install lunescript
 
 - create hello.lns.
    
-#+NAME: hello.lns
 #+BEGIN_SRC lns
-print( "Hello world." );
+$ echo 'print( "Hello world." );' > hello.lns
 #+END_SRC
 
 - execute hello.lns with 'lnsc' command.
@@ -115,7 +114,7 @@ As a result, 10/3 becomes 3, and 10 / 3.0 becomes 3.3333 ....
 The numerical literal is C89-like things adopted.
 
 - Integer supports decimal and hexadecimal representation
-- Real numbers are decimal and exponential representation by e.
+- Real numbers are decimal and exponential representation by 'e'.
 
 Additional ASCII character code representation is possible.
 
@@ -191,8 +190,9 @@ The character string is the same as Lua and has no terminator.
 String literals are enclosed in "or '.
 Multiple line literals are enclosed in ```.
 
-Use txt [N] to access the Nth character in the string.
-However, txt [N] is read-only and characters can not be rewritten.
+Use =txt[N]= to access the Nth character in the string.
+However, =txt[N]= is read-only and characters can not be rewritten.
+if =N= of =txt[N]= is over the length of =txt=, its operation is *undefined*.
 
 #+BEGIN_SRC lns
 let txt = "1234";
@@ -206,7 +206,7 @@ Also, a format format similar to Python is available.
 from here ...
 So far the string ```
 
-"10 +%s =%d" ("1", 11) // "10 + 1 = 11"
+"10 + %s = %d" ("1", 11) // "10 + 1 = 11"
 #+END_SRC
 
 **** String concatenation
@@ -215,16 +215,16 @@ String concatenation uses the same .. as Lua.
 
 *** Boolean (bool)
 
-It has true and false.
+It has =true= and =false=.
 
 
 *** List, array, map
 
-In LuneScript, Lua's table is divided into lists, arrays, and maps.
+In LuneScript, Lua's table is divided into =List=, =Array=, and =Map=.
 
-The list is a sequence of Lua,
-Arrays are fixed-length lists,
-Map is Lua's table.
+The =List= is a sequence of Lua,
+The =Array= are fixed-length lists,
+The =Map= is Lua's table.
 
 Each literal is declared as follows.
 
@@ -239,7 +239,7 @@ let map = { "A": 10, "B": 11, "C": 12 };
 Objects in the list order values and manage values.
 
 #+BEGIN_SRC lns
-let name : itemType[];
+let name : List<itemType>;
 #+END_SRC
 
 The type of value that can be held in the list is limited to one.
@@ -248,13 +248,13 @@ However, if it is a list of stem! Type described later, all values can be retain
 For example, the following will be a list with elements of type int.
 
 #+BEGIN_SRC lns
-let name : int[];
+let name : List<int>;
 #+END_SRC
 
 Objects in the list have insert and remove methods.
 
 #+BEGIN_SRC lns
-let mut list:int[] = [];
+let mut list:List<int> = [];
 list.insert( 1 );  // [ 1 ]
 list.insert( 2 );  // [ 1, 2 ]
 list.insert( 3 );  // [ 1, 2, 3 ]
@@ -272,7 +272,7 @@ print( list[ 1 ] ); // 'a'
 Processing when the index of an element specifies
 out of the range of the list is *undefined*.
 
-**** Arrays
+**** Array
 
 Array objects are fixed-length lists.
 It is the same as the list except that the size is fixed.
@@ -308,30 +308,30 @@ print( map[ "A" ], map.B );
 #+END_SRC
 
 If the key is a character string,
-You can access it as a member of the map object like map.B.
+You can access it as a member of the map object like =map.B=.
 
 You can not set nil for the key and value of the map object.
 
-**** List, type of map constructor
+**** constructor of List and Map 
 
 #+BEGIN_SRC lns
 let list = [ 1, 2, 3 ];
 let map = { "A": 10, "B": 11, "C": 12 };
 #+END_SRC
 
-Lists, maps can declare literals as described above.
-The types of lists and maps generated at this time are determined by the values ​​to be configured.
+List, Map can declare literals as described above.
+The types of List and Map generated at this time are determined by the values to be configured.
 
-If the keys or values ​​used in the map constructor are all of the same type,
+If the keys or values used in the map constructor are all of the same type,
 The key of the map, the type of the value will be the type of that key, value.
 If one is different, it becomes stem type.
 
 Specifically, it is as follows.
 
 #+BEGIN_SRC lns
-let list1 = [ 1, 2, 3 ];			// int[]
-let list2 = [ 'a', 'b', 'c' ];			// str[]
-let list3 = [ 'a', 1, 'c' ];			// stem[]
+let list1 = [ 1, 2, 3 ];			// List<int>
+let list2 = [ 'a', 'b', 'c' ];			// List<str>
+let list3 = [ 'a', 1, 'c' ];			// List<stem>
 let map1 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
 let map2 = { "A": 10, "B": 11, "C": 12 };	// Map<str,int>
 let map3 = { "a": 'z', "b": 'y', "c": 'x' };	// Map<str,str>
@@ -340,7 +340,7 @@ let map4 = { "a": 1, "b": 'Z' };		// Map<str,stem>
 
 *** stem
 
-stem is a type that can hold all values ​​except nil.
+stem is a type that can hold all values except nil.
 
 LuneScript is a static typed language,
 If a value different from the assumed type is given, a compile error will occur.
@@ -348,7 +348,7 @@ If a value different from the assumed type is given, a compile error will occur.
 On the other hand, the stem type is a type that can handle all types except nil,
 No compilation error will occur no matter what value other than nil is given.
 
-stem! is a type that can handle all values ​​including nil.
+stem! is a type that can handle all values including nil.
 There is no problem considering it as the Lua variable itself.
 
 *** ! Type (nilable)
@@ -360,12 +360,14 @@ You do not have to worry about runtime errors with nil.
 
 ** Type conversion
 
-Values ​​of some types can convert types.
+Values of some types can convert types.
 
 To convert, use the following format.
 
 #+BEGIN_SRC lns
 val@@type
+val@@@type
+val@@=type
 #+END_SRC
 
 This declares converting the value of val to type.
@@ -376,9 +378,17 @@ For example, the following converts val to int.
 val@@int
 #+END_SRC
 
+*** ~@@~, ~@@@~, ~@@=~
+
+~@@~, ~@@=~ are forced converting. This method is very dangerous.
+~@@~ can't use for class type.
+
+~@@@~ check matching the type dynamically.
+The result of ~@@@~ is nilable, when occuring type unmatch returns nil.
+
 *** Numeric type conversion
 
-Numeric type values ​​can be converted to different types.
+Numeric type values can be converted to different types.
 Rounding occurs in the conversion.
 
 - int to real
@@ -423,9 +433,9 @@ In LuneScript, integers / are automatically rounded down.
 [ pub | global ] let name [: type] = evp;
 #+END_SRC
 
-Variable declaration is done with let.
+Variable declaration is done with =let=.
 
-Specify variable followed by let.
+Specify variable followed by =let=.
 Type the variable with type: followed by the variable name.
 
 However, if the type can be inferred from the value of the variable declaration initialization, the type specification can be omitted.
@@ -440,7 +450,7 @@ All variables are local.
 However, by defining it as the top level scope,
 It becomes global data within that module.
 
-If pub is specified before the let of the variable defined in the top level scope,
+If pub is specified before the =let= of the variable defined in the top level scope,
 It is a variable that can be referred to from an external module.
 
 Also, declaring global instead of pub is a global variable in the VM.
@@ -587,7 +597,7 @@ test( nil );  // print( 0 );
 
 *** let!
 
-let! performs variable declaration and unwrap at the same time.
+=let!= performs variable declaration and unwrap at the same time.
     
 #+BEGIN_SRC lns
 let! symbol {, symbol } = exp[, exp ] block [ then thenblock ];
@@ -627,7 +637,7 @@ In the processing in block you can access _exp, the result of unwrap of exp.
 
 **** if! let
 
-if! let is a conditional branch by unwrap processing.
+=if! let= is a conditional branch by unwrap processing.
 
 #+BEGIN_SRC lns
 if! let var[,var,...] = exp[,exp,...] block [ else elseblock ];
@@ -666,7 +676,7 @@ You can not write only one sentence without declaring blocks like C.
 
 #+BEGIN_SRC lns
 switch exp {
-  case condexp [, condexp] {
+  case condexp [, condexp ] {
   }
   case condexp {
   }
@@ -701,11 +711,28 @@ for name = exp1, exp2, exp3 {
 }
 #+END_SRC
 
-for is a type control that does not use an iterator.
+=for= is a type control that does not use an iterator.
 Each type that uses an iterator shall be each.
 
 Declare blocks as {}. This block is mandatory.
 You can not write only one sentence without declaring blocks like C.
+
+exp1, exp2, exp3 are evaluated only once.
+
+exp3 is omittable. if exp3 was omitted, exp3 is be =1=.
+
+=for= is same as following C-lang code.
+
+#+BEGIN_SRC c
+{
+   int init = exp1;
+   int goal = exp2;
+   int inc = exp3;
+   for ( name = init; count <= goal; count += inc ) {
+   }
+}
+#+END_SRC
+
 
 *** foreach
 
@@ -735,7 +762,7 @@ apply is a type for using an iterator.
 Declare blocks as {}. This block is mandatory.
 You can not write only one sentence without declaring blocks like C.
 
-val contains the values ​​enumerated by the iterator.
+val contains the values enumerated by the iterator.
 If the iterator enumerates multiple values, declare val2, val3 ... that store that value.
 
 The specification of exp is the same as that of Lua's for.
@@ -752,9 +779,9 @@ Do not support goto
 }
 #+END_SRC
 
-Function declaration is performed with fn as described above, and function name is specified by name.
+Function declaration is performed with =fn= as described above, and function name is specified by name.
 name is optional.
-Declare the argument with arglist and declare it by omitting the let of variable declaration.
+Declare the argument with arglist and declare it by omitting the =let= of variable declaration.
 The return type is declared with retTypeList. Type declaration is the same as after variable declaration.
 Functions can return multiple values. retTypeList declares a minute type of value to return.
 
@@ -1513,5 +1540,5 @@ Developing with self hosting has the following advantages.
 - Because you will be beat down that language, you can realize the strengths and weaknesses of that language.
 - Disadvantages can be found at an early stage, so you can consider improvement measures immediately.
 
-If there are people thinking about designing and developing languages ​​by themselves,
+If there are people thinking about designing and developing languages by themselves,
 I would like to develop with self-hosting.

@@ -12,9 +12,9 @@ LUA_INC_DIR=
 LUA_LIB=
 
 ifndef RELEASE
-CFLAGS = -g3 -Wall -c -Ilune/base -I$(LUA_INC_DIR)
+CFLAGS = -g3 -Wall -Wno-unused-variable -c -Ilune/base -I$(LUA_INC_DIR)
 else
-CFLAGS = -O -Wall -c -Ilune/base -I$(LUA_INC_DIR)
+CFLAGS = -O -Wall -Wno-unused-variable -c -Ilune/base -I$(LUA_INC_DIR)
 endif
 
 work/c/%.o: %.c

@@ -666,15 +666,18 @@ fn getLiteral2Stem( valTxt:str, typeInfo:&Ast.TypeInfo ) : str {
 pub override fn convFilter.processDeclEnum(
    node: Nodes.DeclEnumNode, opt: Opt ) mut
 {
-   let typeInfo = unwrap node.$expType@@@Ast.EnumTypeInfo;
+   let enumType = unwrap node.$expType@@@Ast.EnumTypeInfo;
 
-   let mut enumFullName = self.getEnumTypeName( typeInfo );
+   let enumFullName = self.getEnumTypeName( enumType );
+   let fullName = self.getFullName( enumType );
 
+   let isStrEnum = enumType.$valTypeInfo.equals( Ast.builtinTypeString ##);
+   
    switch self.processMode {
       case .Prototype {
          foreach valName, index in node.$valueNameList {
-            let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
-            if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ##) {
+            let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
+            if isStrEnum {
                self.writeln( "%s %s__%s;" (cTypeStemP,enumFullName, valName.txt));
             }
             else {
@@ -691,48 +694,85 @@ pub override fn convFilter.processDeclEnum(
             "%s %s_get__allList( lune_env_t * _pEnv, lune_stem_t * _pForm )"
             (cTypeStemP, enumFullName) );
          self.writeln( "{" );
-         self.writeln( "return %s_allList;" (enumFullName) );
+         self.writeln( "    return %s_allList;" (enumFullName) );
          self.writeln( "}" );
+
+         if isStrEnum {
+            self.writeln( "lune_decl_enum_get__text_stem( %s );" ( enumFullName ) );
+         }
+         else {
+            let typeTxt;
+            if enumType.$valTypeInfo.$srcTypeInfo == Ast.builtinTypeReal {
+               typeTxt = "real";
+            }
+            else {
+               typeTxt = "int";
+            }
+            self.writeln( "lune_decl_enum_get__text( %s, %s );"
+                          ( enumFullName, typeTxt ) );
+         }
          
          
          self.writeln( "void init_%s( lune_env_t * _pEnv )" ( enumFullName ) );
          self.writeln( "{" );
          self.pushIndent(##);
 
-         if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ##) {
-            // enum 値のセット
+
+
+         let mut stemVarList:List<str> = [];
+         // enum 値のセット
+         if isStrEnum {
             foreach valName, index in node.$valueNameList {
-               let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
+               let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
                // pending: C の文字列リテラル表現できないものを対応できていない
                let valTxt = '"%s"' (Ast.getEnumLiteralVal(valInfo.$val));
-               self.write( "%s__%s = " (enumFullName, valName.txt));
-               self.writeln( "lune_litStr2stem( _pEnv, %s );" (valTxt) );
-            }
-         }
-         
-         self.writeln( "lune_imdList(" );
-         self.pushIndent( ## );
-         self.write( "list" );
-         if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ##) {
-            foreach valName in node.$valueNameList {
-               self.writeln( "," );
-               self.write( "lune_imdStem( %s__%s )" (enumFullName, valName.txt));
+               let stemVar = "%s__%s" (enumFullName, valName.txt);
+               stemVarList.insert( stemVar );
+               self.write( stemVar );
+               self.writeln( "= lune_litStr2stem( _pEnv, %s );" (valTxt) );
             }
          }
          else {
-            foreach valName in node.$valueNameList {
-               self.writeln( ", " );
-               let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
-               let valTxt = "%s" (Ast.getEnumLiteralVal(valInfo.$val));
-               self.write(
-                  "lune_imdStem( %s )"
-                  (getLiteral2Stem( valTxt, typeInfo.$valTypeInfo ) ) );
+            foreach valName, index in node.$valueNameList {
+               let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
+               let valTxt = '%s' (Ast.getEnumLiteralVal(valInfo.$val));
+               let stemVar = "_%s" (valName.txt);
+               stemVarList.insert( stemVar );
+               self.write( "%s %s = " (cTypeStemP, stemVar));
+               self.write( getLiteral2Stem( valTxt, enumType.$valTypeInfo ) );
+               self.writeln( ";" );
             }
+         }
+
+         // _allList のセット
+         self.writeln( "lune_imdList(" );
+         self.pushIndent( ## );
+         self.write( "list" );
+         foreach stemVar in stemVarList {
+            self.writeln( "," );
+            self.write( "lune_imdStem( %s )" (stemVar));
          }
          self.popIndent();
          self.writeln( ");" );
          self.write( "%s_allList = " (enumFullName) );
-         self.writeln( "lune_createList( _pEnv, &list );" );
+         self.writeln( "lune_createList( _pEnv, list );" );
+
+         // _val2NameMap のセット
+         self.writeln( "lune_imdMap(" );
+         self.pushIndent( ## );
+         self.write( "map" );
+         foreach stemVar, index in stemVarList {
+            self.writeln( "," );
+            self.writeln( "{ lune_imdStem( %s )," ( stemVar ) );
+            self.write(
+               '  lune_imdStem( lune_litStr2stem( _pEnv, "%s.%s" ) ) }'
+               (fullName, node.$valueNameList[ index ].txt));
+         }
+         self.popIndent();
+         self.writeln( ");" );
+         self.write( "%s_val2NameMap = " (enumFullName) );
+         self.writeln( "lune_createMap( _pEnv, map );" );
+         
 
          self.popIndent();
          self.writeln( "}" );
@@ -747,8 +787,8 @@ pub override fn convFilter.processDeclEnum(
    
 //    let mut access = node.$accessMode == .Global and "" or "local ";
 //    let mut enumFullName = node.$name.txt;
-//    let typeInfo = unwrap node.$expType@@@Ast.EnumTypeInfo;
-//    let parentInfo = typeInfo.$parentInfo;
+//    let enumType = unwrap node.$expType@@@Ast.EnumTypeInfo;
+//    let parentInfo = enumType.$parentInfo;
 //    let mut isTopNS = true;
 //    if parentInfo ~= Ast.headTypeInfo and parentInfo.$kind == .Class {
 //       enumFullName = "%s.%s" (self.getFullName( parentInfo ), enumFullName );
@@ -765,8 +805,8 @@ pub override fn convFilter.processDeclEnum(
 //    }
 
 
-//    if typeInfo.$accessMode == .Pub {
-//       self.pubEnumId2EnumTypeInfo[ typeInfo.$typeId ] = typeInfo;
+//    if enumType.$accessMode == .Pub {
+//       self.pubEnumId2EnumTypeInfo[ enumType.$typeId ] = enumType;
 //    }
 
 //    self.writeln( "%s._val2NameMap = {}" (enumFullName) );
@@ -794,9 +834,9 @@ pub override fn convFilter.processDeclEnum(
 // ``` (enumFullName, enumFullName, enumFullName ) );
 
 //    foreach valName, index in node.$valueNameList {
-//       let valInfo = unwrap typeInfo.getEnumValInfo( valName.txt );
+//       let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
 //       let mut valTxt = "%s" (Ast.getEnumLiteralVal(valInfo.$val));
-//       if typeInfo.$valTypeInfo.equals( Ast.builtinTypeString ##) {
+//       if enumType.$valTypeInfo.equals( Ast.builtinTypeString ##) {
 //          valTxt = "'%s'" (Ast.getEnumLiteralVal(valInfo.$val));
 //       }
 //       self.writeln( "%s.%s = %s" (enumFullName, valName.txt, valTxt ) );
@@ -3365,8 +3405,15 @@ pub override fn convFilter.processGetField(
 
    if prefixType.$kind == .Enum {
       let mut enumFullName = self.getEnumTypeName( prefixType );
-      if fieldTxt == "_allList" {
-         self.write( "%s_get__allList( _pEnv, NULL )" (enumFullName) );
+      switch fieldTxt {
+         case "_allList" {
+            self.write( "%s_get__allList( _pEnv, NULL )" (enumFullName) );
+         }
+         case "_txt" {
+            self.write( "%s_get__txt( _pEnv, NULL, " (enumFullName) );
+            filter( prefixNode, self, node );
+            self.write( ")" );
+         }
       }
    }
 
@@ -3597,7 +3644,7 @@ fn convFilter.processLiteralListSub(
    }
    self.popIndent();
    self.writeln( ");" );
-   self.writeln( "return lune_create%s( _pEnv, &list );" ( collectionType ) );
+   self.writeln( "return lune_create%s( _pEnv, list );" ( collectionType ) );
    self.popIndent();
    self.writeln( "}" );
 
@@ -3695,7 +3742,7 @@ fn convFilter.processLiteralMapSub( node:&Nodes.LiteralMapNode ) mut
    }
    self.popIndent();
    self.writeln( ");" );
-   self.writeln( "return lune_createMap( _pEnv, &list );" );
+   self.writeln( "return lune_createMap( _pEnv, list );" );
    self.popIndent();
    self.writeln( "}" );
 

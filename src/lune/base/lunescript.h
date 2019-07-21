@@ -164,6 +164,26 @@ extern "C" {
     CLASSVAL->pMtd = &lune_mtd_##SCLASS
     
 
+#define lune_decl_enum_get__text( ENUM, VALTYPE )                       \
+    lune_stem_t * ENUM##_get__txt( lune_env_t * _pEnv, lune_stem_t * _pForm, \
+                                   lune_##VALTYPE##_t val )             \
+    {                                                                   \
+        return lune_mtd_Map_get(                                        \
+            _pEnv, ENUM##_val2NameMap, lune_##VALTYPE##2stem( _pEnv, val ) ); \
+    }
+#define lune_decl_enum_get__text_stem( ENUM )                           \
+    lune_stem_t * ENUM##_get__txt( lune_env_t * _pEnv, lune_stem_t * _pForm, \
+                                   lune_stem_t * val )             \
+    {                                                                   \
+        return lune_mtd_Map_get( _pEnv, ENUM##_val2NameMap, val );   \
+    }
+
+
+
+    
+
+
+    
     typedef enum {
         lune_value_type_none,
         lune_value_type_nil,
@@ -459,6 +479,7 @@ extern "C" {
     extern lune_str_t lune_createLiteralStr( const char * pStr );
 
     extern lune_block_t * lune_enter_module( int stemVerNum );
+    extern void lune_reset_block( lune_env_t * _pEnv );
 
     extern lune_stem_t * lune_setRet( lune_env_t * __pEnv, lune_stem_t * pStem );
     extern void lune_setQ_( lune_stem_t * pStem );
@@ -472,7 +493,7 @@ extern "C" {
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... );
 
 
-    extern lune_int_t lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal );
+    extern lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal );
     extern lune_int_t lune_unwrap_int( lune_stem_t * pStem );
     extern lune_int_t lune_unwrap_intDefault( lune_stem_t * pStem, lune_int_t val );
     extern lune_real_t lune_unwrap_real( lune_stem_t * pStem );
