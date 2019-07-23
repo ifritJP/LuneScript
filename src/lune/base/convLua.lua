@@ -1886,12 +1886,8 @@ function convFilter:processExpMacroExp( node, opt )
 end
 
 
+function convFilter:processLoadRuntime(  )
 
-function convFilter:outputDeclMacro( name, argNameList, callback )
-
-   self:write( string.format( "local function %s(", name) )
-   self:writeln( "__macroArgs )" )
-   self:pushIndent(  )
    do
       local _exp = self.useLuneRuntime
       if _exp ~= nil then
@@ -1901,6 +1897,15 @@ function convFilter:outputDeclMacro( name, argNameList, callback )
       end
    end
    
+end
+
+
+function convFilter:outputDeclMacro( name, argNameList, callback )
+
+   self:write( string.format( "local function %s(", name) )
+   self:writeln( "__macroArgs )" )
+   self:pushIndent(  )
+   self:processLoadRuntime(  )
    for __index, argName in pairs( argNameList ) do
       self:writeln( string.format( "local %s = __macroArgs.%s", argName, argName) )
    end
@@ -3465,7 +3470,7 @@ end
 
 function convFilter:processLuneControl( node, opt )
 
-   self:writeln( string.format( 'local _lune = require( "lune.base._lune%d" )', Ver.luaModVersion) )
+   self:processLoadRuntime(  )
 end
 
 local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer )
@@ -3491,7 +3496,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3160, function (  )
+   Log.log( Log.Level.Info, __func__, 3167, function (  )
    
       return string.format( "code: %s", code)
    end
