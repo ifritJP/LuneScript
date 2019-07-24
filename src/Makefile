@@ -551,7 +551,9 @@ endif
 check-meta-format:
 # メタフォーマットバージョンが同じ場合は、メタ情報が一致しているかどうか比較
 ifeq ($(ORG_VER),$(NEW_VER))
-	@diff work/1/test/Sub2.meta work/4/test/Sub2.meta > /dev/null || \
+	cat work/1/test/Sub2.meta | grep -v -e '^_moduleObj.__version' > work/1/test/Sub2.meta2
+	cat work/4/test/Sub2.meta | grep -v -e '^_moduleObj.__version' > work/4/test/Sub2.meta2
+	@diff work/1/test/Sub2.meta2 work/4/test/Sub2.meta2 > /dev/null || \
 	(echo need to change the meta format version.; exit 1;)
 else
 	@echo meta format version ok.
