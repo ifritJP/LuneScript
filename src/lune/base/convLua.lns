@@ -1644,7 +1644,8 @@ pub fn convFilter.outputDeclMacro(
    self.writeln( "__macroArgs )" );
    self.pushIndent(##);
 
-   self.processLoadRuntime();
+   // マクロのランタイムは、動作中の LuneScript のものを使う必要がある
+   self.writeln( 'local _lune = require( "lune.base._lune%d" )' (Ver.luaModVersion) );
    
    foreach argName in argNameList {
       self.writeln( "local %s = __macroArgs.%s" (argName, argName ) );
