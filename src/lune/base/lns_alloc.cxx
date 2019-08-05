@@ -41,7 +41,7 @@ void _lune_free( lune_allocator_t allocateor,
         pMap->erase( pAddr );
     }
     else {
-        printf( "error!! -- %p, %p\n", pMap, pAddr );
+        printf( "free error!! -- %p, %p\n", pMap, pAddr );
     }
 }
 

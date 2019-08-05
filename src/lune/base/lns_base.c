@@ -2,6 +2,7 @@
 #include <lauxlib.h>
 #include <lunescript.h>
 #include <math.h>
+#include <stdint.h>
 
     /**
      * リストの末尾に STEM を追加。
@@ -105,8 +106,9 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
         break;
     case lune_value_type_class:
         if ( ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc != NULL ) {
-            ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc( _pEnv, pStem, true );
+            ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc( _pEnv, pStem );
         }
+        lune_class_del( _pEnv, pStem->val.classVal );
         break;
     case lune_value_type_ddd: // fall-through
     case lune_value_type_mRet:
@@ -157,6 +159,10 @@ void lune_setQ_( lune_stem_t * pStem )
 
 lune_stem_t * lune_setRet( lune_env_t * _pEnv, lune_stem_t * pStem )
 {
+    if ( pStem->type == lune_value_type_bool ) {
+        return pStem;
+    }
+    
     lune_rmFromList( pStem );
 
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ];
@@ -779,6 +785,14 @@ static void lune_releaseGlobalEnv(void) {
     lune_deleteEnv( s_globalEnv.pEnv );
     printf( ":debug:allocNum = %d\n", s_globalEnv.allocNum );
     lune_checkMem();
+}
+
+lune_stem_t * lune_call_method_0(
+    lune_env_t * _pEnv, lune_stem_t * _pObj, int offset )
+{
+    lune_mtd__Class_t * pMtdTbl = ((lune_Class_t*)_pObj->val.classVal)->pMtd;
+    lune_method_t * pMtd = *(lune_method_t **)((uint8_t*)pMtdTbl + offset);
+    return pMtd( _pEnv, _pObj );
 }
 
 lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... )

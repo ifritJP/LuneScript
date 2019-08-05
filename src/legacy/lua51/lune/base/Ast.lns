@@ -1377,11 +1377,34 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
 /**
 このスコープ内の処理から、 symbol シンボルにアクセスする際の処理。
 
+@param moduleScope このモジュールの最上位スコープ
 @param symbol シンボル
 */
 pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
+
+   fn setClosure( typeInfo:&TypeInfo ) {
+      let mut namespacescope = unwrap typeInfo.$scope;
+      if not namespacescope.closureSymMap[ symbol.$symbolId ] {
+         symbol.set_isSetFromClosuer( true );
+         namespacescope.closureSymMap[ symbol.$symbolId ] = symbol;
+         namespacescope.closureSym2NumMap[ symbol ] = #namespacescope.closureSymList;
+         namespacescope.closureSymList.insert( symbol );
+         namespacescope.parent.accessSymbol( moduleScope, symbol );
+      }
+   }
+   
    if symbol.$scope == moduleScope {
       // symbol が、最上位スコープで定義されているなら、大域変数なのでクロージャではない
+   }
+   elseif symbol.$name == "self" and symbol.$kind == .Var {
+      // self の場合、メソッド内からのアクセスはクロージャではない
+      let typeInfo = self.getNamespaceTypeInfo();
+      if typeInfo.$parentInfo ~= symbol.$namespaceTypeInfo {
+         setClosure( typeInfo );
+      }
+   }
+   elseif symbol.$kind == .Mbr {
+      // メンバーの場合はクロージャではない。
    }
    else {
       // このセット処理が、クロージャかどうかを確認する。
@@ -1389,16 +1412,7 @@ pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
       let typeInfo = self.getNamespaceTypeInfo();
       if typeInfo ~= symbol.$namespaceTypeInfo {
          // クロージャならシンボル情報を登録する。
-         let mut namespacescope = unwrap typeInfo.$scope;
-         if not namespacescope.closureSymMap[ symbol.$symbolId ] {
-            symbol.set_isSetFromClosuer( true );
-            namespacescope.closureSymMap[ symbol.$symbolId ] = symbol;
-            namespacescope.closureSym2NumMap[ symbol ] = #namespacescope.closureSymList;
-            namespacescope.closureSymList.insert( symbol );
-            if! let mut scope = typeInfo.$scope {
-               scope.parent.accessSymbol( moduleScope, symbol );
-            }
-         }
+         setClosure( typeInfo );
       }
    }
 }

@@ -1,5 +1,17 @@
 let mut g_val = 100;
 {
+   class Test {
+      let val:int {pub};
+      pub fn func(): int {
+         let work = self.val + 10;
+         return work;
+      }
+   }
+
+   let test = new Test(1);
+   print( test.$val, test.func() );
+}
+{
    enum Test {
       Val1 = "abc",
       Val2 = "xyz",
@@ -8,7 +20,7 @@ let mut g_val = 100;
    let val = Test.Val1;
    print( val );
    foreach item in Test.$_allList {
-      print( item );
+      print( item, item.$_txt );
    }
 }
 {
@@ -20,7 +32,7 @@ let mut g_val = 100;
    let val = Test.Val1;
    print( val + 10 );
    foreach item in Test.$_allList {
-      print( item );
+      print( item, item.$_txt );
    }
 }
 {

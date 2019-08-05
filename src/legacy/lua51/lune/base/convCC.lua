@@ -617,7 +617,7 @@ end
 function convFilter:getFullName( typeInfo )
 
    local enumName = typeInfo:getFullName( self.typeInfo2ModuleName, true )
-   return string.format( "%s", (enumName:gsub( "&", "" ):gsub( "%.", "_" ) ))
+   return string.format( "%s", (enumName:gsub( "[&@]", "" ):gsub( "%.", "_" ) ))
 end
 function convFilter:getCanonicalName( typeInfo )
 
@@ -762,12 +762,24 @@ function convFilter:processRoot( node, opt )
       filter( declFuncNode, self, node )
    end
    
+   for __index, declClassNode in pairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
+      filter( declClassNode, self, node )
+   end
+   
+   for __index, declMethodNode in pairs( node:get_nodeManager():getDeclMethodNodeList(  ) ) do
+      filter( declMethodNode, self, node )
+   end
+   
    self.processMode = ProcessMode.WideScopeVer
    for __index, child in pairs( children ) do
       if child:get_kind() == Nodes.NodeKind.get_DeclVar() then
          filter( child, self, node )
       end
       
+   end
+   
+   for __index, declClassNode in pairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
+      filter( declClassNode, self, node )
    end
    
    self.processMode = ProcessMode.Immediate
@@ -799,6 +811,14 @@ function convFilter:processRoot( node, opt )
    
    for __index, declEnumNode in pairs( node:get_nodeManager():getDeclEnumNodeList(  ) ) do
       filter( declEnumNode, self, node )
+   end
+   
+   for __index, declClassNode in pairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
+      filter( declClassNode, self, node )
+   end
+   
+   for __index, declMethodNode in pairs( node:get_nodeManager():getDeclMethodNodeList(  ) ) do
+      filter( declMethodNode, self, node )
    end
    
    self.processMode = ProcessMode.InitModule
@@ -1088,8 +1108,236 @@ function convFilter:outputAlter2MapFunc( stream, alt2Map )
 
 end
 
+function convFilter:getMethodTypeTxt( retTypeList )
+
+   if #retTypeList == 1 then
+      do
+         local _switchExp = retTypeList[1]
+         if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+            return "lune_method_int_t"
+         elseif _switchExp == Ast.builtinTypeReal then
+            return "lune_method_real_t"
+         end
+      end
+      
+   end
+   
+   return "lune_method_t"
+end
+
+function convFilter:processDefaultCtor( node )
+
+   local className = node:get_name().txt
+   self:write( string.format( "%s lune_class_%s_new( %s _pEnv", cTypeStemP, className, cTypeEnvP) )
+   for __index, member in pairs( node:get_memberList() ) do
+      self:write( string.format( ", %s %s", getCType( member:get_expType(), false ), member:get_name().txt) )
+   end
+   
+   self:write( ")" )
+end
+
+function convFilter:getClassCName( classType )
+
+   return self:getFullName( classType )
+end
+
+function convFilter:getMethodCName( methodTypeInfo )
+
+   return string.format( "u_mtd_%s__%s", self:getClassCName( methodTypeInfo:get_parentInfo() ), methodTypeInfo:get_rawTxt())
+end
+
+function convFilter:processMethodDeclTxt( methodTypeInfo )
+
+   self:write( string.format( "static %s %s( lune_env_t * _pEnv, lune_stem_t * pObj", getCRetType( methodTypeInfo:get_retTypeInfoList() ), self:getMethodCName( methodTypeInfo )) )
+   for index, arg in pairs( methodTypeInfo:get_argTypeInfoList() ) do
+      self:write( string.format( ", %s arg%d", getCType( arg, false ), index) )
+   end
+   
+   self:write( ")" )
+end
+
+function convFilter:processDeclClassPrototype( node )
+
+   local className = node:get_name().txt
+   self:writeln( string.format( "typedef struct lune_mtd_%s_t {", node:get_name().txt) )
+   for __index, field in pairs( node:get_fieldList() ) do
+      local name = nil
+      local retTypeList = nil
+      do
+         local declMethodNode = _lune.__Cast( field, 3, Nodes.DeclMethodNode )
+         if declMethodNode ~= nil then
+            name = _lune.nilacc( declMethodNode:get_declInfo():get_name(), "txt" )
+            retTypeList = declMethodNode:get_declInfo():get_retTypeInfoList(  )
+         end
+      end
+      
+      do
+         local declMemberNode = _lune.__Cast( field, 3, Nodes.DeclMemberNode )
+         if declMemberNode ~= nil then
+            if declMemberNode:get_getterMode() ~= Ast.AccessMode.None then
+               name = string.format( "get_%s", declMemberNode:get_name().txt)
+               retTypeList = declMemberNode:get_refType():get_expTypeList()
+            elseif declMemberNode:get_setterMode() ~= Ast.AccessMode.None then
+               name = string.format( "set_%s", declMemberNode:get_name().txt)
+               retTypeList = declMemberNode:get_refType():get_expTypeList()
+            end
+            
+         end
+      end
+      
+      if name ~= nil and retTypeList ~= nil then
+         local methodType = self:getMethodTypeTxt( retTypeList )
+         self:writeln( string.format( "%s * %s;", methodType, name) )
+      end
+      
+   end
+   
+   self:writeln( string.format( "} lune_mtd_%s_t;", className) )
+   self:writeln( string.format( "typedef struct %s {", className) )
+   self:writeln( string.format( "lune_mtd_%s_t * pMtd;", className) )
+   for __index, field in pairs( node:get_fieldList() ) do
+      do
+         local declMemberNode = _lune.__Cast( field, 3, Nodes.DeclMemberNode )
+         if declMemberNode ~= nil then
+            self:writeln( string.format( "%s %s;", getCType( declMemberNode:get_expType(), false ), declMemberNode:get_name().txt) )
+         end
+      end
+      
+   end
+   
+   self:writeln( string.format( "} %s;", className) )
+   for __index, member in pairs( node:get_memberList() ) do
+      local memberName = member:get_name().txt
+      if member:get_getterMode() ~= Ast.AccessMode.None then
+         local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope() ))
+         self:processMethodDeclTxt( getterType )
+         self:writeln( ";" )
+      end
+      
+      if member:get_setterMode() ~= Ast.AccessMode.None then
+         local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope() ))
+         self:processMethodDeclTxt( setterType )
+         self:writeln( ";" )
+      end
+      
+   end
+   
+   self:processDefaultCtor( node )
+   self:writeln( ";" )
+   self:writeln( string.format( [==[#define lune_mtd_%s( OBJ )                     \
+    ((%s*)OBJ->val.classVal)->pMtd )]==], className, className) )
+   self:writeln( string.format( [==[#define lune_obj_%s( OBJ )                     \
+          ((%s*)OBJ->val.classVal)]==], className, className) )
+   local ctorType = _lune.unwrap( node:get_scope():getTypeInfoField( "__init", true, node:get_scope() ))
+   self:write( string.format( "void u_class_%s_init( lune_env_t * _pEnv, %s * pObj", className, className) )
+   for index, argType in pairs( ctorType:get_argTypeInfoList() ) do
+      self:write( string.format( ", %s _arg%d", getCType( argType, false ), index) )
+   end
+   
+   self:writeln( ") {" )
+   for index, member in pairs( node:get_memberList() ) do
+      if isStemType( member:get_expType() ) then
+         self:writeln( string.format( "lune_setQ( (&pObj->%s), _arg%d );", member:get_name().txt, index) )
+      else
+       
+         self:writeln( string.format( "pObj->%s = _arg%d;", member:get_name().txt, index) )
+      end
+      
+   end
+   
+   self:writeln( "}" )
+end
+
+function convFilter:processDeclClassForm( node )
+
+   local className = node:get_name().txt
+   self:processDefaultCtor( node )
+   self:writeln( "{" )
+   self:writeln( string.format( "lune_class_new_( _pEnv, %s, pStem, pObj );", className) )
+   for __index, member in pairs( node:get_memberList() ) do
+      self:writeln( string.format( "u_class_%s_init( _pEnv, pObj, %s );", className, member:get_name().txt) )
+   end
+   
+   self:writeln( "return pStem;" )
+   self:writeln( "}" )
+   for __index, member in pairs( node:get_memberList() ) do
+      local memberName = member:get_name().txt
+      if member:get_getterMode() ~= Ast.AccessMode.None then
+         local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope() ))
+         if getterType:get_autoFlag() then
+            self:processMethodDeclTxt( getterType )
+            self:writeln( "{" )
+            self:writeln( string.format( "return lune_obj_%s(pObj)->%s;", className, memberName) )
+            self:writeln( "}" )
+         end
+         
+      end
+      
+      if member:get_setterMode() ~= Ast.AccessMode.None then
+         local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope() ))
+         if setterType:get_autoFlag() then
+            self:processMethodDeclTxt( setterType )
+            self:writeln( "{" )
+            self:writeln( string.format( "lune_obj_%s(pObj)->%s = arg;", className, memberName) )
+            self:writeln( "}" )
+         end
+         
+      end
+      
+   end
+   
+end
+
 function convFilter:processDeclClass( node, opt )
 
+   local className = node:get_name().txt
+   do
+      local _switchExp = self.processMode
+      if _switchExp == ProcessMode.Prototype then
+         self:processDeclClassPrototype( node )
+      elseif _switchExp == ProcessMode.WideScopeVer then
+         self:writeln( string.format( "lune_mtd_%s_t lune_mtd_%s = {", className, className) )
+         for __index, field in pairs( node:get_fieldList() ) do
+            local name = nil
+            local retTypeList = nil
+            do
+               local declMethodNode = _lune.__Cast( field, 3, Nodes.DeclMethodNode )
+               if declMethodNode ~= nil then
+                  name = self:getMethodCName( declMethodNode:get_expType() )
+                  retTypeList = declMethodNode:get_declInfo():get_retTypeInfoList(  )
+               end
+            end
+            
+            do
+               local declMemberNode = _lune.__Cast( field, 3, Nodes.DeclMemberNode )
+               if declMemberNode ~= nil then
+                  local memberName = declMemberNode:get_name().txt
+                  if declMemberNode:get_getterMode() ~= Ast.AccessMode.None then
+                     local getterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "get_%s", memberName), true, node:get_scope() ))
+                     name = self:getMethodCName( getterType )
+                     retTypeList = declMemberNode:get_refType():get_expTypeList()
+                  elseif declMemberNode:get_setterMode() ~= Ast.AccessMode.None then
+                     local setterType = _lune.unwrap( node:get_scope():getTypeInfoField( string.format( "set_%s", memberName), true, node:get_scope() ))
+                     name = self:getMethodCName( setterType )
+                     retTypeList = declMemberNode:get_refType():get_expTypeList()
+                  end
+                  
+               end
+            end
+            
+            if name ~= nil and retTypeList ~= nil then
+               local methodType = self:getMethodTypeTxt( retTypeList )
+               self:writeln( string.format( "(%s *)%s,", methodType, name) )
+            end
+            
+         end
+         
+         self:writeln( "};" )
+      elseif _switchExp == ProcessMode.Form then
+         self:processDeclClassForm( node )
+      end
+   end
+   
 end
 
 
@@ -1120,6 +1368,16 @@ end
 
 function convFilter:processExpNew( node, opt )
 
+   local classFullName = self:getFullName( node:get_symbol(  ):get_expType() )
+   self:write( string.format( "lune_class_%s_new( _pEnv, ", classFullName) )
+   do
+      local _exp = node:get_argList(  )
+      if _exp ~= nil then
+         filter( _exp, self, node )
+      end
+   end
+   
+   self:write( ")" )
 end
 
 
@@ -1143,6 +1401,34 @@ end
 
 function convFilter:processDeclMethod( node, opt )
 
+   do
+      local _switchExp = self.processMode
+      if _switchExp == ProcessMode.Prototype then
+         self:processMethodDeclTxt( node:get_expType() )
+         self:writeln( ";" )
+      elseif _switchExp == ProcessMode.Form then
+         local declInfo = node:get_declInfo(  )
+         do
+            local body = declInfo:get_body()
+            if body ~= nil then
+               local methodNodeToken = _lune.unwrap( declInfo:get_name(  ))
+               local methodName = methodNodeToken.txt
+               self:processMethodDeclTxt( node:get_expType() )
+               self:writeln( "{" )
+               self:pushIndent(  )
+               local className = self:getClassCName( _lune.unwrap( declInfo:get_classTypeInfo()) )
+               self:writeln( string.format( "%s self = pObj;", cTypeStemP) )
+               self:pushRoutine( node:get_expType() )
+               filter( body, self, node )
+               self:popRoutine(  )
+               self:popIndent(  )
+            end
+         end
+         
+         self:writeln( "}" )
+      end
+   end
+   
 end
 
 
@@ -2127,6 +2413,23 @@ function convFilter:processExpCall( node, opt )
    end
    
    if not wroteFuncFlag then
+      if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Method then
+         do
+            local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
+            if fieldNode ~= nil then
+               self:write( "lune_call_method_0( _pEnv, " )
+               filter( fieldNode:get_prefix(), self, node )
+               self:write( string.format( ",offsetof( lune_mtd_%s_t, %s )", self:getFullName( fieldNode:get_prefix():get_expType() ), fieldNode:get_field().txt) )
+            end
+         end
+         
+         wroteFuncFlag = true
+         setArgFlag = true
+      end
+      
+   end
+   
+   if not wroteFuncFlag then
       filter( node:get_func(), self, node )
       if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Form then
          self:write( "->val.form.pFunc" )
@@ -2421,10 +2724,37 @@ function convFilter:processRefField( node, opt )
    do
       local symbolInfo = node:get_symbolInfo()
       if symbolInfo ~= nil then
-         if symbolInfo:get_kind() == Ast.SymbolKind.Mbr and symbolInfo:get_typeInfo():get_kind() == Ast.TypeInfoKind.Enum then
-            self:write( self:getEnumTypeName( symbolInfo:get_typeInfo() ) )
-            self:write( string.format( "__%s", symbolInfo:get_name()) )
-            return 
+         if symbolInfo:get_typeInfo():get_kind() == Ast.TypeInfoKind.Enum then
+            if symbolInfo:get_kind() == Ast.SymbolKind.Mbr then
+               self:write( self:getEnumTypeName( symbolInfo:get_typeInfo() ) )
+               self:write( string.format( "__%s", symbolInfo:get_name()) )
+               return 
+            end
+            
+            Util.err( "illegal access" )
+         end
+         
+         if symbolInfo:get_kind() == Ast.SymbolKind.Mbr then
+            if node:get_prefix():get_expType():get_kind() == Ast.TypeInfoKind.Class then
+               if symbolInfo:get_staticFlag() then
+               else
+                
+                  local className = self:getClassCName( node:get_prefix():get_expType() )
+                  self:write( string.format( "lune_obj_%s( ", className) )
+                  do
+                     local expRefNode = _lune.__Cast( node:get_prefix(), 3, Nodes.ExpRefNode )
+                     if expRefNode ~= nil then
+                        self:write( expRefNode:get_token().txt )
+                     else
+                        filter( node:get_prefix(), self, node )
+                     end
+                  end
+                  
+                  self:write( string.format( ")->%s", node:get_field().txt) )
+               end
+               
+            end
+            
          end
          
       end
@@ -2456,6 +2786,10 @@ function convFilter:processGetField( node, opt )
          end
       end
       
+   elseif prefixType:get_kind() == Ast.TypeInfoKind.Class then
+      self:write( "lune_call_method_0( _pEnv, " )
+      filter( prefixNode, self, node )
+      self:write( string.format( ",offsetof( lune_mtd_%s_t, get_%s ) )", self:getFullName( prefixType ), fieldTxt) )
    end
    
 end

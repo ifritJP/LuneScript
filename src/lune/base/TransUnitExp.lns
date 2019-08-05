@@ -2999,6 +2999,8 @@ fn TransUnit.analyzeExp(
          }
          else {
             self.scope.accessSymbol( self.moduleScope, symbolInfo );
+            // self.scope.accessSymbol( self.moduleScope, symbolInfo,
+            //                          self.getCurrentNamespaceScope() );
          }
       }
    }  

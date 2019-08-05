@@ -95,8 +95,6 @@ typedef struct Sub {
     lune_stem_t * val3;
 } Sub;
 
-#define lune_mtd_Sub( OBJ )                     \
-    ((Sub*)OBJ->val.classVal)->pMtd
 #define lune_obj_Sub( OBJ )                     \
     ((Sub*)OBJ->val.classVal)
 
@@ -157,15 +155,15 @@ static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
 
     lune_var_t * test;
     lune_initVal( test, pBlock, 0, u_class_Test_new( _pEnv, 10 ) );
-    lune_mtd_Test( test->pStem )->func( _pEnv, test->pStem );
-    
 
+    lune_call_method_0( _pEnv, test->pStem, offsetof( lune_mtd_Test_t, func ) );
+    
     lune_var_t * sub;
     lune_initVal(
         sub, pBlock, 1,
         lune_class_Sub_new(
             _pEnv, 20, lune_litStr2stem( _pEnv, "xyz" )) );
-    lune_mtd_Sub( sub->pStem )->func( _pEnv, sub->pStem );
+    lune_call_method_0( _pEnv, sub->pStem, offsetof( lune_mtd_Sub_t, func ) );
     
     
     lune_print(

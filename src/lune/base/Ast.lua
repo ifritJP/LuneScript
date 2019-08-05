@@ -1889,26 +1889,32 @@ end
 _moduleObj.dumpScope = dumpScope
 function Scope:accessSymbol( moduleScope, symbol )
 
+   local function setClosure( typeInfo )
+   
+      local namespacescope = _lune.unwrap( typeInfo:get_scope())
+      if not namespacescope.closureSymMap[symbol:get_symbolId()] then
+         symbol:set_isSetFromClosuer( true )
+         namespacescope.closureSymMap[symbol:get_symbolId()] = symbol
+         namespacescope.closureSym2NumMap[symbol] = #namespacescope.closureSymList
+         table.insert( namespacescope.closureSymList, symbol )
+         namespacescope.parent:accessSymbol( moduleScope, symbol )
+      end
+      
+   end
+   
    if symbol:get_scope() == moduleScope then
+   elseif symbol:get_name() == "self" and symbol:get_kind() == SymbolKind.Var then
+      local typeInfo = self:getNamespaceTypeInfo(  )
+      if typeInfo:get_parentInfo() ~= symbol:get_namespaceTypeInfo() then
+         setClosure( typeInfo )
+      end
+      
+   elseif symbol:get_kind() == SymbolKind.Mbr then
    else
     
       local typeInfo = self:getNamespaceTypeInfo(  )
       if typeInfo ~= symbol:get_namespaceTypeInfo() then
-         local namespacescope = _lune.unwrap( typeInfo:get_scope())
-         if not namespacescope.closureSymMap[symbol:get_symbolId()] then
-            symbol:set_isSetFromClosuer( true )
-            namespacescope.closureSymMap[symbol:get_symbolId()] = symbol
-            namespacescope.closureSym2NumMap[symbol] = #namespacescope.closureSymList
-            table.insert( namespacescope.closureSymList, symbol )
-            do
-               local scope = typeInfo:get_scope()
-               if scope ~= nil then
-                  scope.parent:accessSymbol( moduleScope, symbol )
-               end
-            end
-            
-         end
-         
+         setClosure( typeInfo )
       end
       
    end

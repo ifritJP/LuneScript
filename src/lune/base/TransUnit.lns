@@ -470,6 +470,10 @@ pub class TransUnit {
       return self.scope.getNamespaceTypeInfo();
    }
 
+   pri fn getCurrentNamespaceScope(): Ast.Scope {
+      return unwrap self.getCurrentNamespaceTypeInfo().$scope;
+   }
+
    pri fn pushModule( externalFlag: bool, name:str, mutable: bool ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;

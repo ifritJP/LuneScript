@@ -52,7 +52,7 @@ struct lune_itList_t {
 
 
 
-static void lune_mtd_List_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
+static void lune_mtd_List_gc( lune_env_t * _pEnv, lune_stem_t * pObj );
 static lune_stem_t * lune_mtd_List_insert(
     lune_env_t * _pEnv, lune_stem_t * pListStem, lune_stem_t * pVal );
 static lune_stem_t * lune_mtd_List_refAt(
@@ -133,7 +133,7 @@ lune_stem_t * lune_List_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem )
 /**
 List インスタンスの開放処理
  */
-static void lune_mtd_List_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
+static void lune_mtd_List_gc( lune_env_t * _pEnv, lune_stem_t * pObj )
 {
     LUNE_DEBUG_CALL_LOG;
 
@@ -146,10 +146,6 @@ static void lune_mtd_List_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeF
     }
     
     delete lune_obj_List_obj( pObj );
-
-    if ( freeFlag ) {
-        lune_class_del( _pEnv, lune_obj_List( pObj ) );
-    }
 }
 
 /**
@@ -347,7 +343,7 @@ struct lune_itSet_t {
 };
 
 
-static void lune_mtd_Set_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
+static void lune_mtd_Set_gc( lune_env_t * _pEnv, lune_stem_t * pObj );
 
 
 static lune_stem_t * lune_mtd_Set_add( lune_env_t * _pEnv, lune_stem_t * pObj, lune_stem_t * pVal );
@@ -406,7 +402,7 @@ lune_stem_t * lune_Set_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem )
 /**
 List インスタンスの開放処理
  */
-static void lune_mtd_Set_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
+static void lune_mtd_Set_gc( lune_env_t * _pEnv, lune_stem_t * pObj )
 {
     LUNE_DEBUG_CALL_LOG;
 
@@ -419,10 +415,6 @@ static void lune_mtd_Set_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFl
     }
     
     delete lune_obj_Set_obj( pObj );
-
-    if ( freeFlag ) {
-        lune_class_del( _pEnv, lune_obj_Set( pObj ) );
-    }
 }
 
 lune_stem_t * lune_itSet_new( lune_env_t * _pEnv, lune_stem_t * pSet )
@@ -640,7 +632,7 @@ struct lune_itMap_t {
 };
 
 
-static void lune_mtd_Map_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
+static void lune_mtd_Map_gc( lune_env_t * _pEnv, lune_stem_t * pObj );
 
 
 
@@ -687,7 +679,7 @@ lune_stem_t * lune_Map_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem )
 /**
 List インスタンスの開放処理
  */
-static void lune_mtd_Map_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
+static void lune_mtd_Map_gc( lune_env_t * _pEnv, lune_stem_t * pObj )
 {
     LUNE_DEBUG_CALL_LOG;
 
@@ -702,10 +694,6 @@ static void lune_mtd_Map_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFl
     }
     
     delete pMap;
-
-    if ( freeFlag ) {
-        lune_class_del( _pEnv, lune_obj_Map( pObj ) );
-    }
 }
 
 lune_stem_t * lune_itMap_new( lune_env_t * _pEnv, lune_stem_t * pMap )

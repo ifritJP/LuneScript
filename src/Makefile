@@ -619,6 +619,10 @@ test-miniC:
 
 
 build-cc:
+	$(MAKE) build-cc-only
+	$(call test-convC,ccc)
+
+build-cc-only:
 	$(call transwork,.,.,,base/convCC)
 	$(call test-convC,miniC)
-	$(call test-convC,ccc)
+

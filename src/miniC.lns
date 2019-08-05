@@ -1,25 +1,10 @@
-{
-   enum Test {
-      Val1 = "abc",
-      Val2 = "xyz",
-   }
-
-   let val = Test.Val1;
-   print( val );
-   foreach item in Test.$_allList {
-      print( item, item.$_txt );
-   }
-}
-{
-   enum Test {
-      Val1 = 1,
-      Val2,
-   }
-
-   let val = Test.Val1;
-   print( val + 10 );
-   foreach item in Test.$_allList {
-      print( item, item.$_txt );
+class Test {
+   let val:int {pub};
+   pub fn func(): int {
+      let work = self.val + 10;
+      return work;
    }
 }
 
+let test = new Test(1);
+print( test.$val, test.func() );

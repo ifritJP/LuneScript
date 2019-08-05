@@ -772,6 +772,10 @@ function TransUnit:getCurrentNamespaceTypeInfo(  )
 
    return self.scope:getNamespaceTypeInfo(  )
 end
+function TransUnit:getCurrentNamespaceScope(  )
+
+   return _lune.unwrap( self:getCurrentNamespaceTypeInfo(  ):get_scope())
+end
 function TransUnit:pushModule( externalFlag, name, mutable )
 
    local typeInfo = Ast.headTypeInfo
@@ -3403,7 +3407,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2246, function (  )
+   Log.log( Log.Level.Info, __func__, 2250, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3419,7 +3423,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2257, function (  )
+               Log.log( Log.Level.Info, __func__, 2261, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3450,7 +3454,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2277, function (  )
+   Log.log( Log.Level.Info, __func__, 2281, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3806,7 +3810,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2648, function (  )
+   Log.log( Log.Level.Info, __func__, 2652, function (  )
    
       return string.format( "%s complete", modulePath)
    end

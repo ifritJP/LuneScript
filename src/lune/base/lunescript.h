@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <lns_alloc.h>
 
 #ifdef __cplusplus
@@ -229,6 +230,8 @@ extern "C" {
      * @return メソッドの戻り値
      */
     typedef lune_stem_t * lune_method_t( lune_env_t * _pEnv, lune_stem_t * pObj, ... );
+    typedef lune_int_t lune_method_int_t( lune_env_t * _pEnv, lune_stem_t * pObj, ... );
+    typedef lune_real_t lune_method_real_t( lune_env_t * _pEnv, lune_stem_t * pObj, ... );
 
 
 
@@ -236,9 +239,8 @@ extern "C" {
      * クラスのインスタンスの gc の型
      *
      * @param pObj クラスのインスタンスを保持する stem
-     * @param freeFlag インスタンスを開放する場合 true
      */
-    typedef void lune_gc_t( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
+    typedef void lune_gc_t( lune_env_t * _pEnv, lune_stem_t * pObj );
 
     /**
      * クラスのメソッドの最小構造。
@@ -506,6 +508,9 @@ extern "C" {
     extern bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t * pVal );
     extern lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy );
     extern lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem );
+
+    extern lune_stem_t * lune_call_method_0(
+        lune_env_t * _pEnv, lune_stem_t * _pObj, int offset );
 
 
     extern void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg );
