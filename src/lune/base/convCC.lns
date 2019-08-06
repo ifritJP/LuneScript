@@ -1116,21 +1116,40 @@ fn convFilter.getMethodCName( methodTypeInfo:&Ast.TypeInfo ) : str
 {
    return "u_mtd_%s__%s" ( self.getClassCName( methodTypeInfo.$parentInfo ),
                            methodTypeInfo.$rawTxt );
-   
 }
 
-fn convFilter.processMethodDeclTxt( methodTypeInfo:&Ast.TypeInfo ) mut
+fn convFilter.getCallMethodCName( methodTypeInfo:&Ast.TypeInfo ) : str
+{
+   return "u_call_mtd_%s__%s" ( self.getClassCName( methodTypeInfo.$parentInfo ),
+                                methodTypeInfo.$rawTxt );
+}
+
+
+fn convFilter.processMethodDeclTxt(
+   callFlag:bool, methodTypeInfo:&Ast.TypeInfo, argList:&List<&Nodes.Node>! ) mut
 {
    self.write(
       "static %s %s( lune_env_t * _pEnv, lune_stem_t * pObj"
       ( getCRetType( methodTypeInfo.$retTypeInfoList ),
+        callFlag and self.getCallMethodCName( methodTypeInfo ) or
         self.getMethodCName( methodTypeInfo ) ) );
 
-   foreach arg, index in methodTypeInfo.$argTypeInfoList {
-      self.write( ", %s arg%d" ( getCType( arg, false ), index ) );
+   when! argList {
+      foreach argNode, index in argList {
+         if! let declArgNode = argNode@@@Nodes.DeclArgNode {
+            self.write( ", %s %s" ( getCType( declArgNode.$expType, false ),
+                                    declArgNode.$name.txt ) );
+         }
+      }
+   }
+   else {
+      foreach arg, index in methodTypeInfo.$argTypeInfoList {
+         self.write( ", %s arg%d" ( getCType( arg, false ), index ) );
+      }
    }
    self.write( ")" );
 }
+
 
 fn convFilter.processDeclClassPrototype( node:&Nodes.DeclClassNode ) mut
 {
@@ -1139,26 +1158,27 @@ fn convFilter.processDeclClassPrototype( node:&Nodes.DeclClassNode ) mut
    // メソッド構造体の宣言
    self.writeln( "typedef struct lune_mtd_%s_t {" (node.$name.txt) );
 
+   fn outputField( name:str, retTypeList: &List<&Ast.TypeInfo> ) {
+      let methodType = self.getMethodTypeTxt( retTypeList );
+      self.writeln( "%s * %s;" (methodType, name ) );
+   }
+   
    foreach field in node.$fieldList {
       let mut name:str! = nil;
       let mut retTypeList:&List<&Ast.TypeInfo>! = nil;
       if! let declMethodNode = field@@@Nodes.DeclMethodNode {
-         name = declMethodNode.$declInfo.$name$.txt;
-         retTypeList = declMethodNode.$declInfo.get_retTypeInfoList();
+         outputField( unwrap declMethodNode.$declInfo.$name$.txt,
+                      declMethodNode.$declInfo.get_retTypeInfoList() );
       }
       if! let declMemberNode = field@@@Nodes.DeclMemberNode {
          if declMemberNode.$getterMode ~= .None {
-            name = "get_%s" (declMemberNode.$name.txt);
-            retTypeList = declMemberNode.$refType.$expTypeList;
+            outputField( "get_%s" (declMemberNode.$name.txt),
+                         declMemberNode.$refType.$expTypeList );
          }
-         elseif declMemberNode.$setterMode ~= .None {
-            name = "set_%s" (declMemberNode.$name.txt);
-            retTypeList = declMemberNode.$refType.$expTypeList;
+         if declMemberNode.$setterMode ~= .None {
+            outputField( "set_%s" (declMemberNode.$name.txt),
+                         declMemberNode.$refType.$expTypeList );
          }
-      }
-      when! name, retTypeList {
-         let methodType = self.getMethodTypeTxt( retTypeList );
-         self.writeln( "%s * %s;" (methodType, name ) );
       }
    }
    self.writeln( "} lune_mtd_%s_t;" (className) );
@@ -1181,13 +1201,13 @@ fn convFilter.processDeclClassPrototype( node:&Nodes.DeclClassNode ) mut
       if member.$getterMode ~= .None {
          let getterType = unwrap node.$scope.getTypeInfoField(
             "get_%s" (memberName), true, node.$scope );
-         self.processMethodDeclTxt( getterType );
+         self.processMethodDeclTxt( false, getterType## );
          self.writeln( ";" );
       }
       if member.$setterMode ~= .None {
          let setterType = unwrap node.$scope.getTypeInfoField(
             "set_%s" (memberName), true, node.$scope );
-         self.processMethodDeclTxt( setterType );
+         self.processMethodDeclTxt( false, setterType## );
          self.writeln( ";" );
       }
    }
@@ -1197,7 +1217,7 @@ fn convFilter.processDeclClassPrototype( node:&Nodes.DeclClassNode ) mut
    self.writeln( ";" );
 
    self.writeln( ```#define lune_mtd_%s( OBJ )                     \
-    ((%s*)OBJ->val.classVal)->pMtd )``` (className,className) );
+    (((%s*)OBJ->val.classVal)->pMtd )``` (className,className) );
    self.writeln( ```#define lune_obj_%s( OBJ )                     \
           ((%s*)OBJ->val.classVal)``` (className,className) );
 
@@ -1251,7 +1271,7 @@ fn convFilter.processDeclClassForm( node:&Nodes.DeclClassNode ) mut
          let getterType = unwrap node.$scope.getTypeInfoField(
             "get_%s" (memberName), true, node.$scope );
          if getterType.$autoFlag {
-            self.processMethodDeclTxt( getterType );
+            self.processMethodDeclTxt( false, getterType## );
             self.writeln( "{" );
             self.writeln(
                "return lune_obj_%s(pObj)->%s;" (className, memberName) );
@@ -1265,10 +1285,16 @@ fn convFilter.processDeclClassForm( node:&Nodes.DeclClassNode ) mut
             // self.writeln(
             //    "static void u_mtd_%s_set_%s( lune_env_t * _pEnv, lune_stem_t * pObj, %s arg );"
             //    ( className, memberName, getCType( member.$expType, false ) ) );
-            self.processMethodDeclTxt( setterType );
+            self.processMethodDeclTxt( false, setterType## );
             self.writeln( "{" );
-            self.writeln( "lune_obj_%s(pObj)->%s = arg;"
+            self.writeln( "lune_obj_%s(pObj)->%s = arg1;"
                           (className,memberName) );
+            self.writeln( "}" );
+
+            self.processMethodDeclTxt( true, setterType## );
+            self.writeln( "{" );
+            self.writeln(
+               "lune_mtd_%s( pObj )->set_val( _pEnv, pObj, arg1 );" (className) );
             self.writeln( "}" );
          }
       }
@@ -1285,6 +1311,12 @@ pub override fn convFilter.processDeclClass(
          self.processDeclClassPrototype( node );
       }
       case .WideScopeVer {
+
+         fn outputField( name:str, retTypeList:&List<&Ast.TypeInfo> ) {
+            let methodType = self.getMethodTypeTxt( retTypeList );
+            self.writeln( "(%s *)%s," (methodType, name ) );
+         }
+         
          self.writeln(
             "lune_mtd_%s_t lune_mtd_%s = {" ( className, className ) );
          //self.writeln( "u_mtd_%s_gc," ( className ) );
@@ -1293,27 +1325,23 @@ pub override fn convFilter.processDeclClass(
             let mut name:str! = nil;
             let mut retTypeList:&List<&Ast.TypeInfo>! = nil;
             if! let declMethodNode = field@@@Nodes.DeclMethodNode {
-               name = self.getMethodCName( declMethodNode.$expType );
-               retTypeList = declMethodNode.$declInfo.get_retTypeInfoList();
+               outputField( self.getMethodCName( declMethodNode.$expType ),
+                            declMethodNode.$declInfo.get_retTypeInfoList() );
             }
             if! let declMemberNode = field@@@Nodes.DeclMemberNode {
                let memberName = declMemberNode.$name.txt;
                if declMemberNode.$getterMode ~= .None {
                   let getterType = unwrap node.$scope.getTypeInfoField(
                      "get_%s" (memberName), true, node.$scope );
-                  name = self.getMethodCName( getterType );
-                  retTypeList = declMemberNode.$refType.$expTypeList;
+                  outputField( self.getMethodCName( getterType ),
+                               declMemberNode.$refType.$expTypeList );
                }
-               elseif declMemberNode.$setterMode ~= .None {
+               if declMemberNode.$setterMode ~= .None {
                   let setterType = unwrap node.$scope.getTypeInfoField(
                      "set_%s" (memberName), true, node.$scope );
-                  name = self.getMethodCName( setterType );
-                  retTypeList = declMemberNode.$refType.$expTypeList;
+                  outputField( self.getMethodCName( setterType ),
+                               declMemberNode.$refType.$expTypeList );
                }
-            }
-            when! name, retTypeList {
-               let methodType = self.getMethodTypeTxt( retTypeList );
-               self.writeln( "(%s *)%s," (methodType, name ) );
             }
          }
          self.writeln( "};" );
@@ -1871,19 +1899,21 @@ pub override fn convFilter.processDeclMethod(
 {
    switch self.processMode {
       case .Prototype {
-         self.processMethodDeclTxt( node.$expType );
+         self.processMethodDeclTxt( false, node.$expType, node.$declInfo.$argList );
+         self.writeln( ";" );
+         self.processMethodDeclTxt( true, node.$expType, node.$declInfo.$argList );
          self.writeln( ";" );
       }
       case .Form {
          let declInfo = node.get_declInfo();
+         let className = self.getClassCName( unwrap declInfo.$classTypeInfo );
          if! let body = declInfo.$body {
             let methodNodeToken = unwrap declInfo.get_name();
             let methodName = methodNodeToken.txt;
-            self.processMethodDeclTxt( node.$expType );
+            self.processMethodDeclTxt( false, node.$expType, node.$declInfo.$argList );
             self.writeln( "{" );
 
             self.pushIndent(##);
-            let className = self.getClassCName( unwrap declInfo.$classTypeInfo );
             self.writeln( "%s self = pObj;" (cTypeStemP) );
 
             self.pushRoutine( node.$expType );
@@ -1894,6 +1924,22 @@ pub override fn convFilter.processDeclMethod(
 
             self.popIndent();
          }
+         self.writeln( "}" );
+
+         self.processMethodDeclTxt( true, node.$expType, node.$declInfo.$argList );
+         self.writeln( "{" );
+
+         if #node.$expType.$retTypeInfoList ~= 0 {
+            self.write( "return " );
+         }
+         self.write( "lune_mtd_%s( pObj )->%s( _pEnv, pObj "
+                     ( className, node.$expType.$rawTxt ) );
+         foreach argNode in node.$declInfo.$argList {
+            if! let declArgNode = argNode@@@Nodes.DeclArgNode {
+               self.write( ", %s" ( declArgNode.$name.txt ) );
+            }
+         }
+         self.writeln( ");" );
          
          self.writeln( "}" );
       }
@@ -3301,11 +3347,12 @@ pub override fn convFilter.processExpCall(
    if not wroteFuncFlag {
       if node.$func.$expType.$kind == .Method {
          if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
-            self.write( "lune_call_method_0( _pEnv, " );
+            //self.write( "lune_call_method_0( _pEnv, " );
+            self.write( "%s( _pEnv, " ( self.getCallMethodCName( node.$func.$expType )));
             filter( fieldNode.$prefix, self, node );
-            self.write(
-               ",offsetof( lune_mtd_%s_t, %s )"
-               (self.getFullName( fieldNode.$prefix.$expType ), fieldNode.$field.txt ) );
+            // self.write(
+            //    ",offsetof( lune_mtd_%s_t, %s )"
+            //    (self.getFullName( fieldNode.$prefix.$expType ), fieldNode.$field.txt ) );
          }
          wroteFuncFlag = true;
          setArgFlag = true;
@@ -3755,6 +3802,7 @@ pub override fn convFilter.processGetField(
       self.write(
          ",offsetof( lune_mtd_%s_t, get_%s ) )"
          (self.getFullName( prefixType ), fieldTxt ) );
+      // self.write( ")" );
    }
 
    

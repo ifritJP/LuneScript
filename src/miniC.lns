@@ -1,10 +1,12 @@
 class Test {
-   let val:int {pub};
+   let mut val:int {pub,pub};
    pub fn func(): int {
       let work = self.val + 10;
       return work;
    }
 }
 
-let test = new Test(1);
+let mut test = new Test(1);
+print( test.$val, test.func() );
+test.set_val( 2 );
 print( test.$val, test.func() );

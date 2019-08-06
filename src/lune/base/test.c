@@ -72,6 +72,11 @@ static lune_stem_t * u_mtd_Test_func( lune_env_t * _pEnv, lune_stem_t * pObj )
     return _pEnv->pNoneStem;
 }
 
+lune_stem_t * u_call_mtd_Test_func( lune_env_t * _pEnv, lune_stem_t * pObj )
+{
+    return lune_mtd_Test( pObj )->func( _pEnv, pObj );
+}
+
 
 
 /**
@@ -157,6 +162,7 @@ static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
     lune_initVal( test, pBlock, 0, u_class_Test_new( _pEnv, 10 ) );
 
     lune_call_method_0( _pEnv, test->pStem, offsetof( lune_mtd_Test_t, func ) );
+    u_call_mtd_Test_func( _pEnv, test->pStem );
     
     lune_var_t * sub;
     lune_initVal(
