@@ -153,6 +153,23 @@ function memStream:get_txt()
    return self.txt
 end
 
+local SourceStream = {}
+_moduleObj.SourceStream = SourceStream
+function SourceStream.setmeta( obj )
+  setmetatable( obj, { __index = SourceStream  } )
+end
+function SourceStream.new(  )
+   local obj = {}
+   SourceStream.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function SourceStream:__init(  )
+
+end
+
 local debugFlag = true
 local function setDebugFlag( flag )
 

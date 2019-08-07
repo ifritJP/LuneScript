@@ -10,6 +10,7 @@
    }
 */
 typedef struct lune_mtd_Test_t {
+    lune_del_t * _del;
     lune_gc_t * _gc;
     lune_method_t * func;
 } lune_mtd_Test_t;
@@ -26,11 +27,13 @@ typedef struct Test {
     ((Test*)OBJ->val.classVal)
 
 
-static void u_mtd_Test_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
+static void u_mtd_Test__gc( lune_env_t * _pEnv, lune_stem_t * pObj );
+static void u_mtd_Test__del( lune_env_t * _pEnv, lune_stem_t * pObj );
 static lune_stem_t * u_mtd_Test_func( lune_env_t * _pEnv, lune_stem_t * pObj );
 
 lune_mtd_Test_t lune_mtd_Test = {
-    u_mtd_Test_gc,
+    u_mtd_Test__del,
+    u_mtd_Test__gc,
     (lune_method_t*)u_mtd_Test_func
 };
 
@@ -49,14 +52,14 @@ lune_stem_t * u_class_Test_new( lune_env_t * _pEnv, int val ) {
     return pStem;
 }
 
-static void u_mtd_Test_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
+static void u_mtd_Test__gc( lune_env_t * _pEnv, lune_stem_t * pObj )
+{
+}
+
+static void u_mtd_Test__del( lune_env_t * _pEnv, lune_stem_t * pObj )
 {
     LUNE_DEBUG_CALL_LOG;
     lune_decre_ref( _pEnv, lune_obj_Test( pObj )->val2 );
-
-    if ( freeFlag ) {
-        lune_class_del( _pEnv, lune_obj_Test( pObj ) );
-    }
 }
 
 
@@ -88,6 +91,7 @@ lune_stem_t * u_call_mtd_Test_func( lune_env_t * _pEnv, lune_stem_t * pObj )
    }
 */
 typedef struct lune_mtd_Sub_t {
+    lune_del_t * _del;
     lune_gc_t * _gc;
     lune_method_t * _super_func;
     lune_method_t * func;
@@ -100,15 +104,19 @@ typedef struct Sub {
     lune_stem_t * val3;
 } Sub;
 
+#define lune_mtd_Sub( OBJ )                    \
+    ((Sub*)OBJ->val.classVal)->pMtd
 #define lune_obj_Sub( OBJ )                     \
     ((Sub*)OBJ->val.classVal)
 
 
-static void u_mtd_Sub_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag );
+static void u_mtd_Sub__gc( lune_env_t * _pEnv, lune_stem_t * pObj );
+static void u_mtd_Sub__del( lune_env_t * _pEnv, lune_stem_t * pObj );
 static lune_stem_t * u_mtd_Sub_func( lune_env_t * _pEnv, lune_stem_t * pObj );
 
 lune_mtd_Sub_t lune_mtd_Sub = {
-    u_mtd_Sub_gc,
+    u_mtd_Sub__del,
+    u_mtd_Sub__gc,
     (lune_method_t *)u_mtd_Test_func,
     (lune_method_t *)u_mtd_Sub_func
 };
@@ -128,17 +136,16 @@ lune_stem_t * lune_class_Sub_new(
     return pStem;
 }
 
-static void u_mtd_Sub_gc( lune_env_t * _pEnv, lune_stem_t * pObj, bool freeFlag )
+static void u_mtd_Sub__gc( lune_env_t * _pEnv, lune_stem_t * pObj )
 {
-    
+    u_mtd_Test__gc( _pEnv, pObj );
+}    
+
+static void u_mtd_Sub__del( lune_env_t * _pEnv, lune_stem_t * pObj )
+{
     LUNE_DEBUG_CALL_LOG;
+    u_mtd_Test__del( _pEnv, pObj );
     lune_decre_ref( _pEnv, lune_obj_Sub( pObj )->val3 );
-
-    u_mtd_Test_gc( _pEnv, pObj, false );
-
-    if ( freeFlag ) {
-        lune_class_del( _pEnv, lune_obj_Sub( pObj ) );
-    }
 }
 
 
@@ -154,6 +161,12 @@ static lune_stem_t * u_mtd_Sub_func( lune_env_t * _pEnv, lune_stem_t * pObj )
     return _pEnv->pNoneStem;
 }
 
+lune_stem_t * u_call_mtd_Sub_func( lune_env_t * _pEnv, lune_stem_t * pObj )
+{
+    return lune_mtd_Sub( pObj )->func( _pEnv, pObj );
+}
+
+
 static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
 {
     lune_block_t * pBlock = lune_enter_block( _pEnv, 2 );
@@ -161,7 +174,6 @@ static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
     lune_var_t * test;
     lune_initVal( test, pBlock, 0, u_class_Test_new( _pEnv, 10 ) );
 
-    lune_call_method_0( _pEnv, test->pStem, offsetof( lune_mtd_Test_t, func ) );
     u_call_mtd_Test_func( _pEnv, test->pStem );
     
     lune_var_t * sub;
@@ -169,7 +181,7 @@ static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
         sub, pBlock, 1,
         lune_class_Sub_new(
             _pEnv, 20, lune_litStr2stem( _pEnv, "xyz" )) );
-    lune_call_method_0( _pEnv, sub->pStem, offsetof( lune_mtd_Sub_t, func ) );
+    u_call_mtd_Sub_func( _pEnv, sub->pStem );
     
     
     lune_print(
@@ -179,7 +191,6 @@ static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
             lune_int2stem( _pEnv, 1 ),
             lune_int2stem( _pEnv, 2 ),
             lune_litStr2stem( _pEnv, "abc" )));
-
     lune_stem_t * _ret = lune_setRet( _pEnv, lune_int2stem( _pEnv, 100 ) );
     
     lune_leave_block( _pEnv );

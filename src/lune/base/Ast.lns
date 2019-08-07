@@ -259,7 +259,7 @@ pub class Scope {
    // このスコープがクラスのスコープかどうか。
    pri let classFlag: bool;
    // 継承しているスコープ。
-   pri let mut inherit: &Scope!;
+   pri let mut inherit: &Scope! {pub};
    // 継承しているスコープ。
    pri let ifScopeList: List<&Scope>;
    /** 所有権情報 */
@@ -707,6 +707,11 @@ pub fn isExtId(typeInfo:&TypeInfo): bool {
 /** TypeInfo の head。 */
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
+
+pub fn TypeInfo.hasBase(): bool {
+   return self.$baseTypeInfo ~= headTypeInfo;
+}
+
 
 pub fn Scope.getNamespaceTypeInfo() : &TypeInfo {
    let typeInfo = headTypeInfo;

@@ -643,6 +643,9 @@ end
 function Scope:get_symbol2SymbolInfoMap()
    return self.symbol2SymbolInfoMap
 end
+function Scope:get_inherit()
+   return self.inherit
+end
 function Scope:get_closureSymMap()
    return self.closureSymMap
 end
@@ -1015,6 +1018,11 @@ end
 _moduleObj.isExtId = isExtId
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.headTypeInfo = headTypeInfo
+
+function TypeInfo:hasBase(  )
+
+   return self:get_baseTypeInfo() ~= _moduleObj.headTypeInfo
+end
 
 function Scope:getNamespaceTypeInfo(  )
 
@@ -1475,6 +1483,10 @@ end
 
 function AliasTypeInfo:get_typeData( ... )
    return self.aliasSrcTypeInfo:get_typeData( ... )
+end
+
+function AliasTypeInfo:hasBase( ... )
+   return self.aliasSrcTypeInfo:hasBase( ... )
 end
 
 function AliasTypeInfo:createAlt2typeMap( ... )
@@ -2396,6 +2408,10 @@ function NilableTypeInfo:get_typeData( ... )
    return self.nonnilableType:get_typeData( ... )
 end
 
+function NilableTypeInfo:hasBase( ... )
+   return self.nonnilableType:hasBase( ... )
+end
+
 function NilableTypeInfo:createAlt2typeMap( ... )
    return self.nonnilableType:createAlt2typeMap( ... )
 end
@@ -2855,6 +2871,10 @@ function BoxTypeInfo:get_typeData( ... )
    return self.boxingType:get_typeData( ... )
 end
 
+function BoxTypeInfo:hasBase( ... )
+   return self.boxingType:hasBase( ... )
+end
+
 function BoxTypeInfo:getFullName( ... )
    return self.boxingType:getFullName( ... )
 end
@@ -3178,6 +3198,10 @@ function GenericTypeInfo:get_typeData( ... )
    return self.genSrcTypeInfo:get_typeData( ... )
 end
 
+function GenericTypeInfo:hasBase( ... )
+   return self.genSrcTypeInfo:hasBase( ... )
+end
+
 function GenericTypeInfo:getFullName( ... )
    return self.genSrcTypeInfo:getFullName( ... )
 end
@@ -3374,6 +3398,10 @@ end
 
 function ModifierTypeInfo:get_typeData( ... )
    return self.srcTypeInfo:get_typeData( ... )
+end
+
+function ModifierTypeInfo:hasBase( ... )
+   return self.srcTypeInfo:hasBase( ... )
 end
 
 function ModifierTypeInfo:createAlt2typeMap( ... )

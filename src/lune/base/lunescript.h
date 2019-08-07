@@ -122,11 +122,18 @@ extern "C" {
        変数 SYM に VAL をセットする前に、
        変数 SYM が保持する値の参照カウントをデクリメント。
     */
-#define lune_setq( ENV, SYM, VAL )            \
-    if ( (*SYM) != NULL ) {                   \
-        lune_decre_ref( ENV, (*SYM) );          \
-    }                                           \
-    lune_setQ( SYM, VAL );
+#define lune_setq( ENV, SYM, VAL )              \
+    {                                           \
+        lune_stem_t * __WORK = VAL;             \
+        if ( (*SYM) != __WORK ) {               \
+            if ( (*SYM) != NULL ) {             \
+                lune_decre_ref( ENV, (*SYM) );  \
+            }                                   \
+            (*SYM) = __WORK;                    \
+            lune_setQ_( (*SYM) );               \
+        }                                       \
+    }
+
 
     /**
        STEM 型の値 VAL を、 変数 SYM に代入する。
@@ -243,12 +250,21 @@ extern "C" {
     typedef void lune_gc_t( lune_env_t * _pEnv, lune_stem_t * pObj );
 
     /**
+     * クラスのインスタンスの開放処理
+     *
+     * @param pObj クラスのインスタンスを保持する stem
+     */
+    typedef void lune_del_t( lune_env_t * _pEnv, lune_stem_t * pObj );
+    
+    /**
      * クラスのメソッドの最小構造。
      *
      * 各クラスのインスタンスは、メソッドのポインタを保持する構造体を持つ。
-     * メソッドのポインタを保持する構造体の先頭は、必ず gc のメソッドでなければならない。
+     * メソッドのポインタを保持する構造体の先頭は、
+     * 必ず del, gc のメソッドでなければならない。
      */
     typedef struct lune_mtd__Class_t {
+        lune_del_t * _del;
         lune_gc_t * _gc;
     } lune_mtd__Class_t;
 
@@ -508,9 +524,6 @@ extern "C" {
     extern bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t * pVal );
     extern lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy );
     extern lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem );
-
-    extern lune_stem_t * lune_call_method_0(
-        lune_env_t * _pEnv, lune_stem_t * _pObj, int offset );
 
 
     extern void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg );

@@ -1268,6 +1268,12 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "outerMethodSet": "Set<str>" } ]
 );
 
+pub fn DeclClassNode.hasUserInit() : bool {
+   let scope = unwrap self.$expType.$scope;
+   let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope );
+   return not initFuncType.$autoFlag;
+}
+
 _declNodeClass( "DeclEnum", Node, false, false, true,
                 [ { "accessMode": "Ast.AccessMode" },
                   { "name": "&Parser.Token" },

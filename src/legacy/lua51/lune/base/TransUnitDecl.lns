@@ -2124,7 +2124,7 @@ fn TransUnit.analyzeDeclFunc(
          }
          if not staticFlag {
             self.scope.add(
-               .Var, false, true, "self",
+               .Arg, false, true, "self",
                workClass, .Pri, false,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
          }

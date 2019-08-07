@@ -6733,6 +6733,13 @@ function DeclClassNode:get_outerMethodSet()
 end
 
 
+function DeclClassNode:hasUserInit(  )
+
+   local scope = _lune.unwrap( self:get_expType():get_scope())
+   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope ))
+   return not initFuncType:get_autoFlag()
+end
+
 function NodeKind.get_DeclEnum(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclEnum'])

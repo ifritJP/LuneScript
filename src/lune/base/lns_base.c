@@ -108,6 +108,9 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
         if ( ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc != NULL ) {
             ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc( _pEnv, pStem );
         }
+        if ( ((lune_Class_t*)pStem->val.classVal)->pMtd->_del != NULL ) {
+            ((lune_Class_t*)pStem->val.classVal)->pMtd->_del( _pEnv, pStem );
+        }
         lune_class_del( _pEnv, pStem->val.classVal );
         break;
     case lune_value_type_ddd: // fall-through
@@ -130,7 +133,7 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
         }
         break;
     case lune_value_type_itSet:
-        lune_itSet_gc( _pEnv, pStem );
+        lune_itSet__del( _pEnv, pStem );
         break;
     default:
         break;
@@ -785,14 +788,6 @@ static void lune_releaseGlobalEnv(void) {
     lune_deleteEnv( s_globalEnv.pEnv );
     printf( ":debug:allocNum = %d\n", s_globalEnv.allocNum );
     lune_checkMem();
-}
-
-lune_stem_t * lune_call_method_0(
-    lune_env_t * _pEnv, lune_stem_t * _pObj, int offset )
-{
-    lune_mtd__Class_t * pMtdTbl = ((lune_Class_t*)_pObj->val.classVal)->pMtd;
-    lune_method_t * pMtd = *(lune_method_t **)((uint8_t*)pMtdTbl + offset);
-    return pMtd( _pEnv, _pObj );
 }
 
 lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... )

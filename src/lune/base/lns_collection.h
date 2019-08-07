@@ -9,6 +9,7 @@ extern "C" {
     ((lune_List_t*)OBJ->val.classVal)->pMtd
     
     struct lune_mtd_List_t {
+        lune_del_t * _del;
         lune_gc_t * _gc;
         lune_method_t * insert;
         lune_method_t * refAt;
@@ -20,7 +21,7 @@ extern "C" {
     extern lune_stem_t * lune_List_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem );
 
     extern lune_stem_t * lune_itList_new( lune_env_t * _pEnv, lune_stem_t * pList );
-    extern void lune_itList_gc( lune_env_t * _pEnv, lune_stem_t * it );
+    extern void lune_itList__del( lune_env_t * _pEnv, lune_stem_t * it );
     extern void lune_itList_inc( lune_env_t * _pEnv, lune_stem_t * it );
     extern bool lune_itList_hasNext( lune_env_t * _pEnv, lune_stem_t * it, lune_stem_t ** ppVal );
     
@@ -30,6 +31,7 @@ extern "C" {
     ((lune_Set_t*)OBJ->val.classVal)->pMtd
     
     struct lune_mtd_Set_t {
+        lune_del_t * _del;
         lune_gc_t * _gc;
         lune_method_t * add;
         lune_method_t * del;
@@ -49,7 +51,7 @@ extern "C" {
 
 
     extern lune_stem_t * lune_itSet_new( lune_env_t * _pEnv, lune_stem_t * pSet );
-    extern void lune_itSet_gc( lune_env_t * _pEnv, lune_stem_t * it );
+    extern void lune_itSet__del( lune_env_t * _pEnv, lune_stem_t * it );
     extern void lune_itSet_inc( lune_env_t * _pEnv, lune_stem_t * it );
     extern bool lune_itSet_hasNext( lune_env_t * _pEnv, lune_stem_t * it, lune_stem_t ** ppVal );
 
@@ -59,6 +61,7 @@ extern "C" {
     ((lune_Map_t*)OBJ->val.classVal)->pMtd
     
     struct lune_mtd_Map_t {
+        lune_del_t * _del;
         lune_gc_t * _gc;
         lune_method_t * add;
         lune_method_t * get;
@@ -82,7 +85,7 @@ extern "C" {
     
 
     extern lune_stem_t * lune_itMap_new( lune_env_t * _pEnv, lune_stem_t * pMap );
-    extern void lune_itMap_gc( lune_env_t * _pEnv, lune_stem_t * it );
+    extern void lune_itMap__del( lune_env_t * _pEnv, lune_stem_t * it );
     extern void lune_itMap_inc( lune_env_t * _pEnv, lune_stem_t * it );
     extern bool lune_itMap_hasNext( lune_env_t * _pEnv, lune_stem_t * it,
                                     lune_Map_entry_t * pEntry );

@@ -8,6 +8,15 @@
 
 * 機能
 
+- [ ] 次が実行時エラーする
+  
+class Test {
+   let val:int;
+}
+class Sub extend Test {
+}
+
+  
 - [ ] 文字列中の . を編集すると company-mode がエラーする
 
 - [ ] form<T> を対応する。 これは fn (...<T>) : ...<T> のシンタックスシュガー

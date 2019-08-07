@@ -2017,6 +2017,9 @@ fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.
          }
       }
    }
+   elseif token.txt == "self" {
+      self.addErrMess( token.pos, "this symbol is special keyword -- %s" (token.txt) );
+   }
    return token;
 }
 

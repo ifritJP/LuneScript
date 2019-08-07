@@ -3156,6 +3156,8 @@ function TransUnit:checkSymbol( token, mode )
          
       end
       
+   elseif token.txt == "self" then
+      self:addErrMess( token.pos, string.format( "this symbol is special keyword -- %s", token.txt) )
    end
    
    return token
@@ -3407,7 +3409,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2250, function (  )
+   Log.log( Log.Level.Info, __func__, 2253, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3423,7 +3425,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2261, function (  )
+               Log.log( Log.Level.Info, __func__, 2264, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3454,7 +3456,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2281, function (  )
+   Log.log( Log.Level.Info, __func__, 2284, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3810,7 +3812,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2652, function (  )
+   Log.log( Log.Level.Info, __func__, 2655, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -6108,7 +6110,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          end
          
          if not staticFlag then
-            self.scope:add( Ast.SymbolKind.Var, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+            self.scope:add( Ast.SymbolKind.Arg, false, true, "self", workClass, Ast.AccessMode.Pri, false, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
          end
          
          if not workClass:get_abstractFlag() and abstractFlag then
