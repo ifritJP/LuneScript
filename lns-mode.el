@@ -233,6 +233,10 @@
          ))
   (set (make-local-variable 'isearch-wrap-function) 'lns-isearch-wrap-function)
   (set (make-local-variable 'lns-proj-dir) (lns-proj-search))
+  (when (boundp 'company-backends)
+    (set (make-local-variable 'company-backends)
+	 (delq 'company-dabbrev (copy-sequence company-backends))))
+
 
   (local-set-key (kbd "C-c C-e") 'lns-dispatch-mode)
   )

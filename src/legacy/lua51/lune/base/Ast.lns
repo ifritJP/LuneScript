@@ -1401,14 +1401,14 @@ pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
    if symbol.$scope == moduleScope {
       // symbol が、最上位スコープで定義されているなら、大域変数なのでクロージャではない
    }
-   elseif symbol.$name == "self" and symbol.$kind == .Var {
+   elseif symbol.$name == "self" {
       // self の場合、メソッド内からのアクセスはクロージャではない
       let typeInfo = self.getNamespaceTypeInfo();
-      if typeInfo.$parentInfo ~= symbol.$namespaceTypeInfo {
+      if not typeInfo.$parentInfo.isInheritFrom( symbol.$namespaceTypeInfo## ) {
          setClosure( typeInfo );
       }
    }
-   elseif symbol.$kind == .Mbr {
+   elseif symbol.$kind == .Mbr or symbol.$kind == .Mtd {
       // メンバーの場合はクロージャではない。
    }
    else {

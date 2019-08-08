@@ -1209,3 +1209,12 @@ class Test4 {
    let val:Test = .Bar;
    print( val.$_txt );
 }
+{
+   class Test {
+      let val:int;
+   }
+   class Sub extend Test {
+      // 親クラスのコンストラクタに引数があり、
+      // 継承しているクラスにメンバがない場合に、エラーする不具合があった。
+   }
+}

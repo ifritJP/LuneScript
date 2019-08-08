@@ -1178,7 +1178,7 @@ end
 
 local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInfo, argList )
 
-   if methodTypeInfo:get_rawTxt() ~= "__init" then
+   if methodTypeInfo:get_rawTxt() ~= "__init" and not callFlag then
       stream:write( "static " )
    end
    

@@ -1162,7 +1162,7 @@ fn processMethodDeclTxt(
    stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    callFlag:bool, methodTypeInfo:&Ast.TypeInfo, argList:&List<&Nodes.Node>! )
 {
-   if methodTypeInfo.$rawTxt ~= "__init" {
+   if methodTypeInfo.$rawTxt ~= "__init" and not callFlag {
       stream.write( "static " );
    }
    stream.write(

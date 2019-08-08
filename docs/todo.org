@@ -8,15 +8,6 @@
 
 * 機能
 
-- [ ] 次が実行時エラーする
-  
-class Test {
-   let val:int;
-}
-class Sub extend Test {
-}
-
-  
 - [ ] 文字列中の . を編集すると company-mode がエラーする
 
 - [ ] form<T> を対応する。 これは fn (...<T>) : ...<T> のシンタックスシュガー
@@ -283,6 +274,15 @@ class Sub extend Test {
   
 - [X] enum 値補完の時に enum の _from() などのメソッドまで表示されてしまう。  
 - [X] let の初期値で enum が補完できない。
+- [X] 次が実行時エラーする
+  
+class Test {
+   let val:int;
+}
+class Sub extend Test {
+}
+
+  
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。
 - [ ] import すると、モジュールのシンボルがスコープに追加される。
       このシンボルが変数などと被ると使いづらい。

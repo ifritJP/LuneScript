@@ -9,4 +9,5 @@ class _Test { // error
 }
 macro Hoge() {  // error
 }
+let self = 1; // errorr
 print( __func__ );  // error

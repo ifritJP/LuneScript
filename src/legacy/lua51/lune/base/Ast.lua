@@ -1915,13 +1915,13 @@ function Scope:accessSymbol( moduleScope, symbol )
    end
    
    if symbol:get_scope() == moduleScope then
-   elseif symbol:get_name() == "self" and symbol:get_kind() == SymbolKind.Var then
+   elseif symbol:get_name() == "self" then
       local typeInfo = self:getNamespaceTypeInfo(  )
-      if typeInfo:get_parentInfo() ~= symbol:get_namespaceTypeInfo() then
+      if not typeInfo:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo() ) then
          setClosure( typeInfo )
       end
       
-   elseif symbol:get_kind() == SymbolKind.Mbr then
+   elseif symbol:get_kind() == SymbolKind.Mbr or symbol:get_kind() == SymbolKind.Mtd then
    else
     
       local typeInfo = self:getNamespaceTypeInfo(  )

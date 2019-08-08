@@ -1427,10 +1427,12 @@ end```
       }
 
       let mut argTxt = superArgTxt;
-      if #argTxt > 0 {
-         argTxt = argTxt .. ",";
+      if thisArgTxt ~= "" {
+         if #argTxt > 0 {
+            argTxt = argTxt .. ",";
+         }
+         argTxt = argTxt .. thisArgTxt;
       }
-      argTxt = argTxt .. thisArgTxt;
 
       self.writeln( ```
 function %s.new( %s )

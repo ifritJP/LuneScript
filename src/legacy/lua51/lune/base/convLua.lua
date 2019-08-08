@@ -1719,11 +1719,14 @@ end]==], className, className, destTxt) )
       end
       
       local argTxt = superArgTxt
-      if #argTxt > 0 then
-         argTxt = argTxt .. ","
+      if thisArgTxt ~= "" then
+         if #argTxt > 0 then
+            argTxt = argTxt .. ","
+         end
+         
+         argTxt = argTxt .. thisArgTxt
       end
       
-      argTxt = argTxt .. thisArgTxt
       self:writeln( string.format( [==[
 function %s.new( %s )
    local obj = {}
@@ -3497,7 +3500,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3168, function (  )
+   Log.log( Log.Level.Info, __func__, 3170, function (  )
    
       return string.format( "code: %s", code)
    end
