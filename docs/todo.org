@@ -8,6 +8,33 @@
 
 * 機能
 
+
+- [  ] 次が出来てしまう。
+  
+abstract class Super {
+   pub abstract fn func(): str;
+}
+class Sub1 extend Super {
+   pub override fn func(): str {
+      return __func__;
+   }
+}
+class Sub2 extend Super {
+   pub override fn func(): str {
+      return __func__;
+   }
+}
+fn func( list:List<Super> ) {
+   list.insert( new Sub2() );
+}
+let mut list:List<Sub1> = [];
+func( list ); // List<Sub1> に Sub2 のインスタンスが入ってしまう。。。
+foreach obj in list {
+   print( obj.func() );
+}
+
+  
+  
 - [ ] 文字列中の . を編集すると company-mode がエラーする
 
 - [ ] form<T> を対応する。 これは fn (...<T>) : ...<T> のシンタックスシュガー

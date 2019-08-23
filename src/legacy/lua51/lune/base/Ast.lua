@@ -1244,6 +1244,23 @@ function CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
    end
    
 end
+function CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2type )
+
+   do
+      local _exp = alt2type[CanEvalCtrlTypeInfo.needAutoBoxing]
+      if _exp ~= nil then
+         do
+            local autoBoxingInfo = _lune.__Cast( _exp, 3, AutoBoxingInfo )
+            if autoBoxingInfo ~= nil then
+               return autoBoxingInfo:get_count() ~= 0
+            end
+         end
+         
+      end
+   end
+   
+   return false
+end
 function CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2type, count )
 
    do

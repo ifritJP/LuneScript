@@ -1,40 +1,16 @@
-class Test {
-   pro let mut val:int {pub,pub};
-   let mut val2:str {pub,pub};
-   pub fn func( val:int ): int {
-      return self.val + val;
-   }
-   pub fn sub( val:str ): str {
-      return self.val2;
-   }
+interface IF {
+   pub fn func();
 }
-let mut test = new Test(1, "abc" );
-print( test.$val, test.func( 10 ), test.sub( "xyz" ) );
-test.set_val( 2 );
-test.set_val2( "ABC" );
-print( test.$val, test.func( 20 ), test.sub( "XYZ" ) );
 
-class Val {
-   let test:Test {pub};
-   let val3:int {pub};
-   pub fn __init( test1:Test ) {
-      self.test = test1;
-      self.val3 = 1;
-   }
-}
-let val = new Val( test );
-print( val.$test.$val, val.$test.$val2 );
-
-class Sub extend Test {
-   pub fn func2(): int {
-      return self.$val;
-   }
-   pub fn func3( work:int ) mut {
-      self.val = work;
+class Test extend (IF) {
+   pub fn func() {
+      print( "hoge" );
    }
 }
 
-let mut sub = new Sub( 10, "xyz" );
-print( sub.$val, sub.$val2, sub.func2() );
-sub.func3( 100 );
-print( sub.$val, sub.$val2, sub.func2() );
+fn func( obj:&IF ) {
+   obj.func();
+}
+
+let test = new Test();
+func( test );

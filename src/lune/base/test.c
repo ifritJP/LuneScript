@@ -1,5 +1,28 @@
 #include <lunescript.h>
 
+/**
+   interface IF {
+     pub fn func();
+   }
+*/
+typedef struct lune_mtd_IF_t {
+    lune_method_t * func;
+} lune_mtd_IF_t;
+
+typedef struct IF {
+    /** implement しているインスタンスのポインタ */
+    lune_stem_t * pObj;
+    lune_mtd_IF_t * pMtd;
+} IF;
+
+#define lune_mtd_IF( OBJ )                    \
+    ((IF*)&OBJ->val.ifVal)->pMtd
+
+lune_stem_t * u_call_mtd_IF_func( lune_env_t * _pEnv, lune_stem_t * pObj )
+{
+    return lune_mtd_IF( pObj )->func( _pEnv, lune_getImpObj( pObj ) );
+}
+
 
 /**
    class Test {
@@ -15,21 +38,33 @@ typedef struct lune_mtd_Test_t {
     lune_method_t * func;
 } lune_mtd_Test_t;
 
+typedef struct u_if_imp_Test_t {
+    lune_stem_t IF;
+} u_if_imp_Test_t;
+
 typedef struct Test {
+    u_if_imp_Test_t * pImp;
     lune_mtd_Test_t * pMtd;
     lune_int_t val;
     lune_stem_t * val2;
+    u_if_imp_Test_t imp;
 } Test;
 
 #define lune_mtd_Test( OBJ )                    \
     ((Test*)OBJ->val.classVal)->pMtd
 #define lune_obj_Test( OBJ )                    \
     ((Test*)OBJ->val.classVal)
+#define lune_if_Test( OBJ )                    \
+    ((Test*)OBJ->val.classVal)->pImp
 
 
 static void u_mtd_Test__gc( lune_env_t * _pEnv, lune_stem_t * pObj );
 static void u_mtd_Test__del( lune_env_t * _pEnv, lune_stem_t * pObj );
 static lune_stem_t * u_mtd_Test_func( lune_env_t * _pEnv, lune_stem_t * pObj );
+
+lune_mtd_IF_t lune_if_Test_imp_IF = {
+    (lune_method_t*)u_mtd_Test_func
+};
 
 lune_mtd_Test_t lune_mtd_Test = {
     u_mtd_Test__del,
@@ -48,6 +83,8 @@ lune_stem_t * u_class_Test_new( lune_env_t * _pEnv, int val ) {
     lune_class_new_( _pEnv, Test, pStem, pObj );
 
     u_class_Test_init( _pEnv, pObj, val );
+    pObj->pImp = &pObj->imp;
+    lune_init_if( &pObj->imp.IF, _pEnv, pStem, &lune_if_Test_imp_IF );
 
     return pStem;
 }
@@ -98,6 +135,7 @@ typedef struct lune_mtd_Sub_t {
 } lune_mtd_Sub_t;
 
 typedef struct Sub {
+    void * pImp;
     lune_mtd_Sub_t * pMtd;
     lune_int_t val;
     lune_stem_t * val2;
@@ -169,12 +207,17 @@ lune_stem_t * u_call_mtd_Sub_func( lune_env_t * _pEnv, lune_stem_t * pObj )
 
 static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
 {
-    lune_block_t * pBlock = lune_enter_block( _pEnv, 2 );
+    lune_block_t * pBlock = lune_enter_block( _pEnv, 3 );
 
     lune_var_t * test;
     lune_initVal( test, pBlock, 0, u_class_Test_new( _pEnv, 10 ) );
-
     u_call_mtd_Test_func( _pEnv, test->pStem );
+
+    lune_var_t * iftest;
+    lune_initVal( iftest, pBlock, 2, lune_getIF( &lune_if_Test( test->pStem )->IF ) );
+    u_call_mtd_IF_func( _pEnv, iftest->pStem );
+    
+
     
     lune_var_t * sub;
     lune_initVal(

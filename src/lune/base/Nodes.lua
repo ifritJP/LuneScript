@@ -3990,6 +3990,38 @@ function WhenNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+local CastKind = {}
+_moduleObj.CastKind = CastKind
+CastKind._val2NameMap = {}
+function CastKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "CastKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function CastKind._from( val )
+   if CastKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+CastKind.__allList = {}
+function CastKind.get__allList()
+   return CastKind.__allList
+end
+
+CastKind.Normal = 0
+CastKind._val2NameMap[0] = 'Normal'
+CastKind.__allList[1] = CastKind.Normal
+CastKind.Force = 1
+CastKind._val2NameMap[1] = 'Force'
+CastKind.__allList[2] = CastKind.Force
+CastKind.Implicit = 2
+CastKind._val2NameMap[2] = 'Implicit'
+CastKind.__allList[3] = CastKind.Implicit
+
 function NodeKind.get_ExpCast(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpCast'])
@@ -4027,23 +4059,24 @@ function ExpCastNode:canBeStatement(  )
 
    return false
 end
-function ExpCastNode.new( id, pos, typeList, exp, force )
+function ExpCastNode.new( id, pos, typeList, exp, castType, castKind )
    local obj = {}
    ExpCastNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, exp, force ); end
+   if obj.__init then obj:__init( id, pos, typeList, exp, castType, castKind ); end
    return obj
 end
-function ExpCastNode:__init(id, pos, typeList, exp, force) 
+function ExpCastNode:__init(id, pos, typeList, exp, castType, castKind) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpCast']), pos, typeList)
    
    
    self.exp = exp
-   self.force = force
+   self.castType = castType
+   self.castKind = castKind
    
 end
-function ExpCastNode.create( nodeMan, pos, typeList, exp, force )
+function ExpCastNode.create( nodeMan, pos, typeList, exp, castType, castKind )
 
-   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, typeList, exp, force)
+   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, typeList, exp, castType, castKind)
    nodeMan:addNode( node )
    return node
 end
@@ -4075,8 +4108,111 @@ end
 function ExpCastNode:get_exp()
    return self.exp
 end
-function ExpCastNode:get_force()
-   return self.force
+function ExpCastNode:get_castType()
+   return self.castType
+end
+function ExpCastNode:get_castKind()
+   return self.castKind
+end
+
+
+function ExpCastNode:getLiteral(  )
+
+   return self.exp:getLiteral(  )
+end
+
+function ExpCastNode:setupLiteralTokenList( list )
+
+   return self.exp:setupLiteralTokenList( list )
+end
+
+function NodeKind.get_ExpToDDD(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['ExpToDDD'])
+end
+
+
+regKind( "ExpToDDD" )
+function Filter:processExpToDDD( node, opt )
+
+end
+
+
+function NodeManager:getExpToDDDNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpToDDD']) )
+end
+
+
+local ExpToDDDNode = {}
+setmetatable( ExpToDDDNode, { __index = Node } )
+_moduleObj.ExpToDDDNode = ExpToDDDNode
+function ExpToDDDNode:processFilter( filter, opt )
+
+   filter:processExpToDDD( self, opt )
+end
+function ExpToDDDNode:canBeRight(  )
+
+   return true
+end
+function ExpToDDDNode:canBeLeft(  )
+
+   return false
+end
+function ExpToDDDNode:canBeStatement(  )
+
+   return false
+end
+function ExpToDDDNode.new( id, pos, typeList, expList )
+   local obj = {}
+   ExpToDDDNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, expList ); end
+   return obj
+end
+function ExpToDDDNode:__init(id, pos, typeList, expList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpToDDD']), pos, typeList)
+   
+   
+   self.expList = expList
+   
+end
+function ExpToDDDNode.create( nodeMan, pos, typeList, expList )
+
+   local node = ExpToDDDNode.new(nodeMan:nextId(  ), pos, typeList, expList)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpToDDDNode:visit( visitor, depth )
+
+   do
+      local list = self.expList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'expList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
+end
+function ExpToDDDNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpToDDDNode  } )
+end
+function ExpToDDDNode:get_expList()
+   return self.expList
 end
 
 
@@ -9048,7 +9184,7 @@ function LiteralStringNode:getLiteral(  )
             return nil
          end
          
-         paramList[#paramList] = getLiteralObj( arg )
+         paramList[#paramList + 1] = getLiteralObj( arg )
       end
       
       txt = string.format( txt, table.unpack( paramList ) )

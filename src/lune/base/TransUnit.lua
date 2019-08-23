@@ -6262,6 +6262,10 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          
       end
       
+      if _lune.nilacc( classTypeInfo, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.IF then
+         needNode = true
+      end
+      
    else
     
       needNode = true
@@ -7217,16 +7221,42 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
    
    if #expNodeList ~= 0 then
       local autoBoxingCount = 0
+      local hasImplictCast = false
       local newExpNodeList = {}
       for index, expNode in pairs( expNodeList ) do
-         table.insert( newExpNodeList, expNode )
+         local workNode = expNode
+         local stopFlag = false
          if #dstTypeList >= index then
             local dstType = dstTypeList[index]
             if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode:get_expType() ) then
                autoBoxingCount = autoBoxingCount + 1
-               newExpNodeList[index] = Nodes.BoxingNode.create( self.nodeManager, expNode:get_pos(), {dstType}, expNode )
+               workNode = Nodes.BoxingNode.create( self.nodeManager, expNode:get_pos(), {dstType}, expNode )
+            elseif not dstType:equals( expNode:get_expType() ) and not dstType:get_nonnilableType():equals( expNode:get_expType() ) then
+               if expNode:get_kind() ~= Nodes.NodeKind.get_Abbr() then
+                  hasImplictCast = true
+                  if dstType:get_kind() == Ast.TypeInfoKind.DDD then
+                     local argList = {}
+                     for workIndex = index, #expNodeList do
+                        local appNode = expNodeList[workIndex]
+                        table.insert( argList, appNode )
+                     end
+                     
+                     workNode = Nodes.ExpToDDDNode.create( self.nodeManager, expNode:get_pos(), {dstType}, argList )
+                     stopFlag = true
+                  else
+                   
+                     workNode = Nodes.ExpCastNode.create( self.nodeManager, expNode:get_pos(), {expNode:get_expType()}, expNode, dstType, Nodes.CastKind.Implicit )
+                  end
+                  
+               end
+               
             end
             
+         end
+         
+         table.insert( newExpNodeList, workNode )
+         if stopFlag then
+            break
          end
          
       end
@@ -7236,6 +7266,12 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
             self:addErrMess( pos, string.format( "illegal auto boxing error -- %d", autoBoxingCount) )
          end
          
+         return alt2typeMap, newExpNodeList, expTypeList
+      elseif Ast.CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2typeMap ) then
+         self:addErrMess( pos, "not support auto boxing" )
+      end
+      
+      if hasImplictCast then
          return alt2typeMap, newExpNodeList, expTypeList
       end
       
@@ -7410,10 +7446,10 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
          local kind = exp:get_kind()
          do
             local _switchExp = kind
-            if _switchExp == Nodes.NodeKind.get_LiteralNil() or _switchExp == Nodes.NodeKind.get_LiteralChar() or _switchExp == Nodes.NodeKind.get_LiteralInt() or _switchExp == Nodes.NodeKind.get_LiteralReal() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralString() or _switchExp == Nodes.NodeKind.get_LiteralBool() or _switchExp == Nodes.NodeKind.get_LiteralSymbol() or _switchExp == Nodes.NodeKind.get_RefField() or _switchExp == Nodes.NodeKind.get_ExpMacroStat() or _switchExp == Nodes.NodeKind.get_ExpOmitEnum() then
+            if _switchExp == Nodes.NodeKind.get_LiteralNil() or _switchExp == Nodes.NodeKind.get_LiteralChar() or _switchExp == Nodes.NodeKind.get_LiteralInt() or _switchExp == Nodes.NodeKind.get_LiteralReal() or _switchExp == Nodes.NodeKind.get_LiteralArray() or _switchExp == Nodes.NodeKind.get_LiteralList() or _switchExp == Nodes.NodeKind.get_LiteralMap() or _switchExp == Nodes.NodeKind.get_LiteralString() or _switchExp == Nodes.NodeKind.get_LiteralBool() or _switchExp == Nodes.NodeKind.get_LiteralSymbol() or _switchExp == Nodes.NodeKind.get_RefField() or _switchExp == Nodes.NodeKind.get_ExpMacroStat() or _switchExp == Nodes.NodeKind.get_ExpOmitEnum() or _switchExp == Nodes.NodeKind.get_ExpCast() then
             else 
                
-                  self:error( "Macro arguments must be literal value." )
+                  self:error( string.format( "Macro arguments must be literal value. -- %d:%d:%s", exp:get_pos().lineNo, exp:get_pos().column, Nodes.getNodeKindName( kind )) )
             end
          end
          
@@ -7688,9 +7724,15 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
          
       end
       
-      for index, argType in pairs( argList:get_expTypeList() ) do
-         if index ~= 1 then
-            table.insert( formArgTypeList, argType )
+      if #argList:get_expList() > 1 then
+         do
+            local toDDDNode = _lune.__Cast( argList:get_expList()[2], 3, Nodes.ExpToDDDNode )
+            if toDDDNode ~= nil then
+               for index, workNode in pairs( toDDDNode:get_expList() ) do
+                  table.insert( formArgTypeList, workNode:get_expType() )
+               end
+               
+            end
          end
          
       end
@@ -7962,7 +8004,7 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
       castType = castType:get_nilableTypeInfo()
    end
    
-   return Nodes.ExpCastNode.create( self.nodeManager, firstToken.pos, {castType}, exp, opTxt ~= "@@@" )
+   return Nodes.ExpCastNode.create( self.nodeManager, firstToken.pos, {castType}, exp, castType, opTxt ~= "@@@" and Nodes.CastKind.Force or Nodes.CastKind.Normal )
 end
 
 function TransUnit:analyzeExpCont( firstToken, exp, skipFlag )

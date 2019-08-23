@@ -2,11 +2,18 @@
 
 TEST_OUT=test.exe
 
+CORE_SRCS += lune/base/lns_base.c
+CORE_SRCS += lune/base/lns_collection.cxx
+CORE_SRCS += lune/base/lns_alloc.cxx
+
 SRCS += lune/base/test.c
 
+
 OBJS := $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(SRCS)))))
+OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(CORE_SRCS)))))
 
 vpath %.c lune/base
+vpath %.cxx lune/base
 
 LUA_INC_DIR=
 LUA_LIB=
@@ -19,20 +26,27 @@ endif
 
 work/c/%.o: %.c
 	gcc $(CFLAGS) -o $@ $<
+work/c/%.o: %.cxx
+	g++ $(CFLAGS) -o $@ $<
 
 all: build
+
+
+$(OBJS): lune/base/lunescript.h
+
 
 build: 
 	mkdir -p work/c
 	$(MAKE) -f Makefile.ccc build-objs
-	gcc $(CFLAGS) -o work/c/lns_base.o lune/base/lns_base.c
-	g++ $(CFLAGS) -o work/c/lns_collection.o lune/base/lns_collection.cxx
-	g++ $(CFLAGS) -o work/c/lns_alloc.o lune/base/lns_alloc.cxx
-	g++ -o $(TEST_OUT) work/c/lns_base.o work/c/lns_collection.o work/c/lns_alloc.o \
-			$(OBJS) $(LUA_LIB)
+#	gcc $(CFLAGS) -o work/c/lns_base.o lune/base/lns_base.c
+#	g++ $(CFLAGS) -o work/c/lns_collection.o lune/base/lns_collection.cxx
+#	g++ $(CFLAGS) -o work/c/lns_alloc.o lune/base/lns_alloc.cxx
+	g++ -o $(TEST_OUT) $(OBJS) $(LUA_LIB)
 	./$(TEST_OUT)
 
 build-objs: $(OBJS)
 
 clean:
 	rm -f $(OBJS)
+
+

@@ -903,6 +903,16 @@ pub class CanEvalCtrlTypeInfo extend TypeInfo {
       }
    }
 
+   pub static fn hasNeedAutoBoxing( alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      if! alt2type[ CanEvalCtrlTypeInfo.needAutoBoxing ] {
+         if! let mut autoBoxingInfo = _exp@@@AutoBoxingInfo {
+            return autoBoxingInfo.$count ~= 0;
+         }
+      }
+      return false;
+   }
+   
+
    pub static fn finishNeedAutoBoxing(
       alt2type:Map<&TypeInfo,&TypeInfo>, count:int ): bool
    {

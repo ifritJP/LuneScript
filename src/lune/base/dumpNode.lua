@@ -810,6 +810,16 @@ function dumpFilter:processExpOp1( node, opt )
 end
 
 
+function dumpFilter:processExpToDDD( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, "" )
+   for index, exp in pairs( node:get_expList() ) do
+      filter( exp, self, opt:nextOpt(  ) )
+   end
+   
+end
+
 function dumpFilter:processExpCast( node, opt )
 
    local prefix, depth = opt:get(  )

@@ -1354,32 +1354,35 @@ pub override fn convFilter.processDeclClass(
    let fieldList: List<&Nodes.Node> = nodeInfo.get_fieldList();
    let outerMethodSet: Set<str> = nodeInfo.get_outerMethodSet();
    let mut methodNameSet: Set<str> = (@);
-   foreach field in fieldList {
-      let mut ignoreFlag = false;
-      if field.$kind == Nodes.NodeKind.$DeclConstr {
-         hasConstrFlag = true;
-         methodNameSet.add( "__init" );
-      }
-      if field.$kind == Nodes.NodeKind.$DeclDestr {
-         hasDestrFlag = true;
-         methodNameSet.add( "__free" );
-      }
-      if! let declMemberNode = field@@@Nodes.DeclMemberNode {
-         if not declMemberNode.$staticFlag {
-            memberList.insert( declMemberNode );
-         }
-      }
-      if! let methodNode = field@@@Nodes.DeclMethodNode {
-         let declInfo = methodNode.get_declInfo();
-         let methodNameToken = unwrap declInfo.get_name();
-         if outerMethodSet.has( methodNameToken.txt ) {
-            ignoreFlag = true;
-         }
-         methodNameSet.add( methodNameToken.txt );
-      }
 
-      if ( not ignoreFlag ) {
-         filter( field, self, node );
+   if classTypeInfo.$kind ~= .IF {
+      foreach field in fieldList {
+         let mut ignoreFlag = false;
+         if field.$kind == Nodes.NodeKind.$DeclConstr {
+            hasConstrFlag = true;
+            methodNameSet.add( "__init" );
+         }
+         if field.$kind == Nodes.NodeKind.$DeclDestr {
+            hasDestrFlag = true;
+            methodNameSet.add( "__free" );
+         }
+         if! let declMemberNode = field@@@Nodes.DeclMemberNode {
+            if not declMemberNode.$staticFlag {
+               memberList.insert( declMemberNode );
+            }
+         }
+         if! let methodNode = field@@@Nodes.DeclMethodNode {
+            let declInfo = methodNode.get_declInfo();
+            let methodNameToken = unwrap declInfo.get_name();
+            if outerMethodSet.has( methodNameToken.txt ) {
+               ignoreFlag = true;
+            }
+            methodNameSet.add( methodNameToken.txt );
+         }
+
+         if ( not ignoreFlag ) {
+            filter( field, self, node );
+         }
       }
    }
 
@@ -2565,7 +2568,14 @@ pub override fn convFilter.processExpCall(
       let mut expList:List<&Nodes.Node> = [];
       foreach expNode in argList.$expList {
          if expNode.$expType.$kind ~= .Abbr {
-            expList.insert( expNode );
+            if! let toDDD = expNode@@@Nodes.ExpToDDDNode {
+               foreach appNode in toDDD.$expList {
+                  expList.insert( appNode );
+               }
+            }
+            else {
+               expList.insert( expNode );
+            }
          }
       }
 
@@ -2677,40 +2687,56 @@ pub override fn convFilter.processExpOp1(
    }
 };
 
+pub override fn convFilter.processExpToDDD(
+   node: Nodes.ExpToDDDNode, opt: Opt ) mut
+{
+   foreach exp, index in node.$expList {
+      if index ~= 1 {
+         self.write( ", " );
+      }
+      filter( exp, self, node );
+   }
+}
+
 pub override fn convFilter.processExpCast(
    node: Nodes.ExpCastNode, opt: Opt ) mut
 {
-   if node.$force {
-      if node.$expType.equals( Ast.builtinTypeInt ##) {
-         self.write( "math.floor(" );
+   switch node.$castKind {
+      case .Force {
+         if node.$expType.equals( Ast.builtinTypeInt ##) {
+            self.write( "math.floor(" );
+            filter( node.$exp,  self, node );
+            self.write( ")" );
+         }
+         else {
+            filter( node.$exp,  self, node );
+         }
+      }
+      case .Normal {
+         self.write( "_lune.__Cast( " );
          filter( node.$exp,  self, node );
-         self.write( ")" );
+         let castKind;
+         let mut classObj = "nil";
+         switch node.$expType.$nonnilableType {
+            case Ast.builtinTypeInt {
+               castKind = LuaMod.CastKind.Int;
+            }
+            case Ast.builtinTypeReal {
+               castKind = LuaMod.CastKind.Real;
+            }
+            case Ast.builtinTypeString {
+               castKind = LuaMod.CastKind.Str;
+            }
+            default {
+               castKind = LuaMod.CastKind.Class;
+               classObj = self.getFullName( node.$expType.$nonnilableType );
+            }
+         }
+         self.write( ", %d, %s )" ( castKind, classObj) );
       }
-      else {
+      case .Implicit {
          filter( node.$exp,  self, node );
       }
-   }
-   else {
-      self.write( "_lune.__Cast( " );
-      filter( node.$exp,  self, node );
-      let castKind;
-      let mut classObj = "nil";
-      switch node.$expType.$nonnilableType {
-         case Ast.builtinTypeInt {
-            castKind = LuaMod.CastKind.Int;
-         }
-         case Ast.builtinTypeReal {
-            castKind = LuaMod.CastKind.Real;
-         }
-         case Ast.builtinTypeString {
-            castKind = LuaMod.CastKind.Str;
-         }
-         default {
-            castKind = LuaMod.CastKind.Class;
-            classObj = self.getFullName( node.$expType.$nonnilableType );
-         }
-      }
-      self.write( ", %d, %s )" ( castKind, classObj) );
    }
 };
 
@@ -2952,7 +2978,14 @@ pub override fn convFilter.processLuneKind( node: Nodes.LuneKindNode, opt: Opt )
 {
    // let name = node.$exp.$expType.$kind.$_txt.gsub( ".*%.", "" );
    // self.write( '"%s"' (name) );
-   self.write( "%d" ( node.$exp.$expType.$kind ) );
+   if! let workNode = node.$exp@@@Nodes.ExpCastNode {
+      if workNode.$castKind == .Implicit {
+         self.write( "%d" ( workNode.$exp.$expType.$kind ) );
+      }
+   }
+   else {
+      self.write( "%d" ( node.$exp.$expType.$kind ) );
+   }
 }
    
 

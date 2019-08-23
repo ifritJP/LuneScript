@@ -2276,9 +2276,14 @@ fn TransUnit.analyzeDeclFunc(
             self.protoFuncMap[ typeInfo ] = firstToken.pos;
          }
       }
+
+      if classTypeInfo$.$kind == .IF {
+         needNode = true;
+      }
    }
    else {
       needNode = true;
+
       if abstractFlag {
          self.addErrMess( token.pos, "abstract method can't have body." );
       }

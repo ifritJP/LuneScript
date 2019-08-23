@@ -510,6 +510,17 @@ pub override fn dumpFilter.processExpOp1(
    dump( prefix, depth, node, node.get_op().txt );
    filter( node.get_exp(), self, opt.nextOpt() );
 };
+
+pub override fn dumpFilter.processExpToDDD(
+   node: Nodes.ExpToDDDNode, opt: Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "" );
+   foreach exp, index in node.$expList {
+      filter( exp, self, opt.nextOpt() );
+   }
+}
+
 pub override fn dumpFilter.processExpCast(
    node: &Nodes.ExpCastNode, opt:Opt ) mut
 {

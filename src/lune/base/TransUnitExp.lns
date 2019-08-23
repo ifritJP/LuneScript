@@ -373,7 +373,9 @@ fn TransUnit.analyzeExpRefItem(
 @param expNodeList 設定する値の型リスト
 @param allowDstShort dstTypeList の要素数が expNodeList よりも少ないことを許容する場合 true
 @param warnForFollow true の場合、値を省略している時に警告を出力する
-@param 
+@param
+@return Map<&Ast.TypeInfo,&Ast.TypeInfo>  AlternateTypeInfo → 実型パラメータのマップ
+@return 
 */
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
@@ -447,18 +449,48 @@ fn TransUnit.checkMatchType(
 
    if #expNodeList ~= 0 {
       let mut autoBoxingCount = 0;
+      let mut hasImplictCast = false;
       let mut newExpNodeList:List<&Nodes.Node> = [];
       
       foreach expNode, index in expNodeList {
-         newExpNodeList.insert( expNode );
+         let mut workNode = expNode;
+         let mut stopFlag = false;
          if #dstTypeList >= index {
             let dstType = dstTypeList[ index ];
             //if dstType.$kind == .Box and expNode.$expType.$kind ~= .Box {
             if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode.$expType ) {
                autoBoxingCount = autoBoxingCount + 1;
-               newExpNodeList[ index ] = Nodes.BoxingNode.create(
+
+               workNode = Nodes.BoxingNode.create(
                   self.nodeManager, expNode.$pos, [ dstType ], expNode );
             }
+            elseif not dstType.equals( expNode.$expType ## ) and
+               not dstType.$nonnilableType.equals( expNode.$expType ## )
+            {
+               if expNode.$kind ~= Nodes.NodeKind.$Abbr {
+                  hasImplictCast = true;
+                  if dstType.$kind == .DDD {
+                     let mut argList:List<&Nodes.Node> = [];
+                     for workIndex = index, #expNodeList {
+                        let appNode = expNodeList[ workIndex ];
+                        argList.insert( appNode );
+                     }
+                     workNode = Nodes.ExpToDDDNode.create(
+                        self.nodeManager, expNode.$pos, [ dstType ], argList );
+                     stopFlag = true;
+                  }
+                  else {
+                     workNode = Nodes.ExpCastNode.create(
+                        self.nodeManager, expNode.$pos, [ expNode.$expType ],
+                        expNode, dstType, .Implicit );   
+                  }
+               }
+            }
+         }
+
+         newExpNodeList.insert( workNode );
+         if stopFlag {
+            break;
          }
       }
 
@@ -469,6 +501,14 @@ fn TransUnit.checkMatchType(
             self.addErrMess( pos, "illegal auto boxing error -- %d" (autoBoxingCount) );
          }
          
+         return alt2typeMap, newExpNodeList, expTypeList;
+      }
+      elseif Ast.CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2typeMap ) {
+         self.addErrMess( pos, "not support auto boxing" );
+      }
+
+      
+      if hasImplictCast {
          return alt2typeMap, newExpNodeList, expTypeList;
       }
    }
@@ -652,11 +692,14 @@ fn TransUnit.evalMacroOp(
                  Nodes.NodeKind.$LiteralSymbol,
                  Nodes.NodeKind.$RefField,
                  Nodes.NodeKind.$ExpMacroStat,
-                 Nodes.NodeKind.$ExpOmitEnum
+                 Nodes.NodeKind.$ExpOmitEnum,
+                 Nodes.NodeKind.$ExpCast
             {
             }
             default {
-               self.error( "Macro arguments must be literal value." );
+               self.error( "Macro arguments must be literal value. -- %d:%d:%s"
+                           ( exp.$pos.lineNo, exp.$pos.column, 
+                              Nodes.getNodeKindName(kind)) );
             }
          }
       }
@@ -860,6 +903,8 @@ fn TransUnit.checkStringFormat(
 /**
 関数呼び出し Node の前処理。
 
+引数の型チェックを行なう。
+
 "(" を読み済みの状態。次のトークンは引数のトークンになっている状態にする。
 この関数を抜けると、 ")" を読み込み済みの状態。
 
@@ -931,11 +976,18 @@ fn TransUnit.analyzeExpCall(
             }
          }
       }
-      foreach argType, index in argList.$expTypeList {
-         if index ~= 1 {
-            formArgTypeList.insert( argType );
+      if #argList.$expList > 1 {
+         if! let toDDDNode = argList.$expList[ 2 ]@@@Nodes.ExpToDDDNode {
+            foreach workNode, index in toDDDNode.$expList {
+               formArgTypeList.insert( workNode.$expType );
+            }
          }
       }
+      // foreach argType, index in argList.$expTypeList {
+      //    if index ~= 1 {
+      //       formArgTypeList.insert( argType );
+      //    }
+      // }
       self.checkStringFormat( firstToken.pos, formatTxt, formArgTypeList );
    }
 
@@ -1256,7 +1308,8 @@ fn TransUnit.analyzeExpCast(
    }
 
    return Nodes.ExpCastNode.create(
-      self.nodeManager, firstToken.pos, [ castType ], exp, opTxt ~= "@@@" );
+      self.nodeManager, firstToken.pos, [ castType ], exp, castType,
+      opTxt ~= "@@@" and Nodes.CastKind.Force or Nodes.CastKind.Normal);
 }
 
 

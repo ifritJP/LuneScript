@@ -1629,43 +1629,46 @@ function convFilter:processDeclClass( node, opt )
    local fieldList = nodeInfo:get_fieldList(  )
    local outerMethodSet = nodeInfo:get_outerMethodSet(  )
    local methodNameSet = {}
-   for __index, field in pairs( fieldList ) do
-      local ignoreFlag = false
-      if field:get_kind() == Nodes.NodeKind.get_DeclConstr() then
-         hasConstrFlag = true
-         methodNameSet["__init"]= true
-      end
-      
-      if field:get_kind() == Nodes.NodeKind.get_DeclDestr() then
-         hasDestrFlag = true
-         methodNameSet["__free"]= true
-      end
-      
-      do
-         local declMemberNode = _lune.__Cast( field, 3, Nodes.DeclMemberNode )
-         if declMemberNode ~= nil then
-            if not declMemberNode:get_staticFlag() then
-               table.insert( memberList, declMemberNode )
-            end
-            
+   if classTypeInfo:get_kind() ~= Ast.TypeInfoKind.IF then
+      for __index, field in pairs( fieldList ) do
+         local ignoreFlag = false
+         if field:get_kind() == Nodes.NodeKind.get_DeclConstr() then
+            hasConstrFlag = true
+            methodNameSet["__init"]= true
          end
-      end
-      
-      do
-         local methodNode = _lune.__Cast( field, 3, Nodes.DeclMethodNode )
-         if methodNode ~= nil then
-            local declInfo = methodNode:get_declInfo(  )
-            local methodNameToken = _lune.unwrap( declInfo:get_name(  ))
-            if _lune._Set_has(outerMethodSet, methodNameToken.txt ) then
-               ignoreFlag = true
-            end
-            
-            methodNameSet[methodNameToken.txt]= true
+         
+         if field:get_kind() == Nodes.NodeKind.get_DeclDestr() then
+            hasDestrFlag = true
+            methodNameSet["__free"]= true
          end
-      end
-      
-      if (not ignoreFlag ) then
-         filter( field, self, node )
+         
+         do
+            local declMemberNode = _lune.__Cast( field, 3, Nodes.DeclMemberNode )
+            if declMemberNode ~= nil then
+               if not declMemberNode:get_staticFlag() then
+                  table.insert( memberList, declMemberNode )
+               end
+               
+            end
+         end
+         
+         do
+            local methodNode = _lune.__Cast( field, 3, Nodes.DeclMethodNode )
+            if methodNode ~= nil then
+               local declInfo = methodNode:get_declInfo(  )
+               local methodNameToken = _lune.unwrap( declInfo:get_name(  ))
+               if _lune._Set_has(outerMethodSet, methodNameToken.txt ) then
+                  ignoreFlag = true
+               end
+               
+               methodNameSet[methodNameToken.txt]= true
+            end
+         end
+         
+         if (not ignoreFlag ) then
+            filter( field, self, node )
+         end
+         
       end
       
    end
@@ -2878,7 +2881,18 @@ function convFilter:processExpCall( node, opt )
          local expList = {}
          for __index, expNode in pairs( argList:get_expList() ) do
             if expNode:get_expType():get_kind() ~= Ast.TypeInfoKind.Abbr then
-               table.insert( expList, expNode )
+               do
+                  local toDDD = _lune.__Cast( expNode, 3, Nodes.ExpToDDDNode )
+                  if toDDD ~= nil then
+                     for __index, appNode in pairs( toDDD:get_expList() ) do
+                        table.insert( expList, appNode )
+                     end
+                     
+                  else
+                     table.insert( expList, expNode )
+                  end
+               end
+               
             end
             
          end
@@ -3004,41 +3018,57 @@ function convFilter:processExpOp1( node, opt )
 end
 
 
+function convFilter:processExpToDDD( node, opt )
+
+   for index, exp in pairs( node:get_expList() ) do
+      if index ~= 1 then
+         self:write( ", " )
+      end
+      
+      filter( exp, self, node )
+   end
+   
+end
+
 function convFilter:processExpCast( node, opt )
 
-   if node:get_force() then
-      if node:get_expType():equals( Ast.builtinTypeInt ) then
-         self:write( "math.floor(" )
-         filter( node:get_exp(), self, node )
-         self:write( ")" )
-      else
-       
-         filter( node:get_exp(), self, node )
-      end
-      
-   else
-    
-      self:write( "_lune.__Cast( " )
-      filter( node:get_exp(), self, node )
-      local castKind
-      
-      local classObj = "nil"
-      do
-         local _switchExp = node:get_expType():get_nonnilableType()
-         if _switchExp == Ast.builtinTypeInt then
-            castKind = LuaMod.CastKind.Int
-         elseif _switchExp == Ast.builtinTypeReal then
-            castKind = LuaMod.CastKind.Real
-         elseif _switchExp == Ast.builtinTypeString then
-            castKind = LuaMod.CastKind.Str
-         else 
-            
-               castKind = LuaMod.CastKind.Class
-               classObj = self:getFullName( node:get_expType():get_nonnilableType() )
+   do
+      local _switchExp = node:get_castKind()
+      if _switchExp == Nodes.CastKind.Force then
+         if node:get_expType():equals( Ast.builtinTypeInt ) then
+            self:write( "math.floor(" )
+            filter( node:get_exp(), self, node )
+            self:write( ")" )
+         else
+          
+            filter( node:get_exp(), self, node )
          end
+         
+      elseif _switchExp == Nodes.CastKind.Normal then
+         self:write( "_lune.__Cast( " )
+         filter( node:get_exp(), self, node )
+         local castKind
+         
+         local classObj = "nil"
+         do
+            local _switchExp = node:get_expType():get_nonnilableType()
+            if _switchExp == Ast.builtinTypeInt then
+               castKind = LuaMod.CastKind.Int
+            elseif _switchExp == Ast.builtinTypeReal then
+               castKind = LuaMod.CastKind.Real
+            elseif _switchExp == Ast.builtinTypeString then
+               castKind = LuaMod.CastKind.Str
+            else 
+               
+                  castKind = LuaMod.CastKind.Class
+                  classObj = self:getFullName( node:get_expType():get_nonnilableType() )
+            end
+         end
+         
+         self:write( string.format( ", %d, %s )", castKind, classObj) )
+      elseif _switchExp == Nodes.CastKind.Implicit then
+         filter( node:get_exp(), self, node )
       end
-      
-      self:write( string.format( ", %d, %s )", castKind, classObj) )
    end
    
 end
@@ -3289,7 +3319,18 @@ end
 
 function convFilter:processLuneKind( node, opt )
 
-   self:write( string.format( "%d", node:get_exp():get_expType():get_kind()) )
+   do
+      local workNode = _lune.__Cast( node:get_exp(), 3, Nodes.ExpCastNode )
+      if workNode ~= nil then
+         if workNode:get_castKind() == Nodes.CastKind.Implicit then
+            self:write( string.format( "%d", workNode:get_exp():get_expType():get_kind()) )
+         end
+         
+      else
+         self:write( string.format( "%d", node:get_exp():get_expType():get_kind()) )
+      end
+   end
+   
 end
 
 function convFilter:processProvide( node, opt )
@@ -3500,7 +3541,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3170, function (  )
+   Log.log( Log.Level.Info, __func__, 3203, function (  )
    
       return string.format( "code: %s", code)
    end

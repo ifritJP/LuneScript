@@ -186,8 +186,23 @@ extern "C" {
         return lune_mtd_Map_get( _pEnv, ENUM##_val2NameMap, val );   \
     }
 
+#define lune_init_if( STEM, ENV, OBJ, MTD )                        \
+    {                                                              \
+        lune_stem_t * __pStem = STEM;                              \
+        lune_init_stem( __pStem, lune_value_type_if, ENV );        \
+        __pStem->refCount = 0;                                     \
+        __pStem->val.ifVal.pObj = OBJ;                             \
+        __pStem->val.ifVal.pMtd = MTD;                             \
+    }
 
+#define lune_init_stem( STEM, TYPE, ENV )            \
+    {                                                \
+        lune_stem_t * _pStem = STEM;                 \
+        _pStem->type = TYPE;                         \
+        _pStem->pEnv = ENV;                          \
+    }
 
+#define lune_getImpObj( STEM ) (STEM)->val.ifVal.pObj
     
 
 
@@ -200,6 +215,7 @@ extern "C" {
         lune_value_type_real,
         lune_value_type_str,
         lune_value_type_class,
+        lune_value_type_if,
         lune_value_type_ddd,
         lune_value_type_mRet,
         lune_value_type_form,
@@ -276,6 +292,7 @@ extern "C" {
      * クラスのメンバは、 pMtd の次に宣言する。
      */
     typedef struct lune_Class_t {
+        void * pIFdummy;
         lune_mtd__Class_t * pMtd;
     } lune_Class_t;
 
@@ -335,6 +352,7 @@ extern "C" {
     typedef void lune_listObj_t;
     typedef struct lune_mtd_List_t lune_mtd_List_t;
     typedef struct lune_List_t {
+        void * pIFdummy;
         lune_mtd_List_t * pMtd;
         lune_listObj_t * pObj;
     } lune_List_t;
@@ -343,6 +361,7 @@ extern "C" {
     typedef void lune_setObj_t;
     typedef struct lune_mtd_Set_t lune_mtd_Set_t;
     typedef struct lune_Set_t {
+        void * pIFdummy;
         lune_mtd_Set_t * pMtd;
         lune_setObj_t * pObj;
     } lune_Set_t;
@@ -350,9 +369,15 @@ extern "C" {
     typedef void lune_mapObj_t;
     typedef struct lune_mtd_Map_t lune_mtd_Map_t;
     typedef struct lune_Map_t {
+        void * pIFdummy;
         lune_mtd_Map_t * pMtd;
         lune_mapObj_t * pObj;
     } lune_Map_t;
+
+    typedef struct lune_if_t {
+        lune_stem_t * pObj;
+        void * pMtd;
+    } lune_if_t;
     
     /** stem 型データ */
     struct lune_stem_t {
@@ -374,6 +399,7 @@ extern "C" {
             lune_itList_t * itList;
             lune_itSet_t * itSet;
             lune_itMap_t * itMap;
+            lune_if_t ifVal;
         } val;
         /** 変数にアサインされる前の値を管理する双方向リスト構造。アサイン済みの場合 NULL。 */
         struct lune_stem_t * pNext;
@@ -509,6 +535,7 @@ extern "C" {
     extern void lune_class_del( lune_env_t * _pEnv, void * pObj );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... );
+    extern lune_stem_t * lune_getIF( lune_stem_t * pIFStem );
 
 
     extern lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal );

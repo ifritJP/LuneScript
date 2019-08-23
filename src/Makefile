@@ -596,6 +596,9 @@ uninstall: check_lua_mod_dir
 test-ccc:
 	LANG= $(MAKE) -f Makefile.ccc LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 
+clean-ccc:
+	LANG= $(MAKE) -f Makefile.ccc clean
+
 
 define test-convC
 	$(LUA) lune/base/base.lua $1.lns save -langC

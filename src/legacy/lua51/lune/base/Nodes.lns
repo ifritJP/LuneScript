@@ -935,11 +935,34 @@ pub override fn WhenNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .None;
 }
 
+pub enum CastKind {
+   /** 通常キャスト */
+   Normal,
+   /** 強制キャスト */
+   Force,
+   /** 暗黙キャスト */
+   Implicit,
+}
 
 _declNodeClass( "ExpCast", Node, false, true, false,
                 [ { "exp": "&Node" },
-                  { "force": "bool" } ]
+                  { "castType": "&Ast.TypeInfo" },
+                  { "castKind": "CastKind" } ]
 );
+
+pub override fn ExpCastNode.getLiteral(): Literal! {
+   return self.exp.getLiteral();
+}
+pub override fn ExpCastNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
+   return self.exp.setupLiteralTokenList( list );
+}
+
+
+
+_declNodeClass( "ExpToDDD", Node, false, true, false,
+                [ { "expList": "&List<&Node>" } ]
+);
+
 
 pub enum MacroMode {
    None,
@@ -1699,7 +1722,7 @@ pub override fn LiteralStringNode.getLiteral(): Literal! {
          let! arg = argNode.getLiteral() {
             return nil;
          };
-         paramList[ #paramList ] = getLiteralObj( arg );
+         paramList[ #paramList + 1 ] = getLiteralObj( arg );
       }
       txt = string.format( txt, paramList.unpack() );
    }

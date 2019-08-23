@@ -70,9 +70,8 @@ static lune_stem_t * _lune_alloc_stem(
     
     lune_stem_t * pStem = (lune_stem_t *)_lune_malloc(
         _pEnv->allocateor, sizeof( lune_stem_t ), pFile, lineNo );
-    pStem->type = type;
+    lune_init_stem( pStem, type, _pEnv );
     pStem->refCount = 1;
-    pStem->pEnv = _pEnv;
 
     // 現在のブロックに登録
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
@@ -135,6 +134,9 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
     case lune_value_type_itSet:
         lune_itSet__del( _pEnv, pStem );
         break;
+    case lune_value_type_if:
+        lune_decre_ref( _pEnv, pStem->val.ifVal.pObj );
+        return;
     default:
         break;
     }
@@ -153,6 +155,13 @@ void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
     if ( pStem->refCount == 0 ) {
         lune_gc_stem( _pEnv, pStem, true );
     }
+}
+
+
+lune_stem_t * lune_getIF( lune_stem_t * pIFStem )
+{
+    pIFStem->val.ifVal.pObj->refCount++;
+    return pIFStem;
 }
 
 void lune_setQ_( lune_stem_t * pStem )
