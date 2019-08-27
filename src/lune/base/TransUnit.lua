@@ -4533,7 +4533,7 @@ function TransUnit:checkOverriededMethod(  )
             do
                local impMethodType = classScope:getTypeInfoField( symbolInfo:get_name(), true, classScope )
                if impMethodType ~= nil then
-                  if not impMethodType:canEvalWith( symbolInfo:get_typeInfo(), "=", alt2typeMap ) then
+                  if not impMethodType:canEvalWith( symbolInfo:get_typeInfo(), Ast.CanEvalType.SetOp, alt2typeMap ) then
                      self:addErrMess( pos, string.format( "mismatch method -- %s %s", symbolInfo:get_typeInfo():get_display_stirng(), impMethodType:get_display_stirng()) )
                   end
                   
@@ -4900,7 +4900,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
          do
             local ifFuncType = symbol2TypeInfo[symbolInfo:get_name()]
             if ifFuncType ~= nil then
-               if not ifFuncType:canEvalWith( symbolInfo:get_typeInfo(), "=", ifAlt2typeMap ) then
+               if not ifFuncType:canEvalWith( symbolInfo:get_typeInfo(), Ast.CanEvalType.SetOp, ifAlt2typeMap ) then
                   self:addErrMess( firstPos, string.format( "mismatch method type -- %s.%s, %s.%s", symbolInfo:get_typeInfo():get_parentInfo():getTxt(  ), symbolInfo:get_name(), ifFuncType:get_parentInfo():getTxt(  ), ifFuncType:getTxt(  )) )
                end
                
@@ -5436,7 +5436,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          
          getterMode, workRetType, nextToken = analyzeAccessorMode(  )
          if workRetType ~= Ast.headTypeInfo then
-            if not workRetType:canEvalWith( getterRetType, "=", classTypeInfo:createAlt2typeMap( false ) ) then
+            if not workRetType:canEvalWith( getterRetType, Ast.CanEvalType.SetOp, classTypeInfo:createAlt2typeMap( false ) ) then
                self:addErrMess( firstToken.pos, string.format( "getter type mismatch -- %s <- %s", workRetType:getTxt(  ), getterRetType:getTxt(  )) )
             end
             
@@ -6150,7 +6150,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
                
             end
             
-            if not typeInfo:canEvalWith( prottype, "=", alt2typeMap ) then
+            if not typeInfo:canEvalWith( prottype, Ast.CanEvalType.SetOp, alt2typeMap ) then
                self:addErrMess( name.pos, string.format( "mismatch functype -- %s / %s", typeInfo:get_display_stirng(), prottype:get_display_stirng()) )
             end
             
@@ -6213,7 +6213,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
                
             end
             
-            if not overrideType:canEvalWith( typeInfo, "=", alt2typeMap ) then
+            if not overrideType:canEvalWith( typeInfo, Ast.CanEvalType.SetOp, alt2typeMap ) then
                self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s", funcName) )
             end
             
@@ -6233,7 +6233,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
                do
                   local ifFunc = self.scope:get_parent():getSymbolInfoIfField( name.txt, funcBodyScope )
                   if ifFunc ~= nil then
-                     if not ifFunc:get_typeInfo():canEvalWith( typeInfo, "=", alt2typeMap ) then
+                     if not ifFunc:get_typeInfo():canEvalWith( typeInfo, Ast.CanEvalType.SetOp, alt2typeMap ) then
                         self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s", funcName) )
                      end
                      
@@ -6483,7 +6483,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                   checkType = dddItemType:get_nonnilableType()
                end
                
-               if not argType:equals( Ast.builtinTypeEmpty ) and not argType:canEvalWith( checkType, "=", {} ) then
+               if not argType:equals( Ast.builtinTypeEmpty ) and not argType:canEvalWith( checkType, Ast.CanEvalType.SetOp, {} ) then
                   self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s) <- %s", subIndex, argType:getTxt( true ), dddItemType:getTxt(  )) )
                end
                
@@ -6522,7 +6522,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                end
                
                Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap )
-               if not varType:equals( Ast.builtinTypeEmpty ) and not varType:canEvalWith( expTypeInfo, "=", alt2typeMap ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
+               if not varType:equals( Ast.builtinTypeEmpty ) and not varType:canEvalWith( expTypeInfo, Ast.CanEvalType.SetOp, alt2typeMap ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
                   self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s", index, varType:getTxt( true ), expTypeInfo:getTxt( true )) )
                end
                
@@ -7149,7 +7149,7 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
       self:addErrMess( indexExp:get_pos(), "This node can't use index" )
    end
    
-   if not indexTypeInfo:canEvalWith( indexExp:get_expType(), "=", {} ) then
+   if not indexTypeInfo:canEvalWith( indexExp:get_expType(), Ast.CanEvalType.SetOp, {} ) then
       self:addErrMess( indexExp:get_pos(), string.format( "unmatch index type -- %s, %s", indexTypeInfo:getTxt(  ), indexExp:get_expType():getTxt(  )) )
    end
    
@@ -7991,9 +7991,9 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
       castType = self:createModifier( castType, Ast.MutMode.IMut )
    end
    
-   if castType:canEvalWith( expType, "=", {} ) then
+   if castType:canEvalWith( expType, Ast.CanEvalType.SetOp, {} ) then
       self:addWarnMess( castTypeNode:get_pos(), string.format( "This cast isn't need. (%s <- %s)", castType:getTxt( true ), expType:getTxt( true )) )
-   elseif not expType:canEvalWith( castType, "=", {} ) then
+   elseif not expType:canEvalWith( castType, Ast.CanEvalType.SetOp, {} ) then
       if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) then
          self:addErrMess( castTypeNode:get_pos(), string.format( "This type can't cast. (%s <- %s)", castType:getTxt( true ), expType:getTxt( true )) )
       end
@@ -8904,9 +8904,9 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                if _switchExp == "or" then
                   if exp1Type:equals( exp2Type ) then
                      retType = exp1Type
-                  elseif exp1Type:canEvalWith( exp2Type, "=", {} ) then
+                  elseif exp1Type:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) then
                      retType = exp1Type
-                  elseif exp2Type:canEvalWith( exp1Type, "=", {} ) then
+                  elseif exp2Type:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) then
                      retType = exp2Type
                   elseif exp2Type:equals( Ast.builtinTypeNil ) then
                      retType = exp1Type
@@ -8954,9 +8954,9 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                         end
                         
                      elseif exp1Type:equals( Ast.builtinTypeBool ) or exp2Type:equals( Ast.builtinTypeBool ) then
-                        if exp1Type:canEvalWith( exp2Type, "=", {} ) then
+                        if exp1Type:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) then
                            retType = exp1Type
-                        elseif exp2Type:canEvalWith( exp1Type, "=", {} ) then
+                        elseif exp2Type:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) then
                            retType = exp2Type
                         else
                          
@@ -8977,7 +8977,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   end
                   
                elseif _switchExp == "<" or _switchExp == ">" or _switchExp == "<=" or _switchExp == ">=" then
-                  if Ast.builtinTypeString:canEvalWith( exp1Type, "=", {} ) and Ast.builtinTypeString:canEvalWith( exp2Type, "=", {} ) or (Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt, {} ) or Ast.builtinTypeReal:canEvalWith( exp1Type, opTxt, {} ) ) and (Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt, {} ) or Ast.builtinTypeReal:canEvalWith( exp2Type, opTxt, {} ) ) then
+                  if Ast.builtinTypeString:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) and Ast.builtinTypeString:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) or (Ast.builtinTypeInt:canEvalWith( exp1Type, Ast.CanEvalType.Comp, {} ) or Ast.builtinTypeReal:canEvalWith( exp1Type, Ast.CanEvalType.Comp, {} ) ) and (Ast.builtinTypeInt:canEvalWith( exp2Type, Ast.CanEvalType.Comp, {} ) or Ast.builtinTypeReal:canEvalWith( exp2Type, Ast.CanEvalType.Comp, {} ) ) then
                      
                   else
                    
@@ -8986,7 +8986,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   
                   retType = Ast.builtinTypeBool
                elseif _switchExp == "~=" or _switchExp == "==" then
-                  if (not exp1Type:canEvalWith( exp2Type, opTxt, {} ) and not exp2Type:canEvalWith( exp1Type, opTxt, {} ) ) then
+                  if (not exp1Type:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) and not exp2Type:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) ) then
                      self:addErrMess( nextToken.pos, string.format( "not compatible type '%s' or '%s'", exp1Type:getTxt( true ), exp2Type:getTxt( true )) )
                   end
                   
@@ -9020,7 +9020,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                      self:addErrMess( nextToken.pos, "this lua version can't use bit operand." )
                   end
                   
-                  if not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt, {} ) or not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt, {} ) then
+                  if not Ast.builtinTypeInt:canEvalWith( exp1Type, Ast.CanEvalType.Logical, {} ) or not Ast.builtinTypeInt:canEvalWith( exp2Type, Ast.CanEvalType.Logical, {} ) then
                      self:addErrMess( nextToken.pos, string.format( "no int type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
                   
@@ -9032,7 +9032,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   
                   retType = Ast.builtinTypeString
                elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "%" then
-                  if (not Ast.builtinTypeInt:canEvalWith( exp1Type, opTxt, {} ) and not Ast.builtinTypeReal:canEvalWith( exp1Type, opTxt, {} ) ) or (not Ast.builtinTypeInt:canEvalWith( exp2Type, opTxt, {} ) and not Ast.builtinTypeReal:canEvalWith( exp2Type, opTxt, {} ) ) then
+                  if (not Ast.builtinTypeInt:canEvalWith( exp1Type, Ast.CanEvalType.Math, {} ) and not Ast.builtinTypeReal:canEvalWith( exp1Type, Ast.CanEvalType.Math, {} ) ) or (not Ast.builtinTypeInt:canEvalWith( exp2Type, Ast.CanEvalType.Math, {} ) and not Ast.builtinTypeReal:canEvalWith( exp2Type, Ast.CanEvalType.Math, {} ) ) then
                      self:addErrMess( nextToken.pos, string.format( "no numeric type '%s' or '%s'", exp1Type:getTxt(  ), exp2Type:getTxt(  )) )
                   end
                   
@@ -9278,8 +9278,8 @@ function TransUnit:analyzeExpUnwrap( firstToken )
       end
       
       local alt2type = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
-      if not unwrapType:canEvalWith( insType, "=", alt2type ) then
-         if not insType:canEvalWith( unwrapType, "=", alt2type ) then
+      if not unwrapType:canEvalWith( insType, Ast.CanEvalType.SetOp, alt2type ) then
+         if not insType:canEvalWith( unwrapType, Ast.CanEvalType.SetOp, alt2type ) then
             unwrapType = Ast.builtinTypeStem
          else
           
@@ -9441,7 +9441,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
             
             typeInfo = expType
          elseif _switchExp == "#" then
-            if expType:get_kind() ~= Ast.TypeInfoKind.List and expType:get_kind() ~= Ast.TypeInfoKind.Array and not Ast.builtinTypeString:canEvalWith( expType, "=", {} ) then
+            if expType:get_kind() ~= Ast.TypeInfoKind.List and expType:get_kind() ~= Ast.TypeInfoKind.Array and not Ast.builtinTypeString:canEvalWith( expType, Ast.CanEvalType.SetOp, {} ) then
                self:addErrMess( token.pos, string.format( 'unmatch type for "#" -- %s', expType:getTxt(  )) )
             end
             

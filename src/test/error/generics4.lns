@@ -68,3 +68,30 @@ class Test3<T> {
    let test2 = new Test3<real>();
    map[ 2 ] = test2.clone(); // error
 }
+
+{
+   abstract class Super {
+      pub abstract fn func(): str;
+   }
+   class Sub1 extend Super {
+      pub override fn func(): str {
+         return __func__;
+      }
+   }
+   class Sub2 extend Super {
+      pub override fn func(): str {
+         return __func__;
+      }
+   }
+   fn func( list:List<Super> ) {
+      list.insert( new Sub2() );
+   }
+   fn func2( list:&List<Super> ) {
+   }
+   let mut list:List<Sub1> = [];
+   func( list ); // error List<Sub1> に Sub2 のインスタンスが入ってしまう。。。
+   func2( list );  // ok list が imut なので OK
+   foreach obj in list {
+      print( obj.func() );
+   }
+}

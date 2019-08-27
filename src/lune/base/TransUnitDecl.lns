@@ -272,7 +272,7 @@ fn TransUnit.checkOverriededMethod() mut
                   symbolInfo.$name, true, classScope )
                {
                   if not impMethodType.canEvalWith(
-                     symbolInfo.$typeInfo, "=", alt2typeMap )
+                     symbolInfo.$typeInfo, .SetOp, alt2typeMap )
                   {
                      self.addErrMess(
                         pos, "mismatch method -- %s %s" (symbolInfo.$typeInfo.$display_stirng,
@@ -656,7 +656,7 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
          true, self.scope,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
-               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, "=", ifAlt2typeMap ) {
+               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, .SetOp, ifAlt2typeMap ) {
                   self.addErrMess(
                      firstPos,
                      "mismatch method type -- %s.%s, %s.%s"
@@ -1271,7 +1271,7 @@ fn TransUnit.analyzeDeclMember(
             let workRetType;
             getterMode, workRetType, nextToken = analyzeAccessorMode();
             if workRetType ~= Ast.headTypeInfo {
-               if not workRetType.canEvalWith( getterRetType, "=",
+               if not workRetType.canEvalWith( getterRetType, .SetOp,
                                                classTypeInfo.createAlt2typeMap( false ) )
                {
                   self.addErrMess( firstToken.pos,
@@ -2170,7 +2170,7 @@ fn TransUnit.analyzeDeclFunc(
                self.addErrMess( name.pos, "mismatch functype ret: " .. err );
             }
          }
-         if not typeInfo.canEvalWith( prottype, "=", alt2typeMap ) {
+         if not typeInfo.canEvalWith( prottype, .SetOp, alt2typeMap ) {
             self.addErrMess( name.pos,
                              "mismatch functype -- %s / %s"
                              (typeInfo.$display_stirng, prottype.$display_stirng ) );
@@ -2231,7 +2231,7 @@ fn TransUnit.analyzeDeclFunc(
             }
          }
 
-         if not overrideType.canEvalWith( typeInfo, "=", alt2typeMap ) {
+         if not overrideType.canEvalWith( typeInfo, .SetOp, alt2typeMap ) {
             self.addErrMess( firstToken.pos, "mismatch method type -- %s" (funcName));
          }
       }
@@ -2251,7 +2251,7 @@ fn TransUnit.analyzeDeclFunc(
                if! let ifFunc =
                   self.scope.$parent.getSymbolInfoIfField( name.txt, funcBodyScope )
                {
-                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, "=", alt2typeMap ) {
+                  if not ifFunc.$typeInfo.canEvalWith( typeInfo, .SetOp, alt2typeMap ) {
                      self.addErrMess( firstToken.pos,
                                       "mismatch method type -- %s" (funcName));
                   }
@@ -2530,7 +2530,7 @@ fn TransUnit.analyzeLetAndInitExp(
                   checkType = dddItemType.$nonnilableType;
                }
                if not argType.equals( Ast.builtinTypeEmpty ## ) and
-                  not argType.canEvalWith( checkType, "=", {} )
+                  not argType.canEvalWith( checkType, .SetOp, {} )
                {
                   self.addErrMess(
                      firstPos,
@@ -2572,7 +2572,7 @@ fn TransUnit.analyzeLetAndInitExp(
                Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap );
 
                if not varType.equals( Ast.builtinTypeEmpty ## ) and
-                  not varType.canEvalWith( expTypeInfo, "=", alt2typeMap ) and
+                  not varType.canEvalWith( expTypeInfo, .SetOp, alt2typeMap ) and
                   not (unwrapFlag and expTypeInfo.equals( Ast.builtinTypeNil ## ))
                {
                   self.addErrMess(

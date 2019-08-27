@@ -350,7 +350,7 @@ fn TransUnit.analyzeExpRefItem(
    if not indexExp.canBeRight() {
       self.addErrMess( indexExp.$pos, "This node can't use index" );
    }
-   if not indexTypeInfo.canEvalWith( indexExp.$expType, "=", {} ) {
+   if not indexTypeInfo.canEvalWith( indexExp.$expType, .SetOp, {} ) {
       self.addErrMess( indexExp.$pos,
                        "unmatch index type -- %s, %s"
                        ( indexTypeInfo.getTxt(##), indexExp.$expType.getTxt(##) ) );
@@ -1286,14 +1286,14 @@ fn TransUnit.analyzeExpCast(
       castType = self.createModifier( castType, .IMut );
    }
 
-   if castType.canEvalWith( expType, "=", {} ) {
+   if castType.canEvalWith( expType, .SetOp, {} ) {
       // "str"@@str のように、意味のないキャストはエラー
       self.addWarnMess( castTypeNode.$pos,
                         "This cast isn't need. (%s <- %s)"
                         ( castType.getTxt( true ## ),
                           expType.getTxt( true ## ) ) );          
    }
-   elseif not expType.canEvalWith( castType, "=", {} ) {
+   elseif not expType.canEvalWith( castType, .SetOp, {} ) {
       if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) {
          // キャスト先の型からキャスト元の型へ互換性がない場合はエラー
          self.addErrMess( castTypeNode.$pos,
@@ -2252,10 +2252,10 @@ fn TransUnit.analyzeExpOp2(
                   if exp1Type.equals( exp2Type ##) {
                      retType = exp1Type;
                   }
-                  elseif exp1Type.canEvalWith( exp2Type, "=", {}) {
+                  elseif exp1Type.canEvalWith( exp2Type, .SetOp, {}) {
                      retType = exp1Type;
                   }
-                  elseif exp2Type.canEvalWith( exp1Type, "=", {}) {
+                  elseif exp2Type.canEvalWith( exp1Type, .SetOp, {}) {
                      retType = exp2Type;
                   }
                   elseif exp2Type.equals( Ast.builtinTypeNil ##) {
@@ -2309,10 +2309,10 @@ fn TransUnit.analyzeExpOp2(
                      elseif exp1Type.equals( Ast.builtinTypeBool ##) or
                         exp2Type.equals( Ast.builtinTypeBool ##)
                      {
-                        if exp1Type.canEvalWith( exp2Type, "=", {} ) {
+                        if exp1Type.canEvalWith( exp2Type, .SetOp, {} ) {
                            retType = exp1Type;
                         }
-                        elseif exp2Type.canEvalWith( exp1Type, "=", {} ) {
+                        elseif exp2Type.canEvalWith( exp1Type, .SetOp, {} ) {
                            retType = exp2Type;
                         }  
                         else {
@@ -2330,12 +2330,12 @@ fn TransUnit.analyzeExpOp2(
                   }
                }
                case "<", ">", "<=", ">=" {
-                  if Ast.builtinTypeString.canEvalWith( exp1Type, "=", {} ) and
-                     Ast.builtinTypeString.canEvalWith( exp2Type, "=", {} ) or
-                      ( Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt, {} ) or
-                        Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt, {} ) ) and
-                     ( Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt, {} ) or
-                        Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt, {} ) )
+                  if Ast.builtinTypeString.canEvalWith( exp1Type, .SetOp, {} ) and
+                     Ast.builtinTypeString.canEvalWith( exp2Type, .SetOp, {} ) or
+                      ( Ast.builtinTypeInt.canEvalWith( exp1Type, .Comp, {} ) or
+                        Ast.builtinTypeReal.canEvalWith( exp1Type, .Comp, {} ) ) and
+                     ( Ast.builtinTypeInt.canEvalWith( exp2Type, .Comp, {} ) or
+                        Ast.builtinTypeReal.canEvalWith( exp2Type, .Comp, {} ) )
                   {
                      ;
                   }
@@ -2349,8 +2349,8 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeBool;
                }
                case "~=", "==" {
-                  if ( not exp1Type.canEvalWith( exp2Type, opTxt, {} ) and
-                       not exp2Type.canEvalWith( exp1Type, opTxt, {} ) )
+                  if ( not exp1Type.canEvalWith( exp2Type, .SetOp, {} ) and
+                       not exp2Type.canEvalWith( exp1Type, .SetOp, {} ) )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -2384,8 +2384,8 @@ fn TransUnit.analyzeExpOp2(
                                       "this lua version can't use bit operand." );
                   }
                   
-                  if not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt, {} ) or
-                     not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt, {} )
+                  if not Ast.builtinTypeInt.canEvalWith( exp1Type, .Logical, {} ) or
+                     not Ast.builtinTypeInt.canEvalWith( exp2Type, .Logical, {} )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -2406,10 +2406,10 @@ fn TransUnit.analyzeExpOp2(
                   retType = Ast.builtinTypeString;
                }
                case "+", "-", "*", "/", "%" {
-                  if ( not Ast.builtinTypeInt.canEvalWith( exp1Type, opTxt, {} ) and
-                       not Ast.builtinTypeReal.canEvalWith( exp1Type, opTxt, {} ) ) or
-                      ( not Ast.builtinTypeInt.canEvalWith( exp2Type, opTxt, {} ) and
-                        not Ast.builtinTypeReal.canEvalWith( exp2Type, opTxt, {} ) )
+                  if ( not Ast.builtinTypeInt.canEvalWith( exp1Type, .Math, {} ) and
+                       not Ast.builtinTypeReal.canEvalWith( exp1Type, .Math, {} ) ) or
+                      ( not Ast.builtinTypeInt.canEvalWith( exp2Type, .Math, {} ) and
+                        not Ast.builtinTypeReal.canEvalWith( exp2Type, .Math, {} ) )
                   {
                      self.addErrMess(
                         nextToken.pos,
@@ -2670,9 +2670,9 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
       }
       
       let mut alt2type = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
-      if not unwrapType.canEvalWith( insType, "=", alt2type )
+      if not unwrapType.canEvalWith( insType, .SetOp, alt2type )
       {
-         if not insType.canEvalWith( unwrapType, "=", alt2type ) {
+         if not insType.canEvalWith( unwrapType, .SetOp, alt2type ) {
             unwrapType = Ast.builtinTypeStem;
             // self.addErrMess(
             //    insNode.$pos,
@@ -2849,7 +2849,7 @@ fn TransUnit.analyzeExp(
          case "#" {
             if expType.$kind ~= .List and
                expType.$kind ~= .Array and
-               not Ast.builtinTypeString.canEvalWith( expType, "=", {} )
+               not Ast.builtinTypeString.canEvalWith( expType, .SetOp, {} )
             {  
                self.addErrMess(
                   token.pos,

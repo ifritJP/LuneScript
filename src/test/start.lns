@@ -930,8 +930,8 @@ class GenSub2 extend GenTest {
    let test5 = new SUB2.TestGen<GenTest>(new GenTest());
    func( test5 );
 
-   let test6 = new SUB2.TestGen<GenSub1>(new GenSub1());
-   func( test6 );
+   // let test6 = new SUB2.TestGen<GenSub1>(new GenSub1());
+   // func( test6 );
 }
 
 // func( test3 );  // error
