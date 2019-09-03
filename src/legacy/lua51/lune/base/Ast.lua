@@ -531,13 +531,28 @@ end
 MutMode.IMut = 0
 MutMode._val2NameMap[0] = 'IMut'
 MutMode.__allList[1] = MutMode.IMut
-MutMode.Mut = 1
-MutMode._val2NameMap[1] = 'Mut'
-MutMode.__allList[2] = MutMode.Mut
-MutMode.AllMut = 2
-MutMode._val2NameMap[2] = 'AllMut'
-MutMode.__allList[3] = MutMode.AllMut
+MutMode.IMutRe = 1
+MutMode._val2NameMap[1] = 'IMutRe'
+MutMode.__allList[2] = MutMode.IMutRe
+MutMode.Mut = 2
+MutMode._val2NameMap[2] = 'Mut'
+MutMode.__allList[3] = MutMode.Mut
+MutMode.AllMut = 3
+MutMode._val2NameMap[3] = 'AllMut'
+MutMode.__allList[4] = MutMode.AllMut
 
+local function isMutable( mode )
+
+   do
+      local _switchExp = mode
+      if _switchExp == MutMode.AllMut or _switchExp == MutMode.Mut then
+         return true
+      end
+   end
+   
+   return false
+end
+_moduleObj.isMutable = isMutable
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
 function SymbolInfo.new(  )
@@ -949,7 +964,7 @@ function TypeInfo:get_mutMode(  )
 end
 function TypeInfo.isMut( typeInfo )
 
-   return typeInfo:get_mutMode() ~= MutMode.IMut
+   return isMutable( typeInfo:get_mutMode() )
 end
 function TypeInfo:getParentFullName( importInfo, localFlag )
 
@@ -1084,7 +1099,7 @@ setmetatable( NormalSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.NormalSymbolInfo = NormalSymbolInfo
 function NormalSymbolInfo:get_mutable(  )
 
-   return self.mutMode ~= MutMode.IMut
+   return isMutable( self.mutMode )
 end
 function NormalSymbolInfo:getOrg(  )
 
@@ -1839,17 +1854,17 @@ end
 
 function Scope:addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
-   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable and MutMode.Mut or MutMode.IMut, true )
+   return self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, false, mutable, true )
 end
 
 function Scope:addStaticVar( argFlag, canBeLeft, name, typeInfo, mutable )
 
-   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, true, mutable and MutMode.Mut or MutMode.IMut, true )
+   self:add( argFlag and SymbolKind.Arg or SymbolKind.Var, canBeLeft, true, name, typeInfo, AccessMode.Local, true, mutable, true )
 end
 
 function Scope:addVar( accessMode, name, typeInfo, mutable, hasValueFlag )
 
-   self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable and MutMode.Mut or MutMode.IMut, hasValueFlag )
+   self:add( SymbolKind.Var, true, true, name, typeInfo, accessMode, false, mutable, hasValueFlag )
 end
 
 function Scope:addEnumVal( name, typeInfo )
@@ -2155,12 +2170,12 @@ function AccessSymbolInfo:get_mutable(  )
             local _switchExp = self.symbolInfo:get_mutMode()
             if _switchExp == MutMode.AllMut then
                return true
-            elseif _switchExp == MutMode.IMut then
+            elseif _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
                return false
             end
          end
          
-         return _exp:get_mutMode() ~= MutMode.IMut
+         return TypeInfo.isMut( _exp )
       end
    end
    
@@ -3281,7 +3296,7 @@ end
 function ModifierTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
 
    local txt = self.srcTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
-   if self.mutMode == MutMode.IMut then
+   if not isMutable( self.mutMode ) then
       txt = "&" .. txt
    end
    
@@ -3290,7 +3305,7 @@ end
 function ModifierTypeInfo:get_display_stirng_with( raw )
 
    local txt = self.srcTypeInfo:get_display_stirng_with( raw )
-   if self.mutMode ~= MutMode.IMut then
+   if isMutable( self.mutMode ) then
       txt = "mut " .. txt
    end
    
@@ -4292,7 +4307,7 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
    srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
    do
       local _switchExp = mutMode
-      if _switchExp == MutMode.IMut then
+      if _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
          do
             local _exp = typeInfo2Map.ImutModifierMap[srcTypeInfo]
             if _exp ~= nil then
@@ -4323,7 +4338,7 @@ function NormalTypeInfo.createModifier( srcTypeInfo, mutMode )
    local modifier = ModifierTypeInfo.new(srcTypeInfo, idProv:get_id(), mutMode)
    do
       local _switchExp = mutMode
-      if _switchExp == MutMode.IMut then
+      if _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
          typeInfo2Map.ImutModifierMap[srcTypeInfo] = modifier
       elseif _switchExp == MutMode.AllMut then
          typeInfo2Map.MutModifierMap[srcTypeInfo] = modifier
@@ -4887,7 +4902,7 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
       work = _moduleObj.builtinTypeStem
    end
    
-   if mutMode == MutMode.IMut then
+   if not isMutable( mutMode ) then
       return NormalTypeInfo.createModifier( work, mutMode )
    end
    

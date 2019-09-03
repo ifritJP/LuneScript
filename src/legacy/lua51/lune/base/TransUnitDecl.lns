@@ -206,9 +206,9 @@ fn TransUnit.analyzeDeclArgList(
          self.addErrMess( nextToken.pos, "Argument exists after '...'." );
       }
 
-      let mut mutable = false;
+      let mut mutable = Ast.MutMode.IMut;
       if nextToken.txt == "mut" {
-         mutable = true;
+         mutable = .Mut;
          nextToken = self.getToken(##);
       }
       let mut argName = nextToken;
@@ -227,7 +227,7 @@ fn TransUnit.analyzeDeclArgList(
          argList.insert(
             Nodes.DeclArgDDDNode.create(
                self.nodeManager, argName.pos, [ dddTypeInfo ] ) );
-         self.scope.addLocalVar( true, true, argName.txt, dddTypeInfo, false );
+         self.scope.addLocalVar( true, true, argName.txt, dddTypeInfo, .IMut );
       }
       else {
          argName = self.checkSymbol( argName, .MustNot_ );
@@ -517,7 +517,7 @@ fn TransUnit.analyzeDeclMacro(
          true, .Global, "_lnsLoad",
          nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
          [ Ast.builtinTypeStem ], false );
-      scope.addLocalVar( false, false, "_lnsLoad", funcType, false );
+      scope.addLocalVar( false, false, "_lnsLoad", funcType, .IMut );
 
 
       let mut bakParser = self.parser;
@@ -1387,7 +1387,7 @@ fn TransUnit.addDefaultConstructor(
       true, false, false, .Pub, "__init", nil, argTypeList, [] ## );
    if oldFlag {
       // oldFlag の場合は スコープに "" のシンボルを追加する
-      ctorScope.addVar( .Pri, "", Ast.headTypeInfo, false, true);
+      ctorScope.addVar( .Pri, "", Ast.headTypeInfo, .IMut, true);
    }
    self.popScope();
    classScope.addMethod( initTypeInfo, .Pub, false, false );
@@ -2289,7 +2289,7 @@ fn TransUnit.analyzeDeclFunc(
       }
 
       funcBodyScope.addLocalVar(
-         false, false, "__func__", Ast.builtinTypeString, false );
+         false, false, "__func__", Ast.builtinTypeString, .IMut );
       //self.has__func__Symbol = false;
 
 
@@ -2298,7 +2298,7 @@ fn TransUnit.analyzeDeclFunc(
             self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
          {
             if not overrideType.$abstractFlag {
-               funcBodyScope.addLocalVar( false, false, "super", overrideType, false );
+               funcBodyScope.addLocalVar( false, false, "super", overrideType, .IMut );
             }
          }
       }
@@ -2417,7 +2417,7 @@ fn TransUnit.createExpListNode(
 
 
 class LetVarInfo {
-   pub let mutable:bool;
+   pub let mutable:Ast.MutMode;
    pub let varName: &Parser.Token;
    pub let varType:Nodes.RefTypeNode!;
 }
@@ -2439,7 +2439,7 @@ let で宣言している変数シンボル、型、初期値の型情報を解�
 @return Nodes.ExpListNode! 初期値の ExpListNode。初期値が与えられていない場合は nil。
 */
 fn TransUnit.analyzeLetAndInitExp(
-   firstPos:&Parser.Position, initMutable:bool,
+   firstPos:&Parser.Position, initMutable:Ast.MutMode,
    accessMode:Ast.AccessMode, unwrapFlag:bool ) mut :
    List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
 {
@@ -2455,25 +2455,29 @@ fn TransUnit.analyzeLetAndInitExp(
       let mut mutable = initMutable;
       nextToken = self.getToken(##);
       if nextToken.txt == "mut" {
-         mutable = true;
+         mutable = .Mut;
          nextToken = self.getToken(##);
       }
       let varName = self.checkSymbol( nextToken, .MustNot_ );
       nextToken = self.getToken(##);
       let mut typeInfo = Ast.builtinTypeEmpty;
       if nextToken.txt == ":" {
+         // 型を明示している場合
          let refType = self.analyzeRefType( accessMode, false );
          letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
          typeInfo = refType.$expType;
          nextToken = self.getToken(##);
       }
       else {
-         letVarList.insert( new LetVarInfo( mutable, varName, nil ) );
+         // 型を明示していない場合、 mut でなければ .IMutRe とする
+         letVarList.insert(
+            new LetVarInfo( Ast.isMutable( mutable ) and mutable or .IMutRe,
+                            varName, nil ) );
       }
       if not typeInfo.equals( Ast.builtinTypeEmpty ## ) and
-         Ast.TypeInfo.isMut( typeInfo ) and not mutable
+         Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( mutable )
       {
-         typeInfo = self.createModifier( typeInfo, .IMut );
+         typeInfo = self.createModifier( typeInfo, .IMutRe );
       }
       typeInfoList.insert( typeInfo );
    } nextToken.txt ~= ",";
@@ -2633,9 +2637,9 @@ fn TransUnit.analyzeLetAndInitExp(
             typeInfoList[ index ].equals( Ast.builtinTypeEmpty ## )
          {
             if Ast.TypeInfo.isMut( typeInfo ) and
-               index <= #letVarList and not letVarList[ index ].mutable
+               index <= #letVarList and not Ast.isMutable( letVarList[ index ].mutable )
             {
-               typeInfoList[ index ] = self.createModifier( typeInfo, .IMut );
+               typeInfoList[ index ] = self.createModifier( typeInfo, .IMutRe );
             }
             else {
                typeInfoList[ index ] = typeInfo;
@@ -2670,7 +2674,9 @@ fn TransUnit.analyzeDeclVar(
    }
 
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
-      self.analyzeLetAndInitExp( firstToken.pos, mode == .Sync, accessMode, unwrapFlag );
+      self.analyzeLetAndInitExp(
+         firstToken.pos, mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut,
+         accessMode, unwrapFlag );        
 
 
    if mode ~= .Sync and self.macroScope {
@@ -2735,8 +2741,8 @@ fn TransUnit.analyzeDeclVar(
          {
             hasValue = true;
          }
-         self.scope.addVar( accessMode, varName.txt, typeInfo,
-                            letVarInfo.mutable, hasValue );
+         self.scope.addVar(
+            accessMode, varName.txt, typeInfo, letVarInfo.mutable, hasValue );
       }
       symbolInfoList.insert(
          unwrap self.scope.getSymbolInfo( varName.txt, self.scope, true ) );
@@ -2751,7 +2757,7 @@ fn TransUnit.analyzeDeclVar(
       foreach letVarInfo, index in letVarList {
          self.addLocalVar(
             letVarInfo.varName.pos, false, true, "_" .. letVarInfo.varName.txt,
-            orgExpTypeList[ index ], false ## );
+            orgExpTypeList[ index ], .IMut ## );
       }
 
       unwrapBlock = self.analyzeBlock( .LetUnwrap, .Start, scope );
@@ -2824,7 +2830,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
 
    if nextToken.txt == "let" {
       let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, expList =
-         self.analyzeLetAndInitExp( firstToken.pos, false, .Local, true );
+         self.analyzeLetAndInitExp( firstToken.pos, .IMut, .Local, true );
       typeInfoList = workTypeInfoList;
       when! expList {
          foreach exp in expList.$expList {
@@ -2859,7 +2865,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
          break;
       }
       let varName = varNameList[ index ];
-      self.addLocalVar( firstToken.pos, false, true, varName, expType, false ## );
+      self.addLocalVar( firstToken.pos, false, true, varName, expType, .IMut ## );
    }
 
    let block = self.analyzeBlock( .IfUnwrap, .Start, scope );
@@ -2926,7 +2932,8 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
             varNameList.insert( refNode.$token.txt );
             self.addLocalVar(
                firstToken.pos, false, expNode.canBeLeft(), refNode.$token.txt,
-               expNode.$expType.$nonnilableType, symbolInfo.$mutable, true );
+               expNode.$expType.$nonnilableType,
+               symbolInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
          }
          else {
             self.addErrMess( expNode.$pos,

@@ -25,6 +25,6 @@ SOFTWARE.
 /** lns バージョン */
 pub let version = "1.1.2";
 /** meta フォーマットバージョン */
-pub let metaVersion = "1.0.48";
+pub let metaVersion = "1.0.49";
 /** _lune モジュールバージョン */
 pub let luaModVersion = 1;

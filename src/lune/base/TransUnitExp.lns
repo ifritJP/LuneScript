@@ -300,20 +300,14 @@ fn TransUnit.analyzeExpRefItem(
    }
 
    let mut expectItemType:&Ast.TypeInfo! = nil;
+   // 参照したアイテムの型情報
    let mut typeInfo = Ast.builtinTypeStem_;
    // 指定すべき index の型
    let mut indexTypeInfo = Ast.builtinTypeInt;
    if expType.$kind == .Map {
       let itemTypeList = expType.get_itemTypeInfoList();
-      if expType.$kind == .Map {
-         typeInfo = itemTypeList[2];
-         indexTypeInfo = itemTypeList[1];
-      }
-      else {
-         typeInfo = self.createModifier(
-            Ast.builtinTypeBool.$nilableTypeInfo, .IMut );
-         indexTypeInfo = itemTypeList[1];
-      }
+      typeInfo = itemTypeList[2];
+      indexTypeInfo = itemTypeList[1];
       expectItemType = itemTypeList[1];
       if not typeInfo.equals( Ast.builtinTypeStem_ ##) and not typeInfo.$nilable {
          typeInfo = typeInfo.$nilableTypeInfo;
@@ -342,8 +336,16 @@ fn TransUnit.analyzeExpRefItem(
       }
    }
 
-   if Ast.TypeInfo.isMut( typeInfo ) and not Ast.TypeInfo.isMut( expType ) {
-      typeInfo = self.createModifier( typeInfo, .IMut );
+   if Ast.TypeInfo.isMut( typeInfo ) {
+      if expType.$mutMode == .IMutRe {
+         typeInfo = self.createModifier( typeInfo, .IMutRe );
+      }
+      // let list:&List<Val> の list[1] を &Val として扱う場合は、ここを有効にする。
+      // ただ、 list[1] を &Val とするならば、 &List<&Val> とすべき。
+      // &List<Val> ならば list[1] は Val であるべき。
+      // elseif not Ast.TypeInfo.isMut( expType ) {
+      //    typeInfo = self.createModifier( typeInfo, .IMut );
+      // }
    }
 
    let indexExp = self.analyzeExp( false, false, nil, expectItemType );

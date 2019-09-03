@@ -317,9 +317,9 @@ test-error:
 
 	-$(call exeLune,$(TEST_DIR),test/error/abbr.lns,exe -Werror,2>&1) && echo error:NG
 
-	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > test/error/dis_mutable.lns
+	cat test/error/mutable.lns | sed 's@//_lune@_lune@' > $(TEST_DIR)/test/error/dis_mutable.lns
 	-$(call exeLune,$(TEST_DIR),test/error/dis_mutable.lns,exe,2>&1)
-	rm test/error/dis_mutable.lns
+	rm $(TEST_DIR)/test/error/dis_mutable.lns
 
 test-comp2:
 	$(call exeLune,.,test/start.lns,glue,work/glue 2>&1)

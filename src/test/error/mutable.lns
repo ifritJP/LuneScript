@@ -186,3 +186,57 @@ class Test3 {
    test2.$val7.insert( 1 ); // error
    test2.$val8.insert( 1 ); // error
 }
+{
+   let val = [ [1, 2] ];
+   val.insert( [1] ); // error
+   val[1].insert( 1 ); // error
+
+   fn func( list:List<List<int>> ) {
+      list.insert( [1] );
+      list[1].insert( 1 );
+   }
+   fn func2( list:List<&List<int>> ) {
+      list.insert( [1] ); // error
+      list[1].insert( 1 );
+   }
+   fn func3( list:&List<&List<int>> ) {
+      list.insert( [1] ); // error
+      list[1].insert( 1 );
+   }
+}
+
+{
+   abstract class Super {
+      pub abstract fn func(): str;
+   }
+   class Sub1 extend Super {
+      pub override fn func(): str {
+         return __func__;
+      }
+   }
+   class Sub2 extend Super {
+      pub override fn func(): str {
+         return __func__;
+      }
+   }
+   fn func( list:List<Super> ) {
+      list.insert( new Sub2() );
+   }
+   fn func2( list:&List<Super> ) {
+   }
+   fn func3( list:&List<List<Super>> ) {
+      let mut work:List<Super> = list[1];
+   }
+   fn func4( list:&List<&List<Super>> ) {
+   }
+   let mut list:List<Sub1> = [];
+   func( list ); // error List<Sub1> に Sub2 のインスタンスが入ってしまう。。。
+   func2( list );
+
+   let mut list2:List<List<Sub1>> = [];
+   func3( list2 ); // error List<List<Sub1>> に Sub2 のインスタンスが入ってしまう。。。
+   func4( list2 );
+   foreach obj in list {
+      print( obj.func() );
+   }
+}

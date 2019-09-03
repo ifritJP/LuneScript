@@ -647,7 +647,7 @@ pub class TransUnit {
 
    pri fn addLocalVar(
       pos:&Parser.Position, argFlag:bool, canBeLeft:bool,
-      name:str, typeInfo: &Ast.TypeInfo, mutable:bool, allowShadow:bool! ) mut:
+      name:str, typeInfo: &Ast.TypeInfo, mutable:Ast.MutMode, allowShadow:bool! ) mut:
       &Ast.SymbolInfo
    {
       if not allowShadow {
@@ -1591,11 +1591,11 @@ fn TransUnit.registBuiltInScope() mut {
 
    let mapType = Ast.NormalTypeInfo.createMap(
       .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
-   self.scope.addVar( .Global, "_ENV", mapType, false, true );
-   self.scope.addVar( .Global, "_G", mapType, false, true );
-   self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, false, true );
-   self.scope.addVar( .Global, "__mod__", Ast.builtinTypeString, false, true );
-   self.scope.addVar( .Global, "__line__", Ast.builtinTypeInt, false, true );
+   self.scope.addVar( .Global, "_ENV", mapType, .IMutRe, true );
+   self.scope.addVar( .Global, "_G", mapType, .IMutRe, true );
+   self.scope.addVar( .Global, "_VERSION", Ast.builtinTypeString, .IMut, true );
+   self.scope.addVar( .Global, "__mod__", Ast.builtinTypeString, .IMut, true );
+   self.scope.addVar( .Global, "__line__", Ast.builtinTypeInt, .IMut, true );
    //self.scope.addVar( .Global, "__func__", Ast.builtinTypeString, false, true );
 
    foreach builtinClassInfo in builtInInfo {
@@ -2575,7 +2575,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       if! let typeId = varInfo.typeId {
          self.scope.addStaticVar(
             false, true, varName, unwrap typeId2TypeInfo[ typeId@@int ],
-            varInfo.mutable and true or false );
+            varInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
       }
       else {
          self.error( "illegal varInfo.typeId" );
@@ -2916,7 +2916,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             {
                workType = self.createModifier( workType, .IMut );
             }
-            blockScope.addLocalVar( false, false, paramName.txt, workType, false );
+            blockScope.addLocalVar( false, false, paramName.txt, workType, .IMut );
             valParamNameList.insert( paramName.txt );
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
@@ -2993,7 +2993,8 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       self.addErrMess( exp1.$pos,
                        "exp1 is not number -- %s" (exp1.$expType.getTxt(##)) );
    }
-   let symbolInfo = self.addLocalVar( exp1.$pos, false, true, val.txt, exp1.$expType, false## );
+   let symbolInfo = self.addLocalVar(
+      exp1.$pos, false, true, val.txt, exp1.$expType, .IMut## );
    self.checkNextToken( "," );
    let exp2 = self.analyzeExp( false, false## );
    if not Ast.isNumberType( exp2.$expType ) {
@@ -3077,7 +3078,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
       if index <= #itemTypeList {
          itemType = itemTypeList[ index ];
       }
-      self.addLocalVar( var.pos, false, true, var.txt, itemType, false## );
+      self.addLocalVar( var.pos, false, true, var.txt, itemType, .IMut## );
    }
 
    let block = self.analyzeBlock( .Apply, .Loop, scope );
@@ -3117,10 +3118,10 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
    if exp.$expType.get_kind() == .Map {
       self.addLocalVar(
-         exp.$pos, true, true, mainSymbol.txt, itemTypeInfoList[ 2 ], false## );
+         exp.$pos, true, true, mainSymbol.txt, itemTypeInfoList[ 2 ], .IMut## );
       if! subSymbol {
          self.addLocalVar(
-            _exp.$pos, true, true, _exp.txt, itemTypeInfoList[ 1 ], false## );
+            _exp.$pos, true, true, _exp.txt, itemTypeInfoList[ 1 ], .IMut## );
       }
    }
    elseif exp.$expType.get_kind() == .Set {
@@ -3130,7 +3131,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
       valSymbol = nil;
       subSymbol = mainSymbol;
       self.scope.addLocalVar(
-         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
+         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
    }
    elseif exp.$expType.get_kind() == .List or
       exp.$expType.get_kind() == .Array
@@ -3140,13 +3141,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
                           (exp.$expType.get_kind().$_txt) );
       }
       self.scope.addLocalVar(
-         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], false );
+         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
       if! subSymbol {
          self.addLocalVar(
-            _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, false## );
+            _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
       }
       else {
-         self.scope.addLocalVar( true, false, "__index", Ast.builtinTypeInt, false );
+         self.scope.addLocalVar( true, false, "__index", Ast.builtinTypeInt, .IMut );
       }
    }
    else {

@@ -172,8 +172,21 @@ pub fn txt2AccessMode( accessMode:str ) : AccessMode! {
 
 pub enum MutMode {
    IMut,
+   /**
+   メンバの中身を含めて Imutable。
+   例えば List<Hoge> の List が IMutRe の時、Hoge も Imutable。
+   */ 
+   IMutRe,
    Mut,
    AllMut,
+}
+pub fn isMutable( mode:MutMode ): bool {
+   switch mode {
+      case .AllMut, .Mut {
+         return true;
+      }
+   }
+   return false;
 }
 
 
@@ -626,7 +639,7 @@ static な型か。
    }
 
    pub static fn isMut( typeInfo:&TypeInfo ): bool {
-      return typeInfo.$mutMode ~= .IMut;
+      return isMutable( typeInfo.$mutMode );
    }
 
    /** 親の完全限定名を取得する */
@@ -772,7 +785,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let allmut convModuleParam:stem! {pub,pub}; 
    
    pub override fn get_mutable(): bool {
-      return self.mutMode ~= .IMut;
+      return isMutable( self.mutMode );
    }
 
    pub override fn getOrg(): &SymbolInfo {
@@ -1275,28 +1288,26 @@ pub fn Scope.add(
 }
 
 pub fn Scope.addLocalVar(
-   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:bool ) mut :
+   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:MutMode ) mut :
    &SymbolInfo
 {
    return self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-                    canBeLeft, true, name, typeInfo,
-                    .Local, false, mutable and MutMode.Mut or MutMode.IMut, true );
+                    canBeLeft, true, name, typeInfo, .Local, false, mutable, true );
 }
 
 pub fn Scope.addStaticVar(
-   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:bool ) mut
+   argFlag:bool, canBeLeft:bool, name:str, typeInfo: &TypeInfo, mutable:MutMode ) mut
 {
    self.add( argFlag and SymbolKind.Arg or SymbolKind.Var,
-             canBeLeft, true, name, typeInfo,
-             .Local, true, mutable and MutMode.Mut or MutMode.IMut, true );
+             canBeLeft, true, name, typeInfo, .Local, true, mutable, true );
 }
 
 pub fn Scope.addVar(
    accessMode:AccessMode, name:str,
-   typeInfo: &TypeInfo, mutable:bool, hasValueFlag:bool ) mut
+   typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut
 {
    self.add( SymbolKind.Var, true, true, name, typeInfo,
-             accessMode, false, mutable and MutMode.Mut or MutMode.IMut, hasValueFlag );
+             accessMode, false, mutable, hasValueFlag );
 }
 
 
@@ -1627,11 +1638,11 @@ pub class AccessSymbolInfo extend SymbolInfo {
             case .AllMut {
                return true;
             }
-            case .IMut {
+            case .IMut, .IMutRe {
                return false;
             }
          }
-         return _exp.$mutMode ~= .IMut;
+         return TypeInfo.isMut( _exp );
       }
       return self.symbolInfo.$mutable;
    };
@@ -2357,7 +2368,7 @@ pub class ModifierTypeInfo extend TypeInfo {
    {
       let mut txt = self.srcTypeInfo.getTxtWithRaw(
          raw, fullName, importInfo, localFlag );
-      if self.mutMode == .IMut {
+      if not isMutable( self.mutMode ) {
          txt = "&" .. txt;
       }
       return txt;
@@ -2365,7 +2376,7 @@ pub class ModifierTypeInfo extend TypeInfo {
 
    pub override fn get_display_stirng_with( raw:str ): str {
       let mut txt = self.srcTypeInfo.get_display_stirng_with( raw );
-      if self.mutMode ~= .IMut {
+      if isMutable( self.mutMode ) {
          txt = "mut " .. txt;
       }
       return txt;
@@ -3206,7 +3217,7 @@ pub static fn NormalTypeInfo.createModifier(
 {
    srcTypeInfo = srcTypeInfo.$srcTypeInfo;
    switch mutMode {
-      case .IMut {
+      case .IMut, .IMutRe {
          if! typeInfo2Map.ImutModifierMap[ srcTypeInfo ] {
             if _exp.$typeId < userStartId and srcTypeInfo.$typeId >= userStartId {
                Util.err( "on cache" );
@@ -3228,7 +3239,7 @@ pub static fn NormalTypeInfo.createModifier(
    idProv.increment();
    let modifier = new ModifierTypeInfo( srcTypeInfo, idProv.$id, mutMode );
    switch mutMode {
-      case .IMut {
+      case .IMut, .IMutRe {
          typeInfo2Map.ImutModifierMap[ srcTypeInfo ] = modifier;
       }
       case .AllMut {
@@ -3873,7 +3884,7 @@ pub static fn TypeInfo.getCommonType(
       work = builtinTypeStem;
    }
 
-   if mutMode == .IMut {
+   if not isMutable( mutMode ) {
       return NormalTypeInfo.createModifier( work, mutMode );
    }
    
@@ -3995,7 +4006,8 @@ pub class AbbrTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
+      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   {
       return false;
    }
 
