@@ -53,14 +53,6 @@ struct lune_itList_t {
 
 
 static void lune_mtd_List__del( lune_env_t * _pEnv, lune_stem_t * pObj );
-static lune_stem_t * lune_mtd_List_insert(
-    lune_env_t * _pEnv, lune_stem_t * pListStem, lune_stem_t * pVal );
-static lune_stem_t * lune_mtd_List_refAt(
-    lune_env_t * _pEnv, lune_stem_t * pListStem, int index );
-static lune_stem_t * lune_mtd_List_unpack(
-    lune_env_t * _pEnv, lune_stem_t * pListStem );
-static lune_stem_t * lune_mtd_List_sort(
-    lune_env_t * _pEnv, lune_stem_t * pListStem, lune_stem_t * pForm );
 
 lune_mtd_List_t lune_mtd_List = {
     lune_mtd_List__del,
@@ -70,6 +62,9 @@ lune_mtd_List_t lune_mtd_List = {
     (lune_method_t*)lune_mtd_List_unpack,
     (lune_method_t*)lune_mtd_List_sort,
 };
+
+lune_type_meta_t lune_type_meta_List = { "List" };
+
 
 lune_stem_t * lune_itList_new( lune_env_t * _pEnv, lune_stem_t * pList )
 {
@@ -152,7 +147,7 @@ static void lune_mtd_List__del( lune_env_t * _pEnv, lune_stem_t * pObj )
 /**
 List.insert()  処理
  */
-static lune_stem_t * lune_mtd_List_insert(
+lune_stem_t * lune_mtd_List_insert(
     lune_env_t * _pEnv, lune_stem_t * pObj, lune_stem_t * pVal )
 {
     // pVal の参照カウントをインクリメントするため、 work に setq する
@@ -167,7 +162,7 @@ static lune_stem_t * lune_mtd_List_insert(
 /**
 リストの要素アクセス。
  */
-static lune_stem_t * lune_mtd_List_refAt(
+lune_stem_t * lune_mtd_List_refAt(
     lune_env_t * _pEnv, lune_stem_t * pObj, int index )
 {
     return lune_obj_List_obj( pObj )->at( index - 1 );
@@ -177,7 +172,7 @@ static lune_stem_t * lune_mtd_List_refAt(
 /**
   List.unpack() 処理
  */
-static lune_stem_t * lune_mtd_List_unpack( lune_env_t * _pEnv, lune_stem_t * pObj )
+lune_stem_t * lune_mtd_List_unpack( lune_env_t * _pEnv, lune_stem_t * pObj )
 {
     lune_stem_t * pDDD =
         lune_createDDDOnly( _pEnv, lune_obj_List_obj( pObj )->size() );
@@ -260,7 +255,7 @@ static bool lune_mtd__CmpLune( lune_stem_t * pVal1, lune_stem_t * pVal2 )
 /**
 List.sort() 
  */
-static lune_stem_t * lune_mtd_List_sort(
+lune_stem_t * lune_mtd_List_sort(
     lune_env_t * _pEnv, lune_stem_t * pObj, lune_stem_t * pForm )
 {
     if ( pForm == _pEnv->pNilStem ) {
@@ -369,6 +364,9 @@ lune_mtd_Set_t lune_mtd_Set = {
     (lune_method_t*)lune_mtd_Set_clone,
     (lune_method_t*)lune_mtd_Set_len,
 };
+
+lune_type_meta_t lune_type_meta_Set = { "Set" };
+
 
 
 void lune_class_Set_init( lune_env_t * _pEnv, lune_Set_t * pObj )
@@ -644,6 +642,9 @@ lune_mtd_Map_t lune_mtd_Map = {
     (lune_method_t*)lune_mtd_Map_add,
     (lune_method_t*)lune_mtd_Map_get,
 };
+
+lune_type_meta_t lune_type_meta_Map = { "Map" };
+
 
 
 void lune_class_Map_init( lune_env_t * _pEnv, lune_Map_t * pObj )

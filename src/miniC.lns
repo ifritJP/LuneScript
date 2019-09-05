@@ -1,16 +1,2 @@
-interface IF {
-   pub fn func();
-}
-
-class Test extend (IF) {
-   pub fn func() {
-      print( "hoge" );
-   }
-}
-
-fn func( obj:&IF ) {
-   obj.func();
-}
-
-let test = new Test();
-func( test );
+let val = "abcde";
+print( val[1], val[2], val[3] );

@@ -466,7 +466,8 @@ fn TransUnit.checkMatchType(
                workNode = Nodes.BoxingNode.create(
                   self.nodeManager, expNode.$pos, [ dstType ], expNode );
             }
-            elseif not dstType.equals( expNode.$expType ## ) and
+            elseif dstType ~= Ast.builtinTypeEmpty and
+               not dstType.equals( expNode.$expType ## ) and
                not dstType.$nonnilableType.equals( expNode.$expType ## )
             {
                if expNode.$kind ~= Nodes.NodeKind.$Abbr {

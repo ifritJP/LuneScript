@@ -571,6 +571,9 @@ pub override fn convFilter.processRoot(
    self.writeln( "lune_block_t * pBlock_%X = lune_enter_module( %d );"
                  (self.ast.$moduleScope.$scopeId, stemNum ) );
 
+   // init ブロック内の managedStemTop 用ブロック作成
+   self.writeln( "lune_enter_block( _pEnv, 0 );" );
+   
    foreach child in children {
       switch child.$kind {
          case Nodes.NodeKind.$DeclAlge,
@@ -588,8 +591,11 @@ pub override fn convFilter.processRoot(
       }
    }
 
-   self.popIndent();
+   // init ブロック内の managedStemTop 用ブロックの開放
+   self.writeln( "lune_leave_block( _pEnv );" );
    
+   self.popIndent();
+
    self.writeln( "}" );
 
    Ast.popProcessInfo();
@@ -666,7 +672,7 @@ pub override fn convFilter.processBlock(
          word = "";
       }
    }
-   self.writeln( word );
+   self.writeln( "%s // %d" ( word, node.$pos.lineNo ) );
    self.pushIndent(##);
 
    if not loopFlag {
@@ -1326,8 +1332,9 @@ fn processIFObjInit(
    let className = moduleCtrl.getClassCName( impClassType );
    foreach ifType in classType.$interfaceList {
       let ifName = moduleCtrl.getClassCName( ifType );
-      stream.writeln( "lune_init_if( &pObj->imp.%s, _pEnv, pStem, &lune_if_%s_imp_%s );"
-                      (ifName, className, ifName) );
+      stream.writeln(
+         "lune_init_if( &pObj->imp.%s, _pEnv, pStem, &lune_if_%s_imp_%s, %s );"
+         (ifName, className, ifName, ifName) );
    }
 }
 
@@ -1353,13 +1360,15 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
       self.writeln( "typedef struct u_if_imp_%s_t {" (className) );
 
       processIFObjDecl( self, self.moduleCtrl, node.$expType );
-      
+
+      self.writeln( "lune_stem_t sentinel;" );
       self.writeln( "} u_if_imp_%s_t;" (className) );
    }
    
 
    // クラス構造体の宣言
    self.writeln( "typedef struct %s {" (className) );
+   self.writeln( "lune_type_meta_t * pMeta;" );
    switch kind {
       case .Class {
          self.writeln( "u_if_imp_%s_t * pImp;" (className) );
@@ -1374,13 +1383,23 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
    }
    self.writeln( "} %s;" (className) );
 
-   self.writeln( ```#define lune_mtd_%s( OBJ )                     \
-    (((%s*)OBJ->val.classVal)->pMtd )``` (className,className) );
+   switch kind {
+      case .Class {
+         self.writeln( ```#define lune_mtd_%s( OBJ )                     \
+          (((%s*)OBJ->val.classVal)->pMtd )``` (className,className) );
+      }
+      case .IF {
+         self.writeln( ```#define lune_mtd_%s( OBJ )                     \
+          ((%s*)&OBJ->val.ifVal)->pMtd``` (className,className) );
+      }
+   }
 
 
    if kind == .Class {
-      self.writeln( ```#define lune_obj_%s( OBJ )                     \
-          ((%s*)OBJ->val.classVal)``` (className,className) );
+      self.writeln( "#define lune_obj_%s( OBJ ) ((%s*)OBJ->val.classVal)"
+                    (className,className) );
+      self.writeln( "#define lune_if_%s( OBJ ) ((%s*)OBJ->val.classVal)->pImp"
+                    (className,className) );
       
       processDeclClassPrototype( self, self.moduleCtrl, node );
    }
@@ -1422,6 +1441,8 @@ fn convFilter.processDeclClassForm( node:&Nodes.DeclClassNode ) mut
    self.writeln( ");" );
 
    self.writeln( "pObj->pImp = &pObj->imp;" );
+   self.writeln( "pObj->imp.sentinel.type = lune_value_type_nil;" );
+   
    processIFObjInit( self, self.moduleCtrl, node.$expType, node.$expType );
 
    self.writeln( "return pStem;" );
@@ -1560,6 +1581,9 @@ fn processClassDataInit(
 
    
    let className = moduleCtrl.getClassCName( classTypeInfo );
+
+   stream.writeln(
+      'lune_type_meta_t lune_type_meta_%s = { "%s" };' (className, className) );
    
    stream.writeln(
       "lune_mtd_%s_t lune_mtd_%s = {" ( className, className ) );
@@ -1605,9 +1629,17 @@ pub override fn convFilter.processDeclClass(
          self.processDeclClassNodePrototype( node );
       }
       case .WideScopeVer {
-         if node.$expType.$kind == .Class {
-            processClassDataInit( self, self.moduleCtrl, node.$expType );
+         switch node.$expType.$kind {
+            case .Class {
+               processClassDataInit( self, self.moduleCtrl, node.$expType );
+            }
+            case .IF {
+               self.writeln(
+                  'lune_type_meta_t lune_type_meta_%s = { "%s" };'
+                  (className, className) );
+            }
          }
+         
       }
       case .Form {
          if node.$expType.$kind == .Class {
@@ -3182,6 +3214,74 @@ pub override fn convFilter.processApply(
    // self.writeln( "end" );
 };
 
+fn processToIF( stream:Util.SourceStream,
+                moduleCtrl:ModuleCtrl, expType:&Ast.TypeInfo, process:form )
+{
+   if expType.$kind == .IF {
+      stream.write( "lune_toIF( _pEnv, " );
+      process();
+      stream.write( ", &lune_type_meta_%s )" (moduleCtrl.getClassCName( expType )) );
+   }
+   else {
+      process();
+   }
+}
+
+fn processPoolForeachSetupVal(
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   loopType:&Ast.TypeInfo, keyToken:&Parser.Token!, valToken:&Parser.Token! )
+{
+   let valType = loopType.$itemTypeInfoList[ 1 ];
+   let valSymTxt;
+   if loopType.$kind == .Set {
+      if! keyToken {
+         valSymTxt = _exp.txt;
+      }
+      else {   
+         valSymTxt = "__val";
+      }
+   }
+   else {
+      if! valToken {
+         valSymTxt = _exp.txt;
+      }
+      else {   
+         valSymTxt = "__val";
+      }
+   }
+
+   stream.write( "   %s %s = " ( getCType( valType, false), valSymTxt ) );
+   processToIF( stream, moduleCtrl, valType, fn () {
+      stream.write( "_val%s" ( getAccessPrimValFromStem( false, valType, 0 ) ) );
+   } );
+   stream.write( ";" );
+}
+
+fn processMapForeachSetupVal(
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   loopType:&Ast.TypeInfo, keyToken:&Parser.Token!, valToken:&Parser.Token!,
+   keyTxt:str, valTxt:str )
+{
+   if! keyToken {
+      let keyType = loopType.$itemTypeInfoList[ 1 ];
+      stream.write( "   %s %s = " ( getCType( keyType, false), _exp.txt ) );
+      processToIF( stream, moduleCtrl, keyType, fn () {
+         stream.write(
+            "%s%s" ( keyTxt, getAccessPrimValFromStem( false, keyType, 0 ) ) );
+      } );
+      stream.writeln( ";" );
+   }
+   if! valToken {
+      let valType = loopType.$itemTypeInfoList[ 2 ];
+      stream.write( "   %s %s = " ( getCType( valType, false), _exp.txt ) );
+      processToIF( stream, moduleCtrl, valType, fn () {
+         stream.write(
+            "%s%s" ( valTxt, getAccessPrimValFromStem( false, valType, 0 ) ) );
+      } );
+      stream.writeln( ";" );
+   }
+}
+
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
@@ -3243,45 +3343,57 @@ pub override fn convFilter.processForeach(
 
    switch loopType.$kind {
       case .List, .Set, .Array {
-         let valType = loopType.$itemTypeInfoList[ 1 ];
-         let valSymTxt;
-         if loopType.$kind == .Set {
-            if! node.$key {
-               valSymTxt = _exp.txt;
-            }
-            else {   
-               valSymTxt = "__val";
-            }
-         }
-         else {
-            if! node.$val {
-               valSymTxt = _exp.txt;
-            }
-            else {   
-               valSymTxt = "__val";
-            }
-         }
-         
-         self.writeln(
-            "   %s %s = _val%s;"
-            ( getCType( valType, false), valSymTxt,
-              getAccessPrimValFromStem( false, valType, 0 ) ) );
+         // let valType = loopType.$itemTypeInfoList[ 1 ];
+         // let valSymTxt;
+         // if loopType.$kind == .Set {
+         //    if! node.$key {
+         //       valSymTxt = _exp.txt;
+         //    }
+         //    else {   
+         //       valSymTxt = "__val";
+         //    }
+         // }
+         // else {
+         //    if! node.$val {
+         //       valSymTxt = _exp.txt;
+         //    }
+         //    else {   
+         //       valSymTxt = "__val";
+         //    }
+         // }
+
+         // self.write( "   %s %s = " ( getCType( valType, false), valSymTxt ) );
+         // processToIF( self, self.moduleCtrl, valType, fn () {
+         //    self.write( "_val%s" ( getAccessPrimValFromStem( false, valType, 0 ) ) );
+         // } );
+         // self.write( ";" );
+
+         processPoolForeachSetupVal(
+            self, self.moduleCtrl, loopType, node.$key, node.$val );
       }
       case .Map {
-         if! node.$key {
-            let keyType = loopType.$itemTypeInfoList[ 1 ];
-            self.writeln(
-               "   %s %s = _entry.pKey%s;"
-               ( getCType( keyType, false), _exp.txt,
-                 getAccessPrimValFromStem( false, keyType, 0 ) ) );
-         }
-         if! node.$val {
-            let valType = loopType.$itemTypeInfoList[ 2 ];
-            self.writeln(
-               "   %s %s = _entry.pVal%s;"
-               ( getCType( valType, false), _exp.txt,
-                 getAccessPrimValFromStem( false, valType, 0 ) ) );
-         }
+         // if! node.$key {
+         //    let keyType = loopType.$itemTypeInfoList[ 1 ];
+         //    self.write( "   %s %s = " ( getCType( keyType, false), _exp.txt ) );
+         //    processToIF( self, self.moduleCtrl, keyType, fn () {
+         //       self.write(
+         //          "_entry.pKey%s" ( getAccessPrimValFromStem( false, keyType, 0 ) ) );
+         //    } );
+         //    self.writeln( ";" );
+         // }
+         // if! node.$val {
+         //    let valType = loopType.$itemTypeInfoList[ 2 ];
+         //    self.write( "   %s %s = " ( getCType( valType, false), _exp.txt ) );
+         //    processToIF( self, self.moduleCtrl, valType, fn () {
+         //       self.write(
+         //          "_entry.pVal%s" ( getAccessPrimValFromStem( false, valType, 0 ) ) );
+         //    } );
+         //    self.writeln( ";" );
+         // }
+
+         processMapForeachSetupVal(
+            self, self.moduleCtrl, loopType, node.$key, node.$val,
+            "_entry.pKey", "_entry.pVal" );
       }
       default {
       }
@@ -3344,32 +3456,46 @@ pub override fn convFilter.processForsort(
 
    switch loopType.$kind {
       case .Set {
-         let valType = loopType.$itemTypeInfoList[ 1 ];
-         let valSymTxt;
-         if! node.$key {
-            valSymTxt = _exp.txt;
-         }
-         else {   
-            valSymTxt = "__val";
-         }
-         self.writeln(
-            "   %s %s = _val%s;"
-            ( getCType( valType, false), valSymTxt,
-              getAccessPrimValFromStem( false, valType, 0 ) ) );
+         // let valType = loopType.$itemTypeInfoList[ 1 ];
+         // let valSymTxt;
+         // if! node.$key {
+         //    valSymTxt = _exp.txt;
+         // }
+         // else {   
+         //    valSymTxt = "__val";
+         // }
+         // self.write( "   %s %s = " ( getCType( valType, false), valSymTxt ) );
+         // processToIF( self, self.moduleCtrl, valType, fn () {
+         //    self.write( "_val%s" ( getAccessPrimValFromStem( false, valType, 0 ) ) );
+         // } );
+         // self.write( ";" );
+
+         processPoolForeachSetupVal(
+            self, self.moduleCtrl, loopType, node.$key, node.$val );
       }
       case .Map {
-         if! node.$key {
-            let keyType = loopType.$itemTypeInfoList[ 1 ];
-            self.writeln(
-               "   %s %s = _key%s;"
-               ( getCType( keyType, false), _exp.txt,
-                 getAccessPrimValFromStem( false, keyType, 0 ) ) );
-         }
-         let valType = loopType.$itemTypeInfoList[ 2 ];
-         self.writeln(
-            "   %s %s = lune_mtd_Map( _obj )->get( _pEnv, _obj, _key )%s;"
-            ( getCType( valType, false), node.$val.txt,
-              getAccessPrimValFromStem( false, valType, 0 ) ) );
+         // if! node.$key {
+         //    let keyType = loopType.$itemTypeInfoList[ 1 ];
+         //    self.write( "   %s %s = " ( getCType( keyType, false), _exp.txt ) );
+         //    processToIF( self, self.moduleCtrl, keyType, fn () {
+         //       self.write(
+         //          "_key%s" ( getAccessPrimValFromStem( false, keyType, 0 ) ) );
+         //    } );
+         //    self.writeln( ";" );
+         // }
+         // let valType = loopType.$itemTypeInfoList[ 2 ];
+         // self.write( "   %s %s = " ( getCType( valType, false), node.$val.txt ) );
+         // processToIF( self, self.moduleCtrl, valType, fn () {
+         //    self.write(
+         //       "lune_mtd_Map( _obj )->get( _pEnv, _obj, _key )%s;"
+         //       ( getAccessPrimValFromStem( false, valType, 0 ) ) );
+         // } );
+         // self.writeln( ";" );
+
+         processMapForeachSetupVal(
+            self, self.moduleCtrl, loopType, node.$key, node.$val,
+            "_key", "lune_mtd_Map( _obj )->get( _pEnv, _obj, _key )" );
+         
       }
       default {
       }
@@ -3809,6 +3935,28 @@ pub override fn convFilter.processExpOp1(
 pub override fn convFilter.processExpCast(
    node: Nodes.ExpCastNode, opt: Opt ) mut
 {
+   let exp = node.$exp;
+   let expType = exp.$expType;
+   let nodeExpType = node.$expType;
+   let castType = node.$castType;
+   switch node.$castKind {
+      case .Implicit {
+         if expType == Ast.builtinTypeNil or
+             ( nodeExpType.$kind == .Func and
+               nodeExpType ~= Ast.builtinTypeForm )
+         {
+            filter( exp, self, node );
+         }
+         elseif castType.$kind == .IF {
+            if expType.$kind == .Class {
+               self.write( "lune_getIF( _pEnv, &lune_if_%s( "
+                           (self.moduleCtrl.getClassCName( expType )));
+               self.processVal2Stem( node.$exp, node );
+               self.write( ")->%s )" ( self.moduleCtrl.getClassCName( castType ) ) );
+            }
+         }
+      }
+   }
    // if node.$force {
    //    if node.$expType.equals( Ast.builtinTypeInt ##) {
    //       self.write( "math.floor(" );
@@ -4037,29 +4185,37 @@ pub override fn convFilter.processExpRefItem(
    //    self.write( ")" );
    // }
    // else {
-   //    if node.$val.$expType.equals( Ast.builtinTypeString ##) {
-   //       self.write( "string.byte( " );
-   //       filter( node.$val, self, node );
-   //       self.write( ", " );
-   //       if! node.$index {
-   //          filter( _exp, self, node );
-   //       }
-   //       else {
-   //          error( "index is nil" );
-   //       }
-   //       self.write( " )" );
-   //    }
-   //    else {
-   //       filter( node.$val, self, node );
-   //       self.write( "[" );
-   //       if! node.$index {
-   //          filter( _exp, self, node );
-   //       }
-   //       else {
-   //          self.write( "'%s'" ( unwrap node.$symbol ) );
-   //       }
-   //       self.write( "]" );
-   //    }
+
+   let val = node.$val;
+   let valType = val.$expType;
+   
+   if valType.equals( Ast.builtinTypeString ##) {
+      self.accessPrimVal( val, node );
+      self.write( "->val.str.pStr[" );
+      if! let indexNode = node.$index {
+         filter( indexNode, self, node );
+      }
+      else {
+         error( "index is nil" );
+      }
+      self.write( "- 1 ]" );
+   }
+   else {
+      processToIF( self, self.moduleCtrl, node.$expType,
+                   fn () {
+                      switch valType.$kind {
+                         case .List { 
+                            self.write( "lune_mtd_List_refAt( _pEnv, " );
+                            self.processVal2Stem( val, node );
+                            self.write( ", " );
+                            self.accessPrimVal( unwrap node.$index, node );
+                            self.write( ")" );
+                            self.write( getAccessPrimValFromStem(
+                               false, valType.$itemTypeInfoList[ 1 ], 0 ) );
+                         }
+                      }
+                   } );
+   }
    // }
 };
 
@@ -4614,3 +4770,4 @@ pub fn createFilter(
 {
    return new convFilter( streamName, stream, ast );
 }
+

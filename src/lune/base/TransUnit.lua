@@ -7227,7 +7227,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
             if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode:get_expType() ) then
                autoBoxingCount = autoBoxingCount + 1
                workNode = Nodes.BoxingNode.create( self.nodeManager, expNode:get_pos(), {dstType}, expNode )
-            elseif not dstType:equals( expNode:get_expType() ) and not dstType:get_nonnilableType():equals( expNode:get_expType() ) then
+            elseif dstType ~= Ast.builtinTypeEmpty and not dstType:equals( expNode:get_expType() ) and not dstType:get_nonnilableType():equals( expNode:get_expType() ) then
                if expNode:get_kind() ~= Nodes.NodeKind.get_Abbr() then
                   hasImplictCast = true
                   if dstType:get_kind() == Ast.TypeInfoKind.DDD then

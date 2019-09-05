@@ -944,8 +944,16 @@ pub enum CastKind {
    Implicit,
 }
 
+/**
+ExpCastNode の expType は、 castKind によって異なる。
+
+具体的には、
+Implicit の場合、 exp の型がそのまま入る。
+Implicit 以外の場合、キャスト後の型が入る。
+*/
 _declNodeClass( "ExpCast", Node, false, true, false,
                 [ { "exp": "&Node" },
+                  // キャスト後の型
                   { "castType": "&Ast.TypeInfo" },
                   { "castKind": "CastKind" } ]
 );

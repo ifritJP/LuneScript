@@ -1,5 +1,42 @@
 let mut g_val = 100;
 {
+   interface IF {
+      pub fn func();
+   }
+
+   class Test extend (IF) {
+      pub fn sub() {
+         print( "sub" );
+      }
+      pub fn func() {
+         print( "hoge" );
+      }
+   }
+
+   class Hoge<T> {
+      let val:&T;
+      pub fn func(): &T {
+         return self.val;
+      }
+   }
+
+   fn func( obj:&IF ) {
+      obj.func();
+   }
+
+   let test = new Test();
+   let hoge = new Hoge(test);
+   let list:List<&IF> = [ test ];
+   let list2 = [ 1 ];
+   print( list2[ 1 ] );
+   func( test );
+   func( list[ 1 ] );
+   func( hoge.func() );
+   foreach item in list {
+      item.func();
+   }
+}
+{
    class Test {
       let mut val:int {pub,pub};
       let mut val2:str {pub,pub};

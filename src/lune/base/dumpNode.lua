@@ -823,7 +823,7 @@ end
 function dumpFilter:processExpCast( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, "" )
+   dump( prefix, depth, node, string.format( "%s -> %s", node:get_exp():get_expType():getTxt( true ), node:get_castType():getTxt( true )) )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 

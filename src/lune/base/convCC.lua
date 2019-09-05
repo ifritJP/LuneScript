@@ -866,6 +866,7 @@ function convFilter:processRoot( node, opt )
    self:pushIndent(  )
    local stemNum = setupScopeParam( self.ast:get_moduleScope() )
    self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_module( %d );", self.ast:get_moduleScope():get_scopeId(), stemNum) )
+   self:writeln( "lune_enter_block( _pEnv, 0 );" )
    for __index, child in pairs( children ) do
       do
          local _switchExp = child:get_kind()
@@ -879,6 +880,7 @@ function convFilter:processRoot( node, opt )
       
    end
    
+   self:writeln( "lune_leave_block( _pEnv );" )
    self:popIndent(  )
    self:writeln( "}" )
    Ast.popProcessInfo(  )
@@ -948,7 +950,7 @@ function convFilter:processBlock( node, opt )
       end
    end
    
-   self:writeln( word )
+   self:writeln( string.format( "%s // %d", word, node:get_pos().lineNo) )
    self:pushIndent(  )
    if not loopFlag then
       self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_block( _pEnv, %d );", node:get_scope():get_scopeId(), stemNum) )
@@ -1368,7 +1370,7 @@ local function processIFObjInit( stream, moduleCtrl, classType, impClassType )
    local className = moduleCtrl:getClassCName( impClassType )
    for __index, ifType in pairs( classType:get_interfaceList() ) do
       local ifName = moduleCtrl:getClassCName( ifType )
-      stream:writeln( string.format( "lune_init_if( &pObj->imp.%s, _pEnv, pStem, &lune_if_%s_imp_%s );", ifName, className, ifName) )
+      stream:writeln( string.format( "lune_init_if( &pObj->imp.%s, _pEnv, pStem, &lune_if_%s_imp_%s, %s );", ifName, className, ifName, ifName) )
    end
    
 end
@@ -1388,10 +1390,12 @@ function convFilter:processDeclClassNodePrototype( node )
    if kind == Ast.TypeInfoKind.Class then
       self:writeln( string.format( "typedef struct u_if_imp_%s_t {", className) )
       processIFObjDecl( self, self.moduleCtrl, node:get_expType() )
+      self:writeln( "lune_stem_t sentinel;" )
       self:writeln( string.format( "} u_if_imp_%s_t;", className) )
    end
    
    self:writeln( string.format( "typedef struct %s {", className) )
+   self:writeln( "lune_type_meta_t * pMeta;" )
    do
       local _switchExp = kind
       if _switchExp == Ast.TypeInfoKind.Class then
@@ -1406,11 +1410,20 @@ function convFilter:processDeclClassNodePrototype( node )
    end
    
    self:writeln( string.format( "} %s;", className) )
-   self:writeln( string.format( [==[#define lune_mtd_%s( OBJ )                     \
-    (((%s*)OBJ->val.classVal)->pMtd )]==], className, className) )
+   do
+      local _switchExp = kind
+      if _switchExp == Ast.TypeInfoKind.Class then
+         self:writeln( string.format( [==[#define lune_mtd_%s( OBJ )                     \
+          (((%s*)OBJ->val.classVal)->pMtd )]==], className, className) )
+      elseif _switchExp == Ast.TypeInfoKind.IF then
+         self:writeln( string.format( [==[#define lune_mtd_%s( OBJ )                     \
+          ((%s*)&OBJ->val.ifVal)->pMtd]==], className, className) )
+      end
+   end
+   
    if kind == Ast.TypeInfoKind.Class then
-      self:writeln( string.format( [==[#define lune_obj_%s( OBJ )                     \
-          ((%s*)OBJ->val.classVal)]==], className, className) )
+      self:writeln( string.format( "#define lune_obj_%s( OBJ ) ((%s*)OBJ->val.classVal)", className, className) )
+      self:writeln( string.format( "#define lune_if_%s( OBJ ) ((%s*)OBJ->val.classVal)->pImp", className, className) )
       processDeclClassPrototype( self, self.moduleCtrl, node )
    end
    
@@ -1444,6 +1457,7 @@ function convFilter:processDeclClassForm( node )
    
    self:writeln( ");" )
    self:writeln( "pObj->pImp = &pObj->imp;" )
+   self:writeln( "pObj->imp.sentinel.type = lune_value_type_nil;" )
    processIFObjInit( self, self.moduleCtrl, node:get_expType(), node:get_expType() )
    self:writeln( "return pStem;" )
    self:writeln( "}" )
@@ -1598,6 +1612,7 @@ local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
 
    processIFMethodDataInit( stream, moduleCtrl, classTypeInfo, classTypeInfo )
    local className = moduleCtrl:getClassCName( classTypeInfo )
+   stream:writeln( string.format( 'lune_type_meta_t lune_type_meta_%s = { "%s" };', className, className) )
    stream:writeln( string.format( "lune_mtd_%s_t lune_mtd_%s = {", className, className) )
    stream:writeln( string.format( "u_mtd_%s__del,", className) )
    local function hasGC( baseInfo )
@@ -1649,8 +1664,13 @@ function convFilter:processDeclClass( node, opt )
       if _switchExp == ProcessMode.Prototype then
          self:processDeclClassNodePrototype( node )
       elseif _switchExp == ProcessMode.WideScopeVer then
-         if node:get_expType():get_kind() == Ast.TypeInfoKind.Class then
-            processClassDataInit( self, self.moduleCtrl, node:get_expType() )
+         do
+            local _switchExp = node:get_expType():get_kind()
+            if _switchExp == Ast.TypeInfoKind.Class then
+               processClassDataInit( self, self.moduleCtrl, node:get_expType() )
+            elseif _switchExp == Ast.TypeInfoKind.IF then
+               self:writeln( string.format( 'lune_type_meta_t lune_type_meta_%s = { "%s" };', className, className) )
+            end
          end
          
       elseif _switchExp == ProcessMode.Form then
@@ -2464,6 +2484,88 @@ function convFilter:processApply( node, opt )
 end
 
 
+local function processToIF( stream, moduleCtrl, expType, process )
+
+   if expType:get_kind() == Ast.TypeInfoKind.IF then
+      stream:write( "lune_toIF( _pEnv, " )
+      process(  )
+      stream:write( string.format( ", &lune_type_meta_%s )", moduleCtrl:getClassCName( expType )) )
+   else
+    
+      process(  )
+   end
+   
+end
+
+local function processPoolForeachSetupVal( stream, moduleCtrl, loopType, keyToken, valToken )
+
+   local valType = loopType:get_itemTypeInfoList()[1]
+   local valSymTxt
+   
+   if loopType:get_kind() == Ast.TypeInfoKind.Set then
+      do
+         local _exp = keyToken
+         if _exp ~= nil then
+            valSymTxt = _exp.txt
+         else
+            valSymTxt = "__val"
+         end
+      end
+      
+   else
+    
+      do
+         local _exp = valToken
+         if _exp ~= nil then
+            valSymTxt = _exp.txt
+         else
+            valSymTxt = "__val"
+         end
+      end
+      
+   end
+   
+   stream:write( string.format( "   %s %s = ", getCType( valType, false ), valSymTxt) )
+   processToIF( stream, moduleCtrl, valType, function (  )
+   
+      stream:write( string.format( "_val%s", getAccessPrimValFromStem( false, valType, 0 )) )
+   end
+    )
+   stream:write( ";" )
+end
+
+local function processMapForeachSetupVal( stream, moduleCtrl, loopType, keyToken, valToken, keyTxt, valTxt )
+
+   do
+      local _exp = keyToken
+      if _exp ~= nil then
+         local keyType = loopType:get_itemTypeInfoList()[1]
+         stream:write( string.format( "   %s %s = ", getCType( keyType, false ), _exp.txt) )
+         processToIF( stream, moduleCtrl, keyType, function (  )
+         
+            stream:write( string.format( "%s%s", keyTxt, getAccessPrimValFromStem( false, keyType, 0 )) )
+         end
+          )
+         stream:writeln( ";" )
+      end
+   end
+   
+   do
+      local _exp = valToken
+      if _exp ~= nil then
+         local valType = loopType:get_itemTypeInfoList()[2]
+         stream:write( string.format( "   %s %s = ", getCType( valType, false ), _exp.txt) )
+         processToIF( stream, moduleCtrl, valType, function (  )
+         
+            stream:write( string.format( "%s%s", valTxt, getAccessPrimValFromStem( false, valType, 0 )) )
+         end
+          )
+         stream:writeln( ";" )
+      end
+   end
+   
+end
+
 function convFilter:processForeach( node, opt )
 
    self:writeln( "{" )
@@ -2531,50 +2633,9 @@ function convFilter:processForeach( node, opt )
    do
       local _switchExp = loopType:get_kind()
       if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Array then
-         local valType = loopType:get_itemTypeInfoList()[1]
-         local valSymTxt
-         
-         if loopType:get_kind() == Ast.TypeInfoKind.Set then
-            do
-               local _exp = node:get_key()
-               if _exp ~= nil then
-                  valSymTxt = _exp.txt
-               else
-                  valSymTxt = "__val"
-               end
-            end
-            
-         else
-          
-            do
-               local _exp = node:get_val()
-               if _exp ~= nil then
-                  valSymTxt = _exp.txt
-               else
-                  valSymTxt = "__val"
-               end
-            end
-            
-         end
-         
-         self:writeln( string.format( "   %s %s = _val%s;", getCType( valType, false ), valSymTxt, getAccessPrimValFromStem( false, valType, 0 )) )
+         processPoolForeachSetupVal( self, self.moduleCtrl, loopType, node:get_key(), node:get_val() )
       elseif _switchExp == Ast.TypeInfoKind.Map then
-         do
-            local _exp = node:get_key()
-            if _exp ~= nil then
-               local keyType = loopType:get_itemTypeInfoList()[1]
-               self:writeln( string.format( "   %s %s = _entry.pKey%s;", getCType( keyType, false ), _exp.txt, getAccessPrimValFromStem( false, keyType, 0 )) )
-            end
-         end
-         
-         do
-            local _exp = node:get_val()
-            if _exp ~= nil then
-               local valType = loopType:get_itemTypeInfoList()[2]
-               self:writeln( string.format( "   %s %s = _entry.pVal%s;", getCType( valType, false ), _exp.txt, getAccessPrimValFromStem( false, valType, 0 )) )
-            end
-         end
-         
+         processMapForeachSetupVal( self, self.moduleCtrl, loopType, node:get_key(), node:get_val(), "_entry.pKey", "_entry.pVal" )
       else 
          
       end
@@ -2631,30 +2692,9 @@ function convFilter:processForsort( node, opt )
    do
       local _switchExp = loopType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Set then
-         local valType = loopType:get_itemTypeInfoList()[1]
-         local valSymTxt
-         
-         do
-            local _exp = node:get_key()
-            if _exp ~= nil then
-               valSymTxt = _exp.txt
-            else
-               valSymTxt = "__val"
-            end
-         end
-         
-         self:writeln( string.format( "   %s %s = _val%s;", getCType( valType, false ), valSymTxt, getAccessPrimValFromStem( false, valType, 0 )) )
+         processPoolForeachSetupVal( self, self.moduleCtrl, loopType, node:get_key(), node:get_val() )
       elseif _switchExp == Ast.TypeInfoKind.Map then
-         do
-            local _exp = node:get_key()
-            if _exp ~= nil then
-               local keyType = loopType:get_itemTypeInfoList()[1]
-               self:writeln( string.format( "   %s %s = _key%s;", getCType( keyType, false ), _exp.txt, getAccessPrimValFromStem( false, keyType, 0 )) )
-            end
-         end
-         
-         local valType = loopType:get_itemTypeInfoList()[2]
-         self:writeln( string.format( "   %s %s = lune_mtd_Map( _obj )->get( _pEnv, _obj, _key )%s;", getCType( valType, false ), node:get_val().txt, getAccessPrimValFromStem( false, valType, 0 )) )
+         processMapForeachSetupVal( self, self.moduleCtrl, loopType, node:get_key(), node:get_val(), "_key", "lune_mtd_Map( _obj )->get( _pEnv, _obj, _key )" )
       else 
          
       end
@@ -2929,6 +2969,27 @@ end
 
 function convFilter:processExpCast( node, opt )
 
+   local exp = node:get_exp()
+   local expType = exp:get_expType()
+   local nodeExpType = node:get_expType()
+   local castType = node:get_castType()
+   do
+      local _switchExp = node:get_castKind()
+      if _switchExp == Nodes.CastKind.Implicit then
+         if expType == Ast.builtinTypeNil or (nodeExpType:get_kind() == Ast.TypeInfoKind.Func and nodeExpType ~= Ast.builtinTypeForm ) then
+            filter( exp, self, node )
+         elseif castType:get_kind() == Ast.TypeInfoKind.IF then
+            if expType:get_kind() == Ast.TypeInfoKind.Class then
+               self:write( string.format( "lune_getIF( _pEnv, &lune_if_%s( ", self.moduleCtrl:getClassCName( expType )) )
+               self:processVal2Stem( node:get_exp(), node )
+               self:write( string.format( ")->%s )", self.moduleCtrl:getClassCName( castType )) )
+            end
+            
+         end
+         
+      end
+   end
+   
 end
 
 
@@ -3122,6 +3183,41 @@ end
 
 function convFilter:processExpRefItem( node, opt )
 
+   local val = node:get_val()
+   local valType = val:get_expType()
+   if valType:equals( Ast.builtinTypeString ) then
+      self:accessPrimVal( val, node )
+      self:write( "->val.str.pStr[" )
+      do
+         local indexNode = node:get_index()
+         if indexNode ~= nil then
+            filter( indexNode, self, node )
+         else
+            error( "index is nil" )
+         end
+      end
+      
+      self:write( "- 1 ]" )
+   else
+    
+      processToIF( self, self.moduleCtrl, node:get_expType(), function (  )
+      
+         do
+            local _switchExp = valType:get_kind()
+            if _switchExp == Ast.TypeInfoKind.List then
+               self:write( "lune_mtd_List_refAt( _pEnv, " )
+               self:processVal2Stem( val, node )
+               self:write( ", " )
+               self:accessPrimVal( _lune.unwrap( node:get_index()), node )
+               self:write( ")" )
+               self:write( getAccessPrimValFromStem( false, valType:get_itemTypeInfoList()[1], 0 ) )
+            end
+         end
+         
+      end
+       )
+   end
+   
 end
 
 

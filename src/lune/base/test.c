@@ -10,10 +10,13 @@ typedef struct lune_mtd_IF_t {
 } lune_mtd_IF_t;
 
 typedef struct IF {
+    lune_type_meta_t * pMeta;
     /** implement しているインスタンスのポインタ */
     lune_stem_t * pObj;
     lune_mtd_IF_t * pMtd;
 } IF;
+
+lune_type_meta_t lune_type_meta_IF = { "IF" };
 
 #define lune_mtd_IF( OBJ )                    \
     ((IF*)&OBJ->val.ifVal)->pMtd
@@ -40,15 +43,20 @@ typedef struct lune_mtd_Test_t {
 
 typedef struct u_if_imp_Test_t {
     lune_stem_t IF;
+    lune_stem_t sentinel;
 } u_if_imp_Test_t;
 
 typedef struct Test {
+    lune_type_meta_t * pMeta;
     u_if_imp_Test_t * pImp;
     lune_mtd_Test_t * pMtd;
     lune_int_t val;
     lune_stem_t * val2;
     u_if_imp_Test_t imp;
 } Test;
+
+lune_type_meta_t lune_type_meta_Test = { "Test" };
+
 
 #define lune_mtd_Test( OBJ )                    \
     ((Test*)OBJ->val.classVal)->pMtd
@@ -84,7 +92,8 @@ lune_stem_t * u_class_Test_new( lune_env_t * _pEnv, int val ) {
 
     u_class_Test_init( _pEnv, pObj, val );
     pObj->pImp = &pObj->imp;
-    lune_init_if( &pObj->imp.IF, _pEnv, pStem, &lune_if_Test_imp_IF );
+    pObj->imp.sentinel.type = lune_value_type_nil;
+    lune_init_if( &pObj->imp.IF, _pEnv, pStem, &lune_if_Test_imp_IF, IF );
 
     return pStem;
 }
@@ -135,12 +144,15 @@ typedef struct lune_mtd_Sub_t {
 } lune_mtd_Sub_t;
 
 typedef struct Sub {
+    lune_type_meta_t * pMeta;
     void * pImp;
     lune_mtd_Sub_t * pMtd;
     lune_int_t val;
     lune_stem_t * val2;
     lune_stem_t * val3;
 } Sub;
+lune_type_meta_t lune_type_meta_Sub = { "Sub" };
+
 
 #define lune_mtd_Sub( OBJ )                    \
     ((Sub*)OBJ->val.classVal)->pMtd
@@ -207,16 +219,19 @@ lune_stem_t * u_call_mtd_Sub_func( lune_env_t * _pEnv, lune_stem_t * pObj )
 
 static lune_stem_t * u_lune_form_test( lune_env_t * _pEnv, lune_stem_t * pForm )
 {
-    lune_block_t * pBlock = lune_enter_block( _pEnv, 3 );
+    lune_block_t * pBlock = lune_enter_block( _pEnv, 4 );
 
     lune_var_t * test;
     lune_initVal( test, pBlock, 0, u_class_Test_new( _pEnv, 10 ) );
     u_call_mtd_Test_func( _pEnv, test->pStem );
 
     lune_var_t * iftest;
-    lune_initVal( iftest, pBlock, 2, lune_getIF( &lune_if_Test( test->pStem )->IF ) );
+    lune_initVal( iftest, pBlock, 2, lune_getIF( _pEnv, &lune_if_Test( test->pStem )->IF ) );
     u_call_mtd_IF_func( _pEnv, iftest->pStem );
-    
+
+    lune_var_t * iftest2;
+    lune_initVal( iftest2, pBlock, 3, lune_toIF( _pEnv, test->pStem, &lune_type_meta_IF ) );
+    u_call_mtd_IF_func( _pEnv, iftest2->pStem );
 
     
     lune_var_t * sub;

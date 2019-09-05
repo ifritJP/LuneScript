@@ -136,6 +136,7 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
         break;
     case lune_value_type_if:
         lune_decre_ref( _pEnv, pStem->val.ifVal.pObj );
+        // if は class 内のメンバなので開放しないで return する。
         return;
     default:
         break;
@@ -158,10 +159,41 @@ void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
 }
 
 
-lune_stem_t * lune_getIF( lune_stem_t * pIFStem )
+lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem )
 {
-    pIFStem->val.ifVal.pObj->refCount++;
+    if ( pIFStem->refCount == 0 ) {
+        // interface の stem は共有なので、
+        // 参照回数が 0 の状態から 1 になったタイミングで、
+        // 元インスタンスの参照回数をインクリメントする。
+        pIFStem->val.ifVal.pObj->refCount++;
+
+        lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
+        lune_add2list( &pBlock->managedStemTop, pIFStem );
+        pIFStem->refCount++;
+    }
     return pIFStem;
+}
+
+/**
+ * pStem が class ならば、指定の pMeta の IF のインスタンスを返す。
+ * pStem が IF なら、そのまま pStem を返す。
+ */
+lune_stem_t * lune_toIF(
+    lune_env_t * _pEnv, lune_stem_t * pStem, const lune_type_meta_t * pMeta )
+{
+    if ( pStem->type == lune_value_type_if ) {
+        return pStem;
+    }
+    if ( pStem->type == lune_value_type_class ) {
+        lune_stem_t * pIFStem = (lune_stem_t *)pStem->val.classVal->pIFdummy;
+        for ( ; pIFStem->type != lune_value_type_nil; pIFStem++ ) {
+            if ( pIFStem->val.ifVal.pMeta == pMeta ) {
+                return lune_getIF( _pEnv, pIFStem );
+            }
+        }
+    }
+    lune_abort( "not found interface" );
+    return NULL;
 }
 
 void lune_setQ_( lune_stem_t * pStem )
@@ -1002,7 +1034,13 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg ) 
             printf( "form: %p", pStem );
             break;
         case lune_value_type_class:
-            printf( "class: %p", pStem );
+            printf( "class: %p(%s)", pStem, pStem->val.classVal->pMeta->pName );
+            break;
+        case lune_value_type_if:
+            printf( "if: %p(%s): %p(%s)",
+                    pStem, pStem->val.ifVal.pMeta->pName,
+                    pStem->val.ifVal.pObj,
+                    pStem->val.ifVal.pObj->val.classVal->pMeta->pName );
             break;
         default:
             printf( "unknown type -- %d", pStem->type );

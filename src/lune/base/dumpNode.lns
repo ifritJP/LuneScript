@@ -525,7 +525,9 @@ pub override fn dumpFilter.processExpCast(
    node: &Nodes.ExpCastNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, "" );
+   dump( prefix, depth, node,
+         "%s -> %s" (node.$exp.$expType.getTxt( true ##),
+                      node.$castType.getTxt( true ## ) ) );
    filter( node.get_exp(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processExpParen(

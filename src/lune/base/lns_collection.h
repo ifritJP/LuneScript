@@ -20,6 +20,17 @@ extern "C" {
     extern lune_stem_t * lune_class_List_new( lune_env_t * _pEnv );
     extern lune_stem_t * lune_List_ctor( lune_env_t * _pEnv, lune_stem_t * pDDDStem );
 
+
+    extern lune_stem_t * lune_mtd_List_insert(
+        lune_env_t * _pEnv, lune_stem_t * pListStem, lune_stem_t * pVal );
+    extern lune_stem_t * lune_mtd_List_refAt(
+        lune_env_t * _pEnv, lune_stem_t * pListStem, int index );
+    extern lune_stem_t * lune_mtd_List_unpack(
+        lune_env_t * _pEnv, lune_stem_t * pListStem );
+    extern lune_stem_t * lune_mtd_List_sort(
+        lune_env_t * _pEnv, lune_stem_t * pListStem, lune_stem_t * pForm );
+
+    
     extern lune_stem_t * lune_itList_new( lune_env_t * _pEnv, lune_stem_t * pList );
     extern void lune_itList__del( lune_env_t * _pEnv, lune_stem_t * it );
     extern void lune_itList_inc( lune_env_t * _pEnv, lune_stem_t * it );

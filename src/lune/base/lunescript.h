@@ -26,7 +26,6 @@ extern "C" {
     typedef int lune_bool_t;
     typedef int lune_int_t;
     typedef double lune_real_t;
-    typedef void * lune_class_t;
 
 
     typedef struct lune_stem_t lune_stem_t;
@@ -167,9 +166,10 @@ extern "C" {
 
 
 #define lune_class_new2_( ENV, CLASS, SCLASS, STEMVAL, CLASSVAL )     \
-    lune_stem_t * STEMVAL = lune_class_new( ENV, sizeof( CLASS ) ); \
+    lune_stem_t * STEMVAL = lune_class_new( ENV, sizeof( CLASS ) );   \
     CLASS * CLASSVAL = lune_obj_##SCLASS( pStem );                    \
-    CLASSVAL->pMtd = &lune_mtd_##SCLASS
+    CLASSVAL->pMtd = &lune_mtd_##SCLASS;                              \
+    CLASSVAL->pMeta = &lune_type_meta_##SCLASS;
     
 
 #define lune_decl_enum_get__text( ENUM, VALTYPE )                       \
@@ -186,11 +186,12 @@ extern "C" {
         return lune_mtd_Map_get( _pEnv, ENUM##_val2NameMap, val );   \
     }
 
-#define lune_init_if( STEM, ENV, OBJ, MTD )                        \
+#define lune_init_if( STEM, ENV, OBJ, MTD, IF )                    \
     {                                                              \
         lune_stem_t * __pStem = STEM;                              \
         lune_init_stem( __pStem, lune_value_type_if, ENV );        \
         __pStem->refCount = 0;                                     \
+        __pStem->val.ifVal.pMeta = &lune_type_meta_##IF;           \
         __pStem->val.ifVal.pObj = OBJ;                             \
         __pStem->val.ifVal.pMtd = MTD;                             \
     }
@@ -271,6 +272,14 @@ extern "C" {
      * @param pObj クラスのインスタンスを保持する stem
      */
     typedef void lune_del_t( lune_env_t * _pEnv, lune_stem_t * pObj );
+
+    /**
+     * 型のメタ情報
+     */
+    typedef struct lune_type_meta_t {
+        /** 型名 */
+        const char * pName;        
+    } lune_type_meta_t;
     
     /**
      * クラスのメソッドの最小構造。
@@ -292,6 +301,7 @@ extern "C" {
      * クラスのメンバは、 pMtd の次に宣言する。
      */
     typedef struct lune_Class_t {
+        lune_type_meta_t * pMeta;
         void * pIFdummy;
         lune_mtd__Class_t * pMtd;
     } lune_Class_t;
@@ -352,6 +362,7 @@ extern "C" {
     typedef void lune_listObj_t;
     typedef struct lune_mtd_List_t lune_mtd_List_t;
     typedef struct lune_List_t {
+        lune_type_meta_t * pMeta;
         void * pIFdummy;
         lune_mtd_List_t * pMtd;
         lune_listObj_t * pObj;
@@ -361,6 +372,7 @@ extern "C" {
     typedef void lune_setObj_t;
     typedef struct lune_mtd_Set_t lune_mtd_Set_t;
     typedef struct lune_Set_t {
+        lune_type_meta_t * pMeta;
         void * pIFdummy;
         lune_mtd_Set_t * pMtd;
         lune_setObj_t * pObj;
@@ -369,12 +381,14 @@ extern "C" {
     typedef void lune_mapObj_t;
     typedef struct lune_mtd_Map_t lune_mtd_Map_t;
     typedef struct lune_Map_t {
+        lune_type_meta_t * pMeta;
         void * pIFdummy;
         lune_mtd_Map_t * pMtd;
         lune_mapObj_t * pObj;
     } lune_Map_t;
 
     typedef struct lune_if_t {
+        lune_type_meta_t * pMeta;
         lune_stem_t * pObj;
         void * pMtd;
     } lune_if_t;
@@ -395,7 +409,7 @@ extern "C" {
             lune_str_t str;
             lune_ddd_t ddd;
             lune_form_t form;
-            lune_class_t classVal;
+            lune_Class_t * classVal;
             lune_itList_t * itList;
             lune_itSet_t * itSet;
             lune_itMap_t * itMap;
@@ -535,7 +549,8 @@ extern "C" {
     extern void lune_class_del( lune_env_t * _pEnv, void * pObj );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... );
-    extern lune_stem_t * lune_getIF( lune_stem_t * pIFStem );
+    extern lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem );
+    extern lune_stem_t * lune_toIF( lune_env_t * _pEnv, lune_stem_t * pStem, const lune_type_meta_t * pMeta );
 
 
     extern lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal );

@@ -8,8 +8,10 @@
 
 * 機能
 
+- [ ] let list = [ new Hoge() ]; の c-lang へ変換が出来ない
 
-- [  ] 次が出来てしまう。
+  
+- [ ] 次が出来てしまう。
   
 abstract class Super {
    pub abstract fn func(): str;
