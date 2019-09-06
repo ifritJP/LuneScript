@@ -2178,6 +2178,26 @@ function convFilter:processUnwrapSet( node, opt )
    self:writeln( "end" )
 end
 
+function convFilter:processExpListSub( parent, expList )
+
+   for index, exp in pairs( expList ) do
+      if exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
+         break
+      end
+      
+      if exp:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
+         break
+      end
+      
+      if index > 1 then
+         self:write( ", " )
+      end
+      
+      filter( exp, self, parent )
+   end
+   
+end
+
 function convFilter:processIfUnwrap( node, opt )
 
    self:writeln( "do" )
@@ -2192,14 +2212,7 @@ function convFilter:processIfUnwrap( node, opt )
    end
    
    self:write( " = " )
-   for index, expNode in pairs( node:get_expNodeList() ) do
-      filter( expNode, self, node )
-      if index ~= #node:get_expNodeList() then
-         self:write( ", " )
-      end
-      
-   end
-   
+   self:processExpListSub( node, node:get_expNodeList() )
    self:writeln( "" )
    self:write( "if " )
    for index, varName in pairs( node:get_varNameList() ) do
@@ -2404,14 +2417,7 @@ function convFilter:processDeclFunc( node, opt )
    
    self:write( string.format( "%sfunction %s( ", letTxt, name ) )
    local argList = declInfo:get_argList(  )
-   for index, arg in pairs( argList ) do
-      if index > 1 then
-         self:write( ", " )
-      end
-      
-      filter( arg, self, node )
-   end
-   
+   self:processExpListSub( node, argList )
    self:writeln( " )" )
    do
       local _exp = declInfo:get_body()
@@ -2960,18 +2966,7 @@ end
 function convFilter:processExpList( node, opt )
 
    local expList = node:get_expList(  )
-   for index, exp in pairs( expList ) do
-      if exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
-         break
-      end
-      
-      if index > 1 then
-         self:write( ", " )
-      end
-      
-      filter( exp, self, node )
-   end
-   
+   self:processExpListSub( node, expList )
 end
 
 
@@ -3020,14 +3015,7 @@ end
 
 function convFilter:processExpToDDD( node, opt )
 
-   for index, exp in pairs( node:get_expList() ) do
-      if index ~= 1 then
-         self:write( ", " )
-      end
-      
-      filter( exp, self, node )
-   end
-   
+   self:processExpListSub( node, node:get_expList() )
 end
 
 function convFilter:processExpCast( node, opt )
@@ -3541,7 +3529,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3203, function (  )
+   Log.log( Log.Level.Info, __func__, 3225, function (  )
    
       return string.format( "code: %s", code)
    end

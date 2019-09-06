@@ -558,8 +558,14 @@ function ModuleCtrl:add( moduleTypeInfo, moduleInfo )
 end
 function ModuleCtrl:getFullName( typeInfo )
 
-   local enumName = typeInfo:getFullName( self.typeInfo2ModuleName, true )
-   return string.format( "%s", (enumName:gsub( "[&@]", "" ):gsub( "%.", "_" ) ))
+   typeInfo = typeInfo:get_srcTypeInfo()
+   local workName = typeInfo:getFullName( self.typeInfo2ModuleName, true )
+   local fullName = string.format( "%s", (workName:gsub( "[&@]", "" ):gsub( "%.", "_" ) ))
+   if Ast.isPubToExternal( typeInfo:get_accessMode() ) then
+      return fullName
+   end
+   
+   return string.format( "_%d_%s", typeInfo:get_typeId(), fullName)
 end
 function ModuleCtrl:getClassCName( classType )
 
@@ -1165,9 +1171,9 @@ local function getMethodTypeTxt( retTypeList )
    return "lune_method_t"
 end
 
-local function processNewConstrProto( stream, node )
+local function processNewConstrProto( stream, moduleCtrl, node )
 
-   local className = node:get_name().txt
+   local className = moduleCtrl:getClassCName( node:get_expType() )
    stream:write( string.format( "%s lune_class_%s_new( %s _pEnv", cTypeStemP, className, cTypeEnvP) )
    local scope = _lune.unwrap( node:get_expType():get_scope())
    local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope ))
@@ -1291,7 +1297,7 @@ end
 
 local function processDeclClassPrototype( stream, moduleCtrl, node )
 
-   local className = node:get_name().txt
+   local className = moduleCtrl:getClassCName( node:get_expType() )
    stream:writeln( string.format( "void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj );", className) )
    stream:writeln( string.format( "static void u_mtd_%s__gc( lune_env_t * _pEnv, lune_stem_t * pObj );", className) )
    for __index, member in pairs( node:get_memberList() ) do
@@ -1310,7 +1316,7 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
       
    end
    
-   processNewConstrProto( stream, node )
+   processNewConstrProto( stream, moduleCtrl, node )
    stream:writeln( ";" )
    if not node:hasUserInit(  ) then
       local ctorType = _lune.unwrap( node:get_scope():getTypeInfoField( "__init", true, node:get_scope() ))
@@ -1377,7 +1383,7 @@ end
 
 function convFilter:processDeclClassNodePrototype( node )
 
-   local className = node:get_name().txt
+   local className = self.moduleCtrl:getClassCName( node:get_expType() )
    self:writeln( string.format( "typedef struct lune_mtd_%s_t {", className) )
    local kind = node:get_expType():get_kind()
    if kind == Ast.TypeInfoKind.Class then
@@ -1445,7 +1451,7 @@ function convFilter:processDeclClassForm( node )
    end
    
    self:writeln( "}" )
-   processNewConstrProto( self, node )
+   processNewConstrProto( self, self.moduleCtrl, node )
    self:writeln( "{" )
    self:writeln( string.format( "lune_class_new_( _pEnv, %s, pStem, pObj );", className) )
    self:write( string.format( "u_mtd_%s___init( _pEnv, pStem", className) )
@@ -1658,7 +1664,7 @@ end
 
 function convFilter:processDeclClass( node, opt )
 
-   local className = node:get_name().txt
+   local className = self.moduleCtrl:getClassCName( node:get_expType() )
    do
       local _switchExp = self.processMode
       if _switchExp == ProcessMode.Prototype then
@@ -2497,6 +2503,24 @@ local function processToIF( stream, moduleCtrl, expType, process )
    
 end
 
+local function processToIFGeneric( stream, moduleCtrl, classType, expType, process )
+
+   if classType ~= nil then
+      if expType:get_kind() == Ast.TypeInfoKind.Alternate then
+         local alt2typeMap = classType:createAlt2typeMap( false )
+         local workRetType = Ast.AlternateTypeInfo.getAssign( expType, alt2typeMap )
+         processToIF( stream, moduleCtrl, workRetType, process )
+      else
+       
+         process(  )
+      end
+      
+   else
+      process(  )
+   end
+   
+end
+
 local function processPoolForeachSetupVal( stream, moduleCtrl, loopType, keyToken, valToken )
 
    local valType = loopType:get_itemTypeInfoList()[1]
@@ -2976,15 +3000,16 @@ function convFilter:processExpCast( node, opt )
    do
       local _switchExp = node:get_castKind()
       if _switchExp == Nodes.CastKind.Implicit then
-         if expType == Ast.builtinTypeNil or (nodeExpType:get_kind() == Ast.TypeInfoKind.Func and nodeExpType ~= Ast.builtinTypeForm ) then
-            filter( exp, self, node )
-         elseif castType:get_kind() == Ast.TypeInfoKind.IF then
+         if castType:get_kind() == Ast.TypeInfoKind.IF then
             if expType:get_kind() == Ast.TypeInfoKind.Class then
                self:write( string.format( "lune_getIF( _pEnv, &lune_if_%s( ", self.moduleCtrl:getClassCName( expType )) )
                self:processVal2Stem( node:get_exp(), node )
                self:write( string.format( ")->%s )", self.moduleCtrl:getClassCName( castType )) )
             end
             
+         else
+          
+            filter( exp, self, node )
          end
          
       end
@@ -3290,9 +3315,13 @@ function convFilter:processGetField( node, opt )
       
    elseif prefixType:get_kind() == Ast.TypeInfoKind.Class or prefixType:get_kind() == Ast.TypeInfoKind.IF then
       local getterType = _lune.unwrap( _lune.nilacc( prefixType:get_scope(), 'getTypeInfoField', 'callmtd' , string.format( "get_%s", fieldTxt), true, _lune.unwrap( prefixType:get_scope()) ))
-      self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( getterType )) )
-      filter( prefixNode, self, node )
-      self:write( ")" )
+      processToIFGeneric( self, self.moduleCtrl, prefixType, getterType:get_retTypeInfoList()[1], function (  )
+      
+         self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( getterType )) )
+         filter( prefixNode, self, node )
+         self:write( ")" )
+      end
+       )
    end
    
 end

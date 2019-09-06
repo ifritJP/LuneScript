@@ -206,9 +206,14 @@ class ModuleCtrl {
       self.typeInfo2ModuleName[ moduleTypeInfo ] = moduleInfo;
    }
 
-   pub fn getFullName( typeInfo:&Ast.TypeInfo ): str {
-      let mut enumName = typeInfo.getFullName( self.typeInfo2ModuleName, true );
-      return "%s" ( (enumName.gsub( "[&@]", "" ).gsub( "%.", "_" ) ) );
+   pub fn getFullName( mut typeInfo:&Ast.TypeInfo ): str {
+      typeInfo = typeInfo.$srcTypeInfo;
+      let workName = typeInfo.getFullName( self.typeInfo2ModuleName, true );
+      let fullName = "%s" ( (workName.gsub( "[&@]", "" ).gsub( "%.", "_" ) ) );
+      if Ast.isPubToExternal( typeInfo.$accessMode ) {
+         return fullName;
+      }
+      return "_%d_%s" (typeInfo.$typeId,fullName);
    }
 
 
@@ -1148,9 +1153,9 @@ fn getMethodTypeTxt( retTypeList:&List<&Ast.TypeInfo> ) : str {
 }
 
 fn processNewConstrProto(
-   stream:Util.SourceStream, node:&Nodes.DeclClassNode ) mut
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl, node:&Nodes.DeclClassNode ) mut
 {
-   let className = node.$name.txt;
+   let className = moduleCtrl.getClassCName( node.$expType );
    
    stream.write( "%s lune_class_%s_new( %s _pEnv"
       (cTypeStemP, className, cTypeEnvP ) );
@@ -1241,7 +1246,7 @@ fn processDeclMemberTable( stream:Util.SourceStream, classTypeInfo:&Ast.TypeInfo
 fn processDeclClassPrototype(
    stream:Util.SourceStream, moduleCtrl:ModuleCtrl, node:&Nodes.DeclClassNode )
 {
-   let className = node.$name.txt;
+   let className = moduleCtrl.getClassCName( node.$expType );
    
    // _gc, _del のプロトタイプ
    stream.writeln(
@@ -1266,7 +1271,7 @@ fn processDeclClassPrototype(
    }
 
    // コンストラクタのプロトタイプ
-   processNewConstrProto( stream, node );
+   processNewConstrProto( stream, moduleCtrl, node );
    stream.writeln( ";" );
 
    if not node.hasUserInit() {
@@ -1341,7 +1346,7 @@ fn processIFObjInit(
 
 fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
 {
-   let className = node.$name.txt;
+   let className = self.moduleCtrl.getClassCName( node.$expType );
    
    // メソッド構造体の宣言
    self.writeln( "typedef struct lune_mtd_%s_t {" (className) );
@@ -1426,7 +1431,7 @@ fn convFilter.processDeclClassForm( node:&Nodes.DeclClassNode ) mut
    self.writeln( "}" );
    
    // デフォルトコンストラクタの定義
-   processNewConstrProto( self, node );
+   processNewConstrProto( self, self.moduleCtrl, node );
    self.writeln( "{" );
    
    self.writeln( "lune_class_new_( _pEnv, %s, pStem, pObj );" (className) );
@@ -1622,7 +1627,7 @@ fn processClassDataInit(
 pub override fn convFilter.processDeclClass(
    node: Nodes.DeclClassNode, opt: Opt ) mut
 {
-   let className = node.$name.txt;
+   let className = self.moduleCtrl.getClassCName( node.$expType );
 
    switch self.processMode {
       case .Prototype {
@@ -3227,6 +3232,26 @@ fn processToIF( stream:Util.SourceStream,
    }
 }
 
+fn processToIFGeneric(
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   classType:&Ast.TypeInfo!, expType:&Ast.TypeInfo, process:form )
+{
+   when! classType {
+      if expType.$kind == .Alternate {
+         let alt2typeMap = classType.createAlt2typeMap( false );
+         let workRetType = Ast.AlternateTypeInfo.getAssign( expType, alt2typeMap );
+
+         processToIF( stream, moduleCtrl, workRetType, process );
+      }
+      else {
+         process();
+      }
+   }
+   else {
+      process();
+   }
+}
+
 fn processPoolForeachSetupVal(
    stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
    loopType:&Ast.TypeInfo, keyToken:&Parser.Token!, valToken:&Parser.Token! )
@@ -3651,6 +3676,9 @@ pub fn convFilter.processCallArgList(
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
 {
+
+
+   
    if node.$func.$expType.$kind == .Form {
       self.write( 'lune_call_form( _pEnv, ' );
       filter( node.$func, self, node );
@@ -3670,6 +3698,20 @@ pub override fn convFilter.processExpCall(
       return;
    }
 
+
+   // let classTypeInfo:&Ast.TypeInfo = nil;
+   // if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+   //    let prefixType = fieldNode.$prefix.$expType;
+   //    switch prefixType.$kind {
+   //       case .Class, .IF {
+   //          classTypeInfo = prefixType;
+   //       }
+   //    }
+   // }
+   // processToIFGeneric(
+   //    self, self.moduleCtrl,
+   //    classTypeInfo, expType:&Ast.TypeInfo, process:form )
+   
    
    let mut wroteFuncFlag = false;
    let mut setArgFlag = false;
@@ -3941,19 +3983,16 @@ pub override fn convFilter.processExpCast(
    let castType = node.$castType;
    switch node.$castKind {
       case .Implicit {
-         if expType == Ast.builtinTypeNil or
-             ( nodeExpType.$kind == .Func and
-               nodeExpType ~= Ast.builtinTypeForm )
-         {
-            filter( exp, self, node );
-         }
-         elseif castType.$kind == .IF {
+         if castType.$kind == .IF {
             if expType.$kind == .Class {
                self.write( "lune_getIF( _pEnv, &lune_if_%s( "
                            (self.moduleCtrl.getClassCName( expType )));
                self.processVal2Stem( node.$exp, node );
                self.write( ")->%s )" ( self.moduleCtrl.getClassCName( castType ) ) );
             }
+         }
+         else {
+            filter( exp, self, node );
          }
       }
    }
@@ -4305,10 +4344,13 @@ pub override fn convFilter.processGetField(
    elseif prefixType.$kind == .Class or prefixType.$kind == .IF {
       let getterType = unwrap prefixType.$scope$.getTypeInfoField$(
          "get_%s" (fieldTxt), true, unwrap prefixType.$scope );
-      
-      self.write( "%s( _pEnv, " ( self.moduleCtrl.getCallMethodCName( getterType ) ) );
-      filter( prefixNode, self, node );
-      self.write( ")" );
+      processToIFGeneric(
+         self, self.moduleCtrl, prefixType, getterType.$retTypeInfoList[1], fn () {
+            self.write(
+               "%s( _pEnv, " ( self.moduleCtrl.getCallMethodCName( getterType ) ) );
+            filter( prefixNode, self, node );
+            self.write( ")" );
+         } );
    }
 
    

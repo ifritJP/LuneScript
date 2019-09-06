@@ -44,6 +44,8 @@ help:
 	@echo "  make test-comp"
 	@echo "  make release-check"
 	@echo "  make build-glue [LUA_INC_DIR=path]"
+	@echo "  make build-cc"
+	@echo "  make test-miniC"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -624,8 +626,3 @@ test-miniC:
 build-cc:
 	$(MAKE) build-cc-only
 	$(call test-convC,ccc)
-
-build-cc-only:
-	$(call transwork,.,.,,base/convCC)
-	$(call test-convC,miniC)
-

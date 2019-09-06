@@ -8,6 +8,12 @@
 
 * 機能
 
+- [ ] 次のエラーが検知できない。
+form test();
+
+test(); // test は form の型名なので、コールできないから本来はコンパイルエラー。
+  
+  
 - [ ] let list = [ new Hoge() ]; の c-lang へ変換が出来ない
 
   
@@ -309,6 +315,14 @@ class Test {
    let val:int;
 }
 class Sub extend Test {
+}
+- [X] 次のケースがエラーになる。
+fn func( val:int! ) {
+   foreach item in [1,2] {
+      let! castType = val {
+         castType = item; // error
+      };
+   }
 }
 
   

@@ -503,6 +503,13 @@ pub override fn dumpFilter.processExpList(
       filter( exp, self, opt.nextOpt() );
    }	
 };
+pub override fn dumpFilter.processExpAccessMRet(
+   node: &Nodes.ExpAccessMRetNode, opt:Opt ) mut
+
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "%d" (node.$index) );
+};
 pub override fn dumpFilter.processExpOp1(
    node: &Nodes.ExpOp1Node, opt:Opt ) mut
 {

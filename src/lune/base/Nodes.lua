@@ -4602,6 +4602,96 @@ function ExpCallNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+function NodeKind.get_ExpAccessMRet(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet'])
+end
+
+
+regKind( "ExpAccessMRet" )
+function Filter:processExpAccessMRet( node, opt )
+
+end
+
+
+function NodeManager:getExpAccessMRetNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet']) )
+end
+
+
+local ExpAccessMRetNode = {}
+setmetatable( ExpAccessMRetNode, { __index = Node } )
+_moduleObj.ExpAccessMRetNode = ExpAccessMRetNode
+function ExpAccessMRetNode:processFilter( filter, opt )
+
+   filter:processExpAccessMRet( self, opt )
+end
+function ExpAccessMRetNode:canBeRight(  )
+
+   return true
+end
+function ExpAccessMRetNode:canBeLeft(  )
+
+   return false
+end
+function ExpAccessMRetNode:canBeStatement(  )
+
+   return false
+end
+function ExpAccessMRetNode.new( id, pos, typeList, mRet, index )
+   local obj = {}
+   ExpAccessMRetNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, mRet, index ); end
+   return obj
+end
+function ExpAccessMRetNode:__init(id, pos, typeList, mRet, index) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpAccessMRet']), pos, typeList)
+   
+   
+   self.mRet = mRet
+   self.index = index
+   
+end
+function ExpAccessMRetNode.create( nodeMan, pos, typeList, mRet, index )
+
+   local node = ExpAccessMRetNode.new(nodeMan:nextId(  ), pos, typeList, mRet, index)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpAccessMRetNode:visit( visitor, depth )
+
+   do
+      local child = self.mRet
+      do
+         local _switchExp = visitor( child, self, 'mRet', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
+function ExpAccessMRetNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpAccessMRetNode  } )
+end
+function ExpAccessMRetNode:get_mRet()
+   return self.mRet
+end
+function ExpAccessMRetNode:get_index()
+   return self.index
+end
+
+
 function NodeKind.get_ExpDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpDDD'])

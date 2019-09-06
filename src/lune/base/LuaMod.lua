@@ -18,6 +18,53 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
+function _lune.__isInstanceOf( obj, class )
+   while obj do
+      local meta = getmetatable( obj )
+      if not meta then
+	 return false
+      end
+      local indexTbl = meta.__index
+      if indexTbl == class then
+	 return true
+      end
+      if meta.ifList then
+         for index, ifType in ipairs( meta.ifList ) do
+            if _lune.__isInstanceOf( ifType, class ) then
+               return true
+            end
+         end
+      end
+      obj = indexTbl
+   end
+   return false
+end
+
+function _lune.__Cast( obj, kind, class )
+   if kind == 0 then -- int
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      if math.floor( obj ) ~= obj then
+         return nil
+      end
+      return obj
+   elseif kind == 1 then -- real
+      if type( obj ) ~= "number" then
+         return nil
+      end
+      return obj
+   elseif kind == 2 then -- str
+      if type( obj ) ~= "string" then
+         return nil
+      end
+      return obj
+   elseif kind == 3 then -- class
+      return _lune.__isInstanceOf( obj, class ) and obj or nil
+   end
+   return nil
+end
+
 if not _lune1 then
    _lune1 = _lune
 end

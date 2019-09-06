@@ -1022,6 +1022,12 @@ pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind 
    return .None;
 }
 
+// 多値戻り値の index 番目 ( index >= 2 )
+_declNodeClass( "ExpAccessMRet", Node, false, true, false,
+                [ { "mRet": "&Node" },
+                  { "index": "int" } ]
+);
+
 
 _declNodeClass( "ExpDDD", Node, false, true, false,
                 [ { "token": "&Parser.Token" } ]

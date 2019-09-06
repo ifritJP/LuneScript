@@ -1,2 +1,43 @@
-let val = "abcde";
-print( val[1], val[2], val[3] );
+fn func(): int, int {
+   return 1, 2;
+}
+fn sub( val1:int, val2:int ) {
+   print( val1, val2 );
+}
+sub( func() );
+let work1, work2 = func();
+print( work1, work2 );
+
+
+
+// interface IF {
+//    pub fn func();
+// }
+// class TestA extend (IF) {
+//    pub fn func() {
+//       print( "TestA" );
+//    }
+// }
+// class TestB extend (IF) {
+//    pub fn func() {
+//       print( "TestB" );
+//    }
+// }
+
+// class Hoge<T> {
+//    let mut val:T {pub,pub};
+//    pub fn func(): T {
+//       return self.val;
+//    }
+// }
+
+// {
+//    let test:Hoge<&IF> = new Hoge( new TestA() );
+//    test.$val.func();
+//    test.func().func();
+// }
+// {
+//    let test:Hoge<&IF> = new Hoge( new TestB() );
+//    test.$val.func();
+//    test.func().func();
+// }

@@ -79,7 +79,7 @@ class TentativeSymbol {
    pri let mut oldSymbolSet:Set<&Ast.SymbolInfo>!;
    pri let mut symbolSet:Set<&Ast.SymbolInfo>;
    pri let mut parent:TentativeSymbol!;
-   pri let scope:&Ast.Scope;
+   pri let mut scope:&Ast.Scope;
    pri let mut skipFlag:bool;
    pri let loopFlag:bool;
 
@@ -105,18 +105,23 @@ class TentativeSymbol {
       self.symbolSet.add( symbolInfo.getOrg() );
       symbolInfo.set_hasValueFlag( true );
 
-      if not symbolInfo.$mutable {
-         let mut work = self;
-         while true {
-            if work.loopFlag {
-               // loop 内で immutable な変数へのセットはサポートしない
-               return false;
-            }
-            if! work.parent {
-               work = _exp;
-            }
-            else {
-               break;
+      if self.$scope.isInnerOf( symbolInfo.$scope ) {
+         if not symbolInfo.$mutable {
+            let mut work = self;
+            while true {
+               if! work.parent {
+                  if work.scope == symbolInfo.$scope {
+                     break;
+                  }
+                  if work.loopFlag {
+                     // loop 内で immutable な変数へのセットはサポートしない
+                     return false;
+                  }
+                  work = _exp;
+               }
+               else {
+                  break;
+               }
             }
          }
       }
@@ -189,10 +194,11 @@ class TentativeSymbol {
       return nil;
    }
 
-   pub fn newSet() mut {
+   pub fn newSet( scope:&Ast.Scope ) mut {
       self.merge( false );
       self.oldSymbolSet = self.symbolSet;
       self.symbolSet = (@);
+      self.scope = scope;
    }
 }
 
@@ -209,6 +215,8 @@ enum AnalyzingState {
    /** その他の 関数, メソッド */
    Func,
 }
+
+form checkImplictCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
 
 pub class TransUnit {
 
@@ -437,8 +445,8 @@ pub class TransUnit {
       self.tentativeSymbol = unwrap self.tentativeSymbol.finish( complete );
    }
 
-   pri fn mergeTentativeSymbol() mut {
-      self.tentativeSymbol.newSet();
+   pri fn mergeTentativeSymbol( scope:&Ast.Scope ) mut {
+      self.tentativeSymbol.newSet( scope );
    }
 
 
@@ -657,6 +665,12 @@ pub class TransUnit {
       }
       return self.scope.addLocalVar( argFlag, canBeLeft, name, typeInfo, mutable );
    }
+
+
+   fn checkImplictCast(
+      alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
+      dstTypeList:&List<&Ast.TypeInfo>, expNodeList:&List<&Nodes.Node>,
+      callback:checkImplictCastCallback ) mut : List<&Nodes.Node>!;
 }
 
 
@@ -2156,7 +2170,7 @@ fn TransUnit.analyzeBlock(
          self.prepareTentativeSymbol( self.scope, tentativeMode == .Loop );
       }
       case .Merge, .Finish {
-         self.mergeTentativeSymbol();
+         self.mergeTentativeSymbol( self.scope );
       }
    }
 

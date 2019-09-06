@@ -487,20 +487,27 @@ function TentativeSymbol:regist( symbolInfo )
 
    self.symbolSet[symbolInfo:getOrg(  )]= true
    symbolInfo:set_hasValueFlag( true )
-   if not symbolInfo:get_mutable() then
-      local work = self
-      while true do
-         if work.loopFlag then
-            return false
-         end
-         
-         do
-            local _exp = work.parent
-            if _exp ~= nil then
-               work = _exp
-            else
-               break
+   if self.scope:isInnerOf( symbolInfo:get_scope() ) then
+      if not symbolInfo:get_mutable() then
+         local work = self
+         while true do
+            do
+               local _exp = work.parent
+               if _exp ~= nil then
+                  if work.scope == symbolInfo:get_scope() then
+                     break
+                  end
+                  
+                  if work.loopFlag then
+                     return false
+                  end
+                  
+                  work = _exp
+               else
+                  break
+               end
             end
+            
          end
          
       end
@@ -599,11 +606,12 @@ function TentativeSymbol:finish( complete )
    
    return nil
 end
-function TentativeSymbol:newSet(  )
+function TentativeSymbol:newSet( scope )
 
    self:merge( false )
    self.oldSymbolSet = self.symbolSet
    self.symbolSet = {}
+   self.scope = scope
 end
 function TentativeSymbol.setmeta( obj )
   setmetatable( obj, { __index = TentativeSymbol  } )
@@ -646,6 +654,7 @@ AnalyzingState.__allList[4] = AnalyzingState.ClassMethod
 AnalyzingState.Func = 4
 AnalyzingState._val2NameMap[4] = 'Func'
 AnalyzingState.__allList[5] = AnalyzingState.Func
+
 
 local TransUnit = {}
 _moduleObj.TransUnit = TransUnit
@@ -745,9 +754,9 @@ function TransUnit:finishTentativeSymbol( complete )
 
    self.tentativeSymbol = _lune.unwrap( self.tentativeSymbol:finish( complete ))
 end
-function TransUnit:mergeTentativeSymbol(  )
+function TransUnit:mergeTentativeSymbol( scope )
 
-   self.tentativeSymbol:newSet(  )
+   self.tentativeSymbol:newSet( scope )
 end
 function TransUnit:getCurrentClass(  )
 
@@ -3312,7 +3321,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope )
       if _switchExp == TentativeMode.Simple or _switchExp == TentativeMode.Start or _switchExp == TentativeMode.Ignore or _switchExp == TentativeMode.Loop then
          self:prepareTentativeSymbol( self.scope, tentativeMode == TentativeMode.Loop )
       elseif _switchExp == TentativeMode.Merge or _switchExp == TentativeMode.Finish then
-         self:mergeTentativeSymbol(  )
+         self:mergeTentativeSymbol( self.scope )
       end
    end
    
@@ -3409,7 +3418,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = 'TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2253, function (  )
+   Log.log( Log.Level.Info, __func__, 2267, function (  )
    
       return string.format( "%s start", modulePath)
    end
@@ -3425,7 +3434,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2264, function (  )
+               Log.log( Log.Level.Info, __func__, 2278, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3456,7 +3465,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2284, function (  )
+   Log.log( Log.Level.Info, __func__, 2298, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3812,7 +3821,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2655, function (  )
+   Log.log( Log.Level.Info, __func__, 2669, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -6557,6 +6566,21 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
          expList = self:createExpListNode( expList:get_pos(), expList:get_followOn(), newExpList )
       end
       
+      do
+         local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+         do
+            local workList = self:checkImplictCast( alt2typeMap, typeInfoList, expList:get_expList(), function ( dstType, expNode )
+            
+               return nil
+            end
+             )
+            if workList ~= nil then
+               expList = self:createExpListNode( expList:get_pos(), expList:get_followOn(), workList )
+            end
+         end
+         
+      end
+      
       for index, varType in pairs( typeInfoList ) do
          if index > #expTypeList then
             if not varType:get_nilable() then
@@ -6948,6 +6972,27 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       
    end
    
+   if #expList > 0 then
+      local lastExpNode = expList[#expList]
+      do
+         local _switchExp = lastExpNode:get_kind()
+         if _switchExp == Nodes.NodeKind.get_ExpCall() or _switchExp == Nodes.NodeKind.get_ExpCallSuper() then
+            local retTypeList = lastExpNode:get_expTypeList()
+            if #retTypeList > 1 then
+               for retIndex, retType in pairs( retTypeList ) do
+                  if retIndex ~= 1 then
+                     table.insert( expList, Nodes.ExpAccessMRetNode.create( self.nodeManager, lastExpNode:get_pos(), {retType}, lastExpNode, retIndex ) )
+                  end
+                  
+               end
+               
+            end
+            
+         end
+      end
+      
+   end
+   
    if abbrNode ~= nil then
       table.insert( expList, abbrNode )
    end
@@ -7153,6 +7198,75 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    return Nodes.ExpRefItemNode.create( self.nodeManager, token.pos, {typeInfo}, exp, nilAccess, nil, indexExp )
 end
 
+
+function TransUnit:checkImplictCast( alt2typeMap, dstTypeList, expNodeList, callback )
+
+   local hasModNode = false
+   local newExpNodeList = {}
+   for index, expNode in pairs( expNodeList ) do
+      local workNode = expNode
+      local stopFlag = false
+      if #dstTypeList >= index then
+         local dstType = dstTypeList[index]
+         do
+            local repNode = callback( dstType, expNode )
+            if repNode ~= nil then
+               if not hasModNode then
+                  hasModNode = true
+               end
+               
+               workNode = repNode
+            else
+               if dstType ~= Ast.builtinTypeEmpty and not dstType:equals( expNode:get_expType() ) and not dstType:get_nonnilableType():equals( expNode:get_expType() ) then
+                  if expNode:get_kind() ~= Nodes.NodeKind.get_Abbr() then
+                     if not hasModNode then
+                        hasModNode = true
+                     end
+                     
+                     if dstType:get_kind() == Ast.TypeInfoKind.DDD then
+                        local argList = {}
+                        for workIndex = index, #expNodeList do
+                           local appNode = expNodeList[workIndex]
+                           table.insert( argList, appNode )
+                        end
+                        
+                        workNode = Nodes.ExpToDDDNode.create( self.nodeManager, expNode:get_pos(), {dstType}, argList )
+                        stopFlag = true
+                     else
+                      
+                        local castType = alt2typeMap[dstType]
+                        if  nil == castType then
+                           local _castType = castType
+                        
+                           castType = dstType
+                        end
+                        
+                        workNode = Nodes.ExpCastNode.create( self.nodeManager, expNode:get_pos(), {expNode:get_expType()}, expNode, castType, Nodes.CastKind.Implicit )
+                     end
+                     
+                  end
+                  
+               end
+               
+            end
+         end
+         
+      end
+      
+      table.insert( newExpNodeList, workNode )
+      if stopFlag then
+         break
+      end
+      
+   end
+   
+   if not hasModNode then
+      return nil
+   end
+   
+   return newExpNodeList
+end
+
 function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allowDstShort, warnForFollow, genericsClassType )
 
    local warnForFollowSrcIndex = nil
@@ -7173,7 +7287,12 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       
    end
    
+   local realExpNum = -1
    for index, expNode in pairs( workExpNodeList ) do
+      if realExpNum == -1 and expNode:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
+         realExpNum = index - 1
+      end
+      
       if index == #workExpNodeList then
          for __index, expType in pairs( expNode:get_expTypeList() ) do
             table.insert( expTypeList, expType )
@@ -7186,8 +7305,12 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       
    end
    
-   if warnForFollow and #expTypeList > #workExpNodeList then
-      warnForFollowSrcIndex = #workExpNodeList + 1
+   if realExpNum == -1 then
+      realExpNum = #workExpNodeList
+   end
+   
+   if warnForFollow and #expTypeList > realExpNum then
+      warnForFollowSrcIndex = realExpNum + 1
    end
    
    if hasAbbr then
@@ -7219,42 +7342,21 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       local autoBoxingCount = 0
       local hasImplictCast = false
       local newExpNodeList = {}
-      for index, expNode in pairs( expNodeList ) do
-         local workNode = expNode
-         local stopFlag = false
-         if #dstTypeList >= index then
-            local dstType = dstTypeList[index]
+      do
+         local workList = self:checkImplictCast( alt2typeMap, dstTypeList, expNodeList, function ( dstType, expNode )
+         
             if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode:get_expType() ) then
                autoBoxingCount = autoBoxingCount + 1
-               workNode = Nodes.BoxingNode.create( self.nodeManager, expNode:get_pos(), {dstType}, expNode )
-            elseif dstType ~= Ast.builtinTypeEmpty and not dstType:equals( expNode:get_expType() ) and not dstType:get_nonnilableType():equals( expNode:get_expType() ) then
-               if expNode:get_kind() ~= Nodes.NodeKind.get_Abbr() then
-                  hasImplictCast = true
-                  if dstType:get_kind() == Ast.TypeInfoKind.DDD then
-                     local argList = {}
-                     for workIndex = index, #expNodeList do
-                        local appNode = expNodeList[workIndex]
-                        table.insert( argList, appNode )
-                     end
-                     
-                     workNode = Nodes.ExpToDDDNode.create( self.nodeManager, expNode:get_pos(), {dstType}, argList )
-                     stopFlag = true
-                  else
-                   
-                     workNode = Nodes.ExpCastNode.create( self.nodeManager, expNode:get_pos(), {expNode:get_expType()}, expNode, dstType, Nodes.CastKind.Implicit )
-                  end
-                  
-               end
-               
+               return Nodes.BoxingNode.create( self.nodeManager, expNode:get_pos(), {dstType}, expNode )
             end
             
+            return nil
          end
-         
-         table.insert( newExpNodeList, workNode )
-         if stopFlag then
-            break
+          )
+         if workList ~= nil then
+            newExpNodeList = workList
+            hasImplictCast = true
          end
-         
       end
       
       if autoBoxingCount > 0 then
@@ -9382,7 +9484,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
          self:addErrMess( token.pos, string.format( "can't access to __init of %s", classTypeInfo:getTxt(  )) )
       end
       
-      local alt2type = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
             local genTypeList = {}
@@ -9409,7 +9511,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
          
       end
       
-      exp = Nodes.ExpNewNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, exp, argList )
+      exp = Nodes.ExpNewNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, exp, newArgList )
       exp = self:analyzeExpCont( firstToken, exp, false )
       return exp
    end

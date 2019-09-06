@@ -802,6 +802,13 @@ function dumpFilter:processExpList( node, opt )
 end
 
 
+function dumpFilter:processExpAccessMRet( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, string.format( "%d", node:get_index()) )
+end
+
+
 function dumpFilter:processExpOp1( node, opt )
 
    local prefix, depth = opt:get(  )

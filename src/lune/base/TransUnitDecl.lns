@@ -2619,6 +2619,22 @@ fn TransUnit.analyzeLetAndInitExp(
          // 引数リストを更新する
          expList = self.createExpListNode( expList.$pos, expList.$followOn, newExpList );
       }
+
+      {
+         let mut alt2typeMap =
+            Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
+
+         if! let mut workList = self.checkImplictCast(
+            alt2typeMap, typeInfoList, expList.$expList,
+            fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
+               return nil;
+            } )
+         {
+            expList = self.createExpListNode( expList.$pos, expList.$followOn, workList );
+         }
+      }
+
+
       // 宣言する変数の数より初期値が少ない場合、
       // nil で初期化されるため変数が nilable かどうか判定
       foreach varType, index in typeInfoList {

@@ -1218,3 +1218,23 @@ class Test4 {
       // 継承しているクラスにメンバがない場合に、エラーする不具合があった。
    }
 }
+{
+   fn func( val:int! ) {
+      foreach item, index in [1,2] {
+         if index == 1 {
+            let! castType = val {
+               castType = item;
+            };
+            print( castType );
+         }
+         else {
+            let! castType = val {
+               castType = item;
+            };
+            print( castType );
+         }
+      }
+   }
+   func( nil );
+   func( 10 );
+}

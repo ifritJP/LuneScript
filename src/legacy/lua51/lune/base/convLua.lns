@@ -1915,6 +1915,22 @@ pub override fn convFilter.processUnwrapSet(
    self.writeln( "end" );
 }
 
+fn convFilter.processExpListSub( parent:&Nodes.Node, expList:&List<&Nodes.Node> ) mut {
+   foreach exp, index in expList {
+      if exp.$expType.$kind == .Abbr {
+         break;
+      }
+      if exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
+         break;
+      }
+      if index > 1 {
+         self.write( ", " );
+      }
+      filter( exp, self, parent );
+   }
+}
+
+
 pub override fn convFilter.processIfUnwrap(
    node: Nodes.IfUnwrapNode, opt: Opt ) mut
 {
@@ -1929,12 +1945,16 @@ pub override fn convFilter.processIfUnwrap(
    }
    self.write( " = " );
 
-   foreach expNode, index in node.$expNodeList {
-      filter( expNode, self, node );
-      if index ~= #node.$expNodeList {
-         self.write( ", " );
-      }
-   }
+   self.processExpListSub( node, node.$expNodeList );
+   // foreach expNode, index in node.$expNodeList {
+   //    if expNode.$kind == Nodes.NodeKind.$ExpAccessMRet {
+   //       break;
+   //    }
+   //    if index > 1 {
+   //       self.write( ", " );
+   //    }
+   //    filter( expNode, self, node );
+   // }
    self.writeln( "" );
 
    self.write( "if " );
@@ -2119,20 +2139,17 @@ pub override fn convFilter.processDeclFunc(
    }
    self.write( string.format( "%sfunction %s( ", letTxt, name ) );
 
+
    let argList = declInfo.get_argList();
-   foreach arg, index in argList {
-      if index > 1 {
-         self.write( ", " );
-      }
-      filter( arg, self, node );
-   }
-   self.writeln( " )" );
-   // foreach refType, index in declInfo.get_retTypeList() {
+   self.processExpListSub( node, argList );
+
+   // foreach arg, index in argList {
    //    if index > 1 {
-   //   self.write( ", " )
+   //       self.write( ", " );
    //    }
-   //filter( //    refType,  self, node, baseIndent )
+   //    filter( arg, self, node );
    // }
+   self.writeln( " )" );
 
    if! declInfo.$body {
       self.process__func__symbol(
@@ -2624,21 +2641,25 @@ pub override fn convFilter.processExpCall(
    self.write( " )" );
 };
 
-
 pub override fn convFilter.processExpList(
    node: Nodes.ExpListNode, opt: Opt ) mut
 {
    let expList = node.get_expList();
    //let expList = node.$expList;
-   foreach exp, index in expList {
-      if exp.$expType.$kind == .Abbr {
-         break;
-      }
-      if index > 1 {
-         self.write( ", " );
-      }
-      filter( exp, self, node );
-   }
+
+   self.processExpListSub( node, expList );
+   // foreach exp, index in expList {
+   //    if exp.$expType.$kind == .Abbr {
+   //       break;
+   //    }
+   //    if exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
+   //       break;
+   //    }
+   //    if index > 1 {
+   //       self.write( ", " );
+   //    }
+   //    filter( exp, self, node );
+   // }
 };
 
 
@@ -2690,12 +2711,13 @@ pub override fn convFilter.processExpOp1(
 pub override fn convFilter.processExpToDDD(
    node: Nodes.ExpToDDDNode, opt: Opt ) mut
 {
-   foreach exp, index in node.$expList {
-      if index ~= 1 {
-         self.write( ", " );
-      }
-      filter( exp, self, node );
-   }
+   // foreach exp, index in node.$expList {
+   //    if index ~= 1 {
+   //       self.write( ", " );
+   //    }
+   //    filter( exp, self, node );
+   // }
+   self.processExpListSub( node, node.$expList );
 }
 
 pub override fn convFilter.processExpCast(
