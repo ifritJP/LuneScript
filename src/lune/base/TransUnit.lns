@@ -216,7 +216,7 @@ enum AnalyzingState {
    Func,
 }
 
-form checkImplictCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
+form checkImplicitCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
 
 pub class TransUnit {
 
@@ -667,10 +667,10 @@ pub class TransUnit {
    }
 
 
-   fn checkImplictCast(
+   fn checkImplicitCast(
       alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
-      dstTypeList:&List<&Ast.TypeInfo>, expNodeList:&List<&Nodes.Node>,
-      callback:checkImplictCastCallback ) mut : List<&Nodes.Node>!;
+      dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
+      callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!;
 }
 
 

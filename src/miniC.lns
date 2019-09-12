@@ -4,10 +4,10 @@ fn func(): int, int {
 fn sub( val1:int, val2:int ) {
    print( val1, val2 );
 }
-sub( func() );
+print( func()** );
+sub( func()** );
 let work1, work2 = func();
 print( work1, work2 );
-
 
 
 // interface IF {

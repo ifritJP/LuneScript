@@ -1,5 +1,17 @@
 let mut g_val = 100;
 {
+   fn func(): int, int {
+      return 1, 2;
+   }
+   fn sub( val1:int, val2:int ) {
+      print( val1, val2 );
+   }
+   print( func()** );
+   sub( func()** );
+   let work1, work2 = func();
+   print( work1, work2 );
+}
+{
    interface IF {
       pub fn func();
    }

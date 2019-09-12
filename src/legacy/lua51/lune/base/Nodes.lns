@@ -723,9 +723,17 @@ pub override fn IfNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .None;
 }
 
+pub class MRetExp {
+   let exp:&Node {pub};
+   let index:int {pub};
+}
 
 _declNodeClass( "ExpList", Node, nil, nil, false,
                 [ { "expList": "&List<&Node>" },
+                  // 多値使用している exp。
+                  // nil の場合は多値未使用。
+                  { "mRetExp": "&MRetExp!" },
+                  // '**' を明示している場合 true。
                   { "followOn": "bool" } ]
 );
 pub override fn ExpListNode.canBeLeft():bool {
@@ -898,7 +906,7 @@ _declNodeClass( "UnwrapSet", Node, false, false, true,
 
 _declNodeClass( "IfUnwrap", Node, false, false, true,
                 [ { "varNameList": "List<str>" },
-                  { "expNodeList": "List<&Node>" },
+                  { "expList": "&ExpListNode" },
                   { "block": "&BlockNode" },
                   { "nilBlock": "&BlockNode!" } ]
 );
@@ -968,7 +976,8 @@ pub override fn ExpCastNode.setupLiteralTokenList( list: List<&Parser.Token> ): 
 
 
 _declNodeClass( "ExpToDDD", Node, false, true, false,
-                [ { "expList": "&List<&Node>" } ]
+                //[ { "expList": "&List<&Node>" } ]
+                [ { "expList": "&ExpListNode" } ]
 );
 
 

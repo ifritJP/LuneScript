@@ -148,6 +148,8 @@ extern "C" {
                 lune_setQ_( (*SYM) );   \
             }                           \
         }
+
+#define lune_getMRet( ENV, INDEX ) lune_fromDDD( ENV->pMRet, INDEX )
     
     
 
@@ -466,6 +468,9 @@ extern "C" {
         lune_stem_t * pValStack[ LUNE_VAL_STACK_MAX ];
         /** pValStack の現在位置 */
         int stackPos;
+
+        /** 処理中の MRet */
+        lune_stem_t * pMRet;
     };
 
 
@@ -551,6 +556,7 @@ extern "C" {
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... );
     extern lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem );
     extern lune_stem_t * lune_toIF( lune_env_t * _pEnv, lune_stem_t * pStem, const lune_type_meta_t * pMeta );
+    extern lune_stem_t * lune_setMRet( lune_env_t * _pEnv, lune_stem_t * pStem );
 
 
     extern lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal );

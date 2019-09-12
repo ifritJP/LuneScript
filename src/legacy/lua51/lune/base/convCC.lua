@@ -532,15 +532,18 @@ ProcessMode.__allList[2] = ProcessMode.WideScopeVer
 ProcessMode.InitModule = 2
 ProcessMode._val2NameMap[2] = 'InitModule'
 ProcessMode.__allList[3] = ProcessMode.InitModule
-ProcessMode.Form = 3
-ProcessMode._val2NameMap[3] = 'Form'
-ProcessMode.__allList[4] = ProcessMode.Form
-ProcessMode.Immediate = 4
-ProcessMode._val2NameMap[4] = 'Immediate'
-ProcessMode.__allList[5] = ProcessMode.Immediate
-ProcessMode.Main = 5
-ProcessMode._val2NameMap[5] = 'Main'
-ProcessMode.__allList[6] = ProcessMode.Main
+ProcessMode.Intermediate = 3
+ProcessMode._val2NameMap[3] = 'Intermediate'
+ProcessMode.__allList[4] = ProcessMode.Intermediate
+ProcessMode.Form = 4
+ProcessMode._val2NameMap[4] = 'Form'
+ProcessMode.__allList[5] = ProcessMode.Form
+ProcessMode.Immediate = 5
+ProcessMode._val2NameMap[5] = 'Immediate'
+ProcessMode.__allList[6] = ProcessMode.Immediate
+ProcessMode.Main = 6
+ProcessMode._val2NameMap[6] = 'Main'
+ProcessMode.__allList[7] = ProcessMode.Main
 
 local ModuleCtrl = {}
 function ModuleCtrl.new(  )
@@ -810,6 +813,10 @@ function convFilter:processRoot( node, opt )
       filter( declMethodNode, self, node )
    end
    
+   for __index, dddNode in pairs( node:get_nodeManager():getExpToDDDNodeList(  ) ) do
+      filter( dddNode, self, node )
+   end
+   
    self.processMode = ProcessMode.WideScopeVer
    for __index, child in pairs( children ) do
       if child:get_kind() == Nodes.NodeKind.get_DeclVar() then
@@ -843,6 +850,15 @@ function convFilter:processRoot( node, opt )
    procssLiteralCtor( node:get_nodeManager():getLiteralSetNodeList(  ) )
    procssLiteralCtor( node:get_nodeManager():getLiteralMapNodeList(  ) )
    self.processingNode = nil
+   self.processMode = ProcessMode.Intermediate
+   for __index, callNode in pairs( node:get_nodeManager():getExpCallNodeList(  ) ) do
+      filter( callNode, self, node )
+   end
+   
+   for __index, dddNode in pairs( node:get_nodeManager():getExpToDDDNodeList(  ) ) do
+      filter( dddNode, self, node )
+   end
+   
    self.processMode = ProcessMode.Form
    for __index, declFuncNode in pairs( node:get_nodeManager():getDeclFuncNodeList(  ) ) do
       self.duringDeclFunc = false
@@ -1949,10 +1965,10 @@ end
 
 local function hasMultiVal( exp )
 
-   return exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD or #exp:get_expTypeList() > 1
+   return exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD
 end
 
-function convFilter:processSetValToSym( parent, varSymList, expList, varNode )
+function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mRetExp )
 
    local function initVar(  )
    
@@ -2016,7 +2032,17 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode )
             end
          end
          
+         local mRetIndex = _lune.nilacc( mRetExp, 'get_index', 'callmtd' )
          for index = 1, #expList do
+            if index == mRetIndex then
+               if mRetExp ~= nil then
+                  self:write( "lune_setMRet( _pEnv, " )
+                  filter( mRetExp:get_exp(), self, parent )
+                  self:writeln( ");" )
+               end
+               
+            end
+            
             local workNode = nil
             if #varNodeList >= index then
                workNode = varNodeList[index]
@@ -2042,7 +2068,13 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode )
             end
             
             self:write( " _work = " )
-            filter( exp, self, parent )
+            if index == mRetIndex then
+               self:write( "lune_getMRet( _pEnv, 0 )" )
+            else
+             
+               filter( exp, self, parent )
+            end
+            
             self:writeln( ";" )
             if index == #expList then
                for varIndex = index, #varSymList do
@@ -2154,7 +2186,7 @@ function convFilter:processDeclVar( node, opt )
       
    end
    
-   self:processSetValToSym( node, varSymList, _lune.nilacc( node:get_expList(  ), 'get_expList', 'callmtd' ) )
+   self:processSetValToSym( node, varSymList, _lune.nilacc( node:get_expList(  ), 'get_expList', 'callmtd' ), nil, _lune.nilacc( node:get_expList(  ), 'get_mRetExp', 'callmtd' ) )
    do
       local _exp = node:get_unwrapBlock()
       if _exp ~= nil then
@@ -2320,10 +2352,31 @@ end
 
 function convFilter:processDeclFunc( node, opt )
 
+   local declInfo = node:get_declInfo(  )
+   local name = getFuncName( node:get_expType() )
+   local function processPrototype(  )
+   
+      local letTxt = ""
+      if declInfo:get_accessMode(  ) ~= Ast.AccessMode.Global and #name ~= 0 then
+         letTxt = "static "
+      end
+      
+      self:write( string.format( "%s%s %s( %s _pEnv, %s _pForm", letTxt, getCRetType( node:get_expType():get_retTypeInfoList() ), name, cTypeEnvP, cTypeStemP ) )
+      local argList = declInfo:get_argList(  )
+      for index, arg in pairs( argList ) do
+         self:write( ", " )
+         filter( arg, self, node )
+      end
+      
+      self:write( " )" )
+   end
+   
    do
       local _switchExp = self.processMode
       if _switchExp == ProcessMode.Form then
       elseif _switchExp == ProcessMode.Prototype then
+         processPrototype(  )
+         self:writeln( ";" )
          return 
       else 
          
@@ -2345,21 +2398,7 @@ function convFilter:processDeclFunc( node, opt )
    end
    
    self.duringDeclFunc = true
-   local declInfo = node:get_declInfo(  )
-   local name = getFuncName( node:get_expType() )
-   local letTxt = ""
-   if declInfo:get_accessMode(  ) ~= Ast.AccessMode.Global and #name ~= 0 then
-      letTxt = "static "
-   end
-   
-   self:write( string.format( "%s%s %s( %s _pEnv, %s _pForm", letTxt, getCRetType( node:get_expType():get_retTypeInfoList() ), name, cTypeEnvP, cTypeStemP ) )
-   local argList = declInfo:get_argList(  )
-   for index, arg in pairs( argList ) do
-      self:write( ", " )
-      filter( arg, self, node )
-   end
-   
-   self:writeln( " )" )
+   processPrototype(  )
    self:writeln( "{" )
    local breakKind = Nodes.BreakKind.None
    do
@@ -2797,15 +2836,223 @@ function convFilter:processCreateMRet( expList, parent )
    self:write( ")" )
 end
 
+local MRetInfo = {}
+MRetInfo._name2Val = {}
+function MRetInfo:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "MRetInfo.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function MRetInfo._from( val )
+   return _lune._AlgeFrom( MRetInfo, val )
+end
+
+MRetInfo.DDD = { "DDD", {{ func=Nodes.ExpToDDDNode._fromMap, nilable=false, child={} }}}
+MRetInfo._name2Val["DDD"] = MRetInfo.DDD
+MRetInfo.Form = { "Form"}
+MRetInfo._name2Val["Form"] = MRetInfo.Form
+MRetInfo.Func = { "Func", {{ func=Nodes.Node._fromMap, nilable=false, child={} }}}
+MRetInfo._name2Val["Func"] = MRetInfo.Func
+MRetInfo.Method = { "Method", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
+MRetInfo._name2Val["Method"] = MRetInfo.Method
+
+function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, funcArgNum, mRetInfo, argList )
+
+   local mRetExp = argList:get_mRetExp()
+   if  nil == mRetExp then
+      local _mRetExp = mRetExp
+   
+      return 
+   end
+   
+   local function processDeclMRetProto(  )
+   
+      self:write( string.format( "static %s %s( %s _pEnv", retTypeName, mRetFuncName, cTypeEnvP) )
+      local function processArgs(  )
+      
+         for index, argNode in pairs( argList:get_expList() ) do
+            if index >= mRetExp:get_index() then
+               break
+            end
+            
+            local argType = argNode:get_expType()
+            self:write( string.format( ", %s arg%d", getCType( argType, false ), index) )
+         end
+         
+         self:write( string.format( ", %s pMRet )", cTypeStemP) )
+      end
+      
+      do
+         local _matchExp = mRetInfo
+         if _matchExp[1] == MRetInfo.Method[1] then
+            local funcType = _matchExp[2][1]
+         
+            self:write( string.format( ", %s _pObj", cTypeStemP) )
+            processArgs(  )
+         elseif _matchExp[1] == MRetInfo.Form[1] then
+         
+            self:write( string.format( ", %s _pForm", cTypeStemP) )
+            processArgs(  )
+         elseif _matchExp[1] == MRetInfo.DDD[1] then
+            local node = _matchExp[2][1]
+         
+            processArgs(  )
+         elseif _matchExp[1] == MRetInfo.Func[1] then
+            local funcNode = _matchExp[2][1]
+         
+            processArgs(  )
+         end
+      end
+      
+   end
+   
+   do
+      local _switchExp = self.processMode
+      if _switchExp == ProcessMode.Intermediate then
+         processDeclMRetProto(  )
+         self:writeln( "" )
+         self:writeln( "{" )
+         local function process( primFlag )
+         
+            for index, argNode in pairs( argList:get_expList() ) do
+               local argType = argNode:get_expType()
+               if index == mRetExp:get_index() then
+                  self:writeln( "lune_setMRet( _pEnv, pMRet );" )
+               end
+               
+               if index >= mRetExp:get_index() then
+                  local typeTxt
+                  
+                  if primFlag then
+                     typeTxt = getCType( argType, false )
+                  else
+                   
+                     typeTxt = cTypeStemP
+                  end
+                  
+                  self:write( string.format( "%s arg%d = lune_getMRet( _pEnv, %d )", typeTxt, index, index - mRetExp:get_index()) )
+                  if primFlag then
+                     self:write( getAccessPrimValFromStem( false, argType, 0 ) )
+                  end
+                  
+                  self:writeln( string.format( "; // %s", argType:getTxt( true )) )
+               end
+               
+            end
+            
+            if retTypeName ~= "void" then
+               self:write( "return " )
+            end
+            
+         end
+         
+         do
+            local _matchExp = mRetInfo
+            if _matchExp[1] == MRetInfo.Method[1] then
+               local funcType = _matchExp[2][1]
+            
+               process( true )
+               self:write( string.format( "%s( _pEnv, _pObj", self.moduleCtrl:getCallMethodCName( funcType )) )
+            elseif _matchExp[1] == MRetInfo.Form[1] then
+            
+               process( true )
+               self:write( 'lune_call_form( _pEnv, _pForm' )
+            elseif _matchExp[1] == MRetInfo.Func[1] then
+               local funcNode = _matchExp[2][1]
+            
+               process( true )
+               local wroteFuncFlag = false
+               local builtinFunc = TransUnit.getBuiltinFunc(  )
+               do
+                  local refNode = _lune.__Cast( funcNode, 3, Nodes.ExpRefNode )
+                  if refNode ~= nil then
+                     if refNode:get_expType() == builtinFunc.lune_print then
+                        wroteFuncFlag = true
+                        self:write( "lune_print(" )
+                     end
+                     
+                  end
+               end
+               
+               if not wroteFuncFlag then
+                  filter( funcNode, self, parent )
+                  self:write( "(" )
+               end
+               
+               self:write( " _pEnv, NULL" )
+            elseif _matchExp[1] == MRetInfo.DDD[1] then
+               local node = _matchExp[2][1]
+            
+               process( false )
+               self:write( "lune_createDDD" )
+               local expList = node:get_expList():get_expList()
+               local lastExp = expList[#expList]
+               self:write( string.format( "( _pEnv, %s, %d", tostring( hasMultiVal( lastExp )), #expList) )
+            end
+         end
+         
+         for index = 1, funcArgNum do
+            self:write( string.format( ", arg%d", index) )
+         end
+         
+         self:writeln( ");" )
+         self:writeln( "}" )
+      elseif _switchExp == ProcessMode.Prototype then
+         processDeclMRetProto(  )
+         self:writeln( ";" )
+      end
+   end
+   
+end
+
+local function getMRetFuncName( node )
+
+   return string.format( "lune_call_mret_%d", node:get_id())
+end
+
 function convFilter:processExpToDDD( node, opt )
 
-   self:write( "lune_createDDD" )
-   local expList = node:get_expList()
-   local lastExp = expList[#expList]
-   self:write( string.format( "( _pEnv, %s, %d", tostring( hasMultiVal( lastExp )), #expList) )
-   for __index, exp in pairs( expList ) do
-      self:write( ", " )
-      self:processVal2Stem( exp, node )
+   do
+      local _switchExp = self.processMode
+      if _switchExp == ProcessMode.Intermediate or _switchExp == ProcessMode.Prototype then
+         do
+            local mRetExp = node:get_expList():get_mRetExp()
+            if mRetExp ~= nil then
+               self:processCallWithMRet( node, getMRetFuncName( node ), cTypeStemP, #node:get_expList():get_expList(), _lune.newAlge( MRetInfo.DDD, {node}), node:get_expList() )
+            end
+         end
+         
+         return 
+      end
+   end
+   
+   local expList = node:get_expList():get_expList()
+   do
+      local mRetExp = node:get_expList():get_mRetExp()
+      if mRetExp ~= nil then
+         self:write( string.format( "%s( _pEnv", getMRetFuncName( node )) )
+         for index, exp in pairs( expList ) do
+            if index > mRetExp:get_index() then
+               break
+            end
+            
+            self:write( ", " )
+            self:processVal2Stem( exp, node )
+         end
+         
+      else
+         self:write( "lune_createDDD" )
+         local lastExp = expList[#expList]
+         self:write( string.format( "( _pEnv, %s, %d", tostring( hasMultiVal( lastExp )), #expList) )
+         for __index, exp in pairs( expList ) do
+            self:write( ", " )
+            self:processVal2Stem( exp, node )
+         end
+         
+      end
    end
    
    self:write( ")" )
@@ -2848,110 +3095,197 @@ end
 
 function convFilter:processExpCall( node, opt )
 
-   if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Form then
-      self:write( 'lune_call_form( _pEnv, ' )
-      filter( node:get_func(), self, node )
+   do
+      local _switchExp = self.processMode
+      if _switchExp == ProcessMode.Intermediate or _switchExp == ProcessMode.Prototype then
+         do
+            local argList = node:get_argList()
+            if argList ~= nil then
+               local funcNode = node:get_func()
+               local funcType = funcNode:get_expType()
+               local mRetInfo
+               
+               do
+                  local _switchExp = funcNode:get_expType():get_kind()
+                  if _switchExp == Ast.TypeInfoKind.Method then
+                     mRetInfo = _lune.newAlge( MRetInfo.Method, {funcType})
+                  elseif _switchExp == Ast.TypeInfoKind.Form then
+                     mRetInfo = _lune.newAlge( MRetInfo.Form)
+                  else 
+                     
+                        mRetInfo = _lune.newAlge( MRetInfo.Func, {_lune.unwrap( _lune.__Cast( node:get_func(), 3, Nodes.ExpRefNode ))})
+                  end
+               end
+               
+               self:processCallWithMRet( node, getMRetFuncName( node ), getCRetType( node:get_expTypeList() ), #funcType:get_argTypeInfoList(), mRetInfo, argList )
+            end
+         end
+         
+         return 
+      end
+   end
+   
+   local function process(  )
+   
+      if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Form then
+         self:write( 'lune_call_form( _pEnv, ' )
+         filter( node:get_func(), self, node )
+         do
+            local argList = node:get_argList()
+            if argList ~= nil then
+               self:write( string.format( ', %d', #argList:get_expList()) )
+               if #argList:get_expList() > 0 then
+                  self:write( ', ' )
+                  self:processCallArgList( node:get_func():get_expType(), node:get_argList(), node )
+               end
+               
+            else
+               self:write( ', 0' )
+            end
+         end
+         
+         self:write( ' )' )
+         return 
+      end
+      
+      local wroteFuncFlag = false
+      local setArgFlag = false
+      do
+         local refNode = _lune.__Cast( node:get_func(), 3, Nodes.ExpRefNode )
+         if refNode ~= nil then
+            local builtinFunc = TransUnit.getBuiltinFunc(  )
+            if refNode:get_expType() == builtinFunc.lune_print then
+               wroteFuncFlag = true
+               self:write( "lune_print(" )
+            end
+            
+         end
+      end
+      
+      if not wroteFuncFlag then
+         if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Method then
+            do
+               local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
+               if fieldNode ~= nil then
+                  self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( node:get_func():get_expType() )) )
+                  filter( fieldNode:get_prefix(), self, node )
+               end
+            end
+            
+            wroteFuncFlag = true
+            setArgFlag = true
+         end
+         
+      end
+      
+      if not wroteFuncFlag then
+         filter( node:get_func(), self, node )
+         if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Form then
+            self:write( "->val.form.pFunc" )
+         end
+         
+         self:write( "( " )
+      end
+      
+      if not setArgFlag then
+         self:write( "_pEnv, " )
+         do
+            local scope = node:get_func():get_expType():get_scope()
+            if scope ~= nil then
+               if #scope:get_closureSymList() > 0 then
+                  self:write( string.format( "lune_func2stem( _pEnv, (lune_func_t *)NULL, 0, false, %d", #scope:get_closureSymList()) )
+                  for __index, symbolInfo in pairs( scope:get_closureSymList() ) do
+                     self:write( string.format( ", %s", symbolInfo:get_name()) )
+                  end
+                  
+                  self:write( ")" )
+               else
+                
+                  self:write( "NULL" )
+               end
+               
+            else
+               self:write( "NULL" )
+            end
+         end
+         
+      end
+      
       do
          local argList = node:get_argList()
          if argList ~= nil then
-            self:write( string.format( ', %d', #argList:get_expList()) )
-            if #argList:get_expList() > 0 then
-               self:write( ', ' )
+            local expList = {}
+            for __index, expNode in pairs( argList:get_expList() ) do
+               if expNode:get_expType():get_kind() ~= Ast.TypeInfoKind.Abbr then
+                  table.insert( expList, expNode )
+               end
+               
+            end
+            
+            if #expList > 0 then
+               self:write( ", " )
                self:processCallArgList( node:get_func():get_expType(), node:get_argList(), node )
             end
             
-         else
-            self:write( ', 0' )
          end
       end
       
-      self:write( ' )' )
-      return 
+      self:write( " )" )
    end
    
-   local wroteFuncFlag = false
-   local setArgFlag = false
-   do
-      local refNode = _lune.__Cast( node:get_func(), 3, Nodes.ExpRefNode )
-      if refNode ~= nil then
-         local builtinFunc = TransUnit.getBuiltinFunc(  )
-         if refNode:get_expType() == builtinFunc.lune_print then
-            wroteFuncFlag = true
-            self:write( "lune_print(" )
-         end
-         
-      end
-   end
-   
-   if not wroteFuncFlag then
-      if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Method then
-         do
-            local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
-            if fieldNode ~= nil then
-               self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( node:get_func():get_expType() )) )
-               filter( fieldNode:get_prefix(), self, node )
-            end
-         end
-         
-         wroteFuncFlag = true
-         setArgFlag = true
-      end
-      
-   end
-   
-   if not wroteFuncFlag then
-      filter( node:get_func(), self, node )
-      if node:get_func():get_expType():get_kind() == Ast.TypeInfoKind.Form then
-         self:write( "->val.form.pFunc" )
-      end
-      
-      self:write( "( " )
-   end
-   
-   if not setArgFlag then
-      self:write( "_pEnv, " )
-      do
-         local scope = node:get_func():get_expType():get_scope()
-         if scope ~= nil then
-            if #scope:get_closureSymList() > 0 then
-               self:write( string.format( "lune_func2stem( _pEnv, (lune_func_t *)NULL, 0, false, %d", #scope:get_closureSymList()) )
-               for __index, symbolInfo in pairs( scope:get_closureSymList() ) do
-                  self:write( string.format( ", %s", symbolInfo:get_name()) )
-               end
-               
-               self:write( ")" )
-            else
-             
-               self:write( "NULL" )
-            end
-            
-         else
-            self:write( "NULL" )
-         end
-      end
-      
-   end
-   
+   local isMret = false
    do
       local argList = node:get_argList()
       if argList ~= nil then
-         local expList = {}
-         for __index, expNode in pairs( argList:get_expList() ) do
-            if expNode:get_expType():get_kind() ~= Ast.TypeInfoKind.Abbr then
-               table.insert( expList, expNode )
+         do
+            local mRetExp = argList:get_mRetExp()
+            if mRetExp ~= nil then
+               isMret = true
+               self:write( string.format( "%s( _pEnv", getMRetFuncName( node )) )
+               local funcNode = node:get_func()
+               do
+                  local _switchExp = funcNode:get_expType():get_kind()
+                  if _switchExp == Ast.TypeInfoKind.Method then
+                     do
+                        local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
+                        if fieldNode ~= nil then
+                           self:write( ", " )
+                           filter( fieldNode:get_prefix(), self, node )
+                        end
+                     end
+                     
+                  elseif _switchExp == Ast.TypeInfoKind.Form then
+                     self:write( ", " )
+                     filter( node:get_func(), self, node )
+                  end
+               end
+               
+               for index, argNode in pairs( argList:get_expList() ) do
+                  if index <= mRetExp:get_index() then
+                     self:write( ", " )
+                     filter( argNode, self, node )
+                  end
+                  
+               end
+               
+               self:write( ")" )
             end
-            
-         end
-         
-         if #expList > 0 then
-            self:write( ", " )
-            self:processCallArgList( node:get_func():get_expType(), node:get_argList(), node )
          end
          
       end
    end
    
-   self:write( " )" )
+   if not isMret then
+      process(  )
+   end
+   
+end
+
+
+function convFilter:processExpAccessMRet( node, opt )
+
+   self:write( string.format( "lune_getMRet( _pEnv, %d )", node:get_index() - 1) )
+   self:write( getAccessPrimValFromStem( false, node:get_expType(), 0 ) )
 end
 
 
@@ -3116,16 +3450,20 @@ function convFilter:processExpOp2( node, opt )
          local symbolList = node:get_exp1():getSymbolInfo(  )
          local expList
          
+         local mRetExp
+         
          do
             local expListNode = _lune.__Cast( node:get_exp2(), 3, Nodes.ExpListNode )
             if expListNode ~= nil then
                expList = expListNode:get_expList()
+               mRetExp = expListNode:get_mRetExp()
             else
                expList = {node:get_exp2()}
+               mRetExp = nil
             end
          end
          
-         self:processSetValToSym( node, symbolList, expList, node:get_exp1() )
+         self:processSetValToSym( node, symbolList, expList, node:get_exp1(), mRetExp )
       elseif _switchExp == "and" or _switchExp == "or" then
          self:processAndOr( node, opTxt, opt.node )
       else 

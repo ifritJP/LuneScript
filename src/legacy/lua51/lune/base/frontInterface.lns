@@ -165,7 +165,7 @@ pub fn setFront( newFront:frontInterface ) {
 }
 
 pub fn loadModule( mod:str ): stem!, &stem {
-   return __luneScript.loadModule( mod );
+   return __luneScript.loadModule( mod )**;
 }
 
 pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem {

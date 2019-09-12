@@ -2397,22 +2397,35 @@ fn TransUnit.analyzeDeclFunc(
 }
 
 fn TransUnit.createExpListNode(
-   pos:&Parser.Position, followOn:bool, newExpList:&List<&Nodes.Node> ) mut:
-   Nodes.ExpListNode
+   orgExpList:&Nodes.ExpListNode, newExpList:&List<&Nodes.Node> ) mut: Nodes.ExpListNode
 {
    // 引数リストを更新する
    let mut newExpTypeList:List<&Ast.TypeInfo> = [];
    foreach expNode, listIndex in newExpList {
       newExpTypeList.insert( expNode.$expType );
    }
-   // 最終ノードが複数の値を持つ場合は、その型を追加する
-   foreach expType, listIndex in newExpList[ #newExpList ].$expTypeList {
-      if listIndex ~= 1 {
-         newExpTypeList.insert( expType );
-      }
+   if #newExpList[ #newExpList ].$expTypeList > 1 {
+      self.addErrMess( orgExpList.$pos, "illegal exp -- %d"
+                       (#newExpList[ #newExpList ].$expTypeList) );
    }
+   if! let mRetIndex = orgExpList.$mRetExp$.$index {
+      if mRetIndex > #newExpList {
+         self.addErrMess( orgExpList.$pos, "over index -- %d" (mRetIndex) );
+      }
+      // implicit cast 等で expTypeList が変更されるので、チェックしない。
+      // elseif #newExpList[mRetIndex].$expTypeList == 1 {
+      //    self.addErrMess( orgExpList.$pos, "unmatch mRetIndex -- %d" (mRetIndex) );
+      // }
+   }
+   // 最終ノードが複数の値を持つ場合は、その型を追加する
+   // foreach expType, listIndex in newExpList[ #newExpList ].$expTypeList {
+   //    if listIndex ~= 1 {
+   //       newExpTypeList.insert( expType );
+   //    }
+   // }
    return Nodes.ExpListNode.create(
-      self.nodeManager, pos, newExpTypeList, newExpList, followOn );
+      self.nodeManager, orgExpList.$pos, newExpTypeList, newExpList,
+      orgExpList.$mRetExp, orgExpList.$followOn );
 }
 
 
@@ -2617,20 +2630,20 @@ fn TransUnit.analyzeLetAndInitExp(
       }
       if updateExpList {
          // 引数リストを更新する
-         expList = self.createExpListNode( expList.$pos, expList.$followOn, newExpList );
+         expList = self.createExpListNode( expList, newExpList );
       }
 
       {
          let mut alt2typeMap =
             Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
 
-         if! let mut workList = self.checkImplictCast(
-            alt2typeMap, typeInfoList, expList.$expList,
+         if! let mut workList = self.checkImplicitCast(
+            alt2typeMap, typeInfoList, expList,
             fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
                return nil;
             } )
          {
-            expList = self.createExpListNode( expList.$pos, expList.$followOn, workList );
+            expList = workList;
          }
       }
 
@@ -2841,17 +2854,14 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    let mut nextToken = self.getToken(##);
    let mut typeInfoList:List<&Ast.TypeInfo> = [];
    let mut varNameList:str[] = [];
-
-   let mut expNodeList:List<&Nodes.Node> = [];
+   let mut expList:&Nodes.ExpListNode;
 
    if nextToken.txt == "let" {
-      let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, expList =
+      let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, workExpList =
          self.analyzeLetAndInitExp( firstToken.pos, .IMut, .Local, true );
       typeInfoList = workTypeInfoList;
-      when! expList {
-         foreach exp in expList.$expList {
-            expNodeList.insert( exp );
-         }
+      when! workExpList {
+         expList = workExpList;
       }
       else {
          self.addErrMess( nextToken.pos, "if! let has illegal init val." );
@@ -2863,8 +2873,8 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    }
    else {
       self.pushback();
-      let exp = self.analyzeExp( false, false ## );
-      expNodeList.insert( exp );
+      expList = self.analyzeExpList( false, false ## );
+      let exp = expList.$expList[ 1 ];
       if exp.$expType.$nilable {
          typeInfoList.insert( exp.$expType.$nonnilableType );
       }
@@ -2899,8 +2909,8 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    }
 
    let mut hasCond = false;
-   foreach expNode, index in expNodeList {
-      if index ~= #expNodeList {
+   foreach expNode, index in expList.$expList {
+      if index ~= #expList.$expList {
          if Ast.isConditionalbe( expNode.$expType ) {
             hasCond = true;
             break;
@@ -2921,7 +2931,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
 
    return Nodes.IfUnwrapNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
-      varNameList, expNodeList, block, elseBlock );
+      varNameList, expList, block, elseBlock );
 }
 
 fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node

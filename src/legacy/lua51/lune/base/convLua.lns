@@ -1920,6 +1920,14 @@ fn convFilter.processExpListSub( parent:&Nodes.Node, expList:&List<&Nodes.Node> 
       if exp.$expType.$kind == .Abbr {
          break;
       }
+      // pending
+      if! let castNode = exp@@@Nodes.ExpCastNode {
+         if castNode.$castKind == .Implicit {
+            if castNode.$exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
+               break;
+            }
+         }
+      }
       if exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
          break;
       }
@@ -1945,7 +1953,7 @@ pub override fn convFilter.processIfUnwrap(
    }
    self.write( " = " );
 
-   self.processExpListSub( node, node.$expNodeList );
+   self.processExpListSub( node, node.$expList.$expList );
    // foreach expNode, index in node.$expNodeList {
    //    if expNode.$kind == Nodes.NodeKind.$ExpAccessMRet {
    //       break;
@@ -2586,7 +2594,7 @@ pub override fn convFilter.processExpCall(
       foreach expNode in argList.$expList {
          if expNode.$expType.$kind ~= .Abbr {
             if! let toDDD = expNode@@@Nodes.ExpToDDDNode {
-               foreach appNode in toDDD.$expList {
+               foreach appNode in toDDD.$expList.$expList {
                   expList.insert( appNode );
                }
             }
@@ -2717,7 +2725,7 @@ pub override fn convFilter.processExpToDDD(
    //    }
    //    filter( exp, self, node );
    // }
-   self.processExpListSub( node, node.$expList );
+   self.processExpListSub( node, node.$expList.$expList );
 }
 
 pub override fn convFilter.processExpCast(

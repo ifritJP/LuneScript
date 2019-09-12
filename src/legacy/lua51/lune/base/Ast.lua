@@ -5398,9 +5398,9 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          end
          
          if warnForFollowSrcIndex ~= nil then
-            if warnForFollowSrcIndex <= srcIndex and dstType:get_nilable() then
-               local mess = string.format( "use '**' at arg(%d). %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
-               return MatchType.Warn, mess
+            if warnForFollowSrcIndex <= srcIndex then
+               local workMess = string.format( "use '**' at arg(%d). %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
+               return MatchType.Warn, workMess
             end
             
          end
@@ -5443,12 +5443,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             if warnForFollowSrcIndex ~= nil then
-               if warnForFollowSrcIndex <= index and dstType:get_nilable() then
-                  local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, mess
+               if warnForFollowSrcIndex <= index then
+                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Warn, workMess
                end
                
             end
+            
             
             break
          elseif #expTypeList == index then
@@ -5472,12 +5473,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             if warnForFollowSrcIndex ~= nil then
-               if warnForFollowSrcIndex <= index and dstType:get_nilable() then
-                  local warnMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, warnMess
+               if warnForFollowSrcIndex <= index then
+                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Warn, workMess
                end
                
             end
+            
             
             break
          else
@@ -5487,12 +5489,13 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             end
             
             if warnForFollowSrcIndex ~= nil then
-               if warnForFollowSrcIndex <= index and dstType:get_nilable() then
-                  local mess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
-                  return MatchType.Warn, mess
+               if warnForFollowSrcIndex <= index then
+                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Warn, workMess
                end
                
             end
+            
             
          end
          

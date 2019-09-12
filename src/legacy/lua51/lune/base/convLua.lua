@@ -2185,6 +2185,19 @@ function convFilter:processExpListSub( parent, expList )
          break
       end
       
+      do
+         local castNode = _lune.__Cast( exp, 3, Nodes.ExpCastNode )
+         if castNode ~= nil then
+            if castNode:get_castKind() == Nodes.CastKind.Implicit then
+               if castNode:get_exp():get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
+                  break
+               end
+               
+            end
+            
+         end
+      end
+      
       if exp:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
          break
       end
@@ -2212,7 +2225,7 @@ function convFilter:processIfUnwrap( node, opt )
    end
    
    self:write( " = " )
-   self:processExpListSub( node, node:get_expNodeList() )
+   self:processExpListSub( node, node:get_expList():get_expList() )
    self:writeln( "" )
    self:write( "if " )
    for index, varName in pairs( node:get_varNameList() ) do
@@ -2890,7 +2903,7 @@ function convFilter:processExpCall( node, opt )
                do
                   local toDDD = _lune.__Cast( expNode, 3, Nodes.ExpToDDDNode )
                   if toDDD ~= nil then
-                     for __index, appNode in pairs( toDDD:get_expList() ) do
+                     for __index, appNode in pairs( toDDD:get_expList():get_expList() ) do
                         table.insert( expList, appNode )
                      end
                      
@@ -3015,7 +3028,7 @@ end
 
 function convFilter:processExpToDDD( node, opt )
 
-   self:processExpListSub( node, node:get_expList() )
+   self:processExpListSub( node, node:get_expList():get_expList() )
 end
 
 function convFilter:processExpCast( node, opt )
@@ -3529,7 +3542,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3225, function (  )
+   Log.log( Log.Level.Info, __func__, 3233, function (  )
    
       return string.format( "code: %s", code)
    end

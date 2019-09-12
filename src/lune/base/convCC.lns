@@ -188,6 +188,8 @@ enum ProcessMode {
    WideScopeVer,
    /** モジュール初期化 */
    InitModule,
+   /** 中間処理 */
+   Intermediate,
    /** 内部関数 */
    Form,
    /** 即値 */
@@ -513,6 +515,9 @@ pub override fn convFilter.processRoot(
    foreach declMethodNode in node.$nodeManager.getDeclMethodNodeList() {
       filter( declMethodNode, self, node );
    }
+   foreach dddNode in node.$nodeManager.getExpToDDDNodeList() {
+      filter( dddNode, self, node );
+   }
 
    self.processMode = .WideScopeVer;
    foreach child in children {
@@ -542,8 +547,17 @@ pub override fn convFilter.processRoot(
    procssLiteralCtor( node.$nodeManager.getLiteralSetNodeList() );
    procssLiteralCtor( node.$nodeManager.getLiteralMapNodeList() );
    self.processingNode = nil;
-   
 
+
+   self.processMode = .Intermediate;
+   foreach callNode in node.$nodeManager.getExpCallNodeList() {
+      filter( callNode, self, node );
+   }
+   foreach dddNode in node.$nodeManager.getExpToDDDNodeList() {
+      filter( dddNode, self, node );
+   }
+
+   
    self.processMode = .Form;
    foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
       self.duringDeclFunc = false;
@@ -2527,7 +2541,8 @@ pub fn convFilter.accessPrimVal( exp:&Nodes.Node, parent:&Nodes.Node ) mut {
 }
 
 fn hasMultiVal( exp:&Nodes.Node ): bool {
-   return exp.$expType.$kind == .DDD or #exp.$expTypeList > 1;
+   //return exp.$expType.$kind == .DDD or #exp.$expTypeList > 1;
+   return exp.$expType.$kind == .DDD;
 }
 
 /**
@@ -2539,7 +2554,7 @@ val1, val2, val3 = exp1, exp2, exp3
 */
 fn convFilter.processSetValToSym(
    parent: Nodes.Node, varSymList:&List<&Ast.SymbolInfo>,
-   expList:&List<&Nodes.Node>!, varNode:&Nodes.Node! ) mut
+   expList:&List<&Nodes.Node>!, varNode:&Nodes.Node!, mRetExp:&Nodes.MRetExp! ) mut
 {
    // 変数に値を代入する
    fn initVar(): int {
@@ -2602,8 +2617,17 @@ fn convFilter.processSetValToSym(
                varNodeList = [];
             }
          }
-         
+
+         let mut mRetIndex:int! = mRetExp$.$index;
          for index = 1, #expList {
+            if index == mRetIndex {
+               when! mRetExp {
+                  self.write( "lune_setMRet( _pEnv, " );
+                  filter( mRetExp.$exp, self, parent );
+                  self.writeln( ");" );
+               }
+            }
+            
             let mut workNode:&Nodes.Node! = nil;
             if #varNodeList >= index {
                workNode = varNodeList[ index ];
@@ -2626,8 +2650,14 @@ fn convFilter.processSetValToSym(
                   self.write( getCType( exp.$expType, false ) );
                }
             }
+           
             self.write( " _work = " );
-            filter( exp, self, parent );
+            if index == mRetIndex {
+               self.write( "lune_getMRet( _pEnv, 0 )" );
+            }
+            else {
+               filter( exp, self, parent );
+            }
             
             self.writeln( ";" );
 
@@ -2755,7 +2785,8 @@ pub override fn convFilter.processDeclVar(
    }
 
    // 初期値代入
-   self.processSetValToSym( node, varSymList, node.get_expList()$.$expList ## );
+   self.processSetValToSym( node, varSymList, node.get_expList()$.$expList,
+                            nil, node.get_expList()$.$mRetExp );
    
 
    if! node.$unwrapBlock {
@@ -2924,10 +2955,34 @@ pub fn convFilter.processVal2Stem( node:&Nodes.Node, parent: &Nodes.Node ) mut
 pub override fn convFilter.processDeclFunc(
    node: Nodes.DeclFuncNode, opt: Opt ) mut
 {
+   let declInfo = node.get_declInfo();
+   let mut name = getFuncName( node.$expType );
+   
+   fn processPrototype() {
+      let mut letTxt = "";
+
+      if declInfo.get_accessMode() ~= .Global and #name ~= 0 {
+         letTxt = "static ";
+      }
+      self.write( string.format(
+         "%s%s %s( %s _pEnv, %s _pForm",
+         letTxt, getCRetType( node.$expType.$retTypeInfoList ),
+         name, cTypeEnvP, cTypeStemP ) );
+
+      let argList = declInfo.get_argList();
+      foreach arg, index in argList {
+         self.write( ", " );
+         filter( arg, self, node );
+      }
+      self.write( " )" );
+   }
+   
    switch self.processMode {
       case .Form {
       }
       case .Prototype {
+         processPrototype();
+         self.writeln( ";" );
          return;
       }
       default {
@@ -2948,24 +3003,9 @@ pub override fn convFilter.processDeclFunc(
 
    self.duringDeclFunc = true;
    
-   
-   let declInfo = node.get_declInfo();
-   let mut name = getFuncName( node.$expType );
-   let mut letTxt = "";
-   if declInfo.get_accessMode() ~= .Global and #name ~= 0 {
-      letTxt = "static ";
-   }
-   self.write( string.format(
-      "%s%s %s( %s _pEnv, %s _pForm",
-      letTxt, getCRetType( node.$expType.$retTypeInfoList ),
-      name, cTypeEnvP, cTypeStemP ) );
+   processPrototype();
 
-   let argList = declInfo.get_argList();
-   foreach arg, index in argList {
-      self.write( ", " );
-      filter( arg, self, node );
-   }
-   self.writeln( " )" );
+   
    self.writeln( "{" );
 
    // let localVerNum = 0;
@@ -3610,16 +3650,177 @@ fn convFilter.processCreateMRet(
 }
 
 
+alge MRetInfo {
+   Form,
+   Method(&Ast.TypeInfo),
+   Func(&Nodes.Node),
+   DDD(&Nodes.ExpToDDDNode),
+}
+
+pub fn convFilter.processCallWithMRet(
+   parent:&Nodes.Node, mRetFuncName:str, retTypeName:str,
+   funcArgNum:int, mRetInfo:MRetInfo,
+   argList:&Nodes.ExpListNode ) mut
+{
+   let! mRetExp = argList.$mRetExp {
+      return;
+   };
+   
+   fn processDeclMRetProto() {
+      self.write( "static %s %s( %s _pEnv"
+         ( retTypeName, mRetFuncName, cTypeEnvP ) );
+      
+      fn processArgs() {
+         foreach argNode, index in argList.$expList {
+            if index >= mRetExp.$index {
+               break;
+            }
+            let argType = argNode.$expType;
+            self.write( ", %s arg%d" ( getCType( argType, false ), index ) );
+         }
+         self.write( ", %s pMRet )" (cTypeStemP) );
+      }
+
+      match mRetInfo {
+         case .Method( funcType ) {
+            self.write( ", %s _pObj" (cTypeStemP ) );
+            processArgs();
+         }
+         case .Form {
+            self.write( ", %s _pForm" (cTypeStemP ) );
+            processArgs();
+         }
+         case .DDD(node) {
+            processArgs();
+         }
+         case .Func(funcNode) {
+            processArgs();
+         }
+      }
+   }
+   
+   switch self.processMode {
+      case .Intermediate {
+         processDeclMRetProto();
+         self.writeln( "" );
+         self.writeln( "{" );
+
+         fn process( primFlag:bool ) {
+            foreach argNode, index in argList.$expList {
+               let argType = argNode.$expType;
+               if index == mRetExp.$index {
+                  self.writeln( "lune_setMRet( _pEnv, pMRet );" );
+               }
+               if index >= mRetExp.$index {
+                  let typeTxt;
+                  if primFlag {
+                     typeTxt = getCType(argType, false);
+                  }
+                  else {
+                     typeTxt = cTypeStemP;
+                  }
+                  self.write(
+                     "%s arg%d = lune_getMRet( _pEnv, %d )"
+                     (typeTxt, index, index - mRetExp.$index) );
+                  if primFlag {
+                     self.write( getAccessPrimValFromStem( false, argType, 0 ) );
+                  }
+                  self.writeln( "; // %s" (argType.getTxt( true## )) );
+               }
+            }
+            if retTypeName ~= "void" {
+               self.write( "return " );
+            }
+         }
+
+
+         match mRetInfo {
+            case .Method( funcType ) {
+               process( true );
+               self.write( "%s( _pEnv, _pObj"
+                  ( self.moduleCtrl.getCallMethodCName( funcType )));
+            }
+            case .Form {
+               process( true );
+               self.write( 'lune_call_form( _pEnv, _pForm' );
+            }
+            case .Func( funcNode ) {
+               process( true );
+               let mut wroteFuncFlag = false;
+               let builtinFunc = TransUnit.getBuiltinFunc();
+
+               if! let refNode = funcNode@@@Nodes.ExpRefNode {
+                  if refNode.$expType == builtinFunc.lune_print {
+                     wroteFuncFlag = true;
+                     self.write( "lune_print(" );
+                  }
+               }
+                  
+               if not wroteFuncFlag {
+                  filter( funcNode, self, parent );
+                  self.write( "(" );
+               }
+               self.write( " _pEnv, NULL" );
+            }
+            case .DDD(node) {
+               process( false );
+               self.write( "lune_createDDD" );
+               let expList = node.$expList.$expList;
+               let lastExp = expList[ #expList ];
+               self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
+            }
+         }
+         for index = 1, funcArgNum {
+            self.write( ", arg%d" ( index ) );
+         }
+         self.writeln( ");" );
+         self.writeln( "}" );
+      }
+      case .Prototype {
+         processDeclMRetProto();
+         self.writeln( ";" );
+      }
+   }
+}
+
+fn getMRetFuncName( node:&Nodes.Node ): str {
+   return "lune_call_mret_%d" ( node.$id );
+}
+
 pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt ) mut
 {
-   self.write( "lune_createDDD" );
-   let expList = node.$expList;
-   let lastExp = expList[ #expList ];
+   switch self.processMode {
+      case .Intermediate, .Prototype {
+         if! let mRetExp =  node.$expList.$mRetExp {
+            self.processCallWithMRet(
+               node, getMRetFuncName( node ), cTypeStemP,
+               #node.$expList.$expList, MRetInfo.DDD( node ), node.$expList );
+         }
+         return;
+      }
+   }
+
+
+   let expList = node.$expList.$expList;
+
+   if! let mRetExp = node.$expList.$mRetExp {
+      self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
+      foreach exp, index in expList {
+         if index > mRetExp.$index {
+            break;
+         }
+         self.write( ", " );
+         self.processVal2Stem( exp, node );
+      }
+   }
+   else {
+      self.write( "lune_createDDD" );
+      let lastExp = expList[ #expList ];
       self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
-      
-   foreach exp in expList {
-      self.write( ", " );
-      self.processVal2Stem( exp, node );
+      foreach exp in expList {
+         self.write( ", " );
+         self.processVal2Stem( exp, node );
+      }
    }
    self.write( ")" );
 }
@@ -3673,219 +3874,253 @@ pub fn convFilter.processCallArgList(
 }
 
 
+
+
+
+
+
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
 {
+   switch self.processMode {
+      case .Intermediate, .Prototype {
+         if! let argList = node.$argList {
 
+            let funcNode = node.$func;
+            let funcType = funcNode.$expType;
 
-   
-   if node.$func.$expType.$kind == .Form {
-      self.write( 'lune_call_form( _pEnv, ' );
-      filter( node.$func, self, node );
-      if! let argList = node.$argList {
-         self.write( ', %d' ( #argList.$expList ) );
-
-         if #argList.$expList > 0 {
-            self.write( ', ' );
-            self.processCallArgList(
-               node.$func.$expType, node.$argList, node );
+            let mRetInfo;
+            switch funcNode.$expType.$kind {
+               case .Method {
+                  mRetInfo = MRetInfo.Method( funcType );
+               }
+               case .Form {
+                  mRetInfo = MRetInfo.Form;
+               }
+               default {
+                  mRetInfo = MRetInfo.Func( unwrap node.$func@@@Nodes.ExpRefNode );
+               }
+            }
+            
+            self.processCallWithMRet(
+               node, getMRetFuncName( node ), getCRetType( node.$expTypeList ),
+               #funcType.$argTypeInfoList, mRetInfo, argList );
          }
+         return;
       }
-      else {
-         self.write( ', 0' );
-      }
-      self.write( ' )' );
-      return;
    }
-
-
-   // let classTypeInfo:&Ast.TypeInfo = nil;
-   // if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
-   //    let prefixType = fieldNode.$prefix.$expType;
-   //    switch prefixType.$kind {
-   //       case .Class, .IF {
-   //          classTypeInfo = prefixType;
-   //       }
-   //    }
-   // }
-   // processToIFGeneric(
-   //    self, self.moduleCtrl,
-   //    classTypeInfo, expType:&Ast.TypeInfo, process:form )
    
    
-   let mut wroteFuncFlag = false;
-   let mut setArgFlag = false;
-
-   // fn setArg() {
-   //    self.write( "_pEnv" );
-   // }
    
-   // fn fieldCall():bool {
+   fn process() {
+      if node.$func.$expType.$kind == .Form {
+         self.write( 'lune_call_form( _pEnv, ' );
+         filter( node.$func, self, node );
+         if! let argList = node.$argList {
+            self.write( ', %d' ( #argList.$expList ) );
 
-   //    let! fieldNode = node.$func@@@Nodes.RefFieldNode {
-   //       return true;
-   //    };
-   //    let prefixNode = fieldNode.$prefix;
+            if #argList.$expList > 0 {
+               self.write( ', ' );
+               self.processCallArgList(
+                  node.$func.$expType, node.$argList, node );
+            }
+         }
+         else {
+            self.write( ', 0' );
+         }
+         self.write( ' )' );
 
-   //    fn processSet(): bool {
-   //       setArgFlag = true;
-   //       wroteFuncFlag = true;
+         return;
+      }
 
-   //       switch fieldNode.$field.txt {
-   //          case "add", "del" {
-   //             filter( prefixNode, self, fieldNode );
-   //             self.write( "[" );
-   //             if! let argList = node.$argList {
-   //                filter( argList, self, fieldNode );
-   //             }
-   //             self.write( "]" );
-   //             switch fieldNode.$field.txt {
-   //                case "add" {
-   //                   self.write( "= true" );
-   //                }
-   //                case "del" {
-   //                   self.write( "= nil" );
-   //                }
-   //             }
-   //             return false;
-   //          }
-   //       }
 
-   //       self.write( "_lune._Set_%s(" ( fieldNode.$field.txt ) );
-   //       filter( prefixNode, self, fieldNode );
-   //       return true;
-   //    }
-
-   //    let prefixType = prefixNode.$expType;
-
-   //    fn processEnumAlge() {
-   //       wroteFuncFlag = true;
-   //       let fieldExpType = fieldNode.$expType;
-   //       let canonicalName = self.getCanonicalName( prefixType );
-   //       let mut methodName = fieldNode.$field.txt;
-   //       let mut delimit = ":";
-   //       if methodName == "get__txt" {
-   //          methodName = "_getTxt";
-   //       }
-   //       if fieldExpType.$kind == .Func {
-   //          delimit = ".";
-   //       }
-   //       self.write( "%s%s%s( " (canonicalName, delimit, methodName ) );
-   //       if fieldExpType.$staticFlag {
-   //          setArgFlag = false;
-   //       }
-   //       else {
-   //          filter( prefixNode, self, fieldNode );
-   //          setArgFlag = true;
-   //       }
-   //    }
-
-   //    if node.$nilAccess {
-   //       wroteFuncFlag = true;
-   //       setArgFlag = true;
-   //       switch prefixType.$kind {
-   //          case .List, .Array {
-   //             self.write( "_lune.nilacc( table.%s, nil, 'list', "
-   //                         (fieldNode.$field.txt ) );
-   //             filter( prefixNode, self, fieldNode );
-   //          }
-   //          default {
-   //             self.write( "_lune.nilacc( " );
-   //             filter( prefixNode, self, fieldNode );
-   //             self.write( ", '%s', 'callmtd' " (fieldNode.$field.txt ) );
-   //          }
-   //       }
-   //    }
-   //    else {
-   //       switch prefixType.$kind {
-   //          case .List, .Array {
-   //             setArgFlag = true;
-   //             wroteFuncFlag = true;
-   //             self.write( "table.%s( " (fieldNode.$field.txt ) );
-   //             filter( prefixNode, self, fieldNode );
-   //          }
-   //          case .Set {
-   //             if not processSet() {
-   //                return false;
-   //             }
-   //          }
-   //          case .Enum, .Alge {
-   //             processEnumAlge();
-   //          }
-   //          case .Box {
-   //             filter( prefixNode, self, fieldNode );
-   //             self.write( "[1]" );
-   //             return false;
-   //          }
-   //          case .Class {
-   //             if prefixType.isInheritFrom( Ast.builtinTypeMapping, nil ) and
-   //                isGenericType( prefixType ) and
-   //                ( fieldNode.$field.txt == "_fromMap" or
-   //                  fieldNode.$field.txt == "_fromStem" )
-   //             {
-   //                wroteFuncFlag = true;
-   //                setArgFlag = true;
-   //                filter( node.$func, self, node );
-   //                self.write( "( " );
-   //                if! let argList = node.$argList {
-   //                   filter( argList,  self, node );
-   //                   self.write( ", " );
-   //                }
-   //                self.outputAlter2MapFunc( self, prefixType.createAlt2typeMap(false) );
-   //                self.write( ")" );
-   //                return false;
-   //             }
-   //          }
-   //       }
-   //    }
-   //    return true;
-   // }
-
-   // if not fieldCall() {
-   //    return;
-   // }
-
-   if! let refNode = node.$func@@@Nodes.ExpRefNode {
-      let builtinFunc = TransUnit.getBuiltinFunc();
+      // let classTypeInfo:&Ast.TypeInfo = nil;
+      // if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+      //    let prefixType = fieldNode.$prefix.$expType;
+      //    switch prefixType.$kind {
+      //       case .Class, .IF {
+      //          classTypeInfo = prefixType;
+      //       }
+      //    }
+      // }
+      // processToIFGeneric(
+      //    self, self.moduleCtrl,
+      //    classTypeInfo, expType:&Ast.TypeInfo, process:form )
       
-      if refNode.$expType == builtinFunc.lune_print {
-         wroteFuncFlag = true;
-         self.write( "lune_print(" );
-      }
-      // elseif refNode.$token.txt == "super" {
-      //    wroteFuncFlag = true;
-      //    setArgFlag = true;
-      //    let funcType = refNode.$expType;
-      //    self.write( "%s.%s( self " ( self.getFullName( funcType.$parentInfo ),
-      //                                 funcType.$rawTxt ) );
-      // }
-   }
-   
-   if not wroteFuncFlag {
-      if node.$func.$expType.$kind == .Method {
-         if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
-            //self.write( "lune_call_method_0( _pEnv, " );
-            self.write( "%s( _pEnv, "
-                        ( self.moduleCtrl.getCallMethodCName( node.$func.$expType )));
-            filter( fieldNode.$prefix, self, node );
-            // self.write(
-            //    ",offsetof( lune_mtd_%s_t, %s )"
-            //    (self.getFullName( fieldNode.$prefix.$expType ), fieldNode.$field.txt ) );
-         }
-         wroteFuncFlag = true;
-         setArgFlag = true;
-      }
+      
+      let mut wroteFuncFlag = false;
+      let mut setArgFlag = false;
 
-   }
-   
-   if not wroteFuncFlag {
-      // if node.$nilAccess {
-      //    self.write( "_lune.nilacc( " );
-      //    filter( node.$func, self, node );
-      //    self.write( ", nil, 'call'" );
-      //    wroteFuncFlag = true;
+      // fn setArg() {
+      //    self.write( "_pEnv" );
       // }
-      // else {
+      
+      // fn fieldCall():bool {
+
+      //    let! fieldNode = node.$func@@@Nodes.RefFieldNode {
+      //       return true;
+      //    };
+      //    let prefixNode = fieldNode.$prefix;
+
+      //    fn processSet(): bool {
+      //       setArgFlag = true;
+      //       wroteFuncFlag = true;
+
+      //       switch fieldNode.$field.txt {
+      //          case "add", "del" {
+      //             filter( prefixNode, self, fieldNode );
+      //             self.write( "[" );
+      //             if! let argList = node.$argList {
+      //                filter( argList, self, fieldNode );
+      //             }
+      //             self.write( "]" );
+      //             switch fieldNode.$field.txt {
+      //                case "add" {
+      //                   self.write( "= true" );
+      //                }
+      //                case "del" {
+      //                   self.write( "= nil" );
+      //                }
+      //             }
+      //             return false;
+      //          }
+      //       }
+
+      //       self.write( "_lune._Set_%s(" ( fieldNode.$field.txt ) );
+      //       filter( prefixNode, self, fieldNode );
+      //       return true;
+      //    }
+
+      //    let prefixType = prefixNode.$expType;
+
+      //    fn processEnumAlge() {
+      //       wroteFuncFlag = true;
+      //       let fieldExpType = fieldNode.$expType;
+      //       let canonicalName = self.getCanonicalName( prefixType );
+      //       let mut methodName = fieldNode.$field.txt;
+      //       let mut delimit = ":";
+      //       if methodName == "get__txt" {
+      //          methodName = "_getTxt";
+      //       }
+      //       if fieldExpType.$kind == .Func {
+      //          delimit = ".";
+      //       }
+      //       self.write( "%s%s%s( " (canonicalName, delimit, methodName ) );
+      //       if fieldExpType.$staticFlag {
+      //          setArgFlag = false;
+      //       }
+      //       else {
+      //          filter( prefixNode, self, fieldNode );
+      //          setArgFlag = true;
+      //       }
+      //    }
+
+      //    if node.$nilAccess {
+      //       wroteFuncFlag = true;
+      //       setArgFlag = true;
+      //       switch prefixType.$kind {
+      //          case .List, .Array {
+      //             self.write( "_lune.nilacc( table.%s, nil, 'list', "
+      //                         (fieldNode.$field.txt ) );
+      //             filter( prefixNode, self, fieldNode );
+      //          }
+      //          default {
+      //             self.write( "_lune.nilacc( " );
+      //             filter( prefixNode, self, fieldNode );
+      //             self.write( ", '%s', 'callmtd' " (fieldNode.$field.txt ) );
+      //          }
+      //       }
+      //    }
+      //    else {
+      //       switch prefixType.$kind {
+      //          case .List, .Array {
+      //             setArgFlag = true;
+      //             wroteFuncFlag = true;
+      //             self.write( "table.%s( " (fieldNode.$field.txt ) );
+      //             filter( prefixNode, self, fieldNode );
+      //          }
+      //          case .Set {
+      //             if not processSet() {
+      //                return false;
+      //             }
+      //          }
+      //          case .Enum, .Alge {
+      //             processEnumAlge();
+      //          }
+      //          case .Box {
+      //             filter( prefixNode, self, fieldNode );
+      //             self.write( "[1]" );
+      //             return false;
+      //          }
+      //          case .Class {
+      //             if prefixType.isInheritFrom( Ast.builtinTypeMapping, nil ) and
+      //                isGenericType( prefixType ) and
+      //                ( fieldNode.$field.txt == "_fromMap" or
+      //                  fieldNode.$field.txt == "_fromStem" )
+      //             {
+      //                wroteFuncFlag = true;
+      //                setArgFlag = true;
+      //                filter( node.$func, self, node );
+      //                self.write( "( " );
+      //                if! let argList = node.$argList {
+      //                   filter( argList,  self, node );
+      //                   self.write( ", " );
+      //                }
+      //                self.outputAlter2MapFunc( self, prefixType.createAlt2typeMap(false) );
+      //                self.write( ")" );
+      //                return false;
+      //             }
+      //          }
+      //       }
+      //    }
+      //    return true;
+      // }
+
+      // if not fieldCall() {
+      //    return;
+      // }
+
+      if! let refNode = node.$func@@@Nodes.ExpRefNode {
+         let builtinFunc = TransUnit.getBuiltinFunc();
+         
+         if refNode.$expType == builtinFunc.lune_print {
+            wroteFuncFlag = true;
+            self.write( "lune_print(" );
+         }
+         // elseif refNode.$token.txt == "super" {
+         //    wroteFuncFlag = true;
+         //    setArgFlag = true;
+         //    let funcType = refNode.$expType;
+         //    self.write( "%s.%s( self " ( self.getFullName( funcType.$parentInfo ),
+         //                                 funcType.$rawTxt ) );
+         // }
+      }
+      
+      if not wroteFuncFlag {
+         if node.$func.$expType.$kind == .Method {
+            if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+               //self.write( "lune_call_method_0( _pEnv, " );
+               self.write( "%s( _pEnv, "
+                           ( self.moduleCtrl.getCallMethodCName( node.$func.$expType )));
+               filter( fieldNode.$prefix, self, node );
+               // self.write(
+               //    ",offsetof( lune_mtd_%s_t, %s )"
+               //    (self.getFullName( fieldNode.$prefix.$expType ), fieldNode.$field.txt ) );
+            }
+            wroteFuncFlag = true;
+            setArgFlag = true;
+         }
+
+      }
+      
+      if not wroteFuncFlag {
+         // if node.$nilAccess {
+         //    self.write( "_lune.nilacc( " );
+         //    filter( node.$func, self, node );
+         //    self.write( ", nil, 'call'" );
+         //    wroteFuncFlag = true;
+         // }
+         // else {
          filter( node.$func, self, node );
 
          if node.$func.$expType.$kind == .Form {
@@ -3894,46 +4129,89 @@ pub override fn convFilter.processExpCall(
 
          
          self.write( "( " );
-      // }
-   }
+         // }
+      }
 
-   if not setArgFlag {
-      self.write( "_pEnv, " );
+      if not setArgFlag {
+         self.write( "_pEnv, " );
 
 
-      if! let scope = node.$func.$expType.$scope {
-         if #scope$.$closureSymList > 0 {
-            // クロージャの場合
-            self.write( "lune_func2stem( _pEnv, (lune_func_t *)NULL, 0, false, %d"
-                        (#scope$.$closureSymList) );
-            foreach symbolInfo in scope.$closureSymList {
-               self.write( ", %s" (symbolInfo.$name) );
+         if! let scope = node.$func.$expType.$scope {
+            if #scope$.$closureSymList > 0 {
+               // クロージャの場合
+               self.write( "lune_func2stem( _pEnv, (lune_func_t *)NULL, 0, false, %d"
+                           (#scope$.$closureSymList) );
+               foreach symbolInfo in scope.$closureSymList {
+                  self.write( ", %s" (symbolInfo.$name) );
+               }
+               self.write( ")" );
             }
-            self.write( ")" );
+            else {
+               self.write( "NULL" );
+            }
          }
          else {
             self.write( "NULL" );
          }
       }
-      else {
-         self.write( "NULL" );
-      }
-   }
 
-   if! let argList = node.$argList {
-      let mut expList:List<&Nodes.Node> = [];
-      foreach expNode in argList.$expList {
-         if expNode.$expType.$kind ~= .Abbr {
-            expList.insert( expNode );
+      if! let argList = node.$argList {
+         let mut expList:List<&Nodes.Node> = [];
+         foreach expNode in argList.$expList {
+            if expNode.$expType.$kind ~= .Abbr {
+               expList.insert( expNode );
+            }
+         }
+
+         if #expList > 0 {
+            self.write( ", " );
+            self.processCallArgList( node.$func.$expType, node.$argList, node );
          }
       }
+      self.write( " )" );
+   }
 
-      if #expList > 0 {
-         self.write( ", " );
-         self.processCallArgList( node.$func.$expType, node.$argList, node );
+
+
+   let mut isMret = false;
+   if! let argList = node.$argList {
+      if! let mRetExp = argList.$mRetExp {
+         isMret = true;
+         self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
+
+         let funcNode = node.$func;
+         switch funcNode.$expType.$kind {
+            case .Method {
+               if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+                  self.write( ", " );
+                  filter( fieldNode.$prefix, self, node );
+               }
+            }
+            case .Form {
+               self.write( ", " );
+               filter( node.$func, self, node );
+            }
+         }
+         foreach argNode, index in argList.$expList {
+            if index <= mRetExp.$index {
+               self.write( ", " );
+               filter( argNode, self, node );
+            }
+         }
+         self.write( ")" );
       }
    }
-   self.write( " )" );
+   if not isMret {
+      process();
+   }
+};
+
+pub override fn convFilter.processExpAccessMRet(
+   node: Nodes.ExpAccessMRetNode, opt:Opt ) mut
+
+{
+   self.write( "lune_getMRet( _pEnv, %d )" ( node.$index - 1 ) );
+   self.write( getAccessPrimValFromStem( false, node.$expType, 0 ) );
 };
 
 
@@ -4126,13 +4404,16 @@ pub override fn convFilter.processExpOp2(
       case "=" {
          let symbolList = node.$exp1.getSymbolInfo();
          let expList;
+         let mRetExp:&Nodes.MRetExp!;
          if! let expListNode = node.$exp2@@@Nodes.ExpListNode {
             expList = expListNode.$expList;
+            mRetExp = expListNode.$mRetExp;
          }
          else {
             expList = [ node.$exp2 ];
+            mRetExp = nil;
          }
-         self.processSetValToSym( node, symbolList, expList, node.$exp1 );
+         self.processSetValToSym( node, symbolList, expList, node.$exp1, mRetExp );
       }
       case "and", "or" {
          self.processAndOr( node, opTxt, opt.node );

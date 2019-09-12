@@ -624,5 +624,5 @@ test-miniC:
 
 
 build-cc:
-	$(MAKE) build-cc-only
+	$(MAKE) test-miniC
 	$(call test-convC,ccc)

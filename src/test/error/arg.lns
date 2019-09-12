@@ -63,7 +63,7 @@ fn func3( val1:int, val2:int, val3:int ) {
 
 func3( 1, 2 ); // error
 func3( 1, 2, 3 );
-func3( 1, func2(0) );
+func3( 1, func2(0) ); // warn
 func3( 1, func2(0), 3 );
 func3( func2(0) ); // error
 func3( func2(0), 3 ); // error

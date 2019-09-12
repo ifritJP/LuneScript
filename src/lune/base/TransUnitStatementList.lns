@@ -25,7 +25,7 @@ SOFTWARE.
 subfile owner lune.base.TransUnit;
 
 fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
-   let mut expList: Nodes.ExpListNode! = nil;
+   let mut expList: &Nodes.ExpListNode! = nil;
    let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
    if funcTypeInfo == Ast.headTypeInfo or
       ( funcTypeInfo.$kind ~= .Func and funcTypeInfo.$kind ~= .Method )
@@ -50,15 +50,11 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    }
 
    when! expList {
-      let mut expNodeList:List<&Nodes.Node> = [];
-      foreach exp in expList.$expList {
-         expNodeList.insert( exp );
-      }
       if! let alt2typeMap, newExpNodeList = self.checkMatchType(
-         "return", token.pos, retTypeList, expNodeList, false, true, nil )
+         "return", token.pos, retTypeList, expList, false,
+         not expList.$followOn, nil )
       {
-         expList = self.createExpListNode(
-            expList.$pos, expList.$followOn, newExpNodeList );
+         expList = newExpNodeList;
       }
    }
    else {

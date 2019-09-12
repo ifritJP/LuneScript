@@ -6379,21 +6379,28 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    return node
 end
 
-function TransUnit:createExpListNode( pos, followOn, newExpList )
+function TransUnit:createExpListNode( orgExpList, newExpList )
 
    local newExpTypeList = {}
    for listIndex, expNode in pairs( newExpList ) do
       table.insert( newExpTypeList, expNode:get_expType() )
    end
    
-   for listIndex, expType in pairs( newExpList[#newExpList]:get_expTypeList() ) do
-      if listIndex ~= 1 then
-         table.insert( newExpTypeList, expType )
-      end
-      
+   if #newExpList[#newExpList]:get_expTypeList() > 1 then
+      self:addErrMess( orgExpList:get_pos(), string.format( "illegal exp -- %d", #newExpList[#newExpList]:get_expTypeList()) )
    end
    
-   return Nodes.ExpListNode.create( self.nodeManager, pos, newExpTypeList, newExpList, followOn )
+   do
+      local mRetIndex = _lune.nilacc( orgExpList:get_mRetExp(), 'get_index', 'callmtd' )
+      if mRetIndex ~= nil then
+         if mRetIndex > #newExpList then
+            self:addErrMess( orgExpList:get_pos(), string.format( "over index -- %d", mRetIndex) )
+         end
+         
+      end
+   end
+   
+   return Nodes.ExpListNode.create( self.nodeManager, orgExpList:get_pos(), newExpTypeList, newExpList, orgExpList:get_mRetExp(), orgExpList:get_followOn() )
 end
 
 local LetVarInfo = {}
@@ -6563,19 +6570,19 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       end
       
       if updateExpList then
-         expList = self:createExpListNode( expList:get_pos(), expList:get_followOn(), newExpList )
+         expList = self:createExpListNode( expList, newExpList )
       end
       
       do
          local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
          do
-            local workList = self:checkImplictCast( alt2typeMap, typeInfoList, expList:get_expList(), function ( dstType, expNode )
+            local workList = self:checkImplicitCast( alt2typeMap, typeInfoList, expList, function ( dstType, expNode )
             
                return nil
             end
              )
             if workList ~= nil then
-               expList = self:createExpListNode( expList:get_pos(), expList:get_followOn(), workList )
+               expList = workList
             end
          end
          
@@ -6759,15 +6766,13 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    local nextToken = self:getToken(  )
    local typeInfoList = {}
    local varNameList = {}
-   local expNodeList = {}
+   local expList
+   
    if nextToken.txt == "let" then
-      local workTypeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, Ast.MutMode.IMut, Ast.AccessMode.Local, true )
+      local workTypeInfoList, letVarList, orgExpTypeList, workExpList = self:analyzeLetAndInitExp( firstToken.pos, Ast.MutMode.IMut, Ast.AccessMode.Local, true )
       typeInfoList = workTypeInfoList
-      if expList ~= nil then
-         for __index, exp in pairs( expList:get_expList() ) do
-            table.insert( expNodeList, exp )
-         end
-         
+      if workExpList ~= nil then
+         expList = workExpList
       else
          self:addErrMess( nextToken.pos, "if! let has illegal init val." )
          self:error( "system error" )
@@ -6780,8 +6785,8 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    else
     
       self:pushback(  )
-      local exp = self:analyzeExp( false, false )
-      table.insert( expNodeList, exp )
+      expList = self:analyzeExpList( false, false )
+      local exp = expList:get_expList()[1]
       if exp:get_expType():get_nilable() then
          table.insert( typeInfoList, exp:get_expType():get_nonnilableType() )
       else
@@ -6815,8 +6820,8 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    end
    
    local hasCond = false
-   for index, expNode in pairs( expNodeList ) do
-      if index ~= #expNodeList then
+   for index, expNode in pairs( expList:get_expList() ) do
+      if index ~= #expList:get_expList() then
          if Ast.isConditionalbe( expNode:get_expType() ) then
             hasCond = true
             break
@@ -6840,7 +6845,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
       self:addErrMess( firstToken.pos, "This condition never be false" )
    end
    
-   return Nodes.IfUnwrapNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, varNameList, expNodeList, block, elseBlock )
+   return Nodes.IfUnwrapNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, varNameList, expList, block, elseBlock )
 end
 
 function TransUnit:analyzeWhen( firstToken )
@@ -6891,6 +6896,44 @@ function TransUnit:analyzeWhen( firstToken )
    return Nodes.WhenNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, varNameList, expNodeList, block, elseBlock )
 end
 
+function TransUnit:createExpList( pos, expTypeList, expList, followOn )
+
+   local mRetExp = nil
+   if #expList > 0 then
+      if #expList[#expList]:get_expTypeList() > 1 then
+         mRetExp = Nodes.MRetExp.new(expList[#expList], #expTypeList)
+         for listIndex, expType in pairs( expList[#expList]:get_expTypeList() ) do
+            if listIndex ~= 1 then
+               table.insert( expTypeList, expType )
+            end
+            
+         end
+         
+      end
+      
+      local lastExpNode = expList[#expList]
+      do
+         local _switchExp = lastExpNode:get_kind()
+         if _switchExp == Nodes.NodeKind.get_ExpCall() or _switchExp == Nodes.NodeKind.get_ExpCallSuper() then
+            local retTypeList = lastExpNode:get_expTypeList()
+            if #retTypeList > 1 then
+               for retIndex, retType in pairs( retTypeList ) do
+                  if retIndex ~= 1 then
+                     table.insert( expList, Nodes.ExpAccessMRetNode.create( self.nodeManager, lastExpNode:get_pos(), {retType}, lastExpNode, retIndex ) )
+                  end
+                  
+               end
+               
+            end
+            
+         end
+      end
+      
+   end
+   
+   return Nodes.ExpListNode.create( self.nodeManager, pos, expTypeList, expList, mRetExp, followOn )
+end
+
 function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTypeList, contExpect )
 
    local expList = {}
@@ -6904,6 +6947,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
    
    local index = 1
    local abbrNode = nil
+   local mRetExp = nil
    local followOn = false
    repeat 
       local expectType = nil
@@ -6939,8 +6983,8 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
             self:addErrMess( exp:get_pos(), string.format( "This arg(%d) doesn't have multiple value. It must not use '**'", index) )
          end
          
-         token = self:getToken(  )
          followOn = true
+         token = self:getToken(  )
       end
       
       if token.txt == "##" then
@@ -6955,13 +6999,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       
       index = index + 1
    until token.txt ~= ","
-   for listIndex, expType in pairs( expList[#expList]:get_expTypeList() ) do
-      if listIndex ~= 1 then
-         table.insert( expTypeList, expType )
-      end
-      
-   end
-   
+   local expListNode = self:createExpList( _lune.unwrapDefault( pos, Parser.Position.new(0, 0)), expTypeList, expList, followOn )
    if not allowNoneType then
       for expIndex, expType in pairs( expTypeList ) do
          if expType == Ast.builtinTypeNone then
@@ -6972,33 +7010,12 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       
    end
    
-   if #expList > 0 then
-      local lastExpNode = expList[#expList]
-      do
-         local _switchExp = lastExpNode:get_kind()
-         if _switchExp == Nodes.NodeKind.get_ExpCall() or _switchExp == Nodes.NodeKind.get_ExpCallSuper() then
-            local retTypeList = lastExpNode:get_expTypeList()
-            if #retTypeList > 1 then
-               for retIndex, retType in pairs( retTypeList ) do
-                  if retIndex ~= 1 then
-                     table.insert( expList, Nodes.ExpAccessMRetNode.create( self.nodeManager, lastExpNode:get_pos(), {retType}, lastExpNode, retIndex ) )
-                  end
-                  
-               end
-               
-            end
-            
-         end
-      end
-      
-   end
-   
    if abbrNode ~= nil then
       table.insert( expList, abbrNode )
    end
    
    self:pushback(  )
-   return Nodes.ExpListNode.create( self.nodeManager, _lune.unwrapDefault( pos, Parser.Position.new(0, 0)), expTypeList, expList, followOn )
+   return expListNode
 end
 
 function TransUnit:analyzeListConst( token )
@@ -7199,10 +7216,12 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
 end
 
 
-function TransUnit:checkImplictCast( alt2typeMap, dstTypeList, expNodeList, callback )
+function TransUnit:checkImplicitCast( alt2typeMap, dstTypeList, expListNode, callback )
 
+   local expNodeList = expListNode:get_expList()
    local hasModNode = false
    local newExpNodeList = {}
+   local expTypeList = {}
    for index, expNode in pairs( expNodeList ) do
       local workNode = expNode
       local stopFlag = false
@@ -7225,12 +7244,25 @@ function TransUnit:checkImplictCast( alt2typeMap, dstTypeList, expNodeList, call
                      
                      if dstType:get_kind() == Ast.TypeInfoKind.DDD then
                         local argList = {}
+                        local argTypeList = {}
                         for workIndex = index, #expNodeList do
                            local appNode = expNodeList[workIndex]
                            table.insert( argList, appNode )
                         end
                         
-                        workNode = Nodes.ExpToDDDNode.create( self.nodeManager, expNode:get_pos(), {dstType}, argList )
+                        local mRetExp
+                        
+                        do
+                           local workMRetExp = expListNode:get_mRetExp()
+                           if workMRetExp ~= nil then
+                              mRetExp = Nodes.MRetExp.new(workMRetExp:get_exp(), workMRetExp:get_index() - index + 1)
+                           else
+                              mRetExp = nil
+                           end
+                        end
+                        
+                        local newExpListNode = Nodes.ExpListNode.create( self.nodeManager, expNode:get_pos(), argTypeList, argList, mRetExp, expListNode:get_followOn() )
+                        workNode = Nodes.ExpToDDDNode.create( self.nodeManager, expNode:get_pos(), {dstType}, newExpListNode )
                         stopFlag = true
                      else
                       
@@ -7254,6 +7286,7 @@ function TransUnit:checkImplictCast( alt2typeMap, dstTypeList, expNodeList, call
       end
       
       table.insert( newExpNodeList, workNode )
+      table.insert( expTypeList, workNode:get_expType() )
       if stopFlag then
          break
       end
@@ -7264,11 +7297,29 @@ function TransUnit:checkImplictCast( alt2typeMap, dstTypeList, expNodeList, call
       return nil
    end
    
-   return newExpNodeList
+   local newMRetExp = nil
+   do
+      local mRetExp = expListNode:get_mRetExp()
+      if mRetExp ~= nil then
+         if mRetExp:get_index() <= #newExpNodeList and newExpNodeList[mRetExp:get_index()]:get_expType():get_kind() ~= Ast.TypeInfoKind.DDD then
+            newMRetExp = mRetExp
+         end
+         
+      end
+   end
+   
+   return Nodes.ExpListNode.create( self.nodeManager, expListNode:get_pos(), expTypeList, newExpNodeList, newMRetExp, expListNode:get_followOn() )
 end
 
-function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allowDstShort, warnForFollow, genericsClassType )
+function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allowDstShort, warnForFollow, genericsClassType )
 
+   local expNodeList = _lune.nilacc( expListNode, 'get_expList', 'callmtd' )
+   if  nil == expNodeList then
+      local _expNodeList = expNodeList
+   
+      expNodeList = {}
+   end
+   
    local warnForFollowSrcIndex = nil
    local expTypeList = {}
    local workExpNodeList = expNodeList
@@ -7338,12 +7389,13 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
       end
    end
    
-   if #expNodeList ~= 0 then
+   if expListNode ~= nil then
       local autoBoxingCount = 0
       local hasImplictCast = false
-      local newExpNodeList = {}
+      local newExpListNode
+      
       do
-         local workList = self:checkImplictCast( alt2typeMap, dstTypeList, expNodeList, function ( dstType, expNode )
+         local workList = self:checkImplicitCast( alt2typeMap, dstTypeList, expListNode, function ( dstType, expNode )
          
             if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode:get_expType() ) then
                autoBoxingCount = autoBoxingCount + 1
@@ -7354,8 +7406,10 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
          end
           )
          if workList ~= nil then
-            newExpNodeList = workList
+            newExpListNode = workList
             hasImplictCast = true
+         else
+            newExpListNode = nil
          end
       end
       
@@ -7364,13 +7418,13 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expNodeList, allow
             self:addErrMess( pos, string.format( "illegal auto boxing error -- %d", autoBoxingCount) )
          end
          
-         return alt2typeMap, newExpNodeList, expTypeList
+         return alt2typeMap, newExpListNode, expTypeList
       elseif Ast.CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2typeMap ) then
          self:addErrMess( pos, "not support auto boxing" )
       end
       
       if hasImplictCast then
-         return alt2typeMap, newExpNodeList, expTypeList
+         return alt2typeMap, newExpListNode, expTypeList
       end
       
    end
@@ -7397,22 +7451,17 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       end
    end
    
-   local expNodeList = {}
    local warnForFollow = true
    if expList ~= nil then
-      for __index, node in pairs( expList:get_expList() ) do
-         table.insert( expNodeList, node )
-      end
-      
       if expList:get_followOn() then
          warnForFollow = false
       end
       
    end
    
-   local alt2typeMap, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expNodeList, false, warnForFollow, genericsClass )
+   local alt2typeMap, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, genericsClass )
    if expList ~= nil and newExpNodeList ~= nil then
-      return alt2typeMap, self:createExpListNode( expList:get_pos(), expList:get_followOn(), newExpNodeList )
+      return alt2typeMap, newExpNodeList
    end
    
    return alt2typeMap, expList
@@ -7826,7 +7875,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
          do
             local toDDDNode = _lune.__Cast( argList:get_expList()[2], 3, Nodes.ExpToDDDNode )
             if toDDDNode ~= nil then
-               for index, workNode in pairs( toDDDNode:get_expList() ) do
+               for index, workNode in pairs( toDDDNode:get_expList():get_expList() ) do
                   table.insert( formArgTypeList, workNode:get_expType() )
                end
                
@@ -8717,24 +8766,22 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
       local valInfo = algeTypeInfo:getValInfo( symbolToken.txt )
       if valInfo ~= nil then
          local argList = {}
+         local argListNode
+         
          if #valInfo:get_typeList() > 0 then
             self:checkNextToken( "(" )
-            for index, typeInfo in pairs( valInfo:get_typeList() ) do
-               local argExp = self:analyzeExp( false, false, nil, typeInfo )
-               table.insert( argList, argExp )
-               if index ~= #valInfo:get_typeList() then
-                  self:checkNextToken( "," )
-               end
-               
-            end
-            
+            argListNode = self:analyzeExpList( false, false, nil, valInfo:get_typeList(), nil )
+            argList = (_lune.unwrap( argListNode) ):get_expList()
             self:checkNextToken( ")" )
+         else
+          
+            argListNode = nil
          end
          
          do
-            local alt2typeMap, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argList, false, true, nil )
+            local alt2typeMap, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if alt2typeMap ~= nil and newExpNodeList ~= nil then
-               argList = newExpNodeList
+               argList = newExpNodeList:get_expList()
             end
          end
          
@@ -8862,18 +8909,13 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
    return self:analyzeExpCont( firstToken, exp, skipFlag )
 end
 
-function TransUnit:analyzeExpOpSet( exp, opeToken, exp2NodeList )
+function TransUnit:analyzeExpOpSet( exp, opeToken, expList )
 
    if not exp:canBeLeft(  ) then
       self:addErrMess( exp:get_pos(), string.format( "this node can not be l-value. -- %s", Nodes.getNodeKindName( exp:get_kind() )) )
    end
    
-   local newExpListNode = nil
-   local alt2typeMap, newExpNodeList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), exp2NodeList, true, false, nil )
-   if newExpNodeList ~= nil then
-      newExpListNode = self:createExpListNode( exp2NodeList[1]:get_pos(), false, newExpNodeList )
-   end
-   
+   local alt2typeMap, newExpListNode, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    for index, symbolInfo in pairs( exp:getSymbolInfo(  ) ) do
       if not symbolInfo:get_mutable() and symbolInfo:get_hasValueFlag() then
          if self.validMutControl then
@@ -8938,44 +8980,41 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                end
             end
             
-            local expectTypeInfo = nil
-            do
-               local prefixExpType = exp:get_expType()
+            local expectTypeList = {}
+            for __index, exp1Type in pairs( exp:get_expTypeList() ) do
+               local prefixExpType = exp1Type
                if prefixExpType:get_nilable() then
                   prefixExpType = prefixExpType:get_nonnilableType()
                end
                
+               local expectType = Ast.builtinTypeNone
                do
                   local _exp = _lune.__Cast( prefixExpType:get_srcTypeInfo(), 3, Ast.EnumTypeInfo )
                   if _exp ~= nil then
-                     expectTypeInfo = _exp
+                     expectType = _exp
                   end
                end
                
                do
                   local _exp = _lune.__Cast( prefixExpType:get_srcTypeInfo(), 3, Ast.AlgeTypeInfo )
                   if _exp ~= nil then
-                     expectTypeInfo = _exp
+                     expectType = _exp
                   end
                end
                
+               table.insert( expectTypeList, expectType )
             end
             
-            local exp2 = self:analyzeExp( false, false, opLevel, expectTypeInfo )
-            local exp2NodeList = {exp2}
-            if not exp2:canBeRight(  ) then
-               self:addErrMess( exp2:get_pos(), string.format( "This can't evaluate for '%s' -- %s", opTxt, Nodes.getNodeKindName( exp2:get_kind() )) )
-            end
+            local exp2
             
             if opTxt == "=" then
-               local workToken = self:getToken(  )
-               if workToken.txt == "," then
-                  local expListNode = self:analyzeExpList( false, false, exp2 )
-                  exp2 = expListNode
-                  exp2NodeList = expListNode:get_expList()
-               else
-                
-                  self:pushback(  )
+               local expListNode = self:analyzeExpList( false, false, nil, expectTypeList )
+               exp2 = expListNode
+            else
+             
+               exp2 = self:analyzeExp( false, false, opLevel, expectTypeList[1] )
+               if not exp2:canBeRight(  ) then
+                  self:addErrMess( exp2:get_pos(), string.format( "This can't evaluate for '%s' -- %s", opTxt, Nodes.getNodeKindName( exp2:get_kind() )) )
                end
                
             end
@@ -9143,7 +9182,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                   
                elseif _switchExp == "=" then
                   do
-                     local _exp = self:analyzeExpOpSet( exp, nextToken, exp2NodeList )
+                     local _exp = self:analyzeExpOpSet( exp, nextToken, _lune.unwrap( _lune.__Cast( exp2, 3, Nodes.ExpListNode )) )
                      if _exp ~= nil then
                         exp2 = _exp
                      end
@@ -9759,15 +9798,10 @@ function TransUnit:analyzeReturn( token )
    end
    
    if expList ~= nil then
-      local expNodeList = {}
-      for __index, exp in pairs( expList:get_expList() ) do
-         table.insert( expNodeList, exp )
-      end
-      
       do
-         local alt2typeMap, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, expNodeList, false, true, nil )
+         local alt2typeMap, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, expList, false, not expList:get_followOn(), nil )
          if alt2typeMap ~= nil and newExpNodeList ~= nil then
-            expList = self:createExpListNode( expList:get_pos(), expList:get_followOn(), newExpNodeList )
+            expList = newExpNodeList
          end
       end
       

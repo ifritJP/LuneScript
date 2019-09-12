@@ -158,6 +158,10 @@ void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
     }
 }
 
+lune_stem_t * lune_setMRet( lune_env_t * _pEnv, lune_stem_t * pStem ) {
+    _pEnv->pMRet = pStem;
+    return lune_fromDDD( pStem, 0 );
+}
 
 lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem )
 {
@@ -786,6 +790,7 @@ static lune_env_t * lune_createEnv()
     _pEnv->pTrueStem->refCount++;
     _pEnv->pFalseStem = lune_createBoolStem( _pEnv, false );
     _pEnv->pFalseStem->refCount++;
+    _pEnv->pMRet = NULL;
 
     _pEnv->pSortCallback = NULL;
 

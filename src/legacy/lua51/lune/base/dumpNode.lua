@@ -423,7 +423,7 @@ function dumpFilter:processIfUnwrap( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   for index, expNode in pairs( node:get_expNodeList() ) do
+   for index, expNode in pairs( node:get_expList():get_expList() ) do
       filter( expNode, self, opt:nextOpt(  ) )
    end
    
@@ -793,7 +793,7 @@ end
 function dumpFilter:processExpList( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, "" )
+   dump( prefix, depth, node, node:get_mRetExp() and "hasMRetExp" or "noMRetExp" )
    local expList = node:get_expList(  )
    for index, exp in pairs( expList ) do
       filter( exp, self, opt:nextOpt(  ) )
@@ -821,10 +821,7 @@ function dumpFilter:processExpToDDD( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
-   for index, exp in pairs( node:get_expList() ) do
-      filter( exp, self, opt:nextOpt(  ) )
-   end
-   
+   filter( node:get_expList(), self, opt:nextOpt(  ) )
 end
 
 function dumpFilter:processExpCast( node, opt )

@@ -44,7 +44,7 @@ func2( ret2() ); // warn **
 func2( ret3() ); // error
 
 func20( ret1() ); // error
-func20( ret2() );
+func20( ret2() ); // warn
 
 //=== func3
 func3( ret1() ); // warn ##
@@ -53,7 +53,7 @@ func3( ret3() ); // warn **
 
 func30( ret1() ); // error
 func30( ret2() ); // error
-func30( ret3() );
+func30( ret3() ); // warn
 
 
 fn ret100( val:int ) : int {
@@ -68,7 +68,7 @@ fn ret200( val:int ) : int, int {
          return ret1(); // error
       }
       default {
-         return ret2();
+         return ret2();// warn
       }
    }
 }

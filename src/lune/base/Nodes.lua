@@ -1677,6 +1677,31 @@ function IfNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+local MRetExp = {}
+_moduleObj.MRetExp = MRetExp
+function MRetExp.setmeta( obj )
+  setmetatable( obj, { __index = MRetExp  } )
+end
+function MRetExp.new( exp, index )
+   local obj = {}
+   MRetExp.setmeta( obj )
+   if obj.__init then
+      obj:__init( exp, index )
+   end
+   return obj
+end
+function MRetExp:__init( exp, index )
+
+   self.exp = exp
+   self.index = index
+end
+function MRetExp:get_exp()
+   return self.exp
+end
+function MRetExp:get_index()
+   return self.index
+end
+
 function NodeKind.get_ExpList(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpList'])
@@ -1706,23 +1731,24 @@ function ExpListNode:canBeStatement(  )
 
    return false
 end
-function ExpListNode.new( id, pos, typeList, expList, followOn )
+function ExpListNode.new( id, pos, typeList, expList, mRetExp, followOn )
    local obj = {}
    ExpListNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, expList, followOn ); end
+   if obj.__init then obj:__init( id, pos, typeList, expList, mRetExp, followOn ); end
    return obj
 end
-function ExpListNode:__init(id, pos, typeList, expList, followOn) 
+function ExpListNode:__init(id, pos, typeList, expList, mRetExp, followOn) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpList']), pos, typeList)
    
    
    self.expList = expList
+   self.mRetExp = mRetExp
    self.followOn = followOn
    
 end
-function ExpListNode.create( nodeMan, pos, typeList, expList, followOn )
+function ExpListNode.create( nodeMan, pos, typeList, expList, mRetExp, followOn )
 
-   local node = ExpListNode.new(nodeMan:nextId(  ), pos, typeList, expList, followOn)
+   local node = ExpListNode.new(nodeMan:nextId(  ), pos, typeList, expList, mRetExp, followOn)
    nodeMan:addNode( node )
    return node
 end
@@ -1757,6 +1783,9 @@ function ExpListNode.setmeta( obj )
 end
 function ExpListNode:get_expList()
    return self.expList
+end
+function ExpListNode:get_mRetExp()
+   return self.mRetExp
 end
 function ExpListNode:get_followOn()
    return self.followOn
@@ -3595,46 +3624,42 @@ function IfUnwrapNode:canBeStatement(  )
 
    return true
 end
-function IfUnwrapNode.new( id, pos, typeList, varNameList, expNodeList, block, nilBlock )
+function IfUnwrapNode.new( id, pos, typeList, varNameList, expList, block, nilBlock )
    local obj = {}
    IfUnwrapNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, varNameList, expNodeList, block, nilBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, varNameList, expList, block, nilBlock ); end
    return obj
 end
-function IfUnwrapNode:__init(id, pos, typeList, varNameList, expNodeList, block, nilBlock) 
+function IfUnwrapNode:__init(id, pos, typeList, varNameList, expList, block, nilBlock) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['IfUnwrap']), pos, typeList)
    
    
    self.varNameList = varNameList
-   self.expNodeList = expNodeList
+   self.expList = expList
    self.block = block
    self.nilBlock = nilBlock
    
 end
-function IfUnwrapNode.create( nodeMan, pos, typeList, varNameList, expNodeList, block, nilBlock )
+function IfUnwrapNode.create( nodeMan, pos, typeList, varNameList, expList, block, nilBlock )
 
-   local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, typeList, varNameList, expNodeList, block, nilBlock)
+   local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, typeList, varNameList, expList, block, nilBlock)
    nodeMan:addNode( node )
    return node
 end
 function IfUnwrapNode:visit( visitor, depth )
 
    do
-      local list = self.expNodeList
-      for __index, child in pairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'expNodeList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1 ) then
-                  return false
-               end
-               
-            elseif _switchExp == NodeVisitMode.End then
+      local child = self.expList
+      do
+         local _switchExp = visitor( child, self, 'expList', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
                return false
             end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
          end
-         
-         
       end
       
       
@@ -3688,8 +3713,8 @@ end
 function IfUnwrapNode:get_varNameList()
    return self.varNameList
 end
-function IfUnwrapNode:get_expNodeList()
-   return self.expNodeList
+function IfUnwrapNode:get_expList()
+   return self.expList
 end
 function IfUnwrapNode:get_block()
    return self.block
@@ -4185,21 +4210,17 @@ end
 function ExpToDDDNode:visit( visitor, depth )
 
    do
-      local list = self.expList
-      for __index, child in pairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'expList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1 ) then
-                  return false
-               end
-               
-            elseif _switchExp == NodeVisitMode.End then
+      local child = self.expList
+      do
+         local _switchExp = visitor( child, self, 'expList', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
                return false
             end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
          end
-         
-         
       end
       
       
