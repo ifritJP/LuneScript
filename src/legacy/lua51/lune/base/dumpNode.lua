@@ -543,6 +543,12 @@ function dumpFilter:processExpDDD( node, opt )
 end
 
 
+function dumpFilter:processDeclForm( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, node:get_expType():getTxt( true ) )
+end
+
 function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
 
    local prefix, depth = opt:get(  )
@@ -793,7 +799,18 @@ end
 function dumpFilter:processExpList( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_mRetExp() and "hasMRetExp" or "noMRetExp" )
+   local mess
+   
+   do
+      local mRetExp = node:get_mRetExp()
+      if mRetExp ~= nil then
+         mess = string.format( "hasMRetExp (%d)", mRetExp:get_index())
+      else
+         mess = "noMRetExp"
+      end
+   end
+   
+   dump( prefix, depth, node, mess )
    local expList = node:get_expList(  )
    for index, exp in pairs( expList ) do
       filter( exp, self, opt:nextOpt(  ) )

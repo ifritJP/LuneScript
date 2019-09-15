@@ -1287,7 +1287,7 @@ fn TransUnit.analyzeExpCall(
    }
    else {
       switch( funcTypeInfo.$kind ) {
-         case .Method, .Func, .Form {
+         case .Method, .Func, .Form, .FormFunc {
          }
          default {
             self.error( "can't call the type -- %s, %s"

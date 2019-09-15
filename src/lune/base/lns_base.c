@@ -43,6 +43,8 @@ static lune_globalEnv_t s_globalEnv;
 #define lune_alloc_stem_op( ENV, TYPE ) \
     _lune_alloc_stem( ENV, TYPE, __FILE__, __LINE__ )
 
+#define LUNE_FORM_MAX_ARG 20
+
 #define lune_abort( MESS ) _lune_abort( MESS, LUNE_DEBUG_POS )
 
 static void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
@@ -836,42 +838,10 @@ static void lune_releaseGlobalEnv(void) {
     lune_checkMem();
 }
 
-lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... )
+lune_stem_t * lune_call_form(
+    lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * _pDDD )
 {
-    lune_stem_t * pRet;
-    lune_form_t * pFormInfo = &_pForm->val.form;
-    
-    if ( pFormInfo->hasDDD ) {
-        pRet = NULL;
-    }
-    else {
-        lune_stem_t * pStemArray[ 10 ];
-
-        va_list ap;
-        va_start( ap, num );
-
-        int index;
-        for ( index = 0; index < num; index++ ) {
-            pStemArray[ index ] = va_arg( ap, lune_stem_t * );
-        }
-        va_end(ap);
-
-        switch ( pFormInfo->argNum ) {
-        case 0:
-            pRet = pFormInfo->pFunc( _pEnv, _pForm );
-            break;
-        case 1:
-            pRet = pFormInfo->pFunc(
-                _pEnv, _pForm, pStemArray[ 0 ] );
-            break;
-        case 2:
-            pRet = pFormInfo->pFunc(
-                _pEnv, _pForm, pStemArray[ 0 ], pStemArray[ 1 ] );
-            break;
-        }
-    }
-
-    return pRet;
+    return lune_form_func( _pForm )( _pEnv, _pForm, _pDDD );
 }
 
 lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem ) {

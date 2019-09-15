@@ -6056,6 +6056,96 @@ function DeclVarNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+function NodeKind.get_DeclForm(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['DeclForm'])
+end
+
+
+regKind( "DeclForm" )
+function Filter:processDeclForm( node, opt )
+
+end
+
+
+function NodeManager:getDeclFormNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['DeclForm']) )
+end
+
+
+local DeclFormNode = {}
+setmetatable( DeclFormNode, { __index = Node } )
+_moduleObj.DeclFormNode = DeclFormNode
+function DeclFormNode:processFilter( filter, opt )
+
+   filter:processDeclForm( self, opt )
+end
+function DeclFormNode:canBeRight(  )
+
+   return false
+end
+function DeclFormNode:canBeLeft(  )
+
+   return false
+end
+function DeclFormNode:canBeStatement(  )
+
+   return true
+end
+function DeclFormNode.new( id, pos, typeList, argList )
+   local obj = {}
+   DeclFormNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, argList ); end
+   return obj
+end
+function DeclFormNode:__init(id, pos, typeList, argList) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclForm']), pos, typeList)
+   
+   
+   self.argList = argList
+   
+end
+function DeclFormNode.create( nodeMan, pos, typeList, argList )
+
+   local node = DeclFormNode.new(nodeMan:nextId(  ), pos, typeList, argList)
+   nodeMan:addNode( node )
+   return node
+end
+function DeclFormNode:visit( visitor, depth )
+
+   do
+      local list = self.argList
+      for __index, child in pairs( list ) do
+         do
+            local _switchExp = visitor( child, self, 'argList', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1 ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            end
+         end
+         
+         
+      end
+      
+      
+   end
+   
+   
+   return true
+end
+function DeclFormNode.setmeta( obj )
+  setmetatable( obj, { __index = DeclFormNode  } )
+end
+function DeclFormNode:get_argList()
+   return self.argList
+end
+
+
 local DeclFuncInfo = {}
 _moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.setmeta( obj )
@@ -6779,6 +6869,30 @@ function AdvertiseInfo:get_prefix()
 end
 
 
+local ClassInitBlockInfo = {}
+_moduleObj.ClassInitBlockInfo = ClassInitBlockInfo
+function ClassInitBlockInfo.setmeta( obj )
+  setmetatable( obj, { __index = ClassInitBlockInfo  } )
+end
+function ClassInitBlockInfo.new( func )
+   local obj = {}
+   ClassInitBlockInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( func )
+   end
+   return obj
+end
+function ClassInitBlockInfo:__init( func )
+
+   self.func = func
+end
+function ClassInitBlockInfo:get_func()
+   return self.func
+end
+function ClassInitBlockInfo:set_func( func )
+   self.func = func
+end
+
 function NodeKind.get_DeclClass(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['DeclClass'])
@@ -6816,13 +6930,13 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
+function DeclClassNode.new( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet) 
+function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclClass']), pos, typeList)
    
    
@@ -6834,15 +6948,15 @@ function DeclClassNode:__init(id, pos, typeList, accessMode, name, gluePrefix, d
    self.moduleName = moduleName
    self.memberList = memberList
    self.scope = scope
-   self.initStmtList = initStmtList
+   self.initBlock = initBlock
    self.advertiseList = advertiseList
    self.trustList = trustList
    self.outerMethodSet = outerMethodSet
    
 end
-function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initStmtList, advertiseList, trustList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, typeList, accessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, scope, initBlock, advertiseList, trustList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -6911,27 +7025,6 @@ function DeclClassNode:visit( visitor, depth )
       
    end
    
-   do
-      local list = self.initStmtList
-      for __index, child in pairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'initStmtList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1 ) then
-                  return false
-               end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            end
-         end
-         
-         
-      end
-      
-      
-   end
-   
    
    return true
 end
@@ -6962,8 +7055,8 @@ end
 function DeclClassNode:get_scope()
    return self.scope
 end
-function DeclClassNode:get_initStmtList()
-   return self.initStmtList
+function DeclClassNode:get_initBlock()
+   return self.initBlock
 end
 function DeclClassNode:get_advertiseList()
    return self.advertiseList

@@ -301,6 +301,12 @@ pub override fn dumpFilter.processExpDDD(
    dump( prefix, depth, node, "..." );
 };
 
+pub override fn dumpFilter.processDeclForm( node: &Nodes.DeclFormNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, node.$expType.getTxt( true ## ) );
+}
+
 fn dumpFilter.processDeclFuncInfo(
    node: &Nodes.Node, declInfo: Nodes.DeclFuncInfo, opt:Opt )
 {
@@ -497,7 +503,14 @@ pub override fn dumpFilter.processExpList(
 
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, node.$mRetExp and "hasMRetExp" or "noMRetExp" );
+   let mess;
+   if! let mRetExp = node.$mRetExp {
+      mess = "hasMRetExp (%d)" (mRetExp.$index);
+   }
+   else {
+      mess = "noMRetExp";
+   }
+   dump( prefix, depth, node, mess );
    let expList = node.get_expList();
    foreach exp, index in expList {
       filter( exp, self, opt.nextOpt() );

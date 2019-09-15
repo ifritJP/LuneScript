@@ -1811,22 +1811,25 @@ function _TypeInfoNormal:createTypeInfo( param )
             local workTypeInfo = Ast.NormalTypeInfo.create( accessMode, self.abstractFlag, scope, baseInfo, interfaceList, parentInfo, self.staticFlag, typeInfoKind, self.txt, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode )
             newTypeInfo = workTypeInfo
             param.typeId2TypeInfo[self.typeId] = workTypeInfo
-            if self.kind == Ast.TypeInfoKind.Func or self.kind == Ast.TypeInfoKind.Method or self.kind == Ast.TypeInfoKind.Macro or self.kind == Ast.TypeInfoKind.Form then
-               local symbolKind = Ast.SymbolKind.Fun
-               do
-                  local _switchExp = self.kind
-                  if _switchExp == Ast.TypeInfoKind.Method then
-                     symbolKind = Ast.SymbolKind.Mtd
-                  elseif _switchExp == Ast.TypeInfoKind.Macro then
-                     symbolKind = Ast.SymbolKind.Mac
-                  elseif _switchExp == Ast.TypeInfoKind.Form then
-                     symbolKind = Ast.SymbolKind.Typ
+            do
+               local _switchExp = self.kind
+               if _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Method or _switchExp == Ast.TypeInfoKind.Macro or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
+                  local symbolKind = Ast.SymbolKind.Fun
+                  do
+                     local _switchExp = self.kind
+                     if _switchExp == Ast.TypeInfoKind.Method then
+                        symbolKind = Ast.SymbolKind.Mtd
+                     elseif _switchExp == Ast.TypeInfoKind.Macro then
+                        symbolKind = Ast.SymbolKind.Mac
+                     elseif _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
+                        symbolKind = Ast.SymbolKind.Typ
+                     end
                   end
+                  
+                  local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
+                  workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, workTypeInfo, accessMode, self.staticFlag, Ast.MutMode.IMut, true )
+                  param.typeId2Scope[self.typeId] = scope
                end
-               
-               local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-               workParentScope:add( symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, workTypeInfo, accessMode, self.staticFlag, Ast.MutMode.IMut, true )
-               param.typeId2Scope[self.typeId] = scope
             end
             
          end
@@ -3662,7 +3665,7 @@ function TransUnit:processImport( modulePath )
                local _switchExp = typeInfo:get_kind()
                if _switchExp == Ast.TypeInfoKind.Func then
                   symbolKind = Ast.SymbolKind.Fun
-               elseif _switchExp == Ast.TypeInfoKind.Form then
+               elseif _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
                   symbolKind = Ast.SymbolKind.Typ
                elseif _switchExp == Ast.TypeInfoKind.Method then
                   symbolKind = Ast.SymbolKind.Mtd
@@ -5305,8 +5308,9 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
       table.insert( argTypeInfoList, argNode:get_expType() )
    end
    
-   local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.Form, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false )
+   local formType = Ast.NormalTypeInfo.createFunc( false, false, nil, Ast.TypeInfoKind.FormFunc, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false )
    self.scope:addForm( formType, accessMode )
+   return Nodes.DeclFormNode.create( self.nodeManager, firstToken.pos, {formType}, argList )
 end
 
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
@@ -5350,8 +5354,7 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    elseif token.txt == "alge" then
       return self:analyzeDeclAlge( accessMode, firstToken )
    elseif token.txt == "form" then
-      self:analyzeDeclForm( accessMode, firstToken )
-      return self:createNoneNode( firstToken.pos )
+      return self:analyzeDeclForm( accessMode, firstToken )
    elseif token.txt == "alias" then
       return self:analyzeAlias( accessMode, firstToken )
    end
@@ -5545,6 +5548,50 @@ function TransUnit:addDefaultConstructor( pos, classTypeInfo, classScope, member
    
 end
 
+function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, funcName, funcBodyScope, retTypeInfoList )
+
+   if classTypeInfo ~= nil then
+      do
+         local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope )
+         if overrideType ~= nil then
+            if not overrideType:get_abstractFlag() then
+               funcBodyScope:addLocalVar( false, false, "super", overrideType, Ast.MutMode.IMut )
+            end
+            
+         end
+      end
+      
+   end
+   
+   self:pushAnalyzingState( analyzingState )
+   local body = self:analyzeBlock( Nodes.BlockKind.Func, TentativeMode.Ignore, funcBodyScope )
+   self:popAnalyzingState(  )
+   if #retTypeInfoList ~= 0 then
+      local breakKind = body:getBreakKind( Nodes.CheckBreakMode.Return )
+      if retTypeInfoList[1] ~= Ast.builtinTypeNeverRet then
+         do
+            local _switchExp = breakKind
+            if _switchExp == Nodes.BreakKind.Return or _switchExp == Nodes.BreakKind.NeverRet then
+            else 
+               
+                  self:addErrMess( firstToken.pos, "This funcion doesn't have return." )
+            end
+         end
+         
+      else
+       
+         if breakKind ~= Nodes.BreakKind.NeverRet then
+            self:addErrMess( firstToken.pos, string.format( "This funcion must be never return. -- %s", Nodes.BreakKind:_getTxt( breakKind)
+            ) )
+         end
+         
+      end
+      
+   end
+   
+   return body
+end
+
 function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, name, moduleName, nextToken )
 
    local memberName2Node = {}
@@ -5552,10 +5599,10 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    local fieldList = {}
    local memberList = {}
    local methodNameSet = {}
-   local initStmtList = {}
+   local initBlockInfo = Nodes.ClassInitBlockInfo.new()
    local advertiseList = {}
    local trustList = {}
-   local node = Nodes.DeclClassNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, classAccessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, self.scope, initStmtList, advertiseList, trustList, {} )
+   local node = Nodes.DeclClassNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, classAccessMode, name, gluePrefix, declStmtList, fieldList, moduleName, memberList, self.scope, initBlockInfo, advertiseList, trustList, {} )
    self.typeInfo2ClassNode[classTypeInfo] = node
    local declCtorNode = nil
    local hasInitBlock = false
@@ -5605,9 +5652,8 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
       
    end
    
-   local function processInitBlock(  )
+   local function processInitBlock( token )
    
-      self:pushAnalyzingState( AnalyzingState.InitBlock )
       if mode ~= DeclClassMode.Class then
          self:error( string.format( "%s can not have __init block.", mode) )
       end
@@ -5620,14 +5666,16 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          
       end
       
-      self:pushScope( false )
-      self:prepareTentativeSymbol( self.scope, false )
-      self:checkNextToken( "{" )
-      self:analyzeStatementList( initStmtList, "}" )
-      self:checkNextToken( "}" )
+      local initBlockScope = self:pushScope( false )
+      self:prepareTentativeSymbol( initBlockScope, false )
+      local name = "___init"
+      local funcTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, initBlockScope, Ast.TypeInfoKind.Func, classTypeInfo, false, false, true, Ast.AccessMode.Pri, name, nil, nil, nil, false )
+      local block = self:analyzeFuncBlock( AnalyzingState.InitBlock, token, classTypeInfo, name, initBlockScope, {} )
+      local info = Nodes.DeclFuncInfo.new(classTypeInfo, token, {}, true, Ast.AccessMode.Pri, block, {}, false)
+      local initBlockNode = Nodes.DeclMethodNode.create( self.nodeManager, firstToken.pos, {funcTypeInfo}, info )
+      initBlockInfo:set_func( initBlockNode )
       self:popScope(  )
       self:finishTentativeSymbol( false )
-      self:popAnalyzingState(  )
    end
    
    local function processAdvertise(  )
@@ -5729,7 +5777,7 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          elseif token.txt == "fn" then
             processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag )
          elseif token.txt == "__init" then
-            processInitBlock(  )
+            processInitBlock( token )
          elseif token.txt == "advertise" then
             processAdvertise(  )
          elseif token.txt == ";" then
@@ -6087,11 +6135,6 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    self:checkToken( token, "(" )
    local argList = {}
    token = self:analyzeDeclArgList( accessMode, argList )
-   local argTypeList = {}
-   for __index, argNode in pairs( argList ) do
-      table.insert( argTypeList, argNode:get_expType() )
-   end
-   
    self:checkToken( token, ")" )
    token = self:getToken(  )
    local mutable = false
@@ -6101,6 +6144,11 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    local pubToExtFlag = Ast.isPubToExternal( accessMode )
+   local argTypeList = {}
+   for __index, argNode in pairs( argList ) do
+      table.insert( argTypeList, argNode:get_expType() )
+   end
+   
    local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    if classTypeInfo ~= nil then
       alt2typeMap = classTypeInfo:createAlt2typeMap( false )
@@ -6282,63 +6330,26 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
          self:addErrMess( token.pos, "abstract method can't have body." )
       end
       
-      funcBodyScope:addLocalVar( false, false, "__func__", Ast.builtinTypeString, Ast.MutMode.IMut )
-      if classTypeInfo ~= nil then
-         do
-            local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope )
-            if overrideType ~= nil then
-               if not overrideType:get_abstractFlag() then
-                  funcBodyScope:addLocalVar( false, false, "super", overrideType, Ast.MutMode.IMut )
-               end
-               
-            end
-         end
-         
-      end
-      
       self:pushback(  )
+      local analyzingState
+      
       if isCtorFlag then
-         self:pushAnalyzingState( AnalyzingState.Constructor )
+         analyzingState = AnalyzingState.Constructor
       elseif staticFlag and classTypeInfo then
-         self:pushAnalyzingState( AnalyzingState.ClassMethod )
+         analyzingState = AnalyzingState.ClassMethod
       else
        
-         self:pushAnalyzingState( AnalyzingState.Func )
+         analyzingState = AnalyzingState.Func
       end
       
-      body = self:analyzeBlock( Nodes.BlockKind.Func, TentativeMode.Ignore, funcBodyScope )
-      self:popAnalyzingState(  )
-      if body ~= nil then
-         if #retTypeInfoList ~= 0 then
-            local breakKind = body:getBreakKind( Nodes.CheckBreakMode.Return )
-            if retTypeInfoList[1] ~= Ast.builtinTypeNeverRet then
-               do
-                  local _switchExp = breakKind
-                  if _switchExp == Nodes.BreakKind.Return or _switchExp == Nodes.BreakKind.NeverRet then
-                  else 
-                     
-                        self:addErrMess( firstToken.pos, "This funcion doesn't have return." )
-                  end
-               end
-               
-            else
-             
-               if breakKind ~= Nodes.BreakKind.NeverRet then
-                  self:addErrMess( firstToken.pos, string.format( "This funcion must be never return. -- %s", Nodes.BreakKind:_getTxt( breakKind)
-                  ) )
-               end
-               
-            end
-            
-         end
-         
-         if isCtorFlag then
-            if classTypeInfo ~= nil then
-               if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
-                  if #body:get_stmtList() == 0 or body:get_stmtList()[1]:get_kind() ~= Nodes.nodeKind['ExpCallSuper'] then
-                     self:addErrMess( body:get_pos(), "__init must call super() with first." )
-                  end
-                  
+      funcBodyScope:addLocalVar( false, false, "__func__", Ast.builtinTypeString, Ast.MutMode.IMut )
+      local workBody = self:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, funcName, funcBodyScope, retTypeInfoList )
+      body = workBody
+      if isCtorFlag then
+         if classTypeInfo ~= nil then
+            if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
+               if #workBody:get_stmtList() == 0 or workBody:get_stmtList()[1]:get_kind() ~= Nodes.nodeKind['ExpCallSuper'] then
+                  self:addErrMess( workBody:get_pos(), "__init must call super() with first." )
                end
                
             end
@@ -7988,7 +7999,7 @@ function TransUnit:analyzeExpCall( firstToken, exp, nextToken )
     
       do
          local _switchExp = (funcTypeInfo:get_kind() )
-         if _switchExp == Ast.TypeInfoKind.Method or _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Form then
+         if _switchExp == Ast.TypeInfoKind.Method or _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
          else 
             
                self:error( string.format( "can't call the type -- %s, %s", funcTypeInfo:getTxt(  ), Ast.TypeInfoKind:_getTxt( funcTypeInfo:get_kind())

@@ -567,8 +567,14 @@ function convFilter:outputMeta( node )
          
          if pickupChildFlag and not typeInfo:get_nilable() then
             for __index, itemTypeInfo in pairs( typeInfo:get_children(  ) ) do
-               if Ast.isPubToExternal( itemTypeInfo:get_accessMode() ) and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Form or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
-                  pickupTypeId( itemTypeInfo, true, true )
+               if Ast.isPubToExternal( itemTypeInfo:get_accessMode() ) then
+                  do
+                     local _switchExp = itemTypeInfo:get_kind()
+                     if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Method then
+                        pickupTypeId( itemTypeInfo, true, true )
+                     end
+                  end
+                  
                end
                
             end
@@ -602,7 +608,7 @@ function convFilter:outputMeta( node )
          if not typeInfo:get_externalFlag() then
             do
                local _switchExp = typeInfo:get_kind()
-               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
+               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
                   pickupTypeId( typeInfo:get_nilableTypeInfo(), true, false )
                   local imutType = Ast.NormalTypeInfo.createModifier( typeInfo, Ast.MutMode.IMut )
                   pickupTypeId( imutType, true, false )
@@ -637,8 +643,14 @@ function convFilter:outputMeta( node )
          
          if pickupChildFlag then
             for __index, itemTypeInfo in pairs( typeInfo:get_children() ) do
-               if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub and (itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Class or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.IF or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Form or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Func or itemTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Method ) then
-                  pickupTypeId( itemTypeInfo, true, true )
+               if itemTypeInfo:get_accessMode() == Ast.AccessMode.Pub then
+                  do
+                     local _switchExp = itemTypeInfo:get_kind()
+                     if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Method then
+                        pickupTypeId( itemTypeInfo, true, true )
+                     end
+                  end
+                  
                end
                
             end
@@ -1815,16 +1827,22 @@ end
       
    end
    
-   if #nodeInfo:get_initStmtList() > 0 then
-      self:writeln( "do" )
-      self:pushIndent(  )
-      for __index, initStmt in pairs( nodeInfo:get_initStmtList() ) do
-         filter( initStmt, self, node )
-         self:writeln( "" )
+   do
+      local initBlock = _lune.nilacc( _lune.nilacc( nodeInfo:get_initBlock():get_func(), 'get_declInfo', 'callmtd' ), 'get_body', 'callmtd' )
+      if initBlock ~= nil then
+         if #initBlock:get_stmtList() > 0 then
+            self:writeln( "do" )
+            self:pushIndent(  )
+            for __index, initStmt in pairs( initBlock:get_stmtList() ) do
+               filter( initStmt, self, node )
+               self:writeln( "" )
+            end
+            
+            self:popIndent(  )
+            self:writeln( "end" )
+         end
+         
       end
-      
-      self:popIndent(  )
-      self:writeln( "end" )
    end
    
    if classTypeInfo:isInheritFrom( Ast.builtinTypeMapping, nil ) then
@@ -2178,8 +2196,9 @@ function convFilter:processUnwrapSet( node, opt )
    self:writeln( "end" )
 end
 
-function convFilter:processExpListSub( parent, expList )
+function convFilter:processExpListSub( parent, expList, mRetExp )
 
+   local mRetIndex = _lune.nilacc( mRetExp, 'get_index', 'callmtd' )
    for index, exp in pairs( expList ) do
       if exp:get_expType():get_kind() == Ast.TypeInfoKind.Abbr then
          break
@@ -2198,15 +2217,15 @@ function convFilter:processExpListSub( parent, expList )
          end
       end
       
-      if exp:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
-         break
-      end
-      
       if index > 1 then
          self:write( ", " )
       end
       
       filter( exp, self, parent )
+      if index == mRetIndex then
+         break
+      end
+      
    end
    
 end
@@ -2225,7 +2244,7 @@ function convFilter:processIfUnwrap( node, opt )
    end
    
    self:write( " = " )
-   self:processExpListSub( node, node:get_expList():get_expList() )
+   self:processExpListSub( node, node:get_expList():get_expList(), node:get_expList():get_mRetExp() )
    self:writeln( "" )
    self:write( "if " )
    for index, varName in pairs( node:get_varNameList() ) do
@@ -2430,7 +2449,7 @@ function convFilter:processDeclFunc( node, opt )
    
    self:write( string.format( "%sfunction %s( ", letTxt, name ) )
    local argList = declInfo:get_argList(  )
-   self:processExpListSub( node, argList )
+   self:processExpListSub( node, argList, nil )
    self:writeln( " )" )
    do
       local _exp = declInfo:get_body()
@@ -2978,8 +2997,8 @@ end
 
 function convFilter:processExpList( node, opt )
 
-   local expList = node:get_expList(  )
-   self:processExpListSub( node, expList )
+   local expList = node:get_expList()
+   self:processExpListSub( node, expList, node:get_mRetExp() )
 end
 
 
@@ -3028,7 +3047,7 @@ end
 
 function convFilter:processExpToDDD( node, opt )
 
-   self:processExpListSub( node, node:get_expList():get_expList() )
+   self:processExpListSub( node, node:get_expList():get_expList(), node:get_expList():get_mRetExp() )
 end
 
 function convFilter:processExpCast( node, opt )
@@ -3542,7 +3561,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3233, function (  )
+   Log.log( Log.Level.Info, __func__, 3234, function (  )
    
       return string.format( "code: %s", code)
    end

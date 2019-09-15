@@ -116,6 +116,7 @@ pub enum TypeInfoKind {
    CanEvalCtrl,
    Etc,
    Form,
+   FormFunc,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -2885,7 +2886,7 @@ pub class NormalTypeInfo extend TypeInfo {
             {
                hasNilable = true;
             }
-            case .Func, .Method, .Form {
+            case .Func, .Method, .Form, .FormFunc {
                hasNilable = true;
             }
          }
@@ -2968,26 +2969,27 @@ pub class NormalTypeInfo extend TypeInfo {
 
 
    pub override fn get_display_stirng_with( raw:str ): str {
-      if self.kind == .Func or self.kind == .Form or self.kind == .Method
-      {
-         let mut txt = raw .. "(";
-         foreach argType, index in self.argTypeInfoList {
-            if index ~= 1 {
-               txt = txt .. ", ";
+      switch self.kind {
+         case .Func, .Form, .FormFunc, .Method {
+            let mut txt = raw .. "(";
+            foreach argType, index in self.argTypeInfoList {
+               if index ~= 1 {
+                  txt = txt .. ", ";
+               }
+               txt = txt .. argType.get_display_stirng();
             }
-            txt = txt .. argType.get_display_stirng();
+            txt = txt .. ")";
+            foreach retType, index in self.retTypeInfoList {
+               if index == 1 {
+                  txt = txt .. ": ";
+               }
+               else {
+                  txt = txt .. ", ";
+               }
+               txt = txt .. retType.get_display_stirng();
+            }
+            return txt;
          }
-         txt = txt .. ")";
-         foreach retType, index in self.retTypeInfoList {
-            if index == 1 {
-               txt = txt .. ": ";
-            }
-            else {
-               txt = txt .. ", ";
-            }
-            txt = txt .. retType.get_display_stirng();
-         }
-         return txt;
       }
       return self.getTxtWithRaw( raw ##);
    }
@@ -3318,7 +3320,7 @@ pub static fn NormalTypeInfo.createBuiltin(
    let mut scope:Scope! = nil;
    switch kind {
       case .Array, .List, .Set, .Class, .Module,
-           .IF, .Form, .Func, .Method, .Macro
+           .IF, .Form, .FormFunc, .Func, .Method, .Macro
       {
          scope = new Scope(
             rootScope,
@@ -3650,7 +3652,7 @@ pub fn Scope.addAliasForType( name:str, typeInfo:&TypeInfo ) mut : &SymbolInfo
          skind = .Fun;
          canBeRight = true;
       }
-      case .Form {
+      case .Form, .FormFunc {
          canBeRight = true;
       }
       case .Macro {
@@ -4617,6 +4619,7 @@ pub static fn TypeInfo.canEvalWithBase(
       otherSrc.$kind ~= .Func and
       otherSrc.$kind ~= .Method and
       otherSrc.$kind ~= .Form and
+      otherSrc.$kind ~= .FormFunc and
       otherSrc.$kind ~= .Enum and
       otherSrc.$kind ~= .Abbr and
       otherSrc.$kind ~= .Alternate and
@@ -4647,7 +4650,8 @@ pub static fn TypeInfo.canEvalWithBase(
       return true;
    }
    if dest == builtinTypeForm and
-      ( otherSrc.$kind == .Func or otherSrc.$kind == .Form )
+       ( otherSrc.$kind == .Func or
+         otherSrc.$kind == .Form or otherSrc.$kind == .FormFunc )
    {
       return isSettableToForm( otherSrc );
    }
@@ -4691,10 +4695,17 @@ pub static fn TypeInfo.canEvalWithBase(
       }
       elseif dest.$kind == .Form {
          switch otherSrc.$kind {
-            case .Form, .Func {
-               if dest == builtinTypeForm {
-                  return isSettableToForm( otherSrc );
-               }
+            case .Form {
+               return true;
+            }
+            case .FormFunc, .Func  {
+               return isSettableToForm( otherSrc );
+            }
+         }
+      }
+      elseif dest.$kind == .FormFunc {
+         switch otherSrc.$kind {
+            case .FormFunc, .Func {
                if TypeInfo.checkMatchType( dest.$argTypeInfoList,
                                            otherSrc.$argTypeInfoList,
                                            false, nil, alt2type ) == .Error or
@@ -4777,10 +4788,10 @@ pub static fn TypeInfo.canEvalWithBase(
          return false;
          // return otherSrc.isInheritFrom( dest, alt2type );
       }
-      case .Func, .Form {
-         if dest == builtinTypeForm {
-            return isSettableToForm( otherSrc );
-         }
+      case .Form {
+         return isSettableToForm( otherSrc );
+      }
+      case .Func, .FormFunc {
          if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
                                      false, nil, alt2type ) == .Error or
             TypeInfo.checkMatchType( dest.$retTypeInfoList, otherSrc.$retTypeInfoList,
@@ -4903,7 +4914,7 @@ pub override fn NormalTypeInfo.applyGeneric(
             self.accessMode, self.parentInfo,
             itemTypeInfoList[ 1 ], itemTypeInfoList[ 2 ], self.mutMode );
       }
-      case .Func, .Form {
+      case .Func, .Form, .FormFunc {
          let! argTypeInfoList, workArg = applyGenericList(
             self.argTypeInfoList, alt2typeMap, moduleTypeInfo )
          {

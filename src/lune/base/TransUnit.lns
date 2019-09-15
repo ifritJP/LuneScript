@@ -1117,28 +1117,28 @@ class _TypeInfoNormal extend _TypeInfo {
 
                param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
 
-               if self.kind == .Func or self.kind == .Method or
-                  self.kind == .Macro or self.kind == .Form
-               {
-                  let mut symbolKind = Ast.SymbolKind.Fun;
-                  switch self.kind {
-                     case .Method {
-                        symbolKind = Ast.SymbolKind.Mtd;
+               switch self.kind {
+                  case .Func, .Method, .Macro, .Form, .FormFunc {
+                     let mut symbolKind = Ast.SymbolKind.Fun;
+                     switch self.kind {
+                        case .Method {
+                           symbolKind = Ast.SymbolKind.Mtd;
+                        }
+                        case .Macro {
+                           symbolKind = Ast.SymbolKind.Mac;
+                        }
+                        case .Form, .FormFunc {
+                           symbolKind = Ast.SymbolKind.Typ;
+                        }
                      }
-                     case .Macro {
-                        symbolKind = Ast.SymbolKind.Mac;
-                     }
-                     case .Form {
-                        symbolKind = Ast.SymbolKind.Typ;
-                     }
+                     let mut workParentScope =
+                        unwrap param.typeId2Scope[ self.parentId ];
+                     workParentScope.add(
+                        symbolKind, false, self.kind == .Func,
+                        self.txt, workTypeInfo, accessMode,
+                        self.staticFlag, .IMut, true );
+                     param.typeId2Scope[ self.typeId ] = scope;
                   }
-                  let mut workParentScope =
-                     unwrap param.typeId2Scope[ self.parentId ];
-                  workParentScope.add(
-                     symbolKind, false, self.kind == .Func,
-                     self.txt, workTypeInfo, accessMode,
-                     self.staticFlag, .IMut, true );
-                  param.typeId2Scope[ self.typeId ] = scope;
                }
             }
          }
@@ -2478,7 +2478,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
                case .Func {
                   symbolKind = .Fun;
                }
-               case .Form {
+               case .Form, .FormFunc {
                   symbolKind = .Typ;
                }
                case .Method {

@@ -336,6 +336,9 @@ extern "C" {
     } lune_ddd_t;
 
 
+#define lune_form_func( FORM )                  \
+    (FORM)->val.form.pFunc
+    
 #define lune_form_closure( FORM, INDEX )        \
     (FORM)->val.form.ppClosureValList[ INDEX ]
 
@@ -480,6 +483,8 @@ extern "C" {
 #define lune_fromDDD( STEM, INDEX )  \
     STEM->val.ddd.pStemList[ INDEX ]
 
+#define lune_lenDDD( STEM ) STEM->val.ddd.len
+
 #define lune_bool2stem( ENV, VAL )              \
     _lune_bool2stem( LUNE_DEBUG_POS, ENV, VAL )
 #define lune_int2stem( ENV, VAL )               \
@@ -553,7 +558,7 @@ extern "C" {
     extern void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem );
     extern void lune_class_del( lune_env_t * _pEnv, void * pObj );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
-    extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, int num, ... );
+    extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * _pDDD );
     extern lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem );
     extern lune_stem_t * lune_toIF( lune_env_t * _pEnv, lune_stem_t * pStem, const lune_type_meta_t * pMeta );
     extern lune_stem_t * lune_setMRet( lune_env_t * _pEnv, lune_stem_t * pStem );

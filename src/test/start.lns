@@ -1238,3 +1238,12 @@ class Test4 {
    func( nil );
    func( 10 );
 }
+{
+   fn func(): int, int, int {
+      return 1, 2, 3;
+   }
+   fn sub2( val1:int, ... ) {
+      print( val1, ... );
+   }
+   sub2( func()** );
+}

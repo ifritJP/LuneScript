@@ -1,15 +1,80 @@
 let mut g_val = 100;
 {
-   fn func(): int, int {
-      return 1, 2;
+   let val = 1000;
+   class Test1 {
+      static let val:int;
+      __init {
+         Test1.val = 100 + val;
+      }
+      pub static fn func(): int {
+         return Test1.val;
+      }
    }
-   fn sub( val1:int, val2:int ) {
-      print( val1, val2 );
+   fn func() {
+      let val2 = 10000;
+      class Test2 {
+         static let val:int;
+         __init {
+            Test2.val = 200 + val2;
+         }
+         pub static fn func(): int {
+            return Test2.val + Test1.func();
+         }
+      }
+      print( Test2.func() );
    }
+   func();
+}
+{
+   fn func(): int, int, int {
+      return 1, 2, 3;
+   }
+   fn func2(): str, int, int {
+      return "1", 2, 3;
+   }
+   fn sub( val1:int, val2:int, val3:int ) {
+      print( val1, val2, val3 );
+   }
+   fn sub2( val1:int, ... ) {
+      print( val1, ... );
+   }
+   fn sub3( val1:str, ... ) {
+      print( val1, ... );
+   }
+   print( func() + 1 );
+   print( (func()) + 1 );
    print( func()** );
    sub( func()** );
+   sub2( func()** );
+   sub2( func(), 1 );
+   sub3( func2(), 1 );
    let work1, work2 = func();
    print( work1, work2 );
+}
+{
+   fn func( arg:int ) {
+      class Test {
+         let val:int;
+         pub fn func(): int {
+            return self.val;
+         }
+      }
+      let test = new Test( arg );
+      print( test.func() );
+   }
+   fn func2( arg:int ) {
+      class Test {
+         let val:int;
+         pub fn func(): int {
+            return self.val + 100;
+         }
+      }
+      let test = new Test( arg );
+      print( test.func() );
+   }
+   func(1);
+   func2(2);
+   func(3);
 }
 {
    interface IF {

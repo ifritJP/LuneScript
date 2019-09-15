@@ -1089,7 +1089,9 @@ fn TransUnit.analyzeRetTypeList(
 }
 
 
-fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Token ) mut {
+fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Token )
+mut : Nodes.DeclFormNode
+{
    let name = self.getSymbolToken( .MustNot_ );
    self.checkNextToken( "(" );
    let mut argList:List<&Nodes.Node> = [];
@@ -1115,13 +1117,16 @@ fn TransUnit.analyzeDeclForm( accessMode:Ast.AccessMode, firstToken:&Parser.Toke
    }
 
    let formType = Ast.NormalTypeInfo.createFunc(
-      false, false, nil, .Form,
+      false, false, nil, .FormFunc,
       self.getCurrentNamespaceTypeInfo(), false, false,
       true, accessMode, name.txt, nil, argTypeInfoList, retTypeList, false );
 
    self.scope.addForm( formType, accessMode );
    // self.scope.add(
    //    .Typ, false, false, name.txt, formType, accessMode, true, .IMut, false );
+
+   return Nodes.DeclFormNode.create(
+         self.nodeManager, firstToken.pos, [ formType ], argList );
 }
 
 fn TransUnit.analyzeDecl(
@@ -1176,8 +1181,7 @@ fn TransUnit.analyzeDecl(
       return self.analyzeDeclAlge( accessMode, firstToken );
    }
    elseif token.txt == "form" {
-      self.analyzeDeclForm( accessMode, firstToken );
-      return self.createNoneNode( firstToken.pos );
+      return self.analyzeDeclForm( accessMode, firstToken );
    }
    elseif token.txt == "alias" {
       return self.analyzeAlias( accessMode, firstToken );
@@ -1401,6 +1405,59 @@ fn TransUnit.addDefaultConstructor(
    }
 }
 
+/**
+関数の本体ブロック処理
+
+@param analyzingState 解析状態
+@param firstToken エラー表示用トークン
+@param classTypeInfo クラス情報。 メソッドでない場合は nil。
+@param retTypeInfoList 関数の戻り値型リスト
+@return Nodes.BlockNode 解析結果
+*/
+fn TransUnit.analyzeFuncBlock(
+   analyzingState:AnalyzingState, firstToken: &Parser.Token,
+   classTypeInfo:&Ast.TypeInfo!, funcName:str,
+   funcBodyScope:Ast.Scope, retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode
+{
+   when! classTypeInfo {
+      if! let overrideType =
+         self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
+      {
+         if not overrideType.$abstractFlag {
+            funcBodyScope.addLocalVar( false, false, "super", overrideType, .IMut );
+         }
+      }
+   }
+
+   self.pushAnalyzingState( analyzingState );
+
+   let mut body = self.analyzeBlock( .Func, .Ignore, funcBodyScope );
+
+   self.popAnalyzingState();
+
+   if #retTypeInfoList ~= 0 {
+      let breakKind = body.getBreakKind( .Return );
+      if retTypeInfoList[ 1 ] ~= Ast.builtinTypeNeverRet {
+         switch breakKind {
+            case .Return, .NeverRet {
+            }
+            default {
+               self.addErrMess( firstToken.pos,
+                                "This funcion doesn't have return." );
+            }
+         }
+      }
+      else {
+         if breakKind ~= .NeverRet {
+            self.addErrMess( firstToken.pos,
+                             "This funcion must be never return. -- %s"
+                             (breakKind.$_txt ));
+         }
+      }
+   }
+   return body;
+}
+
 
 /**
 クラスの本体部の解析。
@@ -1428,13 +1485,14 @@ fn TransUnit.analyzeClassBody(
    let mut fieldList:List<&Nodes.Node> = [];
    let mut memberList:List<&Nodes.DeclMemberNode> = [];
    let mut methodNameSet: Set<str> = (@);
-   let mut initStmtList:List<&Nodes.Node> = [];
+   //let mut initStmtList:List<&Nodes.Node> = [];
+   let mut initBlockInfo = new Nodes.ClassInitBlockInfo(##);
    let mut advertiseList:Nodes.AdvertiseInfo[] = [];
    let mut trustList:List<&Ast.TypeInfo> = [];
    let mut node = Nodes.DeclClassNode.create(
       self.nodeManager, firstToken.pos, [ classTypeInfo ],
       classAccessMode, name, gluePrefix, declStmtList, fieldList, moduleName,
-      memberList, self.scope, initStmtList, advertiseList, trustList, (@) );
+      memberList, self.scope, initBlockInfo, advertiseList, trustList, (@) );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
    let mut declCtorNode:&Nodes.Node! = nil;
    let mut hasInitBlock = false;
@@ -1485,9 +1543,9 @@ fn TransUnit.analyzeClassBody(
       }
    }
 
-   fn processInitBlock() {
+   fn processInitBlock( token:&Parser.Token ) {
 
-      self.pushAnalyzingState( .InitBlock );
+      // self.pushAnalyzingState( .InitBlock );
 
       if mode ~= .Class {
          self.error( "%s can not have __init block." (mode) );
@@ -1500,17 +1558,36 @@ fn TransUnit.analyzeClassBody(
          }
       }
 
-      self.pushScope( false## );
-      self.prepareTentativeSymbol( self.scope, false );
+      let mut initBlockScope = self.pushScope( false## );
+      self.prepareTentativeSymbol( initBlockScope, false );
 
-      self.checkNextToken( "{" );
-      self.analyzeStatementList( initStmtList, "}" );
-      self.checkNextToken( "}" );
+      let name = "___init";
+      let funcTypeInfo = Ast.NormalTypeInfo.createFunc(
+         false, false, initBlockScope, .Func, classTypeInfo,
+         false, false, true, .Pri, name, nil, nil, nil, false );
+      
+      let block = self.analyzeFuncBlock(
+         .InitBlock, token, classTypeInfo, name, initBlockScope, [] );
+
+      let mut info = new Nodes.DeclFuncInfo(
+         classTypeInfo, token, [], true, .Pri, block, [], false );
+      let initBlockNode = Nodes.DeclMethodNode.create(
+         self.nodeManager, firstToken.pos, [ funcTypeInfo ], info );
+      initBlockInfo.set_func( initBlockNode );
+
+      // foreach stmtNode in block.$stmtList {
+      //    initStmtList.insert( stmtNode );
+      // }
+      
+
+      // self.checkNextToken( "{" );
+      // self.analyzeStatementList( initStmtList, "}" );
+      // self.checkNextToken( "}" );
 
       self.popScope();
       self.finishTentativeSymbol( false );
 
-      self.popAnalyzingState();
+      // self.popAnalyzingState();
    }
 
    fn processAdvertise() {
@@ -1605,7 +1682,7 @@ fn TransUnit.analyzeClassBody(
             processFn( token, staticFlag, accessMode, abstractFlag, overrideFlag );
          }
          elseif token.txt == "__init" {
-            processInitBlock();
+            processInitBlock( token );
          }
          elseif token.txt == "advertise" {
             processAdvertise();
@@ -1960,8 +2037,6 @@ pri fn TransUnit.addMethod(
    classNodeInfo.$fieldList.insert( methodNode );
 }
 
-
-
 fn TransUnit.analyzeDeclFunc(
    declFuncMode: DeclFuncMode, abstractFlag: bool, overrideFlag: bool,
    mut accessMode: Ast.AccessMode,
@@ -2084,10 +2159,6 @@ fn TransUnit.analyzeDeclFunc(
 
    let mut argList:List<&Nodes.Node> = [];
    token = self.analyzeDeclArgList( accessMode, argList );
-   let mut argTypeList:List<&Ast.TypeInfo> = [];
-   foreach argNode in argList {
-      argTypeList.insert( argNode.$expType );
-   }
 
    self.checkToken( token, ")" );
    token = self.getToken(##);
@@ -2099,6 +2170,12 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let mut pubToExtFlag = Ast.isPubToExternal( accessMode );
+
+   let mut argTypeList:List<&Ast.TypeInfo> = [];
+   foreach argNode in argList {
+      argTypeList.insert( argNode.$expType );
+   }
+   
 
    let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
    when! classTypeInfo {
@@ -2288,68 +2365,36 @@ fn TransUnit.analyzeDeclFunc(
          self.addErrMess( token.pos, "abstract method can't have body." );
       }
 
-      funcBodyScope.addLocalVar(
-         false, false, "__func__", Ast.builtinTypeString, .IMut );
-      //self.has__func__Symbol = false;
-
-
-      when! classTypeInfo {
-         if! let overrideType =
-            self.scope.$parent.getTypeInfoField( funcName, false, funcBodyScope )
-         {
-            if not overrideType.$abstractFlag {
-               funcBodyScope.addLocalVar( false, false, "super", overrideType, .IMut );
-            }
-         }
-      }
-
       self.pushback();
 
+      let analyzingState:AnalyzingState;
       if isCtorFlag {
-         self.pushAnalyzingState( .Constructor );
+         analyzingState = .Constructor;
       }
       elseif staticFlag and classTypeInfo {
-         self.pushAnalyzingState( .ClassMethod );
+         analyzingState = .ClassMethod;
       }
       else {
-         self.pushAnalyzingState( .Func );
+         analyzingState = .Func;
       }
 
-      body = self.analyzeBlock( .Func, .Ignore, funcBodyScope );
+      funcBodyScope.addLocalVar(
+         false, false, "__func__", Ast.builtinTypeString, .IMut );
 
-      self.popAnalyzingState();
+      let mut workBody = self.analyzeFuncBlock(
+         analyzingState, firstToken, classTypeInfo,
+         funcName, funcBodyScope, retTypeInfoList );
+      body = workBody;
 
-      when! body {
-         if #retTypeInfoList ~= 0
-         {
-            let breakKind = body.getBreakKind( .Return );
-            if retTypeInfoList[ 1 ] ~= Ast.builtinTypeNeverRet {
-               switch breakKind {
-                  case .Return, .NeverRet {
-                  }
-                  default {
-                     self.addErrMess( firstToken.pos,
-                                      "This funcion doesn't have return." );
-                  }
-               }
-            }
-            else {
-               if breakKind ~= .NeverRet {
-                  self.addErrMess( firstToken.pos,
-                                   "This funcion must be never return. -- %s"
-                                   (breakKind.$_txt ));
-               }
-            }
-         }
-         if isCtorFlag {
-            when! classTypeInfo {
-               if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
-                  // Super クラスを持っている場合
-                  if #body.$stmtList == 0 or
-                     body.$stmtList[ 1 ].$kind ~= Nodes.nodeKind.ExpCallSuper
-                  {
-                     self.addErrMess( body.$pos, "__init must call super() with first." );
-                  }
+      if isCtorFlag {
+         when! classTypeInfo {
+            if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
+               // Super クラスを持っている場合
+               if #workBody.$stmtList == 0 or
+                  workBody.$stmtList[ 1 ].$kind ~= Nodes.nodeKind.ExpCallSuper
+               {
+                  self.addErrMess( workBody.$pos,
+                                   "__init must call super() with first." );
                }
             }
          }

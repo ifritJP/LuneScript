@@ -1243,6 +1243,9 @@ pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 }
 
 
+_declNodeClass( "DeclForm", Node, false, false, true,
+                [ { "argList": "&List<&Node>" } ]
+);
 
 pub class DeclFuncInfo {
    pri let classTypeInfo: &Ast.TypeInfo! { pub };
@@ -1299,6 +1302,9 @@ pub class AdvertiseInfo {
    pri let mut member: &DeclMemberNode { pub };
    pri let prefix: str {pub};
 };
+pub class ClassInitBlockInfo {
+   pri let mut func: &DeclMethodNode! {pub,pub};
+}
 _declNodeClass( "DeclClass", Node, false, false, true,
                 [ { "accessMode": "Ast.AccessMode" },
                   { "name": "&Parser.Token" },
@@ -1308,7 +1314,8 @@ _declNodeClass( "DeclClass", Node, false, false, true,
                   { "moduleName": "&Parser.Token!" },
                   { "memberList": "List<&DeclMemberNode>" },
                   { "scope": "&Ast.Scope" },
-                  { "initStmtList": "List<&Node>" },
+                  //{ "initStmtList": "List<&Node>" },
+                  { "initBlock": "&ClassInitBlockInfo" },
                   { "advertiseList": "List<&AdvertiseInfo>" },
                   { "trustList": "List<&Ast.TypeInfo>" },
                   { "outerMethodSet": "Set<str>" } ]

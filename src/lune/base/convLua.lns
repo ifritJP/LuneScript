@@ -336,14 +336,12 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
          if pickupChildFlag and not typeInfo.$nilable {
 	    foreach itemTypeInfo in typeInfo.get_children() {
-               if Ast.isPubToExternal( itemTypeInfo.$accessMode ) and
-                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKind.Class or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.IF or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Form or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Func or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Method )
-               {
-                  pickupTypeId( itemTypeInfo, true, true );
+               if Ast.isPubToExternal( itemTypeInfo.$accessMode ) {
+                  switch itemTypeInfo.$kind {
+                     case .Class, .IF, .Form, .FormFunc, .Func, .Method {
+                        pickupTypeId( itemTypeInfo, true, true );
+                     }
+                  }
                }
 	    }
          }
@@ -374,7 +372,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
          if not typeInfo.$externalFlag {
             switch typeInfo.$kind {
-               case .IF, .Class, .Form, .Alge, .Enum,
+               case .IF, .Class, .Form, .FormFunc, .Alge, .Enum,
                     .Map, .Set, .List, .Array, .Alternate, .Box
                {
                   pickupTypeId( typeInfo.$nilableTypeInfo, true, false );
@@ -410,14 +408,12 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 	 }
          if pickupChildFlag {
 	    foreach itemTypeInfo in typeInfo.$children {
-               if itemTypeInfo.$accessMode == .Pub and
-                   ( itemTypeInfo.get_kind() == Ast.TypeInfoKind.Class or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.IF or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Form or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Func or
-                     itemTypeInfo.get_kind() == Ast.TypeInfoKind.Method )
-               {
-                  pickupTypeId( itemTypeInfo, true, true );
+               if itemTypeInfo.$accessMode == .Pub {
+                  switch itemTypeInfo.$kind {
+                     case .Class, .IF, .Form, .FormFunc, .Func, .Method {
+                        pickupTypeId( itemTypeInfo, true, true );
+                     }
+                  }
                }
 	    }
          }
@@ -1527,15 +1523,17 @@ end
    }
 
    // init block
-   if #nodeInfo.$initStmtList > 0 {
-      self.writeln( "do" );
-      self.pushIndent(##);
-      foreach initStmt in nodeInfo.$initStmtList {
-         filter( initStmt, self, node );
-         self.writeln( "" );
+   if! let initBlock = nodeInfo.$initBlock.$func$.$declInfo$.$body {
+      if #initBlock.$stmtList > 0 {
+         self.writeln( "do" );
+         self.pushIndent(##);
+         foreach initStmt in initBlock.$stmtList {
+            filter( initStmt, self, node );
+            self.writeln( "" );
+         }
+         self.popIndent();
+         self.writeln( "end" );
       }
-      self.popIndent();
-      self.writeln( "end" );
    }
 
    // Mapping
@@ -1915,7 +1913,11 @@ pub override fn convFilter.processUnwrapSet(
    self.writeln( "end" );
 }
 
-fn convFilter.processExpListSub( parent:&Nodes.Node, expList:&List<&Nodes.Node> ) mut {
+fn convFilter.processExpListSub(
+   parent:&Nodes.Node, expList:&List<&Nodes.Node>, mRetExp:&Nodes.MRetExp! ) mut
+{
+   let mRetIndex = mRetExp$.$index;
+   
    foreach exp, index in expList {
       if exp.$expType.$kind == .Abbr {
          break;
@@ -1928,13 +1930,13 @@ fn convFilter.processExpListSub( parent:&Nodes.Node, expList:&List<&Nodes.Node> 
             }
          }
       }
-      if exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
-         break;
-      }
       if index > 1 {
          self.write( ", " );
       }
       filter( exp, self, parent );
+      if index == mRetIndex {
+         break;
+      }
    }
 }
 
@@ -1953,7 +1955,7 @@ pub override fn convFilter.processIfUnwrap(
    }
    self.write( " = " );
 
-   self.processExpListSub( node, node.$expList.$expList );
+   self.processExpListSub( node, node.$expList.$expList, node.$expList.$mRetExp );
    // foreach expNode, index in node.$expNodeList {
    //    if expNode.$kind == Nodes.NodeKind.$ExpAccessMRet {
    //       break;
@@ -2149,7 +2151,7 @@ pub override fn convFilter.processDeclFunc(
 
 
    let argList = declInfo.get_argList();
-   self.processExpListSub( node, argList );
+   self.processExpListSub( node, argList, nil );
 
    // foreach arg, index in argList {
    //    if index > 1 {
@@ -2652,10 +2654,9 @@ pub override fn convFilter.processExpCall(
 pub override fn convFilter.processExpList(
    node: Nodes.ExpListNode, opt: Opt ) mut
 {
-   let expList = node.get_expList();
-   //let expList = node.$expList;
+   let expList = node.$expList;
 
-   self.processExpListSub( node, expList );
+   self.processExpListSub( node, expList, node.$mRetExp );
    // foreach exp, index in expList {
    //    if exp.$expType.$kind == .Abbr {
    //       break;
@@ -2725,7 +2726,7 @@ pub override fn convFilter.processExpToDDD(
    //    }
    //    filter( exp, self, node );
    // }
-   self.processExpListSub( node, node.$expList.$expList );
+   self.processExpListSub( node, node.$expList.$expList, node.$expList.$mRetExp );
 }
 
 pub override fn convFilter.processExpCast(
