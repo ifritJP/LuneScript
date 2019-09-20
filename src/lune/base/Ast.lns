@@ -2521,9 +2521,9 @@ pub class ModuleTypeInfo extend TypeInfo {
 }
 
 pub alge EnumLiteral {
-   Int( int ),
-   Real( real ),
-   Str( str ),
+   Int( val:int ),
+   Real( val:real ),
+   Str( val:str ),
 }
 pub fn getEnumLiteralVal( obj:EnumLiteral ) : stem {
    match obj {

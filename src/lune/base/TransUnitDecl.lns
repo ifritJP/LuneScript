@@ -972,7 +972,17 @@ fn TransUnit.analyzeDeclAlge(
 
       let mut typeInfoList:List<&Ast.TypeInfo> = [];
       if nextToken.txt == "(" {
+         // パラメータの宣言
          while true {
+            // パラメータ名の確認
+            let workToken1 = self.getToken(##);
+            let workToken2 = self.getToken(##);
+            if workToken2.txt ~= ":" {
+               // パラメータ名を省略している場合は戻す
+               self.pushback();
+               self.pushback();
+            }
+            
             let typeNode = self.analyzeRefType( .Pub, false );
             typeInfoList.insert( typeNode.$expType );
             nextToken = self.getToken(##);

@@ -307,9 +307,9 @@ alge ModuleUptodate {
    /** ファイルの更新が必要 */
    NeedUpdate,
    /** .meta ファイルの日付だけ更新が必要 */
-   NeedTouch( str, &MetaForBuildId ),
+   NeedTouch( metaCode:str, metaBuildId:&MetaForBuildId ),
    /** 最新で処理不要 */
-   Uptodate( &MetaForBuildId ),
+   Uptodate( metaBuildId:&MetaForBuildId ),
 }
 
 /**

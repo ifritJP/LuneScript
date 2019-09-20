@@ -2927,9 +2927,9 @@ MRetInfo.DDD = { "DDD", {{ func=Nodes.ExpToDDDNode._fromMap, nilable=false, chil
 MRetInfo._name2Val["DDD"] = MRetInfo.DDD
 MRetInfo.Form = { "Form"}
 MRetInfo._name2Val["Form"] = MRetInfo.Form
-MRetInfo.FormFunc = { "FormFunc", {{ func=Nodes.Node._fromMap, nilable=false, child={} }}}
+MRetInfo.FormFunc = { "FormFunc", {{ func=Nodes.ExpRefNode._fromMap, nilable=false, child={} }}}
 MRetInfo._name2Val["FormFunc"] = MRetInfo.FormFunc
-MRetInfo.Func = { "Func", {{ func=Nodes.Node._fromMap, nilable=false, child={} }}}
+MRetInfo.Func = { "Func", {{ func=Nodes.ExpRefNode._fromMap, nilable=false, child={} }}}
 MRetInfo._name2Val["Func"] = MRetInfo.Func
 MRetInfo.Method = { "Method", {{ func=Ast.TypeInfo._fromMap, nilable=false, child={} }}}
 MRetInfo._name2Val["Method"] = MRetInfo.Method
@@ -3075,15 +3075,9 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
                processSetArg( true )
                local wroteFuncFlag = false
                local builtinFunc = TransUnit.getBuiltinFunc(  )
-               do
-                  local refNode = _lune.__Cast( funcNode, 3, Nodes.ExpRefNode )
-                  if refNode ~= nil then
-                     if refNode:get_expType() == builtinFunc.lune_print then
-                        wroteFuncFlag = true
-                        self:write( "lune_print(" )
-                     end
-                     
-                  end
+               if funcNode:get_expType() == builtinFunc.lune_print then
+                  wroteFuncFlag = true
+                  self:write( "lune_print(" )
                end
                
                if not wroteFuncFlag then

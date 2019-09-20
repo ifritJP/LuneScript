@@ -62,16 +62,16 @@ pub enum CheckBreakMode {
 
 pub alge Literal {
    Nil,
-   Int( int ),
-   Real( real ),
-   Str( str ),
-   Bool( bool ),
-   Symbol( str ),
-   Field( &List<str> ),
-   LIST( &List<&Literal> ),
-   ARRAY( &List<&Literal> ),
-   SET( &List<&Literal> ),
-   MAP( &Map<&Literal,&Literal> ),
+   Int( val:int ),
+   Real( val:real ),
+   Str( val:str ),
+   Bool( val:bool ),
+   Symbol( val:str ),
+   Field( val:&List<str> ),
+   LIST( val:&List<&Literal> ),
+   ARRAY( val:&List<&Literal> ),
+   SET( val:&List<&Literal> ),
+   MAP( val:&Map<&Literal,&Literal> ),
 }
 
 pub fn getLiteralObj( obj:&Literal ):stem! {

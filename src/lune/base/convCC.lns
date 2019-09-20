@@ -3414,10 +3414,10 @@ alge MRetInfo {
    /** デフォルト form */
    Form,
    /** 独自で定義した form */
-   FormFunc(&Nodes.Node),
-   Method(&Ast.TypeInfo),
-   Func(&Nodes.Node),
-   DDD(&Nodes.ExpToDDDNode),
+   FormFunc( refNode:&Nodes.ExpRefNode),
+   Method( methodType:&Ast.TypeInfo),
+   Func( refNode:&Nodes.ExpRefNode),
+   DDD( exp2DDD:&Nodes.ExpToDDDNode),
 }
 
 pub fn convFilter.processCallWithMRet(
@@ -3545,11 +3545,9 @@ pub fn convFilter.processCallWithMRet(
                let mut wroteFuncFlag = false;
                let builtinFunc = TransUnit.getBuiltinFunc();
 
-               if! let refNode = funcNode@@@Nodes.ExpRefNode {
-                  if refNode.$expType == builtinFunc.lune_print {
-                     wroteFuncFlag = true;
-                     self.write( "lune_print(" );
-                  }
+               if funcNode.$expType == builtinFunc.lune_print {
+                  wroteFuncFlag = true;
+                  self.write( "lune_print(" );
                }
                   
                if not wroteFuncFlag {

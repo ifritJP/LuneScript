@@ -5188,6 +5188,13 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
       local typeInfoList = {}
       if nextToken.txt == "(" then
          while true do
+            local workToken1 = self:getToken(  )
+            local workToken2 = self:getToken(  )
+            if workToken2.txt ~= ":" then
+               self:pushback(  )
+               self:pushback(  )
+            end
+            
             local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false )
             table.insert( typeInfoList, typeNode:get_expType() )
             nextToken = self:getToken(  )
