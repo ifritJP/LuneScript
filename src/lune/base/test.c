@@ -365,7 +365,7 @@ void lune_init_test( lune_env_t * _pEnv )
     pVal2->pStem->val.intVal= 99;
     // fn () { val2 = val2 + 1000; } ();
     lune_stem_t * pClosure = lune_func2stem(
-        _pEnv, (lune_func_t *)u_lune_form_test3, 1, pVal2, 0, false );
+        _pEnv, (lune_func_t *)u_lune_form_test3, 0, false, 1, pVal2 );
     lune_call_form( _pEnv, pClosure, 0 );
     // print( val2 );
     lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal2->pStem ) );

@@ -1334,6 +1334,7 @@ local function processDeclMemberTable( stream, classTypeInfo )
       
    end
    
+   stream:writeln( "// member" )
    outputVal( _lune.unwrap( classTypeInfo:get_scope()) )
 end
 
@@ -1370,7 +1371,7 @@ end
 local function processDeclClassPrototype( stream, moduleCtrl, node )
 
    local className = moduleCtrl:getClassCName( node:get_expType() )
-   stream:writeln( string.format( "void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj );", className) )
+   stream:writeln( string.format( "static void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj );", className) )
    if hasGC( node:get_expType() ) then
       stream:writeln( string.format( "static void u_mtd_%s__gc( lune_env_t * _pEnv, lune_stem_t * pObj );", className) )
    end
@@ -1395,12 +1396,13 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
    stream:writeln( ";" )
    if not node:hasUserInit(  ) then
       local ctorType = _lune.unwrap( node:get_scope():getTypeInfoField( "__init", true, node:get_scope() ))
-      stream:write( string.format( "void u_mtd_%s___init( lune_env_t * _pEnv, %s pStem", className, cTypeStemP) )
+      stream:write( string.format( "static void u_mtd_%s___init( lune_env_t * _pEnv, %s pStem", className, cTypeStemP) )
       for index, argType in pairs( ctorType:get_argTypeInfoList() ) do
          stream:write( string.format( ", %s _arg%d", getCType( argType, false ), index) )
       end
       
       stream:writeln( ") {" )
+      stream:pushIndent(  )
       do
          local baseScope = node:get_scope():get_inherit()
          if baseScope ~= nil then
@@ -1428,6 +1430,7 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
          
       end
       
+      stream:popIndent(  )
       stream:writeln( "}" )
    end
    
@@ -1463,6 +1466,7 @@ function convFilter:processDeclClassNodePrototype( node )
 
    local className = self.moduleCtrl:getClassCName( node:get_expType() )
    self:writeln( string.format( "typedef struct lune_mtd_%s_t {", className) )
+   self:pushIndent(  )
    local kind = node:get_expType():get_kind()
    if kind == Ast.TypeInfoKind.Class then
       self:writeln( "lune_del_t * _del;" )
@@ -1470,15 +1474,19 @@ function convFilter:processDeclClassNodePrototype( node )
    end
    
    processDeclMethodTable( self, node:get_expType() )
+   self:popIndent(  )
    self:writeln( string.format( "} lune_mtd_%s_t;", className) )
    if kind == Ast.TypeInfoKind.Class then
       self:writeln( string.format( "typedef struct u_if_imp_%s_t {", className) )
+      self:pushIndent(  )
       processIFObjDecl( self, self.moduleCtrl, node:get_expType() )
       self:writeln( "lune_stem_t sentinel;" )
+      self:popIndent(  )
       self:writeln( string.format( "} u_if_imp_%s_t;", className) )
    end
    
    self:writeln( string.format( "typedef struct %s {", className) )
+   self:pushIndent(  )
    self:writeln( "lune_type_meta_t * pMeta;" )
    do
       local _switchExp = kind
@@ -1486,6 +1494,7 @@ function convFilter:processDeclClassNodePrototype( node )
          self:writeln( string.format( "u_if_imp_%s_t * pImp;", className) )
          self:writeln( string.format( "lune_mtd_%s_t * pMtd;", className) )
          processDeclMemberTable( self, node:get_expType() )
+         self:writeln( "// interface implements" )
          self:writeln( string.format( "u_if_imp_%s_t imp;", className) )
       elseif _switchExp == Ast.TypeInfoKind.IF then
          self:writeln( "lune_stem_t * pObj;" )
@@ -1493,6 +1502,7 @@ function convFilter:processDeclClassNodePrototype( node )
       end
    end
    
+   self:popIndent(  )
    self:writeln( string.format( "} %s;", className) )
    do
       local _switchExp = kind
@@ -1516,7 +1526,8 @@ end
 function convFilter:processDeclClassDef( node )
 
    local className = self.moduleCtrl:getClassCName( node:get_expType() )
-   self:writeln( string.format( "void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj ) {", className) )
+   self:writeln( string.format( "static void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj ) {", className) )
+   self:pushIndent(  )
    if node:get_expType():hasBase(  ) then
       self:writeln( string.format( "u_mtd_%s__del( _pEnv, pObj );", self.moduleCtrl:getClassCName( node:get_expType():get_baseTypeInfo() )) )
    end
@@ -1528,9 +1539,11 @@ function convFilter:processDeclClassDef( node )
       
    end
    
+   self:popIndent(  )
    self:writeln( "}" )
    processNewConstrProto( self, self.moduleCtrl, node )
    self:writeln( "{" )
+   self:pushIndent(  )
    self:writeln( string.format( "lune_class_new_( _pEnv, %s, pStem, pObj );", className) )
    self:write( string.format( "u_mtd_%s___init( _pEnv, pStem", className) )
    local scope = _lune.unwrap( node:get_expType():get_scope())
@@ -1544,6 +1557,7 @@ function convFilter:processDeclClassDef( node )
    self:writeln( "pObj->imp.sentinel.type = lune_value_type_nil;" )
    processIFObjInit( self, self.moduleCtrl, node:get_expType(), node:get_expType() )
    self:writeln( "return pStem;" )
+   self:popIndent(  )
    self:writeln( "}" )
    for __index, member in pairs( node:get_memberList() ) do
       local memberName = member:get_name().txt
@@ -1552,11 +1566,15 @@ function convFilter:processDeclClassDef( node )
          if getterType:get_autoFlag() then
             processMethodDeclTxt( self, self.moduleCtrl, false, getterType )
             self:writeln( "{" )
+            self:pushIndent(  )
             self:writeln( string.format( "return lune_obj_%s(pObj)->%s;", className, memberName) )
+            self:popIndent(  )
             self:writeln( "}" )
             processMethodDeclTxt( self, self.moduleCtrl, true, getterType )
             self:writeln( "{" )
+            self:pushIndent(  )
             self:writeln( string.format( "return lune_mtd_%s( pObj )->get_%s( _pEnv, pObj );", className, memberName) )
+            self:popIndent(  )
             self:writeln( "}" )
          end
          
@@ -1567,6 +1585,7 @@ function convFilter:processDeclClassDef( node )
          if setterType:get_autoFlag() then
             processMethodDeclTxt( self, self.moduleCtrl, false, setterType )
             self:writeln( "{" )
+            self:pushIndent(  )
             if isStemType( member:get_expType() ) then
                self:writeln( string.format( 'lune_setq( _pEnv, &(lune_obj_%s(pObj)->%s), arg1 );', className, memberName) )
             else
@@ -1574,10 +1593,13 @@ function convFilter:processDeclClassDef( node )
                self:writeln( string.format( "lune_obj_%s(pObj)->%s = arg1;", className, memberName) )
             end
             
+            self:popIndent(  )
             self:writeln( "}" )
             processMethodDeclTxt( self, self.moduleCtrl, true, setterType )
             self:writeln( "{" )
+            self:pushIndent(  )
             self:writeln( string.format( "lune_mtd_%s( pObj )->set_%s( _pEnv, pObj, arg1 );", className, memberName) )
+            self:popIndent(  )
             self:writeln( "}" )
          end
          
@@ -1685,8 +1707,10 @@ local function processIFMethodDataInit( stream, moduleCtrl, classType, orgClassT
    local className = moduleCtrl:getClassCName( orgClassType )
    for __index, ifType in pairs( classType:get_interfaceList() ) do
       local ifName = moduleCtrl:getClassCName( ifType )
-      stream:writeln( string.format( "lune_mtd_%s_t lune_if_%s_imp_%s = {", ifName, className, ifName) )
+      stream:writeln( string.format( "static lune_mtd_%s_t lune_if_%s_imp_%s = {", ifName, className, ifName) )
+      stream:pushIndent(  )
       processInitIFMethodTable( stream, moduleCtrl, ifType, orgClassType )
+      stream:popIndent(  )
       stream:writeln( "};" )
    end
    
@@ -1698,6 +1722,7 @@ local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
    local className = moduleCtrl:getClassCName( classTypeInfo )
    stream:writeln( string.format( 'lune_type_meta_t lune_type_meta_%s = { "%s" };', className, className) )
    stream:writeln( string.format( "lune_mtd_%s_t lune_mtd_%s = {", className, className) )
+   stream:pushIndent(  )
    stream:writeln( string.format( "u_mtd_%s__del,", className) )
    if hasGC( classTypeInfo ) then
       stream:writeln( string.format( "u_mtd_%s__gc,", className) )
@@ -1707,6 +1732,7 @@ local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
    end
    
    processInitMethodTable( stream, moduleCtrl, classTypeInfo )
+   stream:popIndent(  )
    stream:writeln( "};" )
    for __index, symbolInfo in pairs( (_lune.unwrap( classTypeInfo:get_scope()) ):get_symbol2SymbolInfoMap() ) do
       if symbolInfo:get_kind() == Ast.SymbolKind.Mbr and symbolInfo:get_staticFlag() then
@@ -2054,26 +2080,13 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
    end
    
    local mRetIndex = _lune.nilacc( mRetExp, 'get_index', 'callmtd' )
-   for index = 1, #expList do
-      if index == mRetIndex then
-         if mRetExp ~= nil then
-            self:write( "lune_setMRet( _pEnv, " )
-            filter( mRetExp:get_exp(), self, parent )
-            self:writeln( ");" )
-         end
-         
-      end
-      
+   local function processSet( index )
+   
       local workNode = nil
       if #varNodeList >= index then
          workNode = varNodeList[index]
       end
       
-      if index > #varSymList then
-         return 
-      end
-      
-      self:writeln( "{" )
       local exp = expList[index]
       if hasMultiVal( exp ) then
          self:write( cTypeStemP )
@@ -2100,7 +2113,6 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
       if index == #expList then
          for varIndex = index, #varSymList do
             if varIndex > #varSymList then
-               self:writeln( "}" )
                return 
             end
             
@@ -2111,13 +2123,32 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
             setVal( workNode, varSymList[varIndex], exp, varIndex - index )
          end
          
-         self:writeln( "}" )
          return 
       else
        
          setVal( workNode, varSymList[index], exp, 0 )
       end
       
+   end
+   
+   for index = 1, #expList do
+      if index == mRetIndex then
+         if mRetExp ~= nil then
+            self:write( "lune_setMRet( _pEnv, " )
+            filter( mRetExp:get_exp(), self, parent )
+            self:writeln( ");" )
+         end
+         
+      end
+      
+      if index > #varSymList then
+         return 
+      end
+      
+      self:writeln( "{" )
+      self:pushIndent(  )
+      processSet( index )
+      self:popIndent(  )
       self:writeln( "}" )
    end
    

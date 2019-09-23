@@ -1,34 +1,9 @@
-form FF( val:int, ... );
-fn func( val:int, ... ) {
-   print( val, ... );
+class Test {
+   let txt:str {pub};
 }
-fn func2( ... ) {
-   print( ... );
-}
-form FF3( ...<&stem!> );
+let test = new Test( "abc" );
+print( test.$txt );
 
-fn ret(): int, int, int {
-   return 1, 2, 3;
-}
-fn sub( ff:FF ) {
-   ff( ret()** );
-   ff( 0, ret()** );
-   ff( -1, 0, ret()** );
-}
-fn sub2( ff:form ) {
-   ff( 1 );
-   ff( ret()** );
-   ff( 0, ret()** );
-   ff( -1, 0, ret()** );
-}
-fn sub3( ff:FF3 ) {
-   ff( ret()** );
-   ff( 0, ret()** );
-   ff( -1, 0, ret()** );
-}
-sub( func );
-sub2( func2 );
-sub3( print );
 
 // fn funcL(): int, int {
 //    return 1, 2;

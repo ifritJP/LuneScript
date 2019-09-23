@@ -1279,6 +1279,7 @@ fn processDeclMemberTable( stream:Util.SourceStream, classTypeInfo:&Ast.TypeInfo
          }
       }
    }
+   stream.writeln( "// member" );
    outputVal( unwrap classTypeInfo.$scope );
 }
 
@@ -1308,7 +1309,8 @@ fn processDeclClassPrototype(
    
    // _gc, _del のプロトタイプ
    stream.writeln(
-      "void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj );" (className) );
+      "static void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj );"
+      (className) );
    if hasGC( node.$expType ) {
       stream.writeln( "static void u_mtd_%s__gc( lune_env_t * _pEnv, lune_stem_t * pObj );" (className) );
    }
@@ -1339,7 +1341,7 @@ fn processDeclClassPrototype(
       let ctorType = unwrap node.$scope.getTypeInfoField(
          "__init", true, node.$scope );
       stream.write(
-         "void u_mtd_%s___init( lune_env_t * _pEnv, %s pStem"
+         "static void u_mtd_%s___init( lune_env_t * _pEnv, %s pStem"
          (className, cTypeStemP ) );
       foreach argType, index in ctorType.$argTypeInfoList {
          stream.write(
@@ -1347,6 +1349,7 @@ fn processDeclClassPrototype(
             (getCType( argType, false ), index ) );
       }
       stream.writeln( ") {" );
+      stream.pushIndent(##);
 
       if! let baseScope = node.$scope.$inherit {
          let superInitType =
@@ -1372,6 +1375,7 @@ fn processDeclClassPrototype(
             }
          }
       }
+      stream.popIndent();
       stream.writeln( "}" );
    }
 }
@@ -1412,6 +1416,7 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
    
    // メソッド構造体の宣言
    self.writeln( "typedef struct lune_mtd_%s_t {" (className) );
+   self.pushIndent(##);
 
    let kind = node.$expType.$kind;
    if kind == .Class {
@@ -1420,27 +1425,33 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
    }
 
    processDeclMethodTable( self, node.$expType );
-   
+
+   self.popIndent();
    self.writeln( "} lune_mtd_%s_t;" (className) );
 
    if kind == .Class {
       self.writeln( "typedef struct u_if_imp_%s_t {" (className) );
+      self.pushIndent(##);
 
       processIFObjDecl( self, self.moduleCtrl, node.$expType );
 
       self.writeln( "lune_stem_t sentinel;" );
+      self.popIndent();
       self.writeln( "} u_if_imp_%s_t;" (className) );
    }
    
 
    // クラス構造体の宣言
    self.writeln( "typedef struct %s {" (className) );
+   self.pushIndent( ## );
+   
    self.writeln( "lune_type_meta_t * pMeta;" );
    switch kind {
       case .Class {
          self.writeln( "u_if_imp_%s_t * pImp;" (className) );
          self.writeln( "lune_mtd_%s_t * pMtd;" (className) );
          processDeclMemberTable( self, node.$expType );
+         self.writeln( "// interface implements" );
          self.writeln( "u_if_imp_%s_t imp;" (className) );
       }
       case .IF {
@@ -1448,6 +1459,8 @@ fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
          self.writeln( "lune_mtd_%s_t * pMtd;" (className) );
       }      
    }
+
+   self.popIndent();
    self.writeln( "} %s;" (className) );
 
    switch kind {
@@ -1476,8 +1489,10 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
 {
    let className = self.moduleCtrl.getClassCName( node.$expType );
 
-   self.writeln( "void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj ) {" (className) );
-
+   self.writeln( "static void u_mtd_%s__del( lune_env_t * _pEnv, lune_stem_t * pObj ) {"
+      (className) );
+   self.pushIndent(##);
+   
    if node.$expType.hasBase() {
       self.writeln( "u_mtd_%s__del( _pEnv, pObj );"
                     (self.moduleCtrl.getClassCName( node.$expType.$baseTypeInfo) ) );
@@ -1489,12 +1504,14 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
                        (className, member.$name.txt ) );
       }
    }
-   
+
+   self.popIndent();
    self.writeln( "}" );
    
    // デフォルトコンストラクタの定義
    processNewConstrProto( self, self.moduleCtrl, node );
    self.writeln( "{" );
+   self.pushIndent(##);
    
    self.writeln( "lune_class_new_( _pEnv, %s, pStem, pObj );" (className) );
 
@@ -1513,6 +1530,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
    processIFObjInit( self, self.moduleCtrl, node.$expType, node.$expType );
 
    self.writeln( "return pStem;" );
+   self.popIndent();
    self.writeln( "}" );
 
    // アクセッサの定義
@@ -1524,15 +1542,19 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
          if getterType.$autoFlag {
             processMethodDeclTxt( self, self.moduleCtrl, false, getterType## );
             self.writeln( "{" );
+            self.pushIndent(##);
             self.writeln(
                "return lune_obj_%s(pObj)->%s;" (className, memberName) );
+            self.popIndent();
             self.writeln( "}" );
 
             processMethodDeclTxt( self, self.moduleCtrl, true, getterType## );
             self.writeln( "{" );
+            self.pushIndent(##);
             self.writeln(
                "return lune_mtd_%s( pObj )->get_%s( _pEnv, pObj );"
                (className, memberName) );
+            self.popIndent();
             self.writeln( "}" );
          }
       }
@@ -1545,6 +1567,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
             //    ( className, memberName, getCType( member.$expType, false ) ) );
             processMethodDeclTxt( self, self.moduleCtrl, false, setterType## );
             self.writeln( "{" );
+            self.pushIndent(##);
             if isStemType( member.$expType ) {
                self.writeln(
                   'lune_setq( _pEnv, &(lune_obj_%s(pObj)->%s), arg1 );'
@@ -1554,13 +1577,16 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
                self.writeln( "lune_obj_%s(pObj)->%s = arg1;"
                   (className, memberName) );
             }
+            self.popIndent();
             self.writeln( "}" );
 
             processMethodDeclTxt( self, self.moduleCtrl, true, setterType## );
             self.writeln( "{" );
+            self.pushIndent(##);
             self.writeln(
                "lune_mtd_%s( pObj )->set_%s( _pEnv, pObj, arg1 );"
                (className, memberName) );
+            self.popIndent();
             self.writeln( "}" );
          }
       }
@@ -1634,10 +1660,12 @@ fn processIFMethodDataInit(
    foreach ifType in classType.$interfaceList {
       let ifName = moduleCtrl.getClassCName( ifType );
       stream.writeln(
-         "lune_mtd_%s_t lune_if_%s_imp_%s = {" ( ifName, className, ifName ) );
+         "static lune_mtd_%s_t lune_if_%s_imp_%s = {" ( ifName, className, ifName ) );
+      stream.pushIndent(##);
 
       processInitIFMethodTable( stream, moduleCtrl, ifType, orgClassType );
 
+      stream.popIndent();
       stream.writeln( "};" );
    }
 }
@@ -1658,6 +1686,7 @@ fn processClassDataInit(
    // メソッド情報設定
    stream.writeln(
       "lune_mtd_%s_t lune_mtd_%s = {" ( className, className ) );
+   stream.pushIndent(##);
    
    stream.writeln( "u_mtd_%s__del," ( className ) );
 
@@ -1669,6 +1698,7 @@ fn processClassDataInit(
    }
 
    processInitMethodTable( stream, moduleCtrl, classTypeInfo );
+   stream.popIndent();
    stream.writeln( "};" );
 
    // static メンバー用変数宣言
@@ -2327,25 +2357,12 @@ fn convFilter.processSetValToSym(
    }
 
    let mut mRetIndex:int! = mRetExp$.$index;
-   for index = 1, #expList {
-      if index == mRetIndex {
-         when! mRetExp {
-            self.write( "lune_setMRet( _pEnv, " );
-            filter( mRetExp.$exp, self, parent );
-            self.writeln( ");" );
-         }
-      }
-      
+   fn processSet( index:int ) {
       let mut workNode:&Nodes.Node! = nil;
       if #varNodeList >= index {
          workNode = varNodeList[ index ];
       }
       
-      if index > #varSymList {
-         return;
-      }
-      // 一旦 _work に代入してから、変数にセットする。
-      self.writeln( "{" );
       let exp = expList[ index ];
       if hasMultiVal( exp ) {
          self.write( cTypeStemP );
@@ -2372,7 +2389,6 @@ fn convFilter.processSetValToSym(
       if index == #expList {
          for varIndex = index, #varSymList {
             if varIndex > #varSymList {
-               self.writeln( "}" );
                return;
             }
             if #varNodeList >= varIndex {
@@ -2380,12 +2396,32 @@ fn convFilter.processSetValToSym(
             }
             setVal( workNode, varSymList[ varIndex ], exp, varIndex - index );
          }
-         self.writeln( "}" );
          return;
       }
       else {
          setVal( workNode, varSymList[ index ], exp, 0 );
       }
+   }
+
+   for index = 1, #expList {
+      if index == mRetIndex {
+         when! mRetExp {
+            self.write( "lune_setMRet( _pEnv, " );
+            filter( mRetExp.$exp, self, parent );
+            self.writeln( ");" );
+         }
+      }
+      
+      if index > #varSymList {
+         return;
+      }
+      // 一旦 _work に代入してから、変数にセットする。
+      self.writeln( "{" );
+      self.pushIndent(##);
+
+      processSet( index );
+
+      self.popIndent();
       self.writeln( "}" );
    }
 }
