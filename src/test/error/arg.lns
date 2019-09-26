@@ -116,7 +116,7 @@ func7( func5() ); // warn
    }
    func( 1 ); // warn
    func2( 1 ## ); // error
-   func3( 2 ## );
+   func3( 2 ## ); // error
    func3( ## );
 }
 

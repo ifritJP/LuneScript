@@ -1037,6 +1037,11 @@ _declNodeClass( "ExpAccessMRet", Node, false, true, false,
                   { "index": "int" } ]
 );
 
+// 多値戻り値の先頭だけ使用する場合
+_declNodeClass( "ExpMultiTo1", Node, false, true, false,
+                [ { "exp": "&Node" } ]
+);
+
 
 _declNodeClass( "ExpDDD", Node, false, true, false,
                 [ { "token": "&Parser.Token" } ]
@@ -2018,3 +2023,13 @@ pub class DefMacroInfo extend MacroInfo {
    }
 }
 
+pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
+   let expType = node.$expType;
+   if #node.$expTypeList > 1 {
+      return ExpMultiTo1Node.create( self, node.$pos, [ expType ], node );
+   }
+   elseif expType.$kind == .DDD {
+      return ExpMultiTo1Node.create( self, node.$pos, expType.$itemTypeInfoList, node );
+   }
+   return node;
+}

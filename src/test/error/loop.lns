@@ -81,6 +81,13 @@
       }
       return 1; // error
    }
+   {
+      let mut list = [ 1, 2 ];
+      foreach val in list {
+         list.insert( 0 ); // error
+         list = [];
+      }
+   }
 }
 
 

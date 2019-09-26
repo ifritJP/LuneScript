@@ -4405,6 +4405,7 @@ pub static fn TypeInfo.checkMatchType(
       }
       return .Match, "";
    }
+   // index 番以降の expTypeList の要素が dstType と等しいか調べる。
    fn checkSrcTypeFrom( index:int, dstType:&TypeInfo ) : MatchType, str
    {
       for srcIndex = index, #expTypeList {
@@ -4418,6 +4419,11 @@ pub static fn TypeInfo.checkMatchType(
                checkType = builtinTypeStem_;
             }
          }
+         elseif srcIndex > index and expType.$kind == .Abbr {
+            // 
+            return .Error, "must not use '##'";
+         }
+            
          if not dstType.canEvalWith( checkType, .SetOp, alt2type ) {
             return .Error, "exp(%d) type mismatch %s <- %s"
             ( srcIndex, dstType.getTxt( true## ), expType.getTxt( true## ) );
@@ -4453,6 +4459,7 @@ pub static fn TypeInfo.checkMatchType(
                }
             }
             else {
+               // dst の最終引数が ... の場合
                let mut dddItemType = builtinTypeStem_;
                if #dstType.$itemTypeInfoList > 0 {
                   dddItemType = dstType.$itemTypeInfoList[ 1 ];

@@ -206,6 +206,18 @@ extern "C" {
     }
 
 #define lune_getImpObj( STEM ) (STEM)->val.ifVal.pObj
+
+
+#define lune_init_alge( STEM, ENV, VALTYPE )                       \
+    {                                                              \
+        lune_stem_t * __pStem = STEM;                              \
+        lune_init_stem( __pStem, lune_value_type_alge, ENV );      \
+        __pStem->refCount = 1;                                     \
+        __pStem->val.alge.type = VALTYPE;                          \
+        __pStem->val.alge.pVal = NULL;                              \
+        __pStem->val.alge.gc = NULL;                                \
+    }
+    
     
 
 
@@ -229,6 +241,7 @@ extern "C" {
         lune_value_type_itList,
         lune_value_type_itSet,
         lune_value_type_itMap,
+        lune_value_type_alge,
     } lune_value_type_t;
 
     typedef struct lune_itList_t lune_itList_t;
@@ -308,6 +321,19 @@ extern "C" {
         lune_mtd__Class_t * pMtd;
     } lune_Class_t;
 
+
+    /**
+     * alge 型を開放する際のコールバック
+     */
+    typedef void (lune_algeVal_gc_t)( lune_env_t * _pEnv, void * pVal );
+    /**
+     * alge 型のインスタンス。
+     */
+    typedef struct lune_Alge_t {
+        int type;
+        void * pVal;
+        lune_algeVal_gc_t * gc;
+    } lune_Alge_t;
 
     /**
      * 文字列型データ。
@@ -419,6 +445,7 @@ extern "C" {
             lune_itSet_t * itSet;
             lune_itMap_t * itMap;
             lune_if_t ifVal;
+            lune_Alge_t alge;
         } val;
         /** 変数にアサインされる前の値を管理する双方向リスト構造。アサイン済みの場合 NULL。 */
         struct lune_stem_t * pNext;
@@ -505,6 +532,8 @@ extern "C" {
     _lune_createMRet( LUNE_DEBUG_POS, ENV, HASDDD, NUM, ##__VA_ARGS__ )
 #define lune_class_new( ENV, SIZE )             \
     _lune_class_new( LUNE_DEBUG_POS, ENV, SIZE )
+#define lune_alge_new( ENV, VALTYPE, SIZE, GC )                    \
+    _lune_alge_new( LUNE_DEBUG_POS, ENV, VALTYPE, SIZE, GC )
 #define lune_it_new( ENV, TYPE, VAL )                  \
     _lune_it_new( LUNE_DEBUG_POS, ENV, TYPE, VAL )
 #define lune_createList( ENV, LIST )                  \
@@ -528,6 +557,7 @@ extern "C" {
     extern lune_stem_t * _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
     extern lune_stem_t * _lune_createMRet( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t * _lune_class_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int size );
+    extern lune_stem_t * _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
     extern lune_stem_t * _lune_it_new(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
 
@@ -556,7 +586,6 @@ extern "C" {
     extern void lune_leave_block( lune_env_t * _pEnv );
     extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemVerNum );
     extern void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem );
-    extern void lune_class_del( lune_env_t * _pEnv, void * pObj );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * _pDDD );
     extern lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem );

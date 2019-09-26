@@ -3049,6 +3049,11 @@ function convFilter:processExpToDDD( node, opt )
    self:processExpListSub( node, node:get_expList():get_expList(), node:get_expList():get_mRetExp() )
 end
 
+function convFilter:processExpMultiTo1( node, opt )
+
+   filter( node:get_exp(), self, node )
+end
+
 function convFilter:processExpCast( node, opt )
 
    do
@@ -3058,6 +3063,9 @@ function convFilter:processExpCast( node, opt )
             self:write( "math.floor(" )
             filter( node:get_exp(), self, node )
             self:write( ")" )
+         elseif node:get_expType():equals( Ast.builtinTypeReal ) then
+            filter( node:get_exp(), self, node )
+            self:write( " * 1.0" )
          else
           
             filter( node:get_exp(), self, node )
@@ -3560,7 +3568,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3234, function (  )
+   Log.log( Log.Level.Info, __func__, 3244, function (  )
    
       return string.format( "code: %s", code)
    end

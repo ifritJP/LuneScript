@@ -47,6 +47,9 @@ static lune_globalEnv_t s_globalEnv;
 
 #define lune_abort( MESS ) _lune_abort( MESS, LUNE_DEBUG_POS )
 
+static void lune_class_del( lune_env_t * _pEnv, void * pObj );
+
+
 static void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
 {
     fprintf( stderr, "abort:%s:%d:%s\n", pFile, lineNo, pMessage );
@@ -113,6 +116,12 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
             ((lune_Class_t*)pStem->val.classVal)->pMtd->_del( _pEnv, pStem );
         }
         lune_class_del( _pEnv, pStem->val.classVal );
+        break;
+    case lune_value_type_alge:
+        if ( pStem->val.alge.gc != NULL ) {
+            pStem->val.alge.gc( _pEnv, pStem->val.alge.pVal );
+        }
+        lune_alge_del( _pEnv, pStem->val.alge.pVal );
         break;
     case lune_value_type_ddd: // fall-through
     case lune_value_type_mRet:
@@ -601,6 +610,37 @@ void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem )
  * @param size クラスインスタンスのサイズ
  * @return stem
  */
+lune_stem_t * _lune_alge_new(
+    const char * pFile, int lineNo, lune_env_t * _pEnv, int valType,
+    int size, lune_algeVal_gc_t * gc )
+{
+    lune_stem_t * pStem =
+        lune_alloc_stem( _pEnv, lune_value_type_alge, pFile, lineNo );
+    void * pObj = lune_malloc( _pEnv->allocateor, size );
+    s_globalEnv.allocNum++;
+    pStem->val.alge.type = valType;
+    pStem->val.alge.pVal = pObj;
+    pStem->val.alge.gc = gc;
+    return pStem;
+}
+
+/**
+ * クラスのインスタンスを開放する
+ *
+ * @param pObj クラスのインスタンス
+ */
+void lune_alge_del( lune_env_t * _pEnv, void * pObj )
+{
+    s_globalEnv.allocNum--;
+    lune_free( _pEnv->allocateor, pObj );
+}
+
+/**
+ * クラスのインスタンスを保持する stem を生成する
+ *
+ * @param size クラスインスタンスのサイズ
+ * @return stem
+ */
 lune_stem_t * _lune_class_new(
     const char * pFile, int lineNo, lune_env_t * _pEnv, int size )
 {
@@ -617,7 +657,7 @@ lune_stem_t * _lune_class_new(
  *
  * @param pObj クラスのインスタンス
  */
-void lune_class_del( lune_env_t * _pEnv, void * pObj )
+static void lune_class_del( lune_env_t * _pEnv, void * pObj )
 {
     s_globalEnv.allocNum--;
     lune_free( _pEnv->allocateor, pObj );

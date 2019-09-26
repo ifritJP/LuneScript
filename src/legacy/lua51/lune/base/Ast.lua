@@ -5397,6 +5397,8 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
                checkType = _moduleObj.builtinTypeStem_
             end
             
+         elseif srcIndex > index and expType:get_kind() == TypeInfoKind.Abbr then
+            return MatchType.Error, "must not use '##'"
          end
          
          if not dstType:canEvalWith( checkType, CanEvalType.SetOp, alt2type ) then

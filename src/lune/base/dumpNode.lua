@@ -841,6 +841,13 @@ function dumpFilter:processExpToDDD( node, opt )
    filter( node:get_expList(), self, opt:nextOpt(  ) )
 end
 
+function dumpFilter:processExpMultiTo1( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, "" )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
+end
+
 function dumpFilter:processExpCast( node, opt )
 
    local prefix, depth = opt:get(  )
@@ -1078,6 +1085,13 @@ function dumpFilter:processLiteralSymbol( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, node:get_token(  ).txt )
+end
+
+
+function dumpFilter:processAbbr( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, "##" )
 end
 
 

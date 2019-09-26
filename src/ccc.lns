@@ -1,5 +1,106 @@
 let mut g_val = 100;
 {
+   fn funcL(): int, int {
+      return 1, 2;
+   }
+
+   class Test {
+      static let val:int;
+      __init {
+         Test.val = 1;
+      }
+      pub static fn funcS(): int, int {
+         return Test.val, 2;
+      }
+      pub fn func(): int, int {
+         return 1, 2;
+      }
+   }
+   fn sub( val1:int, val2:int ) {
+      print( val1, val2 );
+   }
+   print( "---" );
+   sub( Test.funcS()** );
+   sub( Test.funcS() + 1, 0 );
+   sub( Test.funcS(), 0 );
+   sub( ( Test.funcS() ), 0 );
+   sub( ( Test.funcS() ) + 1, 0 );
+
+
+   print( "---" );
+   print( Test.funcS()** );
+   print( Test.funcS() + 1, 0 );
+   print( Test.funcS(), 0 );
+   print( ( Test.funcS() ), 0 );
+   print( ( Test.funcS() ) + 1, 0 );
+   print( 0, Test.funcS()** );
+
+
+   print( "---" );
+   let test = new Test();
+   sub( test.func()** );
+   sub( test.func() + 1, 0 );
+   sub( test.func(), 0 );
+   sub( ( test.func() ), 0 );
+   sub( ( test.func() ) + 1, 0 );
+} 
+{
+   fn func(): int, int, int {
+      return 1, 2, 3;
+   }
+   fn sub2( val1:int, ... ) {
+      print( val1, ... );
+   }
+   sub2( func(), 1 );
+
+
+   print( func()@@real + 10 );
+   print( -func() + 10 );
+   print( ~func() + 10 );
+   print( func(), 10 );
+   print( ( func() ) );
+   print( func()** );
+
+   sub2( func()@@int + 10 ## );
+   sub2( func()@@int + 10 );
+   sub2( -func() + 10 ## );
+   sub2( ~func() + 10 ## );
+   sub2( func(), 10 );
+   sub2( ( func() ) ## );
+   sub2( func()** );
+}
+{
+   alge Test {
+      Val1,
+      Val2,
+      Val3( val:int ),
+      Val4( val1:int, val2:str ),
+   }
+
+   fn func( test:Test ) {
+      print( test == .Val1 );
+      match test {
+         case .Val1 {
+            print( ".Val1" );
+         }
+         case .Val2 {
+            print( ".Val2" );
+         }
+         case .Val3( arg ) {
+            print( ".Val3", arg );
+         }
+         case .Val4( arg1, arg2 ) {
+            print( ".Val4", arg1, arg2 );
+         }
+      }
+   }
+
+   func( Test.Val1 );
+   func( Test.Val2 );
+   func( Test.Val3( 3 ) );
+   func( Test.Val4( 3, "val" ) );
+}
+{
    form FF( val:int, ... );
    fn func( val:int, ... ) {
       print( val, ... );

@@ -539,6 +539,14 @@ pub override fn dumpFilter.processExpToDDD(
    filter( node.$expList, self, opt.nextOpt() );
 }
 
+pub override fn dumpFilter.processExpMultiTo1(
+   node: Nodes.ExpMultiTo1Node, opt: Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "" );
+   filter( node.$exp, self, opt.nextOpt() );
+}
+
 pub override fn dumpFilter.processExpCast(
    node: &Nodes.ExpCastNode, opt:Opt ) mut
 {
@@ -747,4 +755,11 @@ pub override fn dumpFilter.processLiteralSymbol(
 {
    let prefix, depth = opt.get();
    dump( prefix, depth, node, node.get_token().txt );
+};
+
+pub override fn dumpFilter.processAbbr(
+   node: Nodes.AbbrNode, opt: Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "##" );
 };

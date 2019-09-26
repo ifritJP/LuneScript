@@ -26,36 +26,46 @@ subfile owner lune.base.TransUnit;
 
 
 fn TransUnit.createExpList(
-   pos:&Parser.Position, expTypeList:List<&Ast.TypeInfo>,
-   expList:List<&Nodes.Node>, followOn:bool ) mut: Nodes.ExpListNode
+   pos:&Parser.Position,
+   expTypeList:List<&Ast.TypeInfo>, expList:&List<&Nodes.Node>,
+   followOn:bool, abbrNode:&Nodes.AbbrNode! ) mut: Nodes.ExpListNode
 {
+   let mut workList:List<&Nodes.Node> = [];
    let mut mRetExp:Nodes.MRetExp! = nil;
    if #expList > 0 {
-      // 最終ノードが複数の値を持つ場合は、その型を追加する
-      if #expList[ #expList ].$expTypeList > 1 {
-         mRetExp = new Nodes.MRetExp( expList[ #expList ], #expTypeList );
-         foreach expType, listIndex in expList[ #expList ].$expTypeList {
-            if listIndex ~= 1 {
-               expTypeList.insert( expType );
+      foreach exp, index in expList {
+         if #exp.$expTypeList > 1 or exp.$expType.$kind == .DDD {
+            // 複数の結果を持つ場合
+            if index ~= #expList {
+               // 最終ノード以外
+               workList.insert(
+                  Nodes.ExpMultiTo1Node.create(
+                     self.nodeManager, exp.$pos, [ exp.$expType ], exp ) );
             }
-         }
-      }
-   
-      let lastExpNode = expList[ #expList ];
-      switch lastExpNode.$kind {
-         case Nodes.NodeKind.$ExpCall, Nodes.NodeKind.$ExpCallSuper {
-            let retTypeList = lastExpNode.$expTypeList;
-            if #retTypeList > 1 {
-               // 多値返却の場合、 ExpAccessMRet を追加する。
-               foreach retType, retIndex in retTypeList {
-                  if retIndex ~= 1 {
-                     expList.insert( 
-                        Nodes.ExpAccessMRetNode.create(
-                           self.nodeManager, lastExpNode.$pos,
-                           [ retType ], lastExpNode, retIndex ) );
+            else {
+               workList.insert( exp );
+               if #exp.$expTypeList > 1 {
+                  // 最終ノードが複数の値を持つ場合は、その型を追加する
+                  mRetExp = new Nodes.MRetExp( exp, index );
+                  foreach expType, listIndex in exp.$expTypeList {
+                     if listIndex ~= 1 {
+                        expTypeList.insert( expType );
+                     }
+                  }
+                  // 多値返却の場合、 ExpAccessMRet を追加する。
+                  foreach retType, retIndex in exp.$expTypeList {
+                     if retIndex ~= 1 {
+                        workList.insert( 
+                           Nodes.ExpAccessMRetNode.create(
+                              self.nodeManager, exp.$pos,
+                              [ retType ], exp, retIndex ) );
+                     }
                   }
                }
             }
+         }
+         else {
+            workList.insert( exp );
          }
       }
    }
@@ -73,8 +83,12 @@ fn TransUnit.createExpList(
    //    expList.insert( abbrNode );
    // }
 
+   when! abbrNode {
+      workList.insert( abbrNode );
+   }
+
    return Nodes.ExpListNode.create(
-      self.nodeManager, pos, expTypeList, expList, mRetExp, followOn );
+      self.nodeManager, pos, expTypeList, workList, mRetExp, followOn );
 }
 
 /**
@@ -193,7 +207,7 @@ fn TransUnit.analyzeExpList(
 
    let mut expListNode = self.createExpList(
       unwrap pos default new Parser.Position( 0, 0 ),
-      expTypeList, expList, followOn );
+      expTypeList, expList, followOn, abbrNode );
 
    if not allowNoneType {
       foreach expType, expIndex in expTypeList {
@@ -202,10 +216,6 @@ fn TransUnit.analyzeExpList(
                              "The type of exp(%d) is None!!" (expIndex) );
          }
       }
-   }
-
-   when! abbrNode {
-      expList.insert( abbrNode );
    }
 
    self.pushback();
@@ -1473,7 +1483,8 @@ fn TransUnit.analyzeExpCast(
    }
 
    return Nodes.ExpCastNode.create(
-      self.nodeManager, firstToken.pos, [ castType ], exp, castType,
+      self.nodeManager, firstToken.pos, [ castType ],
+      self.nodeManager.MultiTo1( exp ), castType,
       opTxt ~= "@@@" and Nodes.CastKind.Force or Nodes.CastKind.Normal);
 }
 
@@ -1922,108 +1933,104 @@ fn TransUnit.analyzeExpField(
 
    let mut getterTypeInfo:&Ast.TypeInfo! = nil;
    let mut symbolInfo:&Ast.SymbolInfo! = nil;
-   if prefixExpType.get_kind() == .Class or
-      prefixExpType.get_kind() == .Module or
-      prefixExpType.get_kind() == .IF or
-      prefixExpType.get_kind() == .List or 
-      prefixExpType.get_kind() == .Array or
-      prefixExpType.get_kind() == .Set or
-      prefixExpType.get_kind() == .Box or
-      prefixExpType.get_kind() == .Alternate
-   {
-      let mut getterFlag = false;
-      typeInfo, symbolInfo, getterFlag =
-         self.analyzeAccessClassField( prefixExpType, mode, token );
-      if getterFlag {
-         if! symbolInfo {
-            getterTypeInfo = _exp.$typeInfo;
+   switch prefixExpType.$kind {
+      case .Class, .Module, .IF, .List, .Array, .Set, .Box, .Alternate {
+         let mut getterFlag = false;
+         typeInfo, symbolInfo, getterFlag =
+            self.analyzeAccessClassField( prefixExpType, mode, token );
+         if getterFlag {
+            if! symbolInfo {
+               getterTypeInfo = _exp.$typeInfo;
+            }
          }
       }
-   }
-   elseif prefixExpType.get_kind() == .Enum or prefixExpType.get_kind() == .Alge {
-      let scope = unwrap prefixExpType.$scope;
-      let mut fieldName = token.txt;
-      let symbolInfoList = prefixExp.getSymbolInfo();
-      let mut isTypeSymbol = false;
-      if #symbolInfoList > 0 {
-         if symbolInfoList[1].$kind == .Typ {
-            isTypeSymbol = true;
-         }  
-      }
-      if mode == .Get {
-         let moduleType = prefixExpType.getModule();
-         if not moduleType.equals( self.moduleType ##) and
-            not self.importModule2ModuleInfoCurrent[ moduleType ] {
-            // enum の名前を取得するには、そのモジュールのインポートが必要
-            self.addErrMess( token.pos, "need to import module -- %s"
-                             ( prefixExpType.getModule().getTxt(##) ) );
+      case .Enum, .Alge {
+         let scope = unwrap prefixExpType.$scope;
+         let mut fieldName = token.txt;
+         let symbolInfoList = prefixExp.getSymbolInfo();
+         let mut isTypeSymbol = false;
+         if #symbolInfoList > 0 {
+            if symbolInfoList[1].$kind == .Typ {
+               isTypeSymbol = true;
+            }  
          }
-         fieldName = "get_" .. fieldName;
-         if! let funcType = scope.getTypeInfoChild( fieldName ) {
+         if mode == .Get {
+            let moduleType = prefixExpType.getModule();
+            if not moduleType.equals( self.moduleType ##) and
+               not self.importModule2ModuleInfoCurrent[ moduleType ] {
+                  // enum の名前を取得するには、そのモジュールのインポートが必要
+                  self.addErrMess( token.pos, "need to import module -- %s"
+                                   ( prefixExpType.getModule().getTxt(##) ) );
+               }
+            fieldName = "get_" .. fieldName;
+            if! let funcType = scope.getTypeInfoChild( fieldName ) {
 
-            if funcType.$staticFlag ~= isTypeSymbol {
-               self.addErrMess(
-                  prefixExp.$pos, "Can't access -- %s, %s" ( fieldName, isTypeSymbol) );
-            }
-            
-            
-            let retTypeList = funcType.$retTypeInfoList;
-            if #retTypeList == 0 {
-               self.addErrMess(
-                  token.$pos,
-                  "The func (%s) doesn't return value." (funcType.getTxt(##)) );
-            }
-            else {
-               typeInfo = retTypeList[ 1 ];
-            }
-         }
-         else {
-            self.addErrMess( token.$pos, "not found -- %s." ( fieldName ) );
-            typeInfo = Ast.builtinTypeNone;
-         }
-
-         getterTypeInfo = Ast.headTypeInfo;
-      }
-      else {
-         if! scope.getTypeInfoChild( fieldName ) {
-            typeInfo = _exp;
-            if typeInfo.$kind == .Enum or typeInfo.$kind == .Alge {
-               if not isTypeSymbol {
-                  self.addErrMess( token.pos, "can't access field -- %s" (token.txt));
+               if funcType.$staticFlag ~= isTypeSymbol {
+                  self.addErrMess(
+                     prefixExp.$pos, "Can't access -- %s, %s" ( fieldName, isTypeSymbol) );
+               }
+               
+               
+               let retTypeList = funcType.$retTypeInfoList;
+               if #retTypeList == 0 {
+                  self.addErrMess(
+                     token.$pos,
+                     "The func (%s) doesn't return value." (funcType.getTxt(##)) );
+               }
+               else {
+                  typeInfo = retTypeList[ 1 ];
                }
             }
+            else {
+               self.addErrMess( token.$pos, "not found -- %s." ( fieldName ) );
+               typeInfo = Ast.builtinTypeNone;
+            }
+
+            getterTypeInfo = Ast.headTypeInfo;
          }
          else {
-            self.addErrMess( token.pos,
-                             "not found field -- %s" (token.txt));
-            typeInfo = Ast.builtinTypeInt;
+            if! scope.getTypeInfoChild( fieldName ) {
+               typeInfo = _exp;
+               if typeInfo.$kind == .Enum or typeInfo.$kind == .Alge {
+                  if not isTypeSymbol {
+                     self.addErrMess( token.pos, "can't access field -- %s" (token.txt));
+                  }
+               }
+            }
+            else {
+               self.addErrMess( token.pos,
+                                "not found field -- %s" (token.txt));
+               typeInfo = Ast.builtinTypeInt;
+            }
          }
       }
-   }
-   elseif prefixExpType.get_kind() == .Map {
-      let work = prefixExpType.$itemTypeInfoList[1];
-      if not work.equals( Ast.builtinTypeString ##) {
-         self.addErrMess(
-            token.pos,
-            "map key type is not str. (%s)" (work.getTxt(##)) );
+      case .Map {
+         let work = prefixExpType.$itemTypeInfoList[1];
+         if not work.equals( Ast.builtinTypeString ##) {
+            self.addErrMess(
+               token.pos,
+               "map key type is not str. (%s)" (work.getTxt(##)) );
+         }
+         typeInfo = prefixExpType.$itemTypeInfoList[2];
+         if not typeInfo.$nilable {
+            typeInfo = typeInfo.$nilableTypeInfo;
+         }
+         return Nodes.ExpRefItemNode.create(
+            self.nodeManager, token.pos,
+            [ typeInfo ], prefixExp, accessNil, token.txt, nil );
       }
-      typeInfo = prefixExpType.$itemTypeInfoList[2];
-      if not typeInfo.$nilable {
-         typeInfo = typeInfo.$nilableTypeInfo;
+      default {
+         if prefixExpType.equals( Ast.builtinTypeStem ##) {
+            return Nodes.ExpRefItemNode.create(
+               self.nodeManager, token.pos,
+               [ Ast.builtinTypeStem_ ], prefixExp, accessNil, token.txt, nil );
+         }
+         else {
+            self.error( "illegal type -- %s, %s"
+                        ( prefixExpType.getTxt(##),
+                          prefixExpType.get_kind().$_txt ) );
+         }
       }
-      return Nodes.ExpRefItemNode.create(
-         self.nodeManager, token.pos,
-         [ typeInfo ], prefixExp, accessNil, token.txt, nil );
-   }
-   elseif prefixExpType.equals( Ast.builtinTypeStem ##) {
-      return Nodes.ExpRefItemNode.create(
-         self.nodeManager, token.pos,
-         [ Ast.builtinTypeStem_ ], prefixExp, accessNil, token.txt, nil );
-   }
-   else {
-      self.error( "illegal type -- %s, %s"
-                  ( prefixExpType.getTxt(##),
-                    prefixExpType.get_kind().$_txt ) );
    }
 
    if not symbolInfo {
@@ -2600,8 +2607,10 @@ fn TransUnit.analyzeExpOp2(
                }
             }
 
+            
             exp = Nodes.ExpOp2Node.create(
-               self.nodeManager, firstToken.pos, [ retType ], nextToken, exp, exp2 );
+               self.nodeManager, firstToken.pos, [ retType ], nextToken,
+               self.nodeManager.MultiTo1( exp ), self.nodeManager.MultiTo1( exp2 ) );
          }
          else {
             self.error( "illegal op" );
@@ -3073,7 +3082,8 @@ fn TransUnit.analyzeExp(
       }  
 
       exp = Nodes.ExpOp1Node.create(
-         self.nodeManager, firstToken.pos, [ typeInfo ], token, self.macroMode, exp );
+         self.nodeManager, firstToken.pos, [ typeInfo ], token,
+         self.macroMode, self.nodeManager.MultiTo1( exp ) );   
       return self.analyzeExpOp2( firstToken, exp, prevOpLevel ), true;
    }
 

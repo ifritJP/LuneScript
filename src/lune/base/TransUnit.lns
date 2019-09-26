@@ -2930,7 +2930,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             {
                workType = self.createModifier( workType, .IMut );
             }
-            blockScope.addLocalVar( false, false, paramName.txt, workType, .IMut );
+            blockScope.addLocalVar( true, false, paramName.txt, workType, .IMut );
             valParamNameList.insert( paramName.txt );
             nextToken = self.getToken(##);
             if nextToken.txt ~= "," {
@@ -3128,7 +3128,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    self.checkToken( nextToken, "in" );
 
    let exp = self.analyzeExp( false, false## );
-
+   
    let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
    if exp.$expType.get_kind() == .Map {
       self.addLocalVar(
@@ -3169,7 +3169,30 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
          (exp.$expType.getTxt(##), exp.$pos.lineNo, exp.$pos.column) );
    }
 
+
+   let mut seqSym:str! = nil;
+   if! let refNode = exp@@@Nodes.ExpRefNode {
+      // foreach の sequential データを保持する変数は imut にする。
+      let seqSymbol = refNode.$symbolInfo;
+      if seqSymbol.$mutable or Ast.TypeInfo.isMut( seqSymbol.$typeInfo ) {
+         let typeInfo;
+         if Ast.TypeInfo.isMut( seqSymbol.$typeInfo ) {
+            typeInfo = self.createModifier( seqSymbol.$typeInfo, .IMut );
+         }
+         else {
+            typeInfo = seqSymbol.$typeInfo;
+         }
+         scope.addLocalVar(
+            seqSymbol.$kind == .Arg, false, seqSymbol.$name, typeInfo, .IMut );
+         seqSym = seqSymbol.$name;
+      }
+   }
+   
    let block = self.analyzeBlock( .Foreach, .Loop, scope );
+
+   when! seqSym {
+      scope.remove( seqSym );
+   }
 
    self.popScope();
 

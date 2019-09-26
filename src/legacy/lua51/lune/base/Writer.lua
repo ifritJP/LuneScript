@@ -226,7 +226,7 @@ function XML.convertXmlTxt( val )
    end
    
    if type( val ) == "number" then
-      return string.format( "%g", val)
+      return string.format( "%g", val * 1.0)
    end
    
    local txt = string.format( "%s", tostring( val))
@@ -462,7 +462,7 @@ function JSON:writeValue( val )
    local txt = ""
    local typeId = type( val )
    if typeId == "number" then
-      txt = string.format( "%g", val)
+      txt = string.format( "%g", val * 1.0)
    elseif typeId == "boolean" then
       txt = val and "true" or "false"
    else

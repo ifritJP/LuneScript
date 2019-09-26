@@ -4713,6 +4713,92 @@ function ExpAccessMRetNode:get_index()
 end
 
 
+function NodeKind.get_ExpMultiTo1(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1'])
+end
+
+
+regKind( "ExpMultiTo1" )
+function Filter:processExpMultiTo1( node, opt )
+
+end
+
+
+function NodeManager:getExpMultiTo1NodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1']) )
+end
+
+
+local ExpMultiTo1Node = {}
+setmetatable( ExpMultiTo1Node, { __index = Node } )
+_moduleObj.ExpMultiTo1Node = ExpMultiTo1Node
+function ExpMultiTo1Node:processFilter( filter, opt )
+
+   filter:processExpMultiTo1( self, opt )
+end
+function ExpMultiTo1Node:canBeRight(  )
+
+   return true
+end
+function ExpMultiTo1Node:canBeLeft(  )
+
+   return false
+end
+function ExpMultiTo1Node:canBeStatement(  )
+
+   return false
+end
+function ExpMultiTo1Node.new( id, pos, typeList, exp )
+   local obj = {}
+   ExpMultiTo1Node.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, exp ); end
+   return obj
+end
+function ExpMultiTo1Node:__init(id, pos, typeList, exp) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpMultiTo1']), pos, typeList)
+   
+   
+   self.exp = exp
+   
+end
+function ExpMultiTo1Node.create( nodeMan, pos, typeList, exp )
+
+   local node = ExpMultiTo1Node.new(nodeMan:nextId(  ), pos, typeList, exp)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpMultiTo1Node:visit( visitor, depth )
+
+   do
+      local child = self.exp
+      do
+         local _switchExp = visitor( child, self, 'exp', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
+function ExpMultiTo1Node.setmeta( obj )
+  setmetatable( obj, { __index = ExpMultiTo1Node  } )
+end
+function ExpMultiTo1Node:get_exp()
+   return self.exp
+end
+
+
 function NodeKind.get_ExpDDD(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpDDD'])
@@ -9580,7 +9666,7 @@ function ExpOp2Node:getLiteral(  )
                      local val = _matchExp[2][1]
                   
                      intVal = val
-                     realVal = val
+                     realVal = val * 1.0
                   elseif _matchExp[1] == Ast.EnumLiteral.Real[1] then
                      local val = _matchExp[2][1]
                   
@@ -9604,7 +9690,7 @@ function ExpOp2Node:getLiteral(  )
             local val = _matchExp[2][1]
          
             intVal = val
-            realVal = val
+            realVal = val * 1.0
             retTypeInfo = Ast.builtinTypeInt
          elseif _matchExp[1] == Literal.Real[1] then
             local val = _matchExp[2][1]
@@ -9716,6 +9802,18 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
 end
 function DefMacroInfo.setmeta( obj )
   setmetatable( obj, { __index = DefMacroInfo  } )
+end
+
+function NodeManager:MultiTo1( node )
+
+   local expType = node:get_expType()
+   if #node:get_expTypeList() > 1 then
+      return ExpMultiTo1Node.create( self, node:get_pos(), {expType}, node )
+   elseif expType:get_kind() == Ast.TypeInfoKind.DDD then
+      return ExpMultiTo1Node.create( self, node:get_pos(), expType:get_itemTypeInfoList(), node )
+   end
+   
+   return node
 end
 
 return _moduleObj
