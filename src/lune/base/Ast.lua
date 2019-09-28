@@ -556,6 +556,38 @@ local function isMutable( mode )
    return false
 end
 _moduleObj.isMutable = isMutable
+local AccessFromClosuer = {}
+_moduleObj.AccessFromClosuer = AccessFromClosuer
+AccessFromClosuer._val2NameMap = {}
+function AccessFromClosuer:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "AccessFromClosuer.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function AccessFromClosuer._from( val )
+   if AccessFromClosuer._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+AccessFromClosuer.__allList = {}
+function AccessFromClosuer.get__allList()
+   return AccessFromClosuer.__allList
+end
+
+AccessFromClosuer.None = 0
+AccessFromClosuer._val2NameMap[0] = 'None'
+AccessFromClosuer.__allList[1] = AccessFromClosuer.None
+AccessFromClosuer.Read = 1
+AccessFromClosuer._val2NameMap[1] = 'Read'
+AccessFromClosuer.__allList[2] = AccessFromClosuer.Read
+AccessFromClosuer.Write = 2
+AccessFromClosuer._val2NameMap[2] = 'Write'
+AccessFromClosuer.__allList[3] = AccessFromClosuer.Write
+
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
 function SymbolInfo.new(  )
@@ -1104,6 +1136,10 @@ function NormalSymbolInfo:get_mutable(  )
 
    return isMutable( self.mutMode )
 end
+function NormalSymbolInfo:get_hasAccessFromClosuer(  )
+
+   return self:get_accessFromClosure() ~= AccessFromClosuer.None
+end
 function NormalSymbolInfo:getOrg(  )
 
    return self
@@ -1118,7 +1154,7 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    SymbolInfo.__init( self)
    
    self.convModuleParam = nil
-   self.isSetFromClosuer = false
+   self.accessFromClosure = AccessFromClosuer.None
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
    self.canBeLeft = canBeLeft
@@ -1174,11 +1210,11 @@ end
 function NormalSymbolInfo:get_mutMode()
    return self.mutMode
 end
-function NormalSymbolInfo:get_isSetFromClosuer()
-   return self.isSetFromClosuer
+function NormalSymbolInfo:get_accessFromClosure()
+   return self.accessFromClosure
 end
-function NormalSymbolInfo:set_isSetFromClosuer( isSetFromClosuer )
-   self.isSetFromClosuer = isSetFromClosuer
+function NormalSymbolInfo:set_accessFromClosure( accessFromClosure )
+   self.accessFromClosure = accessFromClosure
 end
 function NormalSymbolInfo:get_convModuleParam()
    return self.convModuleParam
@@ -1972,17 +2008,29 @@ local function dumpScope( workscope, workprefix )
    dumpScopeSub( workscope, workprefix, {} )
 end
 _moduleObj.dumpScope = dumpScope
-function Scope:accessSymbol( moduleScope, symbol )
+function Scope:accessSymbol( moduleScope, symbol, accessMode )
 
    local function setClosure( typeInfo )
    
       local namespacescope = _lune.unwrap( typeInfo:get_scope())
+      do
+         local _switchExp = symbol:get_accessFromClosure()
+         if _switchExp == AccessFromClosuer.None then
+            symbol:set_accessFromClosure( accessMode )
+            namespacescope.parent:accessSymbol( moduleScope, symbol, accessMode )
+         elseif _switchExp == AccessFromClosuer.Read then
+            if accessMode == AccessFromClosuer.Write then
+               symbol:set_accessFromClosure( accessMode )
+               namespacescope.parent:accessSymbol( moduleScope, symbol, accessMode )
+            end
+            
+         end
+      end
+      
       if not namespacescope.closureSymMap[symbol:get_symbolId()] then
-         symbol:set_isSetFromClosuer( true )
          namespacescope.closureSymMap[symbol:get_symbolId()] = symbol
          namespacescope.closureSym2NumMap[symbol] = #namespacescope.closureSymList
          table.insert( namespacescope.closureSymList, symbol )
-         namespacescope.parent:accessSymbol( moduleScope, symbol )
       end
       
    end
@@ -2264,12 +2312,16 @@ function AccessSymbolInfo:set_hasValueFlag( ... )
    return self.symbolInfo:set_hasValueFlag( ... )
 end
 
-function AccessSymbolInfo:get_isSetFromClosuer( ... )
-   return self.symbolInfo:get_isSetFromClosuer( ... )
+function AccessSymbolInfo:get_hasAccessFromClosuer( ... )
+   return self.symbolInfo:get_hasAccessFromClosuer( ... )
 end
 
-function AccessSymbolInfo:set_isSetFromClosuer( ... )
-   return self.symbolInfo:set_isSetFromClosuer( ... )
+function AccessSymbolInfo:get_accessFromClosure( ... )
+   return self.symbolInfo:get_accessFromClosure( ... )
+end
+
+function AccessSymbolInfo:set_accessFromClosure( ... )
+   return self.symbolInfo:set_accessFromClosure( ... )
 end
 
 function AccessSymbolInfo:set_convModuleParam( ... )

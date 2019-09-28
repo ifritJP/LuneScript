@@ -867,7 +867,7 @@ end
 function dumpFilter:processExpOp2( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_op(  ).txt )
+   dump( prefix, depth, node, string.format( "%s → %s", node:get_op(  ).txt, node:get_expType():getTxt( true )) )
    filter( node:get_exp1(  ), self, opt:nextOpt(  ) )
    filter( node:get_exp2(  ), self, opt:nextOpt(  ) )
 end

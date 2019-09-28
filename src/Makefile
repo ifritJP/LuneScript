@@ -604,7 +604,7 @@ clean-ccc:
 
 define test-convC
 	$(LUA) lune/base/base.lua $1.lns save -langC
-	cat $1.c
+#	cat $1.c
 	LANG= $(MAKE) -f Makefile.ccc SRCS=$1.c TEST_OUT=test.exe \
 		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 	@# C へのトランスコンパイラ結果と、

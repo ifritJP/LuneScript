@@ -1,5 +1,41 @@
 let mut g_val = 100;
 {
+   let func:form;
+   let func2:form;
+   {
+      let mut val = 1;
+      print( "hoge", val );
+      func = fn () {
+         print( val );
+      };
+      func2 = fn () {
+         val = val + 1;
+      };
+      val = 2;
+   }
+   func();
+   func2();
+   func();
+}
+{
+   let func:form;
+   let func2:form;
+   {
+      let mut val = "a1";
+      print( "hoge", val );
+      func = fn () {
+         print( val );
+      };
+      func2 = fn () {
+         val = "a3";
+      };
+      val = "a2";
+   }
+   func();
+   func2();
+   func();
+}
+{
    fn funcL(): int, int {
       return 1, 2;
    }
@@ -135,10 +171,12 @@ let mut g_val = 100;
 }
 {
    let val = 1000;
+   let mut val3 = 0;
    class Test1 {
       static let val:int;
       __init {
          Test1.val = 100 + val;
+         val3 = 10;
       }
       pub static fn func(): int {
          return Test1.val;
@@ -155,7 +193,7 @@ let mut g_val = 100;
             return Test2.val + Test1.func();
          }
       }
-      print( Test2.func() );
+      print( Test2.func(), val3 );
    }
    func();
 }

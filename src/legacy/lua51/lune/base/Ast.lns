@@ -190,6 +190,14 @@ pub fn isMutable( mode:MutMode ): bool {
    return false;
 }
 
+pub enum AccessFromClosuer {
+   /** アクセスなし */
+   None,
+   /** 読み込みアクセス */
+   Read,
+   /** 書き込みアクセス */
+   Write,
+}
 
 /** シンボル情報 */
 pub abstract class SymbolInfo {
@@ -226,11 +234,13 @@ pub abstract class SymbolInfo {
    pub abstract fn get_hasValueFlag(): bool;
    pub abstract fn set_hasValueFlag( arg:bool );
    /** このシンボルが、 closuer 内からセットされているかどうか */
-   pub abstract fn get_isSetFromClosuer(): bool;
-   pub abstract fn set_isSetFromClosuer( val:bool );
+   pub abstract fn get_hasAccessFromClosuer(): bool;
+   pub abstract fn get_accessFromClosure(): AccessFromClosuer;
+   pub abstract fn set_accessFromClosure( mode: AccessFromClosuer );
    /** 変換モジュール用パラメータ */
    pub abstract fn set_convModuleParam( param:stem! );
    pub abstract fn get_convModuleParam():stem!;
+
 
    /**
 このシンボルにアクセス可能かどうか調べる。
@@ -781,12 +791,16 @@ pub class NormalSymbolInfo extend SymbolInfo {
    /** このシンボルがデータを保持しているかどうか */
    pri let allmut hasValueFlag: bool { pub, pub };
    pri let mutMode: MutMode {pub};
-   pri let allmut isSetFromClosuer: bool { pub, pub };
+   pri let allmut accessFromClosure: AccessFromClosuer { pub, pub };
    /** 変換モジュール用パラメータ */
    pri let allmut convModuleParam:stem! {pub,pub}; 
    
    pub override fn get_mutable(): bool {
       return isMutable( self.mutMode );
+   }
+
+   pub override fn get_hasAccessFromClosuer() : bool {
+      return self.$accessFromClosure ~= .None;
    }
 
    pub override fn getOrg(): &SymbolInfo {
@@ -800,7 +814,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    {
       super();
       self.convModuleParam = nil;
-      self.isSetFromClosuer = false;
+      self.accessFromClosure = .None;
       NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
       self.canBeLeft = canBeLeft;
@@ -1420,16 +1434,28 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
 @param moduleScope このモジュールの最上位スコープ
 @param symbol シンボル
 */
-pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo ) mut {
+pub fn Scope.accessSymbol(
+   moduleScope:&Scope, symbol:&SymbolInfo, accessMode:AccessFromClosuer ) mut
+{
 
    fn setClosure( typeInfo:&TypeInfo ) {
       let mut namespacescope = unwrap typeInfo.$scope;
+      switch symbol.$accessFromClosure {
+         case .None {
+            symbol.set_accessFromClosure( accessMode );
+            namespacescope.parent.accessSymbol( moduleScope, symbol, accessMode );
+         }
+         case .Read {
+            if accessMode == .Write {
+               symbol.set_accessFromClosure( accessMode );
+               namespacescope.parent.accessSymbol( moduleScope, symbol, accessMode );
+            }
+         }
+      }
       if not namespacescope.closureSymMap[ symbol.$symbolId ] {
-         symbol.set_isSetFromClosuer( true );
          namespacescope.closureSymMap[ symbol.$symbolId ] = symbol;
          namespacescope.closureSym2NumMap[ symbol ] = #namespacescope.closureSymList;
          namespacescope.closureSymList.insert( symbol );
-         namespacescope.parent.accessSymbol( moduleScope, symbol );
       }
    }
    

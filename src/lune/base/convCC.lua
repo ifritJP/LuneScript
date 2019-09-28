@@ -238,23 +238,6 @@ local cTypeStem = "lune_stem_t"
 local cTypeStemP = "lune_stem_t *"
 local cTypeEnvP = "lune_env_t *"
 local cTypeVarP = "lune_var_t *"
-local SymbolParam = {}
-function SymbolParam.setmeta( obj )
-  setmetatable( obj, { __index = SymbolParam  } )
-end
-function SymbolParam.new( index )
-   local obj = {}
-   SymbolParam.setmeta( obj )
-   if obj.__init then
-      obj:__init( index )
-   end
-   return obj
-end
-function SymbolParam:__init( index )
-
-   self.index = index
-end
-
 local PubVerInfo = {}
 function PubVerInfo.setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
@@ -478,30 +461,6 @@ local function getCRetType( retTypeList )
    return cTypeStemP
 end
 
-local function getCTypeForSym( symbol )
-
-   local typeTxt
-   
-   if symbol:get_isSetFromClosuer() then
-      typeTxt = cTypeVarP
-   else
-    
-      typeTxt = getCType( symbol:get_typeInfo(), symbol:get_kind() == Ast.SymbolKind.Var )
-   end
-   
-   return typeTxt, typeTxt == cTypeVarP
-end
-
-local function isStemSym( symbolInfo )
-
-   if symbolInfo:get_isSetFromClosuer() then
-      return true
-   end
-   
-   local typeTxt, isStem = getCTypeForSym( symbolInfo )
-   return isStem
-end
-
 local ProcessMode = {}
 ProcessMode._val2NameMap = {}
 function ProcessMode:_getTxt( val )
@@ -623,6 +582,225 @@ function ModuleCtrl.setmeta( obj )
   setmetatable( obj, { __index = ModuleCtrl  } )
 end
 
+local VarKind = {}
+VarKind._val2NameMap = {}
+function VarKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "VarKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function VarKind._from( val )
+   if VarKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+VarKind.__allList = {}
+function VarKind.get__allList()
+   return VarKind.__allList
+end
+
+VarKind.Prim = 0
+VarKind._val2NameMap[0] = 'Prim'
+VarKind.__allList[1] = VarKind.Prim
+VarKind.Stem = 1
+VarKind._val2NameMap[1] = 'Stem'
+VarKind.__allList[2] = VarKind.Stem
+VarKind.StemMbr = 2
+VarKind._val2NameMap[2] = 'StemMbr'
+VarKind.__allList[3] = VarKind.StemMbr
+VarKind.Var = 3
+VarKind._val2NameMap[3] = 'Var'
+VarKind.__allList[4] = VarKind.Var
+
+local SymbolParam = {}
+function SymbolParam.setmeta( obj )
+  setmetatable( obj, { __index = SymbolParam  } )
+end
+function SymbolParam.new( kind, index, typeTxt )
+   local obj = {}
+   SymbolParam.setmeta( obj )
+   if obj.__init then
+      obj:__init( kind, index, typeTxt )
+   end
+   return obj
+end
+function SymbolParam:__init( kind, index, typeTxt )
+
+   self.kind = kind
+   self.index = index
+   self.typeTxt = typeTxt
+end
+
+local ScopeInfo = {}
+function ScopeInfo.setmeta( obj )
+  setmetatable( obj, { __index = ScopeInfo  } )
+end
+function ScopeInfo.new( stemNum, varNum )
+   local obj = {}
+   ScopeInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( stemNum, varNum )
+   end
+   return obj
+end
+function ScopeInfo:__init( stemNum, varNum )
+
+   self.stemNum = stemNum
+   self.varNum = varNum
+end
+
+local ScopeMgr = {}
+function ScopeMgr.new(  )
+   local obj = {}
+   ScopeMgr.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function ScopeMgr:__init() 
+   self.scope2InfoMap = {}
+end
+function ScopeMgr.setmeta( obj )
+  setmetatable( obj, { __index = ScopeMgr  } )
+end
+
+function ScopeMgr:setupScopeParam( scope )
+
+   do
+      local scopeInfo = self.scope2InfoMap[scope]
+      if scopeInfo ~= nil then
+         return scopeInfo.stemNum, scopeInfo.varNum
+      end
+   end
+   
+   local varNum = 0
+   local stemNum = 0
+   do
+      local __sorted = {}
+      local __map = scope:get_symbol2SymbolInfoMap()
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local symbol = __map[ __key ]
+         do
+            local param
+            
+            if symbol:get_name() ~= "__func__" then
+               do
+                  local _switchExp = symbol:get_kind()
+                  if _switchExp == Ast.SymbolKind.Var then
+                     if symbol:get_accessFromClosure() == Ast.AccessFromClosuer.Write then
+                        param = SymbolParam.new(VarKind.Var, varNum, cTypeVarP)
+                        varNum = varNum + 1
+                     elseif symbol:get_accessFromClosure() == Ast.AccessFromClosuer.Read or isStemType( symbol:get_typeInfo() ) then
+                        param = SymbolParam.new(VarKind.Stem, stemNum, cTypeStemP)
+                        stemNum = stemNum + 1
+                     else
+                      
+                        param = SymbolParam.new(VarKind.Prim, 0, getCType( symbol:get_typeInfo(), false ))
+                     end
+                     
+                  elseif _switchExp == Ast.SymbolKind.Fun then
+                     param = SymbolParam.new(VarKind.Stem, stemNum, cTypeStemP)
+                     stemNum = stemNum + 1
+                  else 
+                     
+                        if isStemType( symbol:get_typeInfo() ) then
+                           if symbol:get_kind() == Ast.SymbolKind.Mbr then
+                              param = SymbolParam.new(VarKind.StemMbr, 0, cTypeStemP)
+                           else
+                            
+                              param = SymbolParam.new(VarKind.StemMbr, 0, cTypeStemP)
+                           end
+                           
+                        else
+                         
+                           param = SymbolParam.new(VarKind.Prim, 0, getCType( symbol:get_typeInfo(), false ))
+                        end
+                        
+                  end
+               end
+               
+            else
+             
+               param = SymbolParam.new(VarKind.Stem, 0, cTypeStemP)
+            end
+            
+            symbol:set_convModuleParam( param )
+         end
+      end
+   end
+   
+   self.scope2InfoMap[scope] = ScopeInfo.new(stemNum, varNum)
+   return stemNum, varNum
+end
+
+function ScopeMgr:getSymbolParam( symbol )
+
+   do
+      local param = symbol:get_convModuleParam()
+      if param ~= nil then
+         return param
+      end
+   end
+   
+   
+   local scope = symbol:get_scope()
+   if not self.scope2InfoMap[scope] then
+      self:setupScopeParam( scope )
+      do
+         local param = symbol:get_convModuleParam()
+         if param ~= nil then
+            return param
+         end
+      end
+      
+      
+   end
+   
+   Util.err( string.format( "illegal symbol -- %s", symbol:get_name()) )
+end
+
+function ScopeMgr:getSymbolVarKind( symbol )
+
+   local symbolParam = self:getSymbolParam( symbol )
+   return symbolParam.kind
+end
+
+function ScopeMgr:getCTypeForSym( symbol )
+
+   local param = self:getSymbolParam( symbol )
+   return param.typeTxt, param.kind
+end
+
+function ScopeMgr:symbol2Stem( symbol )
+
+   local name = symbol:get_name()
+   if self:getSymbolVarKind( symbol ) == VarKind.Var then
+      return "1, " .. name
+   else
+    
+      do
+         local _switchExp = symbol:get_typeInfo():get_srcTypeInfo()
+         if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+            return string.format( "0, lune_int2stem( _pEnv, %s )", name)
+         elseif _switchExp == Ast.builtinTypeReal then
+            return string.format( "0, lune_real2stem( _pEnv, %s )", name)
+         else 
+            
+               return "0, " .. name
+         end
+      end
+      
+   end
+   
+end
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter,ifList = {Util.SourceStream,} } )
 function convFilter:pushRoutine( funcType )
@@ -644,6 +822,7 @@ end
 function convFilter:__init(streamName, stream, ast) 
    Nodes.Filter.__init( self)
    
+   self.scopeMgr = ScopeMgr.new()
    self.processingNode = nil
    self.processedNodeSet = {}
    self.accessSymbolSet = Util.OrderedSet.new()
@@ -787,24 +966,6 @@ function convFilter:processImport( node, opt )
 end
 
 
-local function setupScopeParam( scope )
-
-   local stemNum = 0
-   for __index, symbol in pairs( scope:get_symbol2SymbolInfoMap() ) do
-      if symbol:get_name() ~= "__func__" then
-         if symbol:get_kind() == Ast.SymbolKind.Var and isStemSym( symbol ) then
-            local param = SymbolParam.new(stemNum)
-            symbol:set_convModuleParam( param )
-            stemNum = stemNum + 1
-         end
-         
-      end
-      
-   end
-   
-   return stemNum
-end
-
 local function getSymbolIndex( symbol )
 
    local param = symbol:get_convModuleParam()
@@ -820,12 +981,6 @@ end
 function convFilter:processRoot( node, opt )
 
    Ast.pushProcessInfo( node:get_processInfo() )
-   node:visit( function ( target, parent, releation, depth )
-   
-      print( string.rep( "  ", depth ) .. Nodes.getNodeKindName( target:get_kind() ), releation )
-      return Nodes.NodeVisitMode.Child
-   end
-   , 0 )
    self:writeln( string.format( "// %s", self.streamName) )
    self:writeln( "#include <lunescript.h>" )
    local children = node:get_children(  )
@@ -943,9 +1098,9 @@ function convFilter:processRoot( node, opt )
    self:writeln( string.format( "void lune_init_test( %s _pEnv )", cTypeEnvP) )
    self:writeln( "{" )
    self:pushIndent(  )
-   local stemNum = setupScopeParam( self.ast:get_moduleScope() )
-   self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_module( %d );", self.ast:get_moduleScope():get_scopeId(), stemNum) )
-   self:writeln( "lune_enter_block( _pEnv, 0 );" )
+   local stemNum, varNum = self.scopeMgr:setupScopeParam( self.ast:get_moduleScope() )
+   self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_module( %d, %d );", self.ast:get_moduleScope():get_scopeId(), stemNum, varNum) )
+   self:writeln( "lune_enter_block( _pEnv, 0, 0 );" )
    for __index, declAlgeNode in pairs( node:get_nodeManager():getDeclAlgeNodeList(  ) ) do
       filter( declAlgeNode, self, node )
    end
@@ -973,9 +1128,41 @@ function convFilter:processSubfile( node, opt )
 
 end
 
+local function getAccessPrimValFromStem( dddFlag, typeInfo, index )
+
+   local txt = ""
+   if dddFlag then
+      txt = string.format( "->val.ddd.pStemList[ %d ]", index)
+   end
+   
+   local expType
+   
+   do
+      local enumType = _lune.__Cast( typeInfo:get_srcTypeInfo(), 3, Ast.EnumTypeInfo )
+      if enumType ~= nil then
+         expType = enumType:get_valTypeInfo()
+      else
+         expType = typeInfo:get_srcTypeInfo()
+      end
+   end
+   
+   do
+      local _switchExp = expType
+      if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
+         txt = txt .. "->val.intVal"
+      elseif _switchExp == Ast.builtinTypeReal then
+         txt = txt .. "->val.realVal"
+      elseif _switchExp == Ast.builtinTypeBool then
+         txt = txt .. "->val.boolVal"
+      end
+   end
+   
+   return txt
+end
+
 function convFilter:processBlock( node, opt )
 
-   local stemNum = setupScopeParam( node:get_scope() )
+   local stemNum, varNum = self.scopeMgr:setupScopeParam( node:get_scope() )
    local scope = node:get_scope()
    do
       local __sorted = {}
@@ -987,7 +1174,22 @@ function convFilter:processBlock( node, opt )
       for __index, __key in ipairs( __sorted ) do
          local symbol = __map[ __key ]
          do
-            self:writeln( string.format( "%s %s = lune_form_closure( _pForm, %d );", cTypeVarP, symbol:get_name(), _lune.unwrap( scope:get_closureSym2NumMap()[symbol])) )
+            local typeTxt, varKind = self.scopeMgr:getCTypeForSym( symbol )
+            local macroName
+            
+            if varKind == VarKind.Stem then
+               macroName = "lune_form_closure_stem"
+            else
+             
+               macroName = "lune_form_closure_var"
+            end
+            
+            self:write( string.format( "%s %s = %s( _pForm, %d )", typeTxt, symbol:get_name(), macroName, _lune.unwrap( scope:get_closureSym2NumMap()[symbol])) )
+            if varKind == VarKind.Stem then
+               self:write( getAccessPrimValFromStem( false, symbol:get_typeInfo(), 1 ) )
+            end
+            
+            self:writeln( ";" )
          end
       end
    end
@@ -1035,7 +1237,7 @@ function convFilter:processBlock( node, opt )
    self:writeln( string.format( "%s // %d", word, node:get_pos().lineNo) )
    self:pushIndent(  )
    if not loopFlag then
-      self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_block( _pEnv, %d );", node:get_scope():get_scopeId(), stemNum) )
+      self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_block( _pEnv, %d, %d );", node:get_scope():get_scopeId(), stemNum, varNum) )
    else
     
       self:writeln( "lune_reset_block( _pEnv );" )
@@ -1062,7 +1264,7 @@ end
 function convFilter:processStmtExp( node, opt )
 
    filter( node:get_exp(), self, node )
-   self:writeln( string.format( "; // %d", node:get_pos().lineNo) )
+   self:write( string.format( "; // %d", node:get_pos().lineNo) )
 end
 
 
@@ -2146,111 +2348,36 @@ function convFilter:processWhen( node, opt )
 
 end
 
-local function getAccessPrimValFromStem( dddFlag, typeInfo, index )
-
-   local txt = ""
-   if dddFlag then
-      txt = string.format( "->val.ddd.pStemList[ %d ]", index)
-   end
-   
-   local expType
-   
-   do
-      local enumType = _lune.__Cast( typeInfo:get_srcTypeInfo(), 3, Ast.EnumTypeInfo )
-      if enumType ~= nil then
-         expType = enumType:get_valTypeInfo()
-      else
-         expType = typeInfo:get_srcTypeInfo()
-      end
-   end
-   
-   do
-      local _switchExp = expType
-      if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
-         txt = txt .. "->val.intVal"
-      elseif _switchExp == Ast.builtinTypeReal then
-         txt = txt .. "->val.realVal"
-      elseif _switchExp == Ast.builtinTypeBool then
-         txt = txt .. "->val.boolVal"
-      end
-   end
-   
-   return txt
-end
-
 function convFilter:accessPrimValFromStem( dddFlag, typeInfo, index )
 
    self:write( getAccessPrimValFromStem( dddFlag, typeInfo, index ) )
 end
 
-local function isStemVal( node )
+function convFilter:isStemVal( node )
 
+   if #node:get_expTypeList() > 1 then
+      return true
+   end
+   
    do
       local _switchExp = node:get_kind()
-      if _switchExp == Nodes.NodeKind.get_ExpCall() then
-         do
-            local callNode = _lune.__Cast( node, 3, Nodes.ExpCallNode )
-            if callNode ~= nil then
-               return isStemRet( callNode:get_func():get_expType():get_retTypeInfoList() )
-            end
-         end
-         
-         Util.err( "" )
-      elseif _switchExp == Nodes.NodeKind.get_ExpParen() then
-         do
-            local _exp = _lune.__Cast( node, 3, Nodes.ExpParenNode )
-            if _exp ~= nil then
-               return isStemType( node:get_expType() )
-            end
-         end
-         
-      elseif _switchExp == Nodes.NodeKind.get_ExpRef() then
+      if _switchExp == Nodes.NodeKind.get_ExpRef() then
          do
             local expRefNode = _lune.__Cast( node, 3, Nodes.ExpRefNode )
             if expRefNode ~= nil then
-               return isStemSym( expRefNode:get_symbolInfo() )
+               return self.scopeMgr:getSymbolVarKind( expRefNode:get_symbolInfo() ) ~= VarKind.Prim
             end
          end
          
-      elseif _switchExp == Nodes.NodeKind.get_ExpOp2() then
-         do
-            local op2Node = _lune.__Cast( node, 3, Nodes.ExpOp2Node )
-            if op2Node ~= nil then
-               do
-                  local _switchExp = op2Node:get_op().txt
-                  if _switchExp == "and" or _switchExp == "or" then
-                     return true
-                  end
-               end
-               
-            end
-         end
-         
-         return isStemType( node:get_expType() )
-      elseif _switchExp == Nodes.NodeKind.get_ExpOp1() then
-         do
-            local op1Node = _lune.__Cast( node, 3, Nodes.ExpOp1Node )
-            if op1Node ~= nil then
-               do
-                  local _switchExp = op1Node:get_op().txt
-                  if _switchExp == "not" then
-                     return true
-                  end
-               end
-               
-            end
-         end
-         
-         return isStemType( node:get_expType() )
       end
    end
    
-   return false
+   return isStemType( node:get_expType() )
 end
 
 function convFilter:accessPrimVal( exp, parent )
 
-   if not isStemVal( exp ) then
+   if not self:isStemVal( exp ) then
       filter( exp, self, parent )
    else
     
@@ -2269,7 +2396,7 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
 
    local function setVal( node, var, exp, index )
    
-      local work, isStem = getCTypeForSym( var )
+      local work, varKind = self.scopeMgr:getCTypeForSym( var )
       local setValTxt = ""
       if hasMultiVal( exp ) then
          setValTxt = string.format( "lune_fromDDD( _work, %d )", index)
@@ -2278,11 +2405,13 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
          setValTxt = "_work"
       end
       
-      if not isStem and isStemVal( exp ) then
+      local isStemExp = self:isStemVal( exp )
+      if varKind == VarKind.Prim and isStemExp then
          setValTxt = setValTxt .. getAccessPrimValFromStem( false, var:get_typeInfo(), 0 )
       end
       
       local varName = var:get_name()
+      local processPrefix = nil
       do
          local fieldNode = _lune.__Cast( node, 3, Nodes.RefFieldNode )
          if fieldNode ~= nil then
@@ -2290,29 +2419,59 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
                varName = self.moduleCtrl:getClassMemberName( _lune.unwrap( fieldNode:get_symbolInfo()) )
             else
              
-               local prefixNode = fieldNode:get_prefix()
-               local className = self.moduleCtrl:getClassCName( prefixNode:get_expType() )
-               self:write( string.format( "lune_obj_%s( ", className) )
-               filter( prefixNode, self, fieldNode )
-               self:write( ")->" )
+               processPrefix = function (  )
+               
+                  local prefixNode = fieldNode:get_prefix()
+                  local className = self.moduleCtrl:getClassCName( prefixNode:get_expType() )
+                  self:write( string.format( "lune_obj_%s( ", className) )
+                  filter( prefixNode, self, fieldNode )
+                  self:write( ")->" )
+               end
+               
             end
             
          end
       end
       
-      if isStem then
-         if isStemType( var:get_typeInfo() ) then
-            self:writeln( string.format( "lune_setq( _pEnv, &%s->pStem, %s );", varName, setValTxt) )
-         else
-          
-            self:write( string.format( "%s->pStem", varName) )
-            self:accessPrimValFromStem( false, var:get_typeInfo(), 0 )
-            self:writeln( string.format( " = %s;", setValTxt) )
+      do
+         local _switchExp = varKind
+         if _switchExp == VarKind.Var then
+            if isStemType( var:get_typeInfo() ) then
+               self:writeln( string.format( "lune_setq( _pEnv, &%s->pStem, %s );", varName, setValTxt) )
+            else
+             
+               self:write( string.format( "%s->pStem", varName) )
+               self:accessPrimValFromStem( false, var:get_typeInfo(), 0 )
+               self:writeln( string.format( " = %s;", setValTxt) )
+            end
+            
+         elseif _switchExp == VarKind.Stem then
+            if isStemExp then
+               self:write( "lune_setq( _pEnv, &" )
+               if processPrefix ~= nil then
+                  processPrefix(  )
+               end
+               
+               self:writeln( string.format( "%s, %s );", varName, setValTxt) )
+            else
+             
+               if processPrefix ~= nil then
+                  processPrefix(  )
+               end
+               
+               self:write( varName )
+               self:write( getAccessPrimValFromStem( false, exp:get_expType(), 0 ) )
+               self:writeln( string.format( " = %s;", setValTxt) )
+            end
+            
+         else 
+            
+               if processPrefix ~= nil then
+                  processPrefix(  )
+               end
+               
+               self:writeln( string.format( "%s = %s;", varName, setValTxt) )
          end
-         
-      else
-       
-         self:writeln( string.format( "%s = %s;", varName, setValTxt) )
       end
       
    end
@@ -2346,7 +2505,7 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
          self:write( cTypeStemP )
       else
        
-         if isStemVal( exp ) then
+         if self:isStemVal( exp ) then
             self:write( cTypeStemP )
          else
           
@@ -2408,6 +2567,36 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
    
 end
 
+function convFilter:processSetupVar( declFlag, var, initVal )
+
+   if declFlag then
+      local typeTxt = self.scopeMgr:getCTypeForSym( var )
+      self:writeln( string.format( "%s %s;", typeTxt, var:get_name()) )
+   end
+   
+   if initVal == "NULL" then
+      if self.scopeMgr:getSymbolVarKind( var ) == VarKind.Stem then
+         self:write( "lune_set_block_stem" )
+      else
+       
+         self:write( "lune_set_block_var" )
+      end
+      
+      self:write( string.format( "( pBlock_%X, %d, %s );", var:get_scope():get_scopeId(), getSymbolIndex( var ), var:get_name()) )
+   else
+    
+      if self.scopeMgr:getSymbolVarKind( var ) == VarKind.Stem then
+         self:write( "lune_initVal_stem" )
+      else
+       
+         self:write( "lune_initVal_var" )
+      end
+      
+      self:write( string.format( "( %s, pBlock_%X, %d, %s );", var:get_name(), var:get_scope():get_scopeId(), getSymbolIndex( var ), initVal) )
+   end
+   
+end
+
 function convFilter:processDeclVar( node, opt )
 
    do
@@ -2415,7 +2604,7 @@ function convFilter:processDeclVar( node, opt )
       if _switchExp == ProcessMode.WideScopeVer then
          local varSymList = node:get_symbolInfoList()
          for index, var in pairs( varSymList ) do
-            local typeTxt, isStem = getCTypeForSym( var )
+            local typeTxt = self.scopeMgr:getCTypeForSym( var )
             do
                local _switchExp = var:get_accessMode()
                if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
@@ -2452,29 +2641,27 @@ function convFilter:processDeclVar( node, opt )
    
    local varSymList = node:get_symbolInfoList()
    for index, var in pairs( varSymList ) do
-      local typeTxt, isStem = getCTypeForSym( var )
-      if isStem then
+      local typeTxt, varKind = self.scopeMgr:getCTypeForSym( var )
+      if varKind ~= VarKind.Prim then
+         local declVarFlag
+         
          if varSymList[1]:get_scope() ~= self.ast:get_moduleScope() then
-            self:writeln( string.format( "%s %s; ", typeTxt, var:get_name()) )
-         end
-         
-         local function getDefInitVal( typeInfo )
-         
-            if isStemType( var:get_typeInfo() ) then
-               return "NULL"
-            end
-            
-            return getLiteral2Stem( "0", var:get_typeInfo() )
-         end
-         
-         local initVal = getDefInitVal( var:get_typeInfo() )
-         if initVal == "NULL" then
-            self:writeln( string.format( "lune_set_block_stem( pBlock_%X, %d, %s );", var:get_scope():get_scopeId(), getSymbolIndex( var ), var:get_name()) )
+            declVarFlag = true
          else
           
-            self:writeln( string.format( "lune_initVal( %s, pBlock_%X, %d, %s );", var:get_name(), var:get_scope():get_scopeId(), getSymbolIndex( var ), initVal) )
+            declVarFlag = false
          end
          
+         local initVal
+         
+         if isStemType( var:get_typeInfo() ) then
+            initVal = "NULL"
+         else
+          
+            initVal = getLiteral2Stem( "0", var:get_typeInfo() )
+         end
+         
+         self:processSetupVar( declVarFlag, var, initVal )
       else
        
          if varSymList[1]:get_scope() ~= self.ast:get_moduleScope() then
@@ -2658,9 +2845,30 @@ local function getFuncName( typeInfo )
    return string.format( "lune_f_%d_%s", typeInfo:get_typeId(), typeInfo:get_rawTxt())
 end
 
+function convFilter:getPrepareClosure( funcName, argNum, hasDDD, symList )
+
+   local txt
+   
+   txt = string.format( "lune_func2stem( _pEnv, (lune_func_t *)%s, %d, %s, %d", funcName, argNum, hasDDD, #symList)
+   for __index, symbolInfo in pairs( symList ) do
+      txt = txt .. ", "
+      txt = txt .. self.scopeMgr:symbol2Stem( symbolInfo )
+   end
+   
+   txt = txt .. ")"
+   return txt
+end
+
+function convFilter:getFunc2Stem( funcType )
+
+   local argList = funcType:get_argTypeInfoList()
+   local hasDDD = #argList > 0 and argList[#argList]:get_kind() == Ast.TypeInfoKind.DDD or false
+   return self:getPrepareClosure( getFuncName( funcType ), #funcType:get_argTypeInfoList(), hasDDD, (_lune.unwrap( funcType:get_scope()) ):get_closureSymList() )
+end
+
 function convFilter:processVal2Stem( node, parent )
 
-   if isStemVal( node ) then
+   if self:isStemVal( node ) then
       filter( node, self, parent )
    else
     
@@ -2692,16 +2900,7 @@ function convFilter:processVal2Stem( node, parent )
                      do
                         local scope = expType:get_scope()
                         if scope ~= nil then
-                           local argList = expType:get_argTypeInfoList()
-                           local hasDDD = #argList > 0 and argList[#argList]:get_kind() == Ast.TypeInfoKind.DDD or false
-                           self:write( "lune_func2stem( _pEnv, (lune_func_t *)" )
-                           self:write( getFuncName( expType ) )
-                           self:write( string.format( ", %d, %s, %d", #node:get_expType():get_argTypeInfoList(), hasDDD, #scope:get_closureSymList()) )
-                           for __index, symbolInfo in pairs( scope:get_closureSymList() ) do
-                              self:write( string.format( ", %s", symbolInfo:get_name()) )
-                           end
-                           
-                           self:write( ")" )
+                           self:write( self:getFunc2Stem( expType ) )
                         else
                            Util.err( "illegal func" )
                         end
@@ -2739,7 +2938,7 @@ function convFilter:processDeclFunc( node, opt )
       else 
          
             if opt.node:get_kind() ~= Nodes.NodeKind.get_Block() then
-               self:processVal2Stem( node, opt.node )
+               self:write( self:getFunc2Stem( node:get_expType() ) )
             end
             
             return 
@@ -2877,8 +3076,8 @@ end
 
 function convFilter:processLoopPreProcess( blockNode )
 
-   local stemNum = setupScopeParam( blockNode:get_scope() )
-   self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_block( _pEnv, %d );", blockNode:get_scope():get_scopeId(), stemNum) )
+   local stemNum, varNum = self.scopeMgr:setupScopeParam( blockNode:get_scope() )
+   self:writeln( string.format( "lune_block_t * pBlock_%X = lune_enter_block( _pEnv, %d, %d );", blockNode:get_scope():get_scopeId(), stemNum, varNum) )
 end
 
 function convFilter:processLoopPostProcess(  )
@@ -3544,12 +3743,7 @@ function convFilter:processCall( funcType, setArgFlag, argList )
          local scope = funcType:get_scope()
          if scope ~= nil then
             if #scope:get_closureSymList() > 0 then
-               self:write( string.format( "lune_func2stem( _pEnv, (lune_func_t *)NULL, 0, false, %d", #scope:get_closureSymList()) )
-               for __index, symbolInfo in pairs( scope:get_closureSymList() ) do
-                  self:write( string.format( ", %s", symbolInfo:get_name()) )
-               end
-               
-               self:write( ")" )
+               self:write( self:getPrepareClosure( "NULL", 0, false, scope:get_closureSymList() ) )
             else
              
                self:write( "NULL" )
@@ -3822,7 +4016,7 @@ function convFilter:processExpMultiTo1( node, opt )
    self:write( "lune_fromDDD( " )
    filter( node:get_exp(), self, node )
    self:write( ", 0 )" )
-   if not isStemVal( node ) then
+   if not self:isStemVal( node ) then
       self:accessPrimValFromStem( false, node:get_exp():get_expType(), 0 )
    end
    
@@ -3837,16 +4031,23 @@ function convFilter:processExpCast( node, opt )
    do
       local _switchExp = node:get_castKind()
       if _switchExp == Nodes.CastKind.Implicit then
-         if castType:get_kind() == Ast.TypeInfoKind.IF then
-            if expType:get_kind() == Ast.TypeInfoKind.Class then
-               self:write( string.format( "lune_getIF( _pEnv, &lune_if_%s( ", self.moduleCtrl:getClassCName( expType )) )
-               self:processVal2Stem( node:get_exp(), node )
-               self:write( string.format( ")->%s )", self.moduleCtrl:getClassCName( castType )) )
+         do
+            local _switchExp = castType:get_kind()
+            if _switchExp == Ast.TypeInfoKind.IF then
+               if expType:get_kind() == Ast.TypeInfoKind.Class then
+                  self:write( string.format( "lune_getIF( _pEnv, &lune_if_%s( ", self.moduleCtrl:getClassCName( expType )) )
+                  self:processVal2Stem( node:get_exp(), node )
+                  self:write( string.format( ")->%s )", self.moduleCtrl:getClassCName( castType )) )
+               end
+               
+            elseif _switchExp == Ast.TypeInfoKind.FormFunc then
+               self:write( self:getFunc2Stem( expType ) )
+            elseif _switchExp == Ast.TypeInfoKind.Form then
+               self:write( self:getFunc2Stem( expType ) )
+            else 
+               
+                  filter( exp, self, node )
             end
-            
-         else
-          
-            filter( exp, self, node )
          end
          
       elseif _switchExp == Nodes.CastKind.Force then
@@ -3867,8 +4068,7 @@ end
 function convFilter:processExpParen( node, opt )
 
    self:write( "(" )
-   filter( node:get_exp(), self, node )
-   self:write( getAccessPrimValFromStem( #node:get_exp():get_expTypeList() > 1, node:get_expType(), 0 ) )
+   self:accessPrimVal( node:get_exp(), node )
    self:write( " )" )
 end
 
@@ -3945,6 +4145,11 @@ function convFilter:processAndOr( node, opTxt, parent )
    
    if firstFlag then
       self:write( ")" )
+      print( "hoge:", node:get_expType():getTxt( true ) )
+      if not isStemType( node:get_expType() ) then
+         self:accessPrimValFromStem( false, node:get_expType(), 0 )
+      end
+      
       self:popIndent(  )
    end
    
@@ -4034,17 +4239,10 @@ function convFilter:processExpRef( node, opt )
    else
     
       local symbolInfo = node:get_symbolInfo()
-      if isStemSym( symbolInfo ) then
+      if self.scopeMgr:getSymbolVarKind( symbolInfo ) == VarKind.Var then
          self:write( string.format( "%s->pStem", symbolInfo:get_name()) )
       else
        
-         if symbolInfo:get_accessMode() == Ast.AccessMode.Pub and symbolInfo:get_kind() == Ast.SymbolKind.Var then
-            if self.needModuleObj then
-               self:write( "_moduleObj." )
-            end
-            
-         end
-         
          if symbolInfo:get_kind() == Ast.SymbolKind.Fun then
             self:write( getFuncName( symbolInfo:get_typeInfo() ) )
          else
@@ -4259,8 +4457,8 @@ function convFilter:processLiteralVal( exp, parent )
 
    local symbolList = exp:getSymbolInfo(  )
    if #symbolList > 0 then
-      local work, varFlag = getCTypeForSym( symbolList[1] )
-      if varFlag then
+      local work, varKind = self.scopeMgr:getCTypeForSym( symbolList[1] )
+      if varKind ~= VarKind.Prim then
          self:write( "lune_imdStem( " )
          filter( exp, self, parent )
          self:write( ")" )
@@ -4382,7 +4580,7 @@ function convFilter:processLiteralListSub( collectionType, node, expListNodeOrg,
    self.processingNode = node
    self:write( string.format( "static %s %s( %s _pEnv", cTypeStemP, literalFuncName, cTypeEnvP) )
    for __index, symbol in pairs( self.accessSymbolSet:get_list() ) do
-      self:write( string.format( ", %s %s", getCTypeForSym( symbol ), symbol:get_name()) )
+      self:write( string.format( ", %s %s", self.scopeMgr:getCTypeForSym( symbol ), symbol:get_name()) )
    end
    
    self:writeln( ")" )
@@ -4491,7 +4689,7 @@ function convFilter:processLiteralMapSub( node )
    self.processingNode = node
    self:write( string.format( "static %s %s( %s _pEnv", cTypeStemP, getLiteralMapFuncName( node ), cTypeEnvP) )
    for __index, symbol in pairs( self.accessSymbolSet:get_list() ) do
-      self:write( string.format( ", %s %s", getCTypeForSym( symbol ), symbol:get_name()) )
+      self:write( string.format( ", %s %s", self.scopeMgr:getCTypeForSym( symbol ), symbol:get_name()) )
    end
    
    self:writeln( ")" )

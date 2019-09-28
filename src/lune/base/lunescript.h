@@ -106,15 +106,22 @@ extern "C" {
      */
 #define LUNE_STEM_POOL_MAX_NUM 100000
 
-#define lune_set_block_stem( BLOCK, INDEX, VAR )     \
+#define lune_set_block_var( BLOCK, INDEX, VAR )     \
     VAR = (BLOCK)->pVarList[ INDEX ]
+#define lune_set_block_stem( BLOCK, INDEX, VAR )     \
+    (BLOCK)->ppStemList[ INDEX ] = &VAR;             \
+    VAR = NULL;
 
 
 
-#define lune_initVal( SYMBOL, BLOCK, INDEX, VAL )     \
-    lune_set_block_stem( BLOCK, INDEX, SYMBOL );   \
+#define lune_initVal_var( SYMBOL, BLOCK, INDEX, VAL )     \
+    lune_set_block_var( BLOCK, INDEX, SYMBOL );   \
     lune_setQ( (&SYMBOL->pStem), VAL );                         
 
+#define lune_initVal_stem( SYMBOL, BLOCK, INDEX, VAL )     \
+    lune_set_block_stem( BLOCK, INDEX, SYMBOL );   \
+    lune_setQ( (&SYMBOL), VAL );                         
+    
     /**
        STEM 型の値 VAL を、 変数 SYM に代入する。
 
@@ -365,14 +372,25 @@ extern "C" {
 #define lune_form_func( FORM )                  \
     (FORM)->val.form.pFunc
     
-#define lune_form_closure( FORM, INDEX )        \
-    (FORM)->val.form.ppClosureValList[ INDEX ]
+#define lune_form_closure_stem( FORM, INDEX )        \
+    (FORM)->val.form.pClosureValList[ INDEX ].val.pStem
+#define lune_form_closure_var( FORM, INDEX )        \
+    (FORM)->val.form.pClosureValList[ INDEX ].val.pVar
+#define lune_form_closure( FORM, INDEX )                        \
+    &((FORM)->val.form.pClosureValList[ INDEX ])
 
     typedef struct lune_var_t {
         lune_stem_t * pStem;
         int refCount;
     } lune_var_t;
-    
+
+    typedef struct lune_closureVal_t {
+        bool isVar;
+        union {
+            lune_var_t * pVar;
+            lune_stem_t * pStem;
+        } val;
+    } lune_closureVal_t;
     
     /**
      * form の情報。
@@ -381,8 +399,8 @@ extern "C" {
         /** 関数 */
         lune_func_t * pFunc;
         /** form 内でアクセスする外部変数を管理するバッファ */
-        lune_var_t ** ppClosureValList;
-        /** ppClosureValList で管理している stem の数 */
+        lune_closureVal_t * pClosureValList;
+        /** pClosureValList で管理している stem の数 */
         int len;
         /** 引数の数*/
         int argNum;
@@ -458,10 +476,14 @@ extern "C" {
         void * pStackAddr;
         /** ブロック深度 */
         int blockDepth;
-        /** このブロックで管理する stem 型を保持するバッファ */
+        /** このブロックで管理する var 型を保持するバッファ */
         lune_var_t ** pVarList;
+        /** このブロックで管理する stem 型を保持するバッファ */
+        lune_stem_t *** ppStemList;
         /** pStemBuf で管理する値の数 */
-        int len;
+        int stemLen;
+        /** pVarBuf で管理する値の数 */
+        int varLen;
         /**
          * このブロック内で生成された stem 型データの双方向リスト。
          * 実際の先頭要素は managedStemTop.pNext。
@@ -484,6 +506,13 @@ extern "C" {
          * ブロック開始時に、ここから割り当てる。
          */
         lune_var_t * varPPool[ LUNE_STEM_POOL_MAX_NUM ];
+        /** varPPool をどこまで使用しているか個数を示す */
+        int useVarPoolNum;
+        /**
+         * ブロック情報で利用する pStemList のバッファ。
+         * ブロック開始時に、ここから割り当てる。
+         */
+        lune_stem_t ** stemPPool[ LUNE_STEM_POOL_MAX_NUM ];
         /** stemPPool をどこまで使用しているか個数を示す */
         int useStemPoolNum;
         /** ブロック情報の Queue。*/
@@ -576,15 +605,15 @@ extern "C" {
 
     extern lune_str_t lune_createLiteralStr( const char * pStr );
 
-    extern lune_block_t * lune_enter_module( int stemVerNum );
+    extern lune_block_t * lune_enter_module( int stemNum, int varNum );
     extern void lune_reset_block( lune_env_t * _pEnv );
 
     extern lune_stem_t * lune_setRet( lune_env_t * __pEnv, lune_stem_t * pStem );
     extern void lune_setQ_( lune_stem_t * pStem );
     extern void lune_setOverwrite( lune_stem_t * pStem );
-    extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int num, int argNum, ... );
+    extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int stemNum, int varNum, int argNum, ... );
     extern void lune_leave_block( lune_env_t * _pEnv );
-    extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemVerNum );
+    extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemNum, int varNum );
     extern void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
     extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * _pDDD );
@@ -618,3 +647,5 @@ extern "C" {
 #include <lns_collection.h>
 
 #endif
+
+

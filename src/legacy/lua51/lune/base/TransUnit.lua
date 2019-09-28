@@ -9065,6 +9065,14 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             local exp2
             
             if opTxt == "=" then
+               do
+                  local refNode = _lune.__Cast( exp, 3, Nodes.ExpRefNode )
+                  if refNode ~= nil then
+                     local refSymbol = refNode:get_symbolInfo()
+                     self.scope:accessSymbol( self.moduleScope, refSymbol, Ast.AccessFromClosuer.Write )
+                  end
+               end
+               
                local expListNode = self:analyzeExpList( false, false, nil, expectTypeList )
                exp2 = expListNode
             else
@@ -9163,6 +9171,8 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                            
                         end
                         
+                     elseif exp1Type:equals( Ast.builtinTypeStem ) then
+                        retType = Ast.builtinTypeStem
                      else
                       
                         retType = exp2Type
@@ -9803,7 +9813,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
             
          else
           
-            self.scope:accessSymbol( self.moduleScope, symbolInfo )
+            self.scope:accessSymbol( self.moduleScope, symbolInfo, Ast.AccessFromClosuer.Read )
          end
          
       end

@@ -1,1 +1,21 @@
-print( "hoge" );
+// class Test {
+//    let val:int {pub};
+// }
+
+// let mut work = fn() {};
+// fn func( test:Test )
+// {
+//    work = fn() {
+//       print( test.$val );
+//    };
+// }
+
+// {
+//    func( new Test( 10 ) );
+// }
+// work();
+
+
+{
+   print( 1 and false and 2 );   
+}

@@ -2374,6 +2374,12 @@ fn TransUnit.analyzeExpOp2(
   
 
             if opTxt == "=" {
+               if! let refNode = exp@@@Nodes.ExpRefNode {
+                  let refSymbol = refNode.$symbolInfo;
+                  self.scope.accessSymbol( self.moduleScope, refSymbol, .Write );
+               }
+
+               
                // let workToken = self.getToken(##);
                // if workToken.txt == "," {
                let mut expListNode = self.analyzeExpList(
@@ -2492,6 +2498,9 @@ fn TransUnit.analyzeExpOp2(
                               retType = Ast.builtinTypeStem;
                            }  
                         }  
+                     }
+                     elseif exp1Type.equals( Ast.builtinTypeStem ## ) {
+                        retType = Ast.builtinTypeStem;
                      }
                      else {
                         retType = exp2Type;
@@ -3225,7 +3234,7 @@ fn TransUnit.analyzeExp(
             }
          }
          else {
-            self.scope.accessSymbol( self.moduleScope, symbolInfo );
+            self.scope.accessSymbol( self.moduleScope, symbolInfo, .Read );
             // self.scope.accessSymbol( self.moduleScope, symbolInfo,
             //                          self.getCurrentNamespaceScope() );
          }
