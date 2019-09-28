@@ -5359,7 +5359,7 @@ pub override fn convFilter.processExpRef(
          //       self.write( "_moduleObj." );
          //    }
          // }
-         if symbolInfo.$kind == .Fun {
+         if symbolInfo.$kind == .Fun or symbolInfo.$typeInfo.$kind == .Func {
             self.write( getFuncName( symbolInfo.$typeInfo ) );
          }
          else {

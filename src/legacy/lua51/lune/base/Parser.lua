@@ -604,7 +604,7 @@ function StreamParser:parse(  )
    
    local list = {}
    local startIndex = 1
-   local multiComment = function ( comIndex, termStr )
+   local function multiComment( comIndex, termStr )
    
       local searchIndex = comIndex
       local comment = ""
@@ -624,7 +624,8 @@ function StreamParser:parse(  )
       
    end
    
-   local addVal = function ( kind, val, column )
+   
+   local function addVal( kind, val, column )
    
       local function createInfo( tokenKind, token, tokenColumn )
       
@@ -807,6 +808,7 @@ function StreamParser:parse(  )
       end
       
    end
+   
    
    local searchIndex = startIndex
    while true do

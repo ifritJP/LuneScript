@@ -15,7 +15,13 @@
 // }
 // work();
 
-
+let func:form;
 {
-   print( 1 and false and 2 );   
+   let mut test1 = 1;
+   let mut test2 = "abc";
+   func = fn() {
+      print( test1, test2 );
+   };
 }
+func();
+

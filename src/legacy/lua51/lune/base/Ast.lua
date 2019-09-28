@@ -5629,6 +5629,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             end
          end
          
+         if otherSrc:get_kind() == TypeInfoKind.Func then
+            return false
+         end
+         
          return true
       elseif not otherMut and destMut then
          local nonNilOtherType = otherSrc:get_nonnilableType()

@@ -4243,7 +4243,7 @@ function convFilter:processExpRef( node, opt )
          self:write( string.format( "%s->pStem", symbolInfo:get_name()) )
       else
        
-         if symbolInfo:get_kind() == Ast.SymbolKind.Fun then
+         if symbolInfo:get_kind() == Ast.SymbolKind.Fun or symbolInfo:get_typeInfo():get_kind() == Ast.TypeInfoKind.Func then
             self:write( getFuncName( symbolInfo:get_typeInfo() ) )
          else
           

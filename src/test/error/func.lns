@@ -123,6 +123,11 @@
    func( fn ( list:&List<int> ) { } ); // error
 }
 
+{
+   let func;
+   func = fn() {};  // error
+   //let func2 = fn() {};  // error
+}
 
 abstract class Super {
    pub abstract fn func2();

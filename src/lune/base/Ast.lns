@@ -4621,6 +4621,14 @@ pub static fn TypeInfo.canEvalWithBase(
                return false;
             }
          }
+         if otherSrc.$kind == .Func {
+            // 関数の型推定は未サポート。
+            // 関数の代入先は FormFunc あるいは Form であり、
+            // それを型推定できないため。
+            // 代入先の FormFunc を自動生成すれば対応できなくはないが、
+            // その場合は C-lang へのトランスコード対応が必要。
+            return false;
+         }
          return true;
       }
       elseif not otherMut and destMut {

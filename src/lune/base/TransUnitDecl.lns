@@ -2720,13 +2720,21 @@ fn TransUnit.analyzeLetAndInitExp(
          if #typeInfoList < index or
             typeInfoList[ index ].equals( Ast.builtinTypeEmpty ## )
          {
+            let workType;
             if Ast.TypeInfo.isMut( typeInfo ) and
                index <= #letVarList and not Ast.isMutable( letVarList[ index ].mutable )
             {
-               typeInfoList[ index ] = self.createModifier( typeInfo, .IMutRe );
+               workType = self.createModifier( typeInfo, .IMutRe );
             }
             else {
-               typeInfoList[ index ] = typeInfo;
+               workType = typeInfo;
+            }
+            typeInfoList[ index ] = workType;
+            if workType.$kind == .Func {
+               self.addErrMess(
+                  firstPos,
+                  "must set the type of variable for function. -- %s"
+                  (letVarList[ index ].varName.txt ) );
             }
          }
       }

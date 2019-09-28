@@ -6644,11 +6644,18 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       
       for index, typeInfo in pairs( expTypeList ) do
          if #typeInfoList < index or typeInfoList[index]:equals( Ast.builtinTypeEmpty ) then
+            local workType
+            
             if Ast.TypeInfo.isMut( typeInfo ) and index <= #letVarList and not Ast.isMutable( letVarList[index].mutable ) then
-               typeInfoList[index] = self:createModifier( typeInfo, Ast.MutMode.IMutRe )
+               workType = self:createModifier( typeInfo, Ast.MutMode.IMutRe )
             else
              
-               typeInfoList[index] = typeInfo
+               workType = typeInfo
+            end
+            
+            typeInfoList[index] = workType
+            if workType:get_kind() == Ast.TypeInfoKind.Func then
+               self:addErrMess( firstPos, string.format( "must set the type of variable for function. -- %s", letVarList[index].varName.txt) )
             end
             
          end

@@ -285,7 +285,7 @@ class Test9 extend Super7 {
       super();
       Test9.sfunc();
 
-      let func = fn () {
+      fn func() {
          self.func();
       };
       
