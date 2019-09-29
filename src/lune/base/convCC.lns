@@ -299,12 +299,11 @@ pub fn ScopeMgr.setupScopeParam( scope:&Ast.Scope ) mut : int, int
       if symbol.$name ~= "__func__" {
          switch symbol.$kind {
             case .Var {
-               if symbol.$accessFromClosure == .Write {
+               if symbol.$hasAccessFromClosuer {
                   param = new SymbolParam( .Var, varNum, cTypeVarP );
                   varNum = varNum + 1;
                }
-               elseif symbol.$accessFromClosure == .Read or
-                  isStemType( symbol.$typeInfo )
+               elseif isStemType( symbol.$typeInfo )
                {
                   param = new SymbolParam( .Stem, stemNum, cTypeStemP );
                   stemNum = stemNum + 1;
@@ -786,6 +785,7 @@ pub override fn convFilter.processRoot(
          }
          default {
             filter( child, self, node );
+            self.writeln( "" );
          }
       }
    }

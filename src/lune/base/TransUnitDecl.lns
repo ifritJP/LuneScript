@@ -2047,6 +2047,60 @@ pri fn TransUnit.addMethod(
    classNodeInfo.$fieldList.insert( methodNode );
 }
 
+fn TransUnit.processAddFunc(
+   isFunc:bool, mut parentScope:Ast.Scope, name:&Parser.Token,
+   typeInfo:&Ast.TypeInfo, alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo> ) mut
+{
+   let accessMode = typeInfo.$accessMode;
+   if accessMode == .Global {
+      //parentScope = Ast.rootScope;
+      parentScope = self.globalScope;
+   }
+
+   if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
+      let argTypeList = typeInfo.$argTypeInfoList;
+      let retTypeInfoList = typeInfo.$retTypeInfoList;
+      {
+         let matchFlag, err = Ast.TypeInfo.checkMatchType(
+            prottype.$argTypeInfoList, argTypeList, false, nil, alt2typeMap );
+         if matchFlag ~= .Match {
+            self.addErrMess( name.pos, "mismatch functype param: " .. err );
+         }
+      }
+      {
+         let matchFlag, err = Ast.TypeInfo.checkMatchType(
+            prottype.$retTypeInfoList, retTypeInfoList, false, nil, alt2typeMap );
+         if matchFlag ~= .Match {
+            self.addErrMess( name.pos, "mismatch functype ret: " .. err );
+         }
+      }
+      if not typeInfo.canEvalWith( prottype, .SetOp, alt2typeMap ) {
+         self.addErrMess( name.pos,
+                          "mismatch functype -- %s / %s"
+                          (typeInfo.$display_stirng, prottype.$display_stirng ) );
+      }
+
+      if self.protoFuncMap[ prottype ] {
+         self.protoFuncMap[ prottype ] = nil;
+      }
+      else {
+         if not prottype.$autoFlag {
+            self.addErrMess( name.pos, "multiple define -- %s" (name.txt) );
+         }
+      }
+   }
+
+
+   let staticFlag = typeInfo.$staticFlag;
+   let mutable = Ast.TypeInfo.isMut( typeInfo );
+   if isFunc {
+      parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
+   }
+   else {
+      parentScope.addMethod( typeInfo, accessMode, staticFlag, mutable );
+   }
+}
+
 fn TransUnit.analyzeDeclFunc(
    declFuncMode: DeclFuncMode, abstractFlag: bool, overrideFlag: bool,
    mut accessMode: Ast.AccessMode,
@@ -2236,50 +2290,9 @@ fn TransUnit.analyzeDeclFunc(
       funcName, altTypeList, argTypeList, retTypeInfoList, mutable );
 
    when! name {
-      let mut parentScope = funcBodyScope.get_parent();
-      if accessMode == .Global {
-         //parentScope = Ast.rootScope;
-         parentScope = self.globalScope;
-      }
-
-      if! let prottype = parentScope.getTypeInfoChild( typeInfo.$rawTxt ) {
-         {
-            let matchFlag, err = Ast.TypeInfo.checkMatchType(
-               prottype.$argTypeInfoList, argTypeList, false, nil, alt2typeMap );
-            if matchFlag ~= .Match {
-               self.addErrMess( name.pos, "mismatch functype param: " .. err );
-            }
-         }
-         {
-            let matchFlag, err = Ast.TypeInfo.checkMatchType(
-               prottype.$retTypeInfoList, retTypeInfoList, false, nil, alt2typeMap );
-            if matchFlag ~= .Match {
-               self.addErrMess( name.pos, "mismatch functype ret: " .. err );
-            }
-         }
-         if not typeInfo.canEvalWith( prottype, .SetOp, alt2typeMap ) {
-            self.addErrMess( name.pos,
-                             "mismatch functype -- %s / %s"
-                             (typeInfo.$display_stirng, prottype.$display_stirng ) );
-         }
-
-         if self.protoFuncMap[ prottype ] {
-            self.protoFuncMap[ prottype ] = nil;
-         }
-         else {
-            if not prottype.$autoFlag {
-               self.addErrMess( token.pos, "multiple define -- %s" (name.txt) );
-            }
-         }
-      }
-
-
-      if kind == Nodes.NodeKind.$DeclFunc {
-         parentScope.addFunc( typeInfo, accessMode, staticFlag, mutable );
-      }
-      else {
-         parentScope.addMethod( typeInfo, accessMode, staticFlag, mutable );
-      }
+      self.processAddFunc(
+         kind == Nodes.NodeKind.$DeclFunc,
+         funcBodyScope.$parent, name, typeInfo, alt2typeMap );
    }
 
    if overrideFlag {
@@ -2730,7 +2743,12 @@ fn TransUnit.analyzeLetAndInitExp(
                workType = typeInfo;
             }
             typeInfoList[ index ] = workType;
-            if workType.$kind == .Func {
+            if workType.$kind == .Func and
+                ( #expTypeList ~= 1 or workType.$rawTxt ~= "" )
+            {
+               // anonymous 関数宣言の型推論変数宣言は、
+               // 通常関数宣言に置き換えるが、
+               // 2 つ以上の変数を宣言している場合はエラーとする。
                self.addErrMess(
                   firstPos,
                   "must set the type of variable for function. -- %s"
@@ -2768,7 +2786,40 @@ fn TransUnit.analyzeDeclVar(
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp(
          firstToken.pos, mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut,
-         accessMode, unwrapFlag );        
+         accessMode, unwrapFlag );
+
+   if mode == .Let and #typeInfoList == 1 {
+      when! expList {
+         let typeInfo = typeInfoList[ 1 ];
+         if #expList.$expList == 1 and typeInfo.$kind == .Func {
+            if! let declNode = expList.$expList[ 1 ]@@@Nodes.DeclFuncNode {
+               if not declNode.$declInfo.$name {
+                  // anonymous 関数宣言の型推論変数宣言は、
+                  // 通常関数宣言に置き換える。
+                  // 次のような感じ。
+                  // let func = fn () {}; → fn func() {}
+                  let letVarInfo = letVarList[ 1 ];
+                  let newTypeInfo = Ast.NormalTypeInfo.createFunc(
+                     typeInfo.$abstractFlag, false, typeInfo.$scope,
+                     typeInfo.$kind, typeInfo.$parentInfo,
+                     false, false, typeInfo.$staticFlag, accessMode,
+                     letVarInfo.varName.txt, typeInfo.$itemTypeInfoList,
+                     typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList,
+                     Ast.TypeInfo.isMut( typeInfo ) );
+                  self.processAddFunc(
+                     true, self.scope, letVarInfo.varName, newTypeInfo,
+                     Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
+                  self.nodeManager.delNode( declNode );
+
+                  let mut declInfo = Nodes.DeclFuncInfo.createFrom(
+                     declNode.$declInfo, letVarInfo.varName );
+                  return Nodes.DeclFuncNode.create(
+                     self.nodeManager, declNode.$pos, [ newTypeInfo ], declInfo );
+               }
+            }
+         }
+      }
+   }
 
 
    if mode ~= .Sync and self.macroScope {

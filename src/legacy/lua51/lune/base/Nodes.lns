@@ -308,6 +308,21 @@ pub class NodeManager {
       };
       list.insert( node );
    }
+   pub fn delNode(node:&Node) mut {
+      let! mut list = self.nodeKind2NodeList[ node.$kind ] {
+         return;
+      };
+      let mut findIndex = -1;
+      foreach item, index in list {
+         if item == node {
+            findIndex = index;
+            break;
+         }
+      }
+      if findIndex ~= -1 {
+         list.remove( findIndex );
+      }
+   }
 }
 
 pub class NodeKind {
@@ -1262,6 +1277,15 @@ pub class DeclFuncInfo {
    pri let retTypeInfoList: List<&Ast.TypeInfo> { pub };
    pri let has__func__Symbol:bool { pub };
 }
+
+pub static fn DeclFuncInfo.createFrom(
+   info:&DeclFuncInfo, name:&Parser.Token ): DeclFuncInfo
+{
+   return new DeclFuncInfo(
+      info.classTypeInfo, name, info.argList, info.staticFlag,
+      info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol );
+}
+
 _declNodeClass( "DeclFunc", Node, false, true, true,
                 [ { "declInfo": "DeclFuncInfo" } ]
 );

@@ -1247,3 +1247,9 @@ class Test4 {
    }
    sub2( func()** );
 }
+{
+   let func = fn () {
+      print( "hoge" );
+   }
+   func();
+}

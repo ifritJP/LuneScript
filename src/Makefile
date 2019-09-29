@@ -221,7 +221,7 @@ test-comp:
 	@LANG= date
 
 	$(MAKE) build-countup
-	rm -rf work
+	rm -rf work/*
 	mkdir -p work/glue
 	$(call mk_lune_proj_dir,work/1)
 	mkdir -p work/1/test

@@ -6056,6 +6056,62 @@ function TransUnit:addMethod( classTypeInfo, methodNode, name )
    table.insert( classNodeInfo:get_fieldList(), methodNode )
 end
 
+function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfo, alt2typeMap )
+
+   local accessMode = typeInfo:get_accessMode()
+   if accessMode == Ast.AccessMode.Global then
+      parentScope = self.globalScope
+   end
+   
+   do
+      local prottype = parentScope:getTypeInfoChild( typeInfo:get_rawTxt() )
+      if prottype ~= nil then
+         local argTypeList = typeInfo:get_argTypeInfoList()
+         local retTypeInfoList = typeInfo:get_retTypeInfoList()
+         do
+            local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false, nil, alt2typeMap )
+            if matchFlag ~= Ast.MatchType.Match then
+               self:addErrMess( name.pos, "mismatch functype param: " .. err )
+            end
+            
+         end
+         
+         do
+            local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_retTypeInfoList(), retTypeInfoList, false, nil, alt2typeMap )
+            if matchFlag ~= Ast.MatchType.Match then
+               self:addErrMess( name.pos, "mismatch functype ret: " .. err )
+            end
+            
+         end
+         
+         if not typeInfo:canEvalWith( prottype, Ast.CanEvalType.SetOp, alt2typeMap ) then
+            self:addErrMess( name.pos, string.format( "mismatch functype -- %s / %s", typeInfo:get_display_stirng(), prottype:get_display_stirng()) )
+         end
+         
+         if self.protoFuncMap[prottype] then
+            self.protoFuncMap[prottype] = nil
+         else
+          
+            if not prottype:get_autoFlag() then
+               self:addErrMess( name.pos, string.format( "multiple define -- %s", name.txt) )
+            end
+            
+         end
+         
+      end
+   end
+   
+   local staticFlag = typeInfo:get_staticFlag()
+   local mutable = Ast.TypeInfo.isMut( typeInfo )
+   if isFunc then
+      parentScope:addFunc( typeInfo, accessMode, staticFlag, mutable )
+   else
+    
+      parentScope:addMethod( typeInfo, accessMode, staticFlag, mutable )
+   end
+   
+end
+
 function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, accessMode, staticFlag, classTypeInfo, firstToken, name )
 
    local token = self:getToken(  )
@@ -6216,54 +6272,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    local namespaceInfo = self:getCurrentNamespaceTypeInfo(  )
    local typeInfo = Ast.NormalTypeInfo.createFunc( abstractFlag, false, funcBodyScope, typeKind, namespaceInfo, false, false, staticFlag, accessMode, funcName, altTypeList, argTypeList, retTypeInfoList, mutable )
    if name ~= nil then
-      local parentScope = funcBodyScope:get_parent(  )
-      if accessMode == Ast.AccessMode.Global then
-         parentScope = self.globalScope
-      end
-      
-      do
-         local prottype = parentScope:getTypeInfoChild( typeInfo:get_rawTxt() )
-         if prottype ~= nil then
-            do
-               local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_argTypeInfoList(), argTypeList, false, nil, alt2typeMap )
-               if matchFlag ~= Ast.MatchType.Match then
-                  self:addErrMess( name.pos, "mismatch functype param: " .. err )
-               end
-               
-            end
-            
-            do
-               local matchFlag, err = Ast.TypeInfo.checkMatchType( prottype:get_retTypeInfoList(), retTypeInfoList, false, nil, alt2typeMap )
-               if matchFlag ~= Ast.MatchType.Match then
-                  self:addErrMess( name.pos, "mismatch functype ret: " .. err )
-               end
-               
-            end
-            
-            if not typeInfo:canEvalWith( prottype, Ast.CanEvalType.SetOp, alt2typeMap ) then
-               self:addErrMess( name.pos, string.format( "mismatch functype -- %s / %s", typeInfo:get_display_stirng(), prottype:get_display_stirng()) )
-            end
-            
-            if self.protoFuncMap[prottype] then
-               self.protoFuncMap[prottype] = nil
-            else
-             
-               if not prottype:get_autoFlag() then
-                  self:addErrMess( token.pos, string.format( "multiple define -- %s", name.txt) )
-               end
-               
-            end
-            
-         end
-      end
-      
-      if kind == Nodes.NodeKind.get_DeclFunc() then
-         parentScope:addFunc( typeInfo, accessMode, staticFlag, mutable )
-      else
-       
-         parentScope:addMethod( typeInfo, accessMode, staticFlag, mutable )
-      end
-      
+      self:processAddFunc( kind == Nodes.NodeKind.get_DeclFunc(), funcBodyScope:get_parent(), name, typeInfo, alt2typeMap )
    end
    
    if overrideFlag then
@@ -6654,7 +6663,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
             end
             
             typeInfoList[index] = workType
-            if workType:get_kind() == Ast.TypeInfoKind.Func then
+            if workType:get_kind() == Ast.TypeInfoKind.Func and (#expTypeList ~= 1 or workType:get_rawTxt() ~= "" ) then
                self:addErrMess( firstPos, string.format( "must set the type of variable for function. -- %s", letVarList[index].varName.txt) )
             end
             
@@ -6690,6 +6699,31 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag )
+   if mode == Nodes.DeclVarMode.Let and #typeInfoList == 1 then
+      if expList ~= nil then
+         local typeInfo = typeInfoList[1]
+         if #expList:get_expList() == 1 and typeInfo:get_kind() == Ast.TypeInfoKind.Func then
+            do
+               local declNode = _lune.__Cast( expList:get_expList()[1], 3, Nodes.DeclFuncNode )
+               if declNode ~= nil then
+                  if not declNode:get_declInfo():get_name() then
+                     local letVarInfo = letVarList[1]
+                     local newTypeInfo = Ast.NormalTypeInfo.createFunc( typeInfo:get_abstractFlag(), false, typeInfo:get_scope(), typeInfo:get_kind(), typeInfo:get_parentInfo(), false, false, typeInfo:get_staticFlag(), accessMode, letVarInfo.varName.txt, typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), Ast.TypeInfo.isMut( typeInfo ) )
+                     self:processAddFunc( true, self.scope, letVarInfo.varName, newTypeInfo, Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) )
+                     self.nodeManager:delNode( declNode )
+                     local declInfo = Nodes.DeclFuncInfo.createFrom( declNode:get_declInfo(), letVarInfo.varName )
+                     return Nodes.DeclFuncNode.create( self.nodeManager, declNode:get_pos(), {newTypeInfo}, declInfo )
+                  end
+                  
+               end
+            end
+            
+         end
+         
+      end
+      
+   end
+   
    if mode ~= Nodes.DeclVarMode.Sync and self.macroScope then
       for index, letVarInfo in pairs( letVarList ) do
          local typeInfo = typeInfoList[index]

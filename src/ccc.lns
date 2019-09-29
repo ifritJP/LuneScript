@@ -1,5 +1,11 @@
 let mut g_val = 100;
 {
+   let func = fn () {
+      print( "hoge" );
+   }
+   func();
+}
+{
    let func:form;
    let func2:form;
    {

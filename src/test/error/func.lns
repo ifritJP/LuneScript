@@ -126,7 +126,8 @@
 {
    let func;
    func = fn() {};  // error
-   //let func2 = fn() {};  // error
+   let func2 = fn() {};
+   let func3 = fn func4() {};  // error
 }
 
 abstract class Super {

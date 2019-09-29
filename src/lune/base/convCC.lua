@@ -694,10 +694,10 @@ function ScopeMgr:setupScopeParam( scope )
                do
                   local _switchExp = symbol:get_kind()
                   if _switchExp == Ast.SymbolKind.Var then
-                     if symbol:get_accessFromClosure() == Ast.AccessFromClosuer.Write then
+                     if symbol:get_hasAccessFromClosuer() then
                         param = SymbolParam.new(VarKind.Var, varNum, cTypeVarP)
                         varNum = varNum + 1
-                     elseif symbol:get_accessFromClosure() == Ast.AccessFromClosuer.Read or isStemType( symbol:get_typeInfo() ) then
+                     elseif isStemType( symbol:get_typeInfo() ) then
                         param = SymbolParam.new(VarKind.Stem, stemNum, cTypeStemP)
                         stemNum = stemNum + 1
                      else
@@ -1112,6 +1112,7 @@ function convFilter:processRoot( node, opt )
          else 
             
                filter( child, self, node )
+               self:writeln( "" )
          end
       end
       

@@ -643,6 +643,29 @@ function NodeManager:addNode( node )
    
    table.insert( list, node )
 end
+function NodeManager:delNode( node )
+
+   local list = self.nodeKind2NodeList[node:get_kind()]
+   if  nil == list then
+      local _list = list
+   
+      return 
+   end
+   
+   local findIndex = -1
+   for index, item in pairs( list ) do
+      if item == node then
+         findIndex = index
+         break
+      end
+      
+   end
+   
+   if findIndex ~= -1 then
+      table.remove( list, findIndex )
+   end
+   
+end
 function NodeManager.setmeta( obj )
   setmetatable( obj, { __index = NodeManager  } )
 end
@@ -6279,6 +6302,11 @@ function DeclFuncInfo:get_retTypeInfoList()
 end
 function DeclFuncInfo:get_has__func__Symbol()
    return self.has__func__Symbol
+end
+
+function DeclFuncInfo.createFrom( info, name )
+
+   return DeclFuncInfo.new(info.classTypeInfo, name, info.argList, info.staticFlag, info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol)
 end
 
 function NodeKind.get_DeclFunc(  )
