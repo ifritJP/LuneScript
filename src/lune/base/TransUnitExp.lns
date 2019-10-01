@@ -2301,16 +2301,31 @@ fn TransUnit.analyzeExpOpSet(
          not symbolInfo.$hasValueFlag and symbolInfo.$kind == .Var
       {
          if symbolInfo.$typeInfo == Ast.builtinTypeEmpty {
+            // 未初期化変数に型が指定されていないので型推論を行なう
+            
             let mut expType = expTypeList[ index ];
-            if expType.$kind == .DDD {
-               if #expType.$itemTypeInfoList > 0 {
-                  expType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
+            switch expType.$kind {
+               case .DDD {
+                  if #expType.$itemTypeInfoList > 0 {
+                     expType = expType.$itemTypeInfoList[ 1 ].$nilableTypeInfo;
+                  }
+               }
+               case .List, .Array, .Set, .Map {
+                  let workPos;
+                  if index <= #expList.$expList {
+                     workPos = expList.$expList[ index ].$pos;
+                  }
+                  else {
+                     workPos = opeToken.$pos;
+                  }
+                  self.checkLiteralEmptyCollection(
+                     opeToken.pos, symbolInfo.$name, expType );
                }
             }
             symbolInfo.set_typeInfo( expType );
          }
          if not self.tentativeSymbol.regist( symbolInfo ) {
-            self.addErrMess( opeToken.$pos,
+            self.addErrMess( opeToken.pos,
                              "can't access in this scope. -- %s"
                              ( symbolInfo.$name ) );
          }

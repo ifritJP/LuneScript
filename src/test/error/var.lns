@@ -4,6 +4,24 @@
    let val2:List<int,int> = [];
 }
 
+{
+   let val1 = [];  // error
+   let val2 = (@); // error
+   let val3 = [@]; // error
+   let val4 = {};  // error
+}
+{
+   let val1;
+   val1 = [];  // error
+   let val2;
+   val2 = (@); // error
+   let val3;
+   val3 = [@]; // error
+   let val4;
+   val4 = {};  // error
+}
+
+
 
 pub let var = 1;
 {

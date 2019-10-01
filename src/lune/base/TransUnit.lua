@@ -6456,6 +6456,18 @@ function TransUnit:createExpListNode( orgExpList, newExpList )
    return Nodes.ExpListNode.create( self.nodeManager, orgExpList:get_pos(), newExpTypeList, newExpList, orgExpList:get_mRetExp(), orgExpList:get_followOn() )
 end
 
+function TransUnit:checkLiteralEmptyCollection( pos, symbolName, expType )
+
+   for __index, itemType in pairs( expType:get_itemTypeInfoList() ) do
+      if itemType == Ast.builtinTypeNone then
+         self:addErrMess( pos, string.format( "must set the item type of Collection. -- %s:%s", symbolName, expType:get_srcTypeInfo():getTxt( true )) )
+         break
+      end
+      
+   end
+   
+end
+
 local LetVarInfo = {}
 function LetVarInfo.setmeta( obj )
   setmetatable( obj, { __index = LetVarInfo  } )
@@ -6653,18 +6665,40 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       
       for index, typeInfo in pairs( expTypeList ) do
          if #typeInfoList < index or typeInfoList[index]:equals( Ast.builtinTypeEmpty ) then
+            local workPos
+            
             local workType
             
-            if Ast.TypeInfo.isMut( typeInfo ) and index <= #letVarList and not Ast.isMutable( letVarList[index].mutable ) then
-               workType = self:createModifier( typeInfo, Ast.MutMode.IMutRe )
+            local workName
+            
+            if index <= #letVarList then
+               workPos = letVarList[index].varName.pos
+               workName = letVarList[index].varName.txt
+               if Ast.TypeInfo.isMut( typeInfo ) and not Ast.isMutable( letVarList[index].mutable ) then
+                  workType = self:createModifier( typeInfo, Ast.MutMode.IMutRe )
+               else
+                
+                  workType = typeInfo
+               end
+               
             else
              
                workType = typeInfo
+               workPos = firstPos
+               workName = ""
             end
             
             typeInfoList[index] = workType
-            if workType:get_kind() == Ast.TypeInfoKind.Func and (#expTypeList ~= 1 or workType:get_rawTxt() ~= "" ) then
-               self:addErrMess( firstPos, string.format( "must set the type of variable for function. -- %s", letVarList[index].varName.txt) )
+            do
+               local _switchExp = workType:get_kind()
+               if _switchExp == Ast.TypeInfoKind.Func then
+                  if #expTypeList ~= 1 or workType:get_rawTxt() ~= "" then
+                     self:addErrMess( firstPos, string.format( "must set the type of variable for function. -- %s", workName) )
+                  end
+                  
+               elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Map then
+                  self:checkLiteralEmptyCollection( workPos, workName, workType )
+               end
             end
             
          end
@@ -9025,11 +9059,25 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expList )
       if index <= #expTypeList and not symbolInfo:get_hasValueFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Var then
          if symbolInfo:get_typeInfo() == Ast.builtinTypeEmpty then
             local expType = expTypeList[index]
-            if expType:get_kind() == Ast.TypeInfoKind.DDD then
-               if #expType:get_itemTypeInfoList() > 0 then
-                  expType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
+            do
+               local _switchExp = expType:get_kind()
+               if _switchExp == Ast.TypeInfoKind.DDD then
+                  if #expType:get_itemTypeInfoList() > 0 then
+                     expType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
+                  end
+                  
+               elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Map then
+                  local workPos
+                  
+                  if index <= #expList:get_expList() then
+                     workPos = expList:get_expList()[index]:get_pos()
+                  else
+                   
+                     workPos = opeToken.pos
+                  end
+                  
+                  self:checkLiteralEmptyCollection( opeToken.pos, symbolInfo:get_name(), expType )
                end
-               
             end
             
             symbolInfo:set_typeInfo( expType )
