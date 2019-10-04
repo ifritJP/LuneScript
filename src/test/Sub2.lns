@@ -198,3 +198,16 @@ pub fn Boxfunc3( val:Nilable<int>! ): Nilable<int>! {
 pub class Val<T:(Mapping)> extend (Mapping) {
    let valval:T {pub};
 }
+
+pub interface IF_test {
+   pub fn func();
+}
+
+pub abstract class Test_class extend (IF_test) {
+}
+
+pub class Sub_class extend Test_class {
+   pub fn func() {
+      print( __func__ );
+   }
+}

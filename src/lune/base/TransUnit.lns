@@ -522,12 +522,12 @@ pub class TransUnit {
    /**
 指定クラスの Scope を push し、TypeInfo を取得する。
 
-クラスが生成済みの場合は baseInfo, interfaceList に nil を指定する。
+クラスが生成済みの場合は baseInfo, interfaceList, genTypeList に nil を指定する。
    */
    pri fn pushClass(
       classFlag:bool, abstractFlag: bool, baseInfo: &Ast.TypeInfo!,
       interfaceList: &List<&Ast.TypeInfo>!,
-      genTypeList: &List<&Ast.AlternateTypeInfo>, externalFlag: bool, name:str,
+      genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
       let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -537,35 +537,58 @@ pub class TransUnit {
 
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.addErrMess( self.currentToken.pos,
-                             "mismatch class abstract for prototpye" );
+                             "mismatch class(%s) abstract for prototpye"
+                             (typeInfo.getTxt(true##)));
          }
          if typeInfo.$accessMode ~= accessMode {
             self.addErrMess( self.currentToken.pos,
-                             "mismatch class accessmode(%s) for prototpye accessmode(%s)"
-                             (accessMode.$_txt, typeInfo.$accessMode.$_txt));
+                             "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
+                             ( typeInfo.getTxt(true##),
+                               accessMode.$_txt, typeInfo.$accessMode.$_txt));
          }
          when! baseInfo {
             if typeInfo.$baseTypeInfo ~= baseInfo {
                self.addErrMess(
                   self.currentToken.pos,
-                  "mismatch class base class(%s) for prototpye base class(%s)"
-                  (baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
+                  "mismatch class(%s) base class(%s) for prototpye base class(%s)"
+                  ( typeInfo.getTxt(true##),
+                    baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
             }
          }
-         when! interfaceList {
-            if #typeInfo.$interfaceList == #interfaceList {
-               foreach ifType, index in typeInfo.$interfaceList {
-                  if ifType ~= interfaceList[ index ] {
+
+         fn compareList( protoList:&List<&Ast.TypeInfo>,
+                         typeList:&List<&Ast.TypeInfo>, message:str )
+         {
+            if #protoList == #typeList {
+               foreach protoType, index in protoList {
+                  if protoType ~= typeList[ index ] {
                      self.addErrMess(
                         self.currentToken.pos,
-                        "mismatch class interface(%s) for prototpye interface(%s)"
-                        (ifType.getTxt(##), interfaceList[ index ]));
+                        "mismatch class(%s) %s(%s) for prototpye %s(%s)"
+                        ( typeInfo.getTxt(true##), message,
+                          typeList[ index ].getTxt(true##),
+                          message, protoType.getTxt(##)));
                   }
                }
             }
+            else {
+               self.addErrMess(
+                  self.currentToken.pos,
+                  "mismatch class(%s) %s(%d) for prototpye %s(%d)"
+                  ( typeInfo.getTxt(true##), message, #typeList,
+                    message, #protoList) );
+            }
+         }
+         
+         when! interfaceList {
+            compareList( typeInfo.$interfaceList, interfaceList, "interface" );
          }
 
+         when! genTypeList {
+            compareList( typeInfo.$itemTypeInfoList, genTypeList, "generics" );
+         }
 
+         
 
          self.scope = unwrap Ast.getScope( typeInfo );
          switch ( typeInfo.$kind ) {
@@ -592,14 +615,23 @@ pub class TransUnit {
 
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true, baseInfo, interfaceList );
+         let workGenTypeList;
+         when! genTypeList {
+            workGenTypeList = genTypeList;
+         }
+         else {
+            workGenTypeList = [];
+         }
          typeInfo = Ast.NormalTypeInfo.createClass(
-            classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList,
-            parentInfo, externalFlag, accessMode, name );
-
+            classFlag, abstractFlag, scope, baseInfo, interfaceList,
+            workGenTypeList, parentInfo, externalFlag, accessMode, name );
+         
          parentScope.addClass( name, typeInfo );
       }
-      foreach genType in genTypeList {
-         self.scope.addAlternate( accessMode, genType.$txt, genType );
+      when! genTypeList {
+         foreach genType in genTypeList {
+            self.scope.addAlternate( accessMode, genType.$txt, genType );
+         }
       }
 
       let! mut namespace = defNamespace {
@@ -1075,9 +1107,12 @@ class _TypeInfoNormal extend _TypeInfo {
                self.kind == Ast.TypeInfoKind.IF
             {
                let baseScope = unwrap param.typeId2Scope[ self.baseId ];
+               let mut ifScopeList:List<Ast.Scope> = [];
+               foreach ifType in interfaceList {
+                  ifScopeList.insert( unwrap ifType.$scope );
+               }
 
-               let mut scope = new Ast.Scope(
-                  parentScope, true, baseScope ## );
+               let mut scope = new Ast.Scope( parentScope, true, baseScope, ifScopeList );
 
                let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
                foreach itemType in itemTypeInfo {
@@ -1396,7 +1431,7 @@ _DefBuiltinFuncType( [
    {
       "string": {
          "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
-         "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["int"] },
+         "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["int!"] },
          "format": { "arg": [ "str", "..." ], "ret": ["str"] },
          "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
          "gmatch": { "arg": [ "str", "str" ], "ret": ["form", "stem!", "stem!"] },
@@ -1410,6 +1445,7 @@ _DefBuiltinFuncType( [
    },
    {
       "str": {
+         "__attrib": { "inplements": [ "Mapping" ] },
          "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["int!", "int!"] },
          "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["int"] },
          "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
@@ -1461,7 +1497,7 @@ _DefBuiltinFuncType( [
       },
    },
    {
-      "Nilable": {
+      "Nilable<_T>": {
          "val": { "type": [ "method" ], "arg": [ ], "ret": [ "_T!" ] },
       }
    }
@@ -1612,21 +1648,54 @@ fn TransUnit.registBuiltInScope() mut {
    self.scope.addVar( .Global, "__line__", Ast.builtinTypeInt, .IMut, true );
    //self.scope.addVar( .Global, "__func__", Ast.builtinTypeString, false, true );
 
+   fn processCopyAlterList( alterList:List<&Ast.AlternateTypeInfo>,
+                            typeList:&List<&Ast.TypeInfo> )
+   {
+      foreach typeInfo in typeList {
+         alterList.insert( unwrap typeInfo@@@Ast.AlternateTypeInfo );
+      }
+   }
+   
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, className in builtinClassInfo {
          let mut name = className;
          let mut genTypeList:List<&Ast.AlternateTypeInfo> = [];
-         if className.find( "<" ## ) {
-            name = "";
-            apply token of className.gmatch( "[^<>,%s]+" ) {
-               if #name == 0 {
-                  name = token;
-               }
-               else {
-                  genTypeList.insert(
-                     Ast.NormalTypeInfo.createAlternate(
-                        true, #genTypeList + 1,
-                        token, .Pri, self.moduleType ## ) );
+
+         switch className {
+            case "List<T>" {
+               name = "List";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeList.$itemTypeInfoList );
+            }
+            case "Array<T>" {
+               name = "Array";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeArray.$itemTypeInfoList );
+            }
+            case "Set<T>" {
+               name = "Set";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeSet.$itemTypeInfoList );
+            }
+            case "Nilable<_T>" {
+               name = "Nilable";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeBox.$itemTypeInfoList );
+            }
+            default {
+               if className.find( "<" ## ) {
+                  name = "";
+                  apply token of className.gmatch( "[^<>,%s]+" ) {
+                     if #name == 0 {
+                        name = token;
+                     }
+                     else {
+                        genTypeList.insert(
+                           Ast.NormalTypeInfo.createAlternate(
+                              true, #genTypeList + 1,
+                              token, .Pri, self.moduleType ## ) );
+                     }
+                  }
                }
             }
          }
@@ -2519,7 +2588,7 @@ fn TransUnit.processImport( modulePath:str ) mut :
       switch ( classTypeInfo.$kind ) {
          case .Class {
             self.pushClass( true, classTypeInfo.$abstractFlag,
-                            nil, nil, [], true, classTypeInfo.getTxt(##), .Pub ## );
+                            nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
@@ -2719,6 +2788,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
    let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
    self.importModule2ModuleInfoCurrent[ moduleTypeInfo ] =
       moduleInfo.assign( assignName.txt );
+   self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName.txt ) );
 
    let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
    self.scope.add(

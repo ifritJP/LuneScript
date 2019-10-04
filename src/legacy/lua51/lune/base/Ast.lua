@@ -399,6 +399,65 @@ local function isBuiltin( typeId )
    return _moduleObj.builtInTypeIdSet[typeId] ~= nil
 end
 _moduleObj.isBuiltin = isBuiltin
+local ModuleInfoIF = {}
+_moduleObj.ModuleInfoIF = ModuleInfoIF
+function ModuleInfoIF.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfoIF  } )
+end
+function ModuleInfoIF.new(  )
+   local obj = {}
+   ModuleInfoIF.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function ModuleInfoIF:__init(  )
+
+end
+
+local ModuleInfoManager = {}
+_moduleObj.ModuleInfoManager = ModuleInfoManager
+function ModuleInfoManager.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfoManager  } )
+end
+function ModuleInfoManager.new(  )
+   local obj = {}
+   ModuleInfoManager.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function ModuleInfoManager:__init(  )
+
+end
+
+local DummyModuleInfoManager = {}
+setmetatable( DummyModuleInfoManager, { ifList = {ModuleInfoManager,} } )
+_moduleObj.DummyModuleInfoManager = DummyModuleInfoManager
+function DummyModuleInfoManager.new(  )
+   local obj = {}
+   DummyModuleInfoManager.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function DummyModuleInfoManager:__init() 
+end
+function DummyModuleInfoManager:getModuleInfo( typeInfo )
+
+   return nil
+end
+function DummyModuleInfoManager.setmeta( obj )
+  setmetatable( obj, { __index = DummyModuleInfoManager  } )
+end
+function DummyModuleInfoManager:get_instance()
+   return DummyModuleInfoManager.instance
+end
+do
+   DummyModuleInfoManager.instance = DummyModuleInfoManager.new()
+end
+
 
 local SymbolKind = {}
 _moduleObj.SymbolKind = SymbolKind
@@ -623,6 +682,7 @@ function DataOwnerInfo:__init( hasData, symbolInfo )
 end
 
 local Scope = {}
+setmetatable( Scope, { ifList = {ModuleInfoManager,} } )
 _moduleObj.Scope = Scope
 function Scope.new( parent, classFlag, inherit, ifScopeList )
    local obj = {}
@@ -633,6 +693,7 @@ end
 function Scope:__init(parent, classFlag, inherit, ifScopeList) 
    self.scopeId = Scope.seedId
    Scope.seedId = Scope.seedId + 1
+   self.typeInfo2ModuleInfoMap = {}
    self.closureSymMap = {}
    self.closureSym2NumMap = {}
    self.closureSymList = {}
@@ -677,6 +738,25 @@ end
 function Scope:addSymbol( symbolInfo )
 
    self.symbol2SymbolInfoMap[symbolInfo:get_name()] = symbolInfo
+end
+function Scope:addModule( typeInfo, moduleInfo )
+
+   self.typeInfo2ModuleInfoMap[typeInfo] = moduleInfo
+end
+function Scope:getModuleInfo( typeInfo )
+
+   do
+      local moduleInfo = self.typeInfo2ModuleInfoMap[typeInfo]
+      if moduleInfo ~= nil then
+         return moduleInfo
+      end
+   end
+   
+   if self.parent ~= self then
+      return self.parent:getModuleInfo( typeInfo )
+   end
+   
+   return nil
 end
 function Scope.setmeta( obj )
   setmetatable( obj, { __index = Scope  } )
@@ -765,23 +845,6 @@ function TypeData:__init( children )
 end
 function TypeData:get_children()
    return self.children
-end
-
-local ModuleInfoIF = {}
-_moduleObj.ModuleInfoIF = ModuleInfoIF
-function ModuleInfoIF.setmeta( obj )
-  setmetatable( obj, { __index = ModuleInfoIF  } )
-end
-function ModuleInfoIF.new(  )
-   local obj = {}
-   ModuleInfoIF.setmeta( obj )
-   if obj.__init then
-      obj:__init(  )
-   end
-   return obj
-end
-function ModuleInfoIF:__init(  )
-
 end
 
 local CanEvalType = {}

@@ -1253,3 +1253,13 @@ class Test4 {
    }
    func();
 }
+
+{
+   fn func( test:SUB2.Test_class ) {
+      test.func();
+   }
+
+   func( new SUB2.Sub_class( ) );
+}
+print( "\\''\'\"" );
+print( '\\""\"\'' );

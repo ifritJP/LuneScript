@@ -294,3 +294,37 @@ class Test9 extend Super7 {
       self.val = 1;
    }
 }
+{
+   proto class Sub;
+   class Sub extend (Mapping) { // error
+   };
+}
+{
+   class Super {
+   }
+   {
+      proto class Sub;
+      class Sub extend (Mapping) { // error
+      };
+      proto class Sub2;
+      class Sub2 extend Super { // error
+      };
+      proto class Sub3<T>;
+      class Sub3 { // error
+      };
+   }
+   {
+      proto class Sub extend (Mapping);
+      class Sub { // error
+      };
+      proto class Sub2 extend Super;
+      class Sub2 { // error
+      };
+      proto class Sub3;
+      class Sub3<T> { // error
+      };
+      // proto class Sub4<T>;
+      // class Sub4<T> { // error
+      // };
+   }
+}

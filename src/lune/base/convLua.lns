@@ -94,6 +94,8 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut needModuleObj: bool;
    pri let useLuneRuntime: str!;
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
+   pri let mut moduleInfoManager:&Ast.ModuleInfoManager;
+   pri let mut moduleInfoManagerHist:List<&Ast.ModuleInfoManager>;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
@@ -103,6 +105,8 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    {
       super();
       //Util.errorLog( "__init: %s" (mode) );
+      self.moduleInfoManager = unwrap moduleTypeInfo.$scope;
+      self.moduleInfoManagerHist = [];
       self.macroVarSymSet = (@);
       self.needModuleObj = true;
       self.indentQueue = [ 0 ];
@@ -926,6 +930,9 @@ pub override fn convFilter.processSubfile(
 pub override fn convFilter.processBlock(
    node: Nodes.BlockNode, opt: Opt ) mut
 {
+   self.moduleInfoManagerHist.insert( self.moduleInfoManager );
+   self.moduleInfoManager = node.$scope;
+
    let mut word = "";
    switch node.get_blockKind() {
       case .If, .Elseif {
@@ -983,6 +990,9 @@ pub override fn convFilter.processBlock(
    if node.get_blockKind() == .Block {
       self.writeln( "end" );
    }
+
+   self.moduleInfoManager = self.moduleInfoManagerHist[ #self.moduleInfoManagerHist ];
+   self.moduleInfoManagerHist.remove(##);
 };
 
 pub override fn convFilter.processStmtExp(

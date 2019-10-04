@@ -722,7 +722,7 @@ fn TransUnit.analyzePushClass(
 
 
    let classTypeInfo = self.pushClass(
-      classFlag, abstractFlag, baseTypeInfo, interfaceList,
+      classFlag, abstractFlag, baseTypeInfo or Ast.headTypeInfo, interfaceList,
       altTypeList, false, name.txt, accessMode ## );
 
    return nextToken, classTypeInfo;
@@ -2128,7 +2128,7 @@ fn TransUnit.analyzeDeclFunc(
       when! classTypeInfo {
          self.pushClass(
             classTypeInfo.$kind == .Class,
-            classTypeInfo.$abstractFlag, nil, nil, [], false, className,
+            classTypeInfo.$abstractFlag, nil, nil, nil, false, className,
             classTypeInfo.$accessMode ## );
       }
       else {

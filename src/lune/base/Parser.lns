@@ -658,20 +658,23 @@ fn StreamParser.parse() mut : Token[]! {
             let workPattern = '["\'\\]';
             while true {
                let! endIndex = string.find( rawLine, workPattern, workIndex ## ) {
+                  // 文字列の区切り文字がない場合はエラー
                   Util.err( "%s:%d:%d: error: illegal string -- %s"
                             ( self.getStreamName(), self.lineNo, index, rawLine ) );
                };
                let workChar = string.byte( rawLine, endIndex ## );
                if workChar == findChar {
+                  // 対になる区切り文字だった場合は文字列として登録
                   addVal( .Str, rawLine.sub( index, endIndex ), index );
                   searchIndex = endIndex + 1;
                   break;
                }
                elseif workChar == ?\\ {
-                  workIndex = workIndex + 2;
+                  // \ の場合は、次の文字がクオートされるので +2
+                  workIndex = endIndex + 2;
                }
                else {
-                  workIndex = workIndex + 1;
+                  workIndex = endIndex + 1;
                }
             }
          }

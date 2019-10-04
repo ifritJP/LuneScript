@@ -367,6 +367,8 @@ end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer) 
    Nodes.Filter.__init( self)
    
+   self.moduleInfoManager = _lune.unwrap( moduleTypeInfo:get_scope())
+   self.moduleInfoManagerHist = {}
    self.macroVarSymSet = {}
    self.needModuleObj = true
    self.indentQueue = {0}
@@ -1229,6 +1231,8 @@ end
 
 function convFilter:processBlock( node, opt )
 
+   table.insert( self.moduleInfoManagerHist, self.moduleInfoManager )
+   self.moduleInfoManager = node:get_scope()
    local word = ""
    do
       local _switchExp = node:get_blockKind(  )
@@ -1276,6 +1280,8 @@ function convFilter:processBlock( node, opt )
       self:writeln( "end" )
    end
    
+   self.moduleInfoManager = self.moduleInfoManagerHist[#self.moduleInfoManagerHist]
+   table.remove( self.moduleInfoManagerHist )
 end
 
 
@@ -3569,7 +3575,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3244, function (  )
+   Log.log( Log.Level.Info, __func__, 3254, function (  )
    
       return string.format( "code: %s", code)
    end

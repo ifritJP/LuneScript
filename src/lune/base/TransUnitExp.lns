@@ -1957,7 +1957,8 @@ fn TransUnit.analyzeExpField(
          if mode == .Get {
             let moduleType = prefixExpType.getModule();
             if not moduleType.equals( self.moduleType ##) and
-               not self.importModule2ModuleInfoCurrent[ moduleType ] {
+               not self.scope.getModuleInfo( moduleType ) {
+                  //not self.importModule2ModuleInfoCurrent[ moduleType ] {
                   // enum の名前を取得するには、そのモジュールのインポートが必要
                   self.addErrMess( token.pos, "need to import module -- %s"
                                    ( prefixExpType.getModule().getTxt(##) ) );
@@ -2143,7 +2144,8 @@ fn TransUnit.analyzeNewAlge(
       }
 
       if algeTypeInfo.$externalFlag and
-         not self.importModule2ModuleInfoCurrent[ algeTypeInfo.getModule().$srcTypeInfo ]
+         not self.scope.getModuleInfo( algeTypeInfo.getModule().$srcTypeInfo )
+         //not self.importModule2ModuleInfoCurrent[ algeTypeInfo.getModule().$srcTypeInfo ]
       {  
          let fullname = algeTypeInfo.getFullName(
             self.importModule2ModuleInfo, true );
@@ -2903,8 +2905,9 @@ fn TransUnit.analyzeExp(
          
          if! let valInfo = enumTyepInfo.getEnumValInfo( nextToken.txt ) {
             if orgExpectType.$externalFlag and
-               not self.importModule2ModuleInfoCurrent[
-                  orgExpectType.getModule().$srcTypeInfo ]
+               not self.scope.getModuleInfo( orgExpectType.getModule().$srcTypeInfo )
+               //not self.importModule2ModuleInfoCurrent[
+                  //orgExpectType.getModule().$srcTypeInfo ]
             {  
                let fullname = orgExpectType.getFullName(
                   self.importModule2ModuleInfo, true );

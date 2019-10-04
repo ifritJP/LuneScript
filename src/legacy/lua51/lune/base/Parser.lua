@@ -864,10 +864,10 @@ function StreamParser:parse(  )
                   searchIndex = endIndex + 1
                   break
                elseif workChar == 92 then
-                  workIndex = workIndex + 2
+                  workIndex = endIndex + 2
                else
                 
-                  workIndex = workIndex + 1
+                  workIndex = endIndex + 1
                end
                
             end

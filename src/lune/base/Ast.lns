@@ -123,7 +123,30 @@ pub fn isBuiltin( typeId: int ) : bool {
    return builtInTypeIdSet[ typeId ] ~= nil;
 }
 
-pub proto class Scope;
+pub interface ModuleInfoIF {
+   /** import したモジュールを assign したシンボル名 */
+   pub fn get_assignName():str;
+   /** import したモジュールのパス */
+   pub fn get_modulePath():str;
+}
+
+pub interface ModuleInfoManager {
+   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF!;
+}
+
+pub class DummyModuleInfoManager extend (ModuleInfoManager) {
+   pri static let instance:DummyModuleInfoManager {pub};
+   pri fn __init() {
+   }
+   __init {
+      DummyModuleInfoManager.instance = new DummyModuleInfoManager();
+   }
+   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF! {
+      return nil;
+   }
+}
+
+pub proto class Scope extend(ModuleInfoManager);
 
 pub enum SymbolKind {
    /** 型 */
@@ -257,13 +280,12 @@ pub abstract class SymbolInfo {
 }
 
 
-
 pub class DataOwnerInfo {
    pub let hasData:bool;
    pub let symbolInfo: &SymbolInfo;
 }
 
-pub class Scope {
+pub class Scope extend (ModuleInfoManager) {
    pri static let mut seedId:int;
    
    __init {
@@ -292,6 +314,7 @@ pub class Scope {
    pri let mut closureSymMap: Map<int,&SymbolInfo> {pub};
    pri let mut closureSymList: List<&SymbolInfo> {pub};
    pri let mut closureSym2NumMap: Map<&SymbolInfo,int> {pub};
+   pri let mut typeInfo2ModuleInfoMap: Map<&TypeInfo,&ModuleInfoIF>;
    
 
    pub fn __init( parent: Scope!, classFlag: bool,
@@ -299,7 +322,8 @@ pub class Scope {
    {
       self.scopeId = Scope.seedId;
       Scope.seedId = Scope.seedId + 1;
-      
+
+      self.typeInfo2ModuleInfoMap = {};
       self.closureSymMap = {};
       self.closureSym2NumMap = {};
       self.closureSymList = [];
@@ -344,6 +368,20 @@ pub class Scope {
 
    pub fn addSymbol( symbolInfo: SymbolInfo ) mut {
       self.symbol2SymbolInfoMap[ symbolInfo.$name ] = symbolInfo;
+   }
+
+   pub fn addModule( typeInfo:&TypeInfo, moduleInfo:&ModuleInfoIF ) mut {
+      self.typeInfo2ModuleInfoMap[ typeInfo ] = moduleInfo;
+   }
+
+   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF! {
+      if! let moduleInfo = self.typeInfo2ModuleInfoMap[ typeInfo ] {
+         return moduleInfo;
+      }
+      if self.parent ~= self {
+         return self.parent.getModuleInfo( typeInfo );
+      }
+      return nil;
    }
 }
 
@@ -412,11 +450,6 @@ pub class TypeData {
 //    return typeInfo.$scope;
 //    //return typeInfo2ScopeMap[ typeInfo ];
 // }
-
-pub interface ModuleInfoIF {
-   pub fn get_assignName():str;
-   pub fn get_modulePath():str;
-}
 
 pub enum CanEvalType {
    /** 代入(アップキャスト可能な型は代入 OK とする) */
