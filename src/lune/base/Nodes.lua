@@ -229,21 +229,72 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+local SimpleModuleInfoManager = {}
+setmetatable( SimpleModuleInfoManager, { ifList = {Ast.ModuleInfoManager,} } )
+function SimpleModuleInfoManager.new( moduleInfoManager )
+   local obj = {}
+   SimpleModuleInfoManager.setmeta( obj )
+   if obj.__init then obj:__init( moduleInfoManager ); end
+   return obj
+end
+function SimpleModuleInfoManager:__init(moduleInfoManager) 
+   if moduleInfoManager ~= nil then
+      self.moduleInfoManager = moduleInfoManager
+   else
+      self.moduleInfoManager = Ast.DummyModuleInfoManager:get_instance()
+   end
+   
+   self.moduleInfoManagerHist = {}
+end
+function SimpleModuleInfoManager:push( moduleInfoManager )
+
+   table.insert( self.moduleInfoManagerHist, self.moduleInfoManager )
+   self.moduleInfoManager = moduleInfoManager
+end
+function SimpleModuleInfoManager:pop(  )
+
+   self.moduleInfoManager = self.moduleInfoManagerHist[#self.moduleInfoManagerHist]
+   table.remove( self.moduleInfoManagerHist )
+end
+function SimpleModuleInfoManager.setmeta( obj )
+  setmetatable( obj, { __index = SimpleModuleInfoManager  } )
+end
+function SimpleModuleInfoManager:getModuleInfo( ... )
+   return self.moduleInfoManager:getModuleInfo( ... )
+end
+
+
 local Filter = {}
 _moduleObj.Filter = Filter
+function Filter.new( moduleTypeInfo, moduleInfoManager )
+   local obj = {}
+   Filter.setmeta( obj )
+   if obj.__init then obj:__init( moduleTypeInfo, moduleInfoManager ); end
+   return obj
+end
+function Filter:__init(moduleTypeInfo, moduleInfoManager) 
+   self.moduleInfoManager = SimpleModuleInfoManager.new(moduleInfoManager)
+   local function process(  )
+   
+      if moduleTypeInfo ~= nil then
+         return Ast.TypeNameCtrl.new(moduleTypeInfo)
+      end
+      
+      return Ast.defaultTypeNameCtrl
+   end
+   
+   
+   self.typeNameCtrl = process(  )
+end
+function Filter:get_moduleInfoManager(  )
+
+   return self.moduleInfoManager
+end
 function Filter.setmeta( obj )
   setmetatable( obj, { __index = Filter  } )
 end
-function Filter.new(  )
-   local obj = {}
-   Filter.setmeta( obj )
-   if obj.__init then
-      obj:__init(  )
-   end
-   return obj
-end
-function Filter:__init(  )
-
+function Filter:get_typeNameCtrl()
+   return self.typeNameCtrl
 end
 
 local BreakKind = {}
@@ -859,24 +910,25 @@ function ImportNode:canBeStatement(  )
 
    return true
 end
-function ImportNode.new( id, pos, typeList, modulePath, assignName, moduleTypeInfo )
+function ImportNode.new( id, pos, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo )
    local obj = {}
    ImportNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, modulePath, assignName, moduleTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo ); end
    return obj
 end
-function ImportNode:__init(id, pos, typeList, modulePath, assignName, moduleTypeInfo) 
+function ImportNode:__init(id, pos, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['Import']), pos, typeList)
    
    
    self.modulePath = modulePath
    self.assignName = assignName
+   self.symbolInfo = symbolInfo
    self.moduleTypeInfo = moduleTypeInfo
    
 end
-function ImportNode.create( nodeMan, pos, typeList, modulePath, assignName, moduleTypeInfo )
+function ImportNode.create( nodeMan, pos, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo )
 
-   local node = ImportNode.new(nodeMan:nextId(  ), pos, typeList, modulePath, assignName, moduleTypeInfo)
+   local node = ImportNode.new(nodeMan:nextId(  ), pos, typeList, modulePath, assignName, symbolInfo, moduleTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -893,6 +945,9 @@ function ImportNode:get_modulePath()
 end
 function ImportNode:get_assignName()
    return self.assignName
+end
+function ImportNode:get_symbolInfo()
+   return self.symbolInfo
 end
 function ImportNode:get_moduleTypeInfo()
    return self.moduleTypeInfo
@@ -1378,10 +1433,6 @@ end
 
 
 regKind( "Block" )
-function Filter:processBlock( node, opt )
-
-end
-
 
 function NodeManager:getBlockNodeList(  )
 
@@ -9842,6 +9893,17 @@ function NodeManager:MultiTo1( node )
    end
    
    return node
+end
+
+function Filter:processBlockSub( node, opt )
+
+end
+
+function Filter:processBlock( node, opt )
+
+   self.moduleInfoManager:push( node:get_scope() )
+   self:processBlockSub( node, opt )
+   self.moduleInfoManager:pop(  )
 end
 
 return _moduleObj

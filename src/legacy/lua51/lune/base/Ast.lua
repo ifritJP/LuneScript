@@ -647,6 +647,30 @@ AccessFromClosuer.Write = 2
 AccessFromClosuer._val2NameMap[2] = 'Write'
 AccessFromClosuer.__allList[3] = AccessFromClosuer.Write
 
+local TypeNameCtrl = {}
+_moduleObj.TypeNameCtrl = TypeNameCtrl
+function TypeNameCtrl.setmeta( obj )
+  setmetatable( obj, { __index = TypeNameCtrl  } )
+end
+function TypeNameCtrl.new( moduleTypeInfo )
+   local obj = {}
+   TypeNameCtrl.setmeta( obj )
+   if obj.__init then
+      obj:__init( moduleTypeInfo )
+   end
+   return obj
+end
+function TypeNameCtrl:__init( moduleTypeInfo )
+
+   self.moduleTypeInfo = moduleTypeInfo
+end
+function TypeNameCtrl:get_moduleTypeInfo()
+   return self.moduleTypeInfo
+end
+function TypeNameCtrl:set_moduleTypeInfo( moduleTypeInfo )
+   self.moduleTypeInfo = moduleTypeInfo
+end
+
 local SymbolInfo = {}
 _moduleObj.SymbolInfo = SymbolInfo
 function SymbolInfo.new(  )
@@ -928,13 +952,13 @@ function TypeInfo:get_rawTxt(  )
 
    return ""
 end
-function TypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function TypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
    return ""
 end
-function TypeInfo:getTxt( fullName, importInfo, localFlag )
+function TypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
 function TypeInfo:canEvalWith( other, canEvalType, alt2type )
 
@@ -1064,43 +1088,9 @@ function TypeInfo.isMut( typeInfo )
 
    return isMutable( typeInfo:get_mutMode() )
 end
-function TypeInfo:getParentFullName( importInfo, localFlag )
+function TypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
 
-   local typeInfo = self
-   local name = ""
-   local infoMap = importInfo
-   if  nil == infoMap then
-      local _infoMap = infoMap
-   
-      infoMap = {}
-   end
-   
-   while not infoMap[typeInfo] do
-      typeInfo = typeInfo:get_parentInfo()
-      if typeInfo == typeInfo:get_parentInfo() then
-         break
-      end
-      
-      local txt = typeInfo:get_rawTxt()
-      if localFlag then
-         do
-            local moduleInfo = infoMap[typeInfo]
-            if moduleInfo ~= nil then
-               txt = moduleInfo:get_assignName()
-            else
-               if typeInfo:isModule(  ) then
-                  break
-               end
-               
-            end
-         end
-         
-      end
-      
-      name = txt .. "." .. name
-   end
-   
-   return name
+   return typeNameCtrl:getParentFullName( self, importInfo, localFlag )
 end
 function TypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
@@ -1153,6 +1143,56 @@ function TypeInfo:get_typeData()
    return self.typeData
 end
 
+function TypeNameCtrl:getModuleName( workTypeInfo, name, moduleInfoMan )
+
+   do
+      local moduleInfo = moduleInfoMan:getModuleInfo( workTypeInfo )
+      if moduleInfo ~= nil then
+         local txt = moduleInfo:get_assignName()
+         return txt .. "." .. name
+      else
+         if self.moduleTypeInfo ~= workTypeInfo then
+            return workTypeInfo:get_rawTxt() .. "." .. name
+         end
+         
+      end
+   end
+   
+   return name
+end
+
+function TypeNameCtrl:getParentFullName( typeInfo, importInfo, localFlag )
+
+   local workTypeInfo = typeInfo
+   local name = ""
+   local moduleInfoMan = importInfo
+   if  nil == moduleInfoMan then
+      local _moduleInfoMan = moduleInfoMan
+   
+      moduleInfoMan = DummyModuleInfoManager:get_instance()
+   end
+   
+   while true do
+      workTypeInfo = workTypeInfo:get_parentInfo()
+      local txt = workTypeInfo:get_rawTxt()
+      if workTypeInfo == workTypeInfo:get_parentInfo() then
+         break
+      end
+      
+      if localFlag then
+         if workTypeInfo:isModule(  ) then
+            name = self:getModuleName( workTypeInfo, name, moduleInfoMan )
+            break
+         end
+         
+      end
+      
+      name = txt .. "." .. name
+   end
+   
+   return name
+end
+
 local function getScope( typeInfo )
 
    return typeInfo:get_scope()
@@ -1169,6 +1209,9 @@ end
 _moduleObj.isExtId = isExtId
 local headTypeInfo = TypeInfo.new(_moduleObj.rootScope)
 _moduleObj.headTypeInfo = headTypeInfo
+
+local defaultTypeNameCtrl = TypeNameCtrl.new(_moduleObj.headTypeInfo)
+_moduleObj.defaultTypeNameCtrl = defaultTypeNameCtrl
 
 function TypeInfo:hasBase(  )
 
@@ -1472,9 +1515,9 @@ end
 local AliasTypeInfo = {}
 setmetatable( AliasTypeInfo, { __index = TypeInfo } )
 _moduleObj.AliasTypeInfo = AliasTypeInfo
-function AliasTypeInfo:getTxt( fullName, importInfo, localFlag )
+function AliasTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self.rawTxt, fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag )
 end
 function AliasTypeInfo:serialize( stream, validChildrenSet )
 
@@ -2145,11 +2188,11 @@ function NilTypeInfo:isModule(  )
 
    return false
 end
-function NilTypeInfo:getTxt( fullName, importInfo, localFlag )
+function NilTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function NilTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function NilTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
    return "nil"
 end
@@ -2197,9 +2240,9 @@ function NilTypeInfo:get_mutMode(  )
 
    return MutMode.IMut
 end
-function NilTypeInfo:getParentFullName( importInfo, localFlag )
+function NilTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
 
-   return "nil"
+   return ""
 end
 function NilTypeInfo.setmeta( obj )
   setmetatable( obj, { __index = NilTypeInfo  } )
@@ -2423,13 +2466,13 @@ function NilableTypeInfo:get_nilable(  )
 
    return true
 end
-function NilableTypeInfo:getTxt( fullName, importInfo, localFlag )
+function NilableTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function NilableTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function NilableTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
-   return self.nonnilableType:getTxtWithRaw( raw, fullName, importInfo, localFlag ) .. "!"
+   return self.nonnilableType:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng_with( raw )
 
@@ -2649,11 +2692,11 @@ function AlternateTypeInfo:get_parentInfo(  )
 
    return self.moduleTypeInfo
 end
-function AlternateTypeInfo:getTxt( fullName, importInfo, localFlag )
+function AlternateTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function AlternateTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function AlternateTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
    return self.txt
 end
@@ -2830,7 +2873,7 @@ function AlternateTypeInfo:get_mutMode(  )
 
    return MutMode.IMut
 end
-function AlternateTypeInfo:getParentFullName( importInfo, localFlag )
+function AlternateTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
 
    return ""
 end
@@ -2908,13 +2951,13 @@ function BoxTypeInfo:get_nilable(  )
 
    return false
 end
-function BoxTypeInfo:getTxt( fullName, importInfo, localFlag )
+function BoxTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function BoxTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function BoxTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
-   return "Nilable<" .. self.boxingType:getTxtWithRaw( raw, fullName, importInfo, localFlag ) .. ">"
+   return "Nilable<" .. self.boxingType:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag ) .. ">"
 end
 function BoxTypeInfo:get_display_stirng(  )
 
@@ -3407,13 +3450,13 @@ _moduleObj.isGenericType = isGenericType
 local ModifierTypeInfo = {}
 setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModifierTypeInfo = ModifierTypeInfo
-function ModifierTypeInfo:getTxt( fullName, importInfo, localFlag )
+function ModifierTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function ModifierTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function ModifierTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
-   local txt = self.srcTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+   local txt = self.srcTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
    if not isMutable( self.mutMode ) then
       txt = "&" .. txt
    end
@@ -3644,11 +3687,11 @@ function ModuleTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
 end
-function ModuleTypeInfo:getTxt( fullName, importInfo, localFlag )
+function ModuleTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function ModuleTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+function ModuleTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
 
    return rawTxt
 end
@@ -3823,11 +3866,11 @@ function EnumTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
 end
-function EnumTypeInfo:getTxt( fullName, importInfo, localFlag )
+function EnumTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function EnumTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+function EnumTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
 
    return rawTxt
 end
@@ -3974,11 +4017,11 @@ function AlgeTypeInfo:getParentId(  )
 
    return self.parentInfo:get_typeId()
 end
-function AlgeTypeInfo:getTxt( fullName, importInfo, localFlag )
+function AlgeTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function AlgeTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+function AlgeTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
 
    return rawTxt
 end
@@ -4148,15 +4191,15 @@ function NormalTypeInfo:get_baseId(  )
 
    return self.baseTypeInfo:get_typeId() or _moduleObj.rootTypeId
 end
-function NormalTypeInfo:getTxt( fullName, importInfo, localFlag )
+function NormalTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function NormalTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
    local parentTxt = ""
-   if fullName then
-      parentTxt = self:getParentFullName( importInfo, localFlag )
+   if typeNameCtrl ~= nil then
+      parentTxt = self:getParentFullName( typeNameCtrl, importInfo, localFlag )
    end
    
    if #self.itemTypeInfoList > 0 then
@@ -4166,7 +4209,7 @@ function NormalTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
             txt = txt .. ","
          end
          
-         txt = txt .. typeInfo:getTxt( fullName, importInfo, localFlag )
+         txt = txt .. typeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
       end
       
       return parentTxt .. txt .. ">"
@@ -5030,18 +5073,18 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
    return work
 end
 
-function DDDTypeInfo:getTxt( fullName, importInfo, localFlag )
+function DDDTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( "...", fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( "...", typeNameCtrl, importInfo, localFlag )
 end
 
-function DDDTypeInfo:getTxtWithRaw( raw, fullName, importInfo, localFlag )
+function DDDTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
    if self.typeInfo == _moduleObj.builtinTypeStem_ then
       return "..."
    end
    
-   local txt = self.typeInfo:getTxt( fullName, importInfo, localFlag )
+   local txt = self.typeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
    return "...<" .. txt .. ">"
 end
 
@@ -5125,11 +5168,11 @@ function AbbrTypeInfo:isModule(  )
 
    return false
 end
-function AbbrTypeInfo:getTxt( fullName, importInfo, localFlag )
+function AbbrTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), fullName, importInfo, localFlag )
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
 end
-function AbbrTypeInfo:getTxtWithRaw( rawTxt, fullName, importInfo, localFlag )
+function AbbrTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
 
    return rawTxt
 end
@@ -5484,10 +5527,10 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          local workDstType = dstTypeList[dstIndex]
          local matchResult = MatchType.Match
          if not workDstType:canEvalWith( workExpType, CanEvalType.SetOp, alt2type ) then
-            local message = string.format( "exp(%d) type mismatch %s <- %s", dstIndex, workDstType:getTxt( true ), workExpType:getTxt( true ))
+            local message = string.format( "exp(%d) type mismatch %s <- %s", dstIndex, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workExpType:getTxt( _moduleObj.defaultTypeNameCtrl ))
             return MatchType.Error, message
          elseif workExpType == _moduleObj.builtinTypeAbbrNone then
-            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", workDstType:getTxt( true )) )
+            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", workDstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
          end
          
          if matchResult ~= MatchType.Match then
@@ -5517,12 +5560,12 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          end
          
          if not dstType:canEvalWith( checkType, CanEvalType.SetOp, alt2type ) then
-            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
+            return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
          end
          
          if warnForFollowSrcIndex ~= nil then
             if warnForFollowSrcIndex <= srcIndex then
-               local workMess = string.format( "use '**' at arg(%d). %s <- %s", srcIndex, dstType:getTxt( true ), expType:getTxt( true ))
+               local workMess = string.format( "use '**' at arg(%d). %s <- %s", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                return MatchType.Warn, workMess
             end
             
@@ -5544,7 +5587,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          if #dstTypeList == index then
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                if not dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type ) then
-                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                end
                
                if not allowDstShort and #dstTypeList < #expTypeList then
@@ -5567,7 +5610,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index then
-                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                   return MatchType.Warn, workMess
                end
                
@@ -5597,7 +5640,7 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
             
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index then
-                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                   return MatchType.Warn, workMess
                end
                
@@ -5608,12 +5651,12 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          else
           
             if not dstType:canEvalWith( expType, CanEvalType.SetOp, alt2type ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
             end
             
             if warnForFollowSrcIndex ~= nil then
                if warnForFollowSrcIndex <= index then
-                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( true ), expType:getTxt( true ))
+                  local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                   return MatchType.Warn, workMess
                end
                
@@ -5630,10 +5673,10 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
          else
           
             if not dstType:canEvalWith( _moduleObj.builtinTypeNil, CanEvalType.SetOp, alt2type ) then
-               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( true ))
+               return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
             end
             
-            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( true )) )
+            return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of %s.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
          end
          
       end
@@ -6027,9 +6070,13 @@ function NormalTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
    
 end
 
-function TypeInfo:getFullName( importInfo, localFlag )
+function TypeInfo:getFullName( typeNameCtrl, importInfo, localFlag )
 
-   return self:getParentFullName( importInfo, localFlag ) .. self:get_rawTxt()
+   if localFlag and self:isModule(  ) then
+      return typeNameCtrl:getModuleName( self, "", importInfo )
+   end
+   
+   return self:getParentFullName( typeNameCtrl, importInfo, localFlag ) .. self:get_rawTxt()
 end
 
 local ProcessInfo = {}

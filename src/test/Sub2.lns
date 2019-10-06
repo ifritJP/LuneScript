@@ -211,3 +211,7 @@ pub class Sub_class extend Test_class {
       print( __func__ );
    }
 }
+
+pub fn testPrint() {
+   print( __func__ );
+}

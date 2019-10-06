@@ -505,23 +505,20 @@ ProcessMode._val2NameMap[6] = 'Immediate'
 ProcessMode.__allList[7] = ProcessMode.Immediate
 
 local ModuleCtrl = {}
-function ModuleCtrl.new(  )
+function ModuleCtrl.new( typeNameCtrl, moduleInfoManager )
    local obj = {}
    ModuleCtrl.setmeta( obj )
-   if obj.__init then obj:__init(  ); end
+   if obj.__init then obj:__init( typeNameCtrl, moduleInfoManager ); end
    return obj
 end
-function ModuleCtrl:__init() 
-   self.typeInfo2ModuleName = {}
-end
-function ModuleCtrl:add( moduleTypeInfo, moduleInfo )
-
-   self.typeInfo2ModuleName[moduleTypeInfo] = moduleInfo
+function ModuleCtrl:__init(typeNameCtrl, moduleInfoManager) 
+   self.typeNameCtrl = typeNameCtrl
+   self.moduleInfoManager = moduleInfoManager
 end
 function ModuleCtrl:getFullName( typeInfo )
 
    typeInfo = typeInfo:get_srcTypeInfo()
-   local workName = typeInfo:getFullName( self.typeInfo2ModuleName, true )
+   local workName = typeInfo:getFullName( self.typeNameCtrl, self.moduleInfoManager, true )
    local fullName = string.format( "%s", (workName:gsub( "[&@]", "" ):gsub( "%.", "_" ) ))
    if Ast.isPubToExternal( typeInfo:get_accessMode() ) then
       return fullName
@@ -820,7 +817,7 @@ function convFilter.new( streamName, stream, ast )
    return obj
 end
 function convFilter:__init(streamName, stream, ast) 
-   Nodes.Filter.__init( self)
+   Nodes.Filter.__init( self,ast:get_moduleTypeInfo(), ast:get_moduleTypeInfo():get_scope())
    
    self.scopeMgr = ScopeMgr.new()
    self.processingNode = nil
@@ -848,7 +845,7 @@ function convFilter:__init(streamName, stream, ast)
    self.pubEnumId2EnumTypeInfo = {}
    self.pubAlgeId2AlgeTypeInfo = {}
    self.needIndent = false
-   self.moduleCtrl = ModuleCtrl.new()
+   self.moduleCtrl = ModuleCtrl.new(self:get_typeNameCtrl(), self:get_moduleInfoManager())
    self:pushRoutine( ast:get_moduleTypeInfo() )
 end
 function convFilter:pushStream(  )
@@ -961,7 +958,6 @@ function convFilter:processImport( node, opt )
    local module = node:get_modulePath(  )
    local moduleName = module:gsub( ".*%.", "" )
    moduleName = node:get_assignName()
-   self.moduleCtrl:add( node:get_moduleTypeInfo(), ModuleInfo.new(moduleName, module) )
    self:write( string.format( "local %s = _lune.loadModule( '%s' )", moduleName, module) )
 end
 
@@ -1161,7 +1157,7 @@ local function getAccessPrimValFromStem( dddFlag, typeInfo, index )
    return txt
 end
 
-function convFilter:processBlock( node, opt )
+function convFilter:processBlockSub( node, opt )
 
    local stemNum, varNum = self.scopeMgr:setupScopeParam( node:get_scope() )
    local scope = node:get_scope()
@@ -3555,7 +3551,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
                      end
                   end
                   
-                  self:writeln( string.format( "; // %s", argType:getTxt( true )) )
+                  self:writeln( string.format( "; // %s", argType:getTxt( self:get_typeNameCtrl() )) )
                end
                
             end
@@ -4146,7 +4142,7 @@ function convFilter:processAndOr( node, opTxt, parent )
    
    if firstFlag then
       self:write( ")" )
-      print( "hoge:", node:get_expType():getTxt( true ) )
+      print( "hoge:", node:get_expType():getTxt( self:get_typeNameCtrl() ) )
       if not isStemType( node:get_expType() ) then
          self:accessPrimValFromStem( false, node:get_expType(), 0 )
       end

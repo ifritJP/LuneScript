@@ -25,9 +25,19 @@ test(); // test は form の型名なので、コールできないから本来�
 - [ ] let val:List<int>!;  
       val or [] が List<int> にならない。 List<int>!;  になってしまう。
 
+- [ ] 型指定アクセッサのアクセス制御判定が意図した動作になっていない。
+  pub let val:Sub {pub:Super}; のこのとき、 
+  Sub は pub でなくても Super が pub なら OK のはずが、 
+  Sub が pub にないとエラーになってしまう。
+  
+- [ ] override のときメドッドの mut の一致を確認してない？
+  
+- [ ] fn ():int { return 1; } (); が実行時エラーする。
   
 * 機能
 
+- [ ] override 禁止を追加する
+  
 - [ ] 独立したスコープを宣言できるようにする
   
 - [ ] クロージャと普通の関数とで、関数の型を変える。

@@ -665,6 +665,7 @@ function TransUnit.new( moduleId, importModuleInfo, macroEval, analyzeModule, mo
    return obj
 end
 function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, mode, pos, targetLuaVer, ctrl_info) 
+   self.typeNameCtrl = Ast.defaultTypeNameCtrl
    self.protoClassMap = {}
    self.analyzingStateQueue = {}
    self.macroCallLineNo = 0
@@ -680,7 +681,6 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.has__func__Symbol = {}
    self.nodeManager = Nodes.NodeManager.new()
    self.importModuleName2ModuleInfo = {}
-   self.importModule2ModuleInfoCurrent = {}
    self.importModule2ModuleInfo = {}
    self.macroScope = nil
    self.validMutControl = true
@@ -830,18 +830,18 @@ function TransUnit:pushClass( classFlag, abstractFlag, baseInfo, interfaceList, 
       if _exp ~= nil then
          typeInfo = _exp
          if typeInfo:get_abstractFlag() ~= abstractFlag then
-            self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt( true )) )
+            self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt( self.typeNameCtrl )) )
          end
          
          if typeInfo:get_accessMode() ~= accessMode then
-            self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", typeInfo:getTxt( true ), Ast.AccessMode:_getTxt( accessMode)
+            self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", typeInfo:getTxt( self.typeNameCtrl ), Ast.AccessMode:_getTxt( accessMode)
             , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
             ) )
          end
          
          if baseInfo ~= nil then
             if typeInfo:get_baseTypeInfo() ~= baseInfo then
-               self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) base class(%s) for prototpye base class(%s)", typeInfo:getTxt( true ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
+               self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) base class(%s) for prototpye base class(%s)", typeInfo:getTxt( self.typeNameCtrl ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
             end
             
          end
@@ -851,14 +851,14 @@ function TransUnit:pushClass( classFlag, abstractFlag, baseInfo, interfaceList, 
             if #protoList == #typeList then
                for index, protoType in pairs( protoList ) do
                   if protoType ~= typeList[index] then
-                     self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) %s(%s) for prototpye %s(%s)", typeInfo:getTxt( true ), message, typeList[index]:getTxt( true ), message, protoType:getTxt(  )) )
+                     self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) %s(%s) for prototpye %s(%s)", typeInfo:getTxt( self.typeNameCtrl ), message, typeList[index]:getTxt( self.typeNameCtrl ), message, protoType:getTxt(  )) )
                   end
                   
                end
                
             else
              
-               self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) %s(%d) for prototpye %s(%d)", typeInfo:getTxt( true ), message, #typeList, message, #protoList) )
+               self:addErrMess( self.currentToken.pos, string.format( "mismatch class(%s) %s(%d) for prototpye %s(%d)", typeInfo:getTxt( self.typeNameCtrl ), message, #typeList, message, #protoList) )
             end
             
          end
@@ -3018,7 +3018,7 @@ function TransUnit:expandMacroVal( token )
             
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
             local enumTypeInfo = _lune.unwrap( _lune.__Cast( macroVal.typeInfo, 3, Ast.EnumTypeInfo ))
-            local fullname = macroVal.typeInfo:getFullName( self.importModule2ModuleInfoCurrent, true )
+            local fullname = macroVal.typeInfo:getFullName( self.typeNameCtrl, self.scope, true )
             local nameList = {}
             for name in fullname:gmatch( "[^%.]+" ) do
                table.insert( nameList, name )
@@ -3477,11 +3477,11 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
 end
 
 function TransUnit:processImport( modulePath )
-   local __func__ = 'TransUnit.processImport'
+   local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2336, function (  )
+   Log.log( Log.Level.Info, __func__, 2337, function (  )
    
-      return string.format( "%s start", modulePath)
+      return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end
     )
    
@@ -3495,7 +3495,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2347, function (  )
+               Log.log( Log.Level.Info, __func__, 2349, function (  )
                
                   return string.format( "%s already", modulePath)
                end
@@ -3526,7 +3526,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2367, function (  )
+   Log.log( Log.Level.Info, __func__, 2369, function (  )
    
       return string.format( "%s processing", modulePath)
    end
@@ -3882,7 +3882,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2738, function (  )
+   Log.log( Log.Level.Info, __func__, 2740, function (  )
    
       return string.format( "%s complete", modulePath)
    end
@@ -3922,12 +3922,11 @@ function TransUnit:analyzeImport( token )
    end
    
    local moduleTypeInfo = _lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId])
-   self.importModule2ModuleInfoCurrent[moduleTypeInfo] = moduleInfo:assign( assignName.txt )
    self.scope:addModule( moduleTypeInfo, moduleInfo:assign( assignName.txt ) )
    local moduleSymbolKind = _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind ))
-   self.scope:add( moduleSymbolKind, false, false, assignName.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+   local moduleSymbolInfo = self.scope:add( moduleSymbolKind, false, false, assignName.txt, moduleTypeInfo, Ast.AccessMode.Local, true, metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
    self:checkToken( nextToken, ";" )
-   return Nodes.ImportNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, modulePath, assignName.txt, moduleTypeInfo )
+   return Nodes.ImportNode.create( self.nodeManager, token.pos, {Ast.builtinTypeNone}, modulePath, assignName.txt, moduleSymbolInfo, moduleTypeInfo )
 end
 
 function TransUnit:analyzeSubfile( token )
@@ -4740,6 +4739,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    
    self.moduleScope = self.scope
    self.moduleType = moduleTypeInfo
+   self.typeNameCtrl = Ast.TypeNameCtrl.new(moduleTypeInfo)
    self.parser = parser
    local ast
    
@@ -6519,7 +6519,7 @@ function TransUnit:checkLiteralEmptyCollection( pos, symbolName, expType )
 
    for __index, itemType in pairs( expType:get_itemTypeInfoList() ) do
       if itemType == Ast.builtinTypeNone then
-         self:addErrMess( pos, string.format( "must set the item type of Collection. -- %s:%s", symbolName, expType:get_srcTypeInfo():getTxt( true )) )
+         self:addErrMess( pos, string.format( "must set the item type of Collection. -- %s:%s", symbolName, expType:get_srcTypeInfo():getTxt( self.typeNameCtrl )) )
          break
       end
       
@@ -6624,7 +6624,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                end
                
                if not argType:equals( Ast.builtinTypeEmpty ) and not argType:canEvalWith( checkType, Ast.CanEvalType.SetOp, {} ) then
-                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s) <- %s", subIndex, argType:getTxt( true ), dddItemType:getTxt(  )) )
+                  self:addErrMess( firstPos, string.format( "unmatch value type (index = %d) %s) <- %s", subIndex, argType:getTxt( self.typeNameCtrl ), dddItemType:getTxt(  )) )
                end
                
                table.insert( expTypeList, checkType )
@@ -6663,7 +6663,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
                
                Ast.CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2typeMap )
                if not varType:equals( Ast.builtinTypeEmpty ) and not varType:canEvalWith( expTypeInfo, Ast.CanEvalType.SetOp, alt2typeMap ) and not (unwrapFlag and expTypeInfo:equals( Ast.builtinTypeNil ) ) then
-                  self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s", index, varType:getTxt( true ), expTypeInfo:getTxt( true )) )
+                  self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- %s", index, varType:getTxt( self.typeNameCtrl ), expTypeInfo:getTxt( self.typeNameCtrl )) )
                end
                
                if varType == Ast.builtinTypeBox then
@@ -6715,7 +6715,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       for index, varType in pairs( typeInfoList ) do
          if index > #expTypeList then
             if not varType:get_nilable() then
-               self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- nil", index, varType:getTxt( true )) )
+               self:addErrMess( firstPos, string.format( "unmatch value type (index:%d) %s <- nil", index, varType:getTxt( self.typeNameCtrl )) )
             end
             
          end
@@ -8323,10 +8323,10 @@ function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
    end
    
    if castType:canEvalWith( expType, Ast.CanEvalType.SetOp, {} ) then
-      self:addWarnMess( castTypeNode:get_pos(), string.format( "This cast isn't need. (%s <- %s)", castType:getTxt( true ), expType:getTxt( true )) )
+      self:addWarnMess( castTypeNode:get_pos(), string.format( "This cast isn't need. (%s <- %s)", castType:getTxt( self.typeNameCtrl ), expType:getTxt( self.typeNameCtrl )) )
    elseif not expType:canEvalWith( castType, Ast.CanEvalType.SetOp, {} ) then
       if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) then
-         self:addErrMess( castTypeNode:get_pos(), string.format( "This type can't cast. (%s <- %s)", castType:getTxt( true ), expType:getTxt( true )) )
+         self:addErrMess( castTypeNode:get_pos(), string.format( "This type can't cast. (%s <- %s)", castType:getTxt( self.typeNameCtrl ), expType:getTxt( self.typeNameCtrl )) )
       end
       
    end
@@ -8765,7 +8765,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       do
          local _switchExp = prefixExpType:get_kind(  )
          if _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Alge then
-            self:addErrMess( firstToken.pos, string.format( "%s does not support $.", prefixExpType:getTxt( false )) )
+            self:addErrMess( firstToken.pos, string.format( "%s does not support $.", prefixExpType:getTxt( nil )) )
          end
       end
       
@@ -8977,7 +8977,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          end
          
          if algeTypeInfo:get_externalFlag() and not self.scope:getModuleInfo( algeTypeInfo:getModule(  ):get_srcTypeInfo() ) then
-            local fullname = algeTypeInfo:getFullName( self.importModule2ModuleInfo, true )
+            local fullname = algeTypeInfo:getFullName( self.typeNameCtrl, self.scope, true )
             self:addErrMess( firstToken.pos, string.format( "This module not import -- %s", fullname) )
          end
          
@@ -9333,13 +9333,13 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                      
                   else
                    
-                     self:addErrMess( nextToken.pos, string.format( "no numeric type '%s' or '%s'", exp1Type:getTxt( true ), exp2Type:getTxt( true )) )
+                     self:addErrMess( nextToken.pos, string.format( "no numeric type '%s' or '%s'", exp1Type:getTxt( self.typeNameCtrl ), exp2Type:getTxt( self.typeNameCtrl )) )
                   end
                   
                   retType = Ast.builtinTypeBool
                elseif _switchExp == "~=" or _switchExp == "==" then
                   if (not exp1Type:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) and not exp2Type:canEvalWith( exp1Type, Ast.CanEvalType.SetOp, {} ) ) then
-                     self:addErrMess( nextToken.pos, string.format( "not compatible type '%s' or '%s'", exp1Type:getTxt( true ), exp2Type:getTxt( true )) )
+                     self:addErrMess( nextToken.pos, string.format( "not compatible type '%s' or '%s'", exp1Type:getTxt( self.typeNameCtrl ), exp2Type:getTxt( self.typeNameCtrl )) )
                   end
                   
                   do
@@ -9660,7 +9660,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
                local valInfo = enumTyepInfo:getEnumValInfo( nextToken.txt )
                if valInfo ~= nil then
                   if orgExpectType:get_externalFlag() and not self.scope:getModuleInfo( orgExpectType:getModule(  ):get_srcTypeInfo() ) then
-                     local fullname = orgExpectType:getFullName( self.importModule2ModuleInfo, true )
+                     local fullname = orgExpectType:getFullName( self.typeNameCtrl, self.scope, true )
                      self:addErrMess( token.pos, string.format( "This module not import -- %s", fullname) )
                   end
                   

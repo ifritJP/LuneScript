@@ -69,7 +69,6 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut stream: oStream;
    pri let mut metaStream: oStream;
    pri let mut outMetaFlag: bool;
-   pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,ModuleInfo>;
    pri let convMode: ConvMode;
    pri let inMacro: bool;
    pri let mut indentQueue: List<int>;
@@ -94,8 +93,6 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut needModuleObj: bool;
    pri let useLuneRuntime: str!;
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
-   pri let mut moduleInfoManager:&Ast.ModuleInfoManager;
-   pri let mut moduleInfoManagerHist:List<&Ast.ModuleInfoManager>;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
@@ -103,10 +100,8 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
                   moduleSymbolKind: Ast.SymbolKind, useLuneRuntime: str!,
                   targetLuaVer:&LuaVer.LuaVerInfo )
    {
-      super();
+      super(moduleTypeInfo, moduleTypeInfo.$scope);
       //Util.errorLog( "__init: %s" (mode) );
-      self.moduleInfoManager = unwrap moduleTypeInfo.$scope;
-      self.moduleInfoManagerHist = [];
       self.macroVarSymSet = (@);
       self.needModuleObj = true;
       self.indentQueue = [ 0 ];
@@ -116,7 +111,6 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       self.stream = stream;
       self.metaStream = metaStream;
       self.outMetaFlag = false;
-      self.typeInfo2ModuleName = {};
       self.convMode = convMode;
       self.inMacro = inMacro;
       self.curLineNo = 1;
@@ -139,13 +133,14 @@ class convFilter extend Nodes.Filter<Opt> (oStream) {
       return 0;
    }
 
-   fn getFullName( typeInfo:&Ast.TypeInfo ): str {
-      let mut enumName = typeInfo.getFullName( self.typeInfo2ModuleName, true );
+   fn getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
+      let mut enumName = typeInfo.getFullName(
+         self.$typeNameCtrl, self.$moduleInfoManager, localFlag );
       return "%s" ( (enumName.gsub( "&", "" )) );
    }
 
-   fn getCanonicalName( typeInfo:&Ast.TypeInfo ): str {
-      return self.getFullName( typeInfo );
+   fn getFullName( typeInfo:&Ast.TypeInfo ): str {
+      return self.getCanonicalName( typeInfo, true );
    }
 
    pub fn close() mut {
@@ -235,8 +230,6 @@ pub override fn convFilter.processImport(
    let module = node.get_modulePath();
    let mut moduleName = module.gsub( ".*%.", "" );
    moduleName = node.$assignName;
-   self.typeInfo2ModuleName[ node.$moduleTypeInfo ] =
-      new ModuleInfo( moduleName, module );
    self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
    //if self.convMode == "exe" or self.convMode == "ast" {
    // if self.convMode == .Exec {
@@ -847,7 +840,9 @@ pub override fn convFilter.processRoot(
       self.writeln( "local _moduleObj = {}" );
    }
    self.writeln(
-      "local __mod__ = '%s'" (node.$moduleTypeInfo.getFullName({} ##)) );
+      "local __mod__ = '%s'"
+      (node.$moduleTypeInfo.getFullName(
+         self.$typeNameCtrl, self.$moduleInfoManager ##)) );
 
    let luneSymbol = "_lune%d" (Ver.luaModVersion);
    
@@ -927,12 +922,9 @@ pub override fn convFilter.processSubfile(
 }
 
 
-pub override fn convFilter.processBlock(
+pub override fn convFilter.processBlockSub(
    node: Nodes.BlockNode, opt: Opt ) mut
 {
-   self.moduleInfoManagerHist.insert( self.moduleInfoManager );
-   self.moduleInfoManager = node.$scope;
-
    let mut word = "";
    switch node.get_blockKind() {
       case .If, .Elseif {
@@ -990,9 +982,6 @@ pub override fn convFilter.processBlock(
    if node.get_blockKind() == .Block {
       self.writeln( "end" );
    }
-
-   self.moduleInfoManager = self.moduleInfoManagerHist[ #self.moduleInfoManagerHist ];
-   self.moduleInfoManagerHist.remove(##);
 };
 
 pub override fn convFilter.processStmtExp(
@@ -1747,13 +1736,10 @@ pub override fn convFilter.processExpNew(
 };
 
 fn convFilter.process__func__symbol(
-   has__func__Symbol:bool, classType:&Ast.TypeInfo, mut funcName:str ) mut
+   has__func__Symbol:bool, parentType:&Ast.TypeInfo, mut funcName:str ) mut
 {
    if has__func__Symbol {
-      let mut nameSpace = "";
-      if classType ~= Ast.headTypeInfo {
-         nameSpace = self.getFullName( classType );
-      }
+      let mut nameSpace = self.getCanonicalName( parentType, false );
       if funcName == "" {
          funcName = "<anonymous>";
       }
@@ -2485,7 +2471,7 @@ pub override fn convFilter.processExpCall(
       fn processEnumAlge() {
          wroteFuncFlag = true;
          let fieldExpType = fieldNode.$expType;
-         let canonicalName = self.getCanonicalName( prefixType );
+         let canonicalName = self.getFullName( prefixType );
          let mut methodName = fieldNode.$field.txt;
          let mut delimit = ":";
          if methodName == "get__txt" {

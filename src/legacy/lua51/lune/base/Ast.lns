@@ -72,6 +72,7 @@ pub let rootTypeId = idProv.getNewId();
 pub proto class TypeInfo;
 pub proto abstract class SymbolInfo;
 
+
 //pub let mut typeInfoKind:Map<str,TypeInfo> = {};
 pub let mut sym2builtInTypeMap:Map<str,SymbolInfo> = {};
 pub let mut builtInTypeIdSet:Map<int,&TypeInfo> = {};
@@ -220,6 +221,14 @@ pub enum AccessFromClosuer {
    Read,
    /** 書き込みアクセス */
    Write,
+}
+
+pub class TypeNameCtrl {
+   /** 現在解析中モジュールの型情報 */
+   let mut moduleTypeInfo:&TypeInfo {pub,pub};
+   
+   pub fn getParentFullName(
+      mut typeInfo:&TypeInfo, mut importInfo:&ModuleInfoManager!, localFlag:bool! ) : str;
 }
 
 /** シンボル情報 */
@@ -464,6 +473,7 @@ pub enum CanEvalType {
    Logical,
 }
 
+
 pub class TypeInfo {
 
    // この TypeInfo のスコープ。
@@ -515,19 +525,29 @@ pub class TypeInfo {
       return "";
    }
 
-   /** この型の名前を取得する。 */
+   /**
+   この型の名前を取得する。
+
+   型のフルパス名を取得する場合は、
+    typeNameCtrl に現在の解析対象モジュールの TypeInfo を指定する。
+    */  
    pro fn getTxtWithRaw(
-      raw:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo, &ModuleInfoIF>!, localFlag:bool! ) : str
+      raw:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return "";
    }
 
-   /** この型の名前を取得する。 */
+   /**
+   この型の名前を取得する。
+
+   型のフルパス名を取得する場合は、
+    typeNameCtrl に現在の解析対象モジュールの TypeInfo を指定する。
+    */  
    pub fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
 
    /** other 型から dest 型への canEvalType の評価が可能かどうか */
@@ -688,32 +708,11 @@ static な型か。
 
    /** 親の完全限定名を取得する */
    pub fn getParentFullName(
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl, 
+      mut importInfo:&ModuleInfoManager!,
+      localFlag:bool! ) : str
    {
-      let mut typeInfo:&TypeInfo = self;
-      let mut name = "";
-      let! mut infoMap = importInfo {
-         infoMap = {};
-      };
-      while not infoMap[ typeInfo ] {
-         typeInfo = typeInfo.$parentInfo;
-         if typeInfo == typeInfo.$parentInfo {
-            break;
-         }
-         let mut txt = typeInfo.$rawTxt;
-         if localFlag {
-            if! let moduleInfo = infoMap[ typeInfo ] {
-               txt = moduleInfo.$assignName;
-            }
-            else {
-               if typeInfo.isModule() {
-                  break;
-               }
-            }
-         }
-         name = txt .. "." .. name;
-      }
-      return name;
+      return typeNameCtrl.getParentFullName( self, importInfo, localFlag );
    }
 
    pub fn applyGeneric( alt2typeMap:&Map<&TypeInfo,&TypeInfo>,
@@ -760,6 +759,54 @@ static な型か。
    }
 }
 
+pub fn TypeNameCtrl.getModuleName(
+   workTypeInfo:&TypeInfo, name:str, moduleInfoMan:&ModuleInfoManager ): str
+{
+   if! let moduleInfo = moduleInfoMan.getModuleInfo( workTypeInfo ) {
+      let txt = moduleInfo.$assignName;
+      return txt .. "." .. name;
+   }
+   else {
+      if self.moduleTypeInfo ~= workTypeInfo {
+         return workTypeInfo.$rawTxt .. "." .. name;
+      }
+   }
+   return name;
+}
+
+pub fn TypeNameCtrl.getParentFullName(
+   mut typeInfo:&TypeInfo, mut importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+{
+   let mut workTypeInfo = typeInfo;
+   let mut name = "";
+   // let! mut infoMap = importInfo {
+   //    infoMap = {};
+   // };
+   //while not infoMap[ typeInfo ] {
+   let! moduleInfoMan = importInfo {
+      moduleInfoMan = DummyModuleInfoManager.$instance;
+   };
+   //while not moduleInfoMan.getModuleInfo( workTypeInfo ) {
+   while true {
+      workTypeInfo = workTypeInfo.$parentInfo;
+      let mut txt = workTypeInfo.$rawTxt;
+      if workTypeInfo == workTypeInfo.$parentInfo {
+         break;
+      }
+      if localFlag {
+         if workTypeInfo.isModule() {
+            name = self.getModuleName( workTypeInfo, name, moduleInfoMan );
+            break;
+         }
+      }
+      name = txt .. "." .. name;
+   }
+   return name;
+}
+
+
+
+
 pub fn getScope( typeInfo:&TypeInfo ): Scope! {
    return typeInfo.$scope;
    //return typeInfo2ScopeMap[ typeInfo ];
@@ -777,6 +824,8 @@ pub fn isExtId(typeInfo:&TypeInfo): bool {
 /** TypeInfo の head。 */
 pub let headTypeInfo:TypeInfo = new TypeInfo( rootScope );
 //let rootTypeInfo:TypeInfo = new TypeInfo( rootScope );
+
+pub let defaultTypeNameCtrl = new TypeNameCtrl( headTypeInfo );
 
 pub fn TypeInfo.hasBase(): bool {
    return self.$baseTypeInfo ~= headTypeInfo;
@@ -1042,9 +1091,9 @@ pub class AliasTypeInfo extend TypeInfo {
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.rawTxt, typeNameCtrl, importInfo, localFlag );
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -1100,7 +1149,7 @@ pub fn Scope.filterTypeInfoField(
    if self.classFlag {
       if includeSelfFlag {
          forsort symbolInfo in self.symbol2SymbolInfoMap {
-            if symbolInfo.canAccess( fromScope ) {
+            if symbolInfo.canAccess(  fromScope ) {
                if not callback( symbolInfo ) {
                   return false;
                }
@@ -1108,7 +1157,8 @@ pub fn Scope.filterTypeInfoField(
          }
       }
       if! let scope = self.inherit {
-         if not scope.filterTypeInfoField( true, fromScope, callback ) {
+         if not scope.filterTypeInfoField(
+            true, fromScope, callback ) {
             return false;
          }
       }
@@ -1128,7 +1178,7 @@ pub fn Scope.getSymbolInfoField(
    if self.classFlag {
       if includeSelfFlag {
          if! self.symbol2SymbolInfoMap$[ name ] {
-            let! symbolInfo = _exp.canAccess( fromScope ) {
+            let! symbolInfo = _exp.canAccess(  fromScope ) {
                return nil;
             };
             return symbolInfo;
@@ -1150,11 +1200,14 @@ pub fn Scope.getSymbolInfoField(
 
 インタフェースを含む。
 */
-pub fn Scope.getSymbolInfoIfField( name: str, fromScope:&Scope ) : &SymbolInfo!
+pub fn Scope.getSymbolInfoIfField(
+   name: str, fromScope:&Scope ) : &SymbolInfo!
 {
    if self.classFlag {
       foreach scope in self.ifScopeList {
-         if! let symbolInfo = scope.getSymbolInfoField( name, true, fromScope ) {
+         if! let symbolInfo =
+            scope.getSymbolInfoField( name, true, fromScope )
+         {
             return symbolInfo;
          }
       }
@@ -1174,7 +1227,8 @@ pub fn Scope.getSymbolInfoIfField( name: str, fromScope:&Scope ) : &SymbolInfo!
 
 インタフェースを含む。
 */
-pub fn Scope.filterSymbolInfoIfField( fromScope:&Scope, callback:filterForm ) : bool
+pub fn Scope.filterSymbolInfoIfField(
+   fromScope:&Scope, callback:filterForm ) : bool
 {
    foreach scope in self.ifScopeList {
       if not scope.filterTypeInfoField( true, fromScope, callback ) {
@@ -1196,7 +1250,8 @@ pub fn Scope.filterSymbolInfoIfField( fromScope:&Scope, callback:filterForm ) : 
 pub fn Scope.getTypeInfoField(
    name: str, includeSelfFlag: bool!, fromScope:&Scope ) : &TypeInfo!
 {
-   let symbolInfo = self.getSymbolInfoField( name, includeSelfFlag, fromScope );
+   let symbolInfo =
+      self.getSymbolInfoField( name, includeSelfFlag, fromScope );
    if! symbolInfo {
       return _exp.$typeInfo;
    }
@@ -1476,12 +1531,14 @@ pub fn Scope.accessSymbol(
       switch symbol.$accessFromClosure {
          case .None {
             symbol.set_accessFromClosure( accessMode );
-            namespacescope.parent.accessSymbol( moduleScope, symbol, accessMode );
+            namespacescope.parent.accessSymbol(
+               moduleScope, symbol, accessMode );
          }
          case .Read {
             if accessMode == .Write {
                symbol.set_accessFromClosure( accessMode );
-               namespacescope.parent.accessSymbol( moduleScope, symbol, accessMode );
+               namespacescope.parent.accessSymbol(
+                  moduleScope, symbol, accessMode );
             }
          }
       }
@@ -1498,7 +1555,9 @@ pub fn Scope.accessSymbol(
    elseif symbol.$name == "self" {
       // self の場合、メソッド内からのアクセスはクロージャではない
       let typeInfo = self.getNamespaceTypeInfo();
-      if not typeInfo.$parentInfo.isInheritFrom( symbol.$namespaceTypeInfo## ) {
+      if not typeInfo.$parentInfo.isInheritFrom(
+         symbol.$namespaceTypeInfo## )
+      {
          setClosure( typeInfo );
       }
    }
@@ -1543,14 +1602,15 @@ pub class NilTypeInfo extend TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      raw:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      raw:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return "nil";
    }
@@ -1615,9 +1675,10 @@ pub class NilTypeInfo extend TypeInfo {
 
    /** 親の完全限定名を取得する */
    pub override fn getParentFullName(
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl, 
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return "nil";
+      return "";
    }
 }
 
@@ -1762,16 +1823,16 @@ pub class NilableTypeInfo extend TypeInfo {
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      raw:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      raw:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return self.nonnilableType.getTxtWithRaw(
-         raw, fullName, importInfo, localFlag ) .. "!";
+         raw, typeNameCtrl, importInfo, localFlag ) .. "!";
    }
 
 
@@ -1879,14 +1940,15 @@ pub class AlternateTypeInfo extend TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      raw:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      raw:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return self.txt;
    }
@@ -2077,7 +2139,8 @@ pub class AlternateTypeInfo extend TypeInfo {
 
    /** 親の完全限定名を取得する */
    pub override fn getParentFullName(
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl, 
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return "";
    }
@@ -2141,16 +2204,16 @@ pub class BoxTypeInfo extend TypeInfo {
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      raw:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      raw:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return "Nilable<" .. self.boxingType.getTxtWithRaw(
-         raw, fullName, importInfo, localFlag ) .. ">";
+         raw, typeNameCtrl, importInfo, localFlag ) .. ">";
    }
 
    pub override fn get_display_stirng(): str {
@@ -2418,16 +2481,16 @@ pub class ModifierTypeInfo extend TypeInfo {
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(
-      fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      raw:str,  fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      raw:str,  typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       let mut txt = self.srcTypeInfo.getTxtWithRaw(
-         raw, fullName, importInfo, localFlag );
+         raw, typeNameCtrl, importInfo, localFlag );
       if not isMutable( self.mutMode ) {
          txt = "&" .. txt;
       }
@@ -2453,8 +2516,7 @@ pub class ModifierTypeInfo extend TypeInfo {
             self.mutMode ) );
    }
 
-   pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   pub override fn canEvalWith( other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
    {
       // if isGenericType( self.srcTypeInfo ) {
       //    return self.srcTypeInfo.canEvalWith( other, canEvalType, alt2type );
@@ -2531,14 +2593,15 @@ pub class ModuleTypeInfo extend TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      rawTxt:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return rawTxt;
    }
@@ -2666,14 +2729,15 @@ pub class EnumTypeInfo extend TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      rawTxt:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return rawTxt;
    }
@@ -2784,14 +2848,15 @@ pub class AlgeTypeInfo extend TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      rawTxt:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return rawTxt;
    }
@@ -2987,18 +3052,19 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!, 
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      mut raw:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      mut raw:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       let mut parentTxt = "";
-      if fullName {
-         parentTxt = self.getParentFullName( importInfo, localFlag );
+      when! typeNameCtrl {
+         parentTxt = self.getParentFullName( typeNameCtrl, importInfo, localFlag );
       }
       // if self.kind == .Array {
       //    let! _exp = self.itemTypeInfoList[1] {
@@ -3018,7 +3084,7 @@ pub class NormalTypeInfo extend TypeInfo {
             if index ~= 1 {
                txt = txt .. ",";
             }
-            txt = txt .. typeInfo.getTxt( fullName, importInfo, localFlag );
+            txt = txt .. typeInfo.getTxt( typeNameCtrl, importInfo, localFlag );
          }
 
          return parentTxt .. txt .. ">";
@@ -3954,19 +4020,19 @@ pub static fn TypeInfo.getCommonType(
 
 
 pub override fn DDDTypeInfo.getTxt(
-   fullName:bool!, importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
 {
-   return self.getTxtWithRaw( "...", fullName, importInfo, localFlag );
+   return self.getTxtWithRaw( "...", typeNameCtrl, importInfo, localFlag );
 }
 
 pro override fn DDDTypeInfo.getTxtWithRaw(
-   raw:str, fullName:bool!,
-   importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   raw:str, typeNameCtrl:&TypeNameCtrl!,
+   importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
 {
    if self.typeInfo == builtinTypeStem_ {
       return "...";
    }
-   let txt = self.typeInfo.getTxt( fullName, importInfo, localFlag );
+   let txt = self.typeInfo.getTxt( typeNameCtrl, importInfo, localFlag );
    return "...<" .. txt .. ">";
 }
 
@@ -4054,14 +4120,15 @@ pub class AbbrTypeInfo extend TypeInfo {
    }
 
    /** この型の名前を取得する。 */
-   pub override fn getTxt( fullName:bool!,
-                  importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return self.getTxtWithRaw( self.$rawTxt, fullName, importInfo, localFlag );
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
    }
    pro override fn getTxtWithRaw(
-      rawTxt:str, fullName:bool!,
-      importInfo:&Map<&TypeInfo,&ModuleInfoIF>!, localFlag:bool! ) : str
+      rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
       return rawTxt;
    }
@@ -4430,7 +4497,8 @@ pub static fn TypeInfo.checkMatchType(
          //if warnForFollowSrcIndex <= ,,index and ,,dstType.$nilable {
          if warnForFollowSrcIndex <= ,,index {
             let workMess = "use '**' at arg(%d). %s <- %s"
-                ( ,,index, ,,dstType.getTxt(true##), ,,expType.getTxt(true##) );
+                ( ,,index, ,,dstType.getTxt( defaultTypeNameCtrl## ),
+                  ,,expType.getTxt( defaultTypeNameCtrl## ) );
             return .Warn, workMess;
          }
       }
@@ -4449,13 +4517,14 @@ pub static fn TypeInfo.checkMatchType(
          let mut matchResult = MatchType.Match;
          if not workDstType.canEvalWith( workExpType, .SetOp, alt2type ) {
             let message = "exp(%d) type mismatch %s <- %s"
-                ( dstIndex, workDstType.getTxt( true## ), workExpType.getTxt( true## ) );
+                ( dstIndex, workDstType.getTxt( defaultTypeNameCtrl## ),
+                  workExpType.getTxt( defaultTypeNameCtrl## ) );
             return .Error, message;
          }
          elseif workExpType == builtinTypeAbbrNone {
             return .Warn, Code.format( .nothing_define_abbr,
                                        "use '##', instate of %s."
-                                       (workDstType.getTxt(true##)) );
+                                       (workDstType.getTxt(defaultTypeNameCtrl##)) );
          }
 
          if matchResult ~= .Match {
@@ -4485,7 +4554,8 @@ pub static fn TypeInfo.checkMatchType(
             
          if not dstType.canEvalWith( checkType, .SetOp, alt2type ) {
             return .Error, "exp(%d) type mismatch %s <- %s"
-            ( srcIndex, dstType.getTxt( true## ), expType.getTxt( true## ) );
+            ( srcIndex, dstType.getTxt( defaultTypeNameCtrl## ),
+              expType.getTxt( defaultTypeNameCtrl## ) );
          }
          // let genDstType = dstType.applyGeneric( alt2type );
          // if not checkType.canEvalWith( dstType, .SetOp, alt2type ) {
@@ -4509,8 +4579,8 @@ pub static fn TypeInfo.checkMatchType(
             if dstType.$srcTypeInfo.$kind ~= .DDD {
                if not dstType.canEvalWith( expType, .SetOp, alt2type ) {
                   return .Error, "exp(%d) type mismatch %s <- %s"
-                  ( index, dstType.getTxt( true## ),
-                    expType.getTxt(true## ));
+                  ( index, dstType.getTxt( defaultTypeNameCtrl## ),
+                    expType.getTxt(defaultTypeNameCtrl## ));
                }
                if not allowDstShort and #dstTypeList < #expTypeList {
                   return .Error, "over exp. expect: %d: actual: %d"
@@ -4573,8 +4643,8 @@ pub static fn TypeInfo.checkMatchType(
          else {
             if not dstType.canEvalWith( expType, .SetOp, alt2type ) {
                return .Error, "exp(%d) type mismatch %s <- %s"
-               ( index, dstType.getTxt( true## ),
-                 expType.getTxt( true## ));
+               ( index, dstType.getTxt( defaultTypeNameCtrl## ),
+                 expType.getTxt( defaultTypeNameCtrl## ));
             }
             _checkWarnForFollow( index, dstType, expType );
             // when! warnForFollowSrcIndex {
@@ -4594,11 +4664,11 @@ pub static fn TypeInfo.checkMatchType(
          else {
             if not dstType.canEvalWith( builtinTypeNil, .SetOp, alt2type ) {
                return .Error, "exp(%d) type mismatch %s <- nil"
-               ( index, dstType.getTxt( true## ));
+               ( index, dstType.getTxt( defaultTypeNameCtrl## ));
             }
             return .Warn, Code.format( .nothing_define_abbr,
                                        "use '##', instate of %s."
-                                       (dstType.getTxt(true##) ) );
+                                       (dstType.getTxt( defaultTypeNameCtrl##) ) );
          }
       }
    }
@@ -5019,10 +5089,14 @@ pub override fn NormalTypeInfo.applyGeneric(
 }
 
 
-pub fn TypeInfo.getFullName( importInfo:&Map<&TypeInfo,&ModuleInfoIF>, localFlag:bool! ) : str {
-   return self.getParentFullName( importInfo, localFlag ) .. self.$rawTxt;
+pub fn TypeInfo.getFullName(
+   typeNameCtrl:&TypeNameCtrl, importInfo:&ModuleInfoManager, localFlag:bool! ) : str
+{
+   if localFlag and self.isModule() {
+      return typeNameCtrl.getModuleName( self, "", importInfo );
+   }
+   return self.getParentFullName( typeNameCtrl, importInfo, localFlag ) .. self.$rawTxt;
 }
-
 
 pub class ProcessInfo {
    let mut idProvier:IdProvider {pub};

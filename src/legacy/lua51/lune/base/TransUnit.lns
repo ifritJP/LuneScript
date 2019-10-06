@@ -274,7 +274,6 @@ pub class TransUnit {
    /** インポートしているモジュールの TypeInfo -> シンボル情報 */
    pri let mut importModule2ModuleInfo: Map<&Ast.TypeInfo,&Nodes.ModuleInfo>;
    pri let mut importModuleName2ModuleInfo: Map<str,&Nodes.ModuleInfo>;
-   pri let mut importModule2ModuleInfoCurrent: Map<&Ast.TypeInfo,&Nodes.ModuleInfo>;
 
    /** subfile 名のリスト */
    pri let mut subfileList: str[];
@@ -326,12 +325,15 @@ pub class TransUnit {
 
    pri let mut useModuleMacroSet:Set<&Ast.TypeInfo>;
 
+   pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
+
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:frontInterface.ImportModuleInfo,
                   macroEval: Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Option.TransCtrlInfo )
    {
+      self.typeNameCtrl = Ast.defaultTypeNameCtrl;
       self.protoClassMap = {};
       self.analyzingStateQueue = [];
       self.macroCallLineNo = 0;
@@ -348,7 +350,6 @@ pub class TransUnit {
       self.has__func__Symbol = (@);
       self.nodeManager = new Nodes.NodeManager();
       self.importModuleName2ModuleInfo = {};
-      self.importModule2ModuleInfoCurrent = {};
       self.importModule2ModuleInfo = {};
       self.macroScope = nil;
       self.validMutControl = true;
@@ -538,12 +539,12 @@ pub class TransUnit {
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.addErrMess( self.currentToken.pos,
                              "mismatch class(%s) abstract for prototpye"
-                             (typeInfo.getTxt(true##)));
+                             (typeInfo.getTxt( self.typeNameCtrl ##)));
          }
          if typeInfo.$accessMode ~= accessMode {
             self.addErrMess( self.currentToken.pos,
                              "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
-                             ( typeInfo.getTxt(true##),
+                             ( typeInfo.getTxt( self.typeNameCtrl ##),
                                accessMode.$_txt, typeInfo.$accessMode.$_txt));
          }
          when! baseInfo {
@@ -551,7 +552,7 @@ pub class TransUnit {
                self.addErrMess(
                   self.currentToken.pos,
                   "mismatch class(%s) base class(%s) for prototpye base class(%s)"
-                  ( typeInfo.getTxt(true##),
+                  ( typeInfo.getTxt( self.typeNameCtrl##),
                     baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
             }
          }
@@ -565,8 +566,8 @@ pub class TransUnit {
                      self.addErrMess(
                         self.currentToken.pos,
                         "mismatch class(%s) %s(%s) for prototpye %s(%s)"
-                        ( typeInfo.getTxt(true##), message,
-                          typeList[ index ].getTxt(true##),
+                        ( typeInfo.getTxt(self.typeNameCtrl##), message,
+                          typeList[ index ].getTxt(self.typeNameCtrl##),
                           message, protoType.getTxt(##)));
                   }
                }
@@ -575,7 +576,7 @@ pub class TransUnit {
                self.addErrMess(
                   self.currentToken.pos,
                   "mismatch class(%s) %s(%d) for prototpye %s(%d)"
-                  ( typeInfo.getTxt(true##), message, #typeList,
+                  ( typeInfo.getTxt(self.typeNameCtrl##), message, #typeList,
                     message, #protoList) );
             }
          }
@@ -1913,7 +1914,7 @@ fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
          elseif macroVal.typeInfo.get_kind() == .Enum {
             let enumTypeInfo = unwrap macroVal.typeInfo@@@Ast.EnumTypeInfo;
             let fullname = macroVal.typeInfo.getFullName(
-               self.importModule2ModuleInfoCurrent, true );
+               self.typeNameCtrl, self.scope, true );
             let mut nameList:List<str> = [];
             apply name of fullname.gmatch( "[^%.]+" ) {
                nameList.insert( name );
@@ -2333,7 +2334,8 @@ class DependModuleInfo {
 fn TransUnit.processImport( modulePath:str ) mut :
    &_MetaInfo, &Map<int,&Ast.TypeInfo>, &Nodes.ModuleInfo
 {
-   Log._log( .Info, `{ return "%s start" ( modulePath); } );
+   Log._log( .Info, `{ return "%s -> %s start"
+                       ( self.moduleType.getTxt( self.typeNameCtrl## ), modulePath); } );
 
    if not self.importModuleInfo.add( modulePath ) {
       self.error( "recursive import: %s -> %s"
@@ -2786,12 +2788,10 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
    let moduleTypeInfo = unwrap typeId2TypeInfo[ metaInfo.__moduleTypeId ];
-   self.importModule2ModuleInfoCurrent[ moduleTypeInfo ] =
-      moduleInfo.assign( assignName.txt );
    self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName.txt ) );
 
    let moduleSymbolKind = unwrap Ast.SymbolKind._from( metaInfo.__moduleSymbolKind );
-   self.scope.add(
+   let moduleSymbolInfo = self.scope.add(
       moduleSymbolKind, false, false, assignName.txt,
       moduleTypeInfo, .Local, true,
       metaInfo.__moduleMutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
@@ -2806,7 +2806,7 @@ fn TransUnit.analyzeImport( token: &Parser.Token ) mut : Nodes.Node {
 
    return Nodes.ImportNode.create(
       self.nodeManager, token.pos, [ Ast.builtinTypeNone ],
-      modulePath, assignName.txt, moduleTypeInfo );
+      modulePath, assignName.txt, moduleSymbolInfo, moduleTypeInfo );
 }
 
 

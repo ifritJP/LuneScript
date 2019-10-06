@@ -1465,16 +1465,16 @@ fn TransUnit.analyzeExpCast(
       // "str"@@str のように、意味のないキャストはエラー
       self.addWarnMess( castTypeNode.$pos,
                         "This cast isn't need. (%s <- %s)"
-                        ( castType.getTxt( true ## ),
-                          expType.getTxt( true ## ) ) );          
+                        ( castType.getTxt( self.typeNameCtrl ## ),
+                          expType.getTxt( self.typeNameCtrl ## ) ) );          
    }
    elseif not expType.canEvalWith( castType, .SetOp, {} ) {
       if not Ast.isNumberType( expType ) or not Ast.isNumberType( castType ) {
          // キャスト先の型からキャスト元の型へ互換性がない場合はエラー
          self.addErrMess( castTypeNode.$pos,
                           "This type can't cast. (%s <- %s)"
-                          ( castType.getTxt( true ## ),
-                            expType.getTxt( true ## ) ) );            
+                          ( castType.getTxt( self.typeNameCtrl ## ),
+                            expType.getTxt( self.typeNameCtrl ## ) ) );            
       }
    }
 
@@ -1923,7 +1923,7 @@ fn TransUnit.analyzeExpField(
          case .Set, .Enum, .Alge {
          // 現状は set, enum, alge の accessNil はサポートしていない。
             self.addErrMess( firstToken.pos,
-                             "%s does not support $." (prefixExpType.getTxt(false##) ) );
+                             "%s does not support $." (prefixExpType.getTxt( nil ##) ) );
          }
       }
    }
@@ -1958,7 +1958,6 @@ fn TransUnit.analyzeExpField(
             let moduleType = prefixExpType.getModule();
             if not moduleType.equals( self.moduleType ##) and
                not self.scope.getModuleInfo( moduleType ) {
-                  //not self.importModule2ModuleInfoCurrent[ moduleType ] {
                   // enum の名前を取得するには、そのモジュールのインポートが必要
                   self.addErrMess( token.pos, "need to import module -- %s"
                                    ( prefixExpType.getModule().getTxt(##) ) );
@@ -2145,10 +2144,8 @@ fn TransUnit.analyzeNewAlge(
 
       if algeTypeInfo.$externalFlag and
          not self.scope.getModuleInfo( algeTypeInfo.getModule().$srcTypeInfo )
-         //not self.importModule2ModuleInfoCurrent[ algeTypeInfo.getModule().$srcTypeInfo ]
       {  
-         let fullname = algeTypeInfo.getFullName(
-            self.importModule2ModuleInfo, true );
+         let fullname = algeTypeInfo.getFullName( self.typeNameCtrl, self.scope, true );
          self.addErrMess( firstToken.pos, "This module not import -- %s"
                           ( fullname ) );
       }
@@ -2538,8 +2535,8 @@ fn TransUnit.analyzeExpOp2(
                      self.addErrMess(
                         nextToken.pos,
                         "no numeric type '%s' or '%s'"
-                        ( exp1Type.getTxt(true## ),
-                          exp2Type.getTxt(true## ) ) );   
+                        ( exp1Type.getTxt(self.typeNameCtrl## ),
+                          exp2Type.getTxt(self.typeNameCtrl## ) ) );   
                   }
                   retType = Ast.builtinTypeBool;
                }
@@ -2550,8 +2547,8 @@ fn TransUnit.analyzeExpOp2(
                      self.addErrMess(
                         nextToken.pos,
                         "not compatible type '%s' or '%s'"
-                        ( exp1Type.getTxt(true## ),
-                          exp2Type.getTxt(true## ) ) );
+                        ( exp1Type.getTxt(self.typeNameCtrl## ),
+                          exp2Type.getTxt(self.typeNameCtrl## ) ) );
                   }
                   if! exp@@@Nodes.NewAlgeValNode {
                      if #_exp.$paramList > 0 {
@@ -2906,11 +2903,9 @@ fn TransUnit.analyzeExp(
          if! let valInfo = enumTyepInfo.getEnumValInfo( nextToken.txt ) {
             if orgExpectType.$externalFlag and
                not self.scope.getModuleInfo( orgExpectType.getModule().$srcTypeInfo )
-               //not self.importModule2ModuleInfoCurrent[
-                  //orgExpectType.getModule().$srcTypeInfo ]
             {  
                let fullname = orgExpectType.getFullName(
-                  self.importModule2ModuleInfo, true );
+                  self.typeNameCtrl, self.scope, true );
                self.addErrMess( token.pos, "This module not import -- %s"
                                 ( fullname ) );
             }  

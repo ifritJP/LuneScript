@@ -224,25 +224,24 @@ setmetatable( dumpFilter, { __index = Nodes.Filter } )
 function dumpFilter.setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
 end
-function dumpFilter.new(  )
+function dumpFilter.new( __superarg1, __superarg2 )
    local obj = {}
    dumpFilter.setmeta( obj )
    if obj.__init then
-      obj:__init(  )
+      obj:__init( __superarg1, __superarg2 )
    end
    return obj
 end
-function dumpFilter:__init(  )
+function dumpFilter:__init( __superarg1, __superarg2 )
 
-   Nodes.Filter.__init( self)
+   Nodes.Filter.__init( self, __superarg1, __superarg2 )
 end
 
-local function createFilter(  )
+local function createFilter( moduleTypeInfo )
 
-   return dumpFilter.new()
+   return dumpFilter.new(moduleTypeInfo, moduleTypeInfo:get_scope())
 end
 _moduleObj.createFilter = createFilter
-local localFilter = dumpFilter.new()
 local function dump( prefix, depth, node, txt )
 
    local typeStr = ""
@@ -256,7 +255,7 @@ end
 
 local function filter( node, filter, opt )
 
-   node:processFilter( localFilter, opt )
+   node:processFilter( filter, opt )
 end
 
 local function getTxt( token )
@@ -295,7 +294,7 @@ function dumpFilter:processSubfile( node, opt )
    dump( prefix, depth, node, "" )
 end
 
-function dumpFilter:processBlock( node, opt )
+function dumpFilter:processBlockSub( node, opt )
 
    local prefix, depth = opt:get(  )
    dump( prefix, depth, node, "" )
@@ -546,7 +545,7 @@ end
 function dumpFilter:processDeclForm( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, node:get_expType():getTxt( true ) )
+   dump( prefix, depth, node, node:get_expType():getTxt( self:get_typeNameCtrl() ) )
 end
 
 function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
@@ -851,7 +850,7 @@ end
 function dumpFilter:processExpCast( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, string.format( "%s -> %s", node:get_exp():get_expType():getTxt( true ), node:get_castType():getTxt( true )) )
+   dump( prefix, depth, node, string.format( "%s -> %s", node:get_exp():get_expType():getTxt( self:get_typeNameCtrl() ), node:get_castType():getTxt( self:get_typeNameCtrl() )) )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 
@@ -867,7 +866,7 @@ end
 function dumpFilter:processExpOp2( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, string.format( "%s → %s", node:get_op(  ).txt, node:get_expType():getTxt( true )) )
+   dump( prefix, depth, node, string.format( "%s → %s", node:get_op(  ).txt, node:get_expType():getTxt( self:get_typeNameCtrl() )) )
    filter( node:get_exp1(  ), self, opt:nextOpt(  ) )
    filter( node:get_exp2(  ), self, opt:nextOpt(  ) )
 end

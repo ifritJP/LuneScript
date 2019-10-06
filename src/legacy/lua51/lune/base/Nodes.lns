@@ -28,7 +28,54 @@ import lune.base.frontInterface;
 import lune.base.Ast;
 import lune.base.LuneControl;
 
-pub class Filter<T> {
+class SimpleModuleInfoManager extend (Ast.ModuleInfoManager)
+{
+   pro let mut moduleInfoManager:&Ast.ModuleInfoManager;
+   pri let mut moduleInfoManagerHist:List<&Ast.ModuleInfoManager>;
+   
+   pub fn __init(moduleInfoManager:&Ast.ModuleInfoManager!) {
+      when! moduleInfoManager {
+         self.moduleInfoManager = moduleInfoManager;
+      }
+      else {
+         self.moduleInfoManager = Ast.DummyModuleInfoManager.$instance;
+      }
+      self.moduleInfoManagerHist = [];
+   }
+
+   pub fn push( moduleInfoManager:&Ast.ModuleInfoManager ) mut {
+      self.moduleInfoManagerHist.insert( self.moduleInfoManager );
+      self.moduleInfoManager = moduleInfoManager;
+   }
+
+   pub fn pop() mut {
+      self.moduleInfoManager = self.moduleInfoManagerHist[ #self.moduleInfoManagerHist ];
+      self.moduleInfoManagerHist.remove(##);
+   }
+   
+   advertise moduleInfoManager;
+}
+
+pub class Filter<T>  {
+   pri let mut moduleInfoManager:SimpleModuleInfoManager;
+   pri let typeNameCtrl:&Ast.TypeNameCtrl {pub};
+
+   pro fn __init( moduleTypeInfo:&Ast.TypeInfo!,
+                  moduleInfoManager:&Ast.ModuleInfoManager! )
+   {
+      self.moduleInfoManager = new SimpleModuleInfoManager( moduleInfoManager );
+      fn process ():&Ast.TypeNameCtrl {
+         when! moduleTypeInfo {
+            return new Ast.TypeNameCtrl( moduleTypeInfo );
+         }
+         return Ast.defaultTypeNameCtrl;
+      };
+      self.typeNameCtrl = process();
+   }
+
+   pro fn get_moduleInfoManager() : &Ast.ModuleInfoManager {
+      return self.moduleInfoManager;
+   }
 }
 
 /**
@@ -469,13 +516,24 @@ macro _declNodeClass(
          super( id, unwrap nodeKind. ,,nodeKindSym, pos, typeList );
       };
 
+      if baseName ~= "Block" {
+         relateStat.insert( `{
+            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
+            };
+         } );
+      }
+      else {
+         relateStat.insert( `{
+            pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut;
+         } );
+      }
+      
       relateStat.insert( `{
-         pub fn Filter. ,,,"process%s" (baseName) ( node: &,,className, opt:T ) mut {
-         };
          pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className> {
             return self.getList( unwrap nodeKind. ,,nodeKindSym )@@List<&,,className>;
          }
       } );
+
       
    }
 
@@ -513,6 +571,7 @@ _declNodeClass( "Subfile", Node, false, false, true,
 _declNodeClass( "Import", Node, false, false, true,
                 [ { "modulePath": "str" },
                   { "assignName": "str" },
+                  { "symbolInfo": "&Ast.SymbolInfo" },
                   { "moduleTypeInfo": "&Ast.TypeInfo" } ]
 );
 
@@ -2056,4 +2115,15 @@ pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
       return ExpMultiTo1Node.create( self, node.$pos, expType.$itemTypeInfoList, node );
    }
    return node;
+}
+
+pub fn Filter.processBlockSub( node: &BlockNode, opt:T ) mut {
+}
+
+pub fn Filter.processBlock( node: &BlockNode, opt:T ) mut {
+   self.moduleInfoManager.push( node.$scope );
+
+   self.processBlockSub( node, opt );
+
+   self.moduleInfoManager.pop();
 }

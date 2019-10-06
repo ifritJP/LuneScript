@@ -353,6 +353,8 @@ pub fn TransUnit.createAST(
    self.moduleScope = self.scope;
    self.moduleType = moduleTypeInfo;
 
+   self.typeNameCtrl = new Ast.TypeNameCtrl( moduleTypeInfo );
+
 
    self.parser = parser;
 
@@ -2506,7 +2508,7 @@ fn TransUnit.checkLiteralEmptyCollection(
          self.addErrMess(
             pos,
             "must set the item type of Collection. -- %s:%s"
-            (symbolName, expType.$srcTypeInfo.getTxt( true## ) ) );
+            (symbolName, expType.$srcTypeInfo.getTxt( self.typeNameCtrl## ) ) );
          break;
       }
    }
@@ -2636,7 +2638,8 @@ fn TransUnit.analyzeLetAndInitExp(
                   self.addErrMess(
                      firstPos,
                      "unmatch value type (index = %d) %s) <- %s"
-                     ( subIndex, argType.getTxt( true ## ), dddItemType.getTxt(##) ));
+                     ( subIndex, argType.getTxt( self.typeNameCtrl## ),
+                       dddItemType.getTxt(##) ));
                }
                expTypeList.insert( checkType );
                orgExpTypeList.insert( dddItemType );
@@ -2680,8 +2683,8 @@ fn TransUnit.analyzeLetAndInitExp(
                      firstPos,
                      "unmatch value type (index:%d) %s <- %s"
                      (index,
-                       varType.getTxt( true ## ),
-                       expTypeInfo.getTxt( true ## )));
+                       varType.getTxt( self.typeNameCtrl ## ),
+                       expTypeInfo.getTxt( self.typeNameCtrl ## )));
                }
                if varType == Ast.builtinTypeBox {
                   typeInfoList[ index ] = Ast.NormalTypeInfo.createBox(
@@ -2740,7 +2743,7 @@ fn TransUnit.analyzeLetAndInitExp(
                self.addErrMess(
                   firstPos,
                   "unmatch value type (index:%d) %s <- nil"
-                  (index, varType.getTxt( true ## )));
+                  (index, varType.getTxt( self.typeNameCtrl## )));
             }
          }
       }

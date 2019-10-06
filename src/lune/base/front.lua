@@ -660,7 +660,7 @@ ModuleUptodate.Uptodate = { "Uptodate", {{ func=MetaForBuildId._fromMap, nilable
 ModuleUptodate._name2Val["Uptodate"] = ModuleUptodate.Uptodate
 
 function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
-   local __func__ = 'Front.getModuleIdAndCheckUptodate'
+   local __func__ = '@lune.@base.@front.Front.getModuleIdAndCheckUptodate'
 
    local uptodate = _lune.newAlge( ModuleUptodate.NeedUpdate)
    if self.option.transCtrlInfo.uptodateMode == Option.CheckingUptodateMode.Force then
@@ -668,7 +668,7 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    end
    
    local function checkDependUptodate( metaTime, metaInfo, metaCode )
-      local __func__ = 'Front.getModuleIdAndCheckUptodate.checkDependUptodate'
+      local __func__ = '@lune.@base.@front.Front.getModuleIdAndCheckUptodate.checkDependUptodate'
    
       for depMod, dependItem in pairs( metaInfo.__dependModuleMap ) do
          local modMetaPath = self:searchModuleFile( depMod, ".meta", self.option.outputDir )
@@ -963,7 +963,7 @@ function Front:loadModule( mod )
 end
 
 function Front:loadMeta( importModuleInfo, mod )
-   local __func__ = 'Front.loadMeta'
+   local __func__ = '@lune.@base.@front.Front.loadMeta'
 
    if self.loadedMetaMap[mod] == nil then
       do
@@ -1045,7 +1045,7 @@ function Front:dumpAst(  )
    Util.profile( self.option.validProf, function (  )
    
       local ast = self:createAst( frontInterface.ImportModuleInfo.new(), self:createPaser(  ), mod, getModuleId( self.option.scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
-      ast:get_node():processFilter( dumpNode.createFilter(  ), dumpNode.Opt.new("", 0) )
+      ast:get_node():processFilter( dumpNode.createFilter( ast:get_moduleTypeInfo() ), dumpNode.Opt.new("", 0) )
    end
    , self.option.scriptPath .. ".profi" )
 end
@@ -1211,7 +1211,7 @@ function Front:saveToLua(  )
    end
    
    local function checkDiff( oldStream, newStream )
-      local __func__ = 'Front.saveToLua.checkDiff'
+      local __func__ = '@lune.@base.@front.Front.saveToLua.checkDiff'
    
       local headEndPos = 0
       local tailBeginPos = 0
@@ -1261,7 +1261,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 891, function (  )
+               Log.log( Log.Level.Debug, __func__, 893, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end
@@ -1455,9 +1455,9 @@ function Front:saveToLua(  )
 end
 
 function Front:exec(  )
-   local __func__ = 'Front.exec'
+   local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1069, function (  )
+   Log.log( Log.Level.Trace, __func__, 1071, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

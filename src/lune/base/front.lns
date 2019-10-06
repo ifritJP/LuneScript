@@ -630,7 +630,9 @@ pub fn Front.dumpAst() mut {
             new frontInterface.ImportModuleInfo(),
             self.createPaser(), mod, getModuleId( self.option.scriptPath, mod ## ),
             nil, .Compile ## );
-	 ast.$node.processFilter( dumpNode.createFilter(), new dumpNode.Opt( "", 0 ) );
+	 ast.$node.processFilter(
+            dumpNode.createFilter( ast.$moduleTypeInfo ),
+            new dumpNode.Opt( "", 0 ) );
       }, self.option.scriptPath .. ".profi" );
 }
 

@@ -365,10 +365,8 @@ function convFilter.new( streamName, stream, metaStream, convMode, inMacro, modu
    return obj
 end
 function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, moduleSymbolKind, useLuneRuntime, targetLuaVer) 
-   Nodes.Filter.__init( self)
+   Nodes.Filter.__init( self,moduleTypeInfo, moduleTypeInfo:get_scope())
    
-   self.moduleInfoManager = _lune.unwrap( moduleTypeInfo:get_scope())
-   self.moduleInfoManagerHist = {}
    self.macroVarSymSet = {}
    self.needModuleObj = true
    self.indentQueue = {0}
@@ -378,7 +376,6 @@ function convFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.stream = stream
    self.metaStream = metaStream
    self.outMetaFlag = false
-   self.typeInfo2ModuleName = {}
    self.convMode = convMode
    self.inMacro = inMacro
    self.curLineNo = 1
@@ -401,14 +398,14 @@ function convFilter:get_indent(  )
    
    return 0
 end
-function convFilter:getFullName( typeInfo )
+function convFilter:getCanonicalName( typeInfo, localFlag )
 
-   local enumName = typeInfo:getFullName( self.typeInfo2ModuleName, true )
+   local enumName = typeInfo:getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), localFlag )
    return string.format( "%s", (enumName:gsub( "&", "" ) ))
 end
-function convFilter:getCanonicalName( typeInfo )
+function convFilter:getFullName( typeInfo )
 
-   return self:getFullName( typeInfo )
+   return self:getCanonicalName( typeInfo, true )
 end
 function convFilter:close(  )
 
@@ -497,7 +494,6 @@ function convFilter:processImport( node, opt )
    local module = node:get_modulePath(  )
    local moduleName = module:gsub( ".*%.", "" )
    moduleName = node:get_assignName()
-   self.typeInfo2ModuleName[node:get_moduleTypeInfo()] = ModuleInfo.new(moduleName, module)
    self:write( string.format( "local %s = _lune.loadModule( '%s' )", moduleName, module) )
 end
 
@@ -1145,7 +1141,7 @@ function convFilter:processRoot( node, opt )
       self:writeln( "local _moduleObj = {}" )
    end
    
-   self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( {} )) )
+   self:writeln( string.format( "local __mod__ = '%s'", node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager() )) )
    local luneSymbol = string.format( "_lune%d", Ver.luaModVersion)
    do
       local runtime = self.useLuneRuntime
@@ -1229,10 +1225,8 @@ function convFilter:processSubfile( node, opt )
 
 end
 
-function convFilter:processBlock( node, opt )
+function convFilter:processBlockSub( node, opt )
 
-   table.insert( self.moduleInfoManagerHist, self.moduleInfoManager )
-   self.moduleInfoManager = node:get_scope()
    local word = ""
    do
       local _switchExp = node:get_blockKind(  )
@@ -1280,8 +1274,6 @@ function convFilter:processBlock( node, opt )
       self:writeln( "end" )
    end
    
-   self.moduleInfoManager = self.moduleInfoManagerHist[#self.moduleInfoManagerHist]
-   table.remove( self.moduleInfoManagerHist )
 end
 
 
@@ -2028,14 +2020,10 @@ function convFilter:processExpNew( node, opt )
 end
 
 
-function convFilter:process__func__symbol( has__func__Symbol, classType, funcName )
+function convFilter:process__func__symbol( has__func__Symbol, parentType, funcName )
 
    if has__func__Symbol then
-      local nameSpace = ""
-      if classType ~= Ast.headTypeInfo then
-         nameSpace = self:getFullName( classType )
-      end
-      
+      local nameSpace = self:getCanonicalName( parentType, false )
       if funcName == "" then
          funcName = "<anonymous>"
       end
@@ -2798,7 +2786,7 @@ function convFilter:processExpCall( node, opt )
       
          wroteFuncFlag = true
          local fieldExpType = fieldNode:get_expType()
-         local canonicalName = self:getCanonicalName( prefixType )
+         local canonicalName = self:getFullName( prefixType )
          local methodName = fieldNode:get_field().txt
          local delimit = ":"
          if methodName == "get__txt" then
@@ -3561,7 +3549,7 @@ local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromMacroCode( code )
-   local __func__ = 'MacroEvalImp.evalFromMacroCode'
+   local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    local newEnv = {}
    for key, val in pairs( _G ) do
@@ -3575,7 +3563,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       return val
    end
    
-   Log.log( Log.Level.Info, __func__, 3254, function (  )
+   Log.log( Log.Level.Info, __func__, 3240, function (  )
    
       return string.format( "code: %s", code)
    end

@@ -349,7 +349,7 @@ class glueFilter extend Nodes.Filter<int> {
 }
 
 pub fn createFilter( outputDir:str! ): Nodes.Filter<int> {
-   return new glueFilter( outputDir );
+   return new glueFilter( nil, nil, outputDir );
 }
 
 pub override fn glueFilter.processRoot( node: &Nodes.RootNode, dummy:int ) mut

@@ -66,7 +66,7 @@ class convFilter extend Nodes.Filter<int> {
 
    pub fn __init( stream:oStream )
    {
-      super();
+      super(nil,nil);
       self.stream = stream;
    }
 }
@@ -74,7 +74,8 @@ class convFilter extend Nodes.Filter<int> {
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, dummy: int ) mut
 {
-   let moduleFull = node.$moduleTypeInfo.getFullName( {} ## );
+   let moduleFull = node.$moduleTypeInfo.getFullName(
+      self.$typeNameCtrl, Ast.DummyModuleInfoManager.$instance ## );
    let mut dependInfo = new DependInfo( moduleFull );
 
    foreach impNode in node.$nodeManager.getImportNodeList() {

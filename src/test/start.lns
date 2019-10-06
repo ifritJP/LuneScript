@@ -1261,5 +1261,19 @@ class Test4 {
 
    func( new SUB2.Sub_class( ) );
 }
-print( "\\''\'\"" );
-print( '\\""\"\'' );
+print( "\\''\'\"\\.\\" );
+print( '\\""\"\'\\.\\' );
+{
+   SUB2.testPrint();
+   {
+      import test.Sub2 as sub;
+      sub.testPrint();
+      {
+         import test.Sub2 as subsub;
+         subsub.testPrint();
+         sub.testPrint();
+      }
+      sub.testPrint();
+   }
+   SUB2.testPrint();
+}

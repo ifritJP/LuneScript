@@ -221,7 +221,7 @@ function convFilter.new( stream )
    return obj
 end
 function convFilter:__init(stream) 
-   Nodes.Filter.__init( self)
+   Nodes.Filter.__init( self,nil, nil)
    
    self.stream = stream
 end
@@ -231,7 +231,7 @@ end
 
 function convFilter:processRoot( node, dummy )
 
-   local moduleFull = node:get_moduleTypeInfo():getFullName( {} )
+   local moduleFull = node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), Ast.DummyModuleInfoManager:get_instance() )
    local dependInfo = DependInfo.new(moduleFull)
    for __index, impNode in pairs( node:get_nodeManager():getImportNodeList(  ) ) do
       dependInfo:addImpotModule( impNode:get_modulePath() )

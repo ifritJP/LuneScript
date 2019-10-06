@@ -174,18 +174,26 @@ enum ProcessMode {
 }
 
 class ModuleCtrl {
-   pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,ModuleInfo>;
+   //pri let mut typeInfo2ModuleName: Map<&Ast.TypeInfo,ModuleInfo>;
+   pri let moduleInfoManager: &Ast.ModuleInfoManager;
+   pri let typeNameCtrl: &Ast.TypeNameCtrl;
+   
 
-   pub fn __init() {
-      self.typeInfo2ModuleName = {};
+   pub fn __init( typeNameCtrl:&Ast.TypeNameCtrl,
+                  moduleInfoManager: &Ast.ModuleInfoManager)
+   {
+      //self.typeInfo2ModuleName = {};
+      self.typeNameCtrl = typeNameCtrl;
+      self.moduleInfoManager = moduleInfoManager;
    }
-   pub fn add( moduleTypeInfo:&Ast.TypeInfo, moduleInfo:ModuleInfo ) mut {
-      self.typeInfo2ModuleName[ moduleTypeInfo ] = moduleInfo;
-   }
+   // pub fn add( moduleTypeInfo:&Ast.TypeInfo, moduleInfo:ModuleInfo ) mut {
+   //    self.typeInfo2ModuleName[ moduleTypeInfo ] = moduleInfo;
+   // }
 
    pub fn getFullName( mut typeInfo:&Ast.TypeInfo ): str {
       typeInfo = typeInfo.$srcTypeInfo;
-      let workName = typeInfo.getFullName( self.typeInfo2ModuleName, true );
+      let workName = typeInfo.getFullName(
+         self.$typeNameCtrl, self.moduleInfoManager, true );
       let fullName = "%s" ( (workName.gsub( "[&@]", "" ).gsub( "%.", "_" ) ) );
       if Ast.isPubToExternal( typeInfo.$accessMode ) {
          return fullName;
@@ -461,7 +469,7 @@ class convFilter extend Nodes.Filter<Opt> (Util.SourceStream) {
 
    pub fn __init( streamName: str, stream: oStream, ast:&TransUnit.ASTInfo )
    {
-      super();
+      super(ast.$moduleTypeInfo, ast.$moduleTypeInfo.$scope);
 
       self.scopeMgr = new ScopeMgr();
       self.processingNode = nil;
@@ -496,7 +504,7 @@ class convFilter extend Nodes.Filter<Opt> (Util.SourceStream) {
       self.pubAlgeId2AlgeTypeInfo = {};
       self.needIndent = false;
 
-      self.moduleCtrl = new ModuleCtrl();
+      self.moduleCtrl = new ModuleCtrl( self.$typeNameCtrl, self.$moduleInfoManager );
 
       self.pushRoutine( ast.$moduleTypeInfo );
    }
@@ -620,7 +628,7 @@ pub override fn convFilter.processImport(
    let module = node.get_modulePath();
    let mut moduleName = module.gsub( ".*%.", "" );
    moduleName = node.$assignName;
-   self.moduleCtrl.add( node.$moduleTypeInfo, new ModuleInfo( moduleName, module ) );
+//   self.moduleCtrl.add( node.$moduleTypeInfo, new ModuleInfo( moduleName, module ) );
    // self.typeInfo2ModuleName[ node.$moduleTypeInfo ] =
    //    new ModuleInfo( moduleName, module );
    self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
@@ -834,7 +842,7 @@ fn getAccessPrimValFromStem( dddFlag:bool, typeInfo:&Ast.TypeInfo, index:int ) :
    return txt;
 }
 
-pub override fn convFilter.processBlock(
+pub override fn convFilter.processBlockSub(
    node: Nodes.BlockNode, opt: Opt ) mut
 {
    // ローカル変数のうち、 stem として扱う変数を決定し、インデックスを紐付ける。
@@ -4121,7 +4129,7 @@ pub fn convFilter.processCallWithMRet(
                         self.write( getAccessPrimValFromStem( false, argType, 0 ) );
                      }
                   }
-                  self.writeln( "; // %s" (argType.getTxt( true## )) );
+                  self.writeln( "; // %s" (argType.getTxt( self.$typeNameCtrl## )) );
                }
             }
             if retTypeName ~= "void" {
@@ -5260,7 +5268,7 @@ fn convFilter.processAndOr( node: Nodes.ExpOp2Node,
    if firstFlag {
       self.write( ")" );
 
-      print( "hoge:", node.$expType.getTxt( true## ) );
+      print( "hoge:", node.$expType.getTxt( self.$typeNameCtrl## ) );
       if not isStemType( node.$expType ) {
          self.accessPrimValFromStem( false, node.$expType, 0 );
       }
