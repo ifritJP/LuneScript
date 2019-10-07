@@ -1,3 +1,13 @@
+pub class Test {
+}
+class Sub extend Test {
+}
+pub class Hoge {
+   let val:Sub {pub:Test};
+}
+let hoge = new Hoge( new Sub() );
+let val:&Sub = hoge.$val; // error
+
 {
-   let test2 = new int;
+   let test2 = new int; // error
 }

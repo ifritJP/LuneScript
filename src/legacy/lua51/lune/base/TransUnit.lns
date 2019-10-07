@@ -218,7 +218,12 @@ enum AnalyzingState {
 
 form checkImplicitCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
 
-pub class TransUnit {
+
+pub interface TransUnitIF {
+   pub fn createModifier( typeInfo:&Ast.TypeInfo, mutMode: Ast.MutMode ) : &Ast.TypeInfo;
+}
+
+pub class TransUnit extend (TransUnitIF) {
 
    /** 解析状態 */
    pri let mut analyzingStateQueue:List<AnalyzingState>;
@@ -519,15 +524,25 @@ pub class TransUnit {
       self.popScope();
    }
 
+   /**
+既存クラスの Scope を push する。
+   */
+   pri fn pushClassScope( errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo ) mut {
+      if self.scope ~= classTypeInfo.$scope$.$parent {
+         self.addErrMess( errPos, "This class does not exist in this scope. -- %s"
+                          (classTypeInfo.getTxt( ## )) );
+      }
+      self.scope = unwrap Ast.getScope( classTypeInfo );
+   }
 
    /**
 指定クラスの Scope を push し、TypeInfo を取得する。
 
 クラスが生成済みの場合は baseInfo, interfaceList, genTypeList に nil を指定する。
    */
-   pri fn pushClass(
-      classFlag:bool, abstractFlag: bool, baseInfo: &Ast.TypeInfo!,
-      interfaceList: &List<&Ast.TypeInfo>!,
+   pub fn pushClass(
+      errPos:&Parser.Position, classFlag:bool, abstractFlag: bool,
+      baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       accessMode:Ast.AccessMode, defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
@@ -537,12 +552,12 @@ pub class TransUnit {
          typeInfo = _exp;
 
          if typeInfo.$abstractFlag ~= abstractFlag {
-            self.addErrMess( self.currentToken.pos,
+            self.addErrMess( errPos,
                              "mismatch class(%s) abstract for prototpye"
                              (typeInfo.getTxt( self.typeNameCtrl ##)));
          }
          if typeInfo.$accessMode ~= accessMode {
-            self.addErrMess( self.currentToken.pos,
+            self.addErrMess( errPos,
                              "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
                              ( typeInfo.getTxt( self.typeNameCtrl ##),
                                accessMode.$_txt, typeInfo.$accessMode.$_txt));
@@ -550,7 +565,7 @@ pub class TransUnit {
          when! baseInfo {
             if typeInfo.$baseTypeInfo ~= baseInfo {
                self.addErrMess(
-                  self.currentToken.pos,
+                  errPos,
                   "mismatch class(%s) base class(%s) for prototpye base class(%s)"
                   ( typeInfo.getTxt( self.typeNameCtrl##),
                     baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
@@ -564,7 +579,7 @@ pub class TransUnit {
                foreach protoType, index in protoList {
                   if protoType ~= typeList[ index ] {
                      self.addErrMess(
-                        self.currentToken.pos,
+                        errPos,
                         "mismatch class(%s) %s(%s) for prototpye %s(%s)"
                         ( typeInfo.getTxt(self.typeNameCtrl##), message,
                           typeList[ index ].getTxt(self.typeNameCtrl##),
@@ -574,20 +589,18 @@ pub class TransUnit {
             }
             else {
                self.addErrMess(
-                  self.currentToken.pos,
+                  errPos,
                   "mismatch class(%s) %s(%d) for prototpye %s(%d)"
                   ( typeInfo.getTxt(self.typeNameCtrl##), message, #typeList,
                     message, #protoList) );
             }
          }
          
-         when! interfaceList {
-            compareList( typeInfo.$interfaceList, interfaceList, "interface" );
-         }
-
-         when! genTypeList {
-            compareList( typeInfo.$itemTypeInfoList, genTypeList, "generics" );
-         }
+         compareList( typeInfo.$interfaceList,
+                      unwrap interfaceList default [], "interface" );
+         
+         compareList( typeInfo.$itemTypeInfoList,
+                      unwrap genTypeList default [], "generics" );
 
          
 
@@ -596,7 +609,7 @@ pub class TransUnit {
             case .Class {
                if not classFlag {
                   self.addErrMess(
-                     self.currentToken.pos,
+                     errPos,
                      "define interface already -- %s" (name) );
                   Util.printStackTrace();
                }
@@ -604,7 +617,7 @@ pub class TransUnit {
             case .IF {
                if classFlag {
                   self.addErrMess(
-                     self.currentToken.pos,
+                     errPos,
                      "define class already -- %s" (name) );
                   Util.printStackTrace();
                }
@@ -646,29 +659,30 @@ pub class TransUnit {
       self.popScope();
    }
 
-   pri fn pushbackStr( name: str, statement: str );
+   pri fn pushbackStr( name: str, statement: str ) mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
                        bool, firstToken: &Parser.Token,
-                       token: &Parser.Token ): Nodes.Node!;
+                       token: &Parser.Token ) mut: Nodes.Node!;
    pri fn analyzeDeclVar(
       mode:Nodes.DeclVarMode,
-      accessMode: Ast.AccessMode, firstToken: &Parser.Token ): Nodes.Node;
+      accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut: Nodes.Node;
    pri fn analyzeDeclFunc(
       declFuncMode: DeclFuncMode, abstractFlag: bool,
       overrideFlag: bool, accessMode: Ast.AccessMode, staticFlag: bool,
       mut classTypeInfo: &Ast.TypeInfo!,
-      firstToken: &Parser.Token, name: &Parser.Token! ) : Nodes.Node;
+      firstToken: &Parser.Token, name: &Parser.Token! ) mut : Nodes.Node;
    pri fn analyzeDeclClass(
       abstractFlag:bool, classAccessMode: Ast.AccessMode,
-      classToken: &Parser.Token, mode:DeclClassMode ): Nodes.DeclClassNode;
+      classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode;
    pri fn analyzeExp( allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,
-                      expectType:&Ast.TypeInfo! ): Nodes.Node;
-   pri fn analyzeStatement( termTxt: str! ): Nodes.Node!;
+                      expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
+   pri fn analyzeStatement( termTxt: str! ) mut : Nodes.Node!;
    pri fn analyzeExpSymbol(
       firstToken: &Parser.Token, token: &Parser.Token,
-      mode: ExpSymbolMode, prefixExp: &Nodes.Node!, skipFlag: bool ): Nodes.Node;
-   pri fn analyzeExpList( allowNoneType:bool, skipOp2Flag: bool, expNode: &Nodes.Node!,
-                          expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ): Nodes.ExpListNode;
+      mode: ExpSymbolMode, prefixExp: &Nodes.Node!, skipFlag: bool ) mut : Nodes.Node;
+   pri fn analyzeExpList(
+      allowNoneType:bool, skipOp2Flag: bool, expNode: &Nodes.Node!,
+      expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ) mut : Nodes.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pri fn getTokenNoErr() mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
@@ -798,7 +812,8 @@ class MacroMetaInfo extend (Mapping) {
 proto abstract class _TypeInfo extend (Mapping);
 
 class ImportParam {
-   pub let transUnit:&TransUnit;
+   pub let pos:&Parser.Position;
+   pub let mut transUnit:TransUnitIF;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
    pub let metaInfo:_MetaInfo;
@@ -901,8 +916,7 @@ class _TypeInfoAlternate extend _TypeInfo {
    pub let belongClassFlag:bool;
    pub let altIndex:int;
 
-   pub override fn createTypeInfo( param:ImportParam ):
-      &Ast.TypeInfo!, str!
+   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let baseInfo = unwrap param.getTypeInfo( self.baseId );
       let mut interfaceList:List<&Ast.TypeInfo> = [];
@@ -922,8 +936,7 @@ class _TypeInfoGeneric extend _TypeInfo {
    pub let genSrcTypeId:int;
    pub let genTypeList:&List<int>;
 
-   pub override fn createTypeInfo( param:ImportParam ):
-      &Ast.TypeInfo!, str!
+   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let genSrcTypeInfo = unwrap param.getTypeInfo( self.genSrcTypeId );
       let mut genTypeList:List<&Ast.TypeInfo> = [];
@@ -941,8 +954,7 @@ class _TypeInfoBox extend _TypeInfo {
    pub let accessMode:Ast.AccessMode;
    pub let boxingType:int;
 
-   pub override fn createTypeInfo( param:ImportParam ):
-      &Ast.TypeInfo!, str!
+   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let boxingType = unwrap param.getTypeInfo( self.boxingType );
       let newTypeInfo = Ast.NormalTypeInfo.createBox( self.accessMode, boxingType );
@@ -956,8 +968,7 @@ class _TypeInfoModifier extend _TypeInfo {
    pub let srcTypeId:int;
    pub let mutMode:Ast.MutMode;
 
-   pub override fn createTypeInfo( param:ImportParam ):
-      &Ast.TypeInfo!, str!
+   pub override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       //let! srcTypeInfo = param.typeId2TypeInfo[ self.srcTypeId ] {
       let! srcTypeInfo = param.getTypeInfo( self.srcTypeId ) {
@@ -1124,13 +1135,12 @@ class _TypeInfoNormal extend _TypeInfo {
                   self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
                   scope, baseInfo, interfaceList, altTypeList,
                   parentInfo, true, .Pub, self.txt );
-               newTypeInfo = workTypeInfo;
-               param.typeId2Scope[ self.typeId ] = scope;
-
-
-               param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
-
                parentScope.addClass( self.txt, workTypeInfo );
+               
+               newTypeInfo = workTypeInfo;
+
+               param.typeId2Scope[ self.typeId ] = scope;
+               param.typeId2TypeInfo[ self.typeId ] = workTypeInfo;
             }
             else {
                let mut scope:Ast.Scope! = nil;
@@ -1714,7 +1724,8 @@ fn TransUnit.registBuiltInScope() mut {
                }
             }
             parentInfo = self.pushClass(
-               classFlag, false, nil, interfaceList, genTypeList, true, name, .Pub ## );
+               self.currentToken.pos, classFlag, false, nil, interfaceList,
+               genTypeList, true, name, .Pub ## );
             Ast.builtInTypeIdSet[ parentInfo.get_typeId() ] = parentInfo;
             Ast.builtInTypeIdSet[ parentInfo.$nilableTypeInfo.$typeId ] =
                parentInfo.$nilableTypeInfo;
@@ -2495,8 +2506,8 @@ fn TransUnit.processImport( modulePath:str ) mut :
 
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self, typeId2Scope, typeId2TypeInfo, metaInfo, self.scope,
-      moduleTypeInfo, id2atomMap );
+      self.currentToken.pos, self, typeId2Scope,
+      typeId2TypeInfo, metaInfo, self.scope, moduleTypeInfo, id2atomMap );
    foreach atomInfo in _typeInfoList {
       let newTypeInfo, errMess = atomInfo.createTypeInfo( importParam );
       if! errMess {
@@ -2587,10 +2598,14 @@ fn TransUnit.processImport( modulePath:str ) mut :
       }
       let mut classTypeInfo = unwrap typeId2TypeInfo[ classTypeId ];
 
+      let mut backupScope = self.scope;
+      
       switch ( classTypeInfo.$kind ) {
          case .Class {
-            self.pushClass( true, classTypeInfo.$abstractFlag,
-                            nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
+            // self.pushClass( self.currentToken.pos, true, classTypeInfo.$abstractFlag,
+            //                 nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
+            self.pushClassScope( self.currentToken.pos, classTypeInfo );
+            
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let classInfo = _exp;
                foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {

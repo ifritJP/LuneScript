@@ -1769,8 +1769,7 @@ fn processDeclClassPrototype(
 
    if not node.hasUserInit() {
       // デフォルトコンストラクタの処理
-      let ctorType = unwrap node.$scope.getTypeInfoField(
-         "__init", true, node.$scope );
+      let ctorType = unwrap node.$scope.getTypeInfoField( "__init", true, node.$scope );
       stream.write(
          "static void u_mtd_%s___init( lune_env_t * _pEnv, %s pStem"
          (className, cTypeStemP ) );

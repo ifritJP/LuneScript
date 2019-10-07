@@ -658,12 +658,14 @@ fn TransUnit.analyzeExtend( accessMode:Ast.AccessMode, firstPos: &Parser.Positio
          true, self.scope,
          fn ( symbolInfo:&Ast.SymbolInfo ): bool {
             if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
-               if not ifFuncType.canEvalWith( symbolInfo.$typeInfo, .SetOp, ifAlt2typeMap ) {
+               let ret, mess = ifFuncType.canEvalWith(
+                  symbolInfo.$typeInfo, .SetOp, ifAlt2typeMap );
+               if not ret {
                   self.addErrMess(
                      firstPos,
-                     "mismatch method type -- %s.%s, %s.%s"
+                     "mismatch method type -- %s.%s, %s.%s\n%s"
                      (symbolInfo.$typeInfo.$parentInfo.getTxt(##), symbolInfo.$name,
-                       ifFuncType.$parentInfo.getTxt(##), ifFuncType.getTxt(##)));
+                       ifFuncType.$parentInfo.getTxt(##), ifFuncType.getTxt(##), mess));
                }
             }
             else {
@@ -703,7 +705,7 @@ fn TransUnit.analyzePushClass(
 
    let mut nextToken = self.getToken(##);
    let mut baseTypeInfo:&Ast.TypeInfo! = nil;
-   let mut interfaceList:&List<&Ast.TypeInfo> = [];
+   let mut interfaceList:&List<&Ast.TypeInfo>! = nil;
    if nextToken.txt == "extend" {
       nextToken, baseTypeInfo, interfaceList = self.analyzeExtend(
          accessMode, firstToken.pos );
@@ -724,8 +726,8 @@ fn TransUnit.analyzePushClass(
 
 
    let classTypeInfo = self.pushClass(
-      classFlag, abstractFlag, baseTypeInfo or Ast.headTypeInfo, interfaceList,
-      altTypeList, false, name.txt, accessMode ## );
+      firstToken.pos, classFlag, abstractFlag, baseTypeInfo or Ast.headTypeInfo,
+      interfaceList, altTypeList, false, name.txt, accessMode ## );
 
    return nextToken, classTypeInfo;
 }
@@ -1326,11 +1328,11 @@ fn TransUnit.analyzeDeclMember(
       }
 
       if Ast.isPubToExternal( classTypeInfo.$accessMode ) {
-         if Ast.isPubToExternal( accessMode ) or
-            Ast.isPubToExternal( getterMode ) or
-            Ast.isPubToExternal( setterMode )
-         {
+         if Ast.isPubToExternal( accessMode ) or Ast.isPubToExternal( setterMode ) {
             self.checkPublic( refType.$pos, typeInfo );
+         }
+         if Ast.isPubToExternal( getterMode ) {
+            self.checkPublic( refType.$pos, getterRetType );
          }
       }
 
@@ -1910,13 +1912,20 @@ fn TransUnit.analyzeDeclClass(
       if memberNode.$setterMode ~= .None and
          not classScope.getTypeInfoChild( setterName )
       {
+         let mutable;
+         if memberType.$mutMode == .Mut {
+            mutable = true;
+         }
+         else {
+            mutable = false;
+         }
          classScope.addMethod(
             Ast.NormalTypeInfo.createFunc(
                false, false, self.pushScope( false ## ),
                .Method, parentInfo, true, false,
                memberNode.$staticFlag, accessMode,
-               setterName, nil, [ memberType ], nil, true
-            ), accessMode, memberNode.$staticFlag, true );
+               setterName, nil, [ memberType ], nil, mutable ),
+            accessMode, memberNode.$staticFlag, true );
          self.popScope();
          methodNameSet.add( setterName );
       }
@@ -2123,18 +2132,24 @@ fn TransUnit.analyzeDeclFunc(
    if token.txt == "." {
       needPopFlag = true;
 
-      let className = (unwrap name).txt;
+      when! name {
+         let className = name.txt;
 
-      classTypeInfo = self.scope.getTypeInfoChild( className );
+         classTypeInfo = self.scope.getTypeInfoChild( className );
 
-      when! classTypeInfo {
-         self.pushClass(
-            classTypeInfo.$kind == .Class,
-            classTypeInfo.$abstractFlag, nil, nil, nil, false, className,
-            classTypeInfo.$accessMode ## );
+         when! classTypeInfo {
+            // self.pushClass(
+            //    name.pos, classTypeInfo.$kind == .Class,
+            //    classTypeInfo.$abstractFlag, nil, nil, nil, false, className,
+            //    classTypeInfo.$accessMode ## );
+            self.pushClassScope( name.pos, classTypeInfo );
+         }
+         else {
+            self.error( "not found class -- %s" (className) );
+         }
       }
       else {
-         self.error( "not found class -- %s" (className) );
+         self.error( "can't use '.' for any function name" );
       }
 
       name = self.getSymbolToken( .MustNot_ );

@@ -116,7 +116,7 @@ Lua からも利用される。
 @return stem! ロードしたモジュール。 失敗した場合 nil
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadModule( mod:str ): stem!, &stem;
+   pub fn loadModule( mod:str ) mut: stem!, &stem;
 
    /**
 指定の LuneScript のモジュールからメタ情報をロードする。
@@ -125,7 +125,7 @@ Lua からも利用される。
 @param mod モジュール (foo.bar)
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem!;
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut: &stem!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -140,11 +140,11 @@ LuneScript のコード文字列からロードする。
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ): stem!, &stem {
+   pub fn loadModule( mod:str ) mut: stem!, &stem {
       // error( "not implements" );
       return require( mod ), {};
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ): &stem! {
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str ) mut : &stem! {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt( importModuleInfo:ImportModuleInfo, name:str, txt:str ): stem {

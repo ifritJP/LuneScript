@@ -92,8 +92,8 @@ class Front extend (frontInterface.frontInterface) {
       frontInterface.setFront( self );
    }
 
-   pub fn loadModule( mod:str ): stem!, &stem;
-   pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ): &stem!;
+   pub fn loadModule( mod:str ) mut: stem!, &stem;
+   pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo, mod:str ) mut: &stem!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
                           name:str, txt:str ): stem;
    pub fn searchModule( mod:str ): str!;

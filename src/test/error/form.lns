@@ -29,3 +29,9 @@
    func = fn ( val:stem!, val2:int ) { // error
    };
 }
+{
+   form Test();
+
+   Test(); // error
+   (Test)(); // error
+}

@@ -230,6 +230,9 @@ pub abstract class Node {
       return .None;
    }
 
+   pub fn getSymbolInfo(): &List<&Ast.AccessSymbolInfo>;
+   
+
    pub abstract fn visit( visitor:NodeVisitor, depth:int ): bool;
 }
 
@@ -1124,6 +1127,10 @@ _declNodeClass( "ExpDDD", Node, false, true, false,
 _declNodeClass( "ExpParen", Node, false, true, false,
                 [ { "exp": "&Node" } ]
 );
+pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.AccessSymbolInfo> {
+   return self.exp.getSymbolInfo();
+}
+
 
 _declNodeClass( "ExpMacroExp", Node, false, false, true,
                 [ { "stmtList": "List<&Node>" } ]

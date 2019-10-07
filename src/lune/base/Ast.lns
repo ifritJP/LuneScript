@@ -553,13 +553,13 @@ pub class TypeInfo {
    /** other 型から dest 型への canEvalType の評価が可能かどうか */
    pro static fn canEvalWithBase(
       dest:&TypeInfo, destMut: bool, other:&TypeInfo,
-      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool;
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!;
 
    /** other 型からこの型への canEvalType の評価が可能かどうか */
    pub fn canEvalWith( other:&TypeInfo, canEvalType:CanEvalType,
-                       alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+                       alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return false;
+      return false, nil;
    }
 
    /** この型が abstract かどうか */
@@ -1618,9 +1618,10 @@ pub class NilTypeInfo extend TypeInfo {
 
    /** other 型からこの型への canEvalType の評価が可能かどうか */
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo, canEvalType:CanEvalType,
+      alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return other.$nilable;
+      return other.$nilable, nil;
    }
 
    /** 表示用文字列取得 */
@@ -1967,7 +1968,7 @@ pub class AlternateTypeInfo extend TypeInfo {
 
       if! let genType = alt2type[ self ] {
          when! canEvalType {
-            return genType.canEvalWith( otherWork, canEvalType, alt2type );
+            return (genType.canEvalWith( otherWork, canEvalType, alt2type ));
          }
          return genType.equals( otherWork, alt2type ## );
       }
@@ -2037,13 +2038,14 @@ pub class AlternateTypeInfo extend TypeInfo {
 
    /** other 型からこの型への canEvalType の評価が可能かどうか */
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
       if self == other.$srcTypeInfo {
-         return true;
+         return true, nil;
       }
       if other.$nilable {
-         return false;
+         return false, nil;
       }
       if not self.belongClassFlag {
          if! let altType = other@@@AlternateTypeInfo {
@@ -2051,13 +2053,13 @@ pub class AlternateTypeInfo extend TypeInfo {
                altType.altIndex == self.altIndex
             {
                // 関数の型パラメータは、インデックスが同じならば同じものとする
-               return true;
+               return true, nil;
             }
          }
       }
 
       //let mut otherWork = unwrap other.applyGeneric( alt2type ) default other;
-      return self.canSetFrom( other, canEvalType, alt2type );
+      return self.canSetFrom( other, canEvalType, alt2type ), nil;
       // let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
       // if! let genType = alt2type[ self ] {
       //    return genType.canEvalWith( otherWork, canEvalType, alt2type );
@@ -2356,22 +2358,23 @@ pub class GenericTypeInfo extend TypeInfo {
 
    /** other 型からこの型への canEvalType の評価が可能かどうか */
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
       if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) {
-         return false;
+         return false, nil;
       }
 
       let otherSrc = other.$srcTypeInfo;
       if self == otherSrc {
-         return true;
+         return true, nil;
       }
 
       // other のスーパークラスを辿って、一致するか調べる
       let mut work = otherSrc;
       while true {
          if work == headTypeInfo {
-            return false;
+            return false, nil;
          }
          foreach genType, altType in work.createAlt2typeMap( false ) {
             alt2type[ altType ] = genType;
@@ -2381,7 +2384,7 @@ pub class GenericTypeInfo extend TypeInfo {
          }
          foreach ifType in work.$interfaceList {
             if self.canEvalWith( ifType, canEvalType, alt2type ) {
-               return true;
+               return true, nil;
             }
          }
          work = work.$baseTypeInfo;
@@ -2392,12 +2395,13 @@ pub class GenericTypeInfo extend TypeInfo {
          foreach val, key in self.alt2typeMap {
             let otherType = AlternateTypeInfo.getAssign(
                unwrap otherGen.alt2typeMap[ key ], alt2type );
-            if not val.canEvalWith( otherType, canEvalType, alt2type ) {
-               return false;
+            let ret, mess = val.canEvalWith( otherType, canEvalType, alt2type );
+            if not ret {
+               return false, mess;
             }
          }
       }
-      return true;
+      return true, nil;
    }
 
    /** この型と typeInfo が等しいかどうか */
@@ -2516,14 +2520,16 @@ pub class ModifierTypeInfo extend TypeInfo {
             self.mutMode ) );
    }
 
-   pub override fn canEvalWith( other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   pub override fn canEvalWith(
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
       // if isGenericType( self.srcTypeInfo ) {
       //    return self.srcTypeInfo.canEvalWith( other, canEvalType, alt2type );
       // }
       return TypeInfo.canEvalWithBase(
          self.srcTypeInfo, TypeInfo.isMut( self ), other.$srcTypeInfo,
-         canEvalType == .SetEq and CanEvalType.SetOp or canEvalType, alt2type );
+         canEvalType == .SetEq and CanEvalType.SetOp or canEvalType, alt2type )**;
    }
 
    pub override fn equals(
@@ -2613,8 +2619,10 @@ pub class ModuleTypeInfo extend TypeInfo {
       return self.get_display_stirng_with( self.$rawTxt );
    }
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
-      return false;
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
+   {
+      return false, nil;
    }
 
    pub override fn serialize(
@@ -2750,9 +2758,10 @@ pub class EnumTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return self == other.$srcTypeInfo;
+      return self == other.$srcTypeInfo, nil;
    }
 
    pub fn addEnumValInfo( valInfo:&EnumValInfo ) mut {
@@ -2869,8 +2878,10 @@ pub class AlgeTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
-      return self == other.$srcTypeInfo;
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
+   {
+      return self == other.$srcTypeInfo, nil;
    }
 
    pub override fn get_mutMode(): MutMode {
@@ -3818,8 +3829,10 @@ pub class DDDTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool {
-      return self.typeInfo.canEvalWith( other, canEvalType, alt2type );
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
+   {
+      return self.typeInfo.canEvalWith( other, canEvalType, alt2type )**;
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -4134,9 +4147,10 @@ pub class AbbrTypeInfo extend TypeInfo {
    }
 
    pub override fn canEvalWith(
-      other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
    {
-      return false;
+      return false, nil;
    }
 
    pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
@@ -4314,72 +4328,87 @@ accessMode = %d, kind = %d, ```
 
 // other 型の値を、この型の変数に設定できるか判定する。
 pub override fn BoxTypeInfo.canEvalWith(
-   other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   other:&TypeInfo,
+   canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
 {
    if self == other {
-      return true;
+      return true, nil;
    }
    switch canEvalType {
       case .SetOp, .SetEq {
       }
       default {
-         return false;
+         return false, nil;
       }
    }
 
    if other.$nilable {
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type );
-      return true;
+      return true, nil;
    }
 
    if self.boxingType.canEvalWith( other, canEvalType, alt2type ) {
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type );
-      return true;
+      return true, nil;
    }
-   return false;
+   return false, nil;
 }
 
 
 // other 型の値を、この型の変数に設定できるか判定する。
 pub override fn NilableTypeInfo.canEvalWith(
-   other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool
+   other:&TypeInfo,
+   canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
 {
    //let otherSrc = other.$srcTypeInfo;
    let otherSrc = other;
 
    if self == builtinTypeStem_ {
-      return true;
+      return true, nil;
    }
    if otherSrc == builtinTypeNil or otherSrc.$kind == .Abbr {
       if self.$nonnilableType.$kind == .Box {
-         return self.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type );
+         return self.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
-      return true;
+      return true, nil;
    }
    if self.typeId == otherSrc.$typeId {
-      return true;
+      return true, nil;
    }
    if otherSrc.$nilable {
       return self.$nonnilableType.canEvalWith(
-         otherSrc.$nonnilableType, canEvalType, alt2type );
+         otherSrc.$nonnilableType, canEvalType, alt2type )**;
    }
-   return self.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type );
+   return self.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type )**;
 }
 
-macro _checkEqualsItemType( type1:sym, type2:sym, index:int, alt2type:sym, destMut:sym ) {
+macro _checkEqualsItemType(
+   type1:sym, type2:sym, index:int, alt2type:sym, destMut:sym, multiFlag:bool )
+{
+   {
+      let retStat:stat;
+      if multiFlag {
+         retStat = `{ return false, mess };
+      }
+      else {
+         retStat = `{ return false };
+      }
+   }
+   let mut mess:str! = nil;
    if #,,type1.$itemTypeInfoList >= ,,index and
       #,,type2.$itemTypeInfoList >= ,,index
    {
       // ここの .SetEq を制御する
-      if not (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
+      let ret;
+      ret, mess = (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
          ,,type2.$itemTypeInfoList[ ,,index ],
-         ,,destMut and CanEvalType.SetEq or CanEvalType.SetOp, ,,alt2type )
-      {
-         return false;
+         ,,destMut and CanEvalType.SetEq or CanEvalType.SetOp, ,,alt2type );
+      if not ret {
+         ,,retStat;
       }
    }
    else {
-      return false;
+      ,,retStat;
    }
 };
 
@@ -4703,7 +4732,7 @@ fn isSettableToForm( typeInfo:&TypeInfo ): bool {
 
 pub static fn TypeInfo.canEvalWithBase(
    dest:&TypeInfo, destMut:bool, other:&TypeInfo, canEvalType:CanEvalType,
-   alt2type:Map<&TypeInfo,&TypeInfo> ) : bool
+   alt2type:Map<&TypeInfo,&TypeInfo> ) : bool, str!
 {
    let otherMut = TypeInfo.isMut( other );
    let mut otherSrc = other.$srcTypeInfo;
@@ -4721,7 +4750,7 @@ pub static fn TypeInfo.canEvalWithBase(
          // 代入先の型が確定していない状態
          switch otherSrc {
             case builtinTypeAbbr, builtinTypeAbbrNone {
-               return false;
+               return false, nil;
             }
          }
          if otherSrc.$kind == .Func {
@@ -4730,25 +4759,25 @@ pub static fn TypeInfo.canEvalWithBase(
             // それを型推定できないため。
             // 代入先の FormFunc を自動生成すれば対応できなくはないが、
             // その場合は C-lang へのトランスコード対応が必要。
-            return false;
+            return false, nil;
          }
-         return true;
+         return true, nil;
       }
       elseif not otherMut and destMut {
          // imut/mut が一致していないものはエラー
          let nonNilOtherType = otherSrc.$nonnilableType;
          switch nonNilOtherType.$kind {
             case .Set, .Map, .List, .IF {
-               return false;
+               return false, nil;
             }
             case .Class {
                if builtinTypeString ~= nonNilOtherType {
-                  return false;
+                  return false, nil;
                }
             }
             case .Prim {
                if builtinTypeStem == nonNilOtherType {
-                  return false;
+                  return false, nil;
                }
             }
          }
@@ -4771,79 +4800,79 @@ pub static fn TypeInfo.canEvalWithBase(
       not isGenericType( otherSrc ) and
       destMut and not otherMut
    {
-      return false;
+      return false, nil;
    }
 
    if dest == builtinTypeStem_ {
-      return true;
+      return true, nil;
    }
 
    if dest.$srcTypeInfo.$kind == .DDD {
       if #dest.$itemTypeInfoList > 0 {
-         return dest.$itemTypeInfoList[ 1 ].canEvalWith( other, canEvalType, alt2type );
+         return dest.$itemTypeInfoList[ 1 ].canEvalWith( other, canEvalType, alt2type )**;
       }
-      return true;
+      return true, nil;
    }
    if not dest.$nilable and otherSrc.$nilable {
       if dest.$kind == .Box {
-         return dest.canEvalWith( otherSrc, canEvalType, alt2type );
+         return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
-      return false;
+      return false, nil;
    }
    if dest == builtinTypeStem and not otherSrc.$nilable {
-      return true;
+      return true, nil;
    }
    if dest == builtinTypeForm and
        ( otherSrc.$kind == .Func or
          otherSrc.$kind == .Form or otherSrc.$kind == .FormFunc )
    {
-      return isSettableToForm( otherSrc );
+      return isSettableToForm( otherSrc ), nil;
    }
    if otherSrc == builtinTypeNil or otherSrc.$kind == .Abbr {
       if dest.$kind ~= .Nilable {
-         return false;
+         return false, nil;
       }
-      return true;
+      return true, nil;
    }
    if dest.$typeId == otherSrc.$typeId {
-      return true;
+      return true, nil;
    }
    if dest.$kind ~= otherSrc.$kind {
       if dest.$kind == .Nilable {
          if otherSrc.$nilable {
             return dest.$nonnilableType.canEvalWith(
-               otherSrc.$nonnilableType, canEvalType, alt2type );
+               otherSrc.$nonnilableType, canEvalType, alt2type )**;
          }
-         return dest.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type );
+         return dest.$nonnilableType.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
       elseif isGenericType( dest ) {
-         return dest.canEvalWith( otherSrc, canEvalType, alt2type );
+         return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
       elseif ( dest.$kind == .Class or dest.$kind == .IF ) and
          ( otherSrc.$kind == .Class or otherSrc.$kind == .IF )
       {
          if canEvalType == .SetOp {
-            return otherSrc.isInheritFrom( dest, alt2type );
+            return otherSrc.isInheritFrom( dest, alt2type ), nil;
          }
-         return false;
+         return false, nil;
       }
       elseif otherSrc.$kind == .Enum {
          let enumTypeInfo = unwrap (otherSrc@@@EnumTypeInfo);
-         return dest.canEvalWith( enumTypeInfo.$valTypeInfo, canEvalType, alt2type );
+         return dest.canEvalWith( enumTypeInfo.$valTypeInfo, canEvalType, alt2type )**;
       }
       elseif dest.$kind == .Alternate {
-         return dest.canEvalWith( otherSrc, canEvalType, alt2type );
+         return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
       elseif dest.$kind == .Box {
-         return dest.canEvalWith( otherSrc, canEvalType, alt2type );
+         return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
       elseif dest.$kind == .Form {
          switch otherSrc.$kind {
             case .Form {
-               return true;
+               return true, nil;
             }
             case .FormFunc, .Func  {
-               return isSettableToForm( otherSrc );
+               return isSettableToForm( otherSrc ), nil;
             }
          }
       }
@@ -4864,13 +4893,13 @@ pub static fn TypeInfo.canEvalWithBase(
                                            false, nil, alt2type ) == .Error or
                   #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
                {
-                  return false;
+                  return false, nil;
                }
-               return true;
+               return true, nil;
             }
          }
       }
-      return false;
+      return false, nil;
    }
    // TypeInfoKind が等しい
    switch dest.$kind {
@@ -4878,7 +4907,7 @@ pub static fn TypeInfo.canEvalWithBase(
          if dest == builtinTypeInt and otherSrc == builtinTypeChar or
             dest == builtinTypeChar and otherSrc == builtinTypeInt
          {
-            return true;
+            return true, nil;
          }
          // int から real の代入を暗黙変換を許可すると
          // [ 1, 1.0 ] の型が List<stem> ではなく List<real> なってしまうので
@@ -4888,52 +4917,52 @@ pub static fn TypeInfo.canEvalWithBase(
          // {
          //    return true;
          // }
-         return false;
+         return false, nil;
       }
       case .List, .Array, .Set {
          if otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone {
             // literalMap の [], [@] は互換有りとする
-            return true;
+            return true, nil;
          }
-         _checkEqualsItemType( dest, otherSrc, 1, alt2type, destMut );
-         return true;
+         _checkEqualsItemType( dest, otherSrc, 1, alt2type, destMut, true );
+         return true, nil;
       }
       case .Map {
          if otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone and
             otherSrc.$itemTypeInfoList[ 2 ] == builtinTypeNone
          {
             // literalMap の {} は互換有りとする
-            return true;
+            return true, nil;
          }
-         fn check1(): bool {
-            _checkEqualsItemType( dest, otherSrc, 1, alt2type, destMut );
+         fn check1(): bool! {
+            _checkEqualsItemType( dest, otherSrc, 1, alt2type, destMut, false );
             return true;
          }
          fn check2(): bool {
-            _checkEqualsItemType( dest, otherSrc, 2, alt2type, destMut );
+            _checkEqualsItemType( dest, otherSrc, 2, alt2type, destMut, false );
             return true;
          }
          let result1 = check1();
          let result2 = check2();
          if result1 and result2 {
-            return true;
+            return true, nil;
          }
          if not result1 and otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone or
             not result2 and otherSrc.$itemTypeInfoList[ 2 ] == builtinTypeNone
          {
-            return true;
+            return true, nil;
          }
-         return false;
+         return false, nil;
       }
       case .Class, .IF {
          if canEvalType == .SetOp {
-            return otherSrc.isInheritFrom( dest, alt2type );
+            return otherSrc.isInheritFrom( dest, alt2type ), nil;
          }
-         return false;
+         return false, nil;
          // return otherSrc.isInheritFrom( dest, alt2type );
       }
       case .Form {
-         return isSettableToForm( otherSrc );
+         return isSettableToForm( otherSrc ), nil;
       }
       case .Func, .FormFunc {
          if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
@@ -4942,9 +4971,9 @@ pub static fn TypeInfo.canEvalWithBase(
                                      false, nil, alt2type ) == .Error or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
-            return false;
+            return false, nil;
          }
-         return true;
+         return true, nil;
       }
       case .Method {
          // if TypeInfo.checkMatchType( dest.$argTypeInfoList, otherSrc.$argTypeInfoList,
@@ -4958,39 +4987,43 @@ pub static fn TypeInfo.canEvalWithBase(
          if #dest.$argTypeInfoList ~= #otherSrc.$argTypeInfoList or
             #dest.$retTypeInfoList ~= #otherSrc.$retTypeInfoList
          {
-            return false;
+            return false, nil;
          }
          foreach argType, index in dest.$argTypeInfoList {
             let otherArgType = otherSrc.$argTypeInfoList[ index ];
             if not argType.equals( otherArgType, alt2type ## ) {
-               Util.errorLog( "unmatch arg(%d) type -- %s, %s"
-                              ( index, argType.getTxt(##), otherArgType.getTxt(##) ));
-               return false;
+               let mess = "unmatch arg(%d) type -- %s, %s"
+                   ( index, argType.getTxt(##), otherArgType.getTxt(##) );
+               return false, mess;
             }
          }
          foreach retType, index in dest.$retTypeInfoList {
             let otherRetType = otherSrc.$retTypeInfoList[ index ];
             if not retType.equals( otherRetType, alt2type ## ) {
-               Util.errorLog( "unmatch ret(%d) type -- %s, %s, %s"
-                              (index, retType.getTxt(##), otherRetType.getTxt(##),
-                                dest.getTxt(##) ));
-               return false;
+               let mess = "unmatch ret(%d) type -- %s, %s, %s"
+                   (index, retType.getTxt(##), otherRetType.getTxt(##), dest.getTxt(##) );
+               return false, mess;
             }
          }
-         return true;
+         if dest.$mutMode ~= otherSrc.$mutMode {
+            let mess = "unmatch mutable mode -- %s, %s"
+                (dest.$mutMode.$_txt, otherSrc.$mutMode.$_txt );
+            return false, mess;
+         }
+         return true, nil;
       }
       case .Nilable {
          return dest.$nonnilableType.canEvalWith(
-            otherSrc.$nonnilableType, canEvalType, alt2type );
+            otherSrc.$nonnilableType, canEvalType, alt2type )**;
       }
       case .Alternate {
-         return dest.canEvalWith( otherSrc, canEvalType, alt2type );
+         return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
       case .Box {
-         return dest.canEvalWith( otherSrc, canEvalType, alt2type );
+         return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
       }
       default {
-         return false;
+         return false, nil;
       }
    }
 }
@@ -4998,10 +5031,11 @@ pub static fn TypeInfo.canEvalWithBase(
 
 // other 型の値を、この型の変数に設定できるか判定する。
 pub override fn NormalTypeInfo.canEvalWith(
-   other:&TypeInfo, canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ) : bool
+   other:&TypeInfo,
+   canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ) : bool, str!
 {
    return TypeInfo.canEvalWithBase(
-      self, TypeInfo.isMut( self ), other, canEvalType, alt2type );
+      self, TypeInfo.isMut( self ), other, canEvalType, alt2type )**;
 }
 
 

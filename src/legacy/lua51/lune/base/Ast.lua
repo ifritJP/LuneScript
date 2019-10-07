@@ -962,7 +962,7 @@ function TypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 end
 function TypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return false
+   return false, nil
 end
 function TypeInfo:get_abstractFlag(  )
 
@@ -2198,7 +2198,7 @@ function NilTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 end
 function NilTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return other:get_nilable()
+   return other:get_nilable(), nil
 end
 function NilTypeInfo:get_display_stirng_with( raw )
 
@@ -2711,7 +2711,7 @@ function AlternateTypeInfo:canSetFrom( other, canEvalType, alt2type )
       local genType = alt2type[self]
       if genType ~= nil then
          if canEvalType ~= nil then
-            return genType:canEvalWith( otherWork, canEvalType, alt2type )
+            return (genType:canEvalWith( otherWork, canEvalType, alt2type ) )
          end
          
          return genType:equals( otherWork, alt2type )
@@ -2798,11 +2798,11 @@ end
 function AlternateTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
    if self == other:get_srcTypeInfo() then
-      return true
+      return true, nil
    end
    
    if other:get_nilable() then
-      return false
+      return false, nil
    end
    
    if not self.belongClassFlag then
@@ -2810,7 +2810,7 @@ function AlternateTypeInfo:canEvalWith( other, canEvalType, alt2type )
          local altType = _lune.__Cast( other, 3, AlternateTypeInfo )
          if altType ~= nil then
             if not altType.belongClassFlag and altType.altIndex == self.altIndex then
-               return true
+               return true, nil
             end
             
          end
@@ -2818,7 +2818,7 @@ function AlternateTypeInfo:canEvalWith( other, canEvalType, alt2type )
       
    end
    
-   return self:canSetFrom( other, canEvalType, alt2type )
+   return self:canSetFrom( other, canEvalType, alt2type ), nil
 end
 function AlternateTypeInfo:get_display_stirng_with( raw )
 
@@ -3198,18 +3198,18 @@ end
 function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
    if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) then
-      return false
+      return false, nil
    end
    
    local otherSrc = other:get_srcTypeInfo()
    if self == otherSrc then
-      return true
+      return true, nil
    end
    
    local work = otherSrc
    while true do
       if work == _moduleObj.headTypeInfo then
-         return false
+         return false, nil
       end
       
       for altType, genType in pairs( work:createAlt2typeMap( false ) ) do
@@ -3222,7 +3222,7 @@ function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
       
       for __index, ifType in pairs( work:get_interfaceList() ) do
          if self:canEvalWith( ifType, canEvalType, alt2type ) then
-            return true
+            return true, nil
          end
          
       end
@@ -3235,8 +3235,9 @@ function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
       if otherGen ~= nil then
          for key, val in pairs( self.alt2typeMap ) do
             local otherType = AlternateTypeInfo.getAssign( _lune.unwrap( otherGen.alt2typeMap[key]), alt2type )
-            if not val:canEvalWith( otherType, canEvalType, alt2type ) then
-               return false
+            local ret, mess = val:canEvalWith( otherType, canEvalType, alt2type )
+            if not ret then
+               return false, mess
             end
             
          end
@@ -3244,7 +3245,7 @@ function GenericTypeInfo:canEvalWith( other, canEvalType, alt2type )
       end
    end
    
-   return true
+   return true, nil
 end
 function GenericTypeInfo:equals( other, alt2type, checkModifer )
 
@@ -3705,7 +3706,7 @@ function ModuleTypeInfo:get_display_stirng(  )
 end
 function ModuleTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return false
+   return false, nil
 end
 function ModuleTypeInfo:serialize( stream, validChildrenSet )
 
@@ -3884,7 +3885,7 @@ function EnumTypeInfo:get_display_stirng(  )
 end
 function EnumTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return self == other:get_srcTypeInfo()
+   return self == other:get_srcTypeInfo(), nil
 end
 function EnumTypeInfo:addEnumValInfo( valInfo )
 
@@ -4035,7 +4036,7 @@ function AlgeTypeInfo:get_display_stirng(  )
 end
 function AlgeTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return self == other:get_srcTypeInfo()
+   return self == other:get_srcTypeInfo(), nil
 end
 function AlgeTypeInfo:get_mutMode(  )
 
@@ -5178,7 +5179,7 @@ function AbbrTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag
 end
 function AbbrTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
-   return false
+   return false, nil
 end
 function AbbrTypeInfo:serialize( stream, validChildrenSet )
 
@@ -5348,7 +5349,7 @@ end
 function BoxTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
    if self == other then
-      return true
+      return true, nil
    end
    
    do
@@ -5356,28 +5357,28 @@ function BoxTypeInfo:canEvalWith( other, canEvalType, alt2type )
       if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetEq then
       else 
          
-            return false
+            return false, nil
       end
    end
    
    if other:get_nilable() then
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
-      return true
+      return true, nil
    end
    
    if self.boxingType:canEvalWith( other, canEvalType, alt2type ) then
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
-      return true
+      return true, nil
    end
    
-   return false
+   return false, nil
 end
 
 function NilableTypeInfo:canEvalWith( other, canEvalType, alt2type )
 
    local otherSrc = other
    if self == _moduleObj.builtinTypeStem_ then
-      return true
+      return true, nil
    end
    
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
@@ -5385,11 +5386,11 @@ function NilableTypeInfo:canEvalWith( other, canEvalType, alt2type )
          return self:get_nonnilableType():canEvalWith( otherSrc, canEvalType, alt2type )
       end
       
-      return true
+      return true, nil
    end
    
    if self.typeId == otherSrc:get_typeId() then
-      return true
+      return true, nil
    end
    
    if otherSrc:get_nilable() then
@@ -5731,29 +5732,29 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          do
             local _switchExp = otherSrc
             if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
-               return false
+               return false, nil
             end
          end
          
          if otherSrc:get_kind() == TypeInfoKind.Func then
-            return false
+            return false, nil
          end
          
-         return true
+         return true, nil
       elseif not otherMut and destMut then
          local nonNilOtherType = otherSrc:get_nonnilableType()
          do
             local _switchExp = nonNilOtherType:get_kind()
             if _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.IF then
-               return false
+               return false, nil
             elseif _switchExp == TypeInfoKind.Class then
                if _moduleObj.builtinTypeString ~= nonNilOtherType then
-                  return false
+                  return false, nil
                end
                
             elseif _switchExp == TypeInfoKind.Prim then
                if _moduleObj.builtinTypeStem == nonNilOtherType then
-                  return false
+                  return false, nil
                end
                
             end
@@ -5764,11 +5765,11 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    end
    
    if (canEvalType == CanEvalType.SetOp or canEvalType == CanEvalType.SetEq ) and otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
-      return false
+      return false, nil
    end
    
    if dest == _moduleObj.builtinTypeStem_ then
-      return true
+      return true, nil
    end
    
    if dest:get_srcTypeInfo():get_kind() == TypeInfoKind.DDD then
@@ -5776,7 +5777,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          return dest:get_itemTypeInfoList()[1]:canEvalWith( other, canEvalType, alt2type )
       end
       
-      return true
+      return true, nil
    end
    
    if not dest:get_nilable() and otherSrc:get_nilable() then
@@ -5784,27 +5785,27 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          return dest:canEvalWith( otherSrc, canEvalType, alt2type )
       end
       
-      return false
+      return false, nil
    end
    
    if dest == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then
-      return true
+      return true, nil
    end
    
    if dest == _moduleObj.builtinTypeForm and (otherSrc:get_kind() == TypeInfoKind.Func or otherSrc:get_kind() == TypeInfoKind.Form or otherSrc:get_kind() == TypeInfoKind.FormFunc ) then
-      return isSettableToForm( otherSrc )
+      return isSettableToForm( otherSrc ), nil
    end
    
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if dest:get_kind() ~= TypeInfoKind.Nilable then
-         return false
+         return false, nil
       end
       
-      return true
+      return true, nil
    end
    
    if dest:get_typeId() == otherSrc:get_typeId() then
-      return true
+      return true, nil
    end
    
    if dest:get_kind() ~= otherSrc:get_kind() then
@@ -5818,10 +5819,10 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          return dest:canEvalWith( otherSrc, canEvalType, alt2type )
       elseif (dest:get_kind() == TypeInfoKind.Class or dest:get_kind() == TypeInfoKind.IF ) and (otherSrc:get_kind() == TypeInfoKind.Class or otherSrc:get_kind() == TypeInfoKind.IF ) then
          if canEvalType == CanEvalType.SetOp then
-            return otherSrc:isInheritFrom( dest, alt2type )
+            return otherSrc:isInheritFrom( dest, alt2type ), nil
          end
          
-         return false
+         return false, nil
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
          local enumTypeInfo = _lune.unwrap( (_lune.__Cast( otherSrc, 3, EnumTypeInfo ) ))
          return dest:canEvalWith( enumTypeInfo:get_valTypeInfo(), canEvalType, alt2type )
@@ -5833,9 +5834,9 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          do
             local _switchExp = otherSrc:get_kind()
             if _switchExp == TypeInfoKind.Form then
-               return true
+               return true, nil
             elseif _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func then
-               return isSettableToForm( otherSrc )
+               return isSettableToForm( otherSrc ), nil
             end
          end
          
@@ -5844,52 +5845,60 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             local _switchExp = otherSrc:get_kind()
             if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func then
                if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( otherSrc:get_argTypeInfoList(), dest:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( otherSrc:get_retTypeInfoList(), dest:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-                  return false
+                  return false, nil
                end
                
-               return true
+               return true, nil
             end
          end
          
       end
       
-      return false
+      return false, nil
    end
    
    do
       local _switchExp = dest:get_kind()
       if _switchExp == TypeInfoKind.Prim then
          if dest == _moduleObj.builtinTypeInt and otherSrc == _moduleObj.builtinTypeChar or dest == _moduleObj.builtinTypeChar and otherSrc == _moduleObj.builtinTypeInt then
-            return true
+            return true, nil
          end
          
-         return false
+         return false, nil
       elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
-            return true
+            return true, nil
          end
          
+         local mess = nil
          if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
-            if not (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type ) then
-               return false
+            local ret
+            
+            ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type )
+            if not ret then
+               return false, mess
             end
             
          else
           
-            return false
+            return false, mess
          end
          
          
-         return true
+         return true, nil
       elseif _switchExp == TypeInfoKind.Map then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and otherSrc:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
-            return true
+            return true, nil
          end
          
          local function check1(  )
          
+            local mess = nil
             if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
-               if not (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type ) then
+               local ret
+               
+               ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( otherSrc:get_itemTypeInfoList()[1], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type )
+               if not ret then
                   return false
                end
                
@@ -5904,8 +5913,12 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          
          local function check2(  )
          
+            local mess = nil
             if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
-               if not (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type ) then
+               local ret
+               
+               ret, mess = (dest:get_itemTypeInfoList()[2] ):canEvalWith( otherSrc:get_itemTypeInfoList()[2], destMut and CanEvalType.SetEq or CanEvalType.SetOp, alt2type )
+               if not ret then
                   return false
                end
                
@@ -5921,38 +5934,38 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          local result1 = check1(  )
          local result2 = check2(  )
          if result1 and result2 then
-            return true
+            return true, nil
          end
          
          if not result1 and otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone or not result2 and otherSrc:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
-            return true
+            return true, nil
          end
          
-         return false
+         return false, nil
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
          if canEvalType == CanEvalType.SetOp then
-            return otherSrc:isInheritFrom( dest, alt2type )
+            return otherSrc:isInheritFrom( dest, alt2type ), nil
          end
          
-         return false
+         return false, nil
       elseif _switchExp == TypeInfoKind.Form then
-         return isSettableToForm( otherSrc )
+         return isSettableToForm( otherSrc ), nil
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.FormFunc then
          if TypeInfo.checkMatchType( dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type ) == MatchType.Error or TypeInfo.checkMatchType( dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type ) == MatchType.Error or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-            return false
+            return false, nil
          end
          
-         return true
+         return true, nil
       elseif _switchExp == TypeInfoKind.Method then
          if #dest:get_argTypeInfoList() ~= #otherSrc:get_argTypeInfoList() or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
-            return false
+            return false, nil
          end
          
          for index, argType in pairs( dest:get_argTypeInfoList() ) do
             local otherArgType = otherSrc:get_argTypeInfoList()[index]
             if not argType:equals( otherArgType, alt2type ) then
-               Util.errorLog( string.format( "unmatch arg(%d) type -- %s, %s", index, argType:getTxt(  ), otherArgType:getTxt(  )) )
-               return false
+               local mess = string.format( "unmatch arg(%d) type -- %s, %s", index, argType:getTxt(  ), otherArgType:getTxt(  ))
+               return false, mess
             end
             
          end
@@ -5960,13 +5973,20 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          for index, retType in pairs( dest:get_retTypeInfoList() ) do
             local otherRetType = otherSrc:get_retTypeInfoList()[index]
             if not retType:equals( otherRetType, alt2type ) then
-               Util.errorLog( string.format( "unmatch ret(%d) type -- %s, %s, %s", index, retType:getTxt(  ), otherRetType:getTxt(  ), dest:getTxt(  )) )
-               return false
+               local mess = string.format( "unmatch ret(%d) type -- %s, %s, %s", index, retType:getTxt(  ), otherRetType:getTxt(  ), dest:getTxt(  ))
+               return false, mess
             end
             
          end
          
-         return true
+         if dest:get_mutMode() ~= otherSrc:get_mutMode() then
+            local mess = string.format( "unmatch mutable mode -- %s, %s", MutMode:_getTxt( dest:get_mutMode())
+            , MutMode:_getTxt( otherSrc:get_mutMode())
+            )
+            return false, mess
+         end
+         
+         return true, nil
       elseif _switchExp == TypeInfoKind.Nilable then
          return dest:get_nonnilableType():canEvalWith( otherSrc:get_nonnilableType(), canEvalType, alt2type )
       elseif _switchExp == TypeInfoKind.Alternate then
@@ -5975,7 +5995,7 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
          return dest:canEvalWith( otherSrc, canEvalType, alt2type )
       else 
          
-            return false
+            return false, nil
       end
    end
    

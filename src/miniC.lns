@@ -15,12 +15,5 @@
 // }
 // work();
 
-let func:form;
-{
-   let mut test1 = 1;
-   let mut test2 = "abc";
-   func = fn() {
-      print( test1, test2 );
-   };
+class Test {
 }
-func();

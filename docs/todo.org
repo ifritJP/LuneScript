@@ -10,32 +10,20 @@
 
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
-- [ ] import を先頭以外にも出来るようにしたため、
-      convLua.lns の self.typeInfo2ModuleName は、スコープと同じで階層化が必要。
-
 - [ ] nilable でないのに val$.$work が指定できる。
 
 - [ ] 文字列中の . を編集すると company-mode がエラーする
-
-- [ ] 次のエラーが検知できない。
-form test();
-
-test(); // test は form の型名なので、コールできないから本来はコンパイルエラー。
-  
-- [ ] let val:List<int>!;  
-      val or [] が List<int> にならない。 List<int>!;  になってしまう。
-
-- [ ] 型指定アクセッサのアクセス制御判定が意図した動作になっていない。
-  pub let val:Sub {pub:Super}; のこのとき、 
-  Sub は pub でなくても Super が pub なら OK のはずが、 
-  Sub が pub にないとエラーになってしまう。
-  
+ 
 - [ ] override のときメドッドの mut の一致を確認してない？
   
 - [ ] fn ():int { return 1; } (); が実行時エラーする。
   
 * 機能
 
+- [ ] A and B or C の結果の型をまともに判定できるように対応する。
+     今は and or の形の場合を特別に扱っている。
+     その為にも stem の TypeInfoKind を、専用にして処理を変更する。
+  
 - [ ] override 禁止を追加する
   
 - [ ] 独立したスコープを宣言できるようにする
@@ -378,6 +366,16 @@ fn func( val:int! ) {
    let val;
    val = [];
 - [X] import したモジュール内で宣言されたクラスの interface のメソッドにアクセスできなかった。
+- [X] import を先頭以外にも出来るようにしたため、
+      convLua.lns の self.typeInfo2ModuleName は、スコープと同じで階層化が必要。
+- [X] let val:List<int>!;  
+      val or [] が List<int> にならない。 List<int>!;  になってしまう。
+- [X] 型指定アクセッサのアクセス制御判定が意図した動作になっていない。
+  pub let val:Sub {pub:Super}; のこのとき、 
+  Sub は pub でなくても Super が pub なら OK のはずが、 
+  Sub が pub にないとエラーになってしまう。
+  
+
   
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。
 - [ ] import すると、モジュールのシンボルがスコープに追加される。
@@ -447,6 +445,10 @@ fn func( val:int! ) {
       また、モジュールのパスを変更できるようにする。
       これは、モジュールを生成した LuneScript のバージョンが異なる場合に、
       正常動作するように対応するため。
+- [#] 次のエラーが検知できない。
+form test();
+
+test(); // test は form の型名なので、コールできないから本来はコンパイルエラー。
 - [ ] int/real/str プリミティブ型の @@@ 対応。
 - [ ] コンストラクタからメソッドをコールする場合、
       全メンバをセットしてから。

@@ -45,3 +45,10 @@
    list2.sort( fn ( val1:int, val2:int ) : int { return val1; } ); // error
    list2.sort( fn ( val1:int, val2:int, val3:int ) : bool { return val1 > val2; } ); // error
 }
+{
+   let list:List<int>! = nil;
+   let list2:List<int> = [] or [];
+   let list3:List<int> = [] or list; // error
+   let list4:List<int> = list or [];
+   let list5:List<int> = list or list; // error
+}

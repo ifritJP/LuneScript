@@ -5028,6 +5028,11 @@ function ExpParenNode:get_exp()
 end
 
 
+function ExpParenNode:getSymbolInfo(  )
+
+   return self.exp:getSymbolInfo(  )
+end
+
 function NodeKind.get_ExpMacroExp(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['ExpMacroExp'])

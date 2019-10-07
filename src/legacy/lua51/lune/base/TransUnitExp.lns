@@ -1127,11 +1127,20 @@ fn TransUnit.prepareExpCall(
    return alt2typeMap, workArgList;
 }
 
+/**
+関数コール処理。
+
+関数コールの "(" を読み込み済みの状態。
+
+@param firstToken 関数コールの最初のトークン
+@param exp 関数
+
+*/
 fn TransUnit.analyzeExpCall(
-   firstToken:&Parser.Token, mut exp: Nodes.Node, nextToken:&Parser.Token ) mut :
+   firstToken:&Parser.Token, mut funcExp: Nodes.Node, nextToken:&Parser.Token ) mut :
    Nodes.Node, &Parser.Token
 {
-   self.checkSymbolHavingValue( exp.$pos, exp.getSymbolInfo() );
+   self.checkSymbolHavingValue( funcExp.$pos, funcExp.getSymbolInfo() );
    
    // string.format() の引数チェック
    fn checkArgForStringForm( argList:&Nodes.ExpListNode ) {
@@ -1210,9 +1219,16 @@ fn TransUnit.analyzeExpCall(
          }
       }
    }
-   
-   // let mut macroFlag = false;
-   let mut funcTypeInfo = exp.$expType;
+
+   let symbolInfoList = funcExp.getSymbolInfo();
+   if #symbolInfoList > 0 {
+      let symbol = symbolInfoList[ 1 ];
+      if symbol.$kind == .Typ {
+         self.addErrMess( funcExp.$pos, "can't call any Type. -- %s" (symbol.$name) );
+      }
+   }
+
+   let mut funcTypeInfo = funcExp.$expType;
    let nilAccess;
 
    if nextToken.txt == "$(" and funcTypeInfo.$nilable {
@@ -1251,7 +1267,7 @@ fn TransUnit.analyzeExpCall(
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
    let mut refFieldNode:&Nodes.RefFieldNode! = nil;
    let mut genericsClass = Ast.headTypeInfo;
-   if! let refField = exp@@@Nodes.RefFieldNode {
+   if! let refField = funcExp@@@Nodes.RefFieldNode {
       refFieldNode = refField;
       let classType = refField.$prefix.$expType;
       genericsClass = classType;
@@ -1267,7 +1283,7 @@ fn TransUnit.analyzeExpCall(
 
 
    let mut alt2typeMap, argList = self.prepareExpCall(
-      exp.$pos, funcTypeInfo, genericTypeList, genericsClass );
+      funcExp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
    if funcTypeInfo.equals( builtinFunc.list_insert ##) {
       when! argList {
@@ -1286,16 +1302,13 @@ fn TransUnit.analyzeExpCall(
    elseif funcTypeInfo.equals( builtinFunc.list_remove ##) {
       if #genericTypeList > 0 {
          if genericTypeList[ 1 ].$nilable {
-            self.addWarnMess( exp.$pos, "remove() is dangerous for nilable's list." );
+            self.addWarnMess( funcExp.$pos, "remove() is dangerous for nilable's list." );
          }
       }
    }
 
-   if funcTypeInfo.get_kind() == .Macro {
-      self.macroMode = .None;
-      exp = self.evalMacro( firstToken, funcTypeInfo, argList );
-   }
-   else {
+
+   fn processFunc(): Nodes.Node {
       switch( funcTypeInfo.$kind ) {
          case .Method, .Func, .Form, .FormFunc {
          }
@@ -1382,17 +1395,27 @@ fn TransUnit.analyzeExpCall(
       if funcTypeInfo.equals( builtinFunc.lune__kind ##) {
          if! let expList = argList$.$expList {
             if #expList > 0 {
-               exp = Nodes.LuneKindNode.create(
-                  self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
-                  expList[ 1 ] );
+               return Nodes.LuneKindNode.create(
+                  self.nodeManager, firstToken.pos,
+                  [ Ast.builtinTypeInt ], expList[ 1 ] );
             }
          }
+         return Nodes.LuneKindNode.create(
+            self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],
+            self.createNoneNode( firstToken.pos ) );               
       }
-      else {
-         exp = Nodes.ExpCallNode.create(
-            self.nodeManager, firstToken.pos,
-            retTypeInfoList, exp, errorFuncFlag, nilAccess, argList );
-      }
+      return Nodes.ExpCallNode.create(
+         self.nodeManager, firstToken.pos,
+         retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList );
+   }
+   
+   let mut exp:Nodes.Node;
+   if funcTypeInfo.get_kind() == .Macro {
+      self.macroMode = .None;
+      exp = self.evalMacro( firstToken, funcTypeInfo, argList );
+   }
+   else {
+      exp = processFunc();
    }
 
    return exp, self.getToken(##);
@@ -2064,7 +2087,9 @@ fn TransUnit.analyzeExpField(
          // オブジェクトが immutable で、
          // mutable な method へのアクセスはエラー
          self.addErrMess(
-            token.pos, "can't access mutable method. -- %s" (token.txt) );
+            token.pos,
+            "can't access mutable method. -- %s.%s"
+            (prefixExpType.getTxt(##), token.txt) );
       }  
    }
 
@@ -2438,28 +2463,54 @@ fn TransUnit.analyzeExpOp2(
             
             switch opTxt {
                case "or" {
+                  // if not exp1Type.equals( Ast.builtinTypeBool ##) and
+                  //    not exp1Type.equals( Ast.builtinTypeStem ##) and
+                  //    not exp1Type.$nilable
+                  // {
+                  //    self.addWarnMess( exp.$pos, "this value never be 'false'" );
+                  //    retType = exp1Type;
+                  // }
                   if exp1Type.equals( exp2Type ##) {
                      retType = exp1Type;
                   }
                   elseif exp1Type.canEvalWith( exp2Type, .SetOp, {}) {
+                     // 暗黙キャストの関係にある場合
                      retType = exp1Type;
                   }
                   elseif exp2Type.canEvalWith( exp1Type, .SetOp, {}) {
+                     // 暗黙キャストの関係にある場合
                      retType = exp2Type;
                   }
                   elseif exp2Type.equals( Ast.builtinTypeNil ##) {
+                     // 片方が nil の場合
                      retType = exp1Type;
                   }
                   elseif exp1Type.equals( Ast.builtinTypeNil ##) {
+                     // 片方が nil の場合
                      retType = exp2Type;
                   }
                   else {
-                     if exp1Type.$nilable or exp2Type.$nilable {
+                     // 型に互換性がない場合
+                     if exp1Type.$nilable and exp2Type.$nilable {
+                        // exp1: nilable, exp2: nilable
                         retType = Ast.builtinTypeStem_;
                      }
-                     else {
+                     elseif exp2Type.$nilable {
+                        // exp1: not nilable, exp2: nilable
+                        retType = Ast.builtinTypeStem_;
+                     }
+                     elseif exp1Type.$nilable {
+                        // exp1: nilable, exp2: not nilable
                         retType = Ast.builtinTypeStem;
                      }
+                     else {
+                        // exp1: not nilable, exp2: not nilable
+                        retType = Ast.builtinTypeStem;
+                     }
+                  }
+                  if retType.$nilable and not exp2Type.$nilable {
+                     // exp2 が nilable でなければ、必ず結果は not nilable になる
+                     retType = retType.$nonnilableType;
                   }
                }
                case "and" {
