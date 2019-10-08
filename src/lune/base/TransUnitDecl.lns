@@ -726,7 +726,7 @@ fn TransUnit.analyzePushClass(
 
 
    let classTypeInfo = self.pushClass(
-      firstToken.pos, classFlag, abstractFlag, baseTypeInfo or Ast.headTypeInfo,
+      firstToken.pos, classFlag, abstractFlag, baseTypeInfo,
       interfaceList, altTypeList, false, name.txt, accessMode ## );
 
    return nextToken, classTypeInfo;
@@ -1147,31 +1147,45 @@ fn TransUnit.analyzeDecl(
    accessMode: Ast.AccessMode, mut staticFlag: bool,
    firstToken: &Parser.Token, mut token: &Parser.Token ) mut : Nodes.Node!
 {
+   let mut count = 0;
    if not staticFlag {
       if token.txt == "static" {
          staticFlag = true;
          token = self.getToken(##);
+         count = count + 1;
       }
    }
    let mut overrideFlag = false;
    if token.txt == "override" {
       overrideFlag = true;
       token = self.getToken(##);
+      count = count + 1;
    }
 
    let mut abstractFlag = false;
    if token.txt == "abstract" {
       abstractFlag = true;
       token = self.getToken(##);
+      count = count + 1;
    }
 
    if token.txt == "let" {
       return self.analyzeDeclVar( .Let, accessMode, firstToken );
    }
    elseif token.txt == "fn" {
-      return self.analyzeDeclFunc(
-         .Func, abstractFlag, overrideFlag,
-         accessMode, staticFlag, nil, firstToken, nil );
+      let nextToken = self.getToken(##);
+      self.pushback();
+      if nextToken.kind == .Symb or Ast.isPubToExternal( accessMode ) or
+         staticFlag or overrideFlag or abstractFlag
+      {
+         // nextToken が .Symb の場合は、通常の関数定義。
+         // anonymous 関数でも、 pub 等が指定されている場合は、
+         // エラー処理用に analyzeDeclFunc() をコールする。
+         return self.analyzeDeclFunc(
+            .Func, abstractFlag, overrideFlag,
+            accessMode, staticFlag, nil, firstToken, nil );
+      }
+      // anonymous 関数の場合は、 関数定義ではなく関数オブジェクトを利用した式。
    }
    elseif token.txt == "class" {
       return self.analyzeDeclClass( abstractFlag, accessMode, firstToken, .Class );
@@ -2128,6 +2142,12 @@ fn TransUnit.analyzeDeclFunc(
          token = self.getToken(##);
       }
    }
+   if not name and ( Ast.isPubToExternal( accessMode ) or
+                     abstractFlag or overrideFlag or staticFlag )
+   {
+      // anonymous 関数で pub 等が指定されているのはエラー
+      self.addErrMess( firstToken.pos, "The anonymous function must be local." );
+   }
    let mut needPopFlag = false;
    if token.txt == "." {
       needPopFlag = true;
@@ -2842,9 +2862,15 @@ fn TransUnit.analyzeDeclVar(
    if mode == .Let and #typeInfoList == 1 {
       when! expList {
          let typeInfo = typeInfoList[ 1 ];
+         let letVaInfo = letVarList[ 1 ];
          if #expList.$expList == 1 and typeInfo.$kind == .Func {
             if! let declNode = expList.$expList[ 1 ]@@@Nodes.DeclFuncNode {
                if not declNode.$declInfo.$name {
+                  if Ast.isMutable( letVaInfo.mutable ) {
+                     self.addErrMess(
+                        letVaInfo.varName.pos, 
+                        "Any function can't be mutable. -- %s" (letVaInfo.varName.txt) );
+                  }
                   // anonymous 関数宣言の型推論変数宣言は、
                   // 通常関数宣言に置き換える。
                   // 次のような感じ。

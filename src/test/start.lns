@@ -365,12 +365,12 @@ _print( `{ SUB2.External.val } );
       }
    };
 
-   _print( `{ foo$.bar$.baz }, "%s" );
-   _print( `{ foo$.ba$.baz }, "%s" );
-   _print( `{ foo$.bar$.hoge$[1] }, "%s" );
-   _print( `{ foo$.ba$.hoge$[1] }, "%s" );
-   _print( `{ foo$.bar$.sage$[1] }, "%c" );
-   _print( `{ foo$.ba$.sage$[1] }, "%s" );
+   _print( `{ foo.bar$.baz }, "%s" );
+   _print( `{ foo.ba$.baz }, "%s" );
+   _print( `{ foo.bar$.hoge$[1] }, "%s" );
+   _print( `{ foo.ba$.hoge$[1] }, "%s" );
+   _print( `{ foo.bar$.sage$[1] }, "%c" );
+   _print( `{ foo.ba$.sage$[1] }, "%s" );
 }
 
 {
@@ -631,7 +631,7 @@ print( MacroTest.A234, MacroTest.B234 );
 
 macro _test( txt:str ) {
    {
-      let val = _lnsLoad( "aa", txt )$.val;
+      let val = _lnsLoad( "aa", txt ).val;
    }
    print( ,,val, type( ,,val ) );
 }
@@ -1165,7 +1165,7 @@ class Test4 {
       return new Test4(2);
    }
    let val = new Test4( 1 );
-   _print( `{ val$.$val } );
+   _print( `{ val.$val } );
    _print( `{ func4()$.$val } );
 }
 {

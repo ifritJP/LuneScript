@@ -615,38 +615,6 @@ local function isMutable( mode )
    return false
 end
 _moduleObj.isMutable = isMutable
-local AccessFromClosuer = {}
-_moduleObj.AccessFromClosuer = AccessFromClosuer
-AccessFromClosuer._val2NameMap = {}
-function AccessFromClosuer:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "AccessFromClosuer.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function AccessFromClosuer._from( val )
-   if AccessFromClosuer._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-AccessFromClosuer.__allList = {}
-function AccessFromClosuer.get__allList()
-   return AccessFromClosuer.__allList
-end
-
-AccessFromClosuer.None = 0
-AccessFromClosuer._val2NameMap[0] = 'None'
-AccessFromClosuer.__allList[1] = AccessFromClosuer.None
-AccessFromClosuer.Read = 1
-AccessFromClosuer._val2NameMap[1] = 'Read'
-AccessFromClosuer.__allList[2] = AccessFromClosuer.Read
-AccessFromClosuer.Write = 2
-AccessFromClosuer._val2NameMap[2] = 'Write'
-AccessFromClosuer.__allList[3] = AccessFromClosuer.Write
-
 local TypeNameCtrl = {}
 _moduleObj.TypeNameCtrl = TypeNameCtrl
 function TypeNameCtrl.setmeta( obj )
@@ -1242,10 +1210,6 @@ function NormalSymbolInfo:get_mutable(  )
 
    return isMutable( self.mutMode )
 end
-function NormalSymbolInfo:get_hasAccessFromClosuer(  )
-
-   return self:get_accessFromClosure() ~= AccessFromClosuer.None
-end
 function NormalSymbolInfo:getOrg(  )
 
    return self
@@ -1260,7 +1224,7 @@ function NormalSymbolInfo:__init(kind, canBeLeft, canBeRight, scope, accessMode,
    SymbolInfo.__init( self)
    
    self.convModuleParam = nil
-   self.accessFromClosure = AccessFromClosuer.None
+   self.hasAccessFromClosure = false
    NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1
    self.kind = kind
    self.canBeLeft = canBeLeft
@@ -1316,11 +1280,11 @@ end
 function NormalSymbolInfo:get_mutMode()
    return self.mutMode
 end
-function NormalSymbolInfo:get_accessFromClosure()
-   return self.accessFromClosure
+function NormalSymbolInfo:get_hasAccessFromClosure()
+   return self.hasAccessFromClosure
 end
-function NormalSymbolInfo:set_accessFromClosure( accessFromClosure )
-   self.accessFromClosure = accessFromClosure
+function NormalSymbolInfo:set_hasAccessFromClosure( hasAccessFromClosure )
+   self.hasAccessFromClosure = hasAccessFromClosure
 end
 function NormalSymbolInfo:get_convModuleParam()
    return self.convModuleParam
@@ -2110,50 +2074,42 @@ local function dumpScope( workscope, workprefix )
       
       
    end
-   
    dumpScopeSub( workscope, workprefix, {} )
 end
 _moduleObj.dumpScope = dumpScope
-function Scope:accessSymbol( moduleScope, symbol, accessMode )
+function Scope:accessSymbol( moduleScope, symbol )
 
-   local function setClosure( typeInfo )
+   local function setClosure( funcType )
    
-      local namespacescope = _lune.unwrap( typeInfo:get_scope())
-      do
-         local _switchExp = symbol:get_accessFromClosure()
-         if _switchExp == AccessFromClosuer.None then
-            symbol:set_accessFromClosure( accessMode )
-            namespacescope.parent:accessSymbol( moduleScope, symbol, accessMode )
-         elseif _switchExp == AccessFromClosuer.Read then
-            if accessMode == AccessFromClosuer.Write then
-               symbol:set_accessFromClosure( accessMode )
-               namespacescope.parent:accessSymbol( moduleScope, symbol, accessMode )
-            end
-            
+      local funcScope = _lune.unwrap( funcType:get_scope())
+      if not funcScope.closureSymMap[symbol:get_symbolId()] then
+         funcScope.closureSymMap[symbol:get_symbolId()] = symbol
+         funcScope.closureSym2NumMap[symbol] = #funcScope.closureSymList
+         table.insert( funcScope.closureSymList, symbol )
+         if not funcScope:isRoot(  ) then
+            funcScope.parent:accessSymbol( moduleScope, symbol )
          end
-      end
-      
-      if not namespacescope.closureSymMap[symbol:get_symbolId()] then
-         namespacescope.closureSymMap[symbol:get_symbolId()] = symbol
-         namespacescope.closureSym2NumMap[symbol] = #namespacescope.closureSymList
-         table.insert( namespacescope.closureSymList, symbol )
+         
+         if not symbol:get_hasAccessFromClosure() then
+            symbol:set_hasAccessFromClosure( true )
+         end
+         
       end
       
    end
-   
    if symbol:get_scope() == moduleScope then
    elseif symbol:get_name() == "self" then
-      local typeInfo = self:getNamespaceTypeInfo(  )
-      if not typeInfo:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo() ) then
-         setClosure( typeInfo )
+      local funcType = self:getNamespaceTypeInfo(  )
+      if not funcType:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo() ) then
+         setClosure( funcType )
       end
       
    elseif symbol:get_kind() == SymbolKind.Mbr or symbol:get_kind() == SymbolKind.Mtd then
    else
     
-      local typeInfo = self:getNamespaceTypeInfo(  )
-      if typeInfo ~= symbol:get_namespaceTypeInfo() then
-         setClosure( typeInfo )
+      local funcType = self:getNamespaceTypeInfo(  )
+      if funcType ~= symbol:get_namespaceTypeInfo() then
+         setClosure( funcType )
       end
       
    end
@@ -2418,16 +2374,12 @@ function AccessSymbolInfo:set_hasValueFlag( ... )
    return self.symbolInfo:set_hasValueFlag( ... )
 end
 
-function AccessSymbolInfo:get_hasAccessFromClosuer( ... )
-   return self.symbolInfo:get_hasAccessFromClosuer( ... )
+function AccessSymbolInfo:get_hasAccessFromClosure( ... )
+   return self.symbolInfo:get_hasAccessFromClosure( ... )
 end
 
-function AccessSymbolInfo:get_accessFromClosure( ... )
-   return self.symbolInfo:get_accessFromClosure( ... )
-end
-
-function AccessSymbolInfo:set_accessFromClosure( ... )
-   return self.symbolInfo:set_accessFromClosure( ... )
+function AccessSymbolInfo:set_hasAccessFromClosure( ... )
+   return self.symbolInfo:set_hasAccessFromClosure( ... )
 end
 
 function AccessSymbolInfo:set_convModuleParam( ... )
@@ -2784,7 +2736,6 @@ function AlternateTypeInfo:isInheritFrom( other, alt2type )
       
       return false
    end
-   
    if check(  ) then
       if alt2type ~= nil then
          alt2type[self] = other
@@ -4135,7 +4086,6 @@ function NormalTypeInfo:__init(abstractFlag, scope, baseTypeInfo, interfaceList,
       
       return alt2typeMap
    end
-   
    self.alt2typeMap = setupAlt2typeMap(  )
    self.typeId = typeId
    if kind == TypeInfoKind.Root then
@@ -4523,7 +4473,6 @@ local function addBuiltin( typeInfo )
 
    _moduleObj.builtInTypeIdSet[typeInfo:get_typeId()] = typeInfo
 end
-
 local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, registScope )
 
    _moduleObj.sym2builtInTypeMap[typeTxt] = NormalSymbolInfo.new(SymbolKind.Typ, false, false, _moduleObj.rootScope, AccessMode.Pub, false, typeTxt, typeInfo, MutMode.IMut, true)
@@ -4543,7 +4492,6 @@ local function registBuiltin( idName, typeTxt, kind, typeInfo, nilableTypeInfo, 
    end
    
 end
-
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
 
    local typeId = idProv:get_id() + 1
@@ -4999,7 +4947,6 @@ function TypeInfo.getCommonType( typeInfo, other, alt2type )
       
       return workType
    end
-   
    local type1 = typeInfo:get_nonnilableType():get_srcTypeInfo()
    local type2 = other:get_nonnilableType():get_srcTypeInfo()
    if type1 == _moduleObj.builtinTypeNone then
@@ -5117,7 +5064,6 @@ local function applyGenericList( typeList, alt2typeMap, moduleTypeInfo )
    
    return typeInfoList, needNew
 end
-
 function GenericTypeInfo:applyGeneric( alt2typeMap, moduleTypeInfo )
 
    if self.genSrcTypeInfo:get_kind() == TypeInfoKind.Class then
@@ -5454,7 +5400,6 @@ function NormalTypeInfo.isAvailableMapping( typeInfo, checkedTypeMap )
       end
       
    end
-   
    typeInfo = typeInfo:get_srcTypeInfo()
    do
       local _exp = checkedTypeMap[typeInfo]
@@ -5542,7 +5487,6 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       
       return MatchType.Match, ""
    end
-   
    local function checkSrcTypeFrom( index, dstType )
    
       for srcIndex = index, #expTypeList do
@@ -5577,7 +5521,6 @@ function TypeInfo.checkMatchType( dstTypeList, expTypeList, allowDstShort, warnF
       
       return MatchType.Match, ""
    end
-   
    if #expTypeList > 0 then
       for index, expType in pairs( expTypeList ) do
          if #dstTypeList == 0 then
@@ -5712,7 +5655,6 @@ local function isSettableToForm( typeInfo )
    
    return true
 end
-
 function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
 
    local otherMut = TypeInfo.isMut( other )
@@ -5910,7 +5852,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             
             return true
          end
-         
          local function check2(  )
          
             local mess = nil
@@ -5930,7 +5871,6 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
             
             return true
          end
-         
          local result1 = check1(  )
          local result2 = check2(  )
          if result1 and result2 then

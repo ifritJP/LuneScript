@@ -459,7 +459,6 @@ local function filter( node, filter, parent )
 
    node:processFilter( filter, Opt.new(parent) )
 end
-
 local stepIndent = 3
 function convFilter:pushIndent( newIndent )
 
@@ -546,7 +545,6 @@ function convFilter:outputMeta( node )
       local typeId = typeInfo:get_typeId()
       return typeId2TypeInfo[typeId] and not Ast.isBuiltin( typeId ) and (moduleTypeInfo:hasRouteNamespaceFrom( node:get_moduleTypeInfo() ) or typeInfo:get_srcTypeInfo() ~= typeInfo or moduleTypeInfo:equals( Ast.headTypeInfo ) )
    end
-   
    local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
    
       if typeInfo:get_typeId(  ) == Ast.rootTypeId then
@@ -661,7 +659,6 @@ function convFilter:outputMeta( node )
       end
       
    end
-   
    local classId2TypeInfo = {}
    local validChildrenSet = {}
    do
@@ -943,7 +940,6 @@ function convFilter:outputMeta( node )
       
       return false
    end
-   
    local wroteTypeIdSet = {}
    local function outputTypeInfo( typeInfo )
    
@@ -1000,7 +996,6 @@ function convFilter:outputMeta( node )
       end
       
    end
-   
    for typeId, typeInfo in pairs( self.pubEnumId2EnumTypeInfo ) do
       typeId2TypeInfo[typeId] = typeInfo
    end
@@ -1360,7 +1355,6 @@ local function isGenericType( typeInfo )
    
    return false
 end
-
 function convFilter:getMapInfo( typeInfo )
 
    local nonnilableType = typeInfo:get_srcTypeInfo()
@@ -1978,8 +1972,7 @@ function convFilter:processDeclMacro( node, opt )
             end
          end
          
-      end
-       )
+      end )
    end
    
 end
@@ -2452,10 +2445,11 @@ function convFilter:processDeclFunc( node, opt )
       end
    end
    
-   self:writeln( "end" )
+   self:write( "end" )
    local expType = node:get_expType(  )
    if expType:get_accessMode(  ) == Ast.AccessMode.Pub then
       if self.needModuleObj then
+         self:writeln( "" )
          self:write( string.format( "_moduleObj.%s = %s", name, name) )
       end
       
@@ -2779,7 +2773,6 @@ function convFilter:processExpCall( node, opt )
          filter( prefixNode, self, fieldNode )
          return true
       end
-      
       local prefixType = prefixNode:get_expType()
       local function processEnumAlge(  )
       
@@ -2806,7 +2799,6 @@ function convFilter:processExpCall( node, opt )
          end
          
       end
-      
       if node:get_nilAccess() then
          wroteFuncFlag = true
          setArgFlag = true
@@ -2869,7 +2861,6 @@ function convFilter:processExpCall( node, opt )
       
       return true
    end
-   
    if not fieldCall(  ) then
       return 
    end
@@ -3561,12 +3552,10 @@ function MacroEvalImp:evalFromMacroCode( code )
       local val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
       return val
    end
-   
-   Log.log( Log.Level.Info, __func__, 3240, function (  )
+   Log.log( Log.Level.Info, __func__, 3241, function (  )
    
       return string.format( "code: %s", code)
-   end
-    )
+   end )
    
    local chunk, err = _lune.loadstring52( code, newEnv )
    if err ~= nil then
@@ -3594,8 +3583,7 @@ function MacroEvalImp:evalFromCode( name, argNameList, code )
          conv:write( code )
       end
       
-   end
-    )
+   end )
    return self:evalFromMacroCode( oStream:get_txt() )
 end
 function MacroEvalImp:eval( node )

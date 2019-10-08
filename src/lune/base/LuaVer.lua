@@ -236,7 +236,6 @@ local function getCurrentVer(  )
    
    return _moduleObj.ver51
 end
-
 local curVer = getCurrentVer(  )
 _moduleObj.curVer = curVer
 

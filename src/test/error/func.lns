@@ -131,6 +131,12 @@
    let func5, val = fn() {}, 1; // error
 }
 
+pub fn () {} // error
+{
+   fn (): int { return 1; } (); // error
+}
+
+
 abstract class Super {
    pub abstract fn func2();
    pub abstract fn func() : int;
@@ -144,3 +150,4 @@ abstract class Sub extend Super {
       return super(); // error
    }
 }
+

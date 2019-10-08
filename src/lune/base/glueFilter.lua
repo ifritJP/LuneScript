@@ -573,7 +573,6 @@ function glueFilter:processRoot( node, dummy )
       
       error( string.format( "open error -- %s ", filePath) )
    end
-   
    for __index, node in pairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do
       do
          local moduleName = node:get_moduleName()

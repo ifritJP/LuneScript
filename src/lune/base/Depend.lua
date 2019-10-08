@@ -236,7 +236,6 @@ local function searchpath51( mod, pathPattern )
    return nil
 end
 
-
 local searchpathForm = searchpath51
 if LuaVer.curVer:get_hasSearchPath() then
    searchpathForm = (_lune.unwrap( _lune.nilacc( _G['package'], nil, 'item', 'searchpath')) )

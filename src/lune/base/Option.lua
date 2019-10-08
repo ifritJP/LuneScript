@@ -192,9 +192,8 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 1881
+   return 1905
 end
-
 
 local ModeKind = {}
 _moduleObj.ModeKind = ModeKind
@@ -434,7 +433,6 @@ usage:
 ]==] )
       os.exit( code )
    end
-   
    local option = Option.new()
    local useStdInFlag = false
    local lineNo = nil

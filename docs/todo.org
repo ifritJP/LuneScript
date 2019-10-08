@@ -10,14 +10,8 @@
 
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
-- [ ] nilable でないのに val$.$work が指定できる。
-
 - [ ] 文字列中の . を編集すると company-mode がエラーする
  
-- [ ] override のときメドッドの mut の一致を確認してない？
-  
-- [ ] fn ():int { return 1; } (); が実行時エラーする。
-  
 * 機能
 
 - [ ] A and B or C の結果の型をまともに判定できるように対応する。
@@ -175,6 +169,10 @@ foreach obj in list {
 - [ ] when のブロック内でシンボルを補完すると、 nilable と 非 nilable の両方が出る。
 
 *  C へのトランスコード
+- [ ] 関数引数のクロージャ。
+      引数に対して lune_initVal_stem() する。
+
+  
 - [ ] C モジュールのコール。 C からのコール。
 - [ ] スレッド
 - [ ] 排他が必要な変数の宣言と、排他ブロック宣言。
@@ -190,6 +188,10 @@ foreach obj in list {
 	そこから alloc する。
 	最初は単純にバッファからの先頭から順に確保し、
 	最後まで確保し終ったら空きリストから取得する。
+
+- [ ] lune_func2stem が汎用化のため可変長引数を使っているが、
+      可変長引数はオーバーヘッドが重い。
+      それぞれ専用関数を作って処理する。
 
 - [X] for 等の loop ブロックは、
       lune_enter_block(), lune_leave_block() 処理をブロック内ではなく、
@@ -374,6 +376,12 @@ fn func( val:int! ) {
   pub let val:Sub {pub:Super}; のこのとき、 
   Sub は pub でなくても Super が pub なら OK のはずが、 
   Sub が pub にないとエラーになってしまう。
+- [X] override の時、 interface メドッドの mut の一致を確認してない？
+- [X] fn ():int { return 1; } (); が実行時エラーする。
+- [X] pub fn () {} が出来てしまう。 anonymous 関数は、本来 pub は出来ない。
+- [X] nilable でないのに val$.$work が指定できる。
+
+  
   
 
   

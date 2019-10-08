@@ -214,14 +214,14 @@ pub fn isMutable( mode:MutMode ): bool {
    return false;
 }
 
-pub enum AccessFromClosuer {
-   /** アクセスなし */
-   None,
-   /** 読み込みアクセス */
-   Read,
-   /** 書き込みアクセス */
-   Write,
-}
+// pub enum AccessFromClosuer {
+//    /** アクセスなし */
+//    None,
+//    /** 読み込みアクセス */
+//    Read,
+//    /** 書き込みアクセス */
+//    Write,
+// }
 
 pub class TypeNameCtrl {
    /** 現在解析中モジュールの型情報 */
@@ -266,9 +266,10 @@ pub abstract class SymbolInfo {
    pub abstract fn get_hasValueFlag(): bool;
    pub abstract fn set_hasValueFlag( arg:bool );
    /** このシンボルが、 closuer 内からセットされているかどうか */
-   pub abstract fn get_hasAccessFromClosuer(): bool;
-   pub abstract fn get_accessFromClosure(): AccessFromClosuer;
-   pub abstract fn set_accessFromClosure( mode: AccessFromClosuer );
+   pub abstract fn get_hasAccessFromClosure(): bool;
+   pub abstract fn set_hasAccessFromClosure(flag:bool);
+   // pub abstract fn get_accessFromClosure(): AccessFromClosuer;
+   // pub abstract fn set_accessFromClosure( mode: AccessFromClosuer );
    /** 変換モジュール用パラメータ */
    pub abstract fn set_convModuleParam( param:stem! );
    pub abstract fn get_convModuleParam():stem!;
@@ -873,7 +874,8 @@ pub class NormalSymbolInfo extend SymbolInfo {
    /** このシンボルがデータを保持しているかどうか */
    pri let allmut hasValueFlag: bool { pub, pub };
    pri let mutMode: MutMode {pub};
-   pri let allmut accessFromClosure: AccessFromClosuer { pub, pub };
+   // pri let allmut accessFromClosure: AccessFromClosuer { pub, pub };
+   pri let allmut hasAccessFromClosure: bool {pub,pub};
    /** 変換モジュール用パラメータ */
    pri let allmut convModuleParam:stem! {pub,pub}; 
    
@@ -881,9 +883,9 @@ pub class NormalSymbolInfo extend SymbolInfo {
       return isMutable( self.mutMode );
    }
 
-   pub override fn get_hasAccessFromClosuer() : bool {
-      return self.$accessFromClosure ~= .None;
-   }
+   // pub override fn get_hasAccessFromClosure() : bool {
+   //    return self.$accessFromClosure ~= .None;
+   // }
 
    pub override fn getOrg(): &SymbolInfo {
       return self;
@@ -896,7 +898,8 @@ pub class NormalSymbolInfo extend SymbolInfo {
    {
       super();
       self.convModuleParam = nil;
-      self.accessFromClosure = .None;
+      //self.accessFromClosure = .None;
+      self.hasAccessFromClosure = false;
       NormalSymbolInfo.symbolIdSeed = NormalSymbolInfo.symbolIdSeed + 1;
       self.kind = kind;
       self.canBeLeft = canBeLeft;
@@ -1177,7 +1180,7 @@ pub fn Scope.getSymbolInfoField(
 {
    if self.classFlag {
       if includeSelfFlag {
-         if! self.symbol2SymbolInfoMap$[ name ] {
+         if! self.symbol2SymbolInfoMap[ name ] {
             let! symbolInfo = _exp.canAccess(  fromScope ) {
                return nil;
             };
@@ -1522,31 +1525,43 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
 @param moduleScope このモジュールの最上位スコープ
 @param symbol シンボル
 */
-pub fn Scope.accessSymbol(
-   moduleScope:&Scope, symbol:&SymbolInfo, accessMode:AccessFromClosuer ) mut
+pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo) mut
 {
-
-   fn setClosure( typeInfo:&TypeInfo ) {
-      let mut namespacescope = unwrap typeInfo.$scope;
-      switch symbol.$accessFromClosure {
-         case .None {
-            symbol.set_accessFromClosure( accessMode );
-            namespacescope.parent.accessSymbol(
-               moduleScope, symbol, accessMode );
+   /**
+   関数スコープに、クロージャのシンボルを登録する。
+   */
+   fn setClosure( funcType:&TypeInfo ) {
+      let mut funcScope = unwrap funcType.$scope;
+      if not funcScope.closureSymMap[ symbol.$symbolId ] {
+         funcScope.closureSymMap[ symbol.$symbolId ] = symbol;
+         funcScope.closureSym2NumMap[ symbol ] = #funcScope.closureSymList;
+         funcScope.closureSymList.insert( symbol );
+         if not funcScope.isRoot() {
+            funcScope.parent.accessSymbol( moduleScope, symbol );
          }
-         case .Read {
-            if accessMode == .Write {
-               symbol.set_accessFromClosure( accessMode );
-               namespacescope.parent.accessSymbol(
-                  moduleScope, symbol, accessMode );
-            }
+         if not symbol.$hasAccessFromClosure {
+            symbol.set_hasAccessFromClosure( true );
          }
       }
-      if not namespacescope.closureSymMap[ symbol.$symbolId ] {
-         namespacescope.closureSymMap[ symbol.$symbolId ] = symbol;
-         namespacescope.closureSym2NumMap[ symbol ] = #namespacescope.closureSymList;
-         namespacescope.closureSymList.insert( symbol );
-      }
+      // switch symbol.$accessFromClosure {
+      //    case .None {
+      //       symbol.set_accessFromClosure( accessMode );
+      //       funcScope.parent.accessSymbol(
+      //          moduleScope, symbol, accessMode );
+      //    }
+      //    case .Read {
+      //       if accessMode == .Write {
+      //          symbol.set_accessFromClosure( accessMode );
+      //          funcScope.parent.accessSymbol(
+      //             moduleScope, symbol, accessMode );
+      //       }
+      //    }
+      // }
+      // if not funcScope.closureSymMap[ symbol.$symbolId ] {
+      //    funcScope.closureSymMap[ symbol.$symbolId ] = symbol;
+      //    funcScope.closureSym2NumMap[ symbol ] = #funcScope.closureSymList;
+      //    funcScope.closureSymList.insert( symbol );
+      // }
    }
    
    if symbol.$scope == moduleScope {
@@ -1554,11 +1569,11 @@ pub fn Scope.accessSymbol(
    }
    elseif symbol.$name == "self" {
       // self の場合、メソッド内からのアクセスはクロージャではない
-      let typeInfo = self.getNamespaceTypeInfo();
-      if not typeInfo.$parentInfo.isInheritFrom(
+      let funcType = self.getNamespaceTypeInfo();
+      if not funcType.$parentInfo.isInheritFrom(
          symbol.$namespaceTypeInfo## )
       {
-         setClosure( typeInfo );
+         setClosure( funcType );
       }
    }
    elseif symbol.$kind == .Mbr or symbol.$kind == .Mtd {
@@ -1567,10 +1582,10 @@ pub fn Scope.accessSymbol(
    else {
       // このセット処理が、クロージャかどうかを確認する。
       // symbol の定義位置が異なる名前空間の場合、クロージャとして判定する。
-      let typeInfo = self.getNamespaceTypeInfo();
-      if typeInfo ~= symbol.$namespaceTypeInfo {
+      let funcType = self.getNamespaceTypeInfo();
+      if funcType ~= symbol.$namespaceTypeInfo {
          // クロージャならシンボル情報を登録する。
-         setClosure( typeInfo );
+         setClosure( funcType );
       }
    }
 }

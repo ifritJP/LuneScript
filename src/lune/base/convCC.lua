@@ -404,7 +404,6 @@ local function isStemType( valType )
    end
    
 end
-
 local function isStemRet( retTypeList )
 
    do
@@ -418,7 +417,6 @@ local function isStemRet( retTypeList )
    
    return true
 end
-
 local function getCType( valType, varFlag )
 
    local expType = valType:get_srcTypeInfo()
@@ -446,7 +444,6 @@ local function getCType( valType, varFlag )
    end
    
 end
-
 local function getCRetType( retTypeList )
 
    do
@@ -460,7 +457,6 @@ local function getCRetType( retTypeList )
    
    return cTypeStemP
 end
-
 local ProcessMode = {}
 ProcessMode._val2NameMap = {}
 function ProcessMode:_getTxt( val )
@@ -691,7 +687,7 @@ function ScopeMgr:setupScopeParam( scope )
                do
                   local _switchExp = symbol:get_kind()
                   if _switchExp == Ast.SymbolKind.Var then
-                     if symbol:get_hasAccessFromClosuer() then
+                     if symbol:get_hasAccessFromClosure() then
                         param = SymbolParam.new(VarKind.Var, varNum, cTypeVarP)
                         varNum = varNum + 1
                      elseif isStemType( symbol:get_typeInfo() ) then
@@ -924,7 +920,6 @@ local function filter( node, filter, parent )
 
    node:processFilter( filter, Opt.new(parent) )
 end
-
 local stepIndent = 3
 function convFilter:pushIndent( newIndent )
 
@@ -973,7 +968,6 @@ local function getSymbolIndex( symbol )
    
    return (param ).index
 end
-
 function convFilter:processRoot( node, opt )
 
    Ast.pushProcessInfo( node:get_processInfo() )
@@ -1044,7 +1038,6 @@ function convFilter:processRoot( node, opt )
       end
       
    end
-   
    procssLiteralCtor( node:get_nodeManager():getLiteralListNodeList(  ) )
    procssLiteralCtor( node:get_nodeManager():getLiteralArrayNodeList(  ) )
    procssLiteralCtor( node:get_nodeManager():getLiteralSetNodeList(  ) )
@@ -1156,7 +1149,6 @@ local function getAccessPrimValFromStem( dddFlag, typeInfo, index )
    
    return txt
 end
-
 function convFilter:processBlockSub( node, opt )
 
    local stemNum, varNum = self.scopeMgr:setupScopeParam( node:get_scope() )
@@ -1291,7 +1283,6 @@ local function getLiteral2Stem( valTxt, typeInfo )
    end
    
 end
-
 function convFilter:processDeclEnum( node, opt )
 
    local enumType = _lune.unwrap( _lune.__Cast( node:get_expType(), 3, Ast.EnumTypeInfo ))
@@ -1416,7 +1407,6 @@ local function isGenericType( typeInfo )
    
    return false
 end
-
 local function processAlgeNewProto( stream, moduleCtrl, typeInfo, valInfo )
 
    stream:write( string.format( "%s %s( %s _pEnv", cTypeStemP, moduleCtrl:getNewAlgeCName( typeInfo, valInfo:get_name() ), cTypeEnvP) )
@@ -1426,7 +1416,6 @@ local function processAlgeNewProto( stream, moduleCtrl, typeInfo, valInfo )
    
    stream:write( ")" )
 end
-
 local function processAlgePrototype( stream, moduleCtrl, node )
 
    local algeType = node:get_algeType()
@@ -1485,7 +1474,6 @@ local function processAlgePrototype( stream, moduleCtrl, node )
    end
    
 end
-
 local function processAlgeWideScope( stream, moduleCtrl, node )
 
    local algeType = node:get_algeType()
@@ -1514,7 +1502,6 @@ local function processAlgeWideScope( stream, moduleCtrl, node )
    end
    
 end
-
 local function processAlgeForm( stream, moduleCtrl, node )
 
    local algeType = node:get_algeType()
@@ -1603,7 +1590,6 @@ local function processAlgeForm( stream, moduleCtrl, node )
    end
    
 end
-
 function convFilter:processDeclAlge( node, opt )
 
    do
@@ -1661,7 +1647,6 @@ local function getMethodTypeTxt( retTypeList )
    
    return "lune_method_t"
 end
-
 local function processNewConstrProto( stream, moduleCtrl, node )
 
    local className = moduleCtrl:getClassCName( node:get_expType() )
@@ -1674,7 +1659,6 @@ local function processNewConstrProto( stream, moduleCtrl, node )
    
    stream:write( ")" )
 end
-
 local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInfo, argList )
 
    if methodTypeInfo:get_rawTxt() ~= "__init" and not callFlag then
@@ -1703,7 +1687,6 @@ local function processMethodDeclTxt( stream, moduleCtrl, callFlag, methodTypeInf
    
    stream:write( ")" )
 end
-
 local function processDeclMethodTable( stream, classTypeInfo )
 
    local function outputField( name, retTypeList )
@@ -1711,7 +1694,6 @@ local function processDeclMethodTable( stream, classTypeInfo )
       local methodType = getMethodTypeTxt( retTypeList )
       stream:writeln( string.format( "%s * %s;", methodType, name) )
    end
-   
    local function outputVal( scope )
    
       do
@@ -1746,10 +1728,8 @@ local function processDeclMethodTable( stream, classTypeInfo )
       end
       
    end
-   
    outputVal( _lune.unwrap( classTypeInfo:get_scope()) )
 end
-
 local function processDeclMemberTable( stream, classTypeInfo )
 
    local function outputVal( scope )
@@ -1786,11 +1766,9 @@ local function processDeclMemberTable( stream, classTypeInfo )
       end
       
    end
-   
    stream:writeln( "// member" )
    outputVal( _lune.unwrap( classTypeInfo:get_scope()) )
 end
-
 local function hasGC( classTypeInfo )
 
    do
@@ -1820,7 +1798,6 @@ local function hasGC( classTypeInfo )
    
    return false
 end
-
 local function processDeclClassPrototype( stream, moduleCtrl, node )
 
    local className = moduleCtrl:getClassCName( node:get_expType() )
@@ -1888,7 +1865,6 @@ local function processDeclClassPrototype( stream, moduleCtrl, node )
    end
    
 end
-
 local function processIFObjDecl( stream, moduleCtrl, classType )
 
    if classType:hasBase(  ) then
@@ -1900,7 +1876,6 @@ local function processIFObjDecl( stream, moduleCtrl, classType )
    end
    
 end
-
 local function processIFObjInit( stream, moduleCtrl, classType, impClassType )
 
    if classType:hasBase(  ) then
@@ -1914,7 +1889,6 @@ local function processIFObjInit( stream, moduleCtrl, classType, impClassType )
    end
    
 end
-
 function convFilter:processDeclClassNodePrototype( node )
 
    local className = self.moduleCtrl:getClassCName( node:get_expType() )
@@ -2069,7 +2043,6 @@ local function processInitMethodTable( stream, moduleCtrl, classTypeInfo )
       local methodType = getMethodTypeTxt( retTypeList )
       stream:writeln( string.format( "(%s *)%s,", methodType, name) )
    end
-   
    local function outputVal( scope )
    
       do
@@ -2104,10 +2077,8 @@ local function processInitMethodTable( stream, moduleCtrl, classTypeInfo )
       end
       
    end
-   
    outputVal( _lune.unwrap( classTypeInfo:get_scope()) )
 end
-
 local function processInitIFMethodTable( stream, moduleCtrl, ifType, classTypeInfo )
 
    local function outputField( name, retTypeList )
@@ -2115,7 +2086,6 @@ local function processInitIFMethodTable( stream, moduleCtrl, ifType, classTypeIn
       local methodType = getMethodTypeTxt( retTypeList )
       stream:writeln( string.format( "(%s *)%s,", methodType, name) )
    end
-   
    local function outputVal( scope, impScope )
    
       do
@@ -2151,10 +2121,8 @@ local function processInitIFMethodTable( stream, moduleCtrl, ifType, classTypeIn
       end
       
    end
-   
    outputVal( _lune.unwrap( ifType:get_scope()), _lune.unwrap( classTypeInfo:get_scope()) )
 end
-
 local function processIFMethodDataInit( stream, moduleCtrl, classType, orgClassType )
 
    local className = moduleCtrl:getClassCName( orgClassType )
@@ -2168,7 +2136,6 @@ local function processIFMethodDataInit( stream, moduleCtrl, classType, orgClassT
    end
    
 end
-
 local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
 
    processIFMethodDataInit( stream, moduleCtrl, classTypeInfo, classTypeInfo )
@@ -2195,7 +2162,6 @@ local function processClassDataInit( stream, moduleCtrl, classTypeInfo )
    end
    
 end
-
 function convFilter:processDeclMember( node, opt )
 
 end
@@ -2388,7 +2354,6 @@ local function hasMultiVal( exp )
 
    return exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD
 end
-
 function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mRetExp )
 
    local function setVal( node, var, exp, index )
@@ -2424,7 +2389,6 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
                   filter( prefixNode, self, fieldNode )
                   self:write( ")->" )
                end
-               
             end
             
          end
@@ -2472,7 +2436,6 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
       end
       
    end
-   
    local varNodeList
    
    do
@@ -2540,7 +2503,6 @@ function convFilter:processSetValToSym( parent, varSymList, expList, varNode, mR
       end
       
    end
-   
    for index = 1, #expList do
       if index == mRetIndex then
          if mRetExp ~= nil then
@@ -2841,7 +2803,6 @@ local function getFuncName( typeInfo )
    
    return string.format( "lune_f_%d_%s", typeInfo:get_typeId(), typeInfo:get_rawTxt())
 end
-
 function convFilter:getPrepareClosure( funcName, argNum, hasDDD, symList )
 
    local txt
@@ -2924,7 +2885,6 @@ function convFilter:processDeclFunc( node, opt )
    
       self:processPrototype( node, declInfo:get_accessMode(), name, getCRetType( node:get_expType():get_retTypeInfoList() ), declInfo:get_argList() )
    end
-   
    do
       local _switchExp = self.processMode
       if _switchExp == ProcessMode.Form then
@@ -3129,7 +3089,6 @@ local function processToIF( stream, moduleCtrl, expType, process )
    end
    
 end
-
 local function processToIFGeneric( stream, moduleCtrl, classType, expType, process )
 
    if classType ~= nil then
@@ -3147,7 +3106,6 @@ local function processToIFGeneric( stream, moduleCtrl, classType, expType, proce
    end
    
 end
-
 local function processPoolForeachSetupVal( stream, moduleCtrl, loopType, keyToken, valToken )
 
    local valType = loopType:get_itemTypeInfoList()[1]
@@ -3180,11 +3138,9 @@ local function processPoolForeachSetupVal( stream, moduleCtrl, loopType, keyToke
    processToIF( stream, moduleCtrl, valType, function (  )
    
       stream:write( string.format( "_val%s", getAccessPrimValFromStem( false, valType, 0 )) )
-   end
-    )
+   end )
    stream:write( ";" )
 end
-
 local function processMapForeachSetupVal( stream, moduleCtrl, loopType, keyToken, valToken, keyTxt, valTxt )
 
    do
@@ -3195,8 +3151,7 @@ local function processMapForeachSetupVal( stream, moduleCtrl, loopType, keyToken
          processToIF( stream, moduleCtrl, keyType, function (  )
          
             stream:write( string.format( "%s%s", keyTxt, getAccessPrimValFromStem( false, keyType, 0 )) )
-         end
-          )
+         end )
          stream:writeln( ";" )
       end
    end
@@ -3209,14 +3164,12 @@ local function processMapForeachSetupVal( stream, moduleCtrl, loopType, keyToken
          processToIF( stream, moduleCtrl, valType, function (  )
          
             stream:write( string.format( "%s%s", valTxt, getAccessPrimValFromStem( false, valType, 0 )) )
-         end
-          )
+         end )
          stream:writeln( ";" )
       end
    end
    
 end
-
 function convFilter:processForeach( node, opt )
 
    self:writeln( "{" )
@@ -3379,7 +3332,6 @@ function convFilter:processExpUnwrap( node, opt )
       end
       
    end
-   
    do
       local _switchExp = node:get_expType():get_srcTypeInfo()
       if _switchExp == Ast.builtinTypeInt or _switchExp == Ast.builtinTypeChar then
@@ -3474,7 +3426,6 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
          
          self:write( string.format( ", %s pMRet )", cTypeStemP) )
       end
-      
       do
          local _matchExp = mRetInfo
          if _matchExp[1] == MRetInfo.Method[1] then
@@ -3503,7 +3454,6 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
       end
       
    end
-   
    do
       local _switchExp = self.processMode
       if _switchExp == ProcessMode.Intermediate then
@@ -3561,7 +3511,6 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
             end
             
          end
-         
          local wroteArgFlag = false
          local function processCreateDDD( expList )
          
@@ -3581,7 +3530,6 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
             end
             
          end
-         
          do
             local _matchExp = mRetInfo
             if _matchExp[1] == MRetInfo.Method[1] then
@@ -3648,7 +3596,6 @@ local function getMRetFuncName( node )
 
    return string.format( "lune_call_mret_%d", node:get_id())
 end
-
 function convFilter:processExpToDDD( node, opt )
 
    do
@@ -3912,7 +3859,6 @@ function convFilter:processExpCall( node, opt )
       
       self:processCall( node:get_func():get_expType(), setArgFlag, node:get_argList() )
    end
-   
    local isMret = false
    do
       local argList = node:get_argList()
@@ -4105,7 +4051,6 @@ function convFilter:processAndOr( node, opTxt, parent )
       
       return false
    end
-   
    local firstFlag = not isAndOr( parent )
    if firstFlag then
       self:writeln( "lune_popVal( _pEnv, lune_incStack( _pEnv ) ||" )
@@ -4287,8 +4232,7 @@ function convFilter:processExpRefItem( node, opt )
             end
          end
          
-      end
-       )
+      end )
    end
    
 end
@@ -4378,8 +4322,7 @@ function convFilter:processGetField( node, opt )
          self:write( string.format( "%s( _pEnv, ", self.moduleCtrl:getCallMethodCName( getterType )) )
          filter( prefixNode, self, node )
          self:write( ")" )
-      end
-       )
+      end )
    end
    
 end
@@ -4524,7 +4467,6 @@ local function getLiteralListFuncName( node )
 
    return string.format( "lune_list_%X", node:get_id())
 end
-
 function convFilter:processLiteralNode( exp, parent )
 
    do
@@ -4626,7 +4568,6 @@ local function getLiteralSetFuncName( node )
 
    return string.format( "lune_set_%X", node:get_id())
 end
-
 function convFilter:processLiteralSet( node, opt )
 
    if self.processMode == ProcessMode.Immediate and self.processingNode == node then
@@ -4655,7 +4596,6 @@ local function getLiteralMapFuncName( node )
 
    return string.format( "lune_map_%X", node:get_id())
 end
-
 function convFilter:processLiteralMapSub( node )
 
    if _lune._Set_has(self.processedNodeSet, node ) then

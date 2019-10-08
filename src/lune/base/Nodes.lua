@@ -283,7 +283,6 @@ function Filter:__init(moduleTypeInfo, moduleInfoManager)
       return Ast.defaultTypeNameCtrl
    end
    
-   
    self.typeNameCtrl = process(  )
 end
 function Filter:get_moduleInfoManager(  )
@@ -641,7 +640,6 @@ local function regKind( name )
    _moduleObj.nodeKind[name] = kind
    return kind
 end
-
 local function getNodeKindName( kind )
 
    return _lune.unwrap( nodeKind2NameMap[kind])
@@ -960,15 +958,15 @@ _moduleObj.LuneHelperInfo = LuneHelperInfo
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end
-function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet )
+function LuneHelperInfo.new( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet, callAnonymous )
    local obj = {}
    LuneHelperInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet )
+      obj:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet, callAnonymous )
    end
    return obj
 end
-function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet )
+function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, useLoad, useUnpack, useAlge, useSet, callAnonymous )
 
    self.useNilAccess = useNilAccess
    self.useUnwrapExp = useUnwrapExp
@@ -977,6 +975,7 @@ function LuneHelperInfo:__init( useNilAccess, useUnwrapExp, hasMappingClassDef, 
    self.useUnpack = useUnpack
    self.useAlge = useAlge
    self.useSet = useSet
+   self.callAnonymous = callAnonymous
 end
 
 local ModuleInfo = {}
@@ -9163,7 +9162,6 @@ function Node:getSymbolInfo(  )
       
       return {}
    end
-   
    return processExpNode( self )
 end
 
@@ -9691,7 +9689,6 @@ local function enumLiiteral2Literal( obj )
    Util.err( "illegal enum" .. Ast.EnumLiteral:_getTxt( obj)
     )
 end
-
 function ExpRefNode:getLiteral(  )
 
    local typeInfo = self.symbolInfo:get_typeInfo()
@@ -9767,7 +9764,6 @@ function ExpOp2Node:getLiteral(  )
          end
          
       end
-      
       do
          local _matchExp = literal
          if _matchExp[1] == Literal.Int[1] then
@@ -9796,7 +9792,6 @@ function ExpOp2Node:getLiteral(  )
       
       return true, intVal, realVal, strVal, retTypeInfo
    end
-   
    local ret1, int1, real1, str1, type1 = getValType( self:get_exp1() )
    local ret2, int2, real2, str2, type2 = getValType( self:get_exp2() )
    if not ret1 or not ret2 then

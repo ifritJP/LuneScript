@@ -347,7 +347,7 @@ pub class TransUnit extend (TransUnitIF) {
       self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
       self.helperInfo = new Nodes.LuneHelperInfo(
-         false, false, false, false, false, false, false );
+         false, false, false, false, false, false, false, false );
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo;
       self.protoFuncMap = {};
@@ -569,6 +569,15 @@ pub class TransUnit extend (TransUnitIF) {
                   "mismatch class(%s) base class(%s) for prototpye base class(%s)"
                   ( typeInfo.getTxt( self.typeNameCtrl##),
                     baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
+            }
+         }
+         else {
+            if typeInfo.hasBase() {
+               self.addErrMess(
+                  errPos,
+                  "mismatch class(%s) base class(None) for prototpye base class(%s)"
+                  ( typeInfo.getTxt( self.typeNameCtrl##),
+                    typeInfo.$baseTypeInfo.getTxt(##)));
             }
          }
 
@@ -1713,11 +1722,11 @@ fn TransUnit.registBuiltInScope() mut {
          let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if name ~= "" {
             let mut classFlag = true;
-            if name2FieldInfo$.__attrib$.type$[1] == "interface" {
+            if name2FieldInfo.__attrib$.type$[1] == "interface" {
                classFlag = false;
             }
             let mut interfaceList:List<&Ast.TypeInfo> = [];
-            if! name2FieldInfo$.__attrib$.inplements {
+            if! name2FieldInfo.__attrib$.inplements {
                foreach ifname in _exp {
                   let ifType = getTypeInfo( ifname );
                   interfaceList.insert( ifType );

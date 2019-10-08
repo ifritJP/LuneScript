@@ -1,19 +1,45 @@
-// class Test {
-//    let val:int {pub};
-// }
-
-// let mut work = fn() {};
-// fn func( test:Test )
-// {
-//    work = fn() {
-//       print( test.$val );
+// form Form();
+// let mut work:Form = fn () {};
+// fn func( mut val:stem ) {
+//    work = fn () {
+//       print( val );
+//       val = 10;
 //    };
 // }
-
-// {
-//    func( new Test( 10 ) );
-// }
+// func( 1 );
+// work();
+// func( "abc" );
 // work();
 
-class Test {
-}
+
+// {
+//    class Test {
+//       let val:int {pub};
+//    }
+
+//    form Form();
+
+//    let mut work:Form = fn() { print( "hoge" ); };
+//    let mut work2:Form = fn() { print( "hoge2" ); };
+//    let val = 100;
+//    fn func( mut test:Test )
+//    {
+//       work = fn() {
+//          print( test.$val, val );
+//          test = new Test( 99 );
+//       };
+//       work2 = fn() {
+//          print( test.$val );
+//       };
+//    }
+
+//    work();
+//    {
+//       func( new Test( 10 ) );
+//    }
+//    work();
+//    work();
+//    work2();
+// }
+
+print( "hoge" );

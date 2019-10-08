@@ -402,7 +402,6 @@ function _lune.__Cast( obj, kind, class )
 end
 ``` ( CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class );
 
-
 codeMap[ .Finalize ] = ```
 return _lune
 ```;

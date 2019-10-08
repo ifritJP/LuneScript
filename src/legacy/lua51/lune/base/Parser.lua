@@ -241,7 +241,6 @@ local function createReserveInfo( luaMode )
    
    return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
-
 local TxtStream = {}
 setmetatable( TxtStream, { ifList = {iStream,} } )
 _moduleObj.TxtStream = TxtStream
@@ -594,7 +593,6 @@ function StreamParser:parse(  )
       
       return line
    end
-   
    local rawLine = readLine(  )
    if  nil == rawLine then
       local _rawLine = rawLine
@@ -624,7 +622,6 @@ function StreamParser:parse(  )
       
    end
    
-   
    local function addVal( kind, val, column )
    
       local function createInfo( tokenKind, token, tokenColumn )
@@ -649,7 +646,6 @@ function StreamParser:parse(  )
          self.prevToken = newToken
          return newToken
       end
-      
       local function analyzeNumber( token, beginIndex )
       
          local nonNumIndex = token:find( '[^%d]', beginIndex )
@@ -710,7 +706,6 @@ function StreamParser:parse(  )
          
          return nonNumIndex - 1, intFlag
       end
-      
       if kind == TokenKind.Symb then
          local searchIndex = 1
          while true do
@@ -808,7 +803,6 @@ function StreamParser:parse(  )
       end
       
    end
-   
    
    local searchIndex = startIndex
    while true do

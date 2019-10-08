@@ -1,7 +1,7 @@
 fn test( val:int ) {
    fn ( val:str ) {
       let val = 1;
-   }
+   };
 }
 
 let val2 = 1;

@@ -2162,12 +2162,13 @@ pub override fn convFilter.processDeclFunc(
          declInfo.$has__func__Symbol, node.$expType.$parentInfo, name );
       filter( _exp,  self, node );
    }
-   self.writeln( "end" );
+   self.write( "end" );
 
    //if declInfo.get_accessMode() == .Pub {
    let expType: Ast.TypeInfo = node.get_expType();
    if expType.get_accessMode() == .Pub {
       if self.needModuleObj {
+         self.writeln( "" );
          self.write( "_moduleObj.%s = %s" ( name, name ) );
       }
 

@@ -383,6 +383,7 @@ fn TransUnit.analyzeExpRefItem(
 
    if nilAccess {
       if not expType.$nilable {
+         self.addWarnMess( token.pos, "This is not nilable. -- %s" (expType.getTxt(##)) );
          nilAccess = false;
       }
       else {
@@ -1231,9 +1232,16 @@ fn TransUnit.analyzeExpCall(
    let mut funcTypeInfo = funcExp.$expType;
    let nilAccess;
 
-   if nextToken.txt == "$(" and funcTypeInfo.$nilable {
-      funcTypeInfo = funcTypeInfo.$nonnilableType;
-      nilAccess = true;
+   if nextToken.txt == "$(" {
+      if funcTypeInfo.$nilable {
+         funcTypeInfo = funcTypeInfo.$nonnilableType;
+         nilAccess = true;
+      }
+      else {
+         self.addWarnMess( funcExp.$pos,
+                           "This is not nilable. -- %s" (funcTypeInfo.getTxt(##) ) );
+         nilAccess = false;
+      }
    }
    else {
       nilAccess = false;
@@ -1408,7 +1416,11 @@ fn TransUnit.analyzeExpCall(
          self.nodeManager, firstToken.pos,
          retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList );
    }
-   
+
+   if funcTypeInfo.$rawTxt == "" {
+      self.addErrMess( funcExp.$pos, "can't directly call the declared function." );
+   }
+
    let mut exp:Nodes.Node;
    if funcTypeInfo.get_kind() == .Macro {
       self.macroMode = .None;
@@ -1907,6 +1919,11 @@ fn TransUnit.analyzeExpField(
    let mut accessNil = false;
    if mode == .FieldNil or mode == .GetNil {
       accessNil = true;
+      if not prefixExp.$expType.$nilable {
+         self.addWarnMess(
+            prefixExp.$pos,
+            "This is not nilable. -- %s" (prefixExp.$expType.getTxt(##)) ); 
+      }
    }
    if self.macroMode == .Analyze {
       if accessNil {
@@ -2413,11 +2430,10 @@ fn TransUnit.analyzeExpOp2(
   
 
             if opTxt == "=" {
-               if! let refNode = exp@@@Nodes.ExpRefNode {
-                  let refSymbol = refNode.$symbolInfo;
-                  self.scope.accessSymbol( self.moduleScope, refSymbol, .Write );
-               }
-
+               // if! let refNode = exp@@@Nodes.ExpRefNode {
+               //    let refSymbol = refNode.$symbolInfo;
+               //    self.scope.accessSymbol( self.moduleScope, refSymbol, .Write );
+               // }
                
                // let workToken = self.getToken(##);
                // if workToken.txt == "," {
@@ -3298,7 +3314,8 @@ fn TransUnit.analyzeExp(
             }
          }
          else {
-            self.scope.accessSymbol( self.moduleScope, symbolInfo, .Read );
+            self.scope.accessSymbol( self.moduleScope, symbolInfo );
+            // self.scope.accessSymbol( self.moduleScope, symbolInfo, .Read );
             // self.scope.accessSymbol( self.moduleScope, symbolInfo,
             //                          self.getCurrentNamespaceScope() );
          }

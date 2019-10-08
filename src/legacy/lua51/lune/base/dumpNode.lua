@@ -252,17 +252,14 @@ local function dump( prefix, depth, node, txt )
    
    print( string.format( "%s: %s %s %s", prefix, Nodes.getNodeKindName( node:get_kind(  ) ), txt, typeStr) )
 end
-
 local function filter( node, filter, opt )
 
    node:processFilter( filter, opt )
 end
-
 local function getTxt( token )
 
    return token.txt
 end
-
 function dumpFilter:processNone( node, opt )
 
    local prefix, depth = opt:get(  )

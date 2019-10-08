@@ -589,6 +589,7 @@ pub class LuneHelperInfo {
    pub let mut useUnpack:bool;
    pub let mut useAlge:bool;
    pub let mut useSet:bool;
+   pub let mut callAnonymous:bool;
 }
 
 pub class ModuleInfo extend (Ast.ModuleInfoIF) {

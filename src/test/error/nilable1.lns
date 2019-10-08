@@ -48,8 +48,8 @@
          }
       }
    };
-   val = map$.hoge$.foo$.val1;  // error
-   valnil = map$.hoge$.foo$.val1;
+   val = map.hoge$.foo$.val1;  // error
+   valnil = map.hoge$.foo$.val1;
 }
 
 {
@@ -82,6 +82,14 @@
 }
 {
    let val:real = tonumber( "1" );
+}
+{
+   let val = [ 1 ];
+   print( val$[1] ); // warn
+   let func:form = fn () {};
+   func$(); // warn
+   let map:Map<str,int> = {};
+   print( map$.val ); // warn
 }
 {
    enum TestEnum {
