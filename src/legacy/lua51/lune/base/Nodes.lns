@@ -1389,6 +1389,7 @@ _declNodeClass( "DeclMember", Node, false, false, true,
 
 _declNodeClass( "DeclArg", Node, false, false, false,
                 [ { "name": "&Parser.Token" },
+                  { "symbolInfo": "&Ast.SymbolInfo" },
                   { "argType": "&RefTypeNode" } ]
 );
 

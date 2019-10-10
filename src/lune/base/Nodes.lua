@@ -6894,23 +6894,24 @@ function DeclArgNode:canBeStatement(  )
 
    return false
 end
-function DeclArgNode.new( id, pos, typeList, name, argType )
+function DeclArgNode.new( id, pos, typeList, name, symbolInfo, argType )
    local obj = {}
    DeclArgNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, name, argType ); end
+   if obj.__init then obj:__init( id, pos, typeList, name, symbolInfo, argType ); end
    return obj
 end
-function DeclArgNode:__init(id, pos, typeList, name, argType) 
+function DeclArgNode:__init(id, pos, typeList, name, symbolInfo, argType) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['DeclArg']), pos, typeList)
    
    
    self.name = name
+   self.symbolInfo = symbolInfo
    self.argType = argType
    
 end
-function DeclArgNode.create( nodeMan, pos, typeList, name, argType )
+function DeclArgNode.create( nodeMan, pos, typeList, name, symbolInfo, argType )
 
-   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, typeList, name, argType)
+   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, typeList, name, symbolInfo, argType)
    nodeMan:addNode( node )
    return node
 end
@@ -6941,6 +6942,9 @@ function DeclArgNode.setmeta( obj )
 end
 function DeclArgNode:get_name()
    return self.name
+end
+function DeclArgNode:get_symbolInfo()
+   return self.symbolInfo
 end
 function DeclArgNode:get_argType()
    return self.argType

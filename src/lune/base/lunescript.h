@@ -137,9 +137,8 @@ extern "C" {
     VAR = NULL;
 
 
-
 #define lune_initVal_var( SYMBOL, BLOCK, INDEX, VAL )     \
-    lune_set_block_var( BLOCK, INDEX, SYMBOL );   \
+    lune_set_block_var( BLOCK, INDEX, SYMBOL );           \
     lune_setQ( (&SYMBOL->pStem), VAL );                         
 
 #define lune_initVal_stem( SYMBOL, BLOCK, INDEX, VAL )     \

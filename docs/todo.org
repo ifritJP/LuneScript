@@ -169,9 +169,17 @@ foreach obj in list {
 - [ ] when のブロック内でシンボルを補完すると、 nilable と 非 nilable の両方が出る。
 
 *  C へのトランスコード
+
+- [ ] symbolInfo に exp を代入する処理をまとめる。
+
+- [ ] processToIF() の処理が関数コール処理に入れる。
+
 - [ ] 関数引数のクロージャ。
       引数に対して lune_initVal_stem() する。
 
+- [ ] foreach 等のループ変数のクロージャ。
+      ループ変数に対して lune_initVal_stem() する。
+      
   
 - [ ] C モジュールのコール。 C からのコール。
 - [ ] スレッド

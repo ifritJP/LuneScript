@@ -4597,8 +4597,8 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
          
          self:checkNextToken( ":" )
          local refType = self:analyzeRefType( accessMode, false )
-         local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, refType )
-         self.scope:addLocalVar( true, true, argName.txt, refType:get_expType(), mutable )
+         local symbolInfo = self.scope:addLocalVar( true, true, argName.txt, refType:get_expType(), mutable )
+         local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, symbolInfo, refType )
          table.insert( argList, arg )
       end
       

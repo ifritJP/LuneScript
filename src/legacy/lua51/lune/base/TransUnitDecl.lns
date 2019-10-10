@@ -239,11 +239,13 @@ fn TransUnit.analyzeDeclArgList(
 
          self.checkNextToken( ":" );
          let refType = self.analyzeRefType( accessMode, false );
+         let symbolInfo = self.scope.addLocalVar(
+            true, true, argName.txt, refType.$expType, mutable );
+         
          let arg = Nodes.DeclArgNode.create(
             self.nodeManager, argName.pos, refType.$expTypeList,
-            argName, refType );
+            argName, symbolInfo, refType );
 
-         self.scope.addLocalVar( true, true, argName.txt, refType.$expType, mutable );
          argList.insert( arg );
       }
       nextToken = self.getToken(##);
