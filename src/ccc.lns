@@ -1,5 +1,63 @@
 let mut g_val = 100;
 {
+   let mut map:Map<int,int> = {};
+   map[ 1 ] = 2;
+   foreach val, key in map {
+      print( key, val );
+   }
+}
+{
+   let mut map:Map<stem,stem> = {};
+   map[ "abc" ] = "xyz";
+   foreach val, key in map {
+      print( key, val );
+   }
+}
+{
+   form Form();
+   macro _loopClosure( set:stat ) {
+      {}
+      {
+         let mut map:Map<stem,Form> = {};
+         foreach val in ,,set
+         {
+            map[ val ] = fn () {
+               print( val );
+            };
+         }
+         forsort func in map {
+            func();
+         }
+      }
+   }
+
+   _loopClosure( `{ [ 1, 2, 3, 4 ] } );
+   _loopClosure( `{ [ "a", "b", "c", "d" ] } );
+   _loopClosure( `{ (@ 1, 2, 3, 4 ) } );
+   _loopClosure( `{ (@ "a", "b", "c", "d" ) } );
+   _loopClosure( `{ { "a": 1, "b":2, "c":3 } } );
+}
+{
+   form Form();
+   let mut work:Form = fn () {};
+   let mut work2:Form = fn () {};
+   fn func( mut val:int, mut val2:stem ) {
+      work = fn () {
+         print( val, val2 );
+         val = 10;
+      };
+      work2 = fn () {
+         print( val, val2 );
+      };
+   }
+   func( 1, 2 );
+   work();
+   work2();
+   func( 10, "abc" );
+   work();
+   work2();
+}
+{
    let func = fn () {
       print( "hoge" );
    }

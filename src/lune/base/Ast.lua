@@ -2097,21 +2097,26 @@ function Scope:accessSymbol( moduleScope, symbol )
       end
       
    end
-   if symbol:get_scope() == moduleScope then
-   elseif symbol:get_name() == "self" then
-      local funcType = self:getNamespaceTypeInfo(  )
-      if not funcType:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo() ) then
-         setClosure( funcType )
+   do
+      local _switchExp = symbol:get_kind()
+      if _switchExp == SymbolKind.Var or _switchExp == SymbolKind.Arg then
+         if symbol:get_scope() == moduleScope or symbol:get_scope() == _moduleObj.rootScope then
+         elseif symbol:get_name() == "self" then
+            local funcType = self:getNamespaceTypeInfo(  )
+            if not funcType:get_parentInfo():isInheritFrom( symbol:get_namespaceTypeInfo():get_parentInfo() ) then
+               setClosure( funcType )
+            end
+            
+         else
+          
+            local funcType = self:getNamespaceTypeInfo(  )
+            if funcType ~= symbol:get_namespaceTypeInfo() then
+               setClosure( funcType )
+            end
+            
+         end
+         
       end
-      
-   elseif symbol:get_kind() == SymbolKind.Mbr or symbol:get_kind() == SymbolKind.Mtd then
-   else
-    
-      local funcType = self:getNamespaceTypeInfo(  )
-      if funcType ~= symbol:get_namespaceTypeInfo() then
-         setClosure( funcType )
-      end
-      
    end
    
 end

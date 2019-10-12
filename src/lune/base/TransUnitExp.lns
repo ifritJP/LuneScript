@@ -2260,7 +2260,10 @@ fn TransUnit.analyzeExpSymbol(
                } );
             
             self.error( "not found type -- " .. token.txt );
-         }; 
+         };
+
+         self.scope.accessSymbol( self.moduleScope, symbolInfo );
+         
          let typeInfo = symbolInfo.$typeInfo;
 
          switch symbolInfo.$kind {
@@ -3313,12 +3316,12 @@ fn TransUnit.analyzeExp(
                self.pushback();
             }
          }
-         else {
-            self.scope.accessSymbol( self.moduleScope, symbolInfo );
-            // self.scope.accessSymbol( self.moduleScope, symbolInfo, .Read );
-            // self.scope.accessSymbol( self.moduleScope, symbolInfo,
-            //                          self.getCurrentNamespaceScope() );
-         }
+         // else {
+         //    self.scope.accessSymbol( self.moduleScope, symbolInfo );
+         //    // self.scope.accessSymbol( self.moduleScope, symbolInfo, .Read );
+         //    // self.scope.accessSymbol( self.moduleScope, symbolInfo,
+         //    //                          self.getCurrentNamespaceScope() );
+         // }
       }
    }  
    elseif token.kind == Parser.TokenKind.Type {

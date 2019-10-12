@@ -1563,29 +1563,31 @@ pub fn Scope.accessSymbol( moduleScope:&Scope, symbol:&SymbolInfo) mut
       //    funcScope.closureSymList.insert( symbol );
       // }
    }
-   
-   if symbol.$scope == moduleScope {
-      // symbol が、最上位スコープで定義されているなら、大域変数なのでクロージャではない
-   }
-   elseif symbol.$name == "self" {
-      // self の場合、メソッド内からのアクセスはクロージャではない
-      let funcType = self.getNamespaceTypeInfo();
-      if not funcType.$parentInfo.isInheritFrom(
-         symbol.$namespaceTypeInfo## )
-      {
-         setClosure( funcType );
-      }
-   }
-   elseif symbol.$kind == .Mbr or symbol.$kind == .Mtd {
-      // メンバーの場合はクロージャではない。
-   }
-   else {
-      // このセット処理が、クロージャかどうかを確認する。
-      // symbol の定義位置が異なる名前空間の場合、クロージャとして判定する。
-      let funcType = self.getNamespaceTypeInfo();
-      if funcType ~= symbol.$namespaceTypeInfo {
-         // クロージャならシンボル情報を登録する。
-         setClosure( funcType );
+
+   switch symbol.$kind {
+      case .Var, .Arg {
+         if symbol.$scope == moduleScope or symbol.$scope == rootScope {
+            // symbol が、最上位スコープで定義されているなら、
+            // 大域変数なのでクロージャではない
+         }
+         elseif symbol.$name == "self" {
+            // self の場合、メソッド内からのアクセスはクロージャではない
+            let funcType = self.getNamespaceTypeInfo();
+            if not funcType.$parentInfo.isInheritFrom(
+               symbol.$namespaceTypeInfo.$parentInfo ## )
+            {
+               setClosure( funcType );
+            }
+         }
+         else {
+            // このシンボルアクセスが、クロージャかどうかを確認する。
+            // symbol の定義位置が異なる名前空間の場合、クロージャとして判定する。
+            let funcType = self.getNamespaceTypeInfo();
+            if funcType ~= symbol.$namespaceTypeInfo {
+               // クロージャならシンボル情報を登録する。
+               setClosure( funcType );
+            }
+         }
       }
    }
 }

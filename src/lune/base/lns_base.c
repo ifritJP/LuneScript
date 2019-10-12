@@ -420,6 +420,12 @@ void lune_reset_block( lune_env_t * _pEnv )
             pVar->refCount--;
         }
     }
+    for ( index = pBlock->stemLen - 1; index >= 0; index-- ) {
+        lune_stem_t ** ppStem = pBlock->ppStemList[ index ];
+        if ( ppStem != NULL ) {
+            lune_decre_ref( _pEnv, *ppStem );
+        }
+    }
 
     lune_reset_blockSub( _pEnv, pBlock );
 

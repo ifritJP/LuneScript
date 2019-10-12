@@ -9079,6 +9079,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
             self:error( "not found type -- " .. token.txt )
          end
          
+         self.scope:accessSymbol( self.moduleScope, symbolInfo )
          local typeInfo = symbolInfo:get_typeInfo()
          do
             local _switchExp = symbolInfo:get_kind()
@@ -9989,9 +9990,6 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
                self:pushback(  )
             end
             
-         else
-          
-            self.scope:accessSymbol( self.moduleScope, symbolInfo )
          end
          
       end

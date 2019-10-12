@@ -1,45 +1,26 @@
-// form Form();
-// let mut work:Form = fn () {};
-// fn func( mut val:stem ) {
-//    work = fn () {
-//       print( val );
-//       val = 10;
-//    };
-// }
-// func( 1 );
-// work();
-// func( "abc" );
-// work();
-
-
-// {
-//    class Test {
-//       let val:int {pub};
-//    }
-
-//    form Form();
-
-//    let mut work:Form = fn() { print( "hoge" ); };
-//    let mut work2:Form = fn() { print( "hoge2" ); };
-//    let val = 100;
-//    fn func( mut test:Test )
-//    {
-//       work = fn() {
-//          print( test.$val, val );
-//          test = new Test( 99 );
-//       };
-//       work2 = fn() {
-//          print( test.$val );
-//       };
-//    }
-
-//    work();
-//    {
-//       func( new Test( 10 ) );
-//    }
-//    work();
-//    work();
-//    work2();
-// }
-
-print( "hoge" );
+{
+   let mut map:Map<int,int> = {};
+   map[ 1 ] = 2;
+   let mut list:List<form> = [];
+   foreach val, key in map {
+      list.insert( fn() {
+         print( key, val );
+      });
+   }
+   foreach func in list {
+      func();
+   }
+}
+{
+   let mut map:Map<str,str> = {};
+   map[ "a" ] = "b";
+   let mut list:List<form> = [];
+   foreach val, key in map {
+      list.insert( fn() {
+         print( key, val );
+      });
+   }
+   foreach func in list {
+      func();
+   }
+}
