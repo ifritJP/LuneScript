@@ -3872,6 +3872,31 @@ function IfUnwrapNode:getBreakKind( checkMode )
    return BreakKind.None
 end
 
+local UnwrapSymbolPair = {}
+_moduleObj.UnwrapSymbolPair = UnwrapSymbolPair
+function UnwrapSymbolPair.setmeta( obj )
+  setmetatable( obj, { __index = UnwrapSymbolPair  } )
+end
+function UnwrapSymbolPair.new( src, dst )
+   local obj = {}
+   UnwrapSymbolPair.setmeta( obj )
+   if obj.__init then
+      obj:__init( src, dst )
+   end
+   return obj
+end
+function UnwrapSymbolPair:__init( src, dst )
+
+   self.src = src
+   self.dst = dst
+end
+function UnwrapSymbolPair:get_src()
+   return self.src
+end
+function UnwrapSymbolPair:get_dst()
+   return self.dst
+end
+
 function NodeKind.get_When(  )
 
    return _lune.unwrap( _moduleObj.nodeKind['When'])
@@ -3909,51 +3934,29 @@ function WhenNode:canBeStatement(  )
 
    return true
 end
-function WhenNode.new( id, pos, typeList, varNameList, expNodeList, block, elseBlock )
+function WhenNode.new( id, pos, typeList, symPairList, block, elseBlock )
    local obj = {}
    WhenNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, varNameList, expNodeList, block, elseBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, symPairList, block, elseBlock ); end
    return obj
 end
-function WhenNode:__init(id, pos, typeList, varNameList, expNodeList, block, elseBlock) 
+function WhenNode:__init(id, pos, typeList, symPairList, block, elseBlock) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['When']), pos, typeList)
    
    
-   self.varNameList = varNameList
-   self.expNodeList = expNodeList
+   self.symPairList = symPairList
    self.block = block
    self.elseBlock = elseBlock
    
 end
-function WhenNode.create( nodeMan, pos, typeList, varNameList, expNodeList, block, elseBlock )
+function WhenNode.create( nodeMan, pos, typeList, symPairList, block, elseBlock )
 
-   local node = WhenNode.new(nodeMan:nextId(  ), pos, typeList, varNameList, expNodeList, block, elseBlock)
+   local node = WhenNode.new(nodeMan:nextId(  ), pos, typeList, symPairList, block, elseBlock)
    nodeMan:addNode( node )
    return node
 end
 function WhenNode:visit( visitor, depth )
 
-   do
-      local list = self.expNodeList
-      for __index, child in pairs( list ) do
-         do
-            local _switchExp = visitor( child, self, 'expNodeList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1 ) then
-                  return false
-               end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            end
-         end
-         
-         
-      end
-      
-      
-   end
-   
    do
       local child = self.block
       do
@@ -3999,11 +4002,8 @@ end
 function WhenNode.setmeta( obj )
   setmetatable( obj, { __index = WhenNode  } )
 end
-function WhenNode:get_varNameList()
-   return self.varNameList
-end
-function WhenNode:get_expNodeList()
-   return self.expNodeList
+function WhenNode:get_symPairList()
+   return self.symPairList
 end
 function WhenNode:get_block()
    return self.block

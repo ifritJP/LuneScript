@@ -7046,7 +7046,6 @@ end
 function TransUnit:analyzeWhen( firstToken )
 
    local nextToken, continueFlag = self:getContinueToken(  )
-   local varNameList = {}
    if not (continueFlag and nextToken.txt == "!" ) then
       self:pushback(  )
       self:addErrMess( nextToken.pos, "'when' need '!'" )
@@ -7055,15 +7054,15 @@ function TransUnit:analyzeWhen( firstToken )
    local symListNode = self:analyzeExpList( false, false )
    local scope = self:pushScope( false )
    local expNodeList = {}
+   local symPairList = {}
    for __index, expNode in pairs( symListNode:get_expList() ) do
-      table.insert( expNodeList, expNode )
       do
          local refNode = _lune.__Cast( expNode, 3, Nodes.ExpRefNode )
          if refNode ~= nil then
             if expNode:get_expType():get_nilable() then
                local symbolInfo = refNode:get_symbolInfo()
-               table.insert( varNameList, refNode:get_token().txt )
-               self:addLocalVar( firstToken.pos, false, expNode:canBeLeft(  ), refNode:get_token().txt, expNode:get_expType():get_nonnilableType(), symbolInfo:get_mutable() and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+               local newSymbolInfo = self:addLocalVar( firstToken.pos, false, expNode:canBeLeft(  ), refNode:get_token().txt, expNode:get_expType():get_nonnilableType(), symbolInfo:get_mutable() and Ast.MutMode.Mut or Ast.MutMode.IMut, true )
+               table.insert( symPairList, Nodes.UnwrapSymbolPair.new(symbolInfo, newSymbolInfo) )
             else
              
                self:addErrMess( expNode:get_pos(), string.format( "This type isn't nilable. -- %s", expNode:get_expType():getTxt(  )) )
@@ -7088,7 +7087,7 @@ function TransUnit:analyzeWhen( firstToken )
       self:pushback(  )
    end
    
-   return Nodes.WhenNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, varNameList, expNodeList, block, elseBlock )
+   return Nodes.WhenNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, symPairList, block, elseBlock )
 end
 
 function TransUnit:createExpList( pos, expTypeList, expList, followOn, abbrNode )

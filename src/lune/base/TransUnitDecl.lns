@@ -3130,7 +3130,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
 fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
 {
    let mut nextToken, continueFlag = self.getContinueToken();
-   let mut varNameList:str[] = [];
+   //let mut varNameList:str[] = [];
 
    if not ( continueFlag and nextToken.txt == "!" ) {
       self.pushback();
@@ -3142,17 +3142,18 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
    let mut scope = self.pushScope( false ## );
 
    let mut expNodeList:List<&Nodes.Node> = [];
+   let mut symPairList:List<&Nodes.UnwrapSymbolPair> = [];
 
    foreach expNode in symListNode.$expList {
-      expNodeList.insert( expNode );
       if! let refNode = expNode@@@Nodes.ExpRefNode {
          if expNode.$expType.$nilable {
             let symbolInfo = refNode.$symbolInfo;
-            varNameList.insert( refNode.$token.txt );
-            self.addLocalVar(
+            // varNameList.insert( refNode.$token.txt );
+            let newSymbolInfo = self.addLocalVar(
                firstToken.pos, false, expNode.canBeLeft(), refNode.$token.txt,
                expNode.$expType.$nonnilableType,
                symbolInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true );
+            symPairList.insert( new Nodes.UnwrapSymbolPair( symbolInfo, newSymbolInfo ) );
          }
          else {
             self.addErrMess( expNode.$pos,
@@ -3182,5 +3183,5 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
 
    return Nodes.WhenNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
-      varNameList, expNodeList, block, elseBlock );
+      symPairList, block, elseBlock );
 }

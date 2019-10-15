@@ -1989,9 +1989,9 @@ pub override fn convFilter.processWhen(
    node: Nodes.WhenNode, opt: Opt ) mut
 {
    self.write( "if " );
-   foreach varName, index in node.$varNameList {
-      self.write( "%s ~= nil" (varName) );
-      if index ~= #node.$varNameList {
+   foreach symPair, index in node.$symPairList {
+      self.write( "%s ~= nil" (symPair.$src.$name) );
+      if index ~= #node.$symPairList {
          self.write( " and " );
       }
    }

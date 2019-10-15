@@ -1002,9 +1002,15 @@ pub override fn IfUnwrapNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 }
 
 
+pub class UnwrapSymbolPair {
+   let src:&Ast.SymbolInfo {pub};
+   let dst:&Ast.SymbolInfo {pub};
+}
+
 _declNodeClass( "When", Node, false, false, true,
-                [ { "varNameList": "List<&str>" },
-                  { "expNodeList": "List<&Node>" },
+                [ //{ "varNameList": "List<&str>" },
+                  //{ "expNodeList": "List<&Node>" },
+                  { "symPairList": "List<&UnwrapSymbolPair>" },
                   { "block": "&BlockNode" },
                   { "elseBlock": "&BlockNode!" } ]
 );

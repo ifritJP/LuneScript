@@ -380,7 +380,7 @@ void lune_init_test( lune_env_t * _pEnv )
     // test2( test );
     u_lune_form_test2(
         _pEnv, NULL,
-        lune_func2stem( _pEnv, (lune_func_t *)u_lune_form_test, 0, false, 0 ) );
+        lune_func2stem( _pEnv, (lune_closure_t *)u_lune_form_test, 0, false, 0 ) );
 
 
     // let val2 = 99;
@@ -389,7 +389,7 @@ void lune_init_test( lune_env_t * _pEnv )
     pVal2->pStem->val.intVal= 99;
     // fn () { val2 = val2 + 1000; } ();
     lune_stem_t * pClosure = lune_func2stem(
-        _pEnv, (lune_func_t *)u_lune_form_test3, 0, false, 1, pVal2 );
+        _pEnv, (lune_closure_t *)u_lune_form_test3, 0, false, 1, pVal2 );
     lune_call_form( _pEnv, pClosure, 0 );
     // print( val2 );
     lune_print( _pEnv, NULL, lune_createDDD( _pEnv, false, 1, pVal2->pStem ) );
@@ -428,7 +428,7 @@ void lune_init_test( lune_env_t * _pEnv )
     // list.sort( fn (val1:int,val2:int):bool { return val1 > val2; } );
     lune_mtd_List( pList->pStem )->sort(
         _pEnv, pList->pStem,
-        lune_func2stem( _pEnv, (lune_func_t *)u_lune_form_comp, 2, false, 0 ) );
+        lune_func2stem( _pEnv, (lune_closure_t *)u_lune_form_comp, 2, false, 0 ) );
     // print( list.unpack() );
     lune_print( _pEnv, NULL, lune_mtd_List( pList->pStem )->unpack( _pEnv, pList->pStem ) );
 

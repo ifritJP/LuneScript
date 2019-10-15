@@ -159,10 +159,12 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
                 lune_closureVal_t * pVal = lune_form_closure( pStem, index );
                 if ( pVal->isVar ) {
                     lune_var_t * pVar = pVal->val.pVar;
-                    pVar->refCount--;
-                    if ( pVar->refCount == 0 ) {
-                        lune_decre_ref( _pEnv, pVar->pStem );
-                    }
+                    lune_lock(
+                        pVar->refCount--;
+                        if ( pVar->refCount == 0 ) {
+                            lune_decre_ref( _pEnv, pVar->pStem );
+                        }
+                    )
                 }
                 else {
                     lune_decre_ref( _pEnv, pVal->val.pStem );
@@ -193,10 +195,12 @@ static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag
  * 参照カウントが 0 になった場合は、開放処理を行なう。
  */
 void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
-    pStem->refCount--;
-    if ( pStem->refCount == 0 ) {
-        lune_gc_stem( _pEnv, pStem, true );
-    }
+    lune_lock(
+        pStem->refCount--;
+        if ( pStem->refCount == 0 ) {
+            lune_gc_stem( _pEnv, pStem, true );
+        }
+    );
 }
 
 lune_stem_t * lune_setMRet( lune_env_t * _pEnv, lune_stem_t * pStem ) {
@@ -206,16 +210,18 @@ lune_stem_t * lune_setMRet( lune_env_t * _pEnv, lune_stem_t * pStem ) {
 
 lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem )
 {
-    if ( pIFStem->refCount == 0 ) {
-        // interface の stem は共有なので、
-        // 参照回数が 0 の状態から 1 になったタイミングで、
-        // 元インスタンスの参照回数をインクリメントする。
-        pIFStem->val.ifVal.pObj->refCount++;
+    lune_lock(
+        if ( pIFStem->refCount == 0 ) {
+            // interface の stem は共有なので、
+            // 参照回数が 0 の状態から 1 になったタイミングで、
+            // 元インスタンスの参照回数をインクリメントする。
+            pIFStem->val.ifVal.pObj->refCount++;
 
-        lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
-        lune_add2list( &pBlock->managedStemTop, pIFStem );
-        pIFStem->refCount++;
-    }
+            lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
+            lune_add2list( &pBlock->managedStemTop, pIFStem );
+            pIFStem->refCount++;
+        }
+    )
     return pIFStem;
 }
 
@@ -243,7 +249,9 @@ lune_stem_t * lune_toIF(
 
 void lune_setQ_( lune_stem_t * pStem )
 {
-    pStem->refCount++;
+    lune_lock( 
+        pStem->refCount++;
+    )
 }
 
 lune_stem_t * lune_setRet( lune_env_t * _pEnv, lune_stem_t * pStem )
@@ -339,12 +347,14 @@ static inline void lune_reset_blockSub( lune_env_t * _pEnv, lune_block_t * pBloc
     while ( pWork != &pBlock->managedStemTop ) {
         lune_stem_t * pPrev = pWork->pPrev;
 
-        if ( pWork->refCount == 1 ) {
-            lune_gc_stem( _pEnv, pWork, true );
-        }
-        else {
-            pWork->refCount--;
-        }
+        lune_lock( 
+            if ( pWork->refCount == 1 ) {
+                lune_gc_stem( _pEnv, pWork, true );
+            }
+            else {
+                pWork->refCount--;
+            }
+        )
         pWork = pPrev;
     }
 }
@@ -361,13 +371,15 @@ static void lune_leave_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock )
     int index;
     for ( index = pBlock->varLen - 1; index >= 0; index-- ) {
         lune_var_t * pVar = pBlock->pVarList[ index ];
-        pVar->refCount--;
-        if ( pVar->refCount == 0 ) {
-            lune_stem_t * pStem = pVar->pStem;
-            if ( pStem != NULL ) {
-                lune_decre_ref( _pEnv, pStem );
+        lune_lock(
+            pVar->refCount--;
+            if ( pVar->refCount == 0 ) {
+                lune_stem_t * pStem = pVar->pStem;
+                if ( pStem != NULL ) {
+                    lune_decre_ref( _pEnv, pStem );
+                }
             }
-        }
+        )
         lune_free( _pEnv->allocateor, pVar );
         s_globalEnv.allocNum--;
     }
@@ -410,15 +422,17 @@ void lune_reset_block( lune_env_t * _pEnv )
     int index;
     for ( index = pBlock->varLen - 1; index >= 0; index-- ) {
         lune_var_t * pVar = pBlock->pVarList[ index ];
-        if ( pVar->refCount == 1 ) {
-            lune_stem_t * pStem = pVar->pStem;
-            if ( pStem != NULL ) {
-                lune_decre_ref( _pEnv, pStem );
+        lune_lock( 
+            if ( pVar->refCount == 1 ) {
+                lune_stem_t * pStem = pVar->pStem;
+                if ( pStem != NULL ) {
+                    lune_decre_ref( _pEnv, pStem );
+                }
             }
-        }
-        else {
-            pVar->refCount--;
-        }
+            else {
+                pVar->refCount--;
+            }
+        )
     }
     for ( index = pBlock->stemLen - 1; index >= 0; index-- ) {
         lune_stem_t ** ppStem = pBlock->ppStemList[ index ];
@@ -724,7 +738,7 @@ static void lune_class_del( lune_env_t * _pEnv, void * pObj )
  */
 lune_stem_t * _lune_func2stem(
     const char * pFile, int lineNo, 
-    lune_env_t * _pEnv, lune_func_t * pFunc, int argNum, bool hasDDD, int num, ... )
+    lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... )
 {
     lune_stem_t * pFormStem =
         lune_alloc_stem( _pEnv, lune_value_type_form, pFile, lineNo );
@@ -738,29 +752,31 @@ lune_stem_t * _lune_func2stem(
     /* s_globalEnv.allocNum++; */
 
     pForm->pFunc = pFunc;
-    pForm->argNum = argNum;
+    //pForm->argNum = argNum;
     pForm->hasDDD = hasDDD;
     
     va_list ap;
     va_start( ap, num );
 
-    int index;
-    for ( index = 0; index < num; index++ ) {
-        lune_closureVal_t * pClosureVal = &pForm->pClosureValList[ index ];
-        pClosureVal->isVar = va_arg( ap, int );
-        if ( pClosureVal->isVar ) {
-            lune_var_t * pVar = va_arg( ap, lune_var_t * );
-            pVar->refCount++;
-            pForm->pClosureValList[ index ].val.pVar = pVar;
+    lune_lock( 
+        int index;
+        for ( index = 0; index < num; index++ ) {
+            lune_closureVal_t * pClosureVal = &pForm->pClosureValList[ index ];
+            pClosureVal->isVar = va_arg( ap, int );
+            if ( pClosureVal->isVar ) {
+                lune_var_t * pVar = va_arg( ap, lune_var_t * );
+                pVar->refCount++;
+                pForm->pClosureValList[ index ].val.pVar = pVar;
+            }
+            else {
+                lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
+                pStem->refCount++;
+                pForm->pClosureValList[ index ].val.pStem = pStem;
+            }
+            // pVar->pStem->refCount++;
+            //pForm->pOrgClosureValList[ index ] = pVar->pStem;
         }
-        else {
-            lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-            pStem->refCount++;
-            pForm->pClosureValList[ index ].val.pStem = pStem;
-        }
-        // pVar->pStem->refCount++;
-        //pForm->pOrgClosureValList[ index ] = pVar->pStem;
-    }
+    )
     va_end(ap);
 
     return pFormStem;
@@ -907,8 +923,10 @@ static lune_env_t * lune_createEnv()
  */
 static void lune_deleteEnv( lune_env_t * _pEnv ) {
 
-    _pEnv->pTrueStem->refCount--;
-    _pEnv->pFalseStem->refCount--;
+    lune_lock( 
+        _pEnv->pTrueStem->refCount--;
+        _pEnv->pFalseStem->refCount--;
+    )
     
     lune_leave_block( _pEnv );
     lune_leave_block( _pEnv );
@@ -942,7 +960,12 @@ static void lune_releaseGlobalEnv(void) {
 lune_stem_t * lune_call_form(
     lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * _pDDD )
 {
-    return lune_form_func( _pForm )( _pEnv, _pForm, _pDDD );
+    if ( lune_isClosure( _pForm ) ) {
+        return lune_closure( _pForm )( _pEnv, _pForm, _pDDD );
+    }
+    else {
+        return lune_func( _pForm )( _pEnv, _pDDD );
+    }
 }
 
 lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem ) {
@@ -1071,7 +1094,7 @@ lune_real_t lune_unwrap_realDefault( lune_stem_t * pStem, lune_real_t val )
  *
  * @param pArg は ddd 型。
  */
-void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg ) {
+void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg ) {
 
     //lune_enter_func( _pEnv, 0, 0, 1, pArg );
     lune_enter_block( _pEnv, 0, 0 );

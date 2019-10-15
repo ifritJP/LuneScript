@@ -84,7 +84,11 @@ extern "C" {
 #define lune_imdMap( MAP, ... )                          \
     lune_imdEntry_t MAP[] = { __VA_ARGS__, { lune_imdSentinel, lune_imdSentinel } };
 
-    
+
+    /**
+       将来のマルチスレッド対応時の排他制御範囲。
+     */
+#define lune_lock( ... )    __VA_ARGS__
 
 
     typedef struct lune_imdVal_t {
@@ -232,7 +236,6 @@ extern "C" {
     {                                                \
         lune_stem_t * _pStem = STEM;                 \
         _pStem->type = TYPE;                         \
-        _pStem->pEnv = ENV;                          \
     }
 
 #define lune_getImpObj( STEM ) (STEM)->val.ifVal.pObj
@@ -289,8 +292,15 @@ extern "C" {
      * @param ... 関数の引数
      * @return 関数の戻り値
      */
-    typedef lune_stem_t * lune_func_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
+    typedef lune_stem_t * lune_closure_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
+    typedef lune_int_t lune_closureInt_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
+    typedef lune_real_t lune_closureReal_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
+    
+    typedef lune_stem_t * lune_func_t( lune_env_t * _pEnv, ... );
+    typedef lune_int_t lune_funcInt_t( lune_env_t * _pEnv, ... );
+    typedef lune_real_t lune_funcReal_t( lune_env_t * _pEnv, ... );
 
+    
     /**
      * メソッドの型
      *
@@ -392,8 +402,22 @@ extern "C" {
     } lune_ddd_t;
 
 
-#define lune_form_func( FORM )                  \
+#define lune_isClosure( FORM ) \
+    ((FORM)->val.form.len != 0)
+    
+#define lune_closure( FORM )                  \
     (FORM)->val.form.pFunc
+#define lune_closure_int( FORM )                  \
+    ((lune_closureInt_t *)(FORM)->val.form.pFunc)
+#define lune_closure_real( FORM )                  \
+    ((lune_closureReal_t *)(FORM)->val.form.pFunc)
+
+#define lune_func( FORM )                  \
+    ((lune_func_t *)(FORM)->val.form.pFunc)
+#define lune_func_int( FORM )                  \
+    ((lune_funcInt_t *)(FORM)->val.form.pFunc)
+#define lune_func_real( FORM )                  \
+    ((lune_funcReal_t *)(FORM)->val.form.pFunc)
     
 #define lune_form_closure_stem( FORM, INDEX )        \
     (FORM)->val.form.pClosureValList[ INDEX ].val.pStem
@@ -420,13 +444,13 @@ extern "C" {
      */
     struct lune_form_t {
         /** 関数 */
-        lune_func_t * pFunc;
+        lune_closure_t * pFunc;
         /** form 内でアクセスする外部変数を管理するバッファ */
         lune_closureVal_t * pClosureValList;
         /** pClosureValList で管理している stem の数 */
         int len;
         /** 引数の数*/
-        int argNum;
+        //int argNum;
         /** 引数に ... を持つかどうか */
         bool hasDDD;
     };
@@ -471,8 +495,6 @@ extern "C" {
         lune_value_type_t type;
         /** このデータを参照している数 */
         int refCount;
-        /** ENV */
-        lune_env_t * pEnv;
         /** 実データ */
         union {
             lune_bool_t boolVal;
@@ -604,7 +626,7 @@ extern "C" {
     extern lune_stem_t * _lune_real2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_real_t val );
     extern lune_stem_t * _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
     extern lune_stem_t * _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
-    extern lune_stem_t * _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_func_t * pFunc, int argNum, bool hasDDD, int num, ... );
+    extern lune_stem_t * _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
     extern lune_stem_t * _lune_createDDD( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t * _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
     extern lune_stem_t * _lune_createMRet( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
@@ -636,6 +658,7 @@ extern "C" {
     extern void lune_setOverwrite( lune_stem_t * pStem );
     extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int stemNum, int varNum, int argNum, ... );
     extern void lune_leave_block( lune_env_t * _pEnv );
+    extern void lune_leave_blockMulti( lune_env_t * _pEnv, int num );
     extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemNum, int varNum );
     extern void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem );
     extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
@@ -660,7 +683,7 @@ extern "C" {
     extern lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem );
 
 
-    extern void lune_print( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * pArg );
+    extern void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg );
 
 
 #ifdef __cplusplus

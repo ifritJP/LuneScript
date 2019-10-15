@@ -257,6 +257,11 @@ static bool lune_mtd__Cmp( lune_stem_t * pVal1, lune_stem_t * pVal2 )
 }
 
 /**
+lune_mtd__CmpLune 用のコールバック環境。
+*/
+static lune_env_t * s_pSortEnv;
+
+/**
 sort() のユーザフォーム実行用関数
 
 @param pVal1 比較対象1
@@ -265,33 +270,34 @@ sort() のユーザフォーム実行用関数
  */
 static bool lune_mtd__CmpLune( lune_stem_t * pVal1, lune_stem_t * pVal2 )
 {
-    lune_env_t * pEnv = pVal1->pEnv;
     lune_stem_t * pRet;
-    lune_setQ( (&pRet), pEnv->pSortCallback->val.form.pFunc( pEnv, pEnv->pSortCallback,
-                                                             pVal1, pVal2 ) );
+    lune_setQ( (&pRet), s_pSortEnv->pSortCallback->val.form.pFunc(
+                   s_pSortEnv, s_pSortEnv->pSortCallback, pVal1, pVal2 ) );
 
     int ret = pRet->val.intVal;
-    lune_decre_ref( pEnv, pRet );
+    lune_decre_ref( s_pSortEnv, pRet );
     
     return ret;
 }
 
 /**
 List.sort() 
- */
+*/
 lune_stem_t * lune_mtd_List_sort(
     lune_env_t * _pEnv, lune_stem_t * pObj, lune_stem_t * pForm )
 {
-    if ( pForm == _pEnv->pNilStem ) {
+    if ( pForm->type == lune_value_type_nil ) {
         std::sort( lune_obj_List_obj( pObj )->begin(),
                    lune_obj_List_obj( pObj )->end(), lune_mtd__Cmp );
     }
     else {
-        _pEnv->pSortCallback = pForm;
-        std::sort( lune_obj_List_obj( pObj )->begin(),
-                   lune_obj_List_obj( pObj )->end(),
-                   lune_mtd__CmpLune );
-        _pEnv->pSortCallback = NULL;
+        lune_lock(
+            s_pSortEnv = _pEnv;
+            _pEnv->pSortCallback = pForm;
+            std::sort( lune_obj_List_obj( pObj )->begin(),
+                       lune_obj_List_obj( pObj )->end(), lune_mtd__CmpLune );
+            s_pSortEnv = NULL;
+        );
     }
 
     return NULL;

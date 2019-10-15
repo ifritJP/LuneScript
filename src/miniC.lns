@@ -1,26 +1,24 @@
 {
-   let mut map:Map<int,int> = {};
-   map[ 1 ] = 2;
-   let mut list:List<form> = [];
-   foreach val, key in map {
-      list.insert( fn() {
-         print( key, val );
-      });
+   form testFunc( val:int, val2:int ): int;
+
+   let val = 1;
+   
+   fn func0( val1:int, val2:int ): int {
+      return val1 + val2;
    }
-   foreach func in list {
-      func();
+   fn func1( val1:int, val2:int ): int {
+      return val + val1 + val2;
    }
-}
-{
-   let mut map:Map<str,str> = {};
-   map[ "a" ] = "b";
-   let mut list:List<form> = [];
-   foreach val, key in map {
-      list.insert( fn() {
-         print( key, val );
-      });
+   fn sub() {
+      {
+         print( val );
+      }
    }
-   foreach func in list {
-      func();
-   }
+   let func2_0:testFunc = func0;
+   let func2_1:testFunc = func1;
+   let func3:form = sub;
+   func0( 1, 2 );
+   func2_0( 1, 2 );
+   func2_1( 1, 2 );
+   sub();
 }

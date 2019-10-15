@@ -433,11 +433,12 @@ end
 function dumpFilter:processWhen( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, "" )
-   for index, expNode in pairs( node:get_expNodeList() ) do
-      filter( expNode, self, opt:nextOpt(  ) )
+   local symTxt = ""
+   for index, symPair in pairs( node:get_symPairList() ) do
+      symTxt = string.format( "%s %s", symTxt, tostring( symPair:get_src()))
    end
    
+   dump( prefix, depth, node, symTxt )
    filter( node:get_block(), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_elseBlock()

@@ -1,5 +1,30 @@
 let mut g_val = 100;
 {
+   fn func( val:int!, val2:real!, val3:str! )
+   {
+      when! val, val2, val3 {
+         print( val + 10, val2 + 100.0, val3 );
+      }
+   }
+   func( nil, nil, nil );
+   func( 1, 1.0, "abc" );
+}
+{
+   fn func( val:int!, val2:real!, val3:str! ): form
+   {
+      when! val, val2, val3 {
+         return fn () {
+            print( val + 10, val2 + 100.0, val3 );
+         };
+      }
+      return fn () {
+         print( "dummy" );
+      };
+   }
+   func( nil, nil, nil )();
+   func( 1, 1.0, "abc" )();
+}
+{
    let mut map:Map<int,int> = {};
    map[ 1 ] = 2;
    foreach val, key in map {
@@ -623,4 +648,14 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    print( func2( 2, 10.5 ) + 1 );
    print( func3( 3, 10.1, true ) ** );
    print( "Hello world.", 1, 1.2, false, nil);
+}
+{
+   fn func()
+   {
+      let val = "abc";
+      {
+         return; // ブロック階層を一度に抜ける処理
+      }
+   }
+   func();
 }

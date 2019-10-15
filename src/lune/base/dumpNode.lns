@@ -228,10 +228,13 @@ pub override fn dumpFilter.processWhen(
    node: &Nodes.WhenNode, opt:Opt ) mut
 {
    let prefix, depth = opt.get();
-   dump( prefix, depth, node, "" );
-   foreach expNode, index in node.$expNodeList {
-      filter( expNode, self, opt.nextOpt() );
+
+   let mut symTxt = "";
+   foreach symPair, index in node.$symPairList {
+      symTxt = "%s %s" (symTxt, symPair.$src);
    }
+   
+   dump( prefix, depth, node, symTxt );
    filter( node.$block, self, opt.nextOpt() );
    if! node.$elseBlock {
       filter( _exp, self, opt.nextOpt() );

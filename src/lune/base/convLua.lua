@@ -2259,9 +2259,9 @@ end
 function convFilter:processWhen( node, opt )
 
    self:write( "if " )
-   for index, varName in pairs( node:get_varNameList() ) do
-      self:write( string.format( "%s ~= nil", varName) )
-      if index ~= #node:get_varNameList() then
+   for index, symPair in pairs( node:get_symPairList() ) do
+      self:write( string.format( "%s ~= nil", symPair:get_src():get_name()) )
+      if index ~= #node:get_symPairList() then
          self:write( " and " )
       end
       
