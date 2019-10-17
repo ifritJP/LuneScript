@@ -3701,25 +3701,25 @@ function IfUnwrapNode:canBeStatement(  )
 
    return true
 end
-function IfUnwrapNode.new( id, pos, typeList, varNameList, expList, block, nilBlock )
+function IfUnwrapNode.new( id, pos, typeList, varSymList, expList, block, nilBlock )
    local obj = {}
    IfUnwrapNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, varNameList, expList, block, nilBlock ); end
+   if obj.__init then obj:__init( id, pos, typeList, varSymList, expList, block, nilBlock ); end
    return obj
 end
-function IfUnwrapNode:__init(id, pos, typeList, varNameList, expList, block, nilBlock) 
+function IfUnwrapNode:__init(id, pos, typeList, varSymList, expList, block, nilBlock) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['IfUnwrap']), pos, typeList)
    
    
-   self.varNameList = varNameList
+   self.varSymList = varSymList
    self.expList = expList
    self.block = block
    self.nilBlock = nilBlock
    
 end
-function IfUnwrapNode.create( nodeMan, pos, typeList, varNameList, expList, block, nilBlock )
+function IfUnwrapNode.create( nodeMan, pos, typeList, varSymList, expList, block, nilBlock )
 
-   local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, typeList, varNameList, expList, block, nilBlock)
+   local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, typeList, varSymList, expList, block, nilBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -3787,8 +3787,8 @@ end
 function IfUnwrapNode.setmeta( obj )
   setmetatable( obj, { __index = IfUnwrapNode  } )
 end
-function IfUnwrapNode:get_varNameList()
-   return self.varNameList
+function IfUnwrapNode:get_varSymList()
+   return self.varSymList
 end
 function IfUnwrapNode:get_expList()
    return self.expList

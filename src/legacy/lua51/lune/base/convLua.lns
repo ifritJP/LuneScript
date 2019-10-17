@@ -1943,9 +1943,9 @@ pub override fn convFilter.processIfUnwrap(
    self.writeln( "do" );
    self.pushIndent(##);
    self.write( "local " );
-   foreach varName, index in node.$varNameList {
-      self.write( varName );
-      if index ~= #node.$varNameList {
+   foreach varSym, index in node.$varSymList {
+      self.write( varSym.$name );
+      if index ~= #node.$varSymList {
          self.write( ", " );
       }
    }
@@ -1964,9 +1964,9 @@ pub override fn convFilter.processIfUnwrap(
    self.writeln( "" );
 
    self.write( "if " );
-   foreach varName, index in node.$varNameList {
-      self.write( "%s ~= nil" (varName) );
-      if index ~= #node.$varNameList {
+   foreach varSym, index in node.$varSymList {
+      self.write( "%s ~= nil" (varSym.$name) );
+      if index ~= #node.$varSymList {
          self.write( " and " );
       }
    }

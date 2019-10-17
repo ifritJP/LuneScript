@@ -1,5 +1,83 @@
 let mut g_val = 100;
 {
+   class Test {
+      pub let mut val:int;
+   }
+
+   fn func( val1:Test! ):form, form
+   {
+      if! val1 {
+         return fn () { print( _exp.val ); }, fn () { _exp.val = _exp.val + 1; };
+      }
+      return fn () { print( "no" ); }, fn () {};
+   }
+   fn hoge( val:Test! ) {
+      let sub1, sub2 = func( val );
+      sub1();
+      sub2();
+      sub1();
+   }
+
+   hoge( nil );
+   hoge( new Test( 0 ) );
+}
+{
+   form Sub():bool!;
+   fn func( sub:Sub )
+   {
+      let work1 = sub();
+      print( work1 );
+   }
+   func( fn ():bool! { return nil; } );
+   func( fn ():bool! { return nil; } );
+   func( fn ():bool! { return true; } );
+   func( fn ():bool! { return true; } );
+   func( fn ():bool! { return false; } );
+   func( fn ():bool! { return false; } );
+}
+{
+   form Sub():int!,str!;
+
+   fn func( sub:Sub )
+   {
+      if! let work1, work2 = sub() {
+         print( work1, work2 );
+      }
+      else {
+         if! sub() {
+            print( _exp );
+         }
+      }
+   }
+   func( fn ():int!, str! { return nil, nil; } );
+   func( fn ():int!, str! { return 1, nil; } );
+   func( fn ():int!, str! { return 1, "str"; } );
+}
+{
+   form testFunc( val:int, val2:int ): int;
+
+   let val = 1;
+   
+   fn func0( val1:int, val2:int ): int {
+      return val1 + val2;
+   }
+   fn func1( val1:int, val2:int ): int {
+      return val + val1 + val2;
+   }
+   fn sub() {
+      {
+         print( val );
+      }
+   }
+   let func2_0:testFunc = func0;
+   let func2_1:testFunc = func1;
+   let func3:form = sub;
+   func0( 1, 2 );
+   func2_0( 1, 2 );
+   func2_1( 1, 2 );
+   sub();
+}
+{
    fn func( val:int!, val2:real!, val3:str! )
    {
       when! val, val2, val3 {

@@ -70,7 +70,77 @@ pub let rootTypeId = idProv.getNewId();
 
 
 pub proto class TypeInfo;
-pub proto abstract class SymbolInfo;
+pub interface ModuleInfoIF {
+   /** import したモジュールを assign したシンボル名 */
+   pub fn get_assignName():str;
+   /** import したモジュールのパス */
+   pub fn get_modulePath():str;
+}
+
+pub interface ModuleInfoManager {
+   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF!;
+}
+
+pub class DummyModuleInfoManager extend (ModuleInfoManager) {
+   pri static let instance:DummyModuleInfoManager {pub};
+   pri fn __init() {
+   }
+   __init {
+      DummyModuleInfoManager.instance = new DummyModuleInfoManager();
+   }
+   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF! {
+      return nil;
+   }
+}
+
+pub enum AccessMode {
+   None,
+   Pub,
+   Pro,
+   Pri,
+   Local,
+   Global,
+}
+
+pub enum SymbolKind {
+   /** 型 */
+   Typ,
+   /** メンバ */
+   Mbr,
+   /** メソッド */
+   Mtd,
+   /** 関数 */
+   Fun,
+   /** 変数 */
+   Var,
+   /** 引数 */
+   Arg,
+   /** マクロ */
+   Mac,
+}
+
+pub proto class Scope extend(ModuleInfoManager);
+
+pub interface LowSymbol {
+   /** このシンボルが属するスコープ */
+   pub fn get_scope(): &Scope;
+   /** シンボルのアクセス */
+   pub fn get_accessMode(): AccessMode;
+   /** このシンボルの ID */
+   pub fn get_symbolId(): int;
+   /** シンボルの名前 */
+   pub fn get_name(): str;
+   /** シンボルの型 */
+   pub fn get_typeInfo(): &TypeInfo;
+   /** このシンボルの種類 SymbolKind */
+   pub fn get_kind(): SymbolKind;
+   /** このシンボルが、 closuer 内からセットされているかどうか */
+   pub fn get_hasAccessFromClosure(): bool;
+   /** 変換モジュール用パラメータ */
+   pub fn get_convModuleParam():stem!;
+}
+
+pub proto abstract class SymbolInfo extend (LowSymbol) ;
 
 
 //pub let mut typeInfoKind:Map<str,TypeInfo> = {};
@@ -124,56 +194,6 @@ pub fn isBuiltin( typeId: int ) : bool {
    return builtInTypeIdSet[ typeId ] ~= nil;
 }
 
-pub interface ModuleInfoIF {
-   /** import したモジュールを assign したシンボル名 */
-   pub fn get_assignName():str;
-   /** import したモジュールのパス */
-   pub fn get_modulePath():str;
-}
-
-pub interface ModuleInfoManager {
-   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF!;
-}
-
-pub class DummyModuleInfoManager extend (ModuleInfoManager) {
-   pri static let instance:DummyModuleInfoManager {pub};
-   pri fn __init() {
-   }
-   __init {
-      DummyModuleInfoManager.instance = new DummyModuleInfoManager();
-   }
-   pub fn getModuleInfo( typeInfo:&TypeInfo ) : &ModuleInfoIF! {
-      return nil;
-   }
-}
-
-pub proto class Scope extend(ModuleInfoManager);
-
-pub enum SymbolKind {
-   /** 型 */
-   Typ,
-   /** メンバ */
-   Mbr,
-   /** メソッド */
-   Mtd,
-   /** 関数 */
-   Fun,
-   /** 変数 */
-   Var,
-   /** 引数 */
-   Arg,
-   /** マクロ */
-   Mac,
-}
-
-pub enum AccessMode {
-   None,
-   Pub,
-   Pro,
-   Pri,
-   Local,
-   Global,
-}
 
 pub fn isPubToExternal( mode:AccessMode ): bool {
    switch mode {
@@ -232,7 +252,7 @@ pub class TypeNameCtrl {
 }
 
 /** シンボル情報 */
-pub abstract class SymbolInfo {
+pub abstract class SymbolInfo extend (LowSymbol) {
    pri let allmut namespaceTypeInfo: &TypeInfo!;
 
    pro fn __init() {
@@ -246,7 +266,7 @@ pub abstract class SymbolInfo {
    /** このシンボルの ID */
    pub abstract fn get_symbolId(): int;
    /** このシンボルが属するスコープ */
-   pub abstract fn get_scope(): Scope;
+   pub abstract fn get_scope(): &Scope;
    /** シンボルのアクセス */
    pub abstract fn get_accessMode(): AccessMode;
    /** */
@@ -860,7 +880,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    /** このシンボルの ID */
    pri let symbolId: int { pub };
    /** このシンボルが属するスコープ */
-   pri let scope: Scope { pub };
+   pri let scope: &Scope { pub };
    /** シンボルのアクセス */
    pri let accessMode: AccessMode { pub };
    /** */

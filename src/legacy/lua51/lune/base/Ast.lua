@@ -236,6 +236,168 @@ local rootTypeId = idProv:getNewId(  )
 _moduleObj.rootTypeId = rootTypeId
 
 
+local ModuleInfoIF = {}
+_moduleObj.ModuleInfoIF = ModuleInfoIF
+function ModuleInfoIF.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfoIF  } )
+end
+function ModuleInfoIF.new(  )
+   local obj = {}
+   ModuleInfoIF.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function ModuleInfoIF:__init(  )
+
+end
+
+local ModuleInfoManager = {}
+_moduleObj.ModuleInfoManager = ModuleInfoManager
+function ModuleInfoManager.setmeta( obj )
+  setmetatable( obj, { __index = ModuleInfoManager  } )
+end
+function ModuleInfoManager.new(  )
+   local obj = {}
+   ModuleInfoManager.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function ModuleInfoManager:__init(  )
+
+end
+
+local DummyModuleInfoManager = {}
+setmetatable( DummyModuleInfoManager, { ifList = {ModuleInfoManager,} } )
+_moduleObj.DummyModuleInfoManager = DummyModuleInfoManager
+function DummyModuleInfoManager.new(  )
+   local obj = {}
+   DummyModuleInfoManager.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function DummyModuleInfoManager:__init() 
+end
+function DummyModuleInfoManager:getModuleInfo( typeInfo )
+
+   return nil
+end
+function DummyModuleInfoManager.setmeta( obj )
+  setmetatable( obj, { __index = DummyModuleInfoManager  } )
+end
+function DummyModuleInfoManager:get_instance()
+   return DummyModuleInfoManager.instance
+end
+do
+   DummyModuleInfoManager.instance = DummyModuleInfoManager.new()
+end
+
+local AccessMode = {}
+_moduleObj.AccessMode = AccessMode
+AccessMode._val2NameMap = {}
+function AccessMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "AccessMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function AccessMode._from( val )
+   if AccessMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+AccessMode.__allList = {}
+function AccessMode.get__allList()
+   return AccessMode.__allList
+end
+
+AccessMode.None = 0
+AccessMode._val2NameMap[0] = 'None'
+AccessMode.__allList[1] = AccessMode.None
+AccessMode.Pub = 1
+AccessMode._val2NameMap[1] = 'Pub'
+AccessMode.__allList[2] = AccessMode.Pub
+AccessMode.Pro = 2
+AccessMode._val2NameMap[2] = 'Pro'
+AccessMode.__allList[3] = AccessMode.Pro
+AccessMode.Pri = 3
+AccessMode._val2NameMap[3] = 'Pri'
+AccessMode.__allList[4] = AccessMode.Pri
+AccessMode.Local = 4
+AccessMode._val2NameMap[4] = 'Local'
+AccessMode.__allList[5] = AccessMode.Local
+AccessMode.Global = 5
+AccessMode._val2NameMap[5] = 'Global'
+AccessMode.__allList[6] = AccessMode.Global
+
+local SymbolKind = {}
+_moduleObj.SymbolKind = SymbolKind
+SymbolKind._val2NameMap = {}
+function SymbolKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "SymbolKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function SymbolKind._from( val )
+   if SymbolKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+SymbolKind.__allList = {}
+function SymbolKind.get__allList()
+   return SymbolKind.__allList
+end
+
+SymbolKind.Typ = 0
+SymbolKind._val2NameMap[0] = 'Typ'
+SymbolKind.__allList[1] = SymbolKind.Typ
+SymbolKind.Mbr = 1
+SymbolKind._val2NameMap[1] = 'Mbr'
+SymbolKind.__allList[2] = SymbolKind.Mbr
+SymbolKind.Mtd = 2
+SymbolKind._val2NameMap[2] = 'Mtd'
+SymbolKind.__allList[3] = SymbolKind.Mtd
+SymbolKind.Fun = 3
+SymbolKind._val2NameMap[3] = 'Fun'
+SymbolKind.__allList[4] = SymbolKind.Fun
+SymbolKind.Var = 4
+SymbolKind._val2NameMap[4] = 'Var'
+SymbolKind.__allList[5] = SymbolKind.Var
+SymbolKind.Arg = 5
+SymbolKind._val2NameMap[5] = 'Arg'
+SymbolKind.__allList[6] = SymbolKind.Arg
+SymbolKind.Mac = 6
+SymbolKind._val2NameMap[6] = 'Mac'
+SymbolKind.__allList[7] = SymbolKind.Mac
+
+
+local LowSymbol = {}
+_moduleObj.LowSymbol = LowSymbol
+function LowSymbol.setmeta( obj )
+  setmetatable( obj, { __index = LowSymbol  } )
+end
+function LowSymbol.new(  )
+   local obj = {}
+   LowSymbol.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function LowSymbol:__init(  )
+
+end
+
 
 local sym2builtInTypeMap = {}
 _moduleObj.sym2builtInTypeMap = sym2builtInTypeMap
@@ -399,151 +561,6 @@ local function isBuiltin( typeId )
    return _moduleObj.builtInTypeIdSet[typeId] ~= nil
 end
 _moduleObj.isBuiltin = isBuiltin
-local ModuleInfoIF = {}
-_moduleObj.ModuleInfoIF = ModuleInfoIF
-function ModuleInfoIF.setmeta( obj )
-  setmetatable( obj, { __index = ModuleInfoIF  } )
-end
-function ModuleInfoIF.new(  )
-   local obj = {}
-   ModuleInfoIF.setmeta( obj )
-   if obj.__init then
-      obj:__init(  )
-   end
-   return obj
-end
-function ModuleInfoIF:__init(  )
-
-end
-
-local ModuleInfoManager = {}
-_moduleObj.ModuleInfoManager = ModuleInfoManager
-function ModuleInfoManager.setmeta( obj )
-  setmetatable( obj, { __index = ModuleInfoManager  } )
-end
-function ModuleInfoManager.new(  )
-   local obj = {}
-   ModuleInfoManager.setmeta( obj )
-   if obj.__init then
-      obj:__init(  )
-   end
-   return obj
-end
-function ModuleInfoManager:__init(  )
-
-end
-
-local DummyModuleInfoManager = {}
-setmetatable( DummyModuleInfoManager, { ifList = {ModuleInfoManager,} } )
-_moduleObj.DummyModuleInfoManager = DummyModuleInfoManager
-function DummyModuleInfoManager.new(  )
-   local obj = {}
-   DummyModuleInfoManager.setmeta( obj )
-   if obj.__init then obj:__init(  ); end
-   return obj
-end
-function DummyModuleInfoManager:__init() 
-end
-function DummyModuleInfoManager:getModuleInfo( typeInfo )
-
-   return nil
-end
-function DummyModuleInfoManager.setmeta( obj )
-  setmetatable( obj, { __index = DummyModuleInfoManager  } )
-end
-function DummyModuleInfoManager:get_instance()
-   return DummyModuleInfoManager.instance
-end
-do
-   DummyModuleInfoManager.instance = DummyModuleInfoManager.new()
-end
-
-
-local SymbolKind = {}
-_moduleObj.SymbolKind = SymbolKind
-SymbolKind._val2NameMap = {}
-function SymbolKind:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "SymbolKind.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function SymbolKind._from( val )
-   if SymbolKind._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-SymbolKind.__allList = {}
-function SymbolKind.get__allList()
-   return SymbolKind.__allList
-end
-
-SymbolKind.Typ = 0
-SymbolKind._val2NameMap[0] = 'Typ'
-SymbolKind.__allList[1] = SymbolKind.Typ
-SymbolKind.Mbr = 1
-SymbolKind._val2NameMap[1] = 'Mbr'
-SymbolKind.__allList[2] = SymbolKind.Mbr
-SymbolKind.Mtd = 2
-SymbolKind._val2NameMap[2] = 'Mtd'
-SymbolKind.__allList[3] = SymbolKind.Mtd
-SymbolKind.Fun = 3
-SymbolKind._val2NameMap[3] = 'Fun'
-SymbolKind.__allList[4] = SymbolKind.Fun
-SymbolKind.Var = 4
-SymbolKind._val2NameMap[4] = 'Var'
-SymbolKind.__allList[5] = SymbolKind.Var
-SymbolKind.Arg = 5
-SymbolKind._val2NameMap[5] = 'Arg'
-SymbolKind.__allList[6] = SymbolKind.Arg
-SymbolKind.Mac = 6
-SymbolKind._val2NameMap[6] = 'Mac'
-SymbolKind.__allList[7] = SymbolKind.Mac
-
-local AccessMode = {}
-_moduleObj.AccessMode = AccessMode
-AccessMode._val2NameMap = {}
-function AccessMode:_getTxt( val )
-   local name = self._val2NameMap[ val ]
-   if name then
-      return string.format( "AccessMode.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-function AccessMode._from( val )
-   if AccessMode._val2NameMap[ val ] then
-      return val
-   end
-   return nil
-end
-    
-AccessMode.__allList = {}
-function AccessMode.get__allList()
-   return AccessMode.__allList
-end
-
-AccessMode.None = 0
-AccessMode._val2NameMap[0] = 'None'
-AccessMode.__allList[1] = AccessMode.None
-AccessMode.Pub = 1
-AccessMode._val2NameMap[1] = 'Pub'
-AccessMode.__allList[2] = AccessMode.Pub
-AccessMode.Pro = 2
-AccessMode._val2NameMap[2] = 'Pro'
-AccessMode.__allList[3] = AccessMode.Pro
-AccessMode.Pri = 3
-AccessMode._val2NameMap[3] = 'Pri'
-AccessMode.__allList[4] = AccessMode.Pri
-AccessMode.Local = 4
-AccessMode._val2NameMap[4] = 'Local'
-AccessMode.__allList[5] = AccessMode.Local
-AccessMode.Global = 5
-AccessMode._val2NameMap[5] = 'Global'
-AccessMode.__allList[6] = AccessMode.Global
-
 local function isPubToExternal( mode )
 
    do
@@ -640,6 +657,7 @@ function TypeNameCtrl:set_moduleTypeInfo( moduleTypeInfo )
 end
 
 local SymbolInfo = {}
+setmetatable( SymbolInfo, { ifList = {LowSymbol,} } )
 _moduleObj.SymbolInfo = SymbolInfo
 function SymbolInfo.new(  )
    local obj = {}

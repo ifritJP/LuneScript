@@ -256,7 +256,11 @@ void lune_setQ_( lune_stem_t * pStem )
 
 lune_stem_t * lune_setRet( lune_env_t * _pEnv, lune_stem_t * pStem )
 {
-    if ( pStem->type == lune_value_type_bool ) {
+    switch ( pStem->type ) {
+    case lune_value_type_bool: // fall-through
+    case lune_value_type_nil:
+        // 同じオブジェクトを使いまわすものは、
+        // 以降の処理を実施すると refcount 管理が不正になるため return する。
         return pStem;
     }
     

@@ -2221,9 +2221,9 @@ function convFilter:processIfUnwrap( node, opt )
    self:writeln( "do" )
    self:pushIndent(  )
    self:write( "local " )
-   for index, varName in pairs( node:get_varNameList() ) do
-      self:write( varName )
-      if index ~= #node:get_varNameList() then
+   for index, varSym in pairs( node:get_varSymList() ) do
+      self:write( varSym:get_name() )
+      if index ~= #node:get_varSymList() then
          self:write( ", " )
       end
       
@@ -2233,9 +2233,9 @@ function convFilter:processIfUnwrap( node, opt )
    self:processExpListSub( node, node:get_expList():get_expList(), node:get_expList():get_mRetExp() )
    self:writeln( "" )
    self:write( "if " )
-   for index, varName in pairs( node:get_varNameList() ) do
-      self:write( string.format( "%s ~= nil", varName) )
-      if index ~= #node:get_varNameList() then
+   for index, varSym in pairs( node:get_varSymList() ) do
+      self:write( string.format( "%s ~= nil", varSym:get_name()) )
+      if index ~= #node:get_varSymList() then
          self:write( " and " )
       end
       

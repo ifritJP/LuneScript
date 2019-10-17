@@ -6963,6 +6963,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    local varNameList = {}
    local expList
    
+   local varList = {}
    if nextToken.txt == "let" then
       local workTypeInfoList, letVarList, orgExpTypeList, workExpList = self:analyzeLetAndInitExp( firstToken.pos, Ast.MutMode.IMut, Ast.AccessMode.Local, true )
       typeInfoList = workTypeInfoList
@@ -6999,7 +7000,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
       end
       
       local varName = varNameList[index]
-      self:addLocalVar( firstToken.pos, false, true, varName, expType, Ast.MutMode.IMut )
+      table.insert( varList, self:addLocalVar( firstToken.pos, false, true, varName, expType, Ast.MutMode.IMut ) )
    end
    
    local block = self:analyzeBlock( Nodes.BlockKind.IfUnwrap, TentativeMode.Start, scope )
@@ -7007,7 +7008,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    local elseBlock = nil
    nextToken = self:getToken( true )
    if nextToken.txt == "else" then
-      elseBlock = self:analyzeBlock( Nodes.BlockKind.IfUnwrap, TentativeMode.Finish )
+      elseBlock = self:analyzeBlock( Nodes.BlockKind.Else, TentativeMode.Finish )
    else
     
       self:finishTentativeSymbol( false )
@@ -7040,7 +7041,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
       self:addErrMess( firstToken.pos, "This condition never be false" )
    end
    
-   return Nodes.IfUnwrapNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, varNameList, expList, block, elseBlock )
+   return Nodes.IfUnwrapNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeNone}, varList, expList, block, elseBlock )
 end
 
 function TransUnit:analyzeWhen( firstToken )

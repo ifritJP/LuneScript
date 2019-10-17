@@ -3048,6 +3048,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    let mut typeInfoList:List<&Ast.TypeInfo> = [];
    let mut varNameList:str[] = [];
    let mut expList:&Nodes.ExpListNode;
+   let mut varList:List<&Ast.SymbolInfo> = [];
 
    if nextToken.txt == "let" {
       let mut workTypeInfoList, mut letVarList, mut orgExpTypeList, workExpList =
@@ -3084,7 +3085,9 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
          break;
       }
       let varName = varNameList[ index ];
-      self.addLocalVar( firstToken.pos, false, true, varName, expType, .IMut ## );
+      varList.insert(
+         self.addLocalVar( firstToken.pos, false, true, varName, expType, .IMut ## ) );
+      
    }
 
    let block = self.analyzeBlock( .IfUnwrap, .Start, scope );
@@ -3094,7 +3097,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    let mut elseBlock:Nodes.BlockNode! = nil;
    nextToken = self.getToken( true );
    if nextToken.txt == "else" {
-      elseBlock = self.analyzeBlock( .IfUnwrap, .Finish ## );
+      elseBlock = self.analyzeBlock( .Else, .Finish ## );
    }
    else {
       self.finishTentativeSymbol( false );
@@ -3124,7 +3127,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
 
    return Nodes.IfUnwrapNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
-      varNameList, expList, block, elseBlock );
+      varList, expList, block, elseBlock );
 }
 
 fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node

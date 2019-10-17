@@ -983,7 +983,7 @@ _declNodeClass( "UnwrapSet", Node, false, false, true,
 );
 
 _declNodeClass( "IfUnwrap", Node, false, false, true,
-                [ { "varNameList": "List<str>" },
+                [ { "varSymList": "&List<&Ast.SymbolInfo>" },
                   { "expList": "&ExpListNode" },
                   { "block": "&BlockNode" },
                   { "nilBlock": "&BlockNode!" } ]
