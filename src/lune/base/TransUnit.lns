@@ -2320,7 +2320,7 @@ pub class ExtMacroInfo extend Nodes.MacroInfo {
       return self.tokenList;
    }
 
-   pub fn __init( name:str, func: form,
+   pub fn __init( name:str, func: Nodes.macroStatmentProc,
                   symbol2MacroValInfoMap: Map<str,Nodes.MacroValInfo>,
                   argList:&List<&Nodes.MacroArgInfo>,
                   tokenList:&List<&Parser.Token> )

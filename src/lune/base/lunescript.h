@@ -52,7 +52,7 @@ extern "C" {
     typedef double lune_real_t;
 
 
-    typedef struct lune_stem_t lune_stem_t;
+    typedef struct lune_any_t lune_any_t;
     typedef struct lune_block_t lune_block_t;
     typedef struct lune_env_t lune_env_t;
     typedef struct lune_form_t lune_form_t;
@@ -66,7 +66,7 @@ extern "C" {
         lune_imdType_list,
         lune_imdType_map,
         lune_imdType_set,
-        lune_imdType_stem,
+        lune_imdType_any,
     } lune_imdType_t;
     typedef struct lune_imdEntry_t lune_imdEntry_t;
 
@@ -76,7 +76,7 @@ extern "C" {
 #define lune_imdInt( VAL ) { .type = lune_imdType_int, .val.valInt = (VAL) }
 #define lune_imdReal( VAL ) { .type = lune_imdType_real, .val.valReal = (VAL) }
 #define lune_imdStr( VAL ) { .type = lune_imdType_str, .val.str = (VAL) }
-#define lune_imdStem( VAL ) { .type = lune_imdType_stem, .val.stem = (VAL) }
+#define lune_imdAny( VAL ) { .type = lune_imdType_any, .val.any = (VAL) }
 #define lune_imdList( LIST, ... )                          \
     lune_imdVal_t LIST[] = { __VA_ARGS__, lune_imdSentinel };
 #define lune_imdSet( SET, ... )                          \
@@ -100,7 +100,7 @@ extern "C" {
             struct lune_imdVal_t * list;
             struct lune_imdEntry_t * map;
             struct lune_imdVal_t * set;
-            lune_stem_t * stem;
+            lune_any_t * any;
         } val;
     } lune_imdVal_t;
 
@@ -108,6 +108,37 @@ extern "C" {
         lune_imdVal_t key;
         lune_imdVal_t val;
     };
+
+
+    typedef enum {
+        lune_stem_type_none,
+        lune_stem_type_nil,
+        lune_stem_type_int,
+        lune_stem_type_real,
+        lune_stem_type_bool,
+        lune_stem_type_any,
+    } lune_stem_type_t;
+
+    typedef struct {
+        lune_stem_type_t type;
+        union {
+            lune_int_t intVal;
+            lune_real_t realVal;
+            lune_bool_t boolVal;
+            lune_any_t * pAny;
+        } val;
+    } lune_stem_t;
+
+#define LUNE_STEM_BASE(TYPE) (lune_stem_t){ .type = TYPE }
+#define LUNE_STEM_INT(VAL) \
+    (lune_stem_t){ .type = lune_stem_type_int, .val = { .intVal = VAL } }
+#define LUNE_STEM_REAL(VAL) \
+    (lune_stem_t){ .type = lune_stem_type_real, .val = { .realVal = VAL } }
+#define LUNE_STEM_BOOL(VAL) \
+    (lune_stem_t){ .type = lune_stem_type_bool, .val = { .boolVal = VAL } }
+#define LUNE_STEM_ANY(VAL) \
+    (lune_stem_t){ .type = lune_stem_type_any, .val = { .pAny = VAL } }
+    
 
     /**
      * ブロックの最大深度。
@@ -128,36 +159,57 @@ extern "C" {
     
 
     /**
-     * 全ブロックで保持する stem 型の値の最大数。
+     * 全ブロックで保持する any 型の値の最大数。
      *
      * 要は、main から関数コールしていった時に、ローカル変数を何個使用できるか。
      */
-#define LUNE_STEM_POOL_MAX_NUM 100000
+#define LUNE_ANY_POOL_MAX_NUM 100000
 
-#define lune_set_block_var( BLOCK, INDEX, VAR )     \
-    VAR = (BLOCK)->pVarList[ INDEX ]
+#define lune_set_block_var( BLOCK, INDEX, TYPE, VAR )    \
+    VAR = (BLOCK)->pVarList[ INDEX ];                    \
+    VAR->stem.type = TYPE
+    
 #define lune_set_block_stem( BLOCK, INDEX, VAR )     \
-    (BLOCK)->ppStemList[ INDEX ] = &VAR;             \
-    VAR = NULL;
+    (BLOCK)->pStemList[ INDEX ] = &(VAR);           \
+    VAR.type = lune_stem_type_nil;
 
 
-#define lune_initVal_var( SYMBOL, BLOCK, INDEX, VAL )     \
-    lune_set_block_var( BLOCK, INDEX, SYMBOL );           \
-    lune_setQ( (&SYMBOL->pStem), VAL );                         
+#define lune_initVal_stem( SYMBOL, BLOCK, INDEX, VAL )                \
+    SYMBOL = (BLOCK)->pVarList[ INDEX ];                              \
+    SYMBOL->stem = VAL
+    
+#define lune_initVal_var( SYMBOL, BLOCK, INDEX, VAL )                   \
+    lune_set_block_var( BLOCK, INDEX, lune_stem_type_any, SYMBOL );     \
+    lune_setQ( SYMBOL->stem, (VAL) );
 
-#define lune_initVal_stem( SYMBOL, BLOCK, INDEX, VAL )     \
-    lune_set_block_stem( BLOCK, INDEX, SYMBOL );   \
-    lune_setQ( (&SYMBOL), VAL );                         
+#if 0
+#define lune_initVal_any( SYMBOL, BLOCK, INDEX, VAL )     \
+    lune_set_block_any( BLOCK, INDEX, SYMBOL );   \
+    lune_setQ( (&SYMBOL->stem), VAL );
+#endif
+
+
+
+#define lune_setq( ENV, STEM, VAL )                                     \
+    {                                                                   \
+        if ( STEM.type == lune_stem_type_any ) {                        \
+            if ( STEM.val.pAny != NULL ) {                              \
+                lune_decre_ref( ENV, STEM.val.pAny );                   \
+            }                                                           \
+        }                                                               \
+        STEM = VAL;                                                     \
+        lune_setQ_( STEM.val.pAny );                                    \
+    }
     
     /**
-       STEM 型の値 VAL を、 変数 SYM に代入する。
+       ANY 型の値 VAL を、 変数 SYM に代入する。
 
        変数 SYM に VAL をセットする前に、
        変数 SYM が保持する値の参照カウントをデクリメント。
     */
-#define lune_setq( ENV, SYM, VAL )              \
+#define lune_setq_any( ENV, SYM, VAL )          \
     {                                           \
-        lune_stem_t * __WORK = VAL;             \
+        lune_any_t * __WORK = VAL;             \
         if ( (*SYM) != __WORK ) {               \
             if ( (*SYM) != NULL ) {             \
                 lune_decre_ref( ENV, (*SYM) );  \
@@ -168,22 +220,35 @@ extern "C" {
     }
 
 
+
+#define lune_setQ( STEM, VAL )                                  \
+    {                                                           \
+        lune_stem_t ___work = VAL;                              \
+        if ( ___work.type == lune_stem_type_any ) {             \
+            lune_setQ_any( &STEM.val.pAny, ___work.val.pAny );  \
+            STEM.type = lune_stem_type_any;                     \
+        }                                                       \
+        else {                                                  \
+            STEM = ___work;                                     \
+        }                                                       \
+    }
+    
     /**
-       STEM 型の値 VAL を、 変数 SYM に代入する。
+       ANY 型の値 VAL を、 変数 SYM に代入する。
 
        - VAL の参照カウントインクリメント
-       - VAL を managedStemTop から除外
+       - VAL を managedAnyTop から除外
     */
-#define lune_setQ( SYM, VAL )           \
-        {                               \
-            lune_stem_t * __WORK = VAL; \
-            if ( (*SYM) != __WORK ) {   \
-                (*SYM) = __WORK;        \
-                lune_setQ_( (*SYM) );   \
-            }                           \
-        }
+#define lune_setQ_any( SYM, VAL )               \
+    {                                           \
+        lune_any_t * __WORK = VAL;              \
+        if ( (*(SYM)) != __WORK ) {             \
+            (*(SYM)) = __WORK;                  \
+            lune_setQ_( (*(SYM)) );             \
+        }                                       \
+    }
 
-#define lune_getMRet( ENV, INDEX ) lune_fromDDD( ENV->pMRet, INDEX )
+#define lune_getMRet( ENV, INDEX ) (lune_fromDDD( ENV->pMRet, INDEX ))
     
     
 
@@ -191,76 +256,58 @@ extern "C" {
        クラスのインスタンスを生成する。
 
        @param CLASS 生成するクラスシンボル
-       @param STEMVAL 生成した stem 値を格納する変数シンボル
+       @param ANYVAL 生成した any 値を格納する変数シンボル
        @param CLASSVAL 生成したクラスインスタンスを格納する変数シンボル
     */
-#define lune_class_new_( ENV, CLASS, STEMVAL, CLASSVAL )              \
-    lune_class_new2_( ENV, CLASS, CLASS, STEMVAL, CLASSVAL )
-    // lune_stem_t * STEMVAL = lune_class_new( ENV, sizeof( CLASS ) );
-    // CLASS * CLASSVAL = lune_obj_##CLASS( pStem );                   
+#define lune_class_new_( ENV, CLASS, ANYVAL, CLASSVAL )              \
+    lune_class_new2_( ENV, CLASS, CLASS, ANYVAL, CLASSVAL )
+    // lune_any_t * ANYVAL = lune_class_new( ENV, sizeof( CLASS ) );
+    // CLASS * CLASSVAL = lune_obj_##CLASS( pAny );                   
     // CLASSVAL->pMtd = &lune_mtd_##CLASS;
 
 
-#define lune_class_new2_( ENV, CLASS, SCLASS, STEMVAL, CLASSVAL )     \
-    lune_stem_t * STEMVAL = lune_class_new( ENV, sizeof( CLASS ) );   \
-    CLASS * CLASSVAL = lune_obj_##SCLASS( pStem );                    \
+#define lune_class_new2_( ENV, CLASS, SCLASS, ANYVAL, CLASSVAL )      \
+    lune_stem_t ANYVAL = lune_class_new( ENV, sizeof( CLASS ) );      \
+    CLASS * CLASSVAL = lune_obj_##SCLASS( ANYVAL.val.pAny );          \
     CLASSVAL->pMtd = &lune_mtd_##SCLASS;                              \
     CLASSVAL->pMeta = &lune_type_meta_##SCLASS;
     
 
 #define lune_decl_enum_get__text( ENUM, VALTYPE )                       \
-    lune_stem_t * ENUM##_get__txt( lune_env_t * _pEnv, lune_stem_t * _pForm, \
+    lune_stem_t ENUM##_get__txt( lune_env_t * _pEnv, lune_any_t * _pForm, \
                                    lune_##VALTYPE##_t val )             \
     {                                                                   \
         return lune_mtd_Map_get(                                        \
             _pEnv, ENUM##_val2NameMap, lune_##VALTYPE##2stem( _pEnv, val ) ); \
     }
-#define lune_decl_enum_get__text_stem( ENUM )                           \
-    lune_stem_t * ENUM##_get__txt( lune_env_t * _pEnv, lune_stem_t * _pForm, \
-                                   lune_stem_t * val )             \
+#define lune_decl_enum_get__text_any( ENUM )                           \
+    lune_stem_t ENUM##_get__txt( lune_env_t * _pEnv, lune_any_t * _pForm, \
+                                   lune_stem_t val )             \
     {                                                                   \
         return lune_mtd_Map_get( _pEnv, ENUM##_val2NameMap, val );   \
     }
 
-#define lune_init_if( STEM, ENV, OBJ, MTD, IF )                    \
-    {                                                              \
-        lune_stem_t * __pStem = STEM;                              \
-        lune_init_stem( __pStem, lune_value_type_if, ENV );        \
-        __pStem->refCount = 0;                                     \
-        __pStem->val.ifVal.pMeta = &lune_type_meta_##IF;           \
-        __pStem->val.ifVal.pObj = OBJ;                             \
-        __pStem->val.ifVal.pMtd = MTD;                             \
+#define lune_init_if( ANY, ENV, OBJ, MTD, IF )                    \
+    {                                                             \
+        lune_any_t * __pAny = ANY;                                \
+        lune_init_any( __pAny, lune_value_type_if, ENV );         \
+        __pAny->refCount = 0;                                     \
+        __pAny->val.ifVal.pMeta = &lune_type_meta_##IF;           \
+        __pAny->val.ifVal.pObj = OBJ.val.pAny;                    \
+        __pAny->val.ifVal.pMtd = MTD;                             \
     }
 
-#define lune_init_stem( STEM, TYPE, ENV )            \
+#define lune_init_any( ANY, TYPE, ENV )            \
     {                                                \
-        lune_stem_t * _pStem = STEM;                 \
-        _pStem->type = TYPE;                         \
+        lune_any_t * _pAny = ANY;                 \
+        _pAny->type = TYPE;                         \
     }
 
-#define lune_getImpObj( STEM ) (STEM)->val.ifVal.pObj
+#define lune_getImpObj( ANY ) (ANY)->val.ifVal.pObj
 
 
-#define lune_init_alge( STEM, ENV, VALTYPE )                       \
-    {                                                              \
-        lune_stem_t * __pStem = STEM;                              \
-        lune_init_stem( __pStem, lune_value_type_alge, ENV );      \
-        __pStem->refCount = 1;                                     \
-        __pStem->val.alge.type = VALTYPE;                          \
-        __pStem->val.alge.pVal = NULL;                              \
-        __pStem->val.alge.gc = NULL;                                \
-    }
-    
-    
-
-
-    
     typedef enum {
         lune_value_type_none,
-        lune_value_type_nil,
-        lune_value_type_bool,
-        lune_value_type_int,
-        lune_value_type_real,
         lune_value_type_str,
         lune_value_type_class,
         lune_value_type_if,
@@ -276,13 +323,12 @@ extern "C" {
         lune_value_type_itMap,
         lune_value_type_alge,
     } lune_value_type_t;
-
     typedef struct lune_itList_t lune_itList_t;
     typedef struct lune_itSet_t lune_itSet_t;
     typedef struct lune_itMap_t lune_itMap_t;
     
 
-    typedef lune_stem_t * lune_newfunc_t( lune_env_t * _pEnv, ... );
+    typedef lune_any_t * lune_newfunc_t( lune_env_t * _pEnv, ... );
 
 
     /**
@@ -292,11 +338,11 @@ extern "C" {
      * @param ... 関数の引数
      * @return 関数の戻り値
      */
-    typedef lune_stem_t * lune_closure_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
-    typedef lune_int_t lune_closureInt_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
-    typedef lune_real_t lune_closureReal_t( lune_env_t * _pEnv, lune_stem_t * pInfo, ... );
+    typedef lune_stem_t lune_closure_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
+    typedef lune_int_t lune_closureInt_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
+    typedef lune_real_t lune_closureReal_t( lune_env_t * _pEnv, lune_any_t * pInfo, ... );
     
-    typedef lune_stem_t * lune_func_t( lune_env_t * _pEnv, ... );
+    typedef lune_stem_t lune_func_t( lune_env_t * _pEnv, ... );
     typedef lune_int_t lune_funcInt_t( lune_env_t * _pEnv, ... );
     typedef lune_real_t lune_funcReal_t( lune_env_t * _pEnv, ... );
 
@@ -304,29 +350,29 @@ extern "C" {
     /**
      * メソッドの型
      *
-     * @param pObj クラスのインスタンスを保持する stem
+     * @param pObj クラスのインスタンスを保持する any
      * @param ... メソッドの引数
      * @return メソッドの戻り値
      */
-    typedef lune_stem_t * lune_method_t( lune_env_t * _pEnv, lune_stem_t * pObj, ... );
-    typedef lune_int_t lune_method_int_t( lune_env_t * _pEnv, lune_stem_t * pObj, ... );
-    typedef lune_real_t lune_method_real_t( lune_env_t * _pEnv, lune_stem_t * pObj, ... );
+    typedef lune_stem_t lune_method_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
+    typedef lune_int_t lune_method_int_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
+    typedef lune_real_t lune_method_real_t( lune_env_t * _pEnv, lune_any_t * pObj, ... );
 
 
 
     /**
      * クラスのインスタンスの gc の型
      *
-     * @param pObj クラスのインスタンスを保持する stem
+     * @param pObj クラスのインスタンスを保持する any
      */
-    typedef void lune_gc_t( lune_env_t * _pEnv, lune_stem_t * pObj );
+    typedef void lune_gc_t( lune_env_t * _pEnv, lune_any_t * pObj );
 
     /**
      * クラスのインスタンスの開放処理
      *
-     * @param pObj クラスのインスタンスを保持する stem
+     * @param pObj クラスのインスタンスを保持する any
      */
-    typedef void lune_del_t( lune_env_t * _pEnv, lune_stem_t * pObj );
+    typedef void lune_del_t( lune_env_t * _pEnv, lune_any_t * pObj );
 
     /**
      * 型のメタ情報
@@ -396,8 +442,8 @@ extern "C" {
      */
     typedef struct {
         /** ... に含む stem を管理するバッファ */
-        lune_stem_t ** pStemList;
-        /** pStemList で管理している stem の数 */
+        lune_stem_t * stemList;
+        /** pAnyList で管理している any の数 */
         int len;
     } lune_ddd_t;
 
@@ -419,15 +465,16 @@ extern "C" {
 #define lune_func_real( FORM )                  \
     ((lune_funcReal_t *)(FORM)->val.form.pFunc)
     
-#define lune_form_closure_stem( FORM, INDEX )        \
-    (FORM)->val.form.pClosureValList[ INDEX ].val.pStem
+#define lune_form_closure_any( FORM, INDEX )        \
+    (FORM)->val.form.pClosureValList[ INDEX ].val.pAny
 #define lune_form_closure_var( FORM, INDEX )        \
     (FORM)->val.form.pClosureValList[ INDEX ].val.pVar
 #define lune_form_closure( FORM, INDEX )                        \
     &((FORM)->val.form.pClosureValList[ INDEX ])
 
     typedef struct lune_var_t {
-        lune_stem_t * pStem;
+        //lune_any_t * pAny;
+        lune_stem_t stem;
         int refCount;
     } lune_var_t;
 
@@ -435,7 +482,7 @@ extern "C" {
         bool isVar;
         union {
             lune_var_t * pVar;
-            lune_stem_t * pStem;
+            lune_stem_t stem;
         } val;
     } lune_closureVal_t;
     
@@ -447,7 +494,7 @@ extern "C" {
         lune_closure_t * pFunc;
         /** form 内でアクセスする外部変数を管理するバッファ */
         lune_closureVal_t * pClosureValList;
-        /** pClosureValList で管理している stem の数 */
+        /** pClosureValList で管理している any の数 */
         int len;
         /** 引数の数*/
         //int argNum;
@@ -485,12 +532,12 @@ extern "C" {
 
     typedef struct lune_if_t {
         lune_type_meta_t * pMeta;
-        lune_stem_t * pObj;
+        lune_any_t * pObj;
         void * pMtd;
     } lune_if_t;
     
-    /** stem 型データ */
-    struct lune_stem_t {
+    /** any 型データ */
+    struct lune_any_t {
         /** 保持しているデータの型 */
         lune_value_type_t type;
         /** このデータを参照している数 */
@@ -511,9 +558,9 @@ extern "C" {
             lune_Alge_t alge;
         } val;
         /** 変数にアサインされる前の値を管理する双方向リスト構造。アサイン済みの場合 NULL。 */
-        struct lune_stem_t * pNext;
+        struct lune_any_t * pNext;
         /** 変数にアサインされる前の値を管理する双方向リスト構造。  */
-        struct lune_stem_t * pPrev;
+        struct lune_any_t * pPrev;
     };
 
     struct lune_block_t {
@@ -524,41 +571,50 @@ extern "C" {
         /** このブロックで管理する var 型を保持するバッファ */
         lune_var_t ** pVarList;
         /** このブロックで管理する stem 型を保持するバッファ */
-        lune_stem_t *** ppStemList;
-        /** pStemBuf で管理する値の数 */
+        lune_stem_t ** pStemList;
+        /** pStemList で管理する値の数 */
         int stemLen;
         /** pVarBuf で管理する値の数 */
         int varLen;
         /**
-         * このブロック内で生成された stem 型データの双方向リスト。
-         * 実際の先頭要素は managedStemTop.pNext。
+         * このブロック内で生成された any 型データの双方向リスト。
+         * 実際の先頭要素は managedAnyTop.pNext。
          */
-        lune_stem_t managedStemTop;
+        lune_any_t managedAnyTop;
    };
+
+    typedef struct {
+        /** 値を返さない関数の戻り値 */
+        lune_stem_t noneStem;
+        /** nil */
+        lune_stem_t nilStem;
+        /** true */
+        lune_stem_t trueStem;
+        /** false */
+        lune_stem_t falseStem;
+
+        /** 要素 0 個の DDD*/
+        lune_stem_t ddd0;
+        
+    } lune_global_t;
+
+    extern lune_global_t lune_global;
 
     struct lune_env_t {
         lune_allocator_t allocateor;
-        /** 値を返さない関数の戻り値 */
-        lune_stem_t * pNoneStem;
-        /** nil */
-        lune_stem_t * pNilStem;
-        /** true */
-        lune_stem_t * pTrueStem;
-        /** false */
-        lune_stem_t * pFalseStem;
         /**
          * ブロック情報で利用する pVarList のバッファ。
          * ブロック開始時に、ここから割り当てる。
          */
-        lune_var_t * varPPool[ LUNE_STEM_POOL_MAX_NUM ];
+        lune_var_t * varPPool[ LUNE_ANY_POOL_MAX_NUM ];
         /** varPPool をどこまで使用しているか個数を示す */
         int useVarPoolNum;
         /**
-         * ブロック情報で利用する pStemList のバッファ。
+         * ブロック情報で利用する pAnyList のバッファ。
          * ブロック開始時に、ここから割り当てる。
          */
-        lune_stem_t ** stemPPool[ LUNE_STEM_POOL_MAX_NUM ];
-        /** stemPPool をどこまで使用しているか個数を示す */
+        lune_stem_t * stemPPool[ LUNE_ANY_POOL_MAX_NUM ];
+        /** anyPPool をどこまで使用しているか個数を示す */
         int useStemPoolNum;
         /** ブロック情報の Queue。*/
         lune_block_t blockQueue[ LUNE_BLOCK_MAX_DEPTH ];
@@ -566,32 +622,26 @@ extern "C" {
         int blockDepth;
 
         /** sort callback */
-        lune_stem_t * pSortCallback;
+        lune_stem_t pSortCallback;
 
         /** 値のスタック */
-        lune_stem_t * pValStack[ LUNE_VAL_STACK_MAX ];
+        lune_stem_t pValStack[ LUNE_VAL_STACK_MAX ];
         /** pValStack の現在位置 */
         int stackPos;
 
         /** 処理中の MRet */
-        lune_stem_t * pMRet;
+        lune_any_t * pMRet;
     };
 
 
-#define lune_set2DDDArg( STEM, INDEX, VAL )  \
-    STEM->val.ddd.pStemList[ INDEX ] = VAL;
+#define lune_set2DDDArg( ANY, INDEX, VAL )  \
+    ANY->val.ddd.stemList[ INDEX ] = VAL;
 
-#define lune_fromDDD( STEM, INDEX )  \
-    STEM->val.ddd.pStemList[ INDEX ]
+#define lune_fromDDD( ANY, INDEX )  \
+    ANY->val.ddd.stemList[ INDEX ]
 
-#define lune_lenDDD( STEM ) STEM->val.ddd.len
+#define lune_lenDDD( ANY ) ANY->val.ddd.len
 
-#define lune_bool2stem( ENV, VAL )              \
-    _lune_bool2stem( LUNE_DEBUG_POS, ENV, VAL )
-#define lune_int2stem( ENV, VAL )               \
-    _lune_int2stem( LUNE_DEBUG_POS, ENV, VAL )
-#define lune_real2stem( ENV, VAL )              \
-    _lune_real2stem( LUNE_DEBUG_POS, ENV, VAL )
 #define lune_str2stem( ENV, VAL )               \
     _lune_str2stem( LUNE_DEBUG_POS, ENV, VAL )
 #define lune_litStr2stem( ENV, STR )            \
@@ -620,70 +670,69 @@ extern "C" {
     _lune_createImmediateVal( LUNE_DEBUG_POS, ENV, VAL )
     
 
-    
-    extern lune_stem_t * _lune_bool2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_bool_t val );
-    extern lune_stem_t * _lune_int2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_int_t val );
-    extern lune_stem_t * _lune_real2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_real_t val );
-    extern lune_stem_t * _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
-    extern lune_stem_t * _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
-    extern lune_stem_t * _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
-    extern lune_stem_t * _lune_createDDD( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
-    extern lune_stem_t * _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
-    extern lune_stem_t * _lune_createMRet( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
-    extern lune_stem_t * _lune_class_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int size );
-    extern lune_stem_t * _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
-    extern lune_stem_t * _lune_it_new(
+
+    extern lune_stem_t _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
+    extern lune_stem_t _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
+    extern lune_stem_t _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
+    extern lune_stem_t _lune_createDDD( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
+    extern lune_stem_t _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
+    extern lune_stem_t _lune_createMRet( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
+    extern lune_stem_t _lune_class_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int size );
+    extern lune_stem_t _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
+    extern lune_any_t * _lune_it_new(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
 
+
+    extern void lune_init_alge( lune_stem_t * pStem, lune_any_t * pAny, int valType );
+
     
-    extern lune_stem_t * _lune_createList( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pList );
-    extern lune_stem_t * _lune_createSet(
+    extern lune_stem_t _lune_createList( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pList );
+    extern lune_stem_t _lune_createSet(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pSet );
-    extern lune_stem_t * _lune_createMap(
+    extern lune_stem_t _lune_createMap(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdEntry_t * pEntry );
 
-    extern lune_stem_t * _lune_createImmediateVal(
+    extern lune_stem_t _lune_createImmediateVal(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_imdVal_t * pVal );
-
     
     
 
     extern lune_str_t lune_createLiteralStr( const char * pStr );
 
-    extern lune_block_t * lune_enter_module( int stemNum, int varNum );
+    extern lune_block_t * lune_enter_module( int anyNum, int varNum );
     extern void lune_reset_block( lune_env_t * _pEnv );
 
-    extern lune_stem_t * lune_setRet( lune_env_t * __pEnv, lune_stem_t * pStem );
-    extern void lune_setQ_( lune_stem_t * pStem );
-    extern void lune_setOverwrite( lune_stem_t * pStem );
-    extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int stemNum, int varNum, int argNum, ... );
+    extern void lune_setRet( lune_env_t * _pEnv, lune_stem_t pAny );
+    extern void lune_setQ_( lune_any_t * pAny );
+    extern void lune_setOverwrite( lune_any_t * pAny );
+    extern lune_block_t * lune_enter_func( lune_env_t * _pEnv, int anyNum, int varNum, int argNum, ... );
     extern void lune_leave_block( lune_env_t * _pEnv );
     extern void lune_leave_blockMulti( lune_env_t * _pEnv, int num );
-    extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemNum, int varNum );
-    extern void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem );
-    extern void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem );
-    extern lune_stem_t * lune_call_form( lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * _pDDD );
-    extern lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem );
-    extern lune_stem_t * lune_toIF( lune_env_t * _pEnv, lune_stem_t * pStem, const lune_type_meta_t * pMeta );
-    extern lune_stem_t * lune_setMRet( lune_env_t * _pEnv, lune_stem_t * pStem );
+    extern lune_block_t * lune_enter_block( lune_env_t * _pEnv, int anyNum, int varNum );
+    extern void lune_decre_ref( lune_env_t * _pEnv, lune_any_t * pAny );
+    extern void lune_it_delete( lune_env_t * _pEnv, lune_any_t * pAny );
+    extern lune_stem_t lune_call_form( lune_env_t * _pEnv, lune_any_t * _pForm, lune_stem_t _pDDD );
+    extern lune_stem_t lune_getIF( lune_env_t * _pEnv, lune_any_t * pIFAny );
+    extern lune_stem_t lune_toIF( lune_env_t * _pEnv, lune_any_t * pAny, const lune_type_meta_t * pMeta );
+    extern lune_stem_t lune_setMRet( lune_env_t * _pEnv, lune_any_t * pAny );
 
 
-    extern lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal );
-    extern lune_int_t lune_unwrap_int( lune_stem_t * pStem );
-    extern lune_int_t lune_unwrap_intDefault( lune_stem_t * pStem, lune_int_t val );
-    extern lune_real_t lune_unwrap_real( lune_stem_t * pStem );
-    extern lune_real_t lune_unwrap_realDefault( lune_stem_t * pStem, lune_real_t val );
+    extern lune_stem_t lune_unwrap_stem( lune_stem_t pAny, lune_stem_t pDefVal );
+    extern lune_int_t lune_unwrap_int( lune_stem_t pAny );
+    extern lune_int_t lune_unwrap_intDefault( lune_stem_t pAny, lune_int_t val );
+    extern lune_real_t lune_unwrap_real( lune_stem_t pAny );
+    extern lune_real_t lune_unwrap_realDefault( lune_stem_t pAny, lune_real_t val );
 
     
 
-    extern bool lune_isCondTrue( const lune_stem_t * pStem );
+    extern bool lune_isCondTrue( const lune_stem_t pAny );
     extern bool lune_incStack( lune_env_t * _pEnv );
-    extern bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t * pVal );
-    extern lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy );
-    extern lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem );
+    extern bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t pVal );
+    extern lune_stem_t lune_popVal( lune_env_t * _pEnv, bool dummy );
+    extern lune_stem_t lune_op_not( lune_env_t * _pEnv, lune_stem_t pAny );
 
 
-    extern void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg );
+    extern void lune_print( lune_env_t * _pEnv, lune_stem_t pArg );
 
 
 #ifdef __cplusplus

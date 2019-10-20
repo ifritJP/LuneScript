@@ -16,6 +16,17 @@
  
 * 機能
 
+- [ ] マクロの実引数の stat 内で補完が効くように対応する。
+  
+- [ ] accessMode に Low を追加。
+    Low は、クラス内でも特別なメソッドからのみアクセスを許可する。
+
+    - Low を作るくらいなら、別クラスを作ってカプセル化すべきか？
+    - でも別クラスを作ると、それだけオーバーヘッドがかかる。
+    
+  
+- [ ] スタブを対応する。  
+
 - [ ] A and B or C の結果の型をまともに判定できるように対応する。
      今は and or の形の場合を特別に扱っている。
      その為にも stem の TypeInfoKind を、専用にして処理を変更する。
@@ -173,6 +184,11 @@ foreach obj in list {
 
 - [ ] when! や if! などで定義したシンボルをクロージャで使用する場合の対応。
 
+- [ ] lune_set_block_var のタイミングで var の確保を行なう。
+
+- [ ] any のメンバに確保に使用した allocateor を保持させ、
+      gc の処理で free する際にそれを使用する。
+
  
 - [ ] C モジュールのコール。 C からのコール。
 - [ ] スレッド
@@ -187,6 +203,23 @@ foreach obj in list {
 
      
 ** 高速化
+
+- [ ] メソッド内で、 self にアクセスしていない場合、
+      self のオブジェクトを宣言しない。
+   
+- [ ] stem と any の分離
+  - [X] collection を stem で扱う。
+  - [ ] int 系の closure を any で扱っているが、これを val にして、
+        val に stem を保持する。
+  - [ ] nil を any で扱っているが、これを stem で扱うにする。
+  - [ ] any から int 系を削除する。
+  - [ ] enum の値のオブジェクトをグローバルで宣言しない。
+        いまは any で扱っているため、毎回インスタンス生成しないように 、
+	グローバルで生成しているが、 any で扱わなくて大丈夫なので、変更する。
+        
+      
+      
+   
 - [ ] block で stemNum, varNum が  0 のものは、 enter/leave 処理を入れない。
       ただし、block 内で new している場合や、戻り値がプリミティブ以外のものがある場合、
       enter/leave 処理を入れないと開放タイミングが遅れる。
@@ -208,6 +241,7 @@ foreach obj in list {
 - [ ] immediate 文字列は、毎度生成するのではなく、
       static に生成しておいてそれを返す。
 
+- [ ] collection の int とそれ以外(real は stem 等と同じ)を分ける。 
 
 - [X] for 等の loop ブロックは、
       lune_enter_block(), lune_leave_block() 処理をブロック内ではなく、

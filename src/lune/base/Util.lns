@@ -24,6 +24,28 @@ SOFTWARE.
 
 import lune.base.Depend;
 
+pri let mut debugFlag = true;
+pub fn setDebugFlag( flag:bool ) {
+   debugFlag = flag;
+}
+pri let mut errorCode = 1;
+pub fn setErrorCode( code:int ) {
+   errorCode = code;
+}
+
+pub fn errorLog( message: str ) {
+   io.stderr.write( message .. "\n" );
+}
+
+pub fn err( message:str ): __ {
+   if debugFlag {
+      error( message );
+   }
+   errorLog( message );
+   os.exit( errorCode );
+}
+
+
 pub class OrderedSet<T> {
    pri let mut set:Set<&T>;
    pri let mut list:List<&T> {pub&};
@@ -72,27 +94,77 @@ pub interface SourceStream {
    pub abstract fn popIndent() mut;
 }
 
-pri let mut debugFlag = true;
-pub fn setDebugFlag( flag:bool ) {
-   debugFlag = flag;
-}
-pri let mut errorCode = 1;
-pub fn setErrorCode( code:int ) {
-   errorCode = code;
-}
+pub class SimpleSourceOStream extend (SourceStream) {
+   let mut stream:oStream;
+   let mut needIndent:bool;
+   let stepIndent:int;
+   let mut curLineNo:int;
+   pri let mut indentQueue: List<int>;
 
-
-pub fn errorLog( message: str ) {
-   io.stderr.write( message .. "\n" );
-}
-
-pub fn err( message:str ): __ {
-   if debugFlag {
-      error( message );
+   pub fn __init( stream:oStream, stepIndent:int ) {
+      self.stream = stream;
+      self.needIndent = true;
+      self.curLineNo = 0;
+      self.stepIndent = stepIndent;
+      self.indentQueue = [ 0 ];
    }
-   errorLog( message );
-   os.exit( errorCode );
+
+   fn get_indent(): int {
+      if #self.indentQueue > 0 {
+         return self.indentQueue[ #self.indentQueue ];
+      }
+      return 0;
+   }
+   
+   fn writeRaw( txt: str ) mut {
+      let mut stream = self.stream;
+
+      if self.needIndent {
+         stream.write( string.rep( " ", self.$indent ) );
+         self.needIndent = false;
+      }
+
+      apply cr of string.gmatch( txt, "\n" ) {
+         self.curLineNo = self.curLineNo + 1;
+      }
+      stream.write( txt );
+   }
+
+   pub fn write( mut txt: str ) mut {
+      while true {
+         if! let index = string.find( txt, "\n"## ) {
+            self.writeRaw( txt.sub( 1, index ) );
+            txt = txt.sub( index + 1 ##);
+         }
+         else {
+            break;
+         }
+      }
+      if #txt > 0 {
+         self.writeRaw( txt );
+      }
+   }
+
+   pub fn writeln( txt: str ) mut {
+      self.write( txt );
+      self.write( "\n" );
+      self.needIndent = true;
+   }
+
+   pub fn pushIndent( newIndent:int! ) mut {
+      let indent = unwrap newIndent default self.$indent + self.stepIndent;
+      self.indentQueue.insert( indent );
+   }
+
+   pub fn popIndent() mut {
+      if #self.indentQueue == 0 {
+         err( "self.indentQueue == 0" );
+      }
+      self.indentQueue.remove(##);
+   }
 }
+
+
 
 pub fn log( message:str ) {
    if debugFlag {

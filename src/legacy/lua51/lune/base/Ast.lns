@@ -1387,7 +1387,7 @@ pub fn Scope.filterSymbolTypeInfo(
          callback( _exp );
       }
    }
-   if moduleScope == fromScope or not self.classFlag {
+   if moduleScope == fromScope or moduleScope == self or not self.classFlag {
       foreach symbolInfo in self.symbol2SymbolInfoMap {
          if not callback( symbolInfo ) {
             return;
@@ -4268,7 +4268,7 @@ pub static fn NormalTypeInfo.createEnum(
       true, externalFlag, true, AccessMode.Pub,
       "_from", nil, [ NormalTypeInfo.createModifier( valTypeInfo, .IMut ) ],
       [ info.$nilableTypeInfo ], false );
-   scope.addFunc( fromVal, AccessMode.Pub, true, false );
+   scope.addMethod( fromVal, AccessMode.Pub, true, false );
 
    let allListType = NormalTypeInfo.createList( .Pub, info, [ info ], .IMut );
    let mut allList = NormalTypeInfo.createFunc(
@@ -4276,7 +4276,7 @@ pub static fn NormalTypeInfo.createEnum(
       true, externalFlag, true, AccessMode.Pub,
       "get__allList", nil, nil,
       [ NormalTypeInfo.createModifier( allListType, .IMut ) ], false );
-   scope.addFunc( allList, AccessMode.Pub, true, false );
+   scope.addMethod( allList, AccessMode.Pub, true, false );
 
    return info;
 }
@@ -5241,4 +5241,5 @@ pub let bitBinOpMap = {
    "|<<": BitOpKind.LShift,
 };
 
-pub let compOpSet = (@ "==", "~=", "<", "<=", ">", ">=" );
+pub let compOpSet = (@ "==", "~=" );
+pub let mathCompOpSet = (@ "<", "<=", ">", ">=" );

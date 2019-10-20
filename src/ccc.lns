@@ -1,5 +1,12 @@
-let mut g_val = 100;
+macro _section()
 {
+   print( "-----", __line__,  "-----" );
+}
+let mut g_val = 100;
+
+
+{
+   _section();
    class Test {
       pub let mut val:int;
    }
@@ -22,6 +29,7 @@ let mut g_val = 100;
    hoge( new Test( 0 ) );
 }
 {
+   _section();
    form Sub():bool!;
    fn func( sub:Sub )
    {
@@ -36,6 +44,7 @@ let mut g_val = 100;
    func( fn ():bool! { return false; } );
 }
 {
+   _section();
    form Sub():int!,str!;
 
    fn func( sub:Sub )
@@ -54,6 +63,7 @@ let mut g_val = 100;
    func( fn ():int!, str! { return 1, "str"; } );
 }
 {
+   _section();
    form testFunc( val:int, val2:int ): int;
 
    let val = 1;
@@ -78,6 +88,7 @@ let mut g_val = 100;
    sub();
 }
 {
+   _section();
    fn func( val:int!, val2:real!, val3:str! )
    {
       when! val, val2, val3 {
@@ -88,6 +99,7 @@ let mut g_val = 100;
    func( 1, 1.0, "abc" );
 }
 {
+   _section();
    fn func( val:int!, val2:real!, val3:str! ): form
    {
       when! val, val2, val3 {
@@ -103,6 +115,7 @@ let mut g_val = 100;
    func( 1, 1.0, "abc" )();
 }
 {
+   _section();
    let mut map:Map<int,int> = {};
    map[ 1 ] = 2;
    foreach val, key in map {
@@ -110,6 +123,7 @@ let mut g_val = 100;
    }
 }
 {
+   _section();
    let mut map:Map<stem,stem> = {};
    map[ "abc" ] = "xyz";
    foreach val, key in map {
@@ -117,6 +131,7 @@ let mut g_val = 100;
    }
 }
 {
+   _section();
    form Form();
    macro _loopClosure( set:stat ) {
       {}
@@ -141,6 +156,7 @@ let mut g_val = 100;
    _loopClosure( `{ { "a": 1, "b":2, "c":3 } } );
 }
 {
+   _section();
    form Form();
    let mut work:Form = fn () {};
    let mut work2:Form = fn () {};
@@ -161,12 +177,14 @@ let mut g_val = 100;
    work2();
 }
 {
+   _section();
    let func = fn () {
       print( "hoge" );
    }
    func();
 }
 {
+   _section();
    let func:form;
    let func2:form;
    {
@@ -185,6 +203,7 @@ let mut g_val = 100;
    func();
 }
 {
+   _section();
    let func:form;
    let func2:form;
    {
@@ -203,6 +222,7 @@ let mut g_val = 100;
    func();
 }
 {
+   _section();
    fn funcL(): int, int {
       return 1, 2;
    }
@@ -248,6 +268,7 @@ let mut g_val = 100;
    sub( ( test.func() ) + 1, 0 );
 } 
 {
+   _section();
    fn func(): int, int, int {
       return 1, 2, 3;
    }
@@ -273,6 +294,7 @@ let mut g_val = 100;
    sub2( func()** );
 }
 {
+   _section();
    alge Test {
       Val1,
       Val2,
@@ -304,6 +326,7 @@ let mut g_val = 100;
    func( Test.Val4( 3, "val" ) );
 }
 {
+   _section();
    form FF( val:int, ... );
    fn func( val:int, ... ) {
       print( val, ... );
@@ -337,6 +360,7 @@ let mut g_val = 100;
    sub3( print );
 }
 {
+   _section();
    let val = 1000;
    let mut val3 = 0;
    class Test1 {
@@ -365,6 +389,7 @@ let mut g_val = 100;
    func();
 }
 {
+   _section();
    fn func(): int, int, int {
       return 1, 2, 3;
    }
@@ -391,6 +416,7 @@ let mut g_val = 100;
    print( work1, work2 );
 }
 {
+   _section();
    fn func( arg:int ) {
       class Test {
          let val:int;
@@ -416,6 +442,7 @@ let mut g_val = 100;
    func(3);
 }
 {
+   _section();
    interface IF {
       pub fn func();
    }
@@ -444,6 +471,7 @@ let mut g_val = 100;
    }
 }
 {
+   _section();
    interface IF {
       pub fn func();
    }
@@ -481,6 +509,7 @@ let mut g_val = 100;
    }
 }
 {
+   _section();
    class Test {
       let mut val:int {pub,pub};
       let mut val2:str {pub,pub};
@@ -516,6 +545,7 @@ let mut g_val = 100;
    print( sub.$val, sub.$val2 );
 }
 {
+   _section();
    enum Test {
       Val1 = "abc",
       Val2 = "xyz",
@@ -528,6 +558,7 @@ let mut g_val = 100;
    }
 }
 {
+   _section();
    enum Test {
       Val1 = 1,
       Val2,
@@ -540,6 +571,7 @@ let mut g_val = 100;
    }
 }
 {
+   _section();
    fn func( val:int! ): int {
       return unwrap val default 10;
    }
@@ -547,6 +579,7 @@ let mut g_val = 100;
    print( func( nil ) + 1 );
 }
 {
+   _section();
    fn func( val:real! ): real {
       return unwrap val default 10.0;
    }
@@ -554,6 +587,7 @@ let mut g_val = 100;
    print( func( nil ) + 1 );
 }
 {
+   _section();
    fn func( val:str! ): str {
       return unwrap val default "abc";
    }
@@ -561,6 +595,7 @@ let mut g_val = 100;
    print( func( nil ) );
 }
 {
+   _section();
    fn func( val: int ) {
       fn comp( val1:int, val2:int ): bool {
          return val1 == val2;
@@ -581,6 +616,7 @@ let mut g_val = 100;
    func( 2 );
 }
 {
+   _section();
    print( nil or false or 1 );
    print( nil or 2 or 3 );
    print( 4 or 5 );
@@ -591,6 +627,7 @@ let mut g_val = 100;
    print( 1 and false and 2 );   
 }
 {
+   _section();
    let val = "abc";
    fn func( val2:str ) {
       forsort item in (@ g_val, 3.5, 1, 2, 0 ) {
@@ -603,6 +640,7 @@ let mut g_val = 100;
    func( "xyz" );
 }
 {
+   _section();
    let val = 10;
    fn func( val2:str ) {
       foreach list in [ [ val, g_val ], [ 3.5, val2 ] ] {
@@ -610,13 +648,13 @@ let mut g_val = 100;
             print( item );
          }
       }
-      foreach list in [ (@ val, g_val ), (@ 3.5, val2 ) ] {
-         foreach item in list {
+      foreach set in [ (@ val, g_val ), (@ 3.5, val2 ) ] {
+         foreach item in set {
             print( item );
          }
       }
-      foreach list in [ { val: g_val }, { 3.5: val2 } ] {
-         foreach item, key in list {
+      foreach map in [ { val: g_val }, { 3.5: val2 } ] {
+         foreach item, key in map {
             print( key, item );
          }
       }
@@ -624,6 +662,7 @@ let mut g_val = 100;
    func( "xyz" );
 }
 {
+   _section();
    fn func(...<int!>) {
       print( ... );
       print( 10, ... );
@@ -632,6 +671,7 @@ let mut g_val = 100;
    func( 1, nil, 2 );
 }
 {
+   _section();
    let form1;
    {
       let mut val = "abc";
@@ -647,6 +687,7 @@ let mut g_val = 100;
    form1();
 }
 {
+   _section();
    form formfunc(val:int, val2:real);
    let form1:formfunc;
    {
@@ -661,6 +702,7 @@ let mut g_val = 100;
 }
 
 {
+   _section();
    let mut val1 = "abc";
    fn func() {
       val1 = "xyz";
@@ -671,6 +713,7 @@ let mut g_val = 100;
 
 let mut g_val2 = "ABC";
 {
+   _section();
    let val1;
    {
       let val2;
@@ -700,6 +743,7 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
 }
 
 {
+   _section();
    let mut val1 = "abc";
    let mut val2 = 1;
    let mut val3 = 1;
@@ -717,6 +761,7 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
 
 
 {
+   _section();
    print( g_val, g_val2 );
 
    print( func1( 1 ) );
@@ -728,6 +773,7 @@ fn func3( val:int, val2:real, val3:bool ):int, real, bool {
    print( "Hello world.", 1, 1.2, false, nil);
 }
 {
+   _section();
    fn func()
    {
       let val = "abc";

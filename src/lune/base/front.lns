@@ -819,10 +819,16 @@ pub fn Front.saveToC( ast:&TransUnit.ASTInfo ) mut {
       return;
    };
 
-   let mut conv = convCC.createFilter( cPath, file, ast );
+   let mut hPath = self.option.scriptPath.gsub( "%.lns$", ".h" );
+   let! mut hFile = io.open( hPath, "w" ) {
+      return;
+   };
+
+   let mut conv = convCC.createFilter( cPath, file, hFile, ast );
    ast.$node.processFilter( conv, new convCC.Opt( ast.$node ) );
 
    file.close();
+   hFile.close();
 }
 
 

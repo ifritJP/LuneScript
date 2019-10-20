@@ -8,9 +8,9 @@ CORE_SRCS += lune/base/lns_alloc.cxx
 
 SRCS += lune/base/test.c
 
-
-OBJS := $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(SRCS)))))
+OBJS = 
 OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(CORE_SRCS)))))
+OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(SRCS)))))
 
 vpath %.c lune/base
 vpath %.cxx lune/base
@@ -19,10 +19,11 @@ LUA_INC_DIR=
 LUA_LIB=
 
 ifndef RELEASE
-CFLAGS = -g3 -Wall -Wno-unused-variable -c -Ilune/base -I$(LUA_INC_DIR)
+CFLAGS = -g3
 else
-CFLAGS = -O -Wall -Wno-unused-variable -c -Ilune/base -I$(LUA_INC_DIR)
+CFLAGS = -O
 endif
+CFLAGS += -Wall -Wno-unused-variable -c -Ilune/base -I. -I$(LUA_INC_DIR)
 
 work/c/%.o: %.c
 	gcc $(CFLAGS) -o $@ $<

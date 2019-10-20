@@ -75,6 +75,19 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
+function _lune.unwrap( val )
+   if val == nil then
+      __luneScript:error( 'unwrap val is nil' )
+   end
+   return val
+end
+function _lune.unwrapDefault( val, defval )
+   if val == nil then
+      return defval
+   end
+   return val
+end
+
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )
@@ -133,6 +146,33 @@ if not _lune1 then
    _lune1 = _lune
 end
 local Depend = _lune.loadModule( 'lune.base.Depend' )
+local debugFlag = true
+local function setDebugFlag( flag )
+
+   debugFlag = flag
+end
+_moduleObj.setDebugFlag = setDebugFlag
+local errorCode = 1
+local function setErrorCode( code )
+
+   errorCode = code
+end
+_moduleObj.setErrorCode = setErrorCode
+local function errorLog( message )
+
+   io.stderr:write( message .. "\n" )
+end
+_moduleObj.errorLog = errorLog
+local function err( message )
+
+   if debugFlag then
+      error( message )
+   end
+   
+   errorLog( message )
+   os.exit( errorCode )
+end
+_moduleObj.err = err
 local OrderedSet = {}
 _moduleObj.OrderedSet = OrderedSet
 function OrderedSet.new(  )
@@ -217,33 +257,87 @@ function SourceStream:__init(  )
 
 end
 
-local debugFlag = true
-local function setDebugFlag( flag )
-
-   debugFlag = flag
+local SimpleSourceOStream = {}
+setmetatable( SimpleSourceOStream, { ifList = {SourceStream,} } )
+_moduleObj.SimpleSourceOStream = SimpleSourceOStream
+function SimpleSourceOStream.new( stream, stepIndent )
+   local obj = {}
+   SimpleSourceOStream.setmeta( obj )
+   if obj.__init then obj:__init( stream, stepIndent ); end
+   return obj
 end
-_moduleObj.setDebugFlag = setDebugFlag
-local errorCode = 1
-local function setErrorCode( code )
-
-   errorCode = code
+function SimpleSourceOStream:__init(stream, stepIndent) 
+   self.stream = stream
+   self.needIndent = true
+   self.curLineNo = 0
+   self.stepIndent = stepIndent
+   self.indentQueue = {0}
 end
-_moduleObj.setErrorCode = setErrorCode
-local function errorLog( message )
+function SimpleSourceOStream:get_indent(  )
 
-   io.stderr:write( message .. "\n" )
-end
-_moduleObj.errorLog = errorLog
-local function err( message )
-
-   if debugFlag then
-      error( message )
+   if #self.indentQueue > 0 then
+      return self.indentQueue[#self.indentQueue]
    end
    
-   errorLog( message )
-   os.exit( errorCode )
+   return 0
 end
-_moduleObj.err = err
+function SimpleSourceOStream:writeRaw( txt )
+
+   local stream = self.stream
+   if self.needIndent then
+      stream:write( string.rep( " ", self:get_indent() ) )
+      self.needIndent = false
+   end
+   
+   for cr in string.gmatch( txt, "\n" ) do
+      self.curLineNo = self.curLineNo + 1
+   end
+   
+   stream:write( txt )
+end
+function SimpleSourceOStream:write( txt )
+
+   while true do
+      do
+         local index = string.find( txt, "\n" )
+         if index ~= nil then
+            self:writeRaw( txt:sub( 1, index ) )
+            txt = txt:sub( index + 1 )
+         else
+            break
+         end
+      end
+      
+   end
+   
+   if #txt > 0 then
+      self:writeRaw( txt )
+   end
+   
+end
+function SimpleSourceOStream:writeln( txt )
+
+   self:write( txt )
+   self:write( "\n" )
+   self.needIndent = true
+end
+function SimpleSourceOStream:pushIndent( newIndent )
+
+   local indent = _lune.unwrapDefault( newIndent, self:get_indent() + self.stepIndent)
+   table.insert( self.indentQueue, indent )
+end
+function SimpleSourceOStream:popIndent(  )
+
+   if #self.indentQueue == 0 then
+      err( "self.indentQueue == 0" )
+   end
+   
+   table.remove( self.indentQueue )
+end
+function SimpleSourceOStream.setmeta( obj )
+  setmetatable( obj, { __index = SimpleSourceOStream  } )
+end
+
 local function log( message )
 
    if debugFlag then

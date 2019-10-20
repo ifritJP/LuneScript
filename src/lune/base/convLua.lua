@@ -1252,6 +1252,8 @@ function convFilter:processBlockSub( node, opt )
          word = ""
       elseif _switchExp == Nodes.BlockKind.IfUnwrap then
          word = ""
+      elseif _switchExp == Nodes.BlockKind.While then
+         word = ""
       end
    end
    
@@ -3552,7 +3554,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       local val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
       return val
    end
-   Log.log( Log.Level.Info, __func__, 3241, function (  )
+   Log.log( Log.Level.Info, __func__, 3244, function (  )
    
       return string.format( "code: %s", code)
    end )

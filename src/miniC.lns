@@ -1,6 +1,28 @@
-macro _Test() {
-   {}
-   print( "hoge" );      
-}
-_Test();
+{
+   form Form();
+   macro _loopClosure( set:stat ) {
+      {}
+      {
+         // let mut map:Map<stem,Form> = {};
+         // foreach val in ,,set
+         // {
+         //    map[ val ] = fn () {
+         //       print( val );
+         //    };
+         // }
+         let mut map:Map<stem,Form> = {};
+         foreach val in ,,set
+         {
+            map[ val ] = fn () {
+               print( val );
+            };
+         }
+         forsort func in map {
+            func();
+         }
+      }
+   }
 
+   _loopClosure( `{ [ "a", "b", "c", "d" ] } );
+   // _loopClosure( `{ (@ "a", "b", "c", "d" ) } );
+}

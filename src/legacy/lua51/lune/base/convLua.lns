@@ -969,6 +969,9 @@ pub override fn convFilter.processBlockSub(
       case .IfUnwrap {
          word = "";
       }
+      case .While {
+         word = "";
+      }
    }
    self.writeln( word );
    self.pushIndent(##);
@@ -3225,7 +3228,7 @@ pub fn createFilter(
 pub class MacroEvalImp extend Nodes.MacroEval {
    pri let mode: str;
 
-   fn evalFromMacroCode( code:str ): form {
+   fn evalFromMacroCode( code:str ): Nodes.macroStatmentProc {
       //Util.errorLog( 'hoooo: %s' (oStream.get_txt()) );
 
       let mut newEnv:Map<str,stem> = {};
@@ -3249,12 +3252,14 @@ pub class MacroEvalImp extend Nodes.MacroEval {
          if not mod {
             Util.err( "macro load error" );
          }
-         return (unwrap mod)@@form;
+         return (unwrap mod)@@Nodes.macroStatmentProc;
       }
       Util.err( "failed to load" );
    }
 
-   pub override fn evalFromCode( name:str, argNameList:&List<str>, code:str! ): form {
+   pub override fn evalFromCode(
+      name:str, argNameList:&List<str>, code:str! ): Nodes.macroStatmentProc
+   {
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(
          "macro", oStream, oStream, .Exec, true,
@@ -3272,7 +3277,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    }
 
 
-   pub override fn eval( node: Nodes.DeclMacroNode ): form
+   pub override fn eval( node: Nodes.DeclMacroNode ): Nodes.macroStatmentProc
    {
       let mut oStream = new Util.memStream();
       let mut conv = new convFilter(

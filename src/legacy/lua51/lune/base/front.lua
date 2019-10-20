@@ -1177,9 +1177,18 @@ function Front:saveToC( ast )
       return 
    end
    
-   local conv = convCC.createFilter( cPath, file, ast )
+   local hPath = self.option.scriptPath:gsub( "%.lns$", ".h" )
+   local hFile = io.open( hPath, "w" )
+   if  nil == hFile then
+      local _hFile = hFile
+   
+      return 
+   end
+   
+   local conv = convCC.createFilter( cPath, file, hFile, ast )
    ast:get_node():processFilter( conv, convCC.Opt.new(ast:get_node()) )
    file:close(  )
+   hFile:close(  )
 end
 
 function Front:saveToLua(  )
@@ -1241,7 +1250,7 @@ function Front:saveToLua(  )
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 893, function (  )
+               Log.log( Log.Level.Debug, __func__, 899, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -1430,7 +1439,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1071, function (  )
+   Log.log( Log.Level.Trace, __func__, 1077, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

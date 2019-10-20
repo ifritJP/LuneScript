@@ -3170,14 +3170,14 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       }
    }
 
-   let block = self.analyzeBlock( .IfUnwrap, .Start, scope );
+   let block = self.analyzeBlock( .When, .Start, scope );
 
    self.popScope();
 
    let mut elseBlock:Nodes.BlockNode! = nil;
    nextToken = self.getToken( true );
    if nextToken.txt == "else" {
-      elseBlock = self.analyzeBlock( .When, .Finish ## );
+      elseBlock = self.analyzeBlock( .Else, .Finish ## );
    }
    else {
       self.finishTentativeSymbol( false );

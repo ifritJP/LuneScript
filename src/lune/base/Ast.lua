@@ -1956,7 +1956,7 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, callback )
       
    end
    
-   if moduleScope == fromScope or not self.classFlag then
+   if moduleScope == fromScope or moduleScope == self or not self.classFlag then
       for __index, symbolInfo in pairs( self.symbol2SymbolInfoMap ) do
          if not callback( symbolInfo ) then
             return 
@@ -5222,10 +5222,10 @@ function NormalTypeInfo.createEnum( scope, parentInfo, externalFlag, accessMode,
    local getEnumName = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Method, info, true, externalFlag, false, AccessMode.Pub, "get__txt", nil, nil, {_moduleObj.builtinTypeString}, false )
    scope:addMethod( getEnumName, AccessMode.Pub, false, false )
    local fromVal = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "_from", nil, {NormalTypeInfo.createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
-   scope:addFunc( fromVal, AccessMode.Pub, true, false )
+   scope:addMethod( fromVal, AccessMode.Pub, true, false )
    local allListType = NormalTypeInfo.createList( AccessMode.Pub, info, {info}, MutMode.IMut )
    local allList = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Func, info, true, externalFlag, true, AccessMode.Pub, "get__allList", nil, nil, {NormalTypeInfo.createModifier( allListType, MutMode.IMut )}, false )
-   scope:addFunc( allList, AccessMode.Pub, true, false )
+   scope:addMethod( allList, AccessMode.Pub, true, false )
    return info
 end
 
@@ -6207,7 +6207,10 @@ BitOpKind.__allList[5] = BitOpKind.RShift
 local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpKind.Xor, ["|>>"] = BitOpKind.RShift, ["|<<"] = BitOpKind.LShift}
 _moduleObj.bitBinOpMap = bitBinOpMap
 
-local compOpSet = {["=="] = true, ["~="] = true, ["<"] = true, ["<="] = true, [">"] = true, [">="] = true}
+local compOpSet = {["=="] = true, ["~="] = true}
 _moduleObj.compOpSet = compOpSet
+
+local mathCompOpSet = {["<"] = true, ["<="] = true, [">"] = true, [">="] = true}
+_moduleObj.mathCompOpSet = mathCompOpSet
 
 return _moduleObj

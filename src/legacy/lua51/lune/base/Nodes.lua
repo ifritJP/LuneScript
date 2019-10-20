@@ -1074,6 +1074,7 @@ function MacroArgInfo:get_typeInfo()
    return self.typeInfo
 end
 
+
 local MacroInfo = {}
 _moduleObj.MacroInfo = MacroInfo
 function MacroInfo.setmeta( obj )

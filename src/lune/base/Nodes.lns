@@ -655,8 +655,19 @@ pub class MacroArgInfo {
    pri let typeInfo: &Ast.TypeInfo {pub};
 }
 
+/**
+macro-statment に定義した処理を表わす関数。
+
+@param macro-statment 処理に渡す引数を格納したマップ。
+       マクロの変数名 → 値。
+@return - macro-statment 処理で定義した macro-expand に渡す変数を格納したマップ
+       マクロの変数名 → 値。
+       macro-expand に渡す変数名 → 値。
+*/
+pub form macroStatmentProc( macroArg:&Map<str,&stem> ): &Map<str,&stem>;
+
 pub abstract class MacroInfo {
-   pub let func: form;
+   pub let func: macroStatmentProc;
    pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
    pub abstract fn getArgList():&List<&MacroArgInfo>;
    pub abstract fn getTokenList():&List<&Parser.Token>;
@@ -1480,8 +1491,9 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
 );
 
 pub abstract class MacroEval {
-   pub abstract fn evalFromCode( name:str, argNameList:&List<str>, code:str! ): form;
-   pub abstract fn eval( macroNode: DeclMacroNode ): form;
+   pub abstract fn evalFromCode(
+      name:str, argNameList:&List<str>, code:str! ): macroStatmentProc;
+   pub abstract fn eval( macroNode: DeclMacroNode ): macroStatmentProc;
 }
 
 _declNodeClass( "Abbr", Node, false, true, false,
@@ -2105,7 +2117,7 @@ pub class DefMacroInfo extend MacroInfo {
       return self.declInfo.$tokenList;
    }
    
-   pub fn __init( func: form, declInfo: DeclMacroInfo, 
+   pub fn __init( func: macroStatmentProc, declInfo: DeclMacroInfo, 
                   symbol2MacroValInfoMap: Map<str,MacroValInfo> )
    {
       super( func, symbol2MacroValInfoMap );

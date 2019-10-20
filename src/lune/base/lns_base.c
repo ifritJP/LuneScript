@@ -1,25 +1,25 @@
 /*
-MIT License
+  MIT License
 
-Copyright (c) 2018,2019 ifritJP
+  Copyright (c) 2018,2019 ifritJP
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 
 #include <lua.h>
@@ -28,27 +28,6 @@ SOFTWARE.
 #include <math.h>
 #include <stdint.h>
 
-    /**
-     * リストの末尾に STEM を追加。
-     */
-#define lune_add2list( TOP, STEM )            \
-    STEM->pNext = TOP;                          \
-    STEM->pPrev = (TOP)->pPrev;                 \
-    (TOP)->pPrev->pNext = STEM;                 \
-    (TOP)->pPrev = STEM;
-
-    /**
-     * リストから STEM を除外。
-     */
-#define lune_rmFromList( STEM )               \
-    if ( (STEM)->pNext != NULL ) {              \
-        (STEM)->pPrev->pNext = (STEM)->pNext;   \
-        (STEM)->pNext->pPrev = (STEM)->pPrev;   \
-        (STEM)->pNext = NULL;                   \
-    }
-
-#define lune_malloc( ALLOCATOR, SIZE ) _lune_malloc( ALLOCATOR, SIZE, __FILE__, __LINE__ )
-#define lune_free( ALLOCATOR, ADDR ) _lune_free( ALLOCATOR, ADDR, __FILE__, __LINE__ )
 
 typedef struct lune_globalEnv_t {
     lune_env_t * pEnv;
@@ -56,22 +35,55 @@ typedef struct lune_globalEnv_t {
     lune_block_t moduleInitBlockBuf[ LUNE_MODULE_MAX_NUM ];
     /** 現在のモジュール数 */
     int moduleNum;
-    /** 現在確保している stem の数 */
+    /** 現在確保している any の数 */
     int allocNum;
 } lune_globalEnv_t;
 
-static lune_globalEnv_t s_globalEnv;
 
-#define lune_alloc_stem( ENV, TYPE, FILE, LINE )             \
-    _lune_alloc_stem( ENV, TYPE, FILE, LINE )
-#define lune_alloc_stem_op( ENV, TYPE ) \
-    _lune_alloc_stem( ENV, TYPE, __FILE__, __LINE__ )
+/**
+ * リストの末尾に ANY を追加。
+ */
+#define lune_add2list( TOP, ANY )               \
+    ANY->pNext = TOP;                           \
+    ANY->pPrev = (TOP)->pPrev;                  \
+    (TOP)->pPrev->pNext = ANY;                  \
+    (TOP)->pPrev = ANY;
+
+/**
+ * リストから ANY を除外。
+ */
+#define lune_rmFromList( ANY )                  \
+    if ( (ANY)->pNext != NULL ) {               \
+        (ANY)->pPrev->pNext = (ANY)->pNext;     \
+        (ANY)->pNext->pPrev = (ANY)->pPrev;     \
+        (ANY)->pNext = NULL;                    \
+    }
+
+#define DECRE_STEM( ENV, STEM )                          \
+    if ( STEM.type == lune_stem_type_any ) {             \
+        if ( STEM.val.pAny != NULL ) {                   \
+            lune_decre_ref( ENV, STEM.val.pAny );        \
+        }                                                \
+    }
+
+
+#define lune_malloc( ALLOCATOR, SIZE ) _lune_malloc( ALLOCATOR, SIZE, __FILE__, __LINE__ )
+#define lune_free( ALLOCATOR, ADDR ) _lune_free( ALLOCATOR, ADDR, __FILE__, __LINE__ )
+
+static lune_globalEnv_t s_globalEnv;
+lune_global_t lune_global;
+
+#define lune_alloc_any( ENV, TYPE, FILE, LINE ) \
+    _lune_alloc_any( ENV, TYPE, FILE, LINE )
+#define lune_alloc_any_op( ENV, TYPE )                  \
+    _lune_alloc_any( ENV, TYPE, __FILE__, __LINE__ )
 
 #define LUNE_FORM_MAX_ARG 20
 
 #define lune_abort( MESS ) _lune_abort( MESS, LUNE_DEBUG_POS )
 
 static void lune_class_del( lune_env_t * _pEnv, void * pObj );
+static void lune_alge_del( lune_env_t * _pEnv, void * pObj );
 
 
 static void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
@@ -82,7 +94,7 @@ static void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
 
 
 /**
- * type の値を保持する stem 型を生成する。
+ * type の値を保持する any 型を生成する。
  *
  * 実際の type の値は別途セットする必要がある。
  *
@@ -90,224 +102,232 @@ static void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
  * この時点では、参照カウントは 0。
  * lune_setq() で、何らかの変数に格納しない限り、ブロック終了時に開放される。
  *
- * @return 生成した stem 値
+ * @return 生成した any 値
  */
-static lune_stem_t * _lune_alloc_stem(
+static lune_any_t * _lune_alloc_any(
     lune_env_t * _pEnv, lune_value_type_t type, const char * pFile, int lineNo )
 {
     s_globalEnv.allocNum++;
     
-    lune_stem_t * pStem = (lune_stem_t *)_lune_malloc(
-        _pEnv->allocateor, sizeof( lune_stem_t ), pFile, lineNo );
-    lune_init_stem( pStem, type, _pEnv );
-    pStem->refCount = 1;
+    lune_any_t * pAny = (lune_any_t *)_lune_malloc(
+        _pEnv->allocateor, sizeof( lune_any_t ), pFile, lineNo );
+    lune_init_any( pAny, type, _pEnv );
+    pAny->refCount = 1;
 
     // 現在のブロックに登録
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
-    lune_add2list( &pBlock->managedStemTop, pStem );
+    lune_add2list( &pBlock->managedAnyTop, pAny );
 
-    return pStem;
+    return pAny;
 }
 
 
 /**
- * pStem を開放する。
+ * pAny を開放する。
  *
  * 参照カウントが 0 になっていることが前提条件。
  */
-static void lune_release_stem( lune_env_t * _pEnv, lune_stem_t * pStem ) {
-    if ( pStem->type == lune_value_type_str ) {
-        pStem->type = lune_value_type_str;
+static void lune_release_any( lune_env_t * _pEnv, lune_any_t * pAny ) {
+    if ( pAny->type == lune_value_type_str ) {
+        pAny->type = lune_value_type_str;
     }
-    pStem->type = lune_value_type_none; // このセットは必須ではないが、
-                                        // セットしておいた方が不具合を見つけ易い。
-    lune_free( _pEnv->allocateor, pStem );
+    pAny->type = lune_value_type_none; // このセットは必須ではないが、
+    // セットしておいた方が不具合を見つけ易い。
+    lune_free( _pEnv->allocateor, pAny );
     s_globalEnv.allocNum--;
 }
 
-static void lune_gc_stem( lune_env_t * _pEnv, lune_stem_t * pStem, bool freeFlag ) {
-    switch ( pStem->type ) {
+static void lune_gc_any( lune_env_t * _pEnv, lune_any_t * pAny, bool freeFlag ) {
+    switch ( pAny->type ) {
     case lune_value_type_str:
-        if ( !pStem->val.str.staticFlag ) {
-            lune_free( _pEnv->allocateor, (char *)pStem->val.str.pStr );
+        if ( !pAny->val.str.staticFlag ) {
+            lune_free( _pEnv->allocateor, (char *)pAny->val.str.pStr );
         }
         break;
     case lune_value_type_class:
-        if ( ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc != NULL ) {
-            ((lune_Class_t*)pStem->val.classVal)->pMtd->_gc( _pEnv, pStem );
+        if ( ((lune_Class_t*)pAny->val.classVal)->pMtd->_gc != NULL ) {
+            ((lune_Class_t*)pAny->val.classVal)->pMtd->_gc( _pEnv, pAny );
         }
-        if ( ((lune_Class_t*)pStem->val.classVal)->pMtd->_del != NULL ) {
-            ((lune_Class_t*)pStem->val.classVal)->pMtd->_del( _pEnv, pStem );
+        if ( ((lune_Class_t*)pAny->val.classVal)->pMtd->_del != NULL ) {
+            ((lune_Class_t*)pAny->val.classVal)->pMtd->_del( _pEnv, pAny );
         }
-        lune_class_del( _pEnv, pStem->val.classVal );
+        lune_class_del( _pEnv, pAny->val.classVal );
         break;
     case lune_value_type_alge:
-        if ( pStem->val.alge.gc != NULL ) {
-            pStem->val.alge.gc( _pEnv, pStem->val.alge.pVal );
+        if ( pAny->val.alge.gc != NULL ) {
+            pAny->val.alge.gc( _pEnv, pAny->val.alge.pVal );
         }
-        lune_alge_del( _pEnv, pStem->val.alge.pVal );
+        lune_alge_del( _pEnv, pAny->val.alge.pVal );
         break;
     case lune_value_type_ddd: // fall-through
     case lune_value_type_mRet:
-        lune_free( _pEnv->allocateor, pStem->val.ddd.pStemList );
-        s_globalEnv.allocNum--;
+        if ( pAny->val.ddd.len != 0 ) {
+            lune_free( _pEnv->allocateor, pAny->val.ddd.stemList );
+            s_globalEnv.allocNum--;
+        }
         break;
     case lune_value_type_form:
         {
             int index;
-            for ( index = 0; index < pStem->val.form.len; index++ ) {
-                lune_closureVal_t * pVal = lune_form_closure( pStem, index );
+            for ( index = 0; index < pAny->val.form.len; index++ ) {
+                lune_closureVal_t * pVal = lune_form_closure( pAny, index );
                 if ( pVal->isVar ) {
                     lune_var_t * pVar = pVal->val.pVar;
                     lune_lock(
                         pVar->refCount--;
                         if ( pVar->refCount == 0 ) {
-                            lune_decre_ref( _pEnv, pVar->pStem );
+                            DECRE_STEM( _pEnv, pVar->stem );
                         }
-                    )
+                    );
                 }
                 else {
-                    lune_decre_ref( _pEnv, pVal->val.pStem );
+                    lune_decre_ref( _pEnv, pVal->val.stem.val.pAny );
                 }
             }
-            lune_free( _pEnv->allocateor, pStem->val.form.pClosureValList );
+            lune_free( _pEnv->allocateor, pAny->val.form.pClosureValList );
             s_globalEnv.allocNum--;
         }
         break;
     case lune_value_type_itSet:
-        lune_itSet__del( _pEnv, pStem );
+        lune_itSet__del( _pEnv, pAny );
         break;
     case lune_value_type_if:
-        lune_decre_ref( _pEnv, pStem->val.ifVal.pObj );
+        lune_decre_ref( _pEnv, pAny->val.ifVal.pObj );
         // if は class 内のメンバなので開放しないで return する。
         return;
     default:
         break;
     }
     if ( freeFlag ) {
-        lune_release_stem( _pEnv, pStem );
+        lune_release_any( _pEnv, pAny );
     }
 }
 
 /**
- * pStem の参照カウントをデクリメントする。
+ * pAny の参照カウントをデクリメントする。
  *
  * 参照カウントが 0 になった場合は、開放処理を行なう。
  */
-void lune_decre_ref( lune_env_t * _pEnv, lune_stem_t * pStem ) {
+void lune_decre_ref( lune_env_t * _pEnv, lune_any_t * pAny ) {
     lune_lock(
-        pStem->refCount--;
-        if ( pStem->refCount == 0 ) {
-            lune_gc_stem( _pEnv, pStem, true );
+        pAny->refCount--;
+        if ( pAny->refCount == 0 ) {
+            lune_gc_any( _pEnv, pAny, true );
         }
     );
 }
 
-lune_stem_t * lune_setMRet( lune_env_t * _pEnv, lune_stem_t * pStem ) {
-    _pEnv->pMRet = pStem;
-    return lune_fromDDD( pStem, 0 );
+lune_stem_t lune_setMRet( lune_env_t * _pEnv, lune_any_t * pAny ) {
+    _pEnv->pMRet = pAny;
+    return lune_fromDDD( pAny, 0 );
 }
 
-lune_stem_t * lune_getIF( lune_env_t * _pEnv, lune_stem_t * pIFStem )
+lune_stem_t lune_getIF( lune_env_t * _pEnv, lune_any_t * pIFAny )
 {
     lune_lock(
-        if ( pIFStem->refCount == 0 ) {
-            // interface の stem は共有なので、
+        if ( pIFAny->refCount == 0 ) {
+            // interface の any は共有なので、
             // 参照回数が 0 の状態から 1 になったタイミングで、
             // 元インスタンスの参照回数をインクリメントする。
-            pIFStem->val.ifVal.pObj->refCount++;
+            pIFAny->val.ifVal.pObj->refCount++;
 
             lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
-            lune_add2list( &pBlock->managedStemTop, pIFStem );
-            pIFStem->refCount++;
+            lune_add2list( &pBlock->managedAnyTop, pIFAny );
+            pIFAny->refCount++;
         }
-    )
-    return pIFStem;
+    );
+    return LUNE_STEM_ANY( pIFAny );
 }
 
 /**
- * pStem が class ならば、指定の pMeta の IF のインスタンスを返す。
- * pStem が IF なら、そのまま pStem を返す。
+ * pAny が class ならば、指定の pMeta の IF のインスタンスを返す。
+ * pAny が IF なら、そのまま pAny を返す。
  */
-lune_stem_t * lune_toIF(
-    lune_env_t * _pEnv, lune_stem_t * pStem, const lune_type_meta_t * pMeta )
+lune_stem_t lune_toIF(
+    lune_env_t * _pEnv, lune_any_t * pAny, const lune_type_meta_t * pMeta )
 {
-    if ( pStem->type == lune_value_type_if ) {
-        return pStem;
+    if ( pAny->type == lune_value_type_if ) {
+        return LUNE_STEM_ANY( pAny );
     }
-    if ( pStem->type == lune_value_type_class ) {
-        lune_stem_t * pIFStem = (lune_stem_t *)pStem->val.classVal->pIFdummy;
-        for ( ; pIFStem->type != lune_value_type_nil; pIFStem++ ) {
-            if ( pIFStem->val.ifVal.pMeta == pMeta ) {
-                return lune_getIF( _pEnv, pIFStem );
+    if ( pAny->type == lune_value_type_class ) {
+        lune_any_t * pIFAny = (lune_any_t *)pAny->val.classVal->pIFdummy;
+        for ( ; pIFAny->type != lune_value_type_none; pIFAny++ ) {
+            if ( pIFAny->val.ifVal.pMeta == pMeta ) {
+                return lune_getIF( _pEnv, pIFAny );
             }
         }
     }
     lune_abort( "not found interface" );
-    return NULL;
+    return lune_global.nilStem;
 }
 
-void lune_setQ_( lune_stem_t * pStem )
+void lune_setQ_( lune_any_t * pAny )
 {
     lune_lock( 
-        pStem->refCount++;
-    )
+        pAny->refCount++;
+    );
 }
 
-lune_stem_t * lune_setRet( lune_env_t * _pEnv, lune_stem_t * pStem )
+void lune_setRet( lune_env_t * _pEnv, lune_stem_t stem )
 {
-    switch ( pStem->type ) {
-    case lune_value_type_bool: // fall-through
-    case lune_value_type_nil:
-        // 同じオブジェクトを使いまわすものは、
-        // 以降の処理を実施すると refcount 管理が不正になるため return する。
-        return pStem;
+    if ( stem.type != lune_stem_type_any ) {
+        return;
     }
-    
-    lune_rmFromList( pStem );
+
+    lune_any_t * pAny = stem.val.pAny;
+    lune_rmFromList( pAny );
 
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth - 1 ];
-    lune_add2list( &pBlock->managedStemTop, pStem );
+    lune_add2list( &pBlock->managedAnyTop, pAny );
 
-    if ( pStem->type == lune_value_type_ddd ||
-         pStem->type == lune_value_type_mRet )
+    if ( pAny->type == lune_value_type_ddd ||
+         pAny->type == lune_value_type_mRet )
     {
         int index;
-        for ( index = 0; index < pStem->val.ddd.len; index++ ) {
-            lune_setRet( _pEnv, lune_fromDDD( pStem, index ) );
+        for ( index = 0; index < pAny->val.ddd.len; index++ ) {
+            lune_setRet( _pEnv, lune_fromDDD( pAny, index ) );
         }
     }
-    return pStem;
+    return;
 }
 
-void lune_setup_block(
-    lune_env_t * _pEnv, lune_block_t * pBlock, int stemNum, int varNum )
+
+static void lune_setup_block_var( lune_env_t * _pEnv, lune_block_t * pBlock )
 {
-    int dummy;
-
-    pBlock->managedStemTop.pPrev = &pBlock->managedStemTop;
-    pBlock->managedStemTop.pNext = &pBlock->managedStemTop;
-
     int index;
-    pBlock->pVarList = _pEnv->varPPool + _pEnv->useVarPoolNum;
-    for ( index = 0; index < varNum; index++ ) {
+    for ( index = 0; index < pBlock->varLen; index++ ) {
         lune_var_t * pVar = (lune_var_t *)lune_malloc(
             _pEnv->allocateor, sizeof( lune_var_t ) );
         s_globalEnv.allocNum++;
-        pVar->pStem = NULL;
+        pVar->stem.val.pAny = NULL;
+        pVar->stem.type = lune_stem_type_nil;
         pBlock->pVarList[ index ] = pVar;
         pVar->refCount = 1;
     }
-    pBlock->ppStemList = _pEnv->stemPPool + _pEnv->useStemPoolNum;
-    for ( index = 0; index < stemNum; index++ ) {
-        pBlock->ppStemList[ index ] = NULL;
-    }
+}
+
+void lune_setup_block(
+    lune_env_t * _pEnv, lune_block_t * pBlock, int anyNum, int varNum )
+{
+    int dummy;
+
+    pBlock->managedAnyTop.pPrev = &pBlock->managedAnyTop;
+    pBlock->managedAnyTop.pNext = &pBlock->managedAnyTop;
+
+    pBlock->pVarList = _pEnv->varPPool + _pEnv->useVarPoolNum;
     pBlock->varLen = varNum;
-    pBlock->stemLen = stemNum;
+    lune_setup_block_var( _pEnv, pBlock );
+    
+    pBlock->pStemList = _pEnv->stemPPool + _pEnv->useStemPoolNum;
+    int index;
+    for ( index = 0; index < anyNum; index++ ) {
+        pBlock->pStemList[ index ] = NULL;
+    }
+    pBlock->stemLen = anyNum;
     pBlock->blockDepth = _pEnv->blockDepth;
     pBlock->pStackAddr = &dummy;
     
-    _pEnv->useStemPoolNum += stemNum;
+    _pEnv->useStemPoolNum += anyNum;
     _pEnv->useVarPoolNum += varNum;
 }
 
@@ -315,15 +335,15 @@ void lune_setup_block(
 /**
  * 新しくブロックを開始する。
  *
- * @param stemVerNum ブロックで管理する stem 型の値の数
+ * @param anyVerNum ブロックで管理する any 型の値の数
  * @return ブロック情報
  */
-lune_block_t * lune_enter_module( int stemNum, int varNum )
+lune_block_t * lune_enter_module( int anyNum, int varNum )
 {
     lune_block_t * pBlock = &s_globalEnv.moduleInitBlockBuf[ s_globalEnv.moduleNum ];
     s_globalEnv.moduleNum++;
 
-    lune_setup_block( s_globalEnv.pEnv, pBlock, stemNum, varNum );
+    lune_setup_block( s_globalEnv.pEnv, pBlock, anyNum, varNum );
 
     return pBlock;
 }
@@ -332,33 +352,33 @@ lune_block_t * lune_enter_module( int stemNum, int varNum )
 /**
  * 新しくブロックを開始する。
  *
- * @param stemVerNum ブロックで管理する stem 型の値の数
+ * @param anyVerNum ブロックで管理する any 型の値の数
  * @return ブロック情報
  */
-lune_block_t * lune_enter_block( lune_env_t * _pEnv, int stemNum, int varNum )
+lune_block_t * lune_enter_block( lune_env_t * _pEnv, int anyNum, int varNum )
 {
     _pEnv->blockDepth++;
     
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
-    lune_setup_block( _pEnv, pBlock, stemNum, varNum );
+    lune_setup_block( _pEnv, pBlock, anyNum, varNum );
 
     return pBlock;
 }
 
 
 static inline void lune_reset_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock ) {
-    lune_stem_t * pWork = pBlock->managedStemTop.pPrev;
-    while ( pWork != &pBlock->managedStemTop ) {
-        lune_stem_t * pPrev = pWork->pPrev;
+    lune_any_t * pWork = pBlock->managedAnyTop.pPrev;
+    while ( pWork != &pBlock->managedAnyTop ) {
+        lune_any_t * pPrev = pWork->pPrev;
 
         lune_lock( 
             if ( pWork->refCount == 1 ) {
-                lune_gc_stem( _pEnv, pWork, true );
+                lune_gc_any( _pEnv, pWork, true );
             }
             else {
                 pWork->refCount--;
             }
-        )
+        );
         pWork = pPrev;
     }
 }
@@ -367,8 +387,8 @@ static inline void lune_reset_blockSub( lune_env_t * _pEnv, lune_block_t * pBloc
  * 現在のブロックを終了する。
  *
  * 次の処理を行なう。
- * - ブロックで管理している stem 型の値の参照カウンタをデクリメント
- * - 変数にアサインされていない stem 型の値を開放
+ * - ブロックで管理している any 型の値の参照カウンタをデクリメント
+ * - 変数にアサインされていない any 型の値を開放
  */
 static void lune_leave_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock )
 {
@@ -378,19 +398,16 @@ static void lune_leave_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock )
         lune_lock(
             pVar->refCount--;
             if ( pVar->refCount == 0 ) {
-                lune_stem_t * pStem = pVar->pStem;
-                if ( pStem != NULL ) {
-                    lune_decre_ref( _pEnv, pStem );
-                }
+                DECRE_STEM( _pEnv, pVar->stem );
             }
-        )
+        );
         lune_free( _pEnv->allocateor, pVar );
         s_globalEnv.allocNum--;
     }
     for ( index = pBlock->stemLen - 1; index >= 0; index-- ) {
-        lune_stem_t ** ppStem = pBlock->ppStemList[ index ];
-        if ( ppStem != NULL ) {
-            lune_decre_ref( _pEnv, *ppStem );
+        lune_stem_t * pStem = pBlock->pStemList[ index ];
+        if ( pStem != NULL && pStem->type == lune_stem_type_any ) {
+            lune_decre_ref( _pEnv, pStem->val.pAny );
         }
     }
 
@@ -405,8 +422,8 @@ static void lune_leave_blockSub( lune_env_t * _pEnv, lune_block_t * pBlock )
  * 現在のブロックを終了する。
  *
  * 次の処理を行なう。
- * - ブロックで管理している stem 型の値の参照カウンタをデクリメント
- * - 変数にアサインされていない stem 型の値を開放
+ * - ブロックで管理している any 型の値の参照カウンタをデクリメント
+ * - 変数にアサインされていない any 型の値を開放
  */
 void lune_leave_block( lune_env_t * _pEnv )
 {
@@ -424,31 +441,31 @@ void lune_reset_block( lune_env_t * _pEnv )
     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
 
     int index;
+
     for ( index = pBlock->varLen - 1; index >= 0; index-- ) {
         lune_var_t * pVar = pBlock->pVarList[ index ];
         lune_lock( 
-            if ( pVar->refCount == 1 ) {
-                lune_stem_t * pStem = pVar->pStem;
-                if ( pStem != NULL ) {
-                    lune_decre_ref( _pEnv, pStem );
-                }
+            pVar->refCount--;
+            if ( pVar->refCount == 0 ) {
+                DECRE_STEM( _pEnv, pVar->stem );
             }
-            else {
-                pVar->refCount--;
-            }
-        )
+        );
+        lune_free( _pEnv->allocateor, pVar );
+        s_globalEnv.allocNum--;
     }
+    lune_setup_block_var( _pEnv, pBlock );
+    
     for ( index = pBlock->stemLen - 1; index >= 0; index-- ) {
-        lune_stem_t ** ppStem = pBlock->ppStemList[ index ];
-        if ( ppStem != NULL ) {
-            lune_decre_ref( _pEnv, *ppStem );
+        lune_stem_t * pStem = pBlock->pStemList[ index ];
+        if ( pStem != NULL && pStem->type == lune_stem_type_any ) {
+            lune_decre_ref( _pEnv, pStem->val.pAny );
         }
     }
 
     lune_reset_blockSub( _pEnv, pBlock );
 
-    pBlock->managedStemTop.pPrev = &pBlock->managedStemTop;
-    pBlock->managedStemTop.pNext = &pBlock->managedStemTop;
+    pBlock->managedAnyTop.pPrev = &pBlock->managedAnyTop;
+    pBlock->managedAnyTop.pNext = &pBlock->managedAnyTop;
 }
 
 
@@ -475,46 +492,48 @@ void lune_leave_blockMulti( lune_env_t * _pEnv, int num )
  * ただし、関数の引数の処理が追加。
  * 関数終了時は、 lune_leave_block() をコールする。
  *
- * @param num lune_enter_block() の stemVerNum と同じ。
- *   ブロック内の stem 値の数と、 argNum を合せた数が num になる。
- * @param argNum 引数の stem 型の値の数
- * @param ... 引数の stem 型の値。
+ * @param num lune_enter_block() の anyVerNum と同じ。
+ *   ブロック内の any 値の数と、 argNum を合せた数が num になる。
+ * @param argNum 引数の any 型の値の数
+ * @param ... 引数の any 型の値。
  */
-lune_block_t * lune_enter_func(
-    lune_env_t * _pEnv, int stemNum, int varNum, int argNum, ... )
+/* lune_block_t * lune_enter_func( */
+/*     lune_env_t * _pEnv, int anyNum, int varNum, int argNum, ... ) */
+/* { */
+/*     lune_enter_block( _pEnv, anyNum, varNum ); */
+/*     lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ]; */
+
+
+/*     va_list ap; */
+/*     va_start( ap, argNum ); */
+
+/*     int index; */
+/*     for ( index = 0; index < argNum; index++ ) { */
+/*         lune_any_t * pAny = va_arg( ap, lune_any_t * ); */
+/*         lune_setq( _pEnv, &pBlock->pVarList[ index ]->stem.val.pAny, pAny ); */
+/*         pBlock->pVarList[ index ]->stem.type = lune_stem_type_any; */
+/*     } */
+/*     va_end(ap); */
+
+/*     return pBlock; */
+/* } */
+
+lune_stem_t lune_getValFromDDD( lune_env_t * _pEnv, lune_any_t * pAny, int index )
 {
-    lune_enter_block( _pEnv, stemNum, varNum );
-    lune_block_t * pBlock = &_pEnv->blockQueue[ _pEnv->blockDepth ];
-
-
-    va_list ap;
-    va_start( ap, argNum );
-
-    int index;
-    for ( index = 0; index < argNum; index++ ) {
-        lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        lune_setq( _pEnv, &pBlock->pVarList[ index ]->pStem, pStem );
+    if ( pAny->val.ddd.len <= index ) {
+        return lune_global.nilStem;
     }
-    va_end(ap);
-
-    return pBlock;
+    return pAny->val.ddd.stemList[ index ];
 }
 
-lune_stem_t * lune_getValFromDDD( lune_env_t * _pEnv, lune_stem_t * pStem, int index )
-{
-    if ( pStem->val.ddd.len <= index ) {
-        return _pEnv->pNilStem;
-    }
-    return pStem->val.ddd.pStemList[ index ];
-}
 
-
-static lune_stem_t * lune_createDDDSub(
-    lune_env_t * _pEnv, bool hasDDD, int num, va_list apSrc, lune_stem_t * pDDDStem ) {
-    lune_ddd_t * pDDD = &pDDDStem->val.ddd;
+static lune_any_t * lune_createDDDSub(
+    lune_env_t * _pEnv, bool hasDDD, int num, va_list apSrc, lune_any_t * pDDDAny ) {
+    lune_ddd_t * pDDD = &pDDDAny->val.ddd;
     int argNum = num;
 
     if ( hasDDD ) {
+        // 最終要素が複数要素の場合、その複数要素が何個あるのか調べる
         argNum = num;
 
         va_list ap;
@@ -522,16 +541,16 @@ static lune_stem_t * lune_createDDDSub(
 
         int index;
         for ( index = 0; index < num - 1; index++ ) {
-            va_arg( ap, lune_stem_t * );
+            va_arg( ap, lune_stem_t );
         }
-        lune_stem_t * pDDDStem = va_arg( ap, lune_stem_t * );
-        argNum += pDDDStem->val.ddd.len - 1;
+        lune_stem_t dddStem = va_arg( ap, lune_stem_t );
+        argNum += dddStem.val.pAny->val.ddd.len - 1;
         va_end(ap);
     }
     
     pDDD->len = argNum;
-    pDDD->pStemList = (lune_stem_t **)lune_malloc(
-        _pEnv->allocateor, sizeof( lune_stem_t * ) * argNum );
+    pDDD->stemList = (lune_stem_t *)lune_malloc(
+        _pEnv->allocateor, sizeof( lune_stem_t ) * argNum );
     s_globalEnv.allocNum++;
 
     va_list ap;
@@ -539,158 +558,176 @@ static lune_stem_t * lune_createDDDSub(
 
     int index;
     for ( index = 0; index < num - 1; index++ ) {
-        lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        if ( pStem->type == lune_value_type_ddd ||
-             pStem->type == lune_value_type_mRet ) {
-            pDDD->pStemList[ index ] = lune_getValFromDDD( _pEnv, pStem, 0 );
+        lune_stem_t stem = va_arg( ap, lune_stem_t );
+        if ( stem.type == lune_stem_type_any ) {
+            lune_any_t * pAny = stem.val.pAny;
+            if ( pAny->type == lune_value_type_ddd ||
+                 pAny->type == lune_value_type_mRet )
+            {
+                pDDD->stemList[ index ] = lune_getValFromDDD( _pEnv, pAny, 0 );
+            }
+            else {
+                pDDD->stemList[ index ] = stem;
+            }
         }
         else {
-            pDDD->pStemList[ index ] = pStem;
+            pDDD->stemList[ index ] = stem;
         }
     }
 
     if ( hasDDD ) {
-        lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        lune_stem_t ** ppStem = &pDDD->pStemList[ num - 1 ];
-        for ( index = 0; index < pStem->val.ddd.len; index++ ) {
-            *ppStem = pStem->val.ddd.pStemList[ index ];
-            ppStem++;
+        lune_stem_t stem = va_arg( ap, lune_stem_t );
+        lune_any_t * pAny = stem.val.pAny;
+        lune_stem_t* pStem = &pDDD->stemList[ num - 1 ];
+        for ( index = 0; index < lune_lenDDD( pAny ); index++ ) {
+            *pStem = lune_fromDDD( pAny, index );
+            pStem++;
         }
     }
     else {
-        lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-        pDDD->pStemList[ num - 1 ] = pStem;
+        pDDD->stemList[ num - 1 ] = va_arg( ap, lune_stem_t );
     }
 
     
     va_end(ap);
 
-    return pDDDStem;
+    return pDDDAny;
 }
 
 /**
  * ... の値を生成する
  *
- * ... に含める値は全て stem に変換する必要がある。
+ * ... に含める値は全て any に変換する必要がある。
  *
  * @param hasDDD ... の最後が ... 要素の場合 true。
  * @param num 値の数
  * @param ... 含める値
  * @return ... の値
  */
-lune_stem_t * _lune_createMRet(
+lune_stem_t _lune_createMRet(
     const char * pFile, int lineNo, lune_env_t * _pEnv, bool hasDDD, int num, ... )
 {
-    lune_stem_t * pDDDStem =
-        lune_alloc_stem( _pEnv, lune_value_type_mRet, pFile, lineNo );
+    lune_any_t * pDDDAny =
+        lune_alloc_any( _pEnv, lune_value_type_mRet, pFile, lineNo );
 
     va_list ap;
     va_start( ap, num );
 
-    lune_createDDDSub( _pEnv, hasDDD, num, ap, pDDDStem );
+    lune_createDDDSub( _pEnv, hasDDD, num, ap, pDDDAny );
 
     va_end(ap);
 
-    return pDDDStem;
+    return LUNE_STEM_ANY( pDDDAny );
 }
 
 
 /**
  * ... の値を生成する
  *
- * ... に含める値は全て stem に変換する必要がある。
+ * ... に含める値は全て any に変換する必要がある。
  *
  * @param hasDDD ... の最後が ... 要素の場合 true。
  * @param num 値の数
  * @param ... 含める値
  * @return ... の値
  */
-lune_stem_t * _lune_createDDD(
+lune_stem_t _lune_createDDD(
     const char * pFile, int lineNo, lune_env_t * _pEnv, bool hasDDD, int num, ... )
 {
-    lune_stem_t * pDDDStem =
-        lune_alloc_stem( _pEnv, lune_value_type_ddd, pFile, lineNo );
+    if ( num > 0 ) {
+        lune_any_t * pDDDAny =
+            lune_alloc_any( _pEnv, lune_value_type_ddd, pFile, lineNo );
 
-    va_list ap;
-    va_start( ap, num );
+        va_list ap;
+        va_start( ap, num );
+        
+        lune_createDDDSub( _pEnv, hasDDD, num, ap, pDDDAny );
 
-    lune_createDDDSub( _pEnv, hasDDD, num, ap, pDDDStem );
+        va_end(ap);
 
-    va_end(ap);
+        return LUNE_STEM_ANY( pDDDAny );
+    }
+    else {
+        return lune_createDDDOnly( _pEnv, 0 );
+    }
 
-    return pDDDStem;
 }
 
 
 /**
  * ... の値を生成する
  *
- * ... に含める値は全て stem に変換する必要がある。
+ * ... に含める値は全て any に変換する必要がある。
  *
  * @param num 値の数
  * @param ... 含める値
  * @return ... の値
  */
-lune_stem_t * _lune_createDDDOnly(
+lune_stem_t _lune_createDDDOnly(
     const char * pFile, int lineNo, lune_env_t * _pEnv, int num ) {
-    lune_stem_t * pDDDStem =
-        lune_alloc_stem( _pEnv, lune_value_type_ddd, pFile, lineNo );
-    lune_ddd_t * pDDD = &pDDDStem->val.ddd;
+    lune_any_t * pDDDAny =
+        lune_alloc_any( _pEnv, lune_value_type_ddd, pFile, lineNo );
+    lune_ddd_t * pDDD = &pDDDAny->val.ddd;
     pDDD->len = num;
-    pDDD->pStemList = (lune_stem_t **)lune_malloc(
-        _pEnv->allocateor, sizeof( lune_stem_t * ) * num );
-    s_globalEnv.allocNum++;
+    if ( num != 0 ) {
+        pDDD->stemList = (lune_stem_t *)lune_malloc(
+            _pEnv->allocateor, sizeof( lune_stem_t ) * num );
+        s_globalEnv.allocNum++;
+    }
+    else {
+        pDDD->stemList = NULL;
+    }
 
-    return pDDDStem;
+    return LUNE_STEM_ANY( pDDDAny );
 }
 
 
-lune_stem_t * _lune_it_new(
+lune_any_t * _lune_it_new(
     const char * pFile, int lineNo, 
     lune_env_t * _pEnv, lune_value_type_t type, void * pVal )
 {
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, type, pFile, lineNo );
+    lune_any_t * pAny =
+        lune_alloc_any( _pEnv, type, pFile, lineNo );
     switch ( type ) {
     case lune_value_type_itList:
-        pStem->val.itList = pVal;
+        pAny->val.itList = pVal;
         break;
     case lune_value_type_itSet:
-        pStem->val.itSet = pVal;
+        pAny->val.itSet = pVal;
         break;
     case lune_value_type_itMap:
-        pStem->val.itMap = pVal;
+        pAny->val.itMap = pVal;
         break;
     default:
         break;
     }
-    return pStem;
+    return pAny;
 }
 
-void lune_it_delete( lune_env_t * _pEnv, lune_stem_t * pStem )
+void lune_it_delete( lune_env_t * _pEnv, lune_any_t * pAny )
 {
-    lune_rmFromList( pStem );
-    lune_gc_stem( _pEnv, pStem, true );
+    lune_rmFromList( pAny );
+    lune_gc_any( _pEnv, pAny, true );
 }
 
 /**
- * クラスのインスタンスを保持する stem を生成する
+ * クラスのインスタンスを保持する any を生成する
  *
  * @param size クラスインスタンスのサイズ
- * @return stem
+ * @return any
  */
-lune_stem_t * _lune_alge_new(
+lune_stem_t _lune_alge_new(
     const char * pFile, int lineNo, lune_env_t * _pEnv, int valType,
     int size, lune_algeVal_gc_t * gc )
 {
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_alge, pFile, lineNo );
+    lune_any_t * pAny =
+        lune_alloc_any( _pEnv, lune_value_type_alge, pFile, lineNo );
     void * pObj = lune_malloc( _pEnv->allocateor, size );
     s_globalEnv.allocNum++;
-    pStem->val.alge.type = valType;
-    pStem->val.alge.pVal = pObj;
-    pStem->val.alge.gc = gc;
-    return pStem;
+    pAny->val.alge.type = valType;
+    pAny->val.alge.pVal = pObj;
+    pAny->val.alge.gc = gc;
+    return LUNE_STEM_ANY( pAny );
 }
 
 /**
@@ -698,27 +735,27 @@ lune_stem_t * _lune_alge_new(
  *
  * @param pObj クラスのインスタンス
  */
-void lune_alge_del( lune_env_t * _pEnv, void * pObj )
+static void lune_alge_del( lune_env_t * _pEnv, void * pObj )
 {
     s_globalEnv.allocNum--;
     lune_free( _pEnv->allocateor, pObj );
 }
 
 /**
- * クラスのインスタンスを保持する stem を生成する
+ * クラスのインスタンスを保持する any を生成する
  *
  * @param size クラスインスタンスのサイズ
- * @return stem
+ * @return any
  */
-lune_stem_t * _lune_class_new(
+lune_stem_t _lune_class_new(
     const char * pFile, int lineNo, lune_env_t * _pEnv, int size )
 {
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_class, pFile, lineNo );
+    lune_any_t * pAny =
+        lune_alloc_any( _pEnv, lune_value_type_class, pFile, lineNo );
     void * pObj = lune_malloc( _pEnv->allocateor, size );
     s_globalEnv.allocNum++;
-    pStem->val.classVal = pObj;
-    return pStem;
+    pAny->val.classVal = pObj;
+    return LUNE_STEM_ANY( pAny );
 }
 
 /**
@@ -733,26 +770,26 @@ static void lune_class_del( lune_env_t * _pEnv, void * pObj )
 }
 
 /**
- * 関数 pFunc を保持する stem を生成する
+ * 関数 pFunc を保持する any を生成する
  *
  * @param pFunc 関数
  * @param num フォーム内でアクセスする外部変数の数
  * @param ... フォーム内でアクセスする外部変数
- * @return stem
+ * @return any
  */
-lune_stem_t * _lune_func2stem(
+lune_stem_t _lune_func2stem(
     const char * pFile, int lineNo, 
     lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... )
 {
-    lune_stem_t * pFormStem =
-        lune_alloc_stem( _pEnv, lune_value_type_form, pFile, lineNo );
-    lune_form_t * pForm = &pFormStem->val.form;
+    lune_any_t * pFormAny =
+        lune_alloc_any( _pEnv, lune_value_type_form, pFile, lineNo );
+    lune_form_t * pForm = &pFormAny->val.form;
     pForm->len = num;
     pForm->pClosureValList = (lune_closureVal_t*)lune_malloc(
         _pEnv->allocateor, sizeof( lune_closureVal_t ) * num );
     s_globalEnv.allocNum++;
-    /* pForm->pOrgClosureValList = (lune_stem_t **)lune_malloc( */
-    /*     _pEnv->allocateor, sizeof( lune_stem_t * ) * num ); */
+    /* pForm->pOrgClosureValList = (lune_any_t **)lune_malloc( */
+    /*     _pEnv->allocateor, sizeof( lune_any_t * ) * num ); */
     /* s_globalEnv.allocNum++; */
 
     pForm->pFunc = pFunc;
@@ -773,76 +810,17 @@ lune_stem_t * _lune_func2stem(
                 pForm->pClosureValList[ index ].val.pVar = pVar;
             }
             else {
-                lune_stem_t * pStem = va_arg( ap, lune_stem_t * );
-                pStem->refCount++;
-                pForm->pClosureValList[ index ].val.pStem = pStem;
+                lune_stem_t stem = va_arg( ap, lune_stem_t );
+                stem.val.pAny->refCount++;
+                pForm->pClosureValList[ index ].val.stem = stem;
             }
-            // pVar->pStem->refCount++;
-            //pForm->pOrgClosureValList[ index ] = pVar->pStem;
+            // pVar->pAny->refCount++;
+            //pForm->pOrgClosureValList[ index ] = pVar->pAny;
         }
-    )
+    );
     va_end(ap);
 
-    return pFormStem;
-}
-
-/**
- * bool 値 val を保持する stem を生成する
- *
- * @param val bool 値
- * @return stem
- */
-lune_stem_t * _lune_bool2stem(
-    const char * pFile, int lineNo, lune_env_t * _pEnv, lune_bool_t val )
-{
-    if ( val ) {
-        return _pEnv->pTrueStem;
-    }
-    return _pEnv->pFalseStem;
-}
-
-/**
- * bool 値 val を保持する stem を生成する
- *
- * @param val bool 値
- * @return stem
- */
-static lune_stem_t * lune_createBoolStem( lune_env_t * _pEnv, lune_bool_t val )
-{
-    lune_stem_t * pStem = _lune_alloc_stem( _pEnv, lune_value_type_bool, LUNE_DEBUG_POS );
-    pStem->val.boolVal = val;
-    return pStem;
-}
-
-
-/**
- * int 値 val を保持する stem を生成する
- *
- * @param val int 値
- * @return stem
- */
-lune_stem_t * _lune_int2stem(
-    const char * pFile, int lineNo, lune_env_t * _pEnv, lune_int_t val )
-{
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_int, pFile, lineNo );
-    pStem->val.intVal = val;
-    return pStem;
-}
-
-/**
- * real 値 val を保持する stem を生成する
- *
- * @param val real 値
- * @return stem
- */
-lune_stem_t * _lune_real2stem(
-    const char * pFile, int lineNo, lune_env_t * _pEnv, lune_real_t val )
-{
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_real, pFile, lineNo );
-    pStem->val.realVal = val;
-    return pStem;
+    return LUNE_STEM_ANY( pFormAny );
 }
 
 /**
@@ -860,29 +838,29 @@ lune_str_t lune_createLiteralStr( const char * pStr ) {
 }
 
 /**
- * 文字列データを保持する stem を生成する
+ * 文字列データを保持する any を生成する
  *
  * @param val 文字列型データ
- * @return stem
+ * @return any
  */
-lune_stem_t * _lune_str2stem(
+lune_stem_t _lune_str2stem(
     const char * pFile, int lineNo, lune_env_t * _pEnv, lune_str_t val )
 {
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_str, pFile, lineNo );
-    pStem->val.str = val;
-    return pStem;
+    lune_any_t * pAny =
+        lune_alloc_any( _pEnv, lune_value_type_str, pFile, lineNo );
+    pAny->val.str = val;
+    return LUNE_STEM_ANY( pAny );
 }
 
-lune_stem_t * _lune_litStr2stem(
+lune_stem_t _lune_litStr2stem(
     const char * pFile, int lineNo, lune_env_t * _pEnv, const char * pStr )
 {
-    lune_stem_t * pStem =
-        lune_alloc_stem( _pEnv, lune_value_type_str, pFile, lineNo );
-    pStem->val.str.len = strlen( pStr );
-    pStem->val.str.pStr = pStr;
-    pStem->val.str.staticFlag = true;
-    return pStem;
+    lune_any_t * pAny =
+        lune_alloc_any( _pEnv, lune_value_type_str, pFile, lineNo );
+    pAny->val.str.len = strlen( pStr );
+    pAny->val.str.pStr = pStr;
+    pAny->val.str.staticFlag = true;
+    return LUNE_STEM_ANY( pAny );
 }
 
 /**
@@ -906,15 +884,9 @@ static lune_env_t * lune_createEnv()
     _pEnv->stackPos = 0;
 
     lune_enter_block( _pEnv, 0, 0 );
-    _pEnv->pNoneStem = lune_alloc_stem_op( _pEnv, lune_value_type_none );
-    _pEnv->pNilStem = lune_alloc_stem_op( _pEnv, lune_value_type_nil );
-    _pEnv->pTrueStem = lune_createBoolStem( _pEnv, true );
-    _pEnv->pTrueStem->refCount++;
-    _pEnv->pFalseStem = lune_createBoolStem( _pEnv, false );
-    _pEnv->pFalseStem->refCount++;
     _pEnv->pMRet = NULL;
 
-    _pEnv->pSortCallback = NULL;
+    _pEnv->pSortCallback = lune_global.nilStem;
 
     lune_enter_block( _pEnv, 0, 0 );
     return _pEnv;
@@ -927,17 +899,12 @@ static lune_env_t * lune_createEnv()
  */
 static void lune_deleteEnv( lune_env_t * _pEnv ) {
 
-    lune_lock( 
-        _pEnv->pTrueStem->refCount--;
-        _pEnv->pFalseStem->refCount--;
-    )
-    
     lune_leave_block( _pEnv );
     lune_leave_block( _pEnv );
 
     s_globalEnv.allocNum--;
 
-    printf( ":debug:useStemPoolNum = %d\n", _pEnv->useStemPoolNum );
+    printf( ":debug:useAnyPoolNum = %d\n", _pEnv->useStemPoolNum );
     printf( ":debug:useVarPoolNum = %d\n", _pEnv->useVarPoolNum );
     printf( ":debug:blockDepth = %d\n", _pEnv->blockDepth );
     
@@ -948,6 +915,14 @@ static void lune_createGlobalEnv(void) {
     s_globalEnv.allocNum = 0;
     s_globalEnv.pEnv = lune_createEnv();
     s_globalEnv.moduleNum = 0;
+
+    
+    lune_global.noneStem = LUNE_STEM_BASE( lune_stem_type_none );
+    lune_global.nilStem = LUNE_STEM_BASE( lune_stem_type_nil );
+    lune_global.trueStem = LUNE_STEM_BOOL( true );
+    lune_global.falseStem = LUNE_STEM_BOOL( false );
+
+    lune_setQ( lune_global.ddd0, lune_createDDD( s_globalEnv.pEnv, false, 0 ) );
 }
 
 static void lune_releaseGlobalEnv(void) {
@@ -956,13 +931,25 @@ static void lune_releaseGlobalEnv(void) {
         lune_leave_blockSub( s_globalEnv.pEnv,
                              &s_globalEnv.moduleInitBlockBuf[ index ] );
     }
+    lune_decre_ref( s_globalEnv.pEnv, lune_global.ddd0.val.pAny );
     lune_deleteEnv( s_globalEnv.pEnv );
     printf( ":debug:allocNum = %d\n", s_globalEnv.allocNum );
     lune_checkMem();
 }
 
-lune_stem_t * lune_call_form(
-    lune_env_t * _pEnv, lune_stem_t * _pForm, lune_stem_t * _pDDD )
+void lune_init_alge( lune_stem_t * pStem, lune_any_t * pAny, int valType )
+{
+    pStem->type = lune_stem_type_any;
+    pStem->val.pAny = pAny;
+    lune_init_any( pAny, lune_value_type_alge, ENV );
+    pAny->refCount = 1;                                      
+    pAny->val.alge.type = valType;                           
+    pAny->val.alge.pVal = NULL;                              
+    pAny->val.alge.gc = NULL;
+}
+
+lune_stem_t lune_call_form(
+    lune_env_t * _pEnv, lune_any_t * _pForm, lune_stem_t _pDDD )
 {
     if ( lune_isClosure( _pForm ) ) {
         return lune_closure( _pForm )( _pEnv, _pForm, _pDDD );
@@ -972,23 +959,23 @@ lune_stem_t * lune_call_form(
     }
 }
 
-lune_stem_t * lune_op_not( lune_env_t * _pEnv, lune_stem_t * pStem ) {
-    if ( lune_isCondTrue( pStem ) ) {
-        return _pEnv->pFalseStem;
+lune_stem_t lune_op_not( lune_env_t * _pEnv, lune_stem_t stem ) {
+    if ( lune_isCondTrue( stem ) ) {
+        return lune_global.falseStem;
     }
-    return _pEnv->pTrueStem;
+    return lune_global.trueStem;
 }
 
 /**
- * pStem の条件判定を行なう
+ * pAny の条件判定を行なう
  *
  * false か nil の場合 false、それ以外は true
  */
-bool lune_isCondTrue( const lune_stem_t * pStem ) {
-    if ( pStem->type == lune_value_type_bool ) {
-        return pStem->val.boolVal;
+bool lune_isCondTrue( const lune_stem_t stem ) {
+    if ( stem.type == lune_stem_type_bool ) {
+        return stem.val.boolVal;
     }
-    else if ( pStem->type == lune_value_type_nil ) {
+    else if ( stem.type == lune_stem_type_nil ) {
         return false;
     }
     return true;
@@ -1011,10 +998,10 @@ bool lune_incStack( lune_env_t * _pEnv ) {
  * @param pVal スタックに詰む値
  * @return pVal の条件判定結果。 lune_isCondTrue()。
  */
-bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t * pVal )
+bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t val )
 {
-    _pEnv->pValStack[ _pEnv->stackPos ] = pVal;
-    return lune_isCondTrue( pVal );
+    _pEnv->pValStack[ _pEnv->stackPos ] = val;
+    return lune_isCondTrue( val );
 }
 
 /**
@@ -1022,25 +1009,25 @@ bool lune_setStackVal( lune_env_t * _pEnv, lune_stem_t * pVal )
  *
  * @return pop した値。
  */
-lune_stem_t * lune_popVal( lune_env_t * _pEnv, bool dummy ) {
-    lune_stem_t * pVal = _pEnv->pValStack[ _pEnv->stackPos ];
+lune_stem_t lune_popVal( lune_env_t * _pEnv, bool dummy ) {
+    lune_stem_t val = _pEnv->pValStack[ _pEnv->stackPos ];
     _pEnv->stackPos--;
-    return pVal;
+    return val;
 }
 
 /**
  * int! の unwrap 処理
  */
-lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal )
+lune_stem_t lune_unwrap_stem( lune_stem_t stem, lune_stem_t defVal )
 {
-    if ( pStem->type != lune_value_type_nil ) {
-        return pStem;
+    if ( stem.type != lune_stem_type_nil ) {
+        return stem;
     }
-    if ( pDefVal != NULL ) {
-        return pDefVal;
+    if ( defVal.type != lune_stem_type_none ) {
+        return defVal;
     }
     lune_abort( __func__ );
-    return NULL; // dummy
+    return lune_global.noneStem; // dummy
 }
 
 
@@ -1048,10 +1035,10 @@ lune_stem_t * lune_unwrap_stem( lune_stem_t * pStem, lune_stem_t * pDefVal )
 /**
  * int! の unwrap 処理
  */
-lune_int_t lune_unwrap_int( lune_stem_t * pStem )
+lune_int_t lune_unwrap_int( lune_stem_t stem )
 {
-    if ( pStem->type == lune_value_type_int ) {
-        return pStem->val.intVal;
+    if ( stem.type == lune_stem_type_int ) {
+        return stem.val.intVal;
     }
     lune_abort( __func__ );
     return 0; // dummy
@@ -1060,10 +1047,10 @@ lune_int_t lune_unwrap_int( lune_stem_t * pStem )
 /**
  * int! の unwrap 処理。 default 値付き。
  */
-lune_int_t lune_unwrap_intDefault( lune_stem_t * pStem, lune_int_t val )
+lune_int_t lune_unwrap_intDefault( lune_stem_t stem, lune_int_t val )
 {
-    if ( pStem->type == lune_value_type_int ) {
-        return pStem->val.intVal;
+    if ( stem.type == lune_stem_type_int ) {
+        return stem.val.intVal;
     }
     return val;
 }
@@ -1072,10 +1059,10 @@ lune_int_t lune_unwrap_intDefault( lune_stem_t * pStem, lune_int_t val )
 /**
  * real! の unwrap 処理
  */
-lune_real_t lune_unwrap_real( lune_stem_t * pStem )
+lune_real_t lune_unwrap_real( lune_stem_t stem )
 {
-    if ( pStem->type == lune_value_type_real ) {
-        return pStem->val.realVal;
+    if ( stem.type == lune_stem_type_real ) {
+        return stem.val.realVal;
     }
     lune_abort( __func__ );
 }
@@ -1083,14 +1070,13 @@ lune_real_t lune_unwrap_real( lune_stem_t * pStem )
 /**
  * real! の unwrap 処理。 default 値付き。
  */
-lune_real_t lune_unwrap_realDefault( lune_stem_t * pStem, lune_real_t val )
+lune_real_t lune_unwrap_realDefault( lune_stem_t stem, lune_real_t val )
 {
-    if ( pStem->type == lune_value_type_real ) {
-        return pStem->val.realVal;
+    if ( stem.type == lune_stem_type_real ) {
+        return stem.val.realVal;
     }
     return val;
 }
-
 
 
 /**
@@ -1098,57 +1084,68 @@ lune_real_t lune_unwrap_realDefault( lune_stem_t * pStem, lune_real_t val )
  *
  * @param pArg は ddd 型。
  */
-void lune_print( lune_env_t * _pEnv, lune_stem_t * pArg ) {
+void lune_print( lune_env_t * _pEnv, lune_stem_t ddd ) {
 
     //lune_enter_func( _pEnv, 0, 0, 1, pArg );
     lune_enter_block( _pEnv, 0, 0 );
 
+    lune_any_t * pArg = ddd.val.pAny;
 
-    lune_ddd_t * pDDD = &pArg->val.ddd;
     int index;
-    for ( index = 0; index < pDDD->len; index++ ) {
+    for ( index = 0; index < lune_lenDDD( pArg ); index++ ) {
         if ( index > 0 ) {
             printf( "\t" );
         }
-        lune_stem_t * pStem = pDDD->pStemList[ index ];
-        switch ( pStem->type ) {
-        case lune_value_type_nil:
+        const lune_stem_t stem = lune_fromDDD( pArg, index );
+        switch ( stem.type ) {
+        case lune_stem_type_nil:
             printf( "nil" );
             break;
-        case lune_value_type_bool:
-            printf( pStem->val.boolVal ? "true" : "false" );
+        case lune_stem_type_bool:
+            printf( stem.val.boolVal ? "true" : "false" );
             break;
-        case lune_value_type_int:
-            printf( "%d", pStem->val.intVal );
+        case lune_stem_type_int:
+            printf( "%d", stem.val.intVal );
             break;
-        case lune_value_type_real:
+        case lune_stem_type_real:
             {
                 double work;
-                if ( modf( pStem->val.realVal, &work ) == 0 ) {
-                    printf( "%g.0", pStem->val.realVal );
+                if ( modf( stem.val.realVal, &work ) == 0 ) {
+                    printf( "%g.0", stem.val.realVal );
                 }
                 else {
-                    printf( "%.14g", pStem->val.realVal );
+                    printf( "%.14g", stem.val.realVal );
                 }
             }
             break;
-        case lune_value_type_str:
-            printf( "%s", pStem->val.str.pStr );
-            break;
-        case lune_value_type_form:
-            printf( "form: %p", pStem );
-            break;
-        case lune_value_type_class:
-            printf( "class: %p(%s)", pStem, pStem->val.classVal->pMeta->pName );
-            break;
-        case lune_value_type_if:
-            printf( "if: %p(%s): %p(%s)",
-                    pStem, pStem->val.ifVal.pMeta->pName,
-                    pStem->val.ifVal.pObj,
-                    pStem->val.ifVal.pObj->val.classVal->pMeta->pName );
+            
+        case lune_stem_type_any:
+            {
+                lune_any_t * pAny = stem.val.pAny;
+                switch ( pAny->type ) {
+                case lune_value_type_str:
+                    printf( "%s", pAny->val.str.pStr );
+                    break;
+                case lune_value_type_form:
+                    printf( "form: %p", pAny );
+                    break;
+                case lune_value_type_class:
+                    printf( "class: %p(%s)", pAny, pAny->val.classVal->pMeta->pName );
+                    break;
+                case lune_value_type_if:
+                    printf( "if: %p(%s): %p(%s)",
+                            pAny, pAny->val.ifVal.pMeta->pName,
+                            pAny->val.ifVal.pObj,
+                            pAny->val.ifVal.pObj->val.classVal->pMeta->pName );
+                    break;
+                default:
+                    printf( "unknown type -- %d", pAny->type );
+                    break;
+                }
+            }
             break;
         default:
-            printf( "unknown type -- %d", pStem->type );
+            printf( "unknown stem type -- %d", stem.type );
             break;
         }
     }
@@ -1180,6 +1177,8 @@ static int lua_main( lua_State *L) {
 }
 
 int main (int argc, char * pArgv[] )  {
+    lune_collection_init();
+    
     lua_State * pLua = luaL_newstate();
     if ( pLua == NULL ) {
         printf( "failed to create a Lua VM.\n" );

@@ -905,9 +905,8 @@ fn TransUnit.evalMacroOp(
    let func = macroInfo.func;
    //let macroVars:Map<str,stem!> = func( argVal.unpack() )@@Map<str,stem!>;
    let mut macroVars:&Map<str,stem> = {};
-   if! let macroRet = func( macroArgValMap ) {
-      macroVars = macroRet@@Map<str,stem>;
-   }
+   let macroRet = func( macroArgValMap );
+   macroVars = macroRet@@Map<str,stem>;
    foreach name in (unwrap macroVars.__names)@@List<str> {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
       let typeInfo = valInfo.typeInfo or Ast.builtinTypeStem_;

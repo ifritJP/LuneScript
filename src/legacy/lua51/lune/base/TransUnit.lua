@@ -7076,12 +7076,12 @@ function TransUnit:analyzeWhen( firstToken )
       
    end
    
-   local block = self:analyzeBlock( Nodes.BlockKind.IfUnwrap, TentativeMode.Start, scope )
+   local block = self:analyzeBlock( Nodes.BlockKind.When, TentativeMode.Start, scope )
    self:popScope(  )
    local elseBlock = nil
    nextToken = self:getToken( true )
    if nextToken.txt == "else" then
-      elseBlock = self:analyzeBlock( Nodes.BlockKind.When, TentativeMode.Finish )
+      elseBlock = self:analyzeBlock( Nodes.BlockKind.Else, TentativeMode.Finish )
    else
     
       self:finishTentativeSymbol( false )
@@ -7830,13 +7830,8 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    
    local func = macroInfo.func
    local macroVars = {}
-   do
-      local macroRet = func( macroArgValMap )
-      if macroRet ~= nil then
-         macroVars = macroRet
-      end
-   end
-   
+   local macroRet = func( macroArgValMap )
+   macroVars = macroRet
    for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
       local typeInfo = valInfo.typeInfo or Ast.builtinTypeStem_
