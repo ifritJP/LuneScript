@@ -639,12 +639,29 @@ pub class ModuleInfo extend (Ast.ModuleInfoIF) {
 /**
 マクロの expand-statement で使用する変数情報。
 
-マクロの引数か、 macro-statment で宣言した変数情報。
+マクロの引数か、 macro-statment で宣言した変数。
 */
 pub class MacroValInfo {
-   /** 値 */
+   /**
+変数に格納された値。
+
+この値には、プリミティブな値(int/real/str/bool)か、プリティブな値のリストが格納される。
+
+なお、 型の builtinTypeStat の変数には、 List<str> が格納される。
+
+つまり次の場合、
+
+---
+let work:stat = `{ 1 + 1; };
+let workList:List<stat> = [ stat ];
+---
+
+ここで work に対応する MacroValInfo.val には List<str> のデータが格納され、
+ここで workList に対応する MacroValInfo.val には List<List<str>> のデータが格納される。
+
+   */
    pub let val: stem!;
-   /** 型 */
+   /** マクロ内での変数の型 */
    pub let typeInfo: Ast.TypeInfo;
    /** 実引数のノード。 この変数がマクロの引数の場合に有効。 */
    pub let argNode: &Node!;
@@ -675,7 +692,7 @@ pub abstract class MacroInfo {
 }
 
 _declNodeClass( "Root", Node, false, false, false,
-                [ { "children": "List<&Node>" },
+                [ { "children": "&List<&Node>" },
                   { "moduleScope": "&Ast.Scope" },
                   { "useModuleMacroSet": "&Set<&Ast.TypeInfo>" },
                   { "moduleId": "&frontInterface.ModuleId" },
@@ -684,9 +701,9 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "&LuneHelperInfo" },
                   { "@nodeManager": "&NodeManager" },
-                  { "importModule2moduleInfo": "Map<&Ast.TypeInfo,&ModuleInfo>" },
-                  { "typeId2MacroInfo": "Map<int,&MacroInfo>" },
-                  { "typeId2ClassMap": "Map<int,&NamespaceInfo>" } ]
+                  { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&ModuleInfo>" },
+                  { "typeId2MacroInfo": "&Map<int,&MacroInfo>" },
+                  { "typeId2ClassMap": "&Map<int,&NamespaceInfo>" } ]
 );
 
 pub fn RootNode.set_provide( node: ProvideNode ) mut {

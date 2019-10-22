@@ -333,8 +333,7 @@ pub class ASTInfo {
 }
 
 pub fn TransUnit.createAST(
-   parser: Parser.Parser, macroFlag: bool, moduleName: str! )
-   mut : ASTInfo
+   parser: Parser.Parser, macroFlag: bool, moduleName: str! ) mut : ASTInfo
 {
    self.moduleName = unwrap moduleName default "";
 
@@ -409,9 +408,10 @@ pub fn TransUnit.createAST(
       let mut rootNode = Nodes.RootNode.create(
          self.nodeManager, new Parser.Position( 0, 0 ),
          [ Ast.builtinTypeNone ], children, self.moduleScope,
-         self.useModuleMacroSet, self.moduleId, processInfo,
-         moduleTypeInfo, nil, self.helperInfo, self.nodeManager,
-         self.importModule2ModuleInfo, self.typeId2MacroInfo, self.typeId2ClassMap );
+         self.macroCtrl.$useModuleMacroSet,
+         self.moduleId, processInfo, moduleTypeInfo, nil, self.helperInfo,
+         self.nodeManager, self.importModule2ModuleInfo,
+         self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
       ast = rootNode;
       if! self.provideNode {
          if lastStatement ~= _exp {
@@ -578,12 +578,8 @@ fn TransUnit.analyzeDeclMacro(
    let mut node = Nodes.DeclMacroNode.create(
       self.nodeManager, firstToken.pos, [ typeInfo ], declMacroInfo );
 
-   let macroObj = self.macroEval.eval( node );
-
-   self.typeId2MacroInfo[ typeInfo.get_typeId() ] =
-      new Nodes.DefMacroInfo( macroObj, declMacroInfo, self.symbol2ValueMapForMacro );
-   self.symbol2ValueMapForMacro = {};
-
+   self.macroCtrl.regist( node );
+   
    return node;
 }
 
@@ -2901,14 +2897,14 @@ fn TransUnit.analyzeDeclVar(
    }
 
 
-   if mode ~= .Sync and self.macroScope {
-      foreach letVarInfo, index in letVarList {
-         let typeInfo = typeInfoList[ index ];
+   // if mode ~= .Sync and self.macroScope {
+   //    foreach letVarInfo, index in letVarList {
+   //       let typeInfo = typeInfoList[ index ];
 
-         self.symbol2ValueMapForMacro[ letVarInfo.varName.txt ] =
-            new Nodes.MacroValInfo( nil, typeInfo, nil);
-      }
-   }
+   //       self.symbol2ValueMapForMacro[ letVarInfo.varName.txt ] =
+   //          new Nodes.MacroValInfo( nil, typeInfo, nil);
+   //    }
+   // }
 
    let mut syncScope:Ast.Scope = self.scope;
    if mode == .Sync {
@@ -2969,6 +2965,10 @@ fn TransUnit.analyzeDeclVar(
       symbolInfoList.insert(
          unwrap self.scope.getSymbolInfo( varName.txt, self.scope, true ) );
    }
+   if mode ~= .Sync and self.macroScope {
+      self.macroCtrl.registVar( symbolInfoList );
+   }
+   
 
    let mut unwrapBlock: Nodes.BlockNode! = nil;
    let mut thenBlock: Nodes.BlockNode! = nil;

@@ -232,6 +232,14 @@ pub abstract class Parser {
    pub abstract fn getStreamName(): str;
 }
 
+pub interface PushbackParser {
+   pub fn getTokenNoErr() mut : &Token;
+   pub fn pushbackToken( token: &Token ) mut;
+   pub fn pushbackStr( name:str, statement: str ) mut;
+   pub fn newPushback( tokenList: List<&Token> ) mut;
+   pub fn error( message:str ) mut: __;
+}
+
 pub class WrapParser extend Parser {
    let mut parser: Parser;
    let name: str;

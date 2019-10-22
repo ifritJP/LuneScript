@@ -8,6 +8,13 @@
 
 * バグ
 
+- [ ] 本来、次は Pub でない Hoge を含んだ func が pub なので、エラーになるはず。
+  
+class Hoge {
+}
+pub fn func( list:&List<Hoge> );
+  
+
 - [ ] company-mode で run-at-time のリトライ処理が走る時、
       バッファが変っているとエラー。
   

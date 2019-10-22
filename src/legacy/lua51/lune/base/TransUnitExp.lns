@@ -756,207 +756,41 @@ fn TransUnit.checkMatchValType(
    return alt2typeMap, expList;
 }
 
-class MacroPaser extend Parser.Parser {
-   let tokenList: &List<&Parser.Token>;
-   let mut pos: int;
-   let name: str;
 
-   pub fn __init( tokenList: &List<&Parser.Token>, name: str ) {
-      super();
-      self.pos = 1;
-      self.tokenList = tokenList;
-      self.name = name;
-   }
+/**
+マクロ展開処理。
 
-   pub override fn getToken() mut : &Parser.Token! {
-      if #self.tokenList < self.pos {
-         return nil;
-      }
-      let token = self.tokenList[ self.pos ];
-      self.pos = self.pos + 1;
+この関数は、所定のマクロの macro-statment を評価し、
+macro-expand を展開したトークンを getToken() で取れるようにセットする。
 
-      // Util.errorLog( "getToken: %s" (token.txt) );
+getToken() で取得したトークンを実際に処理するのは evalMacroCallback で与える。
 
-      return token;
-   }
-   pub override fn getStreamName(): str {
-      return self.name;
-   }
-}
-
+@param firstToken マクロ展開開始トークン。メッセージ表示用
+@param macroTypeInfo マクロの型
+@param expList マクロの引数
+@param evalMacroCallback マクロ展開したコードを処理するコールバック関数。
+*/
 fn TransUnit.evalMacroOp(
    firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
    expList: &Nodes.ExpListNode!, evalMacroCallback:EvalMacroCallback ) mut
 {
-   fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
-      match obj {
-         case .Nil {
-            return nil;
-         }
-         case .Int( val ) {
-            return val;
-         }
-         case .Real( val ) {
-            return val;
-         }
-         case .Str( val ) {
-            return val;
-         }
-         case .Bool( val ) {
-            return val;
-         }
-         case .Symbol( val ) {
-            return [ val ];
-         }
-         case .Field( val ) {
-            return val;
-         }
-         case .LIST( list ) {
-            let mut newList:List<stem!> = [];
-            foreach item, index in list {
-               newList[ index ] = getLiteralMacroVal( item );
-            }
-            return newList;
-         }
-         case .ARRAY( list ) {
-            let mut newList:List<stem!> = [];
-            foreach item, index in list {
-               newList[ index ] = getLiteralMacroVal( item );
-            }
-            return newList;
-         }
-         case .SET( list ) {
-            let mut newSet:Set<stem> = (@);
-            foreach item in list {
-               if! getLiteralMacroVal( item ) {
-                  newSet.add( _exp );
-               }
-            }
-            return newSet;
-         }
-         case .MAP( map ) {
-            let mut newMap:Map<&stem,&stem> = {};
-            foreach val, key in map {
-               let keyObj = getLiteralMacroVal( key );
-               let valObj = getLiteralMacroVal( val );
-               when! keyObj, valObj {
-                  newMap[ keyObj ] = valObj;
-               }
-            }
-            return newMap;
-         }
-      }
-      Util.err( "unknown literal obj -- " .. obj.$_txt );
-   }
-   
-   
-   self.useModuleMacroSet.add( macroTypeInfo.getModule() );
+   let mut parser, mess = self.macroCtrl.evalMacroOp(
+      self.parser.getStreamName(), firstToken, macroTypeInfo, expList );
 
-   when! expList {
-      foreach exp in expList.get_expList() {
-         let kind = exp.$kind;
-         switch kind {
-            case Nodes.NodeKind.$LiteralNil,
-                 Nodes.NodeKind.$LiteralChar,
-                 Nodes.NodeKind.$LiteralInt,
-                 Nodes.NodeKind.$LiteralReal,
-                 Nodes.NodeKind.$LiteralArray,
-                 Nodes.NodeKind.$LiteralList,
-                 Nodes.NodeKind.$LiteralMap,
-                 Nodes.NodeKind.$LiteralString,
-                 Nodes.NodeKind.$LiteralBool,
-                 Nodes.NodeKind.$LiteralSymbol,
-                 Nodes.NodeKind.$RefField,
-                 Nodes.NodeKind.$ExpMacroStat,
-                 Nodes.NodeKind.$ExpOmitEnum,
-                 Nodes.NodeKind.$ExpCast
-            {
-            }
-            default {
-               self.error( "Macro arguments must be literal value. -- %d:%d:%s"
-                           ( exp.$pos.lineNo, exp.$pos.column, 
-                              Nodes.getNodeKindName(kind)) );
-            }
-         }
-      }
-   }
-
-   let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.get_typeId() ];
-
-   let mut argValMap:Map<int,stem> = {};
-   let mut macroArgValMap:Map<str,stem> = {};
-   let macroArgNodeList = macroInfo.getArgList();
-   let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
-   when! expList {
-      foreach argNode, index in expList.get_expList() {
-         let literal = argNode.getLiteral();
-         when! literal {
-            if! let val = getLiteralMacroVal( literal ) {
-               argValMap[ index ] = val;
-               let declArgNode = macroArgNodeList[ index ];
-            
-               macroArgValMap[ declArgNode.$name ] = val;
-               macroArgName2ArgNode[ declArgNode.$name ] = argNode;
-            }
-         }
-      }
-   }
-
-   let func = macroInfo.func;
-   //let macroVars:Map<str,stem!> = func( argVal.unpack() )@@Map<str,stem!>;
-   let mut macroVars:&Map<str,stem> = {};
-   let macroRet = func( macroArgValMap );
-   macroVars = macroRet@@Map<str,stem>;
-   foreach name in (unwrap macroVars.__names)@@List<str> {
-      let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
-      let typeInfo = valInfo.typeInfo or Ast.builtinTypeStem_;
-      let mut val = macroVars[ name ];
-      if typeInfo.equals( Ast.builtinTypeSymbol ##) {
-         val = [ val ];
-      }
-      self.symbol2ValueMapForMacro[ name ] =
-         new Nodes.MacroValInfo( val, typeInfo, macroArgName2ArgNode[ name ] );
-   }
-
-   //let scope = self.pushScope();
-
-
-   foreach arg, index in macroInfo.getArgList() {
-      if arg.$typeInfo.$kind ~= .DDD {
-         let argType = arg.$typeInfo;
-         let argName = arg.$name;
-         //scope.add( argName, argType.expType );
-         self.symbol2ValueMapForMacro[ argName ] =
-            new Nodes.MacroValInfo( argValMap[ index ], argType,
-                                    macroArgName2ArgNode[ argName ] );
-      }
-      else {
-         self.error( "not support ... in macro" );
-      }
-   }
-
-   // foreach macroValInfo, symbol in self.symbol2ValueMapForMacro {
-   //     Util.errorLog( "HOGE: %s %s" (symbol, macroValInfo) );
-   // }
-
-
-   let mut parser = new MacroPaser(
-      macroInfo.getTokenList(),
-      "%s:%d(macro %s)" (self.parser.getStreamName(),
-                          firstToken.pos.lineNo, macroTypeInfo.getTxt(##)) );
    let mut bakParser = self.parser;
-   self.parser = parser;
 
-
-   self.macroMode = .Expand;
-   self.macroCallLineNo = firstToken.pos.lineNo;
+   when! parser {
+      self.parser = parser;
+   }
+   else {
+      self.error( unwrap mess );
+   }
+   
+   self.macroCtrl.startExpandMode( firstToken.pos.lineNo );
 
    evalMacroCallback();
 
-
-   //    self.popScope();
-
-   self.macroMode = .None;
+   self.macroCtrl.finishMacroMode();
    self.parser = bakParser;
 }
 
@@ -1083,6 +917,7 @@ fn TransUnit.checkStringFormat(
 "(" を読み済みの状態。次のトークンは引数のトークンになっている状態にする。
 この関数を抜けると、 ")" を読み込み済みの状態。
 
+
 @param position 関数の定義位置
 @param funcTypeInfo 関数の型情報
 @param genericTypeList Genericsの実型パラメータ
@@ -1094,12 +929,9 @@ fn TransUnit.prepareExpCall(
    genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut :
    Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
-   let mut macroFlag = false;
 
    if funcTypeInfo.get_kind() == .Macro {
-      macroFlag = true;
-      self.symbol2ValueMapForMacro = {};
-      self.macroMode = .Analyze;
+      self.macroCtrl.startAnalyzeMode();
    }
 
    let work = self.getToken(##);
@@ -1422,7 +1254,7 @@ fn TransUnit.analyzeExpCall(
 
    let mut exp:Nodes.Node;
    if funcTypeInfo.get_kind() == .Macro {
-      self.macroMode = .None;
+      self.macroCtrl.finishMacroMode();
       exp = self.evalMacro( firstToken, funcTypeInfo, argList );
    }
    else {
@@ -1924,7 +1756,7 @@ fn TransUnit.analyzeExpField(
             "This is not nilable. -- %s" (prefixExp.$expType.getTxt(##)) ); 
       }
    }
-   if self.macroMode == .Analyze {
+   if self.macroCtrl.$macroMode == .Analyze {
       if accessNil {
          self.helperInfo.useNilAccess = true;
       }
@@ -2232,7 +2064,7 @@ fn TransUnit.analyzeExpSymbol(
       }
    }
    elseif mode == .Symbol {
-      if self.macroMode == .Analyze {
+      if self.macroCtrl.$macroMode == .Analyze {
          exp = Nodes.LiteralSymbolNode.create(
             self.nodeManager, firstToken.pos, [ Ast.builtinTypeSymbol ], token );
       }
@@ -2722,63 +2554,21 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
 
    let mut braceCount = 0;
    let mut prevToken = firstToken;
+
+   let mut errMessList:List<&Macro.ErrorMess> = [];
+   
    while true {
       let token = self.getToken(##);
 
       if token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
-         let mut exp = self.analyzeExp( false, true, unwrap op1levelMap[ token.txt ] ## );
+         let exp = self.analyzeExp( false, true, unwrap op1levelMap[ token.txt ] ## );
 
-         let nextToken = self.getToken(##);
-         if nextToken.txt ~= "~~" {
-            self.pushback();
+         let literalStr = self.macroCtrl.expandSymbol(
+            self, token, exp, self.getToken(##), self.nodeManager, errMessList );
+         foreach errMess in errMessList {
+            self.addErrMess( errMess.pos, errMess.mess );
          }
-
-
-         let mut format = token.txt == ",,," and "' %s '" or '"\'%s\'"';
-
-         if token.txt == ",," {
-            if! let refNode = exp@@@Nodes.ExpRefNode {
-               let refToken = refNode.get_token();
-               let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
-               when! macroInfo {
-                  let valType = macroInfo.typeInfo;
-                  if valType.equals( Ast.builtinTypeSymbol ##) or
-                     valType.equals( Ast.builtinTypeStat ##)
-                  {
-                     format = "' %s '";
-                  }
-                  elseif valType.$kind == .List and
-                     valType.$itemTypeInfoList[1].equals( Ast.builtinTypeStat ##)
-                  {
-                     format = "' %s '";
-                     exp = Nodes.ExpMacroStatListNode.create(
-                        self.nodeManager, token.pos, [ Ast.builtinTypeString ], exp );
-                  }
-                  elseif Ast.builtinTypeString.equals( valType ##) {
-                     //
-                  }
-                  else {
-                     self.addErrMess(
-                        refToken.pos,           
-                        "not support ,, -- %s" (valType.getTxt(##)) );
-                  }
-               }  
-               else {
-                  if exp.$expType.equals( Ast.builtinTypeInt ##) or
-                     exp.$expType.equals( Ast.builtinTypeReal ##)
-                  {
-                     format = "'%s' ";
-                  }
-                  elseif exp.$expType.equals( Ast.builtinTypeStat ##) {
-                     format = "' %s '";
-                  }
-               }
-            }
-         }
-         let newToken = new Parser.Token(
-            Parser.TokenKind.Str, format, token.pos, token.consecutive ## );
-         let literalStr = Nodes.LiteralStringNode.create(
-            self.nodeManager, token.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
+         
          expStrList.insert( literalStr );
       }
       else {
@@ -3174,7 +2964,7 @@ fn TransUnit.analyzeExp(
 
       exp = Nodes.ExpOp1Node.create(
          self.nodeManager, firstToken.pos, [ typeInfo ], token,
-         self.macroMode, self.nodeManager.MultiTo1( exp ) );   
+         self.macroCtrl.$macroMode, self.nodeManager.MultiTo1( exp ) );   
       return self.analyzeExpOp2( firstToken, exp, prevOpLevel ), true;
    }
 
@@ -3284,8 +3074,8 @@ fn TransUnit.analyzeExp(
    }  
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
       let mut lineNo = token.pos.lineNo;
-      if self.macroMode == .Expand {
-         lineNo = self.macroCallLineNo;
+      if self.macroCtrl.$macroMode == .Expand {
+         lineNo = self.macroCtrl.$macroCallLineNo;
       }
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeInt ],

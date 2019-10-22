@@ -49,6 +49,7 @@ build = {
       [ "lune.base.Option" ] = "src/legacy/lua51/lune/base/Option.lua",
       [ "lune.base.Ast" ] = "src/legacy/lua51/lune/base/Ast.lua",
       [ "lune.base.Nodes" ] = "src/legacy/lua51/lune/base/Nodes.lua",
+      [ "lune.base.Macro" ] = "src/legacy/lua51/lune/base/Macro.lua",
       [ "lune.base.TransUnit" ] = "src/legacy/lua51/lune/base/TransUnit.lua",
       [ "lune.base.convLua" ] = "src/legacy/lua51/lune/base/convLua.lua",
       [ "lune.base.convCC" ] = "src/legacy/lua51/lune/base/convCC.lua",

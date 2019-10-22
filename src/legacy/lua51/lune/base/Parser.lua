@@ -431,6 +431,23 @@ function Parser:__init(  )
 
 end
 
+local PushbackParser = {}
+_moduleObj.PushbackParser = PushbackParser
+function PushbackParser.setmeta( obj )
+  setmetatable( obj, { __index = PushbackParser  } )
+end
+function PushbackParser.new(  )
+   local obj = {}
+   PushbackParser.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function PushbackParser:__init(  )
+
+end
+
 local WrapParser = {}
 setmetatable( WrapParser, { __index = Parser } )
 _moduleObj.WrapParser = WrapParser

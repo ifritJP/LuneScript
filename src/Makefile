@@ -92,6 +92,7 @@ define buildLns
 	$(call transwork,$1,$2,$3,base/Option)
 	$(call transwork,$1,$2,$3,base/Nodes)
 	$(call transwork,$1,$2,$3,base/dumpNode)
+	$(call transwork,$1,$2,$3,base/Macro)
 	$(call transwork,$1,$2,$3,base/TransUnit)
 	$(call transwork,$1,$2,$3,base/convLua)
 	$(call transwork,$1,$2,$3,base/convCC)
