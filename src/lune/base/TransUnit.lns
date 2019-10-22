@@ -373,10 +373,6 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.currentToken = Parser.getEofToken();
       self.errMessList = [];
       self.warnMessList = [];
-      //self.macroEval = macroEval;
-      //self.typeId2MacroInfo = {};
-      //self.macroMode = .None;
-      //self.symbol2ValueMapForMacro = {};
       self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
       self.analyzePos = unwrap pos default new Parser.Position( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";

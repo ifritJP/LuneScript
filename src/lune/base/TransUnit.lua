@@ -3212,7 +3212,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2141, function (  )
+   Log.log( Log.Level.Info, __func__, 2137, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3227,7 +3227,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2153, function (  )
+               Log.log( Log.Level.Info, __func__, 2149, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3257,7 +3257,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2173, function (  )
+   Log.log( Log.Level.Info, __func__, 2169, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -3575,7 +3575,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2502, function (  )
+   Log.log( Log.Level.Info, __func__, 2498, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4170,7 +4170,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
          do
             local _switchExp = typeInfo:get_kind()
             if _switchExp == Ast.TypeInfoKind.Map then
-               if #genericList < 2 then
+               if #genericList ~= 2 then
                   self:addErrMess( symbolNode:get_pos(), "Key or value type is unknown" )
                   typeInfo = Ast.NormalTypeInfo.createMap( accessMode, self:getCurrentClass(  ), Ast.builtinTypeStem, Ast.builtinTypeStem, Ast.MutMode.Mut )
                else
@@ -4180,17 +4180,17 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
                
             elseif _switchExp == Ast.TypeInfoKind.List then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem}, Ast.MutMode.Mut )
+                  typeInfo = Ast.NormalTypeInfo.createList( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Array then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem}, Ast.MutMode.Mut )
+                  typeInfo = Ast.NormalTypeInfo.createArray( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Set then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = Ast.NormalTypeInfo.createSet( accessMode, self:getCurrentClass(  ), {genericList[1] or Ast.builtinTypeStem}, Ast.MutMode.Mut )
+                  typeInfo = Ast.NormalTypeInfo.createSet( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.DDD then
@@ -8778,6 +8778,15 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             do
                local _switchExp = opTxt
                if _switchExp == "or" then
+                  if not exp1Type:equals( Ast.builtinTypeBool ) and not exp1Type:equals( Ast.builtinTypeStem ) and not exp1Type:get_nilable() then
+                     if _lune.nilacc( _lune.nilacc( (_lune.__Cast( exp, 3, Nodes.ExpOp2Node ) ), 'get_op', 'callmtd' ), "txt" ) == "and" then
+                     else
+                      
+                        self:addWarnMess( exp:get_pos(), string.format( "this value never be 'false' -- %s", exp1Type:getTxt(  )) )
+                     end
+                     
+                  end
+                  
                   if exp1Type:equals( exp2Type ) then
                      retType = exp1Type
                   elseif exp1Type:canEvalWith( exp2Type, Ast.CanEvalType.SetOp, {} ) then

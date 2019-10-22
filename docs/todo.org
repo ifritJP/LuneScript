@@ -23,9 +23,15 @@ pub fn func( list:&List<Hoge> );
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
 - [ ] 文字列中の . を編集すると company-mode がエラーする
- 
+
+- [ ] 意味のない箇所を () で括れてしまう。 
+
 * 機能
 
+- [ ] Array, List の get(index) 対応。
+      戻り値を nilable として、範囲外にアクセスした場合に nil を返す。
+  
+  
 - [ ] マクロの実引数の stat 内で補完が効くように対応する。
   
 - [ ] accessMode に Low を追加。
@@ -101,9 +107,6 @@ foreach obj in list {
 
 - [ ] 関数コールに引数を与えるときに、仮引数名を必須とするオプションを追加する。
       bool などは true/false では意味が分からない。
-  
-- [ ] Array, List の get(index) 対応。
-      戻り値を nilable として、範囲外にアクセスした場合に nil を返す。
   
 - [ ] set, enum, alge の nil 条件演算子対応。
 - [ ] for 内で let の初期化するとエラー。

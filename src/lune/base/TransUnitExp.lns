@@ -1078,12 +1078,6 @@ fn TransUnit.analyzeExpCall(
       nilAccess = false;
    }
 
-   // if funcTypeInfo.get_kind() == .Macro {
-   //    macroFlag = true;
-   //    self.symbol2ValueMapForMacro = {};
-   //    self.macroMode = .Analyze;
-   // }
-
    // let work = self.getToken(##);
    // let mut argList: &Nodes.ExpListNode! = nil;
    // if work.txt ~= ")" {
@@ -2313,13 +2307,29 @@ fn TransUnit.analyzeExpOp2(
             
             switch opTxt {
                case "or" {
-                  // if not exp1Type.equals( Ast.builtinTypeBool ##) and
-                  //    not exp1Type.equals( Ast.builtinTypeStem ##) and
-                  //    not exp1Type.$nilable
-                  // {
-                  //    self.addWarnMess( exp.$pos, "this value never be 'false'" );
-                  //    retType = exp1Type;
-                  // }
+                  if not exp1Type.equals( Ast.builtinTypeBool ##) and
+                     not exp1Type.equals( Ast.builtinTypeStem ##) and
+                     not exp1Type.$nilable
+                  {
+                     if (exp@@@Nodes.ExpOp2Node)$.$op$.txt == "and" {
+                        // 本来はこの判定は不要で warning を出すべき。
+                        // 現在 ( flag and 1 or 0 ) という式を書いた場合、
+                        // flag and 1 の評価結果を暫定的に int としている。
+                        // これは and or を使った 3 項演算子で、
+                        // 無理矢理に型情報を保持させているための暫定動作。
+                        // 本来 flag and 1 の型は stem 等になるはず。
+                        // しかし、 stem にすると全体の演算結果の型も stem になってしまい
+                        // 意図した型にならない。
+                        // このため、ここで warning を出するは誤認識の可能性が高いので
+                        // warning は出さない。
+                     }
+                     else {
+                        self.addWarnMess(
+                           exp.$pos,
+                           "this value never be 'false' -- %s"
+                           (exp1Type.getTxt(##)) );
+                     }
+                  }
                   if exp1Type.equals( exp2Type ##) {
                      retType = exp1Type;
                   }

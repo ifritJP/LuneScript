@@ -3092,11 +3092,11 @@ pub class NormalTypeInfo extend TypeInfo {
    }
 
    pub override fn getParentId(): int {
-      return self.parentInfo.$typeId or rootTypeId;
+      return self.parentInfo.$typeId;
    }
 
    pub override fn get_baseId(): int {
-      return self.baseTypeInfo.$typeId or rootTypeId;
+      return self.baseTypeInfo.$typeId;
    }
 
    /** この型の名前を取得する。 */

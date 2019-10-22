@@ -161,8 +161,8 @@ pub class MacroCtrl
    pri let macroEval: Nodes.MacroEval;
    /** マクロの TypeId -> マクロ情報 */
    let mut typeId2MacroInfo: Map<int,Nodes.MacroInfo> {pub&};
-   /** macro-expand 内で利用できるシンボルと値の紐付けマップ */
-   pri let mut symbol2ValueMapForMacro: Map<str,Nodes.MacroValInfo> {pub&};
+   /** 現在展開中の macro-expand 内で利用できるシンボルと値の紐付けマップ */
+   pri let mut symbol2ValueMapForMacro: Map<str,Nodes.MacroValInfo>;
    /** マクロのモード */
    pri let mut macroMode: Nodes.MacroMode {pub};
    /** マクロをコールしている行番号 */
@@ -218,6 +218,7 @@ pub fn MacroCtrl.evalMacroOp(
 
    let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.get_typeId() ];
 
+   // マクロに渡す引数をセットする
    let mut argValMap:Map<int,stem> = {};
    let mut macroArgValMap:Map<str,stem> = {};
    let macroArgNodeList = macroInfo.getArgList();
@@ -237,12 +238,15 @@ pub fn MacroCtrl.evalMacroOp(
       }
    }
 
+   // マクロの macro-statment を実行
    let func = macroInfo.func;
-   //let macroVars:Map<str,stem!> = func( argVal.unpack() )@@Map<str,stem!>;
    let mut macroVars = func( macroArgValMap );
+
+   // macro-statment の実行結果から、
+   // symbol2ValueMapForMacro にシンボル名と値を紐付け
    foreach name in (unwrap macroVars.__names)@@List<str> {
       let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
-      let typeInfo = valInfo.typeInfo or Ast.builtinTypeStem_;
+      let typeInfo = valInfo.typeInfo;
       let mut val = macroVars[ name ];
       if typeInfo.equals( Ast.builtinTypeSymbol ##) {
          val = [ val ];
@@ -587,7 +591,10 @@ pub fn MacroCtrl.expandSymbol(
 }
 
 /**
-macro-statment 内で定義している変数を登録する
+macro-statment 内で定義している変数を登録する。
+
+このときはまだ変数宣言しているだけなので、
+実際の値はマクロ展開時にセットする。
 
 @param symbolList 変数一覧
 */

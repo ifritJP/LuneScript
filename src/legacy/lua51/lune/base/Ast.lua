@@ -4159,11 +4159,11 @@ function NormalTypeInfo:isModule(  )
 end
 function NormalTypeInfo:getParentId(  )
 
-   return self.parentInfo:get_typeId() or _moduleObj.rootTypeId
+   return self.parentInfo:get_typeId()
 end
 function NormalTypeInfo:get_baseId(  )
 
-   return self.baseTypeInfo:get_typeId() or _moduleObj.rootTypeId
+   return self.baseTypeInfo:get_typeId()
 end
 function NormalTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 

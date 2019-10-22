@@ -532,9 +532,6 @@ end
 function MacroCtrl:get_typeId2MacroInfo()
    return self.typeId2MacroInfo
 end
-function MacroCtrl:get_symbol2ValueMapForMacro()
-   return self.symbol2ValueMapForMacro
-end
 function MacroCtrl:get_macroMode()
    return self.macroMode
 end
@@ -591,7 +588,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    local macroVars = func( macroArgValMap )
    for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
       local valInfo = _lune.unwrap( macroInfo.symbol2MacroValInfoMap[name])
-      local typeInfo = valInfo.typeInfo or Ast.builtinTypeStem_
+      local typeInfo = valInfo.typeInfo
       local val = macroVars[name]
       if typeInfo:equals( Ast.builtinTypeSymbol ) then
          val = {val}

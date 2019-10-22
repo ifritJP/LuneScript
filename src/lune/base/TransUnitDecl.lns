@@ -101,7 +101,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
 
          switch typeInfo.$kind {
             case .Map {
-               if #genericList < 2 {
+               if #genericList ~= 2 {
                   self.addErrMess( symbolNode.$pos, "Key or value type is unknown" );
                   typeInfo = Ast.NormalTypeInfo.createMap(
                      accessMode, self.getCurrentClass(),
@@ -117,21 +117,21 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                if checkAlternateTypeCount( 1 ) {
                   typeInfo = Ast.NormalTypeInfo.createList(
                      accessMode, self.getCurrentClass(),
-                     [ genericList[1] or Ast.builtinTypeStem ], .Mut );
+                     genericList, .Mut );
                }
             }
             case .Array {
                if checkAlternateTypeCount( 1 ) {
                   typeInfo = Ast.NormalTypeInfo.createArray(
                      accessMode, self.getCurrentClass(),
-                     [ genericList[1] or Ast.builtinTypeStem ], .Mut );
+                     genericList, .Mut );
                }
             }
             case .Set {
                if checkAlternateTypeCount( 1 ) {
                   typeInfo = Ast.NormalTypeInfo.createSet(
                      accessMode, self.getCurrentClass(),
-                     [ genericList[1] or Ast.builtinTypeStem ], .Mut );
+                     genericList, .Mut );
                }
             }
             case .DDD {
@@ -2896,15 +2896,6 @@ fn TransUnit.analyzeDeclVar(
       }
    }
 
-
-   // if mode ~= .Sync and self.macroScope {
-   //    foreach letVarInfo, index in letVarList {
-   //       let typeInfo = typeInfoList[ index ];
-
-   //       self.symbol2ValueMapForMacro[ letVarInfo.varName.txt ] =
-   //          new Nodes.MacroValInfo( nil, typeInfo, nil);
-   //    }
-   // }
 
    let mut syncScope:Ast.Scope = self.scope;
    if mode == .Sync {
