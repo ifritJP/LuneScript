@@ -6390,10 +6390,6 @@ function DeclFuncNode:processFilter( filter, opt )
 
    filter:processDeclFunc( self, opt )
 end
-function DeclFuncNode:canBeRight(  )
-
-   return true
-end
 function DeclFuncNode:canBeLeft(  )
 
    return false
@@ -6433,6 +6429,11 @@ function DeclFuncNode:get_declInfo()
    return self.declInfo
 end
 
+
+function DeclFuncNode:canBeRight(  )
+
+   return self.declInfo:get_name() == nil
+end
 
 function NodeKind.get_DeclMethod(  )
 

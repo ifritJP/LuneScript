@@ -4100,7 +4100,7 @@ function TransUnit:analyzeProvide( firstToken )
    return node
 end
 
-function TransUnit:analyzeRefType( accessMode, allowDDD )
+function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub )
 
    local firstToken = self:getToken(  )
    local token = firstToken
@@ -4118,12 +4118,16 @@ function TransUnit:analyzeRefType( accessMode, allowDDD )
    
    self:checkSymbol( token, SymbolMode.MustNot_ )
    local name = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, true )
-   return self:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutFlag, name )
+   return self:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutFlag, name, parentPub )
 end
 
-function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutFlag, symbolNode )
+function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutFlag, symbolNode, parentPub )
 
    local typeInfo = symbolNode:get_expType()
+   if parentPub and Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( typeInfo:get_accessMode() ) then
+      self:addErrMess( symbolNode:get_pos(), string.format( "This type must be public. -- %s", typeInfo:getTxt(  )) )
+   end
+   
    local continueToken, continueFlag = self:getContinueToken(  )
    local token = continueToken
    if continueFlag and token.txt == "!" then
@@ -4153,7 +4157,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
          local genericList = {}
          local nextToken = Parser.getEofToken(  )
          repeat 
-            local typeExp = self:analyzeRefType( accessMode, false )
+            local typeExp = self:analyzeRefType( accessMode, false, parentPub )
             table.insert( genericList, typeExp:get_expType() )
             nextToken = self:getToken(  )
          until nextToken.txt ~= ","
@@ -4250,7 +4254,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
    return Nodes.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), {typeInfo}, symbolNode, refFlag, mutFlag, arrayMode )
 end
 
-function TransUnit:analyzeDeclArgList( accessMode, argList )
+function TransUnit:analyzeDeclArgList( accessMode, argList, parentPub )
 
    local nextToken = Parser.noneToken
    local hasDDDFlag = false
@@ -4278,7 +4282,7 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
          local dddTypeInfo = Ast.builtinTypeDDD
          if flag and workToken.txt == "<" then
             self:pushbackToken( nextToken )
-            local refTypeNode = self:analyzeRefType( accessMode, true )
+            local refTypeNode = self:analyzeRefType( accessMode, true, parentPub )
             dddTypeInfo = refTypeNode:get_expType()
          end
          
@@ -4292,7 +4296,7 @@ function TransUnit:analyzeDeclArgList( accessMode, argList )
          end
          
          self:checkNextToken( ":" )
-         local refType = self:analyzeRefType( accessMode, false )
+         local refType = self:analyzeRefType( accessMode, false, parentPub )
          local symbolInfo = self.scope:addLocalVar( true, true, argName.txt, refType:get_expType(), mutable )
          local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, symbolInfo, refType )
          table.insert( argList, arg )
@@ -4549,7 +4553,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local scope = self:pushScope( false )
    local workArgList = {}
    local argList = {}
-   local nextToken = self:analyzeDeclArgList( accessMode, workArgList )
+   local nextToken = self:analyzeDeclArgList( accessMode, workArgList, false )
    local argTypeList = {}
    for index, argNode in pairs( workArgList ) do
       do
@@ -4622,7 +4626,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
    local nextToken = self:getToken(  )
    if nextToken.txt ~= "(" then
       self:pushback(  )
-      local workBaseRefType = self:analyzeRefType( accessMode, false )
+      local workBaseRefType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ) )
       baseRef = workBaseRefType
       local baseType = workBaseRefType:get_expType()
       if baseType:get_kind() ~= Ast.TypeInfoKind.Class then
@@ -4644,7 +4648,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
          end
          
          self:pushback(  )
-         local ifTypeNode = self:analyzeRefType( accessMode, false )
+         local ifTypeNode = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ) )
          local ifType = ifTypeNode:get_expType()
          if ifType:get_kind() ~= Ast.TypeInfoKind.IF then
             self:error( string.format( "%s is not interface -- %d", ifType:getTxt(  ), ifType:get_kind()) )
@@ -4966,7 +4970,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
                self:pushback(  )
             end
             
-            local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false )
+            local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false, Ast.isPubToExternal( accessMode ) )
             table.insert( typeInfoList, typeNode:get_expType() )
             nextToken = self:getToken(  )
             if nextToken.txt ~= "," then
@@ -5035,13 +5039,13 @@ function TransUnit:analyzeAlias( accessMode, firstToken )
    return Nodes.AliasNode.create( self.nodeManager, firstToken.pos, {newTypeInfo}, newToken.txt, symbolNode, newTypeInfo )
 end
 
-function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token )
+function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token, parentPub )
 
    local retTypeInfoList = {}
    if token.txt == ":" then
       local hasDDDFlag = false
       while true do
-         local refTypeNode = self:analyzeRefType( accessMode, true )
+         local refTypeNode = self:analyzeRefType( accessMode, true, parentPub )
          if hasDDDFlag then
             self:addErrMess( refTypeNode:get_pos(), "Type exists after '...'." )
          end
@@ -5074,11 +5078,11 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
    self:checkNextToken( "(" )
    local argList = {}
    local funcBodyScope = self:pushScope( false )
-   local nextToken = self:analyzeDeclArgList( accessMode, argList )
+   local nextToken = self:analyzeDeclArgList( accessMode, argList, Ast.isPubToExternal( accessMode ) )
    self:checkToken( nextToken, ")" )
    local retTypeList = {}
    nextToken = self:getToken(  )
-   retTypeList, nextToken = self:analyzeRetTypeList( Ast.isPubToExternal( accessMode ), accessMode, nextToken )
+   retTypeList, nextToken = self:analyzeRetTypeList( Ast.isPubToExternal( accessMode ), accessMode, nextToken, Ast.isPubToExternal( accessMode ) )
    self:checkToken( nextToken, ";" )
    self:popScope(  )
    local argTypeInfoList = {}
@@ -5190,7 +5194,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
    
    local varName = self:checkSymbol( nextToken, SymbolMode.MustNot_ )
    local token = self:getToken(  )
-   local refType = self:analyzeRefType( accessMode, false )
+   local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( classTypeInfo:get_accessMode() ) )
    token = self:getToken(  )
    local getterMode = Ast.AccessMode.None
    local getterRetType = refType:get_expType()
@@ -5213,7 +5217,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
                end
                
                if workToken.txt == ":" then
-                  local typeNode = self:analyzeRefType( mode, false )
+                  local typeNode = self:analyzeRefType( mode, false, Ast.isPubToExternal( classTypeInfo:get_accessMode() ) )
                   retType = typeNode:get_expType()
                   workToken = self:getToken(  )
                end
@@ -5988,8 +5992,16 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    self:checkToken( token, "(" )
+   local parentPub
+   
+   if classTypeInfo ~= nil then
+      parentPub = Ast.isPubToExternal( classTypeInfo:get_accessMode() )
+   else
+      parentPub = Ast.isPubToExternal( accessMode )
+   end
+   
    local argList = {}
-   token = self:analyzeDeclArgList( accessMode, argList )
+   token = self:analyzeDeclArgList( accessMode, argList, parentPub )
    self:checkToken( token, ")" )
    token = self:getToken(  )
    local mutable = false
@@ -6034,7 +6046,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    local retTypeInfoList = {}
-   retTypeInfoList, token = self:analyzeRetTypeList( pubToExtFlag, accessMode, token )
+   retTypeInfoList, token = self:analyzeRetTypeList( pubToExtFlag, accessMode, token, parentPub )
    local namespaceInfo = self:getCurrentNamespaceTypeInfo(  )
    local typeInfo = Ast.NormalTypeInfo.createFunc( abstractFlag, false, funcBodyScope, typeKind, namespaceInfo, false, false, staticFlag, accessMode, funcName, altTypeList, argTypeList, retTypeInfoList, mutable )
    if name ~= nil then
@@ -6270,7 +6282,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, initMutable, accessMode, unwr
       nextToken = self:getToken(  )
       local typeInfo = Ast.builtinTypeEmpty
       if nextToken.txt == ":" then
-         local refType = self:analyzeRefType( accessMode, false )
+         local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ) )
          table.insert( letVarList, LetVarInfo.new(mutable, varName, refType) )
          typeInfo = refType:get_expType()
          nextToken = self:getToken(  )
@@ -7811,7 +7823,7 @@ end
 
 function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
 
-   local castTypeNode = self:analyzeRefType( Ast.AccessMode.Local, false )
+   local castTypeNode = self:analyzeRefType( Ast.AccessMode.Local, false, false )
    local castType = castTypeNode:get_expType()
    local expType = exp:get_expType()
    if opTxt == "@@@" or opTxt == "@@=" then
@@ -9192,7 +9204,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
    end
    local function processsNewExp( token )
    
-      local exp = self:analyzeRefType( Ast.AccessMode.Local, false )
+      local exp = self:analyzeRefType( Ast.AccessMode.Local, false, false )
       local classTypeInfo = exp:get_expType()
       do
          local _switchExp = classTypeInfo:get_kind()
@@ -9385,6 +9397,10 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       elseif token.txt == "(" then
          exp = self:analyzeExp( false, false )
          self:checkNextToken( ")" )
+         if not exp:canBeRight(  ) then
+            self:addErrMess( exp:get_pos(), string.format( "can't be r-value in paren. -- %s", Nodes.getNodeKindName( exp:get_kind() )) )
+         end
+         
          exp = Nodes.ExpParenNode.create( self.nodeManager, firstToken.pos, {exp:get_expType()}, exp )
          exp = self:analyzeExpCont( firstToken, exp, false )
       end
@@ -9455,7 +9471,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
       if #symbolInfoList == 1 then
          local symbolInfo = symbolInfoList[1]
          if symbolInfo:get_kind() == Ast.SymbolKind.Typ then
-            exp = self:analyzeRefTypeWithSymbol( Ast.AccessMode.Local, false, false, false, exp )
+            exp = self:analyzeRefTypeWithSymbol( Ast.AccessMode.Local, false, false, false, exp, false )
             local workToken = self:getToken(  )
             if workToken.txt == "." then
                exp = self:analyzeExpSymbol( firstToken, self:getToken(  ), ExpSymbolMode.Field, exp, false )

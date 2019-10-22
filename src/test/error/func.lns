@@ -129,6 +129,7 @@
    let func2 = fn() {};
    let func3 = fn func4() {};  // error
    let func5, val = fn() {}, 1; // error
+   let func6 = (fn func7() {});  // error
 }
 
 pub fn () {} // error

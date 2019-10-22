@@ -80,13 +80,11 @@ lune_global_t lune_global;
 
 #define LUNE_FORM_MAX_ARG 20
 
-#define lune_abort( MESS ) _lune_abort( MESS, LUNE_DEBUG_POS )
-
 static void lune_class_del( lune_env_t * _pEnv, void * pObj );
 static void lune_alge_del( lune_env_t * _pEnv, void * pObj );
 
 
-static void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
+void _lune_abort( const char * pMessage, const char * pFile, int lineNo )
 {
     fprintf( stderr, "abort:%s:%d:%s\n", pFile, lineNo, pMessage );
     abort();
@@ -682,6 +680,13 @@ lune_stem_t _lune_createDDDOnly(
 }
 
 
+lune_any_t * _lune_luaVal_new(
+    const char * pFile, int lineNo, lune_env_t * _pEnv )
+{
+    return lune_alloc_any( _pEnv, lune_value_type_luaVal, pFile, lineNo );
+}
+
+
 lune_any_t * _lune_it_new(
     const char * pFile, int lineNo, 
     lune_env_t * _pEnv, lune_value_type_t type, void * pVal )
@@ -870,7 +875,7 @@ lune_stem_t _lune_litStr2stem(
  *
  * @return 環境。
  */
-static lune_env_t * lune_createEnv()
+static lune_env_t * lune_createEnv( lua_State * pLua )
 {
     lune_allocator_t allocateor = lune_createAllocator();
     
@@ -878,6 +883,7 @@ static lune_env_t * lune_createEnv()
     s_globalEnv.allocNum++;
     
     _pEnv->allocateor = allocateor;
+    _pEnv->pLua = pLua;
     _pEnv->useStemPoolNum = 0;
     _pEnv->useVarPoolNum = 0;
     _pEnv->blockDepth = 0;
@@ -889,6 +895,11 @@ static lune_env_t * lune_createEnv()
     _pEnv->pSortCallback = lune_global.nilStem;
 
     lune_enter_block( _pEnv, 0, 0 );
+
+    if ( pLua != NULL ) {
+        lune_setLuaWapper( _pEnv );
+    }
+    
     return _pEnv;
 }
 
@@ -911,9 +922,9 @@ static void lune_deleteEnv( lune_env_t * _pEnv ) {
     lune_free( _pEnv->allocateor, _pEnv );
 }
 
-static void lune_createGlobalEnv(void) {
+static void lune_createGlobalEnv() {
     s_globalEnv.allocNum = 0;
-    s_globalEnv.pEnv = lune_createEnv();
+    s_globalEnv.pEnv = lune_createEnv( NULL );
     s_globalEnv.moduleNum = 0;
 
     
@@ -1138,6 +1149,61 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t ddd ) {
                             pAny->val.ifVal.pObj,
                             pAny->val.ifVal.pObj->val.classVal->pMeta->pName );
                     break;
+                case lune_value_type_luaVal:
+                    switch( pAny->val.luaVal.type ) {
+                    case lune_value_type_none:
+                        printf( "lua: none %p", pAny );
+                        break;
+                    case lune_value_type_str:
+                        printf( "lua: str %p", pAny );
+                        break;
+                    case lune_value_type_class:
+                        printf( "lua: class %p", pAny );
+                        break;
+                    case lune_value_type_if:
+                        printf( "lua: if %p", pAny );
+                        break;
+                    case lune_value_type_ddd:
+                        printf( "lua: ddd %p", pAny );
+                        break;
+                    case lune_value_type_mRet:
+                        printf( "lua: mRet %p", pAny );
+                        break;
+                    case lune_value_type_form:
+                        printf( "lua: form %p", pAny );
+                        break;
+                    case lune_value_type_List:
+                        printf( "lua: List %p", pAny );
+                        break;
+                    case lune_value_type_Array:
+                        printf( "lua: Array %p", pAny );
+                        break;
+                    case lune_value_type_Set:
+                        printf( "lua: Set %p", pAny );
+                        break;
+                    case lune_value_type_Map:
+                        printf( "lua: Map %p", pAny );
+                        break;
+                    case lune_value_type_itList:
+                        printf( "lua: itList %p", pAny );
+                        break;
+                    case lune_value_type_itSet:
+                        printf( "lua: itSet %p", pAny );
+                        break;
+                    case lune_value_type_itMap:
+                        printf( "lua: itMap %p", pAny );
+                        break;
+                    case lune_value_type_alge:
+                        printf( "lua: alge %p", pAny );
+                        break;
+                    case lune_value_type_luaVal:
+                        printf( "lua: luaVal %p", pAny );
+                        break;
+                    default:
+                        printf( "unknown type -- %d", pAny->val.luaVal.type );
+                        break;
+                    }
+                    break;
                 default:
                     printf( "unknown type -- %d", pAny->type );
                     break;
@@ -1156,14 +1222,14 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t ddd ) {
 
 
 
-static int lua_main( lua_State *L) {
-    int argc = lua_tointeger(L, 1);
-    char ** pArgv = (char **)lua_touserdata(L, 2);
+static int lua_main( lua_State * pLua ) {
+    int argc = lua_tointeger( pLua, 1);
+    char ** pArgv = (char **)lua_touserdata( pLua, 2);
     int script;
     
     lune_createGlobalEnv();
     
-    lune_env_t * _pEnv = lune_createEnv();
+    lune_env_t * _pEnv = lune_createEnv( pLua );
     
     lune_init_test( _pEnv );
 
@@ -1172,7 +1238,7 @@ static int lua_main( lua_State *L) {
     lune_releaseGlobalEnv();
   
 
-    lua_pushboolean(L, 1);
+    lua_pushboolean( pLua, 1);
     return 1;
 }
 

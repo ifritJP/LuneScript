@@ -826,7 +826,6 @@ local function getAccessPrimValFromSymbolDirect( symName, valKind, symType )
    
    return txt
 end
-_moduleObj.getAccessPrimValFromSymbolDirect = getAccessPrimValFromSymbolDirect
 local ScopeMgr = {}
 function ScopeMgr.new(  )
    local obj = {}
@@ -5012,6 +5011,7 @@ function convFilter:processExpRef( node, opt )
    elseif node:get_token().txt == "..." then
       self:write( "_pDDD" )
    elseif node:get_expType():equals( TransUnit.getBuiltinFunc(  ).lune__load ) then
+      self:write( "lune__load" )
    else
     
       local symbolInfo = node:get_symbolInfo()

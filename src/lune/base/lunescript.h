@@ -37,7 +37,6 @@ SOFTWARE.
 extern "C" {
 #endif
 
-
 #define LUNE_DEBUG_POS __FILE__, __LINE__
 #define LUNE_DEBUG_DECL const char * pFile, int lineNo
 
@@ -322,6 +321,7 @@ extern "C" {
         lune_value_type_itSet,
         lune_value_type_itMap,
         lune_value_type_alge,
+        lune_value_type_luaVal,
     } lune_value_type_t;
     typedef struct lune_itList_t lune_itList_t;
     typedef struct lune_itSet_t lune_itSet_t;
@@ -447,6 +447,10 @@ extern "C" {
         int len;
     } lune_ddd_t;
 
+    typedef struct {
+        lune_value_type_t type;
+    } lune_luaVal_t;
+
 
 #define lune_isClosure( FORM ) \
     ((FORM)->val.form.len != 0)
@@ -556,6 +560,7 @@ extern "C" {
             lune_itMap_t * itMap;
             lune_if_t ifVal;
             lune_Alge_t alge;
+            lune_luaVal_t luaVal;
         } val;
         /** 変数にアサインされる前の値を管理する双方向リスト構造。アサイン済みの場合 NULL。 */
         struct lune_any_t * pNext;
@@ -600,7 +605,11 @@ extern "C" {
 
     extern lune_global_t lune_global;
 
+
+    struct lua_State;
+    
     struct lune_env_t {
+        struct lua_State * pLua;
         lune_allocator_t allocateor;
         /**
          * ブロック情報で利用する pVarList のバッファ。
@@ -668,9 +677,16 @@ extern "C" {
     _lune_createMap( LUNE_DEBUG_POS, ENV, ENTRY )
 #define lune_createImmediateVal( ENV, VAL )                     \
     _lune_createImmediateVal( LUNE_DEBUG_POS, ENV, VAL )
+#define lune_luaVal_new( ENV )                  \
+    _lune_luaVal_new( LUNE_DEBUG_POS, ENV )
+    
     
 
+#define lune_abort( MESS ) _lune_abort( MESS, LUNE_DEBUG_POS )
+    
 
+    extern void _lune_abort( const char * pMessage, const char * pFile, int lineNo );
+    
     extern lune_stem_t _lune_str2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_str_t val );
     extern lune_stem_t _lune_litStr2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, const char * pStr );
     extern lune_stem_t _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
@@ -681,6 +697,10 @@ extern "C" {
     extern lune_stem_t _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
     extern lune_any_t * _lune_it_new(
         LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_value_type_t type, void * pVal );
+
+    extern lune_any_t * _lune_luaVal_new(
+        const char * pFile, int lineNo, lune_env_t * _pEnv );
+    
 
 
     extern void lune_init_alge( lune_stem_t * pStem, lune_any_t * pAny, int valType );
@@ -734,12 +754,12 @@ extern "C" {
 
     extern void lune_print( lune_env_t * _pEnv, lune_stem_t pArg );
 
-
 #ifdef __cplusplus
 }
 #endif
 
 #include <lns_collection.h>
+#include <lns_luaWrapper.h>
 
 #endif
 

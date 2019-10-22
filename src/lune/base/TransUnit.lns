@@ -683,8 +683,8 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pub fn getTokenNoErr() mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
-      accessMode: Ast.AccessMode, allowDDD:bool,
-      refFlag: bool, mutFlag: bool, symbolNode:&Nodes.Node ) mut: Nodes.RefTypeNode;
+      accessMode: Ast.AccessMode, allowDDD:bool, refFlag: bool,
+      mutFlag: bool, symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
 
    pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
 

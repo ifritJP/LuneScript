@@ -1261,7 +1261,7 @@ fn TransUnit.analyzeExpCall(
 fn TransUnit.analyzeExpCast(
    firstToken:&Parser.Token, opTxt:str, exp:Nodes.Node ) mut : Nodes.Node
 {
-   let castTypeNode = self.analyzeRefType( .Local, false );
+   let castTypeNode = self.analyzeRefType( .Local, false, false );
    let mut castType = castTypeNode.$expType;
 
    let expType = exp.$expType;
@@ -2795,7 +2795,7 @@ fn TransUnit.analyzeExp(
    }
 
    fn processsNewExp( token:&Parser.Token ): Nodes.Node {
-      let mut exp:Nodes.Node = self.analyzeRefType( .Local, false );
+      let mut exp:Nodes.Node = self.analyzeRefType( .Local, false, false );
 
       let mut classTypeInfo = exp.$expType;
       switch classTypeInfo.$kind {
@@ -3019,6 +3019,11 @@ fn TransUnit.analyzeExp(
       elseif token.txt == "(" {
          exp = self.analyzeExp( false, false ## );
          self.checkNextToken( ")" );
+         if not exp.canBeRight() {
+            self.addErrMess( exp.$pos,
+                             "can't be r-value in paren. -- %s"
+                             (Nodes.getNodeKindName( exp.$kind) ) );
+         }
          exp = Nodes.ExpParenNode.create(
             self.nodeManager, firstToken.pos, [ exp.$expType ], exp );
          exp = self.analyzeExpCont( firstToken, exp, false );
@@ -3105,7 +3110,8 @@ fn TransUnit.analyzeExp(
       if #symbolInfoList == 1 {
          let symbolInfo = symbolInfoList[ 1 ];
          if symbolInfo.$kind == .Typ {
-            exp = self.analyzeRefTypeWithSymbol( .Local, false, false, false, exp );
+            exp = self.analyzeRefTypeWithSymbol(
+               .Local, false, false, false, exp, false );
             let workToken = self.getToken(##);
             if workToken.txt == "." {
                exp = self.analyzeExpSymbol(

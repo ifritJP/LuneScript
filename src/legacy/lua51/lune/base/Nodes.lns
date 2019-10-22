@@ -1387,9 +1387,15 @@ pub static fn DeclFuncInfo.createFrom(
       info.accessMode, info.body, info.retTypeInfoList, info.has__func__Symbol );
 }
 
-_declNodeClass( "DeclFunc", Node, false, true, true,
+_declNodeClass( "DeclFunc", Node, false, nil, true,
                 [ { "declInfo": "DeclFuncInfo" } ]
 );
+pub override fn DeclFuncNode.canBeRight():bool {
+   // anonymous 関数なら r-value に成れる
+   return self.declInfo.$name == nil;
+}
+
+
 
 _declNodeClass( "DeclMethod", Node, false, false, true,
                 [ { "declInfo": "DeclFuncInfo" } ]

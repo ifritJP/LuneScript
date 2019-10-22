@@ -409,7 +409,7 @@ fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
    return typeInfo.$srcTypeInfo.$nonnilableType;
 }
 
-pub fn getAccessPrimValFromSymbolDirect(
+fn getAccessPrimValFromSymbolDirect(
    symName:str, valKind:ValKind, symType:&Ast.TypeInfo ) mut :str
 {
    let mut txt = symName;
@@ -6128,7 +6128,7 @@ pub override fn convFilter.processExpRef(
       self.write( "_pDDD" );
    }
    elseif node.$expType.equals( TransUnit.getBuiltinFunc().lune__load ##) {
-      //self.write( "_lune." .. self.targetLuaVer.$loadStrFuncName );
+      self.write( "lune__load" );
    }
    else {
       let symbolInfo = node.$symbolInfo;

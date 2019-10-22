@@ -8,23 +8,9 @@
 
 * バグ
 
-- [ ] 本来、次は Pub でない Hoge を含んだ func が pub なので、エラーになるはず。
-  
-class Hoge {
-}
-pub fn func( list:&List<Hoge> );
-  
-
-- [ ] company-mode で run-at-time のリトライ処理が走る時、
-      バッファが変っているとエラー。
-  
-- [ ] クラス内のメソッドから、外部変数にクロージャアクセスできてしまう。  
-  
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
 - [ ] 文字列中の . を編集すると company-mode がエラーする
-
-- [ ] 意味のない箇所を () で括れてしまう。 
 
 * 機能
 
@@ -222,10 +208,10 @@ foreach obj in list {
    
 - [ ] stem と any の分離
   - [X] collection を stem で扱う。
-  - [ ] int 系の closure を any で扱っているが、これを val にして、
+  - [X] int 系の closure を any で扱っているが、これを val にして、
         val に stem を保持する。
-  - [ ] nil を any で扱っているが、これを stem で扱うにする。
-  - [ ] any から int 系を削除する。
+  - [X] nil を any で扱っているが、これを stem で扱うにする。
+  - [X] any から int 系を削除する。
   - [ ] enum の値のオブジェクトをグローバルで宣言しない。
         いまは any で扱っているため、毎回インスタンス生成しないように 、
 	グローバルで生成しているが、 any で扱わなくて大丈夫なので、変更する。
@@ -271,6 +257,8 @@ foreach obj in list {
 
 - [X] anonymous 関数を引数にした場合、その次の引数のインデント位置がおかしい
 - [X] emacs のインデントで行末に無駄なスペースが入る
+- [X] company-mode で run-at-time のリトライ処理が走る時、
+      バッファが変っているとエラー。
 
 
 * 制限・仕様
@@ -447,6 +435,12 @@ fn func( val:int! ) {
       引数に対して lune_initVal_stem() する。
 - [X] foreach 等のループ変数のクロージャ。
       ループ変数に対して lune_initVal_stem() する。
+- [X] 意味のない箇所を () で括れてしまう。 
+- [X] 本来、次は Pub でない Hoge を含んだ func が pub なので、エラーになるはず。
+  
+class Hoge {
+}
+pub fn func( list:&List<Hoge> );
       
 
 

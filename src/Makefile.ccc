@@ -5,6 +5,7 @@ TEST_OUT=test.exe
 CORE_SRCS += lune/base/lns_base.c
 CORE_SRCS += lune/base/lns_collection.cxx
 CORE_SRCS += lune/base/lns_alloc.cxx
+CORE_SRCS += lune/base/lns_luaWrapper.cxx
 
 SRCS += lune/base/test.c
 

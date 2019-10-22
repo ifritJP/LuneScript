@@ -260,6 +260,7 @@ class Super6 {
 }
 pub class ClassC extend Super6 { // error
 }
+pub fn TestSuper6( list:List<Super6> ); // error
 interface IFSuper {
 }
 pub class ClassD extend (IFSuper) { // error
