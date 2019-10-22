@@ -1,0 +1,613 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+import lune.base.Util;
+import lune.base.Nodes;
+import lune.base.Ast;
+import lune.base.Parser;
+
+class MacroMetaArgInfo extend (Mapping) {
+   pub let name:str;
+   pub let typeId:int;
+}
+class MacroMetaInfo extend (Mapping) {
+   pub let name:str;
+   pub let argList:&List<MacroMetaArgInfo>;
+   pub let symList:&List<MacroMetaArgInfo>;
+   pub let stmtBlock:str!;
+   pub let tokenList:&List<&List<stem>>;
+}
+
+
+class MacroPaser extend Parser.Parser {
+   let tokenList: &List<&Parser.Token>;
+   let mut pos: int;
+   let name: str;
+
+   pub fn __init( tokenList: &List<&Parser.Token>, name: str ) {
+      super();
+      self.pos = 1;
+      self.tokenList = tokenList;
+      self.name = name;
+   }
+
+   pub override fn getToken() mut : &Parser.Token! {
+      if #self.tokenList < self.pos {
+         return nil;
+      }
+      let token = self.tokenList[ self.pos ];
+      self.pos = self.pos + 1;
+
+      // Util.errorLog( "getToken: %s" (token.txt) );
+
+      return token;
+   }
+   pub override fn getStreamName(): str {
+      return self.name;
+   }
+}
+
+
+fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
+   match obj {
+      case .Nil {
+         return nil;
+      }
+      case .Int( val ) {
+         return val;
+      }
+      case .Real( val ) {
+         return val;
+      }
+      case .Str( val ) {
+         return val;
+      }
+      case .Bool( val ) {
+         return val;
+      }
+      case .Symbol( val ) {
+         return [ val ];
+      }
+      case .Field( val ) {
+         return val;
+      }
+      case .LIST( list ) {
+         let mut newList:List<stem!> = [];
+         foreach item, index in list {
+            newList[ index ] = getLiteralMacroVal( item );
+         }
+         return newList;
+      }
+      case .ARRAY( list ) {
+         let mut newList:List<stem!> = [];
+         foreach item, index in list {
+            newList[ index ] = getLiteralMacroVal( item );
+         }
+         return newList;
+      }
+      case .SET( list ) {
+         let mut newSet:Set<stem> = (@);
+         foreach item in list {
+            if! getLiteralMacroVal( item ) {
+               newSet.add( _exp );
+            }
+         }
+         return newSet;
+      }
+      case .MAP( map ) {
+         let mut newMap:Map<&stem,&stem> = {};
+         foreach val, key in map {
+            let keyObj = getLiteralMacroVal( key );
+            let valObj = getLiteralMacroVal( val );
+            when! keyObj, valObj {
+               newMap[ keyObj ] = valObj;
+            }
+         }
+         return newMap;
+      }
+   }
+   Util.err( "unknown literal obj -- " .. obj.$_txt );
+}
+
+class ExtMacroInfo extend Nodes.MacroInfo {
+   pri let mut name:str {pub};
+   pri let mut argList:&List<&Nodes.MacroArgInfo>;
+   pri let mut tokenList:&List<&Parser.Token>;
+
+   pub override fn getArgList():&List<&Nodes.MacroArgInfo> {
+      return self.argList;
+   }
+   pub override fn getTokenList():&List<&Parser.Token>{
+      return self.tokenList;
+   }
+
+   pub fn __init( name:str, func: Nodes.macroStatmentProc,
+                  symbol2MacroValInfoMap: Map<str,Nodes.MacroValInfo>,
+                  argList:&List<&Nodes.MacroArgInfo>,
+                  tokenList:&List<&Parser.Token> )
+   {
+      super( func, symbol2MacroValInfoMap );
+      self.name = name;
+      self.argList = argList;
+      self.tokenList = tokenList;
+   }
+}
+
+pub class MacroCtrl
+{
+   let mut useModuleMacroSet:Set<&Ast.TypeInfo> {pub&};
+   /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
+   pri let macroEval: Nodes.MacroEval;
+   /** マクロの TypeId -> マクロ情報 */
+   let mut typeId2MacroInfo: Map<int,Nodes.MacroInfo> {pub&};
+   /** macro-expand 内で利用できるシンボルと値の紐付けマップ */
+   pri let mut symbol2ValueMapForMacro: Map<str,Nodes.MacroValInfo> {pub&};
+   /** マクロのモード */
+   pri let mut macroMode: Nodes.MacroMode {pub};
+   /** マクロをコールしている行番号 */
+   pri let mut macroCallLineNo: int {pub};
+   
+
+   pub fn __init( macroEval: Nodes.MacroEval )
+   {
+      self.useModuleMacroSet = (@);
+      self.typeId2MacroInfo = {};
+      self.symbol2ValueMapForMacro = {};
+      self.macroEval = macroEval;
+      self.macroMode = .None;
+      self.macroCallLineNo = 0;
+   }
+}
+
+pub fn MacroCtrl.evalMacroOp(
+   streamName:str, firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
+   expList: &Nodes.ExpListNode! ) mut: Parser.Parser!, str!
+{
+   self.useModuleMacroSet.add( macroTypeInfo.getModule() );
+
+   when! expList {
+      foreach exp in expList.get_expList() {
+         let kind = exp.$kind;
+         switch kind {
+            case Nodes.NodeKind.$LiteralNil,
+                 Nodes.NodeKind.$LiteralChar,
+                 Nodes.NodeKind.$LiteralInt,
+                 Nodes.NodeKind.$LiteralReal,
+                 Nodes.NodeKind.$LiteralArray,
+                 Nodes.NodeKind.$LiteralList,
+                 Nodes.NodeKind.$LiteralMap,
+                 Nodes.NodeKind.$LiteralString,
+                 Nodes.NodeKind.$LiteralBool,
+                 Nodes.NodeKind.$LiteralSymbol,
+                 Nodes.NodeKind.$RefField,
+                 Nodes.NodeKind.$ExpMacroStat,
+                 Nodes.NodeKind.$ExpOmitEnum,
+                 Nodes.NodeKind.$ExpCast
+            {
+            }
+            default {
+               let mess = "Macro arguments must be literal value. -- %d:%d:%s"
+                   ( exp.$pos.lineNo, exp.$pos.column, 
+                     Nodes.getNodeKindName(kind));
+               return nil, mess;
+            }
+         }
+      }
+   }
+
+   let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.get_typeId() ];
+
+   let mut argValMap:Map<int,stem> = {};
+   let mut macroArgValMap:Map<str,stem> = {};
+   let macroArgNodeList = macroInfo.getArgList();
+   let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
+   when! expList {
+      foreach argNode, index in expList.get_expList() {
+         let literal = argNode.getLiteral();
+         when! literal {
+            if! let val = getLiteralMacroVal( literal ) {
+               argValMap[ index ] = val;
+               let declArgNode = macroArgNodeList[ index ];
+               
+               macroArgValMap[ declArgNode.$name ] = val;
+               macroArgName2ArgNode[ declArgNode.$name ] = argNode;
+            }
+         }
+      }
+   }
+
+   let func = macroInfo.func;
+   //let macroVars:Map<str,stem!> = func( argVal.unpack() )@@Map<str,stem!>;
+   let mut macroVars = func( macroArgValMap );
+   foreach name in (unwrap macroVars.__names)@@List<str> {
+      let valInfo = unwrap macroInfo.symbol2MacroValInfoMap[ name ];
+      let typeInfo = valInfo.typeInfo or Ast.builtinTypeStem_;
+      let mut val = macroVars[ name ];
+      if typeInfo.equals( Ast.builtinTypeSymbol ##) {
+         val = [ val ];
+      }
+      self.symbol2ValueMapForMacro[ name ] =
+         new Nodes.MacroValInfo( val, typeInfo, macroArgName2ArgNode[ name ] );
+   }
+
+   //let scope = self.pushScope();
+
+
+   foreach arg, index in macroInfo.getArgList() {
+      if arg.$typeInfo.$kind ~= .DDD {
+         let argType = arg.$typeInfo;
+         let argName = arg.$name;
+         //scope.add( argName, argType.expType );
+         self.symbol2ValueMapForMacro[ argName ] =
+            new Nodes.MacroValInfo( argValMap[ index ], argType,
+                                    macroArgName2ArgNode[ argName ] );
+      }
+      else {
+         return nil, "not support ... in macro";
+      }
+   }
+
+   // foreach macroValInfo, symbol in self.symbol2ValueMapForMacro {
+   //     Util.errorLog( "HOGE: %s %s" (symbol, macroValInfo) );
+   // }
+
+
+   return new MacroPaser(
+      macroInfo.getTokenList(),
+      "%s:%d(macro %s)" ( streamName,
+                          firstToken.pos.lineNo, macroTypeInfo.getTxt(##)) ), nil;
+}
+
+
+pub fn MacroCtrl.importMacro(
+   macroInfoStem:&stem, macroTypeInfo:&Ast.TypeInfo,
+   typeId2TypeInfo: &Map<int,&Ast.TypeInfo> ) mut
+{
+   let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
+   when! macroInfo {
+      let mut argList:List<&Nodes.MacroArgInfo> = [];
+      let mut argNameList:List<str> = [];
+      let mut symbol2MacroValInfoMap:Map<str,Nodes.MacroValInfo> = {};
+      foreach argInfo in macroInfo.argList {
+         let argTypeInfo = unwrap typeId2TypeInfo[ argInfo.typeId ];
+         argList.insert( new Nodes.MacroArgInfo( argInfo.name, argTypeInfo ) );
+         argNameList.insert( argInfo.name );
+         // symbol2MacroValInfoMap[ argInfo.name ] =
+         //    new Nodes.MacroValInfo( nil, argTypeInfo );
+      }
+      foreach symInfo in macroInfo.symList {
+         let symTypeInfo = unwrap typeId2TypeInfo[ symInfo.typeId ];
+         symbol2MacroValInfoMap[ symInfo.name ] =
+            new Nodes.MacroValInfo( nil, symTypeInfo, nil );
+      }
+
+
+      let mut tokenList:List<&Parser.Token> = [];
+      let mut lineNo = 0;
+      let mut column = 1;
+      foreach tokenInfo in macroInfo.tokenList {
+         let txt = tokenInfo[2]@@str;
+         if txt == "\n" {
+            lineNo = lineNo + 1;
+            column = 1;
+         }
+         else {
+            tokenList.insert(
+               new Parser.Token(
+                  unwrap Parser.TokenKind._from( tokenInfo[1]@@int ),
+                  txt, new Parser.Position( lineNo, column ), false ## ) );
+            column = column + #txt + 1;
+         }
+      }
+
+
+      self.typeId2MacroInfo[ macroTypeInfo.$typeId ] =
+         new ExtMacroInfo(
+            macroInfo.name,
+            self.macroEval.evalFromCode(
+               macroInfo.name, argNameList, macroInfo.stmtBlock ),
+            symbol2MacroValInfoMap, argList, tokenList );
+   }
+   else {
+      Util.errorLog( "macro load fail -- %s" (unwrap err default "") );
+   }
+}
+
+
+pub fn MacroCtrl.regist( node:Nodes.DeclMacroNode ) mut {
+   let macroObj = self.macroEval.eval( node );
+
+   self.typeId2MacroInfo[ node.$expType.get_typeId() ] =
+      new Nodes.DefMacroInfo( macroObj, node.$declInfo,
+                              self.symbol2ValueMapForMacro );  
+   self.symbol2ValueMapForMacro = {};
+}
+
+
+fn expandVal( tokenList:List<&Parser.Token>, val: stem!, pos: &Parser.Position ): str! {
+   when! val {
+      switch type( val ) {
+         case "boolean" {
+            let token = "%s" (val);
+            let kind = Parser.TokenKind.Kywd;
+            tokenList.insert( new Parser.Token( kind, token, pos, false ## ) );
+         }
+         case "number" {
+            let num = "%g" (val@@real);
+            let mut kind = Parser.TokenKind.Int;
+            if string.find( num, ".", 1, true ) {
+               kind = Parser.TokenKind.Real;
+            }
+            tokenList.insert( new Parser.Token( kind, num, pos, false ## ) );
+         }
+         case "string" {
+            tokenList.insert(
+               new Parser.Token(
+                  Parser.TokenKind.Str, '[[%s]]' (val ), pos, false ## ) );
+            // val 中に \n 等の制御コードが入ると正常に処理されない。
+            // val 内の制御コードを \xXX に変換する必要がある。
+         }
+         // case "table" {
+         //    tokenList.insert(
+         //       new Parser.Token( Parser.TokenKind.Dlmt, "{", pos, false ## ) );
+         //    foreach item, key in val@@stem![] {
+         //       tokenList.insert(
+         //          new Parser.Token( Parser.TokenKind.Dlmt, "[", pos, false ## ) );
+
+         //       if! let mess = expandVal( tokenList, key, pos ) {
+         //          return mess;
+         //       }
+
+         //       tokenList.insert(
+         //          new Parser.Token( Parser.TokenKind.Dlmt, "]", pos, false ## ) );
+
+         //       tokenList.insert(
+         //          new Parser.Token( Parser.TokenKind.Dlmt, "=", pos, false ## ) );
+               
+         //       if! let mess = expandVal( tokenList, item, pos ) {
+         //          return mess;
+         //       }
+         //       tokenList.insert(
+         //          new Parser.Token( Parser.TokenKind.Dlmt, ",", pos, false ## ) );
+         //    }
+         //    tokenList.insert(
+         //       new Parser.Token( Parser.TokenKind.Dlmt, "}", pos, false ## ) );
+         // }
+         default {
+            return "not support ,, List -- %s" ( type( val ) );
+         }
+      }
+   }
+   return nil;
+}
+
+pub fn MacroCtrl.expandMacroVal(
+   typeNameCtrl:&Ast.TypeNameCtrl, scope:&Ast.Scope,
+   parser:Parser.PushbackParser, mut token:&Parser.Token ) mut : &Parser.Token
+{
+   let tokenTxt = token.txt;
+   if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
+      let mut nextToken = parser.getTokenNoErr();
+
+      let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
+         parser.error( "unknown macro val %s" (nextToken.txt) );
+      };
+
+      if tokenTxt == ',,' {
+         //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
+         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
+            let txtList = (unwrap macroVal.val)@@str[];
+            for index = #txtList, 1, -1 {
+               nextToken = new Parser.Token(
+                  nextToken.kind, txtList[ index ], nextToken.pos, false ## );
+               parser.pushbackToken( nextToken );
+            }
+         }
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) {
+            parser.pushbackStr( "macroVal %s" (nextToken.txt),
+                                (unwrap macroVal.val)@@str );
+         }
+         elseif macroVal.typeInfo.get_kind() == .Array or
+            macroVal.typeInfo.get_kind() == .List
+         {
+            if macroVal.typeInfo.$itemTypeInfoList[ 1 ].equals( Ast.builtinTypeStat ##) {
+               let strList = (unwrap macroVal.val)@@str[];
+               for index = #strList, 1, -1 {
+                  parser.pushbackStr(
+                     "macroVal %s[%d]" (nextToken.txt, index),
+                     strList[ index ] );
+               }
+            }
+            else {
+               let mut tokenList: List<&Parser.Token> = [];
+
+               if! let argNode = macroVal.argNode {
+                  if not argNode.setupLiteralTokenList( tokenList ) {
+                     parser.error( "illegal macro val ,, -- %s" (nextToken.txt) );
+                  }
+               }
+               else {
+                  parser.error( "not support ,, -- %s" (nextToken.txt) );
+               }
+
+               parser.newPushback( tokenList );
+            }
+         }
+         elseif macroVal.typeInfo.get_kind() == .Enum {
+            let enumTypeInfo = unwrap macroVal.typeInfo@@@Ast.EnumTypeInfo;
+            let fullname = macroVal.typeInfo.getFullName( typeNameCtrl, scope, true );
+            let mut nameList:List<str> = [];
+            apply name of fullname.gmatch( "[^%.]+" ) {
+               nameList.insert( name );
+            }
+            let enumValInfo = unwrap enumTypeInfo.$val2EnumValInfo[ unwrap macroVal.val ];
+            nextToken = new Parser.Token(
+               .Symb, enumValInfo.$name, nextToken.pos, false ## );
+            parser.pushbackToken( nextToken );
+            for index = #nameList, 1, -1 {
+               nextToken = new Parser.Token( .Dlmt, ".", nextToken.pos, false ## );
+               parser.pushbackToken( nextToken );
+               nextToken = new Parser.Token(
+                  .Symb, nameList[ index ], nextToken.pos, false ## );
+               parser.pushbackToken( nextToken );
+            }
+         }
+         else {
+            let mut tokenList: List<&Parser.Token> = [];
+
+            if! let argNode = macroVal.argNode {
+               if not argNode.setupLiteralTokenList( tokenList ) {
+                  parser.error( "illegal macro val ,, -- %s" (nextToken.txt) );
+               }
+            }
+            else {
+               expandVal( tokenList, macroVal.val, nextToken.pos );
+            }
+
+            parser.newPushback( tokenList );
+         }
+      }
+      elseif tokenTxt == ',,,' {
+         if macroVal.typeInfo.equals( Ast.builtinTypeString ## ) {
+            nextToken = new Parser.Token(
+               nextToken.kind, (unwrap macroVal.val)@@str, nextToken.pos, false ## );
+            parser.pushbackToken( nextToken );
+         }
+      }
+      elseif tokenTxt == ',,,,' {
+         if macroVal.typeInfo.equals( Ast.builtinTypeSymbol ## ) {
+            let txtList = (unwrap macroVal.val)@@str[];
+            let mut newToken = "";
+            foreach txt in txtList {
+               newToken = "%s%s" (newToken, txt);
+            }
+            nextToken = new Parser.Token(
+               Parser.TokenKind.Str, "'%s'" (newToken), nextToken.pos, false ## );
+            parser.pushbackToken( nextToken );
+         }
+         elseif macroVal.typeInfo.equals( Ast.builtinTypeStat ## ) {
+            nextToken = new Parser.Token(
+               Parser.TokenKind.Str,
+               "'%s'" (unwrap macroVal.val), nextToken.pos, false ##);
+            parser.pushbackToken( nextToken );
+         }
+         else {
+            parser.error( "not support this symbol -- %s%s"
+                          (tokenTxt, nextToken.txt) );
+         }
+      }
+      nextToken = parser.getTokenNoErr();
+
+      token = nextToken;
+   }
+   return token;
+}
+
+pub class ErrorMess {
+   pub let pos:Parser.Position;
+   pub let mess:str;
+}
+
+pub fn MacroCtrl.expandSymbol(
+   parser:Parser.PushbackParser, prefixToken:&Parser.Token,
+   mut exp:&Nodes.Node, nextToken:&Parser.Token,
+   nodeManager:Nodes.NodeManager, errMessList:List<&ErrorMess>) : &Nodes.LiteralStringNode
+{
+   if nextToken.txt ~= "~~" {
+      parser.pushbackToken( nextToken );
+   }
+   
+   let mut format = prefixToken.txt == ",,," and "' %s '" or '"\'%s\'"';
+
+   if prefixToken.txt == ",," {
+      if! let refNode = exp@@@Nodes.ExpRefNode {
+         let refToken = refNode.$token;
+         let macroInfo = self.symbol2ValueMapForMacro[ refToken.txt ];
+         when! macroInfo {
+            let valType = macroInfo.typeInfo;
+            if valType.equals( Ast.builtinTypeSymbol ##) or
+               valType.equals( Ast.builtinTypeStat ##)
+            {
+               format = "' %s '";
+            }
+            elseif valType.$kind == .List and
+               valType.$itemTypeInfoList[1].equals( Ast.builtinTypeStat ##)
+            {
+               format = "' %s '";
+               exp = Nodes.ExpMacroStatListNode.create(
+                  nodeManager, prefixToken.pos, [ Ast.builtinTypeString ], exp );
+            }
+            elseif Ast.builtinTypeString.equals( valType ##) {
+               //
+            }
+            else {
+               errMessList.insert(
+                  new ErrorMess(    
+                     refToken.pos, "not support ,, -- %s" (valType.getTxt(##)) ) );
+            }
+         }  
+         else {
+            if exp.$expType.equals( Ast.builtinTypeInt ##) or
+               exp.$expType.equals( Ast.builtinTypeReal ##)
+            {
+               format = "'%s' ";
+            }
+            elseif exp.$expType.equals( Ast.builtinTypeStat ##) {
+               format = "' %s '";
+            }
+         }
+      }
+   }
+   let newToken = new Parser.Token(
+      Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive ## );
+   let literalStr = Nodes.LiteralStringNode.create(
+      nodeManager, prefixToken.pos, [ Ast.builtinTypeString ], newToken, [ exp ] );
+   return literalStr;
+}
+
+/**
+macro-statment 内で定義している変数を登録する
+
+@param symbolList 変数一覧
+*/
+pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut {
+   foreach symbolInfo in symbolList {
+      self.symbol2ValueMapForMacro[ symbolInfo.$name ] =
+         new Nodes.MacroValInfo( nil, symbolInfo.$typeInfo, nil);
+   }
+}
+
+pub fn MacroCtrl.startExpandMode( lineNo:int ) mut {
+   self.macroMode = .Expand;
+   self.macroCallLineNo = lineNo;
+}
+
+pub fn MacroCtrl.finishMacroMode() mut {
+   self.macroMode = .None;
+}
+
+pub fn MacroCtrl.startAnalyzeMode() mut {
+   self.macroMode = .Analyze;
+   self.symbol2ValueMapForMacro = {};
+}
