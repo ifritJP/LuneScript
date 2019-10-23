@@ -176,6 +176,11 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                   typeInfo = Ast.NormalTypeInfo.createBox( accessMode, genericList[1] );
                }
             }
+            case .Ext {
+               if checkAlternateTypeCount( 1 ) {
+                  typeInfo = Ast.NormalTypeInfo.createLuaval( genericList[1] );
+               }
+            }
             default {
                self.error( string.format( "not support generic: %s",
                                           typeInfo.getTxt(##) ) );

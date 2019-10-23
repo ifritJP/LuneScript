@@ -59,10 +59,19 @@ tmp-buf: 補完候補の生データを出力しているバッファ
    (lns-company-req
     ;; 次の補完要求が来ている場合、補完処理をしなおす。
     (funcall callback '())
-    (run-at-time 0 nil (lambda ()
-			 (company-lns--candidates
-			  (plist-get lns-company-req :prefix)
-			  (plist-get lns-company-req :callback))))
+    (let ((buf (plist-get lns-company-req :buf)))
+      (cond ((equal buf (current-buffer))
+	     ;; バッファが変っていない場合は、候補をピックアップする
+	     (let ((prefix (plist-get lns-company-req :prefix))
+		   (workcallback (plist-get lns-company-req :callback)))
+	       (run-at-time 0 nil (lambda ()
+				    (company-lns--candidates
+				     prefix workcallback))))
+	     (setq lns-company-req nil))
+	    (t
+	     ;; バッファが変っている場合、ピックアップを中止する
+	     (funcall (plist-get lns-company-req :callback) '())
+	     (setq lns-company-req nil))))
     )
    (candidate-list
     ;; ピックアップできて、次の補完要求もない場合、
@@ -96,10 +105,9 @@ tmp-buf: 補完候補の生データを出力しているバッファ
 	   (funcall (plist-get lns-company-req :callback) nil))
 	 (setq lns-company-req
 	       ;; 補完要求をストックする
-	       (list :prefix prefix :callback callback)))
+	       (list :prefix prefix :callback callback :buf (current-buffer))))
 	(t
 	 (setq lns-company-callback callback)
-	 (setq lns-company-req nil)
 	 (let ((tmp-buf (generate-new-buffer company-lns-buf-name-work)))
 	   (condition-case err-info
 	       ;; 補完実行中のエラー処理

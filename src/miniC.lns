@@ -1,1 +1,18 @@
-print( _load( "print( 'hoge' )"## )** );
+{
+   let func:form;
+   let func2:form;
+   {
+      let mut val = "a1";
+      print( "hoge", val );
+      func = fn () {
+         print( val );
+      };
+      func2 = fn () {
+         val = "a3";
+      };
+      val = "a2";
+   }
+   func();
+   func2();
+   func();
+}

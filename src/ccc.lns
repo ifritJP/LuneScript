@@ -4,7 +4,139 @@ macro _section()
 }
 let mut g_val = 100;
 
+{
+   _section();
+   let func, mess = _load( ```
+local obj = {}
+obj.val1 = 1
+obj.val2 = "abc"
+obj.val3 = 3.5
+obj.val4 = {}
+return obj
+```## );
+   when! func {
+      let map, err = func();
+      when! map {
+         let mut workmap:Map<stem,stem> = {};
+         foreach val, key in map@@Luaval<Map<stem,stem>> {
+            workmap[ key ] = val;
+         }
+         forsort val, key in workmap {
+            print( key, val );
+         }
+      }
+   }
+}
+{
+   _section();
+   macro _test() {
+      fn func( val:Test ) {
+         print( val == .Val1 );
+      }
+      func( .Val1 );
+      func( .Val2 );
+   }
+   {
+      enum Test {
+         Val1,
+         Val2,
+      }
+      _test();
+   }
+   {
+      enum Test {
+         Val1 = 1.0,
+         Val2,
+      }
+      _test();
+   }
+   {
+      enum Test {
+         Val1 = "a",
+         Val2 = "b",
+      }
+      _test();
+      {
+         let work = Test.Val1;
+         print( work == "a" );
+      }
+   }
+}
+{
+   _section();
+   class Test {
+      pub let val:int;
+   }
+   class Test2 {
+      pub let dummy:int;
+      pub let val:int;
+   }
+   fn func( val1:stem, val2:stem, val3:stem )
+   {
+      print( val1@@int + 10, val2@@real + 100, (val3@@=Test).$val,
+             // lua は名前で動的にアクセスするのでが、
+             // C では静的に決定したアドレスでアクセスするため、この場合はズレる
+             "diff->", (val3@@=Test2).$val );
 
+   }
+   func( 1, 2.0, new Test( 1000 ) );
+}
+{
+   _section();
+   fn sub( val:bool ) {
+      if ( val ) {
+         print( "OK" );
+      }
+      else {
+         print( "NG" );
+      }
+   }
+   fn func( val1:bool, val2:bool, val3:bool ) {
+      sub( val1 or val2 or val3 );
+   }
+   fn func2( val1:bool, val2:bool, val3:bool ) {
+      sub( val1 and val2 and val3 );
+   }
+   func( true, true, true );
+   func( true, true, false );
+   func( true, false, true );
+   func( true, false, false );
+   func( false, true, true );
+   func( false, true, false );
+   func( false, false, true );
+   func( false, false, false );
+
+
+   func2( true, true, true );
+   func2( true, true, false );
+   func2( true, false, true );
+   func2( true, false, false );
+   func2( false, true, true );
+   func2( false, true, false );
+   func2( false, false, true );
+   func2( false, false, false );
+}
+{
+   _section();
+   let mut work1:form = fn() {};
+   let mut work2:form = fn() {};
+   fn func() {
+      let mut val = 1;
+      fn sub() {
+         work1 = fn () {
+            val = val + 1;
+         };
+         work2 = fn () {
+            print( val );
+         };
+      }
+      sub();
+   }
+   func();
+   work2();
+   work1();
+   work2();
+}
 {
    _section();
    class Test {

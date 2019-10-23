@@ -501,11 +501,11 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
          break;
       }
       forsort classTypeInfo, classTypeId in workClassMap {
-         let! scope = classTypeInfo.$scope {
-            Util.err( "%s.scope is nil" (classTypeInfo.getTxt(##)) );
-         };
-
          if not Ast.isBuiltin( classTypeId ) {
+            let! scope = classTypeInfo.$scope {
+               Util.err( "%s.scope is nil" (classTypeInfo.getTxt(##)) );
+            };
+            
             pickupTypeId( classTypeInfo, true,
                           validChildrenSet[ classTypeInfo ] == nil and
                           not classTypeInfo.$externalFlag );
@@ -2225,32 +2225,34 @@ pub override fn convFilter.processSwitch(
    filter( node.get_exp(),  self, node );
    self.writeln( "" );
 
-   foreach caseInfo, index in node.get_caseList() {
-      if index == 1 {
-         self.write( "if " );
-      }
-      else {
-         self.write( "elseif " );
-      }
-      let expList = caseInfo.get_expList();
-      foreach expNode, listIndex in expList.get_expList() {
-         if listIndex ~= 1 {
-            self.write( " or " );
+   if #node.$caseList > 0 {
+      foreach caseInfo, index in node.$caseList {
+         if index == 1 {
+            self.write( "if " );
          }
+         else {
+            self.write( "elseif " );
+         }
+         let expList = caseInfo.get_expList();
+         foreach expNode, listIndex in expList.get_expList() {
+            if listIndex ~= 1 {
+               self.write( " or " );
+            }
 
-         self.write( "_switchExp == " );
-         filter( expNode, self, node );
+            self.write( "_switchExp == " );
+            filter( expNode, self, node );
+         }
+         self.write( " then" );
+         filter( caseInfo.$block, self, node );
       }
-      self.write( " then" );
-      filter( caseInfo.$block, self, node );
+      if! node.get_default() {
+         self.writeln( "else " );
+         self.pushIndent(##);
+         filter( _exp, self, node );
+         self.popIndent();
+      }
+      self.writeln( "end" );
    }
-   if! node.get_default() {
-      self.writeln( "else " );
-      self.pushIndent(##);
-      filter( _exp, self, node );
-      self.popIndent();
-   }
-   self.writeln( "end" );
    self.popIndent();
 
    self.writeln( "end" );
@@ -3248,7 +3250,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
          Util.err( err );
       }
       when! chunk {
-         let mod = chunk(##);
+         let mod = chunk();
          if not mod {
             Util.err( "macro load error" );
          }

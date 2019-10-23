@@ -188,6 +188,7 @@ pub enum TypeInfoKind {
    Etc,
    Form,
    FormFunc,
+   Ext,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -3896,7 +3897,8 @@ pub class DDDTypeInfo extend TypeInfo {
       return .DDD;
    }
    pub override fn get_nilable(): bool {
-      return self.typeInfo.$nilable;
+      //return self.typeInfo.$nilable;
+      return true;
    }
    pub override fn get_nilableTypeInfo(): &TypeInfo {
       return self;
@@ -4229,6 +4231,95 @@ pub class AbbrTypeInfo extend TypeInfo {
 pub let builtinTypeAbbr:TypeInfo = new AbbrTypeInfo( idProv, "##" );
 pub let builtinTypeAbbrNone:TypeInfo = new AbbrTypeInfo( idProv, "[##]" );
 
+
+pub class ExtTypeInfo extend TypeInfo {
+   pri let typeId: int { pub };
+   pri let luneType: &TypeInfo { pub };
+   pri let nilableTypeInfo: &TypeInfo { pub };
+
+   pub fn __init( idProvider:IdProvider, luneType:&TypeInfo )
+   {
+      super( luneType.$scope );
+
+      let typeId = idProvider.$id + 1;
+      idProvider.increment();
+      self.typeId = typeId;
+      self.luneType = luneType;
+
+      self.nilableTypeInfo = new NilableTypeInfo( self, typeId + 1 );
+      idProv.increment();
+      
+
+   }
+
+   /** この型の名前を取得する。 */
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      return "Luaval<%s>" ( self.luneType.getTxtWithRaw( rawTxt, typeNameCtrl,
+                                                         importInfo, localFlag ) );
+   }
+
+   pub override fn canEvalWith(
+      other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
+   {
+      return self.luneType.canEvalWith( other, canEvalType, alt2type )**;
+   }
+
+   pub override fn serialize( stream: oStream, validChildrenSet: Map<int,&TypeInfo>! ) {
+      Util.err( "illegal call" );
+   }
+
+   pub override fn get_display_stirng_with( raw:str ): str {
+      return self.getTxtWithRaw( raw ##);
+   }
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt );
+   }
+
+   pub override fn getModule(): &TypeInfo {
+      return headTypeInfo;
+   }
+   pub override fn get_kind(): TypeInfoKind {
+      return .Ext;
+   }
+   pub override fn get_srcTypeInfo(): &TypeInfo {
+      return self;
+   }
+   pub override fn get_nilable(): bool {
+      return false;
+   }
+   
+
+   advertise luneType;
+}
+
+pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : &TypeInfo
+{
+   idProv.increment();
+   return new ExtTypeInfo( idProv, luneType );
+}
+
+pub let builtinTypeLua:TypeInfo =
+   NormalTypeInfo.createLuaval( builtinTypeStem );
+registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, headTypeInfo, false );
+pub let builtinTypeDDDLua:TypeInfo =
+   NormalTypeInfo.createDDD( builtinTypeLua, true );
+registBuiltin( "__LuaDDD", "__LuaDDD", .Ext, builtinTypeDDDLua, headTypeInfo, false );
+
+pub let builtinTypeLoadedFunc = NormalTypeInfo.createFunc(
+   false, true, nil, .Form, headTypeInfo, true, true,
+   true, .Pub, "__loadedfunc", nil, nil, [ builtinTypeDDDLua ], false );
+registBuiltin( "__loadedfunc", "__loadedfunc", .Ext,
+               builtinTypeLoadedFunc, headTypeInfo, false );
 
 
 
@@ -4874,6 +4965,15 @@ pub static fn TypeInfo.canEvalWithBase(
    if dest.$typeId == otherSrc.$typeId {
       return true, nil;
    }
+
+   if dest.$kind == .Ext {
+      return dest.canEvalWith( otherSrc, canEvalType, alt2type )**;
+   }
+   if! let extTypeInfo = otherSrc@@@ExtTypeInfo {
+      otherSrc = extTypeInfo.$luneType;
+   }
+
+   
    if dest.$kind ~= otherSrc.$kind {
       if dest.$kind == .Nilable {
          if otherSrc.$nilable {

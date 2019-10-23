@@ -1,4 +1,5 @@
 subfile use test.startsub;
+import test.macro as Macro;
 import test.simple;
 import lune.base.Writer;
 //import test.Sub2;
@@ -609,12 +610,13 @@ class SubIF extend SUB2.IF {
    sub.sub( .val1 );
 }
 
+Macro._section();
 macro _test() {
    {
       let mut fileObj = unwrap io.open( "test/data.lua" );
       let txt = unwrap fileObj.read( "*a" );
       let val = unwrap _load( txt )$();
-      let val2 = unwrap val$.a;
+      let val2 = unwrap val.a;
       let mut val3:stat[] = [];
       foreach val4, key in val2@@Map<str,stem> {
          val3.insert( `{ ,,,key = ,,val4, } );
@@ -625,7 +627,6 @@ macro _test() {
    }
 }
 _test();
-
 print( MacroTest.A234, MacroTest.B234 );
 
 
@@ -1264,6 +1265,7 @@ class Test4 {
 print( "\\''\'\"\\.\\" );
 print( '\\""\"\'\\.\\' );
 {
+   Macro._section();
    SUB2.testPrint();
    {
       import test.Sub2 as sub;
@@ -1276,4 +1278,16 @@ print( '\\""\"\'\\.\\' );
       sub.testPrint();
    }
    SUB2.testPrint();
+}
+{
+   Macro._section();
+
+   class Test<T> {
+      let list:List<T> {pub};
+   }
+
+   let test = new Test( [ 1, 2, 3, "abc" ] );
+   foreach val in test.$list {
+      print( val );
+   }
 }

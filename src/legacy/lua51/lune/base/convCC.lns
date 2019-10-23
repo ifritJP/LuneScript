@@ -279,6 +279,10 @@ class ModuleCtrl {
       return "%s_%d" (fullName, srcType.$typeId );
    }
 
+   pub fn getEnumValCName( typeInfo:&Ast.TypeInfo, valName:str ): str {
+      return "%s__%s" (self.getEnumTypeName( typeInfo ), valName);
+   }
+
    pub fn getEnumVal2NameMapName( enumType:&Ast.TypeInfo ): str {
       return "%s_val2NameMap" (self.getEnumTypeName( enumType ));
    }
@@ -431,9 +435,9 @@ fn getAccessPrimValFromSymbolDirect(
       case Ast.builtinTypeReal {
          txt = txt .. ".val.realVal";
       }
-      case Ast.builtinTypeBool {
-         txt = txt .. ".val.boolVal";
-      }
+      // case Ast.builtinTypeBool {
+      //    txt = txt .. ".val.boolVal";
+      // }
    }
    return txt;
 }
@@ -574,23 +578,10 @@ class ScopeMgr {
       // if symbol.$hasAccessFromClosuer {
       switch self.getSymbolValKind( symbol ) {
          case .Var {
-            return "1, " .. name;
-         }
-         case .Stem {
-            return "0, " .. name;
+            return name;
          }
          default {
-            switch symbol.$typeInfo.$srcTypeInfo {
-               case Ast.builtinTypeInt, Ast.builtinTypeChar {
-                  return "0, LUNE_STEM_INT( %s )" (name);
-               }
-               case Ast.builtinTypeReal {
-                  return "0, LUNE_STEM_REAL( %s )" (name);
-               }
-               default {
-                  Util.err( "not support -- %s" (symbol.$typeInfo.getTxt( ## )) );
-               }
-            }
+            Util.err( "not support -- %s" (symbol.$typeInfo.getTxt( ## )) );
          }
       }
    }
@@ -912,13 +903,6 @@ pub override fn convFilter.processRoot(
    }
    
    self.processMode = .Form;
-   foreach declFormNode in node.$nodeManager.getDeclFormNodeList() {
-      filter( declFormNode, self, node );
-   }
-   foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
-      self.duringDeclFunc = false;
-      filter( declFuncNode, self, node );
-   }
    foreach declEnumNode in node.$nodeManager.getDeclEnumNodeList() {
       filter( declEnumNode, self, node );
    }
@@ -930,6 +914,13 @@ pub override fn convFilter.processRoot(
    }
    foreach declMethodNode in node.$nodeManager.getDeclMethodNodeList() {
       filter( declMethodNode, self, node );
+   }
+   foreach declFormNode in node.$nodeManager.getDeclFormNodeList() {
+      filter( declFormNode, self, node );
+   }
+   foreach declFuncNode in node.$nodeManager.getDeclFuncNodeList() {
+      self.duringDeclFunc = false;
+      filter( declFuncNode, self, node );
    }
 
    
@@ -1007,10 +998,12 @@ fn getAccessPrimValFromStem( dddFlag:bool, typeInfo:&Ast.TypeInfo, index:int ) :
          txt = txt .. ".val.realVal";
       }
       case Ast.builtinTypeBool {
-         txt = txt .. ".val.boolVal";
+         // txt = txt .. ".val.boolVal";
       }
       default {
-         txt = txt .. ".val.pAny";
+         if expType.$kind == .Alge {
+            txt = txt .. ".val.pAny";
+         }
       }
    }
    return txt;
@@ -1096,16 +1089,9 @@ pub override fn convFilter.processBlockSub(
       //    self.write( cTypeStem );
       // }
       let typeTxt, valKind = self.scopeMgr.getCTypeForSym( symbol );
-      let macroName;
-      if valKind == .Stem {
-         macroName = "lune_form_closure_any";
-      }
-      else {
-         macroName = "lune_form_closure_var";
-      }
       self.write(
-         "%s %s = %s( _pForm, %d )"
-         ( typeTxt, getSymbolName( symbol ), macroName,
+         "%s %s = lune_form_closure_var( _pForm, %d )"
+         ( typeTxt, getSymbolName( symbol ),
            unwrap scope.$closureSym2NumMap[ symbol ] ) );
       // if valKind == .Stem {
       //    self.write( getAccessPrimValFromStem( false, symbol.$typeInfo, 1 ) );
@@ -1322,18 +1308,34 @@ pub override fn convFilter.processDeclEnum(
          foreach valName, index in node.$valueNameList {
             let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
             if isStrEnum {
-               self.writeln( "%s %s__%s;" (cTypeStem,enumFullName, valName.txt));
+               if not Ast.isPubToExternal( enumType.$accessMode ) {
+                  self.write( "static " );
+               }
+               self.writeln(
+                  "%s %s;" (cTypeStem,
+                             self.moduleCtrl.getEnumValCName( enumType, valName.txt ) ));
             }
             else {
                let valTxt = "%s" (Ast.getEnumLiteralVal(valInfo.$val));
-               self.writeln( "#define %s__%s %s" (enumFullName, valName.txt, valTxt ) );
+               self.writeln( "#define %s %s"
+                             (self.moduleCtrl.getEnumValCName( enumType, valName.txt ),
+                               valTxt ) );                   
             }
          }
-         
+
+         if not Ast.isPubToExternal( enumType.$accessMode ) {
+            self.write( "static " );
+         }
          self.writeln( "%s %s_val2NameMap;" (cTypeAnyP, enumFullName) );
+         if not Ast.isPubToExternal( enumType.$accessMode ) {
+            self.write( "static " );
+         }
          self.writeln( "%s %s_allList;" (cTypeStem, enumFullName) );
       }
       case .Form {
+         if not Ast.isPubToExternal( enumType.$accessMode ) {
+            self.write( "static " );
+         }
          self.writeln(
             "%s %s_get__allList( lune_env_t * _pEnv )"
             (cTypeStem, enumFullName) );
@@ -1352,7 +1354,7 @@ pub override fn convFilter.processDeclEnum(
          }
 
          if not Ast.isPubToExternal( enumType.$accessMode ) {
-            self.writeln( "static " );
+            self.write( "static " );
          }
          self.writeln( "%s %s_get__txt( %s _pEnv, %s val ) {"
             ( cTypeStem, enumFullName, cTypeEnvP,
@@ -1380,7 +1382,7 @@ pub override fn convFilter.processDeclEnum(
          self.writeln( "}" );
          
          
-         self.writeln( "void init_%s( lune_env_t * _pEnv )" ( enumFullName ) );
+         self.writeln( "static void init_%s( lune_env_t * _pEnv )" ( enumFullName ) );
          self.writeln( "{" );
          self.pushIndent(##);
 
@@ -1393,7 +1395,7 @@ pub override fn convFilter.processDeclEnum(
                let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
                // pending: C の文字列リテラル表現できないものを対応できていない
                let valTxt = '"%s"' (Ast.getEnumLiteralVal(valInfo.$val));
-               let anyVar = "%s__%s" (enumFullName, valName.txt);
+               let anyVar = self.moduleCtrl.getEnumValCName( enumType, valName.txt );
                anyVarList.insert( anyVar );
 
                // self.writeln( "lune_setQ( %s, lune_litStr2stem( _pEnv, %s ) );"
@@ -2518,6 +2520,7 @@ pub override fn convFilter.processExpMacroExp(
 {
    foreach stmt in node.$stmtList {
       filter( stmt, self, node );
+      self.writeln( "" );
    }
 };
 
@@ -2995,6 +2998,9 @@ pub fn convFilter.processVal2stem(
          //       self.scopeMgr.getAccessPrimValFromSymbolOnly( symbolInfoList[ 1 ] ) );
          // }
          self.write( ")" );
+      }
+      case Ast.builtinTypeBool {
+         filter( node, self, parent );
       }
       default {
          switch expType.$kind {
@@ -4010,9 +4016,12 @@ pub override fn convFilter.processDeclFunc(
          return;
       }
       default {
-         if opt.node.$kind ~= Nodes.NodeKind.$Block {
-            self.write( self.getFunc2stem( node.$expType ) );
-            //self.processVal2stem( node, opt.node );
+         switch opt.node.$kind {
+            case Nodes.NodeKind.$Block, Nodes.NodeKind.$ExpMacroExp {
+            }
+            default {
+               self.write( self.getFunc2stem( node.$expType ) );
+            }
          }
          // else {
          //    if! let rawName = node.$declInfo.$name {
@@ -4469,6 +4478,53 @@ fn convFilter.processMapForeachSetupVal(
    }
 }
 
+alge CollectionKind {
+   List,
+   Array,
+   Set,
+   Map,
+   ExtList(luneType:&Ast.TypeInfo),
+   ExtArray(luneType:&Ast.TypeInfo),
+   ExtSet(luneType:&Ast.TypeInfo),
+   ExtMap(luneType:&Ast.TypeInfo),
+}
+
+fn getCollectionKind( typeInfo:&Ast.TypeInfo ) : CollectionKind {
+   switch typeInfo.$kind {
+      case .List {
+         return .List;
+      }
+      case .Array {
+         return .Array;
+      }
+      case .Set {
+         return .Set;
+      }
+      case .Map {
+         return .Map;
+      }
+      case .Ext {
+         let extType = unwrap typeInfo.$srcTypeInfo@@@Ast.ExtTypeInfo;
+         let luneType = extType.$luneType;
+         switch luneType.$kind {
+            case .List {
+               return .ExtList( luneType );
+            }
+            case .Array {
+               return .ExtArray( luneType );
+            }
+            case .Set {
+               return .ExtSet( luneType );
+            }
+            case .Map {
+               return .ExtMap( luneType );
+            }
+         }
+      }
+   }
+   Util.err( "unknown collection type -- %s" ( typeInfo.getTxt(##) ) );
+}
+
 pub override fn convFilter.processForeach(
    node: Nodes.ForeachNode, opt: Opt ) mut
 {
@@ -4482,6 +4538,9 @@ pub override fn convFilter.processForeach(
 
    let indexSymbol:&Ast.SymbolInfo!;
    let loopType = node.$exp.$expType;
+
+   let collectionKind = getCollectionKind( loopType );
+   
    switch loopType.$kind {
       case .List, .Array {
          self.writeln( "%s _itAny = lune_itList_new( _pEnv, _obj );" (cTypeAnyP) );
@@ -4514,6 +4573,16 @@ pub override fn convFilter.processForeach(
          indexSymbol = nil;
          self.writeln( "lune_Map_entry_t _entry;" );
       }
+      case .Ext {
+         indexSymbol = nil;
+         match collectionKind {
+            case .ExtMap( luneType ) {
+               self.writeln(
+                  "%s _itAny = lune_lua_itMap_new( _pEnv, _obj );" (cTypeAnyP) );
+               self.writeln( "lune_Map_entry_t _entry;" );
+            }
+         }
+      }
       default {
          Util.err( "illegal kind -- %s" (loopType.$kind.$_txt ) );
       }
@@ -4523,16 +4592,27 @@ pub override fn convFilter.processForeach(
 
    switch loopType.$kind {
       case .List, .Array {
+         //self.writeln( "for ( ; lune_reset_block( _pEnv ), lune_itList_hasNext( _pEnv, _itAny, &_val );" );
          self.writeln( "for ( ; lune_itList_hasNext( _pEnv, _itAny, &_val );" );
          self.writeln( "      lune_itList_inc( _pEnv, _itAny ) )" );
       }
       case .Set {
+         //self.writeln( "for ( ; lune_reset_block( _pEnv ), lune_itSet_hasNext( _pEnv, _itAny, &_val );" );
          self.writeln( "for ( ; lune_itSet_hasNext( _pEnv, _itAny, &_val );" );
          self.writeln( "      lune_itSet_inc( _pEnv, _itAny ) )" );
       }
       case .Map {
+         //self.writeln( "for ( ; lune_reset_block( _pEnv ), lune_itMap_hasNext( _pEnv, _itAny, &_entry );" );
          self.writeln( "for ( ; lune_itMap_hasNext( _pEnv, _itAny, &_entry );" );
          self.writeln( "      lune_itMap_inc( _pEnv, _itAny ) )" );
+      }
+      case .Ext {
+         match collectionKind {
+            case .ExtMap( luneType ) {
+               self.writeln(
+                  "while ( lune_lua_itMap_hasNext( _pEnv, _itAny ) )" );
+            }
+         }
       }
    }
    self.writeln( "{" );
@@ -4566,6 +4646,14 @@ pub override fn convFilter.processForeach(
             "_entry.key", "_entry.val" );
       }
       default {
+         match collectionKind {
+            case .ExtMap( luneType ) {
+               self.writeln( "lune_lua_itMap_getEntry( _pEnv, _itAny, &_entry );" );
+               self.processMapForeachSetupVal(
+                  node, luneType, node.$block.$scope, node.$key, node.$val,
+                  "_entry.key", "_entry.val" );
+            }
+         }
       }
    }
    
@@ -5896,13 +5984,31 @@ pub override fn convFilter.processExpCast(
          }
       }
       case .Force {
-         if Ast.isNumberType( castType ) {
-            self.write( "(%s)" ( getCType( castType, false ) ) );
-            filter( exp, self, node );
+         if isStemType( expType ) {
+            switch castType {
+               case Ast.builtinTypeInt, Ast.builtinTypeChar {
+                  self.write( "lune_stem2int( " );
+                  filter( exp, self, node );
+                  self.write( ")" );
+               }
+               case Ast.builtinTypeReal {
+                  self.write( "lune_stem2real( " );
+                  filter( exp, self, node );
+                  self.write( ")" );
+               }
+               default {
+                  // 強制キャストは実行時の処理に任せる。
+                  // ランタイムエラーになってもしかたがない。
+                  filter( exp, self, node );
+               }
+            }
          }
          else {
-            error( "not support cast" );
+            filter( exp, self, node );
          }
+      }
+      case .Normal {
+            error( "not support cast" );
       }
    }
    // if node.$force {
@@ -6079,14 +6185,26 @@ pub override fn convFilter.processExpOp2(
          else {
             if Ast.compOpSet.has( opTxt ) {
                self.write( "LUNE_STEM_BOOL( " );
-               self.accessPrimVal( node.$exp1, node );
-               // filter( node.$exp1, self, node );
+               if isStemType( node.$exp1.$expType ) or isStemType( node.$exp2.$expType ) {
+                  if opTxt ~= "==" {
+                     self.write( "!" );
+                  }
+                  self.write( "lune_equals( " );
+                  self.processVal2stem( node.$exp1, node );
+                  self.write( "," );
+                  self.processVal2stem( node.$exp2, node );
+                  self.write( ") )" );
+               }
+               else {
+                  self.accessPrimVal( node.$exp1, node );
+                  // filter( node.$exp1, self, node );
 
-               self.write( " " .. opTxt .. " " );
-               self.accessPrimVal( node.$exp2, node );
-               // filter( node.$exp2, self, node );
+                  self.write( " " .. opTxt .. " " );
+                  self.accessPrimVal( node.$exp2, node );
+                  // filter( node.$exp2, self, node );
 
-               self.write( ")" );
+                  self.write( ")" );
+               }
             }
             elseif Ast.mathCompOpSet.has( opTxt ) {
                self.write( "LUNE_STEM_BOOL( " );
@@ -6277,6 +6395,19 @@ pub override fn convFilter.processRefField(
 pub override fn convFilter.processExpOmitEnum(
    node: &Nodes.ExpOmitEnumNode, opt: Opt ) mut
 {
+   self.write( self.moduleCtrl.getEnumValCName( node.$expType, node.$valInfo.$name ) );
+   // match node.$valInfo.$val {
+   //    case .Int( val ) {
+   //       self.write( "%d" (val) );
+   //    }
+   //    case .Real( val ){
+   //       self.write( "%g" (val) );
+   //    }
+   //    case .Str( val ) {
+   //       self.write( "\"%s\"" (val) );
+   //    }
+   // }
+   
    // self.write( "%s.%s" ( self.getFullName( node.$expType ), node.$valToken.txt ) );
 };
 
@@ -6739,7 +6870,7 @@ pub override fn convFilter.processLiteralString(
    
    let mut txt = node.get_token().txt;
    if string.find( txt, '^```' ## ) {
-      txt = '[==[' .. txt.sub( 4, -4 ) .. ']==]';
+      txt = ('%q' ( txt.sub( 4, -4 ) )).gsub( "\\\n", "\\n" );
    }
    let opList = TransUnit.findForm( txt );
 

@@ -34,7 +34,7 @@ work/c/%.o: %.cxx
 all: build
 
 
-$(OBJS): lune/base/lunescript.h
+$(OBJS): lune/base/*.h
 
 
 build: 
@@ -43,7 +43,7 @@ build:
 #	gcc $(CFLAGS) -o work/c/lns_base.o lune/base/lns_base.c
 #	g++ $(CFLAGS) -o work/c/lns_collection.o lune/base/lns_collection.cxx
 #	g++ $(CFLAGS) -o work/c/lns_alloc.o lune/base/lns_alloc.cxx
-	g++ -o $(TEST_OUT) $(OBJS) $(LUA_LIB)
+	g++ -ldl -o $(TEST_OUT) $(OBJS) $(LUA_LIB)
 	./$(TEST_OUT)
 
 build-objs: $(OBJS)

@@ -59,7 +59,10 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    }
    else {
       if #retTypeList ~= 0 {
-         self.addErrMess( token.pos, "no return value" );
+         if retTypeList[ 1 ].$kind ~= .DDD {
+            self.addErrMess( token.pos,
+                             "no return value -- need values(%d)" (#retTypeList) );
+         }
       }
    }
 

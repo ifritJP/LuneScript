@@ -28,4 +28,11 @@ SOFTWARE.
 extern void lune_setLuaWapper( lune_env_t * _pEnv );
 extern lune_stem_t lune__load( lune_env_t * _pEnv, lune_stem_t code, lune_stem_t newEnv );
 
+extern lune_any_t * lune_lua_itMap_new( lune_env_t * _pEnv, lune_any_t * _obj );
+extern bool lune_lua_itMap_hasNext(
+    lune_env_t * _pEnv, lune_any_t * _itAny );
+extern void lune_lua_itMap_getEntry(
+    lune_env_t * _pEnv, lune_any_t * _itAny, lune_Map_entry_t * pEntry );
+
+
 #endif

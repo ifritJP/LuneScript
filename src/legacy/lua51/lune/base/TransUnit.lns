@@ -1303,18 +1303,20 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
                   }
                });
             }
-            declProcessList.insert( `{
-               fn ,,,"process_%s" (className) ~~ () {
-                  switch fieldName {
-                     ,,subcaseList
+            if #subcaseList > 0 {
+               declProcessList.insert( `{
+                  fn ,,,"process_%s" (className) ~~ () {
+                     switch fieldName {
+                        ,,subcaseList
+                     }
                   }
-               }
-            });
-            caseList.insert( `{
-               case ,,className {
-                  ,,,"process_%s" (className) ~~ ();
-               }
-            });
+               });
+               caseList.insert( `{
+                  case ,,className {
+                     ,,,"process_%s" (className) ~~ ();
+                  }
+               });
+            }
          }
       }
    }
@@ -1348,7 +1350,6 @@ builtin 関数の TypeInfo を保持するクラス。
    }
 }
 
-
 _DefBuiltinFuncType( [
    {
       "": {
@@ -1362,7 +1363,7 @@ _DefBuiltinFuncType( [
          "require": { "arg": [ "str" ], "ret": ["stem!"] },
          "collectgarbage": { "arg": [ ], "ret": [] },
          "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
-         "_load": { "arg": [ "str", "stem!" ], "ret": ["form!", "str!"] },
+         "_load": { "arg": [ "str", "stem!" ], "ret": ["__loadedfunc!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
       },
    },
@@ -2713,6 +2714,13 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
    }
    self.checkNextToken( "}" );
 
+   if #caseList == 0 {
+      self.addWarnMess( firstToken.pos, "'switch' should have 'case' blocks." );
+      if defaultBlock {
+         self.addErrMess( firstToken.pos, "'switch' must have 'case' blocks when have 'default' block." );
+      }
+   }
+
    return Nodes.SwitchNode.create(
       self.nodeManager, firstToken.pos, [ Ast.builtinTypeNone ],
       exp, caseList, defaultBlock );
@@ -2956,45 +2964,54 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    self.checkToken( nextToken, "in" );
 
    let exp = self.analyzeExp( false, false## );
-   
-   let itemTypeInfoList = exp.$expType.get_itemTypeInfoList();
-   if exp.$expType.get_kind() == .Map {
-      self.addLocalVar(
-         exp.$pos, true, true, mainSymbol.txt, itemTypeInfoList[ 2 ], .IMut## );
-      if! subSymbol {
-         self.addLocalVar(
-            _exp.$pos, true, true, _exp.txt, itemTypeInfoList[ 1 ], .IMut## );
-      }
-   }
-   elseif exp.$expType.get_kind() == .Set {
-      when! subSymbol {
-         self.addErrMess( subSymbol.pos, "Set can't use index" );
-      }
-      valSymbol = nil;
-      subSymbol = mainSymbol;
-      self.scope.addLocalVar(
-         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
-   }
-   elseif exp.$expType.get_kind() == .List or
-      exp.$expType.get_kind() == .Array
-   {
-      if sortFlag {
-         self.addErrMess( exp.$pos, "'%s' doesn't support forsort."
-                          (exp.$expType.get_kind().$_txt) );
-      }
-      self.scope.addLocalVar(
-         true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
-      if! subSymbol {
-         self.addLocalVar(
-            _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
-      }
-      else {
-         self.scope.addLocalVar( true, false, "__index", Ast.builtinTypeInt, .IMut );
-      }
+
+   let expType;
+   if! let extType = exp.$expType.$srcTypeInfo@@@Ast.ExtTypeInfo {
+      expType = extType.$luneType;
    }
    else {
-      self.error( "unknown kind type of exp for foreach-- %s(%d:%d)"
-         (exp.$expType.getTxt(##), exp.$pos.lineNo, exp.$pos.column) );
+      expType = exp.$expType;
+   }
+   
+   let itemTypeInfoList = expType.$itemTypeInfoList;
+   switch expType.$kind {
+      case .Map {
+         self.addLocalVar(
+            exp.$pos, true, true, mainSymbol.txt, itemTypeInfoList[ 2 ], .IMut## );
+         if! subSymbol {
+            self.addLocalVar(
+               _exp.$pos, true, true, _exp.txt, itemTypeInfoList[ 1 ], .IMut## );
+         }
+      }
+      case .Set {
+         when! subSymbol {
+            self.addErrMess( subSymbol.pos, "Set can't use index" );
+         }
+         valSymbol = nil;
+         subSymbol = mainSymbol;
+         self.scope.addLocalVar(
+            true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
+      }
+      case .List, .Array {
+         if sortFlag {
+            self.addErrMess( exp.$pos, "'%s' doesn't support forsort."
+                             (expType.$kind.$_txt) );
+         }
+         self.scope.addLocalVar(
+            true, true, mainSymbol.txt, itemTypeInfoList[ 1 ], .IMut );
+         if! subSymbol {
+            self.addLocalVar(
+               _exp.pos, true, false, _exp.txt, Ast.builtinTypeInt, .IMut## );
+         }
+         else {
+            self.scope.addLocalVar( true, false, "__index", Ast.builtinTypeInt, .IMut );
+         }
+      }
+      default {
+         self.error(
+            "unknown kind type of exp for foreach-- %s(%d:%d)"
+            (expType.getTxt(##), exp.$pos.lineNo, exp.$pos.column) );
+      }
    }
 
 

@@ -108,6 +108,7 @@ endef
 
 
 define build-testcode
+	$(call exeLune,$1,test/macro.lns,$2 save,) > /dev/null
 	$(call exeLune,$1,test/Sub2.lns,$2 save,) > /dev/null
 	$(call exeLune,$1,test/Sub3.lns,$2 save,) > /dev/null
 	$(call exeLune,$1,test/Sub3_2.lns,$2 save,) > /dev/null

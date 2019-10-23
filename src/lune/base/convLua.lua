@@ -745,14 +745,14 @@ function convFilter:outputMeta( node )
          for __index, classTypeId in ipairs( __sorted ) do
             local classTypeInfo = __map[ classTypeId ]
             do
-               local scope = classTypeInfo:get_scope()
-               if  nil == scope then
-                  local _scope = scope
-               
-                  Util.err( string.format( "%s.scope is nil", classTypeInfo:getTxt(  )) )
-               end
-               
                if not Ast.isBuiltin( classTypeId ) then
+                  local scope = classTypeInfo:get_scope()
+                  if  nil == scope then
+                     local _scope = scope
+                  
+                     Util.err( string.format( "%s.scope is nil", classTypeInfo:getTxt(  )) )
+                  end
+                  
                   pickupTypeId( classTypeInfo, true, validChildrenSet[classTypeInfo] == nil and not classTypeInfo:get_externalFlag() )
                   if checkExportTypeInfo( classTypeInfo ) then
                      local className = classTypeInfo:getTxt(  )
@@ -2504,39 +2504,42 @@ function convFilter:processSwitch( node, opt )
    self:write( "local _switchExp = " )
    filter( node:get_exp(  ), self, node )
    self:writeln( "" )
-   for index, caseInfo in pairs( node:get_caseList(  ) ) do
-      if index == 1 then
-         self:write( "if " )
-      else
-       
-         self:write( "elseif " )
-      end
-      
-      local expList = caseInfo:get_expList(  )
-      for listIndex, expNode in pairs( expList:get_expList(  ) ) do
-         if listIndex ~= 1 then
-            self:write( " or " )
+   if #node:get_caseList() > 0 then
+      for index, caseInfo in pairs( node:get_caseList() ) do
+         if index == 1 then
+            self:write( "if " )
+         else
+          
+            self:write( "elseif " )
          end
          
-         self:write( "_switchExp == " )
-         filter( expNode, self, node )
+         local expList = caseInfo:get_expList(  )
+         for listIndex, expNode in pairs( expList:get_expList(  ) ) do
+            if listIndex ~= 1 then
+               self:write( " or " )
+            end
+            
+            self:write( "_switchExp == " )
+            filter( expNode, self, node )
+         end
+         
+         self:write( " then" )
+         filter( caseInfo:get_block(), self, node )
       end
       
-      self:write( " then" )
-      filter( caseInfo:get_block(), self, node )
-   end
-   
-   do
-      local _exp = node:get_default(  )
-      if _exp ~= nil then
-         self:writeln( "else " )
-         self:pushIndent(  )
-         filter( _exp, self, node )
-         self:popIndent(  )
+      do
+         local _exp = node:get_default(  )
+         if _exp ~= nil then
+            self:writeln( "else " )
+            self:pushIndent(  )
+            filter( _exp, self, node )
+            self:popIndent(  )
+         end
       end
+      
+      self:writeln( "end" )
    end
    
-   self:writeln( "end" )
    self:popIndent(  )
    self:writeln( "end" )
 end
@@ -3554,7 +3557,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       local val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
       return val
    end
-   Log.log( Log.Level.Info, __func__, 3244, function (  )
+   Log.log( Log.Level.Info, __func__, 3246, function (  )
    
       return string.format( "code: %s", code)
    end )

@@ -11,12 +11,25 @@
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
 - [ ] 文字列中の . を編集すると company-mode がエラーする
+  
+- [ ] 
+     let map:stem!, err = func();
+
+     上記のソースを C に落すと次になる。
+     
+      lune_setQ( map_130, lune_fromDDD( lune_call_form( _pEnv, func_129.val.pAny, lune_global.ddd0 ).val.pAny, 0 ) );
+      lune_setQ( err_131, lune_fromDDD( lune_call_form( _pEnv, func_129.val.pAny, lune_global.ddd0 ).val.pAny, 1 ) );
+     
+     func() の戻り値が ... で、複数扱いになっていない。
+
 
 * 機能
 
 - [ ] Array, List の get(index) 対応。
       戻り値を nilable として、範囲外にアクセスした場合に nil を返す。
   
+  
+- [ ] match でパラメータのない alge は、一つの case に複数指定できるようにする。
   
 - [ ] マクロの実引数の stat 内で補完が効くように対応する。
   

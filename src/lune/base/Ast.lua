@@ -555,6 +555,9 @@ TypeInfoKind.__allList[23] = TypeInfoKind.Form
 TypeInfoKind.FormFunc = 23
 TypeInfoKind._val2NameMap[23] = 'FormFunc'
 TypeInfoKind.__allList[24] = TypeInfoKind.FormFunc
+TypeInfoKind.Ext = 24
+TypeInfoKind._val2NameMap[24] = 'Ext'
+TypeInfoKind.__allList[25] = TypeInfoKind.Ext
 
 local function isBuiltin( typeId )
 
@@ -4888,7 +4891,7 @@ function DDDTypeInfo:get_kind(  )
 end
 function DDDTypeInfo:get_nilable(  )
 
-   return self.typeInfo:get_nilable()
+   return true
 end
 function DDDTypeInfo:get_nilableTypeInfo(  )
 
@@ -5202,6 +5205,220 @@ _moduleObj.builtinTypeAbbr = builtinTypeAbbr
 local builtinTypeAbbrNone = AbbrTypeInfo.new(idProv, "[##]")
 _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
+local ExtTypeInfo = {}
+setmetatable( ExtTypeInfo, { __index = TypeInfo } )
+_moduleObj.ExtTypeInfo = ExtTypeInfo
+function ExtTypeInfo.new( idProvider, luneType )
+   local obj = {}
+   ExtTypeInfo.setmeta( obj )
+   if obj.__init then obj:__init( idProvider, luneType ); end
+   return obj
+end
+function ExtTypeInfo:__init(idProvider, luneType) 
+   TypeInfo.__init( self,luneType:get_scope())
+   
+   local typeId = idProvider:get_id() + 1
+   idProvider:increment(  )
+   self.typeId = typeId
+   self.luneType = luneType
+   self.nilableTypeInfo = NilableTypeInfo.new(self, typeId + 1)
+   idProv:increment(  )
+end
+function ExtTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
+end
+function ExtTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
+
+   return string.format( "Luaval<%s>", self.luneType:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag ))
+end
+function ExtTypeInfo:canEvalWith( other, canEvalType, alt2type )
+
+   return self.luneType:canEvalWith( other, canEvalType, alt2type )
+end
+function ExtTypeInfo:serialize( stream, validChildrenSet )
+
+   Util.err( "illegal call" )
+end
+function ExtTypeInfo:get_display_stirng_with( raw )
+
+   return self:getTxtWithRaw( raw )
+end
+function ExtTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt() )
+end
+function ExtTypeInfo:getModule(  )
+
+   return _moduleObj.headTypeInfo
+end
+function ExtTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Ext
+end
+function ExtTypeInfo:get_srcTypeInfo(  )
+
+   return self
+end
+function ExtTypeInfo:get_nilable(  )
+
+   return false
+end
+function ExtTypeInfo.setmeta( obj )
+  setmetatable( obj, { __index = ExtTypeInfo  } )
+end
+function ExtTypeInfo:get_typeId()
+   return self.typeId
+end
+function ExtTypeInfo:get_luneType()
+   return self.luneType
+end
+function ExtTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
+end
+function ExtTypeInfo:isModule( ... )
+   return self.luneType:isModule( ... )
+end
+
+function ExtTypeInfo:getParentId( ... )
+   return self.luneType:getParentId( ... )
+end
+
+function ExtTypeInfo:get_baseId( ... )
+   return self.luneType:get_baseId( ... )
+end
+
+function ExtTypeInfo:isInheritFrom( ... )
+   return self.luneType:isInheritFrom( ... )
+end
+
+function ExtTypeInfo:get_rawTxt( ... )
+   return self.luneType:get_rawTxt( ... )
+end
+
+function ExtTypeInfo:get_abstractFlag( ... )
+   return self.luneType:get_abstractFlag( ... )
+end
+
+function ExtTypeInfo:equals( ... )
+   return self.luneType:equals( ... )
+end
+
+function ExtTypeInfo:get_externalFlag( ... )
+   return self.luneType:get_externalFlag( ... )
+end
+
+function ExtTypeInfo:get_interfaceList( ... )
+   return self.luneType:get_interfaceList( ... )
+end
+
+function ExtTypeInfo:get_itemTypeInfoList( ... )
+   return self.luneType:get_itemTypeInfoList( ... )
+end
+
+function ExtTypeInfo:get_argTypeInfoList( ... )
+   return self.luneType:get_argTypeInfoList( ... )
+end
+
+function ExtTypeInfo:get_retTypeInfoList( ... )
+   return self.luneType:get_retTypeInfoList( ... )
+end
+
+function ExtTypeInfo:get_parentInfo( ... )
+   return self.luneType:get_parentInfo( ... )
+end
+
+function ExtTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.luneType:hasRouteNamespaceFrom( ... )
+end
+
+function ExtTypeInfo:get_staticFlag( ... )
+   return self.luneType:get_staticFlag( ... )
+end
+
+function ExtTypeInfo:get_accessMode( ... )
+   return self.luneType:get_accessMode( ... )
+end
+
+function ExtTypeInfo:get_autoFlag( ... )
+   return self.luneType:get_autoFlag( ... )
+end
+
+function ExtTypeInfo:get_nonnilableType( ... )
+   return self.luneType:get_nonnilableType( ... )
+end
+
+function ExtTypeInfo:get_baseTypeInfo( ... )
+   return self.luneType:get_baseTypeInfo( ... )
+end
+
+function ExtTypeInfo:get_children( ... )
+   return self.luneType:get_children( ... )
+end
+
+function ExtTypeInfo:addChildren( ... )
+   return self.luneType:addChildren( ... )
+end
+
+function ExtTypeInfo:get_mutMode( ... )
+   return self.luneType:get_mutMode( ... )
+end
+
+function ExtTypeInfo:getParentFullName( ... )
+   return self.luneType:getParentFullName( ... )
+end
+
+function ExtTypeInfo:applyGeneric( ... )
+   return self.luneType:applyGeneric( ... )
+end
+
+function ExtTypeInfo:get_genSrcTypeInfo( ... )
+   return self.luneType:get_genSrcTypeInfo( ... )
+end
+
+function ExtTypeInfo:serializeTypeInfoList( ... )
+   return self.luneType:serializeTypeInfoList( ... )
+end
+
+function ExtTypeInfo:get_scope( ... )
+   return self.luneType:get_scope( ... )
+end
+
+function ExtTypeInfo:get_typeData( ... )
+   return self.luneType:get_typeData( ... )
+end
+
+function ExtTypeInfo:hasBase( ... )
+   return self.luneType:hasBase( ... )
+end
+
+function ExtTypeInfo:createAlt2typeMap( ... )
+   return self.luneType:createAlt2typeMap( ... )
+end
+
+function ExtTypeInfo:getFullName( ... )
+   return self.luneType:getFullName( ... )
+end
+
+
+function NormalTypeInfo.createLuaval( luneType )
+
+   idProv:increment(  )
+   return ExtTypeInfo.new(idProv, luneType)
+end
+
+local builtinTypeLua = NormalTypeInfo.createLuaval( _moduleObj.builtinTypeStem )
+_moduleObj.builtinTypeLua = builtinTypeLua
+
+registBuiltin( "Luaval", "Luaval", TypeInfoKind.Ext, _moduleObj.builtinTypeLua, _moduleObj.headTypeInfo, false )
+local builtinTypeDDDLua = NormalTypeInfo.createDDD( _moduleObj.builtinTypeLua, true )
+_moduleObj.builtinTypeDDDLua = builtinTypeDDDLua
+
+registBuiltin( "__LuaDDD", "__LuaDDD", TypeInfoKind.Ext, _moduleObj.builtinTypeDDDLua, _moduleObj.headTypeInfo, false )
+local builtinTypeLoadedFunc = NormalTypeInfo.createFunc( false, true, nil, TypeInfoKind.Form, _moduleObj.headTypeInfo, true, true, true, AccessMode.Pub, "__loadedfunc", nil, nil, {_moduleObj.builtinTypeDDDLua}, false )
+_moduleObj.builtinTypeLoadedFunc = builtinTypeLoadedFunc
+
+registBuiltin( "__loadedfunc", "__loadedfunc", TypeInfoKind.Ext, _moduleObj.builtinTypeLoadedFunc, _moduleObj.headTypeInfo, false )
 local numberTypeSet = {}
 numberTypeSet[_moduleObj.builtinTypeInt]= true
 numberTypeSet[_moduleObj.builtinTypeChar]= true
@@ -5771,6 +5988,17 @@ function TypeInfo.canEvalWithBase( dest, destMut, other, canEvalType, alt2type )
    
    if dest:get_typeId() == otherSrc:get_typeId() then
       return true, nil
+   end
+   
+   if dest:get_kind() == TypeInfoKind.Ext then
+      return dest:canEvalWith( otherSrc, canEvalType, alt2type )
+   end
+   
+   do
+      local extTypeInfo = _lune.__Cast( otherSrc, 3, ExtTypeInfo )
+      if extTypeInfo ~= nil then
+         otherSrc = extTypeInfo:get_luneType()
+      end
    end
    
    if dest:get_kind() ~= otherSrc:get_kind() then
