@@ -1092,11 +1092,19 @@ _declNodeClass( "ExpToDDD", Node, false, true, false,
                 [ { "expList": "&ExpListNode" } ]
 );
 
+_declNodeClass( "ExpSubDDD", Node, false, true, false,
+                [ { "src": "&Node" },
+                  { "remainIndex": "int" } ]
+);
+
 
 pub enum MacroMode {
+   /** マクロ処理なし */
    None,
+   /** マクロの展開モード */
    Expand,
-   Analyze,
+   /** マクロ呼び出し時の引数解析モード */
+   AnalyzeArg,
 }
 
 _declNodeClass( "ExpOp1", Node, false, true, false,
@@ -2176,4 +2184,14 @@ pub fn Filter.processBlock( node: &BlockNode, opt:T ) mut {
    self.processBlockSub( node, opt );
 
    self.moduleInfoManager.pop();
+}
+
+/**
+指定のノードが 多値のノードか調べる
+
+@param node ノード
+@return 多値の場合 true
+*/
+pub fn hasMultiValNode( node:&Node ): bool {
+   return #node.$expTypeList > 1 or node.$expType.$kind == .DDD;
 }

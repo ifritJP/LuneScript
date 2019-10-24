@@ -4311,6 +4311,96 @@ function ExpToDDDNode:get_expList()
 end
 
 
+function NodeKind.get_ExpSubDDD(  )
+
+   return _lune.unwrap( _moduleObj.nodeKind['ExpSubDDD'])
+end
+
+
+regKind( "ExpSubDDD" )
+function Filter:processExpSubDDD( node, opt )
+
+end
+
+
+function NodeManager:getExpSubDDDNodeList(  )
+
+   return self:getList( _lune.unwrap( _moduleObj.nodeKind['ExpSubDDD']) )
+end
+
+
+local ExpSubDDDNode = {}
+setmetatable( ExpSubDDDNode, { __index = Node } )
+_moduleObj.ExpSubDDDNode = ExpSubDDDNode
+function ExpSubDDDNode:processFilter( filter, opt )
+
+   filter:processExpSubDDD( self, opt )
+end
+function ExpSubDDDNode:canBeRight(  )
+
+   return true
+end
+function ExpSubDDDNode:canBeLeft(  )
+
+   return false
+end
+function ExpSubDDDNode:canBeStatement(  )
+
+   return false
+end
+function ExpSubDDDNode.new( id, pos, typeList, src, remainIndex )
+   local obj = {}
+   ExpSubDDDNode.setmeta( obj )
+   if obj.__init then obj:__init( id, pos, typeList, src, remainIndex ); end
+   return obj
+end
+function ExpSubDDDNode:__init(id, pos, typeList, src, remainIndex) 
+   Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpSubDDD']), pos, typeList)
+   
+   
+   self.src = src
+   self.remainIndex = remainIndex
+   
+end
+function ExpSubDDDNode.create( nodeMan, pos, typeList, src, remainIndex )
+
+   local node = ExpSubDDDNode.new(nodeMan:nextId(  ), pos, typeList, src, remainIndex)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpSubDDDNode:visit( visitor, depth )
+
+   do
+      local child = self.src
+      do
+         local _switchExp = visitor( child, self, 'src', depth )
+         if _switchExp == NodeVisitMode.Child then
+            if not child:visit( visitor, depth + 1 ) then
+               return false
+            end
+            
+         elseif _switchExp == NodeVisitMode.End then
+            return false
+         end
+      end
+      
+      
+   end
+   
+   
+   return true
+end
+function ExpSubDDDNode.setmeta( obj )
+  setmetatable( obj, { __index = ExpSubDDDNode  } )
+end
+function ExpSubDDDNode:get_src()
+   return self.src
+end
+function ExpSubDDDNode:get_remainIndex()
+   return self.remainIndex
+end
+
+
 local MacroMode = {}
 _moduleObj.MacroMode = MacroMode
 MacroMode._val2NameMap = {}
@@ -4339,9 +4429,9 @@ MacroMode.__allList[1] = MacroMode.None
 MacroMode.Expand = 1
 MacroMode._val2NameMap[1] = 'Expand'
 MacroMode.__allList[2] = MacroMode.Expand
-MacroMode.Analyze = 2
-MacroMode._val2NameMap[2] = 'Analyze'
-MacroMode.__allList[3] = MacroMode.Analyze
+MacroMode.AnalyzeArg = 2
+MacroMode._val2NameMap[2] = 'AnalyzeArg'
+MacroMode.__allList[3] = MacroMode.AnalyzeArg
 
 function NodeKind.get_ExpOp1(  )
 
@@ -9912,4 +10002,9 @@ function Filter:processBlock( node, opt )
    self.moduleInfoManager:pop(  )
 end
 
+local function hasMultiValNode( node )
+
+   return #node:get_expTypeList() > 1 or node:get_expType():get_kind() == Ast.TypeInfoKind.DDD
+end
+_moduleObj.hasMultiValNode = hasMultiValNode
 return _moduleObj

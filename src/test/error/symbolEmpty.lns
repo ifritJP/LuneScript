@@ -1,3 +1,13 @@
+{
+   let val;
+   let val2 = val; // error
+   fn func( flag:bool ) {
+      print( val, val2 ); // error
+      val2 = val; // error
+      print( val, val2 ); // error
+   }
+   print( val ); // error
+}
 class Test {
    let val:int {pub};
 }
@@ -34,7 +44,7 @@ class Test {
 {
    let val;
    fn func() {
-      val = 1; // error
+      val = 1;
    }
    func();
    print( val + 1 ); // error

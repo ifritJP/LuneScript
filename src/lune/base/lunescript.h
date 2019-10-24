@@ -658,6 +658,8 @@ extern "C" {
     _lune_createDDD( LUNE_DEBUG_POS, ENV, HASDDD, NUM, ##__VA_ARGS__)
 #define lune_createDDDOnly( ENV, NUM )          \
     _lune_createDDDOnly( LUNE_DEBUG_POS, ENV, NUM )
+#define lune_createSubDDD( ENV, OFFSET, DDD ) \
+    _lune_createSubDDD( LUNE_DEBUG_POS, ENV, OFFSET, DDD )
 #define lune_createMRet( ENV, HASDDD, NUM, ... )        \
     _lune_createMRet( LUNE_DEBUG_POS, ENV, HASDDD, NUM, ##__VA_ARGS__ )
 #define lune_class_new( ENV, SIZE )             \
@@ -689,6 +691,8 @@ extern "C" {
     extern lune_stem_t _lune_func2stem( LUNE_DEBUG_DECL, lune_env_t * _pEnv, lune_closure_t * pFunc, int argNum, bool hasDDD, int num, ... );
     extern lune_stem_t _lune_createDDD( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t _lune_createDDDOnly( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int num );
+    extern lune_stem_t _lune_createSubDDD(
+        const char * pFile, int lineNo, lune_env_t * _pEnv, int offset, lune_any_t * pDDD );
     extern lune_stem_t _lune_createMRet( LUNE_DEBUG_DECL, lune_env_t * _pEnv, bool hasDDD, int num, ... );
     extern lune_stem_t _lune_class_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int size );
     extern lune_stem_t _lune_alge_new( LUNE_DEBUG_DECL, lune_env_t * _pEnv, int valType, int size, lune_algeVal_gc_t * gc );
@@ -740,6 +744,7 @@ extern "C" {
     extern lune_stem_t lune_toIF( lune_env_t * _pEnv, lune_any_t * pAny, const lune_type_meta_t * pMeta );
     extern lune_stem_t lune_setMRet( lune_env_t * _pEnv, lune_any_t * pAny );
     extern lune_stem_t lune_getValFromDDD( lune_any_t * pAny, int index );
+
 
 
     extern lune_stem_t lune_unwrap_stem( lune_stem_t pAny, lune_stem_t pDefVal );

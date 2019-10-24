@@ -659,6 +659,37 @@ lune_stem_t _lune_createDDD(
  *
  * ... に含める値は全て any に変換する必要がある。
  *
+ * @param hasDDD ... の最後が ... 要素の場合 true。
+ * @param num 値の数
+ * @param ... 含める値
+ * @return ... の値
+ */
+lune_stem_t _lune_createSubDDD(
+    const char * pFile, int lineNo, lune_env_t * _pEnv, int offset, lune_any_t * pDDD )
+{
+    int len;
+    len = lune_lenDDD( pDDD ) - offset;
+    if ( len < 0 ) {
+        return lune_global.nilStem;
+    }
+
+    lune_stem_t subDDD = _lune_createDDDOnly( pFile, lineNo, _pEnv, len );
+        
+    int index;
+    for ( index = 0; index < len; index++ ) {
+        lune_set2DDDArg( subDDD.val.pAny, index, lune_fromDDD( pDDD, index + offset ) );
+    }
+    return subDDD;
+}
+
+
+
+
+/**
+ * ... の値を生成する
+ *
+ * ... に含める値は全て any に変換する必要がある。
+ *
  * @param num 値の数
  * @param ... 含める値
  * @return ... の値

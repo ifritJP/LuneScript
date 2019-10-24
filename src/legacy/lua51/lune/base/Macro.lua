@@ -888,9 +888,9 @@ function MacroCtrl:finishMacroMode(  )
    self.macroMode = Nodes.MacroMode.None
 end
 
-function MacroCtrl:startAnalyzeMode(  )
+function MacroCtrl:startAnalyzeArgMode(  )
 
-   self.macroMode = Nodes.MacroMode.Analyze
+   self.macroMode = Nodes.MacroMode.AnalyzeArg
    self.symbol2ValueMapForMacro = {}
 end
 

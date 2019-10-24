@@ -6,6 +6,26 @@ let mut g_val = 100;
 
 {
    _section();
+   fn func(): ...<int> {
+      return 1, 2, 3;
+   }
+   fn sub2( val1:int!, ... ) {
+      print( val1, ... );
+   }
+   sub2( func()** );
+}
+{
+   _section();
+   let mut val = 0;
+   let func:form = fn (): ... {
+      val = val + 1;
+      return val + 1, val + 2;
+   };
+   let work1, work2 = func();
+   print( work1, work2 );
+}
+{
+   _section();
    let func, mess = _load( ```
 local obj = {}
 obj.val1 = 1

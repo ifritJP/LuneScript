@@ -70,6 +70,10 @@ pub enum AnalyzeMode {
    Complete,
 }
 
+class AccessSymPos {
+   pri let symbol:&Ast.SymbolInfo {pub};
+   pri let pos:&Parser.Position {pub};
+}
 
 /**
 初期値を持たないシンボルの型を確定させるための処理を行なう。
@@ -83,6 +87,7 @@ class TentativeSymbol {
    pri let mut scope:&Ast.Scope;
    pri let mut skipFlag:bool;
    pri let loopFlag:bool;
+   pri let mut accessSymList:List<&AccessSymPos> {pub&};
 
    pub fn __init( parent:TentativeSymbol!, scope:&Ast.Scope, loopFlag:bool ) {
       self.symbolSet = (@);
@@ -91,6 +96,16 @@ class TentativeSymbol {
       self.scope = scope;
       self.skipFlag = false;
       self.loopFlag = loopFlag;
+      self.accessSymList = [];
+   }
+
+   pub fn addAccessSym( accessSym:&AccessSymPos ) mut {
+      self.accessSymList.insert( accessSym );
+   }
+   pub fn clearAccessSym() mut {
+      if #self.accessSymList ~= 0 {
+         self.accessSymList = [];
+      }
    }
 
    pub fn checkAndExclude( mut symbolInfo:&Ast.SymbolInfo ) mut : bool {
@@ -435,11 +450,25 @@ pub class TransUnit extend (TransUnitIF, Parser.PushbackParser) {
       self.tentativeSymbol = new TentativeSymbol( self.tentativeSymbol, scope, loopFlag );
    }
 
+   pri fn checkAccesSym() mut {
+      foreach accessSym in self.tentativeSymbol.$accessSymList {
+         let symbolInfo = accessSym.$symbol;
+         if not symbolInfo.$hasValueFlag {
+            self.addErrMess(
+               accessSym.$pos,
+               "This can't access variable have no value -- %s" (symbolInfo.$name) );
+         }
+      }
+      self.tentativeSymbol.clearAccessSym();
+   }
+   
    pri fn finishTentativeSymbol( complete:bool ) mut {
+      self.checkAccesSym();
       self.tentativeSymbol = unwrap self.tentativeSymbol.finish( complete );
    }
 
    pri fn mergeTentativeSymbol( scope:&Ast.Scope ) mut {
+      self.checkAccesSym();
       self.tentativeSymbol.newSet( scope );
    }
 

@@ -459,6 +459,30 @@ AnalyzeMode.Complete = 2
 AnalyzeMode._val2NameMap[2] = 'Complete'
 AnalyzeMode.__allList[3] = AnalyzeMode.Complete
 
+local AccessSymPos = {}
+function AccessSymPos.setmeta( obj )
+  setmetatable( obj, { __index = AccessSymPos  } )
+end
+function AccessSymPos.new( symbol, pos )
+   local obj = {}
+   AccessSymPos.setmeta( obj )
+   if obj.__init then
+      obj:__init( symbol, pos )
+   end
+   return obj
+end
+function AccessSymPos:__init( symbol, pos )
+
+   self.symbol = symbol
+   self.pos = pos
+end
+function AccessSymPos:get_symbol()
+   return self.symbol
+end
+function AccessSymPos:get_pos()
+   return self.pos
+end
+
 local TentativeSymbol = {}
 function TentativeSymbol.new( parent, scope, loopFlag )
    local obj = {}
@@ -473,6 +497,18 @@ function TentativeSymbol:__init(parent, scope, loopFlag)
    self.scope = scope
    self.skipFlag = false
    self.loopFlag = loopFlag
+   self.accessSymList = {}
+end
+function TentativeSymbol:addAccessSym( accessSym )
+
+   table.insert( self.accessSymList, accessSym )
+end
+function TentativeSymbol:clearAccessSym(  )
+
+   if #self.accessSymList ~= 0 then
+      self.accessSymList = {}
+   end
+   
 end
 function TentativeSymbol:checkAndExclude( symbolInfo )
 
@@ -616,6 +652,9 @@ function TentativeSymbol:newSet( scope )
 end
 function TentativeSymbol.setmeta( obj )
   setmetatable( obj, { __index = TentativeSymbol  } )
+end
+function TentativeSymbol:get_accessSymList()
+   return self.accessSymList
 end
 
 
@@ -764,12 +803,26 @@ function TransUnit:prepareTentativeSymbol( scope, loopFlag )
 
    self.tentativeSymbol = TentativeSymbol.new(self.tentativeSymbol, scope, loopFlag)
 end
+function TransUnit:checkAccesSym(  )
+
+   for __index, accessSym in pairs( self.tentativeSymbol:get_accessSymList() ) do
+      local symbolInfo = accessSym:get_symbol()
+      if not symbolInfo:get_hasValueFlag() then
+         self:addErrMess( accessSym:get_pos(), string.format( "This can't access variable have no value -- %s", symbolInfo:get_name()) )
+      end
+      
+   end
+   
+   self.tentativeSymbol:clearAccessSym(  )
+end
 function TransUnit:finishTentativeSymbol( complete )
 
+   self:checkAccesSym(  )
    self.tentativeSymbol = _lune.unwrap( self.tentativeSymbol:finish( complete ))
 end
 function TransUnit:mergeTentativeSymbol( scope )
 
+   self:checkAccesSym(  )
    self.tentativeSymbol:newSet( scope )
 end
 function TransUnit:getCurrentClass(  )
@@ -3212,7 +3265,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2138, function (  )
+   Log.log( Log.Level.Info, __func__, 2167, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3227,7 +3280,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2150, function (  )
+               Log.log( Log.Level.Info, __func__, 2179, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3257,7 +3310,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2170, function (  )
+   Log.log( Log.Level.Info, __func__, 2199, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -3575,7 +3628,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2499, function (  )
+   Log.log( Log.Level.Info, __func__, 2528, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -4281,7 +4334,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, refFlag, mutF
    return Nodes.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), {typeInfo}, symbolNode, refFlag, mutFlag, arrayMode )
 end
 
-function TransUnit:analyzeDeclArgList( accessMode, argList, parentPub )
+function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
 
    local nextToken = Parser.noneToken
    local hasDDDFlag = false
@@ -4314,17 +4367,17 @@ function TransUnit:analyzeDeclArgList( accessMode, argList, parentPub )
          end
          
          table.insert( argList, Nodes.DeclArgDDDNode.create( self.nodeManager, argName.pos, {dddTypeInfo} ) )
-         self.scope:addLocalVar( true, true, argName.txt, dddTypeInfo, Ast.MutMode.IMut )
+         scope:addLocalVar( true, true, argName.txt, dddTypeInfo, Ast.MutMode.IMut )
       else
        
          argName = self:checkSymbol( argName, SymbolMode.MustNot_ )
-         if self.scope:getSymbolTypeInfo( argName.txt, self.scope, self.moduleScope ) then
+         if scope:getSymbolTypeInfo( argName.txt, scope, self.moduleScope ) then
             self:addErrMess( argName.pos, string.format( "shadowing variable -- %s", argName.txt) )
          end
          
          self:checkNextToken( ":" )
          local refType = self:analyzeRefType( accessMode, false, parentPub )
-         local symbolInfo = self.scope:addLocalVar( true, true, argName.txt, refType:get_expType(), mutable )
+         local symbolInfo = scope:addLocalVar( true, true, argName.txt, refType:get_expType(), mutable )
          local arg = Nodes.DeclArgNode.create( self.nodeManager, argName.pos, refType:get_expTypeList(), argName, symbolInfo, refType )
          table.insert( argList, arg )
       end
@@ -4560,7 +4613,7 @@ function TransUnit:createAST( parser, macroFlag, moduleName )
    return ASTInfo.new(ast, moduleTypeInfo, moduleSymbolKind)
 end
 
-function TransUnit:analyzeDeclMacro( accessMode, firstToken )
+function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentType, workArgList )
 
    local pubFlag = false
    do
@@ -4575,12 +4628,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
       end
    end
    
-   local nameToken = self:getSymbolToken( SymbolMode.Must_ )
-   self:checkNextToken( "(" )
-   local scope = self:pushScope( false )
-   local workArgList = {}
    local argList = {}
-   local nextToken = self:analyzeDeclArgList( accessMode, workArgList, false )
    local argTypeList = {}
    for index, argNode in pairs( workArgList ) do
       do
@@ -4597,10 +4645,10 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    end
    
    self:checkNextToken( "{" )
-   nextToken = self:getToken(  )
+   local nextToken = self:getToken(  )
    local stmtBlock = nil
    if nextToken.txt == "{" then
-      local parser = Parser.WrapParser.new(self.parser, string.format( "decl macro %s", nameToken.txt))
+      local parser = Parser.WrapParser.new(self.parser, self.parser:getStreamName(  ))
       self.macroScope = scope
       local funcType = Ast.NormalTypeInfo.createFunc( false, true, nil, Ast.TypeInfoKind.Func, Ast.headTypeInfo, false, true, true, Ast.AccessMode.Global, "_lnsLoad", nil, {Ast.builtinTypeString, Ast.builtinTypeString}, {Ast.builtinTypeStem}, false )
       scope:addLocalVar( false, false, "_lnsLoad", funcType, Ast.MutMode.IMut )
@@ -4619,7 +4667,6 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
       self:pushback(  )
    end
    
-   self:popScope(  )
    local tokenList = {}
    local braceCount = 0
    while true do
@@ -4637,11 +4684,26 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
       table.insert( tokenList, nextToken )
    end
    
-   local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, scope, Ast.TypeInfoKind.Macro, self:getCurrentNamespaceTypeInfo(  ), false, false, true, accessMode, nameToken.txt, nil, argTypeList )
-   self.scope:addMacro( typeInfo, accessMode )
+   local typeInfo = Ast.NormalTypeInfo.createFunc( false, false, scope, Ast.TypeInfoKind.Macro, parentType, false, false, true, accessMode, nameToken.txt, nil, argTypeList )
    local declMacroInfo = Nodes.DeclMacroInfo.new(pubFlag, nameToken, argList, stmtBlock, tokenList)
    local node = Nodes.DeclMacroNode.create( self.nodeManager, firstToken.pos, {typeInfo}, declMacroInfo )
    self.macroCtrl:regist( node )
+   return node
+end
+
+function TransUnit:analyzeDeclMacro( accessMode, firstToken )
+
+   local nameToken = self:getSymbolToken( SymbolMode.Must_ )
+   self:checkNextToken( "(" )
+   local scope = Ast.TypeInfo.createScope( self.topScope, false, nil, nil )
+   local workArgList = {}
+   local nextToken = self:analyzeDeclArgList( accessMode, scope, workArgList, false )
+   local parentInfo = self:getCurrentNamespaceTypeInfo(  )
+   local backScope = self.scope
+   self.scope = scope
+   local node = self:analyzeDeclMacroSub( accessMode, firstToken, nameToken, scope, parentInfo, workArgList )
+   self.scope = backScope
+   self.scope:addMacro( node:get_expType(), accessMode )
    return node
 end
 
@@ -5105,7 +5167,7 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
    self:checkNextToken( "(" )
    local argList = {}
    local funcBodyScope = self:pushScope( false )
-   local nextToken = self:analyzeDeclArgList( accessMode, argList, Ast.isPubToExternal( accessMode ) )
+   local nextToken = self:analyzeDeclArgList( accessMode, self.scope, argList, Ast.isPubToExternal( accessMode ) )
    self:checkToken( nextToken, ")" )
    local retTypeList = {}
    nextToken = self:getToken(  )
@@ -6028,7 +6090,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, abstractFlag, overrideFlag, ac
    end
    
    local argList = {}
-   token = self:analyzeDeclArgList( accessMode, argList, parentPub )
+   token = self:analyzeDeclArgList( accessMode, self.scope, argList, parentPub )
    self:checkToken( token, ")" )
    token = self:getToken(  )
    local mutable = false
@@ -6826,13 +6888,13 @@ function TransUnit:createExpList( pos, expTypeList, expList, followOn, abbrNode 
    local mRetExp = nil
    if #expList > 0 then
       for index, exp in pairs( expList ) do
-         if #exp:get_expTypeList() > 1 or exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
+         if Nodes.hasMultiValNode( exp ) then
             if index ~= #expList then
                table.insert( workList, Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), {exp:get_expType()}, exp ) )
             else
              
                table.insert( workList, exp )
-               if #exp:get_expTypeList() > 1 then
+               if Nodes.hasMultiValNode( exp ) then
                   mRetExp = Nodes.MRetExp.new(exp, index)
                   for listIndex, expType in pairs( exp:get_expTypeList() ) do
                      if listIndex ~= 1 then
@@ -6913,7 +6975,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, expNode, expectTy
       table.insert( expTypeList, exp:get_expType() )
       local token = self:getToken(  )
       if token.txt == "**" then
-         if #exp:get_expTypeList() <= 1 then
+         if not Nodes.hasMultiValNode( exp ) then
             self:addErrMess( exp:get_pos(), string.format( "This arg(%d) doesn't have multiple value. It must not use '**'", index) )
          end
          
@@ -7152,65 +7214,86 @@ function TransUnit:checkImplicitCast( alt2typeMap, dstTypeList, expListNode, cal
    local hasModNode = false
    local newExpNodeList = {}
    local expTypeList = {}
-   for index, expNode in pairs( expNodeList ) do
-      local workNode = expNode
-      local stopFlag = false
-      if #dstTypeList >= index then
-         local dstType = dstTypeList[index]
-         do
-            local repNode = callback( dstType, expNode )
-            if repNode ~= nil then
-               if not hasModNode then
-                  hasModNode = true
-               end
-               
-               workNode = repNode
-            else
-               if dstType ~= Ast.builtinTypeEmpty and not dstType:equals( expNode:get_expType() ) and not dstType:get_nonnilableType():equals( expNode:get_expType() ) then
-                  if expNode:get_kind() ~= Nodes.NodeKind.get_Abbr() then
-                     if not hasModNode then
-                        hasModNode = true
+   local function process( index, dstType, expNode, workNode )
+   
+      do
+         local repNode = callback( dstType, expNode )
+         if repNode ~= nil then
+            if not hasModNode then
+               hasModNode = true
+            end
+            
+            workNode = repNode
+         else
+            if dstType ~= Ast.builtinTypeEmpty and not dstType:equals( expNode:get_expType() ) and not dstType:get_nonnilableType():equals( expNode:get_expType() ) then
+               if expNode:get_kind() ~= Nodes.NodeKind.get_Abbr() then
+                  if not hasModNode then
+                     hasModNode = true
+                  end
+                  
+                  if dstType:get_kind() == Ast.TypeInfoKind.DDD then
+                     local argList = {}
+                     local argTypeList = {}
+                     for workIndex = index, #expNodeList do
+                        local appNode = expNodeList[workIndex]
+                        table.insert( argList, appNode )
                      end
                      
-                     if dstType:get_kind() == Ast.TypeInfoKind.DDD then
-                        local argList = {}
-                        local argTypeList = {}
-                        for workIndex = index, #expNodeList do
-                           local appNode = expNodeList[workIndex]
-                           table.insert( argList, appNode )
-                        end
-                        
-                        local mRetExp
-                        
-                        do
-                           local workMRetExp = expListNode:get_mRetExp()
-                           if workMRetExp ~= nil then
-                              mRetExp = Nodes.MRetExp.new(workMRetExp:get_exp(), workMRetExp:get_index() - index + 1)
-                           else
-                              mRetExp = nil
+                     local mRetExp
+                     
+                     do
+                        local workMRetExp = expListNode:get_mRetExp()
+                        if workMRetExp ~= nil then
+                           mRetExp = Nodes.MRetExp.new(workMRetExp:get_exp(), workMRetExp:get_index() - index + 1)
+                           if #argList == 0 then
+                              return Nodes.ExpSubDDDNode.create( self.nodeManager, expNode:get_pos(), workMRetExp:get_exp():get_expTypeList(), workMRetExp:get_exp(), index - workMRetExp:get_index() ), true
                            end
+                           
+                        else
+                           mRetExp = nil
                         end
-                        
-                        local newExpListNode = Nodes.ExpListNode.create( self.nodeManager, expNode:get_pos(), argTypeList, argList, mRetExp, expListNode:get_followOn() )
-                        workNode = Nodes.ExpToDDDNode.create( self.nodeManager, expNode:get_pos(), {dstType}, newExpListNode )
-                        stopFlag = true
-                     else
-                      
-                        local castType = alt2typeMap[dstType]
-                        if  nil == castType then
-                           local _castType = castType
-                        
-                           castType = dstType
-                        end
-                        
-                        workNode = Nodes.ExpCastNode.create( self.nodeManager, expNode:get_pos(), {expNode:get_expType()}, expNode, castType, Nodes.CastKind.Implicit )
                      end
                      
+                     local newExpListNode = Nodes.ExpListNode.create( self.nodeManager, expNode:get_pos(), argTypeList, argList, mRetExp, expListNode:get_followOn() )
+                     workNode = Nodes.ExpToDDDNode.create( self.nodeManager, expNode:get_pos(), {dstType}, newExpListNode )
+                     return workNode, true
+                  else
+                   
+                     local castType = alt2typeMap[dstType]
+                     if  nil == castType then
+                        local _castType = castType
+                     
+                        castType = dstType
+                     end
+                     
+                     workNode = Nodes.ExpCastNode.create( self.nodeManager, expNode:get_pos(), {expNode:get_expType()}, expNode, castType, Nodes.CastKind.Implicit )
                   end
                   
                end
                
             end
+            
+         end
+      end
+      
+      return workNode, false
+   end
+   for index, expNode in pairs( expNodeList ) do
+      local workNode = expNode
+      local stopFlag = false
+      if #dstTypeList >= index then
+         if index == #expNodeList and expNode:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
+            for dstIndex = index, #dstTypeList do
+               workNode = expNode
+               workNode, stopFlag = process( dstIndex, dstTypeList[dstIndex], expNode, workNode )
+               table.insert( newExpNodeList, workNode )
+               table.insert( expTypeList, workNode:get_expType() )
+            end
+            
+            break
+         else
+          
+            workNode, stopFlag = process( index, dstTypeList[index], expNode, workNode )
          end
          
       end
@@ -7231,7 +7314,7 @@ function TransUnit:checkImplicitCast( alt2typeMap, dstTypeList, expListNode, cal
    do
       local mRetExp = expListNode:get_mRetExp()
       if mRetExp ~= nil then
-         if mRetExp:get_index() <= #newExpNodeList and newExpNodeList[mRetExp:get_index()]:get_expType():get_kind() ~= Ast.TypeInfoKind.DDD then
+         if mRetExp:get_index() <= #dstTypeList and dstTypeList[mRetExp:get_index()]:get_kind() ~= Ast.TypeInfoKind.DDD then
             newMRetExp = mRetExp
          end
          
@@ -7553,7 +7636,7 @@ end
 function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, genericsClass )
 
    if funcTypeInfo:get_kind(  ) == Ast.TypeInfoKind.Macro then
-      self.macroCtrl:startAnalyzeMode(  )
+      self.macroCtrl:startAnalyzeArgMode(  )
    end
    
    local work = self:getToken(  )
@@ -8103,7 +8186,7 @@ function TransUnit:dumpComp( writer, pattern, symbolInfo, getterFlag )
             local _switchExp = (symbolInfo:get_kind() )
             if _switchExp == Ast.SymbolKind.Fun or _switchExp == Ast.SymbolKind.Mtd then
                writer:write( "displayTxt", string.format( "%s", typeInfo:get_display_stirng()) )
-            elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
+            elseif _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var or _switchExp == Ast.SymbolKind.Arg then
                local name = symbolInfo:get_name()
                do
                   local algeTypeInfo = _lune.__Cast( typeInfo, 3, Ast.AlgeTypeInfo )
@@ -8308,7 +8391,7 @@ function TransUnit:analyzeExpField( firstToken, token, mode, prefixExp )
       
    end
    
-   if self.macroCtrl:get_macroMode() == Nodes.MacroMode.Analyze then
+   if self.macroCtrl:get_macroMode() == Nodes.MacroMode.AnalyzeArg then
       if accessNil then
          self.helperInfo.useNilAccess = true
       end
@@ -8591,7 +8674,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
       end
       
    elseif mode == ExpSymbolMode.Symbol then
-      if self.macroCtrl:get_macroMode() == Nodes.MacroMode.Analyze then
+      if self.macroCtrl:get_macroMode() == Nodes.MacroMode.AnalyzeArg then
          exp = Nodes.LiteralSymbolNode.create( self.nodeManager, firstToken.pos, {Ast.builtinTypeSymbol}, token )
       else
        
@@ -8639,7 +8722,7 @@ function TransUnit:analyzeExpSymbol( firstToken, token, mode, prefixExp, skipFla
                if not symbolInfo:get_hasValueFlag() then
                   local nsTypeInfo = self:getCurrentNamespaceTypeInfo(  )
                   if not symbolInfo:get_scope():isInnerOf( _lune.unwrap( nsTypeInfo:get_scope()) ) then
-                     self:addErrMess( firstToken.pos, string.format( "This can't access variable have no value -- %s", symbolInfo:get_name()) )
+                     self.tentativeSymbol:addAccessSym( AccessSymPos.new(symbolInfo, firstToken.pos) )
                   end
                   
                end

@@ -34,7 +34,7 @@ fn TransUnit.createExpList(
    let mut mRetExp:Nodes.MRetExp! = nil;
    if #expList > 0 {
       foreach exp, index in expList {
-         if #exp.$expTypeList > 1 or exp.$expType.$kind == .DDD {
+         if Nodes.hasMultiValNode( exp ) {
             // 複数の結果を持つ場合
             if index ~= #expList {
                // 最終ノード以外
@@ -44,8 +44,8 @@ fn TransUnit.createExpList(
             }
             else {
                workList.insert( exp );
-               if #exp.$expTypeList > 1 {
-                  // 最終ノードが複数の値を持つ場合は、その型を追加する
+               if Nodes.hasMultiValNode( exp ) {
+                  // 最終ノードが複数の値を持つ場合は、その複数の型を追加する。
                   mRetExp = new Nodes.MRetExp( exp, index );
                   foreach expType, listIndex in exp.$expTypeList {
                      if listIndex ~= 1 {
@@ -149,7 +149,8 @@ fn TransUnit.analyzeExpList(
       let mut token = self.getToken(##);
 
       if token.txt == "**" {
-         if #exp.$expTypeList <= 1 {
+         //if #exp.$expTypeList <= 1 {
+         if not Nodes.hasMultiValNode( exp ) {
             self.addErrMess(
                exp.$pos,
                "This arg(%d) doesn't have multiple value. It must not use '**'" (index) );
@@ -458,8 +459,28 @@ fn TransUnit.analyzeExpRefItem(
 }
 
 
+/**
+expNode から dstType に代入する際に、
+暗黙型キャストが必要かどうかをチェックする。
+
+必要な場合は、 変換を行なう ExpCastNode を返す。
+
+*/
 form checkImplicitCastCallback( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node!;
 
+
+/**
+expListNode の値を dstTypeList へ代入する際に、
+暗黙キャストされるかどうかをチェックし、
+暗黙キャストされる場合、そのノードを ExpCastNode に変換した
+ノードリストを返す。
+
+@param alt2typeMap generics 情報
+@param dstTypeList 代入先型リスト
+@param expListNode 代入元ノードリスト
+@param callback 暗黙キャストをするかどうかの判定コールバック
+
+*/
 fn TransUnit.checkImplicitCast(
    alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
    dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
@@ -469,62 +490,91 @@ fn TransUnit.checkImplicitCast(
    let mut hasModNode = false;
    let mut newExpNodeList:List<&Nodes.Node> = [];
    let mut expTypeList:List<&Ast.TypeInfo> = [];
+
+
+   fn process( index:int, dstType:&Ast.TypeInfo,
+               expNode:&Nodes.Node, mut workNode:&Nodes.Node ) : &Nodes.Node, bool
+   {
+      //if dstType.$kind == .Box and expNode.$expType.$kind ~= .Box {
+      if! let repNode = callback( dstType, expNode ) {
+         if not hasModNode {
+            hasModNode = true;
+         }
+         workNode = repNode;
+      }
+      else {
+         if dstType ~= Ast.builtinTypeEmpty and
+            not dstType.equals( expNode.$expType ## ) and
+            not dstType.$nonnilableType.equals( expNode.$expType ## )
+         {
+            if expNode.$kind ~= Nodes.NodeKind.$Abbr {
+               if not hasModNode {
+                  hasModNode = true;
+               }
+               if dstType.$kind == .DDD {
+                  let mut argList:List<&Nodes.Node> = [];
+                  let mut argTypeList:List<&Ast.TypeInfo> = [];
+                  for workIndex = index, #expNodeList {
+                     let appNode = expNodeList[ workIndex ];
+                     argList.insert( appNode );
+                  }
+
+                  let mRetExp:Nodes.MRetExp!;
+                  if! let workMRetExp = expListNode.$mRetExp {
+                     mRetExp = new Nodes.MRetExp(
+                        workMRetExp.$exp, workMRetExp.$index - index + 1 );
+
+                     if #argList == 0 {
+                        return Nodes.ExpSubDDDNode.create(
+                           self.nodeManager, expNode.$pos,
+                           workMRetExp.$exp.$expTypeList,
+                           workMRetExp.$exp, index - workMRetExp.$index ), true;
+                     }
+                  }
+                  else {
+                     mRetExp = nil;
+                  }
+                  let newExpListNode = Nodes.ExpListNode.create(
+                     self.nodeManager, expNode.$pos, argTypeList, argList,
+                     mRetExp, expListNode.$followOn );
+                  
+                  workNode = Nodes.ExpToDDDNode.create(
+                     self.nodeManager, expNode.$pos, [ dstType ], newExpListNode );
+                  return workNode, true;
+               }
+               else {
+                  let! castType = alt2typeMap[ dstType ] {
+                     castType = dstType;
+                  };
+                  workNode = Nodes.ExpCastNode.create(
+                     self.nodeManager, expNode.$pos, [ expNode.$expType ],
+                     expNode, castType, .Implicit );   
+               }
+            }
+         }
+      }
+      return workNode, false;
+   }
    
    foreach expNode, index in expNodeList {
       let mut workNode = expNode;
       let mut stopFlag = false;
       if #dstTypeList >= index {
-         let dstType = dstTypeList[ index ];
-         //if dstType.$kind == .Box and expNode.$expType.$kind ~= .Box {
-         if! let repNode = callback( dstType, expNode ) {
-            if not hasModNode {
-               hasModNode = true;
+         if index == #expNodeList and expNode.$expType.$kind == .DDD {
+            // 最終ノードが DDD の場合、
+            // 残りの代入先に対して調べる
+            for dstIndex = index, #dstTypeList {
+               workNode = expNode;
+               workNode, stopFlag = process(
+                  dstIndex, dstTypeList[ dstIndex ], expNode, workNode );
+               newExpNodeList.insert( workNode );
+               expTypeList.insert( workNode.$expType );
             }
-            workNode = repNode;
+            break;
          }
          else {
-            if dstType ~= Ast.builtinTypeEmpty and
-               not dstType.equals( expNode.$expType ## ) and
-               not dstType.$nonnilableType.equals( expNode.$expType ## )
-            {
-               if expNode.$kind ~= Nodes.NodeKind.$Abbr {
-                  if not hasModNode {
-                     hasModNode = true;
-                  }
-                  if dstType.$kind == .DDD {
-                     let mut argList:List<&Nodes.Node> = [];
-                     let mut argTypeList:List<&Ast.TypeInfo> = [];
-                     for workIndex = index, #expNodeList {
-                        let appNode = expNodeList[ workIndex ];
-                        argList.insert( appNode );
-                     }
-
-                     let mRetExp:Nodes.MRetExp!;
-                     if! let workMRetExp = expListNode.$mRetExp {
-                        mRetExp = new Nodes.MRetExp(
-                           workMRetExp.$exp, workMRetExp.$index - index + 1 );
-                     }
-                     else {
-                        mRetExp = nil;
-                     }
-                     let newExpListNode = Nodes.ExpListNode.create(
-                        self.nodeManager, expNode.$pos, argTypeList, argList,
-                        mRetExp, expListNode.$followOn );
-                     
-                     workNode = Nodes.ExpToDDDNode.create(
-                        self.nodeManager, expNode.$pos, [ dstType ], newExpListNode );
-                     stopFlag = true;
-                  }
-                  else {
-                     let! castType = alt2typeMap[ dstType ] {
-                        castType = dstType;
-                     };
-                     workNode = Nodes.ExpCastNode.create(
-                        self.nodeManager, expNode.$pos, [ expNode.$expType ],
-                        expNode, castType, .Implicit );   
-                  }
-               }
-            }
+            workNode, stopFlag = process( index, dstTypeList[ index ],
+                                          expNode, workNode );
          }
       }
 
@@ -541,9 +591,11 @@ fn TransUnit.checkImplicitCast(
 
    let mut newMRetExp:&Nodes.MRetExp! = nil;
    if! let mRetExp = expListNode.$mRetExp {
-      if mRetExp.$index <= #newExpNodeList and
-         newExpNodeList[ mRetExp.$index ].$expType.$kind ~= .DDD
+      if mRetExp.$index <= #dstTypeList and dstTypeList[ mRetExp.$index ].$kind ~= .DDD
       {
+         // 代入元の多値の先頭位置と、代入先の ... の位置が異なる場合、
+         // 代入元の多値位置情報を記録する。
+         // 位置が同じ場合は、そのまま代入するだけなので記録しない。
          newMRetExp = mRetExp;
       }
    }
@@ -931,7 +983,7 @@ fn TransUnit.prepareExpCall(
 {
 
    if funcTypeInfo.get_kind() == .Macro {
-      self.macroCtrl.startAnalyzeMode();
+      self.macroCtrl.startAnalyzeArgMode();
    }
 
    let work = self.getToken(##);
@@ -1540,7 +1592,7 @@ fn TransUnit.dumpComp(
             case .Fun, .Mtd {
                writer.write( "displayTxt", "%s" ( typeInfo.$display_stirng ) );
             }  
-            case .Mbr, .Var {
+            case .Mbr, .Var, .Arg {
                let mut name = symbolInfo.$name;
                if! let algeTypeInfo = typeInfo@@@Ast.AlgeTypeInfo {
                   if! let valInfo = algeTypeInfo.getValInfo( name ) {
@@ -1750,10 +1802,14 @@ fn TransUnit.analyzeExpField(
             "This is not nilable. -- %s" (prefixExp.$expType.getTxt(##)) ); 
       }
    }
-   if self.macroCtrl.$macroMode == .Analyze {
+   if self.macroCtrl.$macroMode == .AnalyzeArg {
       if accessNil {
          self.helperInfo.useNilAccess = true;
       }
+
+      // self.checkFieldComp(
+      //    mode == .Get or mode == .GetNil, token, prefixExp );
+      
       return Nodes.RefFieldNode.create(
          self.nodeManager, firstToken.pos, [ Ast.builtinTypeSymbol ],
          token, nil, accessNil, prefixExp );
@@ -2058,7 +2114,7 @@ fn TransUnit.analyzeExpSymbol(
       }
    }
    elseif mode == .Symbol {
-      if self.macroCtrl.$macroMode == .Analyze {
+      if self.macroCtrl.$macroMode == .AnalyzeArg {
          exp = Nodes.LiteralSymbolNode.create(
             self.nodeManager, firstToken.pos, [ Ast.builtinTypeSymbol ], token );
       }
@@ -2105,10 +2161,12 @@ fn TransUnit.analyzeExpSymbol(
                if not symbolInfo.$hasValueFlag {
                   let nsTypeInfo = self.getCurrentNamespaceTypeInfo();
                   if not symbolInfo.$scope.isInnerOf( unwrap nsTypeInfo.$scope ) {
-                     self.addErrMess(
-                        firstToken.pos,         
-                        "This can't access variable have no value -- %s"
-                        (symbolInfo.$name) );
+                     self.tentativeSymbol.addAccessSym(
+                        new AccessSymPos( symbolInfo, firstToken.pos ) );
+                     // self.addErrMess(
+                     //    firstToken.pos,         
+                     //    "This can't access variable have no value -- %s"
+                     //    (symbolInfo.$name) );
                   }
                }
             }           

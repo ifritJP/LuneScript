@@ -26,6 +26,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 #include <lunescript.h>
+#include <math.h>
 
 #define LUNE_LUA_NAME_LEN 30
 

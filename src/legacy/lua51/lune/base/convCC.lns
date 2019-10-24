@@ -130,6 +130,9 @@ fn isStemType( valType:&Ast.TypeInfo ) : bool {
       //    return false;
       // }
       default {
+         if expType.$kind == .DDD {
+            return true;
+         }
          if! let enumType = expType@@@Ast.EnumTypeInfo {
             return isStemType( enumType.$valTypeInfo );
          }
@@ -3004,9 +3007,10 @@ pub fn convFilter.processVal2stem(
       }
       default {
          switch expType.$kind {
-            case .DDD {
-               self.write( "_pDDD" );
-            }
+            // case .DDD {
+            //    // self.write( "_pDDD" );
+            //    filter( node, self, parent );
+            // }
             case .Func {    
                if! let scope = expType.$scope {
                   // let argList = expType.$argTypeInfoList;
@@ -3040,12 +3044,6 @@ pub fn convFilter.processVal2stem(
       }
    }
 }
-
-fn hasMultiVal( exp:&Nodes.Node ): bool {
-   return exp.$expType.$kind == .DDD or #exp.$expTypeList > 1;
-   // return exp.$expType.$kind == .DDD;
-}
-
 
 /**
 シンボル var に値を代入する。
@@ -3225,7 +3223,7 @@ fn convFilter.processValForSetOp(
       if firstMRet {
          accessVal();
       }
-      elseif not firstMRet and hasMultiVal( exp ) {
+      elseif not firstMRet and Nodes.hasMultiValNode( exp ) {
          self.write( "lune_fromDDD( " );
          accessVal();
          self.write( accessAny );
@@ -3366,77 +3364,6 @@ fn convFilter.processSetSymSingle(
 
 
 /**
-値をシンボルに代入する処理。
-
-val1, val2, val3 = exp1, exp2, exp3
-
-@param parent この代入処理の親 Node
-@param varSymList 代入先のシンボルリスト。
-@param expList 代入する値の Node リスト
-@param varNode 代入先のシンボルリスト。 代入先が単なるシンボルの場合は不要。
-    self.val = 1 のようにメンバに代入する場合に指定する。
-@param mRetExp expList の MRetExp 情報。
-*/
-fn convFilter.processSetValToSym(
-   parent: &Nodes.Node, varSymList:&List<&Ast.LowSymbol>, initFlag:bool,
-   expList:&List<&Nodes.Node>, varNode:&Nodes.Node!, mRetExp:&Nodes.MRetExp! ) mut
-{
-   let varNodeList:List<&Nodes.Node>;
-   if! let expListNode = varNode@@@Nodes.ExpListNode {
-      varNodeList = expListNode.$expList;
-   }
-   else {
-      when! varNode {
-         varNodeList = [ varNode ];
-      }
-      else {
-         varNodeList = [];
-      }
-   }
-
-   let mut mRetIndex:int! = mRetExp$.$index;
-   // 代入する値分のループを廻して、値を代入する処理を出力
-   foreach exp, index in expList {
-      let is1stMRet = index == mRetIndex;
-      if is1stMRet {
-         when! mRetExp {
-            self.write( "lune_setMRet( _pEnv, " );
-            filter( mRetExp.$exp, self, parent );
-            self.write( accessAny );
-            self.writeln( ");" );
-         }
-      }
-
-      if index > #varSymList {
-         return;
-      }
-      if index == #expList {
-         // 代入する最終要素の場合、最終要素の多値処理を行なう
-         for varIndex = index, #varSymList {
-            let mut workNode:&Nodes.Node! = nil;
-            if #varNodeList >= varIndex {
-               workNode = varNodeList[ varIndex ];
-            }
-            self.processSetValSingle( parent, workNode, varSymList[ varIndex ],
-                                      initFlag, exp, varIndex - index, is1stMRet );
-            self.writeln( "" );
-         }
-      }
-      else {
-         let mut workNode:&Nodes.Node! = nil;
-         if #varNodeList >= index {
-            workNode = varNodeList[ index ];
-         }
-         self.processSetValSingle( parent, workNode, varSymList[ index ],
-                                   initFlag, exp, 0, is1stMRet );
-         self.writeln( "" );
-      }
-   }
-      
-}
-
-
-/**
 シンボル var に exp の式の結果を代入する。
 
 @param node var シンボルを示す node。
@@ -3446,13 +3373,14 @@ fn convFilter.processSetValToSym(
 @param index exp が ... の場合の index
 */
 fn convFilter.processSetValSingleNode(
-   parent:&Nodes.Node, var:&Nodes.Node, exp:&Nodes.Node, index:int, firstMRet:bool ) mut
+   parent:&Nodes.Node, var:&Nodes.Node, initFlag:bool,
+   exp:&Nodes.Node, index:int, firstMRet:bool ) mut
 {
    let isStemExp = self.isStemVal( exp );
    let symbolList = var.getSymbolInfo();
    if #symbolList > 0 {
       self.processSetValSingle(
-         parent, var, symbolList[ 1 ], false, exp, index, firstMRet );
+         parent, var, symbolList[ 1 ], initFlag, exp, index, firstMRet );
       return;
    }
 
@@ -3482,6 +3410,182 @@ fn convFilter.processSetValSingleNode(
    }
 }
 
+/** 代入先情報 */
+alge DstInfo {
+   Symbol( &Ast.LowSymbol, node:&Nodes.Node! ),
+   Node( node:&Nodes.Node ),
+}
+
+
+
+/**
+値をシンボルに代入する処理。
+
+val1, val2, val3 = exp1, exp2, exp3
+
+@param parent この代入処理の親 Node
+@param varSymList 代入先のシンボルリスト。
+@param expList 代入する値の Node リスト
+@param varNode 代入先のシンボルリスト。 代入先が単なるシンボルの場合は不要。
+    self.val = 1 のようにメンバに代入する場合に指定する。
+@param mRetExp expList の MRetExp 情報。
+*/
+fn convFilter.processSetValToDst(
+   parent: &Nodes.Node, dstList:&List<&DstInfo>, initFlag:bool,
+   expList:&List<&Nodes.Node>, mRetExp:&Nodes.MRetExp! ) mut
+{
+   let mut mRetIndex:int! = mRetExp$.$index;
+   // 代入する値分のループを廻して、値を代入する処理を出力
+   foreach exp, index in expList {
+      let is1stMRet = index == mRetIndex;
+      if is1stMRet {
+         when! mRetExp {
+            self.write( "lune_setMRet( _pEnv, " );
+            filter( mRetExp.$exp, self, parent );
+            self.write( accessAny );
+            self.writeln( ");" );
+         }
+      }
+
+      if index > #dstList {
+         return;
+      }
+
+      
+      if index == #expList {
+         // 代入する最終要素の場合、最終要素の多値処理を行なう
+         for dstIndex = index, #dstList {
+            let accessIndex;
+            when! mRetIndex {
+               accessIndex = index - mRetIndex;
+            }
+            else {
+               accessIndex = 0;
+            }
+            match dstList[ dstIndex ] {
+               case .Symbol( symbolInfo, dstNode ) {
+                  self.processSetValSingle(
+                     parent, dstNode, symbolInfo,
+                     initFlag, exp, accessIndex, is1stMRet and dstIndex == index );
+               }
+               case .Node( dstNode ) {
+                  self.processSetValSingleNode(
+                     parent, dstNode, initFlag, exp, accessIndex,
+                     is1stMRet and dstIndex == index );         
+               }
+            }
+            self.writeln( "" );
+         }
+      }
+      else {
+         let accessIndex;
+         when! mRetIndex {
+            accessIndex = index - mRetIndex;
+         }
+         else {
+            accessIndex = 0;
+         }
+         match dstList[ index ] {
+            case .Symbol( symbolInfo, dstNode ) {
+               self.processSetValSingle(
+                  parent, dstNode, symbolInfo,
+                  initFlag, exp, accessIndex, is1stMRet );
+            }
+            case .Node( dstNode ) {
+               self.processSetValSingleNode(
+                  parent, dstNode, initFlag, exp, accessIndex, is1stMRet );         
+            }
+         }
+         self.writeln( "" );
+      }
+   }
+  
+}
+
+
+/**
+値をシンボルに代入する処理。
+
+val1, val2, val3 = exp1, exp2, exp3
+
+@param parent この代入処理の親 Node
+@param varSymList 代入先のシンボルリスト。
+@param expList 代入する値の Node リスト
+@param varNode 代入先のシンボルリスト。 代入先が単なるシンボルの場合は不要。
+    self.val = 1 のようにメンバに代入する場合に指定する。
+@param mRetExp expList の MRetExp 情報。
+*/
+fn convFilter.processSetValToSym(
+   parent: &Nodes.Node, varSymList:&List<&Ast.LowSymbol>, initFlag:bool,
+   expList:&List<&Nodes.Node>, varNode:&Nodes.Node!, mRetExp:&Nodes.MRetExp! ) mut
+{
+   let varNodeList:List<&Nodes.Node>;
+   if! let expListNode = varNode@@@Nodes.ExpListNode {
+      varNodeList = expListNode.$expList;
+   }
+   else {
+      when! varNode {
+         varNodeList = [ varNode ];
+      }
+      else {
+         varNodeList = [];
+      }
+   }
+
+   let mut dstList:List<&DstInfo> = [];
+   foreach symbol, index in varSymList {
+      let node:&Nodes.Node!;
+      if index <= #varNodeList {
+         node = varNodeList[ index ];
+      }
+      else {
+         node = nil;
+      }
+      dstList.insert( DstInfo.Symbol( symbol, node ) );
+   }
+   self.processSetValToDst( parent, dstList, initFlag, expList, mRetExp);
+
+
+   // let mut mRetIndex:int! = mRetExp$.$index;
+   // // 代入する値分のループを廻して、値を代入する処理を出力
+   // foreach exp, index in expList {
+   //    let is1stMRet = index == mRetIndex;
+   //    if is1stMRet {
+   //       when! mRetExp {
+   //          self.write( "lune_setMRet( _pEnv, " );
+   //          filter( mRetExp.$exp, self, parent );
+   //          self.write( accessAny );
+   //          self.writeln( ");" );
+   //       }
+   //    }
+
+   //    if index > #varSymList {
+   //       return;
+   //    }
+   //    if index == #expList {
+   //       // 代入する最終要素の場合、最終要素の多値処理を行なう
+   //       for varIndex = index, #varSymList {
+   //          let mut workNode:&Nodes.Node! = nil;
+   //          if #varNodeList >= varIndex {
+   //             workNode = varNodeList[ varIndex ];
+   //          }
+   //          self.processSetValSingle( parent, workNode, varSymList[ varIndex ],
+   //                                    initFlag, exp, varIndex - index, is1stMRet );
+   //          self.writeln( "" );
+   //       }
+   //    }
+   //    else {
+   //       let mut workNode:&Nodes.Node! = nil;
+   //       if #varNodeList >= index {
+   //          workNode = varNodeList[ index ];
+   //       }
+   //       self.processSetValSingle( parent, workNode, varSymList[ index ],
+   //                                 initFlag, exp, 0, is1stMRet );
+   //       self.writeln( "" );
+   //    }
+   // }
+      
+}
 
 
 /**
@@ -3498,44 +3602,68 @@ fn convFilter.processSetValToNode(
    parent: &Nodes.Node, dstNode:&Nodes.Node,
    expList:&List<&Nodes.Node>, mRetExp:&Nodes.MRetExp! ) mut
 {
-   let dstNodeList:List<&Nodes.Node>;
+   let mut dstList:List<&DstInfo> = [];
    if! let expListNode = dstNode@@@Nodes.ExpListNode {
-      dstNodeList = expListNode.$expList;
+      foreach node in expListNode.$expList {
+         dstList.insert( DstInfo.Node( node ) );
+      }
    }
    else {
-      dstNodeList = [ dstNode ];
+      dstList.insert( DstInfo.Node( dstNode ) );
    }
+   
+   self.processSetValToDst( parent, dstList, false, expList, mRetExp);
 
-   let mut mRetIndex:int! = mRetExp$.$index;
-   // 代入する値分のループを廻して、値を代入する処理を出力
-   foreach exp, index in expList {
-      let is1stMRet = index == mRetIndex;
-      if is1stMRet {
-         when! mRetExp {
-            self.write( "lune_setMRet( _pEnv, " );
-            filter( mRetExp.$exp, self, parent );
-            self.write( accessAny );
-            self.writeln( ");" );
-         }
-      }
+   
+   // let dstNodeList:List<&Nodes.Node>;
+   // if! let expListNode = dstNode@@@Nodes.ExpListNode {
+   //    dstNodeList = expListNode.$expList;
+   // }
+   // else {
+   //    dstNodeList = [ dstNode ];
+   // }
 
-      if index > #dstNodeList {
-         return;
-      }
-      if index == #expList {
-         // 代入する最終要素の場合、最終要素の多値処理を行なう
-         for varIndex = index, #dstNodeList {
-            let mut workNode = dstNodeList[ varIndex ];
-            self.processSetValSingleNode(
-               parent, workNode, exp, varIndex - index, is1stMRet );   
-         }
-      }
-      else {
-         self.processSetValSingleNode(
-            parent, dstNodeList[ index ], exp, 0, is1stMRet );
-      }
-   }
-      
+   // let mut mRetIndex:int! = mRetExp$.$index;
+   // // 代入する値分のループを廻して、値を代入する処理を出力
+   // foreach exp, index in expList {
+   //    let is1stMRet = index == mRetIndex;
+   //    if is1stMRet {
+   //       when! mRetExp {
+   //          self.write( "lune_setMRet( _pEnv, " );
+   //          filter( mRetExp.$exp, self, parent );
+   //          self.write( accessAny );
+   //          self.writeln( ");" );
+   //       }
+   //    }
+
+   //    if index > #dstNodeList {
+   //       return;
+   //    }
+   //    if index == #expList {
+   //       // 代入する最終要素の場合、最終要素の多値処理を行なう
+   //       for varIndex = index, #dstNodeList {
+   //          let mut workNode = dstNodeList[ varIndex ];
+   //          self.processSetValSingleNode(
+   //             parent, workNode, exp, varIndex - index,
+   //             is1stMRet and varIndex == index );
+   //       }
+   //    }
+   //    else {
+   //       let accessIndex;
+   //       when! mRetIndex {
+   //          accessIndex = index - mRetIndex;
+   //       }
+   //       else {
+   //          accessIndex = 0;
+   //       }
+   //       self.processSetValSingleNode(
+   //          parent, dstNodeList[ index ], exp, accessIndex, is1stMRet );
+   //    }
+   // }
+
+
+
+   
 }
 
 
@@ -3887,6 +4015,13 @@ pub override fn convFilter.processExpDDD(
 {
    // self.write( "..." );
 };
+
+pub override fn convFilter.processExpSubDDD(
+   node: Nodes.ExpSubDDDNode, opt:Opt ) mut
+{
+   self.write( "lune_createSubDDD( _pEnv, %d, _pEnv->pMRet )" (node.$remainIndex ) );
+};
+
 
 fn convFilter.processPrototype(
    parent:Nodes.Node, accessMode:Ast.AccessMode, needFormVal:bool,
@@ -4808,7 +4943,7 @@ fn convFilter.processCreateMRet(
    self.write( "lune_createMRet" );
 
    let lastExp = expList[ #expList ];
-   self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
+   self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
    
    foreach exp, expIndex in expList {
       self.write( ", " );
@@ -4886,44 +5021,60 @@ pub fn convFilter.processCallWithMRet(
          
          fn processSetArg( primFlag:bool ) {
             foreach argNode, index in argList.$expList {
-               let argType = argNode.$expType;
+               let mut argType = argNode.$expType;
                if index == mRetExp.$index {
                   self.writeln( "lune_setMRet( _pEnv, pMRet%s );" (accessAny) );
                }
                if index >= mRetExp.$index {
-                  if! let toDDDNode = argNode@@@Nodes.ExpToDDDNode {
-                     self.write( "%s arg%d = " ( cTypeStem, index ) );
-                     self.write( "lune_createDDD" );
-                     let expList = toDDDNode.$expList.$expList;
-                     let lastExp = expList[ #expList ];
-                     self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
-                     foreach exp, workIndex in expList {
-                        // self.write(
-                        //    ", LUNE_STEM_ANY( lune_getMRet( _pEnv, %d ) )" (workIndex + index - 2) );
-                        self.write(
-                           ", lune_getMRet( _pEnv, %d )" (workIndex + index - 2) );
+                  switch argNode.$kind {
+                     case Nodes.NodeKind.$ExpToDDD {
+                        let toDDDNode = unwrap argNode@@@Nodes.ExpToDDDNode;
+                        self.write( "%s arg%d = " ( cTypeStem, index ) );
+                        self.write( "lune_createDDD" );
+                        let expList = toDDDNode.$expList.$expList;
+                        let lastExp = expList[ #expList ];
+                        self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
+                        foreach exp, workIndex in expList {
+                           // self.write(
+                           //    ", LUNE_STEM_ANY( lune_getMRet( _pEnv, %d ) )" (workIndex + index - 2) );
+                           self.write(
+                              ", lune_getMRet( _pEnv, %d )" (workIndex + index - 2) );
+                        }
+                        self.write( ")" );
+                        argTypeList.insert( Ast.builtinTypeDDD );
                      }
-                     self.write( ")" );
-                     argTypeList.insert( Ast.builtinTypeDDD );
-                  }
-                  else {
-                     let typeTxt;
-                     if primFlag {
-                        typeTxt = getCType(argType, false);
-                        argTypeList.insert( argType.$srcTypeInfo );
+                     case Nodes.NodeKind.$ExpSubDDD {
+                        self.write( "%s arg%d = " ( cTypeStem, index ) );
+                        filter( argNode, self, parent );
                      }
-                     else {
-                        typeTxt = cTypeStem;
-                        argTypeList.insert( Ast.builtinTypeStem );
-                     }
-                     self.write(
-                        "%s arg%d = lune_getMRet( _pEnv, %d )"
-                        (typeTxt, index, index - mRetExp.$index) );
-                     if primFlag {
-                        self.write( getAccessValFromStem( argType ) );
-                     }
-                     else {
-                        self.write( "->val.pAny" );
+                     default {
+                        if! let castNode = argNode@@@Nodes.ExpCastNode {
+                           argType = castNode.$castType;
+                        }
+                        
+                        let typeTxt;
+                        if primFlag {
+                           typeTxt = getCType(argType, false);
+                           argTypeList.insert( argType.$srcTypeInfo );
+                        }
+                        else {
+                           typeTxt = cTypeStem;
+                           argTypeList.insert( Ast.builtinTypeStem );
+                        }
+                        self.write( "%s arg%d = " (typeTxt, index ) );
+                        if argType.$kind == .DDD {
+                           self.write( "pMRet" );
+                        }
+                        else {
+                           self.write(
+                              "lune_getMRet( _pEnv, %d )" (index - mRetExp.$index) );
+                        }
+                        if primFlag {
+                           self.write( getAccessValFromStem( argType ) );
+                        }
+                        else {
+                           self.write( "->val.pAny" );
+                        }
                      }
                   }
                   self.writeln( "; // %s" (argType.getTxt( self.$typeNameCtrl## )) );
@@ -4942,7 +5093,7 @@ pub fn convFilter.processCallWithMRet(
          fn processCreateDDD( expList:&List<&Nodes.Node>) {
             self.write( "lune_createDDD" );
             let lastExp = expList[ #expList ];
-            self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
+            self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
 
             for index = 1, #expList {
                let workExp = expList[ index ];
@@ -4985,7 +5136,7 @@ pub fn convFilter.processCallWithMRet(
                // self.write( "lune_createDDD" );
                // let expList = argList.$expList;
                // let lastExp = expList[ #expList ];
-               // self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
+               // self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
             }
             case .FormFunc( funcNode ) {
                processSetArg( true );
@@ -5014,7 +5165,7 @@ pub fn convFilter.processCallWithMRet(
                // self.write( "lune_createDDD" );
                // let expList = node.$expList.$expList;
                // let lastExp = expList[ #expList ];
-               // self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
+               // self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
                processCreateDDD( node.$expList.$expList );
             }
          }
@@ -5074,7 +5225,7 @@ pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt )
    else {
       self.write( "lune_createDDD" );
       let lastExp = expList[ #expList ];
-      self.write( "( _pEnv, %s, %d" ( hasMultiVal( lastExp ), #expList ) );
+      self.write( "( _pEnv, %s, %d" ( Nodes.hasMultiValNode( lastExp ), #expList ) );
 
       let mut processed = false;
       if #node.$expType.$itemTypeInfoList > 0 {

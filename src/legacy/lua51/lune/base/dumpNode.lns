@@ -301,6 +301,13 @@ pub override fn dumpFilter.processExpDDD(
    let prefix, depth = opt.get();
    dump( prefix, depth, node, "..." );
 };
+pub override fn dumpFilter.processExpSubDDD(
+   node: &Nodes.ExpSubDDDNode, opt:Opt ) mut
+{
+   let prefix, depth = opt.get();
+   dump( prefix, depth, node, "... (%d)" (node.$remainIndex) );
+};
+
 
 pub override fn dumpFilter.processDeclForm( node: &Nodes.DeclFormNode, opt:Opt ) mut
 {

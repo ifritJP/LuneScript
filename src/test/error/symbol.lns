@@ -10,4 +10,12 @@ class _Test { // error
 macro Hoge() {  // error
 }
 let self = 1; // errorr
+let val = 1;
+macro _Test() {
+   {
+      let val2 = val; // error
+   }
+   print( ,,val2 );
+}
+
 print( __func__ );  // error

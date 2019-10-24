@@ -1,18 +1,9 @@
 {
-   let func:form;
-   let func2:form;
-   {
-      let mut val = "a1";
-      print( "hoge", val );
-      func = fn () {
-         print( val );
-      };
-      func2 = fn () {
-         val = "a3";
-      };
-      val = "a2";
+   fn func(): ...<int> {
+      return 1, 2, 3;
    }
-   func();
-   func2();
-   func();
+   fn sub2( val1:int!, ... ) {
+      print( val1, ... );
+   }
+   sub2( func()** );
 }

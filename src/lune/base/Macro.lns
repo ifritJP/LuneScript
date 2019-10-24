@@ -614,7 +614,7 @@ pub fn MacroCtrl.finishMacroMode() mut {
    self.macroMode = .None;
 }
 
-pub fn MacroCtrl.startAnalyzeMode() mut {
-   self.macroMode = .Analyze;
+pub fn MacroCtrl.startAnalyzeArgMode() mut {
+   self.macroMode = .AnalyzeArg;
    self.symbol2ValueMapForMacro = {};
 }

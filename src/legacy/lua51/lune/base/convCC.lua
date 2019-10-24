@@ -423,6 +423,10 @@ local function isStemType( valType )
          return false
       else 
          
+            if expType:get_kind() == Ast.TypeInfoKind.DDD then
+               return true
+            end
+            
             do
                local enumType = _lune.__Cast( expType, 3, Ast.EnumTypeInfo )
                if enumType ~= nil then
@@ -2766,9 +2770,7 @@ function convFilter:processVal2stem( node, parent )
          
             do
                local _switchExp = expType:get_kind()
-               if _switchExp == Ast.TypeInfoKind.DDD then
-                  self:write( "_pDDD" )
-               elseif _switchExp == Ast.TypeInfoKind.Func then
+               if _switchExp == Ast.TypeInfoKind.Func then
                   do
                      local scope = expType:get_scope()
                      if scope ~= nil then
@@ -2789,10 +2791,6 @@ function convFilter:processVal2stem( node, parent )
    
 end
 
-local function hasMultiVal( exp )
-
-   return exp:get_expType():get_kind() == Ast.TypeInfoKind.DDD or #exp:get_expTypeList() > 1
-end
 function convFilter:processSetValSingleDirect( parent, node, var, initFlag, isStemExp, index, firstMRet, processVal )
 
    local valKind = self.scopeMgr:getSymbolValKind( var )
@@ -2939,7 +2937,7 @@ function convFilter:processValForSetOp( parent, dstKind, dstTypeInfo, exp, index
       local setValTxt = ""
       if firstMRet then
          accessVal(  )
-      elseif not firstMRet and hasMultiVal( exp ) then
+      elseif not firstMRet and Nodes.hasMultiValNode( exp ) then
          self:write( "lune_fromDDD( " )
          accessVal(  )
          self:write( accessAny )
@@ -3031,73 +3029,12 @@ function convFilter:processSetSymSingle( parent, node, var, initFlag, symbol, to
    end )
 end
 
-function convFilter:processSetValToSym( parent, varSymList, initFlag, expList, varNode, mRetExp )
-
-   local varNodeList
-   
-   do
-      local expListNode = _lune.__Cast( varNode, 3, Nodes.ExpListNode )
-      if expListNode ~= nil then
-         varNodeList = expListNode:get_expList()
-      else
-         if varNode ~= nil then
-            varNodeList = {varNode}
-         else
-            varNodeList = {}
-         end
-         
-      end
-   end
-   
-   local mRetIndex = _lune.nilacc( mRetExp, 'get_index', 'callmtd' )
-   for index, exp in pairs( expList ) do
-      local is1stMRet = index == mRetIndex
-      if is1stMRet then
-         if mRetExp ~= nil then
-            self:write( "lune_setMRet( _pEnv, " )
-            filter( mRetExp:get_exp(), self, parent )
-            self:write( accessAny )
-            self:writeln( ");" )
-         end
-         
-      end
-      
-      if index > #varSymList then
-         return 
-      end
-      
-      if index == #expList then
-         for varIndex = index, #varSymList do
-            local workNode = nil
-            if #varNodeList >= varIndex then
-               workNode = varNodeList[varIndex]
-            end
-            
-            self:processSetValSingle( parent, workNode, varSymList[varIndex], initFlag, exp, varIndex - index, is1stMRet )
-            self:writeln( "" )
-         end
-         
-      else
-       
-         local workNode = nil
-         if #varNodeList >= index then
-            workNode = varNodeList[index]
-         end
-         
-         self:processSetValSingle( parent, workNode, varSymList[index], initFlag, exp, 0, is1stMRet )
-         self:writeln( "" )
-      end
-      
-   end
-   
-end
-
-function convFilter:processSetValSingleNode( parent, var, exp, index, firstMRet )
+function convFilter:processSetValSingleNode( parent, var, initFlag, exp, index, firstMRet )
 
    local isStemExp = self:isStemVal( exp )
    local symbolList = var:getSymbolInfo(  )
    if #symbolList > 0 then
-      self:processSetValSingle( parent, var, symbolList[1], false, exp, index, firstMRet )
+      self:processSetValSingle( parent, var, symbolList[1], initFlag, exp, index, firstMRet )
       return 
    end
    
@@ -3136,19 +3073,27 @@ function convFilter:processSetValSingleNode( parent, var, exp, index, firstMRet 
    
 end
 
-function convFilter:processSetValToNode( parent, dstNode, expList, mRetExp )
-
-   local dstNodeList
-   
-   do
-      local expListNode = _lune.__Cast( dstNode, 3, Nodes.ExpListNode )
-      if expListNode ~= nil then
-         dstNodeList = expListNode:get_expList()
-      else
-         dstNodeList = {dstNode}
-      end
+local DstInfo = {}
+DstInfo._name2Val = {}
+function DstInfo:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "DstInfo.%s", name )
    end
-   
+   return string.format( "illegal val -- %s", val )
+end
+
+function DstInfo._from( val )
+   return _lune._AlgeFrom( DstInfo, val )
+end
+
+DstInfo.Node = { "Node", {{ func=Nodes.Node._fromMap, nilable=false, child={} }}}
+DstInfo._name2Val["Node"] = DstInfo.Node
+DstInfo.Symbol = { "Symbol", {{ func=Ast.LowSymbol._fromMap, nilable=false, child={} },{ func=Nodes.Node._fromMap, nilable=true, child={} }}}
+DstInfo._name2Val["Symbol"] = DstInfo.Symbol
+
+function convFilter:processSetValToDst( parent, dstList, initFlag, expList, mRetExp )
+
    local mRetIndex = _lune.nilacc( mRetExp, 'get_index', 'callmtd' )
    for index, exp in pairs( expList ) do
       local is1stMRet = index == mRetIndex
@@ -3162,23 +3107,119 @@ function convFilter:processSetValToNode( parent, dstNode, expList, mRetExp )
          
       end
       
-      if index > #dstNodeList then
+      if index > #dstList then
          return 
       end
       
       if index == #expList then
-         for varIndex = index, #dstNodeList do
-            local workNode = dstNodeList[varIndex]
-            self:processSetValSingleNode( parent, workNode, exp, varIndex - index, is1stMRet )
+         for dstIndex = index, #dstList do
+            local accessIndex
+            
+            if mRetIndex ~= nil then
+               accessIndex = index - mRetIndex
+            else
+               accessIndex = 0
+            end
+            
+            do
+               local _matchExp = dstList[dstIndex]
+               if _matchExp[1] == DstInfo.Symbol[1] then
+                  local symbolInfo = _matchExp[2][1]
+                  local dstNode = _matchExp[2][2]
+               
+                  self:processSetValSingle( parent, dstNode, symbolInfo, initFlag, exp, accessIndex, is1stMRet and dstIndex == index )
+               elseif _matchExp[1] == DstInfo.Node[1] then
+                  local dstNode = _matchExp[2][1]
+               
+                  self:processSetValSingleNode( parent, dstNode, initFlag, exp, accessIndex, is1stMRet and dstIndex == index )
+               end
+            end
+            
+            self:writeln( "" )
          end
          
       else
        
-         self:processSetValSingleNode( parent, dstNodeList[index], exp, 0, is1stMRet )
+         local accessIndex
+         
+         if mRetIndex ~= nil then
+            accessIndex = index - mRetIndex
+         else
+            accessIndex = 0
+         end
+         
+         do
+            local _matchExp = dstList[index]
+            if _matchExp[1] == DstInfo.Symbol[1] then
+               local symbolInfo = _matchExp[2][1]
+               local dstNode = _matchExp[2][2]
+            
+               self:processSetValSingle( parent, dstNode, symbolInfo, initFlag, exp, accessIndex, is1stMRet )
+            elseif _matchExp[1] == DstInfo.Node[1] then
+               local dstNode = _matchExp[2][1]
+            
+               self:processSetValSingleNode( parent, dstNode, initFlag, exp, accessIndex, is1stMRet )
+            end
+         end
+         
+         self:writeln( "" )
       end
       
    end
    
+end
+
+function convFilter:processSetValToSym( parent, varSymList, initFlag, expList, varNode, mRetExp )
+
+   local varNodeList
+   
+   do
+      local expListNode = _lune.__Cast( varNode, 3, Nodes.ExpListNode )
+      if expListNode ~= nil then
+         varNodeList = expListNode:get_expList()
+      else
+         if varNode ~= nil then
+            varNodeList = {varNode}
+         else
+            varNodeList = {}
+         end
+         
+      end
+   end
+   
+   local dstList = {}
+   for index, symbol in pairs( varSymList ) do
+      local node
+      
+      if index <= #varNodeList then
+         node = varNodeList[index]
+      else
+       
+         node = nil
+      end
+      
+      table.insert( dstList, _lune.newAlge( DstInfo.Symbol, {symbol,node}) )
+   end
+   
+   self:processSetValToDst( parent, dstList, initFlag, expList, mRetExp )
+end
+
+function convFilter:processSetValToNode( parent, dstNode, expList, mRetExp )
+
+   local dstList = {}
+   do
+      local expListNode = _lune.__Cast( dstNode, 3, Nodes.ExpListNode )
+      if expListNode ~= nil then
+         for __index, node in pairs( expListNode:get_expList() ) do
+            table.insert( dstList, _lune.newAlge( DstInfo.Node, {node}) )
+         end
+         
+      else
+         table.insert( dstList, _lune.newAlge( DstInfo.Node, {dstNode}) )
+      end
+   end
+   
+   self:processSetValToDst( parent, dstList, false, expList, mRetExp )
 end
 
 function convFilter:processDeclVarC( declFlag, var, init0 )
@@ -3489,6 +3530,12 @@ end
 
 function convFilter:processExpDDD( node, opt )
 
+end
+
+
+function convFilter:processExpSubDDD( node, opt )
+
+   self:write( string.format( "lune_createSubDDD( _pEnv, %d, _pEnv->pMRet )", node:get_remainIndex()) )
 end
 
 
@@ -4214,7 +4261,7 @@ function convFilter:processCreateMRet( retTypeList, expList, parent )
    
    self:write( "lune_createMRet" )
    local lastExp = expList[#expList]
-   self:write( string.format( "( _pEnv, %s, %d", tostring( hasMultiVal( lastExp )), #expList) )
+   self:write( string.format( "( _pEnv, %s, %d", tostring( Nodes.hasMultiValNode( lastExp )), #expList) )
    for expIndex, exp in pairs( expList ) do
       self:write( ", " )
       self:processVal2stem( exp, parent )
@@ -4319,39 +4366,58 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
                
                if index >= mRetExp:get_index() then
                   do
-                     local toDDDNode = _lune.__Cast( argNode, 3, Nodes.ExpToDDDNode )
-                     if toDDDNode ~= nil then
+                     local _switchExp = argNode:get_kind()
+                     if _switchExp == Nodes.NodeKind.get_ExpToDDD() then
+                        local toDDDNode = _lune.unwrap( _lune.__Cast( argNode, 3, Nodes.ExpToDDDNode ))
                         self:write( string.format( "%s arg%d = ", cTypeStem, index) )
                         self:write( "lune_createDDD" )
                         local expList = toDDDNode:get_expList():get_expList()
                         local lastExp = expList[#expList]
-                        self:write( string.format( "( _pEnv, %s, %d", tostring( hasMultiVal( lastExp )), #expList) )
+                        self:write( string.format( "( _pEnv, %s, %d", tostring( Nodes.hasMultiValNode( lastExp )), #expList) )
                         for workIndex, exp in pairs( expList ) do
                            self:write( string.format( ", lune_getMRet( _pEnv, %d )", workIndex + index - 2) )
                         end
                         
                         self:write( ")" )
                         table.insert( argTypeList, Ast.builtinTypeDDD )
-                     else
-                        local typeTxt
+                     elseif _switchExp == Nodes.NodeKind.get_ExpSubDDD() then
+                        self:write( string.format( "%s arg%d = ", cTypeStem, index) )
+                        filter( argNode, self, parent )
+                     else 
                         
-                        if primFlag then
-                           typeTxt = getCType( argType, false )
-                           table.insert( argTypeList, argType:get_srcTypeInfo() )
-                        else
-                         
-                           typeTxt = cTypeStem
-                           table.insert( argTypeList, Ast.builtinTypeStem )
-                        end
-                        
-                        self:write( string.format( "%s arg%d = lune_getMRet( _pEnv, %d )", typeTxt, index, index - mRetExp:get_index()) )
-                        if primFlag then
-                           self:write( getAccessValFromStem( argType ) )
-                        else
-                         
-                           self:write( "->val.pAny" )
-                        end
-                        
+                           do
+                              local castNode = _lune.__Cast( argNode, 3, Nodes.ExpCastNode )
+                              if castNode ~= nil then
+                                 argType = castNode:get_castType()
+                              end
+                           end
+                           
+                           local typeTxt
+                           
+                           if primFlag then
+                              typeTxt = getCType( argType, false )
+                              table.insert( argTypeList, argType:get_srcTypeInfo() )
+                           else
+                            
+                              typeTxt = cTypeStem
+                              table.insert( argTypeList, Ast.builtinTypeStem )
+                           end
+                           
+                           self:write( string.format( "%s arg%d = ", typeTxt, index) )
+                           if argType:get_kind() == Ast.TypeInfoKind.DDD then
+                              self:write( "pMRet" )
+                           else
+                            
+                              self:write( string.format( "lune_getMRet( _pEnv, %d )", index - mRetExp:get_index()) )
+                           end
+                           
+                           if primFlag then
+                              self:write( getAccessValFromStem( argType ) )
+                           else
+                            
+                              self:write( "->val.pAny" )
+                           end
+                           
                      end
                   end
                   
@@ -4373,7 +4439,7 @@ function convFilter:processCallWithMRet( parent, mRetFuncName, retTypeName, func
          
             self:write( "lune_createDDD" )
             local lastExp = expList[#expList]
-            self:write( string.format( "( _pEnv, %s, %d", tostring( hasMultiVal( lastExp )), #expList) )
+            self:write( string.format( "( _pEnv, %s, %d", tostring( Nodes.hasMultiValNode( lastExp )), #expList) )
             for index = 1, #expList do
                local workExp = expList[index]
                self:write( ", " )
@@ -4496,7 +4562,7 @@ function convFilter:processExpToDDD( node, opt )
       else
          self:write( "lune_createDDD" )
          local lastExp = expList[#expList]
-         self:write( string.format( "( _pEnv, %s, %d", tostring( hasMultiVal( lastExp )), #expList) )
+         self:write( string.format( "( _pEnv, %s, %d", tostring( Nodes.hasMultiValNode( lastExp )), #expList) )
          local processed = false
          if #node:get_expType():get_itemTypeInfoList() > 0 then
             local itemType = node:get_expType():get_itemTypeInfoList()[1]:get_srcTypeInfo():get_nonnilableType()

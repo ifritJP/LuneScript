@@ -540,6 +540,13 @@ function dumpFilter:processExpDDD( node, opt )
 end
 
 
+function dumpFilter:processExpSubDDD( node, opt )
+
+   local prefix, depth = opt:get(  )
+   dump( prefix, depth, node, string.format( "... (%d)", node:get_remainIndex()) )
+end
+
+
 function dumpFilter:processDeclForm( node, opt )
 
    local prefix, depth = opt:get(  )

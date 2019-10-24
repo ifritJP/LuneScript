@@ -215,7 +215,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
 }
 
 fn TransUnit.analyzeDeclArgList(
-   accessMode:Ast.AccessMode,
+   accessMode:Ast.AccessMode, scope:Ast.Scope,
    argList: List<&Nodes.Node>, parentPub:bool ) mut : &Parser.Token
 {
    let mut nextToken: &Parser.Token = Parser.noneToken;
@@ -251,19 +251,19 @@ fn TransUnit.analyzeDeclArgList(
          argList.insert(
             Nodes.DeclArgDDDNode.create(
                self.nodeManager, argName.pos, [ dddTypeInfo ] ) );
-         self.scope.addLocalVar( true, true, argName.txt, dddTypeInfo, .IMut );
+         scope.addLocalVar( true, true, argName.txt, dddTypeInfo, .IMut );
       }
       else {
          argName = self.checkSymbol( argName, .MustNot_ );
 
-         if self.scope.getSymbolTypeInfo( argName.txt, self.scope, self.moduleScope ) {
+         if scope.getSymbolTypeInfo( argName.txt, scope, self.moduleScope ) {
             self.addErrMess( argName.pos,
                              "shadowing variable -- %s" (argName.txt) );
          }
 
          self.checkNextToken( ":" );
          let refType = self.analyzeRefType( accessMode, false, parentPub );
-         let symbolInfo = self.scope.addLocalVar(
+         let symbolInfo = scope.addLocalVar(
             true, true, argName.txt, refType.$expType, mutable );
          
          let arg = Nodes.DeclArgNode.create(
@@ -487,8 +487,11 @@ pub fn TransUnit.createAST(
 }
 
 
-fn TransUnit.analyzeDeclMacro(
-   accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Nodes.Node
+fn TransUnit.analyzeDeclMacroSub(
+   accessMode: Ast.AccessMode,
+   firstToken: &Parser.Token, nameToken: &Parser.Token,
+   scope:Ast.Scope, parentType:&Ast.TypeInfo,
+   workArgList: List<&Nodes.Node> ) mut : Nodes.DeclMacroNode
 {
    let mut pubFlag = false;
    switch accessMode {
@@ -503,15 +506,10 @@ fn TransUnit.analyzeDeclMacro(
                           ( accessMode.$_txt ) );
       }
    }
-
-   let nameToken = self.getSymbolToken( .Must_ );
-   self.checkNextToken( "(" );
-
-   let mut scope = self.pushScope( false ## );
-
-   let mut workArgList: List<&Nodes.Node> = [];
+   
+   // let mut workArgList: List<&Nodes.Node> = [];
    let mut argList: List<&Nodes.DeclArgNode> = [];
-   let mut nextToken = self.analyzeDeclArgList( accessMode, workArgList, false );
+   // let mut nextToken = self.analyzeDeclArgList( accessMode, workArgList, false );
    let mut argTypeList: List<&Ast.TypeInfo> = [];
    foreach argNode, index in workArgList {
       if! argNode@@@Nodes.DeclArgNode {
@@ -527,12 +525,11 @@ fn TransUnit.analyzeDeclMacro(
 
    self.checkNextToken( "{" );
 
-   nextToken = self.getToken(##);
+   let mut nextToken = self.getToken(##);
 
    let mut stmtBlock : Nodes.BlockNode! = nil;
    if nextToken.txt == "{" {
-      let mut parser = new Parser.WrapParser(
-         self.parser, "decl macro %s" (nameToken.txt) );
+      let mut parser = new Parser.WrapParser( self.parser, self.parser.getStreamName() );
 
       // foreach symbolInfo, symbol in scope.$symbol2SymbolInfoMap {
       //    scope.add( symbol, symbolInfo.$typeInfo, "local", false );
@@ -570,7 +567,7 @@ fn TransUnit.analyzeDeclMacro(
       self.pushback();
    }
 
-   self.popScope();
+   // self.popScope();
 
 
    let mut tokenList: List<&Parser.Token> = [];
@@ -591,10 +588,10 @@ fn TransUnit.analyzeDeclMacro(
    }
 
    let typeInfo = Ast.NormalTypeInfo.createFunc(
-      false, false, scope, .Macro, self.getCurrentNamespaceTypeInfo(),
+      false, false, scope, .Macro, parentType,
       false, false, true, accessMode, nameToken.txt, nil, argTypeList ## );
    //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
-   self.scope.addMacro( typeInfo, accessMode );
+   // self.scope.addMacro( typeInfo, accessMode );
 
 
    let mut declMacroInfo = new Nodes.DeclMacroInfo(
@@ -603,6 +600,43 @@ fn TransUnit.analyzeDeclMacro(
       self.nodeManager, firstToken.pos, [ typeInfo ], declMacroInfo );
 
    self.macroCtrl.regist( node );
+
+
+   return node;
+}
+
+
+fn TransUnit.analyzeDeclMacro(
+   accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Nodes.DeclMacroNode
+{
+
+   let nameToken = self.getSymbolToken( .Must_ );
+   self.checkNextToken( "(" );
+
+
+   // マクロ用のスコープを topScope 直下に生成
+   let mut scope = Ast.TypeInfo.createScope( self.topScope, false, nil, nil );
+
+   // マクロ引数を解析。
+   // このとき、マクロの型名や引数名などは現在のスコープをスコープを利用し、
+   // 引数シンボルはマクロ用スコープに登録する。
+   let mut workArgList: List<&Nodes.Node> = [];
+   let mut nextToken = self.analyzeDeclArgList( accessMode, scope, workArgList, false );
+
+   // マクロ解析用スコープに変更する前に、登録する namespace を取っおく
+   let parentInfo = self.getCurrentNamespaceTypeInfo();
+   
+   // スコープをマクロ用スコープに変更
+   let mut backScope = self.scope;
+   self.scope = scope;   
+
+   let mut node = self.analyzeDeclMacroSub(
+      accessMode, firstToken, nameToken, scope, parentInfo, workArgList );
+
+   // スコープを元に戻す
+   self.scope = backScope;
+
+   self.scope.addMacro( node.$expType, accessMode );
    
    return node;
 }
@@ -1139,7 +1173,7 @@ mut : Nodes.DeclFormNode
    let mut funcBodyScope = self.pushScope( false ## );
 
    let mut nextToken = self.analyzeDeclArgList(
-      accessMode, argList, Ast.isPubToExternal( accessMode ) );
+      accessMode, self.scope, argList, Ast.isPubToExternal( accessMode ) );
 
    self.checkToken( nextToken, ")" );
 
@@ -2297,7 +2331,7 @@ fn TransUnit.analyzeDeclFunc(
    }
    
    let mut argList:List<&Nodes.Node> = [];
-   token = self.analyzeDeclArgList( accessMode, argList, parentPub );
+   token = self.analyzeDeclArgList( accessMode, self.scope, argList, parentPub );
 
    self.checkToken( token, ")" );
    token = self.getToken(##);

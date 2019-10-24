@@ -12,18 +12,9 @@
   
 - [ ] 文字列中の . を編集すると company-mode がエラーする
   
-- [ ] 
-     let map:stem!, err = func();
-
-     上記のソースを C に落すと次になる。
-     
-      lune_setQ( map_130, lune_fromDDD( lune_call_form( _pEnv, func_129.val.pAny, lune_global.ddd0 ).val.pAny, 0 ) );
-      lune_setQ( err_131, lune_fromDDD( lune_call_form( _pEnv, func_129.val.pAny, lune_global.ddd0 ).val.pAny, 1 ) );
-     
-     func() の戻り値が ... で、複数扱いになっていない。
-
-
 * 機能
+
+- [ ] if! の elseif を作る  
 
 - [ ] Array, List の get(index) 対応。
       戻り値を nilable として、範囲外にアクセスした場合に nil を返す。
@@ -211,6 +202,18 @@ foreach obj in list {
 
 - [X] クロージャと普通の関数とで、関数の型を変える。
       今は普通の関数にも form 引数が付いているが、これを削除する。
+
+- [X] 
+     let map:stem!, err = func();
+
+     上記のソースを C に落すと次になる。
+     
+      lune_setQ( map_130, lune_fromDDD( lune_call_form( _pEnv, func_129.val.pAny, lune_global.ddd0 ).val.pAny, 0 ) );
+      lune_setQ( err_131, lune_fromDDD( lune_call_form( _pEnv, func_129.val.pAny, lune_global.ddd0 ).val.pAny, 1 ) );
+     
+     func() の戻り値が ... で、複数扱いになっていない。
+
+
       
 
      
