@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-#include <lua.h>
+#include <lns_base.h>
 #include <lauxlib.h>
 #include <lunescript.h>
 #include <math.h>
@@ -1382,18 +1382,18 @@ void lune_print( lune_env_t * _pEnv, lune_stem_t ddd ) {
     //lune_leave_block( _pEnv );
 }
 
-
-
-static int lua_main( lua_State * pLua ) {
+int lua_main( lua_State * pLua ) {
     int argc = lua_tointeger( pLua, 1);
     char ** pArgv = (char **)lua_touserdata( pLua, 2);
     int script;
+
+    lune_collection_init();
     
     lune_createGlobalEnv();
     
     lune_env_t * _pEnv = lune_createEnv( pLua );
     
-    lune_init_test( _pEnv );
+    lune_run_module( _pEnv );
 
     lune_deleteEnv( _pEnv );
 
@@ -1403,30 +1403,3 @@ static int lua_main( lua_State * pLua ) {
     lua_pushboolean( pLua, 1);
     return 1;
 }
-
-int main (int argc, char * pArgv[] )  {
-    lune_collection_init();
-    
-    lua_State * pLua = luaL_newstate();
-    if ( pLua == NULL ) {
-        printf( "failed to create a Lua VM.\n" );
-        return 1;
-    }
-    lua_pushcfunction( pLua, lua_main );
-    lua_pushinteger( pLua, argc );
-    lua_pushlightuserdata( pLua, pArgv );
-    int status = lua_pcall( pLua, 2, 1, 0 );
-    int result = lua_toboolean( pLua, -1 );
-    if ( !status ) {
-        lua_close( pLua );
-        if ( result ) {
-            return 0;
-        }
-    }
-    else {
-        printf( "lua error: %s\n", lua_tostring( pLua, -1 ) );
-        lua_close( pLua );
-    }
-    return 1;
-}
-

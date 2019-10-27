@@ -192,7 +192,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 2096
+   return 2115
 end
 
 local ModeKind = {}
@@ -250,6 +250,9 @@ ModeKind.__allList[10] = ModeKind.Exec
 ModeKind.Glue = 'glue'
 ModeKind._val2NameMap['glue'] = 'Glue'
 ModeKind.__allList[11] = ModeKind.Glue
+ModeKind.BootC = 'bootC'
+ModeKind._val2NameMap['bootC'] = 'BootC'
+ModeKind.__allList[12] = ModeKind.BootC
 
 local CheckingUptodateMode = {}
 _moduleObj.CheckingUptodateMode = CheckingUptodateMode
@@ -327,6 +330,7 @@ function Option:__init()
    self.stripDebugInfo = false
    self.targetLuaVer = LuaVer.curVer
    self.transCtrlInfo = TransCtrlInfo.create_normal(  )
+   self.bootPath = nil
 end
 function Option:openDepend(  )
 
@@ -415,6 +419,7 @@ usage:
   -ob: output bytecompiled-code.
       -ob0 is without debug information.
       -ob1 is with debug information.
+  -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
 
   common_op:
@@ -438,6 +443,15 @@ usage:
    local lineNo = nil
    local column = nil
    local index = 1
+   local function getNextOp(  )
+   
+      if #argList <= index then
+         return nil
+      end
+      
+      index = index + 1
+      return argList[index]
+   end
    while #argList >= index do
       local arg = argList[index]
       if arg:find( "^-" ) then
@@ -470,7 +484,7 @@ usage:
                
                os.exit( 0 )
             elseif _switchExp == "-mklunemod" then
-               local path = (#argList > index ) and argList[index + 1] or nil
+               local path = getNextOp(  )
                do
                   local mess = outputLuneMod( path )
                   if mess ~= nil then
@@ -483,8 +497,9 @@ usage:
             elseif _switchExp == "-r" then
                option.useLuneModule = string.format( "lune.base._lune%d", Ver.luaModVersion)
             elseif _switchExp == "--runtime" then
-               option.useLuneModule = (#argList > index ) and argList[index + 1] or nil
-               index = index + 1
+               option.useLuneModule = getNextOp(  )
+            elseif _switchExp == "-oc" then
+               option.bootPath = getNextOp(  )
             elseif _switchExp == "-u" then
                option.updateOnLoad = true
             elseif _switchExp == "-Werror" then
@@ -492,58 +507,59 @@ usage:
             elseif _switchExp == "--disable-checking-define-abbr" then
                option.transCtrlInfo.checkingDefineAbbr = false
             elseif _switchExp == "--log" then
-               if #argList > index then
-                  local txt = argList[index + 1]
-                  do
-                     local level = Log.str2level( txt )
-                     if level ~= nil then
-                        Log.setLevel( level )
-                     else
-                        Util.errorLog( string.format( "illegal level -- %s", txt) )
+               do
+                  local txt = getNextOp(  )
+                  if txt ~= nil then
+                     do
+                        local level = Log.str2level( txt )
+                        if level ~= nil then
+                           Log.setLevel( level )
+                        else
+                           Util.errorLog( string.format( "illegal level -- %s", txt) )
+                        end
                      end
+                     
                   end
-                  
                end
                
-               index = index + 1
             elseif _switchExp == "--depends" then
-               if #argList > index then
-                  option.dependsPath = argList[index + 1]
-               end
-               
-               index = index + 1
+               option.dependsPath = getNextOp(  )
             elseif _switchExp == "--uptodate" then
-               if #argList > index then
-                  do
-                     local mode = CheckingUptodateMode._from( argList[index + 1] )
-                     if mode ~= nil then
-                        option.transCtrlInfo.uptodateMode = mode
-                     else
-                        Util.errorLog( "illegal mode -- " .. argList[index + 1] )
+               do
+                  local txt = getNextOp(  )
+                  if txt ~= nil then
+                     do
+                        local mode = CheckingUptodateMode._from( txt )
+                        if mode ~= nil then
+                           option.transCtrlInfo.uptodateMode = mode
+                        else
+                           Util.errorLog( "illegal mode -- " .. txt )
+                        end
                      end
+                     
                   end
-                  
                end
                
-               index = index + 1
             elseif _switchExp == "-langC" then
                option.convertC = true
             elseif _switchExp == "-ol" then
-               if #argList > index then
-                  do
-                     local _switchExp = argList[index + 1]
-                     if _switchExp == "51" then
-                        option.targetLuaVer = LuaVer.ver51
-                     elseif _switchExp == "52" then
-                        option.targetLuaVer = LuaVer.ver52
-                     elseif _switchExp == "53" then
-                        option.targetLuaVer = LuaVer.ver53
+               do
+                  local txt = getNextOp(  )
+                  if txt ~= nil then
+                     do
+                        local _switchExp = txt
+                        if _switchExp == "51" then
+                           option.targetLuaVer = LuaVer.ver51
+                        elseif _switchExp == "52" then
+                           option.targetLuaVer = LuaVer.ver52
+                        elseif _switchExp == "53" then
+                           option.targetLuaVer = LuaVer.ver53
+                        end
                      end
+                     
                   end
-                  
                end
                
-               index = index + 1
             elseif _switchExp == "-ob0" or _switchExp == "-ob1" then
                option.byteCompile = true
                if arg == "-ob0" then

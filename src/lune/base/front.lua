@@ -1435,10 +1435,36 @@ function Front:saveToLua(  )
    return updateFlag
 end
 
+function Front:outputBootC(  )
+
+   local stream
+   
+   do
+      local path = self.option.bootPath
+      if path ~= nil then
+         local cPath = path:gsub( "%.lns$", ".c" )
+         local file = io.open( cPath, "w" )
+         if  nil == file then
+            local _file = file
+         
+            print( string.format( "failed to open file -- %s", cPath) )
+            return 
+         end
+         
+         stream = file
+      else
+         stream = io.stdout
+      end
+   end
+   
+   local initModule = scriptPath2Module( self.option.scriptPath )
+   convCC.outputBootcode( stream, initModule )
+end
+
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1077, function (  )
+   Log.log( Log.Level.Trace, __func__, 1095, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -1463,6 +1489,8 @@ function Front:exec(  )
       elseif _switchExp == Option.ModeKind.Exec then
          frontInterface.setFront( self )
          self:loadModule( scriptPath2Module( self.option.scriptPath ) )
+      elseif _switchExp == Option.ModeKind.BootC then
+         self:outputBootC(  )
       else 
          
             print( "illegal mode" )

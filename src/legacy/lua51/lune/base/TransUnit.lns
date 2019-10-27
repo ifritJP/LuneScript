@@ -1797,9 +1797,9 @@ pub fn TransUnit.error( mess: str ) mut : __ {
       Util.errorLog( mess );
    }
    if self.macroCtrl.$macroMode ~= .None {
-      print( "------ near code -----" );
+      print( "------ near code -----", self.macroCtrl.$macroMode.$_txt );
       let mut code = "";
-      for index = #self.usedTokenList - 20, #self.usedTokenList {
+      for index = #self.usedTokenList - 30, #self.usedTokenList {
          if index > 1 {
             code = "%s %s" ( code, self.usedTokenList[ index ].txt );
          }
@@ -1831,12 +1831,6 @@ fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) mut {
    self.currentToken = self.usedTokenList[ #self.usedTokenList ];
 }
 
-fn TransUnit.expandMacroVal( mut token:&Parser.Token ) mut : &Parser.Token
-{
-   return self.macroCtrl.expandMacroVal(
-      self.typeNameCtrl, self.scope, self, token );
-}
-
 fn TransUnit.getTokenNoErr() mut : &Parser.Token {
    if #self.pushbackList > 0 {
       if self.currentToken ~= Parser.getEofToken() {
@@ -1864,7 +1858,8 @@ fn TransUnit.getTokenNoErr() mut : &Parser.Token {
 
    if! token {
       if self.macroCtrl.$macroMode == .Expand {
-         token = self.expandMacroVal( _exp );
+         token = self.macroCtrl.expandMacroVal(
+            self.typeNameCtrl, self.scope, self, _exp );
       }
    }
    // if! token {

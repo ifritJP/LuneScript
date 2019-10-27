@@ -181,6 +181,15 @@ extern "C" {
     lune_set_block_var( BLOCK, INDEX, lune_stem_type_any, SYMBOL );     \
     lune_setQ( SYMBOL->stem, (VAL) );
 
+#define lune_decre_ref_alter( ENV, STEM )               \
+    {                                                   \
+        lune_stem_t _work = STEM;                       \
+        if ( _work.type == lune_stem_type_any ) {       \
+            lune_decre_ref( ENV, _work.val.pAny );      \
+        }                                               \
+    }
+    
+    
 
 #define lune_setq( ENV, STEM, VAL )                                     \
     {                                                                   \
@@ -761,6 +770,8 @@ extern "C" {
     extern lune_stem_t lune_popVal( lune_env_t * _pEnv, bool dummy );
     extern lune_stem_t lune_op_not( lune_env_t * _pEnv, lune_stem_t pAny );
     extern bool lune_equals( lune_stem_t stem1, lune_stem_t stem2 );
+
+    extern void lune_run_module( lune_env_t * _pEnv );
 
 
 

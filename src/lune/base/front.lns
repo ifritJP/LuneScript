@@ -1072,6 +1072,24 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
 }
 
 
+fn Front.outputBootC()
+{
+   let mut stream:oStream;
+   if! let path = self.option.bootPath {
+      let cPath = path.gsub( "%.lns$", ".c" );
+      let! mut file = io.open( cPath, "w" ) {
+         print( "failed to open file -- %s" (cPath) );
+         return;
+      };
+      stream = file;
+   }
+   else {
+      stream = io.stdout;
+   }
+   let initModule = scriptPath2Module( self.option.scriptPath );
+   convCC.outputBootcode( stream, initModule );
+}
+
 pub fn Front.exec() mut
 {
    Log._log( .Trace, `{ return self.option.mode.$_txt; } );
@@ -1101,6 +1119,9 @@ pub fn Front.exec() mut
          frontInterface.setFront( self );
 
          self.loadModule( scriptPath2Module( self.option.scriptPath ) );
+      }
+      case .BootC {
+         self.outputBootC();
       }
       default {
          print( "illegal mode" );

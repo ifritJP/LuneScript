@@ -260,14 +260,16 @@ end
 local SimpleSourceOStream = {}
 setmetatable( SimpleSourceOStream, { ifList = {SourceStream,} } )
 _moduleObj.SimpleSourceOStream = SimpleSourceOStream
-function SimpleSourceOStream.new( stream, stepIndent )
+function SimpleSourceOStream.new( stream, headStream, stepIndent )
    local obj = {}
    SimpleSourceOStream.setmeta( obj )
-   if obj.__init then obj:__init( stream, stepIndent ); end
+   if obj.__init then obj:__init( stream, headStream, stepIndent ); end
    return obj
 end
-function SimpleSourceOStream:__init(stream, stepIndent) 
-   self.stream = stream
+function SimpleSourceOStream:__init(stream, headStream, stepIndent) 
+   self.srcStream = stream
+   self.nowStream = stream
+   self.headStream = _lune.unwrapDefault( headStream, stream)
    self.needIndent = true
    self.curLineNo = 0
    self.stepIndent = stepIndent
@@ -283,7 +285,7 @@ function SimpleSourceOStream:get_indent(  )
 end
 function SimpleSourceOStream:writeRaw( txt )
 
-   local stream = self.stream
+   local stream = self.nowStream
    if self.needIndent then
       stream:write( string.rep( " ", self:get_indent() ) )
       self.needIndent = false
@@ -333,6 +335,14 @@ function SimpleSourceOStream:popIndent(  )
    end
    
    table.remove( self.indentQueue )
+end
+function SimpleSourceOStream:switchToHeader(  )
+
+   self.nowStream = self.headStream
+end
+function SimpleSourceOStream:returnToSource(  )
+
+   self.nowStream = self.srcStream
 end
 function SimpleSourceOStream.setmeta( obj )
   setmetatable( obj, { __index = SimpleSourceOStream  } )

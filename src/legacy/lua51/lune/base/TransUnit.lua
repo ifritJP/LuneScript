@@ -2858,9 +2858,10 @@ function TransUnit:error( mess )
    end
    
    if self.macroCtrl:get_macroMode() ~= Nodes.MacroMode.None then
-      print( "------ near code -----" )
+      print( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_macroMode())
+       )
       local code = ""
-      for index = #self.usedTokenList - 20, #self.usedTokenList do
+      for index = #self.usedTokenList - 30, #self.usedTokenList do
          if index > 1 then
             code = string.format( "%s %s", code, self.usedTokenList[index].txt)
          end
@@ -2895,11 +2896,6 @@ function TransUnit:newPushback( tokenList )
    end
    
    self.currentToken = self.usedTokenList[#self.usedTokenList]
-end
-
-function TransUnit:expandMacroVal( token )
-
-   return self.macroCtrl:expandMacroVal( self.typeNameCtrl, self.scope, self, token )
 end
 
 function TransUnit:getTokenNoErr(  )
@@ -2937,7 +2933,7 @@ function TransUnit:getTokenNoErr(  )
       local _exp = token
       if _exp ~= nil then
          if self.macroCtrl:get_macroMode() == Nodes.MacroMode.Expand then
-            token = self:expandMacroVal( _exp )
+            token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self.scope, self, _exp )
          end
          
       end
@@ -3265,7 +3261,7 @@ end
 function TransUnit:processImport( modulePath )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.processImport'
 
-   Log.log( Log.Level.Info, __func__, 2167, function (  )
+   Log.log( Log.Level.Info, __func__, 2162, function (  )
    
       return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), modulePath)
    end )
@@ -3280,7 +3276,7 @@ function TransUnit:processImport( modulePath )
          do
             local metaInfoStem = frontInterface.loadMeta( self.importModuleInfo, modulePath )
             if metaInfoStem ~= nil then
-               Log.log( Log.Level.Info, __func__, 2179, function (  )
+               Log.log( Log.Level.Info, __func__, 2174, function (  )
                
                   return string.format( "%s already", modulePath)
                end )
@@ -3310,7 +3306,7 @@ function TransUnit:processImport( modulePath )
    end
    
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 2199, function (  )
+   Log.log( Log.Level.Info, __func__, 2194, function (  )
    
       return string.format( "%s processing", modulePath)
    end )
@@ -3628,7 +3624,7 @@ function TransUnit:processImport( modulePath )
    self.importModule2ModuleInfo[moduleTypeInfo] = moduleInfo
    self.importModuleName2ModuleInfo[modulePath] = moduleInfo
    self.importModuleInfo:remove(  )
-   Log.log( Log.Level.Info, __func__, 2528, function (  )
+   Log.log( Log.Level.Info, __func__, 2523, function (  )
    
       return string.format( "%s complete", modulePath)
    end )
@@ -5524,11 +5520,33 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
          
       end
       
+      if nameToken.txt == "__init" then
+         for symbolName, symbolInfo in pairs( self.scope:get_symbol2SymbolInfoMap() ) do
+            if not symbolInfo:get_staticFlag() then
+               symbolInfo:set_hasValueFlag( false )
+            end
+            
+         end
+         
+      end
+      
       local methodNode = self:analyzeDeclMethod( classTypeInfo, declFuncMode, abstractFlag, overrideFlag, accessMode, staticFlag, token, nameToken )
       table.insert( fieldList, methodNode )
       methodNameSet[nameToken.txt]= true
       if nameToken.txt == "__init" then
          declCtorNode = methodNode
+         for memberName, memberNode in pairs( memberName2Node ) do
+            if not memberNode:get_staticFlag() then
+               local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
+               local typeInfo = symbolInfo:get_typeInfo()
+               if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
+                  self:addErrMess( methodNode:get_pos(), string.format( "Set member -- %s.%s", name.txt, memberName) )
+               end
+               
+            end
+            
+         end
+         
       end
       
    end
@@ -5691,21 +5709,6 @@ function TransUnit:analyzeClassBody( classAccessMode, firstToken, mode, gluePref
    end
    processClassFields( false )
    if mode ~= DeclClassMode.Module then
-      if declCtorNode ~= nil then
-         for memberName, memberNode in pairs( memberName2Node ) do
-            if not memberNode:get_staticFlag() then
-               local symbolInfo = _lune.unwrap( self.scope:getSymbolInfoChild( memberName ))
-               local typeInfo = symbolInfo:get_typeInfo()
-               if not symbolInfo:get_hasValueFlag() and not typeInfo:get_nilable() then
-                  self:addErrMess( declCtorNode:get_pos(), string.format( "Set member -- %s.%s", name.txt, memberName) )
-               end
-               
-            end
-            
-         end
-         
-      end
-      
       if hasStaticMember and not hasInitBlock then
          self:addErrMess( node:get_pos(), string.format( "This class (%s) need __init block for initialize static members.", name.txt) )
       end
@@ -9101,7 +9104,7 @@ function TransUnit:analyzeExpMacroStat( firstToken )
       local token = self:getToken(  )
       if token.txt == ",," or token.txt == ",,," or token.txt == ",,,," then
          local exp = self:analyzeExp( false, true, _lune.unwrap( op1levelMap[token.txt]) )
-         local literalStr = self.macroCtrl:expandSymbol( self, token, exp, self:getToken(  ), self.nodeManager, errMessList )
+         local literalStr = self.macroCtrl:expandSymbol( self, token, exp, self.nodeManager, errMessList )
          for __index, errMess in pairs( errMessList ) do
             self:addErrMess( errMess.pos, errMess.mess )
          end
@@ -9394,7 +9397,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
          
       end
       
-      exp = Nodes.ExpNewNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, exp, newArgList )
+      exp = Nodes.ExpNewNode.create( self.nodeManager, firstToken.pos, {classTypeInfo}, exp, initTypeInfo, newArgList )
       exp = self:analyzeExpCont( firstToken, exp, false )
       return exp
    end

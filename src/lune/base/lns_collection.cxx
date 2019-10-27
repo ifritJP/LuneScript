@@ -60,14 +60,6 @@ lune_stem_t _lune_createImmediateVal(
 }
 
 
-#define DECRE_STEM( ENV, STEM )                          \
-    {                                                    \
-        lune_stem_t _work = STEM;                        \
-        if ( _work.type == lune_stem_type_any ) {        \
-            lune_decre_ref( ENV, _work.val.pAny );       \
-        }                                                \
-    }
-
 #define SETQ( STEM )                                              \
     if ( (STEM)->type == lune_stem_type_any ) {                   \
         lune_setQ_( (STEM)->val.pAny );                          \
@@ -180,8 +172,7 @@ static void lune_mtd_List__del( lune_env_t * _pEnv, lune_any_t * pObj )
     
     for ( it = lune_obj_List_obj( pObj )->begin(); it != end; it++ )
     {
-        lune_stem_t stem = *it;
-        DECRE_STEM( _pEnv, stem );
+        lune_decre_ref_alter( _pEnv, *it );
     }
     
     delete lune_obj_List_obj( pObj );
@@ -495,7 +486,7 @@ static void lune_mtd_Set__del( lune_env_t * _pEnv, lune_any_t * pObj )
     
     for ( it = lune_obj_Set_obj( pObj )->begin(); it != end; it++ )
     {
-        DECRE_STEM( _pEnv, *it );
+        lune_decre_ref_alter( _pEnv, *it );
     }
     
     delete lune_obj_Set_obj( pObj );
@@ -553,7 +544,7 @@ void lune_mtd_Set_del(
     lune_SetIterator it = lune_obj_Set_obj( pObj )->find( val );
 
     if ( it != lune_obj_Set_obj( pObj )->end() ) {
-        DECRE_STEM( _pEnv, *it );
+        lune_decre_ref_alter( _pEnv, *it );
         lune_obj_Set_obj( pObj )->erase( it );
     }
 }
@@ -590,7 +581,7 @@ lune_stem_t lune_mtd_Set_and_(
         for ( ; it != end; it++ ) {
             lune_SetIterator setIt = lune_obj_Set_obj( pObj )->find( *it );
             if ( setIt != lune_obj_Set_obj( pObj )->end() ) {
-                DECRE_STEM( _pEnv, *setIt );
+                lune_decre_ref_alter( _pEnv, *setIt );
                 lune_obj_Set_obj( pObj )->erase( setIt );
             }
         }
@@ -635,7 +626,7 @@ lune_stem_t lune_mtd_Set_sub(
         lune_ListIterator end = lune_obj_List_obj( pObj )->end();
         
         for ( ; it != end; it++ ) {
-            DECRE_STEM( _pEnv, *it );
+            lune_decre_ref_alter( _pEnv, *it );
             
             lune_obj_Set_obj( pObj )->erase( *it );
         }
@@ -783,8 +774,8 @@ static void lune_mtd_Map__del( lune_env_t * _pEnv, lune_any_t * pObj )
     lune_MapIterator end = pMap->end();
     
     for ( it = pMap->begin(); it != end; it++ ) {
-        DECRE_STEM( _pEnv, it->first );
-        DECRE_STEM( _pEnv, it->second );
+        lune_decre_ref_alter( _pEnv, it->first );
+        lune_decre_ref_alter( _pEnv, it->second );
     }
     
     delete pMap;
@@ -830,8 +821,8 @@ void lune_mtd_Map_add( lune_env_t * _pEnv, lune_any_t * pObj,
 
         lune_MapIterator it = pMap->find( key );
         if ( it != pMap->end() ) {
-            DECRE_STEM( _pEnv, it->first );
-            DECRE_STEM( _pEnv, it->second );
+            lune_decre_ref_alter( _pEnv, it->first );
+            lune_decre_ref_alter( _pEnv, it->second );
             
             pMap->erase( it );
         }

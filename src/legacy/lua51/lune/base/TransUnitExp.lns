@@ -557,6 +557,8 @@ fn TransUnit.checkImplicitCast(
    }
    
    foreach expNode, index in expNodeList {
+      // 代入元の値から、代入先の型に暗黙キャストしているかどうか確認し、
+      // 暗黙キャストしている場合は ExpCastNode を生成する。
       let mut workNode = expNode;
       let mut stopFlag = false;
       if #dstTypeList >= index {
@@ -1021,7 +1023,7 @@ fn TransUnit.prepareExpCall(
 
 */
 fn TransUnit.analyzeExpCall(
-   firstToken:&Parser.Token, mut funcExp: Nodes.Node, nextToken:&Parser.Token ) mut :
+   firstToken:&Parser.Token, funcExp: Nodes.Node, nextToken:&Parser.Token ) mut :
    Nodes.Node, &Parser.Token
 {
    self.checkSymbolHavingValue( funcExp.$pos, funcExp.getSymbolInfo() );
@@ -2632,7 +2634,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
          let exp = self.analyzeExp( false, true, unwrap op1levelMap[ token.txt ] ## );
 
          let literalStr = self.macroCtrl.expandSymbol(
-            self, token, exp, self.getToken(##), self.nodeManager, errMessList );
+            self, token, exp, self.nodeManager, errMessList );
          foreach errMess in errMessList {
             self.addErrMess( errMess.pos, errMess.mess );
          }
@@ -2936,7 +2938,8 @@ fn TransUnit.analyzeExp(
       }
       
       exp = Nodes.ExpNewNode.create(
-         self.nodeManager, firstToken.pos, [ classTypeInfo ], exp, newArgList );
+         self.nodeManager, firstToken.pos, [ classTypeInfo ],
+         exp, initTypeInfo, newArgList );
       exp = self.analyzeExpCont( firstToken, exp, false );
 
       return exp;

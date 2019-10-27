@@ -61,6 +61,7 @@ pub enum ModeKind {
    SaveMeta = "SAVE",
    Exec = "exe",
    Glue = "glue",
+   BootC = "bootC",
 }
 
 /** meta ファイルの更新必要性チェックモード */
@@ -109,6 +110,7 @@ pub class Option {
    pub let mut stripDebugInfo:bool;
    /** 変換先の Lua バージョン*/
    pub let mut targetLuaVer:&LuaVer.LuaVerInfo;
+   pub let mut bootPath:str!;
 
    pub let mut transCtrlInfo:TransCtrlInfo;
 
@@ -126,6 +128,7 @@ pub class Option {
       self.stripDebugInfo = false;
       self.targetLuaVer = LuaVer.curVer;
       self.transCtrlInfo = TransCtrlInfo.create_normal();
+      self.bootPath = nil;
    }
 
    pub fn openDepend(): mut oStream! {
@@ -202,6 +205,7 @@ usage:
   -ob: output bytecompiled-code.
       -ob0 is without debug information.
       -ob1 is with debug information.
+  -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
 
   common_op:
@@ -226,7 +230,17 @@ usage:
    let mut lineNo:int! = nil;
    let mut column:int! = nil;
 
+  
    let mut index = 1;
+
+   fn getNextOp():str! {
+      if #argList <= index {
+         return nil;
+      }
+      index = index + 1;
+      return argList[ index ];
+   }
+   
    while #argList >= index {
       let arg = argList[ index ];
 
@@ -253,7 +267,7 @@ usage:
                os.exit( 0 );
             }
             case "-mklunemod" {
-               let path = (#argList > index) and argList[ index + 1 ] or nil;
+               let path = getNextOp();
                if! let mess = outputLuneMod( path ) {
                   Util.errorLog( mess );
                   os.exit( 1 );
@@ -264,8 +278,10 @@ usage:
                option.useLuneModule = "lune.base._lune%d" (Ver.luaModVersion);
             }
             case "--runtime" {
-               option.useLuneModule = (#argList > index) and argList[ index + 1 ] or nil;
-               index = index + 1;
+               option.useLuneModule = getNextOp();
+            }
+            case "-oc" {
+               option.bootPath = getNextOp();
             }
             case "-u" {
                option.updateOnLoad = true;
@@ -277,8 +293,7 @@ usage:
                option.transCtrlInfo.checkingDefineAbbr = false;
             }
             case "--log" {
-               if #argList > index {
-                  let txt = argList[ index + 1 ];
+               if! let txt = getNextOp() {
                   if! let level = Log.str2level( txt ) {
                      Log.setLevel( level );
                   }
@@ -286,37 +301,26 @@ usage:
                      Util.errorLog( "illegal level -- %s" ( txt ) );
                   }
                }
-               index = index + 1;
             }
             case "--depends" {
-               if #argList > index {
-                  option.dependsPath = argList[ index + 1 ];
-                  // if! let stream = io.open( argList[ index + 1 ], "w" ) {
-                  //    option.dependsStream = stream;
-                  // }
-                  // else {
-                  //    Util.err( "failed to open -- %s" (argList[ index + 1 ]) );
-                  // }
-               }
-               index = index + 1;
+               option.dependsPath = getNextOp();
             }
             case "--uptodate" {
-               if #argList > index {
-                  if! let mode = CheckingUptodateMode._from( argList[ index + 1 ] ) {
+               if! let txt = getNextOp() {
+                  if! let mode = CheckingUptodateMode._from( txt ) {
                      option.transCtrlInfo.uptodateMode = mode;
                   }
                   else {
-                     Util.errorLog( "illegal mode -- " .. argList[ index + 1 ] );
+                     Util.errorLog( "illegal mode -- " .. txt );
                   }
                }
-               index = index + 1;
             }
             case "-langC" {
                option.convertC = true;
             }
             case "-ol" {
-               if #argList > index {
-                  switch argList[ index + 1 ] {
+               if! let txt = getNextOp() {
+                  switch txt {
                      case "51" {
                         option.targetLuaVer = LuaVer.ver51;
                      }
@@ -328,7 +332,6 @@ usage:
                      }
                   }
                }
-               index = index + 1;
             }
             case "-ob0", "-ob1" {
                option.byteCompile = true;

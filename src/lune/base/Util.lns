@@ -87,22 +87,29 @@ pub class memStream extend (oStream) {
    }
 }
 
+
 pub interface SourceStream {
    pub abstract fn write( txt: str ) mut;
    pub abstract fn writeln( txt: str ) mut;
    pub abstract fn pushIndent( newIndent:int! ) mut;
    pub abstract fn popIndent() mut;
+   pub abstract fn switchToHeader() mut;
+   pub abstract fn returnToSource() mut;
 }
 
 pub class SimpleSourceOStream extend (SourceStream) {
-   let mut stream:oStream;
+   let mut nowStream:oStream;
+   let mut srcStream:oStream;
+   let mut headStream:oStream;
    let mut needIndent:bool;
    let stepIndent:int;
    let mut curLineNo:int;
    pri let mut indentQueue: List<int>;
 
-   pub fn __init( stream:oStream, stepIndent:int ) {
-      self.stream = stream;
+   pub fn __init( stream:oStream, headStream:oStream!, stepIndent:int ) {
+      self.srcStream = stream;
+      self.nowStream = stream;
+      self.headStream = unwrap headStream default stream;
       self.needIndent = true;
       self.curLineNo = 0;
       self.stepIndent = stepIndent;
@@ -117,7 +124,7 @@ pub class SimpleSourceOStream extend (SourceStream) {
    }
    
    fn writeRaw( txt: str ) mut {
-      let mut stream = self.stream;
+      let mut stream = self.nowStream;
 
       if self.needIndent {
          stream.write( string.rep( " ", self.$indent ) );
@@ -162,9 +169,14 @@ pub class SimpleSourceOStream extend (SourceStream) {
       }
       self.indentQueue.remove(##);
    }
+
+   pub fn switchToHeader() mut {
+      self.nowStream = self.headStream;
+   }
+   pub fn returnToSource() mut {
+      self.nowStream = self.srcStream;
+   }
 }
-
-
 
 pub fn log( message:str ) {
    if debugFlag {

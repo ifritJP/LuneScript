@@ -1625,6 +1625,15 @@ fn TransUnit.analyzeClassBody(
          }
       }
 
+      if nameToken.txt == "__init" {
+         foreach symbolInfo, symbolName in self.scope.$symbol2SymbolInfoMap {
+            if not symbolInfo.$staticFlag {
+               // 一旦全てのメンバを値なし状態にセットする
+               symbolInfo.set_hasValueFlag( false );
+            }
+         }
+      }
+      
       let methodNode = self.analyzeDeclMethod(
          classTypeInfo, declFuncMode, abstractFlag, overrideFlag,
          accessMode, staticFlag, token, nameToken );
@@ -1632,6 +1641,18 @@ fn TransUnit.analyzeClassBody(
       methodNameSet.add( nameToken.txt );
       if nameToken.txt == "__init" {
          declCtorNode = methodNode;
+
+         foreach memberNode, memberName in memberName2Node {
+            if not memberNode.$staticFlag {
+               let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
+               let typeInfo = symbolInfo.$typeInfo;
+               if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
+                  self.addErrMess( methodNode.$pos,
+                                   "Set member -- %s.%s"
+                                   ( name.txt, memberName ) );
+               }
+            }
+         }
       }
    }
 
@@ -1821,19 +1842,19 @@ fn TransUnit.analyzeClassBody(
    processClassFields( false );
 
    if mode ~= .Module {
-      when! declCtorNode {
-         foreach memberNode, memberName in memberName2Node {
-            if not memberNode.$staticFlag {
-               let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
-               let typeInfo = symbolInfo.$typeInfo;
-               if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
-                  self.addErrMess( declCtorNode.$pos,
-                                   "Set member -- %s.%s"
-                                   ( name.txt, memberName ) );
-               }
-            }
-         }
-      }
+      // when! declCtorNode {
+      //    foreach memberNode, memberName in memberName2Node {
+      //       if not memberNode.$staticFlag {
+      //          let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
+      //          let typeInfo = symbolInfo.$typeInfo;
+      //          if not symbolInfo.$hasValueFlag and not typeInfo.$nilable {
+      //             self.addErrMess( declCtorNode.$pos,
+      //                              "Set member -- %s.%s"
+      //                              ( name.txt, memberName ) );
+      //          }
+      //       }
+      //    }
+      // }
 
       if hasStaticMember and not hasInitBlock {
          self.addErrMess(

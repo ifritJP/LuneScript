@@ -1,9 +1,16 @@
-{
-   fn func(): ...<int> {
-      return 1, 2, 3;
+class Test<T> {
+   let val:T {pub};
+   pub fn func( val:T ):T {
+      return val;
    }
-   fn sub2( val1:int!, ... ) {
-      print( val1, ... );
-   }
-   sub2( func()** );
 }
+
+fn sub<T>( val:T ): T {
+   return val;
+}
+
+let test = new Test(1);
+print( test.$val + 1 );
+print( test.func( 10 ) + 10 );
+print( sub( 100 ) );
+

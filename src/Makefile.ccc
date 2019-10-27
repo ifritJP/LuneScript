@@ -2,6 +2,7 @@
 
 TEST_OUT=test.exe
 
+CORE_SRCS += lune/base/lns_main.c
 CORE_SRCS += lune/base/lns_base.c
 CORE_SRCS += lune/base/lns_collection.cxx
 CORE_SRCS += lune/base/lns_alloc.cxx
@@ -13,7 +14,7 @@ OBJS =
 OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(CORE_SRCS)))))
 OBJS += $(addprefix work/c/,$(addsuffix .o,$(notdir $(basename $(SRCS)))))
 
-vpath %.c lune/base
+vpath %.c lune/base work
 vpath %.cxx lune/base
 
 LUA_INC_DIR=

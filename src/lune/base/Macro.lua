@@ -692,8 +692,13 @@ end
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
 
    local tokenTxt = token.txt
+   local nextToken = parser:getTokenNoErr(  )
+   if nextToken.txt ~= "~~" then
+      parser:pushbackToken( nextToken )
+   end
+   
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' then
-      local nextToken = parser:getTokenNoErr(  )
+      nextToken = parser:getTokenNoErr(  )
       local macroVal = self.symbol2ValueMapForMacro[nextToken.txt]
       if  nil == macroVal then
          local _macroVal = macroVal
@@ -824,8 +829,9 @@ function ErrorMess:__init( pos, mess )
    self.mess = mess
 end
 
-function MacroCtrl:expandSymbol( parser, prefixToken, exp, nextToken, nodeManager, errMessList )
+function MacroCtrl:expandSymbol( parser, prefixToken, exp, nodeManager, errMessList )
 
+   local nextToken = parser:getTokenNoErr(  )
    if nextToken.txt ~= "~~" then
       parser:pushbackToken( nextToken )
    end

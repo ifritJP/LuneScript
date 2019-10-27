@@ -301,6 +301,26 @@ class Test9 extend Super7 {
    };
 }
 {
+   class Test {
+      static let mut s_val:int; // error
+      let mut val:int;
+      pub fn setVal() mut {
+         self.val = 1;
+      }
+
+      pub static fn setSVal() mut {
+         Test.s_val = 1;
+      }
+
+      __init {
+      }
+
+      
+      pub fn __init() { // error
+      }
+   }
+}
+{
    class Super {
    }
    {

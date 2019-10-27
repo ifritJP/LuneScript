@@ -971,6 +971,7 @@ _declNodeClass( "Provide", Node, false, false, true,
 
 _declNodeClass( "ExpNew", Node, false, true, true,
                 [ { "symbol": "&Node" },
+                  { "ctorTypeInfo": "&Ast.TypeInfo" },
                   { "argList": "&ExpListNode!" } ]
 );
 

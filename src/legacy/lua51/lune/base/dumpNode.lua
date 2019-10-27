@@ -785,10 +785,23 @@ function dumpFilter:processExpUnwrap( node, opt )
    
 end
 
+local function getTypeListTxt( typeList )
+
+   local txt = ""
+   for index, typeInfo in pairs( typeList ) do
+      if index > 1 then
+         txt = txt .. ", "
+      end
+      
+      txt = txt .. typeInfo:getTxt(  )
+   end
+   
+   return txt
+end
 function dumpFilter:processExpCall( node, opt )
 
    local prefix, depth = opt:get(  )
-   dump( prefix, depth, node, "" )
+   dump( prefix, depth, node, string.format( "-> %s", getTypeListTxt( node:get_expTypeList() )) )
    filter( node:get_func(  ), self, opt:nextOpt(  ) )
    do
       local _exp = node:get_argList(  )

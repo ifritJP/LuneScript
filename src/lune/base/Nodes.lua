@@ -3154,23 +3154,24 @@ function ExpNewNode:canBeStatement(  )
 
    return true
 end
-function ExpNewNode.new( id, pos, typeList, symbol, argList )
+function ExpNewNode.new( id, pos, typeList, symbol, ctorTypeInfo, argList )
    local obj = {}
    ExpNewNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, typeList, symbol, argList ); end
+   if obj.__init then obj:__init( id, pos, typeList, symbol, ctorTypeInfo, argList ); end
    return obj
 end
-function ExpNewNode:__init(id, pos, typeList, symbol, argList) 
+function ExpNewNode:__init(id, pos, typeList, symbol, ctorTypeInfo, argList) 
    Node.__init( self,id, _lune.unwrap( _moduleObj.nodeKind['ExpNew']), pos, typeList)
    
    
    self.symbol = symbol
+   self.ctorTypeInfo = ctorTypeInfo
    self.argList = argList
    
 end
-function ExpNewNode.create( nodeMan, pos, typeList, symbol, argList )
+function ExpNewNode.create( nodeMan, pos, typeList, symbol, ctorTypeInfo, argList )
 
-   local node = ExpNewNode.new(nodeMan:nextId(  ), pos, typeList, symbol, argList)
+   local node = ExpNewNode.new(nodeMan:nextId(  ), pos, typeList, symbol, ctorTypeInfo, argList)
    nodeMan:addNode( node )
    return node
 end
@@ -3223,6 +3224,9 @@ function ExpNewNode.setmeta( obj )
 end
 function ExpNewNode:get_symbol()
    return self.symbol
+end
+function ExpNewNode:get_ctorTypeInfo()
+   return self.ctorTypeInfo
 end
 function ExpNewNode:get_argList()
    return self.argList

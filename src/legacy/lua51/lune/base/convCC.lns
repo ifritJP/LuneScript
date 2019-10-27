@@ -60,6 +60,16 @@ fn getSymbolName( symbolInfo:&Ast.LowSymbol ): str {
    return symbolInfo.$name;
 }
 
+fn getBelongClassType( node:&Nodes.Node ) : &Ast.TypeInfo! {
+   if node.$expType.$kind ~= .Method {
+      return nil;
+   }
+   let! fieldNode = node@@@Nodes.RefFieldNode {
+      return nil;
+   };
+   return fieldNode.$prefix.$expType;
+}
+
 /**
 funcType で示す関数がクロージャかどうかを返す。
 */
@@ -196,6 +206,8 @@ fn getBlockName( scope:&Ast.Scope ): str {
 
 /** 変換プロセス */
 enum ProcessMode {
+   /** include */
+   Include,
    /** プロトタイプ宣言 */
    Prototype,
    /** 大域変数 */
@@ -404,7 +416,7 @@ class WorkSymbol extend (Ast.LowSymbol) {
 
 class ScopeInfo {
    /** スコープ内で宣言されている stem 型変数の数 */
-   pub let anyNum:int;
+   pub let stemNum:int;
    /** スコープ内で宣言されている var 型変数の数 */
    pub let varNum:int;
 }
@@ -459,78 +471,79 @@ class ScopeMgr {
    pub fn setupScopeParam( scope:&Ast.Scope ) mut : int, int
    {
       if! let scopeInfo = self.scope2InfoMap[ scope ] {
-         return scopeInfo.anyNum, scopeInfo.varNum;
+         return scopeInfo.stemNum, scopeInfo.varNum;
       }
 
-      // ローカル変数のうち、 stem として扱う変数を決定し、インデックスを紐付ける。
-      let mut varNum = 0;
-      let mut anyNum = 0;
-      forsort symbol in scope.$symbol2SymbolInfoMap {
-         let param;
-         if symbol.$name ~= "__func__" {
-            switch symbol.$kind {
-               case .Var, .Arg {
-                  if symbol.$hasAccessFromClosure {
-                     // if isStemType( symbol.$typeInfo ) and symbol.$mutable {
-                     //    // 次のシンボルは var 型で保持する。
-                     //    // - stem 型を保持する
-                     //    // - mutable
-                     //    // この場合、シンボルに保持する stem データ自体が
-                     //    // 入れ代わる可能性があるため var 型とする。
-                     //    param = new SymbolParam( .Var, varNum, cTypeVarP );
-                     //    varNum = varNum + 1;
-                     // }
-                     // else {
-                     //    param = new SymbolParam( .Stem, anyNum, cTypeAnyP );
-                     //    anyNum = anyNum + 1;
-                     // }
-                     param = new SymbolParam( .Var, varNum, cTypeVarP );
-                     varNum = varNum + 1;
-                  }
-                  elseif isStemType( symbol.$typeInfo )
-                  {
-                     param = new SymbolParam( .Stem, anyNum, cTypeStem );
-                     anyNum = anyNum + 1;
-                  }
-                  else {
-                     param = new SymbolParam(
-                        .Prim, 0, getCType( symbol.$typeInfo, false ) );
-                  }
-               }
-               case .Mtd {
-                  let retTypeList = symbol.$typeInfo.$retTypeInfoList;
-                  if isStemRet( retTypeList ) {
-                     param = new SymbolParam( .Other, 0, cTypeStem );
-                  }
-                  else {
-                     param = new SymbolParam( .Prim, 0, getCRetType( retTypeList ) );
-                  }
-               }
-               default {
-                  if isStemType( symbol.$typeInfo ) {
-                     if symbol.$kind == .Mbr {
-                        param = new SymbolParam( .StemMbr, 0, cTypeStem );
+
+      let scopeInfo;
+      if not scope.$ownerTypeInfo$.$externalFlag {
+         // ローカル変数のうち、stem, var として扱う変数を決定し、インデックスを紐付ける。
+         let mut varNum = 0;
+         let mut stemNum = 0;
+
+         if scope.$ownerTypeInfo$.isModule$() {
+            // モジュールの場合、グローバルな値を保持するリスト分 + 1 する
+            stemNum = stemNum + 1;
+         }
+         
+         forsort symbol in scope.$symbol2SymbolInfoMap {
+            let param;
+            if symbol.$name ~= "__func__" {
+               switch symbol.$kind {
+                  case .Var, .Arg {
+                     if symbol.$hasAccessFromClosure {
+                        param = new SymbolParam( .Var, varNum, cTypeVarP );
+                        varNum = varNum + 1;
+                     }
+                     elseif isStemType( symbol.$typeInfo )
+                     {
+                        param = new SymbolParam( .Stem, stemNum, cTypeStem );
+                        stemNum = stemNum + 1;
                      }
                      else {
-                        param = new SymbolParam( .Other, 0, cTypeStem );
+                        param = new SymbolParam(
+                           .Prim, 0, getCType( symbol.$typeInfo, false ) );
                      }
                   }
-                  else {
-                     param = new SymbolParam(
-                        .Prim, 0, getCType( symbol.$typeInfo, false ) );
+                  case .Mtd {
+                     let retTypeList = symbol.$typeInfo.$retTypeInfoList;
+                     if isStemRet( retTypeList ) {
+                        param = new SymbolParam( .Other, 0, cTypeStem );
+                     }
+                     else {
+                        param = new SymbolParam( .Prim, 0, getCRetType( retTypeList ) );
+                     }
+                  }
+                  default {
+                     if isStemType( symbol.$typeInfo ) {
+                        if symbol.$kind == .Mbr {
+                           param = new SymbolParam( .StemMbr, 0, cTypeStem );
+                        }
+                        else {
+                           param = new SymbolParam( .Other, 0, cTypeStem );
+                        }
+                     }
+                     else {
+                        param = new SymbolParam(
+                           .Prim, 0, getCType( symbol.$typeInfo, false ) );
+                     }
                   }
                }
             }
+            else {
+               param = new SymbolParam( .Stem, 0, cTypeStem );
+            }
+            symbol.set_convModuleParam( param );
          }
-         else {
-            param = new SymbolParam( .Stem, 0, cTypeStem );
-         }
-         symbol.set_convModuleParam( param );
+         
+         scopeInfo = new ScopeInfo( stemNum, varNum );
       }
-
-      self.scope2InfoMap[ scope ] = new ScopeInfo( anyNum, varNum );
+      else {
+         scopeInfo = new ScopeInfo( 0, 0 );
+      }
+      self.scope2InfoMap[ scope ] = scopeInfo;
       
-      return anyNum, varNum;
+      return scopeInfo.stemNum, scopeInfo.varNum;
    }
 
    pub fn getSymbolParam( symbol:&Ast.LowSymbol ) mut : &SymbolParam
@@ -604,23 +617,61 @@ class ScopeMgr {
 
 }
 
-macro _out2Header( code:stat )
+enum Out2HMode {
+   HeaderPub,
+   HeaderPri,
+   SourcePub,
+   SourcePri,
+}
+
+fn getOut2HeaderPrefix( mode:Out2HMode ) : str
+{
+   switch mode {
+      case .HeaderPub {
+         return "extern ";
+      }
+      case .SourcePri {
+         return "static ";
+      }
+   }
+   return "";
+}
+
+/**
+ヘッダとソースにコードを出力する。
+
+@param sourceStream 出力先
+@param flag 公開する処理かどうか
+@param code コードを出力する処理。
+  この code 内では、 out2HMode を参照して処理を替える。
+
+*/
+macro _out2Header( sourceStream:sym, flag:stat, code:stat )
 {
    {}
-   self.stream = self.headerStream;
-
-   ,,code;
-   
-   self.stream = self.sourceStream
+   {
+      fn processwork( out2HMode:Out2HMode ) {
+         ,,code;
+      }
+      if ,,flag {
+         ,,sourceStream.switchToHeader();
+         processwork( .HeaderPub );
+         ,,sourceStream.returnToSource();
+         
+         processwork( .SourcePub );
+      }
+      else {
+         processwork( .SourcePri );
+      }
+   }
 }
 
 
 class convFilter extend Nodes.Filter<Opt> {
    pri let streamName: str;
    // pri let mut stream: oStream;
-   pri let mut sourceStream:Util.SimpleSourceOStream;
    pri let mut stream:Util.SimpleSourceOStream;
-   pri let mut headerStream:Util.SimpleSourceOStream;
+
    pri let mut streamQueue: List<Util.SimpleSourceOStream>;
 
    pri let mut moduleCtrl:ModuleCtrl;
@@ -701,9 +752,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.currentRoutineInfo = new RoutineInfo( ast.$moduleTypeInfo );
       self.routineInfoQueue.insert( self.currentRoutineInfo );
 
-      self.sourceStream = new Util.SimpleSourceOStream( stream, stepIndent );
-      self.headerStream = new Util.SimpleSourceOStream( headerStream, stepIndent );
-      self.stream = self.sourceStream;
+      self.stream = new Util.SimpleSourceOStream( stream, headerStream, stepIndent );
    }
 
    /**
@@ -715,7 +764,7 @@ class convFilter extend Nodes.Filter<Opt> {
    fn pushStream() mut : Util.memStream {
       self.streamQueue.insert( self.stream );
       let mut stream = new Util.memStream();
-      self.stream = new Util.SimpleSourceOStream( stream, stepIndent );
+      self.stream = new Util.SimpleSourceOStream( stream, nil, stepIndent );
       return stream;
    }
 
@@ -742,8 +791,16 @@ pushStream() で切り替えた出力ストリームを元に戻す。
    fn outputAlter2MapFunc( stream:Util.SourceStream, alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>);
 
 
+   fn processAddModuleGlobal( valName:str ) mut {
+      self.stream.writeln(
+         "lune_mtd_List_insert( _pEnv, lune_module_globalStemList%s, %s );"
+         (accessAny, valName ) );
+   }
+   
    advertise stream;
 }
+
+
 
 fn filter( node: &Nodes.Node, filter: convFilter,
            parent: &Nodes.Node )
@@ -787,20 +844,31 @@ pub override fn convFilter.processNone(
 pub override fn convFilter.processImport(
    node: Nodes.ImportNode, opt: Opt ) mut
 {
-   let module = node.get_modulePath();
-   let mut moduleName = module.gsub( ".*%.", "" );
-   moduleName = node.$assignName;
-//   self.moduleCtrl.add( node.$moduleTypeInfo, new ModuleInfo( moduleName, module ) );
-   // self.typeInfo2ModuleName[ node.$moduleTypeInfo ] =
-   //    new ModuleInfo( moduleName, module );
-   self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
-   //if self.convMode == "exe" or self.convMode == "ast" {
-   // if self.convMode == .Exec {
-   //    self.write( "local %s = _lune.loadModule( '%s' )" ( moduleName, module ) );
-   // }
-   // else {
-   //    self.write( "local %s = require( '%s' )" ( moduleName, module ) );
-   // }
+   if self.processMode == .Include {
+      fn process( out2HMode:Out2HMode ) {
+         switch out2HMode {
+            case .HeaderPub {
+               if node.$symbolInfo.$scope ~= node.$moduleTypeInfo.$scope {
+                  return;
+               }
+            }
+            case .SourcePub, .SourcePri {
+            }
+            default {
+               return;
+            }
+         }
+         self.writeln( "#include<%s.h>" ((node.$modulePath.gsub("%s.", "/"))) );
+      }
+      _out2Header(
+         self.stream,
+         `{ true },
+         `{ process( out2HMode ); } );
+   }
+   else {
+      self.writeln( "lune_init_%s( _pEnv );"
+                    (self.moduleCtrl.getFullName( node.$moduleTypeInfo ) ));
+   }
 };
 
 fn getSymbolIndex( symbol:&Ast.SymbolInfo ) : int {
@@ -810,19 +878,100 @@ fn getSymbolIndex( symbol:&Ast.SymbolInfo ) : int {
    return (param@@=SymbolParam).index;
 }
 
+fn convFilter.processInitModule( node: Nodes.RootNode ) mut
+{
+   let stemNum, varNum = self.scopeMgr.setupScopeParam( self.ast.$moduleScope );
+   
+   self.processMode = .InitModule;
+
+   fn process( out2HMode:Out2HMode ) {
+      self.write(
+         "%svoid lune_init_%s( %s _pEnv )"
+         ( getOut2HeaderPrefix( out2HMode ),
+           self.moduleCtrl.getFullName( node.$moduleTypeInfo ), cTypeEnvP) );
+      
+      
+      switch out2HMode {
+         case .HeaderPub {
+            self.writeln( ";" );
+         }
+         case .SourcePub {
+            self.writeln( "{" );
+         }
+      }
+   }
+   
+   _out2Header(
+      self.stream,
+      `{true},
+      `{ process( out2HMode ); } );
+
+
+   self.pushIndent(##);
+
+
+   let moduneBlockName = getBlockName( self.ast.$moduleScope );
+   self.writeln( "lune_block_t * %s = lune_enter_module( %d, %d );"
+                 (moduneBlockName, stemNum, varNum ) );
+
+   self.writeln( "lune_set_block_stem( %s, 0, lune_module_globalStemList);"
+                 (moduneBlockName) );
+   self.writeln(
+      "lune_setQ( lune_module_globalStemList, lune_class_List_new( _pEnv ));" );
+   
+
+   
+   // init ブロック内の managedStemTop 用ブロック作成
+   self.writeln( "lune_enter_block( _pEnv, 0, 0 );" );
+
+   foreach declAlgeNode in node.$nodeManager.getDeclAlgeNodeList() {
+      filter( declAlgeNode, self, node );
+   }
+   
+   foreach child in node.$children {
+      switch child.$kind {
+         case Nodes.NodeKind.$DeclAlge,
+              //Nodes.NodeKind.$DeclClass,
+              Nodes.NodeKind.$DeclFunc,
+              Nodes.NodeKind.$DeclMacro
+         {
+            //filter( child, self, node );
+            //self.writeln( "" );
+         }
+         default {
+            filter( child, self, node );
+            self.writeln( "" );
+         }
+      }
+   }
+
+   // init ブロック内の managedStemTop 用ブロックの開放
+   self.writeln( "lune_leave_block( _pEnv );" );
+   
+   self.popIndent();
+
+   self.writeln( "}" );
+}
+
 pub override fn convFilter.processRoot(
    node: Nodes.RootNode, opt: Opt ) mut
 {
+   // 最初にトップスコープのパラメータを確定させる
+   self.scopeMgr.setupScopeParam( self.ast.$moduleScope );
+
+   
    Ast.pushProcessInfo( node.$processInfo );
 
-   // node.visit(
-   //    fn ( target:&Nodes.Node, parent:&Nodes.Node,
-   //         releation:str, depth:int ): Nodes.NodeVisitMode
-   //    {
-   //       print( string.rep( "  ", depth ) .. Nodes.getNodeKindName( target.$kind ),
-   //              releation );
-   //       return .Child;
-   //    }, 0 );
+
+   self.stream.switchToHeader();
+   let ifdefname =
+      self.moduleCtrl.getFilePath( self.moduleTypeInfo ).gsub( "/", "_" );
+   self.writeln( ```
+#ifndef __%s__
+#define __%s__
+       ``` (ifdefname, ifdefname) );
+   self.stream.returnToSource();
+   
    
    self.writeln( "// %s" ( self.streamName ) );
 
@@ -832,6 +981,14 @@ pub override fn convFilter.processRoot(
       ( self.moduleCtrl.getFilePath( node.$moduleTypeInfo ) ) );
 
    let children = node.get_children();
+
+   self.processMode = .Include;
+   foreach importNode in node.$nodeManager.getImportNodeList() {
+      filter( importNode, self, node );
+   }
+
+   self.writeln( "static %s lune_module_globalStemList;" (cTypeStem) );
+   
 
    self.processMode = .Prototype;
    foreach declEnumNode in node.$nodeManager.getDeclEnumNodeList() {
@@ -926,50 +1083,14 @@ pub override fn convFilter.processRoot(
       filter( declFuncNode, self, node );
    }
 
+
+   self.processInitModule( node );
    
+
+   self.stream.switchToHeader();
+   self.writeln( "#endif" );
+   self.stream.returnToSource();
    
-   self.processMode = .InitModule;
-   self.writeln( "void lune_init_test( %s _pEnv )" (cTypeEnvP) );
-   self.writeln( "{" );
-
-   self.pushIndent(##);
-
-   let anyNum, varNum = self.scopeMgr.setupScopeParam( self.ast.$moduleScope );
-   
-   self.writeln( "lune_block_t * %s = lune_enter_module( %d, %d );"
-                 (getBlockName( self.ast.$moduleScope ), anyNum, varNum ) );
-
-   // init ブロック内の managedStemTop 用ブロック作成
-   self.writeln( "lune_enter_block( _pEnv, 0, 0 );" );
-
-   foreach declAlgeNode in node.$nodeManager.getDeclAlgeNodeList() {
-      filter( declAlgeNode, self, node );
-   }
-   
-   foreach child in children {
-      switch child.$kind {
-         case Nodes.NodeKind.$DeclAlge,
-              //Nodes.NodeKind.$DeclClass,
-              Nodes.NodeKind.$DeclFunc,
-              Nodes.NodeKind.$DeclMacro
-         {
-            //filter( child, self, node );
-            //self.writeln( "" );
-         }
-         default {
-            filter( child, self, node );
-            self.writeln( "" );
-         }
-      }
-   }
-
-   // init ブロック内の managedStemTop 用ブロックの開放
-   self.writeln( "lune_leave_block( _pEnv );" );
-   
-   self.popIndent();
-
-   self.writeln( "}" );
-
    Ast.popProcessInfo();
 };
 
@@ -1044,9 +1165,9 @@ fn getAccessValFromStem( typeInfo:&Ast.TypeInfo ) :str
 
 fn convFilter.processBlockPreProcess( blockNode:&Nodes.BlockNode ) mut {
    self.pushIndent( ## );
-   let anyNum, varNum = self.scopeMgr.setupScopeParam( blockNode.$scope );
+   let stemNum, varNum = self.scopeMgr.setupScopeParam( blockNode.$scope );
    self.writeln( "lune_block_t * %s = lune_enter_block( _pEnv, %d, %d );"
-                 ( getBlockName( blockNode.$scope ), anyNum, varNum ) );
+                 ( getBlockName( blockNode.$scope ), stemNum, varNum ) );
    self.currentRoutineInfo.pushDepth();
 }
 
@@ -1080,7 +1201,7 @@ pub override fn convFilter.processBlockSub(
    node: Nodes.BlockNode, opt: Opt ) mut
 {
    // ローカル変数のうち、 any として扱う変数を決定し、インデックスを紐付ける。
-   let anyNum, varNum = self.scopeMgr.setupScopeParam( node.$scope );
+   self.scopeMgr.setupScopeParam( node.$scope );
 
    // クロージャでアクセスする外部変数を宣言
    let scope = node.$scope;
@@ -1305,35 +1426,47 @@ pub override fn convFilter.processDeclEnum(
    let fullName = self.getFullName( enumType );
 
    let isStrEnum = enumType.$valTypeInfo.equals( Ast.builtinTypeString ##);
-   
+
    switch self.processMode {
       case .Prototype {
-         foreach valName, index in node.$valueNameList {
-            let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
-            if isStrEnum {
-               if not Ast.isPubToExternal( enumType.$accessMode ) {
-                  self.write( "static " );
+         fn process(out2HMode:Out2HMode) {
+            let prefix = getOut2HeaderPrefix( out2HMode );
+            foreach valName, index in node.$valueNameList {
+               let valInfo = unwrap enumType.getEnumValInfo( valName.txt );
+               let enumValName =
+                  self.moduleCtrl.getEnumValCName( enumType, valName.txt );
+               if isStrEnum {
+                  self.writeln( "%s%s %s;" (prefix, cTypeStem, enumValName ));
                }
-               self.writeln(
-                  "%s %s;" (cTypeStem,
-                             self.moduleCtrl.getEnumValCName( enumType, valName.txt ) ));
+               else {
+                  switch out2HMode {
+                     case .HeaderPub, .SourcePri {
+                        let valTxt = "%s" (Ast.getEnumLiteralVal(valInfo.$val));
+                        self.writeln( "#define %s %s" ( enumValName, valTxt ) );
+                     }
+                  }
+               }
             }
-            else {
-               let valTxt = "%s" (Ast.getEnumLiteralVal(valInfo.$val));
-               self.writeln( "#define %s %s"
-                             (self.moduleCtrl.getEnumValCName( enumType, valName.txt ),
-                               valTxt ) );                   
+            switch out2HMode {
+               case .HeaderPub, .SourcePri {
+                  self.writeln(
+                     "%s%s %s_get__allList( lune_env_t * _pEnv );"
+                     (prefix, cTypeStem, enumFullName) );
+                  self.writeln( "%s%s %s_get__txt( %s _pEnv, %s val );"
+                                ( prefix, cTypeStem, enumFullName, cTypeEnvP,
+                                  getCType( enumType.$valTypeInfo, false ) ) );
+               }
             }
          }
-
-         if not Ast.isPubToExternal( enumType.$accessMode ) {
-            self.write( "static " );
-         }
-         self.writeln( "%s %s_val2NameMap;" (cTypeAnyP, enumFullName) );
-         if not Ast.isPubToExternal( enumType.$accessMode ) {
-            self.write( "static " );
-         }
-         self.writeln( "%s %s_allList;" (cTypeStem, enumFullName) );
+         _out2Header(
+            self.stream,
+            `{ Ast.isPubToExternal( enumType.$accessMode ) },
+            `{
+               process( out2HMode );
+            });
+         
+         self.writeln( "static %s %s_val2NameMap;" (cTypeAnyP, enumFullName) );
+         self.writeln( "static %s %s_allList;" (cTypeStem, enumFullName) );
       }
       case .Form {
          if not Ast.isPubToExternal( enumType.$accessMode ) {
@@ -1419,8 +1552,10 @@ pub override fn convFilter.processDeclEnum(
          }
 
          // _allList のセット
-         self.write( "%s_allList = " (enumFullName) );
-         self.writeln( "lune_class_List_new( _pEnv );" );
+         let allListName = "%s_allList" (enumFullName);
+         self.write( allListName );
+         self.writeln( " = lune_class_List_new( _pEnv );" );
+         self.processAddModuleGlobal( allListName );
          
          foreach anyVar in anyVarList {
             self.writeln(
@@ -1429,8 +1564,10 @@ pub override fn convFilter.processDeclEnum(
          }
 
          // _val2NameMap のセット
-         self.write( "%s_val2NameMap = " (enumFullName) );
-         self.writeln( "lune_class_Map_new( _pEnv ).val.pAny;"  );
+         let val2NameMapName = "%s_val2NameMap" (enumFullName);
+         self.write( val2NameMapName );
+         self.writeln( " = lune_class_Map_new( _pEnv ).val.pAny;"  );
+         self.processAddModuleGlobal( "LUNE_STEM_ANY( %s )" (val2NameMapName) );
          
          foreach anyVar, index in anyVarList {
             self.writeln(
@@ -1639,49 +1776,64 @@ fn processAlgePrototype( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
       valList.insert( valInfo );
    }
 
+   fn process() {
+      // 各値を識別する enum を宣言
+      stream.writeln( "typedef enum {" );
+      stream.pushIndent( ## );
+      let algeTypeName = moduleCtrl.getAlgeCName( node.$expType );
+      let enumName = moduleCtrl.getAlgeEnumCName( node.$expType );
 
-   // 各値を識別する enum を宣言
-   stream.writeln( "typedef enum {" );
-   stream.pushIndent( ## );
-   let algeTypeName = moduleCtrl.getAlgeCName( node.$expType );
-   let enumName = moduleCtrl.getAlgeEnumCName( node.$expType );
-
-   foreach valInfo, index in valList {
-      if index > 1 {
-         stream.writeln( "," );
-      }
-      stream.write( "%s_%s" (enumName, valInfo.$name) );
-   }
-   stream.writeln( "" );
-   stream.popIndent();
-   stream.writeln( "} %s;" ( enumName ) );
-
-   // alge 型の struct を宣言
-   foreach valInfo in valList {
-      if #valInfo.$typeList > 0 {
-         stream.writeln( "typedef struct {" );
-         stream.pushIndent(##);
-         foreach typeInfo, index in valInfo.$typeList {
-            stream.writeln( "%s _val%d;" (getCType( typeInfo, false ), index) );
+      
+      foreach valInfo, index in valList {
+         if index > 1 {
+            stream.writeln( "," );
          }
-         stream.popIndent();
-         stream.writeln(
-            "} %s;" (moduleCtrl.getAlgeValStrCName( node.$expType, valInfo.$name) ) );
+         stream.write( "%s_%s" (enumName, valInfo.$name) );
+      }
+      stream.writeln( "" );
+      stream.popIndent();
+      stream.writeln( "} %s;" ( enumName ) );
+
+      // alge 型の struct を宣言
+      foreach valInfo in valList {
+         if #valInfo.$typeList > 0 {
+            stream.writeln( "typedef struct {" );
+            stream.pushIndent(##);
+            foreach typeInfo, index in valInfo.$typeList {
+               stream.writeln( "%s _val%d;" (getCType( typeInfo, false ), index) );
+            }
+            stream.popIndent();
+            stream.writeln(
+               "} %s;" (moduleCtrl.getAlgeValStrCName( node.$expType, valInfo.$name) ) );
+         }
+      }
+
+      // alge 型のパラメータ有りの値を生成する関数宣言
+      foreach valInfo in valList {
+         if #valInfo.$typeList > 0 {
+            processAlgeNewProto( stream, moduleCtrl, node.$expType, valInfo );
+            stream.writeln( ";" );
+         }
       }
    }
+
+
+   _out2Header(
+      stream,
+      `{ Ast.isPubToExternal( node.$expType.$accessMode ) },
+      `{
+         switch out2HMode {
+            case .HeaderPub, .SourcePri {
+               process();
+            }
+         }
+      });
+
 
    // alge 型のパラメータ無しの値を初期化する関数宣言
    stream.writeln(
       "static void %s( %s _pEnv );"
       (moduleCtrl.getAlgeInitCName(node.$expType), cTypeEnvP ) );
-
-   // alge 型のパラメータ有りの値を生成する関数宣言
-   foreach valInfo in valList {
-      if #valInfo.$typeList > 0 {
-         processAlgeNewProto( stream, moduleCtrl, node.$expType, valInfo );
-         stream.writeln( ";" );
-      }
-   }
 }
 
 fn processAlgeWideScope( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
@@ -1696,15 +1848,30 @@ fn processAlgeWideScope( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
 
    let algeTypeName = moduleCtrl.getAlgeCName( node.$expType );
 
-   foreach valInfo, index in valList {
-      if #valInfo.$typeList == 0 {
-         let varName = moduleCtrl.getAlgeValCName( node.$expType, valInfo.$name );
-         stream.writeln(
-            "%s %s;" (cTypeStem, varName ) );
-         stream.writeln(
-            "%s %s_any;" (cTypeAny, varName ) );
+   fn process( out2HMode:Out2HMode ) {
+      let prefix = getOut2HeaderPrefix( out2HMode );
+
+      foreach valInfo, index in valList {
+         if #valInfo.$typeList == 0 {
+            let varName = moduleCtrl.getAlgeValCName( node.$expType, valInfo.$name );
+            stream.writeln(
+               "%s%s %s;" (prefix, cTypeStem, varName ) );
+            stream.writeln(
+               "%s%s %s_any;" (prefix, cTypeAny, varName ) );
+         }
       }
    }
+   
+   _out2Header(
+      stream,
+      `{ Ast.isPubToExternal( node.$expType.$accessMode ) },
+      `{
+         switch out2HMode {
+            case .HeaderPub, .SourcePri, .SourcePub {
+               process( out2HMode );
+            }
+         }
+      });
 }
 
 fn processAlgeForm( stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
@@ -1968,14 +2135,12 @@ fn getMethodTypeTxt( retTypeList:&List<&Ast.TypeInfo> ) : str {
 }
 
 fn processNewConstrProto(
-   stream:Util.SourceStream, moduleCtrl:ModuleCtrl, node:&Nodes.DeclClassNode ) mut
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   node:&Nodes.DeclClassNode, out2HMode:Out2HMode ) mut
 {
    let className = moduleCtrl.getClassCName( node.$expType );
 
-   if not Ast.isPubToExternal( node.$expType.$accessMode ) {
-      stream.write( "static " );
-   }
-   
+   stream.write( getOut2HeaderPrefix( out2HMode ) );
    stream.write( "%s lune_class_%s_new( %s _pEnv"
       (cTypeStem, className, cTypeEnvP ) );
 
@@ -2124,10 +2289,6 @@ fn processDeclClassPrototype(
       }
    }
 
-   // コンストラクタのプロトタイプ
-   processNewConstrProto( stream, moduleCtrl, node );
-   stream.writeln( ";" );
-
    if not node.hasUserInit() {
       // デフォルトコンストラクタの処理
       let ctorType = unwrap node.$scope.getTypeInfoField( "__init", true, node.$scope );
@@ -2204,74 +2365,90 @@ fn processIFObjInit(
 fn convFilter.processDeclClassNodePrototype( node:&Nodes.DeclClassNode ) mut
 {
    let className = self.moduleCtrl.getClassCName( node.$expType );
-   
-   // メソッド構造体の宣言
-   self.writeln( "typedef struct lune_mtd_%s_t {" (className) );
-   self.pushIndent(##);
 
    let kind = node.$expType.$kind;
-   if kind == .Class {
-      self.writeln( "lune_del_t * _del;" );
-      self.writeln( "lune_gc_t * _gc;" );
-   }
 
-   processDeclMethodTable( self.stream, node.$expType );
-
-   self.popIndent();
-   self.writeln( "} lune_mtd_%s_t;" (className) );
-
-   if kind == .Class {
-      self.writeln( "typedef struct u_if_imp_%s_t {" (className) );
+   fn process( out2HMode:Out2HMode ) {
+      // メソッド構造体の宣言
+      self.writeln( "typedef struct lune_mtd_%s_t {" (className) );
       self.pushIndent(##);
 
-      processIFObjDecl( self.stream, self.moduleCtrl, node.$expType );
+      if kind == .Class {
+         self.writeln( "lune_del_t * _del;" );
+         self.writeln( "lune_gc_t * _gc;" );
+      }
 
-      self.writeln( "%s sentinel;" (cTypeAny) );
+      processDeclMethodTable( self.stream, node.$expType );
+
       self.popIndent();
-      self.writeln( "} u_if_imp_%s_t;" (className) );
-   }
-   
+      self.writeln( "} lune_mtd_%s_t;" (className) );
 
-   // クラス構造体の宣言
-   self.writeln( "typedef struct %s {" (className) );
-   self.pushIndent( ## );
-   
-   self.writeln( "lune_type_meta_t * pMeta;" );
-   switch kind {
-      case .Class {
-         self.writeln( "u_if_imp_%s_t * pImp;" (className) );
-         self.writeln( "lune_mtd_%s_t * pMtd;" (className) );
-         processDeclMemberTable( self.stream, node.$expType );
-         self.writeln( "// interface implements" );
-         self.writeln( "u_if_imp_%s_t imp;" (className) );
+      if kind == .Class {
+         self.writeln( "typedef struct u_if_imp_%s_t {" (className) );
+         self.pushIndent(##);
+
+         processIFObjDecl( self.stream, self.moduleCtrl, node.$expType );
+
+         self.writeln( "%s sentinel;" (cTypeAny) );
+         self.popIndent();
+         self.writeln( "} u_if_imp_%s_t;" (className) );
       }
-      case .IF {
-         self.writeln( "%s pObj;" (cTypeAnyP) );
-         self.writeln( "lune_mtd_%s_t * pMtd;" (className) );
-      }      
-   }
+      
 
-   self.popIndent();
-   self.writeln( "} %s;" (className) );
-
-   switch kind {
-      case .Class {
-         self.writeln( ```#define lune_mtd_%s( OBJ )                     \
-          (((%s*)OBJ->val.classVal)->pMtd )``` (className,className) );
+      // クラス構造体の宣言
+      self.writeln( "typedef struct %s {" (className) );
+      self.pushIndent( ## );
+      
+      self.writeln( "lune_type_meta_t * pMeta;" );
+      switch kind {
+         case .Class {
+            self.writeln( "u_if_imp_%s_t * pImp;" (className) );
+            self.writeln( "lune_mtd_%s_t * pMtd;" (className) );
+            processDeclMemberTable( self.stream, node.$expType );
+            self.writeln( "// interface implements" );
+            self.writeln( "u_if_imp_%s_t imp;" (className) );
+         }
+         case .IF {
+            self.writeln( "%s pObj;" (cTypeAnyP) );
+            self.writeln( "lune_mtd_%s_t * pMtd;" (className) );
+         }      
       }
-      case .IF {
-         self.writeln( ```#define lune_mtd_%s( OBJ )                     \
+
+      self.popIndent();
+      self.writeln( "} %s;" (className) );
+
+      switch kind {
+         case .Class {
+            self.writeln( ```#define lune_mtd_%s( OBJ )                     \
+                (((%s*)OBJ->val.classVal)->pMtd )``` (className,className) );
+            self.writeln( "#define lune_obj_%s( OBJ ) ((%s*)OBJ->val.classVal)"
+                          (className,className) );
+            self.writeln( "#define lune_if_%s( OBJ ) ((%s*)OBJ->val.classVal)->pImp"
+                          (className,className) );
+
+            // コンストラクタのプロトタイプ
+            processNewConstrProto( self.stream, self.moduleCtrl, node, out2HMode );
+            self.stream.writeln( ";" );
+         }
+         case .IF {
+            self.writeln( ```#define lune_mtd_%s( OBJ )                     \
           ((%s*)&OBJ->val.ifVal)->pMtd``` (className,className) );
+         }
       }
    }
-
+   
+   _out2Header(
+      self.stream,
+      `{ Ast.isPubToExternal( node.$expType.$accessMode ) },
+      `{
+         switch out2HMode {
+            case .HeaderPub, .SourcePri {
+               process( out2HMode );
+            }
+         }
+      });
 
    if kind == .Class {
-      self.writeln( "#define lune_obj_%s( OBJ ) ((%s*)OBJ->val.classVal)"
-                    (className,className) );
-      self.writeln( "#define lune_if_%s( OBJ ) ((%s*)OBJ->val.classVal)->pImp"
-                    (className,className) );
-      
       processDeclClassPrototype( self.stream, self.moduleCtrl, node );
    }
 }
@@ -2291,8 +2468,17 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
 
    foreach member in node.$memberList {
       if isStemType( member.$expType ) {
-         self.writeln( "lune_decre_ref( _pEnv, lune_obj_%s( pObj )->%s%s );"
-                       (className, member.$name.txt, accessAny ) );
+         let access;
+         if member.$expType.$kind == .Alternate {
+            self.writeln( "lune_decre_ref_alter" );
+            access = "";
+         }
+         else {
+            self.writeln( "lune_decre_ref" );
+            access = accessAny;
+         }
+         self.writeln( "( _pEnv, lune_obj_%s( pObj )->%s%s );"
+                       (className, member.$name.txt, access ) );
       }
    }
 
@@ -2300,7 +2486,7 @@ fn convFilter.processDeclClassDef( node:&Nodes.DeclClassNode ) mut
    self.writeln( "}" );
    
    // デフォルトコンストラクタの定義
-   processNewConstrProto( self.stream, self.moduleCtrl, node );
+   processNewConstrProto( self.stream, self.moduleCtrl, node, .SourcePub );
    self.writeln( "{" );
    self.pushIndent(##);
    
@@ -2611,18 +2797,6 @@ pub override fn convFilter.processExpMacroStat(
 };
 
 
-pub override fn convFilter.processExpNew(
-   node: Nodes.ExpNewNode, opt: Opt ) mut
-{
-   let classFullName = self.getFullName( node.get_symbol().$expType );
-   self.write( "lune_class_%s_new( _pEnv" ( classFullName ) );
-   if! node.get_argList() {
-      self.write( ", " );
-      filter( _exp,  self, node );
-   }
-   self.write( ")" );
-};
-
 fn convFilter.process__func__symbol(
    has__func__Symbol:bool, classType:&Ast.TypeInfo, mut funcName:str ) mut
 {
@@ -2645,15 +2819,38 @@ fn convFilter.processDeclMethodInfo(
 {
    switch self.processMode {
       case .Prototype {
-         if funcTypeInfo.$parentInfo.$kind == .Class {
+         fn process() {
+            if funcTypeInfo.$parentInfo.$kind == .Class {
+               processMethodDeclTxt( self.stream, self.moduleCtrl, false,
+                                     funcTypeInfo, declInfo.$argList );
+               self.writeln( ";" );
+            }
+            if funcTypeInfo.$rawTxt ~= "__init" and not funcTypeInfo.$staticFlag {
+               processMethodDeclTxt( self.stream, self.moduleCtrl, true,
+                                     funcTypeInfo, declInfo.$argList );
+               self.writeln( ";" );
+            }
+         }
+
+         if funcTypeInfo.$parentInfo.$kind == .Class and
+            funcTypeInfo.$rawTxt == "__init"
+         {
             processMethodDeclTxt( self.stream, self.moduleCtrl, false,
                                   funcTypeInfo, declInfo.$argList );
             self.writeln( ";" );
          }
-         if funcTypeInfo.$rawTxt ~= "__init" and not funcTypeInfo.$staticFlag {
-            processMethodDeclTxt( self.stream, self.moduleCtrl, true,
-                                  funcTypeInfo, declInfo.$argList );
-            self.writeln( ";" );
+         else {
+            _out2Header(
+               self.stream,
+               `{ Ast.isPubToExternal( funcTypeInfo.$parentInfo.$accessMode ) and
+                  Ast.isPubToExternal( funcTypeInfo.$accessMode ) },
+               `{ 
+                  switch out2HMode {
+                     case .HeaderPub, .SourcePri {
+                        process();
+                     }
+                  }
+               });
          }
       }
       case .Form {
@@ -3287,19 +3484,27 @@ fn processToIF( stream:Util.SourceStream,
    }
 }
 
-fn processToIFGeneric(
-   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
-   classType:&Ast.TypeInfo!, expType:&Ast.TypeInfo, process:form )
-{
-   when! classType {
-      if expType.$kind == .Alternate {
-         let alt2typeMap = classType.createAlt2typeMap( false );
-         let workRetType = Ast.AlternateTypeInfo.getAssign( expType, alt2typeMap );
+/**
+AlternateTypeInfo から、実際の型に変換する処理を行なう
 
-         processToIF( stream, moduleCtrl, workRetType, process );
+@param stream 出力先
+@param moduleCtrl モジュール制御
+@param classType この AlternateTypeInfo が続するクラス。
+       クラスが存在しない場合は nil。
+@param expType 変換元の値の型
+@param process 値を出力するコールバック
+*/
+fn processAlterToActualType(
+   stream:Util.SourceStream, moduleCtrl:ModuleCtrl,
+   fromType:&Ast.TypeInfo, toType:&Ast.TypeInfo, process:form )
+{
+   if fromType.$kind == .Alternate {
+      if toType.$kind == .IF {
+         processToIF( stream, moduleCtrl, toType, process );
       }
       else {
          process();
+         stream.write( getAccessValFromStem( toType ) );
       }
    }
    else {
@@ -3960,8 +4165,10 @@ pub override fn convFilter.processWhen(
             srcSymbol.$typeInfo.$nonnilableType, srcSymbol.$kind,
             new SymbolParam( .Stem, -1, cTypeStem ) );
          
+         // self.processSetSymSingle(
+         //    node, nil, dstSymbol, true, workSymbol, true );
          self.processSetSymSingle(
-            node, nil, dstSymbol, true, workSymbol, true );
+            node, nil, dstSymbol, true, workSymbol, false );
          self.writeln( "" );
 
          
@@ -5263,11 +5470,11 @@ pub override fn convFilter.processExpToDDD( node: Nodes.ExpToDDDNode, opt: Opt )
 @param expListNode 引数リストノード
 */
 pub fn convFilter.processCallArgList(
-   funcType:&Ast.TypeInfo, expListNode: &Nodes.ExpListNode! ) mut
+   funcArgTypeList:&List<&Ast.TypeInfo>, expListNode: &Nodes.ExpListNode! ) mut
 {
    when! expListNode {
       let expList = expListNode.$expList;
-      foreach funcArgType, index in funcType.$argTypeInfoList {
+      foreach funcArgType, index in funcArgTypeList {
          if index ~= 1 {
             self.write( ", " );
          }
@@ -5309,6 +5516,21 @@ pub fn convFilter.processCallArgList(
    }
 }
 
+pub override fn convFilter.processExpNew(
+   node: Nodes.ExpNewNode, opt: Opt ) mut
+{
+   let classFullName = self.getFullName( node.$symbol.$expType );
+   self.write( "lune_class_%s_new( _pEnv" ( classFullName ) );
+   if! node.$argList {
+      self.write( ", " );
+      self.processCallArgList( node.$ctorTypeInfo.$argTypeInfoList, _exp );
+      //filter( _exp,  self, node );
+   }
+   self.write( ")" );
+};
+
+
+
 
 fn convFilter.processCall(
    funcType:&Ast.TypeInfo, setArgFlag:bool, argList:&Nodes.ExpListNode! ) mut
@@ -5345,7 +5567,7 @@ fn convFilter.processCall(
 
       if #expList > 0 {
          self.write( ", " );
-         self.processCallArgList( funcType, argList );
+         self.processCallArgList( funcType.$argTypeInfoList, argList );
       }
    }
    self.write( " )" );
@@ -5706,12 +5928,13 @@ pub override fn convFilter.processDeclClass(
 pub override fn convFilter.processExpCall(
    node: Nodes.ExpCallNode, opt: Opt ) mut
 {
+   let funcType = node.$func.$expType;
+   
    switch self.processMode {
       case .Intermediate, .Prototype {
          if! let argList = node.$argList {
 
             let funcNode = node.$func;
-            let funcType = funcNode.$expType;
 
             let mRetInfo;
             switch funcNode.$expType.$kind {
@@ -5736,18 +5959,20 @@ pub override fn convFilter.processExpCall(
          return;
       }
    }
-   
-   
-   
+
+
+   let mut classTypeInfo:&Ast.TypeInfo! = getBelongClassType( node.$func );
+  
    fn process() {
-      if node.$func.$expType.$kind == .Form {
+      if funcType.$kind == .Form {
          self.write( 'lune_call_form( _pEnv, ' );
          filter( node.$func, self, node );
          self.write( accessAny );
          if! let argList = node.$argList {
             if #argList.$expList > 0 {
                self.write( ', ' );
-               self.processCallArgList( node.$func.$expType, node.$argList );
+               self.processCallArgList(
+                  funcType.$argTypeInfoList, argList );
             }
          }
          else {
@@ -5759,20 +5984,6 @@ pub override fn convFilter.processExpCall(
       }
 
 
-      // let classTypeInfo:&Ast.TypeInfo = nil;
-      // if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
-      //    let prefixType = fieldNode.$prefix.$expType;
-      //    switch prefixType.$kind {
-      //       case .Class, .IF {
-      //          classTypeInfo = prefixType;
-      //       }
-      //    }
-      // }
-      // processToIFGeneric(
-      //    self.stream, self.moduleCtrl,
-      //    classTypeInfo, expType:&Ast.TypeInfo, process:form )
-      
-      
       let mut wroteFuncFlag = false;
       let mut setArgFlag = false;
 
@@ -5913,12 +6124,12 @@ pub override fn convFilter.processExpCall(
       }
       
       if not wroteFuncFlag {
-         switch node.$func.$expType.$kind {
+         switch funcType.$kind {
             case .Method {
                if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
                   //self.write( "lune_call_method_0( _pEnv, " );
                   self.write( "%s( _pEnv, "
-                              ( self.moduleCtrl.getCallMethodCName( node.$func.$expType )));
+                              ( self.moduleCtrl.getCallMethodCName( funcType )));
                   filter( fieldNode.$prefix, self, fieldNode );
                   self.write( accessAny );
                   // self.write(
@@ -5930,7 +6141,7 @@ pub override fn convFilter.processExpCall(
             }
             case .FormFunc {
                self.write( "%s( _pEnv, "
-                           ( self.moduleCtrl.getCallFormName( node.$func.$expType ) ));
+                           ( self.moduleCtrl.getCallFormName( funcType ) ));
                filter( node.$func, self, node );
                self.write( accessAny );
                wroteFuncFlag = true;
@@ -5949,7 +6160,7 @@ pub override fn convFilter.processExpCall(
          // else {
          filter( node.$func, self, node );
 
-         // switch node.$func.$expType.$kind {
+         // switch funcType.$kind {
          //    case .FormFunc { 
          //       self.write( "->val.form.pFunc" );
          //    }
@@ -5964,7 +6175,7 @@ pub override fn convFilter.processExpCall(
       //    self.write( "_pEnv, " );
 
 
-      //    if! let scope = node.$func.$expType.$scope {
+      //    if! let scope = funcType.$scope {
       //       if #scope$.$closureSymList > 0 {
       //          // クロージャの場合
       //          self.write( "lune_func2stem( _pEnv, (lune_closure_t *)NULL, 0, false, %d"
@@ -5993,49 +6204,63 @@ pub override fn convFilter.processExpCall(
 
       //    if #expList > 0 {
       //       self.write( ", " );
-      //       self.processCallArgList( node.$func.$expType, node.$argList );
+      //       self.processCallArgList( funcType, node.$argList );
       //    }
       // }
       // self.write( " )" );
 
-      self.processCall( node.$func.$expType, setArgFlag, node.$argList );
+      self.processCall( funcType, setArgFlag, node.$argList );
    }
 
 
-   let mut isMret = false;
-   if! let argList = node.$argList {
-      if! let mRetExp = argList.$mRetExp {
-         // 多値の引数を含む場合
-         isMret = true;
-         self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
+   fn call() {
+      let mut isMret = false;
+      if! let argList = node.$argList {
+         if! let mRetExp = argList.$mRetExp {
+            // 多値の引数を含む場合
+            isMret = true;
+            self.write( "%s( _pEnv" ( getMRetFuncName( node ) ) );
 
-         let funcNode = node.$func;
-         switch funcNode.$expType.$kind {
-            case .Method {
-               if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+            let funcNode = node.$func;
+            switch funcNode.$expType.$kind {
+               case .Method {
+                  if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
+                     self.write( ", " );
+                     filter( fieldNode.$prefix, self, fieldNode );
+                     self.write( accessAny );
+                  }
+               }
+               case .Form, .FormFunc {
                   self.write( ", " );
-                  filter( fieldNode.$prefix, self, fieldNode );
+                  filter( node.$func, self, node );
                   self.write( accessAny );
                }
             }
-            case .Form, .FormFunc {
-               self.write( ", " );
-               filter( node.$func, self, node );
-               self.write( accessAny );
+            foreach argNode, index in argList.$expList {
+               if index <= mRetExp.$index {
+                  self.write( ", " );
+                  filter( argNode, self, argList );
+               }
             }
+            self.write( ")" );
          }
-         foreach argNode, index in argList.$expList {
-            if index <= mRetExp.$index {
-               self.write( ", " );
-               filter( argNode, self, argList );
-            }
-         }
-         self.write( ")" );
+      }
+      if not isMret {
+         process();
       }
    }
-   if not isMret {
-      process();
+
+
+   let retTypeInfoList = funcType.$retTypeInfoList;
+   if #retTypeInfoList == 1 {
+      // 戻り値が alternat だった時に対応する処理
+      processAlterToActualType(
+         self.stream, self.moduleCtrl, retTypeInfoList[ 1 ], node.$expType, call );
    }
+   else {
+      call();
+   }
+   
 };
 
 pub override fn convFilter.processExpAccessMRet(
@@ -6585,16 +6810,23 @@ pub override fn convFilter.processGetField(
    elseif prefixType.$kind == .Class or prefixType.$kind == .IF {
       let getterType = unwrap prefixType.$scope$.getTypeInfoField$(
          "get_%s" (fieldTxt), true, unwrap prefixType.$scope );
-      processToIFGeneric(
-         self.stream, self.moduleCtrl,
-         prefixType, getterType.$retTypeInfoList[1], fn ()
-         {
-            self.write(
-               "%s( _pEnv, " ( self.moduleCtrl.getCallMethodCName( getterType ) ) );
-            filter( prefixNode, self, node );
-            self.write( accessAny );
-            self.write( ")" );
-         } );
+
+      fn process() {
+         self.write(
+            "%s( _pEnv, " ( self.moduleCtrl.getCallMethodCName( getterType ) ) );
+         filter( prefixNode, self, node );
+         self.write( accessAny );
+         self.write( ")" );
+      }
+
+      if #node.$expTypeList == 1 {
+         processAlterToActualType(
+            self.stream, self.moduleCtrl,
+            getterType.$retTypeInfoList[1], node.$expType, process );
+      }
+      else {
+         process();
+      }
    }
 
    
@@ -7089,3 +7321,18 @@ pub fn createFilter(
    return new convFilter( streamName, stream, headerStream, ast );
 }
 
+pub fn outputBootcode( stream: oStream, launchModuleName:str )
+{
+   let mut srcStream = new Util.SimpleSourceOStream( stream, nil, stepIndent );
+
+   let launchModulePath = launchModuleName.gsub( "%.", "/" );
+   let initFuncName = "lune_init_%s" ( (launchModuleName.gsub( "%.", "_" ) ));
+   srcStream.writeln( ```
+#include <lunescript.h>
+#include <%s.h>
+    
+void lune_run_module( lune_env_t * _pEnv ) {
+   %s( _pEnv );    
+}
+``` (launchModulePath, initFuncName) );
+}

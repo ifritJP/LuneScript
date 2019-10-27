@@ -46,6 +46,7 @@ help:
 	@echo "  make build-glue [LUA_INC_DIR=path]"
 	@echo "  make build-cc"
 	@echo "  make test-miniC"
+	@echo "  make test-subC"
 
 exec:
 	$(LUA) lune/base/base.lua test/test.lns token
@@ -366,8 +367,8 @@ test-comp2:
 	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 	$(MAKE) build-glue GLUE_DIR=work/newglue
 
-	$(call exeLune,work/3,test/start.lns,ast,)
-	$(call exeLune,work/3,test/start.lns,lua,)
+	$(call exeLune,work/3,test/start.lns,ast,) > work/ast2.result
+	$(call exeLune,work/3,test/start.lns,lua,) > work/lua.result
 	$(call exeLune,work/3,test/start.lns,exe,2>&1) | tee work/test2.result
 	$(call exeComp,work/3,test/comp.lns,test/comp.lns,test.comp 17 7) | tee -a work/test2.result
 	$(call exeComp,work/3,test/comp-2.lns,test/comp-2.lns,test.comp-2 17 7) | tee -a work/test2.result
@@ -608,17 +609,28 @@ clean-ccc:
 	LANG= $(MAKE) -f Makefile.ccc clean
 
 
-define test-convC
-	$(LUA) lune/base/base.lua $1.lns save -langC
-#	cat $1.c
-	LANG= $(MAKE) -f Makefile.ccc SRCS=$1.c TEST_OUT=test.exe \
+# C にトランスコンパイラしてビルド、実行、テストする
+#
+# $1: トランスコンパイラするモジュールファイルのリスト
+# $2: 実行結果のログファイル名
+# $3: 実行するメインモジュールファイルパス
+define test-convC-exe
+	@$(LUA) lune/base/base.lua $3.lns bootC -oc work/boot.c
+	LANG= $(MAKE) -f Makefile.ccc "SRCS=$1 work/boot.c" TEST_OUT=test.exe \
 		LUA_INC_DIR=$(LUA_INC_DIR) LUA_LIB=$(LUA_LIB)
 	@# C へのトランスコンパイラ結果と、
 	@# Lua へのトランスコンパイラ結果で出力が同じになることを確認
-	@./test.exe | grep -v -e '^:debug:' > work/$1.c.log
-	@$(LUA) lune/base/base.lua $1.lns exe > work/$1.lua.log
-	diff work/$1.c.log work/$1.lua.log
+	@./test.exe | grep -v -e '^:debug:' > work/$2.c.log
+	@$(LUA) lune/base/base.lua $3.lns exe > work/$2.lua.log
+	diff work/$2.c.log work/$2.lua.log
 endef
+
+define test-convC
+	$(LUA) lune/base/base.lua $1.lns save -langC
+	$(call test-convC-exe,$1,$1,$1)
+endef
+
+
 
 build-miniC:
 	LANG= $(MAKE) -f Makefile.ccc SRCS=miniC.c TEST_OUT=test.exe \
@@ -628,7 +640,18 @@ test-miniC:
 	$(call transwork,.,.,,base/convCC)
 	$(call test-convC,miniC)
 
+test-subC:
+	$(call transwork,.,.,,base/convCC)
+	$(LUA) lune/base/base.lua miniC.lns save -langC
+	$(LUA) lune/base/base.lua subC.lns save -langC
+	$(call test-convC-exe,miniC.lns subC.lns,subc,miniC)
+
+
+
 
 build-cc:
 	$(MAKE) test-miniC
-	$(call test-convC,ccc)
+	$(LUA) lune/base/base.lua ccc.lns save -langC
+	$(LUA) lune/base/base.lua subC.lns save -langC
+	$(call test-convC-exe,ccc.lns subC.lns,ccc,ccc)
+

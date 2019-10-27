@@ -411,8 +411,14 @@ pub fn MacroCtrl.expandMacroVal(
    parser:Parser.PushbackParser, mut token:&Parser.Token ) mut : &Parser.Token
 {
    let tokenTxt = token.txt;
+
+   let mut nextToken = parser.getTokenNoErr();
+   if nextToken.txt ~= "~~" {
+      parser.pushbackToken( nextToken );
+   }
+   
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
-      let mut nextToken = parser.getTokenNoErr();
+      nextToken = parser.getTokenNoErr();
 
       let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
          parser.error( "unknown macro val %s" (nextToken.txt) );
@@ -535,9 +541,10 @@ pub class ErrorMess {
 
 pub fn MacroCtrl.expandSymbol(
    parser:Parser.PushbackParser, prefixToken:&Parser.Token,
-   mut exp:&Nodes.Node, nextToken:&Parser.Token,
-   nodeManager:Nodes.NodeManager, errMessList:List<&ErrorMess>) : &Nodes.LiteralStringNode
+   mut exp:&Nodes.Node, nodeManager:Nodes.NodeManager,
+   errMessList:List<&ErrorMess>) : &Nodes.LiteralStringNode
 {
+   let nextToken = parser.getTokenNoErr();
    if nextToken.txt ~= "~~" {
       parser.pushbackToken( nextToken );
    }
