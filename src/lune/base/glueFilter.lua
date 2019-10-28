@@ -185,6 +185,7 @@ end
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Util = _lune.loadModule( 'lune.base.Util' )
 local glueGenerator = {}
 function glueGenerator.setmeta( obj )
   setmetatable( obj, { __index = glueGenerator  } )
@@ -241,16 +242,57 @@ function glueGenerator:getArgInfo( argNode )
    return typeTxt, argType:get_nilable() and nilableTypeTxt or typeTxt, orgType, argName
 end
 
+local function getDeclFuncInfo( node )
+
+   do
+      local work = _lune.__Cast( node, 3, Nodes.DeclConstrNode )
+      if work ~= nil then
+         return work:get_declInfo()
+      end
+   end
+   
+   do
+      local work = _lune.__Cast( node, 3, Nodes.DeclDestrNode )
+      if work ~= nil then
+         return work:get_declInfo()
+      end
+   end
+   
+   do
+      local work = _lune.__Cast( node, 3, Nodes.DeclMethodNode )
+      if work ~= nil then
+         return work:get_declInfo()
+      end
+   end
+   
+   do
+      local work = _lune.__Cast( node, 3, Nodes.DeclFuncNode )
+      if work ~= nil then
+         return work:get_declInfo()
+      end
+   end
+   
+   Util.err( "failed to get DeclFuncInfo" )
+end
+local function getFuncName( name )
+
+   if name == "__free" then
+      return "__gc"
+   end
+   
+   return name
+end
 function glueGenerator:outputPrototype( node )
 
-   self:write( string.format( "static int lns_glue_%s( lua_State * pLua )", node:get_expType():getTxt(  )) )
+   local name = getFuncName( node:get_expType():get_rawTxt() )
+   self:write( string.format( "static int lns_glue_%s( lua_State * pLua )", name) )
 end
 
 function glueGenerator:outputUserPrototype( node, gluePrefix )
 
    local expType = node:get_expType()
-   self:writeHeader( string.format( "extern int %s%s( lua_State * pLua", gluePrefix, expType:getTxt(  )) )
-   local declInfo = node:get_declInfo()
+   self:writeHeader( string.format( "extern int %s%s( lua_State * pLua", gluePrefix, getFuncName( expType:get_rawTxt() )) )
+   local declInfo = getDeclFuncInfo( node )
    for __index, argNode in pairs( declInfo:get_argList() ) do
       local typeTxt, argTypeTxt, argType, argName = self:getArgInfo( argNode )
       if typeTxt ~= "" then
@@ -289,9 +331,9 @@ function glueGenerator:outputFuncReg( symbolName, methodNodeList )
    self:write( string.format( "static const luaL_Reg %s[] = {\n", symbolName) )
    for __index, node in pairs( methodNodeList ) do
       do
-         local nameToken = node:get_declInfo():get_name()
+         local nameToken = getDeclFuncInfo( node ):get_name()
          if nameToken ~= nil then
-            local name = nameToken.txt
+            local name = getFuncName( nameToken.txt )
             self:write( string.format( '  { "%s", lns_glue_%s },\n', name, name) )
          end
       end
@@ -405,12 +447,13 @@ end
 
 function glueGenerator:outputMethod( node, gluePrefix )
 
-   local declInfo = node:get_declInfo()
-   local name = ""
+   local declInfo = getDeclFuncInfo( node )
+   local name
+   
    do
       local _exp = declInfo:get_name()
       if _exp ~= nil then
-         name = gluePrefix .. _exp.txt
+         name = gluePrefix .. getFuncName( _exp.txt )
       else
          return 
       end
@@ -507,6 +550,14 @@ function glueGenerator:outputClass( moduleFullName, node, gluePrefix )
             else
              
                table.insert( methodNodeList, methodNode )
+            end
+            
+         else
+            do
+               local methodNode = _lune.__Cast( fieldNode, 3, Nodes.DeclDestrNode )
+               if methodNode ~= nil then
+                  table.insert( methodNodeList, methodNode )
+               end
             end
             
          end

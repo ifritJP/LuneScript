@@ -1,0 +1,5 @@
+import test.error.Sub5;
+
+Sub5.test.func();
+Sub5.test.func2(); // error
+

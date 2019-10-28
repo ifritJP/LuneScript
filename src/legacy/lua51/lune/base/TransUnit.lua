@@ -5408,6 +5408,17 @@ function TransUnit:addDefaultConstructor( pos, classTypeInfo, classScope, member
       
    end
    
+   if Ast.isPubToExternal( classTypeInfo:get_accessMode() ) then
+      for __index, memberType in pairs( argTypeList ) do
+         if not Ast.isPubToExternal( memberType:get_accessMode() ) then
+            self:addErrMess( pos, string.format( "The type must be 'pub' becaue using in __init(). -- %s:%s", memberType:getTxt(  ), Ast.AccessMode:_getTxt( memberType:get_accessMode())
+            ) )
+         end
+         
+      end
+      
+   end
+   
    local ctorScope = self:pushScope( false )
    local initTypeInfo = Ast.NormalTypeInfo.createFunc( false, false, ctorScope, Ast.TypeInfoKind.Method, classTypeInfo, true, false, false, Ast.AccessMode.Pub, "__init", nil, argTypeList, {} )
    if oldFlag then
@@ -9364,7 +9375,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, prevOpLevel, expectTy
          self:checkNextToken( ")" )
       end
       
-      if initTypeInfo:get_accessMode() == Ast.AccessMode.Pub or (initTypeInfo:get_accessMode() == Ast.AccessMode.Pro and self.scope:getClassTypeInfo(  ):isInheritFrom( classTypeInfo, nil ) ) or (self.scope:getClassTypeInfo(  ) == classTypeInfo ) then
+      if initTypeInfo:get_accessMode() == Ast.AccessMode.Pub or (initTypeInfo:get_accessMode() == Ast.AccessMode.Pro and self.scope:getClassTypeInfo(  ):isInheritFrom( classTypeInfo, nil ) ) or (self.scope:getClassTypeInfo(  ) == classTypeInfo ) or (initTypeInfo:get_accessMode() == Ast.AccessMode.Local and initTypeInfo:getModule(  ) == self.moduleType ) then
       else
        
          self:addErrMess( token.pos, string.format( "can't access to __init of %s", classTypeInfo:getTxt(  )) )

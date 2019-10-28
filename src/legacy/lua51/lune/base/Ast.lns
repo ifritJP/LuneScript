@@ -3653,7 +3653,7 @@ pub static fn NormalTypeInfo.createSet(
    idProv.increment();
    return new NormalTypeInfo(
       false, getScope( builtinTypeSet ), builtinTypeSet,
-      nil, false, false, false, accessMode,
+      nil, false, false, false, AccessMode.Pub,
       "Set", headTypeInfo, idProv.$id, .Set, itemTypeInfo, nil, nil, mutMode );
 }
 
@@ -3668,7 +3668,7 @@ pub static fn NormalTypeInfo.createList(
    idProv.increment();
    return new NormalTypeInfo(
       false, getScope( builtinTypeList ), builtinTypeList,
-      nil, false, false, false, accessMode,
+      nil, false, false, false, AccessMode.Pub,
       "List", headTypeInfo, idProv.$id, .List, itemTypeInfo, nil, nil, mutMode);
 }
 
@@ -3680,7 +3680,7 @@ pub static fn NormalTypeInfo.createArray(
    idProv.increment();
    return new NormalTypeInfo(
       false, getScope( builtinTypeArray ), builtinTypeArray,
-      nil, false, false, false, accessMode,
+      nil, false, false, false, AccessMode.Pub,
       "Array", headTypeInfo, idProv.$id, .Array, itemTypeInfo, nil, nil, mutMode );
 }
 
@@ -3692,7 +3692,7 @@ pub static fn NormalTypeInfo.createMap(
    idProv.increment();
    return new NormalTypeInfo(
       false, getScope( builtinTypeMap ), builtinTypeMap,
-      nil, false, false, false, accessMode,
+      nil, false, false, false, AccessMode.Pub,
       "Map", headTypeInfo, idProv.$id, .Map,
       [ keyTypeInfo, valTypeInfo ], nil, nil, mutMode );
 }

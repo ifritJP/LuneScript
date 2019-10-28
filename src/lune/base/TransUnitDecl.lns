@@ -1476,6 +1476,18 @@ fn TransUnit.addDefaultConstructor(
       }
    }
 
+   if Ast.isPubToExternal( classTypeInfo.$accessMode ) {
+      // クラスが外部公開なら、
+      // コンストラクタの型は全て外部公開可能でなければならない。
+      foreach memberType in argTypeList {
+         if not Ast.isPubToExternal( memberType.$accessMode ) {
+            self.addErrMess(
+               pos, "The type must be 'pub' becaue using in __init(). -- %s:%s"
+               ( memberType.getTxt(##), memberType.$accessMode.$_txt ) );
+         }
+      }
+   }
+
    // デフォルトコンストラクタの登録
    let mut ctorScope = self.pushScope( false ## );
    let initTypeInfo = Ast.NormalTypeInfo.createFunc(

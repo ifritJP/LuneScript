@@ -315,6 +315,7 @@ fn convFilter.outputMeta( node: Nodes.RootNode ) mut
 
    // 公開される型情報を typeId2TypeInfo にピックアップする
    fn pickupTypeId( typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) {
+
       if typeInfo.get_typeId() == Ast.rootTypeId {
          return;
       }

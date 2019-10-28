@@ -1,0 +1,4 @@
+import test.error.Sub5;
+
+Sub5.test.func();
+let test = new Sub5.Test(); // error

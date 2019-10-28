@@ -2,3 +2,16 @@ pub enum Sub5enum {
    val1,
    val2,
 }
+class Hoge {
+}
+pub class Test {
+   let hoge:Hoge;
+   local fn __init(hoge:Hoge) {
+      self.hoge = hoge;
+   }
+   pub fn func() {
+   }
+   local fn func2() {
+   }
+}
+pub let test = new Test( new Hoge() );

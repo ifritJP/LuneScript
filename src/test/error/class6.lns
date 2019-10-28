@@ -2,7 +2,7 @@ pub class Test {
 }
 class Sub extend Test {
 }
-pub class Hoge {
+pub class Hoge { // error
    let val:Sub {pub:Test};
 }
 let hoge = new Hoge( new Sub() );

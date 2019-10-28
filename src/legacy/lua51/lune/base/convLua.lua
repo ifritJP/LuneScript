@@ -3558,7 +3558,7 @@ function MacroEvalImp:evalFromMacroCode( code )
       local val = frontInterface.loadFromLnsTxt( importModuleInfo, name, txt )
       return val
    end
-   Log.log( Log.Level.Info, __func__, 3246, function (  )
+   Log.log( Log.Level.Info, __func__, 3247, function (  )
    
       return string.format( "code: %s", code)
    end )

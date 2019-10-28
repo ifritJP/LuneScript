@@ -4707,7 +4707,7 @@ function NormalTypeInfo.createSet( accessMode, parentInfo, itemTypeInfo, mutMode
    end
    
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, accessMode, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, mutMode)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeSet ), _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Set, itemTypeInfo, nil, nil, mutMode)
 end
 
 function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo, mutMode )
@@ -4717,19 +4717,19 @@ function NormalTypeInfo.createList( accessMode, parentInfo, itemTypeInfo, mutMod
    end
    
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, accessMode, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, mutMode)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeList ), _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.List, itemTypeInfo, nil, nil, mutMode)
 end
 
 function NormalTypeInfo.createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, accessMode, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, mutMode)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeArray ), _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Array, itemTypeInfo, nil, nil, mutMode)
 end
 
 function NormalTypeInfo.createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
    idProv:increment(  )
-   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, accessMode, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, mutMode)
+   return NormalTypeInfo.new(false, getScope( _moduleObj.builtinTypeMap ), _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", _moduleObj.headTypeInfo, idProv:get_id(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, mutMode)
 end
 
 function NormalTypeInfo.createModule( scope, parentInfo, externalFlag, moduleName, mutable )

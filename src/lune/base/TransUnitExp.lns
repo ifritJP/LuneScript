@@ -2900,9 +2900,15 @@ fn TransUnit.analyzeExp(
       if initTypeInfo.$accessMode == .Pub or
           ( initTypeInfo.$accessMode == .Pro and
             self.scope.getClassTypeInfo().isInheritFrom( classTypeInfo, nil ) ) or
-          ( self.scope.getClassTypeInfo() == classTypeInfo )
+          ( self.scope.getClassTypeInfo() == classTypeInfo ) or
+          ( initTypeInfo.$accessMode == .Local and
+            initTypeInfo.getModule() == self.moduleType )
       {
-         // pub、 pro でサブクラス、 pri で同じクラスの場合はアクセス可能
+         // 次の条件でアクセス可能
+         // - pub
+         // - pro でサブクラス内
+         // - pri で同じクラス内
+         // - local で同じモジュール内
       }
       else {
          self.addErrMess(

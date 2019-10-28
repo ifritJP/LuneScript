@@ -300,6 +300,8 @@ test-error:
 	-$(call exeLune,$(TEST_DIR),test/error/import.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/import2.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/import3.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/import4.lns,exe,2>&1)
+	-$(call exeLune,$(TEST_DIR),test/error/import5.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/strformat.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/Alge.lns,exe,2>&1)
 	-$(call exeLune,$(TEST_DIR),test/error/Alge2.lns,exe,2>&1)

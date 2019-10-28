@@ -66,7 +66,7 @@
 		   "apply" "of" "foreach" "forsort" "in" "return" "class" "false"
 		   "nil" "null" "true" "switch" "match" "case" "default" "extend" "proto"
 		   "override" "macro" "let" "unwrap" "if" "module" "subfile" "allmut"
-		   "mut" "__init" "pub" "pro" "pri" "form" "advertise" "provide"
+		   "mut" "__init" "local" "pub" "pro" "pri" "form" "advertise" "provide" 
 		   "wrap" "static" "global" "sync" "then" "do" "interface" "enum"
 		   "glue" "when" "alge" "non" "alias"
 		   "abstract" "trust" "import" "as" "not" "and" "or" "break" "new" )))
